@@ -22,6 +22,7 @@ import pytest
 from google.genai import types
 
 from agents.anyplot import pipeline
+from agents.anyplot.agent import LANGUAGE_SOURCE_LINES
 from agents.anyplot.data.generate import looks_like_formula
 from agents.anyplot.data.transcribe import MAX_TRANSCRIBE_CHARS, TranscribedTable
 from agents.anyplot.dev_fixture import snapshot_from_repo
@@ -1956,7 +1957,7 @@ async def test_a_prepare_data_turn_carries_the_new_dataset_version_in_done(
     name, done = events[-1]
     assert name == "done" and done["data_confirmed"] is False
     dataset = done["dataset"]
-    assert set(dataset) == {"preview", "profile", "bindings", "warnings", "roles", "changes", "version"}
+    assert set(dataset) == {"preview", "profile", "bindings", "warnings", "roles", "suggestion", "changes", "version"}
     assert [role["name"] for role in dataset["roles"]] == ["x", "y"]  # the dataset route's shape, roles included
     assert dataset["version"] == 2 and dataset["changes"] == ["renamed 'Study Hours' to 'Hours'"]
     assert [column["name"] for column in dataset["profile"]["columns"]] == ["Student", "Hours", "Exam Score"]
@@ -1976,7 +1977,7 @@ async def test_a_prepare_data_turn_carries_the_new_dataset_version_in_done(
     undone = await client.post(f"/v1/sessions/{sid}/dataset/undo", headers=HEADERS)
     assert undone.status_code == 200, undone.text
     body = undone.json()
-    assert set(body) == {"preview", "profile", "bindings", "warnings", "roles", "version"}
+    assert set(body) == {"preview", "profile", "bindings", "warnings", "roles", "suggestion", "version"}
     assert body["version"] == 1 and body["profile"]["columns"][1]["name"] == "Study Hours"
     assert body["bindings"] == [{"role": "x", "column": "Study Hours"}, {"role": "y", "column": "Exam Score"}]
     assert [role["name"] for role in body["roles"]] == ["x", "y"]
@@ -2213,7 +2214,7 @@ async def test_generate_data_without_data_stores_version_1_and_the_plot_uses_it(
 
     assert name == "done" and done["data_confirmed"] is False
     dataset = done["dataset"]
-    assert set(dataset) == {"preview", "profile", "bindings", "warnings", "roles", "changes", "version"}
+    assert set(dataset) == {"preview", "profile", "bindings", "warnings", "roles", "suggestion", "changes", "version"}
     assert dataset["version"] == 1 and dataset["changes"] == [SINE_LINE]
     assert [(column["name"], column["dtype"]) for column in dataset["profile"]["columns"]] == [
         ("x", "number"),
@@ -2271,6 +2272,64 @@ async def test_generate_data_on_a_paste_is_the_next_version_and_undo_restores_th
     assert undone.status_code == 200 and undone.json()["version"] == 1
     assert undone.json()["bindings"] == [{"role": "x", "column": "Study Hours"}, {"role": "y", "column": "Exam Score"}]
     assert len(services.datasets) == 1
+
+
+async def test_a_wide_table_on_a_box_plot_is_offered_long_and_to_long_applies_it_without_a_model(
+    client: httpx.AsyncClient, services: Services
+) -> None:
+    """The owner's sensor paste on box-basic: the offer, `.to_long()`, its undo; no offer for a scatter."""
+    response = await client.post(
+        "/v1/sessions",
+        headers=HEADERS,
+        json={
+            "user": USER,
+            "spec_id": "box-basic",
+            "library": "matplotlib",
+            "locale": "de",
+            "snapshot": snapshot_body("box-basic"),
+        },
+    )
+    assert response.status_code == 200, response.text
+    sid = response.json()["session_id"]
+    sensors = "Sensor_A,Sensor_B,Sensor_C\n51.74,58.12,41.05\n48.65,53.40,62.88\n50.23,55.91,47.30\n"
+    pasted = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": sensors})
+    assert pasted.status_code == 200, pasted.text
+    offer = {
+        "kind": "to_long",
+        "columns": ["Sensor_A", "Sensor_B", "Sensor_C"],
+        "names_to": "category",
+        "values_to": "value",
+        "keys": [],
+        "rows": 9,
+    }
+    assert pasted.json()["suggestion"] == offer
+    # The root's summary reads the same offer from its profile tool, fenced as the user's data.
+    from types import SimpleNamespace
+
+    from agents.anyplot.tools.session import get_dataset_profile
+
+    context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid))
+    profile = await get_dataset_profile(context)
+    assert "<user_data>" in profile["to_long"] and '"names_to": "category"' in profile["to_long"]
+
+    long = await client.post(f"/v1/sessions/{sid}/dataset/to_long", headers=HEADERS)
+
+    assert long.status_code == 200, long.text
+    body = long.json()
+    assert (body["version"], body["suggestion"], body["profile"]["rows"]) == (2, None, 9)
+    assert body["bindings"] == [{"role": "category", "column": "category"}, {"role": "value", "column": "value"}]
+    assert body["changes"] and body["changes"][0].startswith("pivoted 3 columns")
+    view = read_session(await _session_state(client, sid))
+    assert view is not None and view.dataset_version == 2 and not view.data_confirmed
+    # Nothing wide is left to apply; undo brings the paste and its offer back.
+    again = await client.post(f"/v1/sessions/{sid}/dataset/to_long", headers=HEADERS)
+    assert (again.status_code, again.json()) == (422, {"detail": "no_suggestion"})
+    undone = await client.post(f"/v1/sessions/{sid}/dataset/undo", headers=HEADERS)
+    assert undone.status_code == 200 and undone.json()["suggestion"] == offer
+
+    scatter = await open_session(client)
+    refused = await client.post(f"/v1/sessions/{scatter}/dataset/to_long", headers=HEADERS)
+    assert refused.status_code == 422
 
 
 async def test_generate_data_refuses_during_a_run_bad_arguments_and_formulas_it_cannot_compute(
@@ -2529,7 +2588,7 @@ def request_text(request: Any) -> str:
 
 def language_block(language: str, source: str) -> tuple[str, str]:
     """The session block's language line and its fenced value."""
-    return f"- Language: {source}", f"<plot_language>\n{language}\n</plot_language>"
+    return LANGUAGE_SOURCE_LINES[source], f"<plot_language>\n{language}\n</plot_language>"
 
 
 async def say(client: httpx.AsyncClient, sid: str, text: str) -> list[tuple[str, dict[str, Any]]]:
@@ -2560,6 +2619,25 @@ async def test_a_new_session_starts_in_english_whatever_the_locale(client: httpx
     line, value = language_block("en", "default")
     assert line in root and value in root and "de-DE" not in root
     assert "Plot language:\n<plot_language>\nen\n</plot_language>" in adapter_inputs(fake)[0]
+
+
+async def test_a_language_chosen_in_the_chip_reaches_the_root_and_the_adapter(
+    client: httpx.AsyncClient, swap_models
+) -> None:
+    """Production case 20261012T211551Z-bcc5bcf1: the chip's choice must arrive as the language to use."""
+    fake = swap_models("gemini", default_script())
+    sid = await open_session(client)
+    chosen = await put_language(client, sid, {"language": "Japanese"})
+    assert chosen.status_code == 200 and chosen.json() == {"language": "ja", "source": "chosen"}
+
+    events = await create_plot(client, sid)
+
+    assert done_language(events) == {"language": "ja", "source": "chosen"}
+    root = request_text(requests_of(fake, "root")[0])
+    line, value = language_block("ja", "chosen")
+    assert line in root and value in root
+    assert "write your replies and the plot text in it" in root
+    assert "Plot language:\n<plot_language>\nja\n</plot_language>" in adapter_inputs(fake)[0]
 
 
 async def test_the_first_typed_message_detects_the_language_once(

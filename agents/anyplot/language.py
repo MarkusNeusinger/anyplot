@@ -7,7 +7,7 @@ language the scope judge names for it (source `detected`); a choice through
 (source `chosen`), and detection never writes over a choice.
 
 A language is a short name or code that matches `LANGUAGE_PATTERN` (`de`, `English`,
-`Klingon`). Because a chosen one is free text that only the pattern bounds, every
+`Swedish`). Because a chosen one is free text that only the pattern bounds, every
 prompt that carries it fences it as `<plot_language>`: data, never an instruction.
 
 This module imports nothing from the package, so `schemas.py`, `session_state.py`,
@@ -60,7 +60,7 @@ def normalise(value: str) -> str:
 
     One space between words and none outside them; a bare two-letter code in lower
     case (`DE` is `de`); a known English name or endonym as its code (`English` is `en`,
-    `Deutsch` is `de`); anything else as typed (`Klingon`).
+    `Deutsch` is `de`); anything else as typed (`Swedish`).
     """
     text = " ".join(value.split())
     code = _NAMES.get(text.lower())
@@ -70,7 +70,7 @@ def normalise(value: str) -> str:
 
 
 def canonical(value: str) -> str:
-    """The comparison key: `normalise`, then case-folded, so `Klingon` and `klingon` are one language."""
+    """The comparison key: `normalise`, then case-folded, so `Swedish` and `swedish` are one language."""
     return normalise(value).casefold()
 
 

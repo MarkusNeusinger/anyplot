@@ -173,6 +173,7 @@ _UPSTREAM_CODES = frozenset(
         "capacity",
         "no_dataset",
         "nothing_to_undo",
+        "no_suggestion",
         "rate_limited",
     }
 )
@@ -995,6 +996,18 @@ async def undo_dataset(sid: SessionId, ctx: Ctx, client: Client) -> Any:
     `409 run_active` while a turn or a render is in flight.
     """
     return await _call_upstream(client, ctx, "POST", f"/sessions/{sid}/dataset/undo")
+
+
+@router.post("/sessions/{sid}/dataset/to_long")
+async def dataset_to_long(sid: SessionId, ctx: Ctx, client: Client) -> Any:
+    """The page's `.to_long()`: make a wide table long for the spec's category and value roles.
+
+    No body: the agents service recomputes its wide-table suggestion and applies that
+    one `pivot_longer`, without a model call, as the next dataset version. It answers
+    like the undo route plus `changes`; `422 no_suggestion` when the table is not wide
+    for this spec, `409 run_active` while a turn or a render is in flight.
+    """
+    return await _call_upstream(client, ctx, "POST", f"/sessions/{sid}/dataset/to_long")
 
 
 @router.post("/sessions/{sid}/messages", response_class=EventSourceResponse)

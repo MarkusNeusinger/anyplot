@@ -131,7 +131,7 @@ _DATA_VERSION_KEYS = frozenset(
 )
 """The keys of a tool result that stores the next dataset version (`prepare_data`, `generate_data`)."""
 RESULT_KEYS: dict[str, frozenset[str]] = {
-    "get_dataset_profile": frozenset({"status", "reason", "code", "rows", "profile", "truncated"}),
+    "get_dataset_profile": frozenset({"status", "reason", "code", "rows", "profile", "truncated", "to_long"}),
     "get_spec_brief": frozenset({"status", "code", "brief"}),
     "get_current_code": frozenset({"status", "code", "version"}),
     "set_bindings": frozenset({"status", "reason", "code", "complete", "missing_roles", "errors", "warnings"}),

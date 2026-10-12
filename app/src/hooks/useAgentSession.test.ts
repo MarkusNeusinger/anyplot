@@ -1106,6 +1106,77 @@ describe('useAgentSession: formulas', () => {
   });
 });
 
+describe('useAgentSession: .to_long()', () => {
+  // The owner's sensor paste: three numbers side by side, offered in long form.
+  const OFFER = {
+    kind: 'to_long',
+    columns: ['Sensor_A', 'Sensor_B'],
+    names_to: 'category',
+    values_to: 'value',
+    keys: [],
+    rows: 4,
+  };
+  const WIDE = { ...DATASET, suggestion: OFFER };
+  const LONG = {
+    ...DATASET,
+    preview: [
+      ['Sensor_A', '1.5'],
+      ['Sensor_B', '2.5'],
+    ],
+    suggestion: null,
+    changes: ['pivoted 2 columns into category/value: 4 rows'],
+    version: 2,
+  };
+  const toLongCalls = () => calls.filter(call => call.path.endsWith('/dataset/to_long'));
+
+  it('applies the offer as the next data version, without a body or a turn', async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/dataset'] = () => json(200, WIDE);
+    routes['POST /sessions/S1/dataset/to_long'] = () => json(200, LONG);
+    const { result } = await openSession(routes);
+    await act(() => result.current.parseData('Sensor_A,Sensor_B\n1.5,2.5\n'));
+    expect(result.current.state.dataset?.parsed.suggestion).toEqual(OFFER);
+    const turns = calls.filter(call => call.path.endsWith('/messages')).length;
+
+    await act(() => result.current.toLongData());
+
+    expect(toLongCalls()).toHaveLength(1);
+    expect(toLongCalls()[0].body).toBeUndefined();
+    expect(result.current.state.dataset?.parsed.preview).toEqual(LONG.preview);
+    expect(result.current.state.dataset?.parsed.suggestion).toBeNull();
+    expect(result.current.state).toMatchObject({
+      dataChange: { kind: 'changed', changes: LONG.changes, version: 2 },
+      dataConfirmed: false,
+      toLongBusy: false,
+      toLongError: null,
+    });
+    expect(calls.filter(call => call.path.endsWith('/messages'))).toHaveLength(turns);
+    expect(trackEvent).toHaveBeenLastCalledWith('agent_data_prepared', { changes: '1' });
+
+    // Long now: no offer, so nothing to ask the server.
+    await act(() => result.current.toLongData());
+    expect(toLongCalls()).toHaveLength(1);
+  });
+
+  it('keeps a refusal until the next paste clears it', async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/dataset'] = () => json(200, WIDE);
+    routes['POST /sessions/S1/dataset/to_long'] = () =>
+      json(422, { detail: 'no_suggestion', ref: 'r1' });
+    const { result } = await openSession(routes);
+    await act(() => result.current.parseData('Sensor_A,Sensor_B\n1.5,2.5\n'));
+
+    await act(() => result.current.toLongData());
+    expect(result.current.state).toMatchObject({
+      toLongBusy: false,
+      toLongError: { code: 'no_suggestion' },
+    });
+
+    await act(() => result.current.parseData('Sensor_A,Sensor_B\n3.5,4.5\n'));
+    expect(result.current.state.toLongError).toBeNull();
+  });
+});
+
 describe('useAgentSession: turns', () => {
   it('runs Create plot through the queue to a version with its image and code', async () => {
     const routes = baseRoutes();

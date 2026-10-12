@@ -69,7 +69,13 @@ import {
   sessionBusy,
   type TranscriptionState,
 } from 'src/hooks/useAgentSession';
-import { type ColumnProfile, MAX_DATASET_BYTES, utf8Bytes } from 'src/lib/agent';
+import {
+  type ColumnProfile,
+  type LongSuggestion,
+  longSuggestion,
+  MAX_DATASET_BYTES,
+  utf8Bytes,
+} from 'src/lib/agent';
 import { bindingRows, kindsHint, signHint } from 'src/sections/agent-chat/bindings';
 import { Ellipsis } from 'src/sections/agent-chat/Ellipsis';
 import { CONFIRM_LOST_TEXT, describeDataFailure } from 'src/sections/agent-chat/messages';
@@ -352,6 +358,77 @@ function dataShape(dataset: NonNullable<AgentSessionState['dataset']>): string {
   return `${countOf(profile.rows, 'row')} · ${countOf(profile.columns.length, 'column')} · version ${version ?? 1}`;
 }
 
+interface LongHintProps {
+  suggestion: LongSuggestion;
+  canApply: boolean;
+  busy: boolean;
+  error: Failure | null;
+  onApply: () => void;
+}
+
+/**
+ * The wide-table offer (`agents/anyplot/data/shape.py`): the columns hold the
+ * same quantity side by side where the plot wants one category column and one
+ * value column. `.to_long()` applies it on the server, without a model call;
+ * `.undo()` takes it back like any data change.
+ */
+function LongHint({ suggestion, canApply, busy, error, onApply }: LongHintProps) {
+  const kept = suggestion.keys.length > 0 ? `, ${suggestion.keys.join(', ')} kept` : '';
+  return (
+    <Box
+      component="section"
+      aria-labelledby="agent-long-title"
+      data-testid="data-long-hint"
+      sx={{
+        borderLeft: `3px solid ${colors.primary}`,
+        pl: 1.5,
+        display: 'flex',
+        flexWrap: 'wrap',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        columnGap: 1,
+        rowGap: 0.5,
+        minWidth: 0,
+      }}
+    >
+      <Box sx={{ minWidth: 0, flex: '1 1 16rem' }}>
+        <Box id="agent-long-title" sx={{ ...labelSx, color: 'var(--ink)' }}>
+          # wide table · this plot wants one {suggestion.names_to} and one {suggestion.values_to}{' '}
+          column
+        </Box>
+        <Box
+          id="agent-long-detail"
+          sx={{
+            ...bodyTextSx,
+            fontSize: smallText,
+            color: 'var(--ink-soft)',
+            overflowWrap: 'anywhere',
+          }}
+        >
+          {suggestion.columns.join(', ')} → {suggestion.names_to} and {suggestion.values_to},{' '}
+          {suggestion.rows.toLocaleString('en-US')} rows{kept}
+        </Box>
+        {error && (
+          <Box role="alert" sx={{ ...bodyTextSx, fontSize: smallText, color: colors.error }}>
+            could not change the table ({error.code})
+          </Box>
+        )}
+      </Box>
+      <Box
+        component="button"
+        type="button"
+        onClick={onApply}
+        disabled={!canApply}
+        aria-label="Make the table long"
+        aria-describedby="agent-long-title agent-long-detail"
+        sx={actionButtonSx}
+      >
+        {busy ? '.to_long() …' : '.to_long()'}
+      </Box>
+    </Box>
+  );
+}
+
 interface DataPanelProps {
   state: AgentSessionState;
   onParse: (text: string) => void;
@@ -362,6 +439,8 @@ interface DataPanelProps {
   onBind: (role: string, column: string | null) => void;
   onConfirmData: () => void;
   onUndo: () => void;
+  /** `.to_long()`: apply the wide-table offer as the next data version. */
+  onToLong?: () => void;
   /** The pinned header's `.show()` / `.hide()`, for the page to move the keyboard focus to. */
   toggleRef?: React.Ref<HTMLButtonElement>;
   /**
@@ -381,6 +460,7 @@ export function DataPanel({
   onBind,
   onConfirmData,
   onUndo,
+  onToLong,
   toggleRef,
   confirmRef,
   decisionRef,
@@ -421,6 +501,8 @@ export function DataPanel({
     (dataset?.parsed.version ?? 1) > 1 &&
     state.undoError?.code !== 'nothing_to_undo';
   const rows = bindingRows(state.roles, state.bindings, columns.length);
+  // The service's wide-table offer, checked again here: the dataset route's answer is not typed.
+  const suggestion = longSuggestion(dataset?.parsed.suggestion);
 
   // `.show()` from far down the thread opens the card at the top of the thread,
   // out of view: bring its top in below the pinned header (the page's
@@ -626,6 +708,16 @@ export function DataPanel({
               undoBusy={state.undoBusy}
               error={state.undoError}
               onUndo={onUndo}
+            />
+          )}
+
+          {suggestion && onToLong && (
+            <LongHint
+              suggestion={suggestion}
+              canApply={ready && !busy && !state.toLongBusy && !transcription}
+              busy={state.toLongBusy}
+              error={state.toLongError}
+              onApply={onToLong}
             />
           )}
 

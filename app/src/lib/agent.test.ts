@@ -6,6 +6,7 @@ import {
   browserLocale,
   caseListQuery,
   countBucket,
+  longSuggestion,
   parseAgentEvent,
   renderedThemes,
   sizeBucket,
@@ -301,8 +302,26 @@ describe('parseAgentEvent', () => {
           DATASET.profile.columns[1],
         ],
       },
+      // No offer in the event: the wide-table suggestion reads as none.
+      suggestion: null,
     });
     expect(JSON.stringify(dataset)).not.toMatch(/ds_secret|sample|internal/);
+  });
+
+  it('reads a wide-table offer strictly and drops a malformed one', () => {
+    const offer = {
+      kind: 'to_long',
+      columns: ['Sensor_A', 'Sensor_B'],
+      names_to: 'category',
+      values_to: 'value',
+      keys: [],
+      rows: 6,
+    };
+    expect(longSuggestion(offer)).toEqual(offer);
+    expect(longSuggestion({ ...offer, kind: 'to_wide' })).toBeNull();
+    expect(longSuggestion({ ...offer, columns: ['Sensor_A'] })).toBeNull();
+    expect(longSuggestion({ ...offer, rows: '6' })).toBeNull();
+    expect(longSuggestion(null)).toBeNull();
   });
 
   it('drops a malformed data version whole and keeps the rest of done', () => {

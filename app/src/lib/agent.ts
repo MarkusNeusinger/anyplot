@@ -21,7 +21,7 @@ export const MAX_DATASET_BYTES = 200 * 1024;
 export const MAX_MESSAGE_CHARS = 2000;
 /**
  * A session language: a short language name or code in Latin letters (`de`,
- * `English`, `Klingon`), as the agents service and the BFF define it
+ * `English`, `Swedish`), as the agents service and the BFF define it
  * (`agents/anyplot/language.py`, `LANGUAGE_PATTERN`). The server matches the
  * value as sent, so the page trims before it tests and sends.
  */
@@ -125,6 +125,21 @@ export interface RoleSpec {
   non_negative?: boolean;
 }
 
+/**
+ * The service's wide-table offer (`agents/anyplot/data/shape.py`): the table holds
+ * the same quantity side by side (`columns`) where the spec wants one category and
+ * one value column. `.to_long()` turns `columns` into `names_to` and `values_to`
+ * (`keys`, date columns, stay), `rows` long.
+ */
+export interface LongSuggestion {
+  kind: 'to_long';
+  columns: string[];
+  names_to: string;
+  values_to: string;
+  keys: string[];
+  rows: number;
+}
+
 export interface DatasetParsed {
   /** Up to 20 data rows (the header is `profile.columns[].name`). */
   preview: string[][];
@@ -134,6 +149,8 @@ export interface DatasetParsed {
   warnings: string[];
   /** Every role of the spec; absent from an agents service older than this field. */
   roles?: RoleSpec[];
+  /** The wide-table offer, or `null`; absent from an older server. */
+  suggestion?: LongSuggestion | null;
   /**
    * The data's version: a paste is 1, each change the assistant made to it one
    * more, each undo one less. `.undo()` is possible while it is above 1.
@@ -159,6 +176,8 @@ export interface DatasetChanged {
    * service older than this field, and dropped whole when one entry is malformed.
    */
   roles?: RoleSpec[];
+  /** The wide-table offer for the new version, or `null`; absent from an older server. */
+  suggestion?: LongSuggestion | null;
   /**
    * What changed, one line per operation, such as `dropped 1 row where Tier =
    * 'Gesamt'` or `generated 200 rows: x from -3.1416 to 3.1416, y = sin(x)`.
@@ -648,6 +667,19 @@ export const agentApi = {
    */
   undoDataset: (token: string, sid: string) =>
     agentJson<DatasetParsed>(`${sessionPath(sid)}/dataset/undo`, token, post()),
+
+  /**
+   * `.to_long()`: the service applies its own wide-table suggestion, without a
+   * model call, as the next data version (the undo route's shape plus
+   * `changes`). `422 no_suggestion` when the table is not wide for this spec.
+   */
+  datasetToLong: async (token: string, sid: string): Promise<DatasetChanged> => {
+    const body = await agentJson<unknown>(`${sessionPath(sid)}/dataset/to_long`, token, post());
+    // Typed like a `done` dataset: a malformed answer puts no table on screen.
+    const dataset = datasetChanged(body);
+    if (!dataset) throw new AgentApiError(502, 'upstream');
+    return dataset;
+  },
   /** Opens the chat turn's SSE stream; the caller reads it with `readSseEvents`. */
   postMessage: (token: string, sid: string, body: TurnBody, signal: AbortSignal) =>
     agentFetch(`${sessionPath(sid)}/messages`, token, {
@@ -933,8 +965,25 @@ function datasetChanged(value: unknown): DatasetChanged | null {
     bindings,
     warnings: strings(value.warnings),
     ...(roles ? { roles } : {}),
+    suggestion: longSuggestion(value.suggestion),
     changes: strings(value.changes),
     version: value.version,
+  };
+}
+
+/** A wide-table offer as the service sends it, or `null` for anything else. */
+export function longSuggestion(value: unknown): LongSuggestion | null {
+  if (!isRecord(value) || value.kind !== 'to_long') return null;
+  const columns = strings(value.columns);
+  if (columns.length < 2 || typeof value.names_to !== 'string' || !value.names_to) return null;
+  if (typeof value.values_to !== 'string' || !value.values_to || !isInt(value.rows)) return null;
+  return {
+    kind: 'to_long',
+    columns,
+    names_to: value.names_to,
+    values_to: value.values_to,
+    keys: strings(value.keys),
+    rows: value.rows,
   };
 }
 

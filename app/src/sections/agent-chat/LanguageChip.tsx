@@ -268,7 +268,7 @@ export function LanguageChip({ value, disabled, onSet }: LanguageChipProps) {
               setHint(false);
             }}
             maxLength={MAX_LANGUAGE_CHARS}
-            placeholder="klingon"
+            placeholder="swedish"
             autoComplete="off"
             spellCheck={false}
             aria-label="Other language"

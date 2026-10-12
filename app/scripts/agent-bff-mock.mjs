@@ -17,8 +17,11 @@
  * check's `errors` lines on a refused binding set, and a scripted `anyplot/1`
  * stream with `ready`, two `queued` statuses, the pipeline steps, `plot` (with
  * the stored `version`), `message` and `done`, with `: ping` comments in
- * between. Two specs exist: scatter-basic (`x`, `y`) and line-multi (`x`, the
- * series family `y1, y2, ...`, an optional `series`). Plots are drawn here as
+ * between. Three specs exist: scatter-basic (`x`, `y`), line-multi (`x`, the
+ * series family `y1, y2, ...`, an optional `series`) and box-basic (`category`,
+ * `value`; for the data step only: a wide paste such as `Sensor_A,Sensor_B`
+ * carries the `suggestion` and `POST .../dataset/to_long` applies it, like the
+ * service's `data/shape.py`). Plots are drawn here as
  * PNGs from the pasted data (a scatter of the bound x and y columns, in the
  * theme's colours), in the spirit of the fake render backend's fixture PNG
  * (agents/anyplot/render/backends/fake.py); no code runs. Like the agents
@@ -175,6 +178,22 @@ const SPECS = {
       role('series', ['categorical'], 'Optional grouping variable if data is in long format', {
         required: false,
       }),
+    ],
+  },
+  // A long-data spec: a wide paste (`Sensor_A,Sensor_B,...`) gets the `.to_long()` offer.
+  // The mock's plot drawing knows only x and y, so this spec is for the data step.
+  'box-basic': {
+    id: 'box-basic',
+    title: 'Basic Box Plot',
+    description: 'A box plot that compares the distribution of a numeric value across categories.',
+    data: [
+      '`category` (string) - group labels for comparison',
+      '`value` (numeric) - numerical values to plot',
+    ],
+    notes: ['Show the median line clearly'],
+    roles: [
+      role('category', ['text'], 'group labels for comparison'),
+      role('value', ['numeric'], 'numerical values to plot'),
     ],
   },
 };
@@ -1130,7 +1149,41 @@ function datasetPayload(session) {
     profile: session.dataset.profile,
     bindings: session.bindings,
     warnings: session.dataset.warnings,
+    suggestion: longSuggestion(session, session.dataset),
     version: session.version,
+  };
+}
+
+/**
+ * The service's wide-table offer (`agents/anyplot/data/shape.py`): the spec wants one
+ * label role and one numeric role, the table holds 2 to 20 numeric columns and no text
+ * column (dates are kept as keys).
+ */
+function longSuggestion(session, dataset) {
+  const roles = SPECS[session.specId].roles;
+  const numericOnly = r => r.kinds.length === 1 && r.kinds[0] === 'numeric';
+  if (roles.some(r => r.variadic && numericOnly(r))) return null;
+  const single = roles.filter(r => !r.variadic && r.required);
+  const labels = single.filter(
+    r => r.kinds.length && r.kinds.every(kind => kind === 'categorical' || kind === 'text')
+  );
+  const values = single.filter(numericOnly);
+  // Exactly one of each, as on the service: two labels would leave one open.
+  if (labels.length !== 1 || values.length !== 1) return null;
+  const label = labels[0];
+  const columns = dataset.profile.columns;
+  if (columns.some(c => c.dtype === 'text' || c.dtype === 'boolean')) return null;
+  const numeric = columns.filter(c => c.dtype === 'integer' || c.dtype === 'number');
+  const keys = columns.filter(c => c.dtype === 'datetime').map(c => c.name);
+  if (numeric.length < 2 || numeric.length > 20 || numeric.length + keys.length !== columns.length)
+    return null;
+  return {
+    kind: 'to_long',
+    columns: numeric.map(c => c.name),
+    names_to: label.name,
+    values_to: values[0].name,
+    keys,
+    rows: dataset.profile.rows * numeric.length,
   };
 }
 
@@ -1603,6 +1656,33 @@ async function route(req, res) {
     session.history = []; // a paste starts over at version 1
     session.version = 1;
     return json(res, 200, { ...datasetPayload(session), roles: SPECS[session.specId].roles }, ref);
+  }
+  if (method === 'POST' && rest === '/dataset/to_long') {
+    // `.to_long()`: the offer recomputed here, applied without a model, as the next version.
+    if (session.active) return fail(res, 409, 'run_active', ref);
+    const offer = session.dataset && longSuggestion(session, session.dataset);
+    if (!offer) return fail(res, 422, 'no_suggestion', ref);
+    const { header, rows } = session.dataset;
+    const at = name => header.indexOf(name);
+    const long = [];
+    for (const column of offer.columns)
+      for (const row of rows)
+        long.push([...offer.keys.map(k => row[at(k)]), column, row[at(column)]]);
+    const parsed = parseDataset(toCsv([...offer.keys, offer.names_to, offer.values_to], long));
+    const changes = [
+      `pivoted ${offer.columns.length} columns into ${offer.names_to}/${offer.values_to}: ${long.length} rows`,
+    ];
+    storeVersion(session, parsed, changes);
+    session.changed = null; // answered here, not by a turn's `done`
+    // A new shape: the default bindings for its columns, as `rebind` on the service.
+    session.bindings = defaultBindings(session, parsed.profile);
+    session.complete = checkBindings(session, session.bindings).complete;
+    return json(
+      res,
+      200,
+      { ...datasetPayload(session), roles: SPECS[session.specId].roles, changes },
+      ref
+    );
   }
   if (method === 'POST' && rest === '/dataset/undo') {
     if (session.active) return fail(res, 409, 'run_active', ref);

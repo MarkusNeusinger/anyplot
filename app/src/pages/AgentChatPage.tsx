@@ -14,8 +14,10 @@
  * is `.create_plot()`: with an empty box it starts the first plot as it is,
  * with text the text goes as a turn and the assistant makes the first plot
  * with that change. Once the library has a plot, the composer refines in plain
- * words; every shipped version gets a result card with the image, the code and
- * the downloads. A line above the column names the current step. The header
+ * words (`.send()`, on the latest version), and the same button becomes
+ * `.start_over()`: a new plot from the catalogue plot with this data, without
+ * the earlier changes; every shipped version gets a result card with the image,
+ * the code and the downloads. A line above the column names the current step. The header
  * carries, next to the library pills, the session language chip
  * (`LanguageChip`): the language of the replies and of the text in the plot,
  * English until the first typed message or a choice sets another. The page
@@ -92,6 +94,9 @@ const SPEC_PATTERN = /^[a-z0-9-]{1,100}$/;
 const OPEN_SOURCES = new Set(['plot_page']);
 /** The chat column's width: a thread to read, and a plot that fits the screen with its composer. */
 const COLUMN_MAX_WIDTH = 960;
+/** What `.start_over()` does, unlike `.send()` beside it (the owner could not tell the two apart). */
+const START_OVER_HELP = 'new from the catalogue plot, without your changes';
+const START_OVER_HELP_ID = 'agent-start-over-help';
 
 /** What a click on `.create_plot()` before the confirmation asks for first. */
 type CreateGate = 'confirm' | 'transcription';
@@ -291,8 +296,8 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
     state.phase === 'ready' && step2 && state.bindingsComplete && !state.transcription && !busy;
   // Until this library has a plot, `.create_plot()` is the composer's action and
   // text in the box goes with it; the pipeline counts versions per library too.
-  const firstPlot =
-    step2 && !Object.values(state.versions).some(version => version.library === state.library);
+  const hasPlot = Object.values(state.versions).some(version => version.library === state.library);
+  const firstPlot = step2 && !hasPlot;
   // The notice before the confirmation is done once the data is confirmed or a turn starts.
   // Adjusted while rendering, React's pattern for state that follows other state.
   if (gateShown && (step2 || running)) setGateShown(false);
@@ -556,6 +561,7 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
               void session.confirmData();
             }}
             onUndo={() => void session.undoData()}
+            onToLong={() => void session.toLongData()}
             toggleRef={toggleRef}
             confirmRef={confirmRef}
             decisionRef={decisionRef}
@@ -704,13 +710,26 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
                       ref={createRef}
                       onClick={handleCreate}
                       disabled={step2 ? !canCreate : state.phase !== 'ready' || busy}
-                      aria-label="Create plot"
+                      // Once this library has a plot, the button starts over from the
+                      // catalogue plot; `.send()` beside it changes the latest version.
+                      aria-label={hasPlot ? 'Start over' : 'Create plot'}
+                      title={hasPlot ? START_OVER_HELP : undefined}
                       aria-describedby={
-                        step2 ? DATA_SUMMARY_ID : gate ? 'agent-create-gate' : undefined
+                        [
+                          hasPlot ? START_OVER_HELP_ID : null,
+                          step2 ? DATA_SUMMARY_ID : gate ? 'agent-create-gate' : null,
+                        ]
+                          .filter(Boolean)
+                          .join(' ') || undefined
                       }
                       sx={actionButtonSx}
                     >
-                      .create_plot()
+                      {hasPlot ? '.start_over()' : '.create_plot()'}
+                    </Box>
+                  )}
+                  {state.dataset && hasPlot && (
+                    <Box component="span" id={START_OVER_HELP_ID} sx={visuallyHiddenSx}>
+                      {START_OVER_HELP}
                     </Box>
                   )}
                   <Box
