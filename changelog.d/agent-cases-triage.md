@@ -16,13 +16,13 @@
   An edit's `replaces` supersedes the earlier row only for the same session
   hash and result version. The row is the source of truth for status, tags and
   promotion; the bucket holds the files until its lifecycle rule deletes them,
-  and the row keeps the failure-class statistics after that.
+  and the row keeps the failure-class statistics after that. (#12142)
 - **`agents.evals.sync_cases` pulls promoted cases into the harness.** On the
   dev machine it reads the table, downloads each promoted, active case from the
   bucket and imports it through `import_case` into the git-ignored
   `agents/evals/.cases/`, removes the directories of retired, superseded or
   unpromoted cases, and with `--backfill` indexes the cases that reached the
-  bucket without a row (a dry run unless `--apply`).
+  bucket without a row (a dry run unless `--apply`). (#12142)
 - **CI verifies every migration before merge.** The new workflow
   `ci-migrations.yml` (check `Verify Migrations`) runs the checks of
   `/verify-migrations` on a PostgreSQL 18 service container for every PR that
@@ -30,4 +30,4 @@
   `uv.lock`: one head, `upgrade head`, `alembic check`, and a downgrade to the
   base commit's head and back, plus a CHECK-constraint parity query that
   `alembic check` cannot do. Until now the first database to see a new revision
-  was production, after the merge.
+  was production, after the merge. (#12142)
