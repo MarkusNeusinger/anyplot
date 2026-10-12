@@ -163,7 +163,7 @@ class Prepared:
     csv: str
     changes: list[str]
     text_columns: list[str] = field(default_factory=list)
-    """The columns `set_type text` keeps text: the caller passes them to `parse_dataset(text_columns=...)`."""
+    """The columns kept text (`set_type text` and `classify`): the caller passes them to `parse_dataset(text_columns=...)`."""
 
 
 @dataclass

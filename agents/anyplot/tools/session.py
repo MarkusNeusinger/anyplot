@@ -196,8 +196,8 @@ async def prepare_data(operations: list[dict[str, Any]], tool_context: ToolConte
     rename (column, name); drop_columns (columns); drop_rows (where: conditions on single columns that must all hold);
     set_type (column, type number|datetime|text, date_format, decimal); aggregate (by, column, how sum|mean|count|min|max,
     period month|quarter|year); sort (column, descending); pivot_longer (columns, names_to, values_to); pivot_wider
-    (names_from, values_from, index); classify (name, rules: where conditions and a label, otherwise: a new text column
-    labelling each row by the first rule that holds). Returns the change lines and the new profile, or an error with a
+    (names_from, values_from, index); classify (name, rules: each where conditions and a label, otherwise: the optional
+    label for rows no rule matches; adds the text column name, labelling each row by the first rule that holds). Returns the change lines and the new profile, or an error with a
     code and a message.
     """
     view = _view(tool_context)

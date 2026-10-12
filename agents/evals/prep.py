@@ -46,8 +46,8 @@ A case makes about five model calls: the dataset judge, the scope judge, and the
 two or three times (a profile read, the tool call, the reply). Under the 30 requests
 per minute Vertex quota for Claude Haiku in `eu` (see `scope.py`), `--calls-per-minute`
 (25 by default) spaces the starts of the cases `CALLS_PER_CASE` times further apart
-than the scope eval spaces its judge calls: 12 seconds at the default, so 21 cases
-take about 4 minutes; the cases run one at a time. The cost is the list price of
+than the scope eval spaces its judge calls: 12 seconds at the default, so 23 cases
+take about 5 minutes; the cases run one at a time. The cost is the list price of
 every call the attribution log booked (`pricing.call_cost`, `pricing.judge_cost`).
 
 It writes `<out>/<date>-prep-<model>.json` (the stamp, the gates, the summary, every
