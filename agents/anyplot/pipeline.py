@@ -618,7 +618,8 @@ def finish(run: Run) -> PlotResult:
         artifacts=artifact_names([run.theme]),
         changes=changes,
         residual_defects=residual,
-        rounds=list(run.rounds),
+        # The shipped render may come from an earlier round than the last (a repair that failed its check).
+        rounds=[round_.model_copy(update={"shipped": round_.attempt == shipped.attempt}) for round_ in run.rounds],
     )
 
 

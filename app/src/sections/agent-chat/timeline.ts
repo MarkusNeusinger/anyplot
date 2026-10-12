@@ -65,7 +65,7 @@ export function roundLabel(attempt: number): string {
 const plural = (count: number, noun: string) => `${count} ${noun}${count === 1 ? '' : 's'}`;
 
 /**
- * The text and tone of a round's end. A shipped result's last round that still
+ * The text and tone of a round's end. The shipped round of a result that still
  * had findings (`needs_attention`) keeps them open rather than failed.
  */
 export function outcomeText(round: Round, open = false): { text: string; tone: OutcomeTone } {
@@ -118,7 +118,9 @@ function liveCells(names: PipelineStep[], reached: PipelineStep[]): GridCell[] {
 /**
  * The rows of a grid. `rounds` are the rounds that ended; `steps` the steps the
  * page saw (a running turn); `status` the shipped result's status, which keeps
- * the last round's findings open on `needs_attention`. A running round without
+ * the shipped round's findings open on `needs_attention` (the round the server
+ * marks `shipped`, which a repair that failed its check leaves earlier than the
+ * last). A running round without
  * an outcome is the last row, with its active step and the steps still to come.
  */
 export function gridRows(
@@ -135,7 +137,10 @@ export function gridRows(
   const attempts = [...new Set([...rounds.map(round => round.attempt), ...reachedBy.keys()])].sort(
     (a, b) => a - b
   );
-  const lastRound = rounds.length ? rounds[rounds.length - 1].attempt : null;
+  // The round whose render shipped: the server marks it; an older result without the mark means the last.
+  const shippedRound =
+    rounds.find(round => round.shipped)?.attempt ??
+    (rounds.some(round => round.shipped !== undefined) ? null : rounds[rounds.length - 1]?.attempt);
   return attempts.map(attempt => {
     const names = attempt > 1 ? REPAIR : FIRST_TRY;
     const reached = reachedBy.get(attempt) ?? [];
@@ -148,7 +153,7 @@ export function gridRows(
         outcome: null,
       };
     }
-    const open = status === 'needs_attention' && attempt === lastRound;
+    const open = status === 'needs_attention' && attempt === shippedRound;
     return {
       attempt,
       label: roundLabel(attempt),

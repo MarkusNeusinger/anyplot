@@ -80,6 +80,18 @@ describe('timeline grid', () => {
     ]);
   });
 
+  it('keeps the findings open on the round that shipped, not on a later round that failed', () => {
+    const rounds: Round[] = [
+      { attempt: 1, outcome: 'review', findings: 1, shipped: true },
+      { attempt: 2, outcome: 'check_failed', findings: 2, shipped: false },
+    ];
+
+    expect(gridRows(rounds, [], 'needs_attention').map(row => row.outcome?.text)).toEqual([
+      '~ 1 finding open',
+      '✗ code check failed',
+    ]);
+  });
+
   it('names every outcome', () => {
     const texts = (
       [

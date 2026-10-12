@@ -914,10 +914,10 @@ async function streamTurn(req, res, session, body, ref) {
       // two review findings, its repair round one that stays open; a first plot passes at once.
       const rounds = refine
         ? [
-            { attempt: 1, outcome: 'review', findings: 2 },
-            { attempt: 2, outcome: 'review', findings: 1 },
+            { attempt: 1, outcome: 'review', findings: 2, shipped: false },
+            { attempt: 2, outcome: 'review', findings: 1, shipped: true },
           ]
-        : [{ attempt: 1, outcome: 'ok', findings: 0 }];
+        : [{ attempt: 1, outcome: 'ok', findings: 0, shipped: true }];
       for (const [step, attempt] of steps) {
         if (stopped()) return;
         // The step that opens a repair round says how the round before it ended.

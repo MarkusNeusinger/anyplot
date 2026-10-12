@@ -235,6 +235,8 @@ export interface Round {
   outcome: RoundOutcome;
   /** The findings the round passed on: review lines, measured defects or check failures. */
   findings: number;
+  /** The round whose render the result shipped; not always the last (a repair that failed its check). */
+  shipped?: boolean;
 }
 
 export interface PlotResult {
@@ -788,10 +790,10 @@ const isInt = (value: unknown): value is number =>
 /** One round from the stream, or `null` when its attempt, outcome or count is not one the server sends. */
 function toRound(value: unknown): Round | null {
   if (!value || typeof value !== 'object') return null;
-  const { attempt, outcome, findings } = value as Record<string, unknown>;
+  const { attempt, outcome, findings, shipped } = value as Record<string, unknown>;
   if (!isInt(attempt) || attempt < 1 || !isInt(findings)) return null;
   if (!ROUND_OUTCOMES.includes(outcome as RoundOutcome)) return null;
-  return { attempt, outcome: outcome as RoundOutcome, findings };
+  return { attempt, outcome: outcome as RoundOutcome, findings, shipped: shipped === true };
 }
 
 /**

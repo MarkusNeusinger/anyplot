@@ -451,11 +451,16 @@ limit reached); `error`: an exception.
 
 
 class Round(_ServerContract):
-    """One pipeline round for the progress grid: its attempt, how it ended, and how many findings it passed on."""
+    """One pipeline round for the progress grid: its attempt, how it ended, and how many findings it passed on.
+
+    `shipped` marks the round whose render the result shipped, which is not always the
+    last one: a repair round that fails its check leaves the earlier render shipped.
+    """
 
     attempt: int = Field(ge=1, le=MAX_ATTEMPTS)
     outcome: RoundOutcome
     findings: int = Field(default=0, ge=0, le=99)
+    shipped: bool = False
 
 
 class PlotResult(_ServerContract):

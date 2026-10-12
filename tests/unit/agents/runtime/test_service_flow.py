@@ -909,8 +909,8 @@ async def test_the_repaired_render_is_reviewed_again_and_can_end_ok(
     # The page's grid: the first round ended with the review's finding, the repair round passed.
     findings = len(VERDICT_REJECT["defects"])
     assert plot["rounds"] == [
-        {"attempt": 1, "outcome": "review", "findings": findings},
-        {"attempt": 2, "outcome": "ok", "findings": 0},
+        {"attempt": 1, "outcome": "review", "findings": findings, "shipped": False},
+        {"attempt": 2, "outcome": "ok", "findings": 0, "shipped": True},
     ]
     assert "24 sparse markers" in adapter_inputs(fake)[1]  # the first review's line went to the repair
     reviews = attribution_lines(caplog, "pipeline_review")
@@ -1125,8 +1125,8 @@ async def test_failed_render_twice_is_a_failed_result(
         "changes": [],
         "residual_defects": [],
         "rounds": [
-            {"attempt": 1, "outcome": "render_failed", "findings": 1},
-            {"attempt": 2, "outcome": "render_failed", "findings": 1},
+            {"attempt": 1, "outcome": "render_failed", "findings": 1, "shipped": False},
+            {"attempt": 2, "outcome": "render_failed", "findings": 1, "shipped": False},
         ],
     }
     # The repair round's first step says how the first round ended, for the page's progress grid.
