@@ -4,6 +4,7 @@ import {
   agentApi,
   agentFetch,
   browserLocale,
+  caseListQuery,
   countBucket,
   parseAgentEvent,
   renderedThemes,
@@ -352,6 +353,97 @@ describe('toAgentApiError', () => {
       )
     );
     expect(error).toMatchObject({ code: 'invalid', errors: ["role 'y' takes y1"] });
+  });
+
+  it('reads the stored case of a row_missing and no case id from any other body', async () => {
+    const missing = await toAgentApiError(
+      new Response(
+        JSON.stringify({ detail: 'row_missing', ref: 'r-1', case_id: '20261012T143005Z-1a2b3c4d' }),
+        { status: 502 }
+      )
+    );
+    expect(missing).toMatchObject({
+      code: 'row_missing',
+      ref: 'r-1',
+      caseId: '20261012T143005Z-1a2b3c4d',
+    });
+    const storage = await toAgentApiError(
+      new Response(JSON.stringify({ detail: 'storage', case_id: 7 }), { status: 502 })
+    );
+    expect(storage.caseId).toBeNull();
+  });
+});
+
+describe('caseListQuery', () => {
+  it('sends only the keys that are set, include_superseded only when true', () => {
+    expect(caseListQuery({})).toBe('');
+    expect(caseListQuery({ status: 'open', include_superseded: false, spec: '' })).toBe(
+      '?status=open'
+    );
+    expect(
+      caseListQuery({
+        reaction: 'bug',
+        status: 'done',
+        spec: 'scatter-basic',
+        library: 'seaborn',
+        model_version: 'm 1',
+        tag: 'legend',
+        include_superseded: true,
+        before: '20261012T143005Z-1a2b3c4d',
+        limit: 20,
+      })
+    ).toBe(
+      '?reaction=bug&status=done&spec=scatter-basic&library=seaborn&model_version=m+1&tag=legend&include_superseded=true&before=20261012T143005Z-1a2b3c4d&limit=20'
+    );
+  });
+});
+
+describe('agentApi cases', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('reads an answer without an items list as an empty page', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(JSON.stringify({ detail: 'x' }), { status: 200 }))
+    );
+    await expect(agentApi.listCases('', { status: 'open' })).resolves.toEqual({
+      items: [],
+      has_more: false,
+    });
+  });
+
+  it('lists, reads and patches a case on the cases routes', async () => {
+    const fetchMock = vi.fn(
+      async () => new Response(JSON.stringify({ items: [], has_more: true }), { status: 200 })
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    await expect(agentApi.listCases('tok', { tag: 'legend' })).resolves.toEqual({
+      items: [],
+      has_more: true,
+    });
+    await agentApi.getCase('tok', 'A/1');
+    await agentApi.patchCase('tok', 'A1', { status: 'done' });
+    const urls = fetchMock.mock.calls.map(call => (call as unknown as [string])[0]);
+    expect(urls[0]).toMatch(/\/debug\/agent\/cases\?tag=legend$/);
+    expect(urls[1]).toMatch(/\/debug\/agent\/cases\/A%2F1$/);
+    expect(urls[2]).toMatch(/\/debug\/agent\/cases\/A1$/);
+    const [, init] = fetchMock.mock.calls[2] as unknown as [string, RequestInit];
+    expect(init).toMatchObject({ method: 'PATCH', body: '{"status":"done"}' });
+    expect((init.headers as Record<string, string>)['X-Anyplot-Client']).toBe('agent-chat/1');
+  });
+
+  it('fetches a case file as a blob through the proxy', async () => {
+    const fetchMock = vi.fn(
+      async () => new Response('png', { status: 200, headers: { 'Content-Type': 'image/png' } })
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const blob = await agentApi.caseFile('tok', 'A1', 'plot-dark.png');
+    expect(await blob.text()).toBe('png');
+    expect((fetchMock.mock.calls[0] as unknown as [string])[0]).toMatch(
+      /\/debug\/agent\/cases\/A1\/files\/plot-dark\.png$/
+    );
   });
 });
 

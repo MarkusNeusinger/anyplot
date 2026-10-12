@@ -10,6 +10,7 @@ from uuid import uuid4
 
 from sqlalchemy import (
     BigInteger,
+    Boolean,
     CheckConstraint,
     DateTime,
     Float,
@@ -281,6 +282,81 @@ class Feedback(Base):
         # Per-image vote counts (migration a7c3e9d1f5b8): reactions are looked up
         # by the implementation they belong to.
         Index("ix_feedback_spec_library", "spec_id", "library_id"),
+    )
+
+
+# Case ids of the agent chat's feedback cases (`core/agent_cases.py`): 25 characters.
+CASE_ID_LENGTH = 25
+
+# The outcome a promoted case carries into the regression harness (`agents/evals/cases.py`
+# `Expected` without `unknown`: the owner chooses one, or the reaction rule gives it).
+AGENT_CASE_EXPECTED = ("accepted", "rejected")
+
+
+class AgentFeedback(Base):
+    """One quick-feedback case of the agent chat (docs/concepts/agent-network.md, "Feedback capture").
+
+    The row is the source of truth for the triage (`status`, `tags`, `expected`,
+    `promoted_at`, `superseded_by`); the files live under `case_uri` in the private
+    case bucket and expire with its lifecycle rule. Every other column copies the
+    manifest's field of the same name (`core.agent_cases.row_from_manifest`), so the
+    class statistics outlive the files. Content (transcript, code, data) is never here.
+    """
+
+    __tablename__ = "agent_feedback"
+
+    # The bucket case id (`20261012T143005Z-1a2b3c4d`). Ids sort by time, so the
+    # primary-key index also serves the newest-first list.
+    id: Mapped[str] = mapped_column(String(CASE_ID_LENGTH), primary_key=True)
+    manifest_schema: Mapped[int] = mapped_column(Integer, nullable=False)
+    # Naive UTC, from the manifest: a backfilled row keeps the time it was reported.
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    case_uri: Mapped[str] = mapped_column(String(255), nullable=False)
+    user_hash: Mapped[str] = mapped_column(String(20), nullable=False)
+    session_hash: Mapped[str] = mapped_column(String(16), nullable=False)
+    spec_id: Mapped[str | None] = mapped_column(String(MAX_SPEC_ID_LENGTH), nullable=True)
+    library_id: Mapped[str | None] = mapped_column(String(MAX_LIBRARY_ID_LENGTH), nullable=True)
+    # The manifest's `language`: the session's UI locale (`de-CH`), not the programming
+    # language that `feedback.language` holds.
+    locale: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    reaction: Mapped[str] = mapped_column(String(20), nullable=False)
+    message: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    include_data: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="new")
+    result_version: Mapped[int] = mapped_column(Integer, nullable=False)
+    replaces: Mapped[str | None] = mapped_column(String(CASE_ID_LENGTH), nullable=True)
+    model: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    model_version: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    judge_model: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    prompt_hash: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    pipeline_status: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    attempts: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    cost_estimate: Mapped[float | None] = mapped_column(Float, nullable=True)
+    files: Mapped[list[str]] = mapped_column(StringArray, nullable=False, default=list)
+
+    # Triage state, never in a manifest.
+    tags: Mapped[list[str]] = mapped_column(StringArray, nullable=False, default=list)
+    expected: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    promoted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    superseded_by: Mapped[str | None] = mapped_column(String(CASE_ID_LENGTH), nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            "reaction IN ('thumbs_up','thumbs_down','bug','idea')", name="ck_agent_feedback_reaction_valid"
+        ),
+        CheckConstraint("status IN ('new','in_progress','done','wont_solve')", name="ck_agent_feedback_status_valid"),
+        CheckConstraint(
+            "expected IS NULL OR expected IN ('accepted','rejected')", name="ck_agent_feedback_expected_valid"
+        ),
+        # Indexes created by migration b4e7a9c2d6f1; declared here so autogenerate
+        # does not propose dropping them. GIN applies on PostgreSQL only.
+        Index("ix_agent_feedback_session_version", "session_hash", "result_version"),
+        Index("ix_agent_feedback_spec_library", "spec_id", "library_id"),
+        Index("ix_agent_feedback_tags", "tags", postgresql_using="gin"),
     )
 
 

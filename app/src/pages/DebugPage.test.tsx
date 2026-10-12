@@ -104,6 +104,70 @@ describe('DebugPage', () => {
     expect(localStorage.getItem('anyplot.adminHint')).toBe('1');
   });
 
+  it('renders the agent cases section after /debug/status', async () => {
+    const fetchMock = vi.fn((url: string) => {
+      if (url.includes('/debug/agent/cases')) {
+        return Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              items: [
+                {
+                  id: '20261012T143005Z-1a2b3c4d',
+                  created_at: '2026-10-12T14:30:05Z',
+                  reaction: 'bug',
+                  message: 'the legend hides points',
+                  include_data: true,
+                  status: 'new',
+                  tags: [],
+                  spec_id: 'scatter-basic',
+                  library_id: 'seaborn',
+                  locale: 'en',
+                  result_version: 1,
+                  replaces: null,
+                  superseded_by: null,
+                  promoted_at: null,
+                  expected: null,
+                  model: null,
+                  model_version: null,
+                  judge_model: null,
+                  prompt_hash: null,
+                  pipeline_status: 'ok',
+                  attempts: 1,
+                  tokens: null,
+                  cost_estimate: null,
+                  files: ['plot-light.png', 'manifest.json'],
+                  user_hash: 'adm_0123456789abcdef',
+                  session_hash: '0123456789abcdef',
+                  case_uri: 'gs://anyplot-agent-cases/cases/20261012T143005Z-1a2b3c4d/',
+                  manifest_schema: 1,
+                  updated_at: '2026-10-12T14:30:05Z',
+                },
+              ],
+              has_more: false,
+            }),
+        });
+      }
+      if (url.includes('/debug/feedback/')) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve(mockDebugData) });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    render(<DebugPage />);
+
+    expect(await screen.findByText('agent cases')).toBeInTheDocument();
+    expect(await screen.findByText('scatter-basic · seaborn · v1')).toBeInTheDocument();
+    // The section asks for the open queue only once the page has loaded.
+    const urls = fetchMock.mock.calls.map(call => call[0]);
+    const statusAt = urls.findIndex(url => url.includes('/debug/status'));
+    const casesAt = urls.findIndex(url => url.includes('/debug/agent/cases'));
+    expect(statusAt).toBeGreaterThanOrEqual(0);
+    expect(casesAt).toBeGreaterThan(statusAt);
+    expect(urls[casesAt]).toMatch(/\/debug\/agent\/cases\?status=open$/);
+  });
+
   it('handles fetch error gracefully', async () => {
     vi.stubGlobal(
       'fetch',

@@ -5,14 +5,14 @@ Provides abstraction layer between API and database models.
 """
 
 from datetime import datetime, timezone
-from typing import Generic, TypeVar
+from typing import Any, Generic, TypeVar
 
-from sqlalchemy import ColumnElement, String, and_, cast, func, or_, select, type_coerce
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import ColumnElement, String, and_, cast, func, or_, select, text, type_coerce, update
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, undefer
 
-from core.database.models import Feedback, Impl, Language, Library, Spec
+from core.database.models import AgentFeedback, Feedback, Impl, Language, Library, Spec
 
 
 T = TypeVar("T")
@@ -82,6 +82,9 @@ IMPL_UPDATABLE_FIELDS = frozenset(
         "impl_tags",
     }
 )
+
+# The triage state of an agent feedback case; every other column copies its manifest.
+AGENT_FEEDBACK_UPDATABLE_FIELDS = frozenset({"status", "tags", "expected", "promoted_at"})
 
 
 class BaseRepository(Generic[T]):
@@ -564,3 +567,153 @@ class FeedbackRepository(BaseRepository[Feedback]):
     async def update_status(self, entry_id: str, new_status: str) -> Feedback | None:
         """Update only the triage status of one entry. Returns None if not found."""
         return await self.update(entry_id, {"status": new_status})
+
+
+class AgentFeedbackRepository(BaseRepository[AgentFeedback]):
+    """Rows of the agent chat's feedback cases; `create_case` applies the supersede rule in one commit.
+
+    `update` changes only the triage state (`AGENT_FEEDBACK_UPDATABLE_FIELDS`); the columns a
+    manifest fills are written once, and `superseded_by` only by `create_case`.
+    """
+
+    model = AgentFeedback
+    updatable_fields = AGENT_FEEDBACK_UPDATABLE_FIELDS
+
+    async def create_case(self, row: dict[str, Any]) -> AgentFeedback:
+        """Insert the row and set both supersede links in ONE commit.
+
+        Backwards: when the row names an earlier case in `replaces`, that row (same
+        session hash and version, not yet superseded) gets `superseded_by = row.id`.
+        Forwards: when a row already names this id in `replaces` (a successor the route
+        inserted before the backfill reached this orphan), this row is inserted with
+        `superseded_by = <that successor>`. On the route's path the forward lookup is a
+        guaranteed no-op (the id was minted in this request), one SELECT. One commit, so
+        an interrupted backfill never leaves a row half-linked: either the row with both
+        links exists, or nothing does.
+
+        On PostgreSQL the two directions are also serialized per session hash and
+        version with a transaction-scoped advisory lock, released by the commit: without
+        it, a backfill inserting an orphan A and a live request inserting its successor B
+        at the same moment could each look up the other before either row is visible and
+        commit unlinked. The SQLite engine of the tests runs one connection and skips it.
+        """
+        if self.session.get_bind().dialect.name == "postgresql":
+            await self.session.execute(
+                text("SELECT pg_advisory_xact_lock(hashtext(:key))"),
+                {"key": f"{row['session_hash']}:{row['result_version']}"},
+            )
+        successor = await self.successor_of(row["id"], row["session_hash"], row["result_version"])
+        entity = AgentFeedback(**row, superseded_by=successor)
+        self.session.add(entity)
+        if row.get("replaces"):
+            await self.supersede(
+                row["replaces"], by=entity.id, session_hash=row["session_hash"], result_version=row["result_version"]
+            )
+        await self.session.commit()
+        await self.session.refresh(entity)
+        return entity
+
+    async def supersede(self, earlier_id: str, *, by: str, session_hash: str, result_version: int) -> bool:
+        """Mark `earlier_id` superseded by `by` when it exists with that session hash and version and is
+        not yet superseded; True when a row changed. No commit: `create_case` commits both links together.
+        """
+        stmt = (
+            update(AgentFeedback)
+            .where(
+                AgentFeedback.id == earlier_id,
+                AgentFeedback.session_hash == session_hash,
+                AgentFeedback.result_version == result_version,
+                AgentFeedback.superseded_by.is_(None),
+            )
+            .values(superseded_by=by)
+        )
+        result = await self.session.execute(stmt)
+        return result.rowcount == 1
+
+    async def successor_of(self, case_id: str, session_hash: str, result_version: int) -> str | None:
+        """The oldest row that names `case_id` in `replaces` with the same session hash and version
+        (`create_case`'s forward link), or None.
+        """
+        result = await self.session.execute(
+            select(AgentFeedback.id)
+            .where(
+                AgentFeedback.replaces == case_id,
+                AgentFeedback.session_hash == session_hash,
+                AgentFeedback.result_version == result_version,
+            )
+            .order_by(AgentFeedback.id)
+            .limit(1)
+        )
+        return result.scalar_one_or_none()
+
+    async def list_cases(
+        self,
+        *,
+        reaction: str | None = None,
+        status: str | tuple[str, ...] | None = None,
+        spec_id: str | None = None,
+        library_id: str | None = None,
+        model_version: str | None = None,
+        tag: str | None = None,
+        include_superseded: bool = False,
+        before: str | None = None,
+        limit: int = 50,
+    ) -> list[AgentFeedback]:
+        """At most `limit` rows, newest first (`id DESC`: case ids sort by time).
+
+        `status` may be one value or a tuple matched with IN (the route's `open`
+        pseudo-filter). Superseded rows are left out unless `include_superseded`.
+        `before` is an exclusive id cursor: only rows with a smaller id. The route asks
+        for one row more than it shows, so it can tell whether a further page exists.
+        """
+        stmt = select(AgentFeedback)
+        if reaction is not None:
+            stmt = stmt.where(AgentFeedback.reaction == reaction)
+        if isinstance(status, str):
+            stmt = stmt.where(AgentFeedback.status == status)
+        elif status:
+            stmt = stmt.where(AgentFeedback.status.in_(status))
+        if spec_id is not None:
+            stmt = stmt.where(AgentFeedback.spec_id == spec_id)
+        if library_id is not None:
+            stmt = stmt.where(AgentFeedback.library_id == library_id)
+        if model_version is not None:
+            stmt = stmt.where(AgentFeedback.model_version == model_version)
+        if tag is not None:
+            stmt = stmt.where(self._has_tag(tag))
+        if not include_superseded:
+            stmt = stmt.where(AgentFeedback.superseded_by.is_(None))
+        if before is not None:
+            stmt = stmt.where(AgentFeedback.id < before)
+        result = await self.session.execute(stmt.order_by(AgentFeedback.id.desc()).limit(limit))
+        return list(result.scalars().all())
+
+    def _has_tag(self, tag: str) -> ColumnElement[bool]:
+        """The row's `tags` hold `tag`.
+
+        On PostgreSQL an array containment (``tags @> ARRAY[tag]``) through `type_coerce`,
+        so the ``ix_agent_feedback_tags`` GIN index applies; a plain ``contains`` on the
+        `StringArray` column would compile to a LIKE against the array. Other dialects
+        (SQLite in tests) store the list as JSON text, matched with LIKE on the quoted tag.
+        """
+        if self.session.get_bind().dialect.name == "postgresql":
+            return type_coerce(AgentFeedback.tags, ARRAY(String)).contains([tag])
+        return cast(AgentFeedback.tags, String).contains(f'"{tag}"', autoescape=True)
+
+    async def siblings(self, session_hash: str, result_version: int, exclude_id: str) -> list[str]:
+        """Ids of the other rows of the same session hash and version, oldest first (the detail's duplicate hint)."""
+        result = await self.session.execute(
+            select(AgentFeedback.id)
+            .where(
+                AgentFeedback.session_hash == session_hash,
+                AgentFeedback.result_version == result_version,
+                AgentFeedback.id != exclude_id,
+            )
+            .order_by(AgentFeedback.id)
+        )
+        return list(result.scalars().all())
+
+    async def list_all(self) -> list[AgentFeedback]:
+        """Every row, oldest first (the sync CLI; the table is small)."""
+        result = await self.session.execute(select(AgentFeedback).order_by(AgentFeedback.id))
+        return list(result.scalars().all())

@@ -4,7 +4,7 @@ This directory holds the anyplot agent network: the service that lets an admin p
 
 ## What is built
 
-The runtime core runs locally: the agents, the plot pipeline, the guardrail plugins, the render layer, the private `/v1` service with its run queue, the theme toggle, and the footer strip on every PNG the service serves ("made with any.plot()" and "anyplot.ai/<spec-id>", see [Footer strip](../docs/concepts/agent-network.md#footer-strip)). The renderer service `anyplot-renderer` (`renderer/`), which runs the adapted code in Cloud Run sandboxes, and the `remote` backend that calls it are built, and the renderer has run in Cloud Run since 2026-10-11 (deployed by the `deploy-renderer` trigger; see [Render through the deployed renderer](#render-through-the-deployed-renderer)). The model-regression harness, the 120 synthetic spike-X cases, the 23 stress cases with their model-free static stage, the blind two-run review gallery and the catalogue eligibility sweep are built (see [Run the regression harness](#run-the-regression-harness)), and the Claude Haiku 5.5 baseline from the thinking run of 2026-10-11 on main is committed (`evals/baselines/claude-haiku-5-5.json`: 122 runs, all passed the gates, 50.8 % ended `ok`); the Gemini baseline is not. The chat page that uses the service through the API's `/debug/agent` routes is in the app (`app/src/pages/AgentChatPage.tsx`, built with `VITE_ENABLE_AGENT_CHAT=true`); since 2026-10-11 its data field also takes free text ("Hund 7 Katze 3 und Vogel 4"), which the judge model reads as a table that the user confirms before it is stored (`anyplot/data/transcribe.py`, rubric `prompts/transcriber.md`), and the flow has two steps: the user confirms the data with its bindings (`POST /v1/sessions/{sid}/dataset/confirm`) before the pipeline draws anything, and in step 1 the root's `prepare_data` tool changes the data on request from a fixed set of operations the server applies (`anyplot/data/prepare.py`, `anyplot/dataset_versions.py`), with the `done` event carrying the new version, the `summarize_data` action for the step-1 summary and `POST /v1/sessions/{sid}/dataset/undo` as the user's undo, and its `generate_data` tool computes the data from a formula the model chose, such as `sin(x)` from -pi to pi (`anyplot/data/generate.py`; a formula pasted into the data field answers `422 formula`) (see [Two steps: data first, then the plot](../docs/concepts/agent-network.md#two-steps-data-first-then-the-plot)); the prep eval scores the root's choices (see [Run the prep eval](#run-the-prep-eval)). The service's own image (`Dockerfile`) and Cloud Build config (`cloudbuild.yaml`) are built, with a CI job that builds and smokes the image before merge, and the service has run in Cloud Run since 2026-10-11, deployed by the `deploy-agents` trigger (see [Build and deploy the service](#build-and-deploy-the-service)); the API side is switched on for admins since 2026-10-11 (the user-id secret is bound, the API trigger sets the service URL and `_AGENT_ENABLED=true`). The judge-only scope eval and its cases are built, and its first full run on 2026-10-10 passed both gates (see [Run the scope eval](#run-the-scope-eval)). Not built yet: the scope cases' second stage through the root, and the `agents-eval.yml` workflow.
+The runtime core runs locally: the agents, the plot pipeline, the guardrail plugins, the render layer, the private `/v1` service with its run queue, the theme toggle, and the footer strip on every PNG the service serves ("made with any.plot()" and "anyplot.ai/<spec-id>", see [Footer strip](../docs/concepts/agent-network.md#footer-strip)). The renderer service `anyplot-renderer` (`renderer/`), which runs the adapted code in Cloud Run sandboxes, and the `remote` backend that calls it are built, and the renderer has run in Cloud Run since 2026-10-11 (deployed by the `deploy-renderer` trigger; see [Render through the deployed renderer](#render-through-the-deployed-renderer)). The model-regression harness, the 120 synthetic spike-X cases, the 23 stress cases with their model-free static stage, the blind two-run review gallery and the catalogue eligibility sweep are built (see [Run the regression harness](#run-the-regression-harness)), and the Claude Haiku 5.5 baseline from the thinking run of 2026-10-11 on main is committed (`evals/baselines/claude-haiku-5-5.json`: 122 runs, all passed the gates, 50.8 % ended `ok`); the Gemini baseline is not. The chat page that uses the service through the API's `/debug/agent` routes is in the app (`app/src/pages/AgentChatPage.tsx`, built with `VITE_ENABLE_AGENT_CHAT=true`); since 2026-10-11 its data field also takes free text ("Hund 7 Katze 3 und Vogel 4"), which the judge model reads as a table that the user confirms before it is stored (`anyplot/data/transcribe.py`, rubric `prompts/transcriber.md`), and the flow has two steps: the user confirms the data with its bindings (`POST /v1/sessions/{sid}/dataset/confirm`) before the pipeline draws anything, and in step 1 the root's `prepare_data` tool changes the data on request from a fixed set of operations the server applies (`anyplot/data/prepare.py`, `anyplot/dataset_versions.py`), with the `done` event carrying the new version, the `summarize_data` action for the step-1 summary and `POST /v1/sessions/{sid}/dataset/undo` as the user's undo, and its `generate_data` tool computes the data from a formula the model chose, such as `sin(x)` from -pi to pi (`anyplot/data/generate.py`; a formula pasted into the data field answers `422 formula`) (see [Two steps: data first, then the plot](../docs/concepts/agent-network.md#two-steps-data-first-then-the-plot)); the prep eval scores the root's choices (see [Run the prep eval](#run-the-prep-eval)). The service's own image (`Dockerfile`) and Cloud Build config (`cloudbuild.yaml`) are built, with a CI job that builds and smokes the image before merge, and the service has run in Cloud Run since 2026-10-11, deployed by the `deploy-agents` trigger (see [Build and deploy the service](#build-and-deploy-the-service)); the API side is switched on for admins since 2026-10-11 (the user-id secret is bound, the API trigger sets the service URL and `_AGENT_ENABLED=true`). The judge-only scope eval and its cases are built, and its first full run on 2026-10-10 passed both gates (see [Run the scope eval](#run-the-scope-eval)). Real sessions reach the harness too: `evals/import_case.py` turns a saved session or a stored feedback case into an eval case, and since 2026-10-12 `evals/sync_cases.py` pulls the cases you promoted on the debug page from the private case bucket (see [Sync promoted cases from the bucket](#sync-promoted-cases-from-the-bucket)). Not built yet: the scope cases' second stage through the root, and the `agents-eval.yml` workflow.
 
 The model is **Claude Haiku 5.5 on Vertex AI** (`claude-haiku-5-5`) by default. **Gemini 3.8 Flash** is the second arm: set `AGENT_PROVIDER=gemini` together with Gemini model ids, so the two can be compared on price and quality later. Every agent and the scope judge run on the configured provider.
 
@@ -40,6 +40,8 @@ The model is **Claude Haiku 5.5 on Vertex AI** (`claude-haiku-5-5`) by default. 
 | `evals/make_fixtures.py` | The seeded generator of the 120 synthetic spike-X cases |
 | `evals/make_stress.py`, `evals/stress.py` | The seeded generator of the 23 stress cases, and the model-free static stage that `--static` runs over them ([Run the stress cases](#run-the-stress-cases)) |
 | `evals/cases.py`, `evals/pricing.py`, `evals/report.py` | Case loading and selection, list prices, and the summary, diff and gallery code; `report.py` also merges two runs into one blind gallery and scores its export |
+| `evals/import_case.py` | Turns one feedback case, a saved session bundle or a case directory copied from the bucket, into an eval case in the git-ignored `evals/.cases/` ([Import a feedback case](#import-a-feedback-case)) |
+| `evals/sync_cases.py` | Keeps `evals/.cases/` in line with the `agent_feedback` table: imports the promoted cases from the private case bucket, removes the retired ones, and with `--backfill` indexes cases that have no row ([Sync promoted cases from the bucket](#sync-promoted-cases-from-the-bucket)) |
 | `evals/eligibility.py` | The model-free sweep of the catalogue's matplotlib and seaborn files: eligible, coupled and blocked pairs, and why |
 | `evals/scope.py`, `evals/scope.evalset.json` | The judge-only scope eval and its 182 synthetic cases: in-scope, off-topic and adversarial messages, scored for adversarial recall and false refusals |
 | `evals/prep.py`, `evals/fixtures/prep/` | The live prep eval and its 21 German and English data requests: each through `/v1` in process with the real model, scored on the `prepare_data` operations and `generate_data` calls the root chose ([Run the prep eval](#run-the-prep-eval)) |
@@ -498,7 +500,7 @@ Spike X is the go or no-go for phase 1: 10 specs times matplotlib and seaborn ti
 
 ### Import a feedback case
 
-`evals/import_case.py` turns a real session into an eval case: a bundle the chat page's `.save()` downloaded, or a case directory that the result card's quick feedback stored in the private case bucket and that you copied to this machine. Reading straight from `gs://` comes with the triage change.
+`evals/import_case.py` turns a real session into an eval case: a bundle the chat page's `.save()` downloaded, or a case directory that the result card's quick feedback stored in the private case bucket and that you copied to this machine. To pull the cases you promoted on the debug page straight from the bucket, see [Sync promoted cases from the bucket](#sync-promoted-cases-from-the-bucket).
 
 1. Run the import from the repository root:
 
@@ -510,6 +512,63 @@ Spike X is the go or no-go for phase 1: 10 specs times matplotlib and seaborn ti
    The case goes to the git-ignored `evals/.cases/<id>/`, never to `evals/fixtures/`, because it holds a user's data. It needs the version's `data.csv`, so save the session or send the feedback with `# include data.csv` ticked. `--version N` picks a version of a bundle (the newest by default), `--id` names the case (by default `session-<hash>-v<n>` or `case-<case id>`), `--expected` sets the outcome (by default from the reaction, the triage's rule: thumbs up is `accepted` and thumbs down `rejected`; bug and idea imply no outcome, so they need the flag; a bundle without a reaction is `unknown`), and `--force` replaces an imported case of the same id.
 2. If the tool refuses with `cannot tell which message made version N`, pass the request yourself. The transcript has no version markers, so the tool takes the `n`-th plot turn (each `create_plot` and every message typed after the first one, or every typed message in a session without `create_plot`) as the request of version `n`, and only when the plot turns and the versions agree in number. A question or a failed run in between breaks that, and so does a stored case on a version that was not the newest. The refusal lists the plot turns; rerun with `--change-request "<the request>"`, or with `--no-change-request` when the version came from `.create_plot()`. The tool also refuses a case whose bindings name a column the version's `data.csv` lacks, because the bundle holds the session's latest bindings, not each version's.
 3. Run the case with `--cases <id>` (see [Run the smoke set or the full matrix](#run-the-smoke-set-or-the-full-matrix)). A run that holds promoted cases can't be saved as a baseline.
+
+### Sync promoted cases from the bucket
+
+`evals/sync_cases.py` keeps `evals/.cases/` in line with the triage on the debug page. The `agent_feedback` table decides which cases belong there: the ones you promoted that are neither superseded by a later submission nor retired (status `done` or `wont_solve`). The bucket holds their files. The sync reads the table and the bucket and writes only local files; the one database write is `--backfill --apply`, described below.
+
+1. Make sure the tool can reach the table and the bucket:
+   - `DATABASE_URL` is exported, or set in this checkout's `.env`. The tool reads only that key from the file, and only from this checkout's own `.env`, never a parent directory's. In a worktree without a `.env` it stops with exit code 2 until you pass `--env <path>` to name a file on purpose.
+   - Application Default Credentials can read the private case bucket, and a default project is set (`gcloud auth application-default login`, `gcloud config get-value project`).
+   - No development-only agent export is set. The importer loads the agent settings, which refuse `AGENT_RENDERER=local`, `AGENT_DEV_FIXTURE`, `AGENT_RENDER_TOKEN` and an `http://` `AGENT_RENDER_URL` unless `ENVIRONMENT=development`. Unset them, or export `ENVIRONMENT=development`; the tool checks this before it touches the database and stops with exit code 2 otherwise.
+2. Run the sync from the repository root:
+
+   ```bash
+   uv run --extra agents python -m agents.evals.sync_cases
+   ```
+
+   The tool prints one line per case it acted on, then a summary:
+
+   ```text
+   case id                    action    detail
+   20261012T074027Z-62b79a45  written   .cases/case-20261012t074027z-62b79a45: scatter-basic matplotlib, expected rejected
+   20261011T233000Z-9f8e7d6c  removed   retired (done)
+   written 1, kept 0, removed 1, skipped 0, unknown 0, failed 0
+   ```
+
+   Each case gets at most one action on `evals/.cases/case-<case id, lower case>/`, the name `import_case.py` gives a case directory:
+   - `written`: the case is promoted and active and had no directory. The tool downloads its `manifest.json` and `data.csv`, imports them with the importer's own checks, and uses the outcome you chose when you promoted it.
+   - `kept`: the directory exists, so the tool leaves it as it is. `--force` imports the case again.
+   - `removed`: the case is retired, superseded or no longer promoted. The directory leaves `.cases/` by one rename, so the harness never meets half a case.
+   - `skipped`: the importer refuses the case, or its files expired in the bucket. The detail says why.
+   - `unknown`: a `case-*` directory that no row names. The tool leaves it alone. It never touches other directories, such as the `session-*` ones of bundle imports.
+   - `failed`: the bucket or the file system failed for this case. The other cases go on.
+3. Resolve each `skipped` line:
+   - `cannot tell which message made version N`: copy the case down with `gcloud storage cp --recursive gs://anyplot-agent-cases/cases/<case_id> .` and import it by hand with `--change-request "<the request>"` or `--no-change-request` (see [Import a feedback case](#import-a-feedback-case)). The next sync keeps that directory for as long as the case stays promoted.
+   - `implies no outcome`: set the expected outcome on the debug page, then sync again.
+   - `files expired in the bucket` or `holds no data.csv`: the case can't become an eval case. Retire it on the debug page (`done` or `wont_solve`).
+4. Run the synced cases with `--cases 'case-*'` (see [Run the smoke set or the full matrix](#run-the-smoke-set-or-the-full-matrix)).
+
+The table owns every `case-<case id>` directory whose case has a row: a case you imported by hand under that default name is removed on the next sync unless its case is promoted. Import it under another `--id` to keep it outside the sync.
+
+To index cases that reached the bucket without a row (stored before the table existed, or answered with `502 row_missing` when the row insert failed):
+
+1. List them with a dry run:
+
+   ```bash
+   uv run --extra agents python -m agents.evals.sync_cases --backfill
+   ```
+
+   Each such case gets a `backfill` line with the row it would get, for example `would insert (thumbs_up, bar-grouped seaborn, v1); run with --apply`. A case without a manifest (an aborted upload), with a malformed manifest, or with a manifest whose id differs from its directory is `skipped`.
+2. Read the plan, then insert the rows:
+
+   ```bash
+   uv run --extra agents python -m agents.evals.sync_cases --backfill --apply
+   ```
+
+   The rows go in oldest first, through the same `create_case` the feedback route uses, so an edit that names an earlier case in `replaces` supersedes it whichever of the two was indexed first. Each row keeps the time from its manifest. This is the only database write the tool makes.
+
+The exit code is 0 when every action was done, 1 when a case was skipped, failed or unknown, and 2 for bad arguments, a missing `DATABASE_URL`, or agent settings that refuse the environment.
 
 ### Regenerate the fixtures
 

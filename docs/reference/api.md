@@ -413,13 +413,15 @@ Used to load interactive plots (plotly, bokeh, altair) in iframes with dynamic s
 
 ## Agent chat (admin only)
 
-> **Status (2026-10-11):** the routes are switched on in production since
+> **Status (2026-10-12):** the routes are switched on in production since
 > 2026-10-11: the deploy-api trigger sets `AGENT_ENABLED=true` and
 > `AGENT_SERVICE_URL`, the `AGENT_USER_ID_KEY` secret is bound, and the
 > anyplot-agents service they call runs in Cloud Run. They stay behind the admin
 > gate. The chat page that calls these routes, `/debug/agent` in the app, is
 > built only with `VITE_ENABLE_AGENT_CHAT=true`, which the deploy-app trigger
-> sets since the same day. Design:
+> sets since the same day. The feedback triage routes under
+> `/debug/agent/cases` and the `agent_feedback` table behind them are built
+> since 2026-10-12 (see [Feedback triage](#feedback-triage)). Design:
 > [Agent network design](../concepts/agent-network.md).
 
 The `/debug/agent/*` routes (`api/routers/agent.py`) are a backend for the
@@ -441,7 +443,8 @@ Every request passes three checks, in this order:
    `AGENT_USER_ID_KEY` are set. Production has deployed with all three since
    2026-10-11; a deploy that lacks one answers `404` instead of breaking, and
    `_AGENT_ENABLED=false` on the deploy-api trigger switches the chat off again.
-3. **CSRF guard** on `POST`, `PUT`, and `DELETE`. The request needs the header
+3. **CSRF guard** on every method except `GET`, `HEAD`, and `OPTIONS`, so on
+   `POST`, `PUT`, `PATCH`, and `DELETE`. The request needs the header
    `X-Anyplot-Client: agent-chat/1`; an `Origin` header, when the browser sends
    one, must be in the CORS allow-list or match `http://localhost:<port>`; and a
    request with a body must send it as `Content-Type: application/json`. A
@@ -462,7 +465,11 @@ A request that gets past the three checks and the body validation is given an
 `X-Request-Id`, which the BFF sends upstream and returns on the response, also
 as `ref` in an error body or an SSE `error` event. Quote it when you report a
 problem. The earlier answers (`401`, `403`, `404` from the kill switch, `422`)
-carry no request id. Upstream calls carry a Cloud Run ID token whose
+carry no request id, and neither does the `503` of a route that needs the
+database (`POST /sessions`, `POST /sessions/{sid}/library`, the feedback route
+and the case routes) on an API without a configured database, which comes in
+the API-wide shape (see [Standard error format](#standard-error-format)).
+Upstream calls carry a Cloud Run ID token whose
 audience is `AGENT_SERVICE_URL`; for a `localhost` or `127.0.0.1` URL no token
 is fetched.
 
@@ -486,7 +493,11 @@ The routes mirror the agents service's `/v1` API. All paths below start with
 | `POST /sessions/{sid}/versions/{version}/render` | `{"theme": "light"}` or `{"theme": "dark"}`; `version` is 0 to 999, where 0 is the latest version | `{status, reason?, artifacts}` once the render is done (see [Theme toggle](#theme-toggle)) |
 | `GET /sessions/{sid}/artifacts/{name}?v=` | `name` is one of `plot-light.png`, `plot-dark.png`, `plot.py`, `data.csv` | The file, with `Cache-Control: private, no-store` and `X-Content-Type-Options: nosniff`; any other name is `404`, and so is the PNG of a theme the version has not rendered. A PNG carries the footer strip (see [Footer strip](#footer-strip)) |
 | `GET /sessions/{sid}/bundle?include_data=&version=` | `include_data` is `true` or `false` (the default); `version` is 0 to 999, where 0 or none means every version | The session as one JSON file to save (the chat page's `.save()`), with `Content-Disposition: attachment; filename="anyplot-session-<first 8 characters of the session id>.json"`, `Cache-Control: private, no-store` and `X-Content-Type-Options: nosniff`. `404 not_found` for a version the session does not have; a bundle over 32 MiB can't be saved (see [Session bundle](#session-bundle)) |
-| `POST /sessions/{sid}/feedback` | `{reaction, message?, include_data, result_version, replaces?}`: `reaction` is `thumbs_up`, `thumbs_down`, `bug` or `idea`; `message` has at most 500 characters after the strip; `include_data` is a JSON boolean and `result_version` a JSON integer from 1 to 999, neither coerced from another type; `replaces` is the case id of the earlier submission for the same version, when this one is an edit of it | `201 {case_id, stored}`: the version is stored as a feedback case in the private case bucket, and `stored` lists its file names (see [Feedback case](#feedback-case)). `404 not_found` for a version the session does not have, `502 storage` when the bucket refused the case, otherwise the errors of the bundle route |
+| `POST /sessions/{sid}/feedback` | `{reaction, message?, include_data, result_version, replaces?}`: `reaction` is `thumbs_up`, `thumbs_down`, `bug` or `idea`; `message` has at most 500 characters after the strip; `include_data` is a JSON boolean and `result_version` a JSON integer from 1 to 999, neither coerced from another type; `replaces` is the case id of the earlier submission for the same version, when this one is an edit of it | `201 {case_id, stored}`: the version is stored as a feedback case in the private case bucket and indexed as a row of the `agent_feedback` table, and `stored` lists its file names (see [Feedback case](#feedback-case)). `404 not_found` for a version the session does not have, `502 storage` when the bucket refused the case, `502 row_missing` with the stored `case_id` when the files are stored but the row insert failed, `503` before the bundle fetch when the API has no database configured, otherwise the errors of the bundle route |
+| `GET /cases?reaction=&status=&spec=&library=&model_version=&tag=&include_superseded=&before=&limit=` | Every filter is optional: `reaction` is one of the four reactions; `status` is `new`, `in_progress`, `done`, `wont_solve`, or `open` for the first two; `spec` is a spec id, `library` a library id, `model_version` an exact value and `tag` one tag; `include_superseded=true` lists superseded cases too; `before` is the last case id of the page before; `limit` is 1 to 200, 50 by default | `{items, has_more}`: the cases' `agent_feedback` rows, newest first, each with every column, timestamps in UTC ISO 8601 with `Z`; `has_more` says that a further page exists (see [Feedback triage](#feedback-triage)) |
+| `GET /cases/{id}` | A case id such as `20261012T143005Z-1a2b3c4d` | The row plus what the case's `manifest.json` adds: `transcript`, `code` (the case's `plot.py`), `diff` (a unified diff of the catalogue original against that code), `catalogue_library_version`, `snapshot_library_version`, `residual_defects`, `changes`, `result_reason`, `config` and `bindings`, and `siblings`, the ids of the other cases of the same session hash and version. `expired: true` when the lifecycle rule has deleted the manifest: then `transcript`, `code`, `diff`, `snapshot_library_version`, `result_reason` and `config` are `null`, the lists `residual_defects`, `changes` and `bindings` are empty, and the row and `siblings` remain. `404 not_found` for an id without a row, `502 storage` when the bucket could not be read |
+| `GET /cases/{id}/files/{name}` | `name` is one of `plot-light.png`, `plot-dark.png`, `plot.py`, `data.csv`, `manifest.json` | The file as stored, with its content type, `Cache-Control: private, no-store`, `Content-Disposition: inline`, `X-Content-Type-Options: nosniff` and `X-Request-Id`. `404 not_found` for an id without a row, a file the case does not hold, or one the lifecycle rule deleted; `502 storage` for any other bucket error |
+| `PATCH /cases/{id}` | `{status?, tags?, promoted?, expected?}`, at least one: `status` is `new`, `in_progress`, `done` or `wont_solve`; `tags` replaces the whole list with at most 10 unique tags that match `^[a-z0-9-]{1,40}$`; `promoted` is a JSON boolean; `expected` is `accepted` or `rejected` | The whole row, as the list shows it, with the tags sorted. `promoted: true` sets `promoted_at` once, and when neither the body nor the row names an expected outcome it takes the reaction's (`thumbs_up` accepted, `thumbs_down` rejected); `promoted: false` clears `promoted_at`. `422 no_data` when you promote a case stored without `data.csv`, `422 expected_required` when you promote a `bug` or `idea` without an expected outcome, `404 not_found` for an id without a row |
 | `DELETE /sessions/{sid}` | None | `204` |
 
 Validation: `spec_id` matches `^[a-z0-9-]{1,100}$`; `library` is one of the 15
@@ -514,7 +525,13 @@ session's lifetime and writes no content to its logs. anyplot stores none of
 it unless you submit quick feedback (see [Feedback case](#feedback-case)).
 That feedback case always holds the conversation, the code, the images and the dataset profile
 with its column names and sample rows, so it can show your data even without
-the data box; the full data file is in it only when you tick the box. The chat
+the data box; the full data file is in it only when you tick the box. Admins
+can read a submitted case on `/debug` through the case routes, the
+conversation, the images and the `data.csv` included, until the bucket's
+lifecycle rule deletes the files after 180 days. The case's row in the
+`agent_feedback` table stays after that: it holds the reaction, your message,
+the hashed user and session ids and the run's metadata, but no conversation,
+code, images or data. The chat
 page's `.save()` downloads something else, the whole session as one bundle with
 every version and no case manifest, to your computer (see
 [Session bundle](#session-bundle)); anyplot keeps no copy of it.
@@ -674,15 +691,18 @@ them to the private bucket `AGENT_CASES_BUCKET` under `cases/<case_id>/`:
 
 The case id is the UTC time in ISO 8601 basic format and eight random hex
 digits, such as `20261012T143005Z-1a2b3c4d`, so case ids sort by time. The
-manifest holds `id`, `created_at`, `case_uri`, `user_hash` (the HMAC user id the
+manifest holds `schema` (1), `id`, `created_at`, `case_uri`, `user_hash` (the HMAC user id the
 agents service sees), `session_hash` (the first 16 hex digits of the session
 id's SHA-256), `spec_id`, `library_id` (the version's library), `language` (the
 session's locale), `reaction`, `message`, `include_data`, `status` (`new`),
 `result_version`, `replaces` (as the page sent it, or `null`), `model`,
 `model_version`, `judge_model`, `prompt_hash` (one
 hash over the config stamp's prompt hashes), `pipeline_status`, `attempts`,
-`tokens`, `cost_estimate`, `files` and `bundle`: every column the planned
-`agent_feedback` table has, so the table can be filled from the manifests later.
+`tokens`, `cost_estimate`, `files` and `bundle`. Every field but `bundle` is a
+column of the case's row in the `agent_feedback` table, `language` as `locale`
+and `schema` as `manifest_schema`: `core.agent_cases.row_from_manifest` turns
+the manifest into that row, for the route and for the backfill of
+`agents/evals/sync_cases.py` alike (see [Feedback triage](#feedback-triage)).
 A field the bundle does not carry is `null`; today that is `model_version`,
 `tokens` and `cost_estimate`. A bundle that lacks the version's data while
 `include_data` is set is refused as `502 upstream`, so no manifest claims data
@@ -694,15 +714,77 @@ when an upload fails, the route answers `502 storage` with a request id and
 uploads nothing more. A retried upload that meets an object under its own name
 counts as stored only when that object's MD5 matches the bytes it carries (its
 own first attempt stored them and lost the response); any other content is a
-conflict and `502 storage`. Sending feedback for the same version again
-stores a new case, and the page sends the earlier case's id as `replaces`, so
-the planned triage can tell which case an edit replaces. The client sends
-`replaces`, so the triage is to honour it only for a case of the same session
-hash and version; without it, the newest such case is the one that counts. The API deletes nothing, so a replaced case keeps its
-files, its `data.csv` too, until the bucket's lifecycle rule deletes them after
-180 days; that rule is the retention for cases and aborted uploads alike. The
-API's runtime identity needs permission to create objects in the bucket and to
-read their metadata, which the check of a retried upload uses.
+conflict and `502 storage`.
+
+After the manifest, the route inserts the case's row into `agent_feedback`.
+When that insert fails (the database is unreachable, or a constraint refuses
+the row), the files are already stored: the route answers `502 row_missing`
+with the request id and the stored `case_id`, so the page can name that case
+in its next edit, and `sync_cases.py --backfill` can index it later (see
+[Sync promoted cases from the bucket](../../agents/README.md#sync-promoted-cases-from-the-bucket)).
+An API without a configured database answers `503` before it fetches the
+bundle, so it never stores a case it cannot index.
+
+Sending feedback for the same version again stores a new case, and the page
+sends the earlier case's id as `replaces`. The new row supersedes the earlier
+one only when that row exists with the same session hash and result version
+and is not superseded yet; the client sends `replaces`, so the check keeps an
+edit from hiding another session's case. A submission without `replaces`
+supersedes nothing, and the case detail lists the other cases of the same
+version as `siblings`, so duplicates stay visible. The API deletes nothing, so
+a replaced case keeps its files, its `data.csv` too, until the bucket's
+lifecycle rule deletes them after 180 days; that rule is the retention for
+cases and aborted uploads alike. The API's runtime identity needs permission
+to create objects in the bucket, to read them (the case routes) and to read
+their metadata, which the check of a retried upload uses.
+
+### Feedback triage
+
+The case routes (`GET /cases`, `GET /cases/{id}`, `GET /cases/{id}/files/{name}`
+and `PATCH /cases/{id}`) serve the "agent cases" section of `/debug`
+(`app/src/sections/debug/`). They never call the agents service. The
+`agent_feedback` row is the source of truth for a case's triage state: its
+status, tags, expected outcome, promotion and supersession. The bucket holds
+the files until its lifecycle rule deletes them, and the row keeps the class
+statistics after that. The table's columns are in
+[Database schema](database.md#agent_feedback).
+
+- **List.** The section opens on the open queue (`status=open`, which is `new`
+  and `in_progress`) with superseded cases hidden, and filters by reaction,
+  status, spec, library, model version and tag. `model_version` is `null` on
+  every case until the agents service stamps it.
+- **Detail.** A case shows the PNG of each theme it holds, the code with a
+  unified diff against the catalogue original, the transcript, the defect
+  lines, the config stamp and your message. The diff runs against the
+  catalogue at triage time, which a regeneration may have changed since the
+  session: compare
+  `snapshot_library_version`, the version the session adapted, with
+  `catalogue_library_version`. The export's attribution header is left out of
+  the diff.
+- **Status and tags.** The status takes the four values of the site feedback's
+  triage; `done` and `wont_solve` retire a case. Tags name failure classes, such
+  as `legend-overlap`.
+- **Promotion.** Promoting sets `promoted_at` and the outcome the regression
+  harness expects (`expected`), and needs the case's `data.csv`, because the
+  harness cannot run a case without it. The section shows the rule as
+  guidance, and nothing enforces it: promote a case when your reaction
+  contradicts the
+  pipeline outcome, when it shows a class no fixture covers, or when it is a
+  bug or idea with a reproducer; retire it once a fixture or a test covers it.
+  On the dev machine, `agents/evals/sync_cases.py` pulls the promoted, active
+  cases into `agents/evals/.cases/` and removes the retired ones (see
+  [Sync promoted cases from the bucket](../../agents/README.md#sync-promoted-cases-from-the-bucket)).
+- **Supersession.** A superseded case keeps its status and tags and can still
+  be changed; a new case starts as `new` without tags. When the backfill
+  indexes a case after the edit that names it in `replaces`, the case goes in
+  already superseded by that edit, in the same commit as its insert, so the
+  chain is the same whichever of the two was indexed first.
+
+The feedback route and the case routes need the migration that creates the
+table (`alembic/versions/b4e7a9c2d6f1_add_agent_feedback_table.py`).
+`sync-postgres.yml` runs it on the merge, in parallel with the API deploy.
+Until it has run, the feedback route stores the case and answers
+`502 row_missing`, and the case routes answer `500`.
 
 ### SSE protocol `anyplot/1`
 
@@ -779,8 +861,16 @@ characters. Two cases answer `502` instead:
 A session bundle over 32 MiB answers `500 upstream` on Cloud Run and
 `502 too_large` where the BFF reads it itself (see
 [Session bundle](#session-bundle)). The feedback route answers `502 storage`
-when the case bucket refused an upload, and `502 upstream` when the bundle is
-not the shape the agents service documents (see [Feedback case](#feedback-case)).
+when the case bucket refused an upload, `502 upstream` when the bundle is
+not the shape the agents service documents, and `502 row_missing` when the
+case is stored but its table row is not; that body also carries the stored
+case id, as
+`{"detail": "row_missing", "ref": "<request id>", "case_id": "<case id>"}`
+(see [Feedback case](#feedback-case)). The case routes answer
+`404 not_found` for a case id without a row and `502 storage` when the bucket
+could not be read; `PATCH /cases/{id}` answers `422 no_data` and
+`422 expected_required` for a promotion it refuses (see
+[Feedback triage](#feedback-triage)).
 
 ### Configuration
 
@@ -791,7 +881,7 @@ not the shape the agents service documents (see [Feedback case](#feedback-case))
 | `AGENT_USER_ID_KEY` | Unset | HMAC key for the user id; from Secret Manager in production |
 | `AGENT_REQUEST_TIMEOUT_S` | `190` | Upstream timeout, and the cap on one chat stream outside the run queue; above the agents service's 180-second deadline |
 | `AGENT_TURN_MAX_S` | `890` | Hard cap on one chat turn, queue wait included; keep it below anyplot-api's Cloud Run `--timeout` (900 seconds in `api/cloudbuild.yaml`) |
-| `AGENT_CASES_BUCKET` | `anyplot-agent-cases` | The private EU bucket the feedback cases go to (see [Feedback case](#feedback-case)); never the public image bucket. The default is the production bucket, so a local API with Application Default Credentials stores its cases there too; set a bucket of your own for local runs |
+| `AGENT_CASES_BUCKET` | `anyplot-agent-cases` | The private EU bucket the feedback cases go to and the case routes read from (see [Feedback case](#feedback-case)); never the public image bucket. The default is the production bucket, so a local API with Application Default Credentials stores its cases there too; set a bucket of your own for local runs |
 
 In production, `AGENT_ENABLED` and `AGENT_SERVICE_URL` come from the
 `_AGENT_ENABLED` and `_AGENT_SERVICE_URL` substitutions in `api/cloudbuild.yaml`.

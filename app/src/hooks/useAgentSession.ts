@@ -1425,7 +1425,9 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
    * flight, because it starts no run and only reads the session; a second call
    * for a version whose send is still in flight joins that one. A failure
    * rejects with an `AgentApiError` for the control's failure line, and records
-   * nothing; a 401 or 403 also shows the sign-in notice.
+   * nothing, except a `502 row_missing`, whose case is stored: its `caseId` is
+   * recorded so the next edit replaces it. A 401 or 403 also shows the sign-in
+   * notice.
    */
   const sendFeedback = useCallback(
     (number: number, input: FeedbackInput): Promise<void> => {
@@ -1465,6 +1467,21 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
             include_data: input.includeData ? 'yes' : 'no',
           });
         } catch (err) {
+          // `502 row_missing`: the case IS in the bucket, only its triage row is
+          // missing. Record it, so the next edit names it in `replaces` and the
+          // backfill can link the chain; the control still shows the failure.
+          if (err instanceof AgentApiError && err.code === 'row_missing' && err.caseId) {
+            safeDispatch({
+              type: 'version_feedback',
+              number,
+              feedback: {
+                reaction: input.reaction,
+                message,
+                includeData: input.includeData,
+                caseId: err.caseId,
+              },
+            });
+          }
           const failure = handleFailure(err);
           throw err instanceof AgentApiError ? err : new AgentApiError(0, failure.code);
         } finally {

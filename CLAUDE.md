@@ -61,7 +61,7 @@ Project skills in `.claude/skills/` encode the verification loops — route by w
 | `app/` | `/verify-frontend` — drive the changed flow in the browser; both viewports, both themes |
 | `api/` | `/verify-api` — read sweep + changed-endpoint payload; shared-prod-DB discipline |
 | `core/`, `tests/` | `/verify-core` — pytest + direct smoke, ruff/mypy gates |
-| `alembic/` | `/verify-migrations` — upgrade → drift check → downgrade roundtrip against a throwaway Postgres; the shared prod DB never sees an untested revision |
+| `alembic/` | `/verify-migrations` — upgrade → drift check → downgrade roundtrip against a throwaway Postgres; the shared prod DB never sees an untested revision. CI verifies every migration on a throwaway PostgreSQL 18 (`Verify Migrations`, `.github/workflows/ci-migrations.yml`) for every PR touching `alembic/` or `core/database/`. |
 | `docs/`, `CLAUDE.md`, instruction files | `/write-docs` — where a doc goes, `docs/index.md` + cross-file sync duties |
 | new binaries, fonts, embedded assets | `/audit-licenses` — tracked-binary/payload/history provenance sweep |
 | any ship request | `/open-pr` — gates → PR → CI watch → review-thread resolution (the executable form of "PR Follow-Through" above) |

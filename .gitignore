@@ -292,7 +292,8 @@ app/.designsync-fonts/*.woff2
 # private bucket, never committed. Baselines in agents/evals/baselines/ ARE committed.
 agents/evals/reports/
 agents/evals/.cases/
-# import_case.py stages a case beside .cases/ before one rename moves it in; only a crash leaves one.
+# import_case.py and sync_cases.py stage a case beside .cases/, so one rename moves it in or
+# out; only a crash leaves one.
 agents/evals/.import-*/
 # ADK's local session and artifact store (`adk web` without the `memory://` flags): users'
 # messages and datasets. Ignoring it here also keeps it out of a `gcloud builds submit` upload.

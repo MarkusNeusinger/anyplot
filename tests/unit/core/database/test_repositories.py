@@ -4,8 +4,13 @@ Tests for database repository classes.
 Uses in-memory SQLite to test repository operations.
 """
 
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
-from sqlalchemy.dialects import postgresql
+from sqlalchemy.dialects import postgresql, sqlite
+from sqlalchemy.dialects.postgresql import asyncpg
+from sqlalchemy.engine import Dialect
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database.models import Library, Spec
@@ -14,6 +19,7 @@ from core.database.repositories import (
     LANGUAGE_UPDATABLE_FIELDS,
     LIBRARY_UPDATABLE_FIELDS,
     SPEC_UPDATABLE_FIELDS,
+    AgentFeedbackRepository,
     ImplRepository,
     LanguageRepository,
     LibraryRepository,
@@ -429,3 +435,85 @@ class TestSpecCategoryFilter:
     def test_rejects_unknown_category(self) -> None:
         with pytest.raises(ValueError, match="Unknown spec tag category"):
             _spec_category_filter("library", ["matplotlib"], "postgresql")
+
+
+async def _list_cases_sql(dialect: Dialect, **filters: Any) -> tuple[str, dict[str, Any]]:
+    """The SQL and bind parameters of the statement `list_cases` executes on `dialect`.
+
+    The session double reports `dialect` as its bind's and captures the statement, so
+    the PostgreSQL branch compiles without a database; the SQLite engine of the
+    integration tests only ever takes the other branch.
+    """
+    session = MagicMock()
+    session.get_bind.return_value.dialect = dialect
+    session.execute = AsyncMock(return_value=MagicMock())
+    await AgentFeedbackRepository(session).list_cases(**filters)
+    compiled = session.execute.await_args.args[0].compile(dialect=dialect)
+    return str(compiled), compiled.params
+
+
+class TestAgentFeedbackTagFilter:
+    """SQL shape of the `tag` filter of `AgentFeedbackRepository.list_cases`."""
+
+    async def test_postgresql_is_an_array_containment(self) -> None:
+        sql, params = await _list_cases_sql(asyncpg.dialect(), tag="legend")
+        # `tags @> $1::VARCHAR[]` with the bare column is the shape the
+        # ix_agent_feedback_tags GIN index serves. A plain `contains` on the
+        # StringArray column renders a LIKE, which PostgreSQL refuses on VARCHAR[].
+        assert "agent_feedback.tags @> $1::VARCHAR[]" in sql
+        assert "LIKE" not in sql
+        # The bind is a one-element list: `contains("legend")` inside the same
+        # type_coerce renders identical SQL but sends a scalar.
+        assert ["legend"] in params.values()
+
+    async def test_sqlite_matches_the_quoted_tag_in_the_json_text(self) -> None:
+        sql, params = await _list_cases_sql(sqlite.dialect(), tag="legend")
+        assert "CAST(agent_feedback.tags AS VARCHAR) LIKE" in sql
+        assert '"legend"' in params.values()
+
+
+async def _create_case_statements(dialect: Dialect) -> list[tuple[str, Any]]:
+    """The SQL text and parameters of every statement `create_case` executes on `dialect`.
+
+    The session double answers every statement with an empty result (no successor, no
+    row superseded), so the calls record the shape of the transaction, not its outcome.
+    """
+    session = MagicMock()
+    session.get_bind.return_value.dialect = dialect
+    empty = MagicMock()
+    empty.scalar_one_or_none.return_value = None
+    empty.rowcount = 0
+    session.execute = AsyncMock(return_value=empty)
+    session.commit = AsyncMock()
+    session.refresh = AsyncMock()
+    row = {
+        "id": "20261012T074027Z-62b79a45",
+        "session_hash": "4725360a3a596801",
+        "result_version": 1,
+        "replaces": None,
+        "reaction": "thumbs_down",
+    }
+    await AgentFeedbackRepository(session).create_case(row)
+    return [
+        (str(call.args[0].compile(dialect=dialect)), call.args[1] if len(call.args) > 1 else None)
+        for call in session.execute.await_args_list
+    ]
+
+
+class TestAgentFeedbackCreateCaseLock:
+    """`create_case` serializes the supersede links per session and version on PostgreSQL."""
+
+    async def test_postgresql_takes_the_advisory_lock_first(self) -> None:
+        statements = await _create_case_statements(asyncpg.dialect())
+        sql, params = statements[0]
+        # A transaction-scoped lock, keyed by the pair the links are looked up with; the
+        # commit at the end of `create_case` releases it.
+        assert "pg_advisory_xact_lock(hashtext(" in sql
+        assert params == {"key": "4725360a3a596801:1"}
+        # The forward lookup follows the lock, inside the same transaction.
+        assert "FROM agent_feedback" in statements[1][0]
+
+    async def test_sqlite_runs_without_a_lock(self) -> None:
+        statements = await _create_case_statements(sqlite.dialect())
+        assert not any("pg_advisory_xact_lock" in sql for sql, _ in statements)
+        assert "FROM agent_feedback" in statements[0][0]

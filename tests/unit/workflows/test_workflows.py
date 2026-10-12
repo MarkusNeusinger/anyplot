@@ -27,6 +27,7 @@ EXPECTED_WORKFLOWS = [
     # CI workflows
     "ci-lint.yml",
     "ci-tests.yml",
+    "ci-migrations.yml",
     # Specification workflows
     "spec-create.yml",
     # Implementation workflows
@@ -428,6 +429,43 @@ class TestCiTestsSpecSectionCheck:
     def test_step_needs_no_dependency_install(self) -> None:
         names = [s.get("name") for s in self._steps()]
         assert names.index("Check spec characteristic sections") < names.index("Set up Python")
+
+
+class TestCiMigrationsWorkflow:
+    """ci-migrations.yml runs every revision against a throwaway PostgreSQL, never against a shared one."""
+
+    WORKFLOW = load_workflow("ci-migrations.yml")
+    TEXT = (WORKFLOWS_DIR / "ci-migrations.yml").read_text(encoding="utf-8")
+
+    def _job(self) -> dict[str, Any]:
+        return self.WORKFLOW["jobs"]["migrations"]
+
+    def test_the_check_name_is_stable(self) -> None:
+        """`Verify Migrations` is the context a required status check names; renaming it unprotects main."""
+        assert self._job()["name"] == "Verify Migrations"
+
+    def test_the_database_is_the_service_container(self) -> None:
+        job = self._job()
+        assert job["services"]["postgres"]["image"] == "postgres:18"  # production runs Cloud SQL POSTGRES_18
+        assert job["env"]["DATABASE_URL"] == "postgresql+asyncpg://postgres:postgres@localhost:5432/anyplot"
+        assert "secrets." not in self.TEXT
+        assert "INSTANCE_CONNECTION_NAME:" not in self.TEXT
+        assert job["permissions"] == {"contents": "read"}
+
+    def test_the_job_always_reports(self) -> None:
+        """Only steps are skipped, so a required check never stays pending on a PR without schema changes."""
+        job = self._job()
+        assert "if" not in job
+        steps = {step.get("name"): step for step in job["steps"]}
+        assert "if" not in steps["Check for schema changes"]
+        assert steps["Skip notice"]["if"] == "steps.check.outputs.should_check == 'false'"
+
+    def test_runs_the_four_checks_and_the_parity_query(self) -> None:
+        scripts = "\n".join(str(step.get("run", "")) for step in self._job()["steps"])
+        for command in ("uv run alembic heads", "uv run alembic upgrade head", "uv run alembic check"):
+            assert command in scripts, command
+        assert 'uv run alembic downgrade "$target"' in scripts
+        assert "pg_get_constraintdef" in scripts
 
 
 def _variable_names(prompt: str) -> set[str]:
