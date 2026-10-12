@@ -799,11 +799,14 @@ async function streamTurn(req, res, session, body, ref) {
     runsInFlight += 1;
     try {
       // The scope judge's detection (a typed message it accepts) and the root's
-      // `set_language`, in miniature; `done` carries the result.
-      if (typeof body.text === 'string' && !/weather|joke/.test(lower)) {
+      // `set_language`, in miniature; `done` carries the result. A message the
+      // judge refuses is refused as a whole: it never reaches the root, so it
+      // neither detects nor sets a language.
+      const outOfScope = /weather|joke/.test(lower);
+      if (typeof body.text === 'string' && !outOfScope) {
         detectLanguage(session, text);
       }
-      const asked = requestedLanguage(lower);
+      const asked = outOfScope ? null : requestedLanguage(lower);
       if (asked) {
         session.language = asked.code;
         session.languageSource = 'chosen';
@@ -838,7 +841,7 @@ async function streamTurn(req, res, session, body, ref) {
         send('message', { text: session.dataset ? change(session) : 'Paste your data first.' });
         return;
       }
-      if (/weather|joke/.test(lower)) {
+      if (outOfScope) {
         await sleep(STEP_MS);
         send('refusal', {
           code: 'out_of_scope',

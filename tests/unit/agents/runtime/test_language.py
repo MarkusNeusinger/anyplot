@@ -17,6 +17,8 @@ from agents.anyplot.language import (
 )
 from agents.anyplot.plugins.ledger import ledger_for
 from agents.anyplot.policy import refusals
+from agents.anyplot.schemas import PlotResult
+from agents.anyplot.services import CodeVersion, Services
 from agents.anyplot.session_state import LANGUAGE, LANGUAGE_SOURCE, LIBRARY, initial_state, language_delta, read_session
 from agents.anyplot.tools.session import set_language
 
@@ -144,13 +146,14 @@ def tool_context(state: dict[str, Any], invocation_id: str) -> SimpleNamespace:
     return SimpleNamespace(state=state, invocation_id=invocation_id, session=SimpleNamespace(id="s1"))
 
 
+@pytest.mark.usefixtures("services")  # fresh stores: `set_language` reads the session's versions
 class TestSetLanguageTool:
     async def test_sets_the_language_as_chosen(self) -> None:
         context = tool_context(opened(), "inv-lang-1")
 
         result = await set_language("DE", context)
 
-        assert result == {"status": "ok", "source": "chosen", "changed": True}
+        assert result == {"status": "ok", "source": "chosen", "changed": True, "plot_outdated": False}  # no plot yet
         assert (context.state[LANGUAGE], context.state[LANGUAGE_SOURCE]) == ("de", "chosen")
 
     async def test_a_name_is_stored_as_its_code(self) -> None:
@@ -164,9 +167,34 @@ class TestSetLanguageTool:
 
         result = await set_language("Deutsch", context)
 
-        assert result == {"status": "ok", "source": "chosen", "changed": False}
+        assert result == {"status": "ok", "source": "chosen", "changed": False, "plot_outdated": False}
         assert (context.state[LANGUAGE], context.state[LANGUAGE_SOURCE]) == ("de", "chosen")
         assert (await set_language("en", context))["changed"] is True
+
+    async def test_the_rewrite_is_decided_against_the_shown_plot_not_the_session(self, services: Services) -> None:
+        """v1 was drawn in English before a German question recorded `de`: asking for German still rewrites it,
+        asking for English does not, and a version of another library is not the shown plot."""
+        context = tool_context(opened(**language_delta("de", "detected")), "inv-lang-8")
+        result = PlotResult(status="ok", attempts=1, artifacts=["plot.py"])
+        for number, (library, language) in enumerate((("matplotlib", "en"), ("seaborn", "de")), start=1):
+            version = CodeVersion(
+                number=number,
+                working="w",
+                run_form="r",
+                export="e",
+                data_csv="a\n1\n",
+                render_id=f"r{number}",
+                result=result,
+                library=library,
+                language=language,
+            )
+            services.versions.add("s1", version)
+
+        german = await set_language("Deutsch", context)
+        english = await set_language("English", context)
+
+        assert (german["changed"], german["plot_outdated"]) == (False, True)
+        assert (english["changed"], english["plot_outdated"]) == (True, False)
 
     async def test_free_text_keeps_its_spelling(self) -> None:
         context = tool_context(opened(), "inv-lang-4")

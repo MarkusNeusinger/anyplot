@@ -992,7 +992,7 @@ class TestToolSafety:
                 tool=FakeTool("set_language"), tool_args={}, tool_context=FakeContext(), result=result
             )
 
-        assert await after({"status": "ok", "source": "chosen", "changed": True}) is None
+        assert await after({"status": "ok", "source": "chosen", "changed": True, "plot_outdated": False}) is None
         assert await after({"status": "error", "code": "run_active"}) is None
         assert await after({"status": "ok", "source": "chosen", "language": "de"}) == {
             "status": "error",

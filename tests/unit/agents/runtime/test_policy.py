@@ -177,10 +177,11 @@ class TestSessionLanguage:
 
         assert "- `set_language(language)`: sets the session language" in root
         assert "call `set_language` with that language, alone, before any other tool" in root
-        # A rewrite of an existing plot only when the language really changed (`de` against `Deutsch` is none).
-        assert "When its result says `changed` is `true` and this library already has a plot" in root
+        # A rewrite only when the shown plot's text is in another language, whatever the session language was.
+        assert "When its result says `plot_outdated` is `true`, the latest plot's text is in another language" in root
         assert '"Write the title, axis titles, legend entries and annotations in the session language;' in root
-        assert "When `changed` is `false`, the session was already in that language" in root
+        assert "When `plot_outdated` is `false` and this library already has a plot, the plot is already" in root
+        assert "`changed` says only whether the session language itself changed" in root
         assert "`set_language` answers `run_active` while a plot run is in progress" in root
         # A language request is no translation, so neither the root nor the judge refuses it.
         assert '("labels in English", "Beschriftung auf Deutsch") is not a translation' in root

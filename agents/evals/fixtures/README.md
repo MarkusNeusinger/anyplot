@@ -4,7 +4,7 @@ Each directory under `cases/` is one case of the regression harness (`agents/eva
 
 | File | Contents |
 |---|---|
-| `case.json` | `spec_id`, `library`, `locale` (the browser locale the session opens with; it never sets the session language), `bindings` (`[{"role", "column"}]`), `expected` (`accepted`, `rejected` or `unknown`), `tags`, and optionally `perturbation`, `source` (where the data comes from) and `language` (a session language such as `de` that the harness chooses through `PUT /v1/sessions/{sid}/language` before the first turn, source `chosen`; a promoted feedback case carries the language its session had, unless that was still the default) |
+| `case.json` | `spec_id`, `library`, `locale` (the browser locale the session opens with; it never sets the session language), `bindings` (`[{"role", "column"}]`), `expected` (`accepted`, `rejected` or `unknown`), `tags`, and optionally `perturbation`, `source` (where the data comes from) and `language` (a session language such as `de` that the harness chooses through `PUT /v1/sessions/{sid}/language` before the first turn, source `chosen`; a promoted feedback case carries the language the imported version's text was written in, and none when the session's language was still the default) |
 | `data.csv` | The dataset, synthetic; sent to the `/dataset` route exactly as a user would paste it |
 | `snapshot.json` | Optional: the catalogue snapshot (`spec_id`, `title`, `description`, `data_roles`, `notes`, `code`, `library_version`). Without it the snapshot is built from `plots/<spec_id>/` in this checkout |
 | `change_request.txt` | Optional: a follow-up message the harness sends after the plot is created |

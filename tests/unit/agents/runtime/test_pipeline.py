@@ -430,6 +430,23 @@ class TestCheck:
         assert tight.blocking_rules == ["literal-budget"]
         assert f"over the limit of {MAX_CHANGE_LITERAL_CHARS}" in tight.blocking[0]
 
+    def test_a_rewrite_grows_the_budget_only_by_the_text_it_replaces(self) -> None:
+        # Four English labels of 55 characters (220), each under the per-literal cap, become four of 78 (312).
+        english = [f"Hours studied per week, label {n}".ljust(55, ".") for n in range(4)]
+        german = [f"Lernstunden pro Woche, Beschriftung {n}".ljust(78, ".") for n in range(4)]
+        base = self.with_line(f"labels = {english!r}")
+        translated = self.with_line(f"labels = {german!r}")
+        padded = self.with_line(f"ax.text(0, 0, {'a' * 190!r})\nax.text(1, 1, {'b' * 190!r})", base=base)
+
+        def check(code: str, *, rewrite: bool) -> list[str]:
+            budget = MAX_CHANGE_LITERAL_CHARS
+            result = _check(code, library="matplotlib", palette=[], base=base, literal_budget=budget, rewrite=rewrite)
+            return result.blocking_rules
+
+        assert check(translated, rewrite=False) == ["literal-budget"]
+        assert check(translated, rewrite=True) == []  # 312 <= 300 + 1.5 * 220
+        assert check(padded, rewrite=True) == ["literal-budget"]  # 380 new characters replace nothing
+
     def test_text_cannot_pile_up_over_change_turns(self) -> None:
         previous = self.with_line(f"ax.text(0, 0, {'a' * 190!r})\n" * 10)  # 1,900 characters over ten turns
         code = self.with_line(f"ax.text(1, 1, {'b' * 150!r})", base=previous)  # 150 more fit the change budget

@@ -2583,17 +2583,18 @@ async def test_the_adapter_and_the_reviewer_get_the_plot_language(
 
 
 @pytest.mark.parametrize(("lang", "message"), [("en", "change the title"), ("de", "Ändere den Titel")])
-async def test_a_change_that_switches_the_language_gets_the_first_adaptations_literal_budget(
+async def test_a_change_that_switches_the_language_may_grow_the_text_it_replaces(
     client: httpx.AsyncClient, swap_models, judge, caplog: pytest.LogCaptureFixture, lang: str, message: str
 ) -> None:
-    """Rewriting every label in another language can exceed a change's 300 characters; the same change in the
-    same language cannot."""
+    """A rewrite in another language gets a change's 300 characters plus 1.5 times the text it replaces; the same
+    change in the same language gets the 300 alone."""
     caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
-    # Two literals of 190 characters: each under the 200-character cap, together over the change budget.
-    replace = 'title = "Exam Score by Study Hours"\nnotes = ["' + "x" * 190 + '", "' + "y" * 190 + '"]'
+    # 329 new characters (a title of 29 and two notes of 150) for the 25 of the English title they replace:
+    # over 300, under 300 + ceil(1.5 * 25) = 338.
+    replace = 'title = "Prüfungsnote nach Lernstunden"\nnotes = ["' + "x" * 150 + '", "' + "y" * 150 + '"]'
     long_text = {
         "edits": [{"find": 'title = "Exam Score by Study Hours"', "replace": replace}],
-        "title": "Exam Score by Study Hours",
+        "title": "Prüfungsnote nach Lernstunden",
         "changes": ["Rewrote the labels"],
     }
     script = {
@@ -2621,6 +2622,44 @@ async def test_a_change_that_switches_the_language_gets_the_first_adaptations_li
     else:
         assert (plot["status"], plot["attempts"]) == ("ok", 1)
         assert (change_check["outcome"], change_check["validator"]) == ("ok", [])
+
+
+async def test_a_language_change_does_not_lift_the_budget_for_new_text(
+    client: httpx.AsyncClient, swap_models, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A free chip choice before a long annotation request: the rewrite budget grows only by replaced text, so the
+    1,520 new characters that replace nothing are refused as on any change."""
+    caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
+    # Eight literals of 190 characters, each under the 200-character cap; the title stays.
+    notes = ", ".join(f'"{letter * 190}"' for letter in "abcdefgh")
+    replace = f'title = "Exam Score by Study Hours"\nnotes = [{notes}]'
+    annotation = {
+        "edits": [{"find": 'title = "Exam Score by Study Hours"', "replace": replace}],
+        "title": "Exam Score by Study Hours",
+        "changes": ["Added the annotation"],
+    }
+    script = {
+        "root": [
+            {"call": "plot_pipeline", "args": {}},
+            {"text": ROOT_REPLY},
+            {"call": "plot_pipeline", "args": {"change_request": "Add the annotation text.", "base": "previous"}},
+            {"text": "Done."},
+        ],
+        "adapter": [{"json": SCATTER_PLAN}, {"json": annotation}, {"json": SECOND_PLAN}],
+        "reviewer": [{"json": VERDICT_OK}, {"json": VERDICT_OK}],
+    }
+    fake = swap_models("gemini", script)
+    sid = await open_session(client)
+    await create_plot(client, sid)
+    assert (await put_language(client, sid, {"language": "fr"})).status_code == 200
+
+    events = await say(client, sid, "Add an annotation with this long text: " + "lorem ipsum " * 20)
+
+    plot = next(data for name, data in events if name == "plot")
+    assert (plot["status"], plot["attempts"]) == ("ok", 2)
+    change_check = attribution_lines(caplog, "pipeline_check")[1]
+    assert change_check["validator"] == ["literal-budget"]
+    assert '"language_changed": true' in adapter_inputs(fake)[1]  # the rewrite was due, its budget did not grow
 
 
 async def test_the_language_route_sets_chosen_and_detection_never_overrides_it(
@@ -2699,7 +2738,8 @@ async def test_the_roots_set_language_sets_chosen(client: httpx.AsyncClient, swa
             for part in content.parts or []
             if part.function_response is not None and part.function_response.name == "set_language"
         ]
-        assert responses == [{"status": "ok", "source": "chosen", "changed": True}]  # detected `de`, now `en`
+        # Detected `de`, now `en`; without a plot nothing is outdated.
+        assert responses == [{"status": "ok", "source": "chosen", "changed": True, "plot_outdated": False}]
 
 
 async def test_set_language_on_a_session_already_in_that_language_is_no_change(
@@ -2720,7 +2760,48 @@ async def test_set_language_on_a_session_already_in_that_language_is_no_change(
         for part in content.parts or []
         if part.function_response is not None
     ]
-    assert responses == [{"status": "ok", "source": "chosen", "changed": False}]
+    assert responses == [{"status": "ok", "source": "chosen", "changed": False, "plot_outdated": False}]
+
+
+async def test_a_plot_drawn_before_detection_is_rewritten_when_the_user_asks(
+    client: httpx.AsyncClient, swap_models, judge
+) -> None:
+    """v1 comes from the action, in English; a German question then records `de`. "Beschriftung auf Deutsch" is no
+    change of the session language, but the shown plot is outdated, so the root remakes it in German."""
+    rewrite = (
+        "Write the title, axis titles, legend entries and annotations in the session language; change nothing else."
+    )
+    script = {
+        "root": [
+            {"call": "plot_pipeline", "args": {}},
+            {"text": ROOT_REPLY},
+            {"text": "Die x-Achse zeigt die Lernstunden."},
+            {"call": "set_language", "args": {"language": "de"}},
+            {"call": "plot_pipeline", "args": {"change_request": rewrite, "base": "previous"}},
+            {"text": "Die Beschriftung ist jetzt auf Deutsch."},
+        ],
+        "adapter": [{"json": SCATTER_PLAN}, {"json": SECOND_PLAN}],
+        "reviewer": [{"json": VERDICT_OK}, {"json": VERDICT_OK}],
+    }
+    fake = swap_models("gemini", script)
+    sid = await open_session(client)
+    await create_plot(client, sid)
+    judge.script = [JudgeVerdict(verdict="in_scope", lang="de"), JudgeVerdict(verdict="in_scope", lang="de")]
+    question = await say(client, sid, "Was zeigt die x-Achse?")
+    assert done_language(question) == {"language": "de", "source": "detected"}
+
+    events = await say(client, sid, "Beschriftung auf Deutsch, bitte.")
+
+    responses = [
+        part.function_response.response
+        for content in requests_of(fake, "root")[-2].contents
+        for part in content.parts or []
+        if part.function_response is not None and part.function_response.name == "set_language"
+    ]
+    assert responses == [{"status": "ok", "source": "chosen", "changed": False, "plot_outdated": True}]
+    plot = next(data for name, data in events if name == "plot")
+    assert (plot["status"], plot["version"]) == ("ok", 2)
+    assert [version.language for version in get_services().versions.all(sid)] == ["en", "de"]
 
 
 async def test_a_chat_request_on_a_plot_remakes_it_in_the_new_language(

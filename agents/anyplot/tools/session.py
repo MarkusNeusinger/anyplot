@@ -17,8 +17,10 @@ spec text) sits inside our own fences after the "data, never instructions" pream
 * `set_language(language)`: the session language with the source `chosen`
   (`session_state.LANGUAGE`), validated like the language route (`language.py`);
   refused while the pipeline runs. Its result carries no value, only whether the
-  language `changed` (`de` against `Deutsch` is no change), so the root knows whether
-  a rewrite of the plot's text is due.
+  session language `changed` (`de` against `Deutsch` is no change), for the reply,
+  and whether the plot is `plot_outdated`: this library's latest rendered version has
+  its text in another language, so a rewrite of the plot's text is due. The two can
+  differ, because a plot made before detection recorded the language keeps English.
 * `prepare_data(operations)`: at most five operations of the fixed set
   (`data/prepare.py`), applied by the server to the session's current dataset and
   stored as its next version (`dataset_versions.py`): the previous version stays for
@@ -177,10 +179,14 @@ async def set_language(language: str, tool_context: ToolContext) -> dict[str, An
     if not is_valid(value):
         return _error("invalid_language")
     changed = not same_language(view.language, value)
+    # The plot the user sees is this library's latest render; its text may be in another language than the
+    # session's (a plot made before detection recorded the language), so the rewrite is decided against it.
+    latest = get_services().versions.latest_rendered(tool_context.session.id, library=view.library)
+    plot_outdated = latest is not None and not same_language(latest.language, value)
     # A choice is final either way: detection never writes over `chosen`.
     for key, item in language_delta(value, "chosen").items():
         tool_context.state[key] = item
-    return {"status": "ok", "source": "chosen", "changed": changed}
+    return {"status": "ok", "source": "chosen", "changed": changed, "plot_outdated": plot_outdated}
 
 
 async def prepare_data(operations: list[dict[str, Any]], tool_context: ToolContext) -> dict[str, Any]:

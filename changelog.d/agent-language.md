@@ -19,7 +19,8 @@
   English and its second must carry German plot text; the full matrix now has
   123 cases. A case may name a `language`, which the harness chooses through
   the language route before the first turn, an imported feedback case carries
-  its session's when that was detected or chosen, and every run records the
+  the language its version's text was written in when the session's was
+  detected or chosen, and every run records the
   last `done` event's language. Six in-scope scope-eval cases (`plot_language`,
   three English, three German) guard the rubric's new line that a request for
   the plot's own text in another language is no translation.
@@ -30,8 +31,9 @@
   English.** The adapter writes the title, axis titles, legend entries and
   annotations in it, while column names and labels from the data keep their
   spelling; a change whose base version was written in another language
-  rewrites them (`language_changed`, with the first adaptation's literal
-  budget); and the reviewer judges the plot text against it under VQ-06,
+  rewrites them (`language_changed`, whose 300-character literal budget grows
+  by 1.5 times the text the plan replaces, so a long new annotation does not
+  ride along); and the reviewer judges the plot text against it under VQ-06,
   fail-open. Code, comments and the internal change notes stay English, and
   earlier versions keep their text. A chosen language is free text, so every
   prompt that carries it, the root's session block included, fences it as

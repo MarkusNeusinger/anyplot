@@ -21,7 +21,8 @@ eval harness may set one or three):
    placeholder finding rejects the code; the other findings become defect lines but
    the code still renders); a change whose base version was written in another
    language than the session language (`language_changed`) rewrites every title,
-   label and annotation, so it gets `MAX_NEW_LITERAL_CHARS`;
+   label and annotation, so its budget grows by `REWRITE_LITERAL_FACTOR` times the
+   literal text the plan replaces, up to `MAX_NEW_LITERAL_CHARS`;
 3. **render**: `normalise`, the loader substitution (`to_run_form`), then the one
    theme the call asks for (`PipelineArgs.theme`, light by default) through the
    render backend, and the host gates (`render/gates.py`) on exactly that theme;
@@ -81,6 +82,7 @@ import csv
 import io
 import json
 import logging
+import math
 import secrets
 import time
 from collections import Counter
@@ -96,7 +98,13 @@ from google.genai import types
 from pydantic import ValidationError
 
 from .briefs import adapter_profile, profile_summary, spec_brief
-from .code.edits import MAX_CHANGE_LITERAL_CHARS, MAX_NEW_LITERAL_CHARS, apply_plan, new_literals
+from .code.edits import (
+    MAX_CHANGE_LITERAL_CHARS,
+    MAX_NEW_LITERAL_CHARS,
+    REWRITE_LITERAL_FACTOR,
+    apply_plan,
+    new_literals,
+)
 from .code.export import export_code
 from .code.regions import find_regions
 from .code.validate import validate_adaptation, validate_security
@@ -485,13 +493,17 @@ def _check(
     palette: list[str],
     base: str,
     literal_budget: int = MAX_NEW_LITERAL_CHARS,
+    rewrite: bool = False,
     origin: str | None = None,
     data_texts: frozenset[str] = frozenset(),
 ) -> CheckResult:
     """Validate a working form against its base: may it render, the blocking lines, the adaptation defect lines.
 
     Besides the two validator profiles, the plan's new string literals (`edits.new_literals`)
-    must fit `literal_budget`, and all new literals of the working form against `origin`
+    must fit `literal_budget`; on a `rewrite` (a change that writes the base's text in another
+    language) the budget grows by `REWRITE_LITERAL_FACTOR` times the literal text the plan drops
+    from the base, up to `MAX_NEW_LITERAL_CHARS`, so a translation fits and new text on top of it
+    still meets the caller's budget. All new literals of the working form against `origin`
     (the catalogue code) `MAX_NEW_LITERAL_CHARS`, so text cannot pile up turn by turn; a
     literal that is a header or a cell of the dataset (`data_texts`) is free in both. The
     budget bounds how much text the model writes, not what it says: personal data the
@@ -507,6 +519,10 @@ def _check(
     blocking_rules = [f.rule for f in blocking_findings]
     literals = new_literals(base, working)
     added = sum(len(text) for text in literals if text not in data_texts)
+    if rewrite:
+        # The base literals the plan no longer holds: the old-language text the translation replaces.
+        dropped = sum(len(text) for text in new_literals(working, base) if text not in data_texts)
+        literal_budget = min(MAX_NEW_LITERAL_CHARS, literal_budget + math.ceil(REWRITE_LITERAL_FACTOR * dropped))
     if added > literal_budget:
         blocking_rules.append("literal-budget")
         blocking.append(
@@ -770,9 +786,9 @@ async def _attempts(
     working = previous.working if previous is not None else view.normalised
     # The base version's text is in another language than the session's: the adapter rewrites it.
     language_changed = previous is not None and not same_language(previous.language, run.language)
-    # A change on a previous version adds a little text; adapting the catalogue code renames much,
-    # and so does a change that rewrites every title, label and annotation in another language.
-    budget = MAX_CHANGE_LITERAL_CHARS if previous is not None and not language_changed else MAX_NEW_LITERAL_CHARS
+    # A change on a previous version adds a little text; adapting the catalogue code renames much. A change
+    # that rewrites the text in another language keeps the change's budget plus the text it replaces (`_check`).
+    budget = MAX_CHANGE_LITERAL_CHARS if previous is not None else MAX_NEW_LITERAL_CHARS
     data_texts = _data_texts(dataset.csv)
     regions = find_regions(view.normalised)
     palette = list(regions.imprint.entries) if regions.imprint else []
@@ -853,6 +869,7 @@ async def _attempts(
             palette=palette,
             base=working,
             literal_budget=budget,
+            rewrite=language_changed,
             origin=view.normalised,
             data_texts=data_texts,
         )
