@@ -8,10 +8,11 @@ A case is the agents service's bundle of one result version (`GET /v1/sessions/{
   included, decoded from the bundle's base64; a theme the version never rendered has none;
 * `plot.py`: the exported code;
 * `data.csv`: the version's data, only when the user ticked `# include data.csv`;
-* `manifest.json`: the case's row (every field the design names for the later
-  `agent_feedback` table, so a table can be filled from the manifests) plus the whole
-  bundle without the PNGs and the data, which are the sibling files. Written LAST: a case
-  directory without a manifest is an aborted write and never a case.
+* `manifest.json`: the case's row (`core.agent_cases.row_from_manifest` turns it into the
+  `agent_feedback` row the route inserts, and the backfill of `sync_cases.py` into one for
+  a case that reached the bucket first) plus the whole bundle without the PNGs and the
+  data, which are the sibling files. Written LAST: a case directory without a manifest is
+  an aborted write and never a case.
 
 The case id is the UTC time in ISO 8601 basic format plus 8 random hex digits
 (`20261012T143005Z-1a2b3c4d`), so ids sort by time. Every upload carries
@@ -20,12 +21,14 @@ another; an upload that meets an object under its name (the library retried a re
 whose first attempt stored it) counts as stored only when the stored bytes match, and
 anything else is a `CaseConflict`. Nothing here deletes: a later submission for the same result version is a new
 case whose manifest names the earlier one in `replaces` (the id the page got for it), and
-the triage counts the newest case of a `session_hash` and `result_version`. The bucket's
+the row of the earlier case is marked superseded by the new one when `replaces` names it
+for the same `session_hash` and `result_version`; nothing is implicit. The bucket's
 lifecycle rule (delete after 180 days) is the retention, also for a replaced case and its
-`data.csv`, and it removes the files of an aborted write. Design:
+`data.csv`, and it removes the files of an aborted write. The triage reads a case back
+(`CaseBucket.download`) and compares its code with the catalogue's (`code_diff`). Design:
 `docs/concepts/agent-network.md` ("Feedback capture").
 
-Everything in this module is blocking (JSON, base64, the GCS client); the route runs it
+Everything in this module is blocking (JSON, base64, the GCS client); the routes run it
 in a worker thread.
 """
 
@@ -33,6 +36,7 @@ from __future__ import annotations
 
 import base64
 import binascii
+import difflib
 import functools
 import hashlib
 import json
@@ -41,14 +45,14 @@ import re
 import secrets
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Protocol
+from typing import Any, Literal, Protocol
+
+# The case id, object names and manifest schema are shared with the table and the sync CLI;
+# `CASE_ID_PATTERN` is re-exported for the routes, which validate ids against it.
+from core.agent_cases import CASE_ID_PATTERN as CASE_ID_PATTERN
+from core.agent_cases import CASE_PREFIX, MANIFEST_NAME, MANIFEST_SCHEMA, case_object
 
 
-CASE_PREFIX = "cases"
-CASE_ID_PATTERN = r"^[0-9]{8}T[0-9]{6}Z-[0-9a-f]{8}$"
-"""What `new_case_id` makes, and what a submission's `replaces` must look like."""
-MANIFEST_NAME = "manifest.json"
-MANIFEST_SCHEMA = 1
 CASE_STATUS_NEW = "new"
 """The status of a fresh case; the triage moves it to `in_progress`, `done` or `wont_solve`."""
 
@@ -89,6 +93,9 @@ class CaseBucket(Protocol):
     def upload(self, name: str, data: bytes, content_type: str) -> None:
         """Store `data` as the object `name`; raise when it is not stored, and never replace an object."""
 
+    def download(self, name: str) -> bytes | None:
+        """The bytes of the object `name`; None when it does not exist (the lifecycle rule deleted it), raise otherwise."""
+
 
 @functools.cache
 def _storage_client() -> Any:
@@ -120,6 +127,15 @@ class GcsCaseBucket:
             if blob.md5_hash != _md5_base64(data):
                 raise CaseConflict(f"{name} exists with other content") from exc
 
+    def download(self, name: str) -> bytes | None:
+        from google.api_core.exceptions import NotFound
+
+        try:
+            data: bytes = _storage_client().bucket(self.bucket).blob(name).download_as_bytes()
+        except NotFound:
+            return None
+        return data
+
 
 @dataclass(frozen=True)
 class Submission:
@@ -149,6 +165,12 @@ class FeedbackCase:
 
     case_id: str
     files: tuple[CaseFile, ...]
+    manifest: dict[str, Any]
+    """The manifest as a dict, the same one `manifest.json` holds: the route derives the case's row from it.
+
+    Required on purpose: a case without its manifest is not a case, and a default would turn a
+    forgotten assignment into a missing row in production instead of a `TypeError` in the tests.
+    """
 
     @property
     def stored(self) -> list[str]:
@@ -309,7 +331,7 @@ def build_case(
         "include_data": submission.include_data,
         "status": CASE_STATUS_NEW,
         "result_version": submission.result_version,
-        # As the page sent it, unchecked: the triage is to honour it only for a case of the same session and version.
+        # As the page sent it: the row insert supersedes the named case only for the same session and version.
         "replaces": submission.replaces,
         "model": _text(config.get("model")),
         # Not in the agents service's config stamp yet: null until it sends them.
@@ -328,15 +350,125 @@ def build_case(
     except ValueError as exc:  # NaN or Infinity, which the agents service's JSON never holds
         raise BundleError("the bundle holds a number JSON cannot carry") from exc
     files.append(CaseFile(MANIFEST_NAME, _utf8(text, MANIFEST_NAME)))
-    return FeedbackCase(case_id=case_id, files=tuple(files))
-
-
-def case_object(case_id: str, name: str) -> str:
-    """The object name of one case file: `cases/<case_id>/<name>`."""
-    return f"{CASE_PREFIX}/{case_id}/{name}"
+    return FeedbackCase(case_id=case_id, files=tuple(files), manifest=manifest)
 
 
 def write_case(bucket: CaseBucket, case: FeedbackCase) -> None:
     """Upload the case's files in order, the manifest last; the first failure stops the rest."""
     for item in case.files:
         bucket.upload(case_object(case.case_id, item.name), item.data, item.content_type)
+
+
+def read_manifest(bucket: CaseBucket, case_id: str) -> dict[str, Any] | None:
+    """The case's `manifest.json` from the bucket; None when the lifecycle rule deleted it.
+
+    Raises the storage library's error when the bucket cannot be read, and `ValueError` when
+    the object is not a JSON object.
+    """
+    data = bucket.download(case_object(case_id, MANIFEST_NAME))
+    if data is None:
+        return None
+    manifest = json.loads(data)
+    if not isinstance(manifest, dict):
+        raise ValueError("the manifest is not a JSON object")
+    return manifest
+
+
+@dataclass(frozen=True)
+class ManifestDetail:
+    """What the triage's case detail shows from a manifest's `bundle`: everything but the row's own columns."""
+
+    transcript: tuple[tuple[Literal["user", "assistant"], str], ...]
+    code: str | None
+    snapshot_library_version: str | None
+    residual_defects: tuple[str, ...]
+    changes: tuple[str, ...]
+    result_reason: str | None
+    config: dict[str, Any] | None
+    bindings: tuple[tuple[str, str], ...]
+    """The session's bound roles as `(role, column)`; unbound roles are left out."""
+
+
+def _list(value: Any) -> list[Any]:
+    return value if isinstance(value, list) else []
+
+
+def _strings(value: Any) -> tuple[str, ...]:
+    return tuple(item for item in _list(value) if isinstance(item, str))
+
+
+def manifest_detail(manifest: dict[str, Any], result_version: int) -> ManifestDetail:
+    """Read the bundle a manifest keeps, defensively: it is the agents service's shape, not this module's.
+
+    The version is the one numbered `result_version` (the manifest keeps only that one), else
+    the first; the transcript keeps only `{role, text}` turns of the user and the assistant.
+    """
+    bundle = _dict(manifest.get("bundle"))
+    versions = [item for item in _list(bundle.get("versions")) if isinstance(item, dict)]
+    version = next((item for item in versions if item.get("number") == result_version), versions[0] if versions else {})
+    result = _dict(version.get("result"))
+    config = bundle.get("config")
+    code = version.get("plot_py")
+    return ManifestDetail(
+        transcript=tuple(
+            (turn["role"], turn["text"])
+            for turn in _list(bundle.get("transcript"))
+            if isinstance(turn, dict)
+            and turn.get("role") in ("user", "assistant")
+            and isinstance(turn.get("text"), str)
+        ),
+        code=code if isinstance(code, str) and code else None,
+        snapshot_library_version=_text(_dict(bundle.get("snapshot")).get("library_version")),
+        residual_defects=_strings(result.get("residual_defects")),
+        changes=_strings(result.get("changes")),
+        result_reason=_text(result.get("reason")),
+        config=config if isinstance(config, dict) else None,
+        bindings=tuple(
+            (binding["role"], binding["column"])
+            for binding in _list(bundle.get("bindings"))
+            if isinstance(binding, dict) and _text(binding.get("role")) and _text(binding.get("column"))
+        ),
+    )
+
+
+def _without_export_header(code: str) -> str:
+    """The exported code without its attribution header (agents/anyplot/code/export.py, `attribution`).
+
+    Only when the first line is the header's: then the leading comment lines up to the
+    first blank line, and that blank line, which the export adds after its two lines.
+    """
+    if not _EXPORT_LIBRARY.match(code):
+        return code
+    lines = code.split("\n")
+    start = 0
+    while start < len(lines) and lines[start].startswith("#"):
+        start += 1
+    if start < len(lines) and not lines[start].strip():
+        start += 1
+    return "\n".join(lines[start:])
+
+
+def _diff_lines(text: str) -> list[str]:
+    """`text` as lines for `difflib`, each ending in a newline (the last one too), split on `\\n` only."""
+    lines = text.split("\n")
+    if lines[-1] == "":
+        lines.pop()
+    return [f"{line}\n" for line in lines]
+
+
+def code_diff(original: str, adapted: str, *, spec_id: str, library_id: str) -> str:
+    """A unified diff from the catalogue's code to a case's exported `plot.py`; empty when they agree.
+
+    The export's attribution header is dropped first, so its two comment lines do not read as
+    a change. Each line counts as newline-terminated, so a missing final newline on either
+    side does not glue two diff lines together.
+    """
+    return "".join(
+        difflib.unified_diff(
+            _diff_lines(original),
+            _diff_lines(_without_export_header(adapted)),
+            fromfile=f"catalogue/{spec_id}/{library_id}.py",
+            tofile="case/plot.py",
+            n=3,
+        )
+    )

@@ -2,7 +2,9 @@
 Tests for api/routers/agent.py — the admin-only agent chat BFF under /debug/agent.
 
 The agents service is never reached: `get_agent_client` is overridden with an
-httpx client on a MockTransport that records every upstream request.
+httpx client on a MockTransport that records every upstream request. No test
+reaches a bucket or a database either: the case bucket and the `agent_feedback`
+table are in-memory fakes, behind a session that is a mock.
 """
 
 import asyncio
@@ -13,6 +15,8 @@ import hmac
 import json
 import re
 from collections.abc import AsyncIterator, Callable
+from datetime import UTC, datetime
+from typing import Any, get_args
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
@@ -20,13 +24,17 @@ import pytest
 from fastapi.concurrency import run_in_threadpool
 from fastapi.testclient import TestClient
 
-from api.agent_cases import prompt_hash
+from api.agent_cases import Submission, build_case, prompt_hash, write_case
 from api.dependencies import require_db
 from api.main import app, fastapi_app
 from api.routers.agent import (
     MAX_BUNDLE_BYTES,
     MAX_DATASET_BYTES,
     NOT_ENABLED,
+    CaseStatus,
+    Expected,
+    Reaction,
+    StatusFilter,
     _bundle_filename,
     derive_user_id,
     get_agent_client,
@@ -34,7 +42,10 @@ from api.routers.agent import (
     load_catalogue_snapshot,
 )
 from api.routers.debug import AdminIdentity, require_admin_identity
+from core.agent_cases import case_object, row_from_manifest
 from core.config import settings
+from core.database import AGENT_CASE_EXPECTED, FEEDBACK_REACTIONS, FEEDBACK_STATUSES, AgentFeedback, get_db
+from core.database.repositories import AGENT_FEEDBACK_UPDATABLE_FIELDS
 
 
 SERVICE_URL = "http://localhost:8001"
@@ -82,16 +93,32 @@ def upstream():
 
 
 class FakeBucket:
-    """The case bucket: records every upload, and fails on the object whose name ends with `fail_on`."""
+    """The case bucket: records every upload and download.
+
+    An upload fails on the object whose name ends with `fail_on`; a download answers the
+    uploaded bytes, None for a file name in `missing` (the lifecycle rule deleted it), and
+    raises with `fail_download`.
+    """
 
     def __init__(self) -> None:
         self.uploads: list[tuple[str, bytes, str]] = []
         self.fail_on: str | None = None
+        self.downloads: list[str] = []
+        self.missing: set[str] = set()
+        self.fail_download = False
 
     def upload(self, name: str, data: bytes, content_type: str) -> None:
         if self.fail_on and name.endswith(self.fail_on):
             raise OSError("bucket refused")
         self.uploads.append((name, data, content_type))
+
+    def download(self, name: str) -> bytes | None:
+        self.downloads.append(name)
+        if self.fail_download:
+            raise OSError("bucket refused")
+        if name.rsplit("/", 1)[1] in self.missing:
+            return None
+        return next((data for stored, data, _ in self.uploads if stored == name), None)
 
     @property
     def names(self) -> list[str]:
@@ -108,6 +135,134 @@ def cases():
     fastapi_app.dependency_overrides[get_case_bucket] = lambda: fake
     yield fake
     fastapi_app.dependency_overrides.pop(get_case_bucket, None)
+
+
+class FakeRows:
+    """The `agent_feedback` table in memory, in place of `AgentFeedbackRepository`.
+
+    Each method is an `AsyncMock` around an in-memory implementation, so a test can read
+    what the route asked for (`await_args`) as well as what it got. `create_case` raises
+    `fail` when set; `list_cases` answers the stored rows newest first up to `limit`, the
+    filters being the repository's business (tests/integration/test_repositories.py).
+    """
+
+    def __init__(self) -> None:
+        self.rows: dict[str, AgentFeedback] = {}
+        self.fail: Exception | None = None
+        self.create_case = AsyncMock(side_effect=self._create_case)
+        self.get_by_id = AsyncMock(side_effect=self._get_by_id)
+        self.list_cases = AsyncMock(side_effect=self._list_cases)
+        self.siblings = AsyncMock(side_effect=self._siblings)
+        self.update = AsyncMock(side_effect=self._update)
+
+    def add(self, **overrides: Any) -> AgentFeedback:
+        row = _row(**overrides)
+        self.rows[row.id] = row
+        return row
+
+    async def _create_case(self, row: dict[str, Any]) -> AgentFeedback:
+        if self.fail is not None:
+            raise self.fail
+        return self.add(**row)
+
+    async def _get_by_id(self, case_id: str) -> AgentFeedback | None:
+        return self.rows.get(case_id)
+
+    async def _list_cases(self, *, limit: int, **filters: Any) -> list[AgentFeedback]:
+        return sorted(self.rows.values(), key=lambda row: row.id, reverse=True)[:limit]
+
+    async def _siblings(self, session_hash: str, result_version: int, exclude_id: str) -> list[str]:
+        return sorted(
+            row.id
+            for row in self.rows.values()
+            if row.session_hash == session_hash and row.result_version == result_version and row.id != exclude_id
+        )
+
+    async def _update(self, case_id: str, data: dict[str, Any]) -> AgentFeedback | None:
+        row = self.rows.get(case_id)
+        if row is None:
+            return None
+        for key, value in data.items():
+            if key in AGENT_FEEDBACK_UPDATABLE_FIELDS:
+                setattr(row, key, value)
+        return row
+
+
+CASE_ID = "20261012T143005Z-1a2b3c4d"
+
+
+def _row(**overrides: Any) -> AgentFeedback:
+    """A complete `agent_feedback` row, as the table holds it after the insert."""
+    case_id = overrides.get("id", CASE_ID)
+    values: dict[str, Any] = {
+        "id": case_id,
+        "manifest_schema": 1,
+        "created_at": datetime(2026, 10, 12, 14, 30, 5),
+        "case_uri": f"gs://anyplot-agent-cases/cases/{case_id}/",
+        "user_hash": "adm_0123456789abcdef",
+        "session_hash": "fedcba9876543210",
+        "spec_id": "scatter-basic",
+        "library_id": "matplotlib",
+        "locale": "de-CH",
+        "reaction": "thumbs_down",
+        "message": "the legend hides the points",
+        "include_data": True,
+        "status": "new",
+        "result_version": 3,
+        "replaces": None,
+        "model": "claude-haiku-5-5",
+        "model_version": None,
+        "judge_model": "claude-haiku-5-5",
+        "prompt_hash": "0123456789abcdef",
+        "pipeline_status": "needs_attention",
+        "attempts": 2,
+        "tokens": None,
+        "cost_estimate": None,
+        "files": ["plot-light.png", "plot-dark.png", "plot.py", "data.csv", "manifest.json"],
+        "tags": [],
+        "expected": None,
+        "promoted_at": None,
+        "superseded_by": None,
+        "updated_at": datetime(2026, 10, 12, 14, 30, 6),
+    }
+    return AgentFeedback(**{**values, **overrides})
+
+
+@pytest.fixture(autouse=True)
+def rows(monkeypatch):
+    """Every test's `agent_feedback` table is a `FakeRows`, behind a session that is a mock.
+
+    Module-wide, not per class: in CI the Run Tests job exports the production
+    `DATABASE_URL` for the whole run, so a route that takes `Db` without these overrides
+    would open a session there. `get_db` yields a mock, `require_db`'s real body passes
+    (`is_db_configured` is patched), the repository is the fake, and `init_db` raises, so
+    no router test can build an engine at all.
+    """
+    fake = FakeRows()
+
+    async def mock_get_db():
+        yield AsyncMock()
+
+    async def no_engine() -> None:
+        raise AssertionError("router tests must never build an engine")
+
+    monkeypatch.setattr("core.database.connection.init_db", no_engine)
+    fastapi_app.dependency_overrides[get_db] = mock_get_db
+    with (
+        patch("api.dependencies.is_db_configured", return_value=True),
+        patch("api.routers.agent.AgentFeedbackRepository", return_value=fake),
+    ):
+        yield fake
+    fastapi_app.dependency_overrides.pop(get_db, None)
+
+
+@pytest.fixture(autouse=True)
+def catalogue():
+    """The catalogue's implementation the case detail diffs against: none unless a test sets one."""
+    repo = MagicMock()
+    repo.get_code = AsyncMock(return_value=None)
+    with patch("api.routers.agent.ImplRepository", return_value=repo):
+        yield repo
 
 
 @pytest.fixture
@@ -178,6 +333,10 @@ ALL_ROUTES = [
     ("GET", "/debug/agent/sessions/s1/bundle?include_data=true", None),
     ("POST", "/debug/agent/sessions/s1/feedback", {"reaction": "bug", "include_data": True, "result_version": 1}),
     ("DELETE", "/debug/agent/sessions/s1", None),
+    ("GET", "/debug/agent/cases?status=open", None),
+    ("GET", f"/debug/agent/cases/{CASE_ID}", None),
+    ("GET", f"/debug/agent/cases/{CASE_ID}/files/plot.py", None),
+    ("PATCH", f"/debug/agent/cases/{CASE_ID}", {"status": "done"}),
 ]
 
 
@@ -205,12 +364,16 @@ class TestGateAndKillSwitch:
         assert upstream.requests[0].headers["X-Anyplot-User"] == token_user
 
     @pytest.mark.parametrize(("method", "path", "body"), ALL_ROUTES)
-    def test_every_route_404_when_disabled(self, client, upstream, monkeypatch, method, path, body) -> None:
+    def test_every_route_404_when_disabled(
+        self, client, upstream, cases, rows, monkeypatch, method, path, body
+    ) -> None:
         monkeypatch.setattr(settings, "agent_enabled", False)
         response = client.request(method, path, json=body, headers=CLIENT_HEADERS)
         assert response.status_code == 404
         assert response.json() == {"detail": NOT_ENABLED}
         assert upstream.requests == []
+        assert (cases.uploads, cases.downloads) == ([], [])
+        assert rows.get_by_id.await_count + rows.list_cases.await_count + rows.create_case.await_count == 0
 
     @pytest.mark.parametrize("unset", ["agent_service_url", "agent_user_id_key"])
     def test_404_when_enabled_but_unconfigured(self, client, upstream, monkeypatch, unset) -> None:
@@ -1506,6 +1669,68 @@ class TestFeedback:
             (second, manifests[0]["session_hash"], 3, first),
         ]
 
+    def test_the_row_is_inserted_after_the_last_upload_from_the_stored_manifest(
+        self, client, upstream, cases, rows
+    ) -> None:
+        upstream.handler = _answer_bundle
+        uploaded_before_insert: list[list[str]] = []
+        insert = rows.create_case.side_effect
+
+        async def recording(row):
+            uploaded_before_insert.append(list(cases.names))
+            return await insert(row)
+
+        rows.create_case.side_effect = recording
+
+        response = self.post(client)
+
+        assert response.status_code == 201
+        assert uploaded_before_insert == [["plot-light.png", "plot-dark.png", "plot.py", "data.csv", "manifest.json"]]
+        row = rows.create_case.await_args.args[0]
+        assert row == row_from_manifest(json.loads(cases.get("manifest.json")))
+        assert row["id"] == response.json()["case_id"]
+        assert row["locale"] == "de-CH"
+        assert rows.rows[row["id"]].status == "new"
+
+    def test_replaces_reaches_the_row(self, client, upstream, cases, rows) -> None:
+        upstream.handler = _answer_bundle
+        first = self.post(client).json()["case_id"]
+        second = self.post(client, replaces=first).json()["case_id"]
+        assert [call.args[0]["replaces"] for call in rows.create_case.await_args_list] == [None, first]
+        assert rows.create_case.await_args.args[0]["id"] == second
+
+    def test_a_failed_row_insert_is_502_row_missing_and_the_case_stays(self, client, upstream, cases, rows) -> None:
+        upstream.handler = _answer_bundle
+        rows.fail = OSError("db down")
+
+        response = self.post(client)
+
+        assert response.status_code == 502
+        case_id = json.loads(cases.get("manifest.json"))["id"]
+        # The stored case's id, so the page can name it in the next edit's `replaces`.
+        assert response.json() == {"detail": "row_missing", "ref": response.headers["X-Request-Id"], "case_id": case_id}
+        assert response.headers["Cache-Control"] == "private, no-store"
+        assert cases.names == ["plot-light.png", "plot-dark.png", "plot.py", "data.csv", "manifest.json"]
+
+    def test_a_failed_upload_inserts_no_row(self, client, upstream, cases, rows) -> None:
+        upstream.handler = _answer_bundle
+        cases.fail_on = "/manifest.json"
+        assert self.post(client).json()["detail"] == "storage"
+        rows.create_case.assert_not_awaited()
+
+    def test_without_a_configured_database_nothing_is_fetched_or_stored(self, client, upstream, cases, rows) -> None:
+        """503 before the bundle fetch: an API without a database never stores a case it cannot index.
+
+        Patched, never left to an unset `DATABASE_URL`, which CI sets for the whole run.
+        """
+        upstream.handler = _answer_bundle
+        with patch("api.dependencies.is_db_configured", return_value=False):
+            response = self.post(client)
+        assert response.status_code == 503
+        assert upstream.requests == []
+        assert cases.names == []
+        rows.create_case.assert_not_awaited()
+
 
 class TestUpstreamMapping:
     @pytest.mark.parametrize(
@@ -1578,3 +1803,436 @@ class TestPassThroughRoutes:
         assert response.status_code == 204
         assert response.headers["X-Request-Id"]
         assert str(upstream.requests[0].url) == f"{SERVICE_URL}/v1/sessions/s1/cancel"
+
+
+def _seed(cases: FakeBucket, rows: FakeRows, *, include_data: bool = True, **row_overrides: Any) -> AgentFeedback:
+    """A stored case: its files in the fake bucket through the real `build_case`, its row in the fake table."""
+    case = build_case(
+        json.dumps(_feedback_bundle(3, data_csv="hours,score\n1.5,52\n")).encode(),
+        Submission(
+            reaction="thumbs_down", message="the legend hides the points", include_data=include_data, result_version=3
+        ),
+        case_id=CASE_ID,
+        created_at=datetime(2026, 10, 12, 14, 30, 5, tzinfo=UTC),
+        bucket="anyplot-agent-cases",
+        user_hash="adm_0123456789abcdef",
+        session_id="abcdefghijk",
+    )
+    write_case(cases, case)
+    return rows.add(**{**row_from_manifest(case.manifest), **row_overrides})
+
+
+def test_the_route_types_match_the_model_tuples() -> None:
+    """The routes' Literal types are written by hand; the model's tuples are the source."""
+    assert get_args(CaseStatus) == FEEDBACK_STATUSES
+    assert get_args(Reaction) == FEEDBACK_REACTIONS
+    assert get_args(Expected) == AGENT_CASE_EXPECTED
+    assert get_args(StatusFilter) == (*FEEDBACK_STATUSES, "open")
+
+
+class TestCases:
+    """The triage routes: list, detail, files and PATCH under /debug/agent/cases."""
+
+    LIST = "/debug/agent/cases"
+    PATH = f"/debug/agent/cases/{CASE_ID}"
+    OLDER = "20261012T140000Z-00000001"
+    NEWER = "20261012T150000Z-00000002"
+
+    def send(self, client, body: Any):
+        return client.patch(self.PATH, json=body, headers=CLIENT_HEADERS)
+
+    # ---- list ---------------------------------------------------------------
+
+    def test_list_maps_the_query_onto_the_repository(self, client, rows) -> None:
+        query = {
+            "reaction": "bug",
+            "status": "open",
+            "spec": "scatter-basic",
+            "library": "matplotlib",
+            "model_version": "m1",
+            "tag": "legend-overlap",
+            "include_superseded": "true",
+            "before": CASE_ID,
+            "limit": 2,
+        }
+        response = client.get(self.LIST, params=query)
+
+        assert response.status_code == 200
+        assert rows.list_cases.await_args.kwargs == {
+            "reaction": "bug",
+            "status": ("new", "in_progress"),
+            "spec_id": "scatter-basic",
+            "library_id": "matplotlib",
+            "model_version": "m1",
+            "tag": "legend-overlap",
+            "include_superseded": True,
+            "before": CASE_ID,
+            "limit": 3,
+        }
+        assert response.headers["Cache-Control"] == "private, no-store"
+        assert response.headers["X-Request-Id"]
+
+    def test_list_defaults_hide_superseded_rows(self, client, rows) -> None:
+        client.get(self.LIST)
+        assert rows.list_cases.await_args.kwargs == {
+            "reaction": None,
+            "status": None,
+            "spec_id": None,
+            "library_id": None,
+            "model_version": None,
+            "tag": None,
+            "include_superseded": False,
+            "before": None,
+            "limit": 51,
+        }
+
+    def test_list_passes_one_status_as_is(self, client, rows) -> None:
+        client.get(self.LIST, params={"status": "wont_solve"})
+        assert rows.list_cases.await_args.kwargs["status"] == "wont_solve"
+
+    def test_list_pages_newest_first_with_has_more(self, client, rows) -> None:
+        for case_id in (self.OLDER, CASE_ID, self.NEWER):
+            rows.add(id=case_id)
+
+        page = client.get(self.LIST, params={"limit": 2}).json()
+        assert [item["id"] for item in page["items"]] == [self.NEWER, CASE_ID]
+        assert page["has_more"] is True
+
+        page = client.get(self.LIST, params={"limit": 3}).json()
+        assert len(page["items"]) == 3
+        assert page["has_more"] is False
+
+    def test_list_items_carry_the_whole_row_with_utc_times(self, client, rows) -> None:
+        rows.add(promoted_at=datetime(2026, 10, 12, 15, 0, 0), expected="rejected", tags=["legend"])
+
+        item = client.get(self.LIST).json()["items"][0]
+
+        assert item == {
+            "id": CASE_ID,
+            "created_at": "2026-10-12T14:30:05Z",
+            "reaction": "thumbs_down",
+            "message": "the legend hides the points",
+            "include_data": True,
+            "status": "new",
+            "tags": ["legend"],
+            "spec_id": "scatter-basic",
+            "library_id": "matplotlib",
+            "locale": "de-CH",
+            "result_version": 3,
+            "replaces": None,
+            "superseded_by": None,
+            "promoted_at": "2026-10-12T15:00:00Z",
+            "expected": "rejected",
+            "model": "claude-haiku-5-5",
+            "model_version": None,
+            "judge_model": "claude-haiku-5-5",
+            "prompt_hash": "0123456789abcdef",
+            "pipeline_status": "needs_attention",
+            "attempts": 2,
+            "tokens": None,
+            "cost_estimate": None,
+            "files": ["plot-light.png", "plot-dark.png", "plot.py", "data.csv", "manifest.json"],
+            "user_hash": "adm_0123456789abcdef",
+            "session_hash": "fedcba9876543210",
+            "case_uri": f"gs://anyplot-agent-cases/cases/{CASE_ID}/",
+            "manifest_schema": 1,
+            "updated_at": "2026-10-12T14:30:06Z",
+        }
+
+    @pytest.mark.parametrize(
+        "query",
+        [
+            "reaction=love",
+            "status=retired",
+            "spec=Bad_Spec",
+            "library=mat-plotlib",
+            "model_version=" + "m" * 101,
+            "model_version=",
+            "tag=Legend",
+            "tag=" + "a" * 41,
+            "include_superseded=maybe",
+            "before=yesterday",
+            "limit=0",
+            "limit=201",
+        ],
+    )
+    def test_list_refuses_a_bad_parameter(self, client, rows, query) -> None:
+        assert client.get(f"{self.LIST}?{query}").status_code == 422
+        rows.list_cases.assert_not_awaited()
+
+    # ---- detail -------------------------------------------------------------
+
+    def test_detail_is_404_without_a_row(self, client, cases, rows) -> None:
+        response = client.get(self.PATH)
+        assert response.status_code == 404
+        assert response.json() == {"detail": "not_found", "ref": response.headers["X-Request-Id"]}
+        assert cases.downloads == []
+
+    @pytest.mark.parametrize("case_id", ["20261012T143005Z-1A2B3C4D", "case-1", "20261012T143005Z-1a2b3c4d0"])
+    def test_detail_is_422_for_an_id_that_is_no_case_id(self, client, rows, case_id) -> None:
+        assert client.get(f"{self.LIST}/{case_id}").status_code == 422
+        rows.get_by_id.assert_not_awaited()
+
+    def test_detail_adds_what_the_manifest_holds(self, client, cases, rows) -> None:
+        _seed(cases, rows)
+
+        response = client.get(self.PATH)
+
+        assert response.status_code == 200
+        assert response.headers["Cache-Control"] == "private, no-store"
+        body = response.json()
+        assert (body["id"], body["created_at"], body["expired"]) == (CASE_ID, "2026-10-12T14:30:05Z", False)
+        assert body["transcript"] == _feedback_bundle()["transcript"]
+        assert body["code"] == PLOT_PY
+        assert body["residual_defects"] == ["VQ-03 light: overlap"]
+        assert body["changes"] == ["log scale"]
+        assert body["result_reason"] is None
+        assert body["config"] == _feedback_bundle()["config"]
+        assert body["bindings"] == [{"role": "x", "column": "hours"}]
+        assert body["snapshot_library_version"] == "3.10.0"
+        assert (body["diff"], body["catalogue_library_version"], body["siblings"]) == (None, None, [])
+        assert cases.downloads == [case_object(CASE_ID, "manifest.json")]
+
+    def test_detail_diffs_against_the_catalogue_without_the_export_header(self, client, cases, rows, catalogue) -> None:
+        _seed(cases, rows)
+        catalogue.get_code.return_value = _make_impl(
+            code="import pandas as pd  # noqa: F401\nimport numpy as np\n", library_version="3.11.2"
+        )
+
+        body = client.get(self.PATH).json()
+
+        catalogue.get_code.assert_awaited_once_with("scatter-basic", "matplotlib")
+        assert body["diff"] == (
+            "--- catalogue/scatter-basic/matplotlib.py\n"
+            "+++ case/plot.py\n"
+            "@@ -1,2 +1 @@\n"
+            " import pandas as pd\n"
+            "-import numpy as np\n"
+        )
+        # The catalogue at triage time, next to the one the session adapted.
+        assert (body["catalogue_library_version"], body["snapshot_library_version"]) == ("3.11.2", "3.10.0")
+
+    def test_detail_skips_the_catalogue_without_a_spec_or_library(self, client, cases, rows, catalogue) -> None:
+        _seed(cases, rows, library_id=None)
+        body = client.get(self.PATH).json()
+        catalogue.get_code.assert_not_awaited()
+        assert body["diff"] is None
+        assert body["code"] == PLOT_PY
+
+    def test_detail_lists_the_other_rows_of_the_same_version(self, client, cases, rows) -> None:
+        seeded = _seed(cases, rows)
+        rows.add(id=self.OLDER, session_hash=seeded.session_hash)
+        rows.add(id=self.NEWER, session_hash=seeded.session_hash, result_version=2)
+        rows.add(id="20261012T160000Z-00000003")
+        assert client.get(self.PATH).json()["siblings"] == [self.OLDER]
+
+    def test_detail_of_an_expired_case_keeps_the_row(self, client, cases, rows, catalogue) -> None:
+        seeded = _seed(cases, rows)
+        rows.add(id=self.OLDER, session_hash=seeded.session_hash)
+        catalogue.get_code.return_value = _make_impl(library_version="3.11.2")
+        cases.missing = {"manifest.json"}
+
+        response = client.get(self.PATH)
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["expired"] is True
+        assert (body["id"], body["reaction"]) == (CASE_ID, "thumbs_down")
+        for field in ("transcript", "code", "diff", "snapshot_library_version", "result_reason", "config"):
+            assert body[field] is None, field
+        assert (body["residual_defects"], body["changes"], body["bindings"]) == ([], [], [])
+        assert body["siblings"] == [self.OLDER]
+        assert body["catalogue_library_version"] == "3.11.2"
+
+    def test_detail_is_502_storage_when_the_bucket_fails(self, client, cases, rows) -> None:
+        _seed(cases, rows)
+        cases.fail_download = True
+        response = client.get(self.PATH)
+        assert response.status_code == 502
+        assert response.json() == {"detail": "storage", "ref": response.headers["X-Request-Id"]}
+
+    def test_detail_is_502_storage_for_a_manifest_that_is_no_json_object(self, client, cases, rows) -> None:
+        rows.add()
+        cases.upload(case_object(CASE_ID, "manifest.json"), b"[1, 2]", "application/json")
+        assert client.get(self.PATH).json()["detail"] == "storage"
+
+    # ---- files --------------------------------------------------------------
+
+    @pytest.mark.parametrize(
+        ("name", "content_type"),
+        [
+            ("plot-light.png", "image/png"),
+            ("plot-dark.png", "image/png"),
+            ("plot.py", "text/x-python; charset=utf-8"),
+            ("data.csv", "text/csv; charset=utf-8"),
+            ("manifest.json", "application/json"),
+        ],
+    )
+    def test_file_as_stored_with_its_type_and_headers(self, client, cases, rows, name, content_type) -> None:
+        _seed(cases, rows)
+
+        response = client.get(f"{self.PATH}/files/{name}")
+
+        assert response.status_code == 200
+        assert response.content == cases.get(name)
+        assert response.headers["Content-Type"] == content_type
+        assert response.headers["Cache-Control"] == "private, no-store"
+        assert response.headers["X-Content-Type-Options"] == "nosniff"
+        assert response.headers["Content-Disposition"] == f'inline; filename="{name}"'
+        assert re.fullmatch(r"[0-9a-f-]{36}", response.headers["X-Request-Id"])
+        assert cases.downloads == [case_object(CASE_ID, name)]
+
+    def test_a_file_the_case_does_not_hold_is_404_without_a_bucket_read(self, client, cases, rows) -> None:
+        _seed(cases, rows, include_data=False)
+        response = client.get(f"{self.PATH}/files/data.csv")
+        assert response.status_code == 404
+        assert response.json() == {"detail": "not_found", "ref": response.headers["X-Request-Id"]}
+        assert cases.downloads == []
+
+    def test_a_file_of_an_unknown_case_is_404(self, client, cases, rows) -> None:
+        assert client.get(f"{self.PATH}/files/plot.py").status_code == 404
+        assert cases.downloads == []
+
+    def test_an_expired_file_is_404(self, client, cases, rows) -> None:
+        _seed(cases, rows)
+        cases.missing = {"plot.py"}
+        response = client.get(f"{self.PATH}/files/plot.py")
+        assert response.status_code == 404
+        assert response.json()["detail"] == "not_found"
+
+    def test_a_file_is_502_storage_when_the_bucket_fails(self, client, cases, rows) -> None:
+        _seed(cases, rows)
+        cases.fail_download = True
+        response = client.get(f"{self.PATH}/files/plot.py")
+        assert response.status_code == 502
+        assert response.json() == {"detail": "storage", "ref": response.headers["X-Request-Id"]}
+
+    @pytest.mark.parametrize("name", ["secrets.txt", "plot.PY", "manifest.json.bak", "plot-light.png.py"])
+    def test_another_file_name_is_422(self, client, cases, rows, name) -> None:
+        _seed(cases, rows)
+        assert client.get(f"{self.PATH}/files/{name}").status_code == 422
+        assert cases.downloads == []
+
+    # ---- PATCH --------------------------------------------------------------
+
+    def test_patch_sets_the_status(self, client, rows) -> None:
+        rows.add()
+        response = self.send(client, {"status": "done"})
+        assert response.status_code == 200
+        assert response.json()["status"] == "done"
+        assert response.headers["Cache-Control"] == "private, no-store"
+        assert rows.update.await_args.args == (CASE_ID, {"status": "done"})
+
+    def test_patch_stores_the_tags_sorted(self, client, rows) -> None:
+        rows.add(tags=["old"])
+        assert self.send(client, {"tags": ["overlap", "legend"]}).json()["tags"] == ["legend", "overlap"]
+        assert rows.update.await_args.args == (CASE_ID, {"tags": ["legend", "overlap"]})
+        assert self.send(client, {"tags": []}).json()["tags"] == []
+
+    def test_patch_takes_ten_tags(self, client, rows) -> None:
+        rows.add()
+        tags = [f"tag-{number}" for number in range(10)]
+        assert self.send(client, {"tags": tags}).json()["tags"] == sorted(tags)
+
+    @pytest.mark.parametrize(
+        "body",
+        [
+            {},
+            {"status": None},
+            {"tags": None},
+            {"status": "retired"},
+            {"tags": ["legend", "legend"]},
+            {"tags": [f"tag-{number}" for number in range(11)]},
+            {"tags": ["Legend"]},
+            {"tags": ["a" * 41]},
+            {"tags": "legend"},
+            {"promoted": "yes"},
+            {"promoted": 1},
+            {"expected": "unknown"},
+            {"status": "done", "superseded_by": "x"},
+            {"replaces": CASE_ID},
+            [],
+        ],
+    )
+    def test_patch_refuses_a_bad_body(self, client, rows, body) -> None:
+        rows.add()
+        assert self.send(client, body).status_code == 422
+        rows.update.assert_not_awaited()
+
+    @pytest.mark.parametrize(("reaction", "expected"), [("thumbs_up", "accepted"), ("thumbs_down", "rejected")])
+    def test_promoting_a_thumbs_case_takes_the_reaction_rule(self, client, rows, reaction, expected) -> None:
+        rows.add(reaction=reaction)
+
+        body = self.send(client, {"promoted": True}).json()
+
+        assert body["expected"] == expected
+        assert body["promoted_at"].endswith("Z")
+        # Naive UTC, like every timestamp column, and now.
+        stored = rows.rows[CASE_ID].promoted_at
+        assert stored.tzinfo is None
+        assert abs(stored - datetime.now(UTC).replace(tzinfo=None)).total_seconds() < 60
+
+    def test_promoting_keeps_an_outcome_already_chosen(self, client, rows) -> None:
+        rows.add(reaction="thumbs_up", expected="rejected")
+        assert self.send(client, {"promoted": True}).json()["expected"] == "rejected"
+        assert set(rows.update.await_args.args[1]) == {"promoted_at"}
+
+    @pytest.mark.parametrize("reaction", ["bug", "idea"])
+    def test_promoting_a_bug_or_idea_needs_an_outcome(self, client, rows, reaction) -> None:
+        rows.add(reaction=reaction)
+
+        response = self.send(client, {"promoted": True, "status": "in_progress"})
+
+        assert response.status_code == 422
+        assert response.json() == {"detail": "expected_required", "ref": response.headers["X-Request-Id"]}
+        rows.update.assert_not_awaited()
+        assert rows.rows[CASE_ID].promoted_at is None
+
+    @pytest.mark.parametrize("reaction", ["bug", "idea"])
+    def test_promoting_a_bug_or_idea_with_an_outcome(self, client, rows, reaction) -> None:
+        rows.add(reaction=reaction)
+        body = self.send(client, {"promoted": True, "expected": "accepted"}).json()
+        assert body["expected"] == "accepted"
+        assert body["promoted_at"] is not None
+
+    def test_promoting_a_case_without_data_is_422_no_data(self, client, rows) -> None:
+        """The harness cannot run a case without its data.csv: checked before anything else, nothing changes."""
+        rows.add(reaction="bug", include_data=False, files=["plot.py", "manifest.json"])
+
+        response = self.send(client, {"promoted": True, "status": "in_progress"})
+
+        assert response.status_code == 422
+        assert response.json() == {"detail": "no_data", "ref": response.headers["X-Request-Id"]}
+        rows.update.assert_not_awaited()
+
+    def test_promoting_again_keeps_the_first_time(self, client, rows) -> None:
+        rows.add(promoted_at=datetime(2026, 10, 12, 15, 0, 0), expected="rejected")
+        assert self.send(client, {"promoted": True}).json()["promoted_at"] == "2026-10-12T15:00:00Z"
+        assert rows.update.await_args.args == (CASE_ID, {})
+
+    def test_unpromoting_clears_the_time_and_keeps_the_outcome(self, client, rows) -> None:
+        rows.add(promoted_at=datetime(2026, 10, 12, 15, 0, 0), expected="rejected")
+        body = self.send(client, {"promoted": False}).json()
+        assert (body["promoted_at"], body["expected"]) == (None, "rejected")
+
+    def test_an_outcome_alone_is_stored(self, client, rows) -> None:
+        rows.add(reaction="idea")
+        body = self.send(client, {"expected": "rejected"}).json()
+        assert (body["expected"], body["promoted_at"]) == ("rejected", None)
+
+    def test_a_superseded_and_retired_case_can_still_be_changed(self, client, rows) -> None:
+        rows.add(status="done", superseded_by=self.NEWER)
+        assert self.send(client, {"status": "in_progress"}).json()["status"] == "in_progress"
+
+    def test_patch_of_an_unknown_case_is_404(self, client, rows) -> None:
+        response = self.send(client, {"status": "done"})
+        assert response.status_code == 404
+        assert response.json()["detail"] == "not_found"
+        rows.update.assert_not_awaited()
+
+    def test_patch_needs_the_client_header(self, client, rows) -> None:
+        rows.add()
+        response = client.patch(self.PATH, json={"status": "done"})
+        assert response.status_code == 403
+        assert response.json() == {"detail": "client_header_required"}
+        rows.update.assert_not_awaited()
