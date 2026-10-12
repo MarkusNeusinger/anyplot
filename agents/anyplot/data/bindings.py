@@ -22,15 +22,21 @@ best tier. A datetime column is tier 0 for every role that accepts datetime,
 because no other kind can use it; that keeps `x (numeric/datetime)` on the date
 column instead of the first number. A role without kinds accepts any column in
 `check_bindings` but is never bound by default.
+
+A role that needs values of 0 or more (`DataRole.non_negative`, set per spec by
+`signs.py`) never takes a column with a negative value by default; it takes the next
+candidate or stays unbound. Bound by hand, it is valid but warned about
+(`BindingCheck.warnings`).
 """
 
 import itertools
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from difflib import SequenceMatcher
 
 from ..schemas import Binding, ColumnDtype, ColumnProfile, DatasetProfile
 from .roles import DataRole, RoleKind
+from .signs import has_negative, sign_line
 
 
 # A variadic family binds at most this many columns by default (charts with more series stop
@@ -53,11 +59,17 @@ _CAMEL = re.compile(r"(?<=[a-z0-9])(?=[A-Z])")
 
 @dataclass(frozen=True)
 class BindingCheck:
-    """The verdict on a set of bindings. `complete` needs no errors and every required role bound."""
+    """The verdict on a set of bindings. `complete` needs no errors and every required role bound.
+
+    `warnings` never refuse a binding: one line per role that needs values of 0 or more
+    bound to a column with a negative value, or left open because every column that
+    fits it has one (`signs.py`).
+    """
 
     complete: bool
     errors: list[str]
     missing_roles: list[str]
+    warnings: list[str] = field(default_factory=list)
 
 
 def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Binding]:
@@ -193,10 +205,13 @@ def check_bindings(bindings: list[Binding], roles: list[DataRole], profile: Data
     `<name><n>`, never its bare name), a role bound twice, a column missing from the
     profile, a column bound twice, a dtype the role's kinds do not accept (see
     `ACCEPTS`). `missing_roles` lists the required roles without a binding; a
-    required variadic family needs at least one member.
+    required variadic family needs at least one member. `warnings`: a valid binding of
+    a non-negative role to a column with a negative value (`signs.sign_line`), and an
+    unbound non-negative role whose every fitting column has one.
     """
     columns = {column.name: column for column in profile.columns}
     errors: list[str] = []
+    warnings: list[str] = []
     seen_roles: set[str] = set()
     seen_columns: set[str] = set()
     bound: set[str] = set()
@@ -224,8 +239,21 @@ def check_bindings(bindings: list[Binding], roles: list[DataRole], profile: Data
             errors.append(f"role '{binding.role}' needs {wanted} data, but column '{column.name}' is {column.dtype}")
             continue
         bound.add(role.name)
+        if role.non_negative and has_negative(column):
+            warnings.append(sign_line(binding.role, column))
+    # An open non-negative role whose only fitting columns are negative says why it stayed open.
+    for role in roles:
+        if not role.non_negative or role.variadic or role.name in seen_roles:
+            continue
+        fitting = [column for column in profile.columns if role.kinds and accepts(role, column.dtype)]
+        if fitting and all(has_negative(column) for column in fitting):
+            names = ", ".join(f"'{column.name}'" for column in fitting[:3])
+            warnings.append(
+                f"{role.name}: not bound, because every column that fits it ({names}) has negative values; "
+                "this role needs values of 0 or more"
+            )
     missing = [role.name for role in roles if role.required and role.name not in bound]
-    return BindingCheck(complete=not errors and not missing, errors=errors, missing_roles=missing)
+    return BindingCheck(complete=not errors and not missing, errors=errors, missing_roles=missing, warnings=warnings)
 
 
 def resolve_role(name: str, roles: list[DataRole]) -> DataRole | None:
@@ -265,6 +293,9 @@ def _member_of(role: DataRole, name: str) -> bool:
 
 
 def _tier(role: DataRole, column: ColumnProfile) -> int | None:
+    """The column's rank as a default for `role`, or None: an incompatible dtype, or a negative value for a non-negative role."""
+    if role.non_negative and has_negative(column):
+        return None
     tiers = [ACCEPTS[kind][column.dtype] for kind in role.kinds if column.dtype in ACCEPTS[kind]]
     return min(tiers) if tiers else None
 

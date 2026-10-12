@@ -386,7 +386,17 @@ describe('parseAgentEvent', () => {
     expect(
       roles([{ name: 'x', kinds: ['numeric', 3], required: 'yes', internal: 1, description: 2 }])
     ).toEqual([
-      { name: 'x', kinds: ['numeric'], required: false, variadic: false, description: '' },
+      {
+        name: 'x',
+        kinds: ['numeric'],
+        required: false,
+        variadic: false,
+        description: '',
+        non_negative: false,
+      },
+    ]);
+    expect(roles([{ name: 'radius', kinds: ['numeric'], non_negative: true }])).toMatchObject([
+      { name: 'radius', non_negative: true },
     ]);
     const many = Array.from({ length: 60 }, (_, index) => ({
       ...GENERATED.roles[0],
