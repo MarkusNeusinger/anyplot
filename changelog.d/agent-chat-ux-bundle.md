@@ -6,7 +6,7 @@
   turns the columns into the plot's category and value columns (date columns kept)
   without a model call, as the next data version with fresh bindings, and `.undo()`
   takes it back. The rule is code (`agents/anyplot/data/shape.py`), and the
-  assistant's data summary names the offer.
+  assistant's data summary names the offer (#12156).
 
 ### Fixed
 
@@ -17,13 +17,13 @@
   server's and is followed, the page's English action messages no longer set the reply
   language, and a language the model cannot write gives English with one sentence that
   says so (the adapter notes it in its changes). A live check on Haiku with Japanese
-  chosen in the chip: reply and title in Japanese.
+  chosen in the chip: reply and title in Japanese (#12156).
 
 ### Changed
 
 - **After the first plot, `.create_plot()` is `.start_over()`.** Next to `.send()`,
   which changes the latest version, the button now says what it does: a new plot
-  from the catalogue plot with this data, without the earlier changes.
+  from the catalogue plot with this data, without the earlier changes (#12156).
 - **The language example is a real language.** The chip's free-text field and the
   tool descriptions name `Swedish` instead of `Klingon`, an example that invited a
-  language the plot text then did not use.
+  language the plot text then did not use (#12156).
