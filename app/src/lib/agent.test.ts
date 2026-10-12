@@ -104,6 +104,7 @@ describe('parseAgentEvent', () => {
       bindings: null,
       dataConfirmed: null,
       dataset: null,
+      language: null,
     });
   });
 
@@ -130,11 +131,40 @@ describe('parseAgentEvent', () => {
       ],
       dataConfirmed: false,
       dataset: null,
+      language: null,
     });
     expect(parseAgentEvent(raw('done', { bindings: [], data_confirmed: true }))).toMatchObject({
       bindings: [],
       dataConfirmed: true,
     });
+  });
+
+  it("reads done's session language and drops anything outside the pattern or the sources", () => {
+    const language = (value: unknown) => {
+      const event = parseAgentEvent(raw('done', { llm_calls: 1, language: value }));
+      return event?.type === 'done' ? event.language : 'not done';
+    };
+    expect(language({ language: 'de', source: 'detected' })).toEqual({
+      language: 'de',
+      source: 'detected',
+    });
+    expect(language({ language: 'Klingon', source: 'chosen', extra: 1 })).toEqual({
+      language: 'Klingon',
+      source: 'chosen',
+    });
+    expect(language({ language: 'en', source: 'default' })).toEqual({
+      language: 'en',
+      source: 'default',
+    });
+    // The chip shows the value as it comes: anything else is dropped whole.
+    expect(language({ language: 'a/b', source: 'chosen' })).toBeNull();
+    expect(language({ language: ' de', source: 'chosen' })).toBeNull();
+    expect(language({ language: 'x'.repeat(41), source: 'chosen' })).toBeNull();
+    expect(language({ language: 'de', source: 'guessed' })).toBeNull();
+    expect(language({ language: 'de' })).toBeNull();
+    expect(language('de')).toBeNull();
+    expect(language(['de', 'chosen'])).toBeNull();
+    expect(language(undefined)).toBeNull();
   });
 
   it('drops a malformed binding list whole and a step state that is not a boolean', () => {
@@ -505,6 +535,46 @@ describe('agentFetch', () => {
       status: 422,
       code: 'nothing_to_undo',
       ref: 'r-u',
+    });
+  });
+
+  it('puts the chip language to the language route with the CSRF header and reads the answer', async () => {
+    const fetchMock = vi.fn(
+      async () =>
+        new Response(JSON.stringify({ language: 'en', source: 'chosen' }), { status: 200 })
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    await expect(agentApi.setLanguage('', 'S/1', 'English')).resolves.toEqual({
+      language: 'en',
+      source: 'chosen',
+    });
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toMatch(/\/debug\/agent\/sessions\/S%2F1\/language$/);
+    expect(init).toMatchObject({ method: 'PUT' });
+    expect(JSON.parse(init.body as string)).toEqual({ language: 'English' });
+    expect((init.headers as Record<string, string>)['X-Anyplot-Client']).toBe('agent-chat/1');
+  });
+
+  it('falls back to the value as sent for an answer it cannot read, and reads a 409', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(JSON.stringify({ ok: true }), { status: 200 }))
+    );
+    await expect(agentApi.setLanguage('', 'S1', 'Klingon')).resolves.toEqual({
+      language: 'Klingon',
+      source: 'chosen',
+    });
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        async () =>
+          new Response(JSON.stringify({ detail: 'run_active', ref: 'r-l' }), { status: 409 })
+      )
+    );
+    await expect(agentApi.setLanguage('', 'S1', 'de')).rejects.toMatchObject({
+      status: 409,
+      code: 'run_active',
+      ref: 'r-l',
     });
   });
 

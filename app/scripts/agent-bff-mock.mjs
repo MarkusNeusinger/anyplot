@@ -32,7 +32,14 @@
  * applied binding change clears the mark, and until it holds every pipeline
  * run answers `plot{status: not_ready, reason: data_unconfirmed}`. Every
  * `done` carries the session's `bindings` and `data_confirmed`, as the service
- * syncs them after a run, and `dataset` after a turn that changed the data.
+ * syncs them after a run, `language` (`{language, source}`, the session
+ * language) and `dataset` after a turn that changed the data.
+ * `PUT .../language` (the header's language chip) validates `{language}` like
+ * the BFF (`^[A-Za-z][A-Za-z -]{0,39}$` on the value as sent, no other field),
+ * stores it in the service's normalised form (a known name or endonym of the
+ * ten common languages as its code, a two-letter value in lower case, anything
+ * else as typed) with the source `chosen`, answers `{language, source}`, and
+ * `409 run_active` while a turn runs.
  * `GET .../bundle?include_data=&version=` (the page's `.save()`) answers the
  * session's feedback case from the mock's state, with the agents service's
  * top-level keys (the transcript of the turns, every version's code, result and
@@ -71,6 +78,18 @@
  * way. Pasted text that looks like a formula ("zeichne sin(x) von -pi bis pi",
  * "y = x**2") answers `422 formula` instead of the transcription, as the
  * service does, because a model must never compute rows.
+ *
+ * The session language in miniature: every session starts at `en`/`default`.
+ * The first typed message that is not refused sets it (`detected`, the scope
+ * judge's job in the service): `de` when it reads German (an umlaut or ß, or a
+ * word such as "bitte", "und", "die", "mach", "zeichne", "beschriftung"), `en`
+ * otherwise, but an English one only from three words on ("sin x" keeps the
+ * default); a later message never changes it. "labels in german" or
+ * "beschriftung auf englisch" (english, german, french, spanish; deutsch,
+ * englisch, französisch, spanisch) is the root's `set_language`: `chosen`,
+ * which detection never overrides, and a reply; when the session has a plot,
+ * the refinement below follows. A question ("…?") in a German session gets the
+ * German reply.
  *
  * Scripted behaviour of a chat message:
  * - contains "weather" or "joke": the fixed out-of-scope refusal;
@@ -779,6 +798,24 @@ async function streamTurn(req, res, session, body, ref) {
     }
     runsInFlight += 1;
     try {
+      // The scope judge's detection (a typed message it accepts) and the root's
+      // `set_language`, in miniature; `done` carries the result.
+      if (typeof body.text === 'string' && !/weather|joke/.test(lower)) {
+        detectLanguage(session, text);
+      }
+      const asked = requestedLanguage(lower);
+      if (asked) {
+        session.language = asked.code;
+        session.languageSource = 'chosen';
+        if (session.versions.length === 0) {
+          await sleep(STEP_MS);
+          send('message', {
+            text: `From now on the plot text and my replies are in ${asked.name}; the next plot uses it.`,
+          });
+          return;
+        }
+        // With a plot, the root then makes the next version in the new language.
+      }
       if (body.action === 'summarize_data') {
         await sleep(STEP_MS * 2);
         send('message', { text: summarizeData(session) });
@@ -822,7 +859,10 @@ async function streamTurn(req, res, session, body, ref) {
       if (text.trim().endsWith('?')) {
         await sleep(STEP_MS * 2);
         send('message', {
-          text: 'The x axis uses the column you bound to x; the marker size is the s= argument of ax.scatter, line 18 of plot.py.',
+          text:
+            session.language === 'de'
+              ? 'Die x-Achse zeigt die Spalte, die du x zugeordnet hast; die Markergröße ist das Argument s= von ax.scatter, Zeile 18 von plot.py.'
+              : 'The x axis uses the column you bound to x; the marker size is the s= argument of ax.scatter, line 18 of plot.py.',
         });
         return;
       }
@@ -922,10 +962,80 @@ async function streamTurn(req, res, session, body, ref) {
       tokens: 18734,
       bindings: session.bindings,
       data_confirmed: session.confirmed,
+      language: { language: session.language, source: session.languageSource },
       ...(session.changed ? { dataset: session.changed } : {}),
     });
     res.end();
   }
+}
+
+// ---------------------------------------------------------------- session language
+
+/** The service's `LANGUAGE_PATTERN` (`agents/anyplot/language.py`). */
+const LANGUAGE_RE = /^[A-Za-z][A-Za-z -]{0,39}$/;
+/** The English names and endonyms the service stores as their code. */
+const LANGUAGE_NAMES = {
+  english: 'en',
+  german: 'de',
+  deutsch: 'de',
+  french: 'fr',
+  francais: 'fr',
+  spanish: 'es',
+  espanol: 'es',
+  italian: 'it',
+  italiano: 'it',
+  portuguese: 'pt',
+  portugues: 'pt',
+  dutch: 'nl',
+  nederlands: 'nl',
+  polish: 'pl',
+  polski: 'pl',
+  chinese: 'zh',
+  japanese: 'ja',
+};
+
+/** The service's `normalise`: one space between words, a known name as its code, a code in lower case. */
+function normaliseLanguage(value) {
+  const text = value.split(/\s+/).filter(Boolean).join(' ');
+  const code = LANGUAGE_NAMES[text.toLowerCase()];
+  if (code) return code;
+  return text.length === 2 ? text.toLowerCase() : text;
+}
+
+const GERMAN = /[äöüß]|\b(bitte|und|der|die|das|mit|zeichne|beschriftung|mach)\b/i;
+
+/**
+ * The scope judge's `lang` for the session's first accepted typed message, once:
+ * `de` for German, else `en`, which counts only from three words on (the judge
+ * also answers `en` when it cannot tell, so "sin x" keeps the default).
+ */
+function detectLanguage(session, text) {
+  if (session.languageSource !== 'default') return;
+  const code = GERMAN.test(text) ? 'de' : 'en';
+  if (code === 'en' && text.trim().split(/\s+/).length < 3) return;
+  session.language = code;
+  session.languageSource = 'detected';
+}
+
+const ASKED_LANGUAGES = {
+  english: ['en', 'English'],
+  englisch: ['en', 'English'],
+  german: ['de', 'German'],
+  deutsch: ['de', 'German'],
+  french: ['fr', 'French'],
+  französisch: ['fr', 'French'],
+  spanish: ['es', 'Spanish'],
+  spanisch: ['es', 'Spanish'],
+};
+
+/** "labels in german", "beschriftung auf englisch": the root's `set_language` request, or `null`. */
+function requestedLanguage(lower) {
+  const match =
+    lower.match(/\blabels? in (english|german|french|spanish)\b/) ??
+    lower.match(/\bbeschriftung (?:bitte )?auf (deutsch|englisch|französisch|spanisch)/);
+  if (!match) return null;
+  const [code, name] = ASKED_LANGUAGES[match[1]];
+  return { code, name };
 }
 
 /**
@@ -1402,6 +1512,9 @@ async function route(req, res) {
       transcript: [],
       // The quick feedback per result version: the latest submission, with its case id.
       feedback: {},
+      // The session language: English by default, whatever the browser's locale.
+      language: 'en',
+      languageSource: 'default',
       active: false,
       cancelled: false,
     });
@@ -1488,6 +1601,16 @@ async function route(req, res) {
     session.complete = checked.complete;
     session.confirmed = false; // the confirmation covered the previous set
     return json(res, 200, checked, ref);
+  }
+  if (method === 'PUT' && rest === '/language') {
+    if (session.active) return fail(res, 409, 'run_active', ref);
+    // The BFF's strict body: `language` only, matched as sent (a leading space is a 422).
+    const extra = body && typeof body === 'object' && Object.keys(body).some(k => k !== 'language');
+    const value = typeof body?.language === 'string' ? body.language : '';
+    if (extra || !LANGUAGE_RE.test(value)) return fail(res, 422, 'invalid', ref);
+    session.language = normaliseLanguage(value);
+    session.languageSource = 'chosen';
+    return json(res, 200, { language: session.language, source: 'chosen' }, ref);
   }
   if (method === 'POST' && rest === '/dataset/confirm') {
     if (session.active) return fail(res, 409, 'run_active', ref);
@@ -1657,7 +1780,13 @@ function feedbackProblem(body) {
  */
 function sessionBundle(session, versions, includeData) {
   return {
-    session: { spec_id: session.specId, library: session.library, locale: 'en' },
+    session: {
+      spec_id: session.specId,
+      library: session.library,
+      locale: 'en',
+      plot_language: session.language,
+      plot_language_source: session.languageSource,
+    },
     snapshot: { spec_id: session.specId, library_version: '3.10.0' },
     transcript: session.transcript,
     versions: versions.map(version => {

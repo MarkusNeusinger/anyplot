@@ -19,6 +19,13 @@ export const AGENT_CLIENT_HEADERS = { 'X-Anyplot-Client': 'agent-chat/1' } as co
 export const MAX_DATASET_BYTES = 200 * 1024;
 /** The BFF's limit on one chat message. */
 export const MAX_MESSAGE_CHARS = 2000;
+/**
+ * A session language: a short language name or code in Latin letters (`de`,
+ * `English`, `Klingon`), as the agents service and the BFF define it
+ * (`agents/anyplot/language.py`, `LANGUAGE_PATTERN`). The server matches the
+ * value as sent, so the page trims before it tests and sends.
+ */
+export const LANGUAGE_PATTERN = /^[A-Za-z][A-Za-z -]{0,39}$/;
 /** The libraries the agents service renders in phase 1; `/status` names the live set. */
 export const DEFAULT_AGENT_LIBRARIES = ['matplotlib', 'seaborn'] as const;
 
@@ -81,6 +88,24 @@ export interface Binding {
   role: string;
   /** `null` leaves the role unbound. */
   column: string | null;
+}
+
+/**
+ * How the session language was set: `default` (nobody yet, English), `detected`
+ * (the session's first typed message), `chosen` (the header's chip or a request
+ * in the chat). Only `chosen` is final.
+ */
+export type LanguageSource = 'default' | 'detected' | 'chosen';
+
+/**
+ * The session language: the assistant's replies and every text in the plot.
+ * Named `plotLanguage` in the page, because `language` there is the
+ * programming language of the code (`?language=python`).
+ */
+export interface PlotLanguage {
+  /** The server's stored form: a known name as its code (`English` is `en`), anything else as typed. */
+  language: string;
+  source: LanguageSource;
 }
 
 /**
@@ -564,6 +589,20 @@ export const agentApi = {
       method: 'PUT',
       body: JSON.stringify(bindings),
     }),
+  /**
+   * The chat header's chip: the session language with the source `chosen`, which
+   * detection never overrides. Answers the stored form (`English` comes back as
+   * `en`); an answer the page cannot read falls back to the value as sent.
+   * `409 run_active` while a turn or a render runs, `422 invalid` for a value
+   * outside `LANGUAGE_PATTERN`.
+   */
+  setLanguage: async (token: string, sid: string, language: string): Promise<PlotLanguage> => {
+    const answer = await agentJson<unknown>(`${sessionPath(sid)}/language`, token, {
+      method: 'PUT',
+      body: JSON.stringify({ language }),
+    });
+    return plotLanguage(answer) ?? { language, source: 'chosen' };
+  },
   /** Step 1's end: the stored dataset and its current bindings fit (`422 no_dataset` without one). */
   confirmDataset: (token: string, sid: string) =>
     agentJson<DatasetConfirmed>(`${sessionPath(sid)}/dataset/confirm`, token, post()),
@@ -707,6 +746,12 @@ export type AgentEvent =
        * data; `null` when the data did not change.
        */
       dataset: DatasetChanged | null;
+      /**
+       * The session language after the run (the first typed message or the
+       * assistant's `set_language` may have set it); `null` when the server sent
+       * none (a refused turn, a gone session, an older server).
+       */
+      language: PlotLanguage | null;
     };
 
 const isInt = (value: unknown): value is number =>
@@ -731,6 +776,22 @@ function bindingList(value: unknown): Binding[] | null {
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   !!value && typeof value === 'object' && !Array.isArray(value);
+
+const LANGUAGE_SOURCES = new Set<string>(['default', 'detected', 'chosen']);
+
+/**
+ * The session language of a `done` event or of the language route's answer,
+ * or `null`: an object whose `language` matches `LANGUAGE_PATTERN` and whose
+ * `source` is one of the three. The chip shows it as it comes, so anything
+ * else is dropped whole.
+ */
+function plotLanguage(value: unknown): PlotLanguage | null {
+  if (!isRecord(value)) return null;
+  const { language, source } = value;
+  if (typeof language !== 'string' || !LANGUAGE_PATTERN.test(language)) return null;
+  if (typeof source !== 'string' || !LANGUAGE_SOURCES.has(source)) return null;
+  return { language, source: source as LanguageSource };
+}
 /** A profile's `min` or `max`: a number, a string, or `null` for anything else. */
 const scalar = (value: unknown): number | string | null =>
   typeof value === 'number' || typeof value === 'string' ? value : null;
@@ -891,6 +952,7 @@ export function parseAgentEvent(raw: SseEvent): AgentEvent | null {
         bindings: bindingList(d.bindings),
         dataConfirmed: typeof d.data_confirmed === 'boolean' ? d.data_confirmed : null,
         dataset: datasetChanged(d.dataset),
+        language: plotLanguage(d.language),
       };
     default:
       return null;

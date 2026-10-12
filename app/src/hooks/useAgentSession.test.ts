@@ -1444,7 +1444,186 @@ describe('useAgentSession: versions and library', () => {
   });
 });
 
+describe('useAgentSession: session language', () => {
+  const languageNotices = (items: ChatItem[]) =>
+    items.filter(item => item.kind === 'notice' && item.text.startsWith('language:'));
+
+  it('starts in English whatever the locale, with no call', async () => {
+    mockFetch(baseRoutes());
+    const hook = renderHook(() => useAgentSession({ ...options, locale: 'de-CH' }));
+    await waitFor(() => expect(hook.result.current.state.phase).toBe('ready'));
+    expect(hook.result.current.state.plotLanguage).toEqual({ language: 'en', source: 'default' });
+    expect(calls.some(call => call.path.endsWith('/language'))).toBe(false);
+  });
+
+  it("takes the chip's choice as the server answers it", async () => {
+    const routes = baseRoutes();
+    routes['PUT /sessions/S1/language'] = () => json(200, { language: 'en', source: 'chosen' });
+    const { result } = await openSession(routes);
+    await act(() => result.current.setLanguage('English'));
+    const put = calls.find(call => call.path === '/sessions/S1/language');
+    expect(put).toMatchObject({ method: 'PUT', body: { language: 'English' } });
+    expect(put?.headers['X-Anyplot-Client']).toBe('agent-chat/1');
+    // The server's stored form, never the typed text.
+    expect(result.current.state.plotLanguage).toEqual({ language: 'en', source: 'chosen' });
+    expect(result.current.state.languageBusy).toBe(false);
+    // A choice is no data change and no detection: nothing in the thread.
+    expect(result.current.state.items).toEqual([]);
+  });
+
+  it('keeps the old value on a 409 and rejects for the chip', async () => {
+    const routes = baseRoutes();
+    routes['PUT /sessions/S1/language'] = () => json(409, { detail: 'run_active', ref: 'ref-l' });
+    const { result } = await openSession(routes);
+    let rejection: unknown;
+    await act(async () => {
+      rejection = await result.current.setLanguage('de').catch((err: unknown) => err);
+    });
+    expect(rejection).toMatchObject({ name: 'AgentApiError', code: 'run_active', ref: 'ref-l' });
+    expect(result.current.state.plotLanguage).toEqual({ language: 'en', source: 'default' });
+    expect(result.current.state.languageBusy).toBe(false);
+  });
+
+  it('holds everything else while the call runs, and sends nothing while a turn runs', async () => {
+    const gate = deferred<Response>();
+    const stream = liveSse([['ready', { run_id: 'r' }]]);
+    const routes = baseRoutes();
+    routes['PUT /sessions/S1/language'] = () => gate.promise;
+    routes['POST /sessions/S1/messages'] = () => stream.response;
+    const { result } = await openSession(routes);
+
+    let choice: Promise<void> = Promise.resolve();
+    act(() => {
+      choice = result.current.setLanguage('de');
+    });
+    await waitFor(() => expect(result.current.state.languageBusy).toBe(true));
+    expect(sessionBusy(result.current.state)).toBe(true);
+    // A turn would race the choice: nothing starts.
+    await act(() => result.current.sendMessage('make the points larger'));
+    expect(calls.some(call => call.path.endsWith('/messages'))).toBe(false);
+    gate.resolve(json(200, { language: 'de', source: 'chosen' }));
+    await act(() => choice);
+    expect(sessionBusy(result.current.state)).toBe(false);
+
+    // While a turn runs, the server would answer 409: the hook asks nothing.
+    let turn: Promise<void> = Promise.resolve();
+    act(() => {
+      turn = result.current.sendMessage('make the points larger');
+    });
+    await waitFor(() => expect(result.current.state.run).not.toBeNull());
+    await act(() => result.current.setLanguage('fr'));
+    expect(calls.filter(call => call.path.endsWith('/language'))).toHaveLength(1);
+    stream.push('done', { language: { language: 'de', source: 'chosen' } });
+    stream.close();
+    await act(() => turn);
+    expect(result.current.state.plotLanguage).toEqual({ language: 'de', source: 'chosen' });
+  });
+
+  it("takes the language a turn's done names, with one notice when it was detected", async () => {
+    const routes = baseRoutes();
+    let done: Record<string, unknown> = {
+      llm_calls: 1,
+      language: { language: 'de', source: 'detected' },
+    };
+    routes['POST /sessions/S1/messages'] = () =>
+      sse([
+        ['message', { text: 'Gern.' }],
+        ['done', done],
+      ]);
+    const { result } = await openSession(routes);
+    await act(() => result.current.sendMessage('Was zeigt die x-Achse?'));
+    expect(result.current.state.plotLanguage).toEqual({ language: 'de', source: 'detected' });
+    // The notice comes under the reply of the turn that set it.
+    expect(lastItem(result.current.state.items)).toMatchObject({
+      kind: 'notice',
+      text: 'language: de · detected from your message · the lang chip in the header changes it',
+    });
+    expect(lastItem(result.current.state.items)).not.toHaveProperty('tone');
+
+    // The next turn names the same language: no second notice.
+    await act(() => result.current.sendMessage('Und die y-Achse?'));
+    expect(languageNotices(result.current.state.items)).toHaveLength(1);
+
+    // The assistant's `set_language`: chosen, no notice.
+    done = { llm_calls: 1, language: { language: 'en', source: 'chosen' } };
+    await act(() => result.current.sendMessage('Beschriftung auf Englisch'));
+    expect(result.current.state.plotLanguage).toEqual({ language: 'en', source: 'chosen' });
+    expect(languageNotices(result.current.state.items)).toHaveLength(1);
+
+    // A done without the field (a refused turn) keeps the chip.
+    done = { llm_calls: 0 };
+    await act(() => result.current.sendMessage('tell me a joke'));
+    expect(result.current.state.plotLanguage).toEqual({ language: 'en', source: 'chosen' });
+  });
+});
+
 describe('agentReducer', () => {
+  it('syncs the session language from done, never down from chosen and never into the data', () => {
+    const ready: AgentSessionState = {
+      ...initialAgentState('matplotlib'),
+      phase: 'ready',
+      sessionId: 'S1',
+      dataConfirmed: true,
+    };
+    const sync = (
+      state: AgentSessionState,
+      language: string,
+      source: 'default' | 'detected' | 'chosen'
+    ) => agentReducer(state, { type: 'language_sync', plotLanguage: { language, source } });
+
+    // default → detected: the value and one quiet notice, the confirmation untouched.
+    const detected = sync(ready, 'de', 'detected');
+    expect(detected.plotLanguage).toEqual({ language: 'de', source: 'detected' });
+    expect(detected.dataConfirmed).toBe(true);
+    expect(detected.confirmLoss).toBeNull();
+    expect(detected.items).toEqual([
+      {
+        id: 1,
+        kind: 'notice',
+        text: 'language: de · detected from your message · the lang chip in the header changes it',
+      },
+    ]);
+    // default → default and detected → detected: nothing new in the thread.
+    expect(sync(ready, 'en', 'default').items).toEqual([]);
+    expect(sync(detected, 'de', 'detected').items).toHaveLength(1);
+    // default → chosen (the assistant's `set_language` on the first message): no notice.
+    expect(sync(ready, 'en', 'chosen')).toMatchObject({
+      plotLanguage: { language: 'en', source: 'chosen' },
+      items: [],
+    });
+
+    // A choice from another tab landed after the server read the sync: a stale done keeps it.
+    const chosen = agentReducer(ready, {
+      type: 'language_done',
+      plotLanguage: { language: 'Klingon', source: 'chosen' },
+    });
+    expect(sync(chosen, 'de', 'detected')).toBe(chosen);
+    expect(sync(chosen, 'en', 'default')).toBe(chosen);
+    expect(sync(detected, 'en', 'default')).toBe(detected);
+    // chosen over chosen applies: the assistant changed it during the turn.
+    expect(sync(chosen, 'fr', 'chosen').plotLanguage).toEqual({ language: 'fr', source: 'chosen' });
+  });
+
+  it('marks the language call busy until it ends, either way', () => {
+    const started = agentReducer(initialAgentState('matplotlib'), { type: 'language_start' });
+    expect(started.languageBusy).toBe(true);
+    expect(sessionBusy(started)).toBe(true);
+    const done = agentReducer(started, {
+      type: 'language_done',
+      plotLanguage: { language: 'de', source: 'chosen' },
+    });
+    expect(done).toMatchObject({
+      languageBusy: false,
+      plotLanguage: { language: 'de', source: 'chosen' },
+    });
+    const failed = agentReducer(started, { type: 'language_failed' });
+    expect(failed).toMatchObject({
+      languageBusy: false,
+      plotLanguage: { language: 'en', source: 'default' },
+    });
+    expect(sessionBusy(failed)).toBe(false);
+  });
+
   it('keeps one queued step while the position changes, then follows the pipeline', () => {
     let state: AgentSessionState = { ...initialAgentState('matplotlib'), sessionId: 'S1' };
     state = agentReducer(state, { type: 'run_start', kind: 'create_plot' });
