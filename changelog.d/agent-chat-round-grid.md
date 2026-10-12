@@ -6,4 +6,4 @@
   `✗ 2 measured`, `✗ code check failed`, or `~ 1 finding open` for a shipped result
   that still needs attention. The step a round stopped at is marked. The pipeline
   reports each round's outcome as `PlotResult.rounds` and on the `repairing` status,
-  and the result card keeps the grid under `# rounds`.
+  and the result card keeps the grid under `# rounds` (#12150).
