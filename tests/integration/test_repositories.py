@@ -5,9 +5,17 @@ Tests actual database operations with SQLite in-memory database.
 Tests Repository layer interaction with database (no HTTP layer).
 """
 
+from datetime import datetime
+
 import pytest
 
-from core.database.repositories import FeedbackRepository, ImplRepository, LibraryRepository, SpecRepository
+from core.database.repositories import (
+    AgentFeedbackRepository,
+    FeedbackRepository,
+    ImplRepository,
+    LibraryRepository,
+    SpecRepository,
+)
 
 
 pytestmark = pytest.mark.integration
@@ -487,3 +495,199 @@ class TestFeedbackRepository:
             "thumbs_down": 0,
         }
         assert await repo.reaction_counts("scatter-basic", "plotly") == {"thumbs_up": 1, "thumbs_down": 0}
+
+
+def _case_row(case_id: str, **overrides) -> dict:
+    """An `agent_feedback` row as `core.agent_cases.row_from_manifest` returns it."""
+    stamp = datetime.strptime(case_id[:16], "%Y%m%dT%H%M%SZ")
+    row = {
+        "id": case_id,
+        "manifest_schema": 1,
+        "created_at": stamp,
+        "case_uri": f"gs://anyplot-agent-cases/cases/{case_id}/",
+        "user_hash": "adm_0123456789abcdef",
+        "session_hash": "aaaaaaaaaaaaaaaa",
+        "spec_id": "scatter-basic",
+        "library_id": "matplotlib",
+        "locale": "en",
+        "reaction": "thumbs_down",
+        "message": None,
+        "include_data": True,
+        "status": "new",
+        "result_version": 3,
+        "replaces": None,
+        "model": "claude-haiku-5-5",
+        "model_version": None,
+        "judge_model": None,
+        "prompt_hash": None,
+        "pipeline_status": "ok",
+        "attempts": 1,
+        "tokens": None,
+        "cost_estimate": None,
+        "files": ["plot.py", "data.csv", "manifest.json"],
+    }
+    return {**row, **overrides}
+
+
+A = "20261012T100000Z-0000000a"
+B = "20261012T110000Z-0000000b"
+C = "20261012T120000Z-0000000c"
+
+
+class TestAgentFeedbackRepository:
+    """Integration tests for AgentFeedbackRepository (the agent chat's feedback cases)."""
+
+    async def test_create_case_applies_the_orm_defaults(self, test_session):
+        entity = await AgentFeedbackRepository(test_session).create_case(_case_row(A))
+        assert (entity.status, entity.tags, entity.superseded_by, entity.promoted_at) == ("new", [], None, None)
+        assert entity.created_at == datetime(2026, 10, 12, 10, 0, 0)
+        assert entity.updated_at is not None
+
+    async def test_replaces_supersedes_the_row_of_the_same_session_and_version(self, test_session):
+        repo = AgentFeedbackRepository(test_session)
+        await repo.create_case(_case_row(A, status="in_progress", tags=["legend"]))
+        await repo.create_case(_case_row(B, replaces=A))
+
+        earlier = await repo.get_by_id(A)
+        assert earlier.superseded_by == B
+        # The earlier row keeps its triage state; the new one starts fresh.
+        assert (earlier.status, earlier.tags) == ("in_progress", ["legend"])
+        later = await repo.get_by_id(B)
+        assert (later.status, later.tags, later.replaces, later.superseded_by) == ("new", [], A, None)
+
+    @pytest.mark.parametrize("other", [{"result_version": 2}, {"session_hash": "bbbbbbbbbbbbbbbb"}])
+    async def test_replaces_leaves_a_row_of_another_session_or_version(self, test_session, other):
+        repo = AgentFeedbackRepository(test_session)
+        await repo.create_case(_case_row(A, **other))
+        await repo.create_case(_case_row(B, replaces=A))
+        assert (await repo.get_by_id(A)).superseded_by is None
+        assert (await repo.get_by_id(B)).replaces == A
+
+    async def test_replaces_leaves_an_already_superseded_row(self, test_session):
+        repo = AgentFeedbackRepository(test_session)
+        await repo.create_case(_case_row(A))
+        await repo.create_case(_case_row(C, replaces=A))
+        await repo.create_case(_case_row(B, replaces=A))
+        assert (await repo.get_by_id(A)).superseded_by == C
+        assert (await repo.get_by_id(B)).superseded_by is None
+
+    async def test_replaces_of_an_unknown_case_is_stored_and_supersedes_nothing(self, test_session):
+        repo = AgentFeedbackRepository(test_session)
+        entity = await repo.create_case(_case_row(B, replaces=A))
+        assert (entity.replaces, entity.superseded_by) == (A, None)
+        assert await repo.get_by_id(A) is None
+
+    async def test_an_orphan_inserted_after_its_successor_arrives_superseded(self, test_session):
+        """The backfill indexes A after the route inserted B naming A: one commit sets A's forward link."""
+        repo = AgentFeedbackRepository(test_session)
+        await repo.create_case(_case_row(B, replaces=A))
+        entity = await repo.create_case(_case_row(A))
+        assert entity.superseded_by == B
+
+    async def test_a_chain_backfilled_in_id_order_links_every_step(self, test_session):
+        """A, C in the table; the orphan B (replaces A, replaced by C) is backfilled: A -> B -> C."""
+        repo = AgentFeedbackRepository(test_session)
+        await repo.create_case(_case_row(A))
+        await repo.create_case(_case_row(C, replaces=B))
+        await repo.create_case(_case_row(B, replaces=A))
+        assert (await repo.get_by_id(A)).superseded_by == B
+        assert (await repo.get_by_id(B)).superseded_by == C
+        assert (await repo.get_by_id(C)).superseded_by is None
+
+    async def test_successor_of(self, test_session):
+        repo = AgentFeedbackRepository(test_session)
+        await repo.create_case(_case_row(B, replaces=A))
+        await repo.create_case(_case_row(C, replaces=A))
+        assert await repo.successor_of(A, "aaaaaaaaaaaaaaaa", 3) == B
+        assert await repo.successor_of(A, "aaaaaaaaaaaaaaaa", 2) is None
+        assert await repo.successor_of(A, "bbbbbbbbbbbbbbbb", 3) is None
+        assert await repo.successor_of(B, "aaaaaaaaaaaaaaaa", 3) is None
+
+    async def test_list_cases_newest_first_without_superseded_rows(self, test_session):
+        repo = AgentFeedbackRepository(test_session)
+        await repo.create_case(_case_row(A))
+        await repo.create_case(_case_row(B, replaces=A))
+        await repo.create_case(_case_row(C, session_hash="bbbbbbbbbbbbbbbb"))
+
+        assert [row.id for row in await repo.list_cases()] == [C, B]
+        assert [row.id for row in await repo.list_cases(include_superseded=True)] == [C, B, A]
+
+    async def test_list_cases_filters(self, test_session):
+        repo = AgentFeedbackRepository(test_session)
+        await repo.create_case(_case_row(A, reaction="bug", status="done", spec_id="bar-basic", model_version="m1"))
+        await repo.create_case(_case_row(B, reaction="thumbs_up", status="in_progress", library_id="seaborn"))
+        await repo.create_case(_case_row(C, status="wont_solve"))
+
+        async def ids(**filters):
+            return [row.id for row in await repo.list_cases(**filters)]
+
+        assert await ids(reaction="bug") == [A]
+        assert await ids(status="done") == [A]
+        assert await ids(status=("new", "in_progress")) == [B]
+        assert await ids(spec_id="bar-basic") == [A]
+        assert await ids(library_id="seaborn") == [B]
+        assert await ids(model_version="m1") == [A]
+        assert await ids(spec_id="scatter-basic", library_id="matplotlib") == [C]
+
+    async def test_list_cases_tag_filter(self, test_session):
+        repo = AgentFeedbackRepository(test_session)
+        await repo.create_case(_case_row(A))
+        await repo.create_case(_case_row(B))
+        await repo.create_case(_case_row(C))
+        await repo.update(A, {"tags": ["legend", "overlap"]})
+        await repo.update(B, {"tags": ["legend-overlap"]})
+
+        assert [row.id for row in await repo.list_cases(tag="legend")] == [A]
+        assert [row.id for row in await repo.list_cases(tag="legend-overlap")] == [B]
+        assert [row.id for row in await repo.list_cases(tag="overlap")] == [A]
+        assert await repo.list_cases(tag="leg") == []
+
+    async def test_list_cases_cursor_and_limit(self, test_session):
+        repo = AgentFeedbackRepository(test_session)
+        for case_id in (A, B, C):
+            await repo.create_case(_case_row(case_id))
+
+        assert [row.id for row in await repo.list_cases(limit=2)] == [C, B]
+        assert [row.id for row in await repo.list_cases(before=B, limit=2)] == [A]
+        assert await repo.list_cases(before=A) == []
+
+    async def test_siblings(self, test_session):
+        repo = AgentFeedbackRepository(test_session)
+        await repo.create_case(_case_row(A))
+        await repo.create_case(_case_row(B))
+        await repo.create_case(_case_row(C, result_version=4))
+        assert await repo.siblings("aaaaaaaaaaaaaaaa", 3, exclude_id=B) == [A]
+        assert await repo.siblings("aaaaaaaaaaaaaaaa", 3, exclude_id=A) == [B]
+        assert await repo.siblings("aaaaaaaaaaaaaaaa", 4, exclude_id=C) == []
+
+    async def test_update_changes_only_the_triage_state(self, test_session):
+        repo = AgentFeedbackRepository(test_session)
+        await repo.create_case(_case_row(A))
+        promoted_at = datetime(2026, 10, 12, 15, 0, 0)
+
+        updated = await repo.update(
+            A,
+            {
+                "status": "done",
+                "tags": ["legend"],
+                "expected": "rejected",
+                "promoted_at": promoted_at,
+                "replaces": B,
+                "superseded_by": C,
+                "reaction": "bug",
+            },
+        )
+
+        assert (updated.status, updated.tags, updated.expected, updated.promoted_at) == (
+            "done",
+            ["legend"],
+            "rejected",
+            promoted_at,
+        )
+        assert (updated.replaces, updated.superseded_by, updated.reaction) == (None, None, "thumbs_down")
+
+    async def test_list_all_oldest_first(self, test_session):
+        repo = AgentFeedbackRepository(test_session)
+        await repo.create_case(_case_row(C))
+        await repo.create_case(_case_row(A))
+        assert [row.id for row in await repo.list_all()] == [A, C]
