@@ -868,6 +868,28 @@ async def test_artifacts_and_bundle_after_a_plot(client: httpx.AsyncClient, swap
     assert {item["role"] for item in bundle["transcript"]} == {"user", "assistant"}
     with_data = (await client.get(f"/v1/sessions/{sid}/bundle?include_data=true", headers=HEADERS)).json()
     assert with_data["versions"][0]["data_csv"].startswith("Student,")
+    # Version 0 is the chat's case: no version even after a plot, and the current data on its own.
+    chat = (await client.get(f"/v1/sessions/{sid}/bundle?version=0&include_data=true", headers=HEADERS)).json()
+    assert chat["versions"] == []
+    assert chat["data_csv"].startswith("Student,")
+    assert chat["transcript"] and chat["profile"] is not None
+    assert "data_csv" not in (await client.get(f"/v1/sessions/{sid}/bundle?version=0", headers=HEADERS)).json()
+
+
+async def test_the_chat_bundle_of_a_session_without_a_plot(client: httpx.AsyncClient) -> None:
+    """The owner's case of 2026-10-12 had no plot to report on: version 0 carries the chat and its data."""
+    sid = await open_session(client)
+
+    chat = (await client.get(f"/v1/sessions/{sid}/bundle?version=0&include_data=true", headers=HEADERS)).json()
+
+    assert chat["versions"] == []
+    assert chat["data_csv"].startswith("Student,")
+    assert [binding["role"] for binding in chat["bindings"]] == ["x", "y"]
+    assert chat["session"]["spec_id"] == "scatter-basic"
+    # No data yet: the chat's case says so with null, which the BFF turns into `422 no_data`.
+    empty = await open_session(client, with_data=False)
+    bare = (await client.get(f"/v1/sessions/{empty}/bundle?version=0&include_data=true", headers=HEADERS)).json()
+    assert bare["versions"] == [] and bare["data_csv"] is None
 
 
 def stored_render(services: Services, sid: str) -> StoredRender:

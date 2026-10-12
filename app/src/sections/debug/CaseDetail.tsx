@@ -18,6 +18,7 @@ import {
   CASE_STATUSES,
   type CasePatch,
   type CaseStatus,
+  caseVersionLabel,
 } from 'src/lib/agent';
 import { ghostButtonSx, smallText } from 'src/sections/agent-chat/styles';
 import { acceptMatch } from 'src/sections/debug/acceptMatch';
@@ -284,7 +285,7 @@ export function CaseDetail({
         <Box sx={{ ...detailMutedSx, overflowWrap: 'anywhere' }}>
           {[
             `created ${formatUtc(detail.created_at)}`,
-            `${detail.spec_id ?? '—'} · ${detail.library_id ?? '—'} · v${detail.result_version}`,
+            `${detail.spec_id ?? '—'} · ${detail.library_id ?? '—'} · ${caseVersionLabel(detail.result_version)}`,
             `user ${detail.user_hash}`,
             `session ${detail.session_hash}`,
             detail.locale ? `locale ${detail.locale}` : null,
@@ -370,6 +371,7 @@ export function CaseDetail({
             expected={detail.expected}
             promotedAt={detail.promoted_at}
             includeData={detail.include_data}
+            noPlot={detail.result_version === 0}
             busy={busy}
             onPatch={onPatch}
           />
@@ -393,13 +395,19 @@ export function CaseDetail({
         <>
           {/* 4. Renders */}
           <Block label="renders">
-            <CaseImages
-              token={token}
-              caseId={detail.id}
-              files={detail.files}
-              specId={detail.spec_id}
-              libraryId={detail.library_id}
-            />
+            {detail.result_version === 0 ? (
+              <Box sx={detailMutedSx}>
+                no plot: the feedback is on the chat itself, which made no plot version
+              </Box>
+            ) : (
+              <CaseImages
+                token={token}
+                caseId={detail.id}
+                files={detail.files}
+                specId={detail.spec_id}
+                libraryId={detail.library_id}
+              />
+            )}
           </Block>
 
           {/* 5. Pipeline */}

@@ -1,6 +1,7 @@
 /**
- * Quick feedback on one result version, at the foot of its result card
- * (docs/concepts/agent-network.md, "Feedback capture"): one of the site's four
+ * Quick feedback on one result version, at the foot of its result card, or
+ * with `version` 0 on the chat itself, below the composer, for a session that
+ * made no plot (docs/concepts/agent-network.md, "Feedback capture"): one of the site's four
  * reactions, an optional text of at most 500 characters, and
  * `# include data.csv`, ticked by default because in phase 1 only admins send
  * their own data. `.send()` has the BFF store the version's case in the
@@ -50,6 +51,8 @@ const FEEDBACK_FAILURE: Record<string, string> = {
   too_large: 'the session is over 32 MB, too large to store as a case',
   upstream: 'the agents service did not answer; try again',
   not_found: 'this version is no longer on the server',
+  // The chat's case with `# include data.csv` ticked, before any data was pasted or computed.
+  no_data: 'there is no data yet; untick # include data.csv',
   session_expired: 'the session expired',
   too_long: `the text is longer than ${MAX_FEEDBACK_CHARS} characters`,
   invalid: 'the server refused this feedback',
@@ -65,15 +68,28 @@ function describeFailure(code: string, ref: string | null): string {
 }
 
 export interface ResultFeedbackProps {
-  /** The version's number, as the server stored it. */
+  /** The version's number, as the server stored it; 0 is the chat itself. */
   version: number;
   /** The case stored for this version, if any. */
   sent: FeedbackRecord | null;
   /** Store the case; rejects with an `AgentApiError` on failure. */
   onSend: (version: number, input: FeedbackInput) => Promise<void>;
+  /**
+   * Whether the session holds data to include; false only for the chat's control before any
+   * data was pasted or computed, which then sends without data.csv and says why.
+   */
+  dataAvailable?: boolean;
 }
 
-export function ResultFeedback({ version, sent, onSend }: ResultFeedbackProps) {
+export function ResultFeedback({
+  version,
+  sent,
+  onSend,
+  dataAvailable = true,
+}: ResultFeedbackProps) {
+  // What the control is about, in its labels: a version, or the chat as a whole.
+  const subject = version === 0 ? 'this chat' : `version ${version}`;
+  const short = version === 0 ? 'this chat' : `v${version}`;
   const [editing, setEditing] = useState(!sent);
   const [reaction, setReaction] = useState<FeedbackReaction | null>(sent?.reaction ?? null);
   const [message, setMessage] = useState(sent?.message ?? '');
@@ -89,6 +105,8 @@ export function ResultFeedback({ version, sent, onSend }: ResultFeedbackProps) {
   // Where the focus goes once the form and the sent line have swapped.
   const pendingFocus = useRef<'edit' | 'reaction' | null>(null);
   const showingSent = !!sent && !editing;
+  // Data that does not exist yet cannot be included, whatever the box said before.
+  const withData = includeData && dataAvailable;
 
   const mounted = useRef(true);
   useEffect(() => {
@@ -141,12 +159,12 @@ export function ResultFeedback({ version, sent, onSend }: ResultFeedbackProps) {
     setSending(true);
     setFailure(null);
     try {
-      await onSend(version, { reaction, message, includeData });
+      await onSend(version, { reaction, message, includeData: withData });
       // Stored: the control shows what was sent, which the page recorded on the version.
       if (mounted.current) {
         const label = REACTIONS.find(item => item.value === reaction)?.label ?? reaction;
         setAnnouncement(
-          `Feedback sent on version ${version}: ${label}, ${includeData ? 'with' : 'without'} data.csv.`
+          `Feedback sent on ${subject}: ${label}, ${withData ? 'with' : 'without'} data.csv.`
         );
         pendingFocus.current = 'edit';
         setEditing(false);
@@ -183,7 +201,7 @@ export function ResultFeedback({ version, sent, onSend }: ResultFeedbackProps) {
   const sentLine = sent && (
     <Box
       component="section"
-      aria-label={`Feedback on version ${version}`}
+      aria-label={`Feedback on ${subject}`}
       sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', columnGap: 1, rowGap: 0.5 }}
     >
       <Box component="span" sx={labelSx}>
@@ -209,7 +227,7 @@ export function ResultFeedback({ version, sent, onSend }: ResultFeedbackProps) {
             <sentOption.Filled fontSize="small" />
           </Box>
         )}
-        sent · v{version}{' '}
+        sent · {short}{' '}
         <Box component="span" sx={{ color: 'var(--ink-muted)' }}>
           · {REACTION_TEXT[sent.reaction]}
           {sent.includeData ? ' · with data.csv' : ''}
@@ -220,7 +238,7 @@ export function ResultFeedback({ version, sent, onSend }: ResultFeedbackProps) {
         type="button"
         ref={editRef}
         onClick={handleEdit}
-        aria-label={`Edit the feedback on version ${version}`}
+        aria-label={`Edit the feedback on ${subject}`}
         sx={{ ...actionButtonSx, ml: 'auto' }}
       >
         .edit()
@@ -231,13 +249,13 @@ export function ResultFeedback({ version, sent, onSend }: ResultFeedbackProps) {
   const form = (
     <Box
       component="form"
-      aria-label={`Feedback on version ${version}`}
+      aria-label={`Feedback on ${subject}`}
       onSubmit={(event: React.FormEvent) => void handleSend(event)}
       sx={{ display: 'flex', flexDirection: 'column', gap: 1, minWidth: 0 }}
     >
       <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 0.5 }}>
         <Box component="span" sx={{ ...labelSx, mr: 0.5 }}>
-          # feedback on v{version}
+          # feedback on {short}
         </Box>
         <Box role="group" aria-label="Reaction" sx={{ display: 'flex', gap: 0.25 }}>
           {REACTIONS.map(option => {
@@ -307,15 +325,15 @@ export function ResultFeedback({ version, sent, onSend }: ResultFeedbackProps) {
           <Box
             component="input"
             type="checkbox"
-            aria-label={`Include data.csv in the feedback on version ${version}`}
-            checked={includeData}
-            disabled={sending}
+            aria-label={`Include data.csv in the feedback on ${subject}`}
+            checked={withData}
+            disabled={sending || !dataAvailable}
             onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
               setIncludeData(event.target.checked)
             }
             sx={{ m: 0, width: 14, height: 14, accentColor: colors.primary, cursor: 'inherit' }}
           />
-          # include data.csv
+          {dataAvailable ? '# include data.csv' : '# no data yet'}
         </Box>
         {/* Right-aligned, also on a line of its own at phone width. */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 'auto' }}>
@@ -328,7 +346,7 @@ export function ResultFeedback({ version, sent, onSend }: ResultFeedbackProps) {
               type="button"
               onClick={handleCancel}
               disabled={sending}
-              aria-label={`Cancel the edit of the feedback on version ${version}`}
+              aria-label={`Cancel the edit of the feedback on ${subject}`}
               sx={actionButtonSx}
             >
               .cancel()
@@ -340,7 +358,11 @@ export function ResultFeedback({ version, sent, onSend }: ResultFeedbackProps) {
             disabled={!reaction}
             aria-disabled={sending || undefined}
             aria-label="Send feedback"
-            title={reaction ? 'store this version as a feedback case' : 'pick a reaction first'}
+            title={
+              reaction
+                ? `store ${version === 0 ? 'this chat' : 'this version'} as a feedback case`
+                : 'pick a reaction first'
+            }
             sx={{
               ...ghostButtonSx,
               '&[aria-disabled="true"]': { opacity: 0.45, cursor: 'default' },

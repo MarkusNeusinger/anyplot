@@ -146,7 +146,7 @@ with `VITE_ENABLE_AGENT_CHAT=true`, and like every event they fire only on
 | `agent_plot_rendered` | `library`, `status`, `repaired`, `spec` | useAgentSession.ts | A turn's `plot` event arrived. `status` ∈ `ok`, `needs_attention`, `failed`, `not_ready`; `repaired` is `yes` when the run needed its repair round (two attempts), else `no` |
 | `agent_guardrail_block` | `reason` | useAgentSession.ts | A guardrail stopped a request. `reason` ∈ `out_of_scope`, `needs_data` (the request needs data the service would have to fetch), `budget`, `unsupported_content` (the stream's fixed refusals), `data_refused` (the pre-filter or the dataset judge refused the pasted data: text addressed to an AI, or the judge's verdict; personal data is never a reason), `guard_unavailable` (the scope check could not answer and failed closed), `other` (a refusal code the page does not know yet) |
 | `agent_session_saved` | `include_data` | useAgentSession.ts | The user saved the session as a JSON file with `.save()` in the chat header, and the download started. `include_data` is `yes` when the `# include data.csv` box was ticked (the default), so the file holds each version's data file, else `no`. A failed save fires nothing |
-| `agent_result_feedback` | `reaction`, `include_data` | useAgentSession.ts | The user sent quick feedback on a result version with `.send()` on its result card, and the BFF stored the version as a feedback case. `reaction` ∈ `thumbs_up`, `thumbs_down`, `bug`, `idea`, the site feedback's set; `include_data` is `yes` when the card's `# include data.csv` box was ticked (the default), so the case holds the version's data file, else `no`. An edit that replaces a sent case fires again. A failed send fires nothing; the text never travels |
+| `agent_result_feedback` | `reaction`, `include_data`, `subject` | useAgentSession.ts | The user sent quick feedback with `.send()`, on a result version from its result card or on the chat itself from the control below the composer, and the BFF stored it as a feedback case. `reaction` ∈ `thumbs_up`, `thumbs_down`, `bug`, `idea`, the site feedback's set; `include_data` is `yes` when the `# include data.csv` box was ticked (the default), so the case holds the data file, else `no`; `subject` is `result` for a version and `chat` for the chat (since 2026-10-12, for a session that made no plot). An edit that replaces a sent case fires again. A failed send fires nothing; the text never travels |
 
 `copy_code` on a result card carries `method: agent` and `page: agent_chat`
 plus the `spec` and `library` of the version.
@@ -519,6 +519,7 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 | `source` | Source UI element / page context | `tag_click`, `nav_click`, `agent_open` (`plot_page` / `direct`) |
 | `framework` | Library id clicked in the libraries-page filter (needs dashboard registration to appear in breakdowns) | `library_filter` |
 | `target` | Click destination (route or external label) | `nav_click` |
+| `subject` | What an agent chat quick feedback is about (`result`: a result version, `chat`: the chat itself) | `agent_result_feedback` |
 | `to` | New mode after toggle (`system` / `light` / `dark`) | `theme_toggle` |
 | `mode` | Spec detail view mode (`preview` / `interactive`) | `view_mode_change` |
 | `theme` | Ambient *effective* theme attached to **every** pageview & event (`dark` / `light`) — resolved from the tri-state mode so OS-followers still split cleanly | all events (set in RootLayout via `setAnalyticsAmbientProps`) |
@@ -658,7 +659,7 @@ User lands on anyplot.ai
 | `agent_plot_rendered` | `library`, `status`, `repaired`, `spec` | useAgentSession.ts |
 | `agent_guardrail_block` | `reason` | useAgentSession.ts |
 | `agent_session_saved` | `include_data` | useAgentSession.ts |
-| `agent_result_feedback` | `reaction`, `include_data` | useAgentSession.ts |
+| `agent_result_feedback` | `reaction`, `include_data`, `subject` | useAgentSession.ts |
 | `search` | `query`, `category` | FilterBar.tsx |
 | `search_no_results` | `query` | FilterBar.tsx |
 | `random_filter` | `category`, `value`, `method` | useFilterState.ts |

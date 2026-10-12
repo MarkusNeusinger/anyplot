@@ -18,10 +18,12 @@ from api.agent_cases import (
     CASE_ID_PATTERN,
     CASE_MEDIA_TYPES,
     CASE_STATUS_NEW,
+    BundleError,
     CaseConflict,
     CaseFile,
     FeedbackCase,
     GcsCaseBucket,
+    NoChatData,
     Submission,
     build_case,
     code_diff,
@@ -214,6 +216,52 @@ def test_the_bffs_manifest_maps_onto_a_row() -> None:
     assert row["locale"] == "de-CH"
     assert row["replaces"] == "20261012T140000Z-00ff00ff"
     assert row["files"] == ["plot.py", "data.csv", "manifest.json"]
+
+
+def _chat_case(bundle: dict[str, object], include_data: bool = True) -> FeedbackCase:
+    """The chat's case (version 0) of a session without a plot, from the `version=0` bundle."""
+    return build_case(
+        json.dumps(bundle).encode(),
+        Submission(reaction="idea", message="sin x as a feature", include_data=include_data, result_version=0),
+        case_id="20261012T150000Z-0a0b0c0d",
+        created_at=datetime(2026, 10, 12, 15, 0, 0, tzinfo=UTC),
+        bucket="anyplot-agent-cases",
+        user_hash="adm_0123456789abcdef",
+        session_id="S1abcdefgh",
+    )
+
+
+CHAT_BUNDLE = {**BUNDLE, "versions": [], "data_csv": "x,y\n-3.14,0\n0,0\n"}
+
+
+def test_the_chat_case_has_its_data_but_no_image_or_code() -> None:
+    case = _chat_case(CHAT_BUNDLE)
+
+    assert case.stored == ["data.csv", "manifest.json"]
+    assert case.files[0].data == b"x,y\n-3.14,0\n0,0\n"
+    # The data is a file of its own, never inside the manifest's bundle.
+    assert "data_csv" not in case.manifest["bundle"]
+    row = row_from_manifest(case.manifest)
+    assert (row["result_version"], row["library_id"], row["pipeline_status"], row["attempts"]) == (
+        0,
+        "matplotlib",
+        None,
+        None,
+    )
+    assert manifest_detail(case.manifest, 0).transcript[0] == ("user", "log scale on y")
+
+
+def test_the_chat_case_without_data_asked() -> None:
+    case = _chat_case({**BUNDLE, "versions": []}, include_data=False)
+    assert case.stored == ["manifest.json"]
+
+
+def test_the_chat_case_of_a_session_without_data_is_the_users_problem_not_a_bad_bundle() -> None:
+    with pytest.raises(NoChatData):
+        _chat_case({**BUNDLE, "versions": [], "data_csv": None})
+    # A bundle that omits the field entirely did not come from a version-0 request: malformed.
+    with pytest.raises(BundleError):
+        _chat_case({**BUNDLE, "versions": []})
 
 
 class MemoryBucket:

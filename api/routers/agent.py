@@ -49,6 +49,7 @@ from api.agent_cases import (
     BundleError,
     CaseBucket,
     GcsCaseBucket,
+    NoChatData,
     Submission,
     build_case,
     code_diff,
@@ -479,7 +480,8 @@ class FeedbackBody(_StrictBody):
     # Strict: a JSON boolean and a JSON integer only. A lax `"yes"` or `true` would
     # store a case the client never meant (`true` is version 1).
     include_data: Annotated[bool, Field(strict=True)]
-    result_version: Annotated[int, Field(ge=1, le=999, strict=True)]
+    # The result version the feedback is about; 0 is the chat itself, for a session that made no plot.
+    result_version: Annotated[int, Field(ge=0, le=999, strict=True)]
     # The case id of the earlier submission for this version, when this one is an edit of it.
     replaces: Annotated[str | None, Field(pattern=CASE_ID_PATTERN)] = None
 
@@ -1097,9 +1099,12 @@ async def get_bundle(
     config stamp; each version's `data.csv` only with `include_data`, and only `version` when
     one above 0 is given. The BFF reads it whole up to `MAX_BUNDLE_BYTES` (`502 too_large`
     above), checks that it is a JSON object and compresses it in a worker thread
-    (`_prepare_bundle`), and answers it as an attachment.
+    (`_prepare_bundle`), and answers it as an attachment. Here `version=0` keeps its
+    documented meaning, every version: the agents service reads 0 as the chat's feedback
+    case, so the BFF leaves the parameter out instead of forwarding it.
     """
-    body = await _fetch_bundle(client, ctx, sid, version=version, include_data=include_data)
+    upstream_version = version if version else None
+    body = await _fetch_bundle(client, ctx, sid, version=upstream_version, include_data=include_data)
     # The middleware's own test for whether the client takes gzip.
     compress = "gzip" in request.headers.get("Accept-Encoding", "")
     content = await run_in_threadpool(_prepare_bundle, body, compress)
@@ -1122,10 +1127,13 @@ async def get_bundle(
 async def submit_feedback(
     sid: SessionId, body: FeedbackBody, ctx: Ctx, client: Client, cases: Cases, db: Db
 ) -> dict[str, Any]:
-    """Quick feedback on one result version: store its case in the private bucket, `201 {case_id, stored}`.
+    """Quick feedback on one result version, or on the chat: store its case in the private bucket, `201 {case_id, stored}`.
 
     The agents service assembles the version's bundle (`version=result_version`, its
-    `data.csv` only with `include_data`); `api/agent_cases.py` splits it into the case
+    `data.csv` only with `include_data`); `result_version` 0 is the feedback on a chat
+    that made no plot, whose bundle is the conversation, the profile and bindings and,
+    with `include_data`, the session's current data (`422 no_data` before any data was
+    pasted or computed), but no image and no `plot.py`; `api/agent_cases.py` splits it into the case
     files and the manifest, which it uploads last, all in a worker thread. A later
     submission for the same version is a new case that names the earlier one in
     `replaces`, which supersedes that case's row for the same session hash and result
@@ -1156,6 +1164,8 @@ async def submit_feedback(
             user_hash=ctx.user_id,
             session_id=sid,
         )
+    except NoChatData as exc:
+        raise AgentHTTPError(422, "no_data", ctx.request_id) from exc
     except BundleError as exc:
         # The reason names a field of the bundle, never its content.
         logger.warning("agent feedback bundle refused (ref %s): %s", ctx.request_id, exc)
@@ -1471,8 +1481,9 @@ async def get_agent_case_file(case_id: CaseId, name: CaseFileName, ctx: Ctx, cas
 async def update_agent_case(case_id: CaseId, body: CasePatch, ctx: Ctx, db: Db) -> CaseItem:
     """Change a case's triage state: status, tags, expected outcome, promotion; answers the whole row.
 
-    Promoting needs the case's data (`422 no_data` otherwise: the regression harness cannot
-    run a case without its `data.csv`) and an expected outcome: the one in the body or on the
+    Promoting needs a plot (`422 no_plot` for a chat case, `result_version` 0, which the
+    regression harness cannot replay), the case's data (`422 no_data` otherwise: the
+    harness cannot run a case without its `data.csv`) and an expected outcome: the one in the body or on the
     row, else the reaction rule (`thumbs_up` accepted, `thumbs_down` rejected), and
     `422 expected_required` for a `bug` or `idea` without one. A superseded or retired case
     can still be changed.
@@ -1487,6 +1498,9 @@ async def update_agent_case(case_id: CaseId, body: CasePatch, ctx: Ctx, db: Db) 
     if body.expected is not None:
         updates["expected"] = body.expected
     if body.promoted is True:
+        if row.result_version == 0:
+            # A chat case has no plot to replay: the regression harness needs a version.
+            raise AgentHTTPError(422, "no_plot", ctx.request_id)
         if not row.include_data:
             raise AgentHTTPError(422, "no_data", ctx.request_id)
         if body.expected is None and row.expected is None:

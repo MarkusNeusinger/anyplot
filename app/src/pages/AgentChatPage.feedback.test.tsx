@@ -57,6 +57,10 @@ const PAGE = '/debug/agent?spec=scatter-basic&library=matplotlib&language=python
 
 let feedbackBodies: unknown[];
 let feedbackAnswer: () => Response;
+/** A turn that answers in words only: the session keeps no plot. */
+let wordsOnly: boolean;
+/** Set to hold the next turn's answer until the test resolves it. */
+let hold: Promise<void> | null;
 
 function stubFetch() {
   feedbackBodies = [];
@@ -72,6 +76,13 @@ function stubFetch() {
         });
       }
       if (url.pathname.endsWith('/sessions/S1/messages') && method === 'POST') {
+        if (hold) await hold;
+        if (wordsOnly) {
+          return sse([
+            ['message', { text: 'The feature role needs names, not numbers.' }],
+            ['done', { llm_calls: 1 }],
+          ]);
+        }
         return sse([
           ['plot', PLOT],
           ['message', { text: 'Here is your plot.' }],
@@ -119,6 +130,8 @@ beforeEach(() => {
   localStorage.clear();
   localStorage.setItem(ADMIN_HINT_KEY, '1');
   analytics.trackEvent.mockClear();
+  wordsOnly = false;
+  hold = null;
   feedbackAnswer = () =>
     json(201, {
       case_id: `20261012T14300${feedbackBodies.length}Z-1a2b3c4d`,
@@ -135,6 +148,40 @@ afterEach(() => {
 });
 
 describe('AgentChatPage quick feedback', () => {
+  it('offers feedback on the chat itself while the session has no plot', async () => {
+    // The owner's case of 2026-10-12: a chat that never made a plot had nothing to report on.
+    const user = userEvent.setup();
+    wordsOnly = true;
+    let release!: () => void;
+    hold = new Promise<void>(resolve => {
+      release = resolve;
+    });
+    renderPage();
+    expect(screen.queryByTestId('chat-feedback')).not.toBeInTheDocument();
+    const box = await screen.findByLabelText('Message');
+    fireEvent.change(box, { target: { value: 'use y as the feature column' } });
+    fireEvent.keyDown(box, { key: 'Enter' });
+    // While the turn runs it may still bring the plot: no offer yet.
+    await screen.findByText('use y as the feature column');
+    expect(screen.queryByTestId('chat-feedback')).not.toBeInTheDocument();
+    release();
+    await screen.findByText('The feature role needs names, not numbers.');
+
+    await user.click(await screen.findByRole('button', { name: 'Give feedback on this chat' }));
+    const form = screen.getByRole('form', { name: 'Feedback on this chat' });
+    // No data pasted: the box cannot be ticked.
+    expect(
+      within(form).getByRole('checkbox', { name: 'Include data.csv in the feedback on this chat' })
+    ).toBeDisabled();
+    await user.click(within(form).getByRole('button', { name: 'Idea' }));
+    await user.click(within(form).getByRole('button', { name: 'Send feedback' }));
+
+    await screen.findByText(/sent · this chat/);
+    expect(feedbackBodies).toEqual([
+      { reaction: 'idea', message: null, include_data: false, result_version: 0 },
+    ]);
+  });
+
   it('sends feedback on a version, shows it as sent, and sends an edit', async () => {
     const user = userEvent.setup();
     renderPage();
@@ -160,7 +207,10 @@ describe('AgentChatPage quick feedback', () => {
     expect(analytics.trackEvent).toHaveBeenCalledWith('agent_result_feedback', {
       reaction: 'thumbs_down',
       include_data: 'yes',
+      subject: 'result',
     });
+    // Once a plot exists, its card takes the feedback: the chat's own control is gone.
+    expect(screen.queryByTestId('chat-feedback')).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Edit the feedback on version 1' }));
     await user.click(screen.getByRole('button', { name: 'Thumbs up' }));

@@ -112,14 +112,17 @@
  * outlives the card's body, which a newer version collapses and unmounts. A
  * later send for the same version stores a new case that names the recorded
  * one as `replaces`, and replaces the record; the sending flag and the failure
- * line stay in the control.
+ * line stay in the control. Version 0 is the chat itself, for a session that
+ * made no plot (or a problem with the conversation rather than a plot): its
+ * case holds the transcript, the profile, the bindings and, when ticked, the
+ * current data, and its record lives on the session (`chatFeedback`).
  *
  * Analytics carry enum properties only, never text or data:
  * `agent_data_parsed{status, size_bucket}`, `agent_data_confirmed{size_bucket}`,
  * `agent_data_prepared{changes}`, `agent_data_undo{version}`,
  * `agent_plot_rendered{library, status, repaired, spec}`,
  * `agent_guardrail_block{reason}`, `agent_session_saved{include_data}` and
- * `agent_result_feedback{reaction, include_data}`.
+ * `agent_result_feedback{reaction, include_data, subject}`.
  */
 
 import { useCallback, useEffect, useReducer, useRef } from 'react';
@@ -338,6 +341,8 @@ export interface AgentSessionState {
   /** The id the next thread item gets; the reducer numbers the items. */
   nextItemId: number;
   versions: Record<number, PlotVersion>;
+  /** The last feedback case stored on the chat itself (version 0), for a session without a plot. */
+  chatFeedback: FeedbackRecord | null;
   run: RunState | null;
 }
 
@@ -424,6 +429,7 @@ export function initialAgentState(library: string): AgentSessionState {
     items: [],
     nextItemId: 1,
     versions: {},
+    chatFeedback: null,
     run: null,
   };
 }
@@ -866,6 +872,8 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
     case 'version_code':
       return patchVersion(state, action.number, version => ({ ...version, code: action.code }));
     case 'version_feedback':
+      // Version 0 is the chat itself: its record lives on the session, not on a version.
+      if (action.number === 0) return { ...state, chatFeedback: action.feedback };
       return patchVersion(state, action.number, version => ({
         ...version,
         feedback: action.feedback,
@@ -1614,7 +1622,8 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
   /**
    * `.send()` on a result card: store the case of version `number` (`POST
    * .../feedback`), record it on the version and report
-   * `agent_result_feedback{reaction, include_data}`. It runs whatever else is in
+   * `agent_result_feedback{reaction, include_data, subject}`. `number` 0 is the
+   * chat itself, recorded as `chatFeedback`. It runs whatever else is in
    * flight, because it starts no run and only reads the session; a second call
    * for a version whose send is still in flight joins that one. A failure
    * rejects with an `AgentApiError` for the control's failure line, and records
@@ -1627,7 +1636,8 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
       const pending = feedbackRef.current.get(number);
       if (pending) return pending;
       const sid = stateRef.current.sessionId;
-      if (!sid || !stateRef.current.versions[number]) {
+      const chat = number === 0;
+      if (!sid || (!chat && !stateRef.current.versions[number])) {
         return Promise.reject(new AgentApiError(0, 'no_session'));
       }
       const message = input.message.trim() || null;
@@ -1635,7 +1645,9 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
         return Promise.reject(new AgentApiError(0, 'too_long'));
       }
       // An edit names the case it replaces, so the triage need not guess from the times.
-      const replaces = stateRef.current.versions[number].feedback?.caseId;
+      const replaces = chat
+        ? stateRef.current.chatFeedback?.caseId
+        : stateRef.current.versions[number].feedback?.caseId;
       const send = async () => {
         try {
           const stored = await agentApi.sendFeedback(token, sid, {
@@ -1658,6 +1670,7 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
           trackEvent('agent_result_feedback', {
             reaction: input.reaction,
             include_data: input.includeData ? 'yes' : 'no',
+            subject: chat ? 'chat' : 'result',
           });
         } catch (err) {
           // `502 row_missing`: the case IS in the bucket, only its triage row is

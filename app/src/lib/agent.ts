@@ -277,10 +277,15 @@ export interface FeedbackBody {
   message: string | null;
   /** Store the version's `data.csv` with the case. */
   include_data: boolean;
-  /** The version's number, 1 to 999. */
+  /** The version's number, 1 to 999, or 0 for the chat itself (a session without a plot). */
   result_version: number;
   /** The case id of the earlier submission for this version, when this one is an edit of it. */
   replaces?: string;
+}
+
+/** A case's version as the triage shows it: `v2`, or `chat, no plot` for version 0. */
+export function caseVersionLabel(resultVersion: number): string {
+  return resultVersion === 0 ? 'chat, no plot' : `v${resultVersion}`;
 }
 
 /** The answer of `POST .../feedback`: the stored case and its file names. */

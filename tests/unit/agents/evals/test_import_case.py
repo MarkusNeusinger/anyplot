@@ -273,6 +273,11 @@ class TestFromAStoredCase:
         assert main([str(_case_dir(tmp_path, include_data=False))]) == 1
         assert "holds no data.csv" in capsys.readouterr().err
 
+    def test_refuses_a_case_on_the_chat_itself(self, tmp_path, promoted) -> None:
+        """Version 0 is feedback on a chat that made no plot: nothing for the plot harness to replay."""
+        with pytest.raises(ImportRefused, match=r"version 0\) has no plot"):
+            read_case_dir(_case_dir(tmp_path, version=0, include_data=False), None)
+
     def test_refuses_another_version_than_the_cases(self, tmp_path, promoted) -> None:
         with pytest.raises(ImportRefused, match="about version 2, not 1"):
             read_case_dir(_case_dir(tmp_path), 1)

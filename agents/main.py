@@ -21,7 +21,7 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `POST /v1/sessions/{sid}/cancel` | | `204` | |
 | `POST /v1/sessions/{sid}/versions/{version}/render` | `{theme}` | `{status, reason?, artifacts}` | `404 not_found`, `409 run_active`, `503 capacity` (no render slot in time, or the render store is full) |
 | `GET /v1/sessions/{sid}/artifacts/{name}?v=` | | the file | `404` |
-| `GET /v1/sessions/{sid}/bundle?version=&include_data=` | | the feedback case bundle; with `AGENT_KEEP_REFUSALS` also `refusals`, the session's refused messages `[{verdict, lang, text, at}]` | `404` |
+| `GET /v1/sessions/{sid}/bundle?version=&include_data=` | | the feedback case bundle: every version, or the one numbered `version`, or with `version=0` the conversation alone (no version; `data_csv`, the current data, with `include_data`); with `AGENT_KEEP_REFUSALS` also `refusals`, the session's refused messages `[{verdict, lang, text, at}]` | `404` |
 | `DELETE /v1/sessions/{sid}` | | `204` | |
 
 Every `/v1` route needs `X-Anyplot-User` (the BFF's opaque user id); sessions are
@@ -1217,7 +1217,13 @@ async def bundle(
     version: Annotated[int | None, Query(ge=0, le=999)] = None,
     include_data: bool = False,
 ) -> JSONResponse:
-    """The feedback case: transcript, code versions, plans, results, profile, bindings, PNGs, config."""
+    """The feedback case: transcript, code versions, plans, results, profile, bindings, PNGs, config.
+
+    Without `version` every version; with a number above 0 that version only (`404 not_found`
+    when the session lacks it); with `version=0` the conversation alone, the feedback on a chat
+    that made no plot: no version, and with `include_data` the session's current `data.csv` as
+    the top-level `data_csv`.
+    """
     session = await runtime.session(user, sid)
     services = get_services()
     settings = get_settings()
@@ -1225,7 +1231,9 @@ async def bundle(
     if view is None:
         raise AgentsError(404, "session_expired")
     versions = services.versions.all(sid)
-    if version:
+    if version == 0:
+        versions = []
+    elif version is not None:
         versions = [item for item in versions if item.number == version]
         if not versions:
             raise AgentsError(404, "not_found")
@@ -1290,6 +1298,9 @@ async def bundle(
             "prompt_hashes": _prompt_hashes(),
         },
     }
+    if version == 0 and include_data:
+        # The chat's case has no version to carry the data: the session's current dataset, or none yet.
+        payload["data_csv"] = dataset.csv if dataset else None
     if settings.keep_refusals:
         # The transcript holds only the placeholder of a refused message; the ring holds its text.
         payload["refusals"] = [asdict(item) for item in services.refusals.all(sid)]

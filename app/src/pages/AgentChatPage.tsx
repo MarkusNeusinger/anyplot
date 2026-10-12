@@ -64,6 +64,7 @@ import { agentApi, browserLocale, DEFAULT_AGENT_LIBRARIES, MAX_MESSAGE_CHARS } f
 import { apiGet, endpoints } from 'src/lib/api';
 import { NotFoundPage } from 'src/pages/NotFoundPage';
 import { paths, specPath } from 'src/routes/paths';
+import { ChatFeedback } from 'src/sections/agent-chat/ChatFeedback';
 import { ChatThread } from 'src/sections/agent-chat/ChatThread';
 import { DATA_SUMMARY_ID, DataPanel } from 'src/sections/agent-chat/DataPanel';
 import { LanguageChip } from 'src/sections/agent-chat/LanguageChip';
@@ -765,6 +766,18 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
               <Box sx={{ ...labelSx, mt: -1 }}>
                 {draft.length} / {MAX_MESSAGE_CHARS}
               </Box>
+            )}
+            {/* A chat without a plot has no result card to report on: its own control. Not while a
+                turn runs, which may still bring the plot; a sent record stays in view. */}
+            {(state.chatFeedback ||
+              (state.items.length > 0 &&
+                !state.run &&
+                Object.keys(state.versions).length === 0)) && (
+              <ChatFeedback
+                sent={state.chatFeedback}
+                dataAvailable={!!state.dataset}
+                onSend={session.sendFeedback}
+              />
             )}
           </Box>
         </Box>
