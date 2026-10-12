@@ -3,6 +3,9 @@
 # at most ~15 minutes, then print the latest review's summary, every inline comment and
 # the ids of the unresolved threads (§3c), which the resolve mutation (§3d) takes.
 #
+# The inline comments are read page by page; reviews and threads come 100 at a time, more
+# than a PR collects.
+#
 # Usage: watch-copilot.sh <pr> [count, default 1]
 #   count 2 waits for the one extra round requested after fixing the first round's findings.
 set -uo pipefail
@@ -12,16 +15,16 @@ REPO=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
 BOT='copilot-pull-request-reviewer[bot]'
 n=0
 for _ in $(seq 1 30); do
-  n=$(gh api "repos/$REPO/pulls/$PR/reviews" --jq "[.[] | select(.user.login==\"$BOT\")] | length")
+  n=$(gh api "repos/$REPO/pulls/$PR/reviews?per_page=100" --jq "[.[] | select(.user.login==\"$BOT\")] | length")
   [ "${n:-0}" -ge "$WANT" ] && break
   sleep 30
 done
 echo "copilot reviews: $n (waited for $WANT)"
 echo "== latest review"
-gh api "repos/$REPO/pulls/$PR/reviews" \
+gh api "repos/$REPO/pulls/$PR/reviews?per_page=100" \
   --jq "[.[] | select(.user.login==\"$BOT\")] | last | \"\(.state) on \(.commit_id[0:9]):\n\(.body)\"" | head -40
 echo "== inline comments"
-gh api "repos/$REPO/pulls/$PR/comments" --jq '.[] | "--- \(.path):\(.line // .original_line) [\(.id)]\n\(.body)"'
+gh api --paginate "repos/$REPO/pulls/$PR/comments?per_page=100" --jq '.[] | "--- \(.path):\(.line // .original_line) [\(.id)]\n\(.body)"'
 echo "== unresolved threads"
 gh api graphql -F owner="${REPO%/*}" -F repo="${REPO#*/}" -F pr="$PR" -f query='
   query($owner: String!, $repo: String!, $pr: Int!) {

@@ -282,12 +282,13 @@ waiting it out.
 
 Poll all of this from ONE script rather than by hand, and kill a
 stale wait loop with the bracket trick (`pkill -f "x[.]y"`), or
-`pkill` matches its own calling shell. The bundled scripts cover the
-loops: `scripts/watch-checks.sh <num>` (§3a),
-`scripts/watch-copilot.sh <num> [count]` (§3b–c: waits for `count`
-Copilot reviews, 2 for the extra round after fixes, then prints the
-latest summary, every inline comment and the unresolved thread ids)
-and `scripts/watch-deploys.sh <merge-sha>` (§4).
+`pkill` matches its own calling shell. The bundled scripts in
+`.claude/skills/open-pr/scripts/` cover the loops, run from the
+repository root: `watch-checks.sh <num>` (§3a),
+`watch-copilot.sh <num> [count]` (§3b–c: waits for `count` Copilot
+reviews, 2 for the extra round after fixes, then prints the latest
+summary, every inline comment and the unresolved thread ids) and
+`watch-deploys.sh <merge-sha>` (§4).
 
 ## 4 · After merge (when it happens): watch the deploy
 
