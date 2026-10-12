@@ -6,3 +6,4 @@
   floor that installs: 22.22.2 or later, which jsdom 30.1 requires; on an older
   22 `yarn install` stops with an engine error. The app image keeps its
   `node:22-alpine` builder, which tracks the 22 line and satisfies the floor.
+  (#12141)
