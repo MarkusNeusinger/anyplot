@@ -25,6 +25,9 @@ the user instead of declaring success.
 
 ## Notes
 
+- For the agent chat (`/debug/agent`), start the stack with `scripts/agents-dev.sh agents|adk|api|app` instead:
+  it adds the agents service (8001), ADK's development UI (8002) and the API's agent routes
+  (`agents/README.md`, "Run the whole stack").
 - Backend: `http://localhost:8000`
 - Frontend: `http://localhost:3000` (port set in `app/vite.config.ts`; do not assume Vite's default 5173)
 - Stop the servers with the matching background-process controls when finished.

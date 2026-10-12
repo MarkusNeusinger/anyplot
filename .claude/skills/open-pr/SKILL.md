@@ -159,10 +159,15 @@ review threads.
 background poll so other work continues:
 
 ```bash
-gh pr checks <num>   # poll every ~20 s, up to ~10 min per check
+.claude/skills/open-pr/scripts/watch-checks.sh <num>    # run in the background
 ```
 
-On failure: `gh run view --log-failed`, fix, push to the same branch,
+The bundled watcher re-reads the head on every poll, dedupes the
+check runs by name (newest id wins, §3e), prints each check as it
+finishes and exits once at least 10 runs exist and none is pending
+(pass a smaller minimum as the second argument for a PR whose paths
+start fewer checks). Its last line counts the checks that are not
+green. On failure: `gh run view --log-failed`, fix, push to the same branch,
 keep watching.
 
 **b. Wait for the Copilot review.** Bot login:
@@ -277,7 +282,13 @@ waiting it out.
 
 Poll all of this from ONE script rather than by hand, and kill a
 stale wait loop with the bracket trick (`pkill -f "x[.]y"`), or
-`pkill` matches its own calling shell.
+`pkill` matches its own calling shell. The bundled scripts in
+`.claude/skills/open-pr/scripts/` cover the loops, run from the
+repository root: `watch-checks.sh <num>` (§3a),
+`watch-copilot.sh <num> [count]` (§3b–c: waits for `count` Copilot
+reviews, 2 for the extra round after fixes, then prints the latest
+summary, every inline comment and the unresolved thread ids) and
+`watch-deploys.sh <merge-sha>` (§4).
 
 ## 4 · After merge (when it happens): watch the deploy
 
@@ -287,10 +298,15 @@ When such paths merged, watch until the build succeeds — a red Cloud
 Build means production did NOT update even though the PR was green:
 
 ```bash
-gcloud builds list --region=europe-west4 --limit 3 \
-  --format='table(id,status,createTime,substitutions.TRIGGER_NAME,substitutions.SHORT_SHA)'
-gcloud builds log --region=europe-west4 <id>   # on failure
+.claude/skills/open-pr/scripts/watch-deploys.sh <merge-sha>   # in the background
+gcloud builds log --region=europe-west4 <id>                  # on failure
 ```
+
+The watcher lists the regional builds whose `SHORT_SHA` (7
+characters) matches the merge, prints each as it finishes, and exits
+once at least one build appeared and none has been queued or working
+for two polls in a row, since a merge starts one to four deploys
+depending on its paths.
 
 The `--region` flag is load-bearing: the `deploy-app` / `deploy-api`
 triggers are **regional** (europe-west4), and the global `gcloud builds

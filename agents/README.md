@@ -227,6 +227,24 @@ The chat page is the app's `/debug/agent?spec=&library=&language=`. Build or ser
 
   The header of `app/scripts/agent-bff-mock.mjs` lists the scripted replies (a refusal, a capacity error, a question, a refinement with a repair round) and the timing variables.
 
+### Run the whole stack
+
+`scripts/agents-dev.sh` starts each part of the local stack with the settings above: the service and `adk web` against the real models and the deployed renderer (next section), the API with the agent routes switched on, and the app with the chat page. Each part runs in the foreground of its own terminal, from the checkout you want to run, and logs to `~/.cache/anyplot-dev/<part>.log` (`ANYPLOT_DEV_LOGS` overrides it).
+
+1. Put the API's two keys where the script finds them, one value per file, readable only by you: `ADMIN_TOKEN` (the token you enter on `/debug`) and `AGENT_USER_ID_KEY` (any value for local use) in `~/.config/anyplot-dev/` (`ANYPLOT_DEV_SECRETS` overrides the directory). Variables of the same name win over the files; the script never prints either.
+2. Start the four parts:
+
+   ```bash
+   scripts/agents-dev.sh agents   # :8001
+   scripts/agents-dev.sh adk      # :8002, the scatter-basic fixture (AGENT_DEV_FIXTURE)
+   scripts/agents-dev.sh api      # :8000
+   scripts/agents-dev.sh app      # :3000, on Node 24 through nvm when installed
+   ```
+
+3. Open `http://localhost:3000/debug`, enter the admin token, and open the chat page in the same tab.
+
+`agents` and `adk` render with a gcloud identity token, which lives one hour, so they restart every 55 minutes with a fresh one; a run in progress at that moment is lost. `scripts/agent-cases.sh [case-id]` reads the production feedback cases as JSON (read-only, the data of `/debug`'s "Agent cases"); it reads the `ADMIN_TOKEN` and `ORIGIN_SECRET` secrets through your gcloud account.
+
 ### Render through the deployed renderer
 
 `adk web` and the local `/v1` service can render through the deployed `anyplot-renderer`, the same sandboxes the deployed agents service uses. The renderer accepts a token only when Cloud Run IAM lets it through (`roles/run.invoker` on the service) and its claims pass the renderer's own check: the token's `aud` in `RENDERER_AUDIENCES` and its `email` in `RENDERER_ALLOWED_CALLERS`.
