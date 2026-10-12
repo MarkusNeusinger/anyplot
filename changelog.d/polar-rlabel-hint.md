@@ -5,4 +5,4 @@
   histogram of the plotted points by angle and radius), and when the labels sit on
   the data the next repair attempt gets the measured target, such as "at 67.5° they
   sit on 10 plotted points → ax.set_rlabel_position(270), 0 points there", instead
-  of guessing an angle. The line never starts a repair on its own.
+  of guessing an angle. The line never starts a repair on its own (#12153).
