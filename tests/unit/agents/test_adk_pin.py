@@ -34,16 +34,23 @@ def test_pyproject_pins_adk_exactly() -> None:
     extras = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text())["project"]["optional-dependencies"]
 
     assert extras["agents"][0] == f"google-adk=={ADK_VERSION}"
-    assert extras["agents-eval"][0] == f"google-adk[eval]=={ADK_VERSION}"
+
+
+def test_no_extra_pulls_adks_eval_stack() -> None:
+    """`google-adk[eval]` brought litellm and nltk, two security alerts for code nothing here runs."""
+    extras = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text())["project"]["optional-dependencies"]
+    lock = (REPO_ROOT / "uv.lock").read_text()
+
+    assert not any("google-adk[" in requirement for requirements in extras.values() for requirement in requirements)
+    assert 'name = "litellm"' not in lock and 'name = "nltk"' not in lock
 
 
 def test_agents_extra_carries_the_claude_backend() -> None:
     """ADK's `anthropic_llm` imports `AsyncAnthropicVertex`; its credentials need the `vertex` extra."""
     extras = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text())["project"]["optional-dependencies"]
 
-    for extra in ("agents", "agents-eval"):
-        assert any(requirement.startswith("anthropic[vertex]") for requirement in extras[extra])
-        assert not any(requirement.startswith("openai-agents") for requirement in extras[extra])
+    assert any(requirement.startswith("anthropic[vertex]") for requirement in extras["agents"])
+    assert not any(requirement.startswith("openai-agents") for requirement in extras["agents"])
 
 
 def test_lock_has_no_openai_agents() -> None:
