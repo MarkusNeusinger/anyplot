@@ -1569,6 +1569,35 @@ class TestFeedback:
         # The session id itself is nowhere in the case.
         assert self.SID not in cases.get("manifest.json").decode()
 
+    def test_the_chat_without_a_plot_is_version_0(self, client, upstream, cases, rows) -> None:
+        """The owner's case of 2026-10-12: a session that made no plot is reported on the chat itself."""
+        chat_bundle = {**_feedback_bundle(3), "versions": [], "data_csv": "x,y\n-3.14,0\n"}
+        upstream.handler = lambda request: httpx.Response(200, json=chat_bundle)
+
+        response = self.post(client, result_version=0)
+
+        assert response.status_code == 201, response.text
+        assert dict(upstream.requests[0].url.params) == {"include_data": "true", "version": "0"}
+        assert response.json()["stored"] == ["data.csv", "manifest.json"]
+        manifest = json.loads(cases.get("manifest.json"))
+        assert (manifest["result_version"], manifest["pipeline_status"], manifest["files"]) == (
+            0,
+            None,
+            ["data.csv", "manifest.json"],
+        )
+        assert "data_csv" not in manifest["bundle"]
+
+    def test_the_chat_without_data_asked_for_its_data_is_422_no_data(self, client, upstream, cases) -> None:
+        upstream.handler = lambda request: httpx.Response(
+            200, json={**_feedback_bundle(3), "versions": [], "data_csv": None}
+        )
+
+        response = self.post(client, result_version=0)
+
+        assert response.status_code == 422
+        assert response.json()["detail"] == "no_data"
+        assert cases.uploads == []
+
     def test_data_csv_only_with_include_data(self, client, upstream, cases) -> None:
         # Even a bundle that carries the data anyway stores none without the box ticked.
         upstream.handler = lambda request: httpx.Response(200, json=_feedback_bundle(3, data_csv="a,b\n1,2\n"))
@@ -1621,7 +1650,7 @@ class TestFeedback:
             {"reaction": "love"},
             {"reaction": None},
             {"message": "x" * 501},
-            {"result_version": 0},
+            {"result_version": -1},
             {"result_version": 1000},
             {"result_version": "three"},
             {"include_data": "maybe"},
@@ -2321,6 +2350,16 @@ class TestCases:
 
         assert response.status_code == 422
         assert response.json() == {"detail": "no_data", "ref": response.headers["X-Request-Id"]}
+        rows.update.assert_not_awaited()
+
+    def test_promoting_a_chat_case_is_422_no_plot(self, client, rows) -> None:
+        """A chat case (version 0) has no plot for the harness to replay, data or not."""
+        rows.add(reaction="thumbs_down", result_version=0, files=["data.csv", "manifest.json"])
+
+        response = self.send(client, {"promoted": True})
+
+        assert response.status_code == 422
+        assert response.json() == {"detail": "no_plot", "ref": response.headers["X-Request-Id"]}
         rows.update.assert_not_awaited()
 
     def test_promoting_again_keeps_the_first_time(self, client, rows) -> None:

@@ -78,6 +78,10 @@ class BundleError(ValueError):
     """The agents service's bundle is not what its route documents; the BFF answers `502 upstream`."""
 
 
+class NoChatData(ValueError):
+    """The chat's case asked for its data, but the session has none yet; the BFF answers `422 no_data`."""
+
+
 class CaseConflict(RuntimeError):
     """An object exists under a case file's name with other content; the BFF answers `502 storage`."""
 
@@ -272,7 +276,10 @@ def build_case(
 
     The bundle must be a JSON object whose `versions` hold the submitted version: the
     BFF asks the agents service for exactly that one, which answers `404 not_found`
-    when the session has no such version.
+    when the session has no such version. `result_version` 0 is the chat's case, of a
+    session that made no plot: its bundle (`version=0`) holds no version, and the data,
+    when asked for, is the bundle's top-level `data_csv`; such a case has no image and no
+    `plot.py`.
     """
     try:
         bundle = json.loads(content)
@@ -283,9 +290,14 @@ def build_case(
     versions = bundle.get("versions")
     if not isinstance(versions, list):
         raise BundleError("the bundle has no version list")
-    version = next(
-        (item for item in versions if isinstance(item, dict) and item.get("number") == submission.result_version), None
-    )
+    chat = submission.result_version == 0
+    if chat:
+        version: dict[str, Any] | None = {"data_csv": bundle.get("data_csv")}
+    else:
+        version = next(
+            (item for item in versions if isinstance(item, dict) and item.get("number") == submission.result_version),
+            None,
+        )
     if version is None:
         raise BundleError("the bundle lacks the submitted version")
 
@@ -300,13 +312,17 @@ def build_case(
     if submission.include_data:
         data_csv = version.get("data_csv")
         # Asked for and absent is a malformed bundle: a manifest must never claim data the case lacks.
+        if chat and data_csv is None and "data_csv" in bundle:
+            # The service said so: no data pasted or computed yet. The user's choice, not a malformed bundle.
+            raise NoChatData("the session has no data yet")
         if not isinstance(data_csv, str) or not data_csv:
-            raise BundleError("the version has no data.csv although the data was asked for")
+            what = "the chat has" if chat else "the version has"
+            raise BundleError(f"{what} no data.csv although the data was asked for")
         files.append(CaseFile("data.csv", _utf8(data_csv, "data.csv")))
 
     # The bundle as the manifest keeps it: without the PNGs and the data, which are files of their own.
     kept = {
-        **bundle,
+        **{key: value for key, value in bundle.items() if key != "data_csv"},
         "versions": [
             {key: value for key, value in item.items() if key not in _FILE_KEYS} if isinstance(item, dict) else item
             for item in versions

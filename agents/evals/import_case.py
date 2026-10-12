@@ -191,6 +191,11 @@ def read_case_dir(path: Path, number: int | None) -> Source:
         raise ImportRefused(f"{path / MANIFEST_NAME}: not a case manifest")
     where = str(path / MANIFEST_NAME)
     result_version = manifest.get("result_version")
+    if result_version == 0:
+        raise ImportRefused(
+            f"{where}: a feedback case on the chat itself (version 0) has no plot to replay; "
+            "a data or scope problem it shows belongs in the prep or scope eval fixtures"
+        )
     if number is not None and number != result_version:
         raise ImportRefused(f"{where}: the case is about version {result_version}, not {number}")
     wanted = result_version if isinstance(result_version, int) else number

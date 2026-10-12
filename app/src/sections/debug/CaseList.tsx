@@ -7,7 +7,7 @@
 
 import Box from '@mui/material/Box';
 
-import { type AgentCase, CASE_STATUSES, type CaseStatus } from 'src/lib/agent';
+import { type AgentCase, CASE_STATUSES, type CaseStatus, caseVersionLabel } from 'src/lib/agent';
 import { REACTION_TEXT, reactionOption } from 'src/sections/agent-chat/reactions';
 import { ghostButtonSx, visuallyHiddenSx } from 'src/sections/agent-chat/styles';
 import { acceptMatch } from 'src/sections/debug/acceptMatch';
@@ -134,7 +134,8 @@ export function CaseList({
             </Box>
             <Box sx={{ minWidth: 0 }}>
               <Box sx={{ ...listTextSx, fontWeight: 600, overflowWrap: 'anywhere' }}>
-                {item.spec_id ?? '—'} · {item.library_id ?? '—'} · v{item.result_version}
+                {item.spec_id ?? '—'} · {item.library_id ?? '—'} ·{' '}
+                {caseVersionLabel(item.result_version)}
               </Box>
               <Box
                 sx={{

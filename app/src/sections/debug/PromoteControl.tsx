@@ -28,6 +28,8 @@ export interface PromoteControlProps {
   expected: CaseExpected | null;
   promotedAt: string | null;
   includeData: boolean;
+  /** A case on the chat itself (version 0): no plot the harness could replay. */
+  noPlot?: boolean;
   /** A change of this case is in flight. */
   busy: boolean;
   onPatch: (patch: CasePatch) => void;
@@ -38,6 +40,7 @@ export function PromoteControl({
   expected,
   promotedAt,
   includeData,
+  noPlot = false,
   busy,
   onPatch,
 }: PromoteControlProps) {
@@ -97,7 +100,7 @@ export function PromoteControl({
             component="button"
             type="button"
             aria-label="Promote to an eval case"
-            disabled={busy || !includeData || value === ''}
+            disabled={busy || noPlot || !includeData || value === ''}
             title={value === '' ? 'choose an expected outcome first' : undefined}
             onClick={() => {
               if (value) onPatch({ promoted: true, expected: value });
@@ -108,8 +111,13 @@ export function PromoteControl({
           </Box>
         )}
       </Box>
-      {!includeData && !promoted && (
-        <Box sx={detailMutedSx}>no data file: the harness cannot run this case</Box>
+      {noPlot && !promoted ? (
+        <Box sx={detailMutedSx}>
+          no plot: a chat case belongs in the prep or scope eval fixtures, not the plot harness
+        </Box>
+      ) : (
+        !includeData &&
+        !promoted && <Box sx={detailMutedSx}>no data file: the harness cannot run this case</Box>
       )}
       <Box sx={{ ...detailMutedSx, maxWidth: '72ch' }}>{PROMOTION_HINT}</Box>
     </Box>

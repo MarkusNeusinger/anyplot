@@ -103,7 +103,8 @@ def row_from_manifest(manifest: Any) -> dict[str, Any]:
 
     Required: `schema == 1`, `id` matching CASE_ID_PATTERN, `created_at` as `YYYY-MM-DDTHH:MM:SSZ`,
     `case_uri`, `user_hash`, `session_hash` (non-empty str), `reaction` in FEEDBACK_REACTIONS,
-    `status` in FEEDBACK_STATUSES, `include_data` bool, `result_version` int from 1 to 999,
+    `status` in FEEDBACK_STATUSES, `include_data` bool, `result_version` int from 0 to 999
+    (0: the chat's case, of a session that made no plot),
     `files` a list of CASE_FILE_NAMES. Optional (None when absent or null): spec_id, library_id,
     language -> locale, message, model, model_version, judge_model, prompt_hash,
     pipeline_status, attempts, tokens, cost_estimate; a value of another type is None too.
@@ -138,8 +139,8 @@ def row_from_manifest(manifest: Any) -> dict[str, Any]:
     if not isinstance(include_data, bool):
         raise ManifestError("include_data is not a boolean")
     result_version = manifest.get("result_version")
-    if not _is_int(result_version) or not 1 <= result_version <= 999:
-        raise ManifestError("result_version is not an integer from 1 to 999")
+    if not _is_int(result_version) or not 0 <= result_version <= 999:
+        raise ManifestError("result_version is not an integer from 0 to 999")
     files = manifest.get("files")
     if not isinstance(files, list) or not all(isinstance(name, str) and name in CASE_FILE_NAMES for name in files):
         raise ManifestError("files is not a list of case file names")

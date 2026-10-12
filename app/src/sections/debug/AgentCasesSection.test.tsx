@@ -283,6 +283,35 @@ describe('AgentCasesSection triage', () => {
     expect(screen.getByLabelText(`Status of case ${A}`)).toHaveValue('new');
   });
 
+  it('shows a chat case (version 0) without renders, and promotion out of reach', async () => {
+    const user = userEvent.setup();
+    const chat = item({
+      result_version: 0,
+      pipeline_status: null,
+      attempts: null,
+      reaction: 'idea',
+      files: ['data.csv', 'manifest.json'],
+    });
+    listAnswer = () => json(200, { items: [chat], has_more: false });
+    detailAnswer = () =>
+      json(200, detailOf(chat, { code: null, diff: null, residual_defects: [] }));
+    renderSection();
+
+    expect(
+      await screen.findByText(/scatter-basic · matplotlib · chat, no plot/)
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: `Open case ${A}` }));
+    const article = await screen.findByRole('article', { name: `Case ${A}` });
+    expect(
+      within(article).getByText(/no plot: the feedback is on the chat itself/)
+    ).toBeInTheDocument();
+    expect(
+      within(article).getByText(/a chat case belongs in the prep or scope eval/)
+    ).toBeInTheDocument();
+    expect(within(article).getByRole('button', { name: 'Promote to an eval case' })).toBeDisabled();
+    expect(calls.some(c => c.url.pathname.includes('/files/'))).toBe(false);
+  });
+
   it('opens a case with both renders as blob URLs and revokes them on close', async () => {
     const user = userEvent.setup();
     renderSection();

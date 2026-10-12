@@ -151,6 +151,42 @@ describe('useAgentSession: quick feedback', () => {
     expect(trackEvent).toHaveBeenCalledWith('agent_result_feedback', {
       reaction: 'thumbs_down',
       include_data: 'yes',
+      subject: 'result',
+    });
+  });
+
+  it('stores the chat itself as version 0 before any plot, and an edit replaces it', async () => {
+    mockFetch();
+    const { result } = renderHook(() => useAgentSession(options));
+    await waitFor(() => expect(result.current.state.phase).toBe('ready'));
+
+    await act(() =>
+      result.current.sendFeedback(0, { reaction: 'idea', message: 'sin x', includeData: false })
+    );
+    expect(feedbackCalls()[0].body).toEqual({
+      reaction: 'idea',
+      message: 'sin x',
+      include_data: false,
+      result_version: 0,
+    });
+    expect(result.current.state.chatFeedback).toEqual({
+      reaction: 'idea',
+      message: 'sin x',
+      includeData: false,
+      caseId: '20261012T143005Z-1a2b3c4d',
+    });
+    expect(trackEvent).toHaveBeenCalledWith('agent_result_feedback', {
+      reaction: 'idea',
+      include_data: 'no',
+      subject: 'chat',
+    });
+
+    await act(() =>
+      result.current.sendFeedback(0, { reaction: 'bug', message: '', includeData: false })
+    );
+    expect(feedbackCalls()[1].body).toMatchObject({
+      result_version: 0,
+      replaces: '20261012T143005Z-1a2b3c4d',
     });
   });
 
@@ -182,6 +218,7 @@ describe('useAgentSession: quick feedback', () => {
     expect(trackEvent).toHaveBeenLastCalledWith('agent_result_feedback', {
       reaction: 'thumbs_up',
       include_data: 'no',
+      subject: 'result',
     });
   });
 
@@ -295,5 +332,14 @@ describe('agentReducer: version_feedback', () => {
     expect(agentReducer(state, { type: 'version_feedback', number: 5, feedback: record })).toBe(
       state
     );
+  });
+
+  it('records version 0 on the session, not on a version', () => {
+    const state = initialAgentState('matplotlib');
+    const record = { reaction: 'bug' as const, message: null, includeData: true, caseId: 'c0' };
+
+    const next = agentReducer(state, { type: 'version_feedback', number: 0, feedback: record });
+    expect(next.chatFeedback).toEqual(record);
+    expect(next.versions).toEqual({});
   });
 });

@@ -136,7 +136,7 @@ def test_replaces_keeps_a_case_id() -> None:
         ({"status": "retired"}, "status"),
         ({"include_data": "true"}, "include_data"),
         ({"include_data": 1}, "include_data"),
-        ({"result_version": 0}, "result_version"),
+        ({"result_version": -1}, "result_version"),
         ({"result_version": 1000}, "result_version"),
         ({"result_version": True}, "result_version"),
         ({"result_version": "3"}, "result_version"),
