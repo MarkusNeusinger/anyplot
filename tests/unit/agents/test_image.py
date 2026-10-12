@@ -33,12 +33,13 @@ import pytest
 import yaml
 
 from agents.anyplot import policy
-from agents.anyplot.render import watermark
+from agents.anyplot.render import harness, watermark
 from agents.anyplot.settings import AgentSettings
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DOCKERFILE = REPO_ROOT / "agents" / "Dockerfile"
+RENDERER_DOCKERFILE = REPO_ROOT / "agents" / "renderer" / "Dockerfile"
 DOCKERIGNORE = REPO_ROOT / ".dockerignore"
 CLOUDBUILD = REPO_ROOT / "agents" / "cloudbuild.yaml"
 RENDERER_CLOUDBUILD = REPO_ROOT / "agents" / "renderer" / "cloudbuild.yaml"
@@ -343,6 +344,32 @@ class TestCopyList:
         assert users and users[-1] not in ("root", "0")
         command = json.loads(next(arguments for keyword, arguments in runtime if keyword == "CMD"))
         assert command == [".venv/bin/uvicorn", "agents.main:app", "--host", "0.0.0.0", "--port", "8080"]
+
+
+class TestRendererImage:
+    """The renderer image (agents/renderer/Dockerfile) against the harness's fallback fonts; CI builds it."""
+
+    def test_the_renderer_image_installs_every_fallback_family_before_the_cache_bake(self) -> None:
+        instructions = _instructions(RENDERER_DOCKERFILE.read_text(encoding="utf-8"))
+        starts = [index for index, (keyword, _) in enumerate(instructions) if keyword == "FROM"]
+        stages = {
+            instructions[start][1]: instructions[start + 1 : end]
+            for start, end in zip(starts, [*starts[1:], len(instructions)], strict=True)
+        }
+        fonts = " ".join(arguments for keyword, arguments in stages["python:3.13-slim AS fonts"] if keyword == "RUN")
+        runtime = stages["python:3.13-slim"]
+
+        # The file stem of each family: `Noto Sans CJK JP` is a face of NotoSansCJK-*.ttc.
+        stems = [name.replace(" ", "").removesuffix("JP") for name in harness.FALLBACK_FAMILIES]
+        assert not [stem for stem in stems if not re.search(rf"(?<![\w-]){stem}(?![\w])", fonts)]
+        assert "NotoSansCJK-Bold.ttc" in fonts  # matplotlib synthesises no bold: a bold CJK title needs this face
+        assert "/usr/share/doc/fonts-noto-core/copyright" in fonts
+        assert "/usr/share/doc/fonts-noto-cjk/copyright" in fonts
+
+        copy = runtime.index(("COPY", "--from=fonts /fonts/noto /usr/share/fonts/noto"))
+        bake = next(index for index, (keyword, arguments) in enumerate(runtime) if "harness.check_fonts()" in arguments)
+        assert copy < bake and runtime[bake][0] == "RUN"
+        assert ("COPY", "--from=fonts /fonts/doc /usr/share/doc/fonts-noto") in runtime
 
 
 # --- Cloud Build -------------------------------------------------------------------------

@@ -1,5 +1,6 @@
 """The bounds the stress cases asked for: the adapter's profile cap, the G9 points cap, the probe's text order, R1 ids."""
 
+import heapq
 from typing import Any
 
 import pytest
@@ -15,9 +16,17 @@ from agents.anyplot.policy import fence
 from agents.anyplot.render import harness
 from agents.anyplot.render.backends.fake import fixture_png
 from agents.anyplot.render.contract import RenderResult, ThemeOutput
-from agents.anyplot.render.gates import MAX_PLOTTED_POINTS, evaluate
-from agents.anyplot.schemas import AdaptRequest, Binding
+from agents.anyplot.render.gates import (
+    GLYPH_LINE_PREFIX,
+    MAX_CODEPOINT,
+    MAX_GLYPH_COUNT,
+    MAX_PLOTTED_POINTS,
+    _glyph_label,
+    evaluate,
+)
+from agents.anyplot.schemas import MAX_NOTE_CHARS, AdaptRequest, Binding
 from agents.anyplot.session_state import SessionView
+from core.defects import DEFECT_RE
 
 from .conftest import CASES
 
@@ -121,6 +130,31 @@ def test_g9_reports_more_plotted_points_than_any_dataset_holds() -> None:
 @pytest.mark.parametrize("value", [True, -5, "many", 1.5e9, None])
 def test_g9_ignores_a_count_that_is_not_a_plain_number(value: object) -> None:
     assert "G9" not in gates({"points": 0, "line_points": value})[0]
+
+
+def test_g10_line_fits_the_reviewer_note_in_the_worst_case() -> None:
+    """The sample is chosen by the code under test, so the bound must hold for the longest labels and the largest count.
+
+    The host keeps distinct code points only, so the worst case is the three longest labels over all of
+    Unicode (surrogates and printable ASCII are dropped before labelling), next to the largest count the
+    gate accepts, in each of the three cause variants.
+    """
+    candidates = (code for code in range(MAX_CODEPOINT + 1) if not (0xD800 <= code <= 0xDFFF or 0x20 <= code <= 0x7E))
+    longest = heapq.nlargest(3, candidates, key=lambda code: len(_glyph_label(code)))
+    assert len(_glyph_label(longest[0])) <= 26
+
+    for missing in (
+        {"count": MAX_GLYPH_COUNT, "math": 0, "sample": longest},
+        {"count": MAX_GLYPH_COUNT, "math": 1, "sample": longest},
+        {"count": MAX_GLYPH_COUNT, "math": 0, "sample": [0x09, *longest[:2]]},
+    ):
+        failed, advisory = gates({"missing_glyphs": missing})
+
+        assert failed == ["G10"]
+        line = advisory[-1]
+        assert len(line) <= MAX_NOTE_CHARS, (len(line), line)
+        assert DEFECT_RE.match(line) and line.startswith(GLYPH_LINE_PREFIX)
+        assert all(_glyph_label(code) in line for code in missing["sample"])  # all three labels, none cut
 
 
 def test_a_renderer_limit_is_recorded_as_its_r1_id() -> None:

@@ -118,7 +118,7 @@ anyplot/
 │   │   ├── auth.py                    # Caller check on the IAM-forwarded ID-token claims
 │   │   ├── settings.py                # RendererSettings (RENDERER_* variables)
 │   │   ├── wire.py                    # JSON contract shared with the agents' remote render backend
-│   │   ├── Dockerfile                 # Renderer image: plotting venv, baked font cache, harness
+│   │   ├── Dockerfile                 # Renderer image: plotting venv, Noto fallback fonts, baked font cache, harness
 │   │   └── cloudbuild.yaml            # Build, candidate deploy, IAM and render smoke, promote
 │   └── anyplot/
 │       ├── agent.py                   # Root agent "anyplot", ALL_AGENTS registry, App with plugins

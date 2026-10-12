@@ -68,6 +68,19 @@ class TestFinish:
         assert result.status == "needs_attention"
         assert result.residual_defects == [NOT_REVIEWED_LINE.format(why="the time limit was reached")]
 
+    def test_a_g10_line_stays_residual_after_a_reviewer_ok(self) -> None:
+        """A measured missing glyph is a fact of the shipped render; the other advisory lines follow the review."""
+        glyphs = "VQ-01 (light): 2 characters have no glyph, drawn as boxes → keep them. Likely cause: a script."
+        clipped = "AR-09 (light): text extends 40 px beyond the canvas edge → keep it inside. Likely cause: a label."
+
+        result = finish(run_with(reviewed_ok=True, advisory_lines=[glyphs, clipped]))
+
+        assert (result.status, result.residual_defects) == ("needs_attention", [glyphs])
+
+        unreviewed = run_with(advisory_lines=[glyphs, clipped])
+        unreviewed.unreviewed_why = "the time limit was reached"
+        assert finish(unreviewed).residual_defects[:2] == [glyphs, clipped]  # carried once, not twice
+
     def test_padded_canvas_is_never_ok(self) -> None:
         run = run_with(padded=True, canvas_line="VQ-05 (dark): drift", reviewed_ok=True)
         run.best, run.padded, run.theme = None, run.best, "dark"

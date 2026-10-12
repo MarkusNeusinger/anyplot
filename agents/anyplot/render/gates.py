@@ -1,4 +1,4 @@
-"""Host gates on a render: R1-R3 decide, G3/G5/G7/G8/G9 advise.
+"""Host gates on a render: R1-R3 decide, G3/G5/G7/G8/G9/G10 advise.
 
 | Gate | Checks | Effect |
 |---|---|---|
@@ -10,6 +10,7 @@
 | G7 | probe: overlapping drawn tick labels | advisory: a VQ-02 line |
 | G8 | probe: more point marks than data rows (fabricated data) | advisory: a DQ-03 line |
 | G9 | probe: scatter marks plus line vertices over `MAX_PLOTTED_POINTS` (computed mass data) | advisory: a DQ-03 line |
+| G10 | probe: characters without a glyph in any font of their text, plain text and mathtext (the harness records matplotlib's own reports) | advisory: a VQ-01 line |
 
 A pipeline run renders one theme (`PipelineArgs.theme`) and the theme toggle renders
 the other one later, so `evaluate` judges exactly the themes of the job it is given:
@@ -28,6 +29,7 @@ of the user's data.
 import builtins
 import math
 import re
+import unicodedata
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Any
@@ -46,6 +48,13 @@ MAX_PLOTTED_POINTS = 200_000
 """G9: scatter marks plus line vertices a plot may draw. The parser's 200 KB cap holds at most about
 102,000 cells (two bytes each), so a plot past twice that drew points the code computed, such as an
 oversampled series or a simulated trajectory (stress cases `stress-compute-*`)."""
+G10_SAMPLE = 3  # code points the G10 line names
+G10_NAME_CHARS = 15  # name text per label: a label is then at most 26 characters and the line fits MAX_NOTE_CHARS
+MAX_CODEPOINT = 0x10FFFF
+MAX_GLYPH_COUNT = 0x110000  # more distinct code points than Unicode has is a tampered probe
+GLYPH_LINE_PREFIX = "VQ-01 ("  # only G10 writes VQ-01; the pipeline carries this line into the residual
+G10_TARGET = "in text the code writes, use characters the fonts cover; a user's column name stays"
+G10_MATH_TARGET = "keep non-Latin text outside $…$ math strings; a user's column name stays"
 CODE_FILE = "plot.py"
 """The file the Python runtime writes the code to; its frames give the error line."""
 ERROR_CLASSES = frozenset(
@@ -107,7 +116,7 @@ class GateReport:
     failed_gates: list[str] = field(default_factory=list)
     """The ids of the gates that failed or reported, one entry per theme and finding: `R1`,
     `R1-timeout`, `R1-<reason>` for a renderer limit (`R1-memory`, `R1-disk_budget`, ...), `R2`,
-    `R3`, then the probe gates `G3`, `G5`, `G7`, `G8`, `G9` in the order the probe checks run
+    `R3`, then the probe gates `G3`, `G5`, `G7`, `G8`, `G9`, `G10` in the order the probe checks run
     (not sorted). Content-free, for the attribution log."""
 
     @property
@@ -288,6 +297,55 @@ def _finite(values: Any, count: int) -> list[float] | None:
     return numbers if all(math.isfinite(number) for number in numbers) else None
 
 
+_NAME_SUFFIX_RE = re.compile(r"-[0-9A-F]{4,6}$")  # CJK UNIFIED IDEOGRAPH-9500 → CJK UNIFIED IDEOGRAPH
+_NAME_STOP_WORDS = frozenset({"with", "of", "and", "for"})  # CHART WITH UPWARDS TREND → chart
+
+
+def _glyph_sample(values: Any) -> list[int]:
+    """At most `G10_SAMPLE` distinct code points of a probe's sample; whatever is not a code point is dropped.
+
+    Printable ASCII (U+0020–U+007E) is in every font the image has, so a "missing" ASCII letter
+    is a tampered probe. A C0 control (TAB, CR) is reported by matplotlib and draws a box, so it
+    is kept and the line can name it; surrogates are not characters.
+    """
+    if not isinstance(values, list):
+        return []
+    kept: list[int] = []
+    for value in values:
+        if isinstance(value, bool) or not isinstance(value, int):
+            continue
+        if not 0 <= value <= MAX_CODEPOINT or 0x20 <= value <= 0x7E or 0xD800 <= value <= 0xDFFF:
+            continue
+        if value not in kept:
+            kept.append(value)
+        if len(kept) == G10_SAMPLE:
+            break
+    return kept
+
+
+def _glyph_label(codepoint: int) -> str:
+    """`U+XXXX`, the character itself when it is a letter, number, punctuation or symbol, and a short name.
+
+    The name is the first two words of the Unicode name when they fit `G10_NAME_CHARS`, else the
+    first word cut to that length, so a label is at most 26 characters (`U+` and six hex digits, a
+    space and the character, a space and the name) and three of them fit the reviewer's note next
+    to a seven-digit count. A format, bidi or control character (`Cf`, `Cc`, `Cs`) and whitespace
+    are never echoed: the line reaches the adapter's and the reviewer's prompts and the user's notes.
+    """
+    char = chr(codepoint)
+    category = unicodedata.category(char)
+    words = _NAME_SUFFIX_RE.sub("", unicodedata.name(char, "")).split()[:2]
+    if len(words) == 2 and words[1].lower() in _NAME_STOP_WORDS:
+        words = words[:1]
+    text = " ".join(words).lower()
+    if len(text) > G10_NAME_CHARS:
+        text = words[0].lower()[:G10_NAME_CHARS]
+    if not text:
+        text = {"Co": "private use", "Cc": "control"}.get(category, "unnamed")
+    shown = f" {char}" if category[0] in "LNPS" else ""
+    return f"U+{codepoint:04X}{shown} {text}"
+
+
 def _probe_lines(probe: dict[str, Any] | None, rows: int) -> list[tuple[str, str]]:
     """Advisory `(gate, line)` pairs from one theme's probe; a malformed probe yields none, never an exception."""
     try:
@@ -361,4 +419,27 @@ def _probe_lines_unchecked(probe: dict[str, Any] | None, rows: int) -> list[tupl
                 "Likely cause: data computed, interpolated or resampled in the code.",
             )
         )
+    glyphs = probe.get("missing_glyphs")
+    if isinstance(glyphs, dict):
+        count = glyphs.get("count")
+        math_count = glyphs.get("math")
+        if isinstance(count, int) and not isinstance(count, bool) and 0 < count <= MAX_GLYPH_COUNT:
+            sample = _glyph_sample(glyphs.get("sample"))
+            labels = ", ".join(_glyph_label(codepoint) for codepoint in sample)
+            shown = f" ({labels}{', …' if count > G10_SAMPLE else ''})" if labels else ""
+            in_math = isinstance(math_count, int) and not isinstance(math_count, bool) and math_count > 0
+            if in_math:
+                drawn, target, cause = "boxes or ¤", G10_MATH_TARGET, "a $…$ math string, which has no font fallback"
+            elif any(codepoint < 0x20 for codepoint in sample):
+                drawn, target, cause = "boxes", G10_TARGET, "a tab or carriage return in a label"
+            else:
+                drawn, target, cause = "boxes", G10_TARGET, "an emoji, a flag or a script the fonts lack"
+            noun = "character has" if count == 1 else "characters have"
+            lines.append(
+                (
+                    "G10",
+                    f"VQ-01 (THEME): {count} {noun} no glyph, drawn as {drawn}{shown} → {target}. "
+                    f"Likely cause: {cause}.",
+                )
+            )
     return lines
