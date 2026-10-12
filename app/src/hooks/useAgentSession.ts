@@ -87,8 +87,9 @@
  * never waits for it. The stored case is recorded on the version
  * (`PlotVersion.feedback`), which the card shows as `sent · v<n>`: the record
  * outlives the card's body, which a newer version collapses and unmounts. A
- * later send for the same version stores a new case and replaces the record;
- * the sending flag and the failure line stay in the control.
+ * later send for the same version stores a new case that names the recorded
+ * one as `replaces`, and replaces the record; the sending flag and the failure
+ * line stay in the control.
  *
  * Analytics carry enum properties only, never text or data:
  * `agent_data_parsed{status, size_bucket}`, `agent_data_confirmed{size_bucket}`,
@@ -1438,6 +1439,8 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
       if (message && message.length > MAX_FEEDBACK_CHARS) {
         return Promise.reject(new AgentApiError(0, 'too_long'));
       }
+      // An edit names the case it replaces, so the triage need not guess from the times.
+      const replaces = stateRef.current.versions[number].feedback?.caseId;
       const send = async () => {
         try {
           const stored = await agentApi.sendFeedback(token, sid, {
@@ -1445,6 +1448,7 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
             message,
             include_data: input.includeData,
             result_version: number,
+            ...(replaces ? { replaces } : {}),
           });
           safeDispatch({
             type: 'version_feedback',

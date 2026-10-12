@@ -43,7 +43,16 @@ from pydantic import AfterValidator, BaseModel, ConfigDict, Field, model_validat
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.background import BackgroundTask
 
-from api.agent_cases import BundleError, CaseBucket, GcsCaseBucket, Submission, build_case, new_case_id, write_case
+from api.agent_cases import (
+    CASE_ID_PATTERN,
+    BundleError,
+    CaseBucket,
+    GcsCaseBucket,
+    Submission,
+    build_case,
+    new_case_id,
+    write_case,
+)
 from api.dependencies import require_db
 from api.routers.debug import AdminIdentity, require_admin, require_admin_identity
 from core.config import settings
@@ -423,8 +432,12 @@ class FeedbackBody(_StrictBody):
     # The site feedback's reaction set (`core.database.FEEDBACK_REACTIONS`).
     reaction: Annotated[str, AfterValidator(_check_reaction)]
     message: Annotated[str | None, AfterValidator(_feedback_message)] = None
-    include_data: bool
-    result_version: Annotated[int, Field(ge=1, le=999)]
+    # Strict: a JSON boolean and a JSON integer only. A lax `"yes"` or `true` would
+    # store a case the client never meant (`true` is version 1).
+    include_data: Annotated[bool, Field(strict=True)]
+    result_version: Annotated[int, Field(ge=1, le=999, strict=True)]
+    # The case id of the earlier submission for this version, when this one is an edit of it.
+    replaces: Annotated[str | None, Field(pattern=CASE_ID_PATTERN)] = None
 
 
 # ============================================================================
@@ -1056,7 +1069,8 @@ async def submit_feedback(sid: SessionId, body: FeedbackBody, ctx: Ctx, client: 
     The agents service assembles the version's bundle (`version=result_version`, its
     `data.csv` only with `include_data`); `api/agent_cases.py` splits it into the case
     files and the manifest, which it uploads last, all in a worker thread. A later
-    submission for the same version is a new case; the newest one counts. Upstream
+    submission for the same version is a new case that names the earlier one in
+    `replaces`; the newest one counts. Upstream
     errors map as for `.save()`, a bundle that is not the documented shape is
     `502 upstream`, and a failed upload is `502 storage`, which leaves no manifest:
     files without one are an aborted case, never a case.
@@ -1064,7 +1078,11 @@ async def submit_feedback(sid: SessionId, body: FeedbackBody, ctx: Ctx, client: 
     content = await _fetch_bundle(client, ctx, sid, version=body.result_version, include_data=body.include_data)
     created_at = datetime.now(UTC)
     submission = Submission(
-        reaction=body.reaction, message=body.message, include_data=body.include_data, result_version=body.result_version
+        reaction=body.reaction,
+        message=body.message,
+        include_data=body.include_data,
+        result_version=body.result_version,
+        replaces=body.replaces,
     )
     try:
         case = await run_in_threadpool(

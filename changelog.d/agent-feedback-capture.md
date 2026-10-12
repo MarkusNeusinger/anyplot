@@ -5,7 +5,8 @@
   site feedback's set), an optional text of at most 500 characters and
   `# include data.csv`, ticked by default for admins in phase 1. `.send()`
   never waits for a turn and never starts one; the card then shows
-  `sent · v<n>`, and an edit stores a new case that replaces it. The BFF's new
+  `sent · v<n>`, and an edit stores a new case that names the one it replaces
+  (`replaces` in its manifest). The BFF's new
   `POST /debug/agent/sessions/{sid}/feedback` fetches that version's bundle from
   the agents service, under the same admin gate, ownership and size cap as
   `.save()`, and writes it to the private bucket `AGENT_CASES_BUCKET`
@@ -20,4 +21,7 @@
   `case.json`, `data.csv` and, when the version came from a typed change,
   `change_request.txt` into the git-ignored `agents/evals/.cases/`, which the
   harness runs as promoted cases. It never writes into the committed fixtures,
-  because a case holds a user's data.
+  because a case holds a user's data. It matches a version's request by
+  position only when the transcript's plot turns and the versions agree in
+  number, and otherwise lists the turns and asks for `--change-request` or
+  `--no-change-request`.

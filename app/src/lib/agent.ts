@@ -224,6 +224,8 @@ export interface FeedbackBody {
   include_data: boolean;
   /** The version's number, 1 to 999. */
   result_version: number;
+  /** The case id of the earlier submission for this version, when this one is an edit of it. */
+  replaces?: string;
 }
 
 /** The answer of `POST .../feedback`: the stored case and its file names. */
@@ -467,7 +469,7 @@ export const agentApi = {
    * version's case (conversation, code, PNGs, config, `data.csv` with
    * `include_data`) in the private case bucket and answers `201 {case_id,
    * stored}`. A later call for the same version stores a new case, which
-   * replaces the earlier one for the triage. `502 storage` when the bucket
+   * names the earlier one in `replaces` for the triage. `502 storage` when the bucket
    * refused the case; upstream errors as for `.save()`.
    */
   sendFeedback: (token: string, sid: string, body: FeedbackBody) =>

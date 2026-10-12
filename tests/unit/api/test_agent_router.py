@@ -1270,6 +1270,7 @@ class TestFeedback:
             "include_data": True,
             "status": "new",
             "result_version": 3,
+            "replaces": None,
             "model": "claude-haiku-5-5",
             "model_version": None,
             "judge_model": "claude-haiku-5-5",
@@ -1334,6 +1335,20 @@ class TestFeedback:
             {"result_version": "three"},
             {"include_data": "maybe"},
             {"case_id": "mine"},
+            # Strict types: no coercion of a boolean, a string or a float into a version,
+            # nor of a string or a number into the data choice.
+            {"result_version": True},
+            {"result_version": "3"},
+            {"result_version": 3.0},
+            {"include_data": "yes"},
+            {"include_data": "true"},
+            {"include_data": 1},
+            {"include_data": 0},
+            # `replaces` is a case id or nothing.
+            {"replaces": "mine"},
+            {"replaces": "../20261012T143005Z-1a2b3c4d"},
+            {"replaces": "20261012T143005Z-1A2B3C4D"},
+            {"replaces": 20261012},
         ],
     )
     def test_422_for_an_invalid_body(self, client, upstream, cases, change) -> None:
@@ -1472,12 +1487,13 @@ class TestFeedback:
     def test_a_later_submission_for_the_same_version_is_a_new_case(self, client, upstream, cases) -> None:
         upstream.handler = _answer_bundle
         first = self.post(client).json()["case_id"]
-        second = self.post(client, reaction="thumbs_up", message=None).json()["case_id"]
+        second = self.post(client, reaction="thumbs_up", message=None, replaces=first).json()["case_id"]
         assert first != second
         manifests = [json.loads(data) for name, data, _ in cases.uploads if name.endswith("/manifest.json")]
-        assert [(item["id"], item["session_hash"], item["result_version"]) for item in manifests] == [
-            (first, manifests[0]["session_hash"], 3),
-            (second, manifests[0]["session_hash"], 3),
+        # The edit names the case it replaces, so the triage need not guess from the times.
+        assert [(item["id"], item["session_hash"], item["result_version"], item["replaces"]) for item in manifests] == [
+            (first, manifests[0]["session_hash"], 3, None),
+            (second, manifests[0]["session_hash"], 3, first),
         ]
 
 

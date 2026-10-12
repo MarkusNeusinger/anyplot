@@ -250,6 +250,6 @@ describe('ResultCard', () => {
       }),
     });
     await userEvent.click(screen.getByRole('button', { name: /Version 2/ }));
-    expect(screen.getByRole('status')).toHaveTextContent('sent · v2 · bug');
+    expect(screen.getByTestId('result-feedback-sent')).toHaveTextContent('sent · v2 · bug');
   });
 });

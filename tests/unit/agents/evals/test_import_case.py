@@ -16,10 +16,12 @@ from agents.evals.cases import MAX_CHANGE_REQUEST_CHARS, load_case
 from agents.evals.import_case import (
     CREATE_PLOT_MESSAGE,
     EXPECTED_BY_REACTION,
+    AmbiguousRequest,
     ImportRefused,
     build_case,
     change_request,
     main,
+    plot_turns,
     read_bundle_file,
     read_case_dir,
     write_case,
@@ -107,7 +109,7 @@ class TestFromABundleFile:
         case = load_case(target, "promoted")
         assert (case.change_request, case.expected, case.origin) == ("log scale on y", "unknown", "promoted")
         out = capsys.readouterr().out
-        assert "change request (check it): log scale on y" in out
+        assert "change request: log scale on y" in out
         assert f"--cases session-{digest}-v2" in out
 
     def test_version_one_came_from_create_plot_and_has_no_change_request(self, tmp_path, promoted) -> None:
@@ -137,6 +139,65 @@ class TestFromABundleFile:
         bundle["session"]["library"] = "seaborn"
         source = read_bundle_file(_bundle_file(tmp_path, bundle), 2)
         assert build_case(source, None).case["library"] == "matplotlib"
+
+    def test_a_first_plot_from_a_typed_note_makes_the_note_version_ones_request(self, tmp_path, promoted) -> None:
+        """Step 2's composer sends a note as a typed message, so the session never holds `create_plot`."""
+        bundle = _bundle()
+        bundle["transcript"][2]["text"] = "use larger markers"
+        source = str(_bundle_file(tmp_path, bundle))
+
+        assert main([source, "--version", "1", "--id", "note-v1"]) == 0
+        assert main([source, "--version", "2", "--id", "note-v2"]) == 0
+
+        assert (promoted / "note-v1" / "change_request.txt").read_text() == "use larger markers\n"
+        assert (promoted / "note-v2" / "change_request.txt").read_text() == "log scale on y\n"
+
+    def test_refuses_to_guess_when_a_question_has_no_version(self, tmp_path, promoted, capsys) -> None:
+        bundle = _bundle()
+        bundle["transcript"][4:4] = [
+            {"role": "user", "text": "what does the y axis show?"},
+            {"role": "assistant", "text": "The exam score."},
+        ]
+        source = str(_bundle_file(tmp_path, bundle))
+
+        assert main([source, "--version", "2", "--id", "asked"]) == 1
+        err = capsys.readouterr().err
+        assert "3 plot turns for 2 versions" in err
+        assert "1. .create_plot()\n  2. what does the y axis show?\n  3. log scale on y" in err
+        assert not promoted.exists()
+
+        assert main([source, "--version", "2", "--id", "asked", "--change-request", " log scale on y "]) == 0
+        assert (promoted / "asked" / "change_request.txt").read_text() == "log scale on y\n"
+        assert main([source, "--version", "1", "--id", "first", "--no-change-request"]) == 0
+        assert set(_written(promoted / "first")) == {"case.json", "data.csv"}
+
+    def test_refuses_bindings_the_versions_data_lacks(self, tmp_path, promoted, capsys) -> None:
+        """The bundle's bindings are the session's when it was saved; a later data change renamed a column."""
+        bundle = _bundle()
+        bundle["bindings"] = [{"role": "x", "column": "Stunden"}, {"role": "y", "column": "Wert"}]
+
+        assert main([str(_bundle_file(tmp_path, bundle)), "--version", "1"]) == 1
+        err = capsys.readouterr().err
+        assert "the bindings name 'Wert', which version 1's data.csv lacks" in err
+        assert not promoted.exists()
+
+    def test_a_quoted_header_with_a_byte_order_mark_still_binds(self, tmp_path, promoted) -> None:
+        bundle = _bundle()
+        bundle["versions"][1]["data_csv"] = '﻿"Stunden","Punkte"\n1.5,52\n'
+        assert main([str(_bundle_file(tmp_path, bundle)), "--id", "bom"]) == 0
+
+    @pytest.mark.parametrize(
+        ("flag", "message"),
+        [("   ", "--change-request is empty"), ("x" * (MAX_CHANGE_REQUEST_CHARS + 1), "at most 600")],
+    )
+    def test_refuses_an_unusable_change_request(self, tmp_path, promoted, capsys, flag, message) -> None:
+        assert main([str(_bundle_file(tmp_path, _bundle())), f"--change-request={flag}"]) == 1
+        assert message in capsys.readouterr().err
+
+    def test_the_two_request_flags_exclude_each_other(self, tmp_path) -> None:
+        with pytest.raises(SystemExit) as exit_info:
+            main([str(_bundle_file(tmp_path, _bundle())), "--change-request", "x", "--no-change-request"])
+        assert exit_info.value.code == 2
 
 
 class TestFromAStoredCase:
@@ -172,6 +233,17 @@ class TestFromAStoredCase:
     def test_refuses_another_version_than_the_cases(self, tmp_path, promoted) -> None:
         with pytest.raises(ImportRefused, match="about version 2, not 1"):
             read_case_dir(_case_dir(tmp_path), 1)
+
+    def test_a_case_sent_on_an_older_version_needs_its_request_named(self, tmp_path, promoted, capsys) -> None:
+        """A case holds only its own version: one more plot turn means it was not the newest."""
+        directory = _case_dir(tmp_path, version=1)
+        manifest = json.loads((directory / "manifest.json").read_text(encoding="utf-8"))
+        assert [turn["text"] for turn in manifest["bundle"]["transcript"]][-2] == "log scale on y"
+
+        assert main([str(directory), "--id", "older"]) == 1
+        assert "2 plot turns for 1 versions" in capsys.readouterr().err
+        assert main([str(directory), "--id", "older", "--no-change-request"]) == 0
+        assert set(_written(promoted / "older")) == {"case.json", "data.csv"}
 
 
 class TestWhereItWrites:
@@ -229,11 +301,31 @@ class TestChangeRequest:
             "[action] Summarize the dataset for the user.",
             "bigger markers",
         )
-        assert change_request(transcript, 1) is None
-        assert change_request(transcript, 2) == "log scale on y"
-        assert change_request(transcript, 3) == "bigger markers"
-        assert change_request(transcript, 4) is None
-        assert change_request(None, 1) is None
+        assert plot_turns(transcript) == [CREATE_PLOT_MESSAGE, "log scale on y", "bigger markers"]
+        assert change_request(transcript, 1, 3) is None
+        assert change_request(transcript, 2, 3) == "log scale on y"
+        assert change_request(transcript, 3, 3) == "bigger markers"
+
+    def test_without_create_plot_every_typed_message_is_a_plot_turn(self) -> None:
+        transcript = self._turns("[action] Summarize the dataset for the user.", "use larger markers", "log scale on y")
+        assert change_request(transcript, 1, 2) == "use larger markers"
+        assert change_request(transcript, 2, 2) == "log scale on y"
+
+    @pytest.mark.parametrize(
+        ("transcript", "number", "versions", "match"),
+        [
+            # A question made no version: the counts differ.
+            ([CREATE_PLOT_MESSAGE, "what does y show?", "log scale on y"], 2, 2, "3 plot turns for 2 versions"),
+            # A version beyond the session's, or none at all.
+            ([CREATE_PLOT_MESSAGE, "log scale on y"], 3, 2, "2 plot turns for 2 versions"),
+            ([CREATE_PLOT_MESSAGE, "log scale on y"], 0, 2, "2 plot turns for 2 versions"),
+            (None, 1, 1, "0 plot turns for 1 versions"),
+        ],
+    )
+    def test_refuses_to_match_when_the_counts_differ(self, transcript, number, versions, match) -> None:
+        turns = self._turns(*transcript) if transcript else transcript
+        with pytest.raises(AmbiguousRequest, match=match):
+            change_request(turns, number, versions)
 
     def test_a_long_request_is_left_out_with_a_note(self, tmp_path) -> None:
         bundle = _bundle()

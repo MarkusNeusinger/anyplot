@@ -23,6 +23,9 @@ const SENT: FeedbackRecord = {
 };
 
 const sendButton = () => screen.getByRole('button', { name: 'Send feedback' });
+const dataBox = (version: number) =>
+  screen.getByRole('checkbox', { name: `Include data.csv in the feedback on version ${version}` });
+const sentLine = () => screen.getByTestId('result-feedback-sent');
 
 describe('ResultFeedback', () => {
   it('offers the four reactions and sends only once one is picked', async () => {
@@ -67,7 +70,7 @@ describe('ResultFeedback', () => {
     const user = userEvent.setup();
     const onSend = vi.fn<Send>(async () => undefined);
     render(<ResultFeedback version={2} sent={null} onSend={onSend} />);
-    const box = screen.getByRole('checkbox', { name: '# include data.csv' });
+    const box = dataBox(2);
     expect(box).toBeChecked();
 
     await user.click(box);
@@ -89,7 +92,7 @@ describe('ResultFeedback', () => {
     await user.click(sendButton());
     // The page records the stored case on the version; the control shows it.
     rerender(<ResultFeedback version={3} sent={SENT} onSend={onSend} />);
-    expect(screen.getByRole('status')).toHaveTextContent('sent · v3 · thumbs down · with data.csv');
+    expect(sentLine()).toHaveTextContent('sent · v3 · thumbs down · with data.csv');
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Edit the feedback on version 3' }));
@@ -101,7 +104,7 @@ describe('ResultFeedback', () => {
       'true'
     );
     await user.click(screen.getByRole('button', { name: 'Idea' }));
-    await user.click(screen.getByRole('checkbox', { name: '# include data.csv' }));
+    await user.click(dataBox(3));
     await user.click(sendButton());
     expect(onSend).toHaveBeenLastCalledWith(3, {
       reaction: 'idea',
@@ -116,16 +119,77 @@ describe('ResultFeedback', () => {
         onSend={onSend}
       />
     );
-    expect(screen.getByRole('status')).toHaveTextContent('sent · v3 · idea');
-    expect(screen.getByRole('status')).not.toHaveTextContent('with data.csv');
+    expect(sentLine()).toHaveTextContent('sent · v3 · idea');
+    expect(sentLine()).not.toHaveTextContent('with data.csv');
   });
 
   it('leaves an edit with .cancel() and shows the case sent before', async () => {
     const user = userEvent.setup();
     render(<ResultFeedback version={4} sent={SENT} onSend={vi.fn<Send>()} />);
     await user.click(screen.getByRole('button', { name: 'Edit the feedback on version 4' }));
-    await user.click(screen.getByRole('button', { name: '.cancel()' }));
-    expect(screen.getByRole('status')).toHaveTextContent('sent · v4');
+    await user.click(
+      screen.getByRole('button', { name: 'Cancel the edit of the feedback on version 4' })
+    );
+    expect(sentLine()).toHaveTextContent('sent · v4');
+  });
+
+  it('announces a stored case and moves the focus across the swap', async () => {
+    const user = userEvent.setup();
+    const onSend = vi.fn<Send>(async () => undefined);
+    const { rerender } = render(<ResultFeedback version={3} sent={null} onSend={onSend} />);
+    // Mounted, and empty, before anything is sent: a live region must exist before its text.
+    expect(screen.getByRole('status')).toBeEmptyDOMElement();
+
+    await user.click(screen.getByRole('button', { name: 'Thumbs down' }));
+    sendButton().focus();
+    await user.keyboard('{Enter}');
+    await waitFor(() =>
+      expect(screen.getByRole('status')).toHaveTextContent(
+        'Feedback sent on version 3: Thumbs down, with data.csv.'
+      )
+    );
+    rerender(<ResultFeedback version={3} sent={SENT} onSend={onSend} />);
+
+    const edit = screen.getByRole('button', { name: 'Edit the feedback on version 3' });
+    await waitFor(() => expect(edit).toHaveFocus());
+
+    await user.keyboard('{Enter}');
+    expect(screen.getByRole('status')).toBeEmptyDOMElement();
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Thumbs down' })).toHaveFocus());
+
+    await user.click(
+      screen.getByRole('button', { name: 'Cancel the edit of the feedback on version 3' })
+    );
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Edit the feedback on version 3' })).toHaveFocus()
+    );
+  });
+
+  it('leaves the focus where the user moved it while the send ran', async () => {
+    const user = userEvent.setup();
+    const gate = deferred();
+    const onSend = vi.fn<Send>(() => gate.promise);
+    const { rerender } = render(
+      <>
+        <input aria-label="Composer" />
+        <ResultFeedback version={1} sent={null} onSend={onSend} />
+      </>
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Bug' }));
+    await user.click(sendButton());
+    await user.click(screen.getByRole('textbox', { name: 'Composer' }));
+    gate.resolve();
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Feedback sent'));
+    rerender(
+      <>
+        <input aria-label="Composer" />
+        <ResultFeedback version={1} sent={{ ...SENT, reaction: 'bug' }} onSend={onSend} />
+      </>
+    );
+
+    expect(sentLine()).toHaveTextContent('sent · v1 · bug');
+    expect(screen.getByRole('textbox', { name: 'Composer' })).toHaveFocus();
   });
 
   it('shows the send in progress, locks its inputs and sends once', async () => {
@@ -140,7 +204,7 @@ describe('ResultFeedback', () => {
     expect(sendButton()).toHaveAttribute('aria-disabled', 'true');
     expect(sendButton()).toHaveFocus();
     expect(screen.getByRole('textbox', { name: 'Feedback message' })).toBeDisabled();
-    expect(screen.getByRole('checkbox', { name: '# include data.csv' })).toBeDisabled();
+    expect(dataBox(1)).toBeDisabled();
     await user.click(sendButton());
     expect(onSend).toHaveBeenCalledTimes(1);
 

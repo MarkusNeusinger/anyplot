@@ -16,6 +16,11 @@
  *   the keyboard focus stays on it).
  * - A failure shows a line with its code's meaning and the request id; the
  *   next attempt clears it.
+ * - The form and the sent line swap, which removes the focused button. The
+ *   focus moves on to `.edit()` after a send or `.cancel()`, and to the picked
+ *   reaction after `.edit()`, unless the user has moved it elsewhere in the
+ *   meantime. A status region outside the swap stays mounted, so a stored case
+ *   is announced to screen readers.
  */
 
 import { type ComponentType, useEffect, useRef, useState } from 'react';
@@ -42,6 +47,7 @@ import {
   labelSx,
   nativeControlSx,
   smallText,
+  visuallyHiddenSx,
 } from 'src/sections/agent-chat/styles';
 import { colors, typography } from 'src/theme';
 
@@ -131,6 +137,15 @@ export function ResultFeedback({ version, sent, onSend }: ResultFeedbackProps) {
   const [includeData, setIncludeData] = useState(sent?.includeData ?? true);
   const [sending, setSending] = useState(false);
   const [failure, setFailure] = useState<{ code: string; ref: string | null } | null>(null);
+  // What the status region announces; set when a case is stored, cleared by `.edit()`.
+  const [announcement, setAnnouncement] = useState('');
+
+  const rootRef = useRef<HTMLDivElement>(null);
+  const editRef = useRef<HTMLButtonElement>(null);
+  const messageRef = useRef<HTMLTextAreaElement>(null);
+  // Where the focus goes once the form and the sent line have swapped.
+  const pendingFocus = useRef<'edit' | 'reaction' | null>(null);
+  const showingSent = !!sent && !editing;
 
   const mounted = useRef(true);
   useEffect(() => {
@@ -140,6 +155,25 @@ export function ResultFeedback({ version, sent, onSend }: ResultFeedbackProps) {
     };
   }, []);
 
+  useEffect(() => {
+    const target = pendingFocus.current;
+    if (!target) return;
+    // The swap dropped the focus to the body; a focus the user moved elsewhere stays there.
+    const active = document.activeElement;
+    if (active && active !== document.body && !rootRef.current?.contains(active)) {
+      pendingFocus.current = null;
+      return;
+    }
+    if (target === 'edit' && showingSent) {
+      pendingFocus.current = null;
+      editRef.current?.focus();
+    } else if (target === 'reaction' && !showingSent) {
+      pendingFocus.current = null;
+      const pressed = rootRef.current?.querySelector<HTMLElement>('button[aria-pressed="true"]');
+      (pressed ?? messageRef.current)?.focus();
+    }
+  }, [showingSent]);
+
   const handleEdit = () => {
     if (sent) {
       setReaction(sent.reaction);
@@ -147,7 +181,15 @@ export function ResultFeedback({ version, sent, onSend }: ResultFeedbackProps) {
       setIncludeData(sent.includeData);
     }
     setFailure(null);
+    setAnnouncement('');
+    pendingFocus.current = 'reaction';
     setEditing(true);
+  };
+
+  const handleCancel = () => {
+    setFailure(null);
+    pendingFocus.current = 'edit';
+    setEditing(false);
   };
 
   const handleSend = async (event: React.FormEvent) => {
@@ -158,7 +200,14 @@ export function ResultFeedback({ version, sent, onSend }: ResultFeedbackProps) {
     try {
       await onSend(version, { reaction, message, includeData });
       // Stored: the control shows what was sent, which the page recorded on the version.
-      if (mounted.current) setEditing(false);
+      if (mounted.current) {
+        const label = REACTIONS.find(item => item.value === reaction)?.label ?? reaction;
+        setAnnouncement(
+          `Feedback sent on version ${version}: ${label}, ${includeData ? 'with' : 'without'} data.csv.`
+        );
+        pendingFocus.current = 'edit';
+        setEditing(false);
+      }
     } catch (err) {
       if (mounted.current) {
         setFailure(
@@ -187,58 +236,59 @@ export function ResultFeedback({ version, sent, onSend }: ResultFeedbackProps) {
     </Box>
   );
 
-  if (sent && !editing) {
-    const option = REACTIONS.find(item => item.value === sent.reaction);
-    return (
+  const sentOption = sent ? REACTIONS.find(item => item.value === sent.reaction) : undefined;
+  const sentLine = sent && (
+    <Box
+      component="section"
+      aria-label={`Feedback on version ${version}`}
+      sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', columnGap: 1, rowGap: 0.5 }}
+    >
+      <Box component="span" sx={labelSx}>
+        # feedback
+      </Box>
+      {/* A flex item laid out as plain text, so at phone width it wraps like a sentence. */}
       <Box
-        component="section"
-        aria-label={`Feedback on version ${version}`}
-        data-testid="result-feedback"
-        sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', columnGap: 1, rowGap: 0.5 }}
+        component="span"
+        data-testid="result-feedback-sent"
+        sx={{ ...labelSx, color: 'var(--ink-soft)', minWidth: 0 }}
       >
-        <Box component="span" sx={labelSx}>
-          # feedback
-        </Box>
-        <Box
-          component="span"
-          role="status"
-          sx={{
-            ...labelSx,
-            color: 'var(--ink-soft)',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 0.5,
-          }}
-        >
-          {option && (
-            <Box component="span" aria-hidden sx={{ display: 'inline-flex', color: option.color }}>
-              <option.Filled fontSize="small" />
-            </Box>
-          )}
-          sent · v{version}{' '}
-          <Box component="span" sx={{ color: 'var(--ink-muted)' }}>
-            · {REACTION_TEXT[sent.reaction]}
-            {sent.includeData ? ' · with data.csv' : ''}
+        {sentOption && (
+          <Box
+            component="span"
+            aria-hidden
+            sx={{
+              display: 'inline-flex',
+              verticalAlign: 'middle',
+              mr: 0.5,
+              color: sentOption.color,
+            }}
+          >
+            <sentOption.Filled fontSize="small" />
           </Box>
-        </Box>
-        <Box
-          component="button"
-          type="button"
-          onClick={handleEdit}
-          aria-label={`Edit the feedback on version ${version}`}
-          sx={{ ...actionButtonSx, ml: 'auto' }}
-        >
-          .edit()
+        )}
+        sent · v{version}{' '}
+        <Box component="span" sx={{ color: 'var(--ink-muted)' }}>
+          · {REACTION_TEXT[sent.reaction]}
+          {sent.includeData ? ' · with data.csv' : ''}
         </Box>
       </Box>
-    );
-  }
+      <Box
+        component="button"
+        type="button"
+        ref={editRef}
+        onClick={handleEdit}
+        aria-label={`Edit the feedback on version ${version}`}
+        sx={{ ...actionButtonSx, ml: 'auto' }}
+      >
+        .edit()
+      </Box>
+    </Box>
+  );
 
-  return (
+  const form = (
     <Box
       component="form"
       aria-label={`Feedback on version ${version}`}
-      data-testid="result-feedback"
       onSubmit={(event: React.FormEvent) => void handleSend(event)}
       sx={{ display: 'flex', flexDirection: 'column', gap: 1, minWidth: 0 }}
     >
@@ -280,6 +330,7 @@ export function ResultFeedback({ version, sent, onSend }: ResultFeedbackProps) {
       </Box>
       <Box
         component="textarea"
+        ref={messageRef}
         aria-label="Feedback message"
         placeholder="optional: what worked, what did not"
         value={message}
@@ -313,6 +364,7 @@ export function ResultFeedback({ version, sent, onSend }: ResultFeedbackProps) {
           <Box
             component="input"
             type="checkbox"
+            aria-label={`Include data.csv in the feedback on version ${version}`}
             checked={includeData}
             disabled={sending}
             onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
@@ -331,11 +383,9 @@ export function ResultFeedback({ version, sent, onSend }: ResultFeedbackProps) {
             <Box
               component="button"
               type="button"
-              onClick={() => {
-                setFailure(null);
-                setEditing(false);
-              }}
+              onClick={handleCancel}
               disabled={sending}
+              aria-label={`Cancel the edit of the feedback on version ${version}`}
               sx={actionButtonSx}
             >
               .cancel()
@@ -365,6 +415,16 @@ export function ResultFeedback({ version, sent, onSend }: ResultFeedbackProps) {
         </Box>
       </Box>
       {failureLine}
+    </Box>
+  );
+
+  return (
+    <Box ref={rootRef} data-testid="result-feedback" sx={{ minWidth: 0 }}>
+      {/* Outside the swap, so it is mounted before the text that announces a stored case. */}
+      <Box role="status" sx={visuallyHiddenSx}>
+        {announcement}
+      </Box>
+      {showingSent ? sentLine : form}
     </Box>
   );
 }

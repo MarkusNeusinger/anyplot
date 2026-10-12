@@ -10,9 +10,11 @@ from datetime import UTC, datetime
 from unittest.mock import MagicMock
 
 import pytest
+from google.api_core.exceptions import Forbidden, PreconditionFailed
 
 from api import agent_cases
 from api.agent_cases import (
+    CASE_ID_PATTERN,
     CASE_MEDIA_TYPES,
     CaseFile,
     FeedbackCase,
@@ -81,6 +83,29 @@ def test_gcs_upload_never_replaces_an_object(monkeypatch) -> None:
     client.bucket.return_value.blob.return_value.upload_from_string.assert_called_once_with(
         b"code", content_type="text/x-python; charset=utf-8", if_generation_match=0
     )
+
+
+def test_gcs_upload_takes_its_own_retried_object_as_stored(monkeypatch) -> None:
+    """A retry whose first attempt stored the object but lost the response meets `412`: that is stored."""
+    client = MagicMock()
+    client.bucket.return_value.blob.return_value.upload_from_string.side_effect = PreconditionFailed("exists")
+    monkeypatch.setattr(agent_cases, "_storage_client", lambda: client)
+
+    GcsCaseBucket("anyplot-agent-cases").upload("cases/x/manifest.json", b"{}", "application/json")
+
+
+def test_gcs_upload_raises_any_other_storage_error(monkeypatch) -> None:
+    client = MagicMock()
+    client.bucket.return_value.blob.return_value.upload_from_string.side_effect = Forbidden("no create right")
+    monkeypatch.setattr(agent_cases, "_storage_client", lambda: client)
+
+    with pytest.raises(Forbidden):
+        GcsCaseBucket("anyplot-agent-cases").upload("cases/x/manifest.json", b"{}", "application/json")
+
+
+def test_case_ids_match_the_pattern_a_replaced_case_is_checked_against() -> None:
+    assert re.fullmatch(CASE_ID_PATTERN, new_case_id(datetime(2026, 10, 12, 14, 30, 5, tzinfo=UTC)))
+    assert not re.fullmatch(CASE_ID_PATTERN, "20261012T143005Z-1A2B3C4D")
 
 
 def test_write_case_uploads_in_order_and_stops_at_the_first_failure() -> None:

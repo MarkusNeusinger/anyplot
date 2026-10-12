@@ -5,6 +5,8 @@ Run it from the repository root:
     uv run --extra agents python -m agents.evals.import_case anyplot-session-AbCdEf12.json
     uv run --extra agents python -m agents.evals.import_case path/to/cases/20261012T143005Z-1a2b3c4d \\
         --expected rejected
+    uv run --extra agents python -m agents.evals.import_case anyplot-session-AbCdEf12.json --version 2 \\
+        --change-request "log scale on y"
 
 `<source>` is one of:
 
@@ -30,15 +32,25 @@ else: a feedback case holds a user's data, and everything under
 * `case.json`: the spec, library, locale and bindings of the session; `expected` from
   `--expected`, else from the manifest's reaction (`thumbs_up` and `idea` → `accepted`,
   `thumbs_down` and `bug` → `rejected`; a bundle without a manifest → `unknown`);
-  `tags` `["imported", <reaction>]`; and `source`, where the case came from;
+  `tags` `["imported", <reaction>]`; and `source`, where the case came from. The
+  bundle holds the session's bindings when it was taken, not each version's, so a
+  binding that names a column the version's `data.csv` lacks (a later data change
+  renamed or dropped it) is refused: the harness could not bind it;
 * `data.csv`: the version's data. A source without it is refused: the harness pastes
   it like a user would, so a case without data cannot run;
 * `change_request.txt`, when the version came from a change the user typed. The
-  transcript carries no version markers, so the request is found by position: the
-  turns that can produce a version are the `create_plot` action and every message
-  typed after the first one, and version `n` is taken as the `n`-th of those. A
-  question in between shifts the count, so the tool prints what it picked; edit or
-  delete the file when it is wrong.
+  transcript carries no version markers, so the request is found by position among
+  the plot turns: each `create_plot` action and every message typed after the first
+  one, or every typed message when the session has none (its first plot came from a
+  note typed in step 2). Version `n` is the `n`-th plot turn only when every plot
+  turn made a version, that is when the turns and the versions agree in number: a
+  bundle holds every version, and a stored case holds only its own, so for a case the
+  tool takes it as the newest one when the feedback was sent. A question, a failed run
+  and, in a session without `create_plot`, a data request typed in step 1 are turns
+  without a version; when the counts differ the tool lists the plot turns and
+  refuses, and `--change-request TEXT` or `--no-change-request` (the version came from
+  `create_plot`) says it instead. The structural fix is a request and bindings stored
+  on each version by the agents service; until then this is the rule.
 
 The case id is `--id`, or `case-<the case id, lower case>` for a case directory and
 `session-<first 8 hex digits of the file's SHA-256>-v<n>` for a bundle. An existing
@@ -49,7 +61,9 @@ Exit codes: 0 written, 1 refused, 2 bad arguments.
 """
 
 import argparse
+import csv
 import hashlib
+import io
 import json
 import os
 import re
@@ -83,6 +97,27 @@ class ImportRefused(ValueError):
     """The source cannot become a runnable case; the message says why."""
 
 
+class AmbiguousRequest(ImportRefused):
+    """The plot turns and the versions differ in number, so no turn can be matched to the version."""
+
+    def __init__(self, number: int, versions: int, turns: list[str]) -> None:
+        listed = "\n".join(
+            f"  {index}. {'.create_plot()' if turn == CREATE_PLOT_MESSAGE else _shorten(turn)}"
+            for index, turn in enumerate(turns, start=1)
+        )
+        super().__init__(
+            f"cannot tell which message made version {number}: the transcript has {len(turns)} plot turns "
+            f"for {versions} versions (a question, a failed run or a data request is a turn without a version). "
+            "Pass --change-request TEXT with the request that made it, or --no-change-request when it came "
+            "from .create_plot()." + (f" The plot turns:\n{listed}" if turns else "")
+        )
+
+
+def _shorten(text: str, limit: int = 100) -> str:
+    flat = " ".join(text.split())
+    return flat if len(flat) <= limit else flat[: limit - 1] + "…"
+
+
 @dataclass(frozen=True)
 class Source:
     """What the source holds, whichever kind it is."""
@@ -93,6 +128,8 @@ class Source:
     manifest: dict[str, Any] | None
     default_id: str
     description: str
+    version_count: int | None
+    """How many versions the session had when the source was taken; None when the source does not say."""
 
 
 def _read_json(path: Path) -> Any:
@@ -124,7 +161,8 @@ def _pick(versions: list[dict[str, Any]], number: int | None, where: str) -> dic
 def read_bundle_file(path: Path, number: int | None) -> Source:
     """A bundle the page's `.save()` downloaded: every version, each with its `data_csv` when it was ticked."""
     bundle = _read_json(path)
-    version = _pick(_versions(bundle, str(path)), number, str(path))
+    versions = _versions(bundle, str(path))
+    version = _pick(versions, number, str(path))
     data = version.get("data_csv")
     digest = hashlib.sha256(path.read_bytes()).hexdigest()[:8]
     return Source(
@@ -134,6 +172,8 @@ def read_bundle_file(path: Path, number: int | None) -> Source:
         manifest=None,
         default_id=f"session-{digest}-v{version['number']}",
         description=f"saved session {path.name}, version {version['number']}",
+        # `.save()` asks for every version, numbered from 1.
+        version_count=max(item["number"] for item in versions),
     )
 
 
@@ -157,6 +197,8 @@ def read_case_dir(path: Path, number: int | None) -> Source:
         manifest=manifest,
         default_id=f"case-{case_id.lower()}",
         description=f"feedback case {case_id}, version {version['number']}",
+        # The feedback route asks for the one version, so the case does not say how many there were.
+        version_count=None,
     )
 
 
@@ -175,23 +217,39 @@ def library_of(source: Source) -> str | None:
     return library if isinstance(library, str) else None
 
 
-def change_request(transcript: Any, number: int) -> str | None:
-    """The message the user typed for version `number`, when that version came from one; see the module notes."""
+def plot_turns(transcript: Any) -> list[str]:
+    """The user turns that can make a version, in order; see the module notes.
+
+    Each `create_plot` action and every message typed after the first one. A session
+    without `create_plot` made its first plot from a note typed in step 2, and the
+    transcript does not say where step 1 ended, so then every typed message counts.
+    Other actions and the placeholder of a refused message never make a version.
+    """
     if not isinstance(transcript, list):
-        return None
+        return []
     turns: list[str] = []
-    started = False
     for entry in transcript:
         if not isinstance(entry, dict) or entry.get("role") != "user" or not isinstance(entry.get("text"), str):
             continue
         text = entry["text"].strip()
-        if text == CREATE_PLOT_MESSAGE:
-            started = True
+        if text == CREATE_PLOT_MESSAGE or (text and not text.startswith(ACTION_PREFIX) and text != WITHHELD):
             turns.append(text)
-        elif started and text and not text.startswith(ACTION_PREFIX) and text != WITHHELD:
-            turns.append(text)
-    if number > len(turns):
-        return None
+    if CREATE_PLOT_MESSAGE in turns:
+        # What was typed before the first `.create_plot()` was about the data (step 1).
+        return turns[turns.index(CREATE_PLOT_MESSAGE) :]
+    return turns
+
+
+def change_request(transcript: Any, number: int, versions: int) -> str | None:
+    """The message the user typed for version `number`, None when `create_plot` made it.
+
+    `versions` is how many versions the session had when the transcript was taken. The
+    `n`-th plot turn made version `n` only when every plot turn made a version, so the
+    match is made only when the counts agree; otherwise `AmbiguousRequest` lists the turns.
+    """
+    turns = plot_turns(transcript)
+    if len(turns) != versions or not 1 <= number <= versions:
+        raise AmbiguousRequest(number, versions, turns)
     text = turns[number - 1]
     return None if text == CREATE_PLOT_MESSAGE else text
 
@@ -208,6 +266,14 @@ def _bindings(bundle: dict[str, Any]) -> list[dict[str, Any]]:
     ]
 
 
+def _header(data_csv: str) -> set[str]:
+    """The column names in the first row of `data_csv`."""
+    try:
+        return set(next(csv.reader(io.StringIO(data_csv.removeprefix("﻿"))), []))
+    except csv.Error:
+        return set()
+
+
 @dataclass(frozen=True)
 class ImportedCase:
     """The files of the eval case and the notes to print."""
@@ -218,8 +284,15 @@ class ImportedCase:
     notes: list[str]
 
 
-def build_case(source: Source, expected: str | None) -> ImportedCase:
-    """The eval case of a source; raises `ImportRefused` when it cannot run."""
+def build_case(
+    source: Source, expected: str | None, *, request: str | None = None, no_request: bool = False
+) -> ImportedCase:
+    """The eval case of a source; raises `ImportRefused` when it cannot run.
+
+    `request` is the change request the user gives for the version (`--change-request`),
+    and `no_request` says that `create_plot` made it (`--no-change-request`); without
+    either, the transcript decides, or the import is refused when it cannot.
+    """
     from core.constants import SUPPORTED_LIBRARIES
 
     raw_session = source.bundle.get("session")
@@ -235,6 +308,16 @@ def build_case(source: Source, expected: str | None) -> ImportedCase:
             "the source holds no data.csv: save the session with `# include data.csv` ticked, "
             "or send the feedback with the box ticked, so the harness has the data to paste"
         )
+    number = source.version["number"]
+    bindings = _bindings(source.bundle)
+    header = _header(source.data_csv)
+    missing = [item["column"] for item in bindings if item["column"] not in header]
+    if missing:
+        raise ImportRefused(
+            f"the bindings name {', '.join(repr(column) for column in missing)}, which version {number}'s "
+            "data.csv lacks: the bundle holds the session's bindings when it was taken, not this version's, "
+            "and a later data change renamed or dropped the column"
+        )
     notes: list[str] = []
     reaction = source.manifest.get("reaction") if source.manifest else None
     reaction = reaction if isinstance(reaction, str) and reaction in EXPECTED_BY_REACTION else None
@@ -242,16 +325,27 @@ def build_case(source: Source, expected: str | None) -> ImportedCase:
         expected = EXPECTED_BY_REACTION[reaction] if reaction else "unknown"
         if reaction in ("bug", "idea"):
             notes.append(f"expected {expected} from the reaction {reaction}; pass --expected to choose")
-    request = change_request(source.bundle.get("transcript"), source.version["number"])
-    if request is not None and len(request) > MAX_CHANGE_REQUEST_CHARS:
-        notes.append(f"left out a change request of {len(request)} characters (at most {MAX_CHANGE_REQUEST_CHARS})")
+    if no_request:
         request = None
+    elif request is not None:
+        request = request.strip()
+        if not request:
+            raise ImportRefused("--change-request is empty; pass --no-change-request when there was none")
+        if len(request) > MAX_CHANGE_REQUEST_CHARS:
+            raise ImportRefused(f"--change-request has {len(request)} characters (at most {MAX_CHANGE_REQUEST_CHARS})")
+    else:
+        # A stored case holds its own version only: taken as the newest when the feedback was sent.
+        versions = source.version_count if source.version_count is not None else number
+        request = change_request(source.bundle.get("transcript"), number, versions)
+        if request is not None and len(request) > MAX_CHANGE_REQUEST_CHARS:
+            notes.append(f"left out a change request of {len(request)} characters (at most {MAX_CHANGE_REQUEST_CHARS})")
+            request = None
     locale = session.get("locale")
     case = {
         "spec_id": spec_id,
         "library": library,
         "locale": locale if isinstance(locale, str) and locale else "en",
-        "bindings": _bindings(source.bundle),
+        "bindings": bindings,
         "expected": expected,
         "tags": [IMPORTED_TAG, reaction] if reaction else [IMPORTED_TAG],
         "source": source.description,
@@ -312,6 +406,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--expected", choices=("accepted", "rejected"), help="the outcome the case expects")
     parser.add_argument("--version", type=int, help="the plot version (default: the case's, or the newest)")
     parser.add_argument("--force", action="store_true", help="replace an imported case of the same id")
+    request = parser.add_mutually_exclusive_group()
+    request.add_argument(
+        "--change-request", metavar="TEXT", help="the request that made the version, when the transcript cannot tell"
+    )
+    request.add_argument(
+        "--no-change-request", action="store_true", help="the version came from .create_plot(), not from a request"
+    )
     args = parser.parse_args(argv)
     if str(args.source).startswith("gs:/"):
         parser.error("a gs:// source is not supported yet; copy the case directory down first")
@@ -324,7 +425,7 @@ def main(argv: list[str] | None = None) -> int:
             source = read_bundle_file(args.source, args.version)
         else:
             raise ImportRefused(f"{args.source}: no such file or directory")
-        imported = build_case(source, args.expected)
+        imported = build_case(source, args.expected, request=args.change_request, no_request=args.no_change_request)
         target = write_case(args.case_id or source.default_id, imported, force=args.force)
     except ImportRefused as exc:
         print(f"refused: {exc}", file=sys.stderr)
@@ -335,7 +436,7 @@ def main(argv: list[str] | None = None) -> int:
     files = ["case.json", "data.csv"] + (["change_request.txt"] if imported.change_request else [])
     print(f"wrote {target} ({', '.join(files)}): {case['spec_id']} {case['library']}, expected {case['expected']}")
     if imported.change_request:
-        print(f"change request (check it): {imported.change_request}")
+        print(f"change request: {imported.change_request}")
     print(f"run it with: uv run --extra agents python -m agents.evals.matrix --cases {target.name} --renderer ...")
     return 0
 

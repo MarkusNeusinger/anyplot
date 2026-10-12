@@ -142,7 +142,9 @@ describe('AgentChatPage quick feedback', () => {
 
     await user.click(within(form).getByRole('button', { name: 'Thumbs down' }));
     await user.type(within(form).getByLabelText('Feedback message'), 'the legend hides points');
-    expect(within(form).getByRole('checkbox', { name: '# include data.csv' })).toBeChecked();
+    expect(
+      within(form).getByRole('checkbox', { name: 'Include data.csv in the feedback on version 1' })
+    ).toBeChecked();
     await user.click(within(form).getByRole('button', { name: 'Send feedback' }));
 
     const sent = await screen.findByText(/sent · v1/);
@@ -167,7 +169,12 @@ describe('AgentChatPage quick feedback', () => {
       expect(screen.getByText(/sent · v1/)).toHaveTextContent('sent · v1 · thumbs up')
     );
     expect(feedbackBodies).toHaveLength(2);
-    expect(feedbackBodies[1]).toMatchObject({ reaction: 'thumbs_up', result_version: 1 });
+    // The edit names the case it replaces: the first answer's id.
+    expect(feedbackBodies[1]).toMatchObject({
+      reaction: 'thumbs_up',
+      result_version: 1,
+      replaces: '20261012T143001Z-1a2b3c4d',
+    });
   });
 
   it('shows a failed send under the control and keeps the form', async () => {

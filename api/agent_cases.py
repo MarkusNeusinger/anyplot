@@ -17,9 +17,11 @@ The case id is the UTC time in ISO 8601 basic format plus 8 random hex digits
 (`20261012T143005Z-1a2b3c4d`), so ids sort by time. Every upload carries
 `if_generation_match=0`: a write never replaces an object, so no case can overwrite
 another. Nothing here deletes: a later submission for the same result version is a new
-case, and the newest case of a `session_hash` and `result_version` is the one that counts.
-The bucket's lifecycle rule (delete after 180 days) is the retention, and it also removes
-the files of an aborted write. Design: `docs/concepts/agent-network.md` ("Feedback capture").
+case whose manifest names the earlier one in `replaces` (the id the page got for it), and
+the triage counts the newest case of a `session_hash` and `result_version`. The bucket's
+lifecycle rule (delete after 180 days) is the retention, also for a replaced case and its
+`data.csv`, and it removes the files of an aborted write. Design:
+`docs/concepts/agent-network.md` ("Feedback capture").
 
 Everything in this module is blocking (JSON, base64, the GCS client); the route runs it
 in a worker thread.
@@ -41,6 +43,8 @@ from typing import Any, Protocol
 
 
 CASE_PREFIX = "cases"
+CASE_ID_PATTERN = r"^[0-9]{8}T[0-9]{6}Z-[0-9a-f]{8}$"
+"""What `new_case_id` makes, and what a submission's `replaces` must look like."""
 MANIFEST_NAME = "manifest.json"
 MANIFEST_SCHEMA = 1
 CASE_STATUS_NEW = "new"
@@ -90,9 +94,17 @@ class GcsCaseBucket:
         self.bucket = bucket
 
     def upload(self, name: str, data: bytes, content_type: str) -> None:
+        from google.api_core.exceptions import PreconditionFailed
+
         blob = _storage_client().bucket(self.bucket).blob(name)
-        # `if_generation_match=0` creates the object only when none exists under that name.
-        blob.upload_from_string(data, content_type=content_type, if_generation_match=0)
+        try:
+            # `if_generation_match=0` creates the object only when none exists under that name.
+            blob.upload_from_string(data, content_type=content_type, if_generation_match=0)
+        except PreconditionFailed:
+            # The object exists. Every case id is new and its object names are written once,
+            # so this is the upload's own object: the library retried a request whose first
+            # attempt stored it but lost the response, and the retry met the stored object.
+            return
 
 
 @dataclass(frozen=True)
@@ -103,6 +115,8 @@ class Submission:
     message: str | None
     include_data: bool
     result_version: int
+    replaces: str | None = None
+    """The case id of the earlier submission for the same version that this one replaces."""
 
 
 @dataclass(frozen=True)
@@ -278,6 +292,8 @@ def build_case(
         "include_data": submission.include_data,
         "status": CASE_STATUS_NEW,
         "result_version": submission.result_version,
+        # As the page sent it, unchecked: the triage is to honour it only for a case of the same session and version.
+        "replaces": submission.replaces,
         "model": _text(config.get("model")),
         # Not in the agents service's config stamp yet: null until it sends them.
         "model_version": _text(config.get("model_version")),

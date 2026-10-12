@@ -486,7 +486,7 @@ The routes mirror the agents service's `/v1` API. All paths below start with
 | `POST /sessions/{sid}/versions/{version}/render` | `{"theme": "light"}` or `{"theme": "dark"}`; `version` is 0 to 999, where 0 is the latest version | `{status, reason?, artifacts}` once the render is done (see [Theme toggle](#theme-toggle)) |
 | `GET /sessions/{sid}/artifacts/{name}?v=` | `name` is one of `plot-light.png`, `plot-dark.png`, `plot.py`, `data.csv` | The file, with `Cache-Control: private, no-store` and `X-Content-Type-Options: nosniff`; any other name is `404`, and so is the PNG of a theme the version has not rendered. A PNG carries the footer strip (see [Footer strip](#footer-strip)) |
 | `GET /sessions/{sid}/bundle?include_data=&version=` | `include_data` is `true` or `false` (the default); `version` is 0 to 999, where 0 or none means every version | The session as one JSON file to save (the chat page's `.save()`), with `Content-Disposition: attachment; filename="anyplot-session-<first 8 characters of the session id>.json"`, `Cache-Control: private, no-store` and `X-Content-Type-Options: nosniff`. `404 not_found` for a version the session does not have; a bundle over 32 MiB can't be saved (see [Session bundle](#session-bundle)) |
-| `POST /sessions/{sid}/feedback` | `{reaction, message?, include_data, result_version}`: `reaction` is `thumbs_up`, `thumbs_down`, `bug` or `idea`; `message` has at most 500 characters after the strip; `result_version` is 1 to 999 | `201 {case_id, stored}`: the version is stored as a feedback case in the private case bucket, and `stored` lists its file names (see [Feedback case](#feedback-case)). `404 not_found` for a version the session does not have, `502 storage` when the bucket refused the case, otherwise the errors of the bundle route |
+| `POST /sessions/{sid}/feedback` | `{reaction, message?, include_data, result_version, replaces?}`: `reaction` is `thumbs_up`, `thumbs_down`, `bug` or `idea`; `message` has at most 500 characters after the strip; `include_data` is a JSON boolean and `result_version` a JSON integer from 1 to 999, neither coerced from another type; `replaces` is the case id of the earlier submission for the same version, when this one is an edit of it | `201 {case_id, stored}`: the version is stored as a feedback case in the private case bucket, and `stored` lists its file names (see [Feedback case](#feedback-case)). `404 not_found` for a version the session does not have, `502 storage` when the bucket refused the case, otherwise the errors of the bundle route |
 | `DELETE /sessions/{sid}` | None | `204` |
 
 Validation: `spec_id` matches `^[a-z0-9-]{1,100}$`; `library` is one of the 15
@@ -511,8 +511,8 @@ with a link plots as it is.
 
 The agents service keeps a session's data, code and images in memory for the
 session's lifetime and writes no content to its logs. anyplot stores none of
-it unless you submit quick feedback (not built yet). That feedback case
-always holds the conversation, the code, the images and the dataset profile
+it unless you submit quick feedback (see [Feedback case](#feedback-case)).
+That feedback case always holds the conversation, the code, the images and the dataset profile
 with its column names and sample rows, so it can show your data even without
 the data box; the full data file is in it only when you tick the box. The chat
 page's `.save()` downloads the same case to your computer (see
@@ -677,7 +677,8 @@ manifest holds `id`, `created_at`, `case_uri`, `user_hash` (the HMAC user id the
 agents service sees), `session_hash` (the first 16 hex digits of the session
 id's SHA-256), `spec_id`, `library_id` (the version's library), `language` (the
 session's locale), `reaction`, `message`, `include_data`, `status` (`new`),
-`result_version`, `model`, `model_version`, `judge_model`, `prompt_hash` (one
+`result_version`, `replaces` (as the page sent it, or `null`), `model`,
+`model_version`, `judge_model`, `prompt_hash` (one
 hash over the config stamp's prompt hashes), `pipeline_status`, `attempts`,
 `tokens`, `cost_estimate`, `files` and `bundle`: every column the planned
 `agent_feedback` table has, so the table can be filled from the manifests later.
@@ -687,11 +688,15 @@ A field the bundle does not carry is `null`; today that is `model_version`,
 The manifest is uploaded last, and every upload refuses to replace an existing
 object. A case directory without a manifest is an aborted upload, never a case:
 when an upload fails, the route answers `502 storage` with a request id and
-uploads nothing more. Sending feedback for the same version again stores a new
-case; the newest case of a session hash and version is the one that counts.
-The API deletes nothing: the bucket's lifecycle rule, which deletes objects
-after 180 days, is the retention for cases and aborted uploads alike. The API's
-runtime identity needs permission to create objects in the bucket.
+uploads nothing more. A retried upload that meets the object its own first
+attempt stored counts as stored. Sending feedback for the same version again
+stores a new case, and the page sends the earlier case's id as `replaces`, so
+the planned triage can tell which case an edit replaces. The client sends
+`replaces`, so the triage is to honour it only for a case of the same session
+hash and version; without it, the newest such case is the one that counts. The API deletes nothing, so a replaced case keeps its
+files, its `data.csv` too, until the bucket's lifecycle rule deletes them after
+180 days; that rule is the retention for cases and aborted uploads alike. The
+API's runtime identity needs permission to create objects in the bucket.
 
 ### SSE protocol `anyplot/1`
 
@@ -780,7 +785,7 @@ not the shape the agents service documents (see [Feedback case](#feedback-case))
 | `AGENT_USER_ID_KEY` | Unset | HMAC key for the user id; from Secret Manager in production |
 | `AGENT_REQUEST_TIMEOUT_S` | `190` | Upstream timeout, and the cap on one chat stream outside the run queue; above the agents service's 180-second deadline |
 | `AGENT_TURN_MAX_S` | `890` | Hard cap on one chat turn, queue wait included; keep it below anyplot-api's Cloud Run `--timeout` (900 seconds in `api/cloudbuild.yaml`) |
-| `AGENT_CASES_BUCKET` | `anyplot-agent-cases` | The private EU bucket the feedback cases go to (see [Feedback case](#feedback-case)); never the public image bucket |
+| `AGENT_CASES_BUCKET` | `anyplot-agent-cases` | The private EU bucket the feedback cases go to (see [Feedback case](#feedback-case)); never the public image bucket. The default is the production bucket, so a local API with Application Default Credentials stores its cases there too; set a bucket of your own for local runs |
 
 In production, `AGENT_ENABLED` and `AGENT_SERVICE_URL` come from the
 `_AGENT_ENABLED` and `_AGENT_SERVICE_URL` substitutions in `api/cloudbuild.yaml`.

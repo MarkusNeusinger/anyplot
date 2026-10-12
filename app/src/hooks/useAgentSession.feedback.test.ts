@@ -154,11 +154,12 @@ describe('useAgentSession: quick feedback', () => {
     });
   });
 
-  it('sends no text as null, and a later send replaces the record', async () => {
+  it('sends no text as null, and a later send names and replaces the record', async () => {
     const { result } = await withVersion();
     await act(() =>
       result.current.sendFeedback(1, { reaction: 'bug', message: 'x', includeData: true })
     );
+    expect(feedbackCalls()[0].body).not.toHaveProperty('replaces');
 
     feedback = () => json(201, { case_id: '20261012T143100Z-99999999', stored: ['manifest.json'] });
     await act(() =>
@@ -170,6 +171,7 @@ describe('useAgentSession: quick feedback', () => {
       message: null,
       include_data: false,
       result_version: 1,
+      replaces: '20261012T143005Z-1a2b3c4d',
     });
     expect(result.current.state.versions[1].feedback).toEqual({
       reaction: 'thumbs_up',
