@@ -43,7 +43,7 @@ RUN uv venv && uv sync --frozen --no-install-project --extra lib-matplotlib --ex
 RUN .venv/bin/python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])" > VERSION
 
 
-# Fonts for plot text in any script (docs/concepts/agent-network.md "Render"):
+# Multi-script fallback fonts for plot text (docs/concepts/agent-network.md "Render"):
 # the harness appends these families to every font lookup, after the font the
 # code chose, so DejaVu Sans stays the catalogue's look and Chinese, Japanese,
 # Korean, Arabic, Hebrew, Thai, the Indic scripts, Khmer, Myanmar, Ethiopic and

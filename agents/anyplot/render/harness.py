@@ -24,8 +24,8 @@ copies it to `/opt/anyplot/harness.py`. In order it:
    rebuilding it in the sandbox's empty private `/tmp` (spike S measured the copy
    as the faster variant); then appends the installed fallback families
    (`FALLBACK_FAMILIES`) to every font lookup after the font the code chose, so
-   text in any script draws without changing the catalogue's first font, and
-   records every code point matplotlib reports as having no glyph
+   text in the installed scripts draws without changing the catalogue's first
+   font, and records every code point matplotlib reports as having no glyph
    (`missing_glyphs` in the probe);
 4. wraps `matplotlib.figure.Figure.savefig` so that every save also writes
    `probe-<theme>.json` next to the plot: the figure size and dpi, the bounding

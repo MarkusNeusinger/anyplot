@@ -1,6 +1,6 @@
 ### Added
 
-- **Plot text in any script.** The renderer image installs Noto Sans, Noto
+- **Plot text in many scripts.** The renderer image installs Noto Sans, Noto
   Sans CJK and the Noto Sans faces of the scripts DejaVu Sans lacks (37 files,
   46.8 MB, Regular and Bold, with their OFL notices), and the harness appends
   them to every font lookup after the font the code chose, so a Chinese,
