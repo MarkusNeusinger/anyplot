@@ -6,4 +6,4 @@
   turn, and the assistant decides either way whether the text is a change or a
   question. The card keeps the image, the code, the downloads and the
   quick-feedback control; follow-ups go through the one box at the foot of the
-  thread.
+  thread. (#12140)
