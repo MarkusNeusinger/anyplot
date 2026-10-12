@@ -22,6 +22,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from .data.bindings import BindingCheck, check_bindings
 from .data.roles import DataRole, parse_roles
+from .data.signs import mark_non_negative
 from .language import DEFAULT_LANGUAGE, SOURCES, LanguageSource, is_valid
 from .schemas import MAX_CODE_CHARS, Binding, DatasetProfile
 
@@ -83,7 +84,8 @@ class CatalogueSnapshot(BaseModel):
         return self
 
     def roles(self) -> list[DataRole]:
-        return parse_roles(self.data_roles)
+        """The spec's data roles, the ones that cannot be negative marked (`data/signs.py`)."""
+        return mark_non_negative(parse_roles(self.data_roles), self.spec_id)
 
 
 @dataclass

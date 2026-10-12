@@ -13,7 +13,7 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `POST /v1/sessions` | `{user, spec_id, library, locale, snapshot}` | `{session_id, eligibility}` | `422 not_eligible` |
 | `POST /v1/sessions/{sid}/library` | `{library, snapshot}` | `{session_id, eligibility}` | `422 not_eligible`, `409 run_active` |
 | `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?}` | `{preview, profile, bindings, warnings, roles, version}`, stored as version 1 (the undo history of an earlier paste is dropped); or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips only that fallback) | `413 too_long`, `422 unparseable`, `422 formula` (text of at most 2,000 characters that asks for a formula, which the chat's `generate_data` computes; never transcribed), `403 data_refused`, `503 guard_unavailable` |
-| `PUT /v1/sessions/{sid}/bindings` | `[{role, column}]` | `{bindings, complete, missing_roles}` | `409 run_active`, `422 invalid` (with `errors`, at most 20 lines) |
+| `PUT /v1/sessions/{sid}/bindings` | `[{role, column}]` | `{bindings, complete, missing_roles, warnings}`: `warnings` names a role that needs values of 0 or more bound to a column with a negative value, or left open for that reason (`data/signs.py`); never a refusal | `409 run_active`, `422 invalid` (with `errors`, at most 20 lines) |
 | `PUT /v1/sessions/{sid}/language` | `{language}` (a short name or code, `^[A-Za-z][A-Za-z -]{0,39}$`) | `{language, source}`: the session language in its stored form (`English` is `en`), source `chosen`, which detection never overrides | `409 run_active`, `422` (the pattern) |
 | `POST /v1/sessions/{sid}/dataset/confirm` | | `{confirmed, rows, columns}`: step 1 of two, the user confirmed the dataset with its bindings; the pipeline runs only then | `409 run_active`, `422 no_dataset` |
 | `POST /v1/sessions/{sid}/dataset/undo` | | `{preview, profile, bindings, warnings, roles, version}`: the dataset version before the root's last `prepare_data` or `generate_data` is the current one again, its bindings carried over (`dataset_versions.py`); unconfirmed, like any version the user has not confirmed | `409 run_active`, `422 nothing_to_undo` |
@@ -56,9 +56,11 @@ are the user's data and pass. A pre-filter hit or any refusing part is
 judge's verdict apart); a part the judge cannot answer is `503 guard_unavailable`.
 
 The dataset answer lists the spec's data roles as `roles`, each
-`{name, kinds, required, variadic, description}`, so a client can offer a column
+`{name, kinds, required, variadic, description, non_negative}`, so a client can offer a column
 choice for every role: a single role binds under its own name, a variadic family
-`y` binds its members `y1`, `y2`, ... (`data/bindings.py`).
+`y` binds its members `y1`, `y2`, ... (`data/bindings.py`). `non_negative` marks a
+role that needs values of 0 or more (`data/signs.py`): the defaults never give it a
+column with a negative value, and the page warns when one is chosen by hand.
 
 The PNG artifacts and the bundle's images carry the footer strip ("made with
 any.plot()", "anyplot.ai/<spec-id>", `render/watermark.py`), so a 3200x1800 render
@@ -806,6 +808,8 @@ def _role_body(role: DataRole) -> dict[str, Any]:
         "required": role.required,
         "variadic": role.variadic,
         "description": description,
+        # The page warns at the dropdown when the bound column has a negative value (`data/signs.py`).
+        "non_negative": role.non_negative,
     }
 
 
@@ -837,7 +841,12 @@ async def put_bindings(
     # Other bindings than the user confirmed leave the confirmation's fingerprint behind: step 1 again.
     await runtime.write_state(session, delta)
     return JSONResponse(
-        {"bindings": delta[BINDINGS], "complete": check.complete, "missing_roles": check.missing_roles},
+        {
+            "bindings": delta[BINDINGS],
+            "complete": check.complete,
+            "missing_roles": check.missing_roles,
+            "warnings": check.warnings,
+        },
         headers=_NO_STORE,
     )
 

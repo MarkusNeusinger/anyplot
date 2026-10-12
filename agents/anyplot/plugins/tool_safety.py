@@ -134,7 +134,7 @@ RESULT_KEYS: dict[str, frozenset[str]] = {
     "get_dataset_profile": frozenset({"status", "reason", "code", "rows", "profile", "truncated"}),
     "get_spec_brief": frozenset({"status", "code", "brief"}),
     "get_current_code": frozenset({"status", "code", "version"}),
-    "set_bindings": frozenset({"status", "reason", "code", "complete", "missing_roles", "errors"}),
+    "set_bindings": frozenset({"status", "reason", "code", "complete", "missing_roles", "errors", "warnings"}),
     # No value: the root knows what it passed, and a result that echoed free text would need a fence.
     "set_language": frozenset({"status", "code", "source", "changed", "plot_outdated"}),
     PREPARE_TOOL: _DATA_VERSION_KEYS,

@@ -141,6 +141,8 @@ class DataRole:
     required: bool
     variadic: bool
     description: str
+    non_negative: bool = False
+    """Whether the role needs values of 0 or more: set per spec by `signs.mark_non_negative`, never parsed."""
 
     def member(self, index: int) -> str:
         """The binding role name of the `index`-th (1-based) column of a variadic family."""

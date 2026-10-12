@@ -97,6 +97,10 @@ async def session_context(context: ReadonlyContext) -> str:
         else:
             missing = ", ".join(check.missing_roles) or "none"
             lines.append(f"- Bindings: incomplete; missing roles: {missing}; {len(check.errors)} invalid")
+        if check.warnings:
+            # The lines name the user's columns, so they stand inside a data fence.
+            lines.append(f"- Binding warnings: {len(check.warnings)}, roles that need values of 0 or more")
+            lines.append(fence("user_data", "\n".join(check.warnings)))
         if view.data_confirmed:
             lines.append("- Data: confirmed by the user; the plot can be made")
         else:

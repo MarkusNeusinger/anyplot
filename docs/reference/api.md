@@ -487,7 +487,7 @@ The routes mirror the agents service's `/v1` API. All paths below start with
 | `POST /sessions` | `{spec_id, library, locale}` | `{session_id, eligibility}`; `404 not_found` when the spec has no implementation for the library |
 | `POST /sessions/{sid}/library` | `{spec_id, library}` | Switches the library; the dataset and bindings stay |
 | `POST /sessions/{sid}/dataset` | `{text, confirmed?}`, at most 200 KB (204,800 bytes) of UTF-8 | `{preview, profile, bindings, warnings, roles, version}` for a table, stored as version 1 of the data (an earlier paste's undo history is dropped): CSV, TSV, semicolon or pipe text; JSON as an array of records, an object of column lists, an object of values or an array of `[category, value]` pairs (the last two become the columns `category`, the keys kept as text, and `value`; a repeated key keeps its last value with a warning); the same shapes as a Python literal, also behind an assignment such as `cat_day = {...}`, with single quotes, trailing commas and tuples (text that starts with a bare `(` and is no literal is read as delimited text); a column whose every cell carries the same unit (`65 %`, `15,6 h`, `€ 5`, also with a no-break space) is read as numbers and named `<name> (<unit>)` with a warning, unless the header already names the unit. For text that is no table (prose, a list typed one value per line) of at most 4,000 characters, `{transcribed: true, text, preview, profile, warnings, note}`, the table the judge model read, with its CSV in `text` and nothing stored: the page shows it for confirmation, and confirming posts that CSV through this route again with `confirmed: true`, which skips only the free-text fallback (a one-column table would otherwise be read again), never the parse, the pre-filter, the judge or the store. `413 too_long` above the limit, `422 unparseable` when neither the parser nor the model finds a table, `422 formula` when the text asks for a formula such as `sin(x) von -pi bis pi` or `y = x**2` (no model reads it; ask for the formula in the chat, where the assistant computes the table, see [Data changes](#data-changes)), `403 data_refused` when a header, a cell or the raw text addresses an AI (personal data such as names, addresses, e-mail addresses, phone numbers and web addresses is allowed), `503 guard_unavailable` when the judge model does not answer |
-| `PUT /sessions/{sid}/bindings` | `[{role, column}]`, at most 50 | The agents service's `{bindings, complete, missing_roles}`; `422 no_dataset` before a parse, `422 invalid` with the check's `errors` lines for a binding the spec roles or the columns refuse, `409 run_active` while a turn or a render is in flight. A change of the bindings drops the data confirmation below |
+| `PUT /sessions/{sid}/bindings` | `[{role, column}]`, at most 50 | The agents service's `{bindings, complete, missing_roles, warnings}`; `422 no_dataset` before a parse, `422 invalid` with the check's `errors` lines for a binding the spec roles or the columns refuse, `409 run_active` while a turn or a render is in flight. A change of the bindings drops the data confirmation below |
 | `PUT /sessions/{sid}/language` | `{language}`: a short language name or code such as `de`, `Deutsch` or `Klingon`, 1 to 40 characters that match `^[A-Za-z][A-Za-z -]{0,39}$` | The agents service's `{language, source}`, the stored form (`English` comes back as `en`, `Klingon` as typed) with the source now `chosen`: the replies and the plot text of the next version follow it, and the language a typed message implies never replaces it (see [Session language](#session-language)). Versions made before keep their text. `422` for a value outside the pattern, `409 run_active` while a turn or a render is in flight |
 | `POST /sessions/{sid}/dataset/confirm` | none | Step 1 of two: you confirm that the stored dataset and its bindings fit; `{confirmed: true, rows, columns}`. The plot pipeline runs only on confirmed data (`create_plot` before it answers `plot{status: "not_ready", reason: "data_unconfirmed"}`); a new paste, a transcription's `.use()`, a binding change, a change of the data by the assistant or an undo drops the confirmation, a library switch keeps it. `422 no_dataset` before a parse, `409 run_active` while a turn or a render is in flight |
 | `POST /sessions/{sid}/dataset/undo` | none | Undo the assistant's last change to the data (see [Data changes](#data-changes)): the version before it is the current dataset again, `{preview, profile, bindings, warnings, roles, version}` like the dataset route, unconfirmed. The service keeps the last five versions. `422 nothing_to_undo` when the paste was never changed or the first data came from a formula, `409 run_active` while a turn or a render is in flight |
@@ -556,15 +556,20 @@ version by the server's number instead of counting the events it received; a
 latest version.
 
 Roles and bindings: the dataset response lists the spec's data roles as
-`roles`, each `{name, kinds, required, variadic, description}`, where `kinds`
-names what a role accepts (`numeric`, `categorical`, `text`, `boolean`,
-`datetime`; empty means any column) and `description` is the spec's own text,
-at most 200 characters. A single role binds under its own name. A variadic
+`roles`, each `{name, kinds, required, variadic, description, non_negative}`,
+where `kinds` names what a role accepts (`numeric`, `categorical`, `text`,
+`boolean`, `datetime`; empty means any column), `description` is the spec's own
+text, at most 200 characters, and `non_negative` marks a role that needs values
+of 0 or more, such as a radius, a size, a standard deviation, or the value of a
+pie, treemap or sankey. The default bindings never give such a role a column
+with a negative value. A single role binds under its own name. A variadic
 family such as `y` binds its members `y1`, `y2`, and so on, never its bare
 name. `PUT /sessions/{sid}/bindings` replaces the whole set and answers
-`{bindings, complete, missing_roles}`: the stored bindings, whether every
-required role has a column, and the required roles that still have none, a
-family by its name. A refused set answers
+`{bindings, complete, missing_roles, warnings}`: the stored bindings, whether
+every required role has a column, the required roles that still have none, a
+family by its name, and one line per `non_negative` role bound to a column
+with a negative value or left open because every fitting column has one (a
+warning, never a refusal). A refused set answers
 `{"detail": "invalid", "ref": "<request id>", "errors": [...]}` with at most
 20 of the binding check's lines, such as
 `role 'y' takes numbered members such as 'y1'`.

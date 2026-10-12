@@ -9,7 +9,7 @@
  */
 
 import { type BindingMap, familyMembers, nthMember } from 'src/hooks/useAgentSession';
-import type { RoleSpec } from 'src/lib/agent';
+import type { ColumnProfile, RoleSpec } from 'src/lib/agent';
 
 /** The BFF's limit on one binding set. */
 const MAX_BINDINGS = 50;
@@ -46,6 +46,19 @@ export function bindingRows(
     }
   }
   return rows;
+}
+
+/**
+ * The warning under a dropdown when a role that needs values of 0 or more (the
+ * server marks it `non_negative`, `agents/anyplot/data/signs.py`) is bound to a
+ * column whose smallest value is negative; `null` otherwise. Never a refusal: the
+ * user may keep the column, for example to drop the negative rows afterwards.
+ */
+export function signHint(role: RoleSpec, column: ColumnProfile | undefined): string | null {
+  if (!role.non_negative || !column || typeof column.min !== 'number' || column.min >= 0) {
+    return null;
+  }
+  return `has negative values (down to ${column.min}); ${role.name} needs values of 0 or more`;
 }
 
 /** What a role accepts, under its name: `numeric / datetime`, `any column`. */

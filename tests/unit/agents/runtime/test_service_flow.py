@@ -2479,6 +2479,7 @@ async def test_bindings_route_validates(client: httpx.AsyncClient) -> None:
     )
     assert partial.status_code == 200
     assert partial.json()["complete"] is False and partial.json()["missing_roles"] == ["y"]
+    assert partial.json()["warnings"] == []  # scatter-basic has no role that needs values of 0 or more
 
 
 async def test_status_and_user_header(client: httpx.AsyncClient) -> None:
