@@ -4,8 +4,11 @@
 It reads spec, library, dataset and bindings from server-set session state, never from
 its input: `PipelineArgs` carries only `change_request`, `base` and `theme` (the one
 theme to render; omitted, a change keeps the previous version's theme and a new plot
-is light). It runs at most `AGENT_MAX_ATTEMPTS` attempts, two by default (the first
-and one repair round; the eval harness may set one or three):
+is light). The session language is read once per run, so the adapter, which writes the
+plot's own text in it, and the reviewer, which judges that text against it, share one
+value; each prompt gets it fenced as `<plot_language>`. It runs at most
+`AGENT_MAX_ATTEMPTS` attempts, two by default (the first and one repair round; the
+eval harness may set one or three):
 
 1. **adapt**: the library's adapter agent turns the working form into an `AdaptPlan`
    (`ctx.run_node`, under its own isolation scope so the root never reads its answer);
@@ -16,7 +19,9 @@ and one repair round; the eval harness may set one or three):
    `MAX_NEW_LITERAL_CHARS` against the catalogue code over all versions, rejects the
    code; dataset headers and cells are free) and the ADAPTATION validator (a
    placeholder finding rejects the code; the other findings become defect lines but
-   the code still renders);
+   the code still renders); a change whose base version was written in another
+   language than the session language (`language_changed`) rewrites every title,
+   label and annotation, so it gets `MAX_NEW_LITERAL_CHARS`;
 3. **render**: `normalise`, the loader substitution (`to_run_form`), then the one
    theme the call asks for (`PipelineArgs.theme`, light by default) through the
    render backend, and the host gates (`render/gates.py`) on exactly that theme;
@@ -97,6 +102,7 @@ from .code.regions import find_regions
 from .code.validate import validate_adaptation, validate_security
 from .data.bindings import check_bindings
 from .data.store import StoredDataset
+from .language import DEFAULT_LANGUAGE, same_language
 from .plugins.ledger import RequestLedger, attribution, budget_allows, ledger_for
 from .policy import DATA_PREAMBLE, fence
 from .render.contract import RendererUnavailable, RenderJob, Theme
@@ -293,6 +299,8 @@ class Run:
     view: SessionView
     dataset: StoredDataset
     theme: Theme = "light"
+    language: str = DEFAULT_LANGUAGE
+    """The session language, read once per run: the adapter writes the plot text in it, the reviewer judges it."""
     attempts: int = 0
     best: Candidate | None = None
     padded: Candidate | None = None
@@ -366,11 +374,13 @@ def render_adapt_request(request: AdaptRequest, view: SessionView) -> str:
     """The adapter's node input: the request as fenced text.
 
     Outside a fence stand only fixed headings, the validated library id and
-    `allow_full`. The notes on the attempt go into one `<tool_notes>` block as JSON,
-    the way the `plot_pipeline` result reaches the root: the readiness hints quote
-    catalogue lines, the feedback quotes model-written code (failed edits, validator
-    findings) or is model-written (reviewer lines), and the previous plan is
-    model-written and can copy catalogue or dataset text. The profile is the first
+    `allow_full`; the plot language, a user-chosen value bounded by a pattern, stands
+    inside its own `<plot_language>` fence. The notes on the attempt go into one
+    `<tool_notes>` block as JSON, the way the `plot_pipeline` result reaches the root:
+    the readiness hints quote catalogue lines, the feedback quotes model-written code
+    (failed edits, validator findings) or is model-written (reviewer lines), and the
+    previous plan is model-written and can copy catalogue or dataset text;
+    `language_changed` says that the base version's text is in another language. The profile is the first
     version of `trimmed_profiles` within `MAX_ADAPTER_PROFILE_BYTES` (`adapter_profile`):
     50 text columns of long values make it about 28,000 characters in full (stress case
     `stress-cap-profile`), more than the rest of the request.
@@ -387,6 +397,8 @@ def render_adapt_request(request: AdaptRequest, view: SessionView) -> str:
         fence("user_data", profile_text),
         "Bindings and loader columns:",
         fence("user_data", _columns_json(request.bindings, request.loader_columns)),
+        "Plot language:",
+        fence("plot_language", request.plot_language),
     ]
     if request.change_request:
         lines += ["Change request:", fence("user_message", request.change_request)]
@@ -397,6 +409,8 @@ def render_adapt_request(request: AdaptRequest, view: SessionView) -> str:
         notes["feedback"] = request.feedback
     if request.previous_plan is not None:
         notes["previous_plan"] = request.previous_plan.model_dump(mode="json")
+    if request.language_changed:
+        notes["language_changed"] = True
     if notes:
         lines += ["Notes on this attempt:", fence("tool_notes", json.dumps(notes, ensure_ascii=False))]
     lines.append(f"allow_full: {'true' if request.allow_full else 'false'}")
@@ -406,8 +420,9 @@ def render_adapt_request(request: AdaptRequest, view: SessionView) -> str:
 def render_review_request(request: ReviewRequest) -> str:
     """The reviewer's node input: the request as fenced text (the images are added by its callback).
 
-    The gate notes are host-written, but they go into a `<tool_notes>` block too, so
-    nothing but fixed headings stands outside a fence.
+    The gate notes are host-written, but they go into a `<tool_notes>` block too, and the
+    plot language into its own `<plot_language>` block, so nothing but fixed headings
+    stands outside a fence.
     """
     lines = [
         DATA_PREAMBLE,
@@ -418,6 +433,8 @@ def render_review_request(request: ReviewRequest) -> str:
         fence("user_data", request.profile_summary),
         "Bindings:",
         fence("user_data", _columns_json(request.bindings)),
+        "Plot language:",
+        fence("plot_language", request.plot_language),
     ]
     if request.change_request:
         lines += ["Change request:", fence("user_message", request.change_request)]
@@ -588,6 +605,7 @@ def _store_version(ctx: Context, services: Services, run: Run, result: PlotResul
             title=shipped.plan.title,
             library=run.view.library,
             theme=run.theme,
+            language=run.language,
             themes={run.theme: ThemeRender("needs_attention", PADDED_REASON) if shipped.padded else ThemeRender("ok")},
         ),
     )
@@ -657,7 +675,7 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
         return
     ledger.pipeline_active = True
     theme = node_input.theme or _default_theme(services, ctx.session.id, view.library, node_input.base)
-    run = Run(view=view, dataset=dataset, theme=theme)
+    run = Run(view=view, dataset=dataset, theme=theme, language=view.language)
     scope = f"pipeline-{secrets.token_hex(6)}"
     try:
         async for event in _attempts(ctx, services, settings, run, node_input, scope):
@@ -750,8 +768,11 @@ async def _attempts(
         services.versions.latest_rendered(ctx.session.id, library=view.library) if args.base == "previous" else None
     )
     working = previous.working if previous is not None else view.normalised
-    # A change on a previous version adds a little text; adapting the catalogue code renames much.
-    budget = MAX_CHANGE_LITERAL_CHARS if previous is not None else MAX_NEW_LITERAL_CHARS
+    # The base version's text is in another language than the session's: the adapter rewrites it.
+    language_changed = previous is not None and not same_language(previous.language, run.language)
+    # A change on a previous version adds a little text; adapting the catalogue code renames much,
+    # and so does a change that rewrites every title, label and annotation in another language.
+    budget = MAX_CHANGE_LITERAL_CHARS if previous is not None and not language_changed else MAX_NEW_LITERAL_CHARS
     data_texts = _data_texts(dataset.csv)
     regions = find_regions(view.normalised)
     palette = list(regions.imprint.entries) if regions.imprint else []
@@ -784,6 +805,8 @@ async def _attempts(
             feedback=_clip_feedback(feedback),
             previous_plan=previous_plan,
             allow_full=attempt >= 2,
+            plot_language=run.language,
+            language_changed=language_changed,
         )
         ledger.adapter_allow_full = request.allow_full
         answer = await _adapt(ctx, scope, render_adapt_request(request, view), view.library)
@@ -948,6 +971,7 @@ async def _attempts(
                 spec_brief=spec_brief(view),
                 change_request=args.change_request,
                 gate_notes=[_note(line) for line in report.advisory][:MAX_NOTES],
+                plot_language=run.language,
             ),
         )
         review_call = _call_fields(ledger, REVIEWER_NAME)

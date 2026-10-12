@@ -32,6 +32,8 @@ from typing import Annotated, Any, Literal, Self, get_args
 
 from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, ValidationInfo, field_validator, model_validator
 
+from .language import DEFAULT_LANGUAGE, LANGUAGE_PATTERN
+
 
 # Limits from the design doc, named once so the parser, the tools and the tests share them.
 MAX_ROWS = 20_000
@@ -240,6 +242,10 @@ class AdaptRequest(_ServerContract):
     feedback: list[Line] = Field(default_factory=list, max_length=MAX_FEEDBACK)
     previous_plan: AdaptPlan | None = None
     allow_full: bool = False
+    plot_language: str = Field(default=DEFAULT_LANGUAGE, pattern=LANGUAGE_PATTERN)
+    """The session language, which the plot's own text (title, axis titles, legend, annotations) is written in."""
+    language_changed: bool = False
+    """The base version's plot text is in another language than `plot_language`: rewrite it."""
 
 
 # --- Review ----------------------------------------------------------------------------
@@ -255,6 +261,8 @@ class ReviewRequest(_ServerContract):
     spec_brief: str = Field(max_length=4_000)
     change_request: str = Field(default="", max_length=MAX_CHANGE_REQUEST_CHARS)
     gate_notes: list[Note] = Field(default_factory=list, max_length=MAX_NOTES)
+    plot_language: str = Field(default=DEFAULT_LANGUAGE, pattern=LANGUAGE_PATTERN)
+    """The session language, against which VQ-06 judges the plot's own text."""
 
 
 class Defect(_ModelOutput):

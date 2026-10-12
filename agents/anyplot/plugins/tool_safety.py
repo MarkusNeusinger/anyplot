@@ -1,11 +1,13 @@
 """ToolSafety: which agent may call which tool, with which arguments, and what comes back.
 
-* `before_tool_callback`: a per-agent allowlist (the root's six session tools and its
+* `before_tool_callback`: a per-agent allowlist (the root's seven session tools and its
   `plot_pipeline` workflow; none for the adapters and the reviewer); Pydantic
   validation of the arguments (ADK
   leaves `FUNCTION_TOOL_ARG_VALIDATION` off; `prepare_data` takes at most five
-  operations of the `Operation` union and `generate_data` the `generate.Generate`
-  spec, and the `invalid_arguments` refusal of either carries the validation lines
+  operations of the `Operation` union, `generate_data` the `generate.Generate`
+  spec and `set_language` one value that matches `language.LANGUAGE_PATTERN`, as the
+  language route does, and the `invalid_arguments` refusal of the first two carries
+  the validation lines
   fenced as `errors`, like the tools' own refusals, so the model can fix the one
   field that was wrong); no link (a scheme such as
   `https://` or `data:image`, or `www.`) or file path in any string argument, as link
@@ -45,6 +47,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from ..data.generate import Generate
 from ..data.prepare import MAX_OPERATIONS, Operation, validation_lines
+from ..language import LANGUAGE_PATTERN, MAX_LANGUAGE_CHARS
 from ..policy import DATA_PREAMBLE, fence
 from ..schemas import MAX_COLUMNS, Binding, PipelineArgs, PlotResult
 from .ledger import argument_hash, attribution, ledger_for
@@ -96,6 +99,13 @@ class _BindingArgs(BaseModel):
     bindings: list[Binding] = Field(max_length=MAX_COLUMNS)
 
 
+class _LanguageArgs(BaseModel):
+    """`set_language`: a language name or code, the same pattern as `PUT /v1/sessions/{sid}/language`."""
+
+    model_config = ConfigDict(extra="forbid")
+    language: str = Field(min_length=1, max_length=MAX_LANGUAGE_CHARS, pattern=LANGUAGE_PATTERN)
+
+
 class _PrepareArgs(BaseModel):
     model_config = ConfigDict(extra="forbid")
     operations: list[Operation] = Field(min_length=1, max_length=MAX_OPERATIONS)
@@ -106,6 +116,7 @@ ARGUMENTS: dict[str, type[BaseModel]] = {
     "get_spec_brief": _NoArgs,
     "get_current_code": _VersionArgs,
     "set_bindings": _BindingArgs,
+    "set_language": _LanguageArgs,
     PREPARE_TOOL: _PrepareArgs,
     GENERATE_TOOL: Generate,
     PIPELINE_TOOL: PipelineArgs,
@@ -122,6 +133,8 @@ RESULT_KEYS: dict[str, frozenset[str]] = {
     "get_spec_brief": frozenset({"status", "code", "brief"}),
     "get_current_code": frozenset({"status", "code", "version"}),
     "set_bindings": frozenset({"status", "reason", "code", "complete", "missing_roles", "errors"}),
+    # No value: the root knows what it passed, and a result that echoed free text would need a fence.
+    "set_language": frozenset({"status", "code", "source", "changed"}),
     PREPARE_TOOL: _DATA_VERSION_KEYS,
     GENERATE_TOOL: _DATA_VERSION_KEYS,
     # Every PlotResult field, so a field added to the schema (as `version` was) can never turn a

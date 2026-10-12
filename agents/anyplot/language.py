@@ -1,0 +1,90 @@
+"""The session language: one language for the root's replies and every text in the plot.
+
+Owner decision of 2026-10-12. A session starts in English (`en`, source `default`),
+whatever the browser's locale. The session's first in-scope typed message records the
+language the scope judge names for it (source `detected`); a choice through
+`PUT /v1/sessions/{sid}/language` or the root's `set_language` tool sets it for good
+(source `chosen`), and detection never writes over a choice.
+
+A language is a short name or code that matches `LANGUAGE_PATTERN` (`de`, `English`,
+`Klingon`). Because a chosen one is free text that only the pattern bounds, every
+prompt that carries it fences it as `<plot_language>`: data, never an instruction.
+
+This module imports nothing from the package, so `schemas.py`, `session_state.py`,
+the tools, the plugins and the routes can all share it without a cycle. The state
+delta that sets the language (`session_state.language_delta`) lives next to the keys.
+"""
+
+import re
+from typing import Literal
+
+
+LANGUAGE_PATTERN = r"^[A-Za-z][A-Za-z -]{0,39}$"
+"""A language name or code: a letter, then up to 39 letters, spaces or hyphens (ASCII only)."""
+LANGUAGE_RE = re.compile(LANGUAGE_PATTERN)
+MAX_LANGUAGE_CHARS = 40
+LanguageSource = Literal["default", "detected", "chosen"]
+SOURCES: frozenset[str] = frozenset(("default", "detected", "chosen"))
+DEFAULT_LANGUAGE = "en"
+COMMON_LANGUAGES = ("en", "de", "fr", "es", "it", "pt", "nl", "pl", "zh", "ja")
+"""The chip's list: the eight languages `refusals.yaml` has lines for, plus zh and ja (English refusals)."""
+_NAMES: dict[str, str] = {
+    "english": "en",
+    "german": "de",
+    "deutsch": "de",
+    "french": "fr",
+    "francais": "fr",
+    "spanish": "es",
+    "espanol": "es",
+    "italian": "it",
+    "italiano": "it",
+    "portuguese": "pt",
+    "portugues": "pt",
+    "dutch": "nl",
+    "nederlands": "nl",
+    "polish": "pl",
+    "polski": "pl",
+    "chinese": "zh",
+    "japanese": "ja",
+}
+"""The English names and the ASCII endonyms of the common languages, by their code."""
+
+
+def normalise(value: str) -> str:
+    """The stored form of a language.
+
+    One space between words and none outside them; a bare two-letter code in lower
+    case (`DE` is `de`); a known English name or endonym as its code (`English` is `en`,
+    `Deutsch` is `de`); anything else as typed (`Klingon`).
+    """
+    text = " ".join(value.split())
+    code = _NAMES.get(text.lower())
+    if code is not None:
+        return code
+    return text.lower() if len(text) == 2 else text
+
+
+def canonical(value: str) -> str:
+    """The comparison key: `normalise`, then case-folded, so `Klingon` and `klingon` are one language."""
+    return normalise(value).casefold()
+
+
+def same_language(a: str, b: str) -> bool:
+    """Whether two values name the same language (`de`, `Deutsch` and `German` do)."""
+    return canonical(a) == canonical(b)
+
+
+def is_valid(value: str) -> bool:
+    """Whether `value` matches `LANGUAGE_PATTERN`."""
+    return bool(LANGUAGE_RE.fullmatch(value))
+
+
+def refusal_lang(language: str) -> str:
+    """The ISO 639-1 code `policy.refusal` looks up for a session language.
+
+    A two-letter code as it is, a known name through the table (`Deutsch` is `de`),
+    anything else English. Never the first two letters of a name: `Plattdeutsch` would
+    read as Polish and `Esperanto` as Spanish.
+    """
+    text = canonical(language)
+    return text if len(text) == 2 and text.isalpha() else DEFAULT_LANGUAGE

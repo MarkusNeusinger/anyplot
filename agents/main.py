@@ -14,9 +14,10 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `POST /v1/sessions/{sid}/library` | `{library, snapshot}` | `{session_id, eligibility}` | `422 not_eligible`, `409 run_active` |
 | `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?}` | `{preview, profile, bindings, warnings, roles, version}`, stored as version 1 (the undo history of an earlier paste is dropped); or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips only that fallback) | `413 too_long`, `422 unparseable`, `422 formula` (text of at most 2,000 characters that asks for a formula, which the chat's `generate_data` computes; never transcribed), `403 data_refused`, `503 guard_unavailable` |
 | `PUT /v1/sessions/{sid}/bindings` | `[{role, column}]` | `{bindings, complete, missing_roles}` | `409 run_active`, `422 invalid` (with `errors`, at most 20 lines) |
+| `PUT /v1/sessions/{sid}/language` | `{language}` (a short name or code, `^[A-Za-z][A-Za-z -]{0,39}$`) | `{language, source}`: the session language in its stored form (`English` is `en`), source `chosen`, which detection never overrides | `409 run_active`, `422` (the pattern) |
 | `POST /v1/sessions/{sid}/dataset/confirm` | | `{confirmed, rows, columns}`: step 1 of two, the user confirmed the dataset with its bindings; the pipeline runs only then | `409 run_active`, `422 no_dataset` |
 | `POST /v1/sessions/{sid}/dataset/undo` | | `{preview, profile, bindings, warnings, roles, version}`: the dataset version before the root's last `prepare_data` or `generate_data` is the current one again, its bindings carried over (`dataset_versions.py`); unconfirmed, like any version the user has not confirmed | `409 run_active`, `422 nothing_to_undo` |
-| `POST /v1/sessions/{sid}/messages` | `{text}` or `{action}` (`create_plot`, `summarize_data`) | SSE `anyplot/1`; the `done` event carries `dataset` (with `roles` and `changes`) after a turn whose `prepare_data` or `generate_data` changed the data, version 1 when `generate_data` made the session's first data | `413 too_long`, `409 run_active`, `503 capacity` |
+| `POST /v1/sessions/{sid}/messages` | `{text}` or `{action}` (`create_plot`, `summarize_data`) | SSE `anyplot/1`; the `done` event carries `dataset` (with `roles` and `changes`) after a turn whose `prepare_data` or `generate_data` changed the data, version 1 when `generate_data` made the session's first data, and `language` (`{language, source}`) after every run | `413 too_long`, `409 run_active`, `503 capacity` |
 | `POST /v1/sessions/{sid}/cancel` | | `204` | |
 | `POST /v1/sessions/{sid}/versions/{version}/render` | `{theme}` | `{status, reason?, artifacts}` | `404 not_found`, `409 run_active`, `503 capacity` (no render slot in time, or the render store is full) |
 | `GET /v1/sessions/{sid}/artifacts/{name}?v=` | | the file | `404` |
@@ -105,6 +106,14 @@ from agents.anyplot.data.store import StoreFull
 from agents.anyplot.data.transcribe import looks_like_free_text, table_to_csv, transcribable
 from agents.anyplot.dataset_versions import dataset_payload, undo_version
 from agents.anyplot.dev_fixture import FixtureError, load_case
+from agents.anyplot.language import (
+    DEFAULT_LANGUAGE,
+    LANGUAGE_PATTERN,
+    MAX_LANGUAGE_CHARS,
+    is_valid,
+    normalise,
+    refusal_lang,
+)
 from agents.anyplot.models import JudgeUnavailable, JudgeVerdict
 from agents.anyplot.opening import (
     INSTRUCTION_LIKE,
@@ -130,6 +139,7 @@ from agents.anyplot.session_state import (
     apply_bindings,
     confirm_delta,
     confirmation_fingerprint,
+    language_delta,
     read_session,
 )
 from agents.anyplot.settings import AgentSettings, get_settings
@@ -440,6 +450,12 @@ class CreateSessionBody(_Body):
 class SwitchLibraryBody(_Body):
     library: str
     snapshot: CatalogueSnapshot
+
+
+class LanguageBody(_Body):
+    """The chat header's language chip: a short language name or code (`de`, `English`, `Klingon`)."""
+
+    language: str = Field(min_length=1, max_length=MAX_LANGUAGE_CHARS, pattern=LANGUAGE_PATTERN)
 
 
 class DatasetBody(_Body):
@@ -826,6 +842,28 @@ async def put_bindings(
     )
 
 
+@app.put("/v1/sessions/{sid}/language", dependencies=v1_dependencies)
+async def put_language(sid: SessionId, body: LanguageBody, user: User, runtime: RuntimeDep) -> JSONResponse:
+    """The user's choice (the chat header's chip): the session language with the source `chosen`.
+
+    Detection never writes over a choice, and the root's `set_language` tool makes the
+    same change. The next reply and the next plot version use it; earlier versions keep
+    their text. The pattern runs before `normalise` (a leading space is a `422`), and the
+    answer carries the stored form, which the page shows: `English` comes back as `en`,
+    `Klingon` as typed. `409 run_active` while a turn or a theme render is in flight, so
+    a choice never races detection inside a run.
+    """
+    session = await runtime.session(user, sid)
+    _active(runtime, sid)
+    if read_session(session.state) is None:
+        raise AgentsError(404, "session_expired")
+    value = normalise(body.language)
+    if not is_valid(value):
+        raise AgentsError(422, "invalid")
+    await runtime.write_state(session, language_delta(value, "chosen"))
+    return JSONResponse({"language": value, "source": "chosen"}, headers=_NO_STORE)
+
+
 @app.post("/v1/sessions/{sid}/dataset/confirm", dependencies=v1_dependencies)
 async def confirm_dataset(sid: SessionId, user: User, runtime: RuntimeDep) -> JSONResponse:
     """Step 1 of two: the user confirms that the stored dataset and its bindings fit (owner rule of 2026-10-11).
@@ -877,7 +915,8 @@ async def undo_dataset(sid: SessionId, user: User, runtime: RuntimeDep) -> JSONR
 async def _session_sync(
     runtime: Runtime, user: str, sid: str, *, dataset_before: str | None = None, ledger: RequestLedger | None = None
 ) -> dict[str, Any]:
-    """The `done` event's sync fields after a turn: the bindings, whether the data is confirmed, a changed dataset.
+    """The `done` event's sync fields after a turn: the bindings, whether the data is confirmed, a changed dataset,
+    the session language.
 
     The root's `set_bindings` tool may have changed the bindings (and dropped the
     confirmation) during the turn, and its `prepare_data` or `generate_data` tool the
@@ -885,8 +924,10 @@ async def _session_sync(
     the new version as the dataset route would answer it (`roles` included, because a
     `generate_data` in a session without data stores its first version, and the page
     learns the spec's roles only from a dataset answer), plus the turn's change lines
-    from the ledger. The page learns both from `done`. Empty when the session is gone,
-    so the stream still closes.
+    from the ledger. The page learns both from `done`. The scope guard's detection or the
+    root's `set_language` may have set the session language, so `language` carries it as
+    `{language, source}` after every run, for the page's chip. Empty when the session is
+    gone, so the stream still closes.
     """
     try:
         session = await runtime.session(user, sid)
@@ -898,6 +939,7 @@ async def _session_sync(
     payload: dict[str, Any] = {
         "bindings": [binding.model_dump() for binding in view.bindings],
         "data_confirmed": view.data_confirmed,
+        "language": {"language": view.language, "source": view.language_source},
     }
     if view.dataset_id and view.dataset_id != dataset_before:
         stored = get_services().datasets.get(view.dataset_id, sid)
@@ -945,7 +987,9 @@ async def post_message(
         user_id=user,
         session_id=sid,
         kind="action" if body.action else "text",
-        lang=view.lang if view else "en",
+        # The refusals sent before the judge (the budget, unsupported content) follow the
+        # session language, never the browser's locale; after the judge, the message's.
+        lang=refusal_lang(view.language) if view else DEFAULT_LANGUAGE,
     )
     translator = Translator(ledger, run_id=secrets.token_hex(8), spec_id=view.spec_id if view else None)
     if not budget_allows(ledger, services.usage, settings):
@@ -1205,6 +1249,7 @@ async def bundle(
                 "plan": item.plan.model_dump(mode="json") if item.plan else None,
                 "result": item.result.model_dump(mode="json"),
                 "theme": item.theme,
+                "language": item.language,
                 "themes": {
                     theme: {"status": record.status, "reason": record.reason} for theme, record in item.themes.items()
                 },
@@ -1213,7 +1258,14 @@ async def bundle(
             }
         )
     payload: dict[str, Any] = {
-        "session": {"spec_id": view.spec_id, "library": view.library, "locale": view.locale},
+        "session": {
+            "spec_id": view.spec_id,
+            "library": view.library,
+            # The browser's locale (the feedback manifest's `language`); the session language is its own pair.
+            "locale": view.locale,
+            "plot_language": view.language,
+            "plot_language_source": view.language_source,
+        },
         "snapshot": {"spec_id": view.snapshot.spec_id, "library_version": view.snapshot.library_version},
         "transcript": transcript,
         "versions": items,

@@ -25,8 +25,9 @@ root.md tells it to use the English line for any other language, never a transla
 of its own.
 
 `fence(tag, text)` wraps untrusted text (catalogue code, dataset profiles and column
-names, user messages, spec text that started as a public issue, and model-written
-notes passed on to another model) in an XML-like block. The opening and closing tags of every fence name are
+names, user messages, spec text that started as a public issue, model-written
+notes passed on to another model, and the session language, which a user may choose
+as free text) in an XML-like block. The opening and closing tags of every fence name are
 neutralised inside the text, so a cell or a code comment cannot close a fence early: also with spaces
 around the slash (`< /user_message>`) and in fullwidth forms (`＜／ｕｓｅｒ＿ｍｅｓｓａｇｅ＞`).
 """
@@ -64,6 +65,7 @@ FENCE_TAGS = (
     "user_text",
     "spec_text",
     "tool_notes",
+    "plot_language",
 )
 _FENCE_TAG = re.compile(r"[<＜﹤]\s*([/／]?)\s*([\w＿]+)")
 """A tag opening, closing or near-miss: `<`, `< /`, `</ ` and their fullwidth forms, then a name."""

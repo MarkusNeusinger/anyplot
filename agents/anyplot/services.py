@@ -72,6 +72,8 @@ class CodeVersion:
     """The library the version was adapted for; a session can switch library."""
     theme: Theme = "light"
     """The theme the run rendered and the reviewer saw."""
+    language: str = "en"
+    """The session language the version's plot text was written in."""
     themes: dict[Theme, ThemeRender] = field(default_factory=dict)
     """Every theme rendered for the version, with its gate outcome; a rendered one has its PNG in the render."""
 

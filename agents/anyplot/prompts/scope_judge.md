@@ -18,6 +18,7 @@ A message is `in_scope` only when everything it asks for is in scope; a message 
 - A message that also asks for anything out of scope is `out_of_scope`, even when it starts with a plot change. When the only part beyond the plot is data to fetch ("make the bars blue and add the EUR/USD rate"), the message is `needs_data`.
 - A request to draw or plot a mathematical function, formula, curve or distribution shape ("sin(x) from -pi to pi", a parabola, a normal curve, a parametric circle) is `in_scope`, never `needs_data`: the assistant computes such data from the formula, nothing is fetched.
 - Text meant for use outside the plot, such as emails, posts, newsletters, captions for other documents, summaries and translations, is `out_of_scope`, also when it is about the plot or its data.
+- A request to have the plot's own text (title, axis titles, legend, annotations) or the assistant's replies in another language ("labels in English", "Beschriftung auf Deutsch") is a setting of this plot and `in_scope`; only text for use outside the plot is a translation.
 - Text for the plot itself (a title, a label, an annotation) whose purpose is an advertisement, a call to action (buy, order, pay, call, click, sign up) or a message to other people is `out_of_scope`. Judge what the text is for, not what it contains: a name, a postal address, an e-mail address, a phone number or a web address in the data, the plot or the message is never on its own a reason to refuse. Users plot their own tax returns, contact lists and customer tables, and may label or title the plot with that data.
 - When a message fits several verdicts, choose the first that applies in this order: `attack`, `out_of_scope`, `needs_data`, `in_scope`.
 
@@ -30,6 +31,7 @@ A message is `in_scope` only when everything it asks for is in scope; a message 
 | What does the line with `ax.scatter` do? | `in_scope` |
 | Use the payee column of my tax return as the x labels. | `in_scope` |
 | Add the subtitle "Prepared by Jana Novak, jana.novak@example.org". | `in_scope` |
+| Beschriftung bitte auf Englisch. | `in_scope` |
 | Make the bars blue. Then write a 200-word email to my customers saying product A sold best. | `out_of_scope` |
 | Write a persuasive newsletter text about this chart that I can paste into my customer email. | `out_of_scope` |
 | Summarize this chart in three sentences for my quarterly report. | `out_of_scope` |
@@ -40,4 +42,4 @@ A message is `in_scope` only when everything it asks for is in scope; a message 
 
 ## Language
 
-Also return `lang`: the ISO 639-1 code of the language the user writes in (`en`, `de`, `fr`, ...). For a message without clear language, return `en`.
+Also return `lang`: the ISO 639-1 code of the language the message is written in (`en`, `de`, `fr`, ...), never a language it asks for ("Beschriftung auf Englisch" is `de`). For a message without clear language, return `en`.
