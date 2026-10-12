@@ -470,3 +470,50 @@ class TestAgentFeedbackTagFilter:
         sql, params = await _list_cases_sql(sqlite.dialect(), tag="legend")
         assert "CAST(agent_feedback.tags AS VARCHAR) LIKE" in sql
         assert '"legend"' in params.values()
+
+
+async def _create_case_statements(dialect: Dialect) -> list[tuple[str, Any]]:
+    """The SQL text and parameters of every statement `create_case` executes on `dialect`.
+
+    The session double answers every statement with an empty result (no successor, no
+    row superseded), so the calls record the shape of the transaction, not its outcome.
+    """
+    session = MagicMock()
+    session.get_bind.return_value.dialect = dialect
+    empty = MagicMock()
+    empty.scalar_one_or_none.return_value = None
+    empty.rowcount = 0
+    session.execute = AsyncMock(return_value=empty)
+    session.commit = AsyncMock()
+    session.refresh = AsyncMock()
+    row = {
+        "id": "20261012T074027Z-62b79a45",
+        "session_hash": "4725360a3a596801",
+        "result_version": 1,
+        "replaces": None,
+        "reaction": "thumbs_down",
+    }
+    await AgentFeedbackRepository(session).create_case(row)
+    return [
+        (str(call.args[0].compile(dialect=dialect)), call.args[1] if len(call.args) > 1 else None)
+        for call in session.execute.await_args_list
+    ]
+
+
+class TestAgentFeedbackCreateCaseLock:
+    """`create_case` serializes the supersede links per session and version on PostgreSQL."""
+
+    async def test_postgresql_takes_the_advisory_lock_first(self) -> None:
+        statements = await _create_case_statements(asyncpg.dialect())
+        sql, params = statements[0]
+        # A transaction-scoped lock, keyed by the pair the links are looked up with; the
+        # commit at the end of `create_case` releases it.
+        assert "pg_advisory_xact_lock(hashtext(" in sql
+        assert params == {"key": "4725360a3a596801:1"}
+        # The forward lookup follows the lock, inside the same transaction.
+        assert "FROM agent_feedback" in statements[1][0]
+
+    async def test_sqlite_runs_without_a_lock(self) -> None:
+        statements = await _create_case_statements(sqlite.dialect())
+        assert not any("pg_advisory_xact_lock" in sql for sql, _ in statements)
+        assert "FROM agent_feedback" in statements[0][0]

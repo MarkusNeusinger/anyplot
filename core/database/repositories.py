@@ -7,7 +7,7 @@ Provides abstraction layer between API and database models.
 from datetime import datetime, timezone
 from typing import Any, Generic, TypeVar
 
-from sqlalchemy import ColumnElement, String, and_, cast, func, or_, select, type_coerce, update
+from sqlalchemy import ColumnElement, String, and_, cast, func, or_, select, text, type_coerce, update
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, undefer
@@ -590,7 +590,18 @@ class AgentFeedbackRepository(BaseRepository[AgentFeedback]):
         guaranteed no-op (the id was minted in this request), one SELECT. One commit, so
         an interrupted backfill never leaves a row half-linked: either the row with both
         links exists, or nothing does.
+
+        On PostgreSQL the two directions are also serialized per session hash and
+        version with a transaction-scoped advisory lock, released by the commit: without
+        it, a backfill inserting an orphan A and a live request inserting its successor B
+        at the same moment could each look up the other before either row is visible and
+        commit unlinked. The SQLite engine of the tests runs one connection and skips it.
         """
+        if self.session.get_bind().dialect.name == "postgresql":
+            await self.session.execute(
+                text("SELECT pg_advisory_xact_lock(hashtext(:key))"),
+                {"key": f"{row['session_hash']}:{row['result_version']}"},
+            )
         successor = await self.successor_of(row["id"], row["session_hash"], row["result_version"])
         entity = AgentFeedback(**row, superseded_by=successor)
         self.session.add(entity)
