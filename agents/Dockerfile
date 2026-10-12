@@ -78,10 +78,12 @@ RUN .venv/bin/python -m compileall -q agents core
 # missing: `agent.py` composes every static instruction at import and
 # `render/watermark.py` parses both font files at import, and both raise on a
 # missing file or a renamed heading. The judge model's three rubrics are read on
-# first use, so the check reads them explicitly. None of it needs credentials or
+# first use, so the check reads them explicitly, and so does the scorer's prompt
+# (`scoring.system_prompt`: `prompts/scorer.md` plus sections cut by heading from the
+# catalogue rubric), which no request uses yet. None of it needs credentials or
 # makes a network call. tests/unit/agents/test_image.py runs this command and
 # holds it against every file the service reads.
-RUN .venv/bin/python -c "import agents.main; from agents.anyplot import policy; policy.scope_rubric(); policy.data_rubric(); policy.transcribe_rubric()"
+RUN .venv/bin/python -c "import agents.main; from agents.anyplot import policy, scoring; policy.scope_rubric(); policy.data_rubric(); policy.transcribe_rubric(); scoring.system_prompt()"
 
 ENV PYTHONUNBUFFERED=1
 ENV PORT=8080

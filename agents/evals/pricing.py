@@ -39,6 +39,10 @@ class Price:
 
 PRICES: dict[str, Price] = {
     "claude-haiku-5-5": Price(input=0.10, output=0.50),
+    # The scorer's and the planned advisors' models (agents/evals/score.py), Anthropic's list
+    # prices as of 2026-10-06; Vertex AI's partner pricing may differ, re-check before a spend decision.
+    "claude-sonnet-5-5": Price(input=2.00, output=10.00),
+    "claude-opus-5-5": Price(input=4.00, output=20.00),
     "gemini-3.8-flash": Price(input=1.50, output=7.50),
     "gemini-3.5-flash-lite": Price(input=0.30, output=2.50),
 }

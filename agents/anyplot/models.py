@@ -715,6 +715,14 @@ def make_judge_client(settings: AgentSettings | None = None) -> JudgeClient:
     )
 
 
+def make_anthropic_client(project: str, location: str, *, max_retries: int = 0) -> Any:
+    """A bare Claude-on-Vertex client for a caller outside the ADK agents (the offline scorer,
+    `agents/evals/score.py`). No SDK retries by default, so a 429 reaches the caller."""
+    from anthropic import AsyncAnthropicVertex
+
+    return AsyncAnthropicVertex(project_id=project, region=location, max_retries=max_retries)
+
+
 def parse_judge_answer(text: str) -> JudgeVerdict:
     """Parse a judge answer given as JSON text (used by fakes and the eval harness)."""
     try:
