@@ -80,6 +80,23 @@ describe('timeline grid', () => {
     ]);
   });
 
+  it("places an outcome at the step the server names, even where the outcome alone can't tell", () => {
+    const rounds: Round[] = [
+      { attempt: 1, outcome: 'unreviewed', findings: 0, step: 'reviewing', shipped: true },
+    ];
+    expect(show(gridRows(rounds, [], 'needs_attention'))).toEqual([
+      'first try: adapting:done checking:done rendering:done reviewing:failed | ~ not reviewed',
+    ]);
+    const limit: Round[] = [{ attempt: 1, outcome: 'unreviewed', findings: 0, step: 'rendering' }];
+    expect(show(gridRows(limit))[0]).toBe(
+      'first try: adapting:done checking:done rendering:done reviewing:skipped | ~ not reviewed'
+    );
+    const late: Round[] = [{ attempt: 1, outcome: 'error', findings: 0, step: 'rendering' }];
+    expect(show(gridRows(late))[0]).toBe(
+      'first try: adapting:done checking:done rendering:failed reviewing:skipped | ✗ error'
+    );
+  });
+
   it('keeps the findings open on the round that shipped, not on a later round that failed', () => {
     const rounds: Round[] = [
       { attempt: 1, outcome: 'review', findings: 1, shipped: true },

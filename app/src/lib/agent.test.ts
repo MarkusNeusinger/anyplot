@@ -64,6 +64,22 @@ describe('parseAgentEvent', () => {
     });
   });
 
+  it('keeps a round without step or shipped mark as it came, and refuses ones of the wrong kind', () => {
+    const rounds = (items: unknown[]) => {
+      const event = parseAgentEvent(raw('plot', { status: 'ok', attempts: 1, rounds: items }));
+      return event?.type === 'plot' ? event.result.rounds : null;
+    };
+
+    expect(rounds([{ attempt: 1, outcome: 'ok', findings: 0 }])).toEqual([
+      { attempt: 1, outcome: 'ok', findings: 0 },
+    ]);
+    expect(
+      rounds([{ attempt: 1, outcome: 'ok', findings: 0, step: 'reviewing', shipped: true }])
+    ).toEqual([{ attempt: 1, outcome: 'ok', findings: 0, step: 'reviewing', shipped: true }]);
+    expect(rounds([{ attempt: 1, outcome: 'ok', findings: 0, shipped: 'yes' }])).toEqual([]);
+    expect(rounds([{ attempt: 1, outcome: 'ok', findings: 0, step: 'sleeping' }])).toEqual([]);
+  });
+
   it('keeps only the documented plot fields and artifact names', () => {
     const event = parseAgentEvent(
       raw('plot', {

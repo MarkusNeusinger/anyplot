@@ -235,6 +235,8 @@ export interface Round {
   outcome: RoundOutcome;
   /** The findings the round passed on: review lines, measured defects or check failures. */
   findings: number;
+  /** The pipeline step the round ended in; absent from an older server. */
+  step?: PipelineStep;
   /** The round whose render the result shipped; not always the last (a repair that failed its check). */
   shipped?: boolean;
 }
@@ -790,10 +792,18 @@ const isInt = (value: unknown): value is number =>
 /** One round from the stream, or `null` when its attempt, outcome or count is not one the server sends. */
 function toRound(value: unknown): Round | null {
   if (!value || typeof value !== 'object') return null;
-  const { attempt, outcome, findings, shipped } = value as Record<string, unknown>;
+  const { attempt, outcome, findings, step, shipped } = value as Record<string, unknown>;
   if (!isInt(attempt) || attempt < 1 || !isInt(findings)) return null;
   if (!ROUND_OUTCOMES.includes(outcome as RoundOutcome)) return null;
-  return { attempt, outcome: outcome as RoundOutcome, findings, shipped: shipped === true };
+  // Absent stays absent (an older server); a value of the wrong kind refuses the round.
+  if (shipped !== undefined && typeof shipped !== 'boolean') return null;
+  if (step !== undefined && step !== null && !PIPELINE_STEPS.includes(step as PipelineStep)) {
+    return null;
+  }
+  const round: Round = { attempt, outcome: outcome as RoundOutcome, findings };
+  if (typeof step === 'string') round.step = step as PipelineStep;
+  if (shipped !== undefined) round.shipped = shipped;
+  return round;
 }
 
 /**

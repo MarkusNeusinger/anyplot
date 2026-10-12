@@ -28,7 +28,10 @@ export const SHORT_STEP: Record<PipelineStep, string> = {
   reviewing: 'review',
 };
 
-/** The column a round stopped at, by its outcome, when the page did not see its steps. */
+/**
+ * The column a round stopped at, by its outcome, for a round from an older server
+ * that names no `step` and whose steps the page did not see.
+ */
 const STOP_COLUMN: Record<RoundOutcome, number> = {
   ok: 3,
   review: 3,
@@ -99,8 +102,15 @@ function columnOf(step: PipelineStep): number {
 }
 
 function finishedCells(names: PipelineStep[], round: Round, reached: PipelineStep[]): GridCell[] {
-  const stop = reached.length ? columnOf(reached[reached.length - 1]) : STOP_COLUMN[round.outcome];
-  const passed = round.outcome === 'ok' || round.outcome === 'unreviewed';
+  const stop = reached.length
+    ? columnOf(reached[reached.length - 1])
+    : round.step
+      ? columnOf(round.step)
+      : STOP_COLUMN[round.outcome];
+  // An unreviewed round passed the step it stopped at, unless that step was the review itself
+  // (an unreadable answer); a limit before the review stops after a good render.
+  const passed =
+    round.outcome === 'ok' || (round.outcome === 'unreviewed' && stop < columnOf('reviewing'));
   return names.map((step, column) => ({
     step,
     state: column < stop ? 'done' : column > stop ? 'skipped' : passed ? 'done' : 'failed',

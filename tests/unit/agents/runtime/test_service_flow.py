@@ -283,6 +283,9 @@ async def test_plan_that_fails_its_schema_is_repaired_without_content_in_logs(
     assert (refused["outcome"], refused["errors"]) == ("refused", ["edits.0.find:string_too_short"])
     (result,) = attribution_lines(caplog, "pipeline_result")
     assert result["stages"] == ["adapter_schema", "reviewer_ok"]
+    # The grid's facts: an unusable answer ends the first try at its first step, with the one line it passed on.
+    first = plot["rounds"][0]
+    assert (first["outcome"], first["step"], first["findings"]) == ("answer_unusable", "adapting", 1)
 
 
 @pytest.mark.parametrize("provider", PROVIDERS)
@@ -909,8 +912,8 @@ async def test_the_repaired_render_is_reviewed_again_and_can_end_ok(
     # The page's grid: the first round ended with the review's finding, the repair round passed.
     findings = len(VERDICT_REJECT["defects"])
     assert plot["rounds"] == [
-        {"attempt": 1, "outcome": "review", "findings": findings, "shipped": False},
-        {"attempt": 2, "outcome": "ok", "findings": 0, "shipped": True},
+        {"attempt": 1, "outcome": "review", "findings": findings, "step": "reviewing", "shipped": False},
+        {"attempt": 2, "outcome": "ok", "findings": 0, "step": "reviewing", "shipped": True},
     ]
     assert "24 sparse markers" in adapter_inputs(fake)[1]  # the first review's line went to the repair
     reviews = attribution_lines(caplog, "pipeline_review")
@@ -1125,8 +1128,8 @@ async def test_failed_render_twice_is_a_failed_result(
         "changes": [],
         "residual_defects": [],
         "rounds": [
-            {"attempt": 1, "outcome": "render_failed", "findings": 1, "shipped": False},
-            {"attempt": 2, "outcome": "render_failed", "findings": 1, "shipped": False},
+            {"attempt": 1, "outcome": "render_failed", "findings": 1, "step": "rendering", "shipped": False},
+            {"attempt": 2, "outcome": "render_failed", "findings": 1, "step": "rendering", "shipped": False},
         ],
     }
     # The repair round's first step says how the first round ended, for the page's progress grid.

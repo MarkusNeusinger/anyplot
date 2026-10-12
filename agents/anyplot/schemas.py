@@ -450,16 +450,24 @@ limit reached); `error`: an exception.
 """
 
 
+RoundStep = Literal["adapting", "repairing", "checking", "rendering", "reviewing"]
+"""The pipeline steps the progress events name, the ones a round can end in."""
+
+
 class Round(_ServerContract):
     """One pipeline round for the progress grid: its attempt, how it ended, and how many findings it passed on.
 
+    `step` is the pipeline step the round was in when it ended (an unreadable review
+    ends at `reviewing`, a limit before the review at `rendering`, an error anywhere).
     `shipped` marks the round whose render the result shipped, which is not always the
     last one: a repair round that fails its check leaves the earlier render shipped.
+    `findings` counts the lines the round passed on as the next attempt reads them.
     """
 
     attempt: int = Field(ge=1, le=MAX_ATTEMPTS)
     outcome: RoundOutcome
     findings: int = Field(default=0, ge=0, le=99)
+    step: RoundStep | None = None
     shipped: bool = False
 
 
