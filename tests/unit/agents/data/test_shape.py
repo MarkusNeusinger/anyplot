@@ -74,5 +74,8 @@ class TestNoSuggestion:
     def test_a_variadic_family_takes_wide_data_as_it_is(self) -> None:
         assert suggest("line-multi", "x,a,b\n1,2,3\n2,3,4\n") is None
 
+    def test_two_required_labels_would_leave_one_open(self) -> None:
+        assert suggest("box-grouped", SENSORS) is None
+
     def test_one_numeric_column_is_not_wide(self) -> None:
         assert suggest("box-basic", "Sensor_A\n1\n2\n") is None

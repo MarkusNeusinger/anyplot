@@ -13,9 +13,10 @@ summary mentions it. No ADK import.
 
 The rule, every condition required:
 
-* **The spec wants long data:** it has a required single (not variadic) role whose
-  kinds are categorical or text only, and exactly one required single role whose
-  kinds are numeric only. A spec with a variadic numeric family (`y1, y2, ...`, which
+* **The spec wants long data:** it has exactly one required single (not variadic)
+  role whose kinds are categorical or text only, and exactly one required single role
+  whose kinds are numeric only (a spec with two required labels, such as box-grouped's
+  `category` and `subcategory`, would keep one of them open). A spec with a variadic numeric family (`y1, y2, ...`, which
   takes wide data as it is) or with two required numeric roles (a scatter's `x` and
   `y`) never gets the suggestion.
 * **The table is wide:** at least two numeric columns (`integer` or `number`), at
@@ -78,7 +79,8 @@ def long_suggestion(roles: list[DataRole], profile: DatasetProfile) -> LongSugge
         return None
     labels = [role for role in single if role.required and role.kinds and set(role.kinds) <= _LABEL_KINDS]
     values = [role for role in single if role.required and set(role.kinds) == {"numeric"}]
-    if not labels or len(values) != 1:
+    # Exactly one of each: box-grouped's `category` and `subcategory` would leave one label open.
+    if len(labels) != 1 or len(values) != 1:
         return None
     dtypes = {column.name: column.dtype for column in profile.columns}
     if any(dtype in _LABEL_COLUMNS for dtype in dtypes.values()):

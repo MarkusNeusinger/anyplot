@@ -1164,11 +1164,13 @@ function longSuggestion(session, dataset) {
   const numericOnly = r => r.kinds.length === 1 && r.kinds[0] === 'numeric';
   if (roles.some(r => r.variadic && numericOnly(r))) return null;
   const single = roles.filter(r => !r.variadic && r.required);
-  const label = single.find(
+  const labels = single.filter(
     r => r.kinds.length && r.kinds.every(kind => kind === 'categorical' || kind === 'text')
   );
   const values = single.filter(numericOnly);
-  if (!label || values.length !== 1) return null;
+  // Exactly one of each, as on the service: two labels would leave one open.
+  if (labels.length !== 1 || values.length !== 1) return null;
+  const label = labels[0];
   const columns = dataset.profile.columns;
   if (columns.some(c => c.dtype === 'text' || c.dtype === 'boolean')) return null;
   const numeric = columns.filter(c => c.dtype === 'integer' || c.dtype === 'number');

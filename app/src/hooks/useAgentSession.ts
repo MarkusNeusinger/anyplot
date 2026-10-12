@@ -679,8 +679,16 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
     case 'unauthorized':
       return { ...state, phase: 'unauthorized', run: null, transcription: null };
     case 'parse_start':
-      // A new parse (a confirmed transcription is one) replaces a pending transcription.
-      return { ...state, parsing: true, datasetError: null, formula: null, transcription: null };
+      // A new parse (a confirmed transcription is one) replaces a pending transcription,
+      // and a `.to_long()` that failed on the data before it is not the new data's error.
+      return {
+        ...state,
+        parsing: true,
+        datasetError: null,
+        formula: null,
+        transcription: null,
+        toLongError: null,
+      };
     case 'parse_done':
       return {
         ...state,
