@@ -306,6 +306,8 @@ cp .env.example .env
 uv run alembic upgrade head
 ```
 
+**Migrations**: CI verifies every migration on a throwaway PostgreSQL 18 (`Verify Migrations`, `.github/workflows/ci-migrations.yml`) for every PR touching `alembic/` or `core/database/`. Production gets a new revision only through `sync-postgres.yml` after the merge; never run alembic against the shared database by hand.
+
 **Note**: The API works without database in limited mode (filesystem fallback for specs).
 
 ## Environment and Troubleshooting

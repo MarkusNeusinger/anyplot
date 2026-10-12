@@ -158,6 +158,29 @@ uv run alembic revision --autogenerate -m "description"
 uv run alembic current
 ```
 
+Run these only against a database of your own, such as a local PostgreSQL.
+The Cloud SQL database is the shared production database, and it receives a
+new revision only through `sync-postgres.yml` after the merge.
+
+To verify a new revision:
+
+1. Push the branch and open the PR. The CI job `Verify Migrations`
+   (`.github/workflows/ci-migrations.yml`) runs on every PR that touches
+   `alembic/`, `alembic.ini`, `core/database/`, `pyproject.toml` or `uv.lock`.
+   On a throwaway PostgreSQL 18 container it checks for a single head, runs
+   `alembic upgrade head` and `alembic check`, compares the CHECK constraints
+   with the models, and downgrades every revision the PR adds and upgrades
+   again. It needs nothing on your machine.
+2. Optional: to check before you push, run the same checks locally against a
+   throwaway PostgreSQL with the `/verify-migrations` skill
+   (`.claude/skills/verify-migrations/SKILL.md`). It starts the database with
+   Docker, or with the `pgserver` wheel where Docker doesn't run, and exports
+   the throwaway `DATABASE_URL` in the same command as every alembic call, so
+   no check can reach production.
+
+How a merged revision reaches production, and how to revert one, is in
+[Database migrations](reference/database.md#database-migrations).
+
 ---
 
 ## Environment variables

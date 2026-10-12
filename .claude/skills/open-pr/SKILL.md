@@ -67,7 +67,7 @@ git diff --name-only origin/main...
 | `app/` | `/verify-frontend` (drive the changed flow; both viewports, both themes) |
 | `api/` | `/verify-api` (read sweep + the changed endpoint's payload) |
 | `core/`, `tests/` | `/verify-core` (pytest + direct smoke) |
-| `alembic/` | `/verify-migrations` (throwaway Postgres; the shared prod DB never sees an untested revision) |
+| `alembic/` | `/verify-migrations` (throwaway Postgres; the shared prod DB never sees an untested revision). CI verifies every migration on a throwaway PostgreSQL 18 (`Verify Migrations`, `.github/workflows/ci-migrations.yml`) for every PR touching `alembic/` or `core/database/`. |
 | review rubric: `prompts/quality-criteria.md`, `prompts/workflow-prompts/ai-quality-review.md`, `prompts/default-style-guide.md`, review rules in `prompts/library/*.md`, review model routing | dispatch a candidate arm (`gh workflow run review-retest.yml -f rules_ref=<sha> -f label=<name> -f compare_to=<baseline run>`) and paste its snippet in the PR (`docs/workflows/review-retest.md`) |
 | `.github/workflows/`, other `prompts/`, `automation/` | no live loop exists — reason through carefully, dry-run what's dry-runnable, and say so in the PR |
 | `docs/`, `CLAUDE.md`, instruction files | `/write-docs` (layer choice, `docs/index.md` + cross-file sync duties) |

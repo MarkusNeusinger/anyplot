@@ -4,7 +4,7 @@
 
 anyplot uses **PostgreSQL** (Cloud SQL) as the primary data store for the website. The database contains **all data needed to serve the frontend** - specs, implementations (including full code), and metadata.
 
-**Key Principle**: Repository is source of truth, database is derived via `sync-postgres.yml`.
+**Key Principle**: Repository is source of truth, database is derived via `sync-postgres.yml`. The exceptions are the two feedback tables, `feedback` and `agent_feedback`: their rows are written by the API and are the source of truth themselves.
 
 ---
 
@@ -35,6 +35,10 @@ anyplot uses **PostgreSQL** (Cloud SQL) as the primary data store for the websit
 - Quality scores and review feedback
 - Generation metadata (model, workflow run, versions)
 
+**Feedback:**
+- Site feedback from the feedback widget and the plot votes (`feedback`), with its triage status
+- One row per quick-feedback case of the admin-only agent chat (`agent_feedback`): the reaction, the message, hashed user and session ids, the run's metadata, and the triage state (status, tags, expected outcome, promotion, supersession); never the conversation, code, images or data
+
 **Other:**
 - Library information (name, version, docs URL)
 
@@ -42,6 +46,7 @@ anyplot uses **PostgreSQL** (Cloud SQL) as the primary data store for the websit
 
 - Preview images (PNG, thumbnails)
 - Interactive HTML plots (plotly, bokeh, altair, etc.)
+- The files of each agent chat feedback case, in the private EU bucket `gs://anyplot-agent-cases` under `cases/<case_id>/` (the PNGs, `plot.py`, `data.csv` only when the admin ticked the box, and `manifest.json`); a lifecycle rule deletes them after 180 days
 
 ### Stored in GitHub
 
@@ -51,7 +56,7 @@ anyplot uses **PostgreSQL** (Cloud SQL) as the primary data store for the websit
 
 ### Not stored anywhere permanently
 
-- User uploaded data (processed in-memory only)
+- User uploaded data (processed in-memory only). The one exception is a quick-feedback case of the agent chat: when an admin submits one with the data box ticked, the case's `data.csv` stays in `gs://anyplot-agent-cases` until the lifecycle rule deletes it after 180 days
 
 ---
 
@@ -68,9 +73,9 @@ The database models use **custom SQLAlchemy types** (`core/database/types.py`) t
 | UUIDs | `UUID` | `String(36)` | `UniversalUUID` |
 
 **Benefits**:
-- ✅ Production uses optimized PostgreSQL native types
-- ✅ Integration tests run with SQLite in-memory (no PostgreSQL needed in CI)
-- ✅ Same code/tests work in both environments
+- Production uses optimized PostgreSQL native types
+- Integration tests run with SQLite in-memory; PostgreSQL in CI is limited to the E2E tests (the Cloud SQL `test` database) and the migration check's throwaway container (see [Database migrations](#database-migrations))
+- Same code/tests work in both environments
 
 **See**: `core/database/types.py` for implementation details.
 
@@ -152,6 +157,81 @@ CREATE TABLE impls
 -- Indexes for performance
 CREATE INDEX idx_impls_spec ON impls (spec_id);
 CREATE INDEX idx_impls_library ON impls (library_id);
+
+-- Site feedback: the floating widget and the plot votes (written by the API)
+CREATE TABLE feedback
+(
+    id          UUID PRIMARY KEY,
+    message     VARCHAR(500),
+    reaction    VARCHAR(20),                -- thumbs_up, thumbs_down, bug, idea
+    contact     VARCHAR(255),
+    path        VARCHAR(500),
+    spec_id     VARCHAR(100),
+    library_id  VARCHAR(50),                -- set only by a plot vote
+    language    VARCHAR(50),                -- the programming language of a plot vote
+    user_agent  VARCHAR(500),
+    viewport    VARCHAR(20),
+    session_id  VARCHAR(64),
+    ip_hash     VARCHAR(64),                -- SHA-256 of the client IP, for the rate limit
+    status      VARCHAR(20) NOT NULL,       -- new, in_progress, done, wont_solve
+    created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT ck_feedback_reaction_valid
+        CHECK (reaction IS NULL OR reaction IN ('thumbs_up','thumbs_down','bug','idea')),
+    CONSTRAINT ck_feedback_status_valid
+        CHECK (status IN ('new','in_progress','done','wont_solve'))
+);
+
+CREATE INDEX ix_feedback_created_at ON feedback (created_at DESC);
+CREATE INDEX ix_feedback_ip_hash_created_at ON feedback (ip_hash, created_at DESC);
+CREATE INDEX ix_feedback_spec_library ON feedback (spec_id, library_id);
+
+-- Quick-feedback cases of the admin-only agent chat (written by the API)
+CREATE TABLE agent_feedback
+(
+    id              VARCHAR(25) PRIMARY KEY,    -- the case id: "20261012T143005Z-1a2b3c4d"
+    manifest_schema INTEGER NOT NULL,           -- the manifest's schema (1)
+    created_at      TIMESTAMP NOT NULL,         -- UTC, from the manifest
+    case_uri        VARCHAR(255) NOT NULL,      -- gs://anyplot-agent-cases/cases/<id>/
+    user_hash       VARCHAR(20) NOT NULL,       -- the HMAC user id the agents service sees
+    session_hash    VARCHAR(16) NOT NULL,       -- first 16 hex digits of the session id's SHA-256
+    spec_id         VARCHAR(100),
+    library_id      VARCHAR(50),
+    locale          VARCHAR(16),                -- the session's UI locale ("de-CH")
+    reaction        VARCHAR(20) NOT NULL,       -- thumbs_up, thumbs_down, bug, idea
+    message         VARCHAR(500),
+    include_data    BOOLEAN NOT NULL,           -- the case holds data.csv
+    status          VARCHAR(20) NOT NULL,       -- new, in_progress, done, wont_solve
+    result_version  INTEGER NOT NULL,           -- the rated version, 1 to 999
+    replaces        VARCHAR(25),                -- the case id an edit names
+    model           VARCHAR(100),
+    model_version   VARCHAR(100),
+    judge_model     VARCHAR(100),
+    prompt_hash     VARCHAR(16),                -- one hash over the prompt hashes
+    pipeline_status VARCHAR(20),                -- ok, needs_attention, failed, ...
+    attempts        INTEGER,
+    tokens          INTEGER,
+    cost_estimate   FLOAT,
+    files           VARCHAR[] NOT NULL,         -- the case's file names
+
+    -- Triage state, never in a manifest
+    tags            VARCHAR[] NOT NULL,         -- lowercase slugs, at most 10
+    expected        VARCHAR(10),                -- accepted, rejected
+    promoted_at     TIMESTAMP,
+    superseded_by   VARCHAR(25),                -- the case id that replaced this one
+    updated_at      TIMESTAMP NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT ck_agent_feedback_reaction_valid
+        CHECK (reaction IN ('thumbs_up','thumbs_down','bug','idea')),
+    CONSTRAINT ck_agent_feedback_status_valid
+        CHECK (status IN ('new','in_progress','done','wont_solve')),
+    CONSTRAINT ck_agent_feedback_expected_valid
+        CHECK (expected IS NULL OR expected IN ('accepted','rejected'))
+);
+
+CREATE INDEX ix_agent_feedback_session_version ON agent_feedback (session_hash, result_version);
+CREATE INDEX ix_agent_feedback_spec_library ON agent_feedback (spec_id, library_id);
+CREATE INDEX ix_agent_feedback_tags ON agent_feedback USING GIN (tags);
 ```
 
 **Note**: Tags are stored as JSONB in the `specs` table (not a separate table).
@@ -246,6 +326,60 @@ INSERT INTO libraries (id, name, version, documentation_url) VALUES
 
 ---
 
+### `agent_feedback`
+
+**Purpose**: Index the quick-feedback cases of the admin-only agent chat and hold their triage state. The feedback route `POST /debug/agent/sessions/{sid}/feedback` inserts one row per case right after the case's files are in `gs://anyplot-agent-cases`, and the "agent cases" section of `/debug` reads and updates it through the case routes ([Feedback triage](api.md#feedback-triage)). The row is the source of truth for the triage; the bucket holds the files until its lifecycle rule deletes them after 180 days, and the row stays, so the class statistics outlive the files. Created by migration `b4e7a9c2d6f1`.
+
+**Key Fields**:
+- `id` - The bucket's case id: the UTC time in ISO 8601 basic format and eight random hex digits, so ids sort by time and link a row to its files under `cases/<id>/`
+- `reaction`, `message`, `include_data`, `result_version`, `replaces` - What the admin sent; `include_data` says whether the case holds `data.csv`
+- `user_hash`, `session_hash` - Hashed ids; the table holds no email address and no session id
+- `locale` - The session's UI locale, the manifest's `language`; unlike `feedback.language`, which holds a programming language
+- `model`, `model_version`, `judge_model`, `prompt_hash`, `pipeline_status`, `attempts`, `tokens`, `cost_estimate` - The run's metadata from the case manifest; `model_version`, `tokens` and `cost_estimate` are `null` until the agents service stamps them
+- `status` - The triage state, the same four values as `feedback.status`; `done` and `wont_solve` retire a case
+- `tags` - Failure classes, lowercase slugs that match `^[a-z0-9-]{1,40}$`, at most 10
+- `promoted_at`, `expected` - When the case was promoted to the regression harness, and the outcome the harness expects (`accepted` or `rejected`); `agents/evals/sync_cases.py` reads both
+- `superseded_by` - The case that replaced this one: an edit whose `replaces` names this case with the same `session_hash` and `result_version`. Superseded rows are hidden in the triage list by default and never deleted
+
+Every column but the triage state copies the field of the same name in the case's `manifest.json` (`core.agent_cases.row_from_manifest`); the conversation, the code, the images and the data stay in the bucket.
+
+**Example Row**:
+```json
+{
+  "id": "20261012T143005Z-1a2b3c4d",
+  "manifest_schema": 1,
+  "created_at": "2026-10-12T14:30:05",
+  "case_uri": "gs://anyplot-agent-cases/cases/20261012T143005Z-1a2b3c4d/",
+  "user_hash": "adm_0123456789abcdef",
+  "session_hash": "9f8e7d6c5b4a3f2e",
+  "spec_id": "scatter-basic",
+  "library_id": "matplotlib",
+  "locale": "de-CH",
+  "reaction": "thumbs_down",
+  "message": "The legend covers the largest points.",
+  "include_data": true,
+  "status": "new",
+  "result_version": 2,
+  "replaces": null,
+  "model": "claude-haiku-5-5",
+  "model_version": null,
+  "judge_model": "claude-haiku-5-5",
+  "prompt_hash": "3c1f9a0b7d2e4f68",
+  "pipeline_status": "ok",
+  "attempts": 1,
+  "tokens": null,
+  "cost_estimate": null,
+  "files": ["plot-light.png", "plot.py", "data.csv", "manifest.json"],
+  "tags": [],
+  "expected": null,
+  "promoted_at": null,
+  "superseded_by": null,
+  "updated_at": "2026-10-12T14:30:06"
+}
+```
+
+---
+
 ## Data access patterns
 
 ### 1. Browse all plots (with implementation count)
@@ -290,29 +424,80 @@ Use **Alembic** for schema migrations:
 
 ```bash
 # Create new migration
-alembic revision -m "add new column"
+uv run alembic revision -m "add new column"
 
 # Apply migrations
-alembic upgrade head
+uv run alembic upgrade head
 
 # Rollback
-alembic downgrade -1
+uv run alembic downgrade -1
 ```
+
+Never run these against the shared production database by hand: production
+schema changes reach Cloud SQL only through `sync-postgres.yml` after the merge
+(see [How a migration reaches production](#how-a-migration-reaches-production)).
 
 ### Migration files
 
-```python
-# migrations/versions/001_initial_schema.py
-def upgrade():
-    op.create_table('specs', ...)
-    op.create_table('libraries', ...)
-    op.create_table('impls', ...)
+Revisions live in `alembic/versions/<revision>_<slug>.py`, for example:
 
-def downgrade():
-    op.drop_table('impls')
-    op.drop_table('libraries')
-    op.drop_table('specs')
+```python
+# alembic/versions/b4e7a9c2d6f1_add_agent_feedback_table.py
+revision = "b4e7a9c2d6f1"
+down_revision = "a7c3e9d1f5b8"
+
+def upgrade() -> None:
+    op.create_table("agent_feedback", ...)
+    op.create_index("ix_agent_feedback_tags", "agent_feedback", ["tags"], postgresql_using="gin")
+
+def downgrade() -> None:
+    op.drop_index("ix_agent_feedback_tags", table_name="agent_feedback")
+    op.drop_table("agent_feedback")
 ```
+
+Declare every index and CHECK constraint that a migration creates in
+`core/database/models.py` as well. `alembic check` compares the indexes and
+proposes to drop an undeclared one; the CHECK constraints are compared by the
+CI job below, because `alembic check` does not see them.
+
+### How a migration reaches production
+
+1. **Before the merge**, the workflow `ci-migrations.yml` (check
+   `Verify Migrations`) runs on every PR that touches `alembic/`,
+   `alembic.ini`, `core/database/`, `pyproject.toml` or `uv.lock`. On a
+   throwaway PostgreSQL 18 service container, the major version production
+   runs, it checks that the revision graph has exactly one head, runs
+   `alembic upgrade head` and `alembic check`, compares the CHECK constraints
+   of the migrated schema with the models' by name and quoted values, and
+   downgrades to the base commit's head and upgrades again, so every revision
+   the PR adds is reversed. The job tests the PR at its last push: when two
+   migration PRs fork from the same head and merge one after the other, the
+   second head shows up only after the merge, in the push run on `main` and in
+   `sync-postgres.yml`, because ruleset `main` does not require branches to be
+   up to date. For the local loop before you push, see
+   [Migrations](../development.md#migrations).
+2. **After the merge**, `sync-postgres.yml` runs on every push to `main` that
+   touches `plots/**` or `alembic/versions/**`. Its step "Run database
+   migrations" runs `alembic upgrade head` against Cloud SQL before the step
+   that syncs the plots. Nothing orders it before the API deploy, which runs in
+   parallel: code that needs the new schema meets the old one for the minutes
+   in between.
+
+### Revert a migration PR
+
+Every later `sync-postgres.yml` run, plots pushes included, starts with
+`alembic upgrade head`. If production's `alembic_version` names a revision
+whose file is gone, that step fails with
+`Can't locate revision identified by '<revision>'`, and the plots stop syncing
+until someone downgrades production by hand. So never revert a migration PR
+whole:
+
+- Keep the revision file in the revert. The revision stays resolvable, and an
+  unused table or column is harmless.
+- Or downgrade production first, then revert. No workflow runs a downgrade,
+  so this is a one-off `alembic downgrade <previous revision>` against Cloud
+  SQL, after a backup (see [Manual backups](#manual-backups)); it drops what the
+  revision created, rows included.
 
 ---
 
@@ -462,7 +647,7 @@ await session.execute(f"SELECT * FROM specs WHERE id = '{spec_id}'")
 
 ### Data privacy
 
-- No user data stored permanently
+- No user data stored permanently, with one exception: the quick-feedback cases of the admin-only agent chat. When an admin submits one, the case (the conversation, the code, the images, the message, a hashed user id, and `data.csv` when the box is ticked) is stored in the private bucket `gs://anyplot-agent-cases` until the lifecycle rule deletes it after 180 days. Its row in `agent_feedback` holds the message and the hashed ids, but no conversation, code, images or data, and stays
 - Anonymous session IDs only
 - Usage data auto-deleted after 90 days
 - GDPR-compliant (no personal data)
