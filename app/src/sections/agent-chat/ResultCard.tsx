@@ -41,7 +41,9 @@ import { type ArtifactName, type Theme } from 'src/lib/agent';
 import { copyImage, downloadBlob } from 'src/sections/agent-chat/files';
 import { IMAGE_FAILURE } from 'src/sections/agent-chat/messages';
 import { ResultFeedback } from 'src/sections/agent-chat/ResultFeedback';
+import { RoundGrid } from 'src/sections/agent-chat/RoundGrid';
 import { actionButtonSx, bodyTextSx, labelSx, smallText } from 'src/sections/agent-chat/styles';
+import { gridRows } from 'src/sections/agent-chat/timeline';
 import { colors, fontSize, overlayButtonSx, typography } from 'src/theme';
 
 const CodeHighlighter = lazy(() => import('src/components/CodeHighlighter'));
@@ -185,6 +187,7 @@ export function ResultCard({
   // Counted as repair rounds, the way the progress timeline names them: "2 attempts" read as many runs.
   const repairs = result.attempts - 1;
   const attempts = repairs < 1 ? 'first try' : `${repairs} repair${repairs === 1 ? '' : 's'}`;
+  const rounds = gridRows(result.rounds ?? [], [], result.status);
   const header = (
     <Box
       component="button"
@@ -420,6 +423,14 @@ export function ResultCard({
               </Box>
             )}
           </Box>
+
+          {/* How each round of the run ended, as the progress grid showed it while it ran. */}
+          {rounds.length > 0 && (
+            <Box sx={{ minWidth: 0, overflowX: 'auto' }}>
+              <Box sx={{ ...labelSx, mb: 0.5 }}># rounds</Box>
+              <RoundGrid rows={rounds} label={`Rounds of version ${number}`} />
+            </Box>
+          )}
 
           {result.changes.length > 0 && (
             <Box>

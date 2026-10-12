@@ -135,6 +135,8 @@ from .schemas import (
     PipelineArgs,
     PlotResult,
     ReviewRequest,
+    Round,
+    RoundOutcome,
     Verdict,
     artifact_names,
 )
@@ -329,11 +331,35 @@ class Run:
     """The attempt whose render the reviewer was last called on, read or not."""
     reviews: int = 0
     """Reviewer calls so far, at most `MAX_REVIEWS`."""
+    rounds: list[Round] = field(default_factory=list)
+    """How each attempt ended, in the page's vocabulary (`ROUND_OUTCOMES`), for `PlotResult.rounds`."""
 
 
-def _end_attempt(run: Run, stage: Stage) -> None:
+ROUND_OUTCOMES: dict[Stage, RoundOutcome] = {
+    "reviewer_ok": "ok",
+    "reviewer_defects": "review",
+    "gates": "measured",
+    "render": "render_failed",
+    "edit_apply": "check_failed",
+    "validator": "check_failed",
+    "loader": "check_failed",
+    "adapter_schema": "answer_unusable",
+    "adapter_truncated": "answer_unusable",
+    "adapter_full_code": "answer_unusable",
+    "not_rereviewed": "unreviewed",
+    "reviewer_unreadable": "unreviewed",
+    "budget": "unreviewed",
+    "deadline": "unreviewed",
+    "error": "error",
+}
+"""The page's name for the stage that ended an attempt; the stage itself stays in the attribution log."""
+
+
+def _end_attempt(run: Run, stage: Stage, findings: int = 0) -> None:
+    """Record what ended the current attempt; `findings` counts the lines it passes to the next one."""
     run.stages.append(stage)
     run.stage = stage
+    run.rounds.append(Round(attempt=max(run.attempts, 1), outcome=ROUND_OUTCOMES[stage], findings=min(findings, 99)))
 
 
 def _call_fields(ledger: RequestLedger, agent: str) -> dict[str, Any]:
@@ -349,8 +375,12 @@ def _line(text: str) -> str:
     return text if len(text) <= MAX_LINE_CHARS else text[: MAX_LINE_CHARS - 1] + "…"
 
 
-def _status(step: str, attempt: int) -> Event:
-    return Event(custom_metadata={STATUS_KEY: {"step": step, "attempt": attempt}})
+def _status(step: str, attempt: int, previous: Round | None = None) -> Event:
+    """A progress event; the step that opens a repair round carries how the round before it ended."""
+    status: dict[str, Any] = {"step": step, "attempt": attempt}
+    if previous is not None:
+        status.update(outcome=previous.outcome, findings=previous.findings)
+    return Event(custom_metadata={STATUS_KEY: status})
 
 
 def _result_event(result: PlotResult) -> Event:
@@ -565,7 +595,7 @@ def finish(run: Run) -> PlotResult:
             reason = run.reason
         else:
             reason = "render" if run.rendered else "validation"
-        return PlotResult(status="failed", reason=reason, attempts=run.attempts)
+        return PlotResult(status="failed", reason=reason, attempts=run.attempts, rounds=list(run.rounds))
     residual: list[str] = []
     if shipped.padded:
         residual.append(PADDED_LINE.format(theme=run.theme))
@@ -588,6 +618,7 @@ def finish(run: Run) -> PlotResult:
         artifacts=artifact_names([run.theme]),
         changes=changes,
         residual_defects=residual,
+        rounds=list(run.rounds),
     )
 
 
@@ -706,7 +737,7 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
         run.error_type = type(exc).__name__
         run.unreviewed_why = run.unreviewed_why or "an internal error stopped the run"
         if len(run.stages) < run.attempts:
-            run.stages.append("error")
+            _end_attempt(run, "error")
         run.stage = "error"
     finally:
         ledger.pipeline_active = False
@@ -717,7 +748,7 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
         result = _store_version(ctx, services, run, result)
     except Exception as exc:  # a result whose artifacts cannot be stored is not shippable
         logger.warning("storing the version failed: %s", type(exc).__name__)
-        result = PlotResult(status="failed", reason="error", attempts=run.attempts)
+        result = PlotResult(status="failed", reason="error", attempts=run.attempts, rounds=list(run.rounds))
         run.error_type = run.error_type or type(exc).__name__
         run.stage = "error"
     # From here on the root's closing reply is never the budget refusal (plugins/budget.py).
@@ -814,7 +845,10 @@ async def _attempts(
             run.reason, run.unreviewed_why, run.stage = "deadline", "the time limit was reached", "deadline"
             return
         run.attempts = attempt
-        yield _status("adapting" if attempt == 1 else "repairing", attempt)
+        if attempt == 1:
+            yield _status("adapting", attempt)
+        else:
+            yield _status("repairing", attempt, run.rounds[-1] if run.rounds else None)
         request = AdaptRequest(
             code=working,
             profile=dataset.profile,
@@ -865,7 +899,7 @@ async def _attempts(
                 edit_tolerant=dict(sorted(Counter(applied.tolerant).items())),
             )
             feedback, previous_plan = applied.failures, plan
-            _end_attempt(run, "edit_apply")
+            _end_attempt(run, "edit_apply", len(feedback))
             continue
         check = _check(
             applied.code,
@@ -891,7 +925,7 @@ async def _attempts(
         )
         if not check.may_render:
             feedback, previous_plan = check.blocking, plan
-            _end_attempt(run, "validator")
+            _end_attempt(run, "validator", len(feedback))
             continue
         working, previous_plan = applied.code, None
         try:
@@ -935,7 +969,7 @@ async def _attempts(
         run.rendered = True
         if not report.passed_host_gates:
             feedback = [*report.blocking, *adaptation_lines]
-            _end_attempt(run, "render")
+            _end_attempt(run, "render", len(feedback))
             continue
         candidate = Candidate(
             working=working,
@@ -960,7 +994,7 @@ async def _attempts(
         # kept as gate notes), again after a rejection, up to `MAX_REVIEWS` calls. With the
         # default two attempts: attempt 1 repairs or is reviewed, attempt 2 is reviewed.
         if not report.canvas_ok or (feedback and attempt < settings.max_attempts):
-            _end_attempt(run, "gates")
+            _end_attempt(run, "gates", len(feedback))
             continue
         if run.reviews >= MAX_REVIEWS:
             # Every review used, and either no feedback or no attempt left for it: the run ends
@@ -1016,7 +1050,7 @@ async def _attempts(
             return
         run.review_lines = [_on_theme(defect, run.theme).as_line() for defect in verdict.defects]
         feedback = list(run.review_lines)
-        _end_attempt(run, "reviewer_defects")
+        _end_attempt(run, "reviewer_defects", len(feedback))
 
 
 def _on_theme(defect: Defect, theme: Theme) -> Defect:

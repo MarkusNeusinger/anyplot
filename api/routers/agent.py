@@ -124,11 +124,15 @@ _NO_STORE = "private, no-store"
 # the agents service's stream translator.
 _EVENT_FIELDS: dict[str, frozenset[str]] = {
     "ready": frozenset({"v", "run_id"}),
-    # `attempt` on a pipeline step; `position` and `waiting` on `step: "queued"`.
-    "status": frozenset({"step", "attempt", "position", "waiting"}),
+    # `attempt` on a pipeline step, plus `outcome` and `findings` (how the round before ended) on
+    # `repairing`; `position` and `waiting` on `step: "queued"`.
+    "status": frozenset({"step", "attempt", "outcome", "findings", "position", "waiting"}),
     "message": frozenset({"text"}),
-    # `version` is the agents service's number of the stored version (ok and needs_attention only).
-    "plot": frozenset({"status", "reason", "attempts", "artifacts", "changes", "residual_defects", "version"}),
+    # `version` is the agents service's number of the stored version (ok and needs_attention only);
+    # `rounds` lists how each attempt ended (`{attempt, outcome, findings}`), for the page's progress grid.
+    "plot": frozenset(
+        {"status", "reason", "attempts", "artifacts", "changes", "residual_defects", "version", "rounds"}
+    ),
     "refusal": frozenset({"code", "text"}),
     "error": frozenset({"code", "ref"}),
     # `bindings` and `data_confirmed` sync the page after a turn in which the root changed the bindings;

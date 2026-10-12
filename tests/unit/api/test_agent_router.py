@@ -867,6 +867,17 @@ class TestMessagesStream:
         events = _sse_events(self._post(client).text)
         assert events[0] == ("plot", {"status": "ok", "attempts": 1, "artifacts": ["plot-light.png"], "version": 2})
 
+    def test_round_outcomes_reach_the_page(self, client, upstream) -> None:
+        """The progress grid's facts: the repair step's previous outcome and the result's rounds."""
+        status = {"step": "repairing", "attempt": 2, "outcome": "review", "findings": 3, "stack": "x"}
+        rounds = [{"attempt": 1, "outcome": "review", "findings": 3}, {"attempt": 2, "outcome": "ok", "findings": 0}]
+        plot = {"status": "ok", "attempts": 2, "artifacts": [], "version": 1, "rounds": rounds}
+        body = f"event: status\ndata: {json.dumps(status)}\n\nevent: plot\ndata: {json.dumps(plot)}\n\n"
+        upstream.handler = lambda request: httpx.Response(200, content=(body + "event: done\ndata: {}\n\n").encode())
+        events = _sse_events(self._post(client).text)
+        assert events[0] == ("status", {"step": "repairing", "attempt": 2, "outcome": "review", "findings": 3})
+        assert events[1] == ("plot", plot)
+
     def test_text_message_forwarded(self, client, upstream) -> None:
         upstream.handler = lambda request: httpx.Response(200, content=b"event: done\ndata: {}\n\n")
         client.post("/debug/agent/sessions/s1/messages", json={"text": "make it blue"}, headers=CLIENT_HEADERS)

@@ -149,6 +149,7 @@ import {
   PNG_ARTIFACT,
   renderedThemes,
   type RoleSpec,
+  type Round,
   sizeBucket,
   type Theme,
   type TurnAction,
@@ -185,6 +186,8 @@ export interface RunState {
   /** Set while the turn waits in the run queue: `position` 1 runs next. */
   queue: { position: number; waiting: number } | null;
   stopping: boolean;
+  /** The rounds that ended so far, from each repair step's `outcome` (absent: none yet). */
+  rounds?: Round[];
 }
 
 export type ThemeImage =
@@ -379,7 +382,7 @@ type Action =
   | { type: 'item'; item: NewChatItem }
   | { type: 'run_start'; kind: RunState['kind'] }
   | { type: 'run_queued'; position: number; waiting: number }
-  | { type: 'run_step'; step: PipelineStep; attempt: number | null }
+  | { type: 'run_step'; step: PipelineStep; attempt: number | null; previous?: Round | null }
   | { type: 'run_stopping' }
   | { type: 'run_end' }
   | { type: 'version_add'; version: PlotVersion }
@@ -841,6 +844,9 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
           ...state.run,
           queue: null,
           steps: [...state.run.steps, { step: action.step, attempt: action.attempt }],
+          rounds: action.previous
+            ? [...(state.run.rounds ?? []), action.previous]
+            : state.run.rounds,
         },
       };
     case 'run_stopping':
@@ -1276,7 +1282,12 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
           safeDispatch({ type: 'run_queued', position: event.position, waiting: event.waiting });
           break;
         case 'step':
-          safeDispatch({ type: 'run_step', step: event.step, attempt: event.attempt });
+          safeDispatch({
+            type: 'run_step',
+            step: event.step,
+            attempt: event.attempt,
+            previous: event.previous,
+          });
           break;
         case 'message':
           addItem({ kind: 'assistant', text: event.text });

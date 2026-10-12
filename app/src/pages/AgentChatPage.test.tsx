@@ -1038,7 +1038,7 @@ describe('AgentChatPage working states', () => {
     expect(screen.getByLabelText(/^x/)).toBeDisabled();
     expect(screen.getByRole('button', { name: '.confirm()' })).toBeDisabled();
     // One indicator: a turn without pipeline steps mounts no progress timeline.
-    expect(screen.queryByRole('list', { name: 'Progress' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('table', { name: 'Progress' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Stop' })).toBeInTheDocument();
 
     releaseTurn?.();
@@ -1058,7 +1058,7 @@ describe('AgentChatPage working states', () => {
     sendFromComposer('what is the mean score?');
     const pending = await screen.findByTestId('pending-reply');
     expect(pending).toHaveTextContent('working on your message …');
-    expect(screen.queryByRole('list', { name: 'Progress' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('table', { name: 'Progress' })).not.toBeInTheDocument();
     releaseTurn?.();
     expect(await screen.findByText('The mean score is 55.')).toBeInTheDocument();
     expect(screen.queryByTestId('pending-reply')).not.toBeInTheDocument();
@@ -1067,7 +1067,7 @@ describe('AgentChatPage working states', () => {
     // `.create_plot()` shows its path in the timeline from the start; the thread adds nothing.
     holdNextTurn = true;
     fireEvent.click(screen.getByRole('button', { name: 'Create plot' }));
-    expect(await screen.findByRole('list', { name: 'Progress' })).toBeInTheDocument();
+    expect(await screen.findByRole('table', { name: 'Progress' })).toBeInTheDocument();
     expect(screen.queryByTestId('pending-reply')).not.toBeInTheDocument();
     releaseTurn?.();
     expect(await screen.findByText('Here is your plot.')).toBeInTheDocument();

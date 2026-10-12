@@ -29,6 +29,38 @@ describe('parseAgentEvent', () => {
       type: 'step',
       step: 'repairing',
       attempt: 2,
+      previous: null,
+    });
+  });
+
+  it('reads how the round before a repair ended, and drops an outcome it does not know', () => {
+    const step = (extra: Record<string, unknown>) =>
+      parseAgentEvent(raw('status', { step: 'repairing', attempt: 2, ...extra }));
+
+    expect(step({ outcome: 'review', findings: 3 })).toMatchObject({
+      previous: { attempt: 1, outcome: 'review', findings: 3 },
+    });
+    expect(step({ outcome: 'exfiltrate', findings: 3 })).toMatchObject({ previous: null });
+    expect(step({ outcome: 'review' })).toMatchObject({ previous: null });
+    expect(
+      parseAgentEvent(
+        raw('plot', {
+          status: 'ok',
+          attempts: 2,
+          rounds: [
+            { attempt: 1, outcome: 'measured', findings: 1 },
+            { attempt: 2, outcome: 'ok', findings: 0 },
+            { attempt: 3, outcome: '<b>', findings: 0 },
+          ],
+        })
+      )
+    ).toMatchObject({
+      result: {
+        rounds: [
+          { attempt: 1, outcome: 'measured', findings: 1 },
+          { attempt: 2, outcome: 'ok', findings: 0 },
+        ],
+      },
     });
   });
 
@@ -53,6 +85,7 @@ describe('parseAgentEvent', () => {
         changes: ['bigger markers'],
         residual_defects: ['VQ-03 light: overlap'],
         version: null,
+        rounds: [],
       },
     });
   });

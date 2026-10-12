@@ -7,9 +7,9 @@ re-validates (`api/routers/agent.py`, `_EVENT_FIELDS`):
 |---|---|---|
 | `ready` | `v`, `run_id` | the start of the request, before it waits in the run queue |
 | `status` | `step: "queued"`, `position`, `waiting` | the run queue, while the run waits: at once, on every change, and every 15 s unchanged (`position` 1 runs next; `waiting` counts every queued entry, this one included) |
-| `status` | `step`, `attempt` | the pipeline's content-free `custom_metadata` progress events |
+| `status` | `step`, `attempt`, and on `repairing` `outcome`, `findings` | the pipeline's content-free `custom_metadata` progress events; the step that opens a repair round says how the round before it ended (`RoundOutcome`, a count) |
 | `message` | `text` | a final, non-partial text response authored by the root (`anyplot`) |
-| `plot` | `status`, `reason`, `attempts`, `artifacts`, `changes`, `residual_defects`, `version` | the pipeline's `PlotResult` output event; `version`, the stored version's number, only on `ok` and `needs_attention` |
+| `plot` | `status`, `reason`, `attempts`, `artifacts`, `changes`, `residual_defects`, `version`, `rounds` | the pipeline's `PlotResult` output event; `version`, the stored version's number, only on `ok` and `needs_attention`; `rounds`, how each attempt ended (`{attempt, outcome, findings}`) |
 | `refusal` | `code`, `text` | the request ledger's refusal, in place of the message: `out_of_scope`, `needs_data` (data that would have to be fetched) and `unsupported_content` from the scope guard, `budget` from the budgets; a user already over the daily budget gets it right after `ready`, without waiting in the queue |
 | `error` | `code`, `ref` | `guard_unavailable`, `capacity` (also when the run waited the queue's maximum), `deadline` or `internal` |
 | `done` | `llm_calls`, `tokens`, and after a run `bindings`, `data_confirmed`, `language` (`{language, source}`, the session language and how it was set) and, when the turn changed the data (`prepare_data`, `generate_data`), `dataset` | the end of every run, always last; the route adds the session's sync fields (`_session_sync` in `agents/main.py`) |
@@ -29,13 +29,14 @@ and a reply after a `plot_pipeline` call arrives already cut at the cap.
 """
 
 import json
-from typing import Any
+from typing import Any, get_args
 
 from google.adk.events.event import Event
 
 from agents.anyplot.output_guard import plain_line, sanitize
 from agents.anyplot.pipeline import STATUS_KEY
 from agents.anyplot.plugins.ledger import RequestLedger
+from agents.anyplot.schemas import RoundOutcome
 
 
 PROTOCOL = "anyplot/1"
@@ -57,7 +58,8 @@ HALT_AUTHOR = "model"  # ADK's author of the event a before_run halt emits
 STEPS = frozenset({"adapting", "checking", "rendering", "reviewing", "repairing"})
 QUEUED_STEP = "queued"
 """The status step the route sends while the run waits in the run queue; no pipeline event carries it."""
-PLOT_FIELDS = ("status", "reason", "attempts", "artifacts", "changes", "residual_defects", "version")
+PLOT_FIELDS = ("status", "reason", "attempts", "artifacts", "changes", "residual_defects", "version", "rounds")
+ROUND_OUTCOMES = frozenset(get_args(RoundOutcome))
 MODEL_WRITTEN_FIELDS = ("changes", "residual_defects")
 
 
@@ -97,7 +99,11 @@ class Translator:
         status = (event.custom_metadata or {}).get(STATUS_KEY)
         if isinstance(status, dict) and status.get("step") in STEPS:
             attempt = status.get("attempt")
-            out.append(sse("status", {"step": status["step"], "attempt": attempt if isinstance(attempt, int) else 1}))
+            data: dict[str, Any] = {"step": status["step"], "attempt": attempt if isinstance(attempt, int) else 1}
+            findings = status.get("findings")
+            if status.get("outcome") in ROUND_OUTCOMES and isinstance(findings, int):
+                data.update(outcome=status["outcome"], findings=findings)
+            out.append(sse("status", data))
             return out
         if event.author == PIPELINE_AUTHOR and isinstance(event.output, dict) and "status" in event.output:
             if not self.plot_sent:
