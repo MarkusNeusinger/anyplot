@@ -6,4 +6,5 @@
   token renewed every 55 minutes and the API keys read from files that are never
   printed; `scripts/agent-cases.sh` reads the production feedback cases. The
   `open-pr` skill bundles the watchers it asks for: the PR's checks, the Copilot
-  review rounds with their unresolved threads, and a merge's Cloud Build deploys.
+  review rounds with their unresolved threads, and a merge's Cloud Build deploys
+  (#12151).
