@@ -589,6 +589,30 @@ class TestHarness:
 
         assert report["text_overlaps_total"] == 0, report["text_overlaps"]
 
+    def test_two_legends_on_one_spot_overlap_but_one_legend_never_with_itself(self) -> None:
+        fig = self.figure()
+        ax = fig.subplots()
+        first = ax.legend(handles=ax.plot([0, 1], [0, 1], label="first series"), loc="upper left", fontsize=20)
+        ax.add_artist(first)
+        ax.legend(handles=ax.plot([0, 1], [1, 0], label="second series"), loc="upper left", fontsize=20)
+
+        report = harness.probe(fig, 200)
+
+        assert [(pair["a"], pair["b"]) for pair in report["text_overlaps"]] == [("legend text", "legend text")]
+
+    def test_a_drawn_text_without_a_role_still_counts(self) -> None:
+        """An axis offset text (the `1e6` multiplier) is drawn but named by no role: it reads "text"."""
+        fig = self.figure()
+        ax = fig.subplots()
+        ax.plot([0, 1], [0, 3e6])
+        offset = ax.yaxis.get_offset_text()
+        offset.set_fontsize(40)
+        ax.set_title("over the multiplier", loc="left", fontsize=40, y=0.99)
+
+        report = harness.probe(fig, 200)
+
+        assert {"title", "text"} in [{pair["a"], pair["b"]} for pair in report["text_overlaps"]]
+
     def test_tick_label_pairs_stay_their_own_count(self) -> None:
         fig = self.figure()
         ax = fig.subplots()

@@ -289,9 +289,19 @@ def _text_kinds(figure):
 
     A polar axes names its axis labels by what they label (the angular and the radial
     axis), and its ids are collected in the second set, so a line can name the cause.
+    The third map names the legend a legend text belongs to: texts of one legend are
+    laid out by it, texts of two legends can collide. A drawn text no role names (an
+    axis offset text, a table cell) is "text" to the caller.
     """
     kinds = {}
     polar = set()
+    legend_of = {}
+
+    def add_legend(legend):
+        for text in [*legend.get_texts(), legend.get_title()]:
+            kinds[id(text)] = "legend text"
+            legend_of[id(text)] = id(legend)
+
     for axes in figure.get_axes():
         is_polar = getattr(axes, "name", "") == "polar"
         axis_names = (("x", "angular"), ("y", "radial"), ("z", "z"))
@@ -312,31 +322,33 @@ def _text_kinds(figure):
             kinds[id(child)] = "annotation" if type(child).__name__ == "Annotation" else "text"
         legend = axes.get_legend()
         if legend is not None:
-            for text in [*legend.get_texts(), legend.get_title()]:
-                kinds[id(text)] = "legend text"
+            add_legend(legend)
+        for artist in axes.artists:  # an earlier legend kept with `ax.add_artist(legend)`
+            if type(artist).__name__ == "Legend":
+                add_legend(artist)
     for legend in getattr(figure, "legends", []):
-        for text in [*legend.get_texts(), legend.get_title()]:
-            kinds[id(text)] = "legend text"
+        add_legend(legend)
     for text in getattr(figure, "texts", []):
         kinds[id(text)] = "text"
     for name in ("_suptitle", "_supxlabel", "_supylabel"):
         text = getattr(figure, name, None)
         if text is not None:
             kinds[id(text)] = "suptitle" if name == "_suptitle" else "figure axis label"
-    return kinds, polar
+    return kinds, polar, legend_of
 
 
 def text_overlaps(figure, extents, scale):
     """Pairs of measured texts that overlap by more than `TEXT_OVERLAP_TOLERANCE_PX`, one of them no tick label.
 
-    Tick label against tick label stays `tick_overlaps`. Two texts of one legend are
-    laid out by the legend and never compared. At most `TEXT_OVERLAP_CANDIDATES`
-    texts that are no tick label are compared with every measured text; the deepest
-    `TEXT_OVERLAP_LIMIT` pairs are returned with the total count. Depths are in the
-    saved image's pixels.
+    Every measured text takes part; one no role names (an axis offset text, a table
+    cell) is "text". Tick label against tick label stays `tick_overlaps`. Two texts of
+    one legend are laid out by that legend and never compared; texts of two legends
+    are. At most `TEXT_OVERLAP_CANDIDATES` texts that are no tick label are compared
+    with every measured text; the deepest `TEXT_OVERLAP_LIMIT` pairs are returned with
+    the total count. Depths are in the saved image's pixels.
     """
-    kinds, polar = _text_kinds(figure)
-    known = [(key, kinds[key], box) for key, box in extents.items() if key in kinds]
+    kinds, polar, legend_of = _text_kinds(figure)
+    known = [(key, kinds.get(key, "text"), box) for key, box in extents.items()]
     others = [item for item in known if item[1] != "tick label"][:TEXT_OVERLAP_CANDIDATES]
     pairs = []
     seen = set()
@@ -344,7 +356,7 @@ def text_overlaps(figure, extents, scale):
         for other_key, other_kind, other_box in known:
             if other_key == key or frozenset((key, other_key)) in seen:
                 continue
-            if kind == other_kind == "legend text":
+            if key in legend_of and legend_of.get(other_key) == legend_of[key]:
                 continue
             depth = float(_overlap_px(box, other_box) * scale)
             if depth > TEXT_OVERLAP_TOLERANCE_PX and math.isfinite(depth):
