@@ -16,6 +16,7 @@
   table can be filled from the cases later. No upload replaces an object, and a
   failed upload answers `502 storage` and leaves no manifest, so a half-written
   case never counts. Analytics: `agent_result_feedback{reaction, include_data}`.
+  (#12139)
 - **`agents.evals.import_case` turns a real session into an eval case.** It reads
   a bundle that `.save()` downloaded, or a stored case directory, and writes
   `case.json`, `data.csv` and, when the version came from a typed change,
@@ -24,4 +25,4 @@
   because a case holds a user's data. It matches a version's request by
   position only when the transcript's plot turns and the versions agree in
   number, and otherwise lists the turns and asks for `--change-request` or
-  `--no-change-request`.
+  `--no-change-request`. (#12139)
