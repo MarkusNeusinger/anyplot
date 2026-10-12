@@ -98,6 +98,17 @@ class TestWhichRenders:
         assert [target.role for target in score.targets_of(run, tmp_path)] == ["first"]
         assert score.targets_of(record(status="failed", attempt_renders=[]), tmp_path) == []
 
+    def test_a_render_without_png_still_counts_for_the_shipped_index(self, tmp_path: Path) -> None:
+        """Attempt 1 rendered nothing usable (render failure), attempt 2 shipped: its render is the second."""
+        failed = {**entry("m1", 1), "png": None}
+        run = record(
+            status="ok", stages=["render", "reviewer_ok"], shipped_attempt=2, attempt_renders=[failed, entry("m1", 2)]
+        )
+
+        found = score.targets_of(run, tmp_path)
+
+        assert [(target.role, target.png.name) for target in found] == [("both", "case-r1-m1-n2.png")]
+
 
 class FakeMessages:
     """Answers each create() with the next scripted tool input (or a text-only reply for None)."""
@@ -147,11 +158,27 @@ class TestScorer:
         broken["items"] = broken["items"][:-1]
         messages = FakeMessages([None, broken])
 
-        with pytest.raises(ScoreError, match="criteria missing"):
+        with pytest.raises(score.ScoringFailed, match="criteria missing") as caught:
             asyncio.run(scorer_with(messages).score(REQUEST))
         assert len(messages.calls) == 2
         second = messages.calls[1]["messages"]
         assert [message["role"] for message in second] == ["user", "assistant", "user"]
+        # Both billed calls travel with the failure, so the spend still counts.
+        assert caught.value.tokens["candidates"] == 1000 and isinstance(caught.value, ScoreError)
+
+    def test_a_failed_score_is_priced_for_the_budget(self) -> None:
+        target = score.Target(
+            "a#r1", "a", "scatter-basic", "matplotlib", "first", Path("p"), Path("c"), Path("d"), "light", "en", None
+        )
+        messages = FakeMessages([None, None])
+
+        outcome = asyncio.run(
+            score.score_all(scorer_with(messages), [(target, REQUEST)], calls_per_minute=0, echo=lambda _: None)
+        )
+
+        (item,) = outcome.scored
+        assert item.result is None and item.error and item.error.startswith("ScoringFailed")
+        assert item.cost_usd > 0
 
     def test_a_missing_model_stops_before_any_scoring(self) -> None:
         response = httpx.Response(404, request=httpx.Request("POST", "https://vertex"))
@@ -316,6 +343,36 @@ class TestSummary:
         report.write_text(json.dumps({"runs": [{"case_id": "x"}]}), encoding="utf-8")
 
         assert score.main([str(report)]) == 2
+
+    @pytest.mark.parametrize("value", ["0", "-3", "two"])
+    def test_a_sample_below_one_is_refused(self, value: str) -> None:
+        with pytest.raises(SystemExit):
+            score.parse_args(["report.json", "--sample", value])
+
+    def test_a_failed_scoring_call_stays_out_of_the_ladder(self) -> None:
+        failed = score.Scored(
+            score.Target(
+                "x#r1",
+                "x",
+                "scatter-basic",
+                "matplotlib",
+                "first",
+                Path("p"),
+                Path("c"),
+                Path("d"),
+                "light",
+                "en",
+                None,
+            ),
+            None,
+            "ScoringFailed: no answer",
+        )
+        items = [failed, scored("x#r1", "shipped", answer())]
+
+        summary = score.summarize(items, [], "claude-opus-5-5")
+
+        assert summary["ladder"]["90"]["runs"] == 0
+        assert summary["score_errors"] == ["x#r1 first: ScoringFailed: no answer"]
 
 
 class TestAttemptRecorder:

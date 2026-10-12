@@ -135,7 +135,8 @@ def shipped_render_index(record: dict[str, Any]) -> int | None:
 
 def targets_of(record: dict[str, Any], base: Path) -> list[Target]:
     """The first and the shipped render of one run record (one target when they are the same)."""
-    entries = [entry for entry in record.get("attempt_renders") or [] if entry.get("png")]
+    every = list(record.get("attempt_renders") or [])
+    entries = [entry for entry in every if entry.get("png")]
     if not entries:
         return []
     run = f"{record['case_id']}#r{record.get('repeat', 1)}"
@@ -160,10 +161,12 @@ def targets_of(record: dict[str, Any], base: Path) -> list[Target]:
     first = entries[0]
     shipped: dict[str, Any] | None = None
     if record.get("status") in ("ok", "needs_attention"):
-        last_turn = entries[-1]["turn"]
-        turn_entries = [entry for entry in entries if entry["turn"] == last_turn]
+        # Every render of the last turn counts, one without a PNG too: the index counts the attempts
+        # that reached the renderer, whatever came out. Only the selected one must have a PNG.
+        last_turn = every[-1]["turn"]
+        turn_entries = [entry for entry in every if entry["turn"] == last_turn]
         index = shipped_render_index(record)
-        if index is not None and 1 <= index <= len(turn_entries):
+        if index is not None and 1 <= index <= len(turn_entries) and turn_entries[index - 1].get("png"):
             shipped = turn_entries[index - 1]
     if shipped is not None and shipped["turn"] == first_turn and shipped["render"] == first["render"]:
         return [target(first, "both")]
@@ -296,7 +299,16 @@ class Scorer:
                 {"role": "assistant", "content": response.content},
                 {"role": "user", "content": _correction(call, last)},
             ]
-        raise ScoreError(last)
+        raise ScoringFailed(last, dict(tokens), time.monotonic() - started)
+
+
+class ScoringFailed(ScoreError):
+    """Two answers without a complete score; carries the billed tokens, so the spend still counts."""
+
+    def __init__(self, message: str, tokens: dict[str, int], latency_s: float) -> None:
+        super().__init__(message)
+        self.tokens = tokens
+        self.latency_s = latency_s
 
 
 def _correction(call: Any, problem: str) -> list[dict[str, Any]]:
@@ -352,6 +364,9 @@ async def score_all(
             item = Scored(target, result, None, cost, latency, tokens)
         except anthropic.RateLimitError as exc:
             return Outcome(results, f"rate limited (429) at render {index}: {str(exc)[:300]}")
+        except ScoringFailed as exc:  # billed calls without a score: priced, so the budget sees them
+            cost = call_cost(scorer.model, scorer.location, exc.tokens)
+            item = Scored(target, None, f"ScoringFailed: {str(exc)[:200]}", cost, exc.latency_s, exc.tokens)
         except Exception as exc:  # one failed call must not end the run; the type and message name it
             item = Scored(target, None, f"{type(exc).__name__}: {str(exc)[:200]}")
         results.append(item)
@@ -415,17 +430,15 @@ def summarize(scored: list[Scored], records: list[dict[str, Any]], model: str) -
         if final and final.result and record.get("passed") and not record.get("advisory") and final.result.score < 80:
             clean_low.append({"run": run, "score": final.result.score, "defects": final.result.defects[:3]})
     ladder = {}
+    # Runs with both scores only: a failed scoring call stays in `score_errors`, never in the ladder.
+    both = [
+        (runs["first"].result.score, runs["shipped"].result.score)
+        for runs in by_run.values()
+        if "first" in runs and "shipped" in runs and runs["first"].result and runs["shipped"].result
+    ]
     for bar in THRESHOLDS:
-        both = [runs for runs in by_run.values() if "first" in runs and "shipped" in runs]
-        first_hit = sum(1 for runs in both if runs["first"].result and runs["first"].result.score >= bar)
-        repair_hit = sum(
-            1
-            for runs in both
-            if runs["first"].result
-            and runs["first"].result.score < bar
-            and runs["shipped"].result
-            and runs["shipped"].result.score >= bar
-        )
+        first_hit = sum(1 for first, _ in both if first >= bar)
+        repair_hit = sum(1 for first, shipped in both if first < bar <= shipped)
         ladder[str(bar)] = {
             "runs": len(both),
             "first_try": first_hit,
@@ -530,9 +543,22 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
         help=f"scoring calls started per minute (default {DEFAULT_CALLS_PER_MINUTE:g})",
     )
     parser.add_argument("--budget-usd", type=float, help="stop before the list-price spend could pass this")
-    parser.add_argument("--sample", type=int, help="score this many runs, spread evenly over the report's runs")
+    parser.add_argument(
+        "--sample", type=positive_int, help="score this many runs (1 or more), spread evenly over the report's runs"
+    )
     parser.add_argument("--estimate-only", action="store_true", help="print the job count and cost estimate, then stop")
     return parser.parse_args(argv)
+
+
+def positive_int(value: str) -> int:
+    """An argparse type: a whole number of at least 1 (`--sample 0` would otherwise read as no sample)."""
+    try:
+        number = int(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"expected a whole number, got {value!r}") from None
+    if number < 1:
+        raise argparse.ArgumentTypeError("must be at least 1")
+    return number
 
 
 def spread(items: list[Any], count: int) -> list[Any]:
@@ -556,7 +582,7 @@ def main(argv: list[str] | None = None) -> int:
     if not records:
         print("the report holds no run with attempt_renders; run the matrix with --keep-attempts", file=sys.stderr)
         return 2
-    if args.sample:
+    if args.sample is not None:
         records = spread(records, args.sample)
     cases = {case.case_id: case for case in load_cases()}
     jobs: list[tuple[Target, ScoreRequest]] = []

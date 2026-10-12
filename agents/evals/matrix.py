@@ -223,7 +223,7 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser.add_argument(
         "--keep-attempts",
         action="store_true",
-        help="also keep every attempt's PNG, code and data under attempts/ (for agents.evals.score)",
+        help="also keep every attempt's PNG, code and data under attempts-<start>/ (for agents.evals.score)",
     )
     parser.add_argument("--cases", default="smoke", help="smoke, full, stress, or comma-separated globs over case ids")
     parser.add_argument(
@@ -1288,8 +1288,9 @@ async def run_matrix(
     recorder: AttemptRecorder | None = None
     if config.keep_attempts:
         # Before the first render: the backend property builds its SerialRenderer from the factory once,
-        # and a token renewal builds the next backend from the same (wrapped) factory.
-        recorder = AttemptRecorder(config.out / "attempts")
+        # and a token renewal builds the next backend from the same (wrapped) factory. One directory per
+        # run, so a second run into the same --out never overwrites what an earlier report points to.
+        recorder = AttemptRecorder(config.out / f"attempts-{datetime.now(UTC):%Y%m%dT%H%M%S}")
         inner_factory = services.backend_factory
         services.backend_factory = lambda: recorder.wrap(inner_factory())
     set_services(services)

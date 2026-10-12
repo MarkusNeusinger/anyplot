@@ -441,7 +441,7 @@ The owner's quality ladder (2026-10-12) lets a result ship only once it reaches 
 
 The scorer judges the 16 criteria a user sees, 75 points scaled to 100: Visual Quality (30), Design Excellence (20), Spec Compliance (15), and DQ-01 and DQ-03 of Data Quality (10). It leaves out DQ-02 (the realism of the scenario: the data is the user's own), Code Quality (the catalogue's code style, inherited through the edits) and Library Mastery (a catalogue showcase). The model gives points per criterion and defect lines; the code adds up and applies the rubric's caps. Design Excellence starts at the rubric's defaults (8 of 20), so a defect-free plot in the plain house style scores 84: a threshold of 90 asks for design beyond the style guide's baseline.
 
-1. Run the matrix with `--keep-attempts`. The harness then also keeps every render a turn sends to the renderer, with its code and data, under `attempts/` in the output directory, and lists them per run as `attempt_renders`:
+1. Run the matrix with `--keep-attempts`. The harness then also keeps every render a turn sends to the renderer, with its code and data, under `attempts-<UTC start time>/` in the output directory (one directory per run, so a second run never overwrites what an earlier report points to), and lists them per run as `attempt_renders`:
 
    ```bash
    uv run --extra agents python -m agents.evals.matrix --cases full --keep-attempts --no-baseline \
