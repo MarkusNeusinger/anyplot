@@ -729,6 +729,14 @@ def agent_kind(name: Any) -> str:
     return "adapter" if text.startswith("adapter_") else text
 
 
+def kind_model(name: Any, settings: "AgentSettings") -> str:
+    """The model a logged agent ran on: its kind's model (`models.model_for`), else `AGENT_MODEL`."""
+    from agents.anyplot.models import MODEL_KINDS, model_for
+
+    kind = agent_kind(name)
+    return model_for(kind, settings) if kind in MODEL_KINDS else settings.model
+
+
 def _any_index(rule: str) -> str:
     """A logged schema rule (`defects.3.observed:string_too_long`) with its list indices written `*`."""
     location, _, kind = rule.rpartition(":")
@@ -809,7 +817,8 @@ def book_attribution(record: dict[str, Any], lines: list[dict[str, Any]], settin
                 tokens[kind] += _int(line.get(kind))
             if line.get("model_version"):
                 versions.add(str(line["model_version"]))
-            record["cost_usd"] += call_cost(settings.model, settings.location, line)
+            # Priced at the model its agent kind ran on (an experiment may give the adapter another one).
+            record["cost_usd"] += call_cost(kind_model(line.get("agent"), settings), settings.location, line)
             reason = finish_reason(line.get("finish_reason"))
             finishes.setdefault(agent_kind(line.get("agent")), Counter())[reason] += 1
             record["calls"].append(
@@ -1187,7 +1196,7 @@ def build_stamp(
     settings hold, so a Gemini report never claims Claude thinking it did not use.
     """
     from agents import main as service
-    from agents.anyplot.models import thinking_budget
+    from agents.anyplot.models import MODEL_KINDS, model_for, thinking_budget
 
     return {
         "run_id": hashlib.sha256(f"{started.isoformat()}-{secrets.token_hex(8)}".encode()).hexdigest()[:12],
@@ -1195,7 +1204,9 @@ def build_stamp(
         "started_at": started.isoformat(timespec="seconds"),
         "finished_at": None,
         "provider": settings.provider,
+        "transport": settings.transport,
         "model": settings.model,
+        "models_by_kind": {kind: model_for(kind, settings) for kind in ("root", "adapter", "reviewer")},
         "judge_model": settings.judge_model,
         "location": settings.location,
         "max_attempts": settings.max_attempts,
@@ -1210,7 +1221,9 @@ def build_stamp(
         "prompt_hashes": service._prompt_hashes(),
         "prices_usd_per_mtok": {
             model: {"input": price_of(model).input, "output": price_of(model).output}
-            for model in sorted({settings.model, settings.judge_model})
+            for model in sorted(
+                {settings.model, settings.judge_model, *(model_for(kind, settings) for kind in MODEL_KINDS)}
+            )
         },
         "location_surcharge": LOCATION_SURCHARGE.get(settings.location, 0.0),
         "cases": config.cases,
@@ -1474,6 +1487,11 @@ def main(argv: list[str] | None = None) -> int:
         f"{stamp_model}: {summary['passed']} of {summary['runs']} runs passed"
         + (f" ({rate * 100:.1f} %)" if rate is not None else "")
         + f", ${summary['cost_total_usd']:.4f} at list price"
+        + (
+            " (claude-cli: an equivalent, not spent, except the root's Vertex AI calls)"
+            if settings.transport == "claude-cli"
+            else ""
+        )
     )
     if result.diff is not None:
         print(diff_markdown(result.diff))

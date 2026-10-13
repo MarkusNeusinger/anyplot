@@ -1,5 +1,6 @@
 """Tests for agents/evals/ladder_lab.py: the pure helpers; no CLI, no model, no renderer."""
 
+import asyncio
 import json
 from pathlib import Path
 
@@ -22,37 +23,26 @@ def test_seed_cases_are_twenty_existing_fixtures() -> None:
     assert all((CASES_DIR / case).is_dir() for case in cases)
 
 
-def test_result_of_reads_the_structured_output_of_the_result_event() -> None:
-    stdout = "\n".join(
+def test_ask_sends_the_image_before_the_text_and_retries_a_failed_call(monkeypatch: pytest.MonkeyPatch) -> None:
+    from agents.anyplot.cli_transport import ClaudeCliClient
+
+    seen: list[list[str]] = []
+    answers = iter(
         [
-            json.dumps({"type": "system", "subtype": "init"}),
-            "not json",
+            json.dumps({"type": "result", "is_error": True, "result": "limit"}),
             json.dumps({"type": "result", "is_error": False, "structured_output": {"ok": True}}),
         ]
     )
-    assert ladder_lab.result_of(stdout) == {"ok": True}
 
+    async def runner(argv: list[str], stdin: bytes, cwd: str) -> str:
+        content = json.loads(stdin)["message"]["content"]
+        seen.append([block["type"] for block in content])
+        return next(answers)
 
-@pytest.mark.parametrize(
-    "stdout",
-    [
-        "",
-        json.dumps({"type": "result", "is_error": True, "result": "Not logged in"}),
-        json.dumps({"type": "result", "is_error": False, "result": "plain text"}),
-    ],
-)
-def test_result_of_refuses_errors_and_answers_without_structure(stdout: str) -> None:
-    with pytest.raises(ladder_lab.LabError):
-        ladder_lab.result_of(stdout)
-
-
-def test_stream_message_puts_the_image_before_the_text() -> None:
-    message = json.loads(ladder_lab.stream_message("look", b"\x89PNG fake"))
-    content = message["message"]["content"]
-    assert [part["type"] for part in content] == ["image", "text"]
-    assert json.loads(ladder_lab.stream_message("look", None))["message"]["content"] == [
-        {"type": "text", "text": "look"}
-    ]
+    monkeypatch.setattr(ladder_lab, "_CLIENT", [ClaudeCliClient(runner=runner, executable="claude")])
+    answer = asyncio.run(ladder_lab.ask("haiku", "SYSTEM", "look", {"type": "object"}, role="reviewer", png=b"png"))
+    assert answer == {"ok": True}
+    assert seen == [["image", "text"], ["image", "text"]]
 
 
 def test_score_plan_parses_counts_and_refuses_unknown_models() -> None:

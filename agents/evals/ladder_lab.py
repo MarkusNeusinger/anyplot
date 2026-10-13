@@ -40,10 +40,8 @@ import asyncio
 import json
 import os
 import secrets
-import shutil
 import statistics
 import sys
-import tempfile
 from collections import Counter
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -79,7 +77,8 @@ REFERENCE = "opus"
 SEED_TRIES = 3
 REPAIR_TRIES = 2
 LLM_CONCURRENCY = 3
-CALL_TIMEOUT_S = 600
+MAX_TOKENS = 16_000
+"""Passed for the SDK's shape; the CLI decides its own output length."""
 CALL_RETRIES = 2
 ADVISOR_MAX_STEPS = 8
 
@@ -171,38 +170,6 @@ def log_call(role: str, model: str, effort: str, seconds: float, ok: bool) -> No
         handle.write(json.dumps(entry) + "\n")
 
 
-def stream_message(text: str, png: bytes | None) -> str:
-    """The CLI's stream-json input: one user message with the PNG (if any) before the text."""
-    from agents.evals.score import image_block
-
-    content: list[dict[str, Any]] = [image_block(png)] if png is not None else []
-    content.append({"type": "text", "text": text})
-    return json.dumps({"type": "user", "message": {"role": "user", "content": content}}) + "\n"
-
-
-def result_of(stdout: str) -> dict[str, Any]:
-    """The structured output of the CLI's `result` event; raises `LabError` when there is none."""
-    result: dict[str, Any] | None = None
-    for line in stdout.splitlines():
-        line = line.strip()
-        if not line.startswith("{"):
-            continue
-        try:
-            event = json.loads(line)
-        except ValueError:
-            continue
-        if isinstance(event, dict) and event.get("type") == "result":
-            result = event
-    if result is None:
-        raise LabError("the CLI wrote no result event")
-    if result.get("is_error"):
-        raise LabError(f"the CLI reported an error: {str(result.get('result'))[:300]}")
-    output = result.get("structured_output")
-    if not isinstance(output, dict):
-        raise LabError("the result carries no structured output")
-    return output
-
-
 async def ask(
     model: str,
     system: str,
@@ -213,64 +180,52 @@ async def ask(
     png: bytes | None = None,
     effort: str | None = None,
 ) -> dict[str, Any]:
-    """One model call through `claude -p`: no tools, no settings, the system prompt replaced."""
-    claude = shutil.which("claude")
-    if claude is None:
-        raise LabError("the `claude` CLI is not on PATH")
+    """One structured model call through the `claude-cli` transport (`agents.anyplot.cli_transport`)."""
+    from agents.anyplot.cli_transport import CliTransportError
+
     effort = effort or EFFORT[role]
     loop = asyncio.get_running_loop()
+    content = [*([image_block(png)] if png is not None else []), {"type": "text", "text": text}]
     last: Exception | None = None
-    with tempfile.TemporaryDirectory(prefix="ladder-lab-") as scratch:
-        system_file = Path(scratch) / "system.md"
-        system_file.write_text(system, encoding="utf-8")
-        command = [
-            claude,
-            "-p",
-            "--verbose",
-            "--model",
-            MODELS[model],
-            "--effort",
-            effort,
-            "--system-prompt-file",
-            str(system_file),
-            "--tools",
-            "",
-            "--setting-sources",
-            "",
-            "--json-schema",
-            json.dumps(schema),
-            "--input-format",
-            "stream-json",
-            "--output-format",
-            "stream-json",
-        ]
-        message = stream_message(text, png).encode("utf-8")
-        for _ in range(CALL_RETRIES + 1):
-            started = loop.time()
-            process = await asyncio.create_subprocess_exec(
-                *command,
-                cwd=scratch,  # outside the checkout, so no project instructions load
-                stdin=asyncio.subprocess.PIPE,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
+    for _ in range(CALL_RETRIES + 1):
+        started = loop.time()
+        try:
+            message = await cli().messages.create(
+                model=MODELS[model],
+                max_tokens=MAX_TOKENS,
+                system=system,
+                messages=[{"role": "user", "content": content}],
+                output_config={"effort": effort, "format": {"type": "json_schema", "schema": schema}},
             )
-            try:
-                stdout, _ = await asyncio.wait_for(process.communicate(message), CALL_TIMEOUT_S)
-            except TimeoutError:
-                process.kill()
-                await process.wait()
-                log_call(role, model, effort, loop.time() - started, ok=False)
-                last = LabError(f"{role} call on {model} timed out")
-                continue
-            try:
-                output = result_of(stdout.decode("utf-8", "replace"))
-            except LabError as exc:
-                log_call(role, model, effort, loop.time() - started, ok=False)
-                last = exc
-                continue
-            log_call(role, model, effort, loop.time() - started, ok=True)
-            return output
+            output = json.loads("".join(block.text for block in message.content if block.type == "text"))
+        except (CliTransportError, ValueError) as exc:
+            log_call(role, model, effort, loop.time() - started, ok=False)
+            last = exc
+            continue
+        log_call(role, model, effort, loop.time() - started, ok=True)
+        if not isinstance(output, dict):
+            last = LabError("the answer is not a JSON object")
+            continue
+        return output
     raise LabError(f"{role} call on {model} failed: {last}")
+
+
+_CLIENT: list[Any] = []
+
+
+def cli() -> Any:
+    """The lab's one CLI client, without a fallback: a call the CLI cannot answer must fail."""
+    from agents.anyplot.cli_transport import ClaudeCliClient
+
+    if not _CLIENT:
+        _CLIENT.append(ClaudeCliClient(concurrency=LLM_CONCURRENCY))
+    return _CLIENT[0]
+
+
+def image_block(png: bytes) -> dict[str, Any]:
+    from agents.evals.score import image_block as block
+
+    return block(png)
 
 
 # --- Seeds: one case set up like a session ------------------------------------------------------

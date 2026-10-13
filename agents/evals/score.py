@@ -59,6 +59,9 @@ DEFAULT_LOCATION = "eu"
 DEFAULT_EFFORT = "high"
 DEFAULT_CALLS_PER_MINUTE = 2.0
 """One scoring call carries about 25,000 input tokens; a new model's default per-minute quota can be small."""
+CLI_CALLS_PER_MINUTE = 30.0
+"""On the claude-cli transport the subscription's limits apply, not a Vertex AI quota; the CLI client
+runs at most `cli_transport.DEFAULT_CONCURRENCY` calls at once."""
 MAX_TOKENS = 16_000
 MAX_IMAGE_BYTES = 3_500_000
 """A PNG above this is re-encoded smaller; the API refuses images above 5 MB."""
@@ -538,10 +541,16 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser.add_argument("--location", default=DEFAULT_LOCATION, help=f"Vertex AI location (default {DEFAULT_LOCATION})")
     parser.add_argument("--effort", default=DEFAULT_EFFORT, help=f"output effort (default {DEFAULT_EFFORT})")
     parser.add_argument(
+        "--transport",
+        choices=("vertex", "claude-cli"),
+        default="vertex",
+        help="vertex (default), or claude-cli: score through the local Claude Code CLI on your subscription",
+    )
+    parser.add_argument(
         "--calls-per-minute",
         type=float,
-        default=DEFAULT_CALLS_PER_MINUTE,
-        help=f"scoring calls started per minute (default {DEFAULT_CALLS_PER_MINUTE:g})",
+        help=f"scoring calls started per minute (default {DEFAULT_CALLS_PER_MINUTE:g} on Vertex AI, "
+        f"{CLI_CALLS_PER_MINUTE:g} on the CLI)",
     )
     parser.add_argument("--budget-usd", type=float, help="stop before the list-price spend could pass this")
     parser.add_argument(
@@ -597,13 +606,21 @@ def main(argv: list[str] | None = None) -> int:
     print(f"{len(jobs)} renders of {len(records)} runs; estimated ${estimate:.2f} at list price on {args.model}")
     if args.estimate_only:
         return 0
-    scorer = Scorer(args.model, args.location, args.effort)
+    client = None
+    calls_per_minute = args.calls_per_minute or DEFAULT_CALLS_PER_MINUTE
+    if args.transport == "claude-cli":
+        from agents.anyplot.cli_transport import ClaudeCliClient
+
+        # No fallback: a scoring call the CLI cannot answer must fail, never reach Vertex AI.
+        client = ClaudeCliClient()
+        calls_per_minute = args.calls_per_minute or CLI_CALLS_PER_MINUTE
+    scorer = Scorer(args.model, args.location, args.effort, client=client)
     try:
         asyncio.run(scorer.probe())
     except SetupError as exc:
         print(f"setup: {exc}", file=sys.stderr)
         return 2
-    outcome = asyncio.run(score_all(scorer, jobs, calls_per_minute=args.calls_per_minute, budget_usd=args.budget_usd))
+    outcome = asyncio.run(score_all(scorer, jobs, calls_per_minute=calls_per_minute, budget_usd=args.budget_usd))
     scored = outcome.scored
     summary = summarize(scored, records, args.model)
     summary["stopped"] = outcome.stopped

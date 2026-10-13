@@ -78,6 +78,7 @@ import re
 from collections.abc import AsyncGenerator, Awaitable, Callable, Sequence
 from dataclasses import dataclass
 from functools import cached_property
+from pathlib import Path
 from typing import Any, Literal, Protocol
 
 from anthropic import transform_schema
@@ -90,7 +91,7 @@ from google.genai import types
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 from .data.transcribe import TranscribedTable
-from .settings import AgentSettings, get_settings
+from .settings import CLI_JUDGE_TIMEOUT_S, AgentSettings, get_settings
 
 
 ModelKind = Literal["root", "adapter", "reviewer"]
@@ -262,10 +263,15 @@ class VertexClaude(Claude):
 
     vertex_project: str
     vertex_region: str
+    transport_client: Any = None
+    """The `claude-cli` transport's client, used instead of Vertex AI's (ADK's `client` field
+    accepts only the SDK's own client classes)."""
 
     @cached_property
     def _anthropic_client(self) -> Any:
         """The Vertex AI client for the configured project and location, built on first use."""
+        if self.transport_client is not None:
+            return self.transport_client
         if self.client is not None:
             return self.client
         from anthropic import AsyncAnthropicVertex
@@ -340,17 +346,47 @@ def thinking_budget(kind: ModelKind, settings: AgentSettings | None = None) -> i
     return budgets.get(kind, 0)
 
 
+_CLI_CLIENTS: dict[tuple[str, str, int, str | None], Any] = {}
+
+
+def cli_client(settings: AgentSettings | None = None, *, fallback: bool = True) -> Any:
+    """The shared `claude-cli` client (one per configuration, so its concurrency gate is shared).
+
+    With `fallback`, a call the CLI cannot answer (the root's chat with tools) goes to Claude on
+    Vertex AI for the configured project and location; without it, such a call raises.
+    """
+    from .cli_transport import ClaudeCliClient
+
+    settings = settings or get_settings()
+    key = (settings.project if fallback else "", settings.location, settings.cli_concurrency, settings.cli_call_log)
+    client = _CLI_CLIENTS.get(key)
+    if client is None:
+        vertex = make_anthropic_client(settings.project, settings.location, max_retries=2) if fallback else None
+        log = Path(settings.cli_call_log) if settings.cli_call_log else None
+        client = ClaudeCliClient(fallback=vertex, concurrency=settings.cli_concurrency, call_log=log)
+        _CLI_CLIENTS[key] = client
+    return client
+
+
+def model_for(kind: ModelKind, settings: AgentSettings | None = None) -> str:
+    """The model id of one agent kind: `AGENT_MODEL`, or an experiment's per-kind model on `claude-cli`."""
+    settings = settings or get_settings()
+    per_kind = {"adapter": settings.adapter_model, "reviewer": settings.reviewer_model}.get(kind)
+    return per_kind or settings.model
+
+
 def make_model(kind: ModelKind, settings: AgentSettings | None = None) -> BaseLlm:
-    """The ADK model of one agent kind for the configured provider."""
+    """The ADK model of one agent kind for the configured provider (and transport)."""
     settings = settings or get_settings()
     if kind not in MODEL_KINDS:
         raise ValueError(f"unknown model kind {kind!r}")
     if settings.provider == "anthropic-vertex":
         return VertexClaude(
-            model=settings.model,
+            model=model_for(kind, settings),
             max_tokens=MAX_OUTPUT_TOKENS[kind] + thinking_budget(kind, settings),
             vertex_project=settings.project,
             vertex_region=settings.location,
+            transport_client=cli_client(settings) if settings.transport == "claude-cli" else None,
         )
     return Gemini(
         model=settings.model,
@@ -525,9 +561,14 @@ class AnthropicJudge:
     project: str
     region: str
     timeout_s: float
+    client: Any = None
+    """A client to use instead of Vertex AI's (the `claude-cli` transport)."""
+    transcribe_timeout_s: float = TRANSCRIBE_TIMEOUT_S
 
     @cached_property
     def _client(self) -> Any:
+        if self.client is not None:
+            return self.client
         from anthropic import AsyncAnthropicVertex
 
         return AsyncAnthropicVertex(project_id=self.project, region=self.region, max_retries=0)
@@ -579,7 +620,7 @@ class AnthropicJudge:
         return await _within_budget(self._attempt, text, rubric, self.timeout_s)
 
     async def transcribe(self, text: str, rubric: str) -> Transcription:
-        return await _within_budget(self._attempt_transcribe, text, rubric, TRANSCRIBE_TIMEOUT_S)
+        return await _within_budget(self._attempt_transcribe, text, rubric, self.transcribe_timeout_s)
 
 
 @dataclass
@@ -701,6 +742,16 @@ def make_judge_client(settings: AgentSettings | None = None) -> JudgeClient:
     """The judge for the configured provider, on `AGENT_JUDGE_MODEL` at `AGENT_LOCATION`."""
     settings = settings or get_settings()
     if settings.provider == "anthropic-vertex":
+        if settings.transport == "claude-cli":
+            # A CLI call starts a process, so the live 4 s budget would fail every verdict closed.
+            return AnthropicJudge(
+                model=settings.judge_model,
+                project=settings.project,
+                region=settings.location,
+                timeout_s=max(settings.judge_timeout_s, CLI_JUDGE_TIMEOUT_S),
+                client=cli_client(settings),
+                transcribe_timeout_s=max(TRANSCRIBE_TIMEOUT_S, CLI_JUDGE_TIMEOUT_S),
+            )
         return AnthropicJudge(
             model=settings.judge_model,
             project=settings.project,
