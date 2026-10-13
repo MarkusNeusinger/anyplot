@@ -11,6 +11,10 @@ another provider, model or location.
 | `AGENT_PROVIDER` | `anthropic-vertex` | Model family of every agent and the scope judge: `anthropic-vertex` (Claude on Vertex AI) or `gemini` |
 | `AGENT_MODEL` | `claude-haiku-5-5` | Model of every agent; an exact id that matches the provider (`gemini-...`, or a model in `CLAUDE_MODELS`) |
 | `AGENT_JUDGE_MODEL` | `claude-haiku-5-5` | Model of the scope and dataset judge; same rule |
+| `AGENT_TRANSPORT` | `vertex` | How Claude calls travel: `vertex` (live) or `claude-cli` (development and test only: the local Claude Code CLI on your subscription; calls it cannot answer, the root's, go to Vertex AI; `cli_transport.py`) |
+| `AGENT_ADAPTER_MODEL`, `AGENT_REVIEWER_MODEL` | unset | `claude-cli` only: the adapter's or the reviewer's model for an experiment, any of `cli_transport.CLI_MODELS` |
+| `AGENT_CLI_CONCURRENCY` | `3` | `claude-cli` only: CLI calls at the same time |
+| `AGENT_CLI_CALL_LOG` | unset | `claude-cli` only: a file each CLI call appends one JSON line to (model, effort, seconds, ok) |
 | `AGENT_LOCATION` | `eu` | Vertex AI location of every model call: `eu`, `us` or `global` |
 | `AGENT_PROJECT`, else `GOOGLE_CLOUD_PROJECT` | `anyplot` | Google Cloud project that serves (and bills) the model calls |
 | `AGENT_LIBRARIES` | `matplotlib,seaborn` | Enabled libraries; each needs a phase-1 runtime (`matplotlib`, `seaborn`) |
@@ -65,6 +69,7 @@ from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 from core.constants import SUPPORTED_LIBRARIES
 
+from .cli_transport import CLI_MODELS
 from .code.normalise import SUPPORTED_LIBRARIES as RUNTIME_LIBRARIES
 from .schemas import MAX_ATTEMPTS
 
@@ -79,6 +84,15 @@ neither Gemini 3.x Flash nor the eu Claude quota, so it is refused rather than t
 
 Provider = Literal["anthropic-vertex", "gemini"]
 """Model families: Claude through Vertex AI's Anthropic endpoint, or Gemini through Vertex AI."""
+
+Transport = Literal["vertex", "claude-cli"]
+"""How Claude calls travel: Vertex AI (live), or the local Claude Code CLI for experiments."""
+
+TRANSPORT_ENVIRONMENTS = frozenset({"development", "test"})
+"""Where `AGENT_TRANSPORT=claude-cli` is allowed: never on a deployed service."""
+
+CLI_JUDGE_TIMEOUT_S = 90.0
+"""The judge's budget on the CLI, which starts a process per call: the live 4 s would fail closed."""
 
 Renderer = Literal["sandbox", "local", "fake", "remote"]
 """Render backends: `remote` (the anyplot-renderer service, phase 1), `sandbox` (Cloud
@@ -134,6 +148,22 @@ class AgentSettings(BaseSettings):
 
     judge_model: str = "claude-haiku-5-5"
     """Model of the scope and dataset judge (`AGENT_JUDGE_MODEL`)."""
+
+    transport: Transport = "vertex"
+    """How Claude calls travel (`AGENT_TRANSPORT`): `vertex` (live), or `claude-cli` (development
+    and test only: the local Claude Code CLI on the developer's subscription, `cli_transport.py`)."""
+
+    adapter_model: str | None = None
+    """Experiments: the adapter's model (`AGENT_ADAPTER_MODEL`); on `claude-cli` any of `CLI_MODELS`."""
+
+    reviewer_model: str | None = None
+    """Experiments: the reviewer's model (`AGENT_REVIEWER_MODEL`); on `claude-cli` any of `CLI_MODELS`."""
+
+    cli_concurrency: PositiveInt = 3
+    """`claude-cli` only: CLI calls at the same time (`AGENT_CLI_CONCURRENCY`)."""
+
+    cli_call_log: str | None = None
+    """`claude-cli` only: a file each CLI call appends one JSON line to (`AGENT_CLI_CALL_LOG`)."""
 
     location: Location = "eu"
     """Vertex AI location of every model call (`AGENT_LOCATION`): `eu`, `us` or `global`."""
@@ -358,6 +388,27 @@ class AgentSettings(BaseSettings):
     def _consistent(self) -> Self:
         """Cross-field rules: provider and model ids agree, development-only features stay there."""
         prefix = MODEL_PREFIXES[self.provider]
+        cli = self.transport == "claude-cli"
+        if cli and self.environment not in TRANSPORT_ENVIRONMENTS:
+            raise ValueError(
+                f"AGENT_TRANSPORT=claude-cli is allowed only when ENVIRONMENT is development or test, "
+                f"not {self.environment!r}"
+            )
+        if cli and self.provider != "anthropic-vertex":
+            raise ValueError(
+                "AGENT_TRANSPORT=claude-cli carries Claude calls; it needs AGENT_PROVIDER=anthropic-vertex"
+            )
+        per_kind = (("AGENT_ADAPTER_MODEL", self.adapter_model), ("AGENT_REVIEWER_MODEL", self.reviewer_model))
+        if not cli and any(value for _, value in per_kind):
+            raise ValueError(
+                "AGENT_ADAPTER_MODEL and AGENT_REVIEWER_MODEL are experiment settings for "
+                "AGENT_TRANSPORT=claude-cli; on Vertex AI every kind runs AGENT_MODEL"
+            )
+        for name, value in per_kind:
+            if value is not None and value not in CLI_MODELS:
+                raise ValueError(
+                    f"{name}={value!r} is not a model of the claude-cli transport ({', '.join(CLI_MODELS)})"
+                )
         for name, value in (("AGENT_MODEL", self.model), ("AGENT_JUDGE_MODEL", self.judge_model)):
             if not value.startswith(prefix):
                 raise ValueError(

@@ -39,6 +39,7 @@ The model is **Claude Haiku 5.5 on Vertex AI** (`claude-haiku-5-5`) by default. 
 | `anyplot/data/`, `anyplot/code/` | The deterministic data and code layers, without ADK |
 | `evals/matrix.py` | The regression harness: runs eval cases through `/v1` in process and writes the report, the Markdown summary, the diff against a baseline and the review galleries |
 | `evals/score.py`, `anyplot/scoring.py`, `anyplot/prompts/scorer.md` | Scores a harness run's renders with the catalogue rubric on Claude Opus: the measurement behind the quality ladder ([Score the renders with the catalogue rubric](#score-the-renders-with-the-catalogue-rubric)) |
+| `anyplot/cli_transport.py`, `scripts/agents-experiment.sh` | The `claude-cli` transport and the experiment runner: the live code with its Claude calls on your subscription ([Run an experiment on your Claude subscription](#run-an-experiment-on-your-claude-subscription)) |
 | `evals/ladder_lab.py` | Compares reviewers, feedback forms and repairers on the same seed renders through the local Claude Code CLI ([Compare reviewers, feedback forms and repairers](#compare-reviewers-feedback-forms-and-repairers-ladder-lab)) |
 | `evals/make_fixtures.py` | The seeded generator of the 120 synthetic spike-X cases |
 | `evals/make_stress.py`, `evals/stress.py` | The seeded generator of the 23 stress cases, and the model-free static stage that `--static` runs over them ([Run the stress cases](#run-the-stress-cases)) |
@@ -68,6 +69,9 @@ Three rules hold for everything here:
 | `AGENT_PROVIDER` | `anthropic-vertex` | `anthropic-vertex` (Claude on Vertex AI) or `gemini` |
 | `AGENT_MODEL` | `claude-haiku-5-5` | Model of every agent; a `gemini-` id, or for `anthropic-vertex` a model in `CLAUDE_MODELS` (accepts disabled thinking) |
 | `AGENT_JUDGE_MODEL` | `claude-haiku-5-5` | Model of the scope and dataset judge; same rule |
+| `AGENT_TRANSPORT` | `vertex` | `vertex`, or `claude-cli` for experiments (development and test only; see [Run an experiment on your Claude subscription](#run-an-experiment-on-your-claude-subscription)) |
+| `AGENT_ADAPTER_MODEL`, `AGENT_REVIEWER_MODEL` | unset | `claude-cli` only: another model for the adapter or the reviewer |
+| `AGENT_CLI_CONCURRENCY`, `AGENT_CLI_CALL_LOG` | `3`, unset | `claude-cli` only: CLI calls at the same time; a file that gets one JSON line per call |
 | `AGENT_LOCATION` | `eu` | Vertex AI location: `eu`, `us` or `global` |
 | `AGENT_PROJECT`, else `GOOGLE_CLOUD_PROJECT` | `anyplot` | Project that serves and bills the model calls |
 | `AGENT_LIBRARIES` | `matplotlib,seaborn` | Enabled libraries; each needs a phase-1 runtime (`matplotlib`, `seaborn`), others are refused at startup |
@@ -469,11 +473,32 @@ The scorer judges the 16 criteria a user sees, 75 points scaled to 100: Visual Q
 - No render lost a point for keeping the user's column names as axis titles (VQ-06, SC-04).
 - Cost: an agent run costs a median of $0.008 and takes about 35 s; scoring one render with Opus costs about $0.09 at list price and takes 16 to 19 s. The whole measurement, both harness runs and 32 scoring calls, cost about $3.
 
+### Run an experiment on your Claude subscription
+
+An experiment changes an agent (a prompt, a pipeline step, a model per agent) and measures the result on the live code. With `AGENT_TRANSPORT=claude-cli` (development and test only) the agents' Claude calls run through the local Claude Code CLI on your own subscription instead of Vertex AI. Everything else stays the live code: the same ADK agents, prompts, schemas, plugins, pipeline, validator, the deployed renderer and the gates. `anyplot/cli_transport.py` replaces only the transport, below ADK: its client answers `messages.create` with the Anthropic SDK's arguments and returns the SDK's `Message`.
+
+- The CLI answers the structured calls: the adapter, the reviewer, the scope and dataset judge, the transcriber, and the offline scorer's single tool. The root (chat with tools and tool results) goes to Claude Haiku on Vertex AI, about $0.002 a run.
+- `AGENT_ADAPTER_MODEL` and `AGENT_REVIEWER_MODEL` pick another model per agent (Haiku, Sonnet or Opus 5.5) for an experiment; the live service refuses both.
+- The known difference to the live calls is thinking: the CLI thinks at the request's effort by its own rules, while the live calls set a thinking budget (or none for the reviewer). The judge's budget rises to 90 s, because each CLI call starts a process.
+- Token counts are real, so budgets and reports work; their dollar figures are list-price equivalents, not money spent.
+
+1. Log in to the CLI with your subscription (`claude`, then `/login`), and to gcloud for the renderer's ID token.
+2. Check out the code to test (a branch with the changed agent) and run the experiment, which runs the regression harness and then scores the first and shipped render of each run with the catalogue rubric on Opus, also through the CLI:
+
+   ```bash
+   AGENT_ADAPTER_MODEL=claude-sonnet-5-5 scripts/agents-experiment.sh sonnet-adapter --cases smoke
+   ```
+
+   Matrix options pass through (`--cases`, `--repeats`, `--max-attempts`). Results land in `~/.cache/anyplot-dev/experiments/<name>/` (`ANYPLOT_DEV_EXPERIMENTS`), outside the checkout: the harness report and gallery, every attempt's render, `*-scores.md`, and `cli-calls.jsonl` with one line per CLI call.
+3. Compare the experiment's `*-scores.md` with a baseline experiment run the same way on `main`, then confirm the winner with the same harness on Vertex AI (without `AGENT_TRANSPORT`).
+
+`evals/score.py --transport claude-cli` scores any harness report through the CLI on its own.
+
 ### Compare reviewers, feedback forms and repairers (ladder lab)
 
 The first measurement could not say why repair 1 gains nothing, because the Haiku reviewer and the Haiku repairer were measured together. `evals/ladder_lab.py` takes them apart on the same seed renders: the ruler (how far the Opus scorer moves on the same render, and how far Sonnet and Haiku are from it), detection (which rubric deductions each model and today's production reviewer name), and execution (with the findings held fixed, which repairer and which feedback form lifts the score). The arms are `today` (today's reviewer lines, Haiku repairs), `lines-haiku`, `lines-sonnet` and `lines-opus` (the reference findings as defect lines), `suggest-haiku` (the lines plus the scorer's suggestions), and `advisor-sonnet-haiku` and `advisor-opus-haiku` (an advisor sees image, code and findings and writes a concrete plan that Haiku applies).
 
-Every model call goes through the local Claude Code CLI (`claude -p` with the agent's own prompts and output schemas, no tools), so the lab runs on your Claude subscription and spends no Vertex AI budget; the answers go through the pipeline's own edit applier, validator, loader, the deployed renderer and the host gates. Compare arms with each other here, and confirm the winning arm on Vertex AI afterwards.
+Every model call goes through the `claude-cli` transport (`anyplot/cli_transport.py`, with the agent's own prompts and output schemas), so the lab runs on your Claude subscription and spends no Vertex AI budget; the answers go through the pipeline's own edit applier, validator, loader, the deployed renderer and the host gates. Compare arms with each other here, and confirm the winning arm on Vertex AI afterwards.
 
 1. Log in to the CLI with your subscription (`claude`, then `/login`), and to gcloud for the renderer's ID token.
 2. Run all stages (seed, score, repair, report) into a directory outside the checkout, so the renders outlive the worktree:

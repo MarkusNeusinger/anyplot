@@ -1187,7 +1187,7 @@ def build_stamp(
     settings hold, so a Gemini report never claims Claude thinking it did not use.
     """
     from agents import main as service
-    from agents.anyplot.models import thinking_budget
+    from agents.anyplot.models import model_for, thinking_budget
 
     return {
         "run_id": hashlib.sha256(f"{started.isoformat()}-{secrets.token_hex(8)}".encode()).hexdigest()[:12],
@@ -1195,7 +1195,9 @@ def build_stamp(
         "started_at": started.isoformat(timespec="seconds"),
         "finished_at": None,
         "provider": settings.provider,
+        "transport": settings.transport,
         "model": settings.model,
+        "models_by_kind": {kind: model_for(kind, settings) for kind in ("root", "adapter", "reviewer")},
         "judge_model": settings.judge_model,
         "location": settings.location,
         "max_attempts": settings.max_attempts,
@@ -1474,6 +1476,11 @@ def main(argv: list[str] | None = None) -> int:
         f"{stamp_model}: {summary['passed']} of {summary['runs']} runs passed"
         + (f" ({rate * 100:.1f} %)" if rate is not None else "")
         + f", ${summary['cost_total_usd']:.4f} at list price"
+        + (
+            " (claude-cli: an equivalent, not spent, except the root's Vertex AI calls)"
+            if settings.transport == "claude-cli"
+            else ""
+        )
     )
     if result.diff is not None:
         print(diff_markdown(result.diff))
