@@ -288,6 +288,11 @@ class AgentSettings(BaseSettings):
     """Claude only (`AGENT_REVIEWER_THINKING_BUDGET`): adaptive thinking for the reviewer with that many
     tokens added to its output cap; 0 (the default) keeps its thinking off, as before."""
 
+    root_effort: Effort = "low"
+    """Claude's `effort` for the root (`AGENT_ROOT_EFFORT`): `low` (default), `medium` or `high`. The root
+    chats, prepares and generates data, and starts the plot pipeline; it runs on Vertex AI even on the
+    claude-cli transport, which cannot carry its tool chat."""
+
     adapter_effort: Effort = "medium"
     """Claude's `effort` for the adapter (`AGENT_ADAPTER_EFFORT`): `low`, `medium` (default) or `high`.
     On the claude-cli transport it is also how much the CLI thinks."""

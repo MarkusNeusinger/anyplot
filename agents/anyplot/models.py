@@ -351,13 +351,14 @@ def thinking_budget(kind: ModelKind, settings: AgentSettings | None = None) -> i
 
 
 def effort_for(kind: ModelKind, settings: AgentSettings | None = None) -> ClaudeEffort:
-    """Claude's effort for one agent kind: the root's is fixed, the adapter's and reviewer's are settings."""
+    """Claude's effort for one agent kind (`AGENT_ROOT_EFFORT`, `AGENT_ADAPTER_EFFORT`, `AGENT_REVIEWER_EFFORT`)."""
     settings = settings or get_settings()
-    if kind == "adapter":
-        return settings.adapter_effort
-    if kind == "reviewer":
-        return settings.reviewer_effort
-    return CLAUDE_EFFORT[kind]
+    efforts: dict[ModelKind, ClaudeEffort] = {
+        "root": settings.root_effort,
+        "adapter": settings.adapter_effort,
+        "reviewer": settings.reviewer_effort,
+    }
+    return efforts.get(kind, CLAUDE_EFFORT[kind])
 
 
 _CLI_CLIENTS: dict[tuple[str, str, int, str | None], Any] = {}
