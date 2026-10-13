@@ -36,6 +36,8 @@ another provider, model or location.
 | `AGENT_MAX_ATTEMPTS` | `2` | Adapter attempts per pipeline run, 1 to 3: the first and at most one repair round by default; the eval harness sets 1 or 3 to measure no repair or a second repair round |
 | `AGENT_ROOT_THINKING_BUDGET` | `1024` | Claude only: adaptive thinking of the root, with that many tokens added to its output cap; 0 turns it off (the 2026-10-11 measurement: with thinking on root and adapter every run passed the gates and 51.6 % ended `ok`, against 91.0 % and 28.7 % without) |
 | `AGENT_ADAPTER_THINKING_BUDGET` | `2048` | The same for the adapter; the eval harness overrides both with `--thinking-budget ROOT,ADAPTER` |
+| `AGENT_REVIEWER_THINKING_BUDGET` | `0` | The same for the reviewer; 0 keeps its thinking off |
+| `AGENT_ADAPTER_EFFORT`, `AGENT_REVIEWER_EFFORT` | `medium`, `low` | Claude's effort per agent kind (`low`, `medium`, `high`); on the claude-cli transport also how much the CLI thinks |
 | `AGENT_MAX_LLM_CALLS` | `12` | LLM calls per request (the `RunConfig` cap) |
 | `AGENT_REQUEST_TOKEN_BUDGET` | `320000` | Cost-weighted tokens per request, in input-token equivalents: an uncached input token counts 1, a cache read 0.1, a cache write 1.25, an output token 5 (`plugins/ledger.BUDGET_WEIGHTS`, the list-price ratios) |
 | `AGENT_DAILY_TOKEN_BUDGET` | `4000000` | Cost-weighted tokens per user and day, weighted the same way; doubled with the request budget on 2026-10-13 for the live flow's self-reviews and catalogue reviews |
@@ -90,6 +92,9 @@ neither Gemini 3.x Flash nor the eu Claude quota, so it is refused rather than t
 
 Provider = Literal["anthropic-vertex", "gemini"]
 """Model families: Claude through Vertex AI's Anthropic endpoint, or Gemini through Vertex AI."""
+
+Effort = Literal["low", "medium", "high"]
+"""Claude efforts an agent kind may run at; Haiku 5.5 takes disabled thinking up to `high`."""
 
 ReviewerMode = Literal["checklist", "catalogue"]
 """The reviewer's rubric: the narrow checklist (live) or the catalogue rubric the offline scorer uses."""
@@ -278,6 +283,18 @@ class AgentSettings(BaseSettings):
     answer (`output_config.format`) lets it think first. Both budgets are ignored on Gemini, which
     thinks by a level per agent kind; a non-zero budget set explicitly there is refused, an
     explicit 0 (`--thinking-budget 0,0`) is accepted."""
+
+    reviewer_thinking_budget: int = Field(default=0, ge=0, le=MAX_THINKING_BUDGET)
+    """Claude only (`AGENT_REVIEWER_THINKING_BUDGET`): adaptive thinking for the reviewer with that many
+    tokens added to its output cap; 0 (the default) keeps its thinking off, as before."""
+
+    adapter_effort: Effort = "medium"
+    """Claude's `effort` for the adapter (`AGENT_ADAPTER_EFFORT`): `low`, `medium` (default) or `high`.
+    On the claude-cli transport it is also how much the CLI thinks."""
+
+    reviewer_effort: Effort = "low"
+    """Claude's `effort` for the reviewer (`AGENT_REVIEWER_EFFORT`): `low` (default), `medium` or `high`.
+    Haiku 5.5 accepts disabled thinking at effort high or below."""
 
     max_llm_calls: PositiveInt = 12
     """LLM calls per request (`AGENT_MAX_LLM_CALLS`), the `RunConfig` cap."""
@@ -471,11 +488,15 @@ class AgentSettings(BaseSettings):
                     f"{name}={value!r} is not a supported Claude model ({', '.join(CLAUDE_MODELS)}): "
                     "the reviewer runs with thinking disabled, which newer Claude models refuse with a 400"
                 )
-        explicit_thinking = {"root_thinking_budget", "adapter_thinking_budget"} & self.model_fields_set
+        explicit_thinking = {
+            "root_thinking_budget",
+            "adapter_thinking_budget",
+            "reviewer_thinking_budget",
+        } & self.model_fields_set
         if self.provider != "anthropic-vertex" and any(getattr(self, name) for name in explicit_thinking):
             raise ValueError(
-                "AGENT_ROOT_THINKING_BUDGET and AGENT_ADAPTER_THINKING_BUDGET apply to Claude only; "
-                "Gemini thinks by a level per agent kind"
+                "AGENT_ROOT_THINKING_BUDGET, AGENT_ADAPTER_THINKING_BUDGET and AGENT_REVIEWER_THINKING_BUDGET "
+                "apply to Claude only; Gemini thinks by a level per agent kind"
             )
         if self.is_development and self.cloud_run_service:
             raise ValueError(

@@ -91,6 +91,8 @@ Three rules hold for everything here:
 | `AGENT_SELF_REVIEW` | `true` | The adapter proofreads its render once per round before the review, against the rubric's technical rows |
 | `AGENT_ROOT_THINKING_BUDGET` | `1024` | Claude only: adaptive thinking of the root, with that many tokens added to its output cap; 0 turns it off |
 | `AGENT_ADAPTER_THINKING_BUDGET` | `2048` | The same for the adapter; the eval harness overrides both with `--thinking-budget ROOT,ADAPTER` |
+| `AGENT_REVIEWER_THINKING_BUDGET` | `0` | The same for the reviewer; 0 keeps its thinking off |
+| `AGENT_ADAPTER_EFFORT`, `AGENT_REVIEWER_EFFORT` | `medium`, `low` | Claude's effort per agent kind (`low`, `medium`, `high`); on the claude-cli transport also how much the CLI thinks |
 | `AGENT_MAX_LLM_CALLS` | `12` | LLM calls per request |
 | `AGENT_REQUEST_TOKEN_BUDGET` | `320000` | Cost-weighted tokens per request (see [Token budgets and output caps](#token-budgets-and-output-caps)) |
 | `AGENT_DAILY_TOKEN_BUDGET` | `4000000` | Cost-weighted tokens per user and day |

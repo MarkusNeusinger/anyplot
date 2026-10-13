@@ -342,8 +342,22 @@ def thinking_budget(kind: ModelKind, settings: AgentSettings | None = None) -> i
     settings = settings or get_settings()
     if settings.provider != "anthropic-vertex":
         return 0
-    budgets: dict[ModelKind, int] = {"root": settings.root_thinking_budget, "adapter": settings.adapter_thinking_budget}
+    budgets: dict[ModelKind, int] = {
+        "root": settings.root_thinking_budget,
+        "adapter": settings.adapter_thinking_budget,
+        "reviewer": settings.reviewer_thinking_budget,
+    }
     return budgets.get(kind, 0)
+
+
+def effort_for(kind: ModelKind, settings: AgentSettings | None = None) -> ClaudeEffort:
+    """Claude's effort for one agent kind: the root's is fixed, the adapter's and reviewer's are settings."""
+    settings = settings or get_settings()
+    if kind == "adapter":
+        return settings.adapter_effort
+    if kind == "reviewer":
+        return settings.reviewer_effort
+    return CLAUDE_EFFORT[kind]
 
 
 _CLI_CLIENTS: dict[tuple[str, str, int, str | None], Any] = {}
@@ -404,7 +418,7 @@ def make_content_config(kind: ModelKind, settings: AgentSettings | None = None) 
         budget = thinking_budget(kind, settings)
         return AnthropicGenerateContentConfig(
             max_output_tokens=MAX_OUTPUT_TOKENS[kind] + budget,
-            effort=CLAUDE_EFFORT[kind],
+            effort=effort_for(kind, settings),
             # thinking_budget 0 is ADK's `thinking: {type: "disabled"}`; unset, Haiku 5.5 thinks.
             # A measurement's budget turns on adaptive thinking (Haiku 5.5 refuses `budget_tokens`).
             thinking_config=types.ThinkingConfig(thinking_budget=ADAPTIVE_THINKING if budget else 0),
