@@ -751,7 +751,25 @@ def detection(reference: list[dict[str, Any]], other: dict[str, Any] | None) -> 
 def fmt(values: Sequence[float]) -> str:
     if not values:
         return "–"
-    return f"{statistics.mean(values):+.1f}" if any(v < 0 for v in values) else f"{statistics.mean(values):.1f}"
+    return f"{statistics.mean(values):+.1f}"
+
+
+TECHNICAL_BAR = 0.95
+"""The share of the technical points (VQ, SC, DQ) the first measurement proposed as the threshold."""
+
+
+def technical_share(result: dict[str, Any]) -> float:
+    points = [result["categories"][key] for key in ("VQ", "SC", "DQ")]
+    return sum(got for got, _ in points) / sum(top for _, top in points)
+
+
+def arm_result(out: Path, arm: str, case_id: str) -> dict[str, Any] | None:
+    """An arm's scored repair of one seed; None when it failed, is missing, or had nothing to repair."""
+    path = out / "arms" / arm / case_id / "score.json"
+    if not path.is_file():
+        return None
+    result: dict[str, Any] = json.loads(path.read_text(encoding="utf-8"))
+    return None if result.get("unchanged") else result
 
 
 def stage_report(out: Path) -> str:
@@ -852,6 +870,30 @@ def stage_report(out: Path) -> str:
             + " | ".join(fmt(category[key]) for key in ("VQ", "DE", "SC", "DQ"))
             + " |"
         )
+
+    # The same seeds for every arm that repairs from findings: the seeds every such arm repaired.
+    finding_arms = [arm.name for arm in ARMS if arm.feedback != "review"]
+    common = [c for c in ref_means if all(arm_result(out, name, c) is not None for name in finding_arms)]
+    if common:
+        seed_bar = sum(technical_share(scores[c][REFERENCE][0]) >= TECHNICAL_BAR for c in common)
+        lines += [
+            "",
+            f"### The same {len(common)} seeds for every arm that repairs from findings",
+            "",
+            f"Seeds: Opus mean {statistics.mean(ref_means[c] for c in common):.1f}; "
+            f"{seed_bar} of {len(common)} at technical ≥ {TECHNICAL_BAR:.0%}.",
+            "",
+            "| Arm | final score | Δ | best | technical ≥ 95 % |",
+            "|---|---|---|---|---|",
+        ]
+        for name in finding_arms:
+            results = [(c, arm_result(out, name, c)) for c in common]
+            finals = [r["score"] for _, r in results if r is not None]
+            bar = sum(technical_share(r) >= TECHNICAL_BAR for _, r in results if r is not None)
+            delta = [r["score"] - ref_means[c] for c, r in results if r is not None]
+            lines.append(
+                f"| {name} | {statistics.mean(finals):.1f} | {fmt(delta)} | {max(finals)} | {bar} of {len(common)} |"
+            )
     lines += ["", "## Calls", ""]
     for key, usage in sorted(USAGE.items()):
         lines.append(f"- {key}: {usage.calls} calls, {usage.failed} failed, {usage.seconds:.0f} s")
