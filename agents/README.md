@@ -39,6 +39,7 @@ The model is **Claude Haiku 5.5 on Vertex AI** (`claude-haiku-5-5`) by default. 
 | `anyplot/data/`, `anyplot/code/` | The deterministic data and code layers, without ADK |
 | `evals/matrix.py` | The regression harness: runs eval cases through `/v1` in process and writes the report, the Markdown summary, the diff against a baseline and the review galleries |
 | `evals/score.py`, `anyplot/scoring.py`, `anyplot/prompts/scorer.md` | Scores a harness run's renders with the catalogue rubric on Claude Opus: the measurement behind the quality ladder ([Score the renders with the catalogue rubric](#score-the-renders-with-the-catalogue-rubric)) |
+| `evals/ladder_lab.py` | Compares reviewers, feedback forms and repairers on the same seed renders through the local Claude Code CLI ([Compare reviewers, feedback forms and repairers](#compare-reviewers-feedback-forms-and-repairers-ladder-lab)) |
 | `evals/make_fixtures.py` | The seeded generator of the 120 synthetic spike-X cases |
 | `evals/make_stress.py`, `evals/stress.py` | The seeded generator of the 23 stress cases, and the model-free static stage that `--static` runs over them ([Run the stress cases](#run-the-stress-cases)) |
 | `evals/cases.py`, `evals/pricing.py`, `evals/report.py` | Case loading and selection, list prices, and the summary, diff and gallery code; `report.py` also merges two runs into one blind gallery and scores its export |
@@ -467,6 +468,30 @@ The scorer judges the 16 criteria a user sees, 75 points scaled to 100: Visual Q
 - The most frequent technical deduction is SC-01 variant creep inherited from the catalogue code: a regression line and confidence band on `scatter-basic`, KDE, rug and mean and median lines on `histogram-basic`, a point strip on `violin-basic`, a donut ring on `pie-basic`. The adapter keeps them, and the agent's reviewer does not flag the catalogue's own layers.
 - No render lost a point for keeping the user's column names as axis titles (VQ-06, SC-04).
 - Cost: an agent run costs a median of $0.008 and takes about 35 s; scoring one render with Opus costs about $0.09 at list price and takes 16 to 19 s. The whole measurement, both harness runs and 32 scoring calls, cost about $3.
+
+### Compare reviewers, feedback forms and repairers (ladder lab)
+
+The first measurement could not say why repair 1 gains nothing, because the Haiku reviewer and the Haiku repairer were measured together. `evals/ladder_lab.py` takes them apart on the same seed renders: the ruler (how far the Opus scorer moves on the same render, and how far Sonnet and Haiku are from it), detection (which rubric deductions each model and today's production reviewer name), and execution (with the findings held fixed, which repairer and which feedback form lifts the score). The arms are `today` (today's reviewer lines, Haiku repairs), `lines-haiku`, `lines-sonnet` and `lines-opus` (the reference findings as defect lines), `suggest-haiku` (the lines plus the scorer's suggestions), and `advisor-sonnet-haiku` and `advisor-opus-haiku` (an advisor sees image, code and findings and writes a concrete plan that Haiku applies).
+
+Every model call goes through the local Claude Code CLI (`claude -p` with the agent's own prompts and output schemas, no tools), so the lab runs on your Claude subscription and spends no Vertex AI budget; the answers go through the pipeline's own edit applier, validator, loader, the deployed renderer and the host gates. Compare arms with each other here, and confirm the winning arm on Vertex AI afterwards.
+
+1. Log in to the CLI with your subscription (`claude`, then `/login`), and to gcloud for the renderer's ID token.
+2. Run all stages (seed, score, repair, report) into a directory outside the checkout, so the renders outlive the worktree:
+
+   ```bash
+   uv run --extra agents python -m agents.evals.ladder_lab all --out ~/.cache/anyplot-dev/ladder-lab
+   ```
+
+   Each stage writes one file per result and skips the results that exist, so a run that stopped (a subscription limit, a renderer hiccup) resumes where it stopped; a repair whose score was lost is scored on resume, never redone. `--cases`, `--scores` (default `opus:3,sonnet:1,haiku:1`) and `--arms` narrow a run, and `--review-efforts low,high` also runs today's reviewer at another effort. Every CLI call is logged to `calls.jsonl`, which the report sums up.
+3. Read `report.md` in the output directory.
+
+**First lab run, 2026-10-13 (20 seeds: ten specs, both libraries; seeds by Haiku; the reference judge Opus 5.5 at high effort, three scores per seed; about 400 CLI calls, no Vertex AI spend):**
+
+- The ruler holds: Opus scores the same render within 1 point on average (at most 4), so a change beyond ±2 is real. Haiku scores 0.2 above the Opus mean, Sonnet 4.1 below it.
+- Finding is a matter of the prompt, not the model. Of the 37 technical deductions at least two Opus runs agree on, today's reviewer (Haiku on the narrow checklist) names 2, and 1 at the scorer's high effort (`--review-efforts low,high`), so the effort is not the cause; Haiku with the scorer's rubric names 28, Sonnet 32 (with 26 extra), Opus 35.
+- Every repair from the rubric's findings helps, and the repairer matters less than expected. On the 15 seeds with findings (Opus mean 78.0, 5 of 15 at 95 % of the technical points): Haiku with the defect lines reaches 82.4 (+4.4) and 14 of 15 at the technical bar; Sonnet the same; Opus 84.1 (+6.1) and 15 of 15; Haiku with an Opus advisor's plan 84.0 (+6.0) and 15 of 15; Haiku with a Sonnet advisor's plan 82.8; the scorer's suggestions on top of the lines add nothing (82.3).
+- No arm reaches 90 (best 85): Design Excellence moves by at most 0.3 points. The repairs fix defects; they do not add design.
+- Caveat: Opus judges repairs that Opus made or planned, so the Opus arms' lead of about 1.7 points may partly be the judge's taste. A blind owner check of a sample, and the confirmation on Vertex AI, decide it.
 
 ### Run the stress cases
 
