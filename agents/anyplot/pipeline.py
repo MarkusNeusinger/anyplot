@@ -162,10 +162,12 @@ SELF_REVIEW_LINE = (
 )
 """The feedback of the self-review attempt (`AGENT_SELF_REVIEW`); the render itself is attached by the adapter's callback."""
 SELF_REVIEW_HIGHLIGHT_LINE = (
-    "Design: look at what this data shows in the image. If one feature stands out (the maximum or minimum, a "
-    "clear outlier, a peak, the latest value, the largest group), add exactly one highlight that points the "
-    "reader to it: one short annotation or one emphasised mark, its position and text computed from df, in the "
-    "existing colors, inside the canvas, not covering data. Name it in `changes`. Add none when nothing stands out."
+    "Design: most plots need no highlight, and none is the default. Add one only when the image shows something "
+    "a reader would likely miss or that changes how the data reads (a clear outlier, a break or turning point, "
+    "one group far apart from the rest), and pointing it out plainly makes the plot more useful. An ordinary "
+    "maximum or the last value is not enough on its own. Then add exactly one: a short annotation or one "
+    "emphasised mark, position and text computed from df, existing colors, inside the canvas, not covering data, "
+    "and name it in `changes`."
 )
 """The design part of the self-review with `AGENT_HIGHLIGHTS=data`: an explicit task, not a permission (2026-10-13:
 with the permission alone the adapter added a highlight to 2 of 20 plots)."""
