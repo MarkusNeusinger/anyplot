@@ -45,6 +45,7 @@ CHECKLIST_FLOW = {
     "AGENT_ADAPTER_EFFORT": "medium",
     "AGENT_REVIEWER_EFFORT": "low",
     "AGENT_REVIEWER_THINKING_BUDGET": "0",
+    "AGENT_CHECK_RETRY": "false",
 }
 """The flow before 2026-10-13, which most runtime tests script, with the deadlines their timing fakes fit
 and the efforts their request assertions expect."""

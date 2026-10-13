@@ -13,6 +13,7 @@ from agents.anyplot.pipeline import SELF_REVIEW_LINE
 from agents.anyplot.scoring import DE_DEFAULTS, SCORED
 from agents.anyplot.settings import get_settings
 
+from .conftest import CHECKLIST_FLOW
 from .fakes import SCATTER_PLAN, default_script
 from .test_service_flow import adapter_inputs, attribution_lines, client, create_plot, open_session, runtime
 
@@ -27,7 +28,7 @@ DEFECT_LINE = "VQ-03 (light): 24 sparse markers at s=130 look small → s=250 (+
 @pytest.fixture(autouse=True)
 def live_flow(monkeypatch: pytest.MonkeyPatch) -> None:
     """The settings defaults: undo the checklist flow the runtime conftest sets for the other tests."""
-    for name in ("AGENT_REVIEWER_MODE", "AGENT_SELF_REVIEW", "AGENT_SHIP_BEST"):
+    for name in CHECKLIST_FLOW:
         monkeypatch.delenv(name, raising=False)
     get_settings.cache_clear()
 
@@ -116,6 +117,30 @@ async def test_with_repair_sees_render_the_repair_sees_before_and_its_proofread_
 
     # adapt (none), proofread (current), repair (the reviewed render), proofread the repair (before and after)
     assert [images(i) for i in range(4)] == [0, 1, 1, 2]
+
+
+async def test_a_repair_whose_edits_do_not_apply_gets_a_retry_in_the_same_round(
+    client: httpx.AsyncClient, swap_models
+) -> None:
+    """The c5 incident of 2026-10-13: a repair's edits missed, the round ended and an unreviewed render shipped."""
+    missing = {"edits": [{"find": "this text is not in the code", "replace": "x"}], "changes": []}
+    script = default_script(plans=[SCATTER_PLAN, EMPTY_PLAN, missing, SECOND_PLAN, EMPTY_PLAN])
+    script["reviewer"] = [{"json": score(**{"VQ-03": 3})}, {"json": score()}]
+    fake = swap_models("gemini", script)
+    sid = await open_session(client)
+
+    events = await create_plot(client, sid)
+
+    plot = next(data for name, data in events if name == "plot")
+    assert (plot["status"], plot["attempts"]) == ("ok", 2)
+    # Two rounds on the page: the missed repair and its retry are one round, which the review passed.
+    assert [(r["attempt"], r["outcome"], r["shipped"]) for r in plot["rounds"]] == [
+        (1, "review", False),
+        (2, "ok", True),
+    ]
+    inputs = adapter_inputs(fake)
+    assert len(inputs) == 5  # adapt, proofread, repair (missed), retry, proofread the retry
+    assert "this text is not in the code" in inputs[3]  # the retry is told which edit missed
 
 
 async def test_the_best_scored_version_ships_when_the_repair_scores_lower(

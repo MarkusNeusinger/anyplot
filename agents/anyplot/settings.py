@@ -17,6 +17,7 @@ another provider, model or location.
 | `AGENT_REVIEW_BAR` | `1.0` | `catalogue` reviews: the share of the technical points (VQ, SC, DQ) a render needs to need no repair |
 | `AGENT_STATUS_BAR` | `0.95` | `catalogue` reviews: the ship bar; a shipped render at or above it shows without notes (`ok`) |
 | `AGENT_SHIP_BEST` | `true` | `catalogue` reviews: review every render and ship the best-scored version, not the last |
+| `AGENT_CHECK_RETRY` | `true` | An adapter answer that fails its check gets one more call in the same round (a full file allowed) instead of ending it |
 | `AGENT_SELF_REVIEW` | `true` | The adapter sees its first render once and may improve it before the review; not a repair, no extra round |
 | `AGENT_HIGHLIGHTS`, `AGENT_SCORER_HIGHLIGHTS` | `off` | Experiments: let the adapter add one data-derived highlight, and exempt it from SC-01 in the scorer rubric |
 | `AGENT_CLI_CONCURRENCY` | `3` | `claude-cli` only: CLI calls at the same time |
@@ -39,10 +40,10 @@ another provider, model or location.
 | `AGENT_REVIEWER_THINKING_BUDGET` | `2048` | The same for the reviewer; 0 turns its thinking off |
 | `AGENT_ROOT_EFFORT`, `AGENT_ADAPTER_EFFORT`, `AGENT_REVIEWER_EFFORT` | `medium`, `high`, `high` | Claude's effort per agent kind (`low`, `medium`, `high`), set by the 2026-10-13 measurements; on the claude-cli transport also how much the CLI thinks |
 | `AGENT_MAX_LLM_CALLS` | `12` | LLM calls per request (the `RunConfig` cap) |
-| `AGENT_REQUEST_TOKEN_BUDGET` | `320000` | Cost-weighted tokens per request, in input-token equivalents: an uncached input token counts 1, a cache read 0.1, a cache write 1.25, an output token 5 (`plugins/ledger.BUDGET_WEIGHTS`, the list-price ratios) |
-| `AGENT_DAILY_TOKEN_BUDGET` | `4000000` | Cost-weighted tokens per user and day, weighted the same way; doubled with the request budget on 2026-10-13 for the live flow's self-reviews and catalogue reviews |
+| `AGENT_REQUEST_TOKEN_BUDGET` | `800000` | Cost-weighted tokens per request, in input-token equivalents: an uncached input token counts 1, a cache read 0.1, a cache write 1.25, an output token 5 (`plugins/ledger.BUDGET_WEIGHTS`, the list-price ratios) |
+| `AGENT_DAILY_TOKEN_BUDGET` | `8000000` | Cost-weighted tokens per user and day, weighted the same way; about 30 median runs of the live flow of 2026-10-13 |
 | `AGENT_DAILY_PIPELINE_RUNS` | `40` | Pipeline runs per user and day |
-| `AGENT_GLOBAL_DAILY_TOKEN_BUDGET` | `12000000` | Cost-weighted tokens per day across all users, three users at their daily budget; reaching it pauses the service |
+| `AGENT_GLOBAL_DAILY_TOKEN_BUDGET` | `24000000` | Cost-weighted tokens per day across all users, three users at their daily budget; reaching it pauses the service |
 | `AGENT_RENDER_TIMEOUT_S` | `60` | Seconds per render, host-enforced |
 | `AGENT_REQUEST_DEADLINE_S` | `540` | Hard request deadline, enforced through `abort_signal` |
 | `AGENT_SOFT_DEADLINE_S` | `480` | Soft deadline inside the pipeline; below the hard one |
@@ -202,6 +203,12 @@ class AgentSettings(BaseSettings):
     once and may improve its code before the review. It is the adapter proofreading its work, not a
     repair (owner, 2026-10-13): it gets an attempt on top of `AGENT_MAX_ATTEMPTS` and no round of its own."""
 
+    check_retry: bool = True
+    """`AGENT_CHECK_RETRY`: an adapter answer that fails its check (edits that do not apply, a validator
+    finding, a broken schema, code that crashes) gets one more call in the same round, which may send a
+    full file, instead of ending the round; a second miss ends it. On since 2026-10-13: a failed edit
+    apply in a repair round had shipped an earlier, unreviewed render."""
+
     repair_sees_render: bool = False
     """Experiments (`AGENT_REPAIR_SEES_RENDER`): a repair sees the render the review's findings describe,
     and its self-review sees that render next to the repaired one, so it can tell whether it got better."""
@@ -306,12 +313,14 @@ class AgentSettings(BaseSettings):
     max_llm_calls: PositiveInt = 12
     """LLM calls per request (`AGENT_MAX_LLM_CALLS`), the `RunConfig` cap."""
 
-    request_token_budget: PositiveInt = 320_000
+    request_token_budget: PositiveInt = 800_000
     """Cost-weighted tokens per request (`AGENT_REQUEST_TOKEN_BUDGET`), in input-token equivalents
-    (`plugins/ledger.BUDGET_WEIGHTS`). Doubled on 2026-10-13 (160,000 before) for the live flow: a
-    self-review per round adds an adapter call with an image, and the catalogue reviewer reads the
-    rubric (about 20,000 tokens, cached after the first call) instead of the short checklist; the
-    Vertex AI confirmation run measures the new spread. The numbers of the old flow: a reviewed
+    (`plugins/ledger.BUDGET_WEIGHTS`). 800,000 since 2026-10-13 (160,000 before) for the live flow: a
+    self-review per round adds an adapter call with an image, the catalogue reviewer reads the rubric
+    (about 20,000 tokens, cached after the first call), and adapter and reviewer think at effort high.
+    On the claude-cli transport such runs booked a median of about 278,000 and at most about 458,000;
+    the budget is a guard against runaway requests, never a reason to cut a round short (owner rule),
+    and the Vertex AI spend cap stays the money limit. The numbers of the old flow: a reviewed
     run with two adapter attempts booked a median of
     about 39,500 with a warm prompt cache (72,200 plain tokens) and about 77,700 on a cold one,
     where each agent's first call writes its prefix; with a second review the costliest run comes
@@ -319,17 +328,17 @@ class AgentSettings(BaseSettings):
     A review starts only while `pipeline.REVIEW_RESERVE_TOKENS` is left for it and the root's
     closing reply."""
 
-    daily_token_budget: PositiveInt = 4_000_000
+    daily_token_budget: PositiveInt = 8_000_000
     """Cost-weighted tokens per user and day (`AGENT_DAILY_TOKEN_BUDGET`), weighted like the request
-    budget; doubled with the request budget on 2026-10-13, so a user gets about as many runs as
-    before. The old flow's numbers: about 54 median runs with a warm cache, where the 40 runs of `daily_pipeline_runs`
+    budget; raised on 2026-10-13 (2,000,000 before) to about 30 median runs of the live flow. The old
+    flow's numbers: about 54 median runs with a warm cache, where the 40 runs of `daily_pipeline_runs`
     bind first, and about 26 for a user whose every request starts cold (77,700 each), where
     this budget binds."""
 
     daily_pipeline_runs: PositiveInt = 40
     """Pipeline runs per user and day (`AGENT_DAILY_PIPELINE_RUNS`)."""
 
-    global_daily_token_budget: PositiveInt = 12_000_000
+    global_daily_token_budget: PositiveInt = 24_000_000
     """Cost-weighted tokens per day across all users (`AGENT_GLOBAL_DAILY_TOKEN_BUDGET`), three users
     at their daily budget; reaching it pauses the service."""
 

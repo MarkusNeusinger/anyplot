@@ -44,10 +44,10 @@ class TestDefaults:
         assert settings.render_image == "anyplot-renderer:dev"
         assert settings.max_attempts == 2  # the first attempt and at most one repair round
         assert settings.max_llm_calls == 12
-        assert settings.request_token_budget == 320_000  # two rounds with self-reviews and catalogue reviews
-        assert settings.daily_token_budget == 4_000_000  # about as many runs per day as before 2026-10-13
+        assert settings.request_token_budget == 800_000  # never cuts a live-flow round short (CLI max ~458k)
+        assert settings.daily_token_budget == 8_000_000  # about 30 median live-flow runs
         assert settings.daily_pipeline_runs == 40
-        assert settings.global_daily_token_budget == 12_000_000  # three users at their daily budget
+        assert settings.global_daily_token_budget == 24_000_000  # three users at their daily budget
         assert settings.render_timeout_s == 60
         assert settings.request_deadline_s == 540  # a round with self-review takes about 60 s; never cut short
         assert settings.soft_deadline_s == 480

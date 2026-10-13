@@ -89,15 +89,16 @@ Three rules hold for everything here:
 | `AGENT_REVIEW_BAR`, `AGENT_STATUS_BAR` | `1.0`, `0.95` | `catalogue` reviews: the share of technical points (VQ, SC, DQ) below which a render gets the repair, and the ship bar at or above which it shows without notes |
 | `AGENT_SHIP_BEST` | `true` | `catalogue` reviews: review every round and ship the best-scored version |
 | `AGENT_SELF_REVIEW` | `true` | The adapter proofreads its render once per round before the review, against the rubric's technical rows |
+| `AGENT_CHECK_RETRY` | `true` | An adapter answer that fails its check (edits that do not apply, a validator finding, a broken schema, code that crashes) gets one more call in the same round, which may send a full file; a second miss ends the round |
 | `AGENT_ROOT_THINKING_BUDGET` | `1024` | Claude only: adaptive thinking of the root, with that many tokens added to its output cap; 0 turns it off |
 | `AGENT_ADAPTER_THINKING_BUDGET` | `2048` | The same for the adapter; the eval harness overrides both with `--thinking-budget ROOT,ADAPTER` |
 | `AGENT_REVIEWER_THINKING_BUDGET` | `2048` | The same for the reviewer; 0 turns its thinking off |
 | `AGENT_ROOT_EFFORT`, `AGENT_ADAPTER_EFFORT`, `AGENT_REVIEWER_EFFORT` | `medium`, `high`, `high` | Claude's effort per agent kind (`low`, `medium`, `high`), set by the 2026-10-13 measurements (see [The plot pipeline since 2026-10-13](#the-plot-pipeline-since-2026-10-13)); on the claude-cli transport also how much the CLI thinks |
 | `AGENT_MAX_LLM_CALLS` | `12` | LLM calls per request |
-| `AGENT_REQUEST_TOKEN_BUDGET` | `320000` | Cost-weighted tokens per request (see [Token budgets and output caps](#token-budgets-and-output-caps)) |
-| `AGENT_DAILY_TOKEN_BUDGET` | `4000000` | Cost-weighted tokens per user and day |
+| `AGENT_REQUEST_TOKEN_BUDGET` | `800000` | Cost-weighted tokens per request (see [Token budgets and output caps](#token-budgets-and-output-caps)) |
+| `AGENT_DAILY_TOKEN_BUDGET` | `8000000` | Cost-weighted tokens per user and day |
 | `AGENT_DAILY_PIPELINE_RUNS` | `40` | Pipeline runs per user and day |
-| `AGENT_GLOBAL_DAILY_TOKEN_BUDGET` | `12000000` | Cost-weighted tokens per day for the whole service |
+| `AGENT_GLOBAL_DAILY_TOKEN_BUDGET` | `24000000` | Cost-weighted tokens per day for the whole service |
 | `AGENT_RENDER_TIMEOUT_S` | `60` | Seconds per theme render |
 | `AGENT_REQUEST_DEADLINE_S` | `540` | Hard request deadline (180 before 2026-10-13: with a self-review per round, the soft deadline of 140 s stopped the repair round in 11 of 20 runs; the owner's rule is that no plot ships unfinished for lack of time) |
 | `AGENT_SOFT_DEADLINE_S` | `480` | Soft deadline inside the pipeline |

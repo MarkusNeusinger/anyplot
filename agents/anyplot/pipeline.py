@@ -370,11 +370,14 @@ class Run:
     best_scored: Candidate | None = None
     """The canvas-clean render with the highest catalogue review score (`AGENT_SHIP_BEST`)."""
     self_reviewed: bool = False
+    """The adapter has looked at its own render at least once (`AGENT_SELF_REVIEW`)."""
     reviewed_render_id: str | None = None
     """The render id of the last rejected review, which a repair and its proofreading may see."""
-    self_review_after: list[int] = field(default_factory=list)
-    """The attempts a self-review followed; the self-review attempt counts as their round (`round_number`)."""
-    """The adapter has looked at its own render (`AGENT_SELF_REVIEW`), at most once per run."""
+    same_round_after: list[int] = field(default_factory=list)
+    """The attempts whose next attempt stays in their round (`round_number`): the ones a self-review
+    followed, and the one whose answer failed its check and got the round's retry."""
+    retried_rounds: set[int] = field(default_factory=set)
+    """The rounds that used their one retry after an answer failed its check (`RETRY_STAGES`)."""
     repair_hints: list[str] = field(default_factory=list)
     """The latest render's measured targets for a repair (`GateReport.repair_hints`), added to
     the hints of every repair attempt after it; they never start a repair themselves."""
@@ -400,6 +403,11 @@ ROUND_OUTCOMES: dict[Stage, RoundOutcome] = {
 }
 """The page's name for the stage that ended an attempt; the stage itself stays in the attribution log."""
 
+RETRY_STAGES: frozenset[Stage] = frozenset(
+    {"adapter_schema", "adapter_truncated", "adapter_full_code", "edit_apply", "validator", "loader", "render"}
+)
+"""Stages where the adapter's answer failed its check: each round retries once before the miss ends it."""
+
 
 def _end_attempt(run: Run, stage: Stage, feedback: Sequence[str] = ()) -> None:
     """Record what ended the current attempt, at the step it was in, with the lines it passes on.
@@ -411,7 +419,15 @@ def _end_attempt(run: Run, stage: Stage, feedback: Sequence[str] = ()) -> None:
     run.stage = stage
     if stage == "self_review":
         # The adapter proofreading its own render is part of the round, never a round of its own.
-        run.self_review_after.append(run.attempts)
+        run.same_round_after.append(run.attempts)
+        return
+    current = round_number(run, run.attempts)
+    if stage in RETRY_STAGES and get_settings().check_retry and current not in run.retried_rounds:
+        # An answer that failed its check (edits that do not apply, a validator finding, a broken
+        # schema, code that crashes) gets one more adapter call in the same round, which may send a
+        # full file: a round never ends unfinished for a formal miss (owner rule, 2026-10-13).
+        run.retried_rounds.add(current)
+        run.same_round_after.append(run.attempts)
         return
     findings = len(_clip_feedback(list(feedback)))
     run.rounds.append(
@@ -425,8 +441,8 @@ def _end_attempt(run: Run, stage: Stage, feedback: Sequence[str] = ()) -> None:
 
 
 def round_number(run: Run, attempt: int) -> int:
-    """The round an attempt belongs to on the page: a self-review attempt and the one it proofreads are one round."""
-    return attempt - sum(1 for proofread in run.self_review_after if proofread < attempt)
+    """The round an attempt belongs to on the page: a self-review or a retry stays in the round it follows."""
+    return attempt - sum(1 for earlier in run.same_round_after if earlier < attempt)
 
 
 def _call_fields(ledger: RequestLedger, agent: str) -> dict[str, Any]:
@@ -993,10 +1009,11 @@ async def _attempts(
 
     adapter = adapter_name(view.library)
     # A round is one adapter attempt and, with `AGENT_SELF_REVIEW`, the adapter proofreading its render
-    # once before the review: the self-review is never a repair and never a round of its own (owner,
-    # 2026-10-13), so a run has at most `AGENT_MAX_ATTEMPTS` rounds and twice as many adapter calls.
+    # once before the review, and with `AGENT_CHECK_RETRY` one more call when an answer fails its check:
+    # neither is a repair or a round of its own (owner, 2026-10-13), so a run has at most
+    # `AGENT_MAX_ATTEMPTS` rounds and up to three adapter calls per round.
     rounds = settings.max_attempts
-    calls = rounds * 2 if settings.self_review else rounds
+    calls = rounds * (1 + int(settings.self_review) + int(settings.check_retry))
     # Ship the best-scored version (`AGENT_SHIP_BEST`, catalogue reviews only): every round is reviewed.
     max_reviews = rounds if ship_best(settings) else MAX_REVIEWS
     self_review_due = False
