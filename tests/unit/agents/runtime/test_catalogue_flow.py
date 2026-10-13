@@ -97,6 +97,27 @@ async def test_a_repair_is_proofread_with_its_findings_before_the_second_review(
     assert SELF_REVIEW_LINE[:40] in inputs[3]
 
 
+async def test_with_repair_sees_render_the_repair_sees_before_and_its_proofread_both(
+    client: httpx.AsyncClient, swap_models, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("AGENT_REPAIR_SEES_RENDER", "true")
+    get_settings.cache_clear()
+    script = default_script(plans=[SCATTER_PLAN, EMPTY_PLAN, SECOND_PLAN, EMPTY_PLAN])
+    script["reviewer"] = [{"json": score(**{"VQ-03": 3})}, {"json": score()}]
+    fake = swap_models("gemini", script)
+    sid = await open_session(client)
+
+    await create_plot(client, sid)
+
+    adapter_requests = [r for r in fake.requests if (r.config.labels or {}).get("agent_kind") == "adapter"]
+
+    def images(index: int) -> int:
+        return sum(1 for part in adapter_requests[index].contents[-1].parts if part.inline_data)
+
+    # adapt (none), proofread (current), repair (the reviewed render), proofread the repair (before and after)
+    assert [images(i) for i in range(4)] == [0, 1, 1, 2]
+
+
 async def test_the_best_scored_version_ships_when_the_repair_scores_lower(
     client: httpx.AsyncClient, swap_models
 ) -> None:

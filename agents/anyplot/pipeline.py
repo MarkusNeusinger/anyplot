@@ -366,6 +366,8 @@ class Run:
     best_scored: Candidate | None = None
     """The canvas-clean render with the highest catalogue review score (`AGENT_SHIP_BEST`)."""
     self_reviewed: bool = False
+    reviewed_render_id: str | None = None
+    """The render id of the last rejected review, which a repair and its proofreading may see."""
     self_review_after: list[int] = field(default_factory=list)
     """The attempts a self-review followed; the self-review attempt counts as their round (`round_number`)."""
     """The adapter has looked at its own render (`AGENT_SELF_REVIEW`), at most once per run."""
@@ -1169,7 +1171,12 @@ async def _attempts(
             # The adapter proofreads its render once per round before the review: after the first
             # version, and after a repair with that repair's findings, to see whether its changes worked.
             run.self_reviewed = True
-            ledger.adapter_render_id = services.renders.put(ctx.session.id, candidate.pngs)
+            current = services.renders.put(ctx.session.id, candidate.pngs)
+            before = run.reviewed_render_id if settings.repair_sees_render and round_number(run, attempt) > 1 else None
+            ledger.adapter_renders = [
+                *([("Render before your repair, which the review's findings describe", before)] if before else []),
+                ("Render of the current code" + (", after your repair" if before else ""), current),
+            ]
             round_findings = [line for line in request.feedback if not line.startswith("Self-review:")]
             feedback = [
                 SELF_REVIEW_LINE,
@@ -1241,6 +1248,12 @@ async def _attempts(
             return
         run.review_lines = list(verdict.lines)
         feedback = list(run.review_lines)
+        run.reviewed_render_id = candidate.render_id
+        if settings.repair_sees_render and candidate.render_id:
+            # The repair sees the render the review's findings describe (`AGENT_REPAIR_SEES_RENDER`).
+            ledger.adapter_renders = [
+                ("Render the review's findings describe, before your repair", candidate.render_id)
+            ]
         _end_attempt(run, "reviewer_defects", feedback)
 
 

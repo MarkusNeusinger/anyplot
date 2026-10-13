@@ -197,6 +197,10 @@ class AgentSettings(BaseSettings):
     once and may improve its code before the review. It is the adapter proofreading its work, not a
     repair (owner, 2026-10-13): it gets an attempt on top of `AGENT_MAX_ATTEMPTS` and no round of its own."""
 
+    repair_sees_render: bool = False
+    """Experiments (`AGENT_REPAIR_SEES_RENDER`): a repair sees the render the review's findings describe,
+    and its self-review sees that render next to the repaired one, so it can tell whether it got better."""
+
     cli_concurrency: PositiveInt = 3
     """`claude-cli` only: CLI calls at the same time (`AGENT_CLI_CONCURRENCY`)."""
 

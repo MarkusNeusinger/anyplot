@@ -21,7 +21,7 @@ The model is **Claude Haiku 5.5 on Vertex AI** (`claude-haiku-5-5`) by default. 
 | `anyplot/models.py` | The only place that builds a model or a model client: `make_model`, `make_content_config` and `make_judge_client`, for Claude on Vertex AI and for Gemini |
 | `anyplot/policy.py` | Composes each agent's static instruction from `anyplot/prompts/` and the catalogue's prompt sources, read verbatim; the fixed refusals; the data fences |
 | `anyplot/prompts/` | `root.md`, `adapter.md`, `reviewer.md`, `scope_judge.md`, `data_judge.md`, `transcriber.md` and `refusals.yaml` (English, German, French, Spanish, Italian, Portuguese, Dutch, Polish, Chinese, Vietnamese and Russian; English for any other language) |
-| `anyplot/pipeline.py` | The `plot_pipeline` node: adapt, check, render, review, repair in at most `AGENT_MAX_ATTEMPTS` − 1 rounds (one by default) and review the repair after a rejection (two reviews at most), always a `PlotResult` |
+| `anyplot/pipeline.py` | The `plot_pipeline` node: in each round (at most `AGENT_MAX_ATTEMPTS`, two by default) adapt or repair, check, render, let the adapter proofread its render once against the rubric's technical rows (`AGENT_SELF_REVIEW`, not a repair and not a round of its own), then review with the catalogue rubric; the best-scored version ships (`AGENT_SHIP_BEST`), shown without notes at or above the ship bar (`AGENT_STATUS_BAR`); always a `PlotResult`. The flow and why: [The plot pipeline since 2026-10-13](#the-plot-pipeline-since-2026-10-13) |
 | `anyplot/sub_agents/` | One single-turn adapter per enabled library and the tool-less reviewer |
 | `anyplot/tools/session.py` | The root's tools: `get_dataset_profile`, `get_spec_brief`, `get_current_code`, `set_bindings`, `set_language`, `prepare_data`, `generate_data` and the `plot_pipeline` workflow |
 | `anyplot/language.py` | The session language: the pattern a language name or code must match, the three sources (`default`, `detected`, `chosen`), the chip's ten common languages, the stored form (`Deutsch` is `de`) and the lookup of a refusal's language |
@@ -84,7 +84,11 @@ Three rules hold for everything here:
 | `AGENT_RUN_CONCURRENCY` | `1` | Pipeline runs (whole `/messages` turns) in flight; the run queue holds the rest |
 | `AGENT_RUNS_PER_MINUTE` | `1` | Runs that may start within any 60 seconds (a sliding window) |
 | `AGENT_QUEUE_MAX_WAIT_S` | `600` | Longest wait in the run queue, after which the run ends with `capacity`; the queue holds rate x wait / 60 entries (10) and answers `503 capacity` beyond that. Through the BFF the whole turn, this wait included, ends by `AGENT_TURN_MAX_S` (890 s, see `docs/reference/api.md`), which the full wait plus the 180 s run fits into |
-| `AGENT_MAX_ATTEMPTS` | `2` | Adapter attempts per pipeline run, 1 to 3: the first and at most one repair round by default; the eval harness sets 1 or 3 (`--max-attempts`) to measure no repair or a second repair round |
+| `AGENT_MAX_ATTEMPTS` | `2` | Rounds per pipeline run, 1 to 3: the first and at most one repair round by default (a self-review adds an adapter call to a round, never a round); the eval harness sets 1 or 3 (`--max-attempts`) to measure no repair or a second repair round |
+| `AGENT_REVIEWER_MODE` | `catalogue` | The reviewer's rubric: `catalogue` (the offline scorer's rubric, verdict decided by code from the points) or `checklist` (the narrow checklist used before 2026-10-13) |
+| `AGENT_REVIEW_BAR`, `AGENT_STATUS_BAR` | `1.0`, `0.95` | `catalogue` reviews: the share of technical points (VQ, SC, DQ) below which a render gets the repair, and the ship bar at or above which it shows without notes |
+| `AGENT_SHIP_BEST` | `true` | `catalogue` reviews: review every round and ship the best-scored version |
+| `AGENT_SELF_REVIEW` | `true` | The adapter proofreads its render once per round before the review, against the rubric's technical rows |
 | `AGENT_ROOT_THINKING_BUDGET` | `1024` | Claude only: adaptive thinking of the root, with that many tokens added to its output cap; 0 turns it off |
 | `AGENT_ADAPTER_THINKING_BUDGET` | `2048` | The same for the adapter; the eval harness overrides both with `--thinking-budget ROOT,ADAPTER` |
 | `AGENT_MAX_LLM_CALLS` | `12` | LLM calls per request |
@@ -439,6 +443,22 @@ The exit code is one of the following:
 | 4 | An outage stopped the run: the renderer became unavailable (the pipeline's `RendererUnavailable`), or 3 runs in a row ended in an error |
 
 Ctrl-C, exit codes 3 and 4 all write the partial report before the harness stops.
+
+### The plot pipeline since 2026-10-13
+
+The defaults are the flow the experiments of 2026-10-13 settled on (about 1,500 runs on the Claude subscription, below). Every agent runs on Claude Haiku 5.5:
+
+1. **Adapt.** The adapter edits the catalogue code for the user's data; the validator, the loader, the render and the host gates follow. A gate finding (text past the canvas, for example) starts a repair round while one is left.
+2. **Self-review.** The adapter sees the render of its code once and checks it against the self-review checklist in its instructions: the rubric's technical rows (VQ-01 to VQ-07, SC-01 to SC-04, DQ-01, DQ-03), cut verbatim from `prompts/quality-criteria.md` with the scorer's rules for a user's plot (`policy.self_review_checklist`). After a repair it also gets that round's findings, so it can see whether its changes worked. The self-review is the adapter proofreading its work: it is part of the round, not a repair and not a round of its own on the page.
+3. **Review.** The reviewer scores the render with the catalogue rubric, the offline scorer's twin (`prompts/reviewer_catalogue.md` before `scoring.system_prompt`). The code decides from the points: every technical point (`AGENT_REVIEW_BAR` 1.0) means no repair; otherwise the defect lines go to the next round.
+4. **Ship the best.** Every round is reviewed, and the best-scored version ships (`AGENT_SHIP_BEST`). At or above 95 % of the technical points (`AGENT_STATUS_BAR`) it shows without notes (`ok`); below, the review's lines are the notes (`needs_attention`).
+
+What the measurements showed, scored by the user scorer on Opus and Sonnet:
+
+- The checklist reviewer named 2 of 37 agreed technical deductions; Haiku with the catalogue rubric 28, Opus 35. A bigger model does not pay: Sonnet as reviewer flagged 15 of 20 runs and repaired more without a better score, Sonnet as adapter gained nothing, a third round gained nothing.
+- The catalogue reviewer's value is an honest status more than points: on 10 unseen specs, the reviewer with ship-best on the original catalogue code scored the same as the old flow (79.2).
+- The self-review lowers the share of runs that end with notes (from 8 to 3 of 20 in the same configuration) at an unchanged score.
+- The largest gain is a catalogue base without variant creep (+2.3 on the unseen specs, one run below 75 instead of four); building such bases is the next step, not part of this flow yet.
 
 ### Score the renders with the catalogue rubric
 

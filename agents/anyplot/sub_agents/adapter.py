@@ -155,19 +155,21 @@ async def adapter_before_model(callback_context: CallbackContext, llm_request: L
     ledger = ledger_for(callback_context.invocation_id)
     if ledger.adapter_allow_full:
         allow_full_file(llm_request.config)
-    if ledger.adapter_render_id:
-        # A self-review (`AGENT_SELF_REVIEW`): the adapter sees the render of its own code, once.
+    if ledger.adapter_renders:
+        # Renders the adapter sees once, each after its label: the current render in a self-review
+        # (`AGENT_SELF_REVIEW`), and the reviewed render before a repair (`AGENT_REPAIR_SEES_RENDER`).
         from ..services import get_services
 
-        stored = get_services().renders.get(ledger.adapter_render_id, callback_context.session.id)
-        ledger.adapter_render_id = None
-        if stored is not None and llm_request.contents:
-            parts: list[types.Part] = []
-            for theme, png in stored.pngs.items():
+        renders, ledger.adapter_renders = ledger.adapter_renders, []
+        parts: list[types.Part] = []
+        for label, render_id in renders:
+            stored = get_services().renders.get(render_id, callback_context.session.id)
+            for theme, png in stored.pngs.items() if stored is not None else []:
                 parts += [
-                    types.Part(text=f"Render of the current code (plot-{theme}.png):"),
+                    types.Part(text=f"{label} (plot-{theme}.png):"),
                     types.Part.from_bytes(data=png, mime_type="image/png"),
                 ]
+        if parts and llm_request.contents:
             last = llm_request.contents[-1]
             last.parts = [*(last.parts or []), *parts]
     return None
