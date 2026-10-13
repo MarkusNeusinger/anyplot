@@ -318,7 +318,9 @@ def open_case(case_id: str) -> Setup:
     state.update(confirm_delta(view))
     view = read_session(state)
     assert view is not None
-    dataset = datasets.get(view.dataset_id, session_id)
+    dataset = datasets.get(ingested.dataset_id, session_id)
+    if dataset is None:
+        raise LabError(f"{case_id}: the dataset was not stored")
     regions = find_regions(view.normalised)
     palette = list(regions.imprint.entries) if regions.imprint else []
     bindings_json = json.dumps([binding.model_dump() for binding in view.bindings], ensure_ascii=False)
@@ -759,7 +761,7 @@ TECHNICAL_BAR = 0.95
 
 
 def technical_share(result: dict[str, Any]) -> float:
-    points = [result["categories"][key] for key in ("VQ", "SC", "DQ")]
+    points: list[tuple[int, int]] = [tuple(result["categories"][key]) for key in ("VQ", "SC", "DQ")]
     return sum(got for got, _ in points) / sum(top for _, top in points)
 
 
