@@ -21,6 +21,7 @@ from agents.anyplot.plugins.budget import BudgetPlugin
 from agents.anyplot.plugins.scope_guard import ScopeGuardPlugin
 from agents.anyplot.plugins.tool_safety import ALLOWED_TOOLS, ToolSafetyPlugin
 from agents.anyplot.schemas import AdaptPlan, PipelineArgs, Verdict
+from agents.anyplot.scoring import ScoreAnswer
 from agents.anyplot.services import Services
 from agents.anyplot.session_state import initial_state, language_delta
 from agents.anyplot.settings import AgentSettings
@@ -83,7 +84,21 @@ class TestRegistry:
             assert agent.tools == []
             assert agent.before_model_callback is not None
         assert {agent.output_schema for agent in agent_module.ADAPTERS.values()} == {AdaptPlan}
-        assert agent_module.reviewer.output_schema is Verdict
+        assert agent_module.reviewer.output_schema in (Verdict, ScoreAnswer)
+
+    def test_the_reviewer_switches_its_rubric_with_the_mode(self) -> None:
+        from agents.anyplot.policy import catalogue_reviewer_instruction, reviewer_instruction
+        from agents.anyplot.sub_agents.reviewer import use_reviewer_mode
+
+        start = agent_module.reviewer.output_schema
+        try:
+            agent = use_reviewer_mode("checklist")
+            assert agent is agent_module.reviewer
+            assert (agent.output_schema, agent.static_instruction) == (Verdict, reviewer_instruction())
+            agent = use_reviewer_mode("catalogue")
+            assert (agent.output_schema, agent.static_instruction) == (ScoreAnswer, catalogue_reviewer_instruction())
+        finally:
+            use_reviewer_mode("catalogue" if start is ScoreAnswer else "checklist")
 
     def test_models_and_locations_come_from_the_settings(self) -> None:
         settings = AgentSettings()

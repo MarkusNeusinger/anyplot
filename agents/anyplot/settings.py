@@ -13,8 +13,12 @@ another provider, model or location.
 | `AGENT_JUDGE_MODEL` | `claude-haiku-5-5` | Model of the scope and dataset judge; same rule |
 | `AGENT_TRANSPORT` | `vertex` | How Claude calls travel: `vertex` (live) or `claude-cli` (development and test only: the local Claude Code CLI on your subscription; calls it cannot answer, the root's, go to Vertex AI; `cli_transport.py`) |
 | `AGENT_ADAPTER_MODEL`, `AGENT_REVIEWER_MODEL` | unset | `claude-cli` only: the adapter's or the reviewer's model for an experiment, any of `cli_transport.CLI_MODELS` |
-| `AGENT_REVIEWER_MODE` | `checklist` | The reviewer's rubric: `checklist` (live) or `catalogue` (the offline scorer's catalogue rubric; `ok` decided by code from the points) |
-| `AGENT_REVIEW_BAR` | `0.95` | `catalogue` reviews: the share of the technical points (VQ, SC, DQ) a render needs, with no score cap, to pass |
+| `AGENT_REVIEWER_MODE` | `catalogue` | The reviewer's rubric: `catalogue` (the offline scorer's catalogue rubric; the verdict decided by code from the points) or `checklist` (the narrow checklist, live before 2026-10-13) |
+| `AGENT_REVIEW_BAR` | `1.0` | `catalogue` reviews: the share of the technical points (VQ, SC, DQ) a render needs to need no repair |
+| `AGENT_STATUS_BAR` | `0.95` | `catalogue` reviews: the ship bar; a shipped render at or above it shows without notes (`ok`) |
+| `AGENT_SHIP_BEST` | `true` | `catalogue` reviews: review every render and ship the best-scored version, not the last |
+| `AGENT_SELF_REVIEW` | `true` | The adapter sees its first render once and may improve it before the review; not a repair, no extra round |
+| `AGENT_HIGHLIGHTS`, `AGENT_SCORER_HIGHLIGHTS` | `off` | Experiments: let the adapter add one data-derived highlight, and exempt it from SC-01 in the scorer rubric |
 | `AGENT_CLI_CONCURRENCY` | `3` | `claude-cli` only: CLI calls at the same time |
 | `AGENT_CLI_CALL_LOG` | unset | `claude-cli` only: a file each CLI call appends one JSON line to (model, effort, seconds, ok) |
 | `AGENT_LOCATION` | `eu` | Vertex AI location of every model call: `eu`, `us` or `global` |
@@ -164,27 +168,34 @@ class AgentSettings(BaseSettings):
     reviewer_model: str | None = None
     """Experiments: the reviewer's model (`AGENT_REVIEWER_MODEL`); on `claude-cli` any of `CLI_MODELS`."""
 
-    reviewer_mode: ReviewerMode = "checklist"
-    """What the reviewer judges with (`AGENT_REVIEWER_MODE`): `checklist` (live: the narrow checklist of
-    `prompts/reviewer.md`) or `catalogue` (the offline scorer's catalogue rubric, `scoring.py`; the code
-    decides `ok` from the points with `AGENT_REVIEW_BAR`, and the defect lines feed the repair)."""
+    reviewer_mode: ReviewerMode = "catalogue"
+    """What the reviewer judges with (`AGENT_REVIEWER_MODE`): `catalogue` (live since 2026-10-13: the
+    offline scorer's catalogue rubric, `scoring.py`; the code decides from the points, and the defect lines
+    feed the repair) or `checklist` (the narrow checklist of `prompts/reviewer.md`, live before). The
+    2026-10-13 measurement: the checklist named 2 of 37 agreed technical deductions, the rubric on Haiku 28."""
 
-    review_bar: float = Field(default=0.95, gt=0, le=1)
-    """`catalogue` reviews only (`AGENT_REVIEW_BAR`): the share of the technical points (VQ, SC, DQ)
-    a render needs, with no score cap, to pass the review."""
+    review_bar: float = Field(default=1.0, gt=0, le=1)
+    """`catalogue` reviews only (`AGENT_REVIEW_BAR`): the share of the technical points (VQ, SC, DQ) a
+    render needs, with no technical item at zero, to need no repair. At 1.0 every technical deduction
+    gets the repair round; `AGENT_SHIP_BEST` keeps a repair that scores lower from shipping."""
+
+    status_bar: float = Field(default=0.95, gt=0, le=1)
+    """`catalogue` reviews only (`AGENT_STATUS_BAR`): the owner's ship bar. A shipped render at or above
+    it is shown without notes (`ok`), even when the review still asked for a repair; below it the
+    review's lines become the residual notes (`needs_attention`)."""
 
     highlights: Literal["off", "data"] = "off"
     """Experiments (`AGENT_HIGHLIGHTS`): `data` lets the adapter add at most one highlight of a
     salient feature of the user's data, computed from `df` (`prompts/adapter_highlights.md`)."""
 
-    ship_best: bool = False
-    """Experiments (`AGENT_SHIP_BEST`, `catalogue` reviews only): every render is reviewed, and the
-    best-scored version ships instead of the last one."""
+    ship_best: bool = True
+    """`catalogue` reviews only (`AGENT_SHIP_BEST`): every render is reviewed, and the best-scored
+    version ships instead of the last one."""
 
-    self_review: bool = False
-    """Experiments (`AGENT_SELF_REVIEW`): after the first render that passes the gates, the adapter
-    sees that render once and may improve its code before the review. It is the adapter proofreading
-    its work, not a repair: it gets an attempt on top of `AGENT_MAX_ATTEMPTS`."""
+    self_review: bool = True
+    """`AGENT_SELF_REVIEW`: after the first render that passes the gates, the adapter sees that render
+    once and may improve its code before the review. It is the adapter proofreading its work, not a
+    repair (owner, 2026-10-13): it gets an attempt on top of `AGENT_MAX_ATTEMPTS` and no round of its own."""
 
     cli_concurrency: PositiveInt = 3
     """`claude-cli` only: CLI calls at the same time (`AGENT_CLI_CONCURRENCY`)."""

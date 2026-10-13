@@ -26,9 +26,17 @@ def development_env(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
         if name.upper().startswith("AGENT_") or name.upper() in ("GOOGLE_CLOUD_PROJECT", "K_SERVICE"):
             monkeypatch.delenv(name)
     monkeypatch.setenv("ENVIRONMENT", "development")
+    # These flow tests script the checklist reviewer's `Verdict` and count attempts without a
+    # self-review; the live catalogue flow (the defaults) has its own tests in test_catalogue_flow.py.
+    for name, value in CHECKLIST_FLOW.items():
+        monkeypatch.setenv(name, value)
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
+
+
+CHECKLIST_FLOW = {"AGENT_REVIEWER_MODE": "checklist", "AGENT_SELF_REVIEW": "false", "AGENT_SHIP_BEST": "false"}
+"""The flow before 2026-10-13, which most runtime tests script."""
 
 
 @pytest.fixture

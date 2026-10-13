@@ -80,11 +80,12 @@ RUN .venv/bin/python -m compileall -q agents core
 # missing file or a renamed heading. The judge model's three rubrics are read on
 # first use, so the check reads them explicitly, and so does the scorer's prompt
 # (`scoring.system_prompt`: `prompts/scorer.md` plus sections cut by heading from the
-# catalogue rubric) and the catalogue reviewer's instruction built on it, which only
-# `AGENT_REVIEWER_MODE=catalogue` uses. None of it needs credentials or
+# catalogue rubric, with the experiment's highlight rule), and both reviewer
+# instructions: the agent imports with one mode and switches at runtime
+# (`AGENT_REVIEWER_MODE`), and the experiment prompts for highlights. None of it needs credentials or
 # makes a network call. tests/unit/agents/test_image.py runs this command and
 # holds it against every file the service reads.
-RUN .venv/bin/python -c "import agents.main; from agents.anyplot import policy, scoring; policy.scope_rubric(); policy.data_rubric(); policy.transcribe_rubric(); scoring.system_prompt(highlights=True); policy.catalogue_reviewer_instruction(); policy.own_prompt('adapter_highlights.md')"
+RUN .venv/bin/python -c "import agents.main; from agents.anyplot import policy, scoring; policy.scope_rubric(); policy.data_rubric(); policy.transcribe_rubric(); scoring.system_prompt(highlights=True); policy.catalogue_reviewer_instruction(); policy.reviewer_instruction(); policy.own_prompt('adapter_highlights.md')"
 
 ENV PYTHONUNBUFFERED=1
 ENV PORT=8080
