@@ -41,8 +41,13 @@ CHECKLIST_FLOW = {
     "AGENT_SHIP_BEST": "false",
     "AGENT_SOFT_DEADLINE_S": "140",
     "AGENT_REQUEST_DEADLINE_S": "180",
+    "AGENT_ROOT_EFFORT": "low",
+    "AGENT_ADAPTER_EFFORT": "medium",
+    "AGENT_REVIEWER_EFFORT": "low",
+    "AGENT_REVIEWER_THINKING_BUDGET": "0",
 }
-"""The flow before 2026-10-13, which most runtime tests script, with the deadlines their timing fakes fit."""
+"""The flow before 2026-10-13, which most runtime tests script, with the deadlines their timing fakes fit
+and the efforts their request assertions expect."""
 
 
 @pytest.fixture

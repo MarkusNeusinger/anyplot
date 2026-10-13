@@ -53,6 +53,8 @@ class TestDefaults:
         assert settings.soft_deadline_s == 480
         assert settings.reviewer_mode == "catalogue" and settings.ship_best and settings.self_review
         assert (settings.review_bar, settings.status_bar) == (1.0, 0.95)
+        assert (settings.root_effort, settings.adapter_effort, settings.reviewer_effort) == ("medium", "high", "high")
+        assert settings.reviewer_thinking_budget == 2048
         assert settings.allowed_callers == []
         assert settings.environment == "production"  # unset never skips the caller check
         assert settings.is_development is False

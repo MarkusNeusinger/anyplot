@@ -33,7 +33,9 @@ display avoids that. And the root replays its thinking block after a tool result
 ADK moves the session-context block between calls, which fails the block's signature
 check; `VertexClaude` asks the API to drop such a block instead (`block_binding`, see
 `THINKING_BINDING_BETA`). Haiku 5.5 accepts disabled thinking at effort `high` or below,
-so every kind stays at `low` or `medium`.
+so every kind stays at `high` or below; the efforts are settings (`effort_for`): since
+2026-10-13 the root runs at `medium`, the adapter and the reviewer at `high`, the reviewer
+with a thinking budget of its own.
 
 ADK 2.11 sends no response schema to Claude: `basic.py` sets
 `config.response_schema` for a tool-less agent with an `output_schema`, and

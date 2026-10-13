@@ -36,8 +36,8 @@ another provider, model or location.
 | `AGENT_MAX_ATTEMPTS` | `2` | Adapter attempts per pipeline run, 1 to 3: the first and at most one repair round by default; the eval harness sets 1 or 3 to measure no repair or a second repair round |
 | `AGENT_ROOT_THINKING_BUDGET` | `1024` | Claude only: adaptive thinking of the root, with that many tokens added to its output cap; 0 turns it off (the 2026-10-11 measurement: with thinking on root and adapter every run passed the gates and 51.6 % ended `ok`, against 91.0 % and 28.7 % without) |
 | `AGENT_ADAPTER_THINKING_BUDGET` | `2048` | The same for the adapter; the eval harness overrides both with `--thinking-budget ROOT,ADAPTER` |
-| `AGENT_REVIEWER_THINKING_BUDGET` | `0` | The same for the reviewer; 0 keeps its thinking off |
-| `AGENT_ADAPTER_EFFORT`, `AGENT_REVIEWER_EFFORT` | `medium`, `low` | Claude's effort per agent kind (`low`, `medium`, `high`); on the claude-cli transport also how much the CLI thinks |
+| `AGENT_REVIEWER_THINKING_BUDGET` | `2048` | The same for the reviewer; 0 turns its thinking off |
+| `AGENT_ROOT_EFFORT`, `AGENT_ADAPTER_EFFORT`, `AGENT_REVIEWER_EFFORT` | `medium`, `high`, `high` | Claude's effort per agent kind (`low`, `medium`, `high`), set by the 2026-10-13 measurements; on the claude-cli transport also how much the CLI thinks |
 | `AGENT_MAX_LLM_CALLS` | `12` | LLM calls per request (the `RunConfig` cap) |
 | `AGENT_REQUEST_TOKEN_BUDGET` | `320000` | Cost-weighted tokens per request, in input-token equivalents: an uncached input token counts 1, a cache read 0.1, a cache write 1.25, an output token 5 (`plugins/ledger.BUDGET_WEIGHTS`, the list-price ratios) |
 | `AGENT_DAILY_TOKEN_BUDGET` | `4000000` | Cost-weighted tokens per user and day, weighted the same way; doubled with the request budget on 2026-10-13 for the live flow's self-reviews and catalogue reviews |
@@ -284,22 +284,24 @@ class AgentSettings(BaseSettings):
     thinks by a level per agent kind; a non-zero budget set explicitly there is refused, an
     explicit 0 (`--thinking-budget 0,0`) is accepted."""
 
-    reviewer_thinking_budget: int = Field(default=0, ge=0, le=MAX_THINKING_BUDGET)
+    reviewer_thinking_budget: int = Field(default=2_048, ge=0, le=MAX_THINKING_BUDGET)
     """Claude only (`AGENT_REVIEWER_THINKING_BUDGET`): adaptive thinking for the reviewer with that many
-    tokens added to its output cap; 0 (the default) keeps its thinking off, as before."""
+    tokens added to its output cap, on since 2026-10-13 with `reviewer_effort` high; 0 turns it off."""
 
-    root_effort: Effort = "low"
-    """Claude's `effort` for the root (`AGENT_ROOT_EFFORT`): `low` (default), `medium` or `high`. The root
-    chats, prepares and generates data, and starts the plot pipeline; it runs on Vertex AI even on the
-    claude-cli transport, which cannot carry its tool chat."""
+    root_effort: Effort = "medium"
+    """Claude's `effort` for the root (`AGENT_ROOT_EFFORT`): `medium` since 2026-10-13 (`low` before). The
+    root chats, prepares and generates data, and starts the plot pipeline; at `low` it merged two filters
+    into one wrong drop condition in the hard prep cases, at `medium` and `high` it solved all 33. It runs on
+    Vertex AI even on the claude-cli transport, which cannot carry its tool chat."""
 
-    adapter_effort: Effort = "medium"
-    """Claude's `effort` for the adapter (`AGENT_ADAPTER_EFFORT`): `low`, `medium` (default) or `high`.
+    adapter_effort: Effort = "high"
+    """Claude's `effort` for the adapter (`AGENT_ADAPTER_EFFORT`): `high` since 2026-10-13 (`medium` before).
     On the claude-cli transport it is also how much the CLI thinks."""
 
-    reviewer_effort: Effort = "low"
-    """Claude's `effort` for the reviewer (`AGENT_REVIEWER_EFFORT`): `low` (default), `medium` or `high`.
-    Haiku 5.5 accepts disabled thinking at effort high or below."""
+    reviewer_effort: Effort = "high"
+    """Claude's `effort` for the reviewer (`AGENT_REVIEWER_EFFORT`): `high` since 2026-10-13 (`low` before),
+    with `reviewer_thinking_budget`. A stricter reviewer alone scored lower on unseen specs; together with
+    the adapter at high it was the best configuration on seeds and unseen specs, by both judges."""
 
     max_llm_calls: PositiveInt = 12
     """LLM calls per request (`AGENT_MAX_LLM_CALLS`), the `RunConfig` cap."""
