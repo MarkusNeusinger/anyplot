@@ -84,7 +84,7 @@ RUN .venv/bin/python -m compileall -q agents core
 # `AGENT_REVIEWER_MODE=catalogue` uses. None of it needs credentials or
 # makes a network call. tests/unit/agents/test_image.py runs this command and
 # holds it against every file the service reads.
-RUN .venv/bin/python -c "import agents.main; from agents.anyplot import policy, scoring; policy.scope_rubric(); policy.data_rubric(); policy.transcribe_rubric(); scoring.system_prompt(); policy.catalogue_reviewer_instruction()"
+RUN .venv/bin/python -c "import agents.main; from agents.anyplot import policy, scoring; policy.scope_rubric(); policy.data_rubric(); policy.transcribe_rubric(); scoring.system_prompt(); policy.catalogue_reviewer_instruction(); policy.own_prompt('adapter_highlights.md')"
 
 ENV PYTHONUNBUFFERED=1
 ENV PORT=8080

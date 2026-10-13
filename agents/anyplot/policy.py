@@ -207,9 +207,13 @@ def root_instruction() -> str:
 @lru_cache(maxsize=None)
 def adapter_instruction(library: str) -> str:
     """The adapter's static instruction for one library (≈8-10k tokens, a stable cache prefix)."""
+    from .settings import get_settings
+
     weaknesses, sizing = repair_excerpts()
+    highlights = own_prompt("adapter_highlights.md") if get_settings().highlights == "data" else ""
     return _join(
         own_prompt("adapter.md"),
+        highlights,
         "## Excerpt: which weaknesses to fix\n\n" + weaknesses,
         "## Excerpt: visual-sizing fixes\n\n" + sizing,
         "## Excerpt: VQ-03 element visibility\n\n" + vq03_table(),

@@ -173,6 +173,14 @@ class AgentSettings(BaseSettings):
     """`catalogue` reviews only (`AGENT_REVIEW_BAR`): the share of the technical points (VQ, SC, DQ)
     a render needs, with no score cap, to pass the review."""
 
+    highlights: Literal["off", "data"] = "off"
+    """Experiments (`AGENT_HIGHLIGHTS`): `data` lets the adapter add at most one highlight of a
+    salient feature of the user's data, computed from `df` (`prompts/adapter_highlights.md`)."""
+
+    self_review: bool = False
+    """Experiments (`AGENT_SELF_REVIEW`): after the first render that passes the gates, the adapter
+    sees that render once and may improve its code before the review; it uses one attempt."""
+
     cli_concurrency: PositiveInt = 3
     """`claude-cli` only: CLI calls at the same time (`AGENT_CLI_CONCURRENCY`)."""
 

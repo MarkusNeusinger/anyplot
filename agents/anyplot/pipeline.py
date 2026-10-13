@@ -154,6 +154,13 @@ from .sub_agents.reviewer import REVIEWER_NAME, reviewer
 logger = logging.getLogger(__name__)
 
 STATUS_KEY = "anyplot_status"
+SELF_REVIEW_LINE = (
+    "Self-review: the attached image is the render of the current code with the user's data. Look at it "
+    "against the spec and the rules: fix what is unreadable, overlapping, clipped, misleading, crowded or not "
+    "true to the user's data, and anything else a careful reviewer would flag. If nothing needs fixing, "
+    "answer with an empty edit list."
+)
+"""The feedback of the self-review attempt (`AGENT_SELF_REVIEW`); the render itself is attached by the adapter's callback."""
 ADAPTER_P95_S = 60.0
 """Seconds a repair attempt's adapter call is budgeted at when checking the soft deadline.
 
@@ -238,6 +245,7 @@ Stage = Literal[
     "reviewer_unreadable",
     "reviewer_defects",
     "reviewer_ok",
+    "self_review",
 ]
 """Where an attempt, or the run, stopped (content-free, for the attribution log only).
 
@@ -339,6 +347,8 @@ class Run:
     """How each attempt ended, in the page's vocabulary (`ROUND_OUTCOMES`), for `PlotResult.rounds`."""
     step: RoundStep | None = None
     """The progress step the current attempt is in, the last one `_status` reported."""
+    self_reviewed: bool = False
+    """The adapter has looked at its own render (`AGENT_SELF_REVIEW`), at most once per run."""
     repair_hints: list[str] = field(default_factory=list)
     """The latest render's measured targets for a repair (`GateReport.repair_hints`), added to
     the hints of every repair attempt after it; they never start a repair themselves."""
@@ -346,6 +356,7 @@ class Run:
 
 ROUND_OUTCOMES: dict[Stage, RoundOutcome] = {
     "reviewer_ok": "ok",
+    "self_review": "measured",
     "reviewer_defects": "review",
     "gates": "measured",
     "render": "render_failed",
@@ -1066,6 +1077,13 @@ async def _attempts(
         # default two attempts: attempt 1 repairs or is reviewed, attempt 2 is reviewed.
         if not report.canvas_ok or (feedback and attempt < settings.max_attempts):
             _end_attempt(run, "gates", feedback)
+            continue
+        if settings.self_review and not run.self_reviewed and attempt < settings.max_attempts:
+            # The adapter looks at its own render once before the review (an experiment switch).
+            run.self_reviewed = True
+            ledger.adapter_render_id = services.renders.put(ctx.session.id, candidate.pngs)
+            feedback = [SELF_REVIEW_LINE]
+            _end_attempt(run, "self_review", feedback)
             continue
         if run.reviews >= MAX_REVIEWS:
             # Every review used, and either no feedback or no attempt left for it: the run ends

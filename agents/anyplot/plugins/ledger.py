@@ -89,6 +89,8 @@ class RequestLedger:
     """A plot shipped in this invocation: the Budget plugin exempts the root's next call once, without tools."""
     adapter_allow_full: bool = False
     review_render_id: str | None = None
+    adapter_render_id: str | None = None
+    """The render the adapter's next call sees (`AGENT_SELF_REVIEW`); None for an ordinary call."""
     lang: str = "en"
     """The ISO 639-1 code of the fixed refusals: the session language's (`language.refusal_lang`) until the
     scope judge answers, then the language the judged message is written in."""

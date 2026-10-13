@@ -152,8 +152,24 @@ def keep_last_content(llm_request: LlmRequest) -> None:
 
 async def adapter_before_model(callback_context: CallbackContext, llm_request: LlmRequest) -> LlmResponse | None:
     keep_last_content(llm_request)
-    if ledger_for(callback_context.invocation_id).adapter_allow_full:
+    ledger = ledger_for(callback_context.invocation_id)
+    if ledger.adapter_allow_full:
         allow_full_file(llm_request.config)
+    if ledger.adapter_render_id:
+        # A self-review (`AGENT_SELF_REVIEW`): the adapter sees the render of its own code, once.
+        from ..services import get_services
+
+        stored = get_services().renders.get(ledger.adapter_render_id, callback_context.session.id)
+        ledger.adapter_render_id = None
+        if stored is not None and llm_request.contents:
+            parts: list[types.Part] = []
+            for theme, png in stored.pngs.items():
+                parts += [
+                    types.Part(text=f"Render of the current code (plot-{theme}.png):"),
+                    types.Part.from_bytes(data=png, mime_type="image/png"),
+                ]
+            last = llm_request.contents[-1]
+            last.parts = [*(last.parts or []), *parts]
     return None
 
 
