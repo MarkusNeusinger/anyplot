@@ -1,0 +1,11 @@
+{
+  "dataset_text": "Bestell-ID,Ort,Produkt,Status\nB-101,Bern,Velo,geliefert\nB-102,Zürich,Velo,geliefert\nB-103,Bern,Helm,offen\nB-104,Bern,Helm,geliefert\nB-105,Bern,Velo,geliefert\nB-106,Basel,Schloss,geliefert\nB-107,Bern,Schloss,storniert\nB-108,Bern,Helm,geliefert\nB-109,Bern,Velo,offen\n",
+  "message": "Ich will nur Bestellungen aus Bern, die schon geliefert sind. Zähl dann die Bestell-IDs pro Produkt.",
+  "expected_operations": [
+    {"op": "drop_rows", "where": [{"column": "Ort", "test": "ne", "value": "Bern"}]},
+    {"op": "drop_rows", "where": [{"column": "Status", "test": "ne", "value": "geliefert"}]},
+    {"op": "aggregate", "by": ["Produkt"], "column": "Bestell-ID", "how": "count"}
+  ],
+  "locale": "de",
+  "tags": ["hard", "chain", "drop_rows", "aggregate", "count"]
+}

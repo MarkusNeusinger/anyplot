@@ -1,0 +1,10 @@
+{
+  "dataset_text": "product,Jan,Feb,Mar,Apr,Total,Notes\nKettle,120,135,150,140,545,\nToaster,80,95,90,110,375,new model in Mar\nBlender,60,55,70,85,270,\n",
+  "message": "Get rid of the Total and Notes columns, and turn the month columns into rows: one row per product and month, with the columns month and units.",
+  "expected_operations": [
+    {"op": "drop_columns", "columns": ["Total", "Notes"]},
+    {"op": "pivot_longer", "columns": ["Jan", "Feb", "Mar", "Apr"], "names_to": "month", "values_to": "units"}
+  ],
+  "locale": "en",
+  "tags": ["hard", "chain", "drop_columns", "pivot_longer"]
+}

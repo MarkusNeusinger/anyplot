@@ -1,0 +1,7 @@
+{
+  "dataset_text": "team,region,goals,assists\nFalcons,North,12,8\nFalcons,South,9,11\nRavens,North,15,6\nRavens,South,7,9\nOtters,North,11,12\nOtters,South,13,5\n",
+  "message": "Show me the totals.",
+  "expected_operations": [],
+  "locale": "en",
+  "tags": ["hard", "ambiguous", "ask_back"]
+}

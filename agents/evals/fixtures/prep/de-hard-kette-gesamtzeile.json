@@ -1,0 +1,12 @@
+{
+  "dataset_text": "Region,Monat,Umsatz,Notiz\nNord,Jan,1200,\nNord,Feb,1350,Messe\nSüd,Jan,980,\nSüd,Feb,1105,\nOst,Jan,760,neu\nOst,Feb,820,\nWest,Jan,1410,\nWest,Feb,1290,\nGesamt,,8915,\n",
+  "message": "Die Gesamt-Zeile gehört nicht dazu und die Notizen brauche ich nicht. Dann bitte den Umsatz pro Region zusammenzählen und die stärkste Region zuerst.",
+  "expected_operations": [
+    {"op": "drop_rows", "where": [{"column": "Region", "test": "eq", "value": "Gesamt"}]},
+    {"op": "drop_columns", "columns": ["Notiz"]},
+    {"op": "aggregate", "by": ["Region"], "column": "Umsatz", "how": "sum"},
+    {"op": "sort", "column": "Umsatz", "descending": true}
+  ],
+  "locale": "de",
+  "tags": ["hard", "chain", "drop_rows", "drop_columns", "aggregate", "sort"]
+}

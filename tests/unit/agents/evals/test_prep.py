@@ -74,7 +74,8 @@ class TestFixtures:
         locales = Counter(item.locale for item in cases)
         ops = {operation["op"] for item in cases for operation in item.expected_operations}
 
-        assert len(cases) == 23
+        assert len(cases) == 33  # 23 single-step cases and 10 `hard` ones (chains, ambiguity, unsupported asks)
+        assert sum(1 for item in cases if "hard" in item.tags) == 10
         assert locales["de"] >= 5 and locales["en"] >= 5
         assert ops == {*OPERATIONS, "generate_data"}
         assert sum(1 for item in cases if not item.expected_operations) >= 2  # out of scope, and a plain question

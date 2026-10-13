@@ -1,0 +1,22 @@
+{
+  "dataset_text": "patient,age,bmi\nP01,45,24.1\nP02,67,31.5\nP03,72,27.9\nP04,58,33.2\nP05,63,30.4\nP06,39,22.8\nP07,81,35.0\n",
+  "message": "Add a column risk: 'high' when the patient is over 60 and the BMI is over 30 at the same time, otherwise 'normal'.",
+  "expected_operations": [
+    {
+      "op": "classify",
+      "name": "risk",
+      "rules": [
+        {
+          "where": [
+            {"column": "age", "test": "gt", "value": "60"},
+            {"column": "bmi", "test": "gt", "value": "30"}
+          ],
+          "label": "high"
+        }
+      ],
+      "otherwise": "normal"
+    }
+  ],
+  "locale": "en",
+  "tags": ["hard", "classify", "two_conditions"]
+}
