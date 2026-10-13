@@ -35,8 +35,14 @@ def development_env(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     get_settings.cache_clear()
 
 
-CHECKLIST_FLOW = {"AGENT_REVIEWER_MODE": "checklist", "AGENT_SELF_REVIEW": "false", "AGENT_SHIP_BEST": "false"}
-"""The flow before 2026-10-13, which most runtime tests script."""
+CHECKLIST_FLOW = {
+    "AGENT_REVIEWER_MODE": "checklist",
+    "AGENT_SELF_REVIEW": "false",
+    "AGENT_SHIP_BEST": "false",
+    "AGENT_SOFT_DEADLINE_S": "140",
+    "AGENT_REQUEST_DEADLINE_S": "180",
+}
+"""The flow before 2026-10-13, which most runtime tests script, with the deadlines their timing fakes fit."""
 
 
 @pytest.fixture

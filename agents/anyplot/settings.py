@@ -37,13 +37,13 @@ another provider, model or location.
 | `AGENT_ROOT_THINKING_BUDGET` | `1024` | Claude only: adaptive thinking of the root, with that many tokens added to its output cap; 0 turns it off (the 2026-10-11 measurement: with thinking on root and adapter every run passed the gates and 51.6 % ended `ok`, against 91.0 % and 28.7 % without) |
 | `AGENT_ADAPTER_THINKING_BUDGET` | `2048` | The same for the adapter; the eval harness overrides both with `--thinking-budget ROOT,ADAPTER` |
 | `AGENT_MAX_LLM_CALLS` | `12` | LLM calls per request (the `RunConfig` cap) |
-| `AGENT_REQUEST_TOKEN_BUDGET` | `160000` | Cost-weighted tokens per request, in input-token equivalents: an uncached input token counts 1, a cache read 0.1, a cache write 1.25, an output token 5 (`plugins/ledger.BUDGET_WEIGHTS`, the list-price ratios) |
-| `AGENT_DAILY_TOKEN_BUDGET` | `2000000` | Cost-weighted tokens per user and day, weighted the same way: about 54 median runs on a warm cache, where the run cap binds first, and about 26 for a user whose every request starts cold |
+| `AGENT_REQUEST_TOKEN_BUDGET` | `320000` | Cost-weighted tokens per request, in input-token equivalents: an uncached input token counts 1, a cache read 0.1, a cache write 1.25, an output token 5 (`plugins/ledger.BUDGET_WEIGHTS`, the list-price ratios) |
+| `AGENT_DAILY_TOKEN_BUDGET` | `4000000` | Cost-weighted tokens per user and day, weighted the same way; doubled with the request budget on 2026-10-13 for the live flow's self-reviews and catalogue reviews |
 | `AGENT_DAILY_PIPELINE_RUNS` | `40` | Pipeline runs per user and day |
-| `AGENT_GLOBAL_DAILY_TOKEN_BUDGET` | `6000000` | Cost-weighted tokens per day across all users, three users at their daily budget; reaching it pauses the service |
+| `AGENT_GLOBAL_DAILY_TOKEN_BUDGET` | `12000000` | Cost-weighted tokens per day across all users, three users at their daily budget; reaching it pauses the service |
 | `AGENT_RENDER_TIMEOUT_S` | `60` | Seconds per render, host-enforced |
-| `AGENT_REQUEST_DEADLINE_S` | `180` | Hard request deadline, enforced through `abort_signal` |
-| `AGENT_SOFT_DEADLINE_S` | `140` | Soft deadline inside the pipeline; below the hard one |
+| `AGENT_REQUEST_DEADLINE_S` | `280` | Hard request deadline, enforced through `abort_signal` |
+| `AGENT_SOFT_DEADLINE_S` | `240` | Soft deadline inside the pipeline; below the hard one |
 | `AGENT_JUDGE_TIMEOUT_S` | `4` | Wall-clock budget of one judge verdict, its single retry and the half-second wait before it included |
 | `AGENT_KEEP_REFUSALS` | `false` | Keep the text and verdict of each message the scope judge refused, in a bounded in-memory ring per session that only the feedback bundle shows; never in a log |
 | `AGENT_ATTACK_STRIKES` | `3` | `attack` verdicts per user and day after which the user gets the budget refusal for the rest of the day |
@@ -282,35 +282,44 @@ class AgentSettings(BaseSettings):
     max_llm_calls: PositiveInt = 12
     """LLM calls per request (`AGENT_MAX_LLM_CALLS`), the `RunConfig` cap."""
 
-    request_token_budget: PositiveInt = 160_000
+    request_token_budget: PositiveInt = 320_000
     """Cost-weighted tokens per request (`AGENT_REQUEST_TOKEN_BUDGET`), in input-token equivalents
-    (`plugins/ledger.BUDGET_WEIGHTS`). A reviewed run with two adapter attempts books a median of
+    (`plugins/ledger.BUDGET_WEIGHTS`). Doubled on 2026-10-13 (160,000 before) for the live flow: a
+    self-review per round adds an adapter call with an image, and the catalogue reviewer reads the
+    rubric (about 20,000 tokens, cached after the first call) instead of the short checklist; the
+    Vertex AI confirmation run measures the new spread. The numbers of the old flow: a reviewed
+    run with two adapter attempts booked a median of
     about 39,500 with a warm prompt cache (72,200 plain tokens) and about 77,700 on a cold one,
     where each agent's first call writes its prefix; with a second review the costliest run comes
     to about 115,000, and with three attempts about 117,300, so the budget leaves about 36 % on top.
     A review starts only while `pipeline.REVIEW_RESERVE_TOKENS` is left for it and the root's
     closing reply."""
 
-    daily_token_budget: PositiveInt = 2_000_000
+    daily_token_budget: PositiveInt = 4_000_000
     """Cost-weighted tokens per user and day (`AGENT_DAILY_TOKEN_BUDGET`), weighted like the request
-    budget: about 54 median runs with a warm cache, where the 40 runs of `daily_pipeline_runs`
+    budget; doubled with the request budget on 2026-10-13, so a user gets about as many runs as
+    before. The old flow's numbers: about 54 median runs with a warm cache, where the 40 runs of `daily_pipeline_runs`
     bind first, and about 26 for a user whose every request starts cold (77,700 each), where
     this budget binds."""
 
     daily_pipeline_runs: PositiveInt = 40
     """Pipeline runs per user and day (`AGENT_DAILY_PIPELINE_RUNS`)."""
 
-    global_daily_token_budget: PositiveInt = 6_000_000
+    global_daily_token_budget: PositiveInt = 12_000_000
     """Cost-weighted tokens per day across all users (`AGENT_GLOBAL_DAILY_TOKEN_BUDGET`), three users
     at their daily budget; reaching it pauses the service."""
 
     render_timeout_s: PositiveInt = 60
     """Seconds per render, host-enforced (`AGENT_RENDER_TIMEOUT_S`)."""
 
-    request_deadline_s: PositiveInt = 180
-    """Hard request deadline in seconds, enforced through `abort_signal` (`AGENT_REQUEST_DEADLINE_S`)."""
+    request_deadline_s: PositiveInt = 280
+    """Hard request deadline in seconds, enforced through `abort_signal` (`AGENT_REQUEST_DEADLINE_S`).
 
-    soft_deadline_s: PositiveInt = 140
+    280 since 2026-10-13 (180 before): with the self-review a round takes about 60 s, and at 140 s
+    the soft deadline stopped the repair round in 11 of 20 measured runs. The run queue's 600 s
+    wait plus 280 s stays below the BFF's 890 s turn cap and the services' 900 s timeout."""
+
+    soft_deadline_s: PositiveInt = 240
     """Soft deadline in seconds inside the pipeline (`AGENT_SOFT_DEADLINE_S`); below the hard one."""
 
     judge_timeout_s: PositiveFloat = 4.0

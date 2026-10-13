@@ -150,7 +150,7 @@ steps:
   # because of the run queue, not the CPU: every queued run holds an open stream,
   # so the instance must take the queue's 10 waiting streams, the run in flight
   # and the other routes, and one turn can last the queue's 600 s maximum wait plus
-  # the 180 s request deadline (anyplot-api's own --timeout is 900 for the same
+  # the 280 s request deadline (anyplot-api's own --timeout is 900 for the same
   # turn). No secrets, no Cloud SQL in phase 1.
   #
   # `--update-env-vars`, never `--set-env-vars`, for the reason api/cloudbuild.yaml

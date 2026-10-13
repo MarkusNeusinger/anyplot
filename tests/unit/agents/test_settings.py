@@ -44,13 +44,15 @@ class TestDefaults:
         assert settings.render_image == "anyplot-renderer:dev"
         assert settings.max_attempts == 2  # the first attempt and at most one repair round
         assert settings.max_llm_calls == 12
-        assert settings.request_token_budget == 160_000  # above a cold reviewed run with a second review
-        assert settings.daily_token_budget == 2_000_000  # about 54 warm runs (the run cap binds first), 26 cold
+        assert settings.request_token_budget == 320_000  # two rounds with self-reviews and catalogue reviews
+        assert settings.daily_token_budget == 4_000_000  # about as many runs per day as before 2026-10-13
         assert settings.daily_pipeline_runs == 40
-        assert settings.global_daily_token_budget == 6_000_000  # three users at their daily budget
+        assert settings.global_daily_token_budget == 12_000_000  # three users at their daily budget
         assert settings.render_timeout_s == 60
-        assert settings.request_deadline_s == 180
-        assert settings.soft_deadline_s == 140
+        assert settings.request_deadline_s == 280  # a round with self-review takes about 60 s
+        assert settings.soft_deadline_s == 240
+        assert settings.reviewer_mode == "catalogue" and settings.ship_best and settings.self_review
+        assert (settings.review_bar, settings.status_bar) == (1.0, 0.95)
         assert settings.allowed_callers == []
         assert settings.environment == "production"  # unset never skips the caller check
         assert settings.is_development is False

@@ -191,8 +191,12 @@ MAX_REVIEWS = 2
 
 Without the second one a repaired render could never end `ok`: in the rerun of spike X
 on main, 39 of 244 runs shipped a repaired render unreviewed (`not_rereviewed`)."""
-REVIEW_RESERVE_TOKENS = 35_000
+REVIEW_RESERVE_TOKENS = 60_000
 """Cost-weighted tokens a review needs left of every token budget, for itself and the root's closing reply.
+
+60,000 since 2026-10-13 (35,000 before): the catalogue reviewer reads the rubric, about 26,000
+tokens that a cold cache writes at weight 1.25, and answers with about 2,500 at weight 5. The
+old checklist's numbers follow.
 
 In the rerun of spike X (Claude Haiku 5.5) a review on a cold prompt cache weighed at
 most 28,099 and the closing reply at most 5,022. With less left, the render ships

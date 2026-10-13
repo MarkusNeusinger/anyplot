@@ -880,9 +880,9 @@ starts it again. No turn runs past `AGENT_TURN_MAX_S` (890 seconds), which
 stays below anyplot-api's own request timeout of 900 seconds: a turn that is
 still queued when its run could no longer finish inside that cap ends with
 `error {"code": "capacity"}` and `done {}`, and leaves the queue before it
-spends a token. At the defaults, the agents service's full 600-second queue
-maximum plus the 180-second run fit inside the cap, so the BFF never cuts a
-wait short. Errors that happen before the stream starts, such as
+spends a token. At the defaults that happens after 585 seconds of waiting,
+15 seconds before the agents service's own 600-second queue maximum, because
+the 280-second run must still fit inside the cap. Errors that happen before the stream starts, such as
 `413 too_long`, an upstream `409 run_active`, or `503 capacity` from a full
 run queue, arrive as HTTP statuses instead.
 
@@ -929,7 +929,7 @@ could not be read; `PATCH /cases/{id}` answers `422 no_data` and
 | `AGENT_ENABLED` | `false` | The kill switch |
 | `AGENT_SERVICE_URL` | Unset | Base URL of anyplot-agents, without `/v1`; also the ID-token audience |
 | `AGENT_USER_ID_KEY` | Unset | HMAC key for the user id; from Secret Manager in production |
-| `AGENT_REQUEST_TIMEOUT_S` | `190` | Upstream timeout, and the cap on one chat stream outside the run queue; above the agents service's 180-second deadline |
+| `AGENT_REQUEST_TIMEOUT_S` | `290` | Upstream timeout, and the cap on one chat stream outside the run queue; above the agents service's 280-second deadline |
 | `AGENT_TURN_MAX_S` | `890` | Hard cap on one chat turn, queue wait included; keep it below anyplot-api's Cloud Run `--timeout` (900 seconds in `api/cloudbuild.yaml`) |
 | `AGENT_CASES_BUCKET` | `anyplot-agent-cases` | The private EU bucket the feedback cases go to and the case routes read from (see [Feedback case](#feedback-case)); never the public image bucket. The default is the production bucket, so a local API with Application Default Credentials stores its cases there too; set a bucket of your own for local runs |
 
