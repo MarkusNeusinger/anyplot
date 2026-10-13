@@ -161,6 +161,14 @@ SELF_REVIEW_LINE = (
     "answer with an empty edit list."
 )
 """The feedback of the self-review attempt (`AGENT_SELF_REVIEW`); the render itself is attached by the adapter's callback."""
+SELF_REVIEW_HIGHLIGHT_LINE = (
+    "Design: look at what this data shows in the image. If one feature stands out (the maximum or minimum, a "
+    "clear outlier, a peak, the latest value, the largest group), add exactly one highlight that points the "
+    "reader to it: one short annotation or one emphasised mark, its position and text computed from df, in the "
+    "existing colors, inside the canvas, not covering data. Name it in `changes`. Add none when nothing stands out."
+)
+"""The design part of the self-review with `AGENT_HIGHLIGHTS=data`: an explicit task, not a permission (2026-10-13:
+with the permission alone the adapter added a highlight to 2 of 20 plots)."""
 ADAPTER_P95_S = 60.0
 """Seconds a repair attempt's adapter call is budgeted at when checking the soft deadline.
 
@@ -1110,7 +1118,7 @@ async def _attempts(
             # The adapter looks at its own render once before the review (an experiment switch).
             run.self_reviewed = True
             ledger.adapter_render_id = services.renders.put(ctx.session.id, candidate.pngs)
-            feedback = [SELF_REVIEW_LINE]
+            feedback = [SELF_REVIEW_LINE, *([SELF_REVIEW_HIGHLIGHT_LINE] if settings.highlights == "data" else [])]
             _end_attempt(run, "self_review", feedback)
             continue
         if run.reviews >= max_reviews:
