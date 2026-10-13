@@ -1,6 +1,6 @@
 ## Highlights from the user's data
 
-This section replaces the last sentence of "Keep the plot" under "User plots". You may add **at most one** highlight that points the reader to the most telling feature of the user's data: the maximum or minimum, a clear outlier, a peak, the latest value, the largest group. Add it only when the data has such a feature and pointing it out makes the plot easier to read; a plot without a clear feature gets none.
+This section replaces the last sentence of "Keep the plot" under "User plots". Most plots need no highlight, and none is the default. You may add **at most one**, and only when the data shows something a reader would likely miss or that changes how the data reads (a clear outlier, a break or turning point, one group far apart from the rest), so that pointing it out plainly makes the plot more useful. An ordinary maximum or the last value is not enough on its own.
 
 - Compute its target and its text from `df` (`idx = df[y].idxmax()`, `f"{df[y].max():,.0f}"`), never from literal values, so it stays right for any data.
 - Keep it light: one short annotation or one emphasised mark in the existing colors and the style guide's sizes, inside the canvas, without covering data. No new encoding, layer, legend entry or reference line.
