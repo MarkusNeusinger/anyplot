@@ -482,13 +482,13 @@ Every model call goes through the local Claude Code CLI (`claude -p` with the ag
    uv run --extra agents python -m agents.evals.ladder_lab all --out ~/.cache/anyplot-dev/ladder-lab
    ```
 
-   Each stage writes one file per result and skips the results that exist, so a run that stopped (a subscription limit, a renderer hiccup) resumes where it stopped. `--cases`, `--scores` (default `opus:3,sonnet:1,haiku:1`) and `--arms` narrow a run.
+   Each stage writes one file per result and skips the results that exist, so a run that stopped (a subscription limit, a renderer hiccup) resumes where it stopped; a repair whose score was lost is scored on resume, never redone. `--cases`, `--scores` (default `opus:3,sonnet:1,haiku:1`) and `--arms` narrow a run, and `--review-efforts low,high` also runs today's reviewer at another effort. Every CLI call is logged to `calls.jsonl`, which the report sums up.
 3. Read `report.md` in the output directory.
 
 **First lab run, 2026-10-13 (20 seeds: ten specs, both libraries; seeds by Haiku; the reference judge Opus 5.5 at high effort, three scores per seed; about 400 CLI calls, no Vertex AI spend):**
 
 - The ruler holds: Opus scores the same render within 1 point on average (at most 4), so a change beyond ±2 is real. Haiku scores 0.2 above the Opus mean, Sonnet 4.1 below it.
-- Finding is a matter of the prompt, not the model. Of the 37 technical deductions at least two Opus runs agree on, today's reviewer (Haiku on the narrow checklist) names 2; Haiku with the scorer's rubric names 28, Sonnet 32 (with 26 extra), Opus 35.
+- Finding is a matter of the prompt, not the model. Of the 37 technical deductions at least two Opus runs agree on, today's reviewer (Haiku on the narrow checklist) names 2, and 1 at the scorer's high effort (`--review-efforts low,high`), so the effort is not the cause; Haiku with the scorer's rubric names 28, Sonnet 32 (with 26 extra), Opus 35.
 - Every repair from the rubric's findings helps, and the repairer matters less than expected. On the 15 seeds with findings (Opus mean 78.0, 5 of 15 at 95 % of the technical points): Haiku with the defect lines reaches 82.4 (+4.4) and 14 of 15 at the technical bar; Sonnet the same; Opus 84.1 (+6.1) and 15 of 15; Haiku with an Opus advisor's plan 84.0 (+6.0) and 15 of 15; Haiku with a Sonnet advisor's plan 82.8; the scorer's suggestions on top of the lines add nothing (82.3).
 - No arm reaches 90 (best 85): Design Excellence moves by at most 0.3 points. The repairs fix defects; they do not add design.
 - Caveat: Opus judges repairs that Opus made or planned, so the Opus arms' lead of about 1.7 points may partly be the judge's taste. A blind owner check of a sample, and the confirmation on Vertex AI, decide it.

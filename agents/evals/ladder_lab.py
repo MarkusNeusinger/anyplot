@@ -158,14 +158,17 @@ class LabError(RuntimeError):
 # --- Claude Code CLI ----------------------------------------------------------------------------
 
 
-@dataclass
-class Usage:
-    calls: int = 0
-    failed: int = 0
-    seconds: float = 0.0
+CALL_LOG: list[Path] = []
+"""Where `ask` appends one JSON line per CLI call (`<out>/calls.jsonl`), so the report covers
+every process of a resumed run; empty in tests."""
 
 
-USAGE: dict[str, Usage] = {}
+def log_call(role: str, model: str, effort: str, seconds: float, ok: bool) -> None:
+    if not CALL_LOG:
+        return
+    entry = {"role": role, "model": model, "effort": effort, "seconds": round(seconds, 1), "ok": ok}
+    with CALL_LOG[0].open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(entry) + "\n")
 
 
 def stream_message(text: str, png: bytes | None) -> str:
@@ -201,13 +204,20 @@ def result_of(stdout: str) -> dict[str, Any]:
 
 
 async def ask(
-    model: str, system: str, text: str, schema: dict[str, Any], *, role: str, png: bytes | None = None
+    model: str,
+    system: str,
+    text: str,
+    schema: dict[str, Any],
+    *,
+    role: str,
+    png: bytes | None = None,
+    effort: str | None = None,
 ) -> dict[str, Any]:
     """One model call through `claude -p`: no tools, no settings, the system prompt replaced."""
     claude = shutil.which("claude")
     if claude is None:
         raise LabError("the `claude` CLI is not on PATH")
-    usage = USAGE.setdefault(f"{role}:{model}", Usage())
+    effort = effort or EFFORT[role]
     loop = asyncio.get_running_loop()
     last: Exception | None = None
     with tempfile.TemporaryDirectory(prefix="ladder-lab-") as scratch:
@@ -220,7 +230,7 @@ async def ask(
             "--model",
             MODELS[model],
             "--effort",
-            EFFORT[role],
+            effort,
             "--system-prompt-file",
             str(system_file),
             "--tools",
@@ -249,16 +259,17 @@ async def ask(
             except TimeoutError:
                 process.kill()
                 await process.wait()
+                log_call(role, model, effort, loop.time() - started, ok=False)
                 last = LabError(f"{role} call on {model} timed out")
                 continue
-            finally:
-                usage.seconds += loop.time() - started
-            usage.calls += 1
             try:
-                return result_of(stdout.decode("utf-8", "replace"))
+                output = result_of(stdout.decode("utf-8", "replace"))
             except LabError as exc:
+                log_call(role, model, effort, loop.time() - started, ok=False)
                 last = exc
-        usage.failed += 1
+                continue
+            log_call(role, model, effort, loop.time() - started, ok=True)
+            return output
     raise LabError(f"{role} call on {model} failed: {last}")
 
 
@@ -486,8 +497,10 @@ async def score(setup: Setup, run_form: str, png: bytes, model: str) -> dict[str
     return parse_answer(answer).as_dict()
 
 
-async def review(setup: Setup, run_form: str, png: bytes, gate_lines: list[str]) -> dict[str, Any]:
-    """Today's production review: the narrow checklist on Haiku."""
+async def review(
+    setup: Setup, run_form: str, png: bytes, gate_lines: list[str], effort: str | None = None
+) -> dict[str, Any]:
+    """Today's production review: the narrow checklist on Haiku (at production's low effort unless `effort`)."""
     from agents.anyplot.briefs import profile_summary, spec_brief
     from agents.anyplot.pipeline import _note, render_review_request
     from agents.anyplot.policy import reviewer_instruction
@@ -503,7 +516,9 @@ async def review(setup: Setup, run_form: str, png: bytes, gate_lines: list[str])
         plot_language=setup.view.language,
     )
     text = render_review_request(request) + "\n\nplot-light.png"
-    raw = await ask("haiku", reviewer_instruction(), text, Verdict.model_json_schema(), role="reviewer", png=png)
+    raw = await ask(
+        "haiku", reviewer_instruction(), text, Verdict.model_json_schema(), role="reviewer", png=png, effort=effort
+    )
     try:
         verdict = Verdict.model_validate(raw)
     except ValueError:
@@ -546,11 +561,15 @@ async def advise(setup: Setup, seed: dict[str, Any], findings: dict[str, Any], m
 
 
 def setup_env() -> None:
-    """Development settings that render on the deployed renderer, like `scripts/agents-dev.sh`."""
+    """Development settings, like `scripts/agents-dev.sh`; the renderer's URL comes from `renderer_url`."""
     os.environ.setdefault("PYTHON_DOTENV_DISABLED", "1")
     os.environ.setdefault("ENVIRONMENT", "development")
     os.environ.setdefault("AGENT_RENDERER", "remote")
     os.environ.setdefault("GOOGLE_CLOUD_PROJECT", "anyplot")
+
+
+def renderer_url() -> None:
+    """`AGENT_RENDER_URL` from gcloud when unset: only the stages that render need it."""
     if not os.environ.get("AGENT_RENDER_URL"):
         import subprocess
 
@@ -577,7 +596,15 @@ def backend() -> Any:
     from agents.anyplot.render import make_backend
     from agents.anyplot.settings import get_settings
 
+    renderer_url()
     return make_backend(get_settings())
+
+
+async def close(render_backend: Any) -> None:
+    """Close a backend that holds a client (the remote one), as the harness does."""
+    closer = getattr(render_backend, "aclose", None)
+    if closer is not None:
+        await closer()
 
 
 def echo(text: str) -> None:
@@ -611,7 +638,10 @@ async def stage_seed(out: Path, cases: list[str]) -> None:
         save_render(folder, rendered, misses)
         echo(f"seed {case_id}: rendered after {len(misses) + 1} tries")
 
-    await asyncio.gather(*(one(case_id) for case_id in cases))
+    try:
+        await asyncio.gather(*(one(case_id) for case_id in cases))
+    finally:
+        await close(render_backend)
 
 
 def score_plan(text: str) -> list[tuple[str, int]]:
@@ -628,7 +658,12 @@ def seeds_of(out: Path) -> list[str]:
     return sorted(path.parent.name for path in (out / "seeds").glob("*/plot.png"))
 
 
-async def stage_score(out: Path, plan: list[tuple[str, int]]) -> None:
+def reviews_dir(out: Path, effort: str) -> Path:
+    """Today's reviewer at production's effort in `reviews/`, at another effort in `reviews-<effort>/`."""
+    return out / ("reviews" if effort == EFFORT["reviewer"] else f"reviews-{effort}")
+
+
+async def stage_score(out: Path, plan: list[tuple[str, int]], review_efforts: Sequence[str]) -> None:
     gate = asyncio.Semaphore(LLM_CONCURRENCY)
 
     async def one_score(case_id: str, model: str, run: int) -> None:
@@ -643,19 +678,19 @@ async def stage_score(out: Path, plan: list[tuple[str, int]]) -> None:
         target.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
         echo(f"score {case_id} {model}-{run}: {result['score']}")
 
-    async def one_review(case_id: str) -> None:
-        target = out / "reviews" / f"{case_id}.json"
+    async def one_review(case_id: str, effort: str) -> None:
+        target = reviews_dir(out, effort) / f"{case_id}.json"
         if target.is_file():
             return
         seed = load_render(out / "seeds" / case_id)
         assert seed is not None
         async with gate:
-            result = await review(open_case(case_id), seed["run_form"], seed["png"], seed["gate_lines"])
+            result = await review(open_case(case_id), seed["run_form"], seed["png"], seed["gate_lines"], effort)
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
-        echo(f"review {case_id}: {'ok' if result['ok'] else ', '.join(result['ids']) or 'unreadable'}")
+        echo(f"review {case_id} ({effort}): {'ok' if result['ok'] else ', '.join(result['ids']) or 'unreadable'}")
 
-    jobs = [one_review(case_id) for case_id in seeds_of(out)]
+    jobs = [one_review(case_id, effort) for case_id in seeds_of(out) for effort in review_efforts]
     jobs += [one_score(c, model, run) for c in seeds_of(out) for model, count in plan for run in range(1, count + 1)]
     await asyncio.gather(*jobs)
 
@@ -684,6 +719,15 @@ async def stage_repair(out: Path, arms: list[Arm]) -> None:
         seed = load_render(out / "seeds" / case_id)
         assert seed is not None
         setup = open_case(case_id)
+        stored = load_render(folder)
+        if stored is not None:
+            # The repair rendered but its score was lost (a limit, an outage): score that render,
+            # never a new one, so a restart cannot change the arm's repair.
+            async with gate:
+                result = await score(setup, stored["run_form"], stored["png"], REFERENCE)
+            (folder / "score.json").write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+            echo(f"{arm.name} {case_id}: {result['score']} (scored on resume)")
+            return
         findings = reference_findings(out, case_id)
         async with gate:
             if arm.feedback == "review":
@@ -727,7 +771,10 @@ async def stage_repair(out: Path, arms: list[Arm]) -> None:
         (folder / "score.json").write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
         echo(f"{arm.name} {case_id}: {result['score']}")
 
-    await asyncio.gather(*(one(arm, case_id) for arm in arms for case_id in seeds_of(out)))
+    try:
+        await asyncio.gather(*(one(arm, case_id) for arm in arms for case_id in seeds_of(out)))
+    finally:
+        await close(render_backend)
 
 
 # --- Report -------------------------------------------------------------------------------------
@@ -774,7 +821,27 @@ def arm_result(out: Path, arm: str, case_id: str) -> dict[str, Any] | None:
     return None if result.get("unchanged") else result
 
 
-def stage_report(out: Path) -> str:
+CALLS_FILE = "calls.jsonl"
+
+
+def call_summary(path: Path) -> list[str]:
+    """One line per role, model and effort from the call log: calls, failed calls, seconds."""
+    if not path.is_file():
+        return ["- no call log"]
+    totals: dict[tuple[str, str, str], list[float]] = {}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        entry = json.loads(line)
+        row = totals.setdefault((entry["role"], entry["model"], entry["effort"]), [0, 0, 0.0])
+        row[0] += 1
+        row[1] += 0 if entry["ok"] else 1
+        row[2] += entry["seconds"]
+    return [
+        f"- {role} on {model} ({effort} effort): {calls:.0f} calls, {failed:.0f} failed, {seconds:.0f} s"
+        for (role, model, effort), (calls, failed, seconds) in sorted(totals.items())
+    ]
+
+
+def stage_report(out: Path, arms: Sequence[Arm] = ARMS) -> str:
     seeds = seeds_of(out)
     scores: dict[str, dict[str, list[dict[str, Any]]]] = {}
     for case_id in seeds:
@@ -827,10 +894,14 @@ def stage_report(out: Path) -> str:
             # The reference against itself: its first run against the agreement of all its runs.
             if runs:
                 judges.setdefault(model, []).append(detection(reference, runs[0]))
-        review_file = out / "reviews" / f"{case_id}.json"
-        if review_file.is_file():
-            verdict = json.loads(review_file.read_text(encoding="utf-8"))
-            judges.setdefault("today's reviewer (haiku)", []).append(detection(reference, verdict))
+        for folder in sorted(out.glob("reviews*")):
+            review_file = folder / f"{case_id}.json"
+            if review_file.is_file():
+                effort = folder.name.removeprefix("reviews-") if "-" in folder.name else EFFORT["reviewer"]
+                verdict = json.loads(review_file.read_text(encoding="utf-8"))
+                judges.setdefault(f"today's reviewer (haiku, {effort} effort)", []).append(
+                    detection(reference, verdict)
+                )
     for judge, rows in judges.items():
         found, missed, extra = (sum(row[i] for row in rows) for i in range(3))
         lines.append(f"| {judge} | {found} | {missed} | {extra} |")
@@ -844,7 +915,7 @@ def stage_report(out: Path) -> str:
         "| Arm | repaired | failed | unchanged | mean Δ | better | same | worse | ≥ 90 | ΔVQ | ΔDE | ΔSC | ΔDQ |",
         "|---|---|---|---|---|---|---|---|---|---|---|---|---|",
     ]
-    for arm in ARMS:
+    for arm in arms:
         deltas: list[float] = []
         category: dict[str, list[float]] = {key: [] for key in ("VQ", "DE", "SC", "DQ")}
         failed = unchanged = high = 0
@@ -861,9 +932,10 @@ def stage_report(out: Path) -> str:
                 continue
             deltas.append(result["score"] - ref_means[case_id])
             high += result["score"] >= 90
-            base = scores[case_id][REFERENCE][0]["categories"]
+            reference_runs = scores[case_id][REFERENCE]
             for key in category:
-                category[key].append(result["categories"][key][0] - base[key][0])
+                base = statistics.mean(run["categories"][key][0] for run in reference_runs)
+                category[key].append(result["categories"][key][0] - base)
         better = sum(d > threshold for d in deltas)
         worse = sum(d < -threshold for d in deltas)
         lines.append(
@@ -874,7 +946,7 @@ def stage_report(out: Path) -> str:
         )
 
     # The same seeds for every arm that repairs from findings: the seeds every such arm repaired.
-    finding_arms = [arm.name for arm in ARMS if arm.feedback != "review"]
+    finding_arms = [arm.name for arm in arms if arm.feedback != "review"]
     common = [c for c in ref_means if all(arm_result(out, name, c) is not None for name in finding_arms)]
     if common:
         seed_bar = sum(technical_share(scores[c][REFERENCE][0]) >= TECHNICAL_BAR for c in common)
@@ -897,8 +969,7 @@ def stage_report(out: Path) -> str:
                 f"| {name} | {statistics.mean(finals):.1f} | {fmt(delta)} | {max(finals)} | {bar} of {len(common)} |"
             )
     lines += ["", "## Calls", ""]
-    for key, usage in sorted(USAGE.items()):
-        lines.append(f"- {key}: {usage.calls} calls, {usage.failed} failed, {usage.seconds:.0f} s")
+    lines += call_summary(out / CALLS_FILE)
     text = "\n".join(lines) + "\n"
     (out / "report.md").write_text(text, encoding="utf-8")
     return text
@@ -911,6 +982,12 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser.add_argument("--cases", help="comma-separated case ids (default: the 20 seed cases)")
     parser.add_argument("--scores", default=SCORE_PLAN, help=f"scores per seed and model (default {SCORE_PLAN})")
     parser.add_argument("--arms", help="comma-separated arm names (default: all)")
+    parser.add_argument(
+        "--review-efforts",
+        default=EFFORT["reviewer"],
+        help="comma-separated efforts for today's reviewer (default: production's); "
+        "`low,high` separates the prompt from the effort",
+    )
     return parser.parse_args(argv)
 
 
@@ -919,18 +996,23 @@ def main(argv: list[str] | None = None) -> int:
     setup_env()
     out: Path = args.out
     out.mkdir(parents=True, exist_ok=True)
+    CALL_LOG[:] = [out / CALLS_FILE]
     cases = args.cases.split(",") if args.cases else seed_cases()
     known = {arm.name: arm for arm in ARMS}
-    arms = [known[name] for name in args.arms.split(",")] if args.arms else list(ARMS)
     try:
+        unknown = [name for name in (args.arms or "").split(",") if name and name not in known]
+        if unknown:
+            raise LabError(f"unknown arm(s): {', '.join(unknown)}")
+        arms = [known[name] for name in args.arms.split(",")] if args.arms else list(ARMS)
+        efforts = [effort.strip() for effort in args.review_efforts.split(",") if effort.strip()]
         if args.stage in ("seed", "all"):
             asyncio.run(stage_seed(out, cases))
         if args.stage in ("score", "all"):
-            asyncio.run(stage_score(out, score_plan(args.scores)))
+            asyncio.run(stage_score(out, score_plan(args.scores), efforts))
         if args.stage in ("repair", "all"):
             asyncio.run(stage_repair(out, arms))
         if args.stage in ("report", "all"):
-            echo(stage_report(out))
+            echo(stage_report(out, arms))
     except LabError as exc:
         echo(f"stopped: {exc}")
         return 2
