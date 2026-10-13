@@ -557,6 +557,11 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
         "--sample", type=positive_int, help="score this many runs (1 or more), spread evenly over the report's runs"
     )
     parser.add_argument("--estimate-only", action="store_true", help="print the job count and cost estimate, then stop")
+    parser.add_argument(
+        "--tag",
+        type=lambda value: value if value.replace("-", "").isalnum() else parser.error(f"bad --tag {value!r}"),
+        help="write <report>-scores-<tag>.{json,md}, for a second judge next to the first",
+    )
     return parser.parse_args(argv)
 
 
@@ -639,10 +644,11 @@ def main(argv: list[str] | None = None) -> int:
         ],
     }
     stem = args.report.with_suffix("")
-    stem.with_name(stem.name + "-scores.json").write_text(
+    suffix = f"-scores-{args.tag}" if args.tag else "-scores"
+    stem.with_name(stem.name + suffix + ".json").write_text(
         json.dumps(out, indent=2, ensure_ascii=False), encoding="utf-8"
     )
-    stem.with_name(stem.name + "-scores.md").write_text(markdown(summary), encoding="utf-8")
+    stem.with_name(stem.name + suffix + ".md").write_text(markdown(summary), encoding="utf-8")
     print(markdown(summary))
     if outcome.stopped:
         print(f"stopped early: {outcome.stopped}", file=sys.stderr)

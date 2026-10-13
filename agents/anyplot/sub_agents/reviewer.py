@@ -28,10 +28,12 @@ from google.genai import types
 
 from ..models import make_content_config, make_model
 from ..plugins.ledger import ledger_for
-from ..policy import reviewer_instruction
+from ..policy import catalogue_reviewer_instruction, reviewer_instruction
 from ..render.contract import THEMES
 from ..schemas import Verdict, repair_verdict
+from ..scoring import ScoreAnswer
 from ..services import get_services
+from ..settings import get_settings
 from .adapter import keep_last_content, schema_guard
 
 
@@ -63,15 +65,38 @@ async def reviewer_before_model(callback_context: CallbackContext, llm_request: 
     return None
 
 
-reviewer = Agent(
-    name=REVIEWER_NAME,
-    description="Reviews the render of an adapted plot once, in the theme it was rendered in; answers with a Verdict.",
-    model=make_model("reviewer"),
-    generate_content_config=make_content_config("reviewer"),
-    static_instruction=reviewer_instruction(),
-    mode="single_turn",
-    include_contents="none",
-    output_schema=Verdict,
-    before_model_callback=reviewer_before_model,
-    after_model_callback=schema_guard(Verdict, repair_verdict),
-)
+def make_reviewer() -> Agent:
+    """The reviewer of the configured mode: the checklist (live) or the catalogue rubric (`AGENT_REVIEWER_MODE`).
+
+    In `catalogue` mode the agent is the offline scorer's twin: the same rubric, answered as a
+    `ScoreAnswer`, which the pipeline checks with `scoring.parse_answer` and turns into a verdict
+    by code (`ScoreResult.passes`).
+    """
+    if get_settings().reviewer_mode == "catalogue":
+        return Agent(
+            name=REVIEWER_NAME,
+            description="Scores the render of an adapted plot with the catalogue rubric; answers with a ScoreAnswer.",
+            model=make_model("reviewer"),
+            generate_content_config=make_content_config("reviewer"),
+            static_instruction=catalogue_reviewer_instruction(),
+            mode="single_turn",
+            include_contents="none",
+            output_schema=ScoreAnswer,
+            before_model_callback=reviewer_before_model,
+            after_model_callback=schema_guard(ScoreAnswer),
+        )
+    return Agent(
+        name=REVIEWER_NAME,
+        description="Reviews the render of an adapted plot once, in the theme it was rendered in; answers with a Verdict.",
+        model=make_model("reviewer"),
+        generate_content_config=make_content_config("reviewer"),
+        static_instruction=reviewer_instruction(),
+        mode="single_turn",
+        include_contents="none",
+        output_schema=Verdict,
+        before_model_callback=reviewer_before_model,
+        after_model_callback=schema_guard(Verdict, repair_verdict),
+    )
+
+
+reviewer = make_reviewer()

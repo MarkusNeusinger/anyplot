@@ -29,7 +29,9 @@ counts them.
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
+
+from pydantic import BaseModel, Field
 
 from core.defects import CRITERIA, DEFECT_RE
 
@@ -44,6 +46,13 @@ SCORED: dict[str, int] = {
 }
 """The criteria a user's plot is scored on and their maxima (75 points)."""
 SCORED_MAX = sum(SCORED.values())
+ScoredId = Literal[
+    "VQ-01", "VQ-02", "VQ-03", "VQ-04", "VQ-05", "VQ-06", "VQ-07",
+    "DE-01", "DE-02", "DE-03",
+    "SC-01", "SC-02", "SC-03", "SC-04",
+    "DQ-01", "DQ-03",
+]  # fmt: skip
+"""`SCORED`'s ids as a type, so a structured answer cannot name another criterion (a test holds the two equal)."""
 DE_DEFAULTS: dict[str, int] = {"DE-01": 4, "DE-02": 2, "DE-03": 2}
 TECHNICAL = tuple(item for item in SCORED if item[:2] in ("VQ", "SC", "DQ"))
 MAX_SUGGESTIONS = 3
@@ -91,6 +100,41 @@ schemas take no numeric bounds, so the range of each item's points is checked in
 `parse_answer`, per criterion."""
 
 _HEADING = re.compile(r"^(#{1,6})\s")
+
+
+class ScoreItem(BaseModel):
+    id: ScoredId
+    points: int
+
+
+class ScoreAnswer(BaseModel):
+    """`TOOL_SCHEMA` as a structured answer, for the pipeline's reviewer in `catalogue` mode;
+    `parse_answer` checks the criteria and ranges the schema cannot."""
+
+    items: list[ScoreItem]
+    defects: list[str] = Field(default_factory=list)
+    suggestions: list[str] = Field(default_factory=list)
+    description: str = ""
+
+
+def mend_answer(answer: dict[str, Any]) -> dict[str, Any]:
+    """A review answer with its formal misses mended, so `parse_answer` can read it.
+
+    For the pipeline's reviewer only (the offline scorer retries instead): a criterion named
+    twice keeps its first entry, points are clamped into the criterion's range, and a missing
+    criterion counts at its starting value (a technical item at its maximum, Design Excellence
+    at its default), as the rubric scores an item no line names. The defect lines stay as written.
+    """
+    seen: dict[str, int] = {}
+    for item in answer.get("items") or []:
+        if not isinstance(item, dict) or item.get("id") not in SCORED or item["id"] in seen:
+            continue
+        value = item.get("points")
+        if isinstance(value, int) and not isinstance(value, bool):
+            seen[item["id"]] = min(max(value, 0), SCORED[item["id"]])
+    for name in SCORED:
+        seen.setdefault(name, DE_DEFAULTS.get(name, SCORED[name]))
+    return {**answer, "items": [{"id": name, "points": points} for name, points in seen.items()]}
 
 
 class ScoreError(ValueError):
@@ -181,6 +225,17 @@ class ScoreResult:
         """Points and maximum of one category (`VQ`, `DE`, `SC`, `DQ`)."""
         items = [item for item in SCORED if item.startswith(prefix)]
         return sum(self.points[item] for item in items), sum(SCORED[item] for item in items)
+
+    @property
+    def technical_share(self) -> float:
+        """The share of the technical points (VQ, SC, DQ) the render got."""
+        return sum(self.points[item] for item in TECHNICAL) / sum(SCORED[item] for item in TECHNICAL)
+
+    def passes(self, bar: float) -> bool:
+        """The review's verdict from the points: at least `bar` of the technical points and no
+        technical item at zero (the rubric's caps on VQ-02, VQ-03 and SC-01); Design Excellence
+        is not part of it."""
+        return self.technical_share >= bar and all(self.points[item] > 0 for item in ("VQ-02", "VQ-03", "SC-01"))
 
     def as_dict(self) -> dict[str, Any]:
         return {

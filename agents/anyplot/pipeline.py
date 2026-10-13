@@ -99,6 +99,8 @@ from google.adk.workflow._errors import DynamicNodeFailError
 from google.genai import types
 from pydantic import ValidationError
 
+from core.defects import DEFECT_RE
+
 from .briefs import adapter_profile, profile_summary, spec_brief
 from .code.edits import (
     MAX_CHANGE_LITERAL_CHARS,
@@ -141,6 +143,7 @@ from .schemas import (
     Verdict,
     artifact_names,
 )
+from .scoring import ScoreAnswer, ScoreError, mend_answer, parse_answer
 from .services import PADDED_REASON, CodeVersion, Services, ThemeRender, get_services
 from .session_state import SessionView, read_session
 from .settings import AgentSettings, get_settings
@@ -705,14 +708,59 @@ async def _adapt(ctx: Context, scope: str, request_text: str, library: str) -> A
         return AdaptMiss("truncated" if call is not None and call.finish_reason == "MAX_TOKENS" else "schema")
 
 
-async def _review(ctx: Context, scope: str, request: ReviewRequest) -> Verdict | None:
+@dataclass(frozen=True)
+class ReviewOutcome:
+    """A read review in either mode: the verdict, the defect lines for the repair, their ids, the score."""
+
+    ok: bool
+    lines: list[str]
+    ids: list[str]
+    score: int | None = None
+    technical: float | None = None
+
+
+async def _review(ctx: Context, scope: str, request: ReviewRequest, theme: Theme) -> ReviewOutcome | None:
     ledger_for(ctx.invocation_id).last_calls.pop(REVIEWER_NAME, None)
+    catalogue = get_settings().reviewer_mode == "catalogue"
+    text = render_score_request(request) if catalogue else render_review_request(request)
     try:
-        raw = await ctx.run_node(reviewer, node_input=render_review_request(request), override_isolation_scope=scope)
-        return Verdict.model_validate(raw)
+        raw = await ctx.run_node(reviewer, node_input=text, override_isolation_scope=scope)
+        if not catalogue:
+            verdict = Verdict.model_validate(raw)
+            return ReviewOutcome(
+                verdict.ok,
+                [_on_theme(defect, theme).as_line() for defect in verdict.defects],
+                [defect.id for defect in verdict.defects],
+            )
+        result = parse_answer(mend_answer(ScoreAnswer.model_validate(raw).model_dump()))
     except (ValidationError, DynamicNodeFailError) as exc:
         _reraise_unless_schema(exc)
         return None
+    except ScoreError as exc:
+        # The message names criteria and ranges only, never content.
+        logger.warning("catalogue review answer is not a complete score: %s", exc)
+        return None
+    ok = result.passes(get_settings().review_bar)
+    ids = sorted({found for line in result.defects if (m := DEFECT_RE.match(line)) for found in m["ids"].split(", ")})
+    return ReviewOutcome(ok, [] if ok else result.defects, ids, result.score, round(result.technical_share, 3))
+
+
+def render_score_request(request: ReviewRequest) -> str:
+    """The catalogue reviewer's node input: the scorer's request (`scoring.user_text`) with the
+    gate notes and the change request added, every value fenced; the image follows from the callback."""
+    lines = [
+        DATA_PREAMBLE,
+        fence("spec_text", request.spec_brief),
+        fence("plot_code", request.code),
+        fence("user_data", request.profile_summary),
+        fence("user_data", json.dumps([item.model_dump() for item in request.bindings], ensure_ascii=False)),
+        fence("plot_language", request.plot_language),
+    ]
+    if request.change_request:
+        lines += ["Change request:", fence("user_message", request.change_request)]
+    if request.gate_notes:
+        lines += ["Gate notes:", fence("tool_notes", json.dumps(request.gate_notes, ensure_ascii=False))]
+    return "\n\n".join(lines)
 
 
 def _reraise_unless_schema(exc: Exception) -> None:
@@ -1051,6 +1099,7 @@ async def _attempts(
                 gate_notes=[_note(line) for line in report.advisory][:MAX_NOTES],
                 plot_language=run.language,
             ),
+            run.theme,
         )
         review_call = _call_fields(ledger, REVIEWER_NAME)
         if verdict is None:
@@ -1063,7 +1112,8 @@ async def _attempts(
             ledger,
             attempt=attempt,
             verdict="ok" if verdict.ok else "defects",
-            defects=[defect.id for defect in verdict.defects],
+            defects=verdict.ids,
+            **({"score": verdict.score, "technical": verdict.technical} if verdict.score is not None else {}),
             **review_call,
         )
         run.reviewed = True
@@ -1071,7 +1121,7 @@ async def _attempts(
         if verdict.ok:
             _end_attempt(run, "reviewer_ok")
             return
-        run.review_lines = [_on_theme(defect, run.theme).as_line() for defect in verdict.defects]
+        run.review_lines = list(verdict.lines)
         feedback = list(run.review_lines)
         _end_attempt(run, "reviewer_defects", feedback)
 

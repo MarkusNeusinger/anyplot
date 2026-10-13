@@ -228,6 +228,15 @@ def reviewer_instruction() -> str:
     )
 
 
+@lru_cache(maxsize=1)
+def catalogue_reviewer_instruction() -> str:
+    """The reviewer's static instruction in `catalogue` mode: a short framing, then the offline
+    scorer's prompt with the catalogue rubric verbatim (`scoring.system_prompt`), one rule source."""
+    from .scoring import system_prompt
+
+    return _join(own_prompt("reviewer_catalogue.md"), system_prompt())
+
+
 def scope_rubric() -> str:
     return own_prompt("scope_judge.md")
 

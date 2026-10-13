@@ -13,6 +13,8 @@ another provider, model or location.
 | `AGENT_JUDGE_MODEL` | `claude-haiku-5-5` | Model of the scope and dataset judge; same rule |
 | `AGENT_TRANSPORT` | `vertex` | How Claude calls travel: `vertex` (live) or `claude-cli` (development and test only: the local Claude Code CLI on your subscription; calls it cannot answer, the root's, go to Vertex AI; `cli_transport.py`) |
 | `AGENT_ADAPTER_MODEL`, `AGENT_REVIEWER_MODEL` | unset | `claude-cli` only: the adapter's or the reviewer's model for an experiment, any of `cli_transport.CLI_MODELS` |
+| `AGENT_REVIEWER_MODE` | `checklist` | The reviewer's rubric: `checklist` (live) or `catalogue` (the offline scorer's catalogue rubric; `ok` decided by code from the points) |
+| `AGENT_REVIEW_BAR` | `0.95` | `catalogue` reviews: the share of the technical points (VQ, SC, DQ) a render needs, with no score cap, to pass |
 | `AGENT_CLI_CONCURRENCY` | `3` | `claude-cli` only: CLI calls at the same time |
 | `AGENT_CLI_CALL_LOG` | unset | `claude-cli` only: a file each CLI call appends one JSON line to (model, effort, seconds, ok) |
 | `AGENT_LOCATION` | `eu` | Vertex AI location of every model call: `eu`, `us` or `global` |
@@ -84,6 +86,9 @@ neither Gemini 3.x Flash nor the eu Claude quota, so it is refused rather than t
 
 Provider = Literal["anthropic-vertex", "gemini"]
 """Model families: Claude through Vertex AI's Anthropic endpoint, or Gemini through Vertex AI."""
+
+ReviewerMode = Literal["checklist", "catalogue"]
+"""The reviewer's rubric: the narrow checklist (live) or the catalogue rubric the offline scorer uses."""
 
 Transport = Literal["vertex", "claude-cli"]
 """How Claude calls travel: Vertex AI (live), or the local Claude Code CLI for experiments."""
@@ -158,6 +163,15 @@ class AgentSettings(BaseSettings):
 
     reviewer_model: str | None = None
     """Experiments: the reviewer's model (`AGENT_REVIEWER_MODEL`); on `claude-cli` any of `CLI_MODELS`."""
+
+    reviewer_mode: ReviewerMode = "checklist"
+    """What the reviewer judges with (`AGENT_REVIEWER_MODE`): `checklist` (live: the narrow checklist of
+    `prompts/reviewer.md`) or `catalogue` (the offline scorer's catalogue rubric, `scoring.py`; the code
+    decides `ok` from the points with `AGENT_REVIEW_BAR`, and the defect lines feed the repair)."""
+
+    review_bar: float = Field(default=0.95, gt=0, le=1)
+    """`catalogue` reviews only (`AGENT_REVIEW_BAR`): the share of the technical points (VQ, SC, DQ)
+    a render needs, with no score cap, to pass the review."""
 
     cli_concurrency: PositiveInt = 3
     """`claude-cli` only: CLI calls at the same time (`AGENT_CLI_CONCURRENCY`)."""
