@@ -188,10 +188,19 @@ async def run_cli(argv: list[str], stdin: bytes, cwd: str) -> str:
     try:
         stdout, _ = await asyncio.wait_for(process.communicate(stdin), CALL_TIMEOUT_S)
     except TimeoutError:
+        await _reap(process)
+        raise CliTransportError(f"the CLI did not answer within {CALL_TIMEOUT_S:.0f} s") from None
+    except asyncio.CancelledError:
+        # A caller's shorter budget (the judge's) cancelled the call: no orphaned CLI keeps working.
+        await asyncio.shield(_reap(process))
+        raise
+    return stdout.decode("utf-8", "replace")
+
+
+async def _reap(process: asyncio.subprocess.Process) -> None:
+    if process.returncode is None:
         process.kill()
         await process.wait()
-        raise CliTransportError(f"the CLI did not answer within {CALL_TIMEOUT_S:.0f} s") from None
-    return stdout.decode("utf-8", "replace")
 
 
 class _Messages:

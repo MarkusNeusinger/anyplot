@@ -563,6 +563,7 @@ class AnthropicJudge:
     timeout_s: float
     client: Any = None
     """A client to use instead of Vertex AI's (the `claude-cli` transport)."""
+    transcribe_timeout_s: float = TRANSCRIBE_TIMEOUT_S
 
     @cached_property
     def _client(self) -> Any:
@@ -619,7 +620,7 @@ class AnthropicJudge:
         return await _within_budget(self._attempt, text, rubric, self.timeout_s)
 
     async def transcribe(self, text: str, rubric: str) -> Transcription:
-        return await _within_budget(self._attempt_transcribe, text, rubric, TRANSCRIBE_TIMEOUT_S)
+        return await _within_budget(self._attempt_transcribe, text, rubric, self.transcribe_timeout_s)
 
 
 @dataclass
@@ -749,6 +750,7 @@ def make_judge_client(settings: AgentSettings | None = None) -> JudgeClient:
                 region=settings.location,
                 timeout_s=max(settings.judge_timeout_s, CLI_JUDGE_TIMEOUT_S),
                 client=cli_client(settings),
+                transcribe_timeout_s=max(TRANSCRIBE_TIMEOUT_S, CLI_JUDGE_TIMEOUT_S),
             )
         return AnthropicJudge(
             model=settings.judge_model,

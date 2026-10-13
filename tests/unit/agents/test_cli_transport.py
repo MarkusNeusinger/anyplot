@@ -183,4 +183,31 @@ class TestSettingsAndFactories:
         judge = models.make_judge_client(AgentSettings(transport="claude-cli", environment="test"))
         assert isinstance(judge, models.AnthropicJudge)
         assert isinstance(judge.client, ClaudeCliClient)
-        assert judge.timeout_s == CLI_JUDGE_TIMEOUT_S
+        assert judge.timeout_s == judge.transcribe_timeout_s == CLI_JUDGE_TIMEOUT_S
+
+    def test_the_harness_prices_each_agent_at_its_own_model(self) -> None:
+        from agents.evals.matrix import kind_model
+
+        settings = AgentSettings(transport="claude-cli", environment="test", reviewer_model="claude-opus-5-5")
+        assert kind_model("reviewer", settings) == "claude-opus-5-5"
+        assert kind_model("adapter_matplotlib", settings) == "claude-haiku-5-5"
+        assert kind_model("anyplot", settings) == "claude-haiku-5-5"
+
+
+def test_a_cancelled_call_kills_the_cli(tmp_path: Path) -> None:
+    from agents.anyplot.cli_transport import run_cli
+
+    async def scenario() -> int:
+        marker = tmp_path / "pid"
+        script = f"echo $$ > {marker}; exec sleep 30"
+        task = asyncio.create_task(run_cli(["sh", "-c", script], b"", str(tmp_path)))
+        while not marker.exists() or not marker.read_text().strip():
+            await asyncio.sleep(0.05)
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+        return int(marker.read_text())
+
+    pid = asyncio.run(scenario())
+    with pytest.raises(ProcessLookupError):
+        os.kill(pid, 0)

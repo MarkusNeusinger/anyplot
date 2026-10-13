@@ -47,8 +47,9 @@ fi
 
 echo "experiment $NAME: adapter ${AGENT_ADAPTER_MODEL:-default}, reviewer ${AGENT_REVIEWER_MODEL:-default}," \
   "commit $(git rev-parse --short HEAD), out $OUT"
-uv run --extra agents python -m agents.evals.matrix --keep-attempts --no-baseline \
-  --renderer remote --render-url "$AGENT_RENDER_URL" --gcloud-token --out "$OUT" "$@"
+# The fixed options come last, so a pass-through option cannot override the renderer or the output.
+uv run --extra agents python -m agents.evals.matrix "$@" --keep-attempts --no-baseline \
+  --renderer remote --render-url "$AGENT_RENDER_URL" --gcloud-token --out "$OUT"
 
 if [ "${SCORE:-1}" != 0 ]; then
   report=$(ls -t "$OUT"/*.json | grep -v -e '-scores.json$' -e 'cli-calls' | head -1)
