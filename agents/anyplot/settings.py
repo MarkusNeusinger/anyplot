@@ -44,8 +44,8 @@ another provider, model or location.
 | `AGENT_DAILY_PIPELINE_RUNS` | `40` | Pipeline runs per user and day |
 | `AGENT_GLOBAL_DAILY_TOKEN_BUDGET` | `12000000` | Cost-weighted tokens per day across all users, three users at their daily budget; reaching it pauses the service |
 | `AGENT_RENDER_TIMEOUT_S` | `60` | Seconds per render, host-enforced |
-| `AGENT_REQUEST_DEADLINE_S` | `280` | Hard request deadline, enforced through `abort_signal` |
-| `AGENT_SOFT_DEADLINE_S` | `240` | Soft deadline inside the pipeline; below the hard one |
+| `AGENT_REQUEST_DEADLINE_S` | `540` | Hard request deadline, enforced through `abort_signal` |
+| `AGENT_SOFT_DEADLINE_S` | `480` | Soft deadline inside the pipeline; below the hard one |
 | `AGENT_JUDGE_TIMEOUT_S` | `4` | Wall-clock budget of one judge verdict, its single retry and the half-second wait before it included |
 | `AGENT_KEEP_REFUSALS` | `false` | Keep the text and verdict of each message the scope judge refused, in a bounded in-memory ring per session that only the feedback bundle shows; never in a log |
 | `AGENT_ATTACK_STRIKES` | `3` | `attack` verdicts per user and day after which the user gets the budget refusal for the rest of the day |
@@ -329,14 +329,17 @@ class AgentSettings(BaseSettings):
     render_timeout_s: PositiveInt = 60
     """Seconds per render, host-enforced (`AGENT_RENDER_TIMEOUT_S`)."""
 
-    request_deadline_s: PositiveInt = 280
+    request_deadline_s: PositiveInt = 540
     """Hard request deadline in seconds, enforced through `abort_signal` (`AGENT_REQUEST_DEADLINE_S`).
 
-    280 since 2026-10-13 (180 before): with the self-review a round takes about 60 s, and at 140 s
-    the soft deadline stopped the repair round in 11 of 20 measured runs. The run queue's 600 s
-    wait plus 280 s stays below the BFF's 890 s turn cap and the services' 900 s timeout."""
+    540 since 2026-10-13 (180 before). With the self-review a round takes about 60 s, and at a soft
+    deadline of 140 s the repair round was skipped in 11 of 20 measured runs; at 240 s the flow
+    reached +3.0 on unseen specs. The owner's rule: a complicated plot must never ship unfinished
+    because time ran out, so the deadlines leave room far above the measured maximum (155 s on the
+    CLI). The run queue's 600 s wait plus 540 s stays below the BFF's 1,190 s turn cap and the
+    services' 1,200 s Cloud Run timeout."""
 
-    soft_deadline_s: PositiveInt = 240
+    soft_deadline_s: PositiveInt = 480
     """Soft deadline in seconds inside the pipeline (`AGENT_SOFT_DEADLINE_S`); below the hard one."""
 
     judge_timeout_s: PositiveFloat = 4.0

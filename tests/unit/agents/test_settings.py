@@ -49,8 +49,8 @@ class TestDefaults:
         assert settings.daily_pipeline_runs == 40
         assert settings.global_daily_token_budget == 12_000_000  # three users at their daily budget
         assert settings.render_timeout_s == 60
-        assert settings.request_deadline_s == 280  # a round with self-review takes about 60 s
-        assert settings.soft_deadline_s == 240
+        assert settings.request_deadline_s == 540  # a round with self-review takes about 60 s; never cut short
+        assert settings.soft_deadline_s == 480
         assert settings.reviewer_mode == "catalogue" and settings.ship_best and settings.self_review
         assert (settings.review_bar, settings.status_bar) == (1.0, 0.95)
         assert settings.allowed_callers == []

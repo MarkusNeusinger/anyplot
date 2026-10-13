@@ -506,7 +506,7 @@ class TestCloudBuild:
             "--min-instances=${_MIN_INSTANCES}",
             "--max-instances=1",
             "--concurrency=20",
-            "--timeout=900",
+            "--timeout=1200",
             "TRAFFIC=(--no-traffic)",
             "--tag=candidate",
             "--revision-suffix=b$BUILD_ID",

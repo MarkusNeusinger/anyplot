@@ -83,7 +83,7 @@ Three rules hold for everything here:
 | `AGENT_WATERMARK` | `true` | Whether the served PNGs (the artifact route and the feedback bundle) carry the footer strip; `false` serves the raw renders. The gates, the reviewer and `plot.py` always see the raw render |
 | `AGENT_RUN_CONCURRENCY` | `1` | Pipeline runs (whole `/messages` turns) in flight; the run queue holds the rest |
 | `AGENT_RUNS_PER_MINUTE` | `1` | Runs that may start within any 60 seconds (a sliding window) |
-| `AGENT_QUEUE_MAX_WAIT_S` | `600` | Longest wait in the run queue, after which the run ends with `capacity`; the queue holds rate x wait / 60 entries (10) and answers `503 capacity` beyond that. Through the BFF the whole turn, this wait included, ends by `AGENT_TURN_MAX_S` (890 s, see `docs/reference/api.md`), which ends a queued turn after 585 s of waiting so the 280 s run still fits |
+| `AGENT_QUEUE_MAX_WAIT_S` | `600` | Longest wait in the run queue, after which the run ends with `capacity`; the queue holds rate x wait / 60 entries (10) and answers `503 capacity` beyond that. Through the BFF the whole turn, this wait included, ends by `AGENT_TURN_MAX_S` (1,190 s, see `docs/reference/api.md`), which the full wait plus the 540 s run fits into |
 | `AGENT_MAX_ATTEMPTS` | `2` | Rounds per pipeline run, 1 to 3: the first and at most one repair round by default (a self-review adds an adapter call to a round, never a round); the eval harness sets 1 or 3 (`--max-attempts`) to measure no repair or a second repair round |
 | `AGENT_REVIEWER_MODE` | `catalogue` | The reviewer's rubric: `catalogue` (the offline scorer's rubric, verdict decided by code from the points) or `checklist` (the narrow checklist used before 2026-10-13) |
 | `AGENT_REVIEW_BAR`, `AGENT_STATUS_BAR` | `1.0`, `0.95` | `catalogue` reviews: the share of technical points (VQ, SC, DQ) below which a render gets the repair, and the ship bar at or above which it shows without notes |
@@ -99,8 +99,8 @@ Three rules hold for everything here:
 | `AGENT_DAILY_PIPELINE_RUNS` | `40` | Pipeline runs per user and day |
 | `AGENT_GLOBAL_DAILY_TOKEN_BUDGET` | `12000000` | Cost-weighted tokens per day for the whole service |
 | `AGENT_RENDER_TIMEOUT_S` | `60` | Seconds per theme render |
-| `AGENT_REQUEST_DEADLINE_S` | `280` | Hard request deadline (180 before 2026-10-13: with a self-review per round, the soft deadline of 140 s stopped the repair round in 11 of 20 runs) |
-| `AGENT_SOFT_DEADLINE_S` | `240` | Soft deadline inside the pipeline |
+| `AGENT_REQUEST_DEADLINE_S` | `540` | Hard request deadline (180 before 2026-10-13: with a self-review per round, the soft deadline of 140 s stopped the repair round in 11 of 20 runs; the owner's rule is that no plot ships unfinished for lack of time) |
+| `AGENT_SOFT_DEADLINE_S` | `480` | Soft deadline inside the pipeline |
 | `AGENT_JUDGE_TIMEOUT_S` | `4` | Budget of one judge verdict, its one retry and the half-second wait before it included |
 | `AGENT_KEEP_REFUSALS` | `false` | Keep the text and verdict of each message the scope judge refused, at most 20 per session in memory, shown only in the feedback bundle (`refusals`); never in a log. A phase-1 stub: read them from the bundle the page's `.save()` downloads (`GET /debug/agent/sessions/{sid}/bundle` on the BFF) while the session lives; the ring goes with the session |
 | `AGENT_ATTACK_STRIKES` | `3` | `attack` verdicts of the scope or dataset judge per user and day, once per distinct message or dataset, after which the user gets the budget refusal for the rest of the UTC day; only a new day, a redeploy or a scale-to-zero resets them. Every token-path caller shares one user id, so raise it for a jailbreak-testing session |
