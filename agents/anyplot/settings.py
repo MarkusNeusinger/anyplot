@@ -177,9 +177,14 @@ class AgentSettings(BaseSettings):
     """Experiments (`AGENT_HIGHLIGHTS`): `data` lets the adapter add at most one highlight of a
     salient feature of the user's data, computed from `df` (`prompts/adapter_highlights.md`)."""
 
+    ship_best: bool = False
+    """Experiments (`AGENT_SHIP_BEST`, `catalogue` reviews only): every render is reviewed, and the
+    best-scored version ships instead of the last one."""
+
     self_review: bool = False
     """Experiments (`AGENT_SELF_REVIEW`): after the first render that passes the gates, the adapter
-    sees that render once and may improve its code before the review; it uses one attempt."""
+    sees that render once and may improve its code before the review. It is the adapter proofreading
+    its work, not a repair: it gets an attempt on top of `AGENT_MAX_ATTEMPTS`."""
 
     cli_concurrency: PositiveInt = 3
     """`claude-cli` only: CLI calls at the same time (`AGENT_CLI_CONCURRENCY`)."""

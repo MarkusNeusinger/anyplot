@@ -314,6 +314,10 @@ class Candidate:
     """The ADAPTATION validator rule ids behind `adaptation_lines`, for the attribution log."""
     advisory_gates: list[str] = field(default_factory=list)
     """The advisory probe gate ids (`G3`, `G5`, `G7`, `G8`, `G9`, `G10`) behind `advisory_lines`, for the attribution log."""
+    review_score: int | None = None
+    """The catalogue review's score of this render, when it had one (`AGENT_REVIEWER_MODE=catalogue`)."""
+    review_lines: list[str] = field(default_factory=list)
+    """This render's own review lines, so a best-scored earlier render ships with its own notes."""
 
 
 @dataclass
@@ -347,6 +351,8 @@ class Run:
     """How each attempt ended, in the page's vocabulary (`ROUND_OUTCOMES`), for `PlotResult.rounds`."""
     step: RoundStep | None = None
     """The progress step the current attempt is in, the last one `_status` reported."""
+    best_scored: Candidate | None = None
+    """The canvas-clean render with the highest catalogue review score (`AGENT_SHIP_BEST`)."""
     self_reviewed: bool = False
     """The adapter has looked at its own render (`AGENT_SELF_REVIEW`), at most once per run."""
     repair_hints: list[str] = field(default_factory=list)
@@ -620,9 +626,24 @@ def _check(
     )
 
 
+def shipped_candidate(run: Run) -> Candidate | None:
+    """The render a run ships: the last canvas-clean one, or with `AGENT_SHIP_BEST` the best-scored one
+    when the last has no higher (or no) review score; a padded render only when nothing else exists."""
+    best = run.best
+    scored = run.best_scored
+    if ship_best(get_settings()) and scored is not None and best is not scored:
+        if best is None or best.review_score is None or (scored.review_score or 0) > best.review_score:
+            best = scored
+    return best or run.padded
+
+
+def ship_best(settings: AgentSettings) -> bool:
+    return settings.ship_best and settings.reviewer_mode == "catalogue"
+
+
 def finish(run: Run) -> PlotResult:
     """The `PlotResult` of a finished run (see the module docstring for the status rules)."""
-    shipped = run.best or run.padded
+    shipped = shipped_candidate(run)
     if shipped is None:
         reason: FailureReason
         if run.reason in ("budget", "deadline", "error"):
@@ -640,7 +661,9 @@ def finish(run: Run) -> PlotResult:
     residual += [line for line in shipped.advisory_lines if line.startswith(GLYPH_LINE_PREFIX)]
     if shipped.reviewed_ok is not True:
         residual += shipped.advisory_lines
-        if run.review_lines:
+        if shipped.review_score is not None and shipped.review_lines:
+            residual += shipped.review_lines
+        elif run.review_lines:
             residual += run.review_lines
         elif not run.reviewed:
             residual.append(NOT_REVIEWED_LINE.format(why=run.unreviewed_why or "the repair round left defects"))
@@ -663,7 +686,7 @@ def _store_version(ctx: Context, services: Services, run: Run, result: PlotResul
     The number travels in the `plot` event, so a client addresses the artifact and theme
     toggle routes by the server's number instead of counting the events it received.
     """
-    shipped = run.best or run.padded
+    shipped = shipped_candidate(run)
     if shipped is None or result.status not in ("ok", "needs_attention"):
         return result
     session_id = ctx.session.id
@@ -914,8 +937,13 @@ async def _attempts(
     rows = data_rows(dataset.csv)
 
     adapter = adapter_name(view.library)
+    # The self-review is the adapter proofreading its own work, never a repair: it gets an attempt
+    # of its own on top of `AGENT_MAX_ATTEMPTS` (owner, 2026-10-13).
+    max_attempts = settings.max_attempts + (1 if settings.self_review else 0)
+    # Ship the best-scored version (`AGENT_SHIP_BEST`, catalogue reviews only): every render is reviewed.
+    max_reviews = max_attempts if ship_best(settings) else MAX_REVIEWS
 
-    for attempt in range(1, settings.max_attempts + 1):
+    for attempt in range(1, max_attempts + 1):
         # This call and the root's closing reply: a plot may ship from any attempt, and ADK's
         # call cap would refuse the reply the Budget plugin's exemption cannot admit.
         if not budget_allows(ledger, services.usage, settings, next_calls=2):
@@ -1075,17 +1103,17 @@ async def _attempts(
         # without feedback, or from the last allowed attempt, is reviewed (the advisory lines
         # kept as gate notes), again after a rejection, up to `MAX_REVIEWS` calls. With the
         # default two attempts: attempt 1 repairs or is reviewed, attempt 2 is reviewed.
-        if not report.canvas_ok or (feedback and attempt < settings.max_attempts):
+        if not report.canvas_ok or (feedback and attempt < max_attempts):
             _end_attempt(run, "gates", feedback)
             continue
-        if settings.self_review and not run.self_reviewed and attempt < settings.max_attempts:
+        if settings.self_review and not run.self_reviewed and attempt < max_attempts:
             # The adapter looks at its own render once before the review (an experiment switch).
             run.self_reviewed = True
             ledger.adapter_render_id = services.renders.put(ctx.session.id, candidate.pngs)
             feedback = [SELF_REVIEW_LINE]
             _end_attempt(run, "self_review", feedback)
             continue
-        if run.reviews >= MAX_REVIEWS:
+        if run.reviews >= max_reviews:
             # Every review used, and either no feedback or no attempt left for it: the run ends
             # here, since another attempt would have nothing to repair.
             _end_attempt(run, "not_rereviewed")
@@ -1136,6 +1164,12 @@ async def _attempts(
         )
         run.reviewed = True
         candidate.reviewed_ok = verdict.ok
+        candidate.review_score = verdict.score
+        candidate.review_lines = [] if verdict.ok else list(verdict.lines)
+        if verdict.score is not None and (
+            run.best_scored is None or verdict.score >= (run.best_scored.review_score or 0)
+        ):
+            run.best_scored = candidate
         if verdict.ok:
             _end_attempt(run, "reviewer_ok")
             return
