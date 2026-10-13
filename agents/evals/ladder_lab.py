@@ -481,7 +481,7 @@ def load_render(folder: Path) -> dict[str, Any] | None:
 async def score(setup: Setup, run_form: str, png: bytes, model: str) -> dict[str, Any]:
     """One rubric score of a render, checked and totalled by `scoring.parse_answer`."""
     from agents.anyplot.briefs import profile_summary
-    from agents.anyplot.scoring import TOOL_SCHEMA, ScoreRequest, parse_answer, system_prompt, user_text
+    from agents.anyplot.scoring import TOOL_SCHEMA, ScoreError, ScoreRequest, parse_answer, system_prompt, user_text
     from agents.evals.score import spec_text
 
     request = ScoreRequest(
@@ -493,8 +493,15 @@ async def score(setup: Setup, run_form: str, png: bytes, model: str) -> dict[str
         theme="light",
         plot_language=setup.view.language,
     )
-    answer = await ask(model, system_prompt(), user_text(request), TOOL_SCHEMA, role="scorer", png=png)
-    return parse_answer(answer).as_dict()
+    problem = ""
+    for _ in range(CALL_RETRIES + 1):
+        answer = await ask(model, system_prompt(), user_text(request), TOOL_SCHEMA, role="scorer", png=png)
+        try:
+            return parse_answer(answer).as_dict()
+        except ScoreError as exc:
+            # The schema cannot enforce a complete criterion set or per-criterion ranges.
+            problem = str(exc)
+    raise LabError(f"scorer on {model} gave no complete score: {problem}")
 
 
 async def review(
@@ -563,8 +570,9 @@ async def advise(setup: Setup, seed: dict[str, Any], findings: dict[str, Any], m
 def setup_env() -> None:
     """Development settings, like `scripts/agents-dev.sh`; the renderer's URL comes from `renderer_url`."""
     os.environ.setdefault("PYTHON_DOTENV_DISABLED", "1")
-    os.environ.setdefault("ENVIRONMENT", "development")
-    os.environ.setdefault("AGENT_RENDERER", "remote")
+    # Forced, not defaulted: a leftover `AGENT_RENDERER=fake` would score fixture PNGs.
+    os.environ["ENVIRONMENT"] = "development"
+    os.environ["AGENT_RENDERER"] = "remote"
     os.environ.setdefault("GOOGLE_CLOUD_PROJECT", "anyplot")
 
 
@@ -654,8 +662,14 @@ def score_plan(text: str) -> list[tuple[str, int]]:
     return plan
 
 
+SELECTED: list[str] = []
+"""The cases `--cases` names; empty means every seed under `--out`. Every stage reads it through `seeds_of`."""
+
+
 def seeds_of(out: Path) -> list[str]:
-    return sorted(path.parent.name for path in (out / "seeds").glob("*/plot.png"))
+    """The rendered seeds under `out`, narrowed to `--cases` when it was given."""
+    seeds = sorted(path.parent.name for path in (out / "seeds").glob("*/plot.png"))
+    return [case for case in seeds if case in SELECTED] if SELECTED else seeds
 
 
 def reviews_dir(out: Path, effort: str) -> Path:
@@ -998,6 +1012,7 @@ def main(argv: list[str] | None = None) -> int:
     out.mkdir(parents=True, exist_ok=True)
     CALL_LOG[:] = [out / CALLS_FILE]
     cases = args.cases.split(",") if args.cases else seed_cases()
+    SELECTED[:] = cases if args.cases else []
     known = {arm.name: arm for arm in ARMS}
     try:
         unknown = [name for name in (args.arms or "").split(",") if name and name not in known]

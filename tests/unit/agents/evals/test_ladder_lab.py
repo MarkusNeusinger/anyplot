@@ -74,6 +74,17 @@ def test_detection_counts_against_the_deductions_two_reference_runs_agree_on() -
     assert ladder_lab.detection(reference, None) == (0, 0, 0)
 
 
+def test_seeds_of_narrows_to_the_selected_cases(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    for case in ("a", "b", "c"):
+        (tmp_path / "seeds" / case).mkdir(parents=True)
+        (tmp_path / "seeds" / case / "plot.png").write_bytes(b"png")
+    (tmp_path / "seeds" / "failed-one").mkdir()
+    monkeypatch.setattr(ladder_lab, "SELECTED", [])
+    assert ladder_lab.seeds_of(tmp_path) == ["a", "b", "c"]
+    monkeypatch.setattr(ladder_lab, "SELECTED", ["c", "a", "missing"])
+    assert ladder_lab.seeds_of(tmp_path) == ["a", "c"]
+
+
 def test_arms_are_unique_and_well_formed() -> None:
     names = [arm.name for arm in ladder_lab.ARMS]
     assert len(names) == len(set(names))
