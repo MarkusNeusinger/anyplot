@@ -26,6 +26,7 @@ an eval can count them. They still count as scored, as the catalogue's review ga
 counts them.
 """
 
+import os
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -161,11 +162,27 @@ def section(text: str, heading: str) -> str:
     return "\n".join(lines[start:end]).strip()
 
 
-def system_prompt(scorer: Path = SCORER_PROMPT, criteria: Path = CRITERIA_FILE, review: Path = REVIEW_FILE) -> str:
-    """`scorer.md` followed by the rubric sections it applies, cut verbatim from the catalogue's prompts."""
+HIGHLIGHT_RULE = Path(__file__).with_name("prompts") / "scorer_highlights.md"
+
+
+def system_prompt(
+    scorer: Path = SCORER_PROMPT,
+    criteria: Path = CRITERIA_FILE,
+    review: Path = REVIEW_FILE,
+    highlights: bool | None = None,
+) -> str:
+    """`scorer.md` followed by the rubric sections it applies, cut verbatim from the catalogue's prompts.
+
+    `highlights` (experiment; default from `AGENT_SCORER_HIGHLIGHTS=on`) adds a fifth user-plot rule:
+    one data-derived highlight is not variant creep (`prompts/scorer_highlights.md`).
+    """
+    if highlights is None:
+        highlights = os.environ.get("AGENT_SCORER_HIGHLIGHTS", "").lower() == "on"
     criteria_text = criteria.read_text(encoding="utf-8")
     review_text = review.read_text(encoding="utf-8")
     parts = [scorer.read_text(encoding="utf-8").strip()]
+    if highlights:
+        parts.append(HIGHLIGHT_RULE.read_text(encoding="utf-8").strip())
     parts.append("# From the catalogue rubric (prompts/quality-criteria.md)")
     parts += [section(criteria_text, heading) for heading in CRITERIA_SECTIONS]
     parts.append("# From the catalogue review (prompts/workflow-prompts/ai-quality-review.md)")
