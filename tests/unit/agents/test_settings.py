@@ -43,7 +43,7 @@ class TestDefaults:
         assert settings.render_url is None and settings.render_token is None
         assert settings.render_image == "anyplot-renderer:dev"
         assert settings.max_attempts == 2  # the first attempt and at most one repair round
-        assert settings.max_llm_calls == 12
+        assert settings.max_llm_calls == 16  # two rounds of adapt, self-review and retry, two reviews, the root
         assert settings.request_token_budget == 800_000  # never cuts a live-flow round short (CLI max ~458k)
         assert settings.daily_token_budget == 8_000_000  # about 30 median live-flow runs
         assert settings.daily_pipeline_runs == 40

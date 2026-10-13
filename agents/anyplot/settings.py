@@ -39,7 +39,7 @@ another provider, model or location.
 | `AGENT_ADAPTER_THINKING_BUDGET` | `2048` | The same for the adapter; the eval harness overrides both with `--thinking-budget ROOT,ADAPTER` |
 | `AGENT_REVIEWER_THINKING_BUDGET` | `2048` | The same for the reviewer; 0 turns its thinking off |
 | `AGENT_ROOT_EFFORT`, `AGENT_ADAPTER_EFFORT`, `AGENT_REVIEWER_EFFORT` | `medium`, `high`, `high` | Claude's effort per agent kind (`low`, `medium`, `high`), set by the 2026-10-13 measurements; on the claude-cli transport also how much the CLI thinks |
-| `AGENT_MAX_LLM_CALLS` | `12` | LLM calls per request (the `RunConfig` cap) |
+| `AGENT_MAX_LLM_CALLS` | `16` | LLM calls per request (the `RunConfig` cap) |
 | `AGENT_REQUEST_TOKEN_BUDGET` | `800000` | Cost-weighted tokens per request, in input-token equivalents: an uncached input token counts 1, a cache read 0.1, a cache write 1.25, an output token 5 (`plugins/ledger.BUDGET_WEIGHTS`, the list-price ratios) |
 | `AGENT_DAILY_TOKEN_BUDGET` | `8000000` | Cost-weighted tokens per user and day, weighted the same way; about 30 median runs of the live flow of 2026-10-13 |
 | `AGENT_DAILY_PIPELINE_RUNS` | `40` | Pipeline runs per user and day |
@@ -310,8 +310,10 @@ class AgentSettings(BaseSettings):
     with `reviewer_thinking_budget`. A stricter reviewer alone scored lower on unseen specs; together with
     the adapter at high it was the best configuration on seeds and unseen specs, by both judges."""
 
-    max_llm_calls: PositiveInt = 12
-    """LLM calls per request (`AGENT_MAX_LLM_CALLS`), the `RunConfig` cap."""
+    max_llm_calls: PositiveInt = 16
+    """LLM calls per request (`AGENT_MAX_LLM_CALLS`), the `RunConfig` cap. 16 since 2026-10-13 (12 before):
+    two rounds with a self-review and a check retry each take up to six adapter calls, two reviews and
+    the root's two calls, so 16 leaves room and never stops a round."""
 
     request_token_budget: PositiveInt = 800_000
     """Cost-weighted tokens per request (`AGENT_REQUEST_TOKEN_BUDGET`), in input-token equivalents

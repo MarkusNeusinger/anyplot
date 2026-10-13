@@ -94,7 +94,7 @@ Three rules hold for everything here:
 | `AGENT_ADAPTER_THINKING_BUDGET` | `2048` | The same for the adapter; the eval harness overrides both with `--thinking-budget ROOT,ADAPTER` |
 | `AGENT_REVIEWER_THINKING_BUDGET` | `2048` | The same for the reviewer; 0 turns its thinking off |
 | `AGENT_ROOT_EFFORT`, `AGENT_ADAPTER_EFFORT`, `AGENT_REVIEWER_EFFORT` | `medium`, `high`, `high` | Claude's effort per agent kind (`low`, `medium`, `high`), set by the 2026-10-13 measurements (see [The plot pipeline since 2026-10-13](#the-plot-pipeline-since-2026-10-13)); on the claude-cli transport also how much the CLI thinks |
-| `AGENT_MAX_LLM_CALLS` | `12` | LLM calls per request |
+| `AGENT_MAX_LLM_CALLS` | `16` | LLM calls per request |
 | `AGENT_REQUEST_TOKEN_BUDGET` | `800000` | Cost-weighted tokens per request (see [Token budgets and output caps](#token-budgets-and-output-caps)) |
 | `AGENT_DAILY_TOKEN_BUDGET` | `8000000` | Cost-weighted tokens per user and day |
 | `AGENT_DAILY_PIPELINE_RUNS` | `40` | Pipeline runs per user and day |
