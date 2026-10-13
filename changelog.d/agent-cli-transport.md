@@ -7,4 +7,4 @@
   with tools stays on Vertex AI. `AGENT_ADAPTER_MODEL` and `AGENT_REVIEWER_MODEL` pick a
   model per agent, `scripts/agents-experiment.sh` runs the harness and the rubric scorer
   in one command, and `agents/evals/score.py --transport claude-cli` and the ladder lab
-  use the same transport.
+  use the same transport (#12159).
