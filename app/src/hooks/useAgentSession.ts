@@ -95,8 +95,10 @@
  * Session language: one per session, for the assistant's replies and every
  * text in the plot, held as `plotLanguage` (`language` is the programming
  * language on this page). It starts as `en` with the source `default`,
- * whatever the browser's locale, as the server's does. The `done` of the
- * session's first typed message brings `detected` (`language_sync`), which
+ * whatever the browser's locale, as the server's does. A paste's answer may
+ * bring `pasted` (the language of the notes around the table or of its column
+ * names; only over `default` or an earlier `pasted`), with one quiet notice. The
+ * `done` of the session's first typed message brings `detected` (`language_sync`), which
  * appends one quiet notice to the thread; a choice from the header's chip
  * (`setLanguage`, `PUT .../language`) or the assistant's `set_language` brings
  * `chosen`, which is final. Only the server's answers set it, and a `done` never
