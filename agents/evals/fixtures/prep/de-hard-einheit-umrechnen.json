@@ -1,0 +1,7 @@
+{
+  "dataset_text": "Stadt,Temperatur_F\nBern,41\nZürich,43\nLugano,52\nBasel,44\nGenf,47\n",
+  "message": "Die Temperaturen sind in Fahrenheit, rechne sie bitte in Celsius um.",
+  "expected_operations": [],
+  "locale": "de",
+  "tags": ["hard", "unsupported", "no_tool"]
+}

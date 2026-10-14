@@ -204,12 +204,51 @@ def root_instruction() -> str:
     return _join(own_prompt("root.md"), "## Fixed refusals\n\n" + "\n\n".join(blocks))
 
 
+SELF_REVIEW_CRITERIA = re.compile(r"^\| (VQ-0[1-7]|SC-0[1-4]|DQ-0[13]) \|.*$", re.MULTILINE)
+"""The rows of the rubric's criteria tables the self-review checks: the technical ones a user sees."""
+
+
+@lru_cache(maxsize=1)
+def self_review_checklist() -> str:
+    """The self-review's checklist: the technical criteria rows of `prompts/quality-criteria.md` and the
+    scorer's rules for a user's plot, both cut verbatim, so the adapter checks its render against the
+    same rules the reviewer scores (owner, 2026-10-13: one place to change a rule)."""
+    from .scoring import SCORER_PROMPT, section
+
+    lines = [match.group(0) for match in SELF_REVIEW_CRITERIA.finditer(catalogue_prompt("quality-criteria.md"))]
+    if len(lines) != 13:
+        raise PromptSourceError(f"quality-criteria.md: expected 13 technical criteria rows, found {len(lines)}")
+    user_rules = section(
+        SCORER_PROMPT.read_text(encoding="utf-8"), "## How the catalogue rubric applies to a user's plot"
+    )
+    # Rules 2 and 3 of the scorer (the user's data, no catalogue title) apply to the adapter's own check;
+    # rule 1 (what the scorer scores) and rule 4 (how the scorer names themes) are the scorer's.
+    data_and_title = [line for line in user_rules.splitlines() if line.startswith(("2. ", "3. "))]
+    if len(data_and_title) != 2:
+        raise PromptSourceError("scorer.md: rules 2 and 3 of 'How the catalogue rubric applies' not found")
+    return _join(
+        "## Self-review checklist\n\n"
+        "When the notes ask for a self-review, the render of your code is attached. Check it against each of "
+        "these rows of the catalogue rubric (`prompts/quality-criteria.md`), in the render's theme, and fix what "
+        "falls short of the top score; the reviewer scores the same rows next.\n\n"
+        "| ID | Criterion | Points | Scale |\n|---|---|---|---|\n" + "\n".join(lines),
+        "For a user's plot, two of the scorer's rules (`agents/anyplot/prompts/scorer.md`) apply:\n\n"
+        + "\n".join(data_and_title),
+    )
+
+
 @lru_cache(maxsize=None)
 def adapter_instruction(library: str) -> str:
     """The adapter's static instruction for one library (≈8-10k tokens, a stable cache prefix)."""
+    from .settings import get_settings
+
     weaknesses, sizing = repair_excerpts()
+    settings = get_settings()
+    highlights = own_prompt("adapter_highlights.md") if settings.highlights == "data" else ""
     return _join(
         own_prompt("adapter.md"),
+        highlights,
+        self_review_checklist() if settings.self_review else "",
         "## Excerpt: which weaknesses to fix\n\n" + weaknesses,
         "## Excerpt: visual-sizing fixes\n\n" + sizing,
         "## Excerpt: VQ-03 element visibility\n\n" + vq03_table(),
@@ -226,6 +265,15 @@ def reviewer_instruction() -> str:
         "## Excerpt: theme-readability check\n\n" + theme_readability_check(),
         "## Style guide (prompts/default-style-guide.md)\n\n" + catalogue_prompt(STYLE_GUIDE),
     )
+
+
+@lru_cache(maxsize=1)
+def catalogue_reviewer_instruction() -> str:
+    """The reviewer's static instruction in `catalogue` mode: a short framing, then the offline
+    scorer's prompt with the catalogue rubric verbatim (`scoring.system_prompt`), one rule source."""
+    from .scoring import system_prompt
+
+    return _join(own_prompt("reviewer_catalogue.md"), system_prompt())
 
 
 def scope_rubric() -> str:

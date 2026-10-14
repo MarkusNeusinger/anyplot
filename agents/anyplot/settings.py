@@ -13,6 +13,13 @@ another provider, model or location.
 | `AGENT_JUDGE_MODEL` | `claude-haiku-5-5` | Model of the scope and dataset judge; same rule |
 | `AGENT_TRANSPORT` | `vertex` | How Claude calls travel: `vertex` (live) or `claude-cli` (development and test only: the local Claude Code CLI on your subscription; calls it cannot answer, the root's, go to Vertex AI; `cli_transport.py`) |
 | `AGENT_ADAPTER_MODEL`, `AGENT_REVIEWER_MODEL` | unset | `claude-cli` only: the adapter's or the reviewer's model for an experiment, any of `cli_transport.CLI_MODELS` |
+| `AGENT_REVIEWER_MODE` | `catalogue` | The reviewer's rubric: `catalogue` (the offline scorer's catalogue rubric; the verdict decided by code from the points) or `checklist` (the narrow checklist, live before 2026-10-13) |
+| `AGENT_REVIEW_BAR` | `1.0` | `catalogue` reviews: the share of the technical points (VQ, SC, DQ) a render needs to need no repair |
+| `AGENT_STATUS_BAR` | `0.95` | `catalogue` reviews: the ship bar; a shipped render at or above it shows without notes (`ok`) |
+| `AGENT_SHIP_BEST` | `true` | `catalogue` reviews: review every render and ship the best-scored version, not the last |
+| `AGENT_CHECK_RETRY` | `true` | An adapter answer that fails its check gets one more call in the same round (a full file allowed) instead of ending it |
+| `AGENT_SELF_REVIEW` | `true` | The adapter sees its first render once and may improve it before the review; not a repair, no extra round |
+| `AGENT_HIGHLIGHTS`, `AGENT_SCORER_HIGHLIGHTS` | `off` | Experiments: let the adapter add one data-derived highlight, and exempt it from SC-01 in the scorer rubric |
 | `AGENT_CLI_CONCURRENCY` | `3` | `claude-cli` only: CLI calls at the same time |
 | `AGENT_CLI_CALL_LOG` | unset | `claude-cli` only: a file each CLI call appends one JSON line to (model, effort, seconds, ok) |
 | `AGENT_LOCATION` | `eu` | Vertex AI location of every model call: `eu`, `us` or `global` |
@@ -29,15 +36,17 @@ another provider, model or location.
 | `AGENT_QUEUE_MAX_WAIT_S` | `600` | Longest wait in the run queue; it also sizes the queue (`AGENT_RUNS_PER_MINUTE` x this / 60 entries) |
 | `AGENT_MAX_ATTEMPTS` | `2` | Adapter attempts per pipeline run, 1 to 3: the first and at most one repair round by default; the eval harness sets 1 or 3 to measure no repair or a second repair round |
 | `AGENT_ROOT_THINKING_BUDGET` | `1024` | Claude only: adaptive thinking of the root, with that many tokens added to its output cap; 0 turns it off (the 2026-10-11 measurement: with thinking on root and adapter every run passed the gates and 51.6 % ended `ok`, against 91.0 % and 28.7 % without) |
-| `AGENT_ADAPTER_THINKING_BUDGET` | `2048` | The same for the adapter; the eval harness overrides both with `--thinking-budget ROOT,ADAPTER` |
-| `AGENT_MAX_LLM_CALLS` | `12` | LLM calls per request (the `RunConfig` cap) |
-| `AGENT_REQUEST_TOKEN_BUDGET` | `160000` | Cost-weighted tokens per request, in input-token equivalents: an uncached input token counts 1, a cache read 0.1, a cache write 1.25, an output token 5 (`plugins/ledger.BUDGET_WEIGHTS`, the list-price ratios) |
-| `AGENT_DAILY_TOKEN_BUDGET` | `2000000` | Cost-weighted tokens per user and day, weighted the same way: about 54 median runs on a warm cache, where the run cap binds first, and about 26 for a user whose every request starts cold |
+| `AGENT_ADAPTER_THINKING_BUDGET` | `8192` | The same for the adapter (2,048 before 2026-10-14, when effort `high` thought past it); the eval harness overrides both with `--thinking-budget ROOT,ADAPTER` |
+| `AGENT_REVIEWER_THINKING_BUDGET` | `4096` | The same for the reviewer; 0 turns its thinking off |
+| `AGENT_ROOT_EFFORT`, `AGENT_ADAPTER_EFFORT`, `AGENT_REVIEWER_EFFORT` | `medium`, `high`, `high` | Claude's effort per agent kind (`low`, `medium`, `high`), set by the 2026-10-13 measurements; on the claude-cli transport also how much the CLI thinks |
+| `AGENT_MAX_LLM_CALLS` | `16` | LLM calls per request (the `RunConfig` cap) |
+| `AGENT_REQUEST_TOKEN_BUDGET` | `800000` | Cost-weighted tokens per request, in input-token equivalents: an uncached input token counts 1, a cache read 0.1, a cache write 1.25, an output token 5 (`plugins/ledger.BUDGET_WEIGHTS`, the list-price ratios) |
+| `AGENT_DAILY_TOKEN_BUDGET` | `8000000` | Cost-weighted tokens per user and day, weighted the same way; about 30 median runs of the live flow of 2026-10-13 |
 | `AGENT_DAILY_PIPELINE_RUNS` | `40` | Pipeline runs per user and day |
-| `AGENT_GLOBAL_DAILY_TOKEN_BUDGET` | `6000000` | Cost-weighted tokens per day across all users, three users at their daily budget; reaching it pauses the service |
+| `AGENT_GLOBAL_DAILY_TOKEN_BUDGET` | `24000000` | Cost-weighted tokens per day across all users, three users at their daily budget; reaching it pauses the service |
 | `AGENT_RENDER_TIMEOUT_S` | `60` | Seconds per render, host-enforced |
-| `AGENT_REQUEST_DEADLINE_S` | `180` | Hard request deadline, enforced through `abort_signal` |
-| `AGENT_SOFT_DEADLINE_S` | `140` | Soft deadline inside the pipeline; below the hard one |
+| `AGENT_REQUEST_DEADLINE_S` | `540` | Hard request deadline, enforced through `abort_signal` |
+| `AGENT_SOFT_DEADLINE_S` | `480` | Soft deadline inside the pipeline; below the hard one |
 | `AGENT_JUDGE_TIMEOUT_S` | `4` | Wall-clock budget of one judge verdict, its single retry and the half-second wait before it included |
 | `AGENT_KEEP_REFUSALS` | `false` | Keep the text and verdict of each message the scope judge refused, in a bounded in-memory ring per session that only the feedback bundle shows; never in a log |
 | `AGENT_ATTACK_STRIKES` | `3` | `attack` verdicts per user and day after which the user gets the budget refusal for the rest of the day |
@@ -85,6 +94,13 @@ neither Gemini 3.x Flash nor the eu Claude quota, so it is refused rather than t
 Provider = Literal["anthropic-vertex", "gemini"]
 """Model families: Claude through Vertex AI's Anthropic endpoint, or Gemini through Vertex AI."""
 
+Effort = Literal["low", "medium", "high"]
+"""Claude efforts an agent kind may run at; Haiku 5.5 takes disabled thinking up to `high`."""
+
+ReviewerMode = Literal["checklist", "catalogue"]
+"""The reviewer's rubric: the catalogue rubric the offline scorer uses (live since 2026-10-13) or the
+narrow checklist of phase 1 (legacy)."""
+
 Transport = Literal["vertex", "claude-cli"]
 """How Claude calls travel: Vertex AI (live), or the local Claude Code CLI for experiments."""
 
@@ -109,10 +125,10 @@ CLAUDE_MODELS: tuple[str, ...] = ("claude-haiku-5-5",)
 Claude Opus 5.5, Sonnet 5.5 and Fable 5.1 answer disabled thinking with a 400. The structured
 answers (`output_config.format`) would work on all of them."""
 FIXTURE_PATTERN = r"^[a-z0-9][a-z0-9-]{0,79}$"
-MAX_THINKING_BUDGET = 4_096
-"""The most output room a thinking measurement may add to a Claude cap (`AGENT_*_THINKING_BUDGET`).
+MAX_THINKING_BUDGET = 8_192
+"""The most output room thinking may add to a Claude cap (`AGENT_*_THINKING_BUDGET`).
 
-It keeps the adapter's full-file cap (16,384 plus 4,096) below the Anthropic SDK's limit
+It keeps the adapter's full-file cap (12,288 plus 8,192) below the Anthropic SDK's limit
 for a request that does not stream (about 21,300 tokens), and a full-file call that uses
 all of it at about 60 s, the `pipeline.ADAPTER_P95_S` the deadline reserves."""
 
@@ -158,6 +174,45 @@ class AgentSettings(BaseSettings):
 
     reviewer_model: str | None = None
     """Experiments: the reviewer's model (`AGENT_REVIEWER_MODEL`); on `claude-cli` any of `CLI_MODELS`."""
+
+    reviewer_mode: ReviewerMode = "catalogue"
+    """What the reviewer judges with (`AGENT_REVIEWER_MODE`): `catalogue` (live since 2026-10-13: the
+    offline scorer's catalogue rubric, `scoring.py`; the code decides from the points, and the defect lines
+    feed the repair) or `checklist` (the narrow checklist of `prompts/reviewer.md`, live before). The
+    2026-10-13 measurement: the checklist named 2 of 37 agreed technical deductions, the rubric on Haiku 28."""
+
+    review_bar: float = Field(default=1.0, gt=0, le=1)
+    """`catalogue` reviews only (`AGENT_REVIEW_BAR`): the share of the technical points (VQ, SC, DQ) a
+    render needs, with no technical item at zero, to need no repair. At 1.0 every technical deduction
+    gets the repair round; `AGENT_SHIP_BEST` keeps a repair that scores lower from shipping."""
+
+    status_bar: float = Field(default=0.95, gt=0, le=1)
+    """`catalogue` reviews only (`AGENT_STATUS_BAR`): the owner's ship bar. A shipped render at or above
+    it is shown without notes (`ok`), even when the review still asked for a repair; below it the
+    review's lines become the residual notes (`needs_attention`)."""
+
+    highlights: Literal["off", "data"] = "off"
+    """Experiments (`AGENT_HIGHLIGHTS`): `data` lets the adapter add at most one highlight of a
+    salient feature of the user's data, computed from `df` (`prompts/adapter_highlights.md`)."""
+
+    ship_best: bool = True
+    """`catalogue` reviews only (`AGENT_SHIP_BEST`): every render is reviewed, and the best-scored
+    version ships instead of the last one."""
+
+    self_review: bool = True
+    """`AGENT_SELF_REVIEW`: after the first render that passes the gates, the adapter sees that render
+    once and may improve its code before the review. It is the adapter proofreading its work, not a
+    repair (owner, 2026-10-13): it gets an attempt on top of `AGENT_MAX_ATTEMPTS` and no round of its own."""
+
+    check_retry: bool = True
+    """`AGENT_CHECK_RETRY`: an adapter answer that fails its check (edits that do not apply, a validator
+    finding, a broken schema, code that crashes) gets one more call in the same round, which may send a
+    full file, instead of ending the round; a second miss ends it. On since 2026-10-13: a failed edit
+    apply in a repair round had shipped an earlier, unreviewed render."""
+
+    repair_sees_render: bool = False
+    """Experiments (`AGENT_REPAIR_SEES_RENDER`): a repair sees the render the review's findings describe,
+    and its self-review sees that render next to the repaired one, so it can tell whether it got better."""
 
     cli_concurrency: PositiveInt = 3
     """`claude-cli` only: CLI calls at the same time (`AGENT_CLI_CONCURRENCY`)."""
@@ -229,46 +284,86 @@ class AgentSettings(BaseSettings):
     tool result; an account that enforces the history-editing check of preserved thinking may refuse
     that call, which a measurement run shows as pipeline errors."""
 
-    adapter_thinking_budget: int = Field(default=2_048, ge=0, le=MAX_THINKING_BUDGET)
+    adapter_thinking_budget: int = Field(default=8_192, ge=0, le=MAX_THINKING_BUDGET)
     """The same for the adapter (`AGENT_ADAPTER_THINKING_BUDGET`), on by default since 2026-10-11:
     it is the lever behind the pass rate (without it the structured answer misses its edit anchors
     in a third of the runs). The adapter is single-turn, so nothing is replayed; its structured
     answer (`output_config.format`) lets it think first. Both budgets are ignored on Gemini, which
     thinks by a level per agent kind; a non-zero budget set explicitly there is refused, an
-    explicit 0 (`--thinking-budget 0,0`) is accepted."""
+    explicit 0 (`--thinking-budget 0,0`) is accepted. 8,192 since 2026-10-14 (2,048 before): at
+    effort `high`, 10 of 80 first adapter calls of the Vertex check thought through the whole
+    10,240-token cap and ended with `MAX_TOKENS` and no plan, while finished calls used up to
+    11,251 tokens with a 95th percentile of 9,063."""
 
-    max_llm_calls: PositiveInt = 12
-    """LLM calls per request (`AGENT_MAX_LLM_CALLS`), the `RunConfig` cap."""
+    reviewer_thinking_budget: int = Field(default=4_096, ge=0, le=MAX_THINKING_BUDGET)
+    """Claude only (`AGENT_REVIEWER_THINKING_BUDGET`): adaptive thinking for the reviewer with that many
+    tokens added to its output cap, on since 2026-10-13 with `reviewer_effort` high; 0 turns it off.
+    4,096 since 2026-10-14 (2,048 before): the cap of 12,288 is twice the 6,144 at which 3 of 118
+    reviews of the Vertex check were cut off; finished reviews used at most 6,141 tokens."""
 
-    request_token_budget: PositiveInt = 160_000
+    root_effort: Effort = "medium"
+    """Claude's `effort` for the root (`AGENT_ROOT_EFFORT`): `medium` since 2026-10-13 (`low` before). The
+    root chats, prepares and generates data, and starts the plot pipeline; at `low` it merged two filters
+    into one wrong drop condition in the hard prep cases, at `medium` and `high` it solved all 33. It runs on
+    Vertex AI even on the claude-cli transport, which cannot carry its tool chat."""
+
+    adapter_effort: Effort = "high"
+    """Claude's `effort` for the adapter (`AGENT_ADAPTER_EFFORT`): `high` since 2026-10-13 (`medium` before).
+    On the claude-cli transport it is also how much the CLI thinks."""
+
+    reviewer_effort: Effort = "high"
+    """Claude's `effort` for the reviewer (`AGENT_REVIEWER_EFFORT`): `high` since 2026-10-13 (`low` before),
+    with `reviewer_thinking_budget`. A stricter reviewer alone scored lower on unseen specs; together with
+    the adapter at high it was the best configuration on seeds and unseen specs, by both judges."""
+
+    max_llm_calls: PositiveInt = 16
+    """LLM calls per request (`AGENT_MAX_LLM_CALLS`), the `RunConfig` cap. 16 since 2026-10-13 (12 before):
+    two rounds with a self-review and a check retry each take up to six adapter calls, two reviews and
+    the root's two calls, so 16 leaves room and never stops a round."""
+
+    request_token_budget: PositiveInt = 800_000
     """Cost-weighted tokens per request (`AGENT_REQUEST_TOKEN_BUDGET`), in input-token equivalents
-    (`plugins/ledger.BUDGET_WEIGHTS`). A reviewed run with two adapter attempts books a median of
+    (`plugins/ledger.BUDGET_WEIGHTS`). 800,000 since 2026-10-13 (160,000 before) for the live flow: a
+    self-review per round adds an adapter call with an image, the catalogue reviewer reads the rubric
+    (about 20,000 tokens, cached after the first call), and adapter and reviewer think at effort high.
+    On the claude-cli transport such runs booked a median of about 278,000 and at most about 458,000;
+    the budget is a guard against runaway requests, never a reason to cut a round short (owner rule),
+    and the Vertex AI spend cap stays the money limit. The numbers of the old flow: a reviewed
+    run with two adapter attempts booked a median of
     about 39,500 with a warm prompt cache (72,200 plain tokens) and about 77,700 on a cold one,
     where each agent's first call writes its prefix; with a second review the costliest run comes
     to about 115,000, and with three attempts about 117,300, so the budget leaves about 36 % on top.
     A review starts only while `pipeline.REVIEW_RESERVE_TOKENS` is left for it and the root's
     closing reply."""
 
-    daily_token_budget: PositiveInt = 2_000_000
+    daily_token_budget: PositiveInt = 8_000_000
     """Cost-weighted tokens per user and day (`AGENT_DAILY_TOKEN_BUDGET`), weighted like the request
-    budget: about 54 median runs with a warm cache, where the 40 runs of `daily_pipeline_runs`
+    budget; raised on 2026-10-13 (2,000,000 before) to about 30 median runs of the live flow. The old
+    flow's numbers: about 54 median runs with a warm cache, where the 40 runs of `daily_pipeline_runs`
     bind first, and about 26 for a user whose every request starts cold (77,700 each), where
     this budget binds."""
 
     daily_pipeline_runs: PositiveInt = 40
     """Pipeline runs per user and day (`AGENT_DAILY_PIPELINE_RUNS`)."""
 
-    global_daily_token_budget: PositiveInt = 6_000_000
+    global_daily_token_budget: PositiveInt = 24_000_000
     """Cost-weighted tokens per day across all users (`AGENT_GLOBAL_DAILY_TOKEN_BUDGET`), three users
     at their daily budget; reaching it pauses the service."""
 
     render_timeout_s: PositiveInt = 60
     """Seconds per render, host-enforced (`AGENT_RENDER_TIMEOUT_S`)."""
 
-    request_deadline_s: PositiveInt = 180
-    """Hard request deadline in seconds, enforced through `abort_signal` (`AGENT_REQUEST_DEADLINE_S`)."""
+    request_deadline_s: PositiveInt = 540
+    """Hard request deadline in seconds, enforced through `abort_signal` (`AGENT_REQUEST_DEADLINE_S`).
 
-    soft_deadline_s: PositiveInt = 140
+    540 since 2026-10-13 (180 before). With the self-review a round takes about 60 s, and at a soft
+    deadline of 140 s the repair round was skipped in 11 of 20 measured runs; at 240 s the flow
+    reached +3.0 on unseen specs. The owner's rule: a complicated plot must never ship unfinished
+    because time ran out, so the deadlines leave room far above the measured maximum (155 s on the
+    CLI). The run queue's 600 s wait plus 540 s stays below the BFF's 1,190 s turn cap and the
+    services' 1,200 s Cloud Run timeout."""
+
+    soft_deadline_s: PositiveInt = 480
     """Soft deadline in seconds inside the pipeline (`AGENT_SOFT_DEADLINE_S`); below the hard one."""
 
     judge_timeout_s: PositiveFloat = 4.0
@@ -420,11 +515,15 @@ class AgentSettings(BaseSettings):
                     f"{name}={value!r} is not a supported Claude model ({', '.join(CLAUDE_MODELS)}): "
                     "the reviewer runs with thinking disabled, which newer Claude models refuse with a 400"
                 )
-        explicit_thinking = {"root_thinking_budget", "adapter_thinking_budget"} & self.model_fields_set
+        explicit_thinking = {
+            "root_thinking_budget",
+            "adapter_thinking_budget",
+            "reviewer_thinking_budget",
+        } & self.model_fields_set
         if self.provider != "anthropic-vertex" and any(getattr(self, name) for name in explicit_thinking):
             raise ValueError(
-                "AGENT_ROOT_THINKING_BUDGET and AGENT_ADAPTER_THINKING_BUDGET apply to Claude only; "
-                "Gemini thinks by a level per agent kind"
+                "AGENT_ROOT_THINKING_BUDGET, AGENT_ADAPTER_THINKING_BUDGET and AGENT_REVIEWER_THINKING_BUDGET "
+                "apply to Claude only; Gemini thinks by a level per agent kind"
             )
         if self.is_development and self.cloud_run_service:
             raise ValueError(

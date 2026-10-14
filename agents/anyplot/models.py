@@ -15,10 +15,10 @@ Reasoning depth is the Claude `effort` of `AnthropicGenerateContentConfig`; ADK 
 ignores `thinking_config.thinking_level` for Claude and raises when both are set.
 
 Claude thinks adaptively by default (since 2026-10-11): the root with
-`AGENT_ROOT_THINKING_BUDGET` (1,024) and the adapter with `AGENT_ADAPTER_THINKING_BUDGET`
-(2,048) extra output tokens, at most `settings.MAX_THINKING_BUDGET` each; the reviewer
-never thinks, and a budget of 0 turns thinking off for that kind (`thinking_budget=0`,
-which ADK maps to `thinking: {type: "disabled"}`; Gemini ignores both budgets). Haiku 5.5
+`AGENT_ROOT_THINKING_BUDGET` (1,024), the adapter with `AGENT_ADAPTER_THINKING_BUDGET`
+(8,192) and, since 2026-10-13, the reviewer with `AGENT_REVIEWER_THINKING_BUDGET` (4,096)
+extra output tokens, at most `settings.MAX_THINKING_BUDGET` each, and a budget of 0 turns
+thinking off for that kind (`thinking_budget=0`, which ADK maps to `thinking: {type: "disabled"}`; Gemini ignores both budgets). Haiku 5.5
 takes no thinking budget of its own (`budget_tokens` is a 400), so the config asks for
 ADK's adaptive mode (`thinking_budget=-1`, sent as
 `thinking: {type: "adaptive", display: "summarized"}`), the depth follows the kind's
@@ -33,7 +33,9 @@ display avoids that. And the root replays its thinking block after a tool result
 ADK moves the session-context block between calls, which fails the block's signature
 check; `VertexClaude` asks the API to drop such a block instead (`block_binding`, see
 `THINKING_BINDING_BETA`). Haiku 5.5 accepts disabled thinking at effort `high` or below,
-so every kind stays at `low` or `medium`.
+so every kind stays at `high` or below; the efforts are settings (`effort_for`): since
+2026-10-13 the root runs at `medium`, the adapter and the reviewer at `high`, the reviewer
+with a thinking budget of its own.
 
 ADK 2.11 sends no response schema to Claude: `basic.py` sets
 `config.response_schema` for a tool-less agent with an `output_schema`, and
@@ -65,8 +67,9 @@ cap; `allow_full_file`, called by
 the adapter's callback when a full file is allowed, raises the cap to
 `ADAPTER_FULL_MAX_OUTPUT_TOKENS` on Claude and `GEMINI_ADAPTER_FULL_MAX_OUTPUT_TOKENS`
 on Gemini, and on Gemini lowers thinking to `GEMINI_ADAPTER_FULL_THINKING`), the
-reviewer judges the render (4,096 tokens, low effort, medium media resolution on
-Gemini). Every cap leaves ample headroom above the measured answers (`MAX_OUTPUT_TOKENS`):
+reviewer judges the render (8,192 tokens on both providers since 2026-10-13, 4,096 before;
+on Claude at effort high with its thinking room on top, on Gemini at LOW thinking and medium
+media resolution). Every cap leaves ample headroom above the measured answers (`MAX_OUTPUT_TOKENS`):
 an answer that finishes costs the same under any cap, and a cut-off wastes the call.
 """
 
@@ -97,7 +100,7 @@ from .settings import CLI_JUDGE_TIMEOUT_S, AgentSettings, get_settings
 ModelKind = Literal["root", "adapter", "reviewer"]
 MODEL_KINDS: tuple[ModelKind, ...] = ("root", "adapter", "reviewer")
 
-MAX_OUTPUT_TOKENS: dict[ModelKind, int] = {"root": 4096, "adapter": 8192, "reviewer": 4096}
+MAX_OUTPUT_TOKENS: dict[ModelKind, int] = {"root": 4096, "adapter": 8192, "reviewer": 8192}
 """Output caps per kind: every kind on Claude, the root and the reviewer on Gemini.
 
 The owner's rule (2026-10-10): a cap leaves ample headroom above the measured answers,
@@ -109,29 +112,37 @@ rerun of spike X on main (244 runs, Claude Haiku 5.5, 2026-10-10):
   finished ones reached 2,030, so the cap cut the distribution. Plans on attempt 2
   finished at a median of 1,562 and at most 2,606 tokens. 8,192 is 3.1 times the
   largest measured plan.
-* reviewer: at most 600 tokens (95th percentile 515) in 218 answers, all `STOP`; 4,096
-  is 6.8 times that.
+* reviewer: the checklist answered at most 600 tokens (95th percentile 515) in 218
+  answers, all `STOP`. The catalogue reviewer (since 2026-10-13) scores 16 criteria and
+  writes defect lines, about 1,400 to 2,500 tokens, so its cap is 8,192 (4,096 before),
+  with its thinking budget on top.
 * root: at most 259 tokens (95th percentile 180) in 566 calls; 4,096 leaves room for
   a longer reply in German or a code explanation.
 
 The caps also fit the soft deadline. Fitted on the rerun's run times, Claude Haiku 5.5
 takes about 0.8 s per call plus 0.0029 s per output token (R² 0.95), so a call that
-uses the whole 8,192 takes about 25 s, the whole 16,384 of `ADAPTER_FULL_MAX_OUTPUT_TOKENS`
-about 49 s (both inside the 60 s of `pipeline.ADAPTER_P95_S`), and the whole 4,096
-of the reviewer about 13 s (inside the 30 s of `pipeline.REVIEWER_P95_S`). On Gemini,
-whose thinking counts toward the cap, a reviewer call that uses all 4,096 takes about
-30 s at spike X's fitted rate (see `GEMINI_ADAPTER_MAX_OUTPUT_TOKENS`). The Gemini
+uses the whole 16,384 of an edit call with its thinking room takes about 48 s, the whole
+20,480 of `ADAPTER_FULL_MAX_OUTPUT_TOKENS` with it about 60 s (the 60 s of
+`pipeline.ADAPTER_P95_S`), and the whole 12,288 of the reviewer with its room about 36 s,
+which the 480 s soft deadline absorbs although `pipeline.REVIEWER_P95_S` reserves 30 s
+for a typical review (the Vertex check of 2026-10-14 finished its reviews at a 95th
+percentile of 4,684 tokens, about 14 s). On Gemini,
+whose thinking counts toward the cap, a reviewer call that uses all 8,192 takes about
+58 s at spike X's fitted rate (see `GEMINI_ADAPTER_MAX_OUTPUT_TOKENS`), which the soft
+deadline absorbs as well. The Gemini
 adapter keeps its own caps (`GEMINI_ADAPTER_MAX_OUTPUT_TOKENS`,
 `GEMINI_ADAPTER_FULL_MAX_OUTPUT_TOKENS`)."""
-ADAPTER_FULL_MAX_OUTPUT_TOKENS = 16_384
-"""The Claude adapter's cap when a full file is allowed (the repair attempt).
+ADAPTER_FULL_MAX_OUTPUT_TOKENS = 12_288
+"""The Claude adapter's cap when a full file is allowed (the repair attempt), before thinking.
 
 Measured full-file plans finished at most at 2,606 tokens. A full file may hold
 `schemas.MAX_FULL_CODE_CHARS` (24 KB), about 9,800 tokens at the 2.5 characters per
-token measured for Haiku 5.5 before JSON escaping, so 16,384 holds a plan at the
+token measured for Haiku 5.5 before JSON escaping, so 12,288 holds a plan at the
 schema's own limit with its change notes; the largest phase-1 catalogue file
-(star-chart-constellation, matplotlib, 20,677 characters) is about 8,300. The
-Anthropic SDK accepts the cap without streaming (its limit is about 21,300 tokens)."""
+(star-chart-constellation, matplotlib, 20,677 characters) is about 8,300. With the
+adapter's thinking room on top (8,192 since 2026-10-14) the cap is 20,480, which the
+Anthropic SDK accepts without streaming (its limit is about 21,300 tokens); it was
+16,384 while the room was 2,048."""
 GEMINI_ADAPTER_FULL_MAX_OUTPUT_TOKENS = 12_288
 """The Gemini adapter's cap when a full file is allowed, thinking included.
 
@@ -342,8 +353,23 @@ def thinking_budget(kind: ModelKind, settings: AgentSettings | None = None) -> i
     settings = settings or get_settings()
     if settings.provider != "anthropic-vertex":
         return 0
-    budgets: dict[ModelKind, int] = {"root": settings.root_thinking_budget, "adapter": settings.adapter_thinking_budget}
+    budgets: dict[ModelKind, int] = {
+        "root": settings.root_thinking_budget,
+        "adapter": settings.adapter_thinking_budget,
+        "reviewer": settings.reviewer_thinking_budget,
+    }
     return budgets.get(kind, 0)
+
+
+def effort_for(kind: ModelKind, settings: AgentSettings | None = None) -> ClaudeEffort:
+    """Claude's effort for one agent kind (`AGENT_ROOT_EFFORT`, `AGENT_ADAPTER_EFFORT`, `AGENT_REVIEWER_EFFORT`)."""
+    settings = settings or get_settings()
+    efforts: dict[ModelKind, ClaudeEffort] = {
+        "root": settings.root_effort,
+        "adapter": settings.adapter_effort,
+        "reviewer": settings.reviewer_effort,
+    }
+    return efforts.get(kind, CLAUDE_EFFORT[kind])
 
 
 _CLI_CLIENTS: dict[tuple[str, str, int, str | None], Any] = {}
@@ -404,7 +430,7 @@ def make_content_config(kind: ModelKind, settings: AgentSettings | None = None) 
         budget = thinking_budget(kind, settings)
         return AnthropicGenerateContentConfig(
             max_output_tokens=MAX_OUTPUT_TOKENS[kind] + budget,
-            effort=CLAUDE_EFFORT[kind],
+            effort=effort_for(kind, settings),
             # thinking_budget 0 is ADK's `thinking: {type: "disabled"}`; unset, Haiku 5.5 thinks.
             # A measurement's budget turns on adaptive thinking (Haiku 5.5 refuses `budget_tokens`).
             thinking_config=types.ThinkingConfig(thinking_budget=ADAPTIVE_THINKING if budget else 0),

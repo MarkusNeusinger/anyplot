@@ -168,7 +168,7 @@ EVAL_GLOBAL_DAILY_TOKENS = 1_000_000_000
 MAX_ATTEMPTS_CHOICES: tuple[int, ...] = (1, 2, 3)
 """The values `--max-attempts` takes: 1 to `agents.anyplot.schemas.MAX_ATTEMPTS`, written out because
 importing that module builds the agents before `configure` has set the environment (a test keeps them equal)."""
-MAX_THINKING_BUDGET = 4_096
+MAX_THINKING_BUDGET = 8_192
 """The largest `--thinking-budget` value: `agents.anyplot.settings.MAX_THINKING_BUDGET`, written out for the
 same reason (a test keeps them equal)."""
 ATTRIBUTION_LOGGER = "anyplot.agents.attribution"

@@ -1,0 +1,10 @@
+{
+  "dataset_text": "date,store,sales\n2024-01-15,Harbor,420\n2024-02-12,Harbor,390\n2024-03-18,Harbor,455\n2024-04-15,Harbor,470\n2024-05-13,Harbor,510\n2024-06-17,Harbor,495\n2024-01-15,Lakeside,120\n2024-02-12,Lakeside,95\n2024-03-18,Lakeside,0\n2024-04-15,Lakeside,0\n2024-01-15,Uptown,610\n2024-02-12,Uptown,640\n2024-03-18,Uptown,600\n2024-04-15,Uptown,655\n2024-05-13,Uptown,700\n2024-06-17,Uptown,690\n",
+  "message": "Lakeside closed in March, leave it out completely. Then I want the average sales per quarter across the remaining stores.",
+  "expected_operations": [
+    {"op": "drop_rows", "where": [{"column": "store", "test": "eq", "value": "Lakeside"}]},
+    {"op": "aggregate", "by": ["date"], "column": "sales", "how": "mean", "period": "quarter"}
+  ],
+  "locale": "en",
+  "tags": ["hard", "chain", "drop_rows", "aggregate", "period"]
+}

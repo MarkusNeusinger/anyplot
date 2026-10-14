@@ -1,0 +1,11 @@
+{
+  "dataset_text": "Product Name,Unit Price,Stock\nDesk Lamp,34.9,120\nNotebook,4.5,800\nOffice Chair,189,35\nPen Set,12,410\nMonitor Arm,79,60\nStapler,9.9,230\n",
+  "message": "Call the price column price_chf, drop everything cheaper than 10, and list the rest from the cheapest up.",
+  "expected_operations": [
+    {"op": "rename", "column": "Unit Price", "name": "price_chf"},
+    {"op": "drop_rows", "where": [{"column": "price_chf", "test": "lt", "value": "10"}]},
+    {"op": "sort", "column": "price_chf", "descending": false}
+  ],
+  "locale": "en",
+  "tags": ["hard", "chain", "rename", "drop_rows", "sort"]
+}

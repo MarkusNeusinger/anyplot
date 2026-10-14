@@ -99,6 +99,8 @@ from google.adk.workflow._errors import DynamicNodeFailError
 from google.genai import types
 from pydantic import ValidationError
 
+from core.defects import DEFECT_RE
+
 from .briefs import adapter_profile, profile_summary, spec_brief
 from .code.edits import (
     MAX_CHANGE_LITERAL_CHARS,
@@ -141,16 +143,34 @@ from .schemas import (
     Verdict,
     artifact_names,
 )
+from .scoring import ScoreAnswer, ScoreError, mend_answer, parse_answer
 from .services import PADDED_REASON, CodeVersion, Services, ThemeRender, get_services
 from .session_state import SessionView, read_session
 from .settings import AgentSettings, get_settings
 from .sub_agents.adapter import ADAPTERS, adapter_name
-from .sub_agents.reviewer import REVIEWER_NAME, reviewer
+from .sub_agents.reviewer import REVIEWER_NAME, use_reviewer_mode
 
 
 logger = logging.getLogger(__name__)
 
 STATUS_KEY = "anyplot_status"
+SELF_REVIEW_LINE = (
+    "Self-review: the attached image is the render of the current code with the user's data. Before it goes "
+    "to the reviewer, check it against the self-review checklist in your instructions, row by row, and against "
+    "the spec: fix what falls short. When the notes also name the previous round's findings, check that your "
+    "changes fixed them in the image. If nothing needs fixing, answer with an empty edit list."
+)
+"""The feedback of the self-review attempt (`AGENT_SELF_REVIEW`); the render itself is attached by the adapter's callback."""
+SELF_REVIEW_HIGHLIGHT_LINE = (
+    "Design: most plots need no highlight, and none is the default. Add one only when the image shows something "
+    "a reader would likely miss or that changes how the data reads (a clear outlier, a break or turning point, "
+    "one group far apart from the rest), and pointing it out plainly makes the plot more useful. An ordinary "
+    "maximum or the last value is not enough on its own. Then add exactly one: a short annotation or one "
+    "emphasised mark, position and text computed from df, existing colors, inside the canvas, not covering data, "
+    "and name it in `changes`."
+)
+"""The design part of the self-review with `AGENT_HIGHLIGHTS=data`: an explicit task, not a permission (2026-10-13:
+with the permission alone the adapter added a highlight to 2 of 20 plots)."""
 ADAPTER_P95_S = 60.0
 """Seconds a repair attempt's adapter call is budgeted at when checking the soft deadline.
 
@@ -171,8 +191,12 @@ MAX_REVIEWS = 2
 
 Without the second one a repaired render could never end `ok`: in the rerun of spike X
 on main, 39 of 244 runs shipped a repaired render unreviewed (`not_rereviewed`)."""
-REVIEW_RESERVE_TOKENS = 35_000
+REVIEW_RESERVE_TOKENS = 60_000
 """Cost-weighted tokens a review needs left of every token budget, for itself and the root's closing reply.
+
+60,000 since 2026-10-13 (35,000 before): the catalogue reviewer reads the rubric, about 26,000
+tokens that a cold cache writes at weight 1.25, and answers with about 2,500 at weight 5. The
+old checklist's numbers follow.
 
 In the rerun of spike X (Claude Haiku 5.5) a review on a cold prompt cache weighed at
 most 28,099 and the closing reply at most 5,022. With less left, the render ships
@@ -235,6 +259,7 @@ Stage = Literal[
     "reviewer_unreadable",
     "reviewer_defects",
     "reviewer_ok",
+    "self_review",
 ]
 """Where an attempt, or the run, stopped (content-free, for the attribution log only).
 
@@ -298,11 +323,17 @@ class Candidate:
     adaptation_lines: list[str] = field(default_factory=list)
     advisory_lines: list[str] = field(default_factory=list)
     reviewed_ok: bool | None = None
+    status_ok: bool | None = None
+    """The review found it good enough to show without notes (`ReviewOutcome.status_ok`)."""
     render_id: str | None = None
     adaptation_rules: list[str] = field(default_factory=list)
     """The ADAPTATION validator rule ids behind `adaptation_lines`, for the attribution log."""
     advisory_gates: list[str] = field(default_factory=list)
     """The advisory probe gate ids (`G3`, `G5`, `G7`, `G8`, `G9`, `G10`) behind `advisory_lines`, for the attribution log."""
+    review_score: int | None = None
+    """The catalogue review's score of this render, when it had one (`AGENT_REVIEWER_MODE=catalogue`)."""
+    review_lines: list[str] = field(default_factory=list)
+    """This render's own review lines, so a best-scored earlier render ships with its own notes."""
 
 
 @dataclass
@@ -336,6 +367,20 @@ class Run:
     """How each attempt ended, in the page's vocabulary (`ROUND_OUTCOMES`), for `PlotResult.rounds`."""
     step: RoundStep | None = None
     """The progress step the current attempt is in, the last one `_status` reported."""
+    best_scored: Candidate | None = None
+    """The canvas-clean render with the highest catalogue review score (`AGENT_SHIP_BEST`)."""
+    self_reviewed: bool = False
+    """The adapter has looked at its own render at least once (`AGENT_SELF_REVIEW`)."""
+    reviewed_render_id: str | None = None
+    """The render id of the last rejected review, which a repair and its proofreading may see."""
+    same_round_after: list[int] = field(default_factory=list)
+    """The attempts whose next attempt stays in their round (`round_number`): the ones a self-review
+    followed, and the one whose answer failed its check and got the round's retry."""
+    retried_rounds: set[int] = field(default_factory=set)
+    """The rounds that used their one retry after an answer failed its check (`RETRY_STAGES`)."""
+    proofread_rounds: set[int] = field(default_factory=set)
+    """The rounds whose self-review has started (`AGENT_SELF_REVIEW`): a check retry of the proofread
+    answer stays the proofread, so a round never proofreads twice."""
     repair_hints: list[str] = field(default_factory=list)
     """The latest render's measured targets for a repair (`GateReport.repair_hints`), added to
     the hints of every repair attempt after it; they never start a repair themselves."""
@@ -343,6 +388,7 @@ class Run:
 
 ROUND_OUTCOMES: dict[Stage, RoundOutcome] = {
     "reviewer_ok": "ok",
+    "self_review": "measured",
     "reviewer_defects": "review",
     "gates": "measured",
     "render": "render_failed",
@@ -360,6 +406,11 @@ ROUND_OUTCOMES: dict[Stage, RoundOutcome] = {
 }
 """The page's name for the stage that ended an attempt; the stage itself stays in the attribution log."""
 
+RETRY_STAGES: frozenset[Stage] = frozenset(
+    {"adapter_schema", "adapter_truncated", "adapter_full_code", "edit_apply", "validator", "loader", "render"}
+)
+"""Stages where the adapter's answer failed its check: each round retries once before the miss ends it."""
+
 
 def _end_attempt(run: Run, stage: Stage, feedback: Sequence[str] = ()) -> None:
     """Record what ended the current attempt, at the step it was in, with the lines it passes on.
@@ -369,10 +420,32 @@ def _end_attempt(run: Run, stage: Stage, feedback: Sequence[str] = ()) -> None:
     """
     run.stages.append(stage)
     run.stage = stage
+    if stage == "self_review":
+        # The adapter proofreading its own render is part of the round, never a round of its own.
+        run.same_round_after.append(run.attempts)
+        return
+    current = round_number(run, run.attempts)
+    if stage in RETRY_STAGES and get_settings().check_retry and current not in run.retried_rounds:
+        # An answer that failed its check (edits that do not apply, a validator finding, a broken
+        # schema, code that crashes) gets one more adapter call in the same round, which may send a
+        # full file: a round never ends unfinished for a formal miss (owner rule, 2026-10-13).
+        run.retried_rounds.add(current)
+        run.same_round_after.append(run.attempts)
+        return
     findings = len(_clip_feedback(list(feedback)))
     run.rounds.append(
-        Round(attempt=max(run.attempts, 1), outcome=ROUND_OUTCOMES[stage], findings=findings, step=run.step)
+        Round(
+            attempt=max(round_number(run, run.attempts), 1),
+            outcome=ROUND_OUTCOMES[stage],
+            findings=findings,
+            step=run.step,
+        )
     )
+
+
+def round_number(run: Run, attempt: int) -> int:
+    """The round an attempt belongs to on the page: a self-review or a retry stays in the round it follows."""
+    return attempt - sum(1 for earlier in run.same_round_after if earlier < attempt)
 
 
 def _call_fields(ledger: RequestLedger, agent: str) -> dict[str, Any]:
@@ -391,7 +464,7 @@ def _line(text: str) -> str:
 def _status(run: Run, step: RoundStep, attempt: int, previous: Round | None = None) -> Event:
     """A progress event, noted as the run's current step; a repair round's first one says how the round before ended."""
     run.step = step
-    status: dict[str, Any] = {"step": step, "attempt": attempt}
+    status: dict[str, Any] = {"step": step, "attempt": round_number(run, attempt)}
     if previous is not None:
         status.update(outcome=previous.outcome, findings=previous.findings)
     return Event(custom_metadata={STATUS_KEY: status})
@@ -606,16 +679,33 @@ def _check(
     )
 
 
+def shipped_candidate(run: Run) -> Candidate | None:
+    """The render a run ships: the last canvas-clean one, or with `AGENT_SHIP_BEST` the best-scored one
+    when the last has no higher (or no) review score; a padded render only when nothing else exists."""
+    best = run.best
+    scored = run.best_scored
+    if ship_best(get_settings()) and scored is not None and best is not scored:
+        if best is None or best.review_score is None or (scored.review_score or 0) > best.review_score:
+            best = scored
+    return best or run.padded
+
+
+def ship_best(settings: AgentSettings) -> bool:
+    return settings.ship_best and settings.reviewer_mode == "catalogue"
+
+
 def finish(run: Run) -> PlotResult:
     """The `PlotResult` of a finished run (see the module docstring for the status rules)."""
-    shipped = run.best or run.padded
+    shipped = shipped_candidate(run)
     if shipped is None:
         reason: FailureReason
         if run.reason in ("budget", "deadline", "error"):
             reason = run.reason
         else:
             reason = "render" if run.rendered else "validation"
-        return PlotResult(status="failed", reason=reason, attempts=run.attempts, rounds=list(run.rounds))
+        return PlotResult(
+            status="failed", reason=reason, attempts=round_number(run, run.attempts), rounds=list(run.rounds)
+        )
     residual: list[str] = []
     if shipped.padded:
         residual.append(PADDED_LINE.format(theme=run.theme))
@@ -624,9 +714,15 @@ def finish(run: Run) -> PlotResult:
     residual += shipped.adaptation_lines
     # A measured missing glyph is a fact of the shipped render, reviewed or not (G10).
     residual += [line for line in shipped.advisory_lines if line.startswith(GLYPH_LINE_PREFIX)]
-    if shipped.reviewed_ok is not True:
+    # Shown without notes when it meets the ship bar (`AGENT_STATUS_BAR`; a checklist pass), although the
+    # review may still have asked for a repair: the owner's rule is no residual notes above the bar. The
+    # review bar decides the repair only, so a pass below the ship bar keeps its notes.
+    meets_bar = shipped.reviewed_ok if shipped.status_ok is None else shipped.status_ok
+    if meets_bar is not True:
         residual += shipped.advisory_lines
-        if run.review_lines:
+        if shipped.review_score is not None and shipped.review_lines:
+            residual += shipped.review_lines
+        elif run.review_lines:
             residual += run.review_lines
         elif not run.reviewed:
             residual.append(NOT_REVIEWED_LINE.format(why=run.unreviewed_why or "the repair round left defects"))
@@ -634,12 +730,15 @@ def finish(run: Run) -> PlotResult:
     changes = [change[:MAX_CHANGE_CHARS] for change in shipped.plan.changes][:MAX_CHANGES]
     return PlotResult(
         status="needs_attention" if residual else "ok",
-        attempts=max(run.attempts, 1),
+        attempts=max(round_number(run, run.attempts), 1),
         artifacts=artifact_names([run.theme]),
         changes=changes,
         residual_defects=residual,
         # The shipped render may come from an earlier round than the last (a repair that failed its check).
-        rounds=[round_.model_copy(update={"shipped": round_.attempt == shipped.attempt}) for round_ in run.rounds],
+        rounds=[
+            round_.model_copy(update={"shipped": round_.attempt == round_number(run, shipped.attempt)})
+            for round_ in run.rounds
+        ],
     )
 
 
@@ -649,7 +748,7 @@ def _store_version(ctx: Context, services: Services, run: Run, result: PlotResul
     The number travels in the `plot` event, so a client addresses the artifact and theme
     toggle routes by the server's number instead of counting the events it received.
     """
-    shipped = run.best or run.padded
+    shipped = shipped_candidate(run)
     if shipped is None or result.status not in ("ok", "needs_attention"):
         return result
     session_id = ctx.session.id
@@ -705,14 +804,77 @@ async def _adapt(ctx: Context, scope: str, request_text: str, library: str) -> A
         return AdaptMiss("truncated" if call is not None and call.finish_reason == "MAX_TOKENS" else "schema")
 
 
-async def _review(ctx: Context, scope: str, request: ReviewRequest) -> Verdict | None:
+@dataclass(frozen=True)
+class ReviewOutcome:
+    """A read review in either mode: the verdict, the defect lines for the repair, their ids, the score."""
+
+    ok: bool
+    """No repair needed: every technical point (`AGENT_REVIEW_BAR`), or the checklist passed."""
+    lines: list[str]
+    ids: list[str]
+    score: int | None = None
+    technical: float | None = None
+    status_ok: bool | None = None
+    """Good enough to show without notes (`AGENT_STATUS_BAR`, the owner's ship bar); None means `ok`."""
+
+
+async def _review(ctx: Context, scope: str, request: ReviewRequest, theme: Theme) -> ReviewOutcome | None:
     ledger_for(ctx.invocation_id).last_calls.pop(REVIEWER_NAME, None)
+    catalogue = get_settings().reviewer_mode == "catalogue"
+    text = render_score_request(request) if catalogue else render_review_request(request)
     try:
-        raw = await ctx.run_node(reviewer, node_input=render_review_request(request), override_isolation_scope=scope)
-        return Verdict.model_validate(raw)
+        agent = use_reviewer_mode(get_settings().reviewer_mode)
+        raw = await ctx.run_node(agent, node_input=text, override_isolation_scope=scope)
+        if not catalogue:
+            verdict = Verdict.model_validate(raw)
+            return ReviewOutcome(
+                verdict.ok,
+                [_on_theme(defect, theme).as_line() for defect in verdict.defects],
+                [defect.id for defect in verdict.defects],
+            )
+        result = parse_answer(mend_answer(ScoreAnswer.model_validate(raw).model_dump()))
     except (ValidationError, DynamicNodeFailError) as exc:
         _reraise_unless_schema(exc)
         return None
+    except ScoreError as exc:
+        # The message names criteria and ranges only, never content.
+        logger.warning("catalogue review answer is not a complete score: %s", exc)
+        return None
+    settings = get_settings()
+    ok = result.passes(settings.review_bar)
+    # The two bars are independent settings: an experiment may set the review bar below the ship bar.
+    status_ok = result.passes(settings.status_bar)
+    if not (ok and status_ok) and not result.defects:
+        # Points lost without a line to say why: no ship-bar notes and nothing for the repair to fix.
+        logger.warning("catalogue review deducted without defect lines: %s", ", ".join(result.silent))
+        return None
+    ids = sorted({found for line in result.defects if (m := DEFECT_RE.match(line)) for found in m["ids"].split(", ")})
+    return ReviewOutcome(
+        ok,
+        [] if ok and status_ok else result.defects,
+        ids,
+        result.score,
+        round(result.technical_share, 3),
+        status_ok=status_ok,
+    )
+
+
+def render_score_request(request: ReviewRequest) -> str:
+    """The catalogue reviewer's node input: the scorer's request (`scoring.user_text`) with the
+    gate notes and the change request added, every value fenced; the image follows from the callback."""
+    lines = [
+        DATA_PREAMBLE,
+        fence("spec_text", request.spec_brief),
+        fence("plot_code", request.code),
+        fence("user_data", request.profile_summary),
+        fence("user_data", json.dumps([item.model_dump() for item in request.bindings], ensure_ascii=False)),
+        fence("plot_language", request.plot_language),
+    ]
+    if request.change_request:
+        lines += ["Change request:", fence("user_message", request.change_request)]
+    if request.gate_notes:
+        lines += ["Gate notes:", fence("tool_notes", json.dumps(request.gate_notes, ensure_ascii=False))]
+    return "\n\n".join(lines)
 
 
 def _reraise_unless_schema(exc: Exception) -> None:
@@ -769,7 +931,9 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
         result = _store_version(ctx, services, run, result)
     except Exception as exc:  # a result whose artifacts cannot be stored is not shippable
         logger.warning("storing the version failed: %s", type(exc).__name__)
-        result = PlotResult(status="failed", reason="error", attempts=run.attempts, rounds=list(run.rounds))
+        result = PlotResult(
+            status="failed", reason="error", attempts=round_number(run, run.attempts), rounds=list(run.rounds)
+        )
         run.error_type = run.error_type or type(exc).__name__
         run.stage = "error"
     # From here on the root's closing reply is never the budget refusal (plugins/budget.py).
@@ -855,8 +1019,21 @@ async def _attempts(
     rows = data_rows(dataset.csv)
 
     adapter = adapter_name(view.library)
+    # A round is one adapter attempt and, with `AGENT_SELF_REVIEW`, the adapter proofreading its render
+    # once before the review, and with `AGENT_CHECK_RETRY` one more call when an answer fails its check:
+    # neither is a repair or a round of its own (owner, 2026-10-13), so a run has at most
+    # `AGENT_MAX_ATTEMPTS` rounds and up to three adapter calls per round.
+    rounds = settings.max_attempts
+    calls = rounds * (1 + int(settings.self_review) + int(settings.check_retry))
+    # Ship the best-scored version (`AGENT_SHIP_BEST`, catalogue reviews only): every round is reviewed.
+    max_reviews = rounds if ship_best(settings) else MAX_REVIEWS
 
-    for attempt in range(1, settings.max_attempts + 1):
+    for attempt in range(1, calls + 1):
+        if round_number(run, attempt) > rounds:
+            break
+        # The proofread, or its retry after a failed check, is this round's last adapter call.
+        proofreading = round_number(run, attempt) in run.proofread_rounds
+        self_review_due = settings.self_review and not proofreading
         # This call and the root's closing reply: a plot may ship from any attempt, and ADK's
         # call cap would refuse the reply the Budget plugin's exemption cannot admit.
         if not budget_allows(ledger, services.usage, settings, next_calls=2):
@@ -866,8 +1043,11 @@ async def _attempts(
             run.reason, run.unreviewed_why, run.stage = "deadline", "the time limit was reached", "deadline"
             return
         run.attempts = attempt
-        if attempt == 1:
+        if round_number(run, attempt) == 1:
             yield _status(run, "adapting", attempt)
+        elif proofreading:
+            # Proofreading a repair is still that round's repairing step on the page.
+            yield _status(run, "repairing", attempt)
         else:
             yield _status(run, "repairing", attempt, run.rounds[-1] if run.rounds else None)
         request = AdaptRequest(
@@ -875,7 +1055,7 @@ async def _attempts(
             profile=dataset.profile,
             bindings=view.bindings,
             loader_columns=columns,
-            hints=_repair_hints(hints, run) if attempt > 1 else hints,
+            hints=_repair_hints(hints, run) if round_number(run, attempt) > 1 else hints,
             change_request=args.change_request,
             feedback=_clip_feedback(feedback),
             previous_plan=previous_plan,
@@ -1016,10 +1196,29 @@ async def _attempts(
         # without feedback, or from the last allowed attempt, is reviewed (the advisory lines
         # kept as gate notes), again after a rejection, up to `MAX_REVIEWS` calls. With the
         # default two attempts: attempt 1 repairs or is reviewed, attempt 2 is reviewed.
-        if not report.canvas_ok or (feedback and attempt < settings.max_attempts):
+        if not report.canvas_ok or (feedback and round_number(run, attempt) < rounds):
             _end_attempt(run, "gates", feedback)
             continue
-        if run.reviews >= MAX_REVIEWS:
+        if self_review_due and attempt < calls:
+            # The adapter proofreads its render once per round before the review: after the first
+            # version, and after a repair with that repair's findings, to see whether its changes worked.
+            run.self_reviewed = True
+            run.proofread_rounds.add(round_number(run, attempt))
+            current = services.renders.put(ctx.session.id, candidate.pngs)
+            before = run.reviewed_render_id if settings.repair_sees_render and round_number(run, attempt) > 1 else None
+            ledger.adapter_renders = [
+                *([("Render before your repair, which the review's findings describe", before)] if before else []),
+                ("Render of the current code" + (", after your repair" if before else ""), current),
+            ]
+            round_findings = [line for line in request.feedback if not line.startswith("Self-review:")]
+            feedback = [
+                SELF_REVIEW_LINE,
+                *([SELF_REVIEW_HIGHLIGHT_LINE] if settings.highlights == "data" else []),
+                *round_findings,
+            ]
+            _end_attempt(run, "self_review", feedback)
+            continue
+        if run.reviews >= max_reviews:
             # Every review used, and either no feedback or no attempt left for it: the run ends
             # here, since another attempt would have nothing to repair.
             _end_attempt(run, "not_rereviewed")
@@ -1038,20 +1237,28 @@ async def _attempts(
         ledger.review_render_id = candidate.render_id
         run.reviewed_attempt = attempt
         run.reviews += 1
-        verdict = await _review(
-            ctx,
-            scope,
-            ReviewRequest(
-                render_id=ledger.review_render_id,
-                code=run_form,
-                bindings=view.bindings,
-                profile_summary=profile_summary(dataset.profile),
-                spec_brief=spec_brief(view),
-                change_request=args.change_request,
-                gate_notes=[_note(line) for line in report.advisory][:MAX_NOTES],
-                plot_language=run.language,
-            ),
+        review_request = ReviewRequest(
+            render_id=ledger.review_render_id,
+            code=run_form,
+            bindings=view.bindings,
+            profile_summary=profile_summary(dataset.profile),
+            spec_brief=spec_brief(view),
+            change_request=args.change_request,
+            gate_notes=[_note(line) for line in report.advisory][:MAX_NOTES],
+            plot_language=run.language,
         )
+        verdict = await _review(ctx, scope, review_request, run.theme)
+        if verdict is None and settings.check_retry and deadline.allows(REVIEWER_P95_S):
+            # An unreadable review is asked once more before the render ships unreviewed (owner rule:
+            # never unfinished for a formal miss; one in 26 Vertex runs on 2026-10-14).
+            attribution(
+                "pipeline_review",
+                ledger,
+                attempt=attempt,
+                verdict="unreadable_retry",
+                **_call_fields(ledger, REVIEWER_NAME),
+            )
+            verdict = await _review(ctx, scope, review_request, run.theme)
         review_call = _call_fields(ledger, REVIEWER_NAME)
         if verdict is None:
             attribution("pipeline_review", ledger, attempt=attempt, verdict="unreadable", **review_call)
@@ -1063,16 +1270,30 @@ async def _attempts(
             ledger,
             attempt=attempt,
             verdict="ok" if verdict.ok else "defects",
-            defects=[defect.id for defect in verdict.defects],
+            defects=verdict.ids,
+            **({"score": verdict.score, "technical": verdict.technical} if verdict.score is not None else {}),
             **review_call,
         )
         run.reviewed = True
         candidate.reviewed_ok = verdict.ok
+        candidate.status_ok = verdict.ok if verdict.status_ok is None else verdict.status_ok
+        candidate.review_score = verdict.score
+        candidate.review_lines = [] if verdict.ok and candidate.status_ok else list(verdict.lines)
+        if verdict.score is not None and (
+            run.best_scored is None or verdict.score >= (run.best_scored.review_score or 0)
+        ):
+            run.best_scored = candidate
         if verdict.ok:
             _end_attempt(run, "reviewer_ok")
             return
-        run.review_lines = [_on_theme(defect, run.theme).as_line() for defect in verdict.defects]
+        run.review_lines = list(verdict.lines)
         feedback = list(run.review_lines)
+        run.reviewed_render_id = candidate.render_id
+        if settings.repair_sees_render and candidate.render_id:
+            # The repair sees the render the review's findings describe (`AGENT_REPAIR_SEES_RENDER`).
+            ledger.adapter_renders = [
+                ("Render the review's findings describe, before your repair", candidate.render_id)
+            ]
         _end_attempt(run, "reviewer_defects", feedback)
 
 

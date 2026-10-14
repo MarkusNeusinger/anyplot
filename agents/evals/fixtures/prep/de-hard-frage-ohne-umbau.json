@@ -1,0 +1,7 @@
+{
+  "dataset_text": "Region,Umsatz\nNord,2550\nSüd,2085\nOst,1580\nWest,2700\n",
+  "message": "Welche Region hatte den höchsten Umsatz, und wie weit lag sie vor der zweiten?",
+  "expected_operations": [],
+  "locale": "de",
+  "tags": ["hard", "question", "no_change"]
+}

@@ -26,10 +26,13 @@ an eval can count them. They still count as scored, as the catalogue's review ga
 counts them.
 """
 
+import os
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
+
+from pydantic import BaseModel, Field
 
 from core.defects import CRITERIA, DEFECT_RE
 
@@ -44,6 +47,13 @@ SCORED: dict[str, int] = {
 }
 """The criteria a user's plot is scored on and their maxima (75 points)."""
 SCORED_MAX = sum(SCORED.values())
+ScoredId = Literal[
+    "VQ-01", "VQ-02", "VQ-03", "VQ-04", "VQ-05", "VQ-06", "VQ-07",
+    "DE-01", "DE-02", "DE-03",
+    "SC-01", "SC-02", "SC-03", "SC-04",
+    "DQ-01", "DQ-03",
+]  # fmt: skip
+"""`SCORED`'s ids as a type, so a structured answer cannot name another criterion (a test holds the two equal)."""
 DE_DEFAULTS: dict[str, int] = {"DE-01": 4, "DE-02": 2, "DE-03": 2}
 TECHNICAL = tuple(item for item in SCORED if item[:2] in ("VQ", "SC", "DQ"))
 MAX_SUGGESTIONS = 3
@@ -93,6 +103,43 @@ schemas take no numeric bounds, so the range of each item's points is checked in
 _HEADING = re.compile(r"^(#{1,6})\s")
 
 
+class ScoreItem(BaseModel):
+    id: ScoredId
+    points: int
+
+
+class ScoreAnswer(BaseModel):
+    """`TOOL_SCHEMA` as a structured answer, for the pipeline's reviewer in `catalogue` mode;
+    `parse_answer` checks the criteria and ranges the schema cannot."""
+
+    items: list[ScoreItem]
+    defects: list[str] = Field(default_factory=list)
+    suggestions: list[str] = Field(default_factory=list)
+    description: str = ""
+
+
+def mend_answer(answer: dict[str, Any]) -> dict[str, Any]:
+    """A review answer with its formal misses mended, so `parse_answer` can read it.
+
+    For the pipeline's reviewer only (the offline scorer retries instead): a criterion named
+    twice keeps its first entry, points are clamped into the criterion's range, and a missing
+    Design Excellence criterion counts at its default. A missing technical criterion stays
+    missing, so `parse_answer` raises and the pipeline asks for the review again: the ship bar
+    reads the technical points, and an unscored item is not a perfect one. The defect lines
+    stay as written.
+    """
+    seen: dict[str, int] = {}
+    for item in answer.get("items") or []:
+        if not isinstance(item, dict) or item.get("id") not in SCORED or item["id"] in seen:
+            continue
+        value = item.get("points")
+        if isinstance(value, int) and not isinstance(value, bool):
+            seen[item["id"]] = min(max(value, 0), SCORED[item["id"]])
+    for name, default in DE_DEFAULTS.items():
+        seen.setdefault(name, default)
+    return {**answer, "items": [{"id": name, "points": points} for name, points in seen.items()]}
+
+
 class ScoreError(ValueError):
     """An answer that is not a complete score: a criterion missing or twice, points out of range."""
 
@@ -117,11 +164,27 @@ def section(text: str, heading: str) -> str:
     return "\n".join(lines[start:end]).strip()
 
 
-def system_prompt(scorer: Path = SCORER_PROMPT, criteria: Path = CRITERIA_FILE, review: Path = REVIEW_FILE) -> str:
-    """`scorer.md` followed by the rubric sections it applies, cut verbatim from the catalogue's prompts."""
+HIGHLIGHT_RULE = Path(__file__).with_name("prompts") / "scorer_highlights.md"
+
+
+def system_prompt(
+    scorer: Path = SCORER_PROMPT,
+    criteria: Path = CRITERIA_FILE,
+    review: Path = REVIEW_FILE,
+    highlights: bool | None = None,
+) -> str:
+    """`scorer.md` followed by the rubric sections it applies, cut verbatim from the catalogue's prompts.
+
+    `highlights` (experiment; default from `AGENT_SCORER_HIGHLIGHTS=on`) adds a fifth user-plot rule:
+    one data-derived highlight is not variant creep (`prompts/scorer_highlights.md`).
+    """
+    if highlights is None:
+        highlights = os.environ.get("AGENT_SCORER_HIGHLIGHTS", "").lower() == "on"
     criteria_text = criteria.read_text(encoding="utf-8")
     review_text = review.read_text(encoding="utf-8")
     parts = [scorer.read_text(encoding="utf-8").strip()]
+    if highlights:
+        parts.append(HIGHLIGHT_RULE.read_text(encoding="utf-8").strip())
     parts.append("# From the catalogue rubric (prompts/quality-criteria.md)")
     parts += [section(criteria_text, heading) for heading in CRITERIA_SECTIONS]
     parts.append("# From the catalogue review (prompts/workflow-prompts/ai-quality-review.md)")
@@ -181,6 +244,17 @@ class ScoreResult:
         """Points and maximum of one category (`VQ`, `DE`, `SC`, `DQ`)."""
         items = [item for item in SCORED if item.startswith(prefix)]
         return sum(self.points[item] for item in items), sum(SCORED[item] for item in items)
+
+    @property
+    def technical_share(self) -> float:
+        """The share of the technical points (VQ, SC, DQ) the render got."""
+        return sum(self.points[item] for item in TECHNICAL) / sum(SCORED[item] for item in TECHNICAL)
+
+    def passes(self, bar: float) -> bool:
+        """The review's verdict from the points: at least `bar` of the technical points and no
+        technical item at zero (the rubric's caps on VQ-02, VQ-03 and SC-01); Design Excellence
+        is not part of it."""
+        return self.technical_share >= bar and all(self.points[item] > 0 for item in ("VQ-02", "VQ-03", "SC-01"))
 
     def as_dict(self) -> dict[str, Any]:
         return {

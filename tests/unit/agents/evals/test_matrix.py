@@ -173,7 +173,7 @@ async def test_two_fixtures_through_the_real_flow(
         2,
         2,
     )
-    assert stamp["thinking_budget"] == {"root": 1024, "adapter": 2048}  # the settings defaults since 2026-10-11
+    assert stamp["thinking_budget"] == {"root": 1024, "adapter": 8192}  # the settings defaults since 2026-10-14
     assert result.report_path.name == f"{stamp['date']}-claude-haiku-5-5.json"
     assert json.loads(result.report_path.read_text())["runs"][1]["case_id"] == "scatter-basic-matplotlib"
     assert "## Runs that did not pass" in result.summary_path.read_text()
@@ -445,7 +445,7 @@ def test_configure_writes_the_thinking_budgets_only_when_the_flag_names_them() -
     configure(parse_args(["--renderer", "fake"]), unset)
     assert "AGENT_ROOT_THINKING_BUDGET" not in unset and "AGENT_ADAPTER_THINKING_BUDGET" not in unset
 
-    for value in ("2048", "1,2,3", "-1,0", "0,4097", "a,b"):
+    for value in ("2048", "1,2,3", "-1,0", "0,8193", "a,b"):
         with pytest.raises(SystemExit):
             parse_args(["--thinking-budget", value])
 
@@ -470,7 +470,7 @@ def test_a_gemini_stamp_records_the_effective_zero_budgets(monkeypatch: pytest.M
     monkeypatch.setenv("AGENT_MODEL", "gemini-3.8-flash")
     monkeypatch.setenv("AGENT_JUDGE_MODEL", "gemini-3.5-flash-lite")
     settings = AgentSettings()
-    assert (settings.root_thinking_budget, settings.adapter_thinking_budget) == (1024, 2048)  # the raw defaults
+    assert (settings.root_thinking_budget, settings.adapter_thinking_budget) == (1024, 8192)  # the raw defaults
 
     stamp = matrix.build_stamp(settings, MatrixConfig(), [], datetime(2026, 10, 11, tzinfo=UTC))
 

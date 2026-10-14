@@ -40,6 +40,13 @@ cd "$ROOT"
 export PYTHON_DOTENV_DISABLED=1
 export ENVIRONMENT=development GOOGLE_CLOUD_PROJECT=anyplot AGENT_LOCATION=eu \
   AGENT_TRANSPORT=claude-cli AGENT_CLI_CALL_LOG="$OUT/cli-calls.jsonl"
+# The token budgets guard Vertex AI spend. On the subscription they only distort the experiment:
+# the CLI's own thinking writes more output tokens than the live thinking budget allows, and the
+# Budget plugin would end runs before their review (7 of the first 15 runs of 2026-10-13).
+export AGENT_REQUEST_TOKEN_BUDGET=${AGENT_REQUEST_TOKEN_BUDGET:-10000000} \
+  AGENT_DAILY_TOKEN_BUDGET=${AGENT_DAILY_TOKEN_BUDGET:-1000000000} \
+  AGENT_GLOBAL_DAILY_TOKEN_BUDGET=${AGENT_GLOBAL_DAILY_TOKEN_BUDGET:-1000000000} \
+  AGENT_DAILY_PIPELINE_RUNS=${AGENT_DAILY_PIPELINE_RUNS:-100000}
 if [ -z "${AGENT_RENDER_URL:-}" ]; then
   AGENT_RENDER_URL=$(gcloud run services describe anyplot-renderer --region=europe-west4 \
     --format='value(status.url)')
@@ -52,6 +59,6 @@ uv run --extra agents python -m agents.evals.matrix "$@" --keep-attempts --no-ba
   --renderer remote --render-url "$AGENT_RENDER_URL" --gcloud-token --out "$OUT"
 
 if [ "${SCORE:-1}" != 0 ]; then
-  report=$(ls -t "$OUT"/*.json | grep -v -e '-scores.json$' -e 'cli-calls' | head -1)
+  report=$(ls -t "$OUT"/*.json | grep -v -e '-scores[-.]' -e 'cli-calls' | head -1)
   uv run --extra agents python -m agents.evals.score "$report" --transport claude-cli
 fi

@@ -1,0 +1,12 @@
+{
+  "dataset_text": "Order Date,Customer,Item,Qty,Unit Price,Internal Code,Comment\n2024-03-02,Acme,Widget,4,12.5,X1,\n2024-03-02,Acme,Gadget,1,40,X2,\n2024-03-05,Globex,Widget,10,12.5,X1,rush\n2024-03-09,Initech,Gizmo,2,25,X3,\n2024-04-01,Globex,Gadget,3,40,X2,\n2024-04-11,Acme,Gizmo,5,25,X3,\n2024-04-20,Initech,Widget,7,12.5,X1,\nTOTAL,,,32,,,\n",
+  "message": "This is a raw export. Remove the TOTAL line and the Internal Code and Comment columns, then give me the total quantity per item, largest first.",
+  "expected_operations": [
+    {"op": "drop_rows", "where": [{"column": "Order Date", "test": "eq", "value": "TOTAL"}]},
+    {"op": "drop_columns", "columns": ["Internal Code", "Comment"]},
+    {"op": "aggregate", "by": ["Item"], "column": "Qty", "how": "sum"},
+    {"op": "sort", "column": "Qty", "descending": true}
+  ],
+  "locale": "en",
+  "tags": ["hard", "chain", "messy", "drop_rows", "drop_columns", "aggregate", "sort"]
+}

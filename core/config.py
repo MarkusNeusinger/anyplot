@@ -280,20 +280,21 @@ class Settings(BaseSettings):
     address. Set via Secret Manager in Cloud Run; rotating it orphans every
     open agent session, which is harmless because sessions live in memory."""
 
-    agent_request_timeout_s: int = 190
+    agent_request_timeout_s: int = 550
     """Upstream timeout in seconds for BFF calls to the agents service, and the
     wall-clock cap on one relayed chat stream outside the run queue. Slightly
-    above the agents service's own 180 s request deadline, so its `deadline`
-    error arrives before the BFF gives up on the stream."""
+    above the agents service's own 540 s request deadline (180 s before
+    2026-10-13), so its `deadline` error arrives before the BFF gives up on the
+    stream."""
 
-    agent_turn_max_s: int = 890
+    agent_turn_max_s: int = 1190
     """Hard wall-clock cap in seconds on one relayed chat turn, queue wait
-    included. Keep it below anyplot-api's Cloud Run `--timeout` (900 s in
+    included. Keep it below anyplot-api's Cloud Run `--timeout` (1,200 s in
     `api/cloudbuild.yaml`), so Cloud Run never cuts a stream without `error`
     and `done`. A turn still queued when less than `agent_request_timeout_s`
     plus the queue's 15 s heartbeat is left ends with `capacity` and leaves the
     queue before it spends a token; at the defaults the agents service's full
-    600 s queue maximum plus its 180 s run fit inside the cap."""
+    600 s queue maximum plus its 540 s run fit inside the cap."""
 
     agent_cases_bucket: str = "anyplot-agent-cases"
     """Private GCS bucket that holds the feedback cases of the agent chat

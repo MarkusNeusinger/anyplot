@@ -39,8 +39,18 @@ from .fakes import SCATTER_PLAN, FakeAnthropic
 
 
 GEMINI = AgentSettings(provider="gemini", model="gemini-3.8-flash", judge_model="gemini-3.5-flash-lite")
-# Thinking off, so the caps below are the bare ones; the defaults (root 1,024, adapter 2,048) are tested apart.
-CLAUDE = AgentSettings(location="global", project="anyplot-eval", root_thinking_budget=0, adapter_thinking_budget=0)
+# Thinking off and the efforts before 2026-10-13, so the caps below are the bare ones; the defaults
+# (root 1,024, adapter and reviewer 2,048; efforts medium, high, high) are tested apart.
+CLAUDE = AgentSettings(
+    location="global",
+    project="anyplot-eval",
+    root_thinking_budget=0,
+    adapter_thinking_budget=0,
+    reviewer_thinking_budget=0,
+    root_effort="low",
+    adapter_effort="medium",
+    reviewer_effort="low",
+)
 CLAUDE_DEFAULTS = AgentSettings(location="global", project="anyplot-eval")
 PACKAGE = Path(__file__).resolve().parents[4] / "agents"
 
@@ -56,7 +66,7 @@ class TestFactories:
             "anyplot-eval",
             "global",
         )
-        assert model.max_tokens == {"root": 4096, "adapter": 8192, "reviewer": 4096}[kind]
+        assert model.max_tokens == {"root": 4096, "adapter": 8192, "reviewer": 8192}[kind]
 
     @pytest.mark.parametrize("kind", ["root", "adapter", "reviewer"])
     def test_gemini_model_comes_from_the_settings(self, kind: str) -> None:
@@ -109,9 +119,9 @@ class TestFactories:
         gemini = {kind: make_content_config(kind, GEMINI).max_output_tokens for kind in ("root", "adapter", "reviewer")}
         claude = {kind: make_content_config(kind, CLAUDE).max_output_tokens for kind in ("root", "adapter", "reviewer")}
 
-        assert gemini == {"root": 4096, "adapter": GEMINI_ADAPTER_MAX_OUTPUT_TOKENS, "reviewer": 4096}
+        assert gemini == {"root": 4096, "adapter": GEMINI_ADAPTER_MAX_OUTPUT_TOKENS, "reviewer": 8192}
         assert GEMINI_ADAPTER_MAX_OUTPUT_TOKENS == 8_192  # bounded by the soft deadline, not by the answers
-        assert claude == {"root": 4096, "adapter": 8192, "reviewer": 4096}
+        assert claude == {"root": 4096, "adapter": 8192, "reviewer": 8192}  # the catalogue reviewer writes more
         assert make_model("adapter", CLAUDE).max_tokens == 8192
         assert JUDGE_MAX_OUTPUT_TOKENS == 256
 
@@ -141,23 +151,28 @@ class TestFactories:
         assert agent_config.max_output_tokens == 8192
 
     def test_claude_defaults_think_adaptively_with_the_budgets_added_to_the_caps(self) -> None:
-        """Since 2026-10-11 the root thinks with 1,024 and the adapter with 2,048 extra output tokens."""
+        """Since 2026-10-11 the root thinks with 1,024 extra output tokens and the adapter too; since
+        2026-10-13 the reviewer thinks as well, at efforts medium, high and high, and since 2026-10-14
+        the adapter has 8,192 tokens of room and the reviewer 4,096."""
         from agents.anyplot.models import ADAPTIVE_THINKING
 
         configs = {kind: make_content_config(kind, CLAUDE_DEFAULTS) for kind in ("root", "adapter", "reviewer")}
 
         assert {kind: config.max_output_tokens for kind, config in configs.items()} == {
             "root": 4096 + 1024,
-            "adapter": 8192 + 2048,
-            "reviewer": 4096,
+            "adapter": 8192 + 8192,
+            "reviewer": 8192 + 4096,
         }
-        assert configs["root"].thinking_config.thinking_budget == ADAPTIVE_THINKING
-        assert configs["adapter"].thinking_config.thinking_budget == ADAPTIVE_THINKING
-        assert configs["reviewer"].thinking_config.thinking_budget == 0  # the reviewer never thinks
-        assert make_model("adapter", CLAUDE_DEFAULTS).max_tokens == 8192 + 2048
+        assert {kind: config.effort for kind, config in configs.items()} == {
+            "root": "medium",
+            "adapter": "high",
+            "reviewer": "high",
+        }
+        assert all(config.thinking_config.thinking_budget == ADAPTIVE_THINKING for config in configs.values())
+        assert make_model("adapter", CLAUDE_DEFAULTS).max_tokens == 8192 + 8192
         request = LlmRequest(config=configs["adapter"].model_copy())
         allow_full_file(request.config)
-        assert request.config.max_output_tokens == ADAPTER_FULL_MAX_OUTPUT_TOKENS + 2048
+        assert request.config.max_output_tokens == ADAPTER_FULL_MAX_OUTPUT_TOKENS + 8192
 
     def test_unknown_kind_is_refused(self) -> None:
         with pytest.raises(ValueError):
@@ -273,7 +288,14 @@ class TestClaudeStructuredOutput:
 
 
 THINKING = AgentSettings(
-    location="global", project="anyplot-eval", root_thinking_budget=2048, adapter_thinking_budget=4096
+    location="global",
+    project="anyplot-eval",
+    root_thinking_budget=2048,
+    adapter_thinking_budget=4096,
+    reviewer_thinking_budget=0,
+    root_effort="low",
+    adapter_effort="medium",
+    reviewer_effort="low",
 )
 NON_STREAMING_LIMIT = 128_000 * 600 // 3600
 """The largest `max_tokens` the Anthropic SDK sends without streaming (`_calculate_nonstreaming_timeout`)."""
@@ -292,7 +314,7 @@ class TestThinkingMeasurement:
         assert {kind: config.max_output_tokens for kind, config in configs.items()} == {
             "root": 4096 + 2048,
             "adapter": 8192 + 4096,
-            "reviewer": 4096,
+            "reviewer": 8192,
         }
         assert {kind: config.thinking_config.thinking_budget for kind, config in configs.items()} == {
             "root": -1,
@@ -504,7 +526,7 @@ class TestJudge:
 
     def test_adapter_full_cap(self) -> None:
         """Claude's full-file cap holds a plan at the schema's 24 KB limit; Gemini's is bounded by the deadline."""
-        assert ADAPTER_FULL_MAX_OUTPUT_TOKENS == 16_384
+        assert ADAPTER_FULL_MAX_OUTPUT_TOKENS == 12_288
         assert GEMINI_ADAPTER_FULL_MAX_OUTPUT_TOKENS == 12_288
         assert MAX_FULL_CODE_CHARS / 2.5 < ADAPTER_FULL_MAX_OUTPUT_TOKENS  # 2.5 characters per Haiku 5.5 token
 
