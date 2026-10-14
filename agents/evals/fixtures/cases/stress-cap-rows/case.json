@@ -19,11 +19,11 @@
     "synthetic"
   ],
   "source": "synthetic: agents/evals/make_stress.py",
-  "bound_expected": "accepted at exactly MAX_INPUT_BYTES (204,800 bytes) and MAX_ROWS (20,000); the adapter request stays bounded by the profile, not by the rows",
+  "bound_expected": "accepted at exactly MAX_INPUT_BYTES (1,048,576 bytes) and MAX_ROWS (20,000); the adapter request stays bounded by the profile, not by the rows",
   "needs_model": false,
   "static": {
     "dataset": "ok",
-    "bytes": 204800,
+    "bytes": 1048576,
     "rows": 20000,
     "bindings": "complete",
     "loader": "ok"

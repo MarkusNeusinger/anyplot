@@ -12,7 +12,8 @@ from typing import Any
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
-from agents.anyplot.data.parse import MAX_INPUT_BYTES, ParsedDataset, parse_dataset
+from agents.anyplot.data import prepare as prepare_module
+from agents.anyplot.data.parse import ParsedDataset, parse_dataset
 from agents.anyplot.data.prepare import (
     MAX_CONDITIONS,
     MAX_DROP_COLUMNS,
@@ -791,15 +792,19 @@ class TestPivotLonger:
         assert code == "invalid_operation"
         assert f"{MAX_ROWS:,}" in message
 
-    def test_a_result_over_the_input_cap_is_refused_before_the_reparse(self) -> None:
-        """The long format of a wide dataset can exceed the parser's 200 KB; the model hears a code, not `internal`."""
+    def test_a_result_over_the_cap_is_refused_before_the_reparse(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """The long format of a wide dataset can exceed the computed-data cap; the model hears a code, not `internal`.
+
+        The cap is lowered for the test: at 2 MiB the input would be over the paste cap first.
+        """
+        monkeypatch.setattr(prepare_module, "MAX_COMPUTED_BYTES", 200 * 1024)
         header = "id," + ",".join(f"t{i}" for i in range(8)) + ",a,b\n"
         text = header + "".join(f"{row}," + ",".join(["t" * 38] * 8) + f",{row},{row * 2}\n" for row in range(380))
-        assert len(text.encode()) < MAX_INPUT_BYTES
+        assert len(text.encode()) < 200 * 1024
         code, message = failure(text, {"op": "pivot_longer", "columns": ["a", "b"]})
 
         assert code == "invalid_operation"
-        assert f"{MAX_INPUT_BYTES // 1024} KB" in message
+        assert "larger than 200 KB" in message
 
     def test_a_datetime_with_times_keeps_them_next_to_another_kind(self) -> None:
         """Unlike kinds melt into text: a timestamp is written with its time, as its own column was (verifiers)."""

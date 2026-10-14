@@ -81,7 +81,9 @@ CLIENT_HEADER_VALUE = "agent-chat/1"
 """Required `X-Anyplot-Client` value on every method but GET, HEAD and OPTIONS (so
 PATCH too). A custom header forces a CORS preflight, which a foreign origin cannot pass."""
 
-MAX_DATASET_BYTES = 200 * 1024
+MAX_DATASET_BYTES = 1024 * 1024
+"""Pasted data, "1 MB" of UTF-8 (200 KB before 2026-10-14): the agents parser's `MAX_INPUT_BYTES`, copied
+because the API image does not ship the agents package."""
 MAX_MESSAGE_CHARS = 2000
 MAX_FEEDBACK_CHARS = 500
 """The cap of a feedback message after the strip, the site feedback's own (`api/routers/feedback.py`)."""
@@ -948,7 +950,7 @@ async def upload_dataset(sid: SessionId, body: DatasetBody, ctx: Ctx, client: Cl
     `language`: the session language as `{language, source}`, source `pasted` when the notes' or the column
     names' language set it before any typed message or choice); or, for free text the
     parser cannot read, the agents service's `{transcribed, text, preview, profile, warnings, note}`, a
-    model's reading that the page shows for confirmation and nothing stored. 413 above 200 KB of UTF-8;
+    model's reading that the page shows for confirmation and nothing stored. 413 above 1 MB of UTF-8;
     `422 formula` for text that asks for a formula, which the assistant computes in the chat instead, and
     `422 code` for a program (Python, JavaScript, R) that generates data, which the assistant runs in the chat."""
     if len(body.text.encode("utf-8")) > MAX_DATASET_BYTES:

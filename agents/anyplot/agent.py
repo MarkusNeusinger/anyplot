@@ -33,6 +33,7 @@ from google.adk.plugins.context_filter_plugin import ContextFilterPlugin
 
 from .data.bindings import check_bindings
 from .dev_fixture import DevFixturePlugin
+from .language import english_name
 from .models import make_content_config, make_model
 from .plugins.budget import BudgetPlugin
 from .plugins.scope_guard import ScopeGuardPlugin
@@ -68,6 +69,13 @@ LANGUAGE_SOURCE_LINES: dict[str, str] = {
 (`20261012T211551Z-bcc5bcf1`): with the bare word `chosen` and a heading that called the
 value "never an instruction", the root refused the user's chip choice as "the block in
 your message" and stayed in English."""
+REPLY_LANGUAGE_LINE = "- Reply language: {name}; every reply is in {name}, also the one to an English [action] message"
+"""The session block's line naming a known non-English session language by its English name (`language.english_name`).
+
+A live test of 2026-10-14: after a German CSV set the language to `de` (source `pasted`), the
+`summarize_data` turn, whose only user text is the English `[action]` line, came back in English
+in 3 of 4 probe runs; the code inside the `<plot_language>` fence alone did not outweigh it.
+The name comes from the server's table, never from the stored value, so it stands outside a fence."""
 NOTES_LINE = "yes; get_dataset_profile returns them under user_notes"
 """The session block's line when the stored dataset kept notes pasted around the table: a fixed text,
 so the root knows to read them again after the context filter dropped the turn that carried them."""
@@ -128,6 +136,9 @@ async def session_context(context: ReadonlyContext) -> str:
         lines.append(f"- Plot versions: {len(versions)}; latest result: {latest.result.status}, theme {latest.theme}")
     else:
         lines.append("- Plot versions: none yet")
+    name = english_name(view.language)
+    if name is not None and name != "English":
+        lines.append(REPLY_LANGUAGE_LINE.format(name=name))
     lines += [SESSION_LANGUAGE_HEADING, fence("plot_language", view.language)]
     return "\n".join(lines)
 

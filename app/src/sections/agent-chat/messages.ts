@@ -39,7 +39,7 @@ export const PLOT_FAILED_TEXT: Record<string, string> = {
 
 /** Failures of the dataset, bindings, confirmation and undo calls. */
 export const DATA_FAILURE: Record<string, string> = {
-  too_long: 'more than 200 KB; paste fewer rows',
+  too_long: 'more than 1 MB; paste fewer rows',
   unparseable: 'could not read this as CSV, TSV, semicolon CSV or JSON',
   data_refused: 'the content check refused this data',
   // The dataset judge or the model that reads free text into a table failed closed.

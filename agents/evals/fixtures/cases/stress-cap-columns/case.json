@@ -23,7 +23,7 @@
   "needs_model": false,
   "static": {
     "dataset": "ok",
-    "bytes": 204800,
+    "bytes": 1048576,
     "columns": 50,
     "bindings": "complete",
     "loader": "ok",

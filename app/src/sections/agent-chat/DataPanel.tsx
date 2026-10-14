@@ -1,6 +1,6 @@
 /**
  * The data card of the agent chat, the first turn of the thread: paste data
- * (200 KB cap with a live counter), parse it on the server, check the 20-row
+ * (1 MB cap with a live counter), parse it on the server, check the 20-row
  * preview and the parser's warnings, and bind each spec role to a column (the
  * server's defaults come preselected).
  *
@@ -754,7 +754,7 @@ export function DataPanel({
           aria-live="polite"
           sx={{ ...labelSx, color: over ? colors.error : 'var(--ink-muted)' }}
         >
-          {formatKb(bytes)} / 200 KB
+          {formatKb(bytes)} / 1 MB
         </Box>
         <Box
           component="button"

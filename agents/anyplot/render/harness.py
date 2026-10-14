@@ -84,11 +84,14 @@ snippet cannot reach it. It runs the snippet with `exec`, catches everything it 
 takes `df` from the returned globals: a pandas DataFrame whose columns are no
 MultiIndex, with a non-default index turned into columns (`reset_index`), its column
 names as text, at most `DATA_MAX_ROWS` rows and `DATA_MAX_COLUMNS` columns and at most
-`DATA_MAX_CSV_BYTES` of CSV (the parser's caps: `agents/anyplot/schemas.py` and
-`data/parse.py`; a test pins them equal). It writes the CSV through the handle it opened
+`DATA_MAX_CSV_BYTES` of CSV (the parser's caps for computed data: `agents/anyplot/schemas.py`
+and `data/parse.py` `MAX_COMPUTED_BYTES`, 2 MiB, twice the 1 MiB paste cap; a test pins them equal). It writes the CSV through the handle it opened
 before the guard; a run the guard refused at any point writes nothing, even when the
 snippet caught the error. Each refusal has its own exit code (`DATA_EXIT`); the host
-maps a code to a fixed message and trusts nothing the snippet printed. The plot mode
+maps a code to a fixed message and trusts nothing the snippet printed. The same code,
+with the measured value and the cap for a broken row, column or byte cap, also goes to
+`status.json` (opened before the guard, written last), because Cloud Run's sandbox
+launcher reports every non-zero exit as its own SIGPIPE (-13) and so loses the code. The plot mode
 arms `PlotGuard` instead (step 5), which lets imports and reads through and refuses with
 `PermissionError`, so a plot that catches a refusal renders without what was refused.
 
@@ -171,9 +174,11 @@ MISSING_MATH_GLYPHS: set[int] = set()  # code points reported by mathtext (no fa
 
 DATA_FLAG = "--data"
 DATA_OUT_FILE = "out.csv"
+DATA_STATUS_FILE = "status.json"
+"""The data run's outcome for the host (`write_status`): `{"exit", "reason", "measured"?, "limit"?}`."""
 DATA_MAX_ROWS = 20_000  # agents/anyplot/schemas.py MAX_ROWS
 DATA_MAX_COLUMNS = 50  # agents/anyplot/schemas.py MAX_COLUMNS
-DATA_MAX_CSV_BYTES = 200 * 1024  # agents/anyplot/data/parse.py MAX_INPUT_BYTES
+DATA_MAX_CSV_BYTES = 2 * 1024 * 1024  # agents/anyplot/data/parse.py MAX_COMPUTED_BYTES (pastes take 1 MiB)
 DATA_EXIT = {
     "ok": 0,
     "error": 1,
@@ -381,6 +386,39 @@ def builds_code(frame):
     return any(file_name.endswith("/" + suffix) and code.co_name == name for suffix, name in CODE_BUILDERS)
 
 
+UNAUDITED_CALLS = (
+    ("os", "mkfifo"),
+    ("os", "mknod"),
+    ("posix", "mkfifo"),
+    ("posix", "mknod"),
+    ("_posixsubprocess", "fork_exec"),
+    ("subprocess", "_fork_exec"),
+)
+"""Callables that create a directory entry or start a process with no audit event in CPython 3.13 (#12177 review:
+`os.mkfifo` and `os.mknod`; `_posixsubprocess.fork_exec` is what `subprocess.Popen` runs after its own event). The
+guards replace them with `refused_call` before arming, in every module that holds them, so code past the validator
+cannot reach them through `os`, `posix` or a module that imported them by name."""
+
+
+def refused_call(*args, **kwargs):
+    raise PermissionError("blocked by the sandbox: a call the audit hook cannot see")
+
+
+def disable_unaudited_calls():
+    """Replace `UNAUDITED_CALLS` in the modules that are loaded or load without side effects."""
+    import importlib
+
+    for module_name, name in UNAUDITED_CALLS:
+        module = sys.modules.get(module_name)
+        if module is None and module_name.startswith(("posix", "_posix")):
+            try:
+                module = importlib.import_module(module_name)
+            except ImportError:
+                continue
+        if module is not None and hasattr(module, name):
+            setattr(module, name, refused_call)
+
+
 def sets_code(event, args):
     """A `function.__code__` assignment, which would run a compiled code object without an `exec` event."""
     return event == "object.__setattr__" and len(args) > 1 and args[1] == "__code__"
@@ -444,8 +482,13 @@ class DataGuard:
         raise RuntimeError("blocked by the data sandbox")
 
     def arm(self, entry=None):
-        """Install the hook (it can never be removed) and let `entry`, the compiled code, run once under it."""
+        """Install the hook (it can never be removed) and let `entry`, the compiled code, run once under it.
+
+        The calls that change the filesystem or start a process without raising an audit event are
+        replaced first (`disable_unaudited_calls`), because the hook cannot see them.
+        """
         self.entry = entry
+        disable_unaudited_calls()
         sys.addaudithook(self)
         self.armed = True
 
@@ -523,7 +566,13 @@ class PlotGuard(DataGuard):
 
     def writes_elsewhere(self, args):
         """Whether an `open` event (path, mode, flags) writes to anything but `outputs`: `open` passes its mode
-        text and the flags it derived, `os.open` only flags."""
+        text and the flags it derived, `os.open` only flags.
+
+        The event carries no `dir_fd`, so a relative path of `os.open` (`mode` None) may name a file
+        in another directory than the working one (`os.open("plot-light.png", flags, dir_fd=fd)`, or
+        `open(..., opener=...)`, whose opener calls `os.open`): an `os.open` write passes only with an
+        absolute path (#12177 review). `open` itself, which savefig and the probe use, takes no `dir_fd`.
+        """
         path, mode, flags = (*args, None, None, None)[:3]
         writes = (isinstance(mode, str) and any(letter in mode for letter in "wax+")) or (
             isinstance(flags, int) and bool(flags & WRITE_FLAGS)
@@ -532,6 +581,8 @@ class PlotGuard(DataGuard):
             return False
         if not isinstance(path, str | bytes | os.PathLike):
             return True  # a file descriptor, or anything else that names no path
+        if mode is None and not os.path.isabs(os.fsdecode(path)):
+            return True
         with self.paused():
             try:
                 return os.path.realpath(os.fsdecode(path)) not in self.outputs
@@ -1083,10 +1134,15 @@ def install_probe(theme):
     Figure.savefig = savefig
 
 
-def frame_csv(frame):
-    """The CSV text of a snippet's `df`, or the `DATA_EXIT` key of why there is none."""
+def frame_csv(frame, measure=None):
+    """The CSV text of a snippet's `df`, or the `DATA_EXIT` key of why there is none.
+
+    For a cap it broke, `measure` (a dict) gets the measured value and the cap: rows,
+    columns or CSV bytes, which the host turns into a message the model can act on.
+    """
     import pandas as pd
 
+    measure = measure if measure is not None else {}
     if not isinstance(frame, pd.DataFrame):
         return None, "no_frame"
     if isinstance(frame.columns, pd.MultiIndex):
@@ -1101,22 +1157,65 @@ def frame_csv(frame):
     frame = frame.copy()
     frame.columns = [str(column) for column in frame.columns]
     if len(frame.index) > DATA_MAX_ROWS:
+        measure.update(measured=len(frame.index), limit=DATA_MAX_ROWS)
         return None, "too_many_rows"
     if len(frame.columns) > DATA_MAX_COLUMNS:
+        measure.update(measured=len(frame.columns), limit=DATA_MAX_COLUMNS)
         return None, "too_many_columns"
     buffer = io.StringIO()
     frame.to_csv(buffer, index=False)
     text = buffer.getvalue()
-    if len(text.encode("utf-8", errors="surrogatepass")) > DATA_MAX_CSV_BYTES:
+    size = len(text.encode("utf-8", errors="surrogatepass"))
+    if size > DATA_MAX_CSV_BYTES:
+        measure.update(measured=size, limit=DATA_MAX_CSV_BYTES)
         return None, "too_large"
     return text, None
 
 
+def write_status(handle, code, measure):
+    """`status.json`: the run's `DATA_EXIT` code and, for a broken cap, the measured value and the cap.
+
+    The host reads it whatever the launcher's exit code says: Cloud Run's `sandbox do`
+    reports every non-zero exit of the sandboxed process as its own death by SIGPIPE
+    (-13), so the exit code alone cannot carry `too_large` from the sandbox. The handle
+    was opened before the guard; the snippet cannot reach it, and a write to an open
+    file raises no audit event.
+    """
+    if handle is None:
+        return
+    reason = next((name for name, value in DATA_EXIT.items() if value == code), None)
+    report = {"exit": code, "reason": reason}
+    for key in ("measured", "limit"):
+        if isinstance(measure.get(key), int):
+            report[key] = measure[key]
+    try:
+        handle.write(json.dumps(report))
+        handle.close()
+    except Exception:
+        pass  # the host then falls back on the launcher's exit code
+
+
 def main_data(path, guard=None):
-    """Data mode (module docstring): run the snippet under `DataGuard` and write its `df` to `out.csv`."""
+    """Data mode (module docstring): run the snippet under `DataGuard`, write its `df` to `out.csv` and the
+    outcome to `status.json`."""
     _report("start")
     set_limits()
     sys.dont_write_bytecode = True  # no .pyc write, which the guard would refuse
+    try:
+        status = open(DATA_STATUS_FILE, "w", encoding="utf-8")  # before the guard, which refuses every open
+    except OSError:
+        status = None
+    measure = {}
+    code = DATA_EXIT["error"]
+    try:
+        code = run_data_snippet(path, guard, measure)
+    finally:
+        write_status(status, code, measure)
+    return code
+
+
+def run_data_snippet(path, guard, measure):
+    """`main_data` after the limits: preload, compile, arm the guard, run the snippet and write `out.csv`."""
     import builtins
     import ctypes  # noqa: F401  (pandas loads it anyway; its load opens a library, so before the guard)
 
@@ -1145,7 +1244,7 @@ def main_data(path, guard=None):
         if guard.blocked:
             return DATA_EXIT["blocked"]
         try:
-            text, refusal = frame_csv(namespace.get("df"))
+            text, refusal = frame_csv(namespace.get("df"), measure)
         except Exception as exc:
             print_snippet_error(guard, exc)
             return DATA_EXIT["blocked"] if guard.blocked else DATA_EXIT["error"]

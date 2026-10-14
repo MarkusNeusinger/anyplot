@@ -10,6 +10,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
+from agents.anyplot.data import generate as generate_module
 from agents.anyplot.data.generate import (
     BINARY_FUNCTIONS,
     CONSTANTS,
@@ -25,8 +26,13 @@ from agents.anyplot.data.generate import (
     looks_like_formula,
     parse_expression,
 )
-from agents.anyplot.data.parse import MAX_INPUT_BYTES, parse_dataset
+from agents.anyplot.data.parse import MAX_COMPUTED_BYTES, parse_dataset
 from agents.anyplot.schemas import MAX_NOTE_CHARS
+
+
+SMALL_CAP = 200 * 1024
+"""The computed-data cap these tests set, the paste cap before 2026-10-14: at 2 MiB no grid within
+`MAX_GRID_ROWS` and `MAX_SERIES` reaches the real cap with the generator's short cells."""
 
 
 def spec(*series: tuple[str, str], variables: list[dict[str, Any]] | None = None) -> Generate:
@@ -312,7 +318,8 @@ class TestForbiddenConstructs:
 
 
 class TestLimits:
-    def test_too_many_points_in_a_grid(self) -> None:
+    def test_too_many_points_in_a_grid(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr(generate_module, "MAX_COMPUTED_BYTES", SMALL_CAP)
         variables = [
             {"name": "x", "start": "0", "stop": "1", "points": 101},
             {"name": "y", "start": "0", "stop": "1", "points": 100},
@@ -324,7 +331,7 @@ class TestLimits:
         assert (
             caught.value.message == "a grid of 101 x 100 points has 10,100 rows; at most 10,000 fit, use fewer points"
         )
-        # 10,000 rows fit when the cells are short (whole numbers here); eight-digit cells hit the 200 KB cap first,
+        # 10,000 rows fit when the cells are short (whole numbers here); eight-digit cells hit the (small) cap first,
         # and the refusal names a grid that fits, for the model's one retry.
         whole = [{"name": name, "start": "0", "stop": "99", "points": 100} for name in ("x", "y")]
         assert len(table(generate(spec(("z", "x - y"), variables=whole)))) == MAX_GRID_ROWS
@@ -336,7 +343,8 @@ class TestLimits:
         smaller = [{**item, "stop": "1", "points": side} for item in whole]
         assert len(table(generate(spec(("z", "x*y"), variables=smaller)))) == side * side
 
-    def test_too_large_a_table(self) -> None:
+    def test_too_large_a_table(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr(generate_module, "MAX_COMPUTED_BYTES", SMALL_CAP)
         variables = [
             {"name": "x", "start": "0", "stop": "1", "points": 100},
             {"name": "y", "start": "0", "stop": "1", "points": 100},
@@ -346,7 +354,7 @@ class TestLimits:
             generate(spec(*series, variables=variables))
 
         assert caught.value.code == "too_large"
-        kilobytes = MAX_INPUT_BYTES // 1024
+        kilobytes = SMALL_CAP // 1024
         assert caught.value.message.startswith(f"the table would be larger than {kilobytes} KB; about ")
         assert "rows of 12 columns fit, such as " in caught.value.message
         assert caught.value.message.endswith("points; use fewer points or fewer series")
@@ -385,7 +393,7 @@ class TestRoundTrip:
         assert parsed.column_dtypes == {"x": "number", "y": "number", "w": "number"}
         assert parsed.csv == generated.csv
         assert parsed.profile.rows == 200 and parsed.profile.columns[2].missing == 100
-        assert len(generated.csv.encode("utf-8")) <= MAX_INPUT_BYTES
+        assert len(generated.csv.encode("utf-8")) <= MAX_COMPUTED_BYTES
 
     def test_the_change_line_is_capped(self) -> None:
         long = "+".join(["x"] * 45)

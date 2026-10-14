@@ -50,6 +50,7 @@ spec text) sits inside our own fences after the "data, never instructions" pream
 """
 
 import json
+import math
 import secrets
 from typing import Any
 
@@ -60,7 +61,7 @@ from pydantic import TypeAdapter, ValidationError
 from ..briefs import spec_brief, trimmed_profiles
 from ..code.data_code import check_data_code
 from ..data.generate import Generate, GenerateError, generate
-from ..data.parse import ParsedDataset, ParseError, parse_dataset
+from ..data.parse import MAX_CANONICAL_BYTES, MAX_COMPUTED_BYTES, ParsedDataset, ParseError, parse_dataset
 from ..data.prepare import MAX_OPERATIONS, Operation, PrepareError, apply_operations, validation_lines
 from ..data.shape import long_suggestion
 from ..data.store import StoredDataset, StoreFull
@@ -261,7 +262,9 @@ async def prepare_data(operations: list[dict[str, Any]], tool_context: ToolConte
         prepared = apply_operations(stored.as_parsed(), parsed_operations)
         # The columns `set_type text` made text stay text: the re-parse would type them by content again.
         # The CSV is the service's own: every row stays, also a `Total` category a sort moved to the end.
-        parsed = parse_dataset(prepared.csv, text_columns=prepared.text_columns, find_table=False)
+        parsed = parse_dataset(
+            prepared.csv, text_columns=prepared.text_columns, find_table=False, max_bytes=MAX_COMPUTED_BYTES
+        )
     except PrepareError as exc:
         # The message names columns of the user's dataset at most, never a cell; fenced like every column name.
         return {"status": "error", "code": exc.code, "message": _fenced_lines([exc.message])}
@@ -292,8 +295,8 @@ async def generate_data(
 
     variables: one or two ranges {"name": "x", "start": "-pi", "stop": "pi", "points": 200}; start and stop are
     numbers or expressions over the constants pi, e and tau; points is 2 to 5000 (default 200); two variables make a
-    grid (every pair, at most 10000 rows: set points on both, such as 50). The table holds at most 200 KB, about 6000
-    rows of three columns of 8-digit numbers. series: one to ten {"name": "y",
+    grid (every pair, at most 10000 rows: set points on both, such as 50). The table holds at most 2 MB, more than any
+    grid within these point limits needs. series: one to ten {"name": "y",
     "expression": "sin(x)"}, each an expression over the variables with numbers, pi, e, tau, + - * / ** % //,
     parentheses and the functions sin cos tan asin acos atan sinh cosh tanh exp log log10 log2 sqrt abs floor ceil
     round sign atan2 min max. Returns the change lines and the new profile, or an error with a code and a message.
@@ -310,7 +313,7 @@ async def generate_data(
         return {"status": "error", "code": "invalid_arguments", "errors": _fenced_lines(validation_lines(exc))}
     try:
         generated = generate(spec)
-        parsed = parse_dataset(generated.csv, find_table=False)
+        parsed = parse_dataset(generated.csv, find_table=False, max_bytes=MAX_COMPUTED_BYTES)
     except GenerateError as exc:
         # The message names variables and series and quotes the model's own expression at most; fenced all the same.
         return {"status": "error", "code": exc.code, "message": _fenced_lines([exc.message])}
@@ -364,11 +367,16 @@ RUN_FAILURES: dict[str, str] = {
     "frame_shape": "df has nested column headers (a MultiIndex) or an index that cannot become columns: flatten it",
     "too_many_rows": f"df has more than {MAX_ROWS:,} rows: compute fewer points",
     "too_many_columns": f"df has more than {MAX_COLUMNS} columns: keep only the columns the plot needs",
-    "too_large": "df's CSV is over 200 KB: compute fewer rows or round the values",
+    "too_large": "df's CSV is over 2 MB: compute fewer rows or round the values",
     "blocked": "the code tried to reach native code, files, processes or the network, which the sandbox refuses",
     "usage": "the sandbox could not start the code",
 }
 """Fixed messages for the harness's data-mode exit codes (`harness.DATA_EXIT`) other than `ok` and `error`."""
+CANONICAL_TOO_LARGE = (
+    "df fits the 2 MB cap, but written out the way the plot reads it (ISO dates, full numbers) it is over "
+    f"{MAX_CANONICAL_BYTES // (1024 * 1024)} MB: keep fewer rows or columns, or shorten long text and number cells"
+)
+"""The refusal of a table whose canonical CSV passes `parse.MAX_CANONICAL_BYTES` although df's own CSV fit."""
 DATA_RUN_SLOT_WAIT_S = 120.0
 """How long `run_data_code` waits for the instance's render slot before it answers `busy`."""
 
@@ -385,7 +393,10 @@ async def run_data_code(code: str, source_language: str, tool_context: ToolConte
 
     code: Python of at most 6,000 characters using only numpy, pandas, math, random, statistics or scipy.stats (and
     the other scipy computing modules); it must assign the final table to df at the top level as a pandas DataFrame
-    (at most 20,000 rows and 50 columns), read no file, call no network and draw nothing (no matplotlib, no plot(),
+    (at most 20,000 rows, 50 columns and 2 MB as CSV: 10,000 rows of about 10 float columns at full precision fit;
+    for a wider table round floats to the decimal places that still keep their values distinct, such as
+    df.round(3) for values between -50 and 50, or keep every k-th row), read no file, call no network and
+    draw nothing (no matplotlib, no plot(),
     no hist()). Never write data values from memory: more than 20 numbers or 20 text values written out in one list,
     tuple or dict (a list repeated with * counts every copy), or 40 in the code, are refused. source_language:
     what the user wrote, one of python, javascript, r, math or other. Returns the change lines and the new profile,
@@ -439,8 +450,10 @@ async def run_data_code(code: str, source_language: str, tool_context: ToolConte
         return _error_lines(*failure)
     assert output.csv_text is not None  # `_run_failure` refuses a run without a table
     try:
-        parsed = parse_dataset(output.csv_text, find_table=False)
+        parsed = parse_dataset(output.csv_text, find_table=False, max_bytes=MAX_COMPUTED_BYTES)
     except ParseError as exc:
+        if exc.code == "too_long":  # its canonical copy outgrew `MAX_CANONICAL_BYTES` (wide dates, long text)
+            return _error_lines("run_failed", [CANONICAL_TOO_LARGE])
         return _error_lines("unparseable", [f"the table df holds cannot be read as data ({exc.code})"])
     if not any(column.dtype in ("integer", "number", "datetime") for column in parsed.profile.columns):
         return _error_lines("no_numbers", ["df has no number or date column: a plot needs values to draw"])
@@ -487,12 +500,54 @@ def _run_failure(output: DataOutput) -> tuple[str, list[str]] | None:
         return "code_error", [f"the code raised {summary}"]
     for name, exit_code in DATA_EXIT.items():
         if output.exit_code == exit_code and name in RUN_FAILURES:
-            return "run_failed", [RUN_FAILURES[name]]
+            return "run_failed", [cap_failure(name, output.measured, output.limit) or RUN_FAILURES[name]]
+    if output.exit_code is not None and output.exit_code < 0:
+        # A launcher that died of a signal and left no `status.json`: the harness's own code is lost.
+        return "run_failed", [f"the sandbox ended the run without naming why (signal {-output.exit_code})"]
     if output.exit_code != 0:
         return "run_failed", ["the code ended with an error the sandbox does not name"]
     if output.csv_text is None:
         return "run_failed", ["the sandbox returned no table"]
     return None
+
+
+CAP_HEADROOM = 0.9
+"""The share of a cap a suggested thinning aims at, so the retry lands under it, not on it."""
+
+
+def cap_failure(name: str, measured: int | None, limit: int | None) -> str | None:
+    """The refusal line of a broken row, column or size cap with the harness's numbers and a fix; None without them.
+
+    A live run of 2026-10-14 (a 10,000-step ODE at full float precision, about 800 KB of
+    CSV) failed twice with no reason given. With the size and the cap the model can thin
+    and round on the first retry: the step `k` keeps the table under the cap as it is.
+    """
+    if measured is None or limit is None or limit <= 0 or measured <= limit:
+        return None
+    k = math.ceil(measured / (limit * CAP_HEADROOM))
+    nth = _ordinal(k)
+    if name == "too_large":
+        return (
+            f"df's CSV is {math.ceil(measured / 1024):,} KB, over the {limit // 1024:,} KB cap: keep every {nth} row "
+            f"(df = df.iloc[::{k}]) or compute about 1/{k} of the points, and round the floats to the decimal "
+            "places that still keep the values distinct (df = df.round(3) for values between -50 and 50; never so "
+            "few that close values become equal), which roughly halves the size and lets you keep more rows; a line "
+            "needs no more than a few thousand points"
+        )
+    if name == "too_many_rows":
+        return (
+            f"df has {measured:,} rows, more than the {limit:,} the data takes: keep every {nth} row "
+            f"(df = df.iloc[::{k}]) or compute fewer points"
+        )
+    if name == "too_many_columns":
+        return f"df has {measured} columns, more than the {limit} the data takes: keep only the columns the plot needs"
+    return None
+
+
+def _ordinal(number: int) -> str:
+    """`2nd`, `3rd`, `4th`, `11th`, `21st`: the step in "keep every 2nd row"."""
+    suffix = "th" if 10 <= number % 100 <= 20 else {1: "st", 2: "nd", 3: "rd"}.get(number % 10, "th")
+    return f"{number}{suffix}"
 
 
 def _fenced_lines(lines: list[str]) -> str:

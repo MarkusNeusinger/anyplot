@@ -433,6 +433,48 @@ class TestDataRun:
         assert run.exit_code == harness.DATA_EXIT["error"] and run.csv_text is None
         assert 'snippet.py", line 2' in run.stderr_tail
 
+    @pytest.mark.parametrize("sigpipe", [False, True], ids=["exit code kept", "launcher dies of SIGPIPE"])
+    async def test_a_cap_refusal_reports_the_harness_code_and_its_numbers(
+        self,
+        executor: SandboxExecutor,
+        monkeypatch: pytest.MonkeyPatch,
+        caplog: pytest.LogCaptureFixture,
+        sigpipe: bool,
+    ) -> None:
+        """Live case of 2026-10-14: Cloud Run's launcher turned the harness's `too_large` into -13."""
+        if sigpipe:
+            monkeypatch.setenv("FAKE_SANDBOX_SIGPIPE", "1")
+        caplog.set_level("INFO", logger=executor_module.__name__)
+        source = (  # 20,000 rows of ten full-precision floats: over the 2 MiB computed-data cap
+            "import numpy as np\nimport pandas as pd\n"
+            "df = pd.DataFrame({f'v{k}': np.linspace(0, 1, 20000) / (k + 3) for k in range(10)})\n"
+        )
+
+        run = await executor.run_data(data_job(source))
+
+        assert run.exit_code == harness.DATA_EXIT["too_large"] and run.reason is None and run.csv_text is None
+        assert run.limit == harness.DATA_MAX_CSV_BYTES and run.measured is not None and run.measured > run.limit
+        (line,) = [record.getMessage() for record in caplog.records if '"event": "sandbox"' in record.getMessage()]
+        assert ('"launcher_signal": 13' in line) is sigpipe and '"harness_exit": 7' in line
+
+    async def test_a_snippet_error_keeps_its_code_behind_a_sigpipe_launcher(
+        self, executor: SandboxExecutor, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("FAKE_SANDBOX_SIGPIPE", "1")
+
+        run = await executor.run_data(data_job("x = 1\nraise ValueError('a secret')\n"))
+
+        assert run.exit_code == harness.DATA_EXIT["error"] and 'snippet.py", line 2' in run.stderr_tail
+
+    def test_a_status_file_the_snippet_could_not_have_written_is_ignored_when_malformed(
+        self, executor: SandboxExecutor, tmp_path: Path
+    ) -> None:
+        attempt = Attempt("r", exit_code=-13)
+        for raw in (b'{"exit": true}', b"not json", b'{"exit": 999}', b'{"exit": 7, "measured": -1}'):
+            (tmp_path / "status.json").write_bytes(raw)
+            executor._read_status(attempt, tmp_path)
+            assert attempt.harness_exit is None and attempt.to_data_wire(1).exit_code == -13
+
     async def test_the_guard_refuses_a_write_and_nothing_is_collected(self, executor: SandboxExecutor) -> None:
         source = "import pandas as pd\nopen('out.csv', 'w').write('a\\n1\\n')\ndf = pd.DataFrame({'a': [2]})\n"
 

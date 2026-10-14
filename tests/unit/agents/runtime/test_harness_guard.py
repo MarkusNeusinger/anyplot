@@ -84,6 +84,15 @@ PLOT_ROUTES = [
     pytest.param("plt.figure().savefig('plot-dark.png')\n", id="a save to another name"),
     pytest.param("import os\nos.remove('plot.py')\n", id="remove"),
     pytest.param("import os\nos.chdir('/')\n", id="chdir moves the outputs"),
+    # The #12177 review: calls that raise no audit event, and a write that names an output relative to another
+    # directory.
+    pytest.param(f"import os\nos.mkfifo('{MARKER}')\n", id="mkfifo raises no audit event"),
+    pytest.param(f"import os\nos.mknod('{MARKER}')\n", id="mknod raises no audit event"),
+    pytest.param(f"import posix\nposix.mkfifo('{MARKER}')\n", id="mkfifo through posix"),
+    pytest.param(
+        "import os\nd = os.open('mpl', os.O_RDONLY)\nos.open('plot-light.png', os.O_CREAT | os.O_WRONLY, dir_fd=d)\n",
+        id="an output name relative to another directory",
+    ),
 ]
 
 
@@ -92,9 +101,9 @@ class TestPlotGuard:
     def test_route_fails_the_render_and_leaves_no_trace(self, tmp_path: Path, body: str) -> None:
         exit_code, stderr = render(tmp_path, body)
         assert exit_code != 0
-        assert "blocked by the render sandbox" in stderr, stderr[-2000:]
+        assert "blocked by the" in stderr and "sandbox" in stderr, stderr[-2000:]
         assert not (tmp_path / MARKER).exists()
-        assert not (tmp_path / "plot-dark.png").exists()
+        assert not (tmp_path / "plot-dark.png").exists() and not (tmp_path / "mpl" / "plot-light.png").exists()
         assert (tmp_path / "plot.py").exists()
 
     def test_a_caught_refusal_refuses_the_action_and_the_plot_still_renders(self, tmp_path: Path) -> None:
@@ -162,6 +171,9 @@ class TestPlotGuardUnit:
         assert guard.refuses("open", (str(tmp_path / "x.txt"), "r+", 2))
         assert guard.refuses("open", (str(tmp_path / "x.txt"), None, harness.os.O_WRONLY | harness.os.O_CREAT))
         assert guard.refuses("open", (1, "w", 1))
+        write = harness.os.O_WRONLY | harness.os.O_CREAT
+        assert not guard.refuses("open", (str(tmp_path / "plot-light.png"), None, write))
+        assert guard.refuses("open", ("plot-light.png", None, write))  # os.open: the event carries no dir_fd
 
     def test_refuses_processes_and_sockets_but_not_imports_or_reads(self, tmp_path: Path) -> None:
         guard = self.guard(tmp_path)
@@ -197,6 +209,12 @@ class TestDataGuardCode:
         exit_code, out, stderr = run_data(tmp_path, "import pandas as pd\n" + code + "df = pd.DataFrame()\n")
         assert exit_code == DATA_EXIT["blocked"], stderr
         assert out == ""
+
+    def test_unaudited_calls_are_replaced(self, tmp_path: Path) -> None:
+        code = "import os\nimport pandas as pd\nos.mkfifo('fifo')\ndf = pd.DataFrame()\n"
+        exit_code, out, stderr = run_data(tmp_path, code)
+        assert exit_code != DATA_EXIT["ok"] and out == ""
+        assert "audit hook cannot see" in stderr and not (tmp_path / "fifo").exists()
 
     def test_builders_still_run(self, tmp_path: Path) -> None:
         code = (
