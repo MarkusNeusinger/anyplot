@@ -70,7 +70,10 @@ export function NumbersStrip({ stats, failed, onRetry }: NumbersStripProps) {
         </Box>
       ))}
       {!stats && failed && onRetry && (
-        <Box sx={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 1.5 }}>
+        <Box
+          role="alert"
+          sx={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 1.5 }}
+        >
           <Box
             component="span"
             sx={{ fontFamily: typography.mono, fontSize: '12px', color: 'var(--ink-muted)' }}
