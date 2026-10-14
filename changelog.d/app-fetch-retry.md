@@ -8,4 +8,4 @@
   `Retry-After` and the caller's abort signal, while a 404 still fails at once
   and POSTs, the debug API and the agent chat never retry. If a load still
   fails, the plot page and the homepage numbers offer `.retry()`, which reloads
-  the data in place.
+  the data in place. (#12174)
