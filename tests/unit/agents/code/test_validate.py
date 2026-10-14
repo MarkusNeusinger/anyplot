@@ -464,6 +464,22 @@ ESCAPES = [
     ("import matplotlib\nrun = matplotlib.subprocess\n", "banned-attribute"),
     ("import matplotlib\nm = matplotlib.os\n", "banned-attribute"),
     ("import warnings\nw = warnings.sys\n", "banned-attribute"),
+    # Native code and raw memory through a value (second opinion of 2026-10-14): these passed before.
+    ('lib = np.zeros(1).ctypes._ctypes.CDLL(None)\nlib.system(b"id")\n', "banned-attribute"),
+    (
+        "state = np.random.default_rng(0).bit_generator.ctypes.state\nx = type(state).from_address(0)\n",
+        "banned-attribute",
+    ),
+    ("ptr = np.zeros(1).ctypes.data_as(None)\n", "banned-attribute"),
+    ("view = np.lib.stride_tricks.as_strided(np.zeros(1), shape=(10**6,))\n", "banned-attribute"),
+    ('np.zeros(3).dump("f")\n', "banned-attribute"),
+    ("compile_c = np.testing.extbuild\n", "banned-attribute"),
+    ('import statsmodels.api as sm\nd = sm.datasets.get_rdataset("x")\n', "banned-attribute"),
+    ('import statsmodels.api as sm\nd = sm.datasets.webuse("x")\n', "banned-attribute"),
+    ('df.to_string("f")\n', "banned-call"),
+    ('df.to_string(buf="f")\n', "banned-call"),
+    ("df.info(buf=None)\n", "banned-call"),
+    ("df.info(**{})\n", "banned-call"),
 ]
 
 

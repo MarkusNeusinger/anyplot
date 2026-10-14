@@ -330,6 +330,23 @@ BANNED_IO: frozenset[str] = frozenset(
 # (`dataclasses._FuncBuilder`), and numpy's file opener (`numpy.lib._datasource.open`).
 ESCAPE_ATTRIBUTES: frozenset[str] = frozenset(
     {
+        # Native code and raw memory through a value, not an import (second opinion of 2026-10-14):
+        # `np.zeros(1).ctypes._ctypes.CDLL(None)` reaches libc, `from_address` reads and writes any
+        # address, `as_strided` views memory outside an array, `.dump` pickles an array to a file;
+        # `extbuild` compiles C, and `get_rdataset` / `webuse` fetch over the network.
+        "ctypes",
+        "_ctypes",
+        "cffi",
+        "data_as",
+        "from_address",
+        "from_buffer",
+        "from_buffer_copy",
+        "as_strided",
+        "dump",
+        "dumps",
+        "extbuild",
+        "get_rdataset",
+        "webuse",
         "sys",
         "os",
         "builtins",
@@ -440,6 +457,8 @@ UNKNOWN_MODULE = "?"
 # `np.loadtxt`, `sns.load_dataset`, sklearn's `load_*`).
 _BANNED_IO_PATTERN = re.compile(r"^(?:read_\w+|fetch_\w+|load\w*)$")
 _STRING_DISPATCH_METHODS = frozenset({"agg", "aggregate", "apply", "transform", "applymap"})
+# Methods that return text without a target and write to one given as `buf` (positional or keyword).
+_BUFFER_WRITERS = frozenset({"to_string", "info"})
 
 _DUNDER_NAME = re.compile(r"^__\w+__$")
 _DUNDER_IN_TEXT = re.compile(r"__\w+__")
@@ -907,6 +926,10 @@ class _Scan:
                 plain = len(call.args) == 1 and not call.keywords and not isinstance(call.args[0], ast.Starred)
                 if not plain:
                     self.add("banned-call", "type() is only allowed with one argument", call)
+            if isinstance(func, ast.Attribute) and func.attr in _BUFFER_WRITERS:
+                # `df.to_string("f")` and `df.info(buf=f)` write to a path; with no target they return text.
+                if call.args or any(keyword.arg in ("buf", None) for keyword in call.keywords):
+                    self.add("banned-call", f"'.{func.attr}()' with a target is not allowed", call)
             if isinstance(func, ast.Attribute) and func.attr in _STRING_DISPATCH_METHODS:
                 for argument in [*call.args, *[keyword.value for keyword in call.keywords]]:
                     for constant in ast.walk(argument):
