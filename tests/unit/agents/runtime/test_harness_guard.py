@@ -106,6 +106,22 @@ PLOT_ROUTES = [
         "import pandas as pd\ng = (i for i in [])\nf = pd.Series([g]).apply(getattr, args=('gi_frame',))\n",
         id="a frame fetched by library code the plot called",
     ),
+    # The #12181 review: a worker thread runs a callable the plot submitted with no plot frame above it, and the
+    # frames it returns reach `run_plot`'s locals and the guard; `gc` hands out the guard object directly.
+    pytest.param(
+        "import sys\nfrom concurrent.futures import ThreadPoolExecutor\n"
+        "with ThreadPoolExecutor(1) as pool:\n    frames = pool.submit(sys._current_frames).result()\n"
+        "for f in frames.values():\n    while f is not None:\n"
+        "        if 'guard' in f.f_locals:\n            f.f_locals['guard'].armed = False\n"
+        "        f = f.f_back\n"
+        f"open('{MARKER}', 'w').write('x')\n",
+        id="sys._current_frames in a worker thread",
+    ),
+    pytest.param(
+        f"import gc\nfor o in gc.get_objects():\n    if hasattr(o, 'plot_file'):\n        o.armed = False\n"
+        f"open('{MARKER}', 'w').write('x')\n",
+        id="gc hands out the guard",
+    ),
 ]
 
 
@@ -192,8 +208,8 @@ class TestPlotGuard:
         assert exit_code != 0 and "SyntaxError" in stderr and 'plot.py", line' in stderr
 
     def test_a_plot_error_keeps_its_traceback(self, tmp_path: Path) -> None:
-        """The interpreter prints the traceback after the plot's frames are gone, so the frame refusal never hides
-        the line the repair needs."""
+        """The interpreter reads the traceback's frames through `traceback`'s summary builder (`FRAME_READERS`), so
+        the frame refusal never hides the line the repair needs."""
         exit_code, stderr = render(tmp_path, "raise ValueError('boom')\n")
         assert exit_code != 0 and "ValueError: boom" in stderr and 'plot.py", line 5' in stderr
         assert "blocked by the" not in stderr
@@ -274,25 +290,18 @@ class TestPlotGuardUnit:
         for event in ("import", "os.listdir", "os.putenv", "compile", "builtins.id", "sys._getframemodulename"):
             assert not guard.refuses(event, ()), event
 
-    def test_refuses_frames_to_plot_code_only(self, tmp_path: Path) -> None:
-        """With this test file standing in for the plot, a frame event raised here is plot code's; with no plot
-        frame on the stack (the interpreter printing a traceback after the plot returned) it passes."""
+    def test_refuses_frames_outside_readers_and_imports(self, tmp_path: Path) -> None:
+        """A frame event raised here, with no plot frame on the stack (a worker thread's case) or with this test
+        file standing in for the plot, is refused; a module name or a non-frame attribute is not."""
         guard = self.guard(tmp_path)
-        for event, args in (
-            ("sys._getframe", (0,)),
-            ("sys._current_frames", ()),
-            ("object.__getattr__", (1, "gi_frame")),
-        ):
-            assert not guard.refuses(event, args), event
-        guard.plot_file = __file__
-        for event, args in (
-            ("sys._getframe", (0,)),
-            ("sys._current_frames", ()),
-            ("object.__getattr__", (1, "tb_frame")),
-        ):
-            assert guard.refuses(event, args), event
+        frame_events = (("sys._getframe", (0,)), ("sys._current_frames", ()), ("object.__getattr__", (1, "tb_frame")))
+        for plot_file in (None, __file__):
+            guard.plot_file = plot_file
+            for event, args in frame_events:
+                assert guard.refuses(event, args), (plot_file, event)
         assert not guard.refuses("object.__getattr__", (1, "__code__"))
         assert not guard.refuses("sys._getframemodulename", (0,))
+        assert guard.refuses("gc.get_objects", ()) and guard.refuses("gc.get_referrers", ())
 
     def test_frame_readers_match_their_whole_chain(self) -> None:
         reader = type("Code", (), {"co_filename": "/usr/lib/python3.13/traceback.py", "co_name": "extract_stack"})

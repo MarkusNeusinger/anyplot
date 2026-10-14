@@ -247,6 +247,7 @@ DATA_BLOCKED_PREFIXES = (
     "code.__new__",
     "function.__new__",
     "builtins.input",
+    "gc.get_",
 )
 """Audit events `DataGuard` refuses once it is armed (https://docs.python.org/3/library/audit_events.html), next to
 every `open` and every `import`. CPython 3.13 raises no event for `os.stat` and its family (`os.path.exists`,
@@ -320,6 +321,7 @@ PLOT_BLOCKED_PREFIXES = (
     "resource.setrlimit",
     "resource.prlimit",
     "builtins.input",
+    "gc.get_",
 )
 """Audit events `PlotGuard` refuses once it is armed (`ctypes.*` but `NATIVE_CALLERS`), next to `exec` and
 `CODE_OBJECT_EVENTS` and every `open` that writes anywhere but the plot's PNG and its probe. Unlike data mode it lets
@@ -327,7 +329,9 @@ imports, file reads and environment writes through: the plot imports its librari
 fonts, style sheets and their own data files while drawing, and scikit-learn's import sets `KMP_DUPLICATE_LIB_OK`
 (`os.putenv`), which matters to no process the guard lets start. A refusal raises `PermissionError`, an `OSError`, so
 library code that already tolerates a read-only filesystem or a missing tool (matplotlib's cache writes,
-`os.makedirs(..., exist_ok=True)`, `ctypes.util.find_library`, loky's `lscpu` call) carries on."""
+`os.makedirs(..., exist_ok=True)`, `ctypes.util.find_library`, loky's `lscpu` call) carries on. Both guards refuse
+`gc.get_objects`, `gc.get_referrers` and `gc.get_referents` (`gc.get_`), which would hand out the guard object itself
+the way a frame's locals would (#12181 review)."""
 FRAME_ATTRIBUTES = frozenset({"gi_frame", "cr_frame", "ag_frame", "tb_frame"})
 """Attributes that hand out a frame, whose `f_builtins` and `f_globals` reach `open` and `__import__`
 (`(i for i in []).gi_frame.f_builtins`). CPython raises `object.__getattr__` for each; every other route to a frame
@@ -601,15 +605,18 @@ class PlotGuard(DataGuard):
         return self.nearest_origin(frame) == "import"
 
     def lets_frame_out(self):
-        """Whether a frame may be handed out (`FRAME_EVENTS`, `FRAME_ATTRIBUTES`): to `FRAME_READERS`, to the module
-        body of an import (an import frame before any plot frame, as for `exec`), and when no plot code is on the
-        stack at all (the interpreter printing the plot's traceback after the plot returned). Plot code, and library
-        code the plot called, gets none: a callback or a `getattr` the plot hands to a library still has the plot's
-        frame above it (Fable review of #12177)."""
+        """Whether a frame may be handed out (`FRAME_EVENTS`, `FRAME_ATTRIBUTES`): only to `FRAME_READERS` and to the
+        module body of an import (an import frame before any plot frame, as for `exec`). Everything else is refused,
+        plot code and library code the plot called (a callback or a `getattr` it hands to a library has the plot's
+        frame above it, Fable review of #12177) as much as a stack with no plot frame at all: a worker thread runs a
+        callable the plot submitted (`ThreadPoolExecutor.submit(sys._current_frames)`) with neither frame above it,
+        and the frames it returned would reach `run_plot`'s locals and the guard itself (#12181 review). The
+        interpreter's traceback of a failed plot needs no exception: it reads its frames through `traceback`'s
+        summary builder, one of `FRAME_READERS`."""
         frame = self.caller()
         if reads_frames(frame):
             return True
-        return self.nearest_origin(frame) != "plot"
+        return self.nearest_origin(frame) == "import"
 
     def nearest_origin(self, frame):
         """Walking up from `frame`: `"plot"` when a frame of the plot file comes first, `"import"` when an import
