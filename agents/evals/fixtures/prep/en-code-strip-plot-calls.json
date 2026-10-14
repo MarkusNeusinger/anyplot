@@ -1,0 +1,6 @@
+{
+  "message": "import numpy as np\nimport matplotlib.pyplot as plt\n\nx = np.linspace(0, 10, 50)\ny = np.exp(-x / 3) * np.cos(2 * x)\nplt.plot(x, y)\nplt.title('Damped oscillation')\nplt.show()",
+  "expected_operations": [{"op": "run_data_code", "rows": 50, "columns": 2}],
+  "locale": "en",
+  "tags": ["run_data_code", "data_code", "python", "strip_plot", "no_dataset"]
+}

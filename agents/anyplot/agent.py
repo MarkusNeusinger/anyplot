@@ -98,7 +98,8 @@ async def session_context(context: ReadonlyContext) -> str:
     dataset = services.datasets.get(view.dataset_id, session_id) if view.dataset_id else None
     if dataset is None:
         lines.append(
-            "- Dataset: none yet; the user pastes it in the data panel, or generate_data computes it from a formula"
+            "- Dataset: none yet; the user pastes it in the data panel, or generate_data computes it from a formula, "
+            "or run_data_code from the user's code"
         )
     else:
         profile = dataset.profile

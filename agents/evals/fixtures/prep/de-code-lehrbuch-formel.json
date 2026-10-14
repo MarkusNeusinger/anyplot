@@ -1,0 +1,6 @@
+{
+  "message": "Aus meinem Lehrbuch, die logistische Abbildung: x(n+1) = r · x(n) · (1 − x(n)) mit r = 3,7 und x(0) = 0,2. Ich brauche 100 Werte, beginnend mit x(0), als n und x.",
+  "expected_operations": [{"op": "run_data_code", "rows": 100, "columns": 2}],
+  "locale": "de",
+  "tags": ["run_data_code", "data_code", "math", "no_dataset"]
+}

@@ -1,0 +1,6 @@
+{
+  "message": "Nimm die Daten aus meinem R-Code:\n\nset.seed(1)\nx <- seq(1, 50)\ny <- 2 * x + rnorm(50, sd = 5)\nplot(x, y)",
+  "expected_operations": [{"op": "run_data_code", "rows": 50, "columns": 2}],
+  "locale": "de",
+  "tags": ["run_data_code", "data_code", "r", "no_dataset"]
+}

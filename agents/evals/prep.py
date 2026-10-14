@@ -10,9 +10,19 @@ optionally `dataset_text`, `spec_id`, `library`, `tags`) opens a session on
 `agents.main:app` through httpx's `ASGITransport`, as the matrix harness does, posts
 the dataset when the case has one (the dataset judge runs for real), sends the message
 as a free-text turn (the scope judge, then the root with its tools) and reads the
-`prepare_data` and `generate_data` calls the root made from the session's events. The
-pipeline never runs: no case confirms the data or asks for a plot, so no render and no
-adapter call happens.
+`prepare_data`, `generate_data` and `run_data_code` calls the root made from the
+session's events. The pipeline never runs: no case confirms the data or asks for a
+plot, so no adapter call happens; a `run_data_code` call runs its snippet on the
+configured render backend (the remote renderer's `POST /run-data` by default).
+
+A `run_data_code` call counts as the table it stored, `{"op": "run_data_code", "rows":
+..., "columns": ...}`, read from its answer: the Python the root writes varies from run
+to run, the table's size does not. With the default `AGENT_RENDERER=fake` every data run
+returns the fake's fixture table, so only that a call stored a table is compared; set
+`AGENT_RENDERER=remote` (with `AGENT_RENDER_URL`) or `local` to compare the sizes. A case with `refuse: true` (a snippet that reads a
+file, a script with another purpose) passes when no data tool call of the turn stored a
+version, whether the scope judge refused it, the validator did, or the root called
+nothing.
 
 Scoring is exact operation match, order-insensitive, and every `prepare_data` and
 `generate_data` call of the turn must have succeeded: the operations are applied in
@@ -46,8 +56,8 @@ A case makes about five model calls: the dataset judge, the scope judge, and the
 two or three times (a profile read, the tool call, the reply). Under the 30 requests
 per minute Vertex quota for Claude Haiku in `eu` (see `scope.py`), `--calls-per-minute`
 (25 by default) spaces the starts of the cases `CALLS_PER_CASE` times further apart
-than the scope eval spaces its judge calls: 12 seconds at the default, so the 33 cases
-take about 7 minutes; the cases run one at a time. The cost is the list price of
+than the scope eval spaces its judge calls: 12 seconds at the default, so the 41 cases
+take about 8 minutes; the cases run one at a time. The cost is the list price of
 every call the attribution log booked (`pricing.call_cost`, `pricing.judge_cost`).
 
 It writes `<out>/<date>-prep-<model>.json` (the stamp, the gates, the summary, every
@@ -110,7 +120,8 @@ DEFAULT_MAX_UNAVAILABLE = 0.1
 EXIT_OK, EXIT_FAILED, EXIT_SETUP, EXIT_OUTAGE = 0, 1, 2, 4
 PREPARE_TOOL = "prepare_data"
 GENERATE_TOOL = "generate_data"
-DATA_TOOLS = frozenset({PREPARE_TOOL, GENERATE_TOOL})
+DATA_CODE_TOOL = "run_data_code"
+DATA_TOOLS = frozenset({PREPARE_TOOL, GENERATE_TOOL, DATA_CODE_TOOL})
 """The root's tools that store a dataset version; every call of them in a turn must succeed."""
 SET_OPERATIONS: dict[str, str] = {"drop_columns": "columns", "pivot_longer": "columns", "drop_rows": "where"}
 """Per operation, the list field whose order carries no meaning (compared as a set)."""
@@ -134,6 +145,25 @@ class PrepCase(BaseModel):
     spec_id: str = Field(default="scatter-basic", pattern=r"^[a-z0-9-]{1,100}$")
     library: str = Field(default="matplotlib", pattern=r"^[a-z0-9]{1,32}$")
     tags: list[str] = Field(default_factory=list)
+    refuse: bool = False
+    """The case passes when no data tool call of the turn stored a version (a scope refusal, a validator refusal or
+    no call at all): a snippet that reads a file or a script with another purpose than the plot's data."""
+
+
+class _CodeExpectation(BaseModel):
+    """An expected `run_data_code` call: the table it should store, by its size (the code itself varies)."""
+
+    model_config = ConfigDict(extra="forbid")
+    op: str = Field(pattern=f"^{DATA_CODE_TOOL}$")
+    rows: int = Field(ge=1)
+    columns: int = Field(ge=1)
+
+
+def canonical_code(item: dict[str, Any], *, size: bool = True) -> str:
+    """A `run_data_code` call as a JSON line: the rows and columns of the table it stored, or only that it stored
+    one when `size` is False (the fake renderer returns a fixture table); raises `ValidationError`."""
+    data = _CodeExpectation.model_validate(item).model_dump()
+    return json.dumps(data if size else {"op": DATA_CODE_TOOL}, sort_keys=True, ensure_ascii=False)
 
 
 def load_cases(directory: Path) -> list[PrepCase]:
@@ -151,7 +181,7 @@ def load_cases(directory: Path) -> list[PrepCase]:
     return cases
 
 
-def canonical_operations(operations: Sequence[dict[str, Any]], decimal: str) -> list[str]:
+def canonical_operations(operations: Sequence[dict[str, Any]], decimal: str, *, code_size: bool = True) -> list[str]:
     """The operations as sorted JSON lines after the `Operation` and `Generate` models and the order-free normalisations.
 
     An item with `"op": "generate_data"` is one `generate_data` call (`canonical_generate`);
@@ -163,9 +193,13 @@ def canonical_operations(operations: Sequence[dict[str, Any]], decimal: str) -> 
 
     from agents.anyplot.data.prepare import Operation
 
-    generated = [item for item in operations if isinstance(item, dict) and item.get("op") == GENERATE_TOOL]
-    prepared = [item for item in operations if not (isinstance(item, dict) and item.get("op") == GENERATE_TOOL)]
-    lines = [canonical_generate(item) for item in generated]
+    def op_of(item: Any) -> Any:
+        return item.get("op") if isinstance(item, dict) else None
+
+    generated = [item for item in operations if op_of(item) == GENERATE_TOOL]
+    coded = [item for item in operations if op_of(item) == DATA_CODE_TOOL]
+    prepared = [item for item in operations if op_of(item) not in (GENERATE_TOOL, DATA_CODE_TOOL)]
+    lines = [canonical_generate(item) for item in generated] + [canonical_code(item, size=code_size) for item in coded]
     for operation in TypeAdapter(list[Operation]).validate_python(prepared):
         data = operation.model_dump(exclude_none=True)
         if data["op"] == "set_type" and data.get("decimal") == decimal:
@@ -239,6 +273,8 @@ def describe(line: str) -> str:
     """A canonical line as a short phrase for the table: `set_type Anteil number`, `aggregate Betrag sum by Datum/month`."""
     data = json.loads(line)
     op = data["op"]
+    if op == DATA_CODE_TOOL:
+        return f"run_data_code: {data['rows']} rows x {data['columns']} columns"
     if op == GENERATE_TOOL:
         from agents.anyplot.data.generate import DEFAULT_POINTS
 
@@ -286,7 +322,10 @@ class CaseResult:
     match: bool | None = None
     tool_calls: list[str] = field(default_factory=list)
     failed_calls: int = 0
-    """`prepare_data` and `generate_data` calls of the turn the service refused or that failed: the case is a miss."""
+    """`prepare_data`, `generate_data` and `run_data_code` calls of the turn the service refused or that failed: the
+    case is a miss (a `refuse` case is scored by `stored_calls` instead)."""
+    stored_calls: int = 0
+    """Data tool calls of the turn that stored a dataset version."""
     refusal: str | None = None
     llm_calls: int = 0
     cost_usd: float = 0.0
@@ -334,7 +373,8 @@ class CaseRunner:
         user = f"prep_{digest[:12]}"
         tag = f"prep-{digest[:10]}"
         decimal = parse_dataset(case.dataset_text).profile.decimal if case.dataset_text else "."
-        result = CaseResult(case.id, None, canonical_operations(case.expected_operations, decimal))
+        code_size = self.settings.renderer != "fake"  # the fake renderer's data run is a fixture table
+        result = CaseResult(case.id, None, canonical_operations(case.expected_operations, decimal, code_size=code_size))
 
         def headers(step: str) -> dict[str, str]:
             return {"X-Anyplot-User": user, "X-Request-Id": f"{tag}-{step}"}
@@ -379,7 +419,7 @@ class CaseRunner:
                     return result
                 if name == "refusal":
                     result.refusal = str(data.get("code"))
-            await self._read_calls(result, user, sid, decimal)
+            await self._read_calls(result, user, sid, decimal, refuse=case.refuse, code_size=code_size)
         finally:
             result.latency_s = round(time.monotonic() - started, 3)
             if sid is not None:
@@ -393,8 +433,14 @@ class CaseRunner:
                 self.collector.take(f"{tag}-{step}")
         return result
 
-    async def _read_calls(self, result: CaseResult, user: str, sid: str, decimal: str) -> None:
-        """The tool calls of the turn from the session's events; the data calls' operations, canonical."""
+    async def _read_calls(
+        self, result: CaseResult, user: str, sid: str, decimal: str, *, refuse: bool = False, code_size: bool = True
+    ) -> None:
+        """The tool calls of the turn from the session's events; the data calls' operations, canonical.
+
+        A `run_data_code` call is read from its answer, not its arguments: the code varies
+        from run to run, so it counts as the size of the table it stored.
+        """
         session = await self.runtime.session(user, sid)
         operations: list[dict[str, Any]] = []
         for event in session.events:
@@ -412,13 +458,22 @@ class CaseRunner:
                 # a formula the server cannot compute.
                 if response.name in DATA_TOOLS:
                     answer = response.response if isinstance(response.response, dict) else {}
-                    result.failed_calls += answer.get("status") != "ok"
+                    ok = answer.get("status") == "ok"
+                    result.failed_calls += not ok
+                    result.stored_calls += ok
+                    if ok and response.name == DATA_CODE_TOOL:
+                        operations.append(
+                            {"op": DATA_CODE_TOOL, "rows": answer.get("rows"), "columns": answer.get("columns")}
+                        )
         result.operations = operations
         try:
-            result.found = canonical_operations(operations, decimal)
+            result.found = canonical_operations(operations, decimal, code_size=code_size)
         except ValidationError:  # ToolSafety refused the call; the root got `invalid_arguments`
             result.found = [json.dumps(item, sort_keys=True, ensure_ascii=False) for item in operations]
-        result.match = same_operations(result.found, result.expected) and not result.failed_calls
+        if refuse:
+            result.match = result.stored_calls == 0
+        else:
+            result.match = same_operations(result.found, result.expected) and not result.failed_calls
 
 
 async def run_cases(
