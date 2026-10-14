@@ -512,6 +512,18 @@ class TestPureModules:
     def test_escape_is_caught(self, body: str, rule: str) -> None:
         assert rule in security_rules(body)
 
+    @pytest.mark.parametrize(
+        "name",
+        [
+            *("gi_frame", "gi_code", "gi_yieldfrom", "cr_frame", "cr_code", "cr_await", "cr_origin"),
+            *("ag_frame", "ag_code", "ag_await", "f_back", "f_builtins", "f_globals", "f_locals"),
+            *("f_code", "f_trace", "tb_frame", "tb_next", "co_code", "co_consts", "co_names"),
+        ],
+    )
+    def test_every_introspection_attribute_is_refused(self, name: str) -> None:
+        """Each spelling of the 2026-10-14 frame and generator denylist, so a typo cannot reopen one."""
+        assert "banned-attribute" in security_rules(f"value = thing.{name}\n")
+
     def test_a_private_module_in_an_import_path_is_named_and_logged_by_its_known_prefix(self) -> None:
         findings = validate_security(plot("import scipy.fft._backend as backend\n"), library="matplotlib")
 
