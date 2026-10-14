@@ -172,6 +172,18 @@ class TestEscapes:
     def test_private_attribute_on_any_receiver(self, body: str) -> None:
         assert "banned-attribute" in rules(HEADER + body)
 
+    @pytest.mark.parametrize(
+        "body",
+        [
+            "g = (i for i in range(1))\nb = g.gi_frame.f_builtins\nh = b['open']('/etc/hostname').read()\n",
+            "g = (i for i in range(1))\nb = g.gi_frame.f_builtins\nimp = b[[k for k in b if k.endswith('port__')][0]]\n",
+            "try:\n    1 / 0\nexcept ZeroDivisionError as exc:\n    f = exc.__traceback__.tb_frame.f_globals\n",
+        ],
+    )
+    def test_frame_introspection_is_refused(self, body: str) -> None:
+        """#12169's escape names reach the DATA profile too: the Fable review's frame bypass never validates."""
+        assert "banned-attribute" in rules(HEADER + body)
+
     def test_random_main_is_banned(self) -> None:
         assert "banned-attribute" in rules(HEADER + "import random\nrandom.main()\n")
 
