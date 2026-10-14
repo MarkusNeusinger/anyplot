@@ -6,4 +6,4 @@
   only applies to imported names. The validator now bans `ctypes`, `_ctypes`, `cffi`,
   `data_as`, `from_address`, `from_buffer`, `as_strided`, `dump`, `extbuild`,
   `get_rdataset` and `webuse` on any object, and `.to_string()` / `.info()` with a target.
-  The catalogue's eligibility is unchanged (285 matplotlib and 287 seaborn files).
+  The catalogue's eligibility is unchanged (285 matplotlib and 287 seaborn files). (#12167)
