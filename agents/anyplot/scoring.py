@@ -123,8 +123,10 @@ def mend_answer(answer: dict[str, Any]) -> dict[str, Any]:
 
     For the pipeline's reviewer only (the offline scorer retries instead): a criterion named
     twice keeps its first entry, points are clamped into the criterion's range, and a missing
-    criterion counts at its starting value (a technical item at its maximum, Design Excellence
-    at its default), as the rubric scores an item no line names. The defect lines stay as written.
+    Design Excellence criterion counts at its default. A missing technical criterion stays
+    missing, so `parse_answer` raises and the pipeline asks for the review again: the ship bar
+    reads the technical points, and an unscored item is not a perfect one. The defect lines
+    stay as written.
     """
     seen: dict[str, int] = {}
     for item in answer.get("items") or []:
@@ -133,8 +135,8 @@ def mend_answer(answer: dict[str, Any]) -> dict[str, Any]:
         value = item.get("points")
         if isinstance(value, int) and not isinstance(value, bool):
             seen[item["id"]] = min(max(value, 0), SCORED[item["id"]])
-    for name in SCORED:
-        seen.setdefault(name, DE_DEFAULTS.get(name, SCORED[name]))
+    for name, default in DE_DEFAULTS.items():
+        seen.setdefault(name, default)
     return {**answer, "items": [{"id": name, "points": points} for name, points in seen.items()]}
 
 

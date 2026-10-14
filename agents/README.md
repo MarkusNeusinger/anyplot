@@ -91,8 +91,8 @@ Three rules hold for everything here:
 | `AGENT_SELF_REVIEW` | `true` | The adapter proofreads its render once per round before the review, against the rubric's technical rows |
 | `AGENT_CHECK_RETRY` | `true` | An adapter answer that fails its check (edits that do not apply, a validator finding, a broken schema, code that crashes) gets one more call in the same round, which may send a full file; a second miss ends the round |
 | `AGENT_ROOT_THINKING_BUDGET` | `1024` | Claude only: adaptive thinking of the root, with that many tokens added to its output cap; 0 turns it off |
-| `AGENT_ADAPTER_THINKING_BUDGET` | `2048` | The same for the adapter; the eval harness overrides both with `--thinking-budget ROOT,ADAPTER` |
-| `AGENT_REVIEWER_THINKING_BUDGET` | `2048` | The same for the reviewer; 0 turns its thinking off |
+| `AGENT_ADAPTER_THINKING_BUDGET` | `8192` | The same for the adapter (2,048 before 2026-10-14, when effort `high` thought past it); the eval harness overrides both with `--thinking-budget ROOT,ADAPTER` |
+| `AGENT_REVIEWER_THINKING_BUDGET` | `4096` | The same for the reviewer; 0 turns its thinking off |
 | `AGENT_ROOT_EFFORT`, `AGENT_ADAPTER_EFFORT`, `AGENT_REVIEWER_EFFORT` | `medium`, `high`, `high` | Claude's effort per agent kind (`low`, `medium`, `high`), set by the 2026-10-13 measurements (see [The plot pipeline since 2026-10-13](#the-plot-pipeline-since-2026-10-13)); on the claude-cli transport also how much the CLI thinks |
 | `AGENT_MAX_LLM_CALLS` | `16` | LLM calls per request |
 | `AGENT_REQUEST_TOKEN_BUDGET` | `800000` | Cost-weighted tokens per request (see [Token budgets and output caps](#token-budgets-and-output-caps)) |
@@ -355,7 +355,7 @@ The container has no Application Default Credentials, so a "Create plot" fails a
 
 `cloudbuild.yaml` builds the image, deploys a `candidate` revision without traffic, smokes it, and promotes exactly that revision:
 
-- The flags follow the design: one instance (sessions live in memory), 2 vCPU and 4 GiB, `--concurrency=20` and `--timeout=900` for the run queue's open streams, `--no-allow-unauthenticated`, the service account `anyplot-agents@`, no `--sandbox-launcher`, and `--update-env-vars` only.
+- The flags follow the design: one instance (sessions live in memory), 2 vCPU and 4 GiB, `--concurrency=20` and `--timeout=1200` (900 before 2026-10-13) for the run queue's open streams, `--no-allow-unauthenticated`, the service account `anyplot-agents@`, no `--sandbox-launcher`, and `--update-env-vars` only.
 - `_PROVIDER`, `_MODEL`, `_JUDGE_MODEL` and `_LIBRARIES` default to the settings defaults, so a deploy switches the model arm without a code change. The budgets and limits are not set, so the deployed code's settings defaults apply.
 - `_RENDER_URL` is the `status.url` of the real `anyplot-renderer`, and the deploy refuses to run without it, because `--update-env-vars` would otherwise replace a working renderer URL with nothing. `AGENT_ALLOWED_CALLERS` is `_API_CALLER`, anyplot-api's runtime identity (the Compute Engine default service account unless a build sets another one), plus `anyplot-agents@` itself for the smoke. The deploy adds the service's own URL to `AGENT_SERVICE_URLS`.
 - The smoke expects Cloud Run IAM to refuse an anonymous `GET /v1/status` with `403`. With `_SMOKE_AUTH=true`, the default, it also calls `/v1/status` with an ID token minted for `anyplot-agents@` and checks that the answer names the configured provider, model, location and libraries.

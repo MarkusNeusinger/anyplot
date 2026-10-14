@@ -837,6 +837,10 @@ async def _review(ctx: Context, scope: str, request: ReviewRequest, theme: Theme
         return None
     settings = get_settings()
     ok = result.passes(settings.review_bar)
+    if not ok and not result.defects:
+        # Points lost without a line to say why: no ship-bar notes and nothing for the repair to fix.
+        logger.warning("catalogue review deducted without defect lines: %s", ", ".join(result.silent))
+        return None
     ids = sorted({found for line in result.defects if (m := DEFECT_RE.match(line)) for found in m["ids"].split(", ")})
     return ReviewOutcome(
         ok,

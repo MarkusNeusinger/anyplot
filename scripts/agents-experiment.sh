@@ -45,6 +45,7 @@ export ENVIRONMENT=development GOOGLE_CLOUD_PROJECT=anyplot AGENT_LOCATION=eu \
 # Budget plugin would end runs before their review (7 of the first 15 runs of 2026-10-13).
 export AGENT_REQUEST_TOKEN_BUDGET=${AGENT_REQUEST_TOKEN_BUDGET:-10000000} \
   AGENT_DAILY_TOKEN_BUDGET=${AGENT_DAILY_TOKEN_BUDGET:-1000000000} \
+  AGENT_GLOBAL_DAILY_TOKEN_BUDGET=${AGENT_GLOBAL_DAILY_TOKEN_BUDGET:-1000000000} \
   AGENT_DAILY_PIPELINE_RUNS=${AGENT_DAILY_PIPELINE_RUNS:-100000}
 if [ -z "${AGENT_RENDER_URL:-}" ]; then
   AGENT_RENDER_URL=$(gcloud run services describe anyplot-renderer --region=europe-west4 \

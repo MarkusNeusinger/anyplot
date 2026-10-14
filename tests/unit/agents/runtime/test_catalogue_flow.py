@@ -157,6 +157,33 @@ async def test_an_unreadable_review_is_asked_once_more(client: httpx.AsyncClient
     assert [(r["attempt"], r["outcome"]) for r in plot["rounds"]] == [(1, "ok")]
 
 
+@pytest.mark.parametrize(
+    "unreadable",
+    [
+        # Points lost without a defect line: no notes for the ship bar and nothing to repair.
+        {**score(**{"VQ-03": 4}), "defects": []},
+        # A technical criterion left unscored is not a perfect one.
+        {**score(), "items": [item for item in score()["items"] if item["id"] != "VQ-03"]},
+    ],
+    ids=["silent-deduction", "missing-technical-item"],
+)
+async def test_a_review_that_cannot_back_its_score_is_asked_once_more(
+    client: httpx.AsyncClient, swap_models, unreadable: dict[str, Any]
+) -> None:
+    script = default_script(plans=[SCATTER_PLAN, EMPTY_PLAN])
+    script["reviewer"] = [{"json": unreadable}, {"json": score()}]
+    fake = swap_models("gemini", script)
+    sid = await open_session(client)
+
+    events = await create_plot(client, sid)
+
+    plot = next(data for name, data in events if name == "plot")
+    assert (plot["status"], plot["residual_defects"]) == ("ok", [])
+    assert [(r["attempt"], r["outcome"]) for r in plot["rounds"]] == [(1, "ok")]
+    reviewer_calls = [r for r in fake.requests if (r.config.labels or {}).get("agent_kind") == "reviewer"]
+    assert len(reviewer_calls) == 2
+
+
 async def test_the_best_scored_version_ships_when_the_repair_scores_lower(
     client: httpx.AsyncClient, swap_models
 ) -> None:
