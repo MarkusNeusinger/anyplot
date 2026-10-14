@@ -12,7 +12,7 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `GET /v1/eligibility?spec=&library=` | | `{eligible, status, reasons}` | |
 | `POST /v1/sessions` | `{user, spec_id, library, locale, snapshot}` | `{session_id, eligibility}` | `422 not_eligible` |
 | `POST /v1/sessions/{sid}/library` | `{library, snapshot}` | `{session_id, eligibility}` | `422 not_eligible`, `409 run_active` |
-| `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?}` | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version}` (`suggestion`: the wide-table offer of `data/shape.py`, or null; `context_lines`: the notes pasted above or below the table that passed the pre-filter and the scope judge, which the root gets with the next `summarize_data` turn), stored as version 1 (the undo history of an earlier paste is dropped); or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips that fallback and keeps every row) | `413 too_long`, `422 unparseable`, `422 formula` (text of at most 2,000 characters that asks for a formula, which the chat's `generate_data` computes; never transcribed), `403 data_refused`, `503 guard_unavailable` |
+| `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?}` | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version, language}` (`suggestion`: the wide-table offer of `data/shape.py`, or null; `context_lines`: the notes pasted above or below the table that passed the pre-filter and the scope judge, which the root gets with the next `summarize_data` turn; `language`: the session language as `{language, source}`, which a paste before any typed message or choice sets from the notes' or the column names' language, source `pasted`), stored as version 1 (the undo history of an earlier paste is dropped); or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips that fallback and keeps every row) | `413 too_long`, `422 unparseable`, `422 formula` (text of at most 2,000 characters that asks for a formula, which the chat's `generate_data` computes; never transcribed), `403 data_refused`, `503 guard_unavailable` |
 | `PUT /v1/sessions/{sid}/bindings` | `[{role, column}]` | `{bindings, complete, missing_roles, warnings}`: `warnings` names a role that needs values of 0 or more bound to a column with a negative value, or left open for that reason (`data/signs.py`); never a refusal | `409 run_active`, `422 invalid` (with `errors`, at most 20 lines) |
 | `PUT /v1/sessions/{sid}/language` | `{language}` (a short name or code, `^[A-Za-z][A-Za-z -]{0,39}$`) | `{language, source}`: the session language in its stored form (`English` is `en`), source `chosen`, which detection never overrides | `409 run_active`, `422` (the pattern) |
 | `POST /v1/sessions/{sid}/dataset/confirm` | | `{confirmed, rows, columns}`: step 1 of two, the user confirmed the dataset with its bindings; the pipeline runs only then | `409 run_active`, `422 no_dataset` |
@@ -121,6 +121,7 @@ from agents.anyplot.language import (
     MAX_LANGUAGE_CHARS,
     is_valid,
     normalise,
+    pasted_language,
     refusal_lang,
 )
 from agents.anyplot.models import JudgeUnavailable
@@ -660,13 +661,14 @@ async def upload_dataset(
     if not services.usage.daily_ok(user, get_settings()):
         raise AgentsError(429, "rate_limited")
     try:
-        await check_dataset(services, ledger, parsed)
+        header_lang = await check_dataset(services, ledger, parsed)
     except DataRefused:
         raise AgentsError(403, "data_refused") from None
     except GuardUnavailable:
         raise AgentsError(503, "guard_unavailable") from None
+    notes_lang = None
     if parsed.context_lines:
-        parsed = await _screen_notes(services, ledger, parsed)
+        parsed, notes_lang = await _screen_notes(services, ledger, parsed)
     try:
         ingested = store_dataset(
             services.datasets,
@@ -679,7 +681,22 @@ async def upload_dataset(
         )
     except StoreFull:
         raise AgentsError(503, "capacity") from None
-    await runtime.write_state(session, ingested.state_delta())
+    delta = ingested.state_delta()
+    # Read again: the chip's choice may have landed while the judges ran, and a choice is never overwritten.
+    # From this read to the append below nothing suspends: `InMemorySessionService.get_session` and
+    # `append_event` (ADK 2.11) contain no `await` that yields, and the code between them is synchronous,
+    # so on the one event loop no `PUT /language` can land in between; the read and the conditional
+    # write are atomic. A persistent session service with I/O in either call would need a
+    # compare-and-set instead. Keep any new `await` out of this block.
+    session = await runtime.session(user, sid)
+    current = read_session(session.state) or view
+    language, language_source = current.language, current.language_source
+    derived = pasted_language(current.language_source, notes_lang, header_lang)
+    if derived is not None:
+        language, language_source = derived, "pasted"
+        delta.update(language_delta(derived, "pasted"))
+        attribution("data_language", ledger, lang=derived, basis="notes" if derived == notes_lang else "headers")
+    await runtime.write_state(session, delta)
     return JSONResponse(
         {
             "preview": parsed.preview,
@@ -690,13 +707,19 @@ async def upload_dataset(
             "roles": [_role_body(role) for role in view.snapshot.roles()],
             "suggestion": _suggestion(view, parsed.profile),
             "version": 1,
+            "language": {"language": language, "source": language_source},
         },
         headers=_NO_STORE,
     )
 
 
-async def _screen_notes(services: Services, ledger: RequestLedger, parsed: ParsedDataset) -> ParsedDataset:
+async def _screen_notes(
+    services: Services, ledger: RequestLedger, parsed: ParsedDataset
+) -> tuple[ParsedDataset, str | None]:
     """The notes pasted around the table, kept only when the pre-filter and the scope judge pass them.
+
+    Returns the dataset and, for kept notes, the judge's `lang` for them, which may set the
+    session language (`language.pasted_language`); None when the notes were dropped.
 
     `parsed.context_lines` (a title, an export's metadata, a source line, "values in
     Fahrenheit, make it a line chart") reach the root as the user's words, so they are
@@ -714,12 +737,12 @@ async def _screen_notes(services: Services, ledger: RequestLedger, parsed: Parse
     counts = {"lines": len(lines), "chars": len("\n".join(lines))}  # as the cap and the judge input count them
     if notes_instruction_like(lines):
         attribution("notes_judge", ledger, verdict="prefilter", **counts)
-        return without_context(parsed, NOTES_INSTRUCTION_WARNING)
+        return without_context(parsed, NOTES_INSTRUCTION_WARNING), None
     try:
         answer = await services.judge.judge(notes_judge_input(lines), scope_rubric())
     except JudgeUnavailable:
         attribution("notes_judge", ledger, verdict="guard_unavailable", **counts)
-        return without_context(parsed, NOTES_UNCHECKED_WARNING)
+        return without_context(parsed, NOTES_UNCHECKED_WARNING), None
     services.usage.add_tokens(
         ledger.user_id,
         judge_budget_tokens(answer.tokens, answer.input_tokens, answer.output_tokens, get_settings().judge_model),
@@ -733,7 +756,9 @@ async def _screen_notes(services: Services, ledger: RequestLedger, parsed: Parse
         judge_output=answer.output_tokens,
         **counts,
     )
-    return parsed if answer.verdict == "in_scope" else without_context(parsed, NOTES_REFUSED_WARNING)
+    if answer.verdict != "in_scope":
+        return without_context(parsed, NOTES_REFUSED_WARNING), None
+    return parsed, answer.lang
 
 
 def _refuse_code_or_formula(ledger: RequestLedger, text: str) -> None:

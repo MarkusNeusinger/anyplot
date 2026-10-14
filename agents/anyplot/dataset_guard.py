@@ -41,18 +41,27 @@ class GuardUnavailable(Exception):
     """The dataset judge gave no verdict for a part: nothing is stored (fail closed)."""
 
 
-async def check_dataset(services: Services, ledger: RequestLedger, parsed: ParsedDataset) -> None:
-    """The pre-filter, then the dataset judge on every part; raises `DataRefused` or `GuardUnavailable`."""
+async def check_dataset(services: Services, ledger: RequestLedger, parsed: ParsedDataset) -> str | None:
+    """The pre-filter, then the dataset judge on every part; raises `DataRefused` or `GuardUnavailable`.
+
+    Returns the language of the headers (`judge_dataset`), which the dataset route uses for the session
+    language (#12171) and `run_data_code` ignores.
+    """
     if instruction_like(parsed):
         attribution("data_judge", ledger, verdict="prefilter")
         raise DataRefused
-    await judge_dataset(services, ledger, dataset_judge_inputs(parsed), content=parsed.csv)
+    return await judge_dataset(services, ledger, dataset_judge_inputs(parsed), content=parsed.csv)
 
 
-async def judge_dataset(services: Services, ledger: RequestLedger, parts: list[str], *, content: str) -> None:
-    """Judge every part of the judged view, a few at a time (module docstring)."""
+async def judge_dataset(services: Services, ledger: RequestLedger, parts: list[str], *, content: str) -> str | None:
+    """Judge every part of the judged view, a few at a time (module docstring).
+
+    Returns the judge's `lang` for the first part, which holds every column name
+    (`dataset_judge_inputs`): the language of the headers, `en` when unclear.
+    """
     rubric = data_rubric()
     judge_model = get_settings().judge_model
+    header_lang: str | None = None
     for start in range(0, len(parts), DATASET_JUDGE_CONCURRENCY):
         batch = parts[start : start + DATASET_JUDGE_CONCURRENCY]
         answers = await asyncio.gather(
@@ -82,7 +91,10 @@ async def judge_dataset(services: Services, ledger: RequestLedger, parts: list[s
                 judge_output=answer.output_tokens,
             )
             refused = refused or answer.verdict != "in_scope"  # fail closed, like the scope guard
+            if number == 1:
+                header_lang = answer.lang
         if unavailable:
             raise GuardUnavailable
         if refused:
             raise DataRefused
+    return header_lang

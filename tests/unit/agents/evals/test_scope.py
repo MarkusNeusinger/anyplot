@@ -10,7 +10,7 @@ import pytest
 
 from agents.anyplot import models
 from agents.anyplot.models import FakeJudge, JudgeVerdict
-from agents.anyplot.plugins.scope_guard import WITHHELD
+from agents.anyplot.plugins.scope_guard import JUDGED_REFUSALS, WITHHELD, withheld_text
 from agents.anyplot.schemas import MAX_MESSAGE_CHARS
 from agents.evals import prep, scope
 from agents.evals.scope import (
@@ -114,7 +114,11 @@ class TestCaseFile:
         cases = [item for item in load_cases(DEFAULT_CASES) if "multi_turn" in item.tags]
 
         assert len(cases) >= 10 and all(item.last_turns for item in cases)
-        assert any(turn.text == WITHHELD for item in cases for turn in item.last_turns)
+        # Only placeholders the ScopeGuard writes: since 2026-10-14 a judged refusal's carries its code.
+        placeholders = {withheld_text(code) for code in JUDGED_REFUSALS} | {WITHHELD}
+        withheld = [turn.text for item in cases for turn in item.last_turns if turn.text.startswith(WITHHELD[:-1])]
+        assert withheld and set(withheld) <= placeholders
+        assert withheld_text("needs_data") in withheld and withheld_text("out_of_scope") in withheld
 
     def test_a_bad_file_is_a_setup_error(self, tmp_path: Path) -> None:
         bad = tmp_path / "bad.json"

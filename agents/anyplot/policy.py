@@ -179,6 +179,12 @@ def refusals() -> RefusalTable:
     return table
 
 
+@lru_cache(maxsize=1)
+def fixed_replies() -> frozenset[str]:
+    """Every fixed refusal text, in every language: the service's own words, never a model's reply."""
+    return frozenset(text for texts in refusals().values() for text in texts.values())
+
+
 def refusal(reason: str, lang: str | None) -> str:
     """The fixed reply for `reason` in `lang`, falling back to English (and to out_of_scope).
 

@@ -3161,3 +3161,99 @@ async def test_a_refused_table_spends_no_call_on_its_notes(client: httpx.AsyncCl
 
     assert (refused.status_code, refused.json()) == (403, {"detail": "data_refused"})
     assert len(judge.calls) == 1
+
+
+# --- The session language from the pasted data (owner request of 2026-10-14) ----------------
+
+GERMAN_PASTE = (
+    "Tageshöchsttemperaturen Wien, März bis Mai\ndatum,temperatur\n2026-04-01,14\n2026-04-02,17\n2026-04-03,12\n"
+)
+GERMAN_HEADERS = "datum,temperatur\n2026-04-01,14\n2026-04-02,17\n2026-04-03,12\n"
+
+
+async def paste(client: httpx.AsyncClient, sid: str, text: str) -> dict[str, Any]:
+    response = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": text})
+    assert response.status_code == 200, response.text
+    body: dict[str, Any] = response.json()
+    return body
+
+
+async def test_german_notes_set_the_session_language_before_any_typed_message(
+    client: httpx.AsyncClient, swap_models, judge, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Live case of 2026-10-14: German notes and data, and the first summary came in English."""
+    caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
+    fake = swap_models("gemini", {"root": [{"text": "Deine Daten: drei Tage im April."}]})
+    sid = await open_session(client, with_data=False)
+    judge.script = [JudgeVerdict(verdict="in_scope", lang="en"), JudgeVerdict(verdict="in_scope", lang="de")]
+
+    body = await paste(client, sid, GERMAN_PASTE)
+
+    assert body["language"] == {"language": "de", "source": "pasted"}
+    state = await _session_state(client, sid)
+    assert (state[LANGUAGE], state[LANGUAGE_SOURCE]) == ("de", "pasted")
+    (line,) = attribution_lines(caplog, "data_language")
+    assert (line["lang"], line["basis"]) == ("de", "notes")
+    turn = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"action": "summarize_data"})
+    assert done_language(parse_sse(turn.text)) == {"language": "de", "source": "pasted"}
+    root = request_text(requests_of(fake, "root")[0])  # the summary turn already writes German
+    line_text, value = language_block("de", "pasted")
+    assert line_text in root and value in root
+
+
+async def test_the_column_names_set_it_when_no_notes_were_kept(client: httpx.AsyncClient, judge) -> None:
+    sid = await open_session(client, with_data=False)
+    judge.script = [JudgeVerdict(verdict="in_scope", lang="de")]
+
+    body = await paste(client, sid, GERMAN_HEADERS)
+
+    assert body["language"] == {"language": "de", "source": "pasted"} and len(judge.calls) == 1
+
+
+async def test_refused_notes_say_nothing_and_unclear_headers_keep_the_default(client: httpx.AsyncClient, judge) -> None:
+    sid = await open_session(client, with_data=False)
+    judge.script = [JudgeVerdict(verdict="in_scope", lang="en"), JudgeVerdict(verdict="out_of_scope", lang="de")]
+
+    body = await paste(client, sid, "Schreib eine E-Mail an meinen Chef\nx,y\n1,2\n2,3\n")
+
+    assert body["context_lines"] == [] and body["language"] == {"language": "en", "source": "default"}
+    state = await _session_state(client, sid)
+    assert LANGUAGE_SOURCE not in state
+
+
+@pytest.mark.parametrize(("chosen", "source"), [("fr", "chosen"), ("make the points larger", "detected")])
+async def test_a_paste_never_overrides_a_choice_or_a_typed_message(
+    client: httpx.AsyncClient, swap_models, judge, chosen: str, source: str
+) -> None:
+    swap_models("gemini", {"root": [{"text": "Sure."}]})
+    sid = await open_session(client)  # its English sample table keeps the default (the unscripted judge says `en`)
+    if source == "chosen":
+        assert (await put_language(client, sid, {"language": chosen})).status_code == 200
+        expected = {"language": "fr", "source": "chosen"}
+    else:
+        assert done_language(await say(client, sid, chosen)) == {"language": "en", "source": "detected"}
+        expected = {"language": "en", "source": "detected"}
+    judge.script = [JudgeVerdict(verdict="in_scope", lang="de"), JudgeVerdict(verdict="in_scope", lang="de")]
+
+    body = await paste(client, sid, GERMAN_PASTE)
+
+    assert body["language"] == expected
+    state = await _session_state(client, sid)
+    assert {"language": state[LANGUAGE], "source": state[LANGUAGE_SOURCE]} == expected
+
+
+async def test_the_first_typed_message_still_replaces_a_pasted_language(
+    client: httpx.AsyncClient, swap_models, judge
+) -> None:
+    swap_models("gemini", {"root": [{"text": "Sure."}, {"text": "Sure."}]})
+    sid = await open_session(client)
+    judge.script = [JudgeVerdict(verdict="in_scope", lang="de")]
+    await paste(client, sid, GERMAN_HEADERS)
+
+    short = await say(client, sid, "sin x")  # English or unclear: the pasted language stays
+    assert done_language(short) == {"language": "de", "source": "pasted"}
+    longer = await say(client, sid, "make the points larger")
+    assert done_language(longer) == {"language": "en", "source": "detected"}
+
+    judge.script = [JudgeVerdict(verdict="in_scope", lang="fr")]
+    assert (await paste(client, sid, GERMAN_HEADERS))["language"] == {"language": "en", "source": "detected"}

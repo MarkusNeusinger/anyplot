@@ -1,8 +1,10 @@
 """The session language: one language for the root's replies and every text in the plot.
 
 Owner decision of 2026-10-12. A session starts in English (`en`, source `default`),
-whatever the browser's locale. The session's first in-scope typed message records the
-language the scope judge names for it (source `detected`); a choice through
+whatever the browser's locale. A paste before any typed message sets the language its
+notes or column names are written in (source `pasted`, `pasted_language`; owner request of
+2026-10-14). The session's first in-scope typed message records the
+language the scope judge names for it (source `detected`), also over `pasted`; a choice through
 `PUT /v1/sessions/{sid}/language` or the root's `set_language` tool sets it for good
 (source `chosen`), and detection never writes over a choice.
 
@@ -23,8 +25,10 @@ LANGUAGE_PATTERN = r"^[A-Za-z][A-Za-z -]{0,39}$"
 """A language name or code: a letter, then up to 39 letters, spaces or hyphens (ASCII only)."""
 LANGUAGE_RE = re.compile(LANGUAGE_PATTERN)
 MAX_LANGUAGE_CHARS = 40
-LanguageSource = Literal["default", "detected", "chosen"]
-SOURCES: frozenset[str] = frozenset(("default", "detected", "chosen"))
+LanguageSource = Literal["default", "pasted", "detected", "chosen"]
+SOURCES: frozenset[str] = frozenset(("default", "pasted", "detected", "chosen"))
+PASTE_OVERWRITES: frozenset[str] = frozenset(("default", "pasted"))
+"""The sources a paste may write over: nothing the user typed or chose."""
 DEFAULT_LANGUAGE = "en"
 COMMON_LANGUAGES = ("en", "zh", "de", "vi", "es", "fr", "nl", "pt", "ru", "it")
 """The chip's list: the site's ten most used visitor languages (Plausible, owner's choice of 2026-10-12).
@@ -82,6 +86,23 @@ def same_language(a: str, b: str) -> bool:
 def is_valid(value: str) -> bool:
     """Whether `value` matches `LANGUAGE_PATTERN`."""
     return bool(LANGUAGE_RE.fullmatch(value))
+
+
+def pasted_language(source: str, notes_lang: str | None, header_lang: str | None) -> str | None:
+    """The session language a paste sets (source `pasted`), or None to keep the current one.
+
+    Only while nothing the user typed or chose set it (`PASTE_OVERWRITES`): the scope
+    judge's `lang` for the notes kept around the table first, else the dataset judge's
+    `lang` for the column names. Both judges answer `en` for text without a clear language
+    (`temperature_2m_max`, `x, y`), so `en` is no signal and keeps what is there: an
+    English paste after a German one leaves `de`, and the default is English anyway.
+    """
+    if source not in PASTE_OVERWRITES:
+        return None
+    for lang in (notes_lang, header_lang):
+        if lang and lang != DEFAULT_LANGUAGE and is_valid(lang):
+            return normalise(lang)
+    return None
 
 
 def refusal_lang(language: str) -> str:

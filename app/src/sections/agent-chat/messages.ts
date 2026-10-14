@@ -75,6 +75,13 @@ export const CONFIRM_LOST_TEXT: Record<ConfirmLoss, string> = {
 export const LANGUAGE_DETECTED_TEXT = (language: string) =>
   `language: ${language} · detected from your message · the lang chip in the header changes it`;
 
+/**
+ * The thread's one quiet line when a paste set the session language from the
+ * language of its notes or column names (`pasted`), before any typed message.
+ */
+export const LANGUAGE_PASTED_TEXT = (language: string) =>
+  `language: ${language} · detected from your pasted data · the lang chip in the header changes it`;
+
 /** Failures only the language chip meets; any other code reads as the page's turn errors do. */
 export const LANGUAGE_FAILURE: Record<string, string> = {
   invalid: 'the server refused this language name',

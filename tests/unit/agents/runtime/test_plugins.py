@@ -29,6 +29,8 @@ from agents.anyplot.plugins.ledger import (
     weighted_tokens,
 )
 from agents.anyplot.plugins.scope_guard import (
+    GUARD_UNAVAILABLE_TEXT,
+    JUDGED_REFUSALS,
     MAX_CONTEXT_CHARS,
     MAX_USER_CONTEXT_CHARS,
     MAX_USER_TURN_CHARS,
@@ -39,6 +41,7 @@ from agents.anyplot.plugins.scope_guard import (
     judge_context,
     judge_input,
     session_turns,
+    withheld_text,
 )
 from agents.anyplot.plugins.tool_safety import RESULT_KEYS, ToolSafetyPlugin, has_url_or_path, result_limit, result_size
 from agents.anyplot.policy import DATA_PREAMBLE, fence
@@ -140,7 +143,7 @@ class TestScopeGuard:
         )
         halt = await plugin.before_run_callback(invocation_context=FakeContext())
 
-        assert replaced.parts[0].text == WITHHELD
+        assert replaced.parts[0].text == withheld_text("out_of_scope")
         assert ledger.refusal[0] == "out_of_scope"
         assert halt.parts[0].text == ledger.refusal[1]
 
@@ -160,7 +163,7 @@ class TestScopeGuard:
         )
         halt = await plugin.before_run_callback(invocation_context=FakeContext())
 
-        assert replaced.parts[0].text == WITHHELD
+        assert replaced.parts[0].text == withheld_text(code)  # `attack` reads as out_of_scope here too
         assert ledger.refusal == (code, policy.refusal(code, "de"))
         assert halt.parts[0].text == policy.refusal(code, "de")
 
@@ -279,6 +282,20 @@ class TestLanguageDetection:
 
         assert context.session.state == {LANGUAGE: "Klingon", LANGUAGE_SOURCE: source}
         assert context.session_service.events == []
+
+    @pytest.mark.parametrize(
+        ("lang", "text", "after"),
+        [("fr", "Rends les points plus grands", ("fr", "detected")), ("en", "sin x", ("de", "pasted"))],
+    )
+    async def test_a_language_from_the_pasted_data_yields_to_the_first_typed_message(
+        self, ledger: RequestLedger, services: Services, judge, lang: str, text: str, after: tuple[str, str]
+    ) -> None:
+        judge.script = [JudgeVerdict(verdict="in_scope", lang=lang)]
+        context = FakeContext(session=FakeSession(state={LANGUAGE: "de", LANGUAGE_SOURCE: "pasted"}))
+
+        await ScopeGuardPlugin().on_user_message_callback(invocation_context=context, user_message=text_message(text))
+
+        assert (context.session.state[LANGUAGE], context.session.state[LANGUAGE_SOURCE]) == after
 
     @pytest.mark.parametrize(
         ("lang", "text", "recorded"),
@@ -482,15 +499,19 @@ class TestOutputGuard:
         assert line["hook"] == "output_guard" and line["verdict"] == "reply_too_long" and line["chars"] == len(TOO_LONG)
         assert "customers" not in caplog.text
 
-    async def test_the_stored_refusal_is_what_the_judge_sees_next(self, ledger: RequestLedger) -> None:
+    async def test_neither_the_refused_reply_nor_its_stored_refusal_reaches_the_judge(
+        self, ledger: RequestLedger
+    ) -> None:
         replaced = await ScopeGuardPlugin().on_event_callback(
             invocation_context=FakeContext(), event=reply_event("anyplot", TOO_LONG)
         )
-        events = [turn_event("user", "write it"), replaced]
+        events = [turn_event("anyplot", "The plot is ready."), turn_event("user", "write it"), replaced]
 
-        context, _ = judge_context(session_turns(FakeContext(session=FakeSession(events=events))))
+        turns = session_turns(FakeContext(session=FakeSession(events=events)))
+        context, _ = judge_context(turns)
 
-        assert context == policy.refusal("out_of_scope", "en") and "Dear customers" not in context
+        assert turns[-1] == ("assistant", policy.refusal("out_of_scope", "en"))  # stored as the fixed refusal
+        assert context == "The plot is ready."  # the last real reply, never the service's own text
 
     async def test_a_long_reply_after_a_pipeline_run_is_cut_not_refused(
         self, ledger: RequestLedger, caplog: pytest.LogCaptureFixture
@@ -607,7 +628,26 @@ class TestJudgeContext:
         turns = session_turns(FakeContext(session=FakeSession(events=events)))
 
         assert turns == [("user", "hello"), ("assistant", "Hi"), ("user", WITHHELD), ("assistant", refused)]
-        assert judge_context(turns) == (refused, ["hello", WITHHELD])  # the shape of the eval's after_refusal cases
+        # The shape of the eval's after_refusal cases: the refusal is skipped, the last real reply is the context.
+        assert judge_context(turns) == ("Hi", ["hello", WITHHELD])
+
+    @pytest.mark.parametrize("reason", ["needs_data", "out_of_scope", "budget", "unsupported_content"])
+    @pytest.mark.parametrize("lang", ["en", "de", "fr", "zh"])
+    def test_a_fixed_reply_is_never_the_judges_context(self, reason: str, lang: str) -> None:
+        """Live case of 2026-10-14: the German `needs_data` refusal primed the next, in-scope message's verdict."""
+        fixed = policy.refusal(reason, lang)
+        real = "Your data: daily maximum temperatures in Vienna. Shall I draw them as a line?"
+
+        assert judge_context([("assistant", real), ("user", WITHHELD), ("assistant", fixed)]) == (real, [WITHHELD])
+        assert judge_context([("user", WITHHELD), ("assistant", fixed)]) == ("", [WITHHELD])
+        # The output guard stores an over-long reply as the fixed refusal under the root's name: skipped too.
+        assert judge_context([("assistant", real), ("assistant", f" {fixed}\n")])[0] == real
+        assert judge_context([("assistant", GUARD_UNAVAILABLE_TEXT)]) == ("", [])
+
+    def test_a_reply_that_quotes_a_refusal_is_still_context(self) -> None:
+        quoted = "I said: " + policy.refusal("needs_data", "en") + " Paste your table and I will plot it."
+
+        assert judge_context([("assistant", quoted)])[0] == quoted[:MAX_CONTEXT_CHARS]
 
     async def test_multi_turn_drift_reaches_the_judge_as_one_request(
         self, ledger: RequestLedger, services: Services, judge
@@ -634,12 +674,48 @@ class TestJudgeContext:
             WITHHELD,
         ]
         assert sent.index("<earlier_user_turns>") < sent.index("<last_assistant_turn>") < sent.index("<user_message>")
-        assert replaced.parts[0].text == WITHHELD and ledger.refusal is not None
+        assert replaced.parts[0].text == withheld_text("out_of_scope") and ledger.refusal is not None
 
     def test_the_rubric_explains_the_earlier_turns(self) -> None:
         rubric = policy.scope_rubric()
 
         assert "`<earlier_user_turns>`" in rubric and "gets the verdict of the whole request" in rubric
+        assert all(f"`{withheld_text(code)}`" in rubric for code in JUDGED_REFUSALS)  # the coded placeholders
+
+    async def test_a_continuation_after_a_needs_data_refusal_shows_the_judge_that_verdict(
+        self, ledger: RequestLedger, services: Services, judge
+    ) -> None:
+        """Copilot on #12171: the placeholder keeps the verdict, the refusal text stays out of the context."""
+        judge.script = [JudgeVerdict(verdict="needs_data", lang="de"), JudgeVerdict(verdict="needs_data", lang="de")]
+        plugin = ScopeGuardPlugin()
+        context = FakeContext()
+        weather = await plugin.on_user_message_callback(
+            invocation_context=context, user_message=text_message("Wie wird das Wetter morgen in Wien?")
+        )
+        assert weather.parts[0].text == "[message withheld by scope policy: needs_data]"
+        events = [turn_event("user", weather.parts[0].text), turn_event("model", policy.refusal("needs_data", "de"))]
+
+        await plugin.on_user_message_callback(
+            invocation_context=FakeContext(session=FakeSession(events=events)),
+            user_message=text_message("Mach es trotzdem"),
+        )
+
+        sent = judge.calls[1][0]
+        assert '["[message withheld by scope policy: needs_data]"]' in sent
+        assert "<last_assistant_turn>" not in sent and "Internet" not in sent
+
+    @pytest.mark.parametrize(
+        ("code", "text"),
+        [
+            ("needs_data", "[message withheld by scope policy: needs_data]"),
+            ("out_of_scope", "[message withheld by scope policy: out_of_scope]"),
+            ("budget", WITHHELD),
+            ("unsupported_content", WITHHELD),
+            (None, WITHHELD),
+        ],
+    )
+    def test_only_a_judged_refusal_names_its_code(self, code: str | None, text: str) -> None:
+        assert withheld_text(code) == text
 
 
 class TestBudget:

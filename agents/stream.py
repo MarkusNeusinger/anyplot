@@ -172,7 +172,7 @@ class Translator:
         changes, version}`, the dataset route's shape plus the change lines of the turn, only after
         a turn that changed the data; `version` is 1 when `generate_data` made the
         session's first data. `language` is the session language as `{language, source}`
-        (`source` one of `default`, `detected` and `chosen`), which the scope guard's
+        (`source` one of `default`, `pasted`, `detected` and `chosen`), which the scope guard's
         detection or the root's `set_language` may have set during the turn; the page's
         chip follows it.
         """

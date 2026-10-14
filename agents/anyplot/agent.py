@@ -60,6 +60,7 @@ SESSION_LANGUAGE_HEADING = (
 )
 LANGUAGE_SOURCE_LINES: dict[str, str] = {
     "default": "- Language: the default, English",
+    "pasted": "- Language: detected from the user's pasted data (the notes around the table or its column names)",
     "detected": "- Language: detected from the user's first message",
     "chosen": "- Language: chosen by the user (in the chat header, or asked of you)",
 }

@@ -91,11 +91,12 @@ export interface Binding {
 }
 
 /**
- * How the session language was set: `default` (nobody yet, English), `detected`
- * (the session's first typed message), `chosen` (the header's chip or a request
- * in the chat). Only `chosen` is final.
+ * How the session language was set: `default` (nobody yet, English), `pasted`
+ * (the notes or the column names of a paste before any typed message),
+ * `detected` (the session's first typed message), `chosen` (the header's chip
+ * or a request in the chat). Only `chosen` is final.
  */
-export type LanguageSource = 'default' | 'detected' | 'chosen';
+export type LanguageSource = 'default' | 'pasted' | 'detected' | 'chosen';
 
 /**
  * The session language: the assistant's replies and every text in the plot.
@@ -167,6 +168,13 @@ export interface DatasetParsed {
    * more, each undo one less. `.undo()` is possible while it is above 1.
    */
   version: number;
+  /**
+   * The paste's answer only: the session language after it, which a paste
+   * before any typed message or choice sets from the language of its notes or
+   * column names (`pasted`). Read it through `plotLanguage`; absent from an
+   * older server.
+   */
+  language?: unknown;
 }
 
 /**
@@ -885,15 +893,15 @@ function bindingList(value: unknown): Binding[] | null {
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   !!value && typeof value === 'object' && !Array.isArray(value);
 
-const LANGUAGE_SOURCES = new Set<string>(['default', 'detected', 'chosen']);
+const LANGUAGE_SOURCES = new Set<string>(['default', 'pasted', 'detected', 'chosen']);
 
 /**
- * The session language of a `done` event or of the language route's answer,
- * or `null`: an object whose `language` matches `LANGUAGE_PATTERN` and whose
- * `source` is one of the three. The chip shows it as it comes, so anything
- * else is dropped whole.
+ * The session language of a `done` event, the dataset route's or the language
+ * route's answer, or `null`: an object whose `language` matches
+ * `LANGUAGE_PATTERN` and whose `source` is one of the four. The chip shows it
+ * as it comes, so anything else is dropped whole.
  */
-function plotLanguage(value: unknown): PlotLanguage | null {
+export function plotLanguage(value: unknown): PlotLanguage | null {
   if (!isRecord(value)) return null;
   const { language, source } = value;
   if (typeof language !== 'string' || !LANGUAGE_PATTERN.test(language)) return null;

@@ -92,8 +92,9 @@ IMPORTED_TAG = "imported"
 ACTION_PREFIX = "[action] "
 """How the agents service records the page's actions as user messages (`agents/main.py`, `ACTION_MESSAGES`)."""
 CREATE_PLOT_MESSAGE = "[action] Create the plot from my dataset and bindings."
-WITHHELD = "[message withheld by scope policy]"
-"""The placeholder of a message the scope judge refused (`agents/anyplot/plugins/scope_guard.py`)."""
+WITHHELD_PREFIX = "[message withheld by scope policy"
+"""The start of the placeholder of a message the scope guard withheld, bare or with its refusal code
+(`[message withheld by scope policy: needs_data]`, `agents/anyplot/plugins/scope_guard.withheld_text`)."""
 MAX_CHANGE_REQUEST_CHARS = 600
 """`agents/evals/cases.py`'s cap on `change_request.txt`; a longer request is left out with a note."""
 # The first line of an exported `plot.py` (`agents/anyplot/code/export.py`, `attribution`).
@@ -244,7 +245,7 @@ def plot_turns(transcript: Any) -> list[str]:
         if not isinstance(entry, dict) or entry.get("role") != "user" or not isinstance(entry.get("text"), str):
             continue
         text = entry["text"].strip()
-        if text == CREATE_PLOT_MESSAGE or (text and not text.startswith(ACTION_PREFIX) and text != WITHHELD):
+        if text == CREATE_PLOT_MESSAGE or (text and not text.startswith((ACTION_PREFIX, WITHHELD_PREFIX))):
             turns.append(text)
     if CREATE_PLOT_MESSAGE in turns:
         # What was typed before the first `.create_plot()` was about the data (step 1).
@@ -290,7 +291,7 @@ def session_language(session: dict[str, Any], version: dict[str, Any]) -> str | 
     """
     from agents.anyplot.language import is_valid
 
-    if session.get("plot_language_source") not in ("detected", "chosen"):
+    if session.get("plot_language_source") not in ("pasted", "detected", "chosen"):
         return None
     value = version.get("language")
     if not isinstance(value, str):

@@ -85,6 +85,9 @@
  * service does, because a model must never compute rows.
  *
  * The session language in miniature: every session starts at `en`/`default`.
+ * A paste whose notes or column names read German sets `de` (`pasted`) while
+ * nothing typed or chosen has, and the dataset answer carries
+ * `language: {language, source}`.
  * The first typed message that is not refused sets it (`detected`, the scope
  * judge's job in the service): `de` when it reads German (an umlaut or ß, or a
  * word such as "bitte", "und", "die", "mach", "zeichne", "beschriftung"), `en`
@@ -1055,11 +1058,24 @@ const GERMAN = /[äöüß]|\b(bitte|und|der|die|das|mit|zeichne|beschriftung|mac
  * also answers `en` when it cannot tell, so "sin x" keeps the default).
  */
 function detectLanguage(session, text) {
-  if (session.languageSource !== 'default') return;
+  // A language from the pasted data yields to the first typed message, as in the service.
+  if (session.languageSource !== 'default' && session.languageSource !== 'pasted') return;
   const code = GERMAN.test(text) ? 'de' : 'en';
   if (code === 'en' && text.trim().split(/\s+/).length < 3) return;
   session.language = code;
   session.languageSource = 'detected';
+}
+
+/**
+ * The service's `pasted_language`, in miniature: a paste before any typed message or
+ * choice sets `de` (source `pasted`) when its text (the notes and the column names)
+ * reads German; anything else is no signal and leaves the current language.
+ */
+function pastedLanguage(session, text) {
+  if (session.languageSource !== 'default' && session.languageSource !== 'pasted') return;
+  if (!GERMAN.test(text)) return;
+  session.language = 'de';
+  session.languageSource = 'pasted';
 }
 
 const ASKED_LANGUAGES = {
@@ -1655,7 +1671,17 @@ async function route(req, res) {
     session.confirmed = false; // a new dataset is unchecked
     session.history = []; // a paste starts over at version 1
     session.version = 1;
-    return json(res, 200, { ...datasetPayload(session), roles: SPECS[session.specId].roles }, ref);
+    pastedLanguage(session, text);
+    return json(
+      res,
+      200,
+      {
+        ...datasetPayload(session),
+        roles: SPECS[session.specId].roles,
+        language: { language: session.language, source: session.languageSource },
+      },
+      ref
+    );
   }
   if (method === 'POST' && rest === '/dataset/to_long') {
     // `.to_long()`: the offer recomputed here, applied without a model, as the next version.
