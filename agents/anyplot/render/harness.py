@@ -248,6 +248,9 @@ DATA_BLOCKED_PREFIXES = (
     "function.__new__",
     "builtins.input",
     "gc.get_",
+    "sys.settrace",
+    "sys.setprofile",
+    "sys.monitoring.",
 )
 """Audit events `DataGuard` refuses once it is armed (https://docs.python.org/3/library/audit_events.html), next to
 every `open` and every `import`. CPython 3.13 raises no event for `os.stat` and its family (`os.path.exists`,
@@ -322,6 +325,9 @@ PLOT_BLOCKED_PREFIXES = (
     "resource.prlimit",
     "builtins.input",
     "gc.get_",
+    "sys.settrace",
+    "sys.setprofile",
+    "sys.monitoring.",
 )
 """Audit events `PlotGuard` refuses once it is armed (`ctypes.*` but `NATIVE_CALLERS`), next to `exec` and
 `CODE_OBJECT_EVENTS` and every `open` that writes anywhere but the plot's PNG and its probe. Unlike data mode it lets
@@ -331,7 +337,18 @@ fonts, style sheets and their own data files while drawing, and scikit-learn's i
 library code that already tolerates a read-only filesystem or a missing tool (matplotlib's cache writes,
 `os.makedirs(..., exist_ok=True)`, `ctypes.util.find_library`, loky's `lscpu` call) carries on. Both guards refuse
 `gc.get_objects`, `gc.get_referrers` and `gc.get_referents` (`gc.get_`), which would hand out the guard object itself
-the way a frame's locals would (#12181 review)."""
+the way a frame's locals would (#12181 review), and every way to install a callback the interpreter hands frames or
+code positions to (Fable review of #12181): `sys.settrace` and `sys.setprofile` (also what `threading.settrace`,
+`setprofile` and their `_all_threads` forms raise, per thread) and `sys.monitoring.register_callback`, the one PEP 669
+call that raises an event (`use_tool_id` and `set_events` do nothing without a callback). A trace function gets the
+real frame and walks `f_back`, which no event sees, to `run_plot`'s locals. The signal handler, which gets a frame
+too, has no event and is replaced instead (`UNAUDITED_CALLS`).
+
+The guard's state (`armed`, `paused_depth`) stays a plain attribute, settable by anyone holding the guard: CPython
+gives in-process code no state that a reference cannot reach (a closure cell is writable through `cell_contents`, a
+class attribute through the class), so the defence is that no reference reaches the code under test. Every route to
+one is refused: frames (`FRAME_EVENTS`, `FRAME_ATTRIBUTES`), the collector (`gc.get_`), trace, profile and monitoring
+callbacks, and signal handlers."""
 FRAME_ATTRIBUTES = frozenset({"gi_frame", "cr_frame", "ag_frame", "tb_frame"})
 """Attributes that hand out a frame, whose `f_builtins` and `f_globals` reach `open` and `__import__`
 (`(i for i in []).gi_frame.f_builtins`). CPython raises `object.__getattr__` for each; every other route to a frame
@@ -441,11 +458,14 @@ UNAUDITED_CALLS = (
     ("posix", "mknod"),
     ("_posixsubprocess", "fork_exec"),
     ("subprocess", "_fork_exec"),
+    ("signal", "signal"),
+    ("_signal", "signal"),
 )
-"""Callables that create a directory entry or start a process with no audit event in CPython 3.13 (#12177 review:
-`os.mkfifo` and `os.mknod`; `_posixsubprocess.fork_exec` is what `subprocess.Popen` runs after its own event). The
-guards replace them with `refused_call` before arming, in every module that holds them, so code past the validator
-cannot reach them through `os`, `posix` or a module that imported them by name."""
+"""Callables that create a directory entry, start a process or install a frame callback with no audit event in
+CPython 3.13 (#12177 review: `os.mkfifo` and `os.mknod`; `_posixsubprocess.fork_exec` is what `subprocess.Popen` runs
+after its own event; Fable review of #12181: `signal.signal`, whose handler is called with the interrupted frame).
+The guards replace them with `refused_call` before arming, in `os`, `posix`, `signal` and the module that holds each
+by name, so code past the validator cannot reach them there."""
 
 
 def refused_call(*args, **kwargs):
@@ -458,7 +478,7 @@ def disable_unaudited_calls():
 
     for module_name, name in UNAUDITED_CALLS:
         module = sys.modules.get(module_name)
-        if module is None and module_name.startswith(("posix", "_posix")):
+        if module is None and module_name.startswith(("posix", "_posix", "signal", "_signal")):
             try:
                 module = importlib.import_module(module_name)
             except ImportError:

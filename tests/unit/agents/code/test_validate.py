@@ -1230,6 +1230,12 @@ MPL = "import matplotlib as mpl\n"
 # Each route a survey of the allowed packages found, as the code a model would write; the reported
 # case (`np.testing.measure` compiles and execs its string) generalised to every member of its kind.
 EXEC_ROUTES = [
+    # Fable review of #12181: trace, profile and monitoring callbacks get real frames, as an attribute on any receiver.
+    pytest.param("t = df.settrace(None)\n", "banned-attribute", id="settrace on any receiver"),
+    pytest.param("p = df.setprofile\n", "banned-attribute", id="setprofile on any receiver"),
+    pytest.param("t = df.settrace_all_threads\n", "banned-attribute", id="settrace_all_threads"),
+    pytest.param("m = df.monitoring.register_callback\n", "banned-attribute", id="sys.monitoring"),
+    pytest.param("from numpy import setprofile\n", "banned-attribute", id="setprofile as a from import"),
     pytest.param('np.testing.measure("import os")\n', "banned-attribute", id="numpy.testing.measure execs a string"),
     pytest.param('np.testing.runstring("x = 1", {})\n', "banned-attribute", id="numpy.testing.runstring"),
     pytest.param("with np.testing.tempdir() as d:\n    pass\n", "banned-attribute", id="numpy.testing.tempdir"),

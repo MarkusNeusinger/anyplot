@@ -8,8 +8,10 @@
   short list of library readers (pandas' chained-assignment check, statsmodels'
   graphics, the `traceback` summaries pyparsing builds for mathtext) and the
   traceback the interpreter prints after a failed plot stay allowed; a worker
-  thread running a callable the plot submitted gets no frame, and both guards
-  refuse `gc.get_objects` and its kin, which hand out the guard. A sweep of
+  thread running a callable the plot submitted gets no frame. Both guards
+  refuse `gc.get_objects` and its kin, which hand out the guard, and the
+  callbacks that receive real frames: `sys.settrace`, `sys.setprofile`,
+  `sys.monitoring` callbacks and signal handlers. A sweep of
   the 572 eligible catalogue matplotlib and seaborn files rendered the same 565
   before and after, with no refusal. (#12181)
 - **The code validator bans cache and spill directories.** The keywords

@@ -396,7 +396,25 @@ BANNED_NAMES: frozenset[str] = frozenset(
     }
 )
 BANNED_ATTRIBUTES: frozenset[str] = frozenset(
-    {"format", "format_map", "eval", "query", "memmap", "ctypeslib", "f2py", "use", "show", "io"}
+    {
+        "format",
+        "format_map",
+        "eval",
+        "query",
+        "memmap",
+        "ctypeslib",
+        "f2py",
+        "use",
+        "show",
+        "io",
+        # Callbacks the interpreter hands real frames (Fable review of #12181): `sys.settrace`, `sys.setprofile`,
+        # `threading`'s forms of both and `sys.monitoring`. The render guard refuses their audit events as well.
+        "settrace",
+        "setprofile",
+        "settrace_all_threads",
+        "setprofile_all_threads",
+        "monitoring",
+    }
 )
 BANNED_IO: frozenset[str] = frozenset(
     {

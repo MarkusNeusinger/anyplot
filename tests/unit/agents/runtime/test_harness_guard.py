@@ -123,6 +123,39 @@ PLOT_ROUTES = [
         id="gc hands out the guard",
     ),
 ]
+# Fable review of #12181: a trace, profile or signal callback gets the real frame and walks `f_back` (no audit event)
+# to `run_plot`'s or `run_data_snippet`'s locals, where the guard sits. Each payload disarms whatever guard it finds,
+# then writes the marker.
+DISARM = (
+    "def disarm(frame, *rest):\n"
+    "    while frame is not None:\n"
+    "        for value in list(frame.f_locals.values()):\n"
+    "            if hasattr(value, 'armed'):\n"
+    "                value.armed = False\n"
+    "        frame = frame.f_back\n"
+    "def touch():\n"
+    "    return 1\n"
+)
+WRITE_AFTER = f"\nopen('{MARKER}', 'w').write('x')\n"
+CALLBACK_ROUTES = [
+    pytest.param("import sys\nsys.settrace(disarm)\ntouch()\nsys.settrace(None)", id="sys.settrace"),
+    pytest.param("import sys\nsys.setprofile(disarm)\ntouch()\nsys.setprofile(None)", id="sys.setprofile"),
+    pytest.param(
+        "import threading\nthreading.settrace_all_threads(disarm)\ntouch()\nthreading.settrace_all_threads(None)",
+        id="threading.settrace_all_threads",
+    ),
+    pytest.param(
+        "import sys\nm = sys.monitoring\nm.use_tool_id(3, 'x')\n"
+        "m.register_callback(3, m.events.PY_START, lambda code, offset: disarm(sys._getframe(1)))\n"
+        "m.set_events(3, m.events.PY_START)\ntouch()\nm.set_events(3, 0)",
+        id="sys.monitoring",
+    ),
+    pytest.param(
+        "import signal\nsignal.signal(signal.SIGUSR1, lambda signum, frame: disarm(frame))\n"
+        "signal.raise_signal(signal.SIGUSR1)",
+        id="a signal handler",
+    ),
+]
 
 
 class TestPlotGuard:
@@ -134,6 +167,13 @@ class TestPlotGuard:
         assert not (tmp_path / MARKER).exists()
         assert not (tmp_path / "plot-dark.png").exists() and not (tmp_path / "mpl" / "plot-light.png").exists()
         assert (tmp_path / "plot.py").exists()
+
+    @pytest.mark.parametrize("body", CALLBACK_ROUTES)
+    def test_frame_callbacks_are_refused(self, tmp_path: Path, body: str) -> None:
+        exit_code, stderr = render(tmp_path, DISARM + body + WRITE_AFTER)
+        assert exit_code != 0
+        assert "blocked by the" in stderr and "sandbox" in stderr, stderr[-2000:]
+        assert not (tmp_path / MARKER).exists()
 
     def test_a_caught_refusal_refuses_the_action_and_the_plot_still_renders(self, tmp_path: Path) -> None:
         body = f'try:\n    np.testing.measure("{WRITE_MARKER}")\nexcept PermissionError:\n    pass\n'
@@ -347,6 +387,13 @@ class TestDataGuardCode:
         exit_code, out, stderr = run_data(tmp_path, "import pandas as pd\n" + code + "df = pd.DataFrame()\n")
         assert exit_code == DATA_EXIT["blocked"], stderr
         assert out == ""
+
+    @pytest.mark.parametrize("body", CALLBACK_ROUTES)
+    def test_frame_callbacks_are_refused(self, tmp_path: Path, body: str) -> None:
+        code = "import pandas as pd\n" + DISARM + body + WRITE_AFTER + "df = pd.DataFrame({'a': [1]})\n"
+        exit_code, out, stderr = run_data(tmp_path, code)
+        assert exit_code in (DATA_EXIT["blocked"], DATA_EXIT["error"]), stderr
+        assert out == "" and not (tmp_path / MARKER).exists()
 
     def test_unaudited_calls_are_replaced(self, tmp_path: Path) -> None:
         code = "import os\nimport pandas as pd\nos.mkfifo('fifo')\ndf = pd.DataFrame()\n"
