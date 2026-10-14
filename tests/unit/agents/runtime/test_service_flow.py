@@ -24,6 +24,7 @@ from google.genai import types
 from agents.anyplot import pipeline
 from agents.anyplot.agent import LANGUAGE_SOURCE_LINES, NOTES_LINE, REPLY_LANGUAGE_LINE, session_context
 from agents.anyplot.data.generate import looks_like_formula
+from agents.anyplot.data.parse import MAX_INPUT_BYTES
 from agents.anyplot.data.transcribe import MAX_TRANSCRIBE_CHARS, TranscribedTable
 from agents.anyplot.dataset_guard import DATASET_JUDGE_CONCURRENCY
 from agents.anyplot.dev_fixture import snapshot_from_repo
@@ -1650,13 +1651,29 @@ async def test_map_spec_is_not_eligible(client: httpx.AsyncClient) -> None:
     assert eligibility.json()["eligible"] is False
 
 
+async def test_a_paste_near_one_megabyte_is_stored_and_judged_once(client: httpx.AsyncClient, judge) -> None:
+    """Owner decision of 2026-10-14: the paste cap is 1 MB; the judge reads headers and a sample, never every row."""
+    sid = await open_session(client, with_data=False)
+    rows = "".join(f"station-{i % 40:02d}-{'x' * 26},{i},{i * 0.25}\n" for i in range(19_000))
+    text = "station,step,value\n" + rows
+    assert 900 * 1024 < len(text.encode("utf-8")) <= MAX_INPUT_BYTES
+
+    stored = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": text})
+
+    assert stored.status_code == 200, stored.text
+    body = stored.json()
+    assert body["profile"]["rows"] == 19_000 and len(body["preview"]) <= 20
+    assert len(judge.calls) == 1  # one part: the judged view does not grow with the rows
+
+
 async def test_dataset_errors(client: httpx.AsyncClient, judge) -> None:
     sid = await open_session(client, with_data=False)
 
     unparseable = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": "a,b\n1,2,3,4\n"})
     assert (unparseable.status_code, unparseable.json()) == (422, {"detail": "unparseable"})
 
-    too_long = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": "a\n" + "1\n" * 110_000})
+    over = "a\n" + "1\n" * (MAX_INPUT_BYTES // 2)  # one line past the 1 MB cap
+    too_long = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": over})
     assert (too_long.status_code, too_long.json()) == (413, {"detail": "too_long"})
 
     prefiltered = await client.post(

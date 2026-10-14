@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from agents.anyplot.data.parse import MAX_INPUT_BYTES
+from agents.anyplot.data.parse import MAX_CANONICAL_BYTES, MAX_COMPUTED_BYTES
 from agents.anyplot.plugins.tool_safety import MAX_DATA_CODE_CHARS
 from agents.anyplot.render import contract, harness, png
 from agents.anyplot.schemas import RENDER_ID_PATTERN
@@ -28,7 +28,8 @@ class TestContract:
         assert wire.MAX_PROBE_BYTES == png.MAX_PROBE_BYTES
         assert wire.MAX_STDERR_CHARS == contract.MAX_STDERR_CHARS
         assert wire.JOB_ID_PATTERN == RENDER_ID_PATTERN
-        assert wire.MAX_CSV_BYTES == MAX_INPUT_BYTES == harness.DATA_MAX_CSV_BYTES
+        assert wire.MAX_CSV_BYTES == MAX_COMPUTED_BYTES == harness.DATA_MAX_CSV_BYTES
+        assert wire.MAX_DATA_CSV_CHARS == MAX_CANONICAL_BYTES > MAX_COMPUTED_BYTES
         assert executor.OUT_FILE == harness.DATA_OUT_FILE and executor.DATA_FLAG == harness.DATA_FLAG
         assert wire.DATA_STATUS_FILE == harness.DATA_STATUS_FILE
         assert max(harness.DATA_EXIT.values()) <= wire.MAX_DATA_EXIT

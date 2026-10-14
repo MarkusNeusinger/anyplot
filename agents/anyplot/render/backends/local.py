@@ -22,7 +22,7 @@ The backend holds no semaphore: `SerialRenderer` (`render/serial.py`), which
 A data run (`run_data`) uses the same isolation with the harness in data mode
 (`harness.py --data snippet.py`), no theme and no plotting settings, and reads the
 harness's `status.json` (its exit code and a refusal's measured value and cap, as the
-renderer does) and the `out.csv` it wrote after exit code 0, under the parser's byte cap.
+renderer does) and the `out.csv` it wrote after exit code 0, under the computed-data cap.
 
 The backend refuses `ENVIRONMENT=production` and fails when Docker is missing:
 there is no bare-subprocess fallback, because that would run model-written code on
@@ -38,7 +38,7 @@ from pathlib import Path
 
 from agents.renderer.wire import DATA_STATUS_FILE, MAX_DATA_STATUS_BYTES, parse_data_status
 
-from ...data.parse import MAX_INPUT_BYTES
+from ...data.parse import MAX_COMPUTED_BYTES
 from ..contract import (
     DataJob,
     DataOutput,
@@ -220,7 +220,7 @@ class LocalDockerBackend:
                 measured, limit = (status.measured, status.limit) if status is not None else (None, None)
                 return DataOutput(exit_code=exit_code, stderr_tail=tail, wall_s=wall, measured=measured, limit=limit)
             try:
-                raw = read_output(run_dir / DATA_OUT_FILE, MAX_INPUT_BYTES)
+                raw = read_output(run_dir / DATA_OUT_FILE, MAX_COMPUTED_BYTES)
                 text = raw.decode("utf-8") if raw is not None else None
             except (PngRejected, UnicodeDecodeError):
                 return DataOutput(exit_code=0, stderr_tail=tail, wall_s=wall, reason="output_rejected")

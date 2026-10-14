@@ -65,9 +65,12 @@ TEXT_KINDS = frozenset(
 G8_SLACK = 10
 G8_FACTOR = 1.5
 MAX_PLOTTED_POINTS = 200_000
-"""G9: scatter marks plus line vertices a plot may draw. The parser's 200 KB cap holds at most about
+"""G9: scatter marks plus line vertices a plot may draw. Set when the 200 KB paste cap held at most about
 102,000 cells (two bytes each), so a plot past twice that drew points the code computed, such as an
-oversampled series or a simulated trajectory (stress cases `stress-compute-*`)."""
+oversampled series or a simulated trajectory (stress cases `stress-compute-*`). Since 2026-10-14 a 1 MB paste
+or 2 MiB of computed data can hold more cells (at most 20,000 rows of 50 columns), so G9 may also name a very
+dense plot of the user's own data; it stays at 200,000 because it is advisory and the stress cases' 610,000
+and 1,000,000 points must still trip it (an open owner question whether to raise it)."""
 G10_SAMPLE = 3  # code points the G10 line names
 G10_NAME_CHARS = 15  # name text per label: a label is then at most 26 characters and the line fits MAX_NOTE_CHARS
 MAX_CODEPOINT = 0x10FFFF

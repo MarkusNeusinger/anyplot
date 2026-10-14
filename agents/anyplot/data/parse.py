@@ -7,8 +7,9 @@ would, for example, read `01.02.2024` as a number under `thousands='.'`).
 
 `parse_dataset` runs these steps in order:
 
-1. **Limits on the raw text.** At most `MAX_INPUT_BYTES` (200 KiB) of UTF-8
-   (`too_long`); no control character other than tab, line feed and carriage
+1. **Limits on the raw text.** At most `MAX_INPUT_BYTES` (1 MiB) of UTF-8, or
+   `MAX_COMPUTED_BYTES` (2 MiB) for a table the service computed (`too_long`; the
+   canonical CSV the parse writes is checked against `MAX_CANONICAL_BYTES` too); no control character other than tab, line feed and carriage
    return (`control_chars`: every Unicode `Cc` character, which is C0, DEL and C1).
 2. **Normalise.** Strip a leading BOM and apply NFC.
 3. **Read every cell as text.** A literal when the first non-blank character is
@@ -112,7 +113,21 @@ from ..schemas import (
 )
 
 
-MAX_INPUT_BYTES = 200 * 1024  # "200 KB", counted like the schemas' 24 KiB: 204,800 UTF-8 bytes
+MAX_INPUT_BYTES = 1024 * 1024
+"""The paste cap, "1 MB": 1,048,576 UTF-8 bytes (owner decision of 2026-10-14; 200 KB before). Measured on a
+914,795-byte paste of 19,999 rows and six columns: the parse takes 0.5 s, the pre-filter over every cell 0.22 s,
+and the dataset judge still reads one part, because it sees the headers and a sample, never every row."""
+MAX_COMPUTED_BYTES = 2 * 1024 * 1024
+"""The cap of a table the service computed itself (`run_data_code`, `generate_data`, `prepare_data`), which
+re-parses pass as `max_bytes` (owner decision of 2026-10-14). A float at full precision takes 16 to 19 bytes: a
+10,000-step ODE with `t, x, y, z` was 637,727 bytes, and 10,001 rows of six normal floats 1,138,766 bytes, over
+the paste cap. Writing fewer significant digits would fit them under it, but it is lossy for large values that
+differ only in their decimals, so computed data keeps full precision under its own cap: 2 MiB holds 10,001 rows of
+about ten float columns. Rows and columns keep their caps (`MAX_ROWS`, `MAX_COLUMNS`)."""
+MAX_CANONICAL_BYTES = 4 * 1024 * 1024
+"""The canonical `data.csv` a parse may produce, also the render job's `data_csv` cap (`renderer/wire.py`
+`MAX_DATA_CSV_CHARS`, pinned equal by a test): ISO dates and dot decimals can grow a paste, so the size is checked
+after the parse rather than assumed (`too_long`)."""
 MAX_INPUT_CELL_CHARS = 200  # per header or cell, after cleaning; the profile's own cells stop at MAX_CELL_CHARS
 PREVIEW_ROWS = 20
 SNIFF_LINES = 50  # enough to see a table below an export's metadata or a few lines of notes
@@ -325,16 +340,19 @@ def pandas_dtypes(column_dtypes: Mapping[str, ColumnDtype]) -> dict[str, str]:
     return {name: PANDAS_DTYPES[dtype] for name, dtype in column_dtypes.items() if dtype != "datetime"}
 
 
-def parse_dataset(text: str, *, text_columns: Collection[str] = (), find_table: bool = True) -> ParsedDataset:
+def parse_dataset(
+    text: str, *, text_columns: Collection[str] = (), find_table: bool = True, max_bytes: int = MAX_INPUT_BYTES
+) -> ParsedDataset:
     """Parse pasted CSV, TSV, semicolon or pipe text, JSON or a Python literal into the canonical dataset.
 
     `text_columns` names (canonical) columns that stay text instead of being typed by
     their cells; a name that is no column is ignored. `find_table` narrows pasted text to
     its table (`table_block`); a caller that re-reads a CSV the service wrote itself (a
     prepared, generated or transcribed table) passes False, so every row it holds stays,
-    also a category named `Total` that a sort moved to the end.
+    also a category named `Total` that a sort moved to the end. `max_bytes` is the paste
+    cap; a caller that re-reads a table the service computed passes `MAX_COMPUTED_BYTES`.
     """
-    _check_size(text)
+    _check_size(text, max_bytes)
     text = text.removeprefix(_BOM)
     _check_controls(text)
     text = unicodedata.normalize("NFC", text)
@@ -356,19 +374,21 @@ def parse_dataset(text: str, *, text_columns: Collection[str] = (), find_table: 
         table = _read_delimited(text, warnings, find_table=find_table, context=context)
     headers, rows, source_format = table
     parsed = _build(headers, rows, source_format, warnings, frozenset(text_columns))
+    if len(parsed.csv.encode("utf-8")) > MAX_CANONICAL_BYTES:
+        raise ParseError("too_long", f"the data is larger than {MAX_CANONICAL_BYTES // 1024:,} KB once written out")
     return replace(parsed, context_lines=context) if context else parsed
 
 
 # --- Limits ------------------------------------------------------------------------------
 
 
-def _check_size(text: str) -> None:
+def _check_size(text: str, max_bytes: int = MAX_INPUT_BYTES) -> None:
     try:
         size = len(text.encode("utf-8"))
     except UnicodeEncodeError:
         raise ParseError("unparseable", "the data is not valid Unicode text") from None
-    if size > MAX_INPUT_BYTES:
-        raise ParseError("too_long", f"the data is larger than {MAX_INPUT_BYTES // 1024} KB")
+    if size > max_bytes:
+        raise ParseError("too_long", f"the data is larger than {max_bytes // 1024:,} KB")
 
 
 def _check_controls(text: str) -> None:

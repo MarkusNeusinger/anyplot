@@ -12,6 +12,7 @@ import pytest
 
 from agents.anyplot.code.edits import apply_plan
 from agents.anyplot.code.normalise import normalise
+from agents.anyplot.data.parse import MAX_INPUT_BYTES
 from agents.anyplot.dev_fixture import snapshot_from_repo
 from agents.anyplot.render.backends.fake import FakeBackend, FakeOutcome, Script
 from agents.anyplot.render.contract import RendererUnavailable
@@ -54,7 +55,7 @@ def context(backend: FakeBackend | None = None, renderer: str = "fake") -> Stati
 
 def test_dataset_outcome_mirrors_the_route() -> None:
     assert dataset_outcome("a,b\n1,2\n")[0] == "ok"
-    assert dataset_outcome("x" * (200 * 1024 + 1))[::2] == ("413 too_long", "too_long")
+    assert dataset_outcome("x" * (MAX_INPUT_BYTES + 1))[::2] == ("413 too_long", "too_long")
     assert dataset_outcome("a,b\n1,2,3\n")[::2] == ("422 unparseable", "unparseable")
 
 
@@ -101,7 +102,7 @@ async def test_cap_profile_shows_the_trimmed_adapter_profile(stress_cases: dict[
     assert measured["adapter_profile_trimmed"] is True
     assert measured["adapter_profile_chars"] <= 16 * 1024 < measured["profile_chars"]
     assert measured["adapter_prompt_chars"] < measured["profile_chars"]  # the request no longer carries it whole
-    assert measured["bytes"] == 200 * 1024 and measured["columns"] == 50
+    assert measured["bytes"] == MAX_INPUT_BYTES and measured["columns"] == 50
 
 
 async def test_over_cap_cases_stop_at_the_dataset_step(stress_cases: dict[str, EvalCase]) -> None:
@@ -176,7 +177,7 @@ async def test_render_expectations_without_a_stand_in_result_never_hold(
         stress_spec(EvalCase(**{**case.__dict__, "directory": copy}))
 
     (copy / "standin.txt").write_text((case.directory / "standin.txt").read_text(encoding="utf-8"), encoding="utf-8")
-    refused = EvalCase(**{**case.__dict__, "directory": copy, "data_text": "x" * (200 * 1024 + 1)})
+    refused = EvalCase(**{**case.__dict__, "directory": copy, "data_text": "x" * (MAX_INPUT_BYTES + 1)})
     record = await static_record(refused, context(renderer="remote"))
 
     assert record["render_checked"] and record["held"] is False
@@ -216,7 +217,7 @@ async def test_the_whole_stress_set_holds_offline(tmp_path: Path, stress_cases: 
     ]
     assert json.loads(result.report_path.read_text())["kind"] == "static"
     table = result.summary_path.read_text()
-    assert "| `stress-cap-profile` | ready | prompt | yes |" in table and "(of 26,911)" in table
+    assert "| `stress-cap-profile` | ready | prompt | yes |" in table and "(of 26,963)" in table
 
 
 def test_static_defaults_to_the_fake_renderer(tmp_path: Path) -> None:

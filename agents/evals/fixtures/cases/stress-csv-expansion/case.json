@@ -19,11 +19,11 @@
     "synthetic"
   ],
   "source": "synthetic: agents/evals/make_stress.py",
-  "bound_expected": "the canonical data.csv grows to about 3.8 times the input and still fits the renderer's 2 MiB data_csv limit (MAX_DATA_CSV_CHARS)",
+  "bound_expected": "the canonical data.csv grows to about 3.8 times the input and still fits the renderer's 4 MiB data_csv limit (MAX_DATA_CSV_CHARS, the parser's MAX_CANONICAL_BYTES)",
   "needs_model": false,
   "static": {
     "dataset": "ok",
-    "bytes": 204800,
+    "bytes": 1048576,
     "bindings": "complete",
     "loader": "ok",
     "csv_fits_wire": true

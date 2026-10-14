@@ -1,3 +1,12 @@
+### Changed
+
+- **Pasted data takes up to 1 MB, computed data up to 2 MB.** The paste cap
+  rose from 200 KB to 1 MB in the parser, the agents route, the BFF and the
+  data card's counter; rows (20,000) and columns (50) keep their caps. Data the
+  assistant computes keeps full float precision under its own 2 MB cap, so a
+  10,000-step run with six columns (about 1.1 MB) fits as it is. A parse whose
+  canonical CSV passes 4 MiB, the render job's limit, is refused. (#12176)
+
 ### Fixed
 
 - **A data snippet over the size cap says how much and what to do.** Cloud Run's

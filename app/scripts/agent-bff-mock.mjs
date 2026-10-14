@@ -201,7 +201,7 @@ const SPECS = {
   },
 };
 const AGENT_LIBRARIES = ['matplotlib', 'seaborn'];
-const MAX_DATASET_BYTES = 200 * 1024;
+const MAX_DATASET_BYTES = 1024 * 1024;
 /** What the agents service stores as the user's message of an action turn (`ACTION_MESSAGES`). */
 const ACTION_MESSAGES = {
   create_plot: '[action] Create the plot from my dataset and bindings.',

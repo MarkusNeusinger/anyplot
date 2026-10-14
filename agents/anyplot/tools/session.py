@@ -61,7 +61,7 @@ from pydantic import TypeAdapter, ValidationError
 from ..briefs import spec_brief, trimmed_profiles
 from ..code.data_code import check_data_code
 from ..data.generate import Generate, GenerateError, generate
-from ..data.parse import ParsedDataset, ParseError, parse_dataset
+from ..data.parse import MAX_COMPUTED_BYTES, ParsedDataset, ParseError, parse_dataset
 from ..data.prepare import MAX_OPERATIONS, Operation, PrepareError, apply_operations, validation_lines
 from ..data.shape import long_suggestion
 from ..data.store import StoredDataset, StoreFull
@@ -262,7 +262,9 @@ async def prepare_data(operations: list[dict[str, Any]], tool_context: ToolConte
         prepared = apply_operations(stored.as_parsed(), parsed_operations)
         # The columns `set_type text` made text stay text: the re-parse would type them by content again.
         # The CSV is the service's own: every row stays, also a `Total` category a sort moved to the end.
-        parsed = parse_dataset(prepared.csv, text_columns=prepared.text_columns, find_table=False)
+        parsed = parse_dataset(
+            prepared.csv, text_columns=prepared.text_columns, find_table=False, max_bytes=MAX_COMPUTED_BYTES
+        )
     except PrepareError as exc:
         # The message names columns of the user's dataset at most, never a cell; fenced like every column name.
         return {"status": "error", "code": exc.code, "message": _fenced_lines([exc.message])}
@@ -293,8 +295,8 @@ async def generate_data(
 
     variables: one or two ranges {"name": "x", "start": "-pi", "stop": "pi", "points": 200}; start and stop are
     numbers or expressions over the constants pi, e and tau; points is 2 to 5000 (default 200); two variables make a
-    grid (every pair, at most 10000 rows: set points on both, such as 50). The table holds at most 200 KB, about 6000
-    rows of three columns of 8-digit numbers. series: one to ten {"name": "y",
+    grid (every pair, at most 10000 rows: set points on both, such as 50). The table holds at most 2 MB, more than any
+    grid within these point limits needs. series: one to ten {"name": "y",
     "expression": "sin(x)"}, each an expression over the variables with numbers, pi, e, tau, + - * / ** % //,
     parentheses and the functions sin cos tan asin acos atan sinh cosh tanh exp log log10 log2 sqrt abs floor ceil
     round sign atan2 min max. Returns the change lines and the new profile, or an error with a code and a message.
@@ -311,7 +313,7 @@ async def generate_data(
         return {"status": "error", "code": "invalid_arguments", "errors": _fenced_lines(validation_lines(exc))}
     try:
         generated = generate(spec)
-        parsed = parse_dataset(generated.csv, find_table=False)
+        parsed = parse_dataset(generated.csv, find_table=False, max_bytes=MAX_COMPUTED_BYTES)
     except GenerateError as exc:
         # The message names variables and series and quotes the model's own expression at most; fenced all the same.
         return {"status": "error", "code": exc.code, "message": _fenced_lines([exc.message])}
@@ -365,7 +367,7 @@ RUN_FAILURES: dict[str, str] = {
     "frame_shape": "df has nested column headers (a MultiIndex) or an index that cannot become columns: flatten it",
     "too_many_rows": f"df has more than {MAX_ROWS:,} rows: compute fewer points",
     "too_many_columns": f"df has more than {MAX_COLUMNS} columns: keep only the columns the plot needs",
-    "too_large": "df's CSV is over 200 KB: compute fewer rows or round the values",
+    "too_large": "df's CSV is over 2 MB: compute fewer rows or round the values",
     "blocked": "the code tried to reach native code, files, processes or the network, which the sandbox refuses",
     "usage": "the sandbox could not start the code",
 }
@@ -386,9 +388,9 @@ async def run_data_code(code: str, source_language: str, tool_context: ToolConte
 
     code: Python of at most 6,000 characters using only numpy, pandas, math, random, statistics or scipy.stats (and
     the other scipy computing modules); it must assign the final table to df at the top level as a pandas DataFrame
-    (at most 20,000 rows, 50 columns and 200 KB as CSV: four float columns at full precision fit about 2,500
-    rows, so round floats to the decimal places that still keep their values distinct, such as df.round(3) for
-    values between -50 and 50, and keep every k-th row of a long simulation), read no file, call no network and
+    (at most 20,000 rows, 50 columns and 2 MB as CSV: 10,000 rows of about 10 float columns at full precision fit;
+    for a wider table round floats to the decimal places that still keep their values distinct, such as
+    df.round(3) for values between -50 and 50, or keep every k-th row), read no file, call no network and
     draw nothing (no matplotlib, no plot(),
     no hist()). Never write data values from memory: more than 20 numbers or 20 text values written out in one list,
     tuple or dict (a list repeated with * counts every copy), or 40 in the code, are refused. source_language:
@@ -443,8 +445,10 @@ async def run_data_code(code: str, source_language: str, tool_context: ToolConte
         return _error_lines(*failure)
     assert output.csv_text is not None  # `_run_failure` refuses a run without a table
     try:
-        parsed = parse_dataset(output.csv_text, find_table=False)
+        parsed = parse_dataset(output.csv_text, find_table=False, max_bytes=MAX_COMPUTED_BYTES)
     except ParseError as exc:
+        if exc.code == "too_long":  # its canonical copy outgrew `MAX_CANONICAL_BYTES` (wide dates, long text)
+            return _error_lines("run_failed", [RUN_FAILURES["too_large"]])
         return _error_lines("unparseable", [f"the table df holds cannot be read as data ({exc.code})"])
     if not any(column.dtype in ("integer", "number", "datetime") for column in parsed.profile.columns):
         return _error_lines("no_numbers", ["df has no number or date column: a plot needs values to draw"])
@@ -519,7 +523,7 @@ def cap_failure(name: str, measured: int | None, limit: int | None) -> str | Non
     nth = _ordinal(k)
     if name == "too_large":
         return (
-            f"df's CSV is {math.ceil(measured / 1024):,} KB, over the {limit // 1024} KB cap: keep every {nth} row "
+            f"df's CSV is {math.ceil(measured / 1024):,} KB, over the {limit // 1024:,} KB cap: keep every {nth} row "
             f"(df = df.iloc[::{k}]) or compute about 1/{k} of the points, and round the floats to the decimal "
             "places that still keep the values distinct (df = df.round(3) for values between -50 and 50; never so "
             "few that close values become equal), which roughly halves the size and lets you keep more rows; a line "

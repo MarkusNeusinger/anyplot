@@ -117,7 +117,14 @@ from starlette.background import BackgroundTask
 from agents.anyplot import agent as agent_module
 from agents.anyplot.code.readiness import MAP_SPECS
 from agents.anyplot.data.classify import classify_paste
-from agents.anyplot.data.parse import MAX_INPUT_BYTES, ParsedDataset, ParseError, parse_dataset, without_context
+from agents.anyplot.data.parse import (
+    MAX_COMPUTED_BYTES,
+    MAX_INPUT_BYTES,
+    ParsedDataset,
+    ParseError,
+    parse_dataset,
+    without_context,
+)
 from agents.anyplot.data.prepare import Operation, PrepareError, apply_operations
 from agents.anyplot.data.roles import DataRole
 from agents.anyplot.data.shape import long_suggestion
@@ -1122,7 +1129,9 @@ async def dataset_to_long(sid: SessionId, user: User, runtime: RuntimeDep) -> JS
     try:
         operations = OPERATIONS.validate_python([suggestion.operation()])
         prepared = apply_operations(stored.as_parsed(), operations)
-        parsed = parse_dataset(prepared.csv, text_columns=prepared.text_columns, find_table=False)
+        parsed = parse_dataset(
+            prepared.csv, text_columns=prepared.text_columns, find_table=False, max_bytes=MAX_COMPUTED_BYTES
+        )
     except (PrepareError, ParseError, ValidationError):
         raise AgentsError(422, "no_suggestion") from None
     try:

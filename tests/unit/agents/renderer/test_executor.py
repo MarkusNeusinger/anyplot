@@ -416,7 +416,10 @@ class TestDataRun:
         if sigpipe:
             monkeypatch.setenv("FAKE_SANDBOX_SIGPIPE", "1")
         caplog.set_level("INFO", logger=executor_module.__name__)
-        source = "import numpy as np\nimport pandas as pd\ndf = pd.DataFrame({'v': np.linspace(0, 1, 15000) / 3})\n"
+        source = (  # 20,000 rows of ten full-precision floats: over the 2 MiB computed-data cap
+            "import numpy as np\nimport pandas as pd\n"
+            "df = pd.DataFrame({f'v{k}': np.linspace(0, 1, 20000) / (k + 3) for k in range(10)})\n"
+        )
 
         run = await executor.run_data(data_job(source))
 

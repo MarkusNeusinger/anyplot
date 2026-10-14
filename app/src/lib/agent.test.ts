@@ -679,7 +679,9 @@ describe('helpers', () => {
     expect(sizeBucket(5 * 1024)).toBe('1_10kb');
     expect(sizeBucket(20 * 1024)).toBe('10_50kb');
     expect(sizeBucket(200 * 1024)).toBe('50_200kb');
-    expect(sizeBucket(200 * 1024 + 1)).toBe('over_200kb');
+    expect(sizeBucket(200 * 1024 + 1)).toBe('200kb_1mb');
+    expect(sizeBucket(1024 * 1024)).toBe('200kb_1mb');
+    expect(sizeBucket(1024 * 1024 + 1)).toBe('over_1mb');
   });
 
   it('buckets counts without exposing them', () => {
