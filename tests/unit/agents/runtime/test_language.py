@@ -9,7 +9,9 @@ from agents.anyplot.dev_fixture import snapshot_from_repo
 from agents.anyplot.language import (
     COMMON_LANGUAGES,
     DEFAULT_LANGUAGE,
+    ENGLISH_NAMES,
     canonical,
+    english_name,
     is_valid,
     normalise,
     pasted_language,
@@ -93,6 +95,21 @@ class TestValues:
     )
     def test_refusal_lang_is_a_code_never_a_prefix(self, language: str, code: str) -> None:
         assert refusal_lang(language) == code
+
+    @pytest.mark.parametrize(
+        ("language", "name"),
+        [("de", "German"), ("Deutsch", "German"), ("DE", "German"), ("en", "English"), ("ja", "Japanese")],
+    )
+    def test_english_name_of_a_known_language(self, language: str, name: str) -> None:
+        assert english_name(language) == name
+
+    @pytest.mark.parametrize("language", ["Swedish", "Klingon", "sv", "Plattdeutsch"])
+    def test_english_name_is_none_for_a_language_outside_the_table(self, language: str) -> None:
+        assert english_name(language) is None
+
+    def test_every_language_of_the_name_table_has_an_english_name(self) -> None:
+        assert set(COMMON_LANGUAGES) <= set(ENGLISH_NAMES)
+        assert {normalise(name) for name in ENGLISH_NAMES.values()} == set(ENGLISH_NAMES)
 
     def test_every_common_language_has_its_own_refusals(self) -> None:
         assert DEFAULT_LANGUAGE == COMMON_LANGUAGES[0] == "en"

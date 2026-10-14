@@ -82,13 +82,24 @@ if failures and os.path.exists(failures):
         print("Error: failed to exec in container: cmd.Wait(exec) failed: exit status 137", file=sys.stderr)
         sys.exit(1)
 os.chdir(mounts[workdir])
+if os.environ.get("FAKE_SANDBOX_SIGPIPE"):
+    import signal
+    import subprocess
+
+    code = subprocess.run(command, env=env).returncode
+    if code != 0:
+        signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+        os.kill(os.getpid(), signal.SIGPIPE)
+    sys.exit(code)
 os.execve(command[0], command, env)
 """
 """A stand-in for `/usr/local/gcp/bin/sandbox`: logs every call, emulates `do` by
 changing into the `/work` mount and exec-ing the command with exactly the `--env`
 values (so the launcher process is the harness, like a real sandbox's `do`), answers
 `delete` with 0 like the real one, and fails `do` without starting anything while
-the counter file in `FAKE_SANDBOX_FAIL` is positive (the S2 launcher failure)."""
+the counter file in `FAKE_SANDBOX_FAIL` is positive (the S2 launcher failure). With
+`FAKE_SANDBOX_SIGPIPE` set it runs the command as a child instead and dies of SIGPIPE
+when the child exits non-zero, as Cloud Run's launcher does (exit code -13)."""
 
 
 def job(source: str = PLOT, *, themes: tuple[Theme, ...] = ("light",), timeout_s: float = 30.0) -> RenderRequest:

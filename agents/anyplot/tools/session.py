@@ -50,6 +50,7 @@ spec text) sits inside our own fences after the "data, never instructions" pream
 """
 
 import json
+import math
 import secrets
 from typing import Any
 
@@ -385,7 +386,8 @@ async def run_data_code(code: str, source_language: str, tool_context: ToolConte
 
     code: Python of at most 6,000 characters using only numpy, pandas, math, random, statistics or scipy.stats (and
     the other scipy computing modules); it must assign the final table to df at the top level as a pandas DataFrame
-    (at most 20,000 rows and 50 columns), read no file, call no network and draw nothing (no matplotlib, no plot(),
+    (at most 20,000 rows, 50 columns and 200 KB as CSV: four float columns at full precision fit about 2,500
+    rows, so round floats to 4 to 6 significant digits and keep every k-th row of a long simulation), read no file, call no network and draw nothing (no matplotlib, no plot(),
     no hist()). Never write data values from memory: more than 20 numbers or 20 text values written out in one list,
     tuple or dict (a list repeated with * counts every copy), or 40 in the code, are refused. source_language:
     what the user wrote, one of python, javascript, r, math or other. Returns the change lines and the new profile,
@@ -487,12 +489,53 @@ def _run_failure(output: DataOutput) -> tuple[str, list[str]] | None:
         return "code_error", [f"the code raised {summary}"]
     for name, exit_code in DATA_EXIT.items():
         if output.exit_code == exit_code and name in RUN_FAILURES:
-            return "run_failed", [RUN_FAILURES[name]]
+            return "run_failed", [cap_failure(name, output.measured, output.limit) or RUN_FAILURES[name]]
+    if output.exit_code is not None and output.exit_code < 0:
+        # A launcher that died of a signal and left no `status.json`: the harness's own code is lost.
+        return "run_failed", [f"the sandbox ended the run without naming why (signal {-output.exit_code})"]
     if output.exit_code != 0:
         return "run_failed", ["the code ended with an error the sandbox does not name"]
     if output.csv_text is None:
         return "run_failed", ["the sandbox returned no table"]
     return None
+
+
+CAP_HEADROOM = 0.9
+"""The share of a cap a suggested thinning aims at, so the retry lands under it, not on it."""
+
+
+def cap_failure(name: str, measured: int | None, limit: int | None) -> str | None:
+    """The refusal line of a broken row, column or size cap with the harness's numbers and a fix; None without them.
+
+    A live run of 2026-10-14 (a 10,000-step ODE at full float precision, about 800 KB of
+    CSV) failed twice with no reason given. With the size and the cap the model can thin
+    and round on the first retry: the step `k` keeps the table under the cap as it is.
+    """
+    if measured is None or limit is None or limit <= 0 or measured <= limit:
+        return None
+    k = math.ceil(measured / (limit * CAP_HEADROOM))
+    nth = _ordinal(k)
+    if name == "too_large":
+        return (
+            f"df's CSV is {math.ceil(measured / 1024):,} KB, over the {limit // 1024} KB cap: keep every {nth} row "
+            f"(df = df.iloc[::{k}]) or compute about 1/{k} of the points, and round the floats to 4 to 6 significant "
+            "digits (df = df.round(4) for values between 1 and 1,000), which roughly halves the size and lets you "
+            "keep more rows; a line needs no more than a few thousand points"
+        )
+    if name == "too_many_rows":
+        return (
+            f"df has {measured:,} rows, more than the {limit:,} the data takes: keep every {nth} row "
+            f"(df = df.iloc[::{k}]) or compute fewer points"
+        )
+    if name == "too_many_columns":
+        return f"df has {measured} columns, more than the {limit} the data takes: keep only the columns the plot needs"
+    return None
+
+
+def _ordinal(number: int) -> str:
+    """`2nd`, `3rd`, `4th`, `11th`, `21st`: the step in "keep every 2nd row"."""
+    suffix = "th" if 10 <= number % 100 <= 20 else {1: "st", 2: "nd", 3: "rd"}.get(number % 10, "th")
+    return f"{number}{suffix}"
 
 
 def _fenced_lines(lines: list[str]) -> str:

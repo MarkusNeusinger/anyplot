@@ -73,7 +73,10 @@ names as text, at most `DATA_MAX_ROWS` rows and `DATA_MAX_COLUMNS` columns and a
 `data/parse.py`; a test pins them equal). It writes the CSV through the handle it opened
 before the guard; a run the guard refused at any point writes nothing, even when the
 snippet caught the error. Each refusal has its own exit code (`DATA_EXIT`); the host
-maps a code to a fixed message and trusts nothing the snippet printed. The plot mode
+maps a code to a fixed message and trusts nothing the snippet printed. The same code,
+with the measured value and the cap for a broken row, column or byte cap, also goes to
+`status.json` (opened before the guard, written last), because Cloud Run's sandbox
+launcher reports every non-zero exit as its own SIGPIPE (-13) and so loses the code. The plot mode
 does not arm the guard: savefig and the probe write files, and a render sweep of the
 catalogue under the guard has not been run (it needs the renderer image).
 
@@ -157,6 +160,8 @@ MISSING_MATH_GLYPHS: set[int] = set()  # code points reported by mathtext (no fa
 
 DATA_FLAG = "--data"
 DATA_OUT_FILE = "out.csv"
+DATA_STATUS_FILE = "status.json"
+"""The data run's outcome for the host (`write_status`): `{"exit", "reason", "measured"?, "limit"?}`."""
 DATA_MAX_ROWS = 20_000  # agents/anyplot/schemas.py MAX_ROWS
 DATA_MAX_COLUMNS = 50  # agents/anyplot/schemas.py MAX_COLUMNS
 DATA_MAX_CSV_BYTES = 200 * 1024  # agents/anyplot/data/parse.py MAX_INPUT_BYTES
@@ -867,10 +872,15 @@ def install_probe(theme):
     Figure.savefig = savefig
 
 
-def frame_csv(frame):
-    """The CSV text of a snippet's `df`, or the `DATA_EXIT` key of why there is none."""
+def frame_csv(frame, measure=None):
+    """The CSV text of a snippet's `df`, or the `DATA_EXIT` key of why there is none.
+
+    For a cap it broke, `measure` (a dict) gets the measured value and the cap: rows,
+    columns or CSV bytes, which the host turns into a message the model can act on.
+    """
     import pandas as pd
 
+    measure = measure if measure is not None else {}
     if not isinstance(frame, pd.DataFrame):
         return None, "no_frame"
     if isinstance(frame.columns, pd.MultiIndex):
@@ -885,22 +895,65 @@ def frame_csv(frame):
     frame = frame.copy()
     frame.columns = [str(column) for column in frame.columns]
     if len(frame.index) > DATA_MAX_ROWS:
+        measure.update(measured=len(frame.index), limit=DATA_MAX_ROWS)
         return None, "too_many_rows"
     if len(frame.columns) > DATA_MAX_COLUMNS:
+        measure.update(measured=len(frame.columns), limit=DATA_MAX_COLUMNS)
         return None, "too_many_columns"
     buffer = io.StringIO()
     frame.to_csv(buffer, index=False)
     text = buffer.getvalue()
-    if len(text.encode("utf-8", errors="surrogatepass")) > DATA_MAX_CSV_BYTES:
+    size = len(text.encode("utf-8", errors="surrogatepass"))
+    if size > DATA_MAX_CSV_BYTES:
+        measure.update(measured=size, limit=DATA_MAX_CSV_BYTES)
         return None, "too_large"
     return text, None
 
 
+def write_status(handle, code, measure):
+    """`status.json`: the run's `DATA_EXIT` code and, for a broken cap, the measured value and the cap.
+
+    The host reads it whatever the launcher's exit code says: Cloud Run's `sandbox do`
+    reports every non-zero exit of the sandboxed process as its own death by SIGPIPE
+    (-13), so the exit code alone cannot carry `too_large` from the sandbox. The handle
+    was opened before the guard; the snippet cannot reach it, and a write to an open
+    file raises no audit event.
+    """
+    if handle is None:
+        return
+    reason = next((name for name, value in DATA_EXIT.items() if value == code), None)
+    report = {"exit": code, "reason": reason}
+    for key in ("measured", "limit"):
+        if isinstance(measure.get(key), int):
+            report[key] = measure[key]
+    try:
+        handle.write(json.dumps(report))
+        handle.close()
+    except Exception:
+        pass  # the host then falls back on the launcher's exit code
+
+
 def main_data(path, guard=None):
-    """Data mode (module docstring): run the snippet under `DataGuard` and write its `df` to `out.csv`."""
+    """Data mode (module docstring): run the snippet under `DataGuard`, write its `df` to `out.csv` and the
+    outcome to `status.json`."""
     _report("start")
     set_limits()
     sys.dont_write_bytecode = True  # no .pyc write, which the guard would refuse
+    try:
+        status = open(DATA_STATUS_FILE, "w", encoding="utf-8")  # before the guard, which refuses every open
+    except OSError:
+        status = None
+    measure = {}
+    code = DATA_EXIT["error"]
+    try:
+        code = run_data_snippet(path, guard, measure)
+    finally:
+        write_status(status, code, measure)
+    return code
+
+
+def run_data_snippet(path, guard, measure):
+    """`main_data` after the limits: preload, compile, arm the guard, run the snippet and write `out.csv`."""
     import builtins
     import ctypes  # noqa: F401  (pandas loads it anyway; its load opens a library, so before the guard)
 
@@ -929,7 +982,7 @@ def main_data(path, guard=None):
         if guard.blocked:
             return DATA_EXIT["blocked"]
         try:
-            text, refusal = frame_csv(namespace.get("df"))
+            text, refusal = frame_csv(namespace.get("df"), measure)
         except Exception as exc:
             print_snippet_error(guard, exc)
             return DATA_EXIT["blocked"] if guard.blocked else DATA_EXIT["error"]

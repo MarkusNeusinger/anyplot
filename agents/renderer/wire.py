@@ -48,6 +48,37 @@ MAX_CSV_BYTES = 200 * 1024
 """The `out.csv` a data run returns: the agents' parser cap (`data/parse.py` `MAX_INPUT_BYTES`), which the harness
 applies before it writes; the executor reads at most this many bytes."""
 
+DATA_STATUS_FILE = "status.json"
+"""The data run's outcome the harness writes (`harness.DATA_STATUS_FILE`, pinned by a test)."""
+MAX_DATA_STATUS_BYTES = 1024
+"""Largest `status.json` a host reads; the harness writes well under 100 bytes."""
+MAX_DATA_EXIT = 255
+
+
+class DataStatus(BaseModel):
+    """`status.json` as the hosts read it: the harness's own exit code, and the measured value and cap of a refusal.
+
+    The executor and the local backend take the exit code from here rather than from
+    the launcher, whose code loses it on Cloud Run (every non-zero exit is -13).
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    exit: int = Field(ge=0, le=MAX_DATA_EXIT)
+    measured: int | None = Field(default=None, ge=0, le=MAX_PROBE_INT)
+    limit: int | None = Field(default=None, ge=0, le=MAX_PROBE_INT)
+
+
+def parse_data_status(raw: bytes | None) -> DataStatus | None:
+    """The harness's `status.json`, or None when it is missing or not the expected shape (strict UTF-8 JSON)."""
+    if raw is None or len(raw) > MAX_DATA_STATUS_BYTES:
+        return None
+    try:
+        return DataStatus.model_validate_json(raw, strict=True)
+    except ValueError:
+        return None
+
+
 RunReason = Literal["timeout", "disk_budget", "file_budget", "memory", "launcher", "output_rejected"]
 """Why a theme has no usable output, when the renderer knows more than the exit code:
 `timeout` (killed at the job's time limit), `disk_budget` (killed for writing more bytes than

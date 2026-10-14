@@ -130,6 +130,7 @@ from agents.anyplot.language import (
     DEFAULT_LANGUAGE,
     LANGUAGE_PATTERN,
     MAX_LANGUAGE_CHARS,
+    english_name,
     is_valid,
     normalise,
     pasted_language,
@@ -197,6 +198,8 @@ ACTION_MESSAGES: dict[str, str] = {
 """The fixed user message of each structured action; the scope judge is skipped for them (`ledger.kind`).
 `summarize_data` also carries the notes the user pasted with the data, when the stored dataset kept any
 (`user_notes_block`): the dataset route ran the pre-filter and the scope judge on them at the paste."""
+ACTION_LANGUAGE_LINE = "Reply in {name}, the session language."
+"""Appended to an action message when the session language is a known one other than English (`english_name`)."""
 ACTION_MESSAGE = ACTION_MESSAGES["create_plot"]
 SWEEP_INTERVAL_S = 300
 ARTIFACT_TYPES: dict[str, str] = {
@@ -1285,6 +1288,11 @@ async def post_message(
         # A hit counts as use: the idle sweep must not take the dataset while the run waits.
         services.datasets.get(view.dataset_id, sid)
     text = ACTION_MESSAGES[body.action] if body.action else (body.text or "")
+    reply_language = english_name(view.language) if view is not None else None
+    if body.action and reply_language is not None and reply_language != "English":
+        # The page's English action line is the turn's only user text: it names the reply language itself
+        # (live case of 2026-10-14, a German CSV paste answered in English). The name is the server's own word.
+        text = f"{text} {ACTION_LANGUAGE_LINE.format(name=reply_language)}"
     if body.action == "summarize_data" and view is not None and view.dataset_id:
         stored = services.datasets.get(view.dataset_id, sid)
         if stored is not None and stored.context_lines:

@@ -57,6 +57,21 @@ _NAMES: dict[str, str] = {
     "japanese": "ja",
 }
 """The English names and the ASCII endonyms of the refusal languages and Japanese, by their code."""
+ENGLISH_NAMES: dict[str, str] = {
+    "en": "English",
+    "de": "German",
+    "fr": "French",
+    "es": "Spanish",
+    "it": "Italian",
+    "pt": "Portuguese",
+    "nl": "Dutch",
+    "pl": "Polish",
+    "zh": "Chinese",
+    "vi": "Vietnamese",
+    "ru": "Russian",
+    "ja": "Japanese",
+}
+"""The English name of each code in `_NAMES`: server text, so a prompt may name the language outside a fence."""
 
 
 def normalise(value: str) -> str:
@@ -103,6 +118,15 @@ def pasted_language(source: str, notes_lang: str | None, header_lang: str | None
         if lang and lang != DEFAULT_LANGUAGE and is_valid(lang):
             return normalise(lang)
     return None
+
+
+def english_name(language: str) -> str | None:
+    """The English name of a session language from `ENGLISH_NAMES` (`de` and `Deutsch` are `German`), else None.
+
+    Only a language the table knows gets a name: the value itself is free text the pattern
+    bounds, so it reaches a prompt only fenced, and this name is the server's own word for it.
+    """
+    return ENGLISH_NAMES.get(canonical(language))
 
 
 def refusal_lang(language: str) -> str:

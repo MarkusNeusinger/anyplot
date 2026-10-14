@@ -30,6 +30,15 @@ class TestContract:
         assert wire.JOB_ID_PATTERN == RENDER_ID_PATTERN
         assert wire.MAX_CSV_BYTES == MAX_INPUT_BYTES == harness.DATA_MAX_CSV_BYTES
         assert executor.OUT_FILE == harness.DATA_OUT_FILE and executor.DATA_FLAG == harness.DATA_FLAG
+        assert wire.DATA_STATUS_FILE == harness.DATA_STATUS_FILE
+        assert max(harness.DATA_EXIT.values()) <= wire.MAX_DATA_EXIT
+
+    def test_the_data_status_parses_only_its_own_shape(self) -> None:
+        status = wire.parse_data_status(b'{"exit": 7, "reason": "too_large", "measured": 637727, "limit": 204800}')
+        assert status is not None and (status.exit, status.measured, status.limit) == (7, 637727, 204800)
+        assert wire.parse_data_status(b'{"exit": 0, "reason": "ok"}') == wire.DataStatus(exit=0)
+        for raw in (None, b"", b"[]", b'{"exit": "7"}', b'{"exit": -1}', b'{"exit": 1.5}', b"x" * 2000):
+            assert wire.parse_data_status(raw) is None
         assert wire.MAX_DATA_SOURCE_CHARS >= MAX_DATA_CODE_CHARS
         assert wire.MAX_DATA_TIMEOUT_S == contract.MAX_DATA_TIMEOUT_S
 

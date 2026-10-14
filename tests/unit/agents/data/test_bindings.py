@@ -75,6 +75,13 @@ class TestDefaultBindingsOnRealSpecs:
         assert as_pairs(bindings) == [("x", "date"), ("y1", "price"), ("series", "company")]
         assert check_bindings(bindings, roles, data).complete
 
+    def test_line_multi_never_groups_by_a_single_valued_column(self) -> None:
+        # A statistics-office export: a text column with one value (the region) before the one that varies.
+        roles = parse_roles(LINE_MULTI)
+        data = profile("Year,Region,Group,Count\n2020,All,A,10\n2020,All,B,12\n2021,All,A,11\n2021,All,B,13\n")
+
+        assert dict(as_pairs(default_bindings(roles, data)))["series"] == "Group"
+
 
 class TestDefaultBindings:
     def test_exact_names_win(self) -> None:
@@ -88,6 +95,25 @@ class TestDefaultBindings:
         data = profile("count,region\n1,north\n2,south\n")
 
         assert as_pairs(default_bindings(roles, data)) == [("group", "region")]
+
+    def test_a_single_valued_column_ranks_after_any_with_two_values(self) -> None:
+        roles = [role("group", "categorical")]
+        # The constant text column outranks the integer one by tier and comes first, yet it splits nothing.
+        data = profile("country,year,value\nCH,2020,1.5\nCH,2021,2.5\n")
+
+        assert as_pairs(default_bindings(roles, data)) == [("group", "year")]
+
+    def test_a_single_valued_column_is_still_taken_when_nothing_else_fits(self) -> None:
+        roles = [role("group", "categorical"), role("value", "numeric")]
+        data = profile("country,value\nCH,1.5\nCH,2.5\n")
+
+        assert as_pairs(default_bindings(roles, data)) == [("group", "country"), ("value", "value")]
+
+    def test_number_roles_keep_a_single_valued_column(self) -> None:
+        roles = [role("x", "numeric")]
+        data = profile("level,value\n1.5,2.5\n1.5,3.5\n")
+
+        assert as_pairs(default_bindings(roles, data)) == [("x", "level")]
 
     def test_integer_column_is_accepted_for_a_categorical_role_when_nothing_better_exists(self) -> None:
         roles = [role("group", "categorical")]

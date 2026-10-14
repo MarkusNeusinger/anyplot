@@ -20,8 +20,9 @@ The backend holds no semaphore: `SerialRenderer` (`render/serial.py`), which
 `Services.backend` puts in front of every backend, hands it one theme at a time.
 
 A data run (`run_data`) uses the same isolation with the harness in data mode
-(`harness.py --data snippet.py`), no theme and no plotting settings, and reads only
-the `out.csv` the harness wrote after exit code 0, under the parser's byte cap.
+(`harness.py --data snippet.py`), no theme and no plotting settings, and reads the
+harness's `status.json` (its exit code and a refusal's measured value and cap, as the
+renderer does) and the `out.csv` it wrote after exit code 0, under the parser's byte cap.
 
 The backend refuses `ENVIRONMENT=production` and fails when Docker is missing:
 there is no bare-subprocess fallback, because that would run model-written code on
@@ -34,6 +35,8 @@ import shutil
 import tempfile
 import time
 from pathlib import Path
+
+from agents.renderer.wire import DATA_STATUS_FILE, MAX_DATA_STATUS_BYTES, parse_data_status
 
 from ...data.parse import MAX_INPUT_BYTES
 from ..contract import (
@@ -208,8 +211,14 @@ class LocalDockerBackend:
                 raise
             wall = time.monotonic() - started
             tail = stderr.decode("utf-8", errors="replace")
-            if process.returncode != 0:
-                return DataOutput(exit_code=process.returncode, stderr_tail=tail, wall_s=wall)
+            try:
+                status = parse_data_status(read_output(run_dir / DATA_STATUS_FILE, MAX_DATA_STATUS_BYTES))
+            except PngRejected:
+                status = None
+            exit_code = status.exit if status is not None else process.returncode
+            if exit_code != 0:
+                measured, limit = (status.measured, status.limit) if status is not None else (None, None)
+                return DataOutput(exit_code=exit_code, stderr_tail=tail, wall_s=wall, measured=measured, limit=limit)
             try:
                 raw = read_output(run_dir / DATA_OUT_FILE, MAX_INPUT_BYTES)
                 text = raw.decode("utf-8") if raw is not None else None

@@ -55,9 +55,15 @@ Each rule below comes from spike S or S2 (docs/concepts/agent-network.md, "Rende
 **Data runs** (`run_data`, the service's `POST /run-data`) take the same path: a run
 directory of their own, the same watchdog, kill path and launcher retry, with the
 snippet as `snippet.py`, no theme and no data file, and the harness in data mode
-(`harness.py --data snippet.py`, which arms its audit-hook guard). The only output read
-is `out.csv`, only after an exit code of 0, with `read_regular` under `MAX_CSV_BYTES`,
-as strict UTF-8; anything else is `output_rejected`.
+(`harness.py --data snippet.py`, which arms its audit-hook guard). The outputs read are
+`status.json` (the harness's own exit code and a refusal's measured value and cap,
+`wire.parse_data_status`) and `out.csv`, the latter only after an exit code of 0, with
+`read_regular` under `MAX_CSV_BYTES`, as strict UTF-8; anything else is
+`output_rejected`. The exit code a data run reports is the harness's from `status.json`,
+because the launcher's is useless for it: Cloud Run's `sandbox do` ends with -13 (SIGPIPE)
+for every non-zero exit of the sandboxed process and logs no `[end]` line for it, seen on
+every failed render and data run since 2026-10-11. The attempt log carries both, with the
+signal as `launcher_signal`.
 
 Strictly serial: the service holds one render slot (`main.py`), and the themes of a
 job run one after the other; a data run takes the same slot. No ADK import.
@@ -82,7 +88,9 @@ from typing import Any, Protocol
 
 from .settings import RendererSettings
 from .wire import (
+    DATA_STATUS_FILE,
     MAX_CSV_BYTES,
+    MAX_DATA_STATUS_BYTES,
     MAX_PNG_BYTES,
     MAX_PROBE_BYTES,
     MAX_STDERR_CHARS,
@@ -93,6 +101,7 @@ from .wire import (
     Theme,
     ThemeRun,
     clean_probe,
+    parse_data_status,
 )
 
 
@@ -439,6 +448,22 @@ class Attempt:
     probe: dict[str, Any] | None = None
     csv_text: str | None = None
     wall_s: float = 0.0
+    harness_exit: int | None = None
+    """A data run's exit code as the harness wrote it to `status.json`; None without a readable one."""
+    status_measured: int | None = None
+    status_limit: int | None = None
+
+    @property
+    def data_exit(self) -> int | None:
+        """A data run's exit code: the harness's own (`status.json`) when it wrote one, else the launcher's.
+
+        The launcher's code loses the harness's on Cloud Run: every non-zero exit of the
+        sandboxed process comes back as -13 (SIGPIPE on the launcher), renders included.
+        A run the host stopped has none.
+        """
+        if self.exit_code is None or self.harness_exit is None:
+            return self.exit_code
+        return self.harness_exit
 
     @property
     def harness_started(self) -> bool:
@@ -497,12 +522,13 @@ class Attempt:
         )
 
     def to_data_wire(self, attempts: int) -> DataRun:
+        from_status = self.reason is None and self.exit_code is not None
         return DataRun(
-            exit_code=self.exit_code,
+            exit_code=self.data_exit,
             timed_out=self.timed_out,
             reason=self.reason,
-            measured=self.measured,
-            limit=self.limit,
+            measured=self.status_measured if from_status else self.measured,
+            limit=self.status_limit if from_status else self.limit,
             csv_text=self.csv_text,
             stderr_tail=self.stderr[-MAX_STDERR_CHARS:],
             wall_s=round(self.wall_s, 3),
@@ -678,11 +704,25 @@ class SandboxExecutor:
             wall_s=wall,
         )
         if theme is None:
-            if stop is None and attempt.exit_code == 0:
-                self._collect_data(attempt, run_dir / "work")
+            if stop is None:
+                self._read_status(attempt, run_dir / "work")
+                if attempt.data_exit == 0:
+                    self._collect_data(attempt, run_dir / "work")
         elif stop is None or stop.reason == "timeout":
             self._collect(attempt, run_dir / "work", theme)
         return attempt
+
+    def _read_status(self, attempt: Attempt, work: Path) -> None:
+        """Take the harness's exit code and a refusal's numbers from the `status.json` a data run left, if any."""
+        try:
+            status = parse_data_status(read_regular(work / DATA_STATUS_FILE, MAX_DATA_STATUS_BYTES))
+        except OutputRejected:
+            status = None
+        if status is None:
+            return
+        attempt.harness_exit = status.exit
+        attempt.status_measured = status.measured
+        attempt.status_limit = status.limit
 
     def _collect_data(self, attempt: Attempt, work: Path) -> None:
         """Read the `out.csv` a data run left, as strict UTF-8 under `MAX_CSV_BYTES`; anything else is refused."""
@@ -759,6 +799,12 @@ def _log_attempt(attempt: Attempt, theme: str, *, retry: bool) -> None:
                 "sandbox": attempt.name,
                 "theme": theme,
                 "exit_code": attempt.exit_code,
+                # A negative launcher code is a signal (-13: SIGPIPE, what `sandbox do` reports for every
+                # non-zero exit inside); a data run's own code is `harness_exit`, from `status.json`.
+                "launcher_signal": -attempt.exit_code
+                if attempt.exit_code is not None and attempt.exit_code < 0
+                else None,
+                "harness_exit": attempt.harness_exit,
                 "reason": attempt.reason,
                 "measured": attempt.measured,
                 "limit": attempt.limit,
