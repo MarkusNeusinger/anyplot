@@ -348,6 +348,7 @@ ESCAPE_ATTRIBUTES: frozenset[str] = frozenset(
         "f_locals",
         "f_code",
         "f_trace",
+        "f_generator",  # Python 3.14: the generator or coroutine that owns a frame
         "tb_frame",
         "tb_next",
         "co_code",

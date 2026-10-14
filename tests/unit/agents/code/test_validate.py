@@ -517,7 +517,7 @@ class TestPureModules:
         [
             *("gi_frame", "gi_code", "gi_yieldfrom", "cr_frame", "cr_code", "cr_await", "cr_origin"),
             *("ag_frame", "ag_code", "ag_await", "f_back", "f_builtins", "f_globals", "f_locals"),
-            *("f_code", "f_trace", "tb_frame", "tb_next", "co_code", "co_consts", "co_names"),
+            *("f_code", "f_trace", "f_generator", "tb_frame", "tb_next", "co_code", "co_consts", "co_names"),
         ],
     )
     def test_every_introspection_attribute_is_refused(self, name: str) -> None:
