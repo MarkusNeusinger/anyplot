@@ -69,8 +69,9 @@ Decisions this module takes where the design leaves room:
   dict, a `**{...}` keyword) a bare `backend` or `usetex` is too, while the word "backend"
   in a list of labels passes. Settings are written only with keys the rule can read:
   `rcParams` (and its two default copies) is subscripted with a literal when written, or
-  `.update`d with a dict literal of literal keys, and is never a value; `rc_context`,
-  `style.context` and every `rc=` take a string or such a dict; `rc(group, **kw)` takes a
+  `.update`d with a dict literal of literal keys, and is never a value; `rc_context` and
+  every `rc=` take such a dict and no settings file (`fname`); `style.context` takes such a
+  dict or a style name, never a path to a style sheet; `rc(group, **kw)` takes a
   literal group and checks each `group.keyword`. The keywords `usetex=` and `backend=` are
   banned on every call (`banned-keyword`), the value "TeX" (`ismath="TeX"`) is a finding,
   and a savefig `format=` other than "png" is a `savefig-target` finding. A key built at
@@ -1013,11 +1014,18 @@ def _is_unsafe_setting(text: str, *, setting: bool = False) -> bool:
     return _UNSAFE_RC_KEY.search(text) is not None
 
 
-def _is_literal_settings(node: ast.AST | None) -> bool:
-    """A settings argument whose keys can be checked: `None`, a string literal (a style or group name) or a dict
-    literal whose every key is a string literal (no `**` unpacking)."""
-    if node is None or (isinstance(node, ast.Constant) and (node.value is None or isinstance(node.value, str))):
+_STYLE_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]*$")
+"""A matplotlib style name (`ggplot`, `seaborn-v0_8-whitegrid`): no dot and no separator, so not a file path, which
+`style.context` would read as a style sheet of settings the key rules never see (#12177 review)."""
+
+
+def _is_literal_settings(node: ast.AST | None, *, style_names: bool = False) -> bool:
+    """A settings argument whose keys can be checked: `None`, a dict literal whose every key is a string literal (no
+    `**` unpacking) and, with `style_names` (`style.context`), a string literal that is a style name, never a path."""
+    if node is None or (isinstance(node, ast.Constant) and node.value is None):
         return True
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return style_names and _STYLE_NAME.match(node.value) is not None
     return isinstance(node, ast.Dict) and all(
         isinstance(key, ast.Constant) and isinstance(key.value, str) for key in node.keys
     )
@@ -1465,8 +1473,9 @@ class _Scan:
         `rcParams` (and its two default copies) may be subscripted, with a string literal
         when the item is written or deleted, or be the receiver of a called `.update`, `.get`
         or `.copy`, whose `.update` arguments are dict literals with string-literal keys; it
-        is never a value (`r = mpl.rcParams`) or a target. `rc_context(...)`, `style.context(...)`
-        and every `rc=` argument take a string or such a dict; `rc(group, **settings)` takes a
+        is never a value (`r = mpl.rcParams`) or a target. `rc_context(...)` and every `rc=`
+        argument take such a dict and no file (`fname`, a second argument); `style.context(...)`
+        takes such a dict or a style name, never a path; `rc(group, **settings)` takes a
         literal group, and each `group.keyword` key is checked like a string literal. A key built
         at run time would pass the string rule; the render guard refuses what such a setting starts.
         """
@@ -1494,7 +1503,16 @@ class _Scan:
             settings = [keyword.value for keyword in call.keywords if keyword.arg == "rc"]
             if name in _RC_CONSUMERS:
                 settings.extend(call.args)
-            if (name in _RC_CONSUMERS and unpacked) or not all(_is_literal_settings(value) for value in settings):
+            # `rc_context(rc, fname)` loads every setting from the file `fname` names (#12177 review).
+            reads_file = name == "rc_context" and (
+                len(call.args) > 1 or any(keyword.arg == "fname" for keyword in call.keywords)
+            )
+            style = name == "context"
+            if (
+                (name in _RC_CONSUMERS and unpacked)
+                or reads_file
+                or not all(_is_literal_settings(value, style_names=style) for value in settings)
+            ):
                 self.add("rc-key", message, call)
             for value in [*settings, *(keyword.value for keyword in call.keywords if keyword.arg is None)]:
                 self._check_setting_keys(value)  # `**{"usetex": True}` too
