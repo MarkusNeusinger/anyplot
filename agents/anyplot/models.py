@@ -15,10 +15,10 @@ Reasoning depth is the Claude `effort` of `AnthropicGenerateContentConfig`; ADK 
 ignores `thinking_config.thinking_level` for Claude and raises when both are set.
 
 Claude thinks adaptively by default (since 2026-10-11): the root with
-`AGENT_ROOT_THINKING_BUDGET` (1,024) and the adapter with `AGENT_ADAPTER_THINKING_BUDGET`
-(2,048) extra output tokens, at most `settings.MAX_THINKING_BUDGET` each; the reviewer
-never thinks, and a budget of 0 turns thinking off for that kind (`thinking_budget=0`,
-which ADK maps to `thinking: {type: "disabled"}`; Gemini ignores both budgets). Haiku 5.5
+`AGENT_ROOT_THINKING_BUDGET` (1,024), the adapter with `AGENT_ADAPTER_THINKING_BUDGET`
+(8,192) and, since 2026-10-13, the reviewer with `AGENT_REVIEWER_THINKING_BUDGET` (4,096)
+extra output tokens, at most `settings.MAX_THINKING_BUDGET` each, and a budget of 0 turns
+thinking off for that kind (`thinking_budget=0`, which ADK maps to `thinking: {type: "disabled"}`; Gemini ignores both budgets). Haiku 5.5
 takes no thinking budget of its own (`budget_tokens` is a 400), so the config asks for
 ADK's adaptive mode (`thinking_budget=-1`, sent as
 `thinking: {type: "adaptive", display: "summarized"}`), the depth follows the kind's
@@ -120,22 +120,27 @@ rerun of spike X on main (244 runs, Claude Haiku 5.5, 2026-10-10):
 
 The caps also fit the soft deadline. Fitted on the rerun's run times, Claude Haiku 5.5
 takes about 0.8 s per call plus 0.0029 s per output token (R² 0.95), so a call that
-uses the whole 8,192 takes about 25 s, the whole 16,384 of `ADAPTER_FULL_MAX_OUTPUT_TOKENS`
-about 49 s (both inside the 60 s of `pipeline.ADAPTER_P95_S`), and the whole 4,096
-of the reviewer about 13 s (inside the 30 s of `pipeline.REVIEWER_P95_S`). On Gemini,
+uses the whole 16,384 of an edit call with its thinking room takes about 48 s, the whole
+20,480 of `ADAPTER_FULL_MAX_OUTPUT_TOKENS` with it about 60 s (the 60 s of
+`pipeline.ADAPTER_P95_S`), and the whole 12,288 of the reviewer with its room about 36 s,
+which the 480 s soft deadline absorbs although `pipeline.REVIEWER_P95_S` reserves 30 s
+for a typical review (the Vertex check of 2026-10-14 finished its reviews at a 95th
+percentile of 4,684 tokens, about 14 s). On Gemini,
 whose thinking counts toward the cap, a reviewer call that uses all 4,096 takes about
 30 s at spike X's fitted rate (see `GEMINI_ADAPTER_MAX_OUTPUT_TOKENS`). The Gemini
 adapter keeps its own caps (`GEMINI_ADAPTER_MAX_OUTPUT_TOKENS`,
 `GEMINI_ADAPTER_FULL_MAX_OUTPUT_TOKENS`)."""
-ADAPTER_FULL_MAX_OUTPUT_TOKENS = 16_384
-"""The Claude adapter's cap when a full file is allowed (the repair attempt).
+ADAPTER_FULL_MAX_OUTPUT_TOKENS = 12_288
+"""The Claude adapter's cap when a full file is allowed (the repair attempt), before thinking.
 
 Measured full-file plans finished at most at 2,606 tokens. A full file may hold
 `schemas.MAX_FULL_CODE_CHARS` (24 KB), about 9,800 tokens at the 2.5 characters per
-token measured for Haiku 5.5 before JSON escaping, so 16,384 holds a plan at the
+token measured for Haiku 5.5 before JSON escaping, so 12,288 holds a plan at the
 schema's own limit with its change notes; the largest phase-1 catalogue file
-(star-chart-constellation, matplotlib, 20,677 characters) is about 8,300. The
-Anthropic SDK accepts the cap without streaming (its limit is about 21,300 tokens)."""
+(star-chart-constellation, matplotlib, 20,677 characters) is about 8,300. With the
+adapter's thinking room on top (8,192 since 2026-10-14) the cap is 20,480, which the
+Anthropic SDK accepts without streaming (its limit is about 21,300 tokens); it was
+16,384 while the room was 2,048."""
 GEMINI_ADAPTER_FULL_MAX_OUTPUT_TOKENS = 12_288
 """The Gemini adapter's cap when a full file is allowed, thinking included.
 

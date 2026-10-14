@@ -151,16 +151,17 @@ class TestFactories:
         assert agent_config.max_output_tokens == 8192
 
     def test_claude_defaults_think_adaptively_with_the_budgets_added_to_the_caps(self) -> None:
-        """Since 2026-10-11 the root thinks with 1,024 and the adapter with 2,048 extra output tokens; since
-        2026-10-13 the reviewer thinks with 2,048 too, and the efforts are medium, high and high."""
+        """Since 2026-10-11 the root thinks with 1,024 extra output tokens and the adapter too; since
+        2026-10-13 the reviewer thinks as well, at efforts medium, high and high, and since 2026-10-14
+        the adapter has 8,192 tokens of room and the reviewer 4,096."""
         from agents.anyplot.models import ADAPTIVE_THINKING
 
         configs = {kind: make_content_config(kind, CLAUDE_DEFAULTS) for kind in ("root", "adapter", "reviewer")}
 
         assert {kind: config.max_output_tokens for kind, config in configs.items()} == {
             "root": 4096 + 1024,
-            "adapter": 8192 + 2048,
-            "reviewer": 8192 + 2048,
+            "adapter": 8192 + 8192,
+            "reviewer": 8192 + 4096,
         }
         assert {kind: config.effort for kind, config in configs.items()} == {
             "root": "medium",
@@ -168,10 +169,10 @@ class TestFactories:
             "reviewer": "high",
         }
         assert all(config.thinking_config.thinking_budget == ADAPTIVE_THINKING for config in configs.values())
-        assert make_model("adapter", CLAUDE_DEFAULTS).max_tokens == 8192 + 2048
+        assert make_model("adapter", CLAUDE_DEFAULTS).max_tokens == 8192 + 8192
         request = LlmRequest(config=configs["adapter"].model_copy())
         allow_full_file(request.config)
-        assert request.config.max_output_tokens == ADAPTER_FULL_MAX_OUTPUT_TOKENS + 2048
+        assert request.config.max_output_tokens == ADAPTER_FULL_MAX_OUTPUT_TOKENS + 8192
 
     def test_unknown_kind_is_refused(self) -> None:
         with pytest.raises(ValueError):
@@ -525,7 +526,7 @@ class TestJudge:
 
     def test_adapter_full_cap(self) -> None:
         """Claude's full-file cap holds a plan at the schema's 24 KB limit; Gemini's is bounded by the deadline."""
-        assert ADAPTER_FULL_MAX_OUTPUT_TOKENS == 16_384
+        assert ADAPTER_FULL_MAX_OUTPUT_TOKENS == 12_288
         assert GEMINI_ADAPTER_FULL_MAX_OUTPUT_TOKENS == 12_288
         assert MAX_FULL_CODE_CHARS / 2.5 < ADAPTER_FULL_MAX_OUTPUT_TOKENS  # 2.5 characters per Haiku 5.5 token
 

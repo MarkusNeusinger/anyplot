@@ -36,8 +36,8 @@ another provider, model or location.
 | `AGENT_QUEUE_MAX_WAIT_S` | `600` | Longest wait in the run queue; it also sizes the queue (`AGENT_RUNS_PER_MINUTE` x this / 60 entries) |
 | `AGENT_MAX_ATTEMPTS` | `2` | Adapter attempts per pipeline run, 1 to 3: the first and at most one repair round by default; the eval harness sets 1 or 3 to measure no repair or a second repair round |
 | `AGENT_ROOT_THINKING_BUDGET` | `1024` | Claude only: adaptive thinking of the root, with that many tokens added to its output cap; 0 turns it off (the 2026-10-11 measurement: with thinking on root and adapter every run passed the gates and 51.6 % ended `ok`, against 91.0 % and 28.7 % without) |
-| `AGENT_ADAPTER_THINKING_BUDGET` | `2048` | The same for the adapter; the eval harness overrides both with `--thinking-budget ROOT,ADAPTER` |
-| `AGENT_REVIEWER_THINKING_BUDGET` | `2048` | The same for the reviewer; 0 turns its thinking off |
+| `AGENT_ADAPTER_THINKING_BUDGET` | `8192` | The same for the adapter (2,048 before 2026-10-14, when effort `high` thought past it); the eval harness overrides both with `--thinking-budget ROOT,ADAPTER` |
+| `AGENT_REVIEWER_THINKING_BUDGET` | `4096` | The same for the reviewer; 0 turns its thinking off |
 | `AGENT_ROOT_EFFORT`, `AGENT_ADAPTER_EFFORT`, `AGENT_REVIEWER_EFFORT` | `medium`, `high`, `high` | Claude's effort per agent kind (`low`, `medium`, `high`), set by the 2026-10-13 measurements; on the claude-cli transport also how much the CLI thinks |
 | `AGENT_MAX_LLM_CALLS` | `16` | LLM calls per request (the `RunConfig` cap) |
 | `AGENT_REQUEST_TOKEN_BUDGET` | `800000` | Cost-weighted tokens per request, in input-token equivalents: an uncached input token counts 1, a cache read 0.1, a cache write 1.25, an output token 5 (`plugins/ledger.BUDGET_WEIGHTS`, the list-price ratios) |
@@ -124,10 +124,10 @@ CLAUDE_MODELS: tuple[str, ...] = ("claude-haiku-5-5",)
 Claude Opus 5.5, Sonnet 5.5 and Fable 5.1 answer disabled thinking with a 400. The structured
 answers (`output_config.format`) would work on all of them."""
 FIXTURE_PATTERN = r"^[a-z0-9][a-z0-9-]{0,79}$"
-MAX_THINKING_BUDGET = 4_096
-"""The most output room a thinking measurement may add to a Claude cap (`AGENT_*_THINKING_BUDGET`).
+MAX_THINKING_BUDGET = 8_192
+"""The most output room thinking may add to a Claude cap (`AGENT_*_THINKING_BUDGET`).
 
-It keeps the adapter's full-file cap (16,384 plus 4,096) below the Anthropic SDK's limit
+It keeps the adapter's full-file cap (12,288 plus 8,192) below the Anthropic SDK's limit
 for a request that does not stream (about 21,300 tokens), and a full-file call that uses
 all of it at about 60 s, the `pipeline.ADAPTER_P95_S` the deadline reserves."""
 
@@ -283,17 +283,22 @@ class AgentSettings(BaseSettings):
     tool result; an account that enforces the history-editing check of preserved thinking may refuse
     that call, which a measurement run shows as pipeline errors."""
 
-    adapter_thinking_budget: int = Field(default=2_048, ge=0, le=MAX_THINKING_BUDGET)
+    adapter_thinking_budget: int = Field(default=8_192, ge=0, le=MAX_THINKING_BUDGET)
     """The same for the adapter (`AGENT_ADAPTER_THINKING_BUDGET`), on by default since 2026-10-11:
     it is the lever behind the pass rate (without it the structured answer misses its edit anchors
     in a third of the runs). The adapter is single-turn, so nothing is replayed; its structured
     answer (`output_config.format`) lets it think first. Both budgets are ignored on Gemini, which
     thinks by a level per agent kind; a non-zero budget set explicitly there is refused, an
-    explicit 0 (`--thinking-budget 0,0`) is accepted."""
+    explicit 0 (`--thinking-budget 0,0`) is accepted. 8,192 since 2026-10-14 (2,048 before): at
+    effort `high`, 10 of 80 first adapter calls of the Vertex check thought through the whole
+    10,240-token cap and ended with `MAX_TOKENS` and no plan, while finished calls used up to
+    11,251 tokens with a 95th percentile of 9,063."""
 
-    reviewer_thinking_budget: int = Field(default=2_048, ge=0, le=MAX_THINKING_BUDGET)
+    reviewer_thinking_budget: int = Field(default=4_096, ge=0, le=MAX_THINKING_BUDGET)
     """Claude only (`AGENT_REVIEWER_THINKING_BUDGET`): adaptive thinking for the reviewer with that many
-    tokens added to its output cap, on since 2026-10-13 with `reviewer_effort` high; 0 turns it off."""
+    tokens added to its output cap, on since 2026-10-13 with `reviewer_effort` high; 0 turns it off.
+    4,096 since 2026-10-14 (2,048 before): the cap of 12,288 is twice the 6,144 at which 3 of 118
+    reviews of the Vertex check were cut off; finished reviews used at most 6,141 tokens."""
 
     root_effort: Effort = "medium"
     """Claude's `effort` for the root (`AGENT_ROOT_EFFORT`): `medium` since 2026-10-13 (`low` before). The

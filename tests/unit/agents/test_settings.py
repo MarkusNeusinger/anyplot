@@ -54,7 +54,7 @@ class TestDefaults:
         assert settings.reviewer_mode == "catalogue" and settings.ship_best and settings.self_review
         assert (settings.review_bar, settings.status_bar) == (1.0, 0.95)
         assert (settings.root_effort, settings.adapter_effort, settings.reviewer_effort) == ("medium", "high", "high")
-        assert settings.reviewer_thinking_budget == 2048
+        assert settings.reviewer_thinking_budget == 4096
         assert settings.allowed_callers == []
         assert settings.environment == "production"  # unset never skips the caller check
         assert settings.is_development is False
@@ -72,14 +72,15 @@ class TestDefaults:
             AgentSettings(model=model)
 
     def test_thinking_budgets_are_on_by_default_bounded_and_claude_only(self) -> None:
-        # The 2026-10-11 measurement: root 1,024 and adapter 2,048 pass every case and double the ok rate.
-        assert (AgentSettings().root_thinking_budget, AgentSettings().adapter_thinking_budget) == (1024, 2048)
-        assert AgentSettings(adapter_thinking_budget=MAX_THINKING_BUDGET).adapter_thinking_budget == 4096
+        # The 2026-10-11 measurement: root 1,024 and adapter thinking pass every case and double the ok rate;
+        # the adapter's room is 8,192 since effort high thought past 2,048 (2026-10-14).
+        assert (AgentSettings().root_thinking_budget, AgentSettings().adapter_thinking_budget) == (1024, 8192)
+        assert AgentSettings(adapter_thinking_budget=MAX_THINKING_BUDGET).adapter_thinking_budget == 8192
         assert AgentSettings(root_thinking_budget=0, adapter_thinking_budget=0).adapter_thinking_budget == 0
         # The defaults never trip the Gemini arm; only an explicit budget does.
         gemini = AgentSettings(provider="gemini", model="gemini-3.8-flash", judge_model="gemini-3.5-flash-lite")
-        assert (gemini.root_thinking_budget, gemini.adapter_thinking_budget) == (1024, 2048)
-        for field_name, value in (("adapter_thinking_budget", 4097), ("root_thinking_budget", -1)):
+        assert (gemini.root_thinking_budget, gemini.adapter_thinking_budget) == (1024, 8192)
+        for field_name, value in (("adapter_thinking_budget", 8193), ("root_thinking_budget", -1)):
             with pytest.raises(ValidationError):
                 AgentSettings(**{field_name: value})
         with pytest.raises(ValidationError, match="apply to Claude only"):

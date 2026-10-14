@@ -1159,12 +1159,12 @@ async def test_the_repair_attempt_widens_the_adapter_request_only(
     else:
         assert isinstance(fake, FakeAnthropic)
         adapter_calls = [call for call in fake.calls if FakeAnthropic.kind(call) == "adapter"]
-        # The edit-only and the full-file cap, each plus the adapter's 2,048 tokens of thinking room.
-        assert [call["max_tokens"] for call in adapter_calls] == [8_192 + 2_048, 16_384 + 2_048]
+        # The edit-only and the full-file cap, each plus the adapter's 8,192 tokens of thinking room.
+        assert [call["max_tokens"] for call in adapter_calls] == [8_192 + 8_192, 12_288 + 8_192]
         assert all(call.get("thinking") == ADAPTIVE_THINKING for call in adapter_calls)
     # The per-request change never reaches the agent's own config, so the next run starts narrow again.
     config = ADAPTERS["matplotlib"].generate_content_config
-    narrow_cap = 8_192 if provider == "gemini" else 8_192 + 2_048  # Claude's cap carries its thinking room
+    narrow_cap = 8_192 if provider == "gemini" else 8_192 + 8_192  # Claude's cap carries its thinking room
     assert config is not None and config.max_output_tokens == narrow_cap
     if provider == "gemini":
         assert config.thinking_config is not None
