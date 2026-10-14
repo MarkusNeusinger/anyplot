@@ -485,6 +485,8 @@ ESCAPES = [
     # The method bound to a name would hide the target from the call check (#12167 review).
     ('writer = df.to_string\nwriter("f")\n', "banned-attribute"),
     ('writer = df.info\nwriter(buf="f")\n', "banned-attribute"),
+    ('df.agg("to_string", buf="f")\n', "banned-call"),
+    ('df.apply("info", buf="f")\n', "banned-call"),
 ]
 
 

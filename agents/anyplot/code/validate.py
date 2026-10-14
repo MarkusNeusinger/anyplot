@@ -964,7 +964,14 @@ class _Scan:
 
     def _check_dispatch_name(self, name: str, method: str, node: ast.AST) -> None:
         """`df.agg("to_csv")` reaches the method by `getattr`: the name is checked as if written."""
-        if name in BANNED_NAMES or name in BANNED_ATTRIBUTES or name in BANNED_IO or _BANNED_IO_PATTERN.match(name):
+        # A buffer writer counts too: `df.agg("to_string", buf="f")` forwards the target (#12167 review).
+        if (
+            name in BANNED_NAMES
+            or name in BANNED_ATTRIBUTES
+            or name in BANNED_IO
+            or name in _BUFFER_WRITERS
+            or _BANNED_IO_PATTERN.match(name)
+        ):
             self.add("banned-call", f"'{name}' is not allowed as a method name in .{method}()", node)
 
     def _check_statements(self) -> None:
