@@ -12,7 +12,7 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `GET /v1/eligibility?spec=&library=` | | `{eligible, status, reasons}` | |
 | `POST /v1/sessions` | `{user, spec_id, library, locale, snapshot}` | `{session_id, eligibility}` | `422 not_eligible` |
 | `POST /v1/sessions/{sid}/library` | `{library, snapshot}` | `{session_id, eligibility}` | `422 not_eligible`, `409 run_active` |
-| `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?}` | `{preview, profile, bindings, warnings, roles, suggestion, version}` (`suggestion`: the wide-table offer of `data/shape.py`, or null), stored as version 1 (the undo history of an earlier paste is dropped); or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips only that fallback) | `413 too_long`, `422 unparseable`, `422 formula` (text of at most 2,000 characters that asks for a formula, which the chat's `generate_data` computes; never transcribed), `403 data_refused`, `503 guard_unavailable` |
+| `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?}` | `{preview, profile, bindings, warnings, roles, suggestion, version}` (`suggestion`: the wide-table offer of `data/shape.py`, or null), stored as version 1 (the undo history of an earlier paste is dropped); or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips that fallback and keeps every row) | `413 too_long`, `422 unparseable`, `422 formula` (text of at most 2,000 characters that asks for a formula, which the chat's `generate_data` computes; never transcribed), `403 data_refused`, `503 guard_unavailable` |
 | `PUT /v1/sessions/{sid}/bindings` | `[{role, column}]` | `{bindings, complete, missing_roles, warnings}`: `warnings` names a role that needs values of 0 or more bound to a column with a negative value, or left open for that reason (`data/signs.py`); never a refusal | `409 run_active`, `422 invalid` (with `errors`, at most 20 lines) |
 | `PUT /v1/sessions/{sid}/language` | `{language}` (a short name or code, `^[A-Za-z][A-Za-z -]{0,39}$`) | `{language, source}`: the session language in its stored form (`English` is `en`), source `chosen`, which detection never overrides | `409 run_active`, `422` (the pattern) |
 | `POST /v1/sessions/{sid}/dataset/confirm` | | `{confirmed, rows, columns}`: step 1 of two, the user confirmed the dataset with its bindings; the pipeline runs only then | `409 run_active`, `422 no_dataset` |
@@ -469,8 +469,9 @@ class DatasetBody(_Body):
     text: str = Field(min_length=1)
     confirmed: bool = False
     """The text is a table the user confirmed (the page's `.use()` on a transcription): the
-    route never hands it to the transcriber again, so a one-column reading can be stored;
-    the parse, the pre-filter, the judge and the store run as for any paste."""
+    route never hands it to the transcriber again, so a one-column reading can be stored,
+    and the parse keeps every row of it (no `table_block` narrowing: the user has seen the
+    table row by row); the pre-filter, the judge and the store run as for any paste."""
 
 
 class BindingBody(_Body):
@@ -634,7 +635,8 @@ async def upload_dataset(
         raise AgentsError(413, "too_long")
     ledger = RequestLedger(request_id=rid, user_id=user, session_id=sid, kind="action")
     try:
-        parsed = parse_dataset(body.text)
+        # A confirmed transcription is the service's own CSV, which the user has seen row by row: no row is left out.
+        parsed = parse_dataset(body.text, find_table=not body.confirmed)
     except ParseError as exc:
         if exc.code == "too_long":
             raise AgentsError(413, "too_long") from None
@@ -717,7 +719,7 @@ async def _transcribe(services: Services, ledger: RequestLedger, text: str) -> J
     )
     csv_text = table_to_csv(reading.table)
     try:
-        parsed = parse_dataset(csv_text)
+        parsed = parse_dataset(csv_text, find_table=False)
     except ParseError:
         attribution("data_transcribe", ledger, outcome="unparseable", judge_tokens=reading.tokens)
         raise AgentsError(422, "unparseable") from None
@@ -956,7 +958,7 @@ async def dataset_to_long(sid: SessionId, user: User, runtime: RuntimeDep) -> JS
     try:
         operations = OPERATIONS.validate_python([suggestion.operation()])
         prepared = apply_operations(stored.as_parsed(), operations)
-        parsed = parse_dataset(prepared.csv, text_columns=prepared.text_columns)
+        parsed = parse_dataset(prepared.csv, text_columns=prepared.text_columns, find_table=False)
     except (PrepareError, ParseError, ValidationError):
         raise AgentsError(422, "no_suggestion") from None
     try:

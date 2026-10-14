@@ -628,7 +628,8 @@ export const agentApi = {
    * A stored dataset, or a transcription of free text to confirm first (`isTranscribed`).
    * `confirmed` marks the table the user accepted with `.use()`: the server then never
    * hands the text to its transcriber again (a one-column table would otherwise be read
-   * again), while the parse, the pre-filter, the judge and the store run as usual.
+   * again) and keeps every row of it (no lines left out as notes or totals), while the
+   * pre-filter, the judge and the store run as usual.
    * Text that asks for a formula (`sin(x) von -pi bis pi`) answers `422 formula` and
    * stores nothing: the chat's `generate_data` computes such a table.
    */
