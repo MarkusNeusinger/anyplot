@@ -12,4 +12,4 @@
   root uses them as context for the whole chat and acts on a clear request in
   them right away, the plot still waiting for the user's confirmation; the scope
   rubric and seven new scope-eval cases cover ordinary notes and an injection
-  hidden among them.
+  hidden among them. (#12168)
