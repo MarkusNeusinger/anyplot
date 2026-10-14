@@ -1,0 +1,9 @@
+{
+  "dataset_text": "Jahr;Herkunft;Bestand\n2019;Inland;6450000\n2019;Ausland;2150000\n2020;Inland;6480000\n2020;Ausland;2210000\n2021;Inland;6500000\n2021;Ausland;2240000\n2022;Inland;6520000\n2022;Ausland;2300000\n",
+  "message": "Füge eine Spalte Anteil hinzu: der Anteil jeder Herkunft am Bestand des Jahres, in Prozent.",
+  "expected_operations": [
+    {"op": "derive", "name": "Anteil", "how": "share", "columns": ["Bestand"], "within": ["Jahr"], "percent": true}
+  ],
+  "locale": "de",
+  "tags": ["derive", "share"]
+}

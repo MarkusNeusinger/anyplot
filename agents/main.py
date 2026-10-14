@@ -1159,7 +1159,11 @@ async def dataset_to_long(sid: SessionId, user: User, runtime: RuntimeDep) -> JS
         operations = OPERATIONS.validate_python([suggestion.operation()])
         prepared = apply_operations(stored.as_parsed(), operations)
         parsed = parse_dataset(
-            prepared.csv, text_columns=prepared.text_columns, find_table=False, max_bytes=MAX_COMPUTED_BYTES
+            prepared.csv,
+            text_columns=prepared.text_columns,
+            find_table=False,
+            max_bytes=MAX_COMPUTED_BYTES,
+            canonical=True,
         )
     except (PrepareError, ParseError, ValidationError):
         raise AgentsError(422, "no_suggestion") from None

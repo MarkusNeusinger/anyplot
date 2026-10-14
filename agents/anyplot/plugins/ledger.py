@@ -109,6 +109,11 @@ class RequestLedger:
     """The change lines of every `prepare_data` call of the turn, in order: the `done` event's `dataset.changes`."""
     data_code_calls: int = 0
     """`run_data_code` calls of this invocation; ToolSafety allows `MAX_DATA_CODE_CALLS`."""
+    root_request: Any = None
+    """The root's latest `LlmRequest`, kept by the reply-language plugin so a reply in the wrong language can be
+    asked again once with the same context (`plugins/reply_language.py`)."""
+    reply_reasked: bool = False
+    """The reply-language plugin asked the root again in this invocation: at most once per turn."""
     run_slot: Callable[[], Awaitable[bool]] | None = None
     """Set by the `/messages` route (`TurnSlot.take`): waits for the run queue's slot and the turn's start in the
     rate window, while the stream sends `status{step:"queued"}`, and holds both until the turn ends. True once the

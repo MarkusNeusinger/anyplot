@@ -200,9 +200,28 @@ class TestRetry:
         assert not Attempt("r", exit_code=None, reason="disk_budget").launcher_failed
 
 
+ESCAPED_HARNESS = """\
+import runpy
+import sys
+
+print('HARNESS {"event": "start"}', flush=True)
+runpy.run_path(sys.argv[-1], run_name="__main__")
+"""
+"""A harness without its audit hook: code that got past the in-process guard, which is what the host's watchdog and
+output checks must assume. The real harness refuses these writes, links and directories itself
+(tests/unit/agents/runtime/test_harness_guard.py); these tests pin the layer behind it."""
+
+
+@pytest.fixture
+def escaped(config: ExecutorConfig, tmp_path: Path) -> SandboxExecutor:
+    path = tmp_path / "escaped_harness.py"
+    path.write_text(ESCAPED_HARNESS, encoding="utf-8")
+    return SandboxExecutor(replace(config, harness=str(path)))
+
+
 class TestBounds:
     async def test_the_byte_watchdog_kills_a_run_over_its_budget(
-        self, executor: SandboxExecutor, launcher: FakeLauncher, config: ExecutorConfig
+        self, escaped: SandboxExecutor, launcher: FakeLauncher, config: ExecutorConfig
     ) -> None:
         source = (
             "import time\n"
@@ -212,7 +231,7 @@ class TestBounds:
             "        handle.flush()\n"
             "        time.sleep(0.01)\n"
         )
-        run = await executor.run_theme(job(source), "light")
+        run = await escaped.run_theme(job(source), "light")
 
         assert run.reason == "disk_budget" and run.exit_code is None and not run.timed_out
         assert run.png_base64 is None
@@ -220,10 +239,10 @@ class TestBounds:
         assert list(config.runs_dir.iterdir()) == []
 
     async def test_a_fast_writer_that_exits_between_two_samples_is_still_refused(
-        self, config: ExecutorConfig, launcher: FakeLauncher
+        self, config: ExecutorConfig, launcher: FakeLauncher, escaped: SandboxExecutor
     ) -> None:
         """The watchdog sleeps between looks; a run that writes past the budget and exits before the next look must not pass."""
-        executor = SandboxExecutor(replace(config, watch_interval_s=30.0))  # the watchdog never samples
+        executor = SandboxExecutor(replace(escaped.config, watch_interval_s=30.0))  # the watchdog never samples
         source = "open('fill.bin', 'wb').write(b'x' * 12 * 1024 * 1024)\n"
 
         run = await executor.run_theme(job(source), "light")
@@ -235,34 +254,34 @@ class TestBounds:
         assert list(config.runs_dir.iterdir()) == []
 
     async def test_the_watchdog_counts_entries_too(
-        self, executor: SandboxExecutor, monkeypatch: pytest.MonkeyPatch
+        self, escaped: SandboxExecutor, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         monkeypatch.setattr(executor_module, "MAX_RUN_ENTRIES", 50)
         source = "import time\nfor index in range(5000):\n    open(f'f{index}', 'w').close()\n    time.sleep(0.001)\n"
-        run = await executor.run_theme(job(source), "light")
+        run = await escaped.run_theme(job(source), "light")
 
         assert run.reason == "file_budget" and run.limit == 50
         assert run.measured is not None and run.measured > 50
 
     async def test_the_byte_watchdog_reports_the_measured_size_and_the_budget(
-        self, executor: SandboxExecutor, config: ExecutorConfig
+        self, escaped: SandboxExecutor, config: ExecutorConfig
     ) -> None:
         source = "import time\nopen('fill.bin', 'wb').write(b'x' * 12 * 1024 * 1024)\ntime.sleep(30)\n"
 
-        run = await executor.run_theme(job(source), "light")
+        run = await escaped.run_theme(job(source), "light")
 
         assert run.reason == "disk_budget" and run.limit == config.run_budget_bytes
         assert run.measured is not None and run.measured > config.run_budget_bytes
 
     async def test_a_tree_past_path_max_counts_as_over_its_limit(
-        self, executor: SandboxExecutor, launcher: FakeLauncher
+        self, escaped: SandboxExecutor, launcher: FakeLauncher
     ) -> None:
         """A walk by full paths cannot see past PATH_MAX; what it cannot measure must not escape the budget."""
         source = (
             "import os, time\nfor _ in range(40):\n    os.mkdir('d' * 200)\n    os.chdir('d' * 200)\ntime.sleep(30)\n"
         )
 
-        run = await executor.run_theme(job(source), "light")
+        run = await escaped.run_theme(job(source), "light")
 
         assert run.reason == "file_budget" and run.measured is None and run.exit_code is None
         assert launcher.deletes() == launcher.launches()
@@ -317,10 +336,20 @@ class TestBounds:
         assert run.exit_code == 0 and run.attempts == 1 and run.png_base64 is not None
         assert run.max_rss_mb is not None  # the end line survives in the stdout tail
 
-    async def test_a_symlinked_png_is_refused(self, executor: SandboxExecutor) -> None:
-        source = "import os\nos.symlink('/etc/hostname', 'plot-light.png')\n"
+    async def test_the_real_harness_refuses_the_fill_before_the_watchdog(
+        self, executor: SandboxExecutor, config: ExecutorConfig
+    ) -> None:
+        source = "open('fill.bin', 'wb').write(b'x' * 12 * 1024 * 1024)\n"
 
         run = await executor.run_theme(job(source), "light")
+
+        assert run.reason is None and run.exit_code not in (0, None) and run.png_base64 is None
+        assert "blocked by the render sandbox" in run.stderr_tail
+
+    async def test_a_symlinked_png_is_refused(self, escaped: SandboxExecutor) -> None:
+        source = "import os\nos.symlink('/etc/hostname', 'plot-light.png')\n"
+
+        run = await escaped.run_theme(job(source), "light")
 
         assert run.exit_code == 0 and run.png_base64 is None and run.reason == "output_rejected"
 

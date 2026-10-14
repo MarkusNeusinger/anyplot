@@ -54,9 +54,13 @@ ARABIC_12 = "\N{ARABIC-INDIC DIGIT ONE}\N{ARABIC-INDIC DIGIT TWO}"
 
 
 def read_back(parsed: ParsedDataset) -> pd.DataFrame:
-    """What the loader does with the exported data.csv."""
+    """What the loader does with the exported data.csv: only the empty cell is missing (`code/loader.py`)."""
     return pd.read_csv(
-        io.StringIO(parsed.csv), dtype=pandas_dtypes(parsed.column_dtypes), parse_dates=parsed.parse_dates
+        io.StringIO(parsed.csv),
+        dtype=pandas_dtypes(parsed.column_dtypes),
+        parse_dates=parsed.parse_dates,
+        keep_default_na=False,
+        na_values=[""],
     )
 
 
@@ -1492,3 +1496,144 @@ class TestJsonStat:
         assert (
             str(frame["value"].dtype) == "Int64" and frame["value"].sum() == 14949 + 11813 + 8727 + 9872 + 1772 + 2082
         )
+
+
+# A statistics-office export as pasted CSV (generalised from the live test of 2026-10-14, a BFS table): the
+# filters `Region` and `Sex` repeat one value in every row, `Origin` and `Year` vary.
+OFFICE_EXPORT = (
+    "Year;Region;Origin;Sex;Population\n"
+    "2021;Country;Native;Sex - Total;6500\n"
+    "2021;Country;Foreign;Sex - Total;2200\n"
+    "2022;Country;Native;Sex - Total;6550\n"
+    "2022;Country;Foreign;Sex - Total;2400\n"
+)
+
+
+class TestConstantColumns:
+    def test_constant_text_columns_move_to_the_notes(self) -> None:
+        parsed = parse_dataset(OFFICE_EXPORT)
+
+        assert [column.name for column in parsed.profile.columns] == ["Year", "Origin", "Population"]
+        assert parsed.csv.splitlines()[0] == "Year,Origin,Population"
+        assert parsed.context_lines == ["Region: Country", "Sex: Sex - Total"]
+        assert "2 columns with the same text in every row moved to the notes: Region, Sex" in parsed.warnings
+        assert "Country" not in " ".join(parsed.warnings)  # the warning names columns, never values
+        assert list(read_back(parsed).columns) == ["Year", "Origin", "Population"]
+
+    def test_the_notes_follow_the_lines_around_the_table(self) -> None:
+        parsed = parse_dataset("Population by origin\n" + OFFICE_EXPORT)
+
+        assert parsed.context_lines == ["Population by origin", "Region: Country", "Sex: Sex - Total"]
+
+    def test_a_constant_whose_note_the_cap_would_cut_stays_a_column(self) -> None:
+        """The notes hold at most `MAX_CONTEXT_CHARS`: a value never disappears into a cut note."""
+        title = "x" * (MAX_CONTEXT_CHARS - 30)
+        parsed = parse_dataset(f"{title}\n" + OFFICE_EXPORT)
+
+        # `Region: Country` fits in the 29 characters left, `Sex: Sex - Total` no longer does.
+        assert parsed.context_lines == [title, "Region: Country"]
+        assert [column.name for column in parsed.profile.columns] == ["Year", "Origin", "Sex", "Population"]
+        assert "1 column with the same text in every row moved to the notes: Region" in parsed.warnings
+
+    def test_too_few_columns_left_keeps_every_column(self) -> None:
+        parsed = parse_dataset("Region,Population\nCountry,6500\nCountry,2200\n")
+
+        assert [column.name for column in parsed.profile.columns] == ["Region", "Population"]
+        assert parsed.context_lines == []
+
+    @pytest.mark.parametrize(
+        "text",
+        [
+            "Region,Origin,Population\nCountry,Native,6500\n,Foreign,2200\n",  # a missing cell: not the same everywhere
+            "Unit,Origin,Population\n1,Native,6500\n1,Foreign,2200\n",  # a number column, not text
+            "Region,Origin,Population\nCountry,Native,6500\n",  # one row: every column is the same everywhere
+        ],
+    )
+    def test_only_complete_text_columns_of_two_rows_count(self, text: str) -> None:
+        parsed = parse_dataset(text)
+
+        assert len(parsed.profile.columns) == 3 and parsed.context_lines == []
+
+    def test_refused_notes_bring_the_columns_back(self) -> None:
+        """The notes judge refuses the notes: the values they carried come back as columns, never lost."""
+        parsed = without_context(parse_dataset(OFFICE_EXPORT), "notes dropped")
+
+        assert [column.name for column in parsed.profile.columns] == ["Year", "Region", "Origin", "Sex", "Population"]
+        assert parsed.context_lines == [] and parsed.warnings[0] == "notes dropped"
+        assert not any("moved to the notes" in warning for warning in parsed.warnings)
+        assert read_back(parsed)["Region"].tolist() == ["Country"] * 4
+
+    def test_a_store_without_screened_notes_keeps_the_columns(self) -> None:
+        """A fixture seed or an eval's ingest stores no notes: the constant columns stay in the table."""
+        from agents.anyplot.data.store import DatasetStore
+        from agents.anyplot.dev_fixture import snapshot_from_repo
+        from agents.anyplot.opening import dataset_judge_inputs, store_dataset
+
+        parsed = parse_dataset(OFFICE_EXPORT)
+        snapshot = snapshot_from_repo("scatter-basic", "matplotlib")
+        unscreened = store_dataset(DatasetStore(), "s1", parsed, snapshot)
+        screened = store_dataset(DatasetStore(), "s1", parsed, snapshot, notes_screened=True)
+
+        assert "Region" in unscreened.parsed.column_dtypes and unscreened.parsed.context_lines == []
+        assert "Region" not in screened.parsed.column_dtypes and screened.parsed.context_lines
+        # The dataset judge reads the table with its constant columns, which may become columns again.
+        assert '"Region"' in dataset_judge_inputs(parsed)[0] and "Country" in "".join(dataset_judge_inputs(parsed))
+
+    def test_a_canonical_reparse_keeps_them(self) -> None:
+        """An operation or the user's code made the column: the re-parse of the service's CSV keeps it."""
+        parsed = parse_dataset(
+            "Region,Origin,Population\nCountry,Native,6500\nCountry,Foreign,2200\n", find_table=False, canonical=True
+        )
+
+        assert [column.name for column in parsed.profile.columns] == ["Region", "Origin", "Population"]
+
+    def test_a_column_kept_text_by_request_stays(self) -> None:
+        parsed = parse_dataset(
+            "Region,Origin,Population\nCountry,Native,6500\nCountry,Foreign,2200\n", text_columns=["Region"]
+        )
+
+        assert parsed.profile.columns[0].name == "Region"
+
+
+class TestNaCategory:
+    """`NA` is Namibia or North America as often as it is "not available"; `data.csv` and its loader keep it."""
+
+    def test_na_among_letter_codes_is_a_code(self) -> None:
+        parsed = parse_dataset("Country,Exports\nCH,12\nNA,3\nDE,40\n")
+
+        assert parsed.csv == "Country,Exports\nCH,12\nNA,3\nDE,40\n"
+        assert parsed.profile.columns[0].missing == 0 and "NA" in parsed.profile.columns[0].top
+        assert any("NA read as a code" in warning for warning in parsed.warnings)
+        assert read_back(parsed)["Country"].tolist() == ["CH", "NA", "DE"]
+
+    @pytest.mark.parametrize(
+        "text",
+        [
+            "Name,Score\nAnna,1\nNA,2\nBen,3\n",  # names, not codes
+            "Country,Score\nCH,1\nNA,2\n",  # one other code is too few to tell
+            "Score,Weight\n1,NA\n2,3\n",  # a number column
+        ],
+    )
+    def test_na_elsewhere_stays_missing(self, text: str) -> None:
+        parsed = parse_dataset(text)
+
+        assert ",NA" not in parsed.csv and "\nNA," not in parsed.csv
+        assert not any("NA read as a code" in warning for warning in parsed.warnings)
+
+    def test_json_keys_and_json_stat_categories_survive_the_loader(self) -> None:
+        pairs = parse_dataset('{"NA": 3, "EU": 4, "None": 5}')
+        stat = parse_dataset(json_stat(["region"], [3], {"region": categories("NA", "EU", "AS")}, [1, 2, 3]))
+
+        assert read_back(pairs)["category"].tolist() == ["NA", "EU", "None"]
+        assert read_back(stat)["region"].tolist() == ["NA", "EU", "AS"]
+
+    def test_a_canonical_reparse_keeps_every_text_cell(self) -> None:
+        """The service writes a missing cell as an empty one: any other text, `NA` or `null`, is a value."""
+        parsed = parse_dataset(
+            "Continent,Label,Count\nNA,null,3\nEU,ok,\n", find_table=False, max_bytes=MAX_COMPUTED_BYTES, canonical=True
+        )
+
+        assert parsed.csv == "Continent,Label,Count\nNA,null,3\nEU,ok,\n"
+        assert parsed.profile.columns[2].missing == 1
+        frame = read_back(parsed)
+        assert frame["Continent"].tolist() == ["NA", "EU"] and frame["Label"].tolist() == ["null", "ok"]

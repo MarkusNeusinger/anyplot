@@ -296,6 +296,11 @@ def describe(line: str) -> str:
         rules = "; ".join(f"{rule['label']!r} if {_conditions(rule['where'])}" for rule in data["rules"])
         otherwise = f"; else {data['otherwise']!r}" if "otherwise" in data else ""
         return f"classify {data['name']}: {rules}{otherwise}"
+    if op == "derive":
+        within = f" within {', '.join(data['within'])}" if data.get("within") else ""
+        order = f" by {data['order']}" if "order" in data else ""
+        percent = " (percent)" if data.get("percent") else ""
+        return f"derive {data['name']} = {data['how']} of {', '.join(data['columns'])}{within}{order}{percent}"
     if op == "set_type":
         extra = [data[key] for key in ("date_format", "decimal") if key in data]
         return f"set_type {data['column']} {data['type']}" + (f" ({', '.join(extra)})" if extra else "")

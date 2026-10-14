@@ -848,7 +848,7 @@ async def test_artifacts_and_bundle_after_a_plot(client: httpx.AsyncClient, swap
     assert code.status_code == 200
     text = code.text
     assert text.startswith("# Adapted by anyplot.ai from scatter-basic (matplotlib 3.11.0) for your data.csv;")
-    assert 'df = pd.read_csv("data.csv"' in text
+    assert "df = pd.read_csv(" in text and '"data.csv"' in text
     assert "load_user_data" not in text
     assert 'title = "Exam Score by Study Hours"' in text
 
