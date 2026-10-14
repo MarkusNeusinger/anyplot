@@ -9,9 +9,9 @@
   graphics, the `traceback` summaries pyparsing builds for mathtext) and the
   traceback the interpreter prints after a failed plot stay allowed. A sweep of
   the 572 eligible catalogue matplotlib and seaborn files rendered the same 565
-  before and after, with no refusal.
+  before and after, with no refusal. (#12181)
 - **The code validator bans cache and spill directories.** The keywords
   `memory=`, `temp_folder=` and `cachedir=` and the helpers `Memory`,
   `check_memory` and `Parallel` are findings, so exported code with a
   scikit-learn `Pipeline(memory=...)` no longer writes a cache directory on the
-  user's machine.
+  user's machine. (#12181)
