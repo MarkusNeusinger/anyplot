@@ -1070,7 +1070,7 @@ class TestToolSafety:
         state = initial_state(
             spec_id="scatter-basic", library="matplotlib", locale="en", snapshot=snapshot, normalised="", readiness={}
         )
-        state.update(store_dataset(store, "s", parsed, snapshot).state_delta())
+        state.update(store_dataset(store, "s", parsed, snapshot, notes_screened=True).state_delta())
         set_services(Services(datasets=store, judge_factory=FakeJudge))
         try:
             result = await get_dataset_profile(SimpleNamespace(state=state, session=SimpleNamespace(id="s")))

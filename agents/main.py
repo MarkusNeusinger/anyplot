@@ -669,7 +669,13 @@ async def upload_dataset(
         parsed = await _screen_notes(services, ledger, parsed)
     try:
         ingested = store_dataset(
-            services.datasets, sid, parsed, view.snapshot, previous_id=view.dataset_id, history=view.dataset_history
+            services.datasets,
+            sid,
+            parsed,
+            view.snapshot,
+            previous_id=view.dataset_id,
+            history=view.dataset_history,
+            notes_screened=True,  # `_screen_notes` above kept only the notes that passed
         )
     except StoreFull:
         raise AgentsError(503, "capacity") from None

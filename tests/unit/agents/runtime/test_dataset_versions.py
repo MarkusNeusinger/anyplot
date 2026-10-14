@@ -29,11 +29,11 @@ def view_of(state: dict) -> SessionView:
 
 
 def opened(store: DatasetStore, text: str = "a,b\n1,2\n3,4\n") -> dict:
-    """A session state with a stored paste, as the dataset route leaves it."""
+    """A session state with a stored paste, as the dataset route leaves it (its notes screened)."""
     state = initial_state(
         spec_id="scatter-basic", library="matplotlib", locale="en", snapshot=SNAPSHOT, normalised="x = 1", readiness={}
     )
-    ingested = store_dataset(store, SID, parse_dataset(text), SNAPSHOT)
+    ingested = store_dataset(store, SID, parse_dataset(text), SNAPSHOT, notes_screened=True)
     state.update(ingested.state_delta())
     return state
 
@@ -139,6 +139,15 @@ def test_a_new_paste_forgets_the_history() -> None:
 
 NOTED = "Rainfall per month\nx,y\n1,2\n3,4\n5,6\nSource: own measurements\n"
 """A paste with a title above and a source line below the table: two notes for the root."""
+
+
+def test_notes_that_did_not_pass_the_screen_are_never_stored() -> None:
+    """A fixture seed or an eval ingest stores the table without its notes (#12168 review)."""
+    store = DatasetStore()
+    ingested = store_dataset(store, SID, parse_dataset(NOTED), SNAPSHOT)
+
+    stored = store.get(ingested.dataset_id, SID)
+    assert ingested.parsed.context_lines == [] and stored is not None and stored.context_lines == []
 
 
 def test_the_notes_travel_with_every_version_and_a_new_paste_replaces_them() -> None:

@@ -27,7 +27,7 @@ import json
 import re
 from collections import Counter
 from collections.abc import Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any
 
 from .code.normalise import SUPPORTED_LIBRARIES as NORMALISED_LIBRARIES
@@ -109,8 +109,18 @@ def store_dataset(
     snapshot: CatalogueSnapshot,
     previous_id: str | None = None,
     history: Sequence[str] = (),
+    *,
+    notes_screened: bool = False,
 ) -> IngestedDataset:
-    """Store a parsed dataset for a session, replacing its previous one and its history; raises `StoreFull`."""
+    """Store a parsed dataset for a session, replacing its previous one and its history; raises `StoreFull`.
+
+    The notes pasted around the table (`context_lines`) are kept only when the caller says they
+    passed the dataset route's screen (`notes_screened`: the pre-filter and the scope judge); every
+    other path (a fixture seed, an eval's ingest) stores the table without them, so no unjudged
+    note ever reaches the root (#12168 review).
+    """
+    if parsed.context_lines and not notes_screened:
+        parsed = replace(parsed, context_lines=[])
     dataset_id = store.put(session_id, parsed)
     for old in (previous_id, *history):
         if old and old != dataset_id:
