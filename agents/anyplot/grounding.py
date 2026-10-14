@@ -33,7 +33,7 @@ from typing import Any
 from .schemas import MAX_SHOWN_TEXT_CHARS, ShownGroup
 
 
-MAX_LABELS = 150
+MAX_LABELS = 400
 """The probe entries read (`harness.LABEL_LIMIT`); more is a tampered probe and the rest is ignored."""
 MAX_DRAWN_CHARS = 200
 """One drawn text as the check reads it (`harness.LABEL_CHARS`): longer than any requested text."""
@@ -59,10 +59,31 @@ UNVERIFIED_LINE = (
 """The residual line of a render with requested texts but no `labels` in its probe: never a silent pass."""
 EXPECT_LINE_ID = {"text": "SC-04", "format": "SC-02"}
 """The rubric id a missing requested text (title, legend, label) or number format is reported under."""
-_MATH_SPACE = re.compile(r"\\[,;:! ]|\\(?:times|cdot|quad|qquad)\b")
-"""Mathtext that draws a space or a multiplication sign: read as a space."""
-_MATH_MARKUP = re.compile(r"\\[A-Za-z]+|[$\\{}_^]")
-"""Any other mathtext command (`\\mathdefault`, `\\mathrm`) and markup character: dropped, so `CO$_2$` reads `CO2`."""
+_MATH_SPACE = re.compile(r"\\[,;:! ]|\\q?quad\b")
+"""Mathtext that draws a space: read as a space."""
+MATH_SYMBOLS: dict[str, str] = {
+    **dict(
+        zip(
+            "alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu nu xi pi rho sigma tau upsilon "
+            "phi chi psi omega".split(),
+            "αβγδεζηθικλμνξπρστυφχψω",
+            strict=True,
+        )
+    ),
+    **dict(zip("Gamma Delta Theta Lambda Xi Pi Sigma Phi Psi Omega".split(), "ΓΔΘΛΞΠΣΦΨΩ", strict=True)),
+    "times": "×",
+    "cdot": "·",
+    "pm": "±",
+    "circ": "°",
+    "degree": "°",
+    "%": "%",
+    "$": "$",
+}
+"""Mathtext commands that draw one character, read as that character (`$\\alpha$` reads `α`)."""
+_MATH_COMMAND = re.compile(r"\\([A-Za-z]+|[%$])")
+_MATH_MARKUP = re.compile(r"[\\{}_^]")
+"""Mathtext markup characters left after the commands: dropped, so `CO$_2$` reads `CO2`."""
+_DOLLAR = re.compile(r"(?<!\\)\$")
 _QUOTES = str.maketrans(dict.fromkeys("\"'„“”«»‚‘’`", ""))
 _DASHES = str.maketrans({"−": "-", "–": "-", "—": "-", " ": " ", " ": " ", "\xa0": " "})
 _NUMBER = r"[+\-−]?\d(?:[\d.,'’ ]*\d)?"
@@ -106,37 +127,54 @@ def _clip(text: str, limit: int) -> str:
 
 
 @dataclass(frozen=True)
-class DrawnTexts:
-    """Every drawn text the probe reported, by role, unclipped beyond the harness's own cap: what the check reads.
+class DrawnLabel:
+    """One drawn text: its probe kind, its text, and for a tick or axis label the index of its axes."""
 
-    `complete` is False when the harness dropped texts other than tick labels for its
-    entry cap (`labels_truncated`), so a text missing from them may still be drawn.
+    kind: str
+    text: str
+    axes: int | None = None
+
+
+@dataclass(frozen=True)
+class DrawnTexts:
+    """Every drawn text the probe reported, unclipped beyond the harness's own cap: what the check reads.
+
+    `complete` is False when the harness left a drawn text out or cut it (`labels_truncated`),
+    so a text missing from them may still be drawn and is never claimed missing.
     """
 
-    groups: dict[ShownGroup, list[str]]
+    labels: list[DrawnLabel]
     complete: bool = True
+
+    @property
+    def groups(self) -> dict[ShownGroup, list[str]]:
+        """The distinct texts by `PlotShows` role, in `GROUP_LIMITS` order."""
+        groups: dict[ShownGroup, list[str]] = {}
+        for label in self.labels:
+            texts = groups.setdefault(_group(label.kind), [])
+            if label.text not in texts:
+                texts.append(label.text)
+        return {group: groups[group] for group in GROUP_LIMITS if groups.get(group)}
 
 
 def drawn_texts(probe: Any) -> DrawnTexts | None:
-    """The drawn texts of a render by role, from its probe's `labels`; None when the probe has none."""
+    """The drawn texts of a render, from its probe's `labels`; None when the probe has none."""
     if not isinstance(probe, dict):
         return None
-    labels = probe.get("labels")
-    if not isinstance(labels, list):
+    entries = probe.get("labels")
+    if not isinstance(entries, list):
         return None
-    groups: dict[ShownGroup, list[str]] = {}
-    for entry in labels[:MAX_LABELS]:
+    labels: list[DrawnLabel] = []
+    for entry in entries[:MAX_LABELS]:
         if not isinstance(entry, dict):
             continue
-        kind, text = entry.get("kind"), entry.get("text")
+        kind, text, axes = entry.get("kind"), entry.get("text"), entry.get("axes")
         if not isinstance(kind, str) or not isinstance(text, str) or not text.strip():
             continue
-        texts = groups.setdefault(_group(kind), [])
-        line = _clip(text, MAX_DRAWN_CHARS)
-        if line not in texts:
-            texts.append(line)
-    complete = probe.get("labels_truncated") is not True and len(labels) <= MAX_LABELS
-    return DrawnTexts({group: groups[group] for group in GROUP_LIMITS if groups.get(group)}, complete)
+        index = axes if isinstance(axes, int) and not isinstance(axes, bool) else None
+        labels.append(DrawnLabel(kind, _clip(text, MAX_DRAWN_CHARS), index))
+    complete = probe.get("labels_truncated") is not True and len(entries) <= MAX_LABELS
+    return DrawnTexts(labels, complete)
 
 
 def plot_texts(drawn: DrawnTexts | None) -> dict[ShownGroup, list[str]] | None:
@@ -150,15 +188,31 @@ def plot_texts(drawn: DrawnTexts | None) -> dict[ShownGroup, list[str]] | None:
 
 
 def _norm(text: str) -> str:
-    """A text as the comparison reads it: NFKC, case-folded, without quotes and mathtext markup, one space."""
+    """A text as the comparison reads it: NFKC, case-folded, without quotes and mathtext markup, one space.
+
+    Mathtext is read as matplotlib draws it: a text with an even number of unescaped `$`
+    is math, whose delimiters draw nothing, a command that draws one character
+    (`MATH_SYMBOLS`) is that character, a spacing command is a space, and an escaped `\\$`
+    is a dollar sign; a lone `$` is a dollar sign too.
+    """
     text = unicodedata.normalize("NFKC", text).translate(_DASHES).translate(_QUOTES)
-    text = _MATH_MARKUP.sub("", _MATH_SPACE.sub(" ", text))
+    delimiters = len(_DOLLAR.findall(text))
+    if delimiters and delimiters % 2 == 0:
+        text = _DOLLAR.sub("", text)
+    text = _MATH_SPACE.sub(" ", text)
+    text = _MATH_COMMAND.sub(lambda match: MATH_SYMBOLS.get(match[1], ""), text)
+    text = _MATH_MARKUP.sub("", text)
     return " ".join(text.casefold().split())
 
 
 def _contains(text: str, wanted: str) -> bool:
-    """`wanted` stands in `text` as a whole: `Kanton 2` is not in `Kanton 20`, `Zürich` is in `Kanton Zürich`."""
-    return re.search(rf"(?<!\w){re.escape(wanted)}(?!\w)", text) is not None
+    """`wanted` stands in `text` as a whole: `Kanton 2` is not in `Kanton 20`, `Zürich` is in `Kanton Zürich`.
+
+    The boundary holds only at a word character's edge, so a symbol stands anywhere: `%` is in `12%`.
+    """
+    before = r"(?<!\w)" if re.match(r"\w", wanted) else ""
+    after = r"(?!\w)" if re.search(r"\w$", wanted) else ""
+    return re.search(before + re.escape(wanted) + after, text) is not None
 
 
 def _has_unit(text: str, unit: str) -> bool:
@@ -234,52 +288,63 @@ def format_unit(token: str) -> str | None:
     return match["pre"] or match["post"]
 
 
+def _ticks_of(label: DrawnLabel) -> str | None:
+    """The tick-label kind a tick or axis label shares an axis with (`y axis label` → `y tick label`), or None."""
+    if label.kind.endswith("tick label"):
+        return label.kind
+    if label.kind == "colorbar label":
+        return "colorbar tick label"
+    axis = label.kind.removesuffix(" axis label")
+    return f"{axis} tick label" if axis in ("x", "y", "z") else None
+
+
 def _format_texts(drawn: DrawnTexts, unit: str) -> list[str]:
-    """The texts a number format applies to: every text that draws its unit, with all tick labels of its axis
-    when that text is a tick label or the axis label (`Bevölkerung (Mio.)` over ticks `6.0`, `7.0`)."""
+    """The texts a number format applies to: every text that draws its unit, and when that text is a tick label
+    or an axis or colorbar label, every tick label of that axis of that axes (`Bevölkerung (Mio.)` over ticks
+    `6.0`, `7.0`), never another subplot's or a twin axis's. Without axes indices (a tampered probe) the kind
+    alone decides."""
     texts: list[str] = []
-    for group, entries in drawn.groups.items():
-        if not any(_has_unit(_norm(text), unit) for text in entries):
+    for label in drawn.labels:
+        if not _has_unit(_norm(label.text), unit):
             continue
-        if group.endswith("tick labels"):
-            texts += entries
-            continue
-        texts += [text for text in entries if _has_unit(_norm(text), unit)]
-        axis = group.removesuffix(" axis label")
-        if axis in ("x", "y", "z"):
-            texts += drawn.groups.get(TICK_OF_AXIS[axis], [])
-    return texts
-
-
-TICK_OF_AXIS: dict[str, ShownGroup] = {"x": "x tick labels", "y": "y tick labels", "z": "z tick labels"}
+        texts.append(label.text)
+        ticks = _ticks_of(label)
+        if ticks is not None:
+            texts += [
+                other.text
+                for other in drawn.labels
+                if other.kind == ticks and (label.axes is None or other.axes is None or other.axes == label.axes)
+            ]
+    return list(dict.fromkeys(texts))
 
 
 def expected_misses(expected: Sequence[str], drawn: DrawnTexts | None) -> list[ExpectMiss]:
     """The requested texts and number formats the drawn texts do not show; none when the probe reported no texts.
 
     A text must be drawn as written within one drawn text (case, spacing, quotes, dashes and
-    mathtext aside); when the harness dropped texts for its cap, a missing text is not claimed.
-    A number format (`format_unit`) must draw its unit, and every text it applies to
-    (`_format_texts`) must use its decimal mark, also when one of them matches the example.
+    mathtext aside); when the harness left texts out, a missing text is not claimed. A number
+    format (`format_unit`) must draw its unit, and every text it applies to (`_format_texts`)
+    must use its decimal mark, also when one of them matches the example; a unit that is
+    nowhere is claimed missing only when the report is complete, a wrong mark always.
     """
     if drawn is None:
         return []
     shown = plot_texts(drawn) or {}
-    normed = [_norm(text) for texts in drawn.groups.values() for text in texts]
-    title = _norm(" ".join(drawn.groups.get("title", [])))
+    normed = [_norm(label.text) for label in drawn.labels]
     misses: list[ExpectMiss] = []
     for token in dict.fromkeys(" ".join(item.split()) for item in expected):
         wanted = _norm(token)
         if not wanted:
             continue
         unit = format_unit(token)
-        if unit is None:
-            if not (any(_contains(text, wanted) for text in normed) or _contains(title, wanted)) and drawn.complete:
+        unit_norm = _norm(unit) if unit is not None else ""
+        if not unit_norm:
+            if drawn.complete and not any(_contains(text, wanted) for text in normed):
                 misses.append(ExpectMiss(token, "text", _observed(shown, "text")))
             continue
-        applies = [_norm(text) for text in _format_texts(drawn, _norm(unit))]
+        applies = [_norm(text) for text in _format_texts(drawn, unit_norm)]
         mark = _decimal_mark(token)
         wrong = None if mark is None else ("." if mark == "," else ",")
-        if not applies or (wrong is not None and any(_wrong_mark(text, wrong) for text in applies)):
+        if (not applies and drawn.complete) or (wrong is not None and any(_wrong_mark(t, wrong) for t in applies)):
             misses.append(ExpectMiss(token, "format", _observed(shown, "format")))
     return misses

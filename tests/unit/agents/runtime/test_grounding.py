@@ -281,6 +281,44 @@ class TestExpectedMisses:
         assert expected_misses(["%"], drawn) == []
         assert expected_misses(["6,5 Mio."], None) == []
 
+    def test_symbols_currency_and_mathtext_read_as_drawn(self) -> None:
+        """Review round 2 of #12183: `%` beside a digit, a `$` currency against plain ticks, `$\\alpha$` as `α`."""
+        assert expected_misses(["%"], drawn_texts(labels(("y tick label", "12%")))) == []
+        assert [m.kind for m in expected_misses(["$12.5"], drawn_texts(labels(("y tick label", "12.5"))))] == ["format"]
+        assert expected_misses(["$12.5"], drawn_texts(labels(("y tick label", r"\$12.5")))) == []
+        assert expected_misses(["α"], drawn_texts(labels(("x axis label", r"$\alpha$")))) == []
+        assert expected_misses(["2 × 3"], drawn_texts(labels(("title", r"$2 \times 3$")))) == []
+
+    def test_separate_titles_never_add_up_to_a_requested_one(self) -> None:
+        drawn = drawn_texts(labels(("title", "Population"), ("title", "2025")))
+
+        assert [miss.kind for miss in expected_misses(["Population 2025"], drawn)] == ["text"]
+
+    def test_a_unit_is_checked_against_its_own_axes_only(self) -> None:
+        """A subplot's or twin's ticks never count for another axis; a colorbar's ticks count for its label."""
+
+        def probe(*entries: tuple[str, str, int]) -> dict[str, Any]:
+            return {"labels": [{"kind": kind, "text": text, "axes": axes} for kind, text, axes in entries]}
+
+        twin = probe(
+            ("y axis label", "Population (Mio.)", 0),
+            ("y tick label", "6,0", 0),
+            ("y tick label", "6,5", 0),
+            ("y axis label", "Anteil", 1),
+            ("y tick label", "0.5", 1),
+        )
+        colorbar = probe(("colorbar label", "Einwohner (Mio.)", 1), ("colorbar tick label", "6.0", 1))
+
+        assert expected_misses(["6,5 Mio."], drawn_texts(twin)) == []
+        assert [m.kind for m in expected_misses(["6,5 Mio."], drawn_texts(colorbar))] == ["format"]
+
+    def test_an_incomplete_report_claims_no_missing_unit_but_still_a_wrong_mark(self) -> None:
+        truncated = {**labels(("title", "Bevölkerung")), "labels_truncated": True}
+        wrong = {**labels(("y tick label", "6.0 Mio.")), "labels_truncated": True}
+
+        assert expected_misses(["6,5 Mio."], drawn_texts(truncated)) == []
+        assert [m.kind for m in expected_misses(["6,5 Mio."], drawn_texts(wrong))] == ["format"]
+
 
 def run_shipping(**candidate: Any) -> Run:
     snapshot = snapshot_from_repo("scatter-basic", "matplotlib")
@@ -441,6 +479,8 @@ class TestHarnessLabels:
         report = harness.probe(fig, 200)
 
         assert len(report["labels"]) <= harness.LABEL_LIMIT
+        assert report["labels_truncated"] is True  # 100 of 200 ticks per axes: absence is never claimed
+        assert {entry.get("axes") for entry in report["labels"] if entry["kind"] == "x tick label"} == {0, 1}
         texts = [entry["text"] for entry in report["labels"] if entry["kind"] == "x tick label"]
         assert sum(text.startswith("Kanton") for text in texts) == harness.TICK_LABELS_PER_AXIS
         assert sum(text.startswith("Bezirk") for text in texts) == harness.TICK_LABELS_PER_AXIS
@@ -462,6 +502,18 @@ class TestHarnessLabels:
         assert any(kind == "colorbar tick label" for kind, _ in kinds)
         assert not any(kind == "y tick label" and text == "0.50" for kind, text in kinds)
         assert all(text != "far away" for _, text in kinds)
+
+    def test_a_text_cut_at_the_character_cap_marks_the_report_incomplete(self) -> None:
+        fig = Figure(figsize=(16, 9))
+        FigureCanvasAgg(fig)
+        ax = fig.subplots()
+        ax.plot([0, 1], [0, 1])
+        ax.set_title("Bevölkerung " * 25, fontsize=4)
+
+        report = harness.probe(fig, 200)
+
+        assert report["labels_truncated"] is True
+        assert expected_misses(["Kanton Zürich"], drawn_texts(report)) == []  # perhaps past the cut: not claimed
 
     def test_a_failing_text_report_leaves_the_key_out(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """An empty list would read as "nothing drawn" and turn every requested text into a miss."""
