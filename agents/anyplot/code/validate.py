@@ -1481,9 +1481,14 @@ class _Scan:
             if keyword.arg in BANNED_KEYWORDS:
                 self.add("banned-keyword", f"the keyword '{keyword.arg}=' is not allowed", keyword)
             elif keyword.arg is None and isinstance(keyword.value, ast.Dict):
-                for key in keyword.value.keys:
-                    if isinstance(key, ast.Constant) and key.value in BANNED_KEYWORDS:
-                        self.add("banned-keyword", f"the keyword '{key.value}=' is not allowed", key)
+                pending = [keyword.value]
+                while pending:  # `**{**{"memory": ...}}`: an unpacked entry has the key None and a dict value
+                    literal = pending.pop()
+                    for key, value in zip(literal.keys, literal.values, strict=True):
+                        if key is None and isinstance(value, ast.Dict):
+                            pending.append(value)
+                        elif isinstance(key, ast.Constant) and key.value in BANNED_KEYWORDS:
+                            self.add("banned-keyword", f"the keyword '{key.value}=' is not allowed", key)
 
     def _check_settings(self) -> None:
         """matplotlib settings are written only with keys the string rule can read (`rc-key`).

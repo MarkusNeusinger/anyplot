@@ -1387,6 +1387,12 @@ CACHE_PATH_ROUTES = [
         id="memory unpacked from a dict literal",
     ),
     pytest.param(
+        SKLEARN
+        + 'from sklearn.pipeline import make_pipeline\nm = make_pipeline(StandardScaler(), **{**{"memory": "c"}})\n',
+        {"banned-keyword"},
+        id="memory unpacked from a nested dict literal",
+    ),
+    pytest.param(
         'from sklearn.utils.parallel import Parallel\np = Parallel(n_jobs=1, temp_folder="spill")\n',
         {"banned-attribute", "banned-keyword"},
         id="Parallel temp_folder",
