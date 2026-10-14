@@ -2,15 +2,20 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useAppData } from 'src/hooks/useLayoutContext';
 import { AppDataProvider } from 'src/layouts/Layout';
-import { render, screen, waitFor } from 'src/test-utils';
+import { render, screen, userEvent, waitFor } from 'src/test-utils';
 
 // Helper component that reads the context and renders the four counts
 // the user-reported NumbersStrip is built from. Acts as a black-box
 // observer of AppDataProvider's data-loading useEffect.
 function DataPeek() {
-  const { specsData, librariesData, languagesData, stats } = useAppData();
+  const { specsData, librariesData, languagesData, stats, loadFailed, reloadAppData } =
+    useAppData();
   return (
     <div>
+      <div data-testid="load-failed">{loadFailed ? 'failed' : 'ok'}</div>
+      <button type="button" onClick={reloadAppData}>
+        reload
+      </button>
       <div data-testid="specs-count">{specsData.length}</div>
       <div data-testid="libraries-count">{librariesData.length}</div>
       <div data-testid="languages-count">{languagesData.length}</div>
@@ -113,7 +118,36 @@ describe('AppDataProvider', () => {
     expect(screen.getByTestId('specs-count')).toHaveTextContent('0');
     expect(screen.getByTestId('libraries-count')).toHaveTextContent('0');
     expect(screen.getByTestId('stats-libraries')).toHaveTextContent('pending');
+    expect(screen.getByTestId('load-failed')).toHaveTextContent('failed');
 
+    warnSpy.mockRestore();
+  });
+
+  it('re-runs a failed load in place through reloadAppData', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    globalThis.fetch = vi.fn().mockRejectedValue(new Error('boom'));
+
+    render(
+      <AppDataProvider>
+        <DataPeek />
+      </AppDataProvider>
+    );
+    await waitFor(() => {
+      expect(screen.getByTestId('load-failed')).toHaveTextContent('failed');
+    });
+
+    globalThis.fetch = vi.fn().mockImplementation((url: string) => {
+      if (url.endsWith('/specs')) return Promise.resolve(jsonResponse([{ id: 'a' }]));
+      if (url.endsWith('/libraries')) return Promise.resolve(jsonResponse({ libraries: [] }));
+      if (url.endsWith('/languages')) return Promise.resolve(jsonResponse({ languages: [] }));
+      return Promise.resolve(jsonResponse({ specs: 1, plots: 1, libraries: 5 }));
+    });
+    await userEvent.click(screen.getByRole('button', { name: 'reload' }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('stats-libraries')).toHaveTextContent('5');
+    });
+    expect(screen.getByTestId('load-failed')).toHaveTextContent('ok');
     warnSpy.mockRestore();
   });
 

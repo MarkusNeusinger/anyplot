@@ -134,10 +134,12 @@ describe('useForceGraphSimulation', () => {
     });
 
     it('surfaces an HTTP error and keeps the graph empty', async () => {
-      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 500 }));
+      // A non-retryable status: apiGet retries a 5xx with real backoff
+      // (covered in lib/api.test.ts), outlasting waitFor's 1 s default.
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 403 }));
       const { result } = renderHook(() => useForceGraphSimulation());
 
-      await waitFor(() => expect(result.current.error).toBe('HTTP 500'));
+      await waitFor(() => expect(result.current.error).toBe('HTTP 403'));
       expect(result.current.specs).toBeNull();
       expect(result.current.graphData.nodes).toHaveLength(0);
       expect(result.current.graphData.links).toHaveLength(0);

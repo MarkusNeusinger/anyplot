@@ -56,6 +56,14 @@ src/
   (`apiGet`/`apiPost` + `endpoints`); raw `fetch()` against our backend lives
   only inside that module. External third-party APIs (e.g. the GitHub releases
   call in `useLatestRelease`) may fetch directly. Callers own caching/abort/dedup.
+  `apiGet` retries a network error (`TypeError`) or a 408/425/429/500/502/503/504
+  twice (about 400 ms, then 1200 ms, or the server's `Retry-After` capped at
+  3 s), honours the caller's abort signal, and throws other statuses such as 404
+  at once; `apiPost`, `fetchWithAuth` and SSE streams never retry. The spec page
+  and the homepage numbers offer `.retry()` (`components/RetryButton`) when a
+  load still fails; other pages (stats, map, plots) keep their own error states,
+  so a new page-level load should add `RetryButton` the same way. Tests that mock a 5xx wait out that backoff, so mock a
+  non-retryable status (403) unless the test is about the retry.
 - **Config**: read `CONFIG` from `src/global-config` instead of `import.meta.env`.
   One exception: the agent chat route in `routes/index.tsx` reads
   `import.meta.env.VITE_ENABLE_AGENT_CHAT` inline, because only a literal in

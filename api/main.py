@@ -295,7 +295,9 @@ app.add_middleware(
     allow_headers=["*"],
     # Mcp-Session-Id: MCP session tracking. X-Request-Id: the agent BFF's
     # reference id, readable by the chat page when it runs cross-origin (dev).
-    expose_headers=["Mcp-Session-Id", "X-Request-Id"],
+    # Retry-After: the SPA's apiGet waits as long as a 429/503 asks (it is not
+    # CORS-safelisted, so the cross-origin page would not see it otherwise).
+    expose_headers=["Mcp-Session-Id", "X-Request-Id", "Retry-After"],
 )
 
 

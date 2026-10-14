@@ -108,6 +108,12 @@ class TestRootEndpoint:
         assert data["health"] == "/health"
 
 
+def test_retry_after_is_readable_cross_origin(client: TestClient) -> None:
+    """The SPA on anyplot.ai reads `Retry-After` from a 429/503 of api.anyplot.ai (#12174)."""
+    response = client.get("/health", headers={"Origin": "https://anyplot.ai"})
+    assert "retry-after" in response.headers["access-control-expose-headers"].lower()
+
+
 class TestHealthEndpoint:
     """Tests for the health check endpoint (/health)."""
 
