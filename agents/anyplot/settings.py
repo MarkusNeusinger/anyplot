@@ -14,8 +14,12 @@ another provider, model or location.
 | `AGENT_TRANSPORT` | `vertex` | How Claude calls travel: `vertex` (live) or `claude-cli` (development and test only: the local Claude Code CLI on your subscription; calls it cannot answer, the root's, go to Vertex AI; `cli_transport.py`) |
 | `AGENT_ADAPTER_MODEL`, `AGENT_REVIEWER_MODEL` | unset | `claude-cli` only: the adapter's or the reviewer's model for an experiment, any of `cli_transport.CLI_MODELS` |
 | `AGENT_REVIEWER_MODE` | `catalogue` | The reviewer's rubric: `catalogue` (the offline scorer's catalogue rubric; the verdict decided by code from the points) or `checklist` (the narrow checklist, live before 2026-10-13) |
-| `AGENT_REVIEW_BAR` | `1.0` | `catalogue` reviews: the share of the technical points (VQ, SC, DQ) a render needs to need no repair |
-| `AGENT_STATUS_BAR` | `0.95` | `catalogue` reviews: the ship bar; a shipped render at or above it shows without notes (`ok`) |
+| `AGENT_REVIEW_BAR` | `0.95` | `catalogue` reviews: the share of the technical points (VQ, SC, DQ) a render needs to need no repair (1.0 before 2026-10-14; owner decision pending) |
+| `AGENT_STATUS_BAR` | `0.95` | `catalogue` reviews: the ship bar; a shipped render at or above it, with no measured gate or validator finding left, shows without notes (`ok`) |
+| `AGENT_STATUS_SCORE` | `0` | `catalogue` reviews: the review score (0 to 100) a shipped render also needs for `ok`; 0 turns the condition off (owner decision pending) |
+| `AGENT_GATE_REPAIR` | `review` | When measured findings of a render (advisory gate lines, ADAPTATION findings) start a repair: `review` (they go to the self-review and, as gate notes, to the review, and a round whose render still has them after its review is repaired with them) or `first` (straight to the repair round, skipping the self-review and the review; live before 2026-10-14) |
+| `AGENT_SHIP_CLEAN_MARGIN` | `3` | `catalogue` reviews with `AGENT_SHIP_BEST`: a render without measured findings ships over a higher-scored one with them when it meets the ship bar or is at most this many points below it |
+| `AGENT_REPAIR_SELF_REVIEW` | `false` | With `AGENT_SELF_REVIEW` on, whether a repair round proofreads its render too, not only the first round |
 | `AGENT_SHIP_BEST` | `true` | `catalogue` reviews: review every render and ship the best-scored version, not the last |
 | `AGENT_CHECK_RETRY` | `true` | An adapter answer that fails its check gets one more call in the same round (a full file allowed) instead of ending it |
 | `AGENT_SELF_REVIEW` | `true` | The adapter sees its first render once and may improve it before the review; not a repair, no extra round |
@@ -191,15 +195,45 @@ class AgentSettings(BaseSettings):
     feed the repair) or `checklist` (the narrow checklist of `prompts/reviewer.md`, live before). The
     2026-10-13 measurement: the checklist named 2 of 37 agreed technical deductions, the rubric on Haiku 28."""
 
-    review_bar: float = Field(default=1.0, gt=0, le=1)
+    review_bar: float = Field(default=0.95, gt=0, le=1)
     """`catalogue` reviews only (`AGENT_REVIEW_BAR`): the share of the technical points (VQ, SC, DQ) a
-    render needs, with no technical item at zero, to need no repair. At 1.0 every technical deduction
-    gets the repair round; `AGENT_SHIP_BEST` keeps a repair that scores lower from shipping."""
+    render needs, with no technical item at zero, to need no repair. Of the 55 technical points, 0.95
+    lets a render lose two without a repair round; 1.0 (before 2026-10-14) sent nearly every render
+    to the repair. `AGENT_SHIP_BEST` keeps a repair that scores lower from shipping. A product choice:
+    the measurement is in `agents/README.md`, the value the owner's."""
 
     status_bar: float = Field(default=0.95, gt=0, le=1)
     """`catalogue` reviews only (`AGENT_STATUS_BAR`): the owner's ship bar. A shipped render at or above
-    it is shown without notes (`ok`), even when the review still asked for a repair; below it the
-    review's lines become the residual notes (`needs_attention`)."""
+    it is shown without the review's notes (`ok`, unless a measured finding is left, see
+    `pipeline.finish`); below it the review's lines become residual notes (`needs_attention`)."""
+
+    status_score: int = Field(default=0, ge=0, le=100)
+    """`catalogue` reviews only (`AGENT_STATUS_SCORE`): the review score a shipped render also needs
+    to show without notes; 0 turns the condition off. A product choice left to the owner: the catalogue
+    originals score about 80 on the user scorer, so a value above that would mark plots as good as the
+    catalogue's own as `needs_attention`."""
+
+    gate_repair: Literal["review", "first"] = "review"
+    """When the measured findings of a render that passed the host gates start a repair (`AGENT_GATE_REPAIR`):
+    the advisory gate lines (G3, G5, G7, G8, G9, G10) and the ADAPTATION validator's soft findings.
+
+    `review`: they go to the round's self-review as findings, then to the review as gate notes, and a
+    round whose render still has them after its review goes to the repair with them and the review's
+    lines together. `first` (live before 2026-10-14): they send the round straight to the repair,
+    skipping its self-review and review, so a run with two rounds repaired them blind and reviewed only
+    the repair. Either way a render whose canvas missed goes straight to the repair."""
+
+    repair_self_review: bool = False
+    """`AGENT_REPAIR_SELF_REVIEW`: whether a repair round proofreads its render before the review, as the
+    first round does. Off (the default), round 1 still proofreads and repair rounds go straight to the
+    review; `AGENT_SELF_REVIEW=false` turns every proofread off, this setting included. Off since
+    2026-10-14: the reviewer scores the repaired render anyway, and `AGENT_SHIP_BEST` ships the better of
+    the two; the measurement is in `agents/README.md`."""
+
+    ship_clean_margin: int = Field(default=3, ge=0, le=100)
+    """`catalogue` reviews with `AGENT_SHIP_BEST` (`AGENT_SHIP_CLEAN_MARGIN`): a render without measured
+    findings ships over a higher-scored one with them when it meets the ship bar or scores at most this
+    many points below it; otherwise the higher score ships with its findings as notes (owner, 2026-10-14)."""
 
     highlights: Literal["off", "data"] = "off"
     """Experiments (`AGENT_HIGHLIGHTS`): `data` lets the adapter add at most one highlight of a

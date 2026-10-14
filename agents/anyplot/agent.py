@@ -176,8 +176,8 @@ def build_context_cache() -> ContextCacheConfig | None:
     """Prompt-cache breakpoints for Claude; none for Gemini.
 
     Without an App-level config ADK sends Claude no `cache_control`
-    (`models/_prompt_cache.py`), so every adapter call would pay the full ~42K
-    characters of its static instruction. With one, ADK marks the tools, the system
+    (`models/_prompt_cache.py`), so every adapter call would pay the full ~93K
+    characters of its static instruction (since 2026-10-14 it holds the reviewer's rubric). With one, ADK marks the tools, the system
     instruction and the end of the conversation. Gemini keeps its implicit cache:
     there the same config would make ADK create explicit caches, a billed resource.
     The 5-minute lifetime is Claude's cheaper write; it covers the repair attempt and

@@ -457,12 +457,15 @@ async def test_gate_feedback_goes_to_the_next_attempt_and_the_last_one_is_review
     max_attempts: str | None,
     attempts: int,
 ) -> None:
-    """Feedback that no repair clears is repaired while an attempt is left; then the last attempt is reviewed.
+    """`AGENT_GATE_REPAIR=first`: feedback that no repair clears is repaired while an attempt is left; then the
+    last attempt is reviewed.
 
     With one attempt that is the first, so its feedback reaches the review as gate notes, not a repair.
     """
     caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
     set_max_attempts(monkeypatch, max_attempts)
+    monkeypatch.setenv("AGENT_GATE_REPAIR", "first")
+    get_settings.cache_clear()
     backend.script = lambda job, theme: FakeOutcome(probe=OVERLAPPING_TICKS)
     swap_models("gemini", default_script(plans=[SCATTER_PLAN] + [{"edits": [], "changes": []}] * (attempts - 1)))
     sid = await open_session(client)
@@ -473,11 +476,69 @@ async def test_gate_feedback_goes_to_the_next_attempt_and_the_last_one_is_review
     repairs = ["repairing", "checking", "rendering"] * (attempts - 1)
     assert steps == ["adapting", "checking", "rendering", *repairs, "reviewing"]
     plot = next(data for name, data in events if name == "plot")
-    assert (plot["status"], plot["attempts"]) == ("ok", attempts)  # the reviewer passed the render it saw
+    # The reviewer passed the render it saw, but the measured overlap is still in it, so it stays a note.
+    assert (plot["status"], plot["attempts"]) == ("needs_attention", attempts)
+    assert [line[:6] for line in plot["residual_defects"]] == ["VQ-02 "]
     (result,) = attribution_lines(caplog, "pipeline_result")
     assert result["stages"] == [*["gates"] * (attempts - 1), "reviewer_ok"]
     assert (result["shipped_attempt"], result["reviewed_attempt"]) == (attempts, attempts)
     assert len(backend.jobs) == attempts
+
+
+async def test_measured_findings_are_reviewed_first_and_repaired_when_they_stay(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend, caplog: pytest.LogCaptureFixture
+) -> None:
+    """`AGENT_GATE_REPAIR=review` (the default): a measured overlap goes to the review as a gate note; the
+    review passes the render, but the overlap is still measured, so the round repairs it, and the repair is
+    reviewed. Nothing waives a measurement: the shipped render keeps the line as a note."""
+    caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
+    backend.script = lambda job, theme: FakeOutcome(probe=OVERLAPPING_TICKS)
+    script = default_script(plans=[SCATTER_PLAN, {"edits": [], "changes": []}])
+    script["reviewer"] = script["reviewer"] * 2
+    fake = swap_models("gemini", script)
+    sid = await open_session(client)
+
+    events = await create_plot(client, sid)
+
+    steps = [data["step"] for name, data in events if name == "status"]
+    assert steps == [
+        "adapting",
+        "checking",
+        "rendering",
+        "reviewing",
+        "repairing",
+        "checking",
+        "rendering",
+        "reviewing",
+    ]
+    (result,) = attribution_lines(caplog, "pipeline_result")
+    assert result["stages"] == ["gates", "reviewer_ok"]
+    plot = next(data for name, data in events if name == "plot")
+    assert plot["status"] == "needs_attention" and plot["residual_defects"][0].startswith("VQ-02 (light)")
+    # The repair gets the measured line although the review passed the render.
+    assert "VQ-02 (light)" in adapter_inputs(fake)[1]
+
+
+async def test_a_passing_review_clears_an_earlier_rounds_review_lines(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Three rounds: round 1 is rejected, round 2 passes but keeps a measured overlap, round 3 repairs it
+    without a review left. Its notes are the overlap and the missing review, never round 1's finding."""
+    set_max_attempts(monkeypatch, "3")
+    backend.script = lambda job, theme: FakeOutcome(probe=OVERLAPPING_TICKS)
+    empty = {"edits": [], "changes": []}
+    script = default_script(plans=[SCATTER_PLAN, empty, empty])
+    script["reviewer"] = [{"json": VERDICT_REJECT}, {"json": VERDICT_OK}]
+    swap_models("gemini", script)
+    sid = await open_session(client)
+
+    events = await create_plot(client, sid)
+
+    plot = next(data for name, data in events if name == "plot")
+    assert plot["status"] == "needs_attention"
+    assert not any("sparse markers" in line for line in plot["residual_defects"])
+    assert plot["residual_defects"][0].startswith("VQ-02 (light)")
+    assert plot["residual_defects"][-1].startswith("the plot was not reviewed")
 
 
 # A plan cut off mid-string: both providers send the truncated JSON text (FakeAnthropic cuts Claude's

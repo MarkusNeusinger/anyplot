@@ -122,9 +122,16 @@ def test_the_adapter_request_carries_the_trimmed_profile_under_its_own_heading(w
 
 def test_g9_reports_more_plotted_points_than_any_dataset_holds() -> None:
     failed, advisory = gates({"points": 10, "line_points": MAX_PLOTTED_POINTS})
-    assert "G9" in failed and advisory[-1].startswith("DQ-03 (code): the plot draws 200010 points")
+    assert "G9" in failed and advisory[-1].startswith("DQ-03 (code): the plot draws 500010 points")
     assert gates({"points": 0, "line_points": MAX_PLOTTED_POINTS})[0] == []
     assert gates({"line_points": 10_000_000}, rows=61)[0] == ["G9"]
+
+
+def test_g9_lets_dense_user_data_pass_and_still_names_the_stress_cases() -> None:
+    # The owner's bound (2026-10-14): 20,000 rows of 24 series pass, the stress cases' computed points do not.
+    assert gates({"line_points": 20_000 * 24}, rows=20_000)[0] == []
+    assert gates({"line_points": 610_000}, rows=61)[0] == ["G9"]
+    assert gates({"line_points": 1_000_000}, rows=61)[0] == ["G9"]
 
 
 @pytest.mark.parametrize("value", [True, -5, "many", 1.5e9, None])

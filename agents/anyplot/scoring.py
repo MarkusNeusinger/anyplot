@@ -180,16 +180,27 @@ def system_prompt(
     """
     if highlights is None:
         highlights = os.environ.get("AGENT_SCORER_HIGHLIGHTS", "").lower() == "on"
-    criteria_text = criteria.read_text(encoding="utf-8")
-    review_text = review.read_text(encoding="utf-8")
     parts = [scorer.read_text(encoding="utf-8").strip()]
     if highlights:
         parts.append(HIGHLIGHT_RULE.read_text(encoding="utf-8").strip())
-    parts.append("# From the catalogue rubric (prompts/quality-criteria.md)")
+    parts.append(rubric_text(criteria, review))
+    return "\n\n".join(parts) + "\n"
+
+
+def rubric_text(criteria: Path = CRITERIA_FILE, review: Path = REVIEW_FILE) -> str:
+    """The rubric sections the scorer applies, cut verbatim from the catalogue's prompts.
+
+    One source for every agent that judges or builds a user's plot: the reviewer and the offline
+    scorer read it behind `scorer.md` (`system_prompt`), the adapter behind its own framing
+    (`policy.adapter_rubric`), so the first try knows what the review will score.
+    """
+    criteria_text = criteria.read_text(encoding="utf-8")
+    review_text = review.read_text(encoding="utf-8")
+    parts = ["# From the catalogue rubric (prompts/quality-criteria.md)"]
     parts += [section(criteria_text, heading) for heading in CRITERIA_SECTIONS]
     parts.append("# From the catalogue review (prompts/workflow-prompts/ai-quality-review.md)")
     parts += [section(review_text, heading) for heading in REVIEW_SECTIONS]
-    return "\n\n".join(parts) + "\n"
+    return "\n\n".join(parts)
 
 
 @dataclass(frozen=True)

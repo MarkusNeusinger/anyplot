@@ -40,6 +40,20 @@ class TestAdapterInstruction:
         assert source("prompts/default-style-guide.md").strip() in policy.adapter_instruction("matplotlib")
         assert source("prompts/library/seaborn.md").strip() in policy.adapter_instruction("seaborn")
 
+    def test_the_adapter_works_to_the_reviewers_rubric(self) -> None:
+        """One source (owner, 2026-10-13): the adapter reads the very rubric sections the reviewer scores with,
+        the anchors and the 5c/5d checks included, and the VQ-03 table only once."""
+        from agents.anyplot.scoring import rubric_text, system_prompt
+
+        rubric = rubric_text()
+        text = policy.adapter_instruction("matplotlib")
+
+        assert rubric in text and rubric in system_prompt() and rubric in policy.catalogue_reviewer_instruction()
+        assert "## Anti-Inflation Calibration Anchors" in text
+        assert "### 5d. MANDATORY: Proportional Sizing Check (both renders)" in text
+        assert text.count(policy.vq03_table()) == 1
+        assert "**No catalogue title.**" in text and "The house style is never a defect" in text
+
     def test_braces_survive_because_the_instruction_is_static(self) -> None:
         assert "{THEME}" in policy.adapter_instruction("matplotlib")
 

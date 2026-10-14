@@ -64,18 +64,18 @@ TEXT_KINDS = frozenset(
 """The text roles the harness names (`harness._text_kinds`); any other probe value reads "text"."""
 G8_SLACK = 10
 G8_FACTOR = 1.5
-MAX_PLOTTED_POINTS = 200_000
-"""G9: scatter marks plus line vertices a plot may draw. Set when the 200 KB paste cap held at most about
-102,000 cells (two bytes each), so a plot past twice that drew points the code computed, such as an
-oversampled series or a simulated trajectory (stress cases `stress-compute-*`). Since 2026-10-14 a 1 MB paste
-or 2 MiB of computed data can hold more cells (at most 20,000 rows of 50 columns), so G9 may also name a very
-dense plot of the user's own data; it stays at 200,000 because it is advisory and the stress cases' 610,000
-and 1,000,000 points must still trip it (an open owner question whether to raise it)."""
+MAX_PLOTTED_POINTS = 500_000
+"""G9: scatter marks plus line vertices a plot may draw, past which the code computed points of its own, such
+as an oversampled series or a simulated trajectory (stress cases `stress-compute-*`). 200,000 until 2026-10-14,
+twice the cells the 200 KB paste cap allowed. A 1 MB paste or 2 MiB of computed data holds up to 20,000 rows
+of 50 columns, so the owner raised it to 500,000 (2026-10-14): a dense plot of the user's own data, such as
+20,000 rows of 24 series (480,000 points), passes, while the stress cases' 610,000 and 1,000,000 points
+still trip it."""
 G10_SAMPLE = 3  # code points the G10 line names
 G10_NAME_CHARS = 15  # name text per label: a label is then at most 26 characters and the line fits MAX_NOTE_CHARS
 MAX_CODEPOINT = 0x10FFFF
 MAX_GLYPH_COUNT = 0x110000  # more distinct code points than Unicode has is a tampered probe
-GLYPH_LINE_PREFIX = "VQ-01 ("  # only G10 writes VQ-01; the pipeline carries this line into the residual
+GLYPH_LINE_PREFIX = "VQ-01 ("  # only G10 writes VQ-01
 G10_TARGET = "in text the code writes, use characters the fonts cover; a user's column name stays"
 G10_MATH_TARGET = "keep non-Latin text outside $…$ math strings; a user's column name stays"
 CODE_FILE = "plot.py"

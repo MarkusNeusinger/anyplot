@@ -14,6 +14,7 @@ from agents.anyplot.opening import dataset_judge_inputs
 from agents.anyplot.pipeline import (
     ADAPTER_P95_S,
     EARLIER_REQUESTS_HEADING,
+    LOW_SCORE_LINE,
     NOT_REVIEWED_LINE,
     PADDED_LINE,
     RENDER_P95_S,
@@ -25,6 +26,8 @@ from agents.anyplot.pipeline import (
     render_adapt_request,
     render_review_request,
     render_score_request,
+    ship_compare,
+    shipped_candidate,
     standing_requests,
     summarise_changes,
 )
@@ -43,7 +46,7 @@ from agents.anyplot.schemas import (
 )
 from agents.anyplot.services import CodeVersion, VersionStore
 from agents.anyplot.session_state import SessionView
-from agents.anyplot.settings import AgentSettings
+from agents.anyplot.settings import AgentSettings, get_settings
 
 from .fakes import gemini_call_s
 
@@ -84,18 +87,105 @@ class TestFinish:
         assert result.status == "needs_attention"
         assert result.residual_defects == [NOT_REVIEWED_LINE.format(why="the time limit was reached")]
 
-    def test_a_g10_line_stays_residual_after_a_reviewer_ok(self) -> None:
-        """A measured missing glyph is a fact of the shipped render; the other advisory lines follow the review."""
+    def test_measured_lines_stay_residual_after_a_reviewer_ok(self) -> None:
+        """Every measured gate line is a fact of the shipped render: a review above the ship bar hides none."""
         glyphs = "VQ-01 (light): 2 characters have no glyph, drawn as boxes → keep them. Likely cause: a script."
         clipped = "AR-09 (light): text extends 40 px beyond the canvas edge → keep it inside. Likely cause: a label."
 
         result = finish(run_with(reviewed_ok=True, advisory_lines=[glyphs, clipped]))
 
-        assert (result.status, result.residual_defects) == ("needs_attention", [glyphs])
+        assert (result.status, result.residual_defects) == ("needs_attention", [glyphs, clipped])
+
+        scored = run_with(reviewed_ok=True, advisory_lines=[clipped])
+        assert scored.best is not None
+        scored.best.status_ok, scored.best.review_score = True, 84
+        assert finish(scored).residual_defects == [clipped]
 
         unreviewed = run_with(advisory_lines=[glyphs, clipped])
         unreviewed.unreviewed_why = "the time limit was reached"
         assert finish(unreviewed).residual_defects[:2] == [glyphs, clipped]  # carried once, not twice
+
+    def test_a_ship_score_marks_a_render_below_it(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """`AGENT_STATUS_SCORE`: every technical point the ship bar asks for, but a lower review score."""
+        monkeypatch.setenv("AGENT_STATUS_SCORE", "85")
+        get_settings.cache_clear()
+        run = run_with(reviewed_ok=True, status_ok=True, review_score=84)
+
+        result = finish(run)
+
+        assert (result.status, result.residual_defects) == (
+            "needs_attention",
+            [LOW_SCORE_LINE.format(score=84, bar=85)],
+        )
+        assert run.best is not None
+        run.best.review_score = 85
+        assert finish(run).status == "ok"
+        get_settings.cache_clear()
+
+    def test_an_unreviewed_repair_after_a_passing_review_is_never_ok(self) -> None:
+        """A passing review sent its render to the repair for a measured finding (`AGENT_GATE_REPAIR=review`);
+        the repair cleared it, but its own review was unreadable: it ships with the not-reviewed note."""
+        run = run_with(attempt=2)  # the repaired render: never reviewed
+        run.reviewed, run.review_lines = True, []  # round 1's review passed
+        run.unreviewed_why = "the review answer could not be read"
+
+        result = finish(run)
+
+        assert result.status == "needs_attention"
+        assert result.residual_defects == [NOT_REVIEWED_LINE.format(why="the review answer could not be read")]
+
+    def test_ship_best_prefers_the_render_without_measured_findings(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """A repair that cleared clipped text ships over a round-1 render that scored a point higher."""
+        monkeypatch.setenv("AGENT_REVIEWER_MODE", "catalogue")
+        monkeypatch.setenv("AGENT_SHIP_BEST", "true")
+        get_settings.cache_clear()
+        clipped = "AR-09 (light): text extends 40 px beyond the canvas edge → keep it inside. Likely cause: a label."
+        run = run_with(reviewed_ok=True, status_ok=True, review_score=84, advisory_lines=[clipped])
+        first = run.best
+        assert first is not None
+        repaired = Candidate(
+            working="w2", run_form="r2", pngs={}, plan=AdaptPlan(changes=["fix"]), attempt=2, review_score=83
+        )
+        repaired.reviewed_ok = repaired.status_ok = True
+        run.best, run.best_scored = repaired, first
+
+        assert ship_compare(repaired, first) == 1 and ship_compare(first, repaired) == -1
+        assert shipped_candidate(run) is repaired
+        first.advisory_lines = []
+        assert shipped_candidate(run) is first  # both clean: the higher score ships
+
+    @pytest.mark.parametrize(
+        ("clean_score", "clean_meets_bar", "margin", "ships"),
+        [
+            (60, False, None, "scored"),  # the owner's case: a clean 60 never replaces an 88 with one G7 line
+            (85, False, None, "clean"),  # within the default margin of 3 points
+            (84, False, None, "scored"),  # 4 points below, below the ship bar
+            (70, True, None, "clean"),  # meets the ship bar: clean wins whatever the score
+            (85, False, "2", "scored"),  # `AGENT_SHIP_CLEAN_MARGIN` narrows the margin
+        ],
+    )
+    def test_a_clean_render_wins_only_at_the_ship_bar_or_within_the_margin(
+        self, monkeypatch: pytest.MonkeyPatch, clean_score: int, clean_meets_bar: bool, margin: str | None, ships: str
+    ) -> None:
+        monkeypatch.setenv("AGENT_REVIEWER_MODE", "catalogue")
+        monkeypatch.setenv("AGENT_SHIP_BEST", "true")
+        if margin is not None:
+            monkeypatch.setenv("AGENT_SHIP_CLEAN_MARGIN", margin)
+        get_settings.cache_clear()
+        overlap = "VQ-02 (light): 2 tick labels overlap → space them. Likely cause: the tick density."
+        run = run_with(reviewed_ok=True, status_ok=True, review_score=88, advisory_lines=[overlap])
+        scored = run.best
+        assert scored is not None
+        clean = Candidate(working="w2", run_form="r2", pngs={}, plan=AdaptPlan(), attempt=3, review_score=clean_score)
+        clean.reviewed_ok, clean.status_ok = clean_meets_bar, clean_meets_bar
+        run.best, run.best_scored = clean, scored
+
+        shipped = shipped_candidate(run)
+
+        assert shipped is (clean if ships == "clean" else scored)
+        if ships == "scored":
+            # The higher score ships with its measured line as a note.
+            assert finish(run).residual_defects == [overlap]
 
     def test_padded_canvas_is_never_ok(self) -> None:
         run = run_with(padded=True, canvas_line="VQ-05 (dark): drift", reviewed_ok=True)

@@ -5,12 +5,13 @@ Every static instruction is assembled from files and never from paraphrased copi
 * the agent's own prompt in `agents/anyplot/prompts/` (`root.md`, `adapter.md`,
   `reviewer.md`, `scope_judge.md`, `data_judge.md`);
 * the catalogue's prompt sources, read verbatim from the repository's `prompts/`
-  directory: `default-style-guide.md`, `library/<library>.md`, and three excerpts cut
+  directory: `default-style-guide.md`, `library/<library>.md`, and excerpts cut
   out by heading, so they follow every edit of their source: "Which weaknesses to
   fix" and the "Visual-sizing fixes" list from
-  `workflow-prompts/impl-repair-claude.md`, the VQ-03 density table from
-  `quality-criteria.md`, and the theme-readability check (step 5c) from
-  `workflow-prompts/ai-quality-review.md`.
+  `workflow-prompts/impl-repair-claude.md`, the theme-readability check (step 5c)
+  from `workflow-prompts/ai-quality-review.md` for the checklist reviewer, and for
+  the adapter the rubric sections the catalogue reviewer scores with
+  (`scoring.rubric_text`, `adapter_rubric`).
 
 The texts are read once per process (`lru_cache`), when `agent.py` builds the agents
 at import time. A missing file or heading raises at import, so a renamed section
@@ -211,36 +212,43 @@ def root_instruction() -> str:
     return _join(own_prompt("root.md"), "## Fixed refusals\n\n" + "\n\n".join(blocks))
 
 
-SELF_REVIEW_CRITERIA = re.compile(r"^\| (VQ-0[1-7]|SC-0[1-4]|DQ-0[13]) \|.*$", re.MULTILINE)
-"""The rows of the rubric's criteria tables the self-review checks: the technical ones a user sees."""
+HOUSE_STYLE_RULE = "The house style is never a defect"
+"""The start of the scorer's paragraph that keeps the style guide's own choices from counting as defects."""
 
 
 @lru_cache(maxsize=1)
-def self_review_checklist() -> str:
-    """The self-review's checklist: the technical criteria rows of `prompts/quality-criteria.md` and the
-    scorer's rules for a user's plot, both cut verbatim, so the adapter checks its render against the
-    same rules the reviewer scores (owner, 2026-10-13: one place to change a rule)."""
-    from .scoring import SCORER_PROMPT, section
+def adapter_rubric() -> str:
+    """The rubric the adapter works to: the scorer's rules for a user's plot and the very rubric
+    sections the reviewer scores with (`scoring.rubric_text`), both cut verbatim, so the first try and
+    the self-review know what the review will judge (owner, 2026-10-13: one place to change a rule).
 
-    lines = [match.group(0) for match in SELF_REVIEW_CRITERIA.finditer(catalogue_prompt("quality-criteria.md"))]
-    if len(lines) != 13:
-        raise PromptSourceError(f"quality-criteria.md: expected 13 technical criteria rows, found {len(lines)}")
+    Until 2026-10-14 the adapter got only the 13 one-line technical rows of the criteria tables,
+    without the scoring principles, the anchors and the 5c/5d checks the reviewer reads.
+    """
+    from .scoring import SCORER_PROMPT, rubric_text, section
+
     user_rules = section(
         SCORER_PROMPT.read_text(encoding="utf-8"), "## How the catalogue rubric applies to a user's plot"
     )
-    # Rules 2 and 3 of the scorer (the user's data, no catalogue title) apply to the adapter's own check;
+    # Rules 2 and 3 of the scorer (the user's data, no catalogue title) apply to the adapter's work;
     # rule 1 (what the scorer scores) and rule 4 (how the scorer names themes) are the scorer's.
     data_and_title = [line for line in user_rules.splitlines() if line.startswith(("2. ", "3. "))]
-    if len(data_and_title) != 2:
-        raise PromptSourceError("scorer.md: rules 2 and 3 of 'How the catalogue rubric applies' not found")
+    house_style = [line for line in user_rules.splitlines() if line.startswith(HOUSE_STYLE_RULE)]
+    if len(data_and_title) != 2 or len(house_style) != 1:
+        raise PromptSourceError(
+            "scorer.md: rules 2 and 3 or the house-style rule of 'How the catalogue rubric' missing"
+        )
     return _join(
-        "## Self-review checklist\n\n"
-        "When the notes ask for a self-review, the render of your code is attached. Check it against each of "
-        "these rows of the catalogue rubric (`prompts/quality-criteria.md`), in the render's theme, and fix what "
-        "falls short of the top score; the reviewer scores the same rows next.\n\n"
-        "| ID | Criterion | Points | Scale |\n|---|---|---|---|\n" + "\n".join(lines),
-        "For a user's plot, two of the scorer's rules (`agents/anyplot/prompts/scorer.md`) apply:\n\n"
-        + "\n".join(data_and_title),
+        "## The rubric your plot is scored with\n\n"
+        "The reviewer scores the render of your code with the catalogue rubric below, the same text it reads: "
+        "Visual Quality (VQ-01 to VQ-07), Design Excellence (DE-01 to DE-03), Spec Compliance (SC-01 to SC-04), "
+        "and DQ-01 and DQ-03 of Data Quality. A render that loses more technical points (VQ, SC, DQ) than the "
+        "review's bar allows goes back to you for a repair, so aim every version at the top score of each technical criterion. When the notes ask for "
+        "a self-review, the render of your code is attached: check it against each technical criterion, in the "
+        "render's theme, and fix what falls short.",
+        "For a user's plot, three of the scorer's rules (`agents/anyplot/prompts/scorer.md`) take precedence "
+        "over the rubric:\n\n" + "\n".join([*data_and_title, *house_style]),
+        rubric_text(),
     )
 
 
@@ -252,13 +260,13 @@ def adapter_instruction(library: str) -> str:
     weaknesses, sizing = repair_excerpts()
     settings = get_settings()
     highlights = own_prompt("adapter_highlights.md") if settings.highlights == "data" else ""
+    # The rubric holds the VQ-03 marker-size and alpha table (`vq03_table`), so it is not repeated.
     return _join(
         own_prompt("adapter.md"),
         highlights,
-        self_review_checklist() if settings.self_review else "",
         "## Excerpt: which weaknesses to fix\n\n" + weaknesses,
         "## Excerpt: visual-sizing fixes\n\n" + sizing,
-        "## Excerpt: VQ-03 element visibility\n\n" + vq03_table(),
+        adapter_rubric(),
         "## Style guide (prompts/default-style-guide.md)\n\n" + catalogue_prompt(STYLE_GUIDE),
         f"## Library rules (prompts/library/{library}.md)\n\n" + catalogue_prompt(f"library/{library}.md"),
     )
