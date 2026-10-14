@@ -590,6 +590,14 @@ class TestTableAmongOtherLines:
         assert (plain.csv, plain.profile.warnings) == ("x,y\n1,2\n3,4\n5,6\n", [])
         assert text_only.profile.rows == 3 and text_only.profile.warnings == []
 
+    def test_the_services_own_csv_keeps_every_row(self) -> None:
+        """A `Total` category a sort moved to the end stays in a re-parse of a prepared table (#12166 review)."""
+        sorted_csv = "Kategorie,Wert\nA,1\nB,2\nC,4\nTotal,3\n"
+
+        assert parse_dataset(sorted_csv).profile.rows == 3  # a paste: the summary row is left out
+        assert parse_dataset(sorted_csv, find_table=False).profile.rows == 4
+        assert parse_dataset(OPEN_METEO, find_table=False).profile.warnings[0].startswith("5 rows had fewer fields")
+
     def test_sniffing_reads_past_the_metadata(self) -> None:
         assert sniff_delimiter("Wetterstation Hohe Warte\nDatum;Temp\n2025-01-01;1,5\n2025-01-02;2,5\n") == (
             ";",

@@ -634,7 +634,8 @@ async def upload_dataset(
         raise AgentsError(413, "too_long")
     ledger = RequestLedger(request_id=rid, user_id=user, session_id=sid, kind="action")
     try:
-        parsed = parse_dataset(body.text)
+        # A confirmed transcription is the service's own CSV, which the user has seen row by row: no row is left out.
+        parsed = parse_dataset(body.text, find_table=not body.confirmed)
     except ParseError as exc:
         if exc.code == "too_long":
             raise AgentsError(413, "too_long") from None
@@ -717,7 +718,7 @@ async def _transcribe(services: Services, ledger: RequestLedger, text: str) -> J
     )
     csv_text = table_to_csv(reading.table)
     try:
-        parsed = parse_dataset(csv_text)
+        parsed = parse_dataset(csv_text, find_table=False)
     except ParseError:
         attribution("data_transcribe", ledger, outcome="unparseable", judge_tokens=reading.tokens)
         raise AgentsError(422, "unparseable") from None
@@ -956,7 +957,7 @@ async def dataset_to_long(sid: SessionId, user: User, runtime: RuntimeDep) -> JS
     try:
         operations = OPERATIONS.validate_python([suggestion.operation()])
         prepared = apply_operations(stored.as_parsed(), operations)
-        parsed = parse_dataset(prepared.csv, text_columns=prepared.text_columns)
+        parsed = parse_dataset(prepared.csv, text_columns=prepared.text_columns, find_table=False)
     except (PrepareError, ParseError, ValidationError):
         raise AgentsError(422, "no_suggestion") from None
     try:

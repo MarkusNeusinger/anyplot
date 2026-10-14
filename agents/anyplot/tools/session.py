@@ -232,7 +232,8 @@ async def prepare_data(operations: list[dict[str, Any]], tool_context: ToolConte
     try:
         prepared = apply_operations(stored.as_parsed(), parsed_operations)
         # The columns `set_type text` made text stay text: the re-parse would type them by content again.
-        parsed = parse_dataset(prepared.csv, text_columns=prepared.text_columns)
+        # The CSV is the service's own: every row stays, also a `Total` category a sort moved to the end.
+        parsed = parse_dataset(prepared.csv, text_columns=prepared.text_columns, find_table=False)
     except PrepareError as exc:
         # The message names columns of the user's dataset at most, never a cell; fenced like every column name.
         return {"status": "error", "code": exc.code, "message": _fenced_lines([exc.message])}
@@ -281,7 +282,7 @@ async def generate_data(
         return {"status": "error", "code": "invalid_arguments", "errors": _fenced_lines(validation_lines(exc))}
     try:
         generated = generate(spec)
-        parsed = parse_dataset(generated.csv)
+        parsed = parse_dataset(generated.csv, find_table=False)
     except GenerateError as exc:
         # The message names variables and series and quotes the model's own expression at most; fenced all the same.
         return {"status": "error", "code": exc.code, "message": _fenced_lines([exc.message])}

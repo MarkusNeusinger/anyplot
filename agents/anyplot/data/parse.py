@@ -278,11 +278,14 @@ def pandas_dtypes(column_dtypes: Mapping[str, ColumnDtype]) -> dict[str, str]:
     return {name: PANDAS_DTYPES[dtype] for name, dtype in column_dtypes.items() if dtype != "datetime"}
 
 
-def parse_dataset(text: str, *, text_columns: Collection[str] = ()) -> ParsedDataset:
+def parse_dataset(text: str, *, text_columns: Collection[str] = (), find_table: bool = True) -> ParsedDataset:
     """Parse pasted CSV, TSV, semicolon or pipe text, JSON or a Python literal into the canonical dataset.
 
     `text_columns` names (canonical) columns that stay text instead of being typed by
-    their cells; a name that is no column is ignored.
+    their cells; a name that is no column is ignored. `find_table` narrows pasted text to
+    its table (`table_block`); a caller that re-reads a CSV the service wrote itself (a
+    prepared, generated or transcribed table) passes False, so every row it holds stays,
+    also a category named `Total` that a sort moved to the end.
     """
     _check_size(text)
     text = text.removeprefix(_BOM)
@@ -302,7 +305,7 @@ def parse_dataset(text: str, *, text_columns: Collection[str] = ()) -> ParsedDat
             raise ParseError("unparseable", "the data starts like JSON or a Python literal but is neither")
         # A bare `(` that neither reader accepts is delimited text: `(in %) Land;Wert`, prose in parentheses.
     if table is None:
-        table = _read_delimited(text, warnings)
+        table = _read_delimited(text, warnings, find_table=find_table)
     headers, rows, source_format = table
     return _build(headers, rows, source_format, warnings, frozenset(text_columns))
 
@@ -334,7 +337,7 @@ def _check_controls(text: str) -> None:
 def sniff_delimiter(text: str) -> tuple[str | None, SourceFormat]:
     """Pick the delimiter from the first `SNIFF_LINES` non-blank lines.
 
-    Pasted data often carries lines that are no part of the table: a title, an export's
+    Pasted data often carries lines that are not part of the table: a title, an export's
     metadata, a sentence explaining the columns (owner rule of 2026-10-14). So the table
     decides, not the first line: each candidate (`,` `;` tab `|`) splits the sample with
     the csv module, quotes honoured, and its table is the lines of its most common field
@@ -390,7 +393,9 @@ def _sniff_by_header(sample: str) -> tuple[str | None, SourceFormat]:
     return choice
 
 
-def _read_delimited(text: str, warnings: list[str]) -> tuple[list[str], list[list[str]], SourceFormat]:
+def _read_delimited(
+    text: str, warnings: list[str], *, find_table: bool = True
+) -> tuple[list[str], list[list[str]], SourceFormat]:
     delimiter, source_format = sniff_delimiter(text)
     reader = csv.reader(
         io.StringIO(text, newline=""), delimiter=delimiter or _NO_DELIMITER, skipinitialspace=True, strict=True
@@ -404,7 +409,7 @@ def _read_delimited(text: str, warnings: list[str]) -> tuple[list[str], list[lis
         raise ParseError("unparseable", f"the quoting is malformed near line {reader.line_num}") from exc
     if not records:
         raise ParseError("unparseable", "the data is empty")
-    block = table_block([record for _, record in records])
+    block = table_block([record for _, record in records]) if find_table else TableBlock(0, len(records))
     if block.above:
         warnings.append(f"left out {_count(block.above, 'line')} above the table (a title, notes or metadata)")
     if block.below:
