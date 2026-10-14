@@ -43,6 +43,38 @@ Decisions this module takes where the design leaves room:
   import bound, and as a `from` import. Both are banned as a component of an import
   path below its root too, where an alias would hide them from the attribute check
   (`import scipy.fft._backend as backend`). No catalogue file uses either.
+* **Exec, process and import-by-name routes through allowed modules** (review of
+  2026-10-14: `np.testing.measure("...")` compiled and ran any string). A survey of every
+  public function of the allowed packages for `exec`, `eval`, `compile`, `subprocess`,
+  sockets, `urlopen`, `import_module` and pickle, and of every module they hand out as an
+  attribute, found three kinds of route, each closed structurally. Whole submodules that
+  test, build, start programs or import by name (`UNSAFE_SUBMODULES`: `testing`, `tests`,
+  `distutils`, `backends`, `animation`, `texmanager`, `sphinxext`, pandas' `computation`,
+  statsmodels' `x13` and `iolib`, ...) are banned like `ESCAPE_ATTRIBUTES`, and a test pins
+  that every public first-level submodule of numpy, pandas, matplotlib, seaborn,
+  scikit-learn, the toolkits and the admitted statsmodels packages is reviewed as safe or
+  banned, so an upgrade that adds one fails until someone looks. Single helpers elsewhere
+  (`UNSAFE_HELPERS`: `test()`, which runs pytest, `add_newdoc` and `import_module`, which
+  import by name, `switch_backend`, `TexManager`, the seaborn and statsmodels fetchers,
+  `print_*` canvas writers, `x13_*` runners) are banned like `BANNED_ATTRIBUTES`. Modules
+  re-exported as attributes (`mpl.tempfile`, `mpl.logging`, pickle, pkgutil, pydoc,
+  `sklearn.<module>.scipy`, ...) joined `ESCAPE_ATTRIBUTES`. And an attribute path resolved
+  through an import must stay inside the import surface: `import scipy.stats` binds `scipy`,
+  so `scipy.datasets.face()` is a finding (`_check_attribute_surface`).
+* **Settings that start programs** (`rc-key`). matplotlib starts LaTeX for `text.usetex`
+  and the `pgf.*` settings, ffmpeg or ImageMagick for `animation.*`, Ghostscript for
+  `ps.usedistiller`, and imports the module `backend` names, as pandas does for
+  `plotting.backend`. A string literal shaped like a dotted settings key that names one is a
+  finding anywhere; in a settings position (an `rcParams` subscript, a key of a settings
+  dict, a `**{...}` keyword) a bare `backend` or `usetex` is too, while the word "backend"
+  in a list of labels passes. Settings are written only with keys the rule can read:
+  `rcParams` (and its two default copies) is subscripted with a literal when written, or
+  `.update`d with a dict literal of literal keys, and is never a value; `rc_context`,
+  `style.context` and every `rc=` take a string or such a dict; `rc(group, **kw)` takes a
+  literal group and checks each `group.keyword`. The keywords `usetex=` and `backend=` are
+  banned on every call (`banned-keyword`), the value "TeX" (`ismath="TeX"`) is a finding,
+  and a savefig `format=` other than "png" is a `savefig-target` finding. A key built at
+  run time still passes; the render harness's audit hook refuses the process it would start.
 * **A module is never a value.** A name bound by `import X [as Y]` may only be the
   receiver of an attribute (`calendar.month_abbr`); as a value (`[calendar][0]`,
   `f(dataclasses)`, `c = collections`) it would reach the attribute checks through an
@@ -154,8 +186,9 @@ banned import names the data surface instead (`DATA_IMPORT_ALTERNATIVE`). An
 before validation.
 
 Rule ids: `size`, `encoding`, `syntax`, `banned-import` (with `Finding.module`), `star-import`,
-`relative-import`, `os-use`, `module-value`, `banned-name`, `banned-call`, `banned-attribute`, `dunder`,
-`banned-statement`, `url-literal`, `string-length`, `savefig-target` (SECURITY);
+`relative-import`, `os-use`, `module-value`, `banned-name`, `banned-call`, `banned-attribute`,
+`banned-keyword`, `rc-key`, `dunder`, `banned-statement`, `url-literal`, `string-length`, `savefig-target`
+(SECURITY; DATA without `savefig-target`);
 `placeholder-count`, `placeholder-use`, `rng`, `literal-data`, `palette-prefix`
 (ADAPTATION); `data-frame` (DATA). Findings are sorted by line; messages never echo
 more than about 60 characters of code and never echo string literal contents.
@@ -491,8 +524,112 @@ ESCAPE_ATTRIBUTES: frozenset[str] = frozenset(
         "_getcategory",
         "_FuncBuilder",
         "_datasource",
+        # Modules the allowed packages hand out as attributes outside the import surface (re-export survey of
+        # 2026-10-14, numpy 2.5, pandas 3.0, matplotlib 3.11, seaborn 0.13, scipy 1.18, scikit-learn 1.9,
+        # statsmodels 0.15): `mpl.tempfile`, `mpl.logging` (`FileHandler`, `config.dictConfig` imports by name),
+        # pickle (`loads` runs code), pkgutil and pydoc (`resolve_name`, `locate`: import by name), the file,
+        # archive and network modules, `sklearn.<module>.scipy` and `seaborn.regression.statsmodels` (the whole
+        # package past the allowed submodules).
+        "tempfile",
+        "logging",
+        "pickle",
+        "pkgutil",
+        "pydoc",
+        "runpy",
+        "webbrowser",
+        "urllib",
+        "codecs",
+        "gzip",
+        "zipfile",
+        "tarfile",
+        "mmap",
+        "fileinput",
+        "traceback",
+        "platform",
+        "threading",
+        "multiprocessing",
+        "atexit",
+        "asyncio",
+        "joblib",
+        "pytest",
+        "PIL",
+        "locale",
+        "scipy",
+        "statsmodels",
     }
 )
+UNSAFE_SUBMODULES: frozenset[str] = frozenset(
+    {
+        "testing",  # numpy.testing.measure / runstring exec any string, tempdir; pandas.testing; matplotlib.testing
+        "testutils",  # numpy.ma.testutils
+        "tests",
+        "conftest",
+        "distutils",
+        "sphinxext",  # matplotlib's plot directive runs code
+        "backends",  # backend_pgf and backend_ps start LaTeX and Ghostscript, PdfPages writes files
+        "backend_bases",  # register_backend: a backend imported by name; TexManager
+        "backend_managers",
+        "backend_tools",
+        "animation",  # the movie writers start ffmpeg and ImageMagick
+        "texmanager",  # starts LaTeX
+        "dviread",  # starts kpsewhich
+        "pylab",
+        "computation",  # pandas' eval engine
+        "compat",  # pandas.compat.pickle_compat, statsmodels.compat
+        "external",  # seaborn.external (appdirs, docscrape → pydoc)
+        "externals",  # sklearn.externals (array_api_extra.testing)
+        "x13",  # statsmodels runs the X-13 binary from a path it is given
+        "discovery",  # sklearn.utils.discovery imports by name
+        "estimator_checks",
+        "iolib",  # statsmodels' pickle save and load
+        "smpickle",
+    }
+)
+"""Submodules of the allowed packages that test, build, start processes, run LaTeX or import by name (validator
+review of 2026-10-14: `np.testing.measure` compiles and execs its string). Banned like `ESCAPE_ATTRIBUTES`: as an
+attribute on any object, as a `from` import and as an import path component below its root. A test pins that every
+public first-level submodule of numpy, pandas, matplotlib, seaborn and scikit-learn is either reviewed as safe or
+in this set, so a library upgrade that adds one fails until someone looks at it."""
+UNSAFE_HELPERS: frozenset[str] = frozenset(
+    {
+        "test",  # np.test, pd.test, mpl.test, scipy's and statsmodels' `test()` run pytest
+        "add_newdoc",  # numpy.lib.add_newdoc imports a module by name
+        "import_module",  # sklearn.utils.discovery re-exports importlib.import_module
+        "import_optional_dependency",  # pandas.core.apply re-exports it: import by name
+        "register_backend",
+        "switch_backend",  # imports a backend module by name (module://...)
+        "backend",  # pd.options.plotting.backend: df.plot() imports the module it names
+        "get_registered_canvas_class",
+        "math_to_image",  # matplotlib.mathtext writes an image to any path
+        "TexManager",
+        "usetex",
+        "set_usetex",
+        "dogplot",  # seaborn fetches an image over the network
+        "get_dataset_names",
+        "get_data_home",
+        "clear_data_home",  # statsmodels deletes its data directory
+        "check_internet",
+        "urlretrieve",
+        "datasets",  # scipy.datasets downloads and caches, statsmodels.api.datasets fetches and deletes
+        "webdoc",  # statsmodels opens a browser
+        "run_spec",
+        "all_estimators",
+        "all_displays",
+        "all_functions",
+        "thumbnail",  # matplotlib.image.thumbnail reads and writes files by path
+        "json_dump",  # matplotlib.font_manager writes JSON to any path
+        "json_load",
+        "save_pickle",
+        "parse_lutkepohl_data",
+        "make_pdf_to_png_converter",
+        "gs_distill",
+        "xpdf_distill",
+    }
+)
+"""Public functions and classes of the allowed modules that exec, start a process, import by name, fetch or write
+files (survey of 2026-10-14). Banned as attributes on any object and as `from` imports, like `BANNED_ATTRIBUTES`;
+`_UNSAFE_HELPER_PATTERN` adds the families `print_*` (a canvas writing any format to any path, past the savefig
+rule) and `x13_*` (statsmodels' X-13 runners)."""
 MODULE_ESCAPES: frozenset[str] = frozenset({"calendar.main", "random.main"})
 """Escapes banned only on their own module, because the bare name is plausible data: `calendar.main`
 sets the process locale through its `-L` option, while `df.main` is a column. Checked against the
@@ -571,6 +708,27 @@ UNKNOWN_MODULE = "?"
 # `read_*` (pandas readers), `fetch_*` (sklearn downloaders), `load*` (`np.load`,
 # `np.loadtxt`, `sns.load_dataset`, sklearn's `load_*`).
 _BANNED_IO_PATTERN = re.compile(r"^(?:read_\w+|fetch_\w+|load\w*)$")
+_UNSAFE_HELPER_PATTERN = re.compile(r"^(?:print_\w+|x13_\w+)$")
+_ANY_RECEIVER_ESCAPES = ESCAPE_ATTRIBUTES | UNSAFE_SUBMODULES
+"""Banned as an attribute on any object, as a `from` import and as an import path component below its root."""
+# matplotlib settings that start a program (LaTeX, ffmpeg, ImageMagick, Ghostscript), import a module by name (a
+# backend, pandas' plotting backend) or open a server, matched against every string literal shaped like a setting
+# key (lower-case dotted words), wherever it appears: a dict key, a subscript, `rc_context`, `set_theme(rc=...)`,
+# `pd.set_option`. "TeX" is the `ismath` value that sends a text through LaTeX (`TextPath`, `text2path`).
+_RC_KEY_SHAPE = re.compile(r"^[a-z][a-z0-9_]*(?:\.[a-z0-9_]+)*$")
+_UNSAFE_RC_KEY = re.compile(
+    r"^(?:animation|pgf|webagg)\.|(?:^|\.)(?:backend|backend_fallback|usetex)$|_path$|latex|ffmpeg|imagemagick|"
+    r"distiller|convert_"
+)
+UNSAFE_TEXT_VALUES = frozenset({"TeX"})
+RC_NAMES = frozenset({"rcParams", "rcParamsDefault", "rcParamsOrig"})
+"""matplotlib's settings dicts: written only through a literal key or `.update` with a dict literal (`_check_rc`)."""
+_RC_READERS = frozenset({"update", "get", "copy"})
+_RC_CONSUMERS = frozenset({"rc_context", "context"})
+"""Calls that take settings as a dict (`mpl.rc_context({...})`, `plt.style.context({...})`): literal keys only."""
+BANNED_KEYWORDS = frozenset({"usetex", "backend"})
+"""Keyword arguments banned on any call: `usetex=True` sends a text through LaTeX (`ax.text`, `TextPath`, `plt.rc`),
+`backend=` imports a backend module by name (`savefig(backend="module://...")`)."""
 _STRING_DISPATCH_METHODS = frozenset({"agg", "aggregate", "apply", "transform", "applymap"})
 # Methods that return text without a target and write to one given as `buf`, with the position of
 # `buf` among their positional parameters (`DataFrame.info(verbose, buf, …)`).
@@ -833,6 +991,38 @@ def _io_hint(name: str) -> str:
     return f" → {_DATA_FROM_DF}" if _BANNED_IO_PATTERN.match(name) else ""
 
 
+def _is_unsafe_helper(name: str) -> bool:
+    return name in UNSAFE_HELPERS or _UNSAFE_HELPER_PATTERN.match(name) is not None
+
+
+RC_KEY_MESSAGE = "this setting starts a program or loads a module (LaTeX, ffmpeg, a backend or a tool path)"
+
+
+def _is_unsafe_setting(text: str, *, setting: bool = False) -> bool:
+    """A string literal that names a setting `_UNSAFE_RC_KEY` matches, or the `ismath="TeX"` value.
+
+    Anywhere in the code only a dotted key counts (`"text.usetex"`, `"plotting.backend"`), so a
+    word such as "backend" in a list of labels passes; where the string is a settings key
+    (`setting`: an `rcParams` subscript, a key of a settings dict, a `**{...}` keyword) a bare
+    `"backend"` or `"usetex"` counts too.
+    """
+    if text in UNSAFE_TEXT_VALUES:
+        return True
+    if _RC_KEY_SHAPE.match(text) is None or ("." not in text and not setting):
+        return False
+    return _UNSAFE_RC_KEY.search(text) is not None
+
+
+def _is_literal_settings(node: ast.AST | None) -> bool:
+    """A settings argument whose keys can be checked: `None`, a string literal (a style or group name) or a dict
+    literal whose every key is a string literal (no `**` unpacking)."""
+    if node is None or (isinstance(node, ast.Constant) and (node.value is None or isinstance(node.value, str))):
+        return True
+    return isinstance(node, ast.Dict) and all(
+        isinstance(key, ast.Constant) and isinstance(key.value, str) for key in node.keys
+    )
+
+
 def _module_allowed(path: str, allowed: Iterable[str]) -> bool:
     return any(path == prefix or path.startswith(prefix + ".") for prefix in allowed)
 
@@ -897,6 +1087,9 @@ class _Scan:
                 self.parents[child] = node
         self.findings: list[Finding] = []
         self.os_names: set[str] = set()
+        self.allowed_imports: frozenset[str] = frozenset()
+        self.import_bindings: dict[str, bool] = {}
+        """Name bound by an import the rules permitted (`import scipy.stats` binds `scipy`) → True."""
         self.aliases: dict[str, str] = {}
         self._collect_aliases()
 
@@ -983,7 +1176,10 @@ class _Scan:
         self._check_module_values()
         self._check_names()
         self._check_attributes()
+        self._check_attribute_surface()
         self._check_calls()
+        self._check_keywords()
+        self._check_settings()
         self._check_buffer_writers()
         self._check_statements()
         self._check_strings()
@@ -997,7 +1193,10 @@ class _Scan:
         self._check_module_values()
         self._check_names()
         self._check_attributes()
+        self._check_attribute_surface()
         self._check_calls()
+        self._check_keywords()
+        self._check_settings()
         self._check_buffer_writers()
         self._check_statements()
         self._check_strings()
@@ -1070,15 +1269,17 @@ class _Scan:
         def permitted(path: str) -> bool:
             return _module_allowed(path, allowed) and not denied(path)
 
+        self.allowed_imports = allowed
         where = "in data code" if self.data_profile else f"with {library}"
         for import_node in self.of(ast.Import):
             for alias in import_node.names:
+                bound = alias.asname or alias.name.split(".")[0]
                 if alias.name == "os" and not self.data_profile:
                     self.os_names.add(alias.asname or "os")
                 elif not permitted(alias.name):
                     self.ban_import(alias.name, f"is not allowed {where}", alias)
                 else:
-                    self._check_module_path(alias.name, alias)
+                    self.import_bindings[bound] = not self._check_module_path(alias.name, alias)
         for from_node in self.of(ast.ImportFrom):
             if from_node.level or not from_node.module:
                 self.add("relative-import", "relative imports are not allowed", from_node)
@@ -1091,6 +1292,8 @@ class _Scan:
                 path = f"{from_node.module}.{alias.name}"
                 if not module_banned and (denied(path) or not (permitted(from_node.module) or permitted(path))):
                     self.ban_import(path, f"is not allowed {where}", alias)
+                elif not module_banned:
+                    self.import_bindings[alias.asname or alias.name] = True
                 self._check_function_name(alias.name, alias)
                 if path in MODULE_ESCAPES:
                     self.add("banned-attribute", f"'{path}' is not allowed", alias)
@@ -1112,7 +1315,7 @@ class _Scan:
             if part in BANNED_ATTRIBUTES or part in BANNED_IO or _BANNED_IO_PATTERN.match(part):
                 self.ban_import(path, f"reaches the banned name '{part}'", node)
                 return True
-            if position and part in ESCAPE_ATTRIBUTES:
+            if position and part in _ANY_RECEIVER_ESCAPES:
                 self.ban_import(path, f"reaches the banned name '{part}'", node)
                 return True
             if position and part.startswith("_"):
@@ -1122,7 +1325,7 @@ class _Scan:
 
     def _check_function_name(self, name: str, node: ast.AST) -> None:
         """A name reached by a `from` import: the attribute, escape and I/O sets apply, and no private name."""
-        if name in BANNED_ATTRIBUTES or name in ESCAPE_ATTRIBUTES:
+        if name in BANNED_ATTRIBUTES or name in _ANY_RECEIVER_ESCAPES or _is_unsafe_helper(name):
             self.add("banned-attribute", f"'{name}' is not allowed", node)
         elif name in BANNED_IO or _BANNED_IO_PATTERN.match(name):
             self.add("banned-call", f"'{name}' is not allowed{self.io_hint(name)}", node)
@@ -1201,7 +1404,11 @@ class _Scan:
         for attribute in self.of(ast.Attribute):
             if _DUNDER_NAME.match(attribute.attr):
                 self.add("dunder", f"dunder attribute '.{attribute.attr}' is not allowed", attribute)
-            elif attribute.attr in BANNED_ATTRIBUTES or attribute.attr in ESCAPE_ATTRIBUTES:
+            elif (
+                attribute.attr in BANNED_ATTRIBUTES
+                or attribute.attr in _ANY_RECEIVER_ESCAPES
+                or _is_unsafe_helper(attribute.attr)
+            ):
                 self.add("banned-attribute", f"attribute '.{attribute.attr}' is not allowed", attribute)
             elif attribute.attr in BANNED_IO or _BANNED_IO_PATTERN.match(attribute.attr):
                 # `df.load` / `df.read_count`: a column reached as an attribute, not a module function.
@@ -1220,6 +1427,118 @@ class _Scan:
             elif attribute.attr.startswith("_") and self.resolve(attribute.value) is not None:
                 # `collections._sys`, `dataclasses._FuncBuilder`: private helpers of an imported name.
                 self.add("banned-attribute", f"the private attribute '{_snippet(attribute)}' is not allowed", attribute)
+
+    def _in_surface(self, path: str) -> bool:
+        return _module_allowed(path, self.allowed_imports) and not _module_allowed(path, DENIED_IMPORTS)
+
+    def _check_attribute_surface(self) -> None:
+        """An attribute path resolved through an import stays inside the import surface.
+
+        `import scipy.stats` binds `scipy`, so `scipy.datasets.face()` would reach a module the
+        import rules keep out (it downloads); `import statsmodels.tsa` binds `statsmodels`, and
+        `statsmodels.iolib` loads pickles. The path is reported once, at its shortest prefix
+        outside the surface; a name bound by a refused import is left to that finding.
+        """
+        for attribute in self.of(ast.Attribute):
+            root: ast.AST = attribute
+            while isinstance(root, ast.Attribute):
+                root = root.value
+            if not isinstance(root, ast.Name) or not self.import_bindings.get(root.id, False):
+                continue
+            path = self.resolve(attribute)
+            if path is None or self._in_surface(path):
+                continue
+            inner = self.resolve(attribute.value) if isinstance(attribute.value, ast.Attribute) else None
+            if inner is not None and not self._in_surface(inner):
+                continue
+            message = f"'{_snippet(attribute)}' reaches a module outside the allowed imports"
+            self.add("banned-attribute", message, attribute)
+
+    def _check_keywords(self) -> None:
+        for keyword in self.of(ast.keyword):
+            if keyword.arg in BANNED_KEYWORDS:
+                self.add("banned-keyword", f"the keyword '{keyword.arg}=' is not allowed", keyword)
+
+    def _check_settings(self) -> None:
+        """matplotlib settings are written only with keys the string rule can read (`rc-key`).
+
+        `rcParams` (and its two default copies) may be subscripted, with a string literal
+        when the item is written or deleted, or be the receiver of a called `.update`, `.get`
+        or `.copy`, whose `.update` arguments are dict literals with string-literal keys; it
+        is never a value (`r = mpl.rcParams`) or a target. `rc_context(...)`, `style.context(...)`
+        and every `rc=` argument take a string or such a dict; `rc(group, **settings)` takes a
+        literal group, and each `group.keyword` key is checked like a string literal. A key built
+        at run time would pass the string rule; the render guard refuses what such a setting starts.
+        """
+        message = "matplotlib settings must be written with literal keys (a string or a dict literal)"
+        for node in [*self.of(ast.Attribute), *self.of(ast.Name)]:
+            name = node.attr if isinstance(node, ast.Attribute) else node.id if isinstance(node, ast.Name) else ""
+            if name not in RC_NAMES:
+                continue
+            if not self._is_settings_use(node):
+                self.add("rc-key", message, node)
+                continue
+            parent = self.parents.get(node)
+            if isinstance(parent, ast.Subscript):
+                self._check_setting_keys(parent.slice)
+            elif isinstance(parent, ast.Attribute) and parent.attr == "update":
+                call = self.parents.get(parent)
+                for argument in call.args if isinstance(call, ast.Call) else []:
+                    self._check_setting_keys(argument)
+        for call in self.of(ast.Call):
+            func = call.func
+            name = func.attr if isinstance(func, ast.Attribute) else func.id if isinstance(func, ast.Name) else ""
+            unpacked = any(isinstance(arg, ast.Starred) for arg in call.args) or any(
+                keyword.arg is None for keyword in call.keywords
+            )
+            settings = [keyword.value for keyword in call.keywords if keyword.arg == "rc"]
+            if name in _RC_CONSUMERS:
+                settings.extend(call.args)
+            if (name in _RC_CONSUMERS and unpacked) or not all(_is_literal_settings(value) for value in settings):
+                self.add("rc-key", message, call)
+            for value in [*settings, *(keyword.value for keyword in call.keywords if keyword.arg is None)]:
+                self._check_setting_keys(value)  # `**{"usetex": True}` too
+            if name == "rc":
+                self._check_rc_call(call, unpacked)
+
+    def _check_setting_keys(self, node: ast.AST) -> None:
+        """The string keys of a settings dict, or a settings subscript's key, checked as settings (bare words too)."""
+        keys = node.keys if isinstance(node, ast.Dict) else [node]
+        for key in keys:
+            if isinstance(key, ast.Constant) and isinstance(key.value, str):
+                if _is_unsafe_setting(key.value, setting=True):
+                    self.add("rc-key", f"string literal names a setting: {RC_KEY_MESSAGE}", key)
+
+    def _is_settings_use(self, node: ast.AST) -> bool:
+        parent = self.parents.get(node)
+        if isinstance(parent, ast.Subscript) and parent.value is node:
+            key = parent.slice
+            return isinstance(parent.ctx, ast.Load) or (isinstance(key, ast.Constant) and isinstance(key.value, str))
+        if not (
+            isinstance(parent, ast.Attribute)
+            and parent.value is node
+            and parent.attr in _RC_READERS
+            and isinstance(getattr(node, "ctx", ast.Load()), ast.Load)
+        ):
+            return False
+        call = self.parents.get(parent)
+        if not (isinstance(call, ast.Call) and call.func is parent):
+            return False
+        if parent.attr != "update":
+            return True
+        return all(_is_literal_settings(arg) and not isinstance(arg, ast.Constant) for arg in call.args) and all(
+            keyword.arg is not None for keyword in call.keywords
+        )
+
+    def _check_rc_call(self, call: ast.Call, unpacked: bool) -> None:
+        """`plt.rc("text", usetex=True)` sets `text.usetex`: a literal group, and each `group.keyword` checked."""
+        group = call.args[0] if len(call.args) == 1 else None
+        if unpacked or not (isinstance(group, ast.Constant) and isinstance(group.value, str)):
+            self.add("rc-key", "rc() takes one literal group name and keyword settings", call)
+            return
+        for keyword in call.keywords:
+            if keyword.arg is not None and _is_unsafe_setting(f"{group.value}.{keyword.arg}"):
+                self.add("rc-key", RC_KEY_MESSAGE, keyword)
 
     def _check_calls(self) -> None:
         for call in self.of(ast.Call):
@@ -1289,6 +1608,8 @@ class _Scan:
             if _URL_IN_TEXT.search(text):
                 hint = f" → {DATA_IO_MESSAGE}" if self.data_profile else ""
                 self.add("url-literal", f"string literal contains a URL or a file:/data: scheme{hint}", constant)
+            if isinstance(constant.value, str) and _is_unsafe_setting(text):
+                self.add("rc-key", f"string literal names a setting: {RC_KEY_MESSAGE}", constant)
 
     def _check_savefig(self) -> None:
         found = False
@@ -1306,6 +1627,13 @@ class _Scan:
             target = call.args[0] if call.args else next((k.value for k in call.keywords if k.arg == "fname"), None)
             if target is None or not _is_theme_target(target):
                 self.add("savefig-target", 'savefig target must be exactly f"plot-{THEME}.png"', call)
+            for keyword in call.keywords:
+                # `format="ps"` with a distiller or `format="pgf"` would start Ghostscript or LaTeX, whatever the name.
+                fmt = keyword.value
+                if keyword.arg == "format" and not (isinstance(fmt, ast.Constant) and fmt.value == "png"):
+                    self.add("savefig-target", 'savefig format must be "png" or left out', keyword)
+                elif keyword.arg is None:
+                    self.add("savefig-target", "savefig takes no **arguments", keyword)
         if not found:
             self.add("savefig-target", "no savefig call found", None)
 

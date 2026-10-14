@@ -234,7 +234,8 @@ class TestGuardUnit:
         assert guard.refuses("sys._getframe", (None,))
         assert guard.refuses("object.__getattr__", (None, "gi_frame"))
         assert not guard.refuses("object.__getattr__", (None, "__code__"))
-        assert not guard.refuses("exec", (None,))
+        assert guard.refuses("exec", (None,))  # every exec but the snippet's own (test_harness_guard.py)
+        assert not guard.refuses("os.stat", ("f",))
 
     def test_unarmed_guard_lets_everything_through(self) -> None:
         guard = harness.DataGuard()
@@ -246,7 +247,7 @@ class TestGuardUnit:
         guard.armed = True  # never `arm()` in the test process: an audit hook cannot be removed
         with pytest.raises(RuntimeError):
             guard("socket.connect", ())
-        guard("exec", (None,))
+        guard("os.stat", ("f",))
         assert guard.blocked == "socket"
         with guard.paused():
             guard("object.__getattr__", (None, "tb_frame"))  # the harness's own traceback printer

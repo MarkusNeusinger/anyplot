@@ -214,6 +214,9 @@ module = [
     "cloud_sql.*",
     "cachetools",
     "cachetools.*",
+    # scikit-learn's untyped helpers, which the render harness warms before its plot guard
+    "threadpoolctl",
+    "joblib.*",
 ]
 ignore_missing_imports = true
 

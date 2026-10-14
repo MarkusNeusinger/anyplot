@@ -5,6 +5,7 @@ bypass the design doc names, and the catalogue (never raises, runs under a time 
 and prints a per-rule summary under `-s`; the catalogue is not clean by design).
 """
 
+import pkgutil
 import time
 from collections import Counter
 from pathlib import Path
@@ -13,13 +14,19 @@ from typing import get_args
 import pytest
 
 from agents.anyplot.code.validate import (
+    BANNED_ATTRIBUTES,
+    BANNED_IO,
+    ESCAPE_ATTRIBUTES,
     MAX_LITERAL_NUMBERS,
     MAX_STRING_CHARS,
     PLACEHOLDER,
+    UNSAFE_HELPERS,
+    UNSAFE_SUBMODULES,
     Finding,
     Profile,
     module_label,
     validate_adaptation,
+    validate_data_code,
     validate_security,
 )
 from agents.anyplot.schemas import MAX_CODE_CHARS
@@ -1215,6 +1222,222 @@ class TestPalette:
         assert [(f.rule, f.message, f.line) for f in findings] == [
             ("palette-prefix", "'IMPRINT.reverse' would change the palette", 5)
         ]
+
+
+# --- exec, process and import-by-name routes through allowed modules (review of 2026-10-14) ----------------
+
+MPL = "import matplotlib as mpl\n"
+# Each route a survey of the allowed packages found, as the code a model would write; the reported
+# case (`np.testing.measure` compiles and execs its string) generalised to every member of its kind.
+EXEC_ROUTES = [
+    pytest.param('np.testing.measure("import os")\n', "banned-attribute", id="numpy.testing.measure execs a string"),
+    pytest.param('np.testing.runstring("x = 1", {})\n', "banned-attribute", id="numpy.testing.runstring"),
+    pytest.param("with np.testing.tempdir() as d:\n    pass\n", "banned-attribute", id="numpy.testing.tempdir"),
+    pytest.param("pd.testing.assert_frame_equal(df, df)\n", "banned-attribute", id="pandas.testing"),
+    pytest.param("import numpy.testing as npt\n", "banned-import", id="import numpy.testing"),
+    pytest.param("from numpy.testing import measure\n", "banned-import", id="from numpy.testing import"),
+    pytest.param("from numpy import testing\n", "banned-attribute", id="from numpy import testing"),
+    pytest.param("from pandas import testing\n", "banned-attribute", id="from pandas import testing"),
+    pytest.param("np.ma.testutils.assert_equal(1, 1)\n", "banned-attribute", id="numpy.ma.testutils"),
+    pytest.param('np.lib.add_newdoc("os", "system", "")\n', "banned-attribute", id="add_newdoc imports by name"),
+    pytest.param("np.test()\n", "banned-attribute", id="numpy test runs pytest"),
+    pytest.param("pd.test()\n", "banned-attribute", id="pandas test runs pytest"),
+    pytest.param(MPL + "mpl.test()\n", "banned-attribute", id="matplotlib test runs pytest"),
+    pytest.param("import matplotlib.testing.compare as c\n", "banned-import", id="matplotlib.testing"),
+    pytest.param("import matplotlib.animation as animation\n", "banned-import", id="animation starts ffmpeg"),
+    pytest.param("from matplotlib.animation import FuncAnimation\n", "banned-import", id="from animation import"),
+    pytest.param("from matplotlib import animation\n", "banned-attribute", id="from matplotlib import animation"),
+    pytest.param("import matplotlib.backends.backend_pgf\n", "banned-import", id="backend_pgf starts LaTeX"),
+    pytest.param("from matplotlib.backends.backend_pdf import PdfPages\n", "banned-import", id="PdfPages"),
+    pytest.param("from matplotlib.texmanager import TexManager\n", "banned-import", id="texmanager"),
+    pytest.param("from matplotlib.backend_bases import register_backend\n", "banned-import", id="register_backend"),
+    pytest.param("import matplotlib.pylab as pylab\n", "banned-import", id="pylab"),
+    pytest.param('plt.switch_backend("module://x")\n', "banned-attribute", id="switch_backend imports by name"),
+    pytest.param('fig.canvas.print_figure("x.png")\n', "banned-attribute", id="canvas print_figure"),
+    pytest.param('fig.canvas.print_eps("x.eps")\n', "banned-attribute", id="canvas print_eps"),
+    pytest.param(MPL + 'mpl.mathtext.math_to_image("$x$", "x.png")\n', "banned-attribute", id="math_to_image"),
+    pytest.param(MPL + 'mpl.image.thumbnail("a.png", "b.png")\n', "banned-attribute", id="image.thumbnail"),
+    pytest.param(MPL + 'mpl.font_manager.json_dump({}, "x.json")\n', "banned-attribute", id="font_manager.json_dump"),
+    pytest.param(MPL + "d = mpl.tempfile.mkdtemp()\n", "banned-attribute", id="re-exported tempfile"),
+    pytest.param(MPL + 'h = mpl.logging.FileHandler("x.log")\n', "banned-attribute", id="re-exported logging"),
+    pytest.param("x = pd.compat.pickle_compat.pickle.loads(b'')\n", "banned-attribute", id="re-exported pickle"),
+    pytest.param("x = pd.core.computation.expr.Expr\n", "banned-attribute", id="pandas eval engine"),
+    pytest.param(
+        'm = pd.core.apply.import_optional_dependency("os")\n', "banned-attribute", id="import_optional_dependency"
+    ),
+    pytest.param('pd.options.plotting.backend = "os"\n', "banned-attribute", id="pandas plotting backend option"),
+    pytest.param('pd.set_option("plotting.backend", "os")\n', "rc-key", id="pandas plotting backend setting"),
+    pytest.param("from sklearn.utils import all_estimators\n", "banned-attribute", id="sklearn all_estimators"),
+    pytest.param("from sklearn.utils.discovery import import_module\n", "banned-import", id="sklearn discovery"),
+    pytest.param("import sklearn.utils.estimator_checks as checks\n", "banned-import", id="sklearn estimator checks"),
+    pytest.param("from sklearn.discriminant_analysis import scipy\n", "banned-attribute", id="re-exported scipy"),
+    pytest.param("import statsmodels.api as sm\nsm.webdoc()\n", "banned-attribute", id="statsmodels webdoc"),
+    pytest.param(
+        "import statsmodels.api as sm\nr = sm.tsa.x13_arima_analysis(df)\n", "banned-attribute", id="x13 runner"
+    ),
+    pytest.param("from statsmodels.tsa.x13 import run_spec\n", "banned-import", id="statsmodels x13"),
+    pytest.param(
+        'import statsmodels.api as sm\nm = sm.iolib.smpickle.load_pickle("m")\n', "banned-attribute", id="iolib"
+    ),
+    pytest.param(
+        "import statsmodels.api as sm\nsm.datasets.clear_data_home()\n", "banned-attribute", id="clear_data_home"
+    ),
+    pytest.param("import scipy.stats\nimg = scipy.datasets.face()\n", "banned-attribute", id="scipy.datasets"),
+    pytest.param("import scipy.stats\nm = scipy.sparse.eye(3)\n", "banned-attribute", id="outside the surface"),
+    pytest.param(
+        "import statsmodels.tsa.api\nx = statsmodels.genmod.families\n", "banned-attribute", id="statsmodels root"
+    ),
+]
+SEABORN_ROUTES = [
+    pytest.param("import seaborn as sns\nsns.dogplot()\n", id="dogplot fetches"),
+    pytest.param("import seaborn as sns\nnames = sns.get_dataset_names()\n", id="get_dataset_names fetches"),
+    pytest.param('import seaborn as sns\nsns.utils.urlretrieve("u", "f")\n', id="urlretrieve"),
+    pytest.param('import seaborn as sns\nf = sns.external.docscrape.pydoc.locate("os.system")\n', id="pydoc"),
+]
+SETTINGS_ROUTES = [
+    pytest.param('plt.rcParams["text.usetex"] = True\n', {"rc-key"}, id="usetex starts LaTeX"),
+    pytest.param(MPL + 'mpl.rcParams["animation.ffmpeg_path"] = "/bin/sh"\n', {"rc-key"}, id="ffmpeg path"),
+    pytest.param(MPL + 'mpl.rcParams["animation.convert_path"] = "x"\n', {"rc-key"}, id="ImageMagick path"),
+    pytest.param('plt.rcParams.update({"text.latex.preamble": "x"})\n', {"rc-key"}, id="latex preamble"),
+    pytest.param('plt.rcParams.update({"pgf.texsystem": "x"})\n', {"rc-key"}, id="pgf"),
+    pytest.param('plt.rcParams.update({"ps.usedistiller": "xpdf"})\n', {"rc-key"}, id="distiller"),
+    pytest.param('plt.rcParams.update({"backend": "module://x"})\n', {"rc-key"}, id="bare backend key"),
+    pytest.param('plt.rcParamsDefault["text.usetex"] = True\n', {"rc-key"}, id="default settings"),
+    pytest.param('plt.rc("text", usetex=True)\n', {"rc-key", "banned-keyword"}, id="rc group and keyword"),
+    pytest.param('plt.rc("animation", ffmpeg_path="x")\n', {"rc-key"}, id="rc ffmpeg_path"),
+    pytest.param('plt.rc("ps", usedistiller="xpdf")\n', {"rc-key"}, id="rc usedistiller"),
+    pytest.param('g = "text"\nplt.rc(g, size=3)\n', {"rc-key"}, id="rc computed group"),
+    pytest.param('with plt.rc_context({"text.usetex": True}):\n    pass\n', {"rc-key"}, id="rc_context"),
+    pytest.param('with plt.style.context({"pgf.preamble": "x"}):\n    pass\n', {"rc-key"}, id="style.context"),
+    pytest.param("s = {}\nwith plt.rc_context(s):\n    pass\n", {"rc-key"}, id="rc_context with a variable"),
+    pytest.param('key = "text.use" + "tex"\nplt.rcParams[key] = True\n', {"rc-key"}, id="computed key"),
+    pytest.param('r = plt.rcParams\nr["text.color"] = "k"\n', {"rc-key"}, id="settings as a value"),
+    pytest.param("s = {}\nplt.rcParams.update(s)\n", {"rc-key"}, id="update with a variable"),
+    pytest.param('plt.rcParams.update(**{"a": 1})\n', {"rc-key"}, id="update unpacked"),
+    pytest.param('ax = plt.gca()\nax.text(0, 0, "x", usetex=True)\n', {"banned-keyword"}, id="usetex keyword"),
+    pytest.param('ax = plt.gca()\nax.text(0, 0, "x", **{"usetex": True})\n', {"rc-key"}, id="usetex unpacked"),
+    pytest.param(
+        'from matplotlib.textpath import TextPath\np = TextPath((0, 0), "x", ismath="TeX")\n',
+        {"rc-key"},
+        id="ismath TeX",
+    ),
+    pytest.param('plt.savefig(f"plot-{THEME}.png", format="ps")\n', {"savefig-target"}, id="savefig format"),
+    pytest.param('plt.savefig(f"plot-{THEME}.png", backend="pgf")\n', {"banned-keyword"}, id="savefig backend"),
+    pytest.param('o = {}\nplt.savefig(f"plot-{THEME}.png", **o)\n', {"savefig-target"}, id="savefig unpacked"),
+]
+ALLOWED_NEAR_ROUTES = [
+    'plt.rcParams["font.family"] = "DejaVu Sans"\n',
+    'plt.rcParams.update({"axes.titlepad": 18, "axes.unicode_minus": True})\n',
+    'size = plt.rcParams["axes.titlesize"]\n',
+    'size = plt.rcParams.get("font.size")\n',
+    'with plt.rc_context({"axes.grid": True}):\n    pass\n',
+    'plt.rc("font", size=12)\n',
+    'labels = ["backend", "frontend", "testing", "latex"]\n',
+    'renamed = df.rename(columns={"a": "file_path"})\n',
+    'ax = plt.gca()\nax.text(0, 0, r"$\\alpha$")\n',
+    'plt.savefig(f"plot-{THEME}.png", format="png")\n',
+    "testing_scores = [1, 2]\n",
+    'scores = df["test"]\n',
+    "from scipy import stats\np = stats.norm.pdf(0)\n",
+    "import scipy.stats\np = scipy.stats.norm.pdf(0)\n",
+    "windows = np.lib.stride_tricks.sliding_window_view(np.arange(5), 2)\n",
+    "import statsmodels.api as sm\nmodel = sm.OLS(df['a'], df['a'])\n",
+]
+
+
+class TestExecAndProcessRoutes:
+    @pytest.mark.parametrize(("body", "rule"), EXEC_ROUTES)
+    def test_route_is_refused(self, body: str, rule: str) -> None:
+        assert rule in security_rules(body)
+
+    @pytest.mark.parametrize("body", SEABORN_ROUTES)
+    def test_seaborn_route_is_refused(self, body: str) -> None:
+        assert "banned-attribute" in security_rules(body, library="seaborn")
+
+    @pytest.mark.parametrize(("body", "expected"), SETTINGS_ROUTES)
+    def test_setting_that_starts_a_program_is_refused(self, body: str, expected: set[str]) -> None:
+        assert security_rules(body) == expected
+
+    def test_seaborn_rc_dict_is_checked(self) -> None:
+        assert security_rules('import seaborn as sns\nsns.set_theme(rc={"text.usetex": True})\n', "seaborn") == {
+            "rc-key"
+        }
+        assert security_rules('import seaborn as sns\nsns.set_theme(rc={"axes.grid": False})\n', "seaborn") == set()
+        assert security_rules("import seaborn as sns\nr = {}\nsns.set_theme(rc=r)\n", "seaborn") == {"rc-key"}
+
+    @pytest.mark.parametrize("body", ALLOWED_NEAR_ROUTES)
+    def test_nearest_allowed_sibling_passes(self, body: str) -> None:
+        assert security_rules(body) == set()
+
+    def test_the_reported_case_fails_the_data_profile_too(self) -> None:
+        code = 'import numpy as np\nimport pandas as pd\nnp.testing.measure("import os")\ndf = pd.DataFrame()\n'
+        assert "banned-attribute" in {finding.rule for finding in validate_data_code(code)}
+
+    def test_messages_never_echo_the_setting(self) -> None:
+        findings = validate_security(plot('plt.rcParams["text.latex.preamble"] = "x"\n'), library="matplotlib")
+        assert findings and all("preamble" not in finding.message for finding in findings)
+
+
+# Every public first-level submodule of a package the validator admits whole, as reviewed on 2026-10-14
+# (numpy 2.5, pandas 3.0, matplotlib 3.11, seaborn 0.13, scikit-learn 1.9, statsmodels 0.15): it is either
+# here, reviewed as computing and drawing only, or banned by name in the validator. A library upgrade that
+# adds a submodule fails `test_every_submodule_is_reviewed` until someone looks at it.
+REVIEWED_SUBMODULES: dict[str, frozenset[str]] = {
+    "numpy": frozenset(
+        "char core dtypes exceptions fft lib linalg ma matlib matrixlib polynomial random rec strings typing "
+        "version".split()
+    ),
+    "pandas": frozenset("api arrays core errors plotting tseries util".split()),
+    "matplotlib": frozenset(
+        "artist axes axis bezier category cbook cm collections colorbar colorizer colors container contour dates "
+        "figure font_manager ft2font gridspec hatch image inset layout_engine legend legend_handler lines markers "
+        "mathtext mlab offsetbox patches path patheffects projections pyplot quiver rcsetup sankey scale spines "
+        "stackplot streamplot style table text textpath ticker transforms tri typing units widgets".split()
+    ),
+    "seaborn": frozenset(
+        "algorithms axisgrid categorical cm colors distributions matrix miscplot objects palettes rcmod regression "
+        "relational utils widgets".split()
+    ),
+    "sklearn": frozenset(
+        "base calibration callback cluster compose covariance cross_decomposition decomposition "
+        "discriminant_analysis dummy ensemble exceptions experimental feature_extraction feature_selection frozen "
+        "gaussian_process impute inspection isotonic kernel_approximation kernel_ridge linear_model manifold "
+        "metrics mixture model_selection multiclass multioutput naive_bayes neighbors neural_network pipeline "
+        "preprocessing random_projection semi_supervised svm tree utils".split()
+    ),
+    "mpl_toolkits.mplot3d": frozenset("art3d axes3d axis3d proj3d".split()),
+    "mpl_toolkits.axes_grid1": frozenset(
+        "anchored_artists axes_divider axes_grid axes_rgb axes_size inset_locator mpl_axes parasite_axes".split()
+    ),
+    "mpl_toolkits.axisartist": frozenset(
+        "angle_helper axes_divider axis_artist axisline_style axislines floating_axes grid_finder "
+        "grid_helper_curvelinear parasite_axes".split()
+    ),
+    "statsmodels.tsa": frozenset(
+        "adfvalues api ar_model ardl arima arima_model arima_process base coint_tables descriptivestats "
+        "deterministic exponential_smoothing filters forecasting holtwinters innovations interp mlemodel "
+        "regime_switching seasonal statespace stattools stl tsatools varma_process vector_ar".split()
+    ),
+    "statsmodels.graphics": frozenset(
+        "agreement api boxplots correlation dotplots factorplots functional gofplots mosaicplot plot_grids "
+        "plottools regressionplots tsaplots tukeyplot utils".split()
+    ),
+    "statsmodels.nonparametric": frozenset(
+        "api bandwidths kde kdetools kernel_density kernel_regression kernels kernels_asymmetric linbin "
+        "smoothers_lowess smoothers_lowess_old".split()
+    ),
+}
+
+
+@pytest.mark.parametrize("root", sorted(REVIEWED_SUBMODULES))
+def test_every_submodule_is_reviewed(root: str) -> None:
+    """A public submodule is reviewed as safe, or the validator bans its name on every receiver."""
+    package = pytest.importorskip(root)
+    banned = ESCAPE_ATTRIBUTES | UNSAFE_SUBMODULES | UNSAFE_HELPERS | BANNED_ATTRIBUTES | BANNED_IO
+    found = {info.name for info in pkgutil.iter_modules(package.__path__) if not info.name.startswith("_")}
+    unreviewed = sorted(found - REVIEWED_SUBMODULES[root] - banned)
+    assert not unreviewed, f"review these {root} submodules and add them to REVIEWED_SUBMODULES or ban them"
+    assert not REVIEWED_SUBMODULES[root] & banned
 
 
 # --- the catalogue corpus ----------------------------------------------------------------------
