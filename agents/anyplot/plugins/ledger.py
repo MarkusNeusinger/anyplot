@@ -107,7 +107,9 @@ class RequestLedger:
     """`run_data_code` calls of this invocation; ToolSafety allows `MAX_DATA_CODE_CALLS`."""
     rate_start: Callable[[], bool] | None = None
     """Set by the `/messages` route: books a start in the run queue's rate window for this turn (`RunQueue.rate`),
-    False when the window is full. None without a route (`adk web`), whose runs bypass the queue."""
+    False when the window is full; idempotent per turn. None without a route (`adk web`), whose runs bypass the
+    queue. The one helper for every sandbox run of a turn: `run_data_code` calls it today, and the plot pipeline can
+    take its rated start through it once the queue no longer rates whole turns."""
 
     def refuse(self, code: str, text: str) -> None:
         if self.refusal is None and self.error is None:
