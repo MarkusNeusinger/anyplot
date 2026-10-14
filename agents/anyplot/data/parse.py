@@ -29,7 +29,7 @@ would, for example, read `01.02.2024` as a number under `thousands='.'`).
    of one dataset, is the one shape nested deeper than 2 (dimension, category,
    index: about five levels): it is checked strictly and flattened into a long
    table, one column per dimension with more than one category (named by its
-   label, the category labels as cells), then `value`, in the order of
+   label, the category labels as cells, kept text), then `value`, in the order of
    `value`; see `_json_stat`. Its one-category dimensions, label, source and
    notes become `context_lines`. The `MAX_NESTING` bracket count below applies
    to it as to everything else. Text that starts with a bare `(` and is
@@ -309,7 +309,7 @@ class _Column:
     source: list[str]  # cleaned cells, as pasted
     cells: list[str]  # canonical cells for data.csv, set by the typing step
     invisible: bool = False
-    text_only: bool = False  # the `category` column of `json_pairs`: keys are names, never typed
+    text_only: bool = False  # `json_pairs` category, `json_stat` dimension: keys are names, never typed
     dtype: ColumnDtype = "text"
     unit: str | None = None  # the unit every cell carried, now part of the name
     bare: list[str] = field(default_factory=list)  # the cells the number typing read: `source`, or the number parts
@@ -878,9 +878,12 @@ def _json_stat(
     position; a dimension of one category may give only `category.label`).
 
     A dimension's column is named by its `label` (else its id), its cells are the category
-    labels (else the codes; a label shared by two categories gets its code in parentheses,
-    with a warning), and the rows run row-major over `id`, the order of `value`. The value
-    column is `value` whatever the dataset's units: a measure dimension (`metric`, or a
+    labels (else the codes), cleaned like the keys of `json_pairs` and kept text: `NA`
+    (Namibia) or `2024` is a name, never a missing cell or a number, and only `value` is
+    typed. A label shared by two categories in that cleaned form gets its code in
+    parentheses, with a warning. The rows run row-major over `id`, the order of `value`.
+    The value column is `value` whatever the dataset's units, and a dimension named
+    `value` in any case is renamed `<label> (dimension)` so the measure keeps the name: a measure dimension (`metric`, or a
     component such as births and deaths) stays a column of the long table, which
     `prepare_data` can pivot later. A dimension of one category is the same in every row,
     so it is no column: `<label>: <category>` joins the dataset's `label`, `source` and
@@ -917,6 +920,11 @@ def _json_stat(
         if size == 1:
             constants.append(f"{header}: {cells[0]}")
             continue
+        if (cleaned := _key_form(_clean_header(header)[0])).casefold() == PAIR_HEADERS[1]:
+            # `value` is the measure's name: a dimension labelled so would take it, or sit
+            # next to it as `Value`, and the measure would become `value_2` or lose its binding.
+            header = f"{cleaned} (dimension)"
+            warnings.append(f"column '{header}': a dimension named like the value column renamed")
         headers.append(header)
         categories.append(cells)
         if relabelled:
@@ -984,13 +992,20 @@ def _json_stat_dimension(entry: Any, name: str, size: int, position: int) -> tup
         label = labels.get(code) if labels else None
         if label is not None and not isinstance(label, str):
             raise _json_stat_refusal(f"a category label of {where} is not text")
-        cells.append(_json_text(code if label is None else label, f"a category of {where}"))
+        cells.append(_key_form(_json_text(code if label is None else label, f"a category of {where}")))
+    # Compared in the form `_build` writes (`_clean_key`, NFC), so `Other` and `Other` behind a
+    # zero-width space, which would be one category in `data.csv`, count as shared too.
     relabelled = len(set(cells)) != len(cells)
     if relabelled:
         cells = [f"{cell} ({code})" for cell, code in zip(cells, codes, strict=True)]
     title = entry.get("label")
     header = title if isinstance(title, str) and title.strip() else name
     return _json_text(header, f"the name of {where}"), cells, relabelled
+
+
+def _key_form(text: str) -> str:
+    """A category or a dimension name as `data.csv` holds it: cleaned like a key (`_clean_key`), in NFC."""
+    return unicodedata.normalize("NFC", _clean_key(text)[0])
 
 
 def _json_stat_values(raw: Any, total: int, position: int) -> list[str]:
@@ -1141,8 +1156,9 @@ def _type_column(column: _Column) -> None:
        that all cells share (`65 %`, `15,6 h`, `€ 5`, see `_split_units`), and the
        number parts pass rules 3 and 4 (so `007 kg` keeps its text). The cells keep
        the number; the unit goes into the column name, see `canonical_headers`.
-    6. **text**: everything else, every column without a non-missing cell, and the
-       `category` column of `json_pairs`, whose cells are the keys (`text_only`).
+    6. **text**: everything else, every column without a non-missing cell, the
+       `category` column of `json_pairs`, whose cells are the keys, and every dimension
+       column of `json_stat`, whose cells are category labels or codes (`text_only`).
     """
     column.cells = list(column.source)
     column.bare = column.source
@@ -1326,7 +1342,11 @@ def _build(
     renamed_by_breaks: list[int] = []
     for position, raw in enumerate(raw_headers):
         header, invisible, broken = _clean_header(raw)
-        text_only = source_format == "json_pairs" and position == 0  # the keys of an object are names
+        # The keys of an object of values are names, and so are JSON-stat categories (every column but
+        # the last, the measure): `NA` (Namibia), `-` or `2024` stay text, untyped and never missing.
+        text_only = (source_format == "json_pairs" and position == 0) or (
+            source_format == "json_stat" and position < len(raw_headers) - 1
+        )
         cells: list[str] = []
         for row in raw_rows:
             cell, cell_invisible = (_clean_key if text_only else _clean_cell)(row[position])

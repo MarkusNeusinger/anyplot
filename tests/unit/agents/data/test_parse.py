@@ -10,6 +10,7 @@ from typing import Any
 import pandas as pd
 import pytest
 
+from agents.anyplot.data.bindings import default_bindings
 from agents.anyplot.data.parse import (
     MAX_CONTEXT_CHARS,
     MAX_INPUT_BYTES,
@@ -24,6 +25,7 @@ from agents.anyplot.data.parse import (
     sniff_delimiter,
     without_context,
 )
+from agents.anyplot.data.roles import DataRole
 from agents.anyplot.schemas import (
     MAX_CELL_CHARS,
     MAX_COLUMN_NAME_CHARS,
@@ -1390,6 +1392,32 @@ class TestJsonStat:
         assert parsed.csv == "c,value\nOther (1),1\nOther (2),2\n"
         assert warned(parsed, "labels shared by two categories carry their codes")
         assert warned(parsed, "status symbols")
+
+    def test_a_label_shared_after_cleaning_gets_its_code(self) -> None:
+        dimensions = {"c": categories("1", "2", labels={"1": "Other", "2": f"Other{ZWSP} "})}
+        parsed = parse_dataset(json_stat(["c"], [2], dimensions, [1, 2]))
+
+        assert parsed.csv == "c,value\nOther (1),1\nOther (2),2\n"
+
+    def test_categories_stay_text_and_only_the_value_is_typed(self) -> None:
+        dimensions = {"geo": categories("NA", "-", "CH"), "year": categories("2023", "2024")}
+        parsed = parse_dataset(json_stat(["geo", "year"], [3, 2], dimensions, [1, 2, 3, 4, 5, None]))
+
+        assert parsed.column_dtypes == {"geo": "text", "year": "text", "value": "integer"}
+        assert parsed.csv.splitlines()[1:3] == ["NA,2023,1", "NA,2024,2"]
+        assert column(parsed, "geo").missing == 0 and column(parsed, "value").missing == 1
+        assert column(parsed, "geo").top == ["NA", "-", "CH"]
+
+    @pytest.mark.parametrize("label", ["value", "Value", " VALUE "])
+    def test_a_dimension_named_value_leaves_the_name_to_the_measure(self, label: str) -> None:
+        dimensions = {"v": {"label": label, **categories("1", "2")}}
+        parsed = parse_dataset(json_stat(["v"], [2], dimensions, [10, 20]))
+
+        assert list(parsed.column_dtypes) == [f"{label.strip()} (dimension)", "value"]
+        assert parsed.column_dtypes["value"] == "integer"
+        assert warned(parsed, "a dimension named like the value column renamed")
+        roles = [DataRole(name="value", kinds=("numeric",), required=True, variadic=False, description="")]
+        assert [binding.column for binding in default_bindings(roles, parsed.profile)] == ["value"]
 
     def test_a_json_stat_1_bundle_of_one_dataset_is_read(self) -> None:
         bundle = {"births": {"dimension": {"id": ["g"], "size": [2], "g": categories("a", "b")}, "value": [3, 4]}}
