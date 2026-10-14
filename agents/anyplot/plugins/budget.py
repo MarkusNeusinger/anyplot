@@ -46,6 +46,7 @@ from ..services import get_services
 from ..settings import get_settings
 from .ledger import (
     CallFacts,
+    RequestLedger,
     attribution,
     budget_allows,
     budget_tokens,
@@ -72,6 +73,38 @@ def strip_tools(llm_request: LlmRequest) -> None:
     llm_request.config.tools = None
     llm_request.config.tool_config = None
     llm_request.tools_dict = {}
+
+
+def book_response(ledger: RequestLedger, agent_name: str, session_user: str, llm_response: LlmResponse) -> None:
+    """Book one model response's tokens, call and model version, and write its attribution line.
+
+    The plugin's `after_model_callback` books every call ADK makes; a call made outside ADK's
+    flow (the reply-language plugin's one re-ask) books itself through this function too.
+    """
+    billable, cached = usage_tokens(llm_response.usage_metadata)
+    weighted = budget_tokens(llm_response.usage_metadata)
+    ledger.llm_calls += 1
+    ledger.tokens += billable
+    ledger.cached_tokens += cached
+    ledger.budget_tokens += weighted
+    if llm_response.model_version:
+        ledger.model_versions.add(llm_response.model_version)
+    user = ledger.user_id or session_user
+    get_services().usage.add_tokens(user, weighted)
+    breakdown = usage_breakdown(llm_response.usage_metadata)
+    finish = finish_name(llm_response.finish_reason)
+    ledger.last_calls[agent_name] = CallFacts(finish, breakdown["candidates"], breakdown["thoughts"])
+    attribution(
+        "model",
+        ledger,
+        agent=agent_name,
+        billable=billable,
+        cached=cached,
+        budget=weighted,
+        **breakdown,
+        model_version=llm_response.model_version,
+        finish_reason=finish,
+    )
 
 
 class BudgetPlugin(BasePlugin):
@@ -111,32 +144,7 @@ class BudgetPlugin(BasePlugin):
             ledger = ledger_for(callback_context.invocation_id)
             if llm_response.partial:
                 return None
-            billable, cached = usage_tokens(llm_response.usage_metadata)
-            weighted = budget_tokens(llm_response.usage_metadata)
-            ledger.llm_calls += 1
-            ledger.tokens += billable
-            ledger.cached_tokens += cached
-            ledger.budget_tokens += weighted
-            if llm_response.model_version:
-                ledger.model_versions.add(llm_response.model_version)
-            user = ledger.user_id or callback_context.session.user_id
-            get_services().usage.add_tokens(user, weighted)
-            breakdown = usage_breakdown(llm_response.usage_metadata)
-            finish = finish_name(llm_response.finish_reason)
-            ledger.last_calls[callback_context.agent_name] = CallFacts(
-                finish, breakdown["candidates"], breakdown["thoughts"]
-            )
-            attribution(
-                "model",
-                ledger,
-                agent=callback_context.agent_name,
-                billable=billable,
-                cached=cached,
-                budget=weighted,
-                **breakdown,
-                model_version=llm_response.model_version,
-                finish_reason=finish,
-            )
+            book_response(ledger, callback_context.agent_name, callback_context.session.user_id, llm_response)
         except Exception as exc:
             logger.warning("budget booking failed: %s", type(exc).__name__)
         return None

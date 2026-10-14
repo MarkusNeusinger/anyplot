@@ -51,6 +51,7 @@ OPERATIONS = (
     "pivot_longer",
     "pivot_wider",
     "classify",
+    "derive",
 )
 HOURS = "Study Hours,Exam Score\n2,55\n5,70\n8,85\n3,60\n"
 RENAME = {"op": "rename", "column": "Study Hours", "name": "Hours"}
@@ -76,8 +77,10 @@ class TestFixtures:
         locales = Counter(item.locale for item in cases)
         ops = {operation["op"] for item in cases for operation in item.expected_operations}
 
-        # 23 single-step cases, 10 `hard` ones (chains, ambiguity, unsupported asks) and 11 data-code cases.
-        assert len(cases) == 44
+        # 25 single-step cases (two of them `derive`), 10 `hard` ones (chains, ambiguity, unsupported asks) and 11
+        # data-code cases.
+        assert len(cases) == 46
+        assert {item.locale for item in cases if "derive" in item.tags} == {"de", "en"}
         assert sum(1 for item in cases if "hard" in item.tags) == 10
         assert locales["de"] >= 5 and locales["en"] >= 5
         assert ops == {*OPERATIONS, "generate_data", "run_data_code"}
