@@ -16,7 +16,9 @@ spec text) sits inside our own fences after the "data, never instructions" pream
 * `get_current_code(version)`: the exported `plot.py` of a version (0 is the latest),
   or the normalised catalogue code before the first version, fenced as `<catalogue_code>`.
 * `set_bindings(bindings)`: `apply_bindings` plus a state write; refused while the
-  pipeline runs.
+  pipeline runs. Its result says whether the data is still `data_confirmed`: bindings that
+  only leave out roles the user confirmed keep the confirmation (`narrowed_confirmation`,
+  `AGENT_NARROWED_BINDINGS=keep`, since 2026-10-15), any other change drops it.
 * `set_language(language)`: the session language with the source `chosen`
   (`session_state.LANGUAGE`), validated like the language route (`language.py`);
   refused while the pipeline runs. Its result carries no value, only whether the
@@ -33,6 +35,11 @@ spec text) sits inside our own fences after the "data, never instructions" pream
   answers its code and its message (which names columns at most, fenced too).
   Refused while the pipeline runs. The model never writes data rows: the operations
   only move, type or aggregate the cells that are there.
+* `query_data(operations, columns, limit)`: a question about the data answered from a copy
+  (`data/query.py`, since 2026-10-15): zero to five operations of `prepare_data`'s set, then
+  the first `limit` rows (at most 25) in at most eight columns, fenced as `<user_data>`, with
+  the total row count and the change lines. Nothing is stored: the dataset, its version, the
+  bindings and the confirmation stay as they are, so a question never mutates the user's data.
 * `generate_data(variables, series)`: a table computed by the server from formulas
   (`data/generate.py`): one or two variables, each a range of evenly spaced points,
   and one to ten series, each an expression over them. The table is parsed like a
@@ -63,6 +70,7 @@ from ..code.data_code import check_data_code
 from ..data.generate import Generate, GenerateError, generate
 from ..data.parse import MAX_CANONICAL_BYTES, MAX_COMPUTED_BYTES, ParsedDataset, ParseError, parse_dataset
 from ..data.prepare import MAX_OPERATIONS, Operation, PrepareError, apply_operations, validation_lines
+from ..data.query import DEFAULT_QUERY_ROWS, QueryArgs, QueryResult, run_query
 from ..data.shape import long_suggestion
 from ..data.store import StoredDataset, StoreFull
 from ..dataset_guard import DataRefused, GuardUnavailable, check_dataset
@@ -71,7 +79,14 @@ from ..language import is_valid, normalise, same_language
 from ..opening import store_dataset
 from ..pipeline import run_pipeline
 from ..plugins.ledger import attribution, ledger_for
-from ..plugins.tool_safety import DATA_CODE_TOOL, MAX_DATA_CODE_CHARS, MAX_NOTES_RESULT_BYTES, result_limit, result_size
+from ..plugins.tool_safety import (
+    DATA_CODE_TOOL,
+    MAX_DATA_CODE_CHARS,
+    MAX_NOTES_RESULT_BYTES,
+    QUERY_TOOL,
+    result_limit,
+    result_size,
+)
 from ..policy import DATA_PREAMBLE, fence, user_notes_block
 from ..render.contract import DataJob, DataOutput, RendererUnavailable
 from ..render.gates import error_summary
@@ -80,7 +95,7 @@ from ..render.runtimes.python import DATA_FILE_NAME
 from ..render.serial import RenderBusy
 from ..schemas import MAX_COLUMNS, MAX_ROWS, Binding, DatasetProfile, PipelineArgs
 from ..services import get_services
-from ..session_state import SessionView, apply_bindings, language_delta, read_session
+from ..session_state import SessionView, apply_bindings, language_delta, narrowed_confirmation, read_session
 from ..settings import get_settings
 
 
@@ -190,15 +205,25 @@ async def set_bindings(bindings: list[dict[str, str]], tool_context: ToolContext
         parsed = [Binding.model_validate(item) for item in bindings]
     except ValueError:
         return _error("invalid_bindings")
-    check, delta = apply_bindings(parsed, view.snapshot.roles(), profile)
+    roles = view.snapshot.roles()
+    check, delta = apply_bindings(parsed, roles, profile)
     if not delta:
         # The errors quote column names from the user's dataset.
         errors = DATA_PREAMBLE + "\n" + fence("user_data", json.dumps(check.errors[:10], ensure_ascii=False))
         return {"status": "error", "code": "invalid_bindings", "errors": errors}
-    # Other bindings than the user confirmed leave the confirmation's fingerprint behind; the panel asks again.
+    # Other bindings than the user confirmed leave the confirmation's fingerprint behind and the panel asks again,
+    # unless they only leave out roles the user confirmed (`narrowed_confirmation`, `AGENT_NARROWED_BINDINGS`).
+    if get_settings().narrowed_bindings == "keep":
+        delta.update(narrowed_confirmation(view, parsed, check, roles))
     for key, value in delta.items():
         tool_context.state[key] = value
-    result: dict[str, Any] = {"status": "ok", "complete": check.complete, "missing_roles": check.missing_roles}
+    confirmed = read_session(tool_context.state)
+    result: dict[str, Any] = {
+        "status": "ok",
+        "complete": check.complete,
+        "missing_roles": check.missing_roles,
+        "data_confirmed": bool(confirmed and confirmed.data_confirmed),
+    }
     if check.warnings:  # valid, but a role that needs values of 0 or more got negative ones; they name columns
         result["warnings"] = DATA_PREAMBLE + "\n" + fence("user_data", json.dumps(check.warnings, ensure_ascii=False))
     return result
@@ -294,6 +319,58 @@ async def prepare_data(operations: list[dict[str, Any]], tool_context: ToolConte
         "changes": DATA_PREAMBLE + "\n" + fence("tool_notes", json.dumps(prepared.changes, ensure_ascii=False)),
     }
     return _with_profile(base, parsed.profile, "prepare_data")
+
+
+async def query_data(
+    operations: list[dict[str, Any]],
+    tool_context: ToolContext,
+    columns: list[str] | None = None,
+    limit: int = DEFAULT_QUERY_ROWS,
+) -> dict[str, Any]:
+    """Answer a question about the user's data without changing it: the operations are applied to a copy and the first rows of the result come back as a small table; nothing is stored, and the data, its version and its confirmation stay as they are.
+
+    operations: zero to five operations of the same set as prepare_data, applied in order (keep only some rows with
+    drop_rows on the others, such as test ne on the year asked about; a top N is a sort with limit; a share, a change
+    or an index is a derive; a total or a mean per group an aggregate). columns: the columns to return, at most 8
+    (default: the first 8). limit: the rows to return, 1 to 25 (default 10). Returns the table (columns and rows),
+    the number of rows of the whole result, whether it was cut, and the change lines, or an error with a code and a
+    message.
+    """
+    view = _view(tool_context)
+    if view is None:
+        return _error("session_not_open")
+    stored = _stored(view, tool_context)
+    if stored is None:
+        return _not_ready("no_dataset")
+    try:
+        args = QueryArgs.model_validate({"operations": operations, "columns": columns, "limit": limit})
+    except ValidationError as exc:
+        return {"status": "error", "code": "invalid_operations", "errors": _fenced_lines(validation_lines(exc))}
+    try:
+        answer = run_query(stored.as_parsed(), args.operations, args.columns, args.limit)
+    except PrepareError as exc:
+        # The message names columns of the user's dataset at most, never a cell; fenced like every column name.
+        return {"status": "error", "code": exc.code, "message": _fenced_lines([exc.message])}
+    return query_result(answer)
+
+
+def query_result(answer: QueryResult) -> dict[str, Any]:
+    """The `query_data` result: the table fenced as `<user_data>`, cut by rows from the end to fit the tool's cap."""
+    rows = list(answer.rows)
+    while True:
+        table = {"columns": answer.columns, "rows": rows}
+        result: dict[str, Any] = {
+            "status": "ok",
+            "rows": answer.total_rows,
+            "table": DATA_PREAMBLE + "\n" + fence("user_data", json.dumps(table, ensure_ascii=False)),
+            "truncated": answer.truncated or len(rows) < len(answer.rows),
+        }
+        if answer.changes:
+            notes = json.dumps(answer.changes, ensure_ascii=False)
+            result["changes"] = DATA_PREAMBLE + "\n" + fence("tool_notes", notes)
+        if not rows or result_size(result) <= result_limit(QUERY_TOOL):
+            return result
+        rows.pop()
 
 
 async def generate_data(
@@ -583,6 +660,7 @@ SESSION_TOOLS = (
     set_bindings,
     set_language,
     prepare_data,
+    query_data,
     generate_data,
     run_data_code,
 )

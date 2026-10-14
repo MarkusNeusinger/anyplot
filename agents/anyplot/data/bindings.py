@@ -35,6 +35,7 @@ from dataclasses import dataclass, field
 from difflib import SequenceMatcher
 
 from ..schemas import Binding, ColumnDtype, ColumnProfile, DatasetProfile
+from .parse import value_like
 from .roles import DataRole, RoleKind
 from .signs import has_negative, sign_line
 
@@ -56,8 +57,20 @@ ACCEPTS: dict[RoleKind, dict[ColumnDtype, int]] = {
 GROUPING_KINDS: frozenset[RoleKind] = frozenset(("categorical", "text", "boolean"))
 """Role kinds whose column splits or labels the marks; a single-valued column ranks last for them."""
 
+MAX_CATEGORIES = 60
+"""The distinct values up to which a text column is a plausible category (bars, groups, series) by default."""
+YEAR_RANGE = (1000, 2200)
+"""The values a year column holds, inclusive."""
+MAX_YEAR_SPAN = 300
+"""The widest range of an integer column that counts as years without a year name."""
+YEAR_WORDS: frozenset[str] = frozenset(
+    {"year", "years", "yr", "jahr", "jahre", "année", "annee", "an", "año", "ano", "anno", "jaar", "år", "rok"}
+)
+"""Column-name words that say the column holds years (`Jahr`, `year`, `Année`), compared in lower case."""
+
 _NOT_ALNUM = re.compile(r"[^0-9a-z]+")
 _CAMEL = re.compile(r"(?<=[a-z0-9])(?=[A-Z])")
+_WORDS = re.compile(r"[^\W_]+")
 
 
 @dataclass(frozen=True)
@@ -83,14 +96,18 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
     2. The remaining roles pick, in the order required single roles, required
        variadic families, optional single roles, optional variadic families (spec
        order within each group), the unused compatible column with the best
-       (single-valued, tier, name similarity, column position): for a categorical,
-       text or boolean role a column with one distinct value ranks after every
-       column with two or more (`_constant_group`). A variadic family takes every
+       (single-valued, category rank, tier, year rank, name similarity, column
+       position): for a categorical, text or boolean role a column with one distinct
+       value ranks after every column with two or more (`_constant_group`), and a real
+       category before a year column before a text column of numbers
+       (`_category_rank`); a number role ranks year columns after the measures, a role
+       that also takes dates before them (`_year_rank`, both since 2026-10-15). A variadic family takes every
        unused tier-0 or tier-1 column in column order, up to `MAX_VARIADIC_DEFAULT`.
        A single role never falls back to a tier-2 column that a variadic family of
        the spec takes at tier 0 or 1: in wide data such as `month, Shoes, Hats`
        for `x`, `y1, y2, ...` and `category`, an integer series column stays a
-       series instead of becoming the category.
+       series instead of becoming the category; a column of years named so is no
+       series, so the category may take it.
 
     Each column is bound at most once. Members of a family are numbered `<name>1`,
     `<name>2`, ... in column order. Roles without kinds stay unbound.
@@ -100,11 +117,12 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
     single: dict[str, str] = {}
     family: dict[str, list[ColumnProfile]] = {role.name: [] for role in roles if role.variadic}
     families = [role for role in roles if role.variadic and role.kinds]
+    # A column of years named so is a time key, never a series of a number family: a single role may take it.
     reserved = {
         column.name
         for column in columns
         for owner in families
-        if (tier := _tier(owner, column)) is not None and tier <= 1
+        if (tier := _tier(owner, column)) is not None and tier <= 1 and year_score(column) < 2
     }
 
     for role in roles:
@@ -146,7 +164,9 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
             ranked = sorted(
                 (
                     _constant_group(role, column),
+                    _category_rank(role, column),
                     tier,
+                    _year_rank(role, column),
                     -_rounded_similarity(role.name, column.name),
                     position,
                     column.name,
@@ -325,6 +345,62 @@ def _constant_group(role: DataRole, column: ColumnProfile) -> bool:
     `Staatsangehörigkeit` has two values. Number and date roles keep their order.
     """
     return column.unique <= 1 and any(kind in GROUPING_KINDS for kind in role.kinds)
+
+
+def year_score(column: ColumnProfile) -> int:
+    """2 for an integer column of years named so (`Jahr`, `year`), 1 for one whose values only look like years, else 0.
+
+    Values look like years when all lie within `YEAR_RANGE` and span at most `MAX_YEAR_SPAN`
+    (a price of 1200 to 1450 does too, which is why a name decides between the two).
+    """
+    if column.dtype != "integer" or not isinstance(column.min, float | int) or not isinstance(column.max, float | int):
+        return 0
+    low, high = YEAR_RANGE
+    if not (low <= column.min and column.max <= high and column.max - column.min <= MAX_YEAR_SPAN):
+        return 0
+    return 2 if YEAR_WORDS & set(_WORDS.findall(column.name.casefold())) else 1
+
+
+def numeric_text(column: ColumnProfile) -> bool:
+    """A text column whose frequent values all read as numbers or dates (`7.184.003` the parse could not type)."""
+    return column.dtype == "text" and bool(column.top) and all(value_like(value) for value in column.top)
+
+
+def _category_rank(role: DataRole, column: ColumnProfile) -> int:
+    """The rank of `column` as a category, group or label for a role of grouping kinds only; 0 for every other role.
+
+    A live test of 2026-10-15 bound `Bevölkerung`, a text column of 24 numbers the parse had
+    not typed, as the category of a bar chart and the year as its value. For a role that
+    groups or labels (and accepts no number or date), the candidates rank:
+
+    0. a real text or boolean column of 2 to `MAX_CATEGORIES` distinct values;
+    1. an integer column of years named so, then 2. one whose values look like years;
+    3. a text column with more distinct values;
+    4. an integer column of at most `MAX_CATEGORIES` distinct values (an ordinal, a code);
+    5. a text column of numbers (`numeric_text`), then 6. any other integer column (a measure).
+    """
+    if not role.kinds or any(kind not in GROUPING_KINDS for kind in role.kinds):
+        return 0
+    if column.dtype in ("text", "boolean") and not numeric_text(column):
+        return 0 if column.unique <= MAX_CATEGORIES else 3
+    if column.dtype == "integer":
+        score = year_score(column)
+        if score:
+            return 3 - score
+        return 4 if column.unique <= MAX_CATEGORIES else 6
+    return 5
+
+
+def _year_rank(role: DataRole, column: ColumnProfile) -> int:
+    """For a number role, years last: the value of a bar or a y is a measure, not the year (live test of 2026-10-15).
+
+    A role that also takes dates (`x (datetime/numeric)`) is a time axis, where years rank
+    first among the number columns. Every other role keeps its order (0).
+    """
+    if "numeric" not in role.kinds:
+        return 0
+    score = year_score(column)
+    return -score if "datetime" in role.kinds else score
 
 
 def _rounded_similarity(role_name: str, column_name: str) -> float:

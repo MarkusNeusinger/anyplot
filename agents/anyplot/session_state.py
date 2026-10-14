@@ -20,7 +20,7 @@ from typing import Any, Self
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from .data.bindings import BindingCheck, check_bindings
+from .data.bindings import BindingCheck, check_bindings, resolve_role
 from .data.roles import DataRole, parse_roles
 from .data.signs import mark_non_negative
 from .language import DEFAULT_LANGUAGE, SOURCES, LanguageSource, is_valid
@@ -60,6 +60,11 @@ id and the bindings as they were (`confirmation_fingerprint`). The plot pipeline
 while the fingerprint of the current state equals it, so a new dataset (a paste, a
 transcription's `.use()`) or any binding change, also one that lands between the
 confirmation's read and its write, leaves the data unconfirmed without an explicit reset."""
+PENDING_REQUEST = PREFIX + "pending_request"
+"""The `change_request` of a first plot that stopped `not_ready` (`data_unconfirmed` or `incomplete_bindings`):
+the user's note for the plot (a title, a label), kept for the next run that starts without one of its own
+(`pipeline.run_pipeline`), so a binding change that asked for `.confirm()` again never loses it (live test of
+2026-10-15). Validated like `PipelineArgs.change_request` on every read; a run that starts takes it."""
 LAST_STATUS = PREFIX + "last_status"
 VERSIONS = PREFIX + "versions"
 
@@ -136,6 +141,40 @@ def confirmation_fingerprint(dataset_id: str | None, bindings: list[Binding]) ->
 def confirm_delta(view: SessionView) -> dict[str, Any]:
     """The state delta of `.confirm()`: the current dataset with its current bindings counts as confirmed."""
     return {CONFIRMED: confirmation_fingerprint(view.dataset_id, view.bindings)}
+
+
+def narrows(confirmed: list[Binding], bindings: list[Binding], roles: list[DataRole]) -> bool:
+    """Whether `bindings` only leave out roles of `confirmed`, every kept column in the role it had.
+
+    A member of a variadic family counts by its family and column, not its number: `y1 =
+    co2_per_capita` out of `y1 = co2_per_capita, y2 = share` narrows, and so does `y1 = share`,
+    the second series renumbered. Something must be left out: the same bindings narrow nothing.
+    """
+
+    def assignments(items: list[Binding]) -> set[tuple[str, str]]:
+        pairs: set[tuple[str, str]] = set()
+        for binding in items:
+            role = resolve_role(binding.role, roles)
+            pairs.add((role.name if role is not None else binding.role, binding.column))
+        return pairs
+
+    kept, before = assignments(bindings), assignments(confirmed)
+    return len(bindings) < len(confirmed) and kept <= before
+
+
+def narrowed_confirmation(
+    view: SessionView, bindings: list[Binding], check: BindingCheck, roles: list[DataRole]
+) -> dict[str, Any]:
+    """The state delta that moves the user's confirmation to `bindings`, or {} when it does not move.
+
+    It moves only while the data is confirmed, the new bindings are complete, and they narrow
+    the confirmed ones (`narrows`): the user saw every assignment they keep, so a step-2 note
+    such as "only co2_per_capita" plots in the same turn instead of stopping on
+    `data_unconfirmed` (live test of 2026-10-15). `AGENT_NARROWED_BINDINGS=reset` turns it off.
+    """
+    if not (view.data_confirmed and check.complete and narrows(view.bindings, bindings, roles)):
+        return {}
+    return {CONFIRMED: confirmation_fingerprint(view.dataset_id, bindings)}
 
 
 def language_delta(language: str, source: LanguageSource) -> dict[str, Any]:

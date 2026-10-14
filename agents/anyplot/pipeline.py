@@ -135,6 +135,7 @@ from .render.gates import data_rows, evaluate
 from .render.runtimes.python import PythonRuntime
 from .schemas import (
     MAX_CHANGE_CHARS,
+    MAX_CHANGE_REQUEST_CHARS,
     MAX_CHANGES,
     MAX_FEEDBACK,
     MAX_LINE_CHARS,
@@ -160,7 +161,7 @@ from .schemas import (
 )
 from .scoring import ScoreAnswer, ScoreError, mend_answer, parse_answer
 from .services import PADDED_REASON, CodeVersion, Services, ThemeRender, get_services
-from .session_state import SessionView, read_session
+from .session_state import PENDING_REQUEST, SessionView, read_session
 from .settings import AgentSettings, get_settings
 from .sub_agents.adapter import ADAPTERS, adapter_name
 from .sub_agents.reviewer import REVIEWER_NAME, use_reviewer_mode
@@ -527,6 +528,47 @@ def load_inputs(
     if not view.data_confirmed:
         return view, dataset, "data_unconfirmed"
     return view, dataset, None
+
+
+PENDING_REASONS: frozenset[str] = frozenset({"data_unconfirmed", "incomplete_bindings"})
+"""The `not_ready` reasons a first plot's request waits through: the user confirms or binds, then plots again."""
+
+
+def keep_pending_request(state: Any, args: PipelineArgs, reason: NotReadyReason | None) -> None:
+    """Keep a first plot's `change_request` that stopped on `reason` for the next run (`PENDING_REQUEST`).
+
+    A live test of 2026-10-15: the user's step-2 note ("only co2_per_capita, title ...") made
+    the root change the bindings, which asked for `.confirm()` again; the plot stopped on
+    `data_unconfirmed`, and the title never reached the plot that the next `.create_plot()`
+    drew. A change of an existing version (`base="previous"`) is not kept: it names a plot
+    that is there, and the root repeats it once the reason is gone.
+    """
+    if reason in PENDING_REASONS and args.change_request and args.base != "previous":
+        state[PENDING_REQUEST] = args.change_request
+
+
+def take_pending_request(state: Any, args: PipelineArgs) -> PipelineArgs:
+    """The run's arguments with a kept request (`keep_pending_request`) in front of its own; the state forgets it.
+
+    A run on the catalogue plot without a request of its own (the bare `.create_plot()`) takes
+    the kept one; one with its own request takes both, the kept one first, when they fit
+    `MAX_CHANGE_REQUEST_CHARS` together, else its own. A change of an existing version drops it.
+    """
+    pending = state.get(PENDING_REQUEST)
+    if pending is None:
+        return args
+    state[PENDING_REQUEST] = None
+    if not isinstance(pending, str) or not pending.strip() or args.base == "previous":
+        return args
+    pending = pending.strip()[:MAX_CHANGE_REQUEST_CHARS]
+    own = args.change_request.strip()
+    if not own:
+        request = pending
+    elif own == pending or len(pending) + 1 + len(own) > MAX_CHANGE_REQUEST_CHARS:
+        request = own
+    else:
+        request = f"{pending}\n{own}"
+    return args.model_copy(update={"change_request": request})
 
 
 def render_adapt_request(request: AdaptRequest, view: SessionView) -> str:
@@ -1027,8 +1069,10 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     ledger = ledger_for(ctx.invocation_id)
     view, dataset, not_ready = load_inputs(ctx, services)
     if not_ready is not None or view is None or dataset is None:
+        keep_pending_request(ctx.state, node_input, not_ready)
         yield _result_event(PlotResult.not_ready(not_ready or "no_dataset"))
         return
+    node_input = take_pending_request(ctx.state, node_input)
     ledger.pipeline_active = True
     if ledger.run_slot is not None and not await ledger.run_slot():
         # No slot: the route failed the turn with `capacity`, or the user cancelled the wait. Either way the run is

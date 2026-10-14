@@ -69,6 +69,7 @@ class TestRegistry:
             "set_bindings",
             "set_language",
             "prepare_data",
+            "query_data",
             "generate_data",
             "run_data_code",
             "plot_pipeline",
