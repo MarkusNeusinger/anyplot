@@ -39,7 +39,7 @@ Do not judge anything else: not the catalogue title format, not the realism of t
 
 These are never defects:
 
-- The house style: a size, color, font or spacing the style guide prescribes, and a styling element the catalogue plot already had, such as a shadow, an outline, a grid or a muted reference line. Data claims are not styling: a callout at an example value is still DQ-03.
+- The house style: a size, color, font or spacing the style guide prescribes, and a styling element the catalogue plot already had, such as a shadow, an outline, a grid or a muted reference line. Data claims are not styling: a callout at an example value is still DQ-03. Nor is an element drawn once per bar or point: value labels, dots on bar ends or shadows that the catalogue drew on a few example marks and the user's data repeats on many are judged like any other element (VQ-03 when they crowd the marks).
 - Column names, units and category labels written the way the user's data writes them, in every plot language; a text whose language you cannot judge.
 - A gate note on its own (see "The request").
 - Something that could be better but fails no criterion above.

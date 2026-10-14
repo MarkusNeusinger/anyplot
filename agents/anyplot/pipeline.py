@@ -352,7 +352,8 @@ class Candidate:
     adaptation_rules: list[str] = field(default_factory=list)
     """The ADAPTATION validator rule ids behind `adaptation_lines`, for the attribution log."""
     advisory_gates: list[str] = field(default_factory=list)
-    """The advisory probe gate ids (`G3`, `G5`, `G7`, `G8`, `G9`, `G10`) behind `advisory_lines`, for the attribution log."""
+    """The advisory probe gate ids (`G3`, `G5`, `G7`, `G8`, `G9`, `G10`, `G11`, `G12`) behind `advisory_lines`, for the
+    attribution log."""
     review_score: int | None = None
     """The catalogue review's score of this render, when it had one (`AGENT_REVIEWER_MODE=catalogue`)."""
     review_lines: list[str] = field(default_factory=list)
@@ -825,7 +826,8 @@ def finish(run: Run) -> PlotResult:
         if shipped.canvas_line:
             residual.append(shipped.canvas_line)
     # The measured findings are facts of the shipped render, reviewed or not: the ADAPTATION findings and
-    # every advisory gate line (clipping G3, annotations outside G5, overlap G7, G8, G9, missing glyphs G10).
+    # every advisory gate line (clipping G3, annotations outside G5, overlap G7, G8, G9, missing glyphs G10,
+    # crowded per-mark labels G11, the plot language's decimal mark G12).
     # No review score hides them (until 2026-10-14 only G10 stayed above the ship bar).
     residual += shipped.adaptation_lines
     residual += shipped.advisory_lines
@@ -1292,7 +1294,7 @@ async def _attempts(
         started = time.monotonic()
         rendered = await services.backend.render(job)
         render_s = time.monotonic() - started
-        report = evaluate(rendered, themes=job.themes, library=view.library, rows=rows)
+        report = evaluate(rendered, themes=job.themes, library=view.library, rows=rows, plot_language=run.language)
         if report.passed_host_gates:
             run.repair_hints = list(report.repair_hints)
         attribution(

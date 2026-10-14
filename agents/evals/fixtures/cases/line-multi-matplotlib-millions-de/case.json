@@ -1,0 +1,14 @@
+{
+  "spec_id": "line-multi",
+  "library": "matplotlib",
+  "locale": "de",
+  "language": "de",
+  "bindings": [
+    {"role": "x", "column": "Jahr"},
+    {"role": "y1", "column": "Bevölkerung"},
+    {"role": "series", "column": "Staatsangehörigkeit"}
+  ],
+  "expected": "accepted",
+  "tags": ["numeric", "long-format", "de", "language", "number-format"],
+  "source": "hand-written synthetic data, generalised from the live test of 2026-10-14 (A: an axis in millions showed 6.0 M in a German session)"
+}

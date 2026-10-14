@@ -18,6 +18,7 @@ delta that sets the language (`session_state.language_delta`) lives next to the 
 """
 
 import re
+from dataclasses import dataclass
 from typing import Literal
 
 
@@ -72,6 +73,53 @@ ENGLISH_NAMES: dict[str, str] = {
     "ja": "Japanese",
 }
 """The English name of each code in `_NAMES`: server text, so a prompt may name the language outside a fence."""
+
+
+@dataclass(frozen=True)
+class NumberFormat:
+    """How the text in a plot writes numbers in one language: its decimal and thousands marks and its short words
+    for large numbers, each as `(power of ten, word)`, smallest first."""
+
+    decimal: str
+    thousands: str
+    suffixes: tuple[tuple[int, str], ...]
+
+
+NUMBER_FORMATS: dict[str, NumberFormat] = {
+    "en": NumberFormat(".", ",", ((3, "k"), (6, "M"), (9, "B"))),
+    "de": NumberFormat(",", ".", ((3, "Tsd."), (6, "Mio."), (9, "Mrd."))),
+    "fr": NumberFormat(",", " ", ((3, "k"), (6, "M"), (9, "Md"))),
+    "es": NumberFormat(",", ".", ((3, "mil"), (6, "M"), (9, "mil M"))),
+    "it": NumberFormat(",", ".", ((3, "mila"), (6, "Mln"), (9, "Mld"))),
+    "pt": NumberFormat(",", ".", ((3, "mil"), (6, "mi"), (9, "bi"))),
+    "nl": NumberFormat(",", ".", ((3, "k"), (6, "mln"), (9, "mld"))),
+    "pl": NumberFormat(",", " ", ((3, "tys."), (6, "mln"), (9, "mld"))),
+    "ru": NumberFormat(",", " ", ((3, "тыс."), (6, "млн"), (9, "млрд"))),
+    "vi": NumberFormat(",", ".", ((3, "N"), (6, "Tr"), (9, "Tỷ"))),
+    "zh": NumberFormat(".", ",", ((4, "万"), (8, "亿"))),
+    "ja": NumberFormat(".", ",", ((4, "万"), (8, "億"))),
+}
+"""The number format of each language in `ENGLISH_NAMES`, the server's own table (Q4 of the live test of 2026-10-14:
+a German plot showed "6.0 M" and "5.30"). `locale` is a banned import in plot code, so the adapter formats with
+`FuncFormatter` or an f-string and these marks (`number_format_table`), and gate G12 measures the decimal mark.
+Chinese and Japanese group large numbers by ten thousand (万) and a hundred million (亿, 億). A language
+outside the table has no number rule and no G12."""
+
+
+def number_format(language: str) -> NumberFormat | None:
+    """The number format of a session language (`de`, `Deutsch` and `German` share one), or None outside the table."""
+    return NUMBER_FORMATS.get(canonical(language))
+
+
+def number_format_table() -> str:
+    """The table as Markdown rows for the adapter's static instruction: code, language, marks and words."""
+    names = {" ": "space", " ": "narrow no-break space", " ": "no-break space"}
+    rows = ["| Plot language | Decimal mark | Thousands mark | Large numbers |", "|---|---|---|---|"]
+    for code, spec in NUMBER_FORMATS.items():
+        words = ", ".join(f"10^{power}: {word}" for power, word in spec.suffixes)
+        thousands = names.get(spec.thousands, f"`{spec.thousands}`")
+        rows.append(f"| `{code}` ({ENGLISH_NAMES[code]}) | `{spec.decimal}` | {thousands} | {words} |")
+    return "\n".join(rows)
 
 
 def normalise(value: str) -> str:

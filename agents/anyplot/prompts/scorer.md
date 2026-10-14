@@ -22,7 +22,7 @@ The rubric below was written for catalogue implementations that generate their o
 3. **No catalogue title.** The mandated catalogue title (`{spec-id} · {language} · {library} · anyplot.ai`) does not apply: a title that names the user's data is correct, and the 5d note on the long mandated title is about that format only. SC-04 asks whether the title and the legend describe the user's data. The adapter keeps the user's column names on purpose: an axis title, legend title or label that is a bound column name (the bindings block lists them) or a category from the data, exactly as the data writes it, is correct and never a VQ-06 or SC-04 deduction, even when it is terse, abbreviated, has no unit or is in another language than the plot language. Units and category labels keep the spelling of the user's data too. Only a text the code added, a sentence or phrase rather than a name from the data, that is plainly in another language than the plot language is a VQ-06 defect.
 4. **One theme.** Apply the theme-readability checklist (5c) only for the attached render's theme, and name that theme, or `code`, in every defect line instead of `both`.
 
-The house style is never a defect: a size, color, font or spacing the style guide prescribes, and a styling element the catalogue plot already had.
+The house style is never a defect: a size, color, font or spacing the style guide prescribes, and a styling element the catalogue plot already had. This covers elements whose count stays fixed, not those drawn once per bar or point: value labels, dots on bar ends or shadows that the catalogue drew on its few example marks and the user's data repeats on many are judged like any other element (VQ-03 when they crowd the marks, VQ-02 when they overlap).
 
 ## Your answer
 
