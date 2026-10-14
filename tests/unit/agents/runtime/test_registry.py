@@ -69,6 +69,7 @@ class TestRegistry:
             "set_language",
             "prepare_data",
             "generate_data",
+            "run_data_code",
             "plot_pipeline",
         }
         # ADK wraps the Workflow in a NodeTool when the agent is built.

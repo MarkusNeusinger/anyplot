@@ -16,6 +16,7 @@ from agents.anyplot.dataset_versions import dataset_payload
 from agents.anyplot.language import MAX_LANGUAGE_CHARS
 from agents.anyplot.output_guard import CODE_OMITTED, MAX_MESSAGE_CHARS, sanitize
 from agents.anyplot.plugins.ledger import RequestLedger
+from agents.anyplot.plugins.tool_safety import MAX_DATA_CODE_CHARS
 from agents.anyplot.schemas import (
     MAX_CELL_CHARS,
     MAX_COLUMN_NAME_CHARS,
@@ -138,6 +139,8 @@ class TestTranslator:
             size_bytes=0,
             # The notes pasted with the data at their cap; the parse refuses control characters, so quotes are worst.
             context_lines=['"' * MAX_CONTEXT_CHARS],
+            # The Python a `run_data_code` version keeps, at the tool's cap, control characters at their worst.
+            code="\x01" * MAX_DATA_CODE_CHARS,
         )
         bindings = [Binding(role=f"{'R' * 30}{index:02d}", column=name) for index, name in enumerate(names)]
         # A `generate_data` call answers a change line and a warning per series; two data calls in one turn.

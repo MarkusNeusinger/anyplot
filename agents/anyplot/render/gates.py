@@ -119,7 +119,14 @@ NO_EXCEPTION_LINE = "an error that printed no exception line"
 UNLISTED_CLASS = "an error of an unlisted exception class"
 
 _ERROR_CLASS = re.compile(r"^((?:[A-Za-z_]\w*\.)*[A-Za-z_]\w*)(?::|$)")
-_CODE_FRAME = re.compile(r'^[ \t]*File "(?:[^"\n]*/)?' + re.escape(CODE_FILE) + r'", line (\d{1,6})\b', re.MULTILINE)
+
+
+def _code_frame(code_file: str) -> re.Pattern[str]:
+    """A traceback frame line in `code_file`, with its line number as the group."""
+    return re.compile(r'^[ \t]*File "(?:[^"\n]*/)?' + re.escape(code_file) + r'", line (\d{1,6})\b', re.MULTILINE)
+
+
+_CODE_FRAME = _code_frame(CODE_FILE)
 
 
 @dataclass
@@ -179,12 +186,13 @@ def _exception_class(line: str) -> str | None:
     return name if isinstance(value, type) and issubclass(value, BaseException) else None
 
 
-def error_summary(stderr_tail: str) -> str:
+def error_summary(stderr_tail: str, *, code_file: str = CODE_FILE) -> str:
     """The exception class of a traceback and the code line that raised it; never the message.
 
     The class comes from the last line that starts with a known exception class (the
     final exception of a chain), the line number from the innermost frame in
-    `CODE_FILE`. Without such a line the summary is a fixed text.
+    `code_file` (`CODE_FILE` for a plot, `snippet.py` for a data run). Without such a
+    line the summary is a fixed text.
     """
     lines = [line.strip() for line in stderr_tail.splitlines() if line.strip()]
     if not lines:
@@ -192,7 +200,8 @@ def error_summary(stderr_tail: str) -> str:
     names = [name for name in map(_exception_class, lines) if name]
     if not names:
         return NO_EXCEPTION_LINE
-    frames = _CODE_FRAME.findall(stderr_tail)
+    frame = _CODE_FRAME if code_file == CODE_FILE else _code_frame(code_file)
+    frames = frame.findall(stderr_tail)
     return f"{names[-1]} at line {int(frames[-1])}" if frames else names[-1]
 
 

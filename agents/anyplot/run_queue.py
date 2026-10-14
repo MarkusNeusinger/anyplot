@@ -13,7 +13,9 @@ allow it, in the order of its lane and then its arrival:
   land while the turn is active), so the summary after a paste and the data requests
   of step 1 follow each other at once while whole pipeline runs keep the minute rule.
   The order stays first come first served: an unrated entry behind a rated one that
-  waits for the window waits with it.
+  waits for the window waits with it. An unrated turn whose root runs a data snippet
+  (`run_data_code`, which does use a sandbox) books its start then (`rate`), or the tool
+  answers `rate_limited` when the window is full.
 
 The queue holds at most `capacity = AGENT_RUNS_PER_MINUTE * AGENT_QUEUE_MAX_WAIT_S / 60`
 waiting entries (10 at the defaults): a new entry that would stand at a position past
@@ -214,6 +216,25 @@ class RunQueue:
             ticket.state = "done"
             self._wake([ticket])
             self.pump()
+
+    def rate(self, ticket: Ticket) -> bool:
+        """Book a start in the rate window for a running entry that started unrated; False when the window is full.
+
+        `run_data_code` runs a sandbox in a turn the route submitted unrated (the data is
+        unconfirmed). An entry that is rated already (its start is booked) needs nothing
+        more: a data run in it replaces a render, which the unconfirmed data then cannot
+        have. Otherwise one start is booked now and the entry counts as rated, so a second
+        data run in the same turn books nothing.
+        """
+        if ticket.rated:
+            return True
+        now = self._clock()
+        self._trim(now)
+        if len(self._starts) >= self.per_minute:
+            return False
+        self._starts.append(now)
+        ticket.rated = True
+        return True
 
     def next_change_at(self, now: float) -> float:
         """The next time a waiting entry's fate can change without any call: an expiry or the window opening."""

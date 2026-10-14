@@ -18,6 +18,7 @@ from ...code.loader import to_run_form
 from ...code.normalise import normalise
 from ...code.validate import validate_security
 from ..contract import Theme
+from ..harness import DATA_FLAG
 from ..png import MAX_PNG_BYTES, MAX_PROBE_BYTES, read_output
 
 
@@ -25,6 +26,8 @@ IMAGE_PYTHON = "/app/.venv/bin/python"
 IMAGE_HARNESS = "/opt/anyplot/harness.py"
 MPL_SEED = "/opt/mplconfig"
 HARNESS_SOURCE = Path(__file__).resolve().parents[1] / "harness.py"
+DATA_FILE_NAME = "snippet.py"
+"""A data run's code file (the renderer's `executor.SNIPPET_FILE`); `gates.error_summary` finds its frames by it."""
 
 
 class PythonRuntime:
@@ -61,6 +64,12 @@ class PythonRuntime:
             "PYTHONDONTWRITEBYTECODE": "1",
             "ANYPLOT_RLIMIT_CPU_S": str(self.cpu_seconds),
         }
+
+    def data_command(self) -> list[str]:
+        return [self.python, "-I", self.harness, DATA_FLAG, DATA_FILE_NAME]
+
+    def data_env(self) -> dict[str, str]:
+        return {"HOME": "/tmp", "PYTHONDONTWRITEBYTECODE": "1", "ANYPLOT_RLIMIT_CPU_S": str(self.cpu_seconds)}
 
     def normalise(self, code: str, library: str) -> str:
         return normalise(code, library=library)

@@ -30,11 +30,20 @@ from agents.anyplot.code.normalise import normalise
 from agents.anyplot.data.parse import parse_dataset
 from agents.anyplot.dev_fixture import snapshot_from_repo
 from agents.anyplot.render import harness, make_backend
-from agents.anyplot.render.backends.fake import FakeBackend, FakeOutcome, fixture_png
+from agents.anyplot.render.backends.fake import FIXTURE_CSV, FakeBackend, FakeOutcome, fixture_png
 from agents.anyplot.render.backends.local import LocalDockerBackend, read_tail
 from agents.anyplot.render.backends.remote import IdTokenSource, RemoteBackend
 from agents.anyplot.render.backends.sandbox import SandboxBackend
-from agents.anyplot.render.contract import THEMES, RendererUnavailable, RenderJob, RenderResult, Theme, ThemeOutput
+from agents.anyplot.render.contract import (
+    THEMES,
+    DataJob,
+    DataRunUnsupported,
+    RendererUnavailable,
+    RenderJob,
+    RenderResult,
+    Theme,
+    ThemeOutput,
+)
 from agents.anyplot.render.gates import data_rows, error_summary, evaluate
 from agents.anyplot.render.png import PngRejected, harden, pad_to, read_output, size_of
 from agents.anyplot.render.runtimes.python import HARNESS_SOURCE, PythonRuntime
@@ -272,6 +281,15 @@ class TestGates:
 
         assert summary == expected
         assert "CANARY" not in summary and "Alice" not in summary and "SECRET" not in summary
+
+    def test_error_summary_of_a_data_snippet_reads_its_own_frames(self) -> None:
+        stderr = (
+            '  File "/work/plot.py", line 9, in <module>\n'
+            '  File "/work/snippet.py", line 4, in <module>\nZeroDivisionError: CANARY\n'
+        )
+
+        assert error_summary(stderr, code_file="snippet.py") == "ZeroDivisionError at line 4"
+        assert error_summary(stderr) == "ZeroDivisionError at line 9"
 
     def test_missing_theme_fails_r1(self) -> None:
         """A two-theme job with only one theme back is incomplete although every output it has passed."""
@@ -880,6 +898,58 @@ class TestBackends:
         assert "/tmp/run:/work" in argv
         assert argv[-4:] == ["/app/.venv/bin/python", "-I", "/opt/anyplot/harness.py", "plot.py"]
         assert "ANYPLOT_THEME=light" in argv
+
+    def test_local_backend_data_command_keeps_the_network_off_and_has_no_theme(self) -> None:
+        backend = LocalDockerBackend(
+            image="anyplot-agents:dev", runtime=PythonRuntime(), environment="development", docker="/usr/bin/docker"
+        )
+        argv = backend.data_argv(DataJob(job_id="d1", source="df = 1\n"), Path("/tmp/run"))
+
+        assert argv[argv.index("--network") + 1] == "none" and "--read-only" in argv
+        assert "/tmp/run:/work" in argv and "r-d1-data" in argv
+        assert argv[-5:] == ["/app/.venv/bin/python", "-I", "/opt/anyplot/harness.py", "--data", "snippet.py"]
+        assert not any(part.startswith(("ANYPLOT_THEME", "MPLBACKEND")) for part in argv)
+
+    async def test_local_backend_runs_a_data_snippet(self, tmp_path: Path) -> None:
+        """A stand-in `docker` that runs the command with this interpreter and the checkout's harness in `/work`."""
+        docker = tmp_path / "docker"
+        docker.write_text(
+            f"#!{sys.executable}\n"
+            "import os, sys\n"
+            "args = sys.argv[1:]\n"
+            "if args[0] == 'kill':\n"
+            "    sys.exit(0)\n"
+            "work = next(v.split(':')[0] for f, v in zip(args, args[1:]) if f == '-v' and v.endswith(':/work'))\n"
+            "image = args.index('anyplot-agents:dev')\n"
+            "command = args[image + 1:]\n"
+            f"command[0] = {sys.executable!r}\n"
+            f"command[2] = {str(HARNESS_SOURCE)!r}\n"
+            "os.chdir(work)\n"
+            "os.execv(command[0], command)\n",
+            encoding="utf-8",
+        )
+        docker.chmod(0o755)
+        backend = LocalDockerBackend(
+            image="anyplot-agents:dev", runtime=PythonRuntime(), environment="development", docker=str(docker)
+        )
+        snippet = "import pandas as pd\ndf = pd.DataFrame({'x': [1, 2], 'y': [3, 4]})\n"
+
+        output = await backend.run_data(DataJob(job_id="d1", source=snippet))
+        failed = await backend.run_data(DataJob(job_id="d2", source="x = 1\nraise ValueError('secret')\n"))
+
+        assert output.exit_code == 0 and output.csv_text == "x,y\n1,3\n2,4\n", output.stderr_tail
+        assert failed.exit_code == 1 and failed.csv_text is None and 'snippet.py", line 2' in failed.stderr_tail
+
+    async def test_fake_and_sandbox_data_runs(self) -> None:
+        fake = FakeBackend()
+        assert (await fake.run_data(DataJob(job_id="d1", source="df = 1\n"))).csv_text == FIXTURE_CSV
+        assert fake.data_jobs[0].job_id == "d1"
+        with pytest.raises(DataRunUnsupported):
+            await SandboxBackend(runtime=PythonRuntime()).run_data(DataJob(job_id="d1", source="df = 1\n"))
+        with pytest.raises(ValueError):
+            DataJob(job_id="../x", source="df = 1\n")
+        with pytest.raises(ValueError):
+            DataJob(job_id="d1", source="df = 1\n", timeout_s=31)
 
     def test_local_backend_refuses_production_and_missing_docker(self, monkeypatch: pytest.MonkeyPatch) -> None:
         with pytest.raises(RendererUnavailable, match="production"):

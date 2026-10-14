@@ -62,8 +62,9 @@ class DatasetVersion:
 
 
 def dataset_payload(stored: StoredDataset, bindings: list[Binding], version: int) -> dict[str, Any]:
-    """`{preview, profile, bindings, warnings, context_lines, version}`: a dataset as the routes and `done` answer it."""
-    return {
+    """`{preview, profile, bindings, warnings, context_lines, version}`: a dataset as the routes and `done` answer it,
+    plus `code` for a version `run_data_code` computed (the Python that ran)."""
+    payload: dict[str, Any] = {
         "preview": [list(row) for row in stored.preview],
         "profile": stored.profile.model_dump(mode="json"),
         "bindings": [binding.model_dump() for binding in bindings],
@@ -71,6 +72,9 @@ def dataset_payload(stored: StoredDataset, bindings: list[Binding], version: int
         "context_lines": list(stored.context_lines),
         "version": version,
     }
+    if stored.code is not None:
+        payload["code"] = stored.code
+    return payload
 
 
 def push_version(
@@ -81,6 +85,7 @@ def push_version(
     snapshot: CatalogueSnapshot,
     *,
     rebind: bool = False,
+    code: str | None = None,
 ) -> DatasetVersion:
     """Store `parsed` as the session's next dataset version; raises `StoreFull` (nothing changes then).
 
@@ -97,7 +102,8 @@ def push_version(
     current = store.get(view.dataset_id, session_id) if view.dataset_id else None
     if current is not None:
         parsed = replace(parsed, context_lines=list(current.context_lines))
-    dataset_id = store.put(session_id, parsed)
+    # `code` (`run_data_code`'s Python) belongs to this version only, never carried to the next.
+    dataset_id = store.put(session_id, parsed, code=code)
     history = [*view.dataset_history, view.dataset_id] if view.dataset_id else list(view.dataset_history)
     for old in history[:-MAX_DATASET_HISTORY]:
         store.delete(old, session_id)

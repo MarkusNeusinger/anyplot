@@ -112,6 +112,7 @@ from agents.anyplot.data.roles import DataRole
 from agents.anyplot.data.shape import long_suggestion
 from agents.anyplot.data.store import StoreFull
 from agents.anyplot.data.transcribe import looks_like_free_text, table_to_csv, transcribable
+from agents.anyplot.dataset_guard import DataRefused, GuardUnavailable, check_dataset
 from agents.anyplot.dataset_versions import dataset_payload, push_version, undo_version
 from agents.anyplot.dev_fixture import FixtureError, load_case
 from agents.anyplot.language import (
@@ -122,7 +123,7 @@ from agents.anyplot.language import (
     normalise,
     refusal_lang,
 )
-from agents.anyplot.models import JudgeUnavailable, JudgeVerdict
+from agents.anyplot.models import JudgeUnavailable
 from agents.anyplot.opening import (
     INSTRUCTION_LIKE,
     NOTES_INSTRUCTION_WARNING,
@@ -130,15 +131,13 @@ from agents.anyplot.opening import (
     NOTES_UNCHECKED_WARNING,
     Eligibility,
     assess,
-    dataset_judge_inputs,
-    instruction_like,
     notes_instruction_like,
     notes_judge_input,
     opening_state,
     store_dataset,
 )
 from agents.anyplot.plugins.ledger import CURRENT_LEDGER, RequestLedger, attribution, budget_allows, judge_budget_tokens
-from agents.anyplot.policy import data_rubric, fence, refusal, scope_rubric, transcribe_rubric, user_notes_block
+from agents.anyplot.policy import fence, refusal, scope_rubric, transcribe_rubric, user_notes_block
 from agents.anyplot.render.serial import RenderBusy
 from agents.anyplot.render.store import RenderStoreFull
 from agents.anyplot.render.watermark import add_footer
@@ -661,10 +660,12 @@ async def upload_dataset(
         return await _transcribe(services, ledger, body.text)
     if not services.usage.daily_ok(user, get_settings()):
         raise AgentsError(429, "rate_limited")
-    if instruction_like(parsed):
-        attribution("data_judge", ledger, verdict="prefilter")
-        raise AgentsError(403, "data_refused")
-    await _judge_dataset(services, ledger, dataset_judge_inputs(parsed), content=parsed.csv)
+    try:
+        await check_dataset(services, ledger, parsed)
+    except DataRefused:
+        raise AgentsError(403, "data_refused") from None
+    except GuardUnavailable:
+        raise AgentsError(503, "guard_unavailable") from None
     if parsed.context_lines:
         parsed = await _screen_notes(services, ledger, parsed)
     try:
@@ -807,58 +808,6 @@ async def _transcribe(services: Services, ledger: RequestLedger, text: str) -> J
         },
         headers=_NO_STORE,
     )
-
-
-DATASET_JUDGE_CONCURRENCY = 4
-"""Parts of one dataset judged at the same time; most datasets are one part, the widest about 30."""
-
-
-async def _judge_dataset(services: Services, ledger: RequestLedger, parts: list[str], *, content: str) -> None:
-    """Judge every part of the judged view, a few at a time; raise 503 on an outage and 403 on any refusal.
-
-    Every answered part books its cost-weighted tokens (`judge_budget_tokens`) to the user
-    and writes its own `data_judge` attribution line (with `part` and `parts`), so the
-    eval harness prices each call.
-    The batches stop at the first refusal or outage: the rest would change nothing. An
-    `attack` verdict is one strike against the user (`UsageBook.add_strike`), counted
-    once per distinct `content` (the canonical CSV), so retrying one upload that the
-    judge wrongly called an attack costs one strike, not one per try.
-    """
-    rubric = data_rubric()
-    judge_model = get_settings().judge_model
-    for start in range(0, len(parts), DATASET_JUDGE_CONCURRENCY):
-        batch = parts[start : start + DATASET_JUDGE_CONCURRENCY]
-        answers = await asyncio.gather(
-            *(services.judge.judge(fence("dataset", part), rubric) for part in batch), return_exceptions=True
-        )
-        if any(isinstance(answer, JudgeVerdict) and answer.verdict == "attack" for answer in answers):
-            services.usage.add_strike(ledger.user_id, content)  # one strike per upload, however many parts
-        refused = unavailable = False
-        for offset, answer in enumerate(answers):
-            number = start + offset + 1
-            if not isinstance(answer, JudgeVerdict):
-                unavailable = True
-                attribution("data_judge", ledger, verdict="guard_unavailable", part=number, parts=len(parts))
-                continue
-            services.usage.add_tokens(
-                ledger.user_id,
-                judge_budget_tokens(answer.tokens, answer.input_tokens, answer.output_tokens, judge_model),
-            )
-            attribution(
-                "data_judge",
-                ledger,
-                verdict=answer.verdict,
-                part=number,
-                parts=len(parts),
-                judge_tokens=answer.tokens,
-                judge_input=answer.input_tokens,
-                judge_output=answer.output_tokens,
-            )
-            refused = refused or answer.verdict != "in_scope"  # fail closed, like the scope guard
-        if unavailable:
-            raise AgentsError(503, "guard_unavailable")
-        if refused:
-            raise AgentsError(403, "data_refused")
 
 
 MAX_ROLE_DESCRIPTION_CHARS = 200
@@ -1143,6 +1092,8 @@ async def post_message(
     except QueueFull:
         logger.info("run queue full (ref %s): %d waiting", rid, queue.waiting_count)
         raise AgentsError(503, "capacity") from None
+    # `run_data_code` runs a sandbox even while the data is unconfirmed: it books the turn's start then.
+    ledger.rate_start = lambda: queue.rate(ticket)
     run = ActiveRun(abort=asyncio.Event(), user=user, started=runtime.now(), ticket=ticket)
     # Registered here so a second request cannot slip in before the stream starts; the
     # stream's finally and the background task both clear it and free its queue slot,

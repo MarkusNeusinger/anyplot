@@ -25,6 +25,7 @@ from agents.anyplot import pipeline
 from agents.anyplot.agent import LANGUAGE_SOURCE_LINES, NOTES_LINE, session_context
 from agents.anyplot.data.generate import looks_like_formula
 from agents.anyplot.data.transcribe import MAX_TRANSCRIBE_CHARS, TranscribedTable
+from agents.anyplot.dataset_guard import DATASET_JUDGE_CONCURRENCY
 from agents.anyplot.dev_fixture import snapshot_from_repo
 from agents.anyplot.models import (
     ADAPTER_FULL_MAX_OUTPUT_TOKENS,
@@ -47,7 +48,7 @@ from agents.anyplot.services import Services, get_services
 from agents.anyplot.session_state import LANGUAGE, LANGUAGE_SOURCE, read_session
 from agents.anyplot.settings import get_settings
 from agents.anyplot.sub_agents.adapter import ADAPTERS
-from agents.main import DATASET_JUDGE_CONCURRENCY, MAX_MESSAGE_CHARS, Runtime, app, get_runtime
+from agents.main import MAX_MESSAGE_CHARS, Runtime, app, get_runtime
 
 from .conftest import CASES
 from .fakes import (

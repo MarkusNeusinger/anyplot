@@ -111,17 +111,19 @@ def store_dataset(
     history: Sequence[str] = (),
     *,
     notes_screened: bool = False,
+    code: str | None = None,
 ) -> IngestedDataset:
     """Store a parsed dataset for a session, replacing its previous one and its history; raises `StoreFull`.
 
     The notes pasted around the table (`context_lines`) are kept only when the caller says they
     passed the dataset route's screen (`notes_screened`: the pre-filter and the scope judge); every
     other path (a fixture seed, an eval's ingest) stores the table without them, so no unjudged
-    note ever reaches the root (#12168 review).
+    note ever reaches the root (#12168 review). `code` is the Python that computed the table
+    (`run_data_code`), kept with the version for the data panel.
     """
     if parsed.context_lines and not notes_screened:
         parsed = replace(parsed, context_lines=[])
-    dataset_id = store.put(session_id, parsed)
+    dataset_id = store.put(session_id, parsed, code=code)
     for old in (previous_id, *history):
         if old and old != dataset_id:
             store.delete(old, session_id)

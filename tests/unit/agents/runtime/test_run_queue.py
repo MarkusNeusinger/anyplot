@@ -370,3 +370,37 @@ class TestRelease:
     def test_invalid_limits_are_refused(self, clock: Clock) -> None:
         with pytest.raises(ValueError):
             RunQueue(concurrency=0, per_minute=1, max_wait_s=600, clock=clock)
+
+
+class TestRateForADataRun:
+    """`run_data_code` books the start of an unrated turn (`RunQueue.rate`)."""
+
+    def test_an_unrated_turn_books_one_start_and_then_counts_as_rated(self, clock: Clock) -> None:
+        queue = make(clock, concurrency=2, per_minute=1)
+        turn = queue.submit("a", "s-a", rated=False)
+
+        assert queue.rate(turn) is True and turn.rated
+        assert queue.rate(turn) is True  # a second data run in the same turn books nothing more
+        other = queue.submit("b", "s-b", rated=False)
+        assert queue.rate(other) is False and not other.rated  # the minute's one start is taken
+        clock.advance(60)
+        assert queue.rate(other) is True
+
+    def test_a_rated_turn_needs_no_second_start(self, clock: Clock) -> None:
+        queue = make(clock, per_minute=1)
+        turn = queue.submit("a", "s-a")
+
+        assert turn.rated and queue.rate(turn) is True
+
+    def test_a_booked_start_makes_the_next_rated_turn_wait(self, clock: Clock) -> None:
+        queue = make(clock, per_minute=1)
+        turn = queue.submit("a", "s-a", rated=False)
+        assert queue.rate(turn)
+        queue.release(turn)
+
+        waiting = queue.submit("b", "s-b")
+
+        assert waiting.waiting
+        clock.advance(60)
+        queue.pump()
+        assert waiting.running

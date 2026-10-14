@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 import pytest
 
 from agents.anyplot.render.backends.fake import FakeBackend
-from agents.anyplot.render.contract import RenderJob, RenderResult, Theme
+from agents.anyplot.render.contract import DataJob, RenderJob, RenderResult, Theme
 from agents.anyplot.render.serial import RenderBusy, RenderSlots, SerialRenderer
 from agents.anyplot.services import Services
 
@@ -165,3 +165,22 @@ def test_services_put_every_backend_behind_the_render_slots() -> None:
     assert isinstance(backend, SerialRenderer) and backend.backend is fake
     assert backend.slots.limit == 1 and backend.name == "fake"
     assert services.backend is backend
+
+
+async def test_a_data_run_takes_a_slot_of_the_run_lane() -> None:
+    backend = HeldBackend()
+    serial = SerialRenderer(backend, concurrency=1)
+    render = asyncio.create_task(serial.render(job("j0")))
+    await settle()
+
+    with pytest.raises(RenderBusy):
+        await serial.run_data(DataJob(job_id="d0", source="df = 1\n"), wait_s=0.01)
+    waiting = asyncio.create_task(serial.run_data(DataJob(job_id="d1", source="df = 1\n")))
+    await settle()
+    assert serial.slots.waiting == 1 and backend.data_jobs == []
+    backend.release.set()
+    await render
+    output = await waiting
+
+    assert output.exit_code == 0 and [item.job_id for item in backend.data_jobs] == ["d1"]
+    assert serial.slots.busy == 0

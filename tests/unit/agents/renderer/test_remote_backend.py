@@ -17,7 +17,7 @@ import pytest
 
 from agents.anyplot.render.backends import remote as remote_module
 from agents.anyplot.render.backends.remote import IdTokenSource, RemoteBackend, token_expiry
-from agents.anyplot.render.contract import RendererUnavailable, RenderJob
+from agents.anyplot.render.contract import DataJob, DataRunUnsupported, RendererUnavailable, RenderJob
 from agents.anyplot.render.gates import evaluate
 from agents.anyplot.render.serial import SerialRenderer
 from agents.renderer.executor import ExecutorConfig, SandboxExecutor
@@ -25,7 +25,7 @@ from agents.renderer.main import Renderer, app, get_renderer
 from agents.renderer.settings import RendererSettings, get_settings
 
 from .conftest import FakeLauncher
-from .helpers import AGENTS_SA, CANVAS_PLOT, SLEEPER, URL, FakeExecutor, id_token
+from .helpers import AGENTS_SA, CANVAS_PLOT, DATA_SNIPPET, SLEEPER, URL, FakeExecutor, id_token
 
 
 GOOD = id_token(aud=URL, email=AGENTS_SA)
@@ -577,3 +577,114 @@ def test_tokens_are_minted_off_the_event_loop(monkeypatch: pytest.MonkeyPatch) -
 
     assert asyncio.run(IdTokenSource(URL, development=False).token()) == GOOD
     assert threads == [True]
+
+
+class TestDataRun:
+    async def test_a_data_run_comes_back_as_a_data_output(self, backend: RemoteBackend, fake: FakeExecutor) -> None:
+        output = await backend.run_data(DataJob(job_id="data123", source=DATA_SNIPPET))
+
+        assert output.exit_code == 0 and output.csv_text == "x,y\n1,2\n" and output.reason is None
+        assert fake.calls == [("data123", "data")]
+
+    async def test_behind_the_serial_renderer(self, backend: RemoteBackend, fake: FakeExecutor) -> None:
+        output = await SerialRenderer(backend, concurrency=1).run_data(DataJob(job_id="data123", source=DATA_SNIPPET))
+
+        assert output.csv_text == "x,y\n1,2\n"
+
+    async def test_end_to_end_with_the_real_executor_and_harness(
+        self, overrides: None, settings: RendererSettings, config: ExecutorConfig
+    ) -> None:
+        app.dependency_overrides[get_renderer] = lambda: Renderer(settings, SandboxExecutor(config))
+        backend = RemoteBackend(url=URL, tokens=StaticTokens(), transport=httpx.ASGITransport(app=app))
+        try:
+            output = await backend.run_data(DataJob(job_id="data123", source=DATA_SNIPPET))
+        finally:
+            await backend.aclose()
+
+        assert output.exit_code == 0 and output.csv_text == "x,y\n1,3\n2,4\n", output.stderr_tail
+
+    async def test_an_old_renderer_without_the_route_is_unsupported(self) -> None:
+        paths: list[str] = []
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            paths.append(request.url.path)
+            return httpx.Response(404, json={"detail": "Not Found"})
+
+        backend = mocked(handler)
+
+        with pytest.raises(DataRunUnsupported):
+            await backend.run_data(DataJob(job_id="data123", source=DATA_SNIPPET))
+        assert paths == ["/run-data"]  # a 404 is no front-end hiccup: never retried
+        await backend.aclose()
+
+    async def test_a_cold_front_end_is_retried(self) -> None:
+        answers = [httpx.Response(503, text="cold"), None]
+        body = {
+            "job_id": "data123",
+            "exit_code": 0,
+            "csv_text": "a\n1\n",
+            "timings": {"slot_wait_s": 0, "total_s": 0},
+            "version": "x",
+        }
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            answer = answers.pop(0)
+            return answer if answer is not None else httpx.Response(200, json=body)
+
+        backend = mocked(handler)
+
+        output = await backend.run_data(DataJob(job_id="data123", source=DATA_SNIPPET))
+
+        assert output.csv_text == "a\n1\n" and answers == []
+        await backend.aclose()
+
+    @pytest.mark.parametrize(
+        ("status", "body", "message"),
+        [
+            (503, {"detail": "busy"}, "HTTP 503, busy"),
+            (
+                200,
+                {"job_id": "other", "exit_code": 0, "timings": {"slot_wait_s": 0, "total_s": 0}, "version": "x"},
+                "another job",
+            ),
+            (200, {"job_id": "data123", "exit_code": 0, "png_base64": "x"}, "does not match the contract"),
+            (
+                200,
+                {
+                    "job_id": "data123",
+                    "exit_code": 1,
+                    "reason": "launcher",
+                    "timings": {"slot_wait_s": 0, "total_s": 0},
+                    "version": "x",
+                },
+                "launcher failed",
+            ),
+        ],
+    )
+    async def test_failures_are_unavailable(self, status: int, body: dict[str, Any], message: str) -> None:
+        backend = mocked(lambda request: httpx.Response(status, json=body))
+
+        with pytest.raises(RendererUnavailable, match=message):
+            await backend.run_data(DataJob(job_id="data123", source=DATA_SNIPPET))
+        await backend.aclose()
+
+    async def test_a_cancelled_data_run_asks_the_renderer_to_stop(self) -> None:
+        paths: list[str] = []
+        started = asyncio.Event()
+
+        async def handler(request: httpx.Request) -> httpx.Response:
+            paths.append(request.url.path)
+            if request.url.path == "/run-data":
+                started.set()
+                await asyncio.sleep(30)
+            return httpx.Response(200, json={"cancelled": 1})
+
+        backend = mocked(handler)
+        task = asyncio.create_task(backend.run_data(DataJob(job_id="data123", source=DATA_SNIPPET)))
+        await started.wait()
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+
+        assert paths == ["/run-data", "/render/data123/cancel"]
+        await backend.aclose()

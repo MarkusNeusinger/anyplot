@@ -31,6 +31,7 @@ class TestContract:
         assert wire.MAX_CSV_BYTES == MAX_INPUT_BYTES == harness.DATA_MAX_CSV_BYTES
         assert executor.OUT_FILE == harness.DATA_OUT_FILE and executor.DATA_FLAG == harness.DATA_FLAG
         assert wire.MAX_DATA_SOURCE_CHARS >= MAX_DATA_CODE_CHARS
+        assert wire.MAX_DATA_TIMEOUT_S == contract.MAX_DATA_TIMEOUT_S
 
     def test_a_data_run_request_is_bounded_and_closed(self) -> None:
         good = {"job_id": "d1", "source": "df = 1\n", "timeout_s": 10}
