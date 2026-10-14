@@ -11,7 +11,8 @@ import pytest
 from agents.anyplot import models
 from agents.anyplot.models import FakeJudge, JudgeVerdict
 from agents.anyplot.plugins.scope_guard import WITHHELD
-from agents.evals import scope
+from agents.anyplot.schemas import MAX_MESSAGE_CHARS
+from agents.evals import prep, scope
 from agents.evals.scope import (
     DEFAULT_CASES,
     EXIT_FAILED,
@@ -28,6 +29,11 @@ from agents.evals.scope import (
     run_cases,
     verdict_of,
 )
+
+
+def test_the_evals_message_cap_is_the_routes() -> None:
+    """The evals write the cap out (importing agents.anyplot first would build the agents); this keeps them equal."""
+    assert scope.MAX_MESSAGE_CHARS == prep.MAX_MESSAGE_CHARS == MAX_MESSAGE_CHARS
 
 
 def case(case_id: str, expected: str, group: str, text: str = "make the bars blue", **extra: object) -> ScopeCase:

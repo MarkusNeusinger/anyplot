@@ -3081,7 +3081,7 @@ async def test_notes_that_pass_the_scope_judge_are_stored_returned_and_reach_the
     assert prompt == "<user_notes>\n" + "\n".join(NOTES) + "\n</user_notes>" and rubric == scope_rubric()
     assert services.usage.user_tokens(USER) > before  # the notes judge's tokens are the user's
     (line,) = attribution_lines(caplog, "notes_judge")
-    assert (line["verdict"], line["lines"], line["chars"], line["judge_tokens"]) == ("in_scope", 2, 93, 120)
+    assert (line["verdict"], line["lines"], line["chars"], line["judge_tokens"]) == ("in_scope", 2, 94, 120)
     assert not any("markers large" in record.getMessage() for record in caplog.records)  # counts, never the text
 
     turn = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"action": "summarize_data"})

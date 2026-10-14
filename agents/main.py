@@ -705,7 +705,7 @@ async def _screen_notes(services: Services, ledger: RequestLedger, parsed: Parse
     verdict and the counts, never the text.
     """
     lines = parsed.context_lines
-    counts = {"lines": len(lines), "chars": sum(len(line) for line in lines)}
+    counts = {"lines": len(lines), "chars": len("\n".join(lines))}  # as the cap and the judge input count them
     if notes_instruction_like(lines):
         attribution("notes_judge", ledger, verdict="prefilter", **counts)
         return without_context(parsed, NOTES_INSTRUCTION_WARNING)
