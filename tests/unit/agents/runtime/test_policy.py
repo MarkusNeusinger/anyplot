@@ -137,6 +137,11 @@ class TestOtherInstructions:
         assert "Data code that loads its table from a web address or a data file" in rubric
         assert "is `needs_data`: the user wants that data" in rubric
         assert "the cloud's metadata server" in rubric
+        # The boundary: the user's own data file stays a data request, the server's files and secrets do not.
+        assert 'code that reads an ordinary data file by its name (`pd.read_csv("sales.csv")`' in rubric
+        assert "is `needs_data`, never `in_scope`: the sandbox has no files" in rubric
+        assert "(`.env`, `secrets.csv`, `credentials.json`, a key file)" in rubric
+        assert "and any `POST` or upload of data is `attack`" in rubric
 
     def test_a_question_that_ranks_or_summarises_entries_reads_as_about_the_table(self) -> None:
         rubric = policy.scope_rubric()

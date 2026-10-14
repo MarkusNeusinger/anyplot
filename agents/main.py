@@ -744,11 +744,21 @@ def _active(runtime: Runtime, sid: str, user: str | None = None) -> None:
         raise AgentsError(409, "run_active")
 
 
+def _data_route_free(runtime: Runtime, sid: str, user: str) -> None:
+    """`_active` for the session's data routes (library, bindings, confirm, undo, to_long): 409 while the session
+    has a run, or while the user's paste is in flight in any session. A paste holds the view it read before its
+    judges ran and writes the next dataset from it, so a version another tab stored meanwhile would be dropped
+    silently. A run of the user in another session does not block them, as before."""
+    _active(runtime, sid)
+    if user in runtime.pasting:
+        raise AgentsError(409, "run_active")
+
+
 @app.post("/v1/sessions/{sid}/library", dependencies=v1_dependencies)
 async def switch_library(sid: SessionId, body: SwitchLibraryBody, user: User, runtime: RuntimeDep) -> JSONResponse:
     settings = get_settings()
     session = await runtime.session(user, sid)
-    _active(runtime, sid)
+    _data_route_free(runtime, sid, user)
     view = read_session(session.state)
     if view is None or body.snapshot.spec_id != view.spec_id:
         raise AgentsError(422, "invalid")
@@ -1030,7 +1040,7 @@ async def put_bindings(
 ) -> JSONResponse:
     services = get_services()
     session = await runtime.session(user, sid)
-    _active(runtime, sid)
+    _data_route_free(runtime, sid, user)
     view = read_session(session.state)
     if view is None:
         raise AgentsError(404, "session_expired")
@@ -1091,7 +1101,7 @@ async def confirm_dataset(sid: SessionId, user: User, runtime: RuntimeDep) -> JS
     """
     services = get_services()
     session = await runtime.session(user, sid)
-    _active(runtime, sid)
+    _data_route_free(runtime, sid, user)
     view = read_session(session.state)
     if view is None:
         raise AgentsError(404, "session_expired")
@@ -1116,7 +1126,7 @@ async def undo_dataset(sid: SessionId, user: User, runtime: RuntimeDep) -> JSONR
     """
     services = get_services()
     session = await runtime.session(user, sid)
-    _active(runtime, sid)
+    _data_route_free(runtime, sid, user)
     view = read_session(session.state)
     if view is None:
         raise AgentsError(404, "session_expired")
@@ -1147,7 +1157,7 @@ async def dataset_to_long(sid: SessionId, user: User, runtime: RuntimeDep) -> JS
     """
     services = get_services()
     session = await runtime.session(user, sid)
-    _active(runtime, sid)
+    _data_route_free(runtime, sid, user)
     view = read_session(session.state)
     if view is None:
         raise AgentsError(404, "session_expired")

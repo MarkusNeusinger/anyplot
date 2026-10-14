@@ -896,7 +896,9 @@ streams `ready`, the `queued` statuses if it has to wait, the pipeline steps,
 
 Before the scope check, and without any model call, the stream sends `ready`,
 a `refusal` and `done` at once when you are paused for the day after three
-messages or pastes the checks classed as attacks (`locked_out`), over the daily
+messages or pastes the checks classed as attacks (`locked_out`; the count lives
+in the agents service's memory and resets at midnight UTC or when the service
+restarts), over the daily
 token budget (`budget`), past 10 messages in a minute (`rate_limited`) or 200
 in a UTC day (`daily_limit`), counting typed messages and the page's actions
 alike, or when the session is closed (`session_closed`). The scope check closes

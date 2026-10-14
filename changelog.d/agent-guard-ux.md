@@ -16,7 +16,9 @@
   limits (`AGENT_USER_PASTES_PER_MINUTE` 10, `AGENT_USER_PASTES_PER_DAY` 100;
   only a paste that reaches the checks counts), one paste per user at a time,
   none while the user's turn runs in any session, and none in a closed session
-  (`403 session_closed`). Each paste spends dataset-judge, notes-judge and
+  (`403 session_closed`); while a paste is in flight, the session's data routes
+  (bindings, confirm, undo, `.to_long()`, library) wait for it, so a version
+  stored from another tab is never dropped. Each paste spends dataset-judge, notes-judge and
   maybe transcriber calls, and was bounded only by the daily token budget
   (#12180).
 
