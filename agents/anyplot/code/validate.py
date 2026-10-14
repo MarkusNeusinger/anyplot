@@ -1031,9 +1031,9 @@ class _Scan:
         source = "values written out belong in the data panel as a table"
         total_numbers = total_strings = 0
         for node in ast.walk(self.tree):
-            if not _is_literal_container(node, self.parents.get(node)) or _is_literal_container(
-                self.parents.get(node), self.parents.get(self.parents.get(node))
-            ):
+            parent = self.parents.get(node)
+            grandparent = self.parents.get(parent) if parent is not None else None
+            if not _is_literal_container(node, parent) or _is_literal_container(parent, grandparent):
                 continue
             numbers, strings = _literal_leaves(node)
             total_numbers += numbers

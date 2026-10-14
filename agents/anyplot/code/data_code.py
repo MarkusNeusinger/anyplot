@@ -27,7 +27,7 @@ def _is_main_test(test: ast.expr) -> bool:
 
 def _first_line(statement: ast.stmt) -> int:
     """The first line of a statement, its decorators included."""
-    decorators = getattr(statement, "decorator_list", [])
+    decorators: list[ast.expr] = getattr(statement, "decorator_list", [])
     return min([statement.lineno, *(decorator.lineno for decorator in decorators)])
 
 
