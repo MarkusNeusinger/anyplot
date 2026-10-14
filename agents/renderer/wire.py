@@ -30,7 +30,7 @@ MAX_SOURCE_CHARS = 128 * 1024
 MAX_DATA_CSV_CHARS = 4 * 1024 * 1024
 """The canonical `data.csv`: the agents' parser refuses a parse whose canonical CSV is larger
 (`data/parse.py` `MAX_CANONICAL_BYTES`, pinned equal), so every stored dataset fits. Pastes take at
-most 1 MiB and computed data 2 MiB (2 MiB here and 200 KB of paste before 2026-10-14)."""
+most 1 MiB and computed data 2 MiB (until 2026-10-14 this cap was 2 MiB and the paste cap 200 KB)."""
 MAX_TIMEOUT_S = 120.0
 MAX_PNG_BYTES = 10 * 1024 * 1024
 """Largest PNG the renderer returns; the agents' R2 gate (`render/png.py`) applies the same cap."""
@@ -47,7 +47,7 @@ MAX_DATA_TIMEOUT_S = 30.0
 """A data run's time limit: a snippet computes a table of at most 20,000 rows, which takes well under a second."""
 MAX_CSV_BYTES = 2 * 1024 * 1024
 """The `out.csv` a data run returns: the agents' cap for computed data (`data/parse.py` `MAX_COMPUTED_BYTES`, 2 MiB;
-pastes keep 200 KB), which the harness applies before it writes; the executor reads at most this many bytes."""
+pastes take 1 MiB), which the harness applies before it writes; the executor reads at most this many bytes."""
 
 DATA_STATUS_FILE = "status.json"
 """The data run's outcome the harness writes (`harness.DATA_STATUS_FILE`, pinned by a test)."""

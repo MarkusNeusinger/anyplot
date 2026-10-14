@@ -61,7 +61,7 @@ from pydantic import TypeAdapter, ValidationError
 from ..briefs import spec_brief, trimmed_profiles
 from ..code.data_code import check_data_code
 from ..data.generate import Generate, GenerateError, generate
-from ..data.parse import MAX_COMPUTED_BYTES, ParsedDataset, ParseError, parse_dataset
+from ..data.parse import MAX_CANONICAL_BYTES, MAX_COMPUTED_BYTES, ParsedDataset, ParseError, parse_dataset
 from ..data.prepare import MAX_OPERATIONS, Operation, PrepareError, apply_operations, validation_lines
 from ..data.shape import long_suggestion
 from ..data.store import StoredDataset, StoreFull
@@ -372,6 +372,11 @@ RUN_FAILURES: dict[str, str] = {
     "usage": "the sandbox could not start the code",
 }
 """Fixed messages for the harness's data-mode exit codes (`harness.DATA_EXIT`) other than `ok` and `error`."""
+CANONICAL_TOO_LARGE = (
+    "df fits the 2 MB cap, but written out the way the plot reads it (ISO dates, full numbers) it is over "
+    f"{MAX_CANONICAL_BYTES // (1024 * 1024)} MB: keep fewer rows or columns, or shorten long text and number cells"
+)
+"""The refusal of a table whose canonical CSV passes `parse.MAX_CANONICAL_BYTES` although df's own CSV fit."""
 DATA_RUN_SLOT_WAIT_S = 120.0
 """How long `run_data_code` waits for the instance's render slot before it answers `busy`."""
 
@@ -448,7 +453,7 @@ async def run_data_code(code: str, source_language: str, tool_context: ToolConte
         parsed = parse_dataset(output.csv_text, find_table=False, max_bytes=MAX_COMPUTED_BYTES)
     except ParseError as exc:
         if exc.code == "too_long":  # its canonical copy outgrew `MAX_CANONICAL_BYTES` (wide dates, long text)
-            return _error_lines("run_failed", [RUN_FAILURES["too_large"]])
+            return _error_lines("run_failed", [CANONICAL_TOO_LARGE])
         return _error_lines("unparseable", [f"the table df holds cannot be read as data ({exc.code})"])
     if not any(column.dtype in ("integer", "number", "datetime") for column in parsed.profile.columns):
         return _error_lines("no_numbers", ["df has no number or date column: a plot needs values to draw"])

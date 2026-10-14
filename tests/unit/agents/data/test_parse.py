@@ -10,8 +10,10 @@ from typing import Any
 import pandas as pd
 import pytest
 
+from agents.anyplot.data import parse as parse_module
 from agents.anyplot.data.bindings import default_bindings
 from agents.anyplot.data.parse import (
+    MAX_COMPUTED_BYTES,
     MAX_CONTEXT_CHARS,
     MAX_INPUT_BYTES,
     MAX_INPUT_CELL_CHARS,
@@ -199,7 +201,25 @@ class TestHeaders:
 
 
 class TestErrors:
-    def test_size_boundary_is_200_kib_of_utf8_bytes(self) -> None:
+    def test_the_canonical_csv_has_its_own_boundary(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """A paste within its cap whose canonical CSV grows past `MAX_CANONICAL_BYTES` is `too_long`."""
+        text = "v\n" + "7e15\n" * 10  # each cell becomes 7000000000000000.0 in the canonical CSV
+        canonical = len(parse_dataset(text).csv.encode("utf-8"))
+        assert canonical > 2 * len(text)
+
+        monkeypatch.setattr(parse_module, "MAX_CANONICAL_BYTES", canonical)
+        assert parse_dataset(text).profile.rows == 10
+        monkeypatch.setattr(parse_module, "MAX_CANONICAL_BYTES", canonical - 1)
+        assert error_code(text) == "too_long"
+
+    def test_computed_data_takes_its_own_byte_cap(self) -> None:
+        text = "label,v\n" + "".join(f"{'k' * 58},{i}\n" for i in range(18_000))
+        assert MAX_INPUT_BYTES < len(text.encode("utf-8")) <= MAX_COMPUTED_BYTES
+
+        assert error_code(text) == "too_long"
+        assert parse_dataset(text, find_table=False, max_bytes=MAX_COMPUTED_BYTES).profile.rows == 18_000
+
+    def test_size_boundary_is_1_mib_of_utf8_bytes(self) -> None:
         rows = (MAX_INPUT_BYTES - 2) // 100
         text = "v\n" + ("a" * 99 + "\n") * rows
         text += "b" * (MAX_INPUT_BYTES - len(text) - 1) + "\n"

@@ -70,7 +70,7 @@ takes `df` from the returned globals: a pandas DataFrame whose columns are no
 MultiIndex, with a non-default index turned into columns (`reset_index`), its column
 names as text, at most `DATA_MAX_ROWS` rows and `DATA_MAX_COLUMNS` columns and at most
 `DATA_MAX_CSV_BYTES` of CSV (the parser's caps for computed data: `agents/anyplot/schemas.py`
-and `data/parse.py` `MAX_COMPUTED_BYTES`, 2 MiB, ten times the paste cap; a test pins them equal). It writes the CSV through the handle it opened
+and `data/parse.py` `MAX_COMPUTED_BYTES`, 2 MiB, twice the 1 MiB paste cap; a test pins them equal). It writes the CSV through the handle it opened
 before the guard; a run the guard refused at any point writes nothing, even when the
 snippet caught the error. Each refusal has its own exit code (`DATA_EXIT`); the host
 maps a code to a fixed message and trusts nothing the snippet printed. The same code,
@@ -164,7 +164,7 @@ DATA_STATUS_FILE = "status.json"
 """The data run's outcome for the host (`write_status`): `{"exit", "reason", "measured"?, "limit"?}`."""
 DATA_MAX_ROWS = 20_000  # agents/anyplot/schemas.py MAX_ROWS
 DATA_MAX_COLUMNS = 50  # agents/anyplot/schemas.py MAX_COLUMNS
-DATA_MAX_CSV_BYTES = 2 * 1024 * 1024  # agents/anyplot/data/parse.py MAX_COMPUTED_BYTES (pastes keep 200 KB)
+DATA_MAX_CSV_BYTES = 2 * 1024 * 1024  # agents/anyplot/data/parse.py MAX_COMPUTED_BYTES (pastes take 1 MiB)
 DATA_EXIT = {
     "ok": 0,
     "error": 1,
