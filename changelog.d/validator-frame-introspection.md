@@ -7,4 +7,4 @@
   `cr_frame`, `f_back`, `f_builtins`, `f_globals`, `f_locals`, `tb_frame`, `co_consts` and
   their siblings) are now refused on any object. The renderer's gVisor sandbox (read-only,
   no egress, no secrets in its environment) bounded the exposure; catalogue eligibility is
-  unchanged (285 matplotlib and 287 seaborn files).
+  unchanged (285 matplotlib and 287 seaborn files). (#12169)
