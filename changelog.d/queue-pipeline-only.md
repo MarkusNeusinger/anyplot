@@ -14,4 +14,4 @@
   at its third `out_of_scope` or `attack` refusal (`AGENT_SESSION_REFUSALS`;
   `needs_data` never counts), answering every later turn with
   `session_closed`. Owner decision of 2026-10-14, after a live test in which
-  plain answers waited about 60 seconds each.
+  plain answers waited about 60 seconds each. (#12175)
