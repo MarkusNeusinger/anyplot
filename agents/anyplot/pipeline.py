@@ -831,7 +831,9 @@ def finish(run: Run) -> PlotResult:
             residual += shipped.review_lines
         elif run.review_lines:
             residual += run.review_lines
-        elif not run.reviewed:
+        elif not run.reviewed or shipped.reviewed_ok is None:
+            # The shipped render itself was never reviewed, even when an earlier one was: a repair of
+            # measured findings after a passing review, whose own review was unreadable or skipped.
             residual.append(NOT_REVIEWED_LINE.format(why=run.unreviewed_why or "the repair round left defects"))
     residual = list(dict.fromkeys(_line(line) for line in residual))[:MAX_RESIDUAL_DEFECTS]
     # The shipped render's own notes: every call up to it that changed the code, never a no-op proofread's.

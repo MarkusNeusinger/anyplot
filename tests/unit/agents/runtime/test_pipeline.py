@@ -122,6 +122,18 @@ class TestFinish:
         assert finish(run).status == "ok"
         get_settings.cache_clear()
 
+    def test_an_unreviewed_repair_after_a_passing_review_is_never_ok(self) -> None:
+        """A passing review sent its render to the repair for a measured finding (`AGENT_GATE_REPAIR=review`);
+        the repair cleared it, but its own review was unreadable: it ships with the not-reviewed note."""
+        run = run_with(attempt=2)  # the repaired render: never reviewed
+        run.reviewed, run.review_lines = True, []  # round 1's review passed
+        run.unreviewed_why = "the review answer could not be read"
+
+        result = finish(run)
+
+        assert result.status == "needs_attention"
+        assert result.residual_defects == [NOT_REVIEWED_LINE.format(why="the review answer could not be read")]
+
     def test_ship_best_prefers_the_render_without_measured_findings(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """A repair that cleared clipped text ships over a round-1 render that scored a point higher."""
         monkeypatch.setenv("AGENT_REVIEWER_MODE", "catalogue")
