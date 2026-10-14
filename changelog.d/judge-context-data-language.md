@@ -7,7 +7,7 @@
   screen a paste name the language, so no model call is added; unclear headers
   such as `temperature_2m_max` keep English. A typed message still replaces it,
   and a paste never overrides a typed or chosen language. The dataset route
-  answers the session language as `language: {language, source}`.
+  answers the session language as `language: {language, source}`. (#12171)
 
 ### Fixed
 
@@ -17,4 +17,4 @@
   refused as `needs_data` too. The judge now sees the last reply a model wrote,
   never a fixed refusal, and its rubric says that a question about your own
   data ("which day was the warmest?") is in scope. Eight scope eval cases
-  reproduce the sequence in German and English.
+  reproduce the sequence in German and English. (#12171)
