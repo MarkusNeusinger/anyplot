@@ -47,6 +47,45 @@ budget:
   vi: "Hiện đã đạt giới hạn sử dụng. Bạn vui lòng thử lại sau."
   ru: "Лимит использования пока исчерпан. Пожалуйста, попробуй ещё раз позже."
 
+rate_limited:
+  en: "That is too many messages in a short time. Please wait a minute and try again."
+  de: "Das sind zu viele Nachrichten in kurzer Zeit. Bitte warte eine Minute und versuche es dann noch einmal."
+  fr: "Cela fait trop de messages en peu de temps. Attends une minute, puis réessaie."
+  es: "Son demasiados mensajes en poco tiempo. Espera un minuto y vuelve a intentarlo."
+  it: "Sono troppi messaggi in poco tempo. Aspetta un minuto e riprova."
+  pt: "São mensagens demais em pouco tempo. Aguarde um minuto e tente novamente."
+  nl: "Dat zijn te veel berichten in korte tijd. Wacht een minuut en probeer het dan opnieuw."
+  pl: "To za dużo wiadomości w krótkim czasie. Odczekaj minutę i spróbuj ponownie."
+  zh: "短时间内消息太多了。请等一分钟后再试。"
+  vi: "Bạn đã gửi quá nhiều tin nhắn trong thời gian ngắn. Vui lòng đợi một phút rồi thử lại."
+  ru: "Слишком много сообщений за короткое время. Пожалуйста, подожди минуту и попробуй ещё раз."
+
+daily_limit:
+  en: "You have reached today's message limit. Please try again tomorrow."
+  de: "Du hast das Nachrichtenlimit für heute erreicht. Bitte versuche es morgen wieder."
+  fr: "Tu as atteint la limite de messages pour aujourd'hui. Réessaie demain, s'il te plaît."
+  es: "Has alcanzado el límite de mensajes de hoy. Vuelve a intentarlo mañana, por favor."
+  it: "Hai raggiunto il limite di messaggi di oggi. Riprova domani, per favore."
+  pt: "Você atingiu o limite de mensagens de hoje. Por favor, tente novamente amanhã."
+  nl: "Je hebt de berichtenlimiet voor vandaag bereikt. Probeer het morgen opnieuw."
+  pl: "Osiągnięto dzisiejszy limit wiadomości. Spróbuj ponownie jutro."
+  zh: "你已达到今天的消息上限，请明天再试。"
+  vi: "Bạn đã đạt giới hạn tin nhắn của hôm nay. Vui lòng thử lại vào ngày mai."
+  ru: "Лимит сообщений на сегодня исчерпан. Пожалуйста, попробуй ещё раз завтра."
+
+session_closed:
+  en: "This chat is closed after several requests outside its scope. Reload the page to start a new session."
+  de: "Dieser Chat ist nach mehreren Anfragen außerhalb seines Themas geschlossen. Lade die Seite neu, um eine neue Sitzung zu starten."
+  fr: "Cette discussion est fermée après plusieurs demandes hors de son sujet. Recharge la page pour commencer une nouvelle session."
+  es: "Este chat se ha cerrado tras varias solicitudes fuera de su ámbito. Recarga la página para empezar una nueva sesión."
+  it: "Questa chat è chiusa dopo diverse richieste fuori dal suo ambito. Ricarica la pagina per iniziare una nuova sessione."
+  pt: "Este chat foi encerrado após vários pedidos fora do seu escopo. Recarregue a página para começar uma nova sessão."
+  nl: "Deze chat is gesloten na meerdere verzoeken buiten het onderwerp. Laad de pagina opnieuw om een nieuwe sessie te starten."
+  pl: "Ten czat został zamknięty po kilku prośbach spoza jego zakresu. Odśwież stronę, aby rozpocząć nową sesję."
+  zh: "由于多次提出超出范围的请求，此对话已关闭。请刷新页面以开始新的会话。"
+  vi: "Cuộc trò chuyện này đã bị đóng sau nhiều yêu cầu nằm ngoài phạm vi. Hãy tải lại trang để bắt đầu một phiên mới."
+  ru: "Этот чат закрыт после нескольких запросов не по теме. Перезагрузи страницу, чтобы начать новую сессию."
+
 unsupported_content:
   en: "Please send your request as text. To use your data, paste it into the data panel."
   de: "Bitte sende deine Anfrage als Text. Deine Daten fügst du im Datenbereich ein."

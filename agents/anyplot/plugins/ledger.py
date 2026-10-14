@@ -15,7 +15,10 @@ runs (`AGENT_DAILY_DATA_RUNS`, counted before each run) it counts the
 `attack` verdicts of the scope and dataset judges per user, once per distinct message
 or dataset: from `AGENT_ATTACK_STRIKES` of them on, `daily_ok` is false for that user
 for the rest of the day, so a turn gets the budget refusal and a dataset
-`429 rate_limited`. Only a new UTC day, a redeploy or a scale-to-zero resets them.
+`429 rate_limited`. It also counts each user's chat turns, per UTC day
+(`AGENT_USER_MESSAGES_PER_DAY`) and in a sliding minute (`AGENT_USER_MESSAGES_PER_MINUTE`),
+which the `/messages` route checks before the scope judge (`message_limit`). Only a new
+UTC day, a redeploy or a scale-to-zero resets them.
 
 The request, user-day and global-day budgets count cost-weighted tokens: each kind
 weighted by its price relative to an uncached input token (`BUDGET_WEIGHTS`), so a
@@ -31,8 +34,9 @@ hash).
 import hashlib
 import json
 import logging
-from collections import OrderedDict
-from collections.abc import Callable
+import time
+from collections import OrderedDict, deque
+from collections.abc import Awaitable, Callable
 from contextvars import ContextVar
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -105,11 +109,13 @@ class RequestLedger:
     """The change lines of every `prepare_data` call of the turn, in order: the `done` event's `dataset.changes`."""
     data_code_calls: int = 0
     """`run_data_code` calls of this invocation; ToolSafety allows `MAX_DATA_CODE_CALLS`."""
-    rate_start: Callable[[], bool] | None = None
-    """Set by the `/messages` route: books a start in the run queue's rate window for this turn (`RunQueue.rate`),
-    False when the window is full; idempotent per turn. None without a route (`adk web`), whose runs bypass the
-    queue. The one helper for every sandbox run of a turn: `run_data_code` calls it today, and the plot pipeline can
-    take its rated start through it once the queue no longer rates whole turns."""
+    run_slot: Callable[[], Awaitable[bool]] | None = None
+    """Set by the `/messages` route (`TurnSlot.take`): waits for the run queue's slot and the turn's start in the
+    rate window, while the stream sends `status{step:"queued"}`, and holds both until the turn ends. True once the
+    turn holds them (at once on a second call); False when the queue is full, the wait ran out or the turn was
+    cancelled, after the route failed the turn with `capacity` (or ended it). None without a route (`adk web`),
+    whose runs bypass the queue. The one helper for every sandbox run of a turn: `plot_pipeline` and
+    `run_data_code` await it before they render or run code."""
 
     def refuse(self, code: str, text: str) -> None:
         if self.refusal is None and self.error is None:
@@ -156,13 +162,22 @@ class _Day:
     global_tokens: int = 0
     user_strikes: dict[str, set[str]] = field(default_factory=dict)
     user_data_runs: dict[str, int] = field(default_factory=dict)
+    user_messages: dict[str, int] = field(default_factory=dict)
+
+
+MESSAGE_WINDOW_S = 60.0
+"""The sliding window of `AGENT_USER_MESSAGES_PER_MINUTE`."""
+MessageLimit = Literal["rate_limited", "daily_limit"]
+"""Why `message_limit` refuses a turn: the minute's messages, or the day's."""
 
 
 class UsageBook:
-    """Per-user and global daily counters for this instance's lifetime."""
+    """Per-user and global daily counters for this instance's lifetime, and each user's messages of the last minute."""
 
-    def __init__(self) -> None:
+    def __init__(self, clock: Callable[[], float] = time.monotonic) -> None:
         self._day = _Day(today())
+        self._clock = clock
+        self._recent: dict[str, deque[float]] = {}
 
     def _current(self) -> _Day:
         date = today()
@@ -224,6 +239,42 @@ class UsageBook:
 
     def data_runs_ok(self, user_id: str, settings: AgentSettings) -> bool:
         return self.user_data_runs(user_id) < settings.daily_data_runs
+
+    def user_messages(self, user_id: str) -> int:
+        """The user's chat turns today (typed messages and actions alike) that passed `message_limit`."""
+        return self._current().user_messages.get(user_id, 0)
+
+    def message_limit(self, user_id: str, settings: AgentSettings) -> MessageLimit | None:
+        """Why the user may not send another chat turn now, or None; checked before the scope judge, so a flood costs
+        no model call. A refused turn is not counted: the window frees itself one minute after the last counted one."""
+        if self.user_messages(user_id) >= settings.user_messages_per_day:
+            return "daily_limit"
+        recent = self._trimmed(user_id)
+        if recent is not None and len(recent) >= settings.user_messages_per_minute:
+            return "rate_limited"
+        return None
+
+    def add_message(self, user_id: str) -> None:
+        """Count one chat turn against the user's minute and day."""
+        day = self._current()
+        day.user_messages[user_id] = day.user_messages.get(user_id, 0) + 1
+        recent = self._trimmed(user_id)
+        if recent is None:
+            recent = self._recent[user_id] = deque()
+        recent.append(self._clock())
+
+    def _trimmed(self, user_id: str) -> deque[float] | None:
+        """The user's message times within the window, oldest first; a user with none left is forgotten."""
+        recent = self._recent.get(user_id)
+        if recent is None:
+            return None
+        now = self._clock()
+        while recent and now - recent[0] >= MESSAGE_WINDOW_S:
+            recent.popleft()
+        if not recent:
+            del self._recent[user_id]
+            return None
+        return recent
 
 
 def request_ok(ledger: RequestLedger, settings: AgentSettings, *, next_calls: int = 1, reserve: int = 0) -> bool:

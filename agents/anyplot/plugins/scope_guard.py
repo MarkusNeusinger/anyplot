@@ -25,6 +25,12 @@
 * an `attack` verdict is a strike against the user (`UsageBook.add_strike`), once
   per distinct message text: from `AGENT_ATTACK_STRIKES` strikes on, the daily check
   above refuses the user with the budget refusal for the rest of the day;
+* the session's `AGENT_SESSION_REFUSALS`-th refusal of type `out_of_scope` or `attack`
+  (3 by default; `needs_data` never counts, `scope_refusals`) closes the session: that
+  refusal goes out as `session_closed` instead of `out_of_scope`, and the `/messages`
+  route answers every later turn of the session with the same refusal before the
+  judge runs, so the user starts a new session. The strikes above are per user and
+  day and count `attack` only; this count is per session and needs no state of its own;
 * the judge's `lang` for the session's first in-scope typed message becomes the
   session language with the source `detected` (`session_state.LANGUAGE`), unless one
   is set: a later message never changes it, a choice (`chosen`) never yields to it, a
@@ -135,6 +141,29 @@ def withheld_text(code: str | None = None) -> str:
 
 def _withheld(code: str | None = None) -> types.Content:
     return types.Content(role="user", parts=[types.Part(text=withheld_text(code))])
+
+
+SESSION_CLOSED = "session_closed"
+"""The refusal code (and `refusals.yaml` entry) of a session closed after `AGENT_SESSION_REFUSALS` refusals."""
+COUNTED_PLACEHOLDER = withheld_text("out_of_scope")
+"""The stored form of every `out_of_scope` and `attack` refusal: what `scope_refusals` counts."""
+
+
+def scope_refusals(events: Sequence[Event]) -> int:
+    """The session's scope-judge refusals of type `out_of_scope` or `attack`, counted from its withheld messages.
+
+    Both verdicts store the same placeholder (`withheld_text("out_of_scope")`), a `needs_data`
+    refusal its own, and a refusal sent before the judge (budget, unsupported content, the message
+    limits, a closed session) the bare one or nothing, so only the counted kinds match. The count
+    lives in the session's own events: it ends with the session, and no state is written for it.
+    """
+    count = 0
+    for event in events:
+        if event.author != USER_AUTHOR or not event.content or not event.content.parts:
+            continue
+        if "".join(part.text or "" for part in event.content.parts) == COUNTED_PLACEHOLDER:
+            count += 1
+    return count
 
 
 def session_turns(invocation_context: InvocationContext) -> list[Turn]:
@@ -267,7 +296,13 @@ class ScopeGuardPlugin(BasePlugin):
                     KeptRefusal(verdict.verdict, verdict.lang, text, datetime.now(UTC).isoformat(timespec="seconds")),
                 )
             code = refusal_code(verdict.verdict)
-            ledger.refuse(code, refusal(code, verdict.lang))
+            shown = code
+            if code == "out_of_scope":
+                count = scope_refusals(invocation_context.session.events) + 1
+                if count >= settings.session_refusals:
+                    shown = SESSION_CLOSED  # the route refuses every later turn of the session before the judge
+                    attribution("scope_guard", ledger, verdict=SESSION_CLOSED, refusals=count)
+            ledger.refuse(shown, refusal(shown, verdict.lang))
             return _withheld(code)
         await self._detect(invocation_context, ledger, verdict, text)
         return None

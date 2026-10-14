@@ -1343,6 +1343,25 @@ describe('useAgentSession: turns', () => {
     expect(JSON.stringify(trackEvent.mock.calls)).not.toContain('Munich');
   });
 
+  it.each(['rate_limited', 'daily_limit', 'session_closed'])(
+    'shows the %s refusal and records it as its own guardrail reason',
+    async code => {
+      const routes = baseRoutes();
+      routes['POST /sessions/S1/messages'] = () =>
+        sse([
+          ['ready', { v: 'anyplot/1', run_id: 'r' }],
+          ['refusal', { code, text: 'A fixed reply.' }],
+          ['done', {}],
+        ]);
+      const { result } = await openSession(routes);
+      await act(() => result.current.sendMessage('another question'));
+      expect(result.current.state.items).toContainEqual(
+        expect.objectContaining({ kind: 'refusal', code, text: 'A fixed reply.' })
+      );
+      expect(trackEvent).toHaveBeenCalledWith('agent_guardrail_block', { reason: code });
+    }
+  );
+
   it('turns an HTTP 409 and a stream without done into errors with their ref', async () => {
     const routes = baseRoutes();
     routes['POST /sessions/S1/messages'] = () => json(409, { detail: 'run_active', ref: 'r409' });

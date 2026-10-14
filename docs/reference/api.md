@@ -492,7 +492,7 @@ The routes mirror the agents service's `/v1` API. All paths below start with
 | `POST /sessions/{sid}/dataset/confirm` | none | Step 1 of two: you confirm that the stored dataset and its bindings fit; `{confirmed: true, rows, columns}`. The plot pipeline runs only on confirmed data (`create_plot` before it answers `plot{status: "not_ready", reason: "data_unconfirmed"}`); a new paste, a transcription's `.use()`, a binding change, a change of the data by the assistant or an undo drops the confirmation, a library switch keeps it. `422 no_dataset` before a parse, `409 run_active` while a turn or a render is in flight |
 | `POST /sessions/{sid}/dataset/undo` | none | Undo the assistant's last change to the data (see [Data changes](#data-changes)): the version before it is the current dataset again, `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version}` like the dataset route (the wide-table offer comes back with a wide version), unconfirmed. The service keeps the last five versions. `422 nothing_to_undo` when the paste was never changed or the first data came from a formula, `409 run_active` while a turn or a render is in flight |
 | `POST /sessions/{sid}/dataset/to_long` | none | Make a wide table long for the plot's category and value roles (the page's `.to_long()`, see [Data changes](#data-changes)): the service recomputes its `suggestion` and applies that `pivot_longer` without a model call, as the next version with the default bindings for the new columns, answered like the undo route plus `changes`, unconfirmed. `422 no_suggestion` when the table is not wide for this plot, `409 run_active` while a turn or a render is in flight |
-| `POST /sessions/{sid}/messages` | `{text}` (at most 2,000 characters), `{"action": "create_plot"}` or `{"action": "summarize_data"}` | An SSE stream in protocol `anyplot/1`; `413 too_long` above the limit, `409 run_active` while you have a queued or running turn or a theme render in any session, `503 capacity` when the run queue is full. `summarize_data` asks the assistant for the step-1 summary of the data (rows, columns with types and units, missing values, percentages, the proposed bindings, one question when something is ambiguous) without the scope judge, like `create_plot`; when the stored dataset kept notes pasted with the table (`context_lines`, judged when they were pasted), the turn carries them to the assistant fenced as `<user_notes>`, so it can act on a request in them, such as "make it a line chart" |
+| `POST /sessions/{sid}/messages` | `{text}` (at most 2,000 characters), `{"action": "create_plot"}` or `{"action": "summarize_data"}` | An SSE stream in protocol `anyplot/1`; `413 too_long` above the limit, `409 run_active` while you have a turn or a theme render in flight in any session; a full run queue ends the turn's stream with `error {"code": "capacity"}` (see [SSE protocol](#sse-protocol-anyplot1)). `summarize_data` asks the assistant for the step-1 summary of the data (rows, columns with types and units, missing values, percentages, the proposed bindings, one question when something is ambiguous) without the scope judge, like `create_plot`; when the stored dataset kept notes pasted with the table (`context_lines`, judged when they were pasted), the turn carries them to the assistant fenced as `<user_notes>`, so it can act on a request in them, such as "make it a line chart" |
 | `POST /sessions/{sid}/cancel` | None | `204`; a turn that still waits leaves the run queue |
 | `POST /sessions/{sid}/versions/{version}/render` | `{"theme": "light"}` or `{"theme": "dark"}`; `version` is 0 to 999, where 0 is the latest version | `{status, reason?, artifacts}` once the render is done (see [Theme toggle](#theme-toggle)) |
 | `GET /sessions/{sid}/artifacts/{name}?v=` | `name` is one of `plot-light.png`, `plot-dark.png`, `plot.py`, `data.csv` | The file, with `Cache-Control: private, no-store` and `X-Content-Type-Options: nosniff`; any other name is `404`, and so is the PNG of a theme the version has not rendered. A PNG carries the footer strip (see [Footer strip](#footer-strip)) |
@@ -859,12 +859,12 @@ Until it has run, the feedback route stores the case and answers
 | Event | Data |
 |---|---|
 | `ready` | `{v, run_id}` |
-| `status` | `{step: "queued", position, waiting}` while the turn waits in the run queue: `position` 1 runs next, and `waiting` counts every queued turn, this one included |
+| `status` | `{step: "queued", position, waiting}` mid-turn, while the turn's plot run or data snippet waits in the run queue: `position` 1 runs next, and `waiting` counts every queued run, this one included |
 | `status` | `{step, attempt}` for a pipeline step: `adapting`, `checking`, `rendering`, `reviewing`, or `repairing`; `repairing` adds `outcome` and `findings`, how the round before it ended (see `rounds` below) |
 | `message` | `{text}`: the assistant's reply as plain text, at most 1,200 characters; a longer reply arrives cut to 1,200 characters when the turn ran the plot pipeline, and as the `out_of_scope` refusal otherwise |
 | `plot` | `{status, reason, attempts, artifacts, changes, residual_defects, version, rounds}`; `version` only on `ok` and `needs_attention`; `rounds` lists each attempt as `{attempt, outcome, findings, step, shipped}` (`step` is the pipeline step the round ended in, `shipped` marks the round whose render the result shipped), where `outcome` is `ok` (the review passed), `review` (the review named `findings`), `measured` (measured findings went to the repair), `render_failed`, `check_failed`, `answer_unusable`, `unreviewed` or `error` |
-| `refusal` | `{code, text}`; `code` is `out_of_scope`, `needs_data` (the request needs data the service would have to fetch), `unsupported_content` or `budget`, and `text` is the fixed reply for it in the language the scope judge detects in your message, or in the session language for a refusal sent before the judge runs (`budget`, `unsupported_content`), which is English until your pasted data, your first message or your choice sets another (see [Session language](#session-language)): English, German, French, Spanish, Italian, Portuguese, Dutch, Polish, Chinese, Vietnamese or Russian, and English for any other language |
-| `error` | `{code, ref}`; `code` is `capacity` (also when the turn waited the run queue's maximum of 600 seconds, or the BFF's turn cap ran out while it waited), `deadline`, `guard_unavailable`, `upstream`, or `internal`; `ref` is the request id |
+| `refusal` | `{code, text}`; `code` is `out_of_scope`, `needs_data` (the request needs data the service would have to fetch), `unsupported_content`, `budget`, `rate_limited` (more than 10 messages in a minute), `daily_limit` (more than 200 messages in a UTC day) or `session_closed` (the session's third `out_of_scope` or `attack` refusal, and every turn after it: reload the page to start a new session), and `text` is the fixed reply for it in the language the scope judge detects in your message, or in the session language for a refusal sent before the judge runs (`budget`, `unsupported_content`, `rate_limited`, `daily_limit`, and `session_closed` after the closing turn), which is English until your pasted data, your first message or your choice sets another (see [Session language](#session-language)): English, German, French, Spanish, Italian, Portuguese, Dutch, Polish, Chinese, Vietnamese or Russian, and English for any other language |
+| `error` | `{code, ref}`; `code` is `capacity` (the run queue was full when the turn's plot run or data snippet asked for a place, the run waited the queue's maximum of 600 seconds, or the BFF's turn cap ran out while it waited), `deadline`, `guard_unavailable`, `upstream`, or `internal`; `ref` is the request id |
 | `done` | `{llm_calls, tokens, bindings?, data_confirmed?, dataset?, language?}`: after a run, the session's bindings and whether the data is confirmed, so the page syncs its dropdowns and its step after a turn in which the root's `set_bindings` changed them; `dataset` only after a turn in which the assistant changed the data or computed it from a formula (see [Data changes](#data-changes)): `{preview, profile, bindings, warnings, context_lines, roles, changes, version}`, the dataset route's shape (`roles` at most 50; `context_lines`, the pasted notes, carried over to every version made from the paste) plus the turn's change lines, for the page's preview table; `version` is 1 when a formula or the user's code made the session's first data; `code`, only on a version computed from the user's code, holds the Python that ran; `language` after every run: `{language, source}`, the session language and how it was set (`default`, `pasted`, `detected` or `chosen`), so the page syncs its chip |
 
 The BFF re-frames the upstream stream instead of forwarding it. It assembles
@@ -875,17 +875,27 @@ is dropped whole, except `done`, which may carry a dataset version and is
 relayed up to 512 KiB (the largest dataset the service accepts fits). An error
 code outside the list becomes `internal`. The BFF stops reading after `done`.
 
-Every turn waits in the agents service's run queue, which runs one turn at a
-time and starts at most one a minute. A turn that starts while the data is
-unconfirmed cannot draw a plot (the pipeline answers `not_ready`, and nothing
-can confirm the data during a turn), so it takes the slot but no start in the
-minute: the summary after a paste and the data requests of step 1 follow each
-other without a wait. A turn that can start at once sends no `queued` status. Otherwise the stream sends `ready`, then a `queued` status at
-once, on every change of the position or the queue length, and every 15
-seconds while nothing changes, and then the turn's own events. If you are
-already over the daily token budget, the stream sends `ready`,
-`refusal {"code": "budget"}` and `done` at once, and the turn never enters the
-queue.
+A turn starts at once. Only the work that runs in the sandbox waits in the
+agents service's run queue, which runs one such run at a time and starts at
+most one a minute: a plot run (the pipeline, after its check that your data is
+confirmed) or a snippet that generates data. A question, an answer about your
+data or code, a refusal, and a data change that needs no sandbox never wait.
+A run that can start at once sends no `queued` status. Otherwise, mid-turn,
+the stream sends a `queued` status at once, on every change of the position or
+the queue length, and every 15 seconds while nothing changes, and then the
+run's own events. A question streams `ready`, `message`, `done`; a plot
+streams `ready`, the `queued` statuses if it has to wait, the pipeline steps,
+`plot`, `message`, `done`. A turn whose run finds the queue full ends with
+`error {"code": "capacity"}` and `done`.
+
+Before the scope check, and without any model call, the stream sends `ready`,
+a `refusal` and `done` at once when you are over the daily token budget
+(`budget`), past 10 messages in a minute (`rate_limited`) or 200 in a UTC day
+(`daily_limit`), counting typed messages and the page's actions alike, or when
+the session is closed (`session_closed`). The scope check closes a session at
+its third `out_of_scope` refusal; a `needs_data` refusal never counts. A
+closed session answers every turn with `session_closed`; reload the page to
+start a new session.
 
 While the stream is idle, a `: ping` comment arrives every 15 seconds. Every
 stream ends with `done`: when the agents service is unreachable, cuts the
@@ -901,8 +911,8 @@ still queued when its run could no longer finish inside that cap ends with
 spends a token. At the defaults, the agents service's full 600-second queue
 maximum plus the 540-second run fit inside the cap, so the BFF never cuts a
 wait short. Errors that happen before the stream starts, such as
-`413 too_long`, an upstream `409 run_active`, or `503 capacity` from a full
-run queue, arrive as HTTP statuses instead.
+`413 too_long` or an upstream `409 run_active`, arrive as HTTP statuses
+instead.
 
 ### Agent error responses
 

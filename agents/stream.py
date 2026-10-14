@@ -5,13 +5,13 @@ re-validates (`api/routers/agent.py`, `_EVENT_FIELDS`):
 
 | Event | Fields | Comes from |
 |---|---|---|
-| `ready` | `v`, `run_id` | the start of the request, before it waits in the run queue |
-| `status` | `step: "queued"`, `position`, `waiting` | the run queue, while the run waits: at once, on every change, and every 15 s unchanged (`position` 1 runs next; `waiting` counts every queued entry, this one included) |
+| `ready` | `v`, `run_id` | the start of the request; a turn starts at once, without the run queue |
+| `status` | `step: "queued"`, `position`, `waiting` | the run queue, mid-turn, while the turn's first sandbox run (`plot_pipeline` or `run_data_code`) waits for the slot: at once, on every change, and every 15 s unchanged (`position` 1 runs next; `waiting` counts every queued entry, this one included); a turn without a sandbox run never sends it |
 | `status` | `step`, `attempt`, and on `repairing` `outcome`, `findings` | the pipeline's content-free `custom_metadata` progress events; the step that opens a repair round says how the round before it ended (`RoundOutcome`, a count) |
 | `message` | `text` | a final, non-partial text response authored by the root (`anyplot`) |
 | `plot` | `status`, `reason`, `attempts`, `artifacts`, `changes`, `residual_defects`, `version`, `rounds` | the pipeline's `PlotResult` output event; `version`, the stored version's number, only on `ok` and `needs_attention`; `rounds`, how each attempt ended (`{attempt, outcome, findings, step, shipped}`: the step it ended in, and whether its render is the one shipped) |
-| `refusal` | `code`, `text` | the request ledger's refusal, in place of the message: `out_of_scope`, `needs_data` (data that would have to be fetched) and `unsupported_content` from the scope guard, `budget` from the budgets; a user already over the daily budget gets it right after `ready`, without waiting in the queue |
-| `error` | `code`, `ref` | `guard_unavailable`, `capacity` (also when the run waited the queue's maximum), `deadline` or `internal` |
+| `refusal` | `code`, `text` | the request ledger's refusal, in place of the message: `out_of_scope`, `needs_data` (data that would have to be fetched), `unsupported_content` and `session_closed` (the session's third `out_of_scope` or `attack` refusal) from the scope guard, `budget` from the budgets; right after `ready`, before the scope judge: `budget` for a user over the daily budget, `rate_limited` or `daily_limit` past the user's message limits, `session_closed` in a closed session |
+| `error` | `code`, `ref` | `guard_unavailable`, `capacity` (also when a sandbox run found the queue full or waited its maximum; the turn ends there, without a `plot`), `deadline` or `internal` |
 | `done` | `llm_calls`, `tokens`, and after a run `bindings`, `data_confirmed`, `language` (`{language, source}`, the session language and how it was set) and, when the turn changed the data (`prepare_data`, `generate_data`), `dataset` | the end of every run, always last; the route adds the session's sync fields (`_session_sync` in `agents/main.py`) |
 
 Function calls and responses, tool outputs, thoughts, partial chunks, adapter and

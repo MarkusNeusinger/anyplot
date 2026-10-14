@@ -114,44 +114,6 @@ class TestRate:
         assert b.waiting and queue.in_flight == 0
         assert queue.next_change_at(clock()) == clock() + 60
 
-    def test_an_unrated_run_takes_no_start_in_the_window(self, clock: Clock) -> None:
-        """A turn that cannot render (the data unconfirmed) waits for the slot only, never for the minute."""
-        queue = make(clock, per_minute=1)
-        summary = queue.submit("a", "s-a", rated=False)
-        assert summary.running
-        queue.release(summary)
-
-        request = queue.submit("a", "s-a", rated=False)
-        assert request.running  # no start was spent: the window is still open
-        queue.release(request)
-
-        plot = queue.submit("a", "s-a")
-        assert plot.running  # the first rated start
-        queue.release(plot)
-        assert queue.submit("a", "s-a").waiting  # the second rated run waits for the window
-
-    def test_an_unrated_run_waits_for_the_slot(self, clock: Clock) -> None:
-        queue = make(clock, per_minute=1)
-        running = queue.submit("a", "s-a")
-        summary = queue.submit("b", "s-b", rated=False)
-
-        assert summary.waiting and queue.position(summary) == QueuePosition(position=1, waiting=1)
-        assert queue.next_change_at(clock()) == clock() + 600  # its expiry; the window does not bind it
-        queue.release(running)
-        assert summary.running  # at once, although a run started within the last 60 s
-
-    def test_an_unrated_run_never_passes_a_rated_one_that_waits_for_the_window(self, clock: Clock) -> None:
-        queue = make(clock, concurrency=2, per_minute=1)
-        queue.submit("a", "s-a")
-        plot = queue.submit("b", "s-b")  # a slot is free; the window is not
-        summary = queue.submit("c", "s-c", rated=False)
-
-        assert plot.waiting and summary.waiting
-        assert queue.next_change_at(clock()) == clock() + 60
-        clock.advance(60)
-        queue.pump()
-        assert plot.running and summary.waiting  # first come first served: both slots are taken now
-
     def test_next_change_at_without_a_time_bound(self, clock: Clock) -> None:
         queue = make(clock, max_wait_s=600)
         assert queue.next_change_at(clock()) == float("inf")
@@ -370,37 +332,3 @@ class TestRelease:
     def test_invalid_limits_are_refused(self, clock: Clock) -> None:
         with pytest.raises(ValueError):
             RunQueue(concurrency=0, per_minute=1, max_wait_s=600, clock=clock)
-
-
-class TestRateForADataRun:
-    """`run_data_code` books the start of an unrated turn (`RunQueue.rate`)."""
-
-    def test_an_unrated_turn_books_one_start_and_then_counts_as_rated(self, clock: Clock) -> None:
-        queue = make(clock, concurrency=2, per_minute=1)
-        turn = queue.submit("a", "s-a", rated=False)
-
-        assert queue.rate(turn) is True and turn.rated
-        assert queue.rate(turn) is True  # a second data run in the same turn books nothing more
-        other = queue.submit("b", "s-b", rated=False)
-        assert queue.rate(other) is False and not other.rated  # the minute's one start is taken
-        clock.advance(60)
-        assert queue.rate(other) is True
-
-    def test_a_rated_turn_needs_no_second_start(self, clock: Clock) -> None:
-        queue = make(clock, per_minute=1)
-        turn = queue.submit("a", "s-a")
-
-        assert turn.rated and queue.rate(turn) is True
-
-    def test_a_booked_start_makes_the_next_rated_turn_wait(self, clock: Clock) -> None:
-        queue = make(clock, per_minute=1)
-        turn = queue.submit("a", "s-a", rated=False)
-        assert queue.rate(turn)
-        queue.release(turn)
-
-        waiting = queue.submit("b", "s-b")
-
-        assert waiting.waiting
-        clock.advance(60)
-        queue.pump()
-        assert waiting.running

@@ -31,9 +31,12 @@ another provider, model or location.
 | `AGENT_RENDER_IMAGE` | `anyplot-renderer:dev` | Image the `local` renderer runs with Docker (build it from `agents/renderer/Dockerfile`) |
 | `AGENT_RENDER_CONCURRENCY` | `1` | Renders (one theme each) that may run at the same time; serial, because one 4 GiB instance holds one sandbox safely (spikes S and S2) |
 | `AGENT_WATERMARK` | `true` | Append the footer strip ("made with any.plot()", "anyplot.ai/<spec-id>") to the PNGs the artifact route and the feedback bundle serve; `false` serves the raw renders. Gates, reviewer and `plot.py` always see the raw render |
-| `AGENT_RUN_CONCURRENCY` | `1` | Pipeline runs (whole `/messages` turns) in flight per instance; the run queue holds the rest |
-| `AGENT_RUNS_PER_MINUTE` | `1` | Runs that may start within any 60 seconds (a sliding window) |
+| `AGENT_RUN_CONCURRENCY` | `1` | Sandbox runs (a `plot_pipeline` or `run_data_code` call, held until its turn ends) in flight per instance; the run queue holds the rest. A chat turn without one never enters the queue |
+| `AGENT_RUNS_PER_MINUTE` | `1` | Sandbox runs that may start within any 60 seconds (a sliding window); one start per turn |
 | `AGENT_QUEUE_MAX_WAIT_S` | `600` | Longest wait in the run queue; it also sizes the queue (`AGENT_RUNS_PER_MINUTE` x this / 60 entries) |
+| `AGENT_USER_MESSAGES_PER_MINUTE` | `10` | Chat turns (typed messages and actions) per user within any 60 seconds; more get the `rate_limited` refusal before the scope judge runs |
+| `AGENT_USER_MESSAGES_PER_DAY` | `200` | Chat turns per user and UTC day; more get the `daily_limit` refusal before the scope judge runs |
+| `AGENT_SESSION_REFUSALS` | `3` | Scope-judge refusals (`out_of_scope` or `attack`, not `needs_data`) after which the session is closed: the last of them and every later turn get the `session_closed` refusal |
 | `AGENT_MAX_ATTEMPTS` | `2` | Adapter attempts per pipeline run, 1 to 3: the first and at most one repair round by default; the eval harness sets 1 or 3 to measure no repair or a second repair round |
 | `AGENT_ROOT_THINKING_BUDGET` | `1024` | Claude only: adaptive thinking of the root, with that many tokens added to its output cap; 0 turns it off (the 2026-10-11 measurement: with thinking on root and adapter every run passed the gates and 51.6 % ended `ok`, against 91.0 % and 28.7 % without) |
 | `AGENT_ADAPTER_THINKING_BUDGET` | `8192` | The same for the adapter (2,048 before 2026-10-14, when effort `high` thought past it); the eval harness overrides both with `--thinking-budget ROOT,ADAPTER` |
@@ -258,16 +261,32 @@ class AgentSettings(BaseSettings):
     serve the raw PNGs; the eval harness turns it off so its renders compare with its baselines."""
 
     run_concurrency: PositiveInt = 1
-    """Pipeline runs in flight per instance (`AGENT_RUN_CONCURRENCY`); the run queue holds the rest."""
+    """Sandbox runs in flight per instance (`AGENT_RUN_CONCURRENCY`); the run queue holds the rest. Only a turn whose
+    root calls `plot_pipeline` or `run_data_code` takes a run, from that call to the end of the turn."""
 
     runs_per_minute: PositiveInt = 1
-    """Runs that may start within any 60 seconds (`AGENT_RUNS_PER_MINUTE`), a sliding window."""
+    """Sandbox runs that may start within any 60 seconds (`AGENT_RUNS_PER_MINUTE`), a sliding window; a chat turn
+    without a sandbox run never counts."""
 
     queue_max_wait_s: PositiveInt = 600
     """Longest wait in the run queue in seconds (`AGENT_QUEUE_MAX_WAIT_S`). Queued time does not
     count toward the request deadline; the queue holds `runs_per_minute * queue_max_wait_s / 60`
     entries and refuses more with `capacity`. That length assumes runs shorter than the 60 s
     rate window: longer runs delay later starts, so admission does not guarantee a start."""
+
+    user_messages_per_minute: PositiveInt = 10
+    """Chat turns per user within any 60 seconds (`AGENT_USER_MESSAGES_PER_MINUTE`), typed messages and actions
+    alike, counted in the usage book. Checked before the scope judge, so a flood costs no model call: since chat turns
+    no longer wait in the run queue (2026-10-14), this is what bounds them."""
+
+    user_messages_per_day: PositiveInt = 200
+    """Chat turns per user and UTC day (`AGENT_USER_MESSAGES_PER_DAY`), checked like the minute's."""
+
+    session_refusals: PositiveInt = 3
+    """Scope-judge refusals of type `out_of_scope` or `attack` after which a session is closed
+    (`AGENT_SESSION_REFUSALS`): the refusal that reaches it and every later turn of the session answer
+    `session_closed`, and the user starts a new session. `needs_data` refusals never count. Counted from the
+    session's withheld messages, so it ends with the session."""
 
     max_attempts: int = Field(default=2, ge=1, le=MAX_ATTEMPTS)
     """Adapter attempts per pipeline run (`AGENT_MAX_ATTEMPTS`), 1 to 3, enforced by the loop

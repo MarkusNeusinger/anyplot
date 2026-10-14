@@ -1,11 +1,12 @@
 """The run queue through `/v1`: two users, a full queue, the maximum wait, cancel and disconnect.
 
-The runtime's queue runs at the production defaults (one run in flight, one start a
-minute, a 600-second maximum wait) on a fake clock, so the tests advance time instead
-of sleeping. A gated fake renderer holds a run or a theme toggle in flight until the
-test opens the gate. The theme toggle's place next to the queue (the registry, the
-render slot) and the checks before a turn enters the queue (budget, dataset) are here
-too.
+Only sandbox work queues (owner decision of 2026-10-14): a turn starts at once, and its
+`plot_pipeline` or `run_data_code` call waits for the slot mid-turn. The runtime's queue
+runs at the production defaults (one run in flight, one start a minute, a 600-second
+maximum wait) on a fake clock, so the tests advance time instead of sleeping. A gated
+fake renderer holds a run or a theme toggle in flight until the test opens the gate.
+The theme toggle's place next to the queue (the registry, the render slot) and the
+checks before a turn starts (budget, dataset) are here too.
 """
 
 import asyncio
@@ -24,7 +25,7 @@ from agents.anyplot.session_state import read_session
 from agents.anyplot.settings import get_settings
 from agents.main import Runtime, app, get_runtime
 
-from .fakes import ROOT_REPLY, SCATTER_PLAN, VERDICT_OK
+from .fakes import ROOT_REPLY, SCATTER_PLAN, VERDICT_OK, kind_of
 from .test_run_queue import Clock
 from .test_service_flow import CASES, HEADERS, USER, create_plot, headers_for, open_session, parse_sse, render_theme
 
@@ -91,10 +92,23 @@ def statuses(events: list[tuple[str, dict[str, Any]]]) -> list[dict[str, Any]]:
     return [data for name, data in events if name == "status"]
 
 
+def interleaved_runs() -> dict[str, list[Any]]:
+    """Two users' plots at once: both roots call the pipeline before either closing reply (a turn starts at once)."""
+    return {
+        "root": [{"call": "plot_pipeline", "args": {}}] * 2 + [{"text": ROOT_REPLY}] * 2,
+        "adapter": [{"json": SCATTER_PLAN}, {"json": SCATTER_PLAN}],
+        "reviewer": [{"json": VERDICT_OK}, {"json": VERDICT_OK}],
+    }
+
+
+def root_calls(fake: Any) -> int:
+    return sum(1 for request in fake.requests if kind_of(request) == "root")
+
+
 async def test_the_second_user_waits_in_the_queue_then_runs(
     client: httpx.AsyncClient, runtime: Runtime, clock: Clock, backend: GatedBackend, swap_models
 ) -> None:
-    swap_models("gemini", two_runs())
+    fake = swap_models("gemini", interleaved_runs())
     first = await open_session(client)
     second = await open_session(client, user=OTHER)
     queue = runtime.run_queue()
@@ -104,6 +118,8 @@ async def test_the_second_user_waits_in_the_queue_then_runs(
     second_run = asyncio.create_task(create_plot(client, second, headers_for(OTHER)))
     await until(lambda: queue.waiting_count == 1, "the second run to queue")
 
+    # The second turn started at once: its root ran and called the pipeline, which waits for the slot.
+    assert root_calls(fake) == 2
     status = (await client.get("/v1/status", headers=HEADERS)).json()
     assert (status["waiting"], status["in_flight"]) == (1, 1)
     backend.gate.set()
@@ -126,10 +142,40 @@ async def test_the_second_user_waits_in_the_queue_then_runs(
     assert runtime.active == {} and (queue.waiting_count, queue.in_flight) == (0, 0)
 
 
-async def test_turns_while_the_data_is_unconfirmed_take_no_start_in_the_window(
+async def test_a_chat_turn_answers_at_once_while_another_users_pipeline_runs(
+    client: httpx.AsyncClient, runtime: Runtime, backend: GatedBackend, swap_models
+) -> None:
+    """A question about the data neither waits for the slot another user's render holds nor spends the minute's start."""
+    swap_models(
+        "gemini",
+        {
+            "root": [{"call": "plot_pipeline", "args": {}}, {"text": "It has 24 rows."}, {"text": ROOT_REPLY}],
+            "adapter": [{"json": SCATTER_PLAN}],
+            "reviewer": [{"json": VERDICT_OK}],
+        },
+    )
+    first = await open_session(client)
+    second = await open_session(client, user=OTHER)
+    queue = runtime.run_queue()
+    plot = asyncio.create_task(create_plot(client, first))
+    await asyncio.wait_for(backend.entered.wait(), 5)
+
+    response = await client.post(
+        f"/v1/sessions/{second}/messages", headers=headers_for(OTHER), json={"text": "How many rows has my data?"}
+    )
+
+    events = parse_sse(response.text)
+    assert [name for name, _ in events] == ["ready", "message", "done"]
+    assert events[1][1] == {"text": "It has 24 rows."}
+    assert (queue.waiting_count, queue.in_flight) == (0, 1)  # the plot holds the slot; the chat turn took nothing
+    backend.gate.set()
+    assert next(data for name, data in await asyncio.wait_for(plot, 10) if name == "plot")["status"] == "ok"
+
+
+async def test_chat_turns_take_no_start_in_the_window(
     client: httpx.AsyncClient, runtime: Runtime, clock: Clock, backend: GatedBackend, swap_models
 ) -> None:
-    """The summary after a paste and a data request cannot render, so they never wait a minute for each other."""
+    """The summary after a paste and a data request run no sandbox, so they never wait a minute for each other."""
     runs = two_runs()
     swap_models(
         "gemini",
@@ -170,16 +216,22 @@ async def test_turns_while_the_data_is_unconfirmed_take_no_start_in_the_window(
     assert next(data for name, data in second if name == "plot")["status"] == "ok"
 
 
-async def test_a_full_queue_answers_503_before_the_stream(client: httpx.AsyncClient, runtime: Runtime) -> None:
+async def test_a_full_queue_ends_the_turn_with_capacity(
+    client: httpx.AsyncClient, runtime: Runtime, swap_models
+) -> None:
+    """The turn starts; its pipeline finds no place in the queue, so it ends with `capacity` and no adapter call."""
+    fake = swap_models("gemini", two_runs())
     sid = await open_session(client)
     queue = runtime.run_queue()
     queue.submit("adm_running", "s-running")
     for index in range(queue.capacity):
         queue.submit(f"adm_wait{index}", f"s-wait-{index}")
 
-    response = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"action": "create_plot"})
+    events = await create_plot(client, sid)
 
-    assert (response.status_code, response.json()) == (503, {"detail": "capacity"})
+    assert [name for name, _ in events] == ["ready", "error", "done"]
+    assert events[1][1] == {"code": "capacity", "ref": "req-1"}
+    assert root_calls(fake) == 1 and len(fake.requests) == 1  # the root's call only: the run was aborted
     assert sid not in runtime.active and queue.waiting_count == 10
 
 
@@ -229,12 +281,15 @@ async def test_a_run_that_waited_the_maximum_ends_with_capacity(
 
     assert [name for name, _ in events] == ["ready", "status", "error", "done"]
     assert events[2][1] == {"code": "capacity", "ref": "req-1"}
-    # No model ran; `done` still syncs the session's bindings and confirmation state.
-    assert (events[3][1]["llm_calls"], events[3][1]["tokens"], events[3][1]["data_confirmed"]) == (0, 0, True)
-    assert fake.requests == [] and sid not in runtime.active
+    # Only the root's call ran, never the pipeline's; `done` still syncs the bindings and confirmation state.
+    assert (events[3][1]["llm_calls"], events[3][1]["data_confirmed"]) == (1, True)
+    assert root_calls(fake) == 1 and len(fake.requests) == 1 and sid not in runtime.active
 
 
-async def test_a_client_gone_while_queued_leaves_the_queue(client: httpx.AsyncClient, runtime: Runtime) -> None:
+async def test_a_client_gone_while_queued_leaves_the_queue(
+    client: httpx.AsyncClient, runtime: Runtime, swap_models
+) -> None:
+    swap_models("gemini", two_runs())
     sid = await open_session(client)
     queue = runtime.run_queue()
     queue.submit("adm_running", "s-running")
@@ -257,7 +312,7 @@ async def test_queued_time_does_not_count_toward_the_deadline(
     swap_models,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """The deadline timer is armed when the run leaves the queue, never while it waits.
+    """The deadline is armed when the turn starts, paused while its pipeline waits mid-turn, and armed again in full.
 
     The timer runs on the loop's real clock, so the test watches `call_later` for a
     delay of `AGENT_REQUEST_DEADLINE_S` and notes the queue clock when it is armed.
@@ -270,23 +325,25 @@ async def test_queued_time_does_not_count_toward_the_deadline(
     loop = asyncio.get_running_loop()
     call_later = loop.call_later
     deadline_s = get_settings().request_deadline_s
-    armed: list[float] = []
+    armed: list[tuple[float, asyncio.TimerHandle]] = []
 
     def watch(delay: float, callback: Callable[..., object], *args: Any, **kwargs: Any) -> asyncio.TimerHandle:
+        handle = call_later(delay, callback, *args, **kwargs)
         if delay == deadline_s:
-            armed.append(clock())
-        return call_later(delay, callback, *args, **kwargs)
+            armed.append((clock(), handle))
+        return handle
 
     monkeypatch.setattr(loop, "call_later", watch)
+    start = clock()
     waiting = asyncio.create_task(create_plot(client, sid))
     await until(lambda: queue.waiting_count == 1, "the run to queue")
-    assert armed == []  # the stream is open and waiting, and no deadline runs yet
+    assert [at for at, _ in armed] == [start] and armed[0][1].cancelled()  # paused while the pipeline waits
 
     clock.advance(500)  # past the 180-second request deadline, inside the 600-second wait
     queue.release(blocker)
     events = await asyncio.wait_for(waiting, 10)
 
-    assert armed == [clock()]  # armed once, when the run started after the wait
+    assert [at for at, _ in armed] == [start, clock()]  # armed again when the run left the queue
     assert next(data for name, data in events if name == "plot")["status"] == "ok"
     assert "error" not in [name for name, _ in events]
 
@@ -358,8 +415,9 @@ async def test_a_user_over_the_daily_budget_is_refused_without_a_queue_place(
 
 
 async def test_queueing_counts_as_use_of_the_dataset(
-    client: httpx.AsyncClient, runtime: Runtime, services: Services
+    client: httpx.AsyncClient, runtime: Runtime, services: Services, swap_models
 ) -> None:
+    swap_models("gemini", two_runs())
     sid = await open_session(client)
     view = read_session((await runtime.session(USER, sid)).state)
     assert view is not None and view.dataset_id
@@ -376,6 +434,74 @@ async def test_queueing_counts_as_use_of_the_dataset(
     assert services.datasets.get(view.dataset_id, sid) is not None
     await client.post(f"/v1/sessions/{sid}/cancel", headers=HEADERS)
     await asyncio.wait_for(waiting, 5)
+
+
+DATA_SNIPPET = "import numpy as np\nimport pandas as pd\nx = np.arange(4)\ndf = pd.DataFrame({'x': x, 'y': x**2})\n"
+DATA_CALL = {"call": "run_data_code", "args": {"code": DATA_SNIPPET, "source_language": "python"}}
+
+
+async def test_a_data_snippet_waits_for_the_slot_mid_turn(
+    client: httpx.AsyncClient, runtime: Runtime, clock: Clock, backend: GatedBackend, swap_models
+) -> None:
+    """`run_data_code` uses a sandbox, so it queues like the pipeline, and its turn's status says so meanwhile."""
+    swap_models("gemini", {"root": [DATA_CALL, {"text": "Check the preview."}]})
+    sid = await open_session(client, with_data=False)
+    queue = runtime.run_queue()
+    blocker = queue.submit("adm_running", "s-running")
+
+    turn = asyncio.create_task(
+        client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "run this: x = range(4)"})
+    )
+    await until(lambda: queue.waiting_count == 1, "the data run to queue")
+    assert backend.data_jobs == []
+    clock.advance(60)  # the blocker's start leaves the rate window
+    queue.release(blocker)
+    events = parse_sse((await asyncio.wait_for(turn, 10)).text)
+
+    assert [name for name, _ in events] == ["ready", "status", "message", "done"]
+    assert events[1][1] == {"step": "queued", "position": 1, "waiting": 1}
+    assert len(backend.data_jobs) == 1 and events[-1][1]["dataset"]["version"] == 1
+    assert runtime.active == {} and (queue.waiting_count, queue.in_flight) == (0, 0)
+
+
+async def test_a_turn_books_one_start_for_all_its_sandbox_runs(
+    client: httpx.AsyncClient, runtime: Runtime, backend: GatedBackend, swap_models
+) -> None:
+    """Two data runs in one turn: the second neither waits nor books a second start (the window allows one a minute)."""
+    swap_models("gemini", {"root": [DATA_CALL, DATA_CALL, {"text": "Done."}]})
+    sid = await open_session(client, with_data=False)
+    queue = runtime.run_queue()
+
+    response = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "run it twice"})
+
+    events = parse_sse(response.text)
+    assert not any(data["step"] == "queued" for data in statuses(events))
+    assert len(backend.data_jobs) == 2 and events[-1][0] == "done"
+    assert queue.submit("adm_other", "s-other").waiting  # the turn's one start fills the minute
+
+
+async def test_a_plot_on_unconfirmed_data_answers_not_ready_without_the_queue(
+    client: httpx.AsyncClient, runtime: Runtime, swap_models
+) -> None:
+    """The pipeline's readiness check comes before the queue: no wait for a run that cannot render."""
+    swap_models("gemini", two_runs())
+    sid = await open_session(client, with_data=False)
+    queue = runtime.run_queue()
+    queue.submit("adm_running", "s-running")  # another user's run holds the only slot
+
+    events = await asyncio.wait_for(create_plot(client, sid), 5)
+
+    assert not any(data["step"] == "queued" for data in statuses(events))
+    assert next(data for name, data in events if name == "plot") == {
+        "status": "not_ready",
+        "reason": "no_dataset",
+        "attempts": 0,
+        "artifacts": [],
+        "changes": [],
+        "residual_defects": [],
+        "rounds": [],
+    }
+    assert queue.waiting_count == 0
 
 
 async def test_a_queued_entry_is_stale_only_after_the_maximum_wait(runtime: Runtime, clock: Clock) -> None:

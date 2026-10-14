@@ -288,13 +288,34 @@ class TestLimits:
         assert first["status"] == "ok" and second == {"status": "error", "code": "daily_limit"}
         assert len(backend.data_jobs) == 1
 
-    async def test_the_rate_window(self, client: httpx.AsyncClient, services: Services, backend: FakeBackend) -> None:
+    async def test_no_run_slot(self, client: httpx.AsyncClient, services: Services, backend: FakeBackend) -> None:
+        """A full run queue (or an expired wait) answers `capacity` and runs nothing."""
         sid = await open_session(client, with_data=False)
-        context = await context_for(client, sid, "inv-rate-1")
-        ledger_for("inv-rate-1").rate_start = lambda: False
+        context = await context_for(client, sid, "inv-slot-1")
 
-        assert await run_data_code(SNIPPET, "python", context) == {"status": "error", "code": "rate_limited"}
+        async def no_slot() -> bool:
+            return False
+
+        ledger_for("inv-slot-1").run_slot = no_slot
+
+        assert await run_data_code(SNIPPET, "python", context) == {"status": "error", "code": "capacity"}
         assert backend.data_jobs == [] and services.usage.user_data_runs("anonymous") == 0
+
+    async def test_the_run_slot_is_taken_before_the_run(
+        self, client: httpx.AsyncClient, services: Services, backend: FakeBackend
+    ) -> None:
+        sid = await open_session(client, with_data=False)
+        context = await context_for(client, sid, "inv-slot-2")
+        taken: list[int] = []
+
+        async def slot() -> bool:
+            taken.append(len(backend.data_jobs))
+            return True
+
+        ledger_for("inv-slot-2").run_slot = slot
+
+        assert (await run_data_code(SNIPPET, "python", context))["status"] == "ok"
+        assert taken == [0] and len(backend.data_jobs) == 1
 
 
 class FakeTool:

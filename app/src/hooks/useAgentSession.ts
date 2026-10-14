@@ -944,7 +944,16 @@ export interface UseAgentSessionOptions {
   token: string;
 }
 
-const GUARDRAIL_REASONS = new Set(['out_of_scope', 'needs_data', 'budget', 'unsupported_content']);
+const GUARDRAIL_REASONS = new Set([
+  'out_of_scope',
+  'needs_data',
+  'budget',
+  'unsupported_content',
+  // The per-user message limits and a session closed after repeated scope refusals.
+  'rate_limited',
+  'daily_limit',
+  'session_closed',
+]);
 
 function failureOf(err: unknown): Failure {
   if (err instanceof AgentApiError) {
