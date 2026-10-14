@@ -1267,6 +1267,12 @@ class TestDerive:
     def test_a_column_without_any_value_is_refused(self) -> None:
         assert failure("k,a,b\nx,1,0\ny,2,0\n", derive("r", "ratio", "a", "b"))[0] == "invalid_operation"
 
+    def test_a_total_that_overflows_gives_no_share(self) -> None:
+        """Two `1e308` values sum to infinity; dividing by it would claim shares of 0 instead of 50 %."""
+        assert failure("k,v\na,1e308\nb,1e308\n", derive("s", "share", "v"))[0] == "invalid_operation"
+        prepared = prepare("g,v\nx,1e308\nx,1e308\ny,1\ny,3\n", derive("s", "share", "v", within=["g"]))
+        assert cells(prepared, 2) == ["", "", "0.25", "0.75"]
+
     def test_free_expressions_do_not_validate(self) -> None:
         with pytest.raises(ValidationError):
             OPERATIONS.validate_python([derive("r", "a / b", "a", "b")])

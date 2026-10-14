@@ -807,7 +807,8 @@ def _derive(frame: pd.DataFrame, op: Derive, carried: _Carried) -> tuple[pd.Data
                 total = values[0].groupby([frame[key] for key in keys], dropna=False).transform("sum")
             else:
                 total = pd.Series(values[0].sum(), index=frame.index)
-            result = values[0] / total.where(total != 0)
+            # A total that overflowed to infinity would give finite shares of 0: no share for its group instead.
+            result = values[0] / total.where((total != 0) & np.isfinite(total))
             what = f"share of {columns[0]} in the total" + (f" of each {' and '.join(keys)}" if keys else "")
         case "percent_change":
             result, what = _percent_change(frame, values[0], columns[0], keys, str(op.order))
