@@ -43,6 +43,10 @@ MAX_CELL_CHARS = 40
 MAX_SAMPLE_ROWS = 5
 MAX_TOP_VALUES = 5
 MAX_CHANGE_REQUEST_CHARS = 600
+MAX_USER_REQUESTS = 8
+"""Earlier change requests of a plot's lineage that a change run carries as the user's standing decisions."""
+MAX_USER_REQUESTS_CHARS = 2_400
+"""Their characters together: the most recent ones are kept within it (four requests at the 600-character cap)."""
 MAX_EDITS = 20
 MAX_FULL_CODE_CHARS = 24 * 1024
 MAX_TITLE_CHARS = 120
@@ -71,6 +75,7 @@ Cell = Annotated[str, Field(max_length=MAX_CELL_CHARS)]
 Note = Annotated[str, Field(min_length=1, max_length=MAX_NOTE_CHARS)]
 Line = Annotated[str, Field(min_length=1, max_length=MAX_LINE_CHARS)]
 ChangeNote = Annotated[str, Field(min_length=1, max_length=MAX_CHANGE_CHARS)]
+UserRequest = Annotated[str, Field(min_length=1, max_length=MAX_CHANGE_REQUEST_CHARS)]
 DefectText = Annotated[str, Field(min_length=1, max_length=MAX_DEFECT_TEXT_CHARS)]
 
 ColumnDtype = Literal["integer", "number", "datetime", "boolean", "text"]
@@ -242,6 +247,8 @@ class AdaptRequest(_ServerContract):
     loader_columns: list[ColumnName] = Field(max_length=MAX_COLUMNS)
     hints: list[Note] = Field(default_factory=list, max_length=MAX_NOTES)
     change_request: str = Field(default="", max_length=MAX_CHANGE_REQUEST_CHARS)
+    user_requests: list[UserRequest] = Field(default_factory=list, max_length=MAX_USER_REQUESTS)
+    """The earlier change requests the base version carries out, oldest first: the user's standing decisions."""
     feedback: list[Line] = Field(default_factory=list, max_length=MAX_FEEDBACK)
     previous_plan: AdaptPlan | None = None
     allow_full: bool = False
@@ -263,6 +270,8 @@ class ReviewRequest(_ServerContract):
     profile_summary: str = Field(max_length=2_000)
     spec_brief: str = Field(max_length=4_000)
     change_request: str = Field(default="", max_length=MAX_CHANGE_REQUEST_CHARS)
+    user_requests: list[UserRequest] = Field(default_factory=list, max_length=MAX_USER_REQUESTS)
+    """The earlier change requests the plot carries out, oldest first: choices the review never turns into defects."""
     gate_notes: list[Note] = Field(default_factory=list, max_length=MAX_NOTES)
     plot_language: str = Field(default=DEFAULT_LANGUAGE, pattern=LANGUAGE_PATTERN)
     """The session language, against which VQ-06 judges the plot's own text."""

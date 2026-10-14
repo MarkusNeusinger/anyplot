@@ -59,7 +59,13 @@ reviewer `ok` does not erase, a padded canvas, or no review because the budget o
 deadline ran out);
 `failed` names its reason; `not_ready` comes before any model call. An `ok` or
 `needs_attention` result is stored as the session's next version before it is
-yielded, and carries that number as `version`. Progress goes out
+yielded, and carries that number as `version`. Its `changes` are the notes of every
+adapter call up to the shipped render whose plan changed the code (`note_changes`), so
+a proofread that changed nothing never replaces them. Each version keeps the change
+requests it carries out (`CodeVersion.requests`); a change of it hands them to every
+adapter call (adaptation, retry, proofread, repair) and to the reviewer as
+`user_requests`, the user's standing decisions, which the prompts say to keep and never
+to report as defects unless the current change request revisits them. Progress goes out
 as content-free events with `custom_metadata={"anyplot_status": {"step", "attempt"}}`,
 which the stream translator turns into `status` events and no model ever reads.
 
@@ -128,6 +134,8 @@ from .schemas import (
     MAX_NOTE_CHARS,
     MAX_NOTES,
     MAX_RESIDUAL_DEFECTS,
+    MAX_USER_REQUESTS,
+    MAX_USER_REQUESTS_CHARS,
     AdaptPlan,
     AdaptRequest,
     Binding,
@@ -158,7 +166,8 @@ SELF_REVIEW_LINE = (
     "Self-review: the attached image is the render of the current code with the user's data. Before it goes "
     "to the reviewer, check it against the self-review checklist in your instructions, row by row, and against "
     "the spec: fix what falls short. When the notes also name the previous round's findings, check that your "
-    "changes fixed them in the image. If nothing needs fixing, answer with an empty edit list."
+    "changes fixed them in the image. What the change request and the earlier requests set stays as the user "
+    "asked, whatever the checklist says. If nothing needs fixing, answer with an empty edit list."
 )
 """The feedback of the self-review attempt (`AGENT_SELF_REVIEW`); the render itself is attached by the adapter's callback."""
 SELF_REVIEW_HIGHLIGHT_LINE = (
@@ -334,6 +343,9 @@ class Candidate:
     """The catalogue review's score of this render, when it had one (`AGENT_REVIEWER_MODE=catalogue`)."""
     review_lines: list[str] = field(default_factory=list)
     """This render's own review lines, so a best-scored earlier render ships with its own notes."""
+    changes: list[str] = field(default_factory=list)
+    """What this render's code changed, for `PlotResult.changes`: the notes of every adapter call of the run
+    up to this render that changed the code (`Run.changes`), so a best-scored earlier render reports its own."""
 
 
 @dataclass
@@ -384,6 +396,12 @@ class Run:
     repair_hints: list[str] = field(default_factory=list)
     """The latest render's measured targets for a repair (`GateReport.repair_hints`), added to
     the hints of every repair attempt after it; they never start a repair themselves."""
+    change_request: str = ""
+    """The run's own change request, stored with the version among its `requests`."""
+    user_requests: list[str] = field(default_factory=list)
+    """The base version's change requests (`standing_requests`): the user's standing decisions."""
+    changes: list[str] = field(default_factory=list)
+    """The `changes` notes of every adapter call so far whose plan changed the code, in order (`note_changes`)."""
 
 
 ROUND_OUTCOMES: dict[Stage, RoundOutcome] = {
@@ -527,8 +545,7 @@ def render_adapt_request(request: AdaptRequest, view: SessionView) -> str:
         "Plot language:",
         fence("plot_language", request.plot_language),
     ]
-    if request.change_request:
-        lines += ["Change request:", fence("user_message", request.change_request)]
+    lines += _requests_lines(request.user_requests, request.change_request)
     notes: dict[str, Any] = {}
     if request.hints:
         notes["hints"] = request.hints
@@ -563,11 +580,58 @@ def render_review_request(request: ReviewRequest) -> str:
         "Plot language:",
         fence("plot_language", request.plot_language),
     ]
-    if request.change_request:
-        lines += ["Change request:", fence("user_message", request.change_request)]
+    lines += _requests_lines(request.user_requests, request.change_request)
     if request.gate_notes:
         lines += ["Gate notes:", fence("tool_notes", json.dumps(request.gate_notes, ensure_ascii=False))]
     return "\n".join(lines)
+
+
+EARLIER_REQUESTS_HEADING = "Earlier requests (the user's standing decisions, oldest first):"
+
+
+def _requests_lines(user_requests: Sequence[str], change_request: str) -> list[str]:
+    """The earlier requests and the change request, each block fenced as user text under a fixed heading."""
+    lines: list[str] = []
+    if user_requests:
+        numbered = "\n".join(f"{number}. {text}" for number, text in enumerate(user_requests, 1))
+        lines += [EARLIER_REQUESTS_HEADING, fence("user_message", numbered)]
+    if change_request:
+        lines += ["Change request:", fence("user_message", change_request)]
+    return lines
+
+
+def standing_requests(requests: Sequence[str]) -> list[str]:
+    """The most recent change requests of a lineage within `MAX_USER_REQUESTS` and `MAX_USER_REQUESTS_CHARS`.
+
+    Oldest first, each on one line, empty ones dropped, a repeated request kept once at its latest
+    place. A request that would cross the character cap ends the list there: an older one never
+    stands without the newer ones, which may have changed what it set.
+    """
+    kept: list[str] = []
+    total = 0
+    for request in reversed(requests):
+        text = " ".join(request.split())
+        if not text or text in kept:
+            continue
+        if len(kept) == MAX_USER_REQUESTS or total + len(text) > MAX_USER_REQUESTS_CHARS:
+            break
+        kept.append(text)
+        total += len(text)
+    return kept[::-1]
+
+
+def note_changes(run: Run, plan: AdaptPlan, *, changed: bool, proofread: bool) -> None:
+    """Add a plan's `changes` notes to the run's, in order and once each.
+
+    A call counts when its plan changed the code. An adaptation (or its check retry) that changed
+    nothing counts only while the run has no notes yet, so a change that needed no edit can say
+    why; a proofread that changed nothing never counts, nor does any later call that changed
+    nothing: its notes ("already present") describe code another call wrote (the live test of
+    2026-10-14, where they replaced the round's real changes).
+    """
+    if not changed and (proofread or run.changes):
+        return
+    run.changes = list(dict.fromkeys([*run.changes, *(" ".join(note.split()) for note in plan.changes)]))
 
 
 def _columns_json(bindings: list[Binding], loader_columns: list[str] | None = None) -> str:
@@ -727,7 +791,8 @@ def finish(run: Run) -> PlotResult:
         elif not run.reviewed:
             residual.append(NOT_REVIEWED_LINE.format(why=run.unreviewed_why or "the repair round left defects"))
     residual = list(dict.fromkeys(_line(line) for line in residual))[:MAX_RESIDUAL_DEFECTS]
-    changes = [change[:MAX_CHANGE_CHARS] for change in shipped.plan.changes][:MAX_CHANGES]
+    # The shipped render's own notes: every call up to it that changed the code, never a no-op proofread's.
+    changes = [change[:MAX_CHANGE_CHARS] for change in shipped.changes][:MAX_CHANGES]
     return PlotResult(
         status="needs_attention" if residual else "ok",
         attempts=max(round_number(run, run.attempts), 1),
@@ -777,6 +842,7 @@ def _store_version(ctx: Context, services: Services, run: Run, result: PlotResul
             library=run.view.library,
             theme=run.theme,
             language=run.language,
+            requests=standing_requests([*run.user_requests, run.change_request]),
             themes={run.theme: ThemeRender("needs_attention", PADDED_REASON) if shipped.padded else ThemeRender("ok")},
         ),
     )
@@ -870,8 +936,7 @@ def render_score_request(request: ReviewRequest) -> str:
         fence("user_data", json.dumps([item.model_dump() for item in request.bindings], ensure_ascii=False)),
         fence("plot_language", request.plot_language),
     ]
-    if request.change_request:
-        lines += ["Change request:", fence("user_message", request.change_request)]
+    lines += _requests_lines(request.user_requests, request.change_request)
     if request.gate_notes:
         lines += ["Gate notes:", fence("tool_notes", json.dumps(request.gate_notes, ensure_ascii=False))]
     return "\n\n".join(lines)
@@ -909,7 +974,7 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
         return
     ledger.pipeline_active = True
     theme = node_input.theme or _default_theme(services, ctx.session.id, view.library, node_input.base)
-    run = Run(view=view, dataset=dataset, theme=theme, language=view.language)
+    run = Run(view=view, dataset=dataset, theme=theme, language=view.language, change_request=node_input.change_request)
     scope = f"pipeline-{secrets.token_hex(6)}"
     try:
         async for event in _attempts(ctx, services, settings, run, node_input, scope):
@@ -1004,6 +1069,8 @@ async def _attempts(
         services.versions.latest_rendered(ctx.session.id, library=view.library) if args.base == "previous" else None
     )
     working = previous.working if previous is not None else view.normalised
+    # What the user asked of the base version's lineage stands: every adapter call and the reviewer see it.
+    run.user_requests = standing_requests(previous.requests) if previous is not None else []
     # The base version's text is in another language than the session's: the adapter rewrites it.
     language_changed = previous is not None and not same_language(previous.language, run.language)
     # A change on a previous version adds a little text; adapting the catalogue code renames much. A change
@@ -1057,6 +1124,7 @@ async def _attempts(
             loader_columns=columns,
             hints=_repair_hints(hints, run) if round_number(run, attempt) > 1 else hints,
             change_request=args.change_request,
+            user_requests=run.user_requests,
             feedback=_clip_feedback(feedback),
             previous_plan=previous_plan,
             allow_full=attempt >= 2,
@@ -1128,6 +1196,7 @@ async def _attempts(
             feedback, previous_plan = check.blocking, plan
             _end_attempt(run, "validator", feedback)
             continue
+        note_changes(run, plan, changed=applied.code != working, proofread=proofreading)
         working, previous_plan = applied.code, None
         try:
             run_form = runtime.loader_block(
@@ -1186,6 +1255,7 @@ async def _attempts(
             advisory_lines=list(report.advisory),
             adaptation_rules=check.adaptation_rules,
             advisory_gates=[gate for gate in report.failed_gates if gate.startswith("G")],
+            changes=list(run.changes),
         )
         if report.canvas_ok:
             run.best = candidate
@@ -1244,6 +1314,7 @@ async def _attempts(
             profile_summary=profile_summary(dataset.profile),
             spec_brief=spec_brief(view),
             change_request=args.change_request,
+            user_requests=run.user_requests,
             gate_notes=[_note(line) for line in report.advisory][:MAX_NOTES],
             plot_language=run.language,
         )
