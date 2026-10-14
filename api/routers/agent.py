@@ -167,6 +167,7 @@ _UPSTREAM_CODES = frozenset(
         "too_long",
         "unparseable",
         "formula",
+        "code",
         "data_refused",
         "session_expired",
         "guard_unavailable",
@@ -946,7 +947,8 @@ async def upload_dataset(sid: SessionId, body: DatasetBody, ctx: Ctx, client: Cl
     the notes pasted above or below the table that the assistant reads with the data); or, for free text the
     parser cannot read, the agents service's `{transcribed, text, preview, profile, warnings, note}`, a
     model's reading that the page shows for confirmation and nothing stored. 413 above 200 KB of UTF-8;
-    `422 formula` for text that asks for a formula, which the assistant computes in the chat instead."""
+    `422 formula` for text that asks for a formula, which the assistant computes in the chat instead, and
+    `422 code` for a program (Python, JavaScript, R) that generates data, which the assistant runs in the chat."""
     if len(body.text.encode("utf-8")) > MAX_DATASET_BYTES:
         raise AgentHTTPError(413, "too_long", ctx.request_id)
     payload: dict[str, Any] = {"text": body.text}

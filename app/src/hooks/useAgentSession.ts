@@ -73,7 +73,10 @@
  * The dataset route refuses such text pasted into the data box with `422
  * formula`, because its free-text reader is a model that would write the rows
  * itself; the hook keeps the refused text (`formula`), and `sendFormula`
- * (`.send()`) sends it to the chat as the user's turn.
+ * (`.send()`) sends it to the chat as the user's turn. Code that generates
+ * data (Python, JavaScript, R) is refused the same way with `422 code`
+ * (`formulaKind`), and the assistant's `run_data_code` runs it in the chat;
+ * the version it stores carries the Python that ran (`code`).
  *
  * One thing at a time: the agents service runs one turn or theme render per
  * user and answers anything else with `409 run_active`, a parse, an undo or a
@@ -286,6 +289,9 @@ export type BindingMap = Record<string, string>;
  */
 export type ConfirmLoss = 'bindings' | 'data' | 'server';
 
+/** What the dataset route refused pasted text as, so the chat takes it instead: `422 formula` or `422 code`. */
+export type FormulaKind = 'formula' | 'code';
+
 export interface AgentSessionState {
   phase: SessionPhase;
   failure: Failure | null;
@@ -296,11 +302,14 @@ export interface AgentSessionState {
   parsing: boolean;
   datasetError: Failure | null;
   /**
-   * Text the dataset route refused as a formula (`422 formula`): nothing was
-   * stored, and the panel offers to send it to the chat, where the assistant
-   * computes the table. The next parse, the send or a new data version clears it.
+   * Text the dataset route refused as a formula (`422 formula`) or as code
+   * (`422 code`): nothing was stored, and the panel offers to send it to the
+   * chat, where the assistant computes the table (`generate_data`) or runs the
+   * code (`run_data_code`). The next parse, the send or a new data version clears it.
    */
   formula: string | null;
+  /** What `formula` was refused as: a formula, or code that generates data. */
+  formulaKind: FormulaKind;
   /** A table read from free text that awaits `.use()` or `.discard()`. */
   transcription: TranscriptionState | null;
   /** The spec's roles, in spec order; the data panel shows a column choice for each. */
@@ -355,8 +364,8 @@ type Action =
   | { type: 'unauthorized' }
   | { type: 'parse_start' }
   | { type: 'parse_done'; parsed: DatasetParsed; bytes: number }
-  /** `formula` is the refused text of a `422 formula`, which is no error to show. */
-  | { type: 'parse_failed'; failure: Failure; formula?: string }
+  /** `formula` is the refused text of a `422 formula` or `422 code`, which is no error to show. */
+  | { type: 'parse_failed'; failure: Failure; formula?: string; formulaKind?: FormulaKind }
   /** The refused formula went to the chat as a turn. */
   | { type: 'formula_sent' }
   | { type: 'transcribed'; transcription: TranscriptionState }
@@ -412,6 +421,7 @@ export function initialAgentState(library: string): AgentSessionState {
     parsing: false,
     datasetError: null,
     formula: null,
+    formulaKind: 'formula',
     transcription: null,
     roles: [],
     bindings: {},
@@ -716,12 +726,13 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
         confirmLoss: null,
       };
     case 'parse_failed':
-      // A formula is no failure of the data: the panel offers the chat instead.
+      // A formula or code is no failure of the data: the panel offers the chat instead.
       return {
         ...state,
         parsing: false,
         datasetError: action.formula === undefined ? action.failure : null,
         formula: action.formula ?? null,
+        formulaKind: action.formulaKind ?? 'formula',
         transcription: null,
       };
     case 'formula_sent':
@@ -1500,11 +1511,13 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
         await applyBindings(defaults, defaults);
       } catch (err) {
         const failure = handleFailure(err);
-        // A formula is refused so that the chat computes it (`sendFormula`).
+        // A formula or code is refused so that the chat computes or runs it (`sendFormula`).
         safeDispatch({
           type: 'parse_failed',
           failure,
-          ...(failure.code === 'formula' ? { formula: text } : {}),
+          ...(failure.code === 'formula' || failure.code === 'code'
+            ? { formula: text, formulaKind: failure.code }
+            : {}),
         });
         const status = ['too_long', 'unparseable', 'data_refused'].includes(failure.code)
           ? failure.code
@@ -1538,11 +1551,13 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
   }, [parseData]);
 
   /**
-   * `.send()` next to a refused formula: the text goes to the chat as the
-   * user's turn, where the assistant's `generate_data` computes the table. The
-   * returned promise ends with that turn. While anything else is in flight
-   * nothing starts and the offer stays. The text always fits a turn: the
-   * dataset route refuses only text within the chat's cap as a formula.
+   * `.send()` next to a refused formula or code: the text goes to the chat as
+   * the user's turn, where the assistant's `generate_data` computes the table or
+   * its `run_data_code` runs the code. The returned promise ends with that turn.
+   * While anything else is in flight nothing starts and the offer stays. A
+   * formula always fits a turn (the dataset route refuses only text within the
+   * chat's cap as one); code longer than `MAX_MESSAGE_CHARS` is refused too, and
+   * the panel asks the user to shorten it instead of offering `.send()`.
    */
   const sendFormula = useCallback(() => {
     const current = stateRef.current;

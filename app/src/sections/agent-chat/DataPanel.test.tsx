@@ -8,7 +8,7 @@ import {
 import type { RoleSpec } from 'src/lib/agent';
 import { bindingRows } from 'src/sections/agent-chat/bindings';
 import { DataPanel } from 'src/sections/agent-chat/DataPanel';
-import { render, screen, userEvent, within } from 'src/test-utils';
+import { fireEvent, render, screen, userEvent, within } from 'src/test-utils';
 
 /** `scrollIntoView` as a spy: jsdom has none. */
 function stubScrollIntoView() {
@@ -721,6 +721,87 @@ describe('DataPanel formulas', () => {
     expect(screen.queryByRole('button', { name: '.send()' })).not.toBeInTheDocument();
     expect(onSendFormula).not.toHaveBeenCalled();
     expect(textbox).toHaveValue(`${FORMULA} und cos(x)`);
+  });
+
+  it('offers .send() for refused code, which the assistant runs', async () => {
+    const CODE = 'np.linspace(0, 10, 100)';
+    const { onSendFormula, rerender } = renderPanel(empty());
+    const textbox = screen.getByLabelText(/# your data/);
+    await userEvent.type(textbox, CODE);
+
+    rerender(empty({ formula: CODE, formulaKind: 'code' }));
+    const send = screen.getByRole('button', { name: '.send()' });
+    expect(send).toHaveAccessibleDescription(
+      'looks like code that makes data: send it to the chat? the assistant runs it in a sandbox and shows you the table.'
+    );
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    await userEvent.click(send);
+    expect(onSendFormula).toHaveBeenCalledTimes(1);
+    expect(textbox).toHaveValue('');
+  });
+
+  it('asks to shorten code the chat cannot take, without .send()', () => {
+    const long = 'x = np.arange(10)\n'.repeat(200);
+    const { rerender } = renderPanel(empty());
+    // The offer belongs to the text in the box; set it through a paste-sized change.
+    fireEvent.change(screen.getByLabelText(/# your data/), { target: { value: long } });
+    rerender(empty({ formula: long, formulaKind: 'code' }));
+
+    expect(screen.getByTestId('formula-offer')).toHaveTextContent(
+      'looks like code that makes data: shorten it to 2,000 characters'
+    );
+    expect(screen.queryByRole('button', { name: '.send()' })).not.toBeInTheDocument();
+  });
+});
+
+describe('DataPanel code that made the data', () => {
+  const CODE =
+    'import numpy as np\nimport pandas as pd\n\nx = np.arange(4)\ndf = pd.DataFrame({"x": x, "y": x**2})\n';
+
+  const withCode = (code: string | undefined) => {
+    const base = stateWith({ x: 'month', y1: 'shoes' });
+    return {
+      ...base,
+      dataset: base.dataset && { ...base.dataset, parsed: { ...base.dataset.parsed, code } },
+    };
+  };
+
+  const panel = (state: AgentSessionState) => (
+    <DataPanel
+      state={state}
+      onParse={vi.fn()}
+      onConfirmTranscription={vi.fn()}
+      onDiscardTranscription={vi.fn()}
+      onSendFormula={vi.fn()}
+      onBind={vi.fn()}
+      onConfirmData={vi.fn()}
+      onUndo={vi.fn()}
+    />
+  );
+
+  it('shows the python collapsed, and opens and closes it', async () => {
+    render(panel(withCode(CODE)));
+
+    const block = screen.getByTestId('data-code');
+    expect(block).toHaveTextContent('# code that made this data · 4 lines of python');
+    expect(within(block).queryByText(/pd\.DataFrame/)).not.toBeInTheDocument();
+    const toggle = within(block).getByRole('button', { name: '.show()' });
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+
+    await userEvent.click(toggle);
+    expect(within(block).getByText(/pd\.DataFrame/)).toBeInTheDocument();
+    expect(within(block).getByRole('button', { name: '.hide()' })).toHaveAttribute(
+      'aria-expanded',
+      'true'
+    );
+
+    await userEvent.click(within(block).getByRole('button', { name: '.hide()' }));
+    expect(within(block).queryByText(/pd\.DataFrame/)).not.toBeInTheDocument();
+  });
+
+  it('shows nothing for a version without code', () => {
+    render(panel(withCode(undefined)));
+    expect(screen.queryByTestId('data-code')).not.toBeInTheDocument();
   });
 });
 
