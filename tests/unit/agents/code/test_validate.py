@@ -1230,6 +1230,12 @@ MPL = "import matplotlib as mpl\n"
 # Each route a survey of the allowed packages found, as the code a model would write; the reported
 # case (`np.testing.measure` compiles and execs its string) generalised to every member of its kind.
 EXEC_ROUTES = [
+    # Fable review of #12181: trace, profile and monitoring callbacks get real frames, as an attribute on any receiver.
+    pytest.param("t = df.settrace(None)\n", "banned-attribute", id="settrace on any receiver"),
+    pytest.param("p = df.setprofile\n", "banned-attribute", id="setprofile on any receiver"),
+    pytest.param("t = df.settrace_all_threads\n", "banned-attribute", id="settrace_all_threads"),
+    pytest.param("m = df.monitoring.register_callback\n", "banned-attribute", id="sys.monitoring"),
+    pytest.param("from numpy import setprofile\n", "banned-attribute", id="setprofile as a from import"),
     pytest.param('np.testing.measure("import os")\n', "banned-attribute", id="numpy.testing.measure execs a string"),
     pytest.param('np.testing.runstring("x = 1", {})\n', "banned-attribute", id="numpy.testing.runstring"),
     pytest.param("with np.testing.tempdir() as d:\n    pass\n", "banned-attribute", id="numpy.testing.tempdir"),
@@ -1321,7 +1327,9 @@ SETTINGS_ROUTES = [
     pytest.param("s = {}\nplt.rcParams.update(s)\n", {"rc-key"}, id="update with a variable"),
     pytest.param('plt.rcParams.update(**{"a": 1})\n', {"rc-key"}, id="update unpacked"),
     pytest.param('ax = plt.gca()\nax.text(0, 0, "x", usetex=True)\n', {"banned-keyword"}, id="usetex keyword"),
-    pytest.param('ax = plt.gca()\nax.text(0, 0, "x", **{"usetex": True})\n', {"rc-key"}, id="usetex unpacked"),
+    pytest.param(
+        'ax = plt.gca()\nax.text(0, 0, "x", **{"usetex": True})\n', {"rc-key", "banned-keyword"}, id="usetex unpacked"
+    ),
     pytest.param(
         'from matplotlib.textpath import TextPath\np = TextPath((0, 0), "x", ismath="TeX")\n',
         {"rc-key"},
@@ -1350,6 +1358,74 @@ ALLOWED_NEAR_ROUTES = [
     "import scipy.stats\np = scipy.stats.norm.pdf(0)\n",
     "windows = np.lib.stride_tricks.sliding_window_view(np.arange(5), 2)\n",
     "import statsmodels.api as sm\nmodel = sm.OLS(df['a'], df['a'])\n",
+]
+SKLEARN = "from sklearn.preprocessing import StandardScaler\n"
+# Keywords and helpers that name a cache or spill directory: the render guard refuses the write in the sandbox, the
+# validator keeps it out of the exported code (Fable review of #12177).
+CACHE_PATH_ROUTES = [
+    pytest.param(
+        SKLEARN + 'from sklearn.pipeline import make_pipeline\nm = make_pipeline(StandardScaler(), memory="cache")\n',
+        {"banned-keyword"},
+        id="make_pipeline memory",
+    ),
+    pytest.param(
+        SKLEARN + 'from sklearn.pipeline import Pipeline\nm = Pipeline([("s", StandardScaler())], memory="cache")\n',
+        {"banned-keyword"},
+        id="Pipeline memory",
+    ),
+    pytest.param(
+        'from sklearn.cluster import AgglomerativeClustering\nm = AgglomerativeClustering(memory="cache")\n',
+        {"banned-keyword"},
+        id="AgglomerativeClustering memory",
+    ),
+    pytest.param(
+        'from sklearn.cluster import FeatureAgglomeration\nm = FeatureAgglomeration(memory="cache")\n',
+        {"banned-keyword"},
+        id="FeatureAgglomeration memory",
+    ),
+    pytest.param(
+        'from sklearn.cluster import OPTICS\nm = OPTICS(memory="cache")\n', {"banned-keyword"}, id="OPTICS memory"
+    ),
+    pytest.param(
+        SKLEARN
+        + 'from sklearn.pipeline import make_pipeline\nm = make_pipeline(StandardScaler(), **{"memory": "c"})\n',
+        {"banned-keyword"},
+        id="memory unpacked from a dict literal",
+    ),
+    pytest.param(
+        SKLEARN
+        + 'from sklearn.pipeline import make_pipeline\nm = make_pipeline(StandardScaler(), **{**{"memory": "c"}})\n',
+        {"banned-keyword"},
+        id="memory unpacked from a nested dict literal",
+    ),
+    pytest.param(
+        'from sklearn.utils.parallel import Parallel\np = Parallel(n_jobs=1, temp_folder="spill")\n',
+        {"banned-attribute", "banned-keyword"},
+        id="Parallel temp_folder",
+    ),
+    pytest.param(
+        'from sklearn.utils.parallel import Parallel\np = Parallel(1, None, "list", 0, None, "2*n_jobs", "auto", "s")\n',
+        {"banned-attribute"},
+        id="Parallel temp_folder positional",
+    ),
+    pytest.param(
+        'from sklearn.utils.validation import check_memory\nm = check_memory("cache")\n',
+        {"banned-attribute"},
+        id="check_memory",
+    ),
+    pytest.param(
+        'import sklearn.utils.validation\nm = sklearn.utils.validation.check_memory("cache")\n',
+        {"banned-attribute"},
+        id="check_memory as an attribute",
+    ),
+    pytest.param("f = dict(cachedir='cache')\n", {"banned-keyword"}, id="cachedir"),
+]
+CACHE_PATH_NEAR_ROUTES = [
+    SKLEARN + "from sklearn.pipeline import make_pipeline\nm = make_pipeline(StandardScaler())\n",
+    "from sklearn.cluster import AgglomerativeClustering\nm = AgglomerativeClustering(n_clusters=3)\n",
+    "fig, ax = plt.subplots()\nim = ax.imshow(np.zeros((2, 2)))\nfig.colorbar(im, ax=ax, location='top')\n",
+    "shared = np.shares_memory(np.zeros(2), np.zeros(2))\n",
+    'usage = {"memory": 12, "cache": 3}\n',
 ]
 
 
@@ -1380,6 +1456,14 @@ class TestExecAndProcessRoutes:
     def test_the_reported_case_fails_the_data_profile_too(self) -> None:
         code = 'import numpy as np\nimport pandas as pd\nnp.testing.measure("import os")\ndf = pd.DataFrame()\n'
         assert "banned-attribute" in {finding.rule for finding in validate_data_code(code)}
+
+    @pytest.mark.parametrize(("body", "expected"), CACHE_PATH_ROUTES)
+    def test_cache_and_spill_directories_are_refused(self, body: str, expected: set[str]) -> None:
+        assert security_rules(body) == expected
+
+    @pytest.mark.parametrize("body", CACHE_PATH_NEAR_ROUTES)
+    def test_cache_path_siblings_pass(self, body: str) -> None:
+        assert security_rules(body) == set()
 
     def test_messages_never_echo_the_setting(self) -> None:
         findings = validate_security(plot('plt.rcParams["text.latex.preamble"] = "x"\n'), library="matplotlib")

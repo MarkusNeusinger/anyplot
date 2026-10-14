@@ -73,7 +73,9 @@ Decisions this module takes where the design leaves room:
   every `rc=` take such a dict and no settings file (`fname`); `style.context` takes such a
   dict or a style name, never a path to a style sheet; `rc(group, **kw)` takes a
   literal group and checks each `group.keyword`. The keywords `usetex=` and `backend=` are
-  banned on every call (`banned-keyword`), the value "TeX" (`ismath="TeX"`) is a finding,
+  banned on every call (`banned-keyword`), and so are the cache and spill directories of
+  scikit-learn and joblib (`memory=`, `temp_folder=`, `cachedir=`), which write to a path
+  on the machine that runs the exported code; the value "TeX" (`ismath="TeX"`) is a finding,
   and a savefig `format=` other than "png" is a `savefig-target` finding. A key built at
   run time still passes; the render harness's audit hook refuses the process it would start.
 * **A module is never a value.** A name bound by `import X [as Y]` may only be the
@@ -394,7 +396,25 @@ BANNED_NAMES: frozenset[str] = frozenset(
     }
 )
 BANNED_ATTRIBUTES: frozenset[str] = frozenset(
-    {"format", "format_map", "eval", "query", "memmap", "ctypeslib", "f2py", "use", "show", "io"}
+    {
+        "format",
+        "format_map",
+        "eval",
+        "query",
+        "memmap",
+        "ctypeslib",
+        "f2py",
+        "use",
+        "show",
+        "io",
+        # Callbacks the interpreter hands real frames (Fable review of #12181): `sys.settrace`, `sys.setprofile`,
+        # `threading`'s forms of both and `sys.monitoring`. The render guard refuses their audit events as well.
+        "settrace",
+        "setprofile",
+        "settrace_all_threads",
+        "setprofile_all_threads",
+        "monitoring",
+    }
 )
 BANNED_IO: frozenset[str] = frozenset(
     {
@@ -625,6 +645,9 @@ UNSAFE_HELPERS: frozenset[str] = frozenset(
         "make_pdf_to_png_converter",
         "gs_distill",
         "xpdf_distill",
+        "Memory",  # joblib's disk cache, `Memory(location)`; sklearn.datasets._lfw re-exports it
+        "check_memory",  # sklearn.utils.validation turns a path into that cache: `check_memory("dir")`
+        "Parallel",  # sklearn.utils.parallel: `temp_folder` is its eighth positional parameter
     }
 )
 """Public functions and classes of the allowed modules that exec, start a process, import by name, fetch or write
@@ -727,9 +750,15 @@ RC_NAMES = frozenset({"rcParams", "rcParamsDefault", "rcParamsOrig"})
 _RC_READERS = frozenset({"update", "get", "copy"})
 _RC_CONSUMERS = frozenset({"rc_context", "context"})
 """Calls that take settings as a dict (`mpl.rc_context({...})`, `plt.style.context({...})`): literal keys only."""
-BANNED_KEYWORDS = frozenset({"usetex", "backend"})
+BANNED_KEYWORDS = frozenset({"usetex", "backend", "memory", "temp_folder", "cachedir"})
 """Keyword arguments banned on any call: `usetex=True` sends a text through LaTeX (`ax.text`, `TextPath`, `plt.rc`),
-`backend=` imports a backend module by name (`savefig(backend="module://...")`)."""
+`backend=` imports a backend module by name (`savefig(backend="module://...")`). `memory=` is a joblib cache
+directory that scikit-learn writes fitted steps to (`Pipeline`, `make_pipeline`, `AgglomerativeClustering`,
+`FeatureAgglomeration`, `OPTICS`, all keyword-only), `temp_folder=` the directory joblib's `Parallel` spills arrays to,
+and `cachedir=` joblib's older name for a cache directory. The render guard refuses those writes in the sandbox; the
+keywords are banned so the exported code makes none on the machine that runs it (survey of the admitted libraries'
+public signatures, 2026-10-14: `location=` names joblib's cache directory too, but matplotlib's colorbar and secondary
+axes take it as a side, so joblib's `Memory` is banned by name instead, in `UNSAFE_HELPERS`)."""
 _STRING_DISPATCH_METHODS = frozenset({"agg", "aggregate", "apply", "transform", "applymap"})
 # Methods that return text without a target and write to one given as `buf`, with the position of
 # `buf` among their positional parameters (`DataFrame.info(verbose, buf, …)`).
@@ -1463,9 +1492,21 @@ class _Scan:
             self.add("banned-attribute", message, attribute)
 
     def _check_keywords(self) -> None:
+        """`BANNED_KEYWORDS` as a keyword, or as a string key of a dict literal unpacked into a call (`**{"memory":
+        "dir"}`). A dict built elsewhere and unpacked (`**options`) is not followed; the render guard refuses the
+        write such a keyword would make in the sandbox."""
         for keyword in self.of(ast.keyword):
             if keyword.arg in BANNED_KEYWORDS:
                 self.add("banned-keyword", f"the keyword '{keyword.arg}=' is not allowed", keyword)
+            elif keyword.arg is None and isinstance(keyword.value, ast.Dict):
+                pending = [keyword.value]
+                while pending:  # `**{**{"memory": ...}}`: an unpacked entry has the key None and a dict value
+                    literal = pending.pop()
+                    for key, value in zip(literal.keys, literal.values, strict=True):
+                        if key is None and isinstance(value, ast.Dict):
+                            pending.append(value)
+                        elif isinstance(key, ast.Constant) and key.value in BANNED_KEYWORDS:
+                            self.add("banned-keyword", f"the keyword '{key.value}=' is not allowed", key)
 
     def _check_settings(self) -> None:
         """matplotlib settings are written only with keys the string rule can read (`rc-key`).
