@@ -387,7 +387,9 @@ async def run_data_code(code: str, source_language: str, tool_context: ToolConte
     code: Python of at most 6,000 characters using only numpy, pandas, math, random, statistics or scipy.stats (and
     the other scipy computing modules); it must assign the final table to df at the top level as a pandas DataFrame
     (at most 20,000 rows, 50 columns and 200 KB as CSV: four float columns at full precision fit about 2,500
-    rows, so round floats to 4 to 6 significant digits and keep every k-th row of a long simulation), read no file, call no network and draw nothing (no matplotlib, no plot(),
+    rows, so round floats to the decimal places that still keep their values distinct, such as df.round(3) for
+    values between -50 and 50, and keep every k-th row of a long simulation), read no file, call no network and
+    draw nothing (no matplotlib, no plot(),
     no hist()). Never write data values from memory: more than 20 numbers or 20 text values written out in one list,
     tuple or dict (a list repeated with * counts every copy), or 40 in the code, are refused. source_language:
     what the user wrote, one of python, javascript, r, math or other. Returns the change lines and the new profile,
@@ -518,9 +520,10 @@ def cap_failure(name: str, measured: int | None, limit: int | None) -> str | Non
     if name == "too_large":
         return (
             f"df's CSV is {math.ceil(measured / 1024):,} KB, over the {limit // 1024} KB cap: keep every {nth} row "
-            f"(df = df.iloc[::{k}]) or compute about 1/{k} of the points, and round the floats to 4 to 6 significant "
-            "digits (df = df.round(4) for values between 1 and 1,000), which roughly halves the size and lets you "
-            "keep more rows; a line needs no more than a few thousand points"
+            f"(df = df.iloc[::{k}]) or compute about 1/{k} of the points, and round the floats to the decimal "
+            "places that still keep the values distinct (df = df.round(3) for values between -50 and 50; never so "
+            "few that close values become equal), which roughly halves the size and lets you keep more rows; a line "
+            "needs no more than a few thousand points"
         )
     if name == "too_many_rows":
         return (
