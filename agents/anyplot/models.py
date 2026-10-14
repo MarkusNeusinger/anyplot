@@ -99,7 +99,7 @@ from .settings import CLI_JUDGE_TIMEOUT_S, AgentSettings, get_settings
 ModelKind = Literal["root", "adapter", "reviewer"]
 MODEL_KINDS: tuple[ModelKind, ...] = ("root", "adapter", "reviewer")
 
-MAX_OUTPUT_TOKENS: dict[ModelKind, int] = {"root": 4096, "adapter": 8192, "reviewer": 4096}
+MAX_OUTPUT_TOKENS: dict[ModelKind, int] = {"root": 4096, "adapter": 8192, "reviewer": 8192}
 """Output caps per kind: every kind on Claude, the root and the reviewer on Gemini.
 
 The owner's rule (2026-10-10): a cap leaves ample headroom above the measured answers,
@@ -111,8 +111,10 @@ rerun of spike X on main (244 runs, Claude Haiku 5.5, 2026-10-10):
   finished ones reached 2,030, so the cap cut the distribution. Plans on attempt 2
   finished at a median of 1,562 and at most 2,606 tokens. 8,192 is 3.1 times the
   largest measured plan.
-* reviewer: at most 600 tokens (95th percentile 515) in 218 answers, all `STOP`; 4,096
-  is 6.8 times that.
+* reviewer: the checklist answered at most 600 tokens (95th percentile 515) in 218
+  answers, all `STOP`. The catalogue reviewer (since 2026-10-13) scores 16 criteria and
+  writes defect lines, about 1,400 to 2,500 tokens, so its cap is 8,192 (4,096 before),
+  with its thinking budget on top.
 * root: at most 259 tokens (95th percentile 180) in 566 calls; 4,096 leaves room for
   a longer reply in German or a code explanation.
 

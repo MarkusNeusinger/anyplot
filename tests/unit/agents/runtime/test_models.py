@@ -66,7 +66,7 @@ class TestFactories:
             "anyplot-eval",
             "global",
         )
-        assert model.max_tokens == {"root": 4096, "adapter": 8192, "reviewer": 4096}[kind]
+        assert model.max_tokens == {"root": 4096, "adapter": 8192, "reviewer": 8192}[kind]
 
     @pytest.mark.parametrize("kind", ["root", "adapter", "reviewer"])
     def test_gemini_model_comes_from_the_settings(self, kind: str) -> None:
@@ -119,9 +119,9 @@ class TestFactories:
         gemini = {kind: make_content_config(kind, GEMINI).max_output_tokens for kind in ("root", "adapter", "reviewer")}
         claude = {kind: make_content_config(kind, CLAUDE).max_output_tokens for kind in ("root", "adapter", "reviewer")}
 
-        assert gemini == {"root": 4096, "adapter": GEMINI_ADAPTER_MAX_OUTPUT_TOKENS, "reviewer": 4096}
+        assert gemini == {"root": 4096, "adapter": GEMINI_ADAPTER_MAX_OUTPUT_TOKENS, "reviewer": 8192}
         assert GEMINI_ADAPTER_MAX_OUTPUT_TOKENS == 8_192  # bounded by the soft deadline, not by the answers
-        assert claude == {"root": 4096, "adapter": 8192, "reviewer": 4096}
+        assert claude == {"root": 4096, "adapter": 8192, "reviewer": 8192}  # the catalogue reviewer writes more
         assert make_model("adapter", CLAUDE).max_tokens == 8192
         assert JUDGE_MAX_OUTPUT_TOKENS == 256
 
@@ -160,7 +160,7 @@ class TestFactories:
         assert {kind: config.max_output_tokens for kind, config in configs.items()} == {
             "root": 4096 + 1024,
             "adapter": 8192 + 2048,
-            "reviewer": 4096 + 2048,
+            "reviewer": 8192 + 2048,
         }
         assert {kind: config.effort for kind, config in configs.items()} == {
             "root": "medium",
@@ -313,7 +313,7 @@ class TestThinkingMeasurement:
         assert {kind: config.max_output_tokens for kind, config in configs.items()} == {
             "root": 4096 + 2048,
             "adapter": 8192 + 4096,
-            "reviewer": 4096,
+            "reviewer": 8192,
         }
         assert {kind: config.thinking_config.thinking_budget for kind, config in configs.items()} == {
             "root": -1,

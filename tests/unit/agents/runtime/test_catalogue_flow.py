@@ -143,6 +143,20 @@ async def test_a_repair_whose_edits_do_not_apply_gets_a_retry_in_the_same_round(
     assert "this text is not in the code" in inputs[3]  # the retry is told which edit missed
 
 
+async def test_an_unreadable_review_is_asked_once_more(client: httpx.AsyncClient, swap_models) -> None:
+    """The Vertex check of 2026-10-14: one review answer failed its schema and the render shipped unreviewed."""
+    script = default_script(plans=[SCATTER_PLAN, EMPTY_PLAN])
+    script["reviewer"] = [{"text": "not a score"}, {"json": score()}]
+    swap_models("gemini", script)
+    sid = await open_session(client)
+
+    events = await create_plot(client, sid)
+
+    plot = next(data for name, data in events if name == "plot")
+    assert (plot["status"], plot["residual_defects"]) == ("ok", [])
+    assert [(r["attempt"], r["outcome"]) for r in plot["rounds"]] == [(1, "ok")]
+
+
 async def test_the_best_scored_version_ships_when_the_repair_scores_lower(
     client: httpx.AsyncClient, swap_models
 ) -> None:

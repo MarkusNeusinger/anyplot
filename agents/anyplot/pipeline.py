@@ -1225,21 +1225,28 @@ async def _attempts(
         ledger.review_render_id = candidate.render_id
         run.reviewed_attempt = attempt
         run.reviews += 1
-        verdict = await _review(
-            ctx,
-            scope,
-            ReviewRequest(
-                render_id=ledger.review_render_id,
-                code=run_form,
-                bindings=view.bindings,
-                profile_summary=profile_summary(dataset.profile),
-                spec_brief=spec_brief(view),
-                change_request=args.change_request,
-                gate_notes=[_note(line) for line in report.advisory][:MAX_NOTES],
-                plot_language=run.language,
-            ),
-            run.theme,
+        review_request = ReviewRequest(
+            render_id=ledger.review_render_id,
+            code=run_form,
+            bindings=view.bindings,
+            profile_summary=profile_summary(dataset.profile),
+            spec_brief=spec_brief(view),
+            change_request=args.change_request,
+            gate_notes=[_note(line) for line in report.advisory][:MAX_NOTES],
+            plot_language=run.language,
         )
+        verdict = await _review(ctx, scope, review_request, run.theme)
+        if verdict is None and settings.check_retry and deadline.allows(REVIEWER_P95_S):
+            # An unreadable review is asked once more before the render ships unreviewed (owner rule:
+            # never unfinished for a formal miss; one in 26 Vertex runs on 2026-10-14).
+            attribution(
+                "pipeline_review",
+                ledger,
+                attempt=attempt,
+                verdict="unreadable_retry",
+                **_call_fields(ledger, REVIEWER_NAME),
+            )
+            verdict = await _review(ctx, scope, review_request, run.theme)
         review_call = _call_fields(ledger, REVIEWER_NAME)
         if verdict is None:
             attribution("pipeline_review", ledger, attempt=attempt, verdict="unreadable", **review_call)
