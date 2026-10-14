@@ -128,17 +128,17 @@ In the rerun of spike X on main (244 runs, Claude Haiku 5.5, warm prompt cache),
 
 The output caps per model call are constants in `anyplot/models.py`, set with ample headroom above the largest measured answer, because an unused cap costs nothing and a cut-off wastes the call:
 
-| Call | Claude | Gemini | Largest measured answer on Claude |
+| Call | Claude (before thinking) | Gemini | Largest measured answer on Claude |
 |---|---|---|---|
 | Root | 4,096 | 4,096 | 259 |
 | Adapter, edits only (attempt 1) | 8,192 | 8,192 | 2,030 (23 of 244 were cut off at the old 2,048) |
-| Adapter, full file allowed (the repair) | 16,384 | 12,288 | 2,606 |
-| Reviewer | 4,096 | 4,096 | 600 |
+| Adapter, full file allowed (the repair) | 12,288 | 12,288 | 2,606 |
+| Reviewer | 8,192 | 4,096 | 600 (checklist); about 2,500 (catalogue rubric) |
 | Scope and dataset judge | 256 | 256 | 59 |
 
-On Gemini, thinking tokens count toward the cap, and the soft deadline bounds the adapter's caps: at spike X's fitted rate, a call that uses all 8,192 tokens still leaves the repair attempt its 75 s. Gemini's answers are larger: its plan calls in spike X needed a median of about 4,700 output tokens, and 11 of 112 needed more than 8,192. Claude Haiku 5.5 runs at about 0.0029 s per output token, so a call that uses all 16,384 takes about 49 s, inside the 60 s the deadline check reserves for an adapter call.
+On Gemini, thinking tokens count toward the cap, and the soft deadline bounds the adapter's caps: at spike X's fitted rate, a call that uses all 8,192 tokens still leaves the repair attempt its 75 s. Gemini's answers are larger: its plan calls in spike X needed a median of about 4,700 output tokens, and 11 of 112 needed more than 8,192. Claude Haiku 5.5 runs at about 0.0029 s per output token, so an adapter call that uses all 20,480 tokens of the full-file cap with its thinking room takes about 60 s, the time the deadline check reserves for an adapter call.
 
-Claude runs with adaptive thinking on the root (`AGENT_ROOT_THINKING_BUDGET`, 1,024) and the adapter (`AGENT_ADAPTER_THINKING_BUDGET`, 2,048) since 2026-10-11; each budget is added to that agent's caps in this table, so the answer keeps its whole headroom however much the thinking uses, and 0 turns it off. The measurement of 2026-10-11 on the 122 cases (real renderer) decided it: with both budgets every run passed the gates and 51.6 % ended `ok`, with the adapter's budget alone 100 % and 50.0 %, with thinking off 91.0 % and 28.7 % (the structured answer then misses its edit anchors in a third of the runs); the price is a median of $0.0063 instead of $0.0038 per plot and a p50 of 31.5 s instead of 13.6 s. Haiku 5.5 takes no thinking budget of its own, so the value is room, not a limit the model sees, and its depth follows the agent's effort. The largest budget, 4,096, keeps the adapter's full-file cap at 20,480, below the Anthropic SDK's limit for a request that does not stream (about 21,300).
+Claude runs with adaptive thinking on the root (`AGENT_ROOT_THINKING_BUDGET`, 1,024) and the adapter (`AGENT_ADAPTER_THINKING_BUDGET`) since 2026-10-11, and on the reviewer (`AGENT_REVIEWER_THINKING_BUDGET`) since 2026-10-13; each budget is added to that agent's caps in this table, so the answer keeps its whole headroom however much the thinking uses, and 0 turns it off. The measurement of 2026-10-11 on the 122 cases (real renderer) decided it: with both budgets every run passed the gates and 51.6 % ended `ok`, with the adapter's budget alone 100 % and 50.0 %, with thinking off 91.0 % and 28.7 % (the structured answer then misses its edit anchors in a third of the runs); the price is a median of $0.0063 instead of $0.0038 per plot and a p50 of 31.5 s instead of 13.6 s. Haiku 5.5 takes no thinking budget of its own, so the value is room, not a limit the model sees, and its depth follows the agent's effort. That makes the room matter at effort `high`: in the Vertex check of 2026-10-14 (80 runs), 10 first adapter calls thought through the whole 10,240-token cap (8,192 plus the adapter's old 2,048) and ended with `MAX_TOKENS` and no plan, and 3 reviews ended the same way at their old 6,144, while finished adapter calls used up to 11,251 tokens (95th percentile 9,063) and finished reviews up to 6,141. Since then the adapter's room is 8,192 and the reviewer's 4,096. The largest budget, 8,192 (`settings.MAX_THINKING_BUDGET`), keeps the adapter's full-file cap at 20,480, below the Anthropic SDK's limit for a request that does not stream (about 21,300).
 
 ## Run it locally
 
