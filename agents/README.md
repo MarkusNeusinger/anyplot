@@ -15,7 +15,7 @@ The model is **Claude Haiku 5.5 on Vertex AI** (`claude-haiku-5-5`) by default. 
 | `main.py` | The `anyplot-agents` FastAPI service: the `/v1` routes the BFF (`api/routers/agent.py`) calls, the caller check, the run registry behind `409 run_active`, in-memory session and artifact services, and the idle sweeper |
 | `stream.py` | The `anyplot/1` stream translator: ADK events in, sanitised `ready`, `status` (including `queued`), `message`, `plot`, `refusal`, `error` and `done` events out |
 | `Dockerfile`, `cloudbuild.yaml` | The `anyplot-agents` image (the `agents` extra, the source tree with its prompts and fonts, uid 1000) and its deploy: build, a `candidate` revision without traffic, the IAM and `/v1/status` smoke, promote. The config's header lists the owner's bootstrap steps |
-| `anyplot/run_queue.py` | The run queue in front of every `/messages` turn: one run in flight, one start a minute (a turn that cannot render, because the data is unconfirmed, takes no start), a 600-second maximum wait, a `premium` lane that nothing sets yet |
+| `anyplot/run_queue.py` | The run queue in front of the sandbox runs (since 2026-10-14 a chat turn starts at once, and only its `plot_pipeline` or `run_data_code` call waits, mid-turn): one run in flight, one start a minute, a 600-second maximum wait, a `premium` lane that nothing sets yet |
 | `anyplot/theme_render.py` | The theme toggle: renders another theme of a finished version from its stored run form, behind waiting pipeline renders, with no model call |
 | `anyplot/agent.py` | The root agent `anyplot`, the `ALL_AGENTS` registry and `app` (the ADK `App` with its plugins), which `adk web` loads |
 | `anyplot/models.py` | The only place that builds a model or a model client: `make_model`, `make_content_config` and `make_judge_client`, for Claude on Vertex AI and for Gemini |
@@ -82,9 +82,12 @@ Three rules hold for everything here:
 | `AGENT_RENDER_IMAGE` | `anyplot-renderer:dev` | Image the `local` renderer runs, built from `renderer/Dockerfile` |
 | `AGENT_RENDER_CONCURRENCY` | `1` | Theme renders at the same time, for every backend (`render/serial.py`); serial, because one 4 GiB instance holds one sandbox safely (spikes S and S2) |
 | `AGENT_WATERMARK` | `true` | Whether the served PNGs (the artifact route and the feedback bundle) carry the footer strip; `false` serves the raw renders. The gates, the reviewer and `plot.py` always see the raw render |
-| `AGENT_RUN_CONCURRENCY` | `1` | Pipeline runs (whole `/messages` turns) in flight; the run queue holds the rest |
-| `AGENT_RUNS_PER_MINUTE` | `1` | Runs that may start within any 60 seconds (a sliding window) |
-| `AGENT_QUEUE_MAX_WAIT_S` | `600` | Longest wait in the run queue, after which the run ends with `capacity`; the queue holds rate x wait / 60 entries (10) and answers `503 capacity` beyond that. Through the BFF the whole turn, this wait included, ends by `AGENT_TURN_MAX_S` (1,190 s, see `docs/reference/api.md`), which the full wait plus the 540 s run fits into |
+| `AGENT_RUN_CONCURRENCY` | `1` | Sandbox runs in flight (a turn's `plot_pipeline` or `run_data_code` call, holding its entry until the turn ends); the run queue holds the rest. A chat turn without one never enters the queue |
+| `AGENT_RUNS_PER_MINUTE` | `1` | Sandbox runs that may start within any 60 seconds (a sliding window), one per turn |
+| `AGENT_QUEUE_MAX_WAIT_S` | `600` | Longest wait in the run queue, after which the turn ends with `error{code:"capacity"}`; the queue holds rate x wait / 60 entries (10), and a sandbox run beyond that ends its turn the same way. Through the BFF the whole turn, this wait included, ends by `AGENT_TURN_MAX_S` (1,190 s, see `docs/reference/api.md`), which the root's first call, the full wait and the 540 s run fit into |
+| `AGENT_USER_MESSAGES_PER_MINUTE` | `10` | Chat turns (typed messages and actions) per user within any 60 seconds; one more gets the fixed `rate_limited` refusal before the scope judge, so it costs no model call |
+| `AGENT_USER_MESSAGES_PER_DAY` | `200` | Chat turns per user and UTC day; one more gets the fixed `daily_limit` refusal before the scope judge |
+| `AGENT_SESSION_REFUSALS` | `3` | Scope-judge refusals of type `out_of_scope` or `attack` (never `needs_data`) after which a session is closed: that refusal and every later turn answer `session_closed`, and the user reloads the page for a new session |
 | `AGENT_MAX_ATTEMPTS` | `2` | Rounds per pipeline run, 1 to 3: the first and at most one repair round by default (a self-review adds an adapter call to a round, never a round); the eval harness sets 1 or 3 (`--max-attempts`) to measure no repair or a second repair round |
 | `AGENT_REVIEWER_MODE` | `catalogue` | The reviewer's rubric: `catalogue` (the offline scorer's rubric, verdict decided by code from the points) or `checklist` (the narrow checklist used before 2026-10-13) |
 | `AGENT_REVIEW_BAR`, `AGENT_STATUS_BAR` | `1.0`, `0.95` | `catalogue` reviews: the share of technical points (VQ, SC, DQ) below which a render gets the repair, and the ship bar at or above which it shows without notes |
@@ -103,7 +106,7 @@ Three rules hold for everything here:
 | `AGENT_RENDER_TIMEOUT_S` | `60` | Seconds per theme render |
 | `AGENT_DATA_CODE` | `true` | Whether the root's `run_data_code` runs; `false` makes it answer `unavailable`. The tool also answers `unavailable` while the renderer has no `POST /run-data` (`404`) |
 | `AGENT_DATA_RUN_TIMEOUT_S` | `20` | Seconds one data snippet may run, at most 30 |
-| `AGENT_DAILY_DATA_RUNS` | `30` | `run_data_code` runs per user and day, counted before each run; an unconfirmed turn also books a start in the run queue's rate window for its first data run |
+| `AGENT_DAILY_DATA_RUNS` | `30` | `run_data_code` runs per user and day, counted before each run; a data run also takes the run queue's slot and its turn's start in the rate window, like a plot |
 | `AGENT_REQUEST_DEADLINE_S` | `540` | Hard request deadline (180 before 2026-10-13: with a self-review per round, the soft deadline of 140 s stopped the repair round in 11 of 20 runs; the owner's rule is that no plot ships unfinished for lack of time) |
 | `AGENT_SOFT_DEADLINE_S` | `480` | Soft deadline inside the pipeline |
 | `AGENT_JUDGE_TIMEOUT_S` | `4` | Budget of one judge verdict, its one retry and the half-second wait before it included |
@@ -206,7 +209,7 @@ uv run uvicorn agents.main:app --port 8001
 
 The service needs the header `X-Anyplot-User` on every `/v1` route; outside `ENVIRONMENT=development` it also requires the IAM-forwarded ID token (`AGENT_SERVICE_URLS`, `AGENT_ALLOWED_CALLERS`). To drive it from the plot page, run the API in front of it as described under [Drive the chat page](#drive-the-chat-page).
 
-At the defaults only one run may start a minute, so a second "Create plot" within a minute waits in the run queue and the stream shows `status` events with `step: "queued"`. A turn while the data is unconfirmed (the summary after a paste, a data request in step 1) cannot render and takes no start, only the slot, so step 1 never waits for the minute. To iterate faster on your own machine, export `AGENT_RUNS_PER_MINUTE=60`. The theme toggle (`POST /v1/sessions/{sid}/versions/{version}/render {"theme": "dark"}`) never waits in the queue.
+At the defaults only one sandbox run may start a minute, so a second "Create plot" within a minute waits in the run queue: the turn starts at once, and when its pipeline is about to run, the stream shows `status` events with `step: "queued"` until the minute is over. A turn that runs no sandbox (a question, a refusal, the summary after a paste, a data request in step 1) never waits. To iterate faster on your own machine, export `AGENT_RUNS_PER_MINUTE=60`; more than 10 chat turns a minute get the `rate_limited` refusal (`AGENT_USER_MESSAGES_PER_MINUTE`). The theme toggle (`POST /v1/sessions/{sid}/versions/{version}/render {"theme": "dark"}`) never waits in the queue.
 
 ### Drive the chat page
 

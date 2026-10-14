@@ -413,9 +413,9 @@ async def run_data_code(code: str, source_language: str, tool_context: ToolConte
     if not services.usage.data_runs_ok(user, settings):
         attribution("data_code", ledger, outcome="daily_limit", language=language)
         return _error("daily_limit")
-    if ledger.rate_start is not None and not ledger.rate_start():
-        attribution("data_code", ledger, outcome="rate_limited", language=language)
-        return _error("rate_limited")
+    if ledger.run_slot is not None and not await ledger.run_slot():  # the run queue's slot and the turn's start
+        attribution("data_code", ledger, outcome="capacity", language=language)
+        return _error("capacity")
     services.usage.add_data_run(user)
     job = DataJob(job_id=f"d{secrets.token_hex(8)}", source=prepared, timeout_s=settings.data_run_timeout_s)
     try:

@@ -1,21 +1,16 @@
-"""The run queue: the memory, rate and cost limiter of one instance, in front of whole pipeline runs.
+"""The run queue: the memory, rate and cost limiter of one instance, in front of the sandbox runs.
 
-Every `/v1/sessions/{sid}/messages` turn is one entry. An entry runs when both limits
-allow it, in the order of its lane and then its arrival:
+Only sandbox work enters it (owner decision of 2026-10-14): a chat turn starts at once,
+and the turn takes an entry only when its root calls `plot_pipeline` or `run_data_code`
+(`agents/main.py`, `TurnSlot`). The turn holds that entry until it ends, so a second
+sandbox run in the same turn neither waits again nor books a second start. A plain
+answer, a refusal, `prepare_data` or `generate_data` never touches the queue. An entry
+runs when both limits allow it, in the order of its lane and then its arrival:
 
 * **Concurrency.** At most `AGENT_RUN_CONCURRENCY` runs are in flight (default 1),
   because spikes S and S2 showed one 4 GiB instance serves one sandbox at a time safely.
 * **Rate.** A run may start only while fewer than `AGENT_RUNS_PER_MINUTE` runs started
-  in the last 60 seconds (default 1), a sliding window of start times. An entry
-  submitted as not `rated` takes a slot but no place in the window and never waits
-  for it: the route marks a turn so while the session's data is unconfirmed, because
-  such a turn cannot render (the pipeline answers `not_ready`, and no confirmation can
-  land while the turn is active), so the summary after a paste and the data requests
-  of step 1 follow each other at once while whole pipeline runs keep the minute rule.
-  The order stays first come first served: an unrated entry behind a rated one that
-  waits for the window waits with it. An unrated turn whose root runs a data snippet
-  (`run_data_code`, which does use a sandbox) books its start then (`rate`), or the tool
-  answers `rate_limited` when the window is full.
+  in the last 60 seconds (default 1), a sliding window of start times.
 
 The queue holds at most `capacity = AGENT_RUNS_PER_MINUTE * AGENT_QUEUE_MAX_WAIT_S / 60`
 waiting entries (10 at the defaults): a new entry that would stand at a position past
@@ -29,7 +24,8 @@ The capacity is the owner's formula (2026-10-09) and assumes that runs end withi
 60-second rate window. A run that takes longer holds the only slot past the window,
 so every later start slips by the difference: at one run in flight, ten accepted
 entries and 90-second runs, the last four wait the full maximum and leave with
-`capacity`. Admission therefore promises a place, not a start.
+`capacity`. Admission therefore promises a place, not a start. A run holds its slot
+until its turn ends, the root's closing reply included.
 
 **Lanes.** An entry carries a lane: `premium` entries go before every `normal` entry,
 first come first served within a lane. Nothing sets `premium` yet; it is the lane for
@@ -103,8 +99,6 @@ class Ticket:
     lane: Lane
     seq: int
     enqueued_at: float
-    rated: bool = True
-    """Counts toward the rate window; False for a turn that cannot render (see the module docstring)."""
     state: TicketState = "waiting"
     started_at: float | None = None
     changed: asyncio.Event = field(default_factory=asyncio.Event, repr=False)
@@ -172,13 +166,13 @@ class RunQueue:
     def in_flight(self) -> int:
         return len(self._running)
 
-    def submit(self, user: str, session_id: str, lane: Lane = "normal", *, rated: bool = True) -> Ticket:
+    def submit(self, user: str, session_id: str, lane: Lane = "normal") -> Ticket:
         """Queue a run, or start it at once; raises `QueueFull` when it would wait past the maximum."""
         now = self._clock()
         self._pump(now)
-        ticket = Ticket(user=user, session_id=session_id, lane=lane, seq=next(self._seq), enqueued_at=now, rated=rated)
+        ticket = Ticket(user=user, session_id=session_id, lane=lane, seq=next(self._seq), enqueued_at=now)
         position = 1 + sum(1 for other in self._waiting if other.order < ticket.order)
-        if position > self.capacity and not (position == 1 and self._can_start(now, rated)):
+        if position > self.capacity and not (position == 1 and self._can_start(now)):
             raise QueueFull(f"position {position} is past the queue's capacity of {self.capacity}")
         self._waiting.append(ticket)
         self._waiting.sort(key=lambda entry: entry.order)
@@ -217,33 +211,13 @@ class RunQueue:
             self._wake([ticket])
             self.pump()
 
-    def rate(self, ticket: Ticket) -> bool:
-        """Book a start in the rate window for a running entry that started unrated; False when the window is full.
-
-        `run_data_code` runs a sandbox in a turn the route submitted unrated (the data is
-        unconfirmed). An entry that is rated already (its start is booked) needs nothing
-        more: a data run in it replaces a render, which the unconfirmed data then cannot
-        have. Otherwise one start is booked now and the entry counts as rated, so a second
-        data run in the same turn books nothing.
-        """
-        if ticket.rated:
-            return True
-        now = self._clock()
-        self._trim(now)
-        if len(self._starts) >= self.per_minute:
-            return False
-        self._starts.append(now)
-        ticket.rated = True
-        return True
-
     def next_change_at(self, now: float) -> float:
         """The next time a waiting entry's fate can change without any call: an expiry or the window opening."""
         if not self._waiting:
             return math.inf
         times = [entry.enqueued_at + self.max_wait_s for entry in self._waiting]
         self._trim(now)
-        head = self._waiting[0]
-        if head.rated and len(self._running) < self.concurrency and len(self._starts) >= self.per_minute:
+        if len(self._running) < self.concurrency and len(self._starts) >= self.per_minute:
             times.append(self._starts[0] + self.window_s)
         return min(times)
 
@@ -286,9 +260,9 @@ class RunQueue:
         while self._starts and now - self._starts[0] >= self.window_s:
             self._starts.popleft()
 
-    def _can_start(self, now: float, rated: bool = True) -> bool:
+    def _can_start(self, now: float) -> bool:
         self._trim(now)
-        return len(self._running) < self.concurrency and (not rated or len(self._starts) < self.per_minute)
+        return len(self._running) < self.concurrency and len(self._starts) < self.per_minute
 
     def _pump(self, now: float) -> None:
         # An entry past its maximum wait never starts, however late the pump that finds
@@ -296,12 +270,11 @@ class RunQueue:
         # than leaving with `capacity`. So: expire the overdue, start, expire the due.
         expired = self._expire(lambda waited: waited > self.max_wait_s, now)
         started: list[Ticket] = []
-        while self._waiting and self._can_start(now, self._waiting[0].rated):
+        while self._waiting and self._can_start(now):
             entry = self._waiting.pop(0)
             entry.state, entry.started_at = "running", now
             self._running.append(entry)
-            if entry.rated:
-                self._starts.append(now)
+            self._starts.append(now)
             started.append(entry)
         expired += self._expire(lambda waited: waited >= self.max_wait_s, now)
         if expired or started:

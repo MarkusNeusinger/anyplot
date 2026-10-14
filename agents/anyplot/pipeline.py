@@ -57,7 +57,10 @@ residual defect lines (reviewer lines that no reviewed render fixed, adaptation
 findings, the G10 line of a render whose text has characters without a glyph, which a
 reviewer `ok` does not erase, a padded canvas, or no review because the budget or the
 deadline ran out);
-`failed` names its reason; `not_ready` comes before any model call. An `ok` or
+`failed` names its reason; `not_ready` comes before any model call and before the run
+queue. A ready run first takes the turn's run-queue slot (`ledger.run_slot`, set by the
+`/messages` route), so only a turn that renders waits in the queue; the soft deadline
+starts after that wait. An `ok` or
 `needs_attention` result is stored as the session's next version before it is
 yielded, and carries that number as `version`. Its `changes` are the notes of every
 adapter call up to the shipped render whose plan changed the code (`note_changes`), so
@@ -986,6 +989,11 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
         yield _result_event(PlotResult.not_ready(not_ready or "no_dataset"))
         return
     ledger.pipeline_active = True
+    if ledger.run_slot is not None and not await ledger.run_slot():
+        # No slot: the route failed the turn with `capacity`, or the user cancelled the wait. Either way the run is
+        # aborted, a cancelled path, so no result: the stream ends with the error, or with `done` after a cancel.
+        ledger.pipeline_active = False
+        return
     theme = node_input.theme or _default_theme(services, ctx.session.id, view.library, node_input.base)
     run = Run(view=view, dataset=dataset, theme=theme, language=view.language, change_request=node_input.change_request)
     scope = f"pipeline-{secrets.token_hex(6)}"

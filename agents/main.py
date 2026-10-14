@@ -18,7 +18,7 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `POST /v1/sessions/{sid}/dataset/confirm` | | `{confirmed, rows, columns}`: step 1 of two, the user confirmed the dataset with its bindings; the pipeline runs only then | `409 run_active`, `422 no_dataset` |
 | `POST /v1/sessions/{sid}/dataset/undo` | | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version}`: the dataset version before the root's last `prepare_data` or `generate_data` is the current one again, its bindings carried over (`dataset_versions.py`); unconfirmed, like any version the user has not confirmed | `409 run_active`, `422 nothing_to_undo` |
 | `POST /v1/sessions/{sid}/dataset/to_long` | | The undo route's shape plus `changes`: the page's `.to_long()` applies the wide-table suggestion, recomputed on the server, as the next dataset version with the default bindings for the new columns; no model call | `409 run_active`, `422 no_suggestion` |
-| `POST /v1/sessions/{sid}/messages` | `{text}` or `{action}` (`create_plot`, `summarize_data`) | SSE `anyplot/1`; the `done` event carries `dataset` (with `roles` and `changes`) after a turn whose `prepare_data` or `generate_data` changed the data, version 1 when `generate_data` made the session's first data, and `language` (`{language, source}`) after every run | `413 too_long`, `409 run_active`, `503 capacity` |
+| `POST /v1/sessions/{sid}/messages` | `{text}` or `{action}` (`create_plot`, `summarize_data`) | SSE `anyplot/1`; the `done` event carries `dataset` (with `roles` and `changes`) after a turn whose `prepare_data` or `generate_data` changed the data, version 1 when `generate_data` made the session's first data, and `language` (`{language, source}`) after every run | `413 too_long`, `409 run_active` |
 | `POST /v1/sessions/{sid}/cancel` | | `204` | |
 | `POST /v1/sessions/{sid}/versions/{version}/render` | `{theme}` | `{status, reason?, artifacts}` | `404 not_found`, `409 run_active`, `503 capacity` (no render slot in time, or the render store is full) |
 | `GET /v1/sessions/{sid}/artifacts/{name}?v=` | | the file | `404` |
@@ -33,19 +33,30 @@ already verified it and replaced the signature) and requires its `aud` in
 `X-Serverless-Authorization` whenever that header is present, because Cloud Run then
 checks only that one and passes `Authorization` through unverified.
 
-Every `/messages` turn goes through the run queue (`anyplot/run_queue.py`): the route
-answers `503 capacity` when the queue is full, otherwise the stream sends `ready`,
-then `status{step:"queued", position, waiting}` while the run waits, then the run.
-The request deadline and its abort start only when the run leaves the queue; a run
-that waited `AGENT_QUEUE_MAX_WAIT_S` ends with `error{code:"capacity"}`. A user with
-a queued or running run gets `409 run_active` on a second turn in any session. A
-user over the daily token budget gets the `budget` refusal at once, without taking
-a place in the queue. The theme toggle (`/versions/{version}/render`) renders the
-other theme of a finished version outside the queue, because it costs no tokens,
-but behind waiting pipeline renders in the render slot (`render/serial.py`); while
-it renders it holds the session's registry entry, so a user has one run or toggle
-in flight at a time. `adk web` runs the agents without this service, so its runs
-bypass the queue; its renders still go through the one render slot.
+A `/messages` turn starts at once: the stream sends `ready` and the run begins, so a
+plain answer, a refusal, `prepare_data` or `generate_data` never waits (owner decision
+of 2026-10-14). Only sandbox work goes through the run queue (`anyplot/run_queue.py`):
+the turn's first `plot_pipeline` or `run_data_code` call takes the queue's slot and the
+turn's start in the rate window (`TurnSlot`, the ledger's `run_slot`), and the stream
+sends `status{step:"queued", position, waiting}` while it waits, mid-turn, then the
+run's own events. The request deadline is paused while the turn waits and starts
+again in full when the slot comes, so queued time never counts. A full queue, or a
+wait of `AGENT_QUEUE_MAX_WAIT_S`, ends the turn with `error{code:"capacity"}`. A user
+with a turn in flight gets `409 run_active` on a second turn in any session.
+
+Before the scope judge runs, and before any model call, the route answers with a fixed
+refusal right after `ready`: `budget` for a user over the daily token budget,
+`session_closed` in a session the scope judge closed (`AGENT_SESSION_REFUSALS`
+refusals of type `out_of_scope` or `attack`), and `rate_limited` or `daily_limit` past
+the user's message limits (`AGENT_USER_MESSAGES_PER_MINUTE`,
+`AGENT_USER_MESSAGES_PER_DAY`, counted in the usage book; actions count too).
+
+The theme toggle (`/versions/{version}/render`) renders the other theme of a finished
+version outside the queue, because it costs no tokens, but behind waiting pipeline
+renders in the render slot (`render/serial.py`); while it renders it holds the
+session's registry entry, so a user has one run or toggle in flight at a time.
+`adk web` runs the agents without this service, so its runs bypass the queue; its
+renders still go through the one render slot.
 
 Before a dataset is stored, a deterministic pre-filter reads every header and cell
 for text addressed to an AI, then the dataset judge reads the judged view (every
@@ -138,11 +149,20 @@ from agents.anyplot.opening import (
     store_dataset,
 )
 from agents.anyplot.plugins.ledger import CURRENT_LEDGER, RequestLedger, attribution, budget_allows, judge_budget_tokens
+from agents.anyplot.plugins.scope_guard import SESSION_CLOSED, scope_refusals
 from agents.anyplot.policy import fence, refusal, scope_rubric, transcribe_rubric, user_notes_block
 from agents.anyplot.render.serial import RenderBusy
 from agents.anyplot.render.store import RenderStoreFull
 from agents.anyplot.render.watermark import add_footer
-from agents.anyplot.run_queue import HEARTBEAT_S, QueueFull, QueueTimeout, QueueWithdrawn, RunQueue, Ticket
+from agents.anyplot.run_queue import (
+    HEARTBEAT_S,
+    QueueFull,
+    QueuePosition,
+    QueueTimeout,
+    QueueWithdrawn,
+    RunQueue,
+    Ticket,
+)
 from agents.anyplot.schemas import MAX_COLUMNS, MAX_MESSAGE_CHARS, Binding, DatasetProfile, Theme
 from agents.anyplot.services import Services, get_services
 from agents.anyplot.session_state import (
@@ -234,13 +254,15 @@ STALE_RUN_MARGIN_S = 30
 
 @dataclass
 class ActiveRun:
-    """A `/messages` request from its queue entry to the end of its stream, or a theme toggle while it renders.
+    """A `/messages` request from its registration to the end of its stream, or a theme toggle while it renders.
 
-    `started` is the registration time on the queue's clock, and the start of the run
-    once it left the queue; the ticket's own times decide the stale check when there
-    is one, so a run that just left a long wait is not mistaken for an old run. A
-    toggle has no ticket, and its abort signal is never read: it ends within the
-    request deadline on its own (a bounded slot wait plus one render).
+    `started` is the registration time on the queue's clock, and the end of the turn's
+    queue wait once a sandbox run waited for the slot (`RunDeadline.arm`). `ticket` is
+    the turn's queue entry, set by its first sandbox run (`TurnSlot`); the ticket's own
+    times decide the stale check when there is one, so a run that just left a long
+    wait is not mistaken for an old run. A toggle has no ticket, and its abort signal
+    is never read: it ends within the request deadline on its own (a bounded slot wait
+    plus one render).
     """
 
     abort: asyncio.Event
@@ -257,6 +279,98 @@ class ActiveRun:
         if self.ticket is not None and self.ticket.started_at is not None:
             began = max(began, self.ticket.started_at)
         return now - began > deadline_s + STALE_RUN_MARGIN_S
+
+
+@dataclass
+class RunDeadline:
+    """A turn's request deadline: armed when the turn starts, paused while it waits in the run queue, armed again in
+    full when it leaves the queue, so queued time never counts (and the BFF, which restarts its own budget on the
+    first event after a wait, still waits longer than this service)."""
+
+    run: ActiveRun
+    seconds: float
+    handle: asyncio.TimerHandle | None = None
+
+    def arm(self, now: float) -> None:
+        self.cancel()
+        self.run.started = now
+        self.handle = asyncio.get_running_loop().call_later(self.seconds, self._hit)
+
+    def cancel(self) -> None:
+        if self.handle is not None:
+            self.handle.cancel()
+            self.handle = None
+
+    def _hit(self) -> None:
+        self.run.deadline_hit = True
+        self.run.abort.set()
+
+
+StreamNote = tuple[Literal["queued"], QueuePosition] | tuple[Literal["event"], Event] | tuple[Literal["end"], None]
+"""What the stream's outbox carries: a queue position of a waiting sandbox run, an ADK event, or the run's end."""
+
+
+@dataclass
+class TurnSlot:
+    """A `/messages` turn's claim on the run queue: taken by its first sandbox run, held until the turn ends.
+
+    `take` is the ledger's `run_slot`, awaited by `plot_pipeline` and `run_data_code`
+    inside the ADK run. The first call submits the turn's queue entry (a start in the rate
+    window and the run slot), pauses the deadline while the entry waits, puts every
+    position into the stream's outbox as it changes (the stream sends it as
+    `status{step:"queued"}`), and arms the deadline again in full when the entry starts.
+    A later call in the same turn answers at once: one start per turn. A full queue or
+    an expired wait fails the turn with `capacity` and aborts the run, so the stream ends
+    with `error{code:"capacity"}` and the root spends no further call; a cancelled wait
+    ends the run like any cancel. The entry is released with the turn (`Runtime.finish`).
+    """
+
+    runtime: "Runtime"
+    run: ActiveRun
+    session_id: str
+    ledger: RequestLedger
+    deadline: RunDeadline
+    outbox: "asyncio.Queue[StreamNote]"
+
+    async def take(self) -> bool:
+        if self.run.ticket is not None:
+            return self.run.ticket.running
+        if self.run.abort.is_set():
+            return False
+        queue = self.runtime.run_queue()
+        try:
+            ticket = queue.submit(self.run.user, self.session_id)
+        except QueueFull:
+            logger.info("run queue full (ref %s): %d waiting", self.ledger.request_id, queue.waiting_count)
+            attribution("queue", self.ledger, verdict="full", waited_s=0.0)
+            self._fail()
+            return False
+        self.run.ticket = ticket
+        outcome = "started"
+        waited = False
+        try:
+            async with contextlib.aclosing(queue.wait(ticket, heartbeat_s=HEARTBEAT_S)) as positions:
+                async for position in positions:
+                    if not waited:
+                        waited = True
+                        self.deadline.cancel()  # queued time never counts
+                    self.outbox.put_nowait(("queued", position))
+        except QueueTimeout:  # waited the maximum: the same answer as a full queue
+            outcome = "expired"
+        except QueueWithdrawn:  # cancelled or purged while it waited: nothing to report
+            outcome = "withdrawn"
+        attribution("queue", self.ledger, verdict=outcome, waited_s=round(self.runtime.now() - ticket.enqueued_at, 1))
+        if outcome == "expired":
+            self._fail()
+        if outcome != "started":
+            return False
+        if waited:
+            self.deadline.arm(self.runtime.now())
+        return True
+
+    def _fail(self) -> None:
+        self.ledger.fail("capacity")
+        self.run.abort.set()
 
 
 @dataclass
@@ -1063,12 +1177,48 @@ async def _session_sync(
 
 
 async def _refused(translator: Translator, ledger: RequestLedger) -> AsyncIterator[str]:
-    """A turn the ledger refused before it entered the queue: `ready`, the refusal, `done`."""
+    """A turn the ledger refused before the scope judge and any model call: `ready`, the refusal, `done`."""
     yield translator.ready()
     for chunk in translator.refusal():
         yield chunk
     attribution("run", ledger, model_versions=[], kind=ledger.kind)
     yield translator.done()
+
+
+def _refuse_now(
+    translator: Translator, ledger: RequestLedger, code: str, hook: str, **fields: Any
+) -> StreamingResponse:
+    """The fixed refusal `code` as the whole turn, sent before the judge: no model call, no queue, no message counted."""
+    ledger.refuse(code, refusal(code, ledger.lang))
+    attribution(hook, ledger, verdict=code, **fields)
+    return StreamingResponse(
+        _refused(translator, ledger), media_type="text/event-stream", headers={**_NO_STORE, "X-Accel-Buffering": "no"}
+    )
+
+
+async def _produce(
+    runtime: Runtime, user: str, sid: str, message: types.Content, run: ActiveRun, outbox: "asyncio.Queue[StreamNote]"
+) -> None:
+    """The ADK run in a task of its own, its events into the stream's outbox.
+
+    The stream reads the outbox, so the queue positions a sandbox run's `TurnSlot.take`
+    puts there while the run is blocked in that tool reach the client meanwhile. An
+    exception ends the outbox like the run's end and is raised in the stream.
+    """
+    settings = get_settings()
+    try:
+        events = runtime.get_runner().run_async(
+            user_id=user,
+            session_id=sid,
+            new_message=message,
+            run_config=RunConfig(max_llm_calls=settings.max_llm_calls, streaming_mode=StreamingMode.NONE),
+            abort_signal=run.abort,
+        )
+        async with contextlib.aclosing(events) as iterator:
+            async for event in iterator:
+                outbox.put_nowait(("event", event))
+    finally:
+        outbox.put_nowait(("end", None))
 
 
 def _error_code(exc: BaseException) -> str:
@@ -1101,33 +1251,22 @@ async def post_message(
         lang=refusal_lang(view.language) if view else DEFAULT_LANGUAGE,
     )
     translator = Translator(ledger, run_id=secrets.token_hex(8), spec_id=view.spec_id if view else None)
+    # The fixed refusals sent before the scope judge, so none of these turns costs a model call.
     if not budget_allows(ledger, services.usage, settings):
-        # The refusal the root would send after the wait, sent now: a user over the daily
-        # budget neither takes a place in the queue nor spends the minute's start.
-        ledger.refuse("budget", refusal("budget", ledger.lang))
-        attribution("budget_halt", ledger, agent="run_queue")
-        return StreamingResponse(
-            _refused(translator, ledger),
-            media_type="text/event-stream",
-            headers={**_NO_STORE, "X-Accel-Buffering": "no"},
-        )
-    queue = runtime.run_queue()
-    # A turn while the data is unconfirmed cannot render (the pipeline answers `not_ready`,
-    # and no confirmation lands while the turn is active), so it takes the slot but no start
-    # in the minute: the summary after a paste and the data requests of step 1 do not wait.
-    rated = view is None or view.data_confirmed
-    try:
-        ticket = queue.submit(user, sid, rated=rated)
-    except QueueFull:
-        logger.info("run queue full (ref %s): %d waiting", rid, queue.waiting_count)
-        raise AgentsError(503, "capacity") from None
-    # `run_data_code` runs a sandbox even while the data is unconfirmed: it books the turn's start then.
-    ledger.rate_start = lambda: queue.rate(ticket)
-    run = ActiveRun(abort=asyncio.Event(), user=user, started=runtime.now(), ticket=ticket)
+        # The refusal the root would send, sent now: a user over the daily budget spends nothing.
+        return _refuse_now(translator, ledger, "budget", "budget_halt", agent="route")
+    refused = scope_refusals(session.events)
+    if refused >= settings.session_refusals:
+        return _refuse_now(translator, ledger, SESSION_CLOSED, "session_closed", refusals=refused)
+    limit = services.usage.message_limit(user, settings)
+    if limit is not None:
+        return _refuse_now(translator, ledger, limit, "message_limit")
+    services.usage.add_message(user)
+    run = ActiveRun(abort=asyncio.Event(), user=user, started=runtime.now())
     # Registered here so a second request cannot slip in before the stream starts; the
     # stream's finally and the background task both clear it and free its queue slot,
     # and an entry neither reached (a client gone before the first byte) goes stale
-    # after the queue's maximum wait or the deadline.
+    # after the deadline (or, while a sandbox run waits, the queue's maximum wait).
     runtime.active[sid] = run
     dataset_before = view.dataset_id if view is not None else None
     if view is not None and view.dataset_id:
@@ -1144,41 +1283,26 @@ async def post_message(
 
     async def stream() -> AsyncIterator[str]:
         token = CURRENT_LEDGER.set(ledger)
-        loop = asyncio.get_running_loop()
-
-        def deadline() -> None:
-            run.deadline_hit = True
-            run.abort.set()
-
-        timer: asyncio.TimerHandle | None = None
+        deadline = RunDeadline(run, settings.request_deadline_s)
+        outbox: asyncio.Queue[StreamNote] = asyncio.Queue()
+        # Only a sandbox run takes the queue's slot, mid-turn: everything before it answers at once.
+        ledger.run_slot = TurnSlot(runtime, run, sid, ledger, deadline, outbox).take
+        producer: asyncio.Task[None] | None = None
         failure: str | None = None
         try:
             yield translator.ready()
-            outcome = "started"
-            async with contextlib.aclosing(queue.wait(ticket, heartbeat_s=HEARTBEAT_S)) as positions:
-                try:
-                    async for position in positions:
-                        yield translator.queued(position.position, position.waiting)
-                except QueueTimeout:  # waited the maximum: the same answer as a full queue
-                    outcome, failure = "expired", "capacity"
-                except QueueWithdrawn:  # cancelled or purged while it waited: nothing to report
-                    outcome = "withdrawn"
-            attribution("queue", ledger, verdict=outcome, waited_s=round(runtime.now() - ticket.enqueued_at, 1))
-            if outcome == "started":
-                # Queued time never counts: the deadline and its abort start with the run.
-                run.started = runtime.now()
-                timer = loop.call_later(settings.request_deadline_s, deadline)
-                events = runtime.get_runner().run_async(
-                    user_id=user,
-                    session_id=sid,
-                    new_message=message,
-                    run_config=RunConfig(max_llm_calls=settings.max_llm_calls, streaming_mode=StreamingMode.NONE),
-                    abort_signal=run.abort,
-                )
-                async with contextlib.aclosing(events) as iterator:
-                    async for event in iterator:
-                        for chunk in translator.translate(event):
-                            yield chunk
+            deadline.arm(runtime.now())
+            producer = asyncio.create_task(_produce(runtime, user, sid, message, run, outbox))
+            while True:
+                note = await outbox.get()
+                if note[0] == "queued":
+                    yield translator.queued(note[1].position, note[1].waiting)
+                elif note[0] == "event":
+                    for chunk in translator.translate(note[1]):
+                        yield chunk
+                else:
+                    await producer  # raises the run's exception, if it ended with one
+                    break
         except Exception as exc:  # the stream always ends with error + done, never a traceback
             logger.warning("run failed (ref %s): %s", rid, type(exc).__name__)
             failure = _error_code(exc)
@@ -1186,8 +1310,11 @@ async def post_message(
             runtime.finish(sid, run)
             raise
         finally:
-            if timer is not None:
-                timer.cancel()
+            deadline.cancel()
+            if producer is not None and not producer.done():
+                producer.cancel()
+                with contextlib.suppress(BaseException):
+                    await producer
             CURRENT_LEDGER.reset(token)
         try:
             if ledger.error is not None:

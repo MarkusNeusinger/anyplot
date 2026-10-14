@@ -235,6 +235,15 @@ class TestSessionLanguage:
 
 
 REFUSAL_LANGS = {"en", "de", "fr", "es", "it", "pt", "nl", "pl", "zh", "vi", "ru"}
+REASONS = [
+    "out_of_scope",
+    "needs_data",
+    "budget",
+    "rate_limited",
+    "daily_limit",
+    "session_closed",
+    "unsupported_content",
+]
 
 
 class TestRefusals:
@@ -267,12 +276,12 @@ class TestRefusals:
     def test_every_reason_has_every_language(self) -> None:
         table = policy.refusals()
 
-        assert set(table) == {"out_of_scope", "needs_data", "budget", "unsupported_content"}
+        assert set(table) == set(REASONS)
         for reason, texts in table.items():
             assert set(texts) == REFUSAL_LANGS, reason
             assert len(set(texts.values())) == len(REFUSAL_LANGS), reason  # no language copies another's text
 
-    @pytest.mark.parametrize("reason", ["out_of_scope", "needs_data", "budget", "unsupported_content"])
+    @pytest.mark.parametrize("reason", REASONS)
     def test_an_unknown_language_gets_the_english_text_of_every_reason(self, reason: str) -> None:
         assert policy.refusal(reason, "ja") == policy.refusal(reason, "en") == policy.refusals()[reason]["en"]
 
