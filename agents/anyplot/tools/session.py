@@ -58,7 +58,7 @@ from google.adk import Workflow
 from google.adk.tools.tool_context import ToolContext
 from pydantic import TypeAdapter, ValidationError
 
-from ..briefs import spec_brief, trimmed_profiles
+from ..briefs import bindings_text, spec_brief, trimmed_profiles
 from ..code.data_code import check_data_code
 from ..data.generate import Generate, GenerateError, generate
 from ..data.parse import MAX_CANONICAL_BYTES, MAX_COMPUTED_BYTES, ParsedDataset, ParseError, parse_dataset
@@ -140,6 +140,10 @@ async def get_dataset_profile(tool_context: ToolContext) -> dict[str, Any]:
         return _not_ready("no_dataset")
     profile = stored.profile
     base: dict[str, Any] = {"status": "ok", "rows": profile.rows}
+    if view.bindings:
+        # The bindings in force, so a summary names these rather than the ones the profile suggests (live tests of
+        # 2026-10-14/15); the column names are the user's headers, so they are fenced as data.
+        base["bindings"] = DATA_PREAMBLE + "\n" + fence("user_data", bindings_text(view.bindings))
     suggestion = long_suggestion(view.snapshot.roles(), profile)
     if suggestion is not None:
         # The page offers it as `.to_long()`; the column names are the user's, so fenced as data.

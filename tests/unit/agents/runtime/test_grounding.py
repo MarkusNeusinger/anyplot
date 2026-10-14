@@ -43,6 +43,7 @@ from agents.anyplot.pipeline import (
     render_score_request,
 )
 from agents.anyplot.plugins.tool_safety import SHOWS_PREAMBLE, ToolSafetyPlugin, fence_pipeline_notes
+from agents.anyplot.policy import DATA_PREAMBLE
 from agents.anyplot.render import harness
 from agents.anyplot.schemas import (
     MAX_SHOWN_TEXT_CHARS,
@@ -55,6 +56,7 @@ from agents.anyplot.schemas import (
 )
 from agents.anyplot.services import Services
 from agents.anyplot.session_state import BINDINGS, DATASET_ID, SessionView, initial_state
+from agents.anyplot.tools.session import get_dataset_profile
 
 
 LORENZ_CODE = """
@@ -369,7 +371,7 @@ class TestSessionBindings:
             ("Kanton,Staatsangehörigkeit,Jahr,Wert\nZH,CH,2020,1\nZH,AU,2020,2\n", {"x": "Jahr", "y": "Wert"}),
         ],
     )
-    async def test_the_session_block_lists_the_bindings_in_force(
+    async def test_the_profile_lists_the_bindings_in_force(
         self, services: Services, csv: str, bindings: dict[str, str]
     ) -> None:
         state = initial_state(
@@ -383,18 +385,22 @@ class TestSessionBindings:
         dataset_id = services.datasets.put("s1", parse_dataset(csv))
         state[DATASET_ID] = dataset_id
         state[BINDINGS] = [{"role": role, "column": column} for role, column in bindings.items()]
+        context = SimpleNamespace(state=state, session=SimpleNamespace(id="s1"), invocation_id="i1")
 
-        text = await agent_module.session_context(SimpleNamespace(state=state, session=SimpleNamespace(id="s1")))
+        result = await get_dataset_profile(cast(Any, context))
+        block = await agent_module.session_context(cast(Any, context))
 
         listed = "\n".join(f"{role}: {column}" for role, column in bindings.items())
-        assert f"{agent_module.BINDINGS_LINE}\n<user_data>\n{listed}\n</user_data>" in text
-        outside = re.sub(r"<(\w+)>\n.*?\n</\1>", "", text, flags=re.DOTALL)
-        assert all(column not in outside for column in bindings.values())  # the user's headers stay fenced
+        assert result["bindings"] == f"{DATA_PREAMBLE}\n<user_data>\n{listed}\n</user_data>"
+        assert "- Bindings: complete" + agent_module.BINDINGS_HINT in block.splitlines()
+        # The user's headers never stand in the session block, which has instruction priority.
+        assert all(column not in block for column in bindings.values())
 
     def test_the_root_prompt_describes_the_bindings_in_force(self) -> None:
         root = agent_module.root_instruction()
 
-        assert 'The bindings in force are the session block\'s "Current bindings" list' in root
+        assert "The bindings in force are the `bindings` that `get_dataset_profile` returns" in root
+        assert "never say they will be chosen later" in root
         assert "never claim the better one is already bound" in root
         assert "Describe the plot from `shows`" in root
         assert "Never state a value, a format, a binding or a text of the plot or the data" in root

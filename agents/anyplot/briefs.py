@@ -7,13 +7,18 @@ at most five fenced sample rows) for the root and the adapter. No ADK import.
 """
 
 import json
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from typing import Any
 
 from .data.roles import DataRole
 from .policy import fence
-from .schemas import DatasetProfile
+from .schemas import Binding, DatasetProfile
 from .session_state import SessionView
+
+
+def bindings_text(bindings: Sequence[Binding]) -> str:
+    """The bindings in force, one `role: column` per line in the stored order, for the root's `get_dataset_profile`."""
+    return "\n".join(f"{binding.role}: {binding.column}" for binding in bindings)
 
 
 MAX_BRIEF_CHARS = 4_000

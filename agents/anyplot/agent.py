@@ -22,7 +22,6 @@
   marks Claude prompt-cache breakpoints. `adk web agents` finds `app` in this module.
 """
 
-from collections.abc import Sequence
 from typing import Any
 
 from google.adk import Agent
@@ -41,7 +40,6 @@ from .plugins.reply_language import ReplyLanguagePlugin
 from .plugins.scope_guard import ScopeGuardPlugin
 from .plugins.tool_safety import ToolSafetyPlugin
 from .policy import fence, root_instruction
-from .schemas import Binding
 from .services import get_services
 from .session_state import read_session
 from .settings import get_settings
@@ -82,16 +80,13 @@ The name comes from the server's table, never from the stored value, so it stand
 NOTES_LINE = "yes; get_dataset_profile returns them under user_notes"
 """The session block's line when the stored dataset kept notes pasted around the table: a fixed text,
 so the root knows to read them again after the context filter dropped the turn that carried them."""
-BINDINGS_LINE = "- Current bindings, one `role: column` per line (the bindings in force; describe exactly these):"
-"""Heads the fenced list of the session's bindings. The live tests of 2026-10-14/15 caught the summary
+BINDINGS_HINT = "; get_dataset_profile lists the bindings in force under bindings"
+"""Where the root reads the bindings themselves. The live tests of 2026-10-14/15 caught the summary
 describing other bindings than the real ones twice ("Staatsangehörigkeit for series" while series was
 `Kanton`; "Jahr as category, CO2 as value" while category was `Bevölkerung` and value `Jahr`): the root
-had only "complete" and guessed the rest from the profile."""
-
-
-def bindings_text(bindings: Sequence[Binding]) -> str:
-    """The bindings as the session block lists them, one `role: column` per line, in the stored order."""
-    return "\n".join(f"{binding.role}: {binding.column}" for binding in bindings)
+had only "complete" and guessed the rest from the profile. The list itself stands in the tool result,
+not here: a measurement of 2026-10-15 with the list in this block saw the root take it for text the
+user had written (1 of 6 summaries)."""
 
 
 async def session_context(context: ReadonlyContext) -> str:
@@ -131,15 +126,12 @@ async def session_context(context: ReadonlyContext) -> str:
             lines.append(f"- Notes pasted with the data: {NOTES_LINE}")
         check = check_bindings(view.bindings, view.snapshot.roles(), profile)
         if check.complete:
-            lines.append("- Bindings: complete")
+            lines.append(f"- Bindings: complete{BINDINGS_HINT}")
         else:
             missing = ", ".join(check.missing_roles) or "none"
-            lines.append(f"- Bindings: incomplete; missing roles: {missing}; {len(check.errors)} invalid")
-        if view.bindings:
-            # The real bindings, so a summary describes these rather than the ones the profile suggests; the
-            # column names are the user's headers, so they stand inside a data fence.
-            lines.append(BINDINGS_LINE)
-            lines.append(fence("user_data", bindings_text(view.bindings)))
+            lines.append(
+                f"- Bindings: incomplete; missing roles: {missing}; {len(check.errors)} invalid{BINDINGS_HINT}"
+            )
         if check.warnings:
             # The lines name the user's columns, so they stand inside a data fence.
             lines.append(f"- Binding warnings: {len(check.warnings)}, roles that need values of 0 or more")

@@ -10,8 +10,9 @@
   texts the user wrote out (`expected_texts`), and the pipeline checks the drawn
   texts for each. A miss gets a repair round (`AGENT_EXPECT_CHECK=repair`), and a
   miss that no round fixes stays as a residual line, so the reply says so.
-- **Data summaries name the real bindings.** The session block lists the bindings
-  in force, so the summary no longer describes the columns the profile suggests.
+- **Data summaries name the real bindings.** `get_dataset_profile` returns the
+  bindings in force, so the summary no longer describes the columns the profile
+  suggests.
 - **Titles know where the data comes from.** The adapter and the reviewer get a
   fenced dataset context: the screened notes pasted with the data and the source
   of a computed table (formulas, or the names in the user's code, such as
