@@ -362,7 +362,7 @@ def sniff_delimiter(text: str) -> tuple[str | None, SourceFormat]:
         except csv.Error:
             continue
         block = table_block(rows)
-        if not block.values or len(rows[block.start]) != block.width:
+        if not block.values or len(rows[block.start]) < block.width:
             continue
         count = sum(1 for row in rows if len(row) == block.width)
         key = (block.values, count, block.width)
@@ -466,10 +466,12 @@ def table_block(records: Sequence[Sequence[str]]) -> TableBlock:
     that width, and a data row is a record of that width with a value in at least half of
     the value columns.
 
-    * The header is the record right above the first data row; everything above it is
-      left out. When the first record already is a data row, it is the header, as before.
-    * The rows end after the last data row and the records of the table's width right below
-      it whose value cells are missing or values (`2024-01-11,,`); anything after that is
+    * The header is the record right above the first data row, past any wider record that
+      also holds the data (a ragged table's full rows, whose header is wider than its short
+      ones); everything above it is left out. When the first record already is a data row,
+      it is the header, as before.
+    * The rows end after the last data row and the records right below it that hold data at
+      the table's width or wider, or whose value cells are missing (`2024-01-11,,`); anything after that is
       left out, such as a source line or a sentence, also one that its commas split into
       the table's width.
     * At most `MAX_SUMMARY_ROWS` rows at the end whose first filled cell is a summary label
@@ -494,6 +496,11 @@ def table_block(records: Sequence[Sequence[str]]) -> TableBlock:
     def data_row(record: Sequence[str]) -> bool:
         return len(record) == width and 2 * sum(_value_like(record[j]) for j in values) >= len(values)
 
+    def wide_data_row(record: Sequence[str]) -> bool:
+        # A data row with more fields than the most common width: a ragged table's full rows
+        # (`a,b,c` / `1,2,3` / `4,5` / `6,7`), whose header is wider than its short rows.
+        return len(record) >= width and 2 * sum(_value_like(record[j]) for j in values) >= len(values)
+
     def sparse_row(record: Sequence[str]) -> bool:
         # A row of the table that lacks values (`2024-01-11,,`), not a sentence split at its commas.
         return len(record) == width and all(_missing(record[j]) or _value_like(record[j]) for j in values)
@@ -501,8 +508,10 @@ def table_block(records: Sequence[Sequence[str]]) -> TableBlock:
     rows = [index for index, record in enumerate(records) if data_row(record)]
     first, last = rows[0], rows[-1]
     start = max(first - 1, 0)
+    while start > 0 and wide_data_row(records[start]):
+        start -= 1
     end = last + 1
-    while end < len(records) and sparse_row(records[end]):
+    while end < len(records) and (sparse_row(records[end]) or wide_data_row(records[end])):
         end += 1
     below = len(records) - end
     summary = 0

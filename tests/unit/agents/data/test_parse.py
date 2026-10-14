@@ -590,6 +590,17 @@ class TestTableAmongOtherLines:
         assert (plain.csv, plain.profile.warnings) == ("x,y\n1,2\n3,4\n5,6\n", [])
         assert text_only.profile.rows == 3 and text_only.profile.warnings == []
 
+    @pytest.mark.parametrize(
+        "text", ["a,b,c\n1,2,3\n4,5\n6,7\n8,9\n", "a,b,c\n4,5\n6,7\n1,2,3\n"], ids=["full-row-first", "full-row-last"]
+    )
+    def test_a_ragged_table_keeps_its_wider_header_and_full_rows(self, text: str) -> None:
+        """Short rows are padded, as before: the most common width is no new header (#12166 review)."""
+        parsed = parse_dataset(text)
+
+        assert list(parsed.column_dtypes) == ["a", "b", "c"]
+        assert parsed.profile.rows == text.count("\n") - 1
+        assert parsed.profile.warnings[0].endswith("had fewer fields than the header; the missing cells are empty")
+
     def test_the_services_own_csv_keeps_every_row(self) -> None:
         """A `Total` category a sort moved to the end stays in a re-parse of a prepared table (#12166 review)."""
         sorted_csv = "Kategorie,Wert\nA,1\nB,2\nC,4\nTotal,3\n"
