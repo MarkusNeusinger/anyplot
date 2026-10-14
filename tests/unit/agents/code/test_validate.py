@@ -72,7 +72,7 @@ def adaptation_rules(body: str, original: list[str] | None = None) -> set[str]:
 
 class TestInterface:
     def test_profile_literal(self) -> None:
-        assert get_args(Profile) == ("security", "adaptation")
+        assert get_args(Profile) == ("security", "adaptation", "data")
 
     def test_finding_is_frozen_and_hashable(self) -> None:
         finding = Finding("banned-name", "'open' is not allowed", 3)

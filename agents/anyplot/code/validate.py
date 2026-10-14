@@ -119,12 +119,40 @@ Decisions this module takes where the design leaves room:
 * **Placeholder (ADAPTATION).** Exactly one `df = load_user_data()` statement, anywhere;
   any other use of the name `load_user_data` is a separate finding.
 
+**The DATA profile** (`validate_data_code`, owner decision of 2026-10-14) checks a snippet
+that generates the data for a plot, which the root translated to Python from what the
+user pasted or typed (Python, JavaScript, R, a textbook formula) and the renderer runs in
+the same sandbox as a plot (`agents/anyplot/tools/session.py`, `run_data_code`). It is
+every SECURITY rule except `savefig-target`, with its own import surface and three rules
+of its own:
+
+* **Imports.** `COMMON_IMPORTS`, the standard `random` module and the scipy submodules of
+  `SHARED_SCIENCE_IMPORTS` (`DATA_IMPORTS`): no plotting library, no sklearn and no
+  statsmodels (`statsmodels.api.datasets` has network and file helpers). `os` is a banned
+  import here, without the THEME exception: a data snippet reads no environment.
+* **No private attribute at all.** A name with a leading underscore is banned as an
+  attribute on any receiver, not only on an imported name: a snippet never needs one, and
+  `random._inst`, `rng._bit_generator` or `x._mgr` would otherwise reach internals the
+  resolver cannot see behind an expression.
+* **`df` at the top.** A module-level assignment to the name `df` (`data-frame`); the
+  harness takes it from the run's globals (`render/harness.py`, data mode).
+* **No rows from memory.** The ADAPTATION rule `literal-data` runs with a dict counted as
+  a container too (`pd.DataFrame({"x": [...]})`), plus a cap on every numeric literal of
+  the file (`MAX_DATA_LITERAL_NUMBERS`): a snippet computes values, and values written
+  out belong in the data panel as a table, where the dataset judge reads them.
+
+Its messages never mention `load_user_data()`: a file, URL or network finding carries the
+fixed `DATA_IO_MESSAGE` ("paste the file's contents in the data panel instead"), and a
+banned import names the data surface instead (`DATA_IMPORT_ALTERNATIVE`). An
+`if __name__ == "__main__":` guard fails the dunder rule; `code/data_code.py` strips it
+before validation.
+
 Rule ids: `size`, `encoding`, `syntax`, `banned-import` (with `Finding.module`), `star-import`,
 `relative-import`, `os-use`, `module-value`, `banned-name`, `banned-call`, `banned-attribute`, `dunder`,
 `banned-statement`, `url-literal`, `string-length`, `savefig-target` (SECURITY);
 `placeholder-count`, `placeholder-use`, `rng`, `literal-data`, `palette-prefix`
-(ADAPTATION). Findings are sorted by line; messages never echo more than about 60
-characters of code and never echo string literal contents.
+(ADAPTATION); `data-frame` (DATA). Findings are sorted by line; messages never echo
+more than about 60 characters of code and never echo string literal contents.
 """
 
 from __future__ import annotations
@@ -143,10 +171,13 @@ from core.palette import IMPRINT
 from ..schemas import MAX_CODE_CHARS
 
 
-Profile = Literal["security", "adaptation"]
+Profile = Literal["security", "adaptation", "data"]
 
 MAX_STRING_CHARS = 200
 MAX_LITERAL_NUMBERS = 20
+MAX_DATA_LITERAL_NUMBERS = 40
+"""Numeric literals a data snippet may hold in all: a formula with its constants, ranges and seeds needs
+far fewer (a random walk about 5, a textbook formula about 10); a table written out needs more."""
 MAX_MESSAGE_CHARS = 300
 MAX_SNIPPET_CHARS = 60
 PLACEHOLDER = "df = load_user_data()"
@@ -248,6 +279,59 @@ LIBRARY_IMPORTS: dict[str, frozenset[str]] = {
     "matplotlib": _MATPLOTLIB_STACK,
     "seaborn": _MATPLOTLIB_STACK | {"seaborn"},
 }
+# The DATA profile: no plotting stack, no sklearn (its `datasets` fetch over the network) and
+# no statsmodels (`statsmodels.api.datasets` and `webuse` read files and URLs). The standard
+# `random` was walked (Python 3.13.12): its public names compute; `main` parses `sys.argv`
+# and prints, so it is banned on its module (`MODULE_ESCAPES`), and its private names
+# (`_os`, `_urandom`, `_inst`) fall under the DATA profile's private-attribute rule.
+DATA_IMPORTS: frozenset[str] = (
+    COMMON_IMPORTS | {"random"} | frozenset(module for module in SHARED_SCIENCE_IMPORTS if module.startswith("scipy."))
+)
+DATA_IO_MESSAGE = "paste the file's contents in the data panel instead"
+"""The one message of every file, URL or network finding of the DATA profile."""
+DATA_IMPORT_ALTERNATIVE = (
+    "compute the data with numpy, pandas, math, random, statistics or scipy.stats; plotting happens later in the chat"
+)
+"""What a DATA-profile `banned-import` suggests for a module that is no file or network module."""
+DATA_IO_MODULES: frozenset[str] = frozenset(
+    {
+        "io",
+        "csv",
+        "json",
+        "pickle",
+        "shelve",
+        "sqlite3",
+        "urllib",
+        "requests",
+        "httpx",
+        "http",
+        "socket",
+        "ssl",
+        "ftplib",
+        "pathlib",
+        "shutil",
+        "glob",
+        "os",
+        "tempfile",
+        "zipfile",
+        "tarfile",
+        "gzip",
+        "bz2",
+        "lzma",
+        "fileinput",
+        "PIL",
+        "imageio",
+        "openpyxl",
+        "pyarrow",
+        "sklearn.datasets",
+        "statsmodels",
+        "scipy.io",
+        "scipy.datasets",
+        "pandas.io",
+        "numpy.lib.format",
+    }
+)
+"""Modules a DATA-profile `banned-import` answers with `DATA_IO_MESSAGE`: the snippet wanted a file or the network."""
 
 BANNED_NAMES: frozenset[str] = frozenset(
     {
@@ -379,7 +463,7 @@ ESCAPE_ATTRIBUTES: frozenset[str] = frozenset(
         "_datasource",
     }
 )
-MODULE_ESCAPES: frozenset[str] = frozenset({"calendar.main"})
+MODULE_ESCAPES: frozenset[str] = frozenset({"calendar.main", "random.main"})
 """Escapes banned only on their own module, because the bare name is plausible data: `calendar.main`
 sets the process locale through its `-L` option, while `df.main` is a column. Checked against the
 resolved attribute path, `from` imports and import paths; the `module-value` rule keeps the module
@@ -448,6 +532,7 @@ LOGGED_MODULES: frozenset[str] = frozenset(
         *(module for modules in LIBRARY_IMPORTS.values() for module in modules),
         *IMPORT_ALTERNATIVES,
         *THIRD_PARTY_MODULES,
+        *DATA_IO_MODULES,
     }
 )
 """The closed vocabulary of `Finding.module`: no word in it comes from a model or a user."""
@@ -527,6 +612,25 @@ def import_alternative(path: str) -> str:
     return IMPORT_ALTERNATIVES[prefix] if prefix is not None else DEFAULT_IMPORT_ALTERNATIVE
 
 
+def data_import_alternative(path: str) -> str:
+    """What a DATA-profile snippet uses instead of the module `path`: the fixed file message, else the data surface."""
+    return DATA_IO_MESSAGE if _longest_prefix(path, DATA_IO_MODULES) is not None else DATA_IMPORT_ALTERNATIVE
+
+
+def validate_data_code(code: str) -> list[Finding]:
+    """The DATA profile (module docstring): SECURITY without savefig, the data import surface, `df`, no rows.
+
+    Never raises; the caller strips an `if __name__ == "__main__":` guard first
+    (`code/data_code.py`).
+    """
+    tree, findings = _parse(code)
+    if tree is None:
+        return findings
+    scan = _Scan(tree, data=True)
+    scan.data(DATA_IMPORTS)
+    return scan.result()
+
+
 def validate_security(code: str, *, library: str) -> list[Finding]:
     """The SECURITY profile: import surface, reflection, I/O, statements, literals, savefig.
 
@@ -584,11 +688,15 @@ def _is_numeric(node: ast.AST) -> bool:
     return isinstance(node, ast.Constant) and type(node.value) in (int, float, complex)
 
 
-def _numeric_leaves(node: ast.AST) -> int:
-    """Numeric literal leaves of a (nested) list, tuple or set literal."""
-    if not isinstance(node, ast.List | ast.Tuple | ast.Set):
+def _numeric_leaves(node: ast.AST, *, dicts: bool = False) -> int:
+    """Numeric literal leaves of a (nested) list, tuple or set literal, and of a dict's keys and values with `dicts`."""
+    if dicts and isinstance(node, ast.Dict):
+        items = [*(key for key in node.keys if key is not None), *node.values]
+    elif isinstance(node, ast.List | ast.Tuple | ast.Set):
+        items = list(node.elts)
+    else:
         return 0
-    return sum(1 if _is_numeric(elt) else _numeric_leaves(elt) for elt in node.elts)
+    return sum(1 if _is_numeric(item) else _numeric_leaves(item, dicts=dicts) for item in items)
 
 
 def _hex(value: str) -> str:
@@ -683,7 +791,10 @@ def _single_name_target(node: ast.AST) -> ast.Name | None:
 class _Scan:
     """One parsed module, indexed by node type, with parent links and import aliases."""
 
-    def __init__(self, tree: ast.Module) -> None:
+    def __init__(self, tree: ast.Module, *, data: bool = False) -> None:
+        self.tree = tree
+        self.data_profile = data
+        """The DATA profile: its own messages (no `load_user_data()`), no `os` exception, no private attribute."""
         self.by_type: defaultdict[type[ast.AST], list[ast.AST]] = defaultdict(list)
         self.parents: dict[ast.AST, ast.AST] = {}
         for node in ast.walk(tree):
@@ -703,7 +814,15 @@ class _Scan:
 
     def ban_import(self, path: str, reason: str, node: ast.AST) -> None:
         """A `banned-import` finding whose message names the module and what to use instead."""
-        self.add("banned-import", f"import of '{path}' {reason} → {import_alternative(path)}", node, module=path)
+        alternative = data_import_alternative(path) if self.data_profile else import_alternative(path)
+        self.add("banned-import", f"import of '{path}' {reason} → {alternative}", node, module=path)
+
+    def io_hint(self, name: str) -> str:
+        """Where the data comes from instead: for a reader or loader (`read_*`, `load*`, `fetch_*`) in a plot, for any
+        file or network name in a data snippet."""
+        if self.data_profile:
+            return f" → {DATA_IO_MESSAGE}" if name in BANNED_IO or _BANNED_IO_PATTERN.match(name) else ""
+        return _io_hint(name)
 
     def result(self) -> list[Finding]:
         unique = dict.fromkeys(self.findings)
@@ -776,6 +895,46 @@ class _Scan:
         self._check_strings()
         self._check_savefig()
 
+    # -- DATA ----------------------------------------------------------------------------
+
+    def data(self, allowed_imports: frozenset[str]) -> None:
+        """Every SECURITY check but savefig, then `df` at the top and no rows written out (module docstring)."""
+        self._check_imports("data", allowed_imports)
+        self._check_module_values()
+        self._check_names()
+        self._check_attributes()
+        self._check_calls()
+        self._check_buffer_writers()
+        self._check_statements()
+        self._check_strings()
+        self._check_data_frame()
+        self._check_literal_data()
+        self._check_literal_total()
+
+    def _check_data_frame(self) -> None:
+        """A module-level `df = ...` (or `df: T = ...`): the table the harness takes from the run's globals."""
+        for statement in self.tree.body:
+            target = _single_name_target(statement)
+            if target is not None and target.id == "df":
+                return
+            if isinstance(statement, ast.Assign) and any(
+                isinstance(element, ast.Name) and element.id == "df"
+                for target_node in statement.targets
+                if isinstance(target_node, ast.Tuple | ast.List)
+                for element in target_node.elts
+            ):
+                return
+        self.add("data-frame", "assign the table to df at the top level, such as df = pd.DataFrame({...})", None)
+
+    def _check_literal_total(self) -> None:
+        count = sum(1 for constant in self.of(ast.Constant) if _is_numeric(constant))
+        if count > MAX_DATA_LITERAL_NUMBERS:
+            message = (
+                f"{count} numeric literals; the limit is {MAX_DATA_LITERAL_NUMBERS}: code computes the data, "
+                "values written out belong in the data panel as a table"
+            )
+            self.add("literal-data", message, None)
+
     def _check_imports(self, library: str, allowed: frozenset[str]) -> None:
         def denied(path: str) -> bool:
             return _module_allowed(path, DENIED_IMPORTS)
@@ -783,12 +942,13 @@ class _Scan:
         def permitted(path: str) -> bool:
             return _module_allowed(path, allowed) and not denied(path)
 
+        where = "in data code" if self.data_profile else f"with {library}"
         for import_node in self.of(ast.Import):
             for alias in import_node.names:
-                if alias.name == "os":
+                if alias.name == "os" and not self.data_profile:
                     self.os_names.add(alias.asname or "os")
                 elif not permitted(alias.name):
-                    self.ban_import(alias.name, f"is not allowed with {library}", alias)
+                    self.ban_import(alias.name, f"is not allowed {where}", alias)
                 else:
                     self._check_module_path(alias.name, alias)
         for from_node in self.of(ast.ImportFrom):
@@ -802,7 +962,7 @@ class _Scan:
                     continue
                 path = f"{from_node.module}.{alias.name}"
                 if not module_banned and (denied(path) or not (permitted(from_node.module) or permitted(path))):
-                    self.ban_import(path, f"is not allowed with {library}", alias)
+                    self.ban_import(path, f"is not allowed {where}", alias)
                 self._check_function_name(alias.name, alias)
                 if path in MODULE_ESCAPES:
                     self.add("banned-attribute", f"'{path}' is not allowed", alias)
@@ -837,7 +997,7 @@ class _Scan:
         if name in BANNED_ATTRIBUTES or name in ESCAPE_ATTRIBUTES:
             self.add("banned-attribute", f"'{name}' is not allowed", node)
         elif name in BANNED_IO or _BANNED_IO_PATTERN.match(name):
-            self.add("banned-call", f"'{name}' is not allowed{_io_hint(name)}", node)
+            self.add("banned-call", f"'{name}' is not allowed{self.io_hint(name)}", node)
         elif name.startswith("_") and not _DUNDER_NAME.match(name):
             self.add("banned-attribute", f"the private name '{name}' is not allowed", node)
 
@@ -893,7 +1053,8 @@ class _Scan:
     def _check_names(self) -> None:
         for name in self.of(ast.Name):
             if name.id in BANNED_NAMES:
-                self.add("banned-name", f"'{name.id}' is not allowed", name)
+                hint = f" → {DATA_IO_MESSAGE}" if self.data_profile and name.id in ("open", "input") else ""
+                self.add("banned-name", f"'{name.id}' is not allowed{hint}", name)
             if _DUNDER_NAME.match(name.id):
                 self.add("dunder", f"dunder name '{name.id}' is not allowed", name)
         for parameter in self.of(ast.arg):
@@ -917,10 +1078,17 @@ class _Scan:
             elif attribute.attr in BANNED_IO or _BANNED_IO_PATTERN.match(attribute.attr):
                 # `df.load` / `df.read_count`: a column reached as an attribute, not a module function.
                 column_like = self.resolve(attribute.value) is None and attribute.attr.startswith(("read_", "load"))
-                hint = "; a column of that name must be subscripted" if column_like else _io_hint(attribute.attr)
+                hint = (
+                    "; a column of that name must be subscripted"
+                    if column_like and not self.data_profile
+                    else self.io_hint(attribute.attr)
+                )
                 self.add("banned-call", f"'{_snippet(attribute)}' is not allowed{hint}", attribute)
             elif self.resolve(attribute) in MODULE_ESCAPES:
                 self.add("banned-attribute", f"attribute '{_snippet(attribute)}' is not allowed", attribute)
+            elif attribute.attr.startswith("_") and self.data_profile:
+                # `random._inst`, `rng._bit_generator`, `x._mgr`: a data snippet needs no private name on anything.
+                self.add("banned-attribute", f"the private attribute '{_snippet(attribute)}' is not allowed", attribute)
             elif attribute.attr.startswith("_") and self.resolve(attribute.value) is not None:
                 # `collections._sys`, `dataclasses._FuncBuilder`: private helpers of an imported name.
                 self.add("banned-attribute", f"the private attribute '{_snippet(attribute)}' is not allowed", attribute)
@@ -965,14 +1133,12 @@ class _Scan:
     def _check_dispatch_name(self, name: str, method: str, node: ast.AST) -> None:
         """`df.agg("to_csv")` reaches the method by `getattr`: the name is checked as if written."""
         # A buffer writer counts too: `df.agg("to_string", buf="f")` forwards the target (#12167 review).
-        if (
-            name in BANNED_NAMES
-            or name in BANNED_ATTRIBUTES
-            or name in BANNED_IO
-            or name in _BUFFER_WRITERS
-            or _BANNED_IO_PATTERN.match(name)
-        ):
+        if name in BANNED_NAMES or name in BANNED_ATTRIBUTES or name in BANNED_IO or name in _BUFFER_WRITERS:
             self.add("banned-call", f"'{name}' is not allowed as a method name in .{method}()", node)
+        elif match := _BANNED_IO_PATTERN.match(name):
+            # The string is a literal, and the pattern takes any word after `read_`: only its family is named.
+            family = next(prefix for prefix in ("read_", "fetch_", "load") if match.group(0).startswith(prefix))
+            self.add("banned-call", f"'{family}...' is not allowed as a method name in .{method}()", node)
 
     def _check_statements(self) -> None:
         for node_type, label in _BANNED_STATEMENTS.items():
@@ -993,7 +1159,8 @@ class _Scan:
             if _DUNDER_IN_TEXT.search(text):
                 self.add("dunder", "string literal contains a dunder identifier", constant)
             if _URL_IN_TEXT.search(text):
-                self.add("url-literal", "string literal contains a URL or a file:/data: scheme", constant)
+                hint = f" → {DATA_IO_MESSAGE}" if self.data_profile else ""
+                self.add("url-literal", f"string literal contains a URL or a file:/data: scheme{hint}", constant)
 
     def _check_savefig(self) -> None:
         found = False
@@ -1074,15 +1241,18 @@ class _Scan:
                 self.add("rng", f"'{name}' may only be used as {name}{_RNG_ALLOWED_TEXT}(...)", use)
 
     def _check_literal_data(self) -> None:
-        for node_type in (ast.List, ast.Tuple, ast.Set):
+        # In a data snippet a dict is a container too: `pd.DataFrame({"x": [...], "y": [...]})` is one table.
+        containers: tuple[type[ast.AST], ...] = (ast.List, ast.Tuple, ast.Set)
+        if self.data_profile:
+            containers = (*containers, ast.Dict)
+        source = "values written out belong in the data panel as a table" if self.data_profile else "data comes from df"
+        for node_type in containers:
             for literal in self.by_type[node_type]:
-                if isinstance(self.parents.get(literal), ast.List | ast.Tuple | ast.Set):
+                if isinstance(self.parents.get(literal), containers):
                     continue  # counted at the outermost container
-                count = _numeric_leaves(literal)
+                count = _numeric_leaves(literal, dicts=self.data_profile)
                 if count > MAX_LITERAL_NUMBERS:
-                    message = (
-                        f"literal with {count} numeric values; the limit is {MAX_LITERAL_NUMBERS}, data comes from df"
-                    )
+                    message = f"literal with {count} numeric values; the limit is {MAX_LITERAL_NUMBERS}, {source}"
                     self.add("literal-data", message, literal)
 
     def _check_palette(self, original_palette: list[str]) -> None:
