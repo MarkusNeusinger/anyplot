@@ -52,7 +52,8 @@ class TestDefaults:
         assert settings.request_deadline_s == 540  # a round with self-review takes about 60 s; never cut short
         assert settings.soft_deadline_s == 480
         assert settings.reviewer_mode == "catalogue" and settings.ship_best and settings.self_review
-        assert (settings.review_bar, settings.status_bar) == (1.0, 0.95)
+        assert (settings.review_bar, settings.status_bar, settings.status_score) == (0.95, 0.95, 0)
+        assert (settings.gate_repair, settings.repair_self_review) == ("review", False)
         assert (settings.root_effort, settings.adapter_effort, settings.reviewer_effort) == ("medium", "high", "high")
         assert settings.reviewer_thinking_budget == 4096
         assert settings.allowed_callers == []

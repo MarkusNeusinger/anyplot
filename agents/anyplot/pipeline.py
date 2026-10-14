@@ -27,14 +27,16 @@ eval harness may set one or three):
    theme the call asks for (`PipelineArgs.theme`, light by default) through the
    render backend, and the host gates (`render/gates.py`) on exactly that theme;
 4. **review**: on the first render that passes the host gates on the exact canvas
-   and either left no feedback or came from the last allowed attempt, and once more
-   on the repaired render after a rejection (`MAX_REVIEWS` reviewer calls in all);
-   the reviewer agent sees the rendered theme's PNG, so each of its image defects is
+   (with `AGENT_GATE_REPAIR=first`: and either left no feedback or came from the last
+   allowed attempt), and once more on the repaired render after a rejection
+   (`MAX_REVIEWS` reviewer calls in all, every round with `AGENT_SHIP_BEST`); the
+   reviewer agent sees the rendered theme's PNG, so each of its image defects is
    filed under that theme, whatever theme the reviewer named;
 5. **repair**: when an attempt left feedback (an answer that missed the schema or was
    cut off at the output limit, each with its own line, failed edits, validator
-   findings, a failed render, gate defects, reviewer defects) and another attempt is
-   allowed, the next attempt gets it, with a full file allowed from attempt 2 on.
+   findings, a failed render, a missed canvas, reviewer defects, and measured
+   findings that the review left in the render) and another attempt is allowed, the
+   next attempt gets it, with a full file allowed from attempt 2 on.
 
 The other theme of a finished version is rendered later by the theme toggle
 (`theme_render.py`) from the stored run form, without any model call.
@@ -51,12 +53,14 @@ the render in progress; its clamped timeout starts when it runs. The exported
 `plot.py` names the rendered theme in its run line.
 
 Every path that is not cancelled yields exactly one `Event(output=PlotResult)` as a
-JSON dict. `ok` means the shipped render passed the host gates on the exact canvas
-and the reviewer passed exactly that render; `needs_attention` ships a render with
+JSON dict. `ok` means the shipped render passed the host gates on the exact canvas,
+has no measured finding left (no advisory gate line, no ADAPTATION finding), and the
+reviewer passed exactly that render (in `catalogue` mode: at or above the ship bar,
+`AGENT_STATUS_BAR` and `AGENT_STATUS_SCORE`); `needs_attention` ships a render with
 residual defect lines (reviewer lines that no reviewed render fixed, adaptation
-findings, the G10 line of a render whose text has characters without a glyph, which a
-reviewer `ok` does not erase, a padded canvas, or no review because the budget or the
-deadline ran out);
+findings, every advisory gate line of the shipped render, such as clipped or
+overlapping text, which no review score erases, a padded canvas, or no review because
+the budget or the deadline ran out);
 `failed` names its reason; `not_ready` comes before any model call and before the run
 queue. A ready run first takes the turn's run-queue slot (`ledger.run_slot`, set by the
 `/messages` route), so only a turn that renders waits in the queue; the soft deadline
@@ -127,7 +131,7 @@ from .language import DEFAULT_LANGUAGE, same_language
 from .plugins.ledger import RequestLedger, attribution, budget_allows, ledger_for
 from .policy import DATA_PREAMBLE, fence
 from .render.contract import RendererUnavailable, RenderJob, Theme
-from .render.gates import GLYPH_LINE_PREFIX, data_rows, evaluate
+from .render.gates import data_rows, evaluate
 from .render.runtimes.python import PythonRuntime
 from .schemas import (
     MAX_CHANGE_CHARS,
@@ -167,12 +171,17 @@ logger = logging.getLogger(__name__)
 STATUS_KEY = "anyplot_status"
 SELF_REVIEW_LINE = (
     "Self-review: the attached image is the render of the current code with the user's data. Before it goes "
-    "to the reviewer, check it against the self-review checklist in your instructions, row by row, and against "
-    "the spec: fix what falls short. When the notes also name the previous round's findings, check that your "
-    "changes fixed them in the image. What the change request and the earlier requests set stays as the user "
-    "asked, whatever the checklist says. If nothing needs fixing, answer with an empty edit list."
+    "to the reviewer, check it against each technical criterion of the rubric in your instructions (VQ, SC, DQ) "
+    "and against the spec: fix what falls short. When the notes also name the previous round's findings, check "
+    "that your changes fixed them in the image. What the change request and the earlier requests set stays as "
+    "the user asked, whatever the rubric says. If nothing needs fixing, answer with an empty edit list."
 )
 """The feedback of the self-review attempt (`AGENT_SELF_REVIEW`); the render itself is attached by the adapter's callback."""
+MEASURED_LINE = (
+    "Measured: the server's checks found the lines below in this render's code or image; fix each of them, "
+    "or the plot goes to a repair round."
+)
+"""Heads the measured findings the self-review gets with `AGENT_GATE_REPAIR=review`."""
 SELF_REVIEW_HIGHLIGHT_LINE = (
     "Design: most plots need no highlight, and none is the default. Add one only when the image shows something "
     "a reader would likely miss or that changes how the data reads (a clear outlier, a break or turning point, "
@@ -220,6 +229,8 @@ without tools, so it can only be the closing reply."""
 PADDED_LINE = "canvas padded after render ({theme})"
 """The residual line of a shipped render whose canvas was padded; it names the rendered theme."""
 NOT_REVIEWED_LINE = "the plot was not reviewed ({why})"
+LOW_SCORE_LINE = "the review scored the plot {score} of 100, below the ship score of {bar}"
+"""The residual line of a render that meets the ship bar but not `AGENT_STATUS_SCORE`."""
 BLOCKING_RULES = frozenset({"placeholder-count", "placeholder-use", "syntax", "size", "encoding"})
 """ADAPTATION findings that keep the code from running: without one placeholder there is no loader."""
 ADAPTATION_IDS = {"rng": "DQ-03", "literal-data": "DQ-03", "palette-prefix": "VQ-07"}
@@ -791,15 +802,21 @@ def finish(run: Run) -> PlotResult:
         residual.append(PADDED_LINE.format(theme=run.theme))
         if shipped.canvas_line:
             residual.append(shipped.canvas_line)
+    # The measured findings are facts of the shipped render, reviewed or not: the ADAPTATION findings and
+    # every advisory gate line (clipping G3, annotations outside G5, overlap G7, G8, G9, missing glyphs G10).
+    # No review score hides them (until 2026-10-14 only G10 stayed above the ship bar).
     residual += shipped.adaptation_lines
-    # A measured missing glyph is a fact of the shipped render, reviewed or not (G10).
-    residual += [line for line in shipped.advisory_lines if line.startswith(GLYPH_LINE_PREFIX)]
-    # Shown without notes when it meets the ship bar (`AGENT_STATUS_BAR`; a checklist pass), although the
-    # review may still have asked for a repair: the owner's rule is no residual notes above the bar. The
-    # review bar decides the repair only, so a pass below the ship bar keeps its notes.
+    residual += shipped.advisory_lines
+    # The review's notes are left out when the render meets the ship bar (`AGENT_STATUS_BAR` and
+    # `AGENT_STATUS_SCORE`; a checklist pass), although the review may still have asked for a repair:
+    # the owner's rule is no review notes above the bar. The review bar decides the repair only, so a
+    # pass below the ship bar keeps its notes.
     meets_bar = shipped.reviewed_ok if shipped.status_ok is None else shipped.status_ok
-    if meets_bar is not True:
-        residual += shipped.advisory_lines
+    status_score = get_settings().status_score
+    if meets_bar is True and shipped.review_score is not None and shipped.review_score < status_score:
+        # Every technical point the bar asks for, but a lower total (Design Excellence) than the ship score.
+        residual.append(LOW_SCORE_LINE.format(score=shipped.review_score, bar=status_score))
+    elif meets_bar is not True:
         if shipped.review_score is not None and shipped.review_lines:
             residual += shipped.review_lines
         elif run.review_lines:
@@ -1121,7 +1138,12 @@ async def _attempts(
             break
         # The proofread, or its retry after a failed check, is this round's last adapter call.
         proofreading = round_number(run, attempt) in run.proofread_rounds
-        self_review_due = settings.self_review and not proofreading
+        # A repair round proofreads only with `AGENT_REPAIR_SELF_REVIEW`: the review re-checks it anyway.
+        self_review_due = (
+            settings.self_review
+            and not proofreading
+            and (round_number(run, attempt) == 1 or settings.repair_self_review)
+        )
         # This call and the root's closing reply: a plot may ship from any attempt, and ADK's
         # call cap would refuse the reply the Budget plugin's exemption cannot admit.
         if not budget_allows(ledger, services.usage, settings, next_calls=2):
@@ -1283,11 +1305,15 @@ async def _attempts(
         else:
             run.padded = candidate
         feedback = [*report.defects, *adaptation_lines]
-        # Feedback goes to the next attempt before any review while one is allowed; a render
-        # without feedback, or from the last allowed attempt, is reviewed (the advisory lines
-        # kept as gate notes), again after a rejection, up to `MAX_REVIEWS` calls. With the
-        # default two attempts: attempt 1 repairs or is reviewed, attempt 2 is reviewed.
-        if not report.canvas_ok or (feedback and round_number(run, attempt) < rounds):
+        # The render's measured findings: what the code, not a model, found in it.
+        measured = [*report.advisory, *adaptation_lines]
+        # A missed canvas always goes to the next attempt before any review. With
+        # `AGENT_GATE_REPAIR=first` the measured findings do too while an attempt is allowed;
+        # with `review` they go to the self-review and the review, and a round whose render
+        # still has them after the review is repaired with them (below). A render is reviewed
+        # again after a rejection, up to the review limit.
+        gates_first = settings.gate_repair == "first"
+        if not report.canvas_ok or (gates_first and feedback and round_number(run, attempt) < rounds):
             _end_attempt(run, "gates", feedback)
             continue
         if self_review_due and attempt < calls:
@@ -1305,6 +1331,8 @@ async def _attempts(
             feedback = [
                 SELF_REVIEW_LINE,
                 *([SELF_REVIEW_HIGHLIGHT_LINE] if settings.highlights == "data" else []),
+                # This render's measured findings first: they are facts of the image the adapter sees.
+                *([MEASURED_LINE, *measured] if measured and not gates_first else []),
                 *round_findings,
             ]
             _end_attempt(run, "self_review", feedback)
@@ -1375,18 +1403,23 @@ async def _attempts(
             run.best_scored is None or verdict.score >= (run.best_scored.review_score or 0)
         ):
             run.best_scored = candidate
-        if verdict.ok:
+        # A measured finding the review passed over still gets the repair (`AGENT_GATE_REPAIR=review`):
+        # a measurement is code, not a verdict, so no review score waives it.
+        open_measured = [] if gates_first else measured
+        if verdict.ok and not (open_measured and round_number(run, attempt) < rounds):
             _end_attempt(run, "reviewer_ok")
             return
-        run.review_lines = list(verdict.lines)
-        feedback = list(run.review_lines)
+        if not verdict.ok:
+            run.review_lines = list(verdict.lines)
+        # The review passed but measured findings are left: the repair gets those alone.
+        feedback = [*open_measured, *([] if verdict.ok else run.review_lines)]
         run.reviewed_render_id = candidate.render_id
         if settings.repair_sees_render and candidate.render_id:
             # The repair sees the render the review's findings describe (`AGENT_REPAIR_SEES_RENDER`).
             ledger.adapter_renders = [
                 ("Render the review's findings describe, before your repair", candidate.render_id)
             ]
-        _end_attempt(run, "reviewer_defects", feedback)
+        _end_attempt(run, "gates" if verdict.ok else "reviewer_defects", feedback)
 
 
 def _on_theme(defect: Defect, theme: Theme) -> Defect:

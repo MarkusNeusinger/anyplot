@@ -89,9 +89,28 @@ async def test_the_first_version_is_proofread_then_reviewed_in_one_round(
     assert (review["verdict"], review["score"], review["technical"]) == ("ok", 84, 1.0)
 
 
+async def test_a_repair_goes_to_the_review_without_a_proofread(client: httpx.AsyncClient, swap_models) -> None:
+    """`AGENT_REPAIR_SELF_REVIEW` is off: the review re-checks the repair, so only round 1 proofreads."""
+    script = default_script(plans=[SCATTER_PLAN, EMPTY_PLAN, SECOND_PLAN])
+    script["reviewer"] = [{"json": score(**{"VQ-03": 3})}, {"json": score()}]
+    fake = swap_models("gemini", script)
+    sid = await open_session(client)
+
+    events = await create_plot(client, sid)
+
+    plot = next(data for name, data in events if name == "plot")
+    assert (plot["status"], plot["attempts"]) == ("ok", 2)
+    assert [(r["attempt"], r["outcome"]) for r in plot["rounds"]] == [(1, "review"), (2, "ok")]
+    inputs = adapter_inputs(fake)
+    assert len(inputs) == 3  # adapt, proofread, repair
+    assert "24 sparse markers" in inputs[2] and SELF_REVIEW_LINE[:40] not in inputs[2]
+
+
 async def test_a_repair_is_proofread_with_its_findings_before_the_second_review(
-    client: httpx.AsyncClient, swap_models
+    client: httpx.AsyncClient, swap_models, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    monkeypatch.setenv("AGENT_REPAIR_SELF_REVIEW", "true")
+    get_settings.cache_clear()
     script = default_script(plans=[SCATTER_PLAN, EMPTY_PLAN, SECOND_PLAN, EMPTY_PLAN])
     script["reviewer"] = [{"json": score(**{"VQ-03": 3})}, {"json": score()}]
     fake = swap_models("gemini", script)
@@ -112,6 +131,7 @@ async def test_with_repair_sees_render_the_repair_sees_before_and_its_proofread_
     client: httpx.AsyncClient, swap_models, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setenv("AGENT_REPAIR_SEES_RENDER", "true")
+    monkeypatch.setenv("AGENT_REPAIR_SELF_REVIEW", "true")
     get_settings.cache_clear()
     script = default_script(plans=[SCATTER_PLAN, EMPTY_PLAN, SECOND_PLAN, EMPTY_PLAN])
     script["reviewer"] = [{"json": score(**{"VQ-03": 3})}, {"json": score()}]
@@ -134,7 +154,7 @@ async def test_a_repair_whose_edits_do_not_apply_gets_a_retry_in_the_same_round(
 ) -> None:
     """The c5 incident of 2026-10-13: a repair's edits missed, the round ended and an unreviewed render shipped."""
     missing = {"edits": [{"find": "this text is not in the code", "replace": "x"}], "changes": []}
-    script = default_script(plans=[SCATTER_PLAN, EMPTY_PLAN, missing, SECOND_PLAN, EMPTY_PLAN])
+    script = default_script(plans=[SCATTER_PLAN, EMPTY_PLAN, missing, SECOND_PLAN])
     script["reviewer"] = [{"json": score(**{"VQ-03": 3})}, {"json": score()}]
     fake = swap_models("gemini", script)
     sid = await open_session(client)
@@ -149,7 +169,7 @@ async def test_a_repair_whose_edits_do_not_apply_gets_a_retry_in_the_same_round(
         (2, "ok", True),
     ]
     inputs = adapter_inputs(fake)
-    assert len(inputs) == 5  # adapt, proofread, repair (missed), retry, proofread the retry
+    assert len(inputs) == 4  # adapt, proofread, repair (missed), retry
     assert "this text is not in the code" in inputs[3]  # the retry is told which edit missed
 
 
@@ -231,9 +251,11 @@ async def test_a_review_that_cannot_back_its_score_is_asked_once_more(
 
 
 async def test_the_best_scored_version_ships_when_the_repair_scores_lower(
-    client: httpx.AsyncClient, swap_models
+    client: httpx.AsyncClient, swap_models, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    script = default_script(plans=[SCATTER_PLAN, EMPTY_PLAN, SECOND_PLAN, EMPTY_PLAN])
+    monkeypatch.setenv("AGENT_REVIEW_BAR", "1.0")
+    get_settings.cache_clear()
+    script = default_script(plans=[SCATTER_PLAN, EMPTY_PLAN, SECOND_PLAN])
     # Round 1 loses one point (below the review bar, above the ship bar); the repair loses four.
     script["reviewer"] = [{"json": score(**{"VQ-05": 1})}, {"json": score(**{"VQ-02": 4})}]
     swap_models("gemini", script)
@@ -246,6 +268,20 @@ async def test_the_best_scored_version_ships_when_the_repair_scores_lower(
     assert shipped == [1]
     # Round 1 meets the ship bar (54 of 55 technical points), so it shows without notes.
     assert (plot["status"], plot["residual_defects"]) == ("ok", [])
+
+
+async def test_two_lost_technical_points_need_no_repair(client: httpx.AsyncClient, swap_models) -> None:
+    """`AGENT_REVIEW_BAR` 0.95: 53 of 55 technical points (96 %) ship from round 1 without notes."""
+    script = default_script(plans=[SCATTER_PLAN, EMPTY_PLAN])
+    script["reviewer"] = [{"json": score(**{"VQ-03": 2})}]
+    fake = swap_models("gemini", script)
+    sid = await open_session(client)
+
+    events = await create_plot(client, sid)
+
+    plot = next(data for name, data in events if name == "plot")
+    assert (plot["status"], plot["attempts"], plot["residual_defects"]) == ("ok", 1, [])
+    assert len(adapter_inputs(fake)) == 2  # adapt, proofread
 
 
 async def test_below_the_ship_bar_the_review_lines_are_the_notes(client: httpx.AsyncClient, swap_models) -> None:
