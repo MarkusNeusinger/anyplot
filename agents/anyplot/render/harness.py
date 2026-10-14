@@ -50,6 +50,28 @@ copies it to `/opt/anyplot/harness.py`. In order it:
    file returns or raises; an exception still propagates, so its traceback reaches
    stderr and the exit code stays non-zero.
 
+**Data mode** (`python -I /opt/anyplot/harness.py --data snippet.py`, the renderer's
+`POST /run-data`): the harness runs a data-generating snippet (`run_data_code`,
+`agents/anyplot/tools/session.py`) instead of a plot. It prints the start line, sets the
+same limits, imports numpy and pandas (pandas loads `ctypes` at import time), opens
+`out.csv` for writing, and only then arms `DataGuard` with `sys.addaudithook`: from
+there on the interpreter refuses `ctypes.*`, `os.system`, `os.exec*`, `os.posix_spawn`,
+`os.spawn*`, `os.fork*`, `subprocess.*`, `socket.*`, every filesystem change
+(`os.remove`, `os.rename`, `os.mkdir`, `os.chmod`, ...) and every `open` for writing.
+An audit hook cannot be removed, and the snippet cannot reach it. It runs the snippet
+with `runpy.run_path`, catches everything it raises (its traceback goes to stderr, the
+exit code is `DATA_EXIT["error"]`, so the snippet cannot choose an exit code), and
+takes `df` from the returned globals: a pandas DataFrame whose columns are no
+MultiIndex, with a non-default index turned into columns (`reset_index`), its column
+names as text, at most `DATA_MAX_ROWS` rows and `DATA_MAX_COLUMNS` columns and at most
+`DATA_MAX_CSV_BYTES` of CSV (the parser's caps: `agents/anyplot/schemas.py` and
+`data/parse.py`; a test pins them equal). It writes the CSV through the handle it opened
+before the guard; a run the guard refused at any point writes nothing, even when the
+snippet caught the error. Each refusal has its own exit code (`DATA_EXIT`); the host
+maps a code to a fixed message and trusts nothing the snippet printed. The plot mode
+does not arm the guard: savefig and the probe write files, and a render sweep of the
+catalogue under the guard has not been run (it needs the renderer image).
+
 The probe feeds the advisory gates G3 (clipped text), G5 (annotation outside its
 axes), G7 (overlapping text: tick labels among themselves, any other text with any), G8 (more point marks than data rows), G9 (more
 plotted points than any dataset within the parser's caps can hold) and G10
@@ -61,6 +83,7 @@ as a verdict.
 """
 
 import functools
+import io
 import itertools
 import json
 import logging
@@ -70,6 +93,7 @@ import resource
 import runpy
 import shutil
 import sys
+import traceback
 
 
 PROBE_LIMIT = 400  # text boxes recorded per figure
@@ -125,6 +149,95 @@ POLAR_AXES_LIMIT = 4  # polar axes the probe describes per figure
 GLYPH_SAMPLE_LIMIT = 16  # code points the probe lists; the host shows a few of them
 MISSING_GLYPHS: set[int] = set()  # code points reported by matplotlib's text layout, this process
 MISSING_MATH_GLYPHS: set[int] = set()  # code points reported by mathtext (no fallback inside `$…$`)
+
+DATA_FLAG = "--data"
+DATA_OUT_FILE = "out.csv"
+DATA_MAX_ROWS = 20_000  # agents/anyplot/schemas.py MAX_ROWS
+DATA_MAX_COLUMNS = 50  # agents/anyplot/schemas.py MAX_COLUMNS
+DATA_MAX_CSV_BYTES = 200 * 1024  # agents/anyplot/data/parse.py MAX_INPUT_BYTES
+DATA_EXIT = {
+    "ok": 0,
+    "error": 1,
+    "usage": 2,
+    "no_frame": 3,
+    "frame_shape": 4,
+    "too_many_rows": 5,
+    "too_many_columns": 6,
+    "too_large": 7,
+    "blocked": 8,
+}
+"""Exit codes of data mode: `error` is an exception in the snippet (its traceback on stderr), `no_frame` no `df`
+or one that is no DataFrame, `frame_shape` MultiIndex columns or an index that cannot become columns,
+`blocked` an operation `DataGuard` refused."""
+DATA_BLOCKED_PREFIXES = (
+    "ctypes.",
+    "os.system",
+    "os.exec",
+    "os.posix_spawn",
+    "os.spawn",
+    "os.fork",
+    "os.kill",
+    "os.killpg",
+    "os.remove",
+    "os.rename",
+    "os.rmdir",
+    "os.mkdir",
+    "os.symlink",
+    "os.link",
+    "os.chmod",
+    "os.chown",
+    "os.chflags",
+    "os.truncate",
+    "os.utime",
+    "os.putenv",
+    "os.unsetenv",
+    "subprocess.",
+    "socket.",
+    "shutil.",
+    "pty.",
+    "webbrowser.",
+    "urllib.Request",
+    "http.client.",
+    "ftplib.",
+    "smtplib.",
+    "sys.addaudithook",
+)
+"""Audit events `DataGuard` refuses once it is armed (https://docs.python.org/3/library/audit_events.html)."""
+_WRITE_MODES = frozenset("wax+")
+_WRITE_FLAGS = os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_TRUNC | os.O_APPEND
+
+
+class DataGuard:
+    """The audit hook of data mode: refuses native code, processes, sockets and writes once armed.
+
+    `blocked` keeps the first refused event's family, so a run whose snippet caught the
+    error is refused all the same.
+    """
+
+    def __init__(self):
+        self.armed = False
+        self.blocked = None
+
+    def refuses(self, event, args):
+        """Whether `event` with `args` is one the armed guard refuses."""
+        if event == "open":
+            mode = args[1] if len(args) > 1 else None
+            flags = args[2] if len(args) > 2 else 0
+            if isinstance(mode, str):
+                return bool(_WRITE_MODES & set(mode))
+            return isinstance(flags, int) and bool(flags & _WRITE_FLAGS)
+        return event.startswith(DATA_BLOCKED_PREFIXES)
+
+    def __call__(self, event, args):
+        if not self.armed or not self.refuses(event, args):
+            return
+        if self.blocked is None:
+            self.blocked = event.split(".", 1)[0]
+        raise RuntimeError("blocked by the data sandbox")
+
+    def arm(self):
+        sys.addaudithook(self)
+        self.armed = True
 
 
 def _limit(kind: int, value: int) -> None:
@@ -593,7 +706,76 @@ def install_probe(theme):
     Figure.savefig = savefig
 
 
+def frame_csv(frame):
+    """The CSV text of a snippet's `df`, or the `DATA_EXIT` key of why there is none."""
+    import pandas as pd
+
+    if not isinstance(frame, pd.DataFrame):
+        return None, "no_frame"
+    if isinstance(frame.columns, pd.MultiIndex):
+        return None, "frame_shape"
+    index = frame.index
+    default_index = isinstance(index, pd.RangeIndex) and index.start == 0 and index.step == 1 and index.name is None
+    if not default_index:
+        try:
+            frame = frame.reset_index()
+        except (ValueError, TypeError):  # an index name that is also a column, a MultiIndex level clash
+            return None, "frame_shape"
+    frame = frame.copy()
+    frame.columns = [str(column) for column in frame.columns]
+    if len(frame.index) > DATA_MAX_ROWS:
+        return None, "too_many_rows"
+    if len(frame.columns) > DATA_MAX_COLUMNS:
+        return None, "too_many_columns"
+    buffer = io.StringIO()
+    frame.to_csv(buffer, index=False)
+    text = buffer.getvalue()
+    if len(text.encode("utf-8", errors="surrogatepass")) > DATA_MAX_CSV_BYTES:
+        return None, "too_large"
+    return text, None
+
+
+def main_data(path, guard=None):
+    """Data mode (module docstring): run the snippet under `DataGuard` and write its `df` to `out.csv`."""
+    _report("start")
+    set_limits()
+    sys.dont_write_bytecode = True  # no .pyc write, which the guard would refuse
+    import ctypes  # noqa: F401  (pandas loads it anyway; its load opens a library, so before the guard)
+
+    import numpy  # noqa: F401
+    import pandas  # noqa: F401
+
+    guard = guard if guard is not None else DataGuard()
+    with open(DATA_OUT_FILE, "w", encoding="utf-8", newline="") as out:
+        guard.arm()
+        try:
+            namespace = runpy.run_path(path, run_name="__main__")
+        except BaseException:  # SystemExit included: the snippet never chooses the exit code
+            traceback.print_exc()
+            return DATA_EXIT["blocked"] if guard.blocked else DATA_EXIT["error"]
+        finally:
+            try:
+                _report("end", **_usage())
+            except Exception:
+                pass
+        if guard.blocked:
+            return DATA_EXIT["blocked"]
+        try:
+            text, refusal = frame_csv(namespace.get("df"))
+        except Exception:
+            traceback.print_exc()
+            return DATA_EXIT["blocked"] if guard.blocked else DATA_EXIT["error"]
+        if guard.blocked:  # a pandas method the snippet replaced reached the guard
+            return DATA_EXIT["blocked"]
+        if refusal is not None:
+            return DATA_EXIT[refusal]
+        out.write(text)
+    return DATA_EXIT["ok"]
+
+
 def main(argv):
+    if len(argv) == 3 and argv[1] == DATA_FLAG:
+        return main_data(argv[2])
     _report("start")
     if len(argv) != 2:
         print("usage: harness.py <plot file>", file=sys.stderr)
