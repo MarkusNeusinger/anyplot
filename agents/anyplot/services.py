@@ -74,6 +74,10 @@ class CodeVersion:
     """The theme the run rendered and the reviewer saw."""
     language: str = "en"
     """The session language the version's plot text was written in."""
+    requests: list[str] = field(default_factory=list)
+    """The change requests the version carries out, oldest first: its lineage's earlier ones and its own,
+    within `MAX_USER_REQUESTS` and `MAX_USER_REQUESTS_CHARS`. A change of this version hands them to the
+    adapter and the reviewer as the user's standing decisions (`pipeline.standing_requests`)."""
     themes: dict[Theme, ThemeRender] = field(default_factory=dict)
     """Every theme rendered for the version, with its gate outcome; a rendered one has its PNG in the render."""
 

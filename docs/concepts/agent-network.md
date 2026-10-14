@@ -141,6 +141,11 @@ Since 2026-10-13 the defaults change the loop in four places (the measurements a
 - Before each review, after a repair too, the adapter proofreads its own render against the rubric's technical rows (`AGENT_SELF_REVIEW`). The proofread is part of the round, never a round of its own.
 - An adapter answer that fails its check gets one more call in the same round (`AGENT_CHECK_RETRY`).
 
+Since 2026-10-14 two more rules hold (the owner's live test of that day):
+
+- `PlotResult.changes` lists the notes of every adapter call up to the shipped render whose plan changed the code. A proofread that changed nothing adds nothing, so its "already present" notes never replace the real changes, and a shipped earlier round reports its own.
+- What the user asked for wins over the rubric. Each version keeps the change requests it carries out (`CodeVersion.requests`); a change of it passes them to every adapter call and to the reviewer as `user_requests`, fenced as user text, and the prompts keep them as the user's standing decisions: never a defect, changed only when the current change request asks for it.
+
 #### Bounds
 
 The owner decided the queue, the rate and the serial renders on 2026-10-09, after spikes S and S2 showed that one instance with 4 GiB serves one sandbox at a time safely.

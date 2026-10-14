@@ -9,13 +9,23 @@ from typing import Any
 import httpx
 import pytest
 
-from agents.anyplot.pipeline import SELF_REVIEW_LINE
+from agents.anyplot.pipeline import EARLIER_REQUESTS_HEADING, SELF_REVIEW_LINE
 from agents.anyplot.scoring import DE_DEFAULTS, SCORED
+from agents.anyplot.services import get_services
 from agents.anyplot.settings import get_settings
 
 from .conftest import CHECKLIST_FLOW
-from .fakes import SCATTER_PLAN, default_script
-from .test_service_flow import adapter_inputs, attribution_lines, client, create_plot, open_session, runtime
+from .fakes import ROOT_REPLY, SCATTER_PLAN, default_script
+from .test_service_flow import (
+    HEADERS,
+    adapter_inputs,
+    attribution_lines,
+    client,
+    create_plot,
+    open_session,
+    parse_sse,
+    runtime,
+)
 
 
 __all__ = ["client", "runtime"]  # fixtures used by name
@@ -250,3 +260,116 @@ async def test_below_the_ship_bar_the_review_lines_are_the_notes(client: httpx.A
     plot = next(data for name, data in events if name == "plot")
     assert plot["status"] == "needs_attention"
     assert any("sparse markers" in line for line in plot["residual_defects"])
+
+
+# --- What a run reports it changed (the live test of 2026-10-14) ---------------------------
+
+NOTHING_TO_FIX: dict[str, Any] = {"edits": [], "changes": ["Red line and axis titles already present"]}
+"""A proofread that changes nothing but writes notes about the code the adaptation wrote."""
+
+
+async def test_a_proofread_that_changes_nothing_keeps_the_rounds_changes(
+    client: httpx.AsyncClient, swap_models
+) -> None:
+    script = default_script(plans=[SCATTER_PLAN, NOTHING_TO_FIX])
+    script["reviewer"] = [{"json": score()}]
+    swap_models("gemini", script)
+    sid = await open_session(client)
+
+    events = await create_plot(client, sid)
+
+    plot = next(data for name, data in events if name == "plot")
+    assert plot["status"] == "ok"
+    assert plot["changes"] == SCATTER_PLAN["changes"]
+
+
+async def test_a_proofread_with_edits_adds_its_changes(client: httpx.AsyncClient, swap_models) -> None:
+    script = default_script(plans=[SCATTER_PLAN, SECOND_PLAN])
+    script["reviewer"] = [{"json": score()}]
+    swap_models("gemini", script)
+    sid = await open_session(client)
+
+    events = await create_plot(client, sid)
+
+    plot = next(data for name, data in events if name == "plot")
+    assert plot["changes"] == [*SCATTER_PLAN["changes"], "Larger markers"]
+
+
+async def test_a_shipped_repair_reports_the_changes_its_code_carries(client: httpx.AsyncClient, swap_models) -> None:
+    """The repair builds on round 1's code, so the user's request stays among the changes it reports."""
+    script = default_script(plans=[SCATTER_PLAN, EMPTY_PLAN, SECOND_PLAN, NOTHING_TO_FIX])
+    script["reviewer"] = [{"json": score(**{"VQ-03": 3})}, {"json": score()}]
+    swap_models("gemini", script)
+    sid = await open_session(client)
+
+    events = await create_plot(client, sid)
+
+    plot = next(data for name, data in events if name == "plot")
+    assert [r["attempt"] for r in plot["rounds"] if r["shipped"]] == [2]
+    assert plot["changes"] == [*SCATTER_PLAN["changes"], "Larger markers"]
+
+
+async def test_ship_best_of_round_1_reports_round_1s_changes(client: httpx.AsyncClient, swap_models) -> None:
+    script = default_script(plans=[SCATTER_PLAN, EMPTY_PLAN, SECOND_PLAN, EMPTY_PLAN])
+    script["reviewer"] = [{"json": score(**{"VQ-05": 1})}, {"json": score(**{"VQ-02": 4})}]
+    swap_models("gemini", script)
+    sid = await open_session(client)
+
+    events = await create_plot(client, sid)
+
+    plot = next(data for name, data in events if name == "plot")
+    assert [r["attempt"] for r in plot["rounds"] if r["shipped"]] == [1]
+    assert plot["changes"] == SCATTER_PLAN["changes"]  # not round 2's "Larger markers"
+
+
+# --- An earlier request stands (the live test of 2026-10-14) -------------------------------
+
+TITLE_REQUEST = "set the title to Vienna 2025"
+MARKER_REQUEST = "make the markers bigger"
+TITLE_PLAN: dict[str, Any] = {
+    "edits": [{"find": 'title = "Exam Score by Study Hours"', "replace": 'title = "Vienna 2025"'}],
+    "title": "Vienna 2025",
+    "changes": ["Set the title to Vienna 2025"],
+}
+
+
+def reviewer_inputs(fake: Any) -> list[str]:
+    requests = [request for request in fake.requests if (request.config.labels or {}).get("agent_kind") == "reviewer"]
+    return ["".join(part.text or "" for part in request.contents[-1].parts or []) for request in requests]
+
+
+async def test_a_later_change_carries_the_earlier_request_to_every_call(client: httpx.AsyncClient, swap_models) -> None:
+    script = {
+        "root": [
+            {"call": "plot_pipeline", "args": {}},
+            {"text": ROOT_REPLY},
+            {"call": "plot_pipeline", "args": {"change_request": TITLE_REQUEST, "base": "previous"}},
+            {"text": "Done: new title."},
+            {"call": "plot_pipeline", "args": {"change_request": MARKER_REQUEST, "base": "previous"}},
+            {"text": "Done: bigger markers."},
+        ],
+        "adapter": [{"json": plan} for plan in (SCATTER_PLAN, EMPTY_PLAN, TITLE_PLAN, EMPTY_PLAN)]
+        + [{"json": plan} for plan in (SECOND_PLAN, EMPTY_PLAN)],
+        "reviewer": [{"json": score()}, {"json": score()}, {"json": score()}],
+    }
+    fake = swap_models("gemini", script)
+    sid = await open_session(client)
+    await create_plot(client, sid)
+    for text in (TITLE_REQUEST, MARKER_REQUEST):
+        response = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": text})
+        plot = next(data for name, data in parse_sse(response.text) if name == "plot")
+        assert plot["status"] == "ok"
+
+    adapter = adapter_inputs(fake)
+    reviewer = reviewer_inputs(fake)
+    assert len(adapter) == 6 and len(reviewer) == 3
+    # The first change has no earlier request; the second carries the first to its adaptation, its
+    # proofread and its review, fenced as user text.
+    earlier = f"{EARLIER_REQUESTS_HEADING}\n\n<user_message>\n1. {TITLE_REQUEST}\n</user_message>"
+    assert not any(EARLIER_REQUESTS_HEADING in text for text in [*adapter[:4], *reviewer[:2]])
+    assert all(earlier.replace("\n\n", "\n") in text for text in adapter[4:])
+    assert earlier in reviewer[2]  # the catalogue reviewer's blocks stand a blank line apart
+    assert all(f"<user_message>\n{MARKER_REQUEST}\n</user_message>" in text for text in [*adapter[4:], reviewer[2]])
+    shipped = get_services().versions.get(sid)
+    assert shipped is not None and shipped.requests == [TITLE_REQUEST, MARKER_REQUEST]
+    assert 'title = "Vienna 2025"' in shipped.working

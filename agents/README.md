@@ -460,6 +460,10 @@ The defaults are the flow the experiments of 2026-10-13 settled on (about 1,500 
 3. **Review.** The reviewer scores the render with the catalogue rubric, the offline scorer's twin (`prompts/reviewer_catalogue.md` before `scoring.system_prompt`). The code decides from the points: every technical point (`AGENT_REVIEW_BAR` 1.0) means no repair; otherwise the defect lines go to the next round.
 4. **Ship the best.** Every round is reviewed, and the best-scored version ships (`AGENT_SHIP_BEST`). At or above 95 % of the technical points (`AGENT_STATUS_BAR`) it shows without notes (`ok`); below, the review's lines are the notes (`needs_attention`).
 
+The result's `changes`, which the root's reply reads, are the notes of every adapter call up to the shipped render whose plan changed the code (`pipeline.note_changes`): a self-review that changed nothing adds nothing, so its "already present" notes never replace the round's real changes, and a shipped earlier round reports its own.
+
+What the user asked for wins over the rubric. Each stored version keeps the change requests it carries out (`CodeVersion.requests`, the most recent 8 within 2,400 characters). A change of a previous version hands the earlier ones to every adapter call (adaptation, check retry, self-review, repair) and to the reviewer as `user_requests`, fenced as user text under "Earlier requests"; the adapter, reviewer and checklist-reviewer prompts treat them, and the current change request, as the user's standing decisions: kept, never reported as a defect, and changed only when the current change request asks for it (the live test of 2026-10-14, where a repair rewrote a title the user had chosen two turns earlier).
+
 What the measurements showed, scored by the user scorer on Opus and Sonnet:
 
 - The checklist reviewer named 2 of 37 agreed technical deductions; Haiku with the catalogue rubric 28, Opus 35. A bigger model does not pay: Sonnet as reviewer flagged 15 of 20 runs and repaired more without a better score, Sonnet as adapter gained nothing, a third round gained nothing.
