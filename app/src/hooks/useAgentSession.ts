@@ -953,6 +953,19 @@ const GUARDRAIL_REASONS = new Set([
   'rate_limited',
   'daily_limit',
   'session_closed',
+  // This plot in another library or language (a pointer to the catalogue), and
+  // a user paused for the day after repeated attack verdicts.
+  'other_library',
+  'locked_out',
+]);
+
+/** The paste route's guard refusals (HTTP errors, not stream refusals) that count as guardrail blocks. */
+const PASTE_GUARDRAIL_REASONS = new Set([
+  'data_refused',
+  'rate_limited',
+  'daily_limit',
+  'locked_out',
+  'session_closed',
 ]);
 
 function failureOf(err: unknown): Failure {
@@ -1553,8 +1566,8 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
           ? failure.code
           : 'error';
         trackEvent('agent_data_parsed', { status, size_bucket: bucket });
-        if (failure.code === 'data_refused') {
-          trackEvent('agent_guardrail_block', { reason: 'data_refused' });
+        if (PASTE_GUARDRAIL_REASONS.has(failure.code)) {
+          trackEvent('agent_guardrail_block', { reason: failure.code });
         }
       } finally {
         parseRef.current = false;

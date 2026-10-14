@@ -64,13 +64,22 @@ would, for example, read `01.02.2024` as a number under `thousands='.'`).
    carried a unit is named `<name> (<unit>)` there, so the duplicate suffixes and
    the 64-character cap cover the new name too (one warning per such column); a
    header that already names the unit (`Anteil (%)`, `Preis in €`) keeps its name.
-7. **Write the canonical `data.csv`** (comma, dot decimal, ISO dates, canonical
+7. **Constant text columns move to the notes** (since 2026-10-14, `_constants_to_notes`):
+   a pasted text column with the same value in every row (`Kanton` = `Schweiz`) leaves
+   the table and `<name>: <value>` joins `context_lines`, as a JSON-stat dimension of one
+   category does, unless fewer than `MIN_KEPT_COLUMNS` columns would remain.
+8. **Write the canonical `data.csv`** (comma, dot decimal, ISO dates, canonical
    headers, missing as an empty cell, `\\n` line ends) and profile it.
 
 The loader reads the result with
-`pd.read_csv("data.csv", dtype=pandas_dtypes(column_dtypes), parse_dates=parse_dates)`
-and gets the typed frame back: `MISSING_VALUES` contains every token pandas reads
-as missing by default, so no such token survives into `data.csv` as text.
+`pd.read_csv("data.csv", dtype=pandas_dtypes(column_dtypes), parse_dates=parse_dates)`,
+plus per-column `na_values` with `keep_default_na=False` when a column is text
+(`code/loader.py`), and gets the typed frame back: in a text column only the empty cell
+is missing. `data.csv` can hold a text cell that pandas would read as missing by
+default: a `json_pairs` key or a JSON-stat category such as `NA` (Namibia), a pasted `NA`
+in a column of letter codes (`_keep_na_codes`), and any text cell of a canonical re-parse
+(`parse_dataset(canonical=True)`). Every other pasted token of `MISSING_VALUES` is an
+empty cell already.
 
 `text_columns` names columns that skip step 6 and stay text whatever their cells
 hold: the `prepare_data` operation `set_type text` keeps a column of years or ids as
@@ -153,14 +162,21 @@ CONTEXT_JOINERS: dict[str | None, str] = {",": ", ", ";": "; ", "\t": " ", "|": 
 reads as it was pasted, a tab becomes a space so the line stays one line on the page."""
 MAX_NESTING = 50  # bracket levels a literal may open; counted before `ast.literal_eval` sees the text
 PAIR_HEADERS = ("category", "value")  # the columns of an object of scalars or an array of pairs
+NA_TOKEN = "NA"
+MIN_OTHER_CODES = 2
+"""The distinct letter codes beside `NA` that make a pasted `NA` a code rather than missing (`_keep_na_codes`)."""
+MIN_KEPT_COLUMNS = 2
+"""The columns a paste keeps at least when constant text columns move to the notes (`_constants_to_notes`):
+a category or a time and a value, the least a plot needs."""
 
 # Candidate delimiters in tie-break order, with the source format each one reports.
 DELIMITERS: tuple[tuple[str, SourceFormat], ...] = ((",", "csv"), (";", "semicolon"), ("\t", "tsv"), ("|", "pipe"))
 
 # A cell is missing when, after cleaning, it is exactly one of these. The set is the
 # design's list (empty, `NA`, `NaN`, `null`, `-`) plus every other token pandas reads as
-# missing by default (`pandas._libs.parsers.STR_NA_VALUES`), so that a plain
-# `pd.read_csv` of `data.csv` never turns a text cell into NaN behind the profile's back.
+# missing by default (`pandas._libs.parsers.STR_NA_VALUES`): a pasted token that pandas reads as
+# missing is missing in the profile too. The few text cells that keep such a token (`NA` as a
+# code, see the module docstring) survive the loader through `keep_default_na=False`.
 MISSING_VALUES: frozenset[str] = frozenset(
     {
         "",
@@ -211,6 +227,7 @@ _FLOAT = re.compile(r"[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?"
 _DECIMAL_COMMA = re.compile(r"[+-]?(?:[1-9][0-9]{0,2}(?:\.[0-9]{3})+|[0-9]+)(?:,[0-9]+)?")
 _THOUSANDS_DOT = re.compile(r"[+-]?(?:[1-9][0-9]{0,2}(?:\.[0-9]{3})+|[0-9]+)")
 _AMBIGUOUS_COMMA = re.compile(r"[+-]?[0-9]{1,3},[0-9]{3}")
+_LETTER_CODE = re.compile(r"[A-Z]{2,3}")  # a country, region or currency code (`CH`, `EU`, `USA`)
 _INTEGER_INDEX = re.compile(r"0|[1-9][0-9]{0,8}")  # a position key of a sparse JSON-stat `value` object
 
 # A number with one unit. The number part only has to look like one here: the rules above
@@ -292,15 +309,27 @@ class ParsedDataset:
     """The lines `find_table` left out above and below the table (a title, an export's metadata, a source
     line, a note), each as one cleaned text line, at most `MAX_CONTEXT_CHARS` in all: the user's notes about
     the data. Summary rows are not among them. Empty for `find_table=False` and for a literal, except a
-    JSON-stat dataset, whose label, source, notes and one-category dimensions are its lines (`_json_stat`)."""
+    JSON-stat dataset, whose label, source, notes and one-category dimensions are its lines (`_json_stat`).
+    A pasted text column with the same value in every row adds `<name>: <value>` (`_constants_to_notes`)."""
+    with_constants: "ParsedDataset | None" = field(default=None, repr=False, compare=False)
+    """The same table with its constant columns still in it, when `_constants_to_notes` moved any: the notes
+    carry their values only while the notes are kept, so a path that drops the notes takes this one instead
+    (`with_constant_columns`), and the dataset judge reads it."""
+
+
+def with_constant_columns(parsed: ParsedDataset) -> ParsedDataset:
+    """`parsed` with the constant columns that moved to its notes back in the table, and without those notes."""
+    return parsed.with_constants if parsed.with_constants is not None else parsed
 
 
 def without_context(parsed: ParsedDataset, warning: str) -> ParsedDataset:
     """`parsed` without its context lines and with `warning` first among its warnings (profile included).
 
     The route drops the notes this way when the pre-filter or the scope judge refuses them;
-    the table itself is unchanged.
+    the table itself is unchanged, except that constant columns whose values had moved into
+    the notes are columns again (`with_constant_columns`), so no value is lost with the notes.
     """
+    parsed = with_constant_columns(parsed)
     kept = list(parsed.warnings)
     omitted = 0
     if kept and (match := _OMITTED.fullmatch(kept[-1])):
@@ -333,6 +362,7 @@ class _Column:
     with_time: bool = False
     decimal_comma: bool = False
     notes: list[str] = field(default_factory=list)
+    na_rows: list[int] = field(default_factory=list)  # the rows whose cell was `NA`, read as missing so far
 
 
 def pandas_dtypes(column_dtypes: Mapping[str, ColumnDtype]) -> dict[str, str]:
@@ -341,7 +371,12 @@ def pandas_dtypes(column_dtypes: Mapping[str, ColumnDtype]) -> dict[str, str]:
 
 
 def parse_dataset(
-    text: str, *, text_columns: Collection[str] = (), find_table: bool = True, max_bytes: int = MAX_INPUT_BYTES
+    text: str,
+    *,
+    text_columns: Collection[str] = (),
+    find_table: bool = True,
+    max_bytes: int = MAX_INPUT_BYTES,
+    canonical: bool = False,
 ) -> ParsedDataset:
     """Parse pasted CSV, TSV, semicolon or pipe text, JSON or a Python literal into the canonical dataset.
 
@@ -351,6 +386,14 @@ def parse_dataset(
     prepared, generated or transcribed table) passes False, so every row it holds stays,
     also a category named `Total` that a sort moved to the end. `max_bytes` is the paste
     cap; a caller that re-reads a table the service computed passes `MAX_COMPUTED_BYTES`.
+
+    `canonical` says the text is a CSV the service wrote from a frame (`prepare_data`,
+    `generate_data`, `run_data_code`, `.to_long()`): there only an empty cell is missing,
+    so a text cell `NA` stays a category, and a column with the same text in every row stays
+    a column, because an operation or the user's code made it on purpose. A paste (and the
+    transcriber's table, which a model wrote from the user's text) keeps the default: the
+    tokens of `MISSING_VALUES` are missing, except `NA` in a column of letter codes
+    (`_keep_na_codes`), and a constant text column moves to the notes (`_constants_to_notes`).
     """
     _check_size(text, max_bytes)
     text = text.removeprefix(_BOM)
@@ -373,7 +416,9 @@ def parse_dataset(
     if table is None:
         table = _read_delimited(text, warnings, find_table=find_table, context=context)
     headers, rows, source_format = table
-    parsed = _build(headers, rows, source_format, warnings, frozenset(text_columns))
+    parsed = _build(
+        headers, rows, source_format, warnings, frozenset(text_columns), canonical=canonical, context=context
+    )
     if len(parsed.csv.encode("utf-8")) > MAX_CANONICAL_BYTES:
         raise ParseError("too_long", f"the data is larger than {MAX_CANONICAL_BYTES // 1024:,} KB once written out")
     return replace(parsed, context_lines=context) if context else parsed
@@ -1074,13 +1119,15 @@ def _strip_invisible(text: str) -> tuple[str, bool]:
 
 
 def _clean_cell(raw: str) -> tuple[str, bool]:
-    text, invisible = _strip_invisible(raw)
-    text = text.replace("\r\n", "\n").replace("\r", "\n").strip()
+    text, invisible = _clean_key(raw)
     return ("" if text in MISSING_VALUES else text), invisible
 
 
 def _clean_key(raw: str) -> tuple[str, bool]:
-    """A pair key (`json_pairs` category) is a name: cleaned like a cell, but `NA` or `null` stays text."""
+    """A pair key (`json_pairs` category) is a name: cleaned like a cell, but `NA` or `null` stays text.
+
+    A cell of canonical CSV (`parse_dataset(canonical=True)`) is cleaned the same way: there the
+    empty cell is the only missing one."""
     text, invisible = _strip_invisible(raw)
     return text.replace("\r\n", "\n").replace("\r", "\n").strip(), invisible
 
@@ -1356,6 +1403,9 @@ def _build(
     source_format: SourceFormat,
     warnings: list[str],
     text_columns: frozenset[str] = frozenset(),
+    *,
+    canonical: bool = False,
+    context: list[str] | None = None,
 ) -> ParsedDataset:
     headers: list[str] = []
     columns: list[_Column] = []
@@ -1368,8 +1418,15 @@ def _build(
             source_format == "json_stat" and position < len(raw_headers) - 1
         )
         cells: list[str] = []
-        for row in raw_rows:
-            cell, cell_invisible = (_clean_key if text_only else _clean_cell)(row[position])
+        na_rows: list[int] = []
+        for row_index, row in enumerate(raw_rows):
+            text, cell_invisible = _clean_key(row[position])
+            if text_only or canonical:
+                cell = text
+            else:
+                cell = "" if text in MISSING_VALUES else text
+                if text == NA_TOKEN:
+                    na_rows.append(row_index)
             cells.append(cell)
             invisible = invisible or cell_invisible
         if not header and not any(cells):
@@ -1377,7 +1434,9 @@ def _build(
         if broken:
             renamed_by_breaks.append(len(headers))
         headers.append(header)
-        columns.append(_Column(name="", source=cells, cells=[], invisible=invisible, text_only=text_only))
+        columns.append(
+            _Column(name="", source=cells, cells=[], invisible=invisible, text_only=text_only, na_rows=na_rows)
+        )
 
     dropped = len(raw_headers) - len(headers)
     if dropped:
@@ -1417,6 +1476,8 @@ def _build(
         for column in columns:
             if column.dtype == "number" and not column.decimal_comma:
                 _retype_thousands_dots(column)
+    for column in columns:
+        _keep_na_codes(column)
 
     # A header that already names the unit (`Anteil (%)`, `Preis in €`) gets no suffix, unless it is
     # longer than a name may be: then the suffix is passed so the cut keeps the unit at the end.
@@ -1450,6 +1511,23 @@ def _build(
             warnings.append(f"column '{before}': unit '{column.unit}' moved from the values into the name '{name}'")
         warnings.extend(f"column '{name}': {note}" for note in column.notes)
 
+    full = _finish(columns, source_format, warnings, text_columns)
+    if canonical or source_format == "json_stat" or context is None:
+        return full
+    notes_before = list(context)
+    kept = _constants_to_notes(columns, len(raw_rows), text_columns, warnings, context)
+    if kept is columns:
+        return full
+    # The table with its constant columns stays at hand: when the notes are not kept, they become columns again.
+    return replace(
+        _finish(kept, source_format, warnings, text_columns), with_constants=replace(full, context_lines=notes_before)
+    )
+
+
+def _finish(
+    columns: list[_Column], source_format: SourceFormat, warnings: list[str], text_columns: frozenset[str]
+) -> ParsedDataset:
+    """The dataset of these typed and named columns: canonical CSV, profile, preview and the loader's typing."""
     rows = [list(row) for row in zip(*(column.cells for column in columns), strict=True)]
     capped = _cap_warnings(warnings)
     profile = DatasetProfile(
@@ -1462,13 +1540,81 @@ def _build(
     )
     return ParsedDataset(
         profile=profile,
-        csv=_write_csv(names, rows),
+        csv=_write_csv([column.name for column in columns], rows),
         preview=[[_clip(cell) for cell in row] for row in rows[:PREVIEW_ROWS]],
         column_dtypes={column.name: column.dtype for column in columns},
         parse_dates=[column.name for column in columns if column.dtype == "datetime"],
         warnings=capped,
         text_columns=[column.name for column in columns if column.name in text_columns],
     )
+
+
+def _keep_na_codes(column: _Column) -> None:
+    """`NA` in a text column of letter codes is a code (Namibia, North America), not a missing cell.
+
+    A pasted `NA` is missing by default (R and many exports write it so). In a column that
+    stays text and whose other cells are all two- or three-letter upper-case codes, at
+    least `MIN_OTHER_CODES` distinct ones (`CH`, `DE`, `NA`; `EU`, `NA`, `SA`), it is one of
+    the codes: the cells get it back and a warning says so, so the root can drop those rows
+    when the user meant missing. Any other column keeps it missing.
+    """
+    if not column.na_rows or column.dtype != "text":
+        return
+    present = {cell for cell in column.cells if cell}
+    if len(present) < MIN_OTHER_CODES or not all(_LETTER_CODE.fullmatch(cell) for cell in present):
+        return
+    for row in column.na_rows:
+        column.cells[row] = NA_TOKEN
+    column.notes.append(f"{NA_TOKEN} read as a code (such as Namibia or North America), not as a missing cell")
+
+
+def _constants_to_notes(
+    columns: list[_Column], rows: int, text_columns: frozenset[str], warnings: list[str], context: list[str] | None
+) -> list[_Column]:
+    """The columns without those that hold the same text in every row, which become notes.
+
+    A statistics export repeats its filters as columns (`Kanton` = `Schweiz`, `Geschlecht`
+    = `Geschlecht - Total`): one value, no information per row, and a trap for a series or
+    color binding. Like a JSON-stat dimension of one category (`_json_stat`), such a column
+    leaves the table and `<name>: <value>` joins the notes (`context`), which the route
+    screens before any model reads them; one warning names the columns, never the values.
+    Only text columns with no missing cell count, in a table of at least two rows; a column
+    kept text by request stays. When fewer than `MIN_KEPT_COLUMNS` columns would remain,
+    every column stays: the table would have too little left to plot. A column whose note
+    the notes' cap (`MAX_CONTEXT_CHARS`) would cut or leave out stays a column too, so the
+    value is never lost to the cap. (When the route later drops every note because the
+    screening refused them, `without_context`, the constants go with them, as a JSON-stat
+    dimension's do.)
+    """
+    if rows < 2 or context is None:
+        return columns
+    constant = [
+        column
+        for column in columns
+        if column.dtype == "text"
+        and not column.text_only
+        and column.name not in text_columns
+        and all(column.cells)
+        and len(set(column.cells)) == 1
+    ]
+    if not constant or len(columns) - len(constant) < MIN_KEPT_COLUMNS:
+        return columns
+    # A column moves only with its whole note: one the notes' cap would cut or leave out stays a column.
+    notes = [_WHITESPACE_RUN.sub(" ", f"{column.name}: {column.cells[0]}").strip() for column in constant]
+    lines, _ = _context_lines([*([line] for line in context), *([note] for note in notes)], None)
+    fitted = lines[len(context) :]
+    moving: list[_Column] = []
+    for column, note, line in zip(constant, notes, fitted, strict=False):
+        if note != line:
+            break
+        moving.append(column)
+    if not moving:
+        return columns
+    context.extend(fitted[: len(moving)])
+    names = ", ".join(column.name for column in moving)
+    warnings.append(f"{_count(len(moving), 'column')} with the same text in every row moved to the notes: {names}")
+    moved = {id(column) for column in moving}
+    return [column for column in columns if id(column) not in moved]
 
 
 def _profile_column(column: _Column) -> ColumnProfile:

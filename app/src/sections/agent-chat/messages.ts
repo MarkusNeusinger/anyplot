@@ -45,9 +45,12 @@ export const DATA_FAILURE: Record<string, string> = {
   // The dataset judge or the model that reads free text into a table failed closed.
   guard_unavailable:
     'the model that checks and reads your data is unavailable right now; try again in a minute',
-  rate_limited: 'the daily limit is reached; try again tomorrow',
+  rate_limited: 'too many pastes in a short time; wait a minute and try again',
+  daily_limit: "today's limit is reached; try again tomorrow",
+  locked_out: 'paused until tomorrow after several refused requests today',
+  session_closed: 'this chat is closed; reload the page to start a new session',
   capacity: 'the server is busy; try again in a minute',
-  run_active: 'a run is in progress; wait for it to finish',
+  run_active: 'a run or another paste is in progress; wait for it to finish',
   no_dataset: 'parse the data first',
   // The service keeps the last five versions, so the history can end above version 1.
   nothing_to_undo: 'there is no earlier version to go back to',

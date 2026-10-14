@@ -34,7 +34,7 @@ from .code.normalise import SUPPORTED_LIBRARIES as NORMALISED_LIBRARIES
 from .code.normalise import normalise
 from .code.readiness import ReadinessStatus, scan
 from .data.bindings import default_bindings
-from .data.parse import ParsedDataset, display_copy, parse_dataset
+from .data.parse import ParsedDataset, display_copy, parse_dataset, with_constant_columns
 from .data.store import DatasetStore
 from .policy import fence
 from .schemas import MAX_SAMPLE_ROWS, MAX_TOP_VALUES, Binding
@@ -121,8 +121,11 @@ def store_dataset(
     note ever reaches the root (#12168 review). `code` is the Python that computed the table
     (`run_data_code`), kept with the version for the data panel.
     """
-    if parsed.context_lines and not notes_screened:
-        parsed = replace(parsed, context_lines=[])
+    if not notes_screened:
+        # Constant columns whose values went into the notes come back as columns, so the values survive.
+        parsed = with_constant_columns(parsed)
+        if parsed.context_lines:
+            parsed = replace(parsed, context_lines=[])
     dataset_id = store.put(session_id, parsed, code=code)
     for old in (previous_id, *history):
         if old and old != dataset_id:
@@ -307,9 +310,10 @@ def dataset_judge_inputs(parsed: ParsedDataset) -> list[str]:
     part), then the top values column by column, then the sample rows cell by cell
     (an empty cell is left out), each starting a new part when the current one is
     full. Nothing is dropped: a wide table or long cells give more parts, never a
-    shorter view.
+    shorter view. The view is the table with its constant columns (`with_constant_columns`):
+    they come back as columns when the notes that carry their values are not kept.
     """
-    view = judged_view(parsed)
+    view = judged_view(with_constant_columns(parsed))
     parts = _Parts({"columns": view.columns})
     for name, values in view.top_values.items():
         parts.add(("top_values", name), values)

@@ -9,12 +9,24 @@ the dataset profile map to pandas dtypes that keep missing values (`integer` to
 `Int64`, `number` to `float64`, `boolean` to `boolean`, `text` to `string`); datetime
 columns go to `parse_dates`. `import pandas as pd` is added after the last module-level
 import when the file does not have it.
+
+`data.csv` writes a missing cell as an empty cell and nothing else, so a text cell such as
+`NA` (Namibia, North America), `None` or `null` is a value there. pandas reads those tokens
+as missing by default, so the loader of a dataset with a text column reads them per column
+(`keep_default_na=False` with a `na_values` mapping): a text column takes only the empty
+cell as missing, every other column the missing tokens the parser knows
+(`parse.MISSING_VALUES`, pandas' defaults plus `-`), bound once to `na_tokens` in a
+statement before the read. The exported `plot.py` then still reads a user's own CSV whose
+number or date columns write `NA` or `-` (an R or spreadsheet export), where one
+`na_values=[""]` for every column would raise on the first such cell. A dataset without
+text columns keeps pandas' defaults and the one short line.
 """
 
 import ast
 import json
 from typing import get_args
 
+from ..data.parse import MISSING_VALUES
 from ..schemas import ColumnDtype
 from .regions import SourceIndex, is_placeholder
 
@@ -24,6 +36,9 @@ PANDAS_DTYPES: dict[str, str] = {"integer": "Int64", "number": "float64", "boole
 DATETIME = "datetime"
 MAX_LINE_CHARS = 120  # the repository's ruff line length
 PANDAS_IMPORT = "import pandas as pd"
+NA_NAME = "na_tokens"
+"""The name the run form binds the missing tokens of the number, boolean and date columns to."""
+TEXT_DTYPE = PANDAS_DTYPES["text"]
 
 _COLUMN_DTYPES = frozenset(get_args(ColumnDtype))
 
@@ -85,23 +100,49 @@ def _loader_arguments(
     return dtype_map, dates
 
 
+def na_values(dtype_map: dict[str, str], dates: list[str]) -> dict[str, list[str]] | None:
+    """The run form's per-column `na_values` for `loader_arguments`' output; None (pandas' defaults) without text.
+
+    A caller reads like the run form with `keep_default_na=values is None, na_values=values`.
+    """
+    if TEXT_DTYPE not in dtype_map.values():
+        return None
+    tokens = sorted(MISSING_VALUES)
+    values = {name: [""] if dtype == TEXT_DTYPE else tokens for name, dtype in dtype_map.items()}
+    values.update({name: tokens for name in dates if name not in values})
+    return values
+
+
 def _literal(text: str) -> str:
     """A double-quoted Python string literal (JSON escapes are valid Python escapes)."""
     return json.dumps(text, ensure_ascii=False)
 
 
 def _statement(indent: str, dtype_map: dict[str, str], dates: list[str]) -> str:
-    """The loader statement, on one line when it fits, else one entry per line."""
+    """The loader statement, on one line when it fits, else one entry per line.
+
+    With a text column, a `na_tokens` list comes first and the read takes `na_values` per
+    column (module docstring); the first line has no indent, since it replaces the
+    placeholder in place.
+    """
     dtype_items = [f"{_literal(name)}: {_literal(dtype)}" for name, dtype in dtype_map.items()]
     date_items = [_literal(name) for name in dates]
+    per_column = TEXT_DTYPE in dtype_map.values()
+    na_items = [
+        f"{_literal(name)}: " + ('[""]' if dtype_map.get(name) == TEXT_DTYPE else NA_NAME)
+        for name in [*dtype_map, *(name for name in dates if name not in dtype_map)]
+    ]
     arguments = [_literal(DATA_FILE)]
     if dtype_items:
         arguments.append("dtype={" + ", ".join(dtype_items) + "}")
     if date_items:
         arguments.append("parse_dates=[" + ", ".join(date_items) + "]")
+    if per_column:
+        arguments += ["keep_default_na=False", "na_values={" + ", ".join(na_items) + "}"]
+    prefix = _tokens_statement(indent) + "\n" + indent if per_column else ""
     single = f"df = pd.read_csv({', '.join(arguments)})"
     if len(indent) + len(single) <= MAX_LINE_CHARS:
-        return single
+        return prefix + single
 
     inner, entry = indent + "    ", indent + "        "
     lines = ["df = pd.read_csv(", f"{inner}{_literal(DATA_FILE)},"]
@@ -109,7 +150,28 @@ def _statement(indent: str, dtype_map: dict[str, str], dates: list[str]) -> str:
         lines += [f"{inner}dtype={{", *(f"{entry}{item}," for item in dtype_items), f"{inner}}},"]
     if date_items:
         lines += [f"{inner}parse_dates=[", *(f"{entry}{item}," for item in date_items), f"{inner}],"]
+    if per_column:
+        lines += [f"{inner}keep_default_na=False,", f"{inner}na_values={{", *(f"{entry}{item}," for item in na_items)]
+        lines.append(f"{inner}}},")
     lines.append(f"{indent})")
+    return prefix + "\n".join(lines)
+
+
+def _tokens_statement(indent: str) -> str:
+    """`na_tokens = [...]`, the parser's missing tokens with the empty cell, wrapped at the line length."""
+    tokens = [_literal(token) for token in sorted(MISSING_VALUES)]
+    single = f"{NA_NAME} = [{', '.join(tokens)}]"
+    if len(indent) + len(single) <= MAX_LINE_CHARS:
+        return single
+    inner = indent + "    "
+    lines, current = [f"{NA_NAME} = ["], inner
+    for token in tokens:
+        piece = f"{token},"
+        if len(current) + len(piece) + 1 > MAX_LINE_CHARS and current.strip():
+            lines.append(current.rstrip())
+            current = inner
+        current += piece if not current.strip() else f" {piece}"
+    lines += [current.rstrip(), f"{indent}]"]
     return "\n".join(lines)
 
 

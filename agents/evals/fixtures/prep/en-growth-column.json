@@ -1,0 +1,9 @@
+{
+  "dataset_text": "Year,Revenue\n2019,120\n2020,105\n2021,140\n2022,168\n2023,175\n",
+  "message": "Add a column Growth with the percent change of Revenue from the previous year.",
+  "expected_operations": [
+    {"op": "derive", "name": "Growth", "how": "percent_change", "columns": ["Revenue"], "order": "Year"}
+  ],
+  "locale": "en",
+  "tags": ["derive", "percent_change"]
+}

@@ -444,7 +444,13 @@ class TestJudge:
         assert (verdict.input_tokens, verdict.output_tokens) == (100, 20)  # the split the eval harness prices
         call = client.calls[0]
         schema = call["output_config"]["format"]["schema"]
-        assert schema["properties"]["verdict"]["enum"] == ["in_scope", "out_of_scope", "attack", "needs_data"]
+        assert schema["properties"]["verdict"]["enum"] == [
+            "in_scope",
+            "out_of_scope",
+            "attack",
+            "needs_data",
+            "other_library",
+        ]
         assert schema["additionalProperties"] is False and schema["required"] == ["verdict", "lang"]
         assert "tools" not in call and "tool_choice" not in call
         assert call["thinking"] == {"type": "disabled"}

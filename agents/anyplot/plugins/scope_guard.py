@@ -17,20 +17,25 @@
   waits a short back-off first (`models.JUDGE_RETRY_BACKOFF_S`), inside the 4-second
   budget blocks with the error `guard_unavailable`;
 * `out_of_scope` and `attack` withhold the message with the fixed `out_of_scope`
-  refusal, and `needs_data` (a request for data the service would have to fetch) with
-  the fixed `needs_data` refusal, each in the language the judge names (`policy.refusal`:
-  English, German, French, Spanish, Italian, Portuguese, Dutch, Polish, Chinese,
-  Vietnamese and Russian, English for every other language); the run ends there, at
-  the first turn;
+  refusal, `needs_data` (a request for data the service would have to fetch) with
+  the fixed `needs_data` refusal, and `other_library` (this plot in another library or
+  language) with the fixed `other_library` answer, a pointer to the catalogue, each in
+  the language the judge names (`policy.refusal`: English, German, French, Spanish,
+  Italian, Portuguese, Dutch, Polish, Chinese, Vietnamese and Russian, English for every
+  other language); the run ends there, at the first turn;
 * an `attack` verdict is a strike against the user (`UsageBook.add_strike`), once
   per distinct message text: from `AGENT_ATTACK_STRIKES` strikes on, the daily check
-  above refuses the user with the budget refusal for the rest of the day;
-* the session's `AGENT_SESSION_REFUSALS`-th refusal of type `out_of_scope` or `attack`
-  (3 by default; `needs_data` never counts, `scope_refusals`) closes the session: that
-  refusal goes out as `session_closed` instead of `out_of_scope`, and the `/messages`
-  route answers every later turn of the session with the same refusal before the
-  judge runs, so the user starts a new session. The strikes above are per user and
-  day and count `attack` only; this count is per session and needs no state of its own;
+  above refuses the user with the `locked_out` refusal for the rest of the day (a
+  spent token budget keeps the `budget` refusal);
+* the session's `AGENT_SESSION_REFUSALS`-th counted refusal (`counted_codes`: `out_of_scope`
+  or `attack`, and `other_library` only with `AGENT_OTHER_LIBRARY_COUNTS`; `needs_data`
+  never counts, `scope_refusals`) closes the session: that refusal goes out as
+  `session_closed` instead, and the `/messages` route answers every later turn of the
+  session with the same refusal before the judge runs (the paste route with
+  `403 session_closed`), so the user starts a new session. With
+  `AGENT_SESSION_CLOSE_WARNING` the counted refusal one before it carries the fixed
+  `close_warning` suffix. The strikes above are per user and day and count `attack`
+  only; this count is per session and needs no state of its own;
 * the judge's `lang` for the session's first in-scope typed message becomes the
   session language with the source `detected` (`session_state.LANGUAGE`), unless one
   is set: a later message never changes it, a choice (`chosen`) never yields to it, a
@@ -87,7 +92,7 @@ from google.genai import types
 from ..language import DEFAULT_LANGUAGE
 from ..models import JudgeUnavailable, JudgeVerdict
 from ..output_guard import reply_length, reply_too_long, sanitize
-from ..policy import fence, fixed_replies, refusal, scope_rubric
+from ..policy import fence, fixed_replies, refusal, refusals, scope_rubric
 from ..services import KeptRefusal, get_services
 from ..session_state import LANGUAGE_SOURCE, SPEC_ID, language_delta
 from ..settings import get_settings
@@ -115,9 +120,18 @@ HALT_AUTHOR = "model"
 Turn = tuple[Literal["user", "assistant"], str]
 
 
-REFUSAL_CODES: dict[str, str] = {"out_of_scope": "out_of_scope", "attack": "out_of_scope", "needs_data": "needs_data"}
+REFUSAL_CODES: dict[str, str] = {
+    "out_of_scope": "out_of_scope",
+    "attack": "out_of_scope",
+    "needs_data": "needs_data",
+    "other_library": "other_library",
+}
 """The `refusal` event code of each refusing verdict. `attack` shares the out-of-scope reply, so an
 attacker learns nothing about how the message was classified."""
+CLOSE_WARNING = "close_warning"
+"""The `refusals.yaml` entry appended to the counted refusal one before the closing one (`AGENT_SESSION_CLOSE_WARNING`)."""
+LOCKED_OUT = "locked_out"
+"""The refusal code (and `refusals.yaml` entry) of a user past `AGENT_ATTACK_STRIKES` today."""
 JUDGED_REFUSALS = frozenset(REFUSAL_CODES.values())
 """The refusal codes a withheld placeholder may carry (`withheld_text`)."""
 
@@ -146,22 +160,32 @@ def _withheld(code: str | None = None) -> types.Content:
 SESSION_CLOSED = "session_closed"
 """The refusal code (and `refusals.yaml` entry) of a session closed after `AGENT_SESSION_REFUSALS` refusals."""
 COUNTED_PLACEHOLDER = withheld_text("out_of_scope")
-"""The stored form of every `out_of_scope` and `attack` refusal: what `scope_refusals` counts."""
+"""The stored form of every `out_of_scope` and `attack` refusal: what `scope_refusals` always counts."""
 
 
-def scope_refusals(events: Sequence[Event]) -> int:
-    """The session's scope-judge refusals of type `out_of_scope` or `attack`, counted from its withheld messages.
+def counted_codes(other_library_counts: bool | None = None) -> frozenset[str]:
+    """The refusal codes that count toward closing a session: `out_of_scope` (which `attack` shares), and
+    `other_library` only with `AGENT_OTHER_LIBRARY_COUNTS`. `needs_data` never counts."""
+    if other_library_counts is None:
+        other_library_counts = get_settings().other_library_counts
+    return frozenset({"out_of_scope", "other_library"} if other_library_counts else {"out_of_scope"})
 
-    Both verdicts store the same placeholder (`withheld_text("out_of_scope")`), a `needs_data`
-    refusal its own, and a refusal sent before the judge (budget, unsupported content, the message
-    limits, a closed session) the bare one or nothing, so only the counted kinds match. The count
-    lives in the session's own events: it ends with the session, and no state is written for it.
+
+def scope_refusals(events: Sequence[Event], counted: frozenset[str] | None = None) -> int:
+    """The session's counted scope-judge refusals (`counted_codes`), counted from its withheld messages.
+
+    `out_of_scope` and `attack` store the same placeholder (`withheld_text("out_of_scope")`), a
+    `needs_data` or `other_library` refusal its own, and a refusal sent before the judge (budget,
+    unsupported content, the message limits, a closed session) the bare one or nothing, so only the
+    counted kinds match. The count lives in the session's own events: it ends with the session, and no
+    state is written for it.
     """
+    placeholders = {withheld_text(code) for code in (counted_codes() if counted is None else counted)}
     count = 0
     for event in events:
         if event.author != USER_AUTHOR or not event.content or not event.content.parts:
             continue
-        if "".join(part.text or "" for part in event.content.parts) == COUNTED_PLACEHOLDER:
+        if "".join(part.text or "" for part in event.content.parts) in placeholders:
             count += 1
     return count
 
@@ -188,6 +212,10 @@ def session_turns(invocation_context: InvocationContext) -> list[Turn]:
 def is_service_text(text: str) -> bool:
     """Whether an assistant turn is the service's own fixed text (a refusal or the outage line), not a model's reply."""
     stripped = text.strip()
+    for warning in refusals().get(CLOSE_WARNING, {}).values():
+        if stripped.endswith(warning) and stripped != warning:
+            stripped = stripped[: -len(warning)].strip()  # a refusal with the closing warning appended
+            break
     return stripped == GUARD_UNAVAILABLE_TEXT or stripped in fixed_replies()
 
 
@@ -260,8 +288,9 @@ class ScopeGuardPlugin(BasePlugin):
         settings = get_settings()
         user = ledger.user_id or invocation_context.session.user_id
         if not services.usage.daily_ok(user, settings):
-            ledger.refuse("budget", refusal("budget", ledger.lang))
-            attribution("scope_guard", ledger, verdict="budget")
+            reason = LOCKED_OUT if services.usage.locked_out(user, settings) else "budget"
+            ledger.refuse(reason, refusal(reason, ledger.lang))
+            attribution("scope_guard", ledger, verdict=reason)
             return _withheld()
         text = "\n".join(part.text or "" for part in parts)
         context, earlier = judge_context(session_turns(invocation_context))
@@ -297,12 +326,20 @@ class ScopeGuardPlugin(BasePlugin):
                 )
             code = refusal_code(verdict.verdict)
             shown = code
-            if code == "out_of_scope":
-                count = scope_refusals(invocation_context.session.events) + 1
+            text_out = refusal(code, verdict.lang)
+            counted = counted_codes(settings.other_library_counts)
+            if code in counted:
+                count = scope_refusals(invocation_context.session.events, counted) + 1
                 if count >= settings.session_refusals:
                     shown = SESSION_CLOSED  # the route refuses every later turn of the session before the judge
+                    text_out = refusal(SESSION_CLOSED, verdict.lang)
                     attribution("scope_guard", ledger, verdict=SESSION_CLOSED, refusals=count)
-            ledger.refuse(shown, refusal(shown, verdict.lang))
+                elif settings.session_close_warning and count == settings.session_refusals - 1:
+                    # The live test of 2026-10-14 closed a session without warning: the refusal before the closing
+                    # one says so, in a fixed suffix of the same language.
+                    text_out = f"{text_out} {refusal(CLOSE_WARNING, verdict.lang)}"
+                    attribution("scope_guard", ledger, verdict=CLOSE_WARNING, refusals=count)
+            ledger.refuse(shown, text_out)
             return _withheld(code)
         await self._detect(invocation_context, ledger, verdict, text)
         return None
