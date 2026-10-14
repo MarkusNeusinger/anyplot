@@ -87,9 +87,10 @@ RESULT_LIMITS: dict[str, int] = {
     GENERATE_TOOL: 16 * 1024,
     # The new profile, trimmed like get_dataset_profile's, plus one change line, or up to ten validator findings.
     DATA_CODE_TOOL: 16 * 1024,
-    # A PlotResult at its schema maximum (16 lines of 640, 5 changes of 200) is about 12 KB, and its `shows`
-    # (62 drawn texts of 80 characters, five requested texts) about 6 KB more.
-    PIPELINE_TOOL: 20 * 1024,
+    # A PlotResult at its schema maximum (16 lines of 640, 5 changes of 200) with its `shows` (62 drawn texts of
+    # 80 characters, five requested texts of 120) is about 18 KB in one-byte and 35 KB in two-byte UTF-8 (German
+    # umlauts throughout). Above the cap `shows` gives way (`shrunk_shows`) before the result is refused.
+    PIPELINE_TOOL: 40 * 1024,
 }
 DATA_ARGUMENT_KEYS: dict[str, frozenset[str]] = {
     PREPARE_TOOL: frozenset({"value", "name", "label", "otherwise"}),
@@ -218,6 +219,20 @@ def fence_pipeline_notes(result: dict[str, Any]) -> dict[str, Any]:
     return fenced
 
 
+SHOWS_KEPT_GROUPS = ("title", "x axis label", "y axis label", "z axis label", "legend")
+"""The `shows` texts a result over its cap keeps: what a reply quotes most; tick labels and the rest go first."""
+
+
+def shrunk_shows(result: dict[str, Any]) -> list[dict[str, Any]]:
+    """Smaller versions of a `plot_pipeline` result, in order: `shows.texts` without tick labels and other texts,
+    then without any texts (`null`, which the root reads as "not measured" and then quotes no plot text)."""
+    shows = result.get(SHOWS_KEY)
+    if not isinstance(shows, dict) or not isinstance(shows.get("texts"), dict):
+        return []
+    kept = {group: texts for group, texts in shows["texts"].items() if group in SHOWS_KEPT_GROUPS}
+    return [{**result, SHOWS_KEY: {**shows, "texts": kept}}, {**result, SHOWS_KEY: {**shows, "texts": None}}]
+
+
 def _strings(value: Any, skip: frozenset[str] = frozenset()) -> list[str]:
     """Every string in `value`, except under a dict key in `skip` (at any depth)."""
     if isinstance(value, str):
@@ -315,6 +330,12 @@ class ToolSafetyPlugin(BasePlugin):
             if set(result) - allowed:
                 return tool_error("invalid_result")
             replaced = fence_pipeline_notes(result) if tool.name == PIPELINE_TOOL else None
+            if replaced is not None and result_size(replaced) > result_limit(tool.name):
+                # A shipped plot never turns into an error for its size: `shows` gives way first.
+                for shrunk in shrunk_shows(result):
+                    replaced = fence_pipeline_notes(shrunk)
+                    if result_size(replaced) <= result_limit(tool.name):
+                        break
             if result_size(replaced or result) > result_limit(tool.name):
                 return tool_error("result_too_large")
             return replaced

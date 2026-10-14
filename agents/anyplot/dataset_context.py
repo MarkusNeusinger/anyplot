@@ -49,9 +49,12 @@ def generated_source(spec: Generate) -> str:
 def code_source(code: str, language: str) -> str:
     """The source line of a `run_data_code` table: the names its validated snippet defines, calls and assigns.
 
-    Only identifiers, never comments or string literals, so a snippet's text cannot speak
-    to the adapter; a function the root named after the system (`def lorenz(...)`) carries
-    the subject into the title.
+    Only identifiers, never comments or string literals. The identifiers are not screened
+    (the root wrote the code, possibly from the user's snippet, and the validator checks
+    what it does, not its names), so they reach the adapter and the reviewer only fenced as
+    `<user_notes>` data, at most `MAX_SOURCE_NAMES` per kind and `MAX_SOURCE_CHARS` in all.
+    A function the root named after the system (`def lorenz(...)`) carries the subject
+    into the title.
     """
     try:
         tree = ast.parse(code)

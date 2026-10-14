@@ -10,6 +10,7 @@ from typing import Any
 import httpx
 import pytest
 
+from agents.anyplot.grounding import UNVERIFIED_LINE
 from agents.anyplot.pipeline import EARLIER_REQUESTS_HEADING, SELF_REVIEW_LINE
 from agents.anyplot.render.backends.fake import FakeBackend, FakeOutcome
 from agents.anyplot.scoring import DE_DEFAULTS, SCORED
@@ -488,3 +489,21 @@ async def test_a_miss_no_round_fixes_ships_as_a_residual_line(
     assert ("requested number format" in adapter_inputs(fake)[1]) is (mode == "repair")
     closing = root_inputs(fake)[-1]
     assert "requested_not_found" in closing and "6.0 M" in closing
+
+
+async def test_a_renderer_without_drawn_texts_leaves_a_note_and_no_repair(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend
+) -> None:
+    """Until the renderer reports `labels`, requested texts are not verifiable: a note, never a pass or a repair."""
+    script = default_script(plans=[SCATTER_PLAN, EMPTY_PLAN])
+    script["root"] = [{"call": "plot_pipeline", "args": {"expected_texts": ["6,5 Mio."]}}, {"text": ROOT_REPLY}]
+    script["reviewer"] = [{"json": score()}]
+    backend.script = lambda job, theme: FakeOutcome(probe={"texts": [], "tick_overlaps": 0, "points": 0})
+    swap_models("gemini", script)
+    sid = await open_session(client)
+
+    events = await create_plot(client, sid)
+
+    plot = next(data for name, data in events if name == "plot")
+    assert (plot["status"], plot["residual_defects"]) == ("needs_attention", [UNVERIFIED_LINE.format(theme="light")])
+    assert len(plot["rounds"]) == 1

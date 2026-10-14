@@ -128,7 +128,7 @@ from .code.validate import validate_adaptation, validate_security
 from .data.bindings import check_bindings
 from .data.store import StoredDataset
 from .dataset_context import dataset_context
-from .grounding import expected_misses, plot_texts
+from .grounding import UNVERIFIED_LINE, drawn_texts, expected_misses, plot_texts
 from .language import DEFAULT_LANGUAGE, same_language
 from .plugins.ledger import RequestLedger, attribution, budget_allows, ledger_for
 from .policy import DATA_PREAMBLE, fence
@@ -371,6 +371,8 @@ class Candidate:
     """The requested texts and number formats this render does not show (`grounding.expected_misses`), as lines."""
     expect_misses: list[str] = field(default_factory=list)
     """The same misses as the requested texts themselves, for `PlotShows.requested_not_found`."""
+    expect_note: str | None = None
+    """`grounding.UNVERIFIED_LINE` when the run had requested texts but the probe reported no drawn texts."""
 
 
 @dataclass
@@ -858,6 +860,8 @@ def finish(run: Run) -> PlotResult:
     residual += shipped.advisory_lines
     # A requested text or number format the shipped render does not show: the reply must say so.
     residual += shipped.expect_lines
+    if shipped.expect_note:
+        residual.append(shipped.expect_note)
     # The review's notes are left out when the render meets the ship bar (`AGENT_STATUS_BAR` and
     # `AGENT_STATUS_SCORE`; a checklist pass), although the review may still have asked for a repair:
     # the owner's rule is no review notes above the bar. The review bar decides the repair only, so a
@@ -1367,9 +1371,14 @@ async def _attempts(
             _end_attempt(run, "render", feedback)
             continue
         output = rendered.outputs.get(run.theme)
-        texts = plot_texts(output.probe if output is not None else None)
-        misses = expected_misses(run.expected_texts, texts) if settings.expect_check != "off" else []
+        # The check reads every drawn text; `shows` gets the clipped summary of them.
+        drawn = drawn_texts(output.probe if output is not None else None)
+        texts = plot_texts(drawn)
+        checking = settings.expect_check != "off" and bool(run.expected_texts)
+        misses = expected_misses(run.expected_texts, drawn) if checking else []
         expect_lines = [miss.line(run.theme) for miss in misses]
+        # No drawn texts to check against (a renderer without `labels`): a note, never a pass and never a repair.
+        expect_note = UNVERIFIED_LINE.format(theme=run.theme) if checking and drawn is None else None
         candidate = Candidate(
             working=working,
             run_form=run_form,
@@ -1386,6 +1395,7 @@ async def _attempts(
             texts=texts,
             expect_lines=expect_lines,
             expect_misses=[miss.expected for miss in misses],
+            expect_note=expect_note,
         )
         if report.canvas_ok:
             run.best = candidate
