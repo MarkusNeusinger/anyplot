@@ -378,6 +378,9 @@ class Run:
     followed, and the one whose answer failed its check and got the round's retry."""
     retried_rounds: set[int] = field(default_factory=set)
     """The rounds that used their one retry after an answer failed its check (`RETRY_STAGES`)."""
+    proofread_rounds: set[int] = field(default_factory=set)
+    """The rounds whose self-review has started (`AGENT_SELF_REVIEW`): a check retry of the proofread
+    answer stays the proofread, so a round never proofreads twice."""
     repair_hints: list[str] = field(default_factory=list)
     """The latest render's measured targets for a repair (`GateReport.repair_hints`), added to
     the hints of every repair attempt after it; they never start a repair themselves."""
@@ -711,9 +714,11 @@ def finish(run: Run) -> PlotResult:
     residual += shipped.adaptation_lines
     # A measured missing glyph is a fact of the shipped render, reviewed or not (G10).
     residual += [line for line in shipped.advisory_lines if line.startswith(GLYPH_LINE_PREFIX)]
-    # Shown without notes when the review passed it, or when it meets the ship bar (`AGENT_STATUS_BAR`)
-    # although the review still asked for a repair: the owner's rule is no residual notes above the bar.
-    if shipped.reviewed_ok is not True and shipped.status_ok is not True:
+    # Shown without notes when it meets the ship bar (`AGENT_STATUS_BAR`; a checklist pass), although the
+    # review may still have asked for a repair: the owner's rule is no residual notes above the bar. The
+    # review bar decides the repair only, so a pass below the ship bar keeps its notes.
+    meets_bar = shipped.reviewed_ok if shipped.status_ok is None else shipped.status_ok
+    if meets_bar is not True:
         residual += shipped.advisory_lines
         if shipped.review_score is not None and shipped.review_lines:
             residual += shipped.review_lines
@@ -837,18 +842,20 @@ async def _review(ctx: Context, scope: str, request: ReviewRequest, theme: Theme
         return None
     settings = get_settings()
     ok = result.passes(settings.review_bar)
-    if not ok and not result.defects:
+    # The two bars are independent settings: an experiment may set the review bar below the ship bar.
+    status_ok = result.passes(settings.status_bar)
+    if not (ok and status_ok) and not result.defects:
         # Points lost without a line to say why: no ship-bar notes and nothing for the repair to fix.
         logger.warning("catalogue review deducted without defect lines: %s", ", ".join(result.silent))
         return None
     ids = sorted({found for line in result.defects if (m := DEFECT_RE.match(line)) for found in m["ids"].split(", ")})
     return ReviewOutcome(
         ok,
-        [] if ok else result.defects,
+        [] if ok and status_ok else result.defects,
         ids,
         result.score,
         round(result.technical_share, 3),
-        status_ok=ok or result.passes(settings.status_bar),
+        status_ok=status_ok,
     )
 
 
@@ -1020,12 +1027,12 @@ async def _attempts(
     calls = rounds * (1 + int(settings.self_review) + int(settings.check_retry))
     # Ship the best-scored version (`AGENT_SHIP_BEST`, catalogue reviews only): every round is reviewed.
     max_reviews = rounds if ship_best(settings) else MAX_REVIEWS
-    self_review_due = False
 
     for attempt in range(1, calls + 1):
         if round_number(run, attempt) > rounds:
             break
-        proofreading = run.stage == "self_review"
+        # The proofread, or its retry after a failed check, is this round's last adapter call.
+        proofreading = round_number(run, attempt) in run.proofread_rounds
         self_review_due = settings.self_review and not proofreading
         # This call and the root's closing reply: a plot may ship from any attempt, and ADK's
         # call cap would refuse the reply the Budget plugin's exemption cannot admit.
@@ -1196,6 +1203,7 @@ async def _attempts(
             # The adapter proofreads its render once per round before the review: after the first
             # version, and after a repair with that repair's findings, to see whether its changes worked.
             run.self_reviewed = True
+            run.proofread_rounds.add(round_number(run, attempt))
             current = services.renders.put(ctx.session.id, candidate.pngs)
             before = run.reviewed_render_id if settings.repair_sees_render and round_number(run, attempt) > 1 else None
             ledger.adapter_renders = [
@@ -1270,7 +1278,7 @@ async def _attempts(
         candidate.reviewed_ok = verdict.ok
         candidate.status_ok = verdict.ok if verdict.status_ok is None else verdict.status_ok
         candidate.review_score = verdict.score
-        candidate.review_lines = [] if verdict.ok else list(verdict.lines)
+        candidate.review_lines = [] if verdict.ok and candidate.status_ok else list(verdict.lines)
         if verdict.score is not None and (
             run.best_scored is None or verdict.score >= (run.best_scored.review_score or 0)
         ):

@@ -133,7 +133,7 @@ The output caps per model call are constants in `anyplot/models.py`, set with am
 | Root | 4,096 | 4,096 | 259 |
 | Adapter, edits only (attempt 1) | 8,192 | 8,192 | 2,030 (23 of 244 were cut off at the old 2,048) |
 | Adapter, full file allowed (the repair) | 12,288 | 12,288 | 2,606 |
-| Reviewer | 8,192 | 4,096 | 600 (checklist); about 2,500 (catalogue rubric) |
+| Reviewer | 8,192 | 8,192 (4,096 before 2026-10-13) | 600 (checklist); about 2,500 (catalogue rubric) |
 | Scope and dataset judge | 256 | 256 | 59 |
 
 On Gemini, thinking tokens count toward the cap, and the soft deadline bounds the adapter's caps: at spike X's fitted rate, a call that uses all 8,192 tokens still leaves the repair attempt its 75 s. Gemini's answers are larger: its plan calls in spike X needed a median of about 4,700 output tokens, and 11 of 112 needed more than 8,192. Claude Haiku 5.5 runs at about 0.0029 s per output token, so an adapter call that uses all 20,480 tokens of the full-file cap with its thinking room takes about 60 s, the time the deadline check reserves for an adapter call.
@@ -761,7 +761,7 @@ A case passes on exact operation match, order-insensitive, when every `prepare_d
    uv run --extra agents python -m agents.evals.prep
    ```
 
-   `--provider gemini` scores the Gemini arm; `--model`, `--judge-model` and `--location` override the settings; `--tags de` or `--tags aggregate,sort` runs a subset (a locale is a tag). A case makes about five model calls (the dataset judge, the scope judge, the root two or three times), so `--calls-per-minute` (25 by default, the same quota reasoning as the scope eval) spaces the starts of the cases five times further apart than the scope eval spaces its judge calls: 12 seconds at the default, about 5 minutes for the 23 cases, which run one at a time.
+   `--provider gemini` scores the Gemini arm; `--model`, `--judge-model` and `--location` override the settings; `--tags de` or `--tags aggregate,sort` runs a subset (a locale is a tag). A case makes about five model calls (the dataset judge, the scope judge, the root two or three times), so `--calls-per-minute` (25 by default, the same quota reasoning as the scope eval) spaces the starts of the cases five times further apart than the scope eval spaces its judge calls: 12 seconds at the default, about 7 minutes for the 33 cases, which run one at a time.
 
 3. Read the table it prints (the case, the expected operations, the found ones, `match`, `miss` or `unavailable`), the summary, and the report it writes to `agents/evals/reports/<date>-prep-<model>.json` (`-<tags>` appended for a subset run): the stamp with the root prompt's hash, every case's canonical expected and found operations, its tool calls, refusal, cost and latency. The datasets and messages stay in the fixtures.
 

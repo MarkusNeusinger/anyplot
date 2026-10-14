@@ -157,6 +157,42 @@ async def test_an_unreadable_review_is_asked_once_more(client: httpx.AsyncClient
     assert [(r["attempt"], r["outcome"]) for r in plot["rounds"]] == [(1, "ok")]
 
 
+async def test_a_proofread_whose_edits_miss_is_retried_and_stays_the_proofread(
+    client: httpx.AsyncClient, swap_models
+) -> None:
+    """A retry of the proofread answer must not start a second proofread in the same round."""
+    missing = {"edits": [{"find": "this text is not in the code", "replace": "x"}], "changes": []}
+    script = default_script(plans=[SCATTER_PLAN, missing, EMPTY_PLAN])
+    script["reviewer"] = [{"json": score()}]
+    fake = swap_models("gemini", script)
+    sid = await open_session(client)
+
+    events = await create_plot(client, sid)
+
+    plot = next(data for name, data in events if name == "plot")
+    assert (plot["status"], plot["attempts"]) == ("ok", 1)
+    assert [(r["attempt"], r["outcome"], r["shipped"]) for r in plot["rounds"]] == [(1, "ok", True)]
+    assert len(adapter_inputs(fake)) == 3  # adapt, proofread (missed), its retry
+
+
+async def test_a_review_bar_below_the_ship_bar_keeps_the_notes(
+    client: httpx.AsyncClient, swap_models, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The bars are independent: no repair above the review bar, but notes below the ship bar."""
+    monkeypatch.setenv("AGENT_REVIEW_BAR", "0.9")
+    get_settings.cache_clear()
+    script = default_script(plans=[SCATTER_PLAN, EMPTY_PLAN])
+    script["reviewer"] = [{"json": score(**{"VQ-03": 4})}]  # 51 of 55 technical points: 93 %
+    swap_models("gemini", script)
+    sid = await open_session(client)
+
+    events = await create_plot(client, sid)
+
+    plot = next(data for name, data in events if name == "plot")
+    assert plot["status"] == "needs_attention"
+    assert any("sparse markers" in line for line in plot["residual_defects"])
+
+
 @pytest.mark.parametrize(
     "unreadable",
     [

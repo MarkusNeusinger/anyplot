@@ -67,8 +67,9 @@ cap; `allow_full_file`, called by
 the adapter's callback when a full file is allowed, raises the cap to
 `ADAPTER_FULL_MAX_OUTPUT_TOKENS` on Claude and `GEMINI_ADAPTER_FULL_MAX_OUTPUT_TOKENS`
 on Gemini, and on Gemini lowers thinking to `GEMINI_ADAPTER_FULL_THINKING`), the
-reviewer judges the render (4,096 tokens, low effort, medium media resolution on
-Gemini). Every cap leaves ample headroom above the measured answers (`MAX_OUTPUT_TOKENS`):
+reviewer judges the render (8,192 tokens on both providers since 2026-10-13, 4,096 before;
+on Claude at effort high with its thinking room on top, on Gemini at LOW thinking and medium
+media resolution). Every cap leaves ample headroom above the measured answers (`MAX_OUTPUT_TOKENS`):
 an answer that finishes costs the same under any cap, and a cut-off wastes the call.
 """
 
@@ -126,8 +127,9 @@ uses the whole 16,384 of an edit call with its thinking room takes about 48 s, t
 which the 480 s soft deadline absorbs although `pipeline.REVIEWER_P95_S` reserves 30 s
 for a typical review (the Vertex check of 2026-10-14 finished its reviews at a 95th
 percentile of 4,684 tokens, about 14 s). On Gemini,
-whose thinking counts toward the cap, a reviewer call that uses all 4,096 takes about
-30 s at spike X's fitted rate (see `GEMINI_ADAPTER_MAX_OUTPUT_TOKENS`). The Gemini
+whose thinking counts toward the cap, a reviewer call that uses all 8,192 takes about
+58 s at spike X's fitted rate (see `GEMINI_ADAPTER_MAX_OUTPUT_TOKENS`), which the soft
+deadline absorbs as well. The Gemini
 adapter keeps its own caps (`GEMINI_ADAPTER_MAX_OUTPUT_TOKENS`,
 `GEMINI_ADAPTER_FULL_MAX_OUTPUT_TOKENS`)."""
 ADAPTER_FULL_MAX_OUTPUT_TOKENS = 12_288

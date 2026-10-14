@@ -98,7 +98,8 @@ Effort = Literal["low", "medium", "high"]
 """Claude efforts an agent kind may run at; Haiku 5.5 takes disabled thinking up to `high`."""
 
 ReviewerMode = Literal["checklist", "catalogue"]
-"""The reviewer's rubric: the narrow checklist (live) or the catalogue rubric the offline scorer uses."""
+"""The reviewer's rubric: the catalogue rubric the offline scorer uses (live since 2026-10-13) or the
+narrow checklist of phase 1 (legacy)."""
 
 Transport = Literal["vertex", "claude-cli"]
 """How Claude calls travel: Vertex AI (live), or the local Claude Code CLI for experiments."""
