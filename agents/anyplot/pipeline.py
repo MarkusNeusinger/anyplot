@@ -544,31 +544,39 @@ def keep_pending_request(state: Any, args: PipelineArgs, reason: NotReadyReason 
     that is there, and the root repeats it once the reason is gone.
     """
     if reason in PENDING_REASONS and args.change_request and args.base != "previous":
-        state[PENDING_REQUEST] = args.change_request
+        # A second blocked request joins the first (`merged_request`), so both reach the plot.
+        state[PENDING_REQUEST] = merged_request(state.get(PENDING_REQUEST), args.change_request)
+
+
+def merged_request(pending: object, own: str) -> str:
+    """A kept request and a new one as one `change_request`: the kept one first when both fit
+    `MAX_CHANGE_REQUEST_CHARS` together, else the new one alone; a new one the kept one already
+    holds as a line adds nothing."""
+    own = own.strip()
+    if not isinstance(pending, str) or not pending.strip():
+        return own
+    pending = pending.strip()[:MAX_CHANGE_REQUEST_CHARS]
+    if not own or own in pending.split("\n"):
+        return pending
+    if len(pending) + 1 + len(own) > MAX_CHANGE_REQUEST_CHARS:
+        return own
+    return f"{pending}\n{own}"
 
 
 def take_pending_request(state: Any, args: PipelineArgs) -> PipelineArgs:
     """The run's arguments with a kept request (`keep_pending_request`) in front of its own; the state forgets it.
 
     A run on the catalogue plot without a request of its own (the bare `.create_plot()`) takes
-    the kept one; one with its own request takes both, the kept one first, when they fit
-    `MAX_CHANGE_REQUEST_CHARS` together, else its own. A change of an existing version drops it.
+    the kept one; one with its own request takes both (`merged_request`). A change of an
+    existing version drops it. A fresh paste drops it before any run (`IngestedDataset.state_delta`).
     """
     pending = state.get(PENDING_REQUEST)
     if pending is None:
         return args
     state[PENDING_REQUEST] = None
-    if not isinstance(pending, str) or not pending.strip() or args.base == "previous":
+    if args.base == "previous":
         return args
-    pending = pending.strip()[:MAX_CHANGE_REQUEST_CHARS]
-    own = args.change_request.strip()
-    if not own:
-        request = pending
-    elif own == pending or len(pending) + 1 + len(own) > MAX_CHANGE_REQUEST_CHARS:
-        request = own
-    else:
-        request = f"{pending}\n{own}"
-    return args.model_copy(update={"change_request": request})
+    return args.model_copy(update={"change_request": merged_request(pending, args.change_request)})
 
 
 def render_adapt_request(request: AdaptRequest, view: SessionView) -> str:

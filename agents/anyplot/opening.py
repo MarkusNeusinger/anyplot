@@ -38,7 +38,15 @@ from .data.parse import ParsedDataset, display_copy, parse_dataset, with_constan
 from .data.store import DatasetStore
 from .policy import fence
 from .schemas import MAX_SAMPLE_ROWS, MAX_TOP_VALUES, Binding
-from .session_state import BINDINGS, DATASET_HISTORY, DATASET_ID, DATASET_VERSION, CatalogueSnapshot, initial_state
+from .session_state import (
+    BINDINGS,
+    DATASET_HISTORY,
+    DATASET_ID,
+    DATASET_VERSION,
+    PENDING_REQUEST,
+    CatalogueSnapshot,
+    initial_state,
+)
 from .settings import AgentSettings
 
 
@@ -93,12 +101,18 @@ class IngestedDataset:
     bindings: list[Binding]
 
     def state_delta(self) -> dict[str, Any]:
-        """The delta of a paste: version 1 of the data, with no history to undo."""
+        """The delta of a paste: version 1 of the data, with no history to undo.
+
+        A request kept from a plot that stopped before the confirmation (`PENDING_REQUEST`) was
+        written for the data it replaces, so it goes too: a title for the Swiss table must not
+        land on the German one pasted after it.
+        """
         return {
             DATASET_ID: self.dataset_id,
             BINDINGS: [binding.model_dump() for binding in self.bindings],
             DATASET_HISTORY: [],
             DATASET_VERSION: 1,
+            PENDING_REQUEST: None,
         }
 
 

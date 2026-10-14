@@ -1775,6 +1775,20 @@ class TestEmptyColumns:
 
         assert parsed.column_dtypes == {"a": "integer", "b": "integer"}
 
+    def test_json_records_and_column_lists_drop_empty_fields_before_the_cap(self) -> None:
+        empty = {f"unused_{i}": None for i in range(MAX_COLUMNS)}
+        records = parse_dataset(json.dumps([{"a": 1, "b": 2, **empty}, {"a": 3, "b": 4, **empty}]))
+        columns = parse_dataset(json.dumps({"a": [1, 3], "b": [2, 4], **{k: [None, None] for k in empty}}))
+
+        for parsed in (records, columns):
+            assert parsed.column_dtypes == {"a": "integer", "b": "integer"}
+            assert warned(parsed, f"{MAX_COLUMNS} columns without any value dropped")
+
+    def test_a_json_table_far_over_the_cap_is_refused_before_it_is_read(self) -> None:
+        wide = parse_module.MAX_RAW_COLUMNS + 1
+        assert error_code(json.dumps([{f"c{i}": None for i in range(wide)}])) == "too_many_columns"
+        assert error_code(json.dumps({f"c{i}": [None] for i in range(wide)})) == "too_many_columns"
+
     def test_a_canonical_reparse_keeps_an_empty_column(self) -> None:
         parsed = parse_dataset(
             "x,y,ratio\n1,2,\n3,4,\n", find_table=False, max_bytes=MAX_COMPUTED_BYTES, canonical=True

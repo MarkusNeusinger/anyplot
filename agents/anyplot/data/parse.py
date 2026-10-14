@@ -170,6 +170,10 @@ PAIR_HEADERS = ("category", "value")  # the columns of an object of scalars or a
 NA_TOKEN = "NA"
 MIN_OTHER_CODES = 2
 """The distinct letter codes beside `NA` that make a pasted `NA` a code rather than missing (`_keep_na_codes`)."""
+MAX_RAW_COLUMNS = 4 * MAX_COLUMNS
+"""The keys a JSON table may carry before its empty columns are dropped (`_without_empty_columns`): an API's
+records name every field of its schema, also the unused ones, and the cap of `MAX_COLUMNS` applies to the
+columns left; this bound keeps the work before that check small. Delimited text is bounded by its size alone."""
 MIN_KEPT_COLUMNS = 2
 """The columns a paste keeps at least when constant text columns move to the notes (`_constants_to_notes`):
 a category or a time and a value, the least a plot needs."""
@@ -848,8 +852,8 @@ def _records(
         for key in record:
             if key not in keys:
                 keys[key] = len(keys)
-                if len(keys) > MAX_COLUMNS:
-                    raise ParseError("too_many_columns", f"the data has more than {MAX_COLUMNS} columns")
+                if len(keys) > MAX_RAW_COLUMNS:
+                    raise ParseError("too_many_columns", f"the data has more than {MAX_RAW_COLUMNS} columns")
     headers = [_json_key(key, position) for key, position in keys.items()]
     rows: list[list[str]] = []
     incomplete = 0
@@ -864,8 +868,10 @@ def _records(
 
 
 def _column_lists(data: Mapping[Any, Sequence[Any]]) -> tuple[list[str], list[list[str]], SourceFormat]:
-    if len(data) > MAX_COLUMNS:
-        raise ParseError("too_many_columns", f"the data has {len(data)} columns; at most {MAX_COLUMNS} are supported")
+    if len(data) > MAX_RAW_COLUMNS:
+        raise ParseError(
+            "too_many_columns", f"the data has {len(data)} columns; at most {MAX_COLUMNS} with values are supported"
+        )
     lengths = {len(values) for values in data.values()}
     if len(lengths) != 1:
         raise ParseError("unparseable", "the column lists have different lengths")

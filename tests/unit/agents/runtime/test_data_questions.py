@@ -335,6 +335,27 @@ class TestPendingRequest:
         keep_pending_request(state, args, reason)
         assert state.get(PENDING_REQUEST) == kept
 
+    def test_a_second_blocked_request_joins_the_first(self) -> None:
+        state: dict[str, Any] = {}
+        keep_pending_request(state, PipelineArgs(change_request="Title: CO2 per capita"), "data_unconfirmed")
+        keep_pending_request(state, PipelineArgs(change_request="log y"), "data_unconfirmed")
+        keep_pending_request(state, PipelineArgs(change_request="log y"), "data_unconfirmed")  # a repeat adds nothing
+
+        assert state[PENDING_REQUEST] == "Title: CO2 per capita\nlog y"
+        assert take_pending_request(state, PipelineArgs()).change_request == "Title: CO2 per capita\nlog y"
+
+    async def test_a_fresh_paste_drops_the_kept_request(self, client: httpx.AsyncClient) -> None:
+        sid = await open_session(client)
+        runtime = app.dependency_overrides[get_runtime]()
+        session = await runtime.session(USER, sid)
+        await runtime.write_state(session, {PENDING_REQUEST: "Title: Swiss emissions"})
+        assert (await _session_state(client, sid))[PENDING_REQUEST] == "Title: Swiss emissions"
+
+        stored = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": OWID})
+
+        assert stored.status_code == 200, stored.text
+        assert (await _session_state(client, sid)).get(PENDING_REQUEST) is None
+
     @pytest.mark.parametrize(
         ("args", "expected"),
         [
