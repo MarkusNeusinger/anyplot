@@ -10,7 +10,7 @@ context through the same functions the ScopeGuard plugin uses
 (`plugins/scope_guard.judge_context` and `judge_input`), and the judge is the one
 `models.make_judge_client` builds, with the rubric `scope_judge.md`; like the plugin,
 `judge_context` never passes a fixed refusal as the last assistant turn. A run of the
-203 cases makes 203 judge calls of about 2,500 input and 60 output tokens, about
+205 cases makes 205 judge calls of about 2,500 input and 60 output tokens, about
 $0.05 at Claude Haiku 5.5's eu list price (the first run, on 2026-10-10, of the 176
 cases the file held then: $0.054).
 

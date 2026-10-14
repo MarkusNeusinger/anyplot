@@ -39,13 +39,16 @@
   session's bounded refusal ring (`services.RefusalStore`), which only the feedback
   bundle shows; the attribution line never carries the text.
 
-A withheld message is replaced by `[message withheld by scope policy]` before ADK
-stores it. `before_run_callback` then halts the run with the refusal text, which
+A withheld message is replaced before ADK stores it: by
+`[message withheld by scope policy: <code>]` after the judge's refusal (`out_of_scope`
+or `needs_data`, `withheld_text`), so the judge's next context keeps the verdict, and by
+the bare `[message withheld by scope policy]` otherwise. `before_run_callback` then halts the run with the refusal text, which
 ADK emits as one final event (author `model`); the stream translator turns the
 ledger's refusal or error into `refusal` or `error` events. The judge's context
 skips that halt event's text, as it skips every fixed reply (`judge_context`): after a
-refusal the judge sees the withheld placeholder among the user turns and the last reply
-a model wrote, never the refusal, which primed it to refuse the next message alike.
+refusal the judge sees the withheld placeholder, with its refusal code, among the user
+turns and the last reply a model wrote, never the refusal text, which primed it to refuse
+the next message alike.
 
 `on_event_callback` is the output side: the root's final reply goes through the
 output guard's length cap (`output_guard.reply_too_long`, the same in every language)
@@ -109,6 +112,8 @@ Turn = tuple[Literal["user", "assistant"], str]
 REFUSAL_CODES: dict[str, str] = {"out_of_scope": "out_of_scope", "attack": "out_of_scope", "needs_data": "needs_data"}
 """The `refusal` event code of each refusing verdict. `attack` shares the out-of-scope reply, so an
 attacker learns nothing about how the message was classified."""
+JUDGED_REFUSALS = frozenset(REFUSAL_CODES.values())
+"""The refusal codes a withheld placeholder may carry (`withheld_text`)."""
 
 
 def refusal_code(verdict: str) -> str:
@@ -116,8 +121,20 @@ def refusal_code(verdict: str) -> str:
     return REFUSAL_CODES.get(verdict, "out_of_scope")
 
 
-def _withheld() -> types.Content:
-    return types.Content(role="user", parts=[types.Part(text=WITHHELD)])
+def withheld_text(code: str | None = None) -> str:
+    """The placeholder a withheld message is stored as: with the refusal code for a judged refusal.
+
+    `[message withheld by scope policy: needs_data]` keeps the earlier verdict for the judge's next
+    context, so "do it anyway" after a `needs_data` refusal gets `needs_data` again, without a
+    natural-language refusal text in that context (which primed the judge, `judge_context`). Only
+    the refusal codes appear (`attack` is `out_of_scope` there too); a refusal before the judge
+    (`budget`, `unsupported_content`) or an outage keeps the bare `WITHHELD`.
+    """
+    return f"{WITHHELD[:-1]}: {code}]" if code in JUDGED_REFUSALS else WITHHELD
+
+
+def _withheld(code: str | None = None) -> types.Content:
+    return types.Content(role="user", parts=[types.Part(text=withheld_text(code))])
 
 
 def session_turns(invocation_context: InvocationContext) -> list[Turn]:
@@ -251,7 +268,7 @@ class ScopeGuardPlugin(BasePlugin):
                 )
             code = refusal_code(verdict.verdict)
             ledger.refuse(code, refusal(code, verdict.lang))
-            return _withheld()
+            return _withheld(code)
         await self._detect(invocation_context, ledger, verdict, text)
         return None
 

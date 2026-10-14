@@ -638,7 +638,7 @@ It starts as English (`en`, source `default`), also when your browser is set to
 another language. When you paste data before typing anything, the language of
 the notes around your table, or else of its column names, sets it (source
 `pasted`, shown as `lang: de · from data`); column names such as
-`temperature_2m_max` or English notes leave English in place. Your first typed
+`temperature_2m_max` or English notes leave the current language unchanged. Your first typed
 message that the assistant answers sets it to the language you write in
 (source `detected`), also after a paste: a refused message and the
 `create_plot` and `summarize_data` actions set nothing, and later messages do

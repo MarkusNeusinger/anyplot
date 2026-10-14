@@ -30,6 +30,7 @@ from agents.anyplot.plugins.ledger import (
 )
 from agents.anyplot.plugins.scope_guard import (
     GUARD_UNAVAILABLE_TEXT,
+    JUDGED_REFUSALS,
     MAX_CONTEXT_CHARS,
     MAX_USER_CONTEXT_CHARS,
     MAX_USER_TURN_CHARS,
@@ -40,6 +41,7 @@ from agents.anyplot.plugins.scope_guard import (
     judge_context,
     judge_input,
     session_turns,
+    withheld_text,
 )
 from agents.anyplot.plugins.tool_safety import RESULT_KEYS, ToolSafetyPlugin, has_url_or_path, result_limit, result_size
 from agents.anyplot.policy import DATA_PREAMBLE, fence
@@ -141,7 +143,7 @@ class TestScopeGuard:
         )
         halt = await plugin.before_run_callback(invocation_context=FakeContext())
 
-        assert replaced.parts[0].text == WITHHELD
+        assert replaced.parts[0].text == withheld_text("out_of_scope")
         assert ledger.refusal[0] == "out_of_scope"
         assert halt.parts[0].text == ledger.refusal[1]
 
@@ -161,7 +163,7 @@ class TestScopeGuard:
         )
         halt = await plugin.before_run_callback(invocation_context=FakeContext())
 
-        assert replaced.parts[0].text == WITHHELD
+        assert replaced.parts[0].text == withheld_text(code)  # `attack` reads as out_of_scope here too
         assert ledger.refusal == (code, policy.refusal(code, "de"))
         assert halt.parts[0].text == policy.refusal(code, "de")
 
@@ -672,12 +674,48 @@ class TestJudgeContext:
             WITHHELD,
         ]
         assert sent.index("<earlier_user_turns>") < sent.index("<last_assistant_turn>") < sent.index("<user_message>")
-        assert replaced.parts[0].text == WITHHELD and ledger.refusal is not None
+        assert replaced.parts[0].text == withheld_text("out_of_scope") and ledger.refusal is not None
 
     def test_the_rubric_explains_the_earlier_turns(self) -> None:
         rubric = policy.scope_rubric()
 
         assert "`<earlier_user_turns>`" in rubric and "gets the verdict of the whole request" in rubric
+        assert all(f"`{withheld_text(code)}`" in rubric for code in JUDGED_REFUSALS)  # the coded placeholders
+
+    async def test_a_continuation_after_a_needs_data_refusal_shows_the_judge_that_verdict(
+        self, ledger: RequestLedger, services: Services, judge
+    ) -> None:
+        """Copilot on #12171: the placeholder keeps the verdict, the refusal text stays out of the context."""
+        judge.script = [JudgeVerdict(verdict="needs_data", lang="de"), JudgeVerdict(verdict="needs_data", lang="de")]
+        plugin = ScopeGuardPlugin()
+        context = FakeContext()
+        weather = await plugin.on_user_message_callback(
+            invocation_context=context, user_message=text_message("Wie wird das Wetter morgen in Wien?")
+        )
+        assert weather.parts[0].text == "[message withheld by scope policy: needs_data]"
+        events = [turn_event("user", weather.parts[0].text), turn_event("model", policy.refusal("needs_data", "de"))]
+
+        await plugin.on_user_message_callback(
+            invocation_context=FakeContext(session=FakeSession(events=events)),
+            user_message=text_message("Mach es trotzdem"),
+        )
+
+        sent = judge.calls[1][0]
+        assert '["[message withheld by scope policy: needs_data]"]' in sent
+        assert "<last_assistant_turn>" not in sent and "Internet" not in sent
+
+    @pytest.mark.parametrize(
+        ("code", "text"),
+        [
+            ("needs_data", "[message withheld by scope policy: needs_data]"),
+            ("out_of_scope", "[message withheld by scope policy: out_of_scope]"),
+            ("budget", WITHHELD),
+            ("unsupported_content", WITHHELD),
+            (None, WITHHELD),
+        ],
+    )
+    def test_only_a_judged_refusal_names_its_code(self, code: str | None, text: str) -> None:
+        assert withheld_text(code) == text
 
 
 class TestBudget:

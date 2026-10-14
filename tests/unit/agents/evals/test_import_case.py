@@ -171,6 +171,9 @@ class TestFromABundleFile:
             ({}, {}, None),  # a bundle saved before the session language existed
             ({"plot_language": "de", "plot_language_source": "default"}, {"language": "de"}, None),
             ({"plot_language": "de", "plot_language_source": "chosen"}, {}, "de"),
+            # A language the paste set: the version's own language first, else the session's.
+            ({"plot_language": "de", "plot_language_source": "pasted"}, {"language": "fr"}, "fr"),
+            ({"plot_language": "de", "plot_language_source": "pasted"}, {}, "de"),
             ({"plot_language": "de", "plot_language_source": "guessed"}, {"language": "de"}, None),
             ({"plot_language": "de", "plot_language_source": "chosen"}, {"language": "de; drop"}, None),
             ({"plot_language": "a/b", "plot_language_source": "detected"}, {}, None),
@@ -406,13 +409,14 @@ class TestChangeRequest:
 
 
 def test_the_copied_constants_match_their_sources() -> None:
-    from agents.anyplot.plugins.scope_guard import WITHHELD
+    from agents.anyplot.plugins.scope_guard import JUDGED_REFUSALS, WITHHELD, withheld_text
     from agents.main import ACTION_MESSAGES
     from core.database import FEEDBACK_REACTIONS
 
     assert ACTION_MESSAGES["create_plot"] == CREATE_PLOT_MESSAGE
     assert all(text.startswith(import_case.ACTION_PREFIX) for text in ACTION_MESSAGES.values())
-    assert WITHHELD == import_case.WITHHELD
+    placeholders = [WITHHELD, *(withheld_text(code) for code in JUDGED_REFUSALS)]
+    assert all(text.startswith(import_case.WITHHELD_PREFIX) for text in placeholders)
     assert import_case.MAX_CHANGE_REQUEST_CHARS == MAX_CHANGE_REQUEST_CHARS
     assert import_case.REACTIONS == set(FEEDBACK_REACTIONS)
     assert set(EXPECTED_BY_REACTION) == {"thumbs_up", "thumbs_down"}
