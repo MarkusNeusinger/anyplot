@@ -8,9 +8,11 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from agents.anyplot.render import contract, png
+from agents.anyplot.data.parse import MAX_INPUT_BYTES
+from agents.anyplot.plugins.tool_safety import MAX_DATA_CODE_CHARS
+from agents.anyplot.render import contract, harness, png
 from agents.anyplot.schemas import RENDER_ID_PATTERN
-from agents.renderer import wire
+from agents.renderer import executor, wire
 from agents.renderer.settings import RendererSettings
 
 from .helpers import job
@@ -26,6 +28,30 @@ class TestContract:
         assert wire.MAX_PROBE_BYTES == png.MAX_PROBE_BYTES
         assert wire.MAX_STDERR_CHARS == contract.MAX_STDERR_CHARS
         assert wire.JOB_ID_PATTERN == RENDER_ID_PATTERN
+        assert wire.MAX_CSV_BYTES == MAX_INPUT_BYTES == harness.DATA_MAX_CSV_BYTES
+        assert executor.OUT_FILE == harness.DATA_OUT_FILE and executor.DATA_FLAG == harness.DATA_FLAG
+        assert wire.MAX_DATA_SOURCE_CHARS >= MAX_DATA_CODE_CHARS
+
+    def test_a_data_run_request_is_bounded_and_closed(self) -> None:
+        good = {"job_id": "d1", "source": "df = 1\n", "timeout_s": 10}
+        assert wire.DataRunRequest.model_validate(good).timeout_s == 10
+        for overrides in (
+            {"timeout_s": wire.MAX_DATA_TIMEOUT_S + 1},
+            {"timeout_s": 0},
+            {"source": ""},
+            {"source": "x" * (wire.MAX_DATA_SOURCE_CHARS + 1)},
+            {"job_id": "../x"},
+            {"themes": ["light"]},
+            {"kind": "data"},
+        ):
+            with pytest.raises(ValidationError):
+                wire.DataRunRequest.model_validate({**good, **overrides})
+
+    def test_a_data_run_answer_is_closed(self) -> None:
+        with pytest.raises(ValidationError):
+            wire.DataRun.model_validate({"exit_code": 0, "png_base64": "x"})
+        with pytest.raises(ValidationError):
+            wire.DataRun.model_validate({"exit_code": 0, "csv_text": "x" * (wire.MAX_CSV_BYTES + 1)})
 
     def test_a_job_names_distinct_known_themes_and_a_bounded_timeout(self) -> None:
         assert job(themes=("light", "dark")).themes == ["light", "dark"]

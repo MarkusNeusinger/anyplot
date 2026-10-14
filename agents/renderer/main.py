@@ -12,7 +12,8 @@ like `agents/evals/`.
 | Route | Body | Result | Errors |
 |---|---|---|---|
 | `POST /render` | `RenderRequest` (`wire.py`): `{job_id, language, library, source, data_csv, themes, timeout_s}` | `RenderResponse`: per theme the exit code, a timeout flag, the stderr tail, the probe, the PNG as base64, the attempts, a reason with the measured value and the limit; the slot wait and total time; `MemAvailable` | `401 unauthenticated`, `403 forbidden`, `409 job_conflict` (another payload for a `job_id` and themes in flight or just finished), `422 invalid_job`, `499 cancelled` or `499 client_gone` (nobody reads it), `500 internal`, `503 busy` (no slot within `RENDERER_SLOT_WAIT_S`), `503 low_memory`, `503 stuck`, `503 sandbox_unavailable`, `503 volume_missing`, `503 io` |
-| `POST /render/{job_id}/cancel` | | `{"cancelled": n}`: the renders of that job it stopped | `401`, `403`, `422 invalid_job` |
+| `POST /run-data` | `DataRunRequest`: `{job_id, source, timeout_s}` (`timeout_s` at most 30) | `DataRunResponse`: the exit code (`harness.DATA_EXIT`), a timeout flag, a reason with the measured value and the limit, `csv_text` (the `out.csv` the harness wrote, only after exit code 0), the stderr tail, the attempts, the timings, the version, `MemAvailable` | the errors of `POST /render` |
+| `POST /render/{job_id}/cancel` | | `{"cancelled": n}`: the renders and data runs of that job it stopped | `401`, `403`, `422 invalid_job` |
 | `GET /status` | | `RendererStatus`: name, version, revision, in flight, waiting, stuck launchers, `MemAvailable`, whether the launcher exists, whether the run volume is in place | `401`, `403` |
 
 All routes sit behind the caller check (`auth.py`) and Cloud Run IAM. There is no
@@ -26,6 +27,13 @@ many sandboxes crash the whole instance. A request waits at most
 `RENDERER_SLOT_WAIT_S` for the slot (`503 busy`), and a render is refused while
 `MemAvailable` is below `RENDERER_MIN_MEM_AVAILABLE_MB` (`503 low_memory`), which is
 the memory signal S2 asked for because the cgroup's memory counter is unreadable.
+
+**Data runs.** `POST /run-data` (added for `run_data_code`, owner decision of 2026-10-14)
+runs a snippet that computes a table with the harness in data mode (`harness.py --data`,
+whose audit hook refuses native code, processes, sockets and writes), in the same one
+render slot, under the same memory floor, watchdog and kill path, with the same
+idempotency rules (its key is the `job_id` and `data`). A renderer deployed before the
+route answers it `404`, which the agents side reads as `unavailable`.
 
 **`job_id` and the themes are the idempotency key.** The `remote` backend and the
 deploy smoke replay a `POST /render` after an ambiguous failure (a connection error,
@@ -86,7 +94,17 @@ from fastapi.responses import JSONResponse
 from .auth import CallerRefused, check_caller
 from .executor import Executor, ExecutorConfig, SandboxExecutor, Unavailable, mem_available_mb, runs_volume_ok
 from .settings import RendererSettings, get_settings
-from .wire import JOB_ID_PATTERN, RendererStatus, RenderRequest, RenderResponse, RenderTimings, Theme, ThemeRun
+from .wire import (
+    JOB_ID_PATTERN,
+    DataRunRequest,
+    DataRunResponse,
+    RendererStatus,
+    RenderRequest,
+    RenderResponse,
+    RenderTimings,
+    Theme,
+    ThemeRun,
+)
 
 
 logger = logging.getLogger("agents.renderer")
@@ -107,25 +125,30 @@ class JobConflict(Exception):
     """A `POST /render` whose key is in flight or just finished with another payload; answered `409 job_conflict`."""
 
 
-type JobKey = tuple[str, tuple[Theme, ...]]
-"""The idempotency key of a request: its `job_id` and its themes, in order."""
+type Job = RenderRequest | DataRunRequest
+type Answer = RenderResponse | DataRunResponse
+type JobKey = tuple[str, tuple[str, ...]]
+"""The idempotency key of a request: its `job_id` and its themes, in order, or `("data",)` for a data run."""
+DATA_KEY = ("data",)
 
 
-def job_key(job: RenderRequest) -> JobKey:
+def job_key(job: Job) -> JobKey:
+    if isinstance(job, DataRunRequest):
+        return (job.job_id, DATA_KEY)
     return (job.job_id, tuple(job.themes))
 
 
-def fingerprint(job: RenderRequest) -> str:
-    """What makes two `POST /render` the same job: the whole request, hashed (the body itself is never kept twice)."""
+def fingerprint(job: Job) -> str:
+    """What makes two requests the same job: the whole request, hashed (the body itself is never kept twice)."""
     return hashlib.sha256(job.model_dump_json().encode("utf-8")).hexdigest()
 
 
 @dataclass
 class RunningJob:
-    """A render in flight and the requests waiting for it; the last one to leave may cancel it."""
+    """A render or data run in flight and the requests waiting for it; the last one to leave may cancel it."""
 
     fingerprint: str
-    task: "asyncio.Task[RenderResponse]"
+    task: "asyncio.Task[Answer]"
     waiters: int = 0
 
 
@@ -191,10 +214,10 @@ class Renderer:
             if not self.volume:
                 logger.error(json.dumps({"event": "runs_volume_missing", "runs_dir": settings.runs_dir}))
         self._running: dict[JobKey, RunningJob] = {}
-        self._done: OrderedDict[JobKey, tuple[str, RenderResponse]] = OrderedDict()
+        self._done: OrderedDict[JobKey, tuple[str, Answer]] = OrderedDict()
 
-    def join(self, job: RenderRequest) -> "asyncio.Future[RenderResponse]":
-        """The render of `job`, started now or already there, with this request counted as a waiter.
+    def join(self, job: Job) -> "asyncio.Future[Answer]":
+        """The render (or data run) of `job`, started now or already there, with this request counted as a waiter.
 
         `job_id` and the themes are the idempotency key (see the module docstring):
         the same payload joins the render in flight or gets the stored answer of a
@@ -215,15 +238,17 @@ class Renderer:
             if done[0] != print_:
                 raise JobConflict
             logger.info(json.dumps({"event": "render_joined", "job_id": job.job_id, "finished": True}))
-            answer: asyncio.Future[RenderResponse] = asyncio.get_running_loop().create_future()
+            answer: asyncio.Future[Answer] = asyncio.get_running_loop().create_future()
             answer.set_result(done[1])
             return answer
-        task = asyncio.create_task(self.render(job))
+        task: asyncio.Task[Answer] = asyncio.create_task(
+            self.run_data(job) if isinstance(job, DataRunRequest) else self.render(job)
+        )
         self._running[key] = RunningJob(print_, task, waiters=1)
         task.add_done_callback(lambda finished: self._forget(key, print_, finished))
         return task
 
-    def leave(self, job: RenderRequest) -> bool:
+    def leave(self, job: Job) -> bool:
         """One waiter of `job` is gone; True when its render still runs and nobody waits for it any more."""
         running = self._running.get(job_key(job))
         if running is None or running.waiters == 0:
@@ -231,7 +256,7 @@ class Renderer:
         running.waiters -= 1
         return running.waiters == 0 and not running.task.done()
 
-    def _forget(self, key: JobKey, print_: str, task: "asyncio.Task[RenderResponse]") -> None:
+    def _forget(self, key: JobKey, print_: str, task: "asyncio.Task[Answer]") -> None:
         running = self._running.get(key)
         if running is not None and running.task is task:
             del self._running[key]
@@ -286,6 +311,49 @@ class Renderer:
                     "exit_codes": {theme: run.exit_code for theme, run in response.outputs.items()},
                     "reasons": {theme: run.reason for theme, run in response.outputs.items()},
                     "attempts": {theme: run.attempts for theme, run in response.outputs.items()},
+                    "slot_wait_s": response.timings.slot_wait_s,
+                    "total_s": response.timings.total_s,
+                    "mem_available_mb_before": available,
+                    "mem_available_mb_after": response.mem_available_mb,
+                }
+            )
+        )
+        return response
+
+    async def run_data(self, job: DataRunRequest) -> DataRunResponse:
+        started = time.monotonic()
+        try:
+            return await self._run_data(job, started)
+        finally:
+            self._exit_if_stuck()
+
+    async def _run_data(self, job: DataRunRequest, started: float) -> DataRunResponse:
+        """One data snippet in its own sandbox, inside the same single slot as the renders."""
+        if self.volume is False:
+            raise Unavailable("volume_missing")
+        async with self.slot.hold(self.settings.slot_wait_s):
+            waited = time.monotonic() - started
+            floor = self.settings.min_mem_available_mb
+            available = mem_available_mb()
+            if floor and available is not None and available < floor:
+                raise Unavailable("low_memory")
+            run = await self.executor.run_data(job)
+        response = DataRunResponse(
+            **run.model_dump(),
+            job_id=job.job_id,
+            timings=RenderTimings(slot_wait_s=round(waited, 3), total_s=round(time.monotonic() - started, 3)),
+            version=self.version,
+            mem_available_mb=mem_available_mb(),
+        )
+        logger.info(
+            json.dumps(
+                {
+                    "event": "data_run",
+                    "job_id": job.job_id,
+                    "exit_code": response.exit_code,
+                    "reason": response.reason,
+                    "attempts": response.attempts,
+                    "csv_bytes": None if response.csv_text is None else len(response.csv_text.encode("utf-8")),
                     "slot_wait_s": response.timings.slot_wait_s,
                     "total_s": response.timings.total_s,
                     "mem_available_mb_before": available,
@@ -383,7 +451,7 @@ async def _client_gone(request: Request) -> None:
         await asyncio.sleep(DISCONNECT_PAUSE_S)
 
 
-async def _leave(renderer: Renderer, job: RenderRequest, task: "asyncio.Future[RenderResponse]") -> None:
+async def _leave(renderer: Renderer, job: Job, task: "asyncio.Future[Answer]") -> None:
     """This request is done with the render; the last one to leave cancels it and waits for its sandbox to stop."""
     if renderer.leave(job):
         task.cancel()
@@ -393,6 +461,17 @@ async def _leave(renderer: Renderer, job: RenderRequest, task: "asyncio.Future[R
 @app.post("/render", dependencies=caller_checked)
 async def render(job: RenderRequest, renderer: RendererDep, request: Request) -> JSONResponse:
     """Run every theme of `job` in its own sandbox, one after the other, inside the render slot."""
+    return await _serve(job, renderer, request)
+
+
+@app.post("/run-data", dependencies=caller_checked)
+async def run_data(job: DataRunRequest, renderer: RendererDep, request: Request) -> JSONResponse:
+    """Run one data snippet in its own sandbox with the harness in data mode, inside the same render slot."""
+    return await _serve(job, renderer, request)
+
+
+async def _serve(job: Job, renderer: Renderer, request: Request) -> JSONResponse:
+    """Join or start the job, race it against the client's disconnect, and answer it (see the module docstring)."""
     task = renderer.join(job)
     gone = asyncio.create_task(_client_gone(request))
     waiting: set[asyncio.Future[Any]] = {task, gone}

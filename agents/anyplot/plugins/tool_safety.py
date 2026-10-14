@@ -61,6 +61,9 @@ ROOT_AGENT = "anyplot"
 PIPELINE_TOOL = "plot_pipeline"
 PREPARE_TOOL = "prepare_data"
 GENERATE_TOOL = "generate_data"
+MAX_DATA_CODE_CHARS = 6_000
+"""`run_data_code`'s `code`: a chat message holds at most 2,000 characters, and a translation from
+JavaScript, R or a formula into Python with imports and a `df` can be about three times longer."""
 MAX_RESULT_BYTES = 8 * 1024
 MAX_CODE_RESULT_BYTES = 24 * 1024
 MAX_NOTES_RESULT_BYTES = 9 * 1024

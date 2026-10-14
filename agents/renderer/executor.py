@@ -52,8 +52,15 @@ Each rule below comes from spike S or S2 (docs/concepts/agent-network.md, "Rende
   written, the launcher cannot be started) is `Unavailable("io")`, a `503`, never a
   plot failure.
 
+**Data runs** (`run_data`, the service's `POST /run-data`) take the same path: a run
+directory of their own, the same watchdog, kill path and launcher retry, with the
+snippet as `snippet.py`, no theme and no data file, and the harness in data mode
+(`harness.py --data snippet.py`, which arms its audit-hook guard). The only output read
+is `out.csv`, only after an exit code of 0, with `read_regular` under `MAX_CSV_BYTES`,
+as strict UTF-8; anything else is `output_rejected`.
+
 Strictly serial: the service holds one render slot (`main.py`), and the themes of a
-job run one after the other. No ADK import.
+job run one after the other; a data run takes the same slot. No ADK import.
 """
 
 import asyncio
@@ -75,9 +82,12 @@ from typing import Any, Protocol
 
 from .settings import RendererSettings
 from .wire import (
+    MAX_CSV_BYTES,
     MAX_PNG_BYTES,
     MAX_PROBE_BYTES,
     MAX_STDERR_CHARS,
+    DataRun,
+    DataRunRequest,
     RenderRequest,
     RunReason,
     Theme,
@@ -93,6 +103,14 @@ FORBIDDEN_FLAGS = ("--allow-egress", "--write")
 WORKDIR = "/work"
 CODE_FILE = "plot.py"
 DATA_FILE = "data.csv"
+SNIPPET_FILE = "snippet.py"
+"""A data run's code file; the agents' error summary looks for its frames by this name."""
+OUT_FILE = "out.csv"
+"""The table a data run's harness writes (`harness.DATA_OUT_FILE`)."""
+DATA_FLAG = "--data"
+"""The harness's data-mode flag (`harness.DATA_FLAG`)."""
+DATA_LABEL = "data"
+"""The sandbox name suffix and log label of a data run, where a render has its theme."""
 LAUNCHER_FAILURE = "failed to exec in container"
 HARNESS_START = 'HARNESS {"event": "start"}'
 HARNESS_END = 'HARNESS {"event": "end"'
@@ -348,15 +366,23 @@ def read_regular(path: Path, max_bytes: int) -> bytes | None:
     return bytes(chunks)
 
 
-def sandbox_env(config: ExecutorConfig, theme: Theme, cpu_s: int) -> dict[str, str]:
-    """The complete environment inside the sandbox: nothing of the host's reaches it."""
+def sandbox_env(config: ExecutorConfig, theme: Theme | None, cpu_s: int) -> dict[str, str]:
+    """The complete environment inside the sandbox: nothing of the host's reaches it.
+
+    A data run (`theme` None) gets no theme and no matplotlib settings: it imports no plotting library.
+    """
+    plot: dict[str, str] = {}
+    if theme is not None:
+        plot = {
+            "ANYPLOT_THEME": theme,
+            "MPLBACKEND": "Agg",
+            "MPLCONFIGDIR": config.mplconfig,
+            "ANYPLOT_MPL_SEED": config.mpl_seed,
+        }
     env = {
         "PATH": SANDBOX_PATH,
         "HOME": "/tmp",
-        "ANYPLOT_THEME": theme,
-        "MPLBACKEND": "Agg",
-        "MPLCONFIGDIR": config.mplconfig,
-        "ANYPLOT_MPL_SEED": config.mpl_seed,
+        **plot,
         "PYTHONDONTWRITEBYTECODE": "1",
         # One BLAS thread: Agg renders on one core, and every thread reserves address
         # space under RLIMIT_AS and counts toward RLIMIT_NPROC.
@@ -372,8 +398,9 @@ def sandbox_env(config: ExecutorConfig, theme: Theme, cpu_s: int) -> dict[str, s
     return env
 
 
-def build_argv(config: ExecutorConfig, name: str, run_dir: Path, theme: Theme, cpu_s: int) -> list[str]:
-    """The `sandbox do` command of one theme; asserted to carry neither `--write` nor `--allow-egress`."""
+def build_argv(config: ExecutorConfig, name: str, run_dir: Path, theme: Theme | None, cpu_s: int) -> list[str]:
+    """The `sandbox do` command of one theme, or of a data run (`theme` None, the harness in data mode);
+    asserted to carry neither `--write` nor `--allow-egress`."""
     argv = [
         config.sandbox_binary,
         "do",
@@ -388,7 +415,8 @@ def build_argv(config: ExecutorConfig, name: str, run_dir: Path, theme: Theme, c
     for key, value in sandbox_env(config, theme, cpu_s).items():
         argv += ["--env", f"{key}={value}"]
     flags = list(argv)
-    argv += ["--", config.python, "-I", config.harness, CODE_FILE]
+    argv += ["--", config.python, "-I", config.harness]
+    argv += [CODE_FILE] if theme is not None else [DATA_FLAG, SNIPPET_FILE]
     if any(part.split("=", 1)[0] in FORBIDDEN_FLAGS for part in flags):
         raise AssertionError("a sandbox must never get --write or --allow-egress")
     return argv
@@ -409,6 +437,7 @@ class Attempt:
     stderr: str = ""
     png: bytes | None = None
     probe: dict[str, Any] | None = None
+    csv_text: str | None = None
     wall_s: float = 0.0
 
     @property
@@ -467,6 +496,19 @@ class Attempt:
             cpu_s=usage.get("cpu_s"),
         )
 
+    def to_data_wire(self, attempts: int) -> DataRun:
+        return DataRun(
+            exit_code=self.exit_code,
+            timed_out=self.timed_out,
+            reason=self.reason,
+            measured=self.measured,
+            limit=self.limit,
+            csv_text=self.csv_text,
+            stderr_tail=self.stderr[-MAX_STDERR_CHARS:],
+            wall_s=round(self.wall_s, 3),
+            attempts=attempts,
+        )
+
 
 def _b64(data: bytes) -> str:
     return base64.b64encode(data).decode("ascii")
@@ -490,6 +532,8 @@ class Executor(Protocol):
     def available(self) -> bool: ...
 
     async def run_theme(self, job: RenderRequest, theme: Theme) -> ThemeRun: ...
+
+    async def run_data(self, job: DataRunRequest) -> DataRun: ...
 
 
 class SandboxExecutor:
@@ -519,30 +563,42 @@ class SandboxExecutor:
 
     async def run_theme(self, job: RenderRequest, theme: Theme) -> ThemeRun:
         """Render one theme; a launcher failure before the harness started is retried once."""
+        files = {CODE_FILE: job.source, DATA_FILE: job.data_csv}
+        attempt, attempts = await self._launch(files, theme, job.timeout_s)
+        return attempt.to_wire(theme, attempts)
+
+    async def run_data(self, job: DataRunRequest) -> DataRun:
+        """Run one data snippet with the harness in data mode; the same retry, watchdog and kill path as a theme."""
+        attempt, attempts = await self._launch({SNIPPET_FILE: job.source}, None, job.timeout_s)
+        return attempt.to_data_wire(attempts)
+
+    async def _launch(self, files: dict[str, str], theme: Theme | None, timeout_s: float) -> tuple[Attempt, int]:
+        """One run (a theme, or a data run when `theme` is None) and its launches; one retry for a launcher failure."""
         if not self.available:
             raise Unavailable("sandbox_unavailable")
         if self.stuck:
             raise Unavailable("stuck")
-        cpu_s = max(1, min(self.config.rlimit_cpu_s, math.ceil(job.timeout_s)))
+        label = theme if theme is not None else DATA_LABEL
+        cpu_s = max(1, min(self.config.rlimit_cpu_s, math.ceil(timeout_s)))
         started = self.clock()
-        attempt = await self._attempt(job, theme, cpu_s, job.timeout_s)
+        attempt = await self._attempt(files, theme, cpu_s, timeout_s)
         attempts = 1
         if attempt.launcher_failed:
-            remaining = job.timeout_s - (self.clock() - started)
-            _log_attempt(attempt, theme, retry=remaining >= MIN_RETRY_S)
+            remaining = timeout_s - (self.clock() - started)
+            _log_attempt(attempt, label, retry=remaining >= MIN_RETRY_S)
             if remaining >= MIN_RETRY_S:
-                attempt = await self._attempt(job, theme, cpu_s, remaining)
+                attempt = await self._attempt(files, theme, cpu_s, remaining)
                 attempts = 2
             if attempt.launcher_failed:
                 attempt.reason = "launcher"
-        _log_attempt(attempt, theme, retry=False)
-        return attempt.to_wire(theme, attempts)
+        _log_attempt(attempt, label, retry=False)
+        return attempt, attempts
 
-    async def _attempt(self, job: RenderRequest, theme: Theme, cpu_s: int, timeout_s: float) -> Attempt:
-        name = f"r-{secrets.token_hex(6)}-{theme}"
+    async def _attempt(self, files: dict[str, str], theme: Theme | None, cpu_s: int, timeout_s: float) -> Attempt:
+        name = f"r-{secrets.token_hex(6)}-{theme if theme is not None else DATA_LABEL}"
         run_dir = self.config.runs_dir / name
         try:
-            self._prepare(run_dir, job)
+            self._prepare(run_dir, files)
             return await self._run(name, run_dir, theme, cpu_s, timeout_s)
         except OSError as exc:
             # A full volume, a failed fork: the host could not run the job, which is
@@ -552,8 +608,8 @@ class SandboxExecutor:
         finally:
             shutil.rmtree(run_dir, ignore_errors=True)
 
-    def _prepare(self, run_dir: Path, job: RenderRequest) -> None:
-        """The run directory with the code and the data; the sandbox mounts its `work` directory."""
+    def _prepare(self, run_dir: Path, files: dict[str, str]) -> None:
+        """The run directory with the code (and a render's data); the sandbox mounts its `work` directory."""
         work = run_dir / "work"
         work.mkdir(parents=True)
         # The sandbox is uid 0 behind gVisor's gofer, and the spikes ran with these
@@ -564,10 +620,10 @@ class SandboxExecutor:
             tmp = run_dir / "tmp"
             tmp.mkdir()
             os.chmod(tmp, 0o1777)
-        (work / CODE_FILE).write_text(job.source, encoding="utf-8")
-        (work / DATA_FILE).write_text(job.data_csv, encoding="utf-8")
+        for file_name, text in files.items():
+            (work / file_name).write_text(text, encoding="utf-8")
 
-    async def _run(self, name: str, run_dir: Path, theme: Theme, cpu_s: int, timeout_s: float) -> Attempt:
+    async def _run(self, name: str, run_dir: Path, theme: Theme | None, cpu_s: int, timeout_s: float) -> Attempt:
         argv = build_argv(self.config, name, run_dir, theme, cpu_s)
         started = self.clock()
         process = await asyncio.create_subprocess_exec(
@@ -621,9 +677,28 @@ class SandboxExecutor:
             stderr=stderr.decode("utf-8", errors="replace"),
             wall_s=wall,
         )
-        if stop is None or stop.reason == "timeout":
+        if theme is None:
+            if stop is None and attempt.exit_code == 0:
+                self._collect_data(attempt, run_dir / "work")
+        elif stop is None or stop.reason == "timeout":
             self._collect(attempt, run_dir / "work", theme)
         return attempt
+
+    def _collect_data(self, attempt: Attempt, work: Path) -> None:
+        """Read the `out.csv` a data run left, as strict UTF-8 under `MAX_CSV_BYTES`; anything else is refused."""
+        try:
+            raw = read_regular(work / OUT_FILE, MAX_CSV_BYTES)
+        except OutputRejected as exc:
+            attempt.reason = "output_rejected"
+            attempt.measured = exc.size
+            attempt.limit = exc.limit
+            return
+        if raw is None:
+            return
+        try:
+            attempt.csv_text = raw.decode("utf-8")
+        except UnicodeDecodeError:
+            attempt.reason = "output_rejected"
 
     def _collect(self, attempt: Attempt, work: Path, theme: Theme) -> None:
         """Read the PNG and the probe the run left; a refused PNG is reported, a refused probe is simply absent."""
@@ -675,7 +750,7 @@ class SandboxExecutor:
             await deleter.wait()
 
 
-def _log_attempt(attempt: Attempt, theme: Theme, *, retry: bool) -> None:
+def _log_attempt(attempt: Attempt, theme: str, *, retry: bool) -> None:
     """One JSON line per sandbox launch: ids, codes and timings, never stdout, stderr or code."""
     logger.info(
         json.dumps(

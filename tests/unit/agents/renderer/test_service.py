@@ -16,10 +16,10 @@ from agents.renderer.auth import decode_claims
 from agents.renderer.executor import ExecutorConfig, SandboxExecutor, Unavailable
 from agents.renderer.main import Renderer, app, get_renderer
 from agents.renderer.settings import RendererSettings, get_settings
-from agents.renderer.wire import RendererStatus, RenderResponse
+from agents.renderer.wire import DataRunResponse, RendererStatus, RenderResponse
 
 from .conftest import FakeLauncher
-from .helpers import AGENTS_SA, SLEEPER, URL, FakeExecutor, id_token, job
+from .helpers import AGENTS_SA, SLEEPER, URL, FakeExecutor, data_job, id_token, job
 
 
 GOOD = id_token(aud=URL, email=AGENTS_SA)
@@ -441,6 +441,88 @@ class TestCancellation:
 
         assert anonymous.status_code == 401
         assert bad.status_code in (404, 422)
+
+
+def data_body(**overrides: Any) -> dict[str, Any]:
+    return {**data_job().model_dump(mode="json"), **overrides}
+
+
+class TestRunData:
+    async def test_the_contract_round_trips(self, client: httpx.AsyncClient, fake: FakeExecutor) -> None:
+        response = await client.post("/run-data", json=data_body(), headers=auth())
+
+        assert response.status_code == 200 and response.headers["cache-control"] == "no-store"
+        answer = DataRunResponse.model_validate_json(response.content)
+        assert answer.job_id == "data123" and answer.exit_code == 0 and answer.csv_text == "x,y\n1,2\n"
+        assert answer.timings.total_s >= answer.timings.slot_wait_s >= 0
+        assert fake.calls == [("data123", "data")]
+
+    async def test_an_invalid_job_is_refused_without_echoing_it(self, client: httpx.AsyncClient) -> None:
+        for bad in (
+            data_body(timeout_s=600, source="SECRET-SNIPPET"),
+            data_body(job_id="../x", source="SECRET-SNIPPET"),
+            data_body(themes=["light"], source="SECRET-SNIPPET"),
+            data_body(source=""),
+        ):
+            response = await client.post("/run-data", json=bad, headers=auth())
+            assert response.status_code == 422 and response.json() == {"detail": "invalid_job"}
+            assert "SECRET" not in response.text
+
+    async def test_the_caller_check_applies(self, client: httpx.AsyncClient) -> None:
+        assert (await client.post("/run-data", json=data_body())).status_code == 401
+
+    async def test_a_data_run_and_a_render_share_the_one_slot(
+        self, client: httpx.AsyncClient, fake: FakeExecutor
+    ) -> None:
+        responses = await asyncio.gather(
+            client.post("/run-data", json=data_body(), headers=auth()),
+            client.post("/render", json=body(), headers=auth()),
+            client.post("/run-data", json=data_body(job_id="data456"), headers=auth()),
+        )
+
+        assert [response.status_code for response in responses] == [200, 200, 200]
+        assert fake.max_active == 1 and len(fake.calls) == 4
+
+    async def test_a_replay_gets_the_stored_answer_and_another_payload_conflicts(
+        self, client: httpx.AsyncClient, fake: FakeExecutor
+    ) -> None:
+        first = await client.post("/run-data", json=data_body(), headers=auth())
+        second = await client.post("/run-data", json=data_body(), headers=auth())
+        other = await client.post("/run-data", json=data_body(source="df = 2\n"), headers=auth())
+
+        assert first.content == second.content and fake.calls == [("data123", "data")]
+        assert other.status_code == 409 and other.json() == {"detail": "job_conflict"}
+
+    async def test_a_render_and_a_data_run_under_one_id_do_not_conflict(
+        self, client: httpx.AsyncClient, fake: FakeExecutor
+    ) -> None:
+        render = await client.post("/render", json=body(job_id="same"), headers=auth())
+        data = await client.post("/run-data", json=data_body(job_id="same"), headers=auth())
+
+        assert render.status_code == data.status_code == 200
+
+    async def test_an_executor_refusal_is_a_503(self, client: httpx.AsyncClient, fake: FakeExecutor) -> None:
+        fake.error = Unavailable("sandbox_unavailable")
+
+        response = await client.post("/run-data", json=data_body(), headers=auth())
+
+        assert response.status_code == 503 and response.json() == {"detail": "sandbox_unavailable"}
+
+    async def test_a_real_snippet_runs_in_the_sandbox(
+        self, settings: RendererSettings, config: ExecutorConfig, launcher: FakeLauncher
+    ) -> None:
+        renderer = Renderer(settings, SandboxExecutor(config))
+        app.dependency_overrides[get_settings] = lambda: settings
+        app.dependency_overrides[get_renderer] = lambda: renderer
+        try:
+            async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url=URL) as client:
+                response = await client.post("/run-data", json=data_body(), headers=auth())
+        finally:
+            app.dependency_overrides.clear()
+
+        answer = DataRunResponse.model_validate_json(response.content)
+        assert answer.exit_code == 0 and answer.csv_text == "x,y\n1,3\n2,4\n"
+        assert renderer.slot.in_flight == 0
 
 
 class TestStatus:

@@ -16,6 +16,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from agents.anyplot.render import harness
 from agents.renderer import executor as executor_module
 from agents.renderer.executor import (
     HARNESS_START,
@@ -38,7 +39,7 @@ from agents.renderer.settings import RendererSettings
 from agents.renderer.wire import MAX_STDERR_CHARS, ThemeRun
 
 from .conftest import FakeLauncher
-from .helpers import PLOT, SLEEPER, job
+from .helpers import PLOT, SLEEPER, data_job, job
 
 
 def envs(argv: list[str]) -> dict[str, str]:
@@ -372,6 +373,82 @@ class TestBounds:
             "max_rss_mb": 150.5,
             "cpu_s": 2.0,
         }
+
+
+class TestDataRun:
+    def test_argv_runs_the_harness_in_data_mode_without_theme_or_matplotlib(
+        self, config: ExecutorConfig, tmp_path: Path
+    ) -> None:
+        argv = build_argv(config, "r-abc-data", tmp_path / "r", None, 20)
+
+        assert argv[argv.index("--") :] == ["--", config.python, "-I", config.harness, "--data", "snippet.py"]
+        assert "--write" not in argv and not any(part.startswith("--allow-egress") for part in argv)
+        values = envs(argv)
+        assert values["PATH"] == SANDBOX_PATH and values["ANYPLOT_RLIMIT_CPU_S"] == "20"
+        assert not {"ANYPLOT_THEME", "MPLBACKEND", "MPLCONFIGDIR", "ANYPLOT_MPL_SEED"} & set(values)
+
+    async def test_a_snippet_returns_its_table(
+        self, executor: SandboxExecutor, launcher: FakeLauncher, config: ExecutorConfig
+    ) -> None:
+        run = await executor.run_data(data_job())
+
+        assert run.exit_code == 0, run.stderr_tail
+        assert run.csv_text == "x,y\n1,3\n2,4\n" and run.reason is None and run.attempts == 1
+        assert len(launcher.launches()) == 1 and launcher.launches()[0].endswith("-data")
+        assert "ANYPLOT_THEME" not in envs(launcher.calls()[0])
+        assert list(config.runs_dir.iterdir()) == []
+
+    async def test_an_error_returns_no_table_and_the_traceback_tail(self, executor: SandboxExecutor) -> None:
+        run = await executor.run_data(data_job("x = 1\nraise ValueError('a secret')\n"))
+
+        assert run.exit_code == harness.DATA_EXIT["error"] and run.csv_text is None
+        assert 'snippet.py", line 2' in run.stderr_tail
+
+    async def test_the_guard_refuses_a_write_and_nothing_is_collected(self, executor: SandboxExecutor) -> None:
+        source = "import pandas as pd\nopen('out.csv', 'w').write('a\\n1\\n')\ndf = pd.DataFrame({'a': [2]})\n"
+
+        run = await executor.run_data(data_job(source))
+
+        assert run.exit_code == harness.DATA_EXIT["blocked"] and run.csv_text is None
+
+    async def test_a_timeout_kills_the_run(self, executor: SandboxExecutor, launcher: FakeLauncher) -> None:
+        run = await executor.run_data(data_job(SLEEPER, timeout_s=1.0))
+
+        assert run.timed_out and run.exit_code is None and run.csv_text is None
+        assert launcher.deletes() == launcher.launches()
+
+    async def test_an_oversized_table_is_refused(
+        self, executor: SandboxExecutor, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(executor_module, "MAX_CSV_BYTES", 4)
+
+        run = await executor.run_data(data_job())
+
+        assert run.reason == "output_rejected" and run.limit == 4 and run.csv_text is None
+
+    async def test_a_launcher_failure_is_retried_once(self, executor: SandboxExecutor, launcher: FakeLauncher) -> None:
+        launcher.fail_next(1)
+
+        run = await executor.run_data(data_job())
+
+        assert run.exit_code == 0 and run.attempts == 2 and run.csv_text is not None
+        assert len(set(launcher.launches())) == 2
+
+    def test_collect_refuses_text_that_is_not_utf8(self, executor: SandboxExecutor, tmp_path: Path) -> None:
+        (tmp_path / "out.csv").write_bytes(b"a\n\xff\n")
+        attempt = Attempt("r", exit_code=0)
+
+        executor._collect_data(attempt, tmp_path)
+
+        assert attempt.reason == "output_rejected" and attempt.csv_text is None
+
+    def test_collect_refuses_a_link(self, executor: SandboxExecutor, tmp_path: Path) -> None:
+        (tmp_path / "out.csv").symlink_to("/etc/hostname")
+        attempt = Attempt("r", exit_code=0)
+
+        executor._collect_data(attempt, tmp_path)
+
+        assert attempt.reason == "output_rejected" and attempt.csv_text is None
 
 
 class TestHelpers:
