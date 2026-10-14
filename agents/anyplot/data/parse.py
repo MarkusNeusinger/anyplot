@@ -23,7 +23,16 @@ would, for example, read `01.02.2024` as a number under `thousands='.'`).
    (`json_pairs`: the columns `category` and `value`, one row per entry, in the
    pasted order; the keys stay text, the values are typed); nesting depth at
    most 2; `null`, `NaN` and `Infinity` are missing; a key repeated in an object
-   keeps its last value, with a warning. Text that starts with a bare `(` and is
+   keeps its last value, with a warning. A JSON-stat 2.0 dataset (`json_stat`,
+   since 2026-10-14: what the statistics offices' APIs return, BFS PxWeb,
+   Eurostat, Statistik Austria, Statistics Norway), or a JSON-stat 1.x bundle
+   of one dataset, is the one shape nested deeper than 2 (dimension, category,
+   index: about five levels): it is checked strictly and flattened into a long
+   table, one column per dimension with more than one category (named by its
+   label, the category labels as cells, kept text), then `value`, in the order of
+   `value`; see `_json_stat`. Its one-category dimensions, label, source and
+   notes become `context_lines`. The `MAX_NESTING` bracket count below applies
+   to it as to everything else. Text that starts with a bare `(` and is
    neither JSON nor a Python literal (a header such as `(in %) Land`, or prose
    in parentheses) is delimited text instead, like everything that starts
    otherwise, see `sniff_delimiter`.
@@ -83,6 +92,7 @@ from collections import Counter
 from collections.abc import Collection, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from datetime import datetime
+from itertools import product
 from typing import Any, Literal
 
 from ..schemas import (
@@ -186,6 +196,7 @@ _FLOAT = re.compile(r"[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?"
 _DECIMAL_COMMA = re.compile(r"[+-]?(?:[1-9][0-9]{0,2}(?:\.[0-9]{3})+|[0-9]+)(?:,[0-9]+)?")
 _THOUSANDS_DOT = re.compile(r"[+-]?(?:[1-9][0-9]{0,2}(?:\.[0-9]{3})+|[0-9]+)")
 _AMBIGUOUS_COMMA = re.compile(r"[+-]?[0-9]{1,3},[0-9]{3}")
+_INTEGER_INDEX = re.compile(r"0|[1-9][0-9]{0,8}")  # a position key of a sparse JSON-stat `value` object
 
 # A number with one unit. The number part only has to look like one here: the rules above
 # then type it. A trailing unit (`65 %`, `15,6 h`, `20°C`, `3 Std.`, `100 m²`, `12 CHF`,
@@ -265,7 +276,8 @@ class ParsedDataset:
     context_lines: list[str] = field(default_factory=list)
     """The lines `find_table` left out above and below the table (a title, an export's metadata, a source
     line, a note), each as one cleaned text line, at most `MAX_CONTEXT_CHARS` in all: the user's notes about
-    the data. Summary rows are not among them. Empty for a literal and for `find_table=False`."""
+    the data. Summary rows are not among them. Empty for `find_table=False` and for a literal, except a
+    JSON-stat dataset, whose label, source, notes and one-category dimensions are its lines (`_json_stat`)."""
 
 
 def without_context(parsed: ParsedDataset, warning: str) -> ParsedDataset:
@@ -297,7 +309,7 @@ class _Column:
     source: list[str]  # cleaned cells, as pasted
     cells: list[str]  # canonical cells for data.csv, set by the typing step
     invisible: bool = False
-    text_only: bool = False  # the `category` column of `json_pairs`: keys are names, never typed
+    text_only: bool = False  # `json_pairs` category, `json_stat` dimension: keys are names, never typed
     dtype: ColumnDtype = "text"
     unit: str | None = None  # the unit every cell carried, now part of the name
     bare: list[str] = field(default_factory=list)  # the cells the number typing read: `source`, or the number parts
@@ -336,7 +348,7 @@ def parse_dataset(text: str, *, text_columns: Collection[str] = (), find_table: 
     literal = _LITERAL_START.match(stripped)
     if literal:
         assignment, body = literal.group(), stripped[literal.end() :]
-        table = _read_literal(body, warnings)
+        table = _read_literal(body, warnings, context)
         if table is None and (assignment or not body.startswith("(")):
             raise ParseError("unparseable", "the data starts like JSON or a Python literal but is neither")
         # A bare `(` that neither reader accepts is delimited text: `(in %) Land;Wert`, prose in parentheses.
@@ -615,8 +627,14 @@ def _context_lines(records: Iterable[Sequence[str]], delimiter: str | None) -> t
     return lines, False
 
 
-def _read_literal(text: str, warnings: list[str]) -> tuple[list[str], list[list[str]], SourceFormat] | None:
-    """JSON, or a Python literal when the JSON reader refuses the text, tabulated alike; None when it is neither."""
+def _read_literal(
+    text: str, warnings: list[str], context: list[str]
+) -> tuple[list[str], list[list[str]], SourceFormat] | None:
+    """JSON, or a Python literal when the JSON reader refuses the text, tabulated alike; None when it is neither.
+
+    A JSON-stat dataset (`_json_stat`) is flattened instead, its title, source, notes and
+    one-category dimensions going to `context`.
+    """
     if _too_deep(text):
         raise ParseError("unparseable", f"the data is nested more than {MAX_NESTING} levels deep")
     decoded = _decode_literal(text)
@@ -625,6 +643,9 @@ def _read_literal(text: str, warnings: list[str]) -> tuple[list[str], list[list[
     data, repeated = decoded
     if repeated:
         warnings.append(f"{_count(repeated, 'key')} repeated; only the last value of a repeated key is kept")
+    dataset = _json_stat_dataset(data)
+    if dataset is not None:
+        return _json_stat(dataset, warnings, context)
     return _tabulate(data, warnings)
 
 
@@ -805,6 +826,212 @@ def _json_cell(value: object, position: int) -> str:
     )
 
 
+# --- JSON-stat ---------------------------------------------------------------------------
+
+
+def _json_stat_dataset(data: Any) -> dict[Any, Any] | None:
+    """The JSON-stat dataset in `data`, None when `data` is no JSON-stat document.
+
+    A JSON-stat 2.0 dataset is an object with a `dimension` object and a `value`, marked by
+    `"class": "dataset"` or, as in some 1.x-style responses, by a top-level `id`. A JSON-stat 1.x
+    bundle (`{"<name>": {"dimension": ..., "value": ...}}`) yields its dataset when it holds one.
+    A 2.0 collection or dimension, or a bundle of several datasets, holds no single table:
+    `unparseable`. Anything else (`{"class": "a"}` is an object of values) is None and goes to
+    `_tabulate` as before.
+    """
+    if not isinstance(data, dict) or not data:
+        return None
+    kind = data.get("class")
+    if isinstance(data.get("dimension"), dict) and "value" in data and (kind == "dataset" or "id" in data):
+        return data
+    if kind == "collection" and isinstance(data.get("link"), dict):
+        raise ParseError("unparseable", "a JSON-stat collection lists datasets but holds no values; paste one dataset")
+    if kind == "dimension" and isinstance(data.get("category"), dict):
+        raise ParseError("unparseable", "a JSON-stat dimension holds no values; paste a dataset")
+    if all(
+        isinstance(entry, dict) and isinstance(entry.get("dimension"), dict) and "value" in entry
+        for entry in data.values()
+    ):
+        if len(data) > 1:
+            raise ParseError(
+                "unparseable", f"the JSON-stat bundle holds {len(data)} datasets; paste one dataset at a time"
+            )
+        (only,) = data.values()
+        return dict(only)
+    return None
+
+
+def _json_stat_refusal(reason: str) -> ParseError:
+    return ParseError("unparseable", f"the JSON-stat dataset is inconsistent: {reason}")
+
+
+def _json_stat(
+    dataset: Mapping[Any, Any], warnings: list[str], context: list[str]
+) -> tuple[list[str], list[list[str]], SourceFormat]:
+    """A JSON-stat dataset as a long table: one column per dimension with more than one category, then `value`.
+
+    Every check comes before the rows are built: `id` and `size` name the dimensions in the
+    same order (a 1.x dataset keeps both inside `dimension`), the product of the sizes is at
+    most `MAX_ROWS` and equals the number of values (`value` as an array, or as a sparse
+    object of positions whose missing ones are empty), and every dimension lists as many
+    categories as its size (`category.index` as an array of codes or an object of code to
+    position; a dimension of one category may give only `category.label`).
+
+    A dimension's column is named by its `label` (else its id), its cells are the category
+    labels (else the codes), cleaned like the keys of `json_pairs` and kept text: `NA`
+    (Namibia) or `2024` is a name, never a missing cell or a number, and only `value` is
+    typed. A label shared by two categories in that cleaned form gets its code in
+    parentheses, with a warning. The rows run row-major over `id`, the order of `value`.
+    The value column is `value` whatever the dataset's units, and a dimension named
+    `value` in any case is renamed `<label> (dimension)` so the measure keeps the name: a measure dimension (`metric`, or a
+    component such as births and deaths) stays a column of the long table, which
+    `prepare_data` can pivot later. A dimension of one category is the same in every row,
+    so it is no column: `<label>: <category>` joins the dataset's `label`, `source` and
+    `note` lines in `context`, the notes the user pasted with the data, which the route
+    screens before any model reads them; the warning gives only their count. `status`
+    symbols are ignored, with one warning.
+    """
+    dimension = dataset["dimension"]
+    ids = dataset["id"] if "id" in dataset else dimension.get("id")
+    sizes = dataset["size"] if "size" in dataset else dimension.get("size")
+    if not isinstance(ids, (list, tuple)) or not ids or not all(isinstance(name, str) for name in ids):
+        raise _json_stat_refusal("`id` must be a list of dimension names")
+    if len(set(ids)) != len(ids):
+        raise _json_stat_refusal("`id` names a dimension twice")
+    if len(ids) > MAX_COLUMNS:
+        raise ParseError(
+            "too_many_columns", f"the dataset has {len(ids)} dimensions; at most {MAX_COLUMNS} are supported"
+        )
+    if not isinstance(sizes, (list, tuple)) or len(sizes) != len(ids):
+        raise _json_stat_refusal("`size` must give one size per dimension in `id`")
+    if not all(type(size) is int and size >= 1 for size in sizes):
+        raise _json_stat_refusal("every size must be a whole number of at least 1")
+    total = 1
+    for size in sizes:
+        total *= size
+        if total > MAX_ROWS:
+            raise ParseError("too_many_rows", f"the data has more than {MAX_ROWS:,} rows")
+
+    headers: list[str] = []
+    categories: list[list[str]] = []
+    constants: list[str] = []
+    for position, (name, size) in enumerate(zip(ids, sizes, strict=True), start=1):
+        header, cells, relabelled = _json_stat_dimension(dimension.get(name), name, size, position)
+        if size == 1:
+            constants.append(f"{header}: {cells[0]}")
+            continue
+        if (cleaned := _key_form(_clean_header(header)[0])).casefold() == PAIR_HEADERS[1]:
+            # `value` is the measure's name: a dimension labelled so would take it, or sit
+            # next to it as `Value`, and the measure would become `value_2` or lose its binding.
+            header = f"{cleaned} (dimension)"
+            warnings.append(f"column '{header}': a dimension named like the value column renamed")
+        headers.append(header)
+        categories.append(cells)
+        if relabelled:
+            warnings.append(
+                f"column '{_clip(header, MAX_COLUMN_NAME_CHARS)}': labels shared by two categories carry their codes"
+            )
+    headers.append(PAIR_HEADERS[1])
+    values = _json_stat_values(dataset.get("value"), total, len(headers) - 1)
+
+    if dataset.get("status"):
+        warnings.append("the dataset's status symbols (such as provisional or estimated) are ignored")
+    if constants:
+        warnings.append(
+            f"{_count(len(constants), 'dimension')} with a single category left out of the columns; "
+            "the notes name each one with its category"
+        )
+    notes: list[str] = []
+    for key, what in (("label", "the dataset's label"), ("source", "the dataset's source")):
+        if isinstance(dataset.get(key), str) and dataset[key].strip():
+            text = _json_text(dataset[key], what)
+            notes.append(text if key == "label" else f"Source: {text}")
+    note = dataset.get("note")
+    for line in note if isinstance(note, (list, tuple)) else [note]:
+        if isinstance(line, str) and line.strip():
+            notes.append(_json_text(line, "a note of the dataset"))
+    notes.extend(constants)
+    lines, cut = _context_lines([[line] for line in notes], None)
+    context.extend(lines)
+    if cut:
+        warnings.append(f"the dataset's notes were cut at {MAX_CONTEXT_CHARS:,} characters")
+
+    rows = [[*combination, value] for combination, value in zip(product(*categories), values, strict=True)]
+    return headers, rows, "json_stat"
+
+
+def _json_stat_dimension(entry: Any, name: str, size: int, position: int) -> tuple[str, list[str], bool]:
+    """A dimension's column name and its category labels in index order; whether codes were added to labels."""
+    where = f"dimension {position} of `id`"
+    if not isinstance(entry, dict) or not isinstance(entry.get("category"), dict):
+        raise _json_stat_refusal(f"{where} has no `category` object")
+    category = entry["category"]
+    index, labels = category.get("index"), category.get("label")
+    if labels is not None and not isinstance(labels, dict):
+        raise _json_stat_refusal(f"the `category.label` of {where} must be an object")
+    codes: list[Any]
+    if index is None:
+        if size != 1 or not isinstance(labels, dict) or len(labels) != 1:
+            raise _json_stat_refusal(f"{where} has no `category.index`")
+        codes = list(labels)
+    elif isinstance(index, (list, tuple)):
+        codes = list(index)
+    elif isinstance(index, dict):
+        positions = list(index.values())
+        if not all(type(at) is int for at in positions) or sorted(positions) != list(range(len(positions))):
+            raise _json_stat_refusal(f"the `category.index` of {where} must number its categories from 0")
+        codes = sorted(index, key=index.__getitem__)
+    else:
+        raise _json_stat_refusal(f"the `category.index` of {where} must be a list or an object")
+    if not all(isinstance(code, str) for code in codes) or len(set(codes)) != len(codes):
+        raise _json_stat_refusal(f"the categories of {where} must be distinct text codes")
+    if len(codes) != size:
+        raise _json_stat_refusal(f"{where} has {len(codes)} categories where `size` gives {size}")
+    cells: list[str] = []
+    for code in codes:
+        label = labels.get(code) if labels else None
+        if label is not None and not isinstance(label, str):
+            raise _json_stat_refusal(f"a category label of {where} is not text")
+        cells.append(_key_form(_json_text(code if label is None else label, f"a category of {where}")))
+    # Compared in the form `_build` writes (`_clean_key`, NFC), so `Other` and `Other` behind a
+    # zero-width space, which would be one category in `data.csv`, count as shared too.
+    relabelled = len(set(cells)) != len(cells)
+    if relabelled:
+        cells = [f"{cell} ({code})" for cell, code in zip(cells, codes, strict=True)]
+    title = entry.get("label")
+    header = title if isinstance(title, str) and title.strip() else name
+    return _json_text(header, f"the name of {where}"), cells, relabelled
+
+
+def _key_form(text: str) -> str:
+    """A category or a dimension name as `data.csv` holds it: cleaned like a key (`_clean_key`), in NFC."""
+    return unicodedata.normalize("NFC", _clean_key(text)[0])
+
+
+def _json_stat_values(raw: Any, total: int, position: int) -> list[str]:
+    """The cells of the value column: an array of `total` values, or a sparse object of positions to values."""
+    if isinstance(raw, (list, tuple)):
+        if len(raw) != total:
+            raise _json_stat_refusal(f"`value` holds {len(raw):,} values where `size` gives {total:,}")
+        pairs: Iterable[tuple[int, Any]] = enumerate(raw)
+    elif isinstance(raw, dict):
+        located: list[tuple[int, Any]] = []
+        for key, value in raw.items():
+            at = int(key) if isinstance(key, str) and _INTEGER_INDEX.fullmatch(key) else key
+            if type(at) is not int or not 0 <= at < total:
+                raise _json_stat_refusal("a key of the `value` object is no position within `size`")
+            located.append((at, value))
+        pairs = located
+    else:
+        raise _json_stat_refusal("`value` must be an array or an object of positions")
+    cells = [""] * total
+    for at, value in pairs:
+        if not _scalar(value):
+            raise _json_stat_refusal("a value is nested; only text, numbers and null are supported")
+        cells[at] = _json_cell(value, position)
+    return cells
+
+
 # --- Cleaning and headers ----------------------------------------------------------------
 
 
@@ -929,8 +1156,9 @@ def _type_column(column: _Column) -> None:
        that all cells share (`65 %`, `15,6 h`, `€ 5`, see `_split_units`), and the
        number parts pass rules 3 and 4 (so `007 kg` keeps its text). The cells keep
        the number; the unit goes into the column name, see `canonical_headers`.
-    6. **text**: everything else, every column without a non-missing cell, and the
-       `category` column of `json_pairs`, whose cells are the keys (`text_only`).
+    6. **text**: everything else, every column without a non-missing cell, the
+       `category` column of `json_pairs`, whose cells are the keys, and every dimension
+       column of `json_stat`, whose cells are category labels or codes (`text_only`).
     """
     column.cells = list(column.source)
     column.bare = column.source
@@ -1114,7 +1342,11 @@ def _build(
     renamed_by_breaks: list[int] = []
     for position, raw in enumerate(raw_headers):
         header, invisible, broken = _clean_header(raw)
-        text_only = source_format == "json_pairs" and position == 0  # the keys of an object are names
+        # The keys of an object of values are names, and so are JSON-stat categories (every column but
+        # the last, the measure): `NA` (Namibia), `-` or `2024` stay text, untyped and never missing.
+        text_only = (source_format == "json_pairs" and position == 0) or (
+            source_format == "json_stat" and position < len(raw_headers) - 1
+        )
         cells: list[str] = []
         for row in raw_rows:
             cell, cell_invisible = (_clean_key if text_only else _clean_cell)(row[position])

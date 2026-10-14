@@ -10,6 +10,7 @@ from typing import Any
 import pandas as pd
 import pytest
 
+from agents.anyplot.data.bindings import default_bindings
 from agents.anyplot.data.parse import (
     MAX_CONTEXT_CHARS,
     MAX_INPUT_BYTES,
@@ -24,6 +25,7 @@ from agents.anyplot.data.parse import (
     sniff_delimiter,
     without_context,
 )
+from agents.anyplot.data.roles import DataRole
 from agents.anyplot.schemas import (
     MAX_CELL_CHARS,
     MAX_COLUMN_NAME_CHARS,
@@ -1248,3 +1250,225 @@ class TestReviewRegressions:
 
         same = canonical_headers(["Anteil", "Anteil"], ["%", "%"])[0]
         assert same == ["Anteil (%)", "Anteil_2 (%)"]
+
+
+def bfs_births() -> dict[str, Any]:
+    """The BFS PxWeb answer of 2026-10-14 (births and deaths by canton, json-stat2), trimmed to three cantons."""
+    total = {"extension": {"show": "value"}}
+    return {
+        "class": "dataset",
+        "label": "Demografische Bilanz nach Kanton nach Jahr, Kanton, Staatsangehörigkeit (Kategorie), Geschlecht "
+        "und Demografische Komponente",
+        "source": "BFS - ESPOP, STATPOP - © BFS",
+        "updated": "2010-12-20T09:58:00Z",
+        "id": ["Jahr", "Kanton", "Staatsangehörigkeit (Kategorie)", "Geschlecht", "Demografische Komponente"],
+        "size": [1, 3, 1, 1, 2],
+        "dimension": {
+            "Jahr": {**total, "label": "Jahr", "category": {"index": {"2024": 0}, "label": {"2024": "2024"}}},
+            "Kanton": {
+                **total,
+                "label": "Kanton",
+                "category": {
+                    "index": {"1": 0, "2": 1, "18": 2},
+                    "label": {"1": "Zürich", "2": "Bern / Berne", "18": "Graubünden / Grigioni / Grischun"},
+                },
+            },
+            "Staatsangehörigkeit (Kategorie)": {
+                **total,
+                "label": "Staatsangehörigkeit (Kategorie)",
+                "category": {"index": {"0": 0}, "label": {"0": "Staatsangehörigkeit (Kategorie) - Total"}},
+            },
+            "Geschlecht": {
+                **total,
+                "label": "Geschlecht",
+                "category": {"index": {"0": 0}, "label": {"0": "Geschlecht - Total"}},
+            },
+            "Demografische Komponente": {
+                **total,
+                "label": "Demografische Komponente",
+                "category": {"index": {"1": 0, "2": 1}, "label": {"1": "Lebendgeburt", "2": "Todesfall"}},
+            },
+        },
+        "value": [14949, 11813, 8727, 9872, 1772, 2082],
+        "role": {"time": ["Jahr"]},
+        "version": "2.0",
+        "extension": {"px": {"decimals": 0}},
+    }
+
+
+def json_stat(ids: list[str], sizes: list[int], dimensions: dict[str, Any], value: Any, **extra: Any) -> str:
+    return json.dumps({"class": "dataset", "id": ids, "size": sizes, "dimension": dimensions, "value": value, **extra})
+
+
+def categories(*codes: str, labels: dict[str, str] | None = None) -> dict[str, Any]:
+    category: dict[str, Any] = {"index": {code: at for at, code in enumerate(codes)}}
+    if labels is not None:
+        category["label"] = labels
+    return {"category": category}
+
+
+class TestJsonStat:
+    def test_the_bfs_answer_is_a_long_table_with_its_constants_as_notes(self) -> None:
+        parsed = parse_dataset(json.dumps(bfs_births(), ensure_ascii=False))
+
+        assert parsed.profile.source_format == "json_stat"
+        assert parsed.column_dtypes == {"Kanton": "text", "Demografische Komponente": "text", "value": "integer"}
+        assert parsed.csv.splitlines() == [
+            "Kanton,Demografische Komponente,value",
+            "Zürich,Lebendgeburt,14949",
+            "Zürich,Todesfall,11813",
+            "Bern / Berne,Lebendgeburt,8727",
+            "Bern / Berne,Todesfall,9872",
+            "Graubünden / Grigioni / Grischun,Lebendgeburt,1772",
+            "Graubünden / Grigioni / Grischun,Todesfall,2082",
+        ]
+        assert parsed.context_lines == [
+            "Demografische Bilanz nach Kanton nach Jahr, Kanton, Staatsangehörigkeit (Kategorie), Geschlecht und "
+            "Demografische Komponente",
+            "Source: BFS - ESPOP, STATPOP - © BFS",
+            "Jahr: 2024",
+            "Staatsangehörigkeit (Kategorie): Staatsangehörigkeit (Kategorie) - Total",
+            "Geschlecht: Geschlecht - Total",
+        ]
+        assert warned(parsed, "3 dimensions with a single category left out of the columns")
+        assert not any("2024" in warning or "Total" in warning for warning in parsed.warnings)  # values only as notes
+
+    def test_a_header_with_special_characters_takes_the_canonical_path(self) -> None:
+        data = bfs_births()
+        data["size"] = [1, 3, 2, 1, 1]
+        data["dimension"]["Staatsangehörigkeit (Kategorie)"]["category"] = {
+            "index": ["1", "2"],
+            "label": {"1": "Schweiz", "2": "Ausland"},
+        }
+        data["dimension"]["Demografische Komponente"]["category"] = {"index": {"1": 0}, "label": {"1": "Lebendgeburt"}}
+        parsed = parse_dataset(json.dumps(data))
+
+        assert parsed.csv.splitlines()[:3] == [
+            "Kanton,Staatsangehörigkeit (Kategorie),value",
+            "Zürich,Schweiz,14949",
+            "Zürich,Ausland,11813",
+        ]
+        assert "Demografische Komponente: Lebendgeburt" in parsed.context_lines
+
+    def test_a_sparse_value_object_leaves_the_missing_positions_empty(self) -> None:
+        text = json_stat(
+            ["Land", "Jahr"],
+            [2, 2],
+            {"Land": categories("AT", "CH"), "Jahr": categories("2023", "2024")},
+            {"0": 1.5, "3": 4},
+        )
+        parsed = parse_dataset(text)
+
+        assert parsed.csv == "Land,Jahr,value\nAT,2023,1.5\nAT,2024,\nCH,2023,\nCH,2024,4.0\n"
+        assert column(parsed, "value").missing == 2
+
+    def test_an_index_array_without_labels_keeps_the_codes(self) -> None:
+        dimensions = {"geo": {"label": "Region", "category": {"index": ["AT", "DE"]}}, "unit": categories("PC")}
+        parsed = parse_dataset(json_stat(["geo", "unit"], [2, 1], dimensions, [None, 2.5]))
+
+        assert parsed.csv == "Region,value\nAT,\nDE,2.5\n"
+        assert parsed.context_lines == ["unit: PC"]
+
+    def test_a_dimension_without_a_label_is_named_by_its_id(self) -> None:
+        parsed = parse_dataset(json_stat(["sex"], [2], {"sex": categories("F", "M", labels={"F": "Frauen"})}, [1, 2]))
+
+        assert parsed.csv == "sex,value\nFrauen,1\nM,2\n"
+
+    def test_a_one_category_dimension_may_omit_its_index(self) -> None:
+        dimensions = {"t": {"category": {"label": {"2024": "2024"}}}, "g": categories("a", "b")}
+        parsed = parse_dataset(json_stat(["t", "g"], [1, 2], dimensions, [1, 2]))
+
+        assert parsed.csv == "g,value\na,1\nb,2\n" and parsed.context_lines == ["t: 2024"]
+
+    def test_every_dimension_of_one_category_leaves_one_value_row(self) -> None:
+        parsed = parse_dataset(json_stat(["t"], [1], {"t": categories("2024")}, [7]))
+
+        assert parsed.csv == "value\n7\n" and parsed.context_lines == ["t: 2024"]
+
+    def test_a_shared_label_gets_its_code_and_status_symbols_a_warning(self) -> None:
+        dimensions = {"c": categories("1", "2", labels={"1": "Other", "2": "Other"})}
+        parsed = parse_dataset(json_stat(["c"], [2], dimensions, [1, 2], status={"1": "p"}))
+
+        assert parsed.csv == "c,value\nOther (1),1\nOther (2),2\n"
+        assert warned(parsed, "labels shared by two categories carry their codes")
+        assert warned(parsed, "status symbols")
+
+    def test_a_label_shared_after_cleaning_gets_its_code(self) -> None:
+        dimensions = {"c": categories("1", "2", labels={"1": "Other", "2": f"Other{ZWSP} "})}
+        parsed = parse_dataset(json_stat(["c"], [2], dimensions, [1, 2]))
+
+        assert parsed.csv == "c,value\nOther (1),1\nOther (2),2\n"
+
+    def test_categories_stay_text_and_only_the_value_is_typed(self) -> None:
+        dimensions = {"geo": categories("NA", "-", "CH"), "year": categories("2023", "2024")}
+        parsed = parse_dataset(json_stat(["geo", "year"], [3, 2], dimensions, [1, 2, 3, 4, 5, None]))
+
+        assert parsed.column_dtypes == {"geo": "text", "year": "text", "value": "integer"}
+        assert parsed.csv.splitlines()[1:3] == ["NA,2023,1", "NA,2024,2"]
+        assert column(parsed, "geo").missing == 0 and column(parsed, "value").missing == 1
+        assert column(parsed, "geo").top == ["NA", "-", "CH"]
+
+    @pytest.mark.parametrize("label", ["value", "Value", " VALUE "])
+    def test_a_dimension_named_value_leaves_the_name_to_the_measure(self, label: str) -> None:
+        dimensions = {"v": {"label": label, **categories("1", "2")}}
+        parsed = parse_dataset(json_stat(["v"], [2], dimensions, [10, 20]))
+
+        assert list(parsed.column_dtypes) == [f"{label.strip()} (dimension)", "value"]
+        assert parsed.column_dtypes["value"] == "integer"
+        assert warned(parsed, "a dimension named like the value column renamed")
+        roles = [DataRole(name="value", kinds=("numeric",), required=True, variadic=False, description="")]
+        assert [binding.column for binding in default_bindings(roles, parsed.profile)] == ["value"]
+
+    def test_a_json_stat_1_bundle_of_one_dataset_is_read(self) -> None:
+        bundle = {"births": {"dimension": {"id": ["g"], "size": [2], "g": categories("a", "b")}, "value": [3, 4]}}
+        parsed = parse_dataset(json.dumps(bundle))
+
+        assert parsed.profile.source_format == "json_stat" and parsed.csv == "g,value\na,3\nb,4\n"
+
+    @pytest.mark.parametrize(
+        ("document", "fragment"),
+        [
+            (json_stat(["g"], [3], {"g": categories("a", "b")}, [1, 2, 3]), "has 2 categories where `size` gives 3"),
+            (json_stat(["g"], [2], {"g": categories("a", "b")}, [1, 2, 3]), "`value` holds 3 values"),
+            (json_stat(["g", "h"], [2], {"g": categories("a", "b")}, [1, 2]), "one size per dimension"),
+            (json_stat(["g"], [2], {}, [1, 2]), "has no `category` object"),
+            (json_stat(["g"], [2], {"g": categories("a", "b")}, {"2": 1}), "no position within `size`"),
+            (json_stat(["g"], [2], {"g": {"category": {"index": {"a": 0, "b": 2}}}}, [1, 2]), "number its categories"),
+            (json_stat(["g"], [0], {"g": categories()}, []), "at least 1"),
+            (json_stat(["g"], [2], {"g": categories("a", "b")}, [1, [2]]), "a value is nested"),
+            (json.dumps({"a": {"dimension": {}, "value": []}, "b": {"dimension": {}, "value": []}}), "2 datasets"),
+            (json.dumps({"class": "collection", "link": {"item": []}}), "collection"),
+        ],
+    )
+    def test_an_inconsistent_document_is_unparseable_without_quoting_it(self, document: str, fragment: str) -> None:
+        with pytest.raises(ParseError) as refused:
+            parse_dataset(document)
+
+        assert refused.value.code == "unparseable" and fragment in refused.value.message
+        assert '"a"' not in refused.value.message
+
+    def test_too_many_rows_are_refused_before_the_values_are_read(self) -> None:
+        width = MAX_ROWS // 100
+        dimensions = {"x": categories(*(str(n) for n in range(width))), "y": categories(*(str(n) for n in range(100)))}
+
+        assert parse_dataset(json_stat(["x", "y"], [width, 100], dimensions, [1] * MAX_ROWS)).profile.rows == MAX_ROWS
+        wider = {**dimensions, "x": categories(*(str(n) for n in range(width + 1)))}
+        assert error_code(json_stat(["x", "y"], [width + 1, 100], wider, [1] * (MAX_ROWS + 100))) == "too_many_rows"
+        assert error_code(json_stat(["x", "y"], [MAX_ROWS, 2], {}, [])) == "too_many_rows"  # before any dimension
+
+    def test_other_objects_with_a_class_key_keep_their_shape(self) -> None:
+        assert parse_dataset('{"class": "dataset", "rest": 3}').profile.source_format == "json_pairs"
+        assert parse_dataset('{"id": [1, 2], "value": [3, 4]}').profile.source_format == "json_columns"
+
+    def test_the_nesting_limit_is_unchanged_for_other_input(self) -> None:
+        assert error_code('{"a": ' + "[" * 60 + "]" * 60 + "}") == "unparseable"
+        nested = json.loads(json.dumps(bfs_births()))  # a normal JSON-stat document nests five levels
+        assert parse_dataset(json.dumps(nested)).profile.rows == 6
+
+    def test_the_loader_reads_the_table_back(self) -> None:
+        frame = read_back(parse_dataset(json.dumps(bfs_births())))
+
+        assert list(frame.columns) == ["Kanton", "Demografische Komponente", "value"]
+        assert (
+            str(frame["value"].dtype) == "Int64" and frame["value"].sum() == 14949 + 11813 + 8727 + 9872 + 1772 + 2082
+        )
