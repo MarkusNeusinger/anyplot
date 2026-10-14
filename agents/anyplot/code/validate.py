@@ -330,6 +330,29 @@ BANNED_IO: frozenset[str] = frozenset(
 # (`dataclasses._FuncBuilder`), and numpy's file opener (`numpy.lib._datasource.open`).
 ESCAPE_ATTRIBUTES: frozenset[str] = frozenset(
     {
+        # Frame, generator, coroutine, traceback and code-object introspection (security review of
+        # 2026-10-14): a generator's frame reaches the interpreter's builtins without a dunder name.
+        "gi_frame",
+        "gi_code",
+        "gi_yieldfrom",
+        "cr_frame",
+        "cr_code",
+        "cr_await",
+        "cr_origin",
+        "ag_frame",
+        "ag_code",
+        "ag_await",
+        "f_back",
+        "f_builtins",
+        "f_globals",
+        "f_locals",
+        "f_code",
+        "f_trace",
+        "tb_frame",
+        "tb_next",
+        "co_code",
+        "co_consts",
+        "co_names",
         # Native code and raw memory through a value, not an import (second opinion of 2026-10-14):
         # `np.zeros(1).ctypes._ctypes.CDLL(None)` reaches libc, `from_address` reads and writes any
         # address, `as_strided` views memory outside an array, `.dump` pickles an array to a file;

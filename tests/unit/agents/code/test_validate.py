@@ -407,6 +407,7 @@ PURE_MODULE_USES = [
     "import cmath\nz = cmath.exp(1j)\n",
     "v = df._values\n",  # a private attribute of a value, not of an imported module
     "top = df.main.max()\n",  # a column called main: calendar.main is banned on the calendar module only
+    "up = df['close'] >= df['open']\n",  # OHLC columns: a key named like a builtin is data, not a reach for it
 ]
 ESCAPES = [
     ("import warnings\nline = warnings.formatwarning('', UserWarning, 'f', 1)\n", "banned-call"),
@@ -464,6 +465,16 @@ ESCAPES = [
     ("import matplotlib\nrun = matplotlib.subprocess\n", "banned-attribute"),
     ("import matplotlib\nm = matplotlib.os\n", "banned-attribute"),
     ("import warnings\nw = warnings.sys\n", "banned-attribute"),
+    # Frame and generator introspection (security review of 2026-10-14): each name alone is refused.
+    ("g = (i for i in range(1))\nframe = g.gi_frame\n", "banned-attribute"),
+    ("g = (i for i in range(1))\ncode = g.gi_code\n", "banned-attribute"),
+    ("names = frame.f_builtins\n", "banned-attribute"),
+    ("names = frame.f_globals\n", "banned-attribute"),
+    ("caller = frame.f_back\n", "banned-attribute"),
+    ("names = frame.f_locals\n", "banned-attribute"),
+    ("frame = error.tb_frame\n", "banned-attribute"),
+    ("frame = coroutine.cr_frame\n", "banned-attribute"),
+    ("values = code.co_consts\n", "banned-attribute"),
     # Native code and raw memory through a value (second opinion of 2026-10-14): these passed before.
     ('lib = np.zeros(1).ctypes._ctypes.CDLL(None)\nlib.system(b"id")\n', "banned-attribute"),
     (
