@@ -36,9 +36,11 @@ LANGUAGE = PREFIX + "language"
 """The session language: the replies and every text in the plot. A short language name or
 code that matches `language.LANGUAGE_PATTERN` (`de`, `English`, `Swedish`). Absent means `en`."""
 LANGUAGE_SOURCE = PREFIX + "language_source"
-"""How it was set: `default` (nobody yet), `detected` (the scope judge's code for the session's
-first in-scope typed message), `chosen` (the language route or the root's `set_language`). Absent
-means `default`. Only `chosen` is final: detection writes only over `default`."""
+"""How it was set: `default` (nobody yet), `pasted` (the judges' code for the notes or the column
+names of a paste before any typed message, `language.pasted_language`), `detected` (the scope
+judge's code for the session's first in-scope typed message), `chosen` (the language route or the
+root's `set_language`). Absent means `default`. Only `chosen` is final: detection writes only over
+`default` and `pasted`, a paste only over `default` and `pasted`."""
 SNAPSHOT = PREFIX + "snapshot"
 NORMALISED = PREFIX + "normalised"
 HINTS = PREFIX + "hints"
@@ -111,7 +113,7 @@ class SessionView:
     language: str = DEFAULT_LANGUAGE
     """The session language (`LANGUAGE`), validated: a value outside the pattern reads as `en`."""
     language_source: LanguageSource = "default"
-    """How the session language was set (`LANGUAGE_SOURCE`): `default`, `detected` or `chosen`."""
+    """How the session language was set (`LANGUAGE_SOURCE`): `default`, `pasted`, `detected` or `chosen`."""
 
     @property
     def data_confirmed(self) -> bool:

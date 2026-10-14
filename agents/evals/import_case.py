@@ -290,7 +290,7 @@ def session_language(session: dict[str, Any], version: dict[str, Any]) -> str | 
     """
     from agents.anyplot.language import is_valid
 
-    if session.get("plot_language_source") not in ("detected", "chosen"):
+    if session.get("plot_language_source") not in ("pasted", "detected", "chosen"):
         return None
     value = version.get("language")
     if not isinstance(value, str):

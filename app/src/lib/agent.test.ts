@@ -206,6 +206,10 @@ describe('parseAgentEvent', () => {
       language: 'en',
       source: 'default',
     });
+    expect(language({ language: 'de', source: 'pasted' })).toEqual({
+      language: 'de',
+      source: 'pasted',
+    });
     // The chip shows the value as it comes: anything else is dropped whole.
     expect(language({ language: 'a/b', source: 'chosen' })).toBeNull();
     expect(language({ language: ' de', source: 'chosen' })).toBeNull();

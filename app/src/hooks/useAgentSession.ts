@@ -150,6 +150,7 @@ import {
   type PlotLanguage,
   type PlotResult,
   PNG_ARTIFACT,
+  plotLanguage as readPlotLanguage,
   renderedThemes,
   type RoleSpec,
   type Round,
@@ -161,7 +162,11 @@ import {
 } from 'src/lib/agent';
 import { readSseEvents } from 'src/lib/sse';
 import { downloadBlob } from 'src/sections/agent-chat/files';
-import { CONFIRM_LOST_TEXT, LANGUAGE_DETECTED_TEXT } from 'src/sections/agent-chat/messages';
+import {
+  CONFIRM_LOST_TEXT,
+  LANGUAGE_DETECTED_TEXT,
+  LANGUAGE_PASTED_TEXT,
+} from 'src/sections/agent-chat/messages';
 import { reloadOnceForAccess } from 'src/utils/adminAuth';
 
 /** How long Stop waits for the server's `done` before it lets go of the stream. */
@@ -611,7 +616,12 @@ function appendItem(state: AgentSessionState, item: NewChatItem): AgentSessionSt
 }
 
 /** The ladder of the language sources: the server only ever climbs it within a session. */
-const SOURCE_RANK: Record<LanguageSource, number> = { default: 0, detected: 1, chosen: 2 };
+const SOURCE_RANK: Record<LanguageSource, number> = {
+  default: 0,
+  pasted: 1,
+  detected: 2,
+  chosen: 3,
+};
 
 function sameBindings(a: BindingMap, b: BindingMap): boolean {
   const names = Object.keys(a);
@@ -838,13 +848,19 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
         return state;
       }
       const next = { ...state, plotLanguage: action.plotLanguage };
-      // The first typed message set it: one quiet line names the chip that changes it.
-      return state.plotLanguage.source === 'default' && action.plotLanguage.source === 'detected'
-        ? appendItem(next, {
-            kind: 'notice',
-            text: LANGUAGE_DETECTED_TEXT(action.plotLanguage.language),
-          })
-        : next;
+      const before = state.plotLanguage;
+      const after = action.plotLanguage;
+      // The first typed message or a paste set it: one quiet line names the chip that changes it.
+      if (after.source === 'detected' && SOURCE_RANK[before.source] < SOURCE_RANK.detected) {
+        return appendItem(next, { kind: 'notice', text: LANGUAGE_DETECTED_TEXT(after.language) });
+      }
+      if (
+        after.source === 'pasted' &&
+        (before.source === 'default' || before.language !== after.language)
+      ) {
+        return appendItem(next, { kind: 'notice', text: LANGUAGE_PASTED_TEXT(after.language) });
+      }
+      return next;
     }
     case 'item':
       return appendItem(state, action.item);
@@ -1492,6 +1508,9 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
           return;
         }
         safeDispatch({ type: 'parse_done', parsed, bytes });
+        // A paste before any typed message may set the session language from its notes or headers.
+        const pastedLanguage = readPlotLanguage(parsed.language);
+        if (pastedLanguage) safeDispatch({ type: 'language_sync', plotLanguage: pastedLanguage });
         trackEvent('agent_data_parsed', { status: 'ok', size_bucket: bucket });
         stored = true;
         const defaults = toMap(parsed.bindings);

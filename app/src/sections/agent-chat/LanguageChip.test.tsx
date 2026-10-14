@@ -34,6 +34,12 @@ describe('LanguageChip', () => {
     expect(chip()).toHaveAttribute('aria-haspopup', 'dialog');
 
     rerender(
+      <LanguageChip value={{ language: 'de', source: 'pasted' }} disabled={false} onSet={onSet} />
+    );
+    expect(chip()).toHaveTextContent(/^lang: de · from data$/);
+    expect(chip()).toHaveAccessibleName('Plot language: de, from data. Change');
+
+    rerender(
       <LanguageChip
         value={{ language: 'Klingon', source: 'chosen' }}
         disabled={false}

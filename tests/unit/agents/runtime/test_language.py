@@ -12,6 +12,7 @@ from agents.anyplot.language import (
     canonical,
     is_valid,
     normalise,
+    pasted_language,
     refusal_lang,
     same_language,
 )
@@ -97,6 +98,39 @@ class TestValues:
         assert DEFAULT_LANGUAGE == COMMON_LANGUAGES[0] == "en"
         assert set(COMMON_LANGUAGES) <= set(refusals()["out_of_scope"])  # every chip language has its own refusals
         assert all(is_valid(code) and normalise(code) == code for code in COMMON_LANGUAGES)
+
+
+class TestPastedLanguage:
+    """A paste sets the language only over `default` or an earlier paste; `en` is no signal (owner, 2026-10-14)."""
+
+    @pytest.mark.parametrize(
+        ("source", "notes", "headers", "expected"),
+        [
+            ("default", "de", "en", "de"),  # German notes, English-looking headers: the notes decide
+            ("default", "de", "fr", "de"),  # the notes before the headers
+            ("default", None, "de", "de"),  # no notes kept: the column names
+            ("default", "en", "de", "de"),  # notes without a clear language fall back to the headers
+            ("default", None, "en", None),  # `temperature_2m_max`: no signal, the default stays
+            ("default", "en", "en", None),
+            ("default", None, None, None),
+            ("pasted", "fr", None, "fr"),  # a later paste in another language moves it
+            ("pasted", None, "en", None),  # an English (or unclear) paste after a German one keeps `de`
+            ("detected", "de", "de", None),  # a typed message's language is never replaced by a paste
+            ("chosen", "de", "de", None),  # nor a choice
+            ("default", "../", None, None),  # never a value outside the pattern
+        ],
+    )
+    def test_precedence(self, source: str, notes: str | None, headers: str | None, expected: str | None) -> None:
+        assert pasted_language(source, notes, headers) == expected
+
+    def test_the_session_block_names_the_new_source(self) -> None:
+        from agents.anyplot.agent import LANGUAGE_SOURCE_LINES
+        from agents.anyplot.language import SOURCES
+
+        assert set(LANGUAGE_SOURCE_LINES) == SOURCES
+        assert "pasted data" in LANGUAGE_SOURCE_LINES["pasted"]
+        view = read_session(opened(**language_delta("de", "pasted")))
+        assert view is not None and (view.language, view.language_source) == ("de", "pasted")
 
 
 class TestState:
