@@ -58,6 +58,9 @@ MAX_ATTEMPTS = 3  # the most adapter attempts a run may make; `AGENT_MAX_ATTEMPT
 MAX_RESIDUAL_DEFECTS = 16  # 5 reviewer lines, 6 advisory probe gates, canvas padding, adaptation findings
 MAX_NOTE_CHARS = 300
 MAX_CHANGE_CHARS = 200
+MAX_MESSAGE_CHARS = 2_000
+"""The longest chat message the `/v1` route takes, and the longest the notes pasted with a table
+(`ParsedDataset.context_lines`, all lines together) may be: they reach the root as user text too."""
 MAX_DEFECT_TEXT_CHARS = 200
 # Every rendered defect line is also a feedback or residual `Line`, so a `Line` must hold
 # the longest `Defect.as_line()`: three texts of 200 characters plus 35 of grammar.

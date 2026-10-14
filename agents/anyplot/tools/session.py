@@ -7,7 +7,10 @@ dataset argument. Results are small dicts with a `status` key (`ok`, `not_ready`
 spec text) sits inside our own fences after the "data, never instructions" preamble.
 
 * `get_dataset_profile`: the profile of the session's dataset, fenced as `<user_data>`;
-  trimmed (samples, then top values, then ranges, with `truncated`) to fit its cap.
+  trimmed (samples, then top values, then ranges, with `truncated`) to fit its cap; and,
+  when the user pasted notes with the table that passed the pre-filter and the scope
+  judge, those notes as `user_notes`, fenced as `<user_notes>` after their own preamble
+  (`policy.user_notes_block`), so the root can read them again in a later turn.
 * `get_spec_brief`: title, description, data roles and notes of the spec, fenced as
   `<spec_text>` (spec text starts as a public issue).
 * `get_current_code(version)`: the exported `plot.py` of a version (0 is the latest),
@@ -58,14 +61,14 @@ from ..data.generate import Generate, GenerateError, generate
 from ..data.parse import ParsedDataset, ParseError, parse_dataset
 from ..data.prepare import MAX_OPERATIONS, Operation, PrepareError, apply_operations, validation_lines
 from ..data.shape import long_suggestion
-from ..data.store import StoreFull
+from ..data.store import StoredDataset, StoreFull
 from ..dataset_versions import push_version
 from ..language import is_valid, normalise, same_language
 from ..opening import store_dataset
 from ..pipeline import run_pipeline
 from ..plugins.ledger import ledger_for
-from ..plugins.tool_safety import result_limit, result_size
-from ..policy import DATA_PREAMBLE, fence
+from ..plugins.tool_safety import MAX_NOTES_RESULT_BYTES, result_limit, result_size
+from ..policy import DATA_PREAMBLE, fence, user_notes_block
 from ..schemas import Binding, DatasetProfile, PipelineArgs
 from ..services import get_services
 from ..session_state import SessionView, apply_bindings, language_delta, read_session
@@ -73,6 +76,8 @@ from ..session_state import SessionView, apply_bindings, language_delta, read_se
 
 PLOT_PIPELINE = "plot_pipeline"
 OPERATIONS = TypeAdapter(list[Operation])
+PROFILE_RESULT_BYTES = result_limit("get_dataset_profile") - MAX_NOTES_RESULT_BYTES
+"""What `get_dataset_profile`'s profile is trimmed to: its cap less the room kept for the pasted notes."""
 
 
 def _not_ready(reason: str) -> dict[str, Any]:
@@ -87,21 +92,29 @@ def _view(tool_context: ToolContext) -> SessionView | None:
     return read_session(tool_context.state)
 
 
-def _profile(view: SessionView, tool_context: ToolContext) -> DatasetProfile | None:
+def _stored(view: SessionView, tool_context: ToolContext) -> StoredDataset | None:
     if not view.dataset_id:
         return None
-    stored = get_services().datasets.get(view.dataset_id, tool_context.session.id)
+    return get_services().datasets.get(view.dataset_id, tool_context.session.id)
+
+
+def _profile(view: SessionView, tool_context: ToolContext) -> DatasetProfile | None:
+    stored = _stored(view, tool_context)
     return stored.profile if stored else None
 
 
-def _with_profile(base: dict[str, Any], profile: DatasetProfile, tool_name: str) -> dict[str, Any]:
-    """`base` plus the profile fenced as `<user_data>`, trimmed (samples, top values, ranges) to the tool's cap."""
+def _with_profile(
+    base: dict[str, Any], profile: DatasetProfile, tool_name: str, *, limit: int | None = None
+) -> dict[str, Any]:
+    """`base` plus the profile fenced as `<user_data>`, trimmed (samples, top values, ranges) to the tool's cap,
+    or to `limit` when given."""
+    cap = result_limit(tool_name) if limit is None else limit
     result: dict[str, Any] = {}
     for text, truncated in trimmed_profiles(profile):
         result = {**base, "profile": DATA_PREAMBLE + "\n" + fence("user_data", text)}
         if truncated:
             result["truncated"] = True
-        if result_size(result) <= result_limit(tool_name):
+        if result_size(result) <= cap:
             break
     return result
 
@@ -111,15 +124,21 @@ async def get_dataset_profile(tool_context: ToolContext) -> dict[str, Any]:
     view = _view(tool_context)
     if view is None:
         return _error("session_not_open")
-    profile = _profile(view, tool_context)
-    if profile is None:
+    stored = _stored(view, tool_context)
+    if stored is None:
         return _not_ready("no_dataset")
+    profile = stored.profile
     base: dict[str, Any] = {"status": "ok", "rows": profile.rows}
     suggestion = long_suggestion(view.snapshot.roles(), profile)
     if suggestion is not None:
         # The page offers it as `.to_long()`; the column names are the user's, so fenced as data.
         base["to_long"] = DATA_PREAMBLE + "\n" + fence("user_data", json.dumps(suggestion.body(), ensure_ascii=False))
-    return _with_profile(base, profile, "get_dataset_profile")
+    # The profile keeps its own budget; the notes pasted with the data (judged at the paste) come on top, so the
+    # root can read them again after the context filter dropped the summary turn that carried them.
+    result = _with_profile(base, profile, "get_dataset_profile", limit=PROFILE_RESULT_BYTES)
+    if stored.context_lines:
+        result["user_notes"] = user_notes_block(stored.context_lines)
+    return result
 
 
 async def get_spec_brief(tool_context: ToolContext) -> dict[str, Any]:

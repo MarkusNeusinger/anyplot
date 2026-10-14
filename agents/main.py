@@ -12,11 +12,11 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `GET /v1/eligibility?spec=&library=` | | `{eligible, status, reasons}` | |
 | `POST /v1/sessions` | `{user, spec_id, library, locale, snapshot}` | `{session_id, eligibility}` | `422 not_eligible` |
 | `POST /v1/sessions/{sid}/library` | `{library, snapshot}` | `{session_id, eligibility}` | `422 not_eligible`, `409 run_active` |
-| `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?}` | `{preview, profile, bindings, warnings, roles, suggestion, version}` (`suggestion`: the wide-table offer of `data/shape.py`, or null), stored as version 1 (the undo history of an earlier paste is dropped); or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips that fallback and keeps every row) | `413 too_long`, `422 unparseable`, `422 formula` (text of at most 2,000 characters that asks for a formula, which the chat's `generate_data` computes; never transcribed), `403 data_refused`, `503 guard_unavailable` |
+| `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?}` | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version}` (`suggestion`: the wide-table offer of `data/shape.py`, or null; `context_lines`: the notes pasted above or below the table that passed the pre-filter and the scope judge, which the root gets with the next `summarize_data` turn), stored as version 1 (the undo history of an earlier paste is dropped); or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips that fallback and keeps every row) | `413 too_long`, `422 unparseable`, `422 formula` (text of at most 2,000 characters that asks for a formula, which the chat's `generate_data` computes; never transcribed), `403 data_refused`, `503 guard_unavailable` |
 | `PUT /v1/sessions/{sid}/bindings` | `[{role, column}]` | `{bindings, complete, missing_roles, warnings}`: `warnings` names a role that needs values of 0 or more bound to a column with a negative value, or left open for that reason (`data/signs.py`); never a refusal | `409 run_active`, `422 invalid` (with `errors`, at most 20 lines) |
 | `PUT /v1/sessions/{sid}/language` | `{language}` (a short name or code, `^[A-Za-z][A-Za-z -]{0,39}$`) | `{language, source}`: the session language in its stored form (`English` is `en`), source `chosen`, which detection never overrides | `409 run_active`, `422` (the pattern) |
 | `POST /v1/sessions/{sid}/dataset/confirm` | | `{confirmed, rows, columns}`: step 1 of two, the user confirmed the dataset with its bindings; the pipeline runs only then | `409 run_active`, `422 no_dataset` |
-| `POST /v1/sessions/{sid}/dataset/undo` | | `{preview, profile, bindings, warnings, roles, suggestion, version}`: the dataset version before the root's last `prepare_data` or `generate_data` is the current one again, its bindings carried over (`dataset_versions.py`); unconfirmed, like any version the user has not confirmed | `409 run_active`, `422 nothing_to_undo` |
+| `POST /v1/sessions/{sid}/dataset/undo` | | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version}`: the dataset version before the root's last `prepare_data` or `generate_data` is the current one again, its bindings carried over (`dataset_versions.py`); unconfirmed, like any version the user has not confirmed | `409 run_active`, `422 nothing_to_undo` |
 | `POST /v1/sessions/{sid}/dataset/to_long` | | The undo route's shape plus `changes`: the page's `.to_long()` applies the wide-table suggestion, recomputed on the server, as the next dataset version with the default bindings for the new columns; no model call | `409 run_active`, `422 no_suggestion` |
 | `POST /v1/sessions/{sid}/messages` | `{text}` or `{action}` (`create_plot`, `summarize_data`) | SSE `anyplot/1`; the `done` event carries `dataset` (with `roles` and `changes`) after a turn whose `prepare_data` or `generate_data` changed the data, version 1 when `generate_data` made the session's first data, and `language` (`{language, source}`) after every run | `413 too_long`, `409 run_active`, `503 capacity` |
 | `POST /v1/sessions/{sid}/cancel` | | `204` | |
@@ -55,6 +55,9 @@ injection only: names, addresses, e-mail addresses, phone numbers and web addres
 are the user's data and pass. A pre-filter hit or any refusing part is
 `403 data_refused` (the `data_judge` attribution line tells `prefilter` and the
 judge's verdict apart); a part the judge cannot answer is `503 guard_unavailable`.
+The notes pasted around the table (`context_lines`) go through the same pre-filter and
+then the scope judge (`_screen_notes`); any refusal or outage there drops only the notes,
+with a warning, never the table, and is never a strike.
 
 The dataset answer lists the spec's data roles as `roles`, each
 `{name, kinds, required, variadic, description, non_negative}`, so a client can offer a column
@@ -103,7 +106,7 @@ from starlette.background import BackgroundTask
 from agents.anyplot import agent as agent_module
 from agents.anyplot.code.readiness import MAP_SPECS
 from agents.anyplot.data.generate import looks_like_formula
-from agents.anyplot.data.parse import MAX_INPUT_BYTES, ParseError, parse_dataset
+from agents.anyplot.data.parse import MAX_INPUT_BYTES, ParsedDataset, ParseError, parse_dataset, without_context
 from agents.anyplot.data.prepare import Operation, PrepareError, apply_operations
 from agents.anyplot.data.roles import DataRole
 from agents.anyplot.data.shape import long_suggestion
@@ -122,20 +125,25 @@ from agents.anyplot.language import (
 from agents.anyplot.models import JudgeUnavailable, JudgeVerdict
 from agents.anyplot.opening import (
     INSTRUCTION_LIKE,
+    NOTES_INSTRUCTION_WARNING,
+    NOTES_REFUSED_WARNING,
+    NOTES_UNCHECKED_WARNING,
     Eligibility,
     assess,
     dataset_judge_inputs,
     instruction_like,
+    notes_instruction_like,
+    notes_judge_input,
     opening_state,
     store_dataset,
 )
 from agents.anyplot.plugins.ledger import CURRENT_LEDGER, RequestLedger, attribution, budget_allows, judge_budget_tokens
-from agents.anyplot.policy import data_rubric, fence, refusal, transcribe_rubric
+from agents.anyplot.policy import data_rubric, fence, refusal, scope_rubric, transcribe_rubric, user_notes_block
 from agents.anyplot.render.serial import RenderBusy
 from agents.anyplot.render.store import RenderStoreFull
 from agents.anyplot.render.watermark import add_footer
 from agents.anyplot.run_queue import HEARTBEAT_S, QueueFull, QueueTimeout, QueueWithdrawn, RunQueue, Ticket
-from agents.anyplot.schemas import MAX_COLUMNS, Binding, DatasetProfile, Theme
+from agents.anyplot.schemas import MAX_COLUMNS, MAX_MESSAGE_CHARS, Binding, DatasetProfile, Theme
 from agents.anyplot.services import Services, get_services
 from agents.anyplot.session_state import (
     BINDINGS,
@@ -157,7 +165,6 @@ from core.constants import SUPPORTED_LIBRARIES
 logger = logging.getLogger("anyplot.agents")
 
 APP_NAME = agent_module.APP_NAME
-MAX_MESSAGE_CHARS = 2_000
 USER_PATTERN = r"^[A-Za-z0-9_-]{1,64}$"
 SESSION_PATTERN = r"^[A-Za-z0-9_-]{1,128}$"
 SPEC_PATTERN = r"^[a-z0-9-]{1,100}$"
@@ -167,7 +174,9 @@ ACTION_MESSAGES: dict[str, str] = {
     "create_plot": "[action] Create the plot from my dataset and bindings.",
     "summarize_data": "[action] Summarize the dataset for the user.",
 }
-"""The fixed user message of each structured action; the scope judge is skipped for them (`ledger.kind`)."""
+"""The fixed user message of each structured action; the scope judge is skipped for them (`ledger.kind`).
+`summarize_data` also carries the notes the user pasted with the data, when the stored dataset kept any
+(`user_notes_block`): the dataset route ran the pre-filter and the scope judge on them at the paste."""
 ACTION_MESSAGE = ACTION_MESSAGES["create_plot"]
 SWEEP_INTERVAL_S = 300
 ARTIFACT_TYPES: dict[str, str] = {
@@ -656,6 +665,8 @@ async def upload_dataset(
         attribution("data_judge", ledger, verdict="prefilter")
         raise AgentsError(403, "data_refused")
     await _judge_dataset(services, ledger, dataset_judge_inputs(parsed), content=parsed.csv)
+    if parsed.context_lines:
+        parsed = await _screen_notes(services, ledger, parsed)
     try:
         ingested = store_dataset(
             services.datasets, sid, parsed, view.snapshot, previous_id=view.dataset_id, history=view.dataset_history
@@ -669,12 +680,54 @@ async def upload_dataset(
             "profile": parsed.profile.model_dump(mode="json"),
             "bindings": [binding.model_dump() for binding in ingested.bindings],
             "warnings": parsed.warnings,
+            "context_lines": parsed.context_lines,
             "roles": [_role_body(role) for role in view.snapshot.roles()],
             "suggestion": _suggestion(view, parsed.profile),
             "version": 1,
         },
         headers=_NO_STORE,
     )
+
+
+async def _screen_notes(services: Services, ledger: RequestLedger, parsed: ParsedDataset) -> ParsedDataset:
+    """The notes pasted around the table, kept only when the pre-filter and the scope judge pass them.
+
+    `parsed.context_lines` (a title, an export's metadata, a source line, "values in
+    Fahrenheit, make it a line chart") reach the root as the user's words, so they are
+    checked like a chat message: first the deterministic pre-filter (`INSTRUCTION_LIKE`),
+    then the scope judge with the scope rubric on the lines inside `<user_notes>`. It runs
+    after the dataset judge, so a refused table spends no call on its notes. A hit, a
+    verdict other than `in_scope` or no verdict (`JudgeUnavailable`: fail closed) drops
+    every note with a warning (`without_context`), and the table is stored all the same.
+    No verdict on notes is a strike: a hidden injection in a copied web table is not the
+    user's doing, and the notes never reach a model. The judge's tokens are booked to the
+    user like the dataset judge's, and the `notes_judge` attribution line carries the
+    verdict and the counts, never the text.
+    """
+    lines = parsed.context_lines
+    counts = {"lines": len(lines), "chars": sum(len(line) for line in lines)}
+    if notes_instruction_like(lines):
+        attribution("notes_judge", ledger, verdict="prefilter", **counts)
+        return without_context(parsed, NOTES_INSTRUCTION_WARNING)
+    try:
+        answer = await services.judge.judge(notes_judge_input(lines), scope_rubric())
+    except JudgeUnavailable:
+        attribution("notes_judge", ledger, verdict="guard_unavailable", **counts)
+        return without_context(parsed, NOTES_UNCHECKED_WARNING)
+    services.usage.add_tokens(
+        ledger.user_id,
+        judge_budget_tokens(answer.tokens, answer.input_tokens, answer.output_tokens, get_settings().judge_model),
+    )
+    attribution(
+        "notes_judge",
+        ledger,
+        verdict=answer.verdict,
+        judge_tokens=answer.tokens,
+        judge_input=answer.input_tokens,
+        judge_output=answer.output_tokens,
+        **counts,
+    )
+    return parsed if answer.verdict == "in_scope" else without_context(parsed, NOTES_REFUSED_WARNING)
 
 
 def _refuse_formula(ledger: RequestLedger, text: str) -> None:
@@ -1095,6 +1148,12 @@ async def post_message(
         # A hit counts as use: the idle sweep must not take the dataset while the run waits.
         services.datasets.get(view.dataset_id, sid)
     text = ACTION_MESSAGES[body.action] if body.action else (body.text or "")
+    if body.action == "summarize_data" and view is not None and view.dataset_id:
+        stored = services.datasets.get(view.dataset_id, sid)
+        if stored is not None and stored.context_lines:
+            # The notes pasted with the table, judged at the paste (`_screen_notes`): the root sees them with the
+            # summary turn that follows every paste, so it can act on a request in them at once.
+            text = f"{text}\n\n{user_notes_block(stored.context_lines)}"
     message = types.Content(role="user", parts=[types.Part(text=text)])
 
     async def stream() -> AsyncIterator[str]:

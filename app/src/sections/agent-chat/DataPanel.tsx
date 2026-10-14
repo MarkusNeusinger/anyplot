@@ -55,6 +55,11 @@
  * rows and offers no `.undo()`. Pasted into the text box, the server refuses it
  * (`422 formula`), and a line under the box offers `.send()`, which sends the
  * text to the chat as a turn and empties the box.
+ *
+ * Lines pasted above or below the table (a title, a source line, a sentence
+ * about the columns) are left out of the table but kept as notes the assistant
+ * reads with the data. A `# notes sent to the assistant` block under the
+ * warnings lists the ones the server kept, collapsed behind `.show()`.
  */
 
 import { useLayoutEffect, useRef, useState } from 'react';
@@ -177,6 +182,62 @@ function WarningList({ warnings }: { warnings: string[] }) {
           <li key={index}>{warning}</li>
         ))}
       </Box>
+    </Box>
+  );
+}
+
+/**
+ * The notes the user pasted above or below the table, which the server kept
+ * and the assistant reads with the data: collapsed to one line with `.show()`,
+ * so the user can check what the assistant got without the card growing.
+ */
+export function NotesBlock({ lines }: { lines: string[] }) {
+  const [open, setOpen] = useState(false);
+  if (lines.length === 0) return null;
+  return (
+    <Box
+      component="section"
+      aria-labelledby="agent-notes-title"
+      data-testid="data-notes"
+      sx={{ borderLeft: '3px solid var(--rule)', pl: 1.5, minWidth: 0 }}
+    >
+      <Box
+        sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', columnGap: 1, rowGap: 0.5 }}
+      >
+        <Box id="agent-notes-title" sx={labelSx}>
+          # notes sent to the assistant · {lines.length} {lines.length === 1 ? 'line' : 'lines'}
+        </Box>
+        <Box
+          component="button"
+          type="button"
+          onClick={() => setOpen(value => !value)}
+          aria-expanded={open}
+          aria-controls="agent-notes-list"
+          aria-describedby="agent-notes-title"
+          sx={actionButtonSx}
+        >
+          {open ? '.hide()' : '.show()'}
+        </Box>
+      </Box>
+      {open && (
+        <Box
+          component="ul"
+          id="agent-notes-list"
+          sx={{
+            m: 0,
+            mt: 0.5,
+            pl: 2.5,
+            ...bodyTextSx,
+            fontSize: smallText,
+            color: 'var(--ink-soft)',
+            overflowWrap: 'anywhere',
+          }}
+        >
+          {lines.map((line, index) => (
+            <li key={index}>{line}</li>
+          ))}
+        </Box>
+      )}
     </Box>
   );
 }
@@ -727,6 +788,8 @@ export function DataPanel({
           </Box>
 
           <WarningList warnings={dataset.parsed.warnings} />
+
+          <NotesBlock lines={dataset.parsed.context_lines ?? []} />
 
           <Box sx={{ minWidth: 0 }}>
             <Box sx={{ ...labelSx, mb: 0.5 }}>

@@ -8,7 +8,7 @@ from google.adk.events.event import Event
 from google.genai import types
 
 from agents.anyplot.data.generate import MAX_SERIES
-from agents.anyplot.data.parse import PREVIEW_ROWS
+from agents.anyplot.data.parse import MAX_CONTEXT_CHARS, PREVIEW_ROWS
 from agents.anyplot.data.prepare import MAX_OPERATIONS
 from agents.anyplot.data.roles import TYPE_WORDS, DataRole
 from agents.anyplot.data.store import StoredDataset
@@ -136,6 +136,8 @@ class TestTranslator:
             created_at=0.0,
             last_used_at=0.0,
             size_bytes=0,
+            # The notes pasted with the data at their cap; the parse refuses control characters, so quotes are worst.
+            context_lines=['"' * MAX_CONTEXT_CHARS],
         )
         bindings = [Binding(role=f"{'R' * 30}{index:02d}", column=name) for index, name in enumerate(names)]
         # A `generate_data` call answers a change line and a warning per series; two data calls in one turn.

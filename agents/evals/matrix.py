@@ -829,7 +829,7 @@ def book_attribution(record: dict[str, Any], lines: list[dict[str, Any]], settin
                     **{kind: _int(line.get(kind)) for kind in ("prompt", "cached", "candidates", "thoughts")},
                 }
             )
-        elif hook in ("data_judge", "scope_guard"):
+        elif hook in ("data_judge", "notes_judge", "scope_guard"):
             judge_in, judge_out = _int(line.get("judge_input")), _int(line.get("judge_output"))
             if not judge_in and not judge_out:
                 judge_in = _int(line.get("judge_tokens"))  # a line without the split prices everything as input

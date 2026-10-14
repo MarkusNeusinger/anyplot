@@ -942,7 +942,8 @@ async def switch_library(
 
 @router.post("/sessions/{sid}/dataset")
 async def upload_dataset(sid: SessionId, body: DatasetBody, ctx: Ctx, client: Client) -> Any:
-    """Parse pasted data: `{preview, profile, bindings, warnings, roles}`, stored; or, for free text the
+    """Parse pasted data: `{preview, profile, bindings, warnings, context_lines, roles}`, stored (`context_lines`:
+    the notes pasted above or below the table that the assistant reads with the data); or, for free text the
     parser cannot read, the agents service's `{transcribed, text, preview, profile, warnings, note}`, a
     model's reading that the page shows for confirmation and nothing stored. 413 above 200 KB of UTF-8;
     `422 formula` for text that asks for a formula, which the assistant computes in the chat instead."""
@@ -991,7 +992,7 @@ async def confirm_dataset(sid: SessionId, ctx: Ctx, client: Client) -> Any:
 async def undo_dataset(sid: SessionId, ctx: Ctx, client: Client) -> Any:
     """Undo the assistant's last change to the data: the version before it becomes the current dataset.
 
-    The agents service answers `{preview, profile, bindings, warnings, roles, version}` like
+    The agents service answers `{preview, profile, bindings, warnings, context_lines, roles, version}` like
     the dataset route, unconfirmed; `422 nothing_to_undo` when the paste was never changed,
     `409 run_active` while a turn or a render is in flight.
     """

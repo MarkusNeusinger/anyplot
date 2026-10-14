@@ -4,12 +4,14 @@ import io
 import json
 import sys
 import time
+from dataclasses import replace
 from typing import Any
 
 import pandas as pd
 import pytest
 
 from agents.anyplot.data.parse import (
+    MAX_CONTEXT_CHARS,
     MAX_INPUT_BYTES,
     MAX_INPUT_CELL_CHARS,
     MISSING_VALUES,
@@ -20,11 +22,13 @@ from agents.anyplot.data.parse import (
     pandas_dtypes,
     parse_dataset,
     sniff_delimiter,
+    without_context,
 )
 from agents.anyplot.schemas import (
     MAX_CELL_CHARS,
     MAX_COLUMN_NAME_CHARS,
     MAX_COLUMNS,
+    MAX_MESSAGE_CHARS,
     MAX_ROWS,
     MAX_SAMPLE_ROWS,
     MAX_TOP_VALUES,
@@ -614,6 +618,84 @@ class TestTableAmongOtherLines:
             ";",
             "semicolon",
         )
+
+
+class TestContextLines:
+    """The lines left out around the table are kept as the user's notes (owner rule of 2026-10-14)."""
+
+    def test_lines_above_and_below_become_one_text_line_each(self) -> None:
+        text = (
+            "Hier meine Wetterdaten, time ist das Datum, dann Temperatur und Regen:\n"
+            + OPEN_METEO
+            + "\nQuelle: Open-Meteo, ERA5, abgerufen am 14.10.2026\n"
+        )
+
+        parsed = parse_dataset(text)
+
+        assert parsed.context_lines == [
+            "Hier meine Wetterdaten, time ist das Datum, dann Temperatur und Regen:",
+            "latitude, longitude, elevation, utc_offset_seconds, timezone, timezone_abbreviation",
+            "48.189804, 16.377296, 194.0, 7200, Europe/Vienna, GMT+2",
+            "Quelle: Open-Meteo, ERA5, abgerufen am 14.10.2026",
+        ]
+        assert parsed.profile.rows == 4  # the table and data.csv are unchanged
+        assert "Quelle" not in parsed.csv and "latitude" not in parsed.csv
+
+    def test_the_delimiter_joins_the_fields_and_empty_fields_and_invisible_characters_go(self) -> None:
+        text = "Werte in °F;;\nTag;Temp;Regen\nMo;3,5;0\nDi;4,1;1,2\nMi;2,0;0\n​Quelle: eigene;Messung\n"
+
+        parsed = parse_dataset(text)
+
+        assert parsed.context_lines == ["Werte in °F", "Quelle: eigene; Messung"]
+
+    def test_a_quoted_field_with_a_line_break_stays_one_line(self) -> None:
+        parsed = parse_dataset('x,y\n1,2\n3,4\n5,6\n"Note: first line\nsecond line",\n')
+
+        assert parsed.context_lines == ["Note: first line second line"]
+
+    def test_summary_rows_are_data_not_notes(self) -> None:
+        parsed = parse_dataset(
+            "Datum,Menge\n2024-03-02,4\n2024-03-05,10\n2024-03-09,2\nTOTAL,16\nExport: Shop-System v2\n"
+        )
+
+        assert parsed.context_lines == ["Export: Shop-System v2"]
+
+    def test_no_notes_without_left_out_lines_for_a_literal_or_for_the_services_own_csv(self) -> None:
+        assert parse_dataset("x,y\n1,2\n3,4\n5,6\n").context_lines == []
+        assert parse_dataset('[{"a": 1, "b": 2}, {"a": 3, "b": 4}]').context_lines == []
+        assert parse_dataset(OPEN_METEO).context_lines != []
+        assert parse_dataset(OPEN_METEO, find_table=False).context_lines == []  # every record kept, none a note
+
+    def test_the_notes_are_cut_at_the_chat_message_cap_with_a_warning(self) -> None:
+        notes = "\n".join(f"Note {index:03d}: " + "n" * 90 for index in range(30))  # 30 lines of 100 characters
+
+        parsed = parse_dataset(f"{notes}\nx,y\n1,2\n3,4\n5,6\n")
+
+        lines = parsed.context_lines
+        assert MAX_CONTEXT_CHARS == MAX_MESSAGE_CHARS == 2_000
+        assert len("\n".join(lines)) <= MAX_CONTEXT_CHARS
+        assert lines[0].startswith("Note 000") and lines[-1].endswith("…") and len(lines) == 20
+        assert "the notes around the table were cut at 2,000 characters" in parsed.warnings
+        assert parsed.profile.rows == 3
+
+    def test_without_context_drops_the_notes_and_puts_its_warning_first(self) -> None:
+        parsed = parse_dataset(f"Title\n{OPEN_METEO}")
+
+        dropped = without_context(parsed, "the notes were left out")
+
+        assert dropped.context_lines == [] and dropped.csv == parsed.csv
+        assert dropped.warnings[0] == dropped.profile.warnings[0] == "the notes were left out"
+        assert dropped.warnings[1:] == parsed.warnings
+
+    def test_without_context_keeps_the_warning_cap_and_the_omitted_count(self) -> None:
+        parsed = parse_dataset("x,y\n1,2\n3,4\n5,6\n")
+        full = [f"w{index}" for index in range(MAX_WARNINGS - 1)] + ["7 more warnings omitted"]
+        capped = replace(parsed, warnings=full, profile=parsed.profile.model_copy(update={"warnings": full}))
+
+        dropped = without_context(capped, "first")
+
+        assert len(dropped.warnings) == MAX_WARNINGS
+        assert dropped.warnings[0] == "first" and dropped.warnings[-1] == "8 more warnings omitted"
 
 
 class TestPythonLiterals:
