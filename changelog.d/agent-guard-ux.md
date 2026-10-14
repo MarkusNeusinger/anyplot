@@ -13,7 +13,7 @@
   request outside this scope will close this chat.",
   `AGENT_SESSION_CLOSE_WARNING`) (#12180).
 - **Paste limits.** The data panel's paste route now has its own per-user
-  limits (`AGENT_USER_PASTES_PER_MINUTE` 6, `AGENT_USER_PASTES_PER_DAY` 60;
+  limits (`AGENT_USER_PASTES_PER_MINUTE` 10, `AGENT_USER_PASTES_PER_DAY` 100;
   only a paste that reaches the checks counts), one paste per user at a time,
   none while the user's turn runs in any session, and none in a closed session
   (`403 session_closed`). Each paste spends dataset-judge, notes-judge and

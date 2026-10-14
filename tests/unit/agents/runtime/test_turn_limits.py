@@ -107,7 +107,7 @@ class TestUsageBook:
             200,
             3,
         )
-        assert (settings.user_pastes_per_minute, settings.user_pastes_per_day) == (6, 60)
+        assert (settings.user_pastes_per_minute, settings.user_pastes_per_day) == (10, 100)  # owner, 2026-10-14
         assert settings.other_library_counts is False and settings.session_close_warning is True
 
     def test_pastes_have_their_own_window_and_day(self) -> None:

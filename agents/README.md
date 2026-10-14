@@ -90,8 +90,8 @@ Three rules hold for everything here:
 | `AGENT_SESSION_REFUSALS` | `3` | Scope-judge refusals of type `out_of_scope` or `attack` (never `needs_data`; `other_library` only with `AGENT_OTHER_LIBRARY_COUNTS`) after which a session is closed: that refusal and every later turn answer `session_closed`, a paste `403 session_closed`, and the user reloads the page for a new session |
 | `AGENT_OTHER_LIBRARY_COUNTS` | `false` | Whether the `other_library` answer (this plot in another library or language) counts toward `AGENT_SESSION_REFUSALS` |
 | `AGENT_SESSION_CLOSE_WARNING` | `true` | The counted refusal one before the closing one ends with the fixed `close_warning` sentence |
-| `AGENT_USER_PASTES_PER_MINUTE` | `6` | Dataset pastes per user within any 60 seconds, across sessions; one more is `429 rate_limited`. Only a paste that reaches the pre-filter or a judge counts |
-| `AGENT_USER_PASTES_PER_DAY` | `60` | Dataset pastes per user and UTC day; one more is `429 daily_limit` |
+| `AGENT_USER_PASTES_PER_MINUTE` | `10` | Dataset pastes per user within any 60 seconds, across sessions; one more is `429 rate_limited`. Only a paste that reaches the pre-filter or a judge counts |
+| `AGENT_USER_PASTES_PER_DAY` | `100` | Dataset pastes per user and UTC day; one more is `429 daily_limit` |
 | `AGENT_MAX_ATTEMPTS` | `2` | Rounds per pipeline run, 1 to 3: the first and at most one repair round by default (a self-review adds an adapter call to a round, never a round); the eval harness sets 1 or 3 (`--max-attempts`) to measure no repair or a second repair round |
 | `AGENT_REVIEWER_MODE` | `catalogue` | The reviewer's rubric: `catalogue` (the offline scorer's rubric, verdict decided by code from the points) or `checklist` (the narrow checklist used before 2026-10-13) |
 | `AGENT_REVIEW_BAR`, `AGENT_STATUS_BAR` | `1.0`, `0.95` | `catalogue` reviews: the share of technical points (VQ, SC, DQ) below which a render gets the repair, and the ship bar at or above which it shows without notes |
