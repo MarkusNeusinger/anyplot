@@ -5,7 +5,8 @@
   window: a question, a refusal, `prepare_data` and `generate_data` answer
   right away, and only a `plot_pipeline` or `run_data_code` call takes the
   queue's slot and the turn's start, mid-turn, while the stream reports
-  `status{step:"queued"}` and the request deadline pauses. A full queue now
+  `status{step:"queued"}` and the request deadline pauses, resuming with the
+  time it had left once the slot comes. A full queue now
   ends the turn with `error{code:"capacity"}` instead of `503 capacity` before
   the stream. To keep chat turns bounded, each user may send 10 messages a
   minute and 200 a day (`AGENT_USER_MESSAGES_PER_MINUTE`,

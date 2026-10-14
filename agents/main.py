@@ -39,8 +39,8 @@ of 2026-10-14). Only sandbox work goes through the run queue (`anyplot/run_queue
 the turn's first `plot_pipeline` or `run_data_code` call takes the queue's slot and the
 turn's start in the rate window (`TurnSlot`, the ledger's `run_slot`), and the stream
 sends `status{step:"queued", position, waiting}` while it waits, mid-turn, then the
-run's own events. The request deadline is paused while the turn waits and starts
-again in full when the slot comes, so queued time never counts. A full queue, or a
+run's own events. The request deadline is paused while the turn waits and resumes
+with the time it had left when the slot comes, so queued time never counts. A full queue, or a
 wait of `AGENT_QUEUE_MAX_WAIT_S`, ends the turn with `error{code:"capacity"}`. A user
 with a turn in flight gets `409 run_active` on a second turn in any session.
 
@@ -283,18 +283,28 @@ class ActiveRun:
 
 @dataclass
 class RunDeadline:
-    """A turn's request deadline: armed when the turn starts, paused while it waits in the run queue, armed again in
-    full when it leaves the queue, so queued time never counts (and the BFF, which restarts its own budget on the
-    first event after a wait, still waits longer than this service)."""
+    """A turn's request deadline: armed when the turn starts, paused while it waits in the run queue, and resumed
+    with the time it had left when it leaves the queue. Queued time never counts, and the time before the wait is
+    never granted twice, so a turn's active time stays within `seconds` and the whole turn within `seconds` plus the
+    queue's maximum wait, below the BFF's turn cap and both services' Cloud Run timeouts."""
 
     run: ActiveRun
     seconds: float
     handle: asyncio.TimerHandle | None = None
+    elapsed: float = 0.0  # active time spent before the last pause
+    armed_at: float | None = None
 
     def arm(self, now: float) -> None:
         self.cancel()
-        self.run.started = now
-        self.handle = asyncio.get_running_loop().call_later(self.seconds, self._hit)
+        self.run.started = now - self.elapsed
+        self.armed_at = now
+        self.handle = asyncio.get_running_loop().call_later(max(self.seconds - self.elapsed, 0.0), self._hit)
+
+    def pause(self, now: float) -> None:
+        if self.armed_at is not None:
+            self.elapsed += now - self.armed_at
+            self.armed_at = None
+        self.cancel()
 
     def cancel(self) -> None:
         if self.handle is not None:
@@ -318,7 +328,7 @@ class TurnSlot:
     inside the ADK run. The first call submits the turn's queue entry (a start in the rate
     window and the run slot), pauses the deadline while the entry waits, puts every
     position into the stream's outbox as it changes (the stream sends it as
-    `status{step:"queued"}`), and arms the deadline again in full when the entry starts.
+    `status{step:"queued"}`), and resumes the deadline with the time it had left when the entry starts.
     A later call in the same turn answers at once: one start per turn. A full queue or
     an expired wait fails the turn with `capacity` and aborts the run, so the stream ends
     with `error{code:"capacity"}` and the root spends no further call; a cancelled wait
@@ -353,7 +363,7 @@ class TurnSlot:
                 async for position in positions:
                     if not waited:
                         waited = True
-                        self.deadline.cancel()  # queued time never counts
+                        self.deadline.pause(self.runtime.now())  # queued time never counts
                     self.outbox.put_nowait(("queued", position))
         except QueueTimeout:  # waited the maximum: the same answer as a full queue
             outcome = "expired"
@@ -1252,12 +1262,14 @@ async def post_message(
     )
     translator = Translator(ledger, run_id=secrets.token_hex(8), spec_id=view.spec_id if view else None)
     # The fixed refusals sent before the scope judge, so none of these turns costs a model call.
-    if not budget_allows(ledger, services.usage, settings):
-        # The refusal the root would send, sent now: a user over the daily budget spends nothing.
-        return _refuse_now(translator, ledger, "budget", "budget_halt", agent="route")
+    # A closed session answers `session_closed` first: its third `attack` refusal also reaches the strike lockout,
+    # which would otherwise mask the closure behind `budget` here (the lockout still covers the user's other sessions).
     refused = scope_refusals(session.events)
     if refused >= settings.session_refusals:
         return _refuse_now(translator, ledger, SESSION_CLOSED, "session_closed", refusals=refused)
+    if not budget_allows(ledger, services.usage, settings):
+        # The refusal the root would send, sent now: a user over the daily budget spends nothing.
+        return _refuse_now(translator, ledger, "budget", "budget_halt", agent="route")
     limit = services.usage.message_limit(user, settings)
     if limit is not None:
         return _refuse_now(translator, ledger, limit, "message_limit")
