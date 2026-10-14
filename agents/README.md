@@ -477,6 +477,18 @@ What the measurements showed, scored by the user scorer on Opus and Sonnet:
 - The self-review lowers the share of runs that end with notes (from 8 to 3 of 20 in the same configuration) at an unchanged score.
 - The largest gain is a catalogue base without variant creep (+2.3 on the unseen specs, one run below 75 instead of four); building such bases is the next step, not part of this flow yet.
 
+The 2026-10-14 changes (the adapter reads the reviewer's rubric, `AGENT_REVIEW_BAR` 0.95, `AGENT_GATE_REPAIR=review`, no proofread in a repair round) were measured on Vertex AI (Claude Haiku 5.5, `eu`, the deployed renderer) over the same 20 cases, the shipped renders scored by the user scorer on Opus:
+
+| Arm | Runs | Repair rate | `ok` | Scorer, shipped (mean) | Technical points lost (mean of 55) | Shipped at or above 80 | p50 / p95 | Cost per plot |
+|---|---|---|---|---|---|---|---|---|
+| Before (main) | 40 | 78 % | 85 % | 82.1 | 1.52 | 36 of 39 | 91 s / 130 s | $0.0163 |
+| After (defaults) | 40 | 20 % | 98 % | 83.4 | 0.62 | 40 of 40 | 65 s / 130 s | $0.0142 |
+| After, `AGENT_REVIEW_BAR=1.0` | 20 | 65 % | 95 % | 83.3 | 0.70 | 19 of 20 | 79 s / 124 s | $0.0163 |
+| After, bar 1.0 and `AGENT_REPAIR_SELF_REVIEW=true` | 20 | 70 % | 100 % | 83.6 | 0.60 | 20 of 20 | 95 s / 122 s | $0.0184 |
+
+- The adapter with the full rubric loses fewer technical points at the same bar (0.70 against 1.52), so the repair rarely has anything left to fix: at 0.95 the repair rate falls from 78 % to 20 % and the median run takes 26 s less, with a higher score.
+- Proofreading the repair (the last two rows) adds 16 s at the median and $0.002 a plot for a difference within the noise of 20 runs (83.6 against 83.3), so it is off.
+
 ### Score the renders with the catalogue rubric
 
 The owner's quality ladder (2026-10-12) lets a result ship only once it reaches a score threshold, scored like the pipeline scores catalogue implementations. `evals/score.py` measures where today's results stand, without changing the agent: it scores a matrix run's renders with `anyplot/scoring.py`, which reads the catalogue rubric verbatim (`prompts/quality-criteria.md` and steps 5c, 5d and 8a of `prompts/workflow-prompts/ai-quality-review.md`) behind `anyplot/prompts/scorer.md`.

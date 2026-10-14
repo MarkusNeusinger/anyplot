@@ -1069,7 +1069,8 @@ def _attribute_result(ledger: RequestLedger, run: Run, result: PlotResult) -> No
     `reviewed_attempt` name the attempt whose render shipped and the one the reviewer
     was last called on, and `reviews` counts the reviewer calls.
     """
-    shipped = (run.best or run.padded) if result.status in ("ok", "needs_attention") else None
+    # The render that actually shipped: with `AGENT_SHIP_BEST` the best-ranked one, not always the last.
+    shipped = shipped_candidate(run) if result.status in ("ok", "needs_attention") else None
     attribution(
         "pipeline_result",
         ledger,

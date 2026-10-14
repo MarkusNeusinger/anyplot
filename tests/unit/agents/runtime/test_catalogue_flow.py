@@ -251,8 +251,9 @@ async def test_a_review_that_cannot_back_its_score_is_asked_once_more(
 
 
 async def test_the_best_scored_version_ships_when_the_repair_scores_lower(
-    client: httpx.AsyncClient, swap_models, monkeypatch: pytest.MonkeyPatch
+    client: httpx.AsyncClient, swap_models, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
+    caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
     monkeypatch.setenv("AGENT_REVIEW_BAR", "1.0")
     get_settings.cache_clear()
     script = default_script(plans=[SCATTER_PLAN, EMPTY_PLAN, SECOND_PLAN])
@@ -268,6 +269,10 @@ async def test_the_best_scored_version_ships_when_the_repair_scores_lower(
     assert shipped == [1]
     # Round 1 meets the ship bar (54 of 55 technical points), so it shows without notes.
     assert (plot["status"], plot["residual_defects"]) == ("ok", [])
+    # The attribution line names the render that shipped (round 1's proofread, attempt 2), not the
+    # last one rendered (the repair, attempt 3).
+    (result,) = attribution_lines(caplog, "pipeline_result")
+    assert result["shipped_attempt"] == 2
 
 
 async def test_two_lost_technical_points_need_no_repair(client: httpx.AsyncClient, swap_models) -> None:
