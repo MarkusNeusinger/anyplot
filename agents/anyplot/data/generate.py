@@ -38,7 +38,7 @@ empty. The variables are rounded before the series are computed, so every row ho
 `invalid_expression`, `invalid_range` (an endpoint that is not finite, equal endpoints,
 a range wider than a float holds, points that round to the same value),
 `too_many_points` (a grid over `MAX_GRID_ROWS`), `undefined` (a series without one
-defined value) and `too_large` (a CSV over the parser's input cap; the message names
+defined value) and `too_large` (a CSV over the computed-data cap `MAX_COMPUTED_BYTES`; the message names
 about how many rows fit). A message names the variable or series and at most quotes
 the expression's own text, and the change line quotes only the checked expression.
 
@@ -63,7 +63,7 @@ import numpy.typing as npt
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, model_validator
 
 from ..schemas import MAX_NOTE_CHARS
-from .parse import MAX_INPUT_BYTES, SNIFF_LINES, sniff_delimiter
+from .parse import MAX_COMPUTED_BYTES, SNIFF_LINES, sniff_delimiter
 from .prepare import NewName
 from .transcribe import MAX_TRANSCRIBE_CHARS
 
@@ -267,16 +267,16 @@ def generate(spec: Generate) -> Generated:
 
     csv_text = _write([*names, *(series.name for series in spec.series)], columns)
     size = len(csv_text.encode("utf-8"))
-    if size > MAX_INPUT_BYTES:
+    if size > MAX_COMPUTED_BYTES:
         # The row count that fits at this table's width, so the model's one retry aims at a size that fits.
-        fit = rows * MAX_INPUT_BYTES // size
+        fit = rows * MAX_COMPUTED_BYTES // size
         hint = f"about {fit:,} rows of {len(columns)} columns fit"
         if len(spec.variables) > 1:
             side = math.isqrt(fit)
             hint += f", such as {side} x {side} points"
         raise GenerateError(
             "too_large",
-            f"the table would be larger than {MAX_INPUT_BYTES // 1024} KB; {hint}; use fewer points or fewer series",
+            f"the table would be larger than {MAX_COMPUTED_BYTES // 1024:,} KB; {hint}; use fewer points or fewer series",
         )
     return Generated(csv=csv_text, changes=[_change(spec, ranges, rows)], warnings=warnings)
 

@@ -28,11 +28,11 @@ Measured with the static stage on 2026-10-10 (WSL2, 32 cores; the stand-ins rend
 
 | Case | Bound | Measured |
 |---|---|---|
-| `cap-rows` | accepted at 204,800 bytes and 20,000 rows | parse 51 ms; adapter request 3,402 characters |
+| `cap-rows` | accepted at 1,048,576 bytes and 20,000 rows (204,800 bytes before the paste cap rose on 2026-10-14) | parse 51 ms at 204,800 bytes; adapter request 3,402 characters |
 | `cap-columns` | accepted at 50 columns, 200-character cells, Unicode and bidi | parse 32 ms; profile 12,138 characters, untrimmed (re-measured on 2026-10-11, when the profile gained `mean` and `median` for numeric columns and lost its null fields) |
-| `cap-profile` | `MAX_ADAPTER_PROFILE_BYTES` (16,384 bytes of UTF-8) trims the adapter's profile | full profile 26,911 characters (29,491 bytes), sent 6,229; adapter request 34,280 before the cap, 13,598 after (re-measured on 2026-10-11, see `cap-columns`) |
-| `csv-expansion` | the renderer's 2 MiB `data_csv` limit | canonical `data.csv` 771,800 bytes, 3.8 times the input |
-| `over-bytes` | `413 too_long` before the parse | refused at 204,801 bytes, one byte over the cap |
+| `cap-profile` | `MAX_ADAPTER_PROFILE_BYTES` (16,384 bytes of UTF-8) trims the adapter's profile | full profile 26,963 characters at the 1 MB cap, sent 6,281; adapter request 13,701 after the cap (re-measured on 2026-10-14) |
+| `csv-expansion` | the renderer's 4 MiB `data_csv` limit (`MAX_CANONICAL_BYTES`; 2 MiB before 2026-10-14) | canonical `data.csv` 3,954,696 bytes, 3.8 times the 1 MB input |
+| `over-bytes` | `413 too_long` before the parse | refused at 1,048,577 bytes, one byte over the cap |
 | `over-rows`, `over-columns`, `over-cell` | `422 unparseable` (`too_many_rows`, `too_many_columns`, `cell_too_long`) | refused within 10 ms |
 | `bar-100-categories` | G7 (advisory) | 99 overlapping tick-label pairs; 310 texts of the probe's 400; 1.8 s CPU (1.9 s wall), 131 MiB peak |
 | `pie-30-slices` | the reviewer only | no gate fires: 92 texts, the legend covers the pie, small slices pile their labels; 1.0 s CPU (1.2 s wall), 127 MiB peak |

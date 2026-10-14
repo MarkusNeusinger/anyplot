@@ -29,8 +29,8 @@ stale.
 
 | Group | Cases | What they stress |
 |---|---|---|
-| `cap` | `cap-rows`, `cap-columns`, `cap-profile`, `csv-expansion` | exactly 204,800 bytes: 20,000 rows; 50 columns with wide numbers, 200-character cells, Unicode and bidi headers, a BOM; 47 text columns that fill every profile slot; numbers that grow 3.8 times in the canonical `data.csv` |
-| `over-cap` | `over-bytes`, `over-rows`, `over-columns`, `over-cell` | one past each cap: 204,801 bytes (`413 too_long`), 20,001 rows, 51 columns, a 201-character cell (`422 unparseable`) |
+| `cap` | `cap-rows`, `cap-columns`, `cap-profile`, `csv-expansion` | exactly 1,048,576 bytes (204,800 before the paste cap rose on 2026-10-14): 20,000 rows; 50 columns with wide numbers, 200-character cells, Unicode and bidi headers, a BOM; 47 text columns that fill every profile slot; numbers that grow 3.8 times in the canonical `data.csv` |
+| `over-cap` | `over-bytes`, `over-rows`, `over-columns`, `over-cell` | one past each cap: 1,048,577 bytes (`413 too_long`), 20,001 rows, 51 columns, a 201-character cell (`422 unparseable`) |
 | `categories` | `bar-100-categories`, `pie-30-slices` | 100 bars in two groups and 30 pie slices: tick labels, legends and the probe's text limit |
 | `degenerate` | `single-row`, `all-nan-column`, `constant-series`, `duplicate-headers`, `dates-centuries`, `mixed-decimals`, `empty-strings` | data a parser or a plot tends to trip over |
 | `injection` | `inject-header`, `inject-row4`, `inject-long-cell` | instructions in a header, in row 4 and in a 150-character cell |
@@ -63,7 +63,7 @@ SOURCE = "synthetic: agents/evals/make_stress.py"
 STANDIN_FILE = "standin.txt"
 SEED = 4242
 OVER_BYTES = MAX_INPUT_BYTES + 1
-"""The `over-bytes` dataset: one byte past `MAX_INPUT_BYTES` (204,801 bytes), so an off-by-one in the route shows."""
+"""The `over-bytes` dataset: one byte past `MAX_INPUT_BYTES` (1,048,577 bytes), so an off-by-one in the route shows."""
 BOM = "\N{ZERO WIDTH NO-BREAK SPACE}"
 
 
@@ -707,7 +707,7 @@ def _cases() -> list[StressCase]:
             _two_column(LINE_HEADER, MAX_ROWS, MAX_INPUT_BYTES, 1),
             LINE_BINDINGS,
             "unknown",
-            "accepted at exactly MAX_INPUT_BYTES (204,800 bytes) and MAX_ROWS (20,000); "
+            "accepted at exactly MAX_INPUT_BYTES (1,048,576 bytes) and MAX_ROWS (20,000); "
             "the adapter request stays bounded by the profile, not by the rows",
             {"dataset": "ok", "bytes": MAX_INPUT_BYTES, "rows": MAX_ROWS, "bindings": "complete", "loader": "ok"},
         ),
@@ -755,8 +755,8 @@ def _cases() -> list[StressCase]:
             csv_expansion(),
             [_binding("x", "X Reading"), _binding("y", "Y Reading")],
             "unknown",
-            "the canonical data.csv grows to about 3.8 times the input and still fits the renderer's 2 MiB "
-            "data_csv limit (MAX_DATA_CSV_CHARS)",
+            "the canonical data.csv grows to about 3.8 times the input and still fits the renderer's 4 MiB "
+            "data_csv limit (MAX_DATA_CSV_CHARS, the parser's MAX_CANONICAL_BYTES)",
             {"dataset": "ok", "bytes": MAX_INPUT_BYTES, "bindings": "complete", "loader": "ok", "csv_fits_wire": True},
         ),
         StressCase(
@@ -766,7 +766,7 @@ def _cases() -> list[StressCase]:
             _two_column(LINE_HEADER, over_bytes_rows, OVER_BYTES, 3),
             LINE_BINDINGS,
             "rejected",
-            "413 too_long at the dataset route: 204,801 bytes is one byte over MAX_INPUT_BYTES, refused before any "
+            "413 too_long at the dataset route: 1,048,577 bytes is one byte over MAX_INPUT_BYTES, refused before any "
             "model call",
             {"dataset": "413 too_long", "bytes": OVER_BYTES},
         ),

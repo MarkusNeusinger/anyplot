@@ -449,9 +449,9 @@ describe('useAgentSession: data and bindings', () => {
     expect(trackEvent).toHaveBeenCalledWith('agent_guardrail_block', { reason: 'data_refused' });
   });
 
-  it('refuses more than 200 KB before sending anything', async () => {
+  it('refuses more than 1 MB before sending anything', async () => {
     const { result } = await openSession(baseRoutes());
-    await act(() => result.current.parseData('x'.repeat(200 * 1024 + 1)));
+    await act(() => result.current.parseData('x'.repeat(1024 * 1024 + 1)));
     expect(result.current.state.datasetError?.code).toBe('too_long');
     expect(calls.some(call => call.path.endsWith('/dataset'))).toBe(false);
   });

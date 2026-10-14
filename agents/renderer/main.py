@@ -352,6 +352,8 @@ class Renderer:
                     "job_id": job.job_id,
                     "exit_code": response.exit_code,
                     "reason": response.reason,
+                    "measured": response.measured,
+                    "limit": response.limit,
                     "attempts": response.attempts,
                     "csv_bytes": None if response.csv_text is None else len(response.csv_text.encode("utf-8")),
                     "slot_wait_s": response.timings.slot_wait_s,

@@ -72,7 +72,7 @@ Errors raise `PrepareError(code, message)`: `unknown_column`, `type_mismatch`,
 `empty_result` (no rows or no columns would remain), `too_wide` and
 `invalid_operation` (an operation that is well-formed but cannot apply, such as a
 condition without its value, a `period` without a datetime key, or a long format that
-would exceed the parser's 200 KB input cap). Messages name columns, never cells.
+would exceed the 2 MiB cap of computed data, `parse.MAX_COMPUTED_BYTES`). Messages name columns, never cells.
 Change lines name column names bare, condition values quoted and clipped to 40
 characters, and are at most `MAX_NOTE_CHARS` long. `validation_lines` formats a
 Pydantic error of the operation models for the model (`tools/session.py` and
@@ -95,7 +95,14 @@ from pandas.api.types import is_bool_dtype, is_datetime64_any_dtype, is_numeric_
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, ValidationError
 
 from ..schemas import MAX_CELL_CHARS, MAX_COLUMNS, MAX_NOTE_CHARS, MAX_ROWS, ColumnName
-from .parse import AMBIGUOUS_DATE_ORDER, MAX_INPUT_BYTES, MISSING_VALUES, ParsedDataset, canonical_names, pandas_dtypes
+from .parse import (
+    AMBIGUOUS_DATE_ORDER,
+    MAX_COMPUTED_BYTES,
+    MISSING_VALUES,
+    ParsedDataset,
+    canonical_names,
+    pandas_dtypes,
+)
 
 
 MAX_OPERATIONS = 5  # per `prepare_data` call, the design's "at most five operations"
@@ -383,11 +390,11 @@ def apply_operations(parsed: ParsedDataset, operations: list[Operation]) -> Prep
             raise PrepareError("empty_result", "no row would remain")
         changes.append(_clip(change, MAX_NOTE_CHARS))
     csv_text = _write(frame, carried)
-    if len(csv_text.encode("utf-8")) > MAX_INPUT_BYTES:
+    if len(csv_text.encode("utf-8")) > MAX_COMPUTED_BYTES:
         # Only the long format grows the data; the re-parse would refuse it, so the model hears it from here.
         raise PrepareError(
             "invalid_operation",
-            f"the result would be larger than {MAX_INPUT_BYTES // 1024} KB; "
+            f"the result would be larger than {MAX_COMPUTED_BYTES // 1024:,} KB; "
             "drop columns or aggregate before pivoting to the long format",
         )
     # Named as the re-parse will name them: a pivot's value or a long new name may be shortened or

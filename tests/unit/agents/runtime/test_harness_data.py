@@ -4,13 +4,14 @@ Every case runs the real harness in a subprocess with the test interpreter, beca
 guard is an audit hook, which can never be removed from the process that arms it.
 """
 
+import json
 import subprocess
 import sys
 from pathlib import Path
 
 import pytest
 
-from agents.anyplot.data.parse import MAX_INPUT_BYTES
+from agents.anyplot.data.parse import MAX_COMPUTED_BYTES, MAX_INPUT_BYTES, parse_dataset
 from agents.anyplot.render import harness
 from agents.anyplot.render.runtimes.python import HARNESS_SOURCE
 from agents.anyplot.schemas import MAX_COLUMNS, MAX_ROWS
@@ -37,7 +38,7 @@ def run(tmp_path: Path, code: str) -> tuple[int, str | None, str]:
 def test_caps_are_the_parsers() -> None:
     assert harness.DATA_MAX_ROWS == MAX_ROWS
     assert harness.DATA_MAX_COLUMNS == MAX_COLUMNS
-    assert harness.DATA_MAX_CSV_BYTES == MAX_INPUT_BYTES
+    assert harness.DATA_MAX_CSV_BYTES == MAX_COMPUTED_BYTES > MAX_INPUT_BYTES  # computed data has its own cap
 
 
 def test_exit_codes_are_distinct() -> None:
@@ -93,8 +94,64 @@ class TestFrame:
         assert run(tmp_path, code)[0] == EXIT["too_many_columns"]
 
     def test_too_large(self, tmp_path: Path) -> None:
-        code = "import pandas as pd\ndf = pd.DataFrame({'a': ['x' * 50] * 10000})\n"
+        code = "import pandas as pd\ndf = pd.DataFrame({'a': ['x' * 150] * 15000})\n"  # about 2.2 MB
         assert run(tmp_path, code)[0] == EXIT["too_large"]
+
+
+class TestStatus:
+    """`status.json`: the harness's own exit code and a broken cap's numbers, which survive a launcher that loses
+    the exit code (Cloud Run's reports -13 for every non-zero exit)."""
+
+    @staticmethod
+    def status(tmp_path: Path) -> dict[str, object]:
+        return json.loads((tmp_path / harness.DATA_STATUS_FILE).read_text(encoding="utf-8"))
+
+    WIDE_SERIES = (
+        "import numpy as np\nimport pandas as pd\nt = np.linspace(0, 40, 20000)\n"
+        "df = pd.DataFrame({'t': t, **{f's{k}': np.sin(t * (k + 1.1)) / (k + 3) for k in range(9)}})\n"
+    )
+    """A generalised long simulation over the computed-data cap: 20,000 steps of ten float columns."""
+
+    def test_a_long_full_precision_series_reports_its_size_and_the_cap(self, tmp_path: Path) -> None:
+        assert run(tmp_path, self.WIDE_SERIES)[0] == EXIT["too_large"]
+        status = self.status(tmp_path)
+        assert status["exit"] == EXIT["too_large"] and status["reason"] == "too_large"
+        assert status["limit"] == harness.DATA_MAX_CSV_BYTES and int(status["measured"]) > harness.DATA_MAX_CSV_BYTES
+
+    def test_the_same_series_rounded_and_thinned_fits(self, tmp_path: Path) -> None:
+        assert run(tmp_path, self.WIDE_SERIES + "df = df.round(4).iloc[::2]\n")[0] == EXIT["ok"]
+        assert self.status(tmp_path) == {"exit": 0, "reason": "ok"}
+
+    def test_ten_thousand_steps_of_six_full_precision_columns_fit(self, tmp_path: Path) -> None:
+        """Owner decision of 2026-10-14: a 10,000-step computation with several columns fits as it is."""
+        code = (
+            "import numpy as np\nimport pandas as pd\nrng = np.random.default_rng(7)\n"
+            "df = pd.DataFrame({f'c{k}': rng.normal(0, 20, 10001).cumsum() for k in range(6)})\n"
+        )
+        exit_code, out, stderr = run(tmp_path, code)
+        assert exit_code == EXIT["ok"], stderr
+        assert out is not None and out.count("\n") == 10_002
+        assert 1024 * 1024 < len(out.encode("utf-8")) <= harness.DATA_MAX_CSV_BYTES  # over the paste cap, under its own
+        parsed = parse_dataset(out, find_table=False, max_bytes=MAX_COMPUTED_BYTES)
+        assert parsed.profile.rows == 10_001 and len(parsed.profile.columns) == 6
+
+    def test_too_many_rows_reports_the_count(self, tmp_path: Path) -> None:
+        code = f"import pandas as pd\ndf = pd.DataFrame({{'a': range({MAX_ROWS + 5})}})\n"
+        assert run(tmp_path, code)[0] == EXIT["too_many_rows"]
+        assert self.status(tmp_path) == {
+            "exit": EXIT["too_many_rows"],
+            "reason": "too_many_rows",
+            "measured": MAX_ROWS + 5,
+            "limit": MAX_ROWS,
+        }
+
+    def test_an_error_is_reported_without_numbers(self, tmp_path: Path) -> None:
+        assert run(tmp_path, "raise ValueError('boom')\n")[0] == EXIT["error"]
+        assert self.status(tmp_path) == {"exit": EXIT["error"], "reason": "error"}
+
+    def test_a_blocked_run_still_writes_its_status(self, tmp_path: Path) -> None:
+        assert run(tmp_path, "import os\nos.system('true')\n")[0] == EXIT["blocked"]
+        assert self.status(tmp_path)["exit"] == EXIT["blocked"]
 
 
 class TestErrors:

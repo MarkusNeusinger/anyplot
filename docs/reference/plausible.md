@@ -500,7 +500,7 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 | `method` | Action method (card, image, tab, agent, click, space, doubletap) | `copy_code`, `random_filter` |
 | `page` | Page context (home, plots, spec_overview, spec_detail, agent_chat) | `copy_code`, `download_image`, `og_image_view` |
 | `status` | Outcome of an agent chat step (`ok`, `needs_attention`, `failed`, `not_ready`; for a parse also `too_long`, `unparseable`, `data_refused`, `error`, `transcribed`, `discarded`) | `agent_data_parsed`, `agent_plot_rendered` |
-| `size_bucket` | Size class of pasted data (`lt_1kb` … `over_200kb`), never the size | `agent_data_parsed`, `agent_data_confirmed` |
+| `size_bucket` | Size class of pasted data (`lt_1kb`, `1_10kb`, `10_50kb`, `50_200kb`, `200kb_1mb`, `over_1mb`; `over_200kb` until the paste cap rose to 1 MB on 2026-10-14), never the size | `agent_data_parsed`, `agent_data_confirmed` |
 | `changes` | How many change lines an assistant's data change or generated table carried (`1`, `2`, `3+`) | `agent_data_prepared` |
 | `version` | The data version an undo restored (`1` is the paste, `2`, `3+`) | `agent_data_undo` |
 | `repaired` | Whether an agent run needed its repair round (`yes` / `no`) | `agent_plot_rendered` |

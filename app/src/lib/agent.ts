@@ -15,8 +15,8 @@ import type { SseEvent } from 'src/lib/sse';
 import { clearAccessReloadGuard } from 'src/utils/adminAuth';
 
 export const AGENT_CLIENT_HEADERS = { 'X-Anyplot-Client': 'agent-chat/1' } as const;
-/** The BFF's limit on pasted data: 200 KB of UTF-8. */
-export const MAX_DATASET_BYTES = 200 * 1024;
+/** The BFF's limit on pasted data: 1 MB of UTF-8 (200 KB before 2026-10-14). */
+export const MAX_DATASET_BYTES = 1024 * 1024;
 /** The BFF's limit on one chat message. */
 export const MAX_MESSAGE_CHARS = 2000;
 /**
@@ -1120,8 +1120,9 @@ export function sizeBucket(bytes: number): string {
   if (bytes < 1024) return 'lt_1kb';
   if (bytes < 10 * 1024) return '1_10kb';
   if (bytes < 50 * 1024) return '10_50kb';
-  if (bytes <= MAX_DATASET_BYTES) return '50_200kb';
-  return 'over_200kb';
+  if (bytes <= 200 * 1024) return '50_200kb';
+  if (bytes <= MAX_DATASET_BYTES) return '200kb_1mb';
+  return 'over_1mb';
 }
 
 /** Low-cardinality count bucket for analytics (`1`, `2`, `3+`); below 1 reads as `1`. */

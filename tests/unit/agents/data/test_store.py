@@ -196,4 +196,4 @@ class TestCap:
         assert len(store) == 1
 
     def test_the_default_cap_is_64_mib(self) -> None:
-        assert DatasetStore().max_bytes == DEFAULT_MAX_BYTES == 64 * 1024 * 1024
+        assert DatasetStore().max_bytes == DEFAULT_MAX_BYTES == 256 * 1024 * 1024

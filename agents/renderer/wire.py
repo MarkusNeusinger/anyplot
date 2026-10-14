@@ -27,9 +27,10 @@ JOB_ID_PATTERN = r"^[A-Za-z0-9_-]{1,64}$"
 LIBRARY_PATTERN = r"^[a-z0-9_-]{1,32}$"
 MAX_SOURCE_CHARS = 128 * 1024
 """The run form: the validator parses at most 48 KB, the loader and the normaliser add little."""
-MAX_DATA_CSV_CHARS = 2 * 1024 * 1024
-"""The canonical `data.csv`: the parser takes at most 200 KB of pasted text, and canonical
-dates and decimals grow it by well under a factor of ten."""
+MAX_DATA_CSV_CHARS = 4 * 1024 * 1024
+"""The canonical `data.csv`: the agents' parser refuses a parse whose canonical CSV is larger
+(`data/parse.py` `MAX_CANONICAL_BYTES`, pinned equal), so every stored dataset fits. Pastes take at
+most 1 MiB and computed data 2 MiB (until 2026-10-14 this cap was 2 MiB and the paste cap 200 KB)."""
 MAX_TIMEOUT_S = 120.0
 MAX_PNG_BYTES = 10 * 1024 * 1024
 """Largest PNG the renderer returns; the agents' R2 gate (`render/png.py`) applies the same cap."""
@@ -44,9 +45,40 @@ MAX_DATA_SOURCE_CHARS = 16 * 1024
 """A data snippet: the tool takes at most 6,000 characters, and stripping a `__main__` guard only shortens it."""
 MAX_DATA_TIMEOUT_S = 30.0
 """A data run's time limit: a snippet computes a table of at most 20,000 rows, which takes well under a second."""
-MAX_CSV_BYTES = 200 * 1024
-"""The `out.csv` a data run returns: the agents' parser cap (`data/parse.py` `MAX_INPUT_BYTES`), which the harness
-applies before it writes; the executor reads at most this many bytes."""
+MAX_CSV_BYTES = 2 * 1024 * 1024
+"""The `out.csv` a data run returns: the agents' cap for computed data (`data/parse.py` `MAX_COMPUTED_BYTES`, 2 MiB;
+pastes take 1 MiB), which the harness applies before it writes; the executor reads at most this many bytes."""
+
+DATA_STATUS_FILE = "status.json"
+"""The data run's outcome the harness writes (`harness.DATA_STATUS_FILE`, pinned by a test)."""
+MAX_DATA_STATUS_BYTES = 1024
+"""Largest `status.json` a host reads; the harness writes well under 100 bytes."""
+MAX_DATA_EXIT = 255
+
+
+class DataStatus(BaseModel):
+    """`status.json` as the hosts read it: the harness's own exit code, and the measured value and cap of a refusal.
+
+    The executor and the local backend take the exit code from here rather than from
+    the launcher, whose code loses it on Cloud Run (every non-zero exit is -13).
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    exit: int = Field(ge=0, le=MAX_DATA_EXIT)
+    measured: int | None = Field(default=None, ge=0, le=MAX_PROBE_INT)
+    limit: int | None = Field(default=None, ge=0, le=MAX_PROBE_INT)
+
+
+def parse_data_status(raw: bytes | None) -> DataStatus | None:
+    """The harness's `status.json`, or None when it is missing or not the expected shape (strict UTF-8 JSON)."""
+    if raw is None or len(raw) > MAX_DATA_STATUS_BYTES:
+        return None
+    try:
+        return DataStatus.model_validate_json(raw, strict=True)
+    except ValueError:
+        return None
+
 
 RunReason = Literal["timeout", "disk_budget", "file_budget", "memory", "launcher", "output_rejected"]
 """Why a theme has no usable output, when the renderer knows more than the exit code:

@@ -53,6 +53,9 @@ ACCEPTS: dict[RoleKind, dict[ColumnDtype, int]] = {
     "datetime": {"datetime": 0},
 }
 
+GROUPING_KINDS: frozenset[RoleKind] = frozenset(("categorical", "text", "boolean"))
+"""Role kinds whose column splits or labels the marks; a single-valued column ranks last for them."""
+
 _NOT_ALNUM = re.compile(r"[^0-9a-z]+")
 _CAMEL = re.compile(r"(?<=[a-z0-9])(?=[A-Z])")
 
@@ -80,7 +83,9 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
     2. The remaining roles pick, in the order required single roles, required
        variadic families, optional single roles, optional variadic families (spec
        order within each group), the unused compatible column with the best
-       (tier, name similarity, column position). A variadic family takes every
+       (single-valued, tier, name similarity, column position): for a categorical,
+       text or boolean role a column with one distinct value ranks after every
+       column with two or more (`_constant_group`). A variadic family takes every
        unused tier-0 or tier-1 column in column order, up to `MAX_VARIADIC_DEFAULT`.
        A single role never falls back to a tier-2 column that a variadic family of
        the spec takes at tier 0 or 1: in wide data such as `month, Shoes, Hats`
@@ -139,15 +144,21 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
                 used.add(columns[position].name)
         elif role.name not in single:
             ranked = sorted(
-                (tier, -_rounded_similarity(role.name, column.name), position, column.name)
+                (
+                    _constant_group(role, column),
+                    tier,
+                    -_rounded_similarity(role.name, column.name),
+                    position,
+                    column.name,
+                )
                 for position, column in enumerate(columns)
                 if column.name not in used
                 and (tier := _tier(role, column)) is not None
                 and (tier <= 1 or column.name not in reserved)
             )
             if ranked:
-                single[role.name] = ranked[0][3]
-                used.add(ranked[0][3])
+                single[role.name] = ranked[0][-1]
+                used.add(ranked[0][-1])
 
     position_of = {column.name: position for position, column in enumerate(columns)}
     bindings: list[Binding] = []
@@ -303,6 +314,17 @@ def _tier(role: DataRole, column: ColumnProfile) -> int | None:
         return None
     tiers = [ACCEPTS[kind][column.dtype] for kind in role.kinds if column.dtype in ACCEPTS[kind]]
     return min(tiers) if tiers else None
+
+
+def _constant_group(role: DataRole, column: ColumnProfile) -> bool:
+    """Whether `column` holds at most one distinct value and `role` groups or labels by its values.
+
+    A categorical, text or boolean role (a series, a category, a label) split by a column
+    with one value draws one group, so such a column ranks after every column with two or
+    more values: `Kanton` holding only "Schweiz" never becomes the series while
+    `Staatsangehörigkeit` has two values. Number and date roles keep their order.
+    """
+    return column.unique <= 1 and any(kind in GROUPING_KINDS for kind in role.kinds)
 
 
 def _rounded_similarity(role_name: str, column_name: str) -> float:
