@@ -12,13 +12,14 @@ for a dozen languages).
 
 So `detect` is a small classifier over the languages the session language table knows
 (`language.ENGLISH_NAMES`): the script decides Russian (Cyrillic), Chinese (Han without
-kana) and Japanese (kana), Vietnamese letters (`ơ`, `ư`, `đ`, the dotted vowels) decide
-Vietnamese, and for the Latin-script languages a count of frequent function words
+kana) and Japanese (kana), Vietnamese letters (`ơ`, `ư`, `đ`, the dotted vowels) together
+with at least two Vietnamese function words decide Vietnamese, and for the Latin-script languages a count of frequent function words
 (`STOPWORDS`, words such as `the`, `und`, `est`, `para`, `het`, `się`) picks one. It
 returns None whenever it is not sure: fewer than `MIN_WORDS` words, fewer than
 `MIN_HITS` function words of the leader, a runner-up within half of the leader, or a
-leader whose words are under `MIN_SHARE` of the text. Text in backticks and in double
-quotes (column names, category values, code) is left out before counting, since the
+leader whose words are under `MIN_SHARE` of the text. Text in code fences, backticks and
+double or single quotes (column names, category values, code), and everything after an
+unclosed backtick, is left out before counting, since the
 user's German column names may stand in an English sentence and say nothing about it.
 
 The check acts only on a confident mismatch, so an unsure guess costs nothing; a wrong
@@ -109,10 +110,15 @@ English and Dutch): the runner-up rule keeps such overlaps from deciding alone."
 DETECTABLE: frozenset[str] = frozenset((*STOPWORDS, "ru", "zh", "ja"))
 """The languages `detect` can name: the session language table's codes (`language.ENGLISH_NAMES`)."""
 
-_QUOTED = re.compile(r"`[^`]*`|\"[^\"]*\"|„[^“”]*[“”]|“[^”]*”|«[^»]*»")
+_QUOTED = re.compile(
+    r"```.*?```|`[^`]*`|\"[^\"]*\"|„[^“”]*[“”]|“[^”]*”|«[^»]*»|‘[^’]*’|(?<!\w)'[^'\n]*'(?!\w)", re.DOTALL
+)
+"""Quoted text: code fences and spans, double quotes in their typographic forms, and single quotes that are no
+apostrophe (one inside a word, `don't`, `l'axe`, starts nothing)."""
 _WORD = re.compile(r"[^\W\d_]+")
 _VIETNAMESE = frozenset("ơưđăạảấầẩẫậắằẳẵặẹẻẽếềểễệỉịọỏốồổỗộớờởỡợụủứừửữựỳỵỷỹ")
 MIN_VIETNAMESE_LETTERS = 3
+MIN_VIETNAMESE_WORDS = 2
 
 
 def _scripts(text: str) -> tuple[int, int, int, int]:
@@ -135,6 +141,8 @@ def _scripts(text: str) -> tuple[int, int, int, int]:
 def detect(text: str) -> str | None:
     """The language `text` is written in as a code of `DETECTABLE`, or None when the guess is not sure."""
     body = _QUOTED.sub(" ", text)
+    if "`" in body:  # an unclosed fence or span: what follows is code or a name, never the reply's language
+        body = body[: body.index("`")]
     letters, cyrillic, han, kana = _scripts(body)
     if not letters:
         return None
@@ -145,9 +153,11 @@ def detect(text: str) -> str | None:
     if cyrillic / letters > 0.5:
         return "ru"
     lowered = body.lower()
-    if sum(char in _VIETNAMESE for char in lowered) >= MIN_VIETNAMESE_LETTERS:
-        return "vi"
     words = _WORD.findall(lowered)
+    if sum(char in _VIETNAMESE for char in lowered) >= MIN_VIETNAMESE_LETTERS:
+        # The letters alone also occur in a Vietnamese name inside another language's reply.
+        if sum(word in STOPWORDS["vi"] for word in words) >= MIN_VIETNAMESE_WORDS:
+            return "vi"
     if len(words) < MIN_WORDS:
         return None
     hits = sorted(((sum(word in stop for word in words), code) for code, stop in STOPWORDS.items()), reverse=True)

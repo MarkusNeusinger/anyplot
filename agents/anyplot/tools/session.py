@@ -236,10 +236,11 @@ async def prepare_data(operations: list[dict[str, Any]], tool_context: ToolConte
     period month|quarter|year); sort (column, descending); pivot_longer (columns, names_to, values_to); pivot_wider
     (names_from, values_from, index); classify (name, rules: each where conditions and a label, otherwise: the optional
     label for rows no rule matches; adds the text column name, labelling each row by the first rule that holds); derive
-    (name, how ratio|difference|sum|share|percent_change, columns, within, order, percent; adds the number column name
-    computed from number columns: columns[0] / columns[1], columns[0] - columns[1], a row sum, a share of the group's
-    total, or the percent change from the previous row in the order of order). Returns the change lines and the new
-    profile, or an error with a code and a message.
+    (name, how ratio|difference|sum|share|percent_change|cumsum|index, columns, within, order, percent; adds the number
+    column name computed from number columns: columns[0] / columns[1], columns[0] - columns[1], a row sum, a share of
+    the group's total, or, in the order of a number or date column order, the percent change from the previous row,
+    the running total, or an index with the group's first row = 100). Returns the change lines and the new profile,
+    or an error with a code and a message.
     """
     view = _view(tool_context)
     if view is None:

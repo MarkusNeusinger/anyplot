@@ -1234,6 +1234,37 @@ class TestDerive:
         assert cells(prepared, 3) == ["25.0", "", "", "-6.25"]
         assert "the first row of each group" in prepared.changes[0]
 
+    def test_running_total_and_index_within_groups_in_the_order_given(self) -> None:
+        shuffled = "Year,Origin,Population\n2022,Foreign,2000\n2021,Foreign,1600\n2021,Native,6400\n2022,Native,6000\n"
+        running = prepare(shuffled, derive("Total", "cumsum", "Population", within=["Origin"], order="Year"))
+        index = prepare(shuffled, derive("Index", "index", "Population", within=["Origin"], order="Year"))
+
+        assert cells(running, 3) == ["3600.0", "1600.0", "6400.0", "12400.0"]
+        assert running.changes == [
+            "added column Total: running total of Population in the order of Year within each Origin"
+        ]
+        assert cells(index, 3) == ["125.0", "100.0", "100.0", "93.75"]
+
+    def test_index_without_groups_starts_at_the_first_value_that_is_there(self) -> None:
+        prepared = prepare("Year,Sales\n2021,\n2022,50\n2023,75\n", derive("Index", "index", "Sales", order="Year"))
+
+        assert cells(prepared, 2) == ["", "100.0", "150.0"]
+
+    def test_a_text_order_column_is_refused(self) -> None:
+        """Month names sort alphabetically (April before Januar): the result would be silently wrong."""
+        months = "Monat,Umsatz\nJanuar,10\nFebruar,12\nMärz,15\nApril,18\n"
+        for how in ("percent_change", "cumsum", "index"):
+            code, message = failure(months, derive("x", how, "Umsatz", order="Monat"))
+            assert code == "type_mismatch" and "set_type" in message, how
+
+    def test_rows_without_an_order_value_stay_empty(self) -> None:
+        """Two missing order values are no repeated value: those rows have no place in the order."""
+        text = "Year,Sales\n2021,10\n,99\n2022,20\n,98\n"
+        prepared = prepare(text, derive("Growth", "percent_change", "Sales", order="Year"))
+
+        assert cells(prepared, 2) == ["", "", "100.0", ""]
+        assert "a row without a Year" in prepared.changes[0]
+
     def test_percent_change_with_repeated_order_values_is_refused(self) -> None:
         code, message = failure(POPULATION, derive("g", "percent_change", "Population", order="Year"))
 

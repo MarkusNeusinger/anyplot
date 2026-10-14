@@ -72,6 +72,34 @@ class TestDetect:
         )
         assert detect(text) == "en"
 
+    @pytest.mark.parametrize(
+        "text",
+        [
+            # Single-quoted German names and values in an English reply.
+            "I bound 'Staatsangehörigkeit der Person' to the color and 'Bestand pro Jahr und Kanton' to the y axis, "
+            "so each of the two groups is one line over the years.",
+            # An unclosed code fence: the code after it is no prose.
+            "The data has one row per year and group, and the bindings put the year on the x axis. ```python\n"
+            "df = df.groupby('Jahr').sum()  # die Summe der Werte für jedes Jahr und die Anzahl der Gruppen",
+        ],
+    )
+    def test_single_quotes_and_unclosed_fences_do_not_decide(self, text: str) -> None:
+        assert detect(text) == "en"
+
+    def test_apostrophes_are_no_quotes(self) -> None:
+        assert (
+            detect("L'axe x montre l'année et l'axe y la valeur. Vous voulez que les deux groupes soient séparés ?")
+            == "fr"
+        )
+
+    def test_vietnamese_letters_in_a_name_do_not_make_vietnamese(self) -> None:
+        """A Vietnamese place name in an English reply has the letters but none of the function words."""
+        text = (
+            "The column City holds Hồ Chí Minh, Đà Nẵng and Hà Nội, and the bindings put the city on the x axis "
+            "and the population on the y axis, one bar for each of the cities."
+        )
+        assert detect(text) == "en"
+
     def test_expected_code_takes_names_and_endonyms(self) -> None:
         assert expected_code("Deutsch") == expected_code("German") == expected_code("de") == "de"
         assert expected_code("Swedish") is None and expected_code("Klingon") is None
@@ -103,6 +131,7 @@ class FakeModel:
 
     answers: list[str]
     requests: list[LlmRequest] = field(default_factory=list)
+    finish_reason: types.FinishReason = types.FinishReason.STOP
 
     async def generate_content_async(self, request: LlmRequest, stream: bool = False) -> AsyncIterator[LlmResponse]:
         self.requests.append(request)
@@ -112,6 +141,7 @@ class FakeModel:
             usage_metadata=types.GenerateContentResponseUsageMetadata(
                 prompt_token_count=100, candidates_token_count=20
             ),
+            finish_reason=self.finish_reason,
         )
 
 
@@ -223,5 +253,17 @@ class TestPlugin:
             raise RuntimeError("down")
 
         monkeypatch.setattr(plugin_module, "root_model", broken)
+        lines: list[dict[str, Any]] = []
+        monkeypatch.setattr(plugin_module, "attribution", lambda hook, ledger, **fields: lines.append(fields))
 
         assert await run(german_session(), response(REPLIES["en"])) is None
+        assert [line["verdict"] for line in lines] == ["mismatch", "error"]
+
+    async def test_a_reask_cut_at_the_output_cap_keeps_the_first_reply(
+        self, ledger: RequestLedger, services: Services, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        model = FakeModel([REPLIES["de"]], finish_reason=types.FinishReason.MAX_TOKENS)
+        monkeypatch.setattr(plugin_module, "root_model", lambda: model)
+
+        assert await run(german_session(), response(REPLIES["en"])) is None
+        assert ledger.llm_calls == 1  # booked all the same

@@ -18,11 +18,13 @@ saw an English summary in a German session (#12176). This plugin checks it in co
   previous turn and `REASK_LINE` naming the language (the server's English name for it,
   never the stored value). The new reply replaces the old one when the detector is sure
   it is in the session language (verdict `reasked`); otherwise, also when it is unsure, the first reply stays (verdict
-  `reask_failed`). The extra call is booked like any other (`budget.book_response`).
+  `reask_failed`; also for a reply the output cap cut, finish reason `MAX_TOKENS`). A
+  re-ask that raises or answers nothing keeps the first reply too (verdict `error`).
+  The extra call is booked like any other (`budget.book_response`).
   At most one re-ask per turn (`ledger.reply_reasked`).
 
-`REASK` switches the re-ask off, leaving only the attribution line (an owner decision
-pending on 2026-10-14: re-ask, or only log). The plugin never raises; a failure keeps
+`REASK` switches the re-ask off, leaving only the attribution line (re-ask once is the
+owner's decision of 2026-10-14). The plugin never raises; a failure keeps
 the reply as it was.
 """
 
@@ -42,7 +44,7 @@ from ..services import get_services
 from ..session_state import LANGUAGE, LANGUAGE_SOURCE
 from ..settings import get_settings
 from .budget import ROOT_AGENT, book_response, strip_tools
-from .ledger import attribution, budget_allows, ledger_for
+from .ledger import attribution, budget_allows, finish_name, ledger_for
 
 
 logger = logging.getLogger(__name__)
@@ -151,15 +153,23 @@ class ReplyLanguagePlugin(BasePlugin):
             return None
         ledger.reply_reasked = True
         final: LlmResponse | None = None
-        async for response in root_model().generate_content_async(reask_request(request, reply, name), stream=False):
-            if not response.partial:
-                final = response
+        try:
+            asked = reask_request(request, reply, name)
+            async for response in root_model().generate_content_async(asked, stream=False):
+                if not response.partial:
+                    final = response
+        except Exception as exc:
+            logger.warning("reply language re-ask failed: %s", type(exc).__name__)
+            attribution("reply_language", ledger, verdict="error", expected=expected, found=found)
+            return None
         if final is None:
+            attribution("reply_language", ledger, verdict="error", expected=expected, found=found)
             return None
         book_response(ledger, ROOT_AGENT, callback_context.session.user_id, final)
         again = reply_text(final)
-        # Only a reply surely in the session language replaces the first one: an unsure guess ("Done.") does not.
-        if again is None or detect(again) != expected:
+        # Only a whole reply surely in the session language replaces the first one: an unsure guess ("Done.") or a
+        # reply cut at the output cap does not.
+        if again is None or finish_name(final.finish_reason) == "MAX_TOKENS" or detect(again) != expected:
             attribution("reply_language", ledger, verdict="reask_failed", expected=expected, found=found)
             return None
         attribution("reply_language", ledger, verdict="reasked", expected=expected, found=found)

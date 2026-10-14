@@ -72,9 +72,10 @@ would, for example, read `01.02.2024` as a number under `thousands='.'`).
    headers, missing as an empty cell, `\\n` line ends) and profile it.
 
 The loader reads the result with
-`pd.read_csv("data.csv", dtype=pandas_dtypes(column_dtypes), parse_dates=parse_dates,
-keep_default_na=False, na_values=[""])` and gets the typed frame back: only the empty
-cell is missing. `data.csv` can hold a text cell that pandas would read as missing by
+`pd.read_csv("data.csv", dtype=pandas_dtypes(column_dtypes), parse_dates=parse_dates)`,
+plus per-column `na_values` with `keep_default_na=False` when a column is text
+(`code/loader.py`), and gets the typed frame back: in a text column only the empty cell
+is missing. `data.csv` can hold a text cell that pandas would read as missing by
 default: a `json_pairs` key or a JSON-stat category such as `NA` (Namibia), a pasted `NA`
 in a column of letter codes (`_keep_na_codes`), and any text cell of a canonical re-parse
 (`parse_dataset(canonical=True)`). Every other pasted token of `MISSING_VALUES` is an
@@ -310,14 +311,25 @@ class ParsedDataset:
     the data. Summary rows are not among them. Empty for `find_table=False` and for a literal, except a
     JSON-stat dataset, whose label, source, notes and one-category dimensions are its lines (`_json_stat`).
     A pasted text column with the same value in every row adds `<name>: <value>` (`_constants_to_notes`)."""
+    with_constants: "ParsedDataset | None" = field(default=None, repr=False, compare=False)
+    """The same table with its constant columns still in it, when `_constants_to_notes` moved any: the notes
+    carry their values only while the notes are kept, so a path that drops the notes takes this one instead
+    (`with_constant_columns`), and the dataset judge reads it."""
+
+
+def with_constant_columns(parsed: ParsedDataset) -> ParsedDataset:
+    """`parsed` with the constant columns that moved to its notes back in the table, and without those notes."""
+    return parsed.with_constants if parsed.with_constants is not None else parsed
 
 
 def without_context(parsed: ParsedDataset, warning: str) -> ParsedDataset:
     """`parsed` without its context lines and with `warning` first among its warnings (profile included).
 
     The route drops the notes this way when the pre-filter or the scope judge refuses them;
-    the table itself is unchanged.
+    the table itself is unchanged, except that constant columns whose values had moved into
+    the notes are columns again (`with_constant_columns`), so no value is lost with the notes.
     """
+    parsed = with_constant_columns(parsed)
     kept = list(parsed.warnings)
     omitted = 0
     if kept and (match := _OMITTED.fullmatch(kept[-1])):
@@ -1499,8 +1511,23 @@ def _build(
             warnings.append(f"column '{before}': unit '{column.unit}' moved from the values into the name '{name}'")
         warnings.extend(f"column '{name}': {note}" for note in column.notes)
 
-    if not canonical and source_format != "json_stat":
-        columns = _constants_to_notes(columns, len(raw_rows), text_columns, warnings, context)
+    full = _finish(columns, source_format, warnings, text_columns)
+    if canonical or source_format == "json_stat" or context is None:
+        return full
+    notes_before = list(context)
+    kept = _constants_to_notes(columns, len(raw_rows), text_columns, warnings, context)
+    if kept is columns:
+        return full
+    # The table with its constant columns stays at hand: when the notes are not kept, they become columns again.
+    return replace(
+        _finish(kept, source_format, warnings, text_columns), with_constants=replace(full, context_lines=notes_before)
+    )
+
+
+def _finish(
+    columns: list[_Column], source_format: SourceFormat, warnings: list[str], text_columns: frozenset[str]
+) -> ParsedDataset:
+    """The dataset of these typed and named columns: canonical CSV, profile, preview and the loader's typing."""
     rows = [list(row) for row in zip(*(column.cells for column in columns), strict=True)]
     capped = _cap_warnings(warnings)
     profile = DatasetProfile(

@@ -61,10 +61,16 @@ The operations:
   `ratio` (`a / b`) and `difference` (`a - b`) of exactly two columns, `sum` of 2 to 10
   columns in the same row (missing cells count as 0, a row with none present stays
   missing), `share` of one column in the total of its group (`within` 0 to 2 key
-  columns, none for the whole column) and `percent_change` of one column from the
-  previous row of its group in the order of `order` (a group's first row is missing;
-  two rows with the same group and order are an `invalid_operation`, since "previous"
-  would be a guess: aggregate first). `percent` multiplies a `ratio` or a `share` by 100;
+  columns, none for the whole column), and three ordered formulas of one column within
+  its group in the order of `order`: `percent_change` from the previous row (a group's
+  first row is missing), `cumsum`, the running total (missing cells add nothing), and
+  `index`, the value relative to the group's first row with a value, which is 100
+  (owner decision of 2026-10-14). The order column must hold numbers or dates: a text
+  column sorts alphabetically (`April` before `Januar`, `10` before `9`), which would be
+  silently wrong, so it is a `type_mismatch` with a hint to `set_type` it first. Two
+  rows with the same group and order are an `invalid_operation`, since "previous" would
+  be a guess (aggregate first); a row without an order value gets an empty cell and
+  takes no place in the order. `percent` multiplies a `ratio` or a `share` by 100;
   a percent change is always in percent. A difference or a sum of whole-number columns
   is computed in Python integers and stays whole (a float64 holds integers only up to
   2**53). A division by zero or a missing input gives a
@@ -140,13 +146,17 @@ Decimal = Literal[".", ","]
 How = Literal["sum", "mean", "count", "min", "max"]
 Period = Literal["month", "quarter", "year"]
 Kind = Literal["number", "datetime", "boolean", "text"]
-DeriveHow = Literal["ratio", "difference", "sum", "share", "percent_change"]
+DeriveHow = Literal["ratio", "difference", "sum", "share", "percent_change", "cumsum", "index"]
+ORDERED: frozenset[str] = frozenset(("percent_change", "cumsum", "index"))
+"""The formulas that walk each group in the order of `order`."""
 _DERIVE_ARITY: dict[str, tuple[int, int]] = {
     "ratio": (2, 2),
     "difference": (2, 2),
     "sum": (2, MAX_DERIVE_COLUMNS),
     "share": (1, 1),
     "percent_change": (1, 1),
+    "cumsum": (1, 1),
+    "index": (1, 1),
 }
 """How many value columns each formula takes, as (at least, at most)."""
 PrepareErrorCode = Literal["unknown_column", "type_mismatch", "empty_result", "too_wide", "invalid_operation"]
@@ -375,8 +385,9 @@ class Derive(_Strict):
     """A new number column computed row by row from number columns by one formula of a closed set.
 
     `columns` are the inputs (two for `ratio` and `difference`, in the order `a / b` and
-    `a - b`; 2 to 10 for `sum`; one for `share` and `percent_change`). `within` groups the
-    rows for `share` and `percent_change`; `order` sorts each group for `percent_change`.
+    `a - b`; 2 to 10 for `sum`; one for `share` and the ordered formulas `percent_change`,
+    `cumsum` and `index`). `within` groups the rows for `share` and the ordered formulas;
+    `order`, a number or datetime column, sorts each group for the ordered formulas.
     """
 
     op: Literal["derive"]
@@ -767,13 +778,13 @@ def _derive(frame: pd.DataFrame, op: Derive, carried: _Carried) -> tuple[pd.Data
         raise PrepareError("invalid_operation", f"derive {op.how} needs different columns")
     for name in [*columns, *keys, *([op.order] if op.order else [])]:
         _require(frame, name)
-    grouped = op.how in ("share", "percent_change")
+    grouped = op.how == "share" or op.how in ORDERED
     if not grouped and (keys or op.order):
         raise PrepareError("invalid_operation", f"derive {op.how} works within one row; it takes no within or order")
     if op.how == "share" and op.order:
         raise PrepareError("invalid_operation", "derive share takes no order")
-    if op.how == "percent_change" and not op.order:
-        raise PrepareError("invalid_operation", "derive percent_change needs an order column, such as a date or year")
+    if op.how in ORDERED and not op.order:
+        raise PrepareError("invalid_operation", f"derive {op.how} needs an order column, such as a date or year")
     if op.percent and op.how not in ("ratio", "share"):
         raise PrepareError(
             "invalid_operation",
@@ -810,9 +821,12 @@ def _derive(frame: pd.DataFrame, op: Derive, carried: _Carried) -> tuple[pd.Data
             # A total that overflowed to infinity would give finite shares of 0: no share for its group instead.
             result = values[0] / total.where((total != 0) & np.isfinite(total))
             what = f"share of {columns[0]} in the total" + (f" of each {' and '.join(keys)}" if keys else "")
-        case "percent_change":
-            result, what = _percent_change(frame, values[0], columns[0], keys, str(op.order))
-            note = "the first row of each group, "
+        case "percent_change" | "cumsum" | "index":
+            result, what = _ordered(frame, values[0], columns[0], keys, str(op.order), op.how)
+            if frame[str(op.order)].isna().any():
+                note = f"a row without a {op.order}, "
+            if op.how == "percent_change":
+                note = "the first row of each group, " + note
     if op.percent:
         result = result * 100
         what += ", in percent"
@@ -851,29 +865,50 @@ def _integer_result(frame: pd.DataFrame, columns: list[str], how: str) -> pd.Ser
     return pd.Series([np.nan if value is None else float(value) for value in results], index=frame.index)
 
 
-def _percent_change(
-    frame: pd.DataFrame, values: pd.Series, column: str, keys: list[str], order: str
+def _ordered(
+    frame: pd.DataFrame, values: pd.Series, column: str, keys: list[str], order: str, how: str
 ) -> tuple[pd.Series, str]:
-    """The percent change of `values` from the previous row of each group, in the order of `order`."""
-    if frame.duplicated(subset=[*keys, order]).any():
-        within = f" within each {' and '.join(keys)}" if keys else ""
+    """`percent_change`, `cumsum` or `index` of `values` within each group, in the order of `order`.
+
+    The order column holds numbers or dates: a text column would sort alphabetically
+    (`April` before `Januar`, `10` before `9`) and give a silently wrong result. A row
+    without an order value has no place in the order: its cell stays empty and it is
+    skipped by its group's other rows. Two rows of a group with the same order value
+    make "previous" a guess and are refused.
+    """
+    kind = _kind(frame[order])
+    if kind not in ("number", "datetime"):
+        raise PrepareError(
+            "type_mismatch",
+            f"column '{order}' is {kind} and would sort alphabetically; derive {how} needs a number or datetime "
+            "order column: set_type it to number or datetime first",
+        )
+    placed = frame[frame[order].notna()]
+    within = f" within each {' and '.join(keys)}" if keys else ""
+    if placed.duplicated(subset=[*keys, order]).any():
         raise PrepareError(
             "invalid_operation",
-            f"column '{order}' repeats a value{within}, so the previous row is unclear; aggregate first",
+            f"column '{order}' repeats a value{within}, so the order of the rows is unclear; aggregate first",
         )
-    try:
-        ordered = frame.sort_values(order, kind="stable", na_position="last").index
-    except TypeError:
-        raise PrepareError("type_mismatch", f"column '{order}' mixes kinds of values and cannot be sorted") from None
+    ordered = placed.sort_values(order, kind="stable").index
     current = values.loc[ordered]
-    if keys:
-        previous = current.groupby([frame[key].loc[ordered] for key in keys], dropna=False).shift(1)
+    groups = [frame[key].loc[ordered] for key in keys]
+    if how == "percent_change":
+        previous = current.groupby(groups, dropna=False).shift(1) if keys else current.shift(1)
+        result = (current - previous) / previous.where(previous != 0) * 100
+        what = f"percent change of {column} from the previous {order}{within}"
+    elif how == "cumsum":
+        result = current.groupby(groups, dropna=False).cumsum() if keys else current.cumsum()
+        what = f"running total of {column} in the order of {order}{within}"
     else:
-        previous = current.shift(1)
-    change = (current - previous) / previous.where(previous != 0) * 100
-    change = change.where(frame[order].loc[ordered].notna())  # a row without its place in the order has no previous
-    within = f" within each {' and '.join(keys)}" if keys else ""
-    return change.reindex(frame.index), f"percent change of {column} from the previous {order}{within}"
+        if keys:  # `first` takes the group's first value that is there
+            base = current.groupby(groups, dropna=False).transform("first")
+        else:
+            present = current.dropna()
+            base = pd.Series(present.iloc[0] if len(present) else np.nan, index=current.index)
+        result = current / base.where(base != 0) * 100
+        what = f"index of {column}, the first {order}{within} = 100"
+    return result.reindex(frame.index), what
 
 
 # --- Conditions ------------------------------------------------------------------------------

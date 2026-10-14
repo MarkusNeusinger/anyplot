@@ -582,7 +582,8 @@ as numbers or dates, drop a total row, sum or average per month or category,
 rename a column, sort, turn columns into rows or rows into columns, add a
 category column derived from other columns, or add a number column computed
 from number columns (a ratio, a difference, a row sum, a share of a group's
-total, or a percent change from the previous row). The
+total, or, in the order of a year or date column, a percent change from the
+previous row, a running total or an index with the first row at 100). The
 assistant never writes data rows: it chooses from a fixed set of operations
 (`rename`, `drop_columns`, `drop_rows`, `set_type`, `aggregate`, `sort`,
 `pivot_longer`, `pivot_wider`, `classify`, `derive`, at most five per call), the agents service

@@ -1554,6 +1554,31 @@ class TestConstantColumns:
 
         assert len(parsed.profile.columns) == 3 and parsed.context_lines == []
 
+    def test_refused_notes_bring_the_columns_back(self) -> None:
+        """The notes judge refuses the notes: the values they carried come back as columns, never lost."""
+        parsed = without_context(parse_dataset(OFFICE_EXPORT), "notes dropped")
+
+        assert [column.name for column in parsed.profile.columns] == ["Year", "Region", "Origin", "Sex", "Population"]
+        assert parsed.context_lines == [] and parsed.warnings[0] == "notes dropped"
+        assert not any("moved to the notes" in warning for warning in parsed.warnings)
+        assert read_back(parsed)["Region"].tolist() == ["Country"] * 4
+
+    def test_a_store_without_screened_notes_keeps_the_columns(self) -> None:
+        """A fixture seed or an eval's ingest stores no notes: the constant columns stay in the table."""
+        from agents.anyplot.data.store import DatasetStore
+        from agents.anyplot.dev_fixture import snapshot_from_repo
+        from agents.anyplot.opening import dataset_judge_inputs, store_dataset
+
+        parsed = parse_dataset(OFFICE_EXPORT)
+        snapshot = snapshot_from_repo("scatter-basic", "matplotlib")
+        unscreened = store_dataset(DatasetStore(), "s1", parsed, snapshot)
+        screened = store_dataset(DatasetStore(), "s1", parsed, snapshot, notes_screened=True)
+
+        assert "Region" in unscreened.parsed.column_dtypes and unscreened.parsed.context_lines == []
+        assert "Region" not in screened.parsed.column_dtypes and screened.parsed.context_lines
+        # The dataset judge reads the table with its constant columns, which may become columns again.
+        assert '"Region"' in dataset_judge_inputs(parsed)[0] and "Country" in "".join(dataset_judge_inputs(parsed))
+
     def test_a_canonical_reparse_keeps_them(self) -> None:
         """An operation or the user's code made the column: the re-parse of the service's CSV keeps it."""
         parsed = parse_dataset(

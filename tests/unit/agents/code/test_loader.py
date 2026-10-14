@@ -38,52 +38,52 @@ def keyword(call: ast.Call, name: str) -> object:
     return next((ast.literal_eval(kw.value) for kw in call.keywords if kw.arg == name), None)
 
 
+def load(run_form: str, csv_text: str, directory: Path, monkeypatch: pytest.MonkeyPatch) -> pd.DataFrame:
+    """Run the run form's loader statements (everything up to `df = ...`) next to `csv_text` as `data.csv`."""
+    (directory / "data.csv").write_text(csv_text, encoding="utf-8")
+    monkeypatch.chdir(directory)
+    tree = ast.parse(run_form)
+    upto = next(
+        i for i, node in enumerate(tree.body) if isinstance(node, ast.Assign) and ast.unparse(node.targets[0]) == "df"
+    )
+    namespace: dict[str, object] = {"pd": pd}
+    exec(compile(ast.Module(body=tree.body[: upto + 1], type_ignores=[]), "run_form", "exec"), namespace)
+    frame = namespace["df"]
+    assert isinstance(frame, pd.DataFrame)
+    return frame
+
+
 def test_placeholder_becomes_read_csv() -> None:
     result = to_run_form(
         WORKING,
-        columns=["x", "y", "when", "s", "b"],
-        dtypes={"x": "integer", "y": "number", "when": "datetime", "s": "text", "b": "boolean"},
+        columns=["x", "y", "when", "b"],
+        dtypes={"x": "integer", "y": "number", "when": "datetime", "b": "boolean"},
         parse_dates=[],
     )
 
     assert "load_user_data" not in result
     assert result == WORKING.replace(
         "df = load_user_data()",
-        "df = pd.read_csv(\n"
-        '    "data.csv",\n'
-        "    dtype={\n"
-        '        "x": "Int64",\n'
-        '        "y": "float64",\n'
-        '        "s": "string",\n'
-        '        "b": "boolean",\n'
-        "    },\n"
-        "    parse_dates=[\n"
-        '        "when",\n'
-        "    ],\n"
-        "    keep_default_na=False,\n"
-        '    na_values=[""],\n'
-        ")",
+        'df = pd.read_csv("data.csv", dtype={"x": "Int64", "y": "float64", "b": "boolean"}, parse_dates=["when"])',
     )
 
 
-def test_a_text_column_reads_only_the_empty_cell_as_missing() -> None:
-    """`data.csv` writes missing as an empty cell; a text `NA` (Namibia, North America) or `None` is a value."""
+def test_a_text_column_gets_per_column_missing_values() -> None:
+    """Text: only the empty cell; every other column: the parser's missing tokens, bound once to `na_tokens`."""
     result = to_run_form(WORKING, columns=["Land", "Wert"], dtypes={"Land": "text", "Wert": "integer"}, parse_dates=[])
-    assert (
-        'df = pd.read_csv("data.csv", dtype={"Land": "string", "Wert": "Int64"}, keep_default_na=False, '
-        'na_values=[""])' in result
-    )
 
-    numbers = to_run_form(WORKING, columns=["Wert"], dtypes={"Wert": "integer"}, parse_dates=[])
-    assert 'df = pd.read_csv("data.csv", dtype={"Wert": "Int64"})\n' in numbers
+    assert '    "", "#N/A"' in result and "\nna_tokens = [\n" in result
+    call = loader_call(result)
+    assert keyword(call, "keep_default_na") is False
+    na_values = next(kw.value for kw in call.keywords if kw.arg == "na_values")
+    assert ast.unparse(na_values) == "{'Land': [''], 'Wert': na_tokens}"
+    assert all(len(line) <= MAX_LINE_CHARS for line in result.splitlines())
 
 
-def test_the_loader_keeps_na_categories_and_reads_empty_cells_as_missing() -> None:
-    """The run form's arguments on a canonical CSV: `NA` stays a category, an empty cell is missing everywhere."""
-    import io
-
-    import pandas as pd
-
+def test_the_loader_keeps_na_categories_and_reads_empty_cells_as_missing(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The run form on a canonical CSV: `NA` stays a category, an empty cell is missing everywhere."""
     from agents.anyplot.data.parse import parse_dataset
 
     parsed = parse_dataset('{"NA": 3, "EU": 4, "None": null}')
@@ -93,17 +93,28 @@ def test_the_loader_keeps_na_categories_and_reads_empty_cells_as_missing() -> No
         dtypes=dict(parsed.column_dtypes),
         parse_dates=list(parsed.parse_dates),
     )
-    tree = ast.parse(result)
-    call = next(
-        node
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "read_csv"
-    )
-    keywords = {kw.arg: ast.literal_eval(kw.value) for kw in call.keywords}
-    frame = pd.read_csv(io.StringIO(parsed.csv), **keywords)
+    frame = load(result, parsed.csv, tmp_path, monkeypatch)
 
     assert frame["category"].tolist() == ["NA", "EU", "None"]
     assert frame["value"].isna().tolist() == [False, False, True]
+
+
+def test_the_exported_loader_reads_a_users_r_export(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """A user's own data.csv from R or a spreadsheet writes `NA` or `-` in number and date columns: no crash."""
+    result = to_run_form(
+        WORKING,
+        columns=["Country", "Exports", "Share", "Date"],
+        dtypes={"Country": "text", "Exports": "integer", "Share": "number", "Date": "datetime"},
+        parse_dates=[],
+    )
+    frame = load(
+        result, "Country,Exports,Share,Date\nNA,NA,-,NA\nCH,12,0.5,2024-01-31\nDE,,n/a,\n", tmp_path, monkeypatch
+    )
+
+    assert frame["Country"].tolist() == ["NA", "CH", "DE"]
+    assert str(frame["Exports"].dtype) == "Int64" and frame["Exports"].isna().tolist() == [True, False, True]
+    assert frame["Share"].isna().tolist() == [True, False, True]
+    assert pd.api.types.is_datetime64_any_dtype(frame["Date"]) and frame["Date"].isna().tolist() == [True, False, True]
 
 
 def test_parse_dates_follow_column_order_and_empty_arguments_are_left_out() -> None:

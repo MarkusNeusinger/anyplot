@@ -1,8 +1,9 @@
 ### Added
 
 - **`derive`, a computed number column in `prepare_data`.** The assistant can
-  add a ratio, a difference, a row sum, a share of a group's total, or a percent
-  change from the previous row, computed server-side in pandas from a closed set
+  add a ratio, a difference, a row sum, a share of a group's total, or, in the
+  order of a number or date column, a percent change from the previous row, a
+  running total or an index (first row = 100), computed server-side in pandas from a closed set
   of formulas (no free expressions), so it answers "which year has the largest
   share of foreigners?" by deriving the share instead of asking you to add the
   column. (#12179)
@@ -16,11 +17,14 @@
 - **Constant text columns of a paste move to the notes.** A pasted column with
   the same text in every row, such as `Kanton` = `Schweiz` in a statistics
   export, becomes a note line (`Kanton: Schweiz`), as a one-category JSON-stat
-  dimension already did, unless fewer than two columns would remain. (#12179)
+  dimension already did, unless fewer than two columns would remain; when the
+  notes are not kept, the columns come back. (#12179)
 
 ### Fixed
 
 - **A category named `NA` no longer turns into a missing value.** The exported
-  loader reads only empty cells as missing when the data has a text column, so
-  `NA` (Namibia, North America) from a JSON key or a JSON-stat category
-  survives, and a pasted `NA` in a column of letter codes stays a code. (#12179)
+  loader reads missing values per column when the data has a text column (only
+  the empty cell in text, the usual tokens elsewhere), so `NA` (Namibia, North
+  America) from a JSON key or a JSON-stat category survives, a pasted `NA` in a
+  column of letter codes stays a code, and an R export with `NA` in a number
+  column still loads. (#12179)
