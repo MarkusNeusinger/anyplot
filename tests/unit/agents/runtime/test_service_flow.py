@@ -2405,9 +2405,11 @@ async def test_generate_data_refuses_during_a_run_bad_arguments_and_formulas_it_
 
 
 async def test_a_formula_in_the_data_field_is_refused_and_never_transcribed(
-    client: httpx.AsyncClient, judge, caplog: pytest.LogCaptureFixture
+    client: httpx.AsyncClient, judge, caplog: pytest.LogCaptureFixture, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """A model must not compute rows: formula-like text gets `422 formula`; free text and literals keep their paths."""
+    monkeypatch.setenv("AGENT_USER_PASTES_PER_MINUTE", "50")  # more transcribed pastes than a user's minute allows
+    get_settings.cache_clear()
     caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
     sid = await open_session(client, with_data=False)
 
@@ -2471,7 +2473,7 @@ async def test_a_dataset_with_personal_data_is_stored(client: httpx.AsyncClient,
     assert len(judge.calls) == 1  # the judge looked for injection and found none
 
 
-async def test_attacks_on_both_judges_add_up_to_the_daily_refusal(
+async def test_attacks_on_both_judges_add_up_to_the_lockout(
     client: httpx.AsyncClient, swap_models, services: Services, judge
 ) -> None:
     fake = swap_models("gemini", default_script())
@@ -2488,8 +2490,9 @@ async def test_attacks_on_both_judges_add_up_to_the_daily_refusal(
     blocked = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "make it blue"})
     upload = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": "a,b\n1,2\n"})
 
-    assert parse_sse(blocked.text)[1] == ("refusal", {"code": "budget", "text": refusal("budget", "en")})
-    assert (upload.status_code, upload.json()) == (429, {"detail": "rate_limited"})
+    # Its own code and text since 2026-10-14, never the "usage limit" text of a spent budget.
+    assert parse_sse(blocked.text)[1] == ("refusal", {"code": "locked_out", "text": refusal("locked_out", "en")})
+    assert (upload.status_code, upload.json()) == (429, {"detail": "locked_out"})
     assert len(judge.calls) == 3 and fake.requests == []
 
 

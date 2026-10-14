@@ -468,8 +468,10 @@ def allow_full_file(config: types.GenerateContentConfig, settings: AgentSettings
 
 # --- Judge -------------------------------------------------------------------------------
 
-Verdict = Literal["in_scope", "out_of_scope", "attack", "needs_data"]
-"""`needs_data`: a request for data the service would have to fetch (owner rule of 2026-10-10)."""
+Verdict = Literal["in_scope", "out_of_scope", "attack", "needs_data", "other_library"]
+"""`needs_data`: a request for data the service would have to fetch (owner rule of 2026-10-10);
+`other_library`: a request for this plot in another library or language, answered with a fixed pointer to the
+catalogue (2026-10-14)."""
 _LANG = re.compile(r"^[a-z]{2}$")
 
 

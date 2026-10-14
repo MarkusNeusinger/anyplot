@@ -598,7 +598,7 @@ describe('DataPanel data changes', () => {
     // A run in another tab: the undo can be tried again.
     rerender(changedState(2, { undoError: { code: 'run_active', ref: 'r409' } }));
     expect(screen.getByRole('alert')).toHaveTextContent(
-      'a run is in progress; wait for it to finish · ref r409'
+      'a run or another paste is in progress; wait for it to finish · ref r409'
     );
     expect(screen.getByRole('button', { name: '.undo()' })).toBeEnabled();
 

@@ -168,21 +168,24 @@ class _Day:
     user_strikes: dict[str, set[str]] = field(default_factory=dict)
     user_data_runs: dict[str, int] = field(default_factory=dict)
     user_messages: dict[str, int] = field(default_factory=dict)
+    user_pastes: dict[str, int] = field(default_factory=dict)
 
 
 MESSAGE_WINDOW_S = 60.0
-"""The sliding window of `AGENT_USER_MESSAGES_PER_MINUTE`."""
+"""The sliding window of `AGENT_USER_MESSAGES_PER_MINUTE` and `AGENT_USER_PASTES_PER_MINUTE`."""
 MessageLimit = Literal["rate_limited", "daily_limit"]
-"""Why `message_limit` refuses a turn: the minute's messages, or the day's."""
+"""Why `message_limit` or `paste_limit` refuses: the minute's count, or the day's."""
+WindowKind = Literal["message", "paste"]
 
 
 class UsageBook:
-    """Per-user and global daily counters for this instance's lifetime, and each user's messages of the last minute."""
+    """Per-user and global daily counters for this instance's lifetime, and each user's messages and pastes of the
+    last minute."""
 
     def __init__(self, clock: Callable[[], float] = time.monotonic) -> None:
         self._day = _Day(today())
         self._clock = clock
-        self._recent: dict[str, deque[float]] = {}
+        self._recent: dict[tuple[WindowKind, str], deque[float]] = {}
 
     def _current(self) -> _Day:
         date = today()
@@ -231,6 +234,11 @@ class UsageBook:
             and self.user_strikes(user_id) < settings.attack_strikes
         )
 
+    def locked_out(self, user_id: str, settings: AgentSettings) -> bool:
+        """Whether the user's `attack` strikes reached `AGENT_ATTACK_STRIKES` today: the `locked_out` refusal, which
+        `daily_ok` folds into its answer, told apart from a spent token budget."""
+        return self.user_strikes(user_id) >= settings.attack_strikes
+
     def runs_ok(self, user_id: str, settings: AgentSettings) -> bool:
         return self.user_runs(user_id) < settings.daily_pipeline_runs
 
@@ -252,32 +260,64 @@ class UsageBook:
     def message_limit(self, user_id: str, settings: AgentSettings) -> MessageLimit | None:
         """Why the user may not send another chat turn now, or None; checked before the scope judge, so a flood costs
         no model call. A refused turn is not counted: the window frees itself one minute after the last counted one."""
-        if self.user_messages(user_id) >= settings.user_messages_per_day:
-            return "daily_limit"
-        recent = self._trimmed(user_id)
-        if recent is not None and len(recent) >= settings.user_messages_per_minute:
-            return "rate_limited"
-        return None
+        return self._limit(
+            "message",
+            user_id,
+            self.user_messages(user_id),
+            settings.user_messages_per_minute,
+            settings.user_messages_per_day,
+        )
 
     def add_message(self, user_id: str) -> None:
         """Count one chat turn against the user's minute and day."""
         day = self._current()
         day.user_messages[user_id] = day.user_messages.get(user_id, 0) + 1
-        recent = self._trimmed(user_id)
+        self._stamp("message", user_id)
+
+    def user_pastes(self, user_id: str) -> int:
+        """The user's dataset pastes today that passed `paste_limit`."""
+        return self._current().user_pastes.get(user_id, 0)
+
+    def paste_limit(self, user_id: str, settings: AgentSettings) -> MessageLimit | None:
+        """Why the user may not paste another dataset now, or None: `AGENT_USER_PASTES_PER_MINUTE` and
+        `AGENT_USER_PASTES_PER_DAY`, across sessions, checked before any parser or model reads the paste."""
+        return self._limit(
+            "paste", user_id, self.user_pastes(user_id), settings.user_pastes_per_minute, settings.user_pastes_per_day
+        )
+
+    def add_paste(self, user_id: str) -> None:
+        """Count one dataset paste against the user's minute and day."""
+        day = self._current()
+        day.user_pastes[user_id] = day.user_pastes.get(user_id, 0) + 1
+        self._stamp("paste", user_id)
+
+    def _limit(
+        self, kind: WindowKind, user_id: str, today_count: int, per_minute: int, per_day: int
+    ) -> MessageLimit | None:
+        if today_count >= per_day:
+            return "daily_limit"
+        recent = self._trimmed(kind, user_id)
+        if recent is not None and len(recent) >= per_minute:
+            return "rate_limited"
+        return None
+
+    def _stamp(self, kind: WindowKind, user_id: str) -> None:
+        recent = self._trimmed(kind, user_id)
         if recent is None:
-            recent = self._recent[user_id] = deque()
+            recent = self._recent[(kind, user_id)] = deque()
         recent.append(self._clock())
 
-    def _trimmed(self, user_id: str) -> deque[float] | None:
-        """The user's message times within the window, oldest first; a user with none left is forgotten."""
-        recent = self._recent.get(user_id)
+    def _trimmed(self, kind: WindowKind, user_id: str) -> deque[float] | None:
+        """The user's times of `kind` within the window, oldest first; a user with none left is forgotten."""
+        key = (kind, user_id)
+        recent = self._recent.get(key)
         if recent is None:
             return None
         now = self._clock()
         while recent and now - recent[0] >= MESSAGE_WINDOW_S:
             recent.popleft()
         if not recent:
-            del self._recent[user_id]
+            del self._recent[key]
             return None
         return recent
 

@@ -36,7 +36,11 @@ another provider, model or location.
 | `AGENT_QUEUE_MAX_WAIT_S` | `600` | Longest wait in the run queue; it also sizes the queue (`AGENT_RUNS_PER_MINUTE` x this / 60 entries) |
 | `AGENT_USER_MESSAGES_PER_MINUTE` | `10` | Chat turns (typed messages and actions) per user within any 60 seconds; more get the `rate_limited` refusal before the scope judge runs |
 | `AGENT_USER_MESSAGES_PER_DAY` | `200` | Chat turns per user and UTC day; more get the `daily_limit` refusal before the scope judge runs |
-| `AGENT_SESSION_REFUSALS` | `3` | Scope-judge refusals (`out_of_scope` or `attack`, not `needs_data`) after which the session is closed: the last of them and every later turn get the `session_closed` refusal |
+| `AGENT_SESSION_REFUSALS` | `3` | Scope-judge refusals (`out_of_scope` or `attack`, not `needs_data`, and `other_library` only with `AGENT_OTHER_LIBRARY_COUNTS`) after which the session is closed: the last of them and every later turn, and every paste, get the `session_closed` refusal |
+| `AGENT_OTHER_LIBRARY_COUNTS` | `false` | Whether an `other_library` refusal (this plot in another library or language) counts toward `AGENT_SESSION_REFUSALS` |
+| `AGENT_SESSION_CLOSE_WARNING` | `true` | The counted refusal one before the closing one carries the fixed `close_warning` suffix |
+| `AGENT_USER_PASTES_PER_MINUTE` | `10` | Dataset pastes per user within any 60 seconds, across sessions; more get `429 rate_limited` before any parser or model reads the paste |
+| `AGENT_USER_PASTES_PER_DAY` | `100` | Dataset pastes per user and UTC day; more get `429 daily_limit` |
 | `AGENT_MAX_ATTEMPTS` | `2` | Adapter attempts per pipeline run, 1 to 3: the first and at most one repair round by default; the eval harness sets 1 or 3 to measure no repair or a second repair round |
 | `AGENT_ROOT_THINKING_BUDGET` | `1024` | Claude only: adaptive thinking of the root, with that many tokens added to its output cap; 0 turns it off (the 2026-10-11 measurement: with thinking on root and adapter every run passed the gates and 51.6 % ended `ok`, against 91.0 % and 28.7 % without) |
 | `AGENT_ADAPTER_THINKING_BUDGET` | `8192` | The same for the adapter (2,048 before 2026-10-14, when effort `high` thought past it); the eval harness overrides both with `--thinking-budget ROOT,ADAPTER` |
@@ -55,7 +59,7 @@ another provider, model or location.
 | `AGENT_SOFT_DEADLINE_S` | `480` | Soft deadline inside the pipeline; below the hard one |
 | `AGENT_JUDGE_TIMEOUT_S` | `4` | Wall-clock budget of one judge verdict, its single retry and the half-second wait before it included |
 | `AGENT_KEEP_REFUSALS` | `false` | Keep the text and verdict of each message the scope judge refused, in a bounded in-memory ring per session that only the feedback bundle shows; never in a log |
-| `AGENT_ATTACK_STRIKES` | `3` | `attack` verdicts per user and day after which the user gets the budget refusal for the rest of the day |
+| `AGENT_ATTACK_STRIKES` | `3` | `attack` verdicts per user and day after which the user gets the `locked_out` refusal (and a paste `429 locked_out`) for the rest of the day |
 | `AGENT_SESSION_IDLE_S` | `3600` | Idle seconds after which the sweeper drops a session and its stores |
 | `AGENT_ALLOWED_CALLERS` | empty | Service-account emails allowed to call `/v1` (comma-separated) |
 | `AGENT_SERVICE_URLS` | empty | ID-token audiences accepted on `/v1` (comma-separated): the service URL, which Cloud Run requires as the audience even for a request to a tag URL |
@@ -288,6 +292,28 @@ class AgentSettings(BaseSettings):
     `session_closed`, and the user starts a new session. `needs_data` refusals never count. Counted from the
     session's withheld messages, so it ends with the session."""
 
+    other_library_counts: bool = False
+    """Whether an `other_library` refusal (this plot in another library or language, answered with a fixed
+    pointer to the catalogue) counts toward `session_refusals` (`AGENT_OTHER_LIBRARY_COUNTS`). Off by default:
+    the request is in good faith and close to the scope, so it never closes a session (live test of
+    2026-10-14). Owner decision of 2026-10-14: it does not count."""
+
+    session_close_warning: bool = True
+    """Whether the counted refusal that leaves a session one refusal before it closes carries the fixed
+    `close_warning` suffix ("One more request outside this scope will close this chat.";
+    `AGENT_SESSION_CLOSE_WARNING`). Owner decision of 2026-10-14: on."""
+
+    user_pastes_per_minute: PositiveInt = 10
+    """Dataset pastes per user within any 60 seconds (`AGENT_USER_PASTES_PER_MINUTE`), across sessions, checked
+    before any parser or model reads the paste: each paste may spend dataset-judge calls (one per ~4 kB part
+    of the judged view), a notes-judge call and a transcriber call. Only a paste that reaches the pre-filter or
+    a model counts (a formula, code or unparseable text is refused for free). More get `429 rate_limited`.
+    Owner decision of 2026-10-14."""
+
+    user_pastes_per_day: PositiveInt = 100
+    """Dataset pastes per user and UTC day (`AGENT_USER_PASTES_PER_DAY`), checked like the minute's; more get
+    `429 daily_limit`. Owner decision of 2026-10-14."""
+
     max_attempts: int = Field(default=2, ge=1, le=MAX_ATTEMPTS)
     """Adapter attempts per pipeline run (`AGENT_MAX_ATTEMPTS`), 1 to 3, enforced by the loop
     in `pipeline.py`. The default 2 is the design's "at most one repair round"; the eval harness
@@ -412,7 +438,8 @@ class AgentSettings(BaseSettings):
 
     attack_strikes: PositiveInt = 3
     """`attack` verdicts of the scope or dataset judge per user and day (`AGENT_ATTACK_STRIKES`) after
-    which the user gets the budget refusal for the rest of the (UTC) day."""
+    which the user gets the `locked_out` refusal for the rest of the (UTC) day, in every session and on
+    the paste route (`429 locked_out`); before 2026-10-14 it was the misleading `budget` text."""
 
     session_idle_s: PositiveInt = 3600
     """Idle seconds before the sweeper drops a session (`AGENT_SESSION_IDLE_S`)."""

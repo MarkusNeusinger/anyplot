@@ -449,6 +449,20 @@ describe('useAgentSession: data and bindings', () => {
     expect(trackEvent).toHaveBeenCalledWith('agent_guardrail_block', { reason: 'data_refused' });
   });
 
+  it.each([
+    [429, 'rate_limited'],
+    [429, 'daily_limit'],
+    [429, 'locked_out'],
+    [403, 'session_closed'],
+  ])('reports the paste route’s %i %s as a guardrail block', async (status, code) => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/dataset'] = () => json(status, { detail: code, ref: 'r10' });
+    const { result } = await openSession(routes);
+    await act(() => result.current.parseData('a,b\n1,2\n'));
+    expect(result.current.state.datasetError).toEqual({ code, ref: 'r10' });
+    expect(trackEvent).toHaveBeenCalledWith('agent_guardrail_block', { reason: code });
+  });
+
   it('refuses more than 1 MB before sending anything', async () => {
     const { result } = await openSession(baseRoutes());
     await act(() => result.current.parseData('x'.repeat(1024 * 1024 + 1)));
@@ -1343,7 +1357,7 @@ describe('useAgentSession: turns', () => {
     expect(JSON.stringify(trackEvent.mock.calls)).not.toContain('Munich');
   });
 
-  it.each(['rate_limited', 'daily_limit', 'session_closed'])(
+  it.each(['rate_limited', 'daily_limit', 'session_closed', 'other_library', 'locked_out'])(
     'shows the %s refusal and records it as its own guardrail reason',
     async code => {
       const routes = baseRoutes();
