@@ -37,16 +37,19 @@ SCAN_LINES = 200
 """Non-empty lines read from the top; a pasted table is decided long before."""
 MIN_CODE_SHARE = 0.5
 _DATA_MODULES = r"(?:np|numpy|pd|pandas|math|Math|random|scipy|stats|st|rng|torch|tf|sp|R)"
+MAX_LINE_SCAN = 400
+"""Characters of a stripped line the patterns read: with the line stripped and capped, and no two quantifiers
+competing for the same spaces before an anchor, matching stays linear in the line (CodeQL, #12172 review)."""
 _STRONG = re.compile(
-    r"^\s*(?:"
-    r"import\s+[A-Za-z_][\w.]*(?:\s+as\s+\w+)?\s*(?:,\s*[A-Za-z_][\w.]*)*\s*;?\s*$"
+    r"^(?:"
+    r"import\s+[A-Za-z_][\w.]*(?:\s+as\s+\w+)?(?:\s*,\s*[A-Za-z_][\w.]*)*;?$"
     r"|from\s+[A-Za-z_][\w.]*\s+import\s+\S"
     r"|(?:library|require|suppressPackageStartupMessages)\s*\(\s*['\"]?\w+['\"]?\s*\)"
     r"|def\s+[A-Za-z_]\w*\s*\("
     r"|(?:async\s+)?function\s*\*?\s*[A-Za-z_$]?[\w$]*\s*\("
     r"|(?:const|let|var)\s+[A-Za-z_$][\w$]*\s*="
     r"|[A-Za-z_.][\w.]*(?:\[[^\]]*\])?\s*<-\s*\S"
-    r"|for\s*\(|while\s*\(|for\s+[A-Za-z_]\w*(?:\s*,\s*[A-Za-z_]\w*)*\s+in\s+.+:\s*$"
+    r"|for\s*\(|while\s*\(|for\s+[A-Za-z_]\w*(?:\s*,\s*[A-Za-z_]\w*)*\s+in[ \t]+\S.*:$"
     r"|(?:print|console\.log|set\.seed|cat|plot|hist|lines)\s*\("
     rf"|{_DATA_MODULES}\.[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*\s*\("
     rf"|[A-Za-z_]\w*(?:\s*,\s*[A-Za-z_]\w*)*\s*=\s*(?:{_DATA_MODULES}\.[A-Za-z_][\w.]*\s*\(|\[.+\bfor\b.+\bin\b.+\])"
@@ -54,17 +57,17 @@ _STRONG = re.compile(
     r")"
 )
 """A line no table has: an import, a definition, an assignment from a data module or an R function, a loop."""
-_ARROW = re.compile(r"\)\s*=>|\b[A-Za-z_$][\w$]*\s*=>")
+_ARROW = re.compile(r"\)[ \t]*=>|\b[A-Za-z_$][\w$]*[ \t]*=>")
 _SHAPED = re.compile(
-    r"^\s*(?:#|//|/\*|\*|[{}\])]+\s*;?\s*$|return\b|else\b|elif\b|if\s*\(|if\s+.+:\s*$|end\s*$)"
-    r"|[;{:]\s*$"
+    r"^(?:#|//|/\*|\*|[{}\])]+;?$|return\b|else\b|elif\b|if\s*\(|if[ \t]+\S.*:$|end$)"
+    r"|[;{:]$"
 )
 """A line code has as well, which alone proves nothing: a comment, a brace, `return`, a line ending in `;`, `{`, `:`."""
 
 
 def looks_like_code(text: str) -> bool:
     """Whether pasted text is a program (Python, JavaScript, R, ...) rather than a table or a formula."""
-    lines = [line for line in text.splitlines() if line.strip()][:SCAN_LINES]
+    lines = [line.strip()[:MAX_LINE_SCAN] for line in text.splitlines() if line.strip()][:SCAN_LINES]
     if not lines:
         return False
     strong = sum(1 for line in lines if _STRONG.search(line) or _ARROW.search(line))

@@ -1,5 +1,6 @@
 """Tests for agents/anyplot/data/classify.py: code, formula or a table, before any parser reads the paste."""
 
+import time
 from pathlib import Path
 
 import pytest
@@ -59,6 +60,18 @@ def test_a_formula_past_the_chat_cap_is_left_to_the_parser_but_code_is_not() -> 
     code = "import numpy as np\n" + "x = np.arange(10)\n" * 200
     assert len(formula) > MAX_MESSAGE_CHARS and classify_paste(formula) is None
     assert len(code) > MAX_MESSAGE_CHARS and classify_paste(code) == "code"
+
+
+@pytest.mark.parametrize(
+    "line",
+    [")" + " " * 200_000 + "x", "if " + " " * 200_000 + "x", "}" + " " * 100_000 + ";" + " " * 100_000 + "x"],
+    ids=["paren-spaces", "if-spaces", "brace-semicolon-spaces"],
+)
+def test_long_space_runs_classify_in_linear_time(line: str) -> None:
+    """CodeQL's polynomial-regex inputs (#12172 review): stripped, capped lines keep the patterns linear."""
+    started = time.perf_counter()
+    looks_like_code(line * 3)
+    assert time.perf_counter() - started < 0.5
 
 
 def test_no_fixture_dataset_is_code_or_a_formula() -> None:

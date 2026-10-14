@@ -91,6 +91,20 @@ class TestSuccess:
         assert [job.source for job in backend.data_jobs] == [SNIPPET]
         assert services.usage.user_data_runs("anonymous") == 1
 
+    async def test_the_dataset_judges_tokens_count_against_the_request(
+        self, client: httpx.AsyncClient, backend: FakeBackend, judge: FakeJudge
+    ) -> None:
+        """Inside a chat turn the root's next budget check must see them, not only the day's book (#12172 review)."""
+        sid = await open_session(client, with_data=False)
+        context = await context_for(client, sid, "inv-code-tokens")
+        judge.script = [JudgeVerdict(verdict="in_scope", lang="en", tokens=50, input_tokens=40, output_tokens=10)]
+
+        done = await run_data_code(SNIPPET, "python", context)
+
+        assert done["status"] == "ok", done
+        ledger = ledger_for("inv-code-tokens")
+        assert ledger.judge_tokens == 50 and ledger.budget_tokens > 0
+
     async def test_a_session_with_data_gets_the_next_version_with_default_bindings(
         self, client: httpx.AsyncClient, services: Services
     ) -> None:

@@ -76,10 +76,12 @@ async def judge_dataset(services: Services, ledger: RequestLedger, parts: list[s
                 unavailable = True
                 attribution("data_judge", ledger, verdict="guard_unavailable", part=number, parts=len(parts))
                 continue
-            services.usage.add_tokens(
-                ledger.user_id,
-                judge_budget_tokens(answer.tokens, answer.input_tokens, answer.output_tokens, judge_model),
-            )
+            weighted = judge_budget_tokens(answer.tokens, answer.input_tokens, answer.output_tokens, judge_model)
+            # Into the request too, like the scope guard: inside a chat turn (`run_data_code`) the root's next
+            # budget check must count these tokens (#12172 review).
+            ledger.judge_tokens += answer.tokens
+            ledger.budget_tokens += weighted
+            services.usage.add_tokens(ledger.user_id, weighted)
             attribution(
                 "data_judge",
                 ledger,
