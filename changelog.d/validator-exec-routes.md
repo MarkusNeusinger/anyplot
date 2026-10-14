@@ -11,11 +11,11 @@
   LaTeX, ffmpeg or Ghostscript or import a backend by name (`rc-key`,
   `usetex=`, `backend=`). A test pins every first-level submodule of the
   packages admitted whole as reviewed or banned, so a library upgrade cannot
-  add one unnoticed.
+  add one unnoticed. (#12177)
 - **The render harness arms an audit hook in plot mode too.** `PlotGuard`
   refuses every `exec` of plot code, processes, sockets, native libraries and
   any write beyond the PNG and its probe, while imports, reads and drawing go
   on; all 474 catalogue matplotlib and seaborn files that pass the validator
   render under it. Data mode's `DataGuard` now refuses `exec` and `compile`
   past the snippet's own run, and lets `namedtuple` through, so
-  `DataFrame.itertuples()` works in a data snippet.
+  `DataFrame.itertuples()` works in a data snippet. (#12177)
