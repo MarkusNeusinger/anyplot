@@ -330,6 +330,23 @@ BANNED_IO: frozenset[str] = frozenset(
 # (`dataclasses._FuncBuilder`), and numpy's file opener (`numpy.lib._datasource.open`).
 ESCAPE_ATTRIBUTES: frozenset[str] = frozenset(
     {
+        # Native code and raw memory through a value, not an import (second opinion of 2026-10-14):
+        # `np.zeros(1).ctypes._ctypes.CDLL(None)` reaches libc, `from_address` reads and writes any
+        # address, `as_strided` views memory outside an array, `.dump` pickles an array to a file;
+        # `extbuild` compiles C, and `get_rdataset` / `webuse` fetch over the network.
+        "ctypes",
+        "_ctypes",
+        "cffi",
+        "data_as",
+        "from_address",
+        "from_buffer",
+        "from_buffer_copy",
+        "as_strided",
+        "dump",
+        "dumps",
+        "extbuild",
+        "get_rdataset",
+        "webuse",
         "sys",
         "os",
         "builtins",
@@ -440,6 +457,9 @@ UNKNOWN_MODULE = "?"
 # `np.loadtxt`, `sns.load_dataset`, sklearn's `load_*`).
 _BANNED_IO_PATTERN = re.compile(r"^(?:read_\w+|fetch_\w+|load\w*)$")
 _STRING_DISPATCH_METHODS = frozenset({"agg", "aggregate", "apply", "transform", "applymap"})
+# Methods that return text without a target and write to one given as `buf`, with the position of
+# `buf` among their positional parameters (`DataFrame.info(verbose, buf, …)`).
+_BUFFER_WRITERS: dict[str, int] = {"to_string": 0, "info": 1}
 
 _DUNDER_NAME = re.compile(r"^__\w+__$")
 _DUNDER_IN_TEXT = re.compile(r"__\w+__")
@@ -573,6 +593,10 @@ def _numeric_leaves(node: ast.AST) -> int:
 
 def _hex(value: str) -> str:
     return value.strip().upper()
+
+
+def _is_none(node: ast.expr) -> bool:
+    return isinstance(node, ast.Constant) and node.value is None
 
 
 def _text(node: ast.Constant) -> str | None:
@@ -747,6 +771,7 @@ class _Scan:
         self._check_names()
         self._check_attributes()
         self._check_calls()
+        self._check_buffer_writers()
         self._check_statements()
         self._check_strings()
         self._check_savefig()
@@ -913,9 +938,40 @@ class _Scan:
                         if isinstance(constant, ast.Constant) and isinstance(constant.value, str):
                             self._check_dispatch_name(constant.value, func.attr, constant)
 
+    def _check_buffer_writers(self) -> None:
+        """`df.to_string("f")` and `df.info(buf=f)` write to a path; with no target they return text.
+
+        Such a method may only be called where it is named (`w = df.to_string; w("f")` would hide
+        the target), and a call is refused when its `buf` argument, by position or by keyword, is
+        anything but `None`, or when a starred argument could carry it.
+        """
+        for attribute in self.of(ast.Attribute):
+            position = _BUFFER_WRITERS.get(attribute.attr)
+            if position is None:
+                continue
+            call = self.parents.get(attribute)
+            if not (isinstance(call, ast.Call) and call.func is attribute):
+                self.add("banned-attribute", f"'.{attribute.attr}' may only be called directly", attribute)
+                continue
+            targets = [
+                *(call.args[position : position + 1]),
+                *(keyword.value for keyword in call.keywords if keyword.arg == "buf"),
+            ]
+            starred = any(isinstance(argument, ast.Starred) for argument in call.args[: position + 1])
+            unpacked = any(keyword.arg is None for keyword in call.keywords)
+            if starred or unpacked or any(not _is_none(target) for target in targets):
+                self.add("banned-call", f"'.{attribute.attr}()' with a target is not allowed", call)
+
     def _check_dispatch_name(self, name: str, method: str, node: ast.AST) -> None:
         """`df.agg("to_csv")` reaches the method by `getattr`: the name is checked as if written."""
-        if name in BANNED_NAMES or name in BANNED_ATTRIBUTES or name in BANNED_IO or _BANNED_IO_PATTERN.match(name):
+        # A buffer writer counts too: `df.agg("to_string", buf="f")` forwards the target (#12167 review).
+        if (
+            name in BANNED_NAMES
+            or name in BANNED_ATTRIBUTES
+            or name in BANNED_IO
+            or name in _BUFFER_WRITERS
+            or _BANNED_IO_PATTERN.match(name)
+        ):
             self.add("banned-call", f"'{name}' is not allowed as a method name in .{method}()", node)
 
     def _check_statements(self) -> None:
