@@ -27,6 +27,11 @@
   toward the day's lockout; it is now `needs_data` with the hint to paste the
   table, and `attack` is kept for code that reaches the system, its
   environment or secrets, or sends data out (#12180).
+- **A question about the table's own figures is no data request.** The judge
+  never sees the pasted table, so "Welches Jahr hat den grössten
+  Ausländeranteil?" read as a statistics lookup and was refused `needs_data`;
+  a question that picks, ranks, compares or summarises entries now counts as
+  being about the table, in any language and without "my data" (#12180).
 - **The strike lockout says what it is.** Three `attack` verdicts in a day now
   answer with their own `locked_out` refusal ("paused until tomorrow after
   several refused requests") instead of the `budget` text "usage limit
