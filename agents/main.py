@@ -735,11 +735,12 @@ def _fixture_seed(
 
 
 def _active(runtime: Runtime, sid: str, user: str | None = None) -> None:
-    """409 while the session has a queued or running run, or, with `user`, while that user has one in any session."""
+    """409 while the session has a queued or running run, or, with `user`, while that user has one in any session
+    or a dataset paste in flight (`Runtime.pasting`), so a turn, a theme toggle and a paste exclude each other."""
     runtime.drop_stale(get_settings())
     if sid in runtime.active:
         raise AgentsError(409, "run_active")
-    if user is not None and any(run.user == user for run in runtime.active.values()):
+    if user is not None and (user in runtime.pasting or any(run.user == user for run in runtime.active.values())):
         raise AgentsError(409, "run_active")
 
 
@@ -777,9 +778,7 @@ async def upload_dataset(
     # A closed session takes no paste either: each one spends judge calls, and the chat it would feed is closed.
     if scope_refusals(session.events) >= settings.session_refusals:
         raise AgentsError(403, SESSION_CLOSED)
-    _active(runtime, sid, user)
-    if user in runtime.pasting:
-        raise AgentsError(409, "run_active")  # one paste per user at a time, across sessions
+    _active(runtime, sid, user)  # also one paste per user at a time, across sessions
     view = read_session(session.state)
     if view is None:
         raise AgentsError(404, "session_expired")

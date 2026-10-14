@@ -424,6 +424,9 @@ class TestPasteGuards:
         runtime.pasting.add(USER)  # a paste of the user in flight, in any session
         assert ((await paste(sid)).status_code, (await paste(other)).status_code) == (409, 409)
         assert (await paste(stranger, headers_for(OTHER))).status_code == 200  # per user
+        # The inverse direction: no turn starts while the user's paste may replace the data it reads.
+        turn = await client.post(f"/v1/sessions/{other}/messages", headers=HEADERS, json={"text": "Which columns?"})
+        assert (turn.status_code, turn.json()) == (409, {"detail": "run_active"})
         runtime.pasting.discard(USER)
 
         runtime.active[other] = ActiveRun(abort=asyncio.Event(), user=USER, started=runtime.now())
