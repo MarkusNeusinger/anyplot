@@ -1,0 +1,6 @@
+{
+  "message": "Use this for my data:\n\nimport numpy as np\n\nrng = np.random.default_rng(42)\nsteps = rng.normal(0, 1, 500)\nwalk = steps.cumsum()",
+  "expected_operations": [{"op": "run_data_code", "rows": 500, "columns": 2}],
+  "locale": "en",
+  "tags": ["run_data_code", "data_code", "python", "no_dataset"]
+}

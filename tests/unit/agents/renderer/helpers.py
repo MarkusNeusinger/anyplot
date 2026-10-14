@@ -7,7 +7,7 @@ import time
 from typing import Any
 
 from agents.anyplot.render.backends.fake import fixture_png
-from agents.renderer.wire import RenderRequest, Theme, ThemeRun
+from agents.renderer.wire import DataRun, DataRunRequest, RenderRequest, Theme, ThemeRun
 
 
 URL = "https://anyplot-renderer-239660669828.europe-west4.run.app"
@@ -117,7 +117,7 @@ class FakeExecutor:
     """Fixture runs without a sandbox; records calls and the most runs at once."""
 
     def __init__(self) -> None:
-        self.calls: list[tuple[str, Theme]] = []
+        self.calls: list[tuple[str, str]] = []
         self.active = 0
         self.max_active = 0
         self.gate: asyncio.Event | None = None
@@ -146,3 +146,25 @@ class FakeExecutor:
             )
         finally:
             self.active -= 1
+
+    async def run_data(self, job: DataRunRequest) -> DataRun:
+        self.active += 1
+        self.max_active = max(self.max_active, self.active)
+        try:
+            if self.error is not None:
+                raise self.error
+            if self.gate is not None:
+                await self.gate.wait()
+            await asyncio.sleep(0.01)
+            self.calls.append((job.job_id, "data"))
+            return DataRun(exit_code=0, csv_text="x,y\n1,2\n", wall_s=0.2)
+        finally:
+            self.active -= 1
+
+
+DATA_SNIPPET = "import pandas as pd\ndf = pd.DataFrame({'x': [1, 2], 'y': [3, 4]})\n"
+"""A data snippet the harness turns into a two-row `out.csv`."""
+
+
+def data_job(source: str = DATA_SNIPPET, *, timeout_s: float = 20.0, job_id: str = "data123") -> DataRunRequest:
+    return DataRunRequest(job_id=job_id, source=source, timeout_s=timeout_s)

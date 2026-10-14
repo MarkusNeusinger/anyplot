@@ -1,0 +1,6 @@
+{
+  "message": "My data comes from this JavaScript:\n\nconst points = [];\nfor (let i = 0; i < 100; i++) {\n  points.push({ x: i, y: Math.random() * 10 });\n}",
+  "expected_operations": [{"op": "run_data_code", "rows": 100, "columns": 2}],
+  "locale": "en",
+  "tags": ["run_data_code", "data_code", "javascript", "no_dataset"]
+}

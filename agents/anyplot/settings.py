@@ -45,6 +45,9 @@ another provider, model or location.
 | `AGENT_DAILY_PIPELINE_RUNS` | `40` | Pipeline runs per user and day |
 | `AGENT_GLOBAL_DAILY_TOKEN_BUDGET` | `24000000` | Cost-weighted tokens per day across all users, three users at their daily budget; reaching it pauses the service |
 | `AGENT_RENDER_TIMEOUT_S` | `60` | Seconds per render, host-enforced |
+| `AGENT_DATA_CODE` | `true` | Whether the root has `run_data_code`: a data-generating snippet (Python, JavaScript, R, a formula) translated to Python, validated and run in the renderer's sandbox |
+| `AGENT_DATA_RUN_TIMEOUT_S` | `20` | Seconds one data snippet may run, at most 30 |
+| `AGENT_DAILY_DATA_RUNS` | `30` | `run_data_code` runs per user and day |
 | `AGENT_REQUEST_DEADLINE_S` | `540` | Hard request deadline, enforced through `abort_signal` |
 | `AGENT_SOFT_DEADLINE_S` | `480` | Soft deadline inside the pipeline; below the hard one |
 | `AGENT_JUDGE_TIMEOUT_S` | `4` | Wall-clock budget of one judge verdict, its single retry and the half-second wait before it included |
@@ -352,6 +355,19 @@ class AgentSettings(BaseSettings):
 
     render_timeout_s: PositiveInt = 60
     """Seconds per render, host-enforced (`AGENT_RENDER_TIMEOUT_S`)."""
+
+    data_code: bool = True
+    """Whether the root has `run_data_code` (`AGENT_DATA_CODE`): a data-generating snippet the user pasted or
+    typed, translated to Python by the root, validated and run in the renderer's sandbox (owner decision of
+    2026-10-14). On by default because the renderer and the agents deploy from main; the tool answers
+    `unavailable` while a renderer without `POST /run-data` serves."""
+
+    data_run_timeout_s: float = Field(default=20.0, gt=0, le=30)
+    """Seconds one data snippet may run in the sandbox (`AGENT_DATA_RUN_TIMEOUT_S`), host-enforced; at most the
+    renderer's 30 s (`wire.MAX_DATA_TIMEOUT_S`)."""
+
+    daily_data_runs: PositiveInt = 30
+    """`run_data_code` runs per user and day (`AGENT_DAILY_DATA_RUNS`), counted before each run."""
 
     request_deadline_s: PositiveInt = 540
     """Hard request deadline in seconds, enforced through `abort_signal` (`AGENT_REQUEST_DEADLINE_S`).

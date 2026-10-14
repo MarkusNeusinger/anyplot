@@ -1,15 +1,17 @@
-"""The renderer's JSON contract: the body of `POST /render` and its answer.
+"""The renderer's JSON contract: the bodies of `POST /render` and `POST /run-data` and their answers.
 
-The request is the agents' `RenderJob` (`agents/anyplot/render/contract.py`) field for
-field; the answer is its `RenderResult`, one `ThemeRun` per theme, with the PNG as
-base64 and the timings added. The renderer service (`main.py`) validates requests
-with these models and the `remote` backend parses answers with them, so both sides
-read one definition.
+The render request is the agents' `RenderJob` (`agents/anyplot/render/contract.py`)
+field for field; the answer is its `RenderResult`, one `ThemeRun` per theme, with the
+PNG as base64 and the timings added. The data run request is the agents' `DataJob`
+(a snippet that computes a table, `run_data_code`); its answer is `DataRunResponse`,
+with the `out.csv` the harness wrote as text. The renderer service (`main.py`)
+validates requests with these models and the `remote` backend parses answers with
+them, so both sides read one definition.
 
 No ADK and no `agents.anyplot` import: importing that package loads ADK, which the
 renderer image does not install. The limits that also exist on the agents side
-(`MAX_PNG_BYTES`, `MAX_PROBE_BYTES`, `MAX_STDERR_CHARS`, the job id pattern) are
-pinned equal by `tests/unit/agents/renderer/test_wire.py`.
+(`MAX_PNG_BYTES`, `MAX_PROBE_BYTES`, `MAX_STDERR_CHARS`, `MAX_CSV_BYTES`, the job id
+pattern) are pinned equal by `tests/unit/agents/renderer/test_wire.py`.
 """
 
 import json
@@ -38,6 +40,13 @@ MAX_PROBE_INT = 2**53
 """Largest integer magnitude a probe may hold: what a JSON number keeps exactly as a float."""
 MAX_STDERR_CHARS = 2_000
 """The stderr tail a theme returns; the agents' `ThemeOutput` keeps the same number of characters."""
+MAX_DATA_SOURCE_CHARS = 16 * 1024
+"""A data snippet: the tool takes at most 6,000 characters, and stripping a `__main__` guard only shortens it."""
+MAX_DATA_TIMEOUT_S = 30.0
+"""A data run's time limit: a snippet computes a table of at most 20,000 rows, which takes well under a second."""
+MAX_CSV_BYTES = 200 * 1024
+"""The `out.csv` a data run returns: the agents' parser cap (`data/parse.py` `MAX_INPUT_BYTES`), which the harness
+applies before it writes; the executor reads at most this many bytes."""
 
 RunReason = Literal["timeout", "disk_budget", "file_budget", "memory", "launcher", "output_rejected"]
 """Why a theme has no usable output, when the renderer knows more than the exit code:
@@ -158,6 +167,44 @@ class RenderResponse(BaseModel):
     version: str
     mem_available_mb: int | None = None
     """`MemAvailable` of the renderer instance after the job, in MiB (None where unreadable)."""
+
+
+class DataRunRequest(BaseModel):
+    """One data-generating snippet to run once in a sandbox of its own (`POST /run-data`); no theme, no data file."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    job_id: str = Field(pattern=JOB_ID_PATTERN)
+    source: str = Field(min_length=1, max_length=MAX_DATA_SOURCE_CHARS)
+    timeout_s: float = Field(gt=0, le=MAX_DATA_TIMEOUT_S)
+
+
+class DataRun(BaseModel):
+    """What one data run's sandbox left behind: the exit code and the `out.csv` the harness wrote, nothing else
+    the snippet printed except the stderr tail, which the agents side reads only for an exception class and line."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    exit_code: int | None
+    """The harness's exit code (`harness.DATA_EXIT`); None when the renderer killed the run."""
+    timed_out: bool = False
+    reason: RunReason | None = None
+    measured: int | None = None
+    limit: int | None = None
+    csv_text: str | None = Field(default=None, max_length=MAX_CSV_BYTES)
+    """`out.csv` as UTF-8 text, read only after an exit code of 0, at most `MAX_CSV_BYTES` bytes."""
+    stderr_tail: str = Field(default="", max_length=MAX_STDERR_CHARS)
+    wall_s: float = Field(default=0.0, ge=0)
+    attempts: int = Field(default=1, ge=1, le=2)
+
+
+class DataRunResponse(DataRun):
+    """`POST /run-data`: the run, with the job id, the timings and the instance's figures added."""
+
+    job_id: str = Field(pattern=JOB_ID_PATTERN)
+    timings: RenderTimings
+    version: str
+    mem_available_mb: int | None = None
 
 
 class RendererStatus(BaseModel):

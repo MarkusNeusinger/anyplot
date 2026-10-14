@@ -69,6 +69,7 @@ class TestRegistry:
             "set_language",
             "prepare_data",
             "generate_data",
+            "run_data_code",
             "plot_pipeline",
         }
         # ADK wraps the Workflow in a NodeTool when the agent is built.
@@ -172,7 +173,8 @@ class TestSessionContext:
             "Session (set by the server):",
             "- Plot: spec scatter-basic, library matplotlib",
             "- Language: the default, English",
-            "- Dataset: none yet; the user pastes it in the data panel, or generate_data computes it from a formula",
+            "- Dataset: none yet; the user pastes it in the data panel, or generate_data computes it from a formula, "
+            "or run_data_code from the user's code",
             "- Plot versions: none yet",
             agent_module.SESSION_LANGUAGE_HEADING,
             "<plot_language>",

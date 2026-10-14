@@ -1057,6 +1057,49 @@ describe('useAgentSession: formulas', () => {
     expect(turnBodies()).toHaveLength(1);
   });
 
+  it('keeps pasted code as an offer of its kind, and the version it made carries its python', async () => {
+    const CODE = 'np.linspace(0, 10, 100)';
+    const PYTHON =
+      'import numpy as np\nimport pandas as pd\ndf = pd.DataFrame({"x": np.linspace(0, 10, 100)})\n';
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/dataset'] = () => json(422, { detail: 'code', ref: 'r-c' });
+    routes['POST /sessions/S1/messages'] = () =>
+      sse([
+        ['message', { text: 'I ran your code. Check the preview.' }],
+        [
+          'done',
+          {
+            llm_calls: 2,
+            bindings: GENERATED.bindings,
+            data_confirmed: false,
+            dataset: {
+              ...GENERATED,
+              code: PYTHON,
+              changes: ['computed from your code: 100 rows, 1 columns'],
+            },
+          },
+        ],
+      ]);
+    const { result } = await openSession(routes);
+
+    await act(() => result.current.parseData(CODE));
+    expect(result.current.state).toMatchObject({
+      formula: CODE,
+      formulaKind: 'code',
+      datasetError: null,
+    });
+
+    await act(() => result.current.sendFormula());
+    expect(turnBodies()).toEqual([{ text: CODE }]);
+    expect(result.current.state.formula).toBeNull();
+    expect(result.current.state.dataset?.parsed.code).toBe(PYTHON);
+
+    // A formula refused after it is a formula again.
+    routes['POST /sessions/S1/dataset'] = () => json(422, { detail: 'formula', ref: 'r-f' });
+    await act(() => result.current.parseData(FORMULA));
+    expect(result.current.state).toMatchObject({ formula: FORMULA, formulaKind: 'formula' });
+  });
+
   it('clears the offer on the next parse and on data the chat computed', async () => {
     const routes = baseRoutes();
     routes['POST /sessions/S1/dataset'] = () => json(422, { detail: 'formula', ref: 'r-f' });

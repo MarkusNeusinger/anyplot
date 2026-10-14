@@ -50,6 +50,33 @@ copies it to `/opt/anyplot/harness.py`. In order it:
    file returns or raises; an exception still propagates, so its traceback reaches
    stderr and the exit code stays non-zero.
 
+**Data mode** (`python -I /opt/anyplot/harness.py --data snippet.py`, the renderer's
+`POST /run-data`): the harness runs a data-generating snippet (`run_data_code`,
+`agents/anyplot/tools/session.py`) instead of a plot. It prints the start line, sets the
+same limits, imports everything the validator's DATA profile allows (`DATA_PRELOAD`, every
+module of `pandas.core`, `pandas.tseries` and `pandas.api`, which pandas would otherwise
+load lazily, and every time zone), reads and compiles the snippet, opens `out.csv` for
+writing, and only then arms `DataGuard` with `sys.addaudithook`: from there on the
+interpreter refuses every `open` (reading too) and every `import`, `ctypes.*`,
+`os.system`, `os.exec*`, `os.posix_spawn`, `os.spawn*`, `os.fork*`, `subprocess.*`,
+`socket.*`, every filesystem change and listing (`os.remove`, `os.listdir`,
+`os.scandir`, ...), and every route to a frame (`gi_frame`, `cr_frame`, `ag_frame`,
+`tb_frame`, `sys._getframe`), whose `f_builtins` would hand out `open` and `__import__`
+past the validator (Fable review of 2026-10-14). An audit hook cannot be removed, and the
+snippet cannot reach it. It runs the snippet with `exec`, catches everything it raises
+(the frames and the exception line go to stderr, the exit code is
+`DATA_EXIT["error"]`, so the snippet cannot choose an exit code), and
+takes `df` from the returned globals: a pandas DataFrame whose columns are no
+MultiIndex, with a non-default index turned into columns (`reset_index`), its column
+names as text, at most `DATA_MAX_ROWS` rows and `DATA_MAX_COLUMNS` columns and at most
+`DATA_MAX_CSV_BYTES` of CSV (the parser's caps: `agents/anyplot/schemas.py` and
+`data/parse.py`; a test pins them equal). It writes the CSV through the handle it opened
+before the guard; a run the guard refused at any point writes nothing, even when the
+snippet caught the error. Each refusal has its own exit code (`DATA_EXIT`); the host
+maps a code to a fixed message and trusts nothing the snippet printed. The plot mode
+does not arm the guard: savefig and the probe write files, and a render sweep of the
+catalogue under the guard has not been run (it needs the renderer image).
+
 The probe feeds the advisory gates G3 (clipped text), G5 (annotation outside its
 axes), G7 (overlapping text: tick labels among themselves, any other text with any), G8 (more point marks than data rows), G9 (more
 plotted points than any dataset within the parser's caps can hold) and G10
@@ -61,6 +88,7 @@ as a verdict.
 """
 
 import functools
+import io
 import itertools
 import json
 import logging
@@ -70,6 +98,7 @@ import resource
 import runpy
 import shutil
 import sys
+import traceback
 
 
 PROBE_LIMIT = 400  # text boxes recorded per figure
@@ -125,6 +154,251 @@ POLAR_AXES_LIMIT = 4  # polar axes the probe describes per figure
 GLYPH_SAMPLE_LIMIT = 16  # code points the probe lists; the host shows a few of them
 MISSING_GLYPHS: set[int] = set()  # code points reported by matplotlib's text layout, this process
 MISSING_MATH_GLYPHS: set[int] = set()  # code points reported by mathtext (no fallback inside `$…$`)
+
+DATA_FLAG = "--data"
+DATA_OUT_FILE = "out.csv"
+DATA_MAX_ROWS = 20_000  # agents/anyplot/schemas.py MAX_ROWS
+DATA_MAX_COLUMNS = 50  # agents/anyplot/schemas.py MAX_COLUMNS
+DATA_MAX_CSV_BYTES = 200 * 1024  # agents/anyplot/data/parse.py MAX_INPUT_BYTES
+DATA_EXIT = {
+    "ok": 0,
+    "error": 1,
+    "usage": 2,
+    "no_frame": 3,
+    "frame_shape": 4,
+    "too_many_rows": 5,
+    "too_many_columns": 6,
+    "too_large": 7,
+    "blocked": 8,
+}
+"""Exit codes of data mode: `error` is an exception in the snippet (its traceback on stderr), `no_frame` no `df`
+or one that is no DataFrame, `frame_shape` MultiIndex columns or an index that cannot become columns,
+`blocked` an operation `DataGuard` refused."""
+DATA_BLOCKED_PREFIXES = (
+    "ctypes.",
+    "os.system",
+    "os.exec",
+    "os.posix_spawn",
+    "os.spawn",
+    "os.fork",
+    "os.kill",
+    "os.killpg",
+    "os.remove",
+    "os.rename",
+    "os.rmdir",
+    "os.mkdir",
+    "os.symlink",
+    "os.link",
+    "os.chmod",
+    "os.chown",
+    "os.chflags",
+    "os.truncate",
+    "os.utime",
+    "os.putenv",
+    "os.unsetenv",
+    "subprocess.",
+    "socket.",
+    "shutil.",
+    "pty.",
+    "webbrowser.",
+    "urllib.Request",
+    "http.client.",
+    "ftplib.",
+    "smtplib.",
+    "sys.addaudithook",
+    "sys._getframe",
+    "sys._current_frames",
+    "sys._current_exceptions",
+    "os.listdir",
+    "os.scandir",
+    "os.chdir",
+    "os.listxattr",
+    "os.getxattr",
+    "glob.",
+    "marshal.",
+    "pickle.",
+    "code.__new__",
+    "function.__new__",
+    "builtins.input",
+)
+"""Audit events `DataGuard` refuses once it is armed (https://docs.python.org/3/library/audit_events.html), next to
+every `open` and every `import`. CPython 3.13 raises no event for `os.stat` and its family (`os.path.exists`,
+`os.lstat`), for reading `os.environ` or calling `os.getenv`, or for `function.__globals__`: those are the
+validator's (`os` is a banned import, dunder attributes are banned), and the sandbox has no secrets in its
+environment and a read-only image. An `import` of a module that is loaded already raises no event either (`import
+os`, which numpy loaded), so the hook stops new modules only; the validator's import rules stop the rest, and with
+every route to a frame refused a snippet cannot reach `__import__` past them."""
+FRAME_ATTRIBUTES = frozenset({"gi_frame", "cr_frame", "ag_frame", "tb_frame"})
+"""Attributes that hand out a frame, whose `f_builtins` and `f_globals` reach `open` and `__import__`
+(`(i for i in []).gi_frame.f_builtins`). CPython raises `object.__getattr__` for each; every other route to a frame
+needs `sys._getframe` (refused) or `inspect` (a banned import, and `inspect.currentframe` is replaced)."""
+DATA_PRELOAD = (
+    "math",
+    "statistics",
+    "datetime",
+    "collections",
+    "itertools",
+    "functools",
+    "textwrap",
+    "colorsys",
+    "re",
+    "warnings",
+    "typing",
+    "calendar",
+    "decimal",
+    "fractions",
+    "zoneinfo",
+    "enum",
+    "dataclasses",
+    "operator",
+    "bisect",
+    "heapq",
+    "numbers",
+    "cmath",
+    "random",
+    "numpy",
+    "numpy.fft",
+    "numpy.linalg",
+    "numpy.polynomial",
+    "numpy.random",
+    "numpy.ma",
+    "pandas",
+    "scipy.stats",
+    "scipy.interpolate",
+    "scipy.signal",
+    "scipy.cluster.hierarchy",
+    "scipy.spatial",
+    "scipy.optimize",
+    "scipy.special",
+    "scipy.integrate",
+    "scipy.ndimage",
+    "scipy.fft",
+    "scipy.linalg",
+    "scipy.constants",
+)
+"""Everything the validator's DATA profile lets a snippet import (`validate.DATA_IMPORTS`, pinned by a test), plus
+the numpy subpackages numpy loads lazily: imported before the guard, because it refuses every later import."""
+PANDAS_WARM_PACKAGES = ("pandas.core", "pandas.tseries", "pandas.api")
+"""pandas imports some modules on first use (`DataFrame.pivot` loads `pandas.core.reshape.reshape`); every module
+under these packages is imported before the guard, so no snippet meets a lazy import."""
+
+
+class DataGuard:
+    """The audit hook of data mode: once armed, refuses every `open` and every `import`, native code, processes,
+    sockets, filesystem changes and listings, and every route to a frame.
+
+    `blocked` keeps the first refused event's family, so a run whose snippet caught the
+    error is refused all the same. `paused()` lets the harness itself read frames while it
+    prints a traceback, when no snippet code runs.
+    """
+
+    def __init__(self):
+        self.armed = False
+        self.blocked = None
+        self.paused_depth = 0
+
+    def refuses(self, event, args):
+        """Whether `event` with `args` is one the armed guard refuses."""
+        if event in ("open", "import"):
+            return True
+        if event == "object.__getattr__":
+            return len(args) > 1 and args[1] in FRAME_ATTRIBUTES
+        return event.startswith(DATA_BLOCKED_PREFIXES)
+
+    def __call__(self, event, args):
+        if not self.armed or self.paused_depth or not self.refuses(event, args):
+            return
+        if self.blocked is None:
+            self.blocked = event.split(".", 1)[0]
+        raise RuntimeError("blocked by the data sandbox")
+
+    def arm(self):
+        sys.addaudithook(self)
+        self.armed = True
+
+    def paused(self):
+        guard = self
+
+        class _Paused:
+            def __enter__(self):
+                guard.paused_depth += 1
+
+            def __exit__(self, *exc):
+                guard.paused_depth -= 1
+                return False
+
+        return _Paused()
+
+
+def preload_data_modules():
+    """Import what a snippet may use, warm pandas' lazy paths and the time zones, before the guard refuses imports
+    and file reads; a module missing here (a developer machine) is skipped."""
+    import importlib
+    import pkgutil
+
+    for name in DATA_PRELOAD:
+        try:
+            importlib.import_module(name)
+        except ImportError:
+            continue
+    for package_name in PANDAS_WARM_PACKAGES:
+        try:
+            package = importlib.import_module(package_name)
+        except ImportError:
+            continue
+        for info in pkgutil.walk_packages(package.__path__, package_name + "."):
+            if ".tests" in info.name:
+                continue
+            try:
+                importlib.import_module(info.name)
+            except Exception:
+                continue  # optional dependencies (numba, pyarrow) that the image does not install
+    import pandas as pd
+
+    warm = pd.DataFrame({"a": [1.0, 2.0], "t": pd.to_datetime(["2020-01-01", "2020-01-02"])})
+    warm.set_index("t").reset_index().to_csv(io.StringIO(), index=False)
+    zones = []
+    try:
+        import zoneinfo
+
+        keys = sorted(zoneinfo.available_timezones())
+        # The C class and the pure-Python one (`zoneinfo._zoneinfo`, which pandas' tslibs can reach) cache apart.
+        classes = {zoneinfo.ZoneInfo, getattr(sys.modules.get("zoneinfo._zoneinfo"), "ZoneInfo", zoneinfo.ZoneInfo)}
+        zones = [kind(key) for kind in classes for key in keys]
+    except Exception:
+        pass
+    # pandas' `find_stack_level` walks frames through `inspect.currentframe()` before every warning; the guard
+    # refuses `sys._getframe`, so the lookup answers None and pandas reports its warning at level 0.
+    import inspect
+
+    inspect.currentframe = lambda: None
+    return zones
+
+
+def print_snippet_error(guard, exc):
+    """The traceback of a snippet error on stderr: its frames' files and lines and the exception line.
+
+    Written by hand, with the guard paused only to read the traceback's frames: the
+    `traceback` module reads source lines from files, which the armed guard refuses.
+    """
+    lines = ["Traceback (most recent call last):"]
+    with guard.paused():
+        tb = exc.__traceback__
+        while tb is not None:
+            code = tb.tb_frame.f_code
+            lines.append(f'  File "{code.co_filename}", line {tb.tb_lineno}, in {code.co_name}')
+            tb = tb.tb_next
+    kind = type(exc)
+    name = kind.__qualname__ if kind.__module__ == "builtins" else f"{kind.__module__}.{kind.__qualname__}"
+    try:
+        text = str(exc)
+    except Exception:
+        text = ""
+    lines.append(f"{name}: {text}" if text else name)
+    try:
+        print("\n".join(lines), file=sys.stderr, flush=True)
+    except Exception:
+        pass
 
 
 def _limit(kind: int, value: int) -> None:
@@ -593,7 +867,84 @@ def install_probe(theme):
     Figure.savefig = savefig
 
 
+def frame_csv(frame):
+    """The CSV text of a snippet's `df`, or the `DATA_EXIT` key of why there is none."""
+    import pandas as pd
+
+    if not isinstance(frame, pd.DataFrame):
+        return None, "no_frame"
+    if isinstance(frame.columns, pd.MultiIndex):
+        return None, "frame_shape"
+    index = frame.index
+    default_index = isinstance(index, pd.RangeIndex) and index.start == 0 and index.step == 1 and index.name is None
+    if not default_index:
+        try:
+            frame = frame.reset_index()
+        except (ValueError, TypeError):  # an index name that is also a column, a MultiIndex level clash
+            return None, "frame_shape"
+    frame = frame.copy()
+    frame.columns = [str(column) for column in frame.columns]
+    if len(frame.index) > DATA_MAX_ROWS:
+        return None, "too_many_rows"
+    if len(frame.columns) > DATA_MAX_COLUMNS:
+        return None, "too_many_columns"
+    buffer = io.StringIO()
+    frame.to_csv(buffer, index=False)
+    text = buffer.getvalue()
+    if len(text.encode("utf-8", errors="surrogatepass")) > DATA_MAX_CSV_BYTES:
+        return None, "too_large"
+    return text, None
+
+
+def main_data(path, guard=None):
+    """Data mode (module docstring): run the snippet under `DataGuard` and write its `df` to `out.csv`."""
+    _report("start")
+    set_limits()
+    sys.dont_write_bytecode = True  # no .pyc write, which the guard would refuse
+    import builtins
+    import ctypes  # noqa: F401  (pandas loads it anyway; its load opens a library, so before the guard)
+
+    zones = preload_data_modules()  # every import and file read happens here, before the guard
+    guard = guard if guard is not None else DataGuard()
+    # The snippet is read and compiled before the guard too: it refuses every `open`, `io.open_code` included.
+    try:
+        with open(path, encoding="utf-8") as handle:
+            code = compile(handle.read(), os.path.basename(path), "exec", dont_inherit=True)
+    except (OSError, SyntaxError, ValueError):
+        traceback.print_exc()
+        return DATA_EXIT["error"]
+    namespace = {"__name__": "__main__", "__builtins__": builtins}
+    with open(DATA_OUT_FILE, "w", encoding="utf-8", newline="") as out:
+        guard.arm()
+        try:
+            exec(code, namespace)
+        except BaseException as exc:  # SystemExit included: the snippet never chooses the exit code
+            print_snippet_error(guard, exc)
+            return DATA_EXIT["blocked"] if guard.blocked else DATA_EXIT["error"]
+        finally:
+            try:
+                _report("end", **_usage())
+            except Exception:
+                pass
+        if guard.blocked:
+            return DATA_EXIT["blocked"]
+        try:
+            text, refusal = frame_csv(namespace.get("df"))
+        except Exception as exc:
+            print_snippet_error(guard, exc)
+            return DATA_EXIT["blocked"] if guard.blocked else DATA_EXIT["error"]
+        if guard.blocked:  # a pandas method the snippet replaced reached the guard
+            return DATA_EXIT["blocked"]
+        if refusal is not None:
+            return DATA_EXIT[refusal]
+        out.write(text)
+    del zones
+    return DATA_EXIT["ok"]
+
+
 def main(argv):
+    if len(argv) == 3 and argv[1] == DATA_FLAG:
+        return main_data(argv[2])
     _report("start")
     if len(argv) != 2:
         print("usage: harness.py <plot file>", file=sys.stderr)

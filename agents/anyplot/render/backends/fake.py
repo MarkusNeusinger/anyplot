@@ -16,7 +16,7 @@ from PIL import Image, ImageDraw
 
 from core.palette import IMPRINT
 
-from ..contract import RenderJob, RenderResult, Theme, ThemeOutput
+from ..contract import DataJob, DataOutput, RenderJob, RenderResult, Theme, ThemeOutput
 
 
 BACKGROUNDS: dict[Theme, str] = {"light": "#FAF8F1", "dark": "#1A1A17"}
@@ -54,15 +54,30 @@ class FakeOutcome:
 
 
 Script = Callable[[RenderJob, Theme], FakeOutcome]
+FIXTURE_CSV = "x,y\n0,0\n1,1\n2,4\n3,9\n"
+"""What a fake data run returns by default: the table a snippet computing `y = x**2` for 0 to 3 writes."""
+DataScript = Callable[[DataJob], DataOutput]
 
 
 @dataclass
 class FakeBackend:
-    """Fixture renders; `script(job, theme)` decides the outcome (default: a clean render)."""
+    """Fixture renders; `script(job, theme)` decides the outcome (default: a clean render).
+
+    A data run returns `FIXTURE_CSV` with exit code 0 unless `data_script(job)` decides;
+    no code runs either way, so the fake is for tests and offline development only.
+    """
 
     script: Script | None = None
     name: str = "fake"
     jobs: list[RenderJob] = field(default_factory=list)
+    data_script: DataScript | None = None
+    data_jobs: list[DataJob] = field(default_factory=list)
+
+    async def run_data(self, job: DataJob) -> DataOutput:
+        self.data_jobs.append(job)
+        if self.data_script is not None:
+            return self.data_script(job)
+        return DataOutput(exit_code=0, csv_text=FIXTURE_CSV, wall_s=0.1)
 
     async def render(self, job: RenderJob) -> RenderResult:
         self.jobs.append(job)

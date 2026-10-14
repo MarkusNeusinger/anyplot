@@ -14,7 +14,7 @@ it. It needs no semaphore of its own: `SerialRenderer` (`render/serial.py`), whi
 `Services.backend` puts in front of every backend, hands it one theme at a time.
 """
 
-from ..contract import RenderJob, RenderResult, RuntimeAdapter
+from ..contract import DataJob, DataOutput, DataRunUnsupported, RenderJob, RenderResult, RuntimeAdapter
 
 
 SANDBOX_BINARY = "/usr/local/gcp/bin/sandbox"
@@ -34,3 +34,7 @@ class SandboxBackend:
             "the in-process sandbox backend is not used in phase 1: renders go through the anyplot-renderer "
             "service (AGENT_RENDERER=remote, AGENT_RENDER_URL); use local or fake in development"
         )
+
+    async def run_data(self, job: DataJob) -> DataOutput:
+        """Data runs go through the renderer's `POST /run-data` too; this variant has none."""
+        raise DataRunUnsupported("the in-process sandbox backend runs no data snippets; use remote, local or fake")

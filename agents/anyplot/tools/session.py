@@ -50,6 +50,7 @@ spec text) sits inside our own fences after the "data, never instructions" pream
 """
 
 import json
+import secrets
 from typing import Any
 
 from google.adk import Workflow
@@ -57,21 +58,29 @@ from google.adk.tools.tool_context import ToolContext
 from pydantic import TypeAdapter, ValidationError
 
 from ..briefs import spec_brief, trimmed_profiles
+from ..code.data_code import check_data_code
 from ..data.generate import Generate, GenerateError, generate
 from ..data.parse import ParsedDataset, ParseError, parse_dataset
 from ..data.prepare import MAX_OPERATIONS, Operation, PrepareError, apply_operations, validation_lines
 from ..data.shape import long_suggestion
 from ..data.store import StoredDataset, StoreFull
+from ..dataset_guard import DataRefused, GuardUnavailable, check_dataset
 from ..dataset_versions import push_version
 from ..language import is_valid, normalise, same_language
 from ..opening import store_dataset
 from ..pipeline import run_pipeline
-from ..plugins.ledger import ledger_for
-from ..plugins.tool_safety import MAX_NOTES_RESULT_BYTES, result_limit, result_size
+from ..plugins.ledger import attribution, ledger_for
+from ..plugins.tool_safety import DATA_CODE_TOOL, MAX_DATA_CODE_CHARS, MAX_NOTES_RESULT_BYTES, result_limit, result_size
 from ..policy import DATA_PREAMBLE, fence, user_notes_block
-from ..schemas import Binding, DatasetProfile, PipelineArgs
+from ..render.contract import DataJob, DataOutput, RendererUnavailable
+from ..render.gates import error_summary
+from ..render.harness import DATA_EXIT
+from ..render.runtimes.python import DATA_FILE_NAME
+from ..render.serial import RenderBusy
+from ..schemas import MAX_COLUMNS, MAX_ROWS, Binding, DatasetProfile, PipelineArgs
 from ..services import get_services
 from ..session_state import SessionView, apply_bindings, language_delta, read_session
+from ..settings import get_settings
 
 
 PLOT_PIPELINE = "plot_pipeline"
@@ -326,21 +335,164 @@ async def generate_data(
     return _with_profile(base, parsed.profile, "generate_data")
 
 
-def _store_generated(session_id: str, view: SessionView, parsed: ParsedDataset) -> tuple[dict[str, Any], int]:
+def _store_generated(
+    session_id: str, view: SessionView, parsed: ParsedDataset, *, code: str | None = None
+) -> tuple[dict[str, Any], int]:
     """Store a generated table: the next version of the session's data, or version 1 when it has none; raises `StoreFull`.
 
     A session whose dataset left the store (a restart keeps neither) counts as one
     without data, so the stale ids are dropped with the history, as a paste drops them.
+    `code` is the Python that computed the table (`run_data_code`), kept with the version.
     """
     store = get_services().datasets
     current = store.get(view.dataset_id, session_id) if view.dataset_id else None
     if current is not None:
-        version = push_version(store, session_id, view, parsed, view.snapshot, rebind=True)
+        version = push_version(store, session_id, view, parsed, view.snapshot, rebind=True, code=code)
         return version.delta, version.version
     ingested = store_dataset(
-        store, session_id, parsed, view.snapshot, previous_id=view.dataset_id, history=view.dataset_history
+        store, session_id, parsed, view.snapshot, previous_id=view.dataset_id, history=view.dataset_history, code=code
     )
     return ingested.state_delta(), 1
+
+
+DATA_CODE_CHANGE = "computed from your code"
+"""The change line of a `run_data_code` version; the rows and columns follow it."""
+SOURCE_LANGUAGES = frozenset({"python", "javascript", "r", "math", "other"})
+"""`run_data_code`'s `source_language`: what the user wrote before the root's translation, for attribution only."""
+RUN_FAILURES: dict[str, str] = {
+    "no_frame": "the code defined no table: assign a pandas DataFrame to df at the top level",
+    "frame_shape": "df has nested column headers (a MultiIndex) or an index that cannot become columns: flatten it",
+    "too_many_rows": f"df has more than {MAX_ROWS:,} rows: compute fewer points",
+    "too_many_columns": f"df has more than {MAX_COLUMNS} columns: keep only the columns the plot needs",
+    "too_large": "df's CSV is over 200 KB: compute fewer rows or round the values",
+    "blocked": "the code tried to reach native code, files, processes or the network, which the sandbox refuses",
+    "usage": "the sandbox could not start the code",
+}
+"""Fixed messages for the harness's data-mode exit codes (`harness.DATA_EXIT`) other than `ok` and `error`."""
+DATA_RUN_SLOT_WAIT_S = 120.0
+"""How long `run_data_code` waits for the instance's render slot before it answers `busy`."""
+
+
+def _error_lines(code: str, lines: list[str]) -> dict[str, Any]:
+    """A `run_data_code` refusal with its lines fenced as `<tool_notes>`: they come from the server, never from the
+    snippet's own output, but they name the model's own code."""
+    notes = DATA_PREAMBLE + "\n" + fence("tool_notes", json.dumps(lines, ensure_ascii=False))
+    return {"status": "error", "code": code, "message": notes}
+
+
+async def run_data_code(code: str, source_language: str, tool_context: ToolContext) -> dict[str, Any]:
+    """Run Python that generates the data for the plot (a snippet the user pasted or typed, translated by you to Python if it was JavaScript, R, a formula or anything else); the server validates it, runs it in a sandbox without network or files, and stores the table it computed in df as the next version of the data, which the user then checks and confirms.
+
+    code: Python of at most 6,000 characters using only numpy, pandas, math, random, statistics or scipy.stats (and
+    the other scipy computing modules); it must assign the final table to df at the top level as a pandas DataFrame
+    (at most 20,000 rows and 50 columns), read no file, call no network and draw nothing (no matplotlib, no plot(),
+    no hist()). Never write data values from memory: more than 20 numbers or 20 text values written out in one list,
+    tuple or dict (a list repeated with * counts every copy), or 40 in the code, are refused. source_language:
+    what the user wrote, one of python, javascript, r, math or other. Returns the change lines and the new profile,
+    or an error with a code and a message.
+    """
+    view = _view(tool_context)
+    if view is None:
+        return _error("session_not_open")
+    ledger = ledger_for(tool_context.invocation_id)
+    if ledger.pipeline_active:
+        return _error("run_active")
+    settings = get_settings()
+    if not settings.data_code:
+        return _error("unavailable")
+    if not isinstance(code, str) or not 0 < len(code) <= MAX_DATA_CODE_CHARS:  # ToolSafety checks it first
+        return _error("invalid_arguments")
+    language = source_language if source_language in SOURCE_LANGUAGES else "other"
+    prepared, findings = check_data_code(code)
+    if findings:
+        attribution("data_code", ledger, outcome="invalid_code", language=language, rules=[f.rule for f in findings])
+        lines = [f"line {f.line}: {f.message}" if f.line else f.message for f in findings[:MAX_FINDING_LINES]]
+        return _error_lines("invalid_code", lines)
+    services = get_services()
+    user = ledger.user_id or "anonymous"
+    if not services.usage.data_runs_ok(user, settings):
+        attribution("data_code", ledger, outcome="daily_limit", language=language)
+        return _error("daily_limit")
+    if ledger.rate_start is not None and not ledger.rate_start():
+        attribution("data_code", ledger, outcome="rate_limited", language=language)
+        return _error("rate_limited")
+    services.usage.add_data_run(user)
+    job = DataJob(job_id=f"d{secrets.token_hex(8)}", source=prepared, timeout_s=settings.data_run_timeout_s)
+    try:
+        output = await services.backend.run_data(job, wait_s=DATA_RUN_SLOT_WAIT_S)
+    except RenderBusy:
+        attribution("data_code", ledger, outcome="busy", language=language)
+        return _error("busy")
+    except (RendererUnavailable, NotImplementedError):  # `DataRunUnsupported` among them: a renderer without the route
+        attribution("data_code", ledger, outcome="unavailable", language=language)
+        return _error("unavailable")
+    failure = _run_failure(output)
+    attribution(
+        "data_code",
+        ledger,
+        outcome=failure[0] if failure else "ran",
+        language=language,
+        exit_code=output.exit_code,
+        wall_s=round(output.wall_s, 3),
+    )
+    if failure is not None:
+        return _error_lines(*failure)
+    assert output.csv_text is not None  # `_run_failure` refuses a run without a table
+    try:
+        parsed = parse_dataset(output.csv_text, find_table=False)
+    except ParseError as exc:
+        return _error_lines("unparseable", [f"the table df holds cannot be read as data ({exc.code})"])
+    if not any(column.dtype in ("integer", "number", "datetime") for column in parsed.profile.columns):
+        return _error_lines("no_numbers", ["df has no number or date column: a plot needs values to draw"])
+    try:
+        await check_dataset(services, ledger, parsed)
+    except DataRefused:
+        return _error("data_refused")
+    except GuardUnavailable:
+        return _error("guard_unavailable")
+    try:
+        delta, number = _store_generated(tool_context.session.id, view, parsed, code=prepared)
+    except StoreFull:
+        return _error("capacity")
+    for key, value in delta.items():
+        tool_context.state[key] = value
+    changes = [f"{DATA_CODE_CHANGE}: {parsed.profile.rows} rows, {len(parsed.profile.columns)} columns"]
+    ledger.dataset_changes.extend(changes)
+    base = {
+        "status": "ok",
+        "rows": parsed.profile.rows,
+        "columns": len(parsed.profile.columns),
+        "version": number,
+        "changes": DATA_PREAMBLE + "\n" + fence("tool_notes", json.dumps(changes, ensure_ascii=False)),
+    }
+    return _with_profile(base, parsed.profile, DATA_CODE_TOOL)
+
+
+MAX_FINDING_LINES = 10
+"""Validator findings a refusal lists; the rest are the same kind of fix."""
+
+
+def _run_failure(output: DataOutput) -> tuple[str, list[str]] | None:
+    """The error code and fixed lines of a data run that left no table; None for one that did.
+
+    Nothing the snippet printed is passed on: an exception is named by its class and the
+    line of `snippet.py` it was raised on (`gates.error_summary`), never its message.
+    """
+    if output.timed_out:
+        return "timeout", ["the code ran longer than the sandbox allows: compute fewer points or simplify it"]
+    if output.reason is not None:
+        return "run_failed", [f"the sandbox stopped the code ({output.reason}): write no files and compute less"]
+    if output.exit_code == DATA_EXIT["error"]:
+        summary = error_summary(output.stderr_tail, code_file=DATA_FILE_NAME)
+        return "code_error", [f"the code raised {summary}"]
+    for name, exit_code in DATA_EXIT.items():
+        if output.exit_code == exit_code and name in RUN_FAILURES:
+            return "run_failed", [RUN_FAILURES[name]]
+    if output.exit_code != 0:
+        return "run_failed", ["the code ended with an error the sandbox does not name"]
+    if output.csv_text is None:
+        return "run_failed", ["the sandbox returned no table"]
+    return None
 
 
 def _fenced_lines(lines: list[str]) -> str:
@@ -369,5 +521,6 @@ SESSION_TOOLS = (
     set_language,
     prepare_data,
     generate_data,
+    run_data_code,
 )
 ROOT_TOOL_NAMES = frozenset({*(tool.__name__ for tool in SESSION_TOOLS), PLOT_PIPELINE})

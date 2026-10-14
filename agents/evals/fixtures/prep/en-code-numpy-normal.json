@@ -1,0 +1,6 @@
+{
+  "message": "Plot the data from this snippet:\nimport numpy as np\nrng = np.random.default_rng(7)\nheight = rng.normal(170, 8, size=1000)\nweight = 0.9 * height - 85 + rng.normal(0, 6, size=1000)",
+  "expected_operations": [{"op": "run_data_code", "rows": 1000, "columns": 2}],
+  "locale": "en",
+  "tags": ["run_data_code", "data_code", "python", "no_dataset"]
+}

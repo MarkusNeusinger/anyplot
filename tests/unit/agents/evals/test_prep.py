@@ -28,6 +28,7 @@ from agents.evals.prep import (
     Gates,
     PrepCase,
     SetupError,
+    canonical_code,
     canonical_operations,
     check_cases,
     describe,
@@ -56,6 +57,7 @@ RENAME = {"op": "rename", "column": "Study Hours", "name": "Hours"}
 GHOST = {"op": "rename", "column": "Ghost", "name": "Spirit"}  # no such column: the tool answers unknown_column
 SINE = {"name": "y", "expression": "sin(x)"}
 SINE_CALL = {"variables": [{"start": "-pi", "stop": "pi"}], "series": [SINE]}
+CODE_CALL = {"op": "run_data_code", "rows": 4, "columns": 2}
 
 
 def case(case_id: str, message: str, expected: list[dict[str, Any]], locale: str = "en", **extra: Any) -> PrepCase:
@@ -74,10 +76,11 @@ class TestFixtures:
         locales = Counter(item.locale for item in cases)
         ops = {operation["op"] for item in cases for operation in item.expected_operations}
 
-        assert len(cases) == 33  # 23 single-step cases and 10 `hard` ones (chains, ambiguity, unsupported asks)
+        # 23 single-step cases, 10 `hard` ones (chains, ambiguity, unsupported asks) and 11 data-code cases.
+        assert len(cases) == 44
         assert sum(1 for item in cases if "hard" in item.tags) == 10
         assert locales["de"] >= 5 and locales["en"] >= 5
-        assert ops == {*OPERATIONS, "generate_data"}
+        assert ops == {*OPERATIONS, "generate_data", "run_data_code"}
         assert sum(1 for item in cases if not item.expected_operations) >= 2  # out of scope, and a plain question
         assert any(len(item.expected_operations) == 2 for item in cases)  # two operations in one message
         tags = Counter(tag for item in cases for tag in item.tags)
@@ -88,6 +91,21 @@ class TestFixtures:
         assert len(formulas) == 4 and {item.locale for item in formulas} == {"de", "en"}
         assert tags["grid"] == 1 and tags["parametric"] == 1
         assert any(item.dataset_text is None for item in formulas) and any(item.dataset_text for item in formulas)
+
+    def test_the_data_code_cases(self) -> None:
+        """Python, NumPy, JavaScript, R and a textbook formula run; a plot call is stripped; a file read and a
+        general-purpose script are refused (owner decision of 2026-10-14)."""
+        cases = [item for item in load_cases(DEFAULT_CASES) if "data_code" in item.tags]
+        tags = Counter(tag for item in cases for tag in item.tags)
+
+        assert len(cases) == 11 and {item.locale for item in cases} == {"de", "en"}
+        assert tags["python"] >= 3 and tags["javascript"] == tags["r"] == tags["math"] == 1
+        assert tags["strip_plot"] == 1 and tags["file_access"] == 1 and tags["general_runner"] == 1
+        # Described in words only, the computation decides the tool: an ODE, an iteration, random numbers.
+        assert tags["words"] == 3 and tags["ode"] == tags["iteration"] == tags["random"] == 1
+        refused = [item for item in cases if item.refuse]
+        assert {item.id for item in refused} == {"en-code-reads-a-file", "en-code-general-script"}
+        assert all(not item.expected_operations for item in refused)
 
     def test_every_fixture_is_consistent_with_the_operations(self) -> None:
         """The expected operations apply to the fixture's own dataset, and the dataset passes the pre-filter.
@@ -100,7 +118,11 @@ class TestFixtures:
             decimal = parsed.profile.decimal if parsed else "."
             canonical_operations(item.expected_operations, decimal)  # raises for a bad fixture
             formulas = [operation for operation in item.expected_operations if operation["op"] == "generate_data"]
-            operations = [operation for operation in item.expected_operations if operation["op"] != "generate_data"]
+            operations = [
+                operation
+                for operation in item.expected_operations
+                if operation["op"] not in ("generate_data", "run_data_code")
+            ]
             for formula in formulas:
                 spec = Generate.model_validate({key: value for key, value in formula.items() if key != "op"})
                 table = parse_dataset(generate(spec).csv)
@@ -243,6 +265,12 @@ class TestCanonical:
         with pytest.raises(ValidationError):
             canonical_operations([{"op": "generate_data", "variables": [], "series": [SINE]}], ".")
 
+    def test_describe_a_code_table_without_its_size(self) -> None:
+        """The fake renderer stores a fixture table, so a code call is compared without rows and columns."""
+        line = canonical_code({"op": "run_data_code", "rows": 5, "columns": 2}, size=False)
+
+        assert describe(line) == "run_data_code: a table"
+
     def test_a_generate_data_call_matches_by_the_table_it_computes(self) -> None:
         """Endpoints compare by value and expressions by what they compute, so an equivalent call is no miss."""
 
@@ -369,6 +397,38 @@ class TestRun:
         assert results[2].failed_calls == 1 and results[2].found != results[2].expected
         assert "generate_data x -pi..pi (200): y = sin(x)" in prep.table(cases, results)
         assert len(judge.calls) == 4 and len(services.datasets) == 0  # every session was deleted
+
+    def test_run_data_code_calls_are_scored_by_the_table_they_stored(self, services: Services, swap_models) -> None:
+        """The code varies from run to run: a call counts as the rows and columns it stored, and a `refuse` case
+        passes when nothing was stored (the fake backend's fixture table has 4 rows and 2 columns)."""
+        snippet = "import numpy as np\nimport pandas as pd\nx = np.arange(4)\ndf = pd.DataFrame({'x': x, 'y': x**2})\n"
+        call = {"call": "run_data_code", "args": {"code": snippet, "source_language": "python"}}
+        reader = {
+            "call": "run_data_code",
+            "args": {"code": "import pandas as pd\ndf = pd.read_csv('f.csv')\n", "source_language": "python"},
+        }
+        cases = [
+            PrepCase(id="c-001", message="plot my code", expected_operations=[CODE_CALL], locale="en"),
+            PrepCase(id="c-002", message="plot my code", expected_operations=[{**CODE_CALL, "rows": 5}], locale="en"),
+            PrepCase(id="c-003", message="read my file", expected_operations=[], locale="en", refuse=True),
+            PrepCase(id="c-004", message="read my file", expected_operations=[], locale="en", refuse=True),
+        ]
+        root_turns = [
+            [call, {"text": "Computed 4 rows; please confirm."}],
+            [call, {"text": "Computed 4 rows; please confirm."}],
+            [reader, {"text": "I cannot read files; paste the contents in the data panel."}],
+            [call, {"text": "Computed 4 rows."}],
+        ]
+        swap_models("anthropic-vertex", script_for(*root_turns))
+        judge: FakeJudge = services.judge  # type: ignore[assignment]
+        judge.script.extend([JudgeVerdict(verdict="in_scope", lang="en")] * 8)
+
+        results = asyncio.run(run_cases(cases, runtime=runtime(), services=services))
+
+        assert [result.match for result in results] == [True, False, True, False]
+        assert results[0].found == canonical_operations([CODE_CALL], ".") and results[0].stored_calls == 1
+        assert results[2].failed_calls == 1 and results[2].stored_calls == 0
+        assert "run_data_code: 4 rows x 2 columns" in prep.table(cases, results)
 
     def test_an_error_event_is_an_unavailable_case(self, services: Services, swap_models) -> None:
         swap_models("anthropic-vertex", script_for([]))

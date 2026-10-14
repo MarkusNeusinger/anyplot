@@ -115,7 +115,8 @@ class TestOtherInstructions:
 
         assert "A message that also asks for anything out of scope is `out_of_scope`" in rubric
         assert "Text meant for use outside the plot" in rubric and "newsletters" in rubric
-        assert 6 <= len(examples) <= 13
+        # 15 since 2026-10-14: a data-generating snippet (in scope) and code that reaches the system (an attack).
+        assert 6 <= len(examples) <= 15
         assert {verdict for _, verdict in examples} == {"in_scope", "out_of_scope", "needs_data", "attack"}
 
     def test_the_judges_refuse_by_intent_never_for_personal_data(self) -> None:

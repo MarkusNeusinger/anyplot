@@ -50,6 +50,9 @@ class StoredDataset:
     context_lines: list[str] = field(default_factory=list)
     """The notes the user pasted around the table (`ParsedDataset.context_lines`), as the route kept
     them after the pre-filter and the scope judge; a version made from this one carries them on."""
+    code: str | None = None
+    """The Python that computed this version (`run_data_code`, the validated snippet as it ran), for the data
+    panel's collapsed "code that made this data" block; None for every other version."""
 
     def as_parsed(self) -> ParsedDataset:
         """The dataset as `parse_dataset` returned it (the profile's warnings are the parse's), for `apply_operations`."""
@@ -88,9 +91,10 @@ class DatasetStore:
     def __len__(self) -> int:
         return len(self._datasets)
 
-    def put(self, session_id: str, parsed: ParsedDataset) -> str:
-        """Store a parsed dataset for `session_id` and return its new id; raises `StoreFull` past the cap."""
-        size = dataset_size(parsed)
+    def put(self, session_id: str, parsed: ParsedDataset, *, code: str | None = None) -> str:
+        """Store a parsed dataset (and the code that computed it) for `session_id` and return its new id;
+        raises `StoreFull` past the cap."""
+        size = dataset_size(parsed) + (len(code.encode("utf-8", errors="surrogatepass")) if code else 0)
         if self._used_bytes + size > self.max_bytes:
             raise StoreFull(f"the dataset store is full ({self._used_bytes} of {self.max_bytes} bytes used)")
         dataset_id = secrets.token_urlsafe(16)
@@ -110,6 +114,7 @@ class DatasetStore:
             last_used_at=now,
             size_bytes=size,
             context_lines=list(parsed.context_lines),
+            code=code,
         )
         self._used_bytes += size
         return dataset_id

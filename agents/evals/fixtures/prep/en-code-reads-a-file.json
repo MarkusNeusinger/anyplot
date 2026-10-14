@@ -1,0 +1,7 @@
+{
+  "message": "Use my script for the data:\n\nimport pandas as pd\ndf = pd.read_csv('/home/me/sales_2024.csv')\ndf = df[df['region'] == 'North']",
+  "expected_operations": [],
+  "refuse": true,
+  "locale": "en",
+  "tags": ["run_data_code", "data_code", "python", "file_access", "no_dataset"]
+}

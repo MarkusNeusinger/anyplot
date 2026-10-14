@@ -19,6 +19,10 @@ code under test writes it, so it can be arbitrarily large.
 The backend holds no semaphore: `SerialRenderer` (`render/serial.py`), which
 `Services.backend` puts in front of every backend, hands it one theme at a time.
 
+A data run (`run_data`) uses the same isolation with the harness in data mode
+(`harness.py --data snippet.py`), no theme and no plotting settings, and reads only
+the `out.csv` the harness wrote after exit code 0, under the parser's byte cap.
+
 The backend refuses `ENVIRONMENT=production` and fails when Docker is missing:
 there is no bare-subprocess fallback, because that would run model-written code on
 the host with the host's network and files.
@@ -31,9 +35,20 @@ import tempfile
 import time
 from pathlib import Path
 
-from ..contract import RendererUnavailable, RenderJob, RenderResult, RuntimeAdapter, Theme, ThemeOutput
-from ..png import PngRejected
-from ..runtimes.python import HARNESS_SOURCE, IMAGE_HARNESS
+from ...data.parse import MAX_INPUT_BYTES
+from ..contract import (
+    DataJob,
+    DataOutput,
+    RendererUnavailable,
+    RenderJob,
+    RenderResult,
+    RuntimeAdapter,
+    Theme,
+    ThemeOutput,
+)
+from ..harness import DATA_OUT_FILE
+from ..png import PngRejected, read_output
+from ..runtimes.python import DATA_FILE_NAME, HARNESS_SOURCE, IMAGE_HARNESS
 
 
 MEMORY_LIMIT = "2g"
@@ -81,12 +96,22 @@ class LocalDockerBackend:
 
     def argv(self, job: RenderJob, theme: Theme, run_dir: Path) -> list[str]:
         """The docker command of one theme; asserted to keep the network off."""
-        argv = [
+        argv = self._isolation(f"r-{job.job_id}-{theme}", run_dir)
+        for key, value in self.runtime.env(theme).items():
+            argv += ["-e", f"{key}={value}"]
+        argv += [self.image, *self.runtime.command(theme)]
+        if argv[argv.index("--network") + 1] != "none" or any("--network=" in part for part in argv):
+            raise AssertionError("a render container must never have network access")
+        return argv
+
+    def _isolation(self, name: str, run_dir: Path) -> list[str]:
+        """`docker run` with the run directory as `/work` and everything else locked down, up to the environment."""
+        return [
             self.docker,
             "run",
             "--rm",
             "--name",
-            f"r-{job.job_id}-{theme}",
+            name,
             "--network",
             "none",
             "--read-only",
@@ -109,12 +134,6 @@ class LocalDockerBackend:
             "-w",
             "/work",
         ]
-        for key, value in self.runtime.env(theme).items():
-            argv += ["-e", f"{key}={value}"]
-        argv += [self.image, *self.runtime.command(theme)]
-        if argv[argv.index("--network") + 1] != "none" or any("--network=" in part for part in argv):
-            raise AssertionError("a render container must never have network access")
-        return argv
 
     async def _run_theme(self, job: RenderJob, theme: Theme, run_dir: Path) -> ThemeOutput:
         started = time.monotonic()
@@ -153,6 +172,52 @@ class LocalDockerBackend:
         if process.returncode is None:
             process.kill()
             await process.wait()
+
+    def data_argv(self, job: DataJob, run_dir: Path) -> list[str]:
+        """The docker command of a data run: the render's isolation, the harness in data mode, no theme."""
+        argv = self._isolation(f"r-{job.job_id}-data", run_dir)
+        for key, value in self.runtime.data_env().items():
+            argv += ["-e", f"{key}={value}"]
+        argv += [self.image, *self.runtime.data_command()]
+        if argv[argv.index("--network") + 1] != "none" or any("--network=" in part for part in argv):
+            raise AssertionError("a data container must never have network access")
+        return argv
+
+    async def run_data(self, job: DataJob) -> DataOutput:
+        """Run a data snippet in a throwaway container and read the `out.csv` the harness wrote after exit code 0."""
+        run_dir = Path(tempfile.mkdtemp(prefix=f"anyplot-data-{job.job_id}-"))
+        name = f"r-{job.job_id}-data"
+        try:
+            os.chmod(run_dir, 0o700)
+            (run_dir / DATA_FILE_NAME).write_text(job.source, encoding="utf-8")
+            started = time.monotonic()
+            process = await asyncio.create_subprocess_exec(
+                *self.data_argv(job, run_dir),
+                stdin=asyncio.subprocess.DEVNULL,
+                stdout=asyncio.subprocess.DEVNULL,
+                stderr=asyncio.subprocess.PIPE,
+                start_new_session=True,
+            )
+            try:
+                stderr = await asyncio.wait_for(_drain_and_wait(process), timeout=job.timeout_s)
+            except TimeoutError:
+                await self._kill(name, process)
+                return DataOutput(exit_code=None, timed_out=True, wall_s=time.monotonic() - started)
+            except asyncio.CancelledError:
+                await asyncio.shield(self._kill(name, process))
+                raise
+            wall = time.monotonic() - started
+            tail = stderr.decode("utf-8", errors="replace")
+            if process.returncode != 0:
+                return DataOutput(exit_code=process.returncode, stderr_tail=tail, wall_s=wall)
+            try:
+                raw = read_output(run_dir / DATA_OUT_FILE, MAX_INPUT_BYTES)
+                text = raw.decode("utf-8") if raw is not None else None
+            except (PngRejected, UnicodeDecodeError):
+                return DataOutput(exit_code=0, stderr_tail=tail, wall_s=wall, reason="output_rejected")
+            return DataOutput(exit_code=0, csv_text=text, stderr_tail=tail, wall_s=wall)
+        finally:
+            shutil.rmtree(run_dir, ignore_errors=True)
 
     async def render(self, job: RenderJob) -> RenderResult:
         run_dir = Path(tempfile.mkdtemp(prefix=f"anyplot-run-{job.job_id}-"))

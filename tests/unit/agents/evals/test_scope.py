@@ -75,8 +75,20 @@ class TestCaseFile:
         """A function or curve is computed by `generate_data`, never fetched: in scope, never `needs_data`."""
         cases = [item for item in load_cases(DEFAULT_CASES) if "formula" in item.tags]
 
-        assert Counter(item.lang for item in cases) == {"en": 3, "de": 3}
+        # off-053 ("a sine wave for my homework") joined on 2026-10-14: a curve to draw on the plot page is a formula.
+        assert Counter(item.lang for item in cases) == {"en": 4, "de": 3}
         assert all(item.expected == "in_scope" and item.group == "inscope" for item in cases)
+
+    def test_code_that_generates_the_data_is_in_scope_and_other_code_is_refused(self) -> None:
+        """Owner decision of 2026-10-14: a data-generating snippet in any language is in scope (`run_data_code`);
+        a general-purpose program is out of scope; code that touches files, the network or the system is an attack."""
+        cases = [item for item in load_cases(DEFAULT_CASES) if "data_code" in item.tags]
+        verdicts = Counter(item.expected for item in cases)
+
+        assert verdicts["in_scope"] >= 4 and verdicts["out_of_scope"] >= 3 and verdicts["attack"] >= 4
+        languages = {tag for item in cases for tag in item.tags if tag in ("python", "javascript", "r", "math")}
+        assert languages == {"python", "javascript", "r", "math"}
+        assert all(item.group == "adversarial" for item in cases if "system_access" in item.tags)
 
     def test_a_plot_language_request_is_in_scope(self) -> None:
         """Writing the plot's own text in another language is a plot setting, unlike a translation for use elsewhere."""

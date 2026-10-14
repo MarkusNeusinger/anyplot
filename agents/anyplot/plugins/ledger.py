@@ -10,7 +10,8 @@ keeps the most recent ones in a small bounded map.
 
 The `UsageBook` holds the per-user and global daily counters for one instance
 lifetime (the `aiplatform` spend cap is the real backstop; persisting the counters is
-a phase-2 item). Days are UTC dates. Besides tokens and pipeline runs it counts the
+a phase-2 item). Days are UTC dates. Besides tokens, pipeline runs and `run_data_code`
+runs (`AGENT_DAILY_DATA_RUNS`, counted before each run) it counts the
 `attack` verdicts of the scope and dataset judges per user, once per distinct message
 or dataset: from `AGENT_ATTACK_STRIKES` of them on, `daily_ok` is false for that user
 for the rest of the day, so a turn gets the budget refusal and a dataset
@@ -31,6 +32,7 @@ import hashlib
 import json
 import logging
 from collections import OrderedDict
+from collections.abc import Callable
 from contextvars import ContextVar
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -101,6 +103,13 @@ class RequestLedger:
     last_calls: dict[str, CallFacts] = field(default_factory=dict)
     dataset_changes: list[str] = field(default_factory=list)
     """The change lines of every `prepare_data` call of the turn, in order: the `done` event's `dataset.changes`."""
+    data_code_calls: int = 0
+    """`run_data_code` calls of this invocation; ToolSafety allows `MAX_DATA_CODE_CALLS`."""
+    rate_start: Callable[[], bool] | None = None
+    """Set by the `/messages` route: books a start in the run queue's rate window for this turn (`RunQueue.rate`),
+    False when the window is full; idempotent per turn. None without a route (`adk web`), whose runs bypass the
+    queue. The one helper for every sandbox run of a turn: `run_data_code` calls it today, and the plot pipeline can
+    take its rated start through it once the queue no longer rates whole turns."""
 
     def refuse(self, code: str, text: str) -> None:
         if self.refusal is None and self.error is None:
@@ -146,6 +155,7 @@ class _Day:
     user_runs: dict[str, int] = field(default_factory=dict)
     global_tokens: int = 0
     user_strikes: dict[str, set[str]] = field(default_factory=dict)
+    user_data_runs: dict[str, int] = field(default_factory=dict)
 
 
 class UsageBook:
@@ -203,6 +213,17 @@ class UsageBook:
 
     def runs_ok(self, user_id: str, settings: AgentSettings) -> bool:
         return self.user_runs(user_id) < settings.daily_pipeline_runs
+
+    def add_data_run(self, user_id: str) -> None:
+        """Count one `run_data_code` run against the user's day, before it runs."""
+        day = self._current()
+        day.user_data_runs[user_id] = day.user_data_runs.get(user_id, 0) + 1
+
+    def user_data_runs(self, user_id: str) -> int:
+        return self._current().user_data_runs.get(user_id, 0)
+
+    def data_runs_ok(self, user_id: str, settings: AgentSettings) -> bool:
+        return self.user_data_runs(user_id) < settings.daily_data_runs
 
 
 def request_ok(ledger: RequestLedger, settings: AgentSettings, *, next_calls: int = 1, reserve: int = 0) -> bool:

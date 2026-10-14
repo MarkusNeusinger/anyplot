@@ -17,7 +17,8 @@ it), so no backend has to remember a semaphore of its own:
   synchronous route never hangs behind a busy instance.
 
 The render's own `job.timeout_s` starts when the backend runs it, after the wait.
-No ADK import.
+A data run (`run_data`, the `run_data_code` tool) takes one slot of the `run` lane
+like one theme of a render: it is a sandbox too. No ADK import.
 """
 
 import asyncio
@@ -25,7 +26,7 @@ from collections import deque
 from dataclasses import replace
 from typing import Literal
 
-from .contract import RenderBackend, RenderJob, RenderResult
+from .contract import DataJob, DataOutput, RenderBackend, RenderJob, RenderResult
 
 
 RenderLane = Literal["run", "toggle"]
@@ -105,3 +106,14 @@ class SerialRenderer:
                 self.slots.release()
             result.outputs.update(rendered.outputs)
         return result
+
+    async def run_data(self, job: DataJob, *, wait_s: float | None = None) -> DataOutput:
+        """Run a data snippet in one slot of the `run` lane; raises `RenderBusy` when the slot wait ran out."""
+        try:
+            await self.slots.acquire("run", wait_s)
+        except TimeoutError:
+            raise RenderBusy(f"no render slot came free within {wait_s} s") from None
+        try:
+            return await self.backend.run_data(job)
+        finally:
+            self.slots.release()

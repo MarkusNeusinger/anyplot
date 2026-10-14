@@ -1,0 +1,6 @@
+{
+  "message": "Erzeug mir das Bifurkationsdiagramm der logistischen Abbildung: r von 2,5 bis 4 in 200 Schritten, je die letzten 50 Werte nach 500 Einschwingschritten, als Spalten r und x.",
+  "expected_operations": [{"op": "run_data_code", "rows": 10000, "columns": 2}],
+  "locale": "de",
+  "tags": ["run_data_code", "data_code", "words", "iteration", "no_dataset"]
+}

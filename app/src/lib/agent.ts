@@ -156,6 +156,11 @@ export interface DatasetParsed {
   context_lines?: string[];
   /** Every role of the spec; absent from an agents service older than this field. */
   roles?: RoleSpec[];
+  /**
+   * The Python that computed this version (the assistant's `run_data_code`, as it
+   * ran in the sandbox); absent for a paste and every other version.
+   */
+  code?: string;
   /** The wide-table offer, or `null`; absent from an older server. */
   suggestion?: LongSuggestion | null;
   /**
@@ -174,9 +179,9 @@ export interface DatasetParsed {
 
 /**
  * A data version the assistant made in step 1 (`done.dataset`): its
- * `prepare_data` changed the data, or its `generate_data` computed a table from
- * a formula. The dataset route's shape plus one English line per operation.
- * The data is unconfirmed again.
+ * `prepare_data` changed the data, its `generate_data` computed a table from
+ * a formula, or its `run_data_code` ran the user's code. The dataset route's
+ * shape plus one English line per operation. The data is unconfirmed again.
  */
 export interface DatasetChanged {
   /** Up to 20 data rows (the header is `profile.columns[].name`). */
@@ -192,6 +197,8 @@ export interface DatasetChanged {
    * service older than this field, and dropped whole when one entry is malformed.
    */
   roles?: RoleSpec[];
+  /** The Python that computed the version (`run_data_code`); absent for every other change. */
+  code?: string;
   /** The wide-table offer for the new version, or `null`; absent from an older server. */
   suggestion?: LongSuggestion | null;
   /**
@@ -647,7 +654,9 @@ export const agentApi = {
    * again) and keeps every row of it (no lines left out as notes or totals), while the
    * pre-filter, the judge and the store run as usual.
    * Text that asks for a formula (`sin(x) von -pi bis pi`) answers `422 formula` and
-   * stores nothing: the chat's `generate_data` computes such a table.
+   * stores nothing: the chat's `generate_data` computes such a table. Code that
+   * generates data (Python, JavaScript, R) answers `422 code` the same way: the
+   * chat's `run_data_code` runs it.
    */
   uploadDataset: (token: string, sid: string, text: string, confirmed = false) =>
     agentJson<DatasetAnswer>(
@@ -983,6 +992,7 @@ function datasetChanged(value: unknown): DatasetChanged | null {
     warnings: strings(value.warnings),
     context_lines: strings(value.context_lines),
     ...(roles ? { roles } : {}),
+    ...(typeof value.code === 'string' && value.code ? { code: value.code } : {}),
     suggestion: longSuggestion(value.suggestion),
     changes: strings(value.changes),
     version: value.version,

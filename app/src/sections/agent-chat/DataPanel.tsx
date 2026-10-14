@@ -56,6 +56,13 @@
  * (`422 formula`), and a line under the box offers `.send()`, which sends the
  * text to the chat as a turn and empties the box.
  *
+ * Code that generates data (Python, JavaScript, R) is refused the same way
+ * (`422 code`) and offered to the chat, where the assistant runs it in a
+ * sandbox; code longer than a chat message cannot move there, so the line asks
+ * to shorten it instead. A version the assistant computed from code shows the
+ * Python that ran in a `# code that made this data` block, collapsed behind
+ * `.show()`.
+ *
  * Lines pasted above or below the table (a title, a source line, a sentence
  * about the columns) are left out of the table but kept as notes the assistant
  * reads with the data. A `# notes sent to the assistant` block under the
@@ -71,6 +78,7 @@ import {
   type AgentSessionState,
   type DataChange,
   type Failure,
+  type FormulaKind,
   sessionBusy,
   type TranscriptionState,
 } from 'src/hooks/useAgentSession';
@@ -79,6 +87,7 @@ import {
   type LongSuggestion,
   longSuggestion,
   MAX_DATASET_BYTES,
+  MAX_MESSAGE_CHARS,
   utf8Bytes,
 } from 'src/lib/agent';
 import { bindingRows, kindsHint, signHint } from 'src/sections/agent-chat/bindings';
@@ -236,6 +245,75 @@ export function NotesBlock({ lines }: { lines: string[] }) {
           {lines.map((line, index) => (
             <li key={index}>{line}</li>
           ))}
+        </Box>
+      )}
+    </Box>
+  );
+}
+
+/** The line under the box for text the server refused as a formula or as code, which the chat takes instead. */
+function offerLine(kind: FormulaKind, tooLong: boolean): string {
+  if (kind === 'formula') {
+    return 'looks like a formula: send it to the chat? the assistant computes the table from it.';
+  }
+  if (tooLong) {
+    return `looks like code that makes data: shorten it to ${MAX_MESSAGE_CHARS.toLocaleString('en-US')} characters, keeping only the part that computes the data, and the chat runs it.`;
+  }
+  return 'looks like code that makes data: send it to the chat? the assistant runs it in a sandbox and shows you the table.';
+}
+
+/**
+ * The Python that computed this data version (the assistant's `run_data_code`),
+ * collapsed behind `.show()`: the user can read what ran on their behalf, the
+ * same way the notes block shows what the assistant reads.
+ */
+export function CodeBlock({ code }: { code: string | undefined }) {
+  const [open, setOpen] = useState(false);
+  if (!code) return null;
+  const lines = code.split('\n').filter(line => line.trim()).length;
+  return (
+    <Box
+      component="section"
+      aria-labelledby="agent-code-title"
+      data-testid="data-code"
+      sx={{ borderLeft: '3px solid var(--rule)', pl: 1.5, minWidth: 0 }}
+    >
+      <Box
+        sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', columnGap: 1, rowGap: 0.5 }}
+      >
+        <Box id="agent-code-title" sx={labelSx}>
+          # code that made this data · {lines} {lines === 1 ? 'line' : 'lines'} of python
+        </Box>
+        <Box
+          component="button"
+          type="button"
+          onClick={() => setOpen(value => !value)}
+          aria-expanded={open}
+          aria-controls="agent-code-text"
+          aria-describedby="agent-code-title"
+          sx={actionButtonSx}
+        >
+          {open ? '.hide()' : '.show()'}
+        </Box>
+      </Box>
+      {open && (
+        <Box
+          component="pre"
+          id="agent-code-text"
+          sx={{
+            m: 0,
+            mt: 0.5,
+            fontFamily: typography.mono,
+            fontSize: smallText,
+            lineHeight: 1.5,
+            color: 'var(--ink-soft)',
+            whiteSpace: 'pre',
+            overflowX: 'auto',
+            maxHeight: 320,
+            overflowY: 'auto',
+          }}
+        >
+          {code}
         </Box>
       )}
     </Box>
@@ -608,7 +686,11 @@ export function DataPanel({
     onConfirmTranscription();
   };
 
-  // `.send()`: the formula moves to the chat as a turn, so the box is free for a table.
+  // Code over the chat's cap is refused all the same, but cannot move there: the line asks to shorten it.
+  const codeTooLong =
+    state.formulaKind === 'code' && (state.formula ?? '').trim().length > MAX_MESSAGE_CHARS;
+
+  // `.send()`: the formula or code moves to the chat as a turn, so the box is free for a table.
   const handleSendFormula = () => {
     setText('');
     onSendFormula();
@@ -729,18 +811,20 @@ export function DataPanel({
             role="status"
             sx={{ ...labelSx, color: 'var(--ink)', flex: '1 1 220px', lineHeight: 1.6 }}
           >
-            looks like a formula: send it to the chat? the assistant computes the table from it.
+            {offerLine(state.formulaKind, codeTooLong)}
           </Box>
-          <Box
-            component="button"
-            type="button"
-            onClick={handleSendFormula}
-            disabled={!ready || busy}
-            aria-describedby="agent-formula-line"
-            sx={ghostButtonSx}
-          >
-            .send()
-          </Box>
+          {!codeTooLong && (
+            <Box
+              component="button"
+              type="button"
+              onClick={handleSendFormula}
+              disabled={!ready || busy}
+              aria-describedby="agent-formula-line"
+              sx={ghostButtonSx}
+            >
+              .send()
+            </Box>
+          )}
         </Box>
       )}
 
@@ -790,6 +874,8 @@ export function DataPanel({
           <WarningList warnings={dataset.parsed.warnings} />
 
           <NotesBlock lines={dataset.parsed.context_lines ?? []} />
+
+          <CodeBlock code={dataset.parsed.code} />
 
           <Box sx={{ minWidth: 0 }}>
             <Box sx={{ ...labelSx, mb: 0.5 }}>

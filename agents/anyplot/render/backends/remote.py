@@ -48,6 +48,11 @@ its answer does not come in time, the backend also posts
 `/render/{job_id}/cancel`, because a front end that does not pass the closed
 connection on would leave the sandbox running and the renderer's only slot taken.
 
+**Data runs.** `run_data` posts a snippet to `AGENT_RENDER_URL/run-data` with the same
+token, retries, timeout margin and cancel path. A `404` means a renderer deployed
+before the route; it raises `DataRunUnsupported`, which the tool answers as
+`unavailable` instead of failing the turn.
+
 No semaphore here: `SerialRenderer` (`render/serial.py`) already hands this backend
 one theme at a time, and the renderer keeps its own single render slot for the
 callers it serves together.
@@ -72,9 +77,17 @@ from google.auth.transport.requests import Request as GoogleAuthRequest
 from google.oauth2 import id_token as google_id_token
 from pydantic import ValidationError
 
-from agents.renderer.wire import MAX_PNG_BYTES, RenderRequest, RenderResponse
+from agents.renderer.wire import MAX_PNG_BYTES, DataRunRequest, DataRunResponse, RenderRequest, RenderResponse
 
-from ..contract import RendererUnavailable, RenderJob, RenderResult, ThemeOutput
+from ..contract import (
+    DataJob,
+    DataOutput,
+    DataRunUnsupported,
+    RendererUnavailable,
+    RenderJob,
+    RenderResult,
+    ThemeOutput,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -259,7 +272,64 @@ class RemoteBackend:
             raise _unavailable(f"the renderer did not answer in time ({type(exc).__name__})") from None
         return self._result(job, response)
 
-    async def _post(self, body: dict[str, object], timeout: httpx.Timeout) -> httpx.Response:
+    async def run_data(self, job: DataJob) -> DataOutput:
+        """POST the snippet to `/run-data`; a renderer without the route (404) raises `DataRunUnsupported`."""
+        try:
+            body = DataRunRequest.model_validate(
+                {"job_id": job.job_id, "source": job.source, "timeout_s": job.timeout_s}
+            ).model_dump(mode="json")
+        except ValidationError as exc:
+            fields = ",".join(sorted({str(error["loc"][0]) for error in exc.errors() if error["loc"]}))
+            raise _unavailable(f"the data job does not fit the renderer contract ({fields})") from None
+        timeout = httpx.Timeout(job.timeout_s + RESPONSE_MARGIN_S, connect=CONNECT_TIMEOUT_S)
+        try:
+            response = await self._post(body, timeout, path="/run-data")
+        except asyncio.CancelledError:
+            await self._cancel_remote(job.job_id)
+            raise
+        except httpx.TimeoutException as exc:
+            await self._cancel_remote(job.job_id)
+            raise _unavailable(f"the renderer did not answer the data run in time ({type(exc).__name__})") from None
+        return self._data_result(job, response)
+
+    def _data_result(self, job: DataJob, response: httpx.Response) -> DataOutput:
+        status = response.status_code
+        if status == 404:
+            # A renderer deployed before the route: the tool answers `unavailable`, the turn goes on.
+            logger.warning("remote renderer: no /run-data route (HTTP 404); deploy the renderer first")
+            raise DataRunUnsupported("the renderer has no /run-data route yet (HTTP 404)")
+        if status != 200:
+            detail = _detail(response)
+            suffix = f", {detail}" if detail else ""
+            raise _unavailable(f"the renderer answered the data run with HTTP {status}{suffix}")
+        try:
+            answer = DataRunResponse.model_validate_json(response.content)
+        except ValidationError:
+            raise _unavailable("the renderer's data answer does not match the contract") from None
+        if answer.job_id != job.job_id:
+            raise _unavailable("the renderer answered for another job")
+        logger.info(
+            "remote data run %s: exit %s, reason %s, attempts %s, %.2f s",
+            job.job_id,
+            answer.exit_code,
+            answer.reason,
+            answer.attempts,
+            answer.wall_s,
+        )
+        if answer.reason == "launcher":
+            raise _unavailable("the renderer's sandbox launcher failed for the data run")
+        return DataOutput(
+            exit_code=answer.exit_code,
+            timed_out=answer.timed_out,
+            csv_text=answer.csv_text,
+            stderr_tail=answer.stderr_tail,
+            wall_s=answer.wall_s,
+            reason=answer.reason,
+            measured=answer.measured,
+            limit=answer.limit,
+        )
+
+    async def _post(self, body: dict[str, object], timeout: httpx.Timeout, *, path: str = "/render") -> httpx.Response:
         """POST the job, retrying connection errors and front-end 429/5xx with backoff inside the budget."""
         delays = iter(self.retry_delays_s)
         started = self.clock()
@@ -267,7 +337,7 @@ class RemoteBackend:
             headers = {"Authorization": f"Bearer {await self.tokens.token()}"}
             response: httpx.Response | None = None
             try:
-                response = await self._client.post(f"{self.url}/render", json=body, headers=headers, timeout=timeout)
+                response = await self._client.post(f"{self.url}{path}", json=body, headers=headers, timeout=timeout)
             except (httpx.ConnectError, httpx.ConnectTimeout, httpx.RemoteProtocolError) as exc:
                 failure = f"could not be reached ({type(exc).__name__})"
             except httpx.TimeoutException:

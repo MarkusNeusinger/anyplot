@@ -438,6 +438,10 @@ class RecordingBackend:
         self.recorder.keep(job, result)
         return result
 
+    async def run_data(self, job: Any) -> Any:
+        """A data run (`run_data_code`) is no plot attempt: passed through unrecorded."""
+        return await self.backend.run_data(job)
+
     async def aclose(self) -> None:
         close = getattr(self.backend, "aclose", None)
         if close is not None:

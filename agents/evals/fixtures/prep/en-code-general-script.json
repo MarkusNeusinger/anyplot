@@ -1,0 +1,7 @@
+{
+  "message": "Run this script and tell me the result, I don't need a plot:\n\ndef is_prime(n):\n    return n > 1 and all(n % d for d in range(2, int(n ** 0.5) + 1))\n\nprint(sum(1 for n in range(100000) if is_prime(n)))",
+  "expected_operations": [],
+  "refuse": true,
+  "locale": "en",
+  "tags": ["run_data_code", "data_code", "python", "general_runner", "no_dataset"]
+}

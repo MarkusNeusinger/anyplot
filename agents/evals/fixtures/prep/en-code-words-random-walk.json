@@ -1,0 +1,6 @@
+{
+  "message": "Make me a random walk with 500 steps, as the columns step and position.",
+  "expected_operations": [{"op": "run_data_code", "rows": 500, "columns": 2}],
+  "locale": "en",
+  "tags": ["run_data_code", "data_code", "words", "random", "no_dataset"]
+}

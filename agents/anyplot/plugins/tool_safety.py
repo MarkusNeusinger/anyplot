@@ -1,6 +1,6 @@
 """ToolSafety: which agent may call which tool, with which arguments, and what comes back.
 
-* `before_tool_callback`: a per-agent allowlist (the root's seven session tools and its
+* `before_tool_callback`: a per-agent allowlist (the root's eight session tools and its
   `plot_pipeline` workflow; none for the adapters and the reviewer); Pydantic
   validation of the arguments (ADK
   leaves `FUNCTION_TOOL_ARG_VALIDATION` off; `prepare_data` takes at most five
@@ -12,7 +12,10 @@
   field that was wrong); no link (a scheme such as
   `https://` or `data:image`, or `www.`) or file path in any string argument, as link
   hygiene; at most one `plot_pipeline` call per invocation (the "one repair round"
-  bound).
+  bound) and at most `MAX_DATA_CODE_CALLS` (2) `run_data_code` calls, whose `code`
+  (at most `MAX_DATA_CODE_CHARS`, a `source_language` of a fixed set) is exempt from the
+  link rule, because the DATA validator bans URL literals and every file reader itself
+  and a division (`x / 2`) reads as a path to the rule.
   Personal data in a `change_request` (a name, an address, an e-mail address, a phone
   number, a web address without a scheme or `www.` such as `jana-novak.de`) passes:
   whether plot text is an advertisement or a message to other people is the scope
@@ -27,7 +30,7 @@
   `columns`, `by`, `index`, ...) and the new names of a pivot stay under the rule, and
   so does every string of `generate_data`: its names and expressions never need a link.
 * `after_tool_callback`: a key allowlist per tool and a size cap of 8 KB (24 KB for
-  `get_current_code`, 16 KB for `prepare_data`, `generate_data` and `plot_pipeline`, 25 KB
+  `get_current_code`, 16 KB for `prepare_data`, `generate_data`, `run_data_code` and `plot_pipeline`, 25 KB
   for `get_dataset_profile`, whose 16 KB of profile sit next to the pasted notes); a result outside them becomes an error. The `plot_pipeline` result
   reaches the root with its model-written `changes` and `residual_defects` fenced as
   `<tool_notes>` under `notes`.
@@ -40,7 +43,7 @@ Every refusal is `{"status": "error", "code": <enum>}`. The plugin never raises.
 import json
 import logging
 import re
-from typing import Any
+from typing import Any, Literal
 
 from google.adk.plugins.base_plugin import BasePlugin
 from google.adk.tools.base_tool import BaseTool
@@ -61,6 +64,12 @@ ROOT_AGENT = "anyplot"
 PIPELINE_TOOL = "plot_pipeline"
 PREPARE_TOOL = "prepare_data"
 GENERATE_TOOL = "generate_data"
+DATA_CODE_TOOL = "run_data_code"
+MAX_DATA_CODE_CALLS = 2
+"""`run_data_code` calls per invocation: the first, and one retry after the validator's findings."""
+MAX_DATA_CODE_CHARS = 6_000
+"""`run_data_code`'s `code`: a chat message holds at most 2,000 characters, and a translation from
+JavaScript, R or a formula into Python with imports and a `df` can be about three times longer."""
 MAX_RESULT_BYTES = 8 * 1024
 MAX_CODE_RESULT_BYTES = 24 * 1024
 MAX_NOTES_RESULT_BYTES = 9 * 1024
@@ -75,11 +84,19 @@ RESULT_LIMITS: dict[str, int] = {
     PREPARE_TOOL: 16 * 1024,
     # The profile of at most 12 columns, the change line and one warning per series.
     GENERATE_TOOL: 16 * 1024,
+    # The new profile, trimmed like get_dataset_profile's, plus one change line, or up to ten validator findings.
+    DATA_CODE_TOOL: 16 * 1024,
     # A PlotResult at its schema maximum (16 lines of 640, 5 changes of 200) is about 12 KB.
     PIPELINE_TOOL: 16 * 1024,
 }
-DATA_ARGUMENT_KEYS: dict[str, frozenset[str]] = {PREPARE_TOOL: frozenset({"value", "name", "label", "otherwise"})}
-"""Per tool, the argument keys whose strings the link rule skips: data that is compared or written, never followed."""
+DATA_ARGUMENT_KEYS: dict[str, frozenset[str]] = {
+    PREPARE_TOOL: frozenset({"value", "name", "label", "otherwise"}),
+    # Code holds `x / 2` and `a // b`, which the path rule reads as paths; the DATA validator bans URL literals,
+    # file names reach no reader (`open`, `read_*` and the I/O modules are banned) and the sandbox has no egress.
+    DATA_CODE_TOOL: frozenset({"code"}),
+}
+"""Per tool, the argument keys whose strings the link rule skips: data that is compared or written, never followed,
+and `run_data_code`'s code, which the DATA validator checks instead."""
 NOTES_KEY = "notes"
 PIPELINE_NOTE_FIELDS = ("changes", "residual_defects")
 
@@ -117,6 +134,14 @@ class _PrepareArgs(BaseModel):
     operations: list[Operation] = Field(min_length=1, max_length=MAX_OPERATIONS)
 
 
+class _DataCodeArgs(BaseModel):
+    """`run_data_code`: Python of at most `MAX_DATA_CODE_CHARS`, and what the user wrote it in (attribution only)."""
+
+    model_config = ConfigDict(extra="forbid")
+    code: str = Field(min_length=1, max_length=MAX_DATA_CODE_CHARS)
+    source_language: Literal["python", "javascript", "r", "math", "other"]
+
+
 ARGUMENTS: dict[str, type[BaseModel]] = {
     "get_dataset_profile": _NoArgs,
     "get_spec_brief": _NoArgs,
@@ -125,9 +150,10 @@ ARGUMENTS: dict[str, type[BaseModel]] = {
     "set_language": _LanguageArgs,
     PREPARE_TOOL: _PrepareArgs,
     GENERATE_TOOL: Generate,
+    DATA_CODE_TOOL: _DataCodeArgs,
     PIPELINE_TOOL: PipelineArgs,
 }
-ARGUMENT_ERROR_TOOLS = frozenset({PREPARE_TOOL, GENERATE_TOOL})
+ARGUMENT_ERROR_TOOLS = frozenset({PREPARE_TOOL, GENERATE_TOOL, DATA_CODE_TOOL})
 """The tools whose `invalid_arguments` refusal carries the validation lines: arguments the model assembles field by field."""
 ALLOWED_TOOLS: dict[str, frozenset[str]] = {ROOT_AGENT: frozenset(ARGUMENTS)}
 _DATA_VERSION_KEYS = frozenset(
@@ -145,6 +171,7 @@ RESULT_KEYS: dict[str, frozenset[str]] = {
     "set_language": frozenset({"status", "code", "source", "changed", "plot_outdated"}),
     PREPARE_TOOL: _DATA_VERSION_KEYS,
     GENERATE_TOOL: _DATA_VERSION_KEYS,
+    DATA_CODE_TOOL: _DATA_VERSION_KEYS,
     # Every PlotResult field, so a field added to the schema (as `version` was) can never turn a
     # shipped plot into `invalid_result` for the root, plus the tool-error shape.
     PIPELINE_TOOL: frozenset(PlotResult.model_fields) | frozenset({"code", "result", "error"}),
@@ -233,6 +260,11 @@ class ToolSafetyPlugin(BasePlugin):
                     verdict = "one_pipeline_per_turn"
                 else:
                     ledger.pipeline_calls += 1
+            if verdict is None and tool.name == DATA_CODE_TOOL:
+                if ledger.data_code_calls >= MAX_DATA_CODE_CALLS:
+                    verdict = "too_many_data_runs"
+                else:
+                    ledger.data_code_calls += 1
             attribution(
                 "tool", ledger, agent=agent, tool=tool.name, args=argument_hash(tool_args), verdict=verdict or "allowed"
             )

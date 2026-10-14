@@ -6,6 +6,11 @@ a `RenderBackend` runs it once per theme in isolation and returns raw outputs (e
 status, the PNG bytes as written, the savefig probe, a stderr tail). The host gates
 (`gates.py`) judge those outputs; the backend never does.
 
+A `DataJob` is a data-generating snippet (`run_data_code`); `run_data` runs it once in
+the same isolation and returns the harness's exit code and the `out.csv` it wrote
+(`DataOutput`). A backend that cannot (a renderer deployed before `POST /run-data`)
+raises `DataRunUnsupported`.
+
 A `RuntimeAdapter` describes one language runtime: the file name the code is written
 to, the command (the CI command, with the probe harness in front for Python), the
 environment per theme, and the code transforms the pipeline applies before a render
@@ -92,12 +97,58 @@ class RenderResult:
     outputs: dict[Theme, ThemeOutput] = field(default_factory=dict)
 
 
+class DataRunUnsupported(RendererUnavailable):
+    """The backend has no data run: a renderer deployed before `POST /run-data` (404), or a backend without one."""
+
+
+MAX_DATA_TIMEOUT_S = 30.0
+"""A data run's longest time limit; the renderer's `wire.MAX_DATA_TIMEOUT_S` is the same (pinned by a test)."""
+
+
+@dataclass(frozen=True)
+class DataJob:
+    """One data-generating snippet to run once in isolation (`run_data_code`); the harness writes its `df`."""
+
+    job_id: str
+    source: str
+    timeout_s: float = 20.0
+
+    def __post_init__(self) -> None:
+        if not _RENDER_ID.fullmatch(self.job_id):
+            raise ValueError("job_id must match the render id pattern")
+        if not 0 < self.timeout_s <= MAX_DATA_TIMEOUT_S:
+            raise ValueError("timeout_s must be positive and at most the data run limit")
+
+
+@dataclass
+class DataOutput:
+    """What a data run left behind: the harness's exit code (`harness.DATA_EXIT`), and its `out.csv` after a 0.
+
+    `stderr_tail` is the snippet's own output: the tool reads it only for an exception
+    class and a line number (`gates.error_summary`), never passes it on.
+    """
+
+    exit_code: int | None
+    timed_out: bool = False
+    csv_text: str | None = None
+    stderr_tail: str = ""
+    wall_s: float = 0.0
+    reason: str | None = None
+    measured: int | None = None
+    limit: int | None = None
+
+    def __post_init__(self) -> None:
+        self.stderr_tail = self.stderr_tail[-MAX_STDERR_CHARS:]
+
+
 class RenderBackend(Protocol):
-    """Runs a job's code once per theme in isolation and collects the raw outputs."""
+    """Runs a job's code once per theme in isolation and collects the raw outputs; runs data snippets the same way."""
 
     name: str
 
     async def render(self, job: RenderJob) -> RenderResult: ...
+
+    async def run_data(self, job: DataJob) -> DataOutput: ...
 
 
 class RuntimeAdapter(Protocol):
@@ -112,6 +163,14 @@ class RuntimeAdapter(Protocol):
 
     def env(self, theme: Theme) -> dict[str, str]:
         """The complete environment of one theme's run; nothing is inherited."""
+        ...
+
+    def data_command(self) -> list[str]:
+        """The argv that runs a data snippet in the work directory with the harness in data mode."""
+        ...
+
+    def data_env(self) -> dict[str, str]:
+        """The complete environment of a data run: no theme, no plotting settings."""
         ...
 
     def normalise(self, code: str, library: str) -> str:

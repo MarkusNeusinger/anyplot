@@ -105,13 +105,14 @@ from starlette.background import BackgroundTask
 
 from agents.anyplot import agent as agent_module
 from agents.anyplot.code.readiness import MAP_SPECS
-from agents.anyplot.data.generate import looks_like_formula
+from agents.anyplot.data.classify import classify_paste
 from agents.anyplot.data.parse import MAX_INPUT_BYTES, ParsedDataset, ParseError, parse_dataset, without_context
 from agents.anyplot.data.prepare import Operation, PrepareError, apply_operations
 from agents.anyplot.data.roles import DataRole
 from agents.anyplot.data.shape import long_suggestion
 from agents.anyplot.data.store import StoreFull
 from agents.anyplot.data.transcribe import looks_like_free_text, table_to_csv, transcribable
+from agents.anyplot.dataset_guard import DataRefused, GuardUnavailable, check_dataset
 from agents.anyplot.dataset_versions import dataset_payload, push_version, undo_version
 from agents.anyplot.dev_fixture import FixtureError, load_case
 from agents.anyplot.language import (
@@ -123,7 +124,7 @@ from agents.anyplot.language import (
     pasted_language,
     refusal_lang,
 )
-from agents.anyplot.models import JudgeUnavailable, JudgeVerdict
+from agents.anyplot.models import JudgeUnavailable
 from agents.anyplot.opening import (
     INSTRUCTION_LIKE,
     NOTES_INSTRUCTION_WARNING,
@@ -131,15 +132,13 @@ from agents.anyplot.opening import (
     NOTES_UNCHECKED_WARNING,
     Eligibility,
     assess,
-    dataset_judge_inputs,
-    instruction_like,
     notes_instruction_like,
     notes_judge_input,
     opening_state,
     store_dataset,
 )
 from agents.anyplot.plugins.ledger import CURRENT_LEDGER, RequestLedger, attribution, budget_allows, judge_budget_tokens
-from agents.anyplot.policy import data_rubric, fence, refusal, scope_rubric, transcribe_rubric, user_notes_block
+from agents.anyplot.policy import fence, refusal, scope_rubric, transcribe_rubric, user_notes_block
 from agents.anyplot.render.serial import RenderBusy
 from agents.anyplot.render.store import RenderStoreFull
 from agents.anyplot.render.watermark import add_footer
@@ -644,28 +643,29 @@ async def upload_dataset(
     if len(body.text.encode("utf-8", errors="surrogatepass")) > MAX_INPUT_BYTES:
         raise AgentsError(413, "too_long")
     ledger = RequestLedger(request_id=rid, user_id=user, session_id=sid, kind="action")
+    if not body.confirmed:  # a confirmed transcription is the service's own CSV
+        _refuse_code_or_formula(ledger, body.text)
     try:
         # A confirmed transcription is the service's own CSV, which the user has seen row by row: no row is left out.
         parsed = parse_dataset(body.text, find_table=not body.confirmed)
     except ParseError as exc:
         if exc.code == "too_long":
             raise AgentsError(413, "too_long") from None
-        if exc.code in ("no_table", "unparseable"):
-            _refuse_formula(ledger, body.text)
         # Text with no table in it (prose, a list on one line) is the transcriber's; a broken
         # table (ragged rows, bad quoting, an over-long cell, invalid JSON) stays the parser's refusal.
         if exc.code == "no_table" and transcribable(body.text):
             return await _transcribe(services, ledger, body.text)
         raise AgentsError(422, "unparseable") from None
     if not body.confirmed and looks_like_free_text(parsed) and transcribable(body.text):
-        _refuse_formula(ledger, body.text)
         return await _transcribe(services, ledger, body.text)
     if not services.usage.daily_ok(user, get_settings()):
         raise AgentsError(429, "rate_limited")
-    if instruction_like(parsed):
-        attribution("data_judge", ledger, verdict="prefilter")
-        raise AgentsError(403, "data_refused")
-    header_lang = await _judge_dataset(services, ledger, dataset_judge_inputs(parsed), content=parsed.csv)
+    try:
+        header_lang = await check_dataset(services, ledger, parsed)
+    except DataRefused:
+        raise AgentsError(403, "data_refused") from None
+    except GuardUnavailable:
+        raise AgentsError(503, "guard_unavailable") from None
     notes_lang = None
     if parsed.context_lines:
         parsed, notes_lang = await _screen_notes(services, ledger, parsed)
@@ -761,19 +761,24 @@ async def _screen_notes(
     return parsed, answer.lang
 
 
-def _refuse_formula(ledger: RequestLedger, text: str) -> None:
-    """`422 formula` for pasted text that asks for a formula (`generate.looks_like_formula`), before any model reads it.
+def _refuse_code_or_formula(ledger: RequestLedger, text: str) -> None:
+    """`422 code` or `422 formula` for pasted text that is a program or asks for a formula, before any parser or
+    model reads it (`data/classify.py`).
 
-    The transcriber would compute such text into rows, which is the one thing no model
-    may do: a formula is the root's `generate_data`, asked for in the chat, where the
-    server computes the table. Only text the chat takes (`MAX_MESSAGE_CHARS`) is
-    refused, because the page's offer sends the refused text to the chat as a turn;
-    longer text goes on to the transcriber, whose rubric computes nothing. Writes a
-    `data_transcribe` attribution line with the outcome `formula` (no text, no tokens).
+    A snippet such as `np.linspace(0, 10, 100)` would parse as a one-row table, and the
+    transcriber would compute a formula's rows, which is the one thing no model may do:
+    code is the root's `run_data_code` and a formula its `generate_data`, asked for in
+    the chat, where the server computes the table. A formula is refused only within the
+    chat's cap (`MAX_MESSAGE_CHARS`), because the page's offer sends the refused text to
+    the chat as a turn; longer text goes on to the transcriber, whose rubric computes
+    nothing. Code is refused at any length, because it is never a table; the page asks
+    to shorten what the chat cannot take. Writes a `data_transcribe` attribution line
+    with the outcome `code` or `formula` (no text, no tokens).
     """
-    if len(text) <= MAX_MESSAGE_CHARS and looks_like_formula(text):
-        attribution("data_transcribe", ledger, outcome="formula")
-        raise AgentsError(422, "formula")
+    kind = classify_paste(text)
+    if kind is not None:
+        attribution("data_transcribe", ledger, outcome=kind)
+        raise AgentsError(422, kind)
 
 
 async def _transcribe(services: Services, ledger: RequestLedger, text: str) -> JSONResponse:
@@ -832,65 +837,6 @@ async def _transcribe(services: Services, ledger: RequestLedger, text: str) -> J
         },
         headers=_NO_STORE,
     )
-
-
-DATASET_JUDGE_CONCURRENCY = 4
-"""Parts of one dataset judged at the same time; most datasets are one part, the widest about 30."""
-
-
-async def _judge_dataset(services: Services, ledger: RequestLedger, parts: list[str], *, content: str) -> str | None:
-    """Judge every part of the judged view, a few at a time; raise 503 on an outage and 403 on any refusal.
-
-    Returns the judge's `lang` for the first part, which holds every column name
-    (`dataset_judge_inputs`): the language of the headers, `en` when unclear.
-
-    Every answered part books its cost-weighted tokens (`judge_budget_tokens`) to the user
-    and writes its own `data_judge` attribution line (with `part` and `parts`), so the
-    eval harness prices each call.
-    The batches stop at the first refusal or outage: the rest would change nothing. An
-    `attack` verdict is one strike against the user (`UsageBook.add_strike`), counted
-    once per distinct `content` (the canonical CSV), so retrying one upload that the
-    judge wrongly called an attack costs one strike, not one per try.
-    """
-    rubric = data_rubric()
-    judge_model = get_settings().judge_model
-    header_lang: str | None = None
-    for start in range(0, len(parts), DATASET_JUDGE_CONCURRENCY):
-        batch = parts[start : start + DATASET_JUDGE_CONCURRENCY]
-        answers = await asyncio.gather(
-            *(services.judge.judge(fence("dataset", part), rubric) for part in batch), return_exceptions=True
-        )
-        if any(isinstance(answer, JudgeVerdict) and answer.verdict == "attack" for answer in answers):
-            services.usage.add_strike(ledger.user_id, content)  # one strike per upload, however many parts
-        refused = unavailable = False
-        for offset, answer in enumerate(answers):
-            number = start + offset + 1
-            if not isinstance(answer, JudgeVerdict):
-                unavailable = True
-                attribution("data_judge", ledger, verdict="guard_unavailable", part=number, parts=len(parts))
-                continue
-            services.usage.add_tokens(
-                ledger.user_id,
-                judge_budget_tokens(answer.tokens, answer.input_tokens, answer.output_tokens, judge_model),
-            )
-            attribution(
-                "data_judge",
-                ledger,
-                verdict=answer.verdict,
-                part=number,
-                parts=len(parts),
-                judge_tokens=answer.tokens,
-                judge_input=answer.input_tokens,
-                judge_output=answer.output_tokens,
-            )
-            refused = refused or answer.verdict != "in_scope"  # fail closed, like the scope guard
-            if number == 1:
-                header_lang = answer.lang
-        if unavailable:
-            raise AgentsError(503, "guard_unavailable")
-        if refused:
-            raise AgentsError(403, "data_refused")
-    return header_lang
 
 
 MAX_ROLE_DESCRIPTION_CHARS = 200
@@ -1175,6 +1121,8 @@ async def post_message(
     except QueueFull:
         logger.info("run queue full (ref %s): %d waiting", rid, queue.waiting_count)
         raise AgentsError(503, "capacity") from None
+    # `run_data_code` runs a sandbox even while the data is unconfirmed: it books the turn's start then.
+    ledger.rate_start = lambda: queue.rate(ticket)
     run = ActiveRun(abort=asyncio.Event(), user=user, started=runtime.now(), ticket=ticket)
     # Registered here so a second request cannot slip in before the stream starts; the
     # stream's finally and the background task both clear it and free its queue slot,
