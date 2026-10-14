@@ -26,6 +26,7 @@ from agents.anyplot.pipeline import (
     render_review_request,
     render_score_request,
     standing_requests,
+    summarise_changes,
 )
 from agents.anyplot.policy import DATA_PREAMBLE
 from agents.anyplot.schemas import (
@@ -311,6 +312,14 @@ def test_without_earlier_requests_there_is_no_heading() -> None:
     request = AdaptRequest(code="x = 1", profile=run.dataset.profile, bindings=[], loader_columns=["a"])
 
     assert EARLIER_REQUESTS_HEADING not in render_adapt_request(request, run.view)
+
+
+def test_more_notes_than_the_result_holds_keep_the_request_and_the_latest() -> None:
+    """The first notes carry out the request, the last ones are what a later repair changed (#12170 review)."""
+    notes = [f"note {n}" for n in range(9)]
+
+    assert summarise_changes(notes) == ["note 0", "note 1", "note 2", "note 7", "note 8"]
+    assert summarise_changes(notes[:3]) == ["note 0", "note 1", "note 2"]
 
 
 class TestStandingRequests:

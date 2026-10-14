@@ -634,6 +634,19 @@ def note_changes(run: Run, plan: AdaptPlan, *, changed: bool, proofread: bool) -
     run.changes = list(dict.fromkeys([*run.changes, *(" ".join(note.split()) for note in plan.changes)]))
 
 
+def summarise_changes(notes: Sequence[str]) -> list[str]:
+    """At most `MAX_CHANGES` notes: the first ones (the adaptation that carried out the request) and the latest.
+
+    A run's calls may write more notes than `PlotResult` holds; keeping only the earliest would hide what a
+    later repair or proofread changed in the shipped code (#12170 review), keeping only the latest would hide
+    the request itself. The notes in between are left out.
+    """
+    if len(notes) <= MAX_CHANGES:
+        return list(notes)
+    head = MAX_CHANGES // 2 + 1
+    return [*notes[:head], *notes[len(notes) - (MAX_CHANGES - head) :]]
+
+
 def _columns_json(bindings: list[Binding], loader_columns: list[str] | None = None) -> str:
     """Bindings (and the loader's columns) as JSON: column names are the user's headers, so they go in a fence."""
     payload: dict[str, Any] = {"bindings": [{"role": item.role, "column": item.column} for item in bindings]}
@@ -792,7 +805,7 @@ def finish(run: Run) -> PlotResult:
             residual.append(NOT_REVIEWED_LINE.format(why=run.unreviewed_why or "the repair round left defects"))
     residual = list(dict.fromkeys(_line(line) for line in residual))[:MAX_RESIDUAL_DEFECTS]
     # The shipped render's own notes: every call up to it that changed the code, never a no-op proofread's.
-    changes = [change[:MAX_CHANGE_CHARS] for change in shipped.changes][:MAX_CHANGES]
+    changes = [change[:MAX_CHANGE_CHARS] for change in summarise_changes(shipped.changes)]
     return PlotResult(
         status="needs_attention" if residual else "ok",
         attempts=max(round_number(run, run.attempts), 1),
