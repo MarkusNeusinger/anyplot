@@ -52,14 +52,20 @@ copies it to `/opt/anyplot/harness.py`. In order it:
    function built by hand or a `__code__` assignment, every `open` that writes anything but
    `plot-<theme>.png` and `probe-<theme>.json`, `subprocess.*`, `os.system`, `os.exec*`,
    `os.posix_spawn`, `os.spawn*`, `os.fork*`, `socket.*`, `ctypes.*` (but threadpoolctl's,
-   `NATIVE_CALLERS`), filesystem changes and `os.chdir`. Imports, reads and `compile` stay
+   `NATIVE_CALLERS`), filesystem changes and `os.chdir`, and every frame (`gi_frame`,
+   `cr_frame`, `ag_frame`, `tb_frame`, `sys._getframe`) while plot code is on the stack, but
+   to `FRAME_READERS` and import bodies (Fable review of #12177; `hide_frames` makes
+   `inspect.currentframe` and `logging.currentframe` answer None first). Imports, reads and `compile` stay
    allowed, because the plot imports its libraries lazily and matplotlib reads fonts and
    style sheets and compiles colour strings while it draws; a refusal raises
    `PermissionError`. The validator review of 2026-10-14 found `np.testing.measure`, which
    compiles and runs any string, past the validator: this is the layer behind it. A sweep
    of the 650 catalogue matplotlib and seaborn files rendered all 474 the validator passes
    under the guard (the seven it newly failed are ones the validator refuses: a fetch, a
-   `chdir`, `load_dataset`);
+   `chdir`, `load_dataset`). With the frame refusals, a sweep of the 572 files the
+   readiness scan admits rendered the same 565 as before, with no refusal logged;
+   the seven failures are the plots' own (each divides by the length of a title the
+   normaliser emptied);
 6. prints `HARNESS {"event": "end", "max_rss_mb": ..., "cpu_s": ...}` when the plot
    file returns or raises; an exception still propagates, so its traceback reaches
    stderr and the exit code stays non-zero.
@@ -326,6 +332,26 @@ FRAME_ATTRIBUTES = frozenset({"gi_frame", "cr_frame", "ag_frame", "tb_frame"})
 """Attributes that hand out a frame, whose `f_builtins` and `f_globals` reach `open` and `__import__`
 (`(i for i in []).gi_frame.f_builtins`). CPython raises `object.__getattr__` for each; every other route to a frame
 needs `sys._getframe` (refused) or `inspect` (a banned import, and `inspect.currentframe` is replaced)."""
+FRAME_EVENTS = ("sys._getframe", "sys._current_frames", "sys._current_exceptions")
+"""Audit events that hand out a frame. `sys._getframemodulename` shares the first one's prefix but returns a module
+name only, and both guards let it through: `namedtuple` and `enum` ask for it."""
+FRAME_READERS = (
+    (("pandas/core/common.py", "is_local_in_caller_frame"),),
+    (("statsmodels/graphics/utils.py", "_import_mpl"),),
+    (("traceback.py", "extract_stack"),),
+    (("traceback.py", "_walk_tb_with_full_positions"), ("traceback.py", "_extract_from_extended_frame_gen")),
+)
+"""The callers the plot guard hands a frame (`FRAME_EVENTS`, `FRAME_ATTRIBUTES`) while plot code is on the stack,
+each a chain of `(file suffix, function)` pairs that the caller's frame and the frames above it must match: each reads
+a name or compares a value in the frame and returns no frame and no namespace. pandas' chained-assignment check runs
+when an inplace method or a `__setitem__` meets a temporary (`df["a"].fillna(0, inplace=True)`), and statsmodels
+names the caller of every graphic (`qqplot`, `plot_acf`). `traceback.extract_stack` and `extract_tb` return file
+names and line numbers (`_walk_tb_with_full_positions` is a generator that yields frames, so it passes only while
+`extract_tb`'s summary builder consumes it): pyparsing calls both while matplotlib builds and runs its mathtext
+parser, on the first `$...$` a plot draws (30 of 572 eligible catalogue files). Library code that reads frames while
+an import runs (scipy's bunch types name their module) needs no entry: an import body gets its frame like its `exec`.
+The helpers that return the frame they read, `inspect.currentframe` and `logging.currentframe`, are replaced to
+answer None before the guard is armed (`hide_frames`)."""
 DATA_PRELOAD = (
     "math",
     "statistics",
@@ -377,13 +403,31 @@ PANDAS_WARM_PACKAGES = ("pandas.core", "pandas.tseries", "pandas.api")
 under these packages is imported before the guard, so no snippet meets a lazy import."""
 
 
-def builds_code(frame):
-    """Whether `frame`, the caller of an `exec` or `compile`, is one of `CODE_BUILDERS`."""
+def is_one_of(frame, functions):
+    """Whether `frame` runs one of `functions`, `(file suffix, function name)` pairs."""
     if frame is None:
         return False
     code = frame.f_code
     file_name = code.co_filename.replace("\\", "/")
-    return any(file_name.endswith("/" + suffix) and code.co_name == name for suffix, name in CODE_BUILDERS)
+    return any(file_name.endswith("/" + suffix) and code.co_name == name for suffix, name in functions)
+
+
+def builds_code(frame):
+    """Whether `frame`, the caller of an `exec` or `compile`, is one of `CODE_BUILDERS`."""
+    return is_one_of(frame, CODE_BUILDERS)
+
+
+def reads_frames(frame):
+    """Whether `frame`, the caller of a frame event, and the frames above it match one of the `FRAME_READERS` chains."""
+    for chain in FRAME_READERS:
+        current = frame
+        for function in chain:
+            if not is_one_of(current, (function,)):
+                break
+            current = current.f_back
+        else:
+            return True
+    return False
 
 
 UNAUDITED_CALLS = (
@@ -511,8 +555,9 @@ WRITE_FLAGS = os.O_WRONLY | os.O_RDWR | os.O_APPEND | os.O_CREAT | os.O_TRUNC
 
 class PlotGuard(DataGuard):
     """The audit hook of plot mode: once armed, refuses `PLOT_BLOCKED_PREFIXES` (processes, sockets, native code,
-    filesystem changes), every `open` that writes anywhere but `outputs`, a `__code__` assignment, and every `exec`
-    but the plot's own run, `CODE_BUILDERS` and the module bodies of an import.
+    filesystem changes), every `open` that writes anywhere but `outputs`, a `__code__` assignment, every `exec`
+    but the plot's own run, `CODE_BUILDERS` and the module bodies of an import, and every frame (`FRAME_EVENTS`,
+    `FRAME_ATTRIBUTES`) handed out while plot code is on the stack, but to `FRAME_READERS` and import bodies.
 
     Imports, reads and `compile` stay allowed (`PLOT_BLOCKED_PREFIXES`, `CODE_EVENTS`). A refusal raises
     `PermissionError`; `blocked` keeps the first refused event's family for a caller that wants it.
@@ -536,6 +581,12 @@ class PlotGuard(DataGuard):
             return not self.lets_code_run(event, args)
         if event.startswith("ctypes."):
             return not self.native_caller()
+        if event == "object.__getattr__":
+            return len(args) > 1 and args[1] in FRAME_ATTRIBUTES and not self.lets_frame_out()
+        if event == "sys._getframemodulename":
+            return False  # a module name, no frame: `namedtuple` and `enum` ask for it
+        if event.startswith(FRAME_EVENTS):
+            return not self.lets_frame_out()
         return event.startswith(PLOT_BLOCKED_PREFIXES)
 
     def lets_code_run(self, event, args):
@@ -547,14 +598,30 @@ class PlotGuard(DataGuard):
         frame = self.caller()
         if builds_code(frame):
             return True
+        return self.nearest_origin(frame) == "import"
+
+    def lets_frame_out(self):
+        """Whether a frame may be handed out (`FRAME_EVENTS`, `FRAME_ATTRIBUTES`): to `FRAME_READERS`, to the module
+        body of an import (an import frame before any plot frame, as for `exec`), and when no plot code is on the
+        stack at all (the interpreter printing the plot's traceback after the plot returned). Plot code, and library
+        code the plot called, gets none: a callback or a `getattr` the plot hands to a library still has the plot's
+        frame above it (Fable review of #12177)."""
+        frame = self.caller()
+        if reads_frames(frame):
+            return True
+        return self.nearest_origin(frame) != "plot"
+
+    def nearest_origin(self, frame):
+        """Walking up from `frame`: `"plot"` when a frame of the plot file comes first, `"import"` when an import
+        frame (`IMPORT_FRAME_FILES`) does, None when neither is on the stack."""
         while frame is not None:
             file_name = frame.f_code.co_filename
             if file_name == self.plot_file:
-                return False
+                return "plot"
             if file_name in IMPORT_FRAME_FILES:
-                return True
+                return "import"
             frame = frame.f_back
-        return False
+        return None
 
     def native_caller(self):
         """Whether the first frame outside the `ctypes` package that raised a `ctypes.*` event is one of
@@ -1286,6 +1353,26 @@ def warm_scikit_learn(source):
         pass
 
 
+def hide_frames():
+    """Make the two stdlib helpers that hand out their caller's frame answer None, before the plot guard is armed.
+
+    The guard refuses a frame to plot code and to library code the plot called (`lets_frame_out`), so
+    `inspect.currentframe()` and `logging.currentframe()` would raise where libraries expect a frame or None:
+    pandas' `find_stack_level` walks frames before every warning, and every logging call looks up its caller.
+    Both read None as "no frame support": pandas reports its warning at level 0, a log record names
+    "(unknown file)". The plot reaches neither module past the validator (both are banned imports).
+    """
+    import inspect
+
+    inspect.currentframe = no_frame
+    logging.currentframe = no_frame
+
+
+def no_frame():
+    """What `inspect.currentframe` and `logging.currentframe` answer in plot mode: no frame (`hide_frames`)."""
+    return None
+
+
 def run_plot(path, guard):
     """Run the plot file as `__main__` under `guard`, the way `runpy.run_path` would.
 
@@ -1305,6 +1392,7 @@ def run_plot(path, guard):
         source = handle.read()
     code = compile(source, path, "exec", dont_inherit=True)
     warm_scikit_learn(source)
+    hide_frames()
     namespace = {
         "__name__": "__main__",
         "__file__": path,

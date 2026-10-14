@@ -93,6 +93,19 @@ PLOT_ROUTES = [
         "import os\nd = os.open('mpl', os.O_RDONLY)\nos.open('plot-light.png', os.O_CREAT | os.O_WRONLY, dir_fd=d)\n",
         id="an output name relative to another directory",
     ),
+    # The Fable review of #12177: a frame's `f_builtins` hands out `open` and `__import__` past the validator.
+    pytest.param(f"g = (i for i in [])\ng.gi_frame.f_builtins['open']('{MARKER}', 'w')\n", id="a generator's frame"),
+    pytest.param(f"import sys\nsys._getframe(0).f_builtins['open']('{MARKER}', 'w')\n", id="sys._getframe in the plot"),
+    pytest.param("import sys\nframes = sys._current_frames()\n", id="sys._current_frames"),
+    pytest.param(
+        "try:\n    1 / 0\nexcept ZeroDivisionError as error:\n    f = error.__traceback__.tb_frame\n",
+        id="a traceback's frame",
+    ),
+    pytest.param("async def c():\n    pass\n\nf = c().cr_frame\n", id="a coroutine's frame"),
+    pytest.param(
+        "import pandas as pd\ng = (i for i in [])\nf = pd.Series([g]).apply(getattr, args=('gi_frame',))\n",
+        id="a frame fetched by library code the plot called",
+    ),
 ]
 
 
@@ -138,6 +151,28 @@ class TestPlotGuard:
             pytest.param(
                 "fig, ax = plt.subplots()\nax.set_title(r'$\\alpha^2$')\nax.legend(['a'])\n", id="mathtext and a legend"
             ),
+            # Library code that reads frames while the plot runs (`FRAME_READERS`, `hide_frames`).
+            pytest.param(
+                "fig, ax = plt.subplots()\nax.set_title(r'$\\alpha^2$')\nfig.canvas.draw()\n",
+                id="mathtext drawn: pyparsing's traceback summaries",
+            ),
+            pytest.param(
+                "import pandas as pd\ndf = pd.DataFrame({'a': [1.0, None]})\ndf['a'].fillna(0, inplace=True)\n",
+                id="pandas' chained-assignment check",
+            ),
+            pytest.param(
+                "import pandas as pd\nd = pd.to_datetime(['10/11/12', '13/11/12'])\n",
+                id="a pandas warning's stack level",
+            ),
+            pytest.param(
+                "import statsmodels.api as sm\nsm.qqplot(np.array([1.0, 2.0, 3.0, 4.5]), line='s')\n",
+                id="a statsmodels graphic names its caller",
+            ),
+            pytest.param(
+                "plt.rcParams['font.family'] = 'NoSuchFamily'\nfig, ax = plt.subplots()\nax.set_title('x')\n"
+                "fig.canvas.draw()\n",
+                id="a logged findfont warning",
+            ),
         ],
     )
     def test_ordinary_plots_still_render(self, tmp_path: Path, body: str) -> None:
@@ -155,6 +190,63 @@ class TestPlotGuard:
     def test_a_syntax_error_is_reported_before_the_guard(self, tmp_path: Path) -> None:
         exit_code, stderr = render(tmp_path, "x = (\n")
         assert exit_code != 0 and "SyntaxError" in stderr and 'plot.py", line' in stderr
+
+    def test_a_plot_error_keeps_its_traceback(self, tmp_path: Path) -> None:
+        """The interpreter prints the traceback after the plot's frames are gone, so the frame refusal never hides
+        the line the repair needs."""
+        exit_code, stderr = render(tmp_path, "raise ValueError('boom')\n")
+        assert exit_code != 0 and "ValueError: boom" in stderr and 'plot.py", line 5' in stderr
+        assert "blocked by the" not in stderr
+
+    def test_a_caught_frame_refusal_still_renders(self, tmp_path: Path) -> None:
+        body = "g = (i for i in [])\ntry:\n    f = g.gi_frame\nexcept PermissionError:\n    f = None\n"
+        exit_code, stderr = render(tmp_path, body)
+        assert exit_code == 0, stderr[-2000:]
+        assert (tmp_path / "plot-light.png").exists()
+
+
+REPO_ROOT = Path(__file__).resolve().parents[4]
+CATALOGUE_UNDER_GUARD = [
+    pytest.param("ice-basic", "matplotlib", id="ice-basic/matplotlib: scikit-learn GradientBoostingRegressor"),
+    pytest.param("mosaic-categorical", "matplotlib", id="mosaic-categorical/matplotlib: a statsmodels graphic"),
+    pytest.param("line-arrhenius", "matplotlib", id="line-arrhenius/matplotlib: mathtext"),
+    pytest.param("silhouette-basic", "seaborn", id="silhouette-basic/seaborn: KMeans"),
+]
+
+
+@pytest.mark.parametrize(("spec_id", "library"), CATALOGUE_UNDER_GUARD)
+def test_catalogue_files_render_under_the_guard(tmp_path: Path, spec_id: str, library: str) -> None:
+    """Real catalogue files, normalised as a session opening does, render under the plot guard: a guard change that
+    breaks scikit-learn, statsmodels or mathtext fails here. The seaborn case needs seaborn, which CI's test
+    environment does not install; the renderer-image job of `ci-image.yml` renders seaborn through the harness."""
+    from agents.anyplot.code.normalise import normalise
+    from core.utils import strip_noqa_comments
+
+    if library == "seaborn":
+        pytest.importorskip("seaborn")
+    source = REPO_ROOT / "plots" / spec_id / "implementations" / "python" / f"{library}.py"
+    if not source.exists():
+        pytest.skip(f"{spec_id}/{library} is absent")
+    code = normalise(strip_noqa_comments(source.read_text(encoding="utf-8")) or "", library=library)
+    (tmp_path / "plot.py").write_text(code, encoding="utf-8")
+    done = subprocess.run(
+        [sys.executable, "-I", str(HARNESS_SOURCE), "plot.py"],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=180,
+        env={
+            "PATH": "/usr/bin:/bin",
+            "HOME": str(tmp_path),
+            "ANYPLOT_THEME": THEME,
+            "MPLBACKEND": "Agg",
+            "MPLCONFIGDIR": str(tmp_path / "mpl"),
+            "ANYPLOT_RLIMIT_CPU_S": "120",
+        },
+    )
+    assert done.returncode == 0, done.stderr[-3000:]
+    assert "blocked by the" not in done.stderr
+    assert (tmp_path / "plot-light.png").exists() and (tmp_path / "probe-light.json").exists()
 
 
 class TestPlotGuardUnit:
@@ -179,8 +271,45 @@ class TestPlotGuardUnit:
         guard = self.guard(tmp_path)
         for event in ("subprocess.Popen", "os.system", "os.posix_spawn", "os.fork", "socket.connect", "os.chdir"):
             assert guard.refuses(event, ()), event
-        for event in ("import", "os.listdir", "os.putenv", "compile", "sys._getframe", "builtins.id"):
+        for event in ("import", "os.listdir", "os.putenv", "compile", "builtins.id", "sys._getframemodulename"):
             assert not guard.refuses(event, ()), event
+
+    def test_refuses_frames_to_plot_code_only(self, tmp_path: Path) -> None:
+        """With this test file standing in for the plot, a frame event raised here is plot code's; with no plot
+        frame on the stack (the interpreter printing a traceback after the plot returned) it passes."""
+        guard = self.guard(tmp_path)
+        for event, args in (
+            ("sys._getframe", (0,)),
+            ("sys._current_frames", ()),
+            ("object.__getattr__", (1, "gi_frame")),
+        ):
+            assert not guard.refuses(event, args), event
+        guard.plot_file = __file__
+        for event, args in (
+            ("sys._getframe", (0,)),
+            ("sys._current_frames", ()),
+            ("object.__getattr__", (1, "tb_frame")),
+        ):
+            assert guard.refuses(event, args), event
+        assert not guard.refuses("object.__getattr__", (1, "__code__"))
+        assert not guard.refuses("sys._getframemodulename", (0,))
+
+    def test_frame_readers_match_their_whole_chain(self) -> None:
+        reader = type("Code", (), {"co_filename": "/usr/lib/python3.13/traceback.py", "co_name": "extract_stack"})
+        frame = type("Frame", (), {"f_code": reader, "f_back": None})
+        assert harness.reads_frames(frame)
+        walker = type(
+            "Code", (), {"co_filename": "/usr/lib/python3.13/traceback.py", "co_name": "_walk_tb_with_full_positions"}
+        )
+        assert not harness.reads_frames(type("Frame", (), {"f_code": walker, "f_back": None}))
+        builder = type(
+            "Code",
+            (),
+            {"co_filename": "/usr/lib/python3.13/traceback.py", "co_name": "_extract_from_extended_frame_gen"},
+        )
+        consumed = type("Frame", (), {"f_code": builder, "f_back": None})
+        assert harness.reads_frames(type("Frame", (), {"f_code": walker, "f_back": consumed}))
+        assert not harness.reads_frames(None)
 
     def test_exec_from_the_test_is_refused_but_the_entry_runs_once(self, tmp_path: Path) -> None:
         guard = self.guard(tmp_path)
