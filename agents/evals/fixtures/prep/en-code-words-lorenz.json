@@ -1,0 +1,6 @@
+{
+  "message": "Draw me the Lorenz attractor with 5,000 points, as the columns x, y and z.",
+  "expected_operations": [{"op": "run_data_code", "rows": 5000, "columns": 3}],
+  "locale": "en",
+  "tags": ["run_data_code", "data_code", "words", "ode", "no_dataset"]
+}

@@ -274,6 +274,8 @@ def describe(line: str) -> str:
     data = json.loads(line)
     op = data["op"]
     if op == DATA_CODE_TOOL:
+        if "rows" not in data:  # the fake renderer's fixture table: only that a table was stored counts
+            return "run_data_code: a table"
         return f"run_data_code: {data['rows']} rows x {data['columns']} columns"
     if op == GENERATE_TOOL:
         from agents.anyplot.data.generate import DEFAULT_POINTS

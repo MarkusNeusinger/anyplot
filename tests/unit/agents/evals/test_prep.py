@@ -28,6 +28,7 @@ from agents.evals.prep import (
     Gates,
     PrepCase,
     SetupError,
+    canonical_code,
     canonical_operations,
     check_cases,
     describe,
@@ -75,8 +76,8 @@ class TestFixtures:
         locales = Counter(item.locale for item in cases)
         ops = {operation["op"] for item in cases for operation in item.expected_operations}
 
-        # 23 single-step cases, 10 `hard` ones (chains, ambiguity, unsupported asks) and 8 data-code cases.
-        assert len(cases) == 41
+        # 23 single-step cases, 10 `hard` ones (chains, ambiguity, unsupported asks) and 11 data-code cases.
+        assert len(cases) == 44
         assert sum(1 for item in cases if "hard" in item.tags) == 10
         assert locales["de"] >= 5 and locales["en"] >= 5
         assert ops == {*OPERATIONS, "generate_data", "run_data_code"}
@@ -97,9 +98,11 @@ class TestFixtures:
         cases = [item for item in load_cases(DEFAULT_CASES) if "data_code" in item.tags]
         tags = Counter(tag for item in cases for tag in item.tags)
 
-        assert len(cases) == 8 and {item.locale for item in cases} == {"de", "en"}
+        assert len(cases) == 11 and {item.locale for item in cases} == {"de", "en"}
         assert tags["python"] >= 3 and tags["javascript"] == tags["r"] == tags["math"] == 1
         assert tags["strip_plot"] == 1 and tags["file_access"] == 1 and tags["general_runner"] == 1
+        # Described in words only, the computation decides the tool: an ODE, an iteration, random numbers.
+        assert tags["words"] == 3 and tags["ode"] == tags["iteration"] == tags["random"] == 1
         refused = [item for item in cases if item.refuse]
         assert {item.id for item in refused} == {"en-code-reads-a-file", "en-code-general-script"}
         assert all(not item.expected_operations for item in refused)
@@ -261,6 +264,12 @@ class TestCanonical:
         assert len(canonical_operations([*bare, RENAME], ".")) == 2
         with pytest.raises(ValidationError):
             canonical_operations([{"op": "generate_data", "variables": [], "series": [SINE]}], ".")
+
+    def test_describe_a_code_table_without_its_size(self) -> None:
+        """The fake renderer stores a fixture table, so a code call is compared without rows and columns."""
+        line = canonical_code({"op": "run_data_code", "rows": 5, "columns": 2}, size=False)
+
+        assert describe(line) == "run_data_code: a table"
 
     def test_a_generate_data_call_matches_by_the_table_it_computes(self) -> None:
         """Endpoints compare by value and expressions by what they compute, so an equivalent call is no miss."""
