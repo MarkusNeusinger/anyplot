@@ -27,6 +27,10 @@ export interface AppData {
   librariesData: import('src/types').LibraryInfo[];
   languagesData: import('src/types').LanguageInfo[];
   stats: { specs: number; plots: number; libraries: number; lines_of_code?: number } | null;
+  /** True when the initial metadata load still failed after apiGet's retries. */
+  loadFailed?: boolean;
+  /** Re-run the metadata load in place (the homepage numbers' `.retry()`). */
+  reloadAppData?: () => void;
 }
 
 export const initialHomeState: HomeState = {

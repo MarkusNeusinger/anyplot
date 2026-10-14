@@ -20,7 +20,7 @@ import { buildSrcSet, getFallbackSrc } from 'src/utils/responsiveImage';
 import { selectPreviewUrl } from 'src/utils/themedPreview';
 
 export function LandingPage() {
-  const { librariesData, stats } = useAppData();
+  const { librariesData, stats, loadFailed, reloadAppData } = useAppData();
   const potd = usePlotOfTheDay();
   const featured = useFeaturedSpecs(5);
   const navigate = useNavigate();
@@ -58,7 +58,7 @@ export function LandingPage() {
         }}
       >
         <HeroSection potd={potd} />
-        <NumbersStrip stats={stats} />
+        <NumbersStrip stats={stats} failed={loadFailed} onRetry={reloadAppData} />
       </Box>
 
       <SpecsSection specCount={stats?.specs} featured={featured} />

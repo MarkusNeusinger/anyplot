@@ -9,6 +9,7 @@ import Button from '@mui/material/Button';
 import Skeleton from '@mui/material/Skeleton';
 import Typography from '@mui/material/Typography';
 
+import { RetryButton } from 'src/components/RetryButton';
 import { GITHUB_URL, LANG_DISPLAY } from 'src/constants';
 import { useAnalytics, useCodeFetch } from 'src/hooks';
 import { useAppData } from 'src/hooks';
@@ -87,9 +88,15 @@ export function SpecPage() {
     [librariesData]
   );
 
+  // Bumped by the `.retry()` action to re-run the spec load in place.
+  const [reloadKey, setReloadKey] = useState(0);
+  const retryLoad = useCallback(() => setReloadKey(k => k + 1), []);
+
   // Fetch spec data
   useEffect(() => {
     if (!specId) return;
+    const controller = new AbortController();
+    const { signal } = controller;
 
     const fetchSpec = async () => {
       setLoading(true);
@@ -98,7 +105,8 @@ export function SpecPage() {
       setHighlightedTags([]);
 
       try {
-        const data = await apiGet<SpecDetail>(endpoints.spec(specId));
+        const data = await apiGet<SpecDetail>(endpoints.spec(specId), { signal });
+        if (signal.aborted) return;
         setSpecData(data);
 
         // Detail mode: validate library matches an impl in the requested language.
@@ -126,6 +134,8 @@ export function SpecPage() {
           }
         }
       } catch (err) {
+        // A superseded load (new spec, unmount, retry) is not a failure.
+        if (signal.aborted) return;
         if (err instanceof ApiError) {
           setError(err.status === 404 ? 'Spec not found' : 'Failed to load spec');
           return;
@@ -133,12 +143,13 @@ export function SpecPage() {
         console.error('Error fetching spec:', err);
         setError('Failed to load spec');
       } finally {
-        setLoading(false);
+        if (!signal.aborted) setLoading(false);
       }
     };
 
     fetchSpec();
-  }, [specId, urlLanguage, urlLibrary, navigate, trackEvent]);
+    return () => controller.abort();
+  }, [specId, urlLanguage, urlLibrary, navigate, trackEvent, reloadKey]);
 
   // Implementations the carousel cycles through. In detail mode, this is what
   // `<LibraryPills>` walks via prev/next. ALL impls of the spec by default; if
@@ -394,6 +405,9 @@ export function SpecPage() {
         <Typography variant="h5" sx={{ mb: 2, color: semanticColors.mutedText }}>
           {error}
         </Typography>
+        <Box sx={{ mb: 2 }}>
+          <RetryButton onClick={retryLoad} label="Retry loading the spec" />
+        </Box>
         <Button
           component={Link}
           to={paths.home}

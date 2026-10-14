@@ -208,7 +208,9 @@ describe('MapPage', () => {
   });
 
   it('shows an error message when the fetch fails', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 500 }));
+    // A non-retryable status: apiGet retries a 5xx with real backoff
+    // (covered in lib/api.test.ts), outlasting waitFor's 1 s default.
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 403 }));
     render(<MapPage />);
     await waitFor(() => {
       expect(screen.getByText(/Failed to load map/)).toBeInTheDocument();

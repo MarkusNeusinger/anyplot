@@ -46,11 +46,19 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   // explaining the user-reported "manchmal echt lange". HTTP/2 multiplexes
   // these tiny aggressively-cached responses with /plots/filter without real
   // contention, and the fetches are async so they don't block first paint.
+  //
+  // apiGet already retries transient failures; when the load still fails,
+  // `loadFailed` lets the homepage offer `.retry()`, which bumps `reloadKey`.
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+  const reloadAppData = useCallback(() => setReloadKey(k => k + 1), []);
+
   useEffect(() => {
     const abortController = new AbortController();
     const signal = abortController.signal;
 
     const load = async () => {
+      setLoadFailed(false);
       // Non-ok responses used to be skipped per endpoint (res.ok check) while
       // the other setters still ran; map ApiError to null to keep that, and
       // rethrow everything else (network errors, aborts) so the whole load
@@ -80,23 +88,25 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         if (libsBody) setLibrariesData(libsBody.libraries || []);
         if (langsBody) setLanguagesData(langsBody.languages || []);
         if (statsBody) setStats(statsBody);
+        if (!specsBody || !libsBody || !langsBody || !statsBody) setLoadFailed(true);
       } catch (err) {
         if (signal.aborted) return;
         console.warn('Initial data load incomplete:', err instanceof Error ? err.message : err);
+        setLoadFailed(true);
       }
     };
 
     load();
 
     return () => abortController.abort();
-  }, []);
+  }, [reloadKey]);
 
   // Memoise the context values — inline object literals would get a fresh
   // identity on every provider render and re-render all consumers even when
   // nothing they read has changed.
   const appDataValue = useMemo(
-    () => ({ specsData, librariesData, languagesData, stats }),
-    [specsData, librariesData, languagesData, stats]
+    () => ({ specsData, librariesData, languagesData, stats, loadFailed, reloadAppData }),
+    [specsData, librariesData, languagesData, stats, loadFailed, reloadAppData]
   );
   const homeStateValue = useMemo(
     () => ({ homeState, homeStateRef, setHomeState, saveScrollPosition }),

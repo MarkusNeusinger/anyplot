@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { SpecPage } from 'src/pages/SpecPage';
-import { render, screen, waitFor } from 'src/test-utils';
+import { render, screen, userEvent, waitFor } from 'src/test-utils';
 
 const mockNavigate = vi.fn();
 let mockParams: Record<string, string | undefined> = { specId: 'scatter-basic' };
@@ -150,6 +150,32 @@ describe('SpecPage', () => {
       expect(screen.getByText('Failed to load spec')).toBeInTheDocument();
     });
     consoleSpy.mockRestore();
+  });
+
+  it('offers .retry() on a failed load and recovers in place on click', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    mockFetchError();
+    render(<SpecPage />);
+
+    const retry = await screen.findByRole('button', { name: 'Retry loading the spec' });
+    expect(retry).toHaveTextContent('.retry()');
+
+    mockFetchSuccess();
+    await userEvent.click(retry);
+
+    expect(await screen.findByText('Basic Scatter Plot')).toBeInTheDocument();
+    expect(screen.queryByText('Failed to load spec')).not.toBeInTheDocument();
+    consoleSpy.mockRestore();
+  });
+
+  it('does not offer .retry() for a missing spec', async () => {
+    mockFetch404();
+    render(<SpecPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/404 — no route matched/i)).toBeInTheDocument();
+    });
+    expect(screen.queryByRole('button', { name: 'Retry loading the spec' })).toBeNull();
   });
 
   it('renders overview mode when no library in URL params', async () => {

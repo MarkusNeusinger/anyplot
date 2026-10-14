@@ -1,5 +1,6 @@
 import Box from '@mui/material/Box';
 
+import { RetryButton } from 'src/components/RetryButton';
 import { typography } from 'src/theme';
 
 interface NumbersStripProps {
@@ -10,6 +11,9 @@ interface NumbersStripProps {
     languages?: number;
     lines_of_code?: number;
   } | null;
+  /** The stats load failed after apiGet's retries: show `.retry()`. */
+  failed?: boolean;
+  onRetry?: () => void;
 }
 
 function formatLoc(n: number | undefined): string {
@@ -18,7 +22,7 @@ function formatLoc(n: number | undefined): string {
   return String(n);
 }
 
-export function NumbersStrip({ stats }: NumbersStripProps) {
+export function NumbersStrip({ stats, failed, onRetry }: NumbersStripProps) {
   const items = [
     { value: stats?.languages ? String(stats.languages) : '—', label: 'languages' },
     { value: stats ? String(stats.libraries) : '—', label: 'libraries' },
@@ -65,6 +69,17 @@ export function NumbersStrip({ stats }: NumbersStripProps) {
           </Box>
         </Box>
       ))}
+      {!stats && failed && onRetry && (
+        <Box sx={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Box
+            component="span"
+            sx={{ fontFamily: typography.mono, fontSize: '12px', color: 'var(--ink-muted)' }}
+          >
+            numbers did not load
+          </Box>
+          <RetryButton onClick={onRetry} label="Retry loading the numbers" />
+        </Box>
+      )}
     </Box>
   );
 }

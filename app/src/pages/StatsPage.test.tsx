@@ -181,7 +181,9 @@ function mockFetchError() {
       if (url.includes('/insights/visitors')) {
         return Promise.resolve({ ok: true, json: () => Promise.resolve({ points: [] }) });
       }
-      return Promise.resolve({ ok: false, status: 500 });
+      // A non-retryable status: apiGet would retry a 5xx with real backoff
+      // (covered in lib/api.test.ts), outlasting waitFor's 1 s default.
+      return Promise.resolve({ ok: false, status: 403 });
     })
   );
 }
