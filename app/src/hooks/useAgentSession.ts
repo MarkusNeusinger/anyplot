@@ -953,6 +953,10 @@ const GUARDRAIL_REASONS = new Set([
   'rate_limited',
   'daily_limit',
   'session_closed',
+  // This plot in another library or language (a pointer to the catalogue), and
+  // a user paused for the day after repeated attack verdicts.
+  'other_library',
+  'locked_out',
 ]);
 
 function failureOf(err: unknown): Failure {

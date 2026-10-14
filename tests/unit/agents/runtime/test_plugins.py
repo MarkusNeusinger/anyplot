@@ -44,7 +44,7 @@ from agents.anyplot.plugins.scope_guard import (
     withheld_text,
 )
 from agents.anyplot.plugins.tool_safety import RESULT_KEYS, ToolSafetyPlugin, has_url_or_path, result_limit, result_size
-from agents.anyplot.policy import DATA_PREAMBLE, fence
+from agents.anyplot.policy import DATA_PREAMBLE, fence, refusal
 from agents.anyplot.schemas import ColumnProfile, DatasetProfile, PlotResult
 from agents.anyplot.services import KeptRefusal, RefusalStore, Services, set_services
 from agents.anyplot.session_state import LANGUAGE, LANGUAGE_SOURCE, SPEC_ID
@@ -369,7 +369,7 @@ class TestLanguageDetection:
 
 
 class TestStrikesAndKeptRefusals:
-    async def test_three_attacks_give_the_budget_refusal_for_the_rest_of_the_day(
+    async def test_three_attacks_give_the_locked_out_refusal_for_the_rest_of_the_day(
         self, ledger: RequestLedger, services: Services, judge, caplog: pytest.LogCaptureFixture
     ) -> None:
         judge.script = [JudgeVerdict(verdict="attack")] * 3 + [JudgeVerdict(verdict="out_of_scope")]
@@ -385,7 +385,7 @@ class TestStrikesAndKeptRefusals:
         await plugin.on_user_message_callback(invocation_context=FakeContext(), user_message=text_message("hi"))
 
         assert services.usage.user_strikes("adm_1") == 3
-        assert ledger.refusal is not None and ledger.refusal[0] == "budget" and len(judge.calls) == 3
+        assert ledger.refusal == ("locked_out", refusal("locked_out", "en")) and len(judge.calls) == 3
         lines = [json.loads(r.getMessage()) for r in caplog.records if r.name == "anyplot.agents.attribution"]
         assert [line.get("strikes") for line in lines if line.get("verdict") == "attack"] == [1, 2, 3]
         assert all("strikes" not in line for line in lines if line.get("verdict") != "attack")

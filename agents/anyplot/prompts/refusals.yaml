@@ -86,6 +86,48 @@ session_closed:
   vi: "Cuộc trò chuyện này đã bị đóng sau nhiều yêu cầu nằm ngoài phạm vi. Hãy tải lại trang để bắt đầu một phiên mới."
   ru: "Этот чат закрыт после нескольких запросов не по теме. Перезагрузи страницу, чтобы начать новую сессию."
 
+other_library:
+  en: "Here I adapt this plot only in Python, with matplotlib or seaborn. For another library or language, open this plot's page in the catalogue and choose that library: if the catalogue has the plot in it, you find its ready-made code there."
+  de: "Hier passe ich diesen Plot nur in Python an, mit matplotlib oder seaborn. Für eine andere Bibliothek oder Sprache öffne die Seite dieses Plots im Katalog und wähle dort die Bibliothek: Wenn der Katalog den Plot darin hat, findest du dort den fertigen Code."
+  fr: "Ici, j'adapte ce graphique uniquement en Python, avec matplotlib ou seaborn. Pour une autre bibliothèque ou un autre langage, ouvre la page de ce graphique dans le catalogue et choisis-y la bibliothèque : si le catalogue propose le graphique avec elle, tu y trouves le code prêt à l'emploi."
+  es: "Aquí adapto este gráfico solo en Python, con matplotlib o seaborn. Para otra biblioteca u otro lenguaje, abre la página de este gráfico en el catálogo y elige allí la biblioteca: si el catálogo tiene el gráfico en ella, encuentras allí el código listo para usar."
+  it: "Qui adatto questo grafico solo in Python, con matplotlib o seaborn. Per un'altra libreria o un altro linguaggio, apri la pagina di questo grafico nel catalogo e scegli lì la libreria: se il catalogo ha il grafico in quella libreria, lì trovi il codice pronto."
+  pt: "Aqui eu adapto este gráfico apenas em Python, com matplotlib ou seaborn. Para outra biblioteca ou linguagem, abra a página deste gráfico no catálogo e escolha a biblioteca lá: se o catálogo tiver o gráfico nela, você encontra o código pronto ali."
+  nl: "Hier pas ik deze grafiek alleen aan in Python, met matplotlib of seaborn. Voor een andere bibliotheek of taal open je de pagina van deze grafiek in de catalogus en kies je daar de bibliotheek: als de catalogus de grafiek daarin heeft, vind je daar de kant-en-klare code."
+  pl: "Tutaj dostosowuję ten wykres tylko w Pythonie, za pomocą matplotlib lub seaborn. Jeśli chcesz innej biblioteki lub innego języka, otwórz stronę tego wykresu w katalogu i wybierz tam bibliotekę: jeśli katalog ma ten wykres w tej bibliotece, znajdziesz tam gotowy kod."
+  zh: "在这里，我只能用 Python 的 matplotlib 或 seaborn 来调整这个图表。如需其他库或语言，请在目录中打开这个图表的页面并选择该库：如果目录中有该库的版本，你会在那里找到现成的代码。"
+  vi: "Ở đây tôi chỉ điều chỉnh biểu đồ này bằng Python, với matplotlib hoặc seaborn. Nếu bạn cần thư viện hoặc ngôn ngữ khác, hãy mở trang của biểu đồ này trong danh mục và chọn thư viện đó: nếu danh mục có biểu đồ bằng thư viện đó, bạn sẽ thấy mã có sẵn ở đó."
+  ru: "Здесь я адаптирую этот график только на Python, с matplotlib или seaborn. Если нужна другая библиотека или другой язык, открой страницу этого графика в каталоге и выбери там библиотеку: если в каталоге есть график на ней, там ты найдёшь готовый код."
+
+locked_out:
+  en: "The assistant is paused for you until tomorrow, after several refused requests today. Please try again tomorrow."
+  de: "Der Assistent ist für dich bis morgen pausiert, weil heute mehrere Anfragen abgelehnt wurden. Bitte versuche es morgen wieder."
+  fr: "L'assistant est en pause pour toi jusqu'à demain, après plusieurs demandes refusées aujourd'hui. Réessaie demain, s'il te plaît."
+  es: "El asistente está en pausa para ti hasta mañana, tras varias solicitudes rechazadas hoy. Vuelve a intentarlo mañana, por favor."
+  it: "L'assistente è in pausa per te fino a domani, dopo diverse richieste rifiutate oggi. Riprova domani, per favore."
+  pt: "O assistente está pausado para você até amanhã, depois de vários pedidos recusados hoje. Por favor, tente novamente amanhã."
+  nl: "De assistent is voor jou tot morgen gepauzeerd, na meerdere geweigerde verzoeken vandaag. Probeer het morgen opnieuw."
+  pl: "Asystent jest dla ciebie wstrzymany do jutra po kilku odrzuconych dziś prośbach. Spróbuj ponownie jutro."
+  zh: "由于今天有多次请求被拒绝，助手对你暂停到明天。请明天再试。"
+  vi: "Trợ lý tạm dừng với bạn đến ngày mai vì hôm nay có nhiều yêu cầu bị từ chối. Vui lòng thử lại vào ngày mai."
+  ru: "Ассистент приостановлен для тебя до завтра после нескольких отклонённых сегодня запросов. Пожалуйста, попробуй ещё раз завтра."
+
+# Not a reply of its own: the suffix the scope guard appends, after one space, to the
+# refusal that leaves the session one counted refusal before it closes
+# (`AGENT_SESSION_CLOSE_WARNING`).
+close_warning:
+  en: "One more request outside this scope will close this chat."
+  de: "Noch eine Anfrage außerhalb dieses Themas schließt diesen Chat."
+  fr: "Une demande de plus hors de ce sujet fermera cette discussion."
+  es: "Una solicitud más fuera de este ámbito cerrará este chat."
+  it: "Un'altra richiesta fuori da questo ambito chiuderà questa chat."
+  pt: "Mais um pedido fora deste escopo encerrará este chat."
+  nl: "Nog één verzoek buiten dit onderwerp sluit deze chat."
+  pl: "Jeszcze jedna prośba spoza tego zakresu zamknie ten czat."
+  zh: "再有一次超出范围的请求，此对话将被关闭。"
+  vi: "Thêm một yêu cầu ngoài phạm vi nữa thì cuộc trò chuyện này sẽ bị đóng."
+  ru: "Ещё один запрос не по теме, и этот чат будет закрыт."
+
 unsupported_content:
   en: "Please send your request as text. To use your data, paste it into the data panel."
   de: "Bitte sende deine Anfrage als Text. Deine Daten fügst du im Datenbereich ein."

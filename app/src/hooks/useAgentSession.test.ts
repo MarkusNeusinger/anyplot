@@ -1343,7 +1343,7 @@ describe('useAgentSession: turns', () => {
     expect(JSON.stringify(trackEvent.mock.calls)).not.toContain('Munich');
   });
 
-  it.each(['rate_limited', 'daily_limit', 'session_closed'])(
+  it.each(['rate_limited', 'daily_limit', 'session_closed', 'other_library', 'locked_out'])(
     'shows the %s refusal and records it as its own guardrail reason',
     async code => {
       const routes = baseRoutes();

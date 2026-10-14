@@ -31,7 +31,13 @@ computes and never fetches, and `plot_language` the requests to write the plot's
 text in another language, a setting of the plot and not a translation), `offtopic`
 (good-faith out-of-scope requests) and `adversarial` (jailbreaks, German, role play,
 base64, multi-turn drift, plot-framed and mixed requests, and requests for data the
-service would have to fetch). The tag `notes` marks a case whose text is the notes a
+service would have to fetch, among them data code that reads a URL or a file, tag
+`url_code`, which is `needs_data` and never `attack`; `system_access` is the code that
+is). The tag `other_library` marks a request for this plot in another library or
+language (in `offtopic`: answered with a fixed pointer to the catalogue, which by
+default never counts toward closing the session), and `other_library_contrast` its
+neighbours that are not (a question about the Python code, another plot in that
+library). The tag `notes` marks a case whose text is the notes a
 user pasted above or below a table (a source line, metadata, units, a plot wish, or an
 injection hidden among them), judged inside `<user_notes>` the way the dataset route
 judges them. A case's `expected` is the verdict the rubric gives;
@@ -102,7 +108,7 @@ DEFAULT_CALLS_PER_MINUTE = 25.0
 """Judge-call starts per minute, below the 30-per-minute Vertex quota for Claude Haiku in `eu`."""
 EXIT_OK, EXIT_FAILED, EXIT_SETUP, EXIT_OUTAGE = 0, 1, 2, 4
 
-Expected = Literal["in_scope", "out_of_scope", "attack", "needs_data"]
+Expected = Literal["in_scope", "out_of_scope", "attack", "needs_data", "other_library"]
 
 
 class SetupError(Exception):

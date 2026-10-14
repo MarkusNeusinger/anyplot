@@ -49,9 +49,10 @@ class TestCaseFile:
 
         assert len(cases) >= 150
         assert groups["inscope"] >= 50 and groups["offtopic"] >= 50 and groups["adversarial"] >= 50
-        assert {item.expected for item in cases} == {"in_scope", "out_of_scope", "attack", "needs_data"}
+        verdicts = {"in_scope", "out_of_scope", "attack", "needs_data", "other_library"}
+        assert {item.expected for item in cases} == verdicts
         assert all(item.expected == "in_scope" for item in cases if item.group == "inscope")
-        assert all(item.expected == "out_of_scope" for item in cases if item.group == "offtopic")
+        assert all(item.expected in ("out_of_scope", "other_library") for item in cases if item.group == "offtopic")
         assert all(item.refuse for item in cases if item.group == "adversarial")
 
     def test_the_adversarial_group_covers_every_planned_kind(self) -> None:
@@ -81,14 +82,35 @@ class TestCaseFile:
 
     def test_code_that_generates_the_data_is_in_scope_and_other_code_is_refused(self) -> None:
         """Owner decision of 2026-10-14: a data-generating snippet in any language is in scope (`run_data_code`);
-        a general-purpose program is out of scope; code that touches files, the network or the system is an attack."""
+        a general-purpose program is out of scope; code that reaches the system, its secrets or sends data out is an
+        attack; since 2026-10-14 code that only reads its data from a URL or a file is `needs_data` (live test: a
+        `pd.read_csv(urlopen(...))` paste earned a strike)."""
         cases = [item for item in load_cases(DEFAULT_CASES) if "data_code" in item.tags]
         verdicts = Counter(item.expected for item in cases)
 
-        assert verdicts["in_scope"] >= 4 and verdicts["out_of_scope"] >= 3 and verdicts["attack"] >= 4
+        assert verdicts["in_scope"] >= 4 and verdicts["out_of_scope"] >= 3 and verdicts["attack"] >= 7
         languages = {tag for item in cases for tag in item.tags if tag in ("python", "javascript", "r", "math")}
         assert languages == {"python", "javascript", "r", "math"}
         assert all(item.group == "adversarial" for item in cases if "system_access" in item.tags)
+        assert all(item.expected == "attack" for item in cases if "system_access" in item.tags)
+
+    def test_data_code_that_reads_a_url_or_a_file_needs_data_never_attack(self) -> None:
+        cases = [item for item in load_cases(DEFAULT_CASES) if "url_code" in item.tags]
+
+        assert len(cases) >= 5 and all(item.expected == "needs_data" for item in cases)
+        assert any("urlopen" in item.text for item in cases) and any("read.csv" in item.text for item in cases)
+        assert any("fetch(" in item.text for item in cases) and any(item.lang == "de" for item in cases)
+
+    def test_a_request_for_another_library_is_its_own_verdict_and_its_neighbours_are_not(self) -> None:
+        """This plot in another library or language gets the fixed `other_library` pointer, never a counted refusal."""
+        cases = load_cases(DEFAULT_CASES)
+        ported = [item for item in cases if "other_library" in item.tags]
+        contrast = [item for item in cases if "other_library_contrast" in item.tags]
+
+        assert len(ported) >= 5 and all(item.expected == "other_library" for item in ported)
+        assert {item.lang for item in ported} >= {"en", "de", "fr"}
+        assert any("Chart.js" in item.text for item in ported)  # the live case of 2026-10-14, generalised
+        assert {item.expected for item in contrast} == {"in_scope", "out_of_scope"}
 
     def test_a_plot_language_request_is_in_scope(self) -> None:
         """Writing the plot's own text in another language is a plot setting, unlike a translation for use elsewhere."""

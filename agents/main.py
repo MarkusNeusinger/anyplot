@@ -12,7 +12,7 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `GET /v1/eligibility?spec=&library=` | | `{eligible, status, reasons}` | |
 | `POST /v1/sessions` | `{user, spec_id, library, locale, snapshot}` | `{session_id, eligibility}` | `422 not_eligible` |
 | `POST /v1/sessions/{sid}/library` | `{library, snapshot}` | `{session_id, eligibility}` | `422 not_eligible`, `409 run_active` |
-| `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?}` | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version, language}` (`suggestion`: the wide-table offer of `data/shape.py`, or null; `context_lines`: the notes pasted above or below the table that passed the pre-filter and the scope judge, which the root gets with the next `summarize_data` turn; `language`: the session language as `{language, source}`, which a paste before any typed message or choice sets from the notes' or the column names' language, source `pasted`), stored as version 1 (the undo history of an earlier paste is dropped); or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips that fallback and keeps every row) | `413 too_long`, `422 unparseable`, `422 formula` (text of at most 2,000 characters that asks for a formula, which the chat's `generate_data` computes; never transcribed), `403 data_refused`, `503 guard_unavailable` |
+| `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?}` | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version, language}` (`suggestion`: the wide-table offer of `data/shape.py`, or null; `context_lines`: the notes pasted above or below the table that passed the pre-filter and the scope judge, which the root gets with the next `summarize_data` turn; `language`: the session language as `{language, source}`, which a paste before any typed message or choice sets from the notes' or the column names' language, source `pasted`), stored as version 1 (the undo history of an earlier paste is dropped); or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips that fallback and keeps every row) | `413 too_long`, `422 unparseable`, `422 formula` (text of at most 2,000 characters that asks for a formula, which the chat's `generate_data` computes; never transcribed), `403 data_refused`, `403 session_closed` (the scope judge closed the session), `409 run_active` (a turn of the user in any session, or another paste of the user in flight), `429 rate_limited` / `429 daily_limit` (`AGENT_USER_PASTES_PER_MINUTE` / `_PER_DAY`, or the daily token budgets for `daily_limit`), `429 locked_out` (the day's `attack` strikes), `503 guard_unavailable` |
 | `PUT /v1/sessions/{sid}/bindings` | `[{role, column}]` | `{bindings, complete, missing_roles, warnings}`: `warnings` names a role that needs values of 0 or more bound to a column with a negative value, or left open for that reason (`data/signs.py`); never a refusal | `409 run_active`, `422 invalid` (with `errors`, at most 20 lines) |
 | `PUT /v1/sessions/{sid}/language` | `{language}` (a short name or code, `^[A-Za-z][A-Za-z -]{0,39}$`) | `{language, source}`: the session language in its stored form (`English` is `en`), source `chosen`, which detection never overrides | `409 run_active`, `422` (the pattern) |
 | `POST /v1/sessions/{sid}/dataset/confirm` | | `{confirmed, rows, columns}`: step 1 of two, the user confirmed the dataset with its bindings; the pipeline runs only then | `409 run_active`, `422 no_dataset` |
@@ -45,7 +45,8 @@ wait of `AGENT_QUEUE_MAX_WAIT_S`, ends the turn with `error{code:"capacity"}`. A
 with a turn in flight gets `409 run_active` on a second turn in any session.
 
 Before the scope judge runs, and before any model call, the route answers with a fixed
-refusal right after `ready`: `budget` for a user over the daily token budget,
+refusal right after `ready`: `locked_out` for a user past the day's `attack` strikes
+(`AGENT_ATTACK_STRIKES`), `budget` for a user over the daily token budget,
 `session_closed` in a session the scope judge closed (`AGENT_SESSION_REFUSALS`
 refusals of type `out_of_scope` or `attack`), and `rate_limited` or `daily_limit` past
 the user's message limits (`AGENT_USER_MESSAGES_PER_MINUTE`,
@@ -157,7 +158,7 @@ from agents.anyplot.opening import (
     store_dataset,
 )
 from agents.anyplot.plugins.ledger import CURRENT_LEDGER, RequestLedger, attribution, budget_allows, judge_budget_tokens
-from agents.anyplot.plugins.scope_guard import SESSION_CLOSED, scope_refusals
+from agents.anyplot.plugins.scope_guard import LOCKED_OUT, SESSION_CLOSED, scope_refusals
 from agents.anyplot.policy import fence, refusal, scope_rubric, transcribe_rubric, user_notes_block
 from agents.anyplot.render.serial import RenderBusy
 from agents.anyplot.render.store import RenderStoreFull
@@ -399,13 +400,15 @@ class Runtime:
 
     `active` is the run registry: one entry per session with a queued or running
     `/messages` turn or a theme toggle in flight, which is what `409 run_active`
-    checks. The queue is built from the settings on first use; its clock is the
-    registry's clock too.
+    checks. `pasting` holds the users with a dataset paste in flight, so a user has one
+    paste at a time across sessions (`409 run_active` for a second one). The queue is built
+    from the settings on first use; its clock is the registry's clock too.
     """
 
     session_service: InMemorySessionService = field(default_factory=InMemorySessionService)
     artifact_service: InMemoryArtifactService = field(default_factory=InMemoryArtifactService)
     active: dict[str, ActiveRun] = field(default_factory=dict)
+    pasting: set[str] = field(default_factory=set)
     eligibility_cache: dict[tuple[str, str], Eligibility] = field(default_factory=dict)
     runner: Runner | None = None
     queue: RunQueue | None = None
@@ -769,13 +772,42 @@ async def upload_dataset(
     sid: SessionId, body: DatasetBody, user: User, runtime: RuntimeDep, rid: RequestId
 ) -> JSONResponse:
     services = get_services()
+    settings = get_settings()
     session = await runtime.session(user, sid)
-    _active(runtime, sid)
+    # A closed session takes no paste either: each one spends judge calls, and the chat it would feed is closed.
+    if scope_refusals(session.events) >= settings.session_refusals:
+        raise AgentsError(403, SESSION_CLOSED)
+    _active(runtime, sid, user)
+    if user in runtime.pasting:
+        raise AgentsError(409, "run_active")  # one paste per user at a time, across sessions
     view = read_session(session.state)
     if view is None:
         raise AgentsError(404, "session_expired")
     if len(body.text.encode("utf-8", errors="surrogatepass")) > MAX_INPUT_BYTES:
         raise AgentsError(413, "too_long")
+    _paste_budget(services, user, settings)
+    limit = services.usage.paste_limit(user, settings)
+    if limit is not None:
+        attribution("paste_limit", RequestLedger(request_id=rid, user_id=user, session_id=sid), verdict=limit)
+        raise AgentsError(429, limit)
+    runtime.pasting.add(user)  # no await since the check above, so no second paste slipped in between
+    try:
+        return await _ingest_paste(services, runtime, body, user, sid, rid, view)
+    finally:
+        runtime.pasting.discard(user)
+
+
+def _paste_budget(services: Services, user: str, settings: AgentSettings) -> None:
+    """`429 locked_out` past the day's `attack` strikes, `429 daily_limit` past the daily token budgets."""
+    if services.usage.daily_ok(user, settings):
+        return
+    raise AgentsError(429, LOCKED_OUT if services.usage.locked_out(user, settings) else "daily_limit")
+
+
+async def _ingest_paste(
+    services: Services, runtime: Runtime, body: DatasetBody, user: str, sid: str, rid: str, view: SessionView
+) -> JSONResponse:
+    """The paste route past its limits: classify, parse or transcribe, judge, screen the notes, store."""
     ledger = RequestLedger(request_id=rid, user_id=user, session_id=sid, kind="action")
     if not body.confirmed:  # a confirmed transcription is the service's own CSV
         _refuse_code_or_formula(ledger, body.text)
@@ -792,8 +824,7 @@ async def upload_dataset(
         raise AgentsError(422, "unparseable") from None
     if not body.confirmed and looks_like_free_text(parsed) and transcribable(body.text):
         return await _transcribe(services, ledger, body.text)
-    if not services.usage.daily_ok(user, get_settings()):
-        raise AgentsError(429, "rate_limited")
+    services.usage.add_paste(user)  # the first model call of this paste: only a paste that reaches one counts
     try:
         header_lang = await check_dataset(services, ledger, parsed)
     except DataRefused:
@@ -926,8 +957,7 @@ async def _transcribe(services: Services, ledger: RequestLedger, text: str) -> J
     call books its tokens like a judge call and writes a `data_transcribe` attribution line.
     """
     user = ledger.user_id
-    if not services.usage.daily_ok(user, get_settings()):
-        raise AgentsError(429, "rate_limited")
+    services.usage.add_paste(user)  # a paste counts against `paste_limit` when it reaches a model (or its pre-filter)
     if INSTRUCTION_LIKE.search(text):
         attribution("data_transcribe", ledger, outcome="prefilter")
         raise AgentsError(403, "data_refused")
@@ -1279,6 +1309,9 @@ async def post_message(
     refused = scope_refusals(session.events)
     if refused >= settings.session_refusals:
         return _refuse_now(translator, ledger, SESSION_CLOSED, "session_closed", refusals=refused)
+    if services.usage.locked_out(user, settings):
+        # Past the day's `attack` strikes: its own refusal, never the misleading "usage limit" text (2026-10-14).
+        return _refuse_now(translator, ledger, LOCKED_OUT, "budget_halt", agent="route")
     if not budget_allows(ledger, services.usage, settings):
         # The refusal the root would send, sent now: a user over the daily budget spends nothing.
         return _refuse_now(translator, ledger, "budget", "budget_halt", agent="route")

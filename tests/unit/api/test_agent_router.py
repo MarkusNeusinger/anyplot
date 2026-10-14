@@ -1908,6 +1908,10 @@ class TestUpstreamMapping:
             (422, {"detail": "formula"}, 422, "formula"),
             (422, {"detail": "code"}, 422, "code"),
             (429, {"detail": "rate_limited"}, 429, "rate_limited"),
+            # The paste route's limits and guards since 2026-10-14; a 403 with a documented code is no IAM error.
+            (429, {"detail": "daily_limit"}, 429, "daily_limit"),
+            (429, {"detail": "locked_out"}, 429, "locked_out"),
+            (403, {"detail": "session_closed"}, 403, "session_closed"),
             (422, {"detail": "Traceback: KeyError in /app/agents/x.py"}, 422, "invalid"),
             (409, {"detail": ["run_active"]}, 409, "conflict"),
             (418, None, 418, "rejected"),
