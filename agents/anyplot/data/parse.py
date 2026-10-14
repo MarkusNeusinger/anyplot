@@ -27,9 +27,13 @@ would, for example, read `01.02.2024` as a number under `thousands='.'`).
    neither JSON nor a Python literal (a header such as `(in %) Land`, or prose
    in parentheses) is delimited text instead, like everything that starts
    otherwise, see `sniff_delimiter`.
-   Fully blank lines (also `;;;`-style lines of empty fields) are skipped; a row
-   with fewer fields than the header is padded with missing cells (one warning);
-   a row with more non-empty fields than the header is `unparseable`.
+   Fully blank lines (also `;;;`-style lines of empty fields) are skipped. Delimited
+   text is first narrowed to its table (`table_block`, since 2026-10-14): a title, an
+   export's metadata or a note above the header, a source line or a note below the
+   last row, and up to three summary rows (`Total`, `Summe`, `Mittelwert`…) at the end
+   are left out, each kind with one warning. A row with fewer fields than the header
+   is padded with missing cells (one warning); a row with more non-empty fields than
+   the header is `unparseable`.
 4. **Clean every cell.** Remove invisible format characters (Unicode category
    `Cf`: zero-width characters, bidi controls, BOMs inside the text, tag
    characters), turn line and paragraph separators (U+2028, U+2029) into spaces,
@@ -98,7 +102,21 @@ from ..schemas import (
 MAX_INPUT_BYTES = 200 * 1024  # "200 KB", counted like the schemas' 24 KiB: 204,800 UTF-8 bytes
 MAX_INPUT_CELL_CHARS = 200  # per header or cell, after cleaning; the profile's own cells stop at MAX_CELL_CHARS
 PREVIEW_ROWS = 20
-SNIFF_LINES = 10
+SNIFF_LINES = 50  # enough to see a table below an export's metadata or a few lines of notes
+VALUE_SHARE = 0.5
+"""The share of filled cells that must read as values in a value column (`table_block`). Half, not a
+large majority: in a short table, the header and a note split into the table's width at its commas
+weigh as much as the few data rows."""
+MAX_SUMMARY_ROWS = 3  # summary rows at the end of a table that `table_block` leaves out
+SUMMARY_LABELS: frozenset[str] = frozenset(
+    {
+        *("total", "totals", "grand total", "subtotal", "sum", "sum total", "average", "avg", "mean"),
+        *("median", "min", "max", "minimum", "maximum", "count", "std", "std dev", "result"),
+        *("summe", "gesamt", "gesamtsumme", "insgesamt", "zwischensumme", "durchschnitt", "mittel"),
+        *("mittelwert", "anzahl", "ergebnis"),
+    }
+)
+"""The first filled cell of a summary row, compared without case and without a trailing colon."""
 MAX_NESTING = 50  # bracket levels a literal may open; counted before `ast.literal_eval` sees the text
 PAIR_HEADERS = ("category", "value")  # the columns of an object of scalars or an array of pairs
 
@@ -316,16 +334,46 @@ def _check_controls(text: str) -> None:
 def sniff_delimiter(text: str) -> tuple[str | None, SourceFormat]:
     """Pick the delimiter from the first `SNIFF_LINES` non-blank lines.
 
-    Each candidate (`,` `;` tab `|`) splits those lines with the csv module, quotes
-    honoured. A candidate counts only if it splits the header line into at least two
-    fields. Among those, the one under which the most sampled lines have exactly the
-    header's field count wins, then the one with more header fields, then the earlier
-    candidate in that order. When no candidate splits the header, the text is a single
-    column (returned as `None`, reported as `csv`). A semicolon file with decimal
-    commas therefore never sniffs as comma-separated: its header has no comma.
+    Pasted data often carries lines that are no part of the table: a title, an export's
+    metadata, a sentence explaining the columns (owner rule of 2026-10-14). So the table
+    decides, not the first line: each candidate (`,` `;` tab `|`) splits the sample with
+    the csv module, quotes honoured, and its table is the lines of its most common field
+    count (at least two fields). The candidate whose table holds the most cells that read
+    as a value (a number or a date, `_value_like`) wins, then the one with more such
+    lines, then more fields, then the earlier candidate in that order. A semicolon file
+    with decimal commas therefore never sniffs as comma-separated: split at its commas,
+    its cells are no numbers. A candidate's table counts only when the line above its
+    first data row has the table's width, so it can be the header: a single column of
+    decimal commas (`v`, `1,5`, `2,3`) is no two-column table without a header.
+
+    When no candidate's table holds a value (text-only tables, prose), the header rule
+    decides as before (`_sniff_by_header`).
     """
     lines = [line for line in _PHYSICAL_LINE.split(text) if line.strip()][:SNIFF_LINES]
     sample = "\n".join(lines)
+    best: tuple[int, int, int] | None = None
+    choice: tuple[str | None, SourceFormat] = (None, "csv")
+    for delimiter, source_format in DELIMITERS:
+        try:
+            rows = [row for row in csv.reader(io.StringIO(sample), delimiter=delimiter, skipinitialspace=True) if row]
+        except csv.Error:
+            continue
+        block = table_block(rows)
+        if not block.values or len(rows[block.start]) != block.width:
+            continue
+        count = sum(1 for row in rows if len(row) == block.width)
+        key = (block.values, count, block.width)
+        if best is None or key > best:
+            best, choice = key, (delimiter, source_format)
+    return choice if best is not None else _sniff_by_header(sample)
+
+
+def _sniff_by_header(sample: str) -> tuple[str | None, SourceFormat]:
+    """The delimiter of a table without values: a candidate counts only if it splits the
+    header line into at least two fields. Among those, the one under which the most sampled
+    lines have exactly the header's field count wins, then the one with more header fields,
+    then the earlier candidate. When no candidate splits the header, the text is a single
+    column (returned as `None`, reported as `csv`)."""
     best: tuple[int, int] | None = None
     choice: tuple[str | None, SourceFormat] = (None, "csv")
     for delimiter, source_format in DELIMITERS:
@@ -347,34 +395,137 @@ def _read_delimited(text: str, warnings: list[str]) -> tuple[list[str], list[lis
     reader = csv.reader(
         io.StringIO(text, newline=""), delimiter=delimiter or _NO_DELIMITER, skipinitialspace=True, strict=True
     )
-    header: list[str] | None = None
-    rows: list[list[str]] = []
-    padded = 0
+    records: list[tuple[int, list[str]]] = []
     try:
         for record in reader:
-            if not any(cell.strip() for cell in record):
-                continue
-            if header is None:
-                header = record
-                continue
-            if len(rows) == MAX_ROWS:
-                raise ParseError("too_many_rows", f"the data has more than {MAX_ROWS:,} rows")
-            width = len(header)
-            if len(record) < width:
-                record = record + [""] * (width - len(record))
-                padded += 1
-            elif len(record) > width:
-                if any(cell.strip() for cell in record[width:]):
-                    raise ParseError("unparseable", f"line {reader.line_num} has more fields than the header")
-                record = record[:width]
-            rows.append(record)
+            if any(cell.strip() for cell in record):
+                records.append((reader.line_num, record))
     except csv.Error as exc:
         raise ParseError("unparseable", f"the quoting is malformed near line {reader.line_num}") from exc
-    if header is None:
+    if not records:
         raise ParseError("unparseable", "the data is empty")
+    block = table_block([record for _, record in records])
+    if block.above:
+        warnings.append(f"left out {_count(block.above, 'line')} above the table (a title, notes or metadata)")
+    if block.below:
+        warnings.append(f"left out {_count(block.below, 'line')} below the table (notes or a source line)")
+    if block.summary:
+        warnings.append(
+            f"left out {_count(block.summary, 'summary row')} at the end of the table (a total, sum, mean or similar)"
+        )
+    header = records[block.start][1]
+    rows: list[list[str]] = []
+    padded = 0
+    for line_num, record in records[block.start + 1 : block.end]:
+        if len(rows) == MAX_ROWS:
+            raise ParseError("too_many_rows", f"the data has more than {MAX_ROWS:,} rows")
+        width = len(header)
+        if len(record) < width:
+            record = record + [""] * (width - len(record))
+            padded += 1
+        elif len(record) > width:
+            if any(cell.strip() for cell in record[width:]):
+                raise ParseError("unparseable", f"line {line_num} has more fields than the header")
+            record = record[:width]
+        rows.append(record)
     if padded:
         warnings.append(f"{_count(padded, 'row')} had fewer fields than the header; the missing cells are empty")
     return header, rows, source_format
+
+
+@dataclass(frozen=True)
+class TableBlock:
+    """Where the table sits among the pasted records: `records[start]` is the header, the rows
+    run to `end` (exclusive); `above`, `below` and `summary` count the records left out."""
+
+    start: int
+    end: int
+    above: int = 0
+    below: int = 0
+    summary: int = 0
+    width: int = 0
+    """The table's field count; 0 when no table with a value column was found (every record kept)."""
+    values: int = 0
+    """The cells of the data rows that read as values."""
+
+
+def table_block(records: Sequence[Sequence[str]]) -> TableBlock:
+    """The table among pasted records that may carry other lines (owner rule of 2026-10-14).
+
+    Real pastes are rarely a bare table: an export starts with metadata (Open-Meteo writes
+    `latitude,longitude,…` and its values above the header), a user adds a sentence that
+    explains the columns, and a source line, a note or a total row follows the table. The
+    table is found by its data: its width is the most common field count (at least two
+    fields, the larger one on a tie), its value columns are the columns where at least
+    `VALUE_SHARE` of the filled cells read as a value (`_value_like`) in the records of
+    that width, and a data row is a record of that width with a value in at least half of
+    the value columns.
+
+    * The header is the record right above the first data row; everything above it is
+      left out. When the first record already is a data row, it is the header, as before.
+    * The rows end after the last data row and the records of the table's width right below
+      it whose value cells are missing or values (`2024-01-11,,`); anything after that is
+      left out, such as a source line or a sentence, also one that its commas split into
+      the table's width.
+    * At most `MAX_SUMMARY_ROWS` rows at the end whose first filled cell is a summary label
+      (`SUMMARY_LABELS`: total, sum, mean, Summe, Gesamt…) are left out.
+
+    A table without a value column (text only, prose) and a table of fewer than three records
+    of its width keep every record: the first is the header.
+    """
+    whole = TableBlock(0, len(records))
+    widths = Counter(len(record) for record in records if len(record) >= 2)
+    if not widths:
+        return whole
+    width = max(widths.items(), key=lambda item: (item[1], item[0]))[0]
+    sized = [record for record in records if len(record) == width]
+    if len(sized) < 3:
+        return whole
+    # The first record of the width is left out of the vote: it may be the header.
+    values = [j for j in range(width) if _mostly_values(row[j] for row in sized[1:])]
+    if not values:
+        return whole
+
+    def data_row(record: Sequence[str]) -> bool:
+        return len(record) == width and 2 * sum(_value_like(record[j]) for j in values) >= len(values)
+
+    def sparse_row(record: Sequence[str]) -> bool:
+        # A row of the table that lacks values (`2024-01-11,,`), not a sentence split at its commas.
+        return len(record) == width and all(_missing(record[j]) or _value_like(record[j]) for j in values)
+
+    rows = [index for index, record in enumerate(records) if data_row(record)]
+    first, last = rows[0], rows[-1]
+    start = max(first - 1, 0)
+    end = last + 1
+    while end < len(records) and sparse_row(records[end]):
+        end += 1
+    below = len(records) - end
+    summary = 0
+    while summary < MAX_SUMMARY_ROWS and end - 1 > start and _summary_row(records[end - 1]):
+        end -= 1
+        summary += 1
+    found = sum(_value_like(records[index][j]) for index in rows for j in range(width))
+    return TableBlock(start, end, above=start, below=below, summary=summary, width=width, values=found)
+
+
+def _value_like(cell: str) -> bool:
+    """A cell that reads as a number or a date, also behind a unit (`65 %`, `€ 5`)."""
+    cell = cell.strip()
+    return bool(cell and (_looks_like_value(cell) or _TRAILING_UNIT.fullmatch(cell) or _LEADING_UNIT.fullmatch(cell)))
+
+
+def _missing(cell: str) -> bool:
+    return cell.strip() in MISSING_VALUES
+
+
+def _mostly_values(cells: Iterable[str]) -> bool:
+    present = [cell for cell in cells if not _missing(cell)]
+    return bool(present) and sum(_value_like(cell) for cell in present) >= VALUE_SHARE * len(present)
+
+
+def _summary_row(record: Sequence[str]) -> bool:
+    label = next((cell.strip() for cell in record if not _missing(cell)), "")
+    return label.rstrip(":").strip().casefold() in SUMMARY_LABELS
 
 
 def _read_literal(text: str, warnings: list[str]) -> tuple[list[str], list[list[str]], SourceFormat] | None:

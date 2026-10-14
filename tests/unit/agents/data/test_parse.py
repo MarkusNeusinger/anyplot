@@ -503,6 +503,100 @@ OWNER_DICT_LITERAL = """cat_day = {
 """
 
 
+OPEN_METEO = """latitude,longitude,elevation,utc_offset_seconds,timezone,timezone_abbreviation
+48.189804,16.377296,194.0,7200,Europe/Vienna,GMT+2
+
+time,temperature_2m_max (°C),precipitation_sum (mm)
+2025-01-01,-0.2,0.00
+2025-01-02,6.0,0.60
+2025-01-03,3.5,0.00
+2025-01-04,2.9,1.20
+"""
+"""The shape of an Open-Meteo CSV download (owner's weather test of 2026-10-14): metadata above the header."""
+
+
+class TestTableAmongOtherLines:
+    """Pasted data with a title, metadata, notes or a total around the table (owner rule of 2026-10-14)."""
+
+    def test_an_export_with_metadata_above_the_header(self) -> None:
+        parsed = parse_dataset(OPEN_METEO)
+
+        assert list(parsed.column_dtypes) == ["time", "temperature_2m_max (°C)", "precipitation_sum (mm)"]
+        assert parsed.column_dtypes["time"] == "datetime"
+        assert parsed.profile.rows == 4
+        assert parsed.profile.warnings == ["left out 2 lines above the table (a title, notes or metadata)"]
+
+    def test_a_comment_above_and_below_also_with_commas(self) -> None:
+        text = (
+            "Hier meine Wetterdaten, time ist das Datum, dann Temperatur und Regen:\n"
+            + OPEN_METEO
+            + "\nQuelle: Open-Meteo, ERA5, abgerufen am 14.10.2026\n"
+        )
+
+        parsed = parse_dataset(text)
+
+        assert parsed.profile.rows == 4
+        assert parsed.profile.warnings == [
+            "left out 3 lines above the table (a title, notes or metadata)",
+            "left out 1 line below the table (notes or a source line)",
+        ]
+
+    def test_a_sentence_below_the_table_that_its_commas_split_into_the_tables_width(self) -> None:
+        text = "Tag,Temp,Regen\nMo,3.5,0\nDi,4.1,1.2\nMi,2.0,0\nWerte gemessen in Wien, Temperatur in °C, Regen in mm\n"
+
+        parsed = parse_dataset(text)
+
+        assert parsed.profile.rows == 3
+        assert parsed.profile.warnings == ["left out 1 line below the table (notes or a source line)"]
+
+    def test_a_title_without_delimiter_above_a_semicolon_table_with_decimal_commas(self) -> None:
+        text = "Monatsmittel Wien 2025\nMonat;Temperatur;Niederschlag\nJan;1,2;30,5\nFeb;3,4;25,0\nMär;8,1;41,2\n"
+
+        parsed = parse_dataset(text)
+
+        assert parsed.profile.source_format == "semicolon"
+        assert parsed.column_dtypes == {"Monat": "text", "Temperatur": "number", "Niederschlag": "number"}
+        assert parsed.csv.splitlines()[1] == "Jan,1.2,30.5"
+
+    @pytest.mark.parametrize("label", ["Summe", "TOTAL", "Gesamt:", "Mittelwert", "Average"])
+    def test_a_summary_row_at_the_end_is_left_out(self, label: str) -> None:
+        text = f"Monat;Regen\nJan;30,5\nFeb;25,0\nMär;41,2\n{label};96,7\n"
+
+        parsed = parse_dataset(text)
+
+        assert parsed.profile.rows == 3
+        assert parsed.profile.warnings == [
+            "left out 1 summary row at the end of the table (a total, sum, mean or similar)"
+        ]
+
+    def test_a_summary_row_in_a_date_column_and_a_source_line_below(self) -> None:
+        text = "Datum,Menge\n2024-03-02,4\n2024-03-05,10\n2024-03-09,2\nTOTAL,16\nExport: Shop-System v2\n"
+
+        parsed = parse_dataset(text)
+
+        assert parsed.column_dtypes == {"Datum": "datetime", "Menge": "integer"}
+        assert parsed.profile.rows == 3
+
+    def test_a_last_row_with_missing_values_stays(self) -> None:
+        parsed = parse_dataset("Datum,Temp,Regen\n2025-01-01,1.0,0\n2025-01-02,2.0,0\n2025-01-03,,\n")
+
+        assert parsed.profile.rows == 3
+        assert parsed.profile.warnings == []
+
+    def test_a_plain_table_and_a_text_table_are_unchanged(self) -> None:
+        plain = parse_dataset("x,y\n1,2\n3,4\n5,6\n")
+        text_only = parse_dataset("Name,Stadt\nAnna,Wien\nBen,Graz\nCem,Linz\n")
+
+        assert (plain.csv, plain.profile.warnings) == ("x,y\n1,2\n3,4\n5,6\n", [])
+        assert text_only.profile.rows == 3 and text_only.profile.warnings == []
+
+    def test_sniffing_reads_past_the_metadata(self) -> None:
+        assert sniff_delimiter("Wetterstation Hohe Warte\nDatum;Temp\n2025-01-01;1,5\n2025-01-02;2,5\n") == (
+            ";",
+            "semicolon",
+        )
+
+
 class TestPythonLiterals:
     def test_the_owners_dict_literal_with_its_assignment_and_trailing_comma(self) -> None:
         parsed = parse_dataset(OWNER_DICT_LITERAL)
@@ -591,7 +685,9 @@ class TestPythonLiterals:
 
         assert header.column_dtypes == {"(in %) Land": "text", "Wert": "integer"}
         assert table.csv == "(a),b\n1,2\n"
-        assert stand.csv == "(Stand: 2024)\nLand;Wert\nA;1\nB;2\n"
+        # A title line above the table is left out since 2026-10-14 (`table_block`).
+        assert stand.csv == "Land,Wert\nA,1\nB,2\n"
+        assert stand.profile.warnings == ["left out 1 line above the table (a title, notes or metadata)"]
         assert error_code("(siehe Anhang) Die Werte sind 3, 4 und 5") == "no_table"
         assert parse_dataset("(x) Katze 3\n(y) Hund 7\n").csv == "(x) Katze 3\n(y) Hund 7\n"
 
