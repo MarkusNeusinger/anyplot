@@ -138,6 +138,13 @@ class TestOtherInstructions:
         assert "is `needs_data`: the user wants that data" in rubric
         assert "the cloud's metadata server" in rubric
 
+    def test_a_question_that_ranks_or_summarises_entries_reads_as_about_the_table(self) -> None:
+        rubric = policy.scope_rubric()
+
+        assert "You never see the table" in rubric
+        assert 'even without the words "my data" and even when its topic is a statistic' in rubric
+        assert "welches Jahr hat den grössten Ausländeranteil?" in rubric
+
     def test_another_library_for_this_plot_is_its_own_verdict(self) -> None:
         rubric = policy.scope_rubric()
         examples = dict(re.findall(r"^\| (.+) \| `(\w+)` \|$", rubric, flags=re.MULTILINE))

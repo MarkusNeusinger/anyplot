@@ -238,6 +238,12 @@
     {"id": "lib-005", "text": "Nice! Now the same thing in Bokeh please.", "last_turns": [{"role": "assistant", "text": "The plot is ready: monthly revenue as a line with markers, the peak in July labelled."}], "expected": "other_library", "lang": "en", "tags": ["offtopic", "other_library", "multi_turn"]},
     {"id": "lib-006", "text": "Does this matplotlib code also run in a Jupyter notebook?", "last_turns": [], "expected": "in_scope", "lang": "en", "tags": ["inscope", "other_library_contrast", "code_question"]},
     {"id": "lib-007", "text": "Write me a Chart.js line chart for my website's visitor counter.", "last_turns": [], "expected": "out_of_scope", "lang": "en", "tags": ["offtopic", "other_library_contrast"]},
+    {"id": "in-078", "text": "Welches Jahr hat den grössten Ausländeranteil?", "last_turns": [], "expected": "in_scope", "lang": "de", "tags": ["inscope", "german", "data_question", "derived_quantity"]},
+    {"id": "in-079", "text": "Which region has the highest share of renewable energy?", "last_turns": [], "expected": "in_scope", "lang": "en", "tags": ["inscope", "data_question", "derived_quantity"]},
+    {"id": "in-080", "text": "In welchem Monat ist die Arbeitslosenquote am stärksten gestiegen?", "last_turns": [{"role": "assistant", "text": "Your table has 36 rows: month, unemployment rate and the number of job seekers, January 2022 to December 2024."}], "expected": "in_scope", "lang": "de", "tags": ["inscope", "german", "multi_turn", "data_question", "derived_quantity"]},
+    {"id": "in-081", "text": "Quelle année a la plus forte proportion de naissances hors mariage ?", "last_turns": [], "expected": "in_scope", "lang": "fr", "tags": ["inscope", "data_question", "derived_quantity"]},
+    {"id": "in-082", "text": "¿Cómo ha evolucionado la población extranjera a lo largo de los años?", "last_turns": [], "expected": "in_scope", "lang": "es", "tags": ["inscope", "data_question", "derived_quantity"]},
+    {"id": "in-083", "text": "Qual è la quota media di esportazioni per paese?", "last_turns": [], "expected": "in_scope", "lang": "it", "tags": ["inscope", "data_question", "derived_quantity"]},
     {"id": "lib-008", "text": "Can you draw this plot in seaborn instead?", "last_turns": [], "expected": "in_scope", "lang": "en", "tags": ["inscope", "other_library_contrast"]}
   ]
 }

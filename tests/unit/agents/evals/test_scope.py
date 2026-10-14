@@ -94,6 +94,15 @@ class TestCaseFile:
         assert all(item.group == "adversarial" for item in cases if "system_access" in item.tags)
         assert all(item.expected == "attack" for item in cases if "system_access" in item.tags)
 
+    def test_a_question_about_a_derived_quantity_of_the_table_is_in_scope(self) -> None:
+        """Live case of 2026-10-14: "Welches Jahr hat den grössten Ausländeranteil?" over a pasted table was refused
+        `needs_data` twice; the judge never sees the table, so such questions read as about it, in any language."""
+        cases = [item for item in load_cases(DEFAULT_CASES) if "derived_quantity" in item.tags]
+
+        assert len(cases) >= 6 and all(item.expected == "in_scope" and item.group == "inscope" for item in cases)
+        assert {item.lang for item in cases} >= {"de", "en", "fr", "es", "it"}
+        assert not any("my data" in item.text.lower() or "meinen daten" in item.text.lower() for item in cases)
+
     def test_data_code_that_reads_a_url_or_a_file_needs_data_never_attack(self) -> None:
         cases = [item for item in load_cases(DEFAULT_CASES) if "url_code" in item.tags]
 
