@@ -776,19 +776,31 @@ def shipped_candidate(run: Run) -> Candidate | None:
     best = run.best
     scored = run.best_scored
     if ship_best(get_settings()) and scored is not None and best is not scored:
-        if best is None or best.review_score is None or ship_rank(scored) > ship_rank(best):
+        if best is None or best.review_score is None or ship_compare(scored, best) > 0:
             best = scored
     return best or run.padded
 
 
-def ship_rank(candidate: Candidate) -> tuple[bool, int]:
-    """How `AGENT_SHIP_BEST` orders two reviewed renders: one without measured findings first, then the score.
+def _clean(candidate: Candidate) -> bool:
+    """No measured finding: no advisory gate line and no ADAPTATION finding."""
+    return not (candidate.advisory_lines or candidate.adaptation_lines)
 
-    A repair that cleared a measured defect (clipped or overlapping text) ships over an earlier render
-    that still has it, even when the review scored the repair a point lower: a measurement outranks a verdict.
+
+def ship_compare(a: Candidate, b: Candidate) -> int:
+    """How `AGENT_SHIP_BEST` orders two reviewed renders: 1 when `a` ships over `b`, -1 the other way, 0 a tie.
+
+    A render without measured findings (clipped or overlapping text) wins over one with them when it
+    meets the ship bar (`AGENT_STATUS_BAR`) or scores at most `AGENT_SHIP_CLEAN_MARGIN` points below it
+    (owner, 2026-10-14). Otherwise the higher score ships, with its measured findings as notes: a clean
+    render of 60 never replaces an 88 that has one overlapping label.
     """
-    clean = not (candidate.advisory_lines or candidate.adaptation_lines)
-    return clean, candidate.review_score or 0
+    score_a, score_b = a.review_score or 0, b.review_score or 0
+    if _clean(a) != _clean(b):
+        clean, other = (a, b) if _clean(a) else (b, a)
+        margin = get_settings().ship_clean_margin
+        if clean.status_ok is True or (clean.review_score or 0) >= (other.review_score or 0) - margin:
+            return 1 if clean is a else -1
+    return (score_a > score_b) - (score_a < score_b)
 
 
 def ship_best(settings: AgentSettings) -> bool:
@@ -1413,26 +1425,24 @@ async def _attempts(
         candidate.status_ok = verdict.ok if verdict.status_ok is None else verdict.status_ok
         candidate.review_score = verdict.score
         candidate.review_lines = [] if verdict.ok and candidate.status_ok else list(verdict.lines)
-        if verdict.score is not None and (
-            run.best_scored is None or ship_rank(candidate) >= ship_rank(run.best_scored)
-        ):
+        if verdict.score is not None and (run.best_scored is None or ship_compare(candidate, run.best_scored) >= 0):
             run.best_scored = candidate
+        # The latest review's lines only: a passing review clears an earlier round's, so a later
+        # unreviewed render never ships with notes that describe another render.
+        run.review_lines = [] if verdict.ok else list(verdict.lines)
         # A measured finding the review passed over still gets the repair (`AGENT_GATE_REPAIR=review`):
         # a measurement is code, not a verdict, so no review score waives it.
         open_measured = [] if gates_first else measured
         if verdict.ok and not (open_measured and round_number(run, attempt) < rounds):
             _end_attempt(run, "reviewer_ok")
             return
-        if not verdict.ok:
-            run.review_lines = list(verdict.lines)
         # The review passed but measured findings are left: the repair gets those alone.
-        feedback = [*open_measured, *([] if verdict.ok else run.review_lines)]
+        feedback = [*open_measured, *run.review_lines]
         run.reviewed_render_id = candidate.render_id
         if settings.repair_sees_render and candidate.render_id:
-            # The repair sees the render the review's findings describe (`AGENT_REPAIR_SEES_RENDER`).
-            ledger.adapter_renders = [
-                ("Render the review's findings describe, before your repair", candidate.render_id)
-            ]
+            # The repair sees the render its findings describe (`AGENT_REPAIR_SEES_RENDER`).
+            what = "the server's measurements" if verdict.ok else "the review's findings"
+            ledger.adapter_renders = [(f"Render {what} describe, before your repair", candidate.render_id)]
         _end_attempt(run, "gates" if verdict.ok else "reviewer_defects", feedback)
 
 

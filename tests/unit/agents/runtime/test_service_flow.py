@@ -519,6 +519,28 @@ async def test_measured_findings_are_reviewed_first_and_repaired_when_they_stay(
     assert "VQ-02 (light)" in adapter_inputs(fake)[1]
 
 
+async def test_a_passing_review_clears_an_earlier_rounds_review_lines(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Three rounds: round 1 is rejected, round 2 passes but keeps a measured overlap, round 3 repairs it
+    without a review left. Its notes are the overlap and the missing review, never round 1's finding."""
+    set_max_attempts(monkeypatch, "3")
+    backend.script = lambda job, theme: FakeOutcome(probe=OVERLAPPING_TICKS)
+    empty = {"edits": [], "changes": []}
+    script = default_script(plans=[SCATTER_PLAN, empty, empty])
+    script["reviewer"] = [{"json": VERDICT_REJECT}, {"json": VERDICT_OK}]
+    swap_models("gemini", script)
+    sid = await open_session(client)
+
+    events = await create_plot(client, sid)
+
+    plot = next(data for name, data in events if name == "plot")
+    assert plot["status"] == "needs_attention"
+    assert not any("sparse markers" in line for line in plot["residual_defects"])
+    assert plot["residual_defects"][0].startswith("VQ-02 (light)")
+    assert plot["residual_defects"][-1].startswith("the plot was not reviewed")
+
+
 # A plan cut off mid-string: both providers send the truncated JSON text (FakeAnthropic cuts Claude's
 # answer before its closing quotes and brackets, so it stops after `study_ho` as Gemini's does).
 CUT_OFF = {

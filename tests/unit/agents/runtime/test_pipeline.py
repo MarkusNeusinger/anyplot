@@ -26,7 +26,7 @@ from agents.anyplot.pipeline import (
     render_adapt_request,
     render_review_request,
     render_score_request,
-    ship_rank,
+    ship_compare,
     shipped_candidate,
     standing_requests,
     summarise_changes,
@@ -149,10 +149,43 @@ class TestFinish:
         repaired.reviewed_ok = repaired.status_ok = True
         run.best, run.best_scored = repaired, first
 
-        assert ship_rank(repaired) > ship_rank(first)
+        assert ship_compare(repaired, first) == 1 and ship_compare(first, repaired) == -1
         assert shipped_candidate(run) is repaired
         first.advisory_lines = []
         assert shipped_candidate(run) is first  # both clean: the higher score ships
+
+    @pytest.mark.parametrize(
+        ("clean_score", "clean_meets_bar", "margin", "ships"),
+        [
+            (60, False, None, "scored"),  # the owner's case: a clean 60 never replaces an 88 with one G7 line
+            (85, False, None, "clean"),  # within the default margin of 3 points
+            (84, False, None, "scored"),  # 4 points below, below the ship bar
+            (70, True, None, "clean"),  # meets the ship bar: clean wins whatever the score
+            (85, False, "2", "scored"),  # `AGENT_SHIP_CLEAN_MARGIN` narrows the margin
+        ],
+    )
+    def test_a_clean_render_wins_only_at_the_ship_bar_or_within_the_margin(
+        self, monkeypatch: pytest.MonkeyPatch, clean_score: int, clean_meets_bar: bool, margin: str | None, ships: str
+    ) -> None:
+        monkeypatch.setenv("AGENT_REVIEWER_MODE", "catalogue")
+        monkeypatch.setenv("AGENT_SHIP_BEST", "true")
+        if margin is not None:
+            monkeypatch.setenv("AGENT_SHIP_CLEAN_MARGIN", margin)
+        get_settings.cache_clear()
+        overlap = "VQ-02 (light): 2 tick labels overlap → space them. Likely cause: the tick density."
+        run = run_with(reviewed_ok=True, status_ok=True, review_score=88, advisory_lines=[overlap])
+        scored = run.best
+        assert scored is not None
+        clean = Candidate(working="w2", run_form="r2", pngs={}, plan=AdaptPlan(), attempt=3, review_score=clean_score)
+        clean.reviewed_ok, clean.status_ok = clean_meets_bar, clean_meets_bar
+        run.best, run.best_scored = clean, scored
+
+        shipped = shipped_candidate(run)
+
+        assert shipped is (clean if ships == "clean" else scored)
+        if ships == "scored":
+            # The higher score ships with its measured line as a note.
+            assert finish(run).residual_defects == [overlap]
 
     def test_padded_canvas_is_never_ok(self) -> None:
         run = run_with(padded=True, canvas_line="VQ-05 (dark): drift", reviewed_ok=True)

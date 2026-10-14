@@ -18,6 +18,7 @@ another provider, model or location.
 | `AGENT_STATUS_BAR` | `0.95` | `catalogue` reviews: the ship bar; a shipped render at or above it, with no measured gate or validator finding left, shows without notes (`ok`) |
 | `AGENT_STATUS_SCORE` | `0` | `catalogue` reviews: the review score (0 to 100) a shipped render also needs for `ok`; 0 turns the condition off (owner decision pending) |
 | `AGENT_GATE_REPAIR` | `review` | When measured findings of a render (advisory gate lines, ADAPTATION findings) start a repair: `review` (they go to the self-review and, as gate notes, to the review, and a round whose render still has them after its review is repaired with them) or `first` (straight to the repair round, skipping the self-review and the review; live before 2026-10-14) |
+| `AGENT_SHIP_CLEAN_MARGIN` | `3` | `catalogue` reviews with `AGENT_SHIP_BEST`: a render without measured findings ships over a higher-scored one with them when it meets the ship bar or is at most this many points below it |
 | `AGENT_REPAIR_SELF_REVIEW` | `false` | With `AGENT_SELF_REVIEW` on, whether a repair round proofreads its render too, not only the first round |
 | `AGENT_SHIP_BEST` | `true` | `catalogue` reviews: review every render and ship the best-scored version, not the last |
 | `AGENT_CHECK_RETRY` | `true` | An adapter answer that fails its check gets one more call in the same round (a full file allowed) instead of ending it |
@@ -223,9 +224,16 @@ class AgentSettings(BaseSettings):
     the repair. Either way a render whose canvas missed goes straight to the repair."""
 
     repair_self_review: bool = False
-    """`AGENT_REPAIR_SELF_REVIEW`: with `AGENT_SELF_REVIEW` on, a repair round proofreads its render too
-    before the review, not only the first round; with it off, no round does. Off since 2026-10-14: the reviewer scores the repaired render anyway, and
-    `AGENT_SHIP_BEST` ships the better of the two; the measurement is in `agents/README.md`."""
+    """`AGENT_REPAIR_SELF_REVIEW`: whether a repair round proofreads its render before the review, as the
+    first round does. Off (the default), round 1 still proofreads and repair rounds go straight to the
+    review; `AGENT_SELF_REVIEW=false` turns every proofread off, this setting included. Off since
+    2026-10-14: the reviewer scores the repaired render anyway, and `AGENT_SHIP_BEST` ships the better of
+    the two; the measurement is in `agents/README.md`."""
+
+    ship_clean_margin: int = Field(default=3, ge=0, le=100)
+    """`catalogue` reviews with `AGENT_SHIP_BEST` (`AGENT_SHIP_CLEAN_MARGIN`): a render without measured
+    findings ships over a higher-scored one with them when it meets the ship bar or scores at most this
+    many points below it; otherwise the higher score ships with its findings as notes (owner, 2026-10-14)."""
 
     highlights: Literal["off", "data"] = "off"
     """Experiments (`AGENT_HIGHLIGHTS`): `data` lets the adapter add at most one highlight of a
