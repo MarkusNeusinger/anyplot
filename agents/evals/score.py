@@ -196,7 +196,7 @@ def request_for(target: Target, case_bindings: list[dict[str, str]] | None) -> S
 
     # The case's data.csv is the render job's canonical CSV, which may be up to `MAX_CANONICAL_BYTES` (a 1 MB
     # paste grows to about 3.8 MB in the stress case `stress-csv-expansion`).
-    parsed = parse_dataset(target.data.read_text(encoding="utf-8"), max_bytes=MAX_CANONICAL_BYTES)
+    parsed = parse_dataset(target.data.read_text(encoding="utf-8"), max_bytes=MAX_CANONICAL_BYTES, canonical=True)
     if case_bindings is None:
         roles = snapshot_from_repo(target.spec_id, target.library).roles()
         case_bindings = [binding.model_dump() for binding in default_bindings(roles, parsed.profile)]

@@ -13,7 +13,7 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from agents.anyplot.data import prepare as prepare_module
-from agents.anyplot.data.parse import ParsedDataset, parse_dataset
+from agents.anyplot.data.parse import MAX_COMPUTED_BYTES, ParsedDataset, parse_dataset
 from agents.anyplot.data.prepare import (
     MAX_CONDITIONS,
     MAX_DROP_COLUMNS,
@@ -83,8 +83,10 @@ def cells(prepared: Prepared, index: int) -> list[str]:
 
 
 def reparse(prepared: Prepared) -> ParsedDataset:
-    """The result as `prepare_data` re-parses it: the columns kept text stay text."""
-    return parse_dataset(prepared.csv, text_columns=prepared.text_columns)
+    """The result as `prepare_data` re-parses it: the columns kept text stay text, the CSV is canonical."""
+    return parse_dataset(
+        prepared.csv, text_columns=prepared.text_columns, find_table=False, max_bytes=MAX_COMPUTED_BYTES, canonical=True
+    )
 
 
 def dtypes(prepared: Prepared) -> dict[str, str]:
@@ -799,7 +801,9 @@ class TestPivotLonger:
         """
         monkeypatch.setattr(prepare_module, "MAX_COMPUTED_BYTES", 200 * 1024)
         header = "id," + ",".join(f"t{i}" for i in range(8)) + ",a,b\n"
-        text = header + "".join(f"{row}," + ",".join(["t" * 38] * 8) + f",{row},{row * 2}\n" for row in range(380))
+        # The filler cells differ by row: a column with the same text in every row would move to the notes.
+        filler = ["t" * 37 + str(row % 10) for row in range(380)]
+        text = header + "".join(f"{row}," + ",".join([filler[row]] * 8) + f",{row},{row * 2}\n" for row in range(380))
         assert len(text.encode()) < 200 * 1024
         code, message = failure(text, {"op": "pivot_longer", "columns": ["a", "b"]})
 
@@ -851,21 +855,21 @@ class TestPivotWider:
     def test_text_hints_carry_the_names_the_reparse_gives(self) -> None:
         """A value longer than a column name may be is shortened by the re-parse; the hint must match it."""
         long_name = "x" * 70
-        text = f"k,series,value\na,{long_name},2023\nb,{long_name},2024\n"
+        text = f"k,series,value\na,{long_name},2023\nb,{long_name},2024\nc,short,2025\n"
         operation = {"op": "pivot_wider", "names_from": "series", "values_from": "value", "index": ["k"]}
         prepared = prepare(text, {"op": "set_type", "column": "value", "type": "text"}, operation)
 
-        assert prepared.text_columns == ["x" * 64]
+        assert prepared.text_columns == ["short", "x" * 64]
         again = parse_dataset(prepared.csv, text_columns=prepared.text_columns)
-        assert again.column_dtypes == {"k": "text", "x" * 64: "text"}
+        assert again.column_dtypes == {"k": "text", "x" * 64: "text", "short": "text"}
 
     def test_rows_without_a_name_are_left_out_and_other_columns_dropped(self) -> None:
         text = (
             "Monat,series,value,note\n"
             "2024-01,Hüte,10,n\n"
-            "2024-02,Hüte,15,n\n"
+            "2024-02,Hüte,15,o\n"
             "2024-01,Schuhe,20,n\n"
-            "2024-03,Schuhe,30,n\n"
+            "2024-03,Schuhe,30,o\n"
             "2024-03,,99,n\n"
         )
         operation = {"op": "pivot_wider", "names_from": "series", "values_from": "value", "index": ["Monat"]}
@@ -891,13 +895,13 @@ class TestPivotWider:
         assert "aggregate first" in message
 
     def test_too_many_new_columns(self) -> None:
-        text = "k,s,v\n" + "".join(f"x,s{i},{i}\n" for i in range(MAX_WIDER_COLUMNS + 1))
+        text = "k,s,v\n" + "".join(f"x{i % 2},s{i},{i}\n" for i in range(MAX_WIDER_COLUMNS + 1))
         operation = {"op": "pivot_wider", "names_from": "s", "values_from": "v", "index": ["k"]}
 
         assert failure(text, operation)[0] == "too_wide"
 
     def test_too_many_columns_in_all(self) -> None:
-        text = "k,j,s,v\n" + "".join(f"x,y,s{i},{i}\n" for i in range(MAX_WIDER_COLUMNS - 1))
+        text = "k,j,s,v\n" + "".join(f"x{i % 2},y{i % 3},s{i},{i}\n" for i in range(MAX_WIDER_COLUMNS - 1))
         operation = {"op": "pivot_wider", "names_from": "s", "values_from": "v", "index": ["k", "j"]}
 
         assert failure(text, operation)[0] == "too_wide"
@@ -1157,3 +1161,117 @@ class TestRoundTrip:
         apply_operations(parsed, OPERATIONS.validate_python([drop("Tier", "eq", "Gesamt")]))
 
         assert parsed.csv == prepare_csv
+
+
+# A long table of a population by origin (generalised from the live test of 2026-10-14: "which year has the
+# largest share of foreigners?" on Jahr, Staatsangehörigkeit, Bestand).
+POPULATION = (
+    "Year,Origin,Population\n"
+    "2021,Native,6500\n"
+    "2021,Foreign,2000\n"
+    "2022,Native,6000\n"
+    "2022,Foreign,2000\n"
+    "2023,Native,6000\n"
+    "2023,Foreign,1500\n"
+)
+
+
+def derive(name: str, how: str, *columns: str, **extra: Any) -> dict[str, Any]:
+    return {"op": "derive", "name": name, "how": how, "columns": list(columns), **extra}
+
+
+class TestDerive:
+    def test_share_within_a_group_answers_the_largest_share_question(self) -> None:
+        prepared = prepare(
+            POPULATION,
+            derive("Share", "share", "Population", within=["Year"], percent=True),
+            drop("Origin", "eq", "Native"),
+            {"op": "sort", "column": "Share", "descending": True},
+        )
+
+        assert rows(prepared) == [
+            "Year,Origin,Population,Share",
+            "2022,Foreign,2000,25.0",
+            "2021,Foreign,2000,23.52941176470588",
+            "2023,Foreign,1500,20.0",
+        ]
+        assert prepared.changes[0] == "added column Share: share of Population in the total of each Year, in percent"
+        assert dtypes(prepared)["Share"] == "number"
+        assert reparse(prepared).profile.sample[0][0] == "2022"  # the root reads the answer from the profile
+
+    def test_share_of_the_whole_column(self) -> None:
+        prepared = prepare("k,v\na,1\nb,3\n", derive("s", "share", "v"))
+
+        assert cells(prepared, 2) == ["0.25", "0.75"]
+
+    def test_ratio_and_difference_keep_the_column_order(self) -> None:
+        text = "k,a,b\nx,6,3\ny,1,0\nz,,2\n"
+        ratio = prepare(text, derive("r", "ratio", "a", "b"))
+        difference = prepare(text, derive("d", "difference", "b", "a"))
+
+        assert cells(ratio, 3) == ["2.0", "", ""]
+        assert ratio.changes == ["added column r: a / b, 2 cells are empty (a missing input or a division by zero)"]
+        assert cells(difference, 3) == ["-3.0", "-1.0", ""]
+
+    def test_sum_across_columns_skips_missing_cells(self) -> None:
+        prepared = prepare("k,a,b,c\nx,1,2,3\ny,,2,\nz,,,\nw,1,1,1\n", derive("total", "sum", "a", "b", "c"))
+
+        assert cells(prepared, 4) == ["6.0", "2.0", "", "3.0"]
+
+    def test_percent_change_within_groups_in_the_order_given(self) -> None:
+        shuffled = "Year,Origin,Population\n2022,Foreign,2000\n2021,Foreign,1600\n2021,Native,6400\n2022,Native,6000\n"
+        prepared = prepare(shuffled, derive("Growth", "percent_change", "Population", within=["Origin"], order="Year"))
+
+        assert cells(prepared, 3) == ["25.0", "", "", "-6.25"]
+        assert "the first row of each group" in prepared.changes[0]
+
+    def test_percent_change_with_repeated_order_values_is_refused(self) -> None:
+        code, message = failure(POPULATION, derive("g", "percent_change", "Population", order="Year"))
+
+        assert code == "invalid_operation" and "aggregate first" in message
+
+    @pytest.mark.parametrize(
+        ("operation", "code"),
+        [
+            (derive("r", "ratio", "Population"), "invalid_operation"),
+            (derive("r", "ratio", "Population", "Population"), "invalid_operation"),
+            (derive("s", "sum", "Population"), "invalid_operation"),
+            (derive("s", "share", "Population", "Year"), "invalid_operation"),
+            (derive("d", "difference", "Population", "Year", within=["Origin"]), "invalid_operation"),
+            (derive("d", "difference", "Population", "Year", percent=True), "invalid_operation"),
+            (derive("s", "share", "Population", order="Year"), "invalid_operation"),
+            (derive("g", "percent_change", "Population"), "invalid_operation"),
+            (derive("s", "share", "Population", within=["Population"]), "invalid_operation"),
+            (derive("Year", "share", "Population"), "invalid_operation"),
+            (derive("s", "share", "Origin"), "type_mismatch"),
+            (derive("s", "share", "Nope"), "unknown_column"),
+            (derive("s", "share", "Population", within=["Nope"]), "unknown_column"),
+        ],
+    )
+    def test_refusals(self, operation: dict[str, Any], code: str) -> None:
+        assert failure(POPULATION, operation)[0] == code
+
+    def test_a_column_without_any_value_is_refused(self) -> None:
+        assert failure("k,a,b\nx,1,0\ny,2,0\n", derive("r", "ratio", "a", "b"))[0] == "invalid_operation"
+
+    def test_free_expressions_do_not_validate(self) -> None:
+        with pytest.raises(ValidationError):
+            OPERATIONS.validate_python([derive("r", "a / b", "a", "b")])
+        with pytest.raises(ValidationError):
+            OPERATIONS.validate_python([{**derive("r", "ratio", "a", "b"), "expression": "a / b"}])
+
+    def test_the_new_column_is_numbers_after_the_reparse(self) -> None:
+        prepared = prepare(POPULATION, derive("Share", "share", "Population", within=["Year"]))
+
+        assert dtypes(prepared) == {"Year": "integer", "Origin": "text", "Population": "integer", "Share": "number"}
+
+
+class TestNaCategory:
+    def test_a_na_category_survives_every_operation_and_the_reparse(self) -> None:
+        """`NA` (North America) from a JSON object's keys stays a category through `_read`, a sort and the re-parse."""
+        prepared = prepare('{"NA": 3, "EU": 4, "AS": 1}', {"op": "sort", "column": "value"})
+
+        assert rows(prepared) == ["category,value", "AS,1", "NA,3", "EU,4"]
+        assert reparse(prepared).profile.columns[0].missing == 0
+        kept = prepare('{"NA": 3, "EU": 4, "AS": 1}', drop("category", "eq", "NA"))
+        assert rows(kept) == ["category,value", "EU,4", "AS,1"]

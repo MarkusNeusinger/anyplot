@@ -235,8 +235,11 @@ async def prepare_data(operations: list[dict[str, Any]], tool_context: ToolConte
     set_type (column, type number|datetime|text, date_format, decimal); aggregate (by, column, how sum|mean|count|min|max,
     period month|quarter|year); sort (column, descending); pivot_longer (columns, names_to, values_to); pivot_wider
     (names_from, values_from, index); classify (name, rules: each where conditions and a label, otherwise: the optional
-    label for rows no rule matches; adds the text column name, labelling each row by the first rule that holds). Returns the change lines and the new profile, or an error with a
-    code and a message.
+    label for rows no rule matches; adds the text column name, labelling each row by the first rule that holds); derive
+    (name, how ratio|difference|sum|share|percent_change, columns, within, order, percent; adds the number column name
+    computed from number columns: columns[0] / columns[1], columns[0] - columns[1], a row sum, a share of the group's
+    total, or the percent change from the previous row in the order of order). Returns the change lines and the new
+    profile, or an error with a code and a message.
     """
     view = _view(tool_context)
     if view is None:
@@ -263,7 +266,11 @@ async def prepare_data(operations: list[dict[str, Any]], tool_context: ToolConte
         # The columns `set_type text` made text stay text: the re-parse would type them by content again.
         # The CSV is the service's own: every row stays, also a `Total` category a sort moved to the end.
         parsed = parse_dataset(
-            prepared.csv, text_columns=prepared.text_columns, find_table=False, max_bytes=MAX_COMPUTED_BYTES
+            prepared.csv,
+            text_columns=prepared.text_columns,
+            find_table=False,
+            max_bytes=MAX_COMPUTED_BYTES,
+            canonical=True,
         )
     except PrepareError as exc:
         # The message names columns of the user's dataset at most, never a cell; fenced like every column name.
@@ -313,7 +320,7 @@ async def generate_data(
         return {"status": "error", "code": "invalid_arguments", "errors": _fenced_lines(validation_lines(exc))}
     try:
         generated = generate(spec)
-        parsed = parse_dataset(generated.csv, find_table=False, max_bytes=MAX_COMPUTED_BYTES)
+        parsed = parse_dataset(generated.csv, find_table=False, max_bytes=MAX_COMPUTED_BYTES, canonical=True)
     except GenerateError as exc:
         # The message names variables and series and quotes the model's own expression at most; fenced all the same.
         return {"status": "error", "code": exc.code, "message": _fenced_lines([exc.message])}
@@ -450,7 +457,7 @@ async def run_data_code(code: str, source_language: str, tool_context: ToolConte
         return _error_lines(*failure)
     assert output.csv_text is not None  # `_run_failure` refuses a run without a table
     try:
-        parsed = parse_dataset(output.csv_text, find_table=False, max_bytes=MAX_COMPUTED_BYTES)
+        parsed = parse_dataset(output.csv_text, find_table=False, max_bytes=MAX_COMPUTED_BYTES, canonical=True)
     except ParseError as exc:
         if exc.code == "too_long":  # its canonical copy outgrew `MAX_CANONICAL_BYTES` (wide dates, long text)
             return _error_lines("run_failed", [CANONICAL_TOO_LARGE])

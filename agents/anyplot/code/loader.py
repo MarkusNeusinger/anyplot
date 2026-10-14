@@ -9,6 +9,13 @@ the dataset profile map to pandas dtypes that keep missing values (`integer` to
 `Int64`, `number` to `float64`, `boolean` to `boolean`, `text` to `string`); datetime
 columns go to `parse_dates`. `import pandas as pd` is added after the last module-level
 import when the file does not have it.
+
+`data.csv` writes a missing cell as an empty cell and nothing else, so a text cell such as
+`NA` (Namibia, North America), `None` or `null` is a value there. pandas reads those tokens
+as missing by default, so the loader of a dataset with a text column adds
+`keep_default_na=False, na_values=[""]`: only the empty cell is missing (`NA_ARGUMENTS`). A
+dataset without text columns leaves them out; its number, boolean and date cells never hold
+such a token, and the exported `plot.py` stays one short line.
 """
 
 import ast
@@ -24,6 +31,9 @@ PANDAS_DTYPES: dict[str, str] = {"integer": "Int64", "number": "float64", "boole
 DATETIME = "datetime"
 MAX_LINE_CHARS = 120  # the repository's ruff line length
 PANDAS_IMPORT = "import pandas as pd"
+NA_ARGUMENTS = ("keep_default_na=False", 'na_values=[""]')
+"""The loader arguments that make only an empty cell missing, added when a column is text."""
+TEXT_DTYPE = PANDAS_DTYPES["text"]
 
 _COLUMN_DTYPES = frozenset(get_args(ColumnDtype))
 
@@ -99,6 +109,8 @@ def _statement(indent: str, dtype_map: dict[str, str], dates: list[str]) -> str:
         arguments.append("dtype={" + ", ".join(dtype_items) + "}")
     if date_items:
         arguments.append("parse_dates=[" + ", ".join(date_items) + "]")
+    na_arguments = list(NA_ARGUMENTS) if TEXT_DTYPE in dtype_map.values() else []
+    arguments += na_arguments
     single = f"df = pd.read_csv({', '.join(arguments)})"
     if len(indent) + len(single) <= MAX_LINE_CHARS:
         return single
@@ -109,6 +121,7 @@ def _statement(indent: str, dtype_map: dict[str, str], dates: list[str]) -> str:
         lines += [f"{inner}dtype={{", *(f"{entry}{item}," for item in dtype_items), f"{inner}}},"]
     if date_items:
         lines += [f"{inner}parse_dates=[", *(f"{entry}{item}," for item in date_items), f"{inner}],"]
+    lines += [f"{inner}{argument}," for argument in na_arguments]
     lines.append(f"{indent})")
     return "\n".join(lines)
 

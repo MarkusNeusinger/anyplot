@@ -169,7 +169,9 @@ def loader_outcome(parsed: ParsedDataset) -> tuple[str, float]:
     dtypes, dates = loader_arguments(columns, dict(parsed.column_dtypes), list(parsed.parse_dates))
     started = time.perf_counter()
     try:
-        frame = pd.read_csv(io.StringIO(parsed.csv), dtype=dtypes, parse_dates=dates)
+        frame = pd.read_csv(
+            io.StringIO(parsed.csv), dtype=dtypes, parse_dates=dates, keep_default_na=False, na_values=[""]
+        )
     except Exception as exc:  # the class is the finding; the message could quote the data
         return type(exc).__name__, (time.perf_counter() - started) * 1000
     elapsed = (time.perf_counter() - started) * 1000

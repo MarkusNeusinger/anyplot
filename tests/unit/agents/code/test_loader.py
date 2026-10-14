@@ -49,9 +49,61 @@ def test_placeholder_becomes_read_csv() -> None:
     assert "load_user_data" not in result
     assert result == WORKING.replace(
         "df = load_user_data()",
-        'df = pd.read_csv("data.csv", dtype={"x": "Int64", "y": "float64", "s": "string", "b": "boolean"}, '
-        'parse_dates=["when"])',
+        "df = pd.read_csv(\n"
+        '    "data.csv",\n'
+        "    dtype={\n"
+        '        "x": "Int64",\n'
+        '        "y": "float64",\n'
+        '        "s": "string",\n'
+        '        "b": "boolean",\n'
+        "    },\n"
+        "    parse_dates=[\n"
+        '        "when",\n'
+        "    ],\n"
+        "    keep_default_na=False,\n"
+        '    na_values=[""],\n'
+        ")",
     )
+
+
+def test_a_text_column_reads_only_the_empty_cell_as_missing() -> None:
+    """`data.csv` writes missing as an empty cell; a text `NA` (Namibia, North America) or `None` is a value."""
+    result = to_run_form(WORKING, columns=["Land", "Wert"], dtypes={"Land": "text", "Wert": "integer"}, parse_dates=[])
+    assert (
+        'df = pd.read_csv("data.csv", dtype={"Land": "string", "Wert": "Int64"}, keep_default_na=False, '
+        'na_values=[""])' in result
+    )
+
+    numbers = to_run_form(WORKING, columns=["Wert"], dtypes={"Wert": "integer"}, parse_dates=[])
+    assert 'df = pd.read_csv("data.csv", dtype={"Wert": "Int64"})\n' in numbers
+
+
+def test_the_loader_keeps_na_categories_and_reads_empty_cells_as_missing() -> None:
+    """The run form's arguments on a canonical CSV: `NA` stays a category, an empty cell is missing everywhere."""
+    import io
+
+    import pandas as pd
+
+    from agents.anyplot.data.parse import parse_dataset
+
+    parsed = parse_dataset('{"NA": 3, "EU": 4, "None": null}')
+    result = to_run_form(
+        WORKING,
+        columns=[column.name for column in parsed.profile.columns],
+        dtypes=dict(parsed.column_dtypes),
+        parse_dates=list(parsed.parse_dates),
+    )
+    tree = ast.parse(result)
+    call = next(
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "read_csv"
+    )
+    keywords = {kw.arg: ast.literal_eval(kw.value) for kw in call.keywords}
+    frame = pd.read_csv(io.StringIO(parsed.csv), **keywords)
+
+    assert frame["category"].tolist() == ["NA", "EU", "None"]
+    assert frame["value"].isna().tolist() == [False, False, True]
 
 
 def test_parse_dates_follow_column_order_and_empty_arguments_are_left_out() -> None:
