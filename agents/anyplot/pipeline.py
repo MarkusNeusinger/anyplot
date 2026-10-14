@@ -776,9 +776,19 @@ def shipped_candidate(run: Run) -> Candidate | None:
     best = run.best
     scored = run.best_scored
     if ship_best(get_settings()) and scored is not None and best is not scored:
-        if best is None or best.review_score is None or (scored.review_score or 0) > best.review_score:
+        if best is None or best.review_score is None or ship_rank(scored) > ship_rank(best):
             best = scored
     return best or run.padded
+
+
+def ship_rank(candidate: Candidate) -> tuple[bool, int]:
+    """How `AGENT_SHIP_BEST` orders two reviewed renders: one without measured findings first, then the score.
+
+    A repair that cleared a measured defect (clipped or overlapping text) ships over an earlier render
+    that still has it, even when the review scored the repair a point lower: a measurement outranks a verdict.
+    """
+    clean = not (candidate.advisory_lines or candidate.adaptation_lines)
+    return clean, candidate.review_score or 0
 
 
 def ship_best(settings: AgentSettings) -> bool:
@@ -1364,7 +1374,8 @@ async def _attempts(
             spec_brief=spec_brief(view),
             change_request=args.change_request,
             user_requests=run.user_requests,
-            gate_notes=[_note(line) for line in report.advisory][:MAX_NOTES],
+            # Every measured finding, the ADAPTATION ones too, so the review sees what the repair will get.
+            gate_notes=[_note(line) for line in measured][:MAX_NOTES],
             plot_language=run.language,
         )
         verdict = await _review(ctx, scope, review_request, run.theme)
@@ -1400,7 +1411,7 @@ async def _attempts(
         candidate.review_score = verdict.score
         candidate.review_lines = [] if verdict.ok and candidate.status_ok else list(verdict.lines)
         if verdict.score is not None and (
-            run.best_scored is None or verdict.score >= (run.best_scored.review_score or 0)
+            run.best_scored is None or ship_rank(candidate) >= ship_rank(run.best_scored)
         ):
             run.best_scored = candidate
         # A measured finding the review passed over still gets the repair (`AGENT_GATE_REPAIR=review`):

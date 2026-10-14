@@ -18,7 +18,7 @@ another provider, model or location.
 | `AGENT_STATUS_BAR` | `0.95` | `catalogue` reviews: the ship bar; a shipped render at or above it, with no measured gate or validator finding left, shows without notes (`ok`) |
 | `AGENT_STATUS_SCORE` | `0` | `catalogue` reviews: the review score (0 to 100) a shipped render also needs for `ok`; 0 turns the condition off (owner decision pending) |
 | `AGENT_GATE_REPAIR` | `review` | When measured findings of a render (advisory gate lines, ADAPTATION findings) start a repair: `review` (they go to the self-review and, as gate notes, to the review, and a round whose render still has them after its review is repaired with them) or `first` (straight to the repair round, skipping the self-review and the review; live before 2026-10-14) |
-| `AGENT_REPAIR_SELF_REVIEW` | `false` | Whether a repair round proofreads its render too (`AGENT_SELF_REVIEW`); the first round always does |
+| `AGENT_REPAIR_SELF_REVIEW` | `false` | With `AGENT_SELF_REVIEW` on, whether a repair round proofreads its render too, not only the first round |
 | `AGENT_SHIP_BEST` | `true` | `catalogue` reviews: review every render and ship the best-scored version, not the last |
 | `AGENT_CHECK_RETRY` | `true` | An adapter answer that fails its check gets one more call in the same round (a full file allowed) instead of ending it |
 | `AGENT_SELF_REVIEW` | `true` | The adapter sees its first render once and may improve it before the review; not a repair, no extra round |
@@ -219,8 +219,8 @@ class AgentSettings(BaseSettings):
     the repair. Either way a render whose canvas missed goes straight to the repair."""
 
     repair_self_review: bool = False
-    """`AGENT_REPAIR_SELF_REVIEW`: a repair round proofreads its render too before the review
-    (`AGENT_SELF_REVIEW`). Off since 2026-10-14: the reviewer scores the repaired render anyway, and
+    """`AGENT_REPAIR_SELF_REVIEW`: with `AGENT_SELF_REVIEW` on, a repair round proofreads its render too
+    before the review, not only the first round; with it off, no round does. Off since 2026-10-14: the reviewer scores the repaired render anyway, and
     `AGENT_SHIP_BEST` ships the better of the two; the measurement is in `agents/README.md`."""
 
     highlights: Literal["off", "data"] = "off"

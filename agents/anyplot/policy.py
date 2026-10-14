@@ -242,8 +242,8 @@ def adapter_rubric() -> str:
         "## The rubric your plot is scored with\n\n"
         "The reviewer scores the render of your code with the catalogue rubric below, the same text it reads: "
         "Visual Quality (VQ-01 to VQ-07), Design Excellence (DE-01 to DE-03), Spec Compliance (SC-01 to SC-04), "
-        "and DQ-01 and DQ-03 of Data Quality. Lost technical points (VQ, SC, DQ) send the plot back to you for a "
-        "repair, so aim every version at the top score of each technical criterion. When the notes ask for "
+        "and DQ-01 and DQ-03 of Data Quality. A render that loses more technical points (VQ, SC, DQ) than the "
+        "review's bar allows goes back to you for a repair, so aim every version at the top score of each technical criterion. When the notes ask for "
         "a self-review, the render of your code is attached: check it against each technical criterion, in the "
         "render's theme, and fix what falls short.",
         "For a user's plot, three of the scorer's rules (`agents/anyplot/prompts/scorer.md`) take precedence "

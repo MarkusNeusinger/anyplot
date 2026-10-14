@@ -26,6 +26,8 @@ from agents.anyplot.pipeline import (
     render_adapt_request,
     render_review_request,
     render_score_request,
+    ship_rank,
+    shipped_candidate,
     standing_requests,
     summarise_changes,
 )
@@ -119,6 +121,26 @@ class TestFinish:
         run.best.review_score = 85
         assert finish(run).status == "ok"
         get_settings.cache_clear()
+
+    def test_ship_best_prefers_the_render_without_measured_findings(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """A repair that cleared clipped text ships over a round-1 render that scored a point higher."""
+        monkeypatch.setenv("AGENT_REVIEWER_MODE", "catalogue")
+        monkeypatch.setenv("AGENT_SHIP_BEST", "true")
+        get_settings.cache_clear()
+        clipped = "AR-09 (light): text extends 40 px beyond the canvas edge → keep it inside. Likely cause: a label."
+        run = run_with(reviewed_ok=True, status_ok=True, review_score=84, advisory_lines=[clipped])
+        first = run.best
+        assert first is not None
+        repaired = Candidate(
+            working="w2", run_form="r2", pngs={}, plan=AdaptPlan(changes=["fix"]), attempt=2, review_score=83
+        )
+        repaired.reviewed_ok = repaired.status_ok = True
+        run.best, run.best_scored = repaired, first
+
+        assert ship_rank(repaired) > ship_rank(first)
+        assert shipped_candidate(run) is repaired
+        first.advisory_lines = []
+        assert shipped_candidate(run) is first  # both clean: the higher score ships
 
     def test_padded_canvas_is_never_ok(self) -> None:
         run = run_with(padded=True, canvas_line="VQ-05 (dark): drift", reviewed_ok=True)
