@@ -1211,12 +1211,21 @@ class TestDerive:
 
         assert cells(ratio, 3) == ["2.0", "", ""]
         assert ratio.changes == ["added column r: a / b, 2 cells are empty (a missing input or a division by zero)"]
-        assert cells(difference, 3) == ["-3.0", "-1.0", ""]
+        assert cells(difference, 3) == ["-3", "-1", ""]
 
     def test_sum_across_columns_skips_missing_cells(self) -> None:
         prepared = prepare("k,a,b,c\nx,1,2,3\ny,,2,\nz,,,\nw,1,1,1\n", derive("total", "sum", "a", "b", "c"))
 
-        assert cells(prepared, 4) == ["6.0", "2.0", "", "3.0"]
+        assert cells(prepared, 4) == ["6", "2", "", "3"]
+
+    def test_whole_numbers_stay_exact_past_float_precision(self) -> None:
+        """A float64 holds integers only up to 2**53: `9007199254740993 - 9007199254740992` is 1, not 0."""
+        prepared = prepare("k,a,b\nx,9007199254740993,9007199254740992\n", derive("d", "difference", "a", "b"))
+        summed = prepare("k,a,b\nx,1,1\ny,1.5,2\n", derive("s", "sum", "a", "b"))
+
+        assert cells(prepared, 3) == ["1"]
+        assert dtypes(prepared)["d"] == "integer"
+        assert cells(summed, 3) == ["2.0", "3.5"]  # a float column sums as floats
 
     def test_percent_change_within_groups_in_the_order_given(self) -> None:
         shuffled = "Year,Origin,Population\n2022,Foreign,2000\n2021,Foreign,1600\n2021,Native,6400\n2022,Native,6000\n"
@@ -1239,6 +1248,10 @@ class TestDerive:
             (derive("s", "share", "Population", "Year"), "invalid_operation"),
             (derive("d", "difference", "Population", "Year", within=["Origin"]), "invalid_operation"),
             (derive("d", "difference", "Population", "Year", percent=True), "invalid_operation"),
+            (
+                derive("g", "percent_change", "Population", order="Year", within=["Origin"], percent=True),
+                "invalid_operation",
+            ),
             (derive("s", "share", "Population", order="Year"), "invalid_operation"),
             (derive("g", "percent_change", "Population"), "invalid_operation"),
             (derive("s", "share", "Population", within=["Population"]), "invalid_operation"),

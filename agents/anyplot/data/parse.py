@@ -1553,7 +1553,11 @@ def _constants_to_notes(
     screens before any model reads them; one warning names the columns, never the values.
     Only text columns with no missing cell count, in a table of at least two rows; a column
     kept text by request stays. When fewer than `MIN_KEPT_COLUMNS` columns would remain,
-    every column stays: the table would have too little left to plot.
+    every column stays: the table would have too little left to plot. A column whose note
+    the notes' cap (`MAX_CONTEXT_CHARS`) would cut or leave out stays a column too, so the
+    value is never lost to the cap. (When the route later drops every note because the
+    screening refused them, `without_context`, the constants go with them, as a JSON-stat
+    dimension's do.)
     """
     if rows < 2 or context is None:
         return columns
@@ -1568,13 +1572,21 @@ def _constants_to_notes(
     ]
     if not constant or len(columns) - len(constant) < MIN_KEPT_COLUMNS:
         return columns
-    lines, cut = _context_lines([*([line] for line in context), *([f"{c.name}: {c.cells[0]}"] for c in constant)], None)
-    context[:] = lines
-    names = ", ".join(column.name for column in constant)
-    warnings.append(f"{_count(len(constant), 'column')} with the same text in every row moved to the notes: {names}")
-    if cut:
-        warnings.append(f"the notes were cut at {MAX_CONTEXT_CHARS:,} characters")
-    moved = {id(column) for column in constant}
+    # A column moves only with its whole note: one the notes' cap would cut or leave out stays a column.
+    notes = [_WHITESPACE_RUN.sub(" ", f"{column.name}: {column.cells[0]}").strip() for column in constant]
+    lines, _ = _context_lines([*([line] for line in context), *([note] for note in notes)], None)
+    fitted = lines[len(context) :]
+    moving: list[_Column] = []
+    for column, note, line in zip(constant, notes, fitted, strict=False):
+        if note != line:
+            break
+        moving.append(column)
+    if not moving:
+        return columns
+    context.extend(fitted[: len(moving)])
+    names = ", ".join(column.name for column in moving)
+    warnings.append(f"{_count(len(moving), 'column')} with the same text in every row moved to the notes: {names}")
+    moved = {id(column) for column in moving}
     return [column for column in columns if id(column) not in moved]
 
 

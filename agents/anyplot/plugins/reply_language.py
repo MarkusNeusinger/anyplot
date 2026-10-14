@@ -16,8 +16,8 @@ saw an English summary in a German session (#12176). This plugin checks it in co
   `mismatch`, the expected and the found code), and, while the request budget allows a
   call, asks the root model once more, without tools, with the wrong reply as its
   previous turn and `REASK_LINE` naming the language (the server's English name for it,
-  never the stored value). The new reply replaces the old one when it is in the session
-  language (verdict `reasked`); otherwise the first reply stays (verdict
+  never the stored value). The new reply replaces the old one when the detector is sure
+  it is in the session language (verdict `reasked`); otherwise, also when it is unsure, the first reply stays (verdict
   `reask_failed`). The extra call is booked like any other (`budget.book_response`).
   At most one re-ask per turn (`ledger.reply_reasked`).
 
@@ -36,7 +36,7 @@ from google.adk.plugins.base_plugin import BasePlugin
 from google.genai import types
 
 from ..language import english_name, is_valid
-from ..language_detect import expected_code, mismatch
+from ..language_detect import detect, expected_code, mismatch
 from ..policy import fixed_replies
 from ..services import get_services
 from ..session_state import LANGUAGE, LANGUAGE_SOURCE
@@ -158,7 +158,8 @@ class ReplyLanguagePlugin(BasePlugin):
             return None
         book_response(ledger, ROOT_AGENT, callback_context.session.user_id, final)
         again = reply_text(final)
-        if again is None or mismatch(again, language) is not None:
+        # Only a reply surely in the session language replaces the first one: an unsure guess ("Done.") does not.
+        if again is None or detect(again) != expected:
             attribution("reply_language", ledger, verdict="reask_failed", expected=expected, found=found)
             return None
         attribution("reply_language", ledger, verdict="reasked", expected=expected, found=found)

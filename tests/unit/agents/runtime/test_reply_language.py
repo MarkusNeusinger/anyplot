@@ -162,10 +162,11 @@ class TestPlugin:
         # A second final reply in the same turn is not asked again.
         assert await run(german_session(), response(REPLIES["en"])) is None and len(model.requests) == 1
 
-    async def test_a_reask_still_in_the_wrong_language_keeps_the_first_reply(
-        self, ledger: RequestLedger, services: Services, monkeypatch: pytest.MonkeyPatch
+    @pytest.mark.parametrize("answer", [REPLIES["fr"], "Fertig."])
+    async def test_a_reask_not_surely_in_the_session_language_keeps_the_first_reply(
+        self, answer: str, ledger: RequestLedger, services: Services, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setattr(plugin_module, "root_model", lambda: FakeModel([REPLIES["fr"]]))
+        monkeypatch.setattr(plugin_module, "root_model", lambda: FakeModel([answer]))
 
         assert await run(german_session(), response(REPLIES["en"])) is None
 

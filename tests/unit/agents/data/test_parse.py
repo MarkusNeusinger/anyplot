@@ -1525,6 +1525,16 @@ class TestConstantColumns:
 
         assert parsed.context_lines == ["Population by origin", "Region: Country", "Sex: Sex - Total"]
 
+    def test_a_constant_whose_note_the_cap_would_cut_stays_a_column(self) -> None:
+        """The notes hold at most `MAX_CONTEXT_CHARS`: a value never disappears into a cut note."""
+        title = "x" * (MAX_CONTEXT_CHARS - 30)
+        parsed = parse_dataset(f"{title}\n" + OFFICE_EXPORT)
+
+        # `Region: Country` fits in the 29 characters left, `Sex: Sex - Total` no longer does.
+        assert parsed.context_lines == [title, "Region: Country"]
+        assert [column.name for column in parsed.profile.columns] == ["Year", "Origin", "Sex", "Population"]
+        assert "1 column with the same text in every row moved to the notes: Region" in parsed.warnings
+
     def test_too_few_columns_left_keeps_every_column(self) -> None:
         parsed = parse_dataset("Region,Population\nCountry,6500\nCountry,2200\n")
 

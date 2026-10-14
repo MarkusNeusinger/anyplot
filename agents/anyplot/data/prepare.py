@@ -65,7 +65,9 @@ The operations:
   previous row of its group in the order of `order` (a group's first row is missing;
   two rows with the same group and order are an `invalid_operation`, since "previous"
   would be a guess: aggregate first). `percent` multiplies a `ratio` or a `share` by 100;
-  a percent change is always in percent. A division by zero or a missing input gives a
+  a percent change is always in percent. A difference or a sum of whole-number columns
+  is computed in Python integers and stays whole (a float64 holds integers only up to
+  2**53). A division by zero or a missing input gives a
   missing cell, and the change line counts them. This is how the root answers "which
   year has the largest share of X": derive the share, then read the profile, instead
   of asking the user to compute a column (live test of 2026-10-14).
@@ -104,7 +106,7 @@ from typing import Annotated, Literal
 
 import numpy as np
 import pandas as pd
-from pandas.api.types import is_bool_dtype, is_datetime64_any_dtype, is_numeric_dtype
+from pandas.api.types import is_bool_dtype, is_datetime64_any_dtype, is_integer_dtype, is_numeric_dtype
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, ValidationError
 
 from ..schemas import MAX_CELL_CHARS, MAX_COLUMNS, MAX_NOTE_CHARS, MAX_ROWS, ColumnName
@@ -772,14 +774,22 @@ def _derive(frame: pd.DataFrame, op: Derive, carried: _Carried) -> tuple[pd.Data
         raise PrepareError("invalid_operation", "derive share takes no order")
     if op.how == "percent_change" and not op.order:
         raise PrepareError("invalid_operation", "derive percent_change needs an order column, such as a date or year")
-    if op.percent and op.how not in ("ratio", "share", "percent_change"):
-        raise PrepareError("invalid_operation", f"percent applies to a ratio or a share, not to a {op.how}")
+    if op.percent and op.how not in ("ratio", "share"):
+        raise PrepareError(
+            "invalid_operation",
+            f"percent applies to a ratio or a share, not to a {op.how} (a percent change is in percent)",
+        )
     if set(columns) & {*keys, *([op.order] if op.order else [])}:
         raise PrepareError("invalid_operation", "a value column cannot also be a within or order column")
     for name in columns:
         kind = _kind(frame[name])
         if kind != "number":
             raise PrepareError("type_mismatch", f"column '{name}' is {kind}; derive {op.how} needs number columns")
+    if op.how in ("difference", "sum") and all(is_integer_dtype(frame[name].dtype) for name in columns):
+        # Whole numbers stay exact: a float64 holds integers only up to 2**53.
+        result = _integer_result(frame, columns, op.how)
+        what = f"{columns[0]} - {columns[1]}" if op.how == "difference" else f"sum of {', '.join(columns)}"
+        return _derived(frame, op, result, what, "", carried)
     values = [frame[name].astype("float64") for name in columns]
     note = ""
     match op.how:
@@ -802,10 +812,17 @@ def _derive(frame: pd.DataFrame, op: Derive, carried: _Carried) -> tuple[pd.Data
         case "percent_change":
             result, what = _percent_change(frame, values[0], columns[0], keys, str(op.order))
             note = "the first row of each group, "
-    if op.percent and op.how != "percent_change":
+    if op.percent:
         result = result * 100
         what += ", in percent"
     result = result.where(np.isfinite(result)).astype("float64")
+    return _derived(frame, op, result, what, note, carried)
+
+
+def _derived(
+    frame: pd.DataFrame, op: Derive, result: pd.Series, what: str, note: str, carried: _Carried
+) -> tuple[pd.DataFrame, str]:
+    """The frame with the derived column appended, and its change line counting the empty cells."""
     present = int(result.notna().sum())
     if not present:
         raise PrepareError("invalid_operation", f"no row has a value for column '{op.name}'; check the input columns")
@@ -816,6 +833,21 @@ def _derive(frame: pd.DataFrame, op: Derive, carried: _Carried) -> tuple[pd.Data
         change += f", {_count(empty, 'cell')} {verb} empty ({note}a missing input or a division by zero)"
     carried.forget([op.name])
     return frame.assign(**{op.name: result}), change
+
+
+def _integer_result(frame: pd.DataFrame, columns: list[str], how: str) -> pd.Series:
+    """A difference or a row sum of whole-number columns in Python integers: `Int64`, or float64 past its range."""
+    rows = zip(*([None if pd.isna(value) else int(value) for value in frame[name]] for name in columns), strict=True)
+    results: list[int | None] = []
+    for row in rows:
+        present = [value for value in row if value is not None]
+        if how == "difference":
+            results.append(None if len(present) < 2 else present[0] - present[1])
+        else:
+            results.append(sum(present) if present else None)
+    if all(value is None or _INT64_MIN <= value <= _INT64_MAX for value in results):
+        return pd.Series(pd.array(results, dtype="Int64"), index=frame.index)
+    return pd.Series([np.nan if value is None else float(value) for value in results], index=frame.index)
 
 
 def _percent_change(
