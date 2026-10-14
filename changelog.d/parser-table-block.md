@@ -6,4 +6,4 @@
   that explains the columns above it, a source line or a note below it, and up to three
   summary rows at the end (`Total`, `Summe`, `Mittelwert`…) are left out, each with a
   warning in the preview. Before, the first line was always the header, so a raw
-  Open-Meteo download lost its data columns.
+  Open-Meteo download lost its data columns. (#12166)
