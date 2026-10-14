@@ -65,6 +65,7 @@ from ..data.parse import MAX_CANONICAL_BYTES, MAX_COMPUTED_BYTES, ParsedDataset,
 from ..data.prepare import MAX_OPERATIONS, Operation, PrepareError, apply_operations, validation_lines
 from ..data.shape import long_suggestion
 from ..data.store import StoredDataset, StoreFull
+from ..dataset_context import code_source, generated_source
 from ..dataset_guard import DataRefused, GuardUnavailable, check_dataset
 from ..dataset_versions import push_version
 from ..language import is_valid, normalise, same_language
@@ -328,7 +329,7 @@ async def generate_data(
     except ParseError:  # the generator keeps the parser's caps (size, rows, columns), so a refusal here is a bug
         return _error("internal")
     try:
-        delta, number = _store_generated(tool_context.session.id, view, parsed)
+        delta, number = _store_generated(tool_context.session.id, view, parsed, source=generated_source(spec))
     except StoreFull:
         return _error("capacity")
     # A new dataset id leaves the confirmation's fingerprint behind: the user confirms the generated data.
@@ -347,21 +348,29 @@ async def generate_data(
 
 
 def _store_generated(
-    session_id: str, view: SessionView, parsed: ParsedDataset, *, code: str | None = None
+    session_id: str, view: SessionView, parsed: ParsedDataset, *, code: str | None = None, source: str
 ) -> tuple[dict[str, Any], int]:
     """Store a generated table: the next version of the session's data, or version 1 when it has none; raises `StoreFull`.
 
     A session whose dataset left the store (a restart keeps neither) counts as one
     without data, so the stale ids are dropped with the history, as a paste drops them.
-    `code` is the Python that computed the table (`run_data_code`), kept with the version.
+    `code` is the Python that computed the table (`run_data_code`), kept with the version;
+    `source` says where it comes from (`dataset_context`), for the adapter and the reviewer.
     """
     store = get_services().datasets
     current = store.get(view.dataset_id, session_id) if view.dataset_id else None
     if current is not None:
-        version = push_version(store, session_id, view, parsed, view.snapshot, rebind=True, code=code)
+        version = push_version(store, session_id, view, parsed, view.snapshot, rebind=True, code=code, source=source)
         return version.delta, version.version
     ingested = store_dataset(
-        store, session_id, parsed, view.snapshot, previous_id=view.dataset_id, history=view.dataset_history, code=code
+        store,
+        session_id,
+        parsed,
+        view.snapshot,
+        previous_id=view.dataset_id,
+        history=view.dataset_history,
+        code=code,
+        source=source,
     )
     return ingested.state_delta(), 1
 
@@ -472,7 +481,9 @@ async def run_data_code(code: str, source_language: str, tool_context: ToolConte
     except GuardUnavailable:
         return _error("guard_unavailable")
     try:
-        delta, number = _store_generated(tool_context.session.id, view, parsed, code=prepared)
+        delta, number = _store_generated(
+            tool_context.session.id, view, parsed, code=prepared, source=code_source(prepared, language)
+        )
     except StoreFull:
         return _error("capacity")
     for key, value in delta.items():
@@ -570,7 +581,8 @@ plot_pipeline = Workflow(
         "once if needed. Call it with no arguments for 'Create plot'; for a change, pass change_request (English, "
         "at most 600 characters) and base='previous'. Leave theme out unless the user asks for a theme: a new plot "
         "is light and a change keeps the latest version's theme; pass theme='dark' only when the user asks for a "
-        "dark plot. Returns the PlotResult."
+        "dark plot. Pass expected_texts (at most five) with the texts and number formats the user wrote out for "
+        "the plot, verbatim. Returns the PlotResult, with what the shipped plot shows under shows."
     ),
     input_schema=PipelineArgs,
     edges=[("START", run_pipeline)],

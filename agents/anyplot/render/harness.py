@@ -37,7 +37,8 @@ copies it to `/opt/anyplot/harness.py`. In order it:
    than `TEXT_OVERLAP_TOLERANCE_PX` (`text_overlaps`, the deepest pairs by role, and
    `text_overlaps_total`), annotations outside their axes, the
    number of drawn point marks (scatter offsets) and the number of vertices of the
-   visible `plot()` lines (`line_points`). Only rendered text counts: matplotlib keeps tick
+   visible `plot()` lines (`line_points`), and the content of the drawn texts by role
+   (`labels`, `drawn_labels`: what the root's closing reply is grounded in). Only rendered text counts: matplotlib keeps tick
    labels for locator positions outside the view interval and for hidden axes
    (`axis("off")`, a twin's), which report themselves visible but are never drawn,
    and an edge label one tick step past the view sat beyond the canvas in every
@@ -141,6 +142,12 @@ corner or an edge (a title on its axes' top tick label, an axis label beside its
 touch on the canvas. The owner's polar case overlapped by far more than this."""
 TEXT_OVERLAP_CANDIDATES = 200  # texts other than tick labels compared with every measured text
 TEXT_OVERLAP_LIMIT = 5  # the deepest pairs the probe reports
+LABEL_LIMIT = 150
+"""Drawn texts whose content the probe reports (`labels`): every title, axis label and legend text of a
+plot, and enough tick labels to read their number format; 150 of 120 characters stay far under the wire's
+256 KiB probe cap."""
+LABEL_CHARS = 120
+TICK_LABELS_PER_AXIS = 30  # tick labels of one kind (`y tick label`) that `labels` keeps, in draw order
 THEME_ENV = "ANYPLOT_THEME"
 MARKER = "HARNESS"
 FALLBACK_FAMILIES = (
@@ -1009,6 +1016,43 @@ def text_overlaps(figure, extents, scale):
     return pairs[:TEXT_OVERLAP_LIMIT], len(pairs)
 
 
+def drawn_labels(figure, drawn):
+    """The content of the drawn texts, by role: what the plot shows, for the host's grounding (`grounding.py`).
+
+    At most `LABEL_LIMIT` entries of `{"kind", "text"}`, each text cut to
+    `LABEL_CHARS`: titles, axis labels, legend texts and annotations first, then tick
+    labels (named by their axis, `x tick label`), then any other drawn text. Only
+    texts the probe's draw rendered count, so a tick label outside the view is never
+    listed. The host reads it as untrusted data: the code under test can write any text.
+    """
+    kinds, _, _ = _text_kinds(figure)
+    for axes in figure.get_axes():
+        for name in ("x", "y", "z"):
+            axis = getattr(axes, f"{name}axis", None)
+            if axis is None:
+                continue
+            for label in axis.get_ticklabels():
+                kinds[id(label)] = f"{name} tick label"
+    entries = []
+    per_kind = {}
+    for key, text in drawn.items():
+        kind = kinds.get(key, "text")
+        per_kind[kind] = per_kind.get(kind, 0) + 1
+        if kind.endswith("tick label") and per_kind[kind] > TICK_LABELS_PER_AXIS:
+            continue  # enough to read the format; the other axes keep their share of LABEL_LIMIT
+        rank = 1 if kind.endswith("tick label") else 2 if kind == "text" else 0
+        entries.append((rank, kind, text))
+    entries.sort(key=lambda entry: entry[0])
+    labels = []
+    for _, kind, text in entries[:LABEL_LIMIT]:
+        try:
+            content = str(text.get_text())
+        except Exception:
+            continue
+        labels.append({"kind": kind, "text": content[:LABEL_CHARS]})
+    return labels
+
+
 def _beyond(box, width, height):
     """Whether a text box reaches past an edge of the `width` x `height` canvas."""
     return box[0] < 0 or box[1] < 0 or box[2] > width or box[3] > height
@@ -1103,7 +1147,12 @@ def probe(figure, dpi):
             except Exception:
                 continue
     overlaps, overlaps_total = text_overlaps(figure, extents, scale)
+    try:
+        labels = drawn_labels(figure, drawn)
+    except Exception:  # the texts are for the reply's grounding; they never break the probe
+        labels = []
     return {
+        "labels": labels,
         "figsize": [float(width_in), float(height_in)],
         "dpi": float(dpi or figure.dpi),
         "canvas": [

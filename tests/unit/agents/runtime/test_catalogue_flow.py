@@ -3,6 +3,7 @@
 The other flow tests script the checklist reviewer (`conftest.CHECKLIST_FLOW`); these run the defaults.
 """
 
+import json
 import logging
 from typing import Any
 
@@ -10,6 +11,7 @@ import httpx
 import pytest
 
 from agents.anyplot.pipeline import EARLIER_REQUESTS_HEADING, SELF_REVIEW_LINE
+from agents.anyplot.render.backends.fake import FakeBackend, FakeOutcome
 from agents.anyplot.scoring import DE_DEFAULTS, SCORED
 from agents.anyplot.services import get_services
 from agents.anyplot.settings import get_settings
@@ -414,3 +416,75 @@ async def test_a_later_change_carries_the_earlier_request_to_every_call(client: 
     shipped = get_services().versions.get(sid)
     assert shipped is not None and shipped.requests == [TITLE_REQUEST, MARKER_REQUEST]
     assert 'title = "Vienna 2025"' in shipped.working
+
+
+def millions_probe(*ticks: str) -> dict[str, Any]:
+    """A probe whose drawn texts are a title and the y tick labels `ticks` (live case Q1 of 2026-10-14)."""
+    entries = [("title", "Wohnbevölkerung der Schweiz"), *(("y tick label", tick) for tick in ticks)]
+    return {"texts": [], "labels": [{"kind": kind, "text": text} for kind, text in entries]}
+
+
+def root_inputs(fake: Any) -> list[str]:
+    requests = [request for request in fake.requests if (request.config.labels or {}).get("agent_kind") == "root"]
+    return [
+        json.dumps([content.model_dump(mode="json") for content in request.contents], ensure_ascii=False)
+        for request in requests
+    ]
+
+
+async def test_a_requested_format_the_render_misses_goes_to_the_repair(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend
+) -> None:
+    """`AGENT_EXPECT_CHECK=repair`: the miss is measured like a gate line, the repair fixes it, the reply sees it."""
+    script = default_script(plans=[SCATTER_PLAN, EMPTY_PLAN, SECOND_PLAN])
+    script["root"] = [{"call": "plot_pipeline", "args": {"expected_texts": ["6,5 Mio."]}}, {"text": ROOT_REPLY}]
+    script["reviewer"] = [{"json": score()}, {"json": score()}]
+    fixed = millions_probe("6,0 Mio.", "6,5 Mio.")
+    backend.script = lambda job, theme: FakeOutcome(
+        probe=fixed if len(backend.jobs) >= 3 else millions_probe("6.0 M", "6.5 M")
+    )
+    fake = swap_models("gemini", script)
+    sid = await open_session(client)
+
+    events = await create_plot(client, sid)
+
+    plot = next(data for name, data in events if name == "plot")
+    assert (plot["status"], plot["residual_defects"]) == ("ok", [])
+    assert [(r["attempt"], r["outcome"], r["shipped"]) for r in plot["rounds"]] == [
+        (1, "measured", False),
+        (2, "ok", True),
+    ]
+    assert "shows" not in plot  # the page's plot event carries no drawn texts
+    inputs = adapter_inputs(fake)
+    miss = 'the plot does not show the requested number format \\"6,5 Mio.\\"'  # quoted inside the notes' JSON
+    assert "<user_message>\n6,5 Mio.\n</user_message>" in inputs[0]
+    assert miss in inputs[1] and miss in inputs[2]  # the proofread and the repair
+    closing = root_inputs(fake)[-1]
+    assert "6,0 Mio." in closing and "requested_not_found" in closing
+
+
+@pytest.mark.parametrize("mode", ["repair", "note"])
+async def test_a_miss_no_round_fixes_ships_as_a_residual_line(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend, monkeypatch: pytest.MonkeyPatch, mode: str
+) -> None:
+    monkeypatch.setenv("AGENT_EXPECT_CHECK", mode)
+    get_settings.cache_clear()
+    plans = [SCATTER_PLAN, EMPTY_PLAN, SECOND_PLAN] if mode == "repair" else [SCATTER_PLAN, EMPTY_PLAN]
+    script = default_script(plans=plans)
+    script["root"] = [{"call": "plot_pipeline", "args": {"expected_texts": ["6,5 Mio."]}}, {"text": ROOT_REPLY}]
+    script["reviewer"] = [{"json": score()}, {"json": score()}]
+    backend.script = lambda job, theme: FakeOutcome(probe=millions_probe("6.0 M", "6.5 M"))
+    fake = swap_models("gemini", script)
+    sid = await open_session(client)
+
+    events = await create_plot(client, sid)
+
+    plot = next(data for name, data in events if name == "plot")
+    assert plot["status"] == "needs_attention"
+    (line,) = plot["residual_defects"]
+    assert line.startswith('SC-02 (light): the plot does not show the requested number format "6,5 Mio."')
+    assert len(plot["rounds"]) == (2 if mode == "repair" else 1)
+    # `note`: the proofread sees no miss line, since only `repair` measures it.
+    assert ("requested number format" in adapter_inputs(fake)[1]) is (mode == "repair")
+    closing = root_inputs(fake)[-1]
+    assert "requested_not_found" in closing and "6.0 M" in closing

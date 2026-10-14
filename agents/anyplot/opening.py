@@ -112,6 +112,7 @@ def store_dataset(
     *,
     notes_screened: bool = False,
     code: str | None = None,
+    source: str | None = None,
 ) -> IngestedDataset:
     """Store a parsed dataset for a session, replacing its previous one and its history; raises `StoreFull`.
 
@@ -119,14 +120,15 @@ def store_dataset(
     passed the dataset route's screen (`notes_screened`: the pre-filter and the scope judge); every
     other path (a fixture seed, an eval's ingest) stores the table without them, so no unjudged
     note ever reaches the root (#12168 review). `code` is the Python that computed the table
-    (`run_data_code`), kept with the version for the data panel.
+    (`run_data_code`), kept with the version for the data panel; `source` says where a computed
+    table comes from (`dataset_context`), for the adapter's and the reviewer's dataset context.
     """
     if not notes_screened:
         # Constant columns whose values went into the notes come back as columns, so the values survive.
         parsed = with_constant_columns(parsed)
         if parsed.context_lines:
             parsed = replace(parsed, context_lines=[])
-    dataset_id = store.put(session_id, parsed, code=code)
+    dataset_id = store.put(session_id, parsed, code=code, source=source)
     for old in (previous_id, *history):
         if old and old != dataset_id:
             store.delete(old, session_id)
