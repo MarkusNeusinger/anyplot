@@ -7,8 +7,9 @@
 * a message with a non-text part is withheld with the `unsupported_content` refusal;
 * the per-user and global daily budget is checked before the judge runs, and the
   judge's tokens are booked to the ledger and the usage book;
-* the judge sees all text parts inside `<user_message>`, the root's last reply (at
-  most 500 characters) inside `<last_assistant_turn>`, and the user's last three
+* the judge sees all text parts inside `<user_message>`, the root's last real reply
+  (at most 500 characters; never a fixed refusal or the outage line, `is_service_text`)
+  inside `<last_assistant_turn>`, and the user's last three
   earlier turns (500 characters each, 1,500 in all, oldest first, as a JSON list)
   inside `<earlier_user_turns>`, so a request split across turns is judged as a
   whole; the fence tags are neutralised in all three;
@@ -29,20 +30,25 @@
   is set: a later message never changes it, a choice (`chosen`) never yields to it, a
   refused message never sets it, and an `en` verdict counts only for a message of at
   least three words, because the judge also answers `en` for a message without a clear
-  language (`sin x` keeps the default, and the next typed message is judged again). The
-  write is a content-free state event appended after the judge's line and the refusal
+  language (`sin x` keeps the default, and the next typed message is judged again). A
+  language derived from the pasted data (source `pasted`) counts as unset here: the
+  first typed message's language replaces it. The write is a content-free state event appended after the judge's line and the refusal
   branch; it never raises, so a failed write is one `language_write_failed` line and the
   accepted message still goes through;
 * with `AGENT_KEEP_REFUSALS`, a refused message's text and verdict go into the
   session's bounded refusal ring (`services.RefusalStore`), which only the feedback
   bundle shows; the attribution line never carries the text.
 
-A withheld message is replaced by `[message withheld by scope policy]` before ADK
-stores it. `before_run_callback` then halts the run with the refusal text, which
+A withheld message is replaced before ADK stores it: by
+`[message withheld by scope policy: <code>]` after the judge's refusal (`out_of_scope`
+or `needs_data`, `withheld_text`), so the judge's next context keeps the verdict, and by
+the bare `[message withheld by scope policy]` otherwise. `before_run_callback` then halts the run with the refusal text, which
 ADK emits as one final event (author `model`); the stream translator turns the
 ledger's refusal or error into `refusal` or `error` events. The judge's context
-counts that halt event as an assistant turn, so after a refusal the judge sees the
-refusal it follows, as the scope eval's cases do.
+skips that halt event's text, as it skips every fixed reply (`judge_context`): after a
+refusal the judge sees the withheld placeholder, with its refusal code, among the user
+turns and the last reply a model wrote, never the refusal text, which primed it to refuse
+the next message alike.
 
 `on_event_callback` is the output side: the root's final reply goes through the
 output guard's length cap (`output_guard.reply_too_long`, the same in every language)
@@ -75,7 +81,7 @@ from google.genai import types
 from ..language import DEFAULT_LANGUAGE
 from ..models import JudgeUnavailable, JudgeVerdict
 from ..output_guard import reply_length, reply_too_long, sanitize
-from ..policy import fence, refusal, scope_rubric
+from ..policy import fence, fixed_replies, refusal, scope_rubric
 from ..services import KeptRefusal, get_services
 from ..session_state import LANGUAGE_SOURCE, SPEC_ID, language_delta
 from ..settings import get_settings
@@ -106,6 +112,8 @@ Turn = tuple[Literal["user", "assistant"], str]
 REFUSAL_CODES: dict[str, str] = {"out_of_scope": "out_of_scope", "attack": "out_of_scope", "needs_data": "needs_data"}
 """The `refusal` event code of each refusing verdict. `attack` shares the out-of-scope reply, so an
 attacker learns nothing about how the message was classified."""
+JUDGED_REFUSALS = frozenset(REFUSAL_CODES.values())
+"""The refusal codes a withheld placeholder may carry (`withheld_text`)."""
 
 
 def refusal_code(verdict: str) -> str:
@@ -113,8 +121,20 @@ def refusal_code(verdict: str) -> str:
     return REFUSAL_CODES.get(verdict, "out_of_scope")
 
 
-def _withheld() -> types.Content:
-    return types.Content(role="user", parts=[types.Part(text=WITHHELD)])
+def withheld_text(code: str | None = None) -> str:
+    """The placeholder a withheld message is stored as: with the refusal code for a judged refusal.
+
+    `[message withheld by scope policy: needs_data]` keeps the earlier verdict for the judge's next
+    context, so "do it anyway" after a `needs_data` refusal gets `needs_data` again, without a
+    natural-language refusal text in that context (which primed the judge, `judge_context`). Only
+    the refusal codes appear (`attack` is `out_of_scope` there too); a refusal before the judge
+    (`budget`, `unsupported_content`) or an outage keeps the bare `WITHHELD`.
+    """
+    return f"{WITHHELD[:-1]}: {code}]" if code in JUDGED_REFUSALS else WITHHELD
+
+
+def _withheld(code: str | None = None) -> types.Content:
+    return types.Content(role="user", parts=[types.Part(text=withheld_text(code))])
 
 
 def session_turns(invocation_context: InvocationContext) -> list[Turn]:
@@ -122,8 +142,9 @@ def session_turns(invocation_context: InvocationContext) -> list[Turn]:
 
     ADK calls `on_user_message_callback` before it stores the new message, so the
     message being judged is never among them. A withheld message appears as its
-    placeholder, and the halt event after it (author `model`) as the assistant turn
-    that carried the fixed refusal, which tells the judge that an earlier turn was refused.
+    placeholder, which tells the judge that an earlier turn was refused, and the halt
+    event after it (author `model`) as the assistant turn that carried the fixed
+    refusal, which `judge_context` then leaves out.
     """
     turns: list[Turn] = []
     for event in invocation_context.session.events:
@@ -135,13 +156,26 @@ def session_turns(invocation_context: InvocationContext) -> list[Turn]:
     return turns
 
 
-def judge_context(turns: Sequence[Turn]) -> tuple[str, list[str]]:
-    """The root's last reply (at most `MAX_CONTEXT_CHARS`) and the last `MAX_USER_TURNS` user turns, oldest first.
+def is_service_text(text: str) -> bool:
+    """Whether an assistant turn is the service's own fixed text (a refusal or the outage line), not a model's reply."""
+    stripped = text.strip()
+    return stripped == GUARD_UNAVAILABLE_TEXT or stripped in fixed_replies()
 
+
+def judge_context(turns: Sequence[Turn]) -> tuple[str, list[str]]:
+    """The root's last real reply (at most `MAX_CONTEXT_CHARS`) and the last `MAX_USER_TURNS` user turns, oldest first.
+
+    A fixed refusal or the outage line (`is_service_text`) is never the context: the
+    live case of 2026-10-14 had the German `needs_data` refusal for a weather question
+    prime the judge to refuse the next message, a question about the user's own data,
+    as `needs_data` too. The judge sees the last reply a model wrote instead (or none),
+    and the withheld placeholder among the user turns still marks the refused one.
     Each user turn keeps at most `MAX_USER_TURN_CHARS` characters and all of them
     together at most `MAX_USER_CONTEXT_CHARS`, the newest first when the budget runs out.
     """
-    assistant = next((text for role, text in reversed(turns) if role == "assistant"), "")[:MAX_CONTEXT_CHARS]
+    assistant = next((text for role, text in reversed(turns) if role == "assistant" and not is_service_text(text)), "")[
+        :MAX_CONTEXT_CHARS
+    ]
     earlier: list[str] = []
     left = MAX_USER_CONTEXT_CHARS
     for role, text in reversed(turns):
@@ -234,7 +268,7 @@ class ScopeGuardPlugin(BasePlugin):
                 )
             code = refusal_code(verdict.verdict)
             ledger.refuse(code, refusal(code, verdict.lang))
-            return _withheld()
+            return _withheld(code)
         await self._detect(invocation_context, ledger, verdict, text)
         return None
 

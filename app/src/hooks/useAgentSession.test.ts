@@ -345,6 +345,20 @@ describe('useAgentSession: data and bindings', () => {
     ]);
   });
 
+  it("takes the session language the paste's answer names, with the pasted-data notice", async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/dataset'] = () =>
+      json(200, { ...DATASET, language: { language: 'de', source: 'pasted' } });
+    const { result } = await openSession(routes);
+    await act(() => result.current.parseData('datum,temperatur\n2026-04-01,14\n'));
+    expect(result.current.state.plotLanguage).toEqual({ language: 'de', source: 'pasted' });
+    expect(
+      result.current.state.items.filter(
+        item => item.kind === 'notice' && item.text.includes('detected from your pasted data')
+      )
+    ).toHaveLength(1);
+  });
+
   it('shows a missing required role and lets a column move between roles', async () => {
     const routes = baseRoutes();
     routes['POST /sessions/S1/dataset'] = () =>
@@ -1639,7 +1653,7 @@ describe('agentReducer', () => {
     const sync = (
       state: AgentSessionState,
       language: string,
-      source: 'default' | 'detected' | 'chosen'
+      source: 'default' | 'pasted' | 'detected' | 'chosen'
     ) => agentReducer(state, { type: 'language_sync', plotLanguage: { language, source } });
 
     // default → detected: the value and one quiet notice, the confirmation untouched.
@@ -1673,6 +1687,38 @@ describe('agentReducer', () => {
     expect(sync(detected, 'en', 'default')).toBe(detected);
     // chosen over chosen applies: the assistant changed it during the turn.
     expect(sync(chosen, 'fr', 'chosen').plotLanguage).toEqual({ language: 'fr', source: 'chosen' });
+  });
+
+  it('takes a language from the pasted data below a typed or chosen one, with its own notice', () => {
+    const ready: AgentSessionState = { ...initialAgentState('matplotlib'), phase: 'ready' };
+    const sync = (
+      state: AgentSessionState,
+      language: string,
+      source: 'default' | 'pasted' | 'detected' | 'chosen'
+    ) => agentReducer(state, { type: 'language_sync', plotLanguage: { language, source } });
+    const pastedNotice =
+      'language: de · detected from your pasted data · the lang chip in the header changes it';
+
+    const pasted = sync(ready, 'de', 'pasted');
+    expect(pasted.plotLanguage).toEqual({ language: 'de', source: 'pasted' });
+    expect(pasted.items).toEqual([{ id: 1, kind: 'notice', text: pastedNotice }]);
+    // The summary turn's done repeats it: no second notice; a done that still says default keeps it.
+    expect(sync(pasted, 'de', 'pasted').items).toHaveLength(1);
+    expect(sync(pasted, 'en', 'default')).toBe(pasted);
+    // A later paste in another language moves it, with a notice.
+    expect(lastItem(sync(pasted, 'fr', 'pasted').items)).toMatchObject({
+      text: 'language: fr · detected from your pasted data · the lang chip in the header changes it',
+    });
+    // The first typed message replaces it, with the message's notice.
+    const detected = sync(pasted, 'en', 'detected');
+    expect(detected.plotLanguage).toEqual({ language: 'en', source: 'detected' });
+    expect(lastItem(detected.items)).toMatchObject({
+      text: 'language: en · detected from your message · the lang chip in the header changes it',
+    });
+    // Never over a typed or a chosen language.
+    expect(sync(detected, 'de', 'pasted')).toBe(detected);
+    const chosen = sync(ready, 'fr', 'chosen');
+    expect(sync(chosen, 'de', 'pasted')).toBe(chosen);
   });
 
   it('marks the language call busy until it ends, either way', () => {

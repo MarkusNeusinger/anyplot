@@ -1,6 +1,7 @@
 /**
  * The session language chip in the chat header, next to the library pills:
- * `lang: en` until something sets it, `lang: de · detected` after the
+ * `lang: en` until something sets it, `lang: de · from data` after a paste
+ * whose notes or column names are German, `lang: de · detected` after the
  * session's first typed message, `lang: de · chosen` after a choice here or a
  * request in the chat ("labels in English"). The session language is the
  * language of the assistant's replies and of every text in the plot; code,
@@ -27,7 +28,12 @@ import { useEffect, useId, useRef, useState } from 'react';
 import Box from '@mui/material/Box';
 import Popover from '@mui/material/Popover';
 
-import { AgentApiError, LANGUAGE_PATTERN, type PlotLanguage } from 'src/lib/agent';
+import {
+  AgentApiError,
+  LANGUAGE_PATTERN,
+  type LanguageSource,
+  type PlotLanguage,
+} from 'src/lib/agent';
 import { COMMON_LANGUAGES } from 'src/sections/agent-chat/languages';
 import { describeLanguageFailure } from 'src/sections/agent-chat/messages';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
@@ -43,6 +49,14 @@ import { colors, typography } from 'src/theme';
 
 /** The server's longest language value; the field stops there. */
 const MAX_LANGUAGE_CHARS = 40;
+
+/** How the chip names each source; `pasted` reads as where the language came from. */
+const SOURCE_LABEL: Record<LanguageSource, string> = {
+  default: 'default',
+  pasted: 'from data',
+  detected: 'detected',
+  chosen: 'chosen',
+};
 
 export interface LanguageChipProps {
   /** The session language as the server last named it. */
@@ -150,7 +164,7 @@ export function LanguageChip({ value, disabled, onSet }: LanguageChipProps) {
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-controls={open ? popoverId : undefined}
-        aria-label={`Plot language: ${value.language}, ${value.source}. Change`}
+        aria-label={`Plot language: ${value.language}, ${SOURCE_LABEL[value.source]}. Change`}
         title={`language of the plot's text and the replies: ${value.language}`}
         sx={{
           ...actionButtonSx,
@@ -176,7 +190,7 @@ export function LanguageChip({ value, disabled, onSet }: LanguageChipProps) {
         </Box>
         {value.source !== 'default' && (
           <Box component="span" sx={{ color: 'var(--ink-muted)', flexShrink: 0 }}>
-            &nbsp;· {value.source}
+            &nbsp;· {SOURCE_LABEL[value.source]}
           </Box>
         )}
         {pending && (

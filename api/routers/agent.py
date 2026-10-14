@@ -942,8 +942,10 @@ async def switch_library(
 
 @router.post("/sessions/{sid}/dataset")
 async def upload_dataset(sid: SessionId, body: DatasetBody, ctx: Ctx, client: Client) -> Any:
-    """Parse pasted data: `{preview, profile, bindings, warnings, context_lines, roles}`, stored (`context_lines`:
-    the notes pasted above or below the table that the assistant reads with the data); or, for free text the
+    """Parse pasted data: `{preview, profile, bindings, warnings, context_lines, roles, language}`, stored
+    (`context_lines`: the notes pasted above or below the table that the assistant reads with the data;
+    `language`: the session language as `{language, source}`, source `pasted` when the notes' or the column
+    names' language set it before any typed message or choice); or, for free text the
     parser cannot read, the agents service's `{transcribed, text, preview, profile, warnings, note}`, a
     model's reading that the page shows for confirmation and nothing stored. 413 above 200 KB of UTF-8;
     `422 formula` for text that asks for a formula, which the assistant computes in the chat instead."""
