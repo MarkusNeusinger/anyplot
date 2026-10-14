@@ -251,6 +251,67 @@ class TestLiteralData:
         text = "x" * (MAX_STRING_CHARS + 1)
         assert "string-length" in rules(HEADER + f"label = '{text}'\n")
 
+    @pytest.mark.parametrize(
+        "code",
+        [
+            pytest.param(
+                "import pandas as pd\ndf = pd.DataFrame({'x': [1, 2, 3, 4, 5] * 10, 'y': [10, 20, 30, 40, 50] * 10})\n",
+                id="numbers repeated",
+            ),
+            pytest.param(
+                "import pandas as pd\ndf = pd.DataFrame({'v': 10 * [1, 2, 3]})\n", id="repetition on the left"
+            ),
+            pytest.param("import pandas as pd\ndf = pd.DataFrame({'v': [1, 2] * 5 * 3})\n", id="repetition twice"),
+            pytest.param(
+                "import pandas as pd\nnames = ['Alice', 'Bob', 'Carol', 'Dan', 'Eve', 'Finn', 'Gus', 'Hana', 'Ida', 'Jon',"
+                " 'Kai', 'Lea', 'Max', 'Nia', 'Ole', 'Pia', 'Quin', 'Rae', 'Sam', 'Tia', 'Uma']\n"
+                "df = pd.DataFrame({'name': names})\n",
+                id="strings written out",
+            ),
+            pytest.param(
+                "import pandas as pd\ndf = pd.DataFrame({'region': ['North', 'South', 'East', 'West'] * 25})\n",
+                id="strings repeated",
+            ),
+            pytest.param(
+                "import pandas as pd\n"
+                + "".join(f"c{n} = ['a{n}', 'b{n}', 'c{n}']\n" for n in range(14))
+                + "df = pd.DataFrame({'c': c0})\n",
+                id="strings over the file cap",
+            ),
+        ],
+    )
+    def test_rows_from_memory_are_refused(self, code: str) -> None:
+        assert "literal-data" in rules(code)
+
+    @pytest.mark.parametrize(
+        "code",
+        [
+            pytest.param(
+                "import numpy as np\nimport pandas as pd\nregions = ['North', 'South', 'East', 'West']\n"
+                "df = pd.DataFrame({'region': np.tile(regions, 25), 'v': np.arange(100)})\n",
+                id="np.tile of a short list",
+            ),
+            pytest.param(
+                "import pandas as pd\n"
+                + "df = pd.DataFrame({"
+                + ", ".join(f"'column_{n}': range(3)" for n in range(30))
+                + "})\n",
+                id="many column names as dict keys",
+            ),
+            pytest.param(
+                "import numpy as np\nimport pandas as pd\nx = np.linspace(0, 1, 11)\n"
+                "df = pd.DataFrame({'x': x, 'g': ['a', 'b'] * 5 + ['a']})\n",
+                id="a short repeated label list",
+            ),
+        ],
+    )
+    def test_computed_or_short_literals_pass(self, code: str) -> None:
+        assert "literal-data" not in rules(code)
+
+    def test_the_messages_name_the_kind(self) -> None:
+        code = "import pandas as pd\ndf = pd.DataFrame({'r': ['N', 'S'] * 11})\n"
+        assert any("22 text values" in message for message in messages(code))
+
 
 class TestMessagesNeverEchoLiterals:
     @pytest.mark.parametrize(

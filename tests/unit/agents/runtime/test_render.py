@@ -909,6 +909,12 @@ class TestBackends:
         assert "/tmp/run:/work" in argv and "r-d1-data" in argv
         assert argv[-5:] == ["/app/.venv/bin/python", "-I", "/opt/anyplot/harness.py", "--data", "snippet.py"]
         assert not any(part.startswith(("ANYPLOT_THEME", "MPLBACKEND")) for part in argv)
+        # The renderer's limits for a data run, address space and processes included (parity with `sandbox_env`).
+        from agents.renderer.settings import RendererSettings
+
+        deployed = RendererSettings()
+        assert f"ANYPLOT_RLIMIT_AS_MB={deployed.rlimit_as_mb}" in argv
+        assert f"ANYPLOT_RLIMIT_NPROC={deployed.rlimit_nproc}" in argv
 
     async def test_local_backend_runs_a_data_snippet(self, tmp_path: Path) -> None:
         """A stand-in `docker` that runs the command with this interpreter and the checkout's harness in `/work`."""

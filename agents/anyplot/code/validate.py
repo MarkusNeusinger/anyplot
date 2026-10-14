@@ -136,10 +136,16 @@ of its own:
   resolver cannot see behind an expression.
 * **`df` at the top.** A module-level assignment to the name `df` (`data-frame`); the
   harness takes it from the run's globals (`render/harness.py`, data mode).
-* **No rows from memory.** The ADAPTATION rule `literal-data` runs with a dict counted as
-  a container too (`pd.DataFrame({"x": [...]})`), plus a cap on every numeric literal of
-  the file (`MAX_DATA_LITERAL_NUMBERS`): a snippet computes values, and values written
-  out belong in the data panel as a table, where the dataset judge reads them.
+* **No rows from memory.** `literal-data` counts the numbers and the strings of every
+  outermost literal container (a list, tuple, set or dict, `pd.DataFrame({"x": [...]})`
+  being one table), a repetition by an int literal as its copies (`[1, 2, 3] * 10` holds
+  30 numbers, `["North", "South"] * 25` 50 strings), strings only as elements and dict
+  values, never as dict keys (column names): more than `MAX_LITERAL_NUMBERS` (20) of
+  either in one container, or more than `MAX_DATA_LITERAL_NUMBERS` (40) of either in the
+  file, numbers outside containers included, is a finding (Fable review of 2026-10-14). A
+  snippet computes values; values written out belong in the data panel as a table, where
+  the dataset judge reads them. `np.repeat` and `np.tile` of a short literal list stay
+  allowed: they repeat values the snippet chose, within the caps.
 
 Its messages never mention `load_user_data()`: a file, URL or network finding carries the
 fixed `DATA_IO_MESSAGE` ("paste the file's contents in the data panel instead"), and a
@@ -688,15 +694,79 @@ def _is_numeric(node: ast.AST) -> bool:
     return isinstance(node, ast.Constant) and type(node.value) in (int, float, complex)
 
 
-def _numeric_leaves(node: ast.AST, *, dicts: bool = False) -> int:
-    """Numeric literal leaves of a (nested) list, tuple or set literal, and of a dict's keys and values with `dicts`."""
-    if dicts and isinstance(node, ast.Dict):
-        items = [*(key for key in node.keys if key is not None), *node.values]
-    elif isinstance(node, ast.List | ast.Tuple | ast.Set):
-        items = list(node.elts)
-    else:
+def _numeric_leaves(node: ast.AST) -> int:
+    """Numeric literal leaves of a (nested) list, tuple or set literal."""
+    if not isinstance(node, ast.List | ast.Tuple | ast.Set):
         return 0
-    return sum(1 if _is_numeric(item) else _numeric_leaves(item, dicts=dicts) for item in items)
+    return sum(1 if _is_numeric(elt) else _numeric_leaves(elt) for elt in node.elts)
+
+
+MAX_REPEAT = 10**6
+"""The largest repetition the literal counts multiply by; a larger literal count is an absurd table anyway."""
+
+
+def _repeat_count(node: ast.BinOp) -> tuple[ast.AST, int] | None:
+    """`[...] * n` or `n * [...]` with an int literal `n`: the repeated operand and `n`; None for anything else."""
+    if not isinstance(node.op, ast.Mult):
+        return None
+    for operand, other in ((node.left, node.right), (node.right, node.left)):
+        if isinstance(other, ast.Constant) and type(other.value) is int and _is_repeatable(operand):
+            return operand, max(0, min(other.value, MAX_REPEAT))
+    return None
+
+
+def _is_repeatable(node: ast.AST) -> bool:
+    if isinstance(node, ast.List | ast.Tuple):
+        return True
+    return isinstance(node, ast.BinOp) and _repeat_count(node) is not None
+
+
+def _is_literal_container(node: ast.AST | None, parent: ast.AST | None = None) -> bool:
+    """A list, tuple, set or dict literal (not an assignment target), or one repeated by an int literal."""
+    if isinstance(node, ast.List | ast.Tuple):
+        return isinstance(node.ctx, ast.Load)
+    if isinstance(node, ast.Set | ast.Dict):
+        return True
+    return isinstance(node, ast.BinOp) and _repeat_count(node) is not None
+
+
+def _counts_child(parent: ast.AST, child: ast.AST) -> bool:
+    """Whether a literal container counts `child` among its leaves: a repetition never counts its multiplier."""
+    if isinstance(parent, ast.BinOp):
+        repeat = _repeat_count(parent)
+        return repeat is not None and repeat[0] is child
+    return True
+
+
+def _literal_leaves(node: ast.AST) -> tuple[int, int]:
+    """Numeric and text leaves of a literal container, a repetition multiplied; dict keys add numbers, not text."""
+    if isinstance(node, ast.BinOp):
+        repeat = _repeat_count(node)
+        if repeat is None:
+            return 0, 0
+        numbers, strings = _literal_leaves(repeat[0])
+        return numbers * repeat[1], strings * repeat[1]
+    if isinstance(node, ast.Dict):
+        key_numbers = sum(1 for key in node.keys if key is not None and _is_numeric(key))
+        numbers, strings = _sum_leaves(node.values)
+        return numbers + key_numbers, strings
+    if isinstance(node, ast.List | ast.Tuple | ast.Set):
+        return _sum_leaves(node.elts)
+    return 0, 0
+
+
+def _sum_leaves(items: Iterable[ast.AST]) -> tuple[int, int]:
+    numbers = strings = 0
+    for item in items:
+        if _is_numeric(item):
+            numbers += 1
+        elif isinstance(item, ast.Constant) and isinstance(item.value, str):
+            strings += 1
+        else:
+            inner = _literal_leaves(item)
+            numbers += inner[0]
+            strings += inner[1]
+    return numbers, strings
 
 
 def _hex(value: str) -> str:
@@ -908,8 +978,7 @@ class _Scan:
         self._check_statements()
         self._check_strings()
         self._check_data_frame()
-        self._check_literal_data()
-        self._check_literal_total()
+        self._check_data_literals()
 
     def _check_data_frame(self) -> None:
         """A module-level `df = ...` (or `df: T = ...`): the table the harness takes from the run's globals."""
@@ -926,14 +995,49 @@ class _Scan:
                 return
         self.add("data-frame", "assign the table to df at the top level, such as df = pd.DataFrame({...})", None)
 
-    def _check_literal_total(self) -> None:
-        count = sum(1 for constant in self.of(ast.Constant) if _is_numeric(constant))
-        if count > MAX_DATA_LITERAL_NUMBERS:
-            message = (
-                f"{count} numeric literals; the limit is {MAX_DATA_LITERAL_NUMBERS}: code computes the data, "
-                "values written out belong in the data panel as a table"
-            )
+    def _check_data_literals(self) -> None:
+        """No rows written out: numbers and strings in literal containers, a repetition counted as its copies.
+
+        A container is a list, tuple, set or dict literal, or one repeated by an int
+        literal (`[1, 2, 3] * 10` holds 30 numbers, `10 * ["a"]` 10 strings), counted at
+        the outermost one. Strings count as list, tuple and set elements and dict values,
+        never as dict keys (column names). Numbers outside any container count toward the
+        file's total too.
+        """
+        source = "values written out belong in the data panel as a table"
+        total_numbers = total_strings = 0
+        for node in ast.walk(self.tree):
+            if not _is_literal_container(node, self.parents.get(node)) or _is_literal_container(
+                self.parents.get(node), self.parents.get(self.parents.get(node))
+            ):
+                continue
+            numbers, strings = _literal_leaves(node)
+            total_numbers += numbers
+            total_strings += strings
+            if numbers > MAX_LITERAL_NUMBERS:
+                message = f"literal with {numbers} numeric values; the limit is {MAX_LITERAL_NUMBERS}, {source}"
+                self.add("literal-data", message, node)
+            if strings > MAX_LITERAL_NUMBERS:
+                message = f"literal with {strings} text values; the limit is {MAX_LITERAL_NUMBERS}, {source}"
+                self.add("literal-data", message, node)
+        total_numbers += sum(
+            1 for constant in self.of(ast.Constant) if _is_numeric(constant) and not self._inside_literal(constant)
+        )
+        if total_numbers > MAX_DATA_LITERAL_NUMBERS:
+            message = f"{total_numbers} numeric literals; the limit is {MAX_DATA_LITERAL_NUMBERS}: code computes the data, {source}"
             self.add("literal-data", message, None)
+        if total_strings > MAX_DATA_LITERAL_NUMBERS:
+            message = f"{total_strings} text values in literals; the limit is {MAX_DATA_LITERAL_NUMBERS}, {source}"
+            self.add("literal-data", message, None)
+
+    def _inside_literal(self, node: ast.AST) -> bool:
+        """Whether `node` sits inside a literal container (`_is_literal_container`), which counts it already."""
+        child, parent = node, self.parents.get(node)
+        while parent is not None:
+            if _is_literal_container(parent, self.parents.get(parent)) and _counts_child(parent, child):
+                return True
+            child, parent = parent, self.parents.get(parent)
+        return False
 
     def _check_imports(self, library: str, allowed: frozenset[str]) -> None:
         def denied(path: str) -> bool:
@@ -1241,18 +1345,16 @@ class _Scan:
                 self.add("rng", f"'{name}' may only be used as {name}{_RNG_ALLOWED_TEXT}(...)", use)
 
     def _check_literal_data(self) -> None:
-        # In a data snippet a dict is a container too: `pd.DataFrame({"x": [...], "y": [...]})` is one table.
-        containers: tuple[type[ast.AST], ...] = (ast.List, ast.Tuple, ast.Set)
-        if self.data_profile:
-            containers = (*containers, ast.Dict)
-        source = "values written out belong in the data panel as a table" if self.data_profile else "data comes from df"
-        for node_type in containers:
+        """The ADAPTATION rule; the DATA profile has its own, stricter one (`_check_data_literals`)."""
+        for node_type in (ast.List, ast.Tuple, ast.Set):
             for literal in self.by_type[node_type]:
-                if isinstance(self.parents.get(literal), containers):
+                if isinstance(self.parents.get(literal), ast.List | ast.Tuple | ast.Set):
                     continue  # counted at the outermost container
-                count = _numeric_leaves(literal, dicts=self.data_profile)
+                count = _numeric_leaves(literal)
                 if count > MAX_LITERAL_NUMBERS:
-                    message = f"literal with {count} numeric values; the limit is {MAX_LITERAL_NUMBERS}, {source}"
+                    message = (
+                        f"literal with {count} numeric values; the limit is {MAX_LITERAL_NUMBERS}, data comes from df"
+                    )
                     self.add("literal-data", message, literal)
 
     def _check_palette(self, original_palette: list[str]) -> None:

@@ -28,6 +28,10 @@ MPL_SEED = "/opt/mplconfig"
 HARNESS_SOURCE = Path(__file__).resolve().parents[1] / "harness.py"
 DATA_FILE_NAME = "snippet.py"
 """A data run's code file (the renderer's `executor.SNIPPET_FILE`); `gates.error_summary` finds its frames by it."""
+DATA_RLIMIT_AS_MB = 1024
+DATA_RLIMIT_NPROC = 64
+"""The renderer's deployed `RENDERER_RLIMIT_AS_MB` and `RENDERER_RLIMIT_NPROC` (pinned by a test), which the local
+backend's data runs apply as well."""
 
 
 class PythonRuntime:
@@ -69,7 +73,18 @@ class PythonRuntime:
         return [self.python, "-I", self.harness, DATA_FLAG, DATA_FILE_NAME]
 
     def data_env(self) -> dict[str, str]:
-        return {"HOME": "/tmp", "PYTHONDONTWRITEBYTECODE": "1", "ANYPLOT_RLIMIT_CPU_S": str(self.cpu_seconds)}
+        """A data run's environment: the renderer's `sandbox_env` limits for a data run, address space and processes
+        included (inside Docker `RLIMIT_NPROC` counts the user's processes on the host, which one BLAS thread keeps
+        far below the limit)."""
+        return {
+            "HOME": "/tmp",
+            "PYTHONDONTWRITEBYTECODE": "1",
+            "OPENBLAS_NUM_THREADS": "1",
+            "OMP_NUM_THREADS": "1",
+            "ANYPLOT_RLIMIT_CPU_S": str(self.cpu_seconds),
+            "ANYPLOT_RLIMIT_AS_MB": str(DATA_RLIMIT_AS_MB),
+            "ANYPLOT_RLIMIT_NPROC": str(DATA_RLIMIT_NPROC),
+        }
 
     def normalise(self, code: str, library: str) -> str:
         return normalise(code, library=library)

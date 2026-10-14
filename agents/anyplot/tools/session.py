@@ -386,7 +386,8 @@ async def run_data_code(code: str, source_language: str, tool_context: ToolConte
     code: Python of at most 6,000 characters using only numpy, pandas, math, random, statistics or scipy.stats (and
     the other scipy computing modules); it must assign the final table to df at the top level as a pandas DataFrame
     (at most 20,000 rows and 50 columns), read no file, call no network and draw nothing (no matplotlib, no plot(),
-    no hist()). Never write data values from memory: more than 20 numbers written out are refused. source_language:
+    no hist()). Never write data values from memory: more than 20 numbers or 20 text values written out in one list,
+    tuple or dict (a list repeated with * counts every copy), or 40 in the code, are refused. source_language:
     what the user wrote, one of python, javascript, r, math or other. Returns the change lines and the new profile,
     or an error with a code and a message.
     """

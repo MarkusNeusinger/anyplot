@@ -142,25 +142,99 @@ class TestGuard:
         )
         assert run(tmp_path, code)[:2] == (EXIT["blocked"], "")
 
-    def test_reading_is_allowed(self, tmp_path: Path) -> None:
+    def test_reading_is_refused_too(self, tmp_path: Path) -> None:
         (tmp_path / "in.txt").write_text("7", encoding="utf-8")
         code = "import pandas as pd\ndf = pd.DataFrame({'a': [int(open('in.txt').read())]})\n"
-        assert run(tmp_path, code)[:2] == (EXIT["ok"], "a\n7\n")
+        assert run(tmp_path, code)[:2] == (EXIT["blocked"], "")
+
+    @pytest.mark.parametrize(
+        "code",
+        [
+            pytest.param(
+                "import pandas as pd\ng = (i for i in range(1))\nb = g.gi_frame.f_builtins\n"
+                "df = pd.DataFrame({'h': [b['open']('/etc/hostname').read()]})\n",
+                id="open through a generator's frame builtins",
+            ),
+            pytest.param(
+                "import pandas as pd\ng = (i for i in range(1))\nb = g.gi_frame.f_builtins\n"
+                "imp = b[[k for k in b if k.endswith('port__')][0]]\nos = imp('os')\n"
+                "df = pd.DataFrame({'e': [str(dict(os.environ))[:50]], 'l': [','.join(os.listdir('/'))]})\n",
+                id="__import__ through a generator's frame builtins",
+            ),
+            pytest.param(
+                "import pandas as pd\ntry:\n    1 / 0\nexcept ZeroDivisionError as exc:\n"
+                "    b = exc.__traceback__.tb_frame.f_globals\ndf = pd.DataFrame({'a': [1]})\n",
+                id="a traceback's frame",
+            ),
+            pytest.param("import pandas as pd\nimport tomllib\ndf = pd.DataFrame({'a': [1]})\n", id="a fresh import"),
+            pytest.param(
+                "import pandas as pd\nimport os\ndf = pd.DataFrame({'n': os.listdir('/')})\n", id="a directory listing"
+            ),
+        ],
+    )
+    def test_frame_and_import_routes_fail_the_run(self, tmp_path: Path, code: str) -> None:
+        exit_code, out, stderr = run(tmp_path, code)
+        assert exit_code == EXIT["blocked"], stderr
+        assert out == ""
+
+    @pytest.mark.parametrize(
+        "code",
+        [
+            pytest.param(
+                "import pandas as pd\ndf = pd.DataFrame({'a': ['x', 'y'], 'b': ['p', 'q'], 'v': [1, 2]})"
+                ".pivot(index='a', columns='b', values='v').reset_index()\n",
+                id="a pandas path that loads a module lazily",
+            ),
+            pytest.param(
+                "import pandas as pd\nd = pd.date_range('2024-03-30', periods=3, freq='D', tz='Europe/Berlin')\n"
+                "df = pd.DataFrame({'d': d.tz_localize(None), 'v': range(3)})\n",
+                id="a time zone",
+            ),
+            pytest.param(
+                "import numpy as np\nimport pandas as pd\nfrom scipy.optimize import curve_fit\n"
+                "x = np.linspace(0, 1, 20)\np, _ = curve_fit(lambda x, a: a * x, x, 2 * x)\n"
+                "df = pd.DataFrame({'x': x, 'y': p[0] * x})\n",
+                id="scipy reading a function's code",
+            ),
+            pytest.param(
+                "import warnings\nimport pandas as pd\nwarnings.simplefilter('always')\n"
+                "s = pd.Series(['1', '2'])\ndf = pd.DataFrame({'a': pd.to_numeric(s), 'p': s.str.pad(3)})\n"
+                "df['w'] = pd.Series([1.5, 2.5]).astype('int64', errors='ignore')\n",
+                id="pandas code paths around warnings",
+            ),
+            pytest.param(
+                "import numpy as np\nimport pandas as pd\nfrom scipy.integrate import solve_ivp\n"
+                "s = solve_ivp(lambda t, y: -y, (0, 5), [1.0], t_eval=np.linspace(0, 5, 20))\n"
+                "df = pd.DataFrame({'t': s.t, 'y': s.y[0], 'f': np.polynomial.Polynomial([1, 2])(s.t)})\n",
+                id="scipy integrate and numpy polynomial",
+            ),
+        ],
+    )
+    def test_ordinary_snippets_still_run(self, tmp_path: Path, code: str) -> None:
+        exit_code, out, stderr = run(tmp_path, code)
+        assert exit_code == EXIT["ok"], stderr
+        assert out
+
+    def test_the_preload_covers_the_data_profile(self) -> None:
+        from agents.anyplot.code.validate import DATA_IMPORTS
+
+        assert set(DATA_IMPORTS) <= set(harness.DATA_PRELOAD)
 
 
 class TestGuardUnit:
     def test_refuses(self) -> None:
         guard = harness.DataGuard()
         assert guard.refuses("open", ("f", "w", 0))
-        assert guard.refuses("open", ("f", "rb+", 0))
-        assert not guard.refuses("open", ("f", "r", 0))
-        assert not guard.refuses("open", ("f", "rb", 0))
-        assert guard.refuses("open", ("f", None, harness.os.O_WRONLY))
-        assert not guard.refuses("open", ("f", None, harness.os.O_RDONLY))
+        assert guard.refuses("open", ("f", "r", 0))
+        assert guard.refuses("open", ("f", None, harness.os.O_RDONLY))
         assert guard.refuses("ctypes.dlopen", ("libc",))
         assert guard.refuses("socket.connect", ())
-        assert not guard.refuses("import", ("numpy",))
-        assert not guard.refuses("os.listdir", (".",))
+        assert guard.refuses("import", ("numpy",))
+        assert guard.refuses("os.listdir", (".",))
+        assert guard.refuses("sys._getframe", (None,))
+        assert guard.refuses("object.__getattr__", (None, "gi_frame"))
+        assert not guard.refuses("object.__getattr__", (None, "__code__"))
+        assert not guard.refuses("exec", (None,))
 
     def test_unarmed_guard_lets_everything_through(self) -> None:
         guard = harness.DataGuard()
@@ -172,5 +246,7 @@ class TestGuardUnit:
         guard.armed = True  # never `arm()` in the test process: an audit hook cannot be removed
         with pytest.raises(RuntimeError):
             guard("socket.connect", ())
-        guard("os.listdir", (".",))
+        guard("exec", (None,))
         assert guard.blocked == "socket"
+        with guard.paused():
+            guard("object.__getattr__", (None, "tb_frame"))  # the harness's own traceback printer

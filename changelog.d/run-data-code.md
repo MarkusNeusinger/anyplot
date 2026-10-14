@@ -5,8 +5,9 @@
   assistant translates it into Python, and its new `run_data_code` tool runs it in the
   renderer's sandbox through a new `POST /run-data` route. The resulting table becomes a
   new data version that you confirm, and the data panel shows the Python that ran under
-  `# code that made this data`. The validator's new DATA profile, an audit hook in the
-  harness (no native code, processes, sockets, or writes), per-user and per-minute
+  `# code that made this data`. The validator's new DATA profile (which also counts text
+  values and repeated lists as written-out rows), an audit hook in the harness (no file
+  access, new imports, frames, native code, processes, or sockets), per-user and per-minute
   limits, and the dataset judge on the computed table keep the sandbox to the plot's
   data. The tool never passes the snippet's own output back to the model.
 - **`422 code` for code pasted into the data field.** A classifier now runs before any
