@@ -938,3 +938,67 @@ describe('DataPanel wide-table offer', () => {
     expect(screen.queryByTestId('data-long-hint')).not.toBeInTheDocument();
   });
 });
+
+describe('DataPanel notes', () => {
+  const NOTES = ['Rainfall per month, station Hohe Warte', 'Source: own measurements'];
+
+  const withNotes = (lines: string[] | undefined) => {
+    const base = stateWith({ x: 'month', y1: 'shoes' });
+    return {
+      ...base,
+      dataset: base.dataset && {
+        ...base.dataset,
+        parsed: { ...base.dataset.parsed, context_lines: lines },
+      },
+    };
+  };
+
+  const panel = (state: AgentSessionState) => (
+    <DataPanel
+      state={state}
+      onParse={vi.fn()}
+      onConfirmTranscription={vi.fn()}
+      onDiscardTranscription={vi.fn()}
+      onSendFormula={vi.fn()}
+      onBind={vi.fn()}
+      onConfirmData={vi.fn()}
+      onUndo={vi.fn()}
+    />
+  );
+
+  it('shows the notes sent to the assistant collapsed, and opens and closes them', async () => {
+    render(panel(withNotes(NOTES)));
+
+    const block = screen.getByTestId('data-notes');
+    expect(block).toHaveTextContent('# notes sent to the assistant · 2 lines');
+    expect(within(block).queryByText(NOTES[0])).not.toBeInTheDocument();
+
+    const toggle = within(block).getByRole('button', { name: '.show()' });
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    await userEvent.click(toggle);
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    expect(toggle).toHaveTextContent('.hide()');
+    expect(
+      within(block)
+        .getAllByRole('listitem')
+        .map(item => item.textContent)
+    ).toEqual(NOTES);
+
+    await userEvent.click(toggle);
+    expect(within(block).queryByText(NOTES[1])).not.toBeInTheDocument();
+  });
+
+  it('names a single line in the singular', () => {
+    render(panel(withNotes([NOTES[1]])));
+    expect(screen.getByTestId('data-notes')).toHaveTextContent(
+      '# notes sent to the assistant · 1 line'
+    );
+  });
+
+  it('shows nothing without notes or from an older server', () => {
+    const { rerender } = render(panel(withNotes([])));
+    expect(screen.queryByTestId('data-notes')).not.toBeInTheDocument();
+    rerender(panel(withNotes(undefined)));
+    expect(screen.queryByTestId('data-notes')).not.toBeInTheDocument();
+  });
+});

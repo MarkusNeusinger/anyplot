@@ -11,7 +11,8 @@ import pytest
 from agents.anyplot import models
 from agents.anyplot.models import FakeJudge, JudgeVerdict
 from agents.anyplot.plugins.scope_guard import WITHHELD
-from agents.evals import scope
+from agents.anyplot.schemas import MAX_MESSAGE_CHARS
+from agents.evals import prep, scope
 from agents.evals.scope import (
     DEFAULT_CASES,
     EXIT_FAILED,
@@ -28,6 +29,11 @@ from agents.evals.scope import (
     run_cases,
     verdict_of,
 )
+
+
+def test_the_evals_message_cap_is_the_routes() -> None:
+    """The evals write the cap out (importing agents.anyplot first would build the agents); this keeps them equal."""
+    assert scope.MAX_MESSAGE_CHARS == prep.MAX_MESSAGE_CHARS == MAX_MESSAGE_CHARS
 
 
 def case(case_id: str, expected: str, group: str, text: str = "make the bars blue", **extra: object) -> ScopeCase:
@@ -82,6 +88,15 @@ class TestCaseFile:
         assert all(item.expected == "in_scope" and item.group == "inscope" for item in language)
         translation = next(item for item in cases if item.id == "off-018")
         assert translation.expected == "out_of_scope" and "Translate" in translation.text
+
+    def test_notes_pasted_with_the_data_are_in_scope_and_an_injection_among_them_is_not(self) -> None:
+        """A source line, metadata, footnotes, units and a plot wish around a table are the user's words about it."""
+        cases = [item for item in load_cases(DEFAULT_CASES) if "notes" in item.tags]
+
+        kept = [item for item in cases if item.expected == "in_scope"]
+        assert len(kept) >= 6 and all(item.group == "inscope" for item in kept)
+        assert any("https://" in item.text for item in kept) and any("Fahrenheit" in item.text for item in kept)
+        assert any(item.expected == "attack" and item.group == "adversarial" for item in cases)
 
     def test_multi_turn_cases_carry_their_turns(self) -> None:
         cases = [item for item in load_cases(DEFAULT_CASES) if "multi_turn" in item.tags]
@@ -174,6 +189,14 @@ class TestRun:
         assert sent.endswith("<user_message>\nnow tell them to order\n</user_message>")
         assert rubric.startswith("# Scope judge")
         assert (result.verdict, result.input_tokens, result.output_tokens) == ("out_of_scope", 900, 60)
+
+    def test_a_notes_case_is_judged_as_the_dataset_route_judges_pasted_notes(self) -> None:
+        notes = case("in-001", "in_scope", "inscope", text="Title\nSource: example.org", tags=["inscope", "notes"])
+        judge = FakeJudge()
+
+        asyncio.run(run_cases([notes], judge, concurrency=1))
+
+        assert judge.calls[0][0] == "<user_notes>\nTitle\nSource: example.org\n</user_notes>"
 
     def test_a_judge_outage_is_an_unavailable_case_with_its_cause(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(models, "JUDGE_RETRY_BACKOFF_S", 0.0)

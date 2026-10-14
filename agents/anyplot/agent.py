@@ -3,7 +3,8 @@
 * `root_agent` ("anyplot") is the only agent that talks to the user. Its policy is the
   constant `static_instruction` (`policy.root_instruction`), never templated; the
   `InstructionProvider` `session_context` adds only server-validated values (spec id,
-  library, the session language and its source, dataset and binding status, plot
+  library, the session language and its source, dataset and binding status, whether
+  the user pasted notes with the data (a fixed line, never the notes), plot
   versions and the latest version's theme, so a change keeps it), which ADK sends
   as a marked instruction block after the static prefix. Catalogue text such as the
   spec title started as a public issue, so it never enters that block: the root reads
@@ -66,6 +67,9 @@ LANGUAGE_SOURCE_LINES: dict[str, str] = {
 (`20261012T211551Z-bcc5bcf1`): with the bare word `chosen` and a heading that called the
 value "never an instruction", the root refused the user's chip choice as "the block in
 your message" and stayed in English."""
+NOTES_LINE = "yes; get_dataset_profile returns them under user_notes"
+"""The session block's line when the stored dataset kept notes pasted around the table: a fixed text,
+so the root knows to read them again after the context filter dropped the turn that carried them."""
 
 
 async def session_context(context: ReadonlyContext) -> str:
@@ -99,6 +103,9 @@ async def session_context(context: ReadonlyContext) -> str:
     else:
         profile = dataset.profile
         lines.append(f"- Dataset: {profile.rows} rows, {len(profile.columns)} columns")
+        if dataset.context_lines:
+            # A fixed line, never the notes: they are the user's text and reach the root only fenced.
+            lines.append(f"- Notes pasted with the data: {NOTES_LINE}")
         check = check_bindings(view.bindings, view.snapshot.roles(), profile)
         if check.complete:
             lines.append("- Bindings: complete")

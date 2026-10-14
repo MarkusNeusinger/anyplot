@@ -1,7 +1,7 @@
 """Tests for the guardrail plugins with fake contexts and a scripted judge."""
 
 import json
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any, get_args
 
 import pytest
@@ -13,7 +13,8 @@ from google.genai import types
 
 from agents.anyplot import policy
 from agents.anyplot.briefs import trimmed_profiles
-from agents.anyplot.models import JudgeVerdict, Verdict
+from agents.anyplot.data.parse import parse_dataset
+from agents.anyplot.models import FakeJudge, JudgeVerdict, Verdict
 from agents.anyplot.output_guard import MAX_MESSAGE_CHARS, reply_length, sanitize
 from agents.anyplot.plugins.budget import BudgetPlugin
 from agents.anyplot.plugins.ledger import (
@@ -42,7 +43,7 @@ from agents.anyplot.plugins.scope_guard import (
 from agents.anyplot.plugins.tool_safety import RESULT_KEYS, ToolSafetyPlugin, has_url_or_path, result_limit, result_size
 from agents.anyplot.policy import DATA_PREAMBLE, fence
 from agents.anyplot.schemas import ColumnProfile, DatasetProfile, PlotResult
-from agents.anyplot.services import KeptRefusal, RefusalStore, Services
+from agents.anyplot.services import KeptRefusal, RefusalStore, Services, set_services
 from agents.anyplot.session_state import LANGUAGE, LANGUAGE_SOURCE, SPEC_ID
 from agents.anyplot.settings import get_settings
 from agents.evals import pricing
@@ -1047,6 +1048,38 @@ class TestToolSafety:
 
         assert fitting is not None and fitting[1] is True
         assert all(column.name in fitting[0] for column in columns)
+
+    async def test_the_widest_profile_and_the_widest_notes_fit_the_profile_tools_cap(self) -> None:
+        """`get_dataset_profile` trims the profile to its own budget and adds the notes at their cap on top."""
+        from types import SimpleNamespace
+
+        from agents.anyplot.data.parse import MAX_CONTEXT_CHARS
+        from agents.anyplot.data.store import DatasetStore
+        from agents.anyplot.dev_fixture import snapshot_from_repo
+        from agents.anyplot.opening import store_dataset
+        from agents.anyplot.session_state import initial_state
+        from agents.anyplot.tools.session import get_dataset_profile
+
+        names = [f"{'n' * 60}{index:04d}" for index in range(50)]
+        rows = "\n".join(",".join(f"{'y' * 39}{row}" for _ in names) for row in range(5))
+        parsed = parse_dataset(",".join(names) + "\n" + rows + "\n")
+        notes = ["\N{GRINNING FACE}" * (MAX_CONTEXT_CHARS // 2 - 1), '"' * (MAX_CONTEXT_CHARS // 2)]  # 4 and 2 bytes
+        parsed = replace(parsed, context_lines=notes)
+        store = DatasetStore()
+        snapshot = snapshot_from_repo("scatter-basic", "matplotlib")
+        state = initial_state(
+            spec_id="scatter-basic", library="matplotlib", locale="en", snapshot=snapshot, normalised="", readiness={}
+        )
+        state.update(store_dataset(store, "s", parsed, snapshot, notes_screened=True).state_delta())
+        set_services(Services(datasets=store, judge_factory=FakeJudge))
+        try:
+            result = await get_dataset_profile(SimpleNamespace(state=state, session=SimpleNamespace(id="s")))
+        finally:
+            set_services(None)
+
+        assert result["user_notes"].count("</user_notes>") == 1 and notes[1] in result["user_notes"]
+        assert all(name in result["profile"] for name in names)
+        assert result_size(result) <= result_limit("get_dataset_profile")
 
     async def test_pipeline_notes_are_fenced_for_the_root(self, ledger: RequestLedger) -> None:
         widest = {

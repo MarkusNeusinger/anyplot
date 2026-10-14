@@ -12,6 +12,9 @@
   every header and cell for text addressed to an AI, then the dataset judge on every
   part of the judged view. Both look for injection only: personal data (names, postal
   and e-mail addresses, phone numbers, web addresses, amounts) is ordinary data.
+* `notes_instruction_like(lines)` and `notes_judge_input(lines)` do the same for the
+  notes pasted around the table (`ParsedDataset.context_lines`): the pre-filter, then
+  the scope judge. A refusal there drops only the notes, never the table.
 
 Used by the `/v1` routes and by the development fixture seed, so a seeded session is
 exactly what the routes would have built. No ADK import.
@@ -24,7 +27,7 @@ import json
 import re
 from collections import Counter
 from collections.abc import Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any
 
 from .code.normalise import SUPPORTED_LIBRARIES as NORMALISED_LIBRARIES
@@ -33,6 +36,7 @@ from .code.readiness import ReadinessStatus, scan
 from .data.bindings import default_bindings
 from .data.parse import ParsedDataset, display_copy, parse_dataset
 from .data.store import DatasetStore
+from .policy import fence
 from .schemas import MAX_SAMPLE_ROWS, MAX_TOP_VALUES, Binding
 from .session_state import BINDINGS, DATASET_HISTORY, DATASET_ID, DATASET_VERSION, CatalogueSnapshot, initial_state
 from .settings import AgentSettings
@@ -105,8 +109,18 @@ def store_dataset(
     snapshot: CatalogueSnapshot,
     previous_id: str | None = None,
     history: Sequence[str] = (),
+    *,
+    notes_screened: bool = False,
 ) -> IngestedDataset:
-    """Store a parsed dataset for a session, replacing its previous one and its history; raises `StoreFull`."""
+    """Store a parsed dataset for a session, replacing its previous one and its history; raises `StoreFull`.
+
+    The notes pasted around the table (`context_lines`) are kept only when the caller says they
+    passed the dataset route's screen (`notes_screened`: the pre-filter and the scope judge); every
+    other path (a fixture seed, an eval's ingest) stores the table without them, so no unjudged
+    note ever reaches the root (#12168 review).
+    """
+    if parsed.context_lines and not notes_screened:
+        parsed = replace(parsed, context_lines=[])
     dataset_id = store.put(session_id, parsed)
     for old in (previous_id, *history):
         if old and old != dataset_id:
@@ -177,6 +191,32 @@ def instruction_like(parsed: ParsedDataset) -> bool:
     and a cell anywhere can reach the reviewer's image as a label.
     """
     return INSTRUCTION_LIKE.search(parsed.csv) is not None
+
+
+NOTES_INSTRUCTION_WARNING = "the notes above or below the table were left out: they read like instructions to an AI"
+NOTES_REFUSED_WARNING = "the notes above or below the table were left out: they are not about the data or the plot"
+NOTES_UNCHECKED_WARNING = "the notes above or below the table were left out: they could not be checked right now"
+"""The warnings of the three ways the `/dataset` route drops the notes pasted with a table
+(`ParsedDataset.context_lines`): the pre-filter, a refusing scope verdict, no verdict. The table
+itself is stored either way; dropping the notes costs the user nothing, no strike included."""
+
+
+def notes_instruction_like(lines: Sequence[str]) -> bool:
+    """Whether the notes pasted around a table hold text that `INSTRUCTION_LIKE` matches, read as one block.
+
+    The same pattern as the cells: one line that hits drops every note, because a hidden
+    injection in a copied web table usually spans the lines around a harmless one.
+    """
+    return bool(lines) and INSTRUCTION_LIKE.search("\n".join(lines)) is not None
+
+
+def notes_judge_input(lines: Sequence[str]) -> str:
+    """The scope judge's input for the notes pasted around a table: the lines inside `<user_notes>`.
+
+    The scope rubric (`scope_judge.md`, "Notes pasted with the data") judges such a block as
+    the user's words about the data; the scope eval sends its `notes` cases through this too.
+    """
+    return fence("user_notes", "\n".join(lines))
 
 
 @dataclass(frozen=True)

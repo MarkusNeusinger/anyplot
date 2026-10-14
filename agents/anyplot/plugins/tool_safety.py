@@ -27,8 +27,8 @@
   `columns`, `by`, `index`, ...) and the new names of a pivot stay under the rule, and
   so does every string of `generate_data`: its names and expressions never need a link.
 * `after_tool_callback`: a key allowlist per tool and a size cap of 8 KB (24 KB for
-  `get_current_code`, 16 KB for `get_dataset_profile`, `prepare_data`,
-  `generate_data` and `plot_pipeline`); a result outside them becomes an error. The `plot_pipeline` result
+  `get_current_code`, 16 KB for `prepare_data`, `generate_data` and `plot_pipeline`, 25 KB
+  for `get_dataset_profile`, whose 16 KB of profile sit next to the pasted notes); a result outside them becomes an error. The `plot_pipeline` result
   reaches the root with its model-written `changes` and `residual_defects` fenced as
   `<tool_notes>` under `notes`.
 * `on_tool_error_callback`: any exception becomes `{"status": "error", "code": ...}`
@@ -63,10 +63,14 @@ PREPARE_TOOL = "prepare_data"
 GENERATE_TOOL = "generate_data"
 MAX_RESULT_BYTES = 8 * 1024
 MAX_CODE_RESULT_BYTES = 24 * 1024
+MAX_NOTES_RESULT_BYTES = 9 * 1024
+"""The `user_notes` of `get_dataset_profile` at their worst: `MAX_CONTEXT_CHARS` (2,000) characters of
+four UTF-8 bytes each, the escaped line breaks, the preamble and the fence (`policy.user_notes_block`)."""
 RESULT_LIMITS: dict[str, int] = {
     "get_current_code": MAX_CODE_RESULT_BYTES,
-    # 50 column names of up to 64 characters fit even when the samples are trimmed away.
-    "get_dataset_profile": 16 * 1024,
+    # 50 column names of up to 64 characters fit even when the samples are trimmed away, next to the notes
+    # pasted with the data at their cap.
+    "get_dataset_profile": 16 * 1024 + MAX_NOTES_RESULT_BYTES,
     # The new profile, trimmed like get_dataset_profile's, plus five change lines of at most 300 characters.
     PREPARE_TOOL: 16 * 1024,
     # The profile of at most 12 columns, the change line and one warning per series.
@@ -131,7 +135,9 @@ _DATA_VERSION_KEYS = frozenset(
 )
 """The keys of a tool result that stores the next dataset version (`prepare_data`, `generate_data`)."""
 RESULT_KEYS: dict[str, frozenset[str]] = {
-    "get_dataset_profile": frozenset({"status", "reason", "code", "rows", "profile", "truncated", "to_long"}),
+    "get_dataset_profile": frozenset(
+        {"status", "reason", "code", "rows", "profile", "truncated", "to_long", "user_notes"}
+    ),
     "get_spec_brief": frozenset({"status", "code", "brief"}),
     "get_current_code": frozenset({"status", "code", "version"}),
     "set_bindings": frozenset({"status", "reason", "code", "complete", "missing_roles", "errors", "warnings"}),

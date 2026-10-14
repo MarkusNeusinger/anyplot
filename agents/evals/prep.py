@@ -310,7 +310,7 @@ def _book(result: CaseResult, lines: list[dict[str, Any]], settings: AgentSettin
         if hook == "model":
             result.llm_calls += 1
             result.cost_usd += call_cost(settings.model, settings.location, line)
-        elif hook in ("data_judge", "scope_guard"):
+        elif hook in ("data_judge", "notes_judge", "scope_guard"):
             judge_in, judge_out = line.get("judge_input"), line.get("judge_output")
             judge_in = judge_in if isinstance(judge_in, int) else int(line.get("judge_tokens") or 0)
             judge_out = judge_out if isinstance(judge_out, int) else 0

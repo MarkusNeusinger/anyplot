@@ -1,6 +1,7 @@
 """Tests for agents/anyplot/data/store.py: ownership, idle sweep, byte accounting and the cap."""
 
 import re
+from dataclasses import replace
 
 import pytest
 
@@ -155,6 +156,15 @@ class TestSweep:
 
         assert stored is not None and stored.text_columns == ["year"]
         assert stored.as_parsed().text_columns == ["year"] and stored.as_parsed().column_dtypes["year"] == "text"
+
+    def test_the_stored_copy_keeps_the_notes_and_counts_their_bytes(self, store: DatasetStore) -> None:
+        noted = parse_dataset("Grüße aus Wien\nx,y\n1,2\n3,4\n5,6\n")
+        plain = replace(noted, context_lines=[])
+        stored = store.get(store.put("s1", noted), "s1")
+
+        assert stored is not None and stored.context_lines == ["Grüße aus Wien"]
+        assert stored.as_parsed().context_lines == ["Grüße aus Wien"]
+        assert dataset_size(noted) == dataset_size(plain) + len("Grüße aus Wien".encode())
 
 
 class TestCap:

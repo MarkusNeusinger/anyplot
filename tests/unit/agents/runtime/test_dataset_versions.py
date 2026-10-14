@@ -29,11 +29,11 @@ def view_of(state: dict) -> SessionView:
 
 
 def opened(store: DatasetStore, text: str = "a,b\n1,2\n3,4\n") -> dict:
-    """A session state with a stored paste, as the dataset route leaves it."""
+    """A session state with a stored paste, as the dataset route leaves it (its notes screened)."""
     state = initial_state(
         spec_id="scatter-basic", library="matplotlib", locale="en", snapshot=SNAPSHOT, normalised="x = 1", readiness={}
     )
-    ingested = store_dataset(store, SID, parse_dataset(text), SNAPSHOT)
+    ingested = store_dataset(store, SID, parse_dataset(text), SNAPSHOT, notes_screened=True)
     state.update(ingested.state_delta())
     return state
 
@@ -53,7 +53,7 @@ def test_push_keeps_the_previous_version_and_carries_the_bindings() -> None:
     assert version.delta[BINDINGS] == [{"role": "x", "column": "hours"}, {"role": "y", "column": "b"}]  # x carried over
     assert not view_of(state).data_confirmed  # the fingerprint names the old dataset id
     assert version.payload() == dataset_payload(version.stored, version.bindings, 2)
-    assert set(version.payload()) == {"preview", "profile", "bindings", "warnings", "version"}
+    assert set(version.payload()) == {"preview", "profile", "bindings", "warnings", "context_lines", "version"}
     assert version.payload()["profile"]["columns"][0]["name"] == "hours"
 
 
@@ -135,3 +135,45 @@ def test_a_new_paste_forgets_the_history() -> None:
 
     assert state[DATASET_HISTORY] == [] and state[DATASET_VERSION] == 1
     assert store.get(first, SID) is None and store.get(pushed.dataset_id, SID) is None and len(store) == 1
+
+
+NOTED = "Rainfall per month\nx,y\n1,2\n3,4\n5,6\nSource: own measurements\n"
+"""A paste with a title above and a source line below the table: two notes for the root."""
+
+
+def test_notes_that_did_not_pass_the_screen_are_never_stored() -> None:
+    """A fixture seed or an eval ingest stores the table without its notes (#12168 review)."""
+    store = DatasetStore()
+    ingested = store_dataset(store, SID, parse_dataset(NOTED), SNAPSHOT)
+
+    stored = store.get(ingested.dataset_id, SID)
+    assert ingested.parsed.context_lines == [] and stored is not None and stored.context_lines == []
+
+
+def test_the_notes_travel_with_every_version_and_a_new_paste_replaces_them() -> None:
+    """prepare_data and generate_data re-parse a CSV without notes; the session's notes stay all the same."""
+    store = DatasetStore()
+    state = opened(store, NOTED)
+    first = state[DATASET_ID]
+    notes = ["Rainfall per month", "Source: own measurements"]
+    first_stored = store.get(first, SID)
+    assert first_stored is not None and first_stored.context_lines == notes
+
+    prepared = push_version(store, SID, view_of(state), parse_dataset("x,y\n1,2\n", find_table=False), SNAPSHOT)
+    state.update(prepared.delta)
+    generated = push_version(
+        store, SID, view_of(state), parse_dataset("t,v\n0,1\n", find_table=False), SNAPSHOT, rebind=True
+    )
+    state.update(generated.delta)
+
+    assert prepared.stored.context_lines == notes and generated.stored.context_lines == notes
+    assert generated.payload()["context_lines"] == notes
+    restored = undo_version(store, SID, view_of(state), SNAPSHOT)
+    assert restored is not None and restored.stored.context_lines == notes  # the version's own
+
+    view = view_of(state)
+    pasted = store_dataset(
+        store, SID, parse_dataset("c,d\n1,2\n3,4\n5,6\n"), SNAPSHOT, view.dataset_id, view.dataset_history
+    )
+    stored = store.get(pasted.dataset_id, SID)
+    assert pasted.parsed.context_lines == [] and stored is not None and stored.context_lines == []

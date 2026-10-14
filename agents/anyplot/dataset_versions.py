@@ -17,13 +17,15 @@ with a change list, and the user can undo. The state keys (`session_state.py`):
   (`CONFIRMED`) names the dataset id, so a new version is unconfirmed by itself; an
   undo clears it, because the restored version's id could match a confirmation given
   before the change.
+* The notes pasted with the data (`StoredDataset.context_lines`) travel with every version
+  made from it (`push_version`); a new paste replaces them, an undo restores the version's own.
 
 `dataset_payload` is the shape every dataset answer shares: the `/dataset` and
 `/dataset/undo` routes (plus `roles`) and the `done` event's `dataset` (plus
 `changes`). No ADK import.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any
 
 from .data.bindings import carry_bindings, default_bindings
@@ -60,12 +62,13 @@ class DatasetVersion:
 
 
 def dataset_payload(stored: StoredDataset, bindings: list[Binding], version: int) -> dict[str, Any]:
-    """`{preview, profile, bindings, warnings, version}`: a dataset as the routes and the `done` event answer it."""
+    """`{preview, profile, bindings, warnings, context_lines, version}`: a dataset as the routes and `done` answer it."""
     return {
         "preview": [list(row) for row in stored.preview],
         "profile": stored.profile.model_dump(mode="json"),
         "bindings": [binding.model_dump() for binding in bindings],
         "warnings": list(stored.profile.warnings),
+        "context_lines": list(stored.context_lines),
         "version": version,
     }
 
@@ -87,7 +90,13 @@ def push_version(
     (`default_bindings`), for a table that replaces the data (`generate_data`), where a
     choice made for the old columns says nothing about the new ones even when a name
     such as `x` returns.
+
+    The notes pasted with the data (`context_lines`) belong to the session's data, not to one
+    version: the new version carries the current version's notes, also after `generate_data`.
     """
+    current = store.get(view.dataset_id, session_id) if view.dataset_id else None
+    if current is not None:
+        parsed = replace(parsed, context_lines=list(current.context_lines))
     dataset_id = store.put(session_id, parsed)
     history = [*view.dataset_history, view.dataset_id] if view.dataset_id else list(view.dataset_history)
     for old in history[:-MAX_DATASET_HISTORY]:

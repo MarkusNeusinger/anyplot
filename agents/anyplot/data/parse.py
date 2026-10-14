@@ -33,7 +33,9 @@ would, for example, read `01.02.2024` as a number under `thousands='.'`).
    last row, and up to three summary rows (`Total`, `Summe`, `Mittelwert`…) at the end
    are left out, each kind with one warning. A row with fewer fields than the header
    is padded with missing cells (one warning); a row with more non-empty fields than
-   the header is `unparseable`.
+   the header is `unparseable`. The lines left out above and below the table (not the
+   summary rows, which are data) are kept as `ParsedDataset.context_lines`, the notes
+   the user pasted with the data, see `_context_lines` (owner rule of 2026-10-14).
 4. **Clean every cell.** Remove invisible format characters (Unicode category
    `Cf`: zero-width characters, bidi controls, BOMs inside the text, tag
    characters), turn line and paragraph separators (U+2028, U+2029) into spaces,
@@ -79,7 +81,7 @@ import tokenize
 import unicodedata
 from collections import Counter
 from collections.abc import Collection, Iterable, Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime
 from typing import Any, Literal
 
@@ -87,6 +89,7 @@ from ..schemas import (
     MAX_CELL_CHARS,
     MAX_COLUMN_NAME_CHARS,
     MAX_COLUMNS,
+    MAX_MESSAGE_CHARS,
     MAX_NOTE_CHARS,
     MAX_ROWS,
     MAX_SAMPLE_ROWS,
@@ -117,6 +120,12 @@ SUMMARY_LABELS: frozenset[str] = frozenset(
     }
 )
 """The first filled cell of a summary row, compared without case and without a trailing colon."""
+MAX_CONTEXT_CHARS = MAX_MESSAGE_CHARS
+"""The notes kept around a table (`context_lines`), all lines and their line breaks together: they
+reach the root as user text, so they get no more room than a chat message."""
+CONTEXT_JOINERS: dict[str | None, str] = {",": ", ", ";": "; ", "\t": " ", "|": " | ", None: " "}
+"""How the fields of a left-out record join back into one line: a sentence that its commas split
+reads as it was pasted, a tab becomes a space so the line stays one line on the page."""
 MAX_NESTING = 50  # bracket levels a literal may open; counted before `ast.literal_eval` sees the text
 PAIR_HEADERS = ("category", "value")  # the columns of an object of scalars or an array of pairs
 
@@ -167,6 +176,7 @@ _CONTROL = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f]")
 _HEADER_BREAKS = re.compile(r"[\t\r\n]+")
 _PHYSICAL_LINE = re.compile(r"\r\n|\r|\n")
 _WHITESPACE_RUN = re.compile(r"\s+")
+_OMITTED = re.compile(r"([0-9]+) more warnings omitted")  # the last line of a capped list (`_cap_warnings`)
 
 # ASCII digits only: `\d` and `int()` also accept other scripts' digits, which pandas does not.
 _INTEGER = re.compile(r"[+-]?[0-9]+")
@@ -252,6 +262,31 @@ class ParsedDataset:
     warnings: list[str]
     text_columns: list[str] = field(default_factory=list)
     """The columns kept text by request (`parse_dataset(text_columns=...)`), in column order."""
+    context_lines: list[str] = field(default_factory=list)
+    """The lines `find_table` left out above and below the table (a title, an export's metadata, a source
+    line, a note), each as one cleaned text line, at most `MAX_CONTEXT_CHARS` in all: the user's notes about
+    the data. Summary rows are not among them. Empty for a literal and for `find_table=False`."""
+
+
+def without_context(parsed: ParsedDataset, warning: str) -> ParsedDataset:
+    """`parsed` without its context lines and with `warning` first among its warnings (profile included).
+
+    The route drops the notes this way when the pre-filter or the scope judge refuses them;
+    the table itself is unchanged.
+    """
+    kept = list(parsed.warnings)
+    omitted = 0
+    if kept and (match := _OMITTED.fullmatch(kept[-1])):
+        omitted = int(match.group(1))
+        kept.pop()
+    lines = [_clip(warning, MAX_NOTE_CHARS), *kept]
+    if omitted or len(lines) > MAX_WARNINGS:
+        keep = MAX_WARNINGS - 1
+        omitted += len(lines) - keep
+        lines = [*lines[:keep], f"{omitted} more warnings omitted"]
+    warnings = lines
+    profile = parsed.profile.model_copy(update={"warnings": warnings})
+    return replace(parsed, profile=profile, warnings=warnings, context_lines=[])
 
 
 @dataclass
@@ -296,6 +331,7 @@ def parse_dataset(text: str, *, text_columns: Collection[str] = (), find_table: 
         raise ParseError("unparseable", "the data is empty")
 
     warnings: list[str] = []
+    context: list[str] = []
     table: tuple[list[str], list[list[str]], SourceFormat] | None = None
     literal = _LITERAL_START.match(stripped)
     if literal:
@@ -305,9 +341,10 @@ def parse_dataset(text: str, *, text_columns: Collection[str] = (), find_table: 
             raise ParseError("unparseable", "the data starts like JSON or a Python literal but is neither")
         # A bare `(` that neither reader accepts is delimited text: `(in %) Land;Wert`, prose in parentheses.
     if table is None:
-        table = _read_delimited(text, warnings, find_table=find_table)
+        table = _read_delimited(text, warnings, find_table=find_table, context=context)
     headers, rows, source_format = table
-    return _build(headers, rows, source_format, warnings, frozenset(text_columns))
+    parsed = _build(headers, rows, source_format, warnings, frozenset(text_columns))
+    return replace(parsed, context_lines=context) if context else parsed
 
 
 # --- Limits ------------------------------------------------------------------------------
@@ -394,8 +431,9 @@ def _sniff_by_header(sample: str) -> tuple[str | None, SourceFormat]:
 
 
 def _read_delimited(
-    text: str, warnings: list[str], *, find_table: bool = True
+    text: str, warnings: list[str], *, find_table: bool = True, context: list[str] | None = None
 ) -> tuple[list[str], list[list[str]], SourceFormat]:
+    """The header, the rows and the format of delimited text; the left-out lines go to `context` when given."""
     delimiter, source_format = sniff_delimiter(text)
     reader = csv.reader(
         io.StringIO(text, newline=""), delimiter=delimiter or _NO_DELIMITER, skipinitialspace=True, strict=True
@@ -418,6 +456,12 @@ def _read_delimited(
         warnings.append(
             f"left out {_count(block.summary, 'summary row')} at the end of the table (a total, sum, mean or similar)"
         )
+    if context is not None and (block.above or block.below):
+        left_out = [record for _, record in (*records[: block.start], *records[block.end + block.summary :])]
+        lines, cut = _context_lines(left_out, delimiter)
+        context.extend(lines)
+        if cut:
+            warnings.append(f"the notes around the table were cut at {MAX_CONTEXT_CHARS:,} characters")
     header = records[block.start][1]
     rows: list[list[str]] = []
     padded = 0
@@ -540,6 +584,35 @@ def _mostly_values(cells: Iterable[str]) -> bool:
 def _summary_row(record: Sequence[str]) -> bool:
     label = next((cell.strip() for cell in record if not _missing(cell)), "")
     return label.rstrip(":").strip().casefold() in SUMMARY_LABELS
+
+
+def _context_lines(records: Iterable[Sequence[str]], delimiter: str | None) -> tuple[list[str], bool]:
+    """The left-out records as text lines, and whether the cap cut them.
+
+    Each record becomes one line: its fields cleaned like cells (invisible format characters
+    removed, any run of whitespace, line breaks inside a quoted field too, one space), the
+    empty ones dropped, the rest joined with the delimiter's display form (`CONTEXT_JOINERS`),
+    so `Source: DWD, station 433` reads as pasted. A record without text is dropped. All lines
+    with their line breaks hold at most `MAX_CONTEXT_CHARS`: the first line past the cap is
+    cut with `…` when a useful part of it fits, and every later one is dropped.
+    """
+    joiner = CONTEXT_JOINERS.get(delimiter, " ")
+    lines: list[str] = []
+    left = MAX_CONTEXT_CHARS
+    for record in records:
+        fields = (_WHITESPACE_RUN.sub(" ", _strip_invisible(cell)[0]).strip() for cell in record)
+        line = joiner.join(cell for cell in fields if cell)
+        if not line:
+            continue
+        need = len(line) + (1 if lines else 0)  # the line break before every line but the first
+        if need > left:
+            room = left - (1 if lines else 0)
+            if room >= 20:  # a stub of a few characters says nothing
+                lines.append(line[: room - 1].rstrip() + "…")
+            return lines, True
+        lines.append(line)
+        left -= need
+    return lines, False
 
 
 def _read_literal(text: str, warnings: list[str]) -> tuple[list[str], list[list[str]], SourceFormat] | None:

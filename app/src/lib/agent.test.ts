@@ -265,6 +265,7 @@ describe('parseAgentEvent', () => {
       { role: 'y', column: 'Anteil' },
     ],
     warnings: ['column Anteil: 1 cell could not be read'],
+    context_lines: ['Anteil der Haushalte, Statistik Austria'],
     changes: ["Anteil: 2 cells read as numbers, unit '%' removed"],
     version: 2,
   };
@@ -345,8 +346,10 @@ describe('parseAgentEvent', () => {
       expect(sync(malformed)).toMatchObject({ dataset: null, dataConfirmed: false });
     }
     // Absent lists read as empty: a version without change lines still replaces the preview.
-    expect(sync({ ...DATASET, changes: undefined, warnings: 'x' })).toMatchObject({
-      dataset: { changes: [], warnings: [], version: 2 },
+    expect(
+      sync({ ...DATASET, changes: undefined, warnings: 'x', context_lines: undefined })
+    ).toMatchObject({
+      dataset: { changes: [], warnings: [], context_lines: [], version: 2 },
     });
   });
 

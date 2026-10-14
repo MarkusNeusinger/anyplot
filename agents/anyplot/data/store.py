@@ -19,7 +19,7 @@ not wall-clock dates.
 import secrets
 import time
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from ..schemas import ColumnDtype, DatasetProfile
 from .parse import ParsedDataset
@@ -47,6 +47,9 @@ class StoredDataset:
     created_at: float
     last_used_at: float
     size_bytes: int
+    context_lines: list[str] = field(default_factory=list)
+    """The notes the user pasted around the table (`ParsedDataset.context_lines`), as the route kept
+    them after the pre-filter and the scope judge; a version made from this one carries them on."""
 
     def as_parsed(self) -> ParsedDataset:
         """The dataset as `parse_dataset` returned it (the profile's warnings are the parse's), for `apply_operations`."""
@@ -58,13 +61,15 @@ class StoredDataset:
             parse_dates=list(self.parse_dates),
             warnings=list(self.profile.warnings),
             text_columns=list(self.text_columns),
+            context_lines=list(self.context_lines),
         )
 
 
 def dataset_size(parsed: ParsedDataset) -> int:
-    """The bytes a dataset is accounted at: `data.csv`, the profile as JSON and the preview cells, as UTF-8."""
+    """The bytes a dataset is accounted at: `data.csv`, the profile as JSON, the preview cells and the notes, as UTF-8."""
     preview = sum(len(cell.encode("utf-8")) for row in parsed.preview for cell in row)
-    return len(parsed.csv.encode("utf-8")) + len(parsed.profile.model_dump_json().encode("utf-8")) + preview
+    notes = sum(len(line.encode("utf-8")) for line in parsed.context_lines)
+    return len(parsed.csv.encode("utf-8")) + len(parsed.profile.model_dump_json().encode("utf-8")) + preview + notes
 
 
 class DatasetStore:
@@ -104,6 +109,7 @@ class DatasetStore:
             created_at=now,
             last_used_at=now,
             size_bytes=size,
+            context_lines=list(parsed.context_lines),
         )
         self._used_bytes += size
         return dataset_id

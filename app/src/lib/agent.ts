@@ -147,6 +147,12 @@ export interface DatasetParsed {
   /** The server's default bindings; roles it could not match are absent. */
   bindings: Binding[];
   warnings: string[];
+  /**
+   * The notes the user pasted above or below the table (a title, a source
+   * line, a sentence about the columns), one line each, that the server kept
+   * for the assistant after its checks; absent from an older server.
+   */
+  context_lines?: string[];
   /** Every role of the spec; absent from an agents service older than this field. */
   roles?: RoleSpec[];
   /** The wide-table offer, or `null`; absent from an older server. */
@@ -171,6 +177,8 @@ export interface DatasetChanged {
   /** The bindings carried over to the new version, or a generated table's defaults. */
   bindings: Binding[];
   warnings: string[];
+  /** The notes pasted with the data, carried over to every version made from it. */
+  context_lines?: string[];
   /**
    * Every role of the spec, at most `MAX_DONE_ROLES`; absent from an agents
    * service older than this field, and dropped whole when one entry is malformed.
@@ -965,6 +973,7 @@ function datasetChanged(value: unknown): DatasetChanged | null {
     profile,
     bindings,
     warnings: strings(value.warnings),
+    context_lines: strings(value.context_lines),
     ...(roles ? { roles } : {}),
     suggestion: longSuggestion(value.suggestion),
     changes: strings(value.changes),

@@ -44,7 +44,8 @@ MAX_DONE_EVENT_CHARS = 512 * 1024
 """The BFF relays a `done` event of at most this many characters (`api/routers/agent.py`,
 `_MAX_DONE_EVENT_CHARS`; 64 KiB for every other event). A `done` that carries `dataset` holds
 20 preview rows and the profile of up to 50 columns with their names, top values, sample rows
-and warnings, the bindings twice, the change lines, up to `MAX_DONE_ROLES` spec roles and
+and warnings, the notes pasted with the data (2,000 characters), the bindings twice, the change
+lines, up to `MAX_DONE_ROLES` spec roles and
 the session language, every string at its schema maximum and JSON-escaped at its worst about 393,000 characters;
 the bound is proven by `tests/unit/agents/runtime/test_stream.py`, so a changed dataset
 always reaches the page."""
@@ -167,8 +168,8 @@ class Translator:
         `prepare_data` or `generate_data` tool the dataset itself, which the page could
         not learn otherwise: it syncs its dropdowns, its step and its preview table from
         these fields, so a confirmation never covers bindings or data the user has not
-        seen. `dataset` is `{preview, profile, bindings, warnings, roles, changes,
-        version}`, the dataset route's shape plus the change lines of the turn, only after
+        seen. `dataset` is `{preview, profile, bindings, warnings, context_lines, roles,
+        changes, version}`, the dataset route's shape plus the change lines of the turn, only after
         a turn that changed the data; `version` is 1 when `generate_data` made the
         session's first data. `language` is the session language as `{language, source}`
         (`source` one of `default`, `detected` and `chosen`), which the scope guard's
