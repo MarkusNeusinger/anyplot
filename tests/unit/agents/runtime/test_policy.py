@@ -146,6 +146,9 @@ class TestOtherInstructions:
         assert "`attack`, `out_of_scope`, `needs_data`, `other_library`, `in_scope`" in rubric
         assert "A request for another plot, or for code that is not this plot, is not `other_library`" in rubric
         assert "[message withheld by scope policy: other_library]" in rubric
+        # The judge never sees the session's library: matplotlib and seaborn are both adapted, so neither is "other".
+        assert "any other tool than matplotlib and seaborn" in rubric
+        assert "is `in_scope`, whichever of them the session uses now" in rubric
 
     def test_the_judges_refuse_by_intent_never_for_personal_data(self) -> None:
         scope, data, root = policy.scope_rubric(), policy.data_rubric(), policy.root_instruction()
