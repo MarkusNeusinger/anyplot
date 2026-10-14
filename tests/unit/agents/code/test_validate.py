@@ -478,8 +478,13 @@ ESCAPES = [
     ('import statsmodels.api as sm\nd = sm.datasets.webuse("x")\n', "banned-attribute"),
     ('df.to_string("f")\n', "banned-call"),
     ('df.to_string(buf="f")\n', "banned-call"),
-    ("df.info(buf=None)\n", "banned-call"),
+    ('df.info(True, "f")\n', "banned-call"),
+    ('df.info(buf="f")\n', "banned-call"),
     ("df.info(**{})\n", "banned-call"),
+    ("args = []\ndf.to_string(*args)\n", "banned-call"),
+    # The method bound to a name would hide the target from the call check (#12167 review).
+    ('writer = df.to_string\nwriter("f")\n', "banned-attribute"),
+    ('writer = df.info\nwriter(buf="f")\n', "banned-attribute"),
 ]
 
 
@@ -706,6 +711,9 @@ ALLOWED_IO_SIBLINGS = [
     "v = df.to_numpy()\n",
     "v = df.to_dict()\n",
     "v = df.to_string()\n",
+    "v = df.to_string(buf=None, index=False)\n",
+    "df.info(False)\n",
+    "df.info(verbose=True, buf=None)\n",
     "r = df['read_count']\n",
     "r = df['load']\n",
     "v = df.agg('mean')\n",
