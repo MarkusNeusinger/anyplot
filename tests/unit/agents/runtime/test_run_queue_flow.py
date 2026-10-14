@@ -21,7 +21,7 @@ from agents.anyplot.render.backends.fake import FakeBackend
 from agents.anyplot.render.contract import RenderJob, RenderResult
 from agents.anyplot.run_queue import RunQueue
 from agents.anyplot.services import Services
-from agents.anyplot.session_state import read_session
+from agents.anyplot.session_state import PENDING_REQUEST, read_session
 from agents.anyplot.settings import get_settings
 from agents.main import Runtime, app, get_runtime
 
@@ -233,6 +233,26 @@ async def test_a_full_queue_ends_the_turn_with_capacity(
     assert events[1][1] == {"code": "capacity", "ref": "req-1"}
     assert root_calls(fake) == 1 and len(fake.requests) == 1  # the root's call only: the run was aborted
     assert sid not in runtime.active and queue.waiting_count == 10
+
+
+async def test_a_run_without_a_queue_place_keeps_the_kept_note_and_its_own(
+    client: httpx.AsyncClient, runtime: Runtime, swap_models
+) -> None:
+    """A note kept from a blocked first plot is taken only once a run has its slot; a refused run adds its own."""
+    script = {"root": [{"call": "plot_pipeline", "args": {"change_request": "log y"}}, {"text": ROOT_REPLY}]}
+    swap_models("gemini", script)
+    sid = await open_session(client)
+    await runtime.write_state(await runtime.session(USER, sid), {PENDING_REQUEST: "Title: A"})
+    queue = runtime.run_queue()
+    queue.submit("adm_running", "s-running")
+    for index in range(queue.capacity):
+        queue.submit(f"adm_wait{index}", f"s-wait-{index}")
+
+    response = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "log y please"})
+
+    assert ("error", {"code": "capacity", "ref": "req-1"}) in parse_sse(response.text)
+    state = (await runtime.session(USER, sid)).state
+    assert state[PENDING_REQUEST] == "Title: A\nlog y"
 
 
 async def test_a_user_with_a_queued_run_gets_409_and_cancel_leaves_the_queue(

@@ -543,8 +543,17 @@ def keep_pending_request(state: Any, args: PipelineArgs, reason: NotReadyReason 
     drew. A change of an existing version (`base="previous"`) is not kept: it names a plot
     that is there, and the root repeats it once the reason is gone.
     """
-    if reason in PENDING_REASONS and args.change_request and args.base != "previous":
-        # A second blocked request joins the first (`merged_request`), so both reach the plot.
+    if reason in PENDING_REASONS:
+        hold_request(state, args)
+
+
+def hold_request(state: Any, args: PipelineArgs) -> None:
+    """Keep a first plot's `change_request` for the next run, joined to one kept already (`merged_request`).
+
+    Also the path of a run that passed the check but got no slot in the run queue (`capacity`,
+    or a cancelled wait): its note waits for the next `.create_plot()` like a blocked one's.
+    """
+    if args.change_request and args.base != "previous":
         state[PENDING_REQUEST] = merged_request(state.get(PENDING_REQUEST), args.change_request)
 
 
@@ -1080,13 +1089,16 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
         keep_pending_request(ctx.state, node_input, not_ready)
         yield _result_event(PlotResult.not_ready(not_ready or "no_dataset"))
         return
-    node_input = take_pending_request(ctx.state, node_input)
     ledger.pipeline_active = True
     if ledger.run_slot is not None and not await ledger.run_slot():
         # No slot: the route failed the turn with `capacity`, or the user cancelled the wait. Either way the run is
         # aborted, a cancelled path, so no result: the stream ends with the error, or with `done` after a cancel.
+        # A kept request stays for the next run, and this run's own joins it, so neither is lost.
+        hold_request(ctx.state, node_input)
         ledger.pipeline_active = False
         return
+    # Taken only once the run has its slot: a run that never starts leaves the user's note for the next one.
+    node_input = take_pending_request(ctx.state, node_input)
     theme = node_input.theme or _default_theme(services, ctx.session.id, view.library, node_input.base)
     run = Run(view=view, dataset=dataset, theme=theme, language=view.language, change_request=node_input.change_request)
     scope = f"pipeline-{secrets.token_hex(6)}"
