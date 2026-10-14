@@ -105,7 +105,7 @@ from starlette.background import BackgroundTask
 
 from agents.anyplot import agent as agent_module
 from agents.anyplot.code.readiness import MAP_SPECS
-from agents.anyplot.data.generate import looks_like_formula
+from agents.anyplot.data.classify import classify_paste
 from agents.anyplot.data.parse import MAX_INPUT_BYTES, ParsedDataset, ParseError, parse_dataset, without_context
 from agents.anyplot.data.prepare import Operation, PrepareError, apply_operations
 from agents.anyplot.data.roles import DataRole
@@ -642,21 +642,20 @@ async def upload_dataset(
     if len(body.text.encode("utf-8", errors="surrogatepass")) > MAX_INPUT_BYTES:
         raise AgentsError(413, "too_long")
     ledger = RequestLedger(request_id=rid, user_id=user, session_id=sid, kind="action")
+    if not body.confirmed:  # a confirmed transcription is the service's own CSV
+        _refuse_code_or_formula(ledger, body.text)
     try:
         # A confirmed transcription is the service's own CSV, which the user has seen row by row: no row is left out.
         parsed = parse_dataset(body.text, find_table=not body.confirmed)
     except ParseError as exc:
         if exc.code == "too_long":
             raise AgentsError(413, "too_long") from None
-        if exc.code in ("no_table", "unparseable"):
-            _refuse_formula(ledger, body.text)
         # Text with no table in it (prose, a list on one line) is the transcriber's; a broken
         # table (ragged rows, bad quoting, an over-long cell, invalid JSON) stays the parser's refusal.
         if exc.code == "no_table" and transcribable(body.text):
             return await _transcribe(services, ledger, body.text)
         raise AgentsError(422, "unparseable") from None
     if not body.confirmed and looks_like_free_text(parsed) and transcribable(body.text):
-        _refuse_formula(ledger, body.text)
         return await _transcribe(services, ledger, body.text)
     if not services.usage.daily_ok(user, get_settings()):
         raise AgentsError(429, "rate_limited")
@@ -737,19 +736,24 @@ async def _screen_notes(services: Services, ledger: RequestLedger, parsed: Parse
     return parsed if answer.verdict == "in_scope" else without_context(parsed, NOTES_REFUSED_WARNING)
 
 
-def _refuse_formula(ledger: RequestLedger, text: str) -> None:
-    """`422 formula` for pasted text that asks for a formula (`generate.looks_like_formula`), before any model reads it.
+def _refuse_code_or_formula(ledger: RequestLedger, text: str) -> None:
+    """`422 code` or `422 formula` for pasted text that is a program or asks for a formula, before any parser or
+    model reads it (`data/classify.py`).
 
-    The transcriber would compute such text into rows, which is the one thing no model
-    may do: a formula is the root's `generate_data`, asked for in the chat, where the
-    server computes the table. Only text the chat takes (`MAX_MESSAGE_CHARS`) is
-    refused, because the page's offer sends the refused text to the chat as a turn;
-    longer text goes on to the transcriber, whose rubric computes nothing. Writes a
-    `data_transcribe` attribution line with the outcome `formula` (no text, no tokens).
+    A snippet such as `np.linspace(0, 10, 100)` would parse as a one-row table, and the
+    transcriber would compute a formula's rows, which is the one thing no model may do:
+    code is the root's `run_data_code` and a formula its `generate_data`, asked for in
+    the chat, where the server computes the table. A formula is refused only within the
+    chat's cap (`MAX_MESSAGE_CHARS`), because the page's offer sends the refused text to
+    the chat as a turn; longer text goes on to the transcriber, whose rubric computes
+    nothing. Code is refused at any length, because it is never a table; the page asks
+    to shorten what the chat cannot take. Writes a `data_transcribe` attribution line
+    with the outcome `code` or `formula` (no text, no tokens).
     """
-    if len(text) <= MAX_MESSAGE_CHARS and looks_like_formula(text):
-        attribution("data_transcribe", ledger, outcome="formula")
-        raise AgentsError(422, "formula")
+    kind = classify_paste(text)
+    if kind is not None:
+        attribution("data_transcribe", ledger, outcome=kind)
+        raise AgentsError(422, kind)
 
 
 async def _transcribe(services: Services, ledger: RequestLedger, text: str) -> JSONResponse:

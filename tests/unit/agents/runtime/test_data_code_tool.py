@@ -370,3 +370,38 @@ async def test_a_turn_that_runs_code_reports_the_version_with_its_code(
     data_code = [line for line in lines if line["hook"] == "data_code"]
     assert data_code and data_code[0]["outcome"] == "ran" and data_code[0]["language"] == "javascript"
     assert "arange" not in caplog.text
+
+
+async def test_code_in_the_data_field_is_refused_before_any_parser(
+    client: httpx.AsyncClient, services: Services, judge: FakeJudge, caplog: pytest.LogCaptureFixture
+) -> None:
+    """`np.linspace(0, 10, 100)` would parse as a one-row table: code answers `422 code`, a formula `422 formula`."""
+    caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
+    sid = await open_session(client, with_data=False)
+    snippets = (
+        "np.linspace(0, 10, 100)",
+        SNIPPET,
+        "let data = [];\nfor (let i = 0; i < 100; i++) {\n  data.push(Math.random());\n}\n",
+        "set.seed(1)\nx <- rnorm(100)\n",
+        "import numpy as np\n" + "x = np.arange(10)\n" * 200,  # longer than the chat takes: still code
+    )
+    for text in snippets:
+        refused = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": text})
+        assert (refused.status_code, refused.json()) == (422, {"detail": "code"}), text
+    formula = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": "y = x**2"})
+    assert (formula.status_code, formula.json()) == (422, {"detail": "formula"})
+    assert judge.calls == [] and judge.transcribe_calls == [] and len(services.datasets) == 0
+    outcomes = [
+        json.loads(record.getMessage())["outcome"]
+        for record in caplog.records
+        if json.loads(record.getMessage())["hook"] == "data_transcribe"
+    ]
+    assert outcomes == ["code"] * len(snippets) + ["formula"]
+
+    table = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": "x,y\n1,2\n3,4\n"})
+    assert table.status_code == 200 and table.json()["profile"]["rows"] == 2
+    # A confirmed transcription is the service's own CSV: never classified.
+    confirmed = await client.post(
+        f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": "x,y\n1,2\n", "confirmed": True}
+    )
+    assert confirmed.status_code == 200
