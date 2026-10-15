@@ -10,6 +10,7 @@ A companion guide `CLAUDE.md` at the repo root carries the shared rules for Clau
 - **Repository prose follows the Google developer documentation style guide** - `docs/`, `README.md`, `agentic/docs/`, changelog entries, and PR/issue text use [Google style](https://developers.google.com/style) (sentence-case headings, second person, numbered procedures); the concrete rules and the house-style exception (`docs/reference/style-guide.md` governs website/brand surfaces) live in the `write-docs` skill (`.claude/skills/write-docs/SKILL.md`). Existing docs migrate on touch, not via bulk rewrites.
 - **Changelog and releases** - see [Changelog + releases](#changelog--releases) below: every PR adds a fragment under `changelog.d/` and adds nothing to `CHANGELOG.md`, a release folds the fragments and bumps the version files via a PR, and the GitHub release is that section condensed, never copied. When reviewing a non-exempt PR that lacks a fragment — or that ADDS a bullet to `[Unreleased]` — flag it; correcting the wording of a bullet already there is allowed and must not be flagged.
 - **Never echo secret values into transcripts or logs** - Verify secrets by exit code or metadata, never by printing them.
+- **Fix small build/test blockers directly, even when out of scope** - If a typecheck error, failing test, lint failure, or other small pipeline blocker shows up while you work on something unrelated, fix it in the same PR or a tiny follow-up — never leave it parked as "pre-existing" or "out of scope". A latent error that doesn't surface locally silently breaks the next Cloud Build, which deploys nothing while every PR check looks green. The bar: if the fix is under ~20 lines and obviously correct, make it; if it would expand scope meaningfully, ask first rather than deferring silently.
 - **Structural fix over symptomatic fix** - When a cheap symptomatic fix and a correct structural fix compete, take the structural one: fix the cause, never mute the alarm. Never modify working code to make a broken test pass — fix the test or flag it.
 - **Never manually merge a pipeline PR, and never bypass the pipeline** - Specifications and implementations go through the GitHub Actions workflows: `spec-create.yml` writes `plots/{spec-id}/specification.md` and `.yaml`, `impl-merge.yml` merges implementation PRs and creates their `metadata/*.yaml`, promotes the preview images to GCS and sets the `impl:{library}:done` label. Merging one by hand skips all of that and leaves `quality_score: null`, no review data, missing GCS images and the issue open. So: never write those files by hand, never run `gh pr merge` on a spec or implementation PR, and add the `approved` label to the **issue**, never to the PR. The full DON'T/DO table is in `CLAUDE.md`. Ordinary (non-pipeline) PRs are merged by the repository owner, not by an agent.
 
@@ -23,7 +24,7 @@ A companion guide `CLAUDE.md` at the repo root carries the shared rules for Clau
 
 **Good tasks for Copilot:**
 - Bug fixes in existing plot implementations
-- Adding new plot types following existing patterns
+- Proposing new plot types as a `spec-request` issue (the pipeline writes the spec and implementations; see Important Rules)
 - Updating documentation
 - Writing or improving unit tests
 - Code refactoring within established patterns
@@ -314,7 +315,7 @@ uv run alembic upgrade head
 
 ### Known Limitations
 
-- **Package Manager**: `uv` may not be available in all environments. Fallback to `pip` if needed.
+- **Package Manager**: Python dependencies are managed with `uv` only — run everything through `uv sync` and `uv run`, never `pip`. If `uv` is missing, install `uv` itself ([installation guide](https://docs.astral.sh/uv/getting-started/installation/)) instead of falling back to `pip`.
 - **External Dependencies**: Some domains may be blocked. If encountering network issues, document them in the PR.
 - **Database**: Cloud SQL requires proper credentials. Use `.env.example` as template for local development.
 
@@ -327,7 +328,7 @@ uv run alembic upgrade head
 
 ### Common Issues
 
-- **Import errors**: Run `uv sync --all-extras` or `pip install -e ".[dev]"` to install dependencies
-- **Test failures**: Ensure you're testing only changes related to your task, not pre-existing issues
+- **Import errors**: Run `uv sync --all-extras` to install dependencies
+- **Test failures**: Fix a small failure you run into even when your task did not cause it (see "Fix small build/test blockers directly" under Important Rules); ask before a fix that would expand the PR's scope meaningfully
 - **Linting failures**: Run `uv run ruff check . --fix` to auto-fix common issues
 - **Type checking**: Add type hints using standard Python typing (e.g., `list[str]`, `dict[str, int]`)

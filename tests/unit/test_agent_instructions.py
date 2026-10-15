@@ -307,6 +307,16 @@ MIRRORED_RULES = {
     "a release is condensed, never copied": ["condensed, never copied", "agentic/commands/release.md"],
     "never echo secret values": ["never echo secret"],
     "structural fix over symptomatic fix": ["structural fix over symptomatic fix"],
+    # The obligation (fix it, even out of scope) AND its limit (the ~20-line bar,
+    # ask first above it). Copilot's guide used to say the opposite — test only
+    # your own changes, leave pre-existing failures alone — until 2026-10-15.
+    "fix small build/test blockers, ask first if larger": [
+        "fix small build/test blockers directly, even when out of scope",
+        "~20 lines",
+        "ask first rather than deferring silently",
+    ],
+    # Owner decision 2026-10-15: no `pip` fallback for either audience.
+    "python tooling is uv only": ["`uv` only", "never `pip`", "instead of falling back to `pip`"],
     # The repository's most consequential rule, and the one an agent that opens
     # and edits PRs is most able to break: specs and implementations go through
     # the workflows, and their PRs are merged by `impl-merge`, never by hand.
