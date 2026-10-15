@@ -385,13 +385,13 @@ class TestComputedRoles:
         roles = parse_roles(ROLLING)
         rolling = next(item for item in roles if item.name == "rolling_avg")
 
-        assert (
-            describe_role(rolling)
-            == "rolling_avg (numeric, not bound: compute it in the plot code from the bound data)"
+        # The spec's own words come along: the rolling average's window (review of 2026-10-15).
+        spec = "the spec: Computed rolling average (e.g., 7-day, 30-day window)"
+        assert describe_role(rolling) == (
+            f"rolling_avg (numeric, not bound: compute it in the plot code from the bound data; {spec})"
         )
-        assert (
-            describe_role(rolling, bound=True)
-            == "rolling_avg (numeric, bound: use its column as it is, do not compute it)"
+        assert describe_role(rolling, bound=True) == (
+            f"rolling_avg (numeric, bound: use its column as it is, do not compute it; {spec})"
         )
         bodies = {body["name"]: body for body in _page_roles(roles)}
         assert list(bodies) == ["date", "value", "rolling_avg"]

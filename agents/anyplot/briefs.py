@@ -33,19 +33,39 @@ count would let a profile of such cells grow the request several times past the 
 """
 
 
-def describe_role(role: DataRole, bound: bool = False) -> str:
+MAX_COMPUTED_DESCRIPTION_CHARS = 200
+"""The spec's own words for a computed role in the brief: its formula and window (review of 2026-10-15)."""
+
+
+def describe_role(role: DataRole, bound: bool = False, companions: Sequence[str] = ()) -> str:
     """One role for the brief; a role the plot can compute says whether its column is bound or the code computes it.
 
     Owner decision of 2026-10-15, "both allowed" (`data/computed.py`): bound, the plot uses the
-    column; open, the plot code computes the value from the bound data.
+    column; open, the plot code computes the value from the bound data. A computed role keeps
+    the spec's description, which names its formula and window (`typically 20-period`), and an
+    open one computed beside bound `companions` (other computed roles of the spec with a column)
+    is computed from them, so the parts agree: the bands around the bound middle band, a
+    balance from the bound loads (review of 2026-10-15).
     """
     kinds = "/".join(role.kinds) if role.kinds else "any"
     name = f"{role.name}1, {role.name}2, ..." if role.variadic else role.name
-    if role.computed and bound:
-        return f"{name} ({kinds}, bound: use its column as it is, do not compute it)"
-    if role.computed:
-        return f"{name} ({kinds}, not bound: compute it in the plot code from the bound data)"
-    return f"{name} ({kinds}, {'required' if role.required else 'optional'})"
+    if not role.computed:
+        return f"{name} ({kinds}, {'required' if role.required else 'optional'})"
+    spec = _clipped(role.description, MAX_COMPUTED_DESCRIPTION_CHARS)
+    described = f"; the spec: {spec}" if spec else ""
+    if bound:
+        return f"{name} ({kinds}, bound: use its column as it is, do not compute it{described})"
+    built = (
+        f"; build it on the bound {', '.join(companions)} where the spec relates them, not independently"
+        if companions
+        else ""
+    )
+    return f"{name} ({kinds}, not bound: compute it in the plot code from the bound data{built}{described})"
+
+
+def _clipped(text: str, limit: int) -> str:
+    text = " ".join(text.split())
+    return text if len(text) <= limit else text[: limit - 1].rstrip() + "…"
 
 
 def spec_brief(view: SessionView) -> str:
@@ -57,7 +77,9 @@ def spec_brief(view: SessionView) -> str:
     if snapshot.description:
         lines.append("Description: " + snapshot.description[:MAX_DESCRIPTION_CHARS])
     if roles:
-        lines.append("Data roles: " + "; ".join(describe_role(role, role.name in bound) for role in roles))
+        companions = [role.name for role in roles if role.computed and role.name in bound]
+        described = [describe_role(role, role.name in bound, companions) for role in roles]
+        lines.append("Data roles: " + "; ".join(described))
     for note in snapshot.notes:
         lines.append("Note: " + note[:MAX_NOTE_CHARS])
     return "\n".join(lines)[:MAX_BRIEF_CHARS]
