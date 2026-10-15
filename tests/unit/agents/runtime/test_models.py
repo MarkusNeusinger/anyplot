@@ -253,6 +253,38 @@ class TestClaudeStructuredOutput:
         assert without["thinking"] == {"type": "disabled"}
         assert "extra_headers" not in without
 
+    @pytest.mark.parametrize("cached", [True, False])
+    async def test_a_system_instruction_of_two_parts_is_two_blocks_the_first_cached(self, cached: bool) -> None:
+        """The root's static policy and its session block: a block that changes leaves the policy cached."""
+        from google.adk.agents.context_cache_config import ContextCacheConfig
+
+        request = self.request(AdaptPlan, tools=True)
+        request.config.system_instruction = types.Content(
+            parts=[types.Part(text="# static policy"), types.Part(text="Session (set by the server):")]
+        )
+        request.cache_config = ContextCacheConfig(ttl_seconds=300) if cached else None
+        client = FakeAnthropic({"unknown": [{"text": "chat"}]})
+        model = make_model("root", CLAUDE)
+        model.__dict__["_anthropic_client"] = client
+
+        [_ async for _ in model.generate_content_async(request)]
+
+        static, session = client.calls[0]["system"]
+        assert (static["text"], session["text"]) == ("# static policy", "Session (set by the server):")
+        assert ("cache_control" in static) is cached
+        assert "cache_control" not in session
+
+    async def test_a_plain_system_instruction_stays_as_adk_sends_it(self) -> None:
+        request = self.request(AdaptPlan, tools=True)
+        request.config.system_instruction = "# static policy"
+        client = FakeAnthropic({"unknown": [{"text": "chat"}]})
+        model = make_model("root", CLAUDE)
+        model.__dict__["_anthropic_client"] = client
+
+        [_ async for _ in model.generate_content_async(request)]
+
+        assert client.calls[0]["system"] == "# static policy"
+
     async def test_verdict_schema_round_trip(self) -> None:
         responses, _ = await self.run(self.request(Verdict), {"ok": True, "defects": []})
 

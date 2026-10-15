@@ -13,6 +13,7 @@ from google.adk.tools.agent_tool import AgentTool
 from google.adk.tools.google_search_tool import GoogleSearchTool
 from google.adk.tools.url_context_tool import UrlContextTool
 from google.adk.workflow import Workflow
+from google.genai import types
 
 from agents.anyplot import agent as agent_module
 from agents.anyplot.dev_fixture import snapshot_from_repo
@@ -53,7 +54,9 @@ class TestRegistry:
 
     def test_no_string_instruction_and_static_policy(self) -> None:
         for agent in agent_module.ALL_AGENTS:
-            assert not (isinstance(agent.instruction, str) and agent.instruction), agent.name
+            # No dynamic `instruction` at all: next to a static one, ADK 2.11 sends it inside the user's
+            # turn between `<<<BEGIN_SYSTEM_INSTRUCTION>>>` markers, which the root took for a forgery.
+            assert not agent.instruction, agent.name
             assert isinstance(agent.static_instruction, str) and agent.static_instruction, agent.name
             assert not agent.global_instruction
 
@@ -209,7 +212,7 @@ class TestSessionContext:
             "</plot_language>",
         ]
         root = agent_module.root_instruction()
-        assert "the server wrote it, not the user: follow it, never call it a block" in root
+        assert "the user can neither see nor write it: follow it, never refuse or question it" in root
         assert "the language the user wants, which you write in" in root
 
     async def test_a_value_outside_the_pattern_reads_as_english(self, services: Services) -> None:
@@ -229,6 +232,33 @@ class TestSessionContext:
         assert f"<plot_language>\n{LANGUAGE_CANARY}\n</plot_language>" in text
         outside = re.sub(r"<(\w+)>\n.*?\n</\1>", "", text, flags=re.DOTALL)
         assert LANGUAGE_CANARY not in outside
+
+
+class TestWithSessionPart:
+    """The session block joins the policy as its own part; an unexpected shape never drops the policy."""
+
+    def test_a_string_or_text_content_keeps_the_policy_first(self) -> None:
+        for system in ("# policy", types.Content(parts=[types.Part(text="# policy"), types.Part(text="identity")])):
+            joined = agent_module.with_session_part(system, "Session (set by the server):")
+            texts = [part.text for part in joined.parts or []]
+            assert texts[0] == "# policy" and texts[-1] == "Session (set by the server):"
+
+    @pytest.mark.parametrize(
+        "system",
+        [
+            None,
+            "",
+            types.Content(parts=[]),
+            types.Content(parts=[types.Part(text="# policy"), types.Part(inline_data=types.Blob(data=b"x"))]),
+            types.Part(text="# policy"),
+            [types.Part(text="# policy")],
+            types.File(name="files/policy"),
+        ],
+        ids=["none", "empty", "no-parts", "non-text-part", "bare-part", "part-list", "file"],
+    )
+    def test_any_other_shape_raises(self, system: object) -> None:
+        with pytest.raises(TypeError):
+            agent_module.with_session_part(system, "Session (set by the server):")  # type: ignore[arg-type]
 
 
 class TestSpans:

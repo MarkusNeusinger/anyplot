@@ -1372,6 +1372,37 @@ async def test_the_session_block_names_the_latest_theme(client: httpx.AsyncClien
     assert any("latest result: ok, theme dark" in text for text in texts)
 
 
+async def test_the_session_block_stands_in_the_system_instruction_never_in_a_user_turn(
+    client: httpx.AsyncClient, swap_models
+) -> None:
+    """Prep eval of 2026-10-15: inside the user's turn, between ADK's instruction markers, the root
+    took the server's session block for text the user forged (7 of 8 turns' thinking said so)."""
+    from agents.anyplot.policy import root_instruction
+
+    script = {**default_script(), "root": [*DARK_SCRIPT_ROOT, {"text": "Which theme?"}]}
+    fake = swap_models("gemini", script)
+    sid = await open_session(client)
+    await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "Create a dark plot"})
+    await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "make the title shorter"})
+
+    root_requests = [request for request in fake.requests if (request.config.labels or {})["agent_kind"] == "root"]
+    assert len(root_requests) >= 3  # a tool call, its follow-up and the next turn
+    statics = set()
+    for request in root_requests:
+        system = request.config.system_instruction
+        assert isinstance(system, types.Content)
+        static, session = [part.text for part in system.parts or []]
+        assert static.startswith(root_instruction())  # ADK appends the agent's identity line
+        statics.add(static)
+        assert session.startswith("Session (set by the server):")
+        for content in request.contents:
+            for part in content.parts or []:
+                text = part.text or ""
+                assert "SYSTEM_INSTRUCTION" not in text and "Session (set by the server)" not in text
+    assert len(statics) == 1  # byte for byte the same in every call, so the prompt cache holds
+    assert "latest result: ok, theme dark" in request_text(root_requests[-1])
+
+
 # --- The theme toggle -------------------------------------------------------------------
 
 

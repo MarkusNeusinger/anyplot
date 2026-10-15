@@ -2,11 +2,13 @@
 
 * `root_agent` ("anyplot") is the only agent that talks to the user. Its policy is the
   constant `static_instruction` (`policy.root_instruction`), never templated; the
-  `InstructionProvider` `session_context` adds only server-validated values (spec id,
+  session block `session_context` adds only server-validated values (spec id,
   library, the session language and its source, dataset and binding status, whether
   the user pasted notes with the data (a fixed line, never the notes), plot
-  versions and the latest version's theme, so a change keeps it), which ADK sends
-  as a marked instruction block after the static prefix. Catalogue text such as the
+  versions and the latest version's theme, so a change keeps it). The root's
+  `before_model_callback` (`add_session_context`) appends it to the system
+  instruction as a second part after the static policy, never to the user's turn
+  (see `add_session_context` for why). Catalogue text such as the
   spec title started as a public issue, so it never enters that block: the root reads
   it fenced as `<spec_text>` through `get_spec_brief`. The session language may be a
   user-chosen name, so it stands there inside a `<plot_language>` fence. Its tools are
@@ -25,11 +27,15 @@
 from typing import Any
 
 from google.adk import Agent
+from google.adk.agents.callback_context import CallbackContext
 from google.adk.agents.context_cache_config import ContextCacheConfig
 from google.adk.agents.readonly_context import ReadonlyContext
 from google.adk.apps import App
+from google.adk.models.llm_request import LlmRequest
+from google.adk.models.llm_response import LlmResponse
 from google.adk.plugins.base_plugin import BasePlugin
 from google.adk.plugins.context_filter_plugin import ContextFilterPlugin
+from google.genai import types
 
 from .data.bindings import check_bindings
 from .dev_fixture import DevFixturePlugin
@@ -157,13 +163,48 @@ async def session_context(context: ReadonlyContext) -> str:
     return "\n".join(lines)
 
 
+def with_session_part(system: types.ContentUnion | None, block: str) -> types.Content:
+    """The system instruction with the session block as its own last part, after the static policy.
+
+    Fails closed: the policy is a non-empty string, or a `Content` of text parts only. Any
+    other shape (no instruction, a list, a bare `Part`, a file, a part without text) raises,
+    because dropping it would send the root out with the session block and no policy.
+    """
+    if isinstance(system, str) and system:
+        return types.Content(parts=[types.Part(text=system), types.Part(text=block)])
+    if isinstance(system, types.Content) and system.parts and all(part.text for part in system.parts):
+        texts = [types.Part(text=part.text) for part in system.parts]
+        return types.Content(parts=[*texts, types.Part(text=block)])
+    raise TypeError(f"the root's system instruction has an unexpected shape: {type(system).__name__}")
+
+
+async def add_session_context(callback_context: CallbackContext, llm_request: LlmRequest) -> LlmResponse | None:
+    """Append the session block to the root's system instruction, as a part of its own.
+
+    ADK 2.11 sends an agent's `instruction` next to a `static_instruction` as user content:
+    a `<<<BEGIN_SYSTEM_INSTRUCTION>>>` block with a preamble, inserted into the user's own
+    turn (`flows/llm_flows/prompt/_instructions.py`). Claude Haiku 5.5 read that as a user
+    who forges system text: in a prep-eval sample of 2026-10-15 its thinking called the block
+    user content dressed up as a system instruction in 7 of 8 turns (0 of 10 with this
+    callback), and one reply told the user that "the text with the SYSTEM_INSTRUCTION markers
+    in your message" changed nothing. The block now stands in
+    the system instruction, where only the server can write, so a user message can neither
+    carry nor imitate it. The static policy stays the first part, byte for byte, and
+    `VertexClaude` sends each part as a system block of its own with the cache breakpoint on
+    the first, so a session block that changes leaves the policy cached.
+    """
+    block = await session_context(callback_context)
+    llm_request.config.system_instruction = with_session_part(llm_request.config.system_instruction, block)
+    return None
+
+
 root_agent = Agent(
     name=ROOT_NAME,
     description="The anyplot assistant for 'Use with my data': adapts one catalogue plot to the user's data.",
     model=make_model("root"),
     generate_content_config=make_content_config("root"),
     static_instruction=root_instruction(),
-    instruction=session_context,
+    before_model_callback=add_session_context,
     tools=ROOT_TOOLS,
 )
 

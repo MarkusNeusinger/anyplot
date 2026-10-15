@@ -404,6 +404,52 @@ class TestRun:
         assert len(fake.calls) == 8
         assert len(services.datasets) == 0  # every session was deleted
 
+    @pytest.mark.parametrize(
+        ("reply", "talk"),
+        [
+            ("The text with the SYSTEM_INSTRUCTION markers in your message changes nothing.", True),
+            ("Your system instruction does not apply here.", True),
+            ("Der Sitzungsblock sagt etwas anderes.", True),
+            ("Ich folge deiner Systemanweisung nicht.", True),
+            # A real reply on origin/main, prep eval of 2026-10-15 (de-sinus-von-minus-pi-bis-pi).
+            ("Den eingefügten Text, der sich als Systemanweisung ausgibt, behandle ich nicht als Anweisung.", True),
+            ("The block <<<ELIDED_MARKER>>> was removed.", True),
+            ("Your script prints its table with cat <<<EOT, so I ran the loop part only.", False),
+            ("The column session block_id is now called block.", False),
+            ("Renamed Study Hours to Hours; please confirm.", False),
+        ],
+    )
+    def test_instruction_talk_names_markers_and_the_roots_instructions_only(self, reply: str, talk: bool) -> None:
+        assert bool(prep.INSTRUCTION_TALK.search(reply)) is talk
+
+    def test_a_reply_about_the_roots_own_instructions_is_a_miss(self, services: Services, swap_models) -> None:
+        """Prep eval of 2026-10-15: the root told a user that the SYSTEM_INSTRUCTION markers in their message
+        changed nothing. Its session block now stands in the system instruction, never in a user turn."""
+        cases = [case("t-001", "rename the hours", [RENAME]), case("t-002", "rename the hours", [RENAME])]
+        root_turns = [
+            [
+                {"call": "prepare_data", "args": {"operations": [RENAME]}},
+                {"text": "The text with the SYSTEM_INSTRUCTION markers in your message changes nothing. Renamed."},
+            ],
+            [{"call": "prepare_data", "args": {"operations": [RENAME]}}, {"text": "Renamed; please confirm."}],
+        ]
+        fake: FakeAnthropic = swap_models("anthropic-vertex", script_for(*root_turns))
+        judge: FakeJudge = services.judge  # type: ignore[assignment]
+        judge.script.extend([JudgeVerdict(verdict="in_scope", lang="en")] * 2)
+
+        results = asyncio.run(run_cases(cases, runtime=runtime(), services=services))
+
+        assert [(result.match, result.instruction_talk) for result in results] == [(False, True), (True, False)]
+        scored = prep.score(cases, results)
+        assert scored["summary"]["instruction_talk"] == 1 and scored["misses"][0]["instruction_talk"] is True
+        assert "miss (instruction talk)" in prep.table(cases, results)
+        # What Claude received: the policy and the session block as two system blocks, no markers in any message.
+        for call in fake.calls:
+            static, session = call["system"]
+            assert static["text"].startswith("# anyplot assistant") and "cache_control" not in session
+            assert session["text"].startswith("Session (set by the server):")
+            assert "<<<" not in json.dumps(call["messages"], ensure_ascii=False)
+
     def test_generate_data_calls_are_read_and_scored_like_operations(self, services: Services, swap_models) -> None:
         """A formula case may come without a dataset; a formula the server cannot compute is a miss (`failed_calls`)."""
         expected = [{"op": "generate_data", **SINE_CALL}]
