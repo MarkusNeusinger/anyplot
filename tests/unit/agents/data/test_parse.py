@@ -1985,6 +1985,27 @@ class TestSpaceAlignedTables:
         assert parsed.csv.splitlines()[2:4] == ["2021,,5.5,6.6", "2022,4.7,,6.9"]
         assert warned(parsed, "2 rows had fewer fields than the header; their cells were placed")
 
+    def test_short_rows_at_the_end_stay_rows_and_a_source_line_stays_a_note(self) -> None:
+        text = (
+            "Jahr    Nord    Mitte    Süd\n"
+            "2020     4.1      5.2    6.3\n"
+            "2021     4.4      5.5    6.6\n"
+            "2022     4.7             6.9\n"
+            "2023              5.9\n"
+            "Quelle: Testamt\n"
+        )
+
+        parsed = parse_dataset(text)
+
+        assert parsed.csv.splitlines()[3:] == ["2022,4.7,,6.9", "2023,,5.9,"]
+        assert parsed.context_lines == ["Quelle: Testamt"]
+
+    def test_a_field_beyond_every_column_is_refused(self) -> None:
+        far = "2021" + " " * 50 + "99.0"
+        text = f"Jahr    Nord    Mitte    Süd\n2020     4.1      5.2    6.3\n{far}\n2022     4.7      5.0    6.9\n"
+
+        assert error_code(text) == "unparseable"
+
     def test_a_short_row_that_does_not_line_up_is_refused(self) -> None:
         two_under_mitte = "2021" + " " * 12 + "1  2"  # both fields sit within the `Mitte` column
         text = f"Jahr    Nord    Mitte    Süd\n2020     4.1      5.2    6.3\n{two_under_mitte}\n2022     4.7      5.0    6.9\n"
@@ -2132,6 +2153,7 @@ class TestApiJson:
             {"left": [{"x": 1}], "right": [{"x": 2}]},  # two tables: none is taken by guess
             [{"page": 1}, [{"x": 1}], [{"x": 2}]],
             [{"page": 0, "total": 0}, []],  # metadata without records
+            [{"a.b": 1, "a": {"b": 2}}],  # two fields, one flattened name
         ],
     )
     def test_ambiguous_or_empty_wrappings_are_refused(self, data: Any) -> None:

@@ -684,6 +684,11 @@ def _read_delimited(
     if not records:
         raise ParseError("unparseable", "the data is empty")
     block = table_block([record for _, record in records]) if find_table else TableBlock(0, len(records))
+    extents: list[list[int]] = []
+    if spaced:
+        extents = _column_extents(spans, block.start, block.end, len(records[block.start][1]))
+        if find_table and not block.summary:
+            block = _with_trailing_short_rows(block, records, spans, extents)
     if block.above:
         warnings.append(f"left out {_count(block.above, 'line')} above the table (a title, notes or metadata)")
     if block.below:
@@ -700,7 +705,6 @@ def _read_delimited(
             warnings.append(f"the notes around the table were cut at {MAX_CONTEXT_CHARS:,} characters")
     header = records[block.start][1]
     width = len(header)
-    extents = _column_extents(spans, block.start, block.end, width) if spaced else []
     rows: list[list[str]] = []
     padded = 0
     for index in range(block.start + 1, block.end):
@@ -727,6 +731,31 @@ def _read_delimited(
     return header, rows, source_format
 
 
+def _with_trailing_short_rows(
+    block: "TableBlock",
+    records: Sequence[tuple[int, list[str]]],
+    spans: Sequence[Sequence[tuple[int, int]]],
+    extents: Sequence[Sequence[int]],
+) -> "TableBlock":
+    """`block` extended over the short rows right below its last full row that line up under its columns.
+
+    `table_block` ends a table at its last row of the full width, so a fixed-width table whose
+    last rows have blank cells (`2022     4.7             6.9`) would lose them to the notes. A
+    record below counts as a row while every field lines up under one column (`_lined_up`) and
+    one of them reads as a value; a source line or a note, which lines up with nothing or holds
+    no value, still ends the table.
+    """
+    end = block.end
+    while end < len(records):
+        fields = records[end][1]
+        if len(fields) >= len(extents) or not any(_value_like(cell) for cell in fields):
+            break
+        if _lined_up(fields, spans[end], extents) is None:
+            break
+        end += 1
+    return replace(block, end=end, below=block.below - (end - block.end)) if end != block.end else block
+
+
 def _column_extents(spans: Sequence[Sequence[tuple[int, int]]], start: int, end: int, width: int) -> list[list[int]]:
     """The character range each column of a space-aligned table covers: its header and its full rows together."""
     extents = [[left, right] for left, right in spans[start]]
@@ -741,20 +770,30 @@ def _column_extents(spans: Sequence[Sequence[tuple[int, int]]], start: int, end:
 def _aligned(
     fields: Sequence[str], spans: Sequence[tuple[int, int]], extents: Sequence[Sequence[int]], line_num: int
 ) -> list[str]:
-    """A short row of a space-aligned table, each field under the column whose range it overlaps most (else the
-    nearest one); `unparseable` when two fields fall under one column or out of order, so no value is guessed."""
+    """A short row of a space-aligned table, each field under the column whose range it overlaps most; `unparseable`
+    when a field lines up with no column or with two equally, or two fields fall under one column or out of order,
+    so no value is placed by guess (`_lined_up`)."""
+    cells = _lined_up(fields, spans, extents)
+    if cells is None:
+        raise ParseError("unparseable", f"line {line_num} does not line up with the columns of the header")
+    return cells
+
+
+def _lined_up(
+    fields: Sequence[str], spans: Sequence[tuple[int, int]], extents: Sequence[Sequence[int]]
+) -> list[str] | None:
+    """The row's cells by position under the columns, or None when a field has no unique column it overlaps, or two
+    fields share a column or come out of order."""
     cells = [""] * len(extents)
     last = -1
     for field_text, (left, right) in zip(fields, spans, strict=True):
-
-        def fit(column: int, left: int = left, right: int = right) -> tuple[int, int]:
-            low, high = extents[column]
-            overlap = min(right, high) - max(left, low)
-            return (max(overlap, 0), -max(low - right, left - high, 0))
-
-        column = max(range(len(extents)), key=fit)
+        overlaps = [min(right, high) - max(left, low) for low, high in extents]
+        best = max(overlaps)
+        if best <= 0 or overlaps.count(best) > 1:
+            return None
+        column = overlaps.index(best)
         if column <= last:
-            raise ParseError("unparseable", f"line {line_num} does not line up with the columns of the header")
+            return None
         cells[column] = field_text
         last = column
     return cells
@@ -1125,6 +1164,9 @@ def _flatten(record: Mapping[Any, Any]) -> tuple[dict[str, Any], list[str]]:
                 walk(value, f"{name}.", depth + 1)
             elif isinstance(value, (dict, list, tuple)):
                 dropped.append(name)
+            elif name in flat:
+                # `{"a.b": 1, "a": {"b": 2}}`, or the keys `1` and `'1'` of a literal: two fields, one name.
+                raise ParseError("unparseable", "two fields of a record get the same column name once flattened")
             else:
                 flat[name] = value
 
