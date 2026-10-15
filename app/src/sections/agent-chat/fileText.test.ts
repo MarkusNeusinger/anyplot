@@ -58,6 +58,14 @@ describe('decodeText', () => {
     expect(decodeText(utf16(TABLE, 'be', false))?.encoding).toBe('utf-16be');
   });
 
+  it('refuses broken UTF-8 behind a byte order mark instead of writing � into a cell', () => {
+    expect(decodeText(bytesOf([0xef, 0xbb, 0xbf], 'a,b\n1,', [0xc3, 0x28], '\n'))).toBeNull();
+    expect(readBytes(bytesOf([0xef, 0xbb, 0xbf], 'a,', [0xe2, 0x82]))).toMatchObject({
+      ok: false,
+      reason: 'binary',
+    });
+  });
+
   it('reads windows-1252, not ISO-8859-1: €, „ and ’ stay printable', () => {
     // "Preis €;„Zitat“;it’s" in windows-1252: 0x80 €, 0x84 „, 0x93 “, 0x92 ’.
     const bytes = bytesOf('Preis ', [0x80], ';', [0x84], 'Zitat', [0x93], ';it', [0x92], 's\n');

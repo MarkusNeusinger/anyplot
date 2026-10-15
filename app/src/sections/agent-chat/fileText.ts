@@ -136,8 +136,9 @@ function decodeWith(label: string, bytes: Uint8Array, fatal: boolean): string | 
 /** The text of `bytes` and the encoding it was read with, or null when no encoding reads it. */
 export function decodeText(bytes: Uint8Array): { text: string; encoding: FileEncoding } | null {
   if (startsWith(bytes, [0xef, 0xbb, 0xbf])) {
-    // The decoder drops the mark itself.
-    const text = decodeWith('utf-8', bytes, false);
+    // The decoder drops the mark itself. Strict, as without a mark: a broken sequence is
+    // refused rather than turned into `�` in a cell.
+    const text = decodeWith('utf-8', bytes, true);
     return text === null ? null : { text, encoding: 'utf-8-bom' };
   }
   const utf16: 'utf-16le' | 'utf-16be' | null = startsWith(bytes, [0xff, 0xfe])

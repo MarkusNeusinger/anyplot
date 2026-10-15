@@ -1281,6 +1281,46 @@ describe('DataPanel file drop', () => {
     );
     await userEvent.click(screen.getByRole('button', { name: '.use()' }));
     expect(onConfirmTranscription).toHaveBeenCalledWith('notes.txt');
+
+    // A new file takes the earlier text's table away, so `.use()` never stores it under the new name.
+    const onDiscardTranscription = vi.fn();
+    rerender(
+      <DataPanel
+        state={emptyState({ transcription })}
+        onParse={vi.fn()}
+        onConfirmTranscription={onConfirmTranscription}
+        onDiscardTranscription={onDiscardTranscription}
+        onSendFormula={vi.fn()}
+        onBind={vi.fn()}
+        onConfirmData={vi.fn()}
+        onUndo={vi.fn()}
+      />
+    );
+    drop(csvFile(CSV, 'other.csv'));
+    await userEvent.click(await screen.findByRole('button', { name: '.replace()' }));
+    expect(onDiscardTranscription).toHaveBeenCalledTimes(1);
+    expect(box()).toHaveValue(CSV);
+  });
+
+  it('drops the result of a slow read that a later file superseded', async () => {
+    renderPanel();
+    let release: (buffer: ArrayBuffer) => void = () => {};
+    const slow = csvFile('slow,file\n1,2\n', 'slow.csv');
+    const slowBytes = await slow.arrayBuffer();
+    slow.arrayBuffer = () =>
+      new Promise<ArrayBuffer>(resolve => {
+        release = resolve;
+      });
+
+    drop(slow);
+    drop(csvFile(CSV, 'fast.csv'));
+    await waitFor(() => expect(box()).toHaveValue(CSV));
+    release(slowBytes);
+    await new Promise(resolve => setTimeout(resolve, 0));
+
+    expect(box()).toHaveValue(CSV);
+    expect(screen.queryByTestId('file-replace')).not.toBeInTheDocument();
+    expect(screen.getByTestId('file-status')).toHaveTextContent('"fast.csv"');
   });
 
   it('marks the box while a file is dragged over it and keeps the browser from opening a stray drop', () => {

@@ -658,6 +658,8 @@ export function DataPanel({
   const parseButtonRef = useRef<HTMLButtonElement>(null);
   const replaceButtonRef = useRef<HTMLButtonElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // Counts file reads, so the result of a superseded one is dropped.
+  const readSeq = useRef(0);
   // The box's text as of the last render, for a file read that ends after an edit.
   const textRef = useRef(text);
   textRef.current = text;
@@ -757,6 +759,13 @@ export function DataPanel({
 
   // The file's text goes into the box as it is; the user reads it and presses `.parse()`.
   const fillFromFile = (name: string, reading: PendingFile['reading'], outcome: FileOutcome) => {
+    // A table read from the box's earlier text belongs to that text: it goes, so `.use()`
+    // never stores it under this file's name and `.parse()` is free for the new text. The
+    // card stays open, also when dropping the table takes the page back to step 2.
+    if (transcription) {
+      setExpanded(true);
+      onDiscardTranscription();
+    }
     setText(reading.text);
     setSource(name);
     setPendingFile(null);
@@ -771,6 +780,9 @@ export function DataPanel({
   // A drop, `.open()` or a pasted file: refused while the session works, read in the
   // browser, then into an empty box, or held for `.replace()` when the box has text.
   const handleFile = async (file: File) => {
+    // Only the latest file counts: a slow read of an earlier one must not land after it.
+    readSeq.current += 1;
+    const seq = readSeq.current;
     setPendingFile(null);
     if (!ready || busy) {
       setFileNotice({ tone: 'error', text: FILE_BUSY_TEXT });
@@ -781,10 +793,12 @@ export function DataPanel({
     try {
       reading = await readFile(file);
     } catch {
+      if (seq !== readSeq.current) return;
       setFileNotice({ tone: 'error', text: describeFileRefusal(file.name, 'unreadable') });
       trackFile('unknown', null, 'unreadable');
       return;
     }
+    if (seq !== readSeq.current) return;
     if (!reading.ok) {
       const code = reading.reason === 'binary' ? reading.kind : reading.reason;
       setFileNotice({ tone: 'error', text: describeFileRefusal(file.name, code) });
