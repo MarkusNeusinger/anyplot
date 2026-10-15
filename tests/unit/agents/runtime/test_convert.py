@@ -509,6 +509,11 @@ def zip_with_declared_size(members: dict[str, bytes], liar: str, declared: int) 
     return bytes(data)
 
 
+LINEAR_TIME_BOUND_S = 5.0
+"""A bound that tells a linear scan from a backtracking one: a quadratic scan of these inputs takes hours.
+At 1.0 s, the CI runner under coverage measured 1.17 s and 1.19 s for the 30 MB scan (2026-10-15)."""
+
+
 class TestSecurityReview:
     """The security review of #12194 (Fable with crafted files through the real harness, Gemini by reading)."""
 
@@ -516,14 +521,14 @@ class TestSecurityReview:
         xml = b"<x><!--" + b"<c " * 10_000_000 + b"--></x>"  # 30 MB, the review's crafted comment
         started = time.perf_counter()
         found = convert.scan_sheet_xml(xml)
-        assert found.cells == 0 and time.perf_counter() - started < 1.0
+        assert found.cells == 0 and time.perf_counter() - started < LINEAR_TIME_BOUND_S
 
     def test_the_crafted_workbook_converts_in_well_under_a_second(self) -> None:
         comment = "<!--" + "".join(f"<c {index % 9973} " for index in range(600_000)) + "-->"
         data = xlsx([Sheet("S", [["a"], [1]], prolog=comment)])
         started = time.perf_counter()
         assert convert.convert(data).csv_text == "a\n1\n"
-        assert time.perf_counter() - started < 1.0
+        assert time.perf_counter() - started < LINEAR_TIME_BOUND_S
 
     def test_a_cell_far_out_is_refused_before_calamine_allocates_the_box(self) -> None:
         far_row = xlsx([Sheet("S", [["a"]], formulas={"A1048576": ("1", "1")})])
