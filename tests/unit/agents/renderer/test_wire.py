@@ -58,6 +58,31 @@ class TestContract:
             with pytest.raises(ValidationError):
                 wire.DataRunRequest.model_validate({**good, **overrides})
 
+    def test_a_conversion_is_bounded_and_its_meta_closed(self) -> None:
+        assert wire.MAX_CONVERT_TIMEOUT_S == contract.MAX_CONVERT_TIMEOUT_S
+        good = {"job_id": "c1", "data_base64": "UEsFBg==", "timeout_s": 10}
+        assert wire.ConvertRequest.model_validate(good).data() == b"PK\x05\x06"
+        for overrides in (
+            {"timeout_s": wire.MAX_CONVERT_TIMEOUT_S + 1},
+            {"data_base64": "!!!!"},
+            {"data_base64": ""},
+            {"sheet": ""},
+            {"sheet": "x" * (wire.MAX_SHEET_NAME_CHARS + 1)},
+            {"source": "x"},
+        ):
+            with pytest.raises(ValidationError):
+                wire.ConvertRequest.model_validate({**good, **overrides})
+        meta = {"kind": "xlsx", "rows": 1, "columns": 1}
+        assert wire.ConvertMeta.model_validate(meta).format == "csv"
+        for overrides in (
+            {"kind": "exe"},
+            {"warnings": {"secret_sheet_name": 1}},
+            {"sheets": ["s"] * 11},
+            {"extra": 1},
+        ):
+            with pytest.raises(ValidationError):
+                wire.ConvertMeta.model_validate({**meta, **overrides})
+
     def test_a_data_run_answer_is_closed(self) -> None:
         with pytest.raises(ValidationError):
             wire.DataRun.model_validate({"exit_code": 0, "png_base64": "x"})

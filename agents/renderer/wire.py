@@ -14,9 +14,11 @@ renderer image does not install. The limits that also exist on the agents side
 pattern) are pinned equal by `tests/unit/agents/renderer/test_wire.py`.
 """
 
+import base64
+import binascii
 import json
 import math
-from typing import Any, Literal
+from typing import Annotated, Any, Literal, get_args
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -232,6 +234,133 @@ class DataRun(BaseModel):
 
 class DataRunResponse(DataRun):
     """`POST /run-data`: the run, with the job id, the timings and the instance's figures added."""
+
+    job_id: str = Field(pattern=JOB_ID_PATTERN)
+    timings: RenderTimings
+    version: str
+    mem_available_mb: int | None = None
+
+
+MAX_CONVERT_INPUT_BYTES = 5 * 1024 * 1024
+"""The largest file `POST /convert` takes (`convert.MAX_INPUT_BYTES`, the agents' and the BFF's raw cap)."""
+MAX_CONVERT_BASE64_CHARS = 4 * ((MAX_CONVERT_INPUT_BYTES + 2) // 3)
+MAX_CONVERT_TIMEOUT_S = 15.0
+"""A conversion's time limit: the agents ask for 10 s, so a conversion never holds the render slot for long."""
+MAX_CONVERT_TEXT_BYTES = 1024 * 1024
+"""The text a conversion returns: the paste cap (`data/parse.py` `MAX_INPUT_BYTES`), because it goes into the paste box."""
+MAX_CONVERT_META_BYTES = 16 * 1024
+MAX_SHEET_NAME_CHARS = 255
+"""A requested sheet name: Excel allows 31 characters, OpenDocument any number; the converter names at most 100."""
+CONVERT_INPUT_FILE = "input.bin"
+CONVERT_REQUEST_FILE = "request.json"  # harness.CONVERT_REQUEST_FILE
+CONVERT_META_FILE = "meta.json"  # harness.CONVERT_META_FILE
+CONVERT_REFUSAL_BASE = 10
+ConvertRefusal = Literal[
+    "unsupported",
+    "encrypted",
+    "pickle",
+    "hdf5",
+    "corrupt",
+    "archive_limits",
+    "too_many_rows",
+    "too_many_columns",
+    "too_large",
+    "empty",
+    "sheet_not_found",
+    "array_shape",
+    "object_array",
+    "formulas_only",
+    "too_complex",
+]
+CONVERT_REASONS: tuple[ConvertRefusal, ...] = get_args(ConvertRefusal)
+"""Why the converter refused a file (`convert.REFUSALS`, `harness.CONVERT_REFUSALS`, pinned equal): the harness exits
+with `CONVERT_REFUSAL_BASE` plus the index."""
+ConvertKind = Literal["xlsx", "xlsm", "xlsb", "xls", "ods", "parquet", "feather", "arrow", "npy", "npz"]
+ConvertWarning = Literal[
+    "formulas_without_value", "hidden_sheets", "dropped_columns", "list_columns", "utc_timestamps", "renamed_columns"
+]
+
+
+def convert_refusal(exit_code: int | None) -> ConvertRefusal | None:
+    """The refusal a convert-mode exit code stands for, or None for any other code."""
+    if exit_code is None:
+        return None
+    index = exit_code - CONVERT_REFUSAL_BASE
+    return CONVERT_REASONS[index] if 0 <= index < len(CONVERT_REASONS) else None
+
+
+class ConvertRequest(BaseModel):
+    """One file to convert to CSV text in a sandbox of its own (`POST /convert`), the bytes as base64."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    job_id: str = Field(pattern=JOB_ID_PATTERN)
+    data_base64: str = Field(min_length=4, max_length=MAX_CONVERT_BASE64_CHARS)
+    sheet: str | None = Field(default=None, min_length=1, max_length=MAX_SHEET_NAME_CHARS)
+    timeout_s: float = Field(gt=0, le=MAX_CONVERT_TIMEOUT_S)
+
+    @field_validator("data_base64")
+    @classmethod
+    def _base64(cls, value: str) -> str:
+        try:
+            raw = base64.b64decode(value, validate=True)
+        except (ValueError, binascii.Error):
+            raise ValueError("data_base64 is not base64") from None
+        if not raw or len(raw) > MAX_CONVERT_INPUT_BYTES:
+            raise ValueError("the file is empty or over the cap")
+        return value
+
+    def data(self) -> bytes:
+        return base64.b64decode(self.data_base64, validate=True)
+
+
+class ConvertMeta(BaseModel):
+    """`meta.json`, what the converter found (`convert.Conversion.meta`); read only after exit code 0."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    kind: ConvertKind
+    format: Literal["csv", "json"] = "csv"
+    """`json` for a table with list columns: records the parser expands into long format."""
+    rows: int = Field(ge=0, le=10 * MAX_PROBE_INT)
+    columns: int = Field(ge=0, le=1_000)
+    sheet: str | None = Field(default=None, max_length=MAX_SHEET_NAME_CHARS)
+    sheets: list[Annotated[str, Field(max_length=MAX_SHEET_NAME_CHARS)]] = Field(default_factory=list, max_length=10)
+    sheet_count: int = Field(default=0, ge=0, le=100_000)
+    warnings: dict[ConvertWarning, Annotated[int, Field(ge=0, le=MAX_PROBE_INT)]] = Field(default_factory=dict)
+    dropped: list[Annotated[str, Field(max_length=100)]] = Field(default_factory=list, max_length=20)
+    """The names of the columns left out (durations, intervals, binary, map, union, nested), at most 20: the page
+    names them, because a step that changes the data says so (owner rule of 2026-10-15)."""
+
+
+CONVERT_HARNESS_EXITS = frozenset(
+    {0, 1, 2, 8, *range(CONVERT_REFUSAL_BASE, CONVERT_REFUSAL_BASE + len(CONVERT_REASONS))}
+)
+"""Every exit code the harness's convert mode writes (`harness.CONVERT_EXIT`, pinned by a test). Any other code is a
+launcher or a process that died without its `status.json` (a SIGABRT of a native reader), which the agents
+service answers `file_too_complex`."""
+
+
+class ConvertRun(BaseModel):
+    """What one conversion's sandbox left: the exit code, the refusal it stands for, the text and the meta."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    exit_code: int | None
+    """The harness's exit code (`harness.CONVERT_EXIT`); None when the renderer killed the run."""
+    timed_out: bool = False
+    reason: RunReason | None = None
+    refusal: ConvertRefusal | None = None
+    measured: int | None = None
+    limit: int | None = None
+    text: str | None = Field(default=None, max_length=MAX_CONVERT_TEXT_BYTES)
+    meta: ConvertMeta | None = None
+    wall_s: float = Field(default=0.0, ge=0)
+    attempts: int = Field(default=1, ge=1, le=2)
+
+
+class ConvertResponse(ConvertRun):
+    """`POST /convert`: the run, with the job id, the timings and the instance's figures added."""
 
     job_id: str = Field(pattern=JOB_ID_PATTERN)
     timings: RenderTimings

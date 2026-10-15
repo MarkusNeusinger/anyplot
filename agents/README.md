@@ -92,6 +92,10 @@ Three rules hold for everything here:
 | `AGENT_SESSION_CLOSE_WARNING` | `true` | The counted refusal one before the closing one ends with the fixed `close_warning` sentence |
 | `AGENT_USER_PASTES_PER_MINUTE` | `10` | Dataset pastes per user within any 60 seconds, across sessions; one more is `429 rate_limited`. Only a paste that reaches the pre-filter or a judge counts |
 | `AGENT_USER_PASTES_PER_DAY` | `100` | Dataset pastes per user and UTC day; one more is `429 daily_limit` |
+| `AGENT_USER_CONVERSIONS_PER_MINUTE` | `5` | File conversions (a dropped spreadsheet, Parquet, Arrow or NumPy file read in the renderer's sandbox) per user within any 60 seconds; one more is `429 rate_limited`. The paste that follows counts as one paste |
+| `AGENT_USER_CONVERSIONS_PER_DAY` | `30` | File conversions per user and UTC day; one more is `429 daily_limit` |
+| `AGENT_CONVERT_TIMEOUT_S` | `10` | Seconds one conversion may run in the sandbox, at most 15 |
+| `AGENT_CONVERT_SLOT_WAIT_S` | `20` | Seconds a conversion waits for the render slot behind every pipeline render; then `503 capacity` |
 | `AGENT_MAX_ATTEMPTS` | `2` | Rounds per pipeline run, 1 to 3: the first and at most one repair round by default (a self-review adds an adapter call to a round, never a round); the eval harness sets 1 or 3 (`--max-attempts`) to measure no repair or a second repair round |
 | `AGENT_REVIEWER_MODE` | `catalogue` | The reviewer's rubric: `catalogue` (the offline scorer's rubric, verdict decided by code from the points) or `checklist` (the narrow checklist used before 2026-10-13) |
 | `AGENT_REVIEW_BAR`, `AGENT_STATUS_BAR` | `0.95`, `0.95` | `catalogue` reviews: the share of technical points (VQ, SC, DQ) below which a render gets the repair (1.0 before 2026-10-14; owner decision pending), and the ship bar at or above which it shows without the review's notes |

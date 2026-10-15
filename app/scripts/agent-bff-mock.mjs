@@ -111,7 +111,9 @@
  * - anything else: a refinement with a repair round, shipped as
  *   `needs_attention`; "dark" in the text renders the dark theme.
  * Pasted data containing "ignore previous" answers `403 data_refused`; pasted
- * text that looks like a formula answers `422 formula`.
+ * text that looks like a formula answers `422 formula`. `POST .../dataset/convert`
+ * (a dropped binary file) answers by the first bytes: a zip is a workbook with two
+ * sheets, Parquet one table, bytes holding "TOO_MANY_ROWS" the row-cap refusal.
  *
  * Environment: PORT (8010), MOCK_STEP_MS (700, per pipeline step),
  * MOCK_QUEUE_MS (2500, per queue position), MOCK_QUEUE (2, the starting
@@ -1745,6 +1747,62 @@ async function route(req, res) {
     session.language = normaliseLanguage(value);
     session.languageSource = 'chosen';
     return json(res, 200, { language: session.language, source: 'chosen' }, ref);
+  }
+  if (method === 'POST' && rest === '/dataset/convert') {
+    // The renderer reads the file in production; here the first bytes pick a canned answer. A zip is a
+    // workbook with the sheets "2024" and "2025", Parquet a single table, a file whose bytes hold
+    // "TOO_MANY_ROWS" the row-cap refusal with its counts, anything else `file_unsupported`.
+    if (typeof body?.data_base64 !== 'string') return fail(res, 422, 'invalid', ref);
+    const bytes = Buffer.from(body.data_base64, 'base64');
+    if (bytes.length > 5 * 1024 * 1024) return fail(res, 413, 'too_long', ref);
+    await sleep(PARSE_MS);
+    if (bytes.includes('TOO_MANY_ROWS')) {
+      res.writeHead(422, { 'Content-Type': 'application/json', 'X-Request-Id': ref });
+      res.end(JSON.stringify({ detail: 'file_too_many_rows', ref, measured: 48213, limit: 20000 }));
+      return;
+    }
+    const head = bytes.subarray(0, 4).toString('latin1');
+    if (head === 'PK\u0003\u0004') {
+      const sheet = body.sheet ?? '2024';
+      if (!['2024', '2025'].includes(sheet)) return fail(res, 422, 'file_sheet_not_found', ref);
+      const year = Number(sheet);
+      const text = `Umsatz ${year}\n\nmonth,revenue\n${year}-01,${year - 1900}\n${year}-02,${year - 1880}\n${year}-03,${year - 1870}\n`;
+      return json(
+        res,
+        200,
+        {
+          text,
+          format: 'csv',
+          kind: 'xlsx',
+          rows: 5,
+          columns: 2,
+          sheet,
+          sheets: ['2024', '2025'],
+          sheet_count: 2,
+          warnings: { formulas_without_value: 2, hidden_sheets: 1 },
+        },
+        ref
+      );
+    }
+    if (head === 'PAR1') {
+      return json(
+        res,
+        200,
+        {
+          text: 'station,temp_c\nNord,4.5\nSüd,7.25\n',
+          format: 'csv',
+          kind: 'parquet',
+          rows: 2,
+          columns: 2,
+          sheet: null,
+          sheets: [],
+          sheet_count: 0,
+          warnings: {},
+        },
+        ref
+      );
+    }
+    return fail(res, 422, 'file_unsupported', ref);
   }
   if (method === 'POST' && rest === '/dataset/confirm') {
     if (session.active) return fail(res, 409, 'run_active', ref);

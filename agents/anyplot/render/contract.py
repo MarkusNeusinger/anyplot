@@ -11,6 +11,11 @@ the same isolation and returns the harness's exit code and the `out.csv` it wrot
 (`DataOutput`). A backend that cannot (a renderer deployed before `POST /run-data`)
 raises `DataRunUnsupported`.
 
+A `ConvertJob` is a binary data file (Excel, OpenDocument, Parquet, Feather, Arrow,
+NumPy) the page dropped; `convert` reads it in the same isolation with the harness in
+convert mode and returns the CSV text (or JSON records) for the paste box
+(`ConvertOutput`). A backend without conversions raises `DataRunUnsupported` too.
+
 A `RuntimeAdapter` describes one language runtime: the file name the code is written
 to, the command (the CI command, with the probe harness in front for Python), the
 environment per theme, and the code transforms the pipeline applies before a render
@@ -25,6 +30,8 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Protocol
+
+from agents.renderer.wire import ConvertMeta
 
 from ..schemas import RENDER_ID_PATTERN, Theme
 
@@ -141,14 +148,55 @@ class DataOutput:
         self.stderr_tail = self.stderr_tail[-MAX_STDERR_CHARS:]
 
 
+MAX_CONVERT_TIMEOUT_S = 15.0
+"""A conversion's longest time limit; the renderer's `wire.MAX_CONVERT_TIMEOUT_S` is the same (pinned by a test)."""
+
+
+@dataclass(frozen=True)
+class ConvertJob:
+    """One binary data file to convert to text in isolation (the dataset route's `/convert`); `sheet` names the
+    sheet or `.npz` array the page chose, None for the first."""
+
+    job_id: str
+    data: bytes = field(repr=False)
+    sheet: str | None = None
+    timeout_s: float = 10.0
+
+    def __post_init__(self) -> None:
+        if not _RENDER_ID.fullmatch(self.job_id):
+            raise ValueError("job_id must match the render id pattern")
+        if not 0 < self.timeout_s <= MAX_CONVERT_TIMEOUT_S:
+            raise ValueError("timeout_s must be positive and at most the conversion limit")
+
+
+@dataclass
+class ConvertOutput:
+    """What a conversion left: the harness's exit code (`harness.CONVERT_EXIT`), the refusal it stands for with
+    the measured value and the cap, or the text and its `meta` after a 0. `reason` is the renderer's run reason
+    (`timeout`, `memory`, ...) when the host stopped the run."""
+
+    exit_code: int | None
+    timed_out: bool = False
+    refusal: str | None = None
+    measured: int | None = None
+    limit: int | None = None
+    text: str | None = field(default=None, repr=False)
+    meta: ConvertMeta | None = None
+    reason: str | None = None
+    wall_s: float = 0.0
+
+
 class RenderBackend(Protocol):
-    """Runs a job's code once per theme in isolation and collects the raw outputs; runs data snippets the same way."""
+    """Runs a job's code once per theme in isolation and collects the raw outputs; runs data snippets and file
+    conversions the same way."""
 
     name: str
 
     async def render(self, job: RenderJob) -> RenderResult: ...
 
     async def run_data(self, job: DataJob) -> DataOutput: ...
+
+    async def convert(self, job: ConvertJob) -> ConvertOutput: ...
 
 
 class RuntimeAdapter(Protocol):
@@ -171,6 +219,14 @@ class RuntimeAdapter(Protocol):
 
     def data_env(self) -> dict[str, str]:
         """The complete environment of a data run: no theme, no plotting settings."""
+        ...
+
+    def convert_command(self) -> list[str]:
+        """The argv that converts the file `input.bin` in the work directory with the harness in convert mode."""
+        ...
+
+    def convert_env(self) -> dict[str, str]:
+        """The complete environment of a conversion."""
         ...
 
     def normalise(self, code: str, library: str) -> str:

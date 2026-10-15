@@ -117,7 +117,7 @@ import unicodedata
 from collections import Counter
 from collections.abc import Collection, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from itertools import pairwise, product
 from typing import Any, Literal
 
@@ -353,6 +353,12 @@ _ISO_DATE = re.compile(r"([0-9]{4})-([0-9]{2})-([0-9]{2})" + _ISO_TIME)
 _DOT_DATE = re.compile(r"([0-9]{1,2})\.([0-9]{1,2})\.([0-9]{4})" + _LOCAL_TIME)
 _SLASH_DATE = re.compile(r"([0-9]{1,2})/([0-9]{1,2})/([0-9]{4})" + _LOCAL_TIME)
 
+_ISO_STAMP = re.compile(
+    r"([0-9]{4})-([0-9]{2})-([0-9]{2})"
+    r"(?:[T ]([0-9]{2}):([0-9]{2})(?::([0-9]{2})(?:[.,]([0-9]{1,9}))?)?(Z|[+-][0-9]{2}(?::?[0-9]{2})?)?)?"
+)
+"""An ISO date, or a timestamp with seconds, a fraction of up to nine digits and an offset (`_as_iso_stamps`)."""
+
 _DATE_FORMATS: tuple[tuple[re.Pattern[str], str], ...] = (
     (_ISO_DATE, "iso"),
     (_DOT_DATE, "dot"),
@@ -441,6 +447,8 @@ class _Column:
     bare: list[str] = field(default_factory=list)  # the cells the number typing read: `source`, or the number parts
     numbers: list[float] = field(default_factory=list)
     dates: list[datetime] = field(default_factory=list)
+    date_texts: list[str] = field(default_factory=list)  # the canonical text of each of `dates`, for exact min/max
+    date_rests: list[int] = field(default_factory=list)  # nanoseconds past each of `dates`' microsecond, for order
     with_time: bool = False
     decimal_comma: bool = False
     notes: list[str] = field(default_factory=list)
@@ -1948,7 +1956,8 @@ def _type_column(column: _Column) -> None:
     """Give the column its dtype and canonical cells, in this order of attempts.
 
     1. **datetime**: every non-missing cell matches one format: ISO
-       `YYYY-MM-DD[(T| )HH:MM[:SS]]`, `DD.MM.YYYY`, or `DD/MM/YYYY` / `MM/DD/YYYY`,
+       `YYYY-MM-DD[(T| )HH:MM[:SS[.fraction]][offset]]` (`_as_iso_stamps`: up to nine
+       fraction digits and the offset kept as written), `DD.MM.YYYY`, or `DD/MM/YYYY` / `MM/DD/YYYY`,
        the last three with an optional ` HH:MM[:SS]` and one- or two-digit day and
        month. A slash column is day-first when a first part exceeds 12, month-first
        when a second part does, not a date when both happen, and day-first with a
@@ -2199,7 +2208,85 @@ def _match_all(pattern: re.Pattern[str], cells: list[str]) -> dict[str, tuple[in
     return fields
 
 
+def _as_iso_stamps(column: _Column, present: list[str]) -> bool | None:
+    """ISO dates and timestamps with every digit and the offset as written (owner rule of 2026-10-15).
+
+    None when a cell is no ISO date, so the other formats are tried. A fraction of up to nine
+    digits stays (each cell padded to the column's longest fraction, which changes no value and
+    lets `pd.read_csv(parse_dates=...)` read the column as one format), and so does an offset
+    (`Z`, `+01`, `+0100`, `+01:00`, written `+01:00`; `Z` as `+00:00`). A column that mixes
+    cells with and without an offset is not a date column: no time is given a zone by guess.
+    A column with several offsets (summer and winter time) is written in UTC (`+00:00`) with a
+    note naming the offsets, because pandas reads one offset per column; the instants stay.
+    """
+    matches = []
+    for cell in present:
+        match = _ISO_STAMP.fullmatch(cell)
+        if match is None:
+            return None
+        matches.append((cell, match))
+    offsets: dict[str, int | None] = {}
+    stamps: dict[str, tuple[datetime, str]] = {}
+    for cell, match in matches:
+        year, month, day = int(match.group(1)), int(match.group(2)), int(match.group(3))
+        hour, minute, second = (int(match.group(index) or 0) for index in (4, 5, 6))
+        fraction, offset = match.group(7) or "", match.group(8)
+        try:
+            stamp = datetime(year, month, day, hour, minute, second, int((fraction + "000000")[:6]))
+        except ValueError:
+            return False
+        minutes: int | None = None
+        if offset is not None:
+            digits = offset[1:].replace(":", "") if offset != "Z" else "0000"
+            minutes = int(digits[:2]) * 60 + int(digits[2:4] or 0)
+            if minutes >= 24 * 60:
+                return False
+            minutes = -minutes if offset.startswith("-") else minutes
+            stamp = stamp.replace(tzinfo=timezone(timedelta(minutes=minutes)))
+        offsets[cell] = minutes
+        stamps[cell] = (stamp, fraction)
+    zones = set(offsets.values())
+    if None in zones and len(zones) > 1:
+        return False
+    mixed = len(zones) > 1
+    if mixed:
+        shown = ", ".join(_offset_text(value) for value in sorted(zone for zone in zones if zone is not None))
+        column.notes.append(f"times with the UTC offsets {shown} written in UTC (+00:00); the instants are the same")
+    digits = max((len(fraction) for _, fraction in stamps.values()), default=0)
+    column.with_time = any(":" in cell for cell in present)
+    texts: dict[str, str] = {}
+    for cell, (stamp, fraction) in stamps.items():
+        if mixed:
+            stamp = stamp.astimezone(timezone.utc)
+        if not column.with_time:
+            texts[cell] = stamp.date().isoformat()
+            continue
+        text = stamp.replace(microsecond=0, tzinfo=None).isoformat(timespec="seconds")
+        if digits:
+            text += "." + fraction.ljust(digits, "0")
+        if stamp.tzinfo is not None:
+            text += _offset_text(0 if mixed else offsets[cell])
+        texts[cell] = text
+    column.dtype = "datetime"
+    column.dates = [stamps[cell][0] for cell in column.source if cell]
+    column.date_texts = [texts[cell] for cell in column.source if cell]
+    column.date_rests = [int((stamps[cell][1] + "000000000")[6:9]) for cell in column.source if cell]
+    column.cells = [texts[cell] if cell else "" for cell in column.source]
+    return True
+
+
+def _offset_text(minutes: int | None) -> str:
+    """An offset in minutes as `+HH:MM`."""
+    value = minutes or 0
+    sign = "-" if value < 0 else "+"
+    hours, rest = divmod(abs(value), 60)
+    return f"{sign}{hours:02d}:{rest:02d}"
+
+
 def _as_dates(column: _Column, present: list[str]) -> bool:
+    stamped = _as_iso_stamps(column, present)
+    if stamped is not None:
+        return stamped
     kind, fields = "", None
     for pattern, candidate in _DATE_FORMATS:
         fields = _match_all(pattern, present)
@@ -2540,6 +2627,9 @@ def _profile_column(column: _Column) -> ColumnProfile:
     if column.dtype in ("integer", "number") and column.numbers:
         minimum, maximum = min(column.numbers), max(column.numbers)
         mean, median = _statistics(column.numbers)
+    elif column.dtype == "datetime" and column.dates and column.date_texts:
+        order = sorted(range(len(column.dates)), key=lambda index: (column.dates[index], column.date_rests[index]))
+        minimum, maximum = column.date_texts[order[0]], column.date_texts[order[-1]]
     elif column.dtype == "datetime" and column.dates:
         minimum, maximum = _iso(min(column.dates), column.with_time), _iso(max(column.dates), column.with_time)
     elif column.dtype in ("text", "boolean"):

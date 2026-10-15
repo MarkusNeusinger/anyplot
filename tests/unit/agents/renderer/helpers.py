@@ -7,7 +7,16 @@ import time
 from typing import Any
 
 from agents.anyplot.render.backends.fake import fixture_png
-from agents.renderer.wire import DataRun, DataRunRequest, RenderRequest, Theme, ThemeRun
+from agents.renderer.wire import (
+    ConvertMeta,
+    ConvertRequest,
+    ConvertRun,
+    DataRun,
+    DataRunRequest,
+    RenderRequest,
+    Theme,
+    ThemeRun,
+)
 
 
 URL = "https://anyplot-renderer-239660669828.europe-west4.run.app"
@@ -171,6 +180,27 @@ class FakeExecutor:
             return DataRun(exit_code=0, csv_text="x,y\n1,2\n", wall_s=0.2)
         finally:
             self.active -= 1
+
+    async def run_convert(self, job: ConvertRequest) -> ConvertRun:
+        self.active += 1
+        self.max_active = max(self.max_active, self.active)
+        try:
+            if self.error is not None:
+                raise self.error
+            if self.gate is not None:
+                await self.gate.wait()
+            await asyncio.sleep(0.01)
+            self.calls.append((job.job_id, "convert"))
+            meta = ConvertMeta(kind="xlsx", rows=2, columns=2, sheet="S", sheets=["S"], sheet_count=1)
+            return ConvertRun(exit_code=0, text="x,y\n1,2\n", meta=meta, wall_s=0.2)
+        finally:
+            self.active -= 1
+
+
+def convert_job(
+    data: bytes = b"PK\x05\x06" + b"\0" * 18, *, sheet: str | None = None, job_id: str = "conv123"
+) -> ConvertRequest:
+    return ConvertRequest(job_id=job_id, data_base64=base64.b64encode(data).decode(), sheet=sheet, timeout_s=10.0)
 
 
 DATA_SNIPPET = "import pandas as pd\ndf = pd.DataFrame({'x': [1, 2], 'y': [3, 4]})\n"

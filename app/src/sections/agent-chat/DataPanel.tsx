@@ -80,6 +80,18 @@
  * request); the data line shows it. Typing keeps the name, a text paste or an
  * empty box drops it; a table read from the file keeps it for `.use()`.
  * Several files at once: the first is read, and the line says so.
+ *
+ * A binary data file (Excel, OpenDocument, Parquet, Feather, Arrow, NumPy, at
+ * most 5 MB) goes to the server instead (`onConvert`, `POST .../dataset/convert`),
+ * which reads it in the renderer's sandbox and answers the text for the box;
+ * then it fills the box like a text file, and `.parse()` sends that text with
+ * the name and the sheet as `source` (`Bericht.xlsx · sheet "2024"`). While it
+ * is read, `.open()`, `.parse()` and the drop zone wait. The line names what
+ * was read and what the server counted (formula cells without a saved value,
+ * hidden sheets, columns left out); a refusal names its numbers. A workbook
+ * with several sheets keeps the file in the page and offers a sheet picker,
+ * which reads the chosen sheet again: over the file's own untouched text at
+ * once, over an edited box after `.replace()`.
  */
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
@@ -96,16 +108,20 @@ import {
   type TranscriptionState,
 } from 'src/hooks/useAgentSession';
 import {
+  AgentApiError,
   type ColumnProfile,
+  type ConvertAnswer,
   type LongSuggestion,
   longSuggestion,
   MAX_DATASET_BYTES,
   MAX_MESSAGE_CHARS,
+  toBase64,
   utf8Bytes,
 } from 'src/lib/agent';
 import { bindingRows, emptyChoice, kindsHint, signHint } from 'src/sections/agent-chat/bindings';
 import { Ellipsis } from 'src/sections/agent-chat/Ellipsis';
 import {
+  countLines,
   FILE_ACCEPT,
   type FileEncoding,
   type FileKind,
@@ -114,9 +130,12 @@ import {
 } from 'src/sections/agent-chat/fileText';
 import {
   CONFIRM_LOST_TEXT,
+  describeConvertFailure,
+  describeConvertWarnings,
   describeDataFailure,
   describeFileRefusal,
   FILE_BUSY_TEXT,
+  FILE_CONVERTING_TEXT,
 } from 'src/sections/agent-chat/messages';
 import { inStep2 } from 'src/sections/agent-chat/steps';
 import {
@@ -601,16 +620,66 @@ function dragHasFiles(transfer: DataTransfer | null): boolean {
 /** What the server keeps for a file's name its content check refused (`dataset_context.FILE_NAME_WITHHELD`). */
 const FILE_NAME_WITHHELD = '(name withheld)';
 
+/** A binary file the server converted: kept in the browser for the sheet picker, which converts it again. */
+interface ConvertedFile {
+  name: string;
+  base64: string;
+  /** The browser's reading of the format, for the analytics of a failed re-conversion. */
+  browserKind: FileKind;
+  /** The server's reading of the format (`xlsx`, `ods`, `parquet`, ...). */
+  kind: string;
+  sheet: string | null;
+  sheets: string[];
+  sheetCount: number;
+  /** The text the conversion put into the box, to tell whether the user edited it since. */
+  text: string;
+}
+
 /** A file read and waiting for the user's `.replace()` because the box holds text. */
 interface PendingFile {
   name: string;
-  reading: Extract<FileReading, { ok: true }>;
+  /** What travels as the dataset route's `source`: the name, and the sheet for a converted workbook. */
+  source: string;
+  text: string;
+  lines: number;
+  /** How it was read, after the name: `as utf-8`, `from the sheet "2024" (xlsx)`. */
+  read: string;
+  /** What the server counted while it converted the file. */
+  notes: string[];
   /** How many files came with it; only the first is read. */
   of: number;
+  kind: string;
+  encoding: FileEncoding | null;
+  converted: ConvertedFile | null;
 }
 
 /** What happened to a dropped, chosen or pasted file, for `agent_data_file`. */
-type FileOutcome = 'filled' | 'replaced' | 'kept' | 'refused' | 'too_large' | 'busy' | 'unreadable';
+type FileOutcome =
+  | 'filled'
+  | 'replaced'
+  | 'kept'
+  | 'refused'
+  | 'too_large'
+  | 'busy'
+  | 'unreadable'
+  | 'failed'
+  | 'sheet';
+
+/** `Bericht.xlsx · sheet "2024"`: the source of a converted workbook names the sheet that was read. */
+function convertedSource(name: string, answer: ConvertAnswer): string {
+  if (answer.sheet === null) return name;
+  return `${name} · ${answer.kind === 'npz' ? 'array' : 'sheet'} "${answer.sheet}"`;
+}
+
+/** The "read ... " part of the line after a conversion. */
+function convertedRead(answer: ConvertAnswer): string {
+  const where =
+    answer.sheet === null
+      ? ''
+      : ` ${answer.kind === 'npz' ? 'array' : 'sheet'} "${answer.sheet}" of`;
+  const shape = `${countOf(answer.rows, 'row')} × ${countOf(answer.columns, 'column')}`;
+  return `on the server:${where} ${answer.kind} · ${shape}${answer.format === 'json' ? ' as JSON records' : ''}`;
+}
 
 interface DataPanelProps {
   state: AgentSessionState;
@@ -636,6 +705,11 @@ interface DataPanelProps {
   decisionRef?: React.Ref<HTMLButtonElement>;
   /** Analytics: `agent_data_file{kind, encoding, outcome}`; never the file's name. */
   onTrack?: (event: string, props?: Record<string, string | undefined>) => void;
+  /**
+   * A dropped binary data file read on the server (`POST .../dataset/convert`); `sheet`
+   * asks for another sheet of the same file. Without it, such files are refused.
+   */
+  onConvert?: (dataBase64: string, sheet?: string) => Promise<ConvertAnswer>;
 }
 
 export function DataPanel({
@@ -652,8 +726,13 @@ export function DataPanel({
   confirmRef,
   decisionRef,
   onTrack,
+  onConvert,
 }: DataPanelProps) {
   const [text, setText] = useState('');
+  // A binary file on its way to the server and back; the box, `.open()` and `.parse()` wait for it.
+  const [converting, setConverting] = useState(false);
+  // The converted file whose text is in the box, for the sheet picker; a text paste or an empty box drops it.
+  const [converted, setConverted] = useState<ConvertedFile | null>(null);
   // The name of the file the box's text came from; typing keeps it, a text paste or an empty box drops it.
   const [source, setSource] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -685,6 +764,8 @@ export function DataPanel({
   // A turn, a theme render, a parse, a binding change or a confirmation in
   // flight: the server would refuse or race a second one.
   const busy = sessionBusy(state);
+  // Whether a dropped file would be taken now: not while a step runs or another file is being read.
+  const dropReady = ready && !busy && !converting;
   const transcription = state.transcription;
   const dataset = state.dataset;
   const columns = dataset?.parsed.profile.columns ?? [];
@@ -759,14 +840,11 @@ export function DataPanel({
     else onParse(text);
   };
 
-  const trackFile = (
-    kind: FileKind | 'unknown',
-    encoding: FileEncoding | null,
-    outcome: FileOutcome
-  ) => onTrack?.('agent_data_file', { kind, encoding: encoding ?? 'none', outcome });
+  const trackFile = (kind: string, encoding: FileEncoding | null, outcome: FileOutcome) =>
+    onTrack?.('agent_data_file', { kind, encoding: encoding ?? 'none', outcome });
 
   // The file's text goes into the box as it is; the user reads it and presses `.parse()`.
-  const fillFromFile = ({ name, reading, of }: PendingFile, outcome: FileOutcome) => {
+  const fillFromFile = (pending: PendingFile, outcome: FileOutcome) => {
     // A table read from the box's earlier text belongs to that text: it goes, so `.use()`
     // never stores it under this file's name and `.parse()` is free for the new text. The
     // card stays open, also when dropping the table takes the page back to step 2.
@@ -774,22 +852,109 @@ export function DataPanel({
       setExpanded(true);
       onDiscardTranscription();
     }
-    setText(reading.text);
-    setSource(name);
+    setText(pending.text);
+    setSource(pending.source);
+    setConverted(pending.converted);
     setPendingFile(null);
     // Several files dropped at once: the first is read, and the line says so (owner, 2026-10-15).
-    const several = of > 1 ? `first of ${of} files read — one file at a time · ` : '';
+    const several =
+      pending.of > 1 ? `first of ${pending.of} files read — one file at a time · ` : '';
+    const notes = pending.notes.length > 0 ? ` · ${pending.notes.join(' · ')}` : '';
     setFileNotice({
       tone: 'ok',
-      text: `${several}read "${name}" as ${reading.encoding} · ${countOf(reading.lines, 'line')} · check it, then .parse()`,
+      text: `${several}read "${pending.name}" ${pending.read} · ${countOf(pending.lines, 'line')}${notes} · check it, then .parse()`,
     });
     setFills(count => count + 1);
-    trackFile('text', reading.encoding, outcome);
+    trackFile(pending.kind, pending.encoding, outcome);
+  };
+
+  // Into an empty box, or held for `.replace()` when the box has text the user did not get from this
+  // very conversion (a sheet switch over the untouched text of the same file replaces it at once).
+  const offerFile = (pending: PendingFile, outcome: FileOutcome = 'filled') => {
+    const current = textRef.current;
+    if (current.trim() && !(outcome === 'sheet' && converted && current === converted.text)) {
+      setFileNotice(null);
+      setPendingFile(pending);
+      return;
+    }
+    fillFromFile(pending, outcome);
+  };
+
+  // A binary format goes to the server (in the renderer's sandbox) and comes back as text for the box.
+  const convertOnServer = async (
+    file: { name: string; base64: string; browserKind: FileKind },
+    of: number,
+    seq: number,
+    sheet?: string
+  ) => {
+    if (!onConvert) {
+      setFileNotice({ tone: 'error', text: describeFileRefusal(file.name, 'binary') });
+      trackFile(file.browserKind, null, 'refused');
+      return;
+    }
+    setConverting(true);
+    setFileNotice({
+      tone: 'ok',
+      text: sheet
+        ? `reading the sheet "${sheet}" of "${file.name}" on the server …`
+        : `reading "${file.name}" on the server …`,
+    });
+    let answer: ConvertAnswer;
+    try {
+      answer = await onConvert(file.base64, sheet);
+    } catch (err) {
+      if (seq !== readSeq.current) return;
+      const failure =
+        err instanceof AgentApiError ? err : new AgentApiError(0, 'unreachable', null);
+      setFileNotice({
+        tone: 'error',
+        text: describeConvertFailure(
+          file.name,
+          failure.code,
+          failure.measured,
+          failure.limit,
+          failure.ref
+        ),
+      });
+      trackFile(file.browserKind, null, failure.code.startsWith('file_') ? 'refused' : 'failed');
+      return;
+    } finally {
+      if (seq === readSeq.current) setConverting(false);
+    }
+    if (seq !== readSeq.current) return;
+    offerFile(
+      {
+        name: file.name,
+        source: convertedSource(file.name, answer),
+        text: answer.text,
+        lines: countLines(answer.text),
+        read: convertedRead(answer),
+        notes: describeConvertWarnings(answer.warnings, answer.dropped),
+        of,
+        kind: answer.kind,
+        encoding: null,
+        converted: {
+          ...file,
+          kind: answer.kind,
+          sheet: answer.sheet,
+          sheets: answer.sheets,
+          sheetCount: answer.sheet_count,
+          text: answer.text,
+        },
+      },
+      sheet ? 'sheet' : 'filled'
+    );
   };
 
   // A drop, `.open()` or a pasted file: refused while the session works, read in the
   // browser, then into an empty box, or held for `.replace()` when the box has text.
   const handleFile = async (file: File, of = 1) => {
+    // A file the server still reads keeps its place: the next one is refused, not swapped in.
+    if (converting) {
+      setFileNotice({ tone: 'error', text: FILE_CONVERTING_TEXT });
+      trackFile('unknown', null, 'busy');
+      return;
+    }
     // Only the latest file counts: a slow read of an earlier one must not land after it.
     readSeq.current += 1;
     const seq = readSeq.current;
@@ -809,28 +974,51 @@ export function DataPanel({
       return;
     }
     if (seq !== readSeq.current) return;
+    if (!reading.ok && reading.reason === 'convert') {
+      await convertOnServer(
+        { name: file.name, base64: toBase64(reading.bytes), browserKind: reading.kind },
+        of,
+        seq
+      );
+      return;
+    }
     if (!reading.ok) {
       const code = reading.reason === 'binary' ? reading.kind : reading.reason;
       setFileNotice({ tone: 'error', text: describeFileRefusal(file.name, code) });
       trackFile(
         reading.kind,
         reading.encoding,
-        reading.reason === 'too_large' ? 'too_large' : 'refused'
+        reading.reason === 'too_large' || reading.reason === 'too_large_binary'
+          ? 'too_large'
+          : 'refused'
       );
       return;
     }
-    const pending = { name: file.name, reading, of };
-    if (textRef.current.trim()) {
-      setFileNotice(null);
-      setPendingFile(pending);
-      return;
-    }
-    fillFromFile(pending, 'filled');
+    offerFile({
+      name: file.name,
+      source: file.name,
+      text: reading.text,
+      lines: reading.lines,
+      read: `as ${reading.encoding}`,
+      notes: [],
+      of,
+      kind: 'text',
+      encoding: reading.encoding,
+      converted: null,
+    });
+  };
+
+  // The sheet picker: the same file again, another sheet, read on the server.
+  const handleSheet = (sheet: string) => {
+    if (!converted || sheet === converted.sheet || !ready || busy || converting) return;
+    readSeq.current += 1;
+    setPendingFile(null);
+    void convertOnServer(converted, 1, readSeq.current, sheet);
   };
 
   // `.keep()`: the box stays as it was, and so does the focus's place in it, not on the page.
   const handleKeep = () => {
-    if (pendingFile) trackFile('text', pendingFile.reading.encoding, 'kept');
+    if (pendingFile) trackFile(pendingFile.kind, pendingFile.encoding, 'kept');
     setPendingFile(null);
     boxRef.current?.focus();
   };
@@ -875,7 +1063,7 @@ export function DataPanel({
     event.preventDefault();
     // Stop here, so the page's guard above does not mark the box as no drop target.
     event.stopPropagation();
-    event.dataTransfer.dropEffect = ready && !busy ? 'copy' : 'none';
+    event.dataTransfer.dropEffect = dropReady ? 'copy' : 'none';
   };
 
   const handleDragLeave = (event: React.DragEvent) => {
@@ -906,9 +1094,10 @@ export function DataPanel({
       void handleFile(file);
       return;
     }
-    // Pasted text is not the file's any more: its name, its line and a file waiting for
-    // `.replace()` (which would overwrite the paste) all go.
+    // Pasted text is not the file's any more: its name, its line, its sheet picker and a file
+    // waiting for `.replace()` (which would overwrite the paste) all go.
     setSource(null);
+    setConverted(null);
     setFileNotice(null);
     setPendingFile(null);
   };
@@ -928,6 +1117,7 @@ export function DataPanel({
   const handleSendFormula = () => {
     setText('');
     setSource(null);
+    setConverted(null);
     onSendFormula();
   };
 
@@ -940,7 +1130,8 @@ export function DataPanel({
         htmlFor="agent-data"
         sx={{ ...labelSx, display: 'block', mb: dataset ? 0.75 : 0.25 }}
       >
-        # your data — paste or drop CSV, TSV, semicolon CSV, JSON or plain text
+        # your data — paste or drop CSV, TSV, JSON, plain text, Excel, ODS, Parquet, Feather or
+        NumPy
       </Box>
       {/* Until there is data, the other source: a curve the assistant computes. */}
       {!dataset && (
@@ -956,7 +1147,7 @@ export function DataPanel({
           colour, or with the warning colour while a step runs and the drop would be refused. */}
       <Box
         data-testid="data-drop-zone"
-        data-drag={dragOver ? (ready && !busy ? 'ready' : 'busy') : undefined}
+        data-drag={dragOver ? (dropReady ? 'ready' : 'busy') : undefined}
         onDragEnter={handleDragEnter}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -974,7 +1165,10 @@ export function DataPanel({
           ref={boxRef}
           onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => {
             setText(event.target.value);
-            if (!event.target.value.trim()) setSource(null);
+            if (!event.target.value.trim()) {
+              setSource(null);
+              setConverted(null);
+            }
             setFileNotice(null);
             // An edit after the question wins: `.replace()` would overwrite it.
             setPendingFile(null);
@@ -991,10 +1185,10 @@ export function DataPanel({
             whiteSpace: 'pre',
             overflowX: 'auto',
             ...(dragOver && {
-              borderColor: ready && !busy ? colors.primary : colors.warning,
+              borderColor: dropReady ? colors.primary : colors.warning,
               borderStyle: 'dashed',
-              outline: `1px dashed ${ready && !busy ? colors.primary : colors.warning}`,
-              bgcolor: `color-mix(in srgb, ${ready && !busy ? colors.primary : colors.warning} 10%, var(--bg-elevated))`,
+              outline: `1px dashed ${dropReady ? colors.primary : colors.warning}`,
+              bgcolor: `color-mix(in srgb, ${dropReady ? colors.primary : colors.warning} 10%, var(--bg-elevated))`,
             }),
           }}
         />
@@ -1020,15 +1214,17 @@ export function DataPanel({
                 fontSize: fontSize.md,
                 color: 'var(--ink)',
                 bgcolor: 'var(--bg-elevated)',
-                border: `1px dashed ${ready && !busy ? colors.primary : colors.warning}`,
+                border: `1px dashed ${dropReady ? colors.primary : colors.warning}`,
                 borderRadius: '4px',
                 px: 1.5,
                 py: 0.75,
               }}
             >
-              {ready && !busy
+              {dropReady
                 ? 'drop the file to read it into the box'
-                : 'a step is still running: drop the file when it is done'}
+                : converting
+                  ? 'a file is still being read: drop the next one when it is done'
+                  : 'a step is still running: drop the file when it is done'}
             </Box>
           </Box>
         )}
@@ -1057,7 +1253,7 @@ export function DataPanel({
             component="button"
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            disabled={!ready || busy}
+            disabled={!ready || busy || converting}
             aria-label="Open a data file"
             sx={actionButtonSx}
           >
@@ -1079,7 +1275,7 @@ export function DataPanel({
             type="button"
             ref={parseButtonRef}
             onClick={handleParse}
-            disabled={!ready || !text.trim() || over || busy || !!transcription}
+            disabled={!ready || !text.trim() || over || busy || converting || !!transcription}
             aria-describedby={transcription || state.parsing ? 'agent-parse-hint' : undefined}
             sx={ghostButtonSx}
           >
@@ -1109,6 +1305,37 @@ export function DataPanel({
           {fileNotice.text}
         </Box>
       )}
+      {/* The other sheets of the workbook in the box (or arrays of an .npz): a choice reads the
+          same file again on the server. Only the visible sheets are named, at most ten. */}
+      {converted && converted.sheets.length > 1 && (
+        <Box
+          data-testid="file-sheets"
+          sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1 }}
+        >
+          <Box component="label" htmlFor="agent-file-sheet" sx={labelSx}>
+            # {converted.kind === 'npz' ? 'array' : 'sheet'}
+            {converted.sheetCount > converted.sheets.length
+              ? ` (first ${converted.sheets.length} of ${converted.sheetCount})`
+              : ` (${converted.sheets.length})`}
+          </Box>
+          <Box
+            component="select"
+            id="agent-file-sheet"
+            value={converted.sheet ?? ''}
+            disabled={!dropReady}
+            onChange={(event: React.ChangeEvent<HTMLSelectElement>) =>
+              handleSheet(event.target.value)
+            }
+            sx={{ ...nativeControlSx, maxWidth: '100%', minWidth: 0 }}
+          >
+            {converted.sheets.map(name => (
+              <option key={name} value={name}>
+                {name}
+              </option>
+            ))}
+          </Box>
+        </Box>
+      )}
       {pendingFile && (
         <Box
           role="group"
@@ -1130,8 +1357,8 @@ export function DataPanel({
             id="agent-file-replace-line"
             sx={{ ...labelSx, color: 'var(--ink)', flex: '1 1 220px', overflowWrap: 'anywhere' }}
           >
-            replace the text in the box with &quot;{pendingFile.name}&quot; (
-            {countOf(pendingFile.reading.lines, 'line')})?
+            replace the text in the box with &quot;{pendingFile.source}&quot; (
+            {countOf(pendingFile.lines, 'line')})?
           </Box>
           <Box sx={{ display: 'flex', gap: 1 }}>
             <Box

@@ -1588,7 +1588,9 @@ def _cell_text(value: object, with_time: bool) -> str | None:
         number = float(value)
         return None if math.isnan(number) else repr(number)
     if isinstance(value, pd.Timestamp):
-        return value.isoformat(timespec="seconds") if with_time else value.date().isoformat()
+        # Every digit and the offset as the value holds them (owner rule of 2026-10-15): a fraction is written
+        # only when there is one, an offset only for a zone-aware value.
+        return value.isoformat() if with_time else value.date().isoformat()
     return str(value)
 
 

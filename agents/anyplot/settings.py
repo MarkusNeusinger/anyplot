@@ -46,6 +46,10 @@ another provider, model or location.
 | `AGENT_SESSION_CLOSE_WARNING` | `true` | The counted refusal one before the closing one carries the fixed `close_warning` suffix |
 | `AGENT_USER_PASTES_PER_MINUTE` | `10` | Dataset pastes per user within any 60 seconds, across sessions; more get `429 rate_limited` before any parser or model reads the paste |
 | `AGENT_USER_PASTES_PER_DAY` | `100` | Dataset pastes per user and UTC day; more get `429 daily_limit` |
+| `AGENT_USER_CONVERSIONS_PER_MINUTE` | `5` | File conversions (a dropped spreadsheet, Parquet, Arrow or NumPy file read in the sandbox) per user within any 60 seconds, across sessions; more get `429 rate_limited`. The paste that follows a conversion counts as one paste |
+| `AGENT_USER_CONVERSIONS_PER_DAY` | `30` | File conversions per user and UTC day; more get `429 daily_limit` |
+| `AGENT_CONVERT_TIMEOUT_S` | `10` | Seconds one conversion may run in the sandbox, at most 15 |
+| `AGENT_CONVERT_SLOT_WAIT_S` | `20` | Seconds a conversion waits for the render slot, behind every pipeline render; then `503 capacity` |
 | `AGENT_MAX_ATTEMPTS` | `2` | Adapter attempts per pipeline run, 1 to 3: the first and at most one repair round by default; the eval harness sets 1 or 3 to measure no repair or a second repair round |
 | `AGENT_ROOT_THINKING_BUDGET` | `1024` | Claude only: adaptive thinking of the root, with that many tokens added to its output cap; 0 turns it off (the 2026-10-11 measurement: with thinking on root and adapter every run passed the gates and 51.6 % ended `ok`, against 91.0 % and 28.7 % without) |
 | `AGENT_ADAPTER_THINKING_BUDGET` | `8192` | The same for the adapter (2,048 before 2026-10-14, when effort `high` thought past it); the eval harness overrides both with `--thinking-budget ROOT,ADAPTER` |
@@ -359,6 +363,23 @@ class AgentSettings(BaseSettings):
     user_pastes_per_day: PositiveInt = 100
     """Dataset pastes per user and UTC day (`AGENT_USER_PASTES_PER_DAY`), checked like the minute's; more get
     `429 daily_limit`. Owner decision of 2026-10-14."""
+
+    user_conversions_per_minute: PositiveInt = 5
+    """File conversions per user within any 60 seconds (`AGENT_USER_CONVERSIONS_PER_MINUTE`), across sessions: a
+    dropped spreadsheet, Parquet, Arrow or NumPy file read in the renderer's sandbox (`POST .../dataset/convert`).
+    Its own counter, apart from the pastes: a conversion spends sandbox time, no tokens, and the paste that
+    follows it counts as one paste. More get `429 rate_limited`. Owner decision of 2026-10-15."""
+
+    user_conversions_per_day: PositiveInt = 30
+    """File conversions per user and UTC day (`AGENT_USER_CONVERSIONS_PER_DAY`); more get `429 daily_limit`."""
+
+    convert_timeout_s: float = Field(default=10.0, gt=0, le=15)
+    """Seconds one conversion may run in the sandbox (`AGENT_CONVERT_TIMEOUT_S`), host-enforced; at most the
+    renderer's 15 s (`wire.MAX_CONVERT_TIMEOUT_S`). Short, so a conversion never holds the render slot for long."""
+
+    convert_slot_wait_s: float = Field(default=20.0, gt=0, le=60)
+    """Seconds a conversion waits for the instance's render slot (`AGENT_CONVERT_SLOT_WAIT_S`), behind every
+    pipeline render (the `toggle` lane); past it the route answers `503 capacity`."""
 
     max_attempts: int = Field(default=2, ge=1, le=MAX_ATTEMPTS)
     """Adapter attempts per pipeline run (`AGENT_MAX_ATTEMPTS`), 1 to 3, enforced by the loop
