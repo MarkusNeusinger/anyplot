@@ -18,4 +18,4 @@
   the parser expands into one row per value. Over a cap (20,000 rows, 50
   columns, 1 MB of text) the file is refused with its numbers. Conversions have
   their own limits (5 a minute, 30 a day per user, one at a time, 10 s) and wait
-  behind every pipeline render.
+  behind every pipeline render. (#12194)
