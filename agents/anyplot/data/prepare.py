@@ -74,9 +74,9 @@ The operations:
   a percent change is always in percent. A difference or a sum of whole-number columns
   is computed in Python integers and stays whole (a float64 holds integers only up to
   2**53). A division by zero or a missing input gives a
-  missing cell, and the change line counts them. This is how the root answers "which
-  year has the largest share of X": derive the share, then read the profile, instead
-  of asking the user to compute a column (live test of 2026-10-14).
+  missing cell, and the change line counts them. A question such as "which year has the
+  largest share of X" takes the same operations through `query_data` (`query.py`), on a
+  copy that is never stored (live tests of 2026-10-14 and 2026-10-15).
 
 Values in conditions are never evaluated: a condition compares text with text for a
 text column, numbers for a numeric column (the value is a dot-decimal number, which

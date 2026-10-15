@@ -20,7 +20,7 @@ from typing import Any, Self
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from .data.bindings import BindingCheck, check_bindings
+from .data.bindings import BindingCheck, check_bindings, resolve_role
 from .data.roles import DataRole, parse_roles
 from .data.signs import mark_non_negative
 from .language import DEFAULT_LANGUAGE, SOURCES, LanguageSource, is_valid
@@ -60,6 +60,14 @@ id and the bindings as they were (`confirmation_fingerprint`). The plot pipeline
 while the fingerprint of the current state equals it, so a new dataset (a paste, a
 transcription's `.use()`) or any binding change, also one that lands between the
 confirmation's read and its write, leaves the data unconfirmed without an explicit reset."""
+PENDING_REQUEST = PREFIX + "pending_request"
+"""The `change_request` of a first plot that stopped `not_ready` (`data_unconfirmed` or `incomplete_bindings`) or
+got no queue slot: the user's note for the plot (a title, a label), joined to the next first-plot run's own request
+(`pipeline.run_pipeline`), so a binding change the root made that asked for `.confirm()` again never loses it (live
+test of 2026-10-15). It stays until a run ships a plot. Any later binding write, new data version (a paste,
+`prepare_data`, `generate_data`, `run_data_code`, `.to_long()`, undo) or library switch drops it: it was written
+for the data and bindings before (owner decision of 2026-10-15). The pipeline reads it defensively: a value that is
+no text is ignored, and text is cut to `MAX_CHANGE_REQUEST_CHARS` (`pipeline.merged_request`)."""
 LAST_STATUS = PREFIX + "last_status"
 VERSIONS = PREFIX + "versions"
 
@@ -138,6 +146,42 @@ def confirm_delta(view: SessionView) -> dict[str, Any]:
     return {CONFIRMED: confirmation_fingerprint(view.dataset_id, view.bindings)}
 
 
+def narrows(confirmed: list[Binding], bindings: list[Binding], roles: list[DataRole]) -> bool:
+    """Whether `bindings` only leave out series of `confirmed`: members of a number family such as `y2`.
+
+    Owner decision of 2026-10-15 ("e.g. drops the 2nd line"): every kept binding is one the
+    user confirmed, role and column as they were, and every one left out is a member of a
+    variadic family of numbers. Leaving out a grouping, text or boolean role (`series`, which
+    merged two countries into one line in the review) or any single role, or renumbering a
+    member so that `y1` plots another column, is a change the user has not seen. Something
+    must be left out: the same bindings narrow nothing.
+    """
+    kept = {(binding.role, binding.column) for binding in bindings}
+    before = {(binding.role, binding.column) for binding in confirmed}
+    if len(kept) != len(bindings) or not kept < before:
+        return False
+    for name, _ in before - kept:
+        role = resolve_role(name, roles)
+        if role is None or not role.variadic or set(role.kinds) != {"numeric"}:
+            return False
+    return True
+
+
+def narrowed_confirmation(
+    view: SessionView, bindings: list[Binding], check: BindingCheck, roles: list[DataRole]
+) -> dict[str, Any]:
+    """The state delta that moves the user's confirmation to `bindings`, or {} when it does not move.
+
+    It moves only while the data is confirmed, the new bindings are complete, and they narrow
+    the confirmed ones (`narrows`): the user saw every assignment they keep, so a step-2 note
+    such as "only co2_per_capita" plots in the same turn instead of stopping on
+    `data_unconfirmed` (live test of 2026-10-15). `AGENT_NARROWED_BINDINGS=reset` turns it off.
+    """
+    if not (view.data_confirmed and check.complete and narrows(view.bindings, bindings, roles)):
+        return {}
+    return {CONFIRMED: confirmation_fingerprint(view.dataset_id, bindings)}
+
+
 def language_delta(language: str, source: LanguageSource) -> dict[str, Any]:
     """The state delta that sets the session language (the language route, `set_language`, detection)."""
     return {LANGUAGE: language, LANGUAGE_SOURCE: source}
@@ -160,6 +204,7 @@ def initial_state(
         NORMALISED: normalised,
         HINTS: list(readiness.get("hints", [])),
         READINESS: readiness,
+        PENDING_REQUEST: None,  # a note kept for another library's first plot does not carry over
     }
 
 
@@ -209,4 +254,5 @@ def apply_bindings(
     check = check_bindings(bindings, roles, profile)
     if check.errors:
         return check, {}
-    return check, {BINDINGS: [binding.model_dump() for binding in bindings]}
+    # A kept plot note (`PENDING_REQUEST`) was written for the bindings before; any binding write drops it.
+    return check, {BINDINGS: [binding.model_dump() for binding in bindings], PENDING_REQUEST: None}
