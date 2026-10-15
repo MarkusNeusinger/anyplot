@@ -96,7 +96,7 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
     2. The remaining roles pick, in the order required single roles, required
        variadic families, optional single roles, optional variadic families (spec
        order within each group), the unused compatible column with the best
-       (single-valued, category rank, tier, year rank, name similarity, column
+       (single-valued, category rank, tier, name similarity, year rank, column
        position): for a categorical, text or boolean role a column with one distinct
        value ranks after every column with two or more (`_constant_group`), and a real
        category before a year column before a text column of numbers
@@ -166,8 +166,8 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
                     _constant_group(role, column),
                     _category_rank(role, column),
                     tier,
-                    _year_rank(role, column),
                     -_rounded_similarity(role.name, column.name),
+                    _year_rank(role, column),
                     position,
                     column.name,
                 )
@@ -348,17 +348,21 @@ def _constant_group(role: DataRole, column: ColumnProfile) -> bool:
 
 
 def year_score(column: ColumnProfile) -> int:
-    """2 for an integer column of years named so (`Jahr`, `year`), 1 for one whose values only look like years, else 0.
+    """2 for an integer column of years named so (`Jahr`, `year`), 1 for an unnamed run of whole years, else 0.
 
-    Values look like years when all lie within `YEAR_RANGE` and span at most `MAX_YEAR_SPAN`
-    (a price of 1200 to 1450 does too, which is why a name decides between the two).
+    Values count as years when all lie within `YEAR_RANGE` and span at most `MAX_YEAR_SPAN`.
+    Without a year name that is not enough (review of 2026-10-15: prices, rents or calories of
+    1000 to 2200 look the same): the column must also hold every year of its range, at least
+    three (`unique == max - min + 1`), as a yearly series does, in a wide or a long table.
     """
     if column.dtype != "integer" or not isinstance(column.min, float | int) or not isinstance(column.max, float | int):
         return 0
     low, high = YEAR_RANGE
     if not (low <= column.min and column.max <= high and column.max - column.min <= MAX_YEAR_SPAN):
         return 0
-    return 2 if YEAR_WORDS & set(_WORDS.findall(column.name.casefold())) else 1
+    if YEAR_WORDS & set(_WORDS.findall(column.name.casefold())):
+        return 2
+    return 1 if column.unique >= 3 and column.unique == int(column.max - column.min) + 1 else 0
 
 
 def numeric_text(column: ColumnProfile) -> bool:
@@ -376,8 +380,9 @@ def _category_rank(role: DataRole, column: ColumnProfile) -> int:
     0. a real text or boolean column of 2 to `MAX_CATEGORIES` distinct values;
     1. an integer column of years named so, then 2. one whose values look like years;
     3. a text column with more distinct values;
-    4. an integer column of at most `MAX_CATEGORIES` distinct values (an ordinal, a code);
-    5. a text column of numbers (`numeric_text`), then 6. any other integer column (a measure).
+    4. an ordinal integer column, every value of a short range (`Quartal` 1 to 4, `_ordinal`);
+    5. another integer column of at most `MAX_CATEGORIES` distinct values;
+    6. a text column of numbers (`numeric_text`), then 7. any other integer column (a measure).
     """
     if not role.kinds or any(kind not in GROUPING_KINDS for kind in role.kinds):
         return 0
@@ -387,8 +392,18 @@ def _category_rank(role: DataRole, column: ColumnProfile) -> int:
         score = year_score(column)
         if score:
             return 3 - score
-        return 4 if column.unique <= MAX_CATEGORIES else 6
-    return 5
+        if _ordinal(column):
+            return 4
+        return 5 if column.unique <= MAX_CATEGORIES else 7
+    return 6
+
+
+def _ordinal(column: ColumnProfile) -> bool:
+    """An integer column that numbers steps (`Quartal` 1 to 4, `Monat` 1 to 12): every value of a short range."""
+    if not isinstance(column.min, float | int) or not isinstance(column.max, float | int):
+        return False
+    span = int(column.max - column.min) + 1
+    return 2 <= column.unique == span <= MAX_CATEGORIES
 
 
 def _year_rank(role: DataRole, column: ColumnProfile) -> int:

@@ -136,6 +136,30 @@ class TestCategoryAndMeasureRanking:
 
         assert as_pairs(default_bindings(roles, data)) == [("value", "price")]
 
+    def test_prices_in_the_year_range_are_measures(self) -> None:
+        # Review of 2026-10-15: a price of 1000 to 2200 scored as a year and lost the value role to the quantity.
+        data = profile("Produkt;Preis;Menge\nA;1250;3\nB;1400;5\nC;1990;2\n")
+
+        assert as_pairs(default_bindings(parse_roles(BAR_BASIC), data)) == [("category", "Produkt"), ("value", "Preis")]
+
+    def test_an_unnamed_run_of_whole_years_still_counts(self) -> None:
+        roles = [role("value", "numeric")]
+        data = profile("t,amount\n2019,7\n2020,9\n2021,8\n")
+
+        assert as_pairs(default_bindings(roles, data)) == [("value", "amount")]
+
+    def test_a_quarter_ranks_before_a_measure_in_the_year_range_as_category(self) -> None:
+        roles = [role("category", "categorical")]
+        data = profile("Umsatz,Quartal\n1250,1\n1400,2\n1990,3\n1700,4\n")
+
+        assert as_pairs(default_bindings(roles, data)) == [("category", "Quartal")]
+
+    def test_name_similarity_decides_before_the_year_rank(self) -> None:
+        roles = [role("value", "numeric")]
+        data = profile("Jahr,amount,value_eur\n2020,3.5,1.5\n2021,4.5,2.5\n2022,5.5,3.5\n")
+
+        assert as_pairs(default_bindings(roles, data)) == [("value", "value_eur")]
+
     def test_a_time_axis_prefers_the_year_among_numbers(self) -> None:
         roles = [role("x", "datetime", "numeric"), role("y", "numeric")]
         data = profile("population,year\n7.5,2020\n7.6,2021\n")

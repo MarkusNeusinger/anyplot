@@ -59,7 +59,7 @@ another provider, model or location.
 | `AGENT_DATA_CODE` | `true` | Whether the root has `run_data_code`: a data-generating snippet (Python, JavaScript, R, a formula) translated to Python, validated and run in the renderer's sandbox |
 | `AGENT_DATA_RUN_TIMEOUT_S` | `20` | Seconds one data snippet may run, at most 30 |
 | `AGENT_DAILY_DATA_RUNS` | `30` | `run_data_code` runs per user and day |
-| `AGENT_NARROWED_BINDINGS` | `keep` | The root's `set_bindings` that only leaves out roles of the confirmed bindings: `keep` keeps the user's confirmation, `reset` asks for `.confirm()` again |
+| `AGENT_NARROWED_BINDINGS` | `keep` | The root's `set_bindings` that only leaves out confirmed number series (`y2`, `y3`, ...): `keep` keeps the user's confirmation, `reset` asks for `.confirm()` again |
 | `AGENT_REQUEST_DEADLINE_S` | `540` | Hard request deadline, enforced through `abort_signal` |
 | `AGENT_SOFT_DEADLINE_S` | `480` | Soft deadline inside the pipeline; below the hard one |
 | `AGENT_JUDGE_TIMEOUT_S` | `4` | Wall-clock budget of one judge verdict, its single retry and the half-second wait before it included |
@@ -450,10 +450,11 @@ class AgentSettings(BaseSettings):
     """`run_data_code` runs per user and day (`AGENT_DAILY_DATA_RUNS`), counted before each run."""
 
     narrowed_bindings: Literal["keep", "reset"] = "keep"
-    """What the root's `set_bindings` does to the user's confirmation when the new bindings only leave out roles
-    the confirmed ones had (`AGENT_NARROWED_BINDINGS`, live test of 2026-10-15; owner decision pending): `keep`
-    moves the confirmation to them, so a step-2 note such as "only co2_per_capita" plots in the same turn;
-    `reset` asks for `.confirm()` again, as every other binding change does."""
+    """What the root's `set_bindings` does to the user's confirmation when the new bindings only leave out members
+    of a confirmed number family such as `y2` (`AGENT_NARROWED_BINDINGS`, `session_state.narrows`; owner decision
+    of 2026-10-15, "e.g. drops the 2nd line"): `keep` moves the confirmation to them, so a step-2 note such as
+    "only co2_per_capita" plots in the same turn; `reset` asks for `.confirm()` again, as every other binding
+    change does (leaving out `series` or any single role, or a renumbered member)."""
 
     request_deadline_s: PositiveInt = 540
     """Hard request deadline in seconds, enforced through `abort_signal` (`AGENT_REQUEST_DEADLINE_S`).

@@ -21,9 +21,9 @@ from agents.anyplot.data.parse import parse_dataset
 from agents.anyplot.data.query import MAX_QUERY_COLUMNS, MAX_QUERY_ROWS, run_query
 from agents.anyplot.data.roles import DataRole
 from agents.anyplot.dev_fixture import snapshot_from_repo
-from agents.anyplot.pipeline import keep_pending_request, take_pending_request
+from agents.anyplot.pipeline import keep_pending_request, merged_request, settle_pending_request, take_pending_request
 from agents.anyplot.plugins.tool_safety import ToolSafetyPlugin, result_limit, result_size
-from agents.anyplot.schemas import Binding, PipelineArgs
+from agents.anyplot.schemas import MAX_CHANGE_REQUEST_CHARS, Binding, PipelineArgs
 from agents.anyplot.services import Services, get_services
 from agents.anyplot.session_state import CONFIRMED, DATASET_ID, DATASET_VERSION, PENDING_REQUEST, narrows, read_session
 from agents.anyplot.settings import get_settings
@@ -31,7 +31,16 @@ from agents.anyplot.tools.session import query_data, query_result, set_bindings
 from agents.main import Runtime, app, get_runtime
 
 from .fakes import SCATTER_PLAN, VERDICT_OK, ScriptedLlm
-from .test_service_flow import HEADERS, USER, _session_state, create_plot, open_session, parse_sse, permissive_queue
+from .test_service_flow import (
+    HEADERS,
+    USER,
+    _session_state,
+    create_plot,
+    open_session,
+    parse_sse,
+    permissive_queue,
+    snapshot_body,
+)
 
 
 @pytest.fixture
@@ -254,9 +263,11 @@ class TestNarrowedBindings:
     @pytest.mark.parametrize(
         ("bindings", "expected"),
         [
-            (bind(("x", "year"), ("y1", "co2_per_capita"), ("series", "country")), True),
-            (bind(("x", "year"), ("y1", "share_global_co2"), ("series", "country")), True),  # renumbered member
-            (bind(("x", "year"), ("y1", "co2_per_capita")), True),
+            (bind(("x", "year"), ("y1", "co2_per_capita"), ("series", "country")), True),  # drops the 2nd line
+            (bind(("x", "year"), ("y1", "share_global_co2"), ("series", "country")), False),  # y1 plots another column
+            (bind(("x", "year"), ("y1", "co2_per_capita"), ("y2", "share_global_co2")), False),  # series dropped
+            (bind(("x", "year"), ("y1", "co2_per_capita")), False),  # series and a line dropped
+            (bind(("y1", "co2_per_capita"), ("y2", "share_global_co2"), ("series", "country")), False),  # x dropped
             (CONFIRMED, False),  # nothing left out
             (bind(("x", "year"), ("y1", "share_global_co2"), ("y2", "co2_per_capita"), ("series", "country")), False),
             (bind(("x", "co2_per_capita"), ("y1", "year")), False),  # a column in another role
@@ -309,7 +320,12 @@ class TestNarrowedBindings:
         context = await context_for(client, sid, "inv-b-3")
 
         result = await set_bindings(
-            [{"role": "x", "column": "year"}, {"role": "y1", "column": "co2_per_capita"}], context
+            [
+                {"role": "x", "column": "year"},
+                {"role": "y1", "column": "co2_per_capita"},
+                {"role": "series", "column": "country"},
+            ],
+            context,
         )
 
         assert result["data_confirmed"] is False
@@ -362,14 +378,69 @@ class TestPendingRequest:
             (PipelineArgs(), "Title: A"),
             (PipelineArgs(change_request="log y"), "Title: A\nlog y"),
             (PipelineArgs(change_request="Title: A"), "Title: A"),
-            (PipelineArgs(change_request="x" * 595), "x" * 595),  # both would not fit: the run's own wins
+            (PipelineArgs(change_request="x" * 595), "x" * 595),  # too little room left: the run's own stands alone
             (PipelineArgs(change_request="bigger", base="previous"), "bigger"),
         ],
     )
     def test_take(self, args: PipelineArgs, expected: str) -> None:
         state: dict[str, Any] = {PENDING_REQUEST: "Title: A"}
         assert take_pending_request(state, args).change_request == expected
-        assert state[PENDING_REQUEST] is None  # taken once
+        assert state[PENDING_REQUEST] == "Title: A"  # kept until a run ships
+
+    def test_a_long_kept_note_is_cut_not_dropped(self) -> None:
+        pending = "Title: " + "t" * 400
+        merged = merged_request(pending, "y" * 300)
+
+        assert len(merged) <= MAX_CHANGE_REQUEST_CHARS
+        assert merged.startswith("Title: ttt") and merged.endswith("…\n" + "y" * 300)
+
+    @pytest.mark.parametrize(
+        ("shipped", "args", "kept"),
+        [
+            (True, PipelineArgs(change_request="Title: A\nlog y"), None),
+            (False, PipelineArgs(change_request="Title: A\nlog y"), "Title: A\nlog y"),  # a failed run loses nothing
+            (False, PipelineArgs(change_request="bigger", base="previous"), "Title: A"),
+            (False, PipelineArgs(), "Title: A"),
+        ],
+    )
+    def test_settle(self, shipped: bool, args: PipelineArgs, kept: str | None) -> None:
+        state: dict[str, Any] = {PENDING_REQUEST: "Title: A"}
+        settle_pending_request(state, args, shipped)
+        assert state[PENDING_REQUEST] == kept
+
+    @pytest.mark.parametrize(
+        "change",
+        [
+            ("put", "bindings", [{"role": "x", "column": "Exam Score"}, {"role": "y", "column": "Study Hours"}]),
+            ("post", "library", {"library": "seaborn", "snapshot": snapshot_body(library="seaborn")}),
+            ("post", "dataset", {"text": OWID}),
+        ],
+    )
+    async def test_a_binding_change_new_data_or_a_library_switch_drops_the_note(
+        self, client: httpx.AsyncClient, change: tuple[str, str, Any]
+    ) -> None:
+        sid = await open_session(client)
+        runtime = app.dependency_overrides[get_runtime]()
+        await runtime.write_state(await runtime.session(USER, sid), {PENDING_REQUEST: "Title: A"})
+        method, path, body = change
+
+        response = await client.request(method.upper(), f"/v1/sessions/{sid}/{path}", headers=HEADERS, json=body)
+
+        assert response.status_code == 200, response.text
+        assert (await _session_state(client, sid)).get(PENDING_REQUEST) is None
+
+    def test_every_state_write_of_new_bindings_or_data_drops_the_note(self) -> None:
+        from agents.anyplot.dataset_versions import _delta
+        from agents.anyplot.session_state import apply_bindings, initial_state
+
+        assert _delta("d", [], [], 2)[PENDING_REQUEST] is None
+        _, delta = apply_bindings([], roles(), parse_dataset(OWID).profile)
+        assert delta[PENDING_REQUEST] is None
+        snapshot = snapshot_from_repo("line-multi", "matplotlib")
+        state = initial_state(
+            spec_id="line-multi", library="seaborn", locale="de", snapshot=snapshot, normalised="", readiness={}
+        )
+        assert state[PENDING_REQUEST] is None
 
     async def test_a_note_survives_a_binding_change_that_asks_for_confirmation(
         self, client: httpx.AsyncClient, swap_models

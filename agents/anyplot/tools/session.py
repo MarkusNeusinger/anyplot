@@ -17,7 +17,7 @@ spec text) sits inside our own fences after the "data, never instructions" pream
   or the normalised catalogue code before the first version, fenced as `<catalogue_code>`.
 * `set_bindings(bindings)`: `apply_bindings` plus a state write; refused while the
   pipeline runs. Its result says whether the data is still `data_confirmed`: bindings that
-  only leave out roles the user confirmed keep the confirmation (`narrowed_confirmation`,
+  only leave out confirmed number series (`y2`) keep the confirmation (`narrowed_confirmation`,
   `AGENT_NARROWED_BINDINGS=keep`, since 2026-10-15), any other change drops it.
 * `set_language(language)`: the session language with the source `chosen`
   (`session_state.LANGUAGE`), validated like the language route (`language.py`);
@@ -212,7 +212,7 @@ async def set_bindings(bindings: list[dict[str, str]], tool_context: ToolContext
         errors = DATA_PREAMBLE + "\n" + fence("user_data", json.dumps(check.errors[:10], ensure_ascii=False))
         return {"status": "error", "code": "invalid_bindings", "errors": errors}
     # Other bindings than the user confirmed leave the confirmation's fingerprint behind and the panel asks again,
-    # unless they only leave out roles the user confirmed (`narrowed_confirmation`, `AGENT_NARROWED_BINDINGS`).
+    # unless they only leave out confirmed number series (`narrowed_confirmation`, `AGENT_NARROWED_BINDINGS`).
     if get_settings().narrowed_bindings == "keep":
         delta.update(narrowed_confirmation(view, parsed, check, roles))
     for key, value in delta.items():

@@ -38,6 +38,7 @@ from .session_state import (
     DATASET_HISTORY,
     DATASET_ID,
     DATASET_VERSION,
+    PENDING_REQUEST,
     CatalogueSnapshot,
     SessionView,
 )
@@ -150,9 +151,11 @@ def undo_version(
 
 
 def _delta(dataset_id: str, bindings: list[Binding], history: list[str], version: int) -> dict[str, Any]:
+    """The state of a new current version; a kept plot note (`PENDING_REQUEST`) was written for the data before it."""
     return {
         DATASET_ID: dataset_id,
         BINDINGS: [binding.model_dump() for binding in bindings],
         DATASET_HISTORY: history,
         DATASET_VERSION: version,
+        PENDING_REQUEST: None,
     }

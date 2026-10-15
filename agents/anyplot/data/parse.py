@@ -57,12 +57,12 @@ would, for example, read `01.02.2024` as a number under `thousands='.'`).
    (the trailing-delimiter column of many spreadsheet exports) is dropped with a
    warning before the 50-column check. So is a pasted column with a header whose cells
    are all missing (an API export's unused schema fields), with one warning naming them,
-   unless fewer than `MIN_KEPT_COLUMNS` columns would remain (`_without_empty_columns`,
-   since 2026-10-15; a canonical re-parse keeps it).
+   unless every column is empty (`_without_empty_columns`, since 2026-10-15; a canonical
+   re-parse keeps it).
 5. **Type each column**, see `_type_column`: dates, then booleans, integers,
    numbers (also with unambiguous thousands groups: `7.184.003`, `1'234'567`,
-   `1 234,5`, `1,234,567`, see `_as_grouped_numbers`; a column of `1,234` shapes in a
-   file with dot decimals reads as comma thousands, `_commas_as_thousands`), then the
+   `1 234,5`, `1,234,567`, see `_as_grouped_numbers`; a column of `1,234` shapes reads
+   as comma thousands only beside a comma-grouped column, `_commas_as_thousands`), then the
    same numbers behind one unit shared by every cell (`65 %`, `15,6 h`, `€ 5`, also
    with a no-break space; the unit leaves the cells), otherwise text.
 6. **Canonicalise the headers**, see `canonical_headers`. A column whose cells
@@ -236,8 +236,8 @@ _FLOAT = re.compile(r"[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?"
 _DECIMAL_COMMA = re.compile(r"[+-]?(?:[1-9][0-9]{0,2}(?:\.[0-9]{3})+|[0-9]+)(?:,[0-9]+)?")
 _THOUSANDS_DOT = re.compile(r"[+-]?(?:[1-9][0-9]{0,2}(?:\.[0-9]{3})+|[0-9]+)")
 _AMBIGUOUS_COMMA = re.compile(r"[+-]?[0-9]{1,3},[0-9]{3}")
-# A cell that is a whole number or `1,234` (a comma before one group of three digits): in a file whose
-# other number columns write dot decimals, the comma groups thousands (`_commas_as_thousands`).
+# A cell that is a whole number or `1,234` (a comma before one group of three digits): beside a column whose
+# commas group thousands unambiguously, the comma groups thousands here too (`_commas_as_thousands`).
 _COMMA_GROUP = re.compile(r"[+-]?(?:[1-9][0-9]{0,2},[0-9]{3}|0|[1-9][0-9]*)")
 # The thousands separators `_as_grouped_numbers` reads, and what its notes call them. A space-like mark
 # (space, no-break, narrow no-break, thin space) or an apostrophe never separates decimals, so one group
@@ -258,6 +258,17 @@ _GROUPED: dict[str, re.Pattern[str]] = {
     )
     for mark in GROUP_MARKS
 }
+_IPV4 = re.compile(r"(?:25[0-5]|2[0-4][0-9]|1?[0-9]{1,2})(?:\.(?:25[0-5]|2[0-4][0-9]|1[0-9]{2})){3}")
+"""Four dot groups, each at most 255 (the last three of three digits, as a group needs): an IPv4 address."""
+_NAME_WORDS = re.compile(r"[^\W_]+")
+ID_WORDS: frozenset[str] = frozenset(
+    {
+        *("id", "ids", "code", "codes", "version", "ver", "phone", "tel", "telefon", "telephone", "mobile"),
+        *("handy", "plz", "zip", "postcode", "postal", "sku", "ip", "iban", "ean", "isbn", "gtin", "nr", "no"),
+    }
+)
+"""Words of a column name that say its cells are ids, codes, versions or phone numbers: their digit groups
+(`123 456`, `1.200.300`) are part of the value, so no thousands reading applies (review of 2026-10-15)."""
 _LETTER_CODE = re.compile(r"[A-Z]{2,3}")  # a country, region or currency code (`CH`, `EU`, `USA`)
 _INTEGER_INDEX = re.compile(r"0|[1-9][0-9]{0,8}")  # a position key of a sparse JSON-stat `value` object
 
@@ -394,6 +405,8 @@ class _Column:
     decimal_comma: bool = False
     notes: list[str] = field(default_factory=list)
     na_rows: list[int] = field(default_factory=list)  # the rows whose cell was `NA`, read as missing so far
+    id_like: bool = False  # the name says ids, codes, versions or phone numbers (`_id_like`): no thousands reading
+    group_mark: str | None = None  # the thousands mark `_as_grouped_numbers` read, evidence for other columns
 
 
 def pandas_dtypes(column_dtypes: Mapping[str, ColumnDtype]) -> dict[str, str]:
@@ -1329,12 +1342,19 @@ def _as_grouped_numbers(column: _Column, cells: list[str], present: list[str]) -
       with the rules above, which read it as a decimal (and `_retype_thousands_dots` or
       `_commas_as_thousands` settles it from the file's other columns);
     * an apostrophe (Swiss `1'234'567`, also `’`) or a space (also no-break, narrow no-break
-      or thin): one group is enough, as these never separate decimals.
+      or thin): some cell holds two or more groups or a decimal part (`1'234.5`), since a
+      single group without one is as often an id, a phone number or an article number
+      (`123 456`) as a number (review of 2026-10-15).
 
     The decimal mark is the other one of dot and comma, the same in every cell. Dates were
     tried first, so `01.02.2024` never gets here; `0.125` is no group (a group never starts
-    with a zero). Without a decimal the column is integers.
+    with a zero). Without a decimal the column is integers. A cell of four dot groups each at
+    most 255 (`192.168.100.200`, an IPv4 address) keeps the column text, and so does a column
+    whose name says it holds ids, codes, versions or phone numbers (`_id_like`). The mark is
+    recorded (`_Column.group_mark`): it is evidence for the file's other columns.
     """
+    if column.id_like:
+        return False
     for mark, label in GROUP_MARKS.items():
         pattern = _GROUPED[mark]
         matches = [pattern.fullmatch(cell) for cell in present]
@@ -1344,51 +1364,63 @@ def _as_grouped_numbers(column: _Column, cells: list[str], present: list[str]) -
         if len(decimals) > 1 or mark in decimals:
             continue
         decimal = decimals.pop() if decimals else None
-        if mark in ".," and not (any(cell.count(mark) >= 2 for cell in present) or (mark == "," and decimal == ".")):
+        several = any(cell.count(mark) >= 2 for cell in present)
+        if mark in ".," and not (several or (mark == "," and decimal == ".")):
+            continue
+        if mark not in ".," and not (several or decimal):
+            continue
+        if mark == "." and any(_IPV4.fullmatch(cell) for cell in present):
             continue
         bare = [cell.replace(mark, "").replace(",", ".") if cell else "" for cell in cells]
         if not (_as_numbers(column, bare) if decimal else _as_integers(column, bare)):
             return False
         column.decimal_comma = decimal == ","
+        column.group_mark = mark
         column.notes.append(f"{label} read as thousands separators")
         return True
     return False
 
 
-def _commas_as_thousands(columns: list[_Column]) -> None:
-    """In a file with dot decimals, a column of `1,234` shapes holds thousands separators.
+def _id_like(name: str) -> bool:
+    """Whether a column name says its cells are ids, codes, versions or phone numbers, never quantities."""
+    words = set(_NAME_WORDS.findall(name.casefold()))
+    return bool(words & ID_WORDS) or any(name.casefold().endswith(suffix) for suffix in ("_id", "-id", "id_"))
 
-    The mirror of `_retype_thousands_dots`: a column whose commas could be decimals or
-    thousands (every cell a whole number or `1,234`, so typed as decimal commas with the
-    `AMBIGUOUS_COMMAS` note) reads as whole numbers with comma thousands when another number
-    column of the file writes dot decimals (`0.25`, `12.5`) and no column writes a decimal
-    comma that is no such shape (`6,07`). When a column does write such a decimal comma, the
-    file settles it the other way: the decimal comma stays and the note goes, so the root asks
-    no question the file answers (live test of 2026-10-15, `43,621` Mio. t beside `6,07` t).
-    Without either evidence the decimal comma stays with its note.
+
+def _commas_as_thousands(columns: list[_Column]) -> None:
+    """A column of `1,234` shapes reads by what the file's other columns settle, else keeps its decimal comma.
+
+    A column whose commas could be decimals or thousands (every cell a whole number or `1,234`,
+    typed as decimal commas with the `AMBIGUOUS_COMMAS` note) is settled only by strong evidence
+    (review of 2026-10-15: a dot number elsewhere is none, since `12.30` may be a time and a
+    rating of `4.5` says nothing about a price of `1,250`):
+
+    * another column writes a decimal comma that is no such shape (`6,07`): the decimal comma
+      stays and the note goes, so the root asks no question the file answers (live test of
+      2026-10-15, `43,621` Mio. t beside `6,07` t);
+    * otherwise, another column groups its thousands with commas unambiguously (`1,234,567`,
+      `1,234.5`, `_as_grouped_numbers`): the column reads as whole numbers with comma
+      thousands, with a note.
+
+    Without either the decimal comma stays with its note. A column named as an id or a code
+    (`_id_like`) is never retyped.
     """
     ambiguous = [column for column in columns if column.decimal_comma and AMBIGUOUS_COMMAS in column.notes]
     if not ambiguous:
         return
-    if any(column.decimal_comma and column not in ambiguous for column in columns):
+    if any(column.decimal_comma and column not in ambiguous and column.group_mark != "," for column in columns):
         for column in ambiguous:
             column.notes.remove(AMBIGUOUS_COMMAS)
         return
-    dot_decimal = any(
-        column.dtype == "number"
-        and not column.decimal_comma
-        and any("." in cell and not _THOUSANDS_DOT.fullmatch(cell) for cell in column.bare if cell)
-        for column in columns
-    )
-    if not dot_decimal:
+    if not any(column.group_mark == "," for column in columns):
         return
     for column in ambiguous:
-        if not all(_COMMA_GROUP.fullmatch(cell) for cell in column.bare if cell):
+        if column.id_like or not all(_COMMA_GROUP.fullmatch(cell) for cell in column.bare if cell):
             continue
         if _as_integers(column, [cell.replace(",", "") for cell in column.bare]):
             column.decimal_comma = False
             column.notes.remove(AMBIGUOUS_COMMAS)
-            column.notes.append("commas read as thousands separators, as in the file's dot-decimal columns")
+            column.notes.append("commas read as thousands separators, as in the file's other columns")
 
 
 def _split_units(present: list[str]) -> tuple[str, dict[str, str]] | None:
@@ -1428,16 +1460,20 @@ def _split_unit(cell: str) -> tuple[str, str] | None:
     return sign + number, match["unit"]
 
 
-def _retype_thousands_dots(column: _Column) -> None:
-    """In a file with decimal commas, a dot-number column of `1.234` shapes holds thousands separators."""
+def _retype_thousands_dots(column: _Column, *, decimal_comma: bool) -> None:
+    """In a file with decimal commas, or with a column of unambiguous dot groups (`7.184.003`), a dot-number
+    column of `1.234` shapes holds thousands separators; `decimal_comma` says the file writes decimal commas.
+    A column named as an id, a code or a version (`_id_like`) is never retyped."""
     present = [cell for cell in column.bare if cell]
-    if not (all(_THOUSANDS_DOT.fullmatch(cell) for cell in present) and any("." in cell for cell in present)):
+    if column.id_like or not (
+        all(_THOUSANDS_DOT.fullmatch(cell) for cell in present) and any("." in cell for cell in present)
+    ):
         return
     cells = [cell.replace(".", "") for cell in column.bare]
     if not _as_integers(column, cells):
         _as_numbers(column, cells)
-    column.decimal_comma = True
-    column.notes.append("dots read as thousands separators, as in the file's decimal-comma columns")
+    column.decimal_comma = decimal_comma
+    column.notes.append("dots read as thousands separators, as in the file's other columns")
 
 
 def _as_integers(column: _Column, cells: list[str]) -> bool:
@@ -1587,16 +1623,18 @@ def _build(
     # is never typed, and the only text that carries such a request is the canonical CSV of an
     # earlier version, whose headers are unique already, so that name is its final name.
     plain_names, _ = canonical_headers(headers) if text_columns else ([], [])
-    for index, column in enumerate(columns):
+    for index, (header, column) in enumerate(zip(headers, columns, strict=True)):
         if text_columns and plain_names[index] in text_columns:
             column.cells = list(column.source)  # kept text by request: the cells as cleaned, never typed
         else:
+            column.id_like = _id_like(header)
             _type_column(column)
     _commas_as_thousands(columns)
-    if any(column.decimal_comma for column in columns):
+    decimal_comma = any(column.decimal_comma for column in columns)
+    if decimal_comma or any(column.group_mark == "." for column in columns):
         for column in columns:
             if column.dtype == "number" and not column.decimal_comma:
-                _retype_thousands_dots(column)
+                _retype_thousands_dots(column, decimal_comma=decimal_comma)
     for column in columns:
         _keep_na_codes(column)
 
@@ -1697,13 +1735,14 @@ def _without_empty_columns(
     A statistics API's export carries its whole schema (live test of 2026-10-15: an ECB CSV
     had 14 columns such as `OBS_COM` and `BREAKS` without a single value), and those columns
     say nothing, crowd the preview and the profile, and count against the column cap, which
-    is checked after this. Like the constant columns (`_constants_to_notes`) they leave the
-    table unless fewer than `MIN_KEPT_COLUMNS` columns would remain. A canonical re-parse keeps
+    is checked after this. They leave the table even when only one column with values remains
+    (a table too small to plot is the later checks' and the root's to name); only a table of
+    nothing but empty columns keeps them, so its own error stays the same. A canonical re-parse keeps
     them (`parse_dataset(canonical=True)`): an operation or the user's code made them on purpose.
     The warning names the columns as pasted (their headers before canonicalisation).
     """
     empty = [index for index, (_, _, column) in enumerate(read) if not any(column.source)]
-    if not empty or len(read) - len(empty) < MIN_KEPT_COLUMNS:
+    if not empty or len(empty) == len(read):
         return read
     names = ", ".join(_clip(read[index][0], MAX_COLUMN_NAME_CHARS) or f"column_{index + 1}" for index in empty)
     warnings.append(f"{_count(len(empty), 'column')} without any value dropped: {names}")
@@ -1837,11 +1876,19 @@ def _looks_like_value(name: str) -> bool:
 
 
 def _grouped_like(cell: str) -> bool:
-    """A number with unambiguous thousands groups (`1'234`, `7.184.003`, `1 234`), as `_as_grouped_numbers` reads it."""
+    """A cell that reads as a number with thousands groups (`1'234`, `7.184.003`, `1 234`), for finding the table.
+
+    Looser than `_as_grouped_numbers`, which types a column: one apostrophe or space group counts
+    here, since a table's value columns are what `table_block` looks for, not their type.
+    """
     for mark in GROUP_MARKS:
         match = _GROUPED[mark].fullmatch(cell)
-        if match and mark in cell and (mark not in ".," or cell.count(mark) >= 2 or match["decimal"] == "."):
-            return match["decimal"] != mark
+        if not match or mark not in cell or match["decimal"] == mark:
+            continue
+        if mark not in ".,":
+            return True
+        if cell.count(mark) >= 2 or match["decimal"] == ".":
+            return not (mark == "." and _IPV4.fullmatch(cell))
     return False
 
 
