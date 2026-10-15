@@ -17,7 +17,8 @@ The format comes from the first bytes, never from the file's name or type:
   container with an `EncryptedPackage` stream) is refused with "remove the password".
   The sheet goes out as its raw cell grid (`csv.writer`): dates ISO, numbers in their
   shortest form, booleans `TRUE`/`FALSE`, empty for nothing, so the parser's
-  `table_block` finds a header below row 1 and keeps a title or a footnote as a note.
+  `table_block` finds a header below row 1 and keeps a title or a footnote as a note;
+  the rows of a table block keep their empty trailing fields (`pad_table_rows`).
   Merged cells keep their value in the top-left cell only, which is how calamine reads
   them. Hidden sheets are skipped and counted, very hidden ones are never named, chart
   and macro sheets are skipped. Without a chosen sheet the first visible sheet with a
@@ -26,9 +27,10 @@ The format comes from the first bytes, never from the file's name or type:
 * **Parquet, Feather (v1 and v2) and Arrow IPC** (file and stream) through pyarrow. The
   row count comes from the Parquet footer before any data page is read, and at most
   `MAX_ROWS` + 1 rows are ever read, batch by batch, whatever a footer claims. Struct
-  columns are flattened to dotted names, dictionary columns decoded, time-zone-aware
-  timestamps written in UTC with `+00:00`; map, binary and union columns are dropped and
-  counted (`dropped_columns`). A table with a list column goes out as JSON records, one
+  columns are flattened to dotted names (a repeated name gets `_2` and is counted,
+  `renamed_columns`), dictionary columns decoded, time-zone-aware timestamps written in UTC
+  without an offset, which the parser's date pattern does not read (`utc_timestamps`); map,
+  binary and union columns are dropped and counted (`dropped_columns`). A table with a list column goes out as JSON records, one
   per line, instead of CSV: the paste route's parser expands list fields into long format
   (one row per value, a `record_id` column, thinning to its row cap), the owner's list
   rule of 2026-10-15 (#12191), so there is one implementation of it (`list_columns`).
@@ -74,7 +76,7 @@ MAX_ZIP_RATIO = 250
 MAX_FORMULA_SCAN_BYTES = 32 * 1024 * 1024
 """The largest sheet part whose formula cells are counted; a larger one is read without the count."""
 MAX_SHEETS_LISTED = 10
-MAX_SHEET_NAME_CHARS = 100
+MAX_SHEET_NAME_CHARS = 255  # wire.MAX_SHEET_NAME_CHARS: a listed name comes back as the choice, whole
 NPY_MAX_HEADER = 10_000  # numpy's own `_MAX_HEADER_SIZE`
 
 REFUSALS = (
@@ -352,7 +354,39 @@ def read_grid(sheet):
         blank = 0
         width = max(width, len(cells))
         rows.append(cells)
-    return rows, width
+    return pad_table_rows(rows), width
+
+
+def pad_table_rows(rows):
+    """Give the rows of each table block their missing trailing fields back.
+
+    Trimming trailing empty cells keeps a title or a footnote a one-field line, which the
+    parser's `table_block` leaves out as a note; a data row whose last cells are empty
+    (`C,` in a `category,value` table) must keep its fields, or it reads as a note too
+    (Copilot review of #12194). A block starts at a row with two or more cells and runs
+    over the rows that follow it without a blank row between; its rows are padded to its
+    widest row. A one-field row right under a table without a blank line therefore counts
+    as a data row; one after a blank line stays a note.
+    """
+    padded = []
+    block = []
+
+    def flush():
+        if block:
+            size = max(len(row) for row in block)
+            padded.extend(row + [""] * (size - len(row)) for row in block)
+            block.clear()
+
+    for row in rows:
+        if not row:
+            flush()
+            padded.append(row)
+        elif block or len(row) >= 2:
+            block.append(row)
+        else:
+            padded.append(row)
+    flush()
+    return padded
 
 
 def _visible_sheets(workbook, warnings):
@@ -401,13 +435,20 @@ def read_workbook(data, kind, sheet_name, warnings):
                     missing = formulas_without_value(data, name)
                     if missing:
                         warnings["formulas_without_value"] = missing
-                listed = [_short(item) for item in visible[:MAX_SHEETS_LISTED]]
-                return Conversion(grid_csv(rows), kind, len(rows), width, _short(name), listed, len(visible), warnings)
+                listed = _listed(visible)
+                return Conversion(grid_csv(rows), kind, len(rows), width, _named(name), listed, len(visible), warnings)
         raise Refused("empty")
 
 
-def _short(name):
-    return name if len(name) <= MAX_SHEET_NAME_CHARS else name[: MAX_SHEET_NAME_CHARS - 1] + "…"
+def _listed(names):
+    """The sheet names the page may offer, whole: each is sent back as the choice, so none is shortened. A name
+    longer than the wire takes (`MAX_SHEET_NAME_CHARS`) is left out of the list and only counted."""
+    return [name for name in names if len(name) <= MAX_SHEET_NAME_CHARS][:MAX_SHEETS_LISTED]
+
+
+def _named(name):
+    """The name of the sheet read, or None for one too long to send back."""
+    return name if len(name) <= MAX_SHEET_NAME_CHARS else None
 
 
 _SHEET_TAG = re.compile(rb"<(?:\w+:)?sheet\b([^>]*)/?>")
@@ -627,10 +668,12 @@ def _arrow_columns(pa, table, warnings):
         ):
             warnings["dropped_columns"] = warnings.get("dropped_columns", 0) + 1
             continue
-        utc = False
         if pa.types.is_timestamp(kind):
-            utc = kind.tz is not None
-            # Microseconds: a Python datetime holds no nanoseconds, and a cast drops the zone (values are UTC).
+            if kind.tz is not None:
+                # Arrow stores zone-aware times in UTC; the cast drops the zone and keeps them. They are
+                # written without an offset, because the parser's ISO date pattern reads none, and counted.
+                warnings["utc_timestamps"] = warnings.get("utc_timestamps", 0) + 1
+            # Microseconds: a Python datetime holds no nanoseconds.
             column = pc.cast(column, pa.timestamp("us"), safe=False)
         elif pa.types.is_duration(kind):
             column = pc.cast(column, pa.duration("us"), safe=False)
@@ -639,7 +682,7 @@ def _arrow_columns(pa, table, warnings):
         elif pa.types.is_float16(kind):
             column = pc.cast(column, pa.float32())
         values = column.to_pylist()
-        texts = [_utc(value) for value in values] if utc else [cell_text(value) for value in values]
+        texts = [cell_text(value) for value in values]
         names.append(str(name))
         # A JSON record keeps a number a number and a missing value null; anything else is its cell text.
         columns.append(
@@ -650,13 +693,31 @@ def _arrow_columns(pa, table, warnings):
             if lists_ahead
             else texts
         )
-    return names, columns, lists
+    return distinct_names(names, warnings), columns, lists
 
 
-def _utc(value):
-    if value is None:
-        return ""
-    return value.isoformat(sep=" ", timespec="microseconds" if value.microsecond else "seconds") + "+00:00"
+def distinct_names(names, warnings):
+    """The column names with every repeat renamed `<name>_2`, `<name>_3` and counted (`renamed_columns`).
+
+    A flattened struct can meet a column of the same dotted name (`point.x` beside a struct
+    `point` with a field `x`); a JSON record would keep only one of them (Copilot review of #12194).
+    """
+    taken = set()
+    result = []
+    renamed = 0
+    for name in names:
+        candidate = name
+        suffix = 2
+        while candidate in taken:
+            candidate = f"{name}_{suffix}"
+            suffix += 1
+        if candidate != name:
+            renamed += 1
+        taken.add(candidate)
+        result.append(candidate)
+    if renamed:
+        warnings["renamed_columns"] = warnings.get("renamed_columns", 0) + renamed
+    return result
 
 
 # --- NumPy ----------------------------------------------------------------------------------
@@ -760,8 +821,7 @@ def read_numpy(data, kind, sheet_name, warnings):
                 refused = refused or Refused("array_shape", array.ndim, 2)
                 continue
             names, columns = _array_columns(array, warnings)
-            listed = [_short(item) for item in labels[:MAX_SHEETS_LISTED]]
-            return _table(names, columns, kind, warnings, _short(label), listed, len(labels))
+            return _table(names, columns, kind, warnings, _named(label), _listed(labels), len(labels))
     raise refused or Refused("empty")
 
 

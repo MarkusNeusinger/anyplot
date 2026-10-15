@@ -356,12 +356,13 @@ def require_body_within_cap(request: Request) -> None:
     Placed before `require_utf8_body`, which reads the body. A route that declares a body
     model has its body read by FastAPI before any dependency runs, so for those this is a
     second line; the file conversion takes its body by hand (`convert_dataset_file`), so its
-    5 MB file is refused here unread. The conversion also needs a declared length: a chunked
-    body has none to check.
+    5 MB file is refused here unread. The conversion also needs a declared length, whatever
+    else the request carries: a chunked body, or an HTTP/2 or proxied one with neither header,
+    has none to check (Copilot review of #12194).
     """
     declared = request.headers.get("content-length")
     if declared is None:
-        if "transfer-encoding" in request.headers and request.url.path.endswith(CONVERT_PATH_SUFFIX):
+        if request.method == "POST" and request.url.path.endswith(CONVERT_PATH_SUFFIX):
             raise AgentHTTPError(411, "length_required")
         return
     try:

@@ -598,6 +598,8 @@ export interface ConvertWarnings {
   hidden_sheets?: number;
   dropped_columns?: number;
   list_columns?: number;
+  utc_timestamps?: number;
+  renamed_columns?: number;
 }
 
 /** A converted file: the text for the box, what kind of file it was, the sheet read and the others. */
@@ -619,6 +621,8 @@ const WARNING_KEYS = [
   'hidden_sheets',
   'dropped_columns',
   'list_columns',
+  'utc_timestamps',
+  'renamed_columns',
 ] as const;
 
 /** The conversion route's answer, checked field by field; null when it is not that shape. */

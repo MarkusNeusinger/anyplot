@@ -75,6 +75,20 @@ class TestSpreadsheets:
         assert [column.name for column in parsed.profile.columns] == ["month", "revenue"]
         assert parsed.context_lines == ["Umsatz 2024"]
 
+    def test_rows_with_empty_trailing_cells_stay_data_rows(self) -> None:
+        rows = [["Bericht"], [], ["category", "value"], ["A", 1], ["B", 2], ["C", None], ["D", None], [], ["Quelle: X"]]
+        result = convert.convert(xlsx([Sheet("S", rows)]))
+        assert result.csv_text == "Bericht\n\ncategory,value\nA,1\nB,2\nC,\nD,\n\nQuelle: X\n"
+        parsed = parse_dataset(result.csv_text)
+        assert parsed.profile.rows == 4 and parsed.context_lines == ["Bericht", "Quelle: X"]
+
+    def test_long_sheet_names_are_sent_whole_or_not_listed(self) -> None:
+        long = "x" * 150
+        data = ods({long: [["a"], [1]], "y" * 300: [["b"]]})
+        result = convert.convert(data)
+        assert result.sheet == long and result.sheets == [long] and result.sheet_count == 2
+        assert convert.convert(data, long).csv_text == "a\n1\n"
+
     def test_merged_cells_keep_their_value_in_the_top_left_cell_only(self) -> None:
         data = xlsx([Sheet("S", [["Region", None, "Sales"], ["North", None, 5]], merged=["A1:B1", "A2:B2"])])
         assert convert.convert(data).csv_text == "Region,,Sales\nNorth,,5\n"
@@ -82,7 +96,7 @@ class TestSpreadsheets:
     def test_formula_cells_without_a_saved_value_are_empty_and_counted(self) -> None:
         sheet = Sheet("S", [["a", "b"], [1, None], [2, None]], formulas={"B2": ("A2*2", None), "B3": ("A3*2", "4")})
         result = convert.convert(xlsx([sheet]))
-        assert result.csv_text == "a,b\n1\n2,4\n"
+        assert result.csv_text == "a,b\n1,\n2,4\n"
         assert result.warnings == {"formulas_without_value": 1}
 
     def test_the_first_visible_sheet_with_a_cell_is_read_and_the_visible_ones_are_named(self) -> None:
@@ -203,10 +217,21 @@ class TestArrow:
 
     def test_parquet_flattens_structs_decodes_dictionaries_and_writes_utc(self) -> None:
         result = convert.convert(parquet(self.TABLE))
-        assert result.csv_text == (
-            "id,point.x,point.y,label,at\n1,1.5,a,u,1970-01-01 00:00:00+00:00\n2,,,v,1970-01-01 01:00:00+00:00\n"
+        assert result.csv_text == "id,point.x,point.y,label,at\n1,1.5,a,u,1970-01-01\n2,,,v,1970-01-01 01:00:00\n"
+        assert result.warnings == {"dropped_columns": 1, "utc_timestamps": 1} and result.kind == "parquet"
+
+    def test_utc_timestamps_are_dates_to_the_parser(self) -> None:
+        table = pa.table(
+            {"at": pa.array([3_600 * 10**9, 7_200 * 10**9], type=pa.timestamp("ns", tz="UTC")), "v": [1, 2]}
         )
-        assert result.warnings == {"dropped_columns": 1} and result.kind == "parquet"
+        parsed = parse_dataset(convert.convert(parquet(table)).csv_text)
+        assert parsed.profile.columns[0].dtype == "datetime"
+
+    def test_a_repeated_flattened_name_is_renamed_and_counted(self) -> None:
+        table = pa.table({"point.x": [1], "point": pa.array([{"x": 2}]), "l": [[1, 2]]})
+        result = convert.convert(parquet(table))
+        assert result.warnings["renamed_columns"] == 1
+        assert '"point.x": 1' in result.csv_text and '"point.x_2": 2' in result.csv_text
 
     def test_feather_v2_and_an_arrow_stream(self) -> None:
         buffer = io.BytesIO()
@@ -344,6 +369,53 @@ class TestHarness:
     def test_a_chosen_sheet_travels_in_the_request_file(self, tmp_path: Path) -> None:
         data = xlsx([Sheet("A", [["a"]]), Sheet("B", [["b"]])])
         assert run_harness(tmp_path, data, "B")[2] == "b\n"
+
+    @pytest.mark.parametrize(
+        ("data", "request_text", "code", "out"),
+        [
+            (xlsx([Sheet("A", [["a"]]), Sheet("B", [["b"]])]), '{"sheet": "B"}', 0, "b\n"),
+            (zip_bomb(), None, harness.CONVERT_EXIT["archive_limits"], ""),
+            (b"\x80\x04K\x01.", '{"sheet": 3}', harness.CONVERT_EXIT["usage"], None),
+            (b"\x80\x04K\x01.", "not json", harness.CONVERT_EXIT["usage"], None),
+        ],
+        ids=["chosen sheet", "refusal", "a sheet that is no text", "a broken request"],
+    )
+    def test_main_convert_in_process_with_an_inert_guard(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        data: bytes,
+        request_text: str | None,
+        code: int,
+        out: str | None,
+    ) -> None:
+        """The same code path as the subprocess runs, with a guard that never arms: an audit hook cannot be removed
+        from the test process. The subprocess cases above prove the real guard lets each format through."""
+
+        class Inert(harness.DataGuard):
+            def arm(self, entry: object = None) -> None:
+                self.entry = entry
+
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setattr(harness, "set_limits", lambda: None)
+        (tmp_path / "input.bin").write_bytes(data)
+        if request_text is not None:
+            (tmp_path / "request.json").write_text(request_text, encoding="utf-8")
+
+        assert harness.main_convert("input.bin", Inert()) == code
+        status = json.loads((tmp_path / "status.json").read_text(encoding="utf-8"))
+        assert status["exit"] == code
+        written = tmp_path / "out.csv"
+        assert (written.read_text(encoding="utf-8") if written.exists() else None) == out
+
+    def test_an_oversized_input_is_refused_before_the_converter_loads(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setattr(harness, "set_limits", lambda: None)
+        (tmp_path / "input.bin").write_bytes(b"\0" * (harness.CONVERT_MAX_INPUT_BYTES + 1))
+        assert harness.main_convert("input.bin", harness.DataGuard()) == harness.CONVERT_EXIT["too_large"]
+        assert harness.main(["harness.py", "--convert", "missing.bin"]) == harness.CONVERT_EXIT["usage"]
 
     def test_the_guard_refuses_code_and_files_while_converting(self) -> None:
         guard = harness.ConvertGuard()

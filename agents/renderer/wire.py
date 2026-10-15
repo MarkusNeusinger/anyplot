@@ -274,7 +274,9 @@ CONVERT_REASONS: tuple[ConvertRefusal, ...] = get_args(ConvertRefusal)
 """Why the converter refused a file (`convert.REFUSALS`, `harness.CONVERT_REFUSALS`, pinned equal): the harness exits
 with `CONVERT_REFUSAL_BASE` plus the index."""
 ConvertKind = Literal["xlsx", "xlsm", "xlsb", "xls", "ods", "parquet", "feather", "arrow", "npy", "npz"]
-ConvertWarning = Literal["formulas_without_value", "hidden_sheets", "dropped_columns", "list_columns"]
+ConvertWarning = Literal[
+    "formulas_without_value", "hidden_sheets", "dropped_columns", "list_columns", "utc_timestamps", "renamed_columns"
+]
 
 
 def convert_refusal(exit_code: int | None) -> ConvertRefusal | None:

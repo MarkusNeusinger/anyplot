@@ -189,10 +189,18 @@ export function describeConvertWarnings(warnings: {
   hidden_sheets?: number;
   dropped_columns?: number;
   list_columns?: number;
+  utc_timestamps?: number;
+  renamed_columns?: number;
 }): string[] {
   const parts: string[] = [];
   const count = (value: number, noun: string) =>
     `${value.toLocaleString('en-US')} ${noun}${value === 1 ? '' : 's'}`;
+  if (warnings.utc_timestamps) {
+    parts.push(`${count(warnings.utc_timestamps, 'time-zone column')} written in UTC`);
+  }
+  if (warnings.renamed_columns) {
+    parts.push(`${count(warnings.renamed_columns, 'repeated column name')} given a _2 suffix`);
+  }
   if (warnings.formulas_without_value) {
     parts.push(
       `${count(warnings.formulas_without_value, 'formula cell')} saved without a value, left empty: open and save the file in Excel to store them`
