@@ -592,3 +592,12 @@ class TestNumberFormatTable:
 
     def test_the_adapter_reads_the_narrowed_house_style_rule(self) -> None:
         assert "not those drawn once per bar or point" in adapter_rubric()
+
+    def test_the_density_rule_has_one_source_in_the_catalogue_prompts(self) -> None:
+        """The rule lives in the style guide and the VQ-03 rubric, which the adapter reads verbatim;
+        adapter.md only points at it, so the "about 25 marks" wording appears once."""
+        instruction = adapter_instruction("matplotlib")
+
+        assert "### Per-mark Labels and Decorations" in instruction
+        assert "**Per-mark labels and decorations count as elements.**" in adapter_rubric()
+        assert instruction.count("rarely holds past about 25 marks") == 1

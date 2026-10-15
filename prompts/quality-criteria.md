@@ -218,6 +218,8 @@ Data elements must be visible and adapted to data density.
 
 **Legend glyphs count as elements.** Size-legend circles, color swatches and line samples must be visible in **both** themes and must match the marks they explain (same fill, outline, alpha and shape). A glyph drawn in the page color, at near-zero alpha, or without the marks' fill is an invisible element: deduct VQ-03 in proportion, and also SC-04 when the encoding it explains becomes unreadable. Look at the legend in each render — do not assume it inherited the marks' styling. The weakness should name the likely fix (e.g. ggplot2 `guides(size = guide_legend(override.aes = list(fill = ..., alpha = ...)))`, or setting the legend marker color explicitly from the palette).
 
+**Per-mark labels and decorations count as elements.** Value labels, dots on bar ends and shadows drawn once per bar or point must stay legible at the plot's number of marks (style guide, "Per-mark Labels and Decorations"). When they crowd the marks (a label wider than its bar's slot, rotated or shrunk to squeeze in, a band of text over many bars), deduct VQ-03 in proportion to how much of the plot they bury, and VQ-02 where they overlap. Labels that fit, or a few labelled extremes, are no deduction.
+
 ### VQ-04: Color Accessibility (2 Points)
 
 This check covers **contrast and CVD safety beyond palette choice** — e.g., adequate luminance difference between overlapping series, sufficient alpha for overlapping markers, no red-green as the sole distinguishing signal when overriding the palette.
