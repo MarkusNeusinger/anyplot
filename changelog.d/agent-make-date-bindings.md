@@ -7,7 +7,7 @@
   refused, never moved. `set_type` to a date also reads `DD/MM/YYYY`,
   `YYYYMMDD`, `YYYY-MM`, `MM/YYYY`, `MM.YYYY` and `YYYY`. The root prompt now
   uses these operations and no longer asks the user to add a column that an
-  operation can build.
+  operation can build. (#12193)
 
 ### Fixed
 
@@ -15,4 +15,4 @@
   measures no longer takes a constant column, a year, or a month, quarter or
   week number when another column fits. An optional measure role stays empty
   instead. A series or category role prefers a name column such as `Austria`
-  over a code column such as `AT` that splits the rows the same way.
+  over a code column such as `AT` that splits the rows the same way. (#12193)
