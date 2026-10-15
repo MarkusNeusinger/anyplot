@@ -169,13 +169,14 @@ class _Day:
     user_data_runs: dict[str, int] = field(default_factory=dict)
     user_messages: dict[str, int] = field(default_factory=dict)
     user_pastes: dict[str, int] = field(default_factory=dict)
+    user_conversions: dict[str, int] = field(default_factory=dict)
 
 
 MESSAGE_WINDOW_S = 60.0
 """The sliding window of `AGENT_USER_MESSAGES_PER_MINUTE` and `AGENT_USER_PASTES_PER_MINUTE`."""
 MessageLimit = Literal["rate_limited", "daily_limit"]
 """Why `message_limit` or `paste_limit` refuses: the minute's count, or the day's."""
-WindowKind = Literal["message", "paste"]
+WindowKind = Literal["message", "paste", "convert"]
 
 
 class UsageBook:
@@ -290,6 +291,27 @@ class UsageBook:
         day = self._current()
         day.user_pastes[user_id] = day.user_pastes.get(user_id, 0) + 1
         self._stamp("paste", user_id)
+
+    def user_conversions(self, user_id: str) -> int:
+        """The user's file conversions today that passed `convert_limit`."""
+        return self._current().user_conversions.get(user_id, 0)
+
+    def convert_limit(self, user_id: str, settings: AgentSettings) -> MessageLimit | None:
+        """Why the user may not convert another file now, or None: `AGENT_USER_CONVERSIONS_PER_MINUTE` and
+        `_PER_DAY`, across sessions, checked before the file reaches the sandbox."""
+        return self._limit(
+            "convert",
+            user_id,
+            self.user_conversions(user_id),
+            settings.user_conversions_per_minute,
+            settings.user_conversions_per_day,
+        )
+
+    def add_conversion(self, user_id: str) -> None:
+        """Count one file conversion against the user's minute and day."""
+        day = self._current()
+        day.user_conversions[user_id] = day.user_conversions.get(user_id, 0) + 1
+        self._stamp("convert", user_id)
 
     def _limit(
         self, kind: WindowKind, user_id: str, today_count: int, per_minute: int, per_day: int

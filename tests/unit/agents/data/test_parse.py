@@ -21,6 +21,7 @@ from agents.anyplot.data.parse import (
     MAX_INPUT_CELL_CHARS,
     MISSING_VALUES,
     PREVIEW_ROWS,
+    RESPELLED,
     ParsedDataset,
     ParseError,
     canonical_headers,
@@ -560,7 +561,10 @@ class TestTableAmongOtherLines:
         assert list(parsed.column_dtypes) == ["time", "temperature_2m_max (°C)", "precipitation_sum (mm)"]
         assert parsed.column_dtypes["time"] == "datetime"
         assert parsed.profile.rows == 4
-        assert parsed.profile.warnings == ["left out 2 lines above the table (a title, notes or metadata)"]
+        assert parsed.profile.warnings == [
+            "left out 2 lines above the table (a title, notes or metadata)",
+            *respelled_warning(4, "precipitation_sum (mm)"),  # `0.00` is written `0.0`
+        ]
 
     def test_a_comment_above_and_below_also_with_commas(self) -> None:
         text = (
@@ -575,6 +579,7 @@ class TestTableAmongOtherLines:
         assert parsed.profile.warnings == [
             "left out 3 lines above the table (a title, notes or metadata)",
             "left out 1 line below the table (notes or a source line)",
+            *respelled_warning(4, "precipitation_sum (mm)"),
         ]
 
     def test_a_sentence_below_the_table_that_its_commas_split_into_the_tables_width(self) -> None:
@@ -1146,12 +1151,14 @@ class TestProfile:
         assert len(parsed.preview[0][0]) == MAX_CELL_CHARS
         assert len(parsed.profile.sample[0][0]) == MAX_CELL_CHARS
 
-    def test_display_copies_are_single_line(self) -> None:
-        parsed = parse_dataset('t\n"line one\nline two"\n')
+    def test_the_model_sees_single_lines_and_the_page_the_whitespace_as_it_is(self) -> None:
+        """The page draws breaks and space runs visibly (owner decision of 2026-10-15); the profile stays one line."""
+        parsed = parse_dataset('t\n"line one\nline  two"\n')
 
-        assert parsed.preview == [["line one line two"]]
+        assert parsed.preview == [["line one\nline  two"]]
         assert parsed.profile.sample == [["line one line two"]]
-        assert parsed.csv == 't\n"line one\nline two"\n'
+        assert parse_dataset("t\n" + "x" * 60 + "\n").preview == [["x" * (MAX_CELL_CHARS - 1) + "…"]]
+        assert parsed.csv == 't\n"line one\nline  two"\n'
 
     def test_warnings_are_capped_with_a_note(self) -> None:
         header = "first" + "," * (MAX_COLUMNS - 1)  # 49 empty names, each a rename warning
@@ -2447,6 +2454,28 @@ def same_value(written: str, cell: str) -> bool:
     return Decimal(written) == Decimal(cell)
 
 
+def spelling_lost(written: str, cell: str) -> bool:
+    """Oracle for the spelling count: the canonical cell drops trailing fraction zeros, a plus sign or the notation."""
+    mantissa, _, exponent = written.lower().partition("e")
+    cell_mantissa, _, cell_exponent = cell.partition("e")
+    zeros = mantissa.partition(".")[2]
+    return (
+        bool(exponent) != bool(cell_exponent)
+        or mantissa.startswith("+")
+        or (zeros.endswith("0") and len(zeros) > len(cell_mantissa.partition(".")[2]))
+    )
+
+
+def respelled_warning(count: int, columns: str = "v") -> list[str]:
+    if not count:
+        return []
+    noun = "number" if count == 1 else "numbers"
+    return [
+        f"{count} {noun} {RESPELLED} (trailing zeros, exponent or plus sign dropped, such as 1.50 as 1.5 or 1e3 "
+        f"as 1000.0) in {columns}"
+    ]
+
+
 class TestFidelity:
     """Owner rule of 2026-10-15: what the user pastes is what the data holds, or a warning says what changed."""
 
@@ -2464,8 +2493,12 @@ class TestFidelity:
             parsed = parse_dataset(text, find_table=False)
             canonical = parsed.csv.splitlines()[1:]
             assert parsed.column_dtypes == {"v": "number"}, name
-            assert parsed.warnings == [], name
-            # The value, not the spelling: `1.50` is written `1.5`, `1.5e3` `1500.0` (shortest round-trip form).
+            # The value, not the spelling: `1.50` is written `1.5`, `1.5e3` `1500.0` (shortest round-trip form),
+            # and one warning counts the cells whose spelling went (owner decision of 2026-10-15).
+            pasted = [repr(float(text)) for text in texts] if name == "json" else texts
+            lost = sum(spelling_lost(written, cell) for written, cell in zip(pasted, canonical, strict=True))
+            assert (lost > 0) == (name != "json"), name
+            assert parsed.warnings == respelled_warning(lost), name
             assert all(same_value(written, cell) for written, cell in zip(texts, canonical, strict=True)), name
             assert canonical == [repr(float(text)) for text in texts], name
             assert read_back(parsed)["v"].tolist() == [float(text) for text in texts], name
@@ -2488,11 +2521,24 @@ class TestFidelity:
 
         lost = sum(not same_value(written, cell) for written, cell in zip(texts, canonical, strict=True))
         assert lost == 42  # 2 of the 40 random 19-digit numbers happen to fit; the two named ones never do
+        respelled = sum(
+            same_value(written, cell) and spelling_lost(written, cell)
+            for written, cell in zip(texts, canonical, strict=True)
+        )
         assert parsed.warnings == [
             f"column 'v': {lost} values with more significant digits than a number holds (15 to 17) "
-            "are stored rounded to the nearest number"
+            "are stored rounded to the nearest number",
+            *respelled_warning(respelled),
         ]
         assert canonical == [repr(float(text)) for text in texts]  # the nearest float, never fewer digits
+
+    def test_a_spelling_that_was_not_kept_is_counted_in_one_line(self) -> None:
+        """Owner decision of 2026-10-15: the value is enough, but the user hears that the spelling went."""
+        parsed = parse_dataset("a,b,c\n1.50,+3,2\n1e3,-0,.5\n2.0,4,1e-7\n")
+
+        # `1.50`, `1e3`; `+3`, `-0`. What the canonical form only adds (`2` as `2.0`, `.5`, `1e-07`) is no loss.
+        assert parsed.csv == "a,b,c\n1.5,3,2.0\n1000.0,0,0.5\n2.0,4,1e-07\n"
+        assert parsed.warnings == respelled_warning(4, "a, b")
 
     def test_a_subnormal_or_underflowing_number_is_warned_too(self) -> None:
         parsed = parse_dataset("v\n1.2345678901e-320\n1e-400\n5e-324\n0.000\n")
@@ -2575,5 +2621,48 @@ class TestFidelity:
         started = time.perf_counter()
         parsed = parse_dataset("v = {'v': [\n" + ",\n".join(values) + "\n]}")
 
-        assert parsed.profile.rows == 20_000 and parsed.warnings == []
+        assert parsed.profile.rows == 20_000 and not warned(parsed, "rounded")
         assert time.perf_counter() - started < 10
+
+
+class TestPreciseTimestamps:
+    """Owner rule of 2026-10-15: ISO timestamps keep every fraction digit and their UTC offset, typed as datetimes."""
+
+    @staticmethod
+    def column(text: str) -> tuple[str, list[str], Any]:
+        parsed = parse_dataset(text)
+        frame = pd.read_csv(
+            io.StringIO(parsed.csv), dtype=pandas_dtypes(parsed.column_dtypes), parse_dates=parsed.parse_dates
+        )
+        cells = [row.split(",")[0] for row in parsed.csv.splitlines()[1:]]
+        return parsed.column_dtypes["t"], cells, frame["t"]
+
+    def test_nanoseconds_and_an_offset_round_trip_exactly(self) -> None:
+        dtype, cells, loaded = self.column("t,v\n2024-01-01 10:00:00.123456789+01:00,1\n2024-01-01T10:00:01.5+0100,2\n")
+        assert dtype == "datetime"
+        assert cells == ["2024-01-01T10:00:00.123456789+01:00", "2024-01-01T10:00:01.500000000+01:00"]
+        assert str(loaded.dtype) == "datetime64[ns, UTC+01:00]"
+        assert loaded[0] == pd.Timestamp("2024-01-01T10:00:00.123456789+01:00")
+
+    def test_z_is_utc_and_naive_fractions_stay_naive(self) -> None:
+        assert self.column("t\n2024-01-01T10:00:00Z\n")[1] == ["2024-01-01T10:00:00+00:00"]
+        dtype, cells, loaded = self.column("t\n2024-01-01T10:00:00.25\n2024-01-01T10:00:00\n")
+        assert cells == ["2024-01-01T10:00:00.25", "2024-01-01T10:00:00.00"] and loaded.dt.tz is None
+        assert loaded[0] == pd.Timestamp("2024-01-01T10:00:00.25")
+
+    def test_several_offsets_are_written_in_utc_and_said(self) -> None:
+        parsed = parse_dataset("t,v\n2024-01-01T10:00:00+01:00,1\n2024-07-01T10:00:00+02:00,2\n")
+        assert parsed.csv.splitlines()[1:] == ["2024-01-01T09:00:00+00:00,1", "2024-07-01T08:00:00+00:00,2"]
+        assert any("+01:00, +02:00 written in UTC" in warning for warning in parsed.warnings)
+
+    def test_cells_with_and_without_an_offset_are_no_date_column(self) -> None:
+        assert parse_dataset("t\n2024-01-01T10:00:00+01:00\n2024-01-02T10:00:00\n").column_dtypes["t"] == "text"
+
+    def test_the_profile_names_the_exact_extremes(self) -> None:
+        profile = parse_dataset("t\n2024-01-01T10:00:00.000000002\n2024-01-01T10:00:00.000000001\n").profile
+        (column,) = profile.columns
+        assert (column.min, column.max) == ("2024-01-01T10:00:00.000000001", "2024-01-01T10:00:00.000000002")
+
+    def test_plain_dates_and_minutes_are_written_as_before(self) -> None:
+        assert self.column("t\n2024-01-05\n2024-02-03\n")[1] == ["2024-01-05", "2024-02-03"]
+        assert self.column("t\n2024-01-05 10:30\n2024-02-03\n")[1] == ["2024-01-05T10:30:00", "2024-02-03T00:00:00"]

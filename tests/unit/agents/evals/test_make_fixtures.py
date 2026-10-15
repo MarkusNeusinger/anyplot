@@ -8,7 +8,7 @@ from collections import Counter
 import pytest
 
 from agents.anyplot.data.bindings import check_bindings
-from agents.anyplot.data.parse import parse_dataset
+from agents.anyplot.data.parse import RESPELLED, parse_dataset
 from agents.anyplot.data.roles import parse_roles
 from agents.anyplot.dev_fixture import CASES_DIR, snapshot_from_repo
 from agents.anyplot.opening import assess
@@ -99,7 +99,8 @@ def test_every_case_parses_binds_and_is_eligible(spec: make_fixtures.SpecFixture
             directory = case_id(spec.spec_id, library, perturbation)
             case = json.loads(files[f"{directory}/case.json"])
             parsed = parse_dataset(files[f"{directory}/data.csv"])
-            assert parsed.warnings == [], directory
+            # The spelling line (`12.50` written `12.5`) says what the canonical form changed; it is no parse issue.
+            assert [warning for warning in parsed.warnings if RESPELLED not in warning] == [], directory
             check = check_bindings([Binding(**item) for item in case["bindings"]], roles, parsed.profile)
             assert check.complete and not check.errors, (directory, check.errors)
 

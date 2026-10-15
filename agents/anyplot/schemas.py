@@ -185,6 +185,10 @@ class ColumnProfile(_ServerContract):
 
     `mean` and `median` are set for integer and number columns only (six significant
     digits), so the root can say what a column holds, such as values that sum to 100.
+    The rounding is for the model only: the page never shows them, and `data.csv` keeps
+    every value (owner decision of 2026-10-15). An integer column's `min` and `max` are
+    exact; past 2^53 the browser's float64 numbers lose their last digits, which only
+    touches the binding hint that names a negative minimum (kept, owner decision).
     """
 
     name: ColumnName

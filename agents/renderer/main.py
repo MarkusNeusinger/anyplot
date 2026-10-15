@@ -13,7 +13,8 @@ like `agents/evals/`.
 |---|---|---|---|
 | `POST /render` | `RenderRequest` (`wire.py`): `{job_id, language, library, source, data_csv, themes, timeout_s}` | `RenderResponse`: per theme the exit code, a timeout flag, the stderr tail, the probe, the PNG as base64, the attempts, a reason with the measured value and the limit; the slot wait and total time; `MemAvailable` | `401 unauthenticated`, `403 forbidden`, `409 job_conflict` (another payload for a `job_id` and themes in flight or just finished), `422 invalid_job`, `499 cancelled` or `499 client_gone` (nobody reads it), `500 internal`, `503 busy` (no slot within `RENDERER_SLOT_WAIT_S`), `503 low_memory`, `503 stuck`, `503 sandbox_unavailable`, `503 volume_missing`, `503 io` |
 | `POST /run-data` | `DataRunRequest`: `{job_id, source, timeout_s}` (`timeout_s` at most 30) | `DataRunResponse`: the exit code (`harness.DATA_EXIT`), a timeout flag, a reason with the measured value and the limit, `csv_text` (the `out.csv` the harness wrote, only after exit code 0), the stderr tail, the attempts, the timings, the version, `MemAvailable` | the errors of `POST /render` |
-| `POST /render/{job_id}/cancel` | | `{"cancelled": n}`: the renders and data runs of that job it stopped | `401`, `403`, `422 invalid_job` |
+| `POST /convert` | `ConvertRequest`: `{job_id, data_base64, sheet?, timeout_s}` (the file at most 5 MiB, `timeout_s` at most 15) | `ConvertResponse`: the exit code (`harness.CONVERT_EXIT`), a timeout flag, a run reason, `refusal` (`wire.CONVERT_REASONS`) with the measured value and the cap, `text` (CSV, or JSON records for a table with list columns, at most 1 MiB) and `meta` (`{kind, format, rows, columns, sheet, sheets, sheet_count, warnings}`) after exit code 0, the attempts, the timings, the version, `MemAvailable` | the errors of `POST /render` |
+| `POST /render/{job_id}/cancel` | | `{"cancelled": n}`: the renders, data runs and conversions of that job it stopped | `401`, `403`, `422 invalid_job` |
 | `GET /status` | | `RendererStatus`: name, version, revision, in flight, waiting, stuck launchers, `MemAvailable`, whether the launcher exists, whether the run volume is in place | `401`, `403` |
 
 All routes sit behind the caller check (`auth.py`) and Cloud Run IAM. There is no
@@ -34,6 +35,12 @@ whose audit hook refuses native code, processes, sockets and writes), in the sam
 render slot, under the same memory floor, watchdog and kill path, with the same
 idempotency rules (its key is the `job_id` and `data`). A renderer deployed before the
 route answers it `404`, which the agents side reads as `unavailable`.
+
+**Conversions.** `POST /convert` (drag and drop of binary data files, owner decision of
+2026-10-15) reads one file with the harness in convert mode (`harness.py --convert`,
+`agents/anyplot/render/convert.py`) under the same guard, slot, memory floor, watchdog, kill
+path and idempotency rules (key: the `job_id` and `convert`). Nothing of the file, its text or
+its sheet names is logged; the log line carries the kind, the exit code and the refusal.
 
 **`job_id` and the themes are the idempotency key.** The `remote` backend and the
 deploy smoke replay a `POST /render` after an ambiguous failure (a connection error,
@@ -80,7 +87,7 @@ import os
 import signal
 import time
 from collections import OrderedDict
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncIterator, Callable, Coroutine
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -96,6 +103,8 @@ from .executor import Executor, ExecutorConfig, SandboxExecutor, Unavailable, me
 from .settings import RendererSettings, get_settings
 from .wire import (
     JOB_ID_PATTERN,
+    ConvertRequest,
+    ConvertResponse,
     DataRunRequest,
     DataRunResponse,
     RendererStatus,
@@ -125,16 +134,20 @@ class JobConflict(Exception):
     """A `POST /render` whose key is in flight or just finished with another payload; answered `409 job_conflict`."""
 
 
-type Job = RenderRequest | DataRunRequest
-type Answer = RenderResponse | DataRunResponse
+type Job = RenderRequest | DataRunRequest | ConvertRequest
+type Answer = RenderResponse | DataRunResponse | ConvertResponse
 type JobKey = tuple[str, tuple[str, ...]]
-"""The idempotency key of a request: its `job_id` and its themes, in order, or `("data",)` for a data run."""
+"""The idempotency key of a request: its `job_id` and its themes, in order, `("data",)` for a data run and
+`("convert",)` for a conversion."""
 DATA_KEY = ("data",)
+CONVERT_KEY = ("convert",)
 
 
 def job_key(job: Job) -> JobKey:
     if isinstance(job, DataRunRequest):
         return (job.job_id, DATA_KEY)
+    if isinstance(job, ConvertRequest):
+        return (job.job_id, CONVERT_KEY)
     return (job.job_id, tuple(job.themes))
 
 
@@ -241,9 +254,14 @@ class Renderer:
             answer: asyncio.Future[Answer] = asyncio.get_running_loop().create_future()
             answer.set_result(done[1])
             return answer
-        task: asyncio.Task[Answer] = asyncio.create_task(
-            self.run_data(job) if isinstance(job, DataRunRequest) else self.render(job)
-        )
+        work: Coroutine[Any, Any, Answer]
+        if isinstance(job, DataRunRequest):
+            work = self.run_data(job)
+        elif isinstance(job, ConvertRequest):
+            work = self.convert(job)
+        else:
+            work = self.render(job)
+        task: asyncio.Task[Answer] = asyncio.create_task(work)
         self._running[key] = RunningJob(print_, task, waiters=1)
         task.add_done_callback(lambda finished: self._forget(key, print_, finished))
         return task
@@ -365,6 +383,51 @@ class Renderer:
         )
         return response
 
+    async def convert(self, job: ConvertRequest) -> ConvertResponse:
+        started = time.monotonic()
+        try:
+            return await self._convert(job, started)
+        finally:
+            self._exit_if_stuck()
+
+    async def _convert(self, job: ConvertRequest, started: float) -> ConvertResponse:
+        """One file conversion in its own sandbox, inside the same single slot as the renders."""
+        if self.volume is False:
+            raise Unavailable("volume_missing")
+        async with self.slot.hold(self.settings.slot_wait_s):
+            waited = time.monotonic() - started
+            floor = self.settings.min_mem_available_mb
+            available = mem_available_mb()
+            if floor and available is not None and available < floor:
+                raise Unavailable("low_memory")
+            run = await self.executor.run_convert(job)
+        response = ConvertResponse(
+            **run.model_dump(),
+            job_id=job.job_id,
+            timings=RenderTimings(slot_wait_s=round(waited, 3), total_s=round(time.monotonic() - started, 3)),
+            version=self.version,
+            mem_available_mb=mem_available_mb(),
+        )
+        logger.info(
+            json.dumps(
+                {
+                    "event": "convert",
+                    "job_id": job.job_id,
+                    "exit_code": response.exit_code,
+                    "reason": response.reason,
+                    "refusal": response.refusal,
+                    "kind": None if response.meta is None else response.meta.kind,
+                    "measured": response.measured,
+                    "limit": response.limit,
+                    "attempts": response.attempts,
+                    "text_bytes": None if response.text is None else len(response.text.encode("utf-8")),
+                    "slot_wait_s": response.timings.slot_wait_s,
+                    "total_s": response.timings.total_s,
+                }
+            )
+        )
+        return response
+
     def _exit_if_stuck(self) -> None:
         """On Cloud Run, a stuck launcher ends this instance: no render could run on it again."""
         if self.terminating or not self.settings.cloud_run_service or not self.executor.stuck:
@@ -469,6 +532,13 @@ async def render(job: RenderRequest, renderer: RendererDep, request: Request) ->
 @app.post("/run-data", dependencies=caller_checked)
 async def run_data(job: DataRunRequest, renderer: RendererDep, request: Request) -> JSONResponse:
     """Run one data snippet in its own sandbox with the harness in data mode, inside the same render slot."""
+    return await _serve(job, renderer, request)
+
+
+@app.post("/convert", dependencies=caller_checked)
+async def convert(job: ConvertRequest, renderer: RendererDep, request: Request) -> JSONResponse:
+    """Convert one data file (Excel, OpenDocument, Parquet, Feather, Arrow, NumPy) to CSV text in its own sandbox,
+    with the harness in convert mode, inside the same render slot."""
     return await _serve(job, renderer, request)
 
 

@@ -37,10 +37,11 @@ The operations:
   only 1677 to 2262; a date pandas still cannot hold is an `invalid_operation`, never a
   crash). Without `date_format`
   pandas infers the format per cell, day before month when ambiguous, as the parser
-  reads a slash date, except in a column whose every cell starts with a year
-  (`2024-06-01T13:00:00Z` is 1 June); a fraction of a second and a UTC offset are kept
-  (`moment_text`), and different offsets in one column are a `type_mismatch`, never a
-  silent conversion to one time zone. Either way a cell that cannot be read becomes missing and the
+  reads a slash date, except for a cell that starts with a year (`2024-06-01T13:00:00Z`
+  is 1 June; the order is chosen per cell); a fraction of a second and a UTC offset are
+  kept (`_cell_text`), different offsets in one column are read in UTC with the offsets
+  named in the change line (owner decision of 2026-10-15, as the parser writes such a
+  column), and times with and without an offset are a `type_mismatch`. Either way a cell that cannot be read becomes missing and the
   change line counts it; when more than 10 % of the non-missing cells fail, the
   operation is a `type_mismatch` instead. To text: every cell becomes its canonical
   text and the column is kept text through the re-parse (`Prepared.text_columns`,
@@ -147,7 +148,7 @@ import unicodedata
 import warnings
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field, replace
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal as ExactDecimal
 from decimal import InvalidOperation
 from typing import Annotated, Literal
@@ -726,6 +727,7 @@ def _set_type(frame: pd.DataFrame, op: SetType, carried: _Carried) -> tuple[pd.D
     present = int(series.notna().sum())
     kind = _kind(series)
     result = frame.copy()
+    zone_notice = ""  # different UTC offsets converted to UTC by a read as dates
     if op.type == "text":
         # Kept text through the re-parse either way: a text column stays one when a later change makes its cells typeable.
         carried.text_columns.add(op.column)
@@ -755,7 +757,7 @@ def _set_type(frame: pd.DataFrame, op: SetType, carried: _Carried) -> tuple[pd.D
     else:
         if kind == "datetime":
             return _reread_dates(frame, op, present, carried)
-        converted, failed, with_time = _to_dates(series, op.date_format)
+        converted, failed, with_time, zone_notice = _to_dates(series, op.date_format)
         _check_failed(op.column, failed, present, "dates")
         result[op.column] = converted
         carried.with_time[op.column] = with_time
@@ -776,7 +778,7 @@ def _set_type(frame: pd.DataFrame, op: SetType, carried: _Carried) -> tuple[pd.D
     if failed:
         verb = "is" if failed == 1 else "are"
         change += f", {_count(failed, 'cell')} could not be read and {verb} now missing"
-    return result, change
+    return result, _with_notice(change, zone_notice)
 
 
 def _reread_dates(frame: pd.DataFrame, op: SetType, present: int, carried: _Carried) -> tuple[pd.DataFrame, str]:
@@ -1551,10 +1553,12 @@ def _plain_number(body: str, decimal: str) -> str | None:
     return cleaned if math.isfinite(float(cleaned)) else None
 
 
-def _to_dates(series: pd.Series, date_format: str | None) -> tuple[pd.Series, int, bool]:
-    """The cells as datetimes (NaT where a cell cannot be read), how many non-missing cells failed, and whether
-    the column is written with a time (the parser's rule: any source cell holds a colon)."""
+def _to_dates(series: pd.Series, date_format: str | None) -> tuple[pd.Series, int, bool, str]:
+    """The cells as datetimes (NaT where a cell cannot be read), how many non-missing cells failed, whether
+    the column is written with a time (the parser's rule: any source cell holds a colon), and the notice of
+    different UTC offsets converted to UTC, else ""."""
     texts = _texts(series)
+    notice = ""
     if date_format == "MM.YYYY" and _kind(series) == "number":
         texts = _month_year_texts(series, texts)
     if date_format:
@@ -1567,39 +1571,80 @@ def _to_dates(series: pd.Series, date_format: str | None) -> tuple[pd.Series, in
         # 6 January (review of 2026-10-15). Day before month is for the other shapes only, decided per cell, so one
         # cell of another shape never turns the year-first ones around (review of #12196).
         year_first = texts.map(lambda text: isinstance(text, str) and bool(_YEAR_FIRST.match(text))).astype(bool)
-        parts = [_inferred_dates(texts.where(year_first), False), _inferred_dates(texts.where(~year_first), True)]
-        kinds = {str(part.dtype) for part in parts if part.notna().any()}  # an all-unreadable part has no zone
-        if len(kinds) > 1:
-            raise _mixed_offsets(series)
+        (first, utc_first), (rest, utc_rest) = (
+            _inferred_dates(texts.where(year_first), False, series.name),
+            _inferred_dates(texts.where(~year_first), True, series.name),
+        )
+        converted = utc_first or utc_rest
+        read = [part for part in (first, rest) if part.notna().any()]  # an all-unreadable part has no zone
+        if len({str(part.dtype) for part in read}) > 1:
+            # Two parts in different zones: one column holds one zone, so both are written in UTC.
+            if any(part.dt.tz is None for part in read):
+                raise _naive_and_zoned(series.name)
+            first, rest = (part.dt.tz_convert("UTC") if part.notna().any() else part for part in (first, rest))
+            converted = True
         # Each part is NaT outside its own cells: one alone is the result, two of one dtype merge.
-        if not parts[1].notna().any():
-            result = parts[0]
-        elif not parts[0].notna().any():
-            result = parts[1]
+        if not rest.notna().any():
+            result = first
+        elif not first.notna().any():
+            result = rest
         else:
-            result = parts[0].where(year_first, parts[1])
+            result = first.where(year_first, rest)
+        if converted:
+            notice = f"times with the UTC offsets {', '.join(_offsets(texts))} converted to UTC (+00:00); "
+            notice += "the instants are the same"
     failed = int((result.isna() & texts.notna()).sum())
     with_time = any(":" in text for text in texts if isinstance(text, str))
-    return result, failed, with_time
+    return result, failed, with_time, notice
 
 
-def _inferred_dates(texts: pd.Series, day_first: bool) -> pd.Series:
-    """pandas' per-cell format inference over `texts` (missing stays NaT); different UTC offsets are refused."""
+def _inferred_dates(texts: pd.Series, day_first: bool, column: object) -> tuple[pd.Series, bool]:
+    """pandas' per-cell format inference over `texts` (missing stays NaT), and whether it converted to UTC.
+
+    Different UTC offsets (summer and winter time) cannot share a column, so they are read in UTC,
+    as the parser writes such a column (owner decision of 2026-10-15), and the change line names
+    them. Times with and without an offset are refused: no time gets a zone by guess.
+    """
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         try:
-            return pd.to_datetime(texts, errors="coerce", format="mixed", dayfirst=day_first)
+            return pd.to_datetime(texts, errors="coerce", format="mixed", dayfirst=day_first), False
         except ValueError:
-            raise _mixed_offsets(texts) from None
+            pass
+        offsets = [_offset_of(text, day_first) for text in texts if isinstance(text, str)]
+        if any(offset is None for offset in offsets if offset is not pd.NaT):
+            raise _naive_and_zoned(column) from None
+        return pd.to_datetime(texts, errors="coerce", format="mixed", dayfirst=day_first, utc=True), True
 
 
-def _mixed_offsets(series: pd.Series) -> PrepareError:
-    # Different UTC offsets (summer and winter time) or times with and without one: one column needs one time
-    # zone, and converting them would change the clock times without a word (review of 2026-10-15).
+def _offset_of(text: str, day_first: bool) -> object:
+    """One cell's UTC offset as a timedelta, None for a time without one, NaT for a cell that is no date."""
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        stamp = pd.to_datetime(text, errors="coerce", dayfirst=day_first)
+    return stamp.utcoffset() if isinstance(stamp, pd.Timestamp) else pd.NaT
+
+
+def _offsets(texts: pd.Series) -> list[str]:
+    """The distinct UTC offsets of the cells, as `+HH:MM`, in order."""
+    found: set[int] = set()
+    for text in texts:
+        if isinstance(text, str):
+            offset = _offset_of(text, not _YEAR_FIRST.match(text))
+            if isinstance(offset, timedelta):
+                found.add(int(offset.total_seconds() // 60))
+    shown = []
+    for minutes in sorted(found):
+        hours, rest = divmod(abs(minutes), 60)
+        shown.append(f"{'-' if minutes < 0 else '+'}{hours:02d}:{rest:02d}")
+    return shown
+
+
+def _naive_and_zoned(column: object) -> PrepareError:
     return PrepareError(
         "type_mismatch",
-        f"column '{series.name}' holds times with different UTC offsets (or some without one); "
-        "they are not converted to one time zone, so the column stays as it is",
+        f"column '{column}' holds times with a UTC offset and times without one; no time is given a zone by guess, "
+        "so the column stays as it is",
     )
 
 
@@ -1729,21 +1774,10 @@ def _cell_text(value: object, with_time: bool) -> str | None:
         number = float(value)
         return None if math.isnan(number) else repr(number)
     if isinstance(value, pd.Timestamp):
-        return moment_text(value) if with_time else value.date().isoformat()
+        # Every digit and the offset as the value holds them (owner rule of 2026-10-15): a fraction is written
+        # only when there is one, an offset only for a zone-aware value.
+        return value.isoformat() if with_time else value.date().isoformat()
     return str(value)
-
-
-def moment_text(value: pd.Timestamp) -> str:
-    """A date-time as ISO text with every digit it holds: seconds, or the fraction of a second it has.
-
-    `2024-01-05T10:00:00`, `2024-01-05T10:00:00.250000` (any fraction is written in
-    microseconds, as the file converters write it), `…T10:00:00.000000001` for a
-    nanosecond; an offset stays (`+02:00`). Writing seconds only would drop a sub-second
-    reading without a word (owner rule of 2026-10-15).
-    """
-    if value.nanosecond:
-        return value.isoformat(timespec="nanoseconds")
-    return value.isoformat(timespec="microseconds" if value.microsecond else "seconds")
 
 
 def _require(frame: pd.DataFrame, name: str) -> None:

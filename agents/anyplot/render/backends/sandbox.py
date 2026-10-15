@@ -14,7 +14,16 @@ it. It needs no semaphore of its own: `SerialRenderer` (`render/serial.py`), whi
 `Services.backend` puts in front of every backend, hands it one theme at a time.
 """
 
-from ..contract import DataJob, DataOutput, DataRunUnsupported, RenderJob, RenderResult, RuntimeAdapter
+from ..contract import (
+    ConvertJob,
+    ConvertOutput,
+    DataJob,
+    DataOutput,
+    DataRunUnsupported,
+    RenderJob,
+    RenderResult,
+    RuntimeAdapter,
+)
 
 
 SANDBOX_BINARY = "/usr/local/gcp/bin/sandbox"
@@ -38,3 +47,7 @@ class SandboxBackend:
     async def run_data(self, job: DataJob) -> DataOutput:
         """Data runs go through the renderer's `POST /run-data` too; this variant has none."""
         raise DataRunUnsupported("the in-process sandbox backend runs no data snippets; use remote, local or fake")
+
+    async def convert(self, job: ConvertJob) -> ConvertOutput:
+        """Conversions go through the renderer's `POST /convert`; this variant has none."""
+        raise DataRunUnsupported("the in-process sandbox backend converts no files; use remote, local or fake")

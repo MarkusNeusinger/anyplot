@@ -509,13 +509,17 @@ export class AgentApiError extends Error {
    * missing, so the page can name it in the next edit's `replaces`; `null` otherwise.
    */
   readonly caseId: string | null;
+  /** A refused file conversion's measured value and cap (`422 file_too_many_rows` and kin); null otherwise. */
+  readonly measured: number | null;
+  readonly limit: number | null;
 
   constructor(
     status: number,
     code: string,
     ref: string | null = null,
     errors: string[] = [],
-    caseId: string | null = null
+    caseId: string | null = null,
+    measure: { measured?: number | null; limit?: number | null } = {}
   ) {
     super(`agent request failed: ${status} ${code}`);
     this.name = 'AgentApiError';
@@ -524,6 +528,8 @@ export class AgentApiError extends Error {
     this.ref = ref;
     this.errors = errors;
     this.caseId = caseId;
+    this.measured = measure.measured ?? null;
+    this.limit = measure.limit ?? null;
   }
 
   /** 401 and 403 from the admin gate: the browser is not (or no longer) signed in as an admin. */
@@ -551,6 +557,7 @@ export async function toAgentApiError(response: Response): Promise<AgentApiError
   let ref: string | null = response.headers.get('X-Request-Id');
   let errors: string[] = [];
   let caseId: string | null = null;
+  const measure: { measured?: number; limit?: number } = {};
   try {
     const body: unknown = await response.json();
     if (body && typeof body === 'object') {
@@ -559,6 +566,8 @@ export async function toAgentApiError(response: Response): Promise<AgentApiError
       if (typeof record.ref === 'string') ref = record.ref;
       errors = strings(record.errors).slice(0, MAX_BINDING_ERRORS);
       if (typeof record.case_id === 'string') caseId = record.case_id;
+      if (isCount(record.measured)) measure.measured = record.measured;
+      if (isCount(record.limit)) measure.limit = record.limit;
     }
   } catch {
     /* not JSON: the status decides */
@@ -571,8 +580,88 @@ export async function toAgentApiError(response: Response): Promise<AgentApiError
     code ?? FALLBACK_CODES[response.status] ?? `http_${response.status}`,
     ref,
     errors,
-    caseId
+    caseId,
+    measure
   );
+}
+
+function isCount(value: unknown): value is number {
+  return typeof value === 'number' && Number.isInteger(value) && value >= 0;
+}
+
+/** The raw file cap of a conversion: 5 MB, as the BFF and the agents service count it. */
+export const MAX_CONVERT_BYTES = 5 * 1024 * 1024;
+
+/** What the server counted while it read a file (`agents/renderer/wire.py` `ConvertWarning`). */
+export interface ConvertWarnings {
+  formulas_without_value?: number;
+  hidden_sheets?: number;
+  dropped_columns?: number;
+  list_columns?: number;
+  utc_timestamps?: number;
+  renamed_columns?: number;
+}
+
+/** A converted file: the text for the box, what kind of file it was, the sheet read and the others. */
+export interface ConvertAnswer {
+  text: string;
+  /** `json` for a table with list columns: records the parser expands into long format. */
+  format: 'csv' | 'json';
+  kind: string;
+  rows: number;
+  columns: number;
+  sheet: string | null;
+  sheets: string[];
+  sheet_count: number;
+  warnings: ConvertWarnings;
+  /** The names of the columns left out (at most 20); `warnings.dropped_columns` counts all of them. */
+  dropped: string[];
+}
+
+const WARNING_KEYS = [
+  'formulas_without_value',
+  'hidden_sheets',
+  'dropped_columns',
+  'list_columns',
+  'utc_timestamps',
+  'renamed_columns',
+] as const;
+
+/** The conversion route's answer, checked field by field; null when it is not that shape. */
+export function convertAnswer(value: unknown): ConvertAnswer | null {
+  if (!value || typeof value !== 'object') return null;
+  const record = value as Record<string, unknown>;
+  if (typeof record.text !== 'string' || typeof record.kind !== 'string') return null;
+  const warnings: ConvertWarnings = {};
+  const raw = record.warnings;
+  if (raw && typeof raw === 'object') {
+    for (const key of WARNING_KEYS) {
+      const count = (raw as Record<string, unknown>)[key];
+      if (isCount(count) && count > 0) warnings[key] = count;
+    }
+  }
+  return {
+    text: record.text,
+    format: record.format === 'json' ? 'json' : 'csv',
+    kind: record.kind,
+    rows: isCount(record.rows) ? record.rows : 0,
+    columns: isCount(record.columns) ? record.columns : 0,
+    sheet: typeof record.sheet === 'string' ? record.sheet : null,
+    sheets: strings(record.sheets).slice(0, 10),
+    sheet_count: isCount(record.sheet_count) ? record.sheet_count : 0,
+    warnings,
+    dropped: strings(record.dropped).slice(0, 20),
+  };
+}
+
+/** Base64 of a file's bytes, in chunks, so a 5 MB file never builds one huge argument list. */
+export function toBase64(bytes: Uint8Array): string {
+  let binary = '';
+  const chunk = 0x8000;
+  for (let index = 0; index < bytes.length; index += chunk) {
+    binary += String.fromCharCode(...bytes.subarray(index, index + chunk));
+  }
+  return btoa(binary);
 }
 
 /** The BFF passes at most this many binding check lines. */
@@ -679,6 +768,29 @@ export const agentApi = {
         ...(source ? { source } : {}),
       })
     ),
+  /**
+   * A dropped binary data file (Excel, OpenDocument, Parquet, Feather, Arrow,
+   * NumPy) read on the server, in the renderer's sandbox, into the text the
+   * paste box takes. Nothing is stored: the page puts `text` into the box and
+   * the user's `.parse()` sends it through `uploadDataset`. `sheet` asks for
+   * another sheet (or `.npz` array) of the same file, by a name of `sheets`.
+   * An answer the page cannot read is `422 invalid`.
+   */
+  convertFile: async (
+    token: string,
+    sid: string,
+    dataBase64: string,
+    sheet?: string
+  ): Promise<ConvertAnswer> => {
+    const answer = await agentJson<unknown>(
+      `${sessionPath(sid)}/dataset/convert`,
+      token,
+      post({ data_base64: dataBase64, ...(sheet ? { sheet } : {}) })
+    );
+    const parsed = convertAnswer(answer);
+    if (!parsed) throw new AgentApiError(422, 'invalid');
+    return parsed;
+  },
   putBindings: (token: string, sid: string, bindings: Binding[]) =>
     agentJson<BindingsApplied>(`${sessionPath(sid)}/bindings`, token, {
       method: 'PUT',

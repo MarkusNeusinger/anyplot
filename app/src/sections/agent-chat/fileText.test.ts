@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { MAX_DATASET_BYTES } from 'src/lib/agent';
+import { MAX_CONVERT_BYTES, MAX_DATASET_BYTES } from 'src/lib/agent';
 import {
   decodeText,
   looksBinary,
@@ -151,6 +151,18 @@ describe('readBytes', () => {
     });
   });
 
+  it.each([
+    [bytesOf([0x50, 0x4b, 0x03, 0x04], 'rest'), 'sales.xlsx', 'spreadsheet'],
+    [bytesOf('PAR1', [0x15]), 'data.parquet', 'parquet'],
+    [bytesOf('FEA1', [0, 0]), 'old.feather', 'arrow'],
+    [bytesOf([0xff, 0xff, 0xff, 0xff, 0x10]), 'rows.arrows', 'arrow'],
+    [bytesOf([0x93], 'NUMPY', [0x01, 0x00]), 'a.npy', 'numpy'],
+  ])('hands %#: %s to the server with its bytes', (bytes, name, kind) => {
+    const reading = readBytes(bytes, name);
+    expect(reading).toMatchObject({ ok: false, reason: 'convert', kind });
+    expect(reading.ok === false && reading.reason === 'convert' && reading.bytes).toEqual(bytes);
+  });
+
   it('refuses text with NUL bytes or with more than 1 % control characters', () => {
     expect(readBytes(bytesOf('abc', [0x00, 0x00, 0x00], 'def'))).toMatchObject({
       ok: false,
@@ -182,10 +194,26 @@ describe('readFile', () => {
     expect(whole).toHaveBeenCalledTimes(1);
   });
 
-  it('answers a large workbook by its format, not its size', async () => {
+  it('reads a workbook between the text cap and the conversion cap whole, for the server', async () => {
     const workbook = new File([bytesOf([0x50, 0x4b, 0x03, 0x04]), new Uint8Array(16)], 'big.xlsx');
     Object.defineProperty(workbook, 'size', { value: MAX_FILE_BYTES + 1 });
-    await expect(readFile(workbook)).resolves.toMatchObject({ ok: false, kind: 'spreadsheet' });
+    await expect(readFile(workbook)).resolves.toMatchObject({
+      ok: false,
+      reason: 'convert',
+      kind: 'spreadsheet',
+    });
+  });
+
+  it('refuses a workbook over the conversion cap before reading it whole', async () => {
+    const workbook = new File([bytesOf([0x50, 0x4b, 0x03, 0x04]), new Uint8Array(16)], 'huge.xlsx');
+    Object.defineProperty(workbook, 'size', { value: MAX_CONVERT_BYTES + 1 });
+    const read = vi.spyOn(workbook, 'arrayBuffer');
+    await expect(readFile(workbook)).resolves.toMatchObject({
+      ok: false,
+      reason: 'too_large_binary',
+      kind: 'spreadsheet',
+    });
+    expect(read).not.toHaveBeenCalled();
   });
 
   it('refuses a text file over the raw cap before reading it', async () => {

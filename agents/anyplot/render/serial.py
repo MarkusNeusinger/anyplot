@@ -18,7 +18,9 @@ it), so no backend has to remember a semaphore of its own:
 
 The render's own `job.timeout_s` starts when the backend runs it, after the wait.
 A data run (`run_data`, the `run_data_code` tool) takes one slot of the `run` lane
-like one theme of a render: it is a sandbox too. No ADK import.
+like one theme of a render: it is a sandbox too. A file conversion (`convert`, the dataset
+route's `/convert`) takes one slot of the `toggle` lane, so it waits behind every pipeline
+render and never delays one. No ADK import.
 """
 
 import asyncio
@@ -26,7 +28,7 @@ from collections import deque
 from dataclasses import replace
 from typing import Literal
 
-from .contract import DataJob, DataOutput, RenderBackend, RenderJob, RenderResult
+from .contract import ConvertJob, ConvertOutput, DataJob, DataOutput, RenderBackend, RenderJob, RenderResult
 
 
 RenderLane = Literal["run", "toggle"]
@@ -115,5 +117,17 @@ class SerialRenderer:
             raise RenderBusy(f"no render slot came free within {wait_s} s") from None
         try:
             return await self.backend.run_data(job)
+        finally:
+            self.slots.release()
+
+    async def convert(self, job: ConvertJob, *, wait_s: float | None = None) -> ConvertOutput:
+        """Convert a file in one slot of the `toggle` lane, behind every waiting pipeline render, so a conversion
+        never delays a plot; raises `RenderBusy` when the slot wait ran out."""
+        try:
+            await self.slots.acquire("toggle", wait_s)
+        except TimeoutError:
+            raise RenderBusy(f"no render slot came free within {wait_s} s") from None
+        try:
+            return await self.backend.convert(job)
         finally:
             self.slots.release()

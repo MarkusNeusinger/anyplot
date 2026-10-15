@@ -14,9 +14,10 @@ from typing import Any
 
 from PIL import Image, ImageDraw
 
+from agents.renderer.wire import ConvertMeta
 from core.palette import IMPRINT
 
-from ..contract import DataJob, DataOutput, RenderJob, RenderResult, Theme, ThemeOutput
+from ..contract import ConvertJob, ConvertOutput, DataJob, DataOutput, RenderJob, RenderResult, Theme, ThemeOutput
 
 
 BACKGROUNDS: dict[Theme, str] = {"light": "#FAF8F1", "dark": "#1A1A17"}
@@ -57,13 +58,15 @@ Script = Callable[[RenderJob, Theme], FakeOutcome]
 FIXTURE_CSV = "x,y\n0,0\n1,1\n2,4\n3,9\n"
 """What a fake data run returns by default: the table a snippet computing `y = x**2` for 0 to 3 writes."""
 DataScript = Callable[[DataJob], DataOutput]
+ConvertScript = Callable[[ConvertJob], ConvertOutput]
 
 
 @dataclass
 class FakeBackend:
     """Fixture renders; `script(job, theme)` decides the outcome (default: a clean render).
 
-    A data run returns `FIXTURE_CSV` with exit code 0 unless `data_script(job)` decides;
+    A data run returns `FIXTURE_CSV` with exit code 0 unless `data_script(job)` decides,
+    and so does a conversion (as a one-sheet workbook) unless `convert_script(job)` does;
     no code runs either way, so the fake is for tests and offline development only.
     """
 
@@ -72,6 +75,15 @@ class FakeBackend:
     jobs: list[RenderJob] = field(default_factory=list)
     data_script: DataScript | None = None
     data_jobs: list[DataJob] = field(default_factory=list)
+    convert_script: ConvertScript | None = None
+    convert_jobs: list[ConvertJob] = field(default_factory=list)
+
+    async def convert(self, job: ConvertJob) -> ConvertOutput:
+        self.convert_jobs.append(job)
+        if self.convert_script is not None:
+            return self.convert_script(job)
+        meta = ConvertMeta(kind="xlsx", rows=4, columns=2, sheet="Sheet1", sheets=["Sheet1"], sheet_count=1)
+        return ConvertOutput(exit_code=0, text=FIXTURE_CSV, meta=meta, wall_s=0.1)
 
     async def run_data(self, job: DataJob) -> DataOutput:
         self.data_jobs.append(job)

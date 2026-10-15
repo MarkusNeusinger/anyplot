@@ -15,7 +15,7 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from agents.anyplot.data import prepare as prepare_module
-from agents.anyplot.data.parse import AMBIGUOUS_DATE_ORDER, MAX_COMPUTED_BYTES, ParsedDataset, parse_dataset
+from agents.anyplot.data.parse import AMBIGUOUS_DATE_ORDER, MAX_COMPUTED_BYTES, RESPELLED, ParsedDataset, parse_dataset
 from agents.anyplot.data.prepare import (
     AMBIGUOUS_MONTH_FIRST,
     MAX_CONDITIONS,
@@ -201,7 +201,9 @@ class TestFixture:
         assert parsed.csv == SALES_CSV
         assert parsed.column_dtypes == {"Datum": "datetime", "Tier": "text", "Anteil": "text", "Umsatz": "number"}
         assert parsed.profile.decimal == ","
-        assert not parsed.warnings  # no unit moved into a name: the bare `7` keeps `Anteil` text
+        # No unit moved into a name (the bare `7` keeps `Anteil` text); only the spelling line for `1.234,50` and the like.
+        assert [warning for warning in parsed.warnings if RESPELLED not in warning] == []
+        assert parsed.warnings[0].startswith(f"4 numbers {RESPELLED}")
 
 
 class TestRename:
@@ -426,7 +428,8 @@ class TestSetTypeNumber:
         moves the unit into the name, so `set_type number` has nothing to do; one bare cell keeps the column text."""
         uniform = parse_dataset(SALES.replace("Katze;7;", "Katze;7 %;"))
         assert uniform.column_dtypes["Anteil (%)"] == "number"
-        assert uniform.warnings == ["column 'Anteil': unit '%' moved from the values into the name 'Anteil (%)'"]
+        assert uniform.warnings[0] == "column 'Anteil': unit '%' moved from the values into the name 'Anteil (%)'"
+        assert len(uniform.warnings) == 2 and RESPELLED in uniform.warnings[1]  # `Umsatz` writes `1.234,50`
         operation = {"op": "set_type", "column": "Anteil (%)", "type": "number"}
         typed = apply_operations(uniform, OPERATIONS.validate_python([operation]))
 
@@ -823,6 +826,14 @@ class TestPivotLonger:
 
         assert cells(prepared, 2) == ["2024-01-05T10:30:00", "2024-02-03T11:00:00", "2", "3"]
         assert dtypes(prepared)["value"] == "text"
+
+    def test_fractions_and_offsets_survive_an_operation(self) -> None:
+        """Owner rule of 2026-10-15: data keeps its precision and its zone through a change."""
+        text = "t,v\n2024-01-05T10:30:00.123456+01:00,2\n2024-01-05T11:00:00.5+01:00,3\n2024-01-05T12:00:00+01:00,4\n"
+        prepared = prepare(text, drop("v", "eq", 4))
+
+        assert cells(prepared, 0) == ["2024-01-05T10:30:00.123456+01:00", "2024-01-05T11:00:00.500000+01:00"]
+        assert dtypes(prepared)["t"] == "datetime"
 
     def test_datetime_columns_alone_keep_their_kind_and_time(self) -> None:
         text = "id,start,end\n1,2024-01-05 10:30,2024-01-06 00:00\n"
@@ -1767,12 +1778,26 @@ class TestFidelity:
         assert cells(prepared, 1) == ["0.0", "0.0", "2.5"]
         assert prepared.changes[0].startswith("a: 3 cells read as numbers, 1 value with more significant digits")
 
-    def test_different_utc_offsets_are_refused_instead_of_converted(self) -> None:
-        code, message = failure(
-            "k,t\nx,2024-01-05T12:00:00+01:00\ny,2024-07-05T12:00:00+02:00\n", set_dates(column="t")
-        )
+    def test_different_utc_offsets_are_converted_to_utc_and_named(self) -> None:
+        """Owner decision of 2026-10-15, as the parser writes such a column: UTC, with the offsets in the change line."""
+        text = "label,t\nx,05.01.2024 12:00 +01:00\ny,05.07.2024 12:00 +02:00\nz,2024-08-01 09:30 +02:00\n"
+        prepared = prepare(text, set_dates(column="t"))
 
-        assert code == "type_mismatch" and "different UTC offsets" in message
+        assert cells(prepared, 1) == [
+            "2024-01-05T11:00:00+00:00",
+            "2024-07-05T10:00:00+00:00",
+            "2024-08-01T07:30:00+00:00",
+        ]
+        assert prepared.changes == [
+            "t: 3 cells read as dates (format inferred, day before month), times with the UTC offsets +01:00, "
+            "+02:00 converted to UTC (+00:00); the instants are the same"
+        ]
+
+    def test_times_with_and_without_an_offset_are_refused(self) -> None:
+        text = "label,t\nx,05.01.2024 12:00 +01:00\ny,05.07.2024 12:00\nz,2024-08-01 09:30 +02:00\n"
+        code, message = failure(text, set_dates(column="t"))
+
+        assert code == "type_mismatch" and "no time is given a zone by guess" in message
 
 
 def set_number(column: str) -> dict[str, Any]:

@@ -29,7 +29,9 @@ from api.dependencies import require_db
 from api.main import app, fastapi_app
 from api.routers.agent import (
     MAX_BUNDLE_BYTES,
+    MAX_CONVERT_BYTES,
     MAX_DATASET_BYTES,
+    MAX_REQUEST_BODY_BYTES,
     NOT_ENABLED,
     CaseStatus,
     Expected,
@@ -323,6 +325,7 @@ ALL_ROUTES = [
     ("POST", "/debug/agent/sessions", {"spec_id": "scatter-basic", "library": "matplotlib", "locale": "en"}),
     ("POST", "/debug/agent/sessions/s1/library", {"spec_id": "scatter-basic", "library": "seaborn"}),
     ("POST", "/debug/agent/sessions/s1/dataset", {"text": "a,b\n1,2\n"}),
+    ("POST", "/debug/agent/sessions/s1/dataset/convert", {"data_base64": "UEsFBg=="}),
     ("PUT", "/debug/agent/sessions/s1/bindings", [{"role": "x", "column": "a"}]),
     ("PUT", "/debug/agent/sessions/s1/language", {"language": "de"}),
     ("POST", "/debug/agent/sessions/s1/dataset/confirm", None),
@@ -2449,3 +2452,92 @@ class TestCases:
         assert response.status_code == 403
         assert response.json() == {"detail": "client_header_required"}
         rows.update.assert_not_awaited()
+
+
+class TestConvert:
+    PATH = "/debug/agent/sessions/s1/dataset/convert"
+    ANSWER = {
+        "text": "a,b\n1,2\n",
+        "format": "csv",
+        "kind": "xlsx",
+        "rows": 1,
+        "columns": 2,
+        "sheet": "S",
+        "sheets": ["S"],
+        "sheet_count": 1,
+        "warnings": {},
+    }
+
+    def test_the_file_and_the_sheet_are_forwarded_and_the_answer_returned(self, client, upstream) -> None:
+        upstream.handler = lambda request: httpx.Response(200, json=self.ANSWER)
+        data = base64.b64encode(b"PK\x03\x04data").decode()
+
+        response = client.post(self.PATH, json={"data_base64": data, "sheet": "2024"}, headers=CLIENT_HEADERS)
+
+        assert response.status_code == 200 and response.json() == self.ANSWER
+        assert upstream.requests[-1].url.path == "/v1/sessions/s1/dataset/convert"
+        assert upstream.last_json == {"data_base64": data, "sheet": "2024"}
+
+    @pytest.mark.parametrize(
+        "body",
+        [
+            {"data_base64": "!!!!"},
+            {"data_base64": "UEsFBg==", "name": "x.xlsx"},
+            {"data_base64": "UEsFBg==", "sheet": ""},
+            {"data_base64": "UEsFBg==", "sheet": "x" * 256},
+            {"sheet": "S"},
+            [],
+        ],
+    )
+    def test_a_bad_body_is_refused_without_echoing_it(self, client, upstream, body) -> None:
+        response = client.post(self.PATH, json=body, headers=CLIENT_HEADERS)
+        assert (response.status_code, response.json()["detail"]) == (422, "invalid")
+        assert upstream.requests == []
+
+    def test_a_file_one_byte_over_the_cap_is_413(self, client, upstream) -> None:
+        data = base64.b64encode(b"\0" * (MAX_CONVERT_BYTES + 1)).decode()
+        response = client.post(self.PATH, json={"data_base64": data}, headers=CLIENT_HEADERS)
+        assert (response.status_code, response.json()["detail"]) == (413, "too_long")
+        assert upstream.requests == []
+
+    def test_an_oversized_body_is_refused_by_its_declared_length_before_it_is_read(self, client, upstream) -> None:
+        content = b'{"data_base64": "' + b"A" * MAX_REQUEST_BODY_BYTES + b'"}'
+        response = client.post(
+            self.PATH, content=content, headers={**CLIENT_HEADERS, "Content-Type": "application/json"}
+        )
+        assert (response.status_code, response.json()["detail"]) == (413, "too_long")
+        assert upstream.requests == []
+
+    def test_the_conversion_needs_a_declared_length(self, client, upstream) -> None:
+        def chunks():
+            yield b'{"data_base64": "UEsFBg=="}'
+
+        response = client.post(
+            self.PATH, content=chunks(), headers={**CLIENT_HEADERS, "Content-Type": "application/json"}
+        )
+        assert (response.status_code, response.json()["detail"]) == (411, "length_required")
+
+    def test_a_refusal_keeps_its_code_and_whole_number_counts_only(self, client, upstream) -> None:
+        upstream.handler = lambda request: httpx.Response(
+            422, json={"detail": "file_too_many_rows", "measured": 21_000, "limit": 20_000, "sheet": "secret"}
+        )
+        response = client.post(self.PATH, json={"data_base64": "UEsFBg=="}, headers=CLIENT_HEADERS)
+        body = response.json()
+        assert response.status_code == 422
+        assert (body["detail"], body["measured"], body["limit"]) == ("file_too_many_rows", 21_000, 20_000)
+        assert "sheet" not in body
+
+        upstream.handler = lambda request: httpx.Response(
+            422, json={"detail": "file_too_large", "measured": True, "limit": "1"}
+        )
+        body = client.post(self.PATH, json={"data_base64": "UEsFBg=="}, headers=CLIENT_HEADERS).json()
+        assert body["detail"] == "file_too_large" and "measured" not in body and "limit" not in body
+
+    def test_convert_unavailable_passes(self, client, upstream) -> None:
+        upstream.handler = lambda request: httpx.Response(503, json={"detail": "convert_unavailable"})
+        response = client.post(self.PATH, json={"data_base64": "UEsFBg=="}, headers=CLIENT_HEADERS)
+        assert (response.status_code, response.json()["detail"]) == (503, "convert_unavailable")
+
+    def test_the_conversion_needs_the_client_header(self, client, upstream) -> None:
+        response = client.post(self.PATH, json={"data_base64": "UEsFBg=="})
+        assert response.status_code == 403 and upstream.requests == []

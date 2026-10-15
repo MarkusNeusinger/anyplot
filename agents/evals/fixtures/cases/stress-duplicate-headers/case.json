@@ -19,12 +19,12 @@
     "synthetic"
   ],
   "source": "synthetic: agents/evals/make_stress.py",
-  "bound_expected": "parse renames duplicates to Value_2, Value_3, Value_4 (case-sensitive: value stays), one warning each",
+  "bound_expected": "parse renames duplicates to Value_2, Value_3, Value_4 (case-sensitive: value stays), one warning each, plus one that counts the numbers written without their trailing zeros (`70.20` as `70.2`)",
   "needs_model": false,
   "static": {
     "dataset": "ok",
     "columns": 5,
-    "warnings": 3,
+    "warnings": 4,
     "bindings": "complete",
     "loader": "ok"
   }

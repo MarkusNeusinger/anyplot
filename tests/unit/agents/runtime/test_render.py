@@ -36,6 +36,7 @@ from agents.anyplot.render.backends.remote import IdTokenSource, RemoteBackend
 from agents.anyplot.render.backends.sandbox import SandboxBackend
 from agents.anyplot.render.contract import (
     THEMES,
+    ConvertJob,
     DataJob,
     DataRunUnsupported,
     RendererUnavailable,
@@ -945,6 +946,54 @@ class TestBackends:
 
         assert output.exit_code == 0 and output.csv_text == "x,y\n1,3\n2,4\n", output.stderr_tail
         assert failed.exit_code == 1 and failed.csv_text is None and 'snippet.py", line 2' in failed.stderr_tail
+
+    async def test_local_backend_converts_a_file(self, tmp_path: Path) -> None:
+        """The stand-in `docker` above, with the harness in convert mode: a workbook, then a refused pickle."""
+        from tests.unit.agents.runtime.convert_fixtures import Sheet, xlsx
+
+        docker = tmp_path / "docker"
+        docker.write_text(
+            f"#!{sys.executable}\n"
+            "import os, sys\n"
+            "args = sys.argv[1:]\n"
+            "if args[0] == 'kill':\n"
+            "    sys.exit(0)\n"
+            "work = next(v.split(':')[0] for f, v in zip(args, args[1:]) if f == '-v' and v.endswith(':/work'))\n"
+            "image = args.index('anyplot-agents:dev')\n"
+            "command = args[image + 1:]\n"
+            f"command[0] = {sys.executable!r}\n"
+            f"command[2] = {str(HARNESS_SOURCE)!r}\n"
+            "os.environ['ARROW_DEFAULT_MEMORY_POOL'] = 'system'\n"
+            "os.chdir(work)\n"
+            "os.execv(command[0], command)\n",
+            encoding="utf-8",
+        )
+        docker.chmod(0o755)
+        backend = LocalDockerBackend(
+            image="anyplot-agents:dev", runtime=PythonRuntime(), environment="development", docker=str(docker)
+        )
+        argv = backend.convert_argv(ConvertJob(job_id="c1", data=b"x"), Path("/tmp/run"))
+        assert argv[-5:] == ["/app/.venv/bin/python", "-I", "/opt/anyplot/harness.py", "--convert", "input.bin"]
+        assert "ARROW_DEFAULT_MEMORY_POOL=system" in argv and argv[argv.index("--network") + 1] == "none"
+
+        data = xlsx([Sheet("A", [["a"]]), Sheet("B", [["b"], [2]])])
+        output = await backend.convert(ConvertJob(job_id="c1", data=data, sheet="B"))
+        refused = await backend.convert(ConvertJob(job_id="c2", data=b"\x80\x04K\x01."))
+
+        assert output.exit_code == 0 and output.text == "b\n2\n"
+        assert output.meta is not None and output.meta.sheets == ["A", "B"]
+        assert refused.refusal == "pickle" and refused.text is None
+
+    async def test_fake_and_sandbox_conversions(self) -> None:
+        fake = FakeBackend()
+        assert (await fake.convert(ConvertJob(job_id="c1", data=b"x"))).text == FIXTURE_CSV
+        assert fake.convert_jobs[0].sheet is None
+        with pytest.raises(DataRunUnsupported):
+            await SandboxBackend(runtime=PythonRuntime()).convert(ConvertJob(job_id="c1", data=b"x"))
+        with pytest.raises(ValueError):
+            ConvertJob(job_id="../x", data=b"x")
+        with pytest.raises(ValueError):
+            ConvertJob(job_id="c1", data=b"x", timeout_s=16)
 
     async def test_fake_and_sandbox_data_runs(self) -> None:
         fake = FakeBackend()

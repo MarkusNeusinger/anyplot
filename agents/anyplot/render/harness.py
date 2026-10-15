@@ -218,6 +218,48 @@ DATA_EXIT = {
 """Exit codes of data mode: `error` is an exception in the snippet (its traceback on stderr), `no_frame` no `df`
 or one that is no DataFrame, `frame_shape` MultiIndex columns or an index that cannot become columns,
 `blocked` an operation `DataGuard` refused."""
+CONVERT_FLAG = "--convert"
+CONVERT_MODULE_FILE = "convert.py"
+"""The converter (`agents/anyplot/render/convert.py`), next to the harness in the image and in the checkout."""
+CONVERT_REQUEST_FILE = "request.json"
+"""`{"sheet": <name or null>}`: the sheet (or `.npz` array) the page chose; missing means the first one."""
+CONVERT_META_FILE = "meta.json"
+"""What the conversion found (`convert.Conversion.meta`): the kind, the sheet and the others, the warning counts."""
+CONVERT_MAX_INPUT_BYTES = 5 * 1024 * 1024  # convert.MAX_INPUT_BYTES
+CONVERT_MAX_REQUEST_BYTES = 4096
+CONVERT_REFUSALS = (
+    "unsupported",
+    "encrypted",
+    "pickle",
+    "hdf5",
+    "corrupt",
+    "archive_limits",
+    "too_many_rows",
+    "too_many_columns",
+    "too_large",
+    "empty",
+    "sheet_not_found",
+    "array_shape",
+    "object_array",
+    "formulas_only",
+    "too_complex",
+)
+"""`convert.REFUSALS`, in its order (pinned by a test): the harness exits with 10 plus the index."""
+CONVERT_EXIT = {
+    "ok": 0,
+    "error": 1,
+    "usage": 2,
+    "blocked": 8,
+    **{reason: 10 + index for index, reason in enumerate(CONVERT_REFUSALS)},
+}
+"""Exit codes of convert mode: `error` an exception in the reader (its class on stderr), `blocked` an operation the
+guard refused (a reader that tried to import, open or run code), the rest a refused file."""
+CONVERT_AST_READERS = (
+    ("ast.py", "parse"),
+    ("ast.py", "literal_eval"),
+    ("numpy/lib/_format_impl.py", "_read_array_header"),
+)
+"""The one `compile` convert mode lets through: NumPy's `.npy` header reader parsing its dict literal to a tree."""
 DATA_BLOCKED_PREFIXES = (
     "ctypes.",
     "os.system",
@@ -1684,7 +1726,7 @@ def frame_csv(frame, measure=None):
     return text, None
 
 
-def write_status(handle, code, measure):
+def write_status(handle, code, measure, exits=DATA_EXIT):
     """`status.json`: the run's `DATA_EXIT` code and, for a broken cap, the measured value and the cap.
 
     The host reads it whatever the launcher's exit code says: Cloud Run's `sandbox do`
@@ -1695,7 +1737,7 @@ def write_status(handle, code, measure):
     """
     if handle is None:
         return
-    reason = next((name for name, value in DATA_EXIT.items() if value == code), None)
+    reason = next((name for name, value in exits.items() if value == code), None)
     report = {"exit": code, "reason": reason}
     for key in ("measured", "limit"):
         if isinstance(measure.get(key), int):
@@ -1852,9 +1894,122 @@ def run_plot(path, guard):
     exec(code, namespace)
 
 
+def chain_matches(frame, chain):
+    """Whether `frame` and the frames above it run the `(file suffix, function)` pairs of `chain`, in order."""
+    for function in chain:
+        if not is_one_of(frame, (function,)):
+            return False
+        frame = frame.f_back
+    return True
+
+
+class ConvertGuard(DataGuard):
+    """The audit hook of convert mode: `DataGuard`, with no code to run at all, but for one `compile`.
+
+    NumPy reads an `.npy` header, a dict literal, with `ast.literal_eval`, which compiles the
+    text to a syntax tree (`compile` with `PyCF_ONLY_AST`, no code object): `CONVERT_AST_READERS`.
+    Every `exec` is refused, as are every `open` and every `import` after the preload.
+    """
+
+    def lets_code_run(self, event, args):
+        """Only NumPy's header compile: none of data mode's `CODE_BUILDERS` (`namedtuple`, dataclasses), which a
+        reader of data files never needs (Copilot review of #12194), and no entry code object to run."""
+        return event == "compile" and chain_matches(self.caller(), CONVERT_AST_READERS)
+
+
+def load_converter():
+    """`convert.py` next to this file (the image's `/opt/anyplot/convert.py`), loaded by path: `-I` puts no script
+    directory on `sys.path`. Registered in `sys.modules` like an import."""
+    import importlib.util
+
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), CONVERT_MODULE_FILE)
+    spec = importlib.util.spec_from_file_location("anyplot_convert", path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def main_convert(path, guard=None):
+    """Convert mode (module docstring): read the file, preload, arm `ConvertGuard`, write `out.csv`, `meta.json`
+    and `status.json`."""
+    _report("start")
+    set_limits()
+    sys.dont_write_bytecode = True
+    try:
+        status = open(DATA_STATUS_FILE, "w", encoding="utf-8")  # before the guard, which refuses every open
+    except OSError:
+        status = None
+    measure = {}
+    code = CONVERT_EXIT["error"]
+    try:
+        code = run_conversion(path, guard, measure)
+    finally:
+        write_status(status, code, measure, CONVERT_EXIT)
+    return code
+
+
+def run_conversion(path, guard, measure):
+    """`main_convert` after the limits. Only the exception's class reaches stderr: its message may quote the file."""
+    try:
+        with open(path, "rb") as handle:
+            data = handle.read(CONVERT_MAX_INPUT_BYTES + 1)
+        request = {}
+        if os.path.exists(CONVERT_REQUEST_FILE):
+            with open(CONVERT_REQUEST_FILE, encoding="utf-8") as handle:
+                request = json.loads(handle.read(CONVERT_MAX_REQUEST_BYTES))
+    except (OSError, ValueError):
+        return CONVERT_EXIT["usage"]
+    sheet = request.get("sheet") if isinstance(request, dict) else None
+    if sheet is not None and not isinstance(sheet, str):
+        return CONVERT_EXIT["usage"]
+    if len(data) > CONVERT_MAX_INPUT_BYTES:
+        measure.update(measured=len(data), limit=CONVERT_MAX_INPUT_BYTES)
+        return CONVERT_EXIT["too_large"]
+    converter = load_converter()
+    converter.preload()
+    guard = guard if guard is not None else ConvertGuard()
+    with (
+        open(DATA_OUT_FILE, "w", encoding="utf-8", newline="") as out,
+        open(CONVERT_META_FILE, "w", encoding="utf-8") as meta,
+    ):
+        guard.arm()
+        try:
+            result = converter.convert(data, sheet)
+            text = result.csv_text
+            # Not ASCII-escaped: ten 255-character CJK sheet names would pass the host's 16 KiB cap as escapes.
+            report = json.dumps(result.meta(), ensure_ascii=False)
+        except converter.Refused as exc:
+            if guard.blocked:
+                return CONVERT_EXIT["blocked"]
+            for key in ("measured", "limit"):
+                value = getattr(exc, key, None)
+                if isinstance(value, int) and not isinstance(value, bool):
+                    measure[key] = value
+            return CONVERT_EXIT.get(exc.reason, CONVERT_EXIT["error"])
+        except BaseException as exc:  # MemoryError and SystemExit too: the code is the harness's own
+            try:
+                print(f"conversion failed: {type(exc).__name__}", file=sys.stderr, flush=True)
+            except Exception:
+                pass
+            return CONVERT_EXIT["blocked"] if guard.blocked else CONVERT_EXIT["error"]
+        finally:
+            try:
+                _report("end", **_usage())
+            except Exception:
+                pass
+        if guard.blocked:
+            return CONVERT_EXIT["blocked"]
+        out.write(text)
+        meta.write(report)
+    return CONVERT_EXIT["ok"]
+
+
 def main(argv):
     if len(argv) == 3 and argv[1] == DATA_FLAG:
         return main_data(argv[2])
+    if len(argv) == 3 and argv[1] == CONVERT_FLAG:
+        return main_convert(argv[2])
     _report("start")
     if len(argv) != 2:
         print("usage: harness.py <plot file>", file=sys.stderr)
