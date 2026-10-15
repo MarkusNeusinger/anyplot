@@ -177,6 +177,7 @@ from agents.anyplot.services import Services, get_services
 from agents.anyplot.session_state import (
     BINDINGS,
     CONFIRMED,
+    PENDING_BINDINGS,
     CatalogueSnapshot,
     SessionView,
     apply_bindings,
@@ -1051,7 +1052,7 @@ async def put_bindings(
         parsed = [Binding(role=item.role, column=item.column) for item in bindings if item.column]
     except ValueError:
         raise AgentsError(422, "invalid") from None
-    check, delta = apply_bindings(parsed, view.snapshot.roles(), stored.profile)
+    check, delta = apply_bindings(parsed, view.snapshot.roles(), stored.profile, session.state.get(PENDING_BINDINGS))
     if not delta:
         return JSONResponse(
             status_code=422, content={"detail": "invalid", "errors": check.errors[:20]}, headers=_NO_STORE

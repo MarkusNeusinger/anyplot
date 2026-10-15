@@ -43,7 +43,7 @@ from .session_state import (
     DATASET_HISTORY,
     DATASET_ID,
     DATASET_VERSION,
-    PENDING_REQUEST,
+    PENDING_CLEARED,
     CatalogueSnapshot,
     initial_state,
 )
@@ -112,7 +112,7 @@ class IngestedDataset:
             BINDINGS: [binding.model_dump() for binding in self.bindings],
             DATASET_HISTORY: [],
             DATASET_VERSION: 1,
-            PENDING_REQUEST: None,
+            **PENDING_CLEARED,
         }
 
 

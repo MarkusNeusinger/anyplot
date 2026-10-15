@@ -136,9 +136,11 @@ from .render.contract import RendererUnavailable, RenderJob, Theme
 from .render.gates import data_rows, evaluate
 from .render.runtimes.python import PythonRuntime
 from .schemas import (
+    EXPECTED_TEXT,
     MAX_CHANGE_CHARS,
     MAX_CHANGE_REQUEST_CHARS,
     MAX_CHANGES,
+    MAX_EXPECTED_TEXTS,
     MAX_FEEDBACK,
     MAX_LINE_CHARS,
     MAX_NOTE_CHARS,
@@ -166,7 +168,14 @@ from .schemas import (
 )
 from .scoring import ScoreAnswer, ScoreError, mend_answer, parse_answer
 from .services import PADDED_REASON, CodeVersion, Services, ThemeRender, get_services
-from .session_state import PENDING_REQUEST, SessionView, read_session
+from .session_state import (
+    BINDINGS,
+    PENDING_BINDINGS,
+    PENDING_EXPECTED_TEXTS,
+    PENDING_REQUEST,
+    SessionView,
+    read_session,
+)
 from .settings import AgentSettings, get_settings
 from .sub_agents.adapter import ADAPTERS, adapter_name
 from .sub_agents.reviewer import REVIEWER_NAME, use_reviewer_mode
@@ -569,8 +578,39 @@ def hold_request(state: Any, args: PipelineArgs) -> None:
     Also the path of a run that passed the check but got no slot in the run queue (`capacity`,
     or a cancelled wait): its note waits for the next `.create_plot()` like a blocked one's.
     """
-    if args.change_request and args.base != "previous":
-        state[PENDING_REQUEST] = merged_request(state.get(PENDING_REQUEST), args.change_request)
+    if (args.change_request or args.expected_texts) and args.base != "previous":
+        state[PENDING_REQUEST] = merged_request(state.get(PENDING_REQUEST), args.change_request) or None
+        state[PENDING_EXPECTED_TEXTS] = chosen_texts(state.get(PENDING_EXPECTED_TEXTS), args) or None
+        # The bindings the note was written for: a later binding change that only fills roles open then keeps it.
+        bindings = state.get(BINDINGS)
+        state[PENDING_BINDINGS] = list(bindings) if isinstance(bindings, list) else []
+
+
+def kept_texts(value: object) -> list[str]:
+    """The stored `expected_texts` that pass the same validator as `PipelineArgs.expected_texts`, item by item,
+    without repeats and at most `MAX_EXPECTED_TEXTS`; anything else stored there is dropped."""
+    texts: list[str] = []
+    for item in value if isinstance(value, list) else []:
+        try:
+            text = EXPECTED_TEXT.validate_python(item, strict=True)
+        except ValidationError:
+            continue
+        if text not in texts:
+            texts.append(text)
+    return texts[:MAX_EXPECTED_TEXTS]
+
+
+def chosen_texts(pending: object, args: PipelineArgs) -> list[str]:
+    """The texts a run checks: its own when it brings a request or texts of its own, else the kept ones.
+
+    Review of 2026-10-15: the root never sees the kept texts, so joining them to a run's own kept
+    a text the user had since withdrawn or replaced ("call it 'Study time'" after "Lernzeit"),
+    which then counted as a miss and started a repair. A run that brings its own word replaces
+    them; only a bare run (`.create_plot()`) fills in the kept ones.
+    """
+    if args.change_request or args.expected_texts:
+        return list(args.expected_texts)
+    return kept_texts(pending)
 
 
 MIN_KEPT_NOTE_CHARS = 40
@@ -609,19 +649,45 @@ def take_pending_request(state: Any, args: PipelineArgs) -> PipelineArgs:
     (`settle_pending_request`), so a run that fails loses no note (review of 2026-10-15).
     """
     pending = state.get(PENDING_REQUEST)
-    if pending is None or args.base == "previous":
+    texts = state.get(PENDING_EXPECTED_TEXTS)
+    if (pending is None and texts is None) or args.base == "previous":
         return args
-    return args.model_copy(update={"change_request": merged_request(pending, args.change_request)})
+    # Validated like the root's own arguments: a stored value never reaches the run unchecked.
+    joined = {
+        **args.model_dump(),
+        "change_request": merged_request(pending, args.change_request),
+        "expected_texts": chosen_texts(texts, args),
+    }
+    try:
+        return PipelineArgs.model_validate(joined)
+    except ValidationError:
+        return args
+
+
+PENDING_KEYS = (PENDING_REQUEST, PENDING_EXPECTED_TEXTS, PENDING_BINDINGS)
 
 
 def settle_pending_request(state: Any, args: PipelineArgs, shipped: bool) -> None:
-    """After a run: a shipped plot used the kept request, so it goes; a run that shipped nothing keeps its request
-    (the kept one with the run's own, as `take_pending_request` joined them) for the next first plot."""
+    """After a run, the kept note as the run leaves it; only a first-plot run touches it, as only it took it.
+
+    A shipped first plot used the kept request and texts, so they go. A first-plot run that
+    shipped nothing keeps what it ran with (`take_pending_request` joined the kept and its own)
+    for the next one. A change of an existing version (`base="previous"`) took nothing, so it
+    leaves the note as it is (review of 2026-10-15), except that stored texts that no longer
+    pass the validator are cleaned (`kept_texts`).
+    """
+    if args.base == "previous":
+        stored = state.get(PENDING_EXPECTED_TEXTS)
+        if stored is not None and kept_texts(stored) != stored:
+            state[PENDING_EXPECTED_TEXTS] = kept_texts(stored) or None
+        return
     if shipped:
-        if state.get(PENDING_REQUEST) is not None:
-            state[PENDING_REQUEST] = None
-    elif args.change_request and args.base != "previous":
-        state[PENDING_REQUEST] = args.change_request
+        for key in PENDING_KEYS:
+            if state.get(key) is not None:
+                state[key] = None
+    elif args.change_request or args.expected_texts:
+        state[PENDING_REQUEST] = args.change_request or None
+        state[PENDING_EXPECTED_TEXTS] = list(args.expected_texts) or None
 
 
 def render_adapt_request(request: AdaptRequest, view: SessionView) -> str:

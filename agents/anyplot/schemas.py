@@ -27,10 +27,21 @@ verdict that rejects without a usable defect stays unread.
 
 import json
 import re
+import unicodedata
 from collections.abc import Iterable
 from typing import Annotated, Any, Literal, Self, get_args
 
-from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, ValidationInfo, field_validator, model_validator
+from pydantic import (
+    AfterValidator,
+    BaseModel,
+    ConfigDict,
+    Field,
+    NonNegativeInt,
+    TypeAdapter,
+    ValidationInfo,
+    field_validator,
+    model_validator,
+)
 
 from .language import DEFAULT_LANGUAGE, LANGUAGE_PATTERN
 
@@ -79,7 +90,21 @@ UserRequest = Annotated[str, Field(min_length=1, max_length=MAX_CHANGE_REQUEST_C
 DefectText = Annotated[str, Field(min_length=1, max_length=MAX_DEFECT_TEXT_CHARS)]
 MAX_EXPECTED_TEXTS = 5
 MAX_EXPECTED_TEXT_CHARS = 120
-ExpectedText = Annotated[str, Field(min_length=1, max_length=MAX_EXPECTED_TEXT_CHARS)]
+
+
+def _visible_text(text: str) -> str:
+    """An expected text holds something to find in the render: not only whitespace, no control character."""
+    if not text.strip():
+        raise ValueError("an expected text is not only whitespace")
+    if any(unicodedata.category(char) == "Cc" for char in text):
+        raise ValueError("an expected text has no control character")
+    return text
+
+
+ExpectedText = Annotated[str, Field(min_length=1, max_length=MAX_EXPECTED_TEXT_CHARS), AfterValidator(_visible_text)]
+EXPECTED_TEXTS: TypeAdapter[list[ExpectedText]] = TypeAdapter(list[ExpectedText])
+"""Validates `expected_texts` read back from session state the way `PipelineArgs` validates them from the root."""
+EXPECTED_TEXT: TypeAdapter[ExpectedText] = TypeAdapter(ExpectedText)
 MAX_DATASET_CONTEXT_CHARS = 1_600
 """The dataset context block (`dataset_context.MAX_CONTEXT_CHARS`, 1,500) with room to spare."""
 MAX_SHOWN_TEXT_CHARS = 80
