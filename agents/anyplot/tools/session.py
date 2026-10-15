@@ -96,7 +96,14 @@ from ..render.runtimes.python import DATA_FILE_NAME
 from ..render.serial import RenderBusy
 from ..schemas import MAX_COLUMNS, MAX_ROWS, Binding, DatasetProfile, PipelineArgs
 from ..services import get_services
-from ..session_state import SessionView, apply_bindings, language_delta, narrowed_confirmation, read_session
+from ..session_state import (
+    PENDING_BINDINGS,
+    SessionView,
+    apply_bindings,
+    language_delta,
+    narrowed_confirmation,
+    read_session,
+)
 from ..settings import get_settings
 
 
@@ -211,7 +218,7 @@ async def set_bindings(bindings: list[dict[str, str]], tool_context: ToolContext
     except ValueError:
         return _error("invalid_bindings")
     roles = view.snapshot.roles()
-    check, delta = apply_bindings(parsed, roles, profile)
+    check, delta = apply_bindings(parsed, roles, profile, tool_context.state.get(PENDING_BINDINGS))
     if not delta:
         # The errors quote column names from the user's dataset.
         errors = DATA_PREAMBLE + "\n" + fence("user_data", json.dumps(check.errors[:10], ensure_ascii=False))

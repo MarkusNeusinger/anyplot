@@ -24,18 +24,21 @@ from agents.anyplot.dev_fixture import snapshot_from_repo
 from agents.anyplot.pipeline import (
     EXPECTED_HEADING,
     keep_pending_request,
+    kept_texts,
     merged_request,
-    merged_texts,
     settle_pending_request,
     take_pending_request,
 )
 from agents.anyplot.plugins.tool_safety import ToolSafetyPlugin, result_limit, result_size
+from agents.anyplot.render.backends.fake import FakeBackend, FakeOutcome
 from agents.anyplot.schemas import MAX_CHANGE_REQUEST_CHARS, Binding, PipelineArgs
 from agents.anyplot.services import Services, get_services
 from agents.anyplot.session_state import (
+    BINDINGS,
     CONFIRMED,
     DATASET_ID,
     DATASET_VERSION,
+    PENDING_BINDINGS,
     PENDING_EXPECTED_TEXTS,
     PENDING_REQUEST,
     narrows,
@@ -415,6 +418,7 @@ class TestPendingRequest:
             (True, PipelineArgs(change_request="Title: A\nlog y"), None),
             (False, PipelineArgs(change_request="Title: A\nlog y"), "Title: A\nlog y"),  # a failed run loses nothing
             (False, PipelineArgs(change_request="bigger", base="previous"), "Title: A"),
+            (True, PipelineArgs(change_request="bigger", base="previous"), "Title: A"),  # took nothing, clears nothing
             (False, PipelineArgs(), "Title: A"),
         ],
     )
@@ -422,6 +426,11 @@ class TestPendingRequest:
         state: dict[str, Any] = {PENDING_REQUEST: "Title: A"}
         settle_pending_request(state, args, shipped)
         assert state[PENDING_REQUEST] == kept
+
+    def test_settle_after_a_change_cleans_corrupt_stored_texts(self) -> None:
+        state: dict[str, Any] = {PENDING_REQUEST: "Title: A", PENDING_EXPECTED_TEXTS: ["A", "   ", "a\x07b", 7]}
+        settle_pending_request(state, PipelineArgs(change_request="bigger", base="previous"), shipped=True)
+        assert state == {PENDING_REQUEST: "Title: A", PENDING_EXPECTED_TEXTS: ["A"]}
 
     @pytest.mark.parametrize(
         "change",
@@ -459,47 +468,162 @@ class TestPendingRequest:
             assert written[PENDING_REQUEST] is None and written[PENDING_EXPECTED_TEXTS] is None
 
     def test_the_texts_travel_with_the_note(self) -> None:
-        state: dict[str, Any] = {}
+        state: dict[str, Any] = {BINDINGS: []}
         args = PipelineArgs(change_request="Title: CO2 pro Kopf", expected_texts=["CO2 pro Kopf"])
         keep_pending_request(state, args, "data_unconfirmed")
-        keep_pending_request(
-            state, PipelineArgs(change_request="Format 6,5 t", expected_texts=["6,5 t"]), "data_unconfirmed"
-        )
 
-        assert state[PENDING_EXPECTED_TEXTS] == ["CO2 pro Kopf", "6,5 t"]
-        taken = take_pending_request(state, PipelineArgs())
-        assert taken.expected_texts == ["CO2 pro Kopf", "6,5 t"]
-        assert taken.change_request == "Title: CO2 pro Kopf\nFormat 6,5 t"
+        assert state[PENDING_EXPECTED_TEXTS] == ["CO2 pro Kopf"]
+        taken = take_pending_request(state, PipelineArgs())  # a bare `.create_plot()` fills in the kept texts
+        assert (taken.change_request, taken.expected_texts) == ("Title: CO2 pro Kopf", ["CO2 pro Kopf"])
         settle_pending_request(state, taken, shipped=False)  # a failed run keeps both
-        assert state[PENDING_EXPECTED_TEXTS] == ["CO2 pro Kopf", "6,5 t"]
+        assert state[PENDING_EXPECTED_TEXTS] == ["CO2 pro Kopf"]
         settle_pending_request(state, taken, shipped=True)
         assert state[PENDING_REQUEST] is None and state[PENDING_EXPECTED_TEXTS] is None
 
-    def test_texts_alone_are_kept_and_a_change_of_a_version_takes_none(self) -> None:
-        state: dict[str, Any] = {}
+    @pytest.mark.parametrize(
+        ("own", "expected"),
+        [
+            (PipelineArgs(change_request="call it Study time", expected_texts=["Study time"]), ["Study time"]),
+            (PipelineArgs(change_request="log y"), []),  # the user's latest word brings no text: none is checked
+            (PipelineArgs(expected_texts=["12 %"]), ["12 %"]),
+            (PipelineArgs(), ["Lernzeit"]),
+        ],
+    )
+    def test_a_run_with_its_own_word_replaces_the_kept_texts(self, own: PipelineArgs, expected: list[str]) -> None:
+        # Review of 2026-10-15: the root never sees the kept texts, so a withdrawn one must not be checked.
+        state: dict[str, Any] = {PENDING_REQUEST: "Title: Lernzeit", PENDING_EXPECTED_TEXTS: ["Lernzeit"]}
+        assert take_pending_request(state, own).expected_texts == expected
+
+    def test_the_latest_blocked_turn_decides_the_texts(self) -> None:
+        state: dict[str, Any] = {BINDINGS: []}
+        for turn in range(1, 4):
+            texts = [f"t{turn}.{index}" for index in range(4)]
+            keep_pending_request(
+                state, PipelineArgs(change_request=f"note {turn}", expected_texts=texts), "data_unconfirmed"
+            )
+
+        assert state[PENDING_EXPECTED_TEXTS] == ["t3.0", "t3.1", "t3.2", "t3.3"]  # never the oldest
+        assert state[PENDING_REQUEST] == "note 1\nnote 2\nnote 3"
+
+    def test_texts_alone_are_kept_and_reach_a_bare_first_plot(self) -> None:
+        state: dict[str, Any] = {BINDINGS: []}
         keep_pending_request(state, PipelineArgs(expected_texts=["12 %"]), "incomplete_bindings")
 
         assert state[PENDING_EXPECTED_TEXTS] == ["12 %"] and state[PENDING_REQUEST] is None
+        taken = take_pending_request(state, PipelineArgs())
+        assert (taken.change_request, taken.expected_texts) == ("", ["12 %"])
         assert take_pending_request(state, PipelineArgs(base="previous")).expected_texts == []
 
     @pytest.mark.parametrize(
-        ("pending", "own", "expected"),
+        ("stored", "expected"),
         [
-            (["a", "b"], ["b", "c"], ["a", "b", "c"]),
-            (["k1", "k2", "k3", "k4"], ["n1", "n2"], ["k1", "k2", "k3", "n1", "n2"]),  # the run's own survive the cap
-            (["ok", 7, "", "x" * 121], [], ["ok"]),  # a stored value is read item by item
-            ("not a list", ["n"], ["n"]),
-            (None, [], []),
+            (["a", "b", "a"], ["a", "b"]),
+            (["ok", 7, "", "   ", "x" * 121, "a\x07b", None], ["ok"]),  # read through the PipelineArgs validator
+            (["1", "2", "3", "4", "5", "6"], ["1", "2", "3", "4", "5"]),
+            ("not a list", []),
+            (None, []),
         ],
     )
-    def test_merged_texts(self, pending: object, own: list[str], expected: list[str]) -> None:
-        assert merged_texts(pending, own) == expected
+    def test_kept_texts(self, stored: object, expected: list[str]) -> None:
+        assert kept_texts(stored) == expected
+
+    def test_a_whitespace_or_control_text_is_refused_from_the_root_too(self) -> None:
+        for bad in ("   ", "a\x07b"):
+            with pytest.raises(ValueError):
+                PipelineArgs(expected_texts=[bad])
+
+    def test_filling_the_roles_open_when_the_note_was_kept_keeps_it(self) -> None:
+        from agents.anyplot.session_state import apply_bindings
+
+        held = [{"role": "x", "column": "year"}]
+        profile = parse_dataset(OWID).profile
+        filled = bind(("x", "year"), ("y1", "co2_per_capita"))
+        changed = bind(("x", "co2_per_capita"), ("y1", "year"))
+
+        assert PENDING_REQUEST not in apply_bindings(filled, roles(), profile, held)[1]
+        assert apply_bindings(changed, roles(), profile, held)[1][PENDING_REQUEST] is None
+        assert apply_bindings(filled, roles(), profile, None)[1][PENDING_REQUEST] is None
+
+    async def test_a_note_held_on_incomplete_bindings_survives_the_binding_that_completes_them(
+        self, client: httpx.AsyncClient
+    ) -> None:
+        sid, _ = await open_line_multi(client)
+        runtime = app.dependency_overrides[get_runtime]()
+        partial = [{"role": "x", "column": "year"}]
+        await client.put(f"/v1/sessions/{sid}/bindings", headers=HEADERS, json=partial)
+        state: dict[str, Any] = dict(await _session_state(client, sid))
+        keep_pending_request(
+            state, PipelineArgs(change_request="Title: A", expected_texts=["A"]), "incomplete_bindings"
+        )
+        kept = {key: state[key] for key in (PENDING_REQUEST, PENDING_EXPECTED_TEXTS, PENDING_BINDINGS)}
+        await runtime.write_state(await runtime.session(USER, sid), kept)
+
+        filled = [*partial, {"role": "y1", "column": "co2_per_capita"}]
+        response = await client.put(f"/v1/sessions/{sid}/bindings", headers=HEADERS, json=filled)
+
+        assert response.status_code == 200, response.text
+        after = await _session_state(client, sid)
+        assert (after[PENDING_REQUEST], after[PENDING_EXPECTED_TEXTS]) == ("Title: A", ["A"])
+        changed = [{"role": "x", "column": "co2_per_capita"}, {"role": "y1", "column": "year"}]
+        await client.put(f"/v1/sessions/{sid}/bindings", headers=HEADERS, json=changed)
+        assert (await _session_state(client, sid))[PENDING_REQUEST] is None
+
+    async def test_a_replaced_text_is_not_checked(
+        self, client: httpx.AsyncClient, swap_models, monkeypatch: pytest.MonkeyPatch, backend: FakeBackend
+    ) -> None:
+        """`AGENT_EXPECT_CHECK=repair`: the render draws the new title only, so a check of the kept one would miss."""
+        monkeypatch.setenv("AGENT_EXPECT_CHECK", "repair")
+        get_settings.cache_clear()
+        probe = {"texts": [], "labels": [{"kind": "title", "text": "Study time"}]}
+        backend.script = lambda job, theme: FakeOutcome(probe=probe)
+        swap_axes = {
+            "call": "set_bindings",
+            "args": {"bindings": [{"role": "x", "column": "Exam Score"}, {"role": "y", "column": "Study Hours"}]},
+        }
+        script = {
+            "root": [
+                swap_axes,
+                {
+                    "call": "plot_pipeline",
+                    "args": {"change_request": "Title: Lernzeit", "expected_texts": ["Lernzeit"]},
+                },
+                {"text": "Please confirm the new bindings."},
+                # After the confirmation the user replaces the title in words.
+                {
+                    "call": "plot_pipeline",
+                    "args": {"change_request": "Title: Study time", "expected_texts": ["Study time"]},
+                },
+                {"text": "Here is your plot."},
+            ],
+            "adapter": [{"json": SCATTER_PLAN}] * 3,
+            "reviewer": [{"json": VERDICT_OK}] * 3,
+        }
+        swap_models("gemini", script)
+        sid = await open_session(client)
+        await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "swap axes, title Lernzeit"})
+        await client.post(f"/v1/sessions/{sid}/dataset/confirm", headers=HEADERS)
+
+        response = await client.post(
+            f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "call it 'Study time'"}
+        )
+
+        plot = next(data for name, data in parse_sse(response.text) if name == "plot")
+        assert plot["status"] in ("ok", "needs_attention"), plot
+        shows = get_services().versions.all(sid)[-1].result.shows  # the plot event leaves `shows` to the root
+        assert shows is not None and shows.texts is not None  # the texts were measured
+        assert shows.requested_not_found == []  # the withdrawn "Lernzeit" was never checked
+        assert plot["attempts"] == 1  # so no repair round ran for it
+        assert (await _session_state(client, sid))[PENDING_EXPECTED_TEXTS] is None
+        get_settings.cache_clear()
 
     async def test_a_kept_text_reaches_the_next_create_plot(
-        self, client: httpx.AsyncClient, swap_models, monkeypatch: pytest.MonkeyPatch
+        self, client: httpx.AsyncClient, swap_models, monkeypatch: pytest.MonkeyPatch, backend: FakeBackend
     ) -> None:
-        monkeypatch.setenv("AGENT_EXPECT_CHECK", "off")  # the fixture render draws none of the texts
+        """`AGENT_EXPECT_CHECK=repair`: the render never draws the kept title, so the kept text shows as checked."""
+        monkeypatch.setenv("AGENT_EXPECT_CHECK", "repair")
         get_settings.cache_clear()
+        probe = {"texts": [], "labels": [{"kind": "title", "text": "Exam Score by Study Hours"}]}
+        backend.script = lambda job, theme: FakeOutcome(probe=probe)
         script = {
             "root": [
                 {
@@ -516,8 +640,8 @@ class TestPendingRequest:
                 {"call": "plot_pipeline", "args": {}},
                 {"text": "Here is your plot."},
             ],
-            "adapter": [{"json": SCATTER_PLAN}],
-            "reviewer": [{"json": VERDICT_OK}],
+            "adapter": [{"json": SCATTER_PLAN}] * 3,
+            "reviewer": [{"json": VERDICT_OK}] * 3,
         }
         fake = swap_models("gemini", script)
         sid = await open_session(client)
@@ -525,15 +649,20 @@ class TestPendingRequest:
         await client.post(
             f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "swap the axes, title Lernzeit"}
         )
-        assert (await _session_state(client, sid))[PENDING_EXPECTED_TEXTS] == ["Lernzeit"]
+        kept = await _session_state(client, sid)
+        assert (kept[PENDING_REQUEST], kept[PENDING_EXPECTED_TEXTS]) == ("Title: Lernzeit", ["Lernzeit"])
         await client.post(f"/v1/sessions/{sid}/dataset/confirm", headers=HEADERS)
+        # The confirmation is no binding change: the note and its texts survive it.
+        assert (await _session_state(client, sid))[PENDING_EXPECTED_TEXTS] == ["Lernzeit"]
         events = await create_plot(client, sid)
 
-        assert next(data for name, data in events if name == "plot")["status"] == "ok"
+        assert next(data for name, data in events if name == "plot")["status"] in ("ok", "needs_attention")
         assert isinstance(fake, ScriptedLlm)
         adapter = [r for r in fake.requests if (r.config.labels or {})["agent_kind"] == "adapter"]
         text = "".join(part.text or "" for part in adapter[0].contents[-1].parts or [])
         assert EXPECTED_HEADING in text and "Lernzeit" in text
+        shows = get_services().versions.all(sid)[-1].result.shows
+        assert shows is not None and shows.requested_not_found == ["Lernzeit"]  # the kept text was checked
         assert (await _session_state(client, sid))[PENDING_EXPECTED_TEXTS] is None
         get_settings.cache_clear()
 

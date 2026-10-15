@@ -70,8 +70,14 @@ for the data and bindings before (owner decision of 2026-10-15). The pipeline re
 no text is ignored, and text is cut to `MAX_CHANGE_REQUEST_CHARS` (`pipeline.merged_request`)."""
 PENDING_EXPECTED_TEXTS = PREFIX + "pending_expected_texts"
 """The `expected_texts` that came with `PENDING_REQUEST` (the title or number format the user asked to see), kept
-and dropped with it, so the next `.create_plot()` checks the render for the same texts (`pipeline.merged_texts`)."""
-PENDING_CLEARED: dict[str, Any] = {PENDING_REQUEST: None, PENDING_EXPECTED_TEXTS: None}
+and dropped with it, so a bare `.create_plot()` checks the render for the same texts; a run that brings a request or
+texts of its own checks only its own (`pipeline.chosen_texts`). Read through the `PipelineArgs` validator
+(`pipeline.kept_texts`)."""
+PENDING_BINDINGS = PREFIX + "pending_bindings"
+"""The bindings as they were when the note was kept (`pipeline.hold_request`): a binding write that keeps every one
+of them and only fills roles open then (the step `incomplete_bindings` waits for) keeps the note (`apply_bindings`,
+review of 2026-10-15)."""
+PENDING_CLEARED: dict[str, Any] = {PENDING_REQUEST: None, PENDING_EXPECTED_TEXTS: None, PENDING_BINDINGS: None}
 """The state delta that drops a kept first-plot note and its texts: every binding write, new data version and
 library switch carries it."""
 LAST_STATUS = PREFIX + "last_status"
@@ -249,16 +255,35 @@ def read_session(state: Any) -> SessionView | None:
 
 
 def apply_bindings(
-    bindings: list[Binding], roles: list[DataRole], profile: DatasetProfile
+    bindings: list[Binding], roles: list[DataRole], profile: DatasetProfile, pending_bindings: object = None
 ) -> tuple[BindingCheck, dict[str, Any]]:
     """`bindings.apply`: validate bindings against the spec roles and the profile.
 
     Returns the check and, when it has no errors, the state delta that stores the
     bindings (incomplete bindings are stored too; the pipeline answers `not_ready`).
     An empty delta means nothing may be written.
+
+    A kept plot note (`PENDING_REQUEST`, its texts) was written for the bindings of the moment
+    it was kept (`pending_bindings`, the state's `PENDING_BINDINGS`), so a binding write drops
+    it, unless it keeps every one of those bindings and only fills roles that were open then
+    (`fills_open_roles`): that is the step a note held on `incomplete_bindings` waits for.
     """
     check = check_bindings(bindings, roles, profile)
     if check.errors:
         return check, {}
-    # A kept plot note (`PENDING_REQUEST`) was written for the bindings before; any binding write drops it.
-    return check, {BINDINGS: [binding.model_dump() for binding in bindings], **PENDING_CLEARED}
+    delta: dict[str, Any] = {BINDINGS: [binding.model_dump() for binding in bindings]}
+    if not fills_open_roles(pending_bindings, bindings):
+        delta.update(PENDING_CLEARED)
+    return check, delta
+
+
+def fills_open_roles(held: object, bindings: list[Binding]) -> bool:
+    """Whether `bindings` keep every binding of `held` (stored bindings) and only add roles `held` left open."""
+    if not isinstance(held, list):
+        return False
+    try:
+        before = {(binding.role, binding.column) for binding in (Binding.model_validate(item) for item in held)}
+    except ValueError:
+        return False
+    after = {(binding.role, binding.column) for binding in bindings}
+    return before <= after
