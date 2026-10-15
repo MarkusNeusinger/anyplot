@@ -18,6 +18,7 @@ from agents.anyplot.opening import instruction_like
 from agents.anyplot.run_queue import RunQueue
 from agents.anyplot.services import Services
 from agents.evals import prep
+from agents.evals.host_data import HostDataBackend
 from agents.evals.prep import (
     DEFAULT_CASES,
     EXIT_FAILED,
@@ -135,6 +136,12 @@ class TestFixtures:
                 assert parsed is not None, item.id
                 prepared = apply_operations(parsed, _operations(operations))
                 assert len(prepared.changes) == len(operations), item.id
+                # An expected `drop_rows` must drop a row of the data as the parser stores it. Since #12166 the
+                # parser leaves out a summary row at the end of a paste; two fixtures still expected the root to
+                # drop that row, which no longer exists, so the root's right answer scored as a miss.
+                for operation, change in zip(operations, prepared.changes, strict=True):
+                    if operation["op"] == "drop_rows":
+                        assert not change.startswith("dropped 0 rows"), (item.id, change)
         check_cases(load_cases(DEFAULT_CASES))
 
     def test_a_bad_directory_or_fixture_is_a_setup_error(self, tmp_path: Path) -> None:
@@ -269,11 +276,29 @@ class TestCanonical:
         with pytest.raises(ValidationError):
             canonical_operations([{"op": "generate_data", "variables": [], "series": [SINE]}], ".")
 
-    def test_describe_a_code_table_without_its_size(self) -> None:
-        """The fake renderer stores a fixture table, so a code call is compared without rows and columns."""
-        line = canonical_code({"op": "run_data_code", "rows": 5, "columns": 2}, size=False)
+    def test_a_code_table_is_compared_and_described_by_its_size(self) -> None:
+        """The eval's data runs execute the snippet (`HostDataBackend`), so a code call always has a real size."""
+        line = canonical_code({"op": "run_data_code", "rows": 5, "columns": 2})
 
-        assert describe(line) == "run_data_code: a table"
+        assert describe(line) == "run_data_code: 5 rows x 2 columns"
+        assert line != canonical_code({"op": "run_data_code", "rows": 4, "columns": 2})
+
+    def test_an_expected_code_table_may_allow_a_few_sizes(self) -> None:
+        """A script with the steps and their walk may keep both: two or three columns are the user's data."""
+        expected = [canonical_code({"op": "run_data_code", "rows": 500, "columns": [3, 2, 2]})]
+
+        assert describe(expected[0]) == "run_data_code: 500 rows x 2 or 3 columns"
+        for columns, fits in ((2, True), (3, True), (4, False)):
+            found = [canonical_code({"op": "run_data_code", "rows": 500, "columns": columns})]
+            assert prep.same_operations(found, expected) is fits, columns
+        two = canonical_code({"op": "run_data_code", "rows": 500, "columns": 2})
+        assert not prep.same_operations([two, two], expected)  # a second call is still a miss
+        assert prep.same_operations(
+            [two, *canonical_operations([RENAME], ".")], [*expected, *canonical_operations([RENAME], ".")]
+        )
+        for bad in ([2], [1, 2, 3, 4, 5], [0, 2]):
+            with pytest.raises(ValidationError):
+                canonical_code({"op": "run_data_code", "rows": 500, "columns": bad})
 
     def test_a_generate_data_call_matches_by_the_table_it_computes(self) -> None:
         """Endpoints compare by value and expressions by what they compute, so an equivalent call is no miss."""
@@ -433,6 +458,37 @@ class TestRun:
         assert results[0].found == canonical_operations([CODE_CALL], ".") and results[0].stored_calls == 1
         assert results[2].failed_calls == 1 and results[2].stored_calls == 0
         assert "run_data_code: 4 rows x 2 columns" in prep.table(cases, results)
+
+    def test_the_eval_backend_answers_a_data_run_with_the_table_the_snippet_computes(
+        self, services: Services, swap_models
+    ) -> None:
+        """The regression of 2026-10-15: the fake's fixed four-row table made the root run its code twice.
+
+        Under the eval's backend the 500-step walk comes back as 500 rows, so one call stores the expected table.
+        """
+        services.backend_factory = lambda: HostDataBackend()
+        snippet = (
+            "import numpy as np\nimport pandas as pd\nrng = np.random.default_rng(42)\n"
+            "df = pd.DataFrame({'step': np.arange(1, 501), 'walk': rng.normal(0, 1, 500).cumsum()})\n"
+        )
+        call = {"call": "run_data_code", "args": {"code": snippet, "source_language": "python"}}
+        expected = [{"op": "run_data_code", "rows": 500, "columns": 2}]
+        cases = [PrepCase(id="h-001", message="plot my random walk", expected_operations=expected, locale="en")]
+        swap_models("anthropic-vertex", script_for([call, {"text": "Computed 500 rows; please confirm."}]))
+        judge: FakeJudge = services.judge  # type: ignore[assignment]
+        judge.script.extend([JudgeVerdict(verdict="in_scope", lang="en")] * 2)  # the scope judge, the data judge
+
+        (result,) = asyncio.run(run_cases(cases, runtime=runtime(), services=services))
+
+        assert result.match is True and result.stored_calls == 1 and result.failed_calls == 0
+        assert "run_data_code: 500 rows x 2 columns" in prep.table(cases, [result])
+
+    def test_the_eval_backend_is_the_host_data_backend_under_the_fake_renderer(self) -> None:
+        from agents.anyplot.settings import AgentSettings
+
+        backend = prep.eval_backend(AgentSettings(renderer="fake", environment="development"))
+
+        assert isinstance(backend, HostDataBackend)
 
     def test_an_error_event_is_an_unavailable_case(self, services: Services, swap_models) -> None:
         swap_models("anthropic-vertex", script_for([]))

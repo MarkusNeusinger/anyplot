@@ -17,9 +17,13 @@ configured render backend (the remote renderer's `POST /run-data` by default).
 
 A `run_data_code` call counts as the table it stored, `{"op": "run_data_code", "rows":
 ..., "columns": ...}`, read from its answer: the Python the root writes varies from run
-to run, the table's size does not. With the default `AGENT_RENDERER=fake` every data run
-returns the fake's fixture table, so only that a call stored a table is compared; set
-`AGENT_RENDERER=remote` (with `AGENT_RENDER_URL`) or `local` to compare the sizes. A case with `refuse: true` (a snippet that reads a
+to run, the table's size does not. With the default `AGENT_RENDERER=fake` no case
+renders, but a data run is not the fake's fixture table: `HostDataBackend`
+(`host_data.py`) runs the snippet under the real harness in data mode, with the
+renderer's limits, and answers with the table it computed, as `POST /run-data` does.
+The fake's fixed four-row table made the root (rightly) distrust its own run and call
+`run_data_code` again, which scored the fake instead of the root. `AGENT_RENDERER=remote`
+(with `AGENT_RENDER_URL`) or `local` sends the data runs to that renderer instead. A case with `refuse: true` (a snippet that reads a
 file, a script with another purpose) passes when no data tool call of the turn stored a
 version, whether the scope judge refused it, the validator did, or the root called
 nothing.
@@ -73,6 +77,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import hashlib
+import itertools
 import json
 import logging
 import os
@@ -83,10 +88,10 @@ from collections.abc import MutableMapping, Sequence
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Annotated, Any
 
 import httpx
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 from agents.evals.matrix import (
     ATTRIBUTION_LOGGER,
@@ -101,6 +106,7 @@ from agents.evals.scope import Pacer
 
 
 if TYPE_CHECKING:  # importing agents.anyplot builds the agents, so the runtime imports wait for `configure`
+    from agents.anyplot.render.contract import RenderBackend
     from agents.anyplot.services import Services
     from agents.anyplot.settings import AgentSettings
     from agents.main import Runtime
@@ -150,20 +156,46 @@ class PrepCase(BaseModel):
     no call at all): a snippet that reads a file or a script with another purpose than the plot's data."""
 
 
+Size = Annotated[int, Field(ge=1)]
+
+
 class _CodeExpectation(BaseModel):
-    """An expected `run_data_code` call: the table it should store, by its size (the code itself varies)."""
+    """An expected `run_data_code` call: the table it should store, by its size (the code itself varies).
+
+    `rows` or `columns` may be a list of two to four sizes when the user's code leaves the table's shape genuinely
+    open, as a script that defines both the steps and the walk they add up to: a table of the walk alone and one that
+    keeps the steps beside it are both the user's data. A call the root made always has one size.
+    """
 
     model_config = ConfigDict(extra="forbid")
     op: str = Field(pattern=f"^{DATA_CODE_TOOL}$")
-    rows: int = Field(ge=1)
-    columns: int = Field(ge=1)
+    rows: Size | list[Size]
+    columns: Size | list[Size]
+
+    @field_validator("rows", "columns")
+    @classmethod
+    def _choices(cls, value: int | list[int]) -> int | list[int]:
+        if isinstance(value, int):
+            return value
+        choices = sorted(set(value))
+        if not 2 <= len(choices) <= 4:
+            raise ValueError("a list of sizes holds two to four different sizes")
+        return choices
 
 
-def canonical_code(item: dict[str, Any], *, size: bool = True) -> str:
-    """A `run_data_code` call as a JSON line: the rows and columns of the table it stored, or only that it stored
-    one when `size` is False (the fake renderer returns a fixture table); raises `ValidationError`."""
+def canonical_code(item: dict[str, Any]) -> str:
+    """A `run_data_code` call as a JSON line: the rows and columns of the table it stored, or the sizes an expected
+    one may have (sorted); raises `ValidationError`."""
     data = _CodeExpectation.model_validate(item).model_dump()
-    return json.dumps(data if size else {"op": DATA_CODE_TOOL}, sort_keys=True, ensure_ascii=False)
+    return json.dumps(data, sort_keys=True, ensure_ascii=False)
+
+
+def _code_fits(found: dict[str, Any], expected: dict[str, Any]) -> bool:
+    """Whether a stored table's size is one the expected `run_data_code` call allows."""
+    return all(
+        found[key] in (expected[key] if isinstance(expected[key], list) else [expected[key]])
+        for key in ("rows", "columns")
+    )
 
 
 def load_cases(directory: Path) -> list[PrepCase]:
@@ -181,7 +213,7 @@ def load_cases(directory: Path) -> list[PrepCase]:
     return cases
 
 
-def canonical_operations(operations: Sequence[dict[str, Any]], decimal: str, *, code_size: bool = True) -> list[str]:
+def canonical_operations(operations: Sequence[dict[str, Any]], decimal: str) -> list[str]:
     """The operations as sorted JSON lines after the `Operation` and `Generate` models and the order-free normalisations.
 
     An item with `"op": "generate_data"` is one `generate_data` call (`canonical_generate`);
@@ -199,7 +231,7 @@ def canonical_operations(operations: Sequence[dict[str, Any]], decimal: str, *, 
     generated = [item for item in operations if op_of(item) == GENERATE_TOOL]
     coded = [item for item in operations if op_of(item) == DATA_CODE_TOOL]
     prepared = [item for item in operations if op_of(item) not in (GENERATE_TOOL, DATA_CODE_TOOL)]
-    lines = [canonical_generate(item) for item in generated] + [canonical_code(item, size=code_size) for item in coded]
+    lines = [canonical_generate(item) for item in generated] + [canonical_code(item) for item in coded]
     for operation in TypeAdapter(list[Operation]).validate_python(prepared):
         data = operation.model_dump(exclude_none=True)
         if data["op"] == "set_type" and data.get("decimal") == decimal:
@@ -265,8 +297,38 @@ def comparison_key(line: str) -> str:
 
 
 def same_operations(found: Sequence[str], expected: Sequence[str]) -> bool:
-    """Whether the found canonical lines are the expected ones, compared by `comparison_key`, order-insensitive."""
-    return sorted(map(comparison_key, found)) == sorted(map(comparison_key, expected))
+    """Whether the found canonical lines are the expected ones, compared by `comparison_key`, order-insensitive.
+
+    A `run_data_code` line matches an expected one whose sizes allow its own (`_code_fits`), each expected
+    call matched by one found call.
+    """
+
+    def split(lines: Sequence[str]) -> tuple[list[str], list[dict[str, Any]]]:
+        keys, codes = [], []
+        for line in lines:
+            data = _json_object(line)
+            if data is not None and data.get("op") == DATA_CODE_TOOL:
+                codes.append(data)
+            else:
+                keys.append(comparison_key(line))
+        return sorted(keys), codes
+
+    found_keys, found_codes = split(found)
+    expected_keys, expected_codes = split(expected)
+    if found_keys != expected_keys or len(found_codes) != len(expected_codes):
+        return False
+    return any(
+        all(_code_fits(item, choice) for item, choice in zip(found_codes, order, strict=True))
+        for order in itertools.permutations(expected_codes)
+    )
+
+
+def _json_object(line: str) -> dict[str, Any] | None:
+    try:
+        data = json.loads(line)
+    except ValueError:
+        return None
+    return data if isinstance(data, dict) else None
 
 
 def describe(line: str) -> str:
@@ -274,9 +336,11 @@ def describe(line: str) -> str:
     data = json.loads(line)
     op = data["op"]
     if op == DATA_CODE_TOOL:
-        if "rows" not in data:  # the fake renderer's fixture table: only that a table was stored counts
-            return "run_data_code: a table"
-        return f"run_data_code: {data['rows']} rows x {data['columns']} columns"
+
+        def sizes(value: int | list[int]) -> str:
+            return " or ".join(map(str, value)) if isinstance(value, list) else str(value)
+
+        return f"run_data_code: {sizes(data['rows'])} rows x {sizes(data['columns'])} columns"
     if op == GENERATE_TOOL:
         from agents.anyplot.data.generate import DEFAULT_POINTS
 
@@ -385,8 +449,7 @@ class CaseRunner:
         user = f"prep_{digest[:12]}"
         tag = f"prep-{digest[:10]}"
         decimal = parse_dataset(case.dataset_text).profile.decimal if case.dataset_text else "."
-        code_size = self.settings.renderer != "fake"  # the fake renderer's data run is a fixture table
-        result = CaseResult(case.id, None, canonical_operations(case.expected_operations, decimal, code_size=code_size))
+        result = CaseResult(case.id, None, canonical_operations(case.expected_operations, decimal))
 
         def headers(step: str) -> dict[str, str]:
             return {"X-Anyplot-User": user, "X-Request-Id": f"{tag}-{step}"}
@@ -431,7 +494,7 @@ class CaseRunner:
                     return result
                 if name == "refusal":
                     result.refusal = str(data.get("code"))
-            await self._read_calls(result, user, sid, decimal, refuse=case.refuse, code_size=code_size)
+            await self._read_calls(result, user, sid, decimal, refuse=case.refuse)
         finally:
             result.latency_s = round(time.monotonic() - started, 3)
             if sid is not None:
@@ -445,9 +508,7 @@ class CaseRunner:
                 self.collector.take(f"{tag}-{step}")
         return result
 
-    async def _read_calls(
-        self, result: CaseResult, user: str, sid: str, decimal: str, *, refuse: bool = False, code_size: bool = True
-    ) -> None:
+    async def _read_calls(self, result: CaseResult, user: str, sid: str, decimal: str, *, refuse: bool = False) -> None:
         """The tool calls of the turn from the session's events; the data calls' operations, canonical.
 
         A `run_data_code` call is read from its answer, not its arguments: the code varies
@@ -479,7 +540,7 @@ class CaseRunner:
                         )
         result.operations = operations
         try:
-            result.found = canonical_operations(operations, decimal, code_size=code_size)
+            result.found = canonical_operations(operations, decimal)
         except ValidationError:  # ToolSafety refused the call; the root got `invalid_arguments`
             result.found = [json.dumps(item, sort_keys=True, ensure_ascii=False) for item in operations]
         if refuse:
@@ -672,7 +733,8 @@ def configure(args: argparse.Namespace, environ: MutableMapping[str, str]) -> No
     environ["ADK_DISABLE_LOAD_DOTENV"] = "1"
     environ.pop("AGENT_DEV_FIXTURE", None)
     environ.setdefault("ENVIRONMENT", "development")
-    environ.setdefault("AGENT_RENDERER", "fake")  # no case renders; the fake backend needs no service
+    # No case renders, so the fake backend needs no service; its data runs execute the snippet (`eval_backend`).
+    environ.setdefault("AGENT_RENDERER", "fake")
     environ["AGENT_RUNS_PER_MINUTE"] = "60"  # the pacer spaces the cases; the queue's own rate would double the wait
     environ["AGENT_GLOBAL_DAILY_TOKEN_BUDGET"] = str(EVAL_GLOBAL_DAILY_TOKENS)
     provider = args.provider
@@ -689,6 +751,16 @@ def configure(args: argparse.Namespace, environ: MutableMapping[str, str]) -> No
         environ["AGENT_JUDGE_MODEL"] = args.judge_model
     if args.location:
         environ["AGENT_LOCATION"] = args.location
+
+
+def eval_backend(settings: AgentSettings) -> RenderBackend:
+    """The renderer the settings name; for `fake`, the fake whose data runs execute the snippet (`HostDataBackend`)."""
+    from agents.anyplot.render import make_backend
+    from agents.evals.host_data import HostDataBackend
+
+    if settings.renderer != "fake":
+        return make_backend(settings)
+    return HostDataBackend(cpu_seconds=settings.render_timeout_s, environment=settings.environment)
 
 
 def _sha(text: str) -> str:
@@ -749,7 +821,7 @@ def main(argv: list[str] | None = None, *, runtime: Runtime | None = None, servi
         run_cases(
             cases,
             runtime=runtime or service.Runtime(),
-            services=services or Services(),
+            services=services or Services(backend_factory=lambda: eval_backend(get_settings())),
             pacer=pacer,
             echo=lambda text: print(text, file=sys.stderr, flush=True),
         )
