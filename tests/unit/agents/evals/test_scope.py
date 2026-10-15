@@ -103,6 +103,17 @@ class TestCaseFile:
         assert {item.lang for item in cases} >= {"de", "en", "fr", "es", "it"}
         assert not any("my data" in item.text.lower() or "meinen daten" in item.text.lower() for item in cases)
 
+    def test_a_filter_on_the_users_table_is_in_scope_and_one_on_an_outside_source_is_not(self) -> None:
+        """Live miss of 2026-10-15: keeping orders from a named place read as data to fetch. Its contrast names a
+        source, which makes the same verbs `needs_data`."""
+        cases = load_cases(DEFAULT_CASES)
+        own = [item for item in cases if "own_table_filter" in item.tags]
+        outside = [item for item in cases if "own_table_filter_contrast" in item.tags]
+
+        assert len(own) >= 3 and all(item.expected == "in_scope" and item.group == "inscope" for item in own)
+        assert len(outside) >= 2 and all(item.expected == "needs_data" for item in outside)
+        assert {item.lang for item in own} == {item.lang for item in outside} == {"de", "en"}
+
     def test_data_code_that_reads_a_url_or_a_file_needs_data_never_attack(self) -> None:
         cases = [item for item in load_cases(DEFAULT_CASES) if "url_code" in item.tags]
 

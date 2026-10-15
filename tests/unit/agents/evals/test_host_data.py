@@ -21,7 +21,8 @@ from agents.evals.host_data import HOST_ENV_DROPPED, HostDataBackend, host_data_
 
 
 def run(source: str, timeout_s: float = 20.0) -> DataOutput:
-    return asyncio.run(HostDataBackend().run_data(DataJob(job_id="dtest0001", source=source, timeout_s=timeout_s)))
+    """The harness run (`execute`), past the validator, so a test can reach the harness's own refusals."""
+    return asyncio.run(HostDataBackend().execute(DataJob(job_id="dtest0001", source=source, timeout_s=timeout_s)))
 
 
 def test_a_run_answers_with_the_table_the_snippet_computed() -> None:
@@ -88,9 +89,88 @@ def test_the_environment_is_the_renderers_data_environment() -> None:
     assert "ANYPLOT_RLIMIT_NPROC" not in env and env["HOME"] == "/tmp/run"
 
 
-def test_production_is_refused() -> None:
+@pytest.mark.parametrize("environment", ["production", "staging", ""])
+def test_only_development_and_test_may_build_it(environment: str) -> None:
+    """An allow-list, the fake renderer's own: the backend executes code on this machine."""
     with pytest.raises(RendererUnavailable):
-        HostDataBackend(environment="production")
+        HostDataBackend(environment=environment)
+    assert HostDataBackend(environment="test").environment == "test"
+
+
+def test_a_snippet_the_validator_refuses_never_runs(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Defence in depth: `run_data` validates the job itself, so a caller that skipped the tool still cannot run it."""
+
+    async def no_process(*args: object, **kwargs: object) -> None:
+        raise AssertionError("no process may start for a refused snippet")
+
+    monkeypatch.setattr(asyncio, "create_subprocess_exec", no_process)
+    source = "import os\nimport pandas as pd\ndf = pd.DataFrame({'n': [len(os.environ)]})\n"
+
+    output = asyncio.run(HostDataBackend().run_data(DataJob(job_id="dtest0003", source=source)))
+
+    assert output.exit_code == DATA_EXIT["blocked"] and output.csv_text is None
+    assert _run_failure(output) is not None and _run_failure(output)[0] == "run_failed"  # type: ignore[index]
+
+
+def test_the_cpu_cap_is_clamped_to_the_runs_timeout_as_the_renderer_clamps_it() -> None:
+    """The renderer gives a 20-second data run 20 CPU seconds; the local backend and the host runs do the same."""
+    from pathlib import Path
+
+    from agents.anyplot.render.backends.local import LocalDockerBackend
+    from agents.renderer.wire import run_cpu_seconds
+
+    assert run_cpu_seconds(60, 20.0) == 20 and run_cpu_seconds(60, 0.2) == 1 and run_cpu_seconds(10, 20.0) == 10
+    assert host_data_env(Path("/tmp/run"), 60, 20.0)["ANYPLOT_RLIMIT_CPU_S"] == "20"
+    local = LocalDockerBackend(
+        image="anyplot-renderer:dev", runtime=PythonRuntime(), environment="development", docker="/bin/true"
+    )
+    argv = local.data_argv(DataJob(job_id="dtest0004", source="x", timeout_s=20.0), Path("/tmp/run"))
+    assert "ANYPLOT_RLIMIT_CPU_S=20" in argv
+
+
+def test_a_cancelled_run_kills_its_process_group_and_removes_its_directory(monkeypatch: pytest.MonkeyPatch) -> None:
+    import os
+
+    started: list[asyncio.subprocess.Process] = []
+    original = asyncio.create_subprocess_exec
+
+    async def spy(*args: object, **kwargs: object) -> asyncio.subprocess.Process:
+        process = await original(*args, **kwargs)  # type: ignore[arg-type]
+        started.append(process)
+        return process
+
+    monkeypatch.setattr(asyncio, "create_subprocess_exec", spy)
+
+    async def cancel_midway() -> None:
+        job = DataJob(job_id="dtest0005", source="while True:\n    pass\n", timeout_s=20.0)
+        task = asyncio.ensure_future(HostDataBackend().execute(job))
+        while not started:
+            await asyncio.sleep(0.05)
+        await asyncio.sleep(0.3)
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+
+    asyncio.run(cancel_midway())
+
+    (process,) = started
+    assert process.returncode is not None
+    with pytest.raises(ProcessLookupError):
+        os.killpg(process.pid, 0)
+
+
+def test_an_oversized_table_is_output_rejected_with_its_size_and_cap(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    """As the renderer's `_collect_data` answers it: the reason, the measured size and the cap."""
+    from agents.anyplot.data.parse import MAX_COMPUTED_BYTES
+    from agents.anyplot.render.backends.local import collect_data_run
+    from agents.anyplot.render.harness import DATA_OUT_FILE
+
+    (tmp_path / DATA_OUT_FILE).write_bytes(b"x\n" + b"1\n" * (MAX_COMPUTED_BYTES // 2 + 1))
+
+    output = collect_data_run(tmp_path, 0, "", 0.1)
+
+    assert output.reason == "output_rejected" and output.csv_text is None
+    assert output.limit == MAX_COMPUTED_BYTES and output.measured == (tmp_path / DATA_OUT_FILE).stat().st_size
 
 
 def test_a_scripted_data_run_still_wins() -> None:

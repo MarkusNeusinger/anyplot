@@ -813,6 +813,16 @@ def main(argv: list[str] | None = None, *, runtime: Runtime | None = None, servi
         price_of(settings.model)
         price_of(settings.judge_model)
         check_cases(cases)
+        if services is None:
+            # Built here, not on the first data run: a backend the settings cannot have (the host data runs outside
+            # development or test, a remote renderer without its URL) is a setup error, not a run of misses.
+            from agents.anyplot.render.contract import RendererUnavailable
+
+            try:
+                backend = eval_backend(settings)
+            except RendererUnavailable as exc:
+                raise SetupError(str(exc)) from exc
+            services = Services(backend_factory=lambda: backend)
     except (SetupError, UnknownPrice, ValidationError) as exc:
         print(f"setup error: {exc}", file=sys.stderr)
         return EXIT_SETUP
@@ -821,7 +831,7 @@ def main(argv: list[str] | None = None, *, runtime: Runtime | None = None, servi
         run_cases(
             cases,
             runtime=runtime or service.Runtime(),
-            services=services or Services(backend_factory=lambda: eval_backend(get_settings())),
+            services=services,
             pacer=pacer,
             echo=lambda text: print(text, file=sys.stderr, flush=True),
         )

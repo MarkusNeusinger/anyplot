@@ -14,6 +14,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+from agents.renderer.wire import run_cpu_seconds
+
 from ...code.loader import to_run_form
 from ...code.normalise import normalise
 from ...code.validate import validate_security
@@ -76,16 +78,18 @@ class PythonRuntime:
     def data_command(self) -> list[str]:
         return [self.python, "-I", self.harness, DATA_FLAG, DATA_FILE_NAME]
 
-    def data_env(self) -> dict[str, str]:
+    def data_env(self, timeout_s: float | None = None) -> dict[str, str]:
         """A data run's environment: the renderer's `sandbox_env` limits for a data run, address space and processes
         included (inside Docker `RLIMIT_NPROC` counts the user's processes on the host, which one BLAS thread keeps
-        far below the limit)."""
+        far below the limit). With the run's `timeout_s`, the CPU cap is clamped to it as the renderer's executor
+        clamps it (`wire.run_cpu_seconds`): a 20-second data run gets 20 CPU seconds, not the render's 60."""
+        cpu_seconds = self.cpu_seconds if timeout_s is None else run_cpu_seconds(self.cpu_seconds, timeout_s)
         return {
             "HOME": "/tmp",
             "PYTHONDONTWRITEBYTECODE": "1",
             "OPENBLAS_NUM_THREADS": "1",
             "OMP_NUM_THREADS": "1",
-            "ANYPLOT_RLIMIT_CPU_S": str(self.cpu_seconds),
+            "ANYPLOT_RLIMIT_CPU_S": str(cpu_seconds),
             "ANYPLOT_RLIMIT_AS_MB": str(DATA_RLIMIT_AS_MB),
             "ANYPLOT_RLIMIT_NPROC": str(DATA_RLIMIT_NPROC),
         }

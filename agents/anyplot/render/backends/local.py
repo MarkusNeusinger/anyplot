@@ -116,8 +116,13 @@ def collect_data_run(run_dir: Path, returncode: int | None, tail: str, wall: flo
         return DataOutput(exit_code=exit_code, stderr_tail=tail, wall_s=wall, measured=measured, limit=limit)
     try:
         raw = read_output(run_dir / DATA_OUT_FILE, MAX_COMPUTED_BYTES)
+    except PngRejected as exc:  # the size and the cap of an oversized file, as the renderer's `_collect_data` sets them
+        return DataOutput(
+            exit_code=0, stderr_tail=tail, wall_s=wall, reason="output_rejected", measured=exc.size, limit=exc.limit
+        )
+    try:
         text = raw.decode("utf-8") if raw is not None else None
-    except (PngRejected, UnicodeDecodeError):
+    except UnicodeDecodeError:
         return DataOutput(exit_code=0, stderr_tail=tail, wall_s=wall, reason="output_rejected")
     return DataOutput(exit_code=0, csv_text=text, stderr_tail=tail, wall_s=wall)
 
@@ -228,7 +233,7 @@ class LocalDockerBackend:
     def data_argv(self, job: DataJob, run_dir: Path) -> list[str]:
         """The docker command of a data run: the render's isolation, the harness in data mode, no theme."""
         argv = self._isolation(f"r-{job.job_id}-data", run_dir)
-        for key, value in self.runtime.data_env().items():
+        for key, value in self.runtime.data_env(job.timeout_s).items():
             argv += ["-e", f"{key}={value}"]
         argv += [self.image, *self.runtime.data_command()]
         if argv[argv.index("--network") + 1] != "none" or any("--network=" in part for part in argv):

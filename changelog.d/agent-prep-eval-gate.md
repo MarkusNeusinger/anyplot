@@ -18,5 +18,11 @@
   refused "only the orders from Bern that were delivered" as data to fetch, and
   read pasted JavaScript data code as a request for another library. The root
   answered "count the bookings per category" as a question instead of
-  aggregating. Both prompts now name these cases, and the scope eval has three
-  new cases. (#12198)
+  aggregating. Both prompts now name these cases, and the scope eval has six
+  new cases, two of them filters on an outside source that stay `needs_data`.
+  (#12198)
+- **Local data runs get the renderer's CPU cap.** The renderer clamps a run's
+  CPU seconds to its timeout, 20 s for a data run. The local backend gave data
+  runs the render's 60 s. Both now use one helper (`wire.run_cpu_seconds`). An
+  oversized `out.csv` also reports its size and cap, as the renderer does.
+  (#12198)

@@ -72,6 +72,16 @@ class DataStatus(BaseModel):
     limit: int | None = Field(default=None, ge=0, le=MAX_PROBE_INT)
 
 
+def run_cpu_seconds(limit_s: int, timeout_s: float) -> int:
+    """The `RLIMIT_CPU` of one run: the host's CPU cap, but never more than the run's own wall-clock timeout.
+
+    The renderer's executor sets it this way for every launch, so a 20-second data run gets
+    20 CPU seconds, not the render's 60; the local backend and the prep eval's host data runs
+    use the same rule, so a snippet the renderer stops is stopped there too.
+    """
+    return max(1, min(limit_s, math.ceil(timeout_s)))
+
+
 def parse_data_status(raw: bytes | None) -> DataStatus | None:
     """The harness's `status.json`, or None when it is missing or not the expected shape (strict UTF-8 JSON)."""
     if raw is None or len(raw) > MAX_DATA_STATUS_BYTES:

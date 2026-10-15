@@ -33,7 +33,15 @@ MAX_BACKGROUND_RATIO = 0.98
 
 
 class PngRejected(ValueError):
-    """The output is not a PNG the host accepts; the message is safe to show to the adapter."""
+    """The output is not a PNG the host accepts; the message is safe to show to the adapter.
+
+    A file over its byte cap carries its `size` and the `limit`, as the renderer's `OutputRejected` does.
+    """
+
+    def __init__(self, message: str, *, size: int | None = None, limit: int | None = None) -> None:
+        super().__init__(message)
+        self.size = size
+        self.limit = limit
 
 
 @dataclass(frozen=True)
@@ -59,12 +67,18 @@ def read_output(path: Path, max_bytes: int) -> bytes | None:
     if not stat.S_ISREG(info.st_mode):
         raise PngRejected(f"{path.name} is not a regular file")
     if info.st_size > max_bytes:
-        raise PngRejected(f"{path.name} is {info.st_size} bytes, more than the {max_bytes}-byte limit")
+        raise PngRejected(
+            f"{path.name} is {info.st_size} bytes, more than the {max_bytes}-byte limit",
+            size=info.st_size,
+            limit=max_bytes,
+        )
     descriptor = os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0))
     with os.fdopen(descriptor, "rb") as handle:
         data = handle.read(max_bytes + 1)
     if len(data) > max_bytes:
-        raise PngRejected(f"{path.name} grew past the {max_bytes}-byte limit while it was read")
+        raise PngRejected(
+            f"{path.name} grew past the {max_bytes}-byte limit while it was read", size=len(data), limit=max_bytes
+        )
     return data
 
 

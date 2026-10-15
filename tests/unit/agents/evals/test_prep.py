@@ -552,6 +552,20 @@ class TestMain:
         )
         assert prep.main(["--cases", str(DEFAULT_CASES), "--tags", "nothing"], services=services) == EXIT_SETUP
 
+    def test_a_backend_that_cannot_be_built_is_a_setup_error(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """Built before the first case, so a refused backend never turns into a run of `unavailable` misses."""
+        from agents.anyplot.render.contract import RendererUnavailable
+
+        def refuse(settings: Any) -> Any:
+            raise RendererUnavailable("not here")
+
+        monkeypatch.setattr(prep, "eval_backend", refuse)
+
+        assert prep.main(["--cases", str(DEFAULT_CASES), "--out", str(tmp_path)]) == EXIT_SETUP
+        assert "setup error: not here" in capsys.readouterr().err
+
     def test_the_pacer_spaces_cases_by_the_calls_a_case_makes(self) -> None:
         args = prep.parse_args([])
         assert args.calls_per_minute == 25 and prep.CALLS_PER_CASE == 5
