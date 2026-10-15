@@ -149,6 +149,7 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field, replace
 from datetime import datetime
 from decimal import Decimal as ExactDecimal
+from decimal import InvalidOperation
 from typing import Annotated, Literal
 
 import numpy as np
@@ -1476,7 +1477,7 @@ def _to_numbers(series: pd.Series, decimal: str) -> tuple[pd.Series, str | None,
         raise PrepareError("type_mismatch", f"column '{series.name}' mixes {len(units)} different units")
     unit = next(iter(units)) if units else None
     # Whole numbers are read exactly, never through a float64, which rounds past 2**53 (`9007199254740993`).
-    exact = [None if number is None else ExactDecimal(number) for number in numbers]
+    exact = [None if number is None else _exact(number) for number in numbers]
     integers = [None if value is None or value != value.to_integral_value() else int(value) for value in exact]
     if all(
         number is None or (integer is not None and _INT64_MIN <= integer <= _INT64_MAX)
@@ -1486,6 +1487,15 @@ def _to_numbers(series: pd.Series, decimal: str) -> tuple[pd.Series, str | None,
     values = [None if number is None else float(number) for number in numbers]
     rounded = sum(not keeps_value(number, float(number)) for number in numbers if number is not None)
     return pd.Series(values, index=series.index, dtype="float64"), unit, failed, decimal, rounded
+
+
+def _exact(number: str) -> ExactDecimal | None:
+    """The dot-decimal `number` as an exact decimal; None for an exponent past the decimal module's range
+    (`1e-9999999999999999999`, whose float is a finite 0.0): such a cell takes the float path and its count."""
+    try:
+        return ExactDecimal(number)
+    except InvalidOperation:
+        return None
 
 
 def _read_numbers(texts: list[str | None], decimal: str) -> tuple[list[str | None], set[str], int]:
@@ -1554,24 +1564,43 @@ def _to_dates(series: pd.Series, date_format: str | None) -> tuple[pd.Series, in
         result = pd.Series(values, index=series.index, dtype="datetime64[us]")
     else:
         # A year-first cell (`2024-06-01T13:00:00Z`) reads year, month, day: with `dayfirst` pandas would read it as
-        # 6 January (review of 2026-10-15). Day before month is for the other shapes only.
-        present = [text for text in texts if isinstance(text, str)]
-        day_first = not (present and all(_YEAR_FIRST.match(text) for text in present))
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            try:
-                result = pd.to_datetime(texts, errors="coerce", format="mixed", dayfirst=day_first)
-            except ValueError:
-                # Different UTC offsets (summer and winter time) or times with and without one: one column needs
-                # one time zone, and converting them would change the clock times without a word (review of 2026-10-15).
-                raise PrepareError(
-                    "type_mismatch",
-                    f"column '{series.name}' holds times with different UTC offsets (or some without one); "
-                    "they are not converted to one time zone, so the column stays as it is",
-                ) from None
+        # 6 January (review of 2026-10-15). Day before month is for the other shapes only, decided per cell, so one
+        # cell of another shape never turns the year-first ones around (review of #12196).
+        year_first = texts.map(lambda text: isinstance(text, str) and bool(_YEAR_FIRST.match(text))).astype(bool)
+        parts = [_inferred_dates(texts.where(year_first), False), _inferred_dates(texts.where(~year_first), True)]
+        kinds = {str(part.dtype) for part in parts if part.notna().any()}  # an all-unreadable part has no zone
+        if len(kinds) > 1:
+            raise _mixed_offsets(series)
+        # Each part is NaT outside its own cells: one alone is the result, two of one dtype merge.
+        if not parts[1].notna().any():
+            result = parts[0]
+        elif not parts[0].notna().any():
+            result = parts[1]
+        else:
+            result = parts[0].where(year_first, parts[1])
     failed = int((result.isna() & texts.notna()).sum())
     with_time = any(":" in text for text in texts if isinstance(text, str))
     return result, failed, with_time
+
+
+def _inferred_dates(texts: pd.Series, day_first: bool) -> pd.Series:
+    """pandas' per-cell format inference over `texts` (missing stays NaT); different UTC offsets are refused."""
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        try:
+            return pd.to_datetime(texts, errors="coerce", format="mixed", dayfirst=day_first)
+        except ValueError:
+            raise _mixed_offsets(texts) from None
+
+
+def _mixed_offsets(series: pd.Series) -> PrepareError:
+    # Different UTC offsets (summer and winter time) or times with and without one: one column needs one time
+    # zone, and converting them would change the clock times without a word (review of 2026-10-15).
+    return PrepareError(
+        "type_mismatch",
+        f"column '{series.name}' holds times with different UTC offsets (or some without one); "
+        "they are not converted to one time zone, so the column stays as it is",
+    )
 
 
 def _read_date(text: str, date_format: str) -> datetime | None:

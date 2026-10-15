@@ -1745,6 +1745,28 @@ class TestFidelity:
 
         assert cells(prepared, 1) == ["2024-06-01T13:00:00+00:00", "2024-01-31T08:00:00+00:00"]
 
+    def test_one_cell_of_another_shape_never_turns_year_first_dates_around(self) -> None:
+        """The order is chosen per cell: a tolerated unreadable cell kept `dayfirst` for the column (review of #12196)."""
+        dates = [f"2024-06-0{n}T13:00:00Z" for n in range(1, 10)]
+        column = [*dates[:4], "soon", *dates[4:]]  # the text cell keeps the column text at the paste
+        prepared = prepare(
+            "label,t\n" + "".join(f"x{n},{cell}\n" for n, cell in enumerate(column)), set_dates(column="t")
+        )
+
+        expected = [f"2024-06-0{n}T13:00:00+00:00" for n in range(1, 10)]
+        assert cells(prepared, 1) == [*expected[:4], "", *expected[4:]]
+        assert prepared.changes == [
+            "t: 9 cells read as dates (format inferred, day before month), 1 cell could not be read and is now missing"
+        ]
+
+    def test_an_exponent_past_the_decimal_range_is_read_as_its_float(self) -> None:
+        prepared = from_text(
+            "k,a\nx,1e-9999999999999999999\ny,0e999999999999999999999999\nz,2.5\n", "a", set_number("a")
+        )
+
+        assert cells(prepared, 1) == ["0.0", "0.0", "2.5"]
+        assert prepared.changes[0].startswith("a: 3 cells read as numbers, 1 value with more significant digits")
+
     def test_different_utc_offsets_are_refused_instead_of_converted(self) -> None:
         code, message = failure(
             "k,t\nx,2024-01-05T12:00:00+01:00\ny,2024-07-05T12:00:00+02:00\n", set_dates(column="t")
