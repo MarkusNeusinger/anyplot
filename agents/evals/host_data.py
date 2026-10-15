@@ -118,10 +118,14 @@ async def _drain_and_wait(process: asyncio.subprocess.Process) -> bytes:
 
 
 async def _kill(process: asyncio.subprocess.Process) -> None:
-    """Kill the run's process group (it was started in a session of its own) and reap it."""
+    """Kill the run's process group (it was started in a session of its own) and reap it, draining stderr meanwhile.
+
+    The timeout cancelled the reader, so stderr is read to its end here: a pipe left full and unread could otherwise
+    keep the transport paused while the process is reaped.
+    """
     if process.returncode is None:
         try:
             os.killpg(process.pid, signal.SIGKILL)
         except ProcessLookupError:
             pass
-        await process.wait()
+    await asyncio.gather(process.wait(), read_tail(process.stderr))

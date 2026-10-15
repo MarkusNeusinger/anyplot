@@ -67,6 +67,13 @@ def test_a_run_past_its_timeout_is_killed() -> None:
     assert _run_failure(output) == ("timeout", [_run_failure(output)[1][0]])  # type: ignore[index]
 
 
+def test_a_run_that_floods_stderr_past_its_timeout_is_killed_and_reaped() -> None:
+    """The kill drains stderr while it reaps, so a full pipe cannot keep the cleanup waiting."""
+    output = run("import sys\nwhile True:\n    sys.stderr.write('x' * 65536)\n", timeout_s=1.0)
+
+    assert output.timed_out and output.exit_code is None
+
+
 def test_the_environment_is_the_renderers_data_environment() -> None:
     """The renderer's data-run limits, except the process count, which outside a container counts the user's."""
     from pathlib import Path
