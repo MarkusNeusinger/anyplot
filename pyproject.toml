@@ -64,6 +64,16 @@ test = [
     "pytest-xdist>=3.8.0",  # CI runs the suite with -n 4 --dist worksteal
     "httpx>=0.28.0",  # For testing FastAPI
     "aiosqlite>=0.20.0",  # SQLite async driver for integration tests
+    "anyplot[convert]",  # the harness's convert mode is tested in-process (tests/unit/agents/render/test_convert.py)
+]
+# The renderer's file conversion (`harness.py --convert`, agents/anyplot/render/convert.py): Excel and
+# OpenDocument through calamine (MIT, Rust; reads cached cell values only, runs no formula, macro or
+# external link), Parquet, Feather and Arrow IPC through pyarrow (Apache-2.0; 14.0.1 fixed
+# CVE-2023-47248, the IPC deserialisation hole). NumPy is in the base set. Only the renderer image
+# (agents/renderer/Dockerfile) and the tests install it.
+convert = [
+    "python-calamine>=0.6.1",
+    "pyarrow>=14.0.1",
 ]
 dev = [
     "ruff>=0.16.3",
@@ -217,6 +227,9 @@ module = [
     # scikit-learn's untyped helpers, which the render harness warms before its plot guard
     "threadpoolctl",
     "joblib.*",
+    # pyarrow ships no type information; the renderer's converter (agents/anyplot/render/convert.py) reads with it
+    "pyarrow",
+    "pyarrow.*",
 ]
 ignore_missing_imports = true
 

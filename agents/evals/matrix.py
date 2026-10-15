@@ -442,6 +442,10 @@ class RecordingBackend:
         """A data run (`run_data_code`) is no plot attempt: passed through unrecorded."""
         return await self.backend.run_data(job)
 
+    async def convert(self, job: Any) -> Any:
+        """A file conversion is no plot attempt either: passed through unrecorded."""
+        return await self.backend.convert(job)
+
     async def aclose(self) -> None:
         close = getattr(self.backend, "aclose", None)
         if close is not None:

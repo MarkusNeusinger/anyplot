@@ -110,31 +110,117 @@ export const IMAGE_FAILURE: Record<string, string> = {
 /**
  * Why a dropped, chosen or pasted file did not go into the data box, by the
  * format its first bytes name (`fileText.ts`) or the refusal. Spreadsheets,
- * Parquet, Arrow and NumPy are a later step; pickle and HDF5 are never read.
+ * Parquet, Arrow and NumPy go to the server (`CONVERT_FAILURE` below); pickle
+ * and HDF5 are never read.
  */
 export const FILE_REFUSAL: Record<string, string> = {
-  spreadsheet:
-    'is a spreadsheet: reading Excel and ODS files comes in a later step; for now, copy the cells and paste them here',
-  parquet:
-    'is a Parquet file: reading Parquet comes in a later step; for now, export it as CSV and drop that',
-  arrow:
-    'is an Arrow or Feather file: reading those comes in a later step; for now, export it as CSV and drop that',
   pickle:
     'is a pickle file, which is never read because loading one can run code; export it as CSV or Parquet',
   hdf5: 'is an HDF5 file, which is not read here; export it as CSV or Parquet',
-  numpy:
-    'is a NumPy file: reading .npy and .npz files comes in a later step; for now, export it as CSV and drop that',
   pdf: 'is a PDF, which is not read here; copy the table in it and paste the text',
-  archive: 'is an archive (zip, gzip or 7z); unpack it and drop the CSV inside',
-  binary: 'is not a text file; drop a CSV, TSV, JSON or plain-text file',
+  archive: 'is an archive (zip, gzip or 7z); unpack it and drop the file inside',
+  binary:
+    'is not a format read here; drop a CSV, TSV, JSON, Excel, ODS, Parquet, Feather, Arrow or NumPy file',
   too_large: 'is more than 1 MB as text; drop a smaller file or paste fewer rows',
+  too_large_binary:
+    'is more than 5 MB; save a smaller file, or copy the cells you need and paste them',
   empty: 'is empty',
   unreadable: 'could not be read by the browser; try again',
 };
 
+/** Why the server did not convert a dropped binary file (`422 file_*` and the route's other errors). */
+export const CONVERT_FAILURE: Record<string, string> = {
+  file_unsupported:
+    'is not a format the server reads; save it as CSV, Excel (.xlsx), ODS or Parquet',
+  file_encrypted:
+    'is protected by a password; remove the password (in Excel: File › Info › Protect Workbook), save it and drop it again',
+  file_pickle:
+    'is a pickle file, which is never read because loading one can run code; export it as CSV or Parquet',
+  file_hdf5: 'is an HDF5 file, which is not read here; export it as CSV or Parquet',
+  file_corrupt: 'could not be read: the file looks damaged, or it is not the format it seems to be',
+  file_archive_limits:
+    'unpacks to more than the server reads (100 MB, at most 250 times its own size); save a smaller file',
+  file_too_many_rows:
+    'has more rows than a table may have; filter it, or copy a range and paste it',
+  file_too_many_columns:
+    'has more columns than a table may have; copy a range of fewer columns and paste it',
+  file_too_large: 'gives more than 1 MB of text; filter it, or copy a range and paste it',
+  file_empty: 'has no cells with values',
+  file_sheet_not_found: 'no longer has that sheet; drop the file again',
+  file_array_shape: 'holds no 2-D or structured array; save the data as a 2-D array or a table',
+  file_object_array:
+    'holds a pickled object array, which is never read because loading one can run code; save numbers or text',
+  file_timeout: 'took longer than the 10 seconds a file may take to read; save a smaller file',
+  file_too_complex: 'needed more memory than the reader may use; save a smaller file',
+  file_unreadable: 'could not be read on the server; save it again or export it as CSV',
+  convert_unavailable:
+    'cannot be read right now, the file reader is not available; export it as CSV for now',
+  rate_limited: 'could not be read: too many files in a short time; wait a minute and try again',
+  daily_limit: "could not be read: today's limit of files is reached; try again tomorrow",
+  locked_out: 'could not be read: paused until tomorrow after several refused requests today',
+  session_closed: 'could not be read: this chat is closed; reload the page to start a new session',
+  capacity: 'could not be read: the server is busy; try again in a minute',
+  run_active: 'could not be read: another file is still being read; wait for it',
+  too_long: 'is more than 5 MB; save a smaller file',
+};
+
+/** The line for a file the server did not convert, the name in quotes first; a broken cap names its numbers. */
+export function describeConvertFailure(
+  name: string,
+  code: string,
+  measured: number | null,
+  limit: number | null,
+  ref: string | null
+): string {
+  let text = CONVERT_FAILURE[code] ?? DATA_FAILURE[code] ?? `could not be read (${code})`;
+  const counted = (noun: string) =>
+    measured !== null && limit !== null
+      ? ` (${measured.toLocaleString('en-US')} ${noun}, the cap is ${limit.toLocaleString('en-US')})`
+      : '';
+  if (code === 'file_too_many_rows') text += counted('rows');
+  if (code === 'file_too_many_columns') text += counted('columns');
+  if (code === 'file_too_large') text += counted('bytes');
+  return `"${name}" ${text}${ref ? ` · ref ${ref}` : ''}`;
+}
+
+/** What the server counted while it read a file, as the parts of the line under the box. */
+export function describeConvertWarnings(warnings: {
+  formulas_without_value?: number;
+  hidden_sheets?: number;
+  dropped_columns?: number;
+  list_columns?: number;
+}): string[] {
+  const parts: string[] = [];
+  const count = (value: number, noun: string) =>
+    `${value.toLocaleString('en-US')} ${noun}${value === 1 ? '' : 's'}`;
+  if (warnings.formulas_without_value) {
+    parts.push(
+      `${count(warnings.formulas_without_value, 'formula cell')} saved without a value, left empty: open and save the file in Excel to store them`
+    );
+  }
+  if (warnings.hidden_sheets) {
+    parts.push(`${count(warnings.hidden_sheets, 'hidden sheet')} skipped`);
+  }
+  if (warnings.dropped_columns) {
+    parts.push(
+      `${count(warnings.dropped_columns, 'column')} of binary, map or nested values left out`
+    );
+  }
+  if (warnings.list_columns) {
+    parts.push(
+      `${count(warnings.list_columns, 'list column')}: the table comes as JSON records, and .parse() gives one row per value`
+    );
+  }
+  return parts;
+}
+
 /** A file dropped or chosen while the session works on something: the server runs one thing at a time. */
 export const FILE_BUSY_TEXT =
   'a step is still running; drop or open the file again when it is done';
+
+/** A file dropped or chosen while the server still reads the one before. */
+export const FILE_CONVERTING_TEXT =
+  'a file is still being read on the server; drop or open the next one when it is done';
 
 /** The line under the box for a refused file, the name in quotes first. */
 export function describeFileRefusal(name: string, code: string): string {

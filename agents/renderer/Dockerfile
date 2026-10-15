@@ -36,7 +36,9 @@ COPY pyproject.toml uv.lock README.md ./
 # imports it. `--no-install-project` keeps the project itself out of the venv, so a
 # sandbox's interpreter finds no anyplot package on its path; the service imports
 # `agents.renderer` from the working directory, which uvicorn puts on `sys.path`.
-RUN uv venv && uv sync --frozen --no-install-project --extra lib-matplotlib --extra lib-seaborn
+# The `convert` extra (python-calamine, pyarrow) is the file conversion's readers
+# (`harness.py --convert`, agents/anyplot/render/convert.py).
+RUN uv venv && uv sync --frozen --no-install-project --extra lib-matplotlib --extra lib-seaborn --extra convert
 
 # The image does not install the project, so its version is written to a file
 # that `GET /status` reports.
@@ -96,6 +98,7 @@ COPY agents/__init__.py ./agents/__init__.py
 COPY agents/renderer/ ./agents/renderer/
 COPY --from=builder /app/VERSION ./agents/renderer/VERSION
 COPY agents/anyplot/render/harness.py /opt/anyplot/harness.py
+COPY agents/anyplot/render/convert.py /opt/anyplot/convert.py
 
 # The fallback fonts and their OFL notices. matplotlib scans /usr/share/fonts
 # recursively without fontconfig (font_manager.findSystemFonts), so one

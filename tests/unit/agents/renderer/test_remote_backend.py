@@ -17,7 +17,7 @@ import pytest
 
 from agents.anyplot.render.backends import remote as remote_module
 from agents.anyplot.render.backends.remote import IdTokenSource, RemoteBackend, token_expiry
-from agents.anyplot.render.contract import DataJob, DataRunUnsupported, RendererUnavailable, RenderJob
+from agents.anyplot.render.contract import ConvertJob, DataJob, DataRunUnsupported, RendererUnavailable, RenderJob
 from agents.anyplot.render.gates import evaluate
 from agents.anyplot.render.serial import SerialRenderer
 from agents.renderer.executor import ExecutorConfig, SandboxExecutor
@@ -687,4 +687,50 @@ class TestDataRun:
             await task
 
         assert paths == ["/run-data", "/render/data123/cancel"]
+        await backend.aclose()
+
+
+class TestConvert:
+    async def test_a_conversion_comes_back_with_its_text_and_meta(
+        self, backend: RemoteBackend, fake: FakeExecutor
+    ) -> None:
+        output = await backend.convert(ConvertJob(job_id="conv123", data=b"PK\x05\x06" + b"\0" * 18))
+
+        assert output.exit_code == 0 and output.text == "x,y\n1,2\n" and output.refusal is None
+        assert output.meta is not None and output.meta.sheet == "S"
+        assert fake.calls == [("conv123", "convert")]
+
+    async def test_behind_the_serial_renderer_in_the_toggle_lane(self, backend: RemoteBackend) -> None:
+        output = await SerialRenderer(backend, concurrency=1).convert(ConvertJob(job_id="conv123", data=b"PK\x05\x06"))
+
+        assert output.text == "x,y\n1,2\n"
+
+    async def test_end_to_end_with_the_real_executor_and_harness(
+        self, overrides: None, settings: RendererSettings, config: ExecutorConfig
+    ) -> None:
+        from tests.unit.agents.runtime.convert_fixtures import Sheet, xlsx
+
+        app.dependency_overrides[get_renderer] = lambda: Renderer(settings, SandboxExecutor(config))
+        backend = RemoteBackend(url=URL, tokens=StaticTokens(), transport=httpx.ASGITransport(app=app))
+        try:
+            ok = await backend.convert(ConvertJob(job_id="conv1", data=xlsx([Sheet("S", [["a"], [1]])])))
+            refused = await backend.convert(ConvertJob(job_id="conv2", data=b"\x80\x04K\x01."))
+        finally:
+            await backend.aclose()
+
+        assert ok.exit_code == 0 and ok.text == "a\n1\n" and ok.meta is not None and ok.meta.kind == "xlsx"
+        assert refused.refusal == "pickle" and refused.text is None
+
+    async def test_an_old_renderer_without_the_route_is_unsupported(self) -> None:
+        backend = mocked(lambda request: httpx.Response(404, json={"detail": "Not Found"}))
+
+        with pytest.raises(DataRunUnsupported):
+            await backend.convert(ConvertJob(job_id="conv123", data=b"PK\x05\x06"))
+        await backend.aclose()
+
+    async def test_a_busy_renderer_is_unavailable(self) -> None:
+        backend = mocked(lambda request: httpx.Response(503, json={"detail": "busy"}))
+
+        with pytest.raises(RendererUnavailable, match="HTTP 503, busy"):
+            await backend.convert(ConvertJob(job_id="conv123", data=b"PK\x05\x06"))
         await backend.aclose()

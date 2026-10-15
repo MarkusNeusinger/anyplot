@@ -139,6 +139,7 @@ import {
   type AgentEvent,
   type ArtifactName,
   type Binding,
+  type ConvertAnswer,
   countBucket,
   type DatasetChanged,
   type DatasetParsed,
@@ -1256,6 +1257,16 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
     [token]
   );
 
+  // A dropped binary file read on the server; the data card keeps its own state for it (nothing is stored).
+  const convertFile = useCallback(
+    async (dataBase64: string, sheet?: string): Promise<ConvertAnswer> => {
+      const sid = stateRef.current.sessionId;
+      if (!sid) throw new AgentApiError(0, 'no_session');
+      return agentApi.convertFile(token, sid, dataBase64, sheet);
+    },
+    [token]
+  );
+
   const loadImage = useCallback(
     async (number: number, theme: Theme, status: 'ok' | 'needs_attention') => {
       safeDispatch({ type: 'version_image', number, theme, image: { state: 'loading' } });
@@ -1826,6 +1837,7 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
     switchLibrary,
     requestTheme,
     fetchArtifact,
+    convertFile,
     saveSession,
     setLanguage,
     sendFeedback,

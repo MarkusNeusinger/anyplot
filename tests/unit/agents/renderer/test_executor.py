@@ -39,7 +39,7 @@ from agents.renderer.settings import RendererSettings
 from agents.renderer.wire import MAX_STDERR_CHARS, ThemeRun
 
 from .conftest import FakeLauncher
-from .helpers import PLOT, SLEEPER, data_job, job
+from .helpers import PLOT, SLEEPER, convert_job, data_job, job
 
 
 def envs(argv: list[str]) -> dict[str, str]:
@@ -83,7 +83,7 @@ class TestCommand:
     def test_forbidden_flags_never_reach_the_launcher(
         self, config: ExecutorConfig, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setattr(executor_module, "sandbox_env", lambda *args: {"--write": ""})
+        monkeypatch.setattr(executor_module, "sandbox_env", lambda *args, **kwargs: {"--write": ""})
 
         with pytest.raises(AssertionError, match="--write"):
             build_argv(config, "r-abc-light", tmp_path, "light", 60)
@@ -520,6 +520,59 @@ class TestDataRun:
         executor._collect_data(attempt, tmp_path)
 
         assert attempt.reason == "output_rejected" and attempt.csv_text is None
+
+
+class TestConvert:
+    def test_argv_runs_the_harness_in_convert_mode_with_the_system_allocator(
+        self, config: ExecutorConfig, tmp_path: Path
+    ) -> None:
+        argv = build_argv(config, "r-abc-convert", tmp_path / "r", None, 10, convert=True)
+
+        assert argv[argv.index("--") :] == ["--", config.python, "-I", config.harness, "--convert", "input.bin"]
+        values = envs(argv)
+        assert values["ARROW_DEFAULT_MEMORY_POOL"] == "system" and values["ANYPLOT_RLIMIT_CPU_S"] == "10"
+        assert not {"ANYPLOT_THEME", "MPLBACKEND"} & set(values)
+        assert "ARROW_DEFAULT_MEMORY_POOL" not in envs(build_argv(config, "r-abc-data", tmp_path / "r", None, 10))
+
+    async def test_a_workbook_returns_its_text_and_meta(
+        self, executor: SandboxExecutor, launcher: FakeLauncher, config: ExecutorConfig
+    ) -> None:
+        from tests.unit.agents.runtime.convert_fixtures import Sheet, xlsx
+
+        data = xlsx([Sheet("A", [["a"]]), Sheet("B", [["x", "y"], [1, 2]])])
+        run = await executor.run_convert(convert_job(data, sheet="B"))
+
+        assert run.exit_code == 0 and run.refusal is None and run.reason is None
+        assert run.text == "x,y\n1,2\n"
+        assert run.meta is not None and (run.meta.kind, run.meta.sheet, run.meta.sheets) == ("xlsx", "B", ["A", "B"])
+        assert launcher.launches()[0].endswith("-convert") and list(config.runs_dir.iterdir()) == []
+
+    @pytest.mark.parametrize("sigpipe", [False, True], ids=["exit code kept", "launcher dies of SIGPIPE"])
+    async def test_a_refusal_names_its_reason_and_numbers(
+        self, executor: SandboxExecutor, monkeypatch: pytest.MonkeyPatch, sigpipe: bool
+    ) -> None:
+        from tests.unit.agents.runtime.convert_fixtures import zip_bomb
+
+        if sigpipe:
+            monkeypatch.setenv("FAKE_SANDBOX_SIGPIPE", "1")
+        run = await executor.run_convert(convert_job(zip_bomb()))
+
+        assert run.refusal == "archive_limits" and run.text is None and run.meta is None
+        assert run.limit == 100 * 1024 * 1024 and run.measured is not None and run.measured > run.limit
+
+    def test_collect_needs_both_the_text_and_a_valid_meta(self, executor: SandboxExecutor, tmp_path: Path) -> None:
+        (tmp_path / "out.csv").write_text("a\n1\n", encoding="utf-8")
+        attempt = Attempt(name="r", exit_code=0)
+        executor._collect_convert(attempt, tmp_path)
+        assert attempt.reason == "output_rejected" and attempt.csv_text is None
+        (tmp_path / "meta.json").write_text('{"kind": "exe", "rows": 1, "columns": 1}', encoding="utf-8")
+        attempt = Attempt(name="r", exit_code=0)
+        executor._collect_convert(attempt, tmp_path)
+        assert attempt.reason == "output_rejected"
+        (tmp_path / "meta.json").write_text('{"kind": "xlsx", "rows": 1, "columns": 1}', encoding="utf-8")
+        attempt = Attempt(name="r", exit_code=0)
+        executor._collect_convert(attempt, tmp_path)
+        assert attempt.reason is None and attempt.csv_text == "a\n1\n" and attempt.convert_meta is not None
 
 
 class TestHelpers:

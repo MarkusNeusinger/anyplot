@@ -23,6 +23,9 @@ A data run (`run_data`) uses the same isolation with the harness in data mode
 (`harness.py --data snippet.py`), no theme and no plotting settings, and reads the
 harness's `status.json` (its exit code and a refusal's measured value and cap, as the
 renderer does) and the `out.csv` it wrote after exit code 0, under the computed-data cap.
+A conversion (`convert`) does the same with the harness in convert mode on `input.bin`
+(the converter mounted read-only next to the harness), and reads `out.csv` under the paste
+cap and `meta.json`.
 
 The backend refuses `ENVIRONMENT=production` and fails when Docker is missing:
 there is no bare-subprocess fallback, because that would run model-written code on
@@ -30,16 +33,29 @@ the host with the host's network and files.
 """
 
 import asyncio
+import json
 import os
 import shutil
 import tempfile
 import time
 from pathlib import Path
 
-from agents.renderer.wire import DATA_STATUS_FILE, MAX_DATA_STATUS_BYTES, parse_data_status
+from agents.renderer.wire import (
+    CONVERT_META_FILE,
+    CONVERT_REQUEST_FILE,
+    DATA_STATUS_FILE,
+    MAX_CONVERT_META_BYTES,
+    MAX_CONVERT_TEXT_BYTES,
+    MAX_DATA_STATUS_BYTES,
+    ConvertMeta,
+    convert_refusal,
+    parse_data_status,
+)
 
 from ...data.parse import MAX_COMPUTED_BYTES
 from ..contract import (
+    ConvertJob,
+    ConvertOutput,
     DataJob,
     DataOutput,
     RendererUnavailable,
@@ -51,7 +67,14 @@ from ..contract import (
 )
 from ..harness import DATA_OUT_FILE
 from ..png import PngRejected, read_output
-from ..runtimes.python import DATA_FILE_NAME, HARNESS_SOURCE, IMAGE_HARNESS
+from ..runtimes.python import (
+    CONVERT_INPUT_NAME,
+    CONVERTER_SOURCE,
+    DATA_FILE_NAME,
+    HARNESS_SOURCE,
+    IMAGE_CONVERTER,
+    IMAGE_HARNESS,
+)
 
 
 MEMORY_LIMIT = "2g"
@@ -134,6 +157,8 @@ class LocalDockerBackend:
             f"{run_dir}:/work",
             "-v",
             f"{HARNESS_SOURCE}:{IMAGE_HARNESS}:ro",
+            "-v",
+            f"{CONVERTER_SOURCE}:{IMAGE_CONVERTER}:ro",
             "-w",
             "/work",
         ]
@@ -225,6 +250,66 @@ class LocalDockerBackend:
             except (PngRejected, UnicodeDecodeError):
                 return DataOutput(exit_code=0, stderr_tail=tail, wall_s=wall, reason="output_rejected")
             return DataOutput(exit_code=0, csv_text=text, stderr_tail=tail, wall_s=wall)
+        finally:
+            shutil.rmtree(run_dir, ignore_errors=True)
+
+    def convert_argv(self, job: ConvertJob, run_dir: Path) -> list[str]:
+        """The docker command of a conversion: the render's isolation, the harness in convert mode."""
+        argv = self._isolation(f"r-{job.job_id}-convert", run_dir)
+        for key, value in self.runtime.convert_env().items():
+            argv += ["-e", f"{key}={value}"]
+        argv += [self.image, *self.runtime.convert_command()]
+        if argv[argv.index("--network") + 1] != "none" or any("--network=" in part for part in argv):
+            raise AssertionError("a conversion container must never have network access")
+        return argv
+
+    async def convert(self, job: ConvertJob) -> ConvertOutput:
+        """Convert a file in a throwaway container; read the text and `meta.json` after exit code 0."""
+        run_dir = Path(tempfile.mkdtemp(prefix=f"anyplot-convert-{job.job_id}-"))
+        name = f"r-{job.job_id}-convert"
+        try:
+            os.chmod(run_dir, 0o700)
+            (run_dir / CONVERT_INPUT_NAME).write_bytes(job.data)
+            (run_dir / CONVERT_REQUEST_FILE).write_text(json.dumps({"sheet": job.sheet}), encoding="utf-8")
+            started = time.monotonic()
+            process = await asyncio.create_subprocess_exec(
+                *self.convert_argv(job, run_dir),
+                stdin=asyncio.subprocess.DEVNULL,
+                stdout=asyncio.subprocess.DEVNULL,
+                stderr=asyncio.subprocess.PIPE,
+                start_new_session=True,
+            )
+            try:
+                await asyncio.wait_for(_drain_and_wait(process), timeout=job.timeout_s)
+            except TimeoutError:
+                await self._kill(name, process)
+                return ConvertOutput(
+                    exit_code=None, timed_out=True, reason="timeout", wall_s=time.monotonic() - started
+                )
+            except asyncio.CancelledError:
+                await asyncio.shield(self._kill(name, process))
+                raise
+            wall = time.monotonic() - started
+            try:
+                status = parse_data_status(read_output(run_dir / DATA_STATUS_FILE, MAX_DATA_STATUS_BYTES))
+            except PngRejected:
+                status = None
+            exit_code = status.exit if status is not None else process.returncode
+            if exit_code != 0:
+                measured, limit = (status.measured, status.limit) if status is not None else (None, None)
+                return ConvertOutput(
+                    exit_code=exit_code, refusal=convert_refusal(exit_code), measured=measured, limit=limit, wall_s=wall
+                )
+            try:
+                raw = read_output(run_dir / DATA_OUT_FILE, MAX_CONVERT_TEXT_BYTES)
+                meta_raw = read_output(run_dir / CONVERT_META_FILE, MAX_CONVERT_META_BYTES)
+                if raw is None or meta_raw is None:
+                    raise ValueError("missing output")
+                text = raw.decode("utf-8")
+                meta = ConvertMeta.model_validate_json(meta_raw, strict=True)
+            except (PngRejected, ValueError):
+                return ConvertOutput(exit_code=0, reason="output_rejected", wall_s=wall)
+            return ConvertOutput(exit_code=0, text=text, meta=meta, wall_s=wall)
         finally:
             shutil.rmtree(run_dir, ignore_errors=True)
 

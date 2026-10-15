@@ -65,8 +65,16 @@ for every non-zero exit of the sandboxed process and logs no `[end]` line for it
 every failed render and data run since 2026-10-11. The attempt log carries both, with the
 signal as `launcher_signal`.
 
+**Conversions** (`run_convert`, the service's `POST /convert`) take the same path again: the
+file's bytes as `input.bin` (`_prepare` writes bytes as they are), the chosen sheet in
+`request.json`, the harness in convert mode (`harness.py --convert input.bin`) and Arrow's
+system allocator in the environment. After exit code 0 the host reads `out.csv` under the
+paste cap (`MAX_CONVERT_TEXT_BYTES`, strict UTF-8) and `meta.json` (`wire.ConvertMeta`); a
+refusal's exit code becomes its name (`wire.convert_refusal`), with the measured value and
+the cap from `status.json`.
+
 Strictly serial: the service holds one render slot (`main.py`), and the themes of a
-job run one after the other; a data run takes the same slot. No ADK import.
+job run one after the other; a data run and a conversion take the same slot. No ADK import.
 """
 
 import asyncio
@@ -88,12 +96,20 @@ from typing import Any, Protocol
 
 from .settings import RendererSettings
 from .wire import (
+    CONVERT_INPUT_FILE,
+    CONVERT_META_FILE,
+    CONVERT_REQUEST_FILE,
     DATA_STATUS_FILE,
+    MAX_CONVERT_META_BYTES,
+    MAX_CONVERT_TEXT_BYTES,
     MAX_CSV_BYTES,
     MAX_DATA_STATUS_BYTES,
     MAX_PNG_BYTES,
     MAX_PROBE_BYTES,
     MAX_STDERR_CHARS,
+    ConvertMeta,
+    ConvertRequest,
+    ConvertRun,
     DataRun,
     DataRunRequest,
     RenderRequest,
@@ -101,6 +117,7 @@ from .wire import (
     Theme,
     ThemeRun,
     clean_probe,
+    convert_refusal,
     parse_data_status,
 )
 
@@ -120,6 +137,10 @@ DATA_FLAG = "--data"
 """The harness's data-mode flag (`harness.DATA_FLAG`)."""
 DATA_LABEL = "data"
 """The sandbox name suffix and log label of a data run, where a render has its theme."""
+CONVERT_FLAG = "--convert"
+"""The harness's convert-mode flag (`harness.CONVERT_FLAG`)."""
+CONVERT_LABEL = "convert"
+"""The sandbox name suffix and log label of a conversion."""
 LAUNCHER_FAILURE = "failed to exec in container"
 HARNESS_START = 'HARNESS {"event": "start"}'
 HARNESS_END = 'HARNESS {"event": "end"'
@@ -375,10 +396,12 @@ def read_regular(path: Path, max_bytes: int) -> bytes | None:
     return bytes(chunks)
 
 
-def sandbox_env(config: ExecutorConfig, theme: Theme | None, cpu_s: int) -> dict[str, str]:
+def sandbox_env(config: ExecutorConfig, theme: Theme | None, cpu_s: int, *, convert: bool = False) -> dict[str, str]:
     """The complete environment inside the sandbox: nothing of the host's reaches it.
 
-    A data run (`theme` None) gets no theme and no matplotlib settings: it imports no plotting library.
+    A data run or a conversion (`theme` None) gets no theme and no matplotlib settings: it imports no plotting
+    library. A conversion also gets Arrow's system allocator, whose jemalloc pool would reserve address space
+    and start a background thread under the sandbox's limits.
     """
     plot: dict[str, str] = {}
     if theme is not None:
@@ -400,6 +423,8 @@ def sandbox_env(config: ExecutorConfig, theme: Theme | None, cpu_s: int) -> dict
         "ANYPLOT_RLIMIT_CPU_S": str(cpu_s),
         "ANYPLOT_RLIMIT_FSIZE_MB": str(config.rlimit_fsize_mb),
     }
+    if convert:
+        env["ARROW_DEFAULT_MEMORY_POOL"] = "system"
     if config.rlimit_as_mb:
         env["ANYPLOT_RLIMIT_AS_MB"] = str(config.rlimit_as_mb)
     if config.rlimit_nproc:
@@ -407,9 +432,11 @@ def sandbox_env(config: ExecutorConfig, theme: Theme | None, cpu_s: int) -> dict
     return env
 
 
-def build_argv(config: ExecutorConfig, name: str, run_dir: Path, theme: Theme | None, cpu_s: int) -> list[str]:
-    """The `sandbox do` command of one theme, or of a data run (`theme` None, the harness in data mode);
-    asserted to carry neither `--write` nor `--allow-egress`."""
+def build_argv(
+    config: ExecutorConfig, name: str, run_dir: Path, theme: Theme | None, cpu_s: int, *, convert: bool = False
+) -> list[str]:
+    """The `sandbox do` command of one theme, of a data run (`theme` None, the harness in data mode) or of a
+    conversion (`convert`, the harness in convert mode); asserted to carry neither `--write` nor `--allow-egress`."""
     argv = [
         config.sandbox_binary,
         "do",
@@ -421,11 +448,14 @@ def build_argv(config: ExecutorConfig, name: str, run_dir: Path, theme: Theme | 
     if config.bind_tmp:
         argv += ["--mount", f"type=bind,source={run_dir / 'tmp'},destination=/tmp"]
     argv += ["-w", WORKDIR]
-    for key, value in sandbox_env(config, theme, cpu_s).items():
+    for key, value in sandbox_env(config, theme, cpu_s, convert=convert).items():
         argv += ["--env", f"{key}={value}"]
     flags = list(argv)
     argv += ["--", config.python, "-I", config.harness]
-    argv += [CODE_FILE] if theme is not None else [DATA_FLAG, SNIPPET_FILE]
+    if convert:
+        argv += [CONVERT_FLAG, CONVERT_INPUT_FILE]
+    else:
+        argv += [CODE_FILE] if theme is not None else [DATA_FLAG, SNIPPET_FILE]
     if any(part.split("=", 1)[0] in FORBIDDEN_FLAGS for part in flags):
         raise AssertionError("a sandbox must never get --write or --allow-egress")
     return argv
@@ -452,6 +482,8 @@ class Attempt:
     """A data run's exit code as the harness wrote it to `status.json`; None without a readable one."""
     status_measured: int | None = None
     status_limit: int | None = None
+    convert_meta: ConvertMeta | None = None
+    """A conversion's `meta.json`, read with its `out.csv` after exit code 0."""
 
     @property
     def data_exit(self) -> int | None:
@@ -535,6 +567,22 @@ class Attempt:
             attempts=attempts,
         )
 
+    def to_convert_wire(self, attempts: int) -> ConvertRun:
+        from_status = self.reason is None and self.exit_code is not None
+        exit_code = self.data_exit
+        return ConvertRun(
+            exit_code=exit_code,
+            timed_out=self.timed_out,
+            reason=self.reason,
+            refusal=convert_refusal(exit_code) if from_status else None,
+            measured=self.status_measured if from_status else self.measured,
+            limit=self.status_limit if from_status else self.limit,
+            text=self.csv_text if self.convert_meta is not None else None,
+            meta=self.convert_meta if self.csv_text is not None else None,
+            wall_s=round(self.wall_s, 3),
+            attempts=attempts,
+        )
+
 
 def _b64(data: bytes) -> str:
     return base64.b64encode(data).decode("ascii")
@@ -560,6 +608,8 @@ class Executor(Protocol):
     async def run_theme(self, job: RenderRequest, theme: Theme) -> ThemeRun: ...
 
     async def run_data(self, job: DataRunRequest) -> DataRun: ...
+
+    async def run_convert(self, job: ConvertRequest) -> ConvertRun: ...
 
 
 class SandboxExecutor:
@@ -589,43 +639,60 @@ class SandboxExecutor:
 
     async def run_theme(self, job: RenderRequest, theme: Theme) -> ThemeRun:
         """Render one theme; a launcher failure before the harness started is retried once."""
-        files = {CODE_FILE: job.source, DATA_FILE: job.data_csv}
+        files: dict[str, str | bytes] = {CODE_FILE: job.source, DATA_FILE: job.data_csv}
         attempt, attempts = await self._launch(files, theme, job.timeout_s)
         return attempt.to_wire(theme, attempts)
 
     async def run_data(self, job: DataRunRequest) -> DataRun:
         """Run one data snippet with the harness in data mode; the same retry, watchdog and kill path as a theme."""
-        attempt, attempts = await self._launch({SNIPPET_FILE: job.source}, None, job.timeout_s)
+        files: dict[str, str | bytes] = {SNIPPET_FILE: job.source}
+        attempt, attempts = await self._launch(files, None, job.timeout_s)
         return attempt.to_data_wire(attempts)
 
-    async def _launch(self, files: dict[str, str], theme: Theme | None, timeout_s: float) -> tuple[Attempt, int]:
-        """One run (a theme, or a data run when `theme` is None) and its launches; one retry for a launcher failure."""
+    async def run_convert(self, job: ConvertRequest) -> ConvertRun:
+        """Convert one file with the harness in convert mode: the file's bytes as `input.bin`, the sheet the page
+        chose in `request.json`; the same retry, watchdog and kill path as a data run."""
+        files: dict[str, str | bytes] = {
+            CONVERT_INPUT_FILE: job.data(),
+            CONVERT_REQUEST_FILE: json.dumps({"sheet": job.sheet}),
+        }
+        attempt, attempts = await self._launch(files, None, job.timeout_s, convert=True)
+        return attempt.to_convert_wire(attempts)
+
+    async def _launch(
+        self, files: dict[str, str | bytes], theme: Theme | None, timeout_s: float, *, convert: bool = False
+    ) -> tuple[Attempt, int]:
+        """One run (a theme, a data run when `theme` is None, a conversion with `convert`) and its launches; one
+        retry for a launcher failure."""
         if not self.available:
             raise Unavailable("sandbox_unavailable")
         if self.stuck:
             raise Unavailable("stuck")
-        label = theme if theme is not None else DATA_LABEL
+        label = theme if theme is not None else CONVERT_LABEL if convert else DATA_LABEL
         cpu_s = max(1, min(self.config.rlimit_cpu_s, math.ceil(timeout_s)))
         started = self.clock()
-        attempt = await self._attempt(files, theme, cpu_s, timeout_s)
+        attempt = await self._attempt(files, theme, cpu_s, timeout_s, convert=convert)
         attempts = 1
         if attempt.launcher_failed:
             remaining = timeout_s - (self.clock() - started)
             _log_attempt(attempt, label, retry=remaining >= MIN_RETRY_S)
             if remaining >= MIN_RETRY_S:
-                attempt = await self._attempt(files, theme, cpu_s, remaining)
+                attempt = await self._attempt(files, theme, cpu_s, remaining, convert=convert)
                 attempts = 2
             if attempt.launcher_failed:
                 attempt.reason = "launcher"
         _log_attempt(attempt, label, retry=False)
         return attempt, attempts
 
-    async def _attempt(self, files: dict[str, str], theme: Theme | None, cpu_s: int, timeout_s: float) -> Attempt:
-        name = f"r-{secrets.token_hex(6)}-{theme if theme is not None else DATA_LABEL}"
+    async def _attempt(
+        self, files: dict[str, str | bytes], theme: Theme | None, cpu_s: int, timeout_s: float, *, convert: bool = False
+    ) -> Attempt:
+        label = theme if theme is not None else CONVERT_LABEL if convert else DATA_LABEL
+        name = f"r-{secrets.token_hex(6)}-{label}"
         run_dir = self.config.runs_dir / name
         try:
             self._prepare(run_dir, files)
-            return await self._run(name, run_dir, theme, cpu_s, timeout_s)
+            return await self._run(name, run_dir, theme, cpu_s, timeout_s, convert=convert)
         except OSError as exc:
             # A full volume, a failed fork: the host could not run the job, which is
             # not the code's fault. `_run` has stopped any sandbox it started.
@@ -634,8 +701,9 @@ class SandboxExecutor:
         finally:
             shutil.rmtree(run_dir, ignore_errors=True)
 
-    def _prepare(self, run_dir: Path, files: dict[str, str]) -> None:
-        """The run directory with the code (and a render's data); the sandbox mounts its `work` directory."""
+    def _prepare(self, run_dir: Path, files: dict[str, str | bytes]) -> None:
+        """The run directory with the code (and a render's data, or a conversion's file as bytes); the sandbox
+        mounts its `work` directory."""
         work = run_dir / "work"
         work.mkdir(parents=True)
         # The sandbox is uid 0 behind gVisor's gofer, and the spikes ran with these
@@ -646,11 +714,16 @@ class SandboxExecutor:
             tmp = run_dir / "tmp"
             tmp.mkdir()
             os.chmod(tmp, 0o1777)
-        for file_name, text in files.items():
-            (work / file_name).write_text(text, encoding="utf-8")
+        for file_name, content in files.items():
+            if isinstance(content, bytes):
+                (work / file_name).write_bytes(content)
+            else:
+                (work / file_name).write_text(content, encoding="utf-8")
 
-    async def _run(self, name: str, run_dir: Path, theme: Theme | None, cpu_s: int, timeout_s: float) -> Attempt:
-        argv = build_argv(self.config, name, run_dir, theme, cpu_s)
+    async def _run(
+        self, name: str, run_dir: Path, theme: Theme | None, cpu_s: int, timeout_s: float, *, convert: bool = False
+    ) -> Attempt:
+        argv = build_argv(self.config, name, run_dir, theme, cpu_s, convert=convert)
         started = self.clock()
         process = await asyncio.create_subprocess_exec(
             *argv,
@@ -706,7 +779,9 @@ class SandboxExecutor:
         if theme is None:
             if stop is None:
                 self._read_status(attempt, run_dir / "work")
-                if attempt.data_exit == 0:
+                if attempt.data_exit == 0 and convert:
+                    self._collect_convert(attempt, run_dir / "work")
+                elif attempt.data_exit == 0:
                     self._collect_data(attempt, run_dir / "work")
         elif stop is None or stop.reason == "timeout":
             self._collect(attempt, run_dir / "work", theme)
@@ -738,6 +813,27 @@ class SandboxExecutor:
         try:
             attempt.csv_text = raw.decode("utf-8")
         except UnicodeDecodeError:
+            attempt.reason = "output_rejected"
+
+    def _collect_convert(self, attempt: Attempt, work: Path) -> None:
+        """Read the text (`out.csv`, at most the paste cap, strict UTF-8) and `meta.json` a conversion left; a text
+        without a readable meta, or a meta without a text, is `output_rejected`."""
+        try:
+            raw = read_regular(work / OUT_FILE, MAX_CONVERT_TEXT_BYTES)
+            meta = read_regular(work / CONVERT_META_FILE, MAX_CONVERT_META_BYTES)
+        except OutputRejected as exc:
+            attempt.reason = "output_rejected"
+            attempt.measured = exc.size
+            attempt.limit = exc.limit
+            return
+        try:
+            if raw is None or meta is None:
+                raise ValueError("missing output")
+            attempt.csv_text = raw.decode("utf-8")
+            attempt.convert_meta = ConvertMeta.model_validate_json(meta, strict=True)
+        except ValueError:  # UnicodeDecodeError and pydantic's ValidationError are ValueErrors
+            attempt.csv_text = None
+            attempt.convert_meta = None
             attempt.reason = "output_rejected"
 
     def _collect(self, attempt: Attempt, work: Path, theme: Theme) -> None:

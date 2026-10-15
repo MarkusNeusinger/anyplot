@@ -5,12 +5,14 @@ import {
   agentFetch,
   browserLocale,
   caseListQuery,
+  convertAnswer,
   countBucket,
   longSuggestion,
   parseAgentEvent,
   renderedThemes,
   sizeBucket,
   toAgentApiError,
+  toBase64,
 } from 'src/lib/agent';
 import { ACCESS_RELOAD_KEY } from 'src/utils/adminAuth';
 
@@ -486,6 +488,72 @@ describe('toAgentApiError', () => {
       new Response(JSON.stringify({ detail: 'storage', case_id: 7 }), { status: 502 })
     );
     expect(storage.caseId).toBeNull();
+  });
+
+  it('reads the counts of a refused conversion, whole numbers only', async () => {
+    const counted = await toAgentApiError(
+      new Response(
+        JSON.stringify({ detail: 'file_too_many_rows', measured: 21000, limit: 20000 }),
+        { status: 422 }
+      )
+    );
+    expect(counted).toMatchObject({ code: 'file_too_many_rows', measured: 21000, limit: 20000 });
+    const odd = await toAgentApiError(
+      new Response(JSON.stringify({ detail: 'file_corrupt', measured: '3', limit: 1.5 }), {
+        status: 422,
+      })
+    );
+    expect(odd).toMatchObject({ measured: null, limit: null });
+  });
+});
+
+describe('convertAnswer', () => {
+  it('keeps the known fields and the positive warning counts', () => {
+    expect(
+      convertAnswer({
+        text: 'a\n1\n',
+        format: 'json',
+        kind: 'parquet',
+        rows: 1,
+        columns: 1,
+        sheet: null,
+        sheets: ['x', 3],
+        sheet_count: 0,
+        warnings: { list_columns: 2, dropped_columns: 0, other: 5 },
+      })
+    ).toEqual({
+      text: 'a\n1\n',
+      format: 'json',
+      kind: 'parquet',
+      rows: 1,
+      columns: 1,
+      sheet: null,
+      sheets: ['x'],
+      sheet_count: 0,
+      warnings: { list_columns: 2 },
+    });
+  });
+
+  it('refuses an answer without text', () => {
+    expect(convertAnswer({ kind: 'xlsx' })).toBeNull();
+    expect(convertAnswer('text')).toBeNull();
+  });
+
+  it('posts the file as base64 with the chosen sheet', async () => {
+    const fetchMock = vi.fn(
+      async () =>
+        new Response(JSON.stringify({ text: 'a\n', kind: 'xlsx' }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        })
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const answer = await agentApi.convertFile('t', 'S1', toBase64(new Uint8Array([1, 2, 3])), 'B');
+    expect(answer.text).toBe('a\n');
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toContain('/debug/agent/sessions/S1/dataset/convert');
+    expect(JSON.parse(String(init.body))).toEqual({ data_base64: 'AQID', sheet: 'B' });
+    vi.unstubAllGlobals();
   });
 });
 

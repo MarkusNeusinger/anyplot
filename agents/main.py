@@ -13,6 +13,7 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `POST /v1/sessions` | `{user, spec_id, library, locale, snapshot}` | `{session_id, eligibility}` | `422 not_eligible` |
 | `POST /v1/sessions/{sid}/library` | `{library, snapshot}` | `{session_id, eligibility}` | `422 not_eligible`, `409 run_active` |
 | `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?, source?}` (`source`: the name of the file the page read the text from, at most 1,024 characters; screened on its own, never a note) | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version, language, file_name?}` (`file_name`: the dropped file's name as the session keeps it, `(name withheld)` when the screen refused it; `suggestion`: the wide-table offer of `data/shape.py`, or null; `context_lines`: the notes pasted above or below the table that passed the pre-filter and the scope judge, which the root gets with the next `summarize_data` turn; `language`: the session language as `{language, source}`, which a paste before any typed message or choice sets from the notes' or the column names' language, source `pasted`), stored as version 1 (the undo history of an earlier paste is dropped); or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips that fallback and keeps every row) | `413 too_long`, `422 unparseable`, `422 formula` (text of at most 2,000 characters that asks for a formula, which the chat's `generate_data` computes; never transcribed), `403 data_refused`, `403 session_closed` (the scope judge closed the session), `409 run_active` (a turn of the user in any session, or another paste of the user in flight), `429 rate_limited` / `429 daily_limit` (`AGENT_USER_PASTES_PER_MINUTE` / `_PER_DAY`, or the daily token budgets for `daily_limit`), `429 locked_out` (the day's `attack` strikes), `503 guard_unavailable` |
+| `POST /v1/sessions/{sid}/dataset/convert` | `{data_base64, sheet?}` (a dropped Excel, OpenDocument, Parquet, Feather, Arrow or NumPy file, at most 5 MiB; `sheet` a sheet or `.npz` array the previous answer named) | `{text, format, kind, rows, columns, sheet, sheets, sheet_count, warnings}`: the file read in the renderer's sandbox (`harness.py --convert`) into the text the paste box takes (CSV, or JSON records for a table with list columns, `format`), the sheet read and at most 10 visible ones (`sheet_count` all of them), `warnings` counts (`formulas_without_value`, `hidden_sheets`, `dropped_columns`, `list_columns`); nothing stored, no model call | `413 too_long`, `422 invalid`, `422 file_<refusal>` (`wire.CONVERT_REASONS`, with `measured` and `limit` for a broken cap) and `file_timeout`, `file_too_complex`, `file_too_large`, `file_unreadable`, `403 session_closed`, `409 run_active` (another conversion of the user in flight), `429 rate_limited` / `429 daily_limit` (`AGENT_USER_CONVERSIONS_PER_MINUTE` / `_PER_DAY`, or the daily token budgets), `429 locked_out`, `503 capacity` (no render slot within `AGENT_CONVERT_SLOT_WAIT_S`), `503 convert_unavailable` (no renderer, or one without `/convert`) |
 | `PUT /v1/sessions/{sid}/bindings` | `[{role, column}]` | `{bindings, complete, missing_roles, warnings}`: `warnings` names a role that needs values of 0 or more bound to a column with a negative value, or left open for that reason (`data/signs.py`); never a refusal | `409 run_active`, `422 invalid` (with `errors`, at most 20 lines) |
 | `PUT /v1/sessions/{sid}/language` | `{language}` (a short name or code, `^[A-Za-z][A-Za-z -]{0,39}$`) | `{language, source}`: the session language in its stored form (`English` is `en`), source `chosen`, which detection never overrides | `409 run_active`, `422` (the pattern) |
 | `POST /v1/sessions/{sid}/dataset/confirm` | | `{confirmed, rows, columns}`: step 1 of two, the user confirmed the dataset with its bindings; the pipeline runs only then | `409 run_active`, `422 no_dataset` |
@@ -169,6 +170,7 @@ from agents.anyplot.opening import (
 from agents.anyplot.plugins.ledger import CURRENT_LEDGER, RequestLedger, attribution, budget_allows, judge_budget_tokens
 from agents.anyplot.plugins.scope_guard import LOCKED_OUT, SESSION_CLOSED, scope_refusals
 from agents.anyplot.policy import fence, file_name_block, refusal, scope_rubric, transcribe_rubric, user_notes_block
+from agents.anyplot.render.contract import ConvertJob, RendererUnavailable
 from agents.anyplot.render.serial import RenderBusy
 from agents.anyplot.render.store import RenderStoreFull
 from agents.anyplot.render.watermark import add_footer
@@ -197,6 +199,7 @@ from agents.anyplot.session_state import (
 )
 from agents.anyplot.settings import AgentSettings, get_settings
 from agents.anyplot.theme_render import RenderGone, render_theme
+from agents.renderer.wire import MAX_CONVERT_BASE64_CHARS, MAX_CONVERT_INPUT_BYTES, MAX_SHEET_NAME_CHARS
 from agents.stream import MAX_DONE_ROLES, Translator
 from core.constants import SUPPORTED_LIBRARIES
 
@@ -419,6 +422,8 @@ class Runtime:
     artifact_service: InMemoryArtifactService = field(default_factory=InMemoryArtifactService)
     active: dict[str, ActiveRun] = field(default_factory=dict)
     pasting: set[str] = field(default_factory=set)
+    converting: set[str] = field(default_factory=set)
+    """The users with a file conversion in flight: one per user at a time (`409 run_active` for a second)."""
     eligibility_cache: dict[tuple[str, str], Eligibility] = field(default_factory=dict)
     runner: Runner | None = None
     queue: RunQueue | None = None
@@ -634,6 +639,14 @@ class DatasetBody(_Body):
     note; the text itself is the file's, unchanged. Never logged."""
 
 
+class ConvertBody(_Body):
+    """A dropped binary data file as base64 (the BFF's CSRF guard takes JSON only), and the sheet the page chose."""
+
+    data_base64: str = Field(min_length=4, max_length=MAX_CONVERT_BASE64_CHARS)
+    sheet: str | None = Field(default=None, min_length=1, max_length=MAX_SHEET_NAME_CHARS)
+    """A sheet of a workbook or an array of an `.npz`, as the previous answer named it; None reads the first."""
+
+
 class BindingBody(_Body):
     role: str = Field(min_length=1, max_length=32)
     column: str | None = Field(default=None, max_length=64)
@@ -818,6 +831,123 @@ async def upload_dataset(
         return await _ingest_paste(services, runtime, body, user, sid, rid, view)
     finally:
         runtime.pasting.discard(user)
+
+
+CONVERT_FAILURES: dict[str, str] = {
+    "timeout": "file_timeout",
+    "memory": "file_too_complex",
+    "disk_budget": "file_too_complex",
+    "file_budget": "file_too_complex",
+    "output_rejected": "file_too_large",
+}
+"""A conversion the renderer stopped, by its run reason, as the route's refusal code; any other failure (the reader
+raised, the guard refused an operation) is `file_unreadable`."""
+
+
+@app.post("/v1/sessions/{sid}/dataset/convert", dependencies=v1_dependencies)
+async def convert_dataset_file(
+    sid: SessionId, body: ConvertBody, user: User, runtime: RuntimeDep, rid: RequestId
+) -> JSONResponse:
+    """A dropped binary data file read in the renderer's sandbox into the text the paste box takes.
+
+    Nothing is stored and no model reads anything: the page puts the text into the box and
+    the user presses `.parse()`, which goes through the ordinary paste route (its limits, the
+    pre-filter, the judges) with the file's name and sheet as `source`. The conversion has its
+    own counter (`AGENT_USER_CONVERSIONS_PER_MINUTE` / `_PER_DAY`, counted when the file goes to
+    the sandbox), checked after the paste route's daily budget and strikes, so a user who may
+    not paste spends no sandbox time; the paste that follows counts as one paste (owner
+    decision of 2026-10-15). One conversion per user at a time (`Runtime.converting`), across
+    sessions; it waits for the render slot behind every pipeline render. The attribution line
+    carries the kind, the outcome, the byte count and the time, never the file, its text or its
+    sheet names.
+    """
+    services = get_services()
+    settings = get_settings()
+    session = await runtime.session(user, sid)
+    if scope_refusals(session.events) >= settings.session_refusals:
+        raise AgentsError(403, SESSION_CLOSED)
+    if user in runtime.converting:
+        raise AgentsError(409, "run_active")
+    try:
+        data = base64.b64decode(body.data_base64, validate=True)
+    except (ValueError, binascii.Error):
+        raise AgentsError(422, "invalid") from None
+    if not data:
+        raise AgentsError(422, "invalid")
+    if len(data) > MAX_CONVERT_INPUT_BYTES:
+        raise AgentsError(413, "too_long")
+    _paste_budget(services, user, settings)
+    ledger = RequestLedger(request_id=rid, user_id=user, session_id=sid, kind="action")
+    limit = services.usage.convert_limit(user, settings)
+    if limit is not None:
+        attribution("convert_limit", ledger, verdict=limit)
+        raise AgentsError(429, limit)
+    runtime.converting.add(user)  # no await since the check above, so no second conversion slipped in between
+    try:
+        services.usage.add_conversion(user)
+        job = ConvertJob(
+            job_id=f"c{secrets.token_hex(8)}", data=data, sheet=body.sheet, timeout_s=settings.convert_timeout_s
+        )
+        try:
+            output = await services.backend.convert(job, wait_s=settings.convert_slot_wait_s)
+        except RenderBusy:
+            attribution("data_convert", ledger, outcome="capacity", bytes=len(data))
+            raise AgentsError(503, "capacity") from None
+        except (RendererUnavailable, NotImplementedError):
+            attribution("data_convert", ledger, outcome="unavailable", bytes=len(data))
+            raise AgentsError(503, "convert_unavailable") from None
+    finally:
+        runtime.converting.discard(user)
+    kind = output.meta.kind if output.meta is not None else None
+    if output.exit_code == 0 and output.text is not None and output.meta is not None:
+        meta = output.meta
+        attribution(
+            "data_convert",
+            ledger,
+            outcome="ok",
+            kind=kind,
+            format=meta.format,
+            rows=meta.rows,
+            columns=meta.columns,
+            sheets=meta.sheet_count,
+            bytes=len(data),
+            wall_s=round(output.wall_s, 3),
+        )
+        return JSONResponse(
+            {
+                "text": output.text,
+                "format": meta.format,
+                "kind": meta.kind,
+                "rows": meta.rows,
+                "columns": meta.columns,
+                "sheet": meta.sheet,
+                "sheets": meta.sheets,
+                "sheet_count": meta.sheet_count,
+                "warnings": dict(meta.warnings),
+            },
+            headers=_NO_STORE,
+        )
+    if output.refusal is not None:
+        code = f"file_{output.refusal}"
+    elif output.timed_out:
+        code = "file_timeout"
+    else:
+        code = CONVERT_FAILURES.get(output.reason or "", "file_unreadable")
+    attribution(
+        "data_convert",
+        ledger,
+        outcome=code,
+        exit_code=output.exit_code,
+        reason=output.reason,
+        bytes=len(data),
+        wall_s=round(output.wall_s, 3),
+    )
+    content: dict[str, Any] = {"detail": code}
+    if output.refusal is not None:
+        content.update(
+            {key: value for key, value in (("measured", output.measured), ("limit", output.limit)) if value is not None}
+        )
+    return JSONResponse(status_code=422, content=content, headers=_NO_STORE)
 
 
 def _paste_budget(services: Services, user: str, settings: AgentSettings) -> None:

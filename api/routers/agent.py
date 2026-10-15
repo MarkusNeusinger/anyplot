@@ -17,6 +17,8 @@ not its configuration never breaks.
 from __future__ import annotations
 
 import asyncio
+import base64
+import binascii
 import gzip
 import hashlib
 import hmac
@@ -84,6 +86,16 @@ PATCH too). A custom header forces a CORS preflight, which a foreign origin cann
 MAX_DATASET_BYTES = 1024 * 1024
 """Pasted data, "1 MB" of UTF-8 (200 KB before 2026-10-14): the agents parser's `MAX_INPUT_BYTES`, copied
 because the API image does not ship the agents package."""
+MAX_CONVERT_BYTES = 5 * 1024 * 1024
+"""A dropped binary data file (Excel, OpenDocument, Parquet, Feather, Arrow, NumPy), raw: the agents service's and
+the renderer's cap (`agents/renderer/wire.py` `MAX_CONVERT_INPUT_BYTES`, copied because the API image does not ship
+the agents package). It travels as base64 in JSON, about 6.7 MB, because the CSRF guard takes JSON only."""
+MAX_CONVERT_BASE64_CHARS = 4 * ((MAX_CONVERT_BYTES + 2) // 3)
+MAX_REQUEST_BODY_BYTES = MAX_CONVERT_BASE64_CHARS + 4096
+"""The largest body any agent route takes, by its declared length: the conversion's base64 and the JSON around it
+(the paste's 1 MB of text stays far below even with every character escaped)."""
+CONVERT_PATH_SUFFIX = "/dataset/convert"
+MAX_SHEET_NAME_CHARS = 255
 MAX_MESSAGE_CHARS = 2000
 MAX_FEEDBACK_CHARS = 500
 """The cap of a feedback message after the strip, the site feedback's own (`api/routers/feedback.py`)."""
@@ -160,6 +172,33 @@ _QUEUED_HEARTBEAT_S = 15.0
 """The agents run queue's `HEARTBEAT_S`: a waiting run's status repeats at least this
 often, so its run may have started up to this long before the BFF sees its first event."""
 
+# Why the agents service did not convert a dropped file (`agents/renderer/wire.py` `CONVERT_REASONS` with
+# `file_` in front, plus the run failures of `agents/main.py` `CONVERT_FAILURES`; copied, because the API
+# image does not ship the agents package). These pass with `measured` and `limit` when the agents service
+# sends them, so the page can say "21,000 rows, the cap is 20,000".
+CONVERT_REFUSAL_CODES = frozenset(
+    f"file_{reason}"
+    for reason in (
+        "unsupported",
+        "encrypted",
+        "pickle",
+        "hdf5",
+        "corrupt",
+        "archive_limits",
+        "too_many_rows",
+        "too_many_columns",
+        "too_large",
+        "empty",
+        "sheet_not_found",
+        "array_shape",
+        "object_array",
+        "timeout",
+        "too_complex",
+        "unreadable",
+    )
+)
+_MAX_MEASURE = 2**53
+
 # Error codes the agents service documents for its /v1 routes; an upstream error
 # body is never forwarded, only one of these codes when it names one.
 _UPSTREAM_CODES = frozenset(
@@ -181,6 +220,8 @@ _UPSTREAM_CODES = frozenset(
         "daily_limit",
         "locked_out",
         "session_closed",
+        "convert_unavailable",
+        *CONVERT_REFUSAL_CODES,
     }
 )
 # A spec data role, as the agents contract defines it (`agents/anyplot/schemas.py`,
@@ -227,6 +268,7 @@ class AgentHTTPError(Exception):
         errors: list[str] | None = None,
         *,
         case_id: str | None = None,
+        measure: dict[str, int] | None = None,
     ) -> None:
         super().__init__(detail)
         self.status_code = status_code
@@ -234,6 +276,7 @@ class AgentHTTPError(Exception):
         self.ref = ref
         self.errors = errors
         self.case_id = case_id
+        self.measure = measure
 
 
 async def agent_http_error_handler(request: Request, exc: AgentHTTPError) -> JSONResponse:
@@ -247,6 +290,8 @@ async def agent_http_error_handler(request: Request, exc: AgentHTTPError) -> JSO
         content["errors"] = exc.errors
     if exc.case_id:
         content["case_id"] = exc.case_id
+    if exc.measure:
+        content.update(exc.measure)
     return JSONResponse(status_code=exc.status_code, content=content, headers=headers)
 
 
@@ -303,6 +348,28 @@ def require_same_site_client(request: Request) -> None:
         raise AgentHTTPError(403, "origin_not_allowed")
     if _has_body(request) and not _is_json(request.headers.get("content-type")):
         raise AgentHTTPError(403, "json_required")
+
+
+def require_body_within_cap(request: Request) -> None:
+    """Refuse a request body over `MAX_REQUEST_BODY_BYTES` by its declared `Content-Length`, before it is read.
+
+    Placed before `require_utf8_body`, which reads the body. A route that declares a body
+    model has its body read by FastAPI before any dependency runs, so for those this is a
+    second line; the file conversion takes its body by hand (`convert_dataset_file`), so its
+    5 MB file is refused here unread. The conversion also needs a declared length: a chunked
+    body has none to check.
+    """
+    declared = request.headers.get("content-length")
+    if declared is None:
+        if "transfer-encoding" in request.headers and request.url.path.endswith(CONVERT_PATH_SUFFIX):
+            raise AgentHTTPError(411, "length_required")
+        return
+    try:
+        size = int(declared)
+    except ValueError:
+        raise AgentHTTPError(400, "bad_request") from None
+    if size > MAX_REQUEST_BODY_BYTES:
+        raise AgentHTTPError(413, "too_long")
 
 
 async def require_utf8_body(request: Request) -> None:
@@ -382,6 +449,7 @@ router = APIRouter(
         Depends(require_admin),
         Depends(require_agent_enabled),
         Depends(require_same_site_client),
+        Depends(require_body_within_cap),
         Depends(require_utf8_body),
     ],
 )
@@ -445,6 +513,13 @@ class DatasetBody(_StrictBody):
     # service sanitises and screens it and keeps it apart from the notes (`file_name` in the answer, never a
     # request to the assistant); it is never logged.
     source: Annotated[str, Field(min_length=1, max_length=1_024)] | None = None
+
+
+class ConvertBody(_StrictBody):
+    # A dropped binary data file as base64 (the CSRF guard takes JSON only), at most 5 MB raw, and the
+    # sheet (or `.npz` array) the page chose from the previous answer's `sheets`.
+    data_base64: Annotated[str, Field(min_length=4, max_length=MAX_CONVERT_BASE64_CHARS)]
+    sheet: Annotated[str, Field(min_length=1, max_length=MAX_SHEET_NAME_CHARS)] | None = None
 
 
 class Binding(_StrictBody):
@@ -617,7 +692,19 @@ def _upstream_error(response: httpx.Response, ref: str, *, binding_errors: bool 
         code = "upstream" if status >= 500 else _GENERIC_CODES.get(status, "rejected")
     if binding_errors and status == 422 and code == "invalid":
         return AgentHTTPError(status, code, ref, errors=_binding_errors(body))
+    if code in CONVERT_REFUSAL_CODES and isinstance(body, dict):
+        return AgentHTTPError(status, code, ref, measure=_measure(body))
     return AgentHTTPError(status, code, ref)
+
+
+def _measure(body: dict[str, Any]) -> dict[str, int] | None:
+    """A conversion refusal's `measured` and `limit`, when each is a whole number in range; nothing else passes."""
+    kept = {
+        key: value
+        for key in ("measured", "limit")
+        if isinstance(value := body.get(key), int) and not isinstance(value, bool) and 0 <= value <= _MAX_MEASURE
+    }
+    return kept or None
 
 
 async def _call_upstream(
@@ -972,6 +1059,33 @@ async def upload_dataset(sid: SessionId, body: DatasetBody, ctx: Ctx, client: Cl
     if body.source is not None:
         payload["source"] = body.source
     return await _call_upstream(client, ctx, "POST", f"/sessions/{sid}/dataset", json_body=payload)
+
+
+@router.post("/sessions/{sid}/dataset/convert")
+async def convert_dataset_file(sid: SessionId, request: Request, ctx: Ctx, client: Client) -> Any:
+    """Read a dropped binary data file into the text the paste box takes (`{data_base64, sheet?}`): `{text, format,
+    kind, rows, columns, sheet, sheets, sheet_count, warnings}`, nothing stored. The agents service converts it in the
+    renderer's sandbox (Excel, OpenDocument, Parquet, Feather, Arrow, NumPy; pickle and HDF5 never). The body is taken
+    by hand, so `require_body_within_cap` refuses an oversized one by its `Content-Length` before it is read; 413
+    above 5 MB raw; `422 file_<reason>` with `measured` and `limit` for a broken cap, `429 rate_limited` /
+    `daily_limit` past the conversion limits, `503 capacity` and `503 convert_unavailable`, passed through."""
+    raw = await request.body()
+    if len(raw) > MAX_REQUEST_BODY_BYTES:
+        raise AgentHTTPError(413, "too_long", ctx.request_id)
+    try:
+        body = ConvertBody.model_validate_json(raw)
+    except ValueError:  # pydantic's ValidationError, for JSON and shape alike; its message echoes the input
+        raise AgentHTTPError(422, "invalid", ctx.request_id) from None
+    try:
+        size = len(base64.b64decode(body.data_base64, validate=True))
+    except (ValueError, binascii.Error):
+        raise AgentHTTPError(422, "invalid", ctx.request_id) from None
+    if size > MAX_CONVERT_BYTES:
+        raise AgentHTTPError(413, "too_long", ctx.request_id)
+    payload: dict[str, Any] = {"data_base64": body.data_base64}
+    if body.sheet is not None:
+        payload["sheet"] = body.sheet
+    return await _call_upstream(client, ctx, "POST", f"/sessions/{sid}/dataset/convert", json_body=payload)
 
 
 @router.put("/sessions/{sid}/bindings")

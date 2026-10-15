@@ -16,10 +16,10 @@ from agents.renderer.auth import decode_claims
 from agents.renderer.executor import ExecutorConfig, SandboxExecutor, Unavailable
 from agents.renderer.main import Renderer, app, get_renderer
 from agents.renderer.settings import RendererSettings, get_settings
-from agents.renderer.wire import DataRunResponse, RendererStatus, RenderResponse
+from agents.renderer.wire import ConvertResponse, DataRunResponse, RendererStatus, RenderResponse
 
 from .conftest import FakeLauncher
-from .helpers import AGENTS_SA, SLEEPER, URL, FakeExecutor, data_job, id_token, job
+from .helpers import AGENTS_SA, SLEEPER, URL, FakeExecutor, convert_job, data_job, id_token, job
 
 
 GOOD = id_token(aud=URL, email=AGENTS_SA)
@@ -548,3 +548,66 @@ class TestStatus:
         assert renderer.settings.allowed_callers == [AGENTS_SA, "owner@example.com"]
         assert renderer.settings.audiences == [URL]
         assert renderer.settings.environment == "production"
+
+
+def convert_body(**overrides: Any) -> dict[str, Any]:
+    return {**convert_job().model_dump(mode="json"), **overrides}
+
+
+class TestConvert:
+    async def test_the_contract_round_trips(self, client: httpx.AsyncClient, fake: FakeExecutor) -> None:
+        response = await client.post("/convert", json=convert_body(), headers=auth())
+
+        assert response.status_code == 200 and response.headers["cache-control"] == "no-store"
+        answer = ConvertResponse.model_validate_json(response.content)
+        assert answer.job_id == "conv123" and answer.text == "x,y\n1,2\n"
+        assert answer.meta is not None and answer.meta.kind == "xlsx"
+        assert fake.calls == [("conv123", "convert")]
+
+    async def test_an_invalid_job_is_refused_without_echoing_it(self, client: httpx.AsyncClient) -> None:
+        over = base64.b64encode(b"\0" * (5 * 1024 * 1024 + 1)).decode()
+        for bad in (
+            convert_body(data_base64="not base64 SECRET"),
+            convert_body(data_base64=over),
+            convert_body(timeout_s=60),
+            convert_body(sheet="x" * 256),
+            convert_body(source="SECRET"),
+        ):
+            response = await client.post("/convert", json=bad, headers=auth())
+            assert response.status_code == 422 and response.json() == {"detail": "invalid_job"}
+            assert "SECRET" not in response.text
+
+    async def test_the_caller_check_applies(self, client: httpx.AsyncClient) -> None:
+        assert (await client.post("/convert", json=convert_body())).status_code == 401
+
+    async def test_a_conversion_and_a_render_share_the_one_slot(
+        self, client: httpx.AsyncClient, fake: FakeExecutor
+    ) -> None:
+        responses = await asyncio.gather(
+            client.post("/convert", json=convert_body(), headers=auth()),
+            client.post("/render", json=body(), headers=auth()),
+            client.post("/convert", json=convert_body(job_id="conv456"), headers=auth()),
+        )
+
+        assert [response.status_code for response in responses] == [200, 200, 200]
+        assert fake.max_active == 1
+
+    async def test_a_replay_gets_the_stored_answer_and_another_sheet_conflicts(
+        self, client: httpx.AsyncClient, fake: FakeExecutor
+    ) -> None:
+        first = await client.post("/convert", json=convert_body(), headers=auth())
+        second = await client.post("/convert", json=convert_body(), headers=auth())
+        other = await client.post("/convert", json=convert_body(sheet="B"), headers=auth())
+
+        assert first.content == second.content and fake.calls == [("conv123", "convert")]
+        assert other.status_code == 409
+
+    async def test_the_log_carries_no_file_content(
+        self, client: httpx.AsyncClient, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        caplog.set_level("INFO", logger="agents.renderer")
+        await client.post("/convert", json=convert_body(sheet="Gehälter 2024"), headers=auth())
+
+        lines = [record.getMessage() for record in caplog.records if '"event": "convert"' in record.getMessage()]
+        assert len(lines) == 1 and "Gehälter" not in lines[0] and "x,y" not in lines[0]
+        assert '"kind": "xlsx"' in lines[0]

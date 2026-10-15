@@ -53,6 +53,10 @@ token, retries, timeout margin and cancel path. A `404` means a renderer deploye
 before the route; it raises `DataRunUnsupported`, which the tool answers as
 `unavailable` instead of failing the turn.
 
+**Conversions.** `convert` posts a dropped binary file to `AGENT_RENDER_URL/convert` (base64
+in JSON) the same way; a `404` raises `DataRunUnsupported`, which the dataset route answers
+`503 convert_unavailable`.
+
 No semaphore here: `SerialRenderer` (`render/serial.py`) already hands this backend
 one theme at a time, and the renderer keeps its own single render slot for the
 callers it serves together.
@@ -77,9 +81,19 @@ from google.auth.transport.requests import Request as GoogleAuthRequest
 from google.oauth2 import id_token as google_id_token
 from pydantic import ValidationError
 
-from agents.renderer.wire import MAX_PNG_BYTES, DataRunRequest, DataRunResponse, RenderRequest, RenderResponse
+from agents.renderer.wire import (
+    MAX_PNG_BYTES,
+    ConvertRequest,
+    ConvertResponse,
+    DataRunRequest,
+    DataRunResponse,
+    RenderRequest,
+    RenderResponse,
+)
 
 from ..contract import (
+    ConvertJob,
+    ConvertOutput,
     DataJob,
     DataOutput,
     DataRunUnsupported,
@@ -327,6 +341,65 @@ class RemoteBackend:
             reason=answer.reason,
             measured=answer.measured,
             limit=answer.limit,
+        )
+
+    async def convert(self, job: ConvertJob) -> ConvertOutput:
+        """POST the file to `/convert` as base64; a renderer without the route (404) raises `DataRunUnsupported`."""
+        try:
+            body = ConvertRequest.model_validate(
+                {
+                    "job_id": job.job_id,
+                    "data_base64": base64.b64encode(job.data).decode("ascii"),
+                    "sheet": job.sheet,
+                    "timeout_s": job.timeout_s,
+                }
+            ).model_dump(mode="json")
+        except ValidationError as exc:
+            fields = ",".join(sorted({str(error["loc"][0]) for error in exc.errors() if error["loc"]}))
+            raise _unavailable(f"the conversion does not fit the renderer contract ({fields})") from None
+        timeout = httpx.Timeout(job.timeout_s + RESPONSE_MARGIN_S, connect=CONNECT_TIMEOUT_S)
+        try:
+            response = await self._post(body, timeout, path="/convert")
+        except asyncio.CancelledError:
+            await self._cancel_remote(job.job_id)
+            raise
+        except httpx.TimeoutException as exc:
+            await self._cancel_remote(job.job_id)
+            raise _unavailable(f"the renderer did not answer the conversion in time ({type(exc).__name__})") from None
+        status = response.status_code
+        if status == 404:
+            logger.warning("remote renderer: no /convert route (HTTP 404); deploy the renderer first")
+            raise DataRunUnsupported("the renderer has no /convert route yet (HTTP 404)")
+        if status != 200:
+            detail = _detail(response)
+            suffix = f", {detail}" if detail else ""
+            raise _unavailable(f"the renderer answered the conversion with HTTP {status}{suffix}")
+        try:
+            answer = ConvertResponse.model_validate_json(response.content)
+        except ValidationError:
+            raise _unavailable("the renderer's conversion answer does not match the contract") from None
+        if answer.job_id != job.job_id:
+            raise _unavailable("the renderer answered for another job")
+        logger.info(
+            "remote conversion %s: exit %s, refusal %s, reason %s, %.2f s",
+            job.job_id,
+            answer.exit_code,
+            answer.refusal,
+            answer.reason,
+            answer.wall_s,
+        )
+        if answer.reason == "launcher":
+            raise _unavailable("the renderer's sandbox launcher failed for the conversion")
+        return ConvertOutput(
+            exit_code=answer.exit_code,
+            timed_out=answer.timed_out,
+            refusal=answer.refusal,
+            measured=answer.measured,
+            limit=answer.limit,
+            text=answer.text,
+            meta=answer.meta,
+            reason=answer.reason,
+            wall_s=answer.wall_s,
         )
 
     async def _post(self, body: dict[str, object], timeout: httpx.Timeout, *, path: str = "/render") -> httpx.Response:
