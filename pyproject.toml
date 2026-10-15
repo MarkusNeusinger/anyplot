@@ -230,6 +230,8 @@ module = [
     # pyarrow ships no type information; the renderer's converter (agents/anyplot/render/convert.py) reads with it
     "pyarrow",
     "pyarrow.*",
+    # in the `convert` extra only, which the type-check job does not install
+    "python_calamine",
 ]
 ignore_missing_imports = true
 
