@@ -1170,6 +1170,35 @@ describe('DataPanel file drop', () => {
     });
   });
 
+  it('holds .replace() while the parse of the text in the box runs', async () => {
+    const { rerender, onParse } = renderPanel();
+    await userEvent.type(box(), 'a,b');
+    drop(csvFile());
+    await screen.findByTestId('file-replace');
+    await userEvent.click(screen.getByRole('button', { name: '.parse()' }));
+    expect(onParse).toHaveBeenCalledWith('a,b');
+
+    const panel = (state: AgentSessionState) => (
+      <DataPanel
+        state={state}
+        onParse={onParse}
+        onConfirmTranscription={vi.fn()}
+        onDiscardTranscription={vi.fn()}
+        onSendFormula={vi.fn()}
+        onBind={vi.fn()}
+        onConfirmData={vi.fn()}
+        onUndo={vi.fn()}
+      />
+    );
+    rerender(panel(emptyState({ parsing: true })));
+    expect(screen.getByRole('button', { name: '.replace()' })).toBeDisabled();
+    expect(box()).toHaveValue('a,b');
+
+    rerender(panel(emptyState()));
+    await userEvent.click(screen.getByRole('button', { name: '.replace()' }));
+    expect(box()).toHaveValue(CSV);
+  });
+
   it('refuses a file while a step runs and leaves the box alone', async () => {
     const { onTrack } = renderPanel(emptyState({ parsing: true }));
 

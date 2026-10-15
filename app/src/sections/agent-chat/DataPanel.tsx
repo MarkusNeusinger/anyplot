@@ -1116,6 +1116,9 @@ export function DataPanel({
               type="button"
               ref={replaceButtonRef}
               onClick={() => fillFromFile(pendingFile.name, pendingFile.reading, 'replaced')}
+              // Not while a parse of the box's text runs: its answer (a table to decide on)
+              // would arrive after the swap and be stored under this file's name.
+              disabled={!ready || busy}
               sx={ghostButtonSx}
             >
               .replace()
