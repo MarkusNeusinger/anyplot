@@ -12,7 +12,7 @@
 | G9 | probe: scatter marks plus line vertices over `MAX_PLOTTED_POINTS` (computed mass data) | advisory: a DQ-03 line |
 | G10 | probe: characters without a glyph in any font of their text, plain text and mathtext (the harness records matplotlib's own reports) | advisory: a VQ-01 line |
 | G11 | probe (`density`): value labels at a data coordinate on a bar's end or point, dots on bar ends and shadowed bars, per axes: more than `MAX_VALUE_LABELS` labels, bar labels wider than `LABEL_SLOT_FILL` of the space per bar, or more than `MAX_DECORATIONS` decorations | advisory: a VQ-03 line |
-| G12 | probe (`labels`): numeric tick labels and annotations whose decimal mark is not the plot language's (`language.NUMBER_FORMATS`; `foreign_decimal`) | advisory: a VQ-06 line |
+| G12 | probe (`labels`, `tick_axes`): numeric annotations, and tick labels of numeric axes (never dates or categories), whose decimal mark is not the plot language's (`language.NUMBER_FORMATS`; `foreign_decimal`, mathtext read as drawn) | advisory: a VQ-06 line |
 
 A pipeline run renders one theme (`PipelineArgs.theme`) and the theme toggle renders
 the other one later, so `evaluate` judges exactly the themes of the job it is given:
@@ -538,13 +538,44 @@ NUMBER_LABEL_KINDS = frozenset({"annotation", "text"})
 `colorbar tick label`, `harness.drawn_labels`); titles, axis titles and legend entries may name a version or a code."""
 
 
-def _number_label_kind(kind: Any) -> str | None:
-    """`tick labels` or `annotations` for a label kind G12 checks, else None."""
+NUMERIC_TICKS = "number"
+"""`harness.tick_axes`'s kind for an axis whose tick labels are numbers; dates, categories and labels the code set
+itself (`fixed`) are never checked."""
+_MATH_MARKUP = re.compile(r"\\mathdefault|\\mathrm|\\,|[{}$]")
+
+
+def plain_text(text: str) -> str:
+    """A label as it reads on the canvas when it is one mathtext string: `$\\mathdefault{5.30}$` reads `5.30` and
+    `$5{,}30$` reads `5,30`. Any other text stays as it is, a currency dollar included."""
+    stripped = text.strip()
+    if len(stripped) > 2 and stripped.startswith("$") and stripped.endswith("$") and stripped.count("$") == 2:
+        return _MATH_MARKUP.sub("", stripped).replace("\\ ", " ").strip()
+    return stripped
+
+
+def _number_label_kind(label: dict[str, Any], ticks: list[Any] | None) -> str | None:
+    """`tick labels` or `annotations` for a label G12 checks, else None.
+
+    An annotation or text always counts. A tick label counts only when the probe's
+    `tick_axes` (`harness.tick_axes`) names its axis numeric: an axis of dates (`14.10`) or
+    of the data's own categories (`3.11`) writes no decimals. Without `tick_axes` (a renderer
+    older than G12) no tick label counts.
+    """
+    kind = label.get("kind")
     if not isinstance(kind, str):
         return None
-    if kind.endswith("tick label"):
-        return "tick labels"
-    return "annotations" if kind in NUMBER_LABEL_KINDS else None
+    if kind in NUMBER_LABEL_KINDS:
+        return "annotations"
+    if not kind.endswith("tick label") or ticks is None:
+        return None
+    index = label.get("axes")
+    if isinstance(index, bool) or not isinstance(index, int) or not 0 <= index < len(ticks):
+        return None
+    entry = ticks[index]
+    if not isinstance(entry, dict):
+        return None
+    names = ("x", "y") if kind == "colorbar tick label" else (kind[0],)
+    return "tick labels" if any(entry.get(name) == NUMERIC_TICKS for name in names) else None
 
 
 def foreign_decimal(text: str, numbers: NumberFormat) -> bool:
@@ -556,7 +587,7 @@ def foreign_decimal(text: str, numbers: NumberFormat) -> bool:
     digits (`1.234`) is a thousands mark and passes. A decimal point mirrors this, except that
     several points (`7.184.003`) pass, because a version-like label writes them too.
     """
-    match = _NUMBER_LABEL.match(text.strip())
+    match = _NUMBER_LABEL.match(plain_text(text))
     if match is None:
         return False
     body = match.group("body")
@@ -580,21 +611,24 @@ def _number_format_lines(
 ) -> list[tuple[str, str]]:
     """The G12 line: numeric tick labels or annotations whose decimal mark is not the plot language's.
 
-    Reads the probe's `labels` field (`{"kind", "text"}` per drawn text). No label text
+    Reads the probe's `labels` field (`{"kind", "text", "axes"}` per drawn text) and its
+    `tick_axes`, which say which tick labels are numbers (`_number_label_kind`). No label text
     reaches the line: a tick label can be a cell of the user's data. The language is named
     by its English name from the server's table, never by the session's free-text value.
     """
     labels = probe.get("labels") if isinstance(probe, dict) else None
     if numbers is None or not isinstance(labels, list):
         return []
+    ticks = probe.get("tick_axes") if isinstance(probe, dict) else None
+    ticks = ticks if isinstance(ticks, list) else None
     numeric = foreign = 0
     kinds: set[str] = set()
     for label in labels:
-        kind = _number_label_kind(label.get("kind")) if isinstance(label, dict) else None
+        kind = _number_label_kind(label, ticks) if isinstance(label, dict) else None
         if kind is None:
             continue
         text = label.get("text")
-        if not isinstance(text, str) or _NUMBER_LABEL.match(text.strip()) is None:
+        if not isinstance(text, str) or _NUMBER_LABEL.match(plain_text(text)) is None:
             continue
         numeric += 1
         if foreign_decimal(text, numbers):

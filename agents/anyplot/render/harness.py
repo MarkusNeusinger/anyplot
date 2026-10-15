@@ -106,7 +106,8 @@ axes), G7 (overlapping text: tick labels among themselves, any other text with a
 plotted points than any dataset within the parser's caps can hold) and G10
 (characters without a glyph in any font of the text); the `density` field each save adds after the
 probe (`density_report`: per axes, the bars and points and the value labels and decorations on them)
-feeds G11. It is
+feeds G11, and `tick_axes` (what each axis's tick labels write: numbers, dates, categories) tells G12
+which tick labels are numbers. It is
 advisory because the code under test could tamper with it; the host never fails a
 render on it. The same holds for the `HARNESS` lines: the code under test shares
 stdout, so the host reads them as hints (a retry decision, a memory figure), never
@@ -1201,12 +1202,19 @@ def polar_report(figure):
     return report
 
 
-def _bar_ends(axes):
-    """Every visible bar of the axes as `(centre, end, width)` in display pixels along its orientation, plus a flag
-    whether it draws a path effect (a shadow), and the orientation of the first bar container.
+def _in_view(x, y, box, slack=1.0):
+    """Whether a display point lies within the axes box (a mark or anchor outside it is clipped, never drawn)."""
+    return box.x0 - slack <= x <= box.x1 + slack and box.y0 - slack <= y <= box.y1 + slack
+
+
+def _bar_ends(axes, box):
+    """Every visible bar of the axes inside its view as `(centre, end, width)` in display pixels along its
+    orientation, plus a flag whether it draws a path effect (a shadow), and the orientation of the first bar container.
 
     For a vertical bar the centre is its x centre, the end the y of the side away from the
-    baseline and the width its pixel width; a horizontal bar swaps the axes.
+    baseline and the width its pixel width; a horizontal bar swaps the axes. A bar with a
+    missing value (NaN geometry) or a centre outside the axes box (a zoomed view) is left
+    out: it draws nothing, and a NaN would void the probe's JSON.
     """
     bars = []
     orientation = None
@@ -1218,18 +1226,23 @@ def _bar_ends(axes):
         for patch in container.patches:
             if not patch.get_visible():
                 continue
-            box = patch.get_window_extent()
+            extent = patch.get_window_extent()
             negative = (patch.get_width() if horizontal else patch.get_height()) < 0
             if horizontal:
-                bar = ((box.y0 + box.y1) / 2, box.x0 if negative else box.x1, box.y1 - box.y0)
+                bar = ((extent.y0 + extent.y1) / 2, extent.x0 if negative else extent.x1, extent.y1 - extent.y0)
+                centre = ((extent.x0 + extent.x1) / 2, bar[0])
             else:
-                bar = ((box.x0 + box.x1) / 2, box.y0 if negative else box.y1, box.x1 - box.x0)
+                bar = ((extent.x0 + extent.x1) / 2, extent.y0 if negative else extent.y1, extent.x1 - extent.x0)
+                centre = (bar[0], (extent.y0 + extent.y1) / 2)
+            if not all(math.isfinite(value) for value in bar) or not _in_view(*centre, box):
+                continue
             bars.append((*bar, bool(patch.get_path_effects())))
     return bars, orientation
 
 
-def _point_marks(axes):
-    """The display positions of the axes' visible scatter marks and of the vertices of its lines of three or more."""
+def _point_marks(axes, box):
+    """The display positions of the axes' visible scatter marks and of the vertices of its lines of three or more,
+    finite and inside the axes box only."""
     import numpy as np
 
     scatter, vertices = [], []
@@ -1243,15 +1256,29 @@ def _point_marks(axes):
         if line.get_visible() and len(xy) >= 3:  # two-vertex lines are rules, brackets and reference lines
             vertices.append(line.get_transform().transform(xy))
     empty = np.empty((0, 2))
-    return (np.concatenate(scatter) if scatter else empty), (np.concatenate(vertices) if vertices else empty)
+
+    def kept(parts):
+        points = np.concatenate(parts) if parts else empty
+        inside = (
+            np.isfinite(points).all(axis=1)
+            & (points[:, 0] >= box.x0 - 1)
+            & (points[:, 0] <= box.x1 + 1)
+            & (points[:, 1] >= box.y0 - 1)
+            & (points[:, 1] <= box.y1 + 1)
+        )
+        return points[inside]
+
+    return kept(scatter), kept(vertices)
 
 
-def _label_anchors(axes):
+def _label_anchors(axes, box):
     """The visible texts of the axes placed at a data coordinate, with their anchors in display pixels.
 
     An annotation counts when its `xycoords` is "data" (`ax.annotate`, `ax.bar_label`), any
     other text when it uses the data transform (`ax.text` at a data position). A callout in
-    axes coordinates is no value label.
+    axes coordinates is no value label. Like matplotlib's own draw, an annotation whose point
+    lies outside the axes is skipped unless it is set to draw there (`annotation_clip=False`);
+    a plain text at an infinite position is skipped too.
     """
     found = []
     for text in axes.texts:
@@ -1261,14 +1288,36 @@ def _label_anchors(axes):
             if text.xycoords != "data":
                 continue
             anchor = axes.transData.transform(text.xy)
+            clipped = text.get_annotation_clip() is not False
         elif text.get_transform() == axes.transData:
             anchor = axes.transData.transform(text.get_position())
+            clipped = False
         else:
             continue
-        found.append((text, float(anchor[0]), float(anchor[1])))
+        x, y = float(anchor[0]), float(anchor[1])
+        if not (math.isfinite(x) and math.isfinite(y)) or (clipped and not _in_view(x, y, box)):
+            continue
+        found.append((text, x, y))
         if len(found) >= DENSITY_LABEL_LIMIT:
             break
     return found
+
+
+def _on_bar_ends(scatter, bar_array, horizontal, value_extent):
+    """Which scatter marks sit on a bar's end, matched in chunks of `DENSITY_MARK_LIMIT` marks so the pairwise
+    arrays stay at most `DENSITY_MARK_LIMIT` squared, however many marks the plot draws."""
+    import numpy as np
+
+    on_bar = np.zeros(len(scatter), dtype=bool)
+    if not len(bar_array) or not len(scatter):
+        return on_bar
+    for start in range(0, len(scatter), DENSITY_MARK_LIMIT):
+        chunk = scatter[start : start + DENSITY_MARK_LIMIT]
+        along, across = (chunk[:, 1], chunk[:, 0]) if horizontal else (chunk[:, 0], chunk[:, 1])
+        near_centre = np.abs(along[:, None] - bar_array[None, :, 0]) <= bar_array[None, :, 2] / 2 + 1
+        near_end = np.abs(across[:, None] - bar_array[None, :, 1]) <= 0.03 * value_extent
+        on_bar[start : start + len(chunk)] = (near_centre & near_end).any(axis=1)
+    return on_bar
 
 
 def density_report(figure, dpi):
@@ -1292,9 +1341,9 @@ def density_report(figure, dpi):
         if len(report) >= DENSITY_AXES_LIMIT:
             break
         try:
-            bars, orientation = _bar_ends(axes)
-            scatter, vertices = _point_marks(axes)
             box = axes.get_window_extent(renderer)
+            bars, orientation = _bar_ends(axes, box)
+            scatter, vertices = _point_marks(axes, box)
         except Exception:
             continue
         if not bars and not len(scatter) and not len(vertices):
@@ -1304,15 +1353,10 @@ def density_report(figure, dpi):
         value_extent = width if horizontal else height
         bar_array = np.asarray([bar[:3] for bar in bars[:DENSITY_MARK_LIMIT]], dtype=float).reshape(-1, 3)
         # A scatter mark on a bar's end is a decoration (the catalogue's dots on its bar tops), not a data mark.
-        on_bar = np.zeros(len(scatter), dtype=bool)
-        if len(bar_array) and len(scatter):
-            along, across = (scatter[:, 1], scatter[:, 0]) if horizontal else (scatter[:, 0], scatter[:, 1])
-            near_centre = np.abs(along[:, None] - bar_array[None, :, 0]) <= bar_array[None, :, 2] / 2 + 1
-            near_end = np.abs(across[:, None] - bar_array[None, :, 1]) <= 0.03 * value_extent
-            on_bar = (near_centre & near_end).any(axis=1)
+        on_bar = _on_bar_ends(scatter, bar_array, horizontal, value_extent)
         points = np.concatenate([scatter[~on_bar], vertices])[:DENSITY_MARK_LIMIT]
         labelled, label_sizes = 0, []
-        for text, x, y in _label_anchors(axes):
+        for text, x, y in _label_anchors(axes, box):
             along, across = (y, x) if horizontal else (x, y)
             on_a_bar = len(bar_array) and bool(
                 (
@@ -1334,7 +1378,9 @@ def density_report(figure, dpi):
                     extent = text.get_window_extent(renderer)
                 except Exception:
                     continue
-                label_sizes.append(float(extent.height if horizontal else extent.width))
+                size = float(extent.height if horizontal else extent.width)
+                if math.isfinite(size):
+                    label_sizes.append(size)
         centres = np.unique(np.round(bar_array[:, 0], 1)) if len(bar_array) else np.empty(0)
         slot = float(np.median(np.diff(centres))) if len(centres) > 1 else None
         report.append(
@@ -1347,6 +1393,49 @@ def density_report(figure, dpi):
                 "label_px": round(float(np.median(label_sizes)) * scale, 1) if label_sizes else None,
             }
         )
+    return report
+
+
+def _tick_kind(axis):
+    """What an axis's tick labels write: `number` (a numeric scale and formatter), `date`, `category`, `fixed`
+    (labels the code set itself, `set_xticks(positions, labels)`: often the data's own categories), `none` (no labels)
+    or `other`."""
+    major = axis.get_major_formatter()
+    formatter = type(major).__name__
+    if formatter == "NullFormatter":
+        return "none"
+    # `set_ticklabels` (and `set_xticks(positions, labels)`) installs a FuncFormatter over a dict of the labels.
+    labels_dict = getattr(getattr(major, "func", None), "func", None)
+    if formatter == "FixedFormatter" or getattr(labels_dict, "__name__", "") == "_format_with_dict":
+        return "fixed"
+    get_converter = getattr(axis, "get_converter", None)
+    converter = get_converter() if get_converter is not None else getattr(axis, "converter", None)
+    if converter is None:
+        return "number"
+    module = type(converter).__module__
+    if "dates" in module:
+        return "date"
+    if "category" in module:
+        return "category"
+    return "other"
+
+
+def tick_axes(figure):
+    """Per axes of `figure.get_axes()`, in that order (the `axes` index of `drawn_labels`), what each of its axes'
+    tick labels write (`_tick_kind`), so the host checks the decimal mark (G12) of numeric ticks only, never of a
+    date (`14.10`) or a category the data names (`3.11`)."""
+    report = []
+    for axes in figure.get_axes():
+        entry = {}
+        for name in ("x", "y", "z"):
+            axis = getattr(axes, f"{name}axis", None)
+            if axis is None:
+                continue
+            try:
+                entry[name] = _tick_kind(axis)
+            except Exception:
+                entry[name] = "other"
+        report.append(entry)
     return report
 
 
@@ -1376,6 +1465,10 @@ def install_probe(theme):
             density = []
         if density:
             report["density"] = density
+        try:
+            report["tick_axes"] = tick_axes(self)
+        except Exception:  # nor does the tick-axes report
+            pass
         try:
             text = json.dumps(report, allow_nan=False)  # NaN or Infinity (a text at an infinite coordinate)
         except (TypeError, ValueError) as exc:

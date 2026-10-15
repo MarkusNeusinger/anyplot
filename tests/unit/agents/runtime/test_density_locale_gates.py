@@ -141,6 +141,43 @@ class TestDensityReport:
 
         assert axes["labelled"] == 0 and _density_lines({"density": [axes]}) == []
 
+    def test_a_missing_bar_value_keeps_the_report_valid_json(self) -> None:
+        """Copilot on #12184: a NaN bar (a group missing after a pivot) would void the probe's JSON."""
+        fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
+        container = ax.bar(range(4), [3.0, float("nan"), 2.0, 1.0])
+        ax.bar_label(container)
+        fig.canvas.draw()
+
+        [axes] = harness.density_report(fig, 400)
+
+        assert axes["bars"] == 3
+        json.dumps(axes, allow_nan=False)
+
+    def test_bars_and_labels_outside_a_zoomed_view_are_not_counted(self) -> None:
+        """Copilot on #12184: 50 labelled bars zoomed to five draw five labels."""
+        fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
+        container = ax.bar(range(50), range(1, 51))
+        ax.bar_label(container)
+        ax.set_xlim(-0.5, 4.5)
+        fig.canvas.draw()
+
+        [axes] = harness.density_report(fig, 400)
+
+        assert axes["bars"] == 5 and axes["labelled"] == 5
+
+    def test_many_scatter_marks_are_matched_in_bounded_chunks(self) -> None:
+        """Copilot on #12184: the pairwise arrays stay bounded however many marks the plot draws."""
+        fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
+        container = ax.bar(range(30), range(1, 31))
+        rng = np.random.default_rng(3)
+        ax.scatter(rng.uniform(0, 29, 9_000), rng.uniform(0, 30, 9_000), s=1)
+        ax.scatter([rect.get_x() + rect.get_width() / 2 for rect in container], range(1, 31), s=30)
+        fig.canvas.draw()
+
+        [axes] = harness.density_report(fig, 400)
+
+        assert axes["decorated"] >= 30 and axes["marks"] < 9_030
+
     def test_the_probe_writes_the_density_field(self, tmp_path: Any, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.chdir(tmp_path)
         monkeypatch.setattr(Figure, "savefig", Figure.savefig)  # restored after the test
@@ -150,6 +187,7 @@ class TestDensityReport:
 
         probe = json.loads((tmp_path / "probe-light.json").read_text())
         assert probe["density"][0]["bars"] == 52
+        assert probe["tick_axes"] == [{"x": "fixed", "y": "number"}]
 
 
 class TestDensityGate:
@@ -222,25 +260,34 @@ class TestForeignDecimal:
         assert not foreign_decimal(text, ENGLISH)
 
 
-def seaborn_style_bar_labels(fmt_label: Any, language: str) -> list[dict[str, str]]:
-    """The live seaborn case: bar labels and y tick labels as the probe's `labels` field lists them."""
+def probe_of(fig: plt.Figure, extra: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+    """The probe's `labels` (as `harness.drawn_labels` writes them, axes index included) and `tick_axes`."""
+    fig.canvas.draw()
+    labels: list[dict[str, Any]] = []
+    for index, ax in enumerate(fig.get_axes()):
+        labels += [{"kind": "annotation", "text": text.get_text()} for text in ax.texts]
+        for name in ("x", "y"):
+            ticks = getattr(ax, f"get_{name}ticklabels")()
+            labels += [
+                {"kind": f"{name} tick label", "text": t.get_text(), "axes": index} for t in ticks if t.get_text()
+            ]
+    return {"labels": labels + (extra or []), "tick_axes": harness.tick_axes(fig)}
+
+
+def seaborn_style_bar_labels(fmt_label: Any, language: str) -> dict[str, Any]:
+    """The live seaborn case: bar labels and y tick labels, and a title that names a version."""
     fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
     container = ax.bar(["A", "B", "C", "D"], [5.3, 4.25, 3.1, 2.05])
     ax.bar_label(container, labels=[fmt_label(value) for value in container.datavalues])
     ax.yaxis.set_major_formatter(FuncFormatter(lambda value, _: fmt_label(value)))
-    fig.canvas.draw()
-    labels = [{"kind": "annotation", "text": text.get_text()} for text in ax.texts]
-    labels += [{"kind": "y tick label", "text": tick.get_text()} for tick in ax.get_yticklabels() if tick.get_text()]
-    labels += [{"kind": "x tick label", "text": tick.get_text()} for tick in ax.get_xticklabels()]
-    labels.append({"kind": "title", "text": f"Version 2.5 ({language})"})
-    return labels
+    return probe_of(fig, [{"kind": "title", "text": f"Version 2.5 ({language})"}])
 
 
 class TestNumberFormatGate:
     def test_the_live_german_case_is_a_vq06_line(self) -> None:
-        labels = seaborn_style_bar_labels(lambda value: f"{value:.2f}", "de")
+        probe = seaborn_style_bar_labels(lambda value: f"{value:.2f}", "de")
 
-        [line] = gate_lines({"labels": labels}, plot_language="de")
+        [line] = gate_lines(probe, plot_language="de")
 
         assert DEFECT_RE.match(line), line
         assert line.startswith("VQ-06 (light): ")
@@ -250,39 +297,94 @@ class TestNumberFormatGate:
 
     def test_the_fixed_german_case_is_clean(self) -> None:
         german = str.maketrans(",.", ".,")
-        labels = seaborn_style_bar_labels(lambda value: f"{value:,.2f}".translate(german), "de")
+        probe = seaborn_style_bar_labels(lambda value: f"{value:,.2f}".translate(german), "de")
 
-        assert gate_lines({"labels": labels}, plot_language="Deutsch") == []
+        assert gate_lines(probe, plot_language="Deutsch") == []
 
     def test_the_english_control_is_clean_and_german_marks_in_english_are_named(self) -> None:
         english = seaborn_style_bar_labels(lambda value: f"{value:.2f}", "en")
         german = seaborn_style_bar_labels(lambda value: f"{value:.2f}".replace(".", ","), "en")
 
-        assert gate_lines({"labels": english}, plot_language="en") == []
-        [line] = gate_lines({"labels": german}, plot_language="en")
+        assert gate_lines(english, plot_language="en") == []
+        [line] = gate_lines(german, plot_language="en")
         assert "English writes a decimal point" in line
 
-    def test_a_language_without_a_number_format_and_no_language_have_no_gate(self) -> None:
-        labels = [{"kind": "y tick label", "text": "5.30"}]
+    def test_date_ticks_and_category_ticks_are_never_checked(self) -> None:
+        """Copilot on #12184: a German `%d.%m` date (`14.10`) and a category the data names (`3.11`)."""
+        import matplotlib.dates as mdates
+        import pandas as pd
 
-        assert _number_format_lines({"labels": labels}, number_format("Swedish"), "Swedish") == []
-        assert gate_lines({"labels": labels}) == []
+        fig, (dates, categories) = plt.subplots(1, 2, figsize=(8, 4.5), dpi=400)
+        days = pd.date_range("2026-10-01", periods=20, freq="D")
+        dates.plot(days, range(20))
+        dates.xaxis.set_major_formatter(mdates.DateFormatter("%d.%m"))
+        dates.set_yticks([0, 10, 20])
+        categories.bar(["3.11", "3.12", "3.13"], [1, 2, 3])
+        categories.set_yticks([0, 1, 2, 3])
+        probe = probe_of(fig)
+
+        assert {"date", "category"} <= {entry["x"] for entry in probe["tick_axes"]}
+        assert any(label["text"] == "3.11" for label in probe["labels"])
+        assert gate_lines(probe, plot_language="de") == []
+
+    def test_mathtext_reads_as_drawn(self) -> None:
+        """Copilot on #12184: `$\\mathdefault{5.30}$` shows a decimal point like `5.30`."""
+        fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
+        ax.plot([0, 1, 2], [0, 1, 2])
+        ax.set_xticks([0, 1, 2])
+        ax.set_yticks([0.25, 1.5], [r"$\mathdefault{0.25}$", r"$1.50$"])
+        ax.text(1, 1, r"$5{,}30$")
+        probe = probe_of(fig)
+        assert probe["tick_axes"] == [{"x": "number", "y": "fixed"}]
+        probe["tick_axes"][0]["y"] = "number"  # as a ScalarFormatter with mathtext would write them
+
+        [line] = gate_lines(probe, plot_language="de")
+
+        # x: 0, 1, 2 (no marks); y: the two mathtext labels; the annotation `$5{,}30$` reads 5,30.
+        assert line.startswith("VQ-06 (light): 2 of 6 numeric tick labels use a decimal point")
+
+    def test_without_tick_axes_only_annotations_count(self) -> None:
+        labels = [{"kind": "y tick label", "text": "5.30", "axes": 0}, {"kind": "annotation", "text": "4.85"}]
+
+        [line] = gate_lines({"labels": labels}, plot_language="de")
+
+        assert line.startswith("VQ-06 (light): 1 of 1 numeric annotations use a decimal point")
+
+    def test_a_language_without_a_number_format_and_no_language_have_no_gate(self) -> None:
+        probe = {"labels": [{"kind": "annotation", "text": "5.30"}]}
+
+        assert _number_format_lines(probe, number_format("Swedish"), "Swedish") == []
+        assert gate_lines(probe) == []
 
     def test_titles_and_legend_entries_are_never_checked(self) -> None:
         labels = [{"kind": "title", "text": "2.5"}, {"kind": "legend text", "text": "1.5"}]
 
-        assert gate_lines({"labels": labels}, plot_language="de") == []
+        assert gate_lines({"labels": labels, "tick_axes": []}, plot_language="de") == []
 
     def test_colorbar_and_3d_tick_labels_count(self) -> None:
-        labels = [{"kind": "colorbar tick label", "text": "0.25"}, {"kind": "z tick label", "text": "1.5"}]
+        labels = [
+            {"kind": "colorbar tick label", "text": "0.25", "axes": 1},
+            {"kind": "z tick label", "text": "1.5", "axes": 0},
+        ]
+        ticks = [{"x": "number", "y": "number", "z": "number"}, {"x": "none", "y": "number"}]
 
-        [line] = gate_lines({"labels": labels}, plot_language="de")
+        [line] = gate_lines({"labels": labels, "tick_axes": ticks}, plot_language="de")
 
         assert line.startswith("VQ-06 (light): 2 of 2 numeric tick labels use a decimal point")
 
-    @pytest.mark.parametrize("labels", ["broken", [None, {"kind": "x tick label", "text": 5.3}], [{"text": "5.30"}]])
-    def test_a_tampered_labels_field_yields_no_line(self, labels: Any) -> None:
-        assert gate_lines({"labels": labels}, plot_language="de") == []
+    @pytest.mark.parametrize(
+        "probe",
+        [
+            {"labels": "broken"},
+            {"labels": [None, {"kind": "annotation", "text": 5.3}]},
+            {"labels": [{"text": "5.30"}]},
+            {"labels": [{"kind": "x tick label", "text": "5.30", "axes": True}], "tick_axes": [{"x": "number"}]},
+            {"labels": [{"kind": "x tick label", "text": "5.30", "axes": 3}], "tick_axes": [{"x": "number"}]},
+            {"labels": [{"kind": "x tick label", "text": "5.30", "axes": 0}], "tick_axes": "broken"},
+        ],
+    )
+    def test_a_tampered_labels_field_yields_no_line(self, probe: Any) -> None:
+        assert gate_lines(probe, plot_language="de") == []
 
 
 class TestNumberFormatTable:
