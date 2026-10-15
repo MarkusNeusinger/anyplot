@@ -217,8 +217,9 @@ class RuntimeAdapter(Protocol):
         """The argv that runs a data snippet in the work directory with the harness in data mode."""
         ...
 
-    def data_env(self) -> dict[str, str]:
-        """The complete environment of a data run: no theme, no plotting settings."""
+    def data_env(self, timeout_s: float | None = None) -> dict[str, str]:
+        """The complete environment of a data run: no theme, no plotting settings; the CPU cap clamped to `timeout_s`
+        when given, as the renderer clamps it."""
         ...
 
     def convert_command(self) -> list[str]:

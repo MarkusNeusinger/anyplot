@@ -119,6 +119,7 @@ from .wire import (
     clean_probe,
     convert_refusal,
     parse_data_status,
+    run_cpu_seconds,
 )
 
 
@@ -671,7 +672,7 @@ class SandboxExecutor:
         if self.stuck:
             raise Unavailable("stuck")
         label = theme if theme is not None else CONVERT_LABEL if convert else DATA_LABEL
-        cpu_s = max(1, min(self.config.rlimit_cpu_s, math.ceil(timeout_s)))
+        cpu_s = run_cpu_seconds(self.config.rlimit_cpu_s, timeout_s)
         started = self.clock()
         attempt = await self._attempt(files, theme, cpu_s, timeout_s, convert=convert)
         attempts = 1

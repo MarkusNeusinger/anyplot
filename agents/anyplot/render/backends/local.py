@@ -98,6 +98,35 @@ async def read_tail(stream: asyncio.StreamReader | None, limit: int = STDERR_LIM
     return bytes(tail)
 
 
+def collect_data_run(run_dir: Path, returncode: int | None, tail: str, wall: float) -> DataOutput:
+    """What a finished data run left in `run_dir`, as the renderer reads it: the harness's `status.json` first (its
+    exit code and a refusal's measured value and cap), the launcher's `returncode` without one, and `out.csv` under
+    the computed-data cap after exit code 0.
+
+    One reader for every harness run outside the renderer service: this backend's containers and the prep eval's
+    data runs (`agents/evals/host_data.py`), so the two answer `run_data_code` alike.
+    """
+    try:
+        status = parse_data_status(read_output(run_dir / DATA_STATUS_FILE, MAX_DATA_STATUS_BYTES))
+    except PngRejected:
+        status = None
+    exit_code = status.exit if status is not None else returncode
+    if exit_code != 0:
+        measured, limit = (status.measured, status.limit) if status is not None else (None, None)
+        return DataOutput(exit_code=exit_code, stderr_tail=tail, wall_s=wall, measured=measured, limit=limit)
+    try:
+        raw = read_output(run_dir / DATA_OUT_FILE, MAX_COMPUTED_BYTES)
+    except PngRejected as exc:  # the size and the cap of an oversized file, as the renderer's `_collect_data` sets them
+        return DataOutput(
+            exit_code=0, stderr_tail=tail, wall_s=wall, reason="output_rejected", measured=exc.size, limit=exc.limit
+        )
+    try:
+        text = raw.decode("utf-8") if raw is not None else None
+    except UnicodeDecodeError:
+        return DataOutput(exit_code=0, stderr_tail=tail, wall_s=wall, reason="output_rejected")
+    return DataOutput(exit_code=0, csv_text=text, stderr_tail=tail, wall_s=wall)
+
+
 async def _drain_and_wait(process: asyncio.subprocess.Process) -> bytes:
     """The stderr tail of `process` once it has exited."""
     tail = await read_tail(process.stderr)
@@ -204,7 +233,7 @@ class LocalDockerBackend:
     def data_argv(self, job: DataJob, run_dir: Path) -> list[str]:
         """The docker command of a data run: the render's isolation, the harness in data mode, no theme."""
         argv = self._isolation(f"r-{job.job_id}-data", run_dir)
-        for key, value in self.runtime.data_env().items():
+        for key, value in self.runtime.data_env(job.timeout_s).items():
             argv += ["-e", f"{key}={value}"]
         argv += [self.image, *self.runtime.data_command()]
         if argv[argv.index("--network") + 1] != "none" or any("--network=" in part for part in argv):
@@ -235,21 +264,7 @@ class LocalDockerBackend:
                 await asyncio.shield(self._kill(name, process))
                 raise
             wall = time.monotonic() - started
-            tail = stderr.decode("utf-8", errors="replace")
-            try:
-                status = parse_data_status(read_output(run_dir / DATA_STATUS_FILE, MAX_DATA_STATUS_BYTES))
-            except PngRejected:
-                status = None
-            exit_code = status.exit if status is not None else process.returncode
-            if exit_code != 0:
-                measured, limit = (status.measured, status.limit) if status is not None else (None, None)
-                return DataOutput(exit_code=exit_code, stderr_tail=tail, wall_s=wall, measured=measured, limit=limit)
-            try:
-                raw = read_output(run_dir / DATA_OUT_FILE, MAX_COMPUTED_BYTES)
-                text = raw.decode("utf-8") if raw is not None else None
-            except (PngRejected, UnicodeDecodeError):
-                return DataOutput(exit_code=0, stderr_tail=tail, wall_s=wall, reason="output_rejected")
-            return DataOutput(exit_code=0, csv_text=text, stderr_tail=tail, wall_s=wall)
+            return collect_data_run(run_dir, process.returncode, stderr.decode("utf-8", errors="replace"), wall)
         finally:
             shutil.rmtree(run_dir, ignore_errors=True)
 
