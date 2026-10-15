@@ -1356,7 +1356,7 @@ async def _attempts(
     previous_plan: AdaptPlan | None = None
     rows = data_rows(dataset.csv)
     # The screened notes pasted with the data and where a computed table comes from, for the title and labels.
-    context = dataset_context(dataset.context_lines, dataset.source)
+    context = dataset_context(dataset.context_lines, dataset.source, dataset.file_name)
 
     adapter = adapter_name(view.library)
     # A round is one adapter attempt and, with `AGENT_SELF_REVIEW`, the adapter proofreading its render

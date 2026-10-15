@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { MAX_DATASET_BYTES } from 'src/lib/agent';
 import {
@@ -58,12 +58,29 @@ describe('decodeText', () => {
     expect(decodeText(utf16(TABLE, 'be', false))?.encoding).toBe('utf-16be');
   });
 
-  it('refuses broken UTF-8 behind a byte order mark instead of writing � into a cell', () => {
-    expect(decodeText(bytesOf([0xef, 0xbb, 0xbf], 'a,b\n1,', [0xc3, 0x28], '\n'))).toBeNull();
-    expect(readBytes(bytesOf([0xef, 0xbb, 0xbf], 'a,', [0xe2, 0x82]))).toMatchObject({
-      ok: false,
-      reason: 'binary',
-    });
+  it('reads text that is no valid UTF-8 behind a byte order mark as windows-1252, never with �', () => {
+    // A legacy export that kept a mark: `Preis €` in windows-1252 behind EF BB BF.
+    const decoded = decodeText(bytesOf([0xef, 0xbb, 0xbf], 'a,Preis ', [0x80], '\n'));
+
+    expect(decoded).toEqual({ text: 'a,Preis €\n', encoding: 'windows-1252' });
+    expect(decoded!.text).not.toContain('�');
+  });
+
+  it('reads BOM-less UTF-16 whose text is mostly not Latin, such as a Chinese table', () => {
+    // ASCII (the commas, the digits, the line breaks) is under a fifth of the characters here.
+    const table =
+      '城市名称与所属省份行政区划,常住人口数量统计\n北京市海淀区中关村大街,2189\n上海市浦东新区陆家嘴环路,2487\n广州市天河区珠江新城大道,1868\n';
+
+    expect(decodeText(utf16(table, 'le', false))).toEqual({ text: table, encoding: 'utf-16le' });
+    expect(decodeText(utf16(table, 'be', false))).toEqual({ text: table, encoding: 'utf-16be' });
+    expect(readBytes(utf16(table, 'le', false))).toMatchObject({ ok: true, lines: 4 });
+    const ascii = [...table].filter(char => char.charCodeAt(0) < 0x80).length;
+    expect(ascii / table.length).toBeLessThan(0.3); // the share the first version required
+  });
+
+  it('refuses UTF-16 cut off in the middle of a character', () => {
+    const cut = utf16(TABLE, 'le').subarray(0, 21); // an odd length
+    expect(readBytes(cut)).toMatchObject({ ok: false, reason: 'binary' });
   });
 
   it('reads windows-1252, not ISO-8859-1: €, „ and ’ stay printable', () => {
@@ -92,6 +109,7 @@ describe('sniffBinary', () => {
     [bytesOf('PAR1', [0x15, 0x04]), 'data.parquet', '', 'parquet'],
     [bytesOf('ARROW1', [0, 0]), 'data.feather', '', 'arrow'],
     [bytesOf([0x93], 'NUMPY', [0x01, 0x00]), 'a.npy', '', 'numpy'],
+    [bytesOf([0x50, 0x4b, 0x03, 0x04], 'rest'), 'arrays.npz', '', 'numpy'],
     [bytesOf([0x89], 'HDF\r\n', [0x1a, 0x0a]), 'store.h5', '', 'hdf5'],
     [bytesOf([0x80, 0x04, 0x95]), 'frame.pkl', '', 'pickle'],
     [bytesOf('%PDF-1.7\n'), 'report.pdf', '', 'pdf'],
@@ -113,6 +131,15 @@ describe('readBytes', () => {
       text: `${TABLE}\n\n`,
       encoding: 'utf-8',
       lines: 3,
+    });
+  });
+
+  it('turns CRLF and CR line breaks into LF, as a textarea holds them, and counts lines on that', () => {
+    expect(readBytes(utf8('a,b\r\n1,2\r\n\r\n3,4\r5,6'))).toEqual({
+      ok: true,
+      text: 'a,b\n1,2\n\n3,4\n5,6',
+      encoding: 'utf-8',
+      lines: 4,
     });
   });
 
@@ -145,9 +172,14 @@ describe('readBytes', () => {
 });
 
 describe('readFile', () => {
-  it('reads a File', async () => {
+  it('reads a File once', async () => {
     const file = new File([TABLE], 'sales.csv', { type: 'text/csv' });
+    const slice = vi.spyOn(file, 'slice');
+    const whole = vi.spyOn(file, 'arrayBuffer');
+
     await expect(readFile(file)).resolves.toMatchObject({ ok: true, text: TABLE, lines: 3 });
+    expect(slice).not.toHaveBeenCalled();
+    expect(whole).toHaveBeenCalledTimes(1);
   });
 
   it('answers a large workbook by its format, not its size', async () => {

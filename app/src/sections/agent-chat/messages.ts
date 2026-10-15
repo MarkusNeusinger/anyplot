@@ -109,8 +109,8 @@ export const IMAGE_FAILURE: Record<string, string> = {
 
 /**
  * Why a dropped, chosen or pasted file did not go into the data box, by the
- * format its first bytes name (`fileText.ts`) or the refusal. Spreadsheets and
- * Parquet are a later step; pickle and HDF5 are never read.
+ * format its first bytes name (`fileText.ts`) or the refusal. Spreadsheets,
+ * Parquet, Arrow and NumPy are a later step; pickle and HDF5 are never read.
  */
 export const FILE_REFUSAL: Record<string, string> = {
   spreadsheet:
@@ -122,7 +122,8 @@ export const FILE_REFUSAL: Record<string, string> = {
   pickle:
     'is a pickle file, which is never read because loading one can run code; export it as CSV or Parquet',
   hdf5: 'is an HDF5 file, which is not read here; export it as CSV or Parquet',
-  numpy: 'is a NumPy file, which is not read here; export it as CSV',
+  numpy:
+    'is a NumPy file: reading .npy and .npz files comes in a later step; for now, export it as CSV and drop that',
   pdf: 'is a PDF, which is not read here; copy the table in it and paste the text',
   archive: 'is an archive (zip, gzip or 7z); unpack it and drop the CSV inside',
   binary: 'is not a text file; drop a CSV, TSV, JSON or plain-text file',

@@ -283,6 +283,11 @@ export interface TranscriptionState {
   note: string;
   /** UTF-8 size of the pasted text it was read from, for the analytics bucket. */
   bytes: number;
+  /**
+   * The name of the file the text was read from, if it was: `.use()` sends it
+   * with the table, also after the box was cleared or edited meanwhile.
+   */
+  source?: string;
 }
 
 /** Binding name (`x`, `y1`) to column; only bound names are present. */
@@ -1537,6 +1542,7 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
               warnings: parsed.warnings ?? [],
               note: typeof parsed.note === 'string' ? parsed.note : '',
               bytes,
+              ...(source ? { source } : {}),
             },
           });
           trackEvent('agent_data_parsed', { status: 'transcribed', size_bucket: bucket });
@@ -1587,14 +1593,12 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
    * clears the transcription. While something else is in flight nothing starts
    * and the table stays.
    */
-  const confirmTranscription = useCallback(
-    (source?: string) => {
-      const transcription = stateRef.current.transcription;
-      if (!transcription) return Promise.resolve();
-      return parseData(transcription.text, true, source);
-    },
-    [parseData]
-  );
+  const confirmTranscription = useCallback(() => {
+    const transcription = stateRef.current.transcription;
+    if (!transcription) return Promise.resolve();
+    // The file's name travels with the table it was read from, whatever the box holds now.
+    return parseData(transcription.text, true, transcription.source);
+  }, [parseData]);
 
   /**
    * `.send()` next to a refused formula or code: the text goes to the chat as

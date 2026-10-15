@@ -98,19 +98,27 @@ export function sniffBinary(bytes: Uint8Array, name = '', type = ''): FileKind |
   if (bytes.length >= 2 && bytes[0] === 0x80 && bytes[1] >= 2 && bytes[1] <= 5) return 'pickle';
   for (const [signature, kind] of MAGIC) {
     if (!startsWith(bytes, signature)) continue;
-    // A zip or an OLE container is a spreadsheet when its name or its type says so.
+    // A zip or an OLE container is a spreadsheet when its name or its type says so; a zip named
+    // `.npz` is NumPy's archive of arrays.
     if (
       (signature[0] === 0x50 || signature[0] === 0xd0) &&
       (SPREADSHEET_NAME.test(name) || SPREADSHEET_TYPE.test(type))
     ) {
       return 'spreadsheet';
     }
+    if (signature[0] === 0x50 && /\.npz$/i.test(name)) return 'numpy';
     return kind;
   }
   return null;
 }
 
-/** UTF-16 without a byte order mark: NUL bytes on the odd (LE) or the even (BE) positions of the first 4 KB. */
+/**
+ * UTF-16 without a byte order mark: NUL bytes on the odd (LE) or the even (BE)
+ * positions of the first 4 KB, and hardly any on the other side. The share is
+ * low on purpose: a table in Chinese or Japanese has NULs only where its
+ * delimiters, digits and line breaks are ASCII. The strict decode and the
+ * control-character check that follow catch a binary file that slips through.
+ */
 function utf16Pattern(bytes: Uint8Array): 'utf-16le' | 'utf-16be' | null {
   const pairs = Math.min(bytes.length, 4096) >> 1;
   if (pairs < 2) return null;
@@ -120,8 +128,8 @@ function utf16Pattern(bytes: Uint8Array): 'utf-16le' | 'utf-16be' | null {
     if (bytes[index] === 0) even += 1;
     if (bytes[index + 1] === 0) odd += 1;
   }
-  if (odd >= pairs * 0.3 && even <= pairs * 0.02) return 'utf-16le';
-  if (even >= pairs * 0.3 && odd <= pairs * 0.02) return 'utf-16be';
+  if (odd >= pairs * 0.05 && even * 10 <= odd) return 'utf-16le';
+  if (even >= pairs * 0.05 && odd * 10 <= even) return 'utf-16be';
   return null;
 }
 
@@ -136,10 +144,13 @@ function decodeWith(label: string, bytes: Uint8Array, fatal: boolean): string | 
 /** The text of `bytes` and the encoding it was read with, or null when no encoding reads it. */
 export function decodeText(bytes: Uint8Array): { text: string; encoding: FileEncoding } | null {
   if (startsWith(bytes, [0xef, 0xbb, 0xbf])) {
-    // The decoder drops the mark itself. Strict, as without a mark: a broken sequence is
-    // refused rather than turned into `�` in a cell.
+    // The decoder drops the mark itself. Strict, as without a mark: a broken sequence never
+    // becomes `�` in a cell. A file that is no valid UTF-8 behind the mark (a legacy export
+    // that kept a mark) is read as windows-1252 without it, like an unmarked one.
     const text = decodeWith('utf-8', bytes, true);
-    return text === null ? null : { text, encoding: 'utf-8-bom' };
+    if (text !== null) return { text, encoding: 'utf-8-bom' };
+    const legacy = decodeWith('windows-1252', bytes.subarray(3), false);
+    return legacy === null ? null : { text: legacy, encoding: 'windows-1252' };
   }
   const utf16: 'utf-16le' | 'utf-16be' | null = startsWith(bytes, [0xff, 0xfe])
     ? 'utf-16le'
@@ -168,12 +179,16 @@ export function looksBinary(text: string): boolean {
   return controls > text.length * 0.01;
 }
 
-/** The non-empty lines of a text, for the line that says what was read. */
+/** The non-empty lines of a text with `\n` line breaks, for the line that says what was read. */
 export function countLines(text: string): number {
-  return text.split(/\r\n|\r|\n/).filter(line => line.trim()).length;
+  return text.split('\n').filter(line => line.trim()).length;
 }
 
-/** Read a file's bytes into text for the box, or say why not. */
+/**
+ * Read a file's bytes into text for the box, or say why not. Line breaks become
+ * `\n` once here, as a textarea holds them: the box, its byte counter, the
+ * line count and the text `.parse()` sends then agree.
+ */
 export function readBytes(bytes: Uint8Array, name = '', type = ''): FileReading {
   const kind = sniffBinary(bytes, name, type);
   if (kind) return { ok: false, reason: 'binary', kind, encoding: null };
@@ -181,7 +196,8 @@ export function readBytes(bytes: Uint8Array, name = '', type = ''): FileReading 
   if (!decoded || looksBinary(decoded.text)) {
     return { ok: false, reason: 'binary', kind: 'binary', encoding: decoded?.encoding ?? null };
   }
-  const { text, encoding } = decoded;
+  const { encoding } = decoded;
+  const text = decoded.text.replace(/\r\n?/g, '\n');
   if (!text.trim()) return { ok: false, reason: 'empty', kind: 'text', encoding };
   if (utf8Bytes(text) > MAX_DATASET_BYTES) {
     return { ok: false, reason: 'too_large', kind: 'text', encoding };
@@ -200,15 +216,16 @@ function fileBytes(file: Blob): Promise<ArrayBuffer> {
 }
 
 /**
- * Read a `File` for the box: the first bytes for a binary format (a 20 MB
- * workbook gets the spreadsheet answer, not "too large"), then the size, then
- * `readBytes`. Rejects only when the browser cannot read the file.
+ * Read a `File` for the box, once. Over the raw cap only its first bytes are
+ * read, so a 20 MB workbook gets the spreadsheet answer rather than "too
+ * large"; anything else is read whole and goes through `readBytes`. Rejects
+ * only when the browser cannot read the file.
  */
 export async function readFile(file: File): Promise<FileReading> {
-  const head = new Uint8Array(await fileBytes(file.slice(0, 16)));
-  const kind = sniffBinary(head, file.name, file.type);
-  if (kind) return { ok: false, reason: 'binary', kind, encoding: null };
   if (file.size > MAX_FILE_BYTES) {
+    const head = new Uint8Array(await fileBytes(file.slice(0, 16)));
+    const kind = sniffBinary(head, file.name, file.type);
+    if (kind) return { ok: false, reason: 'binary', kind, encoding: null };
     return { ok: false, reason: 'too_large', kind: 'text', encoding: null };
   }
   const bytes = new Uint8Array(await fileBytes(file));

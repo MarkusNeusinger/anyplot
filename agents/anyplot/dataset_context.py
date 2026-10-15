@@ -31,6 +31,9 @@ MAX_SOURCE_NAMES = 12
 """Names a snippet's source line lists per kind (defined functions, calls, assigned names)."""
 NOTES_HEADING = "Notes the user pasted with the data:"
 SOURCE_HEADING = "Where the data comes from:"
+FILE_HEADING = "The file the user dropped:"
+FILE_NAME_WITHHELD = "(name withheld)"
+"""What the session keeps for a dropped file's name that the dataset route's screen refused (`main._screen_file_name`)."""
 
 
 def _clip(text: str, limit: int) -> str:
@@ -91,11 +94,14 @@ def _dotted(node: ast.expr) -> str | None:
     return ".".join([node.id, *reversed(names)])
 
 
-def dataset_context(context_lines: Sequence[str], source: str | None) -> str:
-    """The dataset context block's text (empty when there is none): the source line first, then the notes."""
+def dataset_context(context_lines: Sequence[str], source: str | None, file_name: str | None = None) -> str:
+    """The dataset context block's text (empty when there is none): the source line, the dropped file's name
+    (`StoredDataset.file_name`, screened at the paste; left out when withheld), then the notes."""
     parts: list[str] = []
     if source:
         parts.append(f"{SOURCE_HEADING} {source}")
+    if file_name and file_name != FILE_NAME_WITHHELD:
+        parts.append(f"{FILE_HEADING} {file_name}")
     notes = [" ".join(line.split()) for line in context_lines if line.strip()]
     if notes:
         parts.append(NOTES_HEADING + "\n" + "\n".join(notes))

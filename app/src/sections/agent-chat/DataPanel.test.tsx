@@ -1153,6 +1153,7 @@ describe('DataPanel file drop', () => {
     expect(within(group).getByRole('button', { name: '.replace()' })).toHaveFocus();
     await userEvent.click(within(group).getByRole('button', { name: '.keep()' }));
     expect(box()).toHaveValue('a,b');
+    expect(box()).toHaveFocus(); // not left on the page's body
     expect(screen.queryByTestId('file-replace')).not.toBeInTheDocument();
     expect(onTrack).toHaveBeenLastCalledWith('agent_data_file', {
       kind: 'text',
@@ -1163,11 +1164,85 @@ describe('DataPanel file drop', () => {
     drop(csvFile());
     await userEvent.click(await screen.findByRole('button', { name: '.replace()' }));
     expect(box()).toHaveValue(CSV);
+    expect(screen.getByRole('button', { name: '.parse()' })).toHaveFocus();
     expect(onTrack).toHaveBeenLastCalledWith('agent_data_file', {
       kind: 'text',
       encoding: 'utf-8',
       outcome: 'replaced',
     });
+  });
+
+  it('drops the question when the user edits or pastes text after it', async () => {
+    renderPanel();
+    await userEvent.type(box(), 'a,b');
+    drop(csvFile());
+    await screen.findByTestId('file-replace');
+
+    await userEvent.type(box(), ',c');
+    expect(screen.queryByTestId('file-replace')).not.toBeInTheDocument();
+
+    drop(csvFile());
+    await screen.findByTestId('file-replace');
+    fireEvent.paste(box(), { clipboardData: { files: [], getData: () => 'x,y' } });
+    expect(screen.queryByTestId('file-replace')).not.toBeInTheDocument();
+    expect(box()).toHaveValue('a,b,c');
+  });
+
+  it('reads the first of several dropped files and says so', async () => {
+    renderPanel();
+
+    fireEvent.drop(zone(), {
+      dataTransfer: {
+        files: [csvFile(), csvFile('a\n', 'b.csv'), csvFile('c\n', 'c.csv')],
+        types: ['Files'],
+      },
+    });
+
+    await waitFor(() => expect(box()).toHaveValue(CSV));
+    expect(screen.getByTestId('file-status')).toHaveTextContent(
+      'first of 3 files read — one file at a time · read "sales.csv"'
+    );
+  });
+
+  it('reads CRLF line breaks as the box holds them, so the counter, the lines and the payload agree', async () => {
+    const { onParse } = renderPanel();
+
+    drop(csvFile('a,b\r\n1,2\r\n3,4\r\n', 'windows.csv'));
+
+    await waitFor(() => expect(box()).toHaveValue('a,b\n1,2\n3,4\n'));
+    expect(screen.getByTestId('file-status')).toHaveTextContent('3 lines');
+    await userEvent.click(screen.getByRole('button', { name: '.parse()' }));
+    expect(onParse).toHaveBeenCalledWith('a,b\n1,2\n3,4\n', 'windows.csv');
+  });
+
+  it('shows the file name the server kept, and a withheld one as withheld', () => {
+    const withFile = (fileName: string): AgentSessionState => {
+      const state: AgentSessionState = stateWith({});
+      const { dataset } = state;
+      if (!dataset) throw new Error('stateWith gives a dataset');
+      return {
+        ...state,
+        dataset: { ...dataset, parsed: { ...dataset.parsed, file_name: fileName } },
+      };
+    };
+    const { rerender } = renderPanel(withFile('sales.csv'));
+    expect(screen.getByTestId('data-file-name')).toHaveTextContent('· from "sales.csv"');
+
+    rerender(
+      <DataPanel
+        state={withFile('(name withheld)')}
+        onParse={vi.fn()}
+        onConfirmTranscription={vi.fn()}
+        onDiscardTranscription={vi.fn()}
+        onSendFormula={vi.fn()}
+        onBind={vi.fn()}
+        onConfirmData={vi.fn()}
+        onUndo={vi.fn()}
+      />
+    );
+    expect(screen.getByTestId('data-file-name')).toHaveTextContent(
+      'name withheld by the content check'
+    );
   });
 
   it('holds .replace() while the parse of the text in the box runs', async () => {
@@ -1274,7 +1349,7 @@ describe('DataPanel file drop', () => {
     expect(onParse).toHaveBeenLastCalledWith(CSV);
   });
 
-  it('keeps the name for .use() on a table read from the file', async () => {
+  it('leaves the name of a table read from the file to the session, and a new file discards that table', async () => {
     const transcription: TranscriptionState = {
       text: 'name,count\nA,1\n',
       preview: [['A', '1']],
@@ -1309,7 +1384,8 @@ describe('DataPanel file drop', () => {
       />
     );
     await userEvent.click(screen.getByRole('button', { name: '.use()' }));
-    expect(onConfirmTranscription).toHaveBeenCalledWith('notes.txt');
+    // The session keeps the name on the transcription (`useAgentSession`), whatever the box holds now.
+    expect(onConfirmTranscription).toHaveBeenCalledWith();
 
     // A new file takes the earlier text's table away, so `.use()` never stores it under the new name.
     const onDiscardTranscription = vi.fn();

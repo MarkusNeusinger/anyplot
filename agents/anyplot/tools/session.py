@@ -88,7 +88,7 @@ from ..plugins.tool_safety import (
     result_limit,
     result_size,
 )
-from ..policy import DATA_PREAMBLE, fence, user_notes_block
+from ..policy import DATA_PREAMBLE, fence, file_name_block, user_notes_block
 from ..render.contract import DataJob, DataOutput, RendererUnavailable
 from ..render.gates import error_summary
 from ..render.harness import DATA_EXIT
@@ -175,6 +175,9 @@ async def get_dataset_profile(tool_context: ToolContext) -> dict[str, Any]:
     result = _with_profile(base, profile, "get_dataset_profile", limit=PROFILE_RESULT_BYTES)
     if stored.context_lines:
         result["user_notes"] = user_notes_block(stored.context_lines)
+    if stored.file_name:
+        # The dropped file's name, fenced as data under its own preamble: a name, never a request.
+        result["file_name"] = file_name_block(stored.file_name)
     return result
 
 

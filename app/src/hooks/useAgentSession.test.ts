@@ -506,6 +506,23 @@ describe('useAgentSession: data and bindings', () => {
     });
   });
 
+  it('sends a dropped file’s name beside the text, and again with the table read from it', async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/dataset'] = call =>
+      json(200, (call.body as { text: string }).text.includes(',') ? DATASET : TRANSCRIBED);
+    const { result } = await openSession(routes);
+
+    await act(() => result.current.parseData(FREE_TEXT, false, 'notes.txt'));
+    expect(result.current.state.transcription?.source).toBe('notes.txt');
+    // The box may be cleared or edited meanwhile: the table keeps the name it was read with.
+    await act(() => result.current.confirmTranscription());
+
+    expect(calls.filter(call => call.path.endsWith('/dataset')).map(call => call.body)).toEqual([
+      { text: FREE_TEXT, source: 'notes.txt' },
+      { text: TRANSCRIBED.text, confirmed: true, source: 'notes.txt' },
+    ]);
+  });
+
   it('keeps the stored dataset while a transcription waits and discards it locally', async () => {
     const routes = baseRoutes();
     const { result } = await openSession(routes);

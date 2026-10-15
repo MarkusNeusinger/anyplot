@@ -75,8 +75,11 @@
  * file; the user checks it and presses `.parse()`, which takes the focus. A
  * box with text asks first (`.replace()` / `.keep()`), a running step refuses
  * the file, and a live line says what was read. The file's name travels as the
- * dataset route's `source` field, never in the text; the server adds it to the
- * notes. Typing keeps the name, a text paste or an empty box drops it.
+ * dataset route's `source` field, never in the text. The server screens it and
+ * keeps it apart from the notes (the assistant reads it as data, never as a
+ * request); the data line shows it. Typing keeps the name, a text paste or an
+ * empty box drops it; a table read from the file keeps it for `.use()`.
+ * Several files at once: the first is read, and the line says so.
  */
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
@@ -595,10 +598,15 @@ function dragHasFiles(transfer: DataTransfer | null): boolean {
   return !!transfer && Array.from(transfer.types ?? []).includes('Files');
 }
 
+/** What the server keeps for a file's name its content check refused (`dataset_context.FILE_NAME_WITHHELD`). */
+const FILE_NAME_WITHHELD = '(name withheld)';
+
 /** A file read and waiting for the user's `.replace()` because the box holds text. */
 interface PendingFile {
   name: string;
   reading: Extract<FileReading, { ok: true }>;
+  /** How many files came with it; only the first is read. */
+  of: number;
 }
 
 /** What happened to a dropped, chosen or pasted file, for `agent_data_file`. */
@@ -608,8 +616,8 @@ interface DataPanelProps {
   state: AgentSessionState;
   /** `.parse()`; `source` is the name of the file the text was read from, if it was. */
   onParse: (text: string, source?: string) => void;
-  /** `.use()` on a transcription; `source` as for `onParse`. */
-  onConfirmTranscription: (source?: string) => void;
+  /** `.use()` on a transcription; the session keeps the file's name with the table it was read from. */
+  onConfirmTranscription: () => void;
   onDiscardTranscription: () => void;
   /** `.send()` next to a refused formula: the refused text goes to the chat as a turn. */
   onSendFormula: () => void;
@@ -658,6 +666,7 @@ export function DataPanel({
   const parseButtonRef = useRef<HTMLButtonElement>(null);
   const replaceButtonRef = useRef<HTMLButtonElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const boxRef = useRef<HTMLTextAreaElement>(null);
   // Counts file reads, so the result of a superseded one is dropped.
   const readSeq = useRef(0);
   // The box's text as of the last render, for a file read that ends after an edit.
@@ -741,8 +750,7 @@ export function DataPanel({
   const handleUse = () => {
     if (!transcription) return;
     setText(transcription.text);
-    if (source) onConfirmTranscription(source);
-    else onConfirmTranscription();
+    onConfirmTranscription();
   };
 
   // `.parse()`: the file's name rides along only when the text came from a file.
@@ -758,7 +766,7 @@ export function DataPanel({
   ) => onTrack?.('agent_data_file', { kind, encoding: encoding ?? 'none', outcome });
 
   // The file's text goes into the box as it is; the user reads it and presses `.parse()`.
-  const fillFromFile = (name: string, reading: PendingFile['reading'], outcome: FileOutcome) => {
+  const fillFromFile = ({ name, reading, of }: PendingFile, outcome: FileOutcome) => {
     // A table read from the box's earlier text belongs to that text: it goes, so `.use()`
     // never stores it under this file's name and `.parse()` is free for the new text. The
     // card stays open, also when dropping the table takes the page back to step 2.
@@ -769,9 +777,11 @@ export function DataPanel({
     setText(reading.text);
     setSource(name);
     setPendingFile(null);
+    // Several files dropped at once: the first is read, and the line says so (owner, 2026-10-15).
+    const several = of > 1 ? `first of ${of} files read — one file at a time · ` : '';
     setFileNotice({
       tone: 'ok',
-      text: `read "${name}" as ${reading.encoding} · ${countOf(reading.lines, 'line')} · check it, then .parse()`,
+      text: `${several}read "${name}" as ${reading.encoding} · ${countOf(reading.lines, 'line')} · check it, then .parse()`,
     });
     setFills(count => count + 1);
     trackFile('text', reading.encoding, outcome);
@@ -779,7 +789,7 @@ export function DataPanel({
 
   // A drop, `.open()` or a pasted file: refused while the session works, read in the
   // browser, then into an empty box, or held for `.replace()` when the box has text.
-  const handleFile = async (file: File) => {
+  const handleFile = async (file: File, of = 1) => {
     // Only the latest file counts: a slow read of an earlier one must not land after it.
     readSeq.current += 1;
     const seq = readSeq.current;
@@ -809,22 +819,29 @@ export function DataPanel({
       );
       return;
     }
+    const pending = { name: file.name, reading, of };
     if (textRef.current.trim()) {
       setFileNotice(null);
-      setPendingFile({ name: file.name, reading });
+      setPendingFile(pending);
       return;
     }
-    fillFromFile(file.name, reading, 'filled');
+    fillFromFile(pending, 'filled');
   };
 
+  // `.keep()`: the box stays as it was, and so does the focus's place in it, not on the page.
   const handleKeep = () => {
     if (pendingFile) trackFile('text', pendingFile.reading.encoding, 'kept');
     setPendingFile(null);
+    boxRef.current?.focus();
   };
 
-  // `.parse()` takes the focus after a fill, `.replace()` when a file waits for it.
+  // `.parse()` takes the focus after a fill (the box, when `.parse()` cannot take it),
+  // `.replace()` when a file waits for it.
   useEffect(() => {
-    if (fills > 0) parseButtonRef.current?.focus();
+    if (fills === 0) return;
+    const parse = parseButtonRef.current;
+    if (parse && !parse.disabled) parse.focus();
+    else boxRef.current?.focus();
   }, [fills]);
   useEffect(() => {
     if (pendingFile) replaceButtonRef.current?.focus();
@@ -872,8 +889,8 @@ export function DataPanel({
     event.preventDefault();
     dragDepth.current = 0;
     setDragOver(false);
-    const file = event.dataTransfer.files[0];
-    if (file) void handleFile(file);
+    const { files } = event.dataTransfer;
+    if (files[0]) void handleFile(files[0], files.length);
   };
 
   // A pasted file (copied in the file manager) is read like a dropped one. Excel and
@@ -889,8 +906,11 @@ export function DataPanel({
       void handleFile(file);
       return;
     }
-    // Pasted text is not the file's any more.
+    // Pasted text is not the file's any more: its name, its line and a file waiting for
+    // `.replace()` (which would overwrite the paste) all go.
     setSource(null);
+    setFileNotice(null);
+    setPendingFile(null);
   };
 
   const handleChosen = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -951,10 +971,13 @@ export function DataPanel({
           spellCheck={false}
           aria-describedby={dataset ? undefined : 'agent-data-hint'}
           placeholder={'month,revenue\n2026-01,120\n2026-02,135'}
+          ref={boxRef}
           onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => {
             setText(event.target.value);
             if (!event.target.value.trim()) setSource(null);
             setFileNotice(null);
+            // An edit after the question wins: `.replace()` would overwrite it.
+            setPendingFile(null);
           }}
           onPaste={handlePaste}
           sx={{
@@ -1115,7 +1138,7 @@ export function DataPanel({
               component="button"
               type="button"
               ref={replaceButtonRef}
-              onClick={() => fillFromFile(pendingFile.name, pendingFile.reading, 'replaced')}
+              onClick={() => fillFromFile(pendingFile, 'replaced')}
               // Not while a parse of the box's text runs: its answer (a table to decide on)
               // would arrive after the swap and be stored under this file's name.
               disabled={!ready || busy}
@@ -1231,6 +1254,16 @@ export function DataPanel({
           <Box sx={{ ...labelSx, color: 'var(--ink-soft)' }}>
             {dataset.parsed.profile.rows.toLocaleString('en-US')} rows · {columns.length} columns ·{' '}
             {dataset.parsed.profile.source_format}
+            {/* The file's name as the server kept it: the assistant reads it as data, never as a note. */}
+            {dataset.parsed.file_name && (
+              <Box component="span" data-testid="data-file-name" sx={{ overflowWrap: 'anywhere' }}>
+                {' '}
+                ·{' '}
+                {dataset.parsed.file_name === FILE_NAME_WITHHELD
+                  ? 'from a file, name withheld by the content check'
+                  : `from "${dataset.parsed.file_name}"`}
+              </Box>
+            )}
           </Box>
 
           <WarningList warnings={dataset.parsed.warnings} />

@@ -1677,9 +1677,8 @@ async function route(req, res) {
       200,
       {
         ...datasetPayload(session),
-        // A dropped file's name joins the notes, as the service's `with_source_line` does (unsanitised here).
-        context_lines:
-          typeof body?.source === 'string' ? [`source file: ${body.source.slice(0, 80)}`] : [],
+        // A dropped file's name, kept apart from the notes as the service does (unscreened here).
+        ...(typeof body?.source === 'string' ? { file_name: body.source.slice(0, 80) } : {}),
         roles: SPECS[session.specId].roles,
         language: { language: session.language, source: session.languageSource },
       },
