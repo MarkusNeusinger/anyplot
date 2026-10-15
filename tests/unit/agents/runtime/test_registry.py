@@ -13,6 +13,7 @@ from google.adk.tools.agent_tool import AgentTool
 from google.adk.tools.google_search_tool import GoogleSearchTool
 from google.adk.tools.url_context_tool import UrlContextTool
 from google.adk.workflow import Workflow
+from google.genai import types
 
 from agents.anyplot import agent as agent_module
 from agents.anyplot.dev_fixture import snapshot_from_repo
@@ -231,6 +232,33 @@ class TestSessionContext:
         assert f"<plot_language>\n{LANGUAGE_CANARY}\n</plot_language>" in text
         outside = re.sub(r"<(\w+)>\n.*?\n</\1>", "", text, flags=re.DOTALL)
         assert LANGUAGE_CANARY not in outside
+
+
+class TestWithSessionPart:
+    """The session block joins the policy as its own part; an unexpected shape never drops the policy."""
+
+    def test_a_string_or_text_content_keeps_the_policy_first(self) -> None:
+        for system in ("# policy", types.Content(parts=[types.Part(text="# policy"), types.Part(text="identity")])):
+            joined = agent_module.with_session_part(system, "Session (set by the server):")
+            texts = [part.text for part in joined.parts or []]
+            assert texts[0] == "# policy" and texts[-1] == "Session (set by the server):"
+
+    @pytest.mark.parametrize(
+        "system",
+        [
+            None,
+            "",
+            types.Content(parts=[]),
+            types.Content(parts=[types.Part(text="# policy"), types.Part(inline_data=types.Blob(data=b"x"))]),
+            types.Part(text="# policy"),
+            [types.Part(text="# policy")],
+            types.File(name="files/policy"),
+        ],
+        ids=["none", "empty", "no-parts", "non-text-part", "bare-part", "part-list", "file"],
+    )
+    def test_any_other_shape_raises(self, system: object) -> None:
+        with pytest.raises(TypeError):
+            agent_module.with_session_part(system, "Session (set by the server):")  # type: ignore[arg-type]
 
 
 class TestSpans:

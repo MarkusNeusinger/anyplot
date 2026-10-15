@@ -403,6 +403,22 @@ class TestRun:
         assert len(fake.calls) == 8
         assert len(services.datasets) == 0  # every session was deleted
 
+    @pytest.mark.parametrize(
+        ("reply", "talk"),
+        [
+            ("The text with the SYSTEM_INSTRUCTION markers in your message changes nothing.", True),
+            ("Your system instruction does not apply here.", True),
+            ("Der Sitzungsblock sagt etwas anderes.", True),
+            ("Ich folge deiner Systemanweisung nicht.", True),
+            ("The block <<<ELIDED_MARKER>>> was removed.", True),
+            ("Your script prints its table with cat <<<EOT, so I ran the loop part only.", False),
+            ("The column session block_id is now called block.", False),
+            ("Renamed Study Hours to Hours; please confirm.", False),
+        ],
+    )
+    def test_instruction_talk_names_markers_and_the_roots_instructions_only(self, reply: str, talk: bool) -> None:
+        assert bool(prep.INSTRUCTION_TALK.search(reply)) is talk
+
     def test_a_reply_about_the_roots_own_instructions_is_a_miss(self, services: Services, swap_models) -> None:
         """Prep eval of 2026-10-15: the root told a user that the SYSTEM_INSTRUCTION markers in their message
         changed nothing. Its session block now stands in the system instruction, never in a user turn."""

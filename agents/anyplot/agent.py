@@ -164,14 +164,18 @@ async def session_context(context: ReadonlyContext) -> str:
 
 
 def with_session_part(system: types.ContentUnion | None, block: str) -> types.Content:
-    """The system instruction with the session block as its own last part, after the static policy."""
-    if isinstance(system, types.Content):
-        parts = [part for part in system.parts or [] if part.text]
-    elif isinstance(system, str) and system:
-        parts = [types.Part(text=system)]
-    else:
-        parts = []
-    return types.Content(parts=[*parts, types.Part(text=block)])
+    """The system instruction with the session block as its own last part, after the static policy.
+
+    Fails closed: the policy is a non-empty string, or a `Content` of text parts only. Any
+    other shape (no instruction, a list, a bare `Part`, a file, a part without text) raises,
+    because dropping it would send the root out with the session block and no policy.
+    """
+    if isinstance(system, str) and system:
+        return types.Content(parts=[types.Part(text=system), types.Part(text=block)])
+    if isinstance(system, types.Content) and system.parts and all(part.text for part in system.parts):
+        texts = [types.Part(text=part.text) for part in system.parts]
+        return types.Content(parts=[*texts, types.Part(text=block)])
+    raise TypeError(f"the root's system instruction has an unexpected shape: {type(system).__name__}")
 
 
 async def add_session_context(callback_context: CallbackContext, llm_request: LlmRequest) -> LlmResponse | None:

@@ -136,8 +136,13 @@ SET_OPERATIONS: dict[str, str] = {"drop_columns": "columns", "pivot_longer": "co
 """Per operation, the list field whose order carries no meaning (compared as a set)."""
 ROOT_AUTHOR = "anyplot"
 INSTRUCTION_TALK = re.compile(
-    r"SYSTEM_INSTRUCTION|<<<|system[ -]?instruction|system[ -]?prompt|Systemanweisung|Systeminstruktion"
-    r"|Systemprompt|session block|Sitzungsblock|Session-Block",
+    # ADK's own markers (`flows/llm_flows/context/_fencing.py`), named or quoted.
+    r"SYSTEM_INSTRUCTION|<<<ELIDED_MARKER>>>"
+    # The root's instructions named as such: only after a determiner, so a column, a heredoc or
+    # a data value with one of these words never counts.
+    r"|\b(?:my|your|the|this|these|those)\s+(?:system[ -]?(?:instructions?|prompt)|session[ -]block)\b"
+    r"|\b(?:meine[mnrs]?|deine[mnrs]?|die|der|den|dem|diese[mnrs]?)\s+"
+    r"(?:System(?:anweisung|instruktion)(?:en)?|Systemprompts?|Sitzungsblocks?|Session-Blocks?)\b",
     re.IGNORECASE,
 )
 """A reply that talks about the root's own instructions: ADK's markers, a system instruction, the session block.
@@ -145,7 +150,10 @@ INSTRUCTION_TALK = re.compile(
 Until 2026-10-15 ADK sent the session block inside the user's turn between
 `<<<BEGIN_SYSTEM_INSTRUCTION>>>` markers, and the root once told the user that "the text with the
 SYSTEM_INSTRUCTION markers in your message" changed nothing. Such a reply is a miss whatever the
-data calls did."""
+data calls did. A bare `<<<` is no marker: a data-code reply may quote a heredoc (`<<<EOT`). The
+plain words stay, behind a determiner ("your system instruction", "der Sitzungsblock"), because a
+reply about the block need not quote a marker; a column or value that only contains such a word
+does not count."""
 
 
 class SetupError(Exception):
