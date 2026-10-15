@@ -12,4 +12,4 @@
   the agents service sanitises it, pre-filters it on its own and adds
   `source file: <name>` to the notes, which the scope judge reads in the same
   call. Plausible gets `agent_data_file{kind, encoding, outcome}`, never the
-  name.
+  name. (#12192)
