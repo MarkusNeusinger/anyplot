@@ -1262,9 +1262,8 @@ def _to_dates(series: pd.Series, date_format: str | None) -> tuple[pd.Series, in
     texts = _texts(series)
     if date_format == "MM.YYYY" and _kind(series) == "number":
         # The parser read `03.2020` as the number 3.202: four decimals give the year back, trailing zeros included.
-        texts = pd.Series(
-            [None if pd.isna(value) else f"{float(value):.4f}" for value in series], index=series.index, dtype="str"
-        )
+        # Only where they keep the value: `03.20249` stays as it is and fails, never rounded into March 2025.
+        texts = pd.Series([_four_decimals(text) for text in texts], index=series.index, dtype="str")
     if date_format:
         strptime = STRPTIME[date_format]
         result = pd.to_datetime(pd.Series(pd.NaT, index=series.index))
@@ -1277,6 +1276,14 @@ def _to_dates(series: pd.Series, date_format: str | None) -> tuple[pd.Series, in
     failed = int((result.isna() & texts.notna()).sum())
     with_time = any(":" in text for text in texts if isinstance(text, str))
     return result, failed, with_time
+
+
+def _four_decimals(text: object) -> str | None:
+    """A number's text with four decimals when that keeps its value exactly, else its canonical text."""
+    if not isinstance(text, str):
+        return None  # a missing cell
+    padded = f"{float(text):.4f}"
+    return padded if float(padded) == float(text) else text
 
 
 def _check_failed(column: str, failed: int, present: int, what: str) -> None:

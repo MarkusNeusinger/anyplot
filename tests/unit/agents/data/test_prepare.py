@@ -1446,6 +1446,15 @@ class TestSetTypeDateFormats:
         assert cells(prepared, 0) == expected
         assert dtypes(prepared)["d"] == "datetime"
 
+    def test_mm_yyyy_never_rounds_a_malformed_number_into_a_date(self) -> None:
+        """`03.20249` is no MM.YYYY cell: four decimals would make it March 2025, so it stays as it is and fails."""
+        code, _ = failure(
+            "d,v\n03.20249,1\n11.20001,2\n",
+            {"op": "set_type", "column": "d", "type": "datetime", "date_format": "MM.YYYY"},
+        )
+
+        assert code == "type_mismatch"
+
 
 class TestNaCategory:
     def test_a_na_category_survives_every_operation_and_the_reparse(self) -> None:

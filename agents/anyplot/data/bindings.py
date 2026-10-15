@@ -148,7 +148,7 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
     }
 
     # A constant is no measure even when named like the role (`y2`, `size`); a year or a month named so is meant.
-    constants = {column.name for column in columns if column.name in weak and column.unique <= 1}
+    constants = {column.name for column in columns if profile.rows >= MIN_CONSTANT_ROWS and column.unique <= 1}
 
     for role in roles:
         if not role.kinds:

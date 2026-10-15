@@ -242,6 +242,12 @@ class TestWeakMeasures:
 
         assert as_pairs(default_bindings(roles, data)) == [("year", "year"), ("value", "value")]
 
+    def test_a_short_table_keeps_a_one_valued_year_named_like_the_role(self) -> None:
+        roles = [role("year", "numeric"), role("measurement", "numeric")]
+        data = profile("year,value\n2024,1.5\n2024,2.5\n")
+
+        assert as_pairs(default_bindings(roles, data)) == [("year", "year"), ("measurement", "value")]
+
     def test_an_optional_measure_still_takes_a_real_measure(self) -> None:
         roles = [role("x", "numeric"), role("y", "numeric"), role("size", "numeric", required=False)]
         data = profile("a,b,c\n1,2.5,7\n2,3.5,8\n3,1.5,9\n4,2.0,7\n5,4.5,8\n")
