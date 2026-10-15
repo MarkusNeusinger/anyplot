@@ -340,6 +340,32 @@ class TestNumberFormatGate:
         assert any(label["text"] == "3.11" for label in probe["labels"])
         assert gate_lines(probe, plot_language="de") == []
 
+    @pytest.mark.parametrize(("fmt", "fires"), [("{:.2f}", True), ("{:,.2f}", False)])
+    def test_the_real_probe_end_to_end(
+        self, fmt: str, fires: bool, tmp_path: Any, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """The harness's own probe file (block F's `labels`, this gate's `tick_axes`) through `evaluate`."""
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setattr(Figure, "savefig", Figure.savefig)  # restored after the test
+        harness.install_probe("light")
+        german = str.maketrans(",.", ".,")
+
+        def label(value: float) -> str:
+            text = fmt.format(value)
+            return text if fires else text.translate(german)
+
+        fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
+        container = ax.bar(["Altbrunn", "Seefeld", "Hochmatt"], [5.3, 4.85, 6.12])
+        ax.bar_label(container, labels=[label(value) for value in container.datavalues])
+        ax.yaxis.set_major_formatter(FuncFormatter(lambda value, _: label(value)))
+        fig.savefig("plot-light.png", dpi=100)
+        probe = json.loads((tmp_path / "probe-light.json").read_text())
+
+        lines = [line for line in gate_lines(probe, plot_language="de") if line.startswith("VQ-06")]
+
+        assert probe["labels"] and probe["tick_axes"] == [{"x": "category", "y": "number"}]
+        assert bool(lines) is fires
+
     def test_preconverted_date_coordinates_are_dates(self) -> None:
         """Copilot round 2 on #12184: `date2num` coordinates under a DateFormatter leave the converter unset."""
         import datetime
