@@ -3186,6 +3186,33 @@ async def test_notes_that_pass_the_scope_judge_are_stored_returned_and_reach_the
     assert f"- Notes pasted with the data: {NOTES_LINE}" in block and "markers" not in block  # a fixed line
 
 
+async def test_a_paste_of_two_tables_reads_the_chosen_one_and_lists_both(client: httpx.AsyncClient, judge) -> None:
+    """Live test round 5 of 2026-10-15: a report sheet's second table was appended to the first."""
+    sid = await open_session(client, with_data=False)
+    text = "Branch report\n\nBranch,Q1\nNorth,1.5\nSouth,2.5\n\nStaff\nBranch,Staff\nNorth,24\nSouth,18\n"
+    labels = ["Branch, Q1 · 2 rows", "Branch, Staff · 2 rows"]
+
+    first = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": text})
+    second = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": text, "table": 2})
+    missing = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": text, "table": 3})
+    single = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": "a,b\nx,1\ny,2\n"})
+
+    assert first.status_code == second.status_code == single.status_code == 200
+    assert (first.json()["tables"], first.json()["table"], first.json()["preview"]) == (
+        labels,
+        1,
+        [["North", "1.5"], ["South", "2.5"]],
+    )
+    assert (second.json()["tables"], second.json()["table"], second.json()["preview"]) == (
+        labels,
+        2,
+        [["North", "24"], ["South", "18"]],
+    )
+    assert second.json()["context_lines"] == ["Branch report", "Staff"]
+    assert (missing.status_code, missing.json()) == (422, {"detail": "unparseable"})
+    assert "tables" not in single.json() and "table" not in single.json()
+
+
 async def test_the_action_turn_carries_no_notes_block_when_the_paste_had_none(
     client: httpx.AsyncClient, swap_models, judge
 ) -> None:

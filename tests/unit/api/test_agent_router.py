@@ -630,6 +630,22 @@ class TestBodies:
         assert response.status_code == 422
         assert upstream.requests == []
 
+    def test_dataset_table_is_forwarded_only_when_set(self, client, upstream) -> None:
+        """The table picker: which of several tables in the text the agents service reads (live test round 5)."""
+        chosen = client.post(
+            "/debug/agent/sessions/s1/dataset", json={"text": "a,b\n1,2\n", "table": 2}, headers=CLIENT_HEADERS
+        )
+        assert chosen.status_code == 200
+        assert upstream.last_json == {"text": "a,b\n1,2\n", "table": 2}
+
+    @pytest.mark.parametrize("table", [0, 11, "2", 1.5])
+    def test_dataset_table_out_of_bounds_is_refused(self, client, upstream, table) -> None:
+        response = client.post(
+            "/debug/agent/sessions/s1/dataset", json={"text": "a,b\n1,2\n", "table": table}, headers=CLIENT_HEADERS
+        )
+        assert response.status_code == 422
+        assert upstream.requests == []
+
     def test_dataset_body_takes_no_other_field(self, client, upstream) -> None:
         """The body is an allowlist: a file's bytes or its type cannot ride along."""
         response = client.post(

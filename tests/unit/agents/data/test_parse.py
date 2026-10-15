@@ -446,7 +446,7 @@ class TestFormats:
 
         assert parsed.profile.source_format == "json_records"
         assert parsed.column_dtypes == {"x": "number", "label": "text", "flag": "boolean"}
-        assert parsed.csv == "x,label,flag\n1.0,a,\n2.5,,True\n,c,\n"
+        assert parsed.csv == "x,label,flag\n1,a,\n2.5,,True\n,c,\n"
         assert warned(parsed, "3 records lack some keys")
 
     def test_one_incomplete_json_record_takes_a_singular_verb(self) -> None:
@@ -755,7 +755,7 @@ class TestPythonLiterals:
 
         assert parsed.profile.source_format == "json_columns"
         assert parsed.column_dtypes == {"day": "text", "ok": "boolean", "n": "number"}
-        assert parsed.csv == "day,ok,n\na,True,1.0\nb,False,2.5\nc,,\n"
+        assert parsed.csv == "day,ok,n\na,True,1\nb,False,2.5\nc,,\n"
 
     def test_records_and_pairs_as_literals(self) -> None:
         records = parse_dataset("rows = [{'x': 1, 'label': 'a'}, {'x': 2, 'label': 'b'},]")
@@ -849,14 +849,14 @@ class TestUnits:
         parsed = parse_dataset("Tag;Dauer\nMo;15,6 h\nDi;8 h\n")
 
         assert parsed.column_dtypes == {"Tag": "text", "Dauer (h)": "number"}
-        assert parsed.csv.splitlines()[1:] == ["Mo,15.6", "Di,8.0"]
+        assert parsed.csv.splitlines()[1:] == ["Mo,15.6", "Di,8"]
         assert parsed.profile.decimal == ","
 
     def test_a_leading_euro_with_the_sign_before_it(self) -> None:
         parsed = parse_dataset("Posten;Preis\nA;€ 5\nB;-€ 12,50\nC;€-1,5\n")
 
         assert parsed.column_dtypes == {"Posten": "text", "Preis (€)": "number"}
-        assert parsed.csv.splitlines()[1:] == ["A,5.0", "B,-12.5", "C,-1.5"]
+        assert parsed.csv.splitlines()[1:] == ["A,5", "B,-12.5", "C,-1.5"]
 
     def test_a_currency_code_before_or_after_the_number(self) -> None:
         parsed = parse_dataset("a,b\nx,CHF 1200\ny,800 CHF\n")
@@ -879,7 +879,7 @@ class TestUnits:
         parsed = parse_dataset("v\n-3 %\n+2 %\n-0,5 %\n")
 
         assert parsed.column_dtypes == {"v (%)": "number"}
-        assert parsed.csv.splitlines()[1:] == ["-3.0", "2.0", "-0.5"]
+        assert parsed.csv.splitlines()[1:] == ["-3", "2", "-0.5"]
 
     @pytest.mark.parametrize(
         ("cells", "name", "dtype", "canonical"),
@@ -888,9 +888,9 @@ class TestUnits:
             (["12°", "15 °"], "v (°)", "integer", ["12", "15"]),
             (["5µs", "7 μs"], "v", "text", ["5µs", "7 μs"]),
             (["5µs", "7 µs"], "v (µs)", "integer", ["5", "7"]),
-            (["3 Std", "4,5 Std"], "v (Std)", "number", ["3.0", "4.5"]),
+            (["3 Std", "4,5 Std"], "v (Std)", "number", ["3", "4.5"]),
             (["1.234,56 €", "7,5 €"], "v (€)", "number", ["1234.56", "7.5"]),
-            (["$ 3", "-$ 2.5", "$-1"], "v ($)", "number", ["3.0", "-2.5", "-1.0"]),
+            (["$ 3", "-$ 2.5", "$-1"], "v ($)", "number", ["3", "-2.5", "-1"]),
             (["12‰"], "v (‰)", "integer", ["12"]),
             (["2E-2 h", "1e3h"], "v (h)", "number", ["0.02", "1000.0"]),
             (["5 km/h"], "v", "text", ["5 km/h"]),
@@ -997,7 +997,7 @@ class TestUnits:
         ("cells", "name", "canonical"),
         [
             (["5 Std.", "3 Std."], "v (Std.)", ["5", "3"]),
-            (["5 Mio.", "3,5 Mio."], "v (Mio.)", ["5.0", "3.5"]),
+            (["5 Mio.", "3,5 Mio."], "v (Mio.)", ["5", "3.5"]),
             (["100 m²", "80 m²"], "v (m²)", ["100", "80"]),
             (["2 m³"], "v (m³)", ["2"]),
         ],
@@ -1420,7 +1420,7 @@ class TestJsonStat:
         )
         parsed = parse_dataset(text)
 
-        assert parsed.csv == "Land,Jahr,value\nAT,2023,1.5\nAT,2024,\nCH,2023,\nCH,2024,4.0\n"
+        assert parsed.csv == "Land,Jahr,value\nAT,2023,1.5\nAT,2024,\nCH,2023,\nCH,2024,4\n"
         assert column(parsed, "value").missing == 2
 
     def test_an_index_array_without_labels_keeps_the_codes(self) -> None:
@@ -2558,8 +2558,9 @@ class TestFidelity:
         """Owner decision of 2026-10-15: the value is enough, but the user hears that the spelling went."""
         parsed = parse_dataset("a,b,c\n1.50,+3,2\n1e3,-0,.5\n2.0,4,1e-7\n")
 
-        # `1.50`, `1e3`; `+3`, `-0`. What the canonical form only adds (`2` as `2.0`, `.5`, `1e-07`) is no loss.
-        assert parsed.csv == "a,b,c\n1.5,3,2.0\n1000.0,0,0.5\n2.0,4,1e-07\n"
+        # `1.50`, `1e3`; `+3`, `-0`. What the canonical form only adds (`.5` as `0.5`, `1e-07`) is no loss, and a
+        # whole number written without a fraction keeps that form beside decimals (`2`, live test round 5).
+        assert parsed.csv == "a,b,c\n1.5,3,2\n1000.0,0,0.5\n2.0,4,1e-07\n"
         assert parsed.warnings == respelled_warning(4, "a, b")
 
     def test_nanoseconds_beside_a_date_outside_1677_to_2262_stay_text_with_a_note(self) -> None:
@@ -2640,12 +2641,31 @@ class TestFidelity:
             "column 'c': 2 cells read as missing ('None', '-')",
         ]
 
-    def test_missing_marks_in_number_columns_and_the_padding_of_aligned_tables_need_no_warning(self) -> None:
-        numbers = parse_dataset("k,v\na,1\nb,-\nc,n/a\n")
+    def test_missing_marks_in_number_columns_are_counted_like_in_text_columns(self) -> None:
+        """Live test round 5 of 2026-10-15: `NA` in `sex` was said, the same `NA` in `body_mass_g` was not."""
+        numbers = parse_dataset("k,v,d\na,1,2024-01-01\nb,-,NA\nc,n/a,2024-01-03\n")
+
+        assert numbers.column_dtypes == {"k": "text", "v": "integer", "d": "datetime"}
+        assert numbers.warnings == [
+            "column 'v': 2 cells read as missing ('-', 'n/a')",
+            "column 'd': 1 cell read as missing ('NA')",
+        ]
+
+    def test_the_padding_of_aligned_tables_needs_no_warning(self) -> None:
         aligned = parse_dataset("Ort        Wert\nZürich     1\nBern       2\nBasel      3\n")
 
-        assert numbers.column_dtypes["v"] == "integer" and numbers.warnings == []
         assert aligned.csv == "Ort,Wert\nZürich,1\nBern,2\nBasel,3\n" and aligned.warnings == []
+
+    def test_a_whole_number_beside_decimals_keeps_its_form(self) -> None:
+        """Live test round 5 of 2026-10-15: Excel's `87000` beside `120500.5` showed as `87000.0`."""
+        parsed = parse_dataset("Filiale,Umsatz\nZürich,120500.5\nBasel,87000\nBern,2.0\n")
+
+        assert parsed.column_dtypes["Umsatz"] == "number"
+        assert parsed.csv.splitlines()[1:] == ["Zürich,120500.5", "Basel,87000", "Bern,2.0"]
+        assert parsed.warnings == []
+        assert read_back(parsed)["Umsatz"].tolist() == [120500.5, 87000.0, 2.0]
+        # The canonical CSV reads back the same: the form survives every later version's re-parse.
+        assert parse_dataset(parsed.csv, find_table=False, canonical=True).csv == parsed.csv
 
     def test_json_floats_that_overflow_stay_text_instead_of_vanishing(self) -> None:
         parsed = parse_dataset('[{"a": 1e400, "b": 1}, {"a": 2, "b": 2}]')
@@ -2720,3 +2740,176 @@ class TestPreciseTimestamps:
     def test_plain_dates_and_minutes_are_written_as_before(self) -> None:
         assert self.column("t\n2024-01-05\n2024-02-03\n")[1] == ["2024-01-05", "2024-02-03"]
         assert self.column("t\n2024-01-05 10:30\n2024-02-03\n")[1] == ["2024-01-05T10:30:00", "2024-02-03T00:00:00"]
+
+
+# Live test round 5 of 2026-10-15, generalised: a report sheet (`Filialen_2025.xlsx`, sheet ‹Bericht›) as the
+# converter writes it, a title, a revenue table, a blank row, a caption and a staff table. Synthetic values.
+REPORT = (
+    "Branch report 2025 - internal\n"
+    "\n"
+    "Branch,Revenue Q1 (CHF),Revenue Q2 (CHF)\n"
+    "North,120500.5,130100\n"
+    "South,98200.25,101500.5\n"
+    "East,87000,90500\n"
+    "\n"
+    "Staff and floor space\n"
+    "Branch,Staff,Floor (m²)\n"
+    "North,24,450\n"
+    "South,18,380\n"
+    "East,15,300\n"
+)
+
+
+class TestTables:
+    """A paste with several tables, each under its own header after a blank line (`_one_table`)."""
+
+    def test_the_first_table_is_read_and_the_others_are_named(self) -> None:
+        parsed = parse_dataset(REPORT)
+
+        assert parsed.csv == (
+            "Branch,Revenue Q1 (CHF),Revenue Q2 (CHF)\nNorth,120500.5,130100\nSouth,98200.25,101500.5\nEast,87000,90500\n"
+        )
+        assert parsed.column_dtypes == {"Branch": "text", "Revenue Q1 (CHF)": "number", "Revenue Q2 (CHF)": "number"}
+        assert parsed.tables == [
+            "Branch, Revenue Q1 (CHF), Revenue Q2 (CHF) · 3 rows",
+            "Branch, Staff, Floor (m²) · 3 rows",
+        ]
+        assert parsed.table == 1
+        assert parsed.warnings[0] == (
+            "the data holds 2 tables, each under its own header; read table 1 (Branch, Revenue Q1 (CHF), Revenue Q2 "
+            "(CHF) · 3 rows) and left out table 2 (Branch, Staff, Floor (m²) · 3 rows); the table picker in the data "
+            "panel reads another one"
+        )
+        assert parsed.context_lines == ["Branch report 2025 - internal"]
+
+    def test_the_second_table_keeps_the_title_and_its_caption_as_notes(self) -> None:
+        parsed = parse_dataset(REPORT, table=2)
+
+        assert parsed.csv == "Branch,Staff,Floor (m²)\nNorth,24,450\nSouth,18,380\nEast,15,300\n"
+        assert parsed.column_dtypes["Staff"] == "integer"
+        assert parsed.table == 2 and len(parsed.tables) == 2
+        assert "read table 2 (Branch, Staff, Floor (m²) · 3 rows) and left out table 1" in parsed.warnings[0]
+        assert parsed.context_lines == ["Branch report 2025 - internal", "Staff and floor space"]
+
+    def test_a_table_number_past_the_tables_is_refused(self) -> None:
+        with pytest.raises(ParseError) as many:
+            parse_dataset(REPORT, table=3)
+        with pytest.raises(ParseError) as one:
+            parse_dataset("a,b\nx,1\ny,2\n", table=2)
+        with pytest.raises(ParseError) as literal:
+            parse_dataset('[{"a": 1}, {"a": 2}]', table=2)
+
+        assert many.value.code == one.value.code == literal.value.code == "unparseable"
+        assert "holds 2 tables" in many.value.message
+
+    def test_pasted_semicolon_tables_with_another_width_split_too(self) -> None:
+        text = (
+            "Jahr;Wert\n2023;1,5\n2024;2,5\n\nRegion;Jahr;Anteil;Notiz\nNord;2024;12;a\nSüd;2024;13;b\nWest;2024;9;c\n"
+        )
+        first = parse_dataset(text)
+        second = parse_dataset(text, table=2)
+
+        assert first.csv == "Jahr,Wert\n2023,1.5\n2024,2.5\n"
+        assert second.csv.splitlines()[0] == "Region,Jahr,Anteil,Notiz" and second.profile.rows == 3
+        assert first.tables == second.tables
+
+    @pytest.mark.parametrize(
+        "text",
+        [
+            # One table with a blank line inside: the rows after it have no header of their own.
+            "a,b\nx,1\ny,2\n\nz,3\nw,4\n",
+            # An export's metadata of one row above the table (Open-Meteo): no table of its own.
+            "latitude,longitude,elevation\n47.37,8.55,408.0\n\ntime,temperature\n2024-01-01T00:00,1.5\n"
+            "2024-01-01T01:00,1.2\n2024-01-01T02:00,1.1\n",
+            # A key-value block above the table.
+            "Station:,Zürich\nHöhe:,556\nBreite:,47.37\n\nJahr,Wert\n2023,1\n2024,2\n",
+            # Notes below the table.
+            "a,b\nx,1\ny,2\n\nSource: somewhere, 2024\n",
+            # A text-only block below a table.
+            "a,b\nx,1\ny,2\n\nName,Role\nAnna,Lead\nBen,Dev\n",
+        ],
+    )
+    def test_text_with_one_table_stays_one_table(self, text: str) -> None:
+        parsed = parse_dataset(text)
+
+        assert parsed.tables == [] and parsed.table == 1
+        assert not any("tables" in warning for warning in parsed.warnings)
+
+    def test_a_confirmed_or_computed_table_is_never_split(self) -> None:
+        text = REPORT.split("\n", 2)[2]  # from the first header on: a confirmed table keeps every row
+        parsed = parse_dataset(text, find_table=False)
+
+        assert parsed.tables == [] and parsed.profile.rows == 8
+
+    def test_a_year_header_starts_a_table(self) -> None:
+        text = "Land,2020,2021\nCH,1,2\nDE,3,4\n\nLand,Hauptstadt\nCH,Bern\nDE,Berlin\n"
+        assert parse_dataset(text).tables == []  # the second table holds no value: it is no table of its own
+        text = "Land,Hauptstadt,Fläche\nCH,Bern,41285\nDE,Berlin,357588\n\nLand,2020,2021\nCH,1,2\nDE,3,4\n"
+        assert parse_dataset(text, table=2).csv == "Land,2020,2021\nCH,1,2\nDE,3,4\n"
+
+
+# Live test round 5 of 2026-10-15, generalised: R's `write.csv` writes the row names first under an empty header.
+R_EXPORT = (
+    '"","species","bill_length_mm","body_mass_g","sex"\n'
+    '"1","Adelie",39.1,3750,"male"\n'
+    '"2","Gentoo",NA,NA,NA\n'
+    '"3","Chinstrap",40.0,3800,"female"\n'
+)
+
+
+class TestRowNames:
+    def test_r_row_names_leave_the_table_with_a_warning(self) -> None:
+        parsed = parse_dataset(R_EXPORT)
+
+        assert list(parsed.column_dtypes) == ["species", "bill_length_mm", "body_mass_g", "sex"]
+        assert parsed.warnings == [
+            "left out the first column (without a header): its 3 cells only number the rows 1 to 3 in order, as R's "
+            "write.csv or pandas' to_csv write row names",
+            "column 'bill_length_mm': 1 cell read as missing ('NA')",
+            "column 'body_mass_g': 1 cell read as missing ('NA')",
+            "column 'sex': 1 cell read as missing ('NA')",
+        ]
+        assert parsed.csv.splitlines()[1] == "Adelie,39.1,3750,male"
+        assert parsed.csv.splitlines()[3] == "Chinstrap,40.0,3800,female"  # `40.0` as written
+
+    def test_the_row_names_never_become_the_default_x(self) -> None:
+        roles = [
+            DataRole(name="x", kinds=("numeric",), required=True, variadic=False, description="x values"),
+            DataRole(name="y", kinds=("numeric",), required=True, variadic=False, description="y values"),
+        ]
+        bindings = {
+            binding.role: binding.column for binding in default_bindings(roles, parse_dataset(R_EXPORT).profile)
+        }
+
+        assert bindings["x"] != "column_1" and "column_1" not in bindings.values()
+
+    @pytest.mark.parametrize("header", ["", "Unnamed: 0", "...1"])
+    def test_pandas_and_readr_indexes_from_zero_or_one_leave_too(self, header: str) -> None:
+        zero = parse_dataset(f'"{header}",a,b\n0,x,1.5\n1,y,2.5\n2,z,3.5\n')
+        one = parse_dataset(f'"{header}",a,b\n1,x,1.5\n2,y,2.5\n')
+
+        assert list(zero.column_dtypes) == list(one.column_dtypes) == ["a", "b"]
+        assert "the rows 0 to 2 in order" in zero.warnings[0]
+
+    @pytest.mark.parametrize(
+        "text",
+        [
+            '"",a\n3,x\n7,y\n12,z\n',  # row names after a filter: data
+            '"",a\nMazda RX4,1\nDatsun 710,2\n',  # row names that are names
+            "X,a\n1,x\n2,y\n",  # a column a person may call X
+            "index,a\n0,x\n1,y\n",
+            '"",a\n1,x\n',  # one row: no evidence of an order
+            '"",a\n01,x\n02,y\n',  # zero-padded: a code, not a position
+            "a,\nx,1\ny,2\n",  # an empty header that is not the first column
+        ],
+    )
+    def test_anything_else_stays_a_column(self, text: str) -> None:
+        parsed = parse_dataset(text)
+
+        assert not any("number the rows" in warning for warning in parsed.warnings)
+        assert len(parsed.column_dtypes) == 2
+
+    def test_a_canonical_re_parse_keeps_every_column(self) -> None:
+        parsed = parse_dataset('"",a\n1,x\n2,y\n', canonical=True, find_table=False)
+
+        assert list(parsed.column_dtypes) == ["column_1", "a"]

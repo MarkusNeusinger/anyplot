@@ -1524,10 +1524,11 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
    * its default bindings are applied, and the assistant's summary of it follows
    * as the turn `summarize_data`; the returned promise ends with that turn.
    * Text that is no table comes back as a transcription to decide on, which
-   * stores nothing and asks for no summary.
+   * stores nothing and asks for no summary. `table` reads another of the
+   * tables the previous answer named (the data panel's table picker).
    */
   const parseData = useCallback(
-    async (text: string, confirmed = false, source?: string) => {
+    async (text: string, confirmed = false, source?: string, table?: number) => {
       const sid = stateRef.current.sessionId;
       if (!sid || !text.trim() || busy()) return;
       const bytes = utf8Bytes(text);
@@ -1541,7 +1542,7 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
       parseRef.current = true;
       safeDispatch({ type: 'parse_start' });
       try {
-        const parsed = await agentApi.uploadDataset(token, sid, text, confirmed, source);
+        const parsed = await agentApi.uploadDataset(token, sid, text, confirmed, source, table);
         if (isTranscribed(parsed)) {
           // Free text read into a table: shown for the user to confirm, not stored.
           safeDispatch({

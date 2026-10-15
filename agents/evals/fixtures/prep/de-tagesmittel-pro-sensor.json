@@ -1,0 +1,9 @@
+{
+  "dataset_text": "Zeitpunkt,Sensor,Temperatur,Feuchte\n2026-01-01 00:00,S1,14.9,74.8\n2026-01-01 00:13,S2,15.1,78.0\n2026-01-01 00:26,S1,14.1,55.9\n2026-01-01 12:39,S2,18.2,61.0\n2026-01-02 00:52,S1,13.4,70.2\n2026-01-02 09:05,S2,16.8,64.5\n2026-01-02 17:18,S1,17.5,58.1\n2026-01-03 01:31,S2,12.9,80.3\n",
+  "message": "Bilde das Tagesmittel der Temperatur pro Sensor.",
+  "expected_operations": [
+    {"op": "aggregate", "by": ["Zeitpunkt", "Sensor"], "column": "Temperatur", "how": "mean", "period": "day"}
+  ],
+  "locale": "de",
+  "tags": ["aggregate", "mean", "period", "day"]
+}

@@ -689,6 +689,74 @@ describe('DataPanel data changes', () => {
   });
 });
 
+describe('DataPanel tables', () => {
+  // Live test round 5 of 2026-10-15: a report sheet with two tables one below the other.
+  const REPORT = 'Branch,Q1\nNorth,1.5\n\nBranch,Staff\nNorth,24\n';
+  const TABLES = ['Branch, Q1 · 1 row', 'Branch, Staff · 1 row'];
+
+  function renderPanel() {
+    const onParse = vi.fn();
+    const panel = (next: AgentSessionState) => (
+      <DataPanel
+        state={next}
+        onParse={onParse}
+        onConfirmTranscription={vi.fn()}
+        onDiscardTranscription={vi.fn()}
+        onSendFormula={vi.fn()}
+        onBind={vi.fn()}
+        onConfirmData={vi.fn()}
+        onUndo={vi.fn()}
+      />
+    );
+    const view = render(panel({ ...initialAgentState('matplotlib'), phase: 'ready', sessionId: 'S1' }));
+    return { onParse, rerender: (next: AgentSessionState) => view.rerender(panel(next)) };
+  }
+
+  function withTables(table: number, tables: unknown = TABLES): AgentSessionState {
+    const state: AgentSessionState = stateWith({ x: 'month', y1: 'shoes' });
+    const dataset = state.dataset;
+    if (!dataset) throw new Error('stateWith has a dataset');
+    return { ...state, dataset: { ...dataset, parsed: { ...dataset.parsed, tables, table } } };
+  }
+
+  it('offers the other tables of the parsed text and parses it again for the chosen one', async () => {
+    const { onParse, rerender } = renderPanel();
+    await userEvent.type(screen.getByLabelText(/# your data/), REPORT.split('\n').join('{enter}'));
+    await userEvent.click(screen.getByRole('button', { name: '.parse()' }));
+    expect(onParse).toHaveBeenLastCalledWith(REPORT);
+
+    rerender(withTables(1));
+    const picker = screen.getByLabelText('# table (2)');
+    expect(picker).toHaveValue('1');
+    expect(within(picker).getAllByRole('option').map(option => option.textContent)).toEqual([
+      '1 · Branch, Q1 · 1 row',
+      '2 · Branch, Staff · 1 row',
+    ]);
+
+    // An edit of the box after the parse does not count: the tables are the parsed text's.
+    await userEvent.type(screen.getByLabelText(/# your data/), 'more');
+    await userEvent.selectOptions(picker, '2');
+    expect(onParse).toHaveBeenLastCalledWith(REPORT, undefined, 2);
+  });
+
+  it('shows no picker for one table, a malformed answer or a dataset it did not parse', async () => {
+    const { rerender } = renderPanel();
+    rerender(withTables(1));
+    expect(screen.queryByTestId('data-tables')).not.toBeInTheDocument(); // no `.parse()` in this panel yet
+
+    await userEvent.type(screen.getByLabelText(/# your data/), 'a,b{enter}1,2');
+    await userEvent.click(screen.getByRole('button', { name: '.parse()' }));
+    rerender(withTables(1, ['only one']));
+    expect(screen.queryByTestId('data-tables')).not.toBeInTheDocument();
+    rerender(withTables(3));
+    expect(screen.queryByTestId('data-tables')).not.toBeInTheDocument();
+    rerender(withTables(1, [1, 2]));
+    expect(screen.queryByTestId('data-tables')).not.toBeInTheDocument();
+    rerender(withTables(2));
+    expect(screen.getByTestId('data-tables')).toBeInTheDocument();
+  });
+});
+
 describe('DataPanel formulas', () => {
   const FORMULA = 'y = sin(x), x von -pi bis pi';
 

@@ -175,6 +175,14 @@ export interface DatasetParsed {
   /** The wide-table offer, or `null`; absent from an older server. */
   suggestion?: LongSuggestion | null;
   /**
+   * The paste's answer only, when the text held two or more tables, each under
+   * its own header after a blank line: one label per table (its header names
+   * and its row count). Read it through `tableChoice`.
+   */
+  tables?: unknown;
+  /** The table read, 1-based, beside `tables`. */
+  table?: unknown;
+  /**
    * The data's version: a paste is 1, each change the assistant made to it one
    * more, each undo one less. `.undo()` is possible while it is above 1.
    */
@@ -248,6 +256,25 @@ export interface DatasetTranscribed {
 }
 
 export type DatasetAnswer = DatasetParsed | DatasetTranscribed;
+
+/** The tables of one paste the page may choose from (the service's `MAX_TABLES`). */
+export const MAX_DATASET_TABLES = 10;
+
+/**
+ * The tables a paste held and the one read, or `null` for a paste of one
+ * table, a data version the assistant made, or a malformed answer.
+ */
+export function tableChoice(
+  parsed: DatasetParsed | DatasetChanged
+): { tables: string[]; table: number } | null {
+  if (!('tables' in parsed) || !Array.isArray(parsed.tables)) return null;
+  const tables = parsed.tables.filter((label): label is string => typeof label === 'string');
+  if (tables.length < 2 || tables.length !== parsed.tables.length) return null;
+  const listed = tables.slice(0, MAX_DATASET_TABLES);
+  const table = parsed.table;
+  if (!isInt(table) || table < 1 || table > listed.length) return null;
+  return { tables: listed, table };
+}
 
 /** Whether the dataset answer is a transcription that awaits the user's confirmation. */
 export function isTranscribed(answer: DatasetAnswer): answer is DatasetTranscribed {
@@ -762,8 +789,17 @@ export const agentApi = {
    * `source` is the name of the file the text was read from (a drop, `.open()`,
    * a pasted file): it travels beside the text, which stays as in the file; the
    * server screens it and answers it as `file_name`, never as a note.
+   * `table` reads another of the tables the previous answer's `tables` named
+   * (1-based), when the text holds several.
    */
-  uploadDataset: (token: string, sid: string, text: string, confirmed = false, source?: string) =>
+  uploadDataset: (
+    token: string,
+    sid: string,
+    text: string,
+    confirmed = false,
+    source?: string,
+    table?: number
+  ) =>
     agentJson<DatasetAnswer>(
       `${sessionPath(sid)}/dataset`,
       token,
@@ -771,6 +807,7 @@ export const agentApi = {
         text,
         ...(confirmed ? { confirmed: true } : {}),
         ...(source ? { source } : {}),
+        ...(table ? { table } : {}),
       })
     ),
   /**

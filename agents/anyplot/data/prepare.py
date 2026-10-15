@@ -60,7 +60,13 @@ The operations:
   a day over 12) stays as it is (see `_reread_dates`).
 * `aggregate`: group by one or two key columns and reduce one value column with `sum`,
   `mean`, `count`, `min` or `max`. A `period` turns every datetime key into `YYYY-MM`,
-  `YYYY-Qn` or `YYYY` text before grouping. The result holds the key columns and one
+  `YYYY-Qn` or `YYYY` text before grouping, or, since live test round 5 of 2026-10-15
+  ("Tagesmittel pro Sensor" on readings every 13 minutes), into the first moment of its
+  `hour`, `day` or ISO `week` (its Monday), which stays a datetime, so the result keeps
+  a time axis: a day and a week are written as dates, an hour with its time and offset.
+  The buckets follow the column's clock as stored: a column with one UTC offset is cut
+  at its own midnight, one the parser wrote in UTC (several offsets) at UTC midnight,
+  and the change line names that offset. The result holds the key columns and one
   value column named like the source, or `count`; every other column is dropped, rows
   with a missing key form their own group, and the rows are sorted by the keys.
 * `pivot_longer`: 2 to 20 columns become a `names_to`/`values_to` pair (long format,
@@ -129,9 +135,14 @@ an ISO date or date-time), `true`/`false` for a boolean column. A missing cell m
 only `is_missing`. `contains` searches the cell's canonical text, case-sensitively.
 
 What the canonical CSV does not say about its columns travels with the frame as
-`_Carried`: the columns the parser read by guess, the columns kept text, and whether a
+`_Carried`: the columns the parser read by guess, the columns kept text, whether a
 datetime column is written with its time (the parser's choice, read from the profile),
-so a column no operation touched is written back exactly as it was stored.
+and the form of each whole number in a float column (`87000` or `2.0`, as the paste
+wrote it; live test round 5 of 2026-10-15, where `87000` came back as `87000.0` after a
+wide-to-long), so a column no operation touched is written back exactly as it was
+stored and a value an operation moves keeps its form. A whole number an operation
+computes (a sum, a mean, a ratio) is written without `.0` unless its column writes
+every whole number with it; past 2**53 it keeps the `.0` that shows it is a float.
 
 Errors raise `PrepareError(code, message)`: `unknown_column`, `type_mismatch`,
 `empty_result` (no rows or no columns would remain), `too_wide` and
@@ -144,12 +155,13 @@ Pydantic error of the operation models for the model (`tools/session.py` and
 `plugins/tool_safety.py` share it), one line per error with its location.
 """
 
+import csv
 import io
 import math
 import re
 import unicodedata
 import warnings
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta, tzinfo
 from decimal import ROUND_FLOOR, InvalidOperation
@@ -204,7 +216,9 @@ DateFormat = Literal[
 ]
 Decimal = Literal[".", ","]
 How = Literal["sum", "mean", "count", "min", "max"]
-Period = Literal["month", "quarter", "year"]
+Period = Literal["hour", "day", "week", "month", "quarter", "year"]
+DATE_PERIODS = frozenset(("hour", "day", "week"))
+"""The periods whose bucket stays a datetime, its first moment (`_period_starts`); the others become text labels."""
 Kind = Literal["number", "datetime", "boolean", "text"]
 DeriveHow = Literal["ratio", "difference", "sum", "share", "percent_change", "cumsum", "index"]
 ORDERED: frozenset[str] = frozenset(("percent_change", "cumsum", "index"))
@@ -329,13 +343,21 @@ class _Carried:
     columns kept text through the re-parse, and `with_time` whether a datetime column
     is written with its time (the parser's choice, read from the profile's `min`; a
     column no operation touched is therefore written back exactly as stored,
-    `T00:00:00` included).
+    `T00:00:00` included). `forms` holds, per number column, the form each whole
+    number was written in (True for `2.0`, False for `87000`, which the parser keeps
+    so, `parse.number_text`; live test round 5 of 2026-10-15), and `dotted` the
+    columns whose whole numbers are all written with `.0` (as pandas writes a float
+    column), the form of a whole number the column did not hold (a mean, a sum). Any
+    other float column writes a new whole number without `.0`. So a whole number keeps
+    the form the user saw through every operation that moves it (`_cell_text`).
     """
 
     decimal: str
     date_order: dict[str, str] = field(default_factory=dict)
     text_columns: set[str] = field(default_factory=set)
     with_time: dict[str, bool] = field(default_factory=dict)
+    dotted: set[str] = field(default_factory=set)
+    forms: dict[str, dict[float, bool]] = field(default_factory=dict)
 
     @classmethod
     def of(cls, parsed: ParsedDataset) -> "_Carried":
@@ -350,7 +372,9 @@ class _Carried:
             for column in parsed.profile.columns
             if column.dtype == "datetime"
         }
-        return cls(parsed.profile.decimal, order, set(parsed.text_columns), with_time)
+        forms = _whole_forms(parsed)
+        dotted = {name for name, seen in forms.items() if seen and all(seen.values())}
+        return cls(parsed.profile.decimal, order, set(parsed.text_columns), with_time, dotted, forms)
 
     def rename(self, old: str, new: str) -> None:
         if old in self.text_columns:
@@ -360,16 +384,56 @@ class _Carried:
             self.date_order[new] = self.date_order.pop(old)
         if old in self.with_time:
             self.with_time[new] = self.with_time.pop(old)
+        if old in self.dotted:
+            self.dotted.remove(old)
+            self.dotted.add(new)
+        if old in self.forms:
+            self.forms[new] = self.forms.pop(old)
 
     def forget(self, names: Iterable[str]) -> None:
         for name in names:
             self.date_order.pop(name, None)
             self.text_columns.discard(name)
             self.with_time.pop(name, None)
+            self.dotted.discard(name)
+            self.forms.pop(name, None)
 
     def keep_only(self, names: Iterable[str]) -> None:
         kept = set(names)
-        self.forget({*self.date_order, *self.text_columns, *self.with_time} - kept)
+        self.forget({*self.date_order, *self.text_columns, *self.with_time, *self.dotted, *self.forms} - kept)
+
+    def form(self, name: object) -> tuple[bool, Mapping[float, bool]]:
+        """The column's form of a whole number it did not hold, and the forms of those it held (`_cell_text`)."""
+        return str(name) in self.dotted, self.forms.get(str(name), {})
+
+
+def _whole_forms(parsed: ParsedDataset) -> dict[str, dict[float, bool]]:
+    """Per number column of the canonical CSV, each whole number's form: True for `2.0`, False for `2`.
+
+    A value written both ways in one column has no form of its own and takes the column's (`_Carried.dotted`).
+    """
+    numbers = [name for name, dtype in parsed.column_dtypes.items() if dtype == "number"]
+    if not numbers:
+        return {}
+    reader = csv.reader(io.StringIO(parsed.csv))
+    header = next(reader, [])
+    positions = {name: header.index(name) for name in numbers if name in header}
+    forms: dict[str, dict[float, bool]] = {name: {} for name in positions}
+    mixed: dict[str, set[float]] = {name: set() for name in positions}
+    for row in reader:
+        for name, position in positions.items():
+            cell = row[position] if position < len(row) else ""
+            if not cell or "e" in cell:
+                continue
+            value = float(cell)
+            if value.is_integer():
+                dotted = cell.endswith(".0")
+                if forms[name].setdefault(value, dotted) != dotted:
+                    mixed[name].add(value)
+    for name, values in mixed.items():
+        for value in values:
+            forms[name].pop(value, None)
+    return forms
 
 
 # --- Operation models -----------------------------------------------------------------------
@@ -636,7 +700,9 @@ def _read(parsed: ParsedDataset) -> pd.DataFrame:
 
 def _write(frame: pd.DataFrame, carried: _Carried) -> str:
     """Canonical CSV text: every column written through its canonical cell texts."""
-    out = pd.DataFrame({str(name): _texts(frame[name], _with_time(frame[name], carried)) for name in frame.columns})
+    out = pd.DataFrame(
+        {str(name): _texts(frame[name], _with_time(frame[name], carried), carried.form(name)) for name in frame.columns}
+    )
     return out.to_csv(index=False, lineterminator="\n")
 
 
@@ -687,9 +753,11 @@ def _set_type(frame: pd.DataFrame, op: SetType, carried: _Carried) -> tuple[pd.D
         carried.text_columns.add(op.column)
         if kind == "text":
             return frame, f"{op.column}: already text, nothing changed"
-        result[op.column] = _texts(series, _with_time(series, carried))
+        result[op.column] = _texts(series, _with_time(series, carried), carried.form(op.column))
         carried.with_time.pop(op.column, None)
         carried.date_order.pop(op.column, None)
+        carried.dotted.discard(op.column)
+        carried.forms.pop(op.column, None)
         return result, f"{op.column}: {_count(present, 'cell')} now text"
     if op.type == "number":
         if kind == "number":
@@ -797,7 +865,10 @@ def _aggregate(frame: pd.DataFrame, op: Aggregate, carried: _Carried) -> tuple[p
         raise PrepareError("invalid_operation", f"a key column is already named '{value_name}'")
 
     work = frame[[*keys, op.column]].copy()
-    if op.period:
+    if op.period in DATE_PERIODS:
+        for name in date_keys:
+            work[name] = _period_starts(work[name], op.period)
+    elif op.period:
         for name in date_keys:
             work[name] = _period_labels(work[name], op.period)
     if value_kind == "boolean" and op.how in ("sum", "mean"):
@@ -825,10 +896,18 @@ def _aggregate(frame: pd.DataFrame, op: Aggregate, carried: _Carried) -> tuple[p
     result = aggregated.reset_index()
     result.columns = pd.Index([*keys, value_name])
     carried.keep_only([*keys, value_name])
-    if op.period:
+    if op.period in DATE_PERIODS:
+        # Each key is the bucket's first moment: a date for a day or an ISO week (its Monday), a time for an hour.
+        carried.forget(date_keys)
+        carried.with_time.update(dict.fromkeys(date_keys, op.period == "hour"))
+    elif op.period:
         carried.forget(date_keys)  # period labels are text now
 
-    by = " and ".join(keys) + (f" ({op.period})" if op.period else "")
+    period = _PERIOD_WORDS.get(op.period, op.period) if op.period else ""
+    zones = sorted({str(frame[name].dt.tz) for name in date_keys if frame[name].dt.tz is not None})
+    if op.period in DATE_PERIODS and zones:
+        period += f", by the clock of {', '.join(zones)}"  # the column's own offset decides where a day ends
+    by = " and ".join(keys) + (f" ({period})" if period else "")
     change = f"{_VERBS[op.how]} {op.column} by {by}: {_count(len(result), 'row')}"
     other = frame.shape[1] - len(keys) - 1
     if other:
@@ -881,9 +960,13 @@ def _pivot_longer(frame: pd.DataFrame, op: PivotLonger, carried: _Carried) -> tu
     times = [_with_time(frame[name], carried) for name in columns]
     work = frame
     rounded = 0
+    dotted = all(name in carried.dotted for name in columns)
+    forms, respelled = _melted_forms(frame, columns, carried, dotted)
     if len(kinds) > 1:
         # Unlike kinds melt into one text column: each column's canonical texts, a datetime with its time.
-        work = frame.assign(**{name: _texts(frame[name], time) for name, time in zip(columns, times, strict=True)})
+        work = frame.assign(
+            **{name: _texts(frame[name], time, carried.form(name)) for name, time in zip(columns, times, strict=True)}
+        )
     elif kinds == {"number"} and len({is_integer_dtype(frame[name].dtype) for name in columns}) > 1:
         # Whole numbers beside decimals share one float64 column, which rounds a whole number past 2**53: counted.
         whole = [name for name in columns if is_integer_dtype(frame[name].dtype)]
@@ -898,10 +981,56 @@ def _pivot_longer(frame: pd.DataFrame, op: PivotLonger, carried: _Carried) -> tu
         carried.text_columns.add(op.values_to)
     if kinds == {"datetime"}:
         carried.with_time[op.values_to] = any(bool(time) for time in times)
+    if kinds == {"number"}:
+        # Each whole number keeps the form its column wrote it in; the melted column's own form is `.0` only when
+        # every source column's was.
+        carried.forms[op.values_to] = forms
+        if dotted:
+            carried.dotted.add(op.values_to)
     change = f"pivoted {len(columns)} columns into {op.names_to}/{op.values_to}: {_count(rows, 'row')}"
+    notices = []
     if rounded:
-        change = _with_notice(change, cast_note(rounded, f"beside the decimals of {op.values_to}"))
-    return melted, change
+        notices.append(cast_note(rounded, f"beside the decimals of {op.values_to}"))
+    if kinds == {"number"} and respelled:
+        notices.append(
+            f"{_count(respelled, 'whole number')} that the columns wrote both with and without '.0' "
+            f"written {'with' if dotted else 'without'} it"
+        )
+    return melted, _with_notice(change, ", ".join(notices))
+
+
+def _melted_forms(
+    frame: pd.DataFrame, columns: list[str], carried: _Carried, dotted: bool
+) -> tuple[dict[float, bool], int]:
+    """The forms of the whole numbers of `columns` melted into one column, and the cells whose form changes.
+
+    A whole number keeps the form its column wrote it in (`_Carried.form`; a whole-number column writes `7`). A
+    number that one column wrote `2.0` and another `2` can have one form only, the melted column's (`dotted`): the
+    cells written the other way are counted for the change line (owner rule of 2026-10-15).
+    """
+    sources: list[tuple[str, bool, Mapping[float, bool]]] = []
+    merged: dict[float, bool] = {}
+    clashing: set[float] = set()
+    for name in columns:
+        if _kind(frame[name]) != "number":
+            continue
+        own, held = carried.form(name)
+        if is_integer_dtype(frame[name].dtype):
+            own, held = False, {}
+        sources.append((name, own, held))
+        for value in frame[name].dropna():
+            number = float(value)
+            if number.is_integer() and abs(number) < _FLOAT_EXACT:
+                form = held.get(number, own)
+                if merged.setdefault(number, form) != form:
+                    clashing.add(number)
+    respelled = 0
+    for name, own, held in sources:
+        for value in frame[name].dropna():
+            number = float(value)
+            if number in clashing and held.get(number, own) != dotted:
+                respelled += 1
+    return {number: form for number, form in merged.items() if number not in clashing}, respelled
 
 
 def _pivot_wider(frame: pd.DataFrame, op: PivotWider, carried: _Carried) -> tuple[pd.DataFrame, str]:
@@ -916,7 +1045,7 @@ def _pivot_wider(frame: pd.DataFrame, op: PivotWider, carried: _Carried) -> tupl
     work = work[~without_name]
     if not len(work):
         raise PrepareError("empty_result", f"every cell of column '{op.names_from}' is missing")
-    names = _texts(work[op.names_from], _with_time(work[op.names_from], carried))
+    names = _texts(work[op.names_from], _with_time(work[op.names_from], carried), carried.form(op.names_from))
     values_time = _with_time(work[op.values_from], carried)
     distinct = [str(name) for name in names.unique()]
     if len(distinct) > MAX_WIDER_COLUMNS:
@@ -941,9 +1070,14 @@ def _pivot_wider(frame: pd.DataFrame, op: PivotWider, carried: _Carried) -> tupl
     wide = wide.reset_index()
     wide.columns = pd.Index([str(name) for name in wide.columns])
     values_text = op.values_from in carried.text_columns  # the new columns hold its cells: they stay text too
+    values_dotted, values_forms = carried.form(op.values_from)  # and write its whole numbers as it did
     carried.keep_only(index)
     if values_text:
         carried.text_columns.update(distinct)
+    if values_dotted:
+        carried.dotted.update(distinct)
+    if values_forms:
+        carried.forms.update({name: dict(values_forms) for name in distinct})
     if values_time is not None:
         carried.with_time.update(dict.fromkeys(distinct, values_time))
     change = f"pivoted {op.names_from} into {_count(len(distinct), 'column')} with values from {op.values_from}: "
@@ -1739,6 +1873,25 @@ def _check_failed(column: str, failed: int, present: int, what: str) -> None:
         raise PrepareError("type_mismatch", f"column '{column}': {failed} of {present} cells cannot be read as {what}")
 
 
+_PERIOD_WORDS = {"week": "ISO week, each as its Monday", "hour": "hour", "day": "day"}
+
+
+def _period_starts(series: pd.Series, period: str) -> pd.Series:
+    """Every moment as the first moment of its hour, day or ISO week (Monday 00:00), still a datetime.
+
+    The bucket follows the wall clock of the column as stored: a column with one UTC offset
+    (`+01:00`) is cut at its own midnight, a column the parser converted to UTC (mixed offsets)
+    at UTC midnight, a naive column as written. The offset stays on the value, so an hour
+    keeps it in `data.csv`; a day and a week are written as dates (`_cell_text`).
+    """
+    if period == "hour":
+        return pd.Series(series.dt.floor("h"), index=series.index)
+    days = pd.Series(series.dt.normalize(), index=series.index)
+    if period == "day":
+        return days
+    return pd.Series(days - pd.to_timedelta(days.dt.weekday, unit="D"), index=series.index)
+
+
 def _period_labels(series: pd.Series, period: str) -> pd.Series:
     labels: list[str | None] = []
     for value in series:
@@ -1766,15 +1919,18 @@ def _kind(series: pd.Series) -> Kind:
     return "text"
 
 
-def _texts(series: pd.Series, with_time: bool | None = None) -> pd.Series:
+def _texts(
+    series: pd.Series, with_time: bool | None = None, form: tuple[bool, Mapping[float, bool]] = (False, {})
+) -> pd.Series:
     """Every cell as its canonical text (`str` dtype, missing stays missing), as `data.csv` writes it.
 
     `with_time` is the datetime column's carried flag; None derives it from the values
-    (a column an operation made, or a mixed object column after a melt).
+    (a column an operation made, or a mixed object column after a melt). `form` is the
+    column's form of whole floats (`_Carried.form`).
     """
     if with_time is None and _kind(series) == "datetime":
         with_time = _has_time(series)
-    return pd.Series([_cell_text(value, bool(with_time)) for value in series], index=series.index, dtype="str")
+    return pd.Series([_cell_text(value, bool(with_time), form) for value in series], index=series.index, dtype="str")
 
 
 def _has_time(series: pd.Series) -> bool:
@@ -1789,8 +1945,12 @@ def _with_time(series: pd.Series, carried: _Carried) -> bool | None:
     return _has_time(series) if flag is None else flag
 
 
-def _cell_text(value: object, with_time: bool) -> str | None:
-    """One cell's canonical text; the missing scalars of every dtype (None, NA, NaT, NaN) are None."""
+def _cell_text(value: object, with_time: bool, form: tuple[bool, Mapping[float, bool]] = (False, {})) -> str | None:
+    """One cell's canonical text; the missing scalars of every dtype (None, NA, NaT, NaN) are None.
+
+    A whole float below 2**53 is written in the form the column held it in (`87000` or `2.0`, `_Carried.form`),
+    else in the column's form, and without `.0` in a column that has none.
+    """
     if isinstance(value, str):
         return value
     if value is None or value is pd.NA or value is pd.NaT:
@@ -1801,7 +1961,14 @@ def _cell_text(value: object, with_time: bool) -> str | None:
         return str(int(value))
     if isinstance(value, float | np.floating):
         number = float(value)
-        return None if math.isnan(number) else repr(number)
+        if math.isnan(number):
+            return None
+        text = repr(number)
+        dotted, held = form
+        # Past 2**53 the `.0` stays: there a float may hold a whole number only rounded, which its form shows.
+        if text.endswith(".0") and abs(number) < _FLOAT_EXACT and not held.get(number, dotted):
+            return text[:-2]
+        return text
     if isinstance(value, pd.Timestamp):
         # Every digit and the offset as the value holds them (owner rule of 2026-10-15): a fraction is written
         # only when there is one, an offset only for a zone-aware value.

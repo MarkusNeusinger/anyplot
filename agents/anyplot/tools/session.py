@@ -276,7 +276,7 @@ async def prepare_data(operations: list[dict[str, Any]], tool_context: ToolConte
     Each operation is an object with "op" and its fields, column names exactly as the profile lists them:
     rename (column, name); drop_columns (columns); drop_rows (where: conditions on single columns that must all hold);
     set_type (column, type number|datetime|text, date_format, decimal); aggregate (by, column, how sum|mean|count|min|max,
-    period month|quarter|year); sort (column, descending); pivot_longer (columns, names_to, values_to); pivot_wider
+    period hour|day|week|month|quarter|year); sort (column, descending); pivot_longer (columns, names_to, values_to); pivot_wider
     (names_from, values_from, index); classify (name, rules: each where conditions and a label, otherwise: the optional
     label for rows no rule matches; adds the text column name, labelling each row by the first rule that holds); derive
     (name, how ratio|difference|sum|share|percent_change|cumsum|index, columns, within, order, percent; adds the number

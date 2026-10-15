@@ -152,7 +152,8 @@ class TestModels:
             {"op": "aggregate", "by": ["a", "b", "c"], "column": "d", "how": "sum"},
             {"op": "aggregate", "by": [], "column": "d", "how": "sum"},
             {"op": "aggregate", "by": ["a"], "column": "d", "how": "median"},
-            {"op": "aggregate", "by": ["a"], "column": "d", "how": "sum", "period": "week"},
+            {"op": "aggregate", "by": ["a"], "column": "d", "how": "sum", "period": "decade"},
+            {"op": "aggregate", "by": ["a"], "column": "d", "how": "sum", "period": "minute"},
             {"op": "pivot_longer", "columns": ["a"]},
             {"op": "pivot_longer", "columns": [f"c{i}" for i in range(MAX_LONGER_COLUMNS + 1)]},
             {"op": "pivot_longer", "columns": ["a", "b"], "names_to": "x "},
@@ -357,7 +358,7 @@ class TestSetTypeNumber:
     def test_decimal_comma_with_a_trailing_unit(self) -> None:
         prepared = prepare(SALES, {"op": "set_type", "column": "Anteil", "type": "number"})
 
-        assert cells(prepared, 2) == ["12.5", "7.0", "30.0", "", "50.5", "100.0"]
+        assert cells(prepared, 2) == ["12.5", "7", "30", "", "50.5", "100"]  # whole numbers as written
         assert prepared.changes == ["Anteil: 5 cells read as numbers, unit '%' removed"]
         assert dtypes(prepared)["Anteil"] == "number"
 
@@ -374,7 +375,7 @@ class TestSetTypeNumber:
         text = 'p,v\n"€ 1 200,50",1\n€12,2\n€ -3,3\n'
         prepared = prepare(text, {"op": "set_type", "column": "p", "type": "number", "decimal": ","})
 
-        assert rows(prepared)[1:] == ["1200.5,1", "12.0,2", "-3.0,3"]
+        assert rows(prepared)[1:] == ["1200.5,1", "12,2", "-3,3"]
         assert prepared.changes == ["p: 3 cells read as numbers, unit '€' removed"]
 
     def test_the_decimal_argument_overrides_the_dataset_decimal(self) -> None:
@@ -435,7 +436,7 @@ class TestSetTypeNumber:
         typed = apply_operations(uniform, OPERATIONS.validate_python([operation]))
 
         assert typed.csv == uniform.csv
-        assert cells(typed, 2) == ["12.5", "7.0", "30.0", "", "50.5", "100.0"]
+        assert cells(typed, 2) == ["12.5", "7", "30", "", "50.5", "100"]
         assert typed.changes == ["Anteil (%): already numbers, nothing changed"]
 
         assert parse_dataset(SALES).column_dtypes["Anteil"] == "text"
@@ -454,7 +455,7 @@ class TestSetTypeNumber:
         assert parsed.profile.decimal == "." and parsed.column_dtypes["share"] == "text"
         prepared = prepare(dot_file, {"op": "set_type", "column": "share", "type": "number"})
 
-        assert cells(prepared, 1) == ["12.5", "7.0", "30.0", "50.5"]
+        assert cells(prepared, 1) == ["12.5", "7", "30", "50.5"]
         assert prepared.changes == ["share: 4 cells read as numbers (decimal comma), unit '%' removed"]
 
         comma_file = "a;p\n1,5;12.5 %\n2,5;13.5 %\n3,5;14\n"
@@ -462,7 +463,7 @@ class TestSetTypeNumber:
         assert parsed.profile.decimal == "," and parsed.column_dtypes["p"] == "text"
         prepared = prepare(comma_file, {"op": "set_type", "column": "p", "type": "number"})
 
-        assert cells(prepared, 1) == ["12.5", "13.5", "14.0"]
+        assert cells(prepared, 1) == ["12.5", "13.5", "14"]
         assert prepared.changes == ["p: 3 cells read as numbers (decimal point), unit '%' removed"]
 
     def test_the_other_decimal_is_used_for_the_whole_column_when_fewer_cells_fail(self) -> None:
@@ -476,7 +477,7 @@ class TestSetTypeNumber:
         assert parse_dataset(text).column_dtypes["p"] == "text"
         prepared = prepare(text, {"op": "set_type", "column": "p", "type": "number"})
 
-        assert cells(prepared, 0) == ["1.2", "2.5", "3.0"]
+        assert cells(prepared, 0) == ["1.2", "2.5", "3"]
         assert prepared.changes == ["p: 3 cells read as numbers (decimal comma), unit 'kg' removed"]
 
     def test_a_cell_unreadable_with_either_decimal_fails(self) -> None:
@@ -698,7 +699,7 @@ class TestAggregate:
         averaged = prepare(text, {"op": "aggregate", "by": ["k"], "column": "f", "how": "mean"})
 
         assert rows(summed) == ["k,f", "a,1", "b,1"]
-        assert rows(averaged) == ["k,f", "a,0.5", "b,1.0"]
+        assert rows(averaged) == ["k,f", "a,0.5", "b,1"]
 
     @pytest.mark.parametrize(
         ("operation", "code"),
@@ -1112,7 +1113,7 @@ class TestSequences:
             {"op": "sort", "column": "Anteil", "descending": True},
         )
 
-        assert rows(prepared) == ["Segment,Anteil", "Hund,31.0", "Katze,7.0"]
+        assert rows(prepared) == ["Segment,Anteil", "Hund,31", "Katze,7"]
         assert prepared.changes == [
             "renamed 'Tier' to 'Segment'",
             "dropped 1 row where Segment = 'Gesamt'",
@@ -1229,9 +1230,9 @@ class TestDerive:
 
         assert rows(prepared) == [
             "Year,Origin,Population,Share",
-            "2022,Foreign,2000,25.0",
+            "2022,Foreign,2000,25",
             "2021,Foreign,2000,23.52941176470588",
-            "2023,Foreign,1500,20.0",
+            "2023,Foreign,1500,20",
         ]
         assert prepared.changes[0] == "added column Share: share of Population in the total of each Year, in percent"
         assert dtypes(prepared)["Share"] == "number"
@@ -1247,7 +1248,7 @@ class TestDerive:
         ratio = prepare(text, derive("r", "ratio", "a", "b"))
         difference = prepare(text, derive("d", "difference", "b", "a"))
 
-        assert cells(ratio, 3) == ["2.0", "", ""]
+        assert cells(ratio, 3) == ["2", "", ""]
         assert ratio.changes == ["added column r: a / b, 2 cells are empty (a missing input or a division by zero)"]
         assert cells(difference, 3) == ["-3", "-1", ""]
 
@@ -1263,13 +1264,13 @@ class TestDerive:
 
         assert cells(prepared, 3) == ["1"]
         assert dtypes(prepared)["d"] == "integer"
-        assert cells(summed, 3) == ["2.0", "3.5"]  # a float column sums as floats
+        assert cells(summed, 3) == ["2", "3.5"]  # a float column sums as floats, a whole one written without `.0`
 
     def test_percent_change_within_groups_in_the_order_given(self) -> None:
         shuffled = "Year,Origin,Population\n2022,Foreign,2000\n2021,Foreign,1600\n2021,Native,6400\n2022,Native,6000\n"
         prepared = prepare(shuffled, derive("Growth", "percent_change", "Population", within=["Origin"], order="Year"))
 
-        assert cells(prepared, 3) == ["25.0", "", "", "-6.25"]
+        assert cells(prepared, 3) == ["25", "", "", "-6.25"]
         assert "the first row of each group" in prepared.changes[0]
 
     def test_running_total_and_index_within_groups_in_the_order_given(self) -> None:
@@ -1281,12 +1282,12 @@ class TestDerive:
         assert running.changes == [
             "added column Total: running total of Population in the order of Year within each Origin"
         ]
-        assert cells(index, 3) == ["125.0", "100.0", "100.0", "93.75"]
+        assert cells(index, 3) == ["125", "100", "100", "93.75"]
 
     def test_index_without_groups_starts_at_the_first_value_that_is_there(self) -> None:
         prepared = prepare("Year,Sales\n2021,\n2022,50\n2023,75\n", derive("Index", "index", "Sales", order="Year"))
 
-        assert cells(prepared, 2) == ["", "100.0", "150.0"]
+        assert cells(prepared, 2) == ["", "100", "150"]
 
     def test_a_text_order_column_is_refused(self) -> None:
         """Month names sort alphabetically (April before Januar): the result would be silently wrong."""
@@ -1300,7 +1301,7 @@ class TestDerive:
         text = "Year,Sales\n2021,10\n,99\n2022,20\n,98\n"
         prepared = prepare(text, derive("Growth", "percent_change", "Sales", order="Year"))
 
-        assert cells(prepared, 2) == ["", "", "100.0", ""]
+        assert cells(prepared, 2) == ["", "", "100", ""]
         assert "a row without a Year" in prepared.changes[0]
 
     def test_percent_change_with_repeated_order_values_is_refused(self) -> None:
@@ -1762,7 +1763,7 @@ class TestFidelity:
     def test_pivoting_whole_numbers_beside_decimals_counts_the_rounded_ones(self) -> None:
         prepared = prepare(f"g,a,b\nx,{2**53 + 1},1.5\ny,7,2.5\n", {"op": "pivot_longer", "columns": ["a", "b"]})
 
-        assert cells(prepared, 2) == [repr(float(2**53)), "7.0", "1.5", "2.5"]
+        assert cells(prepared, 2) == [repr(float(2**53)), "7", "1.5", "2.5"]  # `7` as written, `.0` past 2**53
         assert prepared.changes == [
             "pivoted 2 columns into series/value: 4 rows, 1 whole number past 2^53 beside the decimals of value is "
             "read as decimal numbers (15 to 17 significant digits; a digit past them is rounded)"
@@ -1835,7 +1836,7 @@ class TestFidelity:
             "k,a\nx,1e-9999999999999999999\ny,0e999999999999999999999999\nz,2.5\n", "a", set_number("a")
         )
 
-        assert cells(prepared, 1) == ["0.0", "0.0", "2.5"]
+        assert cells(prepared, 1) == ["0", "0", "2.5"]
         assert prepared.changes[0].startswith("a: 3 cells read as numbers, 1 value with more significant digits")
 
     def test_different_utc_offsets_are_converted_to_utc_and_named(self) -> None:
@@ -1867,3 +1868,122 @@ def set_number(column: str) -> dict[str, Any]:
 
 def aggregate_sum(column: str) -> dict[str, Any]:
     return {"op": "aggregate", "by": ["g"], "column": column, "how": "sum"}
+
+
+# Live test round 5 of 2026-10-15, generalised: readings every 13 minutes of several sensors ("Tagesmittel pro
+# Sensor" was refused, the periods stopped at month). Synthetic values.
+READINGS = (
+    "timestamp,sensor,temp_c\n"
+    "2026-01-04 23:50,S1,10.0\n"  # a Sunday
+    "2026-01-05 00:03,S1,11.5\n"  # Monday: a new ISO week
+    "2026-01-05 00:16,S2,20.0\n"
+    "2026-01-05 01:02,S1,12.5\n"
+    "2026-01-06 09:00,S2,22.0\n"
+)
+
+
+def per_period(period: str, how: str = "mean", by: tuple[str, ...] = ("timestamp", "sensor")) -> dict[str, Any]:
+    return {"op": "aggregate", "by": list(by), "column": "temp_c", "how": how, "period": period}
+
+
+class TestTimeBuckets:
+    def test_a_daily_mean_per_sensor(self) -> None:
+        prepared = prepare(READINGS, per_period("day"))
+
+        assert rows(prepared) == [
+            "timestamp,sensor,temp_c",
+            "2026-01-04,S1,10.0",
+            "2026-01-05,S1,12.0",
+            "2026-01-05,S2,20.0",
+            "2026-01-06,S2,22.0",
+        ]
+        assert prepared.changes == ["averaged temp_c by timestamp and sensor (day): 4 rows"]
+        assert dtypes(prepared)["timestamp"] == "datetime"  # a date axis, never text labels
+
+    def test_iso_weeks_start_on_monday(self) -> None:
+        prepared = prepare(READINGS, per_period("week", "max", ("timestamp",)))
+
+        assert rows(prepared) == ["timestamp,temp_c", "2025-12-29,10.0", "2026-01-05,22.0"]
+        assert prepared.changes == [
+            "took the maximum of temp_c by timestamp (ISO week, each as its Monday): 2 rows, 1 other column dropped"
+        ]
+
+    def test_hours_keep_their_time(self) -> None:
+        prepared = prepare(READINGS, per_period("hour", "count", ("timestamp",)))
+
+        assert cells(prepared, 0) == [
+            "2026-01-04T23:00:00",
+            "2026-01-05T00:00:00",
+            "2026-01-05T01:00:00",
+            "2026-01-06T09:00:00",
+        ]
+        assert cells(prepared, 1) == ["1", "2", "1", "1"]
+
+    def test_an_offset_column_is_cut_by_its_own_clock(self) -> None:
+        text = "t,v\n2024-03-30T23:30:00+01:00,1\n2024-03-31T00:30:00+01:00,2\n2024-03-31T01:30:00+01:00,4\n"
+        daily = prepare(text, {"op": "aggregate", "by": ["t"], "column": "v", "how": "sum", "period": "day"})
+        hourly = prepare(text, {"op": "aggregate", "by": ["t"], "column": "v", "how": "sum", "period": "hour"})
+
+        assert rows(daily) == ["t,v", "2024-03-30,1", "2024-03-31,6"]
+        assert daily.changes == ["summed v by t (day, by the clock of UTC+01:00): 2 rows"]
+        assert cells(hourly, 0)[0] == "2024-03-30T23:00:00+01:00"
+
+    def test_mixed_offsets_stored_in_utc_are_cut_at_utc_midnight(self) -> None:
+        """The parser writes a column of several offsets in UTC; the day follows that clock, and the line says so."""
+        text = "t,v\n2024-07-31T00:30:00+02:00,1\n2024-01-31T00:30:00+01:00,2\n"
+        prepared = prepare(text, {"op": "aggregate", "by": ["t"], "column": "v", "how": "sum", "period": "day"})
+
+        assert rows(prepared) == ["t,v", "2024-01-30,2", "2024-07-30,1"]
+        assert "by the clock of UTC" in prepared.changes[0]
+
+    def test_the_month_labels_stay_as_they_were(self) -> None:
+        prepared = prepare(READINGS, per_period("month", "count", ("timestamp",)))
+
+        assert rows(prepared) == ["timestamp,count", "2026-01,5"]
+        assert dtypes(prepared)["timestamp"] == "text"
+
+
+class TestWholeNumberForms:
+    """A whole number keeps the form it was written in through the operations (live test round 5 of 2026-10-15)."""
+
+    def test_wide_to_long_keeps_87000_beside_decimals(self) -> None:
+        text = "Branch,Q1,Q2\nNorth,120500.5,130100\nEast,87000,90500.25\n"
+        prepared = prepare(text, {"op": "pivot_longer", "columns": ["Q1", "Q2"], "names_to": "Quarter"})
+
+        assert cells(prepared, 2) == ["120500.5", "87000", "130100", "90500.25"]
+        assert prepared.changes == ["pivoted 2 columns into Quarter/value: 4 rows"]
+        assert reparse(prepared).csv == prepared.csv
+
+    def test_a_column_written_with_dot_zero_keeps_it(self) -> None:
+        text = "k,v\na,2.0\nb,1.5\nc,3.0\n"
+        prepared = prepare(text, {"op": "sort", "column": "v"}, {"op": "rename", "column": "v", "name": "w"})
+
+        assert cells(prepared, 1) == ["1.5", "2.0", "3.0"]
+
+    def test_each_melted_cell_keeps_its_columns_form(self) -> None:
+        prepared = prepare("k,a,b\nx,2.0,1.5\ny,3.5,7\n", {"op": "pivot_longer", "columns": ["a", "b"]})
+
+        assert cells(prepared, 2) == ["2.0", "3.5", "1.5", "7"]
+        assert prepared.changes == ["pivoted 2 columns into series/value: 4 rows"]
+
+    def test_one_number_written_both_ways_takes_one_form_and_is_counted(self) -> None:
+        prepared = prepare("k,a,b\nx,2.0,2\ny,1.5,3.5\n", {"op": "pivot_longer", "columns": ["a", "b"]})
+
+        assert cells(prepared, 2) == ["2", "1.5", "2", "3.5"]
+        assert prepared.changes == [
+            "pivoted 2 columns into series/value: 4 rows, 1 whole number that the columns wrote both with and "
+            "without '.0' written without it"
+        ]
+
+    def test_wide_columns_take_the_form_of_their_values(self) -> None:
+        long = "Monat,series,value\nJan,a,2.0\nJan,b,1.5\nFeb,a,3.5\nFeb,b,4.0\n"
+        prepared = prepare(
+            long, {"op": "pivot_wider", "names_from": "series", "values_from": "value", "index": ["Monat"]}
+        )
+
+        assert rows(prepared)[1:] == ["Feb,3.5,4.0", "Jan,2.0,1.5"]
+
+    def test_set_type_text_keeps_the_written_form(self) -> None:
+        prepared = prepare("k,v\na,2.0\nb,1.5\nc,87000\n", {"op": "set_type", "column": "v", "type": "text"})
+
+        assert cells(prepared, 1) == ["2.0", "1.5", "87000"]
