@@ -1910,9 +1910,9 @@ class ConvertGuard(DataGuard):
     """
 
     def lets_code_run(self, event, args):
-        if event == "compile" and chain_matches(self.caller(), CONVERT_AST_READERS):
-            return True
-        return super().lets_code_run(event, args)
+        """Only NumPy's header compile: none of data mode's `CODE_BUILDERS` (`namedtuple`, dataclasses), which a
+        reader of data files never needs (Copilot review of #12194), and no entry code object to run."""
+        return event == "compile" and chain_matches(self.caller(), CONVERT_AST_READERS)
 
 
 def load_converter():
@@ -1975,7 +1975,8 @@ def run_conversion(path, guard, measure):
         try:
             result = converter.convert(data, sheet)
             text = result.csv_text
-            report = json.dumps(result.meta())
+            # Not ASCII-escaped: ten 255-character CJK sheet names would pass the host's 16 KiB cap as escapes.
+            report = json.dumps(result.meta(), ensure_ascii=False)
         except converter.Refused as exc:
             if guard.blocked:
                 return CONVERT_EXIT["blocked"]

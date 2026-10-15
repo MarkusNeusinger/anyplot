@@ -417,6 +417,36 @@ class TestHarness:
         assert harness.main_convert("input.bin", harness.DataGuard()) == harness.CONVERT_EXIT["too_large"]
         assert harness.main(["harness.py", "--convert", "missing.bin"]) == harness.CONVERT_EXIT["usage"]
 
+    def test_the_guard_keeps_none_of_the_data_modes_code_builders(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """`namedtuple` is one of `CODE_BUILDERS`, which data mode lets compile and exec; convert mode does not."""
+        guard = harness.ConvertGuard()
+        builder = harness.DataGuard()
+        frame = sys._getframe()
+        monkeypatch.setattr(harness, "builds_code", lambda caller: True)  # as if `namedtuple` were the caller
+        monkeypatch.setattr(guard, "caller", lambda: frame)
+        monkeypatch.setattr(builder, "caller", lambda: frame)
+        assert not builder.refuses("exec", (compile("1", "<x>", "eval"),))
+        assert guard.refuses("exec", (compile("1", "<x>", "eval"),))
+        assert guard.refuses("compile", (b"1", "<x>"))
+
+    def test_the_meta_of_ten_long_cjk_sheet_names_fits_the_hosts_cap(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        names = {chr(0x4E00 + index) * 255: [["a"], [index]] for index in range(10)}
+
+        class Inert(harness.DataGuard):
+            def arm(self, entry: object = None) -> None:
+                self.entry = entry
+
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setattr(harness, "set_limits", lambda: None)
+        (tmp_path / "input.bin").write_bytes(ods(names))
+
+        assert harness.main_convert("input.bin", Inert()) == 0
+        raw = (tmp_path / "meta.json").read_bytes()
+        assert len(raw) <= wire.MAX_CONVERT_META_BYTES
+        assert wire.ConvertMeta.model_validate_json(raw, strict=True).sheets == list(names)
+
     def test_the_guard_refuses_code_and_files_while_converting(self) -> None:
         guard = harness.ConvertGuard()
         assert guard.refuses("open", ("/etc/passwd", "r", 0))
