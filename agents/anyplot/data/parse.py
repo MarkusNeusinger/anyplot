@@ -90,7 +90,10 @@ would, for example, read `01.02.2024` as a number under `thousands='.'`).
    the table and `<name>: <value>` joins `context_lines`, as a JSON-stat dimension of one
    category does, unless fewer than `MIN_KEPT_COLUMNS` columns would remain.
 8. **Write the canonical `data.csv`** (comma, dot decimal, ISO dates, canonical
-   headers, missing as an empty cell, `\\n` line ends) and profile it.
+   headers, missing as an empty cell, `\\n` line ends) and profile it. The profile
+   names the months of a text column of month names (`ColumnProfile.months`) and, for
+   JSON records whose list fields expanded into rows, the columns that came from those
+   lists (`DatasetProfile.list_columns`; live test round 4 of 2026-10-15).
 
 The loader reads the result with
 `pd.read_csv("data.csv", dtype=pandas_dtypes(column_dtypes), parse_dates=parse_dates)`,
@@ -143,6 +146,7 @@ from ..schemas import (
     DatasetProfile,
     SourceFormat,
 )
+from .months import named_months
 
 
 MAX_INPUT_BYTES = 1024 * 1024
@@ -468,6 +472,7 @@ class _Column:
     respelled: int = 0  # the number cells that keep their value but not their spelling (`1.50` as `1.5`)
     trimmed: int = 0  # the cells whose surrounding whitespace the cleaning removed
     missing_tokens: Counter[str] = field(default_factory=Counter)  # `MISSING_VALUES` tokens read as missing
+    from_list: bool = False  # a list field of JSON records, expanded into one row per value (`_records`)
 
 
 def pandas_dtypes(column_dtypes: Mapping[str, ColumnDtype]) -> dict[str, str]:
@@ -519,10 +524,11 @@ def parse_dataset(
     text = composed
     context: list[str] = []
     table: tuple[list[str], list[list[str]], SourceFormat] | None = None
+    listed: set[str] = set()  # the headers of list fields that `_records` expanded into rows
     literal = _LITERAL_START.match(stripped)
     if literal:
         assignment, body = literal.group(), stripped[literal.end() :]
-        table = _read_literal(body, warnings, context)
+        table = _read_literal(body, warnings, context, listed)
         if table is None and (assignment or not body.startswith("(")):
             raise ParseError("unparseable", "the data starts like JSON or a Python literal but is neither")
         # A bare `(` that neither reader accepts is delimited text: `(in %) Land;Wert`, prose in parentheses.
@@ -540,6 +546,7 @@ def parse_dataset(
         canonical=canonical,
         context=context,
         missing_marks=marks,
+        listed=frozenset(listed),
     )
     if len(parsed.csv.encode("utf-8")) > MAX_CANONICAL_BYTES:
         raise ParseError("too_long", f"the data is larger than {MAX_CANONICAL_BYTES // 1024:,} KB once written out")
@@ -1079,7 +1086,7 @@ def _context_lines(records: Iterable[Sequence[str]], delimiter: str | None) -> t
 
 
 def _read_literal(
-    text: str, warnings: list[str], context: list[str]
+    text: str, warnings: list[str], context: list[str], listed: set[str] | None = None
 ) -> tuple[list[str], list[list[str]], SourceFormat] | None:
     """JSON, or a Python literal when the JSON reader refuses the text, tabulated alike; None when it is neither.
 
@@ -1101,7 +1108,7 @@ def _read_literal(
     if dataset is not None:
         return _json_stat(dataset, warnings, context)
     records = _api_records(data, warnings, context)
-    return _tabulate(data if records is None else records, warnings)
+    return _tabulate(data if records is None else records, warnings, listed)
 
 
 def _too_deep(text: str) -> bool:
@@ -1229,15 +1236,17 @@ def _repeated_keys(tree: ast.AST) -> int:
     return repeated
 
 
-def _tabulate(data: Any, warnings: list[str]) -> tuple[list[str], list[list[str]], SourceFormat]:
-    """Headers and rows from the decoded value; a tuple counts as a list."""
+def _tabulate(
+    data: Any, warnings: list[str], listed: set[str] | None = None
+) -> tuple[list[str], list[list[str]], SourceFormat]:
+    """Headers and rows from the decoded value; a tuple counts as a list. `listed` collects expanded list fields."""
     if isinstance(data, (list, tuple)):
         if not data:
             raise ParseError("unparseable", "the array is empty")
         if len(data) > MAX_ROWS:
             raise ParseError("too_many_rows", f"the data has more than {MAX_ROWS:,} rows")
         if all(isinstance(record, dict) for record in data):
-            return _records(data, warnings)
+            return _records(data, warnings, listed)
         if all(isinstance(pair, (list, tuple)) and len(pair) == 2 for pair in data):
             return _pairs(data)
         raise ParseError("unparseable", "an array must hold objects, one per row, or [category, value] pairs")
@@ -1476,9 +1485,12 @@ RECORD_ID = "record_id"
 
 
 def _records(
-    records: Sequence[Mapping[Any, Any]], warnings: list[str]
+    records: Sequence[Mapping[Any, Any]], warnings: list[str], listed: set[str] | None = None
 ) -> tuple[list[str], list[list[str]], SourceFormat]:
     """One column per field of any record, nested objects flattened and list fields expanded into rows.
+
+    `listed`, when given, collects the headers of the list fields that expanded, so the
+    profile can name them (`DatasetProfile.list_columns`, live test round 4 of 2026-10-15).
 
     Nested objects become dotted columns (`_flatten`). List fields expand to long format
     (owner decision of 2026-10-15, a measurement curve per record: `{"sample": "A", "x":
@@ -1517,8 +1529,8 @@ def _records(
                 "rows together and need one length",
             )
         flattened.append((fields, lists))
-    listed = {name for _, lists in flattened for name in lists}
-    mixed = sorted(name for name in listed if any(fields.get(name) is not None for fields, _ in flattened))
+    list_fields = {name for _, lists in flattened for name in lists}
+    mixed = sorted(name for name in list_fields if any(fields.get(name) is not None for fields, _ in flattened))
     if mixed:
         raise ParseError(
             "unparseable",
@@ -1540,7 +1552,10 @@ def _records(
         )
     if not any(lists for _, lists in flattened):
         return _flat_records([fields for fields, _ in flattened], warnings)
-    return _flat_records(_expanded(flattened, warnings), warnings)
+    table = _flat_records(_expanded(flattened, warnings), warnings)
+    if listed is not None:
+        listed.update(header for header in table[0] if header in list_fields)
+    return table
 
 
 def _expanded(
@@ -2548,6 +2563,7 @@ def _build(
     canonical: bool = False,
     context: list[str] | None = None,
     missing_marks: frozenset[str] = frozenset(),
+    listed: frozenset[str] = frozenset(),
 ) -> ParsedDataset:
     read: list[tuple[str, bool, _Column]] = []  # header, whether breaks became spaces, column
     for position, raw in enumerate(raw_headers):
@@ -2589,6 +2605,7 @@ def _build(
             mark_rows=mark_rows,
             trimmed=trimmed,
             missing_tokens=tokens,
+            from_list=raw in listed,
         )
         read.append((header, broken, column))
 
@@ -2710,6 +2727,7 @@ def _finish(
     """The dataset of these typed and named columns: canonical CSV, profile, preview and the loader's typing."""
     rows = [list(row) for row in zip(*(column.cells for column in columns), strict=True)]
     capped = _cap_warnings(warnings)
+    listed = [column.name for column in columns if column.from_list]
     profile = DatasetProfile(
         rows=len(rows),
         columns=[_profile_column(column) for column in columns],
@@ -2717,6 +2735,7 @@ def _finish(
         source_format=source_format,
         decimal="," if any(column.decimal_comma for column in columns) else ".",
         warnings=capped,
+        list_columns=listed or None,
     )
     return ParsedDataset(
         profile=profile,
@@ -2906,6 +2925,7 @@ def _profile_column(column: _Column) -> ColumnProfile:
         mean=mean,
         median=median,
         top=top,
+        months=named_months(column.cells) if column.dtype == "text" else None,
     )
 
 

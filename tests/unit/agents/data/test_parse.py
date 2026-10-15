@@ -1134,6 +1134,28 @@ class TestProfile:
         assert parse_dataset("v\n1\n").profile.columns[0].mean == 1.0
         assert "mean" not in parsed.profile.sample[0]  # statistics are column facts, never sample cells
 
+    @pytest.mark.parametrize(
+        ("cells", "months"),
+        [
+            # Live test round 4 of 2026-10-15: the five top values stopped at `Mai`, the column runs to `Jun`.
+            (["Jan", "Feb", "Mär", "Apr", "Mai", "Jun"], [1, 2, 3, 4, 5, 6]),
+            (["Dezember", "Januar", "Februar", "Januar"], [1, 2, 12]),
+            (["janv.", "févr.", "mars", "avr."], [1, 2, 3, 4]),
+            (["Jan", "Feb", "Total"], None),  # one cell that is no month
+            (["set", "out", "set"], None),  # two short words are a category, not September and October
+            (["Q1", "Q2", "Q3"], None),
+        ],
+    )
+    def test_a_text_column_of_month_names_carries_its_months(self, cells: list[str], months: list[int] | None) -> None:
+        parsed = parse_dataset("Monat,v\n" + "".join(f"{cell},{index}\n" for index, cell in enumerate(cells)))
+
+        assert column(parsed, "Monat").months == months
+        assert column(parsed, "v").months is None
+
+    def test_a_number_column_of_months_has_no_month_list(self) -> None:
+        """Month numbers are an integer column: the range is its min and max."""
+        assert column(parse_dataset("Monat,v\n1,5\n2,6\n3,7\n"), "Monat").months is None
+
     def test_top_values_are_capped_and_clipped(self) -> None:
         values = [f"value-{i}-" + "z" * 60 for i in range(8)]
         parsed = parse_dataset("t\n" + "\n".join(values) + "\n")

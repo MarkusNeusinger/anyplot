@@ -85,7 +85,8 @@
  * most 5 MB) goes to the server instead (`onConvert`, `POST .../dataset/convert`),
  * which reads it in the renderer's sandbox and answers the text for the box;
  * then it fills the box like a text file, and `.parse()` sends that text with
- * the name and the sheet as `source` (`Bericht.xlsx · sheet "2024"`). While it
+ * the name and the sheet as `source` (`Bericht.xlsx · sheet ‹2024›`: the sheet in
+ * single angle quotes, so the data line's `from "…"` never nests quotes). While it
  * is read, `.open()`, `.parse()` and the drop zone wait. The line names what
  * was read and what the server counted (formula cells without a saved value,
  * hidden sheets, columns left out); a refusal names its numbers. A workbook
@@ -669,7 +670,7 @@ interface PendingFile {
   source: string;
   text: string;
   lines: number;
-  /** How it was read, after the name: `as utf-8`, `from the sheet "2024" (xlsx)`. */
+  /** How it was read, after the name: `as utf-8`, `on the server: sheet ‹2024› of xlsx · …`. */
   read: string;
   /** What the server counted while it converted the file. */
   notes: string[];
@@ -692,10 +693,19 @@ type FileOutcome =
   | 'failed'
   | 'sheet';
 
-/** `Bericht.xlsx · sheet "2024"`: the source of a converted workbook names the sheet that was read. */
+/**
+ * A sheet or array name as the page writes it: in single angle quotes, `‹Übersicht›`, so it
+ * never nests inside the straight quotes around a file name (`from "Museen_2025.xlsx ·
+ * sheet ‹Übersicht›"`; live test round 4 of 2026-10-15).
+ */
+function sheetLabel(sheet: string): string {
+  return `‹${sheet}›`;
+}
+
+/** `Bericht.xlsx · sheet ‹2024›`: the source of a converted workbook names the sheet that was read. */
 function convertedSource(name: string, answer: ConvertAnswer): string {
   if (answer.sheet === null) return name;
-  return `${name} · ${answer.kind === 'npz' ? 'array' : 'sheet'} "${answer.sheet}"`;
+  return `${name} · ${answer.kind === 'npz' ? 'array' : 'sheet'} ${sheetLabel(answer.sheet)}`;
 }
 
 /** The "read ... " part of the line after a conversion. */
@@ -703,7 +713,7 @@ function convertedRead(answer: ConvertAnswer): string {
   const where =
     answer.sheet === null
       ? ''
-      : ` ${answer.kind === 'npz' ? 'array' : 'sheet'} "${answer.sheet}" of`;
+      : ` ${answer.kind === 'npz' ? 'array' : 'sheet'} ${sheetLabel(answer.sheet)} of`;
   const shape = `${countOf(answer.rows, 'row')} × ${countOf(answer.columns, 'column')}`;
   return `on the server:${where} ${answer.kind} · ${shape}${answer.format === 'json' ? ' as JSON records' : ''}`;
 }
@@ -923,7 +933,7 @@ export function DataPanel({
     setFileNotice({
       tone: 'ok',
       text: sheet
-        ? `reading the sheet "${sheet}" of "${file.name}" on the server …`
+        ? `reading the sheet ${sheetLabel(sheet)} of "${file.name}" on the server …`
         : `reading "${file.name}" on the server …`,
     });
     let answer: ConvertAnswer;
