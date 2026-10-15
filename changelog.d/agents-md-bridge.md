@@ -5,4 +5,4 @@
   Antigravity CLI (`agy`), Codex, and other tools that read those paths load the
   same rules and skills from one source instead of a third file to keep in sync.
   A unit test fails if either link is replaced by a real file or points
-  elsewhere.
+  elsewhere. (#12187)
