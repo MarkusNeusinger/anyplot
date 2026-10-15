@@ -7,4 +7,4 @@
   falling back to every 90+ implementation when the pool is empty), walks the
   pool's specs in an order shuffled per cycle so no spec repeats within a
   cycle, and picks the library per day among that spec's featured
-  implementations.
+  implementations. (#12185)
