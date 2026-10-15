@@ -21,6 +21,7 @@ from typing import Any, Self
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from .data.bindings import BindingCheck, check_bindings, resolve_role
+from .data.computed import mark_computed
 from .data.roles import DataRole, parse_roles
 from .data.signs import mark_non_negative
 from .language import DEFAULT_LANGUAGE, SOURCES, LanguageSource, is_valid
@@ -106,8 +107,9 @@ class CatalogueSnapshot(BaseModel):
         return self
 
     def roles(self) -> list[DataRole]:
-        """The spec's data roles, the ones that cannot be negative marked (`data/signs.py`)."""
-        return mark_non_negative(parse_roles(self.data_roles), self.spec_id)
+        """The spec's data roles, the ones that cannot be negative (`data/signs.py`) and the ones the plot can
+        compute (`data/computed.py`) marked."""
+        return mark_computed(mark_non_negative(parse_roles(self.data_roles), self.spec_id), self.spec_id)
 
 
 @dataclass

@@ -467,11 +467,15 @@ class TestRoleBody:
             "variadic": True,
             "description": "one series",
             "non_negative": False,
+            "computed": False,
         }
         radius = DataRole(
             name="r", kinds=("numeric",), required=True, variadic=False, description="", non_negative=True
         )
         assert _role_body(radius)["non_negative"] is True
+        # A role the plot can compute is optional on the page, whatever its bullet says.
+        sma = DataRole(name="sma", kinds=("numeric",), required=True, variadic=False, description="", computed=True)
+        assert _role_body(sma)["computed"] is True and _role_body(sma)["required"] is False
 
     def test_a_long_description_is_capped(self) -> None:
         role = DataRole(name="label", kinds=(), required=False, variadic=False, description="word " * 100)

@@ -49,6 +49,16 @@ export function bindingRows(
 }
 
 /**
+ * The label of a dropdown's empty choice: a role the plot computes when no column
+ * is bound (the server marks it `computed`, `agents/anyplot/data/computed.py`)
+ * says so, a family's next member offers another column, any other role has none.
+ */
+export function emptyChoice(row: BindingRow): string {
+  if (row.role.computed) return '— computed by the plot —';
+  return row.next ? '— add a column —' : '— none —';
+}
+
+/**
  * The warning under a dropdown when a role that needs values of 0 or more (the
  * server marks it `non_negative`, `agents/anyplot/data/signs.py`) is bound to a
  * column whose smallest value is negative; `null` otherwise. Never a refusal: the

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { ColumnProfile, RoleSpec } from 'src/lib/agent';
-import { signHint } from 'src/sections/agent-chat/bindings';
+import { emptyChoice, signHint } from 'src/sections/agent-chat/bindings';
 
 const radius: RoleSpec = {
   name: 'radius',
@@ -29,5 +29,20 @@ describe('signHint', () => {
     expect(signHint({ ...radius, non_negative: undefined }, column(-1))).toBeNull();
     expect(signHint(radius, undefined)).toBeNull();
     expect(signHint(radius, column('2024-01-01', 'datetime'))).toBeNull();
+  });
+});
+
+describe('emptyChoice', () => {
+  const row = (role: RoleSpec, next = false) => ({ name: role.name, role, first: !next, next });
+
+  it('says that the plot computes a role left open', () => {
+    const sma = { ...radius, name: 'sma', non_negative: false, required: false, computed: true };
+    expect(emptyChoice(row(sma))).toBe('— computed by the plot —');
+  });
+
+  it('offers no column for any other role, and another column for a family', () => {
+    expect(emptyChoice(row(radius))).toBe('— none —');
+    expect(emptyChoice(row({ ...radius, computed: undefined }))).toBe('— none —');
+    expect(emptyChoice(row({ ...radius, variadic: true }, true))).toBe('— add a column —');
   });
 });
