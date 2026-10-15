@@ -88,7 +88,7 @@ Known gaps with NO verification loop yet (reason through carefully and say so in
 
 - **Frontend**: Use `yarn` (not npm). Run `cd app && yarn` for installs, `cd app && yarn dev` for dev server.
 - **Backend**: Python dependencies managed via `pyproject.toml`. For transitive dependencies, update the lock file directly — do not add constraints to `pyproject.toml`.
-- **Scripts**: Use `uv run` for running Python scripts.
+- **Scripts**: Use `uv run` for running Python scripts. Python tooling is `uv` only — `uv sync` and `uv run`, never `pip`; if `uv` is missing, install `uv` itself instead of falling back to `pip`.
 
 ## Claude Code Configuration
 
