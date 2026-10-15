@@ -13,4 +13,4 @@
   50 flagged it, in thinking or reply, 47 of 50 matched (the gate is 80 %), and the
   run cost $0.098, against $0.131 to $0.142 for the two runs before. The prep eval
   now scores a reply that talks about the root's own instructions as a miss
-  (`instruction_talk`).
+  (`instruction_talk`). (#12199)
