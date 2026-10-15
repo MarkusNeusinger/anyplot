@@ -230,8 +230,8 @@ def seaborn_style_bar_labels(fmt_label: Any, language: str) -> list[dict[str, st
     ax.yaxis.set_major_formatter(FuncFormatter(lambda value, _: fmt_label(value)))
     fig.canvas.draw()
     labels = [{"kind": "annotation", "text": text.get_text()} for text in ax.texts]
-    labels += [{"kind": "tick label", "text": tick.get_text()} for tick in ax.get_yticklabels() if tick.get_text()]
-    labels += [{"kind": "tick label", "text": tick.get_text()} for tick in ax.get_xticklabels()]
+    labels += [{"kind": "y tick label", "text": tick.get_text()} for tick in ax.get_yticklabels() if tick.get_text()]
+    labels += [{"kind": "x tick label", "text": tick.get_text()} for tick in ax.get_xticklabels()]
     labels.append({"kind": "title", "text": f"Version 2.5 ({language})"})
     return labels
 
@@ -263,7 +263,7 @@ class TestNumberFormatGate:
         assert "English writes a decimal point" in line
 
     def test_a_language_without_a_number_format_and_no_language_have_no_gate(self) -> None:
-        labels = [{"kind": "tick label", "text": "5.30"}]
+        labels = [{"kind": "y tick label", "text": "5.30"}]
 
         assert _number_format_lines({"labels": labels}, number_format("Swedish"), "Swedish") == []
         assert gate_lines({"labels": labels}) == []
@@ -273,7 +273,14 @@ class TestNumberFormatGate:
 
         assert gate_lines({"labels": labels}, plot_language="de") == []
 
-    @pytest.mark.parametrize("labels", ["broken", [None, {"kind": "tick label", "text": 5.3}], [{"text": "5.30"}]])
+    def test_colorbar_and_3d_tick_labels_count(self) -> None:
+        labels = [{"kind": "colorbar tick label", "text": "0.25"}, {"kind": "z tick label", "text": "1.5"}]
+
+        [line] = gate_lines({"labels": labels}, plot_language="de")
+
+        assert line.startswith("VQ-06 (light): 2 of 2 numeric tick labels use a decimal point")
+
+    @pytest.mark.parametrize("labels", ["broken", [None, {"kind": "x tick label", "text": 5.3}], [{"text": "5.30"}]])
     def test_a_tampered_labels_field_yields_no_line(self, labels: Any) -> None:
         assert gate_lines({"labels": labels}, plot_language="de") == []
 

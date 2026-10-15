@@ -533,8 +533,18 @@ _NUMBER_LABEL = re.compile(
 )
 """A label that is one number: an optional currency sign and sign, digits with marks, an optional unit or word
 (`%`, `Mio.`, `k`, `mil M`). Dates (`14.10.`, `2024-10-14`), ranges, times and words with digits never match."""
-NUMBER_LABEL_KINDS = frozenset({"tick label", "annotation", "text"})
-"""The label kinds whose numbers G12 checks; titles, axis titles and legend entries may name a version or a code."""
+NUMBER_LABEL_KINDS = frozenset({"annotation", "text"})
+"""The label kinds whose numbers G12 checks besides every tick label (`x tick label`, `y tick label`, `z tick label`,
+`colorbar tick label`, `harness.drawn_labels`); titles, axis titles and legend entries may name a version or a code."""
+
+
+def _number_label_kind(kind: Any) -> str | None:
+    """`tick labels` or `annotations` for a label kind G12 checks, else None."""
+    if not isinstance(kind, str):
+        return None
+    if kind.endswith("tick label"):
+        return "tick labels"
+    return "annotations" if kind in NUMBER_LABEL_KINDS else None
 
 
 def foreign_decimal(text: str, numbers: NumberFormat) -> bool:
@@ -580,7 +590,8 @@ def _number_format_lines(
     numeric = foreign = 0
     kinds: set[str] = set()
     for label in labels:
-        if not isinstance(label, dict) or label.get("kind") not in NUMBER_LABEL_KINDS:
+        kind = _number_label_kind(label.get("kind")) if isinstance(label, dict) else None
+        if kind is None:
             continue
         text = label.get("text")
         if not isinstance(text, str) or _NUMBER_LABEL.match(text.strip()) is None:
@@ -588,7 +599,7 @@ def _number_format_lines(
         numeric += 1
         if foreign_decimal(text, numbers):
             foreign += 1
-            kinds.add("tick labels" if label["kind"] == "tick label" else "annotations")
+            kinds.add(kind)
     if not foreign:
         return []
     name = english_name(plot_language or "") or "the plot language"
