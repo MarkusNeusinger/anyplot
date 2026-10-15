@@ -1,7 +1,10 @@
 """Tests for agents/anyplot/data/computed.py: the roles the plot can compute, bound when the data has them."""
 
+from pathlib import Path
+
 import pytest
 
+from agents.anyplot.briefs import describe_role
 from agents.anyplot.data.bindings import check_bindings, default_bindings
 from agents.anyplot.data.computed import ALIASES, COMPUTED_ROLES, name_match
 from agents.anyplot.data.parse import parse_dataset
@@ -30,6 +33,19 @@ def test_the_bullet_prefix_still_marks_the_rolling_average() -> None:
     assert [role.name for role in roles_of("line-timeseries-rolling") if role.computed] == ["rolling_avg"]
 
 
+def test_the_adapter_prompt_knows_both_markers_of_the_brief() -> None:
+    """The adapter computes an unbound computed role and uses a bound one unchanged: the prompt names the brief's
+    exact markers, so the general "leave out what an unbound role needs" rule does not drop the indicator."""
+    role = DataRole(name="sma", kinds=("numeric",), required=True, variadic=False, description="", computed=True)
+    prompt = (Path(__file__).parents[4] / "agents" / "anyplot" / "prompts" / "adapter.md").read_text()
+
+    for bound in (False, True):
+        marker = describe_role(role, bound).split(", ", 1)[1].rstrip(")")
+        assert marker.split(":")[0] + ":" in prompt
+    assert "not bound: compute it in the plot code from the bound data" in prompt
+    assert "bound: use its column as it is" in prompt
+
+
 def test_every_alias_names_a_computed_role() -> None:
     computed = {name for names in COMPUTED_ROLES.values() for name in names} | {"rolling_avg"}
 
@@ -54,7 +70,13 @@ def test_every_alias_names_a_computed_role() -> None:
         ("tsb", "Form", True),
         ("tsb", "tss", False),
         ("rolling_avg", "rollingAvg", True),
+        ("rolling_avg", "Rolling Mean", True),
         ("rolling_avg", "Temperature", False),
+        # Other rolling statistics are no average (Copilot review of #12195).
+        ("rolling_avg", "rolling_std", False),
+        ("rolling_avg", "rolling_sum", False),
+        ("rolling_avg", "rolling_count", False),
+        ("rolling_avg", "Rolling Variance", False),
     ],
 )
 def test_name_match(role_name: str, column: str, matches: bool) -> None:
@@ -80,6 +102,21 @@ class TestBollinger:
             ("lower_band", "Lower"),
         ]
         assert check_bindings(bindings, roles, data).complete
+
+    def test_band_qualified_names_are_bands_not_the_average(self) -> None:
+        """`SMA Upper Band` holds `sma` and `upper band`: the more specific role takes it; `sma` stays computed."""
+        roles = roles_of("indicator-bollinger")
+        data = parse_dataset(
+            "date,close,SMA Upper Band,SMA Lower Band\n"
+            "2024-01-01,100.5,103.0,95.0\n2024-01-02,101.5,104.0,95.5\n2024-01-03,99.0,104.5,95.1\n"
+        ).profile
+
+        assert pairs(default_bindings(roles, data)) == [
+            ("date", "date"),
+            ("close", "close"),
+            ("upper_band", "SMA Upper Band"),
+            ("lower_band", "SMA Lower Band"),
+        ]
 
     def test_only_prices_leave_the_bands_to_the_plot(self) -> None:
         roles = roles_of("indicator-bollinger")

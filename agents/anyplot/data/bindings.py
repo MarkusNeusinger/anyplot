@@ -35,7 +35,7 @@ from dataclasses import dataclass, field
 from difflib import SequenceMatcher
 
 from ..schemas import Binding, ColumnDtype, ColumnProfile, DatasetProfile
-from .computed import name_match
+from .computed import match_score
 from .parse import value_like
 from .roles import DataRole, RoleKind
 from .signs import has_negative, sign_line
@@ -128,7 +128,7 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
        family takes every unused tier-0 or tier-1 column that is no weak measure in column
        order, up to `MAX_VARIADIC_DEFAULT`; a required family that would stay empty takes the
        first weak one. A role the plot can compute (`DataRole.computed`, `data/computed.py`) is
-       bound only to a column whose name clearly holds it (`computed.name_match`, before any other
+       bound only to a column whose name clearly holds it (`computed.match_score`, the most specific first, before any other
        role picks); otherwise it stays open and the plot computes it (owner decision of
        2026-10-15, "both allowed").
        A single role never falls back to a tier-2 column that a variadic family of
@@ -182,19 +182,21 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
 
     # A role the plot can compute takes a column only on a clear name match (`SMA 20` for `sma`), before any
     # other role ranks the columns: otherwise it stays open and the plot computes it (`data/computed.py`).
-    for role in roles:
-        if not role.computed or not role.kinds or role.variadic or role.name in single:
-            continue
-        for column in columns:
-            if (
-                column.name not in used
-                and column.name not in constants
-                and _tier(role, column) is not None
-                and name_match(role, column.name)
-            ):
-                single[role.name] = column.name
-                used.add(column.name)
-                break
+    # The most specific match first (`SMA Upper Band` is the upper band, not the average), then spec and column order.
+    matches = sorted(
+        (-score, role_position, position, role.name, column.name)
+        for role_position, role in enumerate(roles)
+        if role.computed and role.kinds and not role.variadic and role.name not in single
+        for position, column in enumerate(columns)
+        if column.name not in used
+        and column.name not in constants
+        and _tier(role, column) is not None
+        and (score := match_score(role, column.name))
+    )
+    for *_, role_name, column_name in matches:
+        if role_name not in single and column_name not in used:
+            single[role_name] = column_name
+            used.add(column_name)
 
     order = sorted(
         (role for role in roles if role.kinds and not role.computed),

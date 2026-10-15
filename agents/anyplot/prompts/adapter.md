@@ -39,7 +39,7 @@ It returns a pandas DataFrame with exactly the loader columns, typed: `integer` 
 - Address columns only by subscript with the exact bound name: `df["Revenue (EUR)"]`, never `df.Revenue`.
 - Derive everything else from `df`: sorting, grouping, pivots, statistics, fits, positions, widths, axis limits and tick positions. Drop rows with missing values only for the columns a mark needs.
 - Never create data: no random draws to make values (a seeded `np.random.default_rng(<int>)` used only with `.choice`, `.permutation` or `.uniform` for jitter or subsampling is allowed), no literal lists of more than 20 numbers, no file reads, no downloads.
-- A role without a binding is not in the data. Leave out what depends on it, and say so in `changes`.
+- A role without a binding is not in the data. Leave out what depends on it, and say so in `changes`. The one exception is a role the spec brief marks `not bound: compute it in the plot code from the bound data` (a rolling average, a Bollinger band, fitness or fatigue): compute it from the bound columns with the method the spec describes and draw it, and say so in `changes`. A role it marks `bound: use its column as it is` is drawn from that column unchanged, never recomputed.
 
 ## Lines you never touch
 

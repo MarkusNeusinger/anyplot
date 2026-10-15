@@ -32,8 +32,10 @@ COMPUTED_ROLES: dict[str, frozenset[str]] = {
 """Per spec, the roles the plot computes when no column holds them, beyond the bullets that say so."""
 
 ALIASES: dict[str, tuple[str, ...]] = {
+    # Never a bare `rolling`: `rolling_std`, `rolling_sum` and `Rolling Variance` are other statistics.
     "rolling_avg": (
-        "rolling",
+        "rolling average",
+        "rolling mean",
         "moving average",
         "moving avg",
         "moving mean",
@@ -68,9 +70,18 @@ def mark_computed(roles: Iterable[DataRole], spec_id: str) -> list[DataRole]:
 
 def name_match(role: DataRole, column_name: str) -> bool:
     """Whether the column's name clearly says it holds the role's value: every word of the role's name or of one alias."""
+    return match_score(role, column_name) > 0
+
+
+def match_score(role: DataRole, column_name: str) -> int:
+    """How specific the match is: the words of the longest phrase the column's name holds (0: no match).
+
+    `SMA Upper Band` holds `sma` (one word) and `upper band` (two): the more specific role takes
+    the column, so the upper band is never read as the middle average (`bindings.default_bindings`).
+    """
     words = set(_words(column_name))
     phrases = (role.name.replace("_", " "), *ALIASES.get(role.name, ()))
-    return any((wanted := _words(phrase)) and set(wanted) <= words for phrase in phrases)
+    return max((len(wanted) for phrase in phrases if (wanted := _words(phrase)) and set(wanted) <= words), default=0)
 
 
 def _words(text: str) -> list[str]:
