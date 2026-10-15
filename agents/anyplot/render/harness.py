@@ -37,7 +37,8 @@ copies it to `/opt/anyplot/harness.py`. In order it:
    than `TEXT_OVERLAP_TOLERANCE_PX` (`text_overlaps`, the deepest pairs by role, and
    `text_overlaps_total`), annotations outside their axes, the
    number of drawn point marks (scatter offsets) and the number of vertices of the
-   visible `plot()` lines (`line_points`). Only rendered text counts: matplotlib keeps tick
+   visible `plot()` lines (`line_points`), and the content of the drawn texts by role
+   (`labels`, `drawn_labels`: what the root's closing reply is grounded in). Only rendered text counts: matplotlib keeps tick
    labels for locator positions outside the view interval and for hidden axes
    (`axis("off")`, a twin's), which report themselves visible but are never drawn,
    and an edge label one tick step past the view sat beyond the canvas in every
@@ -141,6 +142,15 @@ corner or an edge (a title on its axes' top tick label, an axis label beside its
 touch on the canvas. The owner's polar case overlapped by far more than this."""
 TEXT_OVERLAP_CANDIDATES = 200  # texts other than tick labels compared with every measured text
 TEXT_OVERLAP_LIMIT = 5  # the deepest pairs the probe reports
+LABEL_LIMIT = 400
+"""Drawn texts whose content the probe reports (`labels`): every title, axis label and legend text of a
+plot and the tick labels of 100 categories per axis, so a requested category is found, not guessed at."""
+LABEL_CHARS = 200
+"""One reported text at most: longer than any text the user can ask for (`schemas.MAX_EXPECTED_TEXT_CHARS`, 120)."""
+LABEL_TOTAL_CHARS = 20_000
+"""The reported texts together: JSON escapes a character outside ASCII as up to 12 bytes, so 20,000 of them
+stay under 240 KiB, within the wire's 256 KiB probe cap; past it the rest is left out (`labels_truncated`)."""
+TICK_LABELS_PER_AXIS = 100  # tick labels of one axis of one axes that `labels` keeps, in draw order
 THEME_ENV = "ANYPLOT_THEME"
 MARKER = "HARNESS"
 FALLBACK_FAMILIES = (
@@ -1009,6 +1019,79 @@ def text_overlaps(figure, extents, scale):
     return pairs[:TEXT_OVERLAP_LIMIT], len(pairs)
 
 
+def drawn_labels(figure, drawn, extents=None, canvas=None):
+    """The content of the drawn texts, by role: what the plot shows, for the host's grounding (`grounding.py`).
+
+    At most `LABEL_LIMIT` entries of `{"kind", "text"}`, each text cut to
+    `LABEL_CHARS`: titles, axis labels, legend texts and annotations first, then tick
+    labels (named by their axis, `x tick label`), then any other drawn text, a tick or
+    axis label with the index of its axes in `figure.get_axes()` (`axes`), so a unit on
+    one axis is checked against that axis's ticks only; and whether any drawn text was
+    left out or cut (`labels_truncated`). Only
+    texts the probe's draw rendered count, so a tick label outside the view is never
+    listed, and neither is a text whose measured box (`extents`) lies wholly outside
+    the `canvas`. A colorbar's tick labels and label are `colorbar tick label` and
+    `colorbar label`, never one of the axes'. At most `TICK_LABELS_PER_AXIS` tick labels
+    are kept per axis of each axes, so a second subplot keeps its share. The host reads
+    it as untrusted data: the code under test can write any text.
+    """
+    kinds, _, _ = _text_kinds(figure)
+    axes_of = {}  # id(text) -> the index of its axes in figure.get_axes(), for tick labels and axis labels
+    for index, axes in enumerate(figure.get_axes()):
+        colorbar = getattr(axes, "_colorbar", None) is not None
+        for name in ("x", "y", "z"):
+            axis = getattr(axes, f"{name}axis", None)
+            if axis is None:
+                continue
+            for label in axis.get_ticklabels():
+                kinds[id(label)] = "colorbar tick label" if colorbar else f"{name} tick label"
+                axes_of[id(label)] = index
+            if colorbar:
+                kinds[id(axis.label)] = "colorbar label"
+            axes_of[id(axis.label)] = index
+    entries = []
+    per_axis = {}
+    truncated = False
+    for key, text in drawn.items():
+        box = (extents or {}).get(key)
+        if box is not None and canvas is not None and _outside(box, *canvas):
+            continue  # drawn, but off the canvas: not in the image
+        kind = kinds.get(key, "text")
+        if kind.endswith("tick label"):
+            slot = (axes_of.get(key), kind)
+            per_axis[slot] = per_axis.get(slot, 0) + 1
+            if per_axis[slot] > TICK_LABELS_PER_AXIS:
+                truncated = True  # the other axes keep their share of LABEL_LIMIT
+                continue
+        rank = 1 if kind.endswith("tick label") else 2 if kind == "text" else 0
+        entries.append((rank, kind, key, text))
+    entries.sort(key=lambda entry: entry[0])
+    labels = []
+    budget = LABEL_TOTAL_CHARS
+    for _, kind, key, text in entries[:LABEL_LIMIT]:
+        try:
+            content = str(text.get_text())
+        except Exception:
+            truncated = True
+            continue
+        if min(len(content), LABEL_CHARS) > budget:
+            truncated = True
+            break
+        budget -= min(len(content), LABEL_CHARS)
+        truncated = truncated or len(content) > LABEL_CHARS
+        label = {"kind": kind, "text": content[:LABEL_CHARS]}
+        if key in axes_of:
+            label["axes"] = axes_of[key]
+        labels.append(label)
+    # Any drawn text left out: the host then never claims that a requested text is missing.
+    return labels, truncated or len(entries) > LABEL_LIMIT
+
+
+def _outside(box, width, height):
+    """Whether a text box lies wholly outside the `width` x `height` canvas."""
+    return box[2] <= 0 or box[3] <= 0 or box[0] >= width or box[1] >= height
+
+
 def _beyond(box, width, height):
     """Whether a text box reaches past an edge of the `width` x `height` canvas."""
     return box[0] < 0 or box[1] < 0 or box[2] > width or box[3] > height
@@ -1103,7 +1186,15 @@ def probe(figure, dpi):
             except Exception:
                 continue
     overlaps, overlaps_total = text_overlaps(figure, extents, scale)
+    try:
+        # Without the key the host checks no requested text; an empty list would read as "nothing drawn".
+        figure_canvas = (float(width_in) * figure.dpi, float(height_in) * figure.dpi)  # the extents' pixels
+        labels, truncated = drawn_labels(figure, drawn, extents, figure_canvas)
+        texts_part = {"labels": labels, "labels_truncated": truncated}
+    except Exception:  # the texts are for the reply's grounding; they never break the probe
+        texts_part = {}
     return {
+        **texts_part,
         "figsize": [float(width_in), float(height_in)],
         "dpi": float(dpi or figure.dpi),
         "canvas": [

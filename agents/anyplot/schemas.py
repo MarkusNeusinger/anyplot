@@ -77,6 +77,13 @@ Line = Annotated[str, Field(min_length=1, max_length=MAX_LINE_CHARS)]
 ChangeNote = Annotated[str, Field(min_length=1, max_length=MAX_CHANGE_CHARS)]
 UserRequest = Annotated[str, Field(min_length=1, max_length=MAX_CHANGE_REQUEST_CHARS)]
 DefectText = Annotated[str, Field(min_length=1, max_length=MAX_DEFECT_TEXT_CHARS)]
+MAX_EXPECTED_TEXTS = 5
+MAX_EXPECTED_TEXT_CHARS = 120
+ExpectedText = Annotated[str, Field(min_length=1, max_length=MAX_EXPECTED_TEXT_CHARS)]
+MAX_DATASET_CONTEXT_CHARS = 1_600
+"""The dataset context block (`dataset_context.MAX_CONTEXT_CHARS`, 1,500) with room to spare."""
+MAX_SHOWN_TEXT_CHARS = 80
+"""One drawn text in `PlotShows.texts`."""
 
 ColumnDtype = Literal["integer", "number", "datetime", "boolean", "text"]
 SourceFormat = Literal["csv", "tsv", "semicolon", "pipe", "json_records", "json_columns", "json_pairs", "json_stat"]
@@ -214,6 +221,9 @@ class PipelineArgs(_ServerContract):
     change_request: str = Field(default="", max_length=MAX_CHANGE_REQUEST_CHARS)
     base: Literal["catalogue", "previous"] = "catalogue"
     theme: Theme | None = None
+    expected_texts: list[ExpectedText] = Field(default_factory=list, max_length=MAX_EXPECTED_TEXTS)
+    """The texts and number formats the user asked to see in the plot, verbatim (a title they wrote out, a unit,
+    a format example such as `6,5 Mio.`): the pipeline checks the render's drawn texts for each (`grounding.py`)."""
 
 
 class Edit(_ModelOutput):
@@ -256,6 +266,10 @@ class AdaptRequest(_ServerContract):
     """The session language, which the plot's own text (title, axis titles, legend, annotations) is written in."""
     language_changed: bool = False
     """The base version's plot text is in another language than `plot_language`: rewrite it."""
+    expected_texts: list[ExpectedText] = Field(default_factory=list, max_length=MAX_EXPECTED_TEXTS)
+    """The texts and number formats the user asked to see in the plot (`PipelineArgs.expected_texts`)."""
+    dataset_context: str = Field(default="", max_length=MAX_DATASET_CONTEXT_CHARS)
+    """The screened notes pasted with the data and the source of a computed table (`dataset_context.py`)."""
 
 
 # --- Review ----------------------------------------------------------------------------
@@ -275,6 +289,8 @@ class ReviewRequest(_ServerContract):
     gate_notes: list[Note] = Field(default_factory=list, max_length=MAX_NOTES)
     plot_language: str = Field(default=DEFAULT_LANGUAGE, pattern=LANGUAGE_PATTERN)
     """The session language, against which VQ-06 judges the plot's own text."""
+    dataset_context: str = Field(default="", max_length=MAX_DATASET_CONTEXT_CHARS)
+    """The screened notes pasted with the data and the source of a computed table (`dataset_context.py`)."""
 
 
 class Defect(_ModelOutput):
@@ -483,6 +499,41 @@ class Round(_ServerContract):
     shipped: bool = False
 
 
+ShownGroup = Literal[
+    "title",
+    "x axis label",
+    "y axis label",
+    "z axis label",
+    "other axis labels",
+    "legend",
+    "x tick labels",
+    "y tick labels",
+    "z tick labels",
+    "annotations",
+    "other texts",
+]
+"""The roles `PlotShows.texts` groups the drawn texts by (`grounding.plot_texts`)."""
+ShownText = Annotated[str, Field(min_length=1, max_length=MAX_SHOWN_TEXT_CHARS)]
+ReviewState = Literal["passed", "findings", "not_reviewed"]
+
+
+class PlotShows(_ServerContract):
+    """What the shipped render shows, built by the server: the root's closing reply is grounded in it.
+
+    `texts` are the drawn texts by role, read from the render's probe (`grounding.plot_texts`);
+    None when the renderer reported none (a renderer older than the `labels` probe field).
+    `review` is the verdict on exactly this render (`passed`: it met the ship bar), `score`
+    the catalogue review's score, `requested_not_found` the `expected_texts` the drawn
+    texts do not show (`grounding.expected_misses`). The texts are written by the code under
+    test, so the root reads them fenced, as data.
+    """
+
+    texts: dict[ShownGroup, list[ShownText]] | None = None
+    review: ReviewState = "not_reviewed"
+    score: int | None = Field(default=None, ge=0, le=100)
+    requested_not_found: list[ExpectedText] = Field(default_factory=list, max_length=MAX_EXPECTED_TEXTS)
+
+
 class PlotResult(_ServerContract):
     """The pipeline's final output; every path through `run_pipeline` yields one.
 
@@ -498,6 +549,9 @@ class PlotResult(_ServerContract):
 
     `rounds` lists how each attempt ended, in order (`Round`), for the page's progress
     grid; it is content-free (an outcome and a count) and empty for `not_ready`.
+
+    `shows` is what the shipped render shows (`PlotShows`), on `ok` and `needs_attention`
+    only; it goes to the root, never to the page's `plot` event (`stream.PLOT_FIELDS`).
     """
 
     status: PlotStatus
@@ -508,11 +562,14 @@ class PlotResult(_ServerContract):
     residual_defects: list[Line] = Field(default_factory=list, max_length=MAX_RESIDUAL_DEFECTS)
     version: int | None = Field(default=None, ge=1)
     rounds: list[Round] = Field(default_factory=list, max_length=MAX_ATTEMPTS)
+    shows: PlotShows | None = None
 
     @model_validator(mode="after")
     def _status_rules(self) -> Self:
         if self.status in ("failed", "not_ready") and self.version is not None:
             raise ValueError(f"a {self.status!r} result stores no version")
+        if self.status in ("failed", "not_ready") and self.shows is not None:
+            raise ValueError(f"a {self.status!r} result shows no plot")
         if self.status == "failed":
             if self.reason not in FAILURE_REASONS:
                 raise ValueError(f"a failed result needs a reason in {sorted(FAILURE_REASONS)}")

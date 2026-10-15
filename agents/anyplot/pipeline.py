@@ -127,6 +127,8 @@ from .code.regions import find_regions
 from .code.validate import validate_adaptation, validate_security
 from .data.bindings import check_bindings
 from .data.store import StoredDataset
+from .dataset_context import dataset_context
+from .grounding import UNVERIFIED_LINE, drawn_texts, expected_misses, plot_texts
 from .language import DEFAULT_LANGUAGE, same_language
 from .plugins.ledger import RequestLedger, attribution, budget_allows, ledger_for
 from .policy import DATA_PREAMBLE, fence
@@ -152,10 +154,13 @@ from .schemas import (
     NotReadyReason,
     PipelineArgs,
     PlotResult,
+    PlotShows,
     ReviewRequest,
+    ReviewState,
     Round,
     RoundOutcome,
     RoundStep,
+    ShownGroup,
     Verdict,
     artifact_names,
 )
@@ -361,6 +366,14 @@ class Candidate:
     changes: list[str] = field(default_factory=list)
     """What this render's code changed, for `PlotResult.changes`: the notes of every adapter call of the run
     up to this render that changed the code (`Run.changes`), so a best-scored earlier render reports its own."""
+    texts: dict[ShownGroup, list[str]] | None = None
+    """This render's drawn texts by role (`grounding.plot_texts`), for `PlotShows`; None without probe labels."""
+    expect_lines: list[str] = field(default_factory=list)
+    """The requested texts and number formats this render does not show (`grounding.expected_misses`), as lines."""
+    expect_misses: list[str] = field(default_factory=list)
+    """The same misses as the requested texts themselves, for `PlotShows.requested_not_found`."""
+    expect_note: str | None = None
+    """`grounding.UNVERIFIED_LINE` when the run had requested texts but the probe reported no drawn texts."""
 
 
 @dataclass
@@ -417,6 +430,8 @@ class Run:
     """The base version's change requests (`standing_requests`): the user's standing decisions."""
     changes: list[str] = field(default_factory=list)
     """The `changes` notes of every adapter call so far whose plan changed the code, in order (`note_changes`)."""
+    expected_texts: list[str] = field(default_factory=list)
+    """The texts and number formats the user asked to see (`PipelineArgs.expected_texts`), checked per render."""
 
 
 ROUND_OUTCOMES: dict[Stage, RoundOutcome] = {
@@ -638,7 +653,10 @@ def render_adapt_request(request: AdaptRequest, view: SessionView) -> str:
         "Plot language:",
         fence("plot_language", request.plot_language),
     ]
+    lines += _context_lines(request.dataset_context)
     lines += _requests_lines(request.user_requests, request.change_request)
+    if request.expected_texts:
+        lines += [EXPECTED_HEADING, fence("user_message", "\n".join(request.expected_texts))]
     notes: dict[str, Any] = {}
     if request.hints:
         notes["hints"] = request.hints
@@ -673,6 +691,7 @@ def render_review_request(request: ReviewRequest) -> str:
         "Plot language:",
         fence("plot_language", request.plot_language),
     ]
+    lines += _context_lines(request.dataset_context)
     lines += _requests_lines(request.user_requests, request.change_request)
     if request.gate_notes:
         lines += ["Gate notes:", fence("tool_notes", json.dumps(request.gate_notes, ensure_ascii=False))]
@@ -680,6 +699,16 @@ def render_review_request(request: ReviewRequest) -> str:
 
 
 EARLIER_REQUESTS_HEADING = "Earlier requests (the user's standing decisions, oldest first):"
+EXPECTED_HEADING = "Texts and number formats the user asked to see in the plot, verbatim (one per line):"
+CONTEXT_HEADING = (
+    "Dataset context (what the session knows about the data: the notes the user pasted with it and where a "
+    "computed table comes from; use it for the title and the labels):"
+)
+
+
+def _context_lines(context: str) -> list[str]:
+    """The dataset context block (`dataset_context.py`) under its fixed heading, fenced as the user's notes."""
+    return [CONTEXT_HEADING, fence("user_notes", context)] if context else []
 
 
 def _requests_lines(user_requests: Sequence[str], change_request: str) -> list[str]:
@@ -861,8 +890,8 @@ def shipped_candidate(run: Run) -> Candidate | None:
 
 
 def _clean(candidate: Candidate) -> bool:
-    """No measured finding: no advisory gate line and no ADAPTATION finding."""
-    return not (candidate.advisory_lines or candidate.adaptation_lines)
+    """No measured finding: no advisory gate line, no ADAPTATION finding and no requested text missing."""
+    return not (candidate.advisory_lines or candidate.adaptation_lines or candidate.expect_lines)
 
 
 def ship_compare(a: Candidate, b: Candidate) -> int:
@@ -908,6 +937,10 @@ def finish(run: Run) -> PlotResult:
     # No review score hides them (until 2026-10-14 only G10 stayed above the ship bar).
     residual += shipped.adaptation_lines
     residual += shipped.advisory_lines
+    # A requested text or number format the shipped render does not show: the reply must say so.
+    residual += shipped.expect_lines
+    if shipped.expect_note:
+        residual.append(shipped.expect_note)
     # The review's notes are left out when the render meets the ship bar (`AGENT_STATUS_BAR` and
     # `AGENT_STATUS_SCORE`; a checklist pass), although the review may still have asked for a repair:
     # the owner's rule is no review notes above the bar. The review bar decides the repair only, so a
@@ -940,7 +973,20 @@ def finish(run: Run) -> PlotResult:
             round_.model_copy(update={"shipped": round_.attempt == round_number(run, shipped.attempt)})
             for round_ in run.rounds
         ],
+        shows=PlotShows(
+            texts=shipped.texts,
+            review=_review_state(shipped, meets_bar),
+            score=shipped.review_score,
+            requested_not_found=shipped.expect_misses,
+        ),
     )
+
+
+def _review_state(shipped: Candidate, meets_bar: bool | None) -> ReviewState:
+    """The review's verdict on exactly the shipped render, for `PlotShows.review`."""
+    if shipped.reviewed_ok is None:
+        return "not_reviewed"
+    return "passed" if meets_bar is True else "findings"
 
 
 def _store_version(ctx: Context, services: Services, run: Run, result: PlotResult) -> PlotResult:
@@ -1072,6 +1118,8 @@ def render_score_request(request: ReviewRequest) -> str:
         fence("user_data", json.dumps([item.model_dump() for item in request.bindings], ensure_ascii=False)),
         fence("plot_language", request.plot_language),
     ]
+    if request.dataset_context:
+        lines.append("\n".join(_context_lines(request.dataset_context)))
     lines += _requests_lines(request.user_requests, request.change_request)
     if request.gate_notes:
         lines += ["Gate notes:", fence("tool_notes", json.dumps(request.gate_notes, ensure_ascii=False))]
@@ -1120,7 +1168,14 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     # Taken only once the run has its slot: a run that never starts leaves the user's note for the next one.
     node_input = take_pending_request(ctx.state, node_input)
     theme = node_input.theme or _default_theme(services, ctx.session.id, view.library, node_input.base)
-    run = Run(view=view, dataset=dataset, theme=theme, language=view.language, change_request=node_input.change_request)
+    run = Run(
+        view=view,
+        dataset=dataset,
+        theme=theme,
+        language=view.language,
+        change_request=node_input.change_request,
+        expected_texts=list(node_input.expected_texts),
+    )
     scope = f"pipeline-{secrets.token_hex(6)}"
     try:
         async for event in _attempts(ctx, services, settings, run, node_input, scope):
@@ -1232,6 +1287,8 @@ async def _attempts(
     feedback: list[str] = []
     previous_plan: AdaptPlan | None = None
     rows = data_rows(dataset.csv)
+    # The screened notes pasted with the data and where a computed table comes from, for the title and labels.
+    context = dataset_context(dataset.context_lines, dataset.source)
 
     adapter = adapter_name(view.library)
     # A round is one adapter attempt and, with `AGENT_SELF_REVIEW`, the adapter proofreading its render
@@ -1283,6 +1340,8 @@ async def _attempts(
             allow_full=attempt >= 2,
             plot_language=run.language,
             language_changed=language_changed,
+            expected_texts=run.expected_texts,
+            dataset_context=context,
         )
         ledger.adapter_allow_full = request.allow_full
         answer = await _adapt(ctx, scope, render_adapt_request(request, view), view.library)
@@ -1396,6 +1455,15 @@ async def _attempts(
             feedback = [*report.blocking, *adaptation_lines]
             _end_attempt(run, "render", feedback)
             continue
+        output = rendered.outputs.get(run.theme)
+        # The check reads every drawn text; `shows` gets the clipped summary of them.
+        drawn = drawn_texts(output.probe if output is not None else None)
+        texts = plot_texts(drawn)
+        checking = settings.expect_check != "off" and bool(run.expected_texts)
+        misses = expected_misses(run.expected_texts, drawn) if checking else []
+        expect_lines = [miss.line(run.theme) for miss in misses]
+        # No drawn texts to check against (a renderer without `labels`): a note, never a pass and never a repair.
+        expect_note = UNVERIFIED_LINE.format(theme=run.theme) if checking and drawn is None else None
         candidate = Candidate(
             working=working,
             run_form=run_form,
@@ -1409,14 +1477,20 @@ async def _attempts(
             adaptation_rules=check.adaptation_rules,
             advisory_gates=[gate for gate in report.failed_gates if gate.startswith("G")],
             changes=list(run.changes),
+            texts=texts,
+            expect_lines=expect_lines,
+            expect_misses=[miss.expected for miss in misses],
+            expect_note=expect_note,
         )
         if report.canvas_ok:
             run.best = candidate
         else:
             run.padded = candidate
-        feedback = [*report.defects, *adaptation_lines]
+        # A requested text the render does not show is measured like a gate line (`AGENT_EXPECT_CHECK=repair`).
+        repair_expect = expect_lines if settings.expect_check == "repair" else []
+        feedback = [*report.defects, *adaptation_lines, *repair_expect]
         # The render's measured findings: what the code, not a model, found in it.
-        measured = [*report.advisory, *adaptation_lines]
+        measured = [*report.advisory, *adaptation_lines, *repair_expect]
         # A missed canvas always goes to the next attempt before any review. With
         # `AGENT_GATE_REPAIR=first` the measured findings do too while an attempt is allowed;
         # with `review` they go to the self-review and the review, and a round whose render
@@ -1477,6 +1551,7 @@ async def _attempts(
             # Every measured finding, the ADAPTATION ones too, so the review sees what the repair will get.
             gate_notes=[_note(line) for line in measured][:MAX_NOTES],
             plot_language=run.language,
+            dataset_context=context,
         )
         verdict = await _review(ctx, scope, review_request, run.theme)
         if verdict is None and settings.check_retry and deadline.allows(REVIEWER_P95_S):

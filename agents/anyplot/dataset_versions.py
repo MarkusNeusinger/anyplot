@@ -87,6 +87,7 @@ def push_version(
     *,
     rebind: bool = False,
     code: str | None = None,
+    source: str | None = None,
 ) -> DatasetVersion:
     """Store `parsed` as the session's next dataset version; raises `StoreFull` (nothing changes then).
 
@@ -99,12 +100,16 @@ def push_version(
 
     The notes pasted with the data (`context_lines`) belong to the session's data, not to one
     version: the new version carries the current version's notes, also after `generate_data`.
+    `source` says where a computed table comes from (`dataset_context`); without one, a change
+    of the data (`prepare_data`) carries the current version's on.
     """
     current = store.get(view.dataset_id, session_id) if view.dataset_id else None
     if current is not None:
         parsed = replace(parsed, context_lines=list(current.context_lines))
+        if source is None:
+            source = current.source
     # `code` (`run_data_code`'s Python) belongs to this version only, never carried to the next.
-    dataset_id = store.put(session_id, parsed, code=code)
+    dataset_id = store.put(session_id, parsed, code=code, source=source)
     history = [*view.dataset_history, view.dataset_id] if view.dataset_id else list(view.dataset_history)
     for old in history[:-MAX_DATASET_HISTORY]:
         store.delete(old, session_id)
