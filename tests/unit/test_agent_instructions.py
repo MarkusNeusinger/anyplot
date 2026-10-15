@@ -317,6 +317,13 @@ MIRRORED_RULES = {
     ],
     # Owner decision 2026-10-15: no `pip` fallback for either audience.
     "python tooling is uv only": ["`uv` only", "never `pip`", "instead of falling back to `pip`"],
+    # Owner decision 2026-10-15. The pin carries the prohibition and its one
+    # exit (explicit approval), not just the topic "lint".
+    "proper lint fixes only, no disable comments": [
+        "proper lint fixes only",
+        "never use disable comments",
+        "unless explicitly approved",
+    ],
     # The repository's most consequential rule, and the one an agent that opens
     # and edits PRs is most able to break: specs and implementations go through
     # the workflows, and their PRs are merged by `impl-merge`, never by hand.
