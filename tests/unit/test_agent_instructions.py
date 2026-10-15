@@ -235,6 +235,29 @@ def test_the_commands_symlink_points_where_it_says() -> None:
     assert link.resolve() == (REPO_ROOT / "agentic" / "commands").resolve()
 
 
+@pytest.mark.parametrize(
+    ("link", "target", "raw"),
+    [
+        (REPO_ROOT / "AGENTS.md", CLAUDE_MD, "CLAUDE.md"),
+        (REPO_ROOT / ".agents" / "skills", REPO_ROOT / ".claude" / "skills", "../.claude/skills"),
+    ],
+    ids=["AGENTS.md", ".agents-skills"],
+)
+def test_the_agents_bridge_links_point_at_the_claude_sources(link: Path, target: Path, raw: str) -> None:
+    """`AGENTS.md` and `.agents/skills/` are how agy, Codex and other non-Claude
+    agents find the rules and skills (CLAUDE.md, "Claude Code Configuration").
+
+    Same failure as the commands link: a real file or directory in their place
+    still exists and still reads plausibly, but it is a third copy nobody keeps
+    in sync. The raw link text is pinned as well, because a relative link is
+    what keeps it valid in every checkout and worktree; an absolute one resolves
+    on the machine that made it and nowhere else.
+    """
+    assert link.is_symlink(), f"{link} is documented as a symlink"
+    assert link.readlink() == Path(raw), f"{link} should be the relative link {raw}"
+    assert link.resolve() == target.resolve()
+
+
 def test_every_named_skill_exists() -> None:
     """The routing table in CLAUDE.md sends work to `.claude/skills/<name>/`.
 

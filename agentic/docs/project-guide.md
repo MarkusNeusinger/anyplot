@@ -206,6 +206,7 @@ Example: `plots/scatter-basic/` contains everything for the basic scatter plot.
 - **`agentic/`**: AI workflow layer (composable phases, prompt templates, runtime state)
   - **`agentic/workflows/`**: Click CLI scripts (plan, build, test, review + orchestrators)
   - **`agentic/commands/`**: Markdown prompt templates
+- **Agent instruction files**: `CLAUDE.md` holds the rules and `.claude/skills/` the skills. Three symlinks make them visible to other tools without a copy to keep in sync: `.claude/commands/` points to `agentic/commands/`, `AGENTS.md` points to `CLAUDE.md` (read by the Antigravity CLI `agy`, Codex, and the GitHub Copilot coding agent), and `.agents/skills/` points to `.claude/skills/` (the skills directory `agy` reads). `.github/copilot-instructions.md` is the separate, hand-synced guide for Copilot. `tests/unit/test_agent_instructions.py` fails if a link is replaced by a real file or points elsewhere.
 - **`automation/`**: CI/CD helper scripts (workflow_cli, label_manager, sync_to_postgres)
 - **`infra/`**: Infrastructure that would otherwise live only in a dashboard
   - **`infra/cloudflare/`**: Source of the apex `anyplot.ai/api/*` Worker, plus the origin gate's rollout and measuring procedure
