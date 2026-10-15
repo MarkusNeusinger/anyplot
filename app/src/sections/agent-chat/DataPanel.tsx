@@ -137,6 +137,7 @@ import {
   FILE_BUSY_TEXT,
   FILE_CONVERTING_TEXT,
 } from 'src/sections/agent-chat/messages';
+import { previewSegments } from 'src/sections/agent-chat/previewCell';
 import { inStep2 } from 'src/sections/agent-chat/steps';
 import {
   actionButtonSx,
@@ -158,6 +159,30 @@ function formatKb(bytes: number): string {
 
 function countOf(count: number, noun: string): string {
   return `${count.toLocaleString('en-US')} ${noun}${count === 1 ? '' : 's'}`;
+}
+
+/** One preview cell, its line breaks and space runs drawn as muted marks a screen reader names. */
+function PreviewCell({ cell }: { cell: string }) {
+  return (
+    <>
+      {previewSegments(cell).map((segment, index) => {
+        if (!segment.mark) return <span key={index}>{segment.text}</span>;
+        const label = { break: 'line break', tab: 'tab', spaces: `${segment.text.length} spaces` }[
+          segment.mark
+        ];
+        return (
+          <span key={index} title={label}>
+            <Box component="span" aria-hidden="true" sx={{ color: 'var(--ink-muted)' }}>
+              {segment.text}
+            </Box>
+            <Box component="span" sx={visuallyHiddenSx}>
+              {` (${label}) `}
+            </Box>
+          </span>
+        );
+      })}
+    </>
+  );
 }
 
 /** The first rows of a table under its column names and types. */
@@ -214,7 +239,9 @@ function PreviewTable({ columns, rows }: { columns: ColumnProfile[]; rows: strin
           {rows.map((row, rowIndex) => (
             <tr key={rowIndex}>
               {row.map((cell, cellIndex) => (
-                <td key={cellIndex}>{cell}</td>
+                <td key={cellIndex}>
+                  <PreviewCell cell={cell} />
+                </td>
               ))}
             </tr>
           ))}

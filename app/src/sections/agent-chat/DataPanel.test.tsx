@@ -141,6 +141,35 @@ describe('DataPanel bindings', () => {
     expect(onBind).toHaveBeenCalledWith('y2', 'hats');
   });
 
+  it('draws line breaks and space runs of a preview cell visibly instead of folding them', () => {
+    const base = stateWith({ x: 'month' }, { missingRoles: [] });
+    const state = {
+      ...base,
+      dataset: base.dataset && {
+        ...base.dataset,
+        parsed: {
+          ...base.dataset.parsed,
+          preview: [['2026-01', '1', '2', '3', 'north\nwest  end']],
+        },
+      },
+    };
+    render(
+      <DataPanel
+        state={state}
+        onParse={vi.fn()}
+        onConfirmTranscription={vi.fn()}
+        onDiscardTranscription={vi.fn()}
+        onSendFormula={vi.fn()}
+        onBind={vi.fn()}
+        onConfirmData={vi.fn()}
+        onUndo={vi.fn()}
+      />
+    );
+    const cell = screen.getByTitle('line break').closest('td');
+    expect(cell).toHaveTextContent('north↵ (line break) west·· (2 spaces) end');
+    expect(screen.getByTitle('2 spaces')).toBeInTheDocument();
+  });
+
   it('warns under the dropdown when a role that needs values of 0 or more gets a negative column', () => {
     const radius = role('radius', { non_negative: true });
     const columns = [

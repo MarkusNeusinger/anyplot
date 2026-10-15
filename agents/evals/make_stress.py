@@ -866,8 +866,9 @@ def _cases() -> list[StressCase]:
             duplicate_headers(),
             [_binding("x", "Value_2"), _binding("y", "Value_3")],
             "unknown",
-            "parse renames duplicates to Value_2, Value_3, Value_4 (case-sensitive: value stays), one warning each",
-            {"dataset": "ok", "columns": 5, "warnings": 3, "bindings": "complete", "loader": "ok"},
+            "parse renames duplicates to Value_2, Value_3, Value_4 (case-sensitive: value stays), one warning each, "
+            "plus one that counts the numbers written without their trailing zeros (`70.20` as `70.2`)",
+            {"dataset": "ok", "columns": 5, "warnings": 4, "bindings": "complete", "loader": "ok"},
         ),
         StressCase(
             "dates-centuries",
