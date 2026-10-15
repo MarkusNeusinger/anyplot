@@ -25,7 +25,9 @@ The operations:
   same wherever it occurs. To datetime: with `date_format` the cells are read in
   exactly that format, with an optional time (`HH:MM[:SS]`) after it (a format without
   a day, such as `YYYY-MM` or `YYYY`, reads the first day of the month or the year, and
-  `YYYYMMDD` reads a number column of such dates as well as text); without one
+  `YYYYMMDD` and `YYYYMM` read a number column of such dates as well as text, and
+  `MM.YYYY` a column the parser read as numbers, `03.2020` as 3.202, through four
+  decimals); without one
   pandas infers the format per cell, day before month when ambiguous, as the parser
   reads a slash date. Either way a cell that cannot be read becomes missing and the
   change line counts it; when more than 10 % of the non-missing cells fail, the
@@ -158,7 +160,16 @@ _INT64_MIN, _INT64_MAX = -(2**63), 2**63 - 1
 Test = Literal["eq", "ne", "contains", "is_missing", "gt", "lt"]
 TargetType = Literal["number", "datetime", "text"]
 DateFormat = Literal[
-    "DD.MM.YYYY", "MM/DD/YYYY", "YYYY-MM-DD", "DD/MM/YYYY", "YYYYMMDD", "YYYY-MM", "MM/YYYY", "MM.YYYY", "YYYY"
+    "DD.MM.YYYY",
+    "MM/DD/YYYY",
+    "YYYY-MM-DD",
+    "DD/MM/YYYY",
+    "YYYYMMDD",
+    "YYYYMM",
+    "YYYY-MM",
+    "MM/YYYY",
+    "MM.YYYY",
+    "YYYY",
 ]
 Decimal = Literal[".", ","]
 How = Literal["sum", "mean", "count", "min", "max"]
@@ -185,6 +196,7 @@ STRPTIME: dict[str, str] = {
     "YYYY-MM-DD": "%Y-%m-%d",
     "DD/MM/YYYY": "%d/%m/%Y",
     "YYYYMMDD": "%Y%m%d",
+    "YYYYMM": "%Y%m",
     "YYYY-MM": "%Y-%m",
     "MM/YYYY": "%m/%Y",
     "MM.YYYY": "%m.%Y",
@@ -1248,6 +1260,11 @@ def _to_dates(series: pd.Series, date_format: str | None) -> tuple[pd.Series, in
     """The cells as datetimes (NaT where a cell cannot be read), how many non-missing cells failed, and whether
     the column is written with a time (the parser's rule: any source cell holds a colon)."""
     texts = _texts(series)
+    if date_format == "MM.YYYY" and _kind(series) == "number":
+        # The parser read `03.2020` as the number 3.202: four decimals give the year back, trailing zeros included.
+        texts = pd.Series(
+            [None if pd.isna(value) else f"{float(value):.4f}" for value in series], index=series.index, dtype="str"
+        )
     if date_format:
         strptime = STRPTIME[date_format]
         result = pd.to_datetime(pd.Series(pd.NaT, index=series.index))

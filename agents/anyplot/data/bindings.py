@@ -147,17 +147,21 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
         if (tier := _tier(owner, column)) is not None and tier <= 1 and column.name not in weak
     }
 
+    # A constant is no measure even when named like the role (`y2`, `size`); a year or a month named so is meant.
+    constants = {column.name for column in columns if column.name in weak and column.unique <= 1}
+
     for role in roles:
         if not role.kinds:
             continue
+        named = [column for column in columns if not (is_measure(role) and column.name in constants)]
         if role.variadic:
-            for column in columns:
+            for column in named:
                 if column.name not in used and _member_of(role, column.name) and _tier(role, column) is not None:
                     if len(family[role.name]) < MAX_VARIADIC_DEFAULT:
                         family[role.name].append(column)
                         used.add(column.name)
         else:
-            for column in columns:
+            for column in named:
                 if (
                     column.name not in used
                     and _norm(column.name) == _norm(role.name)

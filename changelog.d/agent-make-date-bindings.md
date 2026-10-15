@@ -5,7 +5,7 @@
   hold the parts of a date: a year with a month and an optional day, a quarter,
   or an ISO week. Out-of-range values and rows that are no calendar date are
   refused, never moved. `set_type` to a date also reads `DD/MM/YYYY`,
-  `YYYYMMDD`, `YYYY-MM`, `MM/YYYY`, `MM.YYYY` and `YYYY`. The root prompt now
+  `YYYYMMDD`, `YYYYMM`, `YYYY-MM`, `MM/YYYY`, `MM.YYYY` and `YYYY`. The root prompt now
   uses these operations and no longer asks the user to add a column that an
   operation can build. (#12193)
 

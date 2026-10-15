@@ -230,6 +230,18 @@ class TestWeakMeasures:
 
         assert as_pairs(default_bindings(roles, data)) == [("x", "a"), ("y", "b")]
 
+    def test_a_constant_named_like_a_member_or_a_role_is_still_skipped(self) -> None:
+        roles = [role("x", "numeric"), role("y", "numeric", variadic=True), role("size", "numeric", required=False)]
+        data = profile("x,y1,y2,size\n1,2.5,0,7\n2,3.5,0,7\n3,1.5,0,7\n4,2.0,0,7\n5,4.5,0,7\n")
+
+        assert as_pairs(default_bindings(roles, data)) == [("x", "x"), ("y1", "y1")]
+
+    def test_a_year_named_like_the_role_is_meant(self) -> None:
+        roles = [role("year", "numeric"), role("value", "numeric")]
+        data = profile("year,value\n2020,1.5\n2021,2.5\n2022,3.5\n")
+
+        assert as_pairs(default_bindings(roles, data)) == [("year", "year"), ("value", "value")]
+
     def test_an_optional_measure_still_takes_a_real_measure(self) -> None:
         roles = [role("x", "numeric"), role("y", "numeric"), role("size", "numeric", required=False)]
         data = profile("a,b,c\n1,2.5,7\n2,3.5,8\n3,1.5,9\n4,2.0,7\n5,4.5,8\n")
