@@ -18,7 +18,7 @@ from ...code.loader import to_run_form
 from ...code.normalise import normalise
 from ...code.validate import validate_security
 from ..contract import Theme
-from ..harness import DATA_FLAG
+from ..harness import CONVERT_FLAG, DATA_FLAG
 from ..png import MAX_PNG_BYTES, MAX_PROBE_BYTES, read_output
 
 
@@ -26,6 +26,10 @@ IMAGE_PYTHON = "/app/.venv/bin/python"
 IMAGE_HARNESS = "/opt/anyplot/harness.py"
 MPL_SEED = "/opt/mplconfig"
 HARNESS_SOURCE = Path(__file__).resolve().parents[1] / "harness.py"
+IMAGE_CONVERTER = "/opt/anyplot/convert.py"
+CONVERTER_SOURCE = HARNESS_SOURCE.with_name("convert.py")
+CONVERT_INPUT_NAME = "input.bin"
+"""A conversion's file (the renderer's `wire.CONVERT_INPUT_FILE`)."""
 DATA_FILE_NAME = "snippet.py"
 """A data run's code file (the renderer's `executor.SNIPPET_FILE`); `gates.error_summary` finds its frames by it."""
 DATA_RLIMIT_AS_MB = 1024
@@ -85,6 +89,14 @@ class PythonRuntime:
             "ANYPLOT_RLIMIT_AS_MB": str(DATA_RLIMIT_AS_MB),
             "ANYPLOT_RLIMIT_NPROC": str(DATA_RLIMIT_NPROC),
         }
+
+    def convert_command(self) -> list[str]:
+        """A conversion: the harness in convert mode on the file written as `input.bin`."""
+        return [self.python, "-I", self.harness, CONVERT_FLAG, CONVERT_INPUT_NAME]
+
+    def convert_env(self) -> dict[str, str]:
+        """A data run's environment, with Arrow's system allocator (the renderer's `sandbox_env` for a conversion)."""
+        return {**self.data_env(), "ARROW_DEFAULT_MEMORY_POOL": "system"}
 
     def normalise(self, code: str, library: str) -> str:
         return normalise(code, library=library)

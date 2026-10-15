@@ -36,7 +36,32 @@ COPY pyproject.toml uv.lock README.md ./
 # imports it. `--no-install-project` keeps the project itself out of the venv, so a
 # sandbox's interpreter finds no anyplot package on its path; the service imports
 # `agents.renderer` from the working directory, which uvicorn puts on `sys.path`.
-RUN uv venv && uv sync --frozen --no-install-project --extra lib-matplotlib --extra lib-seaborn
+# The `convert` extra (python-calamine, pyarrow) is the file conversion's readers
+# (`harness.py --convert`, agents/anyplot/render/convert.py).
+RUN uv venv && uv sync --frozen --no-install-project --extra lib-matplotlib --extra lib-seaborn --extra convert
+
+# pyarrow ships far more than the converter reads (owner decision of 2026-10-15: slim it).
+# The conversion needs the core, compute, IPC, Feather and Parquet; it never touches
+# Flight, the cloud and HDFS filesystems, ORC, Substrait's Python module, Parquet
+# encryption or the C++ test module, nor the headers, Cython sources and tests a build
+# against pyarrow would use. libarrow_substrait itself stays: `lib` links it. Of the
+# three identical copies of libarrow_python only the one the modules load by its soname
+# stays. 163 MB installed become 99 MB; the CI job converts every format inside the
+# built image (`tests/image/convert_smoke.py`), so a removed file that is needed fails it.
+RUN p=.venv/lib/python3.13/site-packages/pyarrow \
+    && du -sh "$p" \
+    && rm -rf "$p/include" "$p/includes" "$p/src" "$p/tests" \
+    && find "$p" \( -name '*.pxd' -o -name '*.pyx' -o -name '*.pxi' \) -delete \
+    && rm -f "$p"/_flight.cpython-*.so "$p"/libarrow_flight.so.* "$p"/libarrow_python_flight.so* \
+        "$p"/_s3fs.cpython-*.so "$p"/libarrow_s3.so.* \
+        "$p"/_azurefs.cpython-*.so "$p"/_gcsfs.cpython-*.so "$p"/_hdfs.cpython-*.so \
+        "$p"/_orc.cpython-*.so "$p"/_dataset_orc.cpython-*.so \
+        "$p"/_substrait.cpython-*.so "$p"/_pyarrow_cpp_tests.cpython-*.so \
+        "$p"/_parquet_encryption.cpython-*.so "$p"/_dataset_parquet_encryption.cpython-*.so \
+        "$p"/libarrow_python_parquet_encryption.so* \
+        "$p"/libarrow_python.so "$p"/libarrow_python.so.*.*.* \
+    && du -sh "$p" \
+    && .venv/bin/python -c "import pyarrow.parquet, pyarrow.feather, pyarrow.ipc, pyarrow.compute"
 
 # The image does not install the project, so its version is written to a file
 # that `GET /status` reports.
@@ -96,6 +121,7 @@ COPY agents/__init__.py ./agents/__init__.py
 COPY agents/renderer/ ./agents/renderer/
 COPY --from=builder /app/VERSION ./agents/renderer/VERSION
 COPY agents/anyplot/render/harness.py /opt/anyplot/harness.py
+COPY agents/anyplot/render/convert.py /opt/anyplot/convert.py
 
 # The fallback fonts and their OFL notices. matplotlib scans /usr/share/fonts
 # recursively without fontconfig (font_manager.findSystemFonts), so one

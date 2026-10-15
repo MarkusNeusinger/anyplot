@@ -554,6 +554,7 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
             onParse={(text, source) => void session.parseData(text, false, source)}
             onConfirmTranscription={() => void session.confirmTranscription()}
             onTrack={trackEvent}
+            onConvert={session.convertFile}
             onDiscardTranscription={session.discardTranscription}
             onSendFormula={() => void session.sendFormula()}
             onBind={session.setBinding}

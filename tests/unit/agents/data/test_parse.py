@@ -2418,3 +2418,46 @@ class TestApiJson:
         assert parse_dataset(json.dumps({"a": [1, 2], "b": [3, 4]})).profile.source_format == "json_columns"
         assert parse_dataset(json.dumps([["x", 1], ["y", 2]])).profile.source_format == "json_pairs"
         assert parse_dataset(json.dumps([{"a": 1}, {"a": 2}])).context_lines == []
+
+
+class TestPreciseTimestamps:
+    """Owner rule of 2026-10-15: ISO timestamps keep every fraction digit and their UTC offset, typed as datetimes."""
+
+    @staticmethod
+    def column(text: str) -> tuple[str, list[str], Any]:
+        parsed = parse_dataset(text)
+        frame = pd.read_csv(
+            io.StringIO(parsed.csv), dtype=pandas_dtypes(parsed.column_dtypes), parse_dates=parsed.parse_dates
+        )
+        cells = [row.split(",")[0] for row in parsed.csv.splitlines()[1:]]
+        return parsed.column_dtypes["t"], cells, frame["t"]
+
+    def test_nanoseconds_and_an_offset_round_trip_exactly(self) -> None:
+        dtype, cells, loaded = self.column("t,v\n2024-01-01 10:00:00.123456789+01:00,1\n2024-01-01T10:00:01.5+0100,2\n")
+        assert dtype == "datetime"
+        assert cells == ["2024-01-01T10:00:00.123456789+01:00", "2024-01-01T10:00:01.500000000+01:00"]
+        assert str(loaded.dtype) == "datetime64[ns, UTC+01:00]"
+        assert loaded[0] == pd.Timestamp("2024-01-01T10:00:00.123456789+01:00")
+
+    def test_z_is_utc_and_naive_fractions_stay_naive(self) -> None:
+        assert self.column("t\n2024-01-01T10:00:00Z\n")[1] == ["2024-01-01T10:00:00+00:00"]
+        dtype, cells, loaded = self.column("t\n2024-01-01T10:00:00.25\n2024-01-01T10:00:00\n")
+        assert cells == ["2024-01-01T10:00:00.25", "2024-01-01T10:00:00.00"] and loaded.dt.tz is None
+        assert loaded[0] == pd.Timestamp("2024-01-01T10:00:00.25")
+
+    def test_several_offsets_are_written_in_utc_and_said(self) -> None:
+        parsed = parse_dataset("t,v\n2024-01-01T10:00:00+01:00,1\n2024-07-01T10:00:00+02:00,2\n")
+        assert parsed.csv.splitlines()[1:] == ["2024-01-01T09:00:00+00:00,1", "2024-07-01T08:00:00+00:00,2"]
+        assert any("+01:00, +02:00 written in UTC" in warning for warning in parsed.warnings)
+
+    def test_cells_with_and_without_an_offset_are_no_date_column(self) -> None:
+        assert parse_dataset("t\n2024-01-01T10:00:00+01:00\n2024-01-02T10:00:00\n").column_dtypes["t"] == "text"
+
+    def test_the_profile_names_the_exact_extremes(self) -> None:
+        profile = parse_dataset("t\n2024-01-01T10:00:00.000000002\n2024-01-01T10:00:00.000000001\n").profile
+        (column,) = profile.columns
+        assert (column.min, column.max) == ("2024-01-01T10:00:00.000000001", "2024-01-01T10:00:00.000000002")
+
+    def test_plain_dates_and_minutes_are_written_as_before(self) -> None:
+        assert self.column("t\n2024-01-05\n2024-02-03\n")[1] == ["2024-01-05", "2024-02-03"]
+        assert self.column("t\n2024-01-05 10:30\n2024-02-03\n")[1] == ["2024-01-05T10:30:00", "2024-02-03T00:00:00"]

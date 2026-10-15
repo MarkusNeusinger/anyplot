@@ -5,7 +5,7 @@ import {
   initialAgentState,
   type TranscriptionState,
 } from 'src/hooks/useAgentSession';
-import type { RoleSpec } from 'src/lib/agent';
+import { AgentApiError, type ConvertAnswer, type RoleSpec } from 'src/lib/agent';
 import { bindingRows } from 'src/sections/agent-chat/bindings';
 import { DataPanel } from 'src/sections/agent-chat/DataPanel';
 import { fireEvent, render, screen, userEvent, waitFor, within } from 'src/test-utils';
@@ -1093,7 +1093,10 @@ describe('DataPanel file drop', () => {
     ...overrides,
   });
 
-  function renderPanel(state: AgentSessionState = emptyState()) {
+  function renderPanel(
+    state: AgentSessionState = emptyState(),
+    onConvert?: (dataBase64: string, sheet?: string) => Promise<ConvertAnswer>
+  ) {
     const onParse = vi.fn();
     const onConfirmTranscription = vi.fn();
     const onTrack = vi.fn();
@@ -1108,6 +1111,7 @@ describe('DataPanel file drop', () => {
         onConfirmData={vi.fn()}
         onUndo={vi.fn()}
         onTrack={onTrack}
+        onConvert={onConvert}
       />
     );
     return { ...view, onParse, onConfirmTranscription, onTrack };
@@ -1289,27 +1293,168 @@ describe('DataPanel file drop', () => {
     expect(screen.getByRole('button', { name: 'Open a data file' })).toBeDisabled();
   });
 
-  it('answers a workbook and a pickle by their format', async () => {
-    const { onTrack } = renderPanel();
-    const zip = new Uint8Array([0x50, 0x4b, 0x03, 0x04, 0, 0, 0, 0]);
+  const ZIP = new Uint8Array([0x50, 0x4b, 0x03, 0x04, 0, 0, 0, 0]);
+  const workbook = (name = 'Bericht.xlsx') => new File([ZIP], name);
+  const answer = (overrides: Partial<ConvertAnswer> = {}): ConvertAnswer => ({
+    text: 'Report 2024\n\nmonth,revenue\nJan,120\n',
+    format: 'csv',
+    kind: 'xlsx',
+    rows: 4,
+    columns: 2,
+    sheet: '2024',
+    sheets: ['2024', '2025'],
+    sheet_count: 2,
+    warnings: {},
+    dropped: [],
+    ...overrides,
+  });
 
-    drop(new File([zip], 'sales.xlsx'));
+  it('sends a workbook to the server as base64 and fills the box with its sheet, the sheet in the source', async () => {
+    const onConvert = vi.fn(async () => answer({ warnings: { formulas_without_value: 3 } }));
+    const { onParse, onTrack } = renderPanel(emptyState(), onConvert);
+
+    drop(workbook());
+
+    await waitFor(() => expect(box()).toHaveValue('Report 2024\n\nmonth,revenue\nJan,120\n'));
+    expect(onConvert).toHaveBeenCalledWith(btoa(String.fromCharCode(...ZIP)), undefined);
+    expect(screen.getByTestId('file-status')).toHaveTextContent(
+      '# read "Bericht.xlsx" on the server: sheet "2024" of xlsx · 4 rows × 2 columns · 3 lines · 3 formula cells saved without a value'
+    );
+    expect(onTrack).toHaveBeenCalledWith('agent_data_file', {
+      kind: 'xlsx',
+      encoding: 'none',
+      outcome: 'filled',
+    });
+    await userEvent.click(screen.getByRole('button', { name: '.parse()' }));
+    expect(onParse).toHaveBeenCalledWith(
+      'Report 2024\n\nmonth,revenue\nJan,120\n',
+      'Bericht.xlsx · sheet "2024"'
+    );
+  });
+
+  it('names the columns the server left out', async () => {
+    const onConvert = vi.fn(async () =>
+      answer({
+        sheet: null,
+        sheets: [],
+        warnings: { dropped_columns: 3 },
+        dropped: ['span', 'raw'],
+      })
+    );
+    renderPanel(emptyState(), onConvert);
+
+    drop(workbook());
+
+    await waitFor(() =>
+      expect(screen.getByTestId('file-status')).toHaveTextContent(
+        '3 columns of durations, intervals, binary, map or nested values left out: "span", "raw" and 1 more'
+      )
+    );
+  });
+
+  it('offers the other sheets and reads the chosen one again on the server', async () => {
+    const onConvert = vi.fn(async (_data: string, sheet?: string) =>
+      sheet === '2025' ? answer({ text: 'a,b\n1,2\n', sheet: '2025' }) : answer()
+    );
+    const { onParse, onTrack } = renderPanel(emptyState(), onConvert);
+
+    drop(workbook());
+    const picker = (await screen.findByLabelText(/# sheet/)) as HTMLSelectElement;
+    expect(picker).toHaveValue('2024');
+    expect(
+      within(picker)
+        .getAllByRole('option')
+        .map(option => option.textContent)
+    ).toEqual(['2024', '2025']);
+
+    await userEvent.selectOptions(picker, '2025');
+    // The box still held this file's own text, so the new sheet replaces it without a question.
+    await waitFor(() => expect(box()).toHaveValue('a,b\n1,2\n'));
+    expect(onConvert).toHaveBeenLastCalledWith(expect.any(String), '2025');
+    expect(onTrack).toHaveBeenLastCalledWith('agent_data_file', {
+      kind: 'xlsx',
+      encoding: 'none',
+      outcome: 'sheet',
+    });
+    await userEvent.click(screen.getByRole('button', { name: '.parse()' }));
+    expect(onParse).toHaveBeenCalledWith('a,b\n1,2\n', 'Bericht.xlsx · sheet "2025"');
+  });
+
+  it('asks before a new sheet replaces text the user edited', async () => {
+    const onConvert = vi.fn(async (_data: string, sheet?: string) =>
+      sheet ? answer({ text: 'a,b\n1,2\n', sheet }) : answer()
+    );
+    renderPanel(emptyState(), onConvert);
+    drop(workbook());
+    const picker = await screen.findByLabelText(/# sheet/);
+    await userEvent.type(box(), 'x');
+
+    await userEvent.selectOptions(picker, '2025');
+
+    expect(await screen.findByTestId('file-replace')).toHaveTextContent(
+      'replace the text in the box with "Bericht.xlsx · sheet "2025"" (2 lines)?'
+    );
+  });
+
+  it('names the counts of a refused file and keeps the box', async () => {
+    const onConvert = vi.fn(async () => {
+      throw new AgentApiError(422, 'file_too_many_rows', 'ref-1', [], null, {
+        measured: 21000,
+        limit: 20000,
+      });
+    });
+    const { onTrack } = renderPanel(emptyState(), onConvert);
+
+    drop(workbook('big.xlsx'));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      '"sales.xlsx" is a spreadsheet: reading Excel and ODS files comes in a later step'
+      '"big.xlsx" has more rows than a table may have; filter it, or copy a range and paste it (21,000 rows, the cap is 20,000) · ref ref-1'
     );
+    expect(box()).toHaveValue('');
     expect(onTrack).toHaveBeenCalledWith('agent_data_file', {
       kind: 'spreadsheet',
       encoding: 'none',
       outcome: 'refused',
     });
+  });
 
-    drop(new File([new Uint8Array([0x80, 0x05, 0x95])], 'frame.pkl'));
+  it('waits for a conversion: .parse() and .open() hold, and a second file is refused', async () => {
+    let finish: (value: ConvertAnswer) => void = () => undefined;
+    const onConvert = vi.fn(
+      () =>
+        new Promise<ConvertAnswer>(resolve => {
+          finish = resolve;
+        })
+    );
+    renderPanel(emptyState(), onConvert);
+
+    drop(workbook());
     await waitFor(() =>
-      expect(screen.getByRole('alert')).toHaveTextContent(
-        'never read because loading one can run code'
+      expect(screen.getByTestId('file-status')).toHaveTextContent(
+        '# reading "Bericht.xlsx" on the server …'
       )
     );
+    expect(screen.getByRole('button', { name: 'Open a data file' })).toBeDisabled();
+
+    drop(csvFile());
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'a file is still being read on the server'
+    );
+    expect(onConvert).toHaveBeenCalledTimes(1);
+
+    finish(answer());
+    await waitFor(() => expect(box()).toHaveValue('Report 2024\n\nmonth,revenue\nJan,120\n'));
+  });
+
+  it('answers a pickle by its format, without the server', async () => {
+    const onConvert = vi.fn();
+    renderPanel(emptyState(), onConvert);
+
+    drop(new File([new Uint8Array([0x80, 0x05, 0x95])], 'frame.pkl'));
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'never read because loading one can run code'
+    );
+    expect(onConvert).not.toHaveBeenCalled();
     expect(box()).toHaveValue('');
   });
 
