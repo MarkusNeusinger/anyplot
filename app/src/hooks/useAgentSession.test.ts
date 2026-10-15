@@ -436,6 +436,29 @@ describe('useAgentSession: data and bindings', () => {
     expect(result.current.state.bindings).toEqual({ x: 'Study Hours', y: 'Exam Score' });
   });
 
+  it('keeps the stored paste for the table picker and sends its table, never a failed parse', async () => {
+    const routes = baseRoutes();
+    const { result } = await openSession(routes);
+    await act(() => result.current.parseData('a,b\n1,2\n\nc,d\n3,4\n', false, 'r.xlsx'));
+    expect(result.current.state.dataset?.paste).toEqual({
+      text: 'a,b\n1,2\n\nc,d\n3,4\n',
+      source: 'r.xlsx',
+    });
+
+    routes['POST /sessions/S1/dataset'] = () => json(422, { detail: 'unparseable', ref: 'r1' });
+    await act(() => result.current.parseData('broken', false));
+    expect(result.current.state.dataset?.paste?.text).toBe('a,b\n1,2\n\nc,d\n3,4\n');
+
+    routes['POST /sessions/S1/dataset'] = () => json(200, DATASET);
+    await act(() => result.current.parseData('a,b\n1,2\n\nc,d\n3,4\n', false, 'r.xlsx', 2));
+    const posted = calls.filter(call => call.path.endsWith('/dataset')).map(call => call.body);
+    expect(posted[posted.length - 1]).toEqual({
+      text: 'a,b\n1,2\n\nc,d\n3,4\n',
+      source: 'r.xlsx',
+      table: 2,
+    });
+  });
+
   it('reports a refused dataset as a guardrail block, without the data', async () => {
     const routes = baseRoutes();
     routes['POST /sessions/S1/dataset'] = () => json(403, { detail: 'data_refused', ref: 'r9' });

@@ -114,6 +114,8 @@
  * text that looks like a formula answers `422 formula`. `POST .../dataset/convert`
  * (a dropped binary file) answers by the first bytes: a zip is a workbook with two
  * sheets, Parquet one table, bytes holding "TOO_MANY_ROWS" the row-cap refusal.
+ * Pasted text with two or more comma tables separated by a blank line answers
+ * `tables` and `table` and reads the first one, or the body's `table`.
  *
  * Environment: PORT (8010), MOCK_STEP_MS (700, per pipeline step),
  * MOCK_QUEUE_MS (2500, per queue position), MOCK_QUEUE (2, the starting
@@ -1652,9 +1654,26 @@ async function route(req, res) {
     if (Buffer.byteLength(text, 'utf8') > MAX_DATASET_BYTES) return fail(res, 413, 'too_long', ref);
     if (/ignore previous/i.test(text)) return fail(res, 403, 'data_refused', ref);
     await sleep(PARSE_MS);
+    // Several tables, each under its own header after a blank line (the service's `_one_table`): the mock reads
+    // blocks of three or more comma lines (a caption line above them left out), the first one or the chosen `table`.
+    const blocks = text
+      .split(/\r?\n\s*\r?\n/)
+      .map(block => {
+        const lines = block.trim().split(/\r?\n/);
+        const start = lines.findIndex(line => line.includes(','));
+        return start < 0 ? [] : lines.slice(start);
+      })
+      .filter(lines => lines.length >= 3);
+    const table = Number.isInteger(body?.table) ? body.table : 1;
+    if (blocks.length < 2 && table > 1) return fail(res, 422, 'unparseable', ref);
+    if (blocks.length >= 2 && table > blocks.length) return fail(res, 422, 'unparseable', ref);
+    const tables =
+      blocks.length >= 2
+        ? blocks.map(lines => `${lines[0].split(',').join(', ')} · ${lines.length - 1} rows`)
+        : null;
     let parsed;
     try {
-      parsed = parseDataset(text);
+      parsed = parseDataset(tables ? blocks[table - 1].join('\n') : text);
     } catch {
       // A formula ("zeichne sin(x) von -pi bis pi") is never transcribed: a model would compute
       // its rows. The service answers 422 formula; the page points to the chat's generate_data.
@@ -1681,6 +1700,7 @@ async function route(req, res) {
         ...datasetPayload(session),
         // A dropped file's name, kept apart from the notes as the service does (unscreened here).
         ...(typeof body?.source === 'string' ? { file_name: body.source.slice(0, 80) } : {}),
+        ...(tables ? { tables, table } : {}),
         roles: SPECS[session.specId].roles,
         language: { language: session.language, source: session.languageSource },
       },

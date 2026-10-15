@@ -92,7 +92,10 @@
  * hidden sheets, columns left out); a refusal names its numbers. A workbook
  * with several sheets keeps the file in the page and offers a sheet picker,
  * which reads the chosen sheet again: over the file's own untouched text at
- * once, over an edited box after `.replace()`.
+ * once, over an edited box after `.replace()`. Text with several tables one
+ * below the other (a report sheet) is read as its first table, and a table
+ * picker beside the preview parses the same text again for another one
+ * (`tables` in the dataset route's answer).
  */
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
@@ -116,6 +119,7 @@ import {
   longSuggestion,
   MAX_DATASET_BYTES,
   MAX_MESSAGE_CHARS,
+  tableChoice,
   toBase64,
   utf8Bytes,
 } from 'src/lib/agent';
@@ -720,8 +724,11 @@ function convertedRead(answer: ConvertAnswer): string {
 
 interface DataPanelProps {
   state: AgentSessionState;
-  /** `.parse()`; `source` is the name of the file the text was read from, if it was. */
-  onParse: (text: string, source?: string) => void;
+  /**
+   * `.parse()`; `source` is the name of the file the text was read from, if it was;
+   * `table` reads another of the tables the stored paste named (the table picker).
+   */
+  onParse: (text: string, source?: string, table?: number) => void;
   /** `.use()` on a transcription; the session keeps the file's name with the table it was read from. */
   onConfirmTranscription: () => void;
   onDiscardTranscription: () => void;
@@ -827,6 +834,10 @@ export function DataPanel({
   const rows = bindingRows(state.roles, state.bindings, columns.length);
   // The service's wide-table offer, checked again here: the dataset route's answer is not typed.
   const suggestion = longSuggestion(dataset?.parsed.suggestion);
+  // A paste of several tables: the picker reads another one (live test round 5 of 2026-10-15). The text
+  // is the stored paste's own (`DatasetState.paste`): an edit of the box or a failed parse since does not count.
+  const paste = dataset?.paste;
+  const choice = dataset && paste ? tableChoice(dataset.parsed) : null;
 
   // `.show()` from far down the thread opens the card at the top of the thread,
   // out of view: bring its top in below the pinned header (the page's
@@ -875,6 +886,12 @@ export function DataPanel({
   const handleParse = () => {
     if (source) onParse(text, source);
     else onParse(text);
+  };
+
+  // The table picker: the stored paste's text again, another of its tables.
+  const handleTable = (table: number) => {
+    if (!paste || !ready || busy || converting || table === choice?.table) return;
+    onParse(paste.text, paste.source, table);
   };
 
   const trackFile = (kind: string, encoding: FileEncoding | null, outcome: FileOutcome) =>
@@ -1529,6 +1546,35 @@ export function DataPanel({
               </Box>
             )}
           </Box>
+
+          {/* The other tables of the pasted text (a report sheet with two tables one below the
+              other): a choice parses the same text again and reads that table. */}
+          {choice && (
+            <Box
+              data-testid="data-tables"
+              sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1, minWidth: 0 }}
+            >
+              <Box component="label" htmlFor="agent-data-table" sx={labelSx}>
+                # table ({choice.tables.length})
+              </Box>
+              <Box
+                component="select"
+                id="agent-data-table"
+                value={choice.table}
+                disabled={!ready || busy || converting}
+                onChange={(event: React.ChangeEvent<HTMLSelectElement>) =>
+                  handleTable(Number(event.target.value))
+                }
+                sx={{ ...nativeControlSx, maxWidth: '100%', minWidth: 0 }}
+              >
+                {choice.tables.map((label, index) => (
+                  <option key={index} value={index + 1}>
+                    {`${index + 1} · ${label}`}
+                  </option>
+                ))}
+              </Box>
+            </Box>
+          )}
 
           <WarningList warnings={dataset.parsed.warnings} />
 

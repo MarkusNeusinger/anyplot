@@ -262,6 +262,12 @@ export interface DatasetState {
   parsed: DatasetParsed;
   /** UTF-8 size of the pasted text, for the analytics bucket; a later version keeps it. */
   bytes: number;
+  /**
+   * The paste this version was parsed from, the text and the file's name, for
+   * the table picker, which parses the same text again for another table; only
+   * a stored paste carries it, so a failed parse never replaces it.
+   */
+  paste?: { text: string; source?: string };
 }
 
 /**
@@ -376,7 +382,12 @@ type Action =
   | { type: 'open_failed'; phase: SessionPhase; failure: Failure | null }
   | { type: 'unauthorized' }
   | { type: 'parse_start' }
-  | { type: 'parse_done'; parsed: DatasetParsed; bytes: number }
+  | {
+      type: 'parse_done';
+      parsed: DatasetParsed;
+      bytes: number;
+      paste?: { text: string; source?: string };
+    }
   /** `formula` is the refused text of a `422 formula` or `422 code`, which is no error to show. */
   | { type: 'parse_failed'; failure: Failure; formula?: string; formulaKind?: FormulaKind }
   /** The refused formula went to the chat as a turn. */
@@ -593,6 +604,9 @@ function withDataVersion(
     dataset: {
       parsed: { ...parsed, roles, version: versionOf(parsed.version) },
       bytes: state.dataset?.bytes ?? 0,
+      // The paste stays with every version made from it (Fable review of #12200); the picker itself shows only
+      // beside an answer that names `tables`, which only the paste route gives.
+      ...(state.dataset?.paste ? { paste: state.dataset.paste } : {}),
     },
     roles,
     bindings,
@@ -725,6 +739,7 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
         dataset: {
           parsed: { ...action.parsed, version: versionOf(action.parsed.version) },
           bytes: action.bytes,
+          ...(action.paste ? { paste: action.paste } : {}),
         },
         dataChange: null,
         undoError: null,
@@ -1524,10 +1539,11 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
    * its default bindings are applied, and the assistant's summary of it follows
    * as the turn `summarize_data`; the returned promise ends with that turn.
    * Text that is no table comes back as a transcription to decide on, which
-   * stores nothing and asks for no summary.
+   * stores nothing and asks for no summary. `table` reads another of the
+   * tables the previous answer named (the data panel's table picker).
    */
   const parseData = useCallback(
-    async (text: string, confirmed = false, source?: string) => {
+    async (text: string, confirmed = false, source?: string, table?: number) => {
       const sid = stateRef.current.sessionId;
       if (!sid || !text.trim() || busy()) return;
       const bytes = utf8Bytes(text);
@@ -1541,7 +1557,7 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
       parseRef.current = true;
       safeDispatch({ type: 'parse_start' });
       try {
-        const parsed = await agentApi.uploadDataset(token, sid, text, confirmed, source);
+        const parsed = await agentApi.uploadDataset(token, sid, text, confirmed, source, table);
         if (isTranscribed(parsed)) {
           // Free text read into a table: shown for the user to confirm, not stored.
           safeDispatch({
@@ -1559,7 +1575,13 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
           trackEvent('agent_data_parsed', { status: 'transcribed', size_bucket: bucket });
           return;
         }
-        safeDispatch({ type: 'parse_done', parsed, bytes });
+        safeDispatch({
+          type: 'parse_done',
+          parsed,
+          bytes,
+          // The text of a paste the table picker may read again (a confirmed transcription is never split).
+          ...(confirmed ? {} : { paste: { text, ...(source ? { source } : {}) } }),
+        });
         // A paste before any typed message may set the session language from its notes or headers.
         const pastedLanguage = readPlotLanguage(parsed.language);
         if (pastedLanguage) safeDispatch({ type: 'language_sync', plotLanguage: pastedLanguage });

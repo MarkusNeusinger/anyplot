@@ -60,7 +60,13 @@ The operations:
   a day over 12) stays as it is (see `_reread_dates`).
 * `aggregate`: group by one or two key columns and reduce one value column with `sum`,
   `mean`, `count`, `min` or `max`. A `period` turns every datetime key into `YYYY-MM`,
-  `YYYY-Qn` or `YYYY` text before grouping. The result holds the key columns and one
+  `YYYY-Qn` or `YYYY` text before grouping, or, since live test round 5 of 2026-10-15
+  ("Tagesmittel pro Sensor" on readings every 13 minutes), into the first moment of its
+  `hour`, `day` or ISO `week` (its Monday), which stays a datetime, so the result keeps
+  a time axis: a day and a week are written as dates, an hour with its time and offset.
+  The buckets follow the column's clock as stored: a column with one UTC offset is cut
+  at its own midnight, one the parser wrote in UTC (several offsets) at UTC midnight,
+  and the change line names that offset. The result holds the key columns and one
   value column named like the source, or `count`; every other column is dropped, rows
   with a missing key form their own group, and the rows are sorted by the keys.
 * `pivot_longer`: 2 to 20 columns become a `names_to`/`values_to` pair (long format,
@@ -131,7 +137,11 @@ only `is_missing`. `contains` searches the cell's canonical text, case-sensitive
 What the canonical CSV does not say about its columns travels with the frame as
 `_Carried`: the columns the parser read by guess, the columns kept text, and whether a
 datetime column is written with its time (the parser's choice, read from the profile),
-so a column no operation touched is written back exactly as it was stored.
+so a column no operation touched is written back exactly as it was stored. A number is
+written in its canonical form, as the parser writes it (`parse.number_text`): a whole
+number below 2**53 without `.0` (`87000`, `2`; owner decision of 2026-10-15, live test
+round 5: `30` and `30.0` are the same number), any other value in its shortest exact
+form, and a whole number past 2**53 with the `.0` that shows a float holds it.
 
 Errors raise `PrepareError(code, message)`: `unknown_column`, `type_mismatch`,
 `empty_result` (no rows or no columns would remain), `too_wide` and
@@ -204,7 +214,9 @@ DateFormat = Literal[
 ]
 Decimal = Literal[".", ","]
 How = Literal["sum", "mean", "count", "min", "max"]
-Period = Literal["month", "quarter", "year"]
+Period = Literal["hour", "day", "week", "month", "quarter", "year"]
+DATE_PERIODS = frozenset(("hour", "day", "week"))
+"""The periods whose bucket stays a datetime, its first moment (`_period_starts`); the others become text labels."""
 Kind = Literal["number", "datetime", "boolean", "text"]
 DeriveHow = Literal["ratio", "difference", "sum", "share", "percent_change", "cumsum", "index"]
 ORDERED: frozenset[str] = frozenset(("percent_change", "cumsum", "index"))
@@ -797,7 +809,10 @@ def _aggregate(frame: pd.DataFrame, op: Aggregate, carried: _Carried) -> tuple[p
         raise PrepareError("invalid_operation", f"a key column is already named '{value_name}'")
 
     work = frame[[*keys, op.column]].copy()
-    if op.period:
+    if op.period in DATE_PERIODS:
+        for name in date_keys:
+            work[name] = _period_starts(work[name], op.period)
+    elif op.period:
         for name in date_keys:
             work[name] = _period_labels(work[name], op.period)
     if value_kind == "boolean" and op.how in ("sum", "mean"):
@@ -825,10 +840,18 @@ def _aggregate(frame: pd.DataFrame, op: Aggregate, carried: _Carried) -> tuple[p
     result = aggregated.reset_index()
     result.columns = pd.Index([*keys, value_name])
     carried.keep_only([*keys, value_name])
-    if op.period:
+    if op.period in DATE_PERIODS:
+        # Each key is the bucket's first moment: a date for a day or an ISO week (its Monday), a time for an hour.
+        carried.forget(date_keys)
+        carried.with_time.update(dict.fromkeys(date_keys, op.period == "hour"))
+    elif op.period:
         carried.forget(date_keys)  # period labels are text now
 
-    by = " and ".join(keys) + (f" ({op.period})" if op.period else "")
+    period = _PERIOD_WORDS.get(op.period, op.period) if op.period else ""
+    zones = sorted({str(frame[name].dt.tz) for name in date_keys if frame[name].dt.tz is not None})
+    if op.period in DATE_PERIODS and zones:
+        period += f", by the clock of {', '.join(zones)}"  # the column's own offset decides where a day ends
+    by = " and ".join(keys) + (f" ({period})" if period else "")
     change = f"{_VERBS[op.how]} {op.column} by {by}: {_count(len(result), 'row')}"
     other = frame.shape[1] - len(keys) - 1
     if other:
@@ -1739,6 +1762,25 @@ def _check_failed(column: str, failed: int, present: int, what: str) -> None:
         raise PrepareError("type_mismatch", f"column '{column}': {failed} of {present} cells cannot be read as {what}")
 
 
+_PERIOD_WORDS = {"week": "ISO week, each as its Monday", "hour": "hour", "day": "day"}
+
+
+def _period_starts(series: pd.Series, period: str) -> pd.Series:
+    """Every moment as the first moment of its hour, day or ISO week (Monday 00:00), still a datetime.
+
+    The bucket follows the wall clock of the column as stored: a column with one UTC offset
+    (`+01:00`) is cut at its own midnight, a column the parser converted to UTC (mixed offsets)
+    at UTC midnight, a naive column as written. The offset stays on the value, so an hour
+    keeps it in `data.csv`; a day and a week are written as dates (`_cell_text`).
+    """
+    if period == "hour":
+        return pd.Series(series.dt.floor("h"), index=series.index)
+    days = pd.Series(series.dt.normalize(), index=series.index)
+    if period == "day":
+        return days
+    return pd.Series(days - pd.to_timedelta(days.dt.weekday, unit="D"), index=series.index)
+
+
 def _period_labels(series: pd.Series, period: str) -> pd.Series:
     labels: list[str | None] = []
     for value in series:
@@ -1801,7 +1843,12 @@ def _cell_text(value: object, with_time: bool) -> str | None:
         return str(int(value))
     if isinstance(value, float | np.floating):
         number = float(value)
-        return None if math.isnan(number) else repr(number)
+        if math.isnan(number):
+            return None
+        text = repr(number)
+        # A whole number in its canonical form, as the parser writes it (`parse.number_text`); past 2**53 the `.0`
+        # stays, since there a float may hold a whole number only rounded, which its form shows.
+        return text[:-2] if text.endswith(".0") and abs(number) < _FLOAT_EXACT else text
     if isinstance(value, pd.Timestamp):
         # Every digit and the offset as the value holds them (owner rule of 2026-10-15): a fraction is written
         # only when there is one, an offset only for a zone-aware value.

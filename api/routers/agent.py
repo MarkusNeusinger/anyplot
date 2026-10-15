@@ -96,6 +96,7 @@ MAX_REQUEST_BODY_BYTES = MAX_CONVERT_BASE64_CHARS + 4096
 (the paste's 1 MB of text stays far below even with every character escaped)."""
 CONVERT_PATH_SUFFIX = "/dataset/convert"
 MAX_SHEET_NAME_CHARS = 255
+MAX_DATASET_TABLES = 10  # agents/anyplot/data/parse.py MAX_TABLES: the tables of one paste the page may choose from
 MAX_MESSAGE_CHARS = 2000
 MAX_FEEDBACK_CHARS = 500
 """The cap of a feedback message after the strip, the site feedback's own (`api/routers/feedback.py`)."""
@@ -515,6 +516,9 @@ class DatasetBody(_StrictBody):
     # service sanitises and screens it and keeps it apart from the notes (`file_name` in the answer, never a
     # request to the assistant); it is never logged.
     source: Annotated[str, Field(min_length=1, max_length=1_024)] | None = None
+    # Which of several tables in `text` to read (the page's table picker, from the previous answer's
+    # `tables`, 1-based); the agents service reads the first without it.
+    table: Annotated[int, Field(strict=True, ge=1, le=MAX_DATASET_TABLES)] | None = None
 
 
 class ConvertBody(_StrictBody):
@@ -1041,9 +1045,10 @@ async def switch_library(
 
 @router.post("/sessions/{sid}/dataset")
 async def upload_dataset(sid: SessionId, body: DatasetBody, ctx: Ctx, client: Client) -> Any:
-    """Parse pasted data (`{text, confirmed?, source?}`, `source` the name of a dropped file, which the agents
-    service screens and answers as `file_name`, never as a note): `{preview, profile, bindings, warnings,
-    context_lines, roles, language, file_name?}`, stored
+    """Parse pasted data (`{text, confirmed?, source?, table?}`, `source` the name of a dropped file, which the
+    agents service screens and answers as `file_name`, never as a note; `table` which of several tables in the
+    text to read): `{preview, profile, bindings, warnings, context_lines, roles, language, file_name?, tables?,
+    table?}`, stored (`tables`: one label per table when the text held two or more, `table` the one read;
     (`context_lines`: the notes pasted above or below the table that the assistant reads with the data;
     `language`: the session language as `{language, source}`, source `pasted` when the notes' or the column
     names' language set it before any typed message or choice); or, for free text the
@@ -1060,6 +1065,8 @@ async def upload_dataset(sid: SessionId, body: DatasetBody, ctx: Ctx, client: Cl
         payload["confirmed"] = True
     if body.source is not None:
         payload["source"] = body.source
+    if body.table is not None:
+        payload["table"] = body.table
     return await _call_upstream(client, ctx, "POST", f"/sessions/{sid}/dataset", json_body=payload)
 
 

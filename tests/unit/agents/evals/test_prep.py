@@ -79,9 +79,10 @@ class TestFixtures:
         locales = Counter(item.locale for item in cases)
         ops = {operation["op"] for item in cases for operation in item.expected_operations}
 
-        # 29 single-step cases (two of them `derive`, two `make_date`, one month-only date format, one sort of month
-        # names), 10 `hard` ones (chains, ambiguity, unsupported asks) and 11 data-code cases.
-        assert len(cases) == 50
+        # 30 single-step cases (two of them `derive`, two `make_date`, one month-only date format, one sort of month
+        # names, one daily mean per sensor), 10 `hard` ones (chains, ambiguity, unsupported asks) and 11 data-code
+        # cases.
+        assert len(cases) == 51
         assert {item.locale for item in cases if "derive" in item.tags} == {"de", "en"}
         assert sum(1 for item in cases if "hard" in item.tags) == 10
         assert locales["de"] >= 5 and locales["en"] >= 5
