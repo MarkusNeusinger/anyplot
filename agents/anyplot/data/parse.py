@@ -866,7 +866,8 @@ def _read_delimited(
 MIN_TABLE_ROWS = 2
 """The rows right under a header after a blank line that make it a table of its own (`_table_starts`)."""
 MAX_TABLES = 10
-"""The tables of one paste that can be chosen (`parse_dataset(table=...)`); a later one stays part of the tenth."""
+"""The tables of one paste that can be chosen (`parse_dataset(table=...)`) and are labelled; a later one is counted
+in the warning only, never read and never joined to the tenth."""
 MAX_TABLE_LABEL_CHARS = 80
 MAX_TABLES_NAMED = 3  # the left-out tables the warning names before it counts the rest
 
@@ -891,23 +892,26 @@ def _one_table(
     every table), so `table_block` finds its header, its notes and its summary rows as for a
     single table. One warning names the table read and the ones left out; `tables` gets one
     label per table (its header and its row count), which the dataset route answers so the
-    page can offer the others, as it offers a workbook's other sheets. Fewer than two tables
-    leave the records as they are.
+    page can offer the others, as it offers a workbook's other sheets. Only the first
+    `MAX_TABLES` can be chosen and are labelled; every table keeps its own boundaries, so a
+    later one never joins the tenth (Copilot review of #12200). Fewer than two tables leave
+    the records as they are.
     """
-    starts = _table_starts([record for _, record in records], breaks)[:MAX_TABLES]
+    starts = _table_starts([record for _, record in records], breaks)
     if len(starts) < 2:
         if table > 1:
             raise ParseError("unparseable", f"the data holds one table; there is no table {table}")
         return records, spans
-    if table > len(starts):
-        raise ParseError("unparseable", f"the data holds {len(starts)} tables; there is no table {table}")
+    choosable = min(len(starts), MAX_TABLES)
+    if table > choosable:
+        raise ParseError("unparseable", f"the data holds {len(starts)} tables; table {table} cannot be read")
     lead = list(range(starts[0][1]))  # the lines above the first table's header: a title, notes
     regions: list[list[int]] = []
-    for index, (group, _) in enumerate(starts):
+    for index, (group, _) in enumerate(starts[:choosable]):
         end = starts[index + 1][0] if index + 1 < len(starts) else len(records)
         regions.append(list(range(end)) if index == 0 else [*lead, *range(group, end)])
     labels: list[str] = []
-    for (_, header), region in zip(starts, regions, strict=True):
+    for (_, header), region in zip(starts, regions, strict=False):
         block = table_block([records[index][1] for index in region])
         rows = block.end - block.start - 1
         names = ", ".join(name for cell in records[header][1] if (name := _clean_header(cell)[0]))
@@ -916,10 +920,11 @@ def _one_table(
         tables.extend(labels)
     others = [f"table {number} ({label})" for number, label in enumerate(labels, start=1) if number != table]
     named = ", ".join(others[:MAX_TABLES_NAMED])
-    if len(others) > MAX_TABLES_NAMED:
-        named += f" and {_count(len(others) - MAX_TABLES_NAMED, 'other table')}"
+    more = len(starts) - 1 - min(len(others), MAX_TABLES_NAMED)
+    if more:
+        named += f" and {_count(more, 'other table')}"
     warnings.append(
-        f"the data holds {len(labels)} tables, each under its own header; read table {table} "
+        f"the data holds {len(starts)} tables, each under its own header; read table {table} "
         f"({labels[table - 1]}) and left out {named}; the table picker in the data panel reads another one"
     )
     chosen = regions[table - 1]

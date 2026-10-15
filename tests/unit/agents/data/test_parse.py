@@ -2847,6 +2847,18 @@ class TestTables:
         text = "Land,Hauptstadt,Fläche\nCH,Bern,41285\nDE,Berlin,357588\n\nLand,2020,2021\nCH,1,2\nDE,3,4\n"
         assert parse_dataset(text, table=2).csv == "Land,2020,2021\nCH,1,2\nDE,3,4\n"
 
+    def test_tables_past_the_cap_keep_their_boundaries(self) -> None:
+        """Copilot review of #12200: the eleventh table had joined the tenth, its header a data row."""
+        text = "\n".join(f"a,b\nx{n},{n}\ny{n},{n + 0.5}\n" for n in range(11))
+        tenth = parse_dataset(text, table=10)
+
+        assert tenth.csv == "a,b\nx9,9\ny9,9.5\n"
+        assert len(tenth.tables) == 10
+        assert tenth.warnings[0].startswith("the data holds 11 tables, each under its own header; read table 10")
+        assert "and 7 other tables;" in tenth.warnings[0]  # 3 named of the 10 left out
+        with pytest.raises(ParseError):
+            parse_dataset(text, table=11)
+
 
 # Live test round 5 of 2026-10-15, generalised: R's `write.csv` writes the row names first under an empty header.
 R_EXPORT = (

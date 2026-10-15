@@ -779,8 +779,6 @@ export function DataPanel({
   const [converted, setConverted] = useState<ConvertedFile | null>(null);
   // The name of the file the box's text came from; typing keeps it, a text paste or an empty box drops it.
   const [source, setSource] = useState<string | null>(null);
-  // The text and file name of the last `.parse()`, which the table picker sends again with another table.
-  const [lastParse, setLastParse] = useState<{ text: string; source: string | null } | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const dragDepth = useRef(0);
   // The line under the box after a file: what was read (a live status), or why it was not (an alert).
@@ -836,8 +834,10 @@ export function DataPanel({
   const rows = bindingRows(state.roles, state.bindings, columns.length);
   // The service's wide-table offer, checked again here: the dataset route's answer is not typed.
   const suggestion = longSuggestion(dataset?.parsed.suggestion);
-  // A paste of several tables: the picker reads another one (live test round 5 of 2026-10-15).
-  const choice = dataset && lastParse ? tableChoice(dataset.parsed) : null;
+  // A paste of several tables: the picker reads another one (live test round 5 of 2026-10-15). The text
+  // is the stored paste's own (`DatasetState.paste`): an edit of the box or a failed parse since does not count.
+  const paste = dataset?.paste;
+  const choice = dataset && paste ? tableChoice(dataset.parsed) : null;
 
   // `.show()` from far down the thread opens the card at the top of the thread,
   // out of view: bring its top in below the pinned header (the page's
@@ -884,17 +884,14 @@ export function DataPanel({
 
   // `.parse()`: the file's name rides along only when the text came from a file.
   const handleParse = () => {
-    setLastParse({ text, source });
     if (source) onParse(text, source);
     else onParse(text);
   };
 
-  // The table picker: the text of the last `.parse()` again, another of its tables (an edit of
-  // the box since then does not count: the tables are that text's).
+  // The table picker: the stored paste's text again, another of its tables.
   const handleTable = (table: number) => {
-    if (!lastParse || !ready || busy || converting || table === choice?.table) return;
-    if (lastParse.source) onParse(lastParse.text, lastParse.source, table);
-    else onParse(lastParse.text, undefined, table);
+    if (!paste || !ready || busy || converting || table === choice?.table) return;
+    onParse(paste.text, paste.source, table);
   };
 
   const trackFile = (kind: string, encoding: FileEncoding | null, outcome: FileOutcome) =>

@@ -161,6 +161,7 @@ import math
 import re
 import unicodedata
 import warnings
+from collections import Counter
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta, tzinfo
@@ -358,6 +359,8 @@ class _Carried:
     with_time: dict[str, bool] = field(default_factory=dict)
     dotted: set[str] = field(default_factory=set)
     forms: dict[str, dict[float, bool]] = field(default_factory=dict)
+    mixed: dict[str, int] = field(default_factory=dict)
+    """Per column, the cells of a whole number it wrote both ways, which the write puts in the column's form."""
 
     @classmethod
     def of(cls, parsed: ParsedDataset) -> "_Carried":
@@ -372,9 +375,8 @@ class _Carried:
             for column in parsed.profile.columns
             if column.dtype == "datetime"
         }
-        forms = _whole_forms(parsed)
-        dotted = {name for name, seen in forms.items() if seen and all(seen.values())}
-        return cls(parsed.profile.decimal, order, set(parsed.text_columns), with_time, dotted, forms)
+        forms, dotted, mixed = _whole_forms(parsed)
+        return cls(parsed.profile.decimal, order, set(parsed.text_columns), with_time, dotted, forms, mixed)
 
     def rename(self, old: str, new: str) -> None:
         if old in self.text_columns:
@@ -389,6 +391,8 @@ class _Carried:
             self.dotted.add(new)
         if old in self.forms:
             self.forms[new] = self.forms.pop(old)
+        if old in self.mixed:
+            self.mixed[new] = self.mixed.pop(old)
 
     def forget(self, names: Iterable[str]) -> None:
         for name in names:
@@ -397,43 +401,52 @@ class _Carried:
             self.with_time.pop(name, None)
             self.dotted.discard(name)
             self.forms.pop(name, None)
+            self.mixed.pop(name, None)
 
     def keep_only(self, names: Iterable[str]) -> None:
         kept = set(names)
-        self.forget({*self.date_order, *self.text_columns, *self.with_time, *self.dotted, *self.forms} - kept)
+        known = {*self.date_order, *self.text_columns, *self.with_time, *self.dotted, *self.forms, *self.mixed}
+        self.forget(known - kept)
 
     def form(self, name: object) -> tuple[bool, Mapping[float, bool]]:
         """The column's form of a whole number it did not hold, and the forms of those it held (`_cell_text`)."""
         return str(name) in self.dotted, self.forms.get(str(name), {})
 
 
-def _whole_forms(parsed: ParsedDataset) -> dict[str, dict[float, bool]]:
-    """Per number column of the canonical CSV, each whole number's form: True for `2.0`, False for `2`.
+def _whole_forms(parsed: ParsedDataset) -> tuple[dict[str, dict[float, bool]], set[str], dict[str, int]]:
+    """Per number column of the canonical CSV, each whole number's form (True for `2.0`, False for `2`), the
+    columns whose form is `.0` (`_Carried.dotted`), and per column the cells whose form the next write changes.
 
-    A value written both ways in one column has no form of its own and takes the column's (`_Carried.dotted`).
+    A value written both ways in one column (`2.0` in one row, `2` in another) has no form of its own and takes
+    the column's: the cells written the other way are counted, and the change lines say so (`_Carried.mixed`,
+    Copilot review of #12200), because one cell can carry no form through an operation that moves it.
     """
     numbers = [name for name, dtype in parsed.column_dtypes.items() if dtype == "number"]
     if not numbers:
-        return {}
+        return {}, set(), {}
     reader = csv.reader(io.StringIO(parsed.csv))
     header = next(reader, [])
     positions = {name: header.index(name) for name in numbers if name in header}
-    forms: dict[str, dict[float, bool]] = {name: {} for name in positions}
-    mixed: dict[str, set[float]] = {name: set() for name in positions}
+    seen: dict[str, Counter[tuple[float, bool]]] = {name: Counter() for name in positions}
     for row in reader:
         for name, position in positions.items():
             cell = row[position] if position < len(row) else ""
-            if not cell or "e" in cell:
-                continue
-            value = float(cell)
-            if value.is_integer():
-                dotted = cell.endswith(".0")
-                if forms[name].setdefault(value, dotted) != dotted:
-                    mixed[name].add(value)
-    for name, values in mixed.items():
-        for value in values:
-            forms[name].pop(value, None)
-    return forms
+            if cell and "e" not in cell and float(cell).is_integer():
+                seen[name][(float(cell), cell.endswith(".0"))] += 1
+    forms: dict[str, dict[float, bool]] = {}
+    dotted: set[str] = set()
+    mixed: dict[str, int] = {}
+    for name, counts in seen.items():
+        clashing = {value for value, form in counts if (value, not form) in counts}
+        forms[name] = {value: form for value, form in counts if value not in clashing}
+        if forms[name] and all(forms[name].values()):
+            dotted.add(name)
+        changed = sum(
+            count for (value, form), count in counts.items() if value in clashing and form != (name in dotted)
+        )
+        if changed:
+            mixed[name] = changed
+    return forms, dotted, mixed
 
 
 # --- Operation models -----------------------------------------------------------------------
@@ -634,6 +647,16 @@ def apply_operations(parsed: ParsedDataset, operations: list[Operation]) -> Prep
         if not len(frame):
             raise PrepareError("empty_result", "no row would remain")
         changes.append(_clip(change, MAX_NOTE_CHARS))
+    mixed = [name for name in carried.mixed if name in frame.columns]
+    if mixed:
+        # A whole number one column wrote both ways is written in one form now: said, with its count.
+        where = _listed(mixed) if len(mixed) <= 3 else _count(len(mixed), "column")
+        total = sum(carried.mixed[name] for name in mixed)
+        changes[-1] = _with_notice(
+            changes[-1],
+            f"{where} wrote the same whole number both with and without '.0' ({_count(total, 'cell')} in the "
+            "other form), now written in one form",
+        )
     csv_text = _write(frame, carried)
     if len(csv_text.encode("utf-8")) > MAX_COMPUTED_BYTES:
         # Only the long format grows the data; the re-parse would refuse it, so the model hears it from here.
@@ -732,7 +755,7 @@ def _drop_rows(frame: pd.DataFrame, op: DropRows, carried: _Carried) -> tuple[pd
     for condition in op.where:
         _require(frame, condition.column)
         series = frame[condition.column]
-        mask &= _matches(series, condition, _with_time(series, carried))
+        mask &= _matches(series, condition, _with_time(series, carried), carried.form(condition.column))
         clauses.append(_describe(condition, _kind(series)))
     dropped = int(mask.sum())
     if dropped == len(frame):
@@ -896,6 +919,7 @@ def _aggregate(frame: pd.DataFrame, op: Aggregate, carried: _Carried) -> tuple[p
     result = aggregated.reset_index()
     result.columns = pd.Index([*keys, value_name])
     carried.keep_only([*keys, value_name])
+    carried.mixed.pop(value_name, None)  # the cells are new values now, not the ones written both ways
     if op.period in DATE_PERIODS:
         # Each key is the bucket's first moment: a date for a day or an ISO week (its Monday), a time for an hour.
         carried.forget(date_keys)
@@ -962,6 +986,7 @@ def _pivot_longer(frame: pd.DataFrame, op: PivotLonger, carried: _Carried) -> tu
     rounded = 0
     dotted = all(name in carried.dotted for name in columns)
     forms, respelled = _melted_forms(frame, columns, carried, dotted)
+    respelled += sum(carried.mixed.get(name, 0) for name in columns)  # a source column's own two forms
     if len(kinds) > 1:
         # Unlike kinds melt into one text column: each column's canonical texts, a datetime with its time.
         work = frame.assign(
@@ -1104,7 +1129,7 @@ def _classify(frame: pd.DataFrame, op: Classify, carried: _Carried) -> tuple[pd.
         for condition in rule.where:
             _require(frame, condition.column)
             series = frame[condition.column]
-            mask &= _matches(series, condition, _with_time(series, carried))
+            mask &= _matches(series, condition, _with_time(series, carried), carried.form(condition.column))
             clauses.append(_describe(condition, _kind(series)))
         hit = mask & open_rows  # the first rule that holds names a row
         labels[hit] = rule.label
@@ -1492,8 +1517,15 @@ def _month_names(series: pd.Series, column: str) -> list[int | None]:
 # --- Conditions ------------------------------------------------------------------------------
 
 
-def _matches(series: pd.Series, condition: Condition, with_time: bool | None) -> pd.Series:
-    """The rows of `series` that satisfy `condition`, as booleans; a missing cell matches only `is_missing`."""
+def _matches(
+    series: pd.Series,
+    condition: Condition,
+    with_time: bool | None,
+    form: tuple[bool, Mapping[float, bool]] = (False, {}),
+) -> pd.Series:
+    """The rows of `series` that satisfy `condition`, as booleans; a missing cell matches only `is_missing`.
+
+    `contains` searches each cell's canonical text as `_write` writes it, a whole number in its `form`."""
     column, test, value = condition.column, condition.test, condition.value
     if test == "is_missing":
         if value is not None:
@@ -1507,7 +1539,7 @@ def _matches(series: pd.Series, condition: Condition, with_time: bool | None) ->
             f"the condition {test} on column '{column}' needs a value; is_missing finds empty cells",
         )
     if test == "contains":
-        return _bools(_texts(series, with_time).str.contains(value, regex=False))
+        return _bools(_texts(series, with_time, form).str.contains(value, regex=False))
     kind = _kind(series)
     target: object
     if kind == "number" and is_integer_dtype(series.dtype):

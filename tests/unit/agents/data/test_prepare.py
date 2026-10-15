@@ -1987,3 +1987,22 @@ class TestWholeNumberForms:
         prepared = prepare("k,v\na,2.0\nb,1.5\nc,87000\n", {"op": "set_type", "column": "v", "type": "text"})
 
         assert cells(prepared, 1) == ["2.0", "1.5", "87000"]
+
+    def test_one_number_written_both_ways_in_one_column_is_said(self) -> None:
+        """Copilot review of #12200: a cell carries no form of its own through a sort, so the change is counted."""
+        prepared = prepare("k,v\na,2.0\nb,2\nc,1.5\n", {"op": "sort", "column": "k"})
+
+        assert cells(prepared, 1) == ["2", "2", "1.5"]
+        assert prepared.changes == [
+            "sorted by k, ascending, v wrote the same whole number both with and without '.0' (1 cell in the "
+            "other form), now written in one form"
+        ]
+
+    def test_contains_searches_the_text_as_written(self) -> None:
+        """Copilot review of #12200: `contains` searched `2` where `data.csv` writes `2.0`."""
+        text = "k,v\na,2.0\nb,1.5\nc,3.0\n"
+        dropped = prepare(text, drop("v", "contains", ".0"))
+        classified = prepare(text, classify("whole", ([{"column": "v", "test": "contains", "value": ".0"}], "y")))
+
+        assert rows(dropped) == ["k,v", "b,1.5"]
+        assert cells(classified, 2) == ["y", "", "y"]

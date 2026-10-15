@@ -714,19 +714,26 @@ describe('DataPanel tables', () => {
     return { onParse, rerender: (next: AgentSessionState) => view.rerender(panel(next)) };
   }
 
-  function withTables(table: number, tables: unknown = TABLES): AgentSessionState {
+  function withTables(
+    table: number,
+    tables: unknown = TABLES,
+    paste: { text: string; source?: string } | null = { text: REPORT, source: 'report.xlsx' }
+  ): AgentSessionState {
     const state: AgentSessionState = stateWith({ x: 'month', y1: 'shoes' });
     const dataset = state.dataset;
     if (!dataset) throw new Error('stateWith has a dataset');
-    return { ...state, dataset: { ...dataset, parsed: { ...dataset.parsed, tables, table } } };
+    return {
+      ...state,
+      dataset: {
+        ...dataset,
+        ...(paste ? { paste } : {}),
+        parsed: { ...dataset.parsed, tables, table },
+      },
+    };
   }
 
-  it('offers the other tables of the parsed text and parses it again for the chosen one', async () => {
+  it('offers the other tables of the stored paste and parses its text again for the chosen one', async () => {
     const { onParse, rerender } = renderPanel();
-    await userEvent.type(screen.getByLabelText(/# your data/), REPORT.split('\n').join('{enter}'));
-    await userEvent.click(screen.getByRole('button', { name: '.parse()' }));
-    expect(onParse).toHaveBeenLastCalledWith(REPORT);
-
     rerender(withTables(1));
     const picker = screen.getByLabelText('# table (2)');
     expect(picker).toHaveValue('1');
@@ -736,19 +743,16 @@ describe('DataPanel tables', () => {
         .map(option => option.textContent)
     ).toEqual(['1 · Branch, Q1 · 1 row', '2 · Branch, Staff · 1 row']);
 
-    // An edit of the box after the parse does not count: the tables are the parsed text's.
-    await userEvent.type(screen.getByLabelText(/# your data/), 'more');
+    // An edit of the box does not count: the tables are the stored paste's.
+    await userEvent.type(screen.getByLabelText(/# your data/), 'other text');
     await userEvent.selectOptions(picker, '2');
-    expect(onParse).toHaveBeenLastCalledWith(REPORT, undefined, 2);
+    expect(onParse).toHaveBeenLastCalledWith(REPORT, 'report.xlsx', 2);
   });
 
-  it('shows no picker for one table, a malformed answer or a dataset it did not parse', async () => {
+  it('shows no picker for one table, a malformed answer or a version without its paste', () => {
     const { rerender } = renderPanel();
-    rerender(withTables(1));
-    expect(screen.queryByTestId('data-tables')).not.toBeInTheDocument(); // no `.parse()` in this panel yet
-
-    await userEvent.type(screen.getByLabelText(/# your data/), 'a,b{enter}1,2');
-    await userEvent.click(screen.getByRole('button', { name: '.parse()' }));
+    rerender(withTables(1, TABLES, null));
+    expect(screen.queryByTestId('data-tables')).not.toBeInTheDocument();
     rerender(withTables(1, ['only one']));
     expect(screen.queryByTestId('data-tables')).not.toBeInTheDocument();
     rerender(withTables(3));
