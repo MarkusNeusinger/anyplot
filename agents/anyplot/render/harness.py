@@ -241,6 +241,8 @@ CONVERT_REFUSALS = (
     "sheet_not_found",
     "array_shape",
     "object_array",
+    "formulas_only",
+    "too_complex",
 )
 """`convert.REFUSALS`, in its order (pinned by a test): the harness exits with 10 plus the index."""
 CONVERT_EXIT = {

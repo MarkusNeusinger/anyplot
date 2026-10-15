@@ -87,6 +87,7 @@ class TestConvertRoute:
             "sheets": ["Sheet1"],
             "sheet_count": 1,
             "warnings": {},
+            "dropped": [],
         }
         (job,) = backend.convert_jobs
         assert job.data == WORKBOOK and job.sheet == "Gehälter 2024" and job.timeout_s == 10.0
@@ -108,6 +109,13 @@ class TestConvertRoute:
             (ConvertOutput(exit_code=None, reason="memory", measured=200, limit=300), {"detail": "file_too_complex"}),
             (ConvertOutput(exit_code=1), {"detail": "file_unreadable"}),
             (ConvertOutput(exit_code=8), {"detail": "file_unreadable"}),
+            # A reader that died without its status.json (SIGABRT on an allocation): too much, not unreadable.
+            (ConvertOutput(exit_code=-6), {"detail": "file_too_complex"}),
+            (ConvertOutput(exit_code=134), {"detail": "file_too_complex"}),
+            (
+                ConvertOutput(exit_code=23, refusal="formulas_only", measured=4),
+                {"detail": "file_formulas_only", "measured": 4},
+            ),
         ],
     )
     async def test_a_refusal_has_its_code_and_a_broken_cap_its_numbers(

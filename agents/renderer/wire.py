@@ -269,6 +269,8 @@ ConvertRefusal = Literal[
     "sheet_not_found",
     "array_shape",
     "object_array",
+    "formulas_only",
+    "too_complex",
 ]
 CONVERT_REASONS: tuple[ConvertRefusal, ...] = get_args(ConvertRefusal)
 """Why the converter refused a file (`convert.REFUSALS`, `harness.CONVERT_REFUSALS`, pinned equal): the harness exits
@@ -326,6 +328,17 @@ class ConvertMeta(BaseModel):
     sheets: list[Annotated[str, Field(max_length=MAX_SHEET_NAME_CHARS)]] = Field(default_factory=list, max_length=10)
     sheet_count: int = Field(default=0, ge=0, le=100_000)
     warnings: dict[ConvertWarning, Annotated[int, Field(ge=0, le=MAX_PROBE_INT)]] = Field(default_factory=dict)
+    dropped: list[Annotated[str, Field(max_length=100)]] = Field(default_factory=list, max_length=20)
+    """The names of the columns left out (durations, intervals, binary, map, union, nested), at most 20: the page
+    names them, because a step that changes the data says so (owner rule of 2026-10-15)."""
+
+
+CONVERT_HARNESS_EXITS = frozenset(
+    {0, 1, 2, 8, *range(CONVERT_REFUSAL_BASE, CONVERT_REFUSAL_BASE + len(CONVERT_REASONS))}
+)
+"""Every exit code the harness's convert mode writes (`harness.CONVERT_EXIT`, pinned by a test). Any other code is a
+launcher or a process that died without its `status.json` (a SIGABRT of a native reader), which the agents
+service answers `file_too_complex`."""
 
 
 class ConvertRun(BaseModel):

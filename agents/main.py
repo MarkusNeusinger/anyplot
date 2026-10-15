@@ -13,7 +13,7 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `POST /v1/sessions` | `{user, spec_id, library, locale, snapshot}` | `{session_id, eligibility}` | `422 not_eligible` |
 | `POST /v1/sessions/{sid}/library` | `{library, snapshot}` | `{session_id, eligibility}` | `422 not_eligible`, `409 run_active` |
 | `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?, source?}` (`source`: the name of the file the page read the text from, at most 1,024 characters; screened on its own, never a note) | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version, language, file_name?}` (`file_name`: the dropped file's name as the session keeps it, `(name withheld)` when the screen refused it; `suggestion`: the wide-table offer of `data/shape.py`, or null; `context_lines`: the notes pasted above or below the table that passed the pre-filter and the scope judge, which the root gets with the next `summarize_data` turn; `language`: the session language as `{language, source}`, which a paste before any typed message or choice sets from the notes' or the column names' language, source `pasted`), stored as version 1 (the undo history of an earlier paste is dropped); or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips that fallback and keeps every row) | `413 too_long`, `422 unparseable`, `422 formula` (text of at most 2,000 characters that asks for a formula, which the chat's `generate_data` computes; never transcribed), `403 data_refused`, `403 session_closed` (the scope judge closed the session), `409 run_active` (a turn of the user in any session, or another paste of the user in flight), `429 rate_limited` / `429 daily_limit` (`AGENT_USER_PASTES_PER_MINUTE` / `_PER_DAY`, or the daily token budgets for `daily_limit`), `429 locked_out` (the day's `attack` strikes), `503 guard_unavailable` |
-| `POST /v1/sessions/{sid}/dataset/convert` | `{data_base64, sheet?}` (a dropped Excel, OpenDocument, Parquet, Feather, Arrow or NumPy file, at most 5 MiB; `sheet` a sheet or `.npz` array the previous answer named) | `{text, format, kind, rows, columns, sheet, sheets, sheet_count, warnings}`: the file read in the renderer's sandbox (`harness.py --convert`) into the text the paste box takes (CSV, or JSON records for a table with list columns, `format`), the sheet read and at most 10 visible ones (`sheet_count` all of them), `warnings` counts (`formulas_without_value`, `hidden_sheets`, `dropped_columns`, `list_columns`); nothing stored, no model call | `413 too_long`, `422 invalid`, `422 file_<refusal>` (`wire.CONVERT_REASONS`, with `measured` and `limit` for a broken cap) and `file_timeout`, `file_too_complex`, `file_too_large`, `file_unreadable`, `403 session_closed`, `409 run_active` (another conversion of the user in flight), `429 rate_limited` / `429 daily_limit` (`AGENT_USER_CONVERSIONS_PER_MINUTE` / `_PER_DAY`, or the daily token budgets), `429 locked_out`, `503 capacity` (no render slot within `AGENT_CONVERT_SLOT_WAIT_S`), `503 convert_unavailable` (no renderer, or one without `/convert`) |
+| `POST /v1/sessions/{sid}/dataset/convert` | `{data_base64, sheet?}` (a dropped Excel, OpenDocument, Parquet, Feather, Arrow or NumPy file, at most 5 MiB; `sheet` a sheet or `.npz` array the previous answer named) | `{text, format, kind, rows, columns, sheet, sheets, sheet_count, warnings, dropped}`: the file read in the renderer's sandbox (`harness.py --convert`) into the text the paste box takes (CSV, or JSON records for a table with list columns, `format`), every value with the precision it came with, the sheet read and at most 10 visible ones with cells (`sheet_count` all of them), `warnings` counts (`formulas_without_value`, `hidden_sheets`, `dropped_columns`, `list_columns`, `utc_timestamps`, `renamed_columns`), `dropped` the names of the columns left out; nothing stored, no model call | `413 too_long`, `422 invalid`, `422 file_<refusal>` (`wire.CONVERT_REASONS`, with `measured` and `limit` for a broken cap) and `file_timeout`, `file_too_complex` (also a reader that died without its `status.json`), `file_too_large`, `file_unreadable`, `403 session_closed`, `409 run_active` (another conversion of the user in flight), `429 rate_limited` / `429 daily_limit` (`AGENT_USER_CONVERSIONS_PER_MINUTE` / `_PER_DAY`, or the daily token budgets), `429 locked_out`, `503 capacity` (no render slot within `AGENT_CONVERT_SLOT_WAIT_S`), `503 convert_unavailable` (no renderer, or one without `/convert`) |
 | `PUT /v1/sessions/{sid}/bindings` | `[{role, column}]` | `{bindings, complete, missing_roles, warnings}`: `warnings` names a role that needs values of 0 or more bound to a column with a negative value, or left open for that reason (`data/signs.py`); never a refusal | `409 run_active`, `422 invalid` (with `errors`, at most 20 lines) |
 | `PUT /v1/sessions/{sid}/language` | `{language}` (a short name or code, `^[A-Za-z][A-Za-z -]{0,39}$`) | `{language, source}`: the session language in its stored form (`English` is `en`), source `chosen`, which detection never overrides | `409 run_active`, `422` (the pattern) |
 | `POST /v1/sessions/{sid}/dataset/confirm` | | `{confirmed, rows, columns}`: step 1 of two, the user confirmed the dataset with its bindings; the pipeline runs only then | `409 run_active`, `422 no_dataset` |
@@ -199,7 +199,12 @@ from agents.anyplot.session_state import (
 )
 from agents.anyplot.settings import AgentSettings, get_settings
 from agents.anyplot.theme_render import RenderGone, render_theme
-from agents.renderer.wire import MAX_CONVERT_BASE64_CHARS, MAX_CONVERT_INPUT_BYTES, MAX_SHEET_NAME_CHARS
+from agents.renderer.wire import (
+    CONVERT_HARNESS_EXITS,
+    MAX_CONVERT_BASE64_CHARS,
+    MAX_CONVERT_INPUT_BYTES,
+    MAX_SHEET_NAME_CHARS,
+)
 from agents.stream import MAX_DONE_ROLES, Translator
 from core.constants import SUPPORTED_LIBRARIES
 
@@ -924,6 +929,7 @@ async def convert_dataset_file(
                 "sheets": meta.sheets,
                 "sheet_count": meta.sheet_count,
                 "warnings": dict(meta.warnings),
+                "dropped": list(meta.dropped),
             },
             headers=_NO_STORE,
         )
@@ -931,8 +937,14 @@ async def convert_dataset_file(
         code = f"file_{output.refusal}"
     elif output.timed_out:
         code = "file_timeout"
+    elif output.reason is not None:
+        code = CONVERT_FAILURES.get(output.reason, "file_unreadable")
+    elif output.exit_code is None or output.exit_code not in CONVERT_HARNESS_EXITS:
+        # A process that died without its `status.json` (a native reader's SIGABRT on an allocation it could not
+        # make; security review of #12194): the file was too much for the sandbox, not unreadable.
+        code = "file_too_complex"
     else:
-        code = CONVERT_FAILURES.get(output.reason or "", "file_unreadable")
+        code = "file_unreadable"
     attribution(
         "data_convert",
         ledger,

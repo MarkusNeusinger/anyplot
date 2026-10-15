@@ -7,11 +7,17 @@ array); the subprocess cases run the real harness with the guard armed, because 
 can never be removed from the process that arms it.
 """
 
+import base64
+import decimal
 import io
 import json
+import os
 import pickle
+import struct
 import subprocess
 import sys
+import time
+import zipfile
 from pathlib import Path
 
 import numpy as np
@@ -56,6 +62,12 @@ class TestPins:
             assert wire.convert_refusal(10 + index) == reason
         assert wire.convert_refusal(1) is None and wire.convert_refusal(None) is None
         assert len(set(harness.CONVERT_EXIT.values())) == len(harness.CONVERT_EXIT)
+        assert set(harness.CONVERT_EXIT.values()) == wire.CONVERT_HARNESS_EXITS
+
+    def test_the_bffs_refusal_codes_name_every_refusal(self) -> None:
+        from api.routers.agent import CONVERT_REFUSAL_CODES
+
+        assert {f"file_{reason}" for reason in convert.REFUSALS} <= CONVERT_REFUSAL_CODES
 
     def test_caps_are_the_parsers_and_the_wires(self) -> None:
         assert convert.MAX_ROWS == MAX_ROWS and convert.MAX_COLUMNS == MAX_COLUMNS
@@ -109,7 +121,7 @@ class TestSpreadsheets:
         ]
         result = convert.convert(xlsx(sheets))
         assert result.sheet == "2024" and result.csv_text == "a\n1\n"
-        assert result.sheets == ["Cover", "2024", "2025"] and result.sheet_count == 3
+        assert result.sheets == ["2024", "2025"] and result.sheet_count == 2  # the empty cover is not offered
         assert result.warnings == {"hidden_sheets": 1}
         assert "Secret" not in json.dumps(result.meta())
 
@@ -215,10 +227,12 @@ class TestArrow:
         }
     )
 
-    def test_parquet_flattens_structs_decodes_dictionaries_and_writes_utc(self) -> None:
+    def test_parquet_flattens_structs_decodes_dictionaries_and_keeps_the_zone(self) -> None:
         result = convert.convert(parquet(self.TABLE))
-        assert result.csv_text == "id,point.x,point.y,label,at\n1,1.5,a,u,1970-01-01\n2,,,v,1970-01-01 01:00:00\n"
-        assert result.warnings == {"dropped_columns": 1, "utc_timestamps": 1} and result.kind == "parquet"
+        assert result.csv_text == (
+            "id,point.x,point.y,label,at\n1,1.5,a,u,1970-01-01 01:00:00+0100\n2,,,v,1970-01-01 02:00:00+0100\n"
+        )
+        assert result.warnings == {"dropped_columns": 1} and result.dropped == ["blob"] and result.kind == "parquet"
 
     def test_utc_timestamps_are_dates_to_the_parser(self) -> None:
         table = pa.table(
@@ -342,6 +356,12 @@ class TestHarness:
             ("parquet", parquet(pa.table({"a": [1], "b": [2]}))),
             ("npy", npy(np.array([[1, 2]]))),
         ],
+        ids=[
+            "xlsx",
+            "ods",
+            "parquet",
+            "npy",
+        ],  # not the bytes: a zip carries its write time, which xdist workers differ on
     )
     def test_formats_convert_under_the_guard(self, tmp_path: Path, label: str, data: bytes) -> None:
         code, status, text = run_harness(tmp_path, data)
@@ -365,6 +385,21 @@ class TestHarness:
         code, status, text = run_harness(tmp_path, zip_bomb())
         assert code == harness.CONVERT_EXIT["archive_limits"] and text is None
         assert status["reason"] == "archive_limits" and status["limit"] == convert.MAX_ZIP_UNCOMPRESSED
+
+    def test_a_zone_aware_timestamp_keeps_its_zone_or_says_utc_under_the_guard(self, tmp_path: Path) -> None:
+        stamps = pa.array([1_700_000_000_123_456_789], type=pa.timestamp("ns", "Europe/Berlin"))
+        code, _, text = run_harness(tmp_path, parquet(pa.table({"t": stamps})))
+        meta = wire.ConvertMeta.model_validate_json((tmp_path / "meta.json").read_text(encoding="utf-8"))
+        assert code == 0 and text is not None
+        # The zone comes from the system's time-zone database; without one the times are UTC and the meta says so.
+        assert text == "t\n2023-11-14 23:13:20.123456789+0100\n" or (
+            text == "t\n2023-11-14 22:13:20.123456789Z\n" and meta.warnings == {"utc_timestamps": 1}
+        )
+
+    def test_an_encrypted_workbook_is_named_under_the_guard(self, tmp_path: Path) -> None:
+        """The OLE sniffer's UTF-16 codec loads lazily: without the preload the guard refused it (`blocked`)."""
+        code, status, _ = run_harness(tmp_path, ole("Root Entry", "EncryptedPackage"))
+        assert (code, status["reason"]) == (harness.CONVERT_EXIT["encrypted"], "encrypted")
 
     def test_a_chosen_sheet_travels_in_the_request_file(self, tmp_path: Path) -> None:
         data = xlsx([Sheet("A", [["a"]]), Sheet("B", [["b"]])])
@@ -453,3 +488,173 @@ class TestHarness:
         assert guard.refuses("import", ("socket", None, None, None, None))
         assert guard.refuses("exec", (compile("1", "<x>", "eval"),))
         assert guard.refuses("compile", (b"1", "<x>"))  # not called from NumPy's header reader
+
+
+def zip_with_declared_size(members: dict[str, bytes], liar: str, declared: int) -> bytes:
+    """A zip whose member `liar` declares `declared` uncompressed bytes in both headers, whatever it holds."""
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
+        for name, content in members.items():
+            archive.writestr(name, content)
+    data = bytearray(buffer.getvalue())
+    with zipfile.ZipFile(io.BytesIO(bytes(data))) as archive:
+        info = archive.getinfo(liar)
+    struct.pack_into("<I", data, info.header_offset + 22, declared)  # local header: uncompressed size
+    position = data.find(b"PK\x01\x02")
+    while position != -1:
+        name_length = struct.unpack_from("<H", data, position + 28)[0]
+        if bytes(data[position + 46 : position + 46 + name_length]) == liar.encode():
+            struct.pack_into("<I", data, position + 24, declared)  # central directory: uncompressed size
+        position = data.find(b"PK\x01\x02", position + 4)
+    return bytes(data)
+
+
+class TestSecurityReview:
+    """The security review of #12194 (Fable with crafted files through the real harness, Gemini by reading)."""
+
+    def test_a_run_of_open_cell_tags_is_scanned_in_linear_time(self) -> None:
+        xml = b"<x><!--" + b"<c " * 10_000_000 + b"--></x>"  # 30 MB, the review's crafted comment
+        started = time.perf_counter()
+        found = convert.scan_sheet_xml(xml)
+        assert found.cells == 0 and time.perf_counter() - started < 1.0
+
+    def test_the_crafted_workbook_converts_in_well_under_a_second(self) -> None:
+        comment = "<!--" + "".join(f"<c {index % 9973} " for index in range(600_000)) + "-->"
+        data = xlsx([Sheet("S", [["a"], [1]], prolog=comment)])
+        started = time.perf_counter()
+        assert convert.convert(data).csv_text == "a\n1\n"
+        assert time.perf_counter() - started < 1.0
+
+    def test_a_cell_far_out_is_refused_before_calamine_allocates_the_box(self) -> None:
+        far_row = xlsx([Sheet("S", [["a"]], formulas={"A1048576": ("1", "1")})])
+        error = refused(far_row)
+        assert (error.reason, error.measured, error.limit) == ("too_many_rows", 1_048_576, MAX_ROWS)
+        far_column = xlsx([Sheet("S", [["a"]], formulas={"XFD1": ("1", "1")})])
+        assert refused(far_column).reason == "too_many_columns"
+
+    def test_a_member_that_inflates_past_its_declared_size_is_corrupt(self) -> None:
+        good = xlsx([Sheet("S", [["a"], [1]])])
+        with zipfile.ZipFile(io.BytesIO(good)) as archive:
+            members = {name: archive.read(name) for name in archive.namelist()}
+        part = "xl/worksheets/sheet1.xml"
+        # Incompressible, so the archive's ratio stays far below its cap: only the declared size lies.
+        members[part] = members[part] + b"<!--" + base64.b64encode(os.urandom(1_500_000)) + b"-->"
+        assert refused(zip_with_declared_size(members, part, 1024)).reason == "corrupt"
+        assert convert.convert(zip_with_declared_size(members, part, len(members[part]))).csv_text == "a\n1\n"
+
+    def test_a_footer_total_that_disagrees_with_its_row_groups_is_corrupt(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        data = parquet(pa.table({"a": [1, 2]}))
+        real = pq.ParquetFile
+
+        class Forged:
+            def __init__(self, source: object) -> None:
+                self._file = real(source)
+
+            def __getattr__(self, name: str) -> object:
+                return getattr(self._file, name)
+
+            @property
+            def metadata(self) -> object:
+                metadata = self._file.metadata
+
+                class Footer:
+                    num_rows = 1
+                    num_row_groups = metadata.num_row_groups
+                    row_group = staticmethod(metadata.row_group)
+
+                return Footer()
+
+        monkeypatch.setattr(pq, "ParquetFile", Forged)
+        assert refused(data).reason == "corrupt"
+
+    def test_row_groups_are_added_up_before_any_page_is_read(self) -> None:
+        buffer = io.BytesIO()
+        pq.write_table(pa.table({"a": range(MAX_ROWS + 10)}), buffer, row_group_size=5_000)
+        error = refused(buffer.getvalue())
+        assert (error.reason, error.measured) == ("too_many_rows", MAX_ROWS + 10)
+
+    def test_running_out_of_memory_is_too_complex(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        def exhausted(*args: object) -> object:
+            raise MemoryError
+
+        monkeypatch.setattr(convert, "_arrow_table", exhausted)
+        assert refused(parquet(pa.table({"a": [1]}))).reason == "too_complex"
+
+    def test_npz_names_with_controls_or_paths_are_never_offered(self) -> None:
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, "w") as archive:
+            for name in ("../evil", "bell\x07", "grid"):
+                member = io.BytesIO()
+                np.save(member, np.ones((1, 2)))
+                archive.writestr(name + ".npy", member.getvalue())
+        result = convert.convert(buffer.getvalue())
+        assert result.sheet == "../evil" or result.sheet is None
+        assert result.sheets == ["grid"] and result.sheet_count == 3
+
+    def test_a_broken_npy_header_is_corrupt(self) -> None:
+        raw = bytearray(npy(np.zeros((2, 2))))
+        end = raw.index(b"}")
+        raw[end] = ord("(")  # an unclosed literal: tokenize's error, not a ValueError
+        assert refused(bytes(raw)).reason == "corrupt"
+
+    def test_durations_and_intervals_are_dropped_and_named(self) -> None:
+        table = pa.table(
+            {
+                "v": [1],
+                "span": pa.array([5], type=pa.duration("s")),
+                "every": pa.array([pa.MonthDayNano([1, 2, 3])], type=pa.month_day_nano_interval()),
+            }
+        )
+        buffer = io.BytesIO()
+        feather.write_feather(table, buffer)  # Parquet holds no interval
+        result = convert.convert(buffer.getvalue())
+        assert result.csv_text == "v\n1\n"
+        assert result.warnings == {"dropped_columns": 2} and result.dropped == ["span", "every"]
+        assert result.meta()["dropped"] == ["span", "every"]
+
+    def test_a_sheet_of_formulas_without_values_is_refused_with_its_count(self) -> None:
+        sheet = Sheet("S", formulas={"A1": ("1+1", None), "A2": ("2+2", None)})
+        error = refused(xlsx([sheet]))
+        assert (error.reason, error.measured) == ("formulas_only", 2)
+
+
+class TestExactValues:
+    """Owner rule of 2026-10-15: data keeps exactly the precision it came in with, through the converter and the
+    parser."""
+
+    def test_nanosecond_timestamps_keep_every_digit_and_their_zone(self) -> None:
+        stamps = pa.array(
+            [1_700_000_000_123_456_789, 1_700_000_001_000_000_000], type=pa.timestamp("ns", "Europe/Berlin")
+        )
+        text = convert.convert(parquet(pa.table({"t": stamps}))).csv_text
+        assert text == "t\n2023-11-14 23:13:20.123456789+0100\n2023-11-14 23:13:21+0100\n"
+        parsed = parse_dataset(text)
+        assert parsed.column_dtypes["t"] == "datetime"
+        assert parsed.csv.splitlines()[1:] == [
+            "2023-11-14T23:13:20.123456789+01:00",
+            "2023-11-14T23:13:21.000000000+01:00",
+        ]
+
+    def test_decimals_and_large_integers_are_written_exactly(self) -> None:
+        table = pa.table(
+            {
+                "d": pa.array([decimal.Decimal("12345678901234567890.123456789"), decimal.Decimal("1.230")]),
+                "n": pa.array([2**63 - 1, -(2**62) - 1], type=pa.int64()),
+                "u": pa.array([2**64 - 1, 0], type=pa.uint64()),
+            }
+        )
+        text = convert.convert(parquet(table)).csv_text
+        assert text.splitlines()[1:] == [
+            f"12345678901234567890.123456789,{2**63 - 1},{2**64 - 1}",
+            f"1.230000000,{-(2**62) - 1},0",  # the column's decimal(29, 9) holds nine places, all written
+        ]
+        assert parse_dataset(text).csv.splitlines()[1].split(",")[1] == str(2**63 - 1)
+
+    def test_floats_keep_their_shortest_exact_text(self) -> None:
+        table = pa.table({"f": pa.array([0.1], type=pa.float32()), "g": [0.1 + 0.2]})
+        assert convert.convert(parquet(table)).csv_text == "f,g\n0.1,0.30000000000000004\n"
+        sheet = Sheet("S", [["x"], [0.1 + 0.2], [1e-300]])
+        assert convert.convert(xlsx([sheet])).csv_text == "x\n0.30000000000000004\n1e-300\n"
+        assert convert.convert(npy(np.array([[0.1]], dtype=np.float32))).csv_text == "column_1\n0.1\n"

@@ -614,6 +614,8 @@ export interface ConvertAnswer {
   sheets: string[];
   sheet_count: number;
   warnings: ConvertWarnings;
+  /** The names of the columns left out (at most 20); `warnings.dropped_columns` counts all of them. */
+  dropped: string[];
 }
 
 const WARNING_KEYS = [
@@ -648,6 +650,7 @@ export function convertAnswer(value: unknown): ConvertAnswer | null {
     sheets: strings(record.sheets).slice(0, 10),
     sheet_count: isCount(record.sheet_count) ? record.sheet_count : 0,
     warnings,
+    dropped: strings(record.dropped).slice(0, 20),
   };
 }
 

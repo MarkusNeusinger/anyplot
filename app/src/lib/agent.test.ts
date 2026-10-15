@@ -520,6 +520,7 @@ describe('convertAnswer', () => {
         sheets: ['x', 3],
         sheet_count: 0,
         warnings: { list_columns: 2, dropped_columns: 0, other: 5 },
+        dropped: ['span', 7],
       })
     ).toEqual({
       text: 'a\n1\n',
@@ -531,6 +532,7 @@ describe('convertAnswer', () => {
       sheets: ['x'],
       sheet_count: 0,
       warnings: { list_columns: 2 },
+      dropped: ['span'],
     });
   });
 

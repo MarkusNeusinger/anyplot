@@ -929,7 +929,7 @@ export function DataPanel({
         text: answer.text,
         lines: countLines(answer.text),
         read: convertedRead(answer),
-        notes: describeConvertWarnings(answer.warnings),
+        notes: describeConvertWarnings(answer.warnings, answer.dropped),
         of,
         kind: answer.kind,
         encoding: null,

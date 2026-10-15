@@ -1305,6 +1305,7 @@ describe('DataPanel file drop', () => {
     sheets: ['2024', '2025'],
     sheet_count: 2,
     warnings: {},
+    dropped: [],
     ...overrides,
   });
 
@@ -1328,6 +1329,26 @@ describe('DataPanel file drop', () => {
     expect(onParse).toHaveBeenCalledWith(
       'Report 2024\n\nmonth,revenue\nJan,120\n',
       'Bericht.xlsx · sheet "2024"'
+    );
+  });
+
+  it('names the columns the server left out', async () => {
+    const onConvert = vi.fn(async () =>
+      answer({
+        sheet: null,
+        sheets: [],
+        warnings: { dropped_columns: 3 },
+        dropped: ['span', 'raw'],
+      })
+    );
+    renderPanel(emptyState(), onConvert);
+
+    drop(workbook());
+
+    await waitFor(() =>
+      expect(screen.getByTestId('file-status')).toHaveTextContent(
+        '3 columns of durations, intervals, binary, map or nested values left out: "span", "raw" and 1 more'
+      )
     );
   });
 

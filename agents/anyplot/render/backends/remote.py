@@ -102,6 +102,7 @@ from ..contract import (
     RenderResult,
     ThemeOutput,
 )
+from ..serial import RenderBusy
 
 
 logger = logging.getLogger(__name__)
@@ -120,6 +121,9 @@ RETRY_BUDGET_S = 30.0
 CANCEL_TIMEOUT_S = 5.0
 FRONT_END_RETRY = frozenset({429, 500, 502, 503, 504})
 _DETAIL = re.compile(r"^[a-z_]{1,32}$")
+BUSY_DETAILS = frozenset({"busy", "low_memory"})
+"""The renderer's `503` details that mean a busy instance, not a missing one: a conversion answers them as
+`RenderBusy`, so the route says `capacity` (try again) rather than `convert_unavailable`."""
 _MAX_PNG_BASE64 = 4 * ((MAX_PNG_BYTES + 2) // 3)
 
 
@@ -372,6 +376,9 @@ class RemoteBackend:
             raise DataRunUnsupported("the renderer has no /convert route yet (HTTP 404)")
         if status != 200:
             detail = _detail(response)
+            if status == 503 and detail in BUSY_DETAILS:
+                # The renderer's own slot or memory floor: a busy instance, which the route answers `capacity`.
+                raise RenderBusy(f"the renderer is busy ({detail})")
             suffix = f", {detail}" if detail else ""
             raise _unavailable(f"the renderer answered the conversion with HTTP {status}{suffix}")
         try:

@@ -192,6 +192,7 @@ CONVERT_REFUSAL_CODES = frozenset(
         "sheet_not_found",
         "array_shape",
         "object_array",
+        "formulas_only",
         "timeout",
         "too_complex",
         "unreadable",

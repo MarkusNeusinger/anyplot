@@ -19,7 +19,7 @@ from agents.anyplot.render.backends import remote as remote_module
 from agents.anyplot.render.backends.remote import IdTokenSource, RemoteBackend, token_expiry
 from agents.anyplot.render.contract import ConvertJob, DataJob, DataRunUnsupported, RendererUnavailable, RenderJob
 from agents.anyplot.render.gates import evaluate
-from agents.anyplot.render.serial import SerialRenderer
+from agents.anyplot.render.serial import RenderBusy, SerialRenderer
 from agents.renderer.executor import ExecutorConfig, SandboxExecutor
 from agents.renderer.main import Renderer, app, get_renderer
 from agents.renderer.settings import RendererSettings, get_settings
@@ -728,9 +728,18 @@ class TestConvert:
             await backend.convert(ConvertJob(job_id="conv123", data=b"PK\x05\x06"))
         await backend.aclose()
 
-    async def test_a_busy_renderer_is_unavailable(self) -> None:
-        backend = mocked(lambda request: httpx.Response(503, json={"detail": "busy"}))
+    @pytest.mark.parametrize("detail", ["busy", "low_memory"])
+    async def test_a_busy_renderer_is_render_busy(self, detail: str) -> None:
+        """The route answers `capacity` (try again), not `convert_unavailable` (security review of #12194)."""
+        backend = mocked(lambda request: httpx.Response(503, json={"detail": detail}))
 
-        with pytest.raises(RendererUnavailable, match="HTTP 503, busy"):
+        with pytest.raises(RenderBusy):
+            await backend.convert(ConvertJob(job_id="conv123", data=b"PK\x05\x06"))
+        await backend.aclose()
+
+    async def test_another_refusal_is_unavailable(self) -> None:
+        backend = mocked(lambda request: httpx.Response(503, json={"detail": "sandbox_unavailable"}))
+
+        with pytest.raises(RendererUnavailable, match="HTTP 503, sandbox_unavailable"):
             await backend.convert(ConvertJob(job_id="conv123", data=b"PK\x05\x06"))
         await backend.aclose()

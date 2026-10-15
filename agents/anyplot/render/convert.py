@@ -13,7 +13,11 @@ The format comes from the first bytes, never from the file's name or type:
   calamine, which reads the values the file stored and nothing else: no formula is
   evaluated, no external link followed, no macro or DDE run. A formula cell the file
   saved without its value is empty, and the cells are counted (`formulas_without_value`,
-  xlsx and xlsm only: the other formats do not say). An encrypted workbook (an OLE
+  xlsx and xlsm only: the other formats do not say); a sheet whose cells are all such
+  formulas is refused (`formulas_only`, owner decision of 2026-10-15). Before calamine
+  loads an xlsx sheet, one linear pass over its part (`scan_sheet_xml`) finds the span of
+  its cells and refuses a sheet past the caps, because calamine allocates the whole
+  bounding box (one cell at XFD1048576 is 549 GB). An encrypted workbook (an OLE
   container with an `EncryptedPackage` stream) is refused with "remove the password".
   The sheet goes out as its raw cell grid (`csv.writer`): dates ISO, numbers in their
   shortest form, booleans `TRUE`/`FALSE`, empty for nothing, so the parser's
@@ -22,15 +26,20 @@ The format comes from the first bytes, never from the file's name or type:
   Merged cells keep their value in the top-left cell only, which is how calamine reads
   them. Hidden sheets are skipped and counted, very hidden ones are never named, chart
   and macro sheets are skipped. Without a chosen sheet the first visible sheet with a
-  cell in it is read; the answer names the visible sheets (at most `MAX_SHEETS_LISTED`)
-  so the page can offer the others.
+  cell in it is read; the answer names the visible sheets with cells (at most
+  `MAX_SHEETS_LISTED`, whole, and only names that are printable and no path) so the page
+  can offer the others.
 * **Parquet, Feather (v1 and v2) and Arrow IPC** (file and stream) through pyarrow. The
-  row count comes from the Parquet footer before any data page is read, and at most
-  `MAX_ROWS` + 1 rows are ever read, batch by batch, whatever a footer claims. Struct
-  columns are flattened to dotted names (a repeated name gets `_2` and is counted,
-  `renamed_columns`), dictionary columns decoded, time-zone-aware timestamps written in UTC
-  without an offset, which the parser's date pattern does not read (`utc_timestamps`); map,
-  binary and union columns are dropped and counted (`dropped_columns`). A table with a list column goes out as JSON records, one
+  row count comes from the Parquet row groups (which must add up to the footer's total)
+  before any data page is read, and at most `MAX_ROWS` + 1 rows are ever read, batch by
+  batch, whatever a footer claims. Struct columns are flattened to dotted names (a
+  repeated name gets `_2` and is counted, `renamed_columns`), dictionary columns decoded.
+  Data keeps the precision it came with (owner rule of 2026-10-15): timestamps and times
+  carry every stored digit (nanoseconds included) and a zone-aware timestamp its offset in
+  its own zone (UTC with `Z`, counted as `utc_timestamps`, only where the zone cannot be
+  read); decimals and 64-bit integers are written exactly, float32 in its shortest text.
+  Map, binary, union, duration and interval columns are dropped, counted and named
+  (`dropped_columns`, `Conversion.dropped`). A table with a list column goes out as JSON records, one
   per line, instead of CSV: the paste route's parser expands list fields into long format
   (one row per value, a `record_id` column, thinning to its row cap), the owner's list
   rule of 2026-10-15 (#12191), so there is one implementation of it (`list_columns`).
@@ -43,7 +52,10 @@ The format comes from the first bytes, never from the file's name or type:
 
 Every zip (xlsx, xlsm, xlsb, ods, npz) passes `check_archive` first: at most
 `MAX_ZIP_ENTRIES` entries, `MAX_ZIP_UNCOMPRESSED` bytes declared uncompressed in all, at
-most `MAX_ZIP_RATIO` times the archive's own size, no encrypted member.
+most `MAX_ZIP_RATIO` times the archive's own size, no encrypted member, and every member
+inflated (bounded by its declared size) to prove that size, because calamine's reader
+trusts none. Every pattern over file content is linear. A reader that runs out of the
+sandbox's address space is `too_complex`.
 
 The caps are the computed-data caps of the harness's data mode for rows and columns
 (`MAX_ROWS`, `MAX_COLUMNS`), with `ROW_SLACK` more raw rows for a spreadsheet's titles
@@ -58,7 +70,9 @@ import decimal
 import io
 import math
 import re
+import struct
 import zipfile
+import zlib
 
 
 MAX_INPUT_BYTES = 5 * 1024 * 1024
@@ -73,8 +87,6 @@ MAX_ZIP_ENTRIES = 2_000
 MAX_ZIP_UNCOMPRESSED = 100 * 1024 * 1024
 MAX_ZIP_RATIO = 250
 """Declared uncompressed bytes per byte of archive: an xlsx of repeated rows packs about 20 to 1, a zip bomb 1,000 to 1."""
-MAX_FORMULA_SCAN_BYTES = 32 * 1024 * 1024
-"""The largest sheet part whose formula cells are counted; a larger one is read without the count."""
 MAX_SHEETS_LISTED = 10
 MAX_SHEET_NAME_CHARS = 255  # wire.MAX_SHEET_NAME_CHARS: a listed name comes back as the choice, whole
 NPY_MAX_HEADER = 10_000  # numpy's own `_MAX_HEADER_SIZE`
@@ -93,6 +105,8 @@ REFUSALS = (
     "sheet_not_found",
     "array_shape",
     "object_array",
+    "formulas_only",
+    "too_complex",
 )
 """Why a file is not converted. The harness exits with `REFUSAL_EXIT_BASE` plus the index (`harness.CONVERT_EXIT`),
 and the renderer maps the code back (`wire.CONVERT_REASONS`); a test pins the three together."""
@@ -127,6 +141,9 @@ class Conversion:
         self.sheets = list(sheets)
         self.sheet_count = sheet_count
         self.warnings = dict(warnings or {})
+        self.dropped = [name if len(name) <= 100 else name[:99] + "…" for name in self.warnings.pop("_dropped", [])][
+            :MAX_DROPPED_NAMED
+        ]
         self.text_format = "csv"
 
     def meta(self):
@@ -140,6 +157,7 @@ class Conversion:
             "sheets": self.sheets,
             "sheet_count": self.sheet_count,
             "warnings": {key: value for key, value in self.warnings.items() if value},
+            "dropped": self.dropped,
         }
 
 
@@ -176,6 +194,9 @@ def preload():
     with zipfile.ZipFile(io.BytesIO(buffer.getvalue())) as archive:
         archive.read("warm.npy")
     "warm".encode("cp437").decode("cp437")
+    # The OLE sniffer matches stream names in UTF-16LE: its codec loads on first use as well (found by the image
+    # smoke, where the guard refused that import and an encrypted workbook came back `blocked`).
+    "warm".encode("utf-16-le").decode("utf-16-le")
 
 
 # --- Sniffing -------------------------------------------------------------------------------
@@ -210,14 +231,17 @@ def _open_zip(data):
         raise Refused("corrupt") from None
 
 
-def check_archive(archive, size):
-    """Refuse a zip whose central directory announces too much: entries, uncompressed bytes, ratio, encryption.
+def check_archive(archive, data):
+    """Refuse a zip whose central directory announces too much (entries, uncompressed bytes, ratio, encryption),
+    then inflate every member to prove its declared size (`_inflated_size`).
 
-    The sizes are the declared ones; Python's `zipfile` never inflates a member past its
-    declared size (a longer stream fails its CRC), and the sandbox's address-space limit
-    and the host's timeout stand behind calamine's own reader.
+    calamine's own zip reader trusts no declared size: a 1.79 MB xlsx that declared 1 KB for a 322 MB part
+    passed the directory check (security review of #12194). Each member is inflated with a bound of its declared
+    size plus one byte, so the whole check inflates at most `MAX_ZIP_UNCOMPRESSED`; a member that inflates to
+    another size than it declares is `corrupt`.
     """
     infos = archive.infolist()
+    size = len(data)
     if len(infos) > MAX_ZIP_ENTRIES:
         raise Refused("archive_limits", len(infos), MAX_ZIP_ENTRIES)
     if any(info.flag_bits & 0x1 for info in infos):
@@ -227,11 +251,51 @@ def check_archive(archive, size):
         raise Refused("archive_limits", total, MAX_ZIP_UNCOMPRESSED)
     if total > MAX_ZIP_RATIO * max(size, 1):
         raise Refused("archive_limits", total // max(size, 1), MAX_ZIP_RATIO)
+    for info in infos:
+        if _inflated_size(data, info) != info.file_size:
+            raise Refused("corrupt")
+
+
+INFLATE_CHUNK = 1024 * 1024
+
+
+def _inflated_size(data, info):
+    """The bytes a member's stored data inflates to, counted up to its declared size plus one, linearly.
+
+    Read from the member's local header in `data` (the name and extra lengths there, then `compress_size` bytes),
+    never through `zipfile`, which stops at the declared size. A method other than stored or deflated is refused.
+    """
+    offset = info.header_offset
+    header = data[offset : offset + 30]
+    if len(header) < 30 or header[:4] != b"PK\x03\x04":
+        raise Refused("corrupt")
+    name_length, extra_length = struct.unpack("<HH", header[26:30])
+    start = offset + 30 + name_length + extra_length
+    raw = data[start : start + info.compress_size]
+    if len(raw) != info.compress_size:
+        raise Refused("corrupt")
+    if info.compress_type == zipfile.ZIP_STORED:
+        return len(raw)
+    if info.compress_type != zipfile.ZIP_DEFLATED:
+        raise Refused("unsupported")
+    bound = info.file_size + 1
+    inflater = zlib.decompressobj(-zlib.MAX_WBITS)
+    total = 0
+    pending = raw
+    try:
+        while pending and total < bound:
+            total += len(inflater.decompress(pending, min(INFLATE_CHUNK, bound - total)))
+            pending = inflater.unconsumed_tail
+        if total < bound and not inflater.eof:
+            total += len(inflater.flush())
+    except zlib.error:
+        raise Refused("corrupt") from None
+    return total
 
 
 def _zip_kind(data):
     with _open_zip(data) as archive:
-        check_archive(archive, len(data))
+        check_archive(archive, data)
         names = set(archive.namelist())
         if "mimetype" in names:
             try:
@@ -418,45 +482,185 @@ def read_workbook(data, kind, sheet_name, warnings):
         raise Refused("corrupt") from None
     with workbook:
         visible = _visible_sheets(workbook, warnings)
-        if sheet_name is not None:
-            if sheet_name not in visible:
-                raise Refused("sheet_not_found")
-            candidates = [sheet_name]
-        else:
-            candidates = visible
-        for name in candidates:
+        if sheet_name is not None and sheet_name not in visible:
+            raise Refused("sheet_not_found")
+        scans = {}
+
+        def scan(name):
+            """The xlsx sheet part's linear scan (`scan_sheet_xml`), or None for the other formats."""
+            if kind not in ("xlsx", "xlsm"):
+                return None
+            if name not in scans:
+                scans[name] = sheet_scan(data, name)
+            return scans[name]
+
+        def load(name):
+            found = scan(name)
+            if found is not None:
+                found.check_caps()  # before calamine allocates the sheet's bounding box
             try:
                 sheet = workbook.get_sheet_by_name(name)
+            except MemoryError:
+                raise Refused("too_complex") from None
             except Exception:
                 raise Refused("corrupt") from None
             rows, width = read_grid(sheet)
-            if rows:
-                if kind in ("xlsx", "xlsm"):
-                    missing = formulas_without_value(data, name)
-                    if missing:
-                        warnings["formulas_without_value"] = missing
-                listed = _listed(visible)
-                return Conversion(grid_csv(rows), kind, len(rows), width, _named(name), listed, len(visible), warnings)
-        raise Refused("empty")
+            return rows, width, found.unsaved if found is not None else 0
+
+        chosen = None
+        for name in [sheet_name] if sheet_name is not None else visible:
+            rows, width, unsaved = load(name)
+            if rows or unsaved:
+                chosen = name
+                break
+        if chosen is None:
+            raise Refused("empty")
+        if not rows:
+            # Owner decision of 2026-10-15: a sheet whose cells are all formulas without saved values is refused.
+            raise Refused("formulas_only", unsaved)
+        if unsaved:
+            warnings["formulas_without_value"] = unsaved
+
+        def has_cells(name):
+            if name == chosen:
+                return True
+            found = scan(name)
+            if found is not None:
+                return found.cells > 0
+            try:
+                return bool(load(name)[0])
+            except Refused:
+                return True  # it has cells, too many of them: offered, and refused when chosen
+
+        # Owner decision of 2026-10-15: the picker offers no empty sheet. The first `MAX_LISTING_CHECKS` are looked
+        # at; the rest count as sheets with cells.
+        checked = [name for name in visible[:MAX_LISTING_CHECKS] if has_cells(name)]
+        count = len(checked) + max(len(visible) - MAX_LISTING_CHECKS, 0)
+        return Conversion(grid_csv(rows), kind, len(rows), width, _named(chosen), _listed(checked), count, warnings)
+
+
+def _listable(name):
+    """A name the page may offer and send back whole: at most `MAX_SHEET_NAME_CHARS`, printable, no path parts."""
+    return (
+        0 < len(name) <= MAX_SHEET_NAME_CHARS
+        and not _UNSAFE_NAME.search(name)
+        and "/" not in name
+        and "\\" not in name
+        and name not in (".", "..")
+    )
 
 
 def _listed(names):
     """The sheet names the page may offer, whole: each is sent back as the choice, so none is shortened. A name
-    longer than the wire takes (`MAX_SHEET_NAME_CHARS`) is left out of the list and only counted."""
-    return [name for name in names if len(name) <= MAX_SHEET_NAME_CHARS][:MAX_SHEETS_LISTED]
+    that is not `_listable` (too long for the wire, a control or bidi character, a path) is left out and counted."""
+    return [name for name in names if _listable(name)][:MAX_SHEETS_LISTED]
 
 
 def _named(name):
-    """The name of the sheet read, or None for one too long to send back."""
-    return name if len(name) <= MAX_SHEET_NAME_CHARS else None
+    """The name of the sheet read, or None for one the page may not show or send back."""
+    return name if _listable(name) else None
 
 
-_SHEET_TAG = re.compile(rb"<(?:\w+:)?sheet\b([^>]*)/?>")
-_RELATIONSHIP_TAG = re.compile(rb"<(?:\w+:)?Relationship\b([^>]*)/?>")
-_ATTRIBUTE = re.compile(rb"([\w:]+)\s*=\s*(\"[^\"]*\"|'[^']*')")
-_CELL = re.compile(rb"<(?:\w+:)?c\b[^>]*?(?:/>|>(.*?)</(?:\w+:)?c>)", re.DOTALL)
-_FORMULA = re.compile(rb"<(?:\w+:)?f\b")
-_VALUE = re.compile(rb"<(?:\w+:)?v\b[^>]*>[^<]")
+# Every pattern over file content is linear: a tag's attributes are `[^<>]*`, which stops at the next `<`, so a scan
+# never runs past it, and there is no lazy `.*?` across cells. A 30 MB run of `<c ` with no `>` (security review of
+# #12194: the earlier `<c ...>(.*?)</c>` pattern ran to the 10 s kill on it) costs one pass.
+_SHEET_TAG = re.compile(rb"<(?:\w+:)?sheet\b([^<>]*)>")
+_RELATIONSHIP_TAG = re.compile(rb"<(?:\w+:)?Relationship\b([^<>]*)>")
+_ATTRIBUTE = re.compile(rb"([\w:]+)\s*=\s*(\"[^\"<]*\"|'[^'<]*')")
+_SHEET_TOKEN = re.compile(rb"<(/?)([A-Za-z_][\w.:-]{0,40}+)([^<>]*+)>")
+"""A tag: whether it closes, its qualified name, its attributes. Possessive, so a run of `<c ` with no `>` costs one
+step per `<` (30 MB in about 0.4 s); `scan_sheet_xml` keeps the tags it reads by their local name."""
+_SHEET_TAGS = frozenset({b"row", b"c", b"f", b"v", b"is"})
+_REF = re.compile(rb"""\br\s*=\s*["']([A-Za-z]{0,3})([0-9]{0,7})["']""")
+_UNSAFE_NAME = re.compile(r"[\x00-\x1f\x7f-\x9f​-‏‪-‮⁦-⁩﻿]")
+MAX_LISTING_CHECKS = 50
+"""Visible sheets looked at for cells before the picker lists them; the rest count as sheets with cells."""
+
+
+class SheetScan:
+    """What one pass over an xlsx sheet part found: the span of the cells with content, and the formula cells the
+    file saved without a value (calamine reads those as empty)."""
+
+    def __init__(self):
+        self.cells = 0
+        self.unsaved = 0
+        self.first_row = self.last_row = self.first_col = self.last_col = None
+
+    def place(self, row, col):
+        self.cells += 1
+        self.first_row = row if self.first_row is None else min(self.first_row, row)
+        self.last_row = row if self.last_row is None else max(self.last_row, row)
+        self.first_col = col if self.first_col is None else min(self.first_col, col)
+        self.last_col = col if self.last_col is None else max(self.last_col, col)
+        self.check_caps()  # past a cap the scan stops: the rest of a huge sheet is never walked
+
+    def check_caps(self):
+        """Refuse a sheet whose cells span more rows or columns than the caps, before calamine allocates its
+        bounding box: one cell at XFD1048576 made it allocate 549 GB and abort (security review of #12194)."""
+        if self.first_row is None:
+            return
+        rows = self.last_row - self.first_row + 1
+        columns = self.last_col - self.first_col + 1
+        if rows > MAX_GRID_ROWS:
+            raise Refused("too_many_rows", rows, MAX_ROWS)
+        if columns > MAX_COLUMNS:
+            raise Refused("too_many_columns", columns, MAX_COLUMNS)
+
+
+def _column_index(letters):
+    index = 0
+    for letter in letters.upper():
+        index = index * 26 + (letter - 64)
+    return index
+
+
+def scan_sheet_xml(xml):
+    """One linear pass over a sheet part's tags (`_SHEET_TOKEN`): rows and cells by their `r` (or one past the
+    previous one when it is missing), a cell with a non-empty `<v>`, an `<is>` or an `<f>` counts as content, and a
+    cell with an `<f>` and no non-empty `<v>` as a formula saved without its value."""
+    found = SheetScan()
+    row = 0
+    col = 0
+    in_cell = False
+    formula = value = content = False
+    for match in _SHEET_TOKEN.finditer(xml):
+        closing, name, attributes = match.group(1), match.group(2).rpartition(b":")[2], match.group(3)
+        if name not in _SHEET_TAGS:
+            continue
+        if name == b"row":
+            if not closing:
+                ref = _REF.search(attributes)
+                row = int(ref.group(2)) if ref and ref.group(2) else row + 1
+                col = 0
+            continue
+        if name == b"c":
+            if closing:
+                if in_cell:
+                    if content:
+                        found.place(row, col)
+                    if formula and not value:
+                        found.unsaved += 1
+                in_cell = False
+                continue
+            ref = _REF.search(attributes)
+            if ref and ref.group(1):
+                col = _column_index(ref.group(1))
+                if ref.group(2):
+                    row = int(ref.group(2))
+            else:
+                col += 1
+            in_cell = not attributes.rstrip().endswith(b"/")
+            formula = value = content = False
+            continue
+        if not in_cell or closing:
+            continue
+        if name == b"f":
+            formula = content = True
+        elif name == b"is":
+            content = True
+        elif name == b"v" and not attributes.rstrip().endswith(b"/") and xml[match.end() : match.end() + 1] != b"<":
+            value = content = True
+    return found
 
 
 def _attributes(raw):
@@ -468,13 +672,10 @@ def _attributes(raw):
     }
 
 
-def formulas_without_value(data, sheet_name):
-    """How many formula cells of an xlsx sheet the file saved without a value (calamine reads them as empty).
-
-    Read from the workbook's own parts with plain patterns, no XML parser: the sheet's
-    relationship id in `xl/workbook.xml`, its part in `xl/_rels/workbook.xml.rels`, then
-    every `<c>` with an `<f>` and no non-empty `<v>`. 0 when a part is missing or too large.
-    """
+def sheet_scan(data, sheet_name):
+    """`scan_sheet_xml` of an xlsx sheet, found from the workbook's own parts with plain patterns, no XML parser:
+    the sheet's relationship id in `xl/workbook.xml`, its part in `xl/_rels/workbook.xml.rels`. None when a part
+    is missing (calamine then reads the sheet without the pre-check)."""
     try:
         with zipfile.ZipFile(io.BytesIO(data)) as archive:
             workbook = archive.read("xl/workbook.xml")
@@ -486,7 +687,7 @@ def formulas_without_value(data, sheet_name):
                     target = next((value for key, value in attributes.items() if key.endswith(":id")), None)
                     break
             if target is None:
-                return 0
+                return None
             part = None
             for raw in _RELATIONSHIP_TAG.findall(relations):
                 attributes = _attributes(raw)
@@ -494,19 +695,12 @@ def formulas_without_value(data, sheet_name):
                     part = attributes.get("Target")
                     break
             if not part:
-                return 0
+                return None
             path = part.lstrip("/") if part.startswith("/") else "xl/" + part
-            info = archive.getinfo(path)
-            if info.file_size > MAX_FORMULA_SCAN_BYTES:
-                return 0
-            xml = archive.read(path)
+            xml = archive.read(path)  # its size was checked against the archive caps by inflating it
     except (KeyError, zipfile.BadZipFile, OSError, ValueError, EOFError):
-        return 0
-    return sum(
-        1
-        for match in _CELL.finditer(xml)
-        if match.group(1) and _FORMULA.search(match.group(1)) and not _VALUE.search(match.group(1))
-    )
+        return None
+    return scan_sheet_xml(xml)
 
 
 # --- Parquet, Feather, Arrow ----------------------------------------------------------------
@@ -518,11 +712,13 @@ def read_arrow(data, kind, warnings):
 
     try:
         table = _arrow_table(pa, data, kind)
+        names, columns, lists = _arrow_columns(pa, table, warnings)
     except Refused:
         raise
+    except MemoryError:  # pyarrow's ArrowMemoryError among them: a decompression bomb past the address-space limit
+        raise Refused("too_complex") from None
     except Exception:  # pyarrow's ArrowInvalid, OSError and kin for a broken or hostile file
         raise Refused("corrupt") from None
-    names, columns, lists = _arrow_columns(pa, table, warnings)
     if lists:
         return _records(names, columns, kind, warnings)
     return _table(names, columns, kind, warnings)
@@ -584,8 +780,14 @@ def _arrow_table(pa, data, kind):
         import pyarrow.parquet as pq
 
         parquet = pq.ParquetFile(source)
-        if parquet.metadata.num_rows > MAX_ROWS:
-            raise Refused("too_many_rows", parquet.metadata.num_rows, MAX_ROWS)
+        metadata = parquet.metadata
+        # The reader goes by row groups, so their counts are checked, and a footer total that disagrees with them
+        # is a forged footer (security review of #12194).
+        grouped = sum(metadata.row_group(index).num_rows for index in range(metadata.num_row_groups))
+        if grouped != metadata.num_rows:
+            raise Refused("corrupt")
+        if grouped > MAX_ROWS:
+            raise Refused("too_many_rows", grouped, MAX_ROWS)
         schema = parquet.schema_arrow
         _leaf_count(pa, schema)
         for batch in parquet.iter_batches(batch_size=4096, use_threads=False):
@@ -665,22 +867,26 @@ def _arrow_columns(pa, table, warnings):
             or pa.types.is_fixed_size_binary(kind)
             or pa.types.is_union(kind)
             or pa.types.is_dictionary(kind)
+            or pa.types.is_duration(kind)
+            or pa.types.is_interval(kind)
         ):
-            warnings["dropped_columns"] = warnings.get("dropped_columns", 0) + 1
+            # A duration or an interval has no form the parser reads as one value; named, never written as repr text.
+            dropped(warnings, str(name))
             continue
-        if pa.types.is_timestamp(kind):
-            if kind.tz is not None:
-                # Arrow stores zone-aware times in UTC; the cast drops the zone and keeps them. They are
-                # written without an offset, because the parser's ISO date pattern reads none, and counted.
-                warnings["utc_timestamps"] = warnings.get("utc_timestamps", 0) + 1
-            # Microseconds: a Python datetime holds no nanoseconds.
-            column = pc.cast(column, pa.timestamp("us"), safe=False)
-        elif pa.types.is_duration(kind):
-            column = pc.cast(column, pa.duration("us"), safe=False)
-        elif pa.types.is_time64(kind):
-            column = pc.cast(column, pa.time64("us"), safe=False)
-        elif pa.types.is_float16(kind):
-            column = pc.cast(column, pa.float32())
+        if pa.types.is_timestamp(kind) or pa.types.is_time(kind):
+            texts = _exact_times(pa, pc, column, kind, warnings)
+            names.append(str(name))
+            columns.append(texts)
+            continue
+        if pa.types.is_floating(kind) and kind.bit_width < 64:
+            # The shortest text that reads back as the same float32 or float16 (`0.1`, not its float64 digits).
+            import numpy as np
+
+            narrow = np.float16 if kind.bit_width == 16 else np.float32
+            texts = ["" if value is None else _float_text(narrow(value)) for value in column.to_pylist()]
+            names.append(str(name))
+            columns.append(texts)
+            continue
         values = column.to_pylist()
         texts = [cell_text(value) for value in values]
         names.append(str(name))
@@ -694,6 +900,42 @@ def _arrow_columns(pa, table, warnings):
             else texts
         )
     return distinct_names(names, warnings), columns, lists
+
+
+MAX_DROPPED_NAMED = 20
+"""Dropped columns named in the answer (`meta.dropped`); more are counted only."""
+_TRAILING_FRACTION = re.compile(r"(\.\d*?)0+(?=$|[Z+-])")
+
+
+def dropped(warnings, name):
+    """Count a column left out (`dropped_columns`) and name it for the page (owner rule of 2026-10-15: a step that
+    changes the data says so). The names travel in `warnings["_dropped"]`, which `Conversion` moves to `dropped`."""
+    warnings["dropped_columns"] = warnings.get("dropped_columns", 0) + 1
+    warnings.setdefault("_dropped", []).append(name)
+
+
+def _exact_times(pa, pc, column, kind, warnings):
+    """Timestamps and times as ISO text with every digit the file stored (nanoseconds included) and, for a
+    zone-aware timestamp, the offset in its own zone (`+0100`): owner rule of 2026-10-15, data keeps its precision
+    and its time zone as written. Trailing zeros of a fraction go, which changes no value.
+
+    pyarrow formats the zone from the system's time-zone database; where that zone cannot be read, the times are
+    written in UTC (`Z`) and counted (`utc_timestamps`), so the change is said, never silent."""
+    try:
+        texts = pc.cast(column, pa.string()).to_pylist()
+    except Exception:
+        if not (pa.types.is_timestamp(kind) and kind.tz is not None):
+            raise
+        warnings["utc_timestamps"] = warnings.get("utc_timestamps", 0) + 1
+        texts = pc.cast(pc.cast(column, pa.timestamp(kind.unit, "UTC")), pa.string()).to_pylist()
+    return ["" if text is None else _TRAILING_FRACTION.sub(lambda m: m.group(1).rstrip("."), text) for text in texts]
+
+
+def _float_text(value):
+    """A float32 or float16 in the shortest text that reads back as the same value; empty for NaN and infinity."""
+    import numpy as np
+
+    return str(value) if np.isfinite(value) else ""
 
 
 def distinct_names(names, warnings):
@@ -735,7 +977,9 @@ def _npy_array(raw):
             shape, fortran, dtype = format_.read_array_header_1_0(handle, max_header_size=NPY_MAX_HEADER)
         else:
             shape, fortran, dtype = format_.read_array_header_2_0(handle, max_header_size=NPY_MAX_HEADER)
-    except ValueError:
+    except MemoryError:
+        raise Refused("too_complex") from None
+    except Exception:  # ValueError, SyntaxError, tokenize's TokenError of a broken header literal, and kin
         raise Refused("corrupt") from None
     if dtype.hasobject:
         raise Refused("object_array")
@@ -745,7 +989,9 @@ def _npy_array(raw):
     handle.seek(0)
     try:
         return format_.read_array(handle, allow_pickle=False, max_header_size=NPY_MAX_HEADER)
-    except ValueError:
+    except MemoryError:
+        raise Refused("too_complex") from None
+    except Exception:
         raise Refused("corrupt") from None
 
 
@@ -769,8 +1015,8 @@ def _array_columns(array, warnings):
         fields = []
         for name in array.dtype.names:
             field = array[name]
-            if field.ndim != 1 or field.dtype.names is not None:
-                warnings["dropped_columns"] = warnings.get("dropped_columns", 0) + 1
+            if field.ndim != 1 or field.dtype.names is not None or field.dtype.kind == "m":
+                dropped(warnings, name)  # a sub-array, a nested record or a duration: no single cell holds it
                 continue
             fields.append((name, field))
     names = []
@@ -779,7 +1025,9 @@ def _array_columns(array, warnings):
         if values.dtype.kind == "M":
             texts = ["" if np.isnat(value) else str(np.datetime_as_string(value)) for value in values]
         elif values.dtype.kind == "m":
-            texts = ["" if np.isnat(value) else str(value) for value in values]
+            texts = ["" if np.isnat(value) else str(value) for value in values]  # a 2-D array of durations
+        elif values.dtype.kind == "f" and values.dtype.itemsize < 8:
+            texts = [_float_text(value) for value in values]
         else:
             texts = [cell_text(value) for value in values.tolist()]
         names.append(name)
@@ -835,10 +1083,13 @@ def convert(data, sheet=None):
         raise Refused("too_large", len(data), MAX_INPUT_BYTES)
     if not data:
         raise Refused("empty")
-    kind = sniff(data)
-    warnings = {}
-    if kind in SPREADSHEET_KINDS:
-        return read_workbook(data, kind, sheet, warnings)
-    if kind in ("parquet", "feather", "arrow"):
-        return read_arrow(data, kind, warnings)
-    return read_numpy(data, kind, sheet, warnings)
+    try:
+        kind = sniff(data)
+        warnings = {}
+        if kind in SPREADSHEET_KINDS:
+            return read_workbook(data, kind, sheet, warnings)
+        if kind in ("parquet", "feather", "arrow"):
+            return read_arrow(data, kind, warnings)
+        return read_numpy(data, kind, sheet, warnings)
+    except MemoryError:  # past the sandbox's address-space limit anywhere in a reader
+        raise Refused("too_complex") from None

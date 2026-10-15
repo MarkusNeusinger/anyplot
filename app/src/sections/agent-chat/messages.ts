@@ -148,6 +148,8 @@ export const CONVERT_FAILURE: Record<string, string> = {
   file_empty: 'has no cells with values',
   file_sheet_not_found: 'no longer has that sheet; drop the file again',
   file_array_shape: 'holds no 2-D or structured array; save the data as a 2-D array or a table',
+  file_formulas_only:
+    'contains only formulas without saved values; open it in Excel and save it once',
   file_object_array:
     'holds a pickled object array, which is never read because loading one can run code; save numbers or text',
   file_timeout: 'took longer than the 10 seconds a file may take to read; save a smaller file',
@@ -184,14 +186,17 @@ export function describeConvertFailure(
 }
 
 /** What the server counted while it read a file, as the parts of the line under the box. */
-export function describeConvertWarnings(warnings: {
-  formulas_without_value?: number;
-  hidden_sheets?: number;
-  dropped_columns?: number;
-  list_columns?: number;
-  utc_timestamps?: number;
-  renamed_columns?: number;
-}): string[] {
+export function describeConvertWarnings(
+  warnings: {
+    formulas_without_value?: number;
+    hidden_sheets?: number;
+    dropped_columns?: number;
+    list_columns?: number;
+    utc_timestamps?: number;
+    renamed_columns?: number;
+  },
+  dropped: string[] = []
+): string[] {
   const parts: string[] = [];
   const count = (value: number, noun: string) =>
     `${value.toLocaleString('en-US')} ${noun}${value === 1 ? '' : 's'}`;
@@ -210,8 +215,13 @@ export function describeConvertWarnings(warnings: {
     parts.push(`${count(warnings.hidden_sheets, 'hidden sheet')} skipped`);
   }
   if (warnings.dropped_columns) {
+    // The names, because a step that changes the data says what it changed (owner rule, 2026-10-15).
+    const more = warnings.dropped_columns - dropped.length;
+    const named = dropped.length
+      ? `: ${dropped.map(name => `"${name}"`).join(', ')}${more > 0 ? ` and ${more} more` : ''}`
+      : '';
     parts.push(
-      `${count(warnings.dropped_columns, 'column')} of binary, map or nested values left out`
+      `${count(warnings.dropped_columns, 'column')} of durations, intervals, binary, map or nested values left out${named}`
     );
   }
   if (warnings.list_columns) {

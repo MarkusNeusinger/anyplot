@@ -400,8 +400,10 @@ def sandbox_env(config: ExecutorConfig, theme: Theme | None, cpu_s: int, *, conv
     """The complete environment inside the sandbox: nothing of the host's reaches it.
 
     A data run or a conversion (`theme` None) gets no theme and no matplotlib settings: it imports no plotting
-    library. A conversion also gets Arrow's system allocator, whose jemalloc pool would reserve address space
-    and start a background thread under the sandbox's limits.
+    library. A conversion also gets Arrow's system allocator (`ARROW_DEFAULT_MEMORY_POOL=system`), so pyarrow's
+    buffers come from the same `malloc` as everything else under the address-space limit; with the bundled
+    jemalloc pool, a test run on a developer machine logged a failed background-thread start under the process
+    limit.
     """
     plot: dict[str, str] = {}
     if theme is not None:

@@ -535,7 +535,7 @@ jobs:
           # What the image is built from: its Dockerfile, the service package,
           # the harness it copies, the dependency lock, README.md (copied next
           # to pyproject.toml) and the root .dockerignore (the build context).
-          RENDERER_CHANGES=$(echo "$CHANGED_FILES" | grep -E '^(agents/renderer/|agents/__init__\.py$|agents/anyplot/render/harness\.py$|pyproject\.toml$|uv\.lock$|README\.md$|\.dockerignore$|\.github/workflows/ci-image\.yml$)' || true)
+          RENDERER_CHANGES=$(echo "$CHANGED_FILES" | grep -E '^(agents/renderer/|agents/__init__\.py$|agents/anyplot/render/harness\.py$|agents/anyplot/render/convert\.py$|tests/image/|tests/unit/agents/runtime/convert_fixtures\.py$|pyproject\.toml$|uv\.lock$|README\.md$|\.dockerignore$|\.github/workflows/ci-image\.yml$)' || true)
 
           if [[ "$EVENT_NAME" == "workflow_dispatch" && "$FORCE_RUN" == "true" ]]; then
             echo "Manual trigger with force_run=true, will build the renderer image"
@@ -609,6 +609,19 @@ jobs:
           print(f"OK: plot-light.png {width}x{height}, {len(png)} bytes; probe written")
           EOF
           tail -n 1 harness.out
+
+      # The file conversion inside the image (harness.py --convert): every format the
+      # page sends, with the image's slimmed pyarrow (owner decision of 2026-10-15),
+      # its calamine and NumPy, the guard's preload, and the sandbox's environment.
+      # A file the Dockerfile's slimming removed but a reader needs fails here.
+      - name: Convert every data format through the harness
+        if: steps.check.outputs.should_build == 'true'
+        run: |
+          set -euo pipefail
+          docker run --rm --network none --read-only --tmpfs /tmp \
+            --cap-drop ALL --security-opt no-new-privileges --user "$(id -u):$(id -g)" \
+            -v "$PWD:/repo:ro" \
+            anyplot-renderer:ci /app/.venv/bin/python -I /repo/tests/image/convert_smoke.py
 
       # The fallback fonts: the harness appends them after the font the code chose,
       # so this fixture does what catalogue code does to the font setup (seaborn's
@@ -689,6 +702,7 @@ jobs:
         run: |
           set -euo pipefail
           echo "image size: $(docker image inspect --format '{{.Size}}' anyplot-renderer:ci) bytes"
+          docker run --rm anyplot-renderer:ci du -sh /app/.venv/lib/python3.13/site-packages/pyarrow
           docker run --rm anyplot-renderer:ci sh -c 'grep PRETTY_NAME /etc/os-release; cat /usr/share/doc/fonts-noto/versions.txt; ls -l /usr/share/fonts/noto; du -sh /usr/share/fonts/noto; head -n 5 /usr/share/doc/fonts-noto/fonts-noto-core.copyright'
 
       # Also after a failed assert, so the PNGs show what went wrong.

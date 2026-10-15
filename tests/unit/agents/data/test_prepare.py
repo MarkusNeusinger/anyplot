@@ -819,6 +819,14 @@ class TestPivotLonger:
         assert cells(prepared, 2) == ["2024-01-05T10:30:00", "2024-02-03T11:00:00", "2", "3"]
         assert dtypes(prepared)["value"] == "text"
 
+    def test_fractions_and_offsets_survive_an_operation(self) -> None:
+        """Owner rule of 2026-10-15: data keeps its precision and its zone through a change."""
+        text = "t,v\n2024-01-05T10:30:00.123456+01:00,2\n2024-01-05T11:00:00.5+01:00,3\n2024-01-05T12:00:00+01:00,4\n"
+        prepared = prepare(text, drop("v", "eq", 4))
+
+        assert cells(prepared, 0) == ["2024-01-05T10:30:00.123456+01:00", "2024-01-05T11:00:00.500000+01:00"]
+        assert dtypes(prepared)["t"] == "datetime"
+
     def test_datetime_columns_alone_keep_their_kind_and_time(self) -> None:
         text = "id,start,end\n1,2024-01-05 10:30,2024-01-06 00:00\n"
         prepared = prepare(text, {"op": "pivot_longer", "columns": ["start", "end"]})
