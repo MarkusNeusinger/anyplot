@@ -708,7 +708,9 @@ describe('DataPanel tables', () => {
         onUndo={vi.fn()}
       />
     );
-    const view = render(panel({ ...initialAgentState('matplotlib'), phase: 'ready', sessionId: 'S1' }));
+    const view = render(
+      panel({ ...initialAgentState('matplotlib'), phase: 'ready', sessionId: 'S1' })
+    );
     return { onParse, rerender: (next: AgentSessionState) => view.rerender(panel(next)) };
   }
 
@@ -728,10 +730,11 @@ describe('DataPanel tables', () => {
     rerender(withTables(1));
     const picker = screen.getByLabelText('# table (2)');
     expect(picker).toHaveValue('1');
-    expect(within(picker).getAllByRole('option').map(option => option.textContent)).toEqual([
-      '1 · Branch, Q1 · 1 row',
-      '2 · Branch, Staff · 1 row',
-    ]);
+    expect(
+      within(picker)
+        .getAllByRole('option')
+        .map(option => option.textContent)
+    ).toEqual(['1 · Branch, Q1 · 1 row', '2 · Branch, Staff · 1 row']);
 
     // An edit of the box after the parse does not count: the tables are the parsed text's.
     await userEvent.type(screen.getByLabelText(/# your data/), 'more');
