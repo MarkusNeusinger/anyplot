@@ -165,6 +165,19 @@ class TestDensityReport:
 
         assert axes["bars"] == 5 and axes["labelled"] == 5
 
+    def test_bars_zoomed_on_their_value_axis_still_count(self) -> None:
+        """Copilot round 2 on #12184: 30 bars ending at 1000 under `ylim(900, 1100)` still draw their ends."""
+        fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
+        container = ax.bar(range(30), [1000] * 30)
+        ax.bar_label(container)
+        ax.set_ylim(900, 1100)
+        fig.canvas.draw()
+
+        [axes] = harness.density_report(fig, 400)
+
+        assert axes["bars"] == 30 and axes["labelled"] == 30
+        assert _density_lines({"density": [axes]})
+
     def test_many_scatter_marks_are_matched_in_bounded_chunks(self) -> None:
         """Copilot on #12184: the pairwise arrays stay bounded however many marks the plot draws."""
         fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
@@ -325,6 +338,23 @@ class TestNumberFormatGate:
 
         assert {"date", "category"} <= {entry["x"] for entry in probe["tick_axes"]}
         assert any(label["text"] == "3.11" for label in probe["labels"])
+        assert gate_lines(probe, plot_language="de") == []
+
+    def test_preconverted_date_coordinates_are_dates(self) -> None:
+        """Copilot round 2 on #12184: `date2num` coordinates under a DateFormatter leave the converter unset."""
+        import datetime
+
+        import matplotlib.dates as mdates
+
+        fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
+        start = datetime.datetime(2026, 10, 1)
+        days = [mdates.date2num(start + datetime.timedelta(days=offset)) for offset in range(20)]
+        ax.plot(days, range(20))
+        ax.xaxis.set_major_formatter(mdates.DateFormatter("%d.%m"))
+        ax.set_yticks([0, 10, 20])
+        probe = probe_of(fig)
+
+        assert probe["tick_axes"] == [{"x": "date", "y": "number"}]
         assert gate_lines(probe, plot_language="de") == []
 
     def test_mathtext_reads_as_drawn(self) -> None:

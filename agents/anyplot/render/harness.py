@@ -1213,8 +1213,9 @@ def _bar_ends(axes, box):
 
     For a vertical bar the centre is its x centre, the end the y of the side away from the
     baseline and the width its pixel width; a horizontal bar swaps the axes. A bar with a
-    missing value (NaN geometry) or a centre outside the axes box (a zoomed view) is left
-    out: it draws nothing, and a NaN would void the probe's JSON.
+    missing value (NaN geometry) or a rectangle outside the axes box (a zoomed view) is left
+    out: it draws nothing, and a NaN would void the probe's JSON. A bar whose rectangle
+    meets the view counts, even when its centre lies past a value-axis limit.
     """
     bars = []
     orientation = None
@@ -1230,11 +1231,11 @@ def _bar_ends(axes, box):
             negative = (patch.get_width() if horizontal else patch.get_height()) < 0
             if horizontal:
                 bar = ((extent.y0 + extent.y1) / 2, extent.x0 if negative else extent.x1, extent.y1 - extent.y0)
-                centre = ((extent.x0 + extent.x1) / 2, bar[0])
             else:
                 bar = ((extent.x0 + extent.x1) / 2, extent.y0 if negative else extent.y1, extent.x1 - extent.x0)
-                centre = (bar[0], (extent.y0 + extent.y1) / 2)
-            if not all(math.isfinite(value) for value in bar) or not _in_view(*centre, box):
+            # Drawn when its rectangle meets the view: a bar zoomed past on its value axis still shows its end.
+            meets = extent.x0 <= box.x1 and extent.x1 >= box.x0 and extent.y0 <= box.y1 and extent.y1 >= box.y0
+            if not all(math.isfinite(value) for value in bar) or not meets:
                 continue
             bars.append((*bar, bool(patch.get_path_effects())))
     return bars, orientation
@@ -1408,6 +1409,9 @@ def _tick_kind(axis):
     labels_dict = getattr(getattr(major, "func", None), "func", None)
     if formatter == "FixedFormatter" or getattr(labels_dict, "__name__", "") == "_format_with_dict":
         return "fixed"
+    # A date formatter over coordinates converted beforehand (`mdates.date2num`) leaves the converter unset.
+    if "Date" in formatter or "dates" in type(major).__module__:
+        return "date"
     get_converter = getattr(axis, "get_converter", None)
     converter = get_converter() if get_converter is not None else getattr(axis, "converter", None)
     if converter is None:
