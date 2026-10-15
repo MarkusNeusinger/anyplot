@@ -120,6 +120,11 @@ ROUND_TRIP: Literal["round_trip"] = "round_trip"
 the last place (measured on pandas 3.0, 2026-10-15), so the plot would not draw the values `data.csv` holds."""
 
 
+ISO_DATES: Literal["ISO8601"] = "ISO8601"
+"""The `date_format` of every date column: `data.csv` writes ISO dates only, and without it pandas guesses a
+format per column and warns "Could not infer format" for years such as 0001 (review of #12196)."""
+
+
 def round_trip(dtype_map: dict[str, str]) -> bool:
     """Whether the read needs `float_precision="round_trip"`: some column is read as float64."""
     return PANDAS_DTYPES["number"] in dtype_map.values()
@@ -150,6 +155,7 @@ def _statement(indent: str, dtype_map: dict[str, str], dates: list[str]) -> str:
         arguments.append("dtype={" + ", ".join(dtype_items) + "}")
     if date_items:
         arguments.append("parse_dates=[" + ", ".join(date_items) + "]")
+        arguments.append(f'date_format="{ISO_DATES}"')
     if exact:
         arguments.append(f'float_precision="{ROUND_TRIP}"')
     if per_column:
@@ -165,6 +171,7 @@ def _statement(indent: str, dtype_map: dict[str, str], dates: list[str]) -> str:
         lines += [f"{inner}dtype={{", *(f"{entry}{item}," for item in dtype_items), f"{inner}}},"]
     if date_items:
         lines += [f"{inner}parse_dates=[", *(f"{entry}{item}," for item in date_items), f"{inner}],"]
+        lines.append(f'{inner}date_format="{ISO_DATES}",')
     if exact:
         lines.append(f'{inner}float_precision="{ROUND_TRIP}",')
     if per_column:

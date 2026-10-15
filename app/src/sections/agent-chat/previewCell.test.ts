@@ -30,6 +30,14 @@ describe('previewSegments', () => {
     ]);
   });
 
+  it('marks a tab, which a cell that never wraps would show as a space', () => {
+    expect(previewSegments('a\tb')).toEqual([
+      { text: 'a' },
+      { text: '→', mark: 'tab' },
+      { text: 'b' },
+    ]);
+  });
+
   it('marks breaks and runs at the edges and next to each other', () => {
     expect(previewSegments('\n  x')).toEqual([
       { text: '↵', mark: 'break' },

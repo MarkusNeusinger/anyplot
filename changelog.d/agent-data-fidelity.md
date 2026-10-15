@@ -8,8 +8,10 @@
   counts the cells; whole numbers past the 64-bit range stay text; one warning counts
   the numbers whose spelling went (`1.50` as `1.5`, `1e3` as `1000.0`); a text cell
   that lost surrounding spaces or became missing (`None`, `-`), and NFC composition, are
-  counted in warnings; the profile's integer `min` and `max` are exact; the data panel's
-  preview shows line breaks as `↵` and space runs as `·` instead of folding them
+  counted in warnings, and so are JSON's `NaN` and `Infinity`; nanosecond times beside a
+  date outside 1677 to 2262 stay text with a warning instead of turning text in the
+  loader; the profile's integer `min` and `max` are exact; the data panel's preview
+  shows line breaks as `↵`, tabs as `→` and space runs as `·` instead of folding them
   (#12196).
 - **Data operations no longer round or wrap numbers without a word.** `set_type number`
   reads whole numbers exactly; an `aggregate` sum of whole numbers no longer wraps
@@ -18,4 +20,6 @@
   count to the length cap. Date-times keep their fraction of a second and their UTC
   offset, a year-first time such as `2024-06-01T13:00:00Z` is no longer read as
   6 January, and `set_type datetime` on different UTC offsets reads them in UTC with a
-  change line naming the offsets instead of crashing the operation (#12196).
+  change line naming the offsets instead of crashing the operation. Conditions on a
+  column with a UTC offset compare moments instead of crashing the tool, and conditions
+  on whole numbers compare exactly (#12196).

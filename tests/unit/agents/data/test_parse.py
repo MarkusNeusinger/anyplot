@@ -2540,6 +2540,38 @@ class TestFidelity:
         assert parsed.csv == "a,b,c\n1.5,3,2.0\n1000.0,0,0.5\n2.0,4,1e-07\n"
         assert parsed.warnings == respelled_warning(4, "a, b")
 
+    def test_nanoseconds_beside_a_date_outside_1677_to_2262_stay_text_with_a_note(self) -> None:
+        """pandas holds a nanosecond only between 1677 and 2262; the loader left such a column text silently."""
+        nanos = parse_dataset("t,v\n1500-01-01T10:00:00.123456789,1\n2024-07-01T10:00:00,2\n")
+        micros = parse_dataset("t,v\n1500-01-01T10:00:00.123456,1\n2024-07-01T10:00:00,2\n")
+
+        assert nanos.column_dtypes["t"] == "text" and nanos.csv.splitlines()[1].startswith(
+            "1500-01-01T10:00:00.123456789"
+        )
+        assert nanos.warnings == [f"column 't': {parse_module.NS_OUT_OF_RANGE}"]
+        assert micros.column_dtypes["t"] == "datetime"
+        assert pd.api.types.is_datetime64_any_dtype(read_back(micros)["t"])  # the loader's typing agrees
+
+    def test_json_nan_and_infinity_are_counted_as_missing(self) -> None:
+        parsed = parse_dataset('[{"a": 1.5, "b": NaN}, {"a": Infinity, "b": 2}, {"a": -Infinity, "b": 3}]')
+
+        assert parsed.csv == "a,b\n1.5,\n,2\n,3\n"
+        assert "3 values NaN, Infinity or -Infinity read as missing" in parsed.warnings
+
+    def test_thousands_dots_past_int64_stay_text(self) -> None:
+        """`_retype_thousands_dots` fell back to a float for a whole number past int64 (review of #12196)."""
+        parsed = parse_dataset("a;b\n1,5;12.345.678.901.234.567.890.123\n2,5;1.234\n")
+
+        assert parsed.column_dtypes["b"] == "text"
+        assert parsed.csv == "a,b\n1.5,12.345.678.901.234.567.890.123\n2.5,1.234\n"
+        assert f"column 'b': {parse_module.BIG_INTEGERS}" in parsed.warnings
+
+    def test_the_missing_token_note_says_how_many_other_tokens_there_are(self) -> None:
+        parsed = parse_dataset("k,c\n1,a\n2,None\n3,-\n4,null\n5,n/a\n6,NULL\n")
+
+        assert warned(parsed, "column 'c': 5 cells read as missing (")
+        assert warned(parsed, " and 2 other tokens)")
+
     def test_a_subnormal_or_underflowing_number_is_warned_too(self) -> None:
         parsed = parse_dataset("v\n1.2345678901e-320\n1e-400\n5e-324\n0.000\n")
 

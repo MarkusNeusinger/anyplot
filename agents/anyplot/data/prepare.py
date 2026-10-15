@@ -148,10 +148,10 @@ import unicodedata
 import warnings
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field, replace
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, tzinfo
+from decimal import ROUND_FLOOR, InvalidOperation
 from decimal import Decimal as ExactDecimal
-from decimal import InvalidOperation
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 
 import numpy as np
 import pandas as pd
@@ -674,6 +674,7 @@ def _read(parsed: ParsedDataset) -> pd.DataFrame:
         io.StringIO(parsed.csv),
         dtype=pandas_dtypes(parsed.column_dtypes),
         parse_dates=list(parsed.parse_dates),
+        date_format="ISO8601",  # `data.csv` writes ISO dates only: no per-column guess, no "Could not infer" warning
         float_precision="round_trip",
         keep_default_na=False,
         na_values=[""],
@@ -772,7 +773,19 @@ def _set_type(frame: pd.DataFrame, op: SetType, carried: _Carried) -> tuple[pd.D
             # A number column of 1450, 1890 and 2100 reads as years too: the change line says so, the user checks it.
             change = f"{op.column}: {_count(present - failed, 'cell')} read as years (YYYY, each as 1 January)"
         else:
-            how = op.date_format or "format inferred, day before month"
+            # The cells that were read decide the wording; an unreadable one is counted below.
+            read = converted.notna()
+            texts = [text for text, ok in zip(_texts(series), read, strict=True) if ok and isinstance(text, str)]
+            year_cells = sum(1 for text in texts if _YEAR_FIRST.match(text))
+            how: str
+            if op.date_format:
+                how = op.date_format
+            elif year_cells == len(texts):
+                how = "format inferred, year first"  # `2024-06-01` is 1 June, no day-before-month guess
+            elif year_cells:
+                how = "format inferred, year first where a cell starts with one, else day before month"
+            else:
+                how = "format inferred, day before month"
             change = f"{op.column}: {_count(present - failed, 'cell')} read as dates ({how})"
     carried.text_columns.discard(op.column)
     if failed:
@@ -837,7 +850,7 @@ def _aggregate(frame: pd.DataFrame, op: Aggregate, carried: _Carried) -> tuple[p
     if value_kind == "boolean" and op.how in ("sum", "mean"):
         work[op.column] = work[op.column].astype("Int64")
     grouped = work.groupby(keys, dropna=False, sort=True)[op.column]
-    rounded = 0
+    rounded = cast = 0
     match op.how:
         case "sum" if is_integer_dtype(work[op.column].dtype):
             # In Python integers: pandas' Int64 sum wraps around silently past 2**63 (review of 2026-10-15).
@@ -848,6 +861,8 @@ def _aggregate(frame: pd.DataFrame, op: Aggregate, carried: _Carried) -> tuple[p
             aggregated = grouped.sum()
         case "mean":
             aggregated = grouped.mean()
+            if is_integer_dtype(work[op.column].dtype):  # a mean is a float: inputs past 2**53 are counted
+                cast = _past_exact(work[op.column])
         case "count":
             aggregated = grouped.count()
         case "min":
@@ -865,6 +880,8 @@ def _aggregate(frame: pd.DataFrame, op: Aggregate, carried: _Carried) -> tuple[p
     other = frame.shape[1] - len(keys) - 1
     if other:
         change += f", {_count(other, 'other column')} dropped"
+    if cast:
+        return result, _with_notice(change, cast_note(cast, f"in {op.column}"))
     return result, _with_notice(change, whole_rounded(rounded) if rounded else "")
 
 
@@ -907,7 +924,7 @@ def _pivot_longer(frame: pd.DataFrame, op: PivotLonger, carried: _Carried) -> tu
     elif kinds == {"number"} and len({is_integer_dtype(frame[name].dtype) for name in columns}) > 1:
         # Whole numbers beside decimals share one float64 column, which rounds a whole number past 2**53: counted.
         whole = [name for name in columns if is_integer_dtype(frame[name].dtype)]
-        rounded = sum(int(value) != int(float(value)) for name in whole for value in frame[name].dropna())
+        rounded = sum(_past_exact(frame[name]) for name in whole)
         work = frame.assign(**{name: frame[name].astype("float64") for name in whole})
     melted = work.melt(id_vars=rest, value_vars=columns, var_name=op.names_to, value_name=op.values_to)
     # The melted column stays text through the re-parse when a source was kept text by request
@@ -920,8 +937,7 @@ def _pivot_longer(frame: pd.DataFrame, op: PivotLonger, carried: _Carried) -> tu
         carried.with_time[op.values_to] = any(bool(time) for time in times)
     change = f"pivoted {len(columns)} columns into {op.names_to}/{op.values_to}: {_count(rows, 'row')}"
     if rounded:
-        notice = f"{_count(rounded, 'whole number')} past 2^53 {_be(rounded)} stored rounded to the nearest number "
-        change = _with_notice(change, notice + f"beside the decimals of {op.values_to}")
+        change = _with_notice(change, cast_note(rounded, f"beside the decimals of {op.values_to}"))
     return melted, change
 
 
@@ -1048,6 +1064,8 @@ def _derive(frame: pd.DataFrame, op: Derive, carried: _Carried) -> tuple[pd.Data
         what = f"{columns[0]} - {columns[1]}" if op.how == "difference" else f"sum of {', '.join(columns)}"
         return _derived(frame, op, result, what, "", carried, notice=whole_rounded(rounded) if rounded else "")
     values = [frame[name].astype("float64") for name in columns]
+    # A float result reads its whole-number inputs as float64: past 2**53 that is counted, never silent (review of #12196).
+    cast = sum(_past_exact(frame[name]) for name in columns if is_integer_dtype(frame[name].dtype))
     note = ""
     match op.how:
         case "ratio":
@@ -1079,7 +1097,7 @@ def _derive(frame: pd.DataFrame, op: Derive, carried: _Carried) -> tuple[pd.Data
         result = result * 100
         what += ", in percent"
     result = result.where(np.isfinite(result)).astype("float64")
-    return _derived(frame, op, result, what, note, carried)
+    return _derived(frame, op, result, what, note, carried, notice=cast_note(cast, "in the inputs") if cast else "")
 
 
 def _derived(
@@ -1127,23 +1145,42 @@ def _whole_numbers(results: Sequence[int | None], index: pd.Index) -> tuple[pd.S
     """Exact whole-number results as `Int64`; past its range float64, with the count of values it rounds.
 
     A float64 holds whole numbers exactly only up to 2**53, so once one result leaves the
-    int64 range the column is float64 and every result past 2**53 is rounded: the count
-    goes into the change line (`whole_rounded`), never silently (owner rule of 2026-10-15).
+    int64 range the column is float64 and every result past 2**53 is written as a float:
+    rounded, or exact but in another form (2**63 as `9.223372036854776e+18`, review of
+    #12196). The count of those goes into the change line (`whole_rounded`), never
+    silently (owner rule of 2026-10-15).
     """
     if all(value is None or _INT64_MIN <= value <= _INT64_MAX for value in results):
         return pd.Series(pd.array(results, dtype="Int64"), index=index), 0
     floats = [np.nan if value is None else float(value) for value in results]
-    rounded = sum(
-        1 for value, number in zip(results, floats, strict=True) if value is not None and int(number) != value
+    return pd.Series(floats, index=index, dtype="float64"), _past_exact(results)
+
+
+def _past_exact(values: Iterable[Any]) -> int:
+    """How many whole numbers are past 2**53, which a float64 holds rounded or only in another form."""
+    count = 0
+    for value in values:
+        if value is not None and not pd.isna(value) and abs(int(value)) > _FLOAT_EXACT:
+            count += 1
+    return count
+
+
+_FLOAT_EXACT = 2**53
+
+
+def cast_note(count: int, where: str) -> str:
+    """The change-line clause of whole numbers past 2**53 that a float computation or column takes as decimals."""
+    return (
+        f"{_count(count, 'whole number')} past 2^53 {where} {_be(count)} read as decimal numbers "
+        "(15 to 17 significant digits; a digit past them is rounded)"
     )
-    return pd.Series(floats, index=index, dtype="float64"), rounded
 
 
 def whole_rounded(count: int) -> str:
-    """The change-line clause of whole-number results that left the int64 range and are stored rounded."""
+    """The change-line clause of whole numbers past 2**53 written as floats once a column left the int64 range."""
     return (
-        f"{_count(count, 'value')} past the 64-bit whole-number range {_be(count)} stored rounded "
-        "to the nearest number (15 to 17 significant digits)"
+        f"{_count(count, 'whole number')} past 2^53 {_be(count)} stored as decimal numbers, since a result left "
+        "the 64-bit whole-number range (15 to 17 significant digits; a digit past them is rounded)"
     )
 
 
@@ -1397,10 +1434,12 @@ def _matches(series: pd.Series, condition: Condition, with_time: bool | None) ->
         return _bools(_texts(series, with_time).str.contains(value, regex=False))
     kind = _kind(series)
     target: object
+    if kind == "number" and is_integer_dtype(series.dtype):
+        return _whole_matches(series, test, value, column)
     if kind == "number":
         target = _number(value, column)
     elif kind == "datetime":
-        target = _moment(value, column)
+        target = _moment(value, column, series.dt.tz)
     elif kind == "boolean":
         if value.casefold() not in ("true", "false"):
             raise PrepareError("invalid_operation", f"the value for column '{column}' must be true or false")
@@ -1436,7 +1475,45 @@ def _number(value: str, column: str) -> float:
     return float(text)
 
 
-def _moment(value: str, column: str) -> pd.Timestamp:
+def _whole_matches(series: pd.Series, test: str, value: str, column: str) -> pd.Series:
+    """A condition on a whole-number column, compared exactly: a float64 value would make `9007199254740993`
+    equal `9007199254740992` (review of #12196).
+
+    The value is read as an exact decimal. A whole value compares as a Python integer; a
+    value with a fraction is never equal to a cell, and `gt` / `lt` compare with the
+    whole number below or above it (`gt 2.5` is `gt 2`, `lt 2.5` is `lt 3`).
+    """
+    _number(value, column)  # the same refusal as any number column for a value that is no number
+    exact = ExactDecimal(value.strip())
+    present = series.notna()
+    if exact == exact.to_integral_value():
+        whole = int(exact)
+        if not _INT64_MIN <= whole <= _INT64_MAX:  # past every cell: equal to none, above or below all
+            above = whole > _INT64_MAX
+            hit = test == "ne" or (test == "lt" and above) or (test == "gt" and not above)
+            return present.astype(bool) if hit else pd.Series(False, index=series.index)
+        if test == "eq":
+            return _bools(series == whole)
+        if test == "ne":
+            return _bools(series != whole) & present
+        return _bools(series > whole) if test == "gt" else _bools(series < whole)
+    if test == "eq":
+        return pd.Series(False, index=series.index)
+    if test == "ne":
+        return present.astype(bool)
+    floor = int(exact.to_integral_value(rounding=ROUND_FLOOR))
+    return _bools(series > floor) if test == "gt" else _bools(series < floor + 1)
+
+
+def _moment(value: str, column: str, zone: tzinfo | None = None) -> pd.Timestamp:
+    """The ISO date or date-time of a condition, comparable with the column's cells.
+
+    A column with a UTC offset (`2024-01-01T10:00:00+01:00`, or `Z`) compares moments: a
+    value with an offset is converted to the column's offset, a value without one is
+    refused, since which zone it means would be a guess. A column without an offset takes
+    a value without one; a value with an offset there is refused the same way. Comparing
+    the two kinds raised a `TypeError` that crashed the tool (review of #12196).
+    """
     try:
         moment = datetime.fromisoformat(value.strip())
     except ValueError:
@@ -1444,9 +1521,19 @@ def _moment(value: str, column: str) -> pd.Timestamp:
             "invalid_operation",
             f"the value for column '{column}' is not an ISO date (YYYY-MM-DD, with an optional time)",
         ) from None
-    if moment.tzinfo is not None:
-        raise PrepareError("invalid_operation", f"the value for column '{column}' must be a date without a time zone")
-    return pd.Timestamp(moment)
+    stamp = pd.Timestamp(moment)
+    if zone is None and stamp.tzinfo is not None:
+        raise PrepareError(
+            "invalid_operation",
+            f"column '{column}' holds times without a UTC offset; give the value without one, such as 2024-01-01T10:00",
+        )
+    if zone is not None and stamp.tzinfo is None:
+        raise PrepareError(
+            "invalid_operation",
+            f"column '{column}' holds times with a UTC offset; give the value with one, such as "
+            "2024-01-01T10:00:00+00:00",
+        )
+    return stamp if zone is None else stamp.tz_convert(zone)
 
 
 def _bools(mask: pd.Series) -> pd.Series:

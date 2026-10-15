@@ -167,7 +167,9 @@ function PreviewCell({ cell }: { cell: string }) {
     <>
       {previewSegments(cell).map((segment, index) => {
         if (!segment.mark) return <span key={index}>{segment.text}</span>;
-        const label = segment.mark === 'break' ? 'line break' : `${segment.text.length} spaces`;
+        const label = { break: 'line break', tab: 'tab', spaces: `${segment.text.length} spaces` }[
+          segment.mark
+        ];
         return (
           <span key={index} title={label}>
             <Box component="span" aria-hidden="true" sx={{ color: 'var(--ink-muted)' }}>

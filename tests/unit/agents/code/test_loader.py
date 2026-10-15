@@ -65,7 +65,7 @@ def test_placeholder_becomes_read_csv() -> None:
     assert result == WORKING.replace(
         "df = load_user_data()",
         'df = pd.read_csv(\n    "data.csv",\n    dtype={\n        "x": "Int64",\n        "y": "float64",\n'
-        '        "b": "boolean",\n    },\n    parse_dates=[\n        "when",\n    ],\n'
+        '        "b": "boolean",\n    },\n    parse_dates=[\n        "when",\n    ],\n    date_format="ISO8601",\n'
         '    float_precision="round_trip",\n)',
     )
 
@@ -75,7 +75,10 @@ def test_without_a_number_column_the_read_stays_on_one_line() -> None:
         WORKING, columns=["x", "when", "b"], dtypes={"x": "integer", "when": "datetime", "b": "boolean"}, parse_dates=[]
     )
 
-    assert 'df = pd.read_csv("data.csv", dtype={"x": "Int64", "b": "boolean"}, parse_dates=["when"])\n' in result
+    assert (
+        'df = pd.read_csv("data.csv", dtype={"x": "Int64", "b": "boolean"}, parse_dates=["when"], '
+        'date_format="ISO8601")\n'
+    ) in result
 
 
 def test_the_loader_reads_every_float_exactly(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -161,7 +164,7 @@ def test_the_exported_loader_reads_a_users_r_export(tmp_path: Path, monkeypatch:
 
 def test_parse_dates_follow_column_order_and_empty_arguments_are_left_out() -> None:
     result = to_run_form(WORKING, columns=["a", "b", "c"], dtypes={"c": "datetime"}, parse_dates=["a"])
-    assert 'df = pd.read_csv("data.csv", parse_dates=["a", "c"])' in result
+    assert 'df = pd.read_csv("data.csv", parse_dates=["a", "c"], date_format="ISO8601")' in result
 
     plain = to_run_form(WORKING, columns=["a"], dtypes={}, parse_dates=[])
     assert 'df = pd.read_csv("data.csv")\n' in plain

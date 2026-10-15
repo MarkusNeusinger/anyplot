@@ -329,7 +329,7 @@ class TestDropRows:
             (drop("Umsatz", "gt", "1,5"), "not a number"),
             (drop("Umsatz", "eq", "Hund"), "not a number"),
             (drop("Datum", "lt", "01.02.2024"), "not an ISO date"),
-            (drop("Datum", "lt", "2024-02-01T00:00:00+02:00"), "without a time zone"),
+            (drop("Datum", "lt", "2024-02-01T00:00:00+02:00"), "holds times without a UTC offset"),
         ],
     )
     def test_invalid_conditions(self, condition: dict[str, Any], fragment: str) -> None:
@@ -584,7 +584,9 @@ class TestSetTypeDatetime:
         prepared = prepare(text, {"op": "set_type", "column": "t", "type": "datetime"})
 
         assert cells(prepared, 0) == ["2024-01-01", "2024-02-01", "2024-04-03", "2024-03-15"]
-        assert prepared.changes == ["t: 4 cells read as dates (format inferred, day before month)"]
+        assert prepared.changes == [
+            "t: 4 cells read as dates (format inferred, year first where a cell starts with one, else day before month)"
+        ]
 
     def test_a_number_column_is_a_type_mismatch(self) -> None:
         assert failure(SALES, {"op": "set_type", "column": "Umsatz", "type": "datetime"})[0] == "type_mismatch"
@@ -1683,10 +1685,8 @@ class TestFidelity:
 
         # Once one total leaves int64 the column is float64, and 2**53 + 3 is rounded with it: both counted.
         assert cells(prepared, 1) == [repr(float(2 * big)), repr(float(2**53 + 3))]
-        assert prepared.changes == [
-            "summed a by g: 2 rows, 2 values past the 64-bit whole-number range are stored rounded to the nearest "
-            "number (15 to 17 significant digits)"
-        ]
+        assert prepared.changes == [f"summed a by g: 2 rows, {prepare_module.whole_rounded(2)}"]
+        assert prepare_module.whole_rounded(2).startswith("2 whole numbers past 2^53 are stored as decimal numbers")
         exact = prepare(f"g,a\nx,{2**53 + 1}\nx,1\n,5\n,\n", aggregate_sum("a"))
         assert rows(exact) == ["g,a", f"x,{2**53 + 2}", ",5"] and exact.changes == ["summed a by g: 2 rows"]
 
@@ -1699,10 +1699,15 @@ class TestFidelity:
         assert cells(running, 3) == [str(2**53 + 2), str(2**53 + 1), ""]
         assert cells(summed, 3) == [str(2**53 + 1), str(2**53 + 2), "2"]
         assert cells(over, 2) == [repr(float(2**63 - 1)), repr(float(2**63))]
-        assert over.changes[0].endswith(  # 2**63 itself is a float exactly: one value is rounded
-            ", 1 value past the 64-bit whole-number range is stored rounded to the nearest number "
-            "(15 to 17 significant digits)"
-        )
+        # 2**63 is a float exactly but written `9.223372036854776e+18`: both values past 2**53 are counted.
+        assert over.changes[0].endswith(f", {prepare_module.whole_rounded(2)}")
+
+    def test_a_result_that_is_exact_as_a_float_is_still_announced(self) -> None:
+        """2**62 + 2**62 = 2**63 leaves int64 although a float holds it exactly (review of #12196)."""
+        prepared = prepare(f"g,a\nx,{2**62}\nx,{2**62}\n", aggregate_sum("a"))
+
+        assert cells(prepared, 1) == ["9.223372036854776e+18"]
+        assert prepared.changes == [f"summed a by g: 1 row, {prepare_module.whole_rounded(1)}"]
 
     def test_an_exact_running_total_groups_keys_as_pandas_does(self) -> None:
         """`-0.0` and `0.0` are one group, as in pandas' own groupby (review of #12196)."""
@@ -1726,7 +1731,7 @@ class TestFidelity:
         for prepared in (summed, running):
             (line,) = prepared.changes
             assert len(line) <= MAX_NOTE_CHARS
-            assert line.endswith("stored rounded to the nearest number (15 to 17 significant digits)")
+            assert line.endswith("(15 to 17 significant digits; a digit past them is rounded)")
             assert "…" in line or prepared is running
 
     def test_derived_ratios_and_percents_keep_full_precision(self) -> None:
@@ -1739,9 +1744,17 @@ class TestFidelity:
 
         assert cells(prepared, 2) == [repr(float(2**53)), "7.0", "1.5", "2.5"]
         assert prepared.changes == [
-            "pivoted 2 columns into series/value: 4 rows, 1 whole number past 2^53 is stored rounded to the "
-            "nearest number beside the decimals of value"
+            "pivoted 2 columns into series/value: 4 rows, 1 whole number past 2^53 beside the decimals of value is "
+            "read as decimal numbers (15 to 17 significant digits; a digit past them is rounded)"
         ]
+
+    def test_float_results_count_their_whole_number_inputs_past_2_53(self) -> None:
+        """A ratio or a mean reads Int64 inputs as float64; past 2**53 that is counted (review of #12196)."""
+        ratio = prepare(f"a,b\n{2**53 + 1},2.0\n4,2.0\n", derive("r", "ratio", "a", "b"))
+        mean = prepare(f"g,a\nx,{2**53 + 1}\nx,1\n", {"op": "aggregate", "by": ["g"], "column": "a", "how": "mean"})
+
+        assert ratio.changes[0].endswith(f", {prepare_module.cast_note(1, 'in the inputs')}")
+        assert mean.changes == [f"averaged a by g: 1 row, {prepare_module.cast_note(1, 'in a')}"]
 
     def test_set_type_datetime_keeps_fractions_of_a_second_and_offsets(self) -> None:
         fractions = prepare("label,t\nx,2024-03-05 12:00:00.25\ny,2024-03-05 12:00:01.5\n", set_dates(column="t"))
@@ -1767,8 +1780,35 @@ class TestFidelity:
         expected = [f"2024-06-0{n}T13:00:00+00:00" for n in range(1, 10)]
         assert cells(prepared, 1) == [*expected[:4], "", *expected[4:]]
         assert prepared.changes == [
-            "t: 9 cells read as dates (format inferred, day before month), 1 cell could not be read and is now missing"
+            "t: 9 cells read as dates (format inferred, year first), 1 cell could not be read and is now missing"
         ]
+
+    def test_conditions_on_a_column_with_an_offset_compare_moments(self) -> None:
+        """A `Z` or offset column took a naive value into a `TypeError` that crashed the tool (review of #12196)."""
+        text = "label,t\na,2023-12-31T23:30:00Z\nb,2024-01-01T00:00:00Z\nc,2024-01-01T00:30:00Z\n"
+        utc = prepare(text, drop("t", "lt", "2024-01-01T00:00:01+00:00"))
+        berlin = prepare(text, drop("t", "lt", "2024-01-01T01:00:01+01:00"))  # the same moment
+        code, message = failure(text, drop("t", "lt", "2024-01-01T00:00:01"))
+
+        assert rows(utc) == rows(berlin) == ["label,t", "c,2024-01-01T00:30:00+00:00"]
+        assert code == "invalid_operation" and "give the value with one" in message
+        classified = prepare(
+            text, classify("late", ([{"column": "t", "test": "gt", "value": "2024-01-01T00:00:00Z"}], "y"))
+        )
+        assert cells(classified, 2) == ["", "", "y"]
+
+    def test_conditions_on_whole_numbers_compare_exactly(self) -> None:
+        """`9007199254740992` and `9007199254740993` are one float64 but two ids (review of #12196)."""
+        text = f"id,v\n{2**53},1\n{2**53 + 1},2\n{2**63 - 1},3\n"
+
+        assert rows(prepare(text, drop("id", "eq", str(2**53)))) == ["id,v", f"{2**53 + 1},2", f"{2**63 - 1},3"]
+        assert rows(prepare(text, drop("id", "ne", str(2**53 + 1)))) == ["id,v", f"{2**53 + 1},2"]
+        assert rows(prepare(text, drop("id", "gt", f"{2**53}.5"))) == ["id,v", f"{2**53},1"]
+        assert rows(prepare(text, drop("id", "lt", f"{2**53}.5"))) == ["id,v", f"{2**53 + 1},2", f"{2**63 - 1},3"]
+        unchanged = ["id,v", f"{2**53},1", f"{2**53 + 1},2", f"{2**63 - 1},3"]
+        assert rows(prepare(text, drop("id", "eq", f"{2**53}.5"))) == unchanged  # a fraction equals no whole number
+        assert rows(prepare(text, drop("id", "gt", str(2**64)))) == unchanged  # past int64: above every cell
+        assert failure(text, drop("id", "lt", str(2**64)))[0] == "empty_result"
 
     def test_an_exponent_past_the_decimal_range_is_read_as_its_float(self) -> None:
         prepared = from_text(
@@ -1789,7 +1829,8 @@ class TestFidelity:
             "2024-08-01T07:30:00+00:00",
         ]
         assert prepared.changes == [
-            "t: 3 cells read as dates (format inferred, day before month), times with the UTC offsets +01:00, "
+            "t: 3 cells read as dates (format inferred, year first where a cell starts with one, else day before "
+            "month), times with the UTC offsets +01:00, "
             "+02:00 converted to UTC (+00:00); the instants are the same"
         ]
 

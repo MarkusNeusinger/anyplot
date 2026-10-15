@@ -1091,9 +1091,12 @@ def _read_literal(
     decoded = _decode_literal(text)
     if decoded is None:
         return None
-    data, repeated = decoded
+    data, repeated, constants = decoded
     if repeated:
         warnings.append(f"{_count(repeated, 'key')} repeated; only the last value of a repeated key is kept")
+    if constants:
+        # A number column holds finite values only (`data.csv` and the loader's float64 have no text for them).
+        warnings.append(f"{_count(constants, 'value')} NaN, Infinity or -Infinity read as missing")
     dataset = _json_stat_dataset(data)
     if dataset is not None:
         return _json_stat(dataset, warnings, context)
@@ -1128,23 +1131,30 @@ def _too_deep(text: str) -> bool:
     return False
 
 
-def _decode_literal(text: str) -> tuple[Any, int] | None:
-    """The decoded value and the number of repeated object keys; None when neither reader accepts the text.
+def _decode_literal(text: str) -> tuple[Any, int, int] | None:
+    """The decoded value, the number of repeated object keys and of JSON's `NaN` and `Infinity` constants (each
+    read as a missing value); None when neither reader accepts the text.
 
     `json.loads` first, then `ast.literal_eval`, which evaluates literals only: a name
     or a call is a ValueError, never run. Both keep the last value of a repeated key,
     so the count lets the caller say that rows went missing.
     """
     repeated = 0
+    constants = 0
 
     def objects(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
         nonlocal repeated
         repeated += len(pairs) - len({key for key, _ in pairs})
         return dict(pairs)
 
+    def constant(_: str) -> None:
+        nonlocal constants
+        constants += 1  # `NaN`, `Infinity`, `-Infinity`: no finite value, so missing, and counted
+        return None
+
     try:
-        loaded = json.loads(text, parse_constant=lambda _: None, parse_float=_SourceFloat, object_pairs_hook=objects)
-        return loaded, repeated
+        loaded = json.loads(text, parse_constant=constant, parse_float=_SourceFloat, object_pairs_hook=objects)
+        return loaded, repeated, constants
     except (ValueError, RecursionError):
         pass
     try:
@@ -1152,7 +1162,7 @@ def _decode_literal(text: str) -> tuple[Any, int] | None:
         value = ast.literal_eval(tree)
     except (ValueError, SyntaxError, TypeError, RecursionError, MemoryError):
         return None
-    return value, _repeated_keys(tree)
+    return value, _repeated_keys(tree), 0
 
 
 class _SourceFloat(float):
@@ -2183,6 +2193,8 @@ def _as_grouped_numbers(column: _Column, cells: list[str], present: list[str]) -
             continue
         bare = [cell.replace(mark, "").replace(",", ".") if cell else "" for cell in cells]
         if not (_as_numbers(column, bare) if decimal else _as_integers(column, bare)):
+            if not decimal:  # a whole number past int64: text keeps every digit, and says why
+                column.notes.append(BIG_INTEGERS)
             return False
         column.decimal_comma = decimal == ","
         column.group_mark = mark
@@ -2281,7 +2293,11 @@ def _retype_thousands_dots(column: _Column, *, decimal_comma: bool) -> None:
         return
     cells = [cell.replace(".", "") for cell in column.bare]
     if not _as_integers(column, cells):
-        _as_numbers(column, cells)
+        # Every cell is a whole number (`_THOUSANDS_DOT`), one past int64: text keeps every digit, as rule 3 does.
+        column.dtype, column.cells, column.numbers, column.unit = "text", list(column.source), [], None
+        column.rounded = column.respelled = 0
+        column.notes.append(BIG_INTEGERS)
+        return
     column.decimal_comma = decimal_comma
     column.notes.append("dots read as thousands separators, as in the file's other columns")
 
@@ -2420,6 +2436,11 @@ def _as_iso_stamps(column: _Column, present: list[str]) -> bool | None:
         shown = ", ".join(_offset_text(value) for value in sorted(zone for zone in zones if zone is not None))
         column.notes.append(f"times with the UTC offsets {shown} written in UTC (+00:00); the instants are the same")
     digits = max((len(fraction) for _, fraction in stamps.values()), default=0)
+    if digits > 6 and any(not _NS_RANGE[0] <= _naive_utc(stamp) <= _NS_RANGE[1] for stamp, _ in stamps.values()):
+        # pandas holds a nanosecond only between 1677 and 2262: the loader's `parse_dates` would leave such a
+        # column text without a word (review of #12196), so it is text here, said, with every digit.
+        column.notes.append(NS_OUT_OF_RANGE)
+        return False
     column.with_time = any(":" in cell for cell in present)
     texts: dict[str, str] = {}
     for cell, (stamp, fraction) in stamps.items():
@@ -2440,6 +2461,24 @@ def _as_iso_stamps(column: _Column, present: list[str]) -> bool | None:
     column.date_rests = [int((stamps[cell][1] + "000000000")[6:9]) for cell in column.source if cell]
     column.cells = [texts[cell] if cell else "" for cell in column.source]
     return True
+
+
+NS_OUT_OF_RANGE = (
+    "kept as text: times with fractions below a microsecond can be read as dates only between 1677 and 2262, "
+    "and this column has a date outside that range"
+)
+_NS_RANGE = (datetime(1677, 9, 22), datetime(2262, 4, 11))
+"""The moments a pandas `datetime64[ns]` holds, a day inside each end so an offset never crosses them."""
+
+
+def _naive_utc(stamp: datetime) -> datetime:
+    """The moment in UTC without its zone; at the ends of the calendar (year 1 or 9999) the wall time itself."""
+    if stamp.tzinfo is None:
+        return stamp
+    try:
+        return stamp.astimezone(timezone.utc).replace(tzinfo=None)
+    except OverflowError:
+        return stamp.replace(tzinfo=None)
 
 
 def _offset_text(minutes: int | None) -> str:
@@ -2752,7 +2791,10 @@ def _fidelity_notes(column: _Column, *, layout_padding: bool) -> None:
         column.notes.append(f"spaces around the text removed in {_count(column.trimmed, 'cell')}")
     if column.missing_tokens:
         total = sum(column.missing_tokens.values())
-        named = ", ".join(f"'{token}'" for token, _ in column.missing_tokens.most_common(3))
+        tokens = column.missing_tokens.most_common()
+        named = ", ".join(f"'{token}'" for token, _ in tokens[:3])
+        if len(tokens) > 3:
+            named += f" and {_count(len(tokens) - 3, 'other token')}"
         column.notes.append(f"{_count(total, 'cell')} read as missing ({named})")
 
 
