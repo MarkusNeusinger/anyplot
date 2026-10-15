@@ -334,8 +334,8 @@ class TestErrors:
             "[1, 2]",
             "(1, 2)",
             "x = [1, 2]",
-            '[{"a": {"nested": 1}}]',
-            '[{"a": [1, 2]}]',
+            '[{"a": [1, 2], "b": [1]}]',
+            '[{"a": {"b": {"c": {"d": {"e": 1}}}}}]',
             '{"a": [1, 2], "b": [1]}',
             '{"a": 1, "b": [2]}',
             '{"a": [[1]]}',
@@ -345,7 +345,8 @@ class TestErrors:
         ],
     )
     def test_unparseable(self, text: str) -> None:
-        # `{"a": 1}` was in this list until the parser read an object of values as pairs (2026-10-11).
+        # `{"a": 1}` was in this list until the parser read an object of values as pairs (2026-10-11), and
+        # `[{"a": {"nested": 1}}]` until it flattened nested objects into dotted columns (2026-10-15).
         assert error_code(text) == "unparseable"
 
     @pytest.mark.parametrize(
@@ -359,7 +360,9 @@ class TestErrors:
         for text in (
             'a,b\n"SECRET"y,1\n',
             "a,b\nSECRET,2,SECRET\n",
-            '[{"a": {"SECRET": 1}}]',
+            '[{"a": {"SECRET": [{"b": 1}]}}]',
+            '{"fields": ["SECRET"], "rows": [["SECRET", "SECRET"]]}',
+            '[{"page": "SECRET"}, [{"x": 1}], [{"x": 2}]]',
             "x = [SECRET]",
             "{'SECRET': {'a': 1}}",
             "{'SECRET': 1, 'b': [2]}",
@@ -1859,3 +1862,559 @@ class TestEmptyColumns:
         )
 
         assert [c.name for c in parsed.profile.columns] == ["x", "y", "ratio"]
+
+
+# A weather station's export, generalised from the MeteoSwiss case of 2026-10-15 (live test round 3): a block of
+# `Key: value` metadata, indented sub-keys and blank lines, then a table aligned with runs of spaces, a header name
+# with one inner space, CRLF line ends and trailing spaces. The station and the values are invented.
+STATION_EXPORT = (
+    "Federal Office of Imaginary Weather\r\n"
+    "\r\n"
+    "Monthly values\r\n"
+    "\r\n"
+    "Station:                  Musterberg / Nord\r\n"
+    "Altitude [m asl]:         812 m\r\n"
+    "\r\n"
+    "Units:\r\n"
+    "         Max Temp:        °C\r\n"
+    "         Precipitation:   mm\r\n"
+    "\r\n"
+    "Missing values:           {mark}\r\n"
+    "Creation date:            3.10.2026\r\n"
+    "\r\n"
+    "Year  Month        Max Temp      Precipitation  \r\n"
+    "1901      1            -4.2               31.5  \r\n"
+    "1901      2            -1.0               {mark}  \r\n"
+    "1901      3             5.7               48.0  \r\n"
+    "1901      4            10.3               66.2  \r\n"
+    "1901      5            15.1              102.4  \r\n"
+)
+
+
+class TestSpaceAlignedTables:
+    """Tables aligned with spaces, as weather and statistics offices write them (live test of 2026-10-15)."""
+
+    @pytest.mark.parametrize("mark", ["NA", "-999"])
+    def test_a_station_export_splits_into_notes_and_a_table(self, mark: str) -> None:
+        parsed = parse_dataset(STATION_EXPORT.format(mark=mark))
+
+        assert parsed.profile.source_format == "whitespace"
+        assert parsed.column_dtypes == {
+            "Year": "integer",
+            "Month": "integer",
+            "Max Temp": "number",
+            "Precipitation": "number",
+        }
+        assert parsed.profile.rows == 5
+        assert column(parsed, "Precipitation").missing == 1
+        assert "Station: Musterberg / Nord" in parsed.context_lines
+        assert "Max Temp: °C" in parsed.context_lines
+        assert f"Missing values: {mark}" in parsed.context_lines
+        assert warned(parsed, "left out 9 lines above the table")
+        assert parsed.csv.splitlines()[:3] == ["Year,Month,Max Temp,Precipitation", "1901,1,-4.2,31.5", "1901,2,-1.0,"]
+
+    def test_a_declared_mark_that_reads_as_a_number_is_missing_with_a_warning(self) -> None:
+        parsed = parse_dataset(STATION_EXPORT.format(mark="-999"))
+
+        assert column(parsed, "Precipitation").min == 31.5
+        assert warned(parsed, "1 cell of number or date columns matched the missing-value mark the notes declare")
+
+    def test_without_a_declaration_the_mark_stays_a_value(self) -> None:
+        parsed = parse_dataset(STATION_EXPORT.format(mark="-999").replace("Missing values:", "Remark:"))
+
+        assert column(parsed, "Precipitation").min == -999
+
+    def test_a_declared_na_leaves_a_column_of_letter_codes_alone(self) -> None:
+        text = "Missing values: NA\n\nLand    Wert\nCH       1.5\nDE       2.5\nAT       NA\nNA       4.5\n"
+
+        parsed = parse_dataset(text)
+
+        assert column(parsed, "Land").missing == 0  # `NA` is Namibia here (owner decision of 2026-10-15)
+        assert column(parsed, "Wert").missing == 1
+        assert warned(parsed, "1 cell of number or date columns matched")
+
+    def test_a_declared_letter_mark_never_blanks_a_text_category(self) -> None:
+        text = "Missing values: M\n\nSex    Wert\nF       1.5\nM       M\nF       3.5\nM       4.5\n"
+
+        parsed = parse_dataset(text)
+
+        assert column(parsed, "Sex").missing == 0
+        assert column(parsed, "Wert").missing == 1
+
+    def test_a_numeric_mark_matches_by_value(self) -> None:
+        text = "nodata = -999\n\nTag    Wert\n1      2.5\n2   -999.0\n3      4.5\n"
+
+        parsed = parse_dataset(text)
+
+        assert column(parsed, "Wert").missing == 1 and column(parsed, "Wert").min == 2.5
+
+    def test_a_row_of_declared_marks_stays_a_row(self) -> None:
+        text = "Fehlwerte: .\n\nJahr    Nord    Süd\n2020     4.1    6.3\n2021       .      .\n2022     4.7    6.9\n"
+
+        parsed = parse_dataset(text)
+
+        assert parsed.profile.rows == 3
+        assert parsed.csv.splitlines()[2] == "2021,,"
+
+    @pytest.mark.parametrize(
+        ("lines", "marks"),
+        [
+            (["Missing values: NA"], {"NA"}),
+            (["nodata = -9999"], {"-9999"}),
+            (["Missing values: 9999"], {"9999"}),
+            (["Fehlwerte: ."], {"."}),
+            (["Missing values: none"], set()),
+            (["Missing values: no"], set()),
+            (["Missing values: 0"], set()),
+            (["Missing values: 1"], set()),  # an ordinary value, no sentinel
+            (["Missing values: 99"], set()),
+            (["The missing values: NA are rare in this file"], set()),
+        ],
+    )
+    def test_only_a_line_that_declares_a_mark_counts(self, lines: list[str], marks: set[str]) -> None:
+        assert parse_module._declared_missing(lines) == marks
+
+    def test_a_plain_aligned_table_keeps_its_thousands_and_decimal_rules(self) -> None:
+        text = (
+            "Region        Einwohner     Anteil   Stichtag\n"
+            "Nord          1 234 567       12,5   01.02.2024\n"
+            "Süd             987 654        8,25  01.02.2024\n"
+            "Ost Mitte     2 001 002       30,0   01.03.2024\n"
+        )
+
+        parsed = parse_dataset(text)
+
+        assert parsed.profile.source_format == "whitespace"
+        assert parsed.column_dtypes == {
+            "Region": "text",
+            "Einwohner": "integer",
+            "Anteil": "number",
+            "Stichtag": "datetime",
+        }
+        assert parsed.csv.splitlines()[3] == "Ost Mitte,2001002,30.0,2024-03-01"
+
+    def test_a_timestamp_with_one_inner_space_stays_one_cell(self) -> None:
+        text = "Zeit                Wert\n2024-01-01 12:00     5\n2024-01-01 13:00     7\n2024-01-01 14:00     6\n"
+
+        parsed = parse_dataset(text)
+
+        assert parsed.column_dtypes == {"Zeit": "datetime", "Wert": "integer"}
+
+    def test_a_blank_cell_of_a_fixed_width_row_stays_in_its_column(self) -> None:
+        text = (
+            "Jahr    Nord    Mitte    Süd\n"
+            "2020     4.1      5.2    6.3\n"
+            "2021              5.5    6.6\n"
+            "2022     4.7             6.9\n"
+            "2023     4.9      5.8    7.1\n"
+        )
+
+        parsed = parse_dataset(text)
+
+        assert parsed.csv.splitlines()[2:4] == ["2021,,5.5,6.6", "2022,4.7,,6.9"]
+        assert warned(parsed, "2 rows had fewer fields than the header; their cells were placed")
+
+    def test_short_rows_at_the_end_stay_rows_and_a_source_line_stays_a_note(self) -> None:
+        text = (
+            "Jahr    Nord    Mitte    Süd\n"
+            "2020     4.1      5.2    6.3\n"
+            "2021     4.4      5.5    6.6\n"
+            "2022     4.7             6.9\n"
+            "2023              5.9\n"
+            "Quelle: Testamt\n"
+        )
+
+        parsed = parse_dataset(text)
+
+        assert parsed.csv.splitlines()[3:] == ["2022,4.7,,6.9", "2023,,5.9,"]
+        assert parsed.context_lines == ["Quelle: Testamt"]
+
+    def test_a_short_summary_row_below_the_table_is_left_out_as_a_summary(self) -> None:
+        text = (
+            "Jahr    Nord    Mitte    Süd\n"
+            "2020     4.1      5.2    6.3\n"
+            "2021     4.4      5.5    6.6\n"
+            "2022     4.7             6.9\n"
+            "Total" + " " * 20 + "19.8\n"
+        )
+
+        parsed = parse_dataset(text)
+
+        assert parsed.column_dtypes["Jahr"] == "integer"
+        assert parsed.profile.rows == 3
+        assert parsed.context_lines == []
+        assert warned(parsed, "left out 1 summary row")
+
+    def test_a_field_beyond_every_column_is_refused(self) -> None:
+        far = "2021" + " " * 50 + "99.0"
+        text = f"Jahr    Nord    Mitte    Süd\n2020     4.1      5.2    6.3\n{far}\n2022     4.7      5.0    6.9\n"
+
+        assert error_code(text) == "unparseable"
+
+    def test_a_short_row_that_does_not_line_up_is_refused(self) -> None:
+        two_under_mitte = "2021" + " " * 12 + "1  2"  # both fields sit within the `Mitte` column
+        text = f"Jahr    Nord    Mitte    Süd\n2020     4.1      5.2    6.3\n{two_under_mitte}\n2022     4.7      5.0    6.9\n"
+
+        assert error_code(text) == "unparseable"
+
+    @pytest.mark.parametrize(
+        "short_row",
+        [
+            "2022     3.14159265",  # starts under `Nord` and reaches into `Mitte`
+            "2022       -12.55",  # starts at the end of `Nord` and ends under `Mitte`
+        ],
+    )
+    def test_a_field_under_two_columns_is_refused(self, short_row: str) -> None:
+        text = (
+            f"Jahr    Nord    Mitte    Süd\n2020     4.1      5.2    6.3\n{short_row}\n2023     4.7      5.0    6.9\n"
+        )
+
+        assert error_code(text) == "unparseable"
+
+    def test_a_misaligned_short_row_at_the_end_is_refused_not_a_note(self) -> None:
+        text = (
+            "Jahr    Nord    Mitte    Süd\n2020     4.1      5.2    6.3\n"
+            "2021     4.4      5.5    6.6\n2022     3.14159265\n"
+        )
+
+        assert error_code(text) == "unparseable"
+
+    def test_a_single_space_table_of_numbers_reads_with_a_warning(self) -> None:
+        parsed = parse_dataset("month sales returns\n1 85 3\n2 90 4.5\n3 70 2\n")
+
+        assert parsed.profile.source_format == "whitespace"
+        assert parsed.column_dtypes == {"month": "integer", "sales": "integer", "returns": "number"}
+        assert warned(parsed, "single spaces read as the column separator")
+
+    @pytest.mark.parametrize(
+        "text",
+        [
+            "Anteil (%)\n65 %\n12 %\n30 %\n",  # a unit after each value
+            "x y\n1 234\n2 345\n3 456\n",  # a space-grouped thousand
+            "x y label\n1 2.5 north\n2 3.5 south\n3 4.0 centre\n",  # a text column: the transcriber's
+            "name age city\nAnna Lee 30 Bern\nBo Chen 41 Basel\nCara Diaz 28 Chur\n",  # two-word names
+            "year country\n2020 CH\n2021 DE\n2022 AT\n",
+            "Shopping list\n12 apples\n3 bananas\n5 pears\n",  # a list under a two-word title
+        ],
+    )
+    def test_single_spaces_never_split_text(self, text: str) -> None:
+        assert sniff_delimiter(text)[0] is None
+
+    def test_a_key_value_block_is_no_table(self) -> None:
+        text = "Station:      Zürich\nAltitude:     604 m\nOpened:       1864\nCount:        12\n"
+
+        assert sniff_delimiter(text)[0] is None
+
+    def test_quotes_around_a_whole_field_go(self) -> None:
+        text = 'City          Wert\n"New York"     1.5\n"Bern"         2.5\nBasel          3.5\n'
+
+        parsed = parse_dataset(text)
+
+        assert parsed.csv.splitlines()[1:3] == ["New York,1.5", "Bern,2.5"]
+
+    def test_a_tab_separated_file_with_double_spaces_in_its_text_stays_tsv(self) -> None:
+        text = "Area  station\tvalue\nNorth  10\t1\nSouth  20\t2\nCentre  30\t3\n"
+
+        parsed = parse_dataset(text)
+
+        assert parsed.profile.source_format == "tsv"
+        assert list(parsed.column_dtypes) == ["Area  station", "value"]
+
+    def test_a_csv_with_spaces_in_its_text_stays_csv(self) -> None:
+        parsed = parse_dataset("Station Name, Value\n10 North, 1\n20 South, 2\n30 West, 3\n")
+
+        assert parsed.profile.source_format == "csv"
+        assert list(parsed.column_dtypes) == ["Station Name", "Value"]
+
+    def test_a_single_space_table_with_a_ragged_row_stays_one_column(self) -> None:
+        parsed = parse_dataset("x y label\n1 2.5 a\n2 3.5 b c\n3 4.0 c\n")
+
+        assert len(parsed.profile.columns) == 1
+
+    def test_a_wide_table_with_years_as_header_reads(self) -> None:
+        text = "Land       2020   2021   2022\nSchweiz     8.6    8.7    8.8\nÖsterreich  8.9    9.0    9.1\nItalien    59.4   59.2   58.9\n"
+
+        parsed = parse_dataset(text)
+
+        assert list(parsed.column_dtypes) == ["Land", "2020", "2021", "2022"]
+
+    @pytest.mark.parametrize(
+        "text",
+        [
+            # Prose with numbers and the odd double space after a full stop.
+            "We measured 12 plants in 2024.  The tallest was 85 cm.\n"
+            "In the second week 3 of them died.  The rest grew.\n"
+            "Overall growth was about 4 cm per week, with 2 dry spells.\n",
+            # A list without a header: the transcriber reads it, as before.
+            "Hund 7\nKatze 3\nMaus 5\n",
+            "Hund     7\nKatze    3\nMaus     5\n",
+            # Prose whose double spaces would make one aligned line: one data row is no table.
+            "Results  of  2024\nWe  sold  12  units.\n",
+        ],
+    )
+    def test_prose_and_a_headerless_list_are_no_space_table(self, text: str) -> None:
+        assert sniff_delimiter(text)[0] is None
+        assert len(parse_dataset(text).profile.columns) == 1
+
+    def test_a_real_delimiter_wins_over_spaces(self) -> None:
+        assert sniff_delimiter("a, b, c\n1, 2, 3\n4, 5, 6\n7, 8, 9\n") == (",", "csv")
+        assert sniff_delimiter("Name\tWert  \nAlpha\t1  \nBeta\t2  \nGamma\t3  \n") == ("\t", "tsv")
+        assert sniff_delimiter("x;y\n1,5;2,5\n3,5;4,5\n5,5;6,5\n") == (";", "semicolon")
+        # Double spaces inside a CSV's text fields add fields, never values: the comma keeps the table.
+        spaced_text = "Area  station  name,value\nNorth  10  East,1\nSouth  20  West,2\nCentre  30  North,3\n"
+        assert sniff_delimiter(spaced_text) == (",", "csv")
+
+
+# An API answer shaped like the World Bank's (live test of 2026-10-15), with an invented indicator and values:
+# a page-metadata object, then the records, each with nested objects and two always-empty fields.
+API_PAGE = [
+    {"page": 1, "pages": 1, "per_page": 50, "total": 4, "lastupdated": "2026-10-01"},
+    [
+        {
+            "indicator": {"id": "XX.TEST.IND", "value": "Test indicator (units)"},
+            "country": {"id": "AA", "value": "Alphaland"},
+            "date": year,
+            "value": value,
+            "unit": "",
+            "obs_status": "",
+        }
+        for year, value in (("2021", 10.5), ("2022", 11.25))
+    ]
+    + [
+        {
+            "indicator": {"id": "XX.TEST.IND", "value": "Test indicator (units)"},
+            "country": {"id": "BB", "value": "Betaland"},
+            "date": year,
+            "value": value,
+            "unit": "",
+            "obs_status": "",
+        }
+        for year, value in (("2021", 7.0), ("2022", None))
+    ],
+]
+
+
+class TestApiJson:
+    """The shapes data APIs answer: records wrapped with metadata, nested objects (live test of 2026-10-15)."""
+
+    def test_a_metadata_object_and_a_record_list_read_as_records_with_notes(self) -> None:
+        parsed = parse_dataset(json.dumps(API_PAGE))
+
+        assert parsed.profile.source_format == "json_records"
+        assert parsed.column_dtypes == {
+            "country.id": "text",
+            "country.value": "text",
+            "date": "integer",
+            "value": "number",
+        }
+        assert parsed.profile.rows == 4
+        assert column(parsed, "value").missing == 1
+        assert parsed.context_lines == [
+            "page: 1",
+            "pages: 1",
+            "per_page: 50",
+            "total: 4",
+            "lastupdated: 2026-10-01",
+            "indicator.id: XX.TEST.IND",
+            "indicator.value: Test indicator (units)",
+        ]
+        assert warned(parsed, "5 fields beside the records")
+        assert warned(parsed, "named with a dot")
+        assert warned(parsed, "2 columns without any value dropped: unit, obs_status")
+
+    @pytest.mark.parametrize("key", ["data", "results", "records", "items"])
+    def test_an_object_with_one_record_list_and_metadata_siblings(self, key: str) -> None:
+        text = json.dumps(
+            {"meta": {"source": "Test API", "count": 3}, key: [{"x": 1, "y": 2}, {"x": 2, "y": 4}, {"x": 3, "y": 6}]}
+        )
+
+        parsed = parse_dataset(text)
+
+        assert parsed.column_dtypes == {"x": "integer", "y": "integer"}
+        assert parsed.context_lines == ["meta.source: Test API", "meta.count: 3"]
+
+    def test_curves_as_lists_expand_to_one_row_per_point(self) -> None:
+        # One record per measured curve, generalised from the owner's case of 2026-10-15.
+        curves = [
+            {"sample": "A", "temperature_c": 20, "x": [0, 1, 2], "y": [0.1, 0.4, 0.9]},
+            {"sample": "B", "temperature_c": 25, "x": [0, 1], "y": [0.2, 0.5]},
+        ]
+
+        parsed = parse_dataset(json.dumps(curves))
+
+        assert list(parsed.column_dtypes) == ["sample", "temperature_c", "x", "y"]
+        assert parsed.csv.splitlines()[1:] == ["A,20,0,0.1", "A,20,1,0.4", "A,20,2,0.9", "B,25,0,0.2", "B,25,1,0.5"]
+        assert warned(parsed, "list fields expanded into one row per value (lists of one record are paired")
+
+    def test_an_empty_list_beside_full_ones_leaves_its_cells_empty(self) -> None:
+        parsed = parse_dataset(
+            json.dumps([{"x": [1, 2], "y": [3, 4], "z": []}, {"x": [5, 6], "y": [7, 8], "z": [1, 2]}])
+        )
+
+        assert parsed.csv.splitlines()[1:3] == ["1,1,3,", "1,2,4,"]
+
+    def test_a_field_that_is_a_list_in_one_record_and_a_value_in_another_is_refused(self) -> None:
+        with pytest.raises(ParseError) as caught:
+            parse_dataset(json.dumps([{"x": [1, 2], "y": 0}, {"x": [3, 4], "y": [5, 6]}]))
+
+        assert caught.value.code == "unparseable" and "the field y" in caught.value.message
+
+    def test_an_existing_record_id_field_is_never_overwritten(self) -> None:
+        curves = [{"record_id": 7, "x": [1, 2]}, {"record_id": 7, "x": [3, 4]}]
+
+        parsed = parse_dataset(json.dumps(curves))
+
+        assert parsed.csv.splitlines()[0] == "record_id_2,record_id,x"
+        assert parsed.csv.splitlines()[1:] == ["1,7,1", "1,7,2", "2,7,3", "2,7,4"]
+        assert warned(parsed, "column 'record_id_2' added")
+
+    @pytest.mark.parametrize(
+        "ids",
+        [
+            ["A", "A "],  # the same cell once cleaned
+            ["NA", "N/A"],  # both missing
+            [20.5, 21.5],  # unique, but a measurement
+            [True, False],
+        ],
+    )
+    def test_only_distinct_text_or_whole_numbers_tell_curves_apart(self, ids: list[Any]) -> None:
+        curves = [{"key": key, "x": [1, 2]} for key in ids]
+
+        parsed = parse_dataset(json.dumps(curves))
+
+        assert parsed.csv.splitlines()[0].startswith("record_id,")
+
+    def test_curves_without_a_field_that_tells_them_apart_get_a_record_id(self) -> None:
+        curves = [{"unit": "mV", "t": [0, 1], "v": [1.5, 2.5]}, {"unit": "mV", "t": [0, 1], "v": [3.5, 4.5]}]
+
+        parsed = parse_dataset(json.dumps(curves))
+
+        assert parsed.csv.splitlines()[0] == "record_id,t,v"  # `unit` is constant: it moves to the notes
+        assert parsed.csv.splitlines()[1:] == ["1,0,1.5", "1,1,2.5", "2,0,3.5", "2,1,4.5"]
+        assert warned(parsed, "column 'record_id' added")
+
+    def test_lists_of_one_record_with_different_lengths_are_refused_by_name(self) -> None:
+        with pytest.raises(ParseError) as caught:
+            parse_dataset(json.dumps([{"id": 1, "x": [1, 2, 3], "y": [1, 2]}, {"id": 2, "x": [1], "y": [1]}]))
+
+        assert caught.value.code == "unparseable"
+        assert "record 1" in caught.value.message and "x (3), y (2)" in caught.value.message
+
+    def test_lists_over_the_row_cap_are_thinned_per_record_with_a_warning(self) -> None:
+        points = parse_module.MAX_ROWS  # two curves of this many points: twice the cap
+        curves = [{"curve": name, "x": list(range(points)), "y": list(range(points))} for name in ("a", "b")]
+
+        parsed = parse_dataset(json.dumps(curves), max_bytes=MAX_COMPUTED_BYTES)
+
+        lines = parsed.csv.splitlines()
+        assert parsed.profile.rows == points  # half of each curve
+        assert lines[1] == "a,0,0" and lines[points // 2] == f"a,{points - 1},{points - 1}"  # both ends kept
+        assert warned(parsed, f"{points:,} evenly spaced values are kept")
+        assert warned(parsed, "paste fewer records or fewer points per record")
+
+    def test_one_long_curve_keeps_both_ends_and_asks_for_fewer_points(self) -> None:
+        points = parse_module.MAX_ROWS + 2  # (n - 1) is no multiple of the step
+        curve = [{"x": list(range(points)), "y": list(range(points))}]
+
+        parsed = parse_dataset(json.dumps(curve), max_bytes=MAX_COMPUTED_BYTES)
+
+        lines = parsed.csv.splitlines()
+        assert parsed.profile.rows <= parse_module.MAX_ROWS
+        assert lines[1] == "0,0" and lines[-1] == f"{points - 1},{points - 1}"
+        assert warned(parsed, "paste fewer points to keep every value")
+
+    def test_a_list_of_records_with_name_and_type_is_data_not_a_schema(self) -> None:
+        payload = {"data": [{"name": "Solar", "type": "renewable", "gwh": 420}], "links": [{"href": "next"}]}
+
+        assert error_code(json.dumps(payload)) == "unparseable"  # two tables: none is taken by guess
+
+    def test_descriptors_that_do_not_name_the_other_lists_fields_are_two_tables(self) -> None:
+        payload = {
+            "people": [{"name": "Ann", "type": "admin", "age": 3}, {"name": "Bo", "type": "user", "age": 4}],
+            "roles": [{"name": "admin", "type": "role"}],
+        }
+
+        assert error_code(json.dumps(payload)) == "unparseable"
+
+    def test_bigquerys_own_row_shape_is_refused_not_misread(self) -> None:
+        payload = {"schema": {"fields": [{"name": "a", "type": "INTEGER"}]}, "rows": [{"f": [{"v": "1"}]}]}
+
+        assert error_code(json.dumps(payload)) == "unparseable"
+
+    def test_descriptors_beside_an_empty_record_list_are_refused(self) -> None:
+        payload = {"fields": [{"name": "a", "type": "int"}, {"name": "b", "type": "str"}], "records": []}
+
+        with pytest.raises(ParseError) as caught:
+            parse_dataset(json.dumps(payload))
+
+        assert caught.value.code == "unparseable" and "the list of records is empty" in caught.value.message
+
+    def test_a_list_of_objects_inside_a_record_is_left_out_with_a_warning(self) -> None:
+        text = json.dumps([{"name": "a", "n": 1, "tags": [{"k": 1}]}, {"name": "b", "n": 2, "tags": []}])
+
+        parsed = parse_dataset(text)
+
+        assert list(parsed.column_dtypes) == ["name", "n"]  # the other record's empty list leaves no value
+        assert warned(parsed, "1 field holding a list of objects or lists")
+
+    @pytest.mark.parametrize(
+        "payload",
+        [
+            {
+                "fields": [{"name": "x", "type": "integer"}, {"name": "y", "type": "number"}],
+                "rows": [[1, 2.5], [2, 3.5]],
+            },
+            {
+                "schema": {"fields": [{"name": "x", "type": "integer"}, {"name": "y", "type": "number"}]},
+                "rows": [[1, 2.5], [2, 3.5]],
+            },
+            {"columns": ["x", "y"], "index": [0, 1], "data": [[1, 2.5], [2, 3.5]]},  # pandas orient="split"
+            {"meta": {"view": {"columns": [{"fieldName": "x"}, {"fieldName": "y"}]}}, "data": [[1, 2.5], [2, 3.5]]},
+        ],
+    )
+    def test_schema_and_rows_read_as_a_table_never_the_schema(self, payload: dict[str, Any]) -> None:
+        parsed = parse_dataset(json.dumps(payload))
+
+        assert parsed.column_dtypes == {"x": "integer", "y": "number"}
+        assert parsed.csv.splitlines()[1:] == ["1,2.5", "2,3.5"]
+
+    def test_a_schema_beside_records_is_metadata(self) -> None:
+        payload = {"fields": [{"name": "x", "type": "integer"}], "data": [{"x": 1}, {"x": 2}]}
+
+        assert parse_dataset(json.dumps(payload)).column_dtypes == {"x": "integer"}
+
+    @pytest.mark.parametrize(
+        "payload",
+        [
+            {"rows": [[1, 2], [3, 4]]},  # rows without names
+            {"fields": [{"name": "x", "type": "integer"}], "rows": [[1, 2], [3, 4]]},  # names do not fit
+            {"fields": [{"name": "x", "type": "a"}, {"name": "x", "type": "b"}], "rows": [[1, 2]]},
+        ],
+    )
+    def test_rows_that_no_schema_names_are_refused(self, payload: dict[str, Any]) -> None:
+        assert error_code(json.dumps(payload)) == "unparseable"
+
+    def test_nesting_is_flattened_to_three_levels(self) -> None:
+        record = {"id": 1, "a": {"b": {"c": {"d": 5, "e": {"f": 6}}}}}
+
+        parsed = parse_dataset(json.dumps([record, {**record, "id": 2}]))
+
+        assert list(parsed.column_dtypes) == ["id", "a.b.c.d"]
+        assert warned(parsed, "left out: a.b.c.e")
+
+    @pytest.mark.parametrize(
+        "data",
+        [
+            {"left": [{"x": 1}], "right": [{"x": 2}]},  # two tables: none is taken by guess
+            [{"page": 1}, [{"x": 1}], [{"x": 2}]],
+            [{"page": 0, "total": 0}, []],  # metadata without records
+            [{"a.b": 1, "a": {"b": 2}}],  # two fields, one flattened name
+        ],
+    )
+    def test_ambiguous_or_empty_wrappings_are_refused(self, data: Any) -> None:
+        assert error_code(json.dumps(data)) == "unparseable"
+
+    def test_json_stat_is_still_read_first_and_plain_shapes_are_unchanged(self) -> None:
+        assert parse_dataset(json.dumps({"a": [1, 2], "b": [3, 4]})).profile.source_format == "json_columns"
+        assert parse_dataset(json.dumps([["x", 1], ["y", 2]])).profile.source_format == "json_pairs"
+        assert parse_dataset(json.dumps([{"a": 1}, {"a": 2}])).context_lines == []

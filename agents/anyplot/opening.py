@@ -215,9 +215,12 @@ def instruction_like(parsed: ParsedDataset) -> bool:
     """Whether any header or cell of the canonical dataset holds text that `INSTRUCTION_LIKE` matches.
 
     It reads every row, not only the ones the judge sees: the pattern costs nothing,
-    and a cell anywhere can reach the reviewer's image as a label.
+    and a cell anywhere can reach the reviewer's image as a label. It reads the table with
+    its constant columns (`with_constant_columns`), as the judge does: when the notes that
+    carry their values are dropped (`without_context`), those columns come back into the
+    stored CSV, so their cells must have passed here too (review of 2026-10-15).
     """
-    return INSTRUCTION_LIKE.search(parsed.csv) is not None
+    return INSTRUCTION_LIKE.search(with_constant_columns(parsed).csv) is not None
 
 
 NOTES_INSTRUCTION_WARNING = "the notes above or below the table were left out: they read like instructions to an AI"
