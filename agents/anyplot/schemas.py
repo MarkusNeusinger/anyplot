@@ -191,8 +191,8 @@ class ColumnProfile(_ServerContract):
     dtype: ColumnDtype
     missing: NonNegativeInt
     unique: NonNegativeInt
-    min: float | Cell | None = None
-    max: float | Cell | None = None
+    min: int | float | Cell | None = None  # an integer column's exactly: a float rounds past 2**53
+    max: int | float | Cell | None = None
     mean: float | None = None
     median: float | None = None
     top: list[Cell] = Field(default_factory=list, max_length=MAX_TOP_VALUES)

@@ -64,8 +64,50 @@ def test_placeholder_becomes_read_csv() -> None:
     assert "load_user_data" not in result
     assert result == WORKING.replace(
         "df = load_user_data()",
-        'df = pd.read_csv("data.csv", dtype={"x": "Int64", "y": "float64", "b": "boolean"}, parse_dates=["when"])',
+        'df = pd.read_csv(\n    "data.csv",\n    dtype={\n        "x": "Int64",\n        "y": "float64",\n'
+        '        "b": "boolean",\n    },\n    parse_dates=[\n        "when",\n    ],\n'
+        '    float_precision="round_trip",\n)',
     )
+
+
+def test_without_a_number_column_the_read_stays_on_one_line() -> None:
+    result = to_run_form(
+        WORKING, columns=["x", "when", "b"], dtypes={"x": "integer", "when": "datetime", "b": "boolean"}, parse_dates=[]
+    )
+
+    assert 'df = pd.read_csv("data.csv", dtype={"x": "Int64", "b": "boolean"}, parse_dates=["when"])\n' in result
+
+
+def test_the_loader_reads_every_float_exactly(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """The run form reads back every float `data.csv` holds: pandas' default reader misses about one in four.
+
+    Generalised fixture: 17-digit values of every magnitude, a subnormal, the extremes and -0.0,
+    written as the parser writes them (`repr`), and integers past 2**53 in an Int64 column.
+    """
+    import random
+    import sys
+
+    from agents.anyplot.data.parse import parse_dataset
+
+    generator = random.Random(20261015)
+    values = [generator.uniform(-1, 1) * 10.0 ** generator.randint(-300, 300) for _ in range(2000)]
+    values += [5e-324, sys.float_info.max, -sys.float_info.max, sys.float_info.min, -0.0, 0.1, 1 / 3]
+    whole = [2**53 + 1, -(2**63), 2**63 - 1] + [0] * (len(values) - 3)
+    parsed = parse_dataset(
+        "v,n\n" + "".join(f"{value!r},{number}\n" for value, number in zip(values, whole, strict=True)),
+        find_table=False,
+    )
+    result = to_run_form(
+        WORKING,
+        columns=[column.name for column in parsed.profile.columns],
+        dtypes=dict(parsed.column_dtypes),
+        parse_dates=list(parsed.parse_dates),
+    )
+    frame = load(result, parsed.csv, tmp_path, monkeypatch)
+
+    assert parsed.warnings == []
+    assert [repr(value) for value in frame["v"]] == [repr(value) for value in values]
+    assert frame["n"].tolist() == whole
 
 
 def test_a_text_column_gets_per_column_missing_values() -> None:

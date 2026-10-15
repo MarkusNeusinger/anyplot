@@ -22,7 +22,9 @@ The operations:
   decimal (`12,5` is no dot-decimal number, never 125). When cells fail with `decimal`
   and fewer fail with the other mark, the whole column is read with the other mark and
   the change line says so ("read as numbers (decimal comma)"); the unit must be the
-  same wherever it occurs. To datetime: with `date_format` the cells are read in
+  same wherever it occurs. Whole numbers are read exactly (`Int64`, never through a
+  float64), and the change line counts the cells a float64 holds only rounded (more
+  than 15 to 17 significant digits). To datetime: with `date_format` the cells are read in
   exactly that format, with an optional time (`HH:MM[:SS]`) after it (a format without
   a day, such as `YYYY-MM` or `YYYY`, reads the first day of the month or the year;
   `YYYY` on a number column says "read as years", since a measure of 1450 to 2100 reads
@@ -35,7 +37,10 @@ The operations:
   only 1677 to 2262; a date pandas still cannot hold is an `invalid_operation`, never a
   crash). Without `date_format`
   pandas infers the format per cell, day before month when ambiguous, as the parser
-  reads a slash date. Either way a cell that cannot be read becomes missing and the
+  reads a slash date, except in a column whose every cell starts with a year
+  (`2024-06-01T13:00:00Z` is 1 June); a fraction of a second and a UTC offset are kept
+  (`moment_text`), and different offsets in one column are a `type_mismatch`, never a
+  silent conversion to one time zone. Either way a cell that cannot be read becomes missing and the
   change line counts it; when more than 10 % of the non-missing cells fail, the
   operation is a `type_mismatch` instead. To text: every cell becomes its canonical
   text and the column is kept text through the re-parse (`Prepared.text_columns`,
@@ -85,9 +90,11 @@ The operations:
   rows with the same group and order are an `invalid_operation`, since "previous" would
   be a guess (aggregate first); a row without an order value gets an empty cell and
   takes no place in the order. `percent` multiplies a `ratio` or a `share` by 100;
-  a percent change is always in percent. A difference or a sum of whole-number columns
-  is computed in Python integers and stays whole (a float64 holds integers only up to
-  2**53). A division by zero or a missing input gives a
+  a percent change is always in percent. A difference, a sum or a `cumsum` of
+  whole-number columns is computed in Python integers and stays whole (a float64 holds
+  integers only up to 2**53), as does an `aggregate` `sum` (pandas' `Int64` sum wraps
+  around past 2**63); a result past int64 makes the column float64, and the change line
+  counts the values it rounds (`whole_rounded`). A division by zero or a missing input gives a
   missing cell, and the change line counts them. A question such as "which year has the
   largest share of X" takes the same operations through `query_data` (`query.py`), on a
   copy that is never stored (live tests of 2026-10-14 and 2026-10-15).
@@ -138,9 +145,10 @@ import math
 import re
 import unicodedata
 import warnings
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field, replace
 from datetime import datetime
+from decimal import Decimal as ExactDecimal
 from typing import Annotated, Literal
 
 import numpy as np
@@ -155,7 +163,9 @@ from .parse import (
     MISSING_VALUES,
     ParsedDataset,
     canonical_names,
+    keeps_value,
     pandas_dtypes,
+    rounded_note,
 )
 
 
@@ -729,7 +739,7 @@ def _set_type(frame: pd.DataFrame, op: SetType, carried: _Carried) -> tuple[pd.D
             # The canonical text of a number is a dot decimal; re-reading it under a decimal comma would be wrong.
             return frame, f"{op.column}: already numbers, nothing changed"
         requested = op.decimal or carried.decimal
-        converted, unit, failed, used = _to_numbers(series, requested)
+        converted, unit, failed, used, rounded = _to_numbers(series, requested)
         _check_failed(op.column, failed, present, "numbers")
         result[op.column] = converted
         carried.with_time.pop(op.column, None)
@@ -739,6 +749,8 @@ def _set_type(frame: pd.DataFrame, op: SetType, carried: _Carried) -> tuple[pd.D
             change += " (decimal comma)" if used == "," else " (decimal point)"
         if unit:
             change += f", unit '{_clip(unit, MAX_CELL_CHARS)}' removed"
+        if rounded:
+            change += f", {rounded_note(rounded)}"
     else:
         if kind == "datetime":
             return _reread_dates(frame, op, present, carried)
@@ -822,7 +834,13 @@ def _aggregate(frame: pd.DataFrame, op: Aggregate, carried: _Carried) -> tuple[p
     if value_kind == "boolean" and op.how in ("sum", "mean"):
         work[op.column] = work[op.column].astype("Int64")
     grouped = work.groupby(keys, dropna=False, sort=True)[op.column]
+    rounded = 0
     match op.how:
+        case "sum" if is_integer_dtype(work[op.column].dtype):
+            # In Python integers: pandas' Int64 sum wraps around silently past 2**63 (review of 2026-10-15).
+            # Summed outside pandas, which would infer a dtype for the totals; the groups come in the order of `size`.
+            totals = [sum(int(value) for value in values.dropna()) for _, values in grouped]
+            aggregated, rounded = _whole_numbers(totals, grouped.size().index)
         case "sum":
             aggregated = grouped.sum()
         case "mean":
@@ -844,6 +862,8 @@ def _aggregate(frame: pd.DataFrame, op: Aggregate, carried: _Carried) -> tuple[p
     other = frame.shape[1] - len(keys) - 1
     if other:
         change += f", {_count(other, 'other column')} dropped"
+    if rounded:
+        change += f", {whole_rounded(rounded)}"
     return result, change
 
 
@@ -879,9 +899,15 @@ def _pivot_longer(frame: pd.DataFrame, op: PivotLonger, carried: _Carried) -> tu
     kinds = {_kind(frame[name]) for name in columns}
     times = [_with_time(frame[name], carried) for name in columns]
     work = frame
+    rounded = 0
     if len(kinds) > 1:
         # Unlike kinds melt into one text column: each column's canonical texts, a datetime with its time.
         work = frame.assign(**{name: _texts(frame[name], time) for name, time in zip(columns, times, strict=True)})
+    elif kinds == {"number"} and len({is_integer_dtype(frame[name].dtype) for name in columns}) > 1:
+        # Whole numbers beside decimals share one float64 column, which rounds a whole number past 2**53: counted.
+        whole = [name for name in columns if is_integer_dtype(frame[name].dtype)]
+        rounded = sum(int(value) != int(float(value)) for name in whole for value in frame[name].dropna())
+        work = frame.assign(**{name: frame[name].astype("float64") for name in whole})
     melted = work.melt(id_vars=rest, value_vars=columns, var_name=op.names_to, value_name=op.values_to)
     # The melted column stays text through the re-parse when a source was kept text by request
     # (ids that look like numbers) or unlike kinds were written as text: by content it could type again.
@@ -891,7 +917,13 @@ def _pivot_longer(frame: pd.DataFrame, op: PivotLonger, carried: _Carried) -> tu
         carried.text_columns.add(op.values_to)
     if kinds == {"datetime"}:
         carried.with_time[op.values_to] = any(bool(time) for time in times)
-    return melted, f"pivoted {len(columns)} columns into {op.names_to}/{op.values_to}: {_count(rows, 'row')}"
+    change = f"pivoted {len(columns)} columns into {op.names_to}/{op.values_to}: {_count(rows, 'row')}"
+    if rounded:
+        change += (
+            f", {_count(rounded, 'whole number')} past 2^53 {_be(rounded)} stored rounded to the nearest number "
+            f"beside the decimals of {op.values_to}"
+        )
+    return melted, change
 
 
 def _pivot_wider(frame: pd.DataFrame, op: PivotWider, carried: _Carried) -> tuple[pd.DataFrame, str]:
@@ -1013,8 +1045,10 @@ def _derive(frame: pd.DataFrame, op: Derive, carried: _Carried) -> tuple[pd.Data
             raise PrepareError("type_mismatch", f"column '{name}' is {kind}; derive {op.how} needs number columns")
     if op.how in ("difference", "sum") and all(is_integer_dtype(frame[name].dtype) for name in columns):
         # Whole numbers stay exact: a float64 holds integers only up to 2**53.
-        result = _integer_result(frame, columns, op.how)
+        result, rounded = _integer_result(frame, columns, op.how)
         what = f"{columns[0]} - {columns[1]}" if op.how == "difference" else f"sum of {', '.join(columns)}"
+        if rounded:
+            what += f", {whole_rounded(rounded)}"
         return _derived(frame, op, result, what, "", carried)
     values = [frame[name].astype("float64") for name in columns]
     note = ""
@@ -1042,6 +1076,8 @@ def _derive(frame: pd.DataFrame, op: Derive, carried: _Carried) -> tuple[pd.Data
                 note = f"a row without a {op.order}, "
             if op.how == "percent_change":
                 note = "the first row of each group, " + note
+            if is_integer_dtype(result.dtype):  # an exact running total of whole numbers (`_integer_cumsum`)
+                return _derived(frame, op, result, what, note, carried)
     if op.percent:
         result = result * 100
         what += ", in percent"
@@ -1065,8 +1101,8 @@ def _derived(
     return frame.assign(**{op.name: result}), change
 
 
-def _integer_result(frame: pd.DataFrame, columns: list[str], how: str) -> pd.Series:
-    """A difference or a row sum of whole-number columns in Python integers: `Int64`, or float64 past its range."""
+def _integer_result(frame: pd.DataFrame, columns: list[str], how: str) -> tuple[pd.Series, int]:
+    """A difference or a row sum of whole-number columns in Python integers, see `_whole_numbers`."""
     rows = zip(*([None if pd.isna(value) else int(value) for value in frame[name]] for name in columns), strict=True)
     results: list[int | None] = []
     for row in rows:
@@ -1075,9 +1111,51 @@ def _integer_result(frame: pd.DataFrame, columns: list[str], how: str) -> pd.Ser
             results.append(None if len(present) < 2 else present[0] - present[1])
         else:
             results.append(sum(present) if present else None)
+    return _whole_numbers(results, frame.index)
+
+
+def _whole_numbers(results: Sequence[int | None], index: pd.Index) -> tuple[pd.Series, int]:
+    """Exact whole-number results as `Int64`; past its range float64, with the count of values it rounds.
+
+    A float64 holds whole numbers exactly only up to 2**53, so once one result leaves the
+    int64 range the column is float64 and every result past 2**53 is rounded: the count
+    goes into the change line (`whole_rounded`), never silently (owner rule of 2026-10-15).
+    """
     if all(value is None or _INT64_MIN <= value <= _INT64_MAX for value in results):
-        return pd.Series(pd.array(results, dtype="Int64"), index=frame.index)
-    return pd.Series([np.nan if value is None else float(value) for value in results], index=frame.index)
+        return pd.Series(pd.array(results, dtype="Int64"), index=index), 0
+    floats = [np.nan if value is None else float(value) for value in results]
+    rounded = sum(
+        1 for value, number in zip(results, floats, strict=True) if value is not None and int(number) != value
+    )
+    return pd.Series(floats, index=index, dtype="float64"), rounded
+
+
+def whole_rounded(count: int) -> str:
+    """The change-line clause of whole-number results that left the int64 range and are stored rounded."""
+    return (
+        f"{_count(count, 'value')} past the 64-bit whole-number range {_be(count)} stored rounded "
+        "to the nearest number (15 to 17 significant digits)"
+    )
+
+
+def _integer_cumsum(frame: pd.DataFrame, column: str, keys: list[str], ordered: pd.Index) -> tuple[pd.Series, int]:
+    """The running total of a whole-number column in Python integers, in the order `ordered`, within each group.
+
+    A missing cell adds nothing and keeps an empty cell, as pandas' `cumsum` does; a row
+    outside `ordered` (no order value) stays empty.
+    """
+    wholes = {row: None if pd.isna(value) else int(value) for row, value in frame[column].items()}
+    totals: dict[tuple[str | None, ...], int] = {}
+    running: dict[object, int | None] = {}
+    for row in ordered:
+        whole = wholes[row]
+        if whole is None:
+            running[row] = None
+            continue
+        group = tuple(_cell_text(frame.at[row, key], True) for key in keys)
+        totals[group] = totals.get(group, 0) + whole
+        running[row] = totals[group]
+    return _whole_numbers([running.get(row) for row in frame.index], frame.index)
 
 
 def _ordered(
@@ -1113,8 +1191,12 @@ def _ordered(
         result = (current - previous) / previous.where(previous != 0) * 100
         what = f"percent change of {column} from the previous {order}{within}"
     elif how == "cumsum":
-        result = current.groupby(groups, dropna=False).cumsum() if keys else current.cumsum()
         what = f"running total of {column} in the order of {order}{within}"
+        if is_integer_dtype(frame[column].dtype):
+            # Whole numbers add up exactly: a float64 running total rounds past 2**53.
+            exact, rounded = _integer_cumsum(frame, column, keys, ordered)
+            return exact, what + (f", {whole_rounded(rounded)}" if rounded else "")
+        result = current.groupby(groups, dropna=False).cumsum() if keys else current.cumsum()
     else:
         if keys:  # `first` takes the group's first value that is there
             base = current.groupby(groups, dropna=False).transform("first")
@@ -1364,8 +1446,9 @@ def _bools(mask: pd.Series) -> pd.Series:
 # --- Conversions -----------------------------------------------------------------------------
 
 
-def _to_numbers(series: pd.Series, decimal: str) -> tuple[pd.Series, str | None, int, str]:
-    """The cells as numbers (`Int64` when every value is whole, else `float64`), the unit removed, the failures, the decimal used.
+def _to_numbers(series: pd.Series, decimal: str) -> tuple[pd.Series, str | None, int, str, int]:
+    """The cells as numbers (`Int64` when every value is whole, else `float64`), the unit removed, the failures, the decimal used,
+    and the cells a float64 holds only rounded (more significant digits than it keeps, see `parse.keeps_value`).
 
     The cells are read with `decimal` first. When some fail and fewer fail with the
     other mark, the column is written that way (a `12,5 %` column in a dot-decimal
@@ -1373,44 +1456,51 @@ def _to_numbers(series: pd.Series, decimal: str) -> tuple[pd.Series, str | None,
     one decimal per column, never a mix.
     """
     if _kind(series) == "boolean":
-        return series.astype("Int64"), None, 0, decimal
+        return series.astype("Int64"), None, 0, decimal, 0
     texts = [text if isinstance(text, str) else None for text in _texts(series)]
-    values, units, failed = _read_numbers(texts, decimal)
+    numbers, units, failed = _read_numbers(texts, decimal)
     if failed:
         other = "," if decimal == "." else "."
         alternative = _read_numbers(texts, other)
         if alternative[2] < failed:
-            (values, units, failed), decimal = alternative, other
+            (numbers, units, failed), decimal = alternative, other
     if len(units) > 1:
         raise PrepareError("type_mismatch", f"column '{series.name}' mixes {len(units)} different units")
     unit = next(iter(units)) if units else None
-    whole = all(value is None or (value.is_integer() and _INT64_MIN <= value <= _INT64_MAX) for value in values)
-    if whole:
-        integers = [None if value is None else int(value) for value in values]
-        return pd.Series(pd.array(integers, dtype="Int64"), index=series.index), unit, failed, decimal
-    return pd.Series(values, index=series.index, dtype="float64"), unit, failed, decimal
+    # Whole numbers are read exactly, never through a float64, which rounds past 2**53 (`9007199254740993`).
+    exact = [None if number is None else ExactDecimal(number) for number in numbers]
+    integers = [None if value is None or value != value.to_integral_value() else int(value) for value in exact]
+    if all(
+        number is None or (integer is not None and _INT64_MIN <= integer <= _INT64_MAX)
+        for number, integer in zip(numbers, integers, strict=True)
+    ):
+        return pd.Series(pd.array(integers, dtype="Int64"), index=series.index), unit, failed, decimal, 0
+    values = [None if number is None else float(number) for number in numbers]
+    rounded = sum(not keeps_value(number, float(number)) for number in numbers if number is not None)
+    return pd.Series(values, index=series.index, dtype="float64"), unit, failed, decimal, rounded
 
 
-def _read_numbers(texts: list[str | None], decimal: str) -> tuple[list[float | None], set[str], int]:
-    """Every cell read with `decimal`: the values (None for missing and failed cells), the units seen, the failures."""
-    values: list[float | None] = []
+def _read_numbers(texts: list[str | None], decimal: str) -> tuple[list[str | None], set[str], int]:
+    """Every cell read with `decimal`: the dot-decimal numbers (None for missing and failed cells), the units seen,
+    the failures."""
+    numbers: list[str | None] = []
     units: set[str] = set()
     failed = 0
     for text in texts:
         if text is None:
-            values.append(None)
+            numbers.append(None)
             continue
         number, unit = _read_number(text, decimal)
         if number is None:
             failed += 1
         elif unit:
             units.add(unit)
-        values.append(number)
-    return values, units, failed
+        numbers.append(number)
+    return numbers, units, failed
 
 
-def _read_number(text: str, decimal: str) -> tuple[float | None, str | None]:
-    """One cell as a finite number and the unit token taken off it; `(None, None)` when it cannot be read."""
+def _read_number(text: str, decimal: str) -> tuple[str | None, str | None]:
+    """One cell as a finite dot-decimal number and the unit token taken off it; `(None, None)` when it cannot be read."""
     body, unit = text.strip(), None
     if _plain_number(body, decimal) is None:
         match = _TRAILING_UNIT.match(body) or _LEADING_UNIT.match(body)
@@ -1421,12 +1511,14 @@ def _read_number(text: str, decimal: str) -> tuple[float | None, str | None]:
     return number, (unit if number is not None else None)
 
 
-def _plain_number(body: str, decimal: str) -> float | None:
-    """`body` read with `decimal` as the parser reads a number; None when it is no finite number that way.
+def _plain_number(body: str, decimal: str) -> str | None:
+    """`body` read with `decimal` as the parser reads a number, as dot-decimal text without groups; None when it is
+    no finite number that way.
 
     Spaces and apostrophes separate thousands. The other mark does so only between
     three-digit groups (`_GROUPED`); anywhere else it makes the cell unreadable with
     this decimal (`12,5` is no dot-decimal number), so a decimal mark is never dropped.
+    The text, not a float, goes back: the caller reads whole numbers exactly.
     """
     thousands = "." if decimal == "," else ","
     cleaned = _SPACES.sub("", body).replace("'", "")
@@ -1438,8 +1530,7 @@ def _plain_number(body: str, decimal: str) -> float | None:
         cleaned = cleaned.replace(",", ".")
     if not _NUMBER.fullmatch(cleaned):
         return None
-    number = float(cleaned)
-    return number if math.isfinite(number) else None
+    return cleaned if math.isfinite(float(cleaned)) else None
 
 
 def _to_dates(series: pd.Series, date_format: str | None) -> tuple[pd.Series, int, bool]:
@@ -1454,9 +1545,22 @@ def _to_dates(series: pd.Series, date_format: str | None) -> tuple[pd.Series, in
         values = [_read_date(text, date_format) if isinstance(text, str) else None for text in texts]
         result = pd.Series(values, index=series.index, dtype="datetime64[us]")
     else:
+        # A year-first cell (`2024-06-01T13:00:00Z`) reads year, month, day: with `dayfirst` pandas would read it as
+        # 6 January (review of 2026-10-15). Day before month is for the other shapes only.
+        present = [text for text in texts if isinstance(text, str)]
+        day_first = not (present and all(_YEAR_FIRST.match(text) for text in present))
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            result = pd.to_datetime(texts, errors="coerce", format="mixed", dayfirst=True)
+            try:
+                result = pd.to_datetime(texts, errors="coerce", format="mixed", dayfirst=day_first)
+            except ValueError:
+                # Different UTC offsets (summer and winter time) or times with and without one: one column needs
+                # one time zone, and converting them would change the clock times without a word (review of 2026-10-15).
+                raise PrepareError(
+                    "type_mismatch",
+                    f"column '{series.name}' holds times with different UTC offsets (or some without one); "
+                    "they are not converted to one time zone, so the column stays as it is",
+                ) from None
     failed = int((result.isna() & texts.notna()).sum())
     with_time = any(":" in text for text in texts if isinstance(text, str))
     return result, failed, with_time
@@ -1588,8 +1692,21 @@ def _cell_text(value: object, with_time: bool) -> str | None:
         number = float(value)
         return None if math.isnan(number) else repr(number)
     if isinstance(value, pd.Timestamp):
-        return value.isoformat(timespec="seconds") if with_time else value.date().isoformat()
+        return moment_text(value) if with_time else value.date().isoformat()
     return str(value)
+
+
+def moment_text(value: pd.Timestamp) -> str:
+    """A date-time as ISO text with every digit it holds: seconds, or the fraction of a second it has.
+
+    `2024-01-05T10:00:00`, `2024-01-05T10:00:00.250000` (any fraction is written in
+    microseconds, as the file converters write it), `…T10:00:00.000000001` for a
+    nanosecond; an offset stays (`+02:00`). Writing seconds only would drop a sub-second
+    reading without a word (owner rule of 2026-10-15).
+    """
+    if value.nanosecond:
+        return value.isoformat(timespec="nanoseconds")
+    return value.isoformat(timespec="microseconds" if value.microsecond else "seconds")
 
 
 def _require(frame: pd.DataFrame, name: str) -> None:

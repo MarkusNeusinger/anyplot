@@ -2,9 +2,11 @@
 
 import io
 import json
+import random
 import sys
 import time
 from dataclasses import replace
+from decimal import Decimal
 from typing import Any
 
 import pandas as pd
@@ -61,6 +63,7 @@ def read_back(parsed: ParsedDataset) -> pd.DataFrame:
         parse_dates=parsed.parse_dates,
         keep_default_na=False,
         na_values=[""],
+        float_precision="round_trip",
     )
 
 
@@ -1028,7 +1031,8 @@ class TestTyping:
             (["true", "FALSE", "True"], "boolean", ["True", "False", "True"]),
             (["1", "-2", "+3"], "integer", ["1", "-2", "3"]),
             (["9223372036854775807"], "integer", ["9223372036854775807"]),
-            (["9223372036854775808"], "number", ["9.223372036854776e+18"]),
+            # Past int64 a float64 would round the last digits: text keeps every one (owner rule of 2026-10-15).
+            (["9223372036854775808"], "text", ["9223372036854775808"]),
             (["007", "12"], "text", ["007", "12"]),
             (["0", "-0"], "integer", ["0", "0"]),
             (["1.5", ".5", "1e3", "2E-2", "3."], "number", ["1.5", "0.5", "1000.0", "0.02", "3.0"]),
@@ -1095,9 +1099,9 @@ class TestProfile:
         assert profile.rows == 11
         assert column(parsed, "when").min == "2024-01-01"
         assert column(parsed, "when").max == "2024-01-11"
-        assert column(parsed, "n").min == 1.0
-        assert column(parsed, "n").max == 10.0
-        assert isinstance(column(parsed, "n").max, float)
+        assert column(parsed, "n").min == 1
+        assert column(parsed, "n").max == 10
+        assert isinstance(column(parsed, "n").max, int)  # exact: a float would round an id past 2**53
         assert column(parsed, "n").missing == 1
         assert column(parsed, "x").max == 5.0
         assert column(parsed, "label").unique == 3
@@ -2418,3 +2422,136 @@ class TestApiJson:
         assert parse_dataset(json.dumps({"a": [1, 2], "b": [3, 4]})).profile.source_format == "json_columns"
         assert parse_dataset(json.dumps([["x", 1], ["y", 2]])).profile.source_format == "json_pairs"
         assert parse_dataset(json.dumps([{"a": 1}, {"a": 2}])).context_lines == []
+
+
+def decimals(seed: int, count: int, digits: int) -> list[str]:
+    """Generalised fixture: `count` signed decimals of exactly `digits` significant digits, exponents -300 to 300,
+    written plain or in scientific notation, some with trailing zeros (`1.50`)."""
+    generator = random.Random(seed)
+    texts: list[str] = []
+    for position in range(count):
+        mantissa = str(generator.randrange(10 ** (digits - 1), 10**digits))
+        sign = "-" if generator.random() < 0.5 else ""
+        exponent = generator.randint(-300, 300) if position % 2 else generator.randint(-6, 6)
+        if position % 2:
+            texts.append(f"{sign}{mantissa[0]}.{mantissa[1:]}{'0' * (position % 3)}e{exponent}")
+        else:
+            point = len(mantissa) + exponent
+            plain = mantissa.rjust(-exponent + 1, "0") if point <= 0 else mantissa + "0" * max(exponent, 0)
+            at = max(point, 1)
+            texts.append(f"{sign}{plain[:at]}.{plain[at:] or '0'}")
+    return texts
+
+
+def same_value(written: str, cell: str) -> bool:
+    return Decimal(written) == Decimal(cell)
+
+
+class TestFidelity:
+    """Owner rule of 2026-10-15: what the user pastes is what the data holds, or a warning says what changed."""
+
+    @pytest.mark.parametrize("digits", [1, 7, 15])
+    def test_numbers_of_up_to_15_digits_keep_their_exact_value_in_every_input_format(self, digits: int) -> None:
+        texts = decimals(seed=digits, count=300, digits=digits)
+        literal = "[" + ", ".join(texts) + "]"
+        inputs = {
+            "csv": "v\n" + "\n".join(texts) + "\n",
+            "json": json.dumps({"v": [float(text) for text in texts]}),
+            "written json": '{"v": ' + literal + "}",
+            "python": "v = {'v': " + literal + "}",
+        }
+        for name, text in inputs.items():
+            parsed = parse_dataset(text, find_table=False)
+            canonical = parsed.csv.splitlines()[1:]
+            assert parsed.column_dtypes == {"v": "number"}, name
+            assert parsed.warnings == [], name
+            # The value, not the spelling: `1.50` is written `1.5`, `1.5e3` `1500.0` (shortest round-trip form).
+            assert all(same_value(written, cell) for written, cell in zip(texts, canonical, strict=True)), name
+            assert canonical == [repr(float(text)) for text in texts], name
+            assert read_back(parsed)["v"].tolist() == [float(text) for text in texts], name
+
+    @pytest.mark.parametrize(
+        "make",
+        [
+            lambda texts: "v\n" + "\n".join(texts) + "\n",
+            lambda texts: '{"v": [' + ", ".join(texts) + "]}",
+            lambda texts: "{'v': [" + ", ".join(texts) + "]}",
+        ],
+        ids=["csv", "json", "python"],
+    )
+    def test_more_digits_than_a_float_holds_are_rounded_with_a_warning_that_counts_them(self, make: Any) -> None:
+        long = decimals(seed=19, count=40, digits=19)
+        short = decimals(seed=3, count=10, digits=3)
+        texts = [*long, *short, "9007199254740993", "-0.1234567890123456789"]
+        parsed = parse_dataset(make(texts), find_table=False)
+        canonical = parsed.csv.splitlines()[1:]
+
+        lost = sum(not same_value(written, cell) for written, cell in zip(texts, canonical, strict=True))
+        assert lost == 42  # 2 of the 40 random 19-digit numbers happen to fit; the two named ones never do
+        assert parsed.warnings == [
+            f"column 'v': {lost} values with more significant digits than a number holds (15 to 17) "
+            "are stored rounded to the nearest number"
+        ]
+        assert canonical == [repr(float(text)) for text in texts]  # the nearest float, never fewer digits
+
+    def test_a_subnormal_or_underflowing_number_is_warned_too(self) -> None:
+        parsed = parse_dataset("v\n1.2345678901e-320\n1e-400\n5e-324\n0.000\n")
+
+        assert parsed.csv == "v\n1.2347e-320\n0.0\n5e-324\n0.0\n"
+        assert warned(parsed, "column 'v': 2 values with more significant digits")
+
+    def test_whole_numbers_are_exact_to_the_int64_limits_and_text_beyond(self) -> None:
+        inside = ["9007199254740993", "-9223372036854775808", "9223372036854775807", "12"]
+        parsed = parse_dataset("id\n" + "\n".join(inside) + "\n")
+        beyond = parse_dataset("id,v\n12345678901234567890123,1\n7,2\n")
+
+        assert parsed.column_dtypes == {"id": "integer"} and parsed.csv.splitlines()[1:] == inside
+        assert read_back(parsed)["id"].tolist() == [int(text) for text in inside]
+        assert column(parsed, "id").min == -(2**63) and column(parsed, "id").max == 2**63 - 1
+        assert beyond.column_dtypes["id"] == "text"
+        assert beyond.csv == "id,v\n12345678901234567890123,1\n7,2\n"
+        assert beyond.warnings == [
+            "column 'id': whole numbers beyond the 64-bit range kept as text, so no digit is lost"
+        ]
+        # From JSON as well: Python reads the integer exactly, the typing keeps it.
+        assert parse_dataset('{"id": [12345678901234567890123, 7]}').column_dtypes["id"] == "text"
+
+    def test_a_whole_number_past_2_53_beside_decimals_is_warned(self) -> None:
+        parsed = parse_dataset("v\n9007199254740993\n1.5\n")
+
+        assert parsed.csv == "v\n9007199254740992.0\n1.5\n"
+        assert warned(parsed, "column 'v': 1 value with more significant digits than a number holds")
+
+    def test_grouped_and_decimal_comma_numbers_keep_every_digit(self) -> None:
+        parsed = parse_dataset("a;b\n1.234.567,890123;7.184.003\n2,5;12.000.000\n")
+
+        assert parsed.csv == "a,b\n1234567.890123,7184003\n2.5,12000000\n"
+        assert parsed.column_dtypes == {"a": "number", "b": "integer"}
+        assert not warned(parsed, "rounded")
+
+    def test_text_cells_keep_every_character_or_a_warning_counts_the_change(self) -> None:
+        parsed = parse_dataset(f"k,c\n1,b \n2,a\n3,None\n4,-\n5,cafe{ACUTE}\n")
+
+        assert parsed.csv == f"k,c\n1,b\n2,a\n3,\n4,\n5,caf{E_ACUTE}\n"
+        assert parsed.warnings == [
+            "1 line held decomposed characters (such as e and a separate accent), now written in Unicode's "
+            "composed form (NFC); the text reads the same",
+            "column 'c': spaces around the text removed in 1 cell",
+            "column 'c': 2 cells read as missing ('None', '-')",
+        ]
+
+    def test_missing_marks_in_number_columns_and_the_padding_of_aligned_tables_need_no_warning(self) -> None:
+        numbers = parse_dataset("k,v\na,1\nb,-\nc,n/a\n")
+        aligned = parse_dataset("Ort        Wert\nZürich     1\nBern       2\nBasel      3\n")
+
+        assert numbers.column_dtypes["v"] == "integer" and numbers.warnings == []
+        assert aligned.csv == "Ort,Wert\nZürich,1\nBern,2\nBasel,3\n" and aligned.warnings == []
+
+    def test_json_floats_that_overflow_stay_text_instead_of_vanishing(self) -> None:
+        parsed = parse_dataset('[{"a": 1e400, "b": 1}, {"a": 2, "b": 2}]')
+
+        assert parsed.column_dtypes["a"] == "text" and parsed.csv == "a,b\n1e400,1\n2,2\n"
+
+    def test_a_python_literal_keeps_complex_numbers_and_underscores_as_python_reads_them(self) -> None:
+        assert parse_dataset("{'v': [1_000.5, 2.25]}").csv == "v\n1000.5\n2.25\n"
+        assert error_code("{'v': [1.5+2j, 2.0]}") == "unparseable"

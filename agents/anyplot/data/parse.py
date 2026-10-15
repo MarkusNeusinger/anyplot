@@ -11,7 +11,8 @@ would, for example, read `01.02.2024` as a number under `thousands='.'`).
    `MAX_COMPUTED_BYTES` (2 MiB) for a table the service computed (`too_long`; the
    canonical CSV the parse writes is checked against `MAX_CANONICAL_BYTES` too); no control character other than tab, line feed and carriage
    return (`control_chars`: every Unicode `Cc` character, which is C0, DEL and C1).
-2. **Normalise.** Strip a leading BOM and apply NFC.
+2. **Normalise.** Strip a leading BOM and apply NFC, with one warning that counts the
+   lines NFC changed (a decomposed `e` and accent became `é`: the text reads the same).
 3. **Read every cell as text.** A literal when the first non-blank character is
    `[`, `{` or `(`, also behind a Python assignment (`cat_day = {`), which is
    stripped: `json.loads` first, then `ast.literal_eval` for a Python literal
@@ -23,7 +24,8 @@ would, for example, read `01.02.2024` as a number under `thousands='.'`).
    or an object of scalars or an array of `[category, value]` pairs
    (`json_pairs`: the columns `category` and `value`, one row per entry, in the
    pasted order; the keys stay text, the values are typed); `null`, `NaN` and
-   `Infinity` are missing; a key repeated in an object keeps its last value, with
+   `Infinity` are missing; a float keeps the text it was written with (`_SourceFloat`),
+   so the typing sees every digit; a key repeated in an object keeps its last value, with
    a warning. Since 2026-10-15 a record's nested objects become columns named with
    dots (`country.value`), down to `MAX_FLATTEN_DEPTH` levels (`_flatten`), and a field
    that holds a list of values expands to one row per value (`_records`); the records
@@ -62,7 +64,10 @@ would, for example, read `01.02.2024` as a number under `thousands='.'`).
    characters), turn line and paragraph separators (U+2028, U+2029) into spaces,
    turn CRLF and CR inside a quoted cell into LF, strip surrounding whitespace,
    and map `MISSING_VALUES` to an empty cell. One warning per column that lost
-   invisible characters. A cell (header or value) longer than
+   invisible characters; in a column that stays text, one warning counts the cells
+   whose surrounding whitespace went (not in a space-aligned table, whose padding is
+   layout) and one the cells read as missing, naming the tokens (`None`, `-`), since
+   there they could have been categories (`_fidelity_notes`). A cell (header or value) longer than
    `MAX_INPUT_CELL_CHARS` after cleaning is `cell_too_long`, checked before any
    typing reads the cell. A column without a header whose cells are all missing
    (the trailing-delimiter column of many spreadsheet exports) is dropped with a
@@ -112,12 +117,14 @@ import json
 import math
 import re
 import statistics
+import sys
 import tokenize
 import unicodedata
 from collections import Counter
 from collections.abc import Collection, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from datetime import datetime
+from decimal import Decimal, InvalidOperation
 from itertools import pairwise, product
 from typing import Any, Literal
 
@@ -448,6 +455,10 @@ class _Column:
     mark_rows: list[int] = field(default_factory=list)  # the rows whose cell is a declared missing-value mark
     id_like: bool = False  # the name says ids, codes, versions or phone numbers (`_id_like`): no thousands reading
     group_mark: str | None = None  # the thousands mark `_as_grouped_numbers` read, evidence for other columns
+    integers: list[int] = field(default_factory=list)  # an integer column's values, exact (`numbers` are floats)
+    rounded: int = 0  # the cells a number column holds only rounded: more digits than a float64 keeps
+    trimmed: int = 0  # the cells whose surrounding whitespace the cleaning removed
+    missing_tokens: Counter[str] = field(default_factory=Counter)  # `MISSING_VALUES` tokens read as missing
 
 
 def pandas_dtypes(column_dtypes: Mapping[str, ColumnDtype]) -> dict[str, str]:
@@ -483,12 +494,20 @@ def parse_dataset(
     _check_size(text, max_bytes)
     text = text.removeprefix(_BOM)
     _check_controls(text)
-    text = unicodedata.normalize("NFC", text)
-    stripped = text.strip()
+    composed = unicodedata.normalize("NFC", text)
+    stripped = composed.strip()
     if not stripped:
         raise ParseError("unparseable", "the data is empty")
 
     warnings: list[str] = []
+    if composed != text:
+        # The same letters, one code point instead of two (`e` + U+0301 is `é`): said, as every change to the text is.
+        changed = sum(1 for line in text.splitlines() if not unicodedata.is_normalized("NFC", line))
+        warnings.append(
+            f"{_count(changed, 'line')} held decomposed characters (such as e and a separate accent), now written "
+            "in Unicode's composed form (NFC); the text reads the same"
+        )
+    text = composed
     context: list[str] = []
     table: tuple[list[str], list[list[str]], SourceFormat] | None = None
     literal = _LITERAL_START.match(stripped)
@@ -1115,15 +1134,65 @@ def _decode_literal(text: str) -> tuple[Any, int] | None:
         return dict(pairs)
 
     try:
-        return json.loads(text, parse_constant=lambda _: None, object_pairs_hook=objects), repeated
+        loaded = json.loads(text, parse_constant=lambda _: None, parse_float=_SourceFloat, object_pairs_hook=objects)
+        return loaded, repeated
     except (ValueError, RecursionError):
         pass
     try:
-        tree = ast.parse(text, mode="eval")
+        tree = _FloatTexts(text).visit(ast.parse(text, mode="eval"))
         value = ast.literal_eval(tree)
     except (ValueError, SyntaxError, TypeError, RecursionError, MemoryError):
         return None
     return value, _repeated_keys(tree)
+
+
+class _SourceFloat(float):
+    """A float of a JSON or Python literal that remembers how it was written.
+
+    `json.loads` and `ast.literal_eval` read `0.1234567890123456789` as a float64 of 17
+    digits; the cell takes the written text instead (`_json_cell`), so the typing step
+    sees every digit and says when a number column holds one only rounded.
+    """
+
+    text: str
+
+    def __new__(cls, text: str) -> "_SourceFloat":
+        number = super().__new__(cls, text.replace("_", ""))
+        number.text = text
+        return number
+
+
+class _FloatTexts(ast.NodeTransformer):
+    """Turn the float constants of a Python literal into `_SourceFloat`s of their written text.
+
+    A signed float (`-0.5`) becomes one constant with its sign, since `literal_eval` applies
+    a sign only to a plain `float`. A complex literal (`1.5+2j`) is left as Python reads it.
+    """
+
+    def __init__(self, source: str) -> None:
+        self.source = source
+
+    def _constant(self, node: ast.AST, sign: str, constant: ast.Constant) -> ast.AST:
+        written = ast.get_source_segment(self.source, constant)
+        if not written:
+            return node
+        return ast.copy_location(ast.Constant(_SourceFloat(sign + written)), node)
+
+    def visit_BinOp(self, node: ast.BinOp) -> ast.AST:
+        return node
+
+    def visit_UnaryOp(self, node: ast.UnaryOp) -> ast.AST:
+        operand = node.operand
+        if (
+            isinstance(node.op, ast.USub | ast.UAdd)
+            and isinstance(operand, ast.Constant)
+            and type(operand.value) is float
+        ):
+            return self._constant(node, "-" if isinstance(node.op, ast.USub) else "", operand)
+        return self.generic_visit(node)
+
+    def visit_Constant(self, node: ast.Constant) -> ast.AST:
+        return self._constant(node, "", node) if type(node.value) is float else node
 
 
 def _repeated_keys(tree: ast.AST) -> int:
@@ -1624,6 +1693,8 @@ def _json_cell(value: object, position: int) -> str:
         return "true" if value else "false"
     if isinstance(value, int):
         return str(value)
+    if isinstance(value, _SourceFloat) and _FLOAT.fullmatch(value.text):
+        return value.text  # every written digit: a JSON number's text is a dot-decimal number already
     if isinstance(value, float):
         return repr(value) if math.isfinite(value) else ""
     if isinstance(value, str):
@@ -1870,8 +1941,19 @@ def _clean_key(raw: str) -> tuple[str, bool]:
 
     A cell of canonical CSV (`parse_dataset(canonical=True)`) is cleaned the same way: there the
     empty cell is the only missing one."""
+    text, invisible, _ = _cleaned(raw)
+    return text, invisible
+
+
+def _cleaned(raw: str) -> tuple[str, bool, bool]:
+    """The cleaned cell, whether invisible characters went, and whether surrounding whitespace went.
+
+    A cell of nothing but whitespace is empty, not trimmed: it was blank to begin with.
+    """
     text, invisible = _strip_invisible(raw)
-    return text.replace("\r\n", "\n").replace("\r", "\n").strip(), invisible
+    unstripped = text.replace("\r\n", "\n").replace("\r", "\n")
+    stripped = unstripped.strip()
+    return stripped, invisible, bool(stripped) and stripped != unstripped
 
 
 def canonical_names(headers: Sequence[str]) -> list[str]:
@@ -1956,9 +2038,12 @@ def _type_column(column: _Column) -> None:
        for the whole column when any cell has a time.
     2. **boolean**: `true` / `false` in any letter case, written `True` / `False`.
     3. **integer**: ASCII digits with an optional sign within int64. A column with a
-       leading zero (`007`) stays text, because the zeros are part of the value.
+       leading zero (`007`) stays text, because the zeros are part of the value, and so
+       does a column with a whole number past int64 (`BIG_INTEGERS`): a float64 would
+       round its last digits.
     4. **number**: dot decimals with an optional exponent, written in Python's
-       shortest round-trip form; then decimal commas when every cell has the
+       shortest round-trip form (the value is kept, not the spelling: `1.50` is `1.5`;
+       a cell with more digits than a float64 holds is counted, `rounded_note`); then decimal commas when every cell has the
        `1.234,56` or `1234,56` shape and at least one has a comma. Dates were tried
        first, so `DD.MM.YYYY` never reads as a thousands-dot number. Then numbers whose
        thousands are grouped unambiguously by a dot, a comma, an apostrophe or a space
@@ -2002,6 +2087,10 @@ def _as_plain_numbers(column: _Column, cells: list[str], present: list[str]) -> 
             return False
         if _as_integers(column, cells):
             return True
+        # Past int64 a whole number only fits a float64, which keeps 15 to 17 digits: an id or a count
+        # of 20 digits would lose its last ones. Text keeps every digit; `set_type number` can still read it.
+        column.notes.append(BIG_INTEGERS)
+        return False
     if all(_FLOAT.fullmatch(cell) for cell in present):
         return _as_numbers(column, cells)
     if all(_DECIMAL_COMMA.fullmatch(cell) for cell in present) and any("," in cell for cell in present):
@@ -2016,6 +2105,17 @@ def _as_plain_numbers(column: _Column, cells: list[str], present: list[str]) -> 
 
 AMBIGUOUS_COMMAS = "commas read as decimal commas; remove them first if they separate thousands"
 """The note of a column whose commas could be decimals or thousands (`1,234`); `_commas_as_thousands` replaces it."""
+
+BIG_INTEGERS = "whole numbers beyond the 64-bit range kept as text, so no digit is lost"
+"""The note of an integer column with a value past int64, which a number column could hold only rounded."""
+
+
+def rounded_note(count: int) -> str:
+    """The note of a number column whose cells hold more significant digits than a float64 keeps."""
+    return (
+        f"{_count(count, 'value')} with more significant digits than a number holds (15 to 17) "
+        f"{'is' if count == 1 else 'are'} stored rounded to the nearest number"
+    )
 
 
 def _as_grouped_numbers(column: _Column, cells: list[str], present: list[str]) -> bool:
@@ -2173,11 +2273,21 @@ def _as_integers(column: _Column, cells: list[str]) -> bool:
         return False
     column.dtype = "integer"
     column.cells = ["" if value is None else str(value) for value in values]
-    column.numbers = [float(value) for value in values if value is not None]
+    column.integers = [value for value in values if value is not None]
+    column.numbers = [float(value) for value in column.integers]
+    column.rounded = 0
     return True
 
 
 def _as_numbers(column: _Column, cells: list[str]) -> bool:
+    """The dot-decimal `cells` as floats, written in their shortest round-trip form (`repr`).
+
+    The value is what counts, not the spelling: `1.50`, `1.5e0` and `+1.5` are all `1.5`. A
+    cell whose value a float64 does not hold (more than about 15 to 17 significant digits,
+    `0.1234567890123456789`, or a whole number past 2**53 beside decimals) is counted in
+    `_Column.rounded`, and `_build` warns about it (owner rule of 2026-10-15: precision is
+    never lost silently).
+    """
     values = [float(cell) if cell else None for cell in cells]
     finite = [value for value in values if value is not None]
     if not all(math.isfinite(value) for value in finite):
@@ -2185,7 +2295,33 @@ def _as_numbers(column: _Column, cells: list[str]) -> bool:
     column.dtype = "number"
     column.cells = ["" if value is None else repr(value) for value in values]
     column.numbers = finite
+    column.integers = []
+    column.rounded = sum(
+        1 for cell, value in zip(cells, values, strict=True) if value is not None and not keeps_value(cell, value)
+    )
     return True
+
+
+_FLOAT_DIGITS = 15
+"""Every decimal of at most this many significant digits survives a float64 and its `repr` (`DBL_DIG`)."""
+
+
+def keeps_value(text: str, value: float) -> bool:
+    """Whether the finite float `value` read from the dot-decimal number `text` has exactly the value of `text`.
+
+    `1.50` and `1.5` are the same value, so are `1e3` and `1000.0`; `0.1234567890123456789`
+    (19 digits) and `9007199254740993` (2**53 + 1) are not, since a float64 keeps 15 to 17
+    significant digits. A short number is decided by its digit count; a long one, or one so
+    small that the float is subnormal, by comparing the decimal values exactly.
+    """
+    mantissa = text.lower().partition("e")[0]
+    digits = mantissa.lstrip("+-").replace(".", "").lstrip("0")
+    if len(digits) <= _FLOAT_DIGITS and (abs(value) >= sys.float_info.min or (value == 0 and not digits)):
+        return True
+    try:
+        return Decimal(text) == Decimal(repr(value))
+    except InvalidOperation:
+        return False
 
 
 def _match_all(pattern: re.Pattern[str], cells: list[str]) -> dict[str, tuple[int, ...]] | None:
@@ -2267,12 +2403,17 @@ def _build(
         cells: list[str] = []
         na_rows: list[int] = []
         mark_rows: list[int] = []
+        trimmed = 0
+        tokens: Counter[str] = Counter()
         for row_index, row in enumerate(raw_rows):
-            text, cell_invisible = _clean_key(row[position])
+            text, cell_invisible, cell_trimmed = _cleaned(row[position])
+            trimmed += cell_trimmed
             if text_only or canonical:
                 cell = text
             else:
                 cell = "" if text in MISSING_VALUES else text
+                if text and not cell:
+                    tokens[text] += 1
                 if text == NA_TOKEN:
                     na_rows.append(row_index)
                 if missing_marks and _matches_mark(text, missing_marks):
@@ -2289,6 +2430,8 @@ def _build(
             text_only=text_only,
             na_rows=na_rows,
             mark_rows=mark_rows,
+            trimmed=trimmed,
+            missing_tokens=tokens,
         )
         read.append((header, broken, column))
 
@@ -2347,6 +2490,7 @@ def _build(
                 _retype_thousands_dots(column, decimal_comma=decimal_comma)
     for column in columns:
         _keep_na_codes(column)
+        _fidelity_notes(column, layout_padding=source_format == "whitespace")
 
     # A header that already names the unit (`Anteil (%)`, `Preis in €`) gets no suffix, unless it is
     # longer than a name may be: then the suffix is passed so the cut keeps the unit at the end.
@@ -2455,7 +2599,31 @@ def _keep_na_codes(column: _Column) -> None:
         return
     for row in column.na_rows:
         column.cells[row] = NA_TOKEN
+    column.missing_tokens.pop(NA_TOKEN, None)
     column.notes.append(f"{NA_TOKEN} read as a code (such as Namibia or North America), not as a missing cell")
+
+
+def _fidelity_notes(column: _Column, *, layout_padding: bool) -> None:
+    """The column's notes for every cell the parse changed beyond its spelling (owner rule of 2026-10-15).
+
+    A number keeps its value and a date its moment (`1.50` is written `1.5`, `5.3.2024`
+    `2024-03-05`): those are the canonical spelling, not a change. What is a change gets
+    a note with its count: a number stored rounded (`_as_numbers`); in a text column, a
+    cell whose surrounding whitespace was removed (not in a space-aligned table, whose
+    padding is layout) and a token such as `None` or `-` read as missing, since there it
+    could have been a category. In number and date columns those tokens are the usual
+    marks of a missing value, and whitespace is no part of a number.
+    """
+    if column.dtype == "number" and column.rounded:
+        column.notes.append(rounded_note(column.rounded))
+    if column.dtype != "text":
+        return
+    if column.trimmed and not layout_padding:
+        column.notes.append(f"spaces around the text removed in {_count(column.trimmed, 'cell')}")
+    if column.missing_tokens:
+        total = sum(column.missing_tokens.values())
+        named = ", ".join(f"'{token}'" for token, _ in column.missing_tokens.most_common(3))
+        column.notes.append(f"{_count(total, 'cell')} read as missing ({named})")
 
 
 def _without_empty_columns(
@@ -2532,12 +2700,16 @@ def _constants_to_notes(
 
 def _profile_column(column: _Column) -> ColumnProfile:
     present = [cell for cell in column.cells if cell]
-    minimum: float | str | None = None
-    maximum: float | str | None = None
+    minimum: int | float | str | None = None
+    maximum: int | float | str | None = None
     mean: float | None = None
     median: float | None = None
     top: list[str] = []
-    if column.dtype in ("integer", "number") and column.numbers:
+    if column.dtype == "integer" and column.integers:
+        # Exact: a float64 would round an id or a count past 2**53 in the profile the root reads.
+        minimum, maximum = min(column.integers), max(column.integers)
+        mean, median = _statistics(column.numbers)
+    elif column.dtype in ("integer", "number") and column.numbers:
         minimum, maximum = min(column.numbers), max(column.numbers)
         mean, median = _statistics(column.numbers)
     elif column.dtype == "datetime" and column.dates:

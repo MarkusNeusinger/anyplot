@@ -7,6 +7,7 @@ The parser types a column whose every cell carries the same unit at the paste (`
 
 import csv
 import io
+import random
 from typing import Any
 
 import pandas as pd
@@ -1243,7 +1244,7 @@ class TestDerive:
         running = prepare(shuffled, derive("Total", "cumsum", "Population", within=["Origin"], order="Year"))
         index = prepare(shuffled, derive("Index", "index", "Population", within=["Origin"], order="Year"))
 
-        assert cells(running, 3) == ["3600.0", "1600.0", "6400.0", "12400.0"]
+        assert cells(running, 3) == ["3600", "1600", "6400", "12400"]  # whole numbers add up as whole numbers
         assert running.changes == [
             "added column Total: running total of Population in the order of Year within each Origin"
         ]
@@ -1626,3 +1627,110 @@ class TestNaCategory:
         assert reparse(prepared).profile.columns[0].missing == 0
         kept = prepare('{"NA": 3, "EU": 4, "AS": 1}', drop("category", "eq", "NA"))
         assert rows(kept) == ["category,value", "EU,4", "AS,1"]
+
+
+def from_text(text: str, column: str, *operations: dict[str, Any]) -> Prepared:
+    """`operations` on a dataset whose `column` is kept text, as `set_type text` leaves it."""
+    parsed = parse_dataset(text, text_columns=[column])
+    return apply_operations(parsed, OPERATIONS.validate_python(list(operations)))
+
+
+class TestFidelity:
+    """Owner rule of 2026-10-15: an operation keeps every digit and every moment, or its change line counts the loss."""
+
+    def test_numbers_pass_untouched_operations_with_every_digit(self) -> None:
+        generator = random.Random(20261015)
+        values = [generator.uniform(-1, 1) * 10.0 ** generator.randint(-300, 300) for _ in range(500)]
+        whole = [2**53 + position for position in range(len(values))]
+        text = "k,v,n\n" + "".join(f"{p % 3},{v!r},{n}\n" for p, (v, n) in enumerate(zip(values, whole, strict=True)))
+        prepared = prepare(text, {"op": "sort", "column": "k", "descending": True}, {"op": "sort", "column": "k"})
+        again = reparse(prepared)
+        frame = pd.read_csv(io.StringIO(again.csv), float_precision="round_trip", dtype={"n": "Int64"})
+
+        assert sorted(cells(prepared, 1)) == sorted(repr(value) for value in values)
+        assert sorted(frame["v"].tolist()) == sorted(values) and sorted(frame["n"].tolist()) == whole
+        assert again.warnings == []
+
+    def test_set_type_number_reads_whole_numbers_exactly(self) -> None:
+        prepared = from_text("k,a\nx,9007199254740993\ny,-9223372036854775808\n", "a", set_number("a"))
+
+        assert cells(prepared, 1) == ["9007199254740993", "-9223372036854775808"]
+        assert dtypes(prepared)["a"] == "integer" and prepared.changes == ["a: 2 cells read as numbers"]
+
+    def test_set_type_number_counts_the_cells_it_rounds(self) -> None:
+        prepared = from_text("k,a\nx,0.1234567890123456789\ny,1.50\nz,123456789012345678901234\n", "a", set_number("a"))
+
+        assert cells(prepared, 1) == ["0.12345678901234568", "1.5", repr(123456789012345678901234.0)]
+        assert prepared.changes == [
+            "a: 3 cells read as numbers, 2 values with more significant digits than a number holds (15 to 17) "
+            "are stored rounded to the nearest number"
+        ]
+
+    def test_an_integer_sum_never_wraps_around(self) -> None:
+        big = 2**63 - 1000
+        prepared = prepare(f"g,a\nx,{big}\nx,{big}\ny,{2**53 + 2}\ny,1\n", aggregate_sum("a"))
+
+        # Once one total leaves int64 the column is float64, and 2**53 + 3 is rounded with it: both counted.
+        assert cells(prepared, 1) == [repr(float(2 * big)), repr(float(2**53 + 3))]
+        assert prepared.changes == [
+            "summed a by g: 2 rows, 2 values past the 64-bit whole-number range are stored rounded to the nearest "
+            "number (15 to 17 significant digits)"
+        ]
+        exact = prepare(f"g,a\nx,{2**53 + 1}\nx,1\n,5\n,\n", aggregate_sum("a"))
+        assert rows(exact) == ["g,a", f"x,{2**53 + 2}", ",5"] and exact.changes == ["summed a by g: 2 rows"]
+
+    def test_a_running_total_and_a_row_sum_of_whole_numbers_stay_exact(self) -> None:
+        text = f"o,a,b\n2,1,{2**53}\n1,{2**53 + 1},1\n3,,2\n"
+        running = prepare(text, derive("t", "cumsum", "a", order="o"))
+        summed = prepare(text, derive("s", "sum", "a", "b"))
+        over = prepare(f"o,a\n1,{2**63 - 1}\n2,1\n", derive("t", "cumsum", "a", order="o"))
+
+        assert cells(running, 3) == [str(2**53 + 2), str(2**53 + 1), ""]
+        assert cells(summed, 3) == [str(2**53 + 1), str(2**53 + 2), "2"]
+        assert cells(over, 2) == [repr(float(2**63 - 1)), repr(float(2**63))]
+        assert over.changes[0].endswith(  # 2**63 itself is a float exactly: one value is rounded
+            ", 1 value past the 64-bit whole-number range is stored rounded to the nearest number "
+            "(15 to 17 significant digits)"
+        )
+
+    def test_derived_ratios_and_percents_keep_full_precision(self) -> None:
+        prepared = prepare("a,b\n1,3\n2,7\n", derive("r", "ratio", "a", "b", percent=True))
+
+        assert cells(prepared, 2) == [repr(1 / 3 * 100), repr(2 / 7 * 100)]
+
+    def test_pivoting_whole_numbers_beside_decimals_counts_the_rounded_ones(self) -> None:
+        prepared = prepare(f"g,a,b\nx,{2**53 + 1},1.5\ny,7,2.5\n", {"op": "pivot_longer", "columns": ["a", "b"]})
+
+        assert cells(prepared, 2) == [repr(float(2**53)), "7.0", "1.5", "2.5"]
+        assert prepared.changes == [
+            "pivoted 2 columns into series/value: 4 rows, 1 whole number past 2^53 is stored rounded to the "
+            "nearest number beside the decimals of value"
+        ]
+
+    def test_set_type_datetime_keeps_fractions_of_a_second_and_offsets(self) -> None:
+        fractions = prepare("label,t\nx,2024-03-05 12:00:00.25\ny,2024-03-05 12:00:01.5\n", set_dates(column="t"))
+        offsets = prepare("k,t\nx,2024-03-05T12:00:00+02:00\ny,2024-03-06T13:00:00+02:00\n", set_dates(column="t"))
+
+        assert cells(fractions, 1) == ["2024-03-05T12:00:00.250000", "2024-03-05T12:00:01.500000"]
+        assert cells(offsets, 1) == ["2024-03-05T12:00:00+02:00", "2024-03-06T13:00:00+02:00"]
+
+    def test_year_first_dates_are_never_read_day_first(self) -> None:
+        """`2024-06-01T13:00:00Z` is 1 June: pandas with `dayfirst` read it as 6 January (review of 2026-10-15)."""
+        prepared = prepare("k,t\nx,2024-06-01T13:00:00Z\ny,2024-01-31T08:00:00Z\n", set_dates(column="t"))
+
+        assert cells(prepared, 1) == ["2024-06-01T13:00:00+00:00", "2024-01-31T08:00:00+00:00"]
+
+    def test_different_utc_offsets_are_refused_instead_of_converted(self) -> None:
+        code, message = failure(
+            "k,t\nx,2024-01-05T12:00:00+01:00\ny,2024-07-05T12:00:00+02:00\n", set_dates(column="t")
+        )
+
+        assert code == "type_mismatch" and "different UTC offsets" in message
+
+
+def set_number(column: str) -> dict[str, Any]:
+    return {"op": "set_type", "column": column, "type": "number"}
+
+
+def aggregate_sum(column: str) -> dict[str, Any]:
+    return {"op": "aggregate", "by": ["g"], "column": column, "how": "sum"}

@@ -149,7 +149,8 @@ async def test_a_stand_in_renders_through_the_backend_and_its_gates(stress_cases
     assert standin["check"] == "ok" and standin["validator"] == [] and standin["gates"] == []
     assert record["render_checked"] is False  # the fake renderer runs no code, so G9 is not expected of it
     (job,) = backend.jobs
-    assert job.themes == ("light",) and 'pd.read_csv("data.csv"' in job.source and "10_000" in job.source
+    assert job.themes == ("light",) and "pd.read_csv(" in job.source and '"data.csv"' in job.source
+    assert 'float_precision="round_trip"' in job.source and "10_000" in job.source
 
 
 async def test_render_expectations_hold_only_on_a_real_renderer(stress_cases: dict[str, EvalCase]) -> None:
