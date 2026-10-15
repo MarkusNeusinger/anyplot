@@ -5,4 +5,4 @@
   (`expected_texts`) are now kept with the note, so the next `.create_plot()`
   checks the render for the same title or format. They follow the note's
   lifecycle: kept until a plot ships, dropped by any change to the bindings,
-  the data or the library.
+  the data or the library. (#12186)
