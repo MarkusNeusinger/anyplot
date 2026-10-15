@@ -22,9 +22,14 @@ would, for example, read `01.02.2024` as a number under `thousands='.'`).
    (`json_records`), an object of equally long column lists (`json_columns`),
    or an object of scalars or an array of `[category, value]` pairs
    (`json_pairs`: the columns `category` and `value`, one row per entry, in the
-   pasted order; the keys stay text, the values are typed); nesting depth at
-   most 2; `null`, `NaN` and `Infinity` are missing; a key repeated in an object
-   keeps its last value, with a warning. A JSON-stat 2.0 dataset (`json_stat`,
+   pasted order; the keys stay text, the values are typed); `null`, `NaN` and
+   `Infinity` are missing; a key repeated in an object keeps its last value, with
+   a warning. Since 2026-10-15 a record's nested objects become columns named with
+   dots (`country.value`), down to `MAX_FLATTEN_DEPTH` levels, and a field that holds
+   a list is left out with a warning (`_flatten`); the records may come wrapped with
+   metadata as an API answers them, `[{page metadata}, [records]]` (the World Bank) or
+   `{"data": [records], "meta": {...}}`, whose other fields become notes
+   (`_api_records`). A JSON-stat 2.0 dataset (`json_stat`,
    since 2026-10-14: what the statistics offices' APIs return, BFS PxWeb,
    Eurostat, Statistik Austria, Statistics Norway), or a JSON-stat 1.x bundle
    of one dataset, is the one shape nested deeper than 2 (dimension, category,
@@ -46,6 +51,11 @@ would, for example, read `01.02.2024` as a number under `thousands='.'`).
    the header is `unparseable`. The lines left out above and below the table (not the
    summary rows, which are data) are kept as `ParsedDataset.context_lines`, the notes
    the user pasted with the data, see `_context_lines` (owner rule of 2026-10-14).
+   Since 2026-10-15 a table aligned with runs of two or more spaces (a weather or
+   statistics office's `.txt`), or separated by single spaces, is read too (`whitespace`,
+   see `sniff_delimiter` and `_space_block`), a short row of a fixed-width layout placed
+   by position (`_aligned`); a note line above it that declares the missing-value mark
+   (`Missing values: -999`) makes that mark missing in every column (`_declared_missing`).
 4. **Clean every cell.** Remove invisible format characters (Unicode category
    `Cf`: zero-width characters, bidi controls, BOMs inside the text, tag
    characters), turn line and paragraph separators (U+2028, U+2029) into spaces,
@@ -107,7 +117,7 @@ from collections import Counter
 from collections.abc import Collection, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from datetime import datetime
-from itertools import product
+from itertools import pairwise, product
 from typing import Any, Literal
 
 from ..schemas import (
@@ -174,12 +184,36 @@ MAX_RAW_COLUMNS = 4 * MAX_COLUMNS
 """The keys a JSON table may carry before its empty columns are dropped (`_without_empty_columns`): an API's
 records name every field of its schema, also the unused ones, and the cap of `MAX_COLUMNS` applies to the
 columns left; this bound keeps the work before that check small. Delimited text is bounded by its size alone."""
+MAX_FLATTEN_DEPTH = 3
+"""The levels of nested objects a JSON record's fields are read from (`_flatten`): `country.value` is one level,
+`a.b.c.d` three. API records nest one level (the World Bank's `country`, `indicator`), rarely two."""
+MAX_NAMED_FIELDS = 5  # the left-out fields a warning names before it ends with `…`
 MIN_KEPT_COLUMNS = 2
 """The columns a paste keeps at least when constant text columns move to the notes (`_constants_to_notes`):
 a category or a time and a value, the least a plot needs."""
 
 # Candidate delimiters in tie-break order, with the source format each one reports.
 DELIMITERS: tuple[tuple[str, SourceFormat], ...] = ((",", "csv"), (";", "semicolon"), ("\t", "tsv"), ("|", "pipe"))
+SPACE_RUN = "  "
+"""The pseudo delimiter of a table aligned with runs of two or more spaces (`_whitespace_records`): a single space
+inside a header or a cell (`Max Temp`, `Zürich / Fluntern`) stays part of it."""
+SINGLE_SPACE = " "
+"""The pseudo delimiter of a table whose fields are separated by single spaces (`a b c`), tried only when the
+space-run reading finds no table, and read only when every line of the table has the header's field count."""
+_SPACE_RUN_FIELD = re.compile(r"[^ \t]+(?: [^ \t]+)*")  # a field between runs of 2+ spaces (or tabs)
+_SPACE_FIELD = re.compile(r"[^ \t]+")  # a field between single spaces (or tabs)
+_YEAR = re.compile(r"1[0-9]{3}|20[0-9]{2}")
+MAX_DECLARED_MISSING_CHARS = 12
+_MISSING_DECLARATION = re.compile(
+    r"(?:missing(?:[ _-]?(?:values?|data|value code))?|no[ _-]?data(?:[ _-]?values?)?|fill[ _-]?values?"
+    r"|na[ _-]?values?|fehlwerte?|fehlende werte|valeurs? manquantes?)"
+    rf"\s*[:=]\s*(?P<mark>\S{{1,{MAX_DECLARED_MISSING_CHARS}}})",
+    re.IGNORECASE,
+)
+"""A note line that declares the file's missing-value mark (`Missing values: NA`, `nodata = -999`)."""
+_DECLARED_MARK = re.compile(r"[+-]?[0-9]+(?:[.,][0-9]+)?|[^\w\s]{1,3}|[A-Za-z]{1,3}")
+_NOT_A_MARK: frozenset[str] = frozenset({"no", "yes", "ja", "nein", "non", "oui", "si"})
+"""Words after `Missing values:` that answer whether values are missing, not which mark stands for them."""
 
 # A cell is missing when, after cleaning, it is exactly one of these. The set is the
 # design's list (empty, `NA`, `NaN`, `null`, `-`) plus every other token pandas reads as
@@ -457,11 +491,20 @@ def parse_dataset(
         if table is None and (assignment or not body.startswith("(")):
             raise ParseError("unparseable", "the data starts like JSON or a Python literal but is neither")
         # A bare `(` that neither reader accepts is delimited text: `(in %) Land;Wert`, prose in parentheses.
+    marks: frozenset[str] = frozenset()
     if table is None:
         table = _read_delimited(text, warnings, find_table=find_table, context=context)
+        marks = _declared_missing(context)
     headers, rows, source_format = table
     parsed = _build(
-        headers, rows, source_format, warnings, frozenset(text_columns), canonical=canonical, context=context
+        headers,
+        rows,
+        source_format,
+        warnings,
+        frozenset(text_columns),
+        canonical=canonical,
+        context=context,
+        missing_marks=marks,
     )
     if len(parsed.csv.encode("utf-8")) > MAX_CANONICAL_BYTES:
         raise ParseError("too_long", f"the data is larger than {MAX_CANONICAL_BYTES // 1024:,} KB once written out")
@@ -507,6 +550,12 @@ def sniff_delimiter(text: str) -> tuple[str | None, SourceFormat]:
     first data row has the table's width, so it can be the header: a single column of
     decimal commas (`v`, `1,5`, `2,3`) is no two-column table without a header.
 
+    Spaces compete after the four (since 2026-10-15, live test of a MeteoSwiss `.txt`): runs
+    of two or more spaces (`SPACE_RUN`, so `Max Temp` stays one header), then single spaces
+    (`SINGLE_SPACE`), each only with the stricter evidence of `_space_block`, ranked by the
+    same values, lines and fields, so a full tie keeps the real delimiter. Their source
+    format is `whitespace`.
+
     When no candidate's table holds a value (text-only tables, prose), the header rule
     decides as before (`_sniff_by_header`).
     """
@@ -526,7 +575,59 @@ def sniff_delimiter(text: str) -> tuple[str | None, SourceFormat]:
         key = (block.values, count, block.width)
         if best is None or key > best:
             best, choice = key, (delimiter, source_format)
+    # A table aligned with spaces competes on the same terms after the real delimiters, so a tie keeps a real one:
+    # runs of two or more spaces first, single spaces only when the runs find no table (`_space_block`).
+    for delimiter in (SPACE_RUN, SINGLE_SPACE):
+        spaced = [fields for line in lines if (fields := _space_fields(line, delimiter))]
+        found = _space_block(spaced, single=delimiter == SINGLE_SPACE)
+        if found is None:
+            continue
+        count = sum(1 for row in spaced if len(row) == found.width)
+        key = (found.values, count, found.width)
+        if best is None or key > best:
+            best, choice = key, (delimiter, "whitespace")
+        break
     return choice if best is not None else _sniff_by_header(sample)
+
+
+def _space_spans(line: str, delimiter: str) -> list[tuple[int, int]]:
+    """Where the fields of a space-aligned line sit: runs of two or more spaces (`SPACE_RUN`) or any space between."""
+    pattern = _SPACE_RUN_FIELD if delimiter == SPACE_RUN else _SPACE_FIELD
+    return [match.span() for match in pattern.finditer(line)]
+
+
+def _space_fields(line: str, delimiter: str) -> list[str]:
+    return [line[start:end] for start, end in _space_spans(line, delimiter)]
+
+
+def _space_block(records: Sequence[Sequence[str]], *, single: bool) -> "TableBlock | None":
+    """The table among space-separated records, or None when spaces are no reliable delimiter here.
+
+    Spaces also separate the words of prose and the items of a list (`Hund 7`), which the
+    transcriber reads better, so a space-aligned table needs more evidence than a comma one:
+    a value column (`table_block`), and a header right above the first data row, at the
+    table's width, that is no data row itself: none of its cells reads as a value, except
+    two or more years (`Land  2020  2021`, a wide table). Single spaces split every word,
+    so there every record from the header to the last row must have the header's width.
+    """
+    block = table_block(records)
+    if not block.values:
+        return None
+    header = records[block.start]
+    if len(header) != block.width:
+        return None
+    values = [cell for cell in header if _value_like(cell)]
+    if values and (len(values) < 2 or len(values) == len(header) or not all(_YEAR.fullmatch(cell) for cell in values)):
+        return None
+    if not single:
+        return block
+    rows = records[block.start : block.end + block.summary]
+    if any(len(record) != block.width for record in rows):
+        return None
+    # Two neighbours that read as one value together are one cell: `65 %`, `1 234`, `2024-01-01 12:00`.
+    if any(_value_like(f"{left} {right}") for record in rows[1:] for left, right in pairwise(record)):
+        return None
+    return block
 
 
 def _sniff_by_header(sample: str) -> tuple[str | None, SourceFormat]:
@@ -554,18 +655,32 @@ def _sniff_by_header(sample: str) -> tuple[str | None, SourceFormat]:
 def _read_delimited(
     text: str, warnings: list[str], *, find_table: bool = True, context: list[str] | None = None
 ) -> tuple[list[str], list[list[str]], SourceFormat]:
-    """The header, the rows and the format of delimited text; the left-out lines go to `context` when given."""
+    """The header, the rows and the format of delimited text; the left-out lines go to `context` when given.
+
+    A space-aligned table (`SPACE_RUN`, `SINGLE_SPACE`) is split line by line, without quoting,
+    and a row with fewer fields than the header (a blank cell in a fixed-width layout) has its
+    fields placed under the header's columns by their position (`_aligned`), never padded at
+    the end, which would shift its values into the wrong columns.
+    """
     delimiter, source_format = sniff_delimiter(text)
-    reader = csv.reader(
-        io.StringIO(text, newline=""), delimiter=delimiter or _NO_DELIMITER, skipinitialspace=True, strict=True
-    )
+    spaced = delimiter in (SPACE_RUN, SINGLE_SPACE)
     records: list[tuple[int, list[str]]] = []
-    try:
-        for record in reader:
-            if any(cell.strip() for cell in record):
-                records.append((reader.line_num, record))
-    except csv.Error as exc:
-        raise ParseError("unparseable", f"the quoting is malformed near line {reader.line_num}") from exc
+    spans: list[list[tuple[int, int]]] = []
+    if delimiter is not None and spaced:
+        for line_num, line in enumerate(_PHYSICAL_LINE.split(text), start=1):
+            if line_spans := _space_spans(line, delimiter):
+                records.append((line_num, [line[start:end] for start, end in line_spans]))
+                spans.append(line_spans)
+    else:
+        reader = csv.reader(
+            io.StringIO(text, newline=""), delimiter=delimiter or _NO_DELIMITER, skipinitialspace=True, strict=True
+        )
+        try:
+            for record in reader:
+                if any(cell.strip() for cell in record):
+                    records.append((reader.line_num, record))
+        except csv.Error as exc:
+            raise ParseError("unparseable", f"the quoting is malformed near line {reader.line_num}") from exc
     if not records:
         raise ParseError("unparseable", "the data is empty")
     block = table_block([record for _, record in records]) if find_table else TableBlock(0, len(records))
@@ -584,23 +699,65 @@ def _read_delimited(
         if cut:
             warnings.append(f"the notes around the table were cut at {MAX_CONTEXT_CHARS:,} characters")
     header = records[block.start][1]
+    width = len(header)
+    extents = _column_extents(spans, block.start, block.end, width) if spaced else []
     rows: list[list[str]] = []
     padded = 0
-    for line_num, record in records[block.start + 1 : block.end]:
+    for index in range(block.start + 1, block.end):
+        line_num, record = records[index]
         if len(rows) == MAX_ROWS:
             raise ParseError("too_many_rows", f"the data has more than {MAX_ROWS:,} rows")
-        width = len(header)
         if len(record) < width:
-            record = record + [""] * (width - len(record))
+            record = (
+                _aligned(record, spans[index], extents, line_num) if spaced else record + [""] * (width - len(record))
+            )
             padded += 1
         elif len(record) > width:
             if any(cell.strip() for cell in record[width:]):
                 raise ParseError("unparseable", f"line {line_num} has more fields than the header")
             record = record[:width]
         rows.append(record)
-    if padded:
+    if padded and spaced:
+        warnings.append(
+            f"{_count(padded, 'row')} had fewer fields than the header; their cells were placed under the header's "
+            "columns by their position, and the cells left over are empty"
+        )
+    elif padded:
         warnings.append(f"{_count(padded, 'row')} had fewer fields than the header; the missing cells are empty")
     return header, rows, source_format
+
+
+def _column_extents(spans: Sequence[Sequence[tuple[int, int]]], start: int, end: int, width: int) -> list[list[int]]:
+    """The character range each column of a space-aligned table covers: its header and its full rows together."""
+    extents = [[left, right] for left, right in spans[start]]
+    for line_spans in spans[start + 1 : end]:
+        if len(line_spans) != width:
+            continue
+        for extent, (left, right) in zip(extents, line_spans, strict=True):
+            extent[0], extent[1] = min(extent[0], left), max(extent[1], right)
+    return extents
+
+
+def _aligned(
+    fields: Sequence[str], spans: Sequence[tuple[int, int]], extents: Sequence[Sequence[int]], line_num: int
+) -> list[str]:
+    """A short row of a space-aligned table, each field under the column whose range it overlaps most (else the
+    nearest one); `unparseable` when two fields fall under one column or out of order, so no value is guessed."""
+    cells = [""] * len(extents)
+    last = -1
+    for field_text, (left, right) in zip(fields, spans, strict=True):
+
+        def fit(column: int, left: int = left, right: int = right) -> tuple[int, int]:
+            low, high = extents[column]
+            overlap = min(right, high) - max(left, low)
+            return (max(overlap, 0), -max(low - right, left - high, 0))
+
+        column = max(range(len(extents)), key=fit)
+        if column <= last:
+            raise ParseError("unparseable", f"line {line_num} does not line up with the columns of the header")
+        cells[column] = field_text
+        last = column
+    return cells
 
 
 @dataclass(frozen=True)
@@ -712,6 +869,30 @@ def _summary_row(record: Sequence[str]) -> bool:
     return label.rstrip(":").strip().casefold() in SUMMARY_LABELS
 
 
+def _declared_missing(lines: Iterable[str]) -> frozenset[str]:
+    """The missing-value marks the notes around a table declare (`Missing values: NA`, `nodata = -999`).
+
+    A weather or statistics export often names its mark in the metadata above the table, and
+    the mark can be one the parser would otherwise read as a value (`-999`, `9999`, `M`). A
+    line counts when it is only such a declaration; the mark is a number other than zero, one
+    to three symbols (`.`, `*`, `--`) or one to three letters that are no answer (`no`, `ja`):
+    `Missing values: none` says that nothing is missing. Every cell that is exactly a declared
+    mark is missing, in every column, and a declared `NA` is never kept as a code.
+    """
+    marks: set[str] = set()
+    for line in lines:
+        match = _MISSING_DECLARATION.fullmatch(line.strip())
+        if match is None:
+            continue
+        mark = match["mark"]
+        if not _DECLARED_MARK.fullmatch(mark) or mark.casefold() in _NOT_A_MARK:
+            continue
+        if mark[-1:].isdigit() and float(mark.replace(",", ".")) == 0:
+            continue
+        marks.add(mark)
+    return frozenset(marks)
+
+
 def _context_lines(records: Iterable[Sequence[str]], delimiter: str | None) -> tuple[list[str], bool]:
     """The left-out records as text lines, and whether the cap cut them.
 
@@ -760,7 +941,8 @@ def _read_literal(
     dataset = _json_stat_dataset(data)
     if dataset is not None:
         return _json_stat(dataset, warnings, context)
-    return _tabulate(data, warnings)
+    records = _api_records(data, warnings, context)
+    return _tabulate(data if records is None else records, warnings)
 
 
 def _too_deep(text: str) -> bool:
@@ -857,7 +1039,128 @@ def _tabulate(data: Any, warnings: list[str]) -> tuple[list[str], list[list[str]
     )
 
 
+def _api_records(data: Any, warnings: list[str], context: list[str]) -> list[dict[Any, Any]] | None:
+    """The records of an API response that wraps them with metadata; None for any other shape.
+
+    Two wrappings are common (live test of 2026-10-15: the World Bank API answers
+    `[{page metadata}, [records]]` and was refused): an array of objects and exactly one
+    list of records (`[{"page": 1, ...}, [{...}, ...]]`), and an object with exactly one
+    list of records beside other fields (`{"data": [...], "meta": {...}}`, also under
+    `results`, `records`, `items` or any other name). A list of records is a non-empty
+    list whose every element is an object. The other objects, or the object's other
+    fields, are metadata: their text, number and boolean fields, nested objects flattened
+    with dots as in a record (`_flatten`), go to `context` as `<name>: <value>` lines, the
+    notes the user pasted with the data, and fields that hold lists are left out; one
+    warning counts them. Two lists of records are `unparseable`: the response holds two
+    tables, and the parser takes none by guess. An array of only objects, or of only
+    lists, is no wrapping and goes to `_tabulate` as before.
+    """
+    metadata: list[Mapping[Any, Any]]
+    if isinstance(data, (list, tuple)):
+        lists = [entry for entry in data if isinstance(entry, (list, tuple))]
+        if not lists or len(lists) == len(data) or not all(isinstance(entry, (dict, list, tuple)) for entry in data):
+            return None
+        tables = [entry for entry in lists if _record_list(entry)]
+        if not tables:
+            raise ParseError("unparseable", "the response holds metadata but no list of records")
+        if len(lists) > 1:
+            raise ParseError("unparseable", f"the response holds {len(lists)} lists; paste one list of records")
+        metadata = [entry for entry in data if isinstance(entry, dict)]
+        records = tables[0]
+    elif isinstance(data, dict):
+        keys = [key for key, value in data.items() if _record_list(value)]
+        if not keys:
+            return None
+        if len(keys) > 1:
+            raise ParseError(
+                "unparseable", f"the object holds {len(keys)} lists of records; paste one list of records at a time"
+            )
+        metadata = [{key: value for key, value in data.items() if key != keys[0]}]
+        records = data[keys[0]]
+    else:
+        return None
+    lines: list[str] = []
+    left_out = 0
+    for entry in metadata:
+        fields, dropped = _flatten(entry)
+        left_out += len(dropped)
+        for name, value in fields.items():
+            cell = _json_text(value, "a field beside the records") if isinstance(value, str) else _json_cell(value, 0)
+            if cell.strip():
+                lines.append(f"{name}: {cell}")
+    if lines:
+        warnings.append(
+            f"{_count(len(lines), 'field')} beside the records (such as paging or a timestamp) moved to the notes"
+        )
+    if left_out:
+        warnings.append(f"{_count(left_out, 'field')} beside the records that hold lists left out")
+    kept, cut = _context_lines([[line] for line in lines], None)
+    context.extend(kept)
+    if cut:
+        warnings.append(f"the notes from the fields beside the records were cut at {MAX_CONTEXT_CHARS:,} characters")
+    return list(records)
+
+
+def _record_list(value: Any) -> bool:
+    """A non-empty list whose every element is an object: one table of records."""
+    return isinstance(value, (list, tuple)) and bool(value) and all(isinstance(item, dict) for item in value)
+
+
+def _flatten(record: Mapping[Any, Any]) -> tuple[dict[str, Any], list[str]]:
+    """A record's fields with nested objects flattened, and the names of the fields left out.
+
+    A nested object's fields become fields named `<parent>.<field>` (`country.value`,
+    `indicator.id`), down to `MAX_FLATTEN_DEPTH` levels: canonical data is one flat table
+    (owner rule of 2026-10-11). A field that holds a list (`"tags": ["a", "b"]`), or an
+    object nested deeper, is left out and named in the second list: a list has no single
+    cell, and its text form (`['a', 'b']`) would be a category no plot can use.
+    """
+    flat: dict[str, Any] = {}
+    dropped: list[str] = []
+
+    def walk(mapping: Mapping[Any, Any], prefix: str, depth: int) -> None:
+        for position, (key, value) in enumerate(mapping.items()):
+            name = prefix + _json_key(key, position)
+            if isinstance(value, dict) and depth < MAX_FLATTEN_DEPTH:
+                walk(value, f"{name}.", depth + 1)
+            elif isinstance(value, (dict, list, tuple)):
+                dropped.append(name)
+            else:
+                flat[name] = value
+
+    walk(record, "", 0)
+    return flat, dropped
+
+
 def _records(
+    records: Sequence[Mapping[Any, Any]], warnings: list[str]
+) -> tuple[list[str], list[list[str]], SourceFormat]:
+    """One column per field of any record, nested objects flattened (`_flatten`), in the order the fields appear."""
+    flattened: list[dict[str, Any]] = []
+    dropped: dict[str, None] = {}
+    nested = False
+    for record in records:
+        fields, left_out = _flatten(record)
+        nested = nested or any(isinstance(value, dict) and value for value in record.values())
+        dropped.update(dict.fromkeys(left_out))
+        flattened.append(fields)
+    if dropped and not any(flattened):
+        raise ParseError(
+            "unparseable", "no field of the records holds text, a number, a boolean or null; lists cannot be columns"
+        )
+    if nested:
+        warnings.append("fields of nested objects became columns named with a dot, such as parent.field")
+    if dropped:
+        names = [_clip(name, MAX_COLUMN_NAME_CHARS) for name in dropped]
+        shown = ", ".join(names[:MAX_NAMED_FIELDS]) + (", …" if len(names) > MAX_NAMED_FIELDS else "")
+        warnings.append(
+            f"{_count(len(names), 'field')} holding a list or objects nested more than "
+            f"{MAX_FLATTEN_DEPTH} levels deep left out: {shown}"
+        )
+    return _flat_records(flattened, warnings)
+
+
+def _flat_records(
     records: Sequence[Mapping[Any, Any]], warnings: list[str]
 ) -> tuple[list[str], list[list[str]], SourceFormat]:
     keys: dict[Any, int] = {}
@@ -1563,8 +1866,11 @@ def _build(
     *,
     canonical: bool = False,
     context: list[str] | None = None,
+    missing_marks: frozenset[str] = frozenset(),
 ) -> ParsedDataset:
     read: list[tuple[str, bool, _Column]] = []  # header, whether breaks became spaces, column
+    extra_marks = missing_marks - MISSING_VALUES
+    marked = 0  # the cells only a declared mark made missing
     for position, raw in enumerate(raw_headers):
         header, invisible, broken = _clean_header(raw)
         # The keys of an object of values are names, and so are JSON-stat categories (every column but
@@ -1578,9 +1884,12 @@ def _build(
             text, cell_invisible = _clean_key(row[position])
             if text_only or canonical:
                 cell = text
+            elif text in extra_marks:
+                cell = ""
+                marked += 1
             else:
                 cell = "" if text in MISSING_VALUES else text
-                if text == NA_TOKEN:
+                if text == NA_TOKEN and NA_TOKEN not in missing_marks:
                     na_rows.append(row_index)
             cells.append(cell)
             invisible = invisible or cell_invisible
@@ -1589,6 +1898,8 @@ def _build(
         column = _Column(name="", source=cells, cells=[], invisible=invisible, text_only=text_only, na_rows=na_rows)
         read.append((header, broken, column))
 
+    if marked:
+        warnings.append(f"{_count(marked, 'cell')} matched the missing-value mark the notes declare and are empty")
     dropped = len(raw_headers) - len(read)
     if dropped:
         warnings.append(f"{_count(dropped, 'empty column')} without a header dropped")
