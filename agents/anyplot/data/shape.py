@@ -74,7 +74,7 @@ class LongSuggestion:
 
 def long_suggestion(roles: list[DataRole], profile: DatasetProfile) -> LongSuggestion | None:
     """The suggestion for this spec and table, or None when the rule above does not hold."""
-    single = [role for role in roles if not role.variadic]
+    single = [role for role in roles if not role.variadic and not role.computed]  # a computed role takes no column
     if any(role.variadic and set(role.kinds) == {"numeric"} for role in roles):
         return None
     labels = [role for role in single if role.required and role.kinds and set(role.kinds) <= _LABEL_KINDS]

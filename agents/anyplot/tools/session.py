@@ -70,7 +70,7 @@ from ..briefs import bindings_text, spec_brief, trimmed_profiles
 from ..code.data_code import check_data_code
 from ..data.generate import Generate, GenerateError, generate
 from ..data.parse import MAX_CANONICAL_BYTES, MAX_COMPUTED_BYTES, ParsedDataset, ParseError, parse_dataset
-from ..data.prepare import MAX_OPERATIONS, Operation, PrepareError, apply_operations, validation_lines
+from ..data.prepare import MAX_OPERATIONS, Operation, PrepareError, apply_operations, validation_lines, with_date_notes
 from ..data.query import DEFAULT_QUERY_ROWS, QueryArgs, QueryResult, run_query
 from ..data.shape import long_suggestion
 from ..data.store import StoredDataset, StoreFull
@@ -318,6 +318,8 @@ async def prepare_data(operations: list[dict[str, Any]], tool_context: ToolConte
             max_bytes=MAX_COMPUTED_BYTES,
             canonical=True,
         )
+        # A date column whose day and month order is still a guess keeps its note, so a later call can switch it.
+        parsed = with_date_notes(parsed, prepared)
     except PrepareError as exc:
         # The message names columns of the user's dataset at most, never a cell; fenced like every column name.
         return {"status": "error", "code": exc.code, "message": _fenced_lines([exc.message])}

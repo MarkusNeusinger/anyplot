@@ -258,14 +258,31 @@ class TestWeakMeasures:
         roles = parse_roles(ROLLING)
         data = profile(monthly("Year,Month,Temperature,Precipitation"))
 
-        assert as_pairs(default_bindings(roles, data)) == [("value", "Temperature"), ("rolling_avg", "Precipitation")]
+        # `rolling_avg` is computed by the plot (owner decision of 2026-10-15): no column for it.
+        assert as_pairs(default_bindings(roles, data)) == [("value", "Temperature")]
 
-    @pytest.mark.parametrize("name", ["Monat", "month_no", "Quartal", "KW", "weekDay"])
+    @pytest.mark.parametrize("name", ["Monat", "month_no", "Quartal", "Woche", "weekOfYear"])
     def test_a_named_date_part_is_weak(self, name: str) -> None:
         roles = [role("value", "numeric")]
         data = profile(f"{name},Messwert\n1,2.5\n2,3.5\n3,1.5\n")
 
         assert as_pairs(default_bindings(roles, data)) == [("value", "Messwert")]
+
+    @pytest.mark.parametrize(
+        "name", ["Dauer (Minuten)", "Days to ship", "kW", "Months since start", "Tag", "hour", "Stunden"]
+    )
+    def test_durations_and_units_are_measures(self, name: str) -> None:
+        """Unit and duration words are no date parts: the first measure keeps its place (review of 2026-10-15)."""
+        roles = [role("value", "numeric")]
+        data = profile(f"Jahr,{name},Messwert\n2020,1,2.5\n2021,30,3.5\n2022,45,1.5\n")
+
+        assert as_pairs(default_bindings(roles, data)) == [("value", name)]
+
+    def test_a_named_month_outside_its_range_is_a_measure(self) -> None:
+        roles = [role("value", "numeric")]
+        data = profile("Month,Messwert\n1,2.5\n24,3.5\n36,1.5\n")
+
+        assert as_pairs(default_bindings(roles, data)) == [("value", "Month")]
 
     def test_an_unnamed_month_counts_only_beside_a_year(self) -> None:
         roles = [role("value", "numeric")]
@@ -275,23 +292,118 @@ class TestWeakMeasures:
         twelve = "M,Wert\n" + "".join(f"{m},{m * 2.5}\n" for m in range(1, 13))
         assert as_pairs(default_bindings(roles, profile(twelve))) == [("value", "M")]
 
-    def test_make_date_leaves_the_date_role_to_set_bindings(self) -> None:
-        """Every binding stays valid after `make_date`, so the carry changes nothing and the root binds the date.
+    def test_weak_measures_a_family_leaves_out_are_no_series(self) -> None:
+        """A constant `target` or a `Dauer (Minuten)` the family skips never becomes the optional series label."""
+        roles = parse_roles(LINE_MULTI)
+        constant = profile("year,actual,target\n2020,1.5,100\n2021,2.5,100\n2022,3.5,100\n2023,2.0,100\n2024,4.0,100\n")
+        assert as_pairs(default_bindings(roles, constant)) == [("x", "year"), ("y1", "actual")]
 
-        The root prompt says so: after `make_date`, `set_bindings` in the same turn while the date role is open.
-        """
+
+class TestAxisRoles:
+    """A scatter's `x (numeric)` is the independent variable: a month, a rank or a year stays on x."""
+
+    SCATTER = (role("x", "numeric"), role("y", "numeric"))
+
+    @pytest.mark.parametrize(
+        ("csv_text", "expected"),
+        [
+            ("Months since start,Revenue\n1,10.5\n2,12.5\n3,15.0\n", [("x", "Months since start"), ("y", "Revenue")]),
+            ("Month,Temperature\n1,-0.5\n2,1.5\n3,5.0\n", [("x", "Month"), ("y", "Temperature")]),
+            (
+                "Year,Quarter,Sales\n2024,1,10.5\n2024,2,12.5\n2024,3,9.0\n2024,4,11.0\n",
+                [("x", "Year"), ("y", "Sales")],
+            ),
+            ("Rating,Score\n1,10.5\n5,12.5\n12,15.0\n", [("x", "Rating"), ("y", "Score")]),
+            ("Rank,Points\n1,99.5\n2,80.5\n3,70.0\n", [("x", "Rank"), ("y", "Points")]),
+            ("Grade,Income\n1,30.5\n2,40.5\n3,50.0\n", [("x", "Grade"), ("y", "Income")]),
+            ("Kinder,Ausgaben\n1,300.5\n2,400.5\n4,500.0\n", [("x", "Kinder"), ("y", "Ausgaben")]),
+        ],
+    )
+    def test_x_keeps_the_first_column(self, csv_text: str, expected: list[tuple[str, str]]) -> None:
+        assert as_pairs(default_bindings(list(self.SCATTER), profile(csv_text))) == expected
+
+    def test_x_still_skips_a_constant(self) -> None:
+        data = profile("flag,a,b\n1,1.5,2\n1,2.5,3\n1,3.5,1\n1,4.5,5\n1,5.5,4\n")
+
+        assert as_pairs(default_bindings(list(self.SCATTER), data)) == [("x", "a"), ("y", "b")]
+
+
+class TestComputedRoles:
+    def test_the_rolling_average_is_computed_and_takes_no_column(self) -> None:
+        roles = parse_roles(ROLLING)
+        rolling = next(item for item in roles if item.name == "rolling_avg")
+        data = profile("date,value,smooth\n2024-01-01,1.5,1.4\n2024-01-02,2.5,2.0\n")
+
+        assert rolling.computed and not any(item.computed for item in roles if item.name != "rolling_avg")
+        assert as_pairs(default_bindings(roles, data)) == [("date", "date"), ("value", "value")]
+        check = check_bindings(default_bindings(roles, data), roles, data)
+        assert check.complete and check.missing_roles == []
+        assert check_bindings(bind(("rolling_avg", "smooth")), roles, data).errors == [
+            "role 'rolling_avg' is computed by the plot from the data and takes no column"
+        ]
+
+    @pytest.mark.parametrize(
+        "bullet",
+        [
+            "`x` (numeric) — x-coordinate values computed as x(t)",
+            "`features` (numeric matrix) - measurement values, used to compute distances",
+            "`sma` (numeric) - Simple moving average (middle band), typically 20-period",
+        ],
+    )
+    def test_only_a_description_that_starts_with_computed_marks_a_role(self, bullet: str) -> None:
+        assert not parse_roles([bullet])[0].computed
+
+    def test_the_adapter_reads_it_and_the_page_never_sees_it(self) -> None:
+        from agents.anyplot.briefs import describe_role
+        from agents.main import _page_roles
+
+        roles = parse_roles(ROLLING)
+        rolling = next(item for item in roles if item.name == "rolling_avg")
+
+        assert (
+            describe_role(rolling)
+            == "rolling_avg (numeric, computed by the plot code from the data, never bound to a column)"
+        )
+        assert [body["name"] for body in _page_roles(roles)] == ["date", "value"]
+
+
+class TestNewDateColumn:
+    def test_make_date_fills_the_open_required_date_role(self) -> None:
+        """Owner decision of 2026-10-15: the code binds the new date column, not the model."""
         roles = parse_roles(ROLLING)
         text = monthly("Year,Month,Temperature,Precipitation")
-        before = default_bindings(roles, profile(text))
+        before = profile(text)
+        bindings = default_bindings(roles, before)
         operation = {"op": "make_date", "name": "Datum", "year": "Year", "month": "Month"}
         after = parse_dataset(apply_operations(parse_dataset(text), OPERATIONS.validate_python([operation])).csv)
 
-        assert carry_bindings(before, roles, after.profile) == before
-        assert as_pairs(default_bindings(roles, after.profile)) == [
+        assert as_pairs(carry_bindings(bindings, roles, after.profile, before)) == [
             ("date", "Datum"),
             ("value", "Temperature"),
-            ("rolling_avg", "Precipitation"),
         ]
+
+    def test_set_type_to_a_date_fills_it_too(self) -> None:
+        roles = parse_roles(ROLLING)
+        text = "period,value\n2024-01,1.5\n2024-02,2.5\n2024-03,3.5\n"
+        before = profile(text)
+        bindings = default_bindings(roles, before)
+        operation = {"op": "set_type", "column": "period", "type": "datetime", "date_format": "YYYY-MM"}
+        after = parse_dataset(apply_operations(parse_dataset(text), OPERATIONS.validate_python([operation])).csv)
+
+        assert ("date", "period") in as_pairs(carry_bindings(bindings, roles, after.profile, before))
+
+    def test_a_date_column_that_was_there_is_left_alone(self) -> None:
+        """A required date role the user left open over an existing date column stays open."""
+        roles = parse_roles(ROLLING)
+        data = profile("when,value\n2024-01-01,1.5\n2024-01-02,2.5\n")
+
+        assert carry_bindings(bind(("value", "value")), roles, data, data) == bind(("value", "value"))
+
+    def test_without_the_version_before_nothing_is_filled(self) -> None:
+        roles = parse_roles(ROLLING)
+        data = profile("when,value\n2024-01-01,1.5\n2024-01-02,2.5\n")
+
+        assert carry_bindings(bind(("value", "value")), roles, data) == bind(("value", "value"))
 
 
 class TestNamesOverCodes:
@@ -300,11 +412,38 @@ class TestNamesOverCodes:
 
         assert ("series", "country.value") in as_pairs(default_bindings(roles, profile(INDICATOR)))
 
-    def test_short_capital_values_count_as_codes_without_a_code_name(self) -> None:
+    def test_short_capital_values_count_as_codes_beside_a_related_name(self) -> None:
         roles = [role("category", "categorical"), role("value", "numeric")]
-        data = profile("land,name,value\nAUT,Austria,1.5\nCHE,Switzerland,2.5\nDEU,Germany,3.5\n")
+        data = profile("country,country_name,value\nAUT,Austria,1.5\nCHE,Switzerland,2.5\nDEU,Germany,3.5\n")
 
-        assert as_pairs(default_bindings(roles, data)) == [("category", "name"), ("value", "value")]
+        assert as_pairs(default_bindings(roles, data)) == [("category", "country_name"), ("value", "value")]
+
+    @pytest.mark.parametrize(
+        "csv_text",
+        [
+            "Status,Line,value\nOK,North,1.5\nNOK,South,2.5\nOK,North,3.5\n",
+            "Currency,Region,value\nEUR,Europe,1.5\nUSD,America,2.5\nCHF,Alps,3.5\n",
+            "Team,Stadt,value\nFCB,Basel,1.5\nYB,Bern,2.5\nFCZ,Zürich,3.5\n",
+        ],
+    )
+    def test_equal_counts_without_a_name_relation_change_nothing(self, csv_text: str) -> None:
+        """Same distinct and missing counts alone are no code and name pair (review of 2026-10-15)."""
+        roles = [role("category", "categorical"), role("value", "numeric")]
+        first = csv_text.split(",", 1)[0]
+
+        assert as_pairs(default_bindings(roles, profile(csv_text))) == [("category", first), ("value", "value")]
+
+    def test_name_similarity_comes_before_the_code_rank(self) -> None:
+        roles = [role("product", "categorical"), role("value", "numeric")]
+        data = profile("color,product_code,value\nred,P1,1.5\nblue,P2,2.5\ngreen,P3,3.5\n")
+
+        assert as_pairs(default_bindings(roles, data)) == [("product", "product_code"), ("value", "value")]
+
+    def test_a_name_column_as_similar_wins_over_the_code(self) -> None:
+        roles = [role("product", "categorical"), role("value", "numeric")]
+        data = profile("product_code,product_name,value\nP1,Chair,1.5\nP2,Table,2.5\nP3,Lamp,3.5\n")
+
+        assert as_pairs(default_bindings(roles, data)) == [("product", "product_name"), ("value", "value")]
 
     def test_a_code_column_without_a_name_twin_keeps_its_place(self) -> None:
         """A name column that partitions the rows differently (more distinct values) is no spelled-out code."""

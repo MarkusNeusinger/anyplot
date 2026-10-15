@@ -36,6 +36,9 @@ count would let a profile of such cells grow the request several times past the 
 def describe_role(role: DataRole) -> str:
     kinds = "/".join(role.kinds) if role.kinds else "any"
     name = f"{role.name}1, {role.name}2, ..." if role.variadic else role.name
+    if role.computed:
+        # No column is bound to it: the plot code computes it from the bound data (owner decision of 2026-10-15).
+        return f"{name} ({kinds}, computed by the plot code from the data, never bound to a column)"
     return f"{name} ({kinds}, {'required' if role.required else 'optional'})"
 
 

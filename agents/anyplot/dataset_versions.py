@@ -127,8 +127,12 @@ def push_version(
     stored = store.get(dataset_id, session_id)
     assert stored is not None  # just stored for this session
     roles = snapshot.roles()
+    # The version before: a date column it did not have fills an open required date role (`carry_bindings`).
+    previous = current.profile if current is not None else None
     bindings = (
-        default_bindings(roles, stored.profile) if rebind else carry_bindings(view.bindings, roles, stored.profile)
+        default_bindings(roles, stored.profile)
+        if rebind
+        else carry_bindings(view.bindings, roles, stored.profile, previous)
     )
     version = view.dataset_version + 1
     return DatasetVersion(dataset_id, stored, bindings, version, _delta(dataset_id, bindings, history, version))

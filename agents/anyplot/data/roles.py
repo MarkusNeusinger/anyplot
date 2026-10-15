@@ -130,6 +130,10 @@ _WORD = re.compile(r"[a-z]+")
 _BACKTICKED = re.compile(r"`[^`]*`")
 _INVALID_NAME_CHARS = re.compile(r"[^A-Za-z0-9_]+")
 _ROLE_NAME = re.compile(ROLE_PATTERN)
+COMPUTED = re.compile(r"(?:computed|calculated|derived)\b", re.IGNORECASE)
+"""A description that starts so names a value the plot computes from the other roles (`rolling_avg` of
+`line-timeseries-rolling`: "Computed rolling average (e.g., 7-day, 30-day window)"). Only the start counts:
+"values computed as x(t)" or "used to compute distances" describe data. A spec opts a role in by its wording."""
 
 
 @dataclass(frozen=True)
@@ -143,6 +147,9 @@ class DataRole:
     description: str
     non_negative: bool = False
     """Whether the role needs values of 0 or more: set per spec by `signs.mark_non_negative`, never parsed."""
+    computed: bool = False
+    """Whether the plot computes the role from the data (`rolling_avg`: "Computed rolling average ..."): no
+    column is bound to it, the adapter computes it (`COMPUTED`; owner decision of 2026-10-15)."""
 
     def member(self, index: int) -> str:
         """The binding role name of the `index`-th (1-based) column of a variadic family."""
@@ -210,12 +217,15 @@ def _parse_bullet(bullet: str) -> list[DataRole]:
     description = (tail.group("desc") if tail else "").strip()
     kinds, _ = type_words(type_text)
     required = not _OPTIONAL.search(f"{type_text} {description}")
+    computed = bool(COMPUTED.match(description))
 
     def role(name: str, variadic: bool = False) -> DataRole | None:
         clean = _clean_name(name, MAX_VARIADIC_NAME_CHARS if variadic else MAX_ROLE_NAME_CHARS)
         if clean is None:
             return None
-        return DataRole(name=clean, kinds=kinds, required=required, variadic=variadic, description=description)
+        return DataRole(
+            name=clean, kinds=kinds, required=required, variadic=variadic, description=description, computed=computed
+        )
 
     candidates: list[DataRole | None] = []
     if through and len(names) >= 2 and (family := _range_family(names[0])):

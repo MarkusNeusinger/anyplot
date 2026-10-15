@@ -24,10 +24,16 @@ The operations:
   the change line says so ("read as numbers (decimal comma)"); the unit must be the
   same wherever it occurs. To datetime: with `date_format` the cells are read in
   exactly that format, with an optional time (`HH:MM[:SS]`) after it (a format without
-  a day, such as `YYYY-MM` or `YYYY`, reads the first day of the month or the year, and
-  `YYYYMMDD` and `YYYYMM` read a number column of such dates as well as text, and
-  `MM.YYYY` a column the parser read as numbers, `03.2020` as 3.202, through four
-  decimals); without one
+  a day, such as `YYYY-MM` or `YYYY`, reads the first day of the month or the year;
+  `YYYY` on a number column says "read as years", since a measure of 1450 to 2100 reads
+  the same way; the compact `YYYYMMDD`, `YYYYMM` and `YYYY` take exactly their 8, 6 or
+  4 digits, so `2024115` is refused, never guessed; `MM.YYYY` reads a column the parser
+  read as numbers, `03.2020` as 3.202, through four decimals, only when every cell then
+  is a month 1 to 12 of a year 1000 to 2200, at most 300 years apart, else the column of
+  ordinary decimals is a `type_mismatch`). The cells are read with Python's own parser
+  and stored at microseconds, so any year from 1 to 9999 fits (a datetime64[ns] holds
+  only 1677 to 2262; a date pandas still cannot hold is an `invalid_operation`, never a
+  crash). Without `date_format`
   pandas infers the format per cell, day before month when ambiguous, as the parser
   reads a slash date. Either way a cell that cannot be read becomes missing and the
   change line counts it; when more than 10 % of the non-missing cells fail, the
@@ -35,10 +41,14 @@ The operations:
   text and the column is kept text through the re-parse (`Prepared.text_columns`,
   `parse_dataset(text_columns=...)`), so a column of years or ids stays a category in
   every later version. A column that already is a number or a datetime column is left
-  as it is ("already numbers, nothing changed"), with one exception: `MM/DD/YYYY` on a
-  slash column the parser read day first by guess (its `AMBIGUOUS_DATE_ORDER` warning)
-  swaps day and month; a column read without a guess (ISO, dotted, or a slash column
-  with a day over 12) stays as it is (see `_reread_dates`).
+  as it is ("already numbers, nothing changed"), with one exception: a date column
+  whose day and month order is open (every day at most 12: the parser's slash guess,
+  its `AMBIGUOUS_DATE_ORDER` warning, or a `set_type` read of such cells) swaps day and
+  month when the format asks for the other order, `MM/DD/YYYY` on a column read day
+  first and `DD/MM/YYYY` or `DD.MM.YYYY` on one read month first, so a wrong choice can
+  be taken back; the order travels to the next version as a warning
+  (`Prepared.date_notes`, `with_date_notes`). A column whose order is settled (ISO, or
+  a day over 12) stays as it is (see `_reread_dates`).
 * `aggregate`: group by one or two key columns and reduce one value column with `sum`,
   `mean`, `count`, `min` or `max`. A `period` turns every datetime key into `YYYY-MM`,
   `YYYY-Qn` or `YYYY` text before grouping. The result holds the key columns and one
@@ -84,13 +94,18 @@ The operations:
 * `make_date`: a new date column `name`, appended last, built row by row from the parts
   of a date held in whole-number columns: a `year`, then a `month` and optionally a
   `day`, or a `quarter`, or an ISO `week`; a part left out is its first (January, the
-  first day of the month or the quarter, the Monday of the week). A day needs a month,
+  first day of the month or the quarter, the Monday of the ISO week, so week 1 can start
+  in late December of the year before, as the change line says). A day needs a month,
   and a quarter or a week takes no other part. A part column holds whole numbers within
   its range (a year of four digits, 1000 to 9999, so a two-digit `24` is refused rather
   than read as the year 24; a month 1 to 12, a day
   1 to 31, a quarter 1 to 4, a week 1 to 53), else the operation is refused, as it is
   when a row's parts are no calendar date (31 April, week 53 of a 52-week year): a
-  date is never moved to the next valid one. A text column is a `type_mismatch` with a
+  date is never moved to the next valid one. A text `month` column may hold month names
+  and abbreviations in the eleven languages of the fixed refusals (`MONTH_NAMES`: en,
+  de, fr, es, it, pt, nl, pl, zh, vi, ru; `Jan`, `März`, `févr.`, `Май`, `3月`,
+  `tháng 3`), compared without case and diacritics; one unknown name refuses it (owner
+  decision of 2026-10-15). Any other text part column is a `type_mismatch` with a
   hint to `set_type` it to number first. A row with a missing part gets an empty cell,
   which the change line counts. It came from the live test of 2026-10-15: a MeteoSwiss
   table of `Year` and `Month` had no date column for a time series, and the root could
@@ -124,7 +139,7 @@ import re
 import unicodedata
 import warnings
 from collections.abc import Iterable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime
 from typing import Annotated, Literal
 
@@ -133,7 +148,7 @@ import pandas as pd
 from pandas.api.types import is_bool_dtype, is_datetime64_any_dtype, is_integer_dtype, is_numeric_dtype
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, ValidationError
 
-from ..schemas import MAX_CELL_CHARS, MAX_COLUMNS, MAX_NOTE_CHARS, MAX_ROWS, ColumnName
+from ..schemas import MAX_CELL_CHARS, MAX_COLUMNS, MAX_NOTE_CHARS, MAX_ROWS, MAX_WARNINGS, ColumnName
 from .parse import (
     AMBIGUOUS_DATE_ORDER,
     MAX_COMPUTED_BYTES,
@@ -202,6 +217,11 @@ STRPTIME: dict[str, str] = {
     "MM.YYYY": "%m.%Y",
     "YYYY": "%Y",
 }
+COMPACT_DIGITS: dict[str, int] = {"YYYYMMDD": 8, "YYYYMM": 6, "YYYY": 4}
+"""The digits a compact date format takes exactly, without a time."""
+MONTH_YEAR_RANGE = (1000, 2200)
+MONTH_YEAR_SPAN = 300
+"""The years an `MM.YYYY` column the parser read as numbers may hold, and their widest spread."""
 DatePart = Literal["year", "month", "day", "quarter", "week"]
 DATE_PART_RANGES: dict[str, tuple[int, int]] = {
     "year": (1000, 9999),  # four digits: a two-digit year (`24`) is refused, never read as the year 24
@@ -211,6 +231,57 @@ DATE_PART_RANGES: dict[str, tuple[int, int]] = {
     "week": (1, 53),
 }
 """The values a `make_date` part column may hold, inclusive."""
+_MONTH_WORDS: tuple[tuple[str, ...], ...] = (
+    # One tuple per month: the names and common abbreviations in the eleven languages of the fixed refusals
+    # (en, de, fr, es, it, pt, nl, pl with its genitive, zh, vi, ru with its genitive); compared folded (`_fold`).
+    (
+        *("january", "jan", "januar", "janner", "jaenner", "janvier", "janv", "enero", "ene", "gennaio", "gen"),
+        *("janeiro", "januari", "styczen", "stycznia", "sty", "一月", "январь", "января", "янв"),
+    ),
+    (
+        *("february", "feb", "februar", "fevrier", "fevr", "fev", "febrero", "febbraio", "fevereiro", "februari"),
+        *("luty", "lutego", "lut", "二月", "февраль", "февраля", "фев"),
+    ),
+    (
+        *("march", "mar", "marz", "maerz", "mrz", "mars", "marzo", "marco", "maart", "mrt", "marzec", "marca"),
+        *("三月", "март", "марта", "мар"),
+    ),
+    (
+        *("april", "apr", "avril", "avr", "abril", "abr", "aprile", "kwiecien", "kwietnia", "kwi", "四月"),
+        *("апрель", "апреля", "апр"),
+    ),
+    ("may", "mai", "mayo", "maggio", "mag", "maio", "mei", "maj", "maja", "五月", "маи", "мая"),
+    (
+        *("june", "jun", "juni", "juin", "junio", "giugno", "giu", "junho", "czerwiec", "czerwca", "cze", "六月"),
+        *("июнь", "июня", "июн"),
+    ),
+    (
+        *("july", "jul", "juli", "juillet", "juil", "julio", "luglio", "lug", "julho", "lipiec", "lipca", "lip"),
+        *("七月", "июль", "июля", "июл"),
+    ),
+    (
+        *("august", "aug", "aout", "agosto", "ago", "augustus", "sierpien", "sierpnia", "sie", "八月", "август"),
+        *("августа", "авг"),
+    ),
+    (
+        *("september", "sep", "sept", "septembre", "septiembre", "setiembre", "set", "settembre", "setembro"),
+        *("wrzesien", "wrzesnia", "wrz", "九月", "сентябрь", "сентября", "сен", "сент"),
+    ),
+    (
+        *("october", "oct", "oktober", "okt", "octobre", "octubre", "ottobre", "ott", "outubro", "out"),
+        *("pazdziernik", "pazdziernika", "paz", "十月", "октябрь", "октября", "окт"),
+    ),
+    (
+        *("november", "nov", "novembre", "noviembre", "novembro", "listopad", "listopada", "lis", "十一月"),
+        *("ноябрь", "ноября", "ноя"),
+    ),
+    (
+        *("december", "dec", "dezember", "dez", "decembre", "diciembre", "dic", "dicembre", "dezembro", "grudzien"),
+        *("grudnia", "gru", "十二月", "декабрь", "декабря", "дек"),
+    ),
+)
+_NUMBERED_MONTH = re.compile(r"(?:thang\s*)?([0-9]{1,2})\s*(?:月)?")
+"""A month written with its number: `3月` (Chinese), `tháng 3` (Vietnamese, folded to `thang 3`), `03`."""
 _TIME_SUFFIXES = ("", " %H:%M", " %H:%M:%S", "T%H:%M", "T%H:%M:%S")
 _VERBS: dict[str, str] = {
     "sum": "summed",
@@ -235,7 +306,15 @@ _TRAILING_UNIT = re.compile(rf"^(?P<body>{_BODY})\s*(?P<unit>[^0-9\s][^0-9]*)$")
 _LEADING_UNIT = re.compile(rf"^(?P<unit>[^0-9\s+-][^0-9]*?)\s*(?P<body>{_BODY})$")
 _SPACES = re.compile(r"\s+")
 _HEADER_BREAKS = re.compile(r"[\t\r\n]")
-_AMBIGUOUS_WARNING = re.compile(rf"column '(?P<name>.+)': {re.escape(AMBIGUOUS_DATE_ORDER)}")
+AMBIGUOUS_MONTH_FIRST = "day and month order is ambiguous; read as MM/DD/YYYY"
+"""The note of a date column whose every day is at most 12, read month first (`set_type` with `MM/DD/YYYY`)."""
+_ORDER_NOTES: dict[str, str] = {"day": AMBIGUOUS_DATE_ORDER, "month": AMBIGUOUS_MONTH_FIRST}
+_AMBIGUOUS_WARNING = re.compile(
+    rf"column '(?P<name>.+)': (?P<note>{re.escape(AMBIGUOUS_DATE_ORDER)}|{re.escape(AMBIGUOUS_MONTH_FIRST)})"
+)
+_YEAR_FIRST = re.compile(r"\s*[0-9]{4}[-/.]")
+_DAY_FIRST_FORMATS = frozenset(("DD.MM.YYYY", "DD/MM/YYYY"))
+"""The formats that read a day before a month; `MM/DD/YYYY` is the one that reads the month first."""
 
 
 class PrepareError(Exception):
@@ -255,6 +334,21 @@ class Prepared:
     changes: list[str]
     text_columns: list[str] = field(default_factory=list)
     """The columns kept text (`set_type text` and `classify`): the caller passes them to `parse_dataset(text_columns=...)`."""
+    date_notes: list[str] = field(default_factory=list)
+    """`column '<name>': <order note>` per date column whose day and month order is still a guess: the caller adds
+    them to the re-parsed version's warnings (`with_date_notes`), so a later call can still switch the order."""
+
+
+def with_date_notes(parsed: ParsedDataset, prepared: Prepared) -> ParsedDataset:
+    """The re-parsed version with `prepared.date_notes` among its warnings, the profile's included.
+
+    The canonical CSV writes ISO dates, so its re-parse no longer knows that the order of
+    a column's day and month was a guess; the note keeps that knowledge with the version.
+    """
+    if not prepared.date_notes:
+        return parsed
+    notes = [*parsed.warnings, *prepared.date_notes][:MAX_WARNINGS]
+    return replace(parsed, warnings=notes, profile=parsed.profile.model_copy(update={"warnings": notes}))
 
 
 @dataclass
@@ -262,48 +356,55 @@ class _Carried:
     """What the canonical CSV does not say about its columns, carried through the operations.
 
     The parse's notes name columns, and an operation renames, drops or creates them,
-    so the notes follow the frame: `ambiguous_dates` are the slash columns the parser
-    read day first by guess (its `AMBIGUOUS_DATE_ORDER` warning, which only the
-    version a paste made carries: after a change the re-parse reads ISO dates and the
-    order is settled), `text_columns` the columns kept text through the re-parse, and
-    `with_time` whether a datetime column is written with its time (the parser's
-    choice, read from the profile's `min`; a column no operation touched is therefore
-    written back exactly as stored, `T00:00:00` included).
+    so the notes follow the frame: `date_order` holds the date columns whose every day
+    is at most 12, so day and month could be read either way, with the order they
+    were read in (`day` for the parser's slash guess, its `AMBIGUOUS_DATE_ORDER`
+    warning, and for a `set_type` that read a day first; `month` for `MM/DD/YYYY`;
+    `Prepared.date_notes` carries it into the next version), `text_columns` the
+    columns kept text through the re-parse, and `with_time` whether a datetime column
+    is written with its time (the parser's choice, read from the profile's `min`; a
+    column no operation touched is therefore written back exactly as stored,
+    `T00:00:00` included).
     """
 
     decimal: str
-    ambiguous_dates: set[str] = field(default_factory=set)
+    date_order: dict[str, str] = field(default_factory=dict)
     text_columns: set[str] = field(default_factory=set)
     with_time: dict[str, bool] = field(default_factory=dict)
 
     @classmethod
     def of(cls, parsed: ParsedDataset) -> "_Carried":
         matches = (_AMBIGUOUS_WARNING.fullmatch(warning) for warning in parsed.warnings)
-        ambiguous = {match.group("name") for match in matches if match}
+        order = {
+            match.group("name"): "day" if match.group("note") == AMBIGUOUS_DATE_ORDER else "month"
+            for match in matches
+            if match
+        }
         with_time = {
             column.name: isinstance(column.min, str) and "T" in column.min
             for column in parsed.profile.columns
             if column.dtype == "datetime"
         }
-        return cls(parsed.profile.decimal, ambiguous, set(parsed.text_columns), with_time)
+        return cls(parsed.profile.decimal, order, set(parsed.text_columns), with_time)
 
     def rename(self, old: str, new: str) -> None:
-        for names in (self.ambiguous_dates, self.text_columns):
-            if old in names:
-                names.remove(old)
-                names.add(new)
+        if old in self.text_columns:
+            self.text_columns.remove(old)
+            self.text_columns.add(new)
+        if old in self.date_order:
+            self.date_order[new] = self.date_order.pop(old)
         if old in self.with_time:
             self.with_time[new] = self.with_time.pop(old)
 
     def forget(self, names: Iterable[str]) -> None:
         for name in names:
-            self.ambiguous_dates.discard(name)
+            self.date_order.pop(name, None)
             self.text_columns.discard(name)
             self.with_time.pop(name, None)
 
     def keep_only(self, names: Iterable[str]) -> None:
         kept = set(names)
-        self.forget({*self.ambiguous_dates, *self.text_columns, *self.with_time} - kept)
+        self.forget({*self.date_order, *self.text_columns, *self.with_time} - kept)
 
 
 # --- Operation models -----------------------------------------------------------------------
@@ -494,29 +595,11 @@ def apply_operations(parsed: ParsedDataset, operations: list[Operation]) -> Prep
     frame = _read(parsed)
     changes: list[str] = []
     for operation in operations:
-        match operation:
-            case Rename():
-                frame, change = _rename(frame, operation, carried)
-            case DropColumns():
-                frame, change = _drop_columns(frame, operation, carried)
-            case DropRows():
-                frame, change = _drop_rows(frame, operation, carried)
-            case SetType():
-                frame, change = _set_type(frame, operation, carried)
-            case Aggregate():
-                frame, change = _aggregate(frame, operation, carried)
-            case Sort():
-                frame, change = _sort(frame, operation)
-            case PivotLonger():
-                frame, change = _pivot_longer(frame, operation, carried)
-            case PivotWider():
-                frame, change = _pivot_wider(frame, operation, carried)
-            case Classify():
-                frame, change = _classify(frame, operation, carried)
-            case Derive():
-                frame, change = _derive(frame, operation, carried)
-            case MakeDate():
-                frame, change = _make_date(frame, operation, carried)
+        try:
+            frame, change = _apply(frame, operation, carried)
+        except (pd.errors.OutOfBoundsDatetime, OverflowError):
+            # A date pandas cannot hold is a refusal, never a crash of the tool (review of 2026-10-15).
+            raise PrepareError("invalid_operation", "a date would lie outside the years the data can hold") from None
         if not frame.shape[1]:
             raise PrepareError("empty_result", "no column would remain")
         if not len(frame):
@@ -535,7 +618,38 @@ def apply_operations(parsed: ParsedDataset, operations: list[Operation]) -> Prep
     names = [str(name) for name in frame.columns]
     canonical = canonical_names(names)
     text_columns = [canon for name, canon in zip(names, canonical, strict=True) if name in carried.text_columns]
-    return Prepared(csv=csv_text, changes=changes, text_columns=text_columns)
+    date_notes = [
+        f"column '{canon}': {_ORDER_NOTES[carried.date_order[name]]}"
+        for name, canon in zip(names, canonical, strict=True)
+        if name in carried.date_order and _kind(frame[name]) == "datetime"
+    ]
+    return Prepared(csv=csv_text, changes=changes, text_columns=text_columns, date_notes=date_notes)
+
+
+def _apply(frame: pd.DataFrame, operation: Operation, carried: _Carried) -> tuple[pd.DataFrame, str]:
+    match operation:
+        case Rename():
+            return _rename(frame, operation, carried)
+        case DropColumns():
+            return _drop_columns(frame, operation, carried)
+        case DropRows():
+            return _drop_rows(frame, operation, carried)
+        case SetType():
+            return _set_type(frame, operation, carried)
+        case Aggregate():
+            return _aggregate(frame, operation, carried)
+        case Sort():
+            return _sort(frame, operation)
+        case PivotLonger():
+            return _pivot_longer(frame, operation, carried)
+        case PivotWider():
+            return _pivot_wider(frame, operation, carried)
+        case Classify():
+            return _classify(frame, operation, carried)
+        case Derive():
+            return _derive(frame, operation, carried)
+        case MakeDate():
+            return _make_date(frame, operation, carried)
 
 
 def _read(parsed: ParsedDataset) -> pd.DataFrame:
@@ -608,6 +722,7 @@ def _set_type(frame: pd.DataFrame, op: SetType, carried: _Carried) -> tuple[pd.D
             return frame, f"{op.column}: already text, nothing changed"
         result[op.column] = _texts(series, _with_time(series, carried))
         carried.with_time.pop(op.column, None)
+        carried.date_order.pop(op.column, None)
         return result, f"{op.column}: {_count(present, 'cell')} now text"
     if op.type == "number":
         if kind == "number":
@@ -618,6 +733,7 @@ def _set_type(frame: pd.DataFrame, op: SetType, carried: _Carried) -> tuple[pd.D
         _check_failed(op.column, failed, present, "numbers")
         result[op.column] = converted
         carried.with_time.pop(op.column, None)
+        carried.date_order.pop(op.column, None)
         change = f"{op.column}: {_count(present - failed, 'cell')} read as numbers"
         if used != requested:
             change += " (decimal comma)" if used == "," else " (decimal point)"
@@ -630,8 +746,19 @@ def _set_type(frame: pd.DataFrame, op: SetType, carried: _Carried) -> tuple[pd.D
         _check_failed(op.column, failed, present, "dates")
         result[op.column] = converted
         carried.with_time[op.column] = with_time
-        how = op.date_format or "format inferred, day before month"
-        change = f"{op.column}: {_count(present - failed, 'cell')} read as dates ({how})"
+        carried.date_order.pop(op.column, None)
+        year_first = op.date_format is None and any(
+            isinstance(text, str) and _YEAR_FIRST.match(text) for text in _texts(series)
+        )
+        if op.date_format in (None, "MM/DD/YYYY", *_DAY_FIRST_FORMATS) and not year_first and _order_open(converted):
+            # Every day is at most 12: the cells read the other way too, so a later request may still swap them.
+            carried.date_order[op.column] = "month" if op.date_format == "MM/DD/YYYY" else "day"
+        if op.date_format == "YYYY":
+            # A number column of 1450, 1890 and 2100 reads as years too: the change line says so, the user checks it.
+            change = f"{op.column}: {_count(present - failed, 'cell')} read as years (YYYY, each as 1 January)"
+        else:
+            how = op.date_format or "format inferred, day before month"
+            change = f"{op.column}: {_count(present - failed, 'cell')} read as dates ({how})"
     carried.text_columns.discard(op.column)
     if failed:
         verb = "is" if failed == 1 else "are"
@@ -640,17 +767,19 @@ def _set_type(frame: pd.DataFrame, op: SetType, carried: _Carried) -> tuple[pd.D
 
 
 def _reread_dates(frame: pd.DataFrame, op: SetType, present: int, carried: _Carried) -> tuple[pd.DataFrame, str]:
-    """A datetime column asked for a date format: nothing to read, except the one order the parser could only guess.
+    """A datetime column asked for a date format: nothing to read, except the order of day and month when it is a guess.
 
-    The parser reads a slash column day first when every day and month part is at most
-    12 and says so in a warning (`AMBIGUOUS_DATE_ORDER`), and the canonical CSV no
-    longer holds the original text. `MM/DD/YYYY` on exactly such a column swaps day and
-    month in every cell; any other format, or a column the parser read without a guess
-    (ISO, dotted, or a slash column with a day over 12), is left as it is. The warning
-    lives in the version a paste made: after a change the re-parse reads ISO dates and
-    the order is settled, so the swap is possible on the pasted version only.
+    A column whose order is open (`_Carried.date_order`: the parser's slash guess, its
+    `AMBIGUOUS_DATE_ORDER` warning, or a `set_type` read whose every day is at most 12,
+    kept from version to version through `Prepared.date_notes`) is read in the other
+    order when the format asks for it: `MM/DD/YYYY` on a column read day first, and
+    `DD/MM/YYYY` or `DD.MM.YYYY` on one read month first, so a wrong choice can be taken
+    back (review of 2026-10-15). Day and month swap in every cell. A column whose order
+    is settled (ISO, or a day over 12) is left as it is.
     """
-    if op.date_format != "MM/DD/YYYY" or op.column not in carried.ambiguous_dates or not present:
+    order = carried.date_order.get(op.column)
+    wanted = "month" if op.date_format == "MM/DD/YYYY" else "day" if op.date_format in _DAY_FIRST_FORMATS else None
+    if order is None or wanted is None or wanted == order or not present:
         return frame, f"{op.column}: already dates, nothing changed"
     series = frame[op.column]
     swapped = [
@@ -658,8 +787,16 @@ def _reread_dates(frame: pd.DataFrame, op: SetType, present: int, carried: _Carr
     ]
     result = frame.copy()
     result[op.column] = pd.Series(swapped, index=series.index, dtype=series.dtype)
-    carried.ambiguous_dates.discard(op.column)
-    return result, f"{op.column}: {_count(present, 'cell')} re-read as dates (MM/DD/YYYY, day and month swapped)"
+    carried.date_order[op.column] = wanted
+    return result, (
+        f"{op.column}: {_count(present, 'cell')} re-read as dates ({op.date_format}, day and month swapped)"
+    )
+
+
+def _order_open(dates: pd.Series) -> bool:
+    """Whether every date's day is at most 12 and some day differs from its month: the cells read the other way too."""
+    present = [value for value in dates if isinstance(value, pd.Timestamp)]
+    return bool(present) and all(value.day <= 12 for value in present) and any(v.day != v.month for v in present)
 
 
 def _aggregate(frame: pd.DataFrame, op: Aggregate, carried: _Carried) -> tuple[pd.DataFrame, str]:
@@ -1040,14 +1177,15 @@ def _make_date(frame: pd.DataFrame, op: MakeDate, carried: _Carried) -> tuple[pd
             f"{_count(impossible, 'row')} of {_listed(list(parts.values()))} "
             f"{'is' if impossible == 1 else 'are'} no calendar date, such as 31 April or week 53 of a year with 52 weeks",
         )
-    result = pd.to_datetime(pd.Series(dates, index=frame.index, dtype="object"))
+    result = pd.Series(dates, index=frame.index, dtype="datetime64[us]")
     empty = int(result.isna().sum())
     if empty == len(result):
         raise PrepareError("invalid_operation", f"no row has every part, so column '{op.name}' would hold no date")
     carried.forget([op.name])
     carried.with_time[op.name] = False
     first = {
-        "week": "the Monday of each week",
+        # ISO 8601: week 1 holds the year's first Thursday, so it can start in late December (2025-W01 is 2024-12-30).
+        "week": "the Monday of each ISO week; week 1 can start in late December of the year before",
         "quarter": "the first day of each quarter",
         "month": "the first day of each month",
         "year": "1 January of each year",
@@ -1066,6 +1204,8 @@ def _date_parts(frame: pd.DataFrame, column: str, part: DatePart) -> list[int | 
     _require(frame, column)
     series = frame[column]
     kind = _kind(series)
+    if kind == "text" and part == "month":
+        return _month_names(series, column)
     if kind != "number":
         raise PrepareError(
             "type_mismatch",
@@ -1086,7 +1226,8 @@ def _date_parts(frame: pd.DataFrame, column: str, part: DatePart) -> list[int | 
         values.append(int(number) if number.is_integer() else None)
     if fractional:
         raise PrepareError(
-            "type_mismatch", f"column '{column}' holds {_count(fractional, 'value')} that are no whole numbers"
+            "type_mismatch",
+            f"column '{column}' holds {_count(fractional, 'value')} that {_be(fractional)} no whole number",
         )
     if outside:
         what = "a year of four digits" if part == "year" else f"a {part}"
@@ -1095,6 +1236,51 @@ def _date_parts(frame: pd.DataFrame, column: str, part: DatePart) -> list[int | 
             f"column '{column}' holds {_count(outside, 'value')} outside {low} to {high}, so it is not {what}",
         )
     return values
+
+
+def _month_names(series: pd.Series, column: str) -> list[int | None]:
+    """A text column of months as numbers: a name or abbreviation (`MONTH_NAMES`), `3月`, `tháng 3`, or digits 1 to 12.
+
+    Compared without case and diacritics, and without a trailing dot (`Jan.`, `März`, `févr.`);
+    one cell that is no month refuses the operation: an unknown name is never guessed.
+    """
+    values: list[int | None] = []
+    unknown = 0
+    for value in series:
+        if not isinstance(value, str):
+            values.append(None)
+            continue
+        month = month_number(value)
+        if month is None:
+            unknown += 1
+        values.append(month)
+    if unknown:
+        raise PrepareError(
+            "type_mismatch",
+            f"column '{column}' holds {_count(unknown, 'value')} that {_be(unknown)} no month name or number from 1 to 12",
+        )
+    return values
+
+
+def month_number(text: str) -> int | None:
+    """The month 1 to 12 a cell names, or None."""
+    key = _fold(text).rstrip(".").strip()
+    if key.isascii() and key.isdigit():
+        return int(key) if 1 <= int(key) <= 12 else None
+    if (match := _NUMBERED_MONTH.fullmatch(key)) is not None:
+        number = int(match.group(1))
+        return number if 1 <= number <= 12 else None
+    return MONTH_NAMES.get(key)
+
+
+def _fold(text: str) -> str:
+    """Lower case without diacritics: `März` is `marz`, `Février` `fevrier`, `Май` `маи`."""
+    decomposed = unicodedata.normalize("NFKD", text.casefold())
+    return "".join(char for char in decomposed if not unicodedata.combining(char))
+
+
+MONTH_NAMES: dict[str, int] = {_fold(word): number for number, words in enumerate(_MONTH_WORDS, 1) for word in words}
+"""A folded month name or abbreviation (`marz`, `fevr`, `маи`) to its number, from `_MONTH_WORDS`."""
 
 
 # --- Conditions ------------------------------------------------------------------------------
@@ -1261,14 +1447,12 @@ def _to_dates(series: pd.Series, date_format: str | None) -> tuple[pd.Series, in
     the column is written with a time (the parser's rule: any source cell holds a colon)."""
     texts = _texts(series)
     if date_format == "MM.YYYY" and _kind(series) == "number":
-        # The parser read `03.2020` as the number 3.202: four decimals give the year back, trailing zeros included.
-        # Only where they keep the value: `03.20249` stays as it is and fails, never rounded into March 2025.
-        texts = pd.Series([_four_decimals(text) for text in texts], index=series.index, dtype="str")
+        texts = _month_year_texts(series, texts)
     if date_format:
-        strptime = STRPTIME[date_format]
-        result = pd.to_datetime(pd.Series(pd.NaT, index=series.index))
-        for suffix in _TIME_SUFFIXES:
-            result = result.fillna(pd.to_datetime(texts, format=strptime + suffix, errors="coerce"))
+        # Python's own reader, one cell at a time: any year from 1 to 9999, stored at the parser's microseconds
+        # (a datetime64[ns] holds only 1677 to 2262, review of 2026-10-15).
+        values = [_read_date(text, date_format) if isinstance(text, str) else None for text in texts]
+        result = pd.Series(values, index=series.index, dtype="datetime64[us]")
     else:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
@@ -1278,12 +1462,61 @@ def _to_dates(series: pd.Series, date_format: str | None) -> tuple[pd.Series, in
     return result, failed, with_time
 
 
-def _four_decimals(text: object) -> str | None:
-    """A number's text with four decimals when that keeps its value exactly, else its canonical text."""
-    if not isinstance(text, str):
-        return None  # a missing cell
-    padded = f"{float(text):.4f}"
-    return padded if float(padded) == float(text) else text
+def _read_date(text: str, date_format: str) -> datetime | None:
+    """One cell in exactly `date_format`, with an optional time after it; None when it is not.
+
+    A compact format takes exactly its digits (`YYYYMMDD` 8, `YYYYMM` 6, `YYYY` 4) and no
+    time: `2024115` is no `YYYYMMDD` date, never guessed as 5 November (review of 2026-10-15).
+    """
+    text = text.strip()
+    digits = COMPACT_DIGITS.get(date_format)
+    if digits is not None and not (text.isascii() and text.isdigit() and len(text) == digits):
+        return None
+    for suffix in ("",) if digits is not None else _TIME_SUFFIXES:
+        try:
+            return datetime.strptime(text, STRPTIME[date_format] + suffix)
+        except ValueError:
+            continue
+    return None
+
+
+def _month_year_texts(series: pd.Series, texts: pd.Series) -> pd.Series:
+    """`MM.YYYY` cells the parser read as numbers (`03.2020` as 3.202), as `m.yyyy` text again; or a refusal.
+
+    Four decimals give the year back, trailing zeros included, but only where they keep the
+    value (`03.20249` stays as it is and fails, never rounded into March 2025). An ordinary
+    decimal reads the same way (`2.2` as February 2000, `3.5` as March 5000), so the column
+    must look like month and year throughout: every month 1 to 12, every year within 1000 to
+    2200 and all of them at most 300 years apart (`2.2`, `2.3`, `2.1` give 2000, 3000 and
+    1000); otherwise it is a `type_mismatch` (review of 2026-10-15). A single year of monthly
+    cells (`01.2020` to `12.2020`, all read without their zeros) passes.
+    """
+    padded: list[str | None] = []
+    parts: list[tuple[int, int]] = []
+    for text in texts:
+        if not isinstance(text, str):
+            padded.append(None)
+            continue
+        candidate = f"{float(text):.4f}"
+        if float(candidate) != float(text):
+            padded.append(text)  # more than four decimals: no month.year, it fails as it is
+            continue
+        padded.append(candidate)
+        month, year = candidate.split(".")
+        parts.append((int(month), int(year)))
+    low, high = MONTH_YEAR_RANGE
+    years = [year for _, year in parts]
+    plausible = (
+        bool(parts)
+        and all(1 <= month <= 12 and low <= year <= high for month, year in parts)
+        and max(years) - min(years) <= MONTH_YEAR_SPAN
+    )
+    if not plausible:
+        raise PrepareError(
+            "type_mismatch",
+            f"column '{series.name}' holds numbers that do not read as month.year (MM.YYYY, such as 03.2024)",
+        )
+    return pd.Series(padded, index=series.index, dtype="str")
 
 
 def _check_failed(column: str, failed: int, present: int, what: str) -> None:
@@ -1366,6 +1599,10 @@ def _require(frame: pd.DataFrame, name: str) -> None:
 
 def _distinct(names: list[str]) -> list[str]:
     return list(dict.fromkeys(names))
+
+
+def _be(number: int) -> str:
+    return "is" if number == 1 else "are"
 
 
 def _listed(names: list[str]) -> str:
