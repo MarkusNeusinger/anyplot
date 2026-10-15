@@ -920,10 +920,12 @@ def _one_table(
     # table these lines become notes without ever meeting `table_block`, so a skipped block there (an export's one
     # row of metadata at the table's width) can never be read as the table's rows.
     lead = list(range(starts[0][0]))
+    # Each region starts at its header, which `_table_starts` found: `table_block` would take a header of years
+    # (`Land,2021,2020`) for a data row and the caption above it for the header. The caption becomes a note.
     regions: list[list[int]] = []
-    for index, (group, _) in enumerate(starts[:choosable]):
+    for index, (_, header) in enumerate(starts[:choosable]):
         end = starts[index + 1][0] if index + 1 < len(starts) else len(records)
-        regions.append(list(range(group, end)))
+        regions.append(list(range(header, end)))
     labels: list[str] = []
     for (_, header), region in zip(starts, regions, strict=False):
         block = table_block([records[index][1] for index in region], extra_missing=marks)
@@ -942,8 +944,9 @@ def _one_table(
         f"({labels[table - 1]}) and left out {named}; the table picker in the data panel reads another one"
     )
     chosen = regions[table - 1]
-    if lead and lead_records is not None:
-        lead_records.extend(records[index] for index in lead)
+    group, header = starts[table - 1]
+    if lead_records is not None:
+        lead_records.extend(records[index] for index in [*lead, *range(group, header)])
     return [records[index] for index in chosen], [spans[index] for index in chosen] if spans else spans
 
 
@@ -960,12 +963,17 @@ def _table_starts(records: Sequence[Sequence[str]], breaks: Collection[int]) -> 
     first cell of its rows ending with a colon.
 
     A blank row inside one table must not split it either (Fable and Gemini review of #12200):
-    a data row after it can look like a header, a row of text only (`Support,Service,Included`)
-    or a name and counts that read as years (`Bern,1500,1850,2040`). So a candidate with the
-    same width as the table above starts a table of its own only with evidence that it is a
-    new header: a caption line above it in its group (`Personal und Fläche`), or a name it
-    shares with the header above (`Filiale` heading both tables). A candidate of another width
-    needs no such evidence: a row that does not fit the table above is no row of it.
+    a data row after it can look like a header, a row of text in a table of text, or a name
+    and counts that read as years (`Bern,1500,1850,2040`). So a candidate with the same width
+    as the table above starts a table of its own only with evidence that it is a new header:
+    a caption line above it in its group (`Personal und Fläche`), a name it shares with the
+    header above (`Filiale` heading both tables), or text over a column that holds values
+    above and below it (`_names_over_values`), which joined would turn that column into text
+    without a word. That last rule also splits an ambiguous row of text inside a table of
+    numbers (`Support,Service,Included` above `Training,Pro,30`): a split is said in a
+    warning, a join is not. A candidate of another width needs no such evidence: a row that
+    does not fit the table above is no row of it. Not told apart: a one-field label above a
+    row of text inside one table reads as a caption and a header, so it splits (said).
     """
     bounds = [0, *sorted(index for index in breaks if 0 < index < len(records)), len(records)]
     starts: list[tuple[int, int]] = []
@@ -984,16 +992,39 @@ def _table_starts(records: Sequence[Sequence[str]], breaks: Collection[int]) -> 
         if starts and len(records[starts[-1][1]]) == width:
             names = {cell.strip().casefold() for cell in records[header] if cell.strip()}
             above = {cell.strip().casefold() for cell in records[starts[-1][1]] if cell.strip()}
-            if header == group and not names & above:
-                continue  # same width, no caption, no shared name: a row of the table above
+            joined = records[starts[-1][1] + 1 : group]
+            if header == group and not names & above and not _names_over_values(records[header], joined, rows):
+                continue  # same width, no caption, no shared name, no text over numbers: a row of the table above
         starts.append((group, header))
     return starts
 
 
+def _names_over_values(
+    candidate: Sequence[str], above: Sequence[Sequence[str]], below: Sequence[Sequence[str]]
+) -> bool:
+    """Whether a header-like row holds no value in a column of values above and below it (Fable review of #12200).
+
+    Joined to the table above, such a row would turn that number column into text without a word
+    (`Region,Umsatz` / `Nord,10` / blank / `Produkt,Menge` / `A,1`); split, it is a header. A row
+    of text in a table of text (`Support,Service,Included` under `Feature,Plan,Note`) holds no
+    such column and stays a row. Ambiguous cases are split, never joined silently: the warning
+    names both tables.
+    """
+    if any(_value_like(cell) for cell in candidate):
+        return False
+    for position in range(len(candidate)):
+        cells = [row[position] for row in above if position < len(row) and row[position].strip()]
+        values = sum(1 for cell in cells if _value_like(cell))
+        below_values = all(position < len(row) and _value_like(row[position]) for row in below)
+        if cells and 2 * values >= len(cells) and below_values:
+            return True
+    return False
+
+
 def _header_line(record: Sequence[str]) -> bool:
     """A record that reads as a table's header: two or more distinct filled names, none a missing mark, and no value
-    among them except two or more years in a wide table (`Land,2020,2021`), running forward; its first name ends
-    with no colon."""
+    among them except two or more years in a wide table (`Land,2020,2021`, or `2025,2024` in finance), all running
+    one way; its first name ends with no colon."""
     cells = [cell.strip() for cell in record]
     if len(cells) < 2 or not all(cells) or any(cell in MISSING_VALUES for cell in cells):
         return False
@@ -1004,8 +1035,12 @@ def _header_line(record: Sequence[str]) -> bool:
         len(values) >= 2
         and len(values) < len(cells)
         and all(_YEAR.fullmatch(cell) for cell in values)
-        and all(int(left) < int(right) for left, right in pairwise(values))  # a header's years run forward
+        and _monotonic([int(cell) for cell in values])  # a header's years run one way (`2021,2022`; `2025,2024`)
     )
+
+
+def _monotonic(numbers: Sequence[int]) -> bool:
+    return all(a < b for a, b in pairwise(numbers)) or all(a > b for a, b in pairwise(numbers))
 
 
 def _with_trailing_short_rows(

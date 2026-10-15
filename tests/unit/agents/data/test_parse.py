@@ -2870,8 +2870,9 @@ class TestTables:
             "Land,Gründung,Beitritt\nFrance,1789,1958\nItaly,1861,1958\n\nSwitzerland,1848,2002\nAustria,1918,1995\n"
             "Norway,1905,1994\n",
             "Name,Start,End\nAlpha,2019,2020\nBeta,2020,2022\n\nGamma,2021,2023\nDelta,2022,2024\nEpsilon,2023,2025\n",
-            "Feature,Plan,Price\nStorage,Basic,10\nBackup,Pro,20\n\nSupport,Service,Included\nTraining,Pro,30\n"
-            "Hosting,Basic,15\n",
+            # A row of text in a table of text.
+            "Feature,Plan,Note\nStorage,Basic,yes\nBackup,Pro,no\n\nSupport,Service,Included\nTraining,Pro,1\n"
+            "Hosting,Basic,2\n",
         ],
     )
     def test_a_blank_row_inside_one_table_never_splits_it(self, text: str) -> None:
@@ -2880,9 +2881,36 @@ class TestTables:
         assert parsed.tables == []
         assert not any("tables" in warning for warning in parsed.warnings)
 
-    def test_years_that_do_not_run_forward_are_no_header(self) -> None:
-        assert not parse_module._header_line(["Bern", "2040", "1850"])
+    @pytest.mark.parametrize("title", ["", "Report 2025\n"])
+    def test_a_header_of_text_over_numbers_is_never_joined_silently(self, title: str) -> None:
+        """Fable review of #12200: joined, `Produkt,Menge` made `Umsatz` text without a word."""
+        text = title + "Region,Umsatz\nNord,10\nSüd,20\nOst,30\n\nProdukt,Menge\nA,1\nB,2\nC,3\n"
+        first = parse_dataset(text)
+        second = parse_dataset(text, table=2)
+
+        assert first.column_dtypes == {"Region": "text", "Umsatz": "integer"}
+        assert first.csv == "Region,Umsatz\nNord,10\nSüd,20\nOst,30\n"
+        assert second.column_dtypes == {"Produkt": "text", "Menge": "integer"}
+        assert first.warnings[0].startswith("the data holds 2 tables")
+
+    def test_an_ambiguous_text_row_over_numbers_splits_with_a_warning(self) -> None:
+        """A split is said in a warning that names both tables; a join would change a column's type silently."""
+        text = "Feature,Plan,Price\nStorage,Basic,10\nBackup,Pro,20\n\nSupport,Service,Included\nTraining,Pro,30\n"
+        parsed = parse_dataset(text + "Hosting,Basic,15\n")
+
+        assert parsed.column_dtypes["Price"] == "integer"
+        assert "table 2 (Support, Service, Included · 2 rows)" in parsed.warnings[0]
+
+    def test_years_of_a_header_run_one_way(self) -> None:
+        assert not parse_module._header_line(["Bern", "2040", "1850", "2001"])
         assert parse_module._header_line(["Land", "2020", "2021"])
+        assert parse_module._header_line(["Land", "2025", "2024", "2023"])  # finance writes the latest first
+
+    def test_a_descending_year_header_starts_a_table(self) -> None:
+        text = "Land,Hauptstadt,Fläche\nCH,Bern,41285\nDE,Berlin,357588\n\nLand,2021,2020\nCH,1,2\nDE,3,4\n"
+        assert parse_dataset(text, table=2).csv == "Land,2021,2020\nCH,1,2\nDE,3,4\n"
+        captioned = text.replace("\n\nLand,2021", "\n\nPer year\nLand,2021")
+        assert parse_dataset(captioned, table=2).csv == "Land,2021,2020\nCH,1,2\nDE,3,4\n"
 
     def test_a_later_table_never_meets_the_lines_above_the_first_one(self) -> None:
         """Gemini review of #12200: an export's metadata above the first table must not become the second's rows,
@@ -3004,11 +3032,25 @@ class TestRowNames:
         assert len(parsed.column_dtypes) == 3
         assert bindings == {"x": "height", "y": "weight"}
 
-    def test_row_numbers_still_bind_when_nothing_else_fits(self) -> None:
-        parsed = parse_dataset("X,weight\n1,65.5\n2,80.1\n3,58.0\n")
+    @pytest.mark.parametrize(
+        ("text", "expected"),
+        [
+            ("X,weight\n1,65.5\n2,80.1\n3,58.0\n", {"x": "X", "y": "weight"}),
+            ("index,value\n0,65.5\n1,80.1\n2,58.0\n", {"x": "index", "y": "value"}),
+            ('"",v\n0,65.5\n1,80.1\n2,58.0\n', {"x": "column_1", "y": "v"}),
+            ("X,Y\n1,65.5\n2,80.1\n3,58.0\n", {"x": "X", "y": "Y"}),
+            # Another column fits x, so `X` takes none; `Y` is y by its name.
+            ("X,Y,Z\n1,65.5,3.5\n2,80.1,4.5\n3,58.0,5.5\n", {"x": "Z", "y": "Y"}),
+        ],
+    )
+    def test_row_numbers_keep_their_natural_slot_when_the_roles_need_them(
+        self, text: str, expected: dict[str, str]
+    ) -> None:
+        """Fable review of #12200: decided per role set, so `X, weight` is never transposed into x = weight."""
+        parsed = parse_dataset(text)
         bindings = {binding.role: binding.column for binding in default_bindings(XY_ROLES, parsed.profile)}
 
-        assert sorted(bindings.values()) == ["X", "weight"]
+        assert bindings == expected
 
 
 XY_ROLES = [

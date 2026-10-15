@@ -199,12 +199,25 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
        series, so the category may take it.
 
     A column that only numbers the rows (`row_number_columns`: R's `X` of `1` to `n`) takes
-    no role by its name, no family member and no optional role, and a required single role
-    takes it only when no other column fits (owner decision of 2026-10-15).
+    no role by its name, no family member and no optional role while the other columns can
+    fill the required roles (owner decision of 2026-10-15: `X, height, weight` binds x to
+    `height`). When the required roles need it all the same (`X, weight` for x and y), the
+    decision is made for the role set, not role by role: the bindings are those of an
+    ordinary table, so the row number keeps its natural slot (x) instead of falling onto
+    the last role (y), which would transpose the plot (Fable review of #12200).
 
     Each column is bound at most once. Members of a family are numbered `<name>1`,
     `<name>2`, ... in column order. Roles without kinds stay unbound.
     """
+    row_numbers = row_number_columns(profile)
+    bindings = _default_bindings(roles, profile, row_numbers)
+    if row_numbers and any(binding.column in row_numbers for binding in bindings):
+        return _default_bindings(roles, profile, set())
+    return bindings
+
+
+def _default_bindings(roles: list[DataRole], profile: DatasetProfile, row_numbers: set[str]) -> list[Binding]:
+    """`default_bindings` with `row_numbers` kept out of every role that another column can fill."""
     columns = profile.columns
     used: set[str] = set()
     single: dict[str, str] = {}
@@ -230,9 +243,6 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
 
     # A constant is no measure even when named like the role (`y2`, `size`); a year or a month named so is meant.
     constants = {column.name for column in columns if profile.rows >= MIN_CONSTANT_ROWS and column.unique <= 1}
-    # Row numbers (`X` of `1` to `n`) take a role only when no other column fits it, never by a name match.
-    row_numbers = row_number_columns(profile)
-
     for role in roles:
         if not role.kinds:
             continue
