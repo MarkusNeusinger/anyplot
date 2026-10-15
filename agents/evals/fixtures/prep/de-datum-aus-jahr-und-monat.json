@@ -1,0 +1,8 @@
+{
+  "dataset_text": "Year  Month  Temperature  Precipitation\n2021      1         -0.8           61.2\n2021      2          3.1           40.5\n2021      3          5.2           38.0\n2021      4          8.4           70.3\n2021      5         12.9           95.1\n2021      6         19.0          120.4\n2021      7         18.6          160.2\n2021      8         17.3          110.7\n2021      9         15.8           50.9\n2021     10          9.4           20.1\n2021     11          4.0           62.8\n2021     12          1.9           88.4\n",
+  "message": "Bilde aus Year und Month eine Datumsspalte namens Datum.",
+  "expected_operations": [{"op": "make_date", "name": "Datum", "year": "Year", "month": "Month"}],
+  "spec_id": "line-timeseries-rolling",
+  "locale": "de",
+  "tags": ["make_date", "datetime", "date_parts"]
+}

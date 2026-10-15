@@ -301,6 +301,11 @@ def describe(line: str) -> str:
         order = f" by {data['order']}" if "order" in data else ""
         percent = " (percent)" if data.get("percent") else ""
         return f"derive {data['name']} = {data['how']} of {', '.join(data['columns'])}{within}{order}{percent}"
+    if op == "make_date":
+        parts = ", ".join(
+            f"{part} {data[part]}" for part in ("year", "month", "day", "quarter", "week") if part in data
+        )
+        return f"make_date {data['name']} from {parts}"
     if op == "set_type":
         extra = [data[key] for key in ("date_format", "decimal") if key in data]
         return f"set_type {data['column']} {data['type']}" + (f" ({', '.join(extra)})" if extra else "")

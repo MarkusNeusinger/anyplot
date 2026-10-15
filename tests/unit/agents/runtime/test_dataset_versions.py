@@ -208,3 +208,26 @@ def test_the_notes_travel_with_every_version_and_a_new_paste_replaces_them() -> 
     )
     stored = store.get(pasted.dataset_id, SID)
     assert pasted.parsed.context_lines == [] and stored is not None and stored.context_lines == []
+
+
+def test_a_new_date_column_fills_the_open_date_role() -> None:
+    """`make_date` on a table of years and months: the version binds the new column (owner decision of 2026-10-15)."""
+    rolling = snapshot_from_repo("line-timeseries-rolling", "matplotlib")
+    store = DatasetStore()
+    state = initial_state(
+        spec_id="line-timeseries-rolling",
+        library="matplotlib",
+        locale="en",
+        snapshot=rolling,
+        normalised="x = 1",
+        readiness={},
+    )
+    rows = "".join(f"2024,{month},{month * 1.5}\n" for month in range(1, 13))
+    ingested = store_dataset(store, SID, parse_dataset("Year,Month,Temperature\n" + rows), rolling, notes_screened=True)
+    state.update(ingested.state_delta())
+    assert view_of(state).bindings and all(binding.role != "date" for binding in view_of(state).bindings)
+
+    dated = "".join(f"2024,{month},{month * 1.5},2024-{month:02d}-01\n" for month in range(1, 13))
+    version = push_version(store, SID, view_of(state), parse_dataset("Year,Month,Temperature,Datum\n" + dated), rolling)
+
+    assert version.delta[BINDINGS] == [{"role": "date", "column": "Datum"}, {"role": "value", "column": "Temperature"}]

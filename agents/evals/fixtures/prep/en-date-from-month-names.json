@@ -1,0 +1,8 @@
+{
+  "dataset_text": "Year,Month,Visitors\n2024,Jan,1200\n2024,Feb,1350\n2024,Mar,1610\n2024,Apr,1880\n2024,May,2240\n2024,Jun,2710\n",
+  "message": "Combine Year and Month into one date column called date.",
+  "expected_operations": [{"op": "make_date", "name": "date", "year": "Year", "month": "Month"}],
+  "spec_id": "line-timeseries-rolling",
+  "locale": "en",
+  "tags": ["make_date", "datetime", "month_names"]
+}

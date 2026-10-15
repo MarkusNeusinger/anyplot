@@ -131,7 +131,7 @@ from agents.anyplot.data.parse import (
     parse_dataset,
     without_context,
 )
-from agents.anyplot.data.prepare import Operation, PrepareError, apply_operations
+from agents.anyplot.data.prepare import Operation, PrepareError, apply_operations, with_date_notes
 from agents.anyplot.data.roles import DataRole
 from agents.anyplot.data.shape import long_suggestion
 from agents.anyplot.data.store import StoreFull
@@ -895,7 +895,7 @@ async def _ingest_paste(
             "bindings": [binding.model_dump() for binding in ingested.bindings],
             "warnings": parsed.warnings,
             "context_lines": parsed.context_lines,
-            "roles": [_role_body(role) for role in view.snapshot.roles()],
+            "roles": _page_roles(view.snapshot.roles()),
             "suggestion": _suggestion(view, parsed.profile),
             "version": 1,
             "language": {"language": language, "source": language_source},
@@ -1084,6 +1084,12 @@ def _role_body(role: DataRole) -> dict[str, Any]:
     }
 
 
+def _page_roles(roles: list[DataRole]) -> list[dict[str, Any]]:
+    """The roles the page offers a dropdown for: a role the plot computes from the data takes no column
+    (`DataRole.computed`, owner decision of 2026-10-15), so the page never sees it."""
+    return [_role_body(role) for role in roles if not role.computed]
+
+
 @app.put("/v1/sessions/{sid}/bindings", dependencies=v1_dependencies)
 async def put_bindings(
     sid: SessionId,
@@ -1190,7 +1196,7 @@ async def undo_dataset(sid: SessionId, user: User, runtime: RuntimeDep) -> JSONR
     return JSONResponse(
         {
             **restored.payload(),
-            "roles": [_role_body(role) for role in view.snapshot.roles()],
+            "roles": _page_roles(view.snapshot.roles()),
             "suggestion": _suggestion(view, restored.stored.profile),
         },
         headers=_NO_STORE,
@@ -1228,6 +1234,7 @@ async def dataset_to_long(sid: SessionId, user: User, runtime: RuntimeDep) -> JS
             max_bytes=MAX_COMPUTED_BYTES,
             canonical=True,
         )
+        parsed = with_date_notes(parsed, prepared)
     except (PrepareError, ParseError, ValidationError):
         raise AgentsError(422, "no_suggestion") from None
     try:
@@ -1238,7 +1245,7 @@ async def dataset_to_long(sid: SessionId, user: User, runtime: RuntimeDep) -> JS
     return JSONResponse(
         {
             **version.payload(),
-            "roles": [_role_body(role) for role in view.snapshot.roles()],
+            "roles": _page_roles(view.snapshot.roles()),
             "suggestion": _suggestion(view, version.stored.profile),
             "changes": prepared.changes,
         },
@@ -1287,7 +1294,7 @@ async def _session_sync(
             changes = list(ledger.dataset_changes) if ledger is not None else []
             payload["dataset"] = {
                 **dataset_payload(stored, view.bindings, view.dataset_version),
-                "roles": [_role_body(role) for role in view.snapshot.roles()[:MAX_DONE_ROLES]],
+                "roles": _page_roles(view.snapshot.roles())[:MAX_DONE_ROLES],
                 "suggestion": _suggestion(view, stored.profile),
                 "changes": changes,
             }
