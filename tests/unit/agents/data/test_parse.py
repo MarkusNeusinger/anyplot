@@ -2000,6 +2000,22 @@ class TestSpaceAlignedTables:
         assert parsed.csv.splitlines()[3:] == ["2022,4.7,,6.9", "2023,,5.9,"]
         assert parsed.context_lines == ["Quelle: Testamt"]
 
+    def test_a_short_summary_row_below_the_table_is_left_out_as_a_summary(self) -> None:
+        text = (
+            "Jahr    Nord    Mitte    Süd\n"
+            "2020     4.1      5.2    6.3\n"
+            "2021     4.4      5.5    6.6\n"
+            "2022     4.7             6.9\n"
+            "Total" + " " * 20 + "19.8\n"
+        )
+
+        parsed = parse_dataset(text)
+
+        assert parsed.column_dtypes["Jahr"] == "integer"
+        assert parsed.profile.rows == 3
+        assert parsed.context_lines == []
+        assert warned(parsed, "left out 1 summary row")
+
     def test_a_field_beyond_every_column_is_refused(self) -> None:
         far = "2021" + " " * 50 + "99.0"
         text = f"Jahr    Nord    Mitte    Süd\n2020     4.1      5.2    6.3\n{far}\n2022     4.7      5.0    6.9\n"
@@ -2061,6 +2077,9 @@ class TestSpaceAlignedTables:
         assert sniff_delimiter("a, b, c\n1, 2, 3\n4, 5, 6\n7, 8, 9\n") == (",", "csv")
         assert sniff_delimiter("Name\tWert  \nAlpha\t1  \nBeta\t2  \nGamma\t3  \n") == ("\t", "tsv")
         assert sniff_delimiter("x;y\n1,5;2,5\n3,5;4,5\n5,5;6,5\n") == (";", "semicolon")
+        # Double spaces inside a CSV's text fields add fields, never values: the comma keeps the table.
+        spaced_text = "Area  station  name,value\nNorth  10  East,1\nSouth  20  West,2\nCentre  30  North,3\n"
+        assert sniff_delimiter(spaced_text) == (",", "csv")
 
 
 # An API answer shaped like the World Bank's (live test of 2026-10-15), with an invented indicator and values:

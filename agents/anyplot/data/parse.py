@@ -552,9 +552,9 @@ def sniff_delimiter(text: str) -> tuple[str | None, SourceFormat]:
 
     Spaces compete after the four (since 2026-10-15, live test of a MeteoSwiss `.txt`): runs
     of two or more spaces (`SPACE_RUN`, so `Max Temp` stays one header), then single spaces
-    (`SINGLE_SPACE`), each only with the stricter evidence of `_space_block`, ranked by the
-    same values, lines and fields, so a full tie keeps the real delimiter. Their source
-    format is `whitespace`.
+    (`SINGLE_SPACE`), each only with the stricter evidence of `_space_block`, and each wins
+    only with more values than every real delimiter: splits at spaces inside a CSV's text
+    fields add fields and lines, never values. Their source format is `whitespace`.
 
     When no candidate's table holds a value (text-only tables, prose), the header rule
     decides as before (`_sniff_by_header`).
@@ -584,7 +584,9 @@ def sniff_delimiter(text: str) -> tuple[str | None, SourceFormat]:
             continue
         count = sum(1 for row in spaced if len(row) == found.width)
         key = (found.values, count, found.width)
-        if best is None or key > best:
+        # Spaces win only with more values: extra splits at spaces inside a real delimiter's text fields
+        # (`North  10  East,1`) add fields and lines, never values, so they must not displace it.
+        if best is None or key[0] > best[0]:
             best, choice = key, (delimiter, "whitespace")
         break
     return choice if best is not None else _sniff_by_header(sample)
@@ -743,17 +745,29 @@ def _with_trailing_short_rows(
     last rows have blank cells (`2022     4.7             6.9`) would lose them to the notes. A
     record below counts as a row while every field lines up under one column (`_lined_up`) and
     one of them reads as a value; a source line or a note, which lines up with nothing or holds
-    no value, still ends the table.
+    no value, still ends the table. A summary row (`Total`, `Summe`) ends it too: up to
+    `MAX_SUMMARY_ROWS` of them right below are left out as summary rows, as `table_block` does
+    with full ones, neither data nor notes.
     """
     end = block.end
     while end < len(records):
         fields = records[end][1]
-        if len(fields) >= len(extents) or not any(_value_like(cell) for cell in fields):
+        if len(fields) >= len(extents) or not any(_value_like(cell) for cell in fields) or _summary_row(fields):
             break
         if _lined_up(fields, spans[end], extents) is None:
             break
         end += 1
-    return replace(block, end=end, below=block.below - (end - block.end)) if end != block.end else block
+    summary = 0
+    while (
+        summary < MAX_SUMMARY_ROWS
+        and end + summary < len(records)
+        and _summary_row(records[end + summary][1])
+        and any(_value_like(cell) for cell in records[end + summary][1])
+    ):
+        summary += 1
+    if end == block.end and not summary:
+        return block
+    return replace(block, end=end, summary=summary, below=len(records) - end - summary)
 
 
 def _column_extents(spans: Sequence[Sequence[tuple[int, int]]], start: int, end: int, width: int) -> list[list[int]]:
