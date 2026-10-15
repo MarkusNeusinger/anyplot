@@ -1,6 +1,7 @@
 """Tests for agents/anyplot/data/bindings.py: default bindings and their validation."""
 
 import pytest
+from pydantic import TypeAdapter
 
 from agents.anyplot.data.bindings import (
     MAX_VARIADIC_DEFAULT,
@@ -12,9 +13,13 @@ from agents.anyplot.data.bindings import (
     resolve_role,
 )
 from agents.anyplot.data.parse import parse_dataset
+from agents.anyplot.data.prepare import Operation, apply_operations
 from agents.anyplot.data.roles import DataRole, RoleKind, parse_roles
 from agents.anyplot.schemas import Binding, ColumnDtype, DatasetProfile
 from tests.unit.agents.data.test_roles import AREA_STACKED, LINE_MULTI
+
+
+OPERATIONS = TypeAdapter(list[Operation])
 
 
 def profile(csv: str) -> DatasetProfile:
@@ -173,6 +178,124 @@ class TestCategoryAndMeasureRanking:
         assert as_pairs(default_bindings(roles, data)) == [("category", "Jahr"), ("y1", "Shoes"), ("y2", "Hats")]
 
 
+# Generalised from the live tests of 2026-10-15 (a World Bank API download, a MeteoSwiss monthly series):
+# a long table with a code and a name column of the same countries and a constant number column.
+INDICATOR = (
+    "country.id,country.value,countryiso3code,date,value,decimal\n"
+    "AT,Austria,AUT,2020,81.2,0\n"
+    "AT,Austria,AUT,2021,81.3,0\n"
+    "CH,Switzerland,CHE,2020,83.0,0\n"
+    "CH,Switzerland,CHE,2021,83.9,0\n"
+    "DE,Germany,DEU,2020,81.0,0\n"
+    "DE,Germany,DEU,2021,80.9,0\n"
+)
+ROLLING = [
+    "`date` (datetime) - Timestamp values representing points in time",
+    "`value` (numeric) - Raw measurements or observations at each timestamp",
+    "`rolling_avg` (numeric) - Computed rolling average (e.g., 7-day, 30-day window)",
+]
+
+
+def monthly(header: str, years: int = 2) -> str:
+    """`Year`, a month 1 to 12 and two measures, `years` years long, with the given header."""
+    lines = [header]
+    for year in range(2020, 2020 + years):
+        lines.extend(f"{year},{month},{month * 1.5 - 4:.1f},{40 + month * 3}.5" for month in range(1, 13))
+    return "\n".join(lines) + "\n"
+
+
+class TestWeakMeasures:
+    def test_a_constant_column_never_joins_a_number_family(self) -> None:
+        roles = parse_roles(LINE_MULTI)
+        bindings = default_bindings(roles, profile(INDICATOR))
+
+        assert ("y1", "value") in as_pairs(bindings)
+        assert all(binding.column != "decimal" for binding in bindings)
+
+    def test_a_required_family_takes_a_weak_column_rather_than_none(self) -> None:
+        roles = [role("y", "numeric", variadic=True), role("group", "categorical")]
+        data = profile("group,flag\na,0\nb,0\nc,0\nd,0\ne,0\n")
+
+        assert as_pairs(default_bindings(roles, data)) == [("y1", "flag"), ("group", "group")]
+
+    def test_a_constant_measure_ranks_last_for_a_single_role(self) -> None:
+        roles = [role("x", "numeric")]
+        data = profile("level,value\n1.5,2.5\n1.5,3.5\n1.5,4.5\n1.5,5.5\n1.5,6.5\n")
+
+        assert as_pairs(default_bindings(roles, data)) == [("x", "value")]
+
+    def test_an_optional_measure_stays_open_rather_than_take_a_weak_column(self) -> None:
+        roles = [role("x", "numeric"), role("y", "numeric"), role("size", "numeric", required=False)]
+        data = profile("a,b,unit_code\n1,2.5,7\n2,3.5,7\n3,1.5,7\n4,2.0,7\n5,4.5,7\n")
+
+        assert as_pairs(default_bindings(roles, data)) == [("x", "a"), ("y", "b")]
+
+    def test_an_optional_measure_still_takes_a_real_measure(self) -> None:
+        roles = [role("x", "numeric"), role("y", "numeric"), role("size", "numeric", required=False)]
+        data = profile("a,b,c\n1,2.5,7\n2,3.5,8\n3,1.5,9\n4,2.0,7\n5,4.5,8\n")
+
+        assert as_pairs(default_bindings(roles, data)) == [("x", "a"), ("y", "b"), ("size", "c")]
+
+    def test_a_month_column_is_no_value_of_a_time_series(self) -> None:
+        roles = parse_roles(ROLLING)
+        data = profile(monthly("Year,Month,Temperature,Precipitation"))
+
+        assert as_pairs(default_bindings(roles, data)) == [("value", "Temperature"), ("rolling_avg", "Precipitation")]
+
+    @pytest.mark.parametrize("name", ["Monat", "month_no", "Quartal", "KW", "weekDay"])
+    def test_a_named_date_part_is_weak(self, name: str) -> None:
+        roles = [role("value", "numeric")]
+        data = profile(f"{name},Messwert\n1,2.5\n2,3.5\n3,1.5\n")
+
+        assert as_pairs(default_bindings(roles, data)) == [("value", "Messwert")]
+
+    def test_an_unnamed_month_counts_only_beside_a_year(self) -> None:
+        roles = [role("value", "numeric")]
+
+        assert as_pairs(default_bindings(roles, profile(monthly("Jahr,M,Wert,Regen")))) == [("value", "Wert")]
+        # Without a year column, 1 to 12 is any measure: the column order stands.
+        twelve = "M,Wert\n" + "".join(f"{m},{m * 2.5}\n" for m in range(1, 13))
+        assert as_pairs(default_bindings(roles, profile(twelve))) == [("value", "M")]
+
+    def test_make_date_leaves_the_date_role_to_set_bindings(self) -> None:
+        """Every binding stays valid after `make_date`, so the carry changes nothing and the root binds the date.
+
+        The root prompt says so: after `make_date`, `set_bindings` in the same turn while the date role is open.
+        """
+        roles = parse_roles(ROLLING)
+        text = monthly("Year,Month,Temperature,Precipitation")
+        before = default_bindings(roles, profile(text))
+        operation = {"op": "make_date", "name": "Datum", "year": "Year", "month": "Month"}
+        after = parse_dataset(apply_operations(parse_dataset(text), OPERATIONS.validate_python([operation])).csv)
+
+        assert carry_bindings(before, roles, after.profile) == before
+        assert as_pairs(default_bindings(roles, after.profile)) == [
+            ("date", "Datum"),
+            ("value", "Temperature"),
+            ("rolling_avg", "Precipitation"),
+        ]
+
+
+class TestNamesOverCodes:
+    def test_a_series_takes_the_name_column_over_its_codes(self) -> None:
+        roles = parse_roles(LINE_MULTI)
+
+        assert ("series", "country.value") in as_pairs(default_bindings(roles, profile(INDICATOR)))
+
+    def test_short_capital_values_count_as_codes_without_a_code_name(self) -> None:
+        roles = [role("category", "categorical"), role("value", "numeric")]
+        data = profile("land,name,value\nAUT,Austria,1.5\nCHE,Switzerland,2.5\nDEU,Germany,3.5\n")
+
+        assert as_pairs(default_bindings(roles, data)) == [("category", "name"), ("value", "value")]
+
+    def test_a_code_column_without_a_name_twin_keeps_its_place(self) -> None:
+        """A name column that partitions the rows differently (more distinct values) is no spelled-out code."""
+        roles = [role("category", "categorical"), role("value", "numeric")]
+        data = profile("country_code,city,value\nAT,Wien,1.5\nAT,Graz,2.5\nCH,Bern,3.5\n")
+
+        assert as_pairs(default_bindings(roles, data)) == [("category", "country_code"), ("value", "value")]
+
+
 class TestDefaultBindings:
     def test_exact_names_win(self) -> None:
         roles = [role("x", "numeric"), role("y", "numeric")]
@@ -199,7 +322,8 @@ class TestDefaultBindings:
 
         assert as_pairs(default_bindings(roles, data)) == [("group", "country"), ("value", "value")]
 
-    def test_number_roles_keep_a_single_valued_column(self) -> None:
+    def test_number_roles_keep_a_single_valued_column_of_a_short_table(self) -> None:
+        """Two equal values in two rows say little: below `MIN_CONSTANT_ROWS` the column order stands."""
         roles = [role("x", "numeric")]
         data = profile("level,value\n1.5,2.5\n1.5,3.5\n")
 

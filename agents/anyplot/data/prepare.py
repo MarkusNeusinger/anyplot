@@ -23,7 +23,9 @@ The operations:
   and fewer fail with the other mark, the whole column is read with the other mark and
   the change line says so ("read as numbers (decimal comma)"); the unit must be the
   same wherever it occurs. To datetime: with `date_format` the cells are read in
-  exactly that format, with an optional time (`HH:MM[:SS]`) after it; without one
+  exactly that format, with an optional time (`HH:MM[:SS]`) after it (a format without
+  a day, such as `YYYY-MM` or `YYYY`, reads the first day of the month or the year, and
+  `YYYYMMDD` reads a number column of such dates as well as text); without one
   pandas infers the format per cell, day before month when ambiguous, as the parser
   reads a slash date. Either way a cell that cannot be read becomes missing and the
   change line counts it; when more than 10 % of the non-missing cells fail, the
@@ -77,6 +79,20 @@ The operations:
   missing cell, and the change line counts them. A question such as "which year has the
   largest share of X" takes the same operations through `query_data` (`query.py`), on a
   copy that is never stored (live tests of 2026-10-14 and 2026-10-15).
+* `make_date`: a new date column `name`, appended last, built row by row from the parts
+  of a date held in whole-number columns: a `year`, then a `month` and optionally a
+  `day`, or a `quarter`, or an ISO `week`; a part left out is its first (January, the
+  first day of the month or the quarter, the Monday of the week). A day needs a month,
+  and a quarter or a week takes no other part. A part column holds whole numbers within
+  its range (a year of four digits, 1000 to 9999, so a two-digit `24` is refused rather
+  than read as the year 24; a month 1 to 12, a day
+  1 to 31, a quarter 1 to 4, a week 1 to 53), else the operation is refused, as it is
+  when a row's parts are no calendar date (31 April, week 53 of a 52-week year): a
+  date is never moved to the next valid one. A text column is a `type_mismatch` with a
+  hint to `set_type` it to number first. A row with a missing part gets an empty cell,
+  which the change line counts. It came from the live test of 2026-10-15: a MeteoSwiss
+  table of `Year` and `Month` had no date column for a time series, and the root could
+  only ask the user to add one by hand.
 
 Values in conditions are never evaluated: a condition compares text with text for a
 text column, numbers for a numeric column (the value is a dot-decimal number, which
@@ -141,7 +157,9 @@ _INT64_MIN, _INT64_MAX = -(2**63), 2**63 - 1
 
 Test = Literal["eq", "ne", "contains", "is_missing", "gt", "lt"]
 TargetType = Literal["number", "datetime", "text"]
-DateFormat = Literal["DD.MM.YYYY", "MM/DD/YYYY", "YYYY-MM-DD"]
+DateFormat = Literal[
+    "DD.MM.YYYY", "MM/DD/YYYY", "YYYY-MM-DD", "DD/MM/YYYY", "YYYYMMDD", "YYYY-MM", "MM/YYYY", "MM.YYYY", "YYYY"
+]
 Decimal = Literal[".", ","]
 How = Literal["sum", "mean", "count", "min", "max"]
 Period = Literal["month", "quarter", "year"]
@@ -161,7 +179,26 @@ _DERIVE_ARITY: dict[str, tuple[int, int]] = {
 """How many value columns each formula takes, as (at least, at most)."""
 PrepareErrorCode = Literal["unknown_column", "type_mismatch", "empty_result", "too_wide", "invalid_operation"]
 
-STRPTIME: dict[str, str] = {"DD.MM.YYYY": "%d.%m.%Y", "MM/DD/YYYY": "%m/%d/%Y", "YYYY-MM-DD": "%Y-%m-%d"}
+STRPTIME: dict[str, str] = {
+    "DD.MM.YYYY": "%d.%m.%Y",
+    "MM/DD/YYYY": "%m/%d/%Y",
+    "YYYY-MM-DD": "%Y-%m-%d",
+    "DD/MM/YYYY": "%d/%m/%Y",
+    "YYYYMMDD": "%Y%m%d",
+    "YYYY-MM": "%Y-%m",
+    "MM/YYYY": "%m/%Y",
+    "MM.YYYY": "%m.%Y",
+    "YYYY": "%Y",
+}
+DatePart = Literal["year", "month", "day", "quarter", "week"]
+DATE_PART_RANGES: dict[str, tuple[int, int]] = {
+    "year": (1000, 9999),  # four digits: a two-digit year (`24`) is refused, never read as the year 24
+    "month": (1, 12),
+    "day": (1, 31),
+    "quarter": (1, 4),
+    "week": (1, 53),
+}
+"""The values a `make_date` part column may hold, inclusive."""
 _TIME_SUFFIXES = ("", " %H:%M", " %H:%M:%S", "T%H:%M", "T%H:%M:%S")
 _VERBS: dict[str, str] = {
     "sum": "summed",
@@ -399,8 +436,35 @@ class Derive(_Strict):
     percent: bool = False
 
 
+class MakeDate(_Strict):
+    """A new date column from whole-number part columns: a `year`, then a `month` and a `day`, or a `quarter`, or a `week`.
+
+    A part left out is its first: January, the first day of the month or the quarter,
+    the Monday of the ISO week. A day needs a month; a quarter or a week takes no other
+    part than the year.
+    """
+
+    op: Literal["make_date"]
+    name: NewName
+    year: ColumnName
+    month: ColumnName | None = None
+    day: ColumnName | None = None
+    quarter: ColumnName | None = None
+    week: ColumnName | None = None
+
+
 Operation = Annotated[
-    Rename | DropColumns | DropRows | SetType | Aggregate | Sort | PivotLonger | PivotWider | Classify | Derive,
+    Rename
+    | DropColumns
+    | DropRows
+    | SetType
+    | Aggregate
+    | Sort
+    | PivotLonger
+    | PivotWider
+    | Classify
+    | Derive
+    | MakeDate,
     Field(discriminator="op"),
 ]
 
@@ -439,6 +503,8 @@ def apply_operations(parsed: ParsedDataset, operations: list[Operation]) -> Prep
                 frame, change = _classify(frame, operation, carried)
             case Derive():
                 frame, change = _derive(frame, operation, carried)
+            case MakeDate():
+                frame, change = _make_date(frame, operation, carried)
         if not frame.shape[1]:
             raise PrepareError("empty_result", "no column would remain")
         if not len(frame):
@@ -911,6 +977,114 @@ def _ordered(
     return result.reindex(frame.index), what
 
 
+def _make_date(frame: pd.DataFrame, op: MakeDate, carried: _Carried) -> tuple[pd.DataFrame, str]:
+    """A date column from whole-number part columns; refused on a value out of range or a row that is no calendar date."""
+    if op.name in frame.columns:
+        raise PrepareError("invalid_operation", f"a column named '{op.name}' already exists")
+    if frame.shape[1] >= MAX_COLUMNS:
+        raise PrepareError("too_wide", f"the data already has {frame.shape[1]} columns; at most {MAX_COLUMNS} fit")
+    if op.day and not op.month:
+        raise PrepareError("invalid_operation", "make_date with a day needs a month column too")
+    if op.quarter and (op.month or op.day or op.week):
+        raise PrepareError("invalid_operation", "make_date with a quarter takes only a year besides it")
+    if op.week and (op.month or op.day):
+        raise PrepareError("invalid_operation", "make_date with a week takes only a year besides it")
+    optional: tuple[tuple[DatePart, str | None], ...] = (
+        ("month", op.month),
+        ("day", op.day),
+        ("quarter", op.quarter),
+        ("week", op.week),
+    )
+    parts: dict[DatePart, str] = {"year": op.year}
+    for part, column in optional:
+        if column:
+            parts[part] = column
+    if len(set(parts.values())) != len(parts):
+        raise PrepareError("invalid_operation", "make_date needs a different column for each part")
+    values = {part: _date_parts(frame, column, part) for part, column in parts.items()}
+    dates: list[datetime | None] = []
+    impossible = 0
+    for row in zip(*values.values(), strict=True):
+        named = dict(zip(parts, row, strict=True))
+        if any(value is None for value in row):
+            dates.append(None)
+            continue
+        year = int(named["year"] or 0)
+        try:
+            if "week" in named:
+                moment = datetime.fromisocalendar(year, int(named["week"] or 0), 1)
+            elif "quarter" in named:
+                moment = datetime(year, 3 * (int(named["quarter"] or 0) - 1) + 1, 1)
+            else:
+                moment = datetime(year, int(named.get("month") or 1), int(named.get("day") or 1))
+        except ValueError:
+            impossible += 1
+            dates.append(None)
+            continue
+        dates.append(moment)
+    if impossible:
+        raise PrepareError(
+            "invalid_operation",
+            f"{_count(impossible, 'row')} of {_listed(list(parts.values()))} "
+            f"{'is' if impossible == 1 else 'are'} no calendar date, such as 31 April or week 53 of a year with 52 weeks",
+        )
+    result = pd.to_datetime(pd.Series(dates, index=frame.index, dtype="object"))
+    empty = int(result.isna().sum())
+    if empty == len(result):
+        raise PrepareError("invalid_operation", f"no row has every part, so column '{op.name}' would hold no date")
+    carried.forget([op.name])
+    carried.with_time[op.name] = False
+    first = {
+        "week": "the Monday of each week",
+        "quarter": "the first day of each quarter",
+        "month": "the first day of each month",
+        "year": "1 January of each year",
+    }
+    change = f"added column {op.name}: dates from {_listed(list(parts.values()))}"
+    if "day" not in parts:
+        change += f" ({next(text for part, text in first.items() if part in parts)})"
+    if empty:
+        verb = "is" if empty == 1 else "are"
+        change += f", {_count(empty, 'cell')} {verb} empty (a missing part)"
+    return frame.assign(**{op.name: result}), change
+
+
+def _date_parts(frame: pd.DataFrame, column: str, part: DatePart) -> list[int | None]:
+    """The cells of `column` as whole numbers within the range of `part`; raises when a value is no whole number or out of range."""
+    _require(frame, column)
+    series = frame[column]
+    kind = _kind(series)
+    if kind != "number":
+        raise PrepareError(
+            "type_mismatch",
+            f"column '{column}' is {kind}; make_date needs whole numbers as the {part}: set_type it to number first",
+        )
+    low, high = DATE_PART_RANGES[part]
+    values: list[int | None] = []
+    fractional = outside = 0
+    for value in series:
+        if pd.isna(value):
+            values.append(None)
+            continue
+        number = float(value)
+        if not number.is_integer():
+            fractional += 1
+        elif not low <= number <= high:
+            outside += 1
+        values.append(int(number) if number.is_integer() else None)
+    if fractional:
+        raise PrepareError(
+            "type_mismatch", f"column '{column}' holds {_count(fractional, 'value')} that are no whole numbers"
+        )
+    if outside:
+        what = "a year of four digits" if part == "year" else f"a {part}"
+        raise PrepareError(
+            "invalid_operation",
+            f"column '{column}' holds {_count(outside, 'value')} outside {low} to {high}, so it is not {what}",
+        )
+    return values
+
+
 # --- Conditions ------------------------------------------------------------------------------
 
 
@@ -1168,6 +1342,11 @@ def _require(frame: pd.DataFrame, name: str) -> None:
 
 def _distinct(names: list[str]) -> list[str]:
     return list(dict.fromkeys(names))
+
+
+def _listed(names: list[str]) -> str:
+    """`a`, `a and b`, `a, b and c`."""
+    return names[0] if len(names) == 1 else f"{', '.join(names[:-1])} and {names[-1]}"
 
 
 def _count(number: int, noun: str) -> str:

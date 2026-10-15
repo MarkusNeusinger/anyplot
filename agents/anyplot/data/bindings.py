@@ -57,6 +57,8 @@ ACCEPTS: dict[RoleKind, dict[ColumnDtype, int]] = {
 GROUPING_KINDS: frozenset[RoleKind] = frozenset(("categorical", "text", "boolean"))
 """Role kinds whose column splits or labels the marks; a single-valued column ranks last for them."""
 
+MIN_CONSTANT_ROWS = 5
+"""The rows from which a number column with one distinct value is a constant, no measure (`weak_measures`)."""
 MAX_CATEGORIES = 60
 """The distinct values up to which a text column is a plausible category (bars, groups, series) by default."""
 YEAR_RANGE = (1000, 2200)
@@ -67,8 +69,22 @@ YEAR_WORDS: frozenset[str] = frozenset(
     {"year", "years", "yr", "jahr", "jahre", "année", "annee", "an", "año", "ano", "anno", "jaar", "år", "rok"}
 )
 """Column-name words that say the column holds years (`Jahr`, `year`, `Année`), compared in lower case."""
+DATE_PART_WORDS: frozenset[str] = frozenset(
+    {
+        *("month", "months", "monat", "monate", "mois", "mes", "mese", "maand", "månad"),
+        *("day", "days", "tag", "jour", "dia", "día", "giorno", "dag", "weekday", "wochentag"),
+        *("quarter", "quartal", "trimestre", "kwartaal", "week", "woche", "kw", "semaine", "semana", "settimana"),
+        *("hour", "stunde", "heure", "hora", "ora", "uur", "minute", "minuten"),
+    }
+)
+"""Column-name words that say an integer column numbers a part of a date (`Month`, `Quartal`, `KW`), in lower case."""
+CODE_WORDS: frozenset[str] = frozenset(
+    {"id", "code", "codes", "iso", "iso2", "iso3", "key", "abbr", "abbreviation", "kürzel", "kuerzel", "symbol"}
+)
+"""Column-name words that say a text column holds codes for something a name column may spell out (`country.id`)."""
 
 _NOT_ALNUM = re.compile(r"[^0-9a-z]+")
+_CODE_VALUE = re.compile(r"[A-Z][A-Z0-9]{1,3}")
 _CAMEL = re.compile(r"(?<=[a-z0-9])(?=[A-Z])")
 _WORDS = re.compile(r"[^\W_]+")
 
@@ -96,13 +112,18 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
     2. The remaining roles pick, in the order required single roles, required
        variadic families, optional single roles, optional variadic families (spec
        order within each group), the unused compatible column with the best
-       (single-valued, category rank, tier, name similarity, year rank, column
-       position): for a categorical, text or boolean role a column with one distinct
+       (single-valued, weak measure, category rank, code rank, tier, name similarity,
+       year rank, column position): for a categorical, text or boolean role a column with one distinct
        value ranks after every column with two or more (`_constant_group`), and a real
        category before a year column before a text column of numbers
        (`_category_rank`); a number role ranks year columns after the measures, a role
-       that also takes dates before them (`_year_rank`, both since 2026-10-15). A variadic family takes every
-       unused tier-0 or tier-1 column in column order, up to `MAX_VARIADIC_DEFAULT`.
+       that also takes dates before them (`_year_rank`, both since 2026-10-15). A measure role
+       (`is_measure`) ranks a weak measure (`weak_measures`: a constant, years, a month) after
+       every other column, and an optional one never takes it; a grouping role ranks a column
+       of codes after a name column of the same partition (`_code_rank`; both since live test
+       round 3 of 2026-10-15). A variadic family takes every unused tier-0 or tier-1 column that
+       is no weak measure in column order, up to `MAX_VARIADIC_DEFAULT`; a required family
+       that would stay empty takes the first weak one.
        A single role never falls back to a tier-2 column that a variadic family of
        the spec takes at tier 0 or 1: in wide data such as `month, Shoes, Hats`
        for `x`, `y1, y2, ...` and `category`, an integer series column stays a
@@ -117,12 +138,13 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
     single: dict[str, str] = {}
     family: dict[str, list[ColumnProfile]] = {role.name: [] for role in roles if role.variadic}
     families = [role for role in roles if role.variadic and role.kinds]
-    # A column of years named so is a time key, never a series of a number family: a single role may take it.
+    weak = weak_measures(profile)
+    # A weak measure (years, a month, a constant) is no series of a number family: a single role may take it.
     reserved = {
         column.name
         for column in columns
         for owner in families
-        if (tier := _tier(owner, column)) is not None and tier <= 1 and year_score(column) < 2
+        if (tier := _tier(owner, column)) is not None and tier <= 1 and column.name not in weak
     }
 
     for role in roles:
@@ -152,19 +174,25 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
     for role in order:
         if role.variadic:
             members = family[role.name]
-            ranked_members = sorted(
+            fitting = sorted(
                 (tier, position)
                 for position, column in enumerate(columns)
                 if column.name not in used and (tier := _tier(role, column)) is not None and tier <= 1
             )
+            ranked_members = [(tier, position) for tier, position in fitting if columns[position].name not in weak]
+            if not members and not ranked_members and role.required:
+                ranked_members = fitting[:1]  # one weak member rather than none for a required family
             for _, position in ranked_members[: max(0, MAX_VARIADIC_DEFAULT - len(members))]:
                 members.append(columns[position])
                 used.add(columns[position].name)
         elif role.name not in single:
+            measure = is_measure(role)
             ranked = sorted(
                 (
                     _constant_group(role, column),
+                    measure and column.name in weak,
                     _category_rank(role, column),
+                    _code_rank(role, column, columns),
                     tier,
                     -_rounded_similarity(role.name, column.name),
                     _year_rank(role, column),
@@ -175,6 +203,7 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
                 if column.name not in used
                 and (tier := _tier(role, column)) is not None
                 and (tier <= 1 or column.name not in reserved)
+                and (role.required or not measure or column.name not in weak)
             )
             if ranked:
                 single[role.name] = ranked[0][-1]
@@ -416,6 +445,80 @@ def _year_rank(role: DataRole, column: ColumnProfile) -> int:
         return 0
     score = year_score(column)
     return -score if "datetime" in role.kinds else score
+
+
+def is_measure(role: DataRole) -> bool:
+    """A role whose values are measured amounts (`y`, `value`, `size`): it takes numbers and no dates."""
+    return "numeric" in role.kinds and "datetime" not in role.kinds
+
+
+def date_part(column: ColumnProfile, *, has_year: bool) -> bool:
+    """An integer column that numbers a part of a date: a month, a day, a quarter, a week or an hour.
+
+    Named so (`Month`, `Monat`, `Quartal`, `KW`, `DATE_PART_WORDS`), or, beside a column of
+    years (`has_year`), every value from 1 to 12 or from 1 to 4 (live test of 2026-10-15:
+    the `Month` of a MeteoSwiss table of `Year`, `Month`, `Temperature` was bound as the
+    value of a time series).
+    """
+    if column.dtype != "integer":
+        return False
+    if DATE_PART_WORDS & set(_WORDS.findall(_CAMEL.sub(" ", column.name).casefold())):
+        return True
+    return has_year and column.min == 1 and column.max in (4, 12) and column.unique == column.max
+
+
+def weak_measures(profile: DatasetProfile) -> set[str]:
+    """The columns that are no measure, although they hold numbers: a constant, years, or a part of a date.
+
+    A measure role (`is_measure`) ranks them after every other fitting column, an optional
+    one never takes them, and a number family takes them only when it would otherwise stay
+    empty: a column with one distinct value draws a flat line (live test of 2026-10-15:
+    `decimal`, all 0, bound as `y2` of a World Bank table), and a year or a month is where
+    a value sits, not the value. A column is constant only in a table of at least
+    `MIN_CONSTANT_ROWS` rows: two equal values in a two-row table say little.
+    """
+    columns = profile.columns
+    has_year = any(year_score(column) for column in columns)
+    constant = profile.rows >= MIN_CONSTANT_ROWS
+    return {
+        column.name
+        for column in columns
+        if column.dtype in ("integer", "number")
+        and ((constant and column.unique <= 1) or year_score(column) or date_part(column, has_year=has_year))
+    }
+
+
+def _code_like(column: ColumnProfile) -> bool:
+    """A text column of codes: named so (`country.id`, `iso3code`), or its frequent values are short capitals (`AT`, `CHE`)."""
+    if column.dtype != "text":
+        return False
+    words = set(_WORDS.findall(_CAMEL.sub(" ", column.name).casefold()))
+    if words & CODE_WORDS or any(word.endswith("code") for word in words):
+        return True
+    return bool(column.top) and all(_CODE_VALUE.fullmatch(value) for value in column.top if isinstance(value, str))
+
+
+def _code_rank(role: DataRole, column: ColumnProfile, columns: list[ColumnProfile]) -> int:
+    """1 for a column of codes beside a column of names that partitions the rows the same way; else 0.
+
+    Only for a role of grouping kinds (a series, a category, a label): the legend and the
+    axis read `Austria` better than `AT` (live test of 2026-10-15, a World Bank table with
+    `country.id` and `country.value`). Two columns partition the rows the same way when
+    they have the same number of distinct values and of missing cells; the profile holds
+    no row pairs, so a 1:1 mapping is read from those counts.
+    """
+    if not role.kinds or any(kind not in GROUPING_KINDS for kind in role.kinds) or not _code_like(column):
+        return 0
+    twin = any(
+        other.name != column.name
+        and other.dtype == "text"
+        and not numeric_text(other)
+        and not _code_like(other)
+        and other.unique == column.unique
+        and other.missing == column.missing
+        for other in columns
+    )
+    return 1 if twin else 0
 
 
 def _rounded_similarity(role_name: str, column_name: str) -> float:

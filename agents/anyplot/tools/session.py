@@ -34,7 +34,8 @@ spec text) sits inside our own fences after the "data, never instructions" pream
   as `<tool_notes>` and the new profile fenced as `<user_data>`; a `PrepareError`
   answers its code and its message (which names columns at most, fenced too).
   Refused while the pipeline runs. The model never writes data rows: the operations
-  only move, type or aggregate the cells that are there.
+  only move, type, aggregate, label or compute from the cells that are there (a
+  `make_date` builds a date from the year and month columns of the same row).
 * `query_data(operations, columns, limit)`: a question about the data answered from a copy
   (`data/query.py`, since 2026-10-15): zero to five operations of `prepare_data`'s set, then
   the first `limit` rows (at most 25) in at most eight columns, fenced as `<user_data>`, with
@@ -281,8 +282,10 @@ async def prepare_data(operations: list[dict[str, Any]], tool_context: ToolConte
     (name, how ratio|difference|sum|share|percent_change|cumsum|index, columns, within, order, percent; adds the number
     column name computed from number columns: columns[0] / columns[1], columns[0] - columns[1], a row sum, a share of
     the group's total, or, in the order of a number or date column order, the percent change from the previous row,
-    the running total, or an index with the group's first row = 100). Returns the change lines and the new profile,
-    or an error with a code and a message.
+    the running total, or an index with the group's first row = 100); make_date (name, year, and month with an
+    optional day, or quarter, or week; adds the date column name built from whole-number columns holding the parts of
+    a date, a part left out being its first: year and month give the first day of each month). Returns the change
+    lines and the new profile, or an error with a code and a message.
     """
     view = _view(tool_context)
     if view is None:

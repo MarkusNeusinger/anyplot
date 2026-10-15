@@ -1,0 +1,7 @@
+{
+  "dataset_text": "period,orders\n2024-01,120\n2024-02,135\n2024-03,128\n2024-04,150\n2024-05,162\n2024-06,171\n",
+  "message": "period is year and month (YYYY-MM); read it as dates.",
+  "expected_operations": [{"op": "set_type", "column": "period", "type": "datetime", "date_format": "YYYY-MM"}],
+  "locale": "en",
+  "tags": ["set_type", "datetime", "date_format"]
+}

@@ -1316,6 +1316,134 @@ class TestDerive:
         assert dtypes(prepared) == {"Year": "integer", "Origin": "text", "Population": "integer", "Share": "number"}
 
 
+# A monthly station series aligned with spaces, as weather services publish it: year and month, no date
+# column (live test of 2026-10-15, generalised; a missing month and a missing value included).
+STATION = (
+    "Year  Month  Temperature  Precipitation\n"
+    "2023     11          4.1           62.0\n"
+    "2023     12          1.2           80.3\n"
+    "2024      1         -0.7           55.1\n"
+    "2024      2          3.4           41.9\n"
+    "2024                 5.0           38.2\n"
+)
+
+
+def make_date(name: str, **parts: str) -> dict[str, Any]:
+    return {"op": "make_date", "name": name, **parts}
+
+
+class TestMakeDate:
+    def test_year_and_month_give_the_first_day_of_each_month(self) -> None:
+        prepared = prepare(STATION, make_date("Datum", year="Year", month="Month"))
+
+        assert cells(prepared, 4) == ["2023-11-01", "2023-12-01", "2024-01-01", "2024-02-01", ""]
+        assert prepared.changes == [
+            "added column Datum: dates from Year and Month (the first day of each month), "
+            "1 cell is empty (a missing part)"
+        ]
+        assert dtypes(prepared)["Datum"] == "datetime"
+        assert list(dtypes(prepared))[:4] == ["Year", "Month", "Temperature", "Precipitation"]
+
+    def test_year_month_and_day(self) -> None:
+        prepared = prepare(
+            "J;M;T;Wert\n2024;2;29;1\n2024;3;1;2\n2023;12;31;3\n", make_date("d", year="J", month="M", day="T")
+        )
+
+        assert cells(prepared, 4) == ["2024-02-29", "2024-03-01", "2023-12-31"]
+        assert prepared.changes == ["added column d: dates from J, M and T"]
+
+    def test_year_and_quarter_give_the_first_day_of_each_quarter(self) -> None:
+        prepared = prepare(
+            "Jahr,Quartal,Umsatz\n2024,1,10\n2024,2,12\n2024,3,9\n2024,4,15\n",
+            make_date("Beginn", year="Jahr", quarter="Quartal"),
+        )
+
+        assert cells(prepared, 3) == ["2024-01-01", "2024-04-01", "2024-07-01", "2024-10-01"]
+        assert "(the first day of each quarter)" in prepared.changes[0]
+
+    def test_year_and_week_give_the_monday_of_the_iso_week(self) -> None:
+        prepared = prepare("year,week,cases\n2024,1,5\n2020,53,7\n", make_date("date", year="year", week="week"))
+
+        assert cells(prepared, 3) == ["2024-01-01", "2020-12-28"]
+
+    def test_a_year_alone_gives_the_first_of_january(self) -> None:
+        prepared = prepare("year,value\n2020,1\n2021,2\n", make_date("date", year="year"))
+
+        assert cells(prepared, 2) == ["2020-01-01", "2021-01-01"]
+        assert prepared.changes == ["added column date: dates from year (1 January of each year)"]
+
+    def test_a_month_out_of_range_is_refused(self) -> None:
+        code, message = failure(
+            "Year,Month,v\n2024,1,1\n2024,13,2\n2024,0,3\n", make_date("d", year="Year", month="Month")
+        )
+
+        assert code == "invalid_operation"
+        assert message == "column 'Month' holds 2 values outside 1 to 12, so it is not a month"
+
+    def test_a_two_digit_year_is_refused(self) -> None:
+        code, message = failure("Jahr,Monat,v\n24,1,1\n24,2,2\n", make_date("d", year="Jahr", month="Monat"))
+
+        assert code == "invalid_operation"
+        assert "a year of four digits" in message
+
+    def test_a_row_that_is_no_calendar_date_is_refused_never_moved(self) -> None:
+        code, message = failure(
+            "y,m,d,v\n2024,4,31,1\n2023,2,29,2\n2024,5,1,3\n", make_date("date", year="y", month="m", day="d")
+        )
+
+        assert code == "invalid_operation"
+        assert message.startswith("2 rows of y, m and d are no calendar date")
+        assert failure("y,w,v\n2021,53,1\n", make_date("date", year="y", week="w"))[0] == "invalid_operation"
+
+    @pytest.mark.parametrize(
+        ("parts", "expected"),
+        [
+            ({"year": "y", "day": "d"}, "make_date with a day needs a month column too"),
+            ({"year": "y", "month": "m", "quarter": "q"}, "make_date with a quarter takes only a year besides it"),
+            ({"year": "y", "quarter": "q", "week": "w"}, "make_date with a quarter takes only a year besides it"),
+            ({"year": "y", "month": "m", "week": "w"}, "make_date with a week takes only a year besides it"),
+            ({"year": "y", "month": "y"}, "make_date needs a different column for each part"),
+        ],
+    )
+    def test_invalid_combinations_are_refused(self, parts: dict[str, str], expected: str) -> None:
+        assert failure("y,m,d,q,w\n2024,1,1,1,1\n", make_date("date", **parts)) == ("invalid_operation", expected)
+
+    def test_a_text_or_fractional_part_is_a_type_mismatch(self) -> None:
+        code, message = failure("Year,Month,v\n2024,Jan,1\n2024,Feb,2\n", make_date("d", year="Year", month="Month"))
+        assert code == "type_mismatch"
+        assert "set_type it to number first" in message
+        assert failure("y,m\n2024,1.5\n2024,2\n", make_date("d", year="y", month="m"))[0] == "type_mismatch"
+
+    def test_unknown_columns_and_taken_names(self) -> None:
+        assert failure(STATION, make_date("d", year="Jahr"))[0] == "unknown_column"
+        assert failure(STATION, make_date("Month", year="Year"))[0] == "invalid_operation"
+
+    def test_a_date_with_no_row_complete_is_refused(self) -> None:
+        assert failure("y,m,v\n2024,,1\n,3,2\n", make_date("d", year="y", month="m"))[0] == "invalid_operation"
+
+    def test_free_text_does_not_validate(self) -> None:
+        with pytest.raises(ValidationError):
+            OPERATIONS.validate_python([{**make_date("d", year="y"), "format": "%Y-%m"}])
+
+
+class TestSetTypeDateFormats:
+    @pytest.mark.parametrize(
+        ("csv_text", "date_format", "expected"),
+        [
+            ("d,v\n20240115,1\n20240216,2\n", "YYYYMMDD", ["2024-01-15", "2024-02-16"]),
+            ("d,v\n2024-01,1\n2024-02,2\n", "YYYY-MM", ["2024-01-01", "2024-02-01"]),
+            ("d;v\n03/2024;1\n04/2024;2\n", "MM/YYYY", ["2024-03-01", "2024-04-01"]),
+            ("d;v\n03.2024;1\n11.2024;2\n", "MM.YYYY", ["2024-03-01", "2024-11-01"]),
+            ("d,v\n13/01/2024,1\n02/03/2024,2\n", "DD/MM/YYYY", ["2024-01-13", "2024-03-02"]),
+        ],
+    )
+    def test_a_format_reads_the_column_as_dates(self, csv_text: str, date_format: str, expected: list[str]) -> None:
+        prepared = prepare(csv_text, {"op": "set_type", "column": "d", "type": "datetime", "date_format": date_format})
+
+        assert cells(prepared, 0) == expected
+        assert dtypes(prepared)["d"] == "datetime"
+
+
 class TestNaCategory:
     def test_a_na_category_survives_every_operation_and_the_reparse(self) -> None:
         """`NA` (North America) from a JSON object's keys stays a category through `_read`, a sort and the re-parse."""
