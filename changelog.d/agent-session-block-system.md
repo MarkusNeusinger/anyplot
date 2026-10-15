@@ -9,7 +9,8 @@
   The root's `before_model_callback` now appends the block to the system
   instruction as a second part after the static policy, and Claude gets each part
   as a system block of its own with the cache breakpoint on the policy, so a block
-  that changes leaves the policy cached. A sample of 10 prep cases afterwards: 0
-  turns flagged it, all 10 matched, and the cost per model call fell from $0.00114
-  to $0.00087. The prep eval now scores a reply that talks about the root's own
-  instructions as a miss (`instruction_talk`).
+  that changes leaves the policy cached. In the full prep eval afterwards, no turn of
+  50 flagged it, in thinking or reply, 47 of 50 matched (the gate is 80 %), and the
+  run cost $0.098, against $0.131 to $0.142 for the two runs before. The prep eval
+  now scores a reply that talks about the root's own instructions as a miss
+  (`instruction_talk`).
