@@ -154,6 +154,12 @@ export interface DatasetParsed {
    * for the assistant after its checks; absent from an older server.
    */
   context_lines?: string[];
+  /**
+   * The name of the file the data was dropped from, as the server screened it
+   * (`(name withheld)` when it refused it); absent for pasted or computed data.
+   * Never a note: the assistant reads it as data, never as a request.
+   */
+  file_name?: string;
   /** Every role of the spec; absent from an agents service older than this field. */
   roles?: RoleSpec[];
   /**
@@ -192,6 +198,8 @@ export interface DatasetChanged {
   warnings: string[];
   /** The notes pasted with the data, carried over to every version made from it. */
   context_lines?: string[];
+  /** The dropped file's name, carried over like the notes. */
+  file_name?: string;
   /**
    * Every role of the spec, at most `MAX_DONE_ROLES`; absent from an agents
    * service older than this field, and dropped whole when one entry is malformed.
@@ -657,12 +665,19 @@ export const agentApi = {
    * stores nothing: the chat's `generate_data` computes such a table. Code that
    * generates data (Python, JavaScript, R) answers `422 code` the same way: the
    * chat's `run_data_code` runs it.
+   * `source` is the name of the file the text was read from (a drop, `.open()`,
+   * a pasted file): it travels beside the text, which stays as in the file; the
+   * server screens it and answers it as `file_name`, never as a note.
    */
-  uploadDataset: (token: string, sid: string, text: string, confirmed = false) =>
+  uploadDataset: (token: string, sid: string, text: string, confirmed = false, source?: string) =>
     agentJson<DatasetAnswer>(
       `${sessionPath(sid)}/dataset`,
       token,
-      post(confirmed ? { text, confirmed: true } : { text })
+      post({
+        text,
+        ...(confirmed ? { confirmed: true } : {}),
+        ...(source ? { source } : {}),
+      })
     ),
   putBindings: (token: string, sid: string, bindings: Binding[]) =>
     agentJson<BindingsApplied>(`${sessionPath(sid)}/bindings`, token, {
@@ -991,6 +1006,9 @@ function datasetChanged(value: unknown): DatasetChanged | null {
     bindings,
     warnings: strings(value.warnings),
     context_lines: strings(value.context_lines),
+    ...(typeof value.file_name === 'string' && value.file_name
+      ? { file_name: value.file_name }
+      : {}),
     ...(roles ? { roles } : {}),
     ...(typeof value.code === 'string' && value.code ? { code: value.code } : {}),
     suggestion: longSuggestion(value.suggestion),

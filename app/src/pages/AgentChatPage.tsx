@@ -551,8 +551,9 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
               the thread, so the header sticks over all of it. */}
           <DataPanel
             state={state}
-            onParse={text => void session.parseData(text)}
+            onParse={(text, source) => void session.parseData(text, false, source)}
             onConfirmTranscription={() => void session.confirmTranscription()}
+            onTrack={trackEvent}
             onDiscardTranscription={session.discardTranscription}
             onSendFormula={() => void session.sendFormula()}
             onBind={session.setBinding}

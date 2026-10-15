@@ -60,6 +60,11 @@ class StoredDataset:
     source: str | None = None
     """Where a computed table comes from, written by the server (`dataset_context.generated_source` for
     `generate_data`, `code_source` for `run_data_code`); the versions made from it carry it on, a paste has none."""
+    file_name: str | None = None
+    """The name of the file the user dropped for this data, sanitised and screened at the dataset route
+    (`main._screen_file_name`; `dataset_context.FILE_NAME_WITHHELD` when the screen refused it); None for text pasted or
+    computed. Never a note: the root reads it fenced as data, a name and never a request. A change of the data
+    carries it on, a computed table (`generate_data`, `run_data_code`) does not (`push_version`)."""
 
     def as_parsed(self) -> ParsedDataset:
         """The dataset as `parse_dataset` returned it (the profile's warnings are the parse's), for `apply_operations`."""
@@ -98,11 +103,19 @@ class DatasetStore:
     def __len__(self) -> int:
         return len(self._datasets)
 
-    def put(self, session_id: str, parsed: ParsedDataset, *, code: str | None = None, source: str | None = None) -> str:
-        """Store a parsed dataset (the code that computed it, and where it comes from) for `session_id` and
-        return its new id; raises `StoreFull` past the cap."""
+    def put(
+        self,
+        session_id: str,
+        parsed: ParsedDataset,
+        *,
+        code: str | None = None,
+        source: str | None = None,
+        file_name: str | None = None,
+    ) -> str:
+        """Store a parsed dataset (the code that computed it, where it comes from, the dropped file's name) for
+        `session_id` and return its new id; raises `StoreFull` past the cap."""
         size = dataset_size(parsed) + sum(
-            len(text.encode("utf-8", errors="surrogatepass")) for text in (code, source) if text
+            len(text.encode("utf-8", errors="surrogatepass")) for text in (code, source, file_name) if text
         )
         if self._used_bytes + size > self.max_bytes:
             raise StoreFull(f"the dataset store is full ({self._used_bytes} of {self.max_bytes} bytes used)")
@@ -125,6 +138,7 @@ class DatasetStore:
             context_lines=list(parsed.context_lines),
             code=code,
             source=source,
+            file_name=file_name,
         )
         self._used_bytes += size
         return dataset_id

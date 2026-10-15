@@ -19,6 +19,9 @@ with a change list, and the user can undo. The state keys (`session_state.py`):
   before the change.
 * The notes pasted with the data (`StoredDataset.context_lines`) travel with every version
   made from it (`push_version`); a new paste replaces them, an undo restores the version's own.
+  The dropped file's name (`StoredDataset.file_name`) travels with a change of the data
+  (`prepare_data`, `.to_long()`) and an undo restores the version's own, but a computed
+  table (`generate_data`, `run_data_code`) drops it: it is no longer the file's data.
 
 `dataset_payload` is the shape every dataset answer shares: the `/dataset` and
 `/dataset/undo` routes (plus `roles`) and the `done` event's `dataset` (plus
@@ -75,6 +78,8 @@ def dataset_payload(stored: StoredDataset, bindings: list[Binding], version: int
     }
     if stored.code is not None:
         payload["code"] = stored.code
+    if stored.file_name is not None:
+        payload["file_name"] = stored.file_name
     return payload
 
 
@@ -104,12 +109,17 @@ def push_version(
     of the data (`prepare_data`) carries the current version's on.
     """
     current = store.get(view.dataset_id, session_id) if view.dataset_id else None
+    file_name = None
     if current is not None:
         parsed = replace(parsed, context_lines=list(current.context_lines))
+        # The dropped file's name stays with a change of that file's data (`prepare_data`, `.to_long()`); a
+        # computed table (`generate_data`, `run_data_code`, which always say where it comes from) is no longer
+        # the file's, so the name would mislabel it.
+        file_name = current.file_name if source is None else None
         if source is None:
             source = current.source
     # `code` (`run_data_code`'s Python) belongs to this version only, never carried to the next.
-    dataset_id = store.put(session_id, parsed, code=code, source=source)
+    dataset_id = store.put(session_id, parsed, code=code, source=source, file_name=file_name)
     history = [*view.dataset_history, view.dataset_id] if view.dataset_id else list(view.dataset_history)
     for old in history[:-MAX_DATASET_HISTORY]:
         store.delete(old, session_id)

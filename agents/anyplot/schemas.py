@@ -107,6 +107,8 @@ EXPECTED_TEXTS: TypeAdapter[list[ExpectedText]] = TypeAdapter(list[ExpectedText]
 EXPECTED_TEXT: TypeAdapter[ExpectedText] = TypeAdapter(ExpectedText)
 MAX_DATASET_CONTEXT_CHARS = 1_600
 """The dataset context block (`dataset_context.MAX_CONTEXT_CHARS`, 1,500) with room to spare."""
+MAX_FILE_NAME_CHARS = 80
+"""A dropped file's name as the session keeps it (`opening.source_name` cuts it to this)."""
 MAX_SHOWN_TEXT_CHARS = 80
 """One drawn text in `PlotShows.texts`."""
 
@@ -295,6 +297,9 @@ class AdaptRequest(_ServerContract):
     """The texts and number formats the user asked to see in the plot (`PipelineArgs.expected_texts`)."""
     dataset_context: str = Field(default="", max_length=MAX_DATASET_CONTEXT_CHARS)
     """The screened notes pasted with the data and the source of a computed table (`dataset_context.py`)."""
+    file_name: str = Field(default="", max_length=MAX_FILE_NAME_CHARS)
+    """The screened name of the file the data was dropped from (`StoredDataset.file_name`), empty when none or
+    withheld: a hint at the subject, fenced on its own as data, never among the notes."""
 
 
 # --- Review ----------------------------------------------------------------------------
@@ -316,6 +321,8 @@ class ReviewRequest(_ServerContract):
     """The session language, against which VQ-06 judges the plot's own text."""
     dataset_context: str = Field(default="", max_length=MAX_DATASET_CONTEXT_CHARS)
     """The screened notes pasted with the data and the source of a computed table (`dataset_context.py`)."""
+    file_name: str = Field(default="", max_length=MAX_FILE_NAME_CHARS)
+    """The screened name of the dropped file, as for `AdaptRequest.file_name`."""
 
 
 class Defect(_ModelOutput):

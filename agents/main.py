@@ -12,7 +12,7 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `GET /v1/eligibility?spec=&library=` | | `{eligible, status, reasons}` | |
 | `POST /v1/sessions` | `{user, spec_id, library, locale, snapshot}` | `{session_id, eligibility}` | `422 not_eligible` |
 | `POST /v1/sessions/{sid}/library` | `{library, snapshot}` | `{session_id, eligibility}` | `422 not_eligible`, `409 run_active` |
-| `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?}` | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version, language}` (`suggestion`: the wide-table offer of `data/shape.py`, or null; `context_lines`: the notes pasted above or below the table that passed the pre-filter and the scope judge, which the root gets with the next `summarize_data` turn; `language`: the session language as `{language, source}`, which a paste before any typed message or choice sets from the notes' or the column names' language, source `pasted`), stored as version 1 (the undo history of an earlier paste is dropped); or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips that fallback and keeps every row) | `413 too_long`, `422 unparseable`, `422 formula` (text of at most 2,000 characters that asks for a formula, which the chat's `generate_data` computes; never transcribed), `403 data_refused`, `403 session_closed` (the scope judge closed the session), `409 run_active` (a turn of the user in any session, or another paste of the user in flight), `429 rate_limited` / `429 daily_limit` (`AGENT_USER_PASTES_PER_MINUTE` / `_PER_DAY`, or the daily token budgets for `daily_limit`), `429 locked_out` (the day's `attack` strikes), `503 guard_unavailable` |
+| `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?, source?}` (`source`: the name of the file the page read the text from, at most 1,024 characters; screened on its own, never a note) | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version, language, file_name?}` (`file_name`: the dropped file's name as the session keeps it, `(name withheld)` when the screen refused it; `suggestion`: the wide-table offer of `data/shape.py`, or null; `context_lines`: the notes pasted above or below the table that passed the pre-filter and the scope judge, which the root gets with the next `summarize_data` turn; `language`: the session language as `{language, source}`, which a paste before any typed message or choice sets from the notes' or the column names' language, source `pasted`), stored as version 1 (the undo history of an earlier paste is dropped); or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips that fallback and keeps every row) | `413 too_long`, `422 unparseable`, `422 formula` (text of at most 2,000 characters that asks for a formula, which the chat's `generate_data` computes; never transcribed), `403 data_refused`, `403 session_closed` (the scope judge closed the session), `409 run_active` (a turn of the user in any session, or another paste of the user in flight), `429 rate_limited` / `429 daily_limit` (`AGENT_USER_PASTES_PER_MINUTE` / `_PER_DAY`, or the daily token budgets for `daily_limit`), `429 locked_out` (the day's `attack` strikes), `503 guard_unavailable` |
 | `PUT /v1/sessions/{sid}/bindings` | `[{role, column}]` | `{bindings, complete, missing_roles, warnings}`: `warnings` names a role that needs values of 0 or more bound to a column with a negative value, or left open for that reason (`data/signs.py`); never a refusal | `409 run_active`, `422 invalid` (with `errors`, at most 20 lines) |
 | `PUT /v1/sessions/{sid}/language` | `{language}` (a short name or code, `^[A-Za-z][A-Za-z -]{0,39}$`) | `{language, source}`: the session language in its stored form (`English` is `en`), source `chosen`, which detection never overrides | `409 run_active`, `422` (the pattern) |
 | `POST /v1/sessions/{sid}/dataset/confirm` | | `{confirmed, rows, columns}`: step 1 of two, the user confirmed the dataset with its bindings; the pipeline runs only then | `409 run_active`, `422 no_dataset` |
@@ -69,7 +69,12 @@ are the user's data and pass. A pre-filter hit or any refusing part is
 judge's verdict apart); a part the judge cannot answer is `503 guard_unavailable`.
 The notes pasted around the table (`context_lines`) go through the same pre-filter and
 then the scope judge (`_screen_notes`); any refusal or outage there drops only the notes,
-with a warning, never the table, and is never a strike.
+with a warning, never the table, and is never a strike. A dropped file's name (`source`) is
+never a note and never part of the text: sanitised (`opening.source_name`), it goes through
+the same pre-filter and then its own scope-judge call (`_screen_file_name`), and the session
+keeps it as `StoredDataset.file_name` (`(name withheld)` after a refusal or an outage, no
+strike, the notes untouched). The root reads it fenced as data, never as a request; its
+judge's `lang` never sets the session language; it is never logged.
 
 The dataset answer lists the spec's data roles as `roles`, each
 `{name, kinds, required, variadic, description, non_negative}`, so a client can offer a column
@@ -131,6 +136,7 @@ from agents.anyplot.data.roles import DataRole
 from agents.anyplot.data.shape import long_suggestion
 from agents.anyplot.data.store import StoreFull
 from agents.anyplot.data.transcribe import looks_like_free_text, table_to_csv, transcribable
+from agents.anyplot.dataset_context import FILE_NAME_WITHHELD
 from agents.anyplot.dataset_guard import DataRefused, GuardUnavailable, check_dataset
 from agents.anyplot.dataset_versions import dataset_payload, push_version, undo_version
 from agents.anyplot.dev_fixture import FixtureError, load_case
@@ -147,19 +153,22 @@ from agents.anyplot.language import (
 from agents.anyplot.models import JudgeUnavailable
 from agents.anyplot.opening import (
     INSTRUCTION_LIKE,
+    MAX_SOURCE_RAW_CHARS,
     NOTES_INSTRUCTION_WARNING,
     NOTES_REFUSED_WARNING,
     NOTES_UNCHECKED_WARNING,
     Eligibility,
     assess,
+    file_name_judge_input,
     notes_instruction_like,
     notes_judge_input,
     opening_state,
+    source_name,
     store_dataset,
 )
 from agents.anyplot.plugins.ledger import CURRENT_LEDGER, RequestLedger, attribution, budget_allows, judge_budget_tokens
 from agents.anyplot.plugins.scope_guard import LOCKED_OUT, SESSION_CLOSED, scope_refusals
-from agents.anyplot.policy import fence, refusal, scope_rubric, transcribe_rubric, user_notes_block
+from agents.anyplot.policy import fence, file_name_block, refusal, scope_rubric, transcribe_rubric, user_notes_block
 from agents.anyplot.render.serial import RenderBusy
 from agents.anyplot.render.store import RenderStoreFull
 from agents.anyplot.render.watermark import add_footer
@@ -619,6 +628,10 @@ class DatasetBody(_Body):
     route never hands it to the transcriber again, so a one-column reading can be stored,
     and the parse keeps every row of it (no `table_block` narrowing: the user has seen the
     table row by row); the pre-filter, the judge and the store run as for any paste."""
+    source: str | None = Field(default=None, min_length=1, max_length=MAX_SOURCE_RAW_CHARS)
+    """The name of the file the page read `text` from (a drop, `.open()` or a pasted file), as the browser
+    gave it. Screened on its own (`_screen_file_name`) and kept as `StoredDataset.file_name`, never as a
+    note; the text itself is the file's, unchanged. Never logged."""
 
 
 class BindingBody(_Body):
@@ -844,6 +857,8 @@ async def _ingest_paste(
     notes_lang = None
     if parsed.context_lines:
         parsed, notes_lang = await _screen_notes(services, ledger, parsed)
+    # The name is screened apart from the notes and its `lang` is not read: neither can cost the other.
+    file_name = await _screen_file_name(services, ledger, body.source) if body.source is not None else None
     try:
         ingested = store_dataset(
             services.datasets,
@@ -853,6 +868,7 @@ async def _ingest_paste(
             previous_id=view.dataset_id,
             history=view.dataset_history,
             notes_screened=True,  # `_screen_notes` above kept only the notes that passed
+            file_name=file_name,
         )
     except StoreFull:
         raise AgentsError(503, "capacity") from None
@@ -883,9 +899,45 @@ async def _ingest_paste(
             "suggestion": _suggestion(view, parsed.profile),
             "version": 1,
             "language": {"language": language, "source": language_source},
+            **({"file_name": file_name} if file_name is not None else {}),
         },
         headers=_NO_STORE,
     )
+
+
+async def _screen_file_name(services: Services, ledger: RequestLedger, raw: str) -> str | None:
+    """A dropped file's name as the session keeps it: sanitised, then screened like a note, on its own.
+
+    None when nothing readable is left (`source_name`). The pre-filter (`INSTRUCTION_LIKE`) runs on
+    the name alone, then the scope judge on one `source file: <name>` line (`file_name_judge_input`),
+    always, also for a name that looks harmless (owner decision of 2026-10-15). A hit, a verdict
+    other than `in_scope` or no verdict keeps `FILE_NAME_WITHHELD` instead: the notes and the table
+    are untouched, and it is never a strike, as for the notes (a file's name is often someone
+    else's). The judge's `lang` is ignored: a name such as `datos_2025.csv` must not set the session
+    language of a German table. Kept names still reach the root only fenced as data with a preamble
+    that says a name is never a request (`policy.file_name_block`), because the scope judge passes
+    plot wishes, and a name that reads like one ("drop rows where…") was not written to the root.
+    The judge's tokens are the user's; the `file_name_judge` attribution line carries the verdict
+    and the length, never the name.
+    """
+    name = source_name(raw)
+    if name is None:
+        return None
+    chars = len(name)
+    if notes_instruction_like([name]):
+        attribution("file_name_judge", ledger, verdict="prefilter", chars=chars)
+        return FILE_NAME_WITHHELD
+    try:
+        answer = await services.judge.judge(file_name_judge_input(name), scope_rubric())
+    except JudgeUnavailable:
+        attribution("file_name_judge", ledger, verdict="guard_unavailable", chars=chars)
+        return FILE_NAME_WITHHELD
+    services.usage.add_tokens(
+        ledger.user_id,
+        judge_budget_tokens(answer.tokens, answer.input_tokens, answer.output_tokens, get_settings().judge_model),
+    )
+    attribution("file_name_judge", ledger, verdict=answer.verdict, judge_tokens=answer.tokens, chars=chars)
+    return name if answer.verdict == "in_scope" else FILE_NAME_WITHHELD
 
 
 async def _screen_notes(
@@ -1355,6 +1407,9 @@ async def post_message(
             # The notes pasted with the table, judged at the paste (`_screen_notes`): the root sees them with the
             # summary turn that follows every paste, so it can act on a request in them at once.
             text = f"{text}\n\n{user_notes_block(stored.context_lines)}"
+        if stored is not None and stored.file_name:
+            # A dropped file's name, screened at the paste (`_screen_file_name`): fenced as data, never a note.
+            text = f"{text}\n\n{file_name_block(stored.file_name)}"
     message = types.Content(role="user", parts=[types.Part(text=text)])
 
     async def stream() -> AsyncIterator[str]:

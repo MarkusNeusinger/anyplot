@@ -283,6 +283,11 @@ export interface TranscriptionState {
   note: string;
   /** UTF-8 size of the pasted text it was read from, for the analytics bucket. */
   bytes: number;
+  /**
+   * The name of the file the text was read from, if it was: `.use()` sends it
+   * with the table, also after the box was cleared or edited meanwhile.
+   */
+  source?: string;
 }
 
 /** Binding name (`x`, `y1`) to column; only bound names are present. */
@@ -1511,7 +1516,7 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
    * stores nothing and asks for no summary.
    */
   const parseData = useCallback(
-    async (text: string, confirmed = false) => {
+    async (text: string, confirmed = false, source?: string) => {
       const sid = stateRef.current.sessionId;
       if (!sid || !text.trim() || busy()) return;
       const bytes = utf8Bytes(text);
@@ -1525,7 +1530,7 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
       parseRef.current = true;
       safeDispatch({ type: 'parse_start' });
       try {
-        const parsed = await agentApi.uploadDataset(token, sid, text, confirmed);
+        const parsed = await agentApi.uploadDataset(token, sid, text, confirmed, source);
         if (isTranscribed(parsed)) {
           // Free text read into a table: shown for the user to confirm, not stored.
           safeDispatch({
@@ -1537,6 +1542,7 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
               warnings: parsed.warnings ?? [],
               note: typeof parsed.note === 'string' ? parsed.note : '',
               bytes,
+              ...(source ? { source } : {}),
             },
           });
           trackEvent('agent_data_parsed', { status: 'transcribed', size_bucket: bucket });
@@ -1590,7 +1596,8 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
   const confirmTranscription = useCallback(() => {
     const transcription = stateRef.current.transcription;
     if (!transcription) return Promise.resolve();
-    return parseData(transcription.text, true);
+    // The file's name travels with the table it was read from, whatever the box holds now.
+    return parseData(transcription.text, true, transcription.source);
   }, [parseData]);
 
   /**

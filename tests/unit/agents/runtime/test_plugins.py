@@ -1132,7 +1132,7 @@ class TestToolSafety:
         from agents.anyplot.data.parse import MAX_CONTEXT_CHARS
         from agents.anyplot.data.store import DatasetStore
         from agents.anyplot.dev_fixture import snapshot_from_repo
-        from agents.anyplot.opening import store_dataset
+        from agents.anyplot.opening import MAX_SOURCE_NAME_CHARS, store_dataset
         from agents.anyplot.session_state import initial_state
         from agents.anyplot.tools.session import get_dataset_profile
 
@@ -1146,7 +1146,11 @@ class TestToolSafety:
         state = initial_state(
             spec_id="scatter-basic", library="matplotlib", locale="en", snapshot=snapshot, normalised="", readiness={}
         )
-        state.update(store_dataset(store, "s", parsed, snapshot, notes_screened=True).state_delta())
+        # A dropped file's name at its cap, of four-byte characters (review of #12192: the plugin path).
+        file_name = "\N{GRINNING FACE}" * MAX_SOURCE_NAME_CHARS
+        state.update(
+            store_dataset(store, "s", parsed, snapshot, notes_screened=True, file_name=file_name).state_delta()
+        )
         set_services(Services(datasets=store, judge_factory=FakeJudge))
         try:
             result = await get_dataset_profile(SimpleNamespace(state=state, session=SimpleNamespace(id="s")))
@@ -1154,8 +1158,14 @@ class TestToolSafety:
             set_services(None)
 
         assert result["user_notes"].count("</user_notes>") == 1 and notes[1] in result["user_notes"]
+        assert result["file_name"].count("</user_data>") == 1 and file_name in result["file_name"]
         assert all(name in result["profile"] for name in names)
         assert result_size(result) <= result_limit("get_dataset_profile")
+        # Through the plugin the root's tool calls pass: the key is allowed and the size fits.
+        checked = await ToolSafetyPlugin().after_tool_callback(
+            tool=FakeTool("get_dataset_profile"), tool_args={}, tool_context=FakeContext(), result=result
+        )
+        assert checked is None  # passed unchanged
 
     async def test_pipeline_notes_are_fenced_for_the_root(self, ledger: RequestLedger) -> None:
         widest = {

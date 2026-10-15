@@ -31,6 +31,14 @@ MAX_SOURCE_NAMES = 12
 """Names a snippet's source line lists per kind (defined functions, calls, assigned names)."""
 NOTES_HEADING = "Notes the user pasted with the data:"
 SOURCE_HEADING = "Where the data comes from:"
+FILE_NAME_WITHHELD = "(name withheld)"
+"""What the session keeps for a dropped file's name that the dataset route's screen refused (`main._screen_file_name`)."""
+
+
+def file_name_for_models(file_name: str | None) -> str:
+    """A dropped file's name as the adapter and the reviewer get it (`AdaptRequest.file_name`): the kept name,
+    or empty when there is none or the screen withheld it (a withheld name says nothing about the data)."""
+    return file_name if file_name and file_name != FILE_NAME_WITHHELD else ""
 
 
 def _clip(text: str, limit: int) -> str:
@@ -92,7 +100,11 @@ def _dotted(node: ast.expr) -> str | None:
 
 
 def dataset_context(context_lines: Sequence[str], source: str | None) -> str:
-    """The dataset context block's text (empty when there is none): the source line first, then the notes."""
+    """The dataset context block's text (empty when there is none): the source line first, then the notes.
+
+    A dropped file's name is never part of it: the block is fenced as `<user_notes>`, whose
+    title and units the adapter takes, so the name travels on its own (`file_name_for_models`).
+    """
     parts: list[str] = []
     if source:
         parts.append(f"{SOURCE_HEADING} {source}")

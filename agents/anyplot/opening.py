@@ -15,6 +15,9 @@
 * `notes_instruction_like(lines)` and `notes_judge_input(lines)` do the same for the
   notes pasted around the table (`ParsedDataset.context_lines`): the pre-filter, then
   the scope judge. A refusal there drops only the notes, never the table.
+* `source_name(raw)` sanitises the name of a dropped file (`source`), and
+  `file_name_judge_input(name)` is its own scope-judge input. The name is never a note:
+  the session keeps it as `StoredDataset.file_name`, and the root reads it fenced as data.
 
 Used by the `/v1` routes and by the development fixture seed, so a seeded session is
 exactly what the routes would have built. No ADK import.
@@ -25,6 +28,7 @@ import csv
 import io
 import json
 import re
+import unicodedata
 from collections import Counter
 from collections.abc import Sequence
 from dataclasses import dataclass, field, replace
@@ -37,7 +41,7 @@ from .data.bindings import default_bindings
 from .data.parse import ParsedDataset, display_copy, parse_dataset, with_constant_columns
 from .data.store import DatasetStore
 from .policy import fence
-from .schemas import MAX_SAMPLE_ROWS, MAX_TOP_VALUES, Binding
+from .schemas import MAX_FILE_NAME_CHARS, MAX_SAMPLE_ROWS, MAX_TOP_VALUES, Binding
 from .session_state import (
     BINDINGS,
     DATASET_HISTORY,
@@ -127,6 +131,7 @@ def store_dataset(
     notes_screened: bool = False,
     code: str | None = None,
     source: str | None = None,
+    file_name: str | None = None,
 ) -> IngestedDataset:
     """Store a parsed dataset for a session, replacing its previous one and its history; raises `StoreFull`.
 
@@ -135,14 +140,15 @@ def store_dataset(
     other path (a fixture seed, an eval's ingest) stores the table without them, so no unjudged
     note ever reaches the root (#12168 review). `code` is the Python that computed the table
     (`run_data_code`), kept with the version for the data panel; `source` says where a computed
-    table comes from (`dataset_context`), for the adapter's and the reviewer's dataset context.
+    table comes from (`dataset_context`), for the adapter's and the reviewer's dataset context;
+    `file_name` is the dropped file's name as the route screened it (`StoredDataset.file_name`).
     """
     if not notes_screened:
         # Constant columns whose values went into the notes come back as columns, so the values survive.
         parsed = with_constant_columns(parsed)
         if parsed.context_lines:
             parsed = replace(parsed, context_lines=[])
-    dataset_id = store.put(session_id, parsed, code=code, source=source)
+    dataset_id = store.put(session_id, parsed, code=code, source=source, file_name=file_name)
     for old in (previous_id, *history):
         if old and old != dataset_id:
             store.delete(old, session_id)
@@ -229,6 +235,59 @@ def notes_instruction_like(lines: Sequence[str]) -> bool:
     injection in a copied web table usually spans the lines around a harmless one.
     """
     return bool(lines) and INSTRUCTION_LIKE.search("\n".join(lines)) is not None
+
+
+MAX_SOURCE_NAME_CHARS = MAX_FILE_NAME_CHARS
+"""The longest file name the session keeps (80); a longer one keeps its start and its extension around a `…`."""
+
+MAX_SOURCE_RAW_CHARS = 1_024
+"""The longest `source` the dataset route accepts before sanitising (a file name is at most 255 bytes on
+the common file systems; a browser that sends a path sends more)."""
+
+_MAX_EXTENSION_CHARS = 10
+
+
+def source_name(raw: str) -> str | None:
+    """A dropped file's name as the session may keep it, or None when nothing readable is left.
+
+    NFC, then every control character (`Cc`: tabs, line breaks, escapes) and line or
+    paragraph separator turned into a space, every other invisible character (`Cf`: bidi
+    marks, zero-width characters; surrogates, private-use and unassigned characters)
+    removed, and whitespace runs collapsed; a path keeps its last part. A name longer than
+    `MAX_SOURCE_NAME_CHARS` keeps its start and its extension around a `…`, so
+    `report-2026-….csv` still says what kind of file it was.
+    """
+    kept: list[str] = []
+    for char in unicodedata.normalize("NFC", raw):
+        category = unicodedata.category(char)
+        if category in ("Cc", "Zl", "Zp"):
+            kept.append(" ")
+        elif not category.startswith("C"):
+            kept.append(char)
+    name = " ".join("".join(kept).split())
+    name = re.split(r"[\\/]", name)[-1].strip()
+    if not name:
+        return None
+    if len(name) <= MAX_SOURCE_NAME_CHARS:
+        return name
+    stem, dot, extension = name.rpartition(".")
+    if dot and stem and 0 < len(extension) <= _MAX_EXTENSION_CHARS and " " not in extension:
+        base, suffix = stem, f".{extension}"
+    else:
+        base, suffix = name, ""
+    room = MAX_SOURCE_NAME_CHARS - len(suffix) - 1  # the `…`
+    tail = room // 3
+    return f"{base[: room - tail].rstrip()}…{base[-tail:].lstrip()}{suffix}"
+
+
+def file_name_judge_input(name: str) -> str:
+    """The scope judge's input for a dropped file's name: one `source file: <name>` line inside `<user_notes>`.
+
+    Judged on its own call, never with the notes: a refused name must not take the user's
+    notes with it, and the name's `lang` must not set the session language. The rubric
+    (`scope_judge.md`) reads such a line as an ordinary note about the data.
+    """
+    return fence("user_notes", f"source file: {name}")
 
 
 def notes_judge_input(lines: Sequence[str]) -> str:

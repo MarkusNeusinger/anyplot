@@ -601,6 +601,42 @@ class TestBodies:
         assert plain.status_code == 200
         assert upstream.last_json == {"text": "a,b\n1,2\n"}
 
+    def test_dataset_source_is_forwarded_only_when_set(self, client, upstream) -> None:
+        """A dropped file's name travels as `source`, beside the text, never inside it."""
+        dropped = client.post(
+            "/debug/agent/sessions/s1/dataset",
+            json={"text": "a,b\n1,2\n", "source": "sales.csv"},
+            headers=CLIENT_HEADERS,
+        )
+        assert dropped.status_code == 200
+        assert upstream.last_json == {"text": "a,b\n1,2\n", "source": "sales.csv"}
+
+        used = client.post(
+            "/debug/agent/sessions/s1/dataset",
+            json={"text": "a,b\n1,2\n", "confirmed": True, "source": "notes.txt"},
+            headers=CLIENT_HEADERS,
+        )
+        assert used.status_code == 200
+        assert upstream.last_json == {"text": "a,b\n1,2\n", "confirmed": True, "source": "notes.txt"}
+
+    @pytest.mark.parametrize("source", ["", "x" * 1_025, 42])
+    def test_dataset_source_out_of_bounds_is_refused(self, client, upstream, source) -> None:
+        response = client.post(
+            "/debug/agent/sessions/s1/dataset", json={"text": "a,b\n1,2\n", "source": source}, headers=CLIENT_HEADERS
+        )
+        assert response.status_code == 422
+        assert upstream.requests == []
+
+    def test_dataset_body_takes_no_other_field(self, client, upstream) -> None:
+        """The body is an allowlist: a file's bytes or its type cannot ride along."""
+        response = client.post(
+            "/debug/agent/sessions/s1/dataset",
+            json={"text": "a,b\n1,2\n", "source": "sales.csv", "encoding": "utf-8"},
+            headers=CLIENT_HEADERS,
+        )
+        assert response.status_code == 422
+        assert upstream.requests == []
+
     def test_dataset_confirm_is_forwarded_without_a_body(self, client, upstream) -> None:
         """Step 1 of two: `.confirm()` posts to the agents service's confirm route and relays its answer."""
         upstream.handler = lambda request: httpx.Response(200, json={"confirmed": True, "rows": 3, "columns": 2})

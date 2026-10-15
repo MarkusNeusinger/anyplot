@@ -67,9 +67,22 @@
  * about the columns) are left out of the table but kept as notes the assistant
  * reads with the data. A `# notes sent to the assistant` block under the
  * warnings lists the ones the server kept, collapsed behind `.show()`.
+ *
+ * A text file comes in three ways: dropped on the box, chosen with `.open()`
+ * (the keyboard's and the phone's way), or pasted as a file. The browser
+ * reads it (`fileText.ts`: binary formats answered by name, the encoding
+ * found, the size checked) and fills the box with the text exactly as in the
+ * file; the user checks it and presses `.parse()`, which takes the focus. A
+ * box with text asks first (`.replace()` / `.keep()`), a running step refuses
+ * the file, and a live line says what was read. The file's name travels as the
+ * dataset route's `source` field, never in the text. The server screens it and
+ * keeps it apart from the notes (the assistant reads it as data, never as a
+ * request); the data line shows it. Typing keeps the name, a text paste or an
+ * empty box drops it; a table read from the file keeps it for `.use()`.
+ * Several files at once: the first is read, and the line says so.
  */
 
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import Box from '@mui/material/Box';
 import GlobalStyles from '@mui/material/GlobalStyles';
@@ -92,7 +105,19 @@ import {
 } from 'src/lib/agent';
 import { bindingRows, kindsHint, signHint } from 'src/sections/agent-chat/bindings';
 import { Ellipsis } from 'src/sections/agent-chat/Ellipsis';
-import { CONFIRM_LOST_TEXT, describeDataFailure } from 'src/sections/agent-chat/messages';
+import {
+  FILE_ACCEPT,
+  type FileEncoding,
+  type FileKind,
+  type FileReading,
+  readFile,
+} from 'src/sections/agent-chat/fileText';
+import {
+  CONFIRM_LOST_TEXT,
+  describeDataFailure,
+  describeFileRefusal,
+  FILE_BUSY_TEXT,
+} from 'src/sections/agent-chat/messages';
 import { inStep2 } from 'src/sections/agent-chat/steps';
 import {
   actionButtonSx,
@@ -568,9 +593,30 @@ function LongHint({ suggestion, canApply, busy, error, onApply }: LongHintProps)
   );
 }
 
+/** Whether a drag carries files (not text dragged from the page or another app). */
+function dragHasFiles(transfer: DataTransfer | null): boolean {
+  return !!transfer && Array.from(transfer.types ?? []).includes('Files');
+}
+
+/** What the server keeps for a file's name its content check refused (`dataset_context.FILE_NAME_WITHHELD`). */
+const FILE_NAME_WITHHELD = '(name withheld)';
+
+/** A file read and waiting for the user's `.replace()` because the box holds text. */
+interface PendingFile {
+  name: string;
+  reading: Extract<FileReading, { ok: true }>;
+  /** How many files came with it; only the first is read. */
+  of: number;
+}
+
+/** What happened to a dropped, chosen or pasted file, for `agent_data_file`. */
+type FileOutcome = 'filled' | 'replaced' | 'kept' | 'refused' | 'too_large' | 'busy' | 'unreadable';
+
 interface DataPanelProps {
   state: AgentSessionState;
-  onParse: (text: string) => void;
+  /** `.parse()`; `source` is the name of the file the text was read from, if it was. */
+  onParse: (text: string, source?: string) => void;
+  /** `.use()` on a transcription; the session keeps the file's name with the table it was read from. */
   onConfirmTranscription: () => void;
   onDiscardTranscription: () => void;
   /** `.send()` next to a refused formula: the refused text goes to the chat as a turn. */
@@ -588,6 +634,8 @@ interface DataPanelProps {
    */
   confirmRef?: React.Ref<HTMLButtonElement>;
   decisionRef?: React.Ref<HTMLButtonElement>;
+  /** Analytics: `agent_data_file{kind, encoding, outcome}`; never the file's name. */
+  onTrack?: (event: string, props?: Record<string, string | undefined>) => void;
 }
 
 export function DataPanel({
@@ -603,8 +651,27 @@ export function DataPanel({
   toggleRef,
   confirmRef,
   decisionRef,
+  onTrack,
 }: DataPanelProps) {
   const [text, setText] = useState('');
+  // The name of the file the box's text came from; typing keeps it, a text paste or an empty box drops it.
+  const [source, setSource] = useState<string | null>(null);
+  const [dragOver, setDragOver] = useState(false);
+  const dragDepth = useRef(0);
+  // The line under the box after a file: what was read (a live status), or why it was not (an alert).
+  const [fileNotice, setFileNotice] = useState<{ tone: 'ok' | 'error'; text: string } | null>(null);
+  const [pendingFile, setPendingFile] = useState<PendingFile | null>(null);
+  // Bumped by each fill, so the effect below hands the focus to `.parse()` even for the same text again.
+  const [fills, setFills] = useState(0);
+  const parseButtonRef = useRef<HTMLButtonElement>(null);
+  const replaceButtonRef = useRef<HTMLButtonElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const boxRef = useRef<HTMLTextAreaElement>(null);
+  // Counts file reads, so the result of a superseded one is dropped.
+  const readSeq = useRef(0);
+  // The box's text as of the last render, for a file read that ends after an edit.
+  const textRef = useRef(text);
+  textRef.current = text;
   // Step 2 only: whether the full card shows below the pinned header.
   const [expanded, setExpanded] = useState(false);
   const cardRef = useRef<HTMLElement>(null);
@@ -686,6 +753,173 @@ export function DataPanel({
     onConfirmTranscription();
   };
 
+  // `.parse()`: the file's name rides along only when the text came from a file.
+  const handleParse = () => {
+    if (source) onParse(text, source);
+    else onParse(text);
+  };
+
+  const trackFile = (
+    kind: FileKind | 'unknown',
+    encoding: FileEncoding | null,
+    outcome: FileOutcome
+  ) => onTrack?.('agent_data_file', { kind, encoding: encoding ?? 'none', outcome });
+
+  // The file's text goes into the box as it is; the user reads it and presses `.parse()`.
+  const fillFromFile = ({ name, reading, of }: PendingFile, outcome: FileOutcome) => {
+    // A table read from the box's earlier text belongs to that text: it goes, so `.use()`
+    // never stores it under this file's name and `.parse()` is free for the new text. The
+    // card stays open, also when dropping the table takes the page back to step 2.
+    if (transcription) {
+      setExpanded(true);
+      onDiscardTranscription();
+    }
+    setText(reading.text);
+    setSource(name);
+    setPendingFile(null);
+    // Several files dropped at once: the first is read, and the line says so (owner, 2026-10-15).
+    const several = of > 1 ? `first of ${of} files read — one file at a time · ` : '';
+    setFileNotice({
+      tone: 'ok',
+      text: `${several}read "${name}" as ${reading.encoding} · ${countOf(reading.lines, 'line')} · check it, then .parse()`,
+    });
+    setFills(count => count + 1);
+    trackFile('text', reading.encoding, outcome);
+  };
+
+  // A drop, `.open()` or a pasted file: refused while the session works, read in the
+  // browser, then into an empty box, or held for `.replace()` when the box has text.
+  const handleFile = async (file: File, of = 1) => {
+    // Only the latest file counts: a slow read of an earlier one must not land after it.
+    readSeq.current += 1;
+    const seq = readSeq.current;
+    setPendingFile(null);
+    if (!ready || busy) {
+      setFileNotice({ tone: 'error', text: FILE_BUSY_TEXT });
+      trackFile('unknown', null, 'busy');
+      return;
+    }
+    let reading: FileReading;
+    try {
+      reading = await readFile(file);
+    } catch {
+      if (seq !== readSeq.current) return;
+      setFileNotice({ tone: 'error', text: describeFileRefusal(file.name, 'unreadable') });
+      trackFile('unknown', null, 'unreadable');
+      return;
+    }
+    if (seq !== readSeq.current) return;
+    if (!reading.ok) {
+      const code = reading.reason === 'binary' ? reading.kind : reading.reason;
+      setFileNotice({ tone: 'error', text: describeFileRefusal(file.name, code) });
+      trackFile(
+        reading.kind,
+        reading.encoding,
+        reading.reason === 'too_large' ? 'too_large' : 'refused'
+      );
+      return;
+    }
+    const pending = { name: file.name, reading, of };
+    if (textRef.current.trim()) {
+      setFileNotice(null);
+      setPendingFile(pending);
+      return;
+    }
+    fillFromFile(pending, 'filled');
+  };
+
+  // `.keep()`: the box stays as it was, and so does the focus's place in it, not on the page.
+  const handleKeep = () => {
+    if (pendingFile) trackFile('text', pendingFile.reading.encoding, 'kept');
+    setPendingFile(null);
+    boxRef.current?.focus();
+  };
+
+  // `.parse()` takes the focus after a fill (the box, when `.parse()` cannot take it),
+  // `.replace()` when a file waits for it.
+  useEffect(() => {
+    if (fills === 0) return;
+    const parse = parseButtonRef.current;
+    if (parse && !parse.disabled) parse.focus();
+    else boxRef.current?.focus();
+  }, [fills]);
+  useEffect(() => {
+    if (pendingFile) replaceButtonRef.current?.focus();
+  }, [pendingFile]);
+
+  // While the chat is mounted, a file dropped next to the box must not make the
+  // browser leave the page to open it. Text drags keep their default.
+  useEffect(() => {
+    const block = (event: DragEvent) => {
+      if (!dragHasFiles(event.dataTransfer)) return;
+      event.preventDefault();
+      if (event.type === 'dragover' && event.dataTransfer) event.dataTransfer.dropEffect = 'none';
+    };
+    window.addEventListener('dragover', block);
+    window.addEventListener('drop', block);
+    return () => {
+      window.removeEventListener('dragover', block);
+      window.removeEventListener('drop', block);
+    };
+  }, []);
+
+  const handleDragEnter = (event: React.DragEvent) => {
+    if (!dragHasFiles(event.dataTransfer)) return;
+    event.preventDefault();
+    dragDepth.current += 1;
+    setDragOver(true);
+  };
+
+  const handleDragOver = (event: React.DragEvent) => {
+    if (!dragHasFiles(event.dataTransfer)) return;
+    event.preventDefault();
+    // Stop here, so the page's guard above does not mark the box as no drop target.
+    event.stopPropagation();
+    event.dataTransfer.dropEffect = ready && !busy ? 'copy' : 'none';
+  };
+
+  const handleDragLeave = (event: React.DragEvent) => {
+    if (!dragHasFiles(event.dataTransfer)) return;
+    dragDepth.current = Math.max(0, dragDepth.current - 1);
+    if (dragDepth.current === 0) setDragOver(false);
+  };
+
+  const handleDrop = (event: React.DragEvent) => {
+    if (!dragHasFiles(event.dataTransfer)) return;
+    event.preventDefault();
+    dragDepth.current = 0;
+    setDragOver(false);
+    const { files } = event.dataTransfer;
+    if (files[0]) void handleFile(files[0], files.length);
+  };
+
+  // A pasted file (copied in the file manager) is read like a dropped one. Excel and
+  // Word put a picture of the cells next to their text: the text wins over an image.
+  const handlePaste = (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const files = Array.from(event.clipboardData?.files ?? []);
+    const pastedText = event.clipboardData?.getData('text/plain') ?? '';
+    const file =
+      files.find(candidate => !candidate.type.startsWith('image/')) ??
+      (pastedText ? undefined : files[0]);
+    if (file) {
+      event.preventDefault();
+      void handleFile(file);
+      return;
+    }
+    // Pasted text is not the file's any more: its name, its line and a file waiting for
+    // `.replace()` (which would overwrite the paste) all go.
+    setSource(null);
+    setFileNotice(null);
+    setPendingFile(null);
+  };
+
+  const handleChosen = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    // Cleared, so choosing the same file again fires a change.
+    event.target.value = '';
+    if (file) void handleFile(file);
+  };
+
   // Code over the chat's cap is refused all the same, but cannot move there: the line asks to shorten it.
   const codeTooLong =
     state.formulaKind === 'code' && (state.formula ?? '').trim().length > MAX_MESSAGE_CHARS;
@@ -693,6 +927,7 @@ export function DataPanel({
   // `.send()`: the formula or code moves to the chat as a turn, so the box is free for a table.
   const handleSendFormula = () => {
     setText('');
+    setSource(null);
     onSendFormula();
   };
 
@@ -705,7 +940,7 @@ export function DataPanel({
         htmlFor="agent-data"
         sx={{ ...labelSx, display: 'block', mb: dataset ? 0.75 : 0.25 }}
       >
-        # your data — paste CSV, TSV, semicolon CSV, JSON or plain text
+        # your data — paste or drop CSV, TSV, semicolon CSV, JSON or plain text
       </Box>
       {/* Until there is data, the other source: a curve the assistant computes. */}
       {!dataset && (
@@ -717,27 +952,87 @@ export function DataPanel({
           to pi
         </Box>
       )}
+      {/* The drop zone: the box itself. A file dragged over it tints it with the brand
+          colour, or with the warning colour while a step runs and the drop would be refused. */}
       <Box
-        component="textarea"
-        id="agent-data"
-        value={text}
-        rows={8}
-        spellCheck={false}
-        aria-describedby={dataset ? undefined : 'agent-data-hint'}
-        placeholder={'month,revenue\n2026-01,120\n2026-02,135'}
-        onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => setText(event.target.value)}
-        sx={{
-          ...nativeControlSx,
-          display: 'block',
-          width: '100%',
-          boxSizing: 'border-box',
-          resize: 'vertical',
-          fontSize: smallText,
-          lineHeight: 1.5,
-          whiteSpace: 'pre',
-          overflowX: 'auto',
-        }}
-      />
+        data-testid="data-drop-zone"
+        data-drag={dragOver ? (ready && !busy ? 'ready' : 'busy') : undefined}
+        onDragEnter={handleDragEnter}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        sx={{ position: 'relative' }}
+      >
+        <Box
+          component="textarea"
+          id="agent-data"
+          value={text}
+          rows={8}
+          spellCheck={false}
+          aria-describedby={dataset ? undefined : 'agent-data-hint'}
+          placeholder={'month,revenue\n2026-01,120\n2026-02,135'}
+          ref={boxRef}
+          onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => {
+            setText(event.target.value);
+            if (!event.target.value.trim()) setSource(null);
+            setFileNotice(null);
+            // An edit after the question wins: `.replace()` would overwrite it.
+            setPendingFile(null);
+          }}
+          onPaste={handlePaste}
+          sx={{
+            ...nativeControlSx,
+            display: 'block',
+            width: '100%',
+            boxSizing: 'border-box',
+            resize: 'vertical',
+            fontSize: smallText,
+            lineHeight: 1.5,
+            whiteSpace: 'pre',
+            overflowX: 'auto',
+            ...(dragOver && {
+              borderColor: ready && !busy ? colors.primary : colors.warning,
+              borderStyle: 'dashed',
+              outline: `1px dashed ${ready && !busy ? colors.primary : colors.warning}`,
+              bgcolor: `color-mix(in srgb, ${ready && !busy ? colors.primary : colors.warning} 10%, var(--bg-elevated))`,
+            }),
+          }}
+        />
+        {dragOver && (
+          <Box
+            aria-hidden
+            sx={{
+              position: 'absolute',
+              inset: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              p: 2,
+              textAlign: 'center',
+              pointerEvents: 'none',
+            }}
+          >
+            {/* On its own surface: over a filled box the line would sit on the text. */}
+            <Box
+              component="span"
+              sx={{
+                ...labelSx,
+                fontSize: fontSize.md,
+                color: 'var(--ink)',
+                bgcolor: 'var(--bg-elevated)',
+                border: `1px dashed ${ready && !busy ? colors.primary : colors.warning}`,
+                borderRadius: '4px',
+                px: 1.5,
+                py: 0.75,
+              }}
+            >
+              {ready && !busy
+                ? 'drop the file to read it into the box'
+                : 'a step is still running: drop the file when it is done'}
+            </Box>
+          </Box>
+        )}
+      </Box>
       <Box
         sx={{
           display: 'flex',
@@ -756,17 +1051,107 @@ export function DataPanel({
         >
           {formatKb(bytes)} / 1 MB
         </Box>
-        <Box
-          component="button"
-          type="button"
-          onClick={() => onParse(text)}
-          disabled={!ready || !text.trim() || over || busy || !!transcription}
-          aria-describedby={transcription || state.parsing ? 'agent-parse-hint' : undefined}
-          sx={ghostButtonSx}
-        >
-          {state.parsing ? '.parse() …' : '.parse()'}
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, ml: 'auto' }}>
+          {/* The keyboard's and the phone's way in: iOS has no drag and drop into a page. */}
+          <Box
+            component="button"
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={!ready || busy}
+            aria-label="Open a data file"
+            sx={actionButtonSx}
+          >
+            .open()
+          </Box>
+          <Box
+            component="input"
+            type="file"
+            ref={fileInputRef}
+            accept={FILE_ACCEPT}
+            onChange={handleChosen}
+            tabIndex={-1}
+            aria-hidden
+            data-testid="data-file-input"
+            sx={{ display: 'none' }}
+          />
+          <Box
+            component="button"
+            type="button"
+            ref={parseButtonRef}
+            onClick={handleParse}
+            disabled={!ready || !text.trim() || over || busy || !!transcription}
+            aria-describedby={transcription || state.parsing ? 'agent-parse-hint' : undefined}
+            sx={ghostButtonSx}
+          >
+            {state.parsing ? '.parse() …' : '.parse()'}
+          </Box>
         </Box>
       </Box>
+      {/* Stays mounted, so a screen reader hears what a file brought in. */}
+      <Box
+        data-testid="file-status"
+        aria-live="polite"
+        sx={{
+          ...labelSx,
+          color: 'var(--ink-soft)',
+          overflowWrap: 'anywhere',
+          mt: fileNotice?.tone === 'ok' ? 0.75 : 0,
+        }}
+      >
+        {fileNotice?.tone === 'ok' ? `# ${fileNotice.text}` : ''}
+      </Box>
+      {fileNotice?.tone === 'error' && (
+        <Box
+          role="alert"
+          data-testid="file-error"
+          sx={{ ...bodyTextSx, color: colors.error, mt: 0.75, overflowWrap: 'anywhere' }}
+        >
+          {fileNotice.text}
+        </Box>
+      )}
+      {pendingFile && (
+        <Box
+          role="group"
+          aria-labelledby="agent-file-replace-line"
+          data-testid="file-replace"
+          sx={{
+            mt: 1,
+            borderLeft: `3px solid ${colors.warning}`,
+            pl: 1.5,
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            columnGap: 1,
+            rowGap: 0.5,
+          }}
+        >
+          <Box
+            id="agent-file-replace-line"
+            sx={{ ...labelSx, color: 'var(--ink)', flex: '1 1 220px', overflowWrap: 'anywhere' }}
+          >
+            replace the text in the box with &quot;{pendingFile.name}&quot; (
+            {countOf(pendingFile.reading.lines, 'line')})?
+          </Box>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Box
+              component="button"
+              type="button"
+              ref={replaceButtonRef}
+              onClick={() => fillFromFile(pendingFile, 'replaced')}
+              // Not while a parse of the box's text runs: its answer (a table to decide on)
+              // would arrive after the swap and be stored under this file's name.
+              disabled={!ready || busy}
+              sx={ghostButtonSx}
+            >
+              .replace()
+            </Box>
+            <Box component="button" type="button" onClick={handleKeep} sx={actionButtonSx}>
+              .keep()
+            </Box>
+          </Box>
+        </Box>
+      )}
       {/* A parse clears a pending table, so the two lines never show together. */}
       {(transcription || state.parsing) && (
         <Box
@@ -869,6 +1254,16 @@ export function DataPanel({
           <Box sx={{ ...labelSx, color: 'var(--ink-soft)' }}>
             {dataset.parsed.profile.rows.toLocaleString('en-US')} rows · {columns.length} columns ·{' '}
             {dataset.parsed.profile.source_format}
+            {/* The file's name as the server kept it: the assistant reads it as data, never as a note. */}
+            {dataset.parsed.file_name && (
+              <Box component="span" data-testid="data-file-name" sx={{ overflowWrap: 'anywhere' }}>
+                {' '}
+                ·{' '}
+                {dataset.parsed.file_name === FILE_NAME_WITHHELD
+                  ? 'from a file, name withheld by the content check'
+                  : `from "${dataset.parsed.file_name}"`}
+              </Box>
+            )}
           </Box>
 
           <WarningList warnings={dataset.parsed.warnings} />
