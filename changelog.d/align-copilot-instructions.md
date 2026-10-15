@@ -6,4 +6,4 @@
   to leave pre-existing failures alone, drops the `pip` fallback in favour of
   `uv` only (now stated in both guides), and lists new plot types as a
   `spec-request` issue rather than a hand-written implementation. The
-  instruction tests pin both rules on both sides.
+  instruction tests pin both rules on both sides. (#12188)
