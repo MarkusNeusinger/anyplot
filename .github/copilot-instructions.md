@@ -28,7 +28,7 @@ A companion guide `CLAUDE.md` at the repo root carries the shared rules for Clau
 - Updating documentation
 - Writing or improving unit tests
 - Code refactoring within established patterns
-- Fixing linting/formatting issues
+- Fixing linting/formatting issues — **proper lint fixes only**: fix the cause. Never use disable comments (`eslint-disable`, `noqa`, `type: ignore`, or similar) unless explicitly approved by the repository owner.
 - Updating dependencies (after checking security advisories)
 
 **Tasks requiring human review:**
