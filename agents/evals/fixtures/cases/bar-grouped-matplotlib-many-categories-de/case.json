@@ -1,0 +1,14 @@
+{
+  "spec_id": "bar-grouped",
+  "library": "matplotlib",
+  "locale": "de",
+  "language": "de",
+  "bindings": [
+    {"role": "category", "column": "Region"},
+    {"role": "group", "column": "Ereignis"},
+    {"role": "value", "column": "Anzahl"}
+  ],
+  "expected": "accepted",
+  "tags": ["categorical", "many-categories", "de", "language", "density"],
+  "source": "hand-written synthetic data, generalised from the live test of 2026-10-14 (B: 26 regions x 2 series)"
+}

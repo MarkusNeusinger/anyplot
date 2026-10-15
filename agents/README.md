@@ -30,7 +30,7 @@ The model is **Claude Haiku 5.5 on Vertex AI** (`claude-haiku-5-5`) by default. 
 | `anyplot/data/generate.py` | The formula source behind `generate_data`: the `Generate` spec (one or two variable ranges, one to ten series), the whitelist evaluator over Python's `ast` (NumPy float64, never `eval`), the canonical CSV it writes, and `looks_like_formula`, the dataset route's `422 formula` guard |
 | `anyplot/plugins/` | `ScopeGuardPlugin`, `BudgetPlugin`, `ToolSafetyPlugin` and the request ledger they share |
 | `anyplot/output_guard.py` | The output sanitiser of every root message and plot-event line (links, HTML and long code blocks out, at most 1,200 characters) and the reply cap the ScopeGuard runs on the root's final reply before it is stored: a reply over 1,200 characters becomes the fixed refusal, the same in every language, or is cut at 1,200 characters when the turn ran the plot pipeline |
-| `anyplot/render/` | The render contract, the probe harness, the host gates (R1-R3, advisory G3/G5/G7/G8/G9/G10), PNG hardening, the render store, the `remote` (the renderer service, phase 1), `local`, `fake` and `sandbox` (an unused in-process stub) backends, `serial.py`, the one render semaphore in front of every backend, and `watermark.py`, the footer strip the artifact route and the feedback bundle add to the raw render |
+| `anyplot/render/` | The render contract, the probe harness, the host gates (R1-R3, advisory G3/G5/G7/G8/G9/G10/G11/G12), PNG hardening, the render store, the `remote` (the renderer service, phase 1), `local`, `fake` and `sandbox` (an unused in-process stub) backends, `serial.py`, the one render semaphore in front of every backend, and `watermark.py`, the footer strip the artifact route and the feedback bundle add to the raw render |
 | `anyplot/render/fonts/` | JetBrains Mono 2.304 Regular and Bold for the footer strip, unmodified, with `OFL.txt` (SIL Open Font License 1.1) and a notice with their SHA-256 values ([fonts README](anyplot/render/fonts/README.md)) |
 | `renderer/` | The `anyplot-renderer` service: `main.py` (`POST /render`, `GET /status`, one render slot), `executor.py` (one `sandbox do` per theme with the kill path, the byte watchdog and the launcher retry), `auth.py` (the caller check), `settings.py` (`RENDERER_*`), `wire.py` (the JSON contract the `remote` backend shares), `Dockerfile` and `cloudbuild.yaml`. No ADK import and no `__init__.py`, so `adk web agents` does not list it as an agent |
 | `anyplot/opening.py`, `session_state.py`, `services.py`, `briefs.py` | Opening a session and taking in a dataset, the server-set session state, the process-wide stores, and the spec and dataset briefs |
@@ -403,7 +403,7 @@ Before the first case the harness renders the catalogue file of the first case o
     --renderer remote --render-url https://RENDERER_URL --gcloud-token
   ```
 
-- The full matrix is the 123 cases that are not stress cases. Cap the spend with `--budget-usd`:
+- The full matrix is the 127 cases that are not stress cases. Cap the spend with `--budget-usd`:
 
   ```bash
   uv run --extra agents python -m agents.evals.matrix --cases full --budget-usd 4 \

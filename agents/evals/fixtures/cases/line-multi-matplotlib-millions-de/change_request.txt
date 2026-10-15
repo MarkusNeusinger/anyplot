@@ -1,0 +1,1 @@
+Zeig die y-Achse in Millionen, zum Beispiel 6,5 Mio.

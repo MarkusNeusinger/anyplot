@@ -1,4 +1,4 @@
-"""Host gates on a render: R1-R3 decide, G3/G5/G7/G8/G9/G10 advise.
+"""Host gates on a render: R1-R3 decide, G3/G5/G7/G8/G9/G10/G11/G12 advise.
 
 | Gate | Checks | Effect |
 |---|---|---|
@@ -11,6 +11,8 @@
 | G8 | probe: more point marks than data rows (fabricated data) | advisory: a DQ-03 line |
 | G9 | probe: scatter marks plus line vertices over `MAX_PLOTTED_POINTS` (computed mass data) | advisory: a DQ-03 line |
 | G10 | probe: characters without a glyph in any font of their text, plain text and mathtext (the harness records matplotlib's own reports) | advisory: a VQ-01 line |
+| G11 | probe (`density`): value labels at a data coordinate on a bar's end or point, dots on bar ends and shadowed bars, per axes: more than `MAX_VALUE_LABELS` labels, bar labels wider than `LABEL_SLOT_FILL` of the space per bar, or more than `MAX_DECORATIONS` decorations | advisory: a VQ-03 line |
+| G12 | probe (`labels`, `tick_axes`): numeric annotations, and tick labels of numeric axes (never dates or categories), whose decimal mark is not the plot language's (`language.NUMBER_FORMATS`; `foreign_decimal`, mathtext read as drawn) | advisory: a VQ-06 line |
 
 A pipeline run renders one theme (`PipelineArgs.theme`) and the theme toggle renders
 the other one later, so `evaluate` judges exactly the themes of the job it is given:
@@ -36,6 +38,7 @@ from typing import Any
 
 from core.canvas import check_canvas
 
+from ..language import NumberFormat, english_name, number_format
 from ..schemas import MAX_LINE_CHARS
 from .contract import THEMES, RenderResult, Theme
 from .png import PngRejected, harden, pad_to
@@ -71,6 +74,15 @@ twice the cells the 200 KB paste cap allowed. A 1 MB paste or 2 MiB of computed 
 of 50 columns, so the owner raised it to 500,000 (2026-10-14): a dense plot of the user's own data, such as
 20,000 rows of 24 series (480,000 points), passes, while the stress cases' 610,000 and 1,000,000 points
 still trip it."""
+MAX_VALUE_LABELS = 25
+"""G11: value labels (texts at a data coordinate on a bar's end or a point) one axes may carry. Q3 of the live test of
+2026-10-14: the catalogue's bar-grouped labels, dots and shadows, meant for its 12 bars, on 52 bars of 26 cantons."""
+LABEL_SLOT_FILL = 0.9
+"""G11: a bar label wider than this share of the space between neighbouring bar centres crowds its neighbours."""
+MIN_CRAMPED_LABELS = 6  # fewer labels than this are a few callouts, never crowded
+MAX_DECORATIONS = 25  # G11: dots on bar ends and shadowed bars one axes may carry
+MAX_DENSITY_AXES = 8  # `harness.DENSITY_AXES_LIMIT`: more entries are a tampered probe, read no further
+MAX_CANVAS_PX = 10_000.0  # a pixel size past any canvas the gates accept is a tampered probe
 G10_SAMPLE = 3  # code points the G10 line names
 G10_NAME_CHARS = 15  # name text per label: a label is then at most 26 characters and the line fits MAX_NOTE_CHARS
 MAX_CODEPOINT = 0x10FFFF
@@ -149,7 +161,7 @@ class GateReport:
     failed_gates: list[str] = field(default_factory=list)
     """The ids of the gates that failed or reported, one entry per theme and finding: `R1`,
     `R1-timeout`, `R1-<reason>` for a renderer limit (`R1-memory`, `R1-disk_budget`, ...), `R2`,
-    `R3`, then the probe gates `G3`, `G5`, `G7`, `G8`, `G9`, `G10` in the order the probe checks run
+    `R3`, then the probe gates `G3`, `G5`, `G7`, `G8`, `G9`, `G10`, `G11`, `G12` in the order the probe checks run
     (not sorted). Content-free, for the attribution log."""
 
     @property
@@ -256,11 +268,18 @@ def data_rows(data_csv: str) -> int:
     return max(0, len([line for line in data_csv.split("\n") if line]) - 1)
 
 
-def evaluate(result: RenderResult, *, themes: Sequence[Theme], library: str, rows: int) -> GateReport:
-    """Run R1-R3 and the advisory gates over every theme of the job; a theme without an output fails R1."""
+def evaluate(
+    result: RenderResult, *, themes: Sequence[Theme], library: str, rows: int, plot_language: str | None = None
+) -> GateReport:
+    """Run R1-R3 and the advisory gates over every theme of the job; a theme without an output fails R1.
+
+    `plot_language` is the session language the plot text is written in; G12 checks the
+    decimal mark of its numbers when the language has a number format (`language.NUMBER_FORMATS`).
+    """
     wanted = [theme for theme in THEMES if theme in themes]
     if not wanted:
         raise ValueError("a render job names at least one theme")
+    numbers = number_format(plot_language) if plot_language else None
     report = GateReport(passed_host_gates=True, canvas_ok=True)
     advisory: dict[str, list[Theme]] = {}
     missed: list[Theme] = []
@@ -307,7 +326,7 @@ def evaluate(result: RenderResult, *, themes: Sequence[Theme], library: str, row
             if verdict.defect_line and verdict.defect_line not in report.canvas_defects:
                 report.canvas_defects.append(_line(verdict.defect_line))
             report.padded_pngs[theme] = pad_to(hardened.data, verdict.target)
-        for gate, line in _probe_lines(output.probe, rows):
+        for gate, line in _probe_lines(output.probe, rows, numbers, plot_language):
             report.failed_gates.append(gate)
             advisory.setdefault(line, []).append(theme)
         # Both themes draw the same geometry, so the hint comes from the first theme that has one.
@@ -424,12 +443,229 @@ def _text_kind(value: Any) -> str:
     return value if isinstance(value, str) and value in TEXT_KINDS else "text"
 
 
-def _probe_lines(probe: dict[str, Any] | None, rows: int) -> list[tuple[str, str]]:
-    """Advisory `(gate, line)` pairs from one theme's probe; a malformed probe yields none, never an exception."""
-    try:
-        return _probe_lines_unchecked(probe, rows)
-    except (ValueError, TypeError, OverflowError, AttributeError):
+def _probe_lines(
+    probe: dict[str, Any] | None, rows: int, numbers: NumberFormat | None = None, plot_language: str | None = None
+) -> list[tuple[str, str]]:
+    """Advisory `(gate, line)` pairs from one theme's probe; a malformed probe yields none, never an exception.
+
+    Each gate is guarded on its own, so a malformed field of one gate never hides another's line.
+    """
+    lines: list[tuple[str, str]] = []
+    checks = (
+        lambda: _probe_lines_unchecked(probe, rows),
+        lambda: _density_lines(probe),
+        lambda: _number_format_lines(probe, numbers, plot_language),
+    )
+    for check in checks:
+        try:
+            lines += check()
+        except (ValueError, TypeError, OverflowError, AttributeError):
+            continue
+    return lines
+
+
+def _count(value: Any) -> int | None:
+    """A non-negative int of the probe, or None (a bool, a float or a negative number is a tampered probe)."""
+    return value if isinstance(value, int) and not isinstance(value, bool) and value >= 0 else None
+
+
+def _pixels(value: Any) -> float | None:
+    """A positive finite pixel size of the probe, or None."""
+    if isinstance(value, bool) or not isinstance(value, int | float):
+        return None
+    number = float(value)
+    return number if math.isfinite(number) and 0 < number <= MAX_CANVAS_PX else None
+
+
+def _density_lines(probe: dict[str, Any] | None) -> list[tuple[str, str]]:
+    """The G11 line: per-mark value labels or decorations past what the plot's marks leave room for.
+
+    The probe's `density` field (`harness.density_report`) describes each axes; the line
+    names the worst one. Labels crowd when more than `MAX_VALUE_LABELS` bar positions carry
+    one (`labelled_bars`: a stacked bar's segment labels count once), or, on an axes without
+    bars, more than that many numeric labels sit on points (`numeric_labels`: named points
+    are the point of scatter-annotated),
+    or when a bar label is wider than `LABEL_SLOT_FILL` of the space between bar centres
+    (from `MIN_CRAMPED_LABELS` labels on); decorations (dots on bar ends, shadowed bars)
+    when there are more than `MAX_DECORATIONS`. Only counts and pixels reach the line.
+    """
+    entries = probe.get("density") if isinstance(probe, dict) else None
+    if not isinstance(entries, list):
         return []
+    worst: tuple[int, str] | None = None
+    for entry in entries[:MAX_DENSITY_AXES]:
+        if not isinstance(entry, dict):
+            continue
+        bars, marks = _count(entry.get("bars")), _count(entry.get("marks"))
+        labelled, decorated = _count(entry.get("labelled")) or 0, _count(entry.get("decorated")) or 0
+        if bars is None or marks is None:
+            continue
+        numeric = _count(entry.get("numeric_labels"))
+        positions = _count(entry.get("labelled_bars"))
+        # With bars the cap counts labelled bar positions, so a stacked bar's segment labels count once; without
+        # bars only numbers count: named points (scatter-annotated asks for 10 to 50) do not.
+        if bars:
+            capped = labelled if positions is None else min(positions, labelled)
+        else:
+            capped = labelled if numeric is None else min(numeric, labelled)
+        slot, label = _pixels(entry.get("slot_px")), _pixels(entry.get("label_px"))
+        cramped = (
+            bars > 0
+            and labelled >= MIN_CRAMPED_LABELS
+            and slot is not None
+            and label is not None
+            and label > slot * LABEL_SLOT_FILL
+        )
+        many_labels = capped > MAX_VALUE_LABELS
+        many_decorations = decorated > MAX_DECORATIONS
+        if not (cramped or many_labels or many_decorations):
+            continue
+        observed: list[str] = []
+        if cramped or many_labels:
+            room = f" ({round(label)} px wide on {round(slot)} px per bar)" if cramped and label and slot else ""
+            observed.append(f"{labelled if bars else capped} value labels{room}")
+        if many_decorations:
+            observed.append(f"{decorated} dots or shadows")
+        marks_text = f"{bars} bars" if bars else f"{marks} marks"
+        line = (
+            f"VQ-03 (THEME): {marks_text} carry {' and '.join(observed)} → at most {MAX_VALUE_LABELS} labels, each "
+            "fitting its mark, and no per-mark dots or shadows past that: drop them or label only the extremes. "
+            "Likely cause: the catalogue's per-mark labels, dots or shadows repeated on every mark of the data."
+        )
+        severity = labelled + decorated
+        if worst is None or severity > worst[0]:
+            worst = (severity, line)
+    return [] if worst is None else [("G11", worst[1])]
+
+
+_NUMBER_LABEL = re.compile(
+    r"^[+\-−]?(?:[$€£¥]\s?)?[+\-−]?(?P<body>\d[\d.,    ']*\d|\d)"
+    r"(?:\s?(?:%|‰|[$€£¥]|[^\W\d_]{1,5}\.?(?:\s[^\W\d_]{1,5}\.?)?))?$"
+)
+"""A label that is one number: an optional sign and currency sign in either order, digits with marks, an optional
+unit, word or trailing currency sign (`%`, `Mio.`, `k`, `mil M`, `5,30 €`, `-$5.30`). Dates (`14.10.`,
+`2024-10-14`), ranges, times and words with digits never match."""
+_DAY_MONTH = re.compile(r"^(0[1-9]|[12]\d|3[01])[.](0[1-9]|1[0-2])$")
+"""`14.10`: a day and month as `%d.%m` writes them, both zero-padded. Read as a date in an annotation, where no axis
+says what it is; a decimal written with two digits each side (`10.12`) is the one number this lets through."""
+NUMBER_LABEL_KINDS = frozenset({"annotation", "text"})
+"""The label kinds whose numbers G12 checks besides every tick label (`x tick label`, `y tick label`, `z tick label`,
+`colorbar tick label`, `harness.drawn_labels`); titles, axis titles and legend entries may name a version or a code."""
+
+
+NUMERIC_TICKS = "number"
+"""`harness.tick_axes`'s kind for an axis whose tick labels are numbers; dates, categories and labels the code set
+itself (`fixed`) are never checked."""
+_MATH_MARKUP = re.compile(r"\\mathdefault|\\mathrm|\\,|[{}$]")
+
+
+def plain_text(text: str) -> str:
+    """A label as it reads on the canvas when it is one mathtext string: `$\\mathdefault{5.30}$` reads `5.30` and
+    `$5{,}30$` reads `5,30`. Any other text stays as it is, a currency dollar included."""
+    stripped = text.strip()
+    if len(stripped) > 2 and stripped.startswith("$") and stripped.endswith("$") and stripped.count("$") == 2:
+        return _MATH_MARKUP.sub("", stripped).replace("\\ ", " ").strip()
+    return stripped
+
+
+def _number_label_kind(label: dict[str, Any], ticks: list[Any] | None) -> str | None:
+    """`tick labels` or `annotations` for a label G12 checks, else None.
+
+    An annotation or text always counts. A tick label counts only when the probe's
+    `tick_axes` (`harness.tick_axes`) names its axis numeric: an axis of dates (`14.10`) or
+    of the data's own categories (`3.11`) writes no decimals. Without `tick_axes` (a renderer
+    older than G12) no tick label counts.
+    """
+    kind = label.get("kind")
+    if not isinstance(kind, str):
+        return None
+    if kind in NUMBER_LABEL_KINDS:
+        return "annotations"
+    if not kind.endswith("tick label") or ticks is None:
+        return None
+    index = label.get("axes")
+    if isinstance(index, bool) or not isinstance(index, int) or not 0 <= index < len(ticks):
+        return None
+    entry = ticks[index]
+    if not isinstance(entry, dict):
+        return None
+    names = ("x", "y") if kind == "colorbar tick label" else (kind[0],)
+    return "tick labels" if any(entry.get(name) == NUMERIC_TICKS for name in names) else None
+
+
+def foreign_decimal(text: str, numbers: NumberFormat) -> bool:
+    """Whether a numeric label writes its decimals with the other mark than the plot language's.
+
+    Only a label that is one number counts (`_NUMBER_LABEL`). With a decimal comma, a single
+    point followed by other than three digits (`5.30`, `6.0 M`) is foreign, and so is a point
+    after a comma (`1,234.5`) or more than one comma (`1,234,567`); a single point with three
+    digits (`1.234`) is a thousands mark and passes, unless the whole part is 0 (`0.125`). A
+    zero-padded day and month (`14.10`, `_DAY_MONTH`) is a date and passes. A decimal point mirrors this, except that
+    several points (`7.184.003`) pass, because a version-like label writes them too.
+    """
+    shown = plain_text(text)
+    match = _NUMBER_LABEL.match(shown)
+    if match is None or _DAY_MONTH.match(shown):
+        return False
+    body = match.group("body")
+    marks = [char for char in body if char in ".,"]
+    if not marks:
+        return False
+    other = "." if numbers.decimal == "," else ","
+    own = numbers.decimal
+    if own in marks and other in marks:
+        return marks[-1] == other  # the decimal mark comes last
+    if other not in marks:
+        return own == "," and marks.count(own) > 1  # `1,234,567` groups with commas: English
+    if marks.count(other) > 1:
+        return False  # `7.184.003` or `1,234,567` group thousands the other way: ambiguous, never named
+    whole, decimals = body.rsplit(other, 1)
+    # `0.125` is never a thousands group: a leading 0 makes the mark a decimal one.
+    return len(decimals) != 3 or whole == "0"
+
+
+def _number_format_lines(
+    probe: dict[str, Any] | None, numbers: NumberFormat | None, plot_language: str | None
+) -> list[tuple[str, str]]:
+    """The G12 line: numeric tick labels or annotations whose decimal mark is not the plot language's.
+
+    Reads the probe's `labels` field (`{"kind", "text", "axes"}` per drawn text) and its
+    `tick_axes`, which say which tick labels are numbers (`_number_label_kind`). No label text
+    reaches the line: a tick label can be a cell of the user's data. The language is named
+    by its English name from the server's table, never by the session's free-text value.
+    """
+    labels = probe.get("labels") if isinstance(probe, dict) else None
+    if numbers is None or not isinstance(labels, list):
+        return []
+    ticks = probe.get("tick_axes") if isinstance(probe, dict) else None
+    ticks = ticks if isinstance(ticks, list) else None
+    numeric = foreign = 0
+    kinds: set[str] = set()
+    for label in labels:
+        kind = _number_label_kind(label, ticks) if isinstance(label, dict) else None
+        if kind is None:
+            continue
+        text = label.get("text")
+        if not isinstance(text, str) or _NUMBER_LABEL.match(plain_text(text)) is None:
+            continue
+        numeric += 1
+        if foreign_decimal(text, numbers):
+            foreign += 1
+            kinds.add(kind)
+    if not foreign:
+        return []
+    name = english_name(plot_language or "") or "the plot language"
+    own, other = ("comma", "point") if numbers.decimal == "," else ("point", "comma")
+    thousands = {".": "a point", ",": "a comma"}.get(numbers.thousands, "a space")
+    words = ", ".join(word for _, word in numbers.suffixes)
+    return [
+        (
+            "G12",
+            f"VQ-06 (THEME): {foreign} of {numeric} numeric {' and '.join(sorted(kinds))} use a decimal {other}; "
+            f"{name} writes a decimal {own} → decimal {own}, {thousands} for thousands, {words} for large numbers. "
+            'Likely cause: a default formatter or fmt="%.2f" instead of a FuncFormatter or f-string with these marks.',
+        )
+    ]
 
 
 def _probe_lines_unchecked(probe: dict[str, Any] | None, rows: int) -> list[tuple[str, str]]:

@@ -40,6 +40,8 @@ from pathlib import Path
 
 import yaml
 
+from .language import number_format_table
+
 
 PACKAGE_DIR = Path(__file__).resolve().parent
 PROMPTS_DIR = PACKAGE_DIR / "prompts"
@@ -263,6 +265,7 @@ def adapter_instruction(library: str) -> str:
     # The rubric holds the VQ-03 marker-size and alpha table (`vq03_table`), so it is not repeated.
     return _join(
         own_prompt("adapter.md"),
+        "## Number formats by plot language\n\n" + number_format_table(),
         highlights,
         "## Excerpt: which weaknesses to fix\n\n" + weaknesses,
         "## Excerpt: visual-sizing fixes\n\n" + sizing,

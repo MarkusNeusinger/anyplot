@@ -1,0 +1,13 @@
+{
+  "spec_id": "bar-basic",
+  "library": "seaborn",
+  "locale": "en",
+  "language": "en",
+  "bindings": [
+    {"role": "category", "column": "City"},
+    {"role": "value", "column": "CO2 per capita (t)"}
+  ],
+  "expected": "accepted",
+  "tags": ["categorical", "decimals", "en", "language", "number-format"],
+  "source": "hand-written synthetic data, the English control of bar-basic-seaborn-decimals-de"
+}

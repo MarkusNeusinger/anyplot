@@ -217,7 +217,7 @@ class AgentSettings(BaseSettings):
 
     gate_repair: Literal["review", "first"] = "review"
     """When the measured findings of a render that passed the host gates start a repair (`AGENT_GATE_REPAIR`):
-    the advisory gate lines (G3, G5, G7, G8, G9, G10) and the ADAPTATION validator's soft findings.
+    the advisory gate lines (G3, G5, G7, G8, G9, G10, G11, G12) and the ADAPTATION validator's soft findings.
 
     `review`: they go to the round's self-review as findings, then to the review as gate notes, and a
     round whose render still has them after its review goes to the repair with them and the review's
