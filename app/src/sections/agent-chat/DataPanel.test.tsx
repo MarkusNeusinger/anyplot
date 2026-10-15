@@ -172,6 +172,30 @@ describe('DataPanel bindings', () => {
     expect(screen.getByLabelText(/^radius/)).toHaveAccessibleDescription(hint);
   });
 
+  it('offers "computed by the plot" for a role the plot computes, and binds a column to it', async () => {
+    const roles = [role('close'), role('sma', { required: false, computed: true })];
+    const onBind = vi.fn();
+    const { container } = render(
+      <DataPanel
+        state={stateWith({ close: 'shoes' }, { roles, missingRoles: [] })}
+        onParse={vi.fn()}
+        onConfirmTranscription={vi.fn()}
+        onDiscardTranscription={vi.fn()}
+        onSendFormula={vi.fn()}
+        onBind={onBind}
+        onConfirmData={vi.fn()}
+        onUndo={vi.fn()}
+      />
+    );
+    const sma = screen.getByLabelText(/^sma/) as HTMLSelectElement;
+    expect(sma.value).toBe('');
+    expect(sma.options[0]).toHaveTextContent('— computed by the plot —');
+    expect(container.querySelector('label[for="agent-role-sma"]')).not.toHaveTextContent('*');
+    expect(container.querySelector('label[for="agent-role-close"]')).toHaveTextContent('close *');
+    await userEvent.selectOptions(sma, 'hats');
+    expect(onBind).toHaveBeenCalledWith('sma', 'hats');
+  });
+
   it('lists the lines of a refused binding set', () => {
     render(
       <DataPanel

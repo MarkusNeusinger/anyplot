@@ -33,12 +33,18 @@ count would let a profile of such cells grow the request several times past the 
 """
 
 
-def describe_role(role: DataRole) -> str:
+def describe_role(role: DataRole, bound: bool = False) -> str:
+    """One role for the brief; a role the plot can compute says whether its column is bound or the code computes it.
+
+    Owner decision of 2026-10-15, "both allowed" (`data/computed.py`): bound, the plot uses the
+    column; open, the plot code computes the value from the bound data.
+    """
     kinds = "/".join(role.kinds) if role.kinds else "any"
     name = f"{role.name}1, {role.name}2, ..." if role.variadic else role.name
+    if role.computed and bound:
+        return f"{name} ({kinds}, bound: use its column as it is, do not compute it)"
     if role.computed:
-        # No column is bound to it: the plot code computes it from the bound data (owner decision of 2026-10-15).
-        return f"{name} ({kinds}, computed by the plot code from the data, never bound to a column)"
+        return f"{name} ({kinds}, not bound: compute it in the plot code from the bound data)"
     return f"{name} ({kinds}, {'required' if role.required else 'optional'})"
 
 
@@ -46,11 +52,12 @@ def spec_brief(view: SessionView) -> str:
     """Title, description, data roles and notes of the session's spec, at most 4,000 characters."""
     snapshot = view.snapshot
     roles = snapshot.roles()
+    bound = {binding.role for binding in view.bindings}
     lines = [f"Spec: {snapshot.title} ({snapshot.spec_id}), library {view.library}"]
     if snapshot.description:
         lines.append("Description: " + snapshot.description[:MAX_DESCRIPTION_CHARS])
     if roles:
-        lines.append("Data roles: " + "; ".join(describe_role(role) for role in roles))
+        lines.append("Data roles: " + "; ".join(describe_role(role, role.name in bound) for role in roles))
     for note in snapshot.notes:
         lines.append("Note: " + note[:MAX_NOTE_CHARS])
     return "\n".join(lines)[:MAX_BRIEF_CHARS]

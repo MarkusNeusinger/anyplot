@@ -35,6 +35,7 @@ from dataclasses import dataclass, field
 from difflib import SequenceMatcher
 
 from ..schemas import Binding, ColumnDtype, ColumnProfile, DatasetProfile
+from .computed import name_match
 from .parse import value_like
 from .roles import DataRole, RoleKind
 from .signs import has_negative, sign_line
@@ -126,7 +127,10 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
        (`_code_rank`; all since live test round 3 and its review of 2026-10-15). A variadic
        family takes every unused tier-0 or tier-1 column that is no weak measure in column
        order, up to `MAX_VARIADIC_DEFAULT`; a required family that would stay empty takes the
-       first weak one. A role the plot computes (`DataRole.computed`) is never bound.
+       first weak one. A role the plot can compute (`DataRole.computed`, `data/computed.py`) is
+       bound only to a column whose name clearly holds it (`computed.name_match`, before any other
+       role picks); otherwise it stays open and the plot computes it (owner decision of
+       2026-10-15, "both allowed").
        A single role never falls back to a tier-2 column that a variadic family of
        the spec takes at tier 0 or 1: in wide data such as `month, Shoes, Hats`
        for `x`, `y1, y2, ...` and `category`, an integer series column stays a
@@ -156,7 +160,7 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
     constants = {column.name for column in columns if profile.rows >= MIN_CONSTANT_ROWS and column.unique <= 1}
 
     for role in roles:
-        if not role.kinds or role.computed:
+        if not role.kinds:
             continue
         named = [column for column in columns if not (is_measure(role) and column.name in constants)]
         if role.variadic:
@@ -175,6 +179,22 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
                     single[role.name] = column.name
                     used.add(column.name)
                     break
+
+    # A role the plot can compute takes a column only on a clear name match (`SMA 20` for `sma`), before any
+    # other role ranks the columns: otherwise it stays open and the plot computes it (`data/computed.py`).
+    for role in roles:
+        if not role.computed or not role.kinds or role.variadic or role.name in single:
+            continue
+        for column in columns:
+            if (
+                column.name not in used
+                and column.name not in constants
+                and _tier(role, column) is not None
+                and name_match(role, column.name)
+            ):
+                single[role.name] = column.name
+                used.add(column.name)
+                break
 
     order = sorted(
         (role for role in roles if role.kinds and not role.computed),
@@ -309,8 +329,9 @@ def check_bindings(bindings: list[Binding], roles: list[DataRole], profile: Data
     Errors: an unknown role (a variadic family is bound through its members
     `<name><n>`, never its bare name), a role bound twice, a column missing from the
     profile, a column bound twice, a dtype the role's kinds do not accept (see
-    `ACCEPTS`), a role the plot computes (`DataRole.computed`, which takes no column and
-    is never missing). `missing_roles` lists the required roles without a binding; a
+    `ACCEPTS`). `missing_roles` lists the required roles without a binding, except a role
+    the plot can compute (`DataRole.computed`: bound, the plot uses the column; open, it
+    computes the value); a
     required variadic family needs at least one member. `warnings`: a valid binding of
     a non-negative role to a column with a negative value (`signs.sign_line`), and an
     unbound non-negative role whose every fitting column that no other role holds has one.
@@ -339,9 +360,6 @@ def check_bindings(bindings: list[Binding], roles: list[DataRole], profile: Data
             errors.append(f"column '{binding.column}' is bound more than once")
         seen_columns.add(binding.column)
         if role is None or column is None:
-            continue
-        if role.computed:
-            errors.append(f"role '{binding.role}' is computed by the plot from the data and takes no column")
             continue
         if not accepts(role, column.dtype):
             wanted = " or ".join(role.kinds)

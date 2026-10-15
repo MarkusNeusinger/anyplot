@@ -124,6 +124,11 @@ export interface RoleSpec {
   description: string;
   /** The role needs values of 0 or more (the server's `data/signs.py`); absent from an older server. */
   non_negative?: boolean;
+  /**
+   * The plot computes the role when no column is bound (the server's `data/computed.py`): a
+   * rolling average, a Bollinger band. Optional; absent from an older server.
+   */
+  computed?: boolean;
 }
 
 /**
@@ -982,6 +987,7 @@ function roleList(value: unknown): RoleSpec[] | undefined {
       variadic: entry.variadic === true,
       description: typeof entry.description === 'string' ? entry.description : '',
       non_negative: entry.non_negative === true,
+      computed: entry.computed === true,
     });
   }
   return roles;

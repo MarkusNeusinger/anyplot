@@ -103,7 +103,7 @@ import {
   MAX_MESSAGE_CHARS,
   utf8Bytes,
 } from 'src/lib/agent';
-import { bindingRows, kindsHint, signHint } from 'src/sections/agent-chat/bindings';
+import { bindingRows, emptyChoice, kindsHint, signHint } from 'src/sections/agent-chat/bindings';
 import { Ellipsis } from 'src/sections/agent-chat/Ellipsis';
 import {
   FILE_ACCEPT,
@@ -1356,7 +1356,7 @@ export function DataPanel({
                         }
                         sx={{ ...nativeControlSx, width: '100%' }}
                       >
-                        <option value="">{row.next ? '— add a column —' : '— none —'}</option>
+                        <option value="">{emptyChoice(row)}</option>
                         {columns.map(column => (
                           <option key={column.name} value={column.name}>
                             {column.name} ({column.dtype})
