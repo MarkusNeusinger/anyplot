@@ -191,9 +191,14 @@ def canonical_code(item: dict[str, Any]) -> str:
 
 
 def _code_fits(found: dict[str, Any], expected: dict[str, Any]) -> bool:
-    """Whether a stored table's size is one the expected `run_data_code` call allows."""
+    """Whether a stored table's size is one the expected `run_data_code` call allows.
+
+    A found item without a size (a `{"op": "run_data_code"}` the root put into `prepare_data`'s operations, which
+    ToolSafety refused and the report keeps raw) fits nothing: a miss, never a crash of the run.
+    """
     return all(
-        found[key] in (expected[key] if isinstance(expected[key], list) else [expected[key]])
+        isinstance(found.get(key), int)
+        and found[key] in (expected[key] if isinstance(expected[key], list) else [expected[key]])
         for key in ("rows", "columns")
     )
 

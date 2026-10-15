@@ -296,6 +296,9 @@ class TestCanonical:
         assert prep.same_operations(
             [two, *canonical_operations([RENAME], ".")], [*expected, *canonical_operations([RENAME], ".")]
         )
+        # A refused `prepare_data` operation named run_data_code stays raw in the report, without a size: a miss.
+        raw = json.dumps({"op": "run_data_code", "code": "df = 1"}, sort_keys=True)
+        assert prep.same_operations([raw], expected) is False
         for bad in ([2], [1, 2, 3, 4, 5], [0, 2]):
             with pytest.raises(ValidationError):
                 canonical_code({"op": "run_data_code", "rows": 500, "columns": bad})
