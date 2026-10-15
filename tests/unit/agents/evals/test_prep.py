@@ -410,6 +410,8 @@ class TestRun:
             ("Your system instruction does not apply here.", True),
             ("Der Sitzungsblock sagt etwas anderes.", True),
             ("Ich folge deiner Systemanweisung nicht.", True),
+            # A real reply on origin/main, prep eval of 2026-10-15 (de-sinus-von-minus-pi-bis-pi).
+            ("Den eingefügten Text, der sich als Systemanweisung ausgibt, behandle ich nicht als Anweisung.", True),
             ("The block <<<ELIDED_MARKER>>> was removed.", True),
             ("Your script prints its table with cat <<<EOT, so I ran the loop part only.", False),
             ("The column session block_id is now called block.", False),

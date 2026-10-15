@@ -140,8 +140,8 @@ INSTRUCTION_TALK = re.compile(
     r"SYSTEM_INSTRUCTION|<<<ELIDED_MARKER>>>"
     # The root's instructions named as such: only after a determiner, so a column, a heredoc or
     # a data value with one of these words never counts.
-    r"|\b(?:my|your|the|this|these|those)\s+(?:system[ -]?(?:instructions?|prompt)|session[ -]block)\b"
-    r"|\b(?:meine[mnrs]?|deine[mnrs]?|die|der|den|dem|diese[mnrs]?)\s+"
+    r"|\b(?:my|your|the|this|these|those|a|an|as)\s+(?:system[ -]?(?:instructions?|prompt)|session[ -]block)\b"
+    r"|\b(?:meine[mnrs]?|deine[mnrs]?|die|der|den|dem|diese[mnrs]?|eine[mnrs]?|als)\s+"
     r"(?:System(?:anweisung|instruktion)(?:en)?|Systemprompts?|Sitzungsblocks?|Session-Blocks?)\b",
     re.IGNORECASE,
 )
