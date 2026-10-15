@@ -79,11 +79,14 @@ MAX_CODE_RESULT_BYTES = 24 * 1024
 MAX_NOTES_RESULT_BYTES = 9 * 1024
 """The `user_notes` of `get_dataset_profile` at their worst: `MAX_CONTEXT_CHARS` (2,000) characters of
 four UTF-8 bytes each, the escaped line breaks, the preamble and the fence (`policy.user_notes_block`)."""
+MAX_FILE_NAME_RESULT_BYTES = 1024
+"""The `file_name` of `get_dataset_profile` at its worst: `MAX_SOURCE_NAME_CHARS` (80) characters of four UTF-8
+bytes each, the preamble and the fence (`policy.file_name_block`), about 650 bytes."""
 RESULT_LIMITS: dict[str, int] = {
     "get_current_code": MAX_CODE_RESULT_BYTES,
     # 50 column names of up to 64 characters fit even when the samples are trimmed away, next to the notes
-    # pasted with the data at their cap.
-    "get_dataset_profile": 16 * 1024 + MAX_NOTES_RESULT_BYTES,
+    # pasted with the data at their cap and a dropped file's name.
+    "get_dataset_profile": 16 * 1024 + MAX_NOTES_RESULT_BYTES + MAX_FILE_NAME_RESULT_BYTES,
     # The new profile, trimmed like get_dataset_profile's, plus five change lines of at most 300 characters.
     PREPARE_TOOL: 16 * 1024,
     # 25 rows of 8 cells of at most 40 characters, 8 column names of 64, and five change lines of 300.
@@ -177,7 +180,7 @@ _DATA_VERSION_KEYS = frozenset(
 """The keys of a tool result that stores the next dataset version (`prepare_data`, `generate_data`)."""
 RESULT_KEYS: dict[str, frozenset[str]] = {
     "get_dataset_profile": frozenset(
-        {"status", "reason", "code", "rows", "bindings", "profile", "truncated", "to_long", "user_notes"}
+        {"status", "reason", "code", "rows", "bindings", "profile", "truncated", "to_long", "user_notes", "file_name"}
     ),
     "get_spec_brief": frozenset({"status", "code", "brief"}),
     "get_current_code": frozenset({"status", "code", "version"}),

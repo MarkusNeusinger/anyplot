@@ -83,6 +83,7 @@ from ..plugins.ledger import attribution, ledger_for
 from ..plugins.tool_safety import (
     DATA_CODE_TOOL,
     MAX_DATA_CODE_CHARS,
+    MAX_FILE_NAME_RESULT_BYTES,
     MAX_NOTES_RESULT_BYTES,
     QUERY_TOOL,
     result_limit,
@@ -109,8 +110,9 @@ from ..settings import get_settings
 
 PLOT_PIPELINE = "plot_pipeline"
 OPERATIONS = TypeAdapter(list[Operation])
-PROFILE_RESULT_BYTES = result_limit("get_dataset_profile") - MAX_NOTES_RESULT_BYTES
-"""What `get_dataset_profile`'s profile is trimmed to: its cap less the room kept for the pasted notes."""
+PROFILE_RESULT_BYTES = result_limit("get_dataset_profile") - MAX_NOTES_RESULT_BYTES - MAX_FILE_NAME_RESULT_BYTES
+"""What `get_dataset_profile`'s profile is trimmed to: its cap less the room kept for the pasted notes and a
+dropped file's name."""
 
 
 def _not_ready(reason: str) -> dict[str, Any]:

@@ -41,7 +41,7 @@ from .data.bindings import default_bindings
 from .data.parse import ParsedDataset, display_copy, parse_dataset, with_constant_columns
 from .data.store import DatasetStore
 from .policy import fence
-from .schemas import MAX_SAMPLE_ROWS, MAX_TOP_VALUES, Binding
+from .schemas import MAX_FILE_NAME_CHARS, MAX_SAMPLE_ROWS, MAX_TOP_VALUES, Binding
 from .session_state import (
     BINDINGS,
     DATASET_HISTORY,
@@ -237,8 +237,8 @@ def notes_instruction_like(lines: Sequence[str]) -> bool:
     return bool(lines) and INSTRUCTION_LIKE.search("\n".join(lines)) is not None
 
 
-MAX_SOURCE_NAME_CHARS = 80
-"""The longest file name the session keeps; a longer one keeps its start and its extension around a `…`."""
+MAX_SOURCE_NAME_CHARS = MAX_FILE_NAME_CHARS
+"""The longest file name the session keeps (80); a longer one keeps its start and its extension around a `…`."""
 
 MAX_SOURCE_RAW_CHARS = 1_024
 """The longest `source` the dataset route accepts before sanitising (a file name is at most 255 bytes on

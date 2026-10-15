@@ -69,6 +69,23 @@ def test_a_dropped_files_name_travels_with_every_version() -> None:
 
     assert version.stored.file_name == "sales.csv" and version.payload()["file_name"] == "sales.csv"
     assert version.stored.context_lines == []  # a name is never a note
+    state.update(version.delta)
+
+    # `.to_long()` rebinds but is still the file's data.
+    long = push_version(store, SID, view_of(state), parse_dataset("k,v\na,1\nb,2\n"), SNAPSHOT, rebind=True)
+    assert long.stored.file_name == "sales.csv"
+    state.update(long.delta)
+
+    # A computed table is no longer the file's: no name, in the payload either.
+    computed = push_version(
+        store, SID, view_of(state), parse_dataset("x,y\n0,0\n1,0.84\n"), SNAPSHOT, rebind=True, source="formulas"
+    )
+    assert computed.stored.file_name is None and "file_name" not in computed.payload()
+    state.update(computed.delta)
+
+    # The undo restores the version's own name.
+    undone = undo_version(store, SID, view_of(state), SNAPSHOT)
+    assert undone is not None and undone.stored.file_name == "sales.csv"
 
 
 def test_a_replacing_table_gets_the_default_bindings_where_a_change_carries_them() -> None:

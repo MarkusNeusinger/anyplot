@@ -666,8 +666,8 @@ export const agentApi = {
    * generates data (Python, JavaScript, R) answers `422 code` the same way: the
    * chat's `run_data_code` runs it.
    * `source` is the name of the file the text was read from (a drop, `.open()`,
-   * a pasted file): it travels beside the text, which stays as in the file, and
-   * the server adds it to the notes as `source file: <name>`.
+   * a pasted file): it travels beside the text, which stays as in the file; the
+   * server screens it and answers it as `file_name`, never as a note.
    */
   uploadDataset: (token: string, sid: string, text: string, confirmed = false, source?: string) =>
     agentJson<DatasetAnswer>(

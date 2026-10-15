@@ -63,8 +63,8 @@ class StoredDataset:
     file_name: str | None = None
     """The name of the file the user dropped for this data, sanitised and screened at the dataset route
     (`main._screen_file_name`; `dataset_context.FILE_NAME_WITHHELD` when the screen refused it); None for text pasted or
-    computed. Never a note: the root reads it fenced as data, a name and never a request. Versions made from
-    this one carry it on."""
+    computed. Never a note: the root reads it fenced as data, a name and never a request. A change of the data
+    carries it on, a computed table (`generate_data`, `run_data_code`) does not (`push_version`)."""
 
     def as_parsed(self) -> ParsedDataset:
         """The dataset as `parse_dataset` returned it (the profile's warnings are the parse's), for `apply_operations`."""
