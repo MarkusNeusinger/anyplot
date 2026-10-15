@@ -7,4 +7,4 @@
   a column whose name clearly holds it (`SMA 20`, `Upper`, `Fitness (CTL)`),
   you can bind any column by hand, and the data panel shows
   `— computed by the plot —` while it is open. The adapter learns per role
-  whether to use the bound column or compute the value from the data.
+  whether to use the bound column or compute the value from the data. (#12195)
