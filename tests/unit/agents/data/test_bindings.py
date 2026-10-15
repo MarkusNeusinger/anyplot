@@ -83,6 +83,96 @@ class TestDefaultBindingsOnRealSpecs:
         assert dict(as_pairs(default_bindings(roles, data)))["series"] == "Group"
 
 
+BAR_BASIC = [
+    "`category` (categorical) - Labels for each bar on the x-axis",
+    "`value` (numeric) - Heights of the bars representing the measured quantity",
+]
+# Live test round 2 of 2026-10-15: before the parse read the thousands dots, `Bevölkerung` was a text column;
+# mixed number formats keep it text here.
+CH_CO2_TEXT_POPULATION = (
+    "Jahr,CO2 (Mio. t),CO2 pro Kopf (t),Bevölkerung\n"
+    "2000,43.621,6.07,7.184.003\n2001,45.085,6.24,7226391.5\n2002,43.467,5.97,7.278.744\n"
+)
+
+
+class TestCategoryAndMeasureRanking:
+    """A category role takes a real category or the year; a value role takes a measure, never the year."""
+
+    def test_bar_basic_on_the_swiss_co2_paste(self) -> None:
+        from tests.unit.agents.data.test_parse import CH_CO2_DE
+
+        data = profile(CH_CO2_DE)
+
+        assert as_pairs(default_bindings(parse_roles(BAR_BASIC), data)) == [
+            ("category", "Jahr"),
+            ("value", "CO2 (Mio. t)"),
+        ]
+
+    def test_a_text_column_of_numbers_ranks_after_the_year(self) -> None:
+        data = profile(CH_CO2_TEXT_POPULATION)
+
+        assert dict(as_pairs(default_bindings(parse_roles(BAR_BASIC), data)))["category"] == "Jahr"
+
+    def test_a_real_category_still_comes_first(self) -> None:
+        data = profile("year,country,co2\n2023,Austria,6.2\n2023,Germany,7.0\n2023,France,4.1\n")
+
+        assert as_pairs(default_bindings(parse_roles(BAR_BASIC), data)) == [("category", "country"), ("value", "co2")]
+
+    def test_a_category_of_too_many_values_ranks_after_the_year(self) -> None:
+        rows = "".join(f"{2000 + i % 10},id-{i},{i}.5\n" for i in range(80))
+        data = profile("year,id,amount\n" + rows)
+
+        assert dict(as_pairs(default_bindings(parse_roles(BAR_BASIC), data)))["category"] == "year"
+
+    def test_the_value_role_skips_a_year_column_for_a_measure(self) -> None:
+        roles = [role("value", "numeric")]
+        data = profile("Jahr,Einwohner\n2020,8670300\n2021,8738800\n")
+
+        assert as_pairs(default_bindings(roles, data)) == [("value", "Einwohner")]
+
+    def test_a_named_year_ranks_after_a_value_that_only_looks_like_years(self) -> None:
+        roles = [role("value", "numeric")]
+        data = profile("year,price\n2020,1250\n2021,1310\n")
+
+        assert as_pairs(default_bindings(roles, data)) == [("value", "price")]
+
+    def test_prices_in_the_year_range_are_measures(self) -> None:
+        # Review of 2026-10-15: a price of 1000 to 2200 scored as a year and lost the value role to the quantity.
+        data = profile("Produkt;Preis;Menge\nA;1250;3\nB;1400;5\nC;1990;2\n")
+
+        assert as_pairs(default_bindings(parse_roles(BAR_BASIC), data)) == [("category", "Produkt"), ("value", "Preis")]
+
+    def test_an_unnamed_run_of_whole_years_still_counts(self) -> None:
+        roles = [role("value", "numeric")]
+        data = profile("t,amount\n2019,7\n2020,9\n2021,8\n")
+
+        assert as_pairs(default_bindings(roles, data)) == [("value", "amount")]
+
+    def test_a_quarter_ranks_before_a_measure_in_the_year_range_as_category(self) -> None:
+        roles = [role("category", "categorical")]
+        data = profile("Umsatz,Quartal\n1250,1\n1400,2\n1990,3\n1700,4\n")
+
+        assert as_pairs(default_bindings(roles, data)) == [("category", "Quartal")]
+
+    def test_name_similarity_decides_before_the_year_rank(self) -> None:
+        roles = [role("value", "numeric")]
+        data = profile("Jahr,amount,value_eur\n2020,3.5,1.5\n2021,4.5,2.5\n2022,5.5,3.5\n")
+
+        assert as_pairs(default_bindings(roles, data)) == [("value", "value_eur")]
+
+    def test_a_time_axis_prefers_the_year_among_numbers(self) -> None:
+        roles = [role("x", "datetime", "numeric"), role("y", "numeric")]
+        data = profile("population,year\n7.5,2020\n7.6,2021\n")
+
+        assert as_pairs(default_bindings(roles, data)) == [("x", "year"), ("y", "population")]
+
+    def test_a_year_column_is_the_category_of_a_wide_table(self) -> None:
+        roles = [role("category", "categorical"), role("y", "numeric", variadic=True)]
+        data = profile("Jahr,Shoes,Hats\n2020,1,2\n2021,3,4\n")
+
+        assert as_pairs(default_bindings(roles, data)) == [("category", "Jahr"), ("y1", "Shoes"), ("y2", "Hats")]
+
+
 class TestDefaultBindings:
     def test_exact_names_win(self) -> None:
         roles = [role("x", "numeric"), role("y", "numeric")]

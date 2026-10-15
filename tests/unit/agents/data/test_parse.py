@@ -1073,7 +1073,8 @@ class TestTyping:
         assert parsed.csv == "a,b\n1,x\n"
 
     def test_an_all_missing_column_is_text(self) -> None:
-        parsed = parse_dataset("a,b\n1,\n2,NA\n")
+        # A paste drops such a column (`TestEmptyColumns`); the service's own CSV keeps and types it.
+        parsed = parse_dataset("a,b\n1,\n2,\n", find_table=False, max_bytes=MAX_COMPUTED_BYTES, canonical=True)
 
         assert column(parsed, "b").dtype == "text"
         assert column(parsed, "b").missing == 2
@@ -1637,3 +1638,224 @@ class TestNaCategory:
         assert parsed.profile.columns[2].missing == 1
         frame = read_back(parsed)
         assert frame["Continent"].tolist() == ["NA", "EU"] and frame["Label"].tolist() == ["null", "ok"]
+
+
+# Live test round 2 of 2026-10-15: a German-format semicolon CSV of Swiss CO2 emissions (decimal commas,
+# population with thousands dots), the first rows as pasted.
+CH_CO2_DE = (
+    "Jahr;CO2 (Mio. t);CO2 pro Kopf (t);Bevölkerung\n"
+    "2000;43,621;6,07;7.184.003\n"
+    "2001;45,085;6,24;7.226.391\n"
+    "2002;43,467;5,97;7.278.744\n"
+    "2003;44,651;6,09;7.333.451\n"
+)
+
+
+class TestThousandsGroups:
+    """Numbers whose thousands are grouped by a dot, a comma, an apostrophe or a space (`_as_grouped_numbers`)."""
+
+    def test_the_swiss_co2_paste_reads_its_population_as_integers(self) -> None:
+        parsed = parse_dataset(CH_CO2_DE)
+
+        assert parsed.column_dtypes == {
+            "Jahr": "integer",
+            "CO2 (Mio. t)": "number",
+            "CO2 pro Kopf (t)": "number",
+            "Bevölkerung": "integer",
+        }
+        assert read_back(parsed)["Bevölkerung"].tolist() == [7184003, 7226391, 7278744, 7333451]
+        assert warned(parsed, "column 'Bevölkerung': dots read as thousands separators")
+        # `6,07` settles the file's decimal comma, so `43,621` asks no question.
+        assert column(parsed, "CO2 (Mio. t)").max == 45.085
+        assert not warned(parsed, "commas read as decimal commas")
+
+    def test_two_dot_groups_settle_the_one_group_cells_of_the_column(self) -> None:
+        parsed = parse_dataset("Ort,Einwohner\nA,999.123\nB,1.234.567\nC,12\n")
+
+        assert parsed.csv.splitlines()[1:] == ["A,999123", "B,1234567", "C,12"]
+
+    @pytest.mark.parametrize(
+        ("cells", "expected", "label"),
+        [
+            (["1'234'567", "2'000", "15"], [1234567, 2000, 15], "apostrophes"),
+            (["1’234.5", "20’000.25"], [1234.5, 20000.25], "apostrophes"),
+            (["1 234 567", "12 000"], [1234567, 12000], "spaces"),
+            (["1\N{NO-BREAK SPACE}234,5", "999"], [1234.5, 999], "spaces"),
+            (
+                ["1\N{NARROW NO-BREAK SPACE}234\N{NARROW NO-BREAK SPACE}567", "5\N{NARROW NO-BREAK SPACE}000"],
+                [1234567, 5000],
+                "spaces",
+            ),
+            (["1\N{THIN SPACE}234\N{THIN SPACE}000", "7"], [1234000, 7], "spaces"),
+            (['"1,234,567"', '"2,000"'], [1234567, 2000], "commas"),
+            (['"1,234.5"', "12.25"], [1234.5, 12.25], "commas"),
+        ],
+    )
+    def test_grouped_numbers_read_as_numbers(self, cells: list[str], expected: list[float], label: str) -> None:
+        parsed = parse_dataset("label\tvalue\n" + "".join(f"r{i}\t{cell}\n" for i, cell in enumerate(cells)))
+
+        assert column(parsed, "value").dtype in ("integer", "number")
+        assert read_back(parsed)["value"].tolist() == expected
+        assert warned(parsed, f"column 'value': {label} read as thousands separators")
+
+    def test_a_swiss_amount_behind_a_currency_keeps_its_groups(self) -> None:
+        parsed = parse_dataset("Posten;Betrag\nMiete;CHF 1'850.50\nAuto;CHF 12'400\nHaus;CHF 1'250'000\n")
+
+        assert parsed.column_dtypes["Betrag (CHF)"] == "number"
+        assert read_back(parsed)["Betrag (CHF)"].tolist() == [1850.5, 12400, 1250000]
+
+    @pytest.mark.parametrize(
+        "evidence",
+        [
+            ["0.25", "0.5", "0.25"],  # a dot decimal elsewhere says nothing about the commas here
+            ["12.30", "8.15", "17.45"],  # times
+            ["4.5", "3.8", "4.1"],  # a rating beside a price (second opinion of 2026-10-15)
+        ],
+    )
+    def test_a_dot_decimal_elsewhere_keeps_the_ambiguous_decimal_comma(self, evidence: list[str]) -> None:
+        rows = "".join(
+            f"{name}\t{price}\t{value}\n"
+            for name, price, value in zip("ABC", ['"1,250"', '"2,500"', "980"], evidence, strict=True)
+        )
+        parsed = parse_dataset("name\tprice\tother\n" + rows)
+
+        assert read_back(parsed)["price"].tolist() == [1.25, 2.5, 980]
+        assert warned(parsed, "column 'price': commas read as decimal commas")
+
+    def test_one_comma_group_beside_a_comma_grouped_column_is_thousands(self) -> None:
+        parsed = parse_dataset('city\tpopulation\tarea\nA\t"1,234"\t"1,234,567"\nB\t"12,500"\t"2,000"\nC\t980\t17\n')
+
+        assert read_back(parsed)["population"].tolist() == [1234, 12500, 980]
+        assert read_back(parsed)["area"].tolist() == [1234567, 2000, 17]
+        assert warned(parsed, "column 'population': commas read as thousands separators, as in the file's other")
+        assert not warned(parsed, "commas read as decimal commas")
+
+    def test_one_dot_group_beside_a_dot_grouped_column_is_thousands(self) -> None:
+        parsed = parse_dataset("a;b;c\nx;7.184.003;1.234\ny;7.226.391;2.500\nz;7.278.744;980\n")
+
+        assert parsed.column_dtypes == {"a": "text", "b": "integer", "c": "integer"}
+        assert read_back(parsed)["c"].tolist() == [1234, 2500, 980]
+        assert warned(parsed, "column 'c': dots read as thousands separators, as in the file's other columns")
+        assert parsed.profile.decimal == "."
+
+    @pytest.mark.parametrize(
+        ("header", "cells"),
+        [
+            ("value", ["123 456", "234 567", "345 678"]),  # one space group: a phone or article number
+            ("value", ["1'234", "5'678", "9'012"]),  # one apostrophe group without a decimal
+            ("value", ["192.168.100.200", "10.200.100.150", "172.160.100.250"]),  # IPv4 addresses
+            ("Version", ["1.200.300", "1.200.301", "2.000.000"]),
+            ("Artikel-Nr", ["1'234'567", "2'345'678", "3'456'789"]),
+            ("customer_id", ["1.234.567", "2.345.678", "3.456.789"]),
+            ("PLZ", ["8 000 001", "3 000 002", "1 200 003"]),
+        ],
+    )
+    def test_ids_codes_and_addresses_stay_text(self, header: str, cells: list[str]) -> None:
+        rows = "".join(f"r{i};{i};{cell}\n" for i, cell in enumerate(cells))
+        parsed = parse_dataset(f"label;n;{header}\n" + rows)
+
+        assert column(parsed, header).dtype == "text"
+        assert not warned(parsed, "read as thousands separators")
+
+    def test_an_id_column_is_not_retyped_by_the_files_decimal_comma(self) -> None:
+        parsed = parse_dataset("Preis;Code\n3,50;1.200\n2,10;1.300\n")
+
+        assert column(parsed, "Code").dtype == "number"
+        assert read_back(parsed)["Code"].tolist() == [1.2, 1.3]
+
+    def test_one_comma_group_without_other_evidence_stays_a_decimal_comma(self) -> None:
+        parsed = parse_dataset("label;v\na;1,234\nb;5,678\n")
+
+        assert column(parsed, "v").max == 5.678
+        assert warned(parsed, "column 'v': commas read as decimal commas")
+
+    @pytest.mark.parametrize(
+        "cells",
+        [
+            ["1.2.3", "4.5.6"],  # groups of one digit: a version or an outline number
+            ["1'23", "4'56"],  # an apostrophe before two digits
+            ["1 23", "4 5"],  # spaces between short numbers
+            ["1.234,5.6", "7"],  # a mark used as both separator and decimal
+            ["1'234,5", "1'234.5"],  # two decimal marks in one column
+            ["0.123.456", "7"],  # a group never starts with a zero
+        ],
+    )
+    def test_irregular_groups_stay_text(self, cells: list[str]) -> None:
+        rows = "".join(f"r{i};{i};{cell}\n" for i, cell in enumerate([*cells, *cells]))
+        parsed = parse_dataset("label;n;value\n" + rows)
+
+        assert column(parsed, "value").dtype == "text"
+
+    def test_dotted_dates_are_still_dates(self) -> None:
+        parsed = parse_dataset("Datum;Wert\n01.02.2024;1.234.567\n15.03.2024;7\n")
+
+        assert parsed.column_dtypes == {"Datum": "datetime", "Wert": "integer"}
+        assert column(parsed, "Datum").min == "2024-02-01"
+
+
+class TestEmptyColumns:
+    """Columns without a value in any row leave the table (`_without_empty_columns`)."""
+
+    ECB = (
+        "KEY,FREQ,TIME_PERIOD,OBS_VALUE,OBS_PRE_BREAK,OBS_COM,BREAKS,TITLE\n"
+        "EXR.D.CHF.EUR.SP00.A,D,2024-01-02,0.9305,,,,Swiss franc/Euro\n"
+        "EXR.D.CHF.EUR.SP00.A,D,2024-01-03,0.9322,,,,Swiss franc/Euro\n"
+        "EXR.D.CHF.EUR.SP00.A,D,2024-01-04,0.9301,,,,Swiss franc/Euro\n"
+    )
+
+    def test_an_api_export_loses_its_empty_columns_with_one_warning(self) -> None:
+        parsed = parse_dataset(self.ECB)
+
+        assert [c.name for c in parsed.profile.columns] == ["TIME_PERIOD", "OBS_VALUE"]
+        assert warned(parsed, "3 columns without any value dropped: OBS_PRE_BREAK, OBS_COM, BREAKS")
+        assert all(len(row) == 2 for row in parsed.preview)
+        # The constants went to the notes; the empty columns are simply gone.
+        assert "KEY: EXR.D.CHF.EUR.SP00.A" in parsed.context_lines
+        assert not any("OBS_COM" in line for line in parsed.context_lines)
+
+    def test_missing_tokens_count_as_empty(self) -> None:
+        parsed = parse_dataset("x,y,note\n1,2,NA\n3,4,-\n5,6,\n")
+
+        assert parsed.column_dtypes == {"x": "integer", "y": "integer"}
+        assert warned(parsed, "1 column without any value dropped: note")
+
+    def test_one_column_with_values_is_kept_alone(self) -> None:
+        parsed = parse_dataset("x,empty\n1,\n2,\n3,\n")
+
+        assert [c.name for c in parsed.profile.columns] == ["x"]
+        assert warned(parsed, "1 column without any value dropped: empty")
+
+    def test_one_column_beside_many_empty_ones_is_no_column_cap_refusal(self) -> None:
+        names = ["value", *(f"e{i}" for i in range(55))]
+        rows = [f"{i}.5" + "," * 55 for i in range(3)]
+        parsed = parse_dataset("\n".join([",".join(names), *rows]) + "\n")
+
+        assert parsed.column_dtypes == {"value": "number"}
+
+    def test_empty_columns_do_not_count_against_the_column_cap(self) -> None:
+        names = ["a", "b", *(f"e{i}" for i in range(MAX_COLUMNS))]
+        rows = ["1,2" + "," * MAX_COLUMNS, "3,4" + "," * MAX_COLUMNS]
+        parsed = parse_dataset("\n".join([",".join(names), *rows]) + "\n")
+
+        assert parsed.column_dtypes == {"a": "integer", "b": "integer"}
+
+    def test_json_records_and_column_lists_drop_empty_fields_before_the_cap(self) -> None:
+        empty = {f"unused_{i}": None for i in range(MAX_COLUMNS)}
+        records = parse_dataset(json.dumps([{"a": 1, "b": 2, **empty}, {"a": 3, "b": 4, **empty}]))
+        columns = parse_dataset(json.dumps({"a": [1, 3], "b": [2, 4], **{k: [None, None] for k in empty}}))
+
+        for parsed in (records, columns):
+            assert parsed.column_dtypes == {"a": "integer", "b": "integer"}
+            assert warned(parsed, f"{MAX_COLUMNS} columns without any value dropped")
+
+    def test_a_json_table_far_over_the_cap_is_refused_before_it_is_read(self) -> None:
+        wide = parse_module.MAX_RAW_COLUMNS + 1
+        assert error_code(json.dumps([{f"c{i}": None for i in range(wide)}])) == "too_many_columns"
+        assert error_code(json.dumps({f"c{i}": [None] for i in range(wide)})) == "too_many_columns"
+
+    def test_a_canonical_reparse_keeps_an_empty_column(self) -> None:
+        parsed = parse_dataset(
+            "x,y,ratio\n1,2,\n3,4,\n", find_table=False, max_bytes=MAX_COMPUTED_BYTES, canonical=True
+        )
+
+        assert [c.name for c in parsed.profile.columns] == ["x", "y", "ratio"]

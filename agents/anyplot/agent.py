@@ -10,9 +10,9 @@
   spec title started as a public issue, so it never enters that block: the root reads
   it fenced as `<spec_text>` through `get_spec_brief`. The session language may be a
   user-chosen name, so it stands there inside a `<plot_language>` fence. Its tools are
-  the seven session tools (`prepare_data` and `generate_data` among them, the step-1
-  data operations and the formula source, and `set_language`) and the `plot_pipeline`
-  NodeTool.
+  the nine session tools (`prepare_data` and `generate_data` among them, the step-1
+  data operations and the formula source, `query_data`, which answers a question about
+  the data from a copy, and `set_language`) and the `plot_pipeline` NodeTool.
 * The adapters (one per enabled library) and the reviewer run only inside the
   pipeline through `ctx.run_node`, so a walk from the root would miss them;
   `ALL_AGENTS` lists every agent for the registry test.

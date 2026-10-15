@@ -1,10 +1,11 @@
 """ToolSafety: which agent may call which tool, with which arguments, and what comes back.
 
-* `before_tool_callback`: a per-agent allowlist (the root's eight session tools and its
+* `before_tool_callback`: a per-agent allowlist (the root's nine session tools and its
   `plot_pipeline` workflow; none for the adapters and the reviewer); Pydantic
   validation of the arguments (ADK
   leaves `FUNCTION_TOOL_ARG_VALIDATION` off; `prepare_data` takes at most five
-  operations of the `Operation` union, `generate_data` the `generate.Generate`
+  operations of the `Operation` union, `query_data` up to five of them with its
+  `query.QueryArgs` bounds, `generate_data` the `generate.Generate`
   spec and `set_language` one value that matches `language.LANGUAGE_PATTERN`, as the
   language route does, and the `invalid_arguments` refusal of the first two carries
   the validation lines
@@ -19,7 +20,7 @@
   Personal data in a `change_request` (a name, an address, an e-mail address, a phone
   number, a web address without a scheme or `www.` such as `jana-novak.de`) passes:
   whether plot text is an advertisement or a message to other people is the scope
-  judge's call, by intent. Four `prepare_data` arguments are exempt from the link rule
+  judge's call, by intent. Four `prepare_data` (and `query_data`) arguments are exempt from the link rule
   by key (`DATA_ARGUMENT_KEYS`): a condition's `value`, a rename's or a new column's
   `name`, and a `classify` rule's `label` and its `otherwise`. They are data, not an
   instruction to follow: a value is compared with the cells of a column, a name
@@ -30,7 +31,7 @@
   `columns`, `by`, `index`, ...) and the new names of a pivot stay under the rule, and
   so does every string of `generate_data`: its names and expressions never need a link.
 * `after_tool_callback`: a key allowlist per tool and a size cap of 8 KB (24 KB for
-  `get_current_code`, 16 KB for `prepare_data`, `generate_data`, `run_data_code` and `plot_pipeline`, 25 KB
+  `get_current_code`, 16 KB for `prepare_data`, `query_data`, `generate_data`, `run_data_code` and `plot_pipeline`, 25 KB
   for `get_dataset_profile`, whose 16 KB of profile sit next to the pasted notes); a result outside them becomes an error. The `plot_pipeline` result
   reaches the root with its model-written `changes` and `residual_defects` fenced as
   `<tool_notes>` under `notes`, and what the shipped render shows (`PlotShows`) fenced
@@ -53,6 +54,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from ..data.generate import Generate
 from ..data.prepare import MAX_OPERATIONS, Operation, validation_lines
+from ..data.query import QueryArgs
 from ..language import LANGUAGE_PATTERN, MAX_LANGUAGE_CHARS
 from ..policy import DATA_PREAMBLE, fence
 from ..schemas import MAX_COLUMNS, Binding, PipelineArgs, PlotResult
@@ -64,6 +66,7 @@ logger = logging.getLogger(__name__)
 ROOT_AGENT = "anyplot"
 PIPELINE_TOOL = "plot_pipeline"
 PREPARE_TOOL = "prepare_data"
+QUERY_TOOL = "query_data"
 GENERATE_TOOL = "generate_data"
 DATA_CODE_TOOL = "run_data_code"
 MAX_DATA_CODE_CALLS = 2
@@ -83,6 +86,8 @@ RESULT_LIMITS: dict[str, int] = {
     "get_dataset_profile": 16 * 1024 + MAX_NOTES_RESULT_BYTES,
     # The new profile, trimmed like get_dataset_profile's, plus five change lines of at most 300 characters.
     PREPARE_TOOL: 16 * 1024,
+    # 25 rows of 8 cells of at most 40 characters, 8 column names of 64, and five change lines of 300.
+    QUERY_TOOL: 16 * 1024,
     # The profile of at most 12 columns, the change line and one warning per series.
     GENERATE_TOOL: 16 * 1024,
     # The new profile, trimmed like get_dataset_profile's, plus one change line, or up to ten validator findings.
@@ -94,6 +99,7 @@ RESULT_LIMITS: dict[str, int] = {
 }
 DATA_ARGUMENT_KEYS: dict[str, frozenset[str]] = {
     PREPARE_TOOL: frozenset({"value", "name", "label", "otherwise"}),
+    QUERY_TOOL: frozenset({"value", "name", "label", "otherwise"}),
     # Code holds `x / 2` and `a // b`, which the path rule reads as paths; the DATA validator bans URL literals,
     # file names reach no reader (`open`, `read_*` and the I/O modules are banned) and the sandbox has no egress.
     DATA_CODE_TOOL: frozenset({"code"}),
@@ -157,11 +163,12 @@ ARGUMENTS: dict[str, type[BaseModel]] = {
     "set_bindings": _BindingArgs,
     "set_language": _LanguageArgs,
     PREPARE_TOOL: _PrepareArgs,
+    QUERY_TOOL: QueryArgs,
     GENERATE_TOOL: Generate,
     DATA_CODE_TOOL: _DataCodeArgs,
     PIPELINE_TOOL: PipelineArgs,
 }
-ARGUMENT_ERROR_TOOLS = frozenset({PREPARE_TOOL, GENERATE_TOOL, DATA_CODE_TOOL})
+ARGUMENT_ERROR_TOOLS = frozenset({PREPARE_TOOL, QUERY_TOOL, GENERATE_TOOL, DATA_CODE_TOOL})
 """The tools whose `invalid_arguments` refusal carries the validation lines: arguments the model assembles field by field."""
 ALLOWED_TOOLS: dict[str, frozenset[str]] = {ROOT_AGENT: frozenset(ARGUMENTS)}
 _DATA_VERSION_KEYS = frozenset(
@@ -174,10 +181,13 @@ RESULT_KEYS: dict[str, frozenset[str]] = {
     ),
     "get_spec_brief": frozenset({"status", "code", "brief"}),
     "get_current_code": frozenset({"status", "code", "version"}),
-    "set_bindings": frozenset({"status", "reason", "code", "complete", "missing_roles", "errors", "warnings"}),
+    "set_bindings": frozenset(
+        {"status", "reason", "code", "complete", "missing_roles", "data_confirmed", "errors", "warnings"}
+    ),
     # No value: the root knows what it passed, and a result that echoed free text would need a fence.
     "set_language": frozenset({"status", "code", "source", "changed", "plot_outdated"}),
     PREPARE_TOOL: _DATA_VERSION_KEYS,
+    QUERY_TOOL: frozenset({"status", "reason", "code", "message", "errors", "rows", "table", "truncated", "changes"}),
     GENERATE_TOOL: _DATA_VERSION_KEYS,
     DATA_CODE_TOOL: _DATA_VERSION_KEYS,
     # Every PlotResult field, so a field added to the schema (as `version` was) can never turn a

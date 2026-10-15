@@ -2210,6 +2210,29 @@ class TestInsightsRouter:
             assert data["preview_url_light"] == TEST_IMAGE_URL
             assert data["preview_url_dark"] == dark_url
 
+    def test_potd_prefers_the_featured_pool_and_rotates_without_repeats(self) -> None:
+        """A featured spec (score >= 92, no `-basic`) beats a plainer one, and a cycle repeats no spec."""
+        from datetime import date, timedelta
+
+        from api.routers.insights import POTD_EPOCH, _pick_potd
+
+        def candidate(spec: str, library: str, score: float) -> tuple:
+            return (spec, spec, "", library, "python", score, "url", None)
+
+        candidates = [
+            candidate("scatter-basic", "matplotlib", 99.0),
+            candidate("precision-recall", "pygal", 90.0),
+            *[candidate(f"spec-{n}", library, 93.0) for n in range(5) for library in ("altair", "plotly")],
+        ]
+        picks = [_pick_potd(candidates, POTD_EPOCH + timedelta(days=day)) for day in range(10)]
+
+        assert {pick[0] for pick in picks} == {f"spec-{n}" for n in range(5)}
+        assert len({pick[0] for pick in picks[:5]}) == 5  # one cycle: every featured spec once
+        assert {pick[3] for pick in picks} == {"altair", "plotly"}  # the library varies too
+        assert _pick_potd(candidates, date(2026, 10, 15)) == _pick_potd(candidates, date(2026, 10, 15))
+        # Without a featured implementation, every candidate qualifies.
+        assert _pick_potd(candidates[:2], POTD_EPOCH)[0] in {"scatter-basic", "precision-recall"}
+
     def test_potd_no_candidates(self, client: TestClient) -> None:
         """Plot of the day should return null when no high-quality implementations."""
         mock_impl = MagicMock()

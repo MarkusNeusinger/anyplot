@@ -137,6 +137,7 @@ from .render.gates import data_rows, evaluate
 from .render.runtimes.python import PythonRuntime
 from .schemas import (
     MAX_CHANGE_CHARS,
+    MAX_CHANGE_REQUEST_CHARS,
     MAX_CHANGES,
     MAX_FEEDBACK,
     MAX_LINE_CHARS,
@@ -165,7 +166,7 @@ from .schemas import (
 )
 from .scoring import ScoreAnswer, ScoreError, mend_answer, parse_answer
 from .services import PADDED_REASON, CodeVersion, Services, ThemeRender, get_services
-from .session_state import SessionView, read_session
+from .session_state import PENDING_REQUEST, SessionView, read_session
 from .settings import AgentSettings, get_settings
 from .sub_agents.adapter import ADAPTERS, adapter_name
 from .sub_agents.reviewer import REVIEWER_NAME, use_reviewer_mode
@@ -543,6 +544,84 @@ def load_inputs(
     if not view.data_confirmed:
         return view, dataset, "data_unconfirmed"
     return view, dataset, None
+
+
+PENDING_REASONS: frozenset[str] = frozenset({"data_unconfirmed", "incomplete_bindings"})
+"""The `not_ready` reasons a first plot's request waits through: the user confirms or binds, then plots again."""
+
+
+def keep_pending_request(state: Any, args: PipelineArgs, reason: NotReadyReason | None) -> None:
+    """Keep a first plot's `change_request` that stopped on `reason` for the next run (`PENDING_REQUEST`).
+
+    A live test of 2026-10-15: the user's step-2 note ("only co2_per_capita, title ...") made
+    the root change the bindings, which asked for `.confirm()` again; the plot stopped on
+    `data_unconfirmed`, and the title never reached the plot that the next `.create_plot()`
+    drew. A change of an existing version (`base="previous"`) is not kept: it names a plot
+    that is there, and the root repeats it once the reason is gone.
+    """
+    if reason in PENDING_REASONS:
+        hold_request(state, args)
+
+
+def hold_request(state: Any, args: PipelineArgs) -> None:
+    """Keep a first plot's `change_request` for the next run, joined to one kept already (`merged_request`).
+
+    Also the path of a run that passed the check but got no slot in the run queue (`capacity`,
+    or a cancelled wait): its note waits for the next `.create_plot()` like a blocked one's.
+    """
+    if args.change_request and args.base != "previous":
+        state[PENDING_REQUEST] = merged_request(state.get(PENDING_REQUEST), args.change_request)
+
+
+MIN_KEPT_NOTE_CHARS = 40
+"""The least of a kept request worth keeping, cut, in front of a new one that leaves too little room."""
+
+
+def merged_request(pending: object, own: str) -> str:
+    """A kept request and a new one as one `change_request` of at most `MAX_CHANGE_REQUEST_CHARS`.
+
+    The kept one comes first. When both do not fit, the kept one is cut with `…` to the room the
+    new one leaves (review of 2026-10-15: dropping it silently lost the user's title), unless less
+    than `MIN_KEPT_NOTE_CHARS` would remain; then the new one, the user's latest word, stands
+    alone. A new one the kept one already holds as a line adds nothing. A kept value that is no
+    text is ignored.
+    """
+    own = own.strip()
+    if not isinstance(pending, str) or not pending.strip():
+        return own
+    pending = pending.strip()[:MAX_CHANGE_REQUEST_CHARS]
+    if not own or own in pending.split("\n"):
+        return pending
+    if len(pending) + 1 + len(own) <= MAX_CHANGE_REQUEST_CHARS:
+        return f"{pending}\n{own}"
+    room = MAX_CHANGE_REQUEST_CHARS - len(own) - 2  # the `…` and the line break
+    if room < MIN_KEPT_NOTE_CHARS:
+        return own
+    return f"{pending[:room].rstrip()}…\n{own}"
+
+
+def take_pending_request(state: Any, args: PipelineArgs) -> PipelineArgs:
+    """The run's arguments with a kept request (`keep_pending_request`) in front of its own.
+
+    A run on the catalogue plot without a request of its own (the bare `.create_plot()`) takes
+    the kept one; one with its own request takes both (`merged_request`); a change of an
+    existing version takes none. The state keeps the request until the run ends
+    (`settle_pending_request`), so a run that fails loses no note (review of 2026-10-15).
+    """
+    pending = state.get(PENDING_REQUEST)
+    if pending is None or args.base == "previous":
+        return args
+    return args.model_copy(update={"change_request": merged_request(pending, args.change_request)})
+
+
+def settle_pending_request(state: Any, args: PipelineArgs, shipped: bool) -> None:
+    """After a run: a shipped plot used the kept request, so it goes; a run that shipped nothing keeps its request
+    (the kept one with the run's own, as `take_pending_request` joined them) for the next first plot."""
+    if shipped:
+        if state.get(PENDING_REQUEST) is not None:
+            state[PENDING_REQUEST] = None
+    elif args.change_request and args.base != "previous":
+        state[PENDING_REQUEST] = args.change_request
 
 
 def render_adapt_request(request: AdaptRequest, view: SessionView) -> str:
@@ -1077,14 +1156,19 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     ledger = ledger_for(ctx.invocation_id)
     view, dataset, not_ready = load_inputs(ctx, services)
     if not_ready is not None or view is None or dataset is None:
+        keep_pending_request(ctx.state, node_input, not_ready)
         yield _result_event(PlotResult.not_ready(not_ready or "no_dataset"))
         return
     ledger.pipeline_active = True
     if ledger.run_slot is not None and not await ledger.run_slot():
         # No slot: the route failed the turn with `capacity`, or the user cancelled the wait. Either way the run is
         # aborted, a cancelled path, so no result: the stream ends with the error, or with `done` after a cancel.
+        # A kept request stays for the next run, and this run's own joins it, so neither is lost.
+        hold_request(ctx.state, node_input)
         ledger.pipeline_active = False
         return
+    # Taken only once the run has its slot: a run that never starts leaves the user's note for the next one.
+    node_input = take_pending_request(ctx.state, node_input)
     theme = node_input.theme or _default_theme(services, ctx.session.id, view.library, node_input.base)
     run = Run(
         view=view,
@@ -1122,6 +1206,7 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
         run.stage = "error"
     # From here on the root's closing reply is never the budget refusal (plugins/budget.py).
     ledger.plot_shipped = result.status in ("ok", "needs_attention")
+    settle_pending_request(ctx.state, node_input, ledger.plot_shipped)
     _attribute_result(ledger, run, result)
     yield close_scope(scope)
     yield _result_event(result)
