@@ -283,6 +283,10 @@ Marker and line sizes should adapt to how dense the data is — no fixed values:
 - **Few series (1–3)** → thicker lines for prominence.
 - **Many series (> 5)** → thinner lines so all stay visible.
 
+### Per-mark Labels and Decorations
+
+Some elements are drawn once per bar or point: value labels, dots on bar ends, shadows, a text next to each point. Unlike a title, a legend or a single callout, their count grows with the data, so a choice that suits 8 bars can bury 50. Keep them only while each label fits the space of its mark (a bar label no wider than its bar's slot) and the plot stays legible, which rarely holds past about 25 marks. With more marks, drop them, or label only the extremes (the largest and the smallest value) when the plot needs numbers. Text that is the encoding itself (heatmap cell values, a word cloud, a table) follows its spec instead.
+
 ### General Rules
 - Elements should be **~2-3× larger** than the library's standard defaults.
 - When in doubt, make it bigger.
@@ -292,7 +296,7 @@ Marker and line sizes should adapt to how dense the data is — no fixed values:
 
 ## Proportional Sizing
 
-The review step checks these proportions visually from the source PNG. There are no hard pixel thresholds — violations cost points in the existing VQ-01 (Text Legibility), VQ-02 (No Overlap), VQ-05 (Layout & Canvas) categories rather than triggering a separate pass/fail. This keeps the contract holistic: a single visual problem (oversized short axis label, overlapping ticks) can reduce points in multiple categories.
+The review step checks these proportions visually from the source PNG. There are no hard pixel thresholds — violations cost points in the existing VQ-01 (Text Legibility), VQ-02 (No Overlap), VQ-03 (Element Visibility), VQ-05 (Layout & Canvas) categories rather than triggering a separate pass/fail. This keeps the contract holistic: a single visual problem (oversized short axis label, overlapping ticks) can reduce points in multiple categories.
 
 - **Title proportion:** Title comfortably takes ~50–70% of the plot width. The mandated `{spec-id} · {lang} · {lib} · anyplot.ai` title is ~67 chars long and naturally fills 70–85% at the style-guide default fontsize — this is **expected**, not a violation. Only flag if title overflows past ~90% of width OR fontsize is too generous for the content. **When the optional `{Descriptive Title} · ` prefix is used, or when `{spec-id}` is long (e.g. `network-bipartite-weighted`), the total title runs past ~67 chars and the default fontsize will overflow** — the generator must shrink the title fontsize via the linear formula `fontsize = round(default × 67 / len(title))` (capped at the library-specific floor). See `prompts/plot-generator.md` "Title fontsize must scale with title length" for the per-library defaults and floors.
 - **Axis label proportionality:** Short labels ("Date", "Year") should not dominate the axis with oversized fontsizes. Long descriptive labels ("Fläche von Häusern in Quadratmetern") are fine as long as they don't overflow — the "no overflow" rule covers that case.
@@ -301,6 +305,7 @@ The review step checks these proportions visually from the source PNG. There are
 - **No overlap:** Text never overlaps with other text or with data elements.
 - **No overflow:** No text extends beyond axis bounds, plot bounds, or frame.
 - **Marker / line density appropriateness:** Element sizes match the data-density heuristic above (sparse → prominent; dense → smaller + alpha).
+- **Per-mark label density:** Value labels, dots on bar ends and shadows follow "Per-mark Labels and Decorations" above; labels that crowd their marks cost VQ-03, labels that overlap cost VQ-02.
 
 ---
 
