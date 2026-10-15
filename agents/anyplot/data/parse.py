@@ -1157,8 +1157,9 @@ class _SourceFloat(float):
     text: str
 
     def __new__(cls, text: str) -> "_SourceFloat":
-        number = super().__new__(cls, text.replace("_", ""))
-        number.text = text
+        digits = text.replace("_", "")  # Python's digit separators (`0.123_456`) are no part of the value
+        number = super().__new__(cls, digits)
+        number.text = digits
         return number
 
 
@@ -1167,15 +1168,19 @@ class _FloatTexts(ast.NodeTransformer):
 
     A signed float (`-0.5`) becomes one constant with its sign, since `literal_eval` applies
     a sign only to a plain `float`. A complex literal (`1.5+2j`) is left as Python reads it.
+    The text is sliced by the node's UTF-8 offsets from lines split once: `ast.get_source_segment`
+    splits the whole source for every call, quadratic in a paste of many floats (review of #12196).
     """
 
     def __init__(self, source: str) -> None:
-        self.source = source
+        # The line breaks Python's tokenizer counts: LF, CRLF and a lone CR.
+        self.lines = [line.encode("utf-8") for line in _PHYSICAL_LINE.split(source)]
 
     def _constant(self, node: ast.AST, sign: str, constant: ast.Constant) -> ast.AST:
-        written = ast.get_source_segment(self.source, constant)
-        if not written:
-            return node
+        line, end_line = constant.lineno, constant.end_lineno
+        if end_line != line or constant.end_col_offset is None or not 0 < line <= len(self.lines):
+            return node  # a float literal never spans lines; anything else keeps Python's own value
+        written = self.lines[line - 1][constant.col_offset : constant.end_col_offset].decode("utf-8")
         return ast.copy_location(ast.Constant(_SourceFloat(sign + written)), node)
 
     def visit_BinOp(self, node: ast.BinOp) -> ast.AST:

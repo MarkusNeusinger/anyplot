@@ -2555,3 +2555,25 @@ class TestFidelity:
     def test_a_python_literal_keeps_complex_numbers_and_underscores_as_python_reads_them(self) -> None:
         assert parse_dataset("{'v': [1_000.5, 2.25]}").csv == "v\n1000.5\n2.25\n"
         assert error_code("{'v': [1.5+2j, 2.0]}") == "unparseable"
+
+    def test_digit_separators_do_not_hide_digits_from_the_rounding_count(self) -> None:
+        parsed = parse_dataset("{'v': [0.123_456_789_012_345_678_9, 2.25]}")
+
+        assert parsed.csv == "v\n0.12345678901234568\n2.25\n"
+        assert warned(parsed, "column 'v': 1 value with more significant digits")
+
+    def test_float_texts_follow_every_line_break_and_non_ascii_text(self) -> None:
+        text = "{'k': ['Zürich', 'Genève'],\r\n 'v': [0.1234567890123456789,\r -1.5]}"
+        parsed = parse_dataset(text)
+
+        assert parsed.csv == "k,v\nZürich,0.12345678901234568\nGenève,-1.5\n"
+        assert warned(parsed, "column 'v': 1 value with more significant digits")
+
+    def test_a_literal_of_many_floats_parses_in_linear_time(self) -> None:
+        """`ast.get_source_segment` per float was quadratic (review of #12196): 20,000 floats on one line each."""
+        values = decimals(seed=7, count=20_000, digits=9)
+        started = time.perf_counter()
+        parsed = parse_dataset("v = {'v': [\n" + ",\n".join(values) + "\n]}")
+
+        assert parsed.profile.rows == 20_000 and parsed.warnings == []
+        assert time.perf_counter() - started < 10

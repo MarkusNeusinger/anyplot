@@ -1693,6 +1693,31 @@ class TestFidelity:
             "(15 to 17 significant digits)"
         )
 
+    def test_an_exact_running_total_groups_keys_as_pandas_does(self) -> None:
+        """`-0.0` and `0.0` are one group, as in pandas' own groupby (review of #12196)."""
+        prepared = prepare(
+            "g,o,a\n-0.0,1,10\n0.0,2,20\n-0.0,3,30\n,4,1\n,5,2\n", derive("t", "cumsum", "a", within=["g"], order="o")
+        )
+
+        assert cells(prepared, 3) == ["10", "30", "60", "1", "3"]
+
+    def test_the_rounding_count_survives_the_line_cap_with_long_names(self) -> None:
+        """A change line is clipped to `MAX_NOTE_CHARS`; the count of rounded values is never the part cut."""
+        names = [f"{letter * 29}x" for letter in "abcdefghij"]
+        header = ",".join(names)
+        row = ",".join(str(2**63 - 1) for _ in names)
+        summed = prepare(f"{header}\n{row}\n{row}\n", derive("s", "sum", *names))
+        order = "o" * 60
+        running = prepare(
+            f"{order},{'v' * 60}\n1,{2**63 - 1}\n2,{2**63 - 1}\n", derive("t" * 60, "cumsum", "v" * 60, order=order)
+        )
+
+        for prepared in (summed, running):
+            (line,) = prepared.changes
+            assert len(line) <= MAX_NOTE_CHARS
+            assert line.endswith("stored rounded to the nearest number (15 to 17 significant digits)")
+            assert "…" in line or prepared is running
+
     def test_derived_ratios_and_percents_keep_full_precision(self) -> None:
         prepared = prepare("a,b\n1,3\n2,7\n", derive("r", "ratio", "a", "b", percent=True))
 

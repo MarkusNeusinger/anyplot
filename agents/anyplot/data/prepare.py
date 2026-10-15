@@ -750,7 +750,7 @@ def _set_type(frame: pd.DataFrame, op: SetType, carried: _Carried) -> tuple[pd.D
         if unit:
             change += f", unit '{_clip(unit, MAX_CELL_CHARS)}' removed"
         if rounded:
-            change += f", {rounded_note(rounded)}"
+            change = _with_notice(change, rounded_note(rounded))
     else:
         if kind == "datetime":
             return _reread_dates(frame, op, present, carried)
@@ -862,9 +862,7 @@ def _aggregate(frame: pd.DataFrame, op: Aggregate, carried: _Carried) -> tuple[p
     other = frame.shape[1] - len(keys) - 1
     if other:
         change += f", {_count(other, 'other column')} dropped"
-    if rounded:
-        change += f", {whole_rounded(rounded)}"
-    return result, change
+    return result, _with_notice(change, whole_rounded(rounded) if rounded else "")
 
 
 def _sort(frame: pd.DataFrame, op: Sort) -> tuple[pd.DataFrame, str]:
@@ -919,10 +917,8 @@ def _pivot_longer(frame: pd.DataFrame, op: PivotLonger, carried: _Carried) -> tu
         carried.with_time[op.values_to] = any(bool(time) for time in times)
     change = f"pivoted {len(columns)} columns into {op.names_to}/{op.values_to}: {_count(rows, 'row')}"
     if rounded:
-        change += (
-            f", {_count(rounded, 'whole number')} past 2^53 {_be(rounded)} stored rounded to the nearest number "
-            f"beside the decimals of {op.values_to}"
-        )
+        notice = f"{_count(rounded, 'whole number')} past 2^53 {_be(rounded)} stored rounded to the nearest number "
+        change = _with_notice(change, notice + f"beside the decimals of {op.values_to}")
     return melted, change
 
 
@@ -1047,9 +1043,7 @@ def _derive(frame: pd.DataFrame, op: Derive, carried: _Carried) -> tuple[pd.Data
         # Whole numbers stay exact: a float64 holds integers only up to 2**53.
         result, rounded = _integer_result(frame, columns, op.how)
         what = f"{columns[0]} - {columns[1]}" if op.how == "difference" else f"sum of {', '.join(columns)}"
-        if rounded:
-            what += f", {whole_rounded(rounded)}"
-        return _derived(frame, op, result, what, "", carried)
+        return _derived(frame, op, result, what, "", carried, notice=whole_rounded(rounded) if rounded else "")
     values = [frame[name].astype("float64") for name in columns]
     note = ""
     match op.how:
@@ -1071,13 +1065,13 @@ def _derive(frame: pd.DataFrame, op: Derive, carried: _Carried) -> tuple[pd.Data
             result = values[0] / total.where((total != 0) & np.isfinite(total))
             what = f"share of {columns[0]} in the total" + (f" of each {' and '.join(keys)}" if keys else "")
         case "percent_change" | "cumsum" | "index":
-            result, what = _ordered(frame, values[0], columns[0], keys, str(op.order), op.how)
+            result, what, notice = _ordered(frame, values[0], columns[0], keys, str(op.order), op.how)
             if frame[str(op.order)].isna().any():
                 note = f"a row without a {op.order}, "
             if op.how == "percent_change":
                 note = "the first row of each group, " + note
-            if is_integer_dtype(result.dtype):  # an exact running total of whole numbers (`_integer_cumsum`)
-                return _derived(frame, op, result, what, note, carried)
+            if is_integer_dtype(result.dtype) or notice:  # an exact running total of whole numbers (`_integer_cumsum`)
+                return _derived(frame, op, result, what, note, carried, notice=notice)
     if op.percent:
         result = result * 100
         what += ", in percent"
@@ -1086,9 +1080,13 @@ def _derive(frame: pd.DataFrame, op: Derive, carried: _Carried) -> tuple[pd.Data
 
 
 def _derived(
-    frame: pd.DataFrame, op: Derive, result: pd.Series, what: str, note: str, carried: _Carried
+    frame: pd.DataFrame, op: Derive, result: pd.Series, what: str, note: str, carried: _Carried, notice: str = ""
 ) -> tuple[pd.DataFrame, str]:
-    """The frame with the derived column appended, and its change line counting the empty cells."""
+    """The frame with the derived column appended, and its change line counting the empty cells.
+
+    `notice` is a loss the line must always show (values stored rounded): it is kept whole and
+    the rest of the line is shortened instead (`_with_notice`).
+    """
     present = int(result.notna().sum())
     if not present:
         raise PrepareError("invalid_operation", f"no row has a value for column '{op.name}'; check the input columns")
@@ -1098,7 +1096,15 @@ def _derived(
         verb = "is" if empty == 1 else "are"
         change += f", {_count(empty, 'cell')} {verb} empty ({note}a missing input or a division by zero)"
     carried.forget([op.name])
-    return frame.assign(**{op.name: result}), change
+    return frame.assign(**{op.name: result}), _with_notice(change, notice)
+
+
+def _with_notice(change: str, notice: str) -> str:
+    """`change` with `notice` appended, the notice never cut: `apply_operations` clips every line to
+    `MAX_NOTE_CHARS`, and a rounding count lost to the clip would be a silent loss again (review of #12196)."""
+    if not notice:
+        return change
+    return f"{_clip(change, MAX_NOTE_CHARS - len(notice) - 2)}, {notice}"
 
 
 def _integer_result(frame: pd.DataFrame, columns: list[str], how: str) -> tuple[pd.Series, int]:
@@ -1145,14 +1151,15 @@ def _integer_cumsum(frame: pd.DataFrame, column: str, keys: list[str], ordered: 
     outside `ordered` (no order value) stays empty.
     """
     wholes = {row: None if pd.isna(value) else int(value) for row, value in frame[column].items()}
-    totals: dict[tuple[str | None, ...], int] = {}
+    totals: dict[tuple[object, ...], int] = {}
     running: dict[object, int | None] = {}
     for row in ordered:
         whole = wholes[row]
         if whole is None:
             running[row] = None
             continue
-        group = tuple(_cell_text(frame.at[row, key], True) for key in keys)
+        # Native key values group as pandas does (`-0.0` with `0.0`); every missing kind is one group (`dropna=False`).
+        group = tuple(None if pd.isna(value := frame.at[row, key]) else value for key in keys)
         totals[group] = totals.get(group, 0) + whole
         running[row] = totals[group]
     return _whole_numbers([running.get(row) for row in frame.index], frame.index)
@@ -1160,8 +1167,9 @@ def _integer_cumsum(frame: pd.DataFrame, column: str, keys: list[str], ordered: 
 
 def _ordered(
     frame: pd.DataFrame, values: pd.Series, column: str, keys: list[str], order: str, how: str
-) -> tuple[pd.Series, str]:
-    """`percent_change`, `cumsum` or `index` of `values` within each group, in the order of `order`.
+) -> tuple[pd.Series, str, str]:
+    """`percent_change`, `cumsum` or `index` of `values` within each group, in the order of `order`, what it
+    computed, and the notice of values stored rounded (an integer running total past int64), else "".
 
     The order column holds numbers or dates: a text column would sort alphabetically
     (`April` before `Januar`, `10` before `9`) and give a silently wrong result. A row
@@ -1195,7 +1203,7 @@ def _ordered(
         if is_integer_dtype(frame[column].dtype):
             # Whole numbers add up exactly: a float64 running total rounds past 2**53.
             exact, rounded = _integer_cumsum(frame, column, keys, ordered)
-            return exact, what + (f", {whole_rounded(rounded)}" if rounded else "")
+            return exact, what, whole_rounded(rounded) if rounded else ""
         result = current.groupby(groups, dropna=False).cumsum() if keys else current.cumsum()
     else:
         if keys:  # `first` takes the group's first value that is there
@@ -1205,7 +1213,7 @@ def _ordered(
             base = pd.Series(present.iloc[0] if len(present) else np.nan, index=current.index)
         result = current / base.where(base != 0) * 100
         what = f"index of {column}, the first {order}{within} = 100"
-    return result.reindex(frame.index), what
+    return result.reindex(frame.index), what, ""
 
 
 def _make_date(frame: pd.DataFrame, op: MakeDate, carried: _Carried) -> tuple[pd.DataFrame, str]:
