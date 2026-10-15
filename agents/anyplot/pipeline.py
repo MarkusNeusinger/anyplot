@@ -139,6 +139,8 @@ from .schemas import (
     MAX_CHANGE_CHARS,
     MAX_CHANGE_REQUEST_CHARS,
     MAX_CHANGES,
+    MAX_EXPECTED_TEXT_CHARS,
+    MAX_EXPECTED_TEXTS,
     MAX_FEEDBACK,
     MAX_LINE_CHARS,
     MAX_NOTE_CHARS,
@@ -166,7 +168,7 @@ from .schemas import (
 )
 from .scoring import ScoreAnswer, ScoreError, mend_answer, parse_answer
 from .services import PADDED_REASON, CodeVersion, Services, ThemeRender, get_services
-from .session_state import PENDING_REQUEST, SessionView, read_session
+from .session_state import PENDING_EXPECTED_TEXTS, PENDING_REQUEST, SessionView, read_session
 from .settings import AgentSettings, get_settings
 from .sub_agents.adapter import ADAPTERS, adapter_name
 from .sub_agents.reviewer import REVIEWER_NAME, use_reviewer_mode
@@ -568,8 +570,27 @@ def hold_request(state: Any, args: PipelineArgs) -> None:
     Also the path of a run that passed the check but got no slot in the run queue (`capacity`,
     or a cancelled wait): its note waits for the next `.create_plot()` like a blocked one's.
     """
-    if args.change_request and args.base != "previous":
-        state[PENDING_REQUEST] = merged_request(state.get(PENDING_REQUEST), args.change_request)
+    if (args.change_request or args.expected_texts) and args.base != "previous":
+        state[PENDING_REQUEST] = merged_request(state.get(PENDING_REQUEST), args.change_request) or None
+        state[PENDING_EXPECTED_TEXTS] = merged_texts(state.get(PENDING_EXPECTED_TEXTS), args.expected_texts) or None
+
+
+def merged_texts(pending: object, own: Sequence[str]) -> list[str]:
+    """Kept `expected_texts` and a run's own as one list of at most `MAX_EXPECTED_TEXTS`, without repeats.
+
+    The texts the user asked to see travel with the note they came with (`PENDING_EXPECTED_TEXTS`),
+    so the next `.create_plot()` checks the render for them as the stopped run would have. The
+    run's own come first when the cap cuts, as the user's latest word; a kept value that is no
+    list of texts within `MAX_EXPECTED_TEXT_CHARS` is ignored, item by item.
+    """
+    kept = [
+        text
+        for text in (pending if isinstance(pending, list) else [])
+        if isinstance(text, str) and 0 < len(text) <= MAX_EXPECTED_TEXT_CHARS
+    ]
+    texts = list(dict.fromkeys([*own, *kept]))[:MAX_EXPECTED_TEXTS]
+    order = {text: index for index, text in enumerate(dict.fromkeys([*kept, *own]))}
+    return sorted(texts, key=order.__getitem__)
 
 
 MIN_KEPT_NOTE_CHARS = 40
@@ -608,19 +629,28 @@ def take_pending_request(state: Any, args: PipelineArgs) -> PipelineArgs:
     (`settle_pending_request`), so a run that fails loses no note (review of 2026-10-15).
     """
     pending = state.get(PENDING_REQUEST)
-    if pending is None or args.base == "previous":
+    texts = state.get(PENDING_EXPECTED_TEXTS)
+    if (pending is None and texts is None) or args.base == "previous":
         return args
-    return args.model_copy(update={"change_request": merged_request(pending, args.change_request)})
+    return args.model_copy(
+        update={
+            "change_request": merged_request(pending, args.change_request),
+            "expected_texts": merged_texts(texts, args.expected_texts),
+        }
+    )
 
 
 def settle_pending_request(state: Any, args: PipelineArgs, shipped: bool) -> None:
-    """After a run: a shipped plot used the kept request, so it goes; a run that shipped nothing keeps its request
-    (the kept one with the run's own, as `take_pending_request` joined them) for the next first plot."""
+    """After a run: a shipped plot used the kept request and texts, so they go; a run that shipped nothing keeps its
+    request and texts (the kept ones with the run's own, as `take_pending_request` joined them) for the next first
+    plot."""
     if shipped:
-        if state.get(PENDING_REQUEST) is not None:
-            state[PENDING_REQUEST] = None
-    elif args.change_request and args.base != "previous":
-        state[PENDING_REQUEST] = args.change_request
+        for key in (PENDING_REQUEST, PENDING_EXPECTED_TEXTS):
+            if state.get(key) is not None:
+                state[key] = None
+    elif (args.change_request or args.expected_texts) and args.base != "previous":
+        state[PENDING_REQUEST] = args.change_request or None
+        state[PENDING_EXPECTED_TEXTS] = list(args.expected_texts) or None
 
 
 def render_adapt_request(request: AdaptRequest, view: SessionView) -> str:

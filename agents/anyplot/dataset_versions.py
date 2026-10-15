@@ -38,7 +38,7 @@ from .session_state import (
     DATASET_HISTORY,
     DATASET_ID,
     DATASET_VERSION,
-    PENDING_REQUEST,
+    PENDING_CLEARED,
     CatalogueSnapshot,
     SessionView,
 )
@@ -162,5 +162,5 @@ def _delta(dataset_id: str, bindings: list[Binding], history: list[str], version
         BINDINGS: [binding.model_dump() for binding in bindings],
         DATASET_HISTORY: history,
         DATASET_VERSION: version,
-        PENDING_REQUEST: None,
+        **PENDING_CLEARED,
     }

@@ -68,6 +68,12 @@ test of 2026-10-15). It stays until a run ships a plot. Any later binding write,
 `prepare_data`, `generate_data`, `run_data_code`, `.to_long()`, undo) or library switch drops it: it was written
 for the data and bindings before (owner decision of 2026-10-15). The pipeline reads it defensively: a value that is
 no text is ignored, and text is cut to `MAX_CHANGE_REQUEST_CHARS` (`pipeline.merged_request`)."""
+PENDING_EXPECTED_TEXTS = PREFIX + "pending_expected_texts"
+"""The `expected_texts` that came with `PENDING_REQUEST` (the title or number format the user asked to see), kept
+and dropped with it, so the next `.create_plot()` checks the render for the same texts (`pipeline.merged_texts`)."""
+PENDING_CLEARED: dict[str, Any] = {PENDING_REQUEST: None, PENDING_EXPECTED_TEXTS: None}
+"""The state delta that drops a kept first-plot note and its texts: every binding write, new data version and
+library switch carries it."""
 LAST_STATUS = PREFIX + "last_status"
 VERSIONS = PREFIX + "versions"
 
@@ -204,7 +210,7 @@ def initial_state(
         NORMALISED: normalised,
         HINTS: list(readiness.get("hints", [])),
         READINESS: readiness,
-        PENDING_REQUEST: None,  # a note kept for another library's first plot does not carry over
+        **PENDING_CLEARED,  # a note kept for another library's first plot does not carry over
     }
 
 
@@ -255,4 +261,4 @@ def apply_bindings(
     if check.errors:
         return check, {}
     # A kept plot note (`PENDING_REQUEST`) was written for the bindings before; any binding write drops it.
-    return check, {BINDINGS: [binding.model_dump() for binding in bindings], PENDING_REQUEST: None}
+    return check, {BINDINGS: [binding.model_dump() for binding in bindings], **PENDING_CLEARED}

@@ -21,11 +21,26 @@ from agents.anyplot.data.parse import parse_dataset
 from agents.anyplot.data.query import MAX_QUERY_COLUMNS, MAX_QUERY_ROWS, run_query
 from agents.anyplot.data.roles import DataRole
 from agents.anyplot.dev_fixture import snapshot_from_repo
-from agents.anyplot.pipeline import keep_pending_request, merged_request, settle_pending_request, take_pending_request
+from agents.anyplot.pipeline import (
+    EXPECTED_HEADING,
+    keep_pending_request,
+    merged_request,
+    merged_texts,
+    settle_pending_request,
+    take_pending_request,
+)
 from agents.anyplot.plugins.tool_safety import ToolSafetyPlugin, result_limit, result_size
 from agents.anyplot.schemas import MAX_CHANGE_REQUEST_CHARS, Binding, PipelineArgs
 from agents.anyplot.services import Services, get_services
-from agents.anyplot.session_state import CONFIRMED, DATASET_ID, DATASET_VERSION, PENDING_REQUEST, narrows, read_session
+from agents.anyplot.session_state import (
+    CONFIRMED,
+    DATASET_ID,
+    DATASET_VERSION,
+    PENDING_EXPECTED_TEXTS,
+    PENDING_REQUEST,
+    narrows,
+    read_session,
+)
 from agents.anyplot.settings import get_settings
 from agents.anyplot.tools.session import query_data, query_result, set_bindings
 from agents.main import Runtime, app, get_runtime
@@ -421,26 +436,106 @@ class TestPendingRequest:
     ) -> None:
         sid = await open_session(client)
         runtime = app.dependency_overrides[get_runtime]()
-        await runtime.write_state(await runtime.session(USER, sid), {PENDING_REQUEST: "Title: A"})
+        kept = {PENDING_REQUEST: "Title: A", PENDING_EXPECTED_TEXTS: ["A"]}
+        await runtime.write_state(await runtime.session(USER, sid), kept)
         method, path, body = change
 
         response = await client.request(method.upper(), f"/v1/sessions/{sid}/{path}", headers=HEADERS, json=body)
 
         assert response.status_code == 200, response.text
-        assert (await _session_state(client, sid)).get(PENDING_REQUEST) is None
+        state = await _session_state(client, sid)
+        assert state.get(PENDING_REQUEST) is None and state.get(PENDING_EXPECTED_TEXTS) is None
 
     def test_every_state_write_of_new_bindings_or_data_drops_the_note(self) -> None:
         from agents.anyplot.dataset_versions import _delta
         from agents.anyplot.session_state import apply_bindings, initial_state
 
-        assert _delta("d", [], [], 2)[PENDING_REQUEST] is None
         _, delta = apply_bindings([], roles(), parse_dataset(OWID).profile)
-        assert delta[PENDING_REQUEST] is None
         snapshot = snapshot_from_repo("line-multi", "matplotlib")
         state = initial_state(
             spec_id="line-multi", library="seaborn", locale="de", snapshot=snapshot, normalised="", readiness={}
         )
-        assert state[PENDING_REQUEST] is None
+        for written in (_delta("d", [], [], 2), delta, state):
+            assert written[PENDING_REQUEST] is None and written[PENDING_EXPECTED_TEXTS] is None
+
+    def test_the_texts_travel_with_the_note(self) -> None:
+        state: dict[str, Any] = {}
+        args = PipelineArgs(change_request="Title: CO2 pro Kopf", expected_texts=["CO2 pro Kopf"])
+        keep_pending_request(state, args, "data_unconfirmed")
+        keep_pending_request(
+            state, PipelineArgs(change_request="Format 6,5 t", expected_texts=["6,5 t"]), "data_unconfirmed"
+        )
+
+        assert state[PENDING_EXPECTED_TEXTS] == ["CO2 pro Kopf", "6,5 t"]
+        taken = take_pending_request(state, PipelineArgs())
+        assert taken.expected_texts == ["CO2 pro Kopf", "6,5 t"]
+        assert taken.change_request == "Title: CO2 pro Kopf\nFormat 6,5 t"
+        settle_pending_request(state, taken, shipped=False)  # a failed run keeps both
+        assert state[PENDING_EXPECTED_TEXTS] == ["CO2 pro Kopf", "6,5 t"]
+        settle_pending_request(state, taken, shipped=True)
+        assert state[PENDING_REQUEST] is None and state[PENDING_EXPECTED_TEXTS] is None
+
+    def test_texts_alone_are_kept_and_a_change_of_a_version_takes_none(self) -> None:
+        state: dict[str, Any] = {}
+        keep_pending_request(state, PipelineArgs(expected_texts=["12 %"]), "incomplete_bindings")
+
+        assert state[PENDING_EXPECTED_TEXTS] == ["12 %"] and state[PENDING_REQUEST] is None
+        assert take_pending_request(state, PipelineArgs(base="previous")).expected_texts == []
+
+    @pytest.mark.parametrize(
+        ("pending", "own", "expected"),
+        [
+            (["a", "b"], ["b", "c"], ["a", "b", "c"]),
+            (["k1", "k2", "k3", "k4"], ["n1", "n2"], ["k1", "k2", "k3", "n1", "n2"]),  # the run's own survive the cap
+            (["ok", 7, "", "x" * 121], [], ["ok"]),  # a stored value is read item by item
+            ("not a list", ["n"], ["n"]),
+            (None, [], []),
+        ],
+    )
+    def test_merged_texts(self, pending: object, own: list[str], expected: list[str]) -> None:
+        assert merged_texts(pending, own) == expected
+
+    async def test_a_kept_text_reaches_the_next_create_plot(
+        self, client: httpx.AsyncClient, swap_models, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("AGENT_EXPECT_CHECK", "off")  # the fixture render draws none of the texts
+        get_settings.cache_clear()
+        script = {
+            "root": [
+                {
+                    "call": "set_bindings",
+                    "args": {
+                        "bindings": [{"role": "x", "column": "Exam Score"}, {"role": "y", "column": "Study Hours"}]
+                    },
+                },
+                {
+                    "call": "plot_pipeline",
+                    "args": {"change_request": "Title: Lernzeit", "expected_texts": ["Lernzeit"]},
+                },
+                {"text": "Please confirm the new bindings."},
+                {"call": "plot_pipeline", "args": {}},
+                {"text": "Here is your plot."},
+            ],
+            "adapter": [{"json": SCATTER_PLAN}],
+            "reviewer": [{"json": VERDICT_OK}],
+        }
+        fake = swap_models("gemini", script)
+        sid = await open_session(client)
+
+        await client.post(
+            f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "swap the axes, title Lernzeit"}
+        )
+        assert (await _session_state(client, sid))[PENDING_EXPECTED_TEXTS] == ["Lernzeit"]
+        await client.post(f"/v1/sessions/{sid}/dataset/confirm", headers=HEADERS)
+        events = await create_plot(client, sid)
+
+        assert next(data for name, data in events if name == "plot")["status"] == "ok"
+        assert isinstance(fake, ScriptedLlm)
+        adapter = [r for r in fake.requests if (r.config.labels or {})["agent_kind"] == "adapter"]
+        text = "".join(part.text or "" for part in adapter[0].contents[-1].parts or [])
+        assert EXPECTED_HEADING in text and "Lernzeit" in text
+        assert (await _session_state(client, sid))[PENDING_EXPECTED_TEXTS] is None
+        get_settings.cache_clear()
 
     async def test_a_note_survives_a_binding_change_that_asks_for_confirmation(
         self, client: httpx.AsyncClient, swap_models
