@@ -47,8 +47,10 @@ same names, points and values, so `-3.0` is `-3`, `tau` is `2*pi` and `x*x` is
 `x**2`. A case with
 `expected_operations: []` passes when the root made no data call: a scope refusal and
 a plain reply both pass, and the report lists every tool call and the refusal, so a
-false refusal stays visible. The gate is `--min-exact` (80 percent) of the answered
-cases.
+false refusal stays visible. A reply of the root that talks about its own instructions
+(ADK's instruction markers, a system instruction, the session block; `INSTRUCTION_TALK`)
+is a miss whatever the data calls did, and the summary counts such cases under
+`instruction_talk`. The gate is `--min-exact` (80 percent) of the answered cases.
 
 A case is `unavailable` when its dataset could not be stored (`503 guard_unavailable`)
 or its turn ended with an `error` event (the judge down, `capacity`); it counts in no
@@ -81,6 +83,7 @@ import itertools
 import json
 import logging
 import os
+import re
 import sys
 import time
 from collections import Counter, defaultdict
@@ -131,6 +134,18 @@ DATA_TOOLS = frozenset({PREPARE_TOOL, GENERATE_TOOL, DATA_CODE_TOOL})
 """The root's tools that store a dataset version; every call of them in a turn must succeed."""
 SET_OPERATIONS: dict[str, str] = {"drop_columns": "columns", "pivot_longer": "columns", "drop_rows": "where"}
 """Per operation, the list field whose order carries no meaning (compared as a set)."""
+ROOT_AUTHOR = "anyplot"
+INSTRUCTION_TALK = re.compile(
+    r"SYSTEM_INSTRUCTION|<<<|system[ -]?instruction|system[ -]?prompt|Systemanweisung|Systeminstruktion"
+    r"|Systemprompt|session block|Sitzungsblock|Session-Block",
+    re.IGNORECASE,
+)
+"""A reply that talks about the root's own instructions: ADK's markers, a system instruction, the session block.
+
+Until 2026-10-15 ADK sent the session block inside the user's turn between
+`<<<BEGIN_SYSTEM_INSTRUCTION>>>` markers, and the root once told the user that "the text with the
+SYSTEM_INSTRUCTION markers in your message" changed nothing. Such a reply is a miss whatever the
+data calls did."""
 
 
 class SetupError(Exception):
@@ -408,6 +423,8 @@ class CaseResult:
     stored_calls: int = 0
     """Data tool calls of the turn that stored a dataset version."""
     refusal: str | None = None
+    instruction_talk: bool = False
+    """The root's reply talked about its own instructions (`INSTRUCTION_TALK`): the case is a miss."""
     llm_calls: int = 0
     cost_usd: float = 0.0
     latency_s: float = 0.0
@@ -522,6 +539,9 @@ class CaseRunner:
         session = await self.runtime.session(user, sid)
         operations: list[dict[str, Any]] = []
         for event in session.events:
+            if event.author == ROOT_AUTHOR and event.content is not None:
+                replies = [part.text for part in event.content.parts or [] if part.text and not part.thought]
+                result.instruction_talk |= any(INSTRUCTION_TALK.search(text) for text in replies)
             for call in event.get_function_calls():
                 result.tool_calls.append(str(call.name))
                 if call.name == PREPARE_TOOL and isinstance(call.args, dict):
@@ -552,6 +572,7 @@ class CaseRunner:
             result.match = result.stored_calls == 0
         else:
             result.match = same_operations(result.found, result.expected) and not result.failed_calls
+        result.match = result.match and not result.instruction_talk
 
 
 async def run_cases(
@@ -614,6 +635,7 @@ def score(cases: Sequence[PrepCase], results: Sequence[CaseResult]) -> dict[str,
     summary = {
         **_block([result for _, result in pairs]),
         "unavailable_rate": _rate(sum(1 for _, result in pairs if result.operations is None), len(pairs)),
+        "instruction_talk": sum(1 for _, result in pairs if result.instruction_talk),
         "llm_calls": sum(result.llm_calls for _, result in pairs),
         "cost_usd": round(sum(result.cost_usd for _, result in pairs), 8),
     }
@@ -622,7 +644,13 @@ def score(cases: Sequence[PrepCase], results: Sequence[CaseResult]) -> dict[str,
         for tag in [case.locale, *case.tags]:
             tags[tag].append(result)
     misses = [
-        {"id": case.id, "expected": result.expected, "found": result.found, "refusal": result.refusal}
+        {
+            "id": case.id,
+            "expected": result.expected,
+            "found": result.found,
+            "refusal": result.refusal,
+            "instruction_talk": result.instruction_talk,
+        }
         for case, result in pairs
         if result.operations is not None and not result.match
     ]
@@ -666,7 +694,7 @@ def table(cases: Sequence[PrepCase], results: Sequence[CaseResult]) -> str:
             found = "; ".join(_safe_describe(line) for line in result.found) or (
                 f"no operation (refusal {result.refusal})" if result.refusal else "no operation"
             )
-            outcome = "match" if result.match else "miss"
+            outcome = "match" if result.match else "miss (instruction talk)" if result.instruction_talk else "miss"
         rows.append((case.id, expected, found, outcome))
     widths = [min(60, max(len(row[column]) for row in rows)) for column in range(4)]
     return "\n".join("  ".join(cell[: widths[i]].ljust(widths[i]) for i, cell in enumerate(row)) for row in rows)
@@ -691,6 +719,8 @@ def summary_text(scored: dict[str, Any], reasons: list[str]) -> str:
             for tag, block in scored["per_tag"].items()
         ),
     ]
+    if summary["instruction_talk"]:
+        lines.append(f"replies about the root's own instructions: {summary['instruction_talk']}")
     if scored["unavailable_causes"]:
         lines.append(
             "unavailable: " + ", ".join(f"{count} x {cause}" for cause, count in scored["unavailable_causes"].items())

@@ -30,12 +30,18 @@ Two details keep the replayed thinking blocks harmless. Left unset, Haiku 5.5 wo
 think with the display omitted, and ADK 2.11 sends such a signature-only block back as
 `redacted_thinking`, which breaks the root's call after a tool result; the summarized
 display avoids that. And the root replays its thinking block after a tool result while
-ADK moves the session-context block between calls, which fails the block's signature
+the session block between the two calls changed (until 2026-10-15 ADK also moved it
+within the conversation; since then it stands in the system instruction and changes only
+when a tool changed the session), which fails the block's signature
 check; `VertexClaude` asks the API to drop such a block instead (`block_binding`, see
 `THINKING_BINDING_BETA`). Haiku 5.5 accepts disabled thinking at effort `high` or below,
 so every kind stays at `high` or below; the efforts are settings (`effort_for`): since
 2026-10-13 the root runs at `medium`, the adapter and the reviewer at `high`, the reviewer
 with a thinking budget of its own.
+
+A system instruction of several parts (the root's: its static policy, then the session
+block) goes to Claude as one system block per part, with ADK's prompt-cache breakpoint on
+the first only (`system_blocks`), so a session block that changes leaves the policy cached.
 
 ADK 2.11 sends no response schema to Claude: `basic.py` sets
 `config.response_schema` for a tool-less agent with an `output_schema`, and
@@ -269,6 +275,32 @@ def _has_tools(llm_request: LlmRequest) -> bool:
     return bool(llm_request.config and llm_request.config.tools)
 
 
+def system_parts(llm_request: LlmRequest) -> list[str]:
+    """The text parts of a request's system instruction; a plain string is one part."""
+    system = llm_request.config.system_instruction if llm_request.config else None
+    if isinstance(system, str):
+        return [system] if system else []
+    if isinstance(system, types.Content):
+        return [part.text for part in system.parts or [] if part.text]
+    return []
+
+
+def system_blocks(parts: Sequence[str], sent: Any) -> list[dict[str, Any]]:
+    """One Claude system block per part, ADK's cache breakpoint (if it set one) on the first only.
+
+    ADK joins a system instruction of several parts into one string and puts its breakpoint
+    on that whole block (`anthropic_llm._apply_cache_breakpoints`), so a part that changes
+    per turn would rewrite the cache of the parts before it. The root's system instruction
+    is its static policy followed by the session block (`agent.add_session_context`): with
+    the breakpoint on the first block, the policy stays cached whatever the block says.
+    """
+    first = sent[0] if isinstance(sent, list) and sent and isinstance(sent[0], dict) else {}
+    blocks: list[dict[str, Any]] = [{"type": "text", "text": text} for text in parts]
+    if first.get("cache_control"):
+        blocks[0]["cache_control"] = first["cache_control"]
+    return blocks
+
+
 class VertexClaude(Claude):
     """ADK's `Claude` with a client from the settings and structured output through `output_config.format`."""
 
@@ -298,6 +330,9 @@ class VertexClaude(Claude):
         replacing it. A request with tools (the root) gets no format: its answer is chat.
         """
         kwargs: dict[str, Any] = super()._build_anthropic_kwargs(llm_request, messages, tools, tool_choice, thinking)
+        parts = system_parts(llm_request)
+        if len(parts) > 1:
+            kwargs["system"] = system_blocks(parts, kwargs.get("system"))
         schema = llm_request.config.response_schema if llm_request.config else None
         if schema is not None and not _has_tools(llm_request):
             kwargs["output_config"] = {
@@ -306,8 +341,8 @@ class VertexClaude(Claude):
             }
         thinking_param = kwargs.get("thinking")
         if isinstance(thinking_param, dict) and thinking_param.get("type") != "disabled":
-            # The root replays its thinking block after a tool result while ADK moves the session
-            # block between the two calls, so the block's signature no longer matches the prefix
+            # The root replays its thinking block after a tool result while the session block changed
+            # between the two calls (a data tool changed the session), so the block's signature no longer matches the prefix
             # and the API answers 400 "Invalid `signature` in `thinking` block" (2 of 122 runs on
             # 2026-10-11, every run on the rerun). With this control the API drops such a block
             # instead of refusing the call; it needs the beta header, which the SDK knows.
