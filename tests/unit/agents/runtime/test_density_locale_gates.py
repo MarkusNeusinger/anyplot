@@ -141,6 +141,104 @@ class TestDensityReport:
 
         assert axes["labelled"] == 0 and _density_lines({"density": [axes]}) == []
 
+    def test_named_points_are_no_value_labels_review_d02(self) -> None:
+        """Fable g11/d02 and perf/p04: 30 and 40 named scatter points (scatter-annotated asks for 10 to 50)."""
+        for count in (30, 40):
+            fig, ax = plt.subplots(figsize=(16, 9), dpi=100)
+            rng = np.random.default_rng(9)
+            x, y = rng.random(count) * 100, rng.random(count) * 100
+            ax.scatter(x, y, s=80)
+            for index, (xi, yi) in enumerate(zip(x, y, strict=True)):
+                ax.text(xi + 1, yi + 1, f"Firm {index}", fontsize=9)
+            fig.canvas.draw()
+
+            [axes] = harness.density_report(fig, 200)
+
+            assert axes["labelled"] == count and axes["numeric_labels"] == 0
+            assert _density_lines({"density": [axes]}) == []
+
+    def test_offset_shadow_bars_leave_the_space_per_label_review_d01(self) -> None:
+        """Fable g11/d01: 12 labelled bars over 12 offset shadow bars once measured 8 px per bar."""
+        fig, ax = plt.subplots(figsize=(16, 9), dpi=100)
+        x = np.arange(12)
+        y = np.random.default_rng(1).integers(50, 500, 12)
+        ax.bar(x + 0.04, y - 4, color="#00000033", zorder=1)
+        container = ax.bar(x, y, zorder=2)
+        ax.bar_label(container, fmt="%d")
+        fig.canvas.draw()
+
+        [axes] = harness.density_report(fig, 200)
+
+        assert axes["labelled"] == 12 and axes["slot_px"] > 150
+        assert _density_lines({"density": [axes]}) == []
+
+    def test_labelling_only_the_extremes_of_52_bars_is_clean(self) -> None:
+        """Gemini on #12184: the fix G11 asks for must pass it."""
+        fig = grouped_bars(26, labels=False, dots=False, shadows=False)
+        ax = fig.axes[0]
+        rects = [rect for container in ax.containers for rect in container]
+        for rect in (max(rects, key=lambda r: r.get_height()), min(rects, key=lambda r: r.get_height())):
+            ax.annotate(f"{int(rect.get_height())}", xy=(rect.get_x() + rect.get_width() / 2, rect.get_height()))
+        fig.canvas.draw()
+
+        [axes] = harness.density_report(fig, 400)
+
+        assert axes["labelled"] == 2 and _density_lines({"density": [axes]}) == []
+
+    def test_stacked_centre_labels_count_once_per_bar_review_p05(self) -> None:
+        """Fable perf/p05 and g11/a05: `bar_label(label_type="center")` labels were not counted at all."""
+        for positions, fires in ((8, False), (40, True)):
+            fig, ax = plt.subplots(figsize=(16, 9), dpi=100)
+            x = np.arange(positions)
+            rng = np.random.default_rng(2)
+            bottom = np.zeros(positions)
+            for _ in range(4):
+                values = rng.integers(20, 100, positions)
+                container = ax.bar(x, values, bottom=bottom)
+                ax.bar_label(container, label_type="center", fmt="%d", fontsize=6)
+                bottom += values
+            fig.canvas.draw()
+
+            [axes] = harness.density_report(fig, 200)
+
+            assert axes["labelled"] == 4 * positions and axes["labelled_bars"] == positions
+            assert bool(_density_lines({"density": [axes]})) is fires
+
+    def test_an_inverted_value_axis_keeps_the_bar_ends(self) -> None:
+        """Gemini on #12184: the end of a bar on an inverted axis is its lower edge on the canvas."""
+        fig = grouped_bars(26, labels=True, dots=True, shadows=False)
+        fig.axes[0].invert_yaxis()
+        fig.canvas.draw()
+
+        [axes] = harness.density_report(fig, 400)
+
+        assert axes["labelled"] == 52 and axes["decorated"] == 52
+
+    def test_dots_drawn_with_plot_markers_are_decorations(self) -> None:
+        """Gemini on #12184: `ax.plot(x, top, "o")` per bar, a Line2D of one vertex."""
+        fig = grouped_bars(26, labels=False, dots=False, shadows=False)
+        ax = fig.axes[0]
+        for rect in [rect for container in ax.containers for rect in container]:
+            ax.plot(rect.get_x() + rect.get_width() / 2, rect.get_height(), "o")
+        fig.canvas.draw()
+
+        [axes] = harness.density_report(fig, 400)
+
+        assert axes["decorated"] == 52 and axes["marks"] == 52
+
+    def test_a_clipped_text_outside_a_zoomed_view_is_not_counted(self) -> None:
+        """Gemini on #12184: `ax.text(..., clip_on=True)` outside the view is never drawn."""
+        fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
+        ax.bar(range(50), range(1, 51))
+        for index in range(50):
+            ax.text(index, index + 1.5, str(index + 1), ha="center", clip_on=True)
+        ax.set_xlim(-0.5, 4.5)
+        fig.canvas.draw()
+
+        [axes] = harness.density_report(fig, 400)
+
+        assert axes["labelled"] == 5
+
     def test_a_missing_bar_value_keeps_the_report_valid_json(self) -> None:
         """Copilot on #12184: a NaN bar (a group missing after a pivot) would void the probe's JSON."""
         fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
@@ -240,9 +338,31 @@ class TestDensityGate:
 
 
 class TestForeignDecimal:
-    @pytest.mark.parametrize("text", ["5.30", "6.0 M", "0.25", "−1.5", "1,234.5", "12.5 %", "$ 3.75", "1,234,567"])
+    @pytest.mark.parametrize(
+        "text",
+        [
+            "5.30",
+            "6.0 M",
+            "0.25",
+            "−1.5",
+            "1,234.5",
+            "12.5 %",
+            "$ 3.75",
+            "1,234,567",
+            "5.30 €",  # review: a trailing currency, the German order
+            "-$5.30",
+            "0.125",  # review: a leading 0 is never a thousands group
+            "−0.125",
+        ],
+    )
     def test_english_numbers_in_a_german_plot(self, text: str) -> None:
         assert foreign_decimal(text, GERMAN)
+
+    def test_a_zero_padded_day_and_month_is_a_date(self) -> None:
+        """Review of #12184: `14.10` in an annotation is a `%d.%m` date; `12.50` stays a decimal."""
+        assert not foreign_decimal("14.10", GERMAN)
+        assert foreign_decimal("12.50", GERMAN)
+        assert not foreign_decimal("5,30 €", GERMAN)
 
     @pytest.mark.parametrize(
         "text",
@@ -459,6 +579,16 @@ class TestNumberFormatTable:
         assert number_format_table() in instruction
         assert "| `de` (German) | `,` | `.` | 10^3: Tsd., 10^6: Mio., 10^9: Mrd. |" in instruction
         assert "**Numbers.**" in instruction and "**Per-mark labels and decorations.**" in instruction
+
+    def test_the_adapter_pattern_writes_every_table_language_and_passes_g12(self) -> None:
+        """Gemini on #12184: the old hint (`maketrans(",.", ".,")`, then the thousands mark for "the first `.`") was
+        ambiguous for space-grouped languages; the placeholder pattern is exact for every row."""
+        assert '.replace(",", "_").replace(".", DECIMAL).replace("_", THOUSANDS)' in adapter_instruction("matplotlib")
+        for code, spec in NUMBER_FORMATS.items():
+            text = f"{1234567.25:,.2f}".replace(",", "_").replace(".", spec.decimal).replace("_", spec.thousands)
+
+            assert text == f"1{spec.thousands}234{spec.thousands}567{spec.decimal}25", code
+            assert not foreign_decimal(f"{0.5:,.2f}".replace(".", spec.decimal), spec), code
 
     def test_the_adapter_reads_the_narrowed_house_style_rule(self) -> None:
         assert "not those drawn once per bar or point" in adapter_rubric()

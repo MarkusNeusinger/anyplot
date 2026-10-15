@@ -481,7 +481,10 @@ def _density_lines(probe: dict[str, Any] | None) -> list[tuple[str, str]]:
     """The G11 line: per-mark value labels or decorations past what the plot's marks leave room for.
 
     The probe's `density` field (`harness.density_report`) describes each axes; the line
-    names the worst one. Labels crowd when there are more than `MAX_VALUE_LABELS` of them,
+    names the worst one. Labels crowd when more than `MAX_VALUE_LABELS` bar positions carry
+    one (`labelled_bars`: a stacked bar's segment labels count once), or, on an axes without
+    bars, more than that many numeric labels sit on points (`numeric_labels`: named points
+    are the point of scatter-annotated),
     or when a bar label is wider than `LABEL_SLOT_FILL` of the space between bar centres
     (from `MIN_CRAMPED_LABELS` labels on); decorations (dots on bar ends, shadowed bars)
     when there are more than `MAX_DECORATIONS`. Only counts and pixels reach the line.
@@ -497,6 +500,14 @@ def _density_lines(probe: dict[str, Any] | None) -> list[tuple[str, str]]:
         labelled, decorated = _count(entry.get("labelled")) or 0, _count(entry.get("decorated")) or 0
         if bars is None or marks is None:
             continue
+        numeric = _count(entry.get("numeric_labels"))
+        positions = _count(entry.get("labelled_bars"))
+        # With bars the cap counts labelled bar positions, so a stacked bar's segment labels count once; without
+        # bars only numbers count: named points (scatter-annotated asks for 10 to 50) do not.
+        if bars:
+            capped = labelled if positions is None else min(positions, labelled)
+        else:
+            capped = labelled if numeric is None else min(numeric, labelled)
         slot, label = _pixels(entry.get("slot_px")), _pixels(entry.get("label_px"))
         cramped = (
             bars > 0
@@ -505,14 +516,14 @@ def _density_lines(probe: dict[str, Any] | None) -> list[tuple[str, str]]:
             and label is not None
             and label > slot * LABEL_SLOT_FILL
         )
-        many_labels = labelled > MAX_VALUE_LABELS
+        many_labels = capped > MAX_VALUE_LABELS
         many_decorations = decorated > MAX_DECORATIONS
         if not (cramped or many_labels or many_decorations):
             continue
         observed: list[str] = []
         if cramped or many_labels:
             room = f" ({round(label)} px wide on {round(slot)} px per bar)" if cramped and label and slot else ""
-            observed.append(f"{labelled} value labels{room}")
+            observed.append(f"{labelled if bars else capped} value labels{room}")
         if many_decorations:
             observed.append(f"{decorated} dots or shadows")
         marks_text = f"{bars} bars" if bars else f"{marks} marks"
@@ -528,11 +539,15 @@ def _density_lines(probe: dict[str, Any] | None) -> list[tuple[str, str]]:
 
 
 _NUMBER_LABEL = re.compile(
-    r"^(?:[$€£¥]\s?)?[+\-−]?(?P<body>\d[\d.,    ']*\d|\d)"
-    r"(?:\s?(?:%|‰|[^\W\d_]{1,5}\.?(?:\s[^\W\d_]{1,5}\.?)?))?$"
+    r"^[+\-−]?(?:[$€£¥]\s?)?[+\-−]?(?P<body>\d[\d.,    ']*\d|\d)"
+    r"(?:\s?(?:%|‰|[$€£¥]|[^\W\d_]{1,5}\.?(?:\s[^\W\d_]{1,5}\.?)?))?$"
 )
-"""A label that is one number: an optional currency sign and sign, digits with marks, an optional unit or word
-(`%`, `Mio.`, `k`, `mil M`). Dates (`14.10.`, `2024-10-14`), ranges, times and words with digits never match."""
+"""A label that is one number: an optional sign and currency sign in either order, digits with marks, an optional
+unit, word or trailing currency sign (`%`, `Mio.`, `k`, `mil M`, `5,30 €`, `-$5.30`). Dates (`14.10.`,
+`2024-10-14`), ranges, times and words with digits never match."""
+_DAY_MONTH = re.compile(r"^(0[1-9]|[12]\d|3[01])[.](0[1-9]|1[0-2])$")
+"""`14.10`: a day and month as `%d.%m` writes them, both zero-padded. Read as a date in an annotation, where no axis
+says what it is; a decimal written with two digits each side (`10.12`) is the one number this lets through."""
 NUMBER_LABEL_KINDS = frozenset({"annotation", "text"})
 """The label kinds whose numbers G12 checks besides every tick label (`x tick label`, `y tick label`, `z tick label`,
 `colorbar tick label`, `harness.drawn_labels`); titles, axis titles and legend entries may name a version or a code."""
@@ -584,11 +599,13 @@ def foreign_decimal(text: str, numbers: NumberFormat) -> bool:
     Only a label that is one number counts (`_NUMBER_LABEL`). With a decimal comma, a single
     point followed by other than three digits (`5.30`, `6.0 M`) is foreign, and so is a point
     after a comma (`1,234.5`) or more than one comma (`1,234,567`); a single point with three
-    digits (`1.234`) is a thousands mark and passes. A decimal point mirrors this, except that
+    digits (`1.234`) is a thousands mark and passes, unless the whole part is 0 (`0.125`). A
+    zero-padded day and month (`14.10`, `_DAY_MONTH`) is a date and passes. A decimal point mirrors this, except that
     several points (`7.184.003`) pass, because a version-like label writes them too.
     """
-    match = _NUMBER_LABEL.match(plain_text(text))
-    if match is None:
+    shown = plain_text(text)
+    match = _NUMBER_LABEL.match(shown)
+    if match is None or _DAY_MONTH.match(shown):
         return False
     body = match.group("body")
     marks = [char for char in body if char in ".,"]
@@ -602,8 +619,9 @@ def foreign_decimal(text: str, numbers: NumberFormat) -> bool:
         return own == "," and marks.count(own) > 1  # `1,234,567` groups with commas: English
     if marks.count(other) > 1:
         return False  # `7.184.003` or `1,234,567` group thousands the other way: ambiguous, never named
-    decimals = body.rsplit(other, 1)[1]
-    return len(decimals) != 3
+    whole, decimals = body.rsplit(other, 1)
+    # `0.125` is never a thousands group: a leading 0 makes the mark a decimal one.
+    return len(decimals) != 3 or whole == "0"
 
 
 def _number_format_lines(

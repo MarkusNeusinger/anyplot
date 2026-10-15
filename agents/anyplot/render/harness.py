@@ -122,6 +122,7 @@ import json
 import logging
 import math
 import os
+import re
 import resource
 import shutil
 import sys
@@ -1299,14 +1300,16 @@ def _in_view(x, y, box, slack=1.0):
 
 
 def _bar_ends(axes, box):
-    """Every visible bar of the axes inside its view as `(centre, end, width)` in display pixels along its
+    """Every visible bar of the axes inside its view as `(centre, end, width, base)` in display pixels along its
     orientation, plus a flag whether it draws a path effect (a shadow), and the orientation of the first bar container.
 
     For a vertical bar the centre is its x centre, the end the y of the side away from the
-    baseline and the width its pixel width; a horizontal bar swaps the axes. A bar with a
-    missing value (NaN geometry) or a rectangle outside the axes box (a zoomed view) is left
-    out: it draws nothing, and a NaN would void the probe's JSON. A bar whose rectangle
-    meets the view counts, even when its centre lies past a value-axis limit.
+    baseline, the base the y of the baseline side and the width its pixel width; a
+    horizontal bar swaps the axes. End and base come from the bar's data coordinates, so an
+    inverted or logarithmic value axis puts the end where the bar ends on the canvas. A bar
+    with a missing value (NaN geometry) or a rectangle outside the axes box (a zoomed view)
+    is left out: it draws nothing, and a NaN would void the probe's JSON. A bar whose
+    rectangle meets the view counts, even when its centre lies past a value-axis limit.
     """
     bars = []
     orientation = None
@@ -1319,22 +1322,25 @@ def _bar_ends(axes, box):
             if not patch.get_visible():
                 continue
             extent = patch.get_window_extent()
-            negative = (patch.get_width() if horizontal else patch.get_height()) < 0
+            x, y, w, h = patch.get_x(), patch.get_y(), patch.get_width(), patch.get_height()
             if horizontal:
-                bar = ((extent.y0 + extent.y1) / 2, extent.x0 if negative else extent.x1, extent.y1 - extent.y0)
+                (end, _), (base, _) = axes.transData.transform([(x + w, y), (x, y)])
+                bar = ((extent.y0 + extent.y1) / 2, end, extent.y1 - extent.y0, base)
             else:
-                bar = ((extent.x0 + extent.x1) / 2, extent.y0 if negative else extent.y1, extent.x1 - extent.x0)
+                (_, end), (_, base) = axes.transData.transform([(x, y + h), (x, y)])
+                bar = ((extent.x0 + extent.x1) / 2, end, extent.x1 - extent.x0, base)
             # Drawn when its rectangle meets the view: a bar zoomed past on its value axis still shows its end.
             meets = extent.x0 <= box.x1 and extent.x1 >= box.x0 and extent.y0 <= box.y1 and extent.y1 >= box.y0
-            if not all(math.isfinite(value) for value in bar) or not meets:
+            if not all(math.isfinite(float(value)) for value in bar) or not meets:
                 continue
-            bars.append((*bar, bool(patch.get_path_effects())))
+            bars.append((*(float(value) for value in bar), bool(patch.get_path_effects())))
     return bars, orientation
 
 
 def _point_marks(axes, box):
-    """The display positions of the axes' visible scatter marks and of the vertices of its lines of three or more,
-    finite and inside the axes box only."""
+    """The display positions of the axes' visible point marks (scatter marks, and the markers of a `plot` call that
+    draws no line, `ax.plot(x, y, "o")`) and of the vertices of its lines of three or more, finite and inside the
+    axes box only."""
     import numpy as np
 
     scatter, vertices = [], []
@@ -1344,8 +1350,13 @@ def _point_marks(axes, box):
         offsets = np.asarray(collection.get_offsets(), dtype=float).reshape(-1, 2)
         scatter.append(collection.get_offset_transform().transform(offsets))
     for line in axes.get_lines():
+        if not line.get_visible():
+            continue
         xy = np.asarray(line.get_xydata(), dtype=float).reshape(-1, 2)
-        if line.get_visible() and len(xy) >= 3:  # two-vertex lines are rules, brackets and reference lines
+        markers_only = line.get_linestyle() in ("None", "none", "", " ") and line.get_marker() not in (None, "None", "")
+        if markers_only:
+            scatter.append(line.get_transform().transform(xy))
+        elif len(xy) >= 3:  # two-vertex lines are rules, brackets and reference lines
             vertices.append(line.get_transform().transform(xy))
     empty = np.empty((0, 2))
 
@@ -1363,27 +1374,36 @@ def _point_marks(axes, box):
     return kept(scatter), kept(vertices)
 
 
-def _label_anchors(axes, box):
+def _label_anchors(axes, box, renderer):
     """The visible texts of the axes placed at a data coordinate, with their anchors in display pixels.
 
     An annotation counts when its `xycoords` is "data" (`ax.annotate`, `ax.bar_label`), any
     other text when it uses the data transform (`ax.text` at a data position). A callout in
     axes coordinates is no value label. Like matplotlib's own draw, an annotation whose point
-    lies outside the axes is skipped unless it is set to draw there (`annotation_clip=False`);
-    a plain text at an infinite position is skipped too.
+    lies outside the axes is skipped unless it is set to draw there (`annotation_clip=False`),
+    and so is a plain text clipped to the axes (`clip_on=True`) outside them; a text at an
+    infinite position is skipped too.
     """
     found = []
     for text in axes.texts:
         if not text.get_visible() or not text.get_text().strip():
             continue
         if type(text).__name__ == "Annotation":
-            if text.xycoords != "data":
+            if callable(text.xycoords):
+                # `bar_label(label_type="center")` anchors at a share of its bar's box: a callable returning it.
+                try:
+                    frame = text.xycoords(renderer)
+                    anchor = (frame.x0 + text.xy[0] * frame.width, frame.y0 + text.xy[1] * frame.height)
+                except Exception:
+                    continue
+            elif text.xycoords == "data":
+                anchor = axes.transData.transform(text.xy)
+            else:
                 continue
-            anchor = axes.transData.transform(text.xy)
             clipped = text.get_annotation_clip() is not False
         elif text.get_transform() == axes.transData:
             anchor = axes.transData.transform(text.get_position())
-            clipped = False
+            clipped = bool(text.get_clip_on())
         else:
             continue
         x, y = float(anchor[0]), float(anchor[1])
@@ -1417,12 +1437,15 @@ def density_report(figure, dpi):
     many of them carry a value label or a decoration, with the space a label has.
 
     `bars` counts the visible bars, `marks` bars plus scatter marks plus line vertices
-    (scatter marks on a bar's end count as decorations instead), `labelled` the texts at a
-    data coordinate whose anchor sits on a mark (a bar's end or a point; `_label_anchors`),
-    `decorated` the scatter marks on a bar's end plus the bars that draw a path effect such as
-    a shadow, `slot_px` the median distance between neighbouring bar centres (the space one
-    bar's label has along the category axis) and `label_px` the median extent of the bar
-    labels along that axis. Pixels are the saved image's. The host turns this into G11.
+    (point marks on a bar's end count as decorations instead), `labelled` the texts at a
+    data coordinate whose anchor sits on a mark (at or past a bar's end, inside a bar's
+    segment, or on a point; `_label_anchors`), `numeric_labels` those of them that are one
+    number (`_is_number_text`: a named point, `Firm 3`, is not), `labelled_bars` the bar
+    positions that carry a label (a stacked bar's segments share one), `decorated` the point marks
+    on a bar's end plus the bars that draw a path effect such as a shadow, `slot_px` the
+    space one bar label has along the category axis (`_label_slot`, from the labelled bars
+    only) and `label_px` the median extent of the bar labels along that axis. Pixels are the
+    saved image's. The host turns this into G11.
     """
     import numpy as np
 
@@ -1447,25 +1470,33 @@ def density_report(figure, dpi):
         # A scatter mark on a bar's end is a decoration (the catalogue's dots on its bar tops), not a data mark.
         on_bar = _on_bar_ends(scatter, bar_array, horizontal, value_extent)
         points = np.concatenate([scatter[~on_bar], vertices])[:DENSITY_MARK_LIMIT]
-        labelled, label_sizes = 0, []
-        for text, x, y in _label_anchors(axes, box):
+        segments = np.asarray([bar[3] for bar in bars[:DENSITY_MARK_LIMIT]], dtype=float)
+        slack = DENSITY_BAR_SLACK * value_extent
+        labelled, numeric, label_sizes, labelled_bars = 0, 0, [], []
+        for text, x, y in _label_anchors(axes, box, renderer):
             along, across = (y, x) if horizontal else (x, y)
-            on_a_bar = len(bar_array) and bool(
-                (
-                    (np.abs(along - bar_array[:, 0]) <= bar_array[:, 2] / 2 + 1)
-                    & (np.abs(across - bar_array[:, 1]) <= DENSITY_BAR_SLACK * value_extent)
-                ).any()
-            )
+            hit = None
+            if len(bar_array):
+                # On a bar: past its end by at most `slack`, or inside its segment (`label_type="center"`).
+                low = np.minimum(bar_array[:, 1], segments) - slack
+                high = np.maximum(bar_array[:, 1], segments) + slack
+                matches = (
+                    (np.abs(along - bar_array[:, 0]) <= bar_array[:, 2] / 2 + 1) & (across >= low) & (across <= high)
+                )
+                if matches.any():
+                    hit = int(np.argmax(matches))
             on_a_point = len(points) and bool(
                 (
                     (np.abs(x - points[:, 0]) <= DENSITY_POINT_SLACK[0] * width + 2)
                     & (np.abs(y - points[:, 1]) <= DENSITY_POINT_SLACK[1] * height + 2)
                 ).any()
             )
-            if not (on_a_bar or on_a_point):
+            if hit is None and not on_a_point:
                 continue
             labelled += 1
-            if on_a_bar:
+            numeric += _is_number_text(text.get_text())
+            if hit is not None:
+                labelled_bars.append((float(bar_array[hit, 0]), float(bar_array[hit, 2])))
                 try:
                     extent = text.get_window_extent(renderer)
                 except Exception:
@@ -1473,19 +1504,56 @@ def density_report(figure, dpi):
                 size = float(extent.height if horizontal else extent.width)
                 if math.isfinite(size):
                     label_sizes.append(size)
-        centres = np.unique(np.round(bar_array[:, 0], 1)) if len(bar_array) else np.empty(0)
-        slot = float(np.median(np.diff(centres))) if len(centres) > 1 else None
+        slot = _label_slot(labelled_bars)
         report.append(
             {
                 "bars": len(bars),
                 "marks": len(bars) + int((~on_bar).sum()) + len(vertices),
                 "labelled": labelled,
-                "decorated": int(on_bar.sum()) + sum(1 for bar in bars if bar[3]),
+                "numeric_labels": numeric,
+                "labelled_bars": len({round(centre, 1) for centre, _ in labelled_bars}),
+                "decorated": int(on_bar.sum()) + sum(1 for bar in bars if bar[4]),
                 "slot_px": None if slot is None else round(slot * scale, 1),
                 "label_px": round(float(np.median(label_sizes)) * scale, 1) if label_sizes else None,
             }
         )
     return report
+
+
+_NUMBER_TEXT = re.compile(
+    r"[$€£¥]?\s?[+\-−]?\s?[$€£¥]?\s?\d[\d.,'    ]*"
+    r"(?:\s?(?:%|‰|[$€£¥]|[^\W\d_]{1,5}\.?(?:\s[^\W\d_]{1,5}\.?)?))?"
+)
+_MATH_MARKUP = re.compile(r"\\mathdefault|\\mathrm|\\,|[{}$]")
+
+
+def _is_number_text(text):
+    """Whether a label is one number (`5.30`, `6,5 Mio.`, `12 %`, `5,30 €`), mathtext read as drawn; a name is not."""
+    stripped = text.strip()
+    if len(stripped) > 2 and stripped.startswith("$") and stripped.endswith("$") and stripped.count("$") == 2:
+        stripped = _MATH_MARKUP.sub("", stripped).strip()
+    return _NUMBER_TEXT.fullmatch(stripped) is not None
+
+
+def _label_slot(labelled_bars):
+    """The space one bar label has along the category axis: the median distance from each labelled bar's centre to
+    the nearest other labelled bar's centre, in display pixels, or None for fewer than two.
+
+    Only labelled bars count, so unlabelled bars between them (an offset shadow series, a
+    chart that labels only its extremes) leave the space as wide as it looks. Distances
+    below half a bar width are one bar labelled twice (a stacked bar's segments) and are skipped.
+    """
+    import numpy as np
+
+    if len(labelled_bars) < 2:
+        return None
+    centres = np.asarray([centre for centre, _ in labelled_bars], dtype=float)
+    widths = np.asarray([bar_width for _, bar_width in labelled_bars], dtype=float)
+    distances = np.abs(centres[:, None] - centres[None, :])
+    distances[distances < np.median(widths) / 2] = np.inf
+    nearest = distances.min(axis=1)
+    nearest = nearest[np.isfinite(nearest)]
+    return float(np.median(nearest)) if len(nearest) else None
 
 
 def _tick_kind(axis):
