@@ -93,6 +93,7 @@ Known gaps with NO verification loop yet (reason through carefully and say so in
 ## Claude Code Configuration
 
 - **Commands directory**: Commands live in `agentic/commands/` (agent-agnostic). A symlink `.claude/commands/ → ../agentic/commands/` ensures Claude Code slash-command resolution works. Do not create commands directly in `.claude/commands/`.
+- **Other agents read the same files**: `AGENTS.md` is a symlink to this file and `.agents/skills/ → ../.claude/skills/` exposes the project skills, so the Antigravity CLI (`agy`), Codex, and other tools that read `AGENTS.md` or `.agents/skills/` load the same rules and skills. Edit `CLAUDE.md` and `.claude/skills/`, never the link paths, and never replace either link with a real file or directory. Rules worded for Claude Code tools (Edit/Write, `model: opus`, subagents, MCP servers) apply to other agents by analogy: their file-editing tool, their strongest model tier, their delegation mechanism.
 
 ## CRITICAL: Mandatory Workflow for New Specs and Implementations
 

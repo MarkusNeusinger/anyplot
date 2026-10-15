@@ -322,7 +322,7 @@ uv run alembic upgrade head
 
 - **Documentation**: Check `docs/` directory for architecture, workflow, and development guides
 - **Examples**: Look at existing plot implementations in `plots/` for patterns
-- **CLAUDE.md**: Additional guidance specific to Claude AI agent workflows
+- **CLAUDE.md**: Additional guidance specific to Claude AI agent workflows; `AGENTS.md` is a symlink to it, so agents that read `AGENTS.md` get the same rules
 - **Issue Templates**: Use GitHub issue templates for consistent problem reporting
 
 ### Common Issues
