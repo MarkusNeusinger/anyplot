@@ -1371,7 +1371,7 @@ describe('DataPanel file drop', () => {
     await waitFor(() => expect(box()).toHaveValue('Report 2024\n\nmonth,revenue\nJan,120\n'));
     expect(onConvert).toHaveBeenCalledWith(btoa(String.fromCharCode(...ZIP)), undefined);
     expect(screen.getByTestId('file-status')).toHaveTextContent(
-      '# read "Bericht.xlsx" on the server: sheet "2024" of xlsx · 4 rows × 2 columns · 3 lines · 3 formula cells saved without a value'
+      '# read "Bericht.xlsx" on the server: sheet ‹2024› of xlsx · 4 rows × 2 columns · 3 lines · 3 formula cells saved without a value'
     );
     expect(onTrack).toHaveBeenCalledWith('agent_data_file', {
       kind: 'xlsx',
@@ -1381,7 +1381,7 @@ describe('DataPanel file drop', () => {
     await userEvent.click(screen.getByRole('button', { name: '.parse()' }));
     expect(onParse).toHaveBeenCalledWith(
       'Report 2024\n\nmonth,revenue\nJan,120\n',
-      'Bericht.xlsx · sheet "2024"'
+      'Bericht.xlsx · sheet ‹2024›'
     );
   });
 
@@ -1430,7 +1430,7 @@ describe('DataPanel file drop', () => {
       outcome: 'sheet',
     });
     await userEvent.click(screen.getByRole('button', { name: '.parse()' }));
-    expect(onParse).toHaveBeenCalledWith('a,b\n1,2\n', 'Bericht.xlsx · sheet "2025"');
+    expect(onParse).toHaveBeenCalledWith('a,b\n1,2\n', 'Bericht.xlsx · sheet ‹2025›');
   });
 
   it('asks before a new sheet replaces text the user edited', async () => {
@@ -1445,8 +1445,22 @@ describe('DataPanel file drop', () => {
     await userEvent.selectOptions(picker, '2025');
 
     expect(await screen.findByTestId('file-replace')).toHaveTextContent(
-      'replace the text in the box with "Bericht.xlsx · sheet "2025"" (2 lines)?'
+      'replace the text in the box with "Bericht.xlsx · sheet ‹2025›" (2 lines)?'
     );
+  });
+
+  it('names the sheet in angle quotes, so the data line never nests quotes', async () => {
+    // Live test round 4 of 2026-10-15: the data line read `from "Museen_2025.xlsx · sheet "Übersicht""`.
+    const onConvert = vi.fn(async () => answer({ sheet: 'Übersicht', sheets: ['Übersicht'] }));
+    const { onParse } = renderPanel(emptyState(), onConvert);
+
+    drop(workbook('Museen_2025.xlsx'));
+    await waitFor(() => expect(box()).toHaveValue('Report 2024\n\nmonth,revenue\nJan,120\n'));
+    await userEvent.click(screen.getByRole('button', { name: '.parse()' }));
+
+    const source = onParse.mock.calls[0][1] as string;
+    expect(source).toBe('Museen_2025.xlsx · sheet ‹Übersicht›');
+    expect(source).not.toContain('"');
   });
 
   it('names the counts of a refused file and keeps the box', async () => {

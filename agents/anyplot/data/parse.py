@@ -90,7 +90,11 @@ would, for example, read `01.02.2024` as a number under `thousands='.'`).
    the table and `<name>: <value>` joins `context_lines`, as a JSON-stat dimension of one
    category does, unless fewer than `MIN_KEPT_COLUMNS` columns would remain.
 8. **Write the canonical `data.csv`** (comma, dot decimal, ISO dates, canonical
-   headers, missing as an empty cell, `\\n` line ends) and profile it.
+   headers, missing as an empty cell, `\\n` line ends) and profile it. The profile
+   names the months of a text column of month names (`ColumnProfile.months`) and, for a
+   number column that holds one value per group of a category column while other number
+   columns vary inside the groups, that category column (`ColumnProfile.constant_within`,
+   `_constant_within`; live test round 4 of 2026-10-15).
 
 The loader reads the result with
 `pd.read_csv("data.csv", dtype=pandas_dtypes(column_dtypes), parse_dates=parse_dates)`,
@@ -143,6 +147,7 @@ from ..schemas import (
     DatasetProfile,
     SourceFormat,
 )
+from .months import named_months
 
 
 MAX_INPUT_BYTES = 1024 * 1024
@@ -199,6 +204,12 @@ MAX_NAMED_FIELDS = 5  # the left-out fields a warning names before it ends with 
 MIN_KEPT_COLUMNS = 2
 """The columns a paste keeps at least when constant text columns move to the notes (`_constants_to_notes`):
 a category or a time and a value, the least a plot needs."""
+MAX_GROUPS = 60
+"""The distinct values up to which a column groups the rows for `_constant_within` (as `bindings.MAX_CATEGORIES`)."""
+MIN_GROUP_ROWS = 2
+"""The rows each group holds on average, at least, for `_constant_within`: groups of one row say nothing."""
+GROUP_YEARS = (1000, 2200)
+"""Whole numbers within this range read as years, and a column of years is no group for `_constant_within`."""
 
 # Candidate delimiters in tie-break order, with the source format each one reports.
 DELIMITERS: tuple[tuple[str, SourceFormat], ...] = ((",", "csv"), (";", "semicolon"), ("\t", "tsv"), ("|", "pipe"))
@@ -2710,9 +2721,10 @@ def _finish(
     """The dataset of these typed and named columns: canonical CSV, profile, preview and the loader's typing."""
     rows = [list(row) for row in zip(*(column.cells for column in columns), strict=True)]
     capped = _cap_warnings(warnings)
+    within = _constant_within(columns)
     profile = DatasetProfile(
         rows=len(rows),
-        columns=[_profile_column(column) for column in columns],
+        columns=[_profile_column(column, within.get(column.name)) for column in columns],
         sample=[[_clip(cell) for cell in row] for row in rows[:MAX_SAMPLE_ROWS]],
         source_format=source_format,
         decimal="," if any(column.decimal_comma for column in columns) else ".",
@@ -2870,7 +2882,88 @@ def _constants_to_notes(
     return [column for column in columns if id(column) not in moved]
 
 
-def _profile_column(column: _Column) -> ColumnProfile:
+def _constant_within(columns: list[_Column]) -> dict[str, str]:
+    """The number columns that hold one value per group of a category column, each with that column's name.
+
+    Live test round 4 of 2026-10-15: three measurement curves as JSON records, each with
+    its `probe`, its `temperatur_c` and lists of `zeit_s` and `spannung_v`, expanded into
+    123 rows; the defaults put `temperatur_c` (one value per curve) on x of a line chart.
+    A number column is a parameter of each group, not a point measure, when a grouping
+    column splits the rows into 2 to `MAX_GROUPS` groups of `MIN_GROUP_ROWS` rows or more
+    on average, the column has one value within every group (its missing cells aside) but
+    at least two across them, and another number column varies within some group. A
+    grouping column holds records: each of its values fills one run of consecutive rows
+    (`_in_runs`: `P1 P1 P2 P2`, as an expanded record or a long table sorted by it gives
+    them), unlike a month or a step that repeats per year or per curve, beside which a
+    climate normal or a reference curve shared by every record is a fine measure. It is a
+    text or boolean column, or a whole-number column that holds no years (`GROUP_YEARS`:
+    a value per year is a fine measure over the years), such as `record_id` or a curve's
+    `kanal`. Text columns are tried first, in column order, and each number column takes
+    the first grouping column it is constant within. A column of years is never such a
+    parameter: in a long table sorted by year, a world total per year groups the years as
+    much as they group it, and the years stay the time axis. Nothing is said for a table
+    where every number column is constant within the groups: there the groups are the rows.
+    """
+    numeric = [column for column in columns if column.dtype in ("integer", "number")]
+    if len(numeric) < 2:
+        return {}
+    rows = len(columns[0].cells) if columns else 0
+    candidates = [column for column in columns if column.dtype in ("text", "boolean")]
+    candidates += [column for column in columns if column.dtype == "integer" and not _years(column)]
+    candidates = [column for column in candidates if _in_runs(column.cells)]
+    found: dict[str, str] = {}
+    for group in candidates:
+        keys = {cell for cell in group.cells if cell}
+        if not 2 <= len(keys) <= MAX_GROUPS or rows < MIN_GROUP_ROWS * len(keys):
+            continue
+        constant: list[_Column] = []
+        varies = False
+        for column in numeric:
+            if column is group:
+                continue
+            if _one_per_group(group.cells, column.cells):
+                constant.append(column)
+            else:
+                varies = True
+        if not varies:
+            continue
+        for column in constant:
+            if column.name not in found and not _years(column) and len({cell for cell in column.cells if cell}) >= 2:
+                found[column.name] = group.name
+    return found
+
+
+def _years(column: _Column) -> bool:
+    """A whole-number column whose values all lie within `GROUP_YEARS`."""
+    low, high = GROUP_YEARS
+    return bool(column.integers) and low <= min(column.integers) and max(column.integers) <= high
+
+
+def _in_runs(cells: list[str]) -> bool:
+    """Whether each non-empty value of `cells` fills one run of consecutive rows (`1 1 2 2`, not `1 2 1 2`)."""
+    finished: set[str] = set()
+    previous = ""
+    for cell in cells:
+        if cell == previous:
+            continue
+        if previous:
+            finished.add(previous)
+        if cell in finished:
+            return False
+        previous = cell
+    return True
+
+
+def _one_per_group(keys: list[str], cells: list[str]) -> bool:
+    """Whether `cells` hold at most one value in each group of rows with the same non-empty key."""
+    seen: dict[str, str] = {}
+    for key, cell in zip(keys, cells, strict=True):
+        if key and cell and seen.setdefault(key, cell) != cell:
+            return False
+    return True
+
+
+def _profile_column(column: _Column, constant_within: str | None = None) -> ColumnProfile:
     present = [cell for cell in column.cells if cell]
     minimum: int | float | str | None = None
     maximum: int | float | str | None = None
@@ -2906,6 +2999,8 @@ def _profile_column(column: _Column) -> ColumnProfile:
         mean=mean,
         median=median,
         top=top,
+        months=named_months(column.cells) if column.dtype == "text" else None,
+        constant_within=constant_within,
     )
 
 

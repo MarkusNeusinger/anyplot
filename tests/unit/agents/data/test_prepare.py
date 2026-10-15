@@ -14,6 +14,7 @@ import pandas as pd
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
+from agents.anyplot.data import months as months_module
 from agents.anyplot.data import prepare as prepare_module
 from agents.anyplot.data.parse import AMBIGUOUS_DATE_ORDER, MAX_COMPUTED_BYTES, RESPELLED, ParsedDataset, parse_dataset
 from agents.anyplot.data.prepare import (
@@ -740,6 +741,25 @@ class TestSort:
 
     def test_unknown_column(self) -> None:
         assert failure(SALES, {"op": "sort", "column": "Art"})[0] == "unknown_column"
+
+    @pytest.mark.parametrize("descending", [False, True])
+    def test_month_names_sort_in_calendar_order(self, descending: bool) -> None:
+        """Alphabetically `Apr` would come before `Jan` (live test round 4 of 2026-10-15)."""
+        prepared = prepare(
+            "Monat,Besucher\nMai,5\nJan,1\nApr,4\nJun,6\nFeb,2\nMär,3\n",
+            {"op": "sort", "column": "Monat", "descending": descending},
+        )
+        calendar = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun"]
+
+        assert cells(prepared, 0) == (calendar[::-1] if descending else calendar)
+        order = "descending" if descending else "ascending"
+        assert prepared.changes == [f"sorted by Monat, {order}, in calendar order of the months"]
+
+    def test_text_that_is_not_all_months_sorts_alphabetically(self) -> None:
+        prepared = prepare("k,v\nMai,5\nJan,1\nZoo,9\nApr,4\n", {"op": "sort", "column": "k"})
+
+        assert cells(prepared, 0) == ["Apr", "Jan", "Mai", "Zoo"]
+        assert prepared.changes == ["sorted by k, ascending"]
 
 
 class TestPivotLonger:
@@ -1477,9 +1497,9 @@ class TestMakeDate:
 
     def test_no_name_maps_to_two_months(self) -> None:
         seen: dict[str, int] = {}
-        for number, words in enumerate(prepare_module._MONTH_WORDS, 1):
+        for number, words in enumerate(months_module._MONTH_WORDS, 1):
             for word in words:
-                key = prepare_module._fold(word)
+                key = months_module.fold(word)
                 assert seen.setdefault(key, number) == number, word
 
     def test_week_one_may_start_in_december_and_the_change_line_says_so(self) -> None:

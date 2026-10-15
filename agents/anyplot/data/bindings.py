@@ -84,6 +84,17 @@ CODE_WORDS: frozenset[str] = frozenset(
 """Column-name words that say a text column holds codes for something a name column may spell out (`country.id`)."""
 NAME_WORDS: frozenset[str] = frozenset({"name", "names", "value", "label", "title", "bezeichnung", "nom", "nombre"})
 """Column-name words that say a text column spells something out (`country.value`, `product_name`)."""
+AXIS_WORDS: frozenset[str] = frozenset(
+    {
+        *("x", "t", "time", "zeit", "temps", "tiempo", "tempo", "tijd", "czas", "elapsed", "step", "schritt"),
+        *("frequency", "freq", "frequenz", "fréquence", "frecuencia", "frequenza", "frequência", "frequentie"),
+        *("wavelength", "wellenlänge", "wellenlaenge", "lambda", "distance", "abstand", "position"),
+    }
+)
+"""Column-name words that say a number column is the independent variable of a curve (`zeit_s`, `Frequency (Hz)`).
+
+An axis role (`is_axis`) ranks such a column first among the number columns (live test round 4 of
+2026-10-15: of `zeit_s` and `spannung_v`, the time is x whatever the column order)."""
 
 _NOT_ALNUM = re.compile(r"[^0-9a-z]+")
 _CODE_VALUE = re.compile(r"[A-Z][A-Z0-9]{1,3}")
@@ -126,7 +137,12 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
        every other column, and an optional one never takes it; an axis (`is_axis`, `x`) avoids
        only constants and ranks years first, so a scatter of `Month, Temperature` keeps the
        month on x; a grouping role ranks a column of codes after its name column
-       (`_code_rank`; all since live test round 3 and its review of 2026-10-15). A variadic
+       (`_code_rank`; all since live test round 3 and its review of 2026-10-15). On a spec with
+       an x axis, the parameters of groups of records and the whole-number column that numbers
+       those groups (`group_parameters`: a curve's temperature and its `id`) are weak measures
+       and an axis avoids them too; after the years, an axis ranks a number column named like
+       an independent variable first (`AXIS_WORDS`: `zeit_s`, `Frequency (Hz)`; both since live
+       test round 4 of 2026-10-15). A variadic
        family takes every unused tier-0 or tier-1 column that is no weak measure in column
        order, up to `MAX_VARIADIC_DEFAULT`; a required family that would stay empty takes the
        first weak one. A role the plot can compute (`DataRole.computed`, `data/computed.py`) is
@@ -147,7 +163,10 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
     single: dict[str, str] = {}
     family: dict[str, list[ColumnProfile]] = {role.name: [] for role in roles if role.variadic}
     families = [role for role in roles if role.variadic and role.kinds]
-    weak = weak_measures(profile)
+    # A parameter of each group (a curve's temperature) is no point of a curve: on a spec with an x axis it
+    # ranks like a weak measure, for x too (live test round 4 of 2026-10-15).
+    per_group = group_parameters(profile) if any(is_axis(role) for role in roles if role.kinds) else set()
+    weak = weak_measures(profile) | per_group
     # A column of years named so is a time key, never a series of a number family: a single role may take it.
     # A weak measure the family leaves out stays reserved too: `Dauer (Minuten)` or a constant `target` is no
     # series label (review of 2026-10-15).
@@ -155,7 +174,10 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
         column.name
         for column in columns
         for owner in families
-        if (tier := _tier(owner, column)) is not None and tier <= 1 and year_score(column) < 2
+        if (tier := _tier(owner, column)) is not None
+        and tier <= 1
+        and year_score(column) < 2
+        and column.name not in per_group  # the `id` of each curve may be the series
     }
 
     # A constant is no measure even when named like the role (`y2`, `size`); a year or a month named so is meant.
@@ -239,8 +261,12 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
                 members.append(columns[position])
                 used.add(columns[position].name)
         elif role.name not in single:
-            # An axis (`x`) only skips constants: a month, a rank or a year is a fine independent variable.
-            avoid = (constants if is_axis(role) else weak) if is_measure(role) else set()
+            # An axis (`x`) only skips constants and group parameters: a month, a rank or a year is a fine
+            # independent variable.
+            if is_axis(role):
+                avoid = (constants if is_measure(role) else set()) | per_group
+            else:
+                avoid = weak if is_measure(role) else set()
             ranked = sorted(
                 (
                     _constant_group(role, column),
@@ -251,6 +277,7 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
                     -_rounded_similarity(role.name, column.name),
                     _code_rank(role, column, columns),
                     _year_rank(role, column),
+                    _axis_word_rank(role, column),
                     position,
                     column.name,
                 )
@@ -542,6 +569,39 @@ def _year_rank(role: DataRole, column: ColumnProfile) -> int:
         return 0
     score = year_score(column)
     return -score if "datetime" in role.kinds or is_axis(role) else score
+
+
+def _axis_word_rank(role: DataRole, column: ColumnProfile) -> int:
+    """For an axis role (`is_axis`), 0 for a number column named like an independent variable (`AXIS_WORDS`), else 1.
+
+    Every other role keeps its order (0). Years come before it (`_year_rank`), so a table
+    of `Year` and `Time spent (h)` keeps the year on x.
+    """
+    if not is_axis(role) or column.dtype not in ("integer", "number"):
+        return 0
+    words = set(_WORDS.findall(_CAMEL.sub(" ", column.name).casefold()))
+    return 0 if words & AXIS_WORDS else 1
+
+
+def group_parameters(profile: DatasetProfile) -> set[str]:
+    """The number columns that describe a group of rows rather than a point: its parameters and its number.
+
+    A parameter holds one value per group (`ColumnProfile.constant_within`), such as the
+    temperature of each of three measurement curves beside their time and voltage points;
+    a whole-number column that such a parameter is constant within numbers the groups (an
+    `id` of each curve). Either may split or label the series, but as the x of a line or
+    one of its measures it draws one value per curve (live test round 4 of 2026-10-15).
+    `default_bindings` ranks them like weak measures on a spec with an x axis, for x too.
+    """
+    numbers = {column.name for column in profile.columns if column.dtype in ("integer", "number")}
+    names = {column.name for column in profile.columns}
+    parameters = {
+        column.name
+        for column in profile.columns
+        if column.name in numbers and column.constant_within is not None and column.constant_within in names
+    }
+    keys = {column.constant_within for column in profile.columns if column.name in parameters}
+    return parameters | {key for key in keys if key is not None and key in numbers}
 
 
 def is_measure(role: DataRole) -> bool:

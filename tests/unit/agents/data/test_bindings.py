@@ -1,5 +1,7 @@
 """Tests for agents/anyplot/data/bindings.py: default bindings and their validation."""
 
+import json
+
 import pytest
 from pydantic import TypeAdapter
 
@@ -326,6 +328,125 @@ class TestAxisRoles:
         data = profile("flag,a,b\n1,1.5,2\n1,2.5,3\n1,3.5,1\n1,4.5,5\n1,5.5,4\n")
 
         assert as_pairs(default_bindings(list(self.SCATTER), data)) == [("x", "a"), ("y", "b")]
+
+
+def curves(records: list[dict[str, object]], axis: str, measure: str, points: int = 41) -> str:
+    """JSON records of measurement curves: each record's scalars plus two lists of `points` values, `measure` first."""
+    rows = []
+    for number, record in enumerate(records, 1):
+        xs = [round(index * 0.05, 2) for index in range(points)]
+        ys = [round(number + index * 0.137 + (index % 7) * 0.01, 3) for index in range(points)]
+        rows.append({**record, measure: ys, axis: xs})
+    return json.dumps(rows)
+
+
+class TestGroupParameters:
+    """Live test round 4 of 2026-10-15: a curve's own scalar is never the x or a measure of a line."""
+
+    @pytest.mark.parametrize(
+        ("records", "axis", "measure", "expected"),
+        [
+            # The live case: time and voltage per probe, a temperature per curve.
+            (
+                [{"probe": f"P{n}", "temperatur_c": t} for n, t in ((1, 20), (2, 40.5), (3, 60))],
+                "zeit_s",
+                "spannung_v",
+                [("x", "zeit_s"), ("y1", "spannung_v"), ("series", "probe")],
+            ),
+            # A frequency sweep per sample, its gain a parameter.
+            (
+                [{"sample": name, "gain_db": gain} for name, gain in (("A", 3.5), ("B", 6.0), ("C", 9.5))],
+                "frequency_hz",
+                "amplitude",
+                [("x", "frequency_hz"), ("y1", "amplitude"), ("series", "sample")],
+            ),
+            # A whole-number id and a scalar parameter, no text column: the id groups the curves.
+            (
+                [{"id": n, "load_kg": load} for n, load in ((1, 2.5), (2, 5.0), (3, 7.5))],
+                "t",
+                "strain",
+                [("x", "t"), ("y1", "strain"), ("series", "id")],
+            ),
+        ],
+    )
+    def test_expanded_lists_are_the_axes_and_the_scalars_describe_the_curves(
+        self, records: list[dict[str, object]], axis: str, measure: str, expected: list[tuple[str, str]]
+    ) -> None:
+        data = parse_dataset(curves(records, axis, measure)).profile
+
+        assert as_pairs(default_bindings(parse_roles(LINE_MULTI), data)) == expected
+
+    def test_the_profile_names_the_group_of_a_parameter(self) -> None:
+        records = [{"probe": f"P{n}", "temperatur_c": 20.0 * n} for n in (1, 2, 3)]
+        columns = {
+            column.name: column for column in parse_dataset(curves(records, "zeit_s", "spannung_v")).profile.columns
+        }
+
+        assert columns["temperatur_c"].constant_within == "probe"
+        assert columns["zeit_s"].constant_within is None
+        assert columns["spannung_v"].constant_within is None
+
+    def test_a_scatter_puts_the_time_on_x_and_never_the_parameter(self) -> None:
+        records = [{"probe": f"P{n}", "temperatur_c": 20.0 * n} for n in (1, 2, 3)]
+        data = parse_dataset(curves(records, "zeit_s", "spannung_v")).profile
+        scatter = [role("x", "numeric"), role("y", "numeric"), role("color", "categorical", required=False)]
+
+        assert as_pairs(default_bindings(scatter, data)) == [("x", "zeit_s"), ("y", "spannung_v"), ("color", "probe")]
+
+    def test_a_bar_chart_may_take_the_parameter_as_its_value(self) -> None:
+        """Without an x axis, one value per group is what a bar shows."""
+        records = [{"probe": f"P{n}", "temperatur_c": 20.0 * n} for n in (1, 2, 3)]
+        data = parse_dataset(curves(records, "zeit_s", "spannung_v")).profile
+        bar = [role("category", "categorical"), role("value", "numeric")]
+
+        assert as_pairs(default_bindings(bar, data)) == [("category", "probe"), ("value", "temperatur_c")]
+
+    def test_a_reference_curve_shared_by_every_record_stays_a_measure(self) -> None:
+        """A step that repeats per curve is no group: the reference has one value per step and is still a series."""
+        rows = "".join(
+            f"{curve},{step},{step * 1.5 + offset},{step * 1.5}\n"
+            for offset, curve in enumerate("ABC")
+            for step in range(10)
+        )
+        data = profile("curve,step,measured,reference\n" + rows)
+
+        assert {column.name: column.constant_within for column in data.columns}["reference"] is None
+        assert as_pairs(default_bindings(parse_roles(LINE_MULTI), data)) == [
+            ("x", "step"),
+            ("y1", "measured"),
+            ("y2", "reference"),
+            ("series", "curve"),
+        ]
+
+    def test_a_value_per_year_beside_per_country_rows_stays_a_measure(self) -> None:
+        rows = "".join(
+            f"{year},{country},{value + year - 2000},{7000 + year - 2000}\n"
+            for year in range(2000, 2006)
+            for country, value in (("AT", 10.5), ("CH", 20.5))
+        )
+        data = profile("Year,Country,GDP,World population\n" + rows)
+
+        assert all(column.constant_within is None for column in data.columns)
+
+    def test_a_table_whose_every_number_is_per_group_flags_nothing(self) -> None:
+        data = profile("probe,temperatur_c,mass\nA,20.5,1.5\nA,20.5,1.5\nB,30.5,2.5\nB,30.5,2.5\n")
+
+        assert all(column.constant_within is None for column in data.columns)
+
+    @pytest.mark.parametrize(
+        ("csv_text", "expected"),
+        [
+            ("spannung_v,zeit_s\n1.5,0.1\n2.5,0.2\n3.5,0.3\n", [("x", "zeit_s"), ("y", "spannung_v")]),
+            ("Amplitude,Frequency (Hz)\n1.5,10\n2.5,20\n3.5,40\n", [("x", "Frequency (Hz)"), ("y", "Amplitude")]),
+            ("Time spent (h),Year\n1.5,2001\n2.5,2002\n3.5,2003\n", [("x", "Year"), ("y", "Time spent (h)")]),
+        ],
+    )
+    def test_x_prefers_a_column_named_like_an_independent_variable(
+        self, csv_text: str, expected: list[tuple[str, str]]
+    ) -> None:
+        scatter = [role("x", "numeric"), role("y", "numeric")]
+
+        assert as_pairs(default_bindings(scatter, profile(csv_text))) == expected
 
 
 class TestComputedRoles:

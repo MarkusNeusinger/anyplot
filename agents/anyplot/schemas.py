@@ -189,6 +189,15 @@ class ColumnProfile(_ServerContract):
     every value (owner decision of 2026-10-15). An integer column's `min` and `max` are
     exact; past 2^53 the browser's float64 numbers lose their last digits, which only
     touches the binding hint that names a negative minimum (kept, owner decision).
+
+    `months` is set for a text column whose every cell names a month (`Jan`, `März`;
+    `data/months.named_months`): the months it holds, 1 to 12 ascending, so the root states
+    the range from them and not from the five `top` values (live test round 4 of
+    2026-10-15: "Jan bis Mai" for a column of Jan to Jun). `constant_within` is set for a
+    number column that holds one value per group of a category column while other number
+    columns vary inside those groups (`data/parse._constant_within`): a curve's temperature
+    beside its time and voltage points. It names that category column; such a column is a
+    parameter of each group, never the x or a measure of a line (`data/bindings.py`).
     """
 
     name: ColumnName
@@ -200,6 +209,8 @@ class ColumnProfile(_ServerContract):
     mean: float | None = None
     median: float | None = None
     top: list[Cell] = Field(default_factory=list, max_length=MAX_TOP_VALUES)
+    months: list[Annotated[int, Field(ge=1, le=12)]] | None = Field(default=None, max_length=12)
+    constant_within: ColumnName | None = None
 
 
 class DatasetProfile(_ServerContract):

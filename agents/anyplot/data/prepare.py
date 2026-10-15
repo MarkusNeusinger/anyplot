@@ -13,7 +13,10 @@ No ADK import.
 The operations:
 
 * `rename` a column; `drop_columns` (1 to 10); `drop_rows` where 1 to 3 conditions on
-  single columns all hold; `sort` by one column.
+  single columns all hold; `sort` by one column. A text column whose every cell names a
+  month (`months.named_months`: `Jan`, `März`, `févr.`) sorts in calendar order, never
+  alphabetically (`April` before `Januar` would be silently wrong; live test of
+  2026-10-15), and the change line says so.
 * `set_type` of one column to `number`, `datetime` or `text`. To number: one unit token
   at either end (`12,5 %`, `€ 12`, `1.200 EUR`) is removed, then the cell is read with
   `decimal` as the parser reads a number: the other mark is a thousands separator in
@@ -110,7 +113,7 @@ The operations:
   1 to 31, a quarter 1 to 4, a week 1 to 53), else the operation is refused, as it is
   when a row's parts are no calendar date (31 April, week 53 of a 52-week year): a
   date is never moved to the next valid one. A text `month` column may hold month names
-  and abbreviations in the eleven languages of the fixed refusals (`MONTH_NAMES`: en,
+  and abbreviations in the eleven languages of the fixed refusals (`months.MONTH_NAMES`: en,
   de, fr, es, it, pt, nl, pl, zh, vi, ru; `Jan`, `März`, `févr.`, `Май`, `3月`,
   `tháng 3`), compared without case and diacritics; one unknown name refuses it (owner
   decision of 2026-10-15). Any other text part column is a `type_mismatch` with a
@@ -159,6 +162,7 @@ from pandas.api.types import is_bool_dtype, is_datetime64_any_dtype, is_integer_
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, ValidationError
 
 from ..schemas import MAX_CELL_CHARS, MAX_COLUMNS, MAX_NOTE_CHARS, MAX_ROWS, MAX_WARNINGS, ColumnName
+from .months import month_number, named_months
 from .parse import (
     AMBIGUOUS_DATE_ORDER,
     MAX_COMPUTED_BYTES,
@@ -243,57 +247,6 @@ DATE_PART_RANGES: dict[str, tuple[int, int]] = {
     "week": (1, 53),
 }
 """The values a `make_date` part column may hold, inclusive."""
-_MONTH_WORDS: tuple[tuple[str, ...], ...] = (
-    # One tuple per month: the names and common abbreviations in the eleven languages of the fixed refusals
-    # (en, de, fr, es, it, pt, nl, pl with its genitive, zh, vi, ru with its genitive); compared folded (`_fold`).
-    (
-        *("january", "jan", "januar", "janner", "jaenner", "janvier", "janv", "enero", "ene", "gennaio", "gen"),
-        *("janeiro", "januari", "styczen", "stycznia", "sty", "一月", "январь", "января", "янв"),
-    ),
-    (
-        *("february", "feb", "februar", "fevrier", "fevr", "fev", "febrero", "febbraio", "fevereiro", "februari"),
-        *("luty", "lutego", "lut", "二月", "февраль", "февраля", "фев"),
-    ),
-    (
-        *("march", "mar", "marz", "maerz", "mrz", "mars", "marzo", "marco", "maart", "mrt", "marzec", "marca"),
-        *("三月", "март", "марта", "мар"),
-    ),
-    (
-        *("april", "apr", "avril", "avr", "abril", "abr", "aprile", "kwiecien", "kwietnia", "kwi", "四月"),
-        *("апрель", "апреля", "апр"),
-    ),
-    ("may", "mai", "mayo", "maggio", "mag", "maio", "mei", "maj", "maja", "五月", "маи", "мая"),
-    (
-        *("june", "jun", "juni", "juin", "junio", "giugno", "giu", "junho", "czerwiec", "czerwca", "cze", "六月"),
-        *("июнь", "июня", "июн"),
-    ),
-    (
-        *("july", "jul", "juli", "juillet", "juil", "julio", "luglio", "lug", "julho", "lipiec", "lipca", "lip"),
-        *("七月", "июль", "июля", "июл"),
-    ),
-    (
-        *("august", "aug", "aout", "agosto", "ago", "augustus", "sierpien", "sierpnia", "sie", "八月", "август"),
-        *("августа", "авг"),
-    ),
-    (
-        *("september", "sep", "sept", "septembre", "septiembre", "setiembre", "set", "settembre", "setembro"),
-        *("wrzesien", "wrzesnia", "wrz", "九月", "сентябрь", "сентября", "сен", "сент"),
-    ),
-    (
-        *("october", "oct", "oktober", "okt", "octobre", "octubre", "ottobre", "ott", "outubro", "out"),
-        *("pazdziernik", "pazdziernika", "paz", "十月", "октябрь", "октября", "окт"),
-    ),
-    (
-        *("november", "nov", "novembre", "noviembre", "novembro", "listopad", "listopada", "lis", "十一月"),
-        *("ноябрь", "ноября", "ноя"),
-    ),
-    (
-        *("december", "dec", "dezember", "dez", "decembre", "diciembre", "dic", "dicembre", "dezembro", "grudzien"),
-        *("grudnia", "gru", "十二月", "декабрь", "декабря", "дек"),
-    ),
-)
-_NUMBERED_MONTH = re.compile(r"(?:thang\s*)?([0-9]{1,2})\s*(?:月)?")
-"""A month written with its number: `3月` (Chinese), `tháng 3` (Vietnamese, folded to `thang 3`), `03`."""
 _TIME_SUFFIXES = ("", " %H:%M", " %H:%M:%S", "T%H:%M", "T%H:%M:%S")
 _VERBS: dict[str, str] = {
     "sum": "summed",
@@ -887,13 +840,23 @@ def _aggregate(frame: pd.DataFrame, op: Aggregate, carried: _Carried) -> tuple[p
 
 def _sort(frame: pd.DataFrame, op: Sort) -> tuple[pd.DataFrame, str]:
     _require(frame, op.column)
+    series = frame[op.column]
+    order = "descending" if op.descending else "ascending"
+    if _kind(series) == "text" and named_months([value for value in series if isinstance(value, str)]):
+        ordered = frame.sort_values(
+            op.column,
+            ascending=not op.descending,
+            kind="stable",
+            na_position="last",
+            key=lambda column: column.map(lambda value: month_number(value) if isinstance(value, str) else None),
+        )
+        return ordered.reset_index(drop=True), f"sorted by {op.column}, {order}, in calendar order of the months"
     try:
         ordered = frame.sort_values(op.column, ascending=not op.descending, kind="stable", na_position="last")
     except TypeError:
         raise PrepareError(
             "type_mismatch", f"column '{op.column}' mixes kinds of values and cannot be sorted"
         ) from None
-    order = "descending" if op.descending else "ascending"
     return ordered.reset_index(drop=True), f"sorted by {op.column}, {order}"
 
 
@@ -1390,27 +1353,6 @@ def _month_names(series: pd.Series, column: str) -> list[int | None]:
             f"column '{column}' holds {_count(unknown, 'value')} that {_be(unknown)} no month name or number from 1 to 12",
         )
     return values
-
-
-def month_number(text: str) -> int | None:
-    """The month 1 to 12 a cell names, or None."""
-    key = _fold(text).rstrip(".").strip()
-    if key.isascii() and key.isdigit():
-        return int(key) if 1 <= int(key) <= 12 else None
-    if (match := _NUMBERED_MONTH.fullmatch(key)) is not None:
-        number = int(match.group(1))
-        return number if 1 <= number <= 12 else None
-    return MONTH_NAMES.get(key)
-
-
-def _fold(text: str) -> str:
-    """Lower case without diacritics: `März` is `marz`, `Février` `fevrier`, `Май` `маи`."""
-    decomposed = unicodedata.normalize("NFKD", text.casefold())
-    return "".join(char for char in decomposed if not unicodedata.combining(char))
-
-
-MONTH_NAMES: dict[str, int] = {_fold(word): number for number, words in enumerate(_MONTH_WORDS, 1) for word in words}
-"""A folded month name or abbreviation (`marz`, `fevr`, `маи`) to its number, from `_MONTH_WORDS`."""
 
 
 # --- Conditions ------------------------------------------------------------------------------
