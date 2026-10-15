@@ -1494,7 +1494,8 @@ def _read_json_lines(
     dotted columns, list fields to rows, a float keeps its written text), and a repeated key
     or a `NaN` is counted as in JSON.
     """
-    lines = [(number, line.strip()) for number, line in enumerate(_PHYSICAL_LINE.split(text), start=1) if line.strip()]
+    # The line as pasted, its leading spaces kept, so a JSON error's column is the column in the paste.
+    lines = [(number, line) for number, line in enumerate(_PHYSICAL_LINE.split(text), start=1) if line.strip()]
     if len(lines) < 2:
         return None
     reader = _JsonReader()
@@ -2109,8 +2110,10 @@ def _column_lists(data: Mapping[Any, Sequence[Any]]) -> tuple[list[str], list[li
     lengths = {len(values) for values in data.values()}
     if len(lengths) != 1:
         described = ", ".join(
-            f"{_clip(str(name), MAX_COLUMN_NAME_CHARS)} ({len(values)})"
-            for name, values in list(data.items())[:MAX_NAMED_FIELDS]
+            # `_json_key` checks the name as the columns are checked (a lone surrogate is refused), so the
+            # message is always valid text.
+            f"{_clip(_json_key(name, position), MAX_COLUMN_NAME_CHARS)} ({len(values)})"
+            for position, (name, values) in enumerate(list(data.items())[:MAX_NAMED_FIELDS])
         ) + (", …" if len(data) > MAX_NAMED_FIELDS else "")
         raise ParseError(
             "unparseable",

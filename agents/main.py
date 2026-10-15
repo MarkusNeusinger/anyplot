@@ -553,7 +553,8 @@ app = FastAPI(title="anyplot-agents", docs_url=None, redoc_url=None, openapi_url
 async def _agents_error(_: Request, exc: AgentsError) -> JSONResponse:
     content: dict[str, Any] = {"detail": exc.code}
     if exc.cause:
-        content["cause"] = exc.cause[:MAX_CAUSE_CHARS]
+        # Backstop: a cause that names the user's text must never turn a refusal into a 500 on encoding.
+        content["cause"] = exc.cause[:MAX_CAUSE_CHARS].encode("utf-8", "replace").decode("utf-8")
     return JSONResponse(status_code=exc.status, content=content, headers=_NO_STORE)
 
 

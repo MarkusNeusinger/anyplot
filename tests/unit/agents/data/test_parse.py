@@ -3090,6 +3090,20 @@ class TestJsonLines:
         )
         assert caught.value.message.endswith("trailing comma before end of object at column 8")
 
+    def test_the_column_of_a_json_error_counts_the_lines_leading_spaces(self) -> None:
+        """Copilot review of #12201: the column is the one in the paste, indentation included."""
+        with pytest.raises(ParseError) as caught:
+            parse_dataset('{"a": 1, "b": 2}\n    {"a": 2 "b": 3}\n')
+
+        assert caught.value.message.endswith("line 2 is not valid JSON: Expecting ',' delimiter at column 13")
+
+    def test_a_lone_surrogate_in_a_named_column_list_is_refused_as_text(self) -> None:
+        """Copilot review of #12201: a refusal's message is always valid text, never a 500 on encoding."""
+        with pytest.raises(ParseError) as caught:
+            parse_dataset('{"\\ud800": [1, 2], "b": [1]}')
+
+        caught.value.message.encode("utf-8")  # raises when a surrogate slipped into the message
+
     def test_a_line_that_holds_no_object_is_named(self) -> None:
         with pytest.raises(ParseError, match="line 2 holds an array of 2 values instead of an object"):
             parse_dataset('{"a": 1}\n[1, 2]\n')
