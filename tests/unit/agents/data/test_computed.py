@@ -103,19 +103,27 @@ class TestBollinger:
         ]
         assert check_bindings(bindings, roles, data).complete
 
-    def test_band_qualified_names_are_bands_not_the_average(self) -> None:
-        """`SMA Upper Band` holds `sma` and `upper band`: the more specific role takes it; `sma` stays computed."""
+    @pytest.mark.parametrize(
+        ("upper", "lower"),
+        [
+            ("SMA Upper Band", "SMA Lower Band"),
+            ("Moving Average Upper Band", "Moving Average Lower Band"),
+            ("Gleitender Durchschnitt oberes Band", "Gleitender Durchschnitt unteres Band"),
+        ],
+    )
+    def test_band_qualified_names_are_bands_not_the_average(self, upper: str, lower: str) -> None:
+        """A band named after the average is a band: `sma` never takes it and stays computed."""
         roles = roles_of("indicator-bollinger")
         data = parse_dataset(
-            "date,close,SMA Upper Band,SMA Lower Band\n"
+            f"date,close,{upper},{lower}\n"
             "2024-01-01,100.5,103.0,95.0\n2024-01-02,101.5,104.0,95.5\n2024-01-03,99.0,104.5,95.1\n"
         ).profile
 
         assert pairs(default_bindings(roles, data)) == [
             ("date", "date"),
             ("close", "close"),
-            ("upper_band", "SMA Upper Band"),
-            ("lower_band", "SMA Lower Band"),
+            ("upper_band", upper),
+            ("lower_band", lower),
         ]
 
     def test_only_prices_leave_the_bands_to_the_plot(self) -> None:

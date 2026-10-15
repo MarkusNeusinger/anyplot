@@ -57,6 +57,10 @@ ALIASES: dict[str, tuple[str, ...]] = {
 """Per role name, the words a column name holds when it clearly carries that value (all words of one entry,
 compared without case and diacritics). The role's own name always counts too (`rolling_avg`, `upper band`)."""
 
+EXCLUDES: dict[str, frozenset[str]] = {"sma": frozenset({"upper", "lower", "obere", "oberes", "untere", "unteres"})}
+"""Per role name, words that rule a column out although an alias matches: `Moving Average Upper Band` is a band,
+never the middle average (Copilot review of #12195)."""
+
 _WORD = re.compile(r"[^\W_]+")
 _CAMEL = re.compile(r"(?<=[a-z])(?=[A-Z])")
 _DIGIT_EDGE = re.compile(r"(?<=[^\W\d_])(?=\d)|(?<=\d)(?=[^\W\d_])")
@@ -80,6 +84,8 @@ def match_score(role: DataRole, column_name: str) -> int:
     the column, so the upper band is never read as the middle average (`bindings.default_bindings`).
     """
     words = set(_words(column_name))
+    if words & EXCLUDES.get(role.name, frozenset()):
+        return 0
     phrases = (role.name.replace("_", " "), *ALIASES.get(role.name, ()))
     return max((len(wanted) for phrase in phrases if (wanted := _words(phrase)) and set(wanted) <= words), default=0)
 
