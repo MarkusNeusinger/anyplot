@@ -487,6 +487,17 @@ describe('toAgentApiError', () => {
     expect(odd.cause).toBeNull();
   });
 
+  it('reads the broken part of a damaged file from the closed set only', async () => {
+    const damaged = await toAgentApiError(
+      new Response(JSON.stringify({ detail: 'file_corrupt', damage: 'parquet' }), { status: 422 })
+    );
+    expect(damaged.damage).toBe('parquet');
+    const unknown = await toAgentApiError(
+      new Response(JSON.stringify({ detail: 'file_corrupt', damage: 'Traceback' }), { status: 422 })
+    );
+    expect(unknown.damage).toBeNull();
+  });
+
   it("keeps the binding check's lines of a refused binding set", async () => {
     const error = await toAgentApiError(
       new Response(

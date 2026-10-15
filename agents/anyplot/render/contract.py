@@ -180,6 +180,8 @@ class ConvertOutput:
     refusal: str | None = None
     measured: int | None = None
     limit: int | None = None
+    damage: str | None = None
+    """A `corrupt` refusal's broken part (`wire.ConvertDamage`), or None."""
     text: str | None = field(default=None, repr=False)
     meta: ConvertMeta | None = None
     reason: str | None = None

@@ -105,6 +105,13 @@ class TestConvertRoute:
                 {"detail": "file_too_many_rows", "measured": 21_000, "limit": 20_000},
             ),
             (ConvertOutput(exit_code=11, refusal="encrypted"), {"detail": "file_encrypted"}),
+            # Owner decision of 2026-10-16: a damaged file names its broken part, from a closed set only.
+            (
+                ConvertOutput(exit_code=14, refusal="corrupt", damage="parquet"),
+                {"detail": "file_corrupt", "damage": "parquet"},
+            ),
+            (ConvertOutput(exit_code=14, refusal="corrupt", damage="nonsense"), {"detail": "file_corrupt"}),
+            (ConvertOutput(exit_code=14, refusal="corrupt"), {"detail": "file_corrupt"}),
             (ConvertOutput(exit_code=None, timed_out=True, reason="timeout"), {"detail": "file_timeout"}),
             (ConvertOutput(exit_code=None, reason="memory", measured=200, limit=300), {"detail": "file_too_complex"}),
             (ConvertOutput(exit_code=1), {"detail": "file_unreadable"}),

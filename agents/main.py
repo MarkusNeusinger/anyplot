@@ -201,6 +201,7 @@ from agents.anyplot.session_state import (
 from agents.anyplot.settings import AgentSettings, get_settings
 from agents.anyplot.theme_render import RenderGone, render_theme
 from agents.renderer.wire import (
+    CONVERT_DAMAGES,
     CONVERT_HARNESS_EXITS,
     MAX_CONVERT_BASE64_CHARS,
     MAX_CONVERT_INPUT_BYTES,
@@ -261,6 +262,15 @@ disable_content_capture()
 
 MAX_CAUSE_CHARS = 300
 """The longest `cause` an error answer carries (`AgentsError`); the BFF applies the same cap."""
+
+
+def clip_cause(cause: str) -> str:
+    """The cause within `MAX_CAUSE_CHARS`, a longer one cut at a word boundary with `…` (never mid-word)."""
+    if len(cause) <= MAX_CAUSE_CHARS:
+        return cause
+    head = cause[: MAX_CAUSE_CHARS - 1]
+    space = head.rfind(" ")
+    return (head[:space] if space >= MAX_CAUSE_CHARS // 2 else head).rstrip(" ,;:") + "…"
 
 
 class AgentsError(Exception):
@@ -554,7 +564,7 @@ async def _agents_error(_: Request, exc: AgentsError) -> JSONResponse:
     content: dict[str, Any] = {"detail": exc.code}
     if exc.cause:
         # Backstop: a cause that names the user's text must never turn a refusal into a 500 on encoding.
-        content["cause"] = exc.cause[:MAX_CAUSE_CHARS].encode("utf-8", "replace").decode("utf-8")
+        content["cause"] = clip_cause(exc.cause).encode("utf-8", "replace").decode("utf-8")
     return JSONResponse(status_code=exc.status, content=content, headers=_NO_STORE)
 
 
@@ -970,6 +980,7 @@ async def convert_dataset_file(
         outcome=code,
         exit_code=output.exit_code,
         reason=output.reason,
+        damage=output.damage,
         bytes=len(data),
         wall_s=round(output.wall_s, 3),
     )
@@ -978,6 +989,8 @@ async def convert_dataset_file(
         content.update(
             {key: value for key, value in (("measured", output.measured), ("limit", output.limit)) if value is not None}
         )
+    if output.refusal == "corrupt" and output.damage in CONVERT_DAMAGES:
+        content["damage"] = output.damage  # which part is broken, a closed name the page words (owner, 2026-10-16)
     return JSONResponse(status_code=422, content=content, headers=_NO_STORE)
 
 
@@ -997,7 +1010,9 @@ async def _ingest_paste(
         _refuse_code_or_formula(ledger, body.text)
     try:
         # A confirmed transcription is the service's own CSV, which the user has seen row by row: no row is left out.
-        parsed = parse_dataset(body.text, find_table=not body.confirmed, table=body.table or 1)
+        # A dropped `.jsonl` or `.ndjson` file is JSON Lines by its name, so a file of one record is one row.
+        json_lines = body.source is not None and body.source.lower().rstrip().endswith((".jsonl", ".ndjson"))
+        parsed = parse_dataset(body.text, find_table=not body.confirmed, table=body.table or 1, json_lines=json_lines)
     except ParseError as exc:
         if exc.code == "too_long":
             raise AgentsError(413, "too_long", exc.message) from None

@@ -968,7 +968,8 @@ export function DataPanel({
           failure.measured,
           failure.limit,
           failure.ref,
-          file.browserKind
+          file.browserKind,
+          failure.damage
         ),
       });
       trackFile(file.browserKind, null, failure.code.startsWith('file_') ? 'refused' : 'failed');

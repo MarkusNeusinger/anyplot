@@ -175,8 +175,25 @@ const KIND_NAME: Record<string, string> = {
 };
 
 /**
+ * The broken part of a damaged file (`422 file_corrupt` with `damage`, a closed set the
+ * server names; owner decision of 2026-10-16), in the page's words.
+ */
+export const DAMAGE_TEXT: Record<string, string> = {
+  zip: 'its zip container is broken or cut off (an incomplete download or copy); save or download it again',
+  workbook:
+    'its workbook parts are missing or broken, so no sheet can be listed; open it in Excel or LibreOffice and save it again',
+  sheet:
+    'the cells of this sheet are broken; open it in Excel or LibreOffice and save it again, or pick another sheet',
+  parquet: 'its Parquet footer or a data page is broken or cut off; write the file again',
+  arrow: 'its Arrow or Feather structure is broken or cut off; write the file again',
+  npy_header: 'its NumPy header is broken; save the array again with numpy.save',
+  npy_data:
+    'it holds less data than its NumPy header announces (a cut-off file); save the array again with numpy.save',
+};
+
+/**
  * The line for a file the server did not convert, the name in quotes first; a broken cap names its
- * numbers, and a damaged file the format its first bytes named (`kind`).
+ * numbers, and a damaged file the format its first bytes named (`kind`) and the broken part (`damage`).
  */
 export function describeConvertFailure(
   name: string,
@@ -184,11 +201,15 @@ export function describeConvertFailure(
   measured: number | null,
   limit: number | null,
   ref: string | null,
-  kind: string | null = null
+  kind: string | null = null,
+  damage: string | null = null
 ): string {
   let text = CONVERT_FAILURE[code] ?? DATA_FAILURE[code] ?? `could not be read (${code})`;
-  // A damaged file names the format its first bytes claimed, so "not the format it seems" says which one.
-  if (code === 'file_corrupt' && kind && KIND_NAME[kind]) {
+  // A damaged file names the format its first bytes claimed, and the part the server found broken.
+  if (code === 'file_corrupt' && damage && DAMAGE_TEXT[damage]) {
+    const as = kind && KIND_NAME[kind] ? ` as ${KIND_NAME[kind]}` : '';
+    text = `could not be read${as}: ${DAMAGE_TEXT[damage]}`;
+  } else if (code === 'file_corrupt' && kind && KIND_NAME[kind]) {
     text = `starts like ${KIND_NAME[kind]} but could not be read as one: the file is damaged (a cut-off download or copy), or it is another format saved under this name`;
   }
   const counted = (noun: string) =>
@@ -262,25 +283,17 @@ export function describeFileRefusal(name: string, code: string): string {
 }
 
 /**
- * The lead of a failure that names its cause, where the code's own text would
- * say something else: a `too_long` with a cause is the table written out, not
- * the 1 MB the page checks before it sends.
- */
-const CAUSE_LEAD: Record<string, string> = {
-  too_long: 'too large',
-};
-
-/**
- * A failed data call in one line: the code's text, then what the data fails on
- * when the server named it (owner rule, 2026-10-16: never only "could not
- * read"), then the request id.
+ * A failed data call in one line: what the data fails on when the server named
+ * it (owner rule, 2026-10-16: never only "could not read"), else the code's
+ * text, then the request id. The cause stands alone: it is a whole sentence,
+ * and some say the format WAS read ("the data reads as JSON Lines, but line 2
+ * …"), which a "could not read this as …" lead would contradict.
  */
 export function describeDataFailure(
   code: string,
   ref: string | null,
   cause: string | null = null
 ): string {
-  const lead = DATA_FAILURE[code] ?? `request failed (${code})`;
-  const text = cause ? `${CAUSE_LEAD[code] ?? lead}: ${cause}` : lead;
+  const text = cause || (DATA_FAILURE[code] ?? `request failed (${code})`);
   return ref ? `${text} · ref ${ref}` : text;
 }

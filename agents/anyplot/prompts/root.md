@@ -104,7 +104,7 @@ After `plot_pipeline` returns, describe the result in the session language. A sh
 - Never say a text is missing or not set when `texts` holds it (a `title` entry means the plot has a title), and never say a requested text or format is there when `requested_not_found` lists it: say plainly that the plot does not show it yet, quote what `texts` shows instead, and offer to try again.
 - `ok`: the plot is ready; name the main changes in one sentence.
 - `needs_attention`: the plot is ready but has the residual issues the result lists; name them briefly and offer to fix one.
-- `ok` and `needs_attention` mean the plot was made from the data the user confirmed: in that reply never ask for `.confirm()` and never say the data is not confirmed, whatever an earlier turn said.
+- `ok` and `needs_attention` (their result says `data_confirmed: true`) mean the plot was made from the data the user confirmed: in that reply never ask for `.confirm()` and never say the data is not confirmed, whatever an earlier turn said.
 - `failed`: the plot could not be made; give the reason in plain words (for example "the code could not be adapted to the data" or "the time limit was reached") and suggest one concrete next step, such as checking the bindings.
 - `not_ready`: say what is missing; for `data_unconfirmed`, ask the user to confirm the data in the data panel first.
 - Numbers about the data in the reply (rows, points, columns) come from the latest tool result or the session block, never from an earlier turn: the data may have changed since, for example through an undo.

@@ -1996,6 +1996,13 @@ class TestUpstreamMapping:
         assert body["cause"].startswith("the header has 3 fields, but line 3 has 4; x")
         assert len(body["cause"]) == 300
 
+    def test_a_long_cause_is_cut_at_a_word_and_loses_its_control_characters(self, client, upstream) -> None:
+        cause = "line\x07 3\x9b has 4 fields; " + "word " * 80
+        upstream.handler = lambda request: httpx.Response(422, json={"detail": "unparseable", "cause": cause})
+        body = client.post("/debug/agent/sessions/s1/dataset", json={"text": "a,b"}, headers=CLIENT_HEADERS).json()
+        assert body["cause"].startswith("line 3 has 4 fields; word word")
+        assert body["cause"].endswith("word…") and len(body["cause"]) <= 300
+
     @pytest.mark.parametrize(
         ("status", "body"),
         [
@@ -2572,6 +2579,21 @@ class TestConvert:
         )
         body = client.post(self.PATH, json={"data_base64": "UEsFBg=="}, headers=CLIENT_HEADERS).json()
         assert body["detail"] == "file_too_large" and "measured" not in body and "limit" not in body
+
+    @pytest.mark.parametrize(
+        ("code", "damage", "passed"),
+        [
+            ("file_corrupt", "zip", "zip"),
+            ("file_corrupt", "npy_data", "npy_data"),
+            ("file_corrupt", "Traceback in /app/x.py", None),  # a closed set: no text passes
+            ("file_corrupt", ["zip"], None),
+            ("file_empty", "zip", None),  # only a damaged file names a broken part
+        ],
+    )
+    def test_a_damaged_file_keeps_only_a_known_broken_part(self, client, upstream, code, damage, passed) -> None:
+        upstream.handler = lambda request: httpx.Response(422, json={"detail": code, "damage": damage})
+        body = client.post(self.PATH, json={"data_base64": "UEsFBg=="}, headers=CLIENT_HEADERS).json()
+        assert body["detail"] == code and body.get("damage") == passed
 
     def test_convert_unavailable_passes(self, client, upstream) -> None:
         upstream.handler = lambda request: httpx.Response(503, json={"detail": "convert_unavailable"})

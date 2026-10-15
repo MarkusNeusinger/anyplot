@@ -549,6 +549,8 @@ export class AgentApiError extends Error {
    * `413 too_long`): "the header has 3 fields, but line 3 has 4"; null otherwise.
    */
   readonly cause: string | null;
+  /** Which part of a damaged file is broken (`422 file_corrupt`): one of `CONVERT_DAMAGES`; null otherwise. */
+  readonly damage: ConvertDamage | null;
 
   constructor(
     status: number,
@@ -557,7 +559,8 @@ export class AgentApiError extends Error {
     errors: string[] = [],
     caseId: string | null = null,
     measure: { measured?: number | null; limit?: number | null } = {},
-    cause: string | null = null
+    cause: string | null = null,
+    damage: ConvertDamage | null = null
   ) {
     super(`agent request failed: ${status} ${code}`);
     this.name = 'AgentApiError';
@@ -569,6 +572,7 @@ export class AgentApiError extends Error {
     this.measured = measure.measured ?? null;
     this.limit = measure.limit ?? null;
     this.cause = cause;
+    this.damage = damage;
   }
 
   /** 401 and 403 from the admin gate: the browser is not (or no longer) signed in as an admin. */
@@ -598,6 +602,7 @@ export async function toAgentApiError(response: Response): Promise<AgentApiError
   let caseId: string | null = null;
   const measure: { measured?: number; limit?: number } = {};
   let cause: string | null = null;
+  let damage: ConvertDamage | null = null;
   try {
     const body: unknown = await response.json();
     if (body && typeof body === 'object') {
@@ -610,6 +615,9 @@ export async function toAgentApiError(response: Response): Promise<AgentApiError
       if (isCount(record.limit)) measure.limit = record.limit;
       if (typeof record.cause === 'string') {
         cause = record.cause.split(/\s+/).join(' ').trim().slice(0, MAX_CAUSE_CHARS) || null;
+      }
+      if ((CONVERT_DAMAGES as readonly unknown[]).includes(record.damage)) {
+        damage = record.damage as ConvertDamage;
       }
     }
   } catch {
@@ -625,12 +633,25 @@ export async function toAgentApiError(response: Response): Promise<AgentApiError
     errors,
     caseId,
     measure,
-    cause
+    cause,
+    damage
   );
 }
 
 /** The longest cause the page shows, as the BFF caps it (`api/routers/agent.py` `_MAX_CAUSE_CHARS`). */
 const MAX_CAUSE_CHARS = 300;
+
+/** The broken part of a damaged file (`agents/renderer/wire.py` `ConvertDamage`, `api/routers/agent.py`). */
+export const CONVERT_DAMAGES = [
+  'zip',
+  'workbook',
+  'sheet',
+  'parquet',
+  'arrow',
+  'npy_header',
+  'npy_data',
+] as const;
+export type ConvertDamage = (typeof CONVERT_DAMAGES)[number];
 
 function isCount(value: unknown): value is number {
   return typeof value === 'number' && Number.isInteger(value) && value >= 0;

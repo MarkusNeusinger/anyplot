@@ -56,6 +56,10 @@ DATA_STATUS_FILE = "status.json"
 MAX_DATA_STATUS_BYTES = 1024
 """Largest `status.json` a host reads; the harness writes well under 100 bytes."""
 MAX_DATA_EXIT = 255
+ConvertDamage = Literal["zip", "workbook", "sheet", "parquet", "arrow", "npy_header", "npy_data"]
+"""The broken part of a `corrupt` file (`convert.DAMAGES`, `harness.CONVERT_DAMAGES`, pinned equal): a closed set,
+so the converter's own text never leaves the sandbox."""
+CONVERT_DAMAGES: tuple[ConvertDamage, ...] = get_args(ConvertDamage)
 
 
 class DataStatus(BaseModel):
@@ -70,6 +74,13 @@ class DataStatus(BaseModel):
     exit: int = Field(ge=0, le=MAX_DATA_EXIT)
     measured: int | None = Field(default=None, ge=0, le=MAX_PROBE_INT)
     limit: int | None = Field(default=None, ge=0, le=MAX_PROBE_INT)
+    damage: ConvertDamage | None = None
+    """A `corrupt` conversion's broken part; a name outside `ConvertDamage` reads as None, never as a broken status."""
+
+    @field_validator("damage", mode="before")
+    @classmethod
+    def _known_damage(cls, value: object) -> object:
+        return value if value in CONVERT_DAMAGES else None
 
 
 def run_cpu_seconds(limit_s: int, timeout_s: float) -> int:
@@ -363,6 +374,9 @@ class ConvertRun(BaseModel):
     refusal: ConvertRefusal | None = None
     measured: int | None = None
     limit: int | None = None
+    damage: ConvertDamage | None = None
+    """A `corrupt` refusal's broken part. The renderer leaves the key out while it is None, so an agents service
+    that predates the field (its `extra="forbid"`) reads every other answer during a deploy."""
     text: str | None = Field(default=None, max_length=MAX_CONVERT_TEXT_BYTES)
     meta: ConvertMeta | None = None
     wall_s: float = Field(default=0.0, ge=0)

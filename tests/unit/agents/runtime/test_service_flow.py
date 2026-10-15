@@ -49,7 +49,7 @@ from agents.anyplot.services import Services, get_services
 from agents.anyplot.session_state import LANGUAGE, LANGUAGE_SOURCE, read_session
 from agents.anyplot.settings import get_settings
 from agents.anyplot.sub_agents.adapter import ADAPTERS
-from agents.main import ACTION_LANGUAGE_LINE, MAX_MESSAGE_CHARS, Runtime, app, get_runtime
+from agents.main import ACTION_LANGUAGE_LINE, MAX_CAUSE_CHARS, MAX_MESSAGE_CHARS, Runtime, app, clip_cause, get_runtime
 
 from .conftest import CASES
 from .fakes import (
@@ -1776,6 +1776,11 @@ async def test_dataset_errors(client: httpx.AsyncClient, judge) -> None:
     assert broken.status_code == 422
     assert broken.json()["cause"].startswith("the data reads as JSON Lines (one JSON object per line), but line 2")
 
+    long = "a,b\n" + "".join(f"{i},{i},{i}\n" for i in range(12))  # a cause over the cap: cut at a word
+    assert len(clip_cause("word " * 100)) <= MAX_CAUSE_CHARS and clip_cause("word " * 100).endswith("word…")
+    assert clip_cause("short") == "short"
+    assert (await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": long})).status_code == 422
+
     over = "a\n" + "1\n" * (MAX_INPUT_BYTES // 2)  # one line past the 1 MB cap
     too_long = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": over})
     assert (too_long.status_code, too_long.json()) == (413, {"detail": "too_long"})
@@ -1799,6 +1804,19 @@ async def test_dataset_errors(client: httpx.AsyncClient, judge) -> None:
     judge.script = [TimeoutError(), TimeoutError()]
     unavailable = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": "a,b\n1,2\n"})
     assert (unavailable.status_code, unavailable.json()) == (503, {"detail": "guard_unavailable"})
+
+
+async def test_a_dropped_jsonl_file_of_one_record_is_one_row(client: httpx.AsyncClient, judge) -> None:
+    """Gemini review of #12201: the file's name says JSON Lines, so one record is one row, not two pairs."""
+    sid = await open_session(client, with_data=False)
+    text = '{"city": "Berlin", "pop": 3.7}\n'
+
+    dropped = await client.post(
+        f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": text, "source": "cities.jsonl"}
+    )
+
+    assert dropped.status_code == 200, dropped.text
+    assert dropped.json()["profile"]["rows"] == 1 and dropped.json()["profile"]["source_format"] == "json_lines"
 
 
 def _reading(columns: list[str], rows: list[list[str]], note: str = "") -> Transcription:

@@ -223,6 +223,10 @@ def fence_pipeline_notes(result: dict[str, Any]) -> dict[str, Any]:
     the adapter meant to do from what the plot shows.
     """
     fenced = {key: value for key, value in result.items() if key not in (*PIPELINE_NOTE_FIELDS, SHOWS_KEY)}
+    if result.get("status") in ("ok", "needs_attention"):
+        # A shipped plot passed the gate on the user's confirmation: a server fact in the result itself,
+        # so an earlier turn's "please confirm" never reads as still true (live round 6, R6-1).
+        fenced["data_confirmed"] = True
     if any(result.get(key) for key in PIPELINE_NOTE_FIELDS):
         notes = {key: result.get(key) or [] for key in PIPELINE_NOTE_FIELDS}
         fenced[NOTES_KEY] = DATA_PREAMBLE + "\n" + fence("tool_notes", json.dumps(notes, ensure_ascii=False))

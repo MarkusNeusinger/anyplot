@@ -3113,6 +3113,36 @@ class TestJsonLines:
 
         assert warned(parsed, "1 key repeated") and warned(parsed, "1 value NaN, Infinity or -Infinity")
 
+    def test_json_lines_below_a_title_keep_the_title_as_notes(self) -> None:
+        """Fable review of #12201: under a title line, JSON Lines had read as one text column of JSON."""
+        parsed = parse_dataset('Export 2026\n# source: a log\n{"a": 1, "b": 2}\n{"a": 2, "b": 3}\n')
+
+        assert (parsed.profile.source_format, parsed.profile.rows) == ("json_lines", 2)
+        assert parsed.context_lines == ["Export 2026", "# source: a log"]
+        assert warned(parsed, "left out 2 lines above the table")
+
+    def test_a_broken_line_below_a_title_is_named(self) -> None:
+        with pytest.raises(ParseError, match="line 3 is not valid JSON: Expecting ',' delimiter at column 9"):
+            parse_dataset('Export 2026\n{"a": 1, "b": 2}\n{"a": 2 "b": 3}\n')
+
+    def test_a_table_with_a_json_cell_stays_a_table(self) -> None:
+        assert parse_dataset('a,b\n{"x":1},2\n3,4\n').profile.source_format == "csv"
+
+    def test_a_dropped_jsonl_file_of_one_record_is_one_row(self) -> None:
+        """Gemini review of #12201: a one-line `.jsonl` file is one record, not category/value pairs."""
+        parsed = parse_dataset('{"city": "Berlin", "pop": 3.7}\n', json_lines=True)
+
+        assert (parsed.profile.source_format, parsed.profile.rows) == ("json_lines", 1)
+        assert [column.name for column in parsed.profile.columns] == ["city", "pop"]
+
+    def test_a_pasted_object_of_mixed_values_stays_pairs_and_says_so(self) -> None:
+        mixed = parse_dataset('{"city": "Berlin", "pop": 3.7}')
+        counts = parse_dataset('{"Hund": 7, "Katze": 3}')
+
+        assert (mixed.profile.source_format, mixed.profile.rows) == ("json_pairs", 2)
+        assert warned(mixed, "read as 2 category/value pairs, one row per key; to read it as one row")
+        assert counts.warnings == []  # one kind of value: the pair reading is the plain one
+
     def test_a_first_line_that_is_no_object_is_no_json_lines(self) -> None:
         """Two arrays on two lines stay a refusal of JSON, which names the JSON error."""
         with pytest.raises(ParseError, match=r"not valid JSON: Extra data at line 2, column 1"):
@@ -3159,8 +3189,17 @@ class TestRefusalsNameTheirCause:
     @pytest.mark.parametrize(
         ("text", "fragment"),
         [
-            ('[{"a": 1}, {"a": 2}\n', "not valid JSON: Expecting ',' delimiter at line 1, column 20"),
+            # The end of the input is the paste's line 2 (its trailing line break counts).
+            ('[{"a": 1}, {"a": 2}\n', "not valid JSON: Expecting ',' delimiter at line 2, column 1"),
             ('data = {"a": [1, 2}\n', "is not one: closing parenthesis '}' does not match opening parenthesis '['"),
+            # Review of #12201: positions count from the paste's own first line, indentation included.
+            ('\n\n{"a": 1,\n"b"}', "Expecting ':' delimiter at line 4, column 4"),
+            ('\n\n    {"a": 1 "b": 2}\n', "Expecting ',' delimiter at line 3, column 13; a comma is missing"),
+            ('\n\ndata = {"a": [1, 2}', "does not match opening parenthesis '[' on line 3"),
+            # JSON that Python reads as names (`true`, `null`, unquoted keys) gets the JSON error, never "a call".
+            ('[{"a": true}, {"a": false},]', "not valid JSON: Illegal trailing comma before end of array"),
+            ("{a: 1, b: 2}", "at line 1, column 2; JSON writes every key in double quotes"),
+            ('{"a": null},\n{"a": 1}', "Extra data at line 1, column 12; for one object per line (JSON Lines) leave"),
             ('{"a": open("x")}\n', "holds a name, a call or an operation, which is never run"),
             ('[{"a": 1}, 7]\n', "item 2 is a number"),
             ('{"a": [1, 2], "b": [1]}\n', "the column lists have different lengths (a (2), b (1))"),

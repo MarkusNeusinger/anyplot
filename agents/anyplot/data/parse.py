@@ -511,8 +511,13 @@ def parse_dataset(
     max_bytes: int = MAX_INPUT_BYTES,
     canonical: bool = False,
     table: int = 1,
+    json_lines: bool = False,
 ) -> ParsedDataset:
-    """Parse pasted CSV, TSV, semicolon or pipe text, JSON or a Python literal into the canonical dataset.
+    """Parse pasted CSV, TSV, semicolon or pipe text, JSON, JSON Lines or a Python literal into the canonical dataset.
+
+    `json_lines` says the text came from a file named `.jsonl` or `.ndjson`: it is read as JSON
+    Lines first, so a file of one record is one row (a pasted single object of values stays
+    category/value pairs, with a warning when its values mix text and numbers).
 
     `table` chooses among the tables of a paste that holds several (`_one_table`, 1-based, at
     most `MAX_TABLES`); a number past the tables found is `unparseable`. The result lists them
@@ -556,14 +561,19 @@ def parse_dataset(
     read: tuple[list[str], list[list[str]], SourceFormat] | None = None
     listed: set[str] = set()  # the headers of list fields that `_records` expanded into rows
     literal = _LITERAL_START.match(stripped)
-    if literal:
+    notes = context if find_table else None  # the lines above JSON Lines are notes only in a paste
+    if json_lines:  # a dropped `.jsonl` or `.ndjson` file: one object per line, also a file of one line
+        read = _read_json_lines(text, warnings, listed, context=notes, single=True)
+    if read is None and literal:
         assignment, body = literal.group(), stripped[literal.end() :]
         read = _read_literal(body, warnings, context, listed)
         if read is None and not assignment:
             read = _read_json_lines(text, warnings, listed)  # the whole text, so line numbers count from line 1
         if read is None and (assignment or not body.startswith("(")):
-            raise ParseError("unparseable", _not_a_literal(body, python=bool(assignment)))
+            raise ParseError("unparseable", _not_a_literal(text, body, python=bool(assignment)))
         # A bare `(` that neither reader accepts is delimited text: `(in %) Land;Wert`, prose in parentheses.
+    elif read is None and notes is not None:
+        read = _read_json_lines(text, warnings, listed, context=notes)  # JSON Lines below a title line
     declared: set[str] = set()
     tables: list[str] = []
     if read is None:
@@ -1480,23 +1490,41 @@ MAX_LINES_NAMED = 5
 """The broken lines a refusal names (`_ragged_rows`) or a warning names (`_some_lines`) before it counts the rest."""
 
 
+MAX_JSON_LINES_LEAD = 10
+"""The lines above JSON Lines (a title, an export's comment lines) that may stand before the first object."""
+
+
 def _read_json_lines(
-    text: str, warnings: list[str], listed: set[str] | None = None
+    text: str,
+    warnings: list[str],
+    listed: set[str] | None = None,
+    *,
+    context: list[str] | None = None,
+    single: bool = False,
 ) -> tuple[list[str], list[list[str]], SourceFormat] | None:
     """JSON Lines (one JSON object per line) read as JSON records; None when the text is not JSON Lines.
 
-    The text counts as JSON Lines when it has two or more non-empty lines and its first one
-    is a JSON object on its own (live test round 6 of 2026-10-16: a log export of 600 lines
-    `{"ts": ..., "service": ..., "latency_ms": ..., "status": ...}`). Every other non-empty
-    line must then be an object too: a line that is no valid JSON, or holds an array or a
-    value, is `unparseable` with its line number and the JSON error, never skipped. The
-    records follow the rules of a JSON array of records (`_records`: nested objects to
-    dotted columns, list fields to rows, a float keeps its written text), and a repeated key
-    or a `NaN` is counted as in JSON.
+    The text counts as JSON Lines when it has two or more non-empty lines from its first
+    object on and that first line is a JSON object on its own (live test round 6 of
+    2026-10-16: a log export of 600 lines `{"ts": ..., "service": ..., "latency_ms": ...,
+    "status": ...}`); `single` (a dropped `.jsonl` or `.ndjson` file) accepts one line too, so
+    a file of one record is one row, not the category/value pairs a pasted object gives.
+    Every other non-empty line must then be an object too: a line that is no valid JSON, or
+    holds an array or a value, is `unparseable` with its line number and the JSON error,
+    never skipped. With `context`, up to `MAX_JSON_LINES_LEAD` lines above the first line
+    that starts with `{` (a title, an export's comment) are left out as notes, with the
+    warning a delimited table's left-out lines get (Fable review of #12201: such a paste was
+    read as one text column of JSON). The records follow the rules of a JSON array of records
+    (`_records`: nested objects to dotted columns, list fields to rows, a float keeps its
+    written text), and a repeated key or a `NaN` is counted as in JSON.
     """
     # The line as pasted, its leading spaces kept, so a JSON error's column is the column in the paste.
     lines = [(number, line) for number, line in enumerate(_PHYSICAL_LINE.split(text), start=1) if line.strip()]
-    if len(lines) < 2:
+    start = next((index for index, (_, line) in enumerate(lines) if line.lstrip().startswith("{")), None)
+    if start is None or (start and (context is None or start > MAX_JSON_LINES_LEAD)):
+        return None
+    lead, lines = lines[:start], lines[start:]
+    if len(lines) < (1 if single else 2):
         return None
     reader = _JsonReader()
     try:
@@ -1505,6 +1533,8 @@ def _read_json_lines(
         return None
     if not isinstance(first, dict):
         return None
+    if lead and (len(lines) < 2 or not all(line.lstrip().startswith("{") for _, line in lines)):
+        return None  # below a title, only lines that all start with `{` make it JSON Lines, never a table's cell
     if len(lines) > MAX_ROWS:
         raise ParseError("too_many_rows", f"the data has {len(lines):,} JSON lines, more than {MAX_ROWS:,} rows")
     records: list[dict[str, Any]] = [first]
@@ -1528,6 +1558,12 @@ def _read_json_lines(
                 f"{_json_kind(record)} instead of an object",
             )
         records.append(record)
+    if lead and context is not None:
+        noted, cut = _context_lines([[line] for _, line in lead], None)
+        context.extend(noted)
+        warnings.append(f"left out {_count(len(lead), 'line')} above the table (a title, notes or metadata)")
+        if cut:
+            warnings.append(f"the notes around the table were cut at {MAX_CONTEXT_CHARS:,} characters")
     if reader.repeated:
         warnings.append(f"{_count(reader.repeated, 'key')} repeated; only the last value of a repeated key is kept")
     if reader.constants:
@@ -1551,33 +1587,67 @@ def _json_kind(value: Any) -> str:
     return "a number"
 
 
-def _not_a_literal(text: str, *, python: bool) -> str:
+_LITERAL_NODES = (
+    ast.Expression,
+    ast.Constant,
+    ast.Dict,
+    ast.List,
+    ast.Tuple,
+    ast.Set,
+    ast.Name,
+    ast.Load,
+    ast.UnaryOp,
+    ast.UAdd,
+    ast.USub,
+)
+"""The nodes of a container of values and bare names: JSON with `true` or an unquoted key, never a call or an operation."""
+
+
+def _not_a_literal(text: str, body: str, *, python: bool) -> str:
     """Why text that starts like JSON or a Python literal is neither: the reader's error with its line and column.
 
-    Text behind an assignment (`data = {...}`) is Python, so Python's syntax error names the
-    place; so does text that is valid Python but no literal (a name or a call, which is never
-    evaluated). Any other text gets the JSON error. Only the position and the reader's own
-    words are named, never the text around them.
+    `text` is the paste as it came (its leading blank lines and indentation kept), `body` the
+    literal the readers tried (stripped, behind an assignment such as `data = {...}`). Every
+    line and column counts from the paste's own first line (review of #12201: a count from
+    the stripped body named line 2 for physical line 4). Text behind an assignment is Python,
+    so Python's syntax error names the place; so does text that holds a call or an operation,
+    which is never evaluated. Everything else, also JSON that Python reads as names (`true`,
+    `null`, an unquoted key), gets the JSON error, with a hint for the two slips that cause
+    most of them: a comma after each object of a list of lines, and a missing comma. Only the
+    position and the reader's own words are named, never the text around them.
     """
+    offset = text[: len(text) - len(text.lstrip())].count("\n")  # the blank lines above the literal
     try:
-        ast.parse(text, mode="eval")
+        tree = ast.parse(body, mode="eval")
     except SyntaxError as exc:
         if python:
-            where = f" on line {exc.lineno}" if exc.lineno else ""
+            where = f" on line {exc.lineno + offset}" if exc.lineno else ""
             return f"the data starts like a Python literal but is not one: {exc.msg}{where}"
     except (ValueError, RecursionError, MemoryError):
         pass
     else:
-        return (
-            "the data starts like a Python literal but holds a name, a call or an operation, which is never run; "
-            "paste the values themselves"
-        )
+        if python or not all(isinstance(node, _LITERAL_NODES) for node in ast.walk(tree)):
+            return (
+                "the data starts like a Python literal but holds a name, a call or an operation, which is never "
+                "run; paste the values themselves"
+            )
+    if python:  # `data = …` is no JSON: the JSON reader's position would point at the assignment
+        return "the data starts like a Python literal but is not one"
     try:
         json.loads(text)
     except json.JSONDecodeError as exc:
+        hint = ""
+        if exc.msg == "Extra data":
+            hint = (
+                "; for one object per line (JSON Lines) leave out the commas between the lines, otherwise put the "
+                "values into one array [ … ]"
+            )
+        elif exc.msg.startswith("Expecting ',' delimiter"):
+            hint = "; a comma is missing between two values"
+        elif exc.msg.startswith("Expecting property name"):
+            hint = "; JSON writes every key in double quotes"
         return (
-            f"the data starts like JSON but is not valid JSON: {exc.msg} at line {exc.lineno}, column {exc.colno} "
-            "(nor a Python literal or JSON Lines)"
+            f"the data starts like JSON but is not valid JSON: {exc.msg} at line {exc.lineno}, column {exc.colno}{hint}"
         )
     except (ValueError, RecursionError):
         pass
@@ -1681,6 +1751,13 @@ def _tabulate(
             if len(data) > MAX_ROWS:
                 raise ParseError(
                     "too_many_rows", f"the object holds {len(data):,} entries; at most {MAX_ROWS:,} rows are read"
+                )
+            kinds = {_json_kind(value) for value in data.values() if value is not None}
+            if "a text value" in kinds and kinds & {"a number", "a boolean"}:
+                # `{"city": "Berlin", "pop": 3.7}` may be one record: the shape the paste got is said.
+                warnings.append(
+                    f"the object was read as {_count(len(data), 'category/value pair')}, one row per key; to read "
+                    "it as one row with the keys as columns, put it in brackets [ … ]"
                 )
             return _pairs(data.items())
         raise ParseError(

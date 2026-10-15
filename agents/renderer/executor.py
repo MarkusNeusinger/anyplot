@@ -107,6 +107,7 @@ from .wire import (
     MAX_PNG_BYTES,
     MAX_PROBE_BYTES,
     MAX_STDERR_CHARS,
+    ConvertDamage,
     ConvertMeta,
     ConvertRequest,
     ConvertRun,
@@ -485,6 +486,8 @@ class Attempt:
     """A data run's exit code as the harness wrote it to `status.json`; None without a readable one."""
     status_measured: int | None = None
     status_limit: int | None = None
+    status_damage: ConvertDamage | None = None
+    """A `corrupt` conversion's broken part, as `status.json` names it."""
     convert_meta: ConvertMeta | None = None
     """A conversion's `meta.json`, read with its `out.csv` after exit code 0."""
 
@@ -580,6 +583,7 @@ class Attempt:
             refusal=convert_refusal(exit_code) if from_status else None,
             measured=self.status_measured if from_status else self.measured,
             limit=self.status_limit if from_status else self.limit,
+            damage=self.status_damage if from_status else None,
             text=self.csv_text if self.convert_meta is not None else None,
             meta=self.convert_meta if self.csv_text is not None else None,
             wall_s=round(self.wall_s, 3),
@@ -801,6 +805,7 @@ class SandboxExecutor:
         attempt.harness_exit = status.exit
         attempt.status_measured = status.measured
         attempt.status_limit = status.limit
+        attempt.status_damage = status.damage
 
     def _collect_data(self, attempt: Attempt, work: Path) -> None:
         """Read the `out.csv` a data run left, as strict UTF-8 under `MAX_CSV_BYTES`; anything else is refused."""
