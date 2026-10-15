@@ -107,6 +107,39 @@ export const IMAGE_FAILURE: Record<string, string> = {
   unreachable: 'no answer: your sign-in may have expired (reload the page)',
 };
 
+/**
+ * Why a dropped, chosen or pasted file did not go into the data box, by the
+ * format its first bytes name (`fileText.ts`) or the refusal. Spreadsheets and
+ * Parquet are a later step; pickle and HDF5 are never read.
+ */
+export const FILE_REFUSAL: Record<string, string> = {
+  spreadsheet:
+    'is a spreadsheet: reading Excel and ODS files comes in a later step; for now, copy the cells and paste them here',
+  parquet:
+    'is a Parquet file: reading Parquet comes in a later step; for now, export it as CSV and drop that',
+  arrow:
+    'is an Arrow or Feather file: reading those comes in a later step; for now, export it as CSV and drop that',
+  pickle:
+    'is a pickle file, which is never read because loading one can run code; export it as CSV or Parquet',
+  hdf5: 'is an HDF5 file, which is not read here; export it as CSV or Parquet',
+  numpy: 'is a NumPy file, which is not read here; export it as CSV',
+  pdf: 'is a PDF, which is not read here; copy the table in it and paste the text',
+  archive: 'is an archive (zip, gzip or 7z); unpack it and drop the CSV inside',
+  binary: 'is not a text file; drop a CSV, TSV, JSON or plain-text file',
+  too_large: 'is more than 1 MB as text; drop a smaller file or paste fewer rows',
+  empty: 'is empty',
+  unreadable: 'could not be read by the browser; try again',
+};
+
+/** A file dropped or chosen while the session works on something: the server runs one thing at a time. */
+export const FILE_BUSY_TEXT =
+  'a step is still running; drop or open the file again when it is done';
+
+/** The line under the box for a refused file, the name in quotes first. */
+export function describeFileRefusal(name: string, code: string): string {
+  return `"${name}" ${FILE_REFUSAL[code] ?? FILE_REFUSAL.binary}`;
+}
+
 export function describeDataFailure(code: string, ref: string | null): string {
   const text = DATA_FAILURE[code] ?? `request failed (${code})`;
   return ref ? `${text} · ref ${ref}` : text;

@@ -143,6 +143,7 @@ with `VITE_ENABLE_AGENT_CHAT=true`, and like every event they fire only on
 | `agent_data_confirmed` | `size_bucket` | useAgentSession.ts | The user ended step 1 with `.confirm()`: the stored data and its bindings fit, and the page now offers `.create_plot()`. Fires again after each new parse, binding change, data change or undo that the user confirms. `size_bucket` as for `agent_data_parsed`; data the assistant generated from a formula without a paste counts as `lt_1kb` |
 | `agent_data_prepared` | `changes` | useAgentSession.ts | The assistant changed the data in a turn (its `prepare_data`, for example "read Anteil as numbers" or "sum per month") or computed it from a formula (its `generate_data`, for example "sin(x) from -pi to pi"): the turn's `done` carried a new data version, which the data panel shows with its change lines and, when an earlier version exists, `.undo()`. A generated table in a session without data is version 1 and fires this event too, and so does the data panel's `.to_long()` (a wide table made long, no model call). `changes` ∈ `1`, `2`, `3+`, the number of change lines (one per operation; a generated table has one, plus one per series with undefined values) |
 | `agent_data_undo` | `version` | useAgentSession.ts | The user took back the assistant's last change to the data with `.undo()`, and the server restored the version before it. `version` ∈ `1` (back at the paste), `2`, `3+`: the restored version |
+| `agent_data_file` | `kind`, `encoding`, `outcome` | DataPanel.tsx | A file reached the data box: dropped on it, chosen with `.open()` or pasted as a file (since 2026-10-15). The browser read it, or refused it, before anything went to the server; `.parse()` afterwards reports `agent_data_parsed` as for a paste. `kind` ∈ `text`, `spreadsheet`, `parquet`, `arrow`, `numpy`, `hdf5`, `pickle`, `pdf`, `archive`, `binary` (by the file's first bytes; `binary` for anything else that is not text), `unknown` (refused before it was read); `encoding` ∈ `utf-8`, `utf-8-bom`, `utf-16le`, `utf-16be`, `windows-1252`, `none`; `outcome` ∈ `filled` (into an empty box), `replaced` (the box had text and the user chose `.replace()`), `kept` (the user chose `.keep()`), `refused` (a binary format or an empty file), `too_large` (over 4 MB, or over 1 MB as text), `busy` (a step was running), `unreadable` (the browser could not read it). The file's name is never sent |
 | `agent_plot_rendered` | `library`, `status`, `repaired`, `spec` | useAgentSession.ts | A turn's `plot` event arrived. `status` ∈ `ok`, `needs_attention`, `failed`, `not_ready`; `repaired` is `yes` when the run needed its repair round (two attempts), else `no` |
 | `agent_guardrail_block` | `reason` | useAgentSession.ts | A guardrail stopped a request. `reason` ∈ `out_of_scope`, `needs_data` (the request needs data the service would have to fetch), `budget`, `unsupported_content`, `rate_limited` and `daily_limit` (the user's message limits per minute and per day, and since 2026-10-14 the paste limits, which the data panel reports from the dataset route's `429`), `session_closed` (the session closed after three scope refusals), `other_library` (a request for this plot in another library or language, answered with a pointer to the catalogue), `locked_out` (the user is paused for the day after three attack verdicts; these are the stream's fixed refusals), `data_refused` (the pre-filter or the dataset judge refused the pasted data: text addressed to an AI, or the judge's verdict; personal data is never a reason), `guard_unavailable` (the scope check could not answer and failed closed), `other` (a refusal code the page does not know yet) |
 | `agent_session_saved` | `include_data` | useAgentSession.ts | The user saved the session as a JSON file with `.save()` in the chat header, and the download started. `include_data` is `yes` when the `# include data.csv` box was ticked (the default), so the file holds each version's data file, else `no`. A failed save fires nothing |
@@ -503,6 +504,9 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 | `size_bucket` | Size class of pasted data (`lt_1kb`, `1_10kb`, `10_50kb`, `50_200kb`, `200kb_1mb`, `over_1mb`; `over_200kb` until the paste cap rose to 1 MB on 2026-10-14), never the size | `agent_data_parsed`, `agent_data_confirmed` |
 | `changes` | How many change lines an assistant's data change or generated table carried (`1`, `2`, `3+`) | `agent_data_prepared` |
 | `version` | The data version an undo restored (`1` is the paste, `2`, `3+`) | `agent_data_undo` |
+| `kind` | What a file dropped on the agent chat's data box was, by its first bytes (`text`, `spreadsheet`, `parquet`, `arrow`, `numpy`, `hdf5`, `pickle`, `pdf`, `archive`, `binary`, `unknown`); on this site only, the bots site's `kind` is another property | `agent_data_file` |
+| `encoding` | The text encoding the browser read a dropped file with (`utf-8`, `utf-8-bom`, `utf-16le`, `utf-16be`, `windows-1252`, `none`) | `agent_data_file` |
+| `outcome` | What happened to a dropped file (`filled`, `replaced`, `kept`, `refused`, `too_large`, `busy`, `unreadable`) | `agent_data_file` |
 | `repaired` | Whether an agent run needed its repair round (`yes` / `no`) | `agent_plot_rendered` |
 | `reason` | Why a guardrail stopped an agent chat request (`out_of_scope`, `needs_data`, `budget`, `unsupported_content`, `rate_limited`, `daily_limit`, `session_closed`, `other_library`, `locked_out`, `data_refused`, `guard_unavailable`, `other`) | `agent_guardrail_block` |
 | `include_data` | Whether a saved agent chat session, or a feedback case, carries the data file (`yes` / `no`) | `agent_session_saved`, `agent_result_feedback` |
@@ -574,6 +578,7 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 | `agent_data_confirmed` | Custom Event | Track how often users confirm their data before the agent chat plots it |
 | `agent_data_prepared` | Custom Event | Track how often the agent chat's assistant changes the data in step 1 or computes it from a formula |
 | `agent_data_undo` | Custom Event | Track how often users take back the assistant's change to their data |
+| `agent_data_file` | Custom Event | Track which files users drop on the agent chat's data box, and how often the browser refuses one |
 | `agent_plot_rendered` | Custom Event | Track agent chat plot outcomes and repair rounds |
 | `agent_guardrail_block` | Custom Event | Track agent chat refusals and failed-closed guard checks |
 | `agent_session_saved` | Custom Event | Track how often admins save an agent chat session as a file, and with the data or without |
@@ -656,6 +661,7 @@ User lands on anyplot.ai
 | `agent_data_confirmed` | `size_bucket` | useAgentSession.ts |
 | `agent_data_prepared` | `changes` | useAgentSession.ts |
 | `agent_data_undo` | `version` | useAgentSession.ts |
+| `agent_data_file` | `kind`, `encoding`, `outcome` | DataPanel.tsx |
 | `agent_plot_rendered` | `library`, `status`, `repaired`, `spec` | useAgentSession.ts |
 | `agent_guardrail_block` | `reason` | useAgentSession.ts |
 | `agent_session_saved` | `include_data` | useAgentSession.ts |
@@ -884,7 +890,7 @@ window.plausible = function(...args) { console.log('Plausible:', args); };
 - [x] Server-side og:image tracking (`og_image_view`) with platform detection
 - [x] Landing-page navigation tracking (`nav_click`)
 - [x] Theme tracking (`theme_toggle` event + `theme` ambient pageview prop)
-- [x] Agent chat events (`agent_open`, `agent_data_parsed`, `agent_data_confirmed`, `agent_data_prepared`, `agent_data_undo`, `agent_plot_rendered`, `agent_guardrail_block`, `agent_session_saved`), enum properties only
+- [x] Agent chat events (`agent_open`, `agent_data_parsed`, `agent_data_confirmed`, `agent_data_prepared`, `agent_data_undo`, `agent_data_file`, `agent_plot_rendered`, `agent_guardrail_block`, `agent_session_saved`), enum properties only
 - [x] Agent chat quick feedback (`agent_result_feedback`), with the feedback control
 
 ### Plausible dashboard checklist

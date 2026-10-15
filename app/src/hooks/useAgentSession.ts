@@ -1511,7 +1511,7 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
    * stores nothing and asks for no summary.
    */
   const parseData = useCallback(
-    async (text: string, confirmed = false) => {
+    async (text: string, confirmed = false, source?: string) => {
       const sid = stateRef.current.sessionId;
       if (!sid || !text.trim() || busy()) return;
       const bytes = utf8Bytes(text);
@@ -1525,7 +1525,7 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
       parseRef.current = true;
       safeDispatch({ type: 'parse_start' });
       try {
-        const parsed = await agentApi.uploadDataset(token, sid, text, confirmed);
+        const parsed = await agentApi.uploadDataset(token, sid, text, confirmed, source);
         if (isTranscribed(parsed)) {
           // Free text read into a table: shown for the user to confirm, not stored.
           safeDispatch({
@@ -1587,11 +1587,14 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
    * clears the transcription. While something else is in flight nothing starts
    * and the table stays.
    */
-  const confirmTranscription = useCallback(() => {
-    const transcription = stateRef.current.transcription;
-    if (!transcription) return Promise.resolve();
-    return parseData(transcription.text, true);
-  }, [parseData]);
+  const confirmTranscription = useCallback(
+    (source?: string) => {
+      const transcription = stateRef.current.transcription;
+      if (!transcription) return Promise.resolve();
+      return parseData(transcription.text, true, source);
+    },
+    [parseData]
+  );
 
   /**
    * `.send()` next to a refused formula or code: the text goes to the chat as

@@ -657,12 +657,19 @@ export const agentApi = {
    * stores nothing: the chat's `generate_data` computes such a table. Code that
    * generates data (Python, JavaScript, R) answers `422 code` the same way: the
    * chat's `run_data_code` runs it.
+   * `source` is the name of the file the text was read from (a drop, `.open()`,
+   * a pasted file): it travels beside the text, which stays as in the file, and
+   * the server adds it to the notes as `source file: <name>`.
    */
-  uploadDataset: (token: string, sid: string, text: string, confirmed = false) =>
+  uploadDataset: (token: string, sid: string, text: string, confirmed = false, source?: string) =>
     agentJson<DatasetAnswer>(
       `${sessionPath(sid)}/dataset`,
       token,
-      post(confirmed ? { text, confirmed: true } : { text })
+      post({
+        text,
+        ...(confirmed ? { confirmed: true } : {}),
+        ...(source ? { source } : {}),
+      })
     ),
   putBindings: (token: string, sid: string, bindings: Binding[]) =>
     agentJson<BindingsApplied>(`${sessionPath(sid)}/bindings`, token, {

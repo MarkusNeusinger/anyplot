@@ -15,6 +15,9 @@
 * `notes_instruction_like(lines)` and `notes_judge_input(lines)` do the same for the
   notes pasted around the table (`ParsedDataset.context_lines`): the pre-filter, then
   the scope judge. A refusal there drops only the notes, never the table.
+* `with_source_line(parsed, raw)` appends the name of a dropped file (`source`) to those
+  notes as `source file: <name>`, sanitised (`source_name`) and pre-filtered on its own,
+  so it reaches the scope judge with the other notes in the same call.
 
 Used by the `/v1` routes and by the development fixture seed, so a seeded session is
 exactly what the routes would have built. No ADK import.
@@ -25,6 +28,7 @@ import csv
 import io
 import json
 import re
+import unicodedata
 from collections import Counter
 from collections.abc import Sequence
 from dataclasses import dataclass, field, replace
@@ -34,7 +38,7 @@ from .code.normalise import SUPPORTED_LIBRARIES as NORMALISED_LIBRARIES
 from .code.normalise import normalise
 from .code.readiness import ReadinessStatus, scan
 from .data.bindings import default_bindings
-from .data.parse import ParsedDataset, display_copy, parse_dataset, with_constant_columns
+from .data.parse import MAX_CONTEXT_CHARS, ParsedDataset, display_copy, parse_dataset, with_constant_columns
 from .data.store import DatasetStore
 from .policy import fence
 from .schemas import MAX_SAMPLE_ROWS, MAX_TOP_VALUES, Binding
@@ -229,6 +233,82 @@ def notes_instruction_like(lines: Sequence[str]) -> bool:
     injection in a copied web table usually spans the lines around a harmless one.
     """
     return bool(lines) and INSTRUCTION_LIKE.search("\n".join(lines)) is not None
+
+
+MAX_SOURCE_NAME_CHARS = 80
+"""The longest file name the notes carry; a longer one keeps its start and its extension around a `…`."""
+
+MAX_SOURCE_RAW_CHARS = 1_024
+"""The longest `source` the dataset route accepts before sanitising (a file name is at most 255 bytes on
+the common file systems; a browser that sends a path sends more)."""
+
+SOURCE_LINE = "source file: {name}"
+SOURCE_WITHHELD = "source file: (name withheld)"
+"""The note a dropped file's name becomes; the second when the name alone trips the pre-filter."""
+
+_MAX_EXTENSION_CHARS = 10
+
+
+def source_name(raw: str) -> str | None:
+    """A dropped file's name as the notes may carry it, or None when nothing readable is left.
+
+    NFC, then every control, format (bidi marks, zero-width characters), surrogate,
+    private-use and unassigned character removed, line and tab breaks turned into
+    spaces and whitespace runs collapsed; a path keeps its last part. A name longer
+    than `MAX_SOURCE_NAME_CHARS` keeps its start and its extension around a `…`, so
+    `report-2026-….csv` still says what kind of file it was.
+    """
+    kept: list[str] = []
+    for char in unicodedata.normalize("NFC", raw):
+        category = unicodedata.category(char)
+        if char in "\t\n\r" or category in ("Zl", "Zp"):
+            kept.append(" ")
+        elif not category.startswith("C"):
+            kept.append(char)
+    name = " ".join("".join(kept).split())
+    name = re.split(r"[\\/]", name)[-1].strip()
+    if not name:
+        return None
+    if len(name) <= MAX_SOURCE_NAME_CHARS:
+        return name
+    stem, dot, extension = name.rpartition(".")
+    if dot and stem and 0 < len(extension) <= _MAX_EXTENSION_CHARS and " " not in extension:
+        base, suffix = stem, f".{extension}"
+    else:
+        base, suffix = name, ""
+    room = MAX_SOURCE_NAME_CHARS - len(suffix) - 1  # the `…`
+    tail = room // 3
+    return f"{base[: room - tail].rstrip()}…{base[-tail:].lstrip()}{suffix}"
+
+
+def source_line(raw: str) -> str | None:
+    """The note for a dropped file's name: `source file: <name>`, the name withheld when it alone reads like
+    an instruction to an AI (`INSTRUCTION_LIKE`), None when the name sanitises to nothing."""
+    name = source_name(raw)
+    if name is None:
+        return None
+    if notes_instruction_like([name]):
+        return SOURCE_WITHHELD
+    return SOURCE_LINE.format(name=name)
+
+
+def with_source_line(parsed: ParsedDataset, raw: str) -> ParsedDataset:
+    """`parsed` with the dropped file's name appended to its notes (`context_lines`), for the notes' screen.
+
+    The line goes last, after the notes the parser kept, and only when it fits under the notes'
+    cap (`MAX_CONTEXT_CHARS`, line breaks counted): the notes the user wrote, and the constant
+    columns' values among them, matter more than the file's name. It never goes into the text
+    the parser read, where it would break a JSON document or a two-row table, and it is never
+    logged: the `notes_judge` attribution counts it with the other lines, by length only.
+    """
+    line = source_line(raw)
+    if line is None:
+        return parsed
+    lines = parsed.context_lines
+    used = len("\n".join(lines))
+    if used + (1 if lines else 0) + len(line) > MAX_CONTEXT_CHARS:
+        return parsed
+    return replace(parsed, context_lines=[*lines, line])
 
 
 def notes_judge_input(lines: Sequence[str]) -> str:

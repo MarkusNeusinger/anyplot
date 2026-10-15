@@ -12,7 +12,7 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `GET /v1/eligibility?spec=&library=` | | `{eligible, status, reasons}` | |
 | `POST /v1/sessions` | `{user, spec_id, library, locale, snapshot}` | `{session_id, eligibility}` | `422 not_eligible` |
 | `POST /v1/sessions/{sid}/library` | `{library, snapshot}` | `{session_id, eligibility}` | `422 not_eligible`, `409 run_active` |
-| `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?}` | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version, language}` (`suggestion`: the wide-table offer of `data/shape.py`, or null; `context_lines`: the notes pasted above or below the table that passed the pre-filter and the scope judge, which the root gets with the next `summarize_data` turn; `language`: the session language as `{language, source}`, which a paste before any typed message or choice sets from the notes' or the column names' language, source `pasted`), stored as version 1 (the undo history of an earlier paste is dropped); or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips that fallback and keeps every row) | `413 too_long`, `422 unparseable`, `422 formula` (text of at most 2,000 characters that asks for a formula, which the chat's `generate_data` computes; never transcribed), `403 data_refused`, `403 session_closed` (the scope judge closed the session), `409 run_active` (a turn of the user in any session, or another paste of the user in flight), `429 rate_limited` / `429 daily_limit` (`AGENT_USER_PASTES_PER_MINUTE` / `_PER_DAY`, or the daily token budgets for `daily_limit`), `429 locked_out` (the day's `attack` strikes), `503 guard_unavailable` |
+| `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?, source?}` (`source`: the name of the file the page read the text from, at most 1,024 characters; it joins the notes as `source file: <name>`) | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version, language}` (`suggestion`: the wide-table offer of `data/shape.py`, or null; `context_lines`: the notes pasted above or below the table that passed the pre-filter and the scope judge, which the root gets with the next `summarize_data` turn; `language`: the session language as `{language, source}`, which a paste before any typed message or choice sets from the notes' or the column names' language, source `pasted`), stored as version 1 (the undo history of an earlier paste is dropped); or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips that fallback and keeps every row) | `413 too_long`, `422 unparseable`, `422 formula` (text of at most 2,000 characters that asks for a formula, which the chat's `generate_data` computes; never transcribed), `403 data_refused`, `403 session_closed` (the scope judge closed the session), `409 run_active` (a turn of the user in any session, or another paste of the user in flight), `429 rate_limited` / `429 daily_limit` (`AGENT_USER_PASTES_PER_MINUTE` / `_PER_DAY`, or the daily token budgets for `daily_limit`), `429 locked_out` (the day's `attack` strikes), `503 guard_unavailable` |
 | `PUT /v1/sessions/{sid}/bindings` | `[{role, column}]` | `{bindings, complete, missing_roles, warnings}`: `warnings` names a role that needs values of 0 or more bound to a column with a negative value, or left open for that reason (`data/signs.py`); never a refusal | `409 run_active`, `422 invalid` (with `errors`, at most 20 lines) |
 | `PUT /v1/sessions/{sid}/language` | `{language}` (a short name or code, `^[A-Za-z][A-Za-z -]{0,39}$`) | `{language, source}`: the session language in its stored form (`English` is `en`), source `chosen`, which detection never overrides | `409 run_active`, `422` (the pattern) |
 | `POST /v1/sessions/{sid}/dataset/confirm` | | `{confirmed, rows, columns}`: step 1 of two, the user confirmed the dataset with its bindings; the pipeline runs only then | `409 run_active`, `422 no_dataset` |
@@ -69,7 +69,9 @@ are the user's data and pass. A pre-filter hit or any refusing part is
 judge's verdict apart); a part the judge cannot answer is `503 guard_unavailable`.
 The notes pasted around the table (`context_lines`) go through the same pre-filter and
 then the scope judge (`_screen_notes`); any refusal or outage there drops only the notes,
-with a warning, never the table, and is never a strike.
+with a warning, never the table, and is never a strike. A dropped file's name (`source`)
+joins those notes as `source file: <name>` after the parse (`opening.with_source_line`),
+sanitised and pre-filtered on its own; it is never written into the text, never logged.
 
 The dataset answer lists the spec's data roles as `roles`, each
 `{name, kinds, required, variadic, description, non_negative}`, so a client can offer a column
@@ -147,6 +149,7 @@ from agents.anyplot.language import (
 from agents.anyplot.models import JudgeUnavailable
 from agents.anyplot.opening import (
     INSTRUCTION_LIKE,
+    MAX_SOURCE_RAW_CHARS,
     NOTES_INSTRUCTION_WARNING,
     NOTES_REFUSED_WARNING,
     NOTES_UNCHECKED_WARNING,
@@ -156,6 +159,7 @@ from agents.anyplot.opening import (
     notes_judge_input,
     opening_state,
     store_dataset,
+    with_source_line,
 )
 from agents.anyplot.plugins.ledger import CURRENT_LEDGER, RequestLedger, attribution, budget_allows, judge_budget_tokens
 from agents.anyplot.plugins.scope_guard import LOCKED_OUT, SESSION_CLOSED, scope_refusals
@@ -619,6 +623,10 @@ class DatasetBody(_Body):
     route never hands it to the transcriber again, so a one-column reading can be stored,
     and the parse keeps every row of it (no `table_block` narrowing: the user has seen the
     table row by row); the pre-filter, the judge and the store run as for any paste."""
+    source: str | None = Field(default=None, min_length=1, max_length=MAX_SOURCE_RAW_CHARS)
+    """The name of the file the page read `text` from (a drop, `.open()` or a pasted file), as the browser
+    gave it. It joins the notes as `source file: <name>` (`opening.with_source_line`) and goes through
+    their screen; the text itself is the file's, unchanged. Never logged."""
 
 
 class BindingBody(_Body):
@@ -834,6 +842,9 @@ async def _ingest_paste(
         raise AgentsError(422, "unparseable") from None
     if not body.confirmed and looks_like_free_text(parsed) and transcribable(body.text):
         return await _transcribe(services, ledger, body.text)
+    if body.source is not None:
+        # After the parse, never in the text: a first line would break a JSON document or a small table.
+        parsed = with_source_line(parsed, body.source)
     services.usage.add_paste(user)  # the first model call of this paste: only a paste that reaches one counts
     try:
         header_lang = await check_dataset(services, ledger, parsed)

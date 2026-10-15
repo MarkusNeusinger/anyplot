@@ -441,6 +441,9 @@ class DatasetBody(_StrictBody):
     # `.use()` on a transcription: the table the user confirmed; the agents service then never
     # hands the text to its transcriber again (a one-column table would loop otherwise).
     confirmed: bool = False
+    # The name of the file the page read `text` from (a drop, `.open()`, a pasted file). The agents
+    # service sanitises it and adds it to the notes as `source file: <name>`; it is never logged.
+    source: Annotated[str, Field(min_length=1, max_length=1_024)] | None = None
 
 
 class Binding(_StrictBody):
@@ -948,7 +951,8 @@ async def switch_library(
 
 @router.post("/sessions/{sid}/dataset")
 async def upload_dataset(sid: SessionId, body: DatasetBody, ctx: Ctx, client: Client) -> Any:
-    """Parse pasted data: `{preview, profile, bindings, warnings, context_lines, roles, language}`, stored
+    """Parse pasted data (`{text, confirmed?, source?}`, `source` the name of a dropped file, which the agents
+    service adds to the notes): `{preview, profile, bindings, warnings, context_lines, roles, language}`, stored
     (`context_lines`: the notes pasted above or below the table that the assistant reads with the data;
     `language`: the session language as `{language, source}`, source `pasted` when the notes' or the column
     names' language set it before any typed message or choice); or, for free text the
@@ -963,6 +967,8 @@ async def upload_dataset(sid: SessionId, body: DatasetBody, ctx: Ctx, client: Cl
     payload: dict[str, Any] = {"text": body.text}
     if body.confirmed:
         payload["confirmed"] = True
+    if body.source is not None:
+        payload["source"] = body.source
     return await _call_upstream(client, ctx, "POST", f"/sessions/{sid}/dataset", json_body=payload)
 
 
