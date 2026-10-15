@@ -35,6 +35,7 @@ from dataclasses import dataclass, field
 from difflib import SequenceMatcher
 
 from ..schemas import Binding, ColumnDtype, ColumnProfile, DatasetProfile
+from .computed import match_score, window_line, window_rank
 from .parse import value_like
 from .roles import DataRole, RoleKind
 from .signs import has_negative, sign_line
@@ -96,7 +97,9 @@ class BindingCheck:
 
     `warnings` never refuse a binding: one line per role that needs values of 0 or more
     bound to a column with a negative value, or left open because every column that
-    fits it has one (`signs.py`).
+    fits it has one (`signs.py`); and one per computed role bound to a column whose name
+    carries another window than the spec's (`computed.window_line`: `SMA 200` for a
+    20-period band).
     """
 
     complete: bool
@@ -126,7 +129,10 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
        (`_code_rank`; all since live test round 3 and its review of 2026-10-15). A variadic
        family takes every unused tier-0 or tier-1 column that is no weak measure in column
        order, up to `MAX_VARIADIC_DEFAULT`; a required family that would stay empty takes the
-       first weak one. A role the plot computes (`DataRole.computed`) is never bound.
+       first weak one. A role the plot can compute (`DataRole.computed`, `data/computed.py`) is
+       bound only to a column whose name clearly holds it (`computed.match_score`, the most specific first, before any other
+       role picks); otherwise it stays open and the plot computes it (owner decision of
+       2026-10-15, "both allowed").
        A single role never falls back to a tier-2 column that a variadic family of
        the spec takes at tier 0 or 1: in wide data such as `month, Shoes, Hats`
        for `x`, `y1, y2, ...` and `category`, an integer series column stays a
@@ -156,7 +162,7 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
     constants = {column.name for column in columns if profile.rows >= MIN_CONSTANT_ROWS and column.unique <= 1}
 
     for role in roles:
-        if not role.kinds or role.computed:
+        if not role.kinds:
             continue
         named = [column for column in columns if not (is_measure(role) and column.name in constants)]
         if role.variadic:
@@ -176,11 +182,45 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
                     used.add(column.name)
                     break
 
+    # A role the plot can compute takes a column only on a clear name match (`SMA 20` for `sma`, `data/computed.py`);
+    # otherwise it stays open and the plot computes it. Its matches are `claims`: the required roles pick first and
+    # rank a claimed column last, so a match never takes the one column `close` or `tss` needs (review of
+    # 2026-10-15), and the computed roles pick before the optional ones.
+    computed = [role for role in roles if role.computed and role.kinds and not role.variadic]
+    claims = {
+        column.name
+        for role in computed
+        for column in columns
+        if column.name not in weak and _tier(role, column) is not None and match_score(role, column.name)
+    }
+
+    def bind_computed() -> None:
+        # The most specific match first (`SMA Upper Band` is the upper band, not the average), then the column
+        # that names the spec's window (`SMA 20` before `SMA 50`), then spec and column order. Never a weak measure.
+        matches = sorted(
+            (-score, window_rank(role, column.name), role_position, position, role.name, column.name)
+            for role_position, role in enumerate(computed)
+            if role.name not in single
+            for position, column in enumerate(columns)
+            if column.name not in used
+            and column.name not in weak
+            and _tier(role, column) is not None
+            and (score := match_score(role, column.name))
+        )
+        for *_, role_name, column_name in matches:
+            if role_name not in single and column_name not in used:
+                single[role_name] = column_name
+                used.add(column_name)
+
     order = sorted(
         (role for role in roles if role.kinds and not role.computed),
         key=lambda role: (not role.required, role.variadic),  # stable: spec order inside each group
     )
+    computed_bound = False
     for role in order:
+        if not role.required and not computed_bound:
+            bind_computed()
+            computed_bound = True
         if role.variadic:
             members = family[role.name]
             fitting = sorted(
@@ -188,7 +228,11 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
                 for position, column in enumerate(columns)
                 if column.name not in used and (tier := _tier(role, column)) is not None and tier <= 1
             )
-            ranked_members = [(tier, position) for tier, position in fitting if columns[position].name not in weak]
+            ranked_members = [
+                (tier, position)
+                for tier, position in fitting
+                if columns[position].name not in weak and columns[position].name not in claims
+            ]
             if not members and not ranked_members and role.required:
                 ranked_members = fitting[:1]  # one weak member rather than none for a required family
             for _, position in ranked_members[: max(0, MAX_VARIADIC_DEFAULT - len(members))]:
@@ -201,6 +245,7 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
                 (
                     _constant_group(role, column),
                     column.name in avoid,
+                    column.name in claims,  # a column a computed role's name matches comes last
                     _category_rank(role, column),
                     tier,
                     -_rounded_similarity(role.name, column.name),
@@ -218,6 +263,8 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
             if ranked:
                 single[role.name] = ranked[0][-1]
                 used.add(ranked[0][-1])
+    if not computed_bound:
+        bind_computed()
 
     position_of = {column.name: position for position, column in enumerate(columns)}
     bindings: list[Binding] = []
@@ -309,8 +356,9 @@ def check_bindings(bindings: list[Binding], roles: list[DataRole], profile: Data
     Errors: an unknown role (a variadic family is bound through its members
     `<name><n>`, never its bare name), a role bound twice, a column missing from the
     profile, a column bound twice, a dtype the role's kinds do not accept (see
-    `ACCEPTS`), a role the plot computes (`DataRole.computed`, which takes no column and
-    is never missing). `missing_roles` lists the required roles without a binding; a
+    `ACCEPTS`). `missing_roles` lists the required roles without a binding, except a role
+    the plot can compute (`DataRole.computed`: bound, the plot uses the column; open, it
+    computes the value); a
     required variadic family needs at least one member. `warnings`: a valid binding of
     a non-negative role to a column with a negative value (`signs.sign_line`), and an
     unbound non-negative role whose every fitting column that no other role holds has one.
@@ -340,9 +388,6 @@ def check_bindings(bindings: list[Binding], roles: list[DataRole], profile: Data
         seen_columns.add(binding.column)
         if role is None or column is None:
             continue
-        if role.computed:
-            errors.append(f"role '{binding.role}' is computed by the plot from the data and takes no column")
-            continue
         if not accepts(role, column.dtype):
             wanted = " or ".join(role.kinds)
             errors.append(f"role '{binding.role}' needs {wanted} data, but column '{column.name}' is {column.dtype}")
@@ -350,6 +395,8 @@ def check_bindings(bindings: list[Binding], roles: list[DataRole], profile: Data
         bound.add(role.name)
         if role.non_negative and has_negative(column):
             warnings.append(sign_line(binding.role, column))
+        if role.computed and (line := window_line(role.name, column.name)):
+            warnings.append(line)  # nothing changes silently: `SMA 200` is no 20-period band
     # An open non-negative role whose only fitting free columns are negative says why it stayed open;
     # a column another role holds is no candidate, as in `default_bindings`.
     for role in roles:

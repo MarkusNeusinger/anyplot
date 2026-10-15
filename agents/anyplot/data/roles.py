@@ -148,8 +148,9 @@ class DataRole:
     non_negative: bool = False
     """Whether the role needs values of 0 or more: set per spec by `signs.mark_non_negative`, never parsed."""
     computed: bool = False
-    """Whether the plot computes the role from the data (`rolling_avg`: "Computed rolling average ..."): no
-    column is bound to it, the adapter computes it (`COMPUTED`; owner decision of 2026-10-15)."""
+    """Whether the plot can compute the role from the data (`rolling_avg`: "Computed rolling average ...", by
+    `COMPUTED`, or listed in `computed.COMPUTED_ROLES`): optional, bound when a column holds it, else the adapter
+    computes it (owner decision of 2026-10-15, "both allowed")."""
 
     def member(self, index: int) -> str:
         """The binding role name of the `index`-th (1-based) column of a variadic family."""

@@ -258,7 +258,7 @@ class TestWeakMeasures:
         roles = parse_roles(ROLLING)
         data = profile(monthly("Year,Month,Temperature,Precipitation"))
 
-        # `rolling_avg` is computed by the plot (owner decision of 2026-10-15): no column for it.
+        # No column is named like a rolling average, so the plot computes `rolling_avg` (owner decision of 2026-10-15).
         assert as_pairs(default_bindings(roles, data)) == [("value", "Temperature")]
 
     @pytest.mark.parametrize("name", ["Monat", "month_no", "Quartal", "Woche", "weekOfYear"])
@@ -329,7 +329,9 @@ class TestAxisRoles:
 
 
 class TestComputedRoles:
-    def test_the_rolling_average_is_computed_and_takes_no_column(self) -> None:
+    """Owner decision of 2026-10-15, "both allowed": bound on a clear name match or by hand, else computed."""
+
+    def test_without_a_matching_column_the_plot_computes_it(self) -> None:
         roles = parse_roles(ROLLING)
         rolling = next(item for item in roles if item.name == "rolling_avg")
         data = profile("date,value,smooth\n2024-01-01,1.5,1.4\n2024-01-02,2.5,2.0\n")
@@ -338,8 +340,31 @@ class TestComputedRoles:
         assert as_pairs(default_bindings(roles, data)) == [("date", "date"), ("value", "value")]
         check = check_bindings(default_bindings(roles, data), roles, data)
         assert check.complete and check.missing_roles == []
-        assert check_bindings(bind(("rolling_avg", "smooth")), roles, data).errors == [
-            "role 'rolling_avg' is computed by the plot from the data and takes no column"
+
+    def test_a_hand_binding_is_allowed(self) -> None:
+        roles = parse_roles(ROLLING)
+        data = profile("date,value,smooth\n2024-01-01,1.5,1.4\n2024-01-02,2.5,2.0\n")
+        bindings = bind(("date", "date"), ("value", "value"), ("rolling_avg", "smooth"))
+
+        check = check_bindings(bindings, roles, data)
+        assert check.complete and check.errors == []
+
+    @pytest.mark.parametrize("name", ["rolling_avg", "Rolling Avg (7d)", "SMA 20", "SMA20", "gleitender Durchschnitt"])
+    def test_a_column_named_so_is_bound(self, name: str) -> None:
+        roles = parse_roles(ROLLING)
+        data = profile(f"date,{name},value\n2024-01-01,1.4,1.5\n2024-01-02,2.0,2.5\n2024-01-03,2.2,2.0\n")
+
+        assert as_pairs(default_bindings(roles, data)) == [("date", "date"), ("value", "value"), ("rolling_avg", name)]
+
+    def test_the_name_match_comes_before_the_measure_ranking(self) -> None:
+        """`value` would take the first number column; the named rolling column is kept for `rolling_avg`."""
+        roles = parse_roles(ROLLING)
+        data = profile("date,SMA 20,Temperature\n2024-01-01,1.4,1.5\n2024-01-02,2.0,2.5\n2024-01-03,2.2,2.0\n")
+
+        assert as_pairs(default_bindings(roles, data)) == [
+            ("date", "date"),
+            ("value", "Temperature"),
+            ("rolling_avg", "SMA 20"),
         ]
 
     @pytest.mark.parametrize(
@@ -353,18 +378,25 @@ class TestComputedRoles:
     def test_only_a_description_that_starts_with_computed_marks_a_role(self, bullet: str) -> None:
         assert not parse_roles([bullet])[0].computed
 
-    def test_the_adapter_reads_it_and_the_page_never_sees_it(self) -> None:
+    def test_the_adapter_reads_bound_or_computed_and_the_page_gets_an_optional_role(self) -> None:
         from agents.anyplot.briefs import describe_role
         from agents.main import _page_roles
 
         roles = parse_roles(ROLLING)
         rolling = next(item for item in roles if item.name == "rolling_avg")
 
-        assert (
-            describe_role(rolling)
-            == "rolling_avg (numeric, computed by the plot code from the data, never bound to a column)"
+        # The spec's own words come along: the rolling average's window (review of 2026-10-15).
+        spec = "the spec: Computed rolling average (e.g., 7-day, 30-day window)"
+        assert describe_role(rolling) == (
+            f"rolling_avg (numeric, not bound: compute it in the plot code from the bound data; {spec})"
         )
-        assert [body["name"] for body in _page_roles(roles)] == ["date", "value"]
+        assert describe_role(rolling, bound=True) == (
+            f"rolling_avg (numeric, bound: use its column as it is, do not compute it; {spec})"
+        )
+        bodies = {body["name"]: body for body in _page_roles(roles)}
+        assert list(bodies) == ["date", "value", "rolling_avg"]
+        assert bodies["rolling_avg"]["computed"] is True and bodies["rolling_avg"]["required"] is False
+        assert bodies["value"]["computed"] is False and bodies["value"]["required"] is True
 
 
 class TestNewDateColumn:

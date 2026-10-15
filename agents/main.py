@@ -1218,18 +1218,21 @@ def _role_body(role: DataRole) -> dict[str, Any]:
     return {
         "name": role.name,
         "kinds": list(role.kinds),
-        "required": role.required,
+        # A role the plot can compute is never missing: the page marks it optional (`data/computed.py`).
+        "required": role.required and not role.computed,
         "variadic": role.variadic,
         "description": description,
         # The page warns at the dropdown when the bound column has a negative value (`data/signs.py`).
         "non_negative": role.non_negative,
+        # Left open, the plot computes the role from the data: the dropdown's empty choice says so.
+        "computed": role.computed,
     }
 
 
 def _page_roles(roles: list[DataRole]) -> list[dict[str, Any]]:
-    """The roles the page offers a dropdown for: a role the plot computes from the data takes no column
-    (`DataRole.computed`, owner decision of 2026-10-15), so the page never sees it."""
-    return [_role_body(role) for role in roles if not role.computed]
+    """The roles the page offers a dropdown for, every one: a role the plot can compute shows "computed by
+    the plot" as its empty choice (`computed`, owner decision of 2026-10-15, "both allowed")."""
+    return [_role_body(role) for role in roles]
 
 
 @app.put("/v1/sessions/{sid}/bindings", dependencies=v1_dependencies)

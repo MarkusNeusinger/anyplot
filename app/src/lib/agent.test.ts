@@ -421,10 +421,14 @@ describe('parseAgentEvent', () => {
         variadic: false,
         description: '',
         non_negative: false,
+        computed: false,
       },
     ]);
     expect(roles([{ name: 'radius', kinds: ['numeric'], non_negative: true }])).toMatchObject([
       { name: 'radius', non_negative: true },
+    ]);
+    expect(roles([{ name: 'sma', kinds: ['numeric'], computed: true }])).toMatchObject([
+      { name: 'sma', computed: true },
     ]);
     const many = Array.from({ length: 60 }, (_, index) => ({
       ...GENERATED.roles[0],
