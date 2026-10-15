@@ -160,6 +160,9 @@ _EVENT_FIELDS: dict[str, frozenset[str]] = {
 _ERROR_CODES = frozenset({"capacity", "deadline", "guard_unavailable", "upstream", "internal"})
 _MAX_BINDING_ERRORS = 20
 _MAX_BINDING_ERROR_CHARS = 300
+_MAX_CAUSE_CHARS = 300  # agents/main.py MAX_CAUSE_CHARS; copied, because the API image does not ship the agents package
+_CAUSE_CODES = frozenset({"unparseable", "too_long"})
+"""The upstream codes whose `cause` passes (`_cause`): the paste route's refusals of the user's data."""
 _MAX_EVENT_CHARS = 64 * 1024
 _MAX_DONE_EVENT_CHARS = 512 * 1024
 """The cap of a `done` event: after a turn in which the assistant changed the data it carries
@@ -259,7 +262,8 @@ class AgentHTTPError(Exception):
     `{"status", "message", "path"}` and drops their headers, while the chat
     page needs a stable code and the request id to quote. `errors` carries the
     binding check lines of a `422 invalid`; `case_id` the stored case of a
-    `502 row_missing`, so the page can chain its next edit to it.
+    `502 row_missing`, so the page can chain its next edit to it; `cause` the
+    agents service's sentence naming what a refused paste fails on (`_cause`).
     """
 
     def __init__(
@@ -271,6 +275,7 @@ class AgentHTTPError(Exception):
         *,
         case_id: str | None = None,
         measure: dict[str, int] | None = None,
+        cause: str | None = None,
     ) -> None:
         super().__init__(detail)
         self.status_code = status_code
@@ -279,6 +284,7 @@ class AgentHTTPError(Exception):
         self.errors = errors
         self.case_id = case_id
         self.measure = measure
+        self.cause = cause
 
 
 async def agent_http_error_handler(request: Request, exc: AgentHTTPError) -> JSONResponse:
@@ -294,6 +300,8 @@ async def agent_http_error_handler(request: Request, exc: AgentHTTPError) -> JSO
         content["case_id"] = exc.case_id
     if exc.measure:
         content.update(exc.measure)
+    if exc.cause:
+        content["cause"] = exc.cause
     return JSONResponse(status_code=exc.status_code, content=content, headers=headers)
 
 
@@ -673,7 +681,8 @@ def _upstream_error(response: httpx.Response, ref: str, *, binding_errors: bool 
     """Map an upstream error to the same status with a generic code; never echo its body.
 
     With `binding_errors`, a `422 invalid` keeps the agents service's binding check
-    lines (`_binding_errors`), so the chat page can say which binding was refused.
+    lines (`_binding_errors`), so the chat page can say which binding was refused; a
+    refused paste (`unparseable`, `too_long`) keeps its `cause` (`_cause`).
     """
     status = response.status_code
     if status < 400 or status > 599:
@@ -700,7 +709,24 @@ def _upstream_error(response: httpx.Response, ref: str, *, binding_errors: bool 
         return AgentHTTPError(status, code, ref, errors=_binding_errors(body))
     if code in CONVERT_REFUSAL_CODES and isinstance(body, dict):
         return AgentHTTPError(status, code, ref, measure=_measure(body))
+    if code in _CAUSE_CODES:
+        return AgentHTTPError(status, code, ref, cause=_cause(body))
     return AgentHTTPError(status, code, ref)
+
+
+def _cause(body: Any) -> str | None:
+    """The agents service's `cause` of a refused paste, one line of at most 300 characters.
+
+    Owner rule of 2026-10-16: a paste that is refused says what it fails on, such as
+    "the header has 3 fields, but line 3 has 4". The agents service writes that sentence
+    from the user's own paste (line numbers, field counts, a column name, the JSON
+    reader's error), never from an exception text, so it passes like the binding check
+    lines do; anything that is not a string is dropped.
+    """
+    cause = body.get("cause") if isinstance(body, dict) else None
+    if not isinstance(cause, str):
+        return None
+    return " ".join(cause.split())[:_MAX_CAUSE_CHARS] or None
 
 
 def _measure(body: dict[str, Any]) -> dict[str, int] | None:

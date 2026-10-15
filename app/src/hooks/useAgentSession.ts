@@ -189,6 +189,8 @@ export interface Failure {
   ref: string | null;
   /** The binding check's lines of a refused binding set. */
   errors?: string[];
+  /** What a refused paste fails on, in the server's words (`AgentApiError.cause`). */
+  cause?: string;
 }
 
 export type TimelineStep = 'queued' | PipelineStep;
@@ -991,9 +993,12 @@ const PASTE_GUARDRAIL_REASONS = new Set([
 
 function failureOf(err: unknown): Failure {
   if (err instanceof AgentApiError) {
-    return err.errors.length
-      ? { code: err.code, ref: err.ref, errors: err.errors }
-      : { code: err.code, ref: err.ref };
+    return {
+      code: err.code,
+      ref: err.ref,
+      ...(err.errors.length ? { errors: err.errors } : {}),
+      ...(err.cause ? { cause: err.cause } : {}),
+    };
   }
   return { code: 'network', ref: null };
 }

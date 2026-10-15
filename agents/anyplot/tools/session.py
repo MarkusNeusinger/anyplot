@@ -569,7 +569,7 @@ async def run_data_code(code: str, source_language: str, tool_context: ToolConte
     except ParseError as exc:
         if exc.code == "too_long":  # its canonical copy outgrew `MAX_CANONICAL_BYTES` (wide dates, long text)
             return _error_lines("run_failed", [CANONICAL_TOO_LARGE])
-        return _error_lines("unparseable", [f"the table df holds cannot be read as data ({exc.code})"])
+        return _error_lines("unparseable", [f"the table df holds cannot be read as data: {exc.message}"])
     if not any(column.dtype in ("integer", "number", "datetime") for column in parsed.profile.columns):
         return _error_lines("no_numbers", ["df has no number or date column: a plot needs values to draw"])
     try:

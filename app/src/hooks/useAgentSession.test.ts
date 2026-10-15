@@ -1168,11 +1168,12 @@ describe('useAgentSession: formulas', () => {
 
     await act(() => result.current.parseData(FORMULA));
     expect(result.current.state.formula).toBe(FORMULA);
-    routes['POST /sessions/S1/dataset'] = () => json(422, { detail: 'unparseable', ref: 'r-u' });
+    routes['POST /sessions/S1/dataset'] = () =>
+      json(422, { detail: 'unparseable', ref: 'r-u', cause: 'line 3 has 4 fields' });
     await act(() => result.current.parseData('just words'));
     expect(result.current.state).toMatchObject({
       formula: null,
-      datasetError: { code: 'unparseable', ref: 'r-u' },
+      datasetError: { code: 'unparseable', ref: 'r-u', cause: 'line 3 has 4 fields' },
     });
   });
 

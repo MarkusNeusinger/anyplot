@@ -40,7 +40,7 @@ export const PLOT_FAILED_TEXT: Record<string, string> = {
 /** Failures of the dataset, bindings, confirmation and undo calls. */
 export const DATA_FAILURE: Record<string, string> = {
   too_long: 'more than 1 MB; paste fewer rows',
-  unparseable: 'could not read this as CSV, TSV, semicolon CSV or JSON',
+  unparseable: 'could not read this as CSV, TSV, semicolon CSV, JSON or JSON Lines',
   data_refused: 'the content check refused this data',
   // The dataset judge or the model that reads free text into a table failed closed.
   guard_unavailable:
@@ -166,15 +166,31 @@ export const CONVERT_FAILURE: Record<string, string> = {
   too_long: 'is more than 5 MB; save a smaller file',
 };
 
-/** The line for a file the server did not convert, the name in quotes first; a broken cap names its numbers. */
+/** The formats the page sends to the server (`fileText.ts` `ConvertibleKind`), as a sentence names them. */
+const KIND_NAME: Record<string, string> = {
+  spreadsheet: 'a spreadsheet (Excel or OpenDocument)',
+  parquet: 'a Parquet file',
+  arrow: 'an Arrow or Feather file',
+  numpy: 'a NumPy file',
+};
+
+/**
+ * The line for a file the server did not convert, the name in quotes first; a broken cap names its
+ * numbers, and a damaged file the format its first bytes named (`kind`).
+ */
 export function describeConvertFailure(
   name: string,
   code: string,
   measured: number | null,
   limit: number | null,
-  ref: string | null
+  ref: string | null,
+  kind: string | null = null
 ): string {
   let text = CONVERT_FAILURE[code] ?? DATA_FAILURE[code] ?? `could not be read (${code})`;
+  // A damaged file names the format its first bytes claimed, so "not the format it seems" says which one.
+  if (code === 'file_corrupt' && kind && KIND_NAME[kind]) {
+    text = `starts like ${KIND_NAME[kind]} but could not be read as one: the file is damaged (a cut-off download or copy), or it is another format saved under this name`;
+  }
   const counted = (noun: string) =>
     measured !== null && limit !== null
       ? ` (${measured.toLocaleString('en-US')} ${noun}, the cap is ${limit.toLocaleString('en-US')})`
@@ -245,7 +261,26 @@ export function describeFileRefusal(name: string, code: string): string {
   return `"${name}" ${FILE_REFUSAL[code] ?? FILE_REFUSAL.binary}`;
 }
 
-export function describeDataFailure(code: string, ref: string | null): string {
-  const text = DATA_FAILURE[code] ?? `request failed (${code})`;
+/**
+ * The lead of a failure that names its cause, where the code's own text would
+ * say something else: a `too_long` with a cause is the table written out, not
+ * the 1 MB the page checks before it sends.
+ */
+const CAUSE_LEAD: Record<string, string> = {
+  too_long: 'too large',
+};
+
+/**
+ * A failed data call in one line: the code's text, then what the data fails on
+ * when the server named it (owner rule, 2026-10-16: never only "could not
+ * read"), then the request id.
+ */
+export function describeDataFailure(
+  code: string,
+  ref: string | null,
+  cause: string | null = null
+): string {
+  const lead = DATA_FAILURE[code] ?? `request failed (${code})`;
+  const text = cause ? `${CAUSE_LEAD[code] ?? lead}: ${cause}` : lead;
   return ref ? `${text} · ref ${ref}` : text;
 }

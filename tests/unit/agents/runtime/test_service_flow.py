@@ -1762,7 +1762,19 @@ async def test_dataset_errors(client: httpx.AsyncClient, judge) -> None:
     sid = await open_session(client, with_data=False)
 
     unparseable = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": "a,b\n1,2,3,4\n"})
-    assert (unparseable.status_code, unparseable.json()) == (422, {"detail": "unparseable"})
+    # Owner rule of 2026-10-16: the refusal says what the paste fails on.
+    assert (unparseable.status_code, unparseable.json()) == (
+        422,
+        {
+            "detail": "unparseable",
+            "cause": "the header has 2 fields, but line 2 has 4; a value that holds a comma needs quotes around it",
+        },
+    )
+
+    ndjson = '{"a": 1}\n{"a": 2\n'
+    broken = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": ndjson})
+    assert broken.status_code == 422
+    assert broken.json()["cause"].startswith("the data reads as JSON Lines (one JSON object per line), but line 2")
 
     over = "a\n" + "1\n" * (MAX_INPUT_BYTES // 2)  # one line past the 1 MB cap
     too_long = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": over})
@@ -1872,11 +1884,18 @@ async def test_transcription_fails_closed(client: httpx.AsyncClient, judge) -> N
 
     judge.transcriptions = [_reading(["text"], [["what is a bar chart?"]], "no values")]
     no_table = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": "what is a bar chart?"})
-    assert (no_table.status_code, no_table.json()) == (422, {"detail": "unparseable"})
+    assert (no_table.status_code, no_table.json()["detail"]) == (422, "unparseable")
+    assert no_table.json()["cause"].startswith("no table found: the text has no separators between columns")
 
     judge.transcriptions = [_reading(["a"], [[""]])]  # a table of one empty cell has no rows for the parser
     empty = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": "nothing here"})
-    assert (empty.status_code, empty.json()) == (422, {"detail": "unparseable"})
+    assert (empty.status_code, empty.json()) == (
+        422,
+        {
+            "detail": "unparseable",
+            "cause": "the model read the text as a table, but that table was refused: the data has a header but no rows",
+        },
+    )
 
 
 async def test_a_confirmed_one_column_table_is_stored_not_read_again(client: httpx.AsyncClient, judge) -> None:
@@ -1926,11 +1945,22 @@ async def test_a_plot_waits_for_the_users_confirmation_of_the_data(client: httpx
     assert (plot["status"], plot["reason"]) == ("not_ready", "data_unconfirmed")
     assert [FakeAnthropic.kind(call) for call in fake.calls] == ["root", "root"]  # no adapter, no reviewer
 
+    first_turn = len(fake.calls)
     confirmed = await client.post(f"/v1/sessions/{sid}/dataset/confirm", headers=HEADERS)
     assert confirmed.json() == {"confirmed": True, "rows": 24, "columns": 3}
     events = await create_plot(client, sid)
     plot = next(data for name, data in events if name == "plot")
     assert plot["status"] == "ok", plot
+    # Live round 6 (R6-1): the closing reply said the data was not confirmed. Every root call after the
+    # confirmation, the closing one included, carries the confirmed line in its session block.
+    second = [call for call in fake.calls[first_turn:] if FakeAnthropic.kind(call) == "root"]
+    assert len(second) == 2
+    for call in second:
+        system = json.dumps(call["system"], default=str)
+        assert "- Data: confirmed by the user; the plot can be made" in system
+        assert "- Data: not confirmed yet" not in system
+    done = next(data for name, data in events if name == "done")
+    assert done["data_confirmed"] is True
 
 
 async def test_the_confirmation_drops_with_a_binding_change_or_a_new_dataset(client: httpx.AsyncClient) -> None:
@@ -3240,7 +3270,8 @@ async def test_a_paste_of_two_tables_reads_the_chosen_one_and_lists_both(client:
         [["North", "24"], ["South", "18"]],
     )
     assert second.json()["context_lines"] == ["Branch report", "Staff"]
-    assert (missing.status_code, missing.json()) == (422, {"detail": "unparseable"})
+    assert (missing.status_code, missing.json()["detail"]) == (422, "unparseable")
+    assert "table 3" in missing.json()["cause"]
     assert "tables" not in single.json() and "table" not in single.json()
 
 

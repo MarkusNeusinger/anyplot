@@ -114,7 +114,16 @@ MAX_SHOWN_TEXT_CHARS = 80
 
 ColumnDtype = Literal["integer", "number", "datetime", "boolean", "text"]
 SourceFormat = Literal[
-    "csv", "tsv", "semicolon", "pipe", "whitespace", "json_records", "json_columns", "json_pairs", "json_stat"
+    "csv",
+    "tsv",
+    "semicolon",
+    "pipe",
+    "whitespace",
+    "json_records",
+    "json_lines",
+    "json_columns",
+    "json_pairs",
+    "json_stat",
 ]
 
 # The reviewer's reduced checklist: the rubric criteria it scores plus AR-09 for clipping.

@@ -40,7 +40,13 @@ would, for example, read `01.02.2024` as a number under `thousands='.'`).
    label, the category labels as cells, kept text), then `value`, in the order of
    `value`; see `_json_stat`. Its one-category dimensions, label, source and
    notes become `context_lines`. The `MAX_NESTING` bracket count below applies
-   to it as to everything else. Text that starts with a bare `(` and is
+   to it as to everything else. JSON Lines (`json_lines`, since 2026-10-16: a log
+   export or `df.to_json(orient="records", lines=True)`, one JSON object per line)
+   reads when the whole text is no JSON but its first line is one object: every
+   non-empty line must then be an object, read by the rules of JSON records; a line
+   that is not names its number and the JSON error (`_read_json_lines`). Text that
+   starts like JSON and is neither JSON, JSON Lines nor a Python literal is
+   `unparseable` with the JSON error's line and column. Text that starts with a bare `(` and is
    neither JSON nor a Python literal (a header such as `(in %) Land`, or prose
    in parentheses) is delimited text instead, like everything that starts
    otherwise, see `sniff_delimiter`.
@@ -49,8 +55,10 @@ would, for example, read `01.02.2024` as a number under `thousands='.'`).
    export's metadata or a note above the header, a source line or a note below the
    last row, and up to three summary rows (`Total`, `Summe`, `Mittelwert`…) at the end
    are left out, each kind with one warning. A row with fewer fields than the header
-   is padded with missing cells (one warning); a row with more non-empty fields than
-   the header is `unparseable`. The lines left out above and below the table (not the
+   is padded with missing cells (one warning that names the first lines); empty fields
+   past the header's last column are dropped (one warning that counts the rows); a row
+   with more non-empty fields than the header is `unparseable`, the message naming
+   every such line and every short one with its field count (`_ragged_rows`). The lines left out above and below the table (not the
    summary rows, which are data) are kept as `ParsedDataset.context_lines`, the notes
    the user pasted with the data, see `_context_lines` (owner rule of 2026-10-14).
    Text that holds two or more tables, each under its own header after a blank line (a
@@ -551,8 +559,10 @@ def parse_dataset(
     if literal:
         assignment, body = literal.group(), stripped[literal.end() :]
         read = _read_literal(body, warnings, context, listed)
+        if read is None and not assignment:
+            read = _read_json_lines(text, warnings, listed)  # the whole text, so line numbers count from line 1
         if read is None and (assignment or not body.startswith("(")):
-            raise ParseError("unparseable", "the data starts like JSON or a Python literal but is neither")
+            raise ParseError("unparseable", _not_a_literal(body, python=bool(assignment)))
         # A bare `(` that neither reader accepts is delimited text: `(in %) Land;Wert`, prose in parentheses.
     declared: set[str] = set()
     tables: list[str] = []
@@ -801,7 +811,11 @@ def _read_delimited(
                 else:
                     blank = True
         except csv.Error as exc:
-            raise ParseError("unparseable", f"the quoting is malformed near line {reader.line_num}") from exc
+            raise ParseError(
+                "unparseable",
+                f"the quoting is malformed near line {reader.line_num} ({exc}); a value that starts with a quote "
+                "must end with one before the next separator, and a quote inside it is written twice",
+            ) from exc
     if not records:
         raise ParseError("unparseable", "the data is empty")
     marks = (
@@ -844,29 +858,80 @@ def _read_delimited(
     header = records[block.start][1]
     width = len(header)
     rows: list[list[str]] = []
-    padded = 0
+    short: list[tuple[int, int]] = []  # (line, fields) of the rows with fewer fields than the header
+    long: list[tuple[int, int]] = []  # (line, fields) of the rows with a value past the header's last column
+    trimmed = 0
+    if block.end - block.start - 1 > MAX_ROWS:
+        raise ParseError(
+            "too_many_rows", f"the table has {block.end - block.start - 1:,} rows; at most {MAX_ROWS:,} are read"
+        )
     for index in range(block.start + 1, block.end):
         line_num, record = records[index]
-        if len(rows) == MAX_ROWS:
-            raise ParseError("too_many_rows", f"the data has more than {MAX_ROWS:,} rows")
         if len(record) < width:
+            short.append((line_num, len(record)))
             record = (
                 _aligned(record, spans[index], extents, line_num) if spaced else record + [""] * (width - len(record))
             )
-            padded += 1
         elif len(record) > width:
             if any(cell.strip() for cell in record[width:]):
-                raise ParseError("unparseable", f"line {line_num} has more fields than the header")
+                long.append((line_num, len(record)))
+            else:
+                trimmed += 1
             record = record[:width]
         rows.append(record)
-    if padded and spaced:
+    if long:
+        raise ParseError("unparseable", _ragged_rows(width, long, short, delimiter))
+    if short and spaced:
         warnings.append(
-            f"{_count(padded, 'row')} had fewer fields than the header; their cells were placed under the header's "
-            "columns by their position, and the cells left over are empty"
+            f"{_count(len(short), 'row')} had fewer fields than the header; their cells were placed under the "
+            f"header's columns by their position, and the cells left over are empty ({_some_lines(short)})"
         )
-    elif padded:
-        warnings.append(f"{_count(padded, 'row')} had fewer fields than the header; the missing cells are empty")
+    elif short:
+        warnings.append(
+            f"{_count(len(short), 'row')} had fewer fields than the header; the missing cells are empty "
+            f"({_some_lines(short)})"
+        )
+    if trimmed:
+        warnings.append(
+            f"{_count(trimmed, 'row')} had empty fields past the header's {width} columns; those empty fields were "
+            "left out"
+        )
     return header, rows, source_format
+
+
+def _some_lines(lines: Sequence[tuple[int, int]]) -> str:
+    """`line 4`, `lines 4, 9 and 3 more`: the first `MAX_LINES_NAMED` line numbers, the rest counted."""
+    numbers = [str(number) for number, _ in lines[:MAX_LINES_NAMED]]
+    more = len(lines) - len(numbers)
+    named = ", ".join(numbers) + (f" and {more:,} more" if more else "")
+    return f"line{'s' if len(lines) > 1 else ''} {named}"
+
+
+def _ragged_rows(
+    width: int, long: Sequence[tuple[int, int]], short: Sequence[tuple[int, int]], delimiter: str | None
+) -> str:
+    """The refusal of a table whose rows have more values than its header: every such line, and the short ones too.
+
+    Owner rule of 2026-10-16: a paste the parser refuses says what it fails on, so the
+    message names the lines with their field counts, grouped by the count in the order of
+    their first line (the first `MAX_LINES_NAMED` lines of a group, the rest counted), the
+    short lines beside the long ones, so one round of fixes mends them all. Nothing is
+    repaired: a value past the last column has no column to go to, and moving it would be a
+    guess. The likeliest cause, a separator inside an unquoted value, closes the message.
+    """
+    groups: dict[int, list[tuple[int, int]]] = {}
+    for line in sorted([*long, *short]):
+        groups.setdefault(line[1], []).append(line)
+    named = [
+        f"{_some_lines(lines)} {'has' if len(lines) == 1 else 'have'} {fields}" for fields, lines in groups.items()
+    ]
+    separator = {",": "comma", ";": "semicolon", "\t": "tab", "|": "pipe"}.get(delimiter or "", "separator")
+    hint = (
+        f"; a value that holds a {separator} needs quotes around it"
+        if delimiter not in (None, SPACE_RUN, SINGLE_SPACE)
+        else ""
+    )
+    return f"the header has {width} fields, but " + "; ".join(named) + hint
 
 
 MIN_TABLE_ROWS = 2
@@ -1377,22 +1442,9 @@ def _decode_literal(text: str) -> tuple[Any, int, int] | None:
     or a call is a ValueError, never run. Both keep the last value of a repeated key,
     so the count lets the caller say that rows went missing.
     """
-    repeated = 0
-    constants = 0
-
-    def objects(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
-        nonlocal repeated
-        repeated += len(pairs) - len({key for key, _ in pairs})
-        return dict(pairs)
-
-    def constant(_: str) -> None:
-        nonlocal constants
-        constants += 1  # `NaN`, `Infinity`, `-Infinity`: no finite value, so missing, and counted
-        return None
-
+    reader = _JsonReader()
     try:
-        loaded = json.loads(text, parse_constant=constant, parse_float=_SourceFloat, object_pairs_hook=objects)
-        return loaded, repeated, constants
+        return reader.loads(text), reader.repeated, reader.constants
     except (ValueError, RecursionError):
         pass
     try:
@@ -1401,6 +1453,134 @@ def _decode_literal(text: str) -> tuple[Any, int, int] | None:
     except (ValueError, SyntaxError, TypeError, RecursionError, MemoryError):
         return None
     return value, _repeated_keys(tree), 0
+
+
+class _JsonReader:
+    """`json.loads` with the parser's hooks, counting repeated object keys and `NaN` / `Infinity` constants."""
+
+    def __init__(self) -> None:
+        self.repeated = 0
+        self.constants = 0
+
+    def _objects(self, pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+        self.repeated += len(pairs) - len({key for key, _ in pairs})
+        return dict(pairs)
+
+    def _constant(self, _: str) -> None:
+        self.constants += 1  # `NaN`, `Infinity`, `-Infinity`: no finite value, so missing, and counted
+        return None
+
+    def loads(self, text: str) -> Any:
+        return json.loads(
+            text, parse_constant=self._constant, parse_float=_SourceFloat, object_pairs_hook=self._objects
+        )
+
+
+MAX_LINES_NAMED = 5
+"""The broken lines a refusal names (`_ragged_rows`) or a warning names (`_some_lines`) before it counts the rest."""
+
+
+def _read_json_lines(
+    text: str, warnings: list[str], listed: set[str] | None = None
+) -> tuple[list[str], list[list[str]], SourceFormat] | None:
+    """JSON Lines (one JSON object per line) read as JSON records; None when the text is not JSON Lines.
+
+    The text counts as JSON Lines when it has two or more non-empty lines and its first one
+    is a JSON object on its own (live test round 6 of 2026-10-16: a log export of 600 lines
+    `{"ts": ..., "service": ..., "latency_ms": ..., "status": ...}`). Every other non-empty
+    line must then be an object too: a line that is no valid JSON, or holds an array or a
+    value, is `unparseable` with its line number and the JSON error, never skipped. The
+    records follow the rules of a JSON array of records (`_records`: nested objects to
+    dotted columns, list fields to rows, a float keeps its written text), and a repeated key
+    or a `NaN` is counted as in JSON.
+    """
+    lines = [(number, line.strip()) for number, line in enumerate(_PHYSICAL_LINE.split(text), start=1) if line.strip()]
+    if len(lines) < 2:
+        return None
+    reader = _JsonReader()
+    try:
+        first = reader.loads(lines[0][1])
+    except (ValueError, RecursionError):
+        return None
+    if not isinstance(first, dict):
+        return None
+    if len(lines) > MAX_ROWS:
+        raise ParseError("too_many_rows", f"the data has {len(lines):,} JSON lines, more than {MAX_ROWS:,} rows")
+    records: list[dict[str, Any]] = [first]
+    for number, line in lines[1:]:
+        try:
+            record = reader.loads(line)
+        except json.JSONDecodeError as exc:
+            raise ParseError(
+                "unparseable",
+                f"the data reads as JSON Lines (one JSON object per line), but line {number} is not valid JSON: "
+                f"{exc.msg} at column {exc.colno}",
+            ) from None
+        except (ValueError, RecursionError):
+            raise ParseError(
+                "unparseable", f"the data reads as JSON Lines, but line {number} is not valid JSON"
+            ) from None
+        if not isinstance(record, dict):
+            raise ParseError(
+                "unparseable",
+                f"the data reads as JSON Lines (one JSON object per line), but line {number} holds "
+                f"{_json_kind(record)} instead of an object",
+            )
+        records.append(record)
+    if reader.repeated:
+        warnings.append(f"{_count(reader.repeated, 'key')} repeated; only the last value of a repeated key is kept")
+    if reader.constants:
+        warnings.append(f"{_count(reader.constants, 'value')} NaN, Infinity or -Infinity read as missing")
+    headers, rows, _ = _records(records, warnings, listed)
+    return headers, rows, "json_lines"
+
+
+def _json_kind(value: Any) -> str:
+    """What a JSON value is, in a refusal's words: `an array of 3 values`, `a number`; never the value itself."""
+    if isinstance(value, (list, tuple)):
+        return f"an array of {_count(len(value), 'value')}"
+    if isinstance(value, dict):
+        return "an object"
+    if isinstance(value, str):
+        return "a text value"
+    if value is None:
+        return "null"
+    if isinstance(value, bool):
+        return "a boolean"
+    return "a number"
+
+
+def _not_a_literal(text: str, *, python: bool) -> str:
+    """Why text that starts like JSON or a Python literal is neither: the reader's error with its line and column.
+
+    Text behind an assignment (`data = {...}`) is Python, so Python's syntax error names the
+    place; so does text that is valid Python but no literal (a name or a call, which is never
+    evaluated). Any other text gets the JSON error. Only the position and the reader's own
+    words are named, never the text around them.
+    """
+    try:
+        ast.parse(text, mode="eval")
+    except SyntaxError as exc:
+        if python:
+            where = f" on line {exc.lineno}" if exc.lineno else ""
+            return f"the data starts like a Python literal but is not one: {exc.msg}{where}"
+    except (ValueError, RecursionError, MemoryError):
+        pass
+    else:
+        return (
+            "the data starts like a Python literal but holds a name, a call or an operation, which is never run; "
+            "paste the values themselves"
+        )
+    try:
+        json.loads(text)
+    except json.JSONDecodeError as exc:
+        return (
+            f"the data starts like JSON but is not valid JSON: {exc.msg} at line {exc.lineno}, column {exc.colno} "
+            "(nor a Python literal or JSON Lines)"
+        )
+    except (ValueError, RecursionError):
+        pass
+    return "the data starts like JSON or a Python literal but is neither"
 
 
 class _SourceFloat(float):
@@ -1475,12 +1655,21 @@ def _tabulate(
         if not data:
             raise ParseError("unparseable", "the array is empty")
         if len(data) > MAX_ROWS:
-            raise ParseError("too_many_rows", f"the data has more than {MAX_ROWS:,} rows")
+            raise ParseError("too_many_rows", f"the array holds {len(data):,} rows; at most {MAX_ROWS:,} are read")
         if all(isinstance(record, dict) for record in data):
             return _records(data, warnings, listed)
         if all(isinstance(pair, (list, tuple)) and len(pair) == 2 for pair in data):
             return _pairs(data)
-        raise ParseError("unparseable", "an array must hold objects, one per row, or [category, value] pairs")
+        odd = next(
+            (
+                (index, item)
+                for index, item in enumerate(data, start=1)
+                if not isinstance(item, dict) and not (isinstance(item, (list, tuple)) and len(item) == 2)
+            ),
+            None,
+        )
+        found = f"; item {odd[0]} is {_json_kind(odd[1])}" if odd else "; it mixes objects and pairs"
+        raise ParseError("unparseable", f"an array must hold objects, one per row, or [category, value] pairs{found}")
 
     if isinstance(data, dict):
         if not data:
@@ -1489,7 +1678,9 @@ def _tabulate(
             return _column_lists(data)
         if all(_scalar(value) for value in data.values()):
             if len(data) > MAX_ROWS:
-                raise ParseError("too_many_rows", f"the data has more than {MAX_ROWS:,} rows")
+                raise ParseError(
+                    "too_many_rows", f"the object holds {len(data):,} entries; at most {MAX_ROWS:,} rows are read"
+                )
             return _pairs(data.items())
         raise ParseError(
             "unparseable", "an object must map every name to a list of values, or every category to one value"
@@ -1917,7 +2108,14 @@ def _column_lists(data: Mapping[Any, Sequence[Any]]) -> tuple[list[str], list[li
         )
     lengths = {len(values) for values in data.values()}
     if len(lengths) != 1:
-        raise ParseError("unparseable", "the column lists have different lengths")
+        described = ", ".join(
+            f"{_clip(str(name), MAX_COLUMN_NAME_CHARS)} ({len(values)})"
+            for name, values in list(data.items())[:MAX_NAMED_FIELDS]
+        ) + (", …" if len(data) > MAX_NAMED_FIELDS else "")
+        raise ParseError(
+            "unparseable",
+            f"the column lists have different lengths ({described}); every column needs one value per row",
+        )
     if lengths.pop() > MAX_ROWS:
         raise ParseError("too_many_rows", f"the data has more than {MAX_ROWS:,} rows")
     headers = [_json_key(key, position) for position, key in enumerate(data)]
@@ -2898,10 +3096,15 @@ def _build(
             raise ParseError(
                 "cell_too_long", f"the header of column {position} has more than {MAX_INPUT_CELL_CHARS} characters"
             )
-        if any(len(cell) > MAX_INPUT_CELL_CHARS for cell in column.source):
+        long_cell = next(
+            (row for row, cell in enumerate(column.source, start=1) if len(cell) > MAX_INPUT_CELL_CHARS), 0
+        )
+        if long_cell:
             named = _clip(header, MAX_COLUMN_NAME_CHARS) if header else f"column_{position}"
             raise ParseError(
-                "cell_too_long", f"a cell in column '{named}' has more than {MAX_INPUT_CELL_CHARS} characters"
+                "cell_too_long",
+                f"the cell in row {long_cell:,} of column '{named}' has "
+                f"{len(column.source[long_cell - 1]):,} characters; at most {MAX_INPUT_CELL_CHARS} are read",
             )
 
     # Typing comes before naming: a column whose cells carried a unit is named after it. A
