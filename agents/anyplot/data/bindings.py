@@ -108,6 +108,12 @@ RECORD_KEY_WORDS: frozenset[str] = frozenset(
 than measuring them: a required measure that must take a per-record value takes a parameter first (review of
 #12197: a bubble's size is the `weight`, not the `id`)."""
 
+ROW_NUMBER_NAMES: frozenset[str] = frozenset(
+    {"X", "Unnamed: 0", "...1", "index", "Index", "rownames", "row.names", "row_names"}
+)
+"""Column names a tool gives the row numbers it writes (R's `read.csv` names an empty header `X`, pandas `Unnamed: 0`,
+readr `...1`); with `column_<n>`, the parser's name for an empty header (`row_number_columns`)."""
+_GENERATED_NAME = re.compile(r"column_[0-9]+")
 _NOT_ALNUM = re.compile(r"[^0-9a-z]+")
 _CODE_VALUE = re.compile(r"[A-Z][A-Z0-9]{1,3}")
 _CAMEL = re.compile(r"(?<=[a-z0-9])(?=[A-Z])")
@@ -129,6 +135,29 @@ class BindingCheck:
     errors: list[str]
     missing_roles: list[str]
     warnings: list[str] = field(default_factory=list)
+
+
+def row_number_columns(profile: DatasetProfile) -> set[str]:
+    """The columns that only number the rows: a row-number name (`ROW_NUMBER_NAMES`, `column_<n>`) over the whole
+    numbers `1` to `n` or `0` to `n - 1`, each once, none missing.
+
+    Owner decision of 2026-10-15 (live test round 5): such a column stays in the table, but no default binding
+    takes it while another column fits the role, so R's `X` of `1` to `n` is never the x of a scatter plot. The
+    parser drops only the exact shapes a tool writes (`parse.ROW_NAME_SHAPES`); this covers the rest. The profile
+    has no row order, so the values are checked as a set: `unique` equals the row count and the range is `1..n`
+    or `0..n-1`.
+    """
+    rows = profile.rows
+    return {
+        column.name
+        for column in profile.columns
+        if rows >= 2
+        and (column.name in ROW_NUMBER_NAMES or _GENERATED_NAME.fullmatch(column.name))
+        and column.dtype == "integer"
+        and column.missing == 0
+        and column.unique == rows
+        and (column.min, column.max) in ((1, rows), (0, rows - 1))
+    }
 
 
 def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Binding]:
@@ -169,6 +198,10 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
        series instead of becoming the category; a column of years named so is no
        series, so the category may take it.
 
+    A column that only numbers the rows (`row_number_columns`: R's `X` of `1` to `n`) takes
+    no role by its name, no family member and no optional role, and a required single role
+    takes it only when no other column fits (owner decision of 2026-10-15).
+
     Each column is bound at most once. Members of a family are numbered `<name>1`,
     `<name>2`, ... in column order. Roles without kinds stay unbound.
     """
@@ -197,11 +230,17 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
 
     # A constant is no measure even when named like the role (`y2`, `size`); a year or a month named so is meant.
     constants = {column.name for column in columns if profile.rows >= MIN_CONSTANT_ROWS and column.unique <= 1}
+    # Row numbers (`X` of `1` to `n`) take a role only when no other column fits it, never by a name match.
+    row_numbers = row_number_columns(profile)
 
     for role in roles:
         if not role.kinds:
             continue
-        named = [column for column in columns if not (is_measure(role) and column.name in constants)]
+        named = [
+            column
+            for column in columns
+            if not (is_measure(role) and column.name in constants) and column.name not in row_numbers
+        ]
         if role.variadic:
             for column in named:
                 if column.name not in used and _member_of(role, column.name) and _tier(role, column) is not None:
@@ -268,7 +307,9 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
             ranked_members = [
                 (tier, position)
                 for tier, position in fitting
-                if columns[position].name not in weak and columns[position].name not in claims
+                if columns[position].name not in weak
+                and columns[position].name not in claims
+                and columns[position].name not in row_numbers
             ]
             if not members and not ranked_members and role.required:
                 # One weak member rather than none for a required family; a record's parameter before its number.
@@ -285,6 +326,7 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
                 avoid = weak if is_measure(role) else set()
             ranked = sorted(
                 (
+                    column.name in row_numbers,  # row numbers only when nothing else fits
                     _constant_group(role, column),
                     column.name in avoid,
                     column.name in keys and is_measure(role),  # a record's parameter before its number
@@ -302,7 +344,7 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
                 if column.name not in used
                 and (tier := _tier(role, column)) is not None
                 and (tier <= 1 or column.name not in reserved)
-                and (role.required or column.name not in avoid)
+                and (role.required or (column.name not in avoid and column.name not in row_numbers))
             )
             if ranked:
                 single[role.name] = ranked[0][-1]

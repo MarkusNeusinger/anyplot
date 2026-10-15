@@ -79,9 +79,10 @@ would, for example, read `01.02.2024` as a number under `thousands='.'`).
    warning before the 50-column check. So is a pasted column with a header whose cells
    are all missing (an API export's unused schema fields), with one warning naming them,
    unless every column is empty (`_without_empty_columns`, since 2026-10-15; a canonical
-   re-parse keeps it). So is a first column of row names that only number the rows (R's
-   `write.csv`, pandas' `to_csv`: an empty header and `1` to `n`), with a warning that
-   counts its cells (`_without_row_names`, live test round 5 of 2026-10-15).
+   re-parse keeps it). So is a paste's first column of row names that only number the rows
+   (R's `write.csv`: an empty header over `1` to `n`; pandas' `Unnamed: 0` over `0` to
+   `n - 1`), with a warning that counts its cells (`_without_row_names`, live test round 5
+   of 2026-10-15).
 5. **Type each column**, see `_type_column`: dates, then booleans, integers,
    numbers (also with unambiguous thousands groups: `7.184.003`, `1'234'567`,
    `1 234,5`, `1,234,567`, see `_as_grouped_numbers`; a column of `1,234` shapes reads
@@ -524,6 +525,8 @@ def parse_dataset(
     tokens of `MISSING_VALUES` are missing, except `NA` in a column of letter codes
     (`_keep_na_codes`), and a constant text column moves to the notes (`_constants_to_notes`).
     """
+    if table < 1:
+        raise ValueError(f"table is 1-based, got {table}")  # a caller's bug, never the user's data
     _check_size(text, max_bytes)
     text = text.removeprefix(_BOM)
     _check_controls(text)
@@ -571,6 +574,7 @@ def parse_dataset(
         context=context,
         missing_marks=marks,
         listed=frozenset(listed),
+        row_names=find_table,
     )
     if len(parsed.csv.encode("utf-8")) > MAX_CANONICAL_BYTES:
         raise ParseError("too_long", f"the data is larger than {MAX_CANONICAL_BYTES // 1024:,} KB once written out")
@@ -807,8 +811,9 @@ def _read_delimited(
     )
     if declared is not None:
         declared.update(marks)
+    lead: list[tuple[int, list[str]]] = []  # a later table's title lines, kept as notes (`_one_table`)
     if find_table:
-        records, spans = _one_table(records, spans, breaks, table, warnings, tables)
+        records, spans = _one_table(records, spans, breaks, table, warnings, tables, marks, lead)
     elif table > 1:
         raise ParseError("unparseable", f"the data holds one table; there is no table {table}")
     block = (
@@ -821,16 +826,17 @@ def _read_delimited(
         extents = _column_extents(spans, block.start, block.end, len(records[block.start][1]))
         if find_table and not block.summary:
             block = _with_trailing_short_rows(block, records, spans, extents)
-    if block.above:
-        warnings.append(f"left out {_count(block.above, 'line')} above the table (a title, notes or metadata)")
+    if block.above or lead:
+        above = block.above + len(lead)
+        warnings.append(f"left out {_count(above, 'line')} above the table (a title, notes or metadata)")
     if block.below:
         warnings.append(f"left out {_count(block.below, 'line')} below the table (notes or a source line)")
     if block.summary:
         warnings.append(
             f"left out {_count(block.summary, 'summary row')} at the end of the table (a total, sum, mean or similar)"
         )
-    if context is not None and (block.above or block.below):
-        left_out = [record for _, record in (*records[: block.start], *records[block.end + block.summary :])]
+    if context is not None and (block.above or block.below or lead):
+        left_out = [record for _, record in (*lead, *records[: block.start], *records[block.end + block.summary :])]
         lines, cut = _context_lines(left_out, delimiter)
         context.extend(lines)
         if cut:
@@ -879,6 +885,8 @@ def _one_table(
     table: int,
     warnings: list[str],
     tables: list[str] | None,
+    marks: frozenset[str] = frozenset(),
+    lead_records: list[tuple[int, list[str]]] | None = None,
 ) -> tuple[list[tuple[int, list[str]]], list[list[tuple[int, int]]]]:
     """The records of table number `table` (1-based) when the text holds two or more tables, else all of them.
 
@@ -888,15 +896,17 @@ def _one_table(
     every number column into text. A table of its own starts after a blank line (or at the
     top) with a header under at most a few one-field lines (a caption), see `_table_starts`.
     With two or more such tables, table `table` is read: its own lines from its blank line
-    to the next table's, after the lines above the first table (a title, which belongs to
-    every table), so `table_block` finds its header, its notes and its summary rows as for a
-    single table. One warning names the table read and the ones left out; `tables` gets one
+    to the next table's, so `table_block` finds its header, its notes and its summary rows as
+    for a single table. The lines before the first table's blank-line group (a title, which
+    belongs to every table) go to `lead_records`, which the caller keeps as notes. One warning names the table read and the ones left out; `tables` gets one
     label per table (its header and its row count), which the dataset route answers so the
     page can offer the others, as it offers a workbook's other sheets. Only the first
     `MAX_TABLES` can be chosen and are labelled; every table keeps its own boundaries, so a
     later one never joins the tenth (Copilot review of #12200). Fewer than two tables leave
     the records as they are.
     """
+    if table < 1:
+        raise ValueError(f"table is 1-based, got {table}")
     starts = _table_starts([record for _, record in records], breaks)
     if len(starts) < 2:
         if table > 1:
@@ -905,14 +915,18 @@ def _one_table(
     choosable = min(len(starts), MAX_TABLES)
     if table > choosable:
         raise ParseError("unparseable", f"the data holds {len(starts)} tables; table {table} cannot be read")
-    lead = list(range(starts[0][1]))  # the lines above the first table's header: a title, notes
+    # The document's title area: the lines before the first table's blank-line group. The first table's own caption
+    # (a line of its group above its header) is its own, never a note of the others (review of #12200). For every
+    # table these lines become notes without ever meeting `table_block`, so a skipped block there (an export's one
+    # row of metadata at the table's width) can never be read as the table's rows.
+    lead = list(range(starts[0][0]))
     regions: list[list[int]] = []
     for index, (group, _) in enumerate(starts[:choosable]):
         end = starts[index + 1][0] if index + 1 < len(starts) else len(records)
-        regions.append(list(range(end)) if index == 0 else [*lead, *range(group, end)])
+        regions.append(list(range(group, end)))
     labels: list[str] = []
     for (_, header), region in zip(starts, regions, strict=False):
-        block = table_block([records[index][1] for index in region])
+        block = table_block([records[index][1] for index in region], extra_missing=marks)
         rows = block.end - block.start - 1
         names = ", ".join(name for cell in records[header][1] if (name := _clean_header(cell)[0]))
         labels.append(f"{_clip(names, MAX_TABLE_LABEL_CHARS)} · {_count(rows, 'row')}")
@@ -928,6 +942,8 @@ def _one_table(
         f"({labels[table - 1]}) and left out {named}; the table picker in the data panel reads another one"
     )
     chosen = regions[table - 1]
+    if lead and lead_records is not None:
+        lead_records.extend(records[index] for index in lead)
     return [records[index] for index in chosen], [spans[index] for index in chosen] if spans else spans
 
 
@@ -942,6 +958,14 @@ def _table_starts(records: Sequence[Sequence[str]], breaks: Collection[int]) -> 
     `latitude,longitude` and its values above the real table) start none, so such text stays
     one table as before. Neither does a key-value block (`Station:,Zürich`): a header or every
     first cell of its rows ending with a colon.
+
+    A blank row inside one table must not split it either (Fable and Gemini review of #12200):
+    a data row after it can look like a header, a row of text only (`Support,Service,Included`)
+    or a name and counts that read as years (`Bern,1500,1850,2040`). So a candidate with the
+    same width as the table above starts a table of its own only with evidence that it is a
+    new header: a caption line above it in its group (`Personal und Fläche`), or a name it
+    shares with the header above (`Filiale` heading both tables). A candidate of another width
+    needs no such evidence: a row that does not fit the table above is no row of it.
     """
     bounds = [0, *sorted(index for index in breaks if 0 < index < len(records)), len(records)]
     starts: list[tuple[int, int]] = []
@@ -957,13 +981,19 @@ def _table_starts(records: Sequence[Sequence[str]], breaks: Collection[int]) -> 
             continue
         if all(row[0].strip().endswith(":") for row in records[header + 1 : end] if row):
             continue
+        if starts and len(records[starts[-1][1]]) == width:
+            names = {cell.strip().casefold() for cell in records[header] if cell.strip()}
+            above = {cell.strip().casefold() for cell in records[starts[-1][1]] if cell.strip()}
+            if header == group and not names & above:
+                continue  # same width, no caption, no shared name: a row of the table above
         starts.append((group, header))
     return starts
 
 
 def _header_line(record: Sequence[str]) -> bool:
     """A record that reads as a table's header: two or more distinct filled names, none a missing mark, and no value
-    among them except two or more years in a wide table (`Land,2020,2021`); its first name ends with no colon."""
+    among them except two or more years in a wide table (`Land,2020,2021`), running forward; its first name ends
+    with no colon."""
     cells = [cell.strip() for cell in record]
     if len(cells) < 2 or not all(cells) or any(cell in MISSING_VALUES for cell in cells):
         return False
@@ -971,7 +1001,10 @@ def _header_line(record: Sequence[str]) -> bool:
         return False
     values = [cell for cell in cells if _value_like(cell)]
     return not values or (
-        len(values) >= 2 and len(values) < len(cells) and all(_YEAR.fullmatch(cell) for cell in values)
+        len(values) >= 2
+        and len(values) < len(cells)
+        and all(_YEAR.fullmatch(cell) for cell in values)
+        and all(int(left) < int(right) for left, right in pairwise(values))  # a header's years run forward
     )
 
 
@@ -2524,31 +2557,40 @@ def _as_numbers(column: _Column, cells: list[str]) -> bool:
 
 
 def number_text(written: str, value: float) -> str:
-    """The canonical text of a cell of a number column: `repr`, except a whole number written without a fraction.
+    """The canonical text of a cell of a number column: `repr`, except an exact whole number has no `.0`.
 
     `87000` beside `120500.5` stays `87000` (live test round 5 of 2026-10-15: it showed as
-    `87000.0` in the preview and in `data.csv`, a representation the user never wrote); `2.0`
-    stays `2.0`, and `1e3` is `1000.0` as before. A whole number a float64 holds only rounded
-    (past 2**53) keeps the `repr` that shows it, which the rounding note counts.
+    `87000.0` in the preview and in `data.csv`), and `2.0` is `2`: owner decision of
+    2026-10-15, `30` and `30.0` are the same number, so the canonical form is the shorter one
+    and no note counts it; only a change of value is said. A value a float64 holds only
+    rounded, and any whole number past 2**53, keep the `repr` that shows it, which the
+    rounding note counts (`_as_numbers`). `prepare.py` writes computed numbers the same way.
     """
     text = repr(value)
-    if _INTEGER.fullmatch(written) and text.endswith(".0") and keeps_value(written, value):
+    if text.endswith(".0") and abs(value) < _FLOAT_EXACT_WHOLE and keeps_value(written, value):
         return text[:-2]
     return text
+
+
+_FLOAT_EXACT_WHOLE = 2**53
+"""Below this a float64 holds every whole number exactly, so a whole number's text needs no `.0` to say it is one."""
 
 
 def _respelled(written: str, canonical: str) -> bool:
     """Whether the canonical text of a number of the same value drops what the written one showed.
 
-    Trailing zeros of a fraction (`1.50` as `1.5`, `2.00` as `2.0`), scientific notation
-    (`1e3` as `1000.0`, or a long plain number as `1.2e+20`) and a plus sign (`+1.5`). What
-    the canonical form only adds (`2` as `2.0`, `.5` as `0.5`, `1e-7` as `1e-07`) is no loss.
+    Trailing zeros of a fraction (`1.50` as `1.5`), scientific notation (`1e3` as `1000`, or a
+    long plain number as `1.2e+20`) and a plus sign (`+1.5`). What the canonical form only adds
+    (`.5` as `0.5`, `1e-7` as `1e-07`) is no loss, and neither is a whole number's fraction of
+    zeros (`2.0` or `2.00` as `2`: owner decision of 2026-10-15, the same number).
     """
     mantissa, _, exponent = written.lower().partition("e")
     canonical_mantissa, _, canonical_exponent = canonical.partition("e")
     if bool(exponent) != bool(canonical_exponent) or mantissa.startswith("+"):
         return True
     fraction = mantissa.partition(".")[2]
+    if fraction and not fraction.strip("0") and "." not in canonical_mantissa:
+        return False
     return fraction.endswith("0") and len(fraction) > len(canonical_mantissa.partition(".")[2])
 
 
@@ -2743,8 +2785,10 @@ def _build(
     context: list[str] | None = None,
     missing_marks: frozenset[str] = frozenset(),
     listed: frozenset[str] = frozenset(),
+    row_names: bool = True,
 ) -> ParsedDataset:
     read: list[tuple[str, bool, _Column]] = []  # header, whether breaks became spaces, column
+    first: _Column | None = None  # the text's own first column, when it was read (`_without_row_names`)
     for position, raw in enumerate(raw_headers):
         header, invisible, broken = _clean_header(raw)
         # The keys of an object of values are names, and so are JSON-stat categories (every column but
@@ -2791,14 +2835,16 @@ def _build(
             from_list=raw in listed,
         )
         read.append((header, broken, column))
+        if position == 0:
+            first = column
 
     dropped = len(raw_headers) - len(read)
     if dropped:
         warnings.append(f"{_count(dropped, 'empty column')} without a header dropped")
     if not canonical:
         read = _without_empty_columns(read, warnings)
-        if source_format in _DELIMITED:
-            read = _without_row_names(read, warnings)
+        if row_names and source_format in _DELIMITED:
+            read = _without_row_names(read, warnings, first)
     headers = [header for header, _, _ in read]
     columns = [column for _, _, column in read]
     renamed_by_breaks = [index for index, (_, broken, _) in enumerate(read) if broken]
@@ -2890,7 +2936,7 @@ def _build(
         more = ", …" if len(respelled) > MAX_NAMED_FIELDS else ""
         warnings.append(
             f"{_count(total, 'number')} {RESPELLED} (trailing zeros, exponent or plus sign dropped, "
-            f"such as 1.50 as 1.5 or 1e3 as 1000.0) in {named}{more}"
+            f"such as 1.50 as 1.5 or 1e3 as 1000) in {named}{more}"
         )
 
     full = _finish(columns, source_format, warnings, text_columns)
@@ -3025,41 +3071,45 @@ def _without_empty_columns(
     return [entry for index, entry in enumerate(read) if index not in gone]
 
 
-ROW_NAME_HEADERS = frozenset(("", "Unnamed: 0", "...1"))
-"""The headers a tool gives the row-name or index column it writes first: R's `write.csv` (an empty name),
-pandas' `to_csv` of an unnamed index (empty; `Unnamed: 0` after a round trip through `read_csv`) and readr's
-`read_csv` of such a file (`...1`). No person names a column so."""
+ROW_NAME_SHAPES: dict[str, int] = {"": 1, "...1": 1, "Unnamed: 0": 0}
+"""The header a tool gives the row-name column it writes first, and the number its rows start at: R's
+`write.csv` (an empty name, `1` to `n`), readr's `read_csv` of such a file (`...1`, `1` to `n`) and pandas'
+`read_csv` of a frame written with its index (`Unnamed: 0`, `0` to `n - 1`). No person names a column so. An
+empty header over `0` to `n - 1` (pandas' `to_csv` itself, or a step column someone left unnamed) stays: it
+may be data, and `bindings.row_number_columns` keeps it from every default binding instead (review of #12200)."""
 _DELIMITED: frozenset[SourceFormat] = frozenset(("csv", "tsv", "semicolon", "pipe", "whitespace"))
 
 
-def _without_row_names(read: list[tuple[str, bool, _Column]], warnings: list[str]) -> list[tuple[str, bool, _Column]]:
+def _without_row_names(
+    read: list[tuple[str, bool, _Column]], warnings: list[str], first: _Column | None
+) -> list[tuple[str, bool, _Column]]:
     """The pasted columns without a leading row-name column that only numbers the rows, with one warning.
 
     R's `write.csv` writes the row names first under an empty header (`"","species",...`,
-    then `"1","Chinstrap",...`), and pandas' `to_csv` writes its index so (live test round
-    5 of 2026-10-15: the column became `column_1`, typed integer, and the default x of a
-    scatter plot). The first column leaves the table when its header is one of
-    `ROW_NAME_HEADERS` and its cells are exactly the row positions in order, `1` to `n` or
-    `0` to `n - 1`, at least two rows, and another column remains. It holds nothing but the
-    row order, which the table keeps: the warning names it and counts its cells (owner rule
-    of 2026-10-15, a change is said with its count). A first column under such a header that
-    holds anything else (row names such as car models, positions after a filter, `3`, `7`,
-    `12`) is data and stays, named `column_1`. A column named `X` (R's `read.csv` of such a
-    file) or `index` stays too: a person may name an x coordinate or an index so.
+    then `"1","Chinstrap",...`; live test round 5 of 2026-10-15: the column became
+    `column_1`, typed integer, and the default x of a scatter plot). The column leaves the
+    table when it is the text's own first column (`first`), its header and its numbers are
+    one tool's shape (`ROW_NAME_SHAPES`), its cells are exactly the row positions in order, at
+    least two rows, and another column remains. It holds nothing but the row order, which the
+    table keeps: the warning names it and counts its cells (owner rule of 2026-10-15, a
+    change is said with its count). Any other first column stays: row names such as car
+    models, positions after a filter, an empty header over `0` to `n - 1`, and a column
+    named `X` (R's `read.csv` of such a file) or `index`, which a person may name so; the
+    default bindings pass over those (`bindings.row_number_columns`, owner decision of
+    2026-10-15). It runs on a paste, the text of a converted file included, but not on a
+    confirmed transcription, whose every column the user has seen (`find_table=False`).
     """
-    if len(read) < 2:
+    if len(read) < 2 or first is None or read[0][2] is not first:
         return read
     header, _, column = read[0]
     cells = column.source
-    if header not in ROW_NAME_HEADERS or len(cells) < 2 or cells[0] not in ("0", "1"):
-        return read
-    first = int(cells[0])
-    if any(cell != str(first + offset) for offset, cell in enumerate(cells)):
+    start = ROW_NAME_SHAPES.get(header)
+    if start is None or len(cells) < 2 or any(cell != str(start + offset) for offset, cell in enumerate(cells)):
         return read
     named = f"'{header}'" if header else "without a header"
     warnings.append(
-        f"left out the first column ({named}): its {_count(len(cells), 'cell')} only number the rows "
-        f"{first} to {first + len(cells) - 1} in order, as R's write.csv or pandas' to_csv write row names"
+        f"left out the column {named}: its {_count(len(cells), 'cell')} only number the rows "
+        f"{start} to {start + len(cells) - 1} in order, as R's write.csv or pandas' index write row names"
     )
     return read[1:]
 

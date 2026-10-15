@@ -8,6 +8,7 @@ The parser types a column whose every cell carries the same unit at the paste (`
 import csv
 import io
 import random
+from decimal import Decimal
 from typing import Any
 
 import pandas as pd
@@ -58,9 +59,9 @@ SALES = (
 SALES_CSV = (
     "Datum,Tier,Anteil,Umsatz\n"
     '2024-01-05,Hund,"12,5 %",1200.5\n'
-    "2024-01-20,Katze,7,800.0\n"
+    "2024-01-20,Katze,7,800\n"
     "2024-02-14,Hund,30 %,300.25\n"
-    "2024-02-28,Katze,,150.0\n"
+    "2024-02-28,Katze,,150\n"
     '2024-03-15,Hund,"50,5 %",999.75\n'
     "2024-03-31,Gesamt,100 %,3450.5\n"
 )
@@ -205,7 +206,8 @@ class TestFixture:
         assert parsed.profile.decimal == ","
         # No unit moved into a name (the bare `7` keeps `Anteil` text); only the spelling line for `1.234,50` and the like.
         assert [warning for warning in parsed.warnings if RESPELLED not in warning] == []
-        assert parsed.warnings[0].startswith(f"4 numbers {RESPELLED}")
+        # `1.200,50` and `3.450,50` drop a written zero; `800,00` as `800` is the same whole number, no note.
+        assert parsed.warnings[0].startswith(f"2 numbers {RESPELLED}")
 
 
 class TestRename:
@@ -298,8 +300,8 @@ class TestDropRows:
         kept_by_ne = prepare(SALES, drop("Anteil", "ne", "7"))
         kept_by_contains = prepare(SALES, drop("Anteil", "contains", "%"))
 
-        assert rows(kept_by_ne)[1:] == ["2024-01-20,Katze,7,800.0", "2024-02-28,Katze,,150.0"]
-        assert rows(kept_by_contains)[1:] == ["2024-01-20,Katze,7,800.0", "2024-02-28,Katze,,150.0"]
+        assert rows(kept_by_ne)[1:] == ["2024-01-20,Katze,7,800", "2024-02-28,Katze,,150"]
+        assert rows(kept_by_contains)[1:] == ["2024-01-20,Katze,7,800", "2024-02-28,Katze,,150"]
 
     def test_boolean_columns(self) -> None:
         text = "flag,v\ntrue,1\nfalse,2\n,3\n"
@@ -673,7 +675,7 @@ class TestAggregate:
             "Tier,Datum,Umsatz",
             "Gesamt,2024-Q1,3450.5",
             "Hund,2024-Q1,833.5",
-            "Katze,2024-Q1,475.0",
+            "Katze,2024-Q1,475",
         ]
         assert prepared.changes == ["averaged Umsatz by Tier and Datum (quarter): 3 rows, 1 other column dropped"]
 
@@ -683,7 +685,7 @@ class TestAggregate:
         )
         maximum = prepare(SALES, {"op": "aggregate", "by": ["Datum"], "column": "Tier", "how": "max", "period": "year"})
 
-        assert rows(minimum) == ["Datum,Umsatz", "2024,150.0"]
+        assert rows(minimum) == ["Datum,Umsatz", "2024,150"]
         assert rows(maximum) == ["Datum,Tier", "2024,Katze"]
         assert minimum.changes == ["took the minimum of Umsatz by Datum (year): 1 row, 2 other columns dropped"]
         assert maximum.changes[0].startswith("took the maximum of Tier by Datum (year)")
@@ -730,14 +732,14 @@ class TestSort:
     def test_descending(self) -> None:
         prepared = prepare(SALES, {"op": "sort", "column": "Umsatz", "descending": True})
 
-        assert cells(prepared, 3) == ["3450.5", "1200.5", "999.75", "800.0", "300.25", "150.0"]
+        assert cells(prepared, 3) == ["3450.5", "1200.5", "999.75", "800", "300.25", "150"]
         assert prepared.changes == ["sorted by Umsatz, descending"]
 
     def test_ascending_is_stable_with_missing_cells_last(self) -> None:
         prepared = prepare(SALES, {"op": "sort", "column": "Anteil"})
 
         assert cells(prepared, 1) == ["Gesamt", "Hund", "Hund", "Hund", "Katze", "Katze"]
-        assert rows(prepared)[-1] == "2024-02-28,Katze,,150.0"
+        assert rows(prepared)[-1] == "2024-02-28,Katze,,150"
         assert prepared.changes == ["sorted by Anteil, ascending"]
 
     def test_unknown_column(self) -> None:
@@ -1681,7 +1683,11 @@ class TestFidelity:
         again = reparse(prepared)
         frame = pd.read_csv(io.StringIO(again.csv), float_precision="round_trip", dtype={"n": "Int64"})
 
-        assert sorted(cells(prepared, 1)) == sorted(repr(value) for value in values)
+        # The shortest round-trip text, a whole number below 2**53 without `.0` (owner decision of 2026-10-15).
+        canonical = [
+            repr(value)[:-2] if repr(value).endswith(".0") and abs(value) < 2**53 else repr(value) for value in values
+        ]
+        assert sorted(cells(prepared, 1)) == sorted(canonical)
         assert sorted(frame["v"].tolist()) == sorted(values) and sorted(frame["n"].tolist()) == whole
         assert again.warnings == []
 
@@ -1892,10 +1898,10 @@ class TestTimeBuckets:
 
         assert rows(prepared) == [
             "timestamp,sensor,temp_c",
-            "2026-01-04,S1,10.0",
-            "2026-01-05,S1,12.0",
-            "2026-01-05,S2,20.0",
-            "2026-01-06,S2,22.0",
+            "2026-01-04,S1,10",
+            "2026-01-05,S1,12",
+            "2026-01-05,S2,20",
+            "2026-01-06,S2,22",
         ]
         assert prepared.changes == ["averaged temp_c by timestamp and sensor (day): 4 rows"]
         assert dtypes(prepared)["timestamp"] == "datetime"  # a date axis, never text labels
@@ -1903,7 +1909,7 @@ class TestTimeBuckets:
     def test_iso_weeks_start_on_monday(self) -> None:
         prepared = prepare(READINGS, per_period("week", "max", ("timestamp",)))
 
-        assert rows(prepared) == ["timestamp,temp_c", "2025-12-29,10.0", "2026-01-05,22.0"]
+        assert rows(prepared) == ["timestamp,temp_c", "2025-12-29,10", "2026-01-05,22"]
         assert prepared.changes == [
             "took the maximum of temp_c by timestamp (ISO week, each as its Monday): 2 rows, 1 other column dropped"
         ]
@@ -1954,55 +1960,61 @@ class TestWholeNumberForms:
         assert prepared.changes == ["pivoted 2 columns into Quarter/value: 4 rows"]
         assert reparse(prepared).csv == prepared.csv
 
-    def test_a_column_written_with_dot_zero_keeps_it(self) -> None:
-        text = "k,v\na,2.0\nb,1.5\nc,3.0\n"
-        prepared = prepare(text, {"op": "sort", "column": "v"}, {"op": "rename", "column": "v", "name": "w"})
+    def test_a_whole_number_is_written_without_dot_zero_through_every_operation(self) -> None:
+        """Owner decision of 2026-10-15: `30` and `30.0` are the same number; one canonical form, no note."""
+        text = "k,a,b\nx,2.0,1.5\ny,3.5,7\n"
+        melted = prepare(text, {"op": "pivot_longer", "columns": ["a", "b"]})
+        sorted_ = prepare(text, {"op": "sort", "column": "a"}, {"op": "rename", "column": "a", "name": "w"})
+        typed = prepare(text, {"op": "set_type", "column": "a", "type": "text"})
 
-        assert cells(prepared, 1) == ["1.5", "2.0", "3.0"]
+        assert cells(melted, 2) == ["2", "3.5", "1.5", "7"]
+        assert melted.changes == ["pivoted 2 columns into series/value: 4 rows"]
+        assert cells(sorted_, 1) == ["2", "3.5"]
+        assert cells(typed, 1) == ["2", "3.5"]
 
-    def test_each_melted_cell_keeps_its_columns_form(self) -> None:
-        prepared = prepare("k,a,b\nx,2.0,1.5\ny,3.5,7\n", {"op": "pivot_longer", "columns": ["a", "b"]})
+    def test_a_whole_number_past_2_53_keeps_its_dot_zero(self) -> None:
+        """Past 2**53 a float may hold a whole number only rounded: its `.0` stays, and a change line counts it."""
+        prepared = prepare(f"k,a,b\nx,{2**60},1.5\n", {"op": "pivot_longer", "columns": ["a", "b"]})
 
-        assert cells(prepared, 2) == ["2.0", "3.5", "1.5", "7"]
-        assert prepared.changes == ["pivoted 2 columns into series/value: 4 rows"]
+        assert cells(prepared, 2) == [repr(float(2**60)), "1.5"]
 
-    def test_one_number_written_both_ways_takes_one_form_and_is_counted(self) -> None:
-        prepared = prepare("k,a,b\nx,2.0,2\ny,1.5,3.5\n", {"op": "pivot_longer", "columns": ["a", "b"]})
-
-        assert cells(prepared, 2) == ["2", "1.5", "2", "3.5"]
-        assert prepared.changes == [
-            "pivoted 2 columns into series/value: 4 rows, 1 whole number that the columns wrote both with and "
-            "without '.0' written without it"
+    @pytest.mark.parametrize("seed", [1, 2, 3])
+    def test_no_value_is_ever_rounded_silently_by_an_operation_that_moves_it(self, seed: int) -> None:
+        """Owner decision of 2026-10-15: only the spelling of a whole number may change, never a value unsaid. Every
+        number up to 15 significant digits, whole or not, comes out of the operations that move or reshape cells
+        with its exact value, and a whole number without `.0`."""
+        generator = random.Random(seed)
+        values = [
+            str(round(generator.uniform(-1e6, 1e6), generator.randint(0, 8))) if index % 4 else str(index * 1000)
+            for index in range(1, 81)
         ]
-
-    def test_wide_columns_take_the_form_of_their_values(self) -> None:
-        long = "Monat,series,value\nJan,a,2.0\nJan,b,1.5\nFeb,a,3.5\nFeb,b,4.0\n"
-        prepared = prepare(
-            long, {"op": "pivot_wider", "names_from": "series", "values_from": "value", "index": ["Monat"]}
-        )
-
-        assert rows(prepared)[1:] == ["Feb,3.5,4.0", "Jan,2.0,1.5"]
-
-    def test_set_type_text_keeps_the_written_form(self) -> None:
-        prepared = prepare("k,v\na,2.0\nb,1.5\nc,87000\n", {"op": "set_type", "column": "v", "type": "text"})
-
-        assert cells(prepared, 1) == ["2.0", "1.5", "87000"]
-
-    def test_one_number_written_both_ways_in_one_column_is_said(self) -> None:
-        """Copilot review of #12200: a cell carries no form of its own through a sort, so the change is counted."""
-        prepared = prepare("k,v\na,2.0\nb,2\nc,1.5\n", {"op": "sort", "column": "k"})
-
-        assert cells(prepared, 1) == ["2", "2", "1.5"]
-        assert prepared.changes == [
-            "sorted by k, ascending, v wrote the same whole number both with and without '.0' (1 cell in the "
-            "other form), now written in one form"
+        rows_ = "".join(f"r{n},{values[2 * n]},{values[2 * n + 1]}\n" for n in range(40))
+        text = "k,a,b\n" + rows_
+        operations: list[list[dict[str, Any]]] = [
+            [{"op": "pivot_longer", "columns": ["a", "b"]}],
+            [{"op": "sort", "column": "b", "descending": True}],
+            [{"op": "rename", "column": "a", "name": "c"}],
+            [drop("a", "gt", "0")],
+            [{"op": "set_type", "column": "b", "type": "text"}],
+            [
+                {"op": "pivot_longer", "columns": ["a", "b"]},
+                {"op": "pivot_wider", "names_from": "series", "values_from": "value", "index": ["k"]},
+            ],
         ]
-
-    def test_contains_searches_the_text_as_written(self) -> None:
-        """Copilot review of #12200: `contains` searched `2` where `data.csv` writes `2.0`."""
-        text = "k,v\na,2.0\nb,1.5\nc,3.0\n"
-        dropped = prepare(text, drop("v", "contains", ".0"))
-        classified = prepare(text, classify("whole", ([{"column": "v", "test": "contains", "value": ".0"}], "y")))
-
-        assert rows(dropped) == ["k,v", "b,1.5"]
-        assert cells(classified, 2) == ["y", "", "y"]
+        expected = {Decimal(value) for value in values}
+        for ops in operations:
+            prepared = prepare(text, *ops)
+            numbers = [
+                cell
+                for row in csv.reader(io.StringIO(prepared.csv))
+                for cell in row[1:]
+                if cell and cell[0] in "-0123456789"
+            ]
+            assert numbers, ops
+            for cell in numbers:
+                if cell in ("a", "b"):
+                    continue
+                assert Decimal(cell) in expected, (ops, cell)  # the exact value, never a rounded one
+                if Decimal(cell) == Decimal(cell).to_integral_value():
+                    assert "." not in cell and "e" not in cell, (ops, cell)  # a whole number without `.0`
+            assert not any("rounded" in change or "decimal numbers" in change for change in prepared.changes), ops

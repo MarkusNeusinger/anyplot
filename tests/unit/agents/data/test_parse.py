@@ -563,7 +563,9 @@ class TestTableAmongOtherLines:
         assert parsed.profile.rows == 4
         assert parsed.profile.warnings == [
             "left out 2 lines above the table (a title, notes or metadata)",
-            *respelled_warning(4, "precipitation_sum (mm)"),  # `0.00` is written `0.0`
+            # `0.00` as `0` is the same whole number and needs no note (owner decision of 2026-10-15); `1.20` as
+            # `1.2` drops a written zero of a fraction and is counted.
+            *respelled_warning(2, "precipitation_sum (mm)"),
         ]
 
     def test_a_comment_above_and_below_also_with_commas(self) -> None:
@@ -579,7 +581,7 @@ class TestTableAmongOtherLines:
         assert parsed.profile.warnings == [
             "left out 3 lines above the table (a title, notes or metadata)",
             "left out 1 line below the table (notes or a source line)",
-            *respelled_warning(4, "precipitation_sum (mm)"),
+            *respelled_warning(2, "precipitation_sum (mm)"),
         ]
 
     def test_a_sentence_below_the_table_that_its_commas_split_into_the_tables_width(self) -> None:
@@ -892,7 +894,7 @@ class TestUnits:
             (["1.234,56 €", "7,5 €"], "v (€)", "number", ["1234.56", "7.5"]),
             (["$ 3", "-$ 2.5", "$-1"], "v ($)", "number", ["3", "-2.5", "-1"]),
             (["12‰"], "v (‰)", "integer", ["12"]),
-            (["2E-2 h", "1e3h"], "v (h)", "number", ["0.02", "1000.0"]),
+            (["2E-2 h", "1e3h"], "v (h)", "number", ["0.02", "1000"]),
             (["5 km/h"], "v", "text", ["5 km/h"]),
             (["5 metre"], "v", "text", ["5 metre"]),
             (["-$-1"], "v", "text", ["-$-1"]),
@@ -1040,7 +1042,7 @@ class TestTyping:
             (["9223372036854775808"], "text", ["9223372036854775808"]),
             (["007", "12"], "text", ["007", "12"]),
             (["0", "-0"], "integer", ["0", "0"]),
-            (["1.5", ".5", "1e3", "2E-2", "3."], "number", ["1.5", "0.5", "1000.0", "0.02", "3.0"]),
+            (["1.5", ".5", "1e3", "2E-2", "3."], "number", ["1.5", "0.5", "1000", "0.02", "3"]),
             (["1e999"], "text", ["1e999"]),
             ([ARABIC_12], "text", [ARABIC_12]),
             (["1_000"], "text", ["1_000"]),
@@ -1944,7 +1946,7 @@ class TestSpaceAlignedTables:
         assert "Max Temp: °C" in parsed.context_lines
         assert f"Missing values: {mark}" in parsed.context_lines
         assert warned(parsed, "left out 9 lines above the table")
-        assert parsed.csv.splitlines()[:3] == ["Year,Month,Max Temp,Precipitation", "1901,1,-4.2,31.5", "1901,2,-1.0,"]
+        assert parsed.csv.splitlines()[:3] == ["Year,Month,Max Temp,Precipitation", "1901,1,-4.2,31.5", "1901,2,-1,"]
 
     def test_a_declared_mark_that_reads_as_a_number_is_missing_with_a_warning(self) -> None:
         parsed = parse_dataset(STATION_EXPORT.format(mark="-999"))
@@ -2024,7 +2026,7 @@ class TestSpaceAlignedTables:
             "Anteil": "number",
             "Stichtag": "datetime",
         }
-        assert parsed.csv.splitlines()[3] == "Ost Mitte,2001002,30.0,2024-03-01"
+        assert parsed.csv.splitlines()[3] == "Ost Mitte,2001002,30,2024-03-01"
 
     def test_a_timestamp_with_one_inner_space_stays_one_cell(self) -> None:
         text = "Zeit                Wert\n2024-01-01 12:00     5\n2024-01-01 13:00     7\n2024-01-01 14:00     6\n"
@@ -2477,15 +2479,26 @@ def same_value(written: str, cell: str) -> bool:
 
 
 def spelling_lost(written: str, cell: str) -> bool:
-    """Oracle for the spelling count: the canonical cell drops trailing fraction zeros, a plus sign or the notation."""
+    """Oracle for the spelling count: the canonical cell drops trailing fraction zeros, a plus sign or the notation;
+    a whole number's fraction of zeros (`2.0` as `2`) is no loss (owner decision of 2026-10-15)."""
     mantissa, _, exponent = written.lower().partition("e")
     cell_mantissa, _, cell_exponent = cell.partition("e")
     zeros = mantissa.partition(".")[2]
+    whole_zeros = bool(zeros) and not zeros.strip("0") and "." not in cell_mantissa
     return (
         bool(exponent) != bool(cell_exponent)
         or mantissa.startswith("+")
-        or (zeros.endswith("0") and len(zeros) > len(cell_mantissa.partition(".")[2]))
+        or (not whole_zeros and zeros.endswith("0") and len(zeros) > len(cell_mantissa.partition(".")[2]))
     )
+
+
+def canonical_number(text: str) -> str:
+    """Oracle for a number cell's canonical text: the shortest round-trip `repr`, without `.0` for a whole number
+    the float holds exactly below 2**53 (owner decision of 2026-10-15: `30` and `30.0` are the same number)."""
+    value = float(text)
+    shortest = repr(value)
+    exact = Decimal(text) == Decimal(shortest)
+    return shortest[:-2] if shortest.endswith(".0") and abs(value) < 2**53 and exact else shortest
 
 
 def respelled_warning(count: int, columns: str = "v") -> list[str]:
@@ -2494,7 +2507,7 @@ def respelled_warning(count: int, columns: str = "v") -> list[str]:
     noun = "number" if count == 1 else "numbers"
     return [
         f"{count} {noun} {RESPELLED} (trailing zeros, exponent or plus sign dropped, such as 1.50 as 1.5 or 1e3 "
-        f"as 1000.0) in {columns}"
+        f"as 1000) in {columns}"
     ]
 
 
@@ -2522,7 +2535,7 @@ class TestFidelity:
             assert (lost > 0) == (name != "json"), name
             assert parsed.warnings == respelled_warning(lost), name
             assert all(same_value(written, cell) for written, cell in zip(texts, canonical, strict=True)), name
-            assert canonical == [repr(float(text)) for text in texts], name
+            assert canonical == [canonical_number(text) for text in texts], name
             assert read_back(parsed)["v"].tolist() == [float(text) for text in texts], name
 
     @pytest.mark.parametrize(
@@ -2552,15 +2565,15 @@ class TestFidelity:
             "are stored rounded to the nearest number",
             *respelled_warning(respelled),
         ]
-        assert canonical == [repr(float(text)) for text in texts]  # the nearest float, never fewer digits
+        assert canonical == [canonical_number(text) for text in texts]  # the nearest float, never fewer digits
 
     def test_a_spelling_that_was_not_kept_is_counted_in_one_line(self) -> None:
         """Owner decision of 2026-10-15: the value is enough, but the user hears that the spelling went."""
         parsed = parse_dataset("a,b,c\n1.50,+3,2\n1e3,-0,.5\n2.0,4,1e-7\n")
 
-        # `1.50`, `1e3`; `+3`, `-0`. What the canonical form only adds (`.5` as `0.5`, `1e-07`) is no loss, and a
-        # whole number written without a fraction keeps that form beside decimals (`2`, live test round 5).
-        assert parsed.csv == "a,b,c\n1.5,3,2\n1000.0,0,0.5\n2.0,4,1e-07\n"
+        # `1.50`, `1e3`; `+3`, `-0`. What the canonical form only adds (`.5` as `0.5`, `1e-07`) is no loss, and
+        # neither is a whole number's `.0` (`2.0` as `2`: the same number, owner decision of 2026-10-15).
+        assert parsed.csv == "a,b,c\n1.5,3,2\n1000,0,0.5\n2,4,1e-07\n"
         assert parsed.warnings == respelled_warning(4, "a, b")
 
     def test_nanoseconds_beside_a_date_outside_1677_to_2262_stay_text_with_a_note(self) -> None:
@@ -2598,7 +2611,7 @@ class TestFidelity:
     def test_a_subnormal_or_underflowing_number_is_warned_too(self) -> None:
         parsed = parse_dataset("v\n1.2345678901e-320\n1e-400\n5e-324\n0.000\n")
 
-        assert parsed.csv == "v\n1.2347e-320\n0.0\n5e-324\n0.0\n"
+        assert parsed.csv == "v\n1.2347e-320\n0.0\n5e-324\n0\n"  # `1e-400` rounded to 0 keeps the `.0` that shows it
         assert warned(parsed, "column 'v': 2 values with more significant digits")
 
     def test_whole_numbers_are_exact_to_the_int64_limits_and_text_beyond(self) -> None:
@@ -2656,12 +2669,13 @@ class TestFidelity:
 
         assert aligned.csv == "Ort,Wert\nZürich,1\nBern,2\nBasel,3\n" and aligned.warnings == []
 
-    def test_a_whole_number_beside_decimals_keeps_its_form(self) -> None:
-        """Live test round 5 of 2026-10-15: Excel's `87000` beside `120500.5` showed as `87000.0`."""
+    def test_a_whole_number_beside_decimals_is_written_without_dot_zero(self) -> None:
+        """Live test round 5 of 2026-10-15: Excel's `87000` beside `120500.5` showed as `87000.0`. Owner decision of
+        that day: a whole number is written without `.0` whatever form it came in, and needs no note."""
         parsed = parse_dataset("Filiale,Umsatz\nZürich,120500.5\nBasel,87000\nBern,2.0\n")
 
         assert parsed.column_dtypes["Umsatz"] == "number"
-        assert parsed.csv.splitlines()[1:] == ["Zürich,120500.5", "Basel,87000", "Bern,2.0"]
+        assert parsed.csv.splitlines()[1:] == ["Zürich,120500.5", "Basel,87000", "Bern,2"]
         assert parsed.warnings == []
         assert read_back(parsed)["Umsatz"].tolist() == [120500.5, 87000.0, 2.0]
         # The canonical CSV reads back the same: the form survives every later version's re-parse.
@@ -2847,6 +2861,50 @@ class TestTables:
         text = "Land,Hauptstadt,Fläche\nCH,Bern,41285\nDE,Berlin,357588\n\nLand,2020,2021\nCH,1,2\nDE,3,4\n"
         assert parse_dataset(text, table=2).csv == "Land,2020,2021\nCH,1,2\nDE,3,4\n"
 
+    @pytest.mark.parametrize(
+        "text",
+        [
+            # Fable and Gemini review of #12200: a blank row inside one table, then a row that looks like a header.
+            "City,1900,1950,2000\nZürich,150,390,363\nGeneva,97,145,177\n\nBern,1500,1850,2040\nBasel,110,183,166\n"
+            "Luzern,29,60,57\n",
+            "Land,Gründung,Beitritt\nFrance,1789,1958\nItaly,1861,1958\n\nSwitzerland,1848,2002\nAustria,1918,1995\n"
+            "Norway,1905,1994\n",
+            "Name,Start,End\nAlpha,2019,2020\nBeta,2020,2022\n\nGamma,2021,2023\nDelta,2022,2024\nEpsilon,2023,2025\n",
+            "Feature,Plan,Price\nStorage,Basic,10\nBackup,Pro,20\n\nSupport,Service,Included\nTraining,Pro,30\n"
+            "Hosting,Basic,15\n",
+        ],
+    )
+    def test_a_blank_row_inside_one_table_never_splits_it(self, text: str) -> None:
+        parsed = parse_dataset(text)
+
+        assert parsed.tables == []
+        assert not any("tables" in warning for warning in parsed.warnings)
+
+    def test_years_that_do_not_run_forward_are_no_header(self) -> None:
+        assert not parse_module._header_line(["Bern", "2040", "1850"])
+        assert parse_module._header_line(["Land", "2020", "2021"])
+
+    def test_a_later_table_never_meets_the_lines_above_the_first_one(self) -> None:
+        """Gemini review of #12200: an export's metadata above the first table must not become the second's rows,
+        and the first table's own caption is no note of the second."""
+        text = (
+            "latitude,longitude,elevation\n47.37,8.55,408\n\nRevenue\nBranch,Q1,Q2\nNorth,1.5,2.5\nSouth,3.5,4.5\n\n"
+            "Staff\nBranch,Staff,Floor\nNorth,24,450\nSouth,18,380\n"
+        )
+        first = parse_dataset(text)
+        second = parse_dataset(text, table=2)
+
+        assert first.csv == "Branch,Q1,Q2\nNorth,1.5,2.5\nSouth,3.5,4.5\n"
+        assert first.tables == ["Branch, Q1, Q2 · 2 rows", "Branch, Staff, Floor · 2 rows"]
+        assert first.context_lines == ["latitude, longitude, elevation", "47.37, 8.55, 408", "Revenue"]
+        assert second.csv == "Branch,Staff,Floor\nNorth,24,450\nSouth,18,380\n"
+        assert second.context_lines == ["latitude, longitude, elevation", "47.37, 8.55, 408", "Staff"]
+        assert "left out 3 lines above the table (a title, notes or metadata)" in second.warnings
+
+    def test_a_table_number_below_one_is_a_callers_error(self) -> None:
+        with pytest.raises(ValueError):
+            parse_dataset(REPORT, table=0)
+
     def test_tables_past_the_cap_keep_their_boundaries(self) -> None:
         """Copilot review of #12200: the eleventh table had joined the tenth, its header a data row."""
         text = "\n".join(f"a,b\nx{n},{n}\ny{n},{n + 0.5}\n" for n in range(11))
@@ -2875,44 +2933,48 @@ class TestRowNames:
 
         assert list(parsed.column_dtypes) == ["species", "bill_length_mm", "body_mass_g", "sex"]
         assert parsed.warnings == [
-            "left out the first column (without a header): its 3 cells only number the rows 1 to 3 in order, as R's "
-            "write.csv or pandas' to_csv write row names",
+            "left out the column without a header: its 3 cells only number the rows 1 to 3 in order, as R's "
+            "write.csv or pandas' index write row names",
             "column 'bill_length_mm': 1 cell read as missing ('NA')",
             "column 'body_mass_g': 1 cell read as missing ('NA')",
             "column 'sex': 1 cell read as missing ('NA')",
         ]
         assert parsed.csv.splitlines()[1] == "Adelie,39.1,3750,male"
-        assert parsed.csv.splitlines()[3] == "Chinstrap,40.0,3800,female"  # `40.0` as written
+        assert parsed.csv.splitlines()[3] == "Chinstrap,40,3800,female"  # the same number as `40.0`
 
     def test_the_row_names_never_become_the_default_x(self) -> None:
-        roles = [
-            DataRole(name="x", kinds=("numeric",), required=True, variadic=False, description="x values"),
-            DataRole(name="y", kinds=("numeric",), required=True, variadic=False, description="y values"),
-        ]
         bindings = {
-            binding.role: binding.column for binding in default_bindings(roles, parse_dataset(R_EXPORT).profile)
+            binding.role: binding.column for binding in default_bindings(XY_ROLES, parse_dataset(R_EXPORT).profile)
         }
 
         assert bindings["x"] != "column_1" and "column_1" not in bindings.values()
 
-    @pytest.mark.parametrize("header", ["", "Unnamed: 0", "...1"])
-    def test_pandas_and_readr_indexes_from_zero_or_one_leave_too(self, header: str) -> None:
-        zero = parse_dataset(f'"{header}",a,b\n0,x,1.5\n1,y,2.5\n2,z,3.5\n')
-        one = parse_dataset(f'"{header}",a,b\n1,x,1.5\n2,y,2.5\n')
+    @pytest.mark.parametrize(
+        ("header", "start"),
+        [("", 1), ("...1", 1), ("Unnamed: 0", 0)],  # R and readr from 1, pandas' index from 0
+    )
+    def test_each_tools_exact_shape_leaves(self, header: str, start: int) -> None:
+        rows = "".join(f"{start + n},{letter},{n + 1.5}\n" for n, letter in enumerate("xyz"))
+        parsed = parse_dataset(f'"{header}",a,b\n{rows}')
 
-        assert list(zero.column_dtypes) == list(one.column_dtypes) == ["a", "b"]
-        assert "the rows 0 to 2 in order" in zero.warnings[0]
+        assert list(parsed.column_dtypes) == ["a", "b"]
+        assert f"the rows {start} to {start + 2} in order" in parsed.warnings[0]
+        named = f"'{header}'" if header else "without a header"
+        assert parsed.warnings[0].startswith(f"left out the column {named}:")
 
     @pytest.mark.parametrize(
         "text",
         [
             '"",a\n3,x\n7,y\n12,z\n',  # row names after a filter: data
             '"",a\nMazda RX4,1\nDatsun 710,2\n',  # row names that are names
-            "X,a\n1,x\n2,y\n",  # a column a person may call X
+            '"",a\n0,x\n1,y\n2,z\n',  # an empty header from 0: maybe a step column (review of #12200)
+            '"Unnamed: 0",a\n1,x\n2,y\n',  # pandas counts from 0
+            "X,a\n1,x\n2,y\n",  # R's `read.csv` name: kept, but never a default binding
             "index,a\n0,x\n1,y\n",
             '"",a\n1,x\n',  # one row: no evidence of an order
             '"",a\n01,x\n02,y\n',  # zero-padded: a code, not a position
             "a,\nx,1\ny,2\n",  # an empty header that is not the first column
+            ',"",a\n,1,x\n,2,y\n',  # not the text's own first column: an empty one went before it
         ],
     )
     def test_anything_else_stays_a_column(self, text: str) -> None:
@@ -2921,7 +2983,35 @@ class TestRowNames:
         assert not any("number the rows" in warning for warning in parsed.warnings)
         assert len(parsed.column_dtypes) == 2
 
-    def test_a_canonical_re_parse_keeps_every_column(self) -> None:
-        parsed = parse_dataset('"",a\n1,x\n2,y\n', canonical=True, find_table=False)
+    def test_a_canonical_re_parse_or_a_confirmed_transcription_keeps_every_column(self) -> None:
+        canonical = parse_dataset('"",a\n1,x\n2,y\n', canonical=True, find_table=False)
+        confirmed = parse_dataset('"",a\n1,x\n2,y\n', find_table=False)
 
-        assert list(parsed.column_dtypes) == ["column_1", "a"]
+        assert list(canonical.column_dtypes) == list(confirmed.column_dtypes) == ["column_1", "a"]
+
+    @pytest.mark.parametrize(
+        "text",
+        [
+            "X,height,weight\n1,170,65.5\n2,182,80.1\n3,165,58.0\n",  # R's `read.csv` of a `write.csv` file
+            '"",height,weight\n0,170,65.5\n1,182,80.1\n2,165,58.0\n',  # pandas' `to_csv` with its index
+        ],
+    )
+    def test_kept_row_numbers_take_no_default_binding_while_another_column_fits(self, text: str) -> None:
+        """Owner decision of 2026-10-15: the column stays, but x is a measure, never the row number."""
+        parsed = parse_dataset(text)
+        bindings = {binding.role: binding.column for binding in default_bindings(XY_ROLES, parsed.profile)}
+
+        assert len(parsed.column_dtypes) == 3
+        assert bindings == {"x": "height", "y": "weight"}
+
+    def test_row_numbers_still_bind_when_nothing_else_fits(self) -> None:
+        parsed = parse_dataset("X,weight\n1,65.5\n2,80.1\n3,58.0\n")
+        bindings = {binding.role: binding.column for binding in default_bindings(XY_ROLES, parsed.profile)}
+
+        assert sorted(bindings.values()) == ["X", "weight"]
+
+
+XY_ROLES = [
+    DataRole(name="x", kinds=("numeric",), required=True, variadic=False, description="x values"),
+    DataRole(name="y", kinds=("numeric",), required=True, variadic=False, description="y values"),
+]

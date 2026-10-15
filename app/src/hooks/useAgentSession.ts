@@ -604,6 +604,9 @@ function withDataVersion(
     dataset: {
       parsed: { ...parsed, roles, version: versionOf(parsed.version) },
       bytes: state.dataset?.bytes ?? 0,
+      // The paste stays with every version made from it (Fable review of #12200); the picker itself shows only
+      // beside an answer that names `tables`, which only the paste route gives.
+      ...(state.dataset?.paste ? { paste: state.dataset.paste } : {}),
     },
     roles,
     bindings,

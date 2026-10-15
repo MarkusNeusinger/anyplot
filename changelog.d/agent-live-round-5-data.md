@@ -13,12 +13,12 @@
 
 ### Fixed
 
-- **R and pandas row names no longer become a column.** A first column under an empty header
-  (R's `write.csv`, pandas' `to_csv`), `Unnamed: 0` or `...1` whose cells only number the rows
-  `1` to `n` or `0` to `n - 1` leaves the table with a warning that counts its cells, so it is
-  never bound as the default x. (#12200)
+- **R and pandas row names no longer become the default x.** A first column in a tool's exact
+  row-name shape (R's empty header or readr's `...1` over `1` to `n`, pandas' `Unnamed: 0` over
+  `0` to `n - 1`) leaves the table with a warning that counts its cells; other row-number
+  columns such as R's `X` stay but take no default binding while another column fits. (#12200)
 - **Missing-value tokens are announced in every column.** `NA`, `-` or `n/a` read as missing in
   a number or date column now gets the same per-column count as in a text column. (#12200)
-- **Whole numbers keep the form they were written in.** `87000` beside `120500.5` stays `87000`
-  in the preview and in `data.csv` (it showed as `87000.0`), and the `prepare_data` operations
-  carry each whole number's form through a wide-to-long, a sort or a pivot. (#12200)
+- **Whole numbers are written without `.0`.** `87000` beside `120500.5` stays `87000` in the
+  preview and in `data.csv` (it showed as `87000.0`), and `prepare_data` writes every whole
+  number it moves or computes the same way; a rounded value keeps its note. (#12200)
