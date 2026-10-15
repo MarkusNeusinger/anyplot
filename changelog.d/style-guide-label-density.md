@@ -7,4 +7,4 @@
   label the extremes), and the VQ-03 rubric and the review's proportional
   sizing check deduct crowded per-mark labels in proportion. The agent's
   adapter now points at this one shared rule instead of carrying its own
-  copy.
+  copy (#12189).
