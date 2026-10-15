@@ -91,10 +91,22 @@ AXIS_WORDS: frozenset[str] = frozenset(
         *("wavelength", "wellenlänge", "wellenlaenge", "lambda", "distance", "abstand", "position"),
     }
 )
-"""Column-name words that say a number column is the independent variable of a curve (`zeit_s`, `Frequency (Hz)`).
+"""Column-name words that say a list column is the independent variable of a curve (`zeit_s`, `Frequency (Hz)`).
 
-An axis role (`is_axis`) ranks such a column first among the number columns (live test round 4 of
-2026-10-15: of `zeit_s` and `spannung_v`, the time is x whatever the column order)."""
+Only in a table expanded from JSON list fields (`DatasetProfile.list_columns`): an axis role (`is_axis`)
+ranks such a list column first (live test round 4 of 2026-10-15: of `zeit_s` and `spannung_v`, the time is x
+whatever the field order). An ordinary table keeps its column order (`speed_kmh, stopping_distance` keeps the
+speed on x; review of #12197)."""
+RECORD_KEY_WORDS: frozenset[str] = frozenset(
+    {
+        *("id", "record", "nr", "no", "num", "number", "nummer", "key", "idx", "index"),
+        *("kanal", "channel", "probe", "sample", "specimen", "run", "lauf", "trial", "versuch"),
+        *("curve", "kurve", "messung", "measurement", "series", "serie", "reihe"),
+    }
+)
+"""Column-name words that say a per-record number column numbers the records (`record_id`, `id`, `Kanal`) rather
+than measuring them: a required measure that must take a per-record value takes a parameter first (review of
+#12197: a bubble's size is the `weight`, not the `id`)."""
 
 _NOT_ALNUM = re.compile(r"[^0-9a-z]+")
 _CODE_VALUE = re.compile(r"[A-Z][A-Z0-9]{1,3}")
@@ -137,12 +149,14 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
        every other column, and an optional one never takes it; an axis (`is_axis`, `x`) avoids
        only constants and ranks years first, so a scatter of `Month, Temperature` keeps the
        month on x; a grouping role ranks a column of codes after its name column
-       (`_code_rank`; all since live test round 3 and its review of 2026-10-15). On a spec with
-       an x axis, the parameters of groups of records and the whole-number column that numbers
-       those groups (`group_parameters`: a curve's temperature and its `id`) are weak measures
-       and an axis avoids them too; after the years, an axis ranks a number column named like
-       an independent variable first (`AXIS_WORDS`: `zeit_s`, `Frequency (Hz)`; both since live
-       test round 4 of 2026-10-15). A variadic
+       (`_code_rank`; all since live test round 3 and its review of 2026-10-15). In a table
+       expanded from JSON list fields (`DatasetProfile.list_columns`) on a spec with an x axis,
+       the number columns that hold one value per record (`record_values`: a curve's
+       temperature, its `id`) are weak measures and an axis avoids them too, a measure that
+       must take one takes a parameter before a record number (`RECORD_KEY_WORDS`), and after
+       the years an axis ranks a list column named like an independent variable first
+       (`AXIS_WORDS`: `zeit_s`, `Frequency (Hz)`; all since live test round 4 of 2026-10-15
+       and the review of #12197; an ordinary table binds as before). A variadic
        family takes every unused tier-0 or tier-1 column that is no weak measure in column
        order, up to `MAX_VARIADIC_DEFAULT`; a required family that would stay empty takes the
        first weak one. A role the plot can compute (`DataRole.computed`, `data/computed.py`) is
@@ -163,9 +177,10 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
     single: dict[str, str] = {}
     family: dict[str, list[ColumnProfile]] = {role.name: [] for role in roles if role.variadic}
     families = [role for role in roles if role.variadic and role.kinds]
-    # A parameter of each group (a curve's temperature) is no point of a curve: on a spec with an x axis it
-    # ranks like a weak measure, for x too (live test round 4 of 2026-10-15).
-    per_group = group_parameters(profile) if any(is_axis(role) for role in roles if role.kinds) else set()
+    # A value per record of expanded JSON lists (a curve's temperature) is no point of the curve: on a spec with an
+    # x axis it ranks like a weak measure, for x too (live test round 4 of 2026-10-15). Ordinary tables: none.
+    per_group = record_values(profile) if any(is_axis(role) for role in roles if role.kinds) else set()
+    keys = {name for name in per_group if _record_key(name)}
     weak = weak_measures(profile) | per_group
     # A column of years named so is a time key, never a series of a number family: a single role may take it.
     # A weak measure the family leaves out stays reserved too: `Dauer (Minuten)` or a constant `target` is no
@@ -256,12 +271,13 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
                 if columns[position].name not in weak and columns[position].name not in claims
             ]
             if not members and not ranked_members and role.required:
-                ranked_members = fitting[:1]  # one weak member rather than none for a required family
+                # One weak member rather than none for a required family; a record's parameter before its number.
+                ranked_members = sorted(fitting, key=lambda item: columns[item[1]].name in keys)[:1]
             for _, position in ranked_members[: max(0, MAX_VARIADIC_DEFAULT - len(members))]:
                 members.append(columns[position])
                 used.add(columns[position].name)
         elif role.name not in single:
-            # An axis (`x`) only skips constants and group parameters: a month, a rank or a year is a fine
+            # An axis (`x`) only skips constants and values per record: a month, a rank or a year is a fine
             # independent variable.
             if is_axis(role):
                 avoid = (constants if is_measure(role) else set()) | per_group
@@ -271,13 +287,14 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
                 (
                     _constant_group(role, column),
                     column.name in avoid,
+                    column.name in keys and is_measure(role),  # a record's parameter before its number
                     column.name in claims,  # a column a computed role's name matches comes last
                     _category_rank(role, column),
                     tier,
                     -_rounded_similarity(role.name, column.name),
                     _code_rank(role, column, columns),
                     _year_rank(role, column),
-                    _axis_word_rank(role, column),
+                    _axis_word_rank(role, column, profile.list_columns),
                     position,
                     column.name,
                 )
@@ -571,37 +588,44 @@ def _year_rank(role: DataRole, column: ColumnProfile) -> int:
     return -score if "datetime" in role.kinds or is_axis(role) else score
 
 
-def _axis_word_rank(role: DataRole, column: ColumnProfile) -> int:
-    """For an axis role (`is_axis`), 0 for a number column named like an independent variable (`AXIS_WORDS`), else 1.
+def _axis_word_rank(role: DataRole, column: ColumnProfile, list_columns: list[str] | None) -> int:
+    """For an axis role, 0 for a list column named like an independent variable (`AXIS_WORDS`), else 1.
 
-    Every other role keeps its order (0). Years come before it (`_year_rank`), so a table
-    of `Year` and `Time spent (h)` keeps the year on x.
+    Only in a table expanded from JSON list fields (`list_columns`); every other table and
+    every other role keep their order (0). Years come before it (`_year_rank`).
     """
-    if not is_axis(role) or column.dtype not in ("integer", "number"):
+    if not list_columns or not is_axis(role) or column.name not in list_columns:
         return 0
-    words = set(_WORDS.findall(_CAMEL.sub(" ", column.name).casefold()))
-    return 0 if words & AXIS_WORDS else 1
+    return 0 if _words(column.name) & AXIS_WORDS else 1
 
 
-def group_parameters(profile: DatasetProfile) -> set[str]:
-    """The number columns that describe a group of rows rather than a point: its parameters and its number.
+def record_values(profile: DatasetProfile) -> set[str]:
+    """The number columns of an expanded table that hold one value per record, not a point of its curve.
 
-    A parameter holds one value per group (`ColumnProfile.constant_within`), such as the
-    temperature of each of three measurement curves beside their time and voltage points;
-    a whole-number column that such a parameter is constant within numbers the groups (an
-    `id` of each curve). Either may split or label the series, but as the x of a line or
-    one of its measures it draws one value per curve (live test round 4 of 2026-10-15).
-    `default_bindings` ranks them like weak measures on a spec with an x axis, for x too.
+    A table expanded from JSON records with list fields (`DatasetProfile.list_columns`)
+    repeats each record's other fields on every row of its points: the temperature of a
+    curve, its `id`. They may split or label the series, but as the x of a line or one of
+    its measures they draw one value per curve (live test round 4 of 2026-10-15). A column
+    named like an axis (`AXIS_WORDS`) is never one, and an ordinary table has none (review
+    of #12197: `step, target, reading` or `country, year, quota, exports` bind as before).
     """
-    numbers = {column.name for column in profile.columns if column.dtype in ("integer", "number")}
-    names = {column.name for column in profile.columns}
-    parameters = {
+    listed = set(profile.list_columns or ())
+    if not listed:
+        return set()
+    return {
         column.name
         for column in profile.columns
-        if column.name in numbers and column.constant_within is not None and column.constant_within in names
+        if column.name not in listed and column.dtype in ("integer", "number") and not _words(column.name) & AXIS_WORDS
     }
-    keys = {column.constant_within for column in profile.columns if column.name in parameters}
-    return parameters | {key for key in keys if key is not None and key in numbers}
+
+
+def _record_key(name: str) -> bool:
+    """A column named like the number of a record (`record_id`, `id`, `Kanal`; `RECORD_KEY_WORDS`)."""
+    return bool(_words(name) & RECORD_KEY_WORDS)
+
+
+def _words(name: str) -> set[str]:
+    return set(_WORDS.findall(_CAMEL.sub(" ", name).casefold()))
 
 
 def is_measure(role: DataRole) -> bool:

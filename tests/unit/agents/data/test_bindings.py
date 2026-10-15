@@ -12,6 +12,7 @@ from agents.anyplot.data.bindings import (
     check_bindings,
     default_bindings,
     name_similarity,
+    record_values,
     resolve_role,
 )
 from agents.anyplot.data.parse import parse_dataset
@@ -376,15 +377,36 @@ class TestGroupParameters:
 
         assert as_pairs(default_bindings(parse_roles(LINE_MULTI), data)) == expected
 
-    def test_the_profile_names_the_group_of_a_parameter(self) -> None:
+    def test_the_profile_names_the_list_columns(self) -> None:
         records = [{"probe": f"P{n}", "temperatur_c": 20.0 * n} for n in (1, 2, 3)]
-        columns = {
-            column.name: column for column in parse_dataset(curves(records, "zeit_s", "spannung_v")).profile.columns
-        }
+        data = parse_dataset(curves(records, "zeit_s", "spannung_v")).profile
 
-        assert columns["temperatur_c"].constant_within == "probe"
-        assert columns["zeit_s"].constant_within is None
-        assert columns["spannung_v"].constant_within is None
+        assert data.list_columns == ["spannung_v", "zeit_s"]
+        assert record_values(data) == {"temperatur_c"}
+
+    def test_a_per_record_value_named_like_an_axis_is_never_demoted(self) -> None:
+        records = [{"probe": f"P{n}", "start_time": 10.0 * n} for n in (1, 2, 3)]
+        data = parse_dataset(curves(records, "zeit_s", "spannung_v")).profile
+
+        assert record_values(data) == set()
+
+    def test_a_bubble_size_takes_the_parameter_before_the_record_number(self) -> None:
+        """Review of #12197: the size of each record's bubbles is its `weight`, never its `id`."""
+        records = [{"id": n, "weight": w} for n, w in ((1, 60.5), (2, 72.5), (3, 81.0))]
+        data = parse_dataset(curves(records, "t", "y", points=6)).profile
+        bubble = [role("x", "numeric"), role("y", "numeric"), role("size", "numeric")]
+
+        assert as_pairs(default_bindings(bubble, data)) == [("x", "t"), ("y", "y"), ("size", "weight")]
+
+    def test_run_records_bind_their_time_and_voltage(self) -> None:
+        records = [{"run": n, "sensor": f"S{n}"} for n in (1, 2, 3)]
+        data = parse_dataset(curves(records, "time_s", "voltage", points=8)).profile
+
+        assert as_pairs(default_bindings(parse_roles(LINE_MULTI), data)) == [
+            ("x", "time_s"),
+            ("y1", "voltage"),
+            ("series", "sensor"),
+        ]
 
     def test_a_scatter_puts_the_time_on_x_and_never_the_parameter(self) -> None:
         records = [{"probe": f"P{n}", "temperatur_c": 20.0 * n} for n in (1, 2, 3)]
@@ -401,52 +423,86 @@ class TestGroupParameters:
 
         assert as_pairs(default_bindings(bar, data)) == [("category", "probe"), ("value", "temperatur_c")]
 
-    def test_a_reference_curve_shared_by_every_record_stays_a_measure(self) -> None:
-        """A step that repeats per curve is no group: the reference has one value per step and is still a series."""
-        rows = "".join(
-            f"{curve},{step},{step * 1.5 + offset},{step * 1.5}\n"
-            for offset, curve in enumerate("ABC")
-            for step in range(10)
-        )
-        data = profile("curve,step,measured,reference\n" + rows)
+    def test_a_parameter_within_the_year_range_is_still_a_parameter(self) -> None:
+        """Review of #12197: loads of 1250, 1400 and 1990 kg per curve are no years."""
+        records = [{"probe": f"P{n}", "load_kg": load} for n, load in ((1, 1250), (2, 1400), (3, 1990))]
+        data = parse_dataset(curves(records, "t", "strain")).profile
 
-        assert {column.name: column.constant_within for column in data.columns}["reference"] is None
         assert as_pairs(default_bindings(parse_roles(LINE_MULTI), data)) == [
-            ("x", "step"),
-            ("y1", "measured"),
-            ("y2", "reference"),
-            ("series", "curve"),
+            ("x", "t"),
+            ("y1", "strain"),
+            ("series", "probe"),
         ]
 
-    def test_a_value_per_year_beside_per_country_rows_stays_a_measure(self) -> None:
-        rows = "".join(
-            f"{year},{country},{value + year - 2000},{7000 + year - 2000}\n"
-            for year in range(2000, 2006)
-            for country, value in (("AT", 10.5), ("CH", 20.5))
-        )
-        data = profile("Year,Country,GDP,World population\n" + rows)
 
-        assert all(column.constant_within is None for column in data.columns)
+class TestOrdinaryTablesBindAsBefore:
+    """Review of #12197: only a table expanded from JSON lists knows its per-record values; a pasted table binds
+    exactly as before round 4 (no `list_columns`, no `record_values`, no axis words)."""
 
-    def test_a_table_whose_every_number_is_per_group_flags_nothing(self) -> None:
-        data = profile("probe,temperatur_c,mass\nA,20.5,1.5\nA,20.5,1.5\nB,30.5,2.5\nB,30.5,2.5\n")
+    SCATTER = (role("x", "numeric"), role("y", "numeric"))
+    BUBBLE = (role("x", "numeric"), role("y", "numeric"), role("size", "numeric"))
 
-        assert all(column.constant_within is None for column in data.columns)
+    CASES = {
+        "step": "step,target,reading\n" + "".join(f"{s},{10 + s // 3},{s * 1.7 + 0.3}\n" for s in range(12)),
+        "run": "run,time_s,sensor,voltage\n"
+        + "".join(f"{r},{t * 0.5},S{r},{r + t * 0.21}\n" for r in (1, 2, 3) for t in range(8)),
+        "quota": "country,year,quota,exports\n"
+        + "".join(
+            f"{c},{y},{q},{e + y - 2000}.5\n" for c, q, e in (("AT", 5, 100), ("CH", 7, 200)) for y in range(2000, 2008)
+        ),
+        "speed": "speed_kmh,stopping_distance\n30,9.5\n50,25.1\n80,64.2\n100,100.3\n",
+        "bubble": "id,weight,t,y\n"
+        + "".join(f"{i},{w},{t},{i * 2 + t * 0.7}\n" for i, w in ((1, 60.5), (2, 72.5), (3, 81.0)) for t in range(6)),
+        "area": "country,date,area_km2,value\n"
+        + "".join(
+            f"{c},2024-0{m}-01,{a},{v + m}.5\n"
+            for c, a, v in (("AT", 83879, 10), ("CH", 41285, 20))
+            for m in range(1, 7)
+        ),
+        "prices": "product,shop,list_price,sale_price\n"
+        + "".join(
+            f"{p},{s},{lp},{lp - d}.5\n" for p, lp in (("A", 20), ("B", 35)) for s, d in (("X", 2), ("Y", 4), ("Z", 1))
+        ),
+        "fiscal": "fiscal_year,revenue,cost\n"
+        + "".join(
+            f"{fy},{v}.5,{v * 2}\n" for fy, v in (("2000/01", 1), ("2000/01", 2), ("2001/02", 3), ("2002/03", 5))
+        ),
+        "curves": "curve,step,measured,reference\n"
+        + "".join(f"{c},{s},{s * 1.5 + o},{s * 1.5}\n" for s in range(10) for o, c in enumerate("ABC")),
+    }
+
+    @pytest.mark.parametrize("name", sorted(CASES))
+    def test_a_pasted_table_has_no_list_columns(self, name: str) -> None:
+        data = profile(self.CASES[name])
+
+        assert data.list_columns is None
+        assert record_values(data) == set()
 
     @pytest.mark.parametrize(
-        ("csv_text", "expected"),
+        ("name", "spec", "expected"),
         [
-            ("spannung_v,zeit_s\n1.5,0.1\n2.5,0.2\n3.5,0.3\n", [("x", "zeit_s"), ("y", "spannung_v")]),
-            ("Amplitude,Frequency (Hz)\n1.5,10\n2.5,20\n3.5,40\n", [("x", "Frequency (Hz)"), ("y", "Amplitude")]),
-            ("Time spent (h),Year\n1.5,2001\n2.5,2002\n3.5,2003\n", [("x", "Year"), ("y", "Time spent (h)")]),
+            ("step", "scatter", [("x", "step"), ("y", "target")]),
+            ("speed", "scatter", [("x", "speed_kmh"), ("y", "stopping_distance")]),
+            ("quota", "line", [("x", "year"), ("y1", "quota"), ("y2", "exports"), ("series", "country")]),
+            ("bubble", "bubble", [("x", "id"), ("y", "y"), ("size", "weight")]),
+            ("area", "line", [("x", "date"), ("y1", "area_km2"), ("y2", "value"), ("series", "country")]),
+            ("prices", "scatter", [("x", "list_price"), ("y", "sale_price")]),
+            ("curves", "line", [("x", "step"), ("y1", "measured"), ("y2", "reference"), ("series", "curve")]),
         ],
     )
-    def test_x_prefers_a_column_named_like_an_independent_variable(
-        self, csv_text: str, expected: list[tuple[str, str]]
-    ) -> None:
-        scatter = [role("x", "numeric"), role("y", "numeric")]
+    def test_the_bindings_of_main_stay(self, name: str, spec: str, expected: list[tuple[str, str]]) -> None:
+        roles = {"scatter": list(self.SCATTER), "bubble": list(self.BUBBLE), "line": parse_roles(LINE_MULTI)}[spec]
 
-        assert as_pairs(default_bindings(scatter, profile(csv_text))) == expected
+        assert as_pairs(default_bindings(roles, profile(self.CASES[name]))) == expected
+
+    @pytest.mark.parametrize(
+        "csv_text",
+        ["spannung_v,zeit_s\n1.5,0.1\n2.5,0.2\n3.5,0.3\n", "Amplitude,Frequency (Hz)\n1.5,10\n2.5,20\n3.5,40\n"],
+    )
+    def test_axis_words_never_reorder_a_pasted_table(self, csv_text: str) -> None:
+        first = csv_text.split(",", 1)[0]
+
+        assert default_bindings(list(self.SCATTER), profile(csv_text))[0].column == first
 
 
 class TestComputedRoles:

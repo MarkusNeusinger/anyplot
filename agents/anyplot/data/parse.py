@@ -91,10 +91,9 @@ would, for example, read `01.02.2024` as a number under `thousands='.'`).
    category does, unless fewer than `MIN_KEPT_COLUMNS` columns would remain.
 8. **Write the canonical `data.csv`** (comma, dot decimal, ISO dates, canonical
    headers, missing as an empty cell, `\\n` line ends) and profile it. The profile
-   names the months of a text column of month names (`ColumnProfile.months`) and, for a
-   number column that holds one value per group of a category column while other number
-   columns vary inside the groups, that category column (`ColumnProfile.constant_within`,
-   `_constant_within`; live test round 4 of 2026-10-15).
+   names the months of a text column of month names (`ColumnProfile.months`) and, for
+   JSON records whose list fields expanded into rows, the columns that came from those
+   lists (`DatasetProfile.list_columns`; live test round 4 of 2026-10-15).
 
 The loader reads the result with
 `pd.read_csv("data.csv", dtype=pandas_dtypes(column_dtypes), parse_dates=parse_dates)`,
@@ -204,12 +203,6 @@ MAX_NAMED_FIELDS = 5  # the left-out fields a warning names before it ends with 
 MIN_KEPT_COLUMNS = 2
 """The columns a paste keeps at least when constant text columns move to the notes (`_constants_to_notes`):
 a category or a time and a value, the least a plot needs."""
-MAX_GROUPS = 60
-"""The distinct values up to which a column groups the rows for `_constant_within` (as `bindings.MAX_CATEGORIES`)."""
-MIN_GROUP_ROWS = 2
-"""The rows each group holds on average, at least, for `_constant_within`: groups of one row say nothing."""
-GROUP_YEARS = (1000, 2200)
-"""Whole numbers within this range read as years, and a column of years is no group for `_constant_within`."""
 
 # Candidate delimiters in tie-break order, with the source format each one reports.
 DELIMITERS: tuple[tuple[str, SourceFormat], ...] = ((",", "csv"), (";", "semicolon"), ("\t", "tsv"), ("|", "pipe"))
@@ -479,6 +472,7 @@ class _Column:
     respelled: int = 0  # the number cells that keep their value but not their spelling (`1.50` as `1.5`)
     trimmed: int = 0  # the cells whose surrounding whitespace the cleaning removed
     missing_tokens: Counter[str] = field(default_factory=Counter)  # `MISSING_VALUES` tokens read as missing
+    from_list: bool = False  # a list field of JSON records, expanded into one row per value (`_records`)
 
 
 def pandas_dtypes(column_dtypes: Mapping[str, ColumnDtype]) -> dict[str, str]:
@@ -530,10 +524,11 @@ def parse_dataset(
     text = composed
     context: list[str] = []
     table: tuple[list[str], list[list[str]], SourceFormat] | None = None
+    listed: set[str] = set()  # the headers of list fields that `_records` expanded into rows
     literal = _LITERAL_START.match(stripped)
     if literal:
         assignment, body = literal.group(), stripped[literal.end() :]
-        table = _read_literal(body, warnings, context)
+        table = _read_literal(body, warnings, context, listed)
         if table is None and (assignment or not body.startswith("(")):
             raise ParseError("unparseable", "the data starts like JSON or a Python literal but is neither")
         # A bare `(` that neither reader accepts is delimited text: `(in %) Land;Wert`, prose in parentheses.
@@ -551,6 +546,7 @@ def parse_dataset(
         canonical=canonical,
         context=context,
         missing_marks=marks,
+        listed=frozenset(listed),
     )
     if len(parsed.csv.encode("utf-8")) > MAX_CANONICAL_BYTES:
         raise ParseError("too_long", f"the data is larger than {MAX_CANONICAL_BYTES // 1024:,} KB once written out")
@@ -1090,7 +1086,7 @@ def _context_lines(records: Iterable[Sequence[str]], delimiter: str | None) -> t
 
 
 def _read_literal(
-    text: str, warnings: list[str], context: list[str]
+    text: str, warnings: list[str], context: list[str], listed: set[str] | None = None
 ) -> tuple[list[str], list[list[str]], SourceFormat] | None:
     """JSON, or a Python literal when the JSON reader refuses the text, tabulated alike; None when it is neither.
 
@@ -1112,7 +1108,7 @@ def _read_literal(
     if dataset is not None:
         return _json_stat(dataset, warnings, context)
     records = _api_records(data, warnings, context)
-    return _tabulate(data if records is None else records, warnings)
+    return _tabulate(data if records is None else records, warnings, listed)
 
 
 def _too_deep(text: str) -> bool:
@@ -1240,15 +1236,17 @@ def _repeated_keys(tree: ast.AST) -> int:
     return repeated
 
 
-def _tabulate(data: Any, warnings: list[str]) -> tuple[list[str], list[list[str]], SourceFormat]:
-    """Headers and rows from the decoded value; a tuple counts as a list."""
+def _tabulate(
+    data: Any, warnings: list[str], listed: set[str] | None = None
+) -> tuple[list[str], list[list[str]], SourceFormat]:
+    """Headers and rows from the decoded value; a tuple counts as a list. `listed` collects expanded list fields."""
     if isinstance(data, (list, tuple)):
         if not data:
             raise ParseError("unparseable", "the array is empty")
         if len(data) > MAX_ROWS:
             raise ParseError("too_many_rows", f"the data has more than {MAX_ROWS:,} rows")
         if all(isinstance(record, dict) for record in data):
-            return _records(data, warnings)
+            return _records(data, warnings, listed)
         if all(isinstance(pair, (list, tuple)) and len(pair) == 2 for pair in data):
             return _pairs(data)
         raise ParseError("unparseable", "an array must hold objects, one per row, or [category, value] pairs")
@@ -1487,9 +1485,12 @@ RECORD_ID = "record_id"
 
 
 def _records(
-    records: Sequence[Mapping[Any, Any]], warnings: list[str]
+    records: Sequence[Mapping[Any, Any]], warnings: list[str], listed: set[str] | None = None
 ) -> tuple[list[str], list[list[str]], SourceFormat]:
     """One column per field of any record, nested objects flattened and list fields expanded into rows.
+
+    `listed`, when given, collects the headers of the list fields that expanded, so the
+    profile can name them (`DatasetProfile.list_columns`, live test round 4 of 2026-10-15).
 
     Nested objects become dotted columns (`_flatten`). List fields expand to long format
     (owner decision of 2026-10-15, a measurement curve per record: `{"sample": "A", "x":
@@ -1528,8 +1529,8 @@ def _records(
                 "rows together and need one length",
             )
         flattened.append((fields, lists))
-    listed = {name for _, lists in flattened for name in lists}
-    mixed = sorted(name for name in listed if any(fields.get(name) is not None for fields, _ in flattened))
+    list_fields = {name for _, lists in flattened for name in lists}
+    mixed = sorted(name for name in list_fields if any(fields.get(name) is not None for fields, _ in flattened))
     if mixed:
         raise ParseError(
             "unparseable",
@@ -1551,7 +1552,10 @@ def _records(
         )
     if not any(lists for _, lists in flattened):
         return _flat_records([fields for fields, _ in flattened], warnings)
-    return _flat_records(_expanded(flattened, warnings), warnings)
+    table = _flat_records(_expanded(flattened, warnings), warnings)
+    if listed is not None:
+        listed.update(header for header in table[0] if header in list_fields)
+    return table
 
 
 def _expanded(
@@ -2559,6 +2563,7 @@ def _build(
     canonical: bool = False,
     context: list[str] | None = None,
     missing_marks: frozenset[str] = frozenset(),
+    listed: frozenset[str] = frozenset(),
 ) -> ParsedDataset:
     read: list[tuple[str, bool, _Column]] = []  # header, whether breaks became spaces, column
     for position, raw in enumerate(raw_headers):
@@ -2600,6 +2605,7 @@ def _build(
             mark_rows=mark_rows,
             trimmed=trimmed,
             missing_tokens=tokens,
+            from_list=raw in listed,
         )
         read.append((header, broken, column))
 
@@ -2721,14 +2727,15 @@ def _finish(
     """The dataset of these typed and named columns: canonical CSV, profile, preview and the loader's typing."""
     rows = [list(row) for row in zip(*(column.cells for column in columns), strict=True)]
     capped = _cap_warnings(warnings)
-    within = _constant_within(columns)
+    listed = [column.name for column in columns if column.from_list]
     profile = DatasetProfile(
         rows=len(rows),
-        columns=[_profile_column(column, within.get(column.name)) for column in columns],
+        columns=[_profile_column(column) for column in columns],
         sample=[[_clip(cell) for cell in row] for row in rows[:MAX_SAMPLE_ROWS]],
         source_format=source_format,
         decimal="," if any(column.decimal_comma for column in columns) else ".",
         warnings=capped,
+        list_columns=listed or None,
     )
     return ParsedDataset(
         profile=profile,
@@ -2882,88 +2889,7 @@ def _constants_to_notes(
     return [column for column in columns if id(column) not in moved]
 
 
-def _constant_within(columns: list[_Column]) -> dict[str, str]:
-    """The number columns that hold one value per group of a category column, each with that column's name.
-
-    Live test round 4 of 2026-10-15: three measurement curves as JSON records, each with
-    its `probe`, its `temperatur_c` and lists of `zeit_s` and `spannung_v`, expanded into
-    123 rows; the defaults put `temperatur_c` (one value per curve) on x of a line chart.
-    A number column is a parameter of each group, not a point measure, when a grouping
-    column splits the rows into 2 to `MAX_GROUPS` groups of `MIN_GROUP_ROWS` rows or more
-    on average, the column has one value within every group (its missing cells aside) but
-    at least two across them, and another number column varies within some group. A
-    grouping column holds records: each of its values fills one run of consecutive rows
-    (`_in_runs`: `P1 P1 P2 P2`, as an expanded record or a long table sorted by it gives
-    them), unlike a month or a step that repeats per year or per curve, beside which a
-    climate normal or a reference curve shared by every record is a fine measure. It is a
-    text or boolean column, or a whole-number column that holds no years (`GROUP_YEARS`:
-    a value per year is a fine measure over the years), such as `record_id` or a curve's
-    `kanal`. Text columns are tried first, in column order, and each number column takes
-    the first grouping column it is constant within. A column of years is never such a
-    parameter: in a long table sorted by year, a world total per year groups the years as
-    much as they group it, and the years stay the time axis. Nothing is said for a table
-    where every number column is constant within the groups: there the groups are the rows.
-    """
-    numeric = [column for column in columns if column.dtype in ("integer", "number")]
-    if len(numeric) < 2:
-        return {}
-    rows = len(columns[0].cells) if columns else 0
-    candidates = [column for column in columns if column.dtype in ("text", "boolean")]
-    candidates += [column for column in columns if column.dtype == "integer" and not _years(column)]
-    candidates = [column for column in candidates if _in_runs(column.cells)]
-    found: dict[str, str] = {}
-    for group in candidates:
-        keys = {cell for cell in group.cells if cell}
-        if not 2 <= len(keys) <= MAX_GROUPS or rows < MIN_GROUP_ROWS * len(keys):
-            continue
-        constant: list[_Column] = []
-        varies = False
-        for column in numeric:
-            if column is group:
-                continue
-            if _one_per_group(group.cells, column.cells):
-                constant.append(column)
-            else:
-                varies = True
-        if not varies:
-            continue
-        for column in constant:
-            if column.name not in found and not _years(column) and len({cell for cell in column.cells if cell}) >= 2:
-                found[column.name] = group.name
-    return found
-
-
-def _years(column: _Column) -> bool:
-    """A whole-number column whose values all lie within `GROUP_YEARS`."""
-    low, high = GROUP_YEARS
-    return bool(column.integers) and low <= min(column.integers) and max(column.integers) <= high
-
-
-def _in_runs(cells: list[str]) -> bool:
-    """Whether each non-empty value of `cells` fills one run of consecutive rows (`1 1 2 2`, not `1 2 1 2`)."""
-    finished: set[str] = set()
-    previous = ""
-    for cell in cells:
-        if cell == previous:
-            continue
-        if previous:
-            finished.add(previous)
-        if cell in finished:
-            return False
-        previous = cell
-    return True
-
-
-def _one_per_group(keys: list[str], cells: list[str]) -> bool:
-    """Whether `cells` hold at most one value in each group of rows with the same non-empty key."""
-    seen: dict[str, str] = {}
-    for key, cell in zip(keys, cells, strict=True):
-        if key and cell and seen.setdefault(key, cell) != cell:
-            return False
-    return True
-
-
-def _profile_column(column: _Column, constant_within: str | None = None) -> ColumnProfile:
+def _profile_column(column: _Column) -> ColumnProfile:
     present = [cell for cell in column.cells if cell]
     minimum: int | float | str | None = None
     maximum: int | float | str | None = None
@@ -3000,7 +2926,6 @@ def _profile_column(column: _Column, constant_within: str | None = None) -> Colu
         median=median,
         top=top,
         months=named_months(column.cells) if column.dtype == "text" else None,
-        constant_within=constant_within,
     )
 
 

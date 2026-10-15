@@ -2,12 +2,12 @@
 
 - **Measurement curves bind their time to x, never a per-curve value.** Three
   curves pasted as JSON records with list fields put `temperatur_c` (one value
-  per curve) on x of a line chart. The profile now names, for a number column
-  with one value per group of records, that group (`constant_within`), and on a
-  spec with an x axis such parameters and the id that numbers the groups rank
-  like weak measures; after the years, x prefers a column named like an
-  independent variable (`zeit_s`, `Frequency (Hz)`). A bar chart may still show
-  the per-curve value. (#12197)
+  per curve) on x of a line chart. The profile now names the columns that came
+  from the lists (`list_columns`); on a spec with an x axis the other number
+  columns of such a table (one value per record) rank like weak measures, a
+  parameter before a record number, and x prefers a list column named like an
+  independent variable (`zeit_s`, `Frequency (Hz)`). A pasted table binds as
+  before, and a bar chart may still show the per-curve value. (#12197)
 - **One register per language in the chat.** A German summary said "Aus Ihren
   Notizen" where every other text said "du". The root now keeps the informal
   address the fixed refusals use (du, tu, tú, je), and a unit test checks the
