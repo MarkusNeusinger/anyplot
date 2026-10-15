@@ -424,6 +424,40 @@ async def get_dashboard(db: AsyncSession = Depends(require_db)) -> DashboardResp
 # =============================================================================
 
 
+POTD_FEATURED_MIN_SCORE = 92.0
+"""Implementations at or above this score, of specs that are not a `-basic` variant, form the featured pool."""
+POTD_EPOCH = date(2026, 1, 1)
+"""Day 0 of the rotation: day N picks the (N mod pool size)-th spec of the current cycle's order."""
+
+PotdCandidate = tuple[str, str, str, str, str, float, str, str | None]
+"""(spec_id, spec_title, description, library_id, language, quality_score, preview_url, preview_url_dark)."""
+
+
+def _digest(text: str) -> int:
+    return int(hashlib.sha256(text.encode()).hexdigest(), 16)
+
+
+def _pick_potd(candidates: list[PotdCandidate], today: date) -> PotdCandidate:
+    """The plot of the day: a rotation over the featured specs, then one of the spec's featured libraries.
+
+    The featured pool holds implementations scored at least `POTD_FEATURED_MIN_SCORE` of
+    specs that are not a `-basic` variant (a plain scatter or bar chart makes a dull
+    front page); without any, every candidate qualifies. Each cycle of as many days as
+    the pool has specs walks the specs in an order shuffled per cycle, so no spec
+    repeats within a cycle while the catalogue stays the same; the library is then
+    drawn per day among that spec's featured implementations, so the library varies too.
+    """
+    featured = [c for c in candidates if c[5] >= POTD_FEATURED_MIN_SCORE and not c[0].endswith("-basic")]
+    by_spec: dict[str, list[PotdCandidate]] = {}
+    for candidate in featured or candidates:
+        by_spec.setdefault(candidate[0], []).append(candidate)
+    cycle, offset = divmod((today - POTD_EPOCH).days, len(by_spec))
+    order = sorted(by_spec, key=lambda spec: _digest(f"potd:{cycle}:{spec}"))
+    spec_id = order[offset]
+    impls = sorted(by_spec[spec_id], key=lambda c: c[3])
+    return impls[_digest(f"potd:{today.isoformat()}:{spec_id}") % len(impls)]
+
+
 async def _refresh_potd() -> PlotOfTheDayResponse | None:
     """Standalone factory for background refresh."""
     async with get_db_context() as db:
@@ -436,7 +470,7 @@ async def _build_potd(spec_repo: SpecRepository, impl_repo: ImplRepository) -> P
     today = date.today().isoformat()
 
     # Collect candidates: implementations with quality_score >= 90 (lightweight, no code loaded)
-    candidates: list[tuple[str, str, str, str, str, float, str, str | None]] = []
+    candidates: list[PotdCandidate] = []
     for spec in all_specs:
         for impl in spec.impls:
             if impl.quality_score is not None and impl.quality_score >= 90 and impl.preview_url:
@@ -457,12 +491,9 @@ async def _build_potd(spec_repo: SpecRepository, impl_repo: ImplRepository) -> P
     if not candidates:
         return None
 
-    # Deterministic selection based on date
-    seed = int(hashlib.md5(today.encode()).hexdigest(), 16)  # noqa: S324
-    idx = seed % len(candidates)
-    spec_id, spec_title, description, library_id, language, quality_score, preview_url, preview_url_dark = candidates[
-        idx
-    ]
+    spec_id, spec_title, description, library_id, language, quality_score, preview_url, preview_url_dark = _pick_potd(
+        candidates, date.fromisoformat(today)
+    )
 
     # Load deferred fields (code, image_description) for just this one impl
     full_impl = await impl_repo.get_by_spec_and_library(spec_id, library_id)
@@ -498,8 +529,10 @@ async def get_plot_of_the_day(db: AsyncSession = Depends(require_db)) -> PlotOfT
     """
     Get the featured plot of the day.
 
-    Deterministically selects a high-quality implementation (score >= 90)
-    based on today's date. Returns the same result for the entire day.
+    Deterministically selects a high-quality implementation (score >= 90) based on
+    today's date, preferring the featured pool (score >= 92, no `-basic` spec) and
+    rotating through its specs without repeats (`_pick_potd`). Returns the same
+    result for the entire day.
     """
     spec_repo = SpecRepository(db)
     impl_repo = ImplRepository(db)

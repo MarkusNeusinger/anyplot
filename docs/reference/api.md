@@ -296,7 +296,7 @@ Cached with stale-while-revalidate (1h refresh, 24h TTL).
 
 **Purpose**: Daily featured high-quality implementation
 
-Deterministically selects an implementation with quality_score >= 90 based on today's date. Returns spec info, preview URL, AI image description, and code.
+Deterministically selects an implementation based on today's date. It prefers the featured pool (quality_score >= 92 of specs that are not a `-basic` variant; every implementation at 90 or more when the pool is empty), walks the pool's specs in an order shuffled per cycle so no spec repeats within a cycle, and picks the library per day among that spec's featured implementations. Returns spec info, preview URL, AI image description, and code.
 
 ### GET `/insights/related/{spec_id}`
 
