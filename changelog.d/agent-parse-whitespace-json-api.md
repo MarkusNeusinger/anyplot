@@ -14,7 +14,7 @@
 - **The agent chat reads JSON as data APIs answer it.** The World Bank's
   `[{page metadata}, [records]]` was refused. Records wrapped with metadata (an
   array beside a metadata object, or `{"data" | "results" | "records": [...]}`
-  with sibling fields) and schema-plus-rows payloads (BigQuery, CKAN, Socrata,
+  with sibling fields) and schema-plus-rows payloads (CKAN, Socrata, Frictionless,
   pandas `orient="split"`) now read, the metadata going to the notes; nested
   objects become dotted columns (`country.value`) down to three levels, and
   list fields such as a measured curve's `x` and `y` expand to one row per

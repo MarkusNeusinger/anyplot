@@ -2244,7 +2244,45 @@ class TestApiJson:
 
         assert list(parsed.column_dtypes) == ["sample", "temperature_c", "x", "y"]
         assert parsed.csv.splitlines()[1:] == ["A,20,0,0.1", "A,20,1,0.4", "A,20,2,0.9", "B,25,0,0.2", "B,25,1,0.5"]
-        assert warned(parsed, "list fields expanded into one row per value: x, y")
+        assert warned(parsed, "list fields expanded into one row per value (lists of one record are paired")
+
+    def test_an_empty_list_beside_full_ones_leaves_its_cells_empty(self) -> None:
+        parsed = parse_dataset(
+            json.dumps([{"x": [1, 2], "y": [3, 4], "z": []}, {"x": [5, 6], "y": [7, 8], "z": [1, 2]}])
+        )
+
+        assert parsed.csv.splitlines()[1:3] == ["1,1,3,", "1,2,4,"]
+
+    def test_a_field_that_is_a_list_in_one_record_and_a_value_in_another_is_refused(self) -> None:
+        with pytest.raises(ParseError) as caught:
+            parse_dataset(json.dumps([{"x": [1, 2], "y": 0}, {"x": [3, 4], "y": [5, 6]}]))
+
+        assert caught.value.code == "unparseable" and "the field y" in caught.value.message
+
+    def test_an_existing_record_id_field_is_never_overwritten(self) -> None:
+        curves = [{"record_id": 7, "x": [1, 2]}, {"record_id": 7, "x": [3, 4]}]
+
+        parsed = parse_dataset(json.dumps(curves))
+
+        assert parsed.csv.splitlines()[0] == "record_id_2,record_id,x"
+        assert parsed.csv.splitlines()[1:] == ["1,7,1", "1,7,2", "2,7,3", "2,7,4"]
+        assert warned(parsed, "column 'record_id_2' added")
+
+    @pytest.mark.parametrize(
+        "ids",
+        [
+            ["A", "A "],  # the same cell once cleaned
+            ["NA", "N/A"],  # both missing
+            [20.5, 21.5],  # unique, but a measurement
+            [True, False],
+        ],
+    )
+    def test_only_distinct_text_or_whole_numbers_tell_curves_apart(self, ids: list[Any]) -> None:
+        curves = [{"key": key, "x": [1, 2]} for key in ids]
+
+        parsed = parse_dataset(json.dumps(curves))
+
+        assert parsed.csv.splitlines()[0].startswith("record_id,")
 
     def test_curves_without_a_field_that_tells_them_apart_get_a_record_id(self) -> None:
         curves = [{"unit": "mV", "t": [0, 1], "v": [1.5, 2.5]}, {"unit": "mV", "t": [0, 1], "v": [3.5, 4.5]}]
@@ -2268,9 +2306,48 @@ class TestApiJson:
 
         parsed = parse_dataset(json.dumps(curves), max_bytes=MAX_COMPUTED_BYTES)
 
-        assert parsed.profile.rows == points  # every 2nd point of each curve
-        assert parsed.csv.splitlines()[1:3] == ["a,0,0", "a,2,2"]
-        assert warned(parsed, f"every 2th value of each record is kept ({points:,} rows)")
+        lines = parsed.csv.splitlines()
+        assert parsed.profile.rows == points  # half of each curve
+        assert lines[1] == "a,0,0" and lines[points // 2] == f"a,{points - 1},{points - 1}"  # both ends kept
+        assert warned(parsed, f"{points:,} evenly spaced values are kept")
+        assert warned(parsed, "paste fewer records or fewer points per record")
+
+    def test_one_long_curve_keeps_both_ends_and_asks_for_fewer_points(self) -> None:
+        points = parse_module.MAX_ROWS + 2  # (n - 1) is no multiple of the step
+        curve = [{"x": list(range(points)), "y": list(range(points))}]
+
+        parsed = parse_dataset(json.dumps(curve), max_bytes=MAX_COMPUTED_BYTES)
+
+        lines = parsed.csv.splitlines()
+        assert parsed.profile.rows <= parse_module.MAX_ROWS
+        assert lines[1] == "0,0" and lines[-1] == f"{points - 1},{points - 1}"
+        assert warned(parsed, "paste fewer points to keep every value")
+
+    def test_a_list_of_records_with_name_and_type_is_data_not_a_schema(self) -> None:
+        payload = {"data": [{"name": "Solar", "type": "renewable", "gwh": 420}], "links": [{"href": "next"}]}
+
+        assert error_code(json.dumps(payload)) == "unparseable"  # two tables: none is taken by guess
+
+    def test_descriptors_that_do_not_name_the_other_lists_fields_are_two_tables(self) -> None:
+        payload = {
+            "people": [{"name": "Ann", "type": "admin", "age": 3}, {"name": "Bo", "type": "user", "age": 4}],
+            "roles": [{"name": "admin", "type": "role"}],
+        }
+
+        assert error_code(json.dumps(payload)) == "unparseable"
+
+    def test_bigquerys_own_row_shape_is_refused_not_misread(self) -> None:
+        payload = {"schema": {"fields": [{"name": "a", "type": "INTEGER"}]}, "rows": [{"f": [{"v": "1"}]}]}
+
+        assert error_code(json.dumps(payload)) == "unparseable"
+
+    def test_descriptors_beside_an_empty_record_list_are_refused(self) -> None:
+        payload = {"fields": [{"name": "a", "type": "int"}, {"name": "b", "type": "str"}], "records": []}
+
+        with pytest.raises(ParseError) as caught:
+            parse_dataset(json.dumps(payload))
+
+        assert caught.value.code == "unparseable" and "the list of records is empty" in caught.value.message
 
     def test_a_list_of_objects_inside_a_record_is_left_out_with_a_warning(self) -> None:
         text = json.dumps([{"name": "a", "n": 1, "tags": [{"k": 1}]}, {"name": "b", "n": 2, "tags": []}])

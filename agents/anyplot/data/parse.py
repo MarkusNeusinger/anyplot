@@ -1204,12 +1204,21 @@ def _api_records(data: Any, warnings: list[str], context: list[str]) -> list[dic
             keys = [key for key, value in data.items() if _record_list(value)]
             if not keys:
                 return None
-            if len(keys) > 1:
-                # A list of field descriptors (`{"name": ..., "type": ...}`) beside the records is their schema.
-                keys = [key for key in keys if not all(_descriptor(item) for item in data[key])] or keys
+            if len(keys) == 2:
+                # A list of field descriptors beside the records is their schema, but only when it holds nothing
+                # but descriptor keys and names every field of the records; otherwise two tables, none by guess.
+                schema = [key for key in keys if _schema_of(data[key], data[next(k for k in keys if k != key)])]
+                if len(schema) == 1:
+                    keys = [key for key in keys if key != schema[0]]
             if len(keys) > 1:
                 raise ParseError(
                     "unparseable", f"the object holds {len(keys)} lists of records; paste one list of records at a time"
+                )
+            if all(_descriptor(item) for item in data[keys[0]]) and any(
+                isinstance(value, (list, tuple)) and not value for value in data.values()
+            ):
+                raise ParseError(
+                    "unparseable", "the list of records is empty; only the description of its fields is there"
                 )
             metadata = [{key: value for key, value in data.items() if key != keys[0]}]
             records = data[keys[0]]
@@ -1242,9 +1251,32 @@ def _record_list(value: Any) -> bool:
     return isinstance(value, (list, tuple)) and bool(value) and all(isinstance(item, dict) for item in value)
 
 
+DESCRIPTOR_KEYS: frozenset[str] = frozenset(
+    {
+        *("name", "type", "format", "description", "title", "label", "mode", "unit", "constraints", "id"),
+        *("fieldName", "dataTypeName", "example", "rdfType", "fields", "info", "nullable"),
+    }
+)
+"""The keys a field descriptor of a schema holds (Frictionless, BigQuery, CKAN, Socrata); a record with any other key
+is data, also one that has a `name` and a `type` (`{"name": "Solar", "type": "renewable", "gwh": 420}`)."""
+
+
 def _descriptor(item: Any) -> bool:
-    """A field descriptor of a schema: an object with a text `name` and a `type` (Frictionless, BigQuery, CKAN)."""
-    return isinstance(item, dict) and isinstance(item.get("name"), str) and "type" in item
+    """A field descriptor of a schema: an object with a text `name`, a `type` and no key outside `DESCRIPTOR_KEYS`."""
+    return (
+        isinstance(item, dict)
+        and isinstance(item.get("name"), str)
+        and "type" in item
+        and all(isinstance(key, str) and key in DESCRIPTOR_KEYS for key in item)
+    )
+
+
+def _schema_of(descriptors: Sequence[Any], records: Sequence[Any]) -> bool:
+    """Whether `descriptors` describe `records`: descriptors only, and their names cover every field of the records."""
+    if not all(_descriptor(item) for item in descriptors):
+        return False
+    names = {item["name"] for item in descriptors}
+    return all(isinstance(record, dict) and set(map(str, record)) <= names for record in records)
 
 
 def _row_list(value: Any) -> bool:
@@ -1286,12 +1318,13 @@ def _schema_names(data: Mapping[Any, Any]) -> list[str] | None:
 def _schema_rows(data: Mapping[Any, Any]) -> list[dict[str, Any]] | None:
     """The records of a schema-and-rows payload (`{"fields": [...], "rows": [[...], ...]}`); None for another shape.
 
-    BigQuery, CKAN, Socrata, Frictionless and pandas (`orient="split"`) write the column names
-    once (`_schema_names`) and the rows as lists of cells (review of 2026-10-15: the parser
-    took the field list for the table and dropped the rows). An object with exactly one list of
-    rows is read as one record per row, named by the schema; a list of rows without names that
-    match its length, two lists of rows or a repeated name are `unparseable`, so the schema is
-    never taken for the data.
+    CKAN, Socrata, Frictionless and pandas (`orient="split"`) write the column names once
+    (`_schema_names`) and the rows as lists of cells (review of 2026-10-15: the parser took the
+    field list for the table and dropped the rows). An object with exactly one list of rows is
+    read as one record per row, named by the schema; a list of rows without names that match
+    its length, two lists of rows or a repeated name are `unparseable`, so the schema is never
+    taken for the data. BigQuery's own `rows: [{"f": [{"v": ...}]}]` is no list of rows: its
+    cells are a list of objects, which `_flatten` leaves out, and the paste is refused.
     """
     keys = [key for key, value in data.items() if _row_list(value)]
     if not keys:
@@ -1358,15 +1391,20 @@ def _records(
     (owner decision of 2026-10-15, a measurement curve per record: `{"sample": "A", "x":
     [...], "y": [...]}`): a record whose lists all have the same length n gives n rows, the
     k-th row holding the k-th value of each list and the record's other fields repeated; a
-    record whose lists differ in length is `unparseable`, the message naming the record, the
-    fields and their lengths; an empty list gives one row with the list fields empty. When
-    the records expanded into several rows each and no field has a different value in every
-    record, a first column `RECORD_ID` numbers the records, so each curve stays one series.
+    record whose non-empty lists differ in length is `unparseable`, the message naming the
+    record, the fields and their lengths; an empty list leaves its cells empty in that
+    record's rows, and a record whose lists are all empty gives one row. A field that is a
+    list in one record and a single value in another is `unparseable`: repeating the value
+    over the other record's points would be a guess. Independent lists of one length (`tags`
+    and `scores`) are paired by position too; the warning names every expanded field. When
+    the records expanded into several rows each and no text or whole-number field has a
+    different value in every record (`_tells_apart`), a first column numbers the records
+    (`RECORD_ID`, or `record_id_2` and so on when a field has that name), so each curve
+    stays one series.
 
-    The expanded rows keep `MAX_ROWS`: when the lists hold more points, every k-th point of
-    each record is kept (the first included), the smallest k that fits, with a warning that
-    names k and the counts, so nothing is cut silently and the root can say that pasting fewer
-    records keeps every point.
+    The expanded rows keep `MAX_ROWS` (`_thinned`): when the lists hold more points, each
+    record keeps evenly spaced points with its first and last one, with a warning that
+    gives the counts, so nothing is cut silently and the root can say what keeps every point.
     """
     flattened: list[tuple[dict[str, Any], dict[str, list[Any]]]] = []
     dropped: dict[str, None] = {}
@@ -1375,7 +1413,7 @@ def _records(
         fields, lists, left_out = _flatten(record)
         nested = nested or any(isinstance(value, dict) and value for value in record.values())
         dropped.update(dict.fromkeys(left_out))
-        lengths = {name: len(values) for name, values in lists.items()}
+        lengths = {name: len(values) for name, values in lists.items() if values}
         if len(set(lengths.values())) > 1:
             described = ", ".join(
                 f"{_clip(name, MAX_COLUMN_NAME_CHARS)} ({length})" for name, length in lengths.items()
@@ -1386,6 +1424,14 @@ def _records(
                 "rows together and need one length",
             )
         flattened.append((fields, lists))
+    listed = {name for _, lists in flattened for name in lists}
+    mixed = sorted(name for name in listed if any(fields.get(name) is not None for fields, _ in flattened))
+    if mixed:
+        raise ParseError(
+            "unparseable",
+            f"the field {_clip(mixed[0], MAX_COLUMN_NAME_CHARS)} holds a list in some records and a single value "
+            "in others; it needs the same shape in every record",
+        )
     if dropped and not any(fields or lists for fields, lists in flattened):
         raise ParseError(
             "unparseable", "no field of the records holds text, a number, a boolean or null, or a list of them"
@@ -1408,41 +1454,98 @@ def _expanded(
     flattened: Sequence[tuple[dict[str, Any], dict[str, list[Any]]]], warnings: list[str]
 ) -> list[dict[str, Any]]:
     """The records with their list fields expanded into rows, thinned to `MAX_ROWS` and numbered when needed."""
-    points = [len(next(iter(lists.values()))) if lists else 0 for _, lists in flattened]
-    total = sum(max(count, 1) for count in points)
-    step = 1
-    while sum(max(math.ceil(count / step), 1) for count in points) > MAX_ROWS:
-        step += 1
+    points = [max((len(values) for values in lists.values()), default=0) for _, lists in flattened]
+    kept = _thinned(points)
+    all_fields = {name for fields, lists in flattened for name in (*fields, *lists)}
     numbered = (
         len(flattened) > 1
         and any(count > 1 for count in points)
         and not any(_tells_apart(name, [fields for fields, _ in flattened]) for name in flattened[0][0])
     )
+    id_name = RECORD_ID
+    suffix = 2
+    while id_name in all_fields:
+        id_name = f"{RECORD_ID}_{suffix}"
+        suffix += 1
     rows: list[dict[str, Any]] = []
-    for position, ((fields, lists), count) in enumerate(zip(flattened, points, strict=True), start=1):
-        base = {RECORD_ID: position, **fields} if numbered else fields
-        if not lists or count == 0:
+    for position, ((fields, lists), count, indices) in enumerate(zip(flattened, points, kept, strict=True), start=1):
+        base = {id_name: position, **fields} if numbered else fields
+        if count == 0:
             rows.append({**base, **dict.fromkeys(lists)})
             continue
-        for at in range(0, count, step):
-            rows.append({**base, **{name: values[at] for name, values in lists.items()}})
+        for at in indices:
+            rows.append({**base, **{name: values[at] if values else None for name, values in lists.items()}})
     expanded = dict.fromkeys(name for _, record_lists in flattened for name in record_lists)
     names = ", ".join(_clip(name, MAX_COLUMN_NAME_CHARS) for name in expanded)
-    warnings.append(f"list fields expanded into one row per value: {names}")
+    paired = " (lists of one record are paired by position)" if len(expanded) > 1 else ""
+    warnings.append(f"list fields expanded into one row per value{paired}: {names}")
     if numbered:
-        warnings.append(f"column '{RECORD_ID}' added: it numbers the records, so the rows of each stay together")
-    if step > 1:
+        warnings.append(f"column '{id_name}' added: it numbers the records, so the rows of each stay together")
+    total = sum(points)
+    if sum(len(indices) for indices in kept) < sum(max(count, 1) for count in points):
+        remedy = "paste fewer points" if len(flattened) == 1 else "paste fewer records or fewer points per record"
         warnings.append(
-            f"the lists hold {total:,} values in all, more than the {MAX_ROWS:,} rows a table may have: every "
-            f"{step}th value of each record is kept ({len(rows):,} rows); paste fewer records to keep every value"
+            f"the lists hold {total:,} values, more than the {MAX_ROWS:,} rows a table may have: "
+            f"{sum(len(indices) for indices in kept):,} evenly spaced values are kept, the first and last of each "
+            f"record among them; {remedy} to keep every value"
         )
     return rows
 
 
+def _thinned(points: Sequence[int]) -> list[list[int]]:
+    """For each record of `points` values, the positions kept so all rows fit `MAX_ROWS`: evenly spaced, both ends kept.
+
+    Every position while everything fits. Otherwise each record keeps about one in k of its
+    values, the smallest k that fits, always its first and its last one (a curve keeps its
+    range); a record of no values still takes one row. When even two values per record do not
+    fit, the data is `too_many_rows`.
+    """
+
+    def keep(count: int, step: int) -> int:
+        return min(count, max(math.ceil(count / step), 2)) if count else 1
+
+    if sum(max(count, 1) for count in points) <= MAX_ROWS:
+        return [list(range(count)) for count in points]
+    if sum(keep(count, max(points)) for count in points) > MAX_ROWS:
+        raise ParseError(
+            "too_many_rows", f"the lists give more than {MAX_ROWS:,} rows, even with two values per record"
+        )
+    low, high = 2, max(points)  # the kept rows shrink as the step grows: the smallest step that fits, by halving
+    while low < high:
+        middle = (low + high) // 2
+        if sum(keep(count, middle) for count in points) > MAX_ROWS:
+            low = middle + 1
+        else:
+            high = middle
+    step = low
+    kept: list[list[int]] = []
+    for count in points:
+        size = keep(count, step) if count else 0
+        if size <= 1:
+            kept.append(list(range(size)))
+            continue
+        kept.append(sorted({round(index * (count - 1) / (size - 1)) for index in range(size)}))
+    return kept
+
+
 def _tells_apart(name: str, records: Sequence[Mapping[str, Any]]) -> bool:
-    """Whether every record has the scalar field `name` and no two records share its value."""
-    values = [record.get(name) for record in records]
-    return all(value is not None for value in values) and len(set(map(repr, values))) == len(values)
+    """Whether the field `name` identifies the records: text or whole numbers, every record a different value.
+
+    Decided on the values as `data.csv` will hold them (review of 2026-10-15): `A` and `A ` or
+    `NA` and `N/A` clean to the same cell and do not tell two curves apart. A number with a
+    fraction (a temperature, a mass) is a measurement, never an identifier, even when unique;
+    so is a boolean.
+    """
+    cells: list[str] = []
+    for record in records:
+        value = record.get(name)
+        if isinstance(value, bool) or not isinstance(value, (str, int)):
+            return False
+        cell = str(value) if isinstance(value, int) else _clean_cell(value)[0]
+        if not cell:
+            return False
+        cells.append(cell)
+    return len(set(cells)) == len(cells)
 
 
 def _flat_records(
