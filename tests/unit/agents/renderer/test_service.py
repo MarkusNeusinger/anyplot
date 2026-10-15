@@ -563,6 +563,8 @@ class TestConvert:
         assert answer.job_id == "conv123" and answer.text == "x,y\n1,2\n"
         assert answer.meta is not None and answer.meta.kind == "xlsx"
         assert fake.calls == [("conv123", "convert")]
+        # An empty `damage` is left out, so an agents service from before the field (extra="forbid") reads it.
+        assert "damage" not in response.json()
 
     async def test_an_invalid_job_is_refused_without_echoing_it(self, client: httpx.AsyncClient) -> None:
         over = base64.b64encode(b"\0" * (5 * 1024 * 1024 + 1)).decode()

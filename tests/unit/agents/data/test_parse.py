@@ -642,7 +642,7 @@ class TestTableAmongOtherLines:
 
         assert list(parsed.column_dtypes) == ["a", "b", "c"]
         assert parsed.profile.rows == text.count("\n") - 1
-        assert parsed.profile.warnings[0].endswith("had fewer fields than the header; the missing cells are empty")
+        assert "had fewer fields than the header; the missing cells are empty (lines " in parsed.profile.warnings[0]
 
     def test_the_services_own_csv_keeps_every_row(self) -> None:
         """A `Total` category a sort moved to the end stays in a re-parse of a prepared table (#12166 review)."""
@@ -3051,6 +3051,176 @@ class TestRowNames:
         bindings = {binding.role: binding.column for binding in default_bindings(XY_ROLES, parsed.profile)}
 
         assert bindings == expected
+
+
+EVENTS_NDJSON = (
+    '{"ts": "2026-10-01T09:14:00Z", "service": "worker", "latency_ms": 40.6, "status": 200}\n'
+    '{"ts": "2026-10-01T10:43:00Z", "service": "worker", "latency_ms": 250.40, "status": 200}\n'
+    "\n"
+    '{"ts": "2026-10-01T10:59:00.125Z", "service": "web", "latency_ms": 85.5, "status": 503}\n'
+)
+
+
+class TestJsonLines:
+    """Live round 6 (R6-2): `events.ndjson`, one JSON object per line, was refused as unreadable."""
+
+    def test_json_lines_read_as_records_with_every_value(self) -> None:
+        parsed = parse_dataset(EVENTS_NDJSON)
+
+        assert parsed.profile.source_format == "json_lines"
+        assert [column.name for column in parsed.profile.columns] == ["ts", "service", "latency_ms", "status"]
+        assert parsed.profile.rows == 3
+        rows = list(csv_rows(parsed.csv))[1:]
+        assert [row[1:] for row in rows] == [
+            ["worker", "40.6", "200"],
+            ["worker", "250.4", "200"],
+            ["web", "85.5", "503"],
+        ]
+        assert rows[2][0].startswith("2026-10-01T10:59:00.125")  # the milliseconds stay
+        assert warned(parsed, "trailing zeros")  # 250.40 -> 250.4 is said, as in a JSON array
+
+    def test_a_broken_line_is_named_with_the_json_error(self) -> None:
+        text = '{"a": 1}\n{"a": 2}\n{"a": 3,}\n'
+        with pytest.raises(ParseError) as caught:
+            parse_dataset(text)
+
+        assert caught.value.code == "unparseable"
+        assert caught.value.message.startswith(
+            "the data reads as JSON Lines (one JSON object per line), but line 3 is not valid JSON: "
+        )
+        assert caught.value.message.endswith("trailing comma before end of object at column 8")
+
+    def test_the_column_of_a_json_error_counts_the_lines_leading_spaces(self) -> None:
+        """Copilot review of #12201: the column is the one in the paste, indentation included."""
+        with pytest.raises(ParseError) as caught:
+            parse_dataset('{"a": 1, "b": 2}\n    {"a": 2 "b": 3}\n')
+
+        assert caught.value.message.endswith("line 2 is not valid JSON: Expecting ',' delimiter at column 13")
+
+    def test_a_lone_surrogate_in_a_named_column_list_is_refused_as_text(self) -> None:
+        """Copilot review of #12201: a refusal's message is always valid text, never a 500 on encoding."""
+        with pytest.raises(ParseError) as caught:
+            parse_dataset('{"\\ud800": [1, 2], "b": [1]}')
+
+        caught.value.message.encode("utf-8")  # raises when a surrogate slipped into the message
+
+    def test_a_line_that_holds_no_object_is_named(self) -> None:
+        with pytest.raises(ParseError, match="line 2 holds an array of 2 values instead of an object"):
+            parse_dataset('{"a": 1}\n[1, 2]\n')
+
+    def test_repeated_keys_and_nan_are_counted_as_in_json(self) -> None:
+        parsed = parse_dataset('{"a": 1, "a": 2, "b": NaN}\n{"a": 3, "b": 4}\n')
+
+        assert warned(parsed, "1 key repeated") and warned(parsed, "1 value NaN, Infinity or -Infinity")
+
+    def test_json_lines_below_a_title_keep_the_title_as_notes(self) -> None:
+        """Fable review of #12201: under a title line, JSON Lines had read as one text column of JSON."""
+        parsed = parse_dataset('Export 2026\n# source: a log\n{"a": 1, "b": 2}\n{"a": 2, "b": 3}\n')
+
+        assert (parsed.profile.source_format, parsed.profile.rows) == ("json_lines", 2)
+        assert parsed.context_lines == ["Export 2026", "# source: a log"]
+        assert warned(parsed, "left out 2 lines above the table")
+
+    def test_a_broken_line_below_a_title_is_named(self) -> None:
+        with pytest.raises(ParseError, match="line 3 is not valid JSON: Expecting ',' delimiter at column 9"):
+            parse_dataset('Export 2026\n{"a": 1, "b": 2}\n{"a": 2 "b": 3}\n')
+
+    def test_a_table_with_a_json_cell_stays_a_table(self) -> None:
+        assert parse_dataset('a,b\n{"x":1},2\n3,4\n').profile.source_format == "csv"
+
+    def test_a_dropped_jsonl_file_of_one_record_is_one_row(self) -> None:
+        """Gemini review of #12201: a one-line `.jsonl` file is one record, not category/value pairs."""
+        parsed = parse_dataset('{"city": "Berlin", "pop": 3.7}\n', json_lines=True)
+
+        assert (parsed.profile.source_format, parsed.profile.rows) == ("json_lines", 1)
+        assert [column.name for column in parsed.profile.columns] == ["city", "pop"]
+
+    def test_a_pasted_object_of_mixed_values_stays_pairs_and_says_so(self) -> None:
+        mixed = parse_dataset('{"city": "Berlin", "pop": 3.7}')
+        counts = parse_dataset('{"Hund": 7, "Katze": 3}')
+
+        assert (mixed.profile.source_format, mixed.profile.rows) == ("json_pairs", 2)
+        assert warned(mixed, "read as 2 category/value pairs, one row per key; to read it as one row")
+        assert counts.warnings == []  # one kind of value: the pair reading is the plain one
+
+    def test_a_first_line_that_is_no_object_is_no_json_lines(self) -> None:
+        """Two arrays on two lines stay a refusal of JSON, which names the JSON error."""
+        with pytest.raises(ParseError, match=r"not valid JSON: Extra data at line 2, column 1"):
+            parse_dataset("[1, 2]\n[3, 4]\n")
+
+
+def csv_rows(text: str) -> list[list[str]]:
+    import csv
+
+    return list(csv.reader(io.StringIO(text)))
+
+
+class TestRefusalsNameTheirCause:
+    """Owner rule of 2026-10-16: a refused paste says what it fails on (live round 6, R6-3)."""
+
+    def test_ragged_rows_name_every_line_and_its_field_count(self) -> None:
+        text = "Monat,Besucher,Umsatz\nJan,1200,5400\nFeb,1350,6100,Notiz: Aktion\nMär,1100\nApr,1500,7200\n"
+        with pytest.raises(ParseError) as caught:
+            parse_dataset(text)
+
+        assert caught.value.code == "unparseable"
+        assert caught.value.message == (
+            "the header has 3 fields, but line 3 has 4; line 4 has 2; a value that holds a comma needs quotes around it"
+        )
+
+    def test_many_ragged_lines_are_grouped_and_counted(self) -> None:
+        text = "a,b\n" + "".join(f"{i},{i},{i}\n" for i in range(12))
+        with pytest.raises(ParseError) as caught:
+            parse_dataset(text)
+
+        assert caught.value.message.startswith("the header has 2 fields, but lines 2, 3, 4, 5, 6 and 7 more have 3")
+
+    def test_trailing_empty_fields_are_left_out_with_a_count(self) -> None:
+        parsed = parse_dataset("Monat,Besucher\nJan,1200,,\nFeb,1350\nMär,1100,\n")
+
+        assert parsed.csv == "Monat,Besucher\nJan,1200\nFeb,1350\nMär,1100\n"
+        assert warned(parsed, "2 rows had empty fields past the header's 2 columns; those empty fields were left out")
+
+    def test_short_rows_name_their_lines(self) -> None:
+        parsed = parse_dataset("a,b,c\n1,2,3\n4,5\n6,7,8\n9,10,11\n")
+
+        assert warned(parsed, "1 row had fewer fields than the header; the missing cells are empty (line 3)")
+
+    @pytest.mark.parametrize(
+        ("text", "fragment"),
+        [
+            # The end of the input is the paste's line 2 (its trailing line break counts).
+            ('[{"a": 1}, {"a": 2}\n', "not valid JSON: Expecting ',' delimiter at line 2, column 1"),
+            ('data = {"a": [1, 2}\n', "is not one: closing parenthesis '}' does not match opening parenthesis '['"),
+            # Review of #12201: positions count from the paste's own first line, indentation included.
+            ('\n\n{"a": 1,\n"b"}', "Expecting ':' delimiter at line 4, column 4"),
+            ('\n\n    {"a": 1 "b": 2}\n', "Expecting ',' delimiter at line 3, column 13; a comma is missing"),
+            ('\n\ndata = {"a": [1, 2}', "does not match opening parenthesis '[' on line 3"),
+            # JSON that Python reads as names (`true`, `null`, unquoted keys) gets the JSON error, never "a call".
+            ('[{"a": true}, {"a": false},]', "not valid JSON: Illegal trailing comma before end of array"),
+            ("{a: 1, b: 2}", "at line 1, column 2; JSON writes every key in double quotes"),
+            ('{"a": null},\n{"a": 1}', "Extra data at line 1, column 12; for one object per line (JSON Lines) leave"),
+            ('{"a": open("x")}\n', "holds a name, a call or an operation, which is never run"),
+            ('[{"a": 1}, 7]\n', "item 2 is a number"),
+            ('{"a": [1, 2], "b": [1]}\n', "the column lists have different lengths (a (2), b (1))"),
+            ('a,b\n"x,1\n', "the quoting is malformed near line 2"),
+        ],
+    )
+    def test_each_refusal_names_where(self, text: str, fragment: str) -> None:
+        with pytest.raises(ParseError) as caught:
+            parse_dataset(text)
+
+        assert fragment in caught.value.message
+
+    def test_a_long_cell_names_its_row_and_length(self) -> None:
+        cell = "x" * (MAX_INPUT_CELL_CHARS + 5)
+        with pytest.raises(ParseError) as caught:
+            parse_dataset(f"name,v\nok,1\n{cell},2\n")
+
+        assert caught.value.message == (
+            f"the cell in row 2 of column 'name' has {MAX_INPUT_CELL_CHARS + 5:,} characters; "
+            f"at most {MAX_INPUT_CELL_CHARS} are read"
+        )
 
 
 XY_ROLES = [

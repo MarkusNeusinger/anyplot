@@ -12,7 +12,7 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `GET /v1/eligibility?spec=&library=` | | `{eligible, status, reasons}` | |
 | `POST /v1/sessions` | `{user, spec_id, library, locale, snapshot}` | `{session_id, eligibility}` | `422 not_eligible` |
 | `POST /v1/sessions/{sid}/library` | `{library, snapshot}` | `{session_id, eligibility}` | `422 not_eligible`, `409 run_active` |
-| `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?, source?, table?}` (`source`: the name of the file the page read the text from, at most 1,024 characters; screened on its own, never a note; `table`: 1 to 10, which of several tables in the text to read, from the previous answer's `tables`) | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version, language, file_name?, tables?, table?}` (`file_name`: the dropped file's name as the session keeps it, `(name withheld)` when the screen refused it; `tables`: one label per table, its header names and its row count, when the text held two or more tables each under its own header after a blank line, and `table` the one read, see `data/parse.py` `_one_table`;`suggestion`: the wide-table offer of `data/shape.py`, or null; `context_lines`: the notes pasted above or below the table that passed the pre-filter and the scope judge, which the root gets with the next `summarize_data` turn; `language`: the session language as `{language, source}`, which a paste before any typed message or choice sets from the notes' or the column names' language, source `pasted`), stored as version 1 (the undo history of an earlier paste is dropped); or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips that fallback and keeps every row) | `413 too_long`, `422 unparseable`, `422 formula` (text of at most 2,000 characters that asks for a formula, which the chat's `generate_data` computes; never transcribed), `403 data_refused`, `403 session_closed` (the scope judge closed the session), `409 run_active` (a turn of the user in any session, or another paste of the user in flight), `429 rate_limited` / `429 daily_limit` (`AGENT_USER_PASTES_PER_MINUTE` / `_PER_DAY`, or the daily token budgets for `daily_limit`), `429 locked_out` (the day's `attack` strikes), `503 guard_unavailable` |
+| `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?, source?, table?}` (`source`: the name of the file the page read the text from, at most 1,024 characters; screened on its own, never a note; `table`: 1 to 10, which of several tables in the text to read, from the previous answer's `tables`) | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version, language, file_name?, tables?, table?}` (`file_name`: the dropped file's name as the session keeps it, `(name withheld)` when the screen refused it; `tables`: one label per table, its header names and its row count, when the text held two or more tables each under its own header after a blank line, and `table` the one read, see `data/parse.py` `_one_table`;`suggestion`: the wide-table offer of `data/shape.py`, or null; `context_lines`: the notes pasted above or below the table that passed the pre-filter and the scope judge, which the root gets with the next `summarize_data` turn; `language`: the session language as `{language, source}`, which a paste before any typed message or choice sets from the notes' or the column names' language, source `pasted`), stored as version 1 (the undo history of an earlier paste is dropped); or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips that fallback and keeps every row) | `413 too_long`, `422 unparseable` (both with `cause`, the parser's sentence naming what the data fails on, at most 300 characters), `422 formula` (text of at most 2,000 characters that asks for a formula, which the chat's `generate_data` computes; never transcribed), `403 data_refused`, `403 session_closed` (the scope judge closed the session), `409 run_active` (a turn of the user in any session, or another paste of the user in flight), `429 rate_limited` / `429 daily_limit` (`AGENT_USER_PASTES_PER_MINUTE` / `_PER_DAY`, or the daily token budgets for `daily_limit`), `429 locked_out` (the day's `attack` strikes), `503 guard_unavailable` |
 | `POST /v1/sessions/{sid}/dataset/convert` | `{data_base64, sheet?}` (a dropped Excel, OpenDocument, Parquet, Feather, Arrow or NumPy file, at most 5 MiB; `sheet` a sheet or `.npz` array the previous answer named) | `{text, format, kind, rows, columns, sheet, sheets, sheet_count, warnings, dropped}`: the file read in the renderer's sandbox (`harness.py --convert`) into the text the paste box takes (CSV, or JSON records for a table with list columns, `format`), every value with the precision it came with, the sheet read and at most 10 visible ones with cells (`sheet_count` all of them), `warnings` counts (`formulas_without_value`, `hidden_sheets`, `dropped_columns`, `list_columns`, `utc_timestamps`, `renamed_columns`), `dropped` the names of the columns left out; nothing stored, no model call | `413 too_long`, `422 invalid`, `422 file_<refusal>` (`wire.CONVERT_REASONS`, with `measured` and `limit` for a broken cap) and `file_timeout`, `file_too_complex` (also a reader that died without its `status.json`), `file_too_large`, `file_unreadable`, `403 session_closed`, `409 run_active` (another conversion of the user in flight), `429 rate_limited` / `429 daily_limit` (`AGENT_USER_CONVERSIONS_PER_MINUTE` / `_PER_DAY`, or the daily token budgets), `429 locked_out`, `503 capacity` (no render slot within `AGENT_CONVERT_SLOT_WAIT_S`), `503 convert_unavailable` (no renderer, or one without `/convert`) |
 | `PUT /v1/sessions/{sid}/bindings` | `[{role, column}]` | `{bindings, complete, missing_roles, warnings}`: `warnings` names a role that needs values of 0 or more bound to a column with a negative value, or left open for that reason (`data/signs.py`); never a refusal | `409 run_active`, `422 invalid` (with `errors`, at most 20 lines) |
 | `PUT /v1/sessions/{sid}/language` | `{language}` (a short name or code, `^[A-Za-z][A-Za-z -]{0,39}$`) | `{language, source}`: the session language in its stored form (`English` is `en`), source `chosen`, which detection never overrides | `409 run_active`, `422` (the pattern) |
@@ -137,7 +137,7 @@ from agents.anyplot.data.prepare import Operation, PrepareError, apply_operation
 from agents.anyplot.data.roles import DataRole
 from agents.anyplot.data.shape import long_suggestion
 from agents.anyplot.data.store import StoreFull
-from agents.anyplot.data.transcribe import looks_like_free_text, table_to_csv, transcribable
+from agents.anyplot.data.transcribe import MAX_TRANSCRIBE_CHARS, looks_like_free_text, table_to_csv, transcribable
 from agents.anyplot.dataset_context import FILE_NAME_WITHHELD
 from agents.anyplot.dataset_guard import DataRefused, GuardUnavailable, check_dataset
 from agents.anyplot.dataset_versions import dataset_payload, push_version, undo_version
@@ -201,6 +201,7 @@ from agents.anyplot.session_state import (
 from agents.anyplot.settings import AgentSettings, get_settings
 from agents.anyplot.theme_render import RenderGone, render_theme
 from agents.renderer.wire import (
+    CONVERT_DAMAGES,
     CONVERT_HARNESS_EXITS,
     MAX_CONVERT_BASE64_CHARS,
     MAX_CONVERT_INPUT_BYTES,
@@ -259,13 +260,33 @@ def disable_content_capture() -> None:
 disable_content_capture()
 
 
-class AgentsError(Exception):
-    """A `/v1` error answered as `{"detail": code}`; never an exception text."""
+MAX_CAUSE_CHARS = 300
+"""The longest `cause` an error answer carries (`AgentsError`); the BFF applies the same cap."""
 
-    def __init__(self, status: int, code: str) -> None:
+
+def clip_cause(cause: str) -> str:
+    """The cause within `MAX_CAUSE_CHARS`, a longer one cut at a word boundary with `…` (never mid-word)."""
+    if len(cause) <= MAX_CAUSE_CHARS:
+        return cause
+    head = cause[: MAX_CAUSE_CHARS - 1]
+    space = head.rfind(" ")
+    return (head[:space] if space >= MAX_CAUSE_CHARS // 2 else head).rstrip(" ,;:") + "…"
+
+
+class AgentsError(Exception):
+    """A `/v1` error answered as `{"detail": code}`, plus `"cause"` when the refusal names one; never an exception text.
+
+    `cause` is a sentence the service wrote for the user about their own data, such as the
+    parser's `ParseError.message` ("the header has 3 fields, but line 3 has 4"): owner rule
+    of 2026-10-16, a paste that is refused says what it fails on. It never carries an
+    exception's text, a stack or a model's words.
+    """
+
+    def __init__(self, status: int, code: str, cause: str | None = None) -> None:
         super().__init__(code)
         self.status = status
         self.code = code
+        self.cause = cause
 
 
 def _version() -> str:
@@ -540,7 +561,11 @@ app = FastAPI(title="anyplot-agents", docs_url=None, redoc_url=None, openapi_url
 
 @app.exception_handler(AgentsError)
 async def _agents_error(_: Request, exc: AgentsError) -> JSONResponse:
-    return JSONResponse(status_code=exc.status, content={"detail": exc.code}, headers=_NO_STORE)
+    content: dict[str, Any] = {"detail": exc.code}
+    if exc.cause:
+        # Backstop: a cause that names the user's text must never turn a refusal into a 500 on encoding.
+        content["cause"] = clip_cause(exc.cause).encode("utf-8", "replace").decode("utf-8")
+    return JSONResponse(status_code=exc.status, content=content, headers=_NO_STORE)
 
 
 # --- Caller and user ---------------------------------------------------------------------
@@ -955,6 +980,7 @@ async def convert_dataset_file(
         outcome=code,
         exit_code=output.exit_code,
         reason=output.reason,
+        damage=output.damage,
         bytes=len(data),
         wall_s=round(output.wall_s, 3),
     )
@@ -963,6 +989,8 @@ async def convert_dataset_file(
         content.update(
             {key: value for key, value in (("measured", output.measured), ("limit", output.limit)) if value is not None}
         )
+    if output.refusal == "corrupt" and output.damage in CONVERT_DAMAGES:
+        content["damage"] = output.damage  # which part is broken, a closed name the page words (owner, 2026-10-16)
     return JSONResponse(status_code=422, content=content, headers=_NO_STORE)
 
 
@@ -982,15 +1010,24 @@ async def _ingest_paste(
         _refuse_code_or_formula(ledger, body.text)
     try:
         # A confirmed transcription is the service's own CSV, which the user has seen row by row: no row is left out.
-        parsed = parse_dataset(body.text, find_table=not body.confirmed, table=body.table or 1)
+        # A dropped `.jsonl` or `.ndjson` file is JSON Lines by its name, so a file of one record is one row.
+        json_lines = body.source is not None and body.source.lower().rstrip().endswith((".jsonl", ".ndjson"))
+        parsed = parse_dataset(body.text, find_table=not body.confirmed, table=body.table or 1, json_lines=json_lines)
     except ParseError as exc:
         if exc.code == "too_long":
-            raise AgentsError(413, "too_long") from None
+            raise AgentsError(413, "too_long", exc.message) from None
         # Text with no table in it (prose, a list on one line) is the transcriber's; a broken
-        # table (ragged rows, bad quoting, an over-long cell, invalid JSON) stays the parser's refusal.
+        # table (ragged rows, bad quoting, an over-long cell, invalid JSON) stays the parser's refusal,
+        # which names its cause (owner rule of 2026-10-16).
         if exc.code == "no_table" and transcribable(body.text):
             return await _transcribe(services, ledger, body.text)
-        raise AgentsError(422, "unparseable") from None
+        cause = exc.message
+        if exc.code == "no_table":
+            cause = (
+                f"{cause}, and the text is longer than the {MAX_TRANSCRIBE_CHARS:,} characters the model that reads "
+                "free text as a table takes"
+            )
+        raise AgentsError(422, "unparseable", cause) from None
     if not body.confirmed and looks_like_free_text(parsed) and transcribable(body.text):
         return await _transcribe(services, ledger, body.text)
     services.usage.add_paste(user)  # the first model call of this paste: only a paste that reaches one counts
@@ -1182,13 +1219,20 @@ async def _transcribe(services: Services, ledger: RequestLedger, text: str) -> J
     csv_text = table_to_csv(reading.table)
     try:
         parsed = parse_dataset(csv_text, find_table=False)
-    except ParseError:
+    except ParseError as exc:
         attribution("data_transcribe", ledger, outcome="unparseable", judge_tokens=reading.tokens)
-        raise AgentsError(422, "unparseable") from None
+        raise AgentsError(
+            422, "unparseable", f"the model read the text as a table, but that table was refused: {exc.message}"
+        ) from None
     if looks_like_free_text(parsed) and parsed.profile.columns[0].name == "text":
         # The rubric's answer for text that holds no table: one column named `text`.
         attribution("data_transcribe", ledger, outcome="no_table", judge_tokens=reading.tokens)
-        raise AgentsError(422, "unparseable")
+        raise AgentsError(
+            422,
+            "unparseable",
+            "no table found: the text has no separators between columns, and the model that reads free text found "
+            "no rows and columns in it",
+        )
     attribution(
         "data_transcribe",
         ledger,

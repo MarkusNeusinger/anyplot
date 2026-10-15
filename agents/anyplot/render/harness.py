@@ -200,7 +200,7 @@ MISSING_MATH_GLYPHS: set[int] = set()  # code points reported by mathtext (no fa
 DATA_FLAG = "--data"
 DATA_OUT_FILE = "out.csv"
 DATA_STATUS_FILE = "status.json"
-"""The data run's outcome for the host (`write_status`): `{"exit", "reason", "measured"?, "limit"?}`."""
+"""The data run's outcome for the host (`write_status`): `{"exit", "reason", "measured"?, "limit"?, "damage"?}`."""
 DATA_MAX_ROWS = 20_000  # agents/anyplot/schemas.py MAX_ROWS
 DATA_MAX_COLUMNS = 50  # agents/anyplot/schemas.py MAX_COLUMNS
 DATA_MAX_CSV_BYTES = 2 * 1024 * 1024  # agents/anyplot/data/parse.py MAX_COMPUTED_BYTES (pastes take 1 MiB)
@@ -245,6 +245,9 @@ CONVERT_REFUSALS = (
     "too_complex",
 )
 """`convert.REFUSALS`, in its order (pinned by a test): the harness exits with 10 plus the index."""
+CONVERT_DAMAGES = ("zip", "workbook", "sheet", "parquet", "arrow", "npy_header", "npy_data")
+"""`convert.DAMAGES` (pinned by a test): the broken part of a `corrupt` file, written to `status.json` as `damage`
+only when it is one of these names, so no text of the reader's ever leaves the sandbox."""
 CONVERT_EXIT = {
     "ok": 0,
     "error": 1,
@@ -1742,6 +1745,8 @@ def write_status(handle, code, measure, exits=DATA_EXIT):
     for key in ("measured", "limit"):
         if isinstance(measure.get(key), int):
             report[key] = measure[key]
+    if measure.get("damage") in CONVERT_DAMAGES:
+        report["damage"] = measure["damage"]
     try:
         handle.write(json.dumps(report))
         handle.close()
@@ -1986,6 +1991,9 @@ def run_conversion(path, guard, measure):
                 value = getattr(exc, key, None)
                 if isinstance(value, int) and not isinstance(value, bool):
                     measure[key] = value
+            damage = getattr(exc, "damage", None)
+            if isinstance(damage, str) and damage in CONVERT_DAMAGES:
+                measure["damage"] = damage
             return CONVERT_EXIT.get(exc.reason, CONVERT_EXIT["error"])
         except BaseException as exc:  # MemoryError and SystemExit too: the code is the harness's own
             try:

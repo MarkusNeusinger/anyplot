@@ -313,7 +313,12 @@ class LocalDockerBackend:
             if exit_code != 0:
                 measured, limit = (status.measured, status.limit) if status is not None else (None, None)
                 return ConvertOutput(
-                    exit_code=exit_code, refusal=convert_refusal(exit_code), measured=measured, limit=limit, wall_s=wall
+                    exit_code=exit_code,
+                    refusal=convert_refusal(exit_code),
+                    measured=measured,
+                    limit=limit,
+                    damage=status.damage if status is not None else None,
+                    wall_s=wall,
                 )
             try:
                 raw = read_output(run_dir / DATA_OUT_FILE, MAX_CONVERT_TEXT_BYTES)

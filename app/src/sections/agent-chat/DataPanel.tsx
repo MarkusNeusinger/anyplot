@@ -967,7 +967,9 @@ export function DataPanel({
           failure.code,
           failure.measured,
           failure.limit,
-          failure.ref
+          failure.ref,
+          file.browserKind,
+          failure.damage
         ),
       });
       trackFile(file.browserKind, null, failure.code.startsWith('file_') ? 'refused' : 'failed');
@@ -1496,7 +1498,11 @@ export function DataPanel({
 
       {state.datasetError && (
         <Box role="alert" sx={{ ...bodyTextSx, color: colors.error, mt: 1.5 }}>
-          {describeDataFailure(state.datasetError.code, state.datasetError.ref)}
+          {describeDataFailure(
+            state.datasetError.code,
+            state.datasetError.ref,
+            state.datasetError.cause
+          )}
         </Box>
       )}
 

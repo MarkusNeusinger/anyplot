@@ -111,6 +111,12 @@ REFUSALS = (
 """Why a file is not converted. The harness exits with `REFUSAL_EXIT_BASE` plus the index (`harness.CONVERT_EXIT`),
 and the renderer maps the code back (`wire.CONVERT_REASONS`); a test pins the three together."""
 REFUSAL_EXIT_BASE = 10
+DAMAGES = ("zip", "workbook", "sheet", "parquet", "arrow", "npy_header", "npy_data")
+"""Which part of a `corrupt` file is broken (owner decision of 2026-10-16: the page names it), a closed set and never
+an exception's text: `zip` the zip container (cut off, a member that does not inflate to its declared size, a part
+that cannot be read), `workbook` the workbook's own parts (no sheet list), `sheet` the cells of one sheet, `parquet` a
+Parquet footer or data page, `arrow` an Arrow IPC or Feather stream, `npy_header` a NumPy header, `npy_data` NumPy data
+shorter than its header says. `harness.CONVERT_DAMAGES` and `wire.ConvertDamage` are pinned equal by a test."""
 
 OLE_MAGIC = b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"
 ZIP_MAGICS = (b"PK\x03\x04", b"PK\x05\x06")
@@ -120,13 +126,20 @@ _CONTROLS = re.compile(r"[\x00-\x08\x0b-\x1f\x7f-\x9f]")
 
 
 class Refused(Exception):
-    """A file this module does not convert: `reason` is one of `REFUSALS`, with the measured value and the cap."""
+    """A file this module does not convert: `reason` is one of `REFUSALS`, with the measured value and the cap, and
+    for `corrupt` the broken part (`damage`, one of `DAMAGES`)."""
 
-    def __init__(self, reason, measured=None, limit=None):
+    def __init__(self, reason, measured=None, limit=None, damage=None):
         super().__init__(reason)
         self.reason = reason
         self.measured = measured
         self.limit = limit
+        self.damage = damage if damage in DAMAGES else None
+
+
+def _corrupt(damage):
+    """A `corrupt` refusal that names its broken part."""
+    return Refused("corrupt", damage=damage)
 
 
 class Conversion:
@@ -228,7 +241,7 @@ def _open_zip(data):
     try:
         return zipfile.ZipFile(io.BytesIO(data))
     except (zipfile.BadZipFile, ValueError, OSError, EOFError):
-        raise Refused("corrupt") from None
+        raise _corrupt("zip") from None
 
 
 def check_archive(archive, data):
@@ -253,7 +266,7 @@ def check_archive(archive, data):
         raise Refused("archive_limits", total // max(size, 1), MAX_ZIP_RATIO)
     for info in infos:
         if _inflated_size(data, info) != info.file_size:
-            raise Refused("corrupt")
+            raise _corrupt("zip")
 
 
 INFLATE_CHUNK = 1024 * 1024
@@ -268,12 +281,12 @@ def _inflated_size(data, info):
     offset = info.header_offset
     header = data[offset : offset + 30]
     if len(header) < 30 or header[:4] != b"PK\x03\x04":
-        raise Refused("corrupt")
+        raise _corrupt("zip")
     name_length, extra_length = struct.unpack("<HH", header[26:30])
     start = offset + 30 + name_length + extra_length
     raw = data[start : start + info.compress_size]
     if len(raw) != info.compress_size:
-        raise Refused("corrupt")
+        raise _corrupt("zip")
     if info.compress_type == zipfile.ZIP_STORED:
         return len(raw)
     if info.compress_type != zipfile.ZIP_DEFLATED:
@@ -289,7 +302,7 @@ def _inflated_size(data, info):
         if total < bound and not inflater.eof:
             total += len(inflater.flush())
     except zlib.error:
-        raise Refused("corrupt") from None
+        raise _corrupt("zip") from None
     return total
 
 
@@ -301,7 +314,7 @@ def _zip_kind(data):
             try:
                 mimetype = archive.read("mimetype")[:200].strip()
             except (zipfile.BadZipFile, OSError, ValueError, EOFError):
-                raise Refused("corrupt") from None
+                raise _corrupt("zip") from None
             if mimetype == ODS_MIMETYPE:
                 return "ods"
         if "[Content_Types].xml" in names:
@@ -311,7 +324,7 @@ def _zip_kind(data):
                 try:
                     types = archive.read("[Content_Types].xml")
                 except (zipfile.BadZipFile, OSError, ValueError, EOFError):
-                    raise Refused("corrupt") from None
+                    raise _corrupt("zip") from None
                 return "xlsm" if b"macroEnabled" in types else "xlsx"
         if names and all(name.endswith(".npy") for name in names):
             return "npz"
@@ -479,7 +492,7 @@ def read_workbook(data, kind, sheet_name, warnings):
     except PasswordError:
         raise Refused("encrypted") from None
     except Exception:  # calamine's errors (zip, XML, a broken record) and anything its reader raises
-        raise Refused("corrupt") from None
+        raise _corrupt("workbook") from None
     with workbook:
         visible = _visible_sheets(workbook, warnings)
         if sheet_name is not None and sheet_name not in visible:
@@ -503,7 +516,7 @@ def read_workbook(data, kind, sheet_name, warnings):
             except MemoryError:
                 raise Refused("too_complex") from None
             except Exception:
-                raise Refused("corrupt") from None
+                raise _corrupt("sheet") from None
             rows, width = read_grid(sheet)
             return rows, width, found.unsaved if found is not None else 0
 
@@ -718,7 +731,7 @@ def read_arrow(data, kind, warnings):
     except MemoryError:  # pyarrow's ArrowMemoryError among them: a decompression bomb past the address-space limit
         raise Refused("too_complex") from None
     except Exception:  # pyarrow's ArrowInvalid, OSError and kin for a broken or hostile file
-        raise Refused("corrupt") from None
+        raise _corrupt("parquet" if kind == "parquet" else "arrow") from None
     if lists:
         return _records(names, columns, kind, warnings)
     return _table(names, columns, kind, warnings)
@@ -785,7 +798,7 @@ def _arrow_table(pa, data, kind):
         # is a forged footer (security review of #12194).
         grouped = sum(metadata.row_group(index).num_rows for index in range(metadata.num_row_groups))
         if grouped != metadata.num_rows:
-            raise Refused("corrupt")
+            raise _corrupt("parquet")
         if grouped > MAX_ROWS:
             raise Refused("too_many_rows", grouped, MAX_ROWS)
         schema = parquet.schema_arrow
@@ -980,19 +993,19 @@ def _npy_array(raw):
     except MemoryError:
         raise Refused("too_complex") from None
     except Exception:  # ValueError, SyntaxError, tokenize's TokenError of a broken header literal, and kin
-        raise Refused("corrupt") from None
+        raise _corrupt("npy_header") from None
     if dtype.hasobject:
         raise Refused("object_array")
     count = math.prod(shape) if shape else 1
     if count * max(dtype.itemsize, 1) > len(raw):
-        raise Refused("corrupt")
+        raise _corrupt("npy_data")
     handle.seek(0)
     try:
         return format_.read_array(handle, allow_pickle=False, max_header_size=NPY_MAX_HEADER)
     except MemoryError:
         raise Refused("too_complex") from None
     except Exception:
-        raise Refused("corrupt") from None
+        raise _corrupt("npy_data") from None
 
 
 def _array_shape_ok(array):
@@ -1057,7 +1070,7 @@ def read_numpy(data, kind, sheet_name, warnings):
             try:
                 raw = archive.read(label + ".npy")
             except (zipfile.BadZipFile, OSError, ValueError, EOFError, KeyError):
-                raise Refused("corrupt") from None
+                raise _corrupt("zip") from None
             try:
                 array = _npy_array(raw)
             except Refused as exc:

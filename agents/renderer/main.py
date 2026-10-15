@@ -419,6 +419,7 @@ class Renderer:
                     "kind": None if response.meta is None else response.meta.kind,
                     "measured": response.measured,
                     "limit": response.limit,
+                    "damage": response.damage,
                     "attempts": response.attempts,
                     "text_bytes": None if response.text is None else len(response.text.encode("utf-8")),
                     "slot_wait_s": response.timings.slot_wait_s,
@@ -569,6 +570,9 @@ async def _serve(job: Job, renderer: Renderer, request: Request) -> JSONResponse
         if error is not None:
             raise error
         content = task.result().model_dump(mode="json")
+        if "damage" in content and content["damage"] is None:
+            # Left out while empty: an agents service from before the field forbids unknown keys (deploy order).
+            del content["damage"]
     except Exception as exc:  # the class only: a message can carry the job's code, data or output
         logger.error(json.dumps({"event": "render_error", "job_id": job.job_id, "error": type(exc).__name__}))
         return _internal()

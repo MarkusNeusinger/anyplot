@@ -403,6 +403,7 @@ class RemoteBackend:
             refusal=answer.refusal,
             measured=answer.measured,
             limit=answer.limit,
+            damage=answer.damage,
             text=answer.text,
             meta=answer.meta,
             reason=answer.reason,

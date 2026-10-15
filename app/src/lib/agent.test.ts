@@ -466,6 +466,38 @@ describe('toAgentApiError', () => {
     expect(error.code).toBe('not_enabled');
   });
 
+  it('reads the cause of a refused paste as one line, text only', async () => {
+    const refused = await toAgentApiError(
+      new Response(
+        JSON.stringify({
+          detail: 'unparseable',
+          ref: 'r',
+          cause: 'the header has 3 fields,\n but line 3 has 4',
+        }),
+        { status: 422 }
+      )
+    );
+    expect(refused).toMatchObject({
+      code: 'unparseable',
+      cause: 'the header has 3 fields, but line 3 has 4',
+    });
+    const odd = await toAgentApiError(
+      new Response(JSON.stringify({ detail: 'unparseable', cause: ['x'] }), { status: 422 })
+    );
+    expect(odd.cause).toBeNull();
+  });
+
+  it('reads the broken part of a damaged file from the closed set only', async () => {
+    const damaged = await toAgentApiError(
+      new Response(JSON.stringify({ detail: 'file_corrupt', damage: 'parquet' }), { status: 422 })
+    );
+    expect(damaged.damage).toBe('parquet');
+    const unknown = await toAgentApiError(
+      new Response(JSON.stringify({ detail: 'file_corrupt', damage: 'Traceback' }), { status: 422 })
+    );
+    expect(unknown.damage).toBeNull();
+  });
+
   it("keeps the binding check's lines of a refused binding set", async () => {
     const error = await toAgentApiError(
       new Response(

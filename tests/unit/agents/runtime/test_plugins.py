@@ -1180,7 +1180,9 @@ class TestToolSafety:
             tool=FakeTool("plot_pipeline"), tool_args={}, tool_context=FakeContext(), result=widest
         )
 
-        assert result is not None and set(result) == {"status", "attempts", "artifacts", "notes"}
+        assert result is not None and set(result) == {"status", "attempts", "artifacts", "notes", "data_confirmed"}
+        # A shipped plot tells the root the data was confirmed (live round 6, R6-1); a failed one says nothing.
+        assert result["data_confirmed"] is True
         assert result["notes"].startswith(DATA_PREAMBLE + "\n<tool_notes>\n")
         assert result["notes"].count("</tool_notes>") == 1
         assert await ToolSafetyPlugin().after_tool_callback(

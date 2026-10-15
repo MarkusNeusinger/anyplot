@@ -64,6 +64,19 @@ class TestPins:
         assert len(set(harness.CONVERT_EXIT.values())) == len(harness.CONVERT_EXIT)
         assert set(harness.CONVERT_EXIT.values()) == wire.CONVERT_HARNESS_EXITS
 
+    def test_damages_agree_across_converter_harness_wire_and_bff(self) -> None:
+        from api.routers.agent import CONVERT_DAMAGES as BFF_DAMAGES
+
+        assert convert.DAMAGES == harness.CONVERT_DAMAGES == wire.CONVERT_DAMAGES
+        assert set(convert.DAMAGES) == BFF_DAMAGES
+
+    def test_a_status_with_an_unknown_damage_keeps_its_exit_code(self) -> None:
+        """A name outside the closed set reads as None; the status (and its exit code) stays readable."""
+        status = wire.parse_data_status(b'{"exit": 14, "damage": "Traceback: /etc/passwd"}')
+        assert status is not None and (status.exit, status.damage) == (14, None)
+        named = wire.parse_data_status(b'{"exit": 14, "damage": "zip"}')
+        assert named is not None and named.damage == "zip"
+
     def test_the_bffs_refusal_codes_name_every_refusal(self) -> None:
         from api.routers.agent import CONVERT_REFUSAL_CODES
 
@@ -189,7 +202,23 @@ class TestContainers:
 
     def test_an_xls_container_goes_to_calamine_and_a_broken_one_is_corrupt(self) -> None:
         assert convert.sniff(ole("Root Entry", "Workbook")) == "xls"
-        assert refused(ole("Root Entry", "Workbook")).reason == "corrupt"
+        error = refused(ole("Root Entry", "Workbook"))
+        assert (error.reason, error.damage) == ("corrupt", "workbook")
+
+    def test_a_cut_off_zip_names_its_container(self) -> None:
+        good = xlsx([Sheet("S", [["a"], [1]])])
+        error = refused(good[: len(good) // 2])
+        assert (error.reason, error.damage) == ("corrupt", "zip")
+
+    def test_a_sheet_whose_cells_cannot_be_read_names_the_sheet(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        from python_calamine import CalamineWorkbook
+
+        def broken(self: object, name: str) -> object:
+            raise ValueError("broken sheet xml")
+
+        monkeypatch.setattr(CalamineWorkbook, "get_sheet_by_name", broken)
+        error = refused(xlsx([Sheet("S", [["a"], [1]])]))
+        assert (error.reason, error.damage) == ("corrupt", "sheet")
 
     def test_other_ole_files_and_zips_are_unsupported(self) -> None:
         assert refused(ole("Root Entry", "WordDocument")).reason == "unsupported"
@@ -273,16 +302,17 @@ class TestArrow:
         assert refused(parquet(table)).reason == "too_many_columns"
 
     @pytest.mark.parametrize(
-        "data",
+        ("data", "damage"),
         [
-            b"PAR1" + b"\x00" * 16 + (2**31 - 1).to_bytes(4, "little") + b"PAR1",
-            b"PAR1garbagePAR1",
-            b"ARROW1\x00\x00" + b"\xff" * 64,
-            b"\xff\xff\xff\xff" + b"\x7f\xff\xff\xff" + b"\x00" * 16,
+            (b"PAR1" + b"\x00" * 16 + (2**31 - 1).to_bytes(4, "little") + b"PAR1", "parquet"),
+            (b"PAR1garbagePAR1", "parquet"),
+            (b"ARROW1\x00\x00" + b"\xff" * 64, "arrow"),
+            (b"\xff\xff\xff\xff" + b"\x7f\xff\xff\xff" + b"\x00" * 16, "arrow"),
         ],
     )
-    def test_a_hostile_footer_or_stream_is_corrupt(self, data: bytes) -> None:
-        assert refused(data).reason == "corrupt"
+    def test_a_hostile_footer_or_stream_is_corrupt(self, data: bytes, damage: str) -> None:
+        error = refused(data)
+        assert (error.reason, error.damage) == ("corrupt", damage)
 
 
 class TestNumpy:
@@ -303,7 +333,8 @@ class TestNumpy:
     def test_a_header_that_claims_more_data_than_there_is_is_refused_before_allocating(self) -> None:
         raw = bytearray(npy(np.zeros((2, 2))))
         raw = raw.replace(b"(2, 2)", b"(9999999, 9999)", 1)
-        assert refused(bytes(raw)).reason == "corrupt"
+        error = refused(bytes(raw))
+        assert (error.reason, error.damage) == ("corrupt", "npy_data")
 
     def test_npz_arrays_are_sheets_and_a_pickled_member_is_skipped_or_refused(self) -> None:
         buffer = io.BytesIO()
@@ -385,6 +416,16 @@ class TestHarness:
         code, status, text = run_harness(tmp_path, zip_bomb())
         assert code == harness.CONVERT_EXIT["archive_limits"] and text is None
         assert status["reason"] == "archive_limits" and status["limit"] == convert.MAX_ZIP_UNCOMPRESSED
+        assert "damage" not in status
+
+    @pytest.mark.parametrize(
+        ("data", "damage"), [(b"PAR1garbagePAR1", "parquet"), (b"ARROW1\x00\x00" + b"\xff" * 64, "arrow")]
+    )
+    def test_a_damaged_file_writes_its_broken_part_to_status(self, tmp_path: Path, data: bytes, damage: str) -> None:
+        """Owner decision of 2026-10-16: the page names which part is broken, a closed name from the sandbox."""
+        code, status, _ = run_harness(tmp_path, data)
+        assert (code, status["reason"], status["damage"]) == (harness.CONVERT_EXIT["corrupt"], "corrupt", damage)
+        assert wire.parse_data_status(json.dumps(status).encode()) is not None
 
     def test_a_zone_aware_timestamp_keeps_its_zone_or_says_utc_under_the_guard(self, tmp_path: Path) -> None:
         stamps = pa.array([1_700_000_000_123_456_789], type=pa.timestamp("ns", "Europe/Berlin"))
@@ -544,7 +585,8 @@ class TestSecurityReview:
         part = "xl/worksheets/sheet1.xml"
         # Incompressible, so the archive's ratio stays far below its cap: only the declared size lies.
         members[part] = members[part] + b"<!--" + base64.b64encode(os.urandom(1_500_000)) + b"-->"
-        assert refused(zip_with_declared_size(members, part, 1024)).reason == "corrupt"
+        error = refused(zip_with_declared_size(members, part, 1024))
+        assert (error.reason, error.damage) == ("corrupt", "zip")
         assert convert.convert(zip_with_declared_size(members, part, len(members[part]))).csv_text == "a\n1\n"
 
     def test_a_footer_total_that_disagrees_with_its_row_groups_is_corrupt(
@@ -572,7 +614,8 @@ class TestSecurityReview:
                 return Footer()
 
         monkeypatch.setattr(pq, "ParquetFile", Forged)
-        assert refused(data).reason == "corrupt"
+        error = refused(data)
+        assert (error.reason, error.damage) == ("corrupt", "parquet")
 
     def test_row_groups_are_added_up_before_any_page_is_read(self) -> None:
         buffer = io.BytesIO()
@@ -602,7 +645,8 @@ class TestSecurityReview:
         raw = bytearray(npy(np.zeros((2, 2))))
         end = raw.index(b"}")
         raw[end] = ord("(")  # an unclosed literal: tokenize's error, not a ValueError
-        assert refused(bytes(raw)).reason == "corrupt"
+        error = refused(bytes(raw))
+        assert (error.reason, error.damage) == ("corrupt", "npy_header")
 
     def test_durations_and_intervals_are_dropped_and_named(self) -> None:
         table = pa.table(
