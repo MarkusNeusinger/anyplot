@@ -104,10 +104,11 @@ import logging
 import os
 import re
 import secrets
+import sys
 import time
 from collections.abc import AsyncIterator, Callable
 from dataclasses import asdict, dataclass, field
-from typing import Annotated, Any, Literal
+from typing import Annotated, Any, Literal, TextIO
 
 from fastapi import Body, Depends, FastAPI, Header, Path, Query, Request
 from fastapi.responses import JSONResponse, Response, StreamingResponse
@@ -266,6 +267,34 @@ def disable_content_capture() -> None:
 
 
 disable_content_capture()
+
+
+ATTRIBUTION_LOGGER = "anyplot.agents.attribution"
+
+
+class _AttributionHandler(logging.StreamHandler[TextIO]):
+    """The stdout handler of the attribution lines, a class of its own so `enable_attribution_log` finds it."""
+
+
+def enable_attribution_log() -> None:
+    """The content-free attribution lines (`plugins/ledger.attribution`) on stdout at INFO, where Cloud Run's
+    log agent reads them (owner decision of 2026-10-16).
+
+    Without a handler the logging module drops INFO, so not one `pipeline_*` line of live test round 7 reached
+    Cloud Logging and no run could be explained. Only this logger: every other one keeps its level, and the
+    model SDKs stay at WARNING (`disable_content_capture`). The lines carry ids, counts, verdicts and rule ids,
+    never text, code or data. It still propagates, so a test's log capture sees it; the root has no handler of
+    its own in the service. Idempotent: a second call adds no second handler.
+    """
+    attribution_logger = logging.getLogger(ATTRIBUTION_LOGGER)
+    attribution_logger.setLevel(logging.INFO)
+    if not any(isinstance(handler, _AttributionHandler) for handler in attribution_logger.handlers):
+        handler = _AttributionHandler(sys.stdout)
+        handler.setFormatter(logging.Formatter("%(message)s"))
+        attribution_logger.addHandler(handler)
+
+
+enable_attribution_log()
 
 
 MAX_CAUSE_CHARS = 300

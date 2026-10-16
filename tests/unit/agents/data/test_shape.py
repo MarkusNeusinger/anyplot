@@ -100,6 +100,37 @@ class TestMatrix:
     def test_two_number_columns_are_no_matrix(self) -> None:
         assert suggest("heatmap-basic", "label,a,b\nA,1,2\nB,4,5\nC,7,8\n") is None
 
+    def test_an_hour_column_of_whole_numbers_is_the_row_key(self) -> None:
+        text = "Stunde;Mo;Di;Mi\n8;42;35;35\n9;48;39;43\n10;46;53;56\n11;55;44;64\n"
+
+        suggestion = suggest("heatmap-basic", text)
+
+        assert suggestion is not None and (suggestion.keys, suggestion.columns) == (["Stunde"], ["Mo", "Di", "Mi"])
+
+    def test_a_date_column_is_the_row_key(self) -> None:
+        text = "Datum,A,B,C\n2025-01-01,1,2,3\n2025-01-02,4,5,6\n2025-01-03,7,8,9\n"
+
+        suggestion = suggest("heatmap-basic", text)
+
+        assert suggestion is not None and suggestion.keys == ["Datum"]
+
+    def test_grouped_charts_get_it_flows_hierarchies_and_codes_do_not(self) -> None:
+        """Review of #12204: melting a wide table into a flow's target or a party's color means nothing."""
+        for spec_id in ("box-grouped", "bar-grouped", "bar-stacked", "heatmap-annotated"):
+            assert suggest(spec_id, VISITORS) is not None, spec_id
+        for spec_id in ("sankey-basic", "chord-basic", "icicle-basic", "sunburst-basic", "parliament-basic"):
+            assert suggest(spec_id, VISITORS) is None, spec_id
+
+
+class TestTimeKeys:
+    """Review of #12204: a column of years is a key the offer keeps, as the bindings treat it."""
+
+    def test_a_year_column_is_kept_not_melted(self) -> None:
+        suggestion = suggest("box-basic", "Jahr,CO2,Bevoelkerung\n2000,43.6,7184003\n2001,45.1,7226391\n")
+
+        assert suggestion is not None
+        assert (suggestion.columns, suggestion.keys) == (["CO2", "Bevoelkerung"], ["Jahr"])
+
 
 # Four rows of the owner's paste of round 7.
 VISITORS = (

@@ -842,6 +842,22 @@ class TestWideTableSiblings:
         ]
         assert label_siblings(self.ROLES, data) == ["Mo", "Di", "Mi"]
 
+    def test_a_constant_measurement_stays_a_sibling(self) -> None:
+        """Review of #12204: a constant `Mo` is still one of the side-by-side columns, never a label."""
+        data = profile("Stunde;Mo;Di;Mi\n" + "".join(f"{h:02d}:00;42;{30 + h};{40 + h}\n" for h in range(8, 14)))
+
+        assert label_siblings(self.ROLES, data) == ["Mo", "Di", "Mi"]
+        assert "y" not in dict(as_pairs(default_bindings(self.ROLES, data)))
+
+    def test_refilling_open_roles_keeps_the_side_by_side_columns_out(self) -> None:
+        """Review of #12204: after `.to_long()` and an undo, `x` stays and `y`, `value` are filled again on the
+        reduced table, where the wide-table rule no longer holds by itself."""
+        data = profile(self.DATA)
+
+        carried = carry_bindings(bind(("x", "Stunde"), ("y", "y"), ("value", "value")), self.ROLES, data)
+
+        assert as_pairs(carried) == [("x", "Stunde"), ("value", "Mo")]
+
     def test_a_year_column_is_no_sibling(self) -> None:
         # bar-basic on the Swiss CO2 paste: the table is all numbers, `Jahr` still labels the bars.
         roles = [role("category", "categorical"), role("value", "numeric")]
@@ -943,7 +959,7 @@ class TestCheckBindings:
         (("categorical",), "boolean", True),
         (("categorical",), "integer", True),
         (("categorical",), "number", False),
-        (("categorical",), "datetime", False),
+        (("categorical",), "datetime", True),  # months label a heatmap or a grouped bar (live test round 7)
         (("text",), "text", True),
         (("text",), "boolean", True),
         (("text",), "integer", True),

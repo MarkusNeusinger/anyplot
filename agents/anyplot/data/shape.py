@@ -22,8 +22,9 @@ The rule, every condition required:
 * **The table is wide:** at least two numeric columns (`integer` or `number`), at
   most `MAX_LONGER_COLUMNS`, and no text or boolean column, which could already be
   the category (a table with a label column is long, or its labels are the user's
-  choice to make). A datetime column is a key: it is kept, and every numeric column
-  is pivoted.
+  choice to make). A datetime column is a key: it is kept, and so is a column of
+  years or of a part of a date (`temporal.time_keys`: `Jahr` beside `CO2` and
+  `Bevölkerung`); every other numeric column is pivoted.
 * **The result fits:** at most `MAX_ROWS` rows, and the new names (the two role
   names) are not already a kept column's name.
 
@@ -34,12 +35,15 @@ kept. Every condition required:
 
 * **The spec wants a long matrix:** its required single roles are exactly two roles
   that take labels (their kinds include categorical or text; a heatmap's also take
-  numbers) and one numeric-only role, and no variadic numeric family.
-* **The table is a wide matrix:** exactly one text column, the row labels, with a
-  distinct label in every row and none missing, which is kept as the key; at least
-  `MIN_MATRIX_COLUMNS` numeric columns (at most `MAX_LONGER_COLUMNS`); and no other
-  column. Long data such as `day, hour, count` (two number columns, the day repeated)
-  stays as it is.
+  numbers), both of a grid or grouped chart (`MATRIX_ROLES`: never a flow's `source`
+  and `target`, a hierarchy or a party's color), and one numeric-only role, and no
+  variadic numeric family.
+* **The table is a wide matrix:** one row-label column (`_row_key`: the one text
+  column, else the one date column, else a first column of whole numbers that is a
+  year or every hour of a range, `Stunde` 0 to 23), with a distinct label in every
+  row and none missing, which is kept as the key; at least `MIN_MATRIX_COLUMNS` other
+  numeric columns (at most `MAX_LONGER_COLUMNS`); and no other column. Long data such
+  as `day, hour, count` (two number columns, the day repeated) stays as it is.
 * **The result fits:** as above. The column names go into the second label role in
   spec order (`y`, `subcategory`), the values into the value role; the default
   bindings give the kept label column to the first (`x`, `category`), as they do for
@@ -53,9 +57,10 @@ now keeps a label role off the measurement columns of a table this module calls 
 from dataclasses import dataclass
 from typing import Any
 
-from ..schemas import MAX_ROWS, DatasetProfile
+from ..schemas import MAX_ROWS, ColumnProfile, DatasetProfile
 from .prepare import MAX_LONGER_COLUMNS
 from .roles import DataRole
+from .temporal import time_keys
 
 
 _LABEL_KINDS = frozenset({"categorical", "text"})
@@ -64,6 +69,16 @@ _LABEL_COLUMNS = frozenset({"text", "boolean"})
 MIN_MATRIX_COLUMNS = 3
 """The measurement columns a wide matrix has at least (the heatmap specs ask for 5 to 50); two number columns
 beside a label column are more often a long table with an integer key."""
+MATRIX_ROLES: frozenset[str] = frozenset(
+    {
+        *("x", "y", "x_category", "y_category", "fill_category", "row_labels", "column_labels"),
+        *("category", "subcategory", "group", "component", "series", "split_group"),
+        *("angular", "radial", "entity", "period", "season", "cycle"),
+    }
+)
+"""Label roles whose pair makes a grid or a grouped chart, where melting a wide matrix is meaningful (review of
+#12204). A pair of other roles is a flow (`source`, `target`), a hierarchy (`name`, `parent`, `level_1`), a
+geometry, a color or a code (`party`, `color`, `newick_string`): their wide tables are no matrix of one measure."""
 
 
 @dataclass(frozen=True)
@@ -112,32 +127,55 @@ def long_suggestion(roles: list[DataRole], profile: DatasetProfile) -> LongSugge
     if len(values) != 1:
         return None
     dtypes = {column.name: column.dtype for column in profile.columns}
-    numeric = [name for name, dtype in dtypes.items() if dtype in _NUMERIC_COLUMNS]
-    if not 2 <= len(numeric) <= MAX_LONGER_COLUMNS:
-        return None
+    time = time_keys(profile)  # years and parts of a date say where a value sits: keys, never melted
     labels = [role for role in single if role.required and role.kinds and set(role.kinds) <= _LABEL_KINDS]
     if len(labels) == 1 and not any(dtype in _LABEL_COLUMNS for dtype in dtypes.values()):
-        keys = [name for name, dtype in dtypes.items() if dtype == "datetime"]
-        names_to = labels[0].name
+        keys = [name for name, dtype in dtypes.items() if dtype == "datetime" or name in time]
+        names_to, least = labels[0].name, 2
     else:
-        # The matrix rule: two label roles, one of them for the kept label column.
+        # The matrix rule: two label roles of a grid or grouped chart, one of them for the kept row labels.
         pair = [role for role in single if role.required and takes_labels(role)]
         required = [role for role in single if role.required]
-        texts = [column for column in profile.columns if column.dtype == "text"]
-        if len(pair) != 2 or len(required) != 3 or len(texts) != 1 or "boolean" in dtypes.values():
+        if len(pair) != 2 or len(required) != 3 or any(role.name not in MATRIX_ROLES for role in pair):
             return None
-        # A matrix: one distinct label per row and at least `MIN_MATRIX_COLUMNS` measures. Long data of
-        # `day, hour, count` (an integer key, the label repeated per hour) stays as it is.
-        if len(numeric) < MIN_MATRIX_COLUMNS or texts[0].missing or texts[0].unique != profile.rows:
+        key = _row_key(profile, time)
+        if key is None or "boolean" in dtypes.values():
             return None
-        keys = [texts[0].name]
-        names_to = pair[1].name
-    if len(numeric) + len(keys) != len(dtypes):
+        keys = [key]
+        names_to, least = pair[1].name, MIN_MATRIX_COLUMNS
+    measures = [name for name, dtype in dtypes.items() if dtype in _NUMERIC_COLUMNS and name not in keys]
+    if not least <= len(measures) <= MAX_LONGER_COLUMNS or len(measures) + len(keys) != len(dtypes):
         return None
     values_to = values[0].name
     if names_to == values_to or {names_to, values_to} & set(keys):
         return None
-    rows = profile.rows * len(numeric)
+    rows = profile.rows * len(measures)
     if rows > MAX_ROWS:
         return None
-    return LongSuggestion(numeric, names_to, values_to, keys, rows)
+    return LongSuggestion(measures, names_to, values_to, keys, rows)
+
+
+def _row_key(profile: DatasetProfile, time: set[str]) -> str | None:
+    """The row labels of a wide matrix, or None: the one text column, else the one date column, else a first
+    column of whole numbers that is a time key or every number of its range (`Stunde` 0 to 23). Each with a
+    distinct value in every row and none missing: long data such as `day, hour, count` repeats its labels."""
+    columns = profile.columns
+    texts = [column for column in columns if column.dtype == "text"]
+    dates = [column for column in columns if column.dtype == "datetime"]
+    if texts:
+        key = texts[0] if len(texts) == 1 and not dates else None
+    elif dates:
+        key = dates[0] if len(dates) == 1 else None
+    else:
+        first = columns[0] if columns else None
+        key = first if first is not None and first.dtype == "integer" and (first.name in time or _run(first)) else None
+    if key is None or key.missing or key.unique != profile.rows:
+        return None
+    return key.name
+
+
+def _run(column: ColumnProfile) -> bool:
+    """Whole numbers that hold every number of their range, at least three (`0` to `23`): steps, not measures."""
+    if not isinstance(column.min, float | int) or not isinstance(column.max, float | int):
+        return False
+    return 3 <= column.unique == int(column.max - column.min) + 1

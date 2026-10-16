@@ -3,6 +3,7 @@
 The other flow tests script the checklist reviewer (`conftest.CHECKLIST_FLOW`); these run the defaults.
 """
 
+import io
 import json
 import logging
 from typing import Any
@@ -90,6 +91,33 @@ async def test_the_first_version_is_proofread_then_reviewed_in_one_round(
     assert any(part.inline_data for part in adapter_requests[1].contents[-1].parts)
     (review,) = attribution_lines(caplog, "pipeline_review")
     assert (review["verdict"], review["score"], review["technical"]) == ("ok", 84, 1.0)
+
+
+async def test_the_attribution_lines_reach_stdout_without_content(client: httpx.AsyncClient, swap_models) -> None:
+    """Owner decision of 2026-10-16: the attribution logger writes to stdout at INFO (Cloud Logging had none of
+    round 7's lines), and a whole plot run writes no column name, cell, message or plot text there."""
+    from agents.main import ATTRIBUTION_LOGGER, enable_attribution_log
+
+    enable_attribution_log()
+    enable_attribution_log()  # idempotent: one handler
+    handlers = [h for h in logging.getLogger(ATTRIBUTION_LOGGER).handlers if type(h).__name__ == "_AttributionHandler"]
+    assert len(handlers) == 1 and logging.getLogger(ATTRIBUTION_LOGGER).level == logging.INFO
+    stream = io.StringIO()
+    previous = handlers[0].setStream(stream)
+    try:
+        script = default_script(plans=[SCATTER_PLAN, EMPTY_PLAN])
+        script["reviewer"] = [{"json": score(**{"VQ-03": 3})}, {"json": score()}]
+        swap_models("gemini", script)
+        sid = await open_session(client)
+        await create_plot(client, sid)
+    finally:
+        handlers[0].setStream(previous)
+
+    lines = [json.loads(line) for line in stream.getvalue().splitlines()]
+    assert {"pipeline_review", "pipeline_result"} <= {line["hook"] for line in lines}
+    written = stream.getvalue()
+    for content in ("Study Hours", "Exam Score", "S01", "sparse markers", "Larger markers", ROOT_REPLY[:20]):
+        assert content not in written, content
 
 
 async def test_a_repair_goes_to_the_review_without_a_proofread(client: httpx.AsyncClient, swap_models) -> None:
@@ -260,8 +288,9 @@ async def test_the_best_scored_version_ships_when_the_repair_scores_lower(
     monkeypatch.setenv("AGENT_REVIEW_BAR", "1.0")
     get_settings.cache_clear()
     script = default_script(plans=[SCATTER_PLAN, EMPTY_PLAN, SECOND_PLAN])
-    # Round 1 loses one point (below the review bar, above the ship bar); the repair loses four.
-    script["reviewer"] = [{"json": score(**{"VQ-05": 1})}, {"json": score(**{"VQ-02": 4})}]
+    # Round 1 loses one point (below the review bar, above the ship bar); the repair loses four. No visible-defect
+    # ids (`VISIBLE_DEFECT_IDS`), which would leave round 1 a note.
+    script["reviewer"] = [{"json": score(**{"VQ-03": 1})}, {"json": score(**{"VQ-03": 4})}]
     swap_models("gemini", script)
     sid = await open_session(client)
 
@@ -292,7 +321,7 @@ async def test_two_lost_technical_points_need_no_repair(client: httpx.AsyncClien
     assert len(adapter_inputs(fake)) == 2  # adapt, proofread
 
 
-@pytest.mark.parametrize("visible", ["VQ-05", "VQ-02"])
+@pytest.mark.parametrize("visible", ["VQ-05", "VQ-02", "VQ-01"])
 async def test_a_visible_defect_above_the_review_bar_still_gets_the_repair(
     client: httpx.AsyncClient, swap_models, visible: str
 ) -> None:
@@ -329,10 +358,8 @@ async def test_an_auto_reject_line_for_clipped_text_gets_the_repair(client: http
     assert "Wochentag" in adapter_inputs(fake)[2]
 
 
-async def test_a_visible_defect_no_round_fixes_ships_above_the_ship_bar_without_notes(
-    client: httpx.AsyncClient, swap_models
-) -> None:
-    """The ship bar is untouched: the repair round is spent, the better-scored render ships without notes."""
+async def test_a_visible_defect_no_round_fixes_ships_with_its_note(client: httpx.AsyncClient, swap_models) -> None:
+    """Review of #12204: the better-scored render ships, and the visible defect it still shows is a note."""
     script = default_script(plans=[SCATTER_PLAN, EMPTY_PLAN, SECOND_PLAN])
     script["reviewer"] = [{"json": score(**{"VQ-05": 1})}, {"json": score(**{"VQ-05": 2})}]
     swap_models("gemini", script)
@@ -341,8 +368,27 @@ async def test_a_visible_defect_no_round_fixes_ships_above_the_ship_bar_without_
     events = await create_plot(client, sid)
 
     plot = next(data for name, data in events if name == "plot")
-    assert (plot["status"], plot["attempts"], plot["residual_defects"]) == ("ok", 2, [])
+    assert (plot["status"], plot["attempts"]) == ("needs_attention", 2)
     assert [r["attempt"] for r in plot["rounds"] if r["shipped"]] == [1]
+    assert [line[:5] for line in plot["residual_defects"]] == ["VQ-05"]
+
+
+async def test_a_clean_repair_ships_over_a_higher_score_with_a_clipped_label(
+    client: httpx.AsyncClient, swap_models
+) -> None:
+    """Review of #12204: a 96 with an AR-09 line against a clean 94 shipped the clipped plot without a note."""
+    clipped = score(**{"VQ-03": 1})
+    clipped["defects"] = [*clipped["defects"], "AR-09 (light): the y axis label is cut at the right edge → inside."]
+    script = default_script(plans=[SCATTER_PLAN, EMPTY_PLAN, SECOND_PLAN])
+    script["reviewer"] = [{"json": clipped}, {"json": score(**{"VQ-03": 2})}]
+    swap_models("gemini", script)
+    sid = await open_session(client)
+
+    events = await create_plot(client, sid)
+
+    plot = next(data for name, data in events if name == "plot")
+    assert [r["attempt"] for r in plot["rounds"] if r["shipped"]] == [2]
+    assert (plot["status"], plot["residual_defects"]) == ("ok", [])
 
 
 async def test_below_the_ship_bar_the_review_lines_are_the_notes(client: httpx.AsyncClient, swap_models) -> None:

@@ -177,6 +177,7 @@ from .parse import (
     AMBIGUOUS_DATE_ORDER,
     MAX_COMPUTED_BYTES,
     MISSING_VALUES,
+    YEAR_MONTH,
     ParsedDataset,
     canonical_names,
     keeps_value,
@@ -921,6 +922,10 @@ def _pivot_longer(frame: pd.DataFrame, op: PivotLonger, carried: _Carried) -> tu
     carried.forget(columns)
     if explicit_text or len(kinds) > 1:
         carried.text_columns.add(op.values_to)
+    if all(YEAR_MONTH.fullmatch(name) for name in columns):
+        # Month headers (`2025-01`) are the labels of the long table: the re-parse would read them as dates,
+        # which a heatmap's `y` or a box plot's `category` does not take as such (review of #12204).
+        carried.text_columns.add(op.names_to)
     if kinds == {"datetime"}:
         carried.with_time[op.values_to] = any(bool(time) for time in times)
     change = f"pivoted {len(columns)} columns into {op.names_to}/{op.values_to}: {_count(rows, 'row')}"

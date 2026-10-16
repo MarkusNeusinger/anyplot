@@ -246,7 +246,7 @@ class TestDefect:
     def test_ids_are_the_reviewer_checklist(self) -> None:
         ids = set(get_args(DefectId))
 
-        assert ids == {"VQ-01", "VQ-02", "VQ-03", "VQ-06", "VQ-07", "SC-01", "SC-03", "DQ-03", "AR-09"}
+        assert ids == {"VQ-01", "VQ-02", "VQ-03", "VQ-06", "VQ-07", "SC-01", "SC-03", "SC-04", "DQ-03", "AR-09"}
         assert ids <= set(CRITERIA) | set(AR_IDS)
 
     @pytest.mark.parametrize("defect_id", get_args(DefectId))
