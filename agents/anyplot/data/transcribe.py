@@ -68,6 +68,8 @@ MIN_SENTENCE_WORDS = 3
 _NUMBER_TOKEN = re.compile(r"(?:^|\s)[-+]?\.?\d")
 """A number that stands as a word of its own, as in `Hund 7`: a label with its value, no category."""
 _DIGITS = re.compile(r"\d+")
+_NAME_MARKS = re.compile(r"[_()\[\]:/%#\d]")
+"""Marks a column name carries and a category rarely does (`Anzahl_Tiere`, `Typ (neu)`, `Q1`)."""
 _SENTENCE_END = (".", "!", "?", ":", ";")
 
 
@@ -129,11 +131,14 @@ def looks_like_free_text(parsed: ParsedDataset) -> bool:
 
 
 def category_header_warning(parsed: ParsedDataset) -> str | None:
-    """The warning a one-column category list is stored with, None for any other table.
+    """The note a one-column category list is stored with when its header could be a first category; else None.
 
-    Its header line cannot be told from a first category by form (`Tier` above `Hund`, `Katze`
-    reads like `Apfel` above `Birne`, `Kirsche`), so the user learns which line became the
-    column's name rather than losing a category silently (review of #12202).
+    A header that carries a column name's marks (`_`, brackets, `:`, `/`, `%`, `#`, a digit) or
+    more words than any category is a name, and the list is stored without a note. Otherwise
+    the header has the categories' form, and no cheap rule tells `Tier` above `Hund`, `Katze`
+    from `Apfel` above `Birne`, `Kirsche` (decision of the review of #12202): the list is
+    stored with a short, informative note that names the line read as the column's name, so
+    a lost category is never silent and a right reading costs one quiet line.
     """
     if len(parsed.profile.columns) != 1 or parsed.profile.source_format.startswith("json"):
         return None
@@ -141,9 +146,9 @@ def category_header_warning(parsed: ParsedDataset) -> str | None:
     cells = _cells(parsed)
     if column.dtype != "text" or _digit_codes(cells) or not _category_list(column.name, cells):
         return None
-    return (
-        f"the first line '{column.name}' is read as the column's name; if it is a category, add a header line above it"
-    )
+    if _NAME_MARKS.search(column.name) or len(column.name.split()) > max(len(cell.split()) for cell in cells):
+        return None
+    return f"read '{column.name}' as the column name"
 
 
 def _cells(parsed: ParsedDataset) -> list[str]:

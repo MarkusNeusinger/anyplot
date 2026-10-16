@@ -82,12 +82,30 @@ def test_one_column_of_values_or_categories_is_a_table(text: str) -> None:
 
 def test_a_category_list_names_the_line_that_became_its_header() -> None:
     """Review of #12202: `Apfel` above `Birne, Birne, Kirsche` cannot be told from a header by form."""
-    assert category_header_warning(parse_dataset("Apfel\nBirne\nBirne\nKirsche\n")) == (
-        "the first line 'Apfel' is read as the column's name; if it is a category, add a header line above it"
-    )
-    assert category_header_warning(parse_dataset("PLZ\n01067\n01069\n01067\n")) is None  # codes
-    assert category_header_warning(parse_dataset(R7_COMMUTE_TIMES)) is None  # typed values
-    assert category_header_warning(parse_dataset("Tier,Anzahl\nHund,7\n")) is None  # two columns
+    assert category_header_warning(parse_dataset("Apfel\nBirne\nBirne\nKirsche\n")) == "read 'Apfel' as the column name"
+    # `Tier` has the categories' form too: no cheap rule tells it from `Apfel`, so the same quiet note.
+    assert category_header_warning(parse_dataset("Tier\nHund\nKatze\nHund\n")) == "read 'Tier' as the column name"
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        pytest.param("Tier_Art\nHund\nKatze\nHund\n", id="underscore"),
+        pytest.param("Tier (Art)\nHund\nKatze\nHund\n", id="brackets"),
+        pytest.param("Verkehrsmittel zur Arbeit\nAuto\nBahn\nAuto\n", id="more-words-than-any-category"),
+        pytest.param("Typ:\nA\nB\nA\n", id="colon"),
+        pytest.param("PLZ\n01067\n01069\n01067\n", id="digit-codes"),
+        pytest.param(R7_COMMUTE_TIMES, id="typed-values"),
+        pytest.param("Tier,Anzahl\nHund,7\n", id="two-columns"),
+    ],
+)
+def test_a_header_with_a_column_names_form_gets_no_note(text: str) -> None:
+    assert category_header_warning(parse_dataset(text)) is None
+
+
+def test_a_category_header_note_is_never_a_free_text_reading() -> None:
+    assert not looks_like_free_text(parse_dataset("Tier_Art\nHund\nKatze\nHund\n"))
+    assert category_header_warning(parse_dataset("Hund 7\nKatze 3\nHund 2\n")) is None  # free text, no table
 
 
 @pytest.mark.parametrize(

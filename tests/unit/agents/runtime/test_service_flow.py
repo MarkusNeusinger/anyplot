@@ -2019,10 +2019,13 @@ async def test_a_category_list_says_which_line_became_its_name(client: httpx.Asy
     )
 
     assert stored.status_code == 200 and "transcribed" not in stored.json()
-    assert stored.json()["warnings"][0] == (
-        "the first line 'Apfel' is read as the column's name; if it is a category, add a header line above it"
-    )
+    assert stored.json()["warnings"][0] == "read 'Apfel' as the column name"
     assert judge.transcribe_calls == []
+
+    named = await client.post(
+        f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": "Tier_Art\nHund\nKatze\nHund\n"}
+    )
+    assert named.status_code == 200 and named.json()["warnings"] == []  # a name's form: no note
 
 
 async def test_a_confirmed_one_column_table_is_stored_not_read_again(client: httpx.AsyncClient, judge) -> None:
