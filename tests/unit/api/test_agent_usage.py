@@ -257,6 +257,9 @@ class TestQuery:
         assert f"IN ({keeps}), ts, NULL)) AS last_keep_at" in sql and "saved_session" not in sql
         assert "IN ('thumbs_down', 'bug')" in sql
         assert "outcomes.last_keep_at > per_session.last_run_at" in sql
+        # Review of #12207: a thumbs_down sent just before the window still rejects a session that straddles it.
+        assert "timestamp >= TIMESTAMP_SUB(@since, INTERVAL 2 DAY)" in sql
+        assert "NOT IN (SELECT session FROM rejections" in sql
 
     def test_counts_an_input_once_and_leaves_not_ready_runs_out(self) -> None:
         sql = usage_sql(DATASET)

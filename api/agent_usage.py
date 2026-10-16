@@ -55,6 +55,10 @@ KEEP_ACTIONS = ("copied_code", "copied_image", "downloaded_png", "downloaded_cod
 """The outcomes that keep a result; never `saved_session`, which users also send to report a plot they did not like."""
 REJECT_REACTIONS = ("thumbs_down", "bug")
 """Feedback reactions that make a session not kept, whatever else the user did."""
+REJECT_LOOKBACK_DAYS = 2
+"""How far before the window a rejection is still read (review of #12207): a session that straddles the window's
+start keeps a thumbs_down sent before it. Sessions live in memory on one instance, so two days covers them; the
+extra range is a pruned partition scan of the outcome lines only."""
 
 
 class UsageItem(BaseModel):
@@ -216,15 +220,24 @@ per_session AS (
   FROM runs GROUP BY session
 ),
 outcomes AS (
-  SELECT
-    session,
-    MAX(IF(JSON_VALUE(payload.action) IN ({keep}), ts, NULL)) AS last_keep_at,
-    COUNTIF(JSON_VALUE(payload.action) = 'feedback' AND JSON_VALUE(payload.reaction) IN ({reject})) AS rejections
+  SELECT session, MAX(IF(JSON_VALUE(payload.action) IN ({keep}), ts, NULL)) AS last_keep_at
   FROM ev WHERE event = 'outcome' GROUP BY session
+),
+rejections AS (
+  -- A rejection counts from up to {REJECT_LOOKBACK_DAYS} days before the window, so a session that straddles the
+  -- window's start keeps a thumbs_down or bug sent before it; still a pruned partition range.
+  SELECT DISTINCT JSON_VALUE(json_payload.session) AS session
+  FROM `{dataset}{LOGS_SUFFIX}._AllLogs`
+  WHERE timestamp >= TIMESTAMP_SUB(@since, INTERVAL {REJECT_LOOKBACK_DAYS} DAY)
+    AND JSON_VALUE(json_payload.log_type) = 'agent_telemetry'
+    AND JSON_VALUE(json_payload.source) = 'live'
+    AND JSON_VALUE(json_payload.event) = 'outcome'
+    AND JSON_VALUE(json_payload.action) = 'feedback'
+    AND JSON_VALUE(json_payload.reaction) IN ({reject})
 ),
 shipped_sessions AS (
   SELECT per_session.session, (
-    IFNULL(outcomes.rejections, 0) = 0
+    per_session.session NOT IN (SELECT session FROM rejections WHERE session IS NOT NULL)
     AND outcomes.last_keep_at IS NOT NULL
     AND outcomes.last_keep_at > per_session.last_run_at
   ) AS kept

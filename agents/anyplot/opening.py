@@ -324,18 +324,26 @@ def _capped_variants(values: Iterable[str]) -> list[str]:
     Review of #12206: values that share a 40-character prefix (1,000 long URLs of one site) were all pulled
     in, which multiplied the judge's parts and calls. The model only ever reads the display copies (the
     profile lists those), so the most frequent full values behind each copy are what the judge needs; the
-    first of each copy is judged whatever the cap, so every copy the profile lists stays covered.
+    first of each copy is judged whatever the cap, so every copy the profile lists stays covered. The firsts are
+    reserved before any further variant (review of #12207: a later copy's first value went over the budget
+    that earlier variants had used up); at most `MAX_LISTED_VALUES` copies of the parser's 200 characters
+    (2,400) always fit.
     """
-    kept: list[str] = []
+    ordered = list(values)
+    firsts: dict[str, int] = {}
+    for index, value in enumerate(ordered):
+        firsts.setdefault(display_copy(value), index)
+    first_indices = set(firsts.values())
+    chars = sum(len(ordered[index]) for index in first_indices)
     per_copy: Counter[str] = Counter()
-    chars = 0
-    for value in values:
+    kept: list[str] = []
+    for index, value in enumerate(ordered):
         copy_ = display_copy(value)
-        first = per_copy[copy_] == 0
-        if not first and (per_copy[copy_] >= MAX_JUDGED_VARIANTS or chars + len(value) > MAX_JUDGED_VALUE_CHARS):
-            continue
+        if index not in first_indices:
+            if per_copy[copy_] >= MAX_JUDGED_VARIANTS or chars + len(value) > MAX_JUDGED_VALUE_CHARS:
+                continue
+            chars += len(value)
         per_copy[copy_] += 1
-        chars += len(value)
         kept.append(value)
     return kept
 
