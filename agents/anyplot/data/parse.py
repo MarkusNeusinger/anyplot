@@ -132,6 +132,7 @@ Error messages never quote the user's data; at most they name a column.
 """
 
 import ast
+import contextlib
 import csv
 import io
 import json
@@ -207,6 +208,12 @@ CONTEXT_JOINERS: dict[str | None, str] = {",": ", ", ";": "; ", "\t": " ", "|": 
 reads as it was pasted, a tab becomes a space so the line stays one line on the page."""
 MAX_NESTING = 50  # bracket levels a literal may open; counted before `ast.literal_eval` sees the text
 PAIR_HEADERS = ("category", "value")  # the columns of an object of scalars or an array of pairs
+LIST_COLUMN_NAME = "value"
+"""The name of a pasted list of values without a header line (`_header_as_row`), a list of `5 kg`
+cells with its unit as every other unit column (`value (kg)`)."""
+HEADERLESS_LIST_WARNING = (
+    f"no header line: the first line is a value, kept as the first row, and the column is named '{LIST_COLUMN_NAME}'"
+)
 NA_TOKEN = "NA"
 MIN_OTHER_CODES = 2
 """The distinct letter codes beside `NA` that make a pasted `NA` a code rather than missing (`_keep_na_codes`)."""
@@ -584,18 +591,32 @@ def parse_dataset(
         raise ParseError("unparseable", f"the data holds one table; there is no table {table}")
     marks = frozenset(declared)
     headers, rows, source_format = read
-    parsed = _build(
-        headers,
-        rows,
-        source_format,
-        warnings,
-        frozenset(text_columns),
-        canonical=canonical,
-        context=context,
-        missing_marks=marks,
-        listed=frozenset(listed),
-        row_names=find_table,
-    )
+
+    def build(heads: list[str], body: list[list[str]], notes: list[str], said: list[str]) -> ParsedDataset:
+        return _build(
+            heads,
+            body,
+            source_format,
+            said,
+            frozenset(text_columns),
+            canonical=canonical,
+            context=notes,
+            missing_marks=marks,
+            listed=frozenset(listed),
+            row_names=find_table,
+        )
+
+    parsed = None
+    if find_table and not canonical and len(rows) < MAX_ROWS and _header_as_row(headers, source_format):
+        # A list of values without a header line: its first line is the first value, not a name.
+        # A refusal of that reading (one row too many, a cell too long) leaves the first reading to answer.
+        trial_context, trial_warnings = list(context), [*warnings, HEADERLESS_LIST_WARNING]
+        with contextlib.suppress(ParseError):
+            trial = build([LIST_COLUMN_NAME], [headers, *rows], trial_context, trial_warnings)
+            if trial.profile.columns[0].dtype != "text":
+                parsed, context = trial, trial_context
+    if parsed is None:
+        parsed = build(headers, rows, context, warnings)
     if len(parsed.csv.encode("utf-8")) > MAX_CANONICAL_BYTES:
         raise ParseError("too_long", f"the data is larger than {MAX_CANONICAL_BYTES // 1024:,} KB once written out")
     if tables:
@@ -3552,6 +3573,20 @@ def _write_csv(names: list[str], rows: list[list[str]]) -> str:
     writer.writerow(names)
     writer.writerows(rows)
     return buffer.getvalue()
+
+
+def _header_as_row(headers: list[str], source_format: SourceFormat) -> bool:
+    """Whether a pasted one-column text's header line may be a value: the first row of a list without a header.
+
+    The caller keeps that reading only when the column, header line included, then types as
+    values (integers, numbers, dates, booleans; `5 kg` and `€7` with their unit too), so a value
+    is never lost to the header (owner rule: no silent value change); a name such as
+    `Pendelzeit_min` makes that column text, and the first reading stands. A text list keeps its
+    first line as the header, and the transcriber, which can tell a name from a first category,
+    reads a short one (`transcribe.looks_like_free_text`). Only a header with a digit in it is
+    tried (a number, a date, `5 kg`), so a name costs no second reading.
+    """
+    return len(headers) == 1 and not source_format.startswith("json") and any(c.isdigit() for c in headers[0])
 
 
 def _looks_like_value(name: str) -> bool:

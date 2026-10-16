@@ -543,8 +543,27 @@ class _JudgeAnswer(BaseModel):
     lang: str = Field(description="ISO 639-1 code of the language the user writes in, for example en or de")
 
 
+JudgeFailure = Literal["timeout", "cut_off", "error"]
+"""Why a judge or transcriber call gave no answer (`JudgeUnavailable.failure`)."""
+
+
 class JudgeUnavailable(Exception):
-    """No verdict within the budget: timeout, transport error or an unparseable answer."""
+    """No verdict within the budget: timeout, transport error or an unparseable answer.
+
+    `failure` says which, so a caller can name the cause (owner rule of 2026-10-16):
+    `timeout` when the budget ran out while no attempt had failed yet (the model was
+    still writing), `cut_off` when an attempt stopped at its output cap (`AnswerCutOff`,
+    the answer was longer than the model may write), `error` for everything else (a
+    transport or API error, a quota, an answer that does not parse): a real outage.
+    """
+
+    def __init__(self, message: str, failure: JudgeFailure = "error") -> None:
+        super().__init__(message)
+        self.failure: JudgeFailure = failure
+
+
+class AnswerCutOff(ValueError):
+    """A model call that stopped at its output cap: the answer is cut off, not an answer."""
 
 
 class Transcription(BaseModel):
@@ -597,6 +616,8 @@ async def _within_budget[Answer](
     Fails closed with `JudgeUnavailable`, whose message names the type of the last
     failure (for example `RateLimitError`), also when the budget ran out during the wait
     or the retry, so a caller can tell a quota from a timeout without the exception text.
+    Its `failure` is `cut_off` when the last attempt stopped at its output cap, `timeout`
+    when the budget ran out with no failed attempt before, and `error` otherwise.
     """
     last: BaseException | None = None
     try:
@@ -612,8 +633,10 @@ async def _within_budget[Answer](
                     last = exc
     except TimeoutError as exc:
         after = f" (after {type(last).__name__})" if last is not None else ""
-        raise JudgeUnavailable(f"the judge did not answer in time{after}") from exc
-    raise JudgeUnavailable(f"the judge failed twice ({type(last).__name__})") from last
+        failure: JudgeFailure = "timeout" if last is None else "cut_off" if isinstance(last, AnswerCutOff) else "error"
+        raise JudgeUnavailable(f"the judge did not answer in time{after}", failure) from exc
+    failure = "cut_off" if isinstance(last, AnswerCutOff) else "error"
+    raise JudgeUnavailable(f"the judge failed twice ({type(last).__name__})", failure) from last
 
 
 @dataclass
@@ -649,6 +672,8 @@ class AnthropicJudge:
             output_config={"format": structured_output_format(schema)},
         )
         # A refusal or a cut-off answer need not match the format; it is a failed attempt, not an answer.
+        if message.stop_reason == "max_tokens":
+            raise AnswerCutOff("the judge stopped at its output cap")
         if message.stop_reason != "end_turn":
             raise ValueError(f"the judge stopped with {message.stop_reason}")
         answer = "".join(block.text for block in message.content if getattr(block, "type", "") == "text")
@@ -722,6 +747,9 @@ class GeminiJudge:
                 labels=_labels("judge"),
             ),
         )
+        candidates = getattr(response, "candidates", None) or []
+        if candidates and candidates[0].finish_reason == types.FinishReason.MAX_TOKENS:
+            raise AnswerCutOff("the judge stopped at its output cap")
         answer = schema.model_validate_json(response.text or "")
         usage = response.usage_metadata
 

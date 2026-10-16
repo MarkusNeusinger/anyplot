@@ -137,7 +137,7 @@ from agents.anyplot.data.prepare import Operation, PrepareError, apply_operation
 from agents.anyplot.data.roles import DataRole
 from agents.anyplot.data.shape import long_suggestion
 from agents.anyplot.data.store import StoreFull
-from agents.anyplot.data.transcribe import MAX_TRANSCRIBE_CHARS, looks_like_free_text, table_to_csv, transcribable
+from agents.anyplot.data.transcribe import looks_like_free_text, table_to_csv, transcribable, transcribe_refusal
 from agents.anyplot.dataset_context import FILE_NAME_WITHHELD
 from agents.anyplot.dataset_guard import DataRefused, GuardUnavailable, check_dataset
 from agents.anyplot.dataset_versions import dataset_payload, push_version, undo_version
@@ -152,7 +152,7 @@ from agents.anyplot.language import (
     pasted_language,
     refusal_lang,
 )
-from agents.anyplot.models import JudgeUnavailable
+from agents.anyplot.models import JudgeFailure, JudgeUnavailable
 from agents.anyplot.opening import (
     INSTRUCTION_LIKE,
     MAX_SOURCE_RAW_CHARS,
@@ -1019,14 +1019,12 @@ async def _ingest_paste(
         # Text with no table in it (prose, a list on one line) is the transcriber's; a broken
         # table (ragged rows, bad quoting, an over-long cell, invalid JSON) stays the parser's refusal,
         # which names its cause (owner rule of 2026-10-16).
-        if exc.code == "no_table" and transcribable(body.text):
+        refusal = transcribe_refusal(body.text)
+        if exc.code == "no_table" and refusal is None:
             return await _transcribe(services, ledger, body.text)
         cause = exc.message
         if exc.code == "no_table":
-            cause = (
-                f"{cause}, and the text is longer than the {MAX_TRANSCRIBE_CHARS:,} characters the model that reads "
-                "free text as a table takes"
-            )
+            cause = f"{cause}, and {refusal}"
         raise AgentsError(422, "unparseable", cause) from None
     if not body.confirmed and looks_like_free_text(parsed) and transcribable(body.text):
         return await _transcribe(services, ledger, body.text)
@@ -1192,6 +1190,20 @@ def _refuse_code_or_formula(ledger: RequestLedger, text: str) -> None:
         raise AgentsError(422, kind)
 
 
+def _transcribe_failure_cause(failure: JudgeFailure, text: str) -> str:
+    """What a transcription that timed out or was cut off fails on, with the text's size and the way out."""
+    lines = sum(1 for line in text.splitlines() if line.strip())
+    size = f"{lines:,} {'line' if lines == 1 else 'lines'}, {len(text.strip()):,} characters"
+    if failure == "timeout":
+        what = "did not finish in the time it has"
+    else:
+        what = "would have to write a longer table than it may"
+    return (
+        f"no table found: the text has no separators between columns, and the model that reads free text as a table "
+        f"{what} for this text ({size}); paste the data with a separator between columns (CSV or TSV), or a shorter part"
+    )
+
+
 async def _transcribe(services: Services, ledger: RequestLedger, text: str) -> JSONResponse:
     """Read free text as a table with the transcriber and answer with it, storing nothing.
 
@@ -1209,9 +1221,14 @@ async def _transcribe(services: Services, ledger: RequestLedger, text: str) -> J
         raise AgentsError(403, "data_refused")
     try:
         reading = await services.judge.transcribe(fence("user_text", text), transcribe_rubric())
-    except JudgeUnavailable:
-        attribution("data_transcribe", ledger, outcome="guard_unavailable")
-        raise AgentsError(503, "guard_unavailable") from None
+    except JudgeUnavailable as exc:
+        if exc.failure == "error":  # a transport or API error, a quota, an answer that does not parse
+            attribution("data_transcribe", ledger, outcome="guard_unavailable")
+            raise AgentsError(503, "guard_unavailable") from None
+        # The model was still writing when the budget ran out, or stopped at its output cap: the
+        # text is too much to read in one go, which the user can change; no outage to wait out.
+        attribution("data_transcribe", ledger, outcome=exc.failure)
+        raise AgentsError(422, "unparseable", _transcribe_failure_cause(exc.failure, text)) from None
     services.usage.add_tokens(
         user,
         judge_budget_tokens(reading.tokens, reading.input_tokens, reading.output_tokens, get_settings().judge_model),
