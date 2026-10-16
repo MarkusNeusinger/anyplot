@@ -815,6 +815,46 @@ class TestCarryBindings:
         assert as_pairs(carried) == [("x", "a"), ("y1", "b"), ("y2", "c")]
 
 
+class TestDatesAndKeysAsLabels:
+    """Fable's re-review of #12204: dates and numbering columns as labels, against the bindings on main."""
+
+    BAR = [role("category", "categorical"), role("value", "numeric")]
+    GROUPED = [role("category", "categorical"), role("group", "categorical"), role("value", "numeric")]
+
+    @pytest.mark.parametrize("first", ["id", "Nr", "Stunde"])
+    def test_a_numbering_first_column_stays_the_category(self, first: str) -> None:
+        start = 0 if first == "Stunde" else 1
+        data = profile(f"{first},a,b,c\n" + "".join(f"{i},{i * 2},{i * 3},{i * 5}\n" for i in range(start, start + 10)))
+
+        bindings = default_bindings(self.BAR, data)
+
+        assert as_pairs(bindings) == [("category", first), ("value", "a")]
+        assert check_bindings(bindings, self.BAR, data).warnings == []
+
+    def test_a_text_category_beats_a_few_dates(self) -> None:
+        data = profile(
+            "ts,host,latency\n" + "".join(f"2025-01-0{d},{h},{d * 10}\n" for d in range(1, 4) for h in ("web1", "web2"))
+        )
+
+        assert dict(as_pairs(default_bindings(self.BAR, data)))["category"] == "host"
+        assert dict(as_pairs(default_bindings(self.GROUPED, data))) == {
+            "category": "host",
+            "group": "ts",
+            "value": "latency",
+        }
+
+    def test_thousands_of_dates_are_no_default_label(self) -> None:
+        rows = "".join(f"2025-01-01T{h:02d}:{m:02d}:00,s{h % 3},{m}\n" for h in range(24) for m in range(0, 60, 5))
+        data = profile("timestamp,sensor,value\n" + rows)
+
+        assert "group" not in dict(as_pairs(default_bindings(self.GROUPED, data)))
+
+    def test_dates_alone_still_label_the_bars(self) -> None:
+        data = profile("Datum,Wert\n" + "".join(f"2025-01-{d:02d},{d}\n" for d in range(1, 31)))
+
+        assert as_pairs(default_bindings(self.BAR, data)) == [("category", "Datum"), ("value", "Wert")]
+
+
 def test_an_optional_label_role_takes_no_dates_by_its_name() -> None:
     """Review of #12204: a date column named `series` stays the x of a line chart, not its optional group."""
     data = profile("series,revenue\n2025-01-01,10\n2025-01-02,12\n2025-01-03,9\n")

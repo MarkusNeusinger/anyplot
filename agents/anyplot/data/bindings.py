@@ -26,8 +26,9 @@ column instead of the first number. A role without kinds accepts any column in
 A role that labels (`categorical`, `text`) takes a datetime column too, since live
 test round 7 of 2026-10-16: the paste reads `2025-01` as a date, and the months
 of a heatmap or a grouped bar chart are its labels as they were when the column
-was text. A required role only: an optional group or color role never takes the
-dates by default (`_label_dates`).
+was text. By default only a required role, only up to `MAX_CATEGORIES` dates, and
+after a real text category (`_dates_may_label`, `_category_rank`): an optional group
+or color role, 20,000 timestamps and `ts` beside `host` stay out (review of #12204).
 
 A role that needs values of 0 or more (`DataRole.non_negative`, set per spec by
 `signs.py`) never takes a column with a negative value by default; it takes the next
@@ -294,7 +295,7 @@ def _default_bindings(
                     and _norm(column.name) == _norm(role.name)
                     and _tier(role, column) is not None
                     and not (column.name in siblings and takes_labels(role))
-                    and (role.required or not _label_dates(role, column))
+                    and _dates_may_label(role, column)
                 ):
                     single[role.name] = column.name
                     used.add(column.name)
@@ -391,7 +392,7 @@ def _default_bindings(
                 and (tier <= 1 or column.name not in reserved)
                 and (role.required or (column.name not in avoid and column.name not in row_numbers))
                 and not (column.name in siblings and takes_labels(role))
-                and (role.required or not _label_dates(role, column))
+                and _dates_may_label(role, column)
             )
             if ranked:
                 single[role.name] = ranked[0][-1]
@@ -624,7 +625,8 @@ def _category_rank(role: DataRole, column: ColumnProfile) -> int:
     groups or labels (and accepts no number or date), the candidates rank:
 
     0. a real text or boolean column of 2 to `MAX_CATEGORIES` distinct values;
-    1. an integer column of years named so, then 2. one whose values look like years;
+    1. an integer column of years named so, or a date column (at most `MAX_CATEGORIES` dates by default),
+       then 2. one whose values look like years;
     3. a text column with more distinct values;
     4. an ordinal integer column, every value of a short range (`Quartal` 1 to 4, `_ordinal`);
     5. another integer column of at most `MAX_CATEGORIES` distinct values;
@@ -632,9 +634,13 @@ def _category_rank(role: DataRole, column: ColumnProfile) -> int:
     """
     if not role.kinds or any(kind not in GROUPING_KINDS for kind in role.kinds):
         return 0
-    if (column.dtype in ("text", "boolean") and not numeric_text(column)) or column.dtype == "datetime":
-        # Dates label like text since `2025-01` reads as a date (live test round 7 of 2026-10-16).
+    if column.dtype in ("text", "boolean") and not numeric_text(column):
         return 0 if column.unique <= MAX_CATEGORIES else 3
+    if column.dtype == "datetime":
+        # Dates label too since `2025-01` reads as a date (live test round 7 of 2026-10-16), but after a real
+        # category: `ts, host, latency` keeps `host` as the bars (review of #12204). More than `MAX_CATEGORIES`
+        # dates are never a default (`_label_dates`).
+        return 1
     if column.dtype == "integer":
         score = year_score(column)
         if score:
@@ -648,6 +654,15 @@ def _category_rank(role: DataRole, column: ColumnProfile) -> int:
 def _label_dates(role: DataRole, column: ColumnProfile) -> bool:
     """A datetime column for a role that takes it only as labels (`categorical`, `text`, not `datetime`)."""
     return column.dtype == "datetime" and "datetime" not in role.kinds
+
+
+def _dates_may_label(role: DataRole, column: ColumnProfile) -> bool:
+    """Whether the defaults may give a role that takes dates only as labels this date column: a required role and
+    at most `MAX_CATEGORIES` dates (review of #12204: 20,000 timestamps became a stacked bar's components). Any
+    other column, and any role that takes `datetime`, passes."""
+    if not _label_dates(role, column):
+        return True
+    return role.required and column.unique <= MAX_CATEGORIES
 
 
 def _ordinal(column: ColumnProfile) -> bool:

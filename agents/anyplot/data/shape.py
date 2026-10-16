@@ -24,7 +24,8 @@ The rule, every condition required:
   the category (a table with a label column is long, or its labels are the user's
   choice to make). A datetime column is a key: it is kept, and so is a column of
   years or of a part of a date (`temporal.time_keys`: `Jahr` beside `CO2` and
-  `Bevölkerung`); every other numeric column is pivoted.
+  `Bevölkerung`), and so is a first column that numbers the rows (`_numbering_key`:
+  `id`, `Nr`, `Stunde` 0 to 3); every other numeric column is pivoted.
 * **The result fits:** at most `MAX_ROWS` rows, and the new names (the two role
   names) are not already a kept column's name.
 
@@ -58,9 +59,10 @@ from dataclasses import dataclass
 from typing import Any
 
 from ..schemas import MAX_ROWS, ColumnProfile, DatasetProfile
+from .parse import ID_WORDS
 from .prepare import MAX_LONGER_COLUMNS
 from .roles import DataRole
-from .temporal import time_keys
+from .temporal import WORDS, time_keys
 
 
 _LABEL_KINDS = frozenset({"categorical", "text"})
@@ -130,7 +132,10 @@ def long_suggestion(roles: list[DataRole], profile: DatasetProfile) -> LongSugge
     time = time_keys(profile)  # years and parts of a date say where a value sits: keys, never melted
     labels = [role for role in single if role.required and role.kinds and set(role.kinds) <= _LABEL_KINDS]
     if len(labels) == 1 and not any(dtype in _LABEL_COLUMNS for dtype in dtypes.values()):
-        keys = [name for name, dtype in dtypes.items() if dtype == "datetime" or name in time]
+        # A first column that numbers the rows (`id`, `Nr`, `Stunde` 0 to 3) is a key too, never a measure
+        # (review of #12204: melted, it kept `category` off every column of `id,a,b,c`).
+        numbering = _numbering_key(profile)
+        keys = [name for name, dtype in dtypes.items() if dtype == "datetime" or name in time or name == numbering]
         names_to, least = labels[0].name, 2
     else:
         # The matrix rule: two label roles of a grid or grouped chart, one of them for the kept row labels.
@@ -173,6 +178,16 @@ def _row_key(profile: DatasetProfile, time: set[str]) -> str | None:
     if key is None or key.missing or key.unique != profile.rows:
         return None
     return key.name
+
+
+def _numbering_key(profile: DatasetProfile) -> str | None:
+    """The first column when it numbers the rows: whole numbers, one per row, none missing, and every number of
+    its range (`1` to `n`, `100` to `109`, an hour `0` to `3`) or a name that says ids (`id`, `Nr`, `Code`)."""
+    first = profile.columns[0] if profile.columns else None
+    if first is None or first.dtype != "integer" or first.missing or first.unique != profile.rows:
+        return None
+    named = bool(set(WORDS.findall(first.name.casefold())) & ID_WORDS)
+    return first.name if named or _run(first) else None
 
 
 def _run(column: ColumnProfile) -> bool:

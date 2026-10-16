@@ -54,10 +54,11 @@ def date_part(column: ColumnProfile, *, has_year: bool) -> bool:
     """An integer column that numbers a month, a quarter or a week of the year.
 
     Named so (`Month`, `Monat`, `Quartal`, `Woche`, `DATE_PART_WORDS`) and within that
-    part's range, or, beside a column of years (`has_year`), every value from 1 to 12 or
-    from 1 to 4 (live test of 2026-10-15: the `Month` of a MeteoSwiss table of `Year`,
-    `Month`, `Temperature` was bound as the value of a time series). Durations and units
-    (`Months since start` up to 36, `Dauer (Minuten)`, a `kW` column) are measures.
+    part's range, or, right after a column of years (`has_year`, see `time_keys`), every
+    value from 1 to 12 or from 1 to 4 (live test of 2026-10-15: the `Month` of a
+    MeteoSwiss table of `Year`, `Month`, `Temperature` was bound as the value of a time
+    series). Durations and units (`Months since start` up to 36, `Dauer (Minuten)`, a
+    `kW` column) are measures.
     """
     if column.dtype != "integer" or not isinstance(column.min, float | int) or not isinstance(column.max, float | int):
         return False
@@ -69,7 +70,17 @@ def date_part(column: ColumnProfile, *, has_year: bool) -> bool:
 
 
 def time_keys(profile: DatasetProfile) -> set[str]:
-    """The integer columns of years or of a part of a date (`year_score`, `date_part`): where a value sits."""
+    """The integer columns of years or of a part of a date (`year_score`, `date_part`): where a value sits.
+
+    An unnamed 1-to-12 or 1-to-4 column counts as a month or quarter only right after a column of years that
+    repeats (`Year, Month, Temperature`: each year once per month): anywhere beside one was too loose (review
+    of #12204: in `Jahr, CH, AT, DE`, one row per year, a country whose values ran 1 to 4 became a key).
+    """
     columns = profile.columns
-    has_year = any(year_score(column) for column in columns)
-    return {column.name for column in columns if year_score(column) or date_part(column, has_year=has_year)}
+    keys: set[str] = set()
+    for index, column in enumerate(columns):
+        before = columns[index - 1] if index > 0 else None
+        after_year = before is not None and year_score(before) > 0 and before.unique < profile.rows
+        if year_score(column) or date_part(column, has_year=after_year):
+            keys.add(column.name)
+    return keys

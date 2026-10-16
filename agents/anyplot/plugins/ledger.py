@@ -497,8 +497,9 @@ def session_hash(session_id: str) -> str:
 
 
 def attribution(hook: str, ledger: RequestLedger, **fields: Any) -> None:
-    """One content-free JSON log line for a plugin hook."""
+    """One content-free JSON log line for a plugin hook (`severity` is Cloud Logging's level field)."""
     record = {
+        "severity": "INFO",
         "hook": hook,
         "request_id": ledger.request_id,
         "user": ledger.user_id,

@@ -131,6 +131,19 @@ class TestMatrix:
 class TestTimeKeys:
     """Review of #12204: a column of years is a key the offer keeps, as the bindings treat it."""
 
+    def test_a_country_beside_one_row_per_year_is_no_quarter(self) -> None:
+        """Fable's re-review: `CH` of 1 to 4 right after `Jahr` was taken for a quarter and kept as a key."""
+        suggestion = suggest("box-basic", "Jahr,CH,AT,DE\n2000,1,2,3\n2001,2,3,4\n2002,3,4,5\n2003,4,5,6\n")
+
+        assert suggestion is not None and (suggestion.columns, suggestion.keys) == (["CH", "AT", "DE"], ["Jahr"])
+
+    def test_a_numbering_first_column_is_kept(self) -> None:
+        text = "id,a,b,c\n" + "".join(f"{i},{i * 2},{i * 3},{i * 5}\n" for i in range(100, 110))
+
+        suggestion = suggest("box-basic", text)
+
+        assert suggestion is not None and (suggestion.columns, suggestion.keys) == (["a", "b", "c"], ["id"])
+
     def test_a_year_column_is_kept_not_melted(self) -> None:
         suggestion = suggest("box-basic", "Jahr,CO2,Bevoelkerung\n2000,43.6,7184003\n2001,45.1,7226391\n")
 
