@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { ColumnProfile, RoleSpec } from 'src/lib/agent';
-import { emptyChoice, signHint } from 'src/sections/agent-chat/bindings';
+import { emptyChoice, siblingHint, signHint } from 'src/sections/agent-chat/bindings';
 
 const radius: RoleSpec = {
   name: 'radius',
@@ -29,6 +29,34 @@ describe('signHint', () => {
     expect(signHint({ ...radius, non_negative: undefined }, column(-1))).toBeNull();
     expect(signHint(radius, undefined)).toBeNull();
     expect(signHint(radius, column('2024-01-01', 'datetime'))).toBeNull();
+  });
+});
+
+describe('siblingHint', () => {
+  // Live test round 7: a heatmap of `Stunde;Mo;...;So`, its `y` bound to the numbers of `Mo`.
+  const y: RoleSpec = { ...radius, name: 'y', kinds: ['text', 'numeric'], non_negative: false };
+  const offer = {
+    kind: 'to_long' as const,
+    columns: ['Mo', 'Di', 'Mi'],
+    names_to: 'y',
+    values_to: 'value',
+    keys: ['Stunde'],
+    rows: 42,
+    siblings: ['Mo', 'Di', 'Mi'],
+  };
+
+  it('warns when a role that takes labels is bound to a number column of a wide table', () => {
+    expect(siblingHint(y, 'Mo', offer)).toBe(
+      'one of 3 number columns that hold one measure side by side; y wants labels: .to_long() first'
+    );
+  });
+
+  it('stays quiet for a measure role, a key column, no offer or no column', () => {
+    expect(siblingHint({ ...y, name: 'value', kinds: ['numeric'] }, 'Mo', offer)).toBeNull();
+    expect(siblingHint(y, 'Stunde', offer)).toBeNull();
+    expect(siblingHint(y, 'Mo', null)).toBeNull();
+    expect(siblingHint(y, undefined, offer)).toBeNull();
+    expect(siblingHint(y, 'Mo', { ...offer, siblings: [] })).toBeNull();
   });
 });
 

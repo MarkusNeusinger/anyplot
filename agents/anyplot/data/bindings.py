@@ -12,8 +12,8 @@ ranks candidate columns for the default:
 | Role kind     | Tier 1 (preferred) | Tier 2 (accepted)  |
 |---------------|--------------------|--------------------|
 | `numeric`     | number, integer    |                    |
-| `categorical` | text, boolean      | integer            |
-| `text`        | text               | boolean, integer   |
+| `categorical` | text, boolean, datetime | integer       |
+| `text`        | text, datetime     | boolean, integer   |
 | `boolean`     | boolean            | integer (0/1 code) |
 | `datetime`    | datetime (tier 0)  |                    |
 
@@ -22,6 +22,13 @@ best tier. A datetime column is tier 0 for every role that accepts datetime,
 because no other kind can use it; that keeps `x (numeric/datetime)` on the date
 column instead of the first number. A role without kinds accepts any column in
 `check_bindings` but is never bound by default.
+
+A role that labels (`categorical`, `text`) takes a datetime column too, since live
+test round 7 of 2026-10-16: the paste reads `2025-01` as a date, and the months
+of a heatmap or a grouped bar chart are its labels as they were when the column
+was text. By default only a required role, only up to `MAX_CATEGORIES` dates, and
+after a real text category (`_dates_may_label`, `_category_rank`): an optional group
+or color role, 20,000 timestamps and `ts` beside `host` stay out (review of #12204).
 
 A role that needs values of 0 or more (`DataRole.non_negative`, set per spec by
 `signs.py`) never takes a column with a negative value by default; it takes the next
@@ -38,7 +45,11 @@ from ..schemas import Binding, ColumnDtype, ColumnProfile, DatasetProfile
 from .computed import match_score, window_line, window_rank
 from .parse import value_like
 from .roles import DataRole, RoleKind
+from .shape import long_suggestion, takes_labels
 from .signs import has_negative, sign_line
+from .temporal import CAMEL as _CAMEL
+from .temporal import WORDS as _WORDS
+from .temporal import date_part, year_score
 
 
 # A variadic family binds at most this many columns by default (charts with more series stop
@@ -49,8 +60,8 @@ MIN_NAME_SIMILARITY = 0.6
 
 ACCEPTS: dict[RoleKind, dict[ColumnDtype, int]] = {
     "numeric": {"number": 1, "integer": 1},
-    "categorical": {"text": 1, "boolean": 1, "integer": 2},
-    "text": {"text": 1, "boolean": 2, "integer": 2},
+    "categorical": {"text": 1, "boolean": 1, "datetime": 1, "integer": 2},
+    "text": {"text": 1, "datetime": 1, "boolean": 2, "integer": 2},
     "boolean": {"boolean": 1, "integer": 2},
     "datetime": {"datetime": 0},
 }
@@ -62,22 +73,6 @@ MIN_CONSTANT_ROWS = 5
 """The rows from which a number column with one distinct value is a constant, no measure (`weak_measures`)."""
 MAX_CATEGORIES = 60
 """The distinct values up to which a text column is a plausible category (bars, groups, series) by default."""
-YEAR_RANGE = (1000, 2200)
-"""The values a year column holds, inclusive."""
-MAX_YEAR_SPAN = 300
-"""The widest range of an integer column that counts as years without a year name."""
-YEAR_WORDS: frozenset[str] = frozenset(
-    {"year", "years", "yr", "jahr", "jahre", "année", "annee", "an", "año", "ano", "anno", "jaar", "år", "rok"}
-)
-"""Column-name words that say the column holds years (`Jahr`, `year`, `Année`), compared in lower case."""
-DATE_PART_WORDS: dict[str, int] = {
-    **dict.fromkeys(("month", "monat", "mois", "mes", "mese", "maand", "månad", "miesiac", "miesiąc"), 12),
-    **dict.fromkeys(("quarter", "quartal", "trimestre", "kwartaal", "kwartal"), 4),
-    **dict.fromkeys(("week", "woche", "kalenderwoche", "semaine", "semana", "settimana"), 53),
-}
-"""Column-name words that say an integer column numbers a month, a quarter or a week of the year, with the
-largest value it then holds. Singular only, and no unit words: `Months since start`, `Dauer (Minuten)`,
-`Days to ship` and a `kW` column are measures (review of 2026-10-15)."""
 CODE_WORDS: frozenset[str] = frozenset(
     {"id", "code", "codes", "iso", "iso2", "iso3", "key", "abbr", "abbreviation", "kürzel", "kuerzel", "symbol"}
 )
@@ -116,8 +111,6 @@ readr `...1`); with `column_<n>`, the parser's name for an empty header (`row_nu
 _GENERATED_NAME = re.compile(r"column_[0-9]+")
 _NOT_ALNUM = re.compile(r"[^0-9a-z]+")
 _CODE_VALUE = re.compile(r"[A-Z][A-Z0-9]{1,3}")
-_CAMEL = re.compile(r"(?<=[a-z0-9])(?=[A-Z])")
-_WORDS = re.compile(r"[^\W_]+")
 
 
 @dataclass(frozen=True)
@@ -128,7 +121,8 @@ class BindingCheck:
     bound to a column with a negative value, or left open because every column that
     fits it has one (`signs.py`); and one per computed role bound to a column whose name
     carries another window than the spec's (`computed.window_line`: `SMA 200` for a
-    20-period band).
+    20-period band); and one per role that takes labels bound to a measurement column of a
+    table that is wide for the spec (`sibling_line`: a heatmap's `y` on the numbers of `Mo`).
     """
 
     complete: bool
@@ -158,6 +152,31 @@ def row_number_columns(profile: DatasetProfile) -> set[str]:
         and column.unique == rows
         and (column.min, column.max) in ((1, rows), (0, rows - 1))
     }
+
+
+def label_siblings(roles: list[DataRole], profile: DatasetProfile) -> list[str]:
+    """The number columns of a table that is wide for this spec (`shape.long_suggestion`): one measure side by side.
+
+    A role that takes labels (`shape.takes_labels`) never takes one of them by default, and bound to one by
+    hand it carries a warning (`sibling_line`): in live test round 7 of 2026-10-16 a heatmap of
+    `Stunde;Mo;...;So` got `y` = `Mo` and `value` = `Di` by default, the user confirmed, and the run drew a
+    meaningless mostly empty matrix after 170 s. The role stays open instead, so the bindings are incomplete
+    and the page offers `.to_long()`. They are exactly the columns the offer melts: a column of years or
+    of a part of a date is a key there (`temporal.time_keys`), so `Jahr` beside `CO2` and `Bevölkerung`
+    stays the category of a bar chart, while a constant measurement column is still a sibling.
+    """
+    suggestion = long_suggestion(roles, profile)
+    return list(suggestion.columns) if suggestion is not None else []
+
+
+def sibling_line(role: str, column: str, siblings: list[str]) -> str:
+    """The warning of a label role bound to one of the measurement columns of a wide table."""
+    shown = ", ".join(f"'{name}'" for name in siblings[:4]) + (", ..." if len(siblings) > 4 else "")
+    return (
+        f"{role}: bound to '{column}', one of {len(siblings)} number columns ({shown}) that hold one measure side "
+        f"by side; {role} wants labels, so each number would become a category of its own: turn the columns into "
+        "rows first (.to_long())"
+    )
 
 
 def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Binding]:
@@ -209,14 +228,26 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
     Each column is bound at most once. Members of a family are numbered `<name>1`,
     `<name>2`, ... in column order. Roles without kinds stay unbound.
     """
+    return _with_row_numbers(roles, profile, set(label_siblings(roles, profile)))
+
+
+def _with_row_numbers(roles: list[DataRole], profile: DatasetProfile, siblings: set[str]) -> list[Binding]:
+    """`default_bindings` with the side-by-side columns `siblings` kept out of every role that takes labels.
+
+    `carry_bindings` fills the open roles on a reduced view of the table, on which the wide-table rule may no
+    longer hold: it passes the siblings of the whole table (review of #12204: after an undo of `.to_long()` the
+    heatmap's `y` took `Mo` again).
+    """
     row_numbers = row_number_columns(profile)
-    bindings = _default_bindings(roles, profile, row_numbers)
+    bindings = _default_bindings(roles, profile, row_numbers, siblings)
     if row_numbers and any(binding.column in row_numbers for binding in bindings):
-        return _default_bindings(roles, profile, set())
+        return _default_bindings(roles, profile, set(), siblings)
     return bindings
 
 
-def _default_bindings(roles: list[DataRole], profile: DatasetProfile, row_numbers: set[str]) -> list[Binding]:
+def _default_bindings(
+    roles: list[DataRole], profile: DatasetProfile, row_numbers: set[str], siblings: set[str]
+) -> list[Binding]:
     """`default_bindings` with `row_numbers` kept out of every role that another column can fill."""
     columns = profile.columns
     used: set[str] = set()
@@ -263,6 +294,8 @@ def _default_bindings(roles: list[DataRole], profile: DatasetProfile, row_number
                     column.name not in used
                     and _norm(column.name) == _norm(role.name)
                     and _tier(role, column) is not None
+                    and not (column.name in siblings and takes_labels(role))
+                    and _dates_may_label(role, column)
                 ):
                     single[role.name] = column.name
                     used.add(column.name)
@@ -312,7 +345,10 @@ def _default_bindings(roles: list[DataRole], profile: DatasetProfile, row_number
             fitting = sorted(
                 (tier, position)
                 for position, column in enumerate(columns)
-                if column.name not in used and (tier := _tier(role, column)) is not None and tier <= 1
+                if column.name not in used
+                and (tier := _tier(role, column)) is not None
+                and tier <= 1
+                and not _label_dates(role, column)  # a family of labels takes no dates by default
             )
             ranked_members = [
                 (tier, position)
@@ -355,6 +391,8 @@ def _default_bindings(roles: list[DataRole], profile: DatasetProfile, row_number
                 and (tier := _tier(role, column)) is not None
                 and (tier <= 1 or column.name not in reserved)
                 and (role.required or (column.name not in avoid and column.name not in row_numbers))
+                and not (column.name in siblings and takes_labels(role))
+                and _dates_may_label(role, column)
             )
             if ranked:
                 single[role.name] = ranked[0][-1]
@@ -399,7 +437,8 @@ def carry_bindings(
     taken = {binding.role for binding in kept}
     open_roles = [role for role in roles if role.variadic or role.name not in taken]
     free = profile.model_copy(update={"columns": [column for column in profile.columns if column.name not in used]})
-    for binding in default_bindings(open_roles, free):
+    # The wide-table rule is judged on the whole table and spec, never on the reduced view.
+    for binding in _with_row_numbers(open_roles, free, set(label_siblings(roles, profile))):
         role = resolve_role(binding.role, roles)
         if role is not None and role.variadic:
             number = next(n for n in itertools.count(1) if role.member(n) not in taken)
@@ -456,10 +495,13 @@ def check_bindings(bindings: list[Binding], roles: list[DataRole], profile: Data
     the plot can compute (`DataRole.computed`: bound, the plot uses the column; open, it
     computes the value); a
     required variadic family needs at least one member. `warnings`: a valid binding of
-    a non-negative role to a column with a negative value (`signs.sign_line`), and an
-    unbound non-negative role whose every fitting column that no other role holds has one.
+    a non-negative role to a column with a negative value (`signs.sign_line`), an
+    unbound non-negative role whose every fitting column that no other role holds has one,
+    and a role that takes labels bound to a measurement column of a wide table
+    (`label_siblings`, `sibling_line`).
     """
     columns = {column.name: column for column in profile.columns}
+    siblings = label_siblings(roles, profile)
     errors: list[str] = []
     warnings: list[str] = []
     seen_roles: set[str] = set()
@@ -489,6 +531,8 @@ def check_bindings(bindings: list[Binding], roles: list[DataRole], profile: Data
             errors.append(f"role '{binding.role}' needs {wanted} data, but column '{column.name}' is {column.dtype}")
             continue
         bound.add(role.name)
+        if column.name in siblings and takes_labels(role):
+            warnings.append(sibling_line(binding.role, column.name, siblings))
         if role.non_negative and has_negative(column):
             warnings.append(sign_line(binding.role, column))
         if role.computed and (line := window_line(role.name, column.name)):
@@ -568,24 +612,6 @@ def _constant_group(role: DataRole, column: ColumnProfile) -> bool:
     return column.unique <= 1 and any(kind in GROUPING_KINDS for kind in role.kinds)
 
 
-def year_score(column: ColumnProfile) -> int:
-    """2 for an integer column of years named so (`Jahr`, `year`), 1 for an unnamed run of whole years, else 0.
-
-    Values count as years when all lie within `YEAR_RANGE` and span at most `MAX_YEAR_SPAN`.
-    Without a year name that is not enough (review of 2026-10-15: prices, rents or calories of
-    1000 to 2200 look the same): the column must also hold every year of its range, at least
-    three (`unique == max - min + 1`), as a yearly series does, in a wide or a long table.
-    """
-    if column.dtype != "integer" or not isinstance(column.min, float | int) or not isinstance(column.max, float | int):
-        return 0
-    low, high = YEAR_RANGE
-    if not (low <= column.min and column.max <= high and column.max - column.min <= MAX_YEAR_SPAN):
-        return 0
-    if YEAR_WORDS & set(_WORDS.findall(column.name.casefold())):
-        return 2
-    return 1 if column.unique >= 3 and column.unique == int(column.max - column.min) + 1 else 0
-
-
 def numeric_text(column: ColumnProfile) -> bool:
     """A text column whose frequent values all read as numbers or dates (`7.184.003` the parse could not type)."""
     return column.dtype == "text" and bool(column.top) and all(value_like(value) for value in column.top)
@@ -599,7 +625,8 @@ def _category_rank(role: DataRole, column: ColumnProfile) -> int:
     groups or labels (and accepts no number or date), the candidates rank:
 
     0. a real text or boolean column of 2 to `MAX_CATEGORIES` distinct values;
-    1. an integer column of years named so, then 2. one whose values look like years;
+    1. an integer column of years named so, or a date column (at most `MAX_CATEGORIES` dates by default),
+       then 2. one whose values look like years;
     3. a text column with more distinct values;
     4. an ordinal integer column, every value of a short range (`Quartal` 1 to 4, `_ordinal`);
     5. another integer column of at most `MAX_CATEGORIES` distinct values;
@@ -609,6 +636,11 @@ def _category_rank(role: DataRole, column: ColumnProfile) -> int:
         return 0
     if column.dtype in ("text", "boolean") and not numeric_text(column):
         return 0 if column.unique <= MAX_CATEGORIES else 3
+    if column.dtype == "datetime":
+        # Dates label too since `2025-01` reads as a date (live test round 7 of 2026-10-16), but after a real
+        # category: `ts, host, latency` keeps `host` as the bars (review of #12204). More than `MAX_CATEGORIES`
+        # dates are never a default (`_label_dates`).
+        return 1
     if column.dtype == "integer":
         score = year_score(column)
         if score:
@@ -617,6 +649,20 @@ def _category_rank(role: DataRole, column: ColumnProfile) -> int:
             return 4
         return 5 if column.unique <= MAX_CATEGORIES else 7
     return 6
+
+
+def _label_dates(role: DataRole, column: ColumnProfile) -> bool:
+    """A datetime column for a role that takes it only as labels (`categorical`, `text`, not `datetime`)."""
+    return column.dtype == "datetime" and "datetime" not in role.kinds
+
+
+def _dates_may_label(role: DataRole, column: ColumnProfile) -> bool:
+    """Whether the defaults may give a role that takes dates only as labels this date column: a required role and
+    at most `MAX_CATEGORIES` dates (review of #12204: 20,000 timestamps became a stacked bar's components). Any
+    other column, and any role that takes `datetime`, passes."""
+    if not _label_dates(role, column):
+        return True
+    return role.required and column.unique <= MAX_CATEGORIES
 
 
 def _ordinal(column: ColumnProfile) -> bool:
@@ -692,24 +738,6 @@ def is_axis(role: DataRole) -> bool:
     `Month, Temperature`: x is the month, review of 2026-10-15).
     """
     return role.name == "x" or role.name.startswith("x_")
-
-
-def date_part(column: ColumnProfile, *, has_year: bool) -> bool:
-    """An integer column that numbers a month, a quarter or a week of the year.
-
-    Named so (`Month`, `Monat`, `Quartal`, `Woche`, `DATE_PART_WORDS`) and within that
-    part's range, or, beside a column of years (`has_year`), every value from 1 to 12 or
-    from 1 to 4 (live test of 2026-10-15: the `Month` of a MeteoSwiss table of `Year`,
-    `Month`, `Temperature` was bound as the value of a time series). Durations and units
-    (`Months since start` up to 36, `Dauer (Minuten)`, a `kW` column) are measures.
-    """
-    if column.dtype != "integer" or not isinstance(column.min, float | int) or not isinstance(column.max, float | int):
-        return False
-    words = _WORDS.findall(_CAMEL.sub(" ", column.name).casefold())
-    highest = max((DATE_PART_WORDS.get(word, 0) for word in words), default=0)
-    if highest and 1 <= column.min and column.max <= highest:
-        return True
-    return has_year and column.min == 1 and column.max in (4, 12) and column.unique == column.max
 
 
 def weak_measures(profile: DatasetProfile) -> set[str]:

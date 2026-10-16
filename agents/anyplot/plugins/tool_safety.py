@@ -220,13 +220,19 @@ def fence_pipeline_notes(result: dict[str, Any]) -> dict[str, Any]:
     the data preamble instead of as bare strings. `shows` (`PlotShows`: the shipped
     render's drawn texts, which the code under test wrote, and the review's verdict)
     gets a `<tool_notes>` block of its own under `SHOWS_PREAMBLE`, so the root tells what
-    the adapter meant to do from what the plot shows.
+    the adapter meant to do from what the plot shows. A shipped result adds two server facts:
+    `data_confirmed: true` and `data_changed: false` (the pipeline draws the confirmed data
+    and changes none of it).
     """
     fenced = {key: value for key, value in result.items() if key not in (*PIPELINE_NOTE_FIELDS, SHOWS_KEY)}
     if result.get("status") in ("ok", "needs_attention"):
         # A shipped plot passed the gate on the user's confirmation: a server fact in the result itself,
         # so an earlier turn's "please confirm" never reads as still true (live round 6, R6-1).
         fenced["data_confirmed"] = True
+        # The pipeline never changes the user's data: only `prepare_data`, `generate_data`, `run_data_code`,
+        # `.to_long()` and `.undo()` do. A server fact next to the adapter's notes, so a note about an "Other"
+        # group or a remainder the code draws never reads as a row added to the data (live round 7, R7-6).
+        fenced["data_changed"] = False
     if any(result.get(key) for key in PIPELINE_NOTE_FIELDS):
         notes = {key: result.get(key) or [] for key in PIPELINE_NOTE_FIELDS}
         fenced[NOTES_KEY] = DATA_PREAMBLE + "\n" + fence("tool_notes", json.dumps(notes, ensure_ascii=False))

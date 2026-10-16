@@ -246,6 +246,18 @@ PADDED_LINE = "canvas padded after render ({theme})"
 NOT_REVIEWED_LINE = "the plot was not reviewed ({why})"
 LOW_SCORE_LINE = "the review scored the plot {score} of 100, below the ship score of {bar}"
 """The residual line of a render that meets the ship bar but not `AGENT_STATUS_SCORE`."""
+VISIBLE_DEFECT_IDS = frozenset({"AR-09", "VQ-01", "VQ-02", "VQ-05"})
+"""Review ids of a defect the user sees at a glance: text cut off at the canvas edge (AR-09), unreadable text
+(VQ-01, owner decision of 2026-10-16), overlapping text or marks (VQ-02), and a layout that cuts or crams the plot
+(VQ-05). The reviewer's twins of the measured gate lines G3 and G7, which no review score waives either
+(`AGENT_GATE_REPAIR=review`).
+
+A review that names one of them sends the round to the repair even when its points pass the review bar
+(`AGENT_REVIEW_BAR`, 0.95 of the technical points: two lost points pass): live test round 7 of 2026-10-16 shipped
+a heatmap after the first try with its axis label at the right edge and a crammed colorbar, and the reply listed
+them. Such a render is not clean for `AGENT_SHIP_BEST` (`_clean`), so a clean repair a few points lower ships
+over it, and a render that ships with such lines carries them as notes (`needs_attention`) at any score, like a
+measured finding (review of #12204: the forced repair had been dropped silently for a 96 that clipped a label)."""
 BLOCKING_RULES = frozenset({"placeholder-count", "placeholder-use", "syntax", "size", "encoding"})
 """ADAPTATION findings that keep the code from running: without one placeholder there is no loader."""
 ADAPTATION_IDS = {"rng": "DQ-03", "literal-data": "DQ-03", "palette-prefix": "VQ-07"}
@@ -373,6 +385,9 @@ class Candidate:
     """The catalogue review's score of this render, when it had one (`AGENT_REVIEWER_MODE=catalogue`)."""
     review_lines: list[str] = field(default_factory=list)
     """This render's own review lines, so a best-scored earlier render ships with its own notes."""
+    visible_lines: list[str] = field(default_factory=list)
+    """The review lines of this render under `VISIBLE_DEFECT_IDS`, whatever its points: such a render is no clean
+    one for `ship_compare`, and shipped it carries them as notes (review of #12204)."""
     changes: list[str] = field(default_factory=list)
     """What this render's code changed, for `PlotResult.changes`: the notes of every adapter call of the run
     up to this render that changed the code (`Run.changes`), so a best-scored earlier render reports its own."""
@@ -968,8 +983,11 @@ def shipped_candidate(run: Run) -> Candidate | None:
 
 
 def _clean(candidate: Candidate) -> bool:
-    """No measured finding: no advisory gate line, no ADAPTATION finding and no requested text missing."""
-    return not (candidate.advisory_lines or candidate.adaptation_lines or candidate.expect_lines)
+    """No measured finding (no advisory gate line, no ADAPTATION finding, no requested text missing) and no
+    review line for a visible defect (`VISIBLE_DEFECT_IDS`): a clipped label is not clean at any score."""
+    return not (
+        candidate.advisory_lines or candidate.adaptation_lines or candidate.expect_lines or candidate.visible_lines
+    )
 
 
 def ship_compare(a: Candidate, b: Candidate) -> int:
@@ -1016,6 +1034,9 @@ def finish(run: Run) -> PlotResult:
     # No review score hides them (until 2026-10-14 only G10 stayed above the ship bar).
     residual += shipped.adaptation_lines
     residual += shipped.advisory_lines
+    # A visible defect the review named stays a note at any score, as a measured one does: the repair round
+    # was spent on it, and the render that ships still shows it (review of #12204).
+    residual += shipped.visible_lines
     # A requested text or number format the shipped render does not show: the reply must say so.
     residual += shipped.expect_lines
     if shipped.expect_note:
@@ -1136,13 +1157,16 @@ class ReviewOutcome:
     """A read review in either mode: the verdict, the defect lines for the repair, their ids, the score."""
 
     ok: bool
-    """No repair needed: every technical point (`AGENT_REVIEW_BAR`), or the checklist passed."""
+    """No repair needed: the technical points at the review bar (`AGENT_REVIEW_BAR`) and no defect line under
+    `VISIBLE_DEFECT_IDS`, or the checklist passed."""
     lines: list[str]
     ids: list[str]
     score: int | None = None
     technical: float | None = None
     status_ok: bool | None = None
     """Good enough to show without notes (`AGENT_STATUS_BAR`, the owner's ship bar); None means `ok`."""
+    visible: list[str] = field(default_factory=list)
+    """The defect lines under `VISIBLE_DEFECT_IDS`: the render is not clean (`Candidate.visible_lines`)."""
 
 
 async def _review(ctx: Context, scope: str, request: ReviewRequest, theme: Theme) -> ReviewOutcome | None:
@@ -1176,6 +1200,14 @@ async def _review(ctx: Context, scope: str, request: ReviewRequest, theme: Theme
         logger.warning("catalogue review deducted without defect lines: %s", ", ".join(result.silent))
         return None
     ids = sorted({found for line in result.defects if (m := DEFECT_RE.match(line)) for found in m["ids"].split(", ")})
+    visible = [
+        line
+        for line in result.defects
+        if (m := DEFECT_RE.match(line)) and VISIBLE_DEFECT_IDS & set(m["ids"].split(", "))
+    ]
+    if visible:
+        # A visible defect gets the repair round whatever the points (`VISIBLE_DEFECT_IDS`); the ship bar stays.
+        ok = False
     return ReviewOutcome(
         ok,
         [] if ok and status_ok else result.defects,
@@ -1183,6 +1215,7 @@ async def _review(ctx: Context, scope: str, request: ReviewRequest, theme: Theme
         result.score,
         round(result.technical_share, 3),
         status_ok=status_ok,
+        visible=visible,
     )
 
 
@@ -1668,6 +1701,7 @@ async def _attempts(
         candidate.status_ok = verdict.ok if verdict.status_ok is None else verdict.status_ok
         candidate.review_score = verdict.score
         candidate.review_lines = [] if verdict.ok and candidate.status_ok else list(verdict.lines)
+        candidate.visible_lines = list(verdict.visible)
         if verdict.score is not None and (run.best_scored is None or ship_compare(candidate, run.best_scored) >= 0):
             run.best_scored = candidate
         # The latest review's lines only: a passing review clears an earlier round's, so a later

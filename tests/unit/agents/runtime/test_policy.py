@@ -80,7 +80,7 @@ class TestOtherInstructions:
     def test_reviewer_has_checklist_theme_check_and_style_guide(self) -> None:
         text = policy.reviewer_instruction()
 
-        for criterion in ("VQ-01", "VQ-02", "VQ-03", "VQ-06", "VQ-07", "SC-01", "SC-03", "DQ-03", "AR-09"):
+        for criterion in ("VQ-01", "VQ-02", "VQ-03", "VQ-06", "VQ-07", "SC-01", "SC-03", "SC-04", "DQ-03", "AR-09"):
             assert f"| {criterion} |" in text
         assert policy.theme_readability_check() in source("prompts/workflow-prompts/ai-quality-review.md")
         assert '**No text is "dark on dark"**' in text

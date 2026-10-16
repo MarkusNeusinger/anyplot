@@ -395,6 +395,15 @@ _ISO_STAMP = re.compile(
 )
 """An ISO date, or a timestamp with seconds, a fraction of up to nine digits and an offset (`_as_iso_stamps`)."""
 
+YEAR_MONTH = re.compile(r"([0-9]{4})-([0-9]{2})")
+"""A month as ISO 8601 writes it (`2025-01`), read as its first day (`_as_periods`)."""
+SPAN_WORDS: frozenset[str] = frozenset(
+    {"season", "seasons", "saison", "saisons", "spielzeit", "temporada", "stagione", "seizoen", "sezon", "span"}
+)
+"""Words of a column name that say its `YYYY-NN` cells are spans of years, never months (`_as_periods`)."""
+MONTH_YEARS = (1000, 2200)
+"""The years a month or quarter column may hold (`prepare.MONTH_YEAR_RANGE`, the `set_type` reading of `YYYY-MM`)."""
+
 _DATE_FORMATS: tuple[tuple[re.Pattern[str], str], ...] = (
     (_ISO_DATE, "iso"),
     (_DOT_DATE, "dot"),
@@ -499,6 +508,7 @@ class _Column:
     na_rows: list[int] = field(default_factory=list)  # the rows whose cell was `NA`, read as missing so far
     mark_rows: list[int] = field(default_factory=list)  # the rows whose cell is a declared missing-value mark
     id_like: bool = False  # the name says ids, codes, versions or phone numbers (`_id_like`): no thousands reading
+    span_like: bool = False  # the name says seasons or spans (`SPAN_WORDS`): `2009-10` is no month
     group_mark: str | None = None  # the thousands mark `_as_grouped_numbers` read, evidence for other columns
     integers: list[int] = field(default_factory=list)  # an integer column's values, exact (`numbers` are floats)
     rounded: int = 0  # the cells a number column holds only rounded: more digits than a float64 keeps
@@ -3081,7 +3091,7 @@ def _as_dates(column: _Column, present: list[str]) -> bool:
             kind = candidate
             break
     if fields is None:
-        return False
+        return _as_periods(column, present)
 
     day_first = True
     if kind == "slash":
@@ -3110,6 +3120,44 @@ def _as_dates(column: _Column, present: list[str]) -> bool:
     column.dates = [parsed[cell] for cell in column.source if cell]
     column.cells = [_iso(parsed[cell], column.with_time) if cell else "" for cell in column.source]
     return True
+
+
+def _as_periods(column: _Column, present: list[str]) -> bool:
+    """Months (`2025-01`) as dates, each its first day, with a note (live test round 7 of 2026-10-16).
+
+    The month of `YYYY-MM` read as text made a monthly series' `x` fall on the GWh column, and the root
+    converted it on request with `set_type` (`YYYY-MM`, the first day of each month); the parser now reads it
+    the same way at the paste, and the note names the reading, so no value changes unannounced. A year from
+    `MONTH_YEARS` and a month from 1 to 12 in every cell, or the column stays text. So does a span that only
+    looks like a month (`_year_spans`: seasons `2009-10`, `2010-11`, five-year bins `2000-05`, `2005-10`), and
+    a column whose name says ids, codes or seasons (`ID_WORDS`, `SPAN_WORDS`): turning those into dates would
+    change what the cells mean.
+
+    Quarters (`2025-Q1`) stay text: as a date they would read `2025-01-01` and lose the spelling that says
+    quarter; `set_type` reads them on request.
+    """
+    fields = _match_all(YEAR_MONTH, present)
+    if fields is None or column.id_like or column.span_like:
+        return False
+    low, high = MONTH_YEARS
+    if not all(low <= year <= high and 1 <= month <= 12 for year, month in fields.values()):
+        return False
+    if _year_spans(list(fields.values())):
+        return False
+    firsts = {cell: datetime(year, month, 1) for cell, (year, month) in fields.items()}
+    column.dtype = "datetime"
+    column.with_time = False
+    column.dates = [firsts[cell] for cell in column.source if cell]
+    column.cells = [_iso(firsts[cell], False) if cell else "" for cell in column.source]
+    column.notes.append(f"{_count(len(present), 'cell')} read as months (YYYY-MM, each as the first day of the month)")
+    return True
+
+
+def _year_spans(pairs: list[tuple[int, ...]]) -> bool:
+    """Whether every `YYYY-NN` names a span of years rather than a month: the second part is the last two digits
+    of a year 1 to 12 after the first, the same distance in every cell (`2009-10` a season, `2000-05` a bin)."""
+    gaps = {(number - year) % 100 for year, number in pairs}
+    return len(gaps) == 1 and 1 <= gaps.pop() <= 12
 
 
 def _iso(value: datetime, with_time: bool) -> str:
@@ -3230,6 +3278,7 @@ def _build(
             column.cells = list(column.source)  # kept text by request: the cells as cleaned, never typed
         else:
             column.id_like = _id_like(header)
+            column.span_like = bool(set(_NAME_WORDS.findall(header.casefold())) & SPAN_WORDS)
             marked += _blank_marks(column)
             _type_column(column)
     if marked:

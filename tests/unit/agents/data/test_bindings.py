@@ -11,6 +11,7 @@ from agents.anyplot.data.bindings import (
     carry_bindings,
     check_bindings,
     default_bindings,
+    label_siblings,
     name_similarity,
     record_values,
     resolve_role,
@@ -814,6 +815,105 @@ class TestCarryBindings:
         assert as_pairs(carried) == [("x", "a"), ("y1", "b"), ("y2", "c")]
 
 
+class TestDatesAndKeysAsLabels:
+    """Fable's re-review of #12204: dates and numbering columns as labels, against the bindings on main."""
+
+    BAR = [role("category", "categorical"), role("value", "numeric")]
+    GROUPED = [role("category", "categorical"), role("group", "categorical"), role("value", "numeric")]
+
+    @pytest.mark.parametrize("first", ["id", "Nr", "Stunde"])
+    def test_a_numbering_first_column_stays_the_category(self, first: str) -> None:
+        start = 0 if first == "Stunde" else 1
+        data = profile(f"{first},a,b,c\n" + "".join(f"{i},{i * 2},{i * 3},{i * 5}\n" for i in range(start, start + 10)))
+
+        bindings = default_bindings(self.BAR, data)
+
+        assert as_pairs(bindings) == [("category", first), ("value", "a")]
+        assert check_bindings(bindings, self.BAR, data).warnings == []
+
+    def test_a_text_category_beats_a_few_dates(self) -> None:
+        data = profile(
+            "ts,host,latency\n" + "".join(f"2025-01-0{d},{h},{d * 10}\n" for d in range(1, 4) for h in ("web1", "web2"))
+        )
+
+        assert dict(as_pairs(default_bindings(self.BAR, data)))["category"] == "host"
+        assert dict(as_pairs(default_bindings(self.GROUPED, data))) == {
+            "category": "host",
+            "group": "ts",
+            "value": "latency",
+        }
+
+    def test_thousands_of_dates_are_no_default_label(self) -> None:
+        rows = "".join(f"2025-01-01T{h:02d}:{m:02d}:00,s{h % 3},{m}\n" for h in range(24) for m in range(0, 60, 5))
+        data = profile("timestamp,sensor,value\n" + rows)
+
+        assert "group" not in dict(as_pairs(default_bindings(self.GROUPED, data)))
+
+    def test_dates_alone_still_label_the_bars(self) -> None:
+        data = profile("Datum,Wert\n" + "".join(f"2025-01-{d:02d},{d}\n" for d in range(1, 31)))
+
+        assert as_pairs(default_bindings(self.BAR, data)) == [("category", "Datum"), ("value", "Wert")]
+
+
+def test_an_optional_label_role_takes_no_dates_by_its_name() -> None:
+    """Review of #12204: a date column named `series` stays the x of a line chart, not its optional group."""
+    data = profile("series,revenue\n2025-01-01,10\n2025-01-02,12\n2025-01-03,9\n")
+
+    assert as_pairs(default_bindings(parse_roles(LINE_MULTI), data)) == [("x", "series"), ("y1", "revenue")]
+
+
+class TestWideTableSiblings:
+    """Live test round 7 of 2026-10-16: a heatmap's `y` and `value` on `Mo` and `Di` of a wide matrix."""
+
+    ROLES = [role("x", "text", "numeric"), role("y", "text", "numeric"), role("value", "numeric")]
+    DATA = "Stunde;Mo;Di;Mi\n08:00;42;35;35\n09:00;48;39;43\n10:00;46;53;56\n"
+
+    def test_no_role_that_takes_labels_gets_a_side_by_side_column_by_default(self) -> None:
+        data = profile(self.DATA)
+
+        bindings = default_bindings(self.ROLES, data)
+
+        assert as_pairs(bindings) == [("x", "Stunde"), ("value", "Mo")]
+        assert check_bindings(bindings, self.ROLES, data).missing_roles == ["y"]  # incomplete: `.to_long()` first
+
+    def test_bound_by_hand_it_is_warned_about(self) -> None:
+        data = profile(self.DATA)
+
+        check = check_bindings(bind(("x", "Stunde"), ("y", "Mo"), ("value", "Di")), self.ROLES, data)
+
+        assert check.complete
+        assert check.warnings == [
+            "y: bound to 'Mo', one of 3 number columns ('Mo', 'Di', 'Mi') that hold one measure side by side; "
+            "y wants labels, so each number would become a category of its own: turn the columns into rows first "
+            "(.to_long())"
+        ]
+        assert label_siblings(self.ROLES, data) == ["Mo", "Di", "Mi"]
+
+    def test_a_constant_measurement_stays_a_sibling(self) -> None:
+        """Review of #12204: a constant `Mo` is still one of the side-by-side columns, never a label."""
+        data = profile("Stunde;Mo;Di;Mi\n" + "".join(f"{h:02d}:00;42;{30 + h};{40 + h}\n" for h in range(8, 14)))
+
+        assert label_siblings(self.ROLES, data) == ["Mo", "Di", "Mi"]
+        assert "y" not in dict(as_pairs(default_bindings(self.ROLES, data)))
+
+    def test_refilling_open_roles_keeps_the_side_by_side_columns_out(self) -> None:
+        """Review of #12204: after `.to_long()` and an undo, `x` stays and `y`, `value` are filled again on the
+        reduced table, where the wide-table rule no longer holds by itself."""
+        data = profile(self.DATA)
+
+        carried = carry_bindings(bind(("x", "Stunde"), ("y", "y"), ("value", "value")), self.ROLES, data)
+
+        assert as_pairs(carried) == [("x", "Stunde"), ("value", "Mo")]
+
+    def test_a_year_column_is_no_sibling(self) -> None:
+        # bar-basic on the Swiss CO2 paste: the table is all numbers, `Jahr` still labels the bars.
+        roles = [role("category", "categorical"), role("value", "numeric")]
+        data = profile("Jahr,CO2,Bevölkerung\n2000,43.6,7184003\n2001,45.1,7226391\n2002,43.5,7278744\n")
+
+        assert as_pairs(default_bindings(roles, data)) == [("category", "Jahr"), ("value", "CO2")]
+        assert check_bindings(bind(("category", "Jahr"), ("value", "CO2")), roles, data).warnings == []
+
+
 class TestCheckBindings:
     ROLES = [
         role("x", "datetime", "numeric"),
@@ -906,7 +1006,7 @@ class TestCheckBindings:
         (("categorical",), "boolean", True),
         (("categorical",), "integer", True),
         (("categorical",), "number", False),
-        (("categorical",), "datetime", False),
+        (("categorical",), "datetime", True),  # months label a heatmap or a grouped bar (live test round 7)
         (("text",), "text", True),
         (("text",), "boolean", True),
         (("text",), "integer", True),

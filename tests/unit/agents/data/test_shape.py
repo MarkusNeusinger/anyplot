@@ -61,6 +61,106 @@ class TestSuggestion:
         assert (suggestion.columns, suggestion.keys, suggestion.rows) == (["Sensor_A", "Sensor_B"], ["Datum"], 4)
 
 
+class TestMatrix:
+    """Live test round 7 of 2026-10-16: a heatmap of visitors per hour and weekday, pasted wide."""
+
+    def test_the_wide_heatmap_gets_the_long_form_with_its_row_labels_kept(self) -> None:
+        suggestion = suggest("heatmap-basic", VISITORS)
+
+        assert suggestion is not None
+        assert suggestion.operation() == {
+            "op": "pivot_longer",
+            "columns": ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"],
+            "names_to": "y",
+            "values_to": "value",
+        }
+        assert (suggestion.keys, suggestion.rows) == (["Stunde"], 28)
+
+    def test_applied_it_binds_every_role(self) -> None:
+        suggestion = suggest("heatmap-basic", VISITORS)
+        assert suggestion is not None
+        operations = TypeAdapter(list[Operation]).validate_python([suggestion.operation()])
+
+        prepared = apply_operations(parse_dataset(VISITORS), operations)
+        parsed = parse_dataset(prepared.csv, text_columns=prepared.text_columns)
+
+        assert prepared.csv.splitlines()[:2] == ["Stunde,y,value", "08:00,Mo,42"]
+        bound = {binding.role: binding.column for binding in default_bindings(roles("heatmap-basic"), parsed.profile)}
+        assert bound == {"x": "Stunde", "y": "y", "value": "value"}
+        assert long_suggestion(roles("heatmap-basic"), parsed.profile) is None
+
+    def test_long_heatmap_data_with_an_integer_key_stays(self) -> None:
+        text = "day,hour,count\n" + "".join(f"{day},{hour},{hour * 2}\n" for day in ("Mon", "Tue") for hour in (9, 10))
+
+        assert suggest("heatmap-basic", text) is None
+
+    def test_row_labels_that_repeat_are_no_matrix(self) -> None:
+        assert suggest("heatmap-basic", "label,a,b,c\nA,1,2,3\nA,4,5,6\nB,7,8,9\n") is None
+
+    def test_two_number_columns_are_no_matrix(self) -> None:
+        assert suggest("heatmap-basic", "label,a,b\nA,1,2\nB,4,5\nC,7,8\n") is None
+
+    def test_an_hour_column_of_whole_numbers_is_the_row_key(self) -> None:
+        text = "Stunde;Mo;Di;Mi\n8;42;35;35\n9;48;39;43\n10;46;53;56\n11;55;44;64\n"
+
+        suggestion = suggest("heatmap-basic", text)
+
+        assert suggestion is not None and (suggestion.keys, suggestion.columns) == (["Stunde"], ["Mo", "Di", "Mi"])
+
+    def test_a_date_column_is_the_row_key(self) -> None:
+        text = "Datum,A,B,C\n2025-01-01,1,2,3\n2025-01-02,4,5,6\n2025-01-03,7,8,9\n"
+
+        suggestion = suggest("heatmap-basic", text)
+
+        assert suggestion is not None and suggestion.keys == ["Datum"]
+
+    def test_a_second_time_key_is_no_measurement(self) -> None:
+        """Review of #12204: `Year` beside the row labels would have been melted with `A`, `B`, `C`."""
+        text = "Region,Year,A,B,C\nNord,2025,1,2,3\nSüd,2025,4,5,6\nOst,2025,7,8,9\n"
+
+        assert suggest("heatmap-basic", text) is None
+
+    def test_grouped_charts_get_it_flows_hierarchies_and_codes_do_not(self) -> None:
+        """Review of #12204: melting a wide table into a flow's target or a party's color means nothing."""
+        for spec_id in ("box-grouped", "bar-grouped", "bar-stacked", "heatmap-annotated"):
+            assert suggest(spec_id, VISITORS) is not None, spec_id
+        for spec_id in ("sankey-basic", "chord-basic", "icicle-basic", "sunburst-basic", "parliament-basic"):
+            assert suggest(spec_id, VISITORS) is None, spec_id
+
+
+class TestTimeKeys:
+    """Review of #12204: a column of years is a key the offer keeps, as the bindings treat it."""
+
+    def test_a_country_beside_one_row_per_year_is_no_quarter(self) -> None:
+        """Fable's re-review: `CH` of 1 to 4 right after `Jahr` was taken for a quarter and kept as a key."""
+        suggestion = suggest("box-basic", "Jahr,CH,AT,DE\n2000,1,2,3\n2001,2,3,4\n2002,3,4,5\n2003,4,5,6\n")
+
+        assert suggestion is not None and (suggestion.columns, suggestion.keys) == (["CH", "AT", "DE"], ["Jahr"])
+
+    def test_a_numbering_first_column_is_kept(self) -> None:
+        text = "id,a,b,c\n" + "".join(f"{i},{i * 2},{i * 3},{i * 5}\n" for i in range(100, 110))
+
+        suggestion = suggest("box-basic", text)
+
+        assert suggestion is not None and (suggestion.columns, suggestion.keys) == (["a", "b", "c"], ["id"])
+
+    def test_a_year_column_is_kept_not_melted(self) -> None:
+        suggestion = suggest("box-basic", "Jahr,CO2,Bevoelkerung\n2000,43.6,7184003\n2001,45.1,7226391\n")
+
+        assert suggestion is not None
+        assert (suggestion.columns, suggestion.keys) == (["CO2", "Bevoelkerung"], ["Jahr"])
+
+
+# Four rows of the owner's paste of round 7.
+VISITORS = (
+    "Stunde;Mo;Di;Mi;Do;Fr;Sa;So\n"
+    "08:00;42;35;35;46;32;48;40\n"
+    "09:00;48;39;43;51;38;61;41\n"
+    "10:00;46;53;56;57;51;57;57\n"
+    "11:00;55;44;64;60;60;63;68\n"
+)
+
+
 class TestNoSuggestion:
     def test_a_scatter_wants_two_numbers(self) -> None:
         assert suggest("scatter-basic", "x,y\n1,2\n3,4\n") is None

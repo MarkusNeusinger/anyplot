@@ -323,8 +323,12 @@ describe('parseAgentEvent', () => {
       values_to: 'value',
       keys: [],
       rows: 6,
+      siblings: ['Sensor_A', 'Sensor_B'],
     };
     expect(longSuggestion(offer)).toEqual(offer);
+    // An older server sends no siblings: none to warn about.
+    const older = { ...offer, siblings: undefined };
+    expect(longSuggestion(older)).toEqual({ ...offer, siblings: [] });
     expect(longSuggestion({ ...offer, kind: 'to_wide' })).toBeNull();
     expect(longSuggestion({ ...offer, columns: ['Sensor_A'] })).toBeNull();
     expect(longSuggestion({ ...offer, rows: '6' })).toBeNull();

@@ -177,6 +177,7 @@ from .parse import (
     AMBIGUOUS_DATE_ORDER,
     MAX_COMPUTED_BYTES,
     MISSING_VALUES,
+    YEAR_MONTH,
     ParsedDataset,
     canonical_names,
     keeps_value,
@@ -846,6 +847,8 @@ def _aggregate(frame: pd.DataFrame, op: Aggregate, carried: _Carried) -> tuple[p
         carried.with_time.update(dict.fromkeys(date_keys, op.period == "hour"))
     elif op.period:
         carried.forget(date_keys)  # period labels are text now
+        # ... and stay text through the re-parse, which reads `2024-03` and `2024-Q1` as dates since live round 7.
+        carried.text_columns.update(date_keys)
 
     period = _PERIOD_WORDS.get(op.period, op.period) if op.period else ""
     zones = sorted({str(frame[name].dt.tz) for name in date_keys if frame[name].dt.tz is not None})
@@ -919,6 +922,10 @@ def _pivot_longer(frame: pd.DataFrame, op: PivotLonger, carried: _Carried) -> tu
     carried.forget(columns)
     if explicit_text or len(kinds) > 1:
         carried.text_columns.add(op.values_to)
+    if all(YEAR_MONTH.fullmatch(name) for name in columns):
+        # Month headers (`2025-01`) are the labels of the long table: the re-parse would read them as dates,
+        # which a heatmap's `y` or a box plot's `category` does not take as such (review of #12204).
+        carried.text_columns.add(op.names_to)
     if kinds == {"datetime"}:
         carried.with_time[op.values_to] = any(bool(time) for time in times)
     change = f"pivoted {len(columns)} columns into {op.names_to}/{op.values_to}: {_count(rows, 'row')}"

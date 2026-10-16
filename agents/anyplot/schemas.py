@@ -127,7 +127,7 @@ SourceFormat = Literal[
 ]
 
 # The reviewer's reduced checklist: the rubric criteria it scores plus AR-09 for clipping.
-DefectId = Literal["VQ-01", "VQ-02", "VQ-03", "VQ-06", "VQ-07", "SC-01", "SC-03", "DQ-03", "AR-09"]
+DefectId = Literal["VQ-01", "VQ-02", "VQ-03", "VQ-06", "VQ-07", "SC-01", "SC-03", "SC-04", "DQ-03", "AR-09"]
 DefectTheme = Literal["light", "dark", "both", "code"]
 Theme = Literal["light", "dark"]
 """A render theme; `render/contract.py` re-exports it with the `THEMES` order."""

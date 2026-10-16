@@ -11,6 +11,7 @@ from typing import Any
 
 import pandas as pd
 import pytest
+from pydantic import TypeAdapter
 
 from agents.anyplot.data import parse as parse_module
 from agents.anyplot.data.bindings import default_bindings
@@ -32,6 +33,7 @@ from agents.anyplot.data.parse import (
     sniff_delimiter,
     without_context,
 )
+from agents.anyplot.data.prepare import Operation, apply_operations
 from agents.anyplot.data.roles import DataRole
 from agents.anyplot.schemas import (
     MAX_CELL_CHARS,
@@ -1034,6 +1036,13 @@ class TestTyping:
             (["31.12.2024 23:59"], "datetime", ["2024-12-31T23:59:00"]),
             (["25/12/2024", "01/02/2024"], "datetime", ["2024-12-25", "2024-02-01"]),
             (["12/25/2024", "01/02/2024"], "datetime", ["2024-12-25", "2024-01-02"]),
+            (["2025-01", "2025-12"], "datetime", ["2025-01-01", "2025-12-01"]),
+            (["2025-Q1", "2025-q4"], "text", ["2025-Q1", "2025-q4"]),
+            (["2009-10", "2010-11", "2011-12"], "text", ["2009-10", "2010-11", "2011-12"]),
+            (["2000-05", "2005-10"], "text", ["2000-05", "2005-10"]),
+            (["2025-13"], "text", ["2025-13"]),
+            (["0999-01"], "text", ["0999-01"]),
+            (["2025-01", "2025-Q2"], "text", ["2025-01", "2025-Q2"]),
             (["31.02.2024"], "text", ["31.02.2024"]),
             (["25/12/2024", "12/25/2024"], "text", ["25/12/2024", "12/25/2024"]),
             (["2024-01-05", "05.01.2024"], "text", ["2024-01-05", "05.01.2024"]),
@@ -1094,6 +1103,62 @@ class TestTyping:
 
         assert column(parsed, "b").dtype == "text"
         assert column(parsed, "b").missing == 2
+
+
+class TestMonthsAndQuarters:
+    """Live test round 7 of 2026-10-16: `2025-01` read as text made `GWh` the x of a monthly line."""
+
+    TEXT = "Monat,Quelle,GWh\n2025-01,Wasser,2228\n2025-01,Kern,1740\n2025-02,Wasser,2010\n2025-02,Kern,1702\n"
+
+    def test_a_month_column_is_dates_with_the_reading_announced(self) -> None:
+        parsed = parse_dataset(self.TEXT)
+
+        assert parsed.column_dtypes["Monat"] == "datetime"
+        assert parsed.csv.splitlines()[1] == "2025-01-01,Wasser,2228"
+        assert "column 'Monat': 4 cells read as months (YYYY-MM, each as the first day of the month)" in parsed.warnings
+
+    def test_it_reads_as_set_type_with_yyyy_mm_does(self) -> None:
+        text_first = parse_dataset(self.TEXT, text_columns=["Monat"])
+        operations = TypeAdapter(list[Operation]).validate_python(
+            [{"op": "set_type", "column": "Monat", "type": "datetime", "date_format": "YYYY-MM"}]
+        )
+
+        converted = apply_operations(text_first, operations)
+
+        assert converted.csv == parse_dataset(self.TEXT).csv
+
+    def test_quarters_keep_their_spelling(self) -> None:
+        # As a date `2025-Q1` would read `2025-01-01` and lose the word quarter; `set_type` reads it on request.
+        parsed = parse_dataset("Quartal,Umsatz\n2025-Q1,10\n2025-Q2,12\n")
+
+        assert parsed.column_dtypes["Quartal"] == "text"
+        assert parsed.csv.splitlines()[1:] == ["2025-Q1,10", "2025-Q2,12"]
+
+    @pytest.mark.parametrize("name", ["Saison", "season", "Code", "Kurs Nr"])
+    def test_a_name_that_says_season_or_code_keeps_the_text(self, name: str) -> None:
+        parsed = parse_dataset(f"{name},Punkte\n2024-01,10\n2024-03,12\n2025-02,9\n")
+
+        assert parsed.column_dtypes[name] == "text"
+
+    def test_season_spans_stay_text(self) -> None:
+        # Each second part is the next year's last two digits: a season, not October, November, December.
+        parsed = parse_dataset("Jahr,Tore\n2009-10,61\n2010-11,58\n2011-12,64\n")
+
+        assert parsed.column_dtypes["Jahr"] == "text"
+        assert not any("read as months" in line for line in parsed.warnings)
+
+    def test_month_headers_stay_labels_through_to_long(self) -> None:
+        """Review of #12204: the pivot's names must not turn into dates the heatmap's `y` would read as such."""
+        text = "Region,2025-01,2025-02,2025-03\nNord,1,2,3\nSüd,4,5,6\nOst,7,8,9\n"
+        operations = TypeAdapter(list[Operation]).validate_python(
+            [{"op": "pivot_longer", "columns": ["2025-01", "2025-02", "2025-03"], "names_to": "y"}]
+        )
+
+        prepared = apply_operations(parse_dataset(text), operations)
+
+        assert "y" in prepared.text_columns
+        again = parse_dataset(prepared.csv, text_columns=prepared.text_columns, find_table=False, canonical=True)
+        assert again.column_dtypes["y"] == "text" and again.csv.splitlines()[1] == "Nord,2025-01,1"
 
 
 class TestProfile:

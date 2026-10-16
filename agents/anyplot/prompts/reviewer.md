@@ -34,6 +34,7 @@ Check only these criteria, in the attached render:
 | VQ-07 | Palette compliance | First categorical series not `#009E73` (ordered categories excepted: their ramp sets the colors); colors outside the Imprint palette or out of its order (with more than eight groups, the groups past the seventh largest drawn in the muted ink, `#6B6A63` light or `#A8A79F` dark, as one "Other" group are compliant, and this replaces the style guide's small-multiples advice for nine or more series); one palette color for two groups; ordered categories (Likert levels, grades, sizes) in the categorical palette instead of ordered steps of one ramp, or with a red or green pole on the wrong side (style guide, "Ordered Categories"); a continuous colormap other than `imprint_seq` or `imprint_div`; backgrounds other than `#FAF8F1` (light) and `#1A1A17` (dark); chrome in the wrong theme. Judge colors from the color values in `<plot_code>`, not from how a hue looks in the render, which antialiasing, alpha and edges shift: a color from the Imprint list or a theme token (`INK`, `INK_SOFT`, `INK_MUTED`, `PAGE_BG`, `ELEVATED_BG`) is compliant, and a fit line, band, label or outline in its series' own color is not a second group |
 | SC-01 | Plot type | No longer the spec's plot type or variant, or encodings and layers that neither the spec nor the change request asked for |
 | SC-03 | Data mapping | A bound column on the wrong axis or role; marks away from their data values; axes that cut off data |
+| SC-04 | Title and legend | Legend entries that do not match the data's groups (a group missing, a label of the example data, two entries for one group, an entry for a reshaped column's old name); a requested title or legend text that the render does not show |
 | DQ-03 | Stale claims | A number, label or callout from the catalogue's example data that does not follow from the user's data: a literal statistic, a callout at an example value, a hard-coded axis range or tick set that does not fit the user's values |
 | AR-09 | Edge clipping | Pixels of a title, label, legend or annotation actually cut off at the canvas border (touching the border is not clipping) |
 
@@ -52,7 +53,7 @@ Answer with one JSON object:
 
 - `ok`: `true` when no criterion fails in the attached render, otherwise `false`. `ok` is the expected verdict for a correct plot: the checklist is not a search for improvements.
 - `defects`: empty when `ok` is `true`; otherwise one to five findings, the most severe first. Each finding has:
-  - `id`: one of `VQ-01`, `VQ-02`, `VQ-03`, `VQ-06`, `VQ-07`, `SC-01`, `SC-03`, `DQ-03`, `AR-09`, never an id outside this table, such as the style guide's VQ-05;
+  - `id`: one of `VQ-01`, `VQ-02`, `VQ-03`, `VQ-06`, `VQ-07`, `SC-01`, `SC-03`, `SC-04`, `DQ-03`, `AR-09`, never an id outside this table, such as the style guide's VQ-05;
   - `theme`: the attached render's theme (`light` or `dark`), or `code` when the problem is visible only in the code;
   - `observed`: what is wrong, with the observed value (for example "y tick labels at about 25 px");
   - `target`: the target or direction, with a signed delta when it is numeric (for example "about 44 px, the table's 8 pt (+19 px)");

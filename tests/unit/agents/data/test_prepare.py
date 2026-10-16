@@ -769,17 +769,18 @@ class TestPivotLonger:
     def test_two_unequal_series(self) -> None:
         prepared = prepare(WIDE, {"op": "pivot_longer", "columns": ["Hüte", "Schuhe"]})
 
+        # The paste reads `2024-01` as the month's first day (live test round 7 of 2026-10-16).
         assert rows(prepared) == [
             "Monat,series,value",
-            "2024-01,Hüte,10",
-            "2024-02,Hüte,15",
-            "2024-03,Hüte,",
-            "2024-01,Schuhe,20",
-            "2024-02,Schuhe,",
-            "2024-03,Schuhe,30",
+            "2024-01-01,Hüte,10",
+            "2024-02-01,Hüte,15",
+            "2024-03-01,Hüte,",
+            "2024-01-01,Schuhe,20",
+            "2024-02-01,Schuhe,",
+            "2024-03-01,Schuhe,30",
         ]
         assert prepared.changes == ["pivoted 2 columns into series/value: 6 rows"]
-        assert dtypes(prepared) == {"Monat": "text", "series": "text", "value": "integer"}
+        assert dtypes(prepared) == {"Monat": "datetime", "series": "text", "value": "integer"}
 
     def test_own_names(self) -> None:
         operation = {"op": "pivot_longer", "columns": ["Hüte", "Schuhe"], "names_to": "Artikel", "values_to": "Stück"}
@@ -883,15 +884,15 @@ class TestPivotWider:
         operation = {"op": "pivot_wider", "names_from": "series", "values_from": "value", "index": ["Monat"]}
         prepared = prepare(LONG, operation)
 
-        assert rows(prepared) == ["Monat,Hüte,Schuhe", "2024-01,10,20", "2024-02,15,", "2024-03,,30"]
-        assert dtypes(prepared) == {"Monat": "text", "Hüte": "integer", "Schuhe": "integer"}
+        assert rows(prepared) == ["Monat,Hüte,Schuhe", "2024-01-01,10,20", "2024-02-01,15,", "2024-03-01,,30"]
+        assert dtypes(prepared) == {"Monat": "datetime", "Hüte": "integer", "Schuhe": "integer"}
 
     def test_values_kept_text_make_text_columns(self) -> None:
         operation = {"op": "pivot_wider", "names_from": "series", "values_from": "value", "index": ["Monat"]}
         prepared = prepare(LONG, {"op": "set_type", "column": "value", "type": "text"}, operation)
 
         assert prepared.text_columns == ["Hüte", "Schuhe"]
-        assert dtypes(prepared) == {"Monat": "text", "Hüte": "text", "Schuhe": "text"}
+        assert dtypes(prepared) == {"Monat": "datetime", "Hüte": "text", "Schuhe": "text"}
 
     def test_text_hints_carry_the_names_the_reparse_gives(self) -> None:
         """A value longer than a column name may be is shortened by the re-parse; the hint must match it."""

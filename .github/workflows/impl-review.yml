@@ -2242,7 +2242,7 @@ jobs:
               # Rendered to a file and posted through gh_retry: a failed comment
               # must not stop the close and the issue bookkeeping below.
               FAILED=0
-              cat > /tmp/anyplot-exhausted.md <<EOF
+              cat > "$RUNNER_TEMP/anyplot-exhausted.md" <<EOF
           ## AI Review - Final Status
 
           ### Score: $SCORE/100 (Below Threshold)
@@ -2258,7 +2258,7 @@ jobs:
           ---
           :robot: *[impl-review](https://github.com/$REPOSITORY/actions/runs/$RUN_ID)*
           EOF
-              gh_retry "final status PR comment" gh pr comment "$PR_NUM" --body-file /tmp/anyplot-exhausted.md || FAILED=1
+              gh_retry "final status PR comment" gh pr comment "$PR_NUM" --body-file "$RUNNER_TEMP/anyplot-exhausted.md" || FAILED=1
               gh_retry "PR close" gh pr close "$PR_NUM" || FAILED=1
 
               if [ -n "$ISSUE_NUMBER" ]; then
