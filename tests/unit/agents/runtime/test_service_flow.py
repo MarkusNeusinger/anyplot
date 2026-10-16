@@ -2574,7 +2574,7 @@ async def test_a_wide_table_on_a_box_plot_is_offered_long_and_to_long_applies_it
     offer = {
         "kind": "to_long",
         "columns": ["Sensor_A", "Sensor_B", "Sensor_C"],
-        "names_to": "Category",  # the session language (English: the locale is no language), not the role names
+        "names_to": "Category",  # what the columns are, not the role names
         "values_to": "Value",
         "keys": [],
         "rows": 9,
@@ -2589,7 +2589,8 @@ async def test_a_wide_table_on_a_box_plot_is_offered_long_and_to_long_applies_it
     context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid))
     profile = await get_dataset_profile(context)
     assert "<user_data>" in profile["to_long"] and '"names_to": "Category"' in profile["to_long"]
-    # A German session gets German names, in the offer and in the table `.to_long()` writes.
+    # A language change after the paste leaves the offer the page shows exactly what `.to_long()` applies
+    # (review of #12206: names in the session language had changed under the cached card).
     language = await client.put(f"/v1/sessions/{sid}/language", headers=HEADERS, json={"language": "de"})
     assert language.status_code == 200, language.text
 
@@ -2598,7 +2599,7 @@ async def test_a_wide_table_on_a_box_plot_is_offered_long_and_to_long_applies_it
     assert long.status_code == 200, long.text
     body = long.json()
     assert (body["version"], body["suggestion"], body["profile"]["rows"]) == (2, None, 9)
-    assert body["bindings"] == [{"role": "category", "column": "Kategorie"}, {"role": "value", "column": "Wert"}]
+    assert body["bindings"] == [{"role": "category", "column": "Category"}, {"role": "value", "column": "Value"}]
     assert body["changes"] and body["changes"][0].startswith("pivoted 3 columns")
     view = read_session(await _session_state(client, sid))
     assert view is not None and view.dataset_version == 2 and not view.data_confirmed
@@ -2607,7 +2608,7 @@ async def test_a_wide_table_on_a_box_plot_is_offered_long_and_to_long_applies_it
     assert (again.status_code, again.json()) == (422, {"detail": "no_suggestion"})
     undone = await client.post(f"/v1/sessions/{sid}/dataset/undo", headers=HEADERS)
     assert undone.status_code == 200
-    assert undone.json()["suggestion"] == {**pasted.json()["suggestion"], "names_to": "Kategorie", "values_to": "Wert"}
+    assert undone.json()["suggestion"] == pasted.json()["suggestion"]
 
     scatter = await open_session(client)
     refused = await client.post(f"/v1/sessions/{scatter}/dataset/to_long", headers=HEADERS)

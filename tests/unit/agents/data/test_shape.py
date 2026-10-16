@@ -2,7 +2,7 @@
 
 from pydantic import TypeAdapter
 
-from agents.anyplot.data.bindings import default_bindings, filled_bindings
+from agents.anyplot.data.bindings import default_bindings, filled_bindings, label_siblings
 from agents.anyplot.data.parse import parse_dataset
 from agents.anyplot.data.prepare import Operation, apply_operations
 from agents.anyplot.data.shape import long_names, long_suggestion
@@ -77,16 +77,16 @@ class TestMatrix:
         assert (suggestion.keys, suggestion.rows) == (["Stunde"], 28)
 
     def test_applied_it_binds_every_role(self) -> None:
-        suggestion = long_suggestion(roles("heatmap-basic"), parse_dataset(VISITORS).profile, "de")
+        suggestion = suggest("heatmap-basic", VISITORS)
         assert suggestion is not None
         operations = TypeAdapter(list[Operation]).validate_python([suggestion.operation()])
 
         prepared = apply_operations(parse_dataset(VISITORS), operations)
         parsed = parse_dataset(prepared.csv, text_columns=prepared.text_columns)
 
-        assert prepared.csv.splitlines()[:2] == ["Stunde,Wochentag,Wert", "08:00,Mo,42"]
+        assert prepared.csv.splitlines()[:2] == ["Stunde,Weekday,Value", "08:00,Mo,42"]
         bound = {binding.role: binding.column for binding in default_bindings(roles("heatmap-basic"), parsed.profile)}
-        assert bound == {"x": "Stunde", "y": "Wochentag", "value": "Wert"}
+        assert bound == {"x": "Stunde", "y": "Weekday", "value": "Value"}
         assert long_suggestion(roles("heatmap-basic"), parsed.profile) is None
 
     def test_long_heatmap_data_with_an_integer_key_stays(self) -> None:
@@ -183,68 +183,58 @@ class TestNoSuggestion:
 
 class TestLongNames:
     """Live test round 8 of 2026-10-16: the role names `y` and `value` became the title "Wert nach Wochentag und
-    Stunde"; the new columns are named in the session language after what the melted headers are."""
+    Stunde"; the new columns are named after what the melted headers are, in English whatever the session
+    language, so the offer the page shows never changes under it (review of #12206)."""
 
-    def test_names_follow_the_session_language(self) -> None:
-        profile = parse_dataset(SENSORS).profile
-        names = {
-            language: (suggestion.names_to, suggestion.values_to)
-            for language in ("de", "Deutsch", "fr", "zh", "Swedish")
-            if (suggestion := long_suggestion(roles("box-basic"), profile, language)) is not None
-        }
-
-        assert names == {
-            "de": ("Kategorie", "Wert"),
-            "Deutsch": ("Kategorie", "Wert"),
-            "fr": ("Catégorie", "Valeur"),
-            "zh": ("类别", "数值"),
-            "Swedish": ("Category", "Value"),  # outside the table: English
-        }
+    ROLES = ("category", "value")
 
     def test_the_names_column_says_what_the_headers_are(self) -> None:
-        assert long_names(["Mo", "Di", "Mi", "Do", "Fr"], [], "de") == ("Wochentag", "Wert")
-        assert long_names(["Monday", "Tuesday", "Wednesday"], [], "en") == ("Weekday", "Value")
-        assert long_names(["Jan", "Feb", "März"], [], "de") == ("Monat", "Wert")
-        assert long_names(["2019", "2020", "2021"], ["Region"], "de") == ("Jahr", "Wert")
-        assert long_names(["Sensor_A", "Mo", "Di"], [], "de") == ("Kategorie", "Wert")
-        assert long_names(["Mo", "Mo.", "Di"], [], "de") == ("Kategorie", "Wert")  # two distinct days only
+        assert long_names(["Mo", "Di", "Mi", "Do", "Fr"], [], self.ROLES) == ("Weekday", "Value")
+        assert long_names(["Monday", "Tuesday", "Wednesday"], [], self.ROLES) == ("Weekday", "Value")
+        assert long_names(["Jan", "Feb", "März"], [], self.ROLES) == ("Month", "Value")
+        assert long_names(["2019", "2020", "2021"], ["Region"], self.ROLES) == ("Year", "Value")
+        assert long_names(["Sensor_A", "Mo", "Di"], [], self.ROLES) == ("Category", "Value")
+        assert long_names(["Mo", "Mo.", "Di"], [], self.ROLES) == ("Category", "Value")  # two distinct days only
+
+    def test_a_name_an_input_column_has_gives_way(self) -> None:
+        """Review of #12206: `Value,Other` melted into `Value` made pandas' `melt` raise, a 500 on `.to_long()`."""
+        assert long_names(["Value", "Other"], [], self.ROLES) == ("Category", "Value 2")  # case-insensitive
+        assert long_names(["Other", "Weight"], ["Value"], ("y", "value")) == ("Category", "Value 2")
+        assert long_names(["value", "Other"], ["Category"], self.ROLES) == ("Category 2", "Value 2")
+        assert long_names(["2019", "2020", "2021"], ["year"], ("y", "value")) == ("y", "Value")
+
+    def test_names_never_decide_the_offer_and_the_route_never_fails_on_them(self) -> None:
+        for text in ("Value,Other\n1.5,2.5\n3.5,4.5\n", "value,Category\n1.5,2.5\n3.5,4.5\n"):
+            suggestion = suggest("box-basic", text)
+            assert suggestion is not None, text
+            operations = TypeAdapter(list[Operation]).validate_python([suggestion.operation()])
+            header = apply_operations(parse_dataset(text), operations).csv.splitlines()[0]
+            assert header == f"{suggestion.names_to},{suggestion.values_to}"
+
+    def test_the_binding_warning_sees_every_table_the_page_offers(self) -> None:
+        """Review of #12206: with names that decided the offer, a table whose headers took the names was offered
+        in one language while `label_siblings` (no language) found no wide table and warned about nothing."""
+        text = "y,Value,A,B\nr1,1,2,3\nr2,4,5,6\nr3,7,8,9\n"
+        profile = parse_dataset(text).profile
+
+        assert suggest("heatmap-basic", text) is not None
+        assert label_siblings(roles("heatmap-basic"), profile) == ["Value", "A", "B"]
 
     def test_the_new_columns_keep_the_roles_they_are_made_for_whatever_their_names(self) -> None:
         """`Category` would take bar-grouped's `category` by its name; the headers are meant for its `group`."""
         text = "Region,Alpha,Beta,Gamma\nNord,1,2,3\nSüd,5,6,7\nOst,9,1,2\n"
-        for language, names in (("en", "Category"), ("de", "Kategorie")):
-            suggestion = long_suggestion(roles("bar-grouped"), parse_dataset(text).profile, language)
-            assert suggestion is not None and suggestion.names_to == names
-            operations = TypeAdapter(list[Operation]).validate_python([suggestion.operation()])
-            prepared = apply_operations(parse_dataset(text), operations)
-            parsed = parse_dataset(prepared.csv, text_columns=prepared.text_columns)
+        suggestion = suggest("bar-grouped", text)
+        assert suggestion is not None and suggestion.names_to == "Category"
+        operations = TypeAdapter(list[Operation]).validate_python([suggestion.operation()])
+        prepared = apply_operations(parse_dataset(text), operations)
+        parsed = parse_dataset(prepared.csv, text_columns=prepared.text_columns)
 
-            pinned = filled_bindings(suggestion.bindings(), roles("bar-grouped"), parsed.profile)
+        pinned = filled_bindings(suggestion.bindings(), roles("bar-grouped"), parsed.profile)
 
-            assert {binding.role: binding.column for binding in pinned} == {
-                "category": "Region",
-                "group": names,
-                "value": suggestion.values_to,
-            }
-            by_name = {
-                binding.role: binding.column for binding in default_bindings(roles("bar-grouped"), parsed.profile)
-            }
-            assert by_name["category"] == names  # what the names alone would have bound
-
-    def test_a_melted_column_with_the_name_is_never_the_new_name(self) -> None:
-        """Review of #12206: `Value,Other` melted into `Value` made pandas' `melt` raise, a 500 on `.to_long()`."""
-        for language, text in (("en", "Value,Other\n1.5,2.5\n3.5,4.5\n"), ("de", "Wert,Anderes\n1.5,2.5\n3.5,4.5\n")):
-            suggestion = long_suggestion(roles("box-basic"), parse_dataset(text).profile, language)
-            assert suggestion is not None and (suggestion.names_to, suggestion.values_to) == ("category", "value")
-            operations = TypeAdapter(list[Operation]).validate_python([suggestion.operation()])
-            assert apply_operations(parse_dataset(text), operations).csv.splitlines()[0] == "category,value"
-
-        # The role names are a melted column's too: no offer.
-        assert suggest("box-basic", "value,Category\n1.5,2.5\n3.5,4.5\n") is None
-
-    def test_a_kept_column_with_the_name_keeps_the_role_names(self) -> None:
-        assert long_names(["2019", "2020", "2021"], ["jahr"], "de") is None
-        text = "Wert,Sensor_A,Sensor_B\n2024-01-01,1.5,2.5\n2024-01-02,1.7,2.1\n"
-        suggestion = long_suggestion(roles("box-basic"), parse_dataset(text).profile, "de")
-
-        assert suggestion is not None and (suggestion.names_to, suggestion.values_to) == ("category", "value")
+        assert {binding.role: binding.column for binding in pinned} == {
+            "category": "Region",
+            "group": "Category",
+            "value": "Value",
+        }
+        by_name = {binding.role: binding.column for binding in default_bindings(roles("bar-grouped"), parsed.profile)}
+        assert by_name["category"] == "Category"  # what the names alone would have bound

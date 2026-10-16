@@ -26,8 +26,8 @@ The rule, every condition required:
   years or of a part of a date (`temporal.time_keys`: `Jahr` beside `CO2` and
   `Bevölkerung`), and so is a first column that numbers the rows (`_numbering_key`:
   `id`, `Nr`, `Stunde` 0 to 3); every other numeric column is pivoted.
-* **The result fits:** at most `MAX_ROWS` rows, and the new names (`long_names`, or
-  the two role names when those are taken) are not already a kept column's name.
+* **The result fits:** at most `MAX_ROWS` rows. The new names (`long_names`) never name
+  an input column and never decide the offer.
 
 The matrix rule (live test round 7 of 2026-10-16): a heatmap's `x` and `y` (string or
 numeric labels) and `value`, or a grouped box's `category`, `subcategory` and `value`,
@@ -54,21 +54,21 @@ Before this rule the default bindings put a heatmap's `y` on the numbers of `Mo`
 its `value` on `Di`, and the plot drew 14 rows of nonsense; `bindings.label_siblings`
 now keeps a label role off the measurement columns of a table this module calls wide.
 
-The new columns' names (`long_names`, live test round 8 of 2026-10-16): words in the
-session language, never the roles' names, which became the plot's text ("Wert nach
-Wochentag und Stunde" came from a column `value`, `Wochentag` only from the root's guess).
-The names column says what the melted headers are when every header is a weekday, a
-month or a year (`Wochentag`, `Monat`, `Jahr`), else `Kategorie`; the values column is
-`Wert`. English (`Category`, `Value`) for a language outside `LONG_NAMES`. What the
-values measure is the user's to say: the root offers a rename when the notes or the
-file name tell it.
+The new columns' names (`long_names`, live test round 8 of 2026-10-16): words, never
+the roles' names, which became the plot's text ("Wert nach Wochentag und Stunde" came
+from a column `value`, `Wochentag` only from the root's guess). The names column says
+what the melted headers are when every header is a weekday, a month or a year
+(`Weekday`, `Month`, `Year`), else `Category`; the values column is `Value` (English,
+see `LONG_NAMES`). The new columns stay bound to the roles they were made for whatever
+their names (`LongSuggestion.bindings`). What the values measure is the user's to say:
+the root offers a rename when the notes or the file name tell it.
 """
 
+import itertools
 import re
 from dataclasses import dataclass
 from typing import Any
 
-from ..language import DEFAULT_LANGUAGE, canonical
 from ..schemas import MAX_ROWS, Binding, ColumnProfile, DatasetProfile
 from .months import fold, named_months
 from .parse import ID_WORDS
@@ -95,21 +95,19 @@ MATRIX_ROLES: frozenset[str] = frozenset(
 geometry, a color or a code (`party`, `color`, `newick_string`): their wide tables are no matrix of one measure."""
 
 
-LONG_NAMES: dict[str, dict[str, str]] = {
-    "en": {"category": "Category", "weekday": "Weekday", "month": "Month", "year": "Year", "value": "Value"},
-    "de": {"category": "Kategorie", "weekday": "Wochentag", "month": "Monat", "year": "Jahr", "value": "Wert"},
-    "fr": {"category": "Catégorie", "weekday": "Jour", "month": "Mois", "year": "Année", "value": "Valeur"},
-    "es": {"category": "Categoría", "weekday": "Día", "month": "Mes", "year": "Año", "value": "Valor"},
-    "it": {"category": "Categoria", "weekday": "Giorno", "month": "Mese", "year": "Anno", "value": "Valore"},
-    "pt": {"category": "Categoria", "weekday": "Dia", "month": "Mês", "year": "Ano", "value": "Valor"},
-    "nl": {"category": "Categorie", "weekday": "Weekdag", "month": "Maand", "year": "Jaar", "value": "Waarde"},
-    "pl": {"category": "Kategoria", "weekday": "Dzień", "month": "Miesiąc", "year": "Rok", "value": "Wartość"},
-    "ru": {"category": "Категория", "weekday": "День недели", "month": "Месяц", "year": "Год", "value": "Значение"},
-    "vi": {"category": "Danh mục", "weekday": "Thứ", "month": "Tháng", "year": "Năm", "value": "Giá trị"},
-    "zh": {"category": "类别", "weekday": "星期", "month": "月份", "year": "年份", "value": "数值"},
+LONG_NAMES: dict[str, str] = {
+    "category": "Category",
+    "weekday": "Weekday",
+    "month": "Month",
+    "year": "Year",
+    "value": "Value",
 }
-"""The `.to_long()` column names by session language (`long_names`): the names column by what its headers are,
-and the values column."""
+"""The `.to_long()` column names (`long_names`): the names column by what its headers are, and the values column.
+
+English whatever the session language (decided in the review of #12206): the data panel around the offer is
+English, and a name that followed the session language would change under the offer the page already shows
+when the first typed message or the chip changes the language, so the card and the route could disagree. The
+adapter writes the plot's labels in the plot language from these names."""
 _WEEKDAY_WORDS: tuple[tuple[str, ...], ...] = (
     # One tuple per day, Monday first: names and abbreviations (en, de, fr, es, it, pt, nl), compared folded.
     ("monday", "mon", "montag", "mo", "lundi", "lun", "lunes", "lunedi", "segunda", "seg", "maandag", "ma"),
@@ -126,11 +124,14 @@ MIN_NAMED_HEADERS = 3
 """The distinct weekdays or years among the melted headers from which the names column is named after them."""
 
 
-def long_names(columns: list[str], keys: list[str], language: str) -> tuple[str, str] | None:
-    """The names column's and the values column's name for melting `columns` (`LONG_NAMES`), or None when one of
-    them is already a column's name, kept or melted (case-insensitive): pandas' `melt` refuses a `value_name`
-    that names an input column (review of #12206: `Value,Other` melted into `Value` was a 500)."""
-    words = LONG_NAMES.get(canonical(language), LONG_NAMES[DEFAULT_LANGUAGE])
+def long_names(columns: list[str], keys: list[str], roles: tuple[str, str]) -> tuple[str, str]:
+    """The names column's and the values column's name for melting `columns` beside `keys` (`LONG_NAMES`).
+
+    Never a column's name, kept or melted (case-insensitive): pandas' `melt` refuses a `value_name` that names
+    an input column (review of #12206: `Value,Other` melted into `Value` was a 500). A taken word gives way to
+    the role's name (`roles`: the names and the values role), then to the word numbered (`Value 2`), so the
+    names never decide whether a table gets the offer.
+    """
     folded = [fold(column).rstrip(".").strip() for column in columns]
     if all(_YEAR_HEADER.fullmatch(column) for column in folded) and len(set(folded)) >= MIN_NAMED_HEADERS:
         kind = "year"
@@ -140,11 +141,16 @@ def long_names(columns: list[str], keys: list[str], language: str) -> tuple[str,
         kind = "weekday"
     else:
         kind = "category"
-    names_to, values_to = words[kind], words["value"]
     taken = {name.casefold() for name in [*keys, *columns]}
-    if names_to.casefold() in taken or values_to.casefold() in taken:
-        return None
+    names_to = _free(LONG_NAMES[kind], roles[0], taken)
+    values_to = _free(LONG_NAMES["value"], roles[1], taken | {names_to.casefold()})
     return names_to, values_to
+
+
+def _free(word: str, role: str, taken: set[str]) -> str:
+    """`word`, else `role`, else `word 2`, `word 3`, ...: the first that no name in `taken` (case-folded) has."""
+    candidates = itertools.chain((word, role), (f"{word} {number}" for number in itertools.count(2)))
+    return next(name for name in candidates if name.casefold() not in taken)
 
 
 @dataclass(frozen=True)
@@ -194,13 +200,9 @@ def takes_labels(role: DataRole) -> bool:
     return bool(set(role.kinds) & _LABEL_KINDS)
 
 
-def long_suggestion(
-    roles: list[DataRole], profile: DatasetProfile, language: str = DEFAULT_LANGUAGE
-) -> LongSuggestion | None:
-    """The suggestion for this spec and table, or None when neither rule above holds.
-
-    The new columns are named in `language` (`long_names`); when such a name is already a kept column's, they
-    take the roles' names instead."""
+def long_suggestion(roles: list[DataRole], profile: DatasetProfile) -> LongSuggestion | None:
+    """The suggestion for this spec and table, or None when neither rule above holds; the new columns' names
+    (`long_names`) never decide it."""
     single = [role for role in roles if not role.variadic and not role.computed]  # a computed role takes no column
     if any(role.variadic and set(role.kinds) == {"numeric"} for role in roles):
         return None
@@ -232,9 +234,7 @@ def long_suggestion(
     if not least <= len(measures) <= MAX_LONGER_COLUMNS or len(measures) + len(keys) != len(dtypes):
         return None
     names_role, values_role = names_to, values[0].name
-    names_to, values_to = long_names(measures, keys, language) or (names_role, values_role)
-    if names_to == values_to or {names_to, values_to} & {*keys, *measures}:
-        return None  # the role names are a column's too: no offer that `melt` would refuse
+    names_to, values_to = long_names(measures, keys, (names_role, values_role))
     rows = profile.rows * len(measures)
     if rows > MAX_ROWS:
         return None

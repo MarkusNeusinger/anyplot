@@ -143,9 +143,17 @@ COLOR_SCALE_KEYWORDS = frozenset(
 """Keywords that pin a color mapping's range or midpoint (matplotlib, seaborn, plotly). Not `cmin`/`cmax`:
 matplotlib's `hist2d` uses them as count thresholds that hide bins, no color range."""
 COLORBAR_KEYWORDS = frozenset({"cbar_kws", "colorbar_kws"})
-NORM_CALLS = frozenset(
-    {"Normalize", "TwoSlopeNorm", "CenteredNorm", "BoundaryNorm", "LogNorm", "PowerNorm", "SymLogNorm"}
-)
+NORM_CALLS: dict[str, tuple[tuple[int, ...], frozenset[str]]] = {
+    "Normalize": ((0, 1), frozenset({"vmin", "vmax"})),
+    "LogNorm": ((0, 1), frozenset({"vmin", "vmax"})),
+    "TwoSlopeNorm": ((0, 1, 2), frozenset({"vcenter", "vmin", "vmax"})),
+    "CenteredNorm": ((0, 1), frozenset({"vcenter", "halfrange"})),
+    "BoundaryNorm": ((0,), frozenset({"boundaries"})),
+    "PowerNorm": ((1, 2), frozenset({"vmin", "vmax"})),
+    "SymLogNorm": ((2, 3), frozenset({"vmin", "vmax"})),
+}
+"""Each norm's range, center or boundary arguments, by position and keyword; never an encoding parameter such
+as `PowerNorm`'s `gamma` or `SymLogNorm`'s `linthresh` (review of #12206)."""
 RANGE_CALLS = frozenset({"range", "arange", "linspace"})
 DATE_CALLS = frozenset({"Timestamp", "datetime", "datetime64", "date", "to_datetime"})
 GENERATOR_FACTORIES = frozenset({"default_rng", "RandomState", "Generator"})
@@ -426,8 +434,14 @@ def _color_scale_literals(node: ast.Call, method: str | None) -> list[ast.expr |
         elif keyword.arg in COLORBAR_KEYWORDS and _ticks_literal(value):
             found.append(keyword)
     arguments = [*node.args, *(keyword.value for keyword in node.keywords)]
-    if method in ("set_clim", "clim") or method in NORM_CALLS:
+    if method in ("set_clim", "clim"):
         if _has_literal(arguments):
+            found.append(node)
+    elif method is not None and method in NORM_CALLS:
+        positions, names = NORM_CALLS[method]
+        bounds = [node.args[index] for index in positions if index < len(node.args)]
+        bounds += [keyword.value for keyword in node.keywords if keyword.arg in names]
+        if _has_literal(bounds):
             found.append(node)
     elif method == "set_ticks" and isinstance(node.func, ast.Attribute):
         receiver = (dotted_name(node.func.value) or "").casefold()

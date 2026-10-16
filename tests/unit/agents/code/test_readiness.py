@@ -90,6 +90,8 @@ def test_normalised_catalogue_file_is_coupled() -> None:
         ("cbar.set_ticks([0, 50, 100])", "color-scale"),
         ("mesh.set_clim(10, 90)", "color-scale"),
         ("from matplotlib.colors import TwoSlopeNorm\nnorm = TwoSlopeNorm(vcenter=50)", "color-scale"),
+        ("from matplotlib.colors import PowerNorm\nnorm = PowerNorm(0.5, 10, 90)", "color-scale"),
+        ("from matplotlib.colors import BoundaryNorm\nnorm = BoundaryNorm([0, 10, 20], 256)", "color-scale"),
         ('g = sns.clustermap(df[["a", "b"]], cbar_pos=(0.05, 0.15, 0.04, 0.6))', "colorbar-position"),
         ('ax.annotate("Peak", xy=(5, 92.3))', "annotations"),
         ('ax.annotate("Peak", (df["x"][3], 92.3), xytext=(10, 10), textcoords="offset points")', "annotations"),
@@ -135,6 +137,10 @@ def test_each_coupling_rule(body: str, category: str) -> None:
         'sns.heatmap(df[["a", "b"]], center=0)',
         'ax.contourf(df[["a", "b"]], levels=10)',
         'ax.hist2d(df["a"], df["b"], cmin=1)',
+        # A norm's encoding parameter is no range (review of #12206: scatter-constellation-diagram's PowerNorm).
+        'from matplotlib.colors import PowerNorm\nnorm = PowerNorm(gamma=0.7, vmin=df["a"].min(), vmax=df["a"].max())',
+        "from matplotlib.colors import PowerNorm\nnorm = PowerNorm(0.5)",
+        'from matplotlib.colors import SymLogNorm\nnorm = SymLogNorm(linthresh=1.0, vmin=df["a"].min())',
         "ax.set_ticks([1, 2, 3])",
     ],
 )

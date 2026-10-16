@@ -12,8 +12,9 @@
 
 ### Changed
 
-- **`.to_long()` names the new columns in the session language.** The names column says what the
-  melted headers are (`Wochentag`, `Monat`, `Jahr`) or `Kategorie`, and the values column is `Wert`,
-  instead of the roles' names `y` and `value`, which became the plot's text. The new columns stay
+- **`.to_long()` gives the new columns meaningful names.** The names column says what the melted
+  headers are (`Weekday`, `Month`, `Year`) or `Category`, and the values column is `Value`, instead
+  of the roles' names `y` and `value`, which became the plot's text; a name an input column already
+  has gives way, so the route never fails on pandas' `melt`. The new columns stay
   bound to the roles they were made for whatever their names, and the summary offers a rename when
   the notes or the file name say what the values measure. (#12206)

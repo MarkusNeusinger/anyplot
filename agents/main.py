@@ -1485,7 +1485,7 @@ async def dataset_to_long(sid: SessionId, user: User, runtime: RuntimeDep) -> JS
     if view is None:
         raise AgentsError(404, "session_expired")
     stored = services.datasets.get(view.dataset_id, sid) if view.dataset_id else None
-    suggestion = long_suggestion(view.snapshot.roles(), stored.profile, view.language) if stored is not None else None
+    suggestion = long_suggestion(view.snapshot.roles(), stored.profile) if stored is not None else None
     if stored is None or suggestion is None:
         raise AgentsError(422, "no_suggestion")
     try:
@@ -1525,7 +1525,7 @@ def _suggestion(view: SessionView, profile: DatasetProfile) -> dict[str, Any] | 
     page warns under such a dropdown, as the session block warns the root.
     """
     roles = view.snapshot.roles()
-    suggestion = long_suggestion(roles, profile, view.language)
+    suggestion = long_suggestion(roles, profile)
     if suggestion is None:
         return None
     return {**suggestion.body(), "siblings": label_siblings(roles, profile)}
