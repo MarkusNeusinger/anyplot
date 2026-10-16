@@ -183,10 +183,31 @@ class TestNoSuggestion:
 
 class TestLongNames:
     """Live test round 8 of 2026-10-16: the role names `y` and `value` became the title "Wert nach Wochentag und
-    Stunde"; the new columns are named after what the melted headers are, in English whatever the session
-    language, so the offer the page shows never changes under it (review of #12206)."""
+    Stunde"; the new columns are named after what the melted headers are. Live round 9: in the session language,
+    since they are generated text (`Weekday` became a German heatmap's axis title)."""
 
     ROLES = ("category", "value")
+
+    def test_the_names_follow_the_session_language(self) -> None:
+        days = ["Mo", "Di", "Mi", "Do", "Fr"]
+        assert long_names(days, [], self.ROLES, "de") == ("Wochentag", "Wert")
+        assert long_names(days, [], self.ROLES, "Deutsch") == ("Wochentag", "Wert")
+        assert long_names(["Jan", "Feb", "Mär"], [], self.ROLES, "fr") == ("Mois", "Valeur")
+        assert long_names(["Sensor_A", "Sensor_B"], [], self.ROLES, "nl") == ("Categorie", "Waarde")
+        assert long_names(["2019", "2020", "2021"], [], self.ROLES, "es") == ("Año", "Valor")
+        assert long_names(days, [], self.ROLES, "Klingon") == ("Weekday", "Value")  # outside the table: English
+        # The user's own headers are never translated, and a taken word still gives way.
+        assert long_names(["Wert", "Other"], ["Kategorie"], self.ROLES, "de") == ("category", "value")
+
+    def test_weekday_headers_come_from_one_language(self) -> None:
+        """Review of #12206: Portuguese and Dutch gaps, and country codes read as days."""
+        assert long_names(["segunda-feira", "terça-feira", "quarta-feira"], [], self.ROLES)[0] == "Weekday"
+        assert long_names(["seg", "ter", "qua", "qui", "sex"], [], self.ROLES)[0] == "Weekday"
+        assert long_names(["maandag", "dinsdag", "woensdag", "donderdag"], [], self.ROLES)[0] == "Weekday"
+        assert long_names(["ma", "di", "wo", "do", "vr", "za", "zo"], [], self.ROLES)[0] == "Weekday"
+        assert long_names(["Montag", "Mardi", "Miércoles"], [], self.ROLES)[0] == "Category"  # three languages
+        for codes in (["FR", "ZA", "MA"], ["MO", "MI", "MA"], ["FR", "SA", "SO"]):
+            assert long_names(codes, [], self.ROLES)[0] == "Category", codes
 
     def test_the_names_column_says_what_the_headers_are(self) -> None:
         assert long_names(["Mo", "Di", "Mi", "Do", "Fr"], [], self.ROLES) == ("Weekday", "Value")

@@ -10,7 +10,14 @@ import json
 import pytest
 
 from agents.anyplot.data.parse import display_copy, parse_dataset
-from agents.anyplot.opening import MAX_JUDGE_CHUNK_CHARS, dataset_judge_inputs, instruction_like, judged_view
+from agents.anyplot.opening import (
+    MAX_JUDGE_CHUNK_CHARS,
+    MAX_JUDGED_VALUE_CHARS,
+    MAX_JUDGED_VARIANTS,
+    dataset_judge_inputs,
+    instruction_like,
+    judged_view,
+)
 from agents.anyplot.schemas import MAX_LISTED_VALUES, MAX_SAMPLE_ROWS, MAX_TOP_VALUES
 
 
@@ -59,6 +66,19 @@ class TestParity:
 
         assert view.top_values["label"] == [f"{stem} first", "other", f"{stem} {INJECTION}"]
         assert INJECTION in judged_text(text)
+
+    def test_variants_behind_one_display_copy_are_capped(self) -> None:
+        """Review of #12206: 1,000 long URLs sharing their first 40 characters were all pulled in, uncapped."""
+        site = "https://example.org/a/very/long/path/to/"
+        urls = [f"{site}{index:04d}" for index in range(1000)]
+        text = "link\n" + "\n".join([urls[0]] * 3 + urls[1:]) + "\n"
+
+        view = judged_view(parse_dataset(text))
+
+        values = view.top_values["link"]
+        assert values[0] == urls[0]  # the most frequent full value of the copy is always judged
+        assert len(values) == MAX_JUDGED_VARIANTS
+        assert sum(len(value) for value in values) <= MAX_JUDGED_VALUE_CHARS
 
     def test_the_judge_sees_every_value_of_a_column_the_profile_lists_in_full(self) -> None:
         values = ["alpha"] * 3 + ["beta"] * 2 + ["gamma", "delta", "omega", INJECTION]

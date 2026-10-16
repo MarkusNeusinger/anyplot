@@ -225,6 +225,8 @@ def fence_pipeline_notes(result: dict[str, Any]) -> dict[str, Any]:
     and changes none of it).
     """
     fenced = {key: value for key, value in result.items() if key not in (*PIPELINE_NOTE_FIELDS, SHOWS_KEY)}
+    if fenced.get("request_kept") is None:
+        fenced.pop("request_kept", None)  # only a `not_ready` result that kept the run's request says so
     if result.get("status") in ("ok", "needs_attention"):
         # A shipped plot passed the gate on the user's confirmation: a server fact in the result itself,
         # so an earlier turn's "please confirm" never reads as still true (live round 6, R6-1).

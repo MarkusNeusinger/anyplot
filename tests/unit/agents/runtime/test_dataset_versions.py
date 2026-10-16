@@ -5,6 +5,7 @@ from agents.anyplot.data.store import DatasetStore
 from agents.anyplot.dataset_versions import MAX_DATASET_HISTORY, dataset_payload, push_version, undo_version
 from agents.anyplot.dev_fixture import snapshot_from_repo
 from agents.anyplot.opening import store_dataset
+from agents.anyplot.schemas import Binding
 from agents.anyplot.session_state import (
     BINDINGS,
     CONFIRMED,
@@ -86,6 +87,25 @@ def test_a_dropped_files_name_travels_with_every_version() -> None:
     # The undo restores the version's own name.
     undone = undo_version(store, SID, view_of(state), SNAPSHOT)
     assert undone is not None and undone.stored.file_name == "sales.csv"
+
+
+def test_pinned_bindings_keep_the_users_bindings_on_kept_columns() -> None:
+    """Review of #12206: `.to_long()` gave the defaults to every role it did not pin, dropping the user's choice."""
+    store = DatasetStore()
+    state = opened(store, "a,b,w1,w2\n1,2,3,4\n5,6,7,8\n")
+    state[BINDINGS] = [{"role": "x", "column": "b"}, {"role": "y", "column": "w1"}]  # x on `b`, not the default `a`
+
+    long = push_version(
+        store,
+        SID,
+        view_of(state),
+        parse_dataset("a,b,v\n1,2,3\n1,2,4\n"),
+        SNAPSHOT,
+        pinned=[Binding(role="y", column="v")],
+    )
+
+    # The kept column keeps the user's role; the pinned role takes its new column; the melted `w1` is gone.
+    assert long.delta[BINDINGS] == [{"role": "x", "column": "b"}, {"role": "y", "column": "v"}]
 
 
 def test_a_replacing_table_gets_the_default_bindings_where_a_change_carries_them() -> None:

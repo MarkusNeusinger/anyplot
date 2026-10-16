@@ -154,6 +154,7 @@ import {
   type FeedbackReaction,
   isTranscribed,
   type LanguageSource,
+  type LongSuggestion,
   MAX_DATASET_BYTES,
   MAX_FEEDBACK_CHARS,
   MAX_MESSAGE_CHARS,
@@ -430,6 +431,12 @@ type Action =
   | { type: 'language_failed' }
   /** A turn's `done` named the session language. */
   | { type: 'language_sync'; plotLanguage: PlotLanguage }
+  /**
+   * The `.to_long()` offer as the server recomputed it in the session language
+   * (a turn's `done`, the language route's answer): the card names what the
+   * route applies, also after the language changed (live round 9).
+   */
+  | { type: 'suggestion_sync'; suggestion: LongSuggestion | null }
   /** Append a thread item; the reducer gives it the next id. */
   | { type: 'item'; item: NewChatItem }
   | { type: 'run_start'; kind: RunState['kind'] }
@@ -905,6 +912,16 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
       }
       return next;
     }
+    case 'suggestion_sync':
+      return state.dataset
+        ? {
+            ...state,
+            dataset: {
+              ...state.dataset,
+              parsed: { ...state.dataset.parsed, suggestion: action.suggestion },
+            },
+          }
+        : state;
     case 'item':
       return appendItem(state, action.item);
     case 'run_start':
@@ -1492,6 +1509,10 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
           if (event.language) {
             safeDispatch({ type: 'language_sync', plotLanguage: event.language });
           }
+          // The `.to_long()` offer in the session language after the turn, which may have changed it.
+          if (event.suggestion !== undefined) {
+            safeDispatch({ type: 'suggestion_sync', suggestion: event.suggestion });
+          }
           break;
         default:
           break;
@@ -1773,8 +1794,10 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
       languageRef.current = true;
       safeDispatch({ type: 'language_start' });
       try {
-        const applied = await agentApi.setLanguage(token, sid, language);
+        const { suggestion, ...applied } = await agentApi.setLanguage(token, sid, language);
         safeDispatch({ type: 'language_done', plotLanguage: applied });
+        // The offer's new column names follow the language: the card shows what `.to_long()` applies.
+        if (suggestion !== undefined) safeDispatch({ type: 'suggestion_sync', suggestion });
       } catch (err) {
         const failure = handleFailure(err);
         safeDispatch({ type: 'language_failed' });

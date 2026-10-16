@@ -14,7 +14,7 @@
  */
 
 import type { RunState } from 'src/hooks/useAgentSession';
-import type { PipelineStep, PlotStatus, Round, RoundOutcome } from 'src/lib/agent';
+import type { PipelineStep, PlotResult, PlotStatus, Round, RoundOutcome } from 'src/lib/agent';
 
 const FIRST_TRY: PipelineStep[] = ['adapting', 'checking', 'rendering', 'reviewing'];
 const REPAIR: PipelineStep[] = ['repairing', 'checking', 'rendering', 'reviewing'];
@@ -58,11 +58,86 @@ export interface GridRow {
   cells: GridCell[];
   /** How the round ended, or `null` while it runs. */
   outcome: { text: string; tone: OutcomeTone } | null;
+  /** A repair round's line while it runs (`repairing layout`), else `null`. */
+  repairs: string | null;
 }
 
-/** The name of a pipeline round: attempt 1 is the first try, every later attempt a repair. */
+const ORDINALS = ['first', 'second', 'third', 'fourth', 'fifth'];
+
+/**
+ * The name of a pipeline round: `first try`, `second try`, ... (live round 9 of
+ * 2026-10-16: "repair 1" read as no second round at all, so a forced repair was
+ * missed on the page). Every try after the first is a repair round.
+ */
 export function roundLabel(attempt: number): string {
-  return attempt <= 1 ? 'first try' : `repair ${attempt - 1}`;
+  const index = Math.max(attempt, 1) - 1;
+  return index < ORDINALS.length ? `${ORDINALS[index]} try` : `try ${index + 1}`;
+}
+
+/**
+ * The rubric ids a repair works on, in words for the grid (`VQ-05` is
+ * `layout`). Unknown ids are left out; the ids are closed codes, never text.
+ */
+export const DEFECT_WORDS: Record<string, string> = {
+  'VQ-01': 'text size',
+  'VQ-02': 'overlap',
+  'VQ-03': 'mark visibility',
+  'VQ-04': 'color contrast',
+  'VQ-05': 'layout',
+  'VQ-06': 'axis labels',
+  'VQ-07': 'palette',
+  'AR-09': 'clipped text',
+  'SC-01': 'plot type',
+  'SC-02': 'spec features',
+  'SC-03': 'data mapping',
+  'SC-04': 'title and legend',
+  'DQ-01': 'feature coverage',
+  'DQ-02': 'data context',
+  'DQ-03': 'data accuracy',
+  'DE-01': 'design',
+  'DE-02': 'visual refinement',
+  'DE-03': 'storytelling',
+};
+
+/** What a repair round fixes when its ids name nothing known: by how the round before ended. */
+const REPAIR_OF: Partial<Record<RoundOutcome, string>> = {
+  review: 'review findings',
+  measured: 'measured findings',
+  render_failed: 'the render',
+  check_failed: 'the code check',
+  answer_unusable: 'the answer',
+};
+
+/**
+ * The line a repair round shows while it runs: `repairing layout, text size`,
+ * from the round before it (`null` for the first try or without a round before).
+ */
+export function repairText(previous: Round | undefined): string | null {
+  if (!previous) return null;
+  const words = [...new Set((previous.defects ?? []).map(id => DEFECT_WORDS[id]).filter(Boolean))];
+  const what = words.length ? words.join(', ') : REPAIR_OF[previous.outcome];
+  return what ? `repairing ${what}` : 'repairing';
+}
+
+/**
+ * The tries of a result for its card's header: `first try` for one round;
+ * the shipped round's name when the last one shipped (`second try`); and, when
+ * an earlier round's render won (a repair that failed its check or scored
+ * lower), which one: `first try shipped of 2`. A result without a shipped round
+ * (failed) counts its tries.
+ */
+export function triesText(result: Pick<PlotResult, 'attempts' | 'rounds'>): string {
+  const rounds = result.rounds ?? [];
+  const total = Math.max(
+    rounds.length ? Math.max(...rounds.map(round => round.attempt)) : result.attempts,
+    1
+  );
+  if (total === 1) return roundLabel(1);
+  const shipped = rounds.find(round => round.shipped)?.attempt;
+  if (shipped === undefined) {
+    return rounds.some(round => round.shipped !== undefined) ? `${total} tries` : roundLabel(total);
+  }
+  return shipped < total ? `${roundLabel(shipped)} shipped of ${total}` : roundLabel(shipped);
 }
 
 const plural = (count: number, noun: string) => `${count} ${noun}${count === 1 ? '' : 's'}`;
@@ -161,6 +236,7 @@ export function gridRows(
         label: roundLabel(attempt),
         cells: liveCells(names, reached),
         outcome: null,
+        repairs: repairText(rounds.find(item => item.attempt === attempt - 1)),
       };
     }
     const open = status === 'needs_attention' && attempt === shippedRound;
@@ -169,6 +245,7 @@ export function gridRows(
       label: roundLabel(attempt),
       cells: finishedCells(names, round, reached),
       outcome: outcomeText(round, open),
+      repairs: null,
     };
   });
 }
@@ -182,5 +259,13 @@ export function gridRows(
 export function liveRows(run: RunState): GridRow[] {
   const rows = gridRows(run.rounds ?? [], run.steps);
   if (rows.length || run.kind !== 'create_plot') return rows;
-  return [{ attempt: 1, label: roundLabel(1), cells: liveCells(FIRST_TRY, []), outcome: null }];
+  return [
+    {
+      attempt: 1,
+      label: roundLabel(1),
+      cells: liveCells(FIRST_TRY, []),
+      outcome: null,
+      repairs: null,
+    },
+  ];
 }

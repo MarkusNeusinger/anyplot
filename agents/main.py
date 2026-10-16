@@ -15,11 +15,11 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?, source?, table?}` (`source`: the name of the file the page read the text from, at most 1,024 characters; screened on its own, never a note; `table`: 1 to 10, which of several tables in the text to read, from the previous answer's `tables`) | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version, language, file_name?, tables?, table?}` (`file_name`: the dropped file's name as the session keeps it, `(name withheld)` when the screen refused it; `tables`: one label per table, its header names and its row count, when the text held two or more tables each under its own header after a blank line, and `table` the one read, see `data/parse.py` `_one_table`;`suggestion`: the wide-table offer of `data/shape.py` with `siblings`, the columns a role that takes labels should not take (`bindings.label_siblings`), or null; `context_lines`: the notes pasted above or below the table that passed the pre-filter and the scope judge, which the root gets with the next `summarize_data` turn; `language`: the session language as `{language, source}`, which a paste before any typed message or choice sets from the notes' or the column names' language, source `pasted`), stored as version 1 (the undo history of an earlier paste is dropped); or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips that fallback and keeps every row) | `413 too_long`, `422 unparseable` (both with `cause`, the parser's sentence naming what the data fails on, at most 300 characters), `422 formula` (text of at most 2,000 characters that asks for a formula, which the chat's `generate_data` computes; never transcribed), `403 data_refused`, `403 session_closed` (the scope judge closed the session), `409 run_active` (a turn of the user in any session, or another paste of the user in flight), `429 rate_limited` / `429 daily_limit` (`AGENT_USER_PASTES_PER_MINUTE` / `_PER_DAY`, or the daily token budgets for `daily_limit`), `429 locked_out` (the day's `attack` strikes), `503 guard_unavailable` |
 | `POST /v1/sessions/{sid}/dataset/convert` | `{data_base64, sheet?}` (a dropped Excel, OpenDocument, Parquet, Feather, Arrow or NumPy file, at most 5 MiB; `sheet` a sheet or `.npz` array the previous answer named) | `{text, format, kind, rows, columns, sheet, sheets, sheet_count, warnings, dropped}`: the file read in the renderer's sandbox (`harness.py --convert`) into the text the paste box takes (CSV, or JSON records for a table with list columns, `format`), every value with the precision it came with, the sheet read and at most 10 visible ones with cells (`sheet_count` all of them), `warnings` counts (`formulas_without_value`, `hidden_sheets`, `dropped_columns`, `list_columns`, `utc_timestamps`, `renamed_columns`), `dropped` the names of the columns left out; nothing stored, no model call | `413 too_long`, `422 invalid`, `422 file_<refusal>` (`wire.CONVERT_REASONS`, with `measured` and `limit` for a broken cap) and `file_timeout`, `file_too_complex` (also a reader that died without its `status.json`), `file_too_large`, `file_unreadable`, `403 session_closed`, `409 run_active` (another conversion of the user in flight), `429 rate_limited` / `429 daily_limit` (`AGENT_USER_CONVERSIONS_PER_MINUTE` / `_PER_DAY`, or the daily token budgets), `429 locked_out`, `503 capacity` (no render slot within `AGENT_CONVERT_SLOT_WAIT_S`), `503 convert_unavailable` (no renderer, or one without `/convert`) |
 | `PUT /v1/sessions/{sid}/bindings` | `[{role, column}]` | `{bindings, complete, missing_roles, warnings}`: `warnings` names a role that needs values of 0 or more bound to a column with a negative value, or left open for that reason (`data/signs.py`); never a refusal | `409 run_active`, `422 invalid` (with `errors`, at most 20 lines) |
-| `PUT /v1/sessions/{sid}/language` | `{language}` (a short name or code, `^[A-Za-z][A-Za-z -]{0,39}$`) | `{language, source}`: the session language in its stored form (`English` is `en`), source `chosen`, which detection never overrides | `409 run_active`, `422` (the pattern) |
+| `PUT /v1/sessions/{sid}/language` | `{language}` (a short name or code, `^[A-Za-z][A-Za-z -]{0,39}$`) | `{language, source, suggestion?}`: the session language in its stored form (`English` is `en`), source `chosen`, which detection never overrides; `suggestion`, when the session has data, the `.to_long()` offer (or null) with its new column names in that language | `409 run_active`, `422` (the pattern) |
 | `POST /v1/sessions/{sid}/dataset/confirm` | | `{confirmed, rows, columns}`: step 1 of two, the user confirmed the dataset with its bindings; the pipeline runs only then | `409 run_active`, `422 no_dataset` |
 | `POST /v1/sessions/{sid}/dataset/undo` | | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version}`: the dataset version before the root's last `prepare_data` or `generate_data` is the current one again, its bindings carried over (`dataset_versions.py`); unconfirmed, like any version the user has not confirmed | `409 run_active`, `422 nothing_to_undo` |
 | `POST /v1/sessions/{sid}/dataset/to_long` | | The undo route's shape plus `changes`: the page's `.to_long()` applies the wide-table suggestion, recomputed on the server, as the next dataset version with the new columns bound to the roles they were made for; no model call | `409 run_active`, `422 no_suggestion` |
-| `POST /v1/sessions/{sid}/messages` | `{text}` or `{action}` (`create_plot`, `summarize_data`) | SSE `anyplot/1`; the `done` event carries `dataset` (with `roles` and `changes`) after a turn whose `prepare_data` or `generate_data` changed the data, version 1 when `generate_data` made the session's first data, and `language` (`{language, source}`) after every run | `413 too_long`, `409 run_active` |
+| `POST /v1/sessions/{sid}/messages` | `{text}` or `{action}` (`create_plot`, `summarize_data`) | SSE `anyplot/1`; the `done` event carries `dataset` (with `roles` and `changes`) after a turn whose `prepare_data` or `generate_data` changed the data, version 1 when `generate_data` made the session's first data, and `language` (`{language, source}`) after every run, and `suggestion` (the `.to_long()` offer in the session language, or null) after every run on a session with data | `413 too_long`, `409 run_active` |
 | `POST /v1/sessions/{sid}/cancel` | | `204` | |
 | `POST /v1/sessions/{sid}/outcome` | `{action, version?, reaction?}` (closed sets: `telemetry.OutcomeAction`, `telemetry.Reaction`, the latter with `feedback` only) | `204`: the content-free `outcome` telemetry line (`anyplot/telemetry.py`) | `422`, `429 rate_limited` / `429 daily_limit` (`OUTCOMES_PER_MINUTE` / `_PER_DAY`) |
 | `POST /v1/sessions/{sid}/versions/{version}/render` | `{theme}` | `{status, reason?, artifacts}` | `404 not_found`, `409 run_active`, `503 capacity` (no render slot in time, or the render store is full) |
@@ -1206,7 +1206,8 @@ async def _ingest_paste(
             "warnings": parsed.warnings,
             "context_lines": parsed.context_lines,
             "roles": _page_roles(view.snapshot.roles()),
-            "suggestion": _suggestion(view, parsed.profile),
+            # In the language the paste leaves: `.to_long()`'s new column names are generated text.
+            "suggestion": _suggestion(view, parsed.profile, language),
             "version": 1,
             "language": {"language": language, "source": language_source},
             **({"file_name": file_name} if file_name is not None else {}),
@@ -1511,7 +1512,13 @@ async def put_language(sid: SessionId, body: LanguageBody, user: User, runtime: 
     if not is_valid(value):
         raise AgentsError(422, "invalid")
     await runtime.write_state(session, language_delta(value, "chosen"))
-    return JSONResponse({"language": value, "source": "chosen"}, headers=_NO_STORE)
+    answer: dict[str, Any] = {"language": value, "source": "chosen"}
+    view = read_session(session.state)
+    stored = get_services().datasets.get(view.dataset_id, sid) if view is not None and view.dataset_id else None
+    if view is not None and stored is not None:
+        # The `.to_long()` offer with its new column names in the new language, so the page's card follows.
+        answer["suggestion"] = _suggestion(view, stored.profile, value)
+    return JSONResponse(answer, headers=_NO_STORE)
 
 
 @app.post("/v1/sessions/{sid}/dataset/confirm", dependencies=v1_dependencies)
@@ -1587,7 +1594,7 @@ async def dataset_to_long(sid: SessionId, user: User, runtime: RuntimeDep) -> JS
     if view is None:
         raise AgentsError(404, "session_expired")
     stored = services.datasets.get(view.dataset_id, sid) if view.dataset_id else None
-    suggestion = long_suggestion(view.snapshot.roles(), stored.profile) if stored is not None else None
+    suggestion = long_suggestion(view.snapshot.roles(), stored.profile, view.language) if stored is not None else None
     if stored is None or suggestion is None:
         raise AgentsError(422, "no_suggestion")
     try:
@@ -1621,14 +1628,15 @@ async def dataset_to_long(sid: SessionId, user: User, runtime: RuntimeDep) -> JS
     )
 
 
-def _suggestion(view: SessionView, profile: DatasetProfile) -> dict[str, Any] | None:
+def _suggestion(view: SessionView, profile: DatasetProfile, language: str | None = None) -> dict[str, Any] | None:
     """The wide-table suggestion for a dataset answer (`data/shape.py`), or None.
 
-    `siblings` are the columns no role that takes labels should be bound to (`bindings.label_siblings`): the
-    page warns under such a dropdown, as the session block warns the root.
+    Its new column names are in the session language (`language`, else the view's), as the `.to_long()` route
+    computes them. `siblings` are the columns no role that takes labels should be bound to
+    (`bindings.label_siblings`): the page warns under such a dropdown, as the session block warns the root.
     """
     roles = view.snapshot.roles()
-    suggestion = long_suggestion(roles, profile)
+    suggestion = long_suggestion(roles, profile, language or view.language)
     if suggestion is None:
         return None
     return {**suggestion.body(), "siblings": label_siblings(roles, profile)}
@@ -1638,7 +1646,7 @@ async def _session_sync(
     runtime: Runtime, user: str, sid: str, *, dataset_before: str | None = None, ledger: RequestLedger | None = None
 ) -> dict[str, Any]:
     """The `done` event's sync fields after a turn: the bindings, whether the data is confirmed, a changed dataset,
-    the session language.
+    the session language and the wide-table offer in it (`suggestion`, whenever the session has data).
 
     The root's `set_bindings` tool may have changed the bindings (and dropped the
     confirmation) during the turn, and its `prepare_data` or `generate_data` tool the
@@ -1663,14 +1671,17 @@ async def _session_sync(
         "data_confirmed": view.data_confirmed,
         "language": {"language": view.language, "source": view.language_source},
     }
-    if view.dataset_id and view.dataset_id != dataset_before:
-        stored = get_services().datasets.get(view.dataset_id, sid)
-        if stored is not None:
+    stored = get_services().datasets.get(view.dataset_id, sid) if view.dataset_id else None
+    if stored is not None:
+        # The wide-table offer in the session language after the turn: the first typed message or `set_language`
+        # may have changed it, and the page's card must name what `.to_long()` applies (live round 9).
+        payload["suggestion"] = _suggestion(view, stored.profile)
+        if view.dataset_id != dataset_before:
             changes = list(ledger.dataset_changes) if ledger is not None else []
             payload["dataset"] = {
                 **dataset_payload(stored, view.bindings, view.dataset_version),
                 "roles": _page_roles(view.snapshot.roles())[:MAX_DONE_ROLES],
-                "suggestion": _suggestion(view, stored.profile),
+                "suggestion": payload["suggestion"],
                 "changes": changes,
             }
     return payload

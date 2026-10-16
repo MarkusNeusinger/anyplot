@@ -92,6 +92,13 @@ class TestTranslator:
         assert payload["language"] == language
         assert "language" not in parse(translator.done())[1]  # a turn refused before the queue: the chip stays
 
+    def test_done_carries_the_offer_or_its_absence(self, translator: Translator) -> None:
+        """`suggestion` null says the data has no `.to_long()` offer; no key says the route had no data."""
+        offer = {"kind": "to_long", "names_to": "Wochentag", "values_to": "Wert"}
+        assert parse(translator.done(suggestion=offer))[1]["suggestion"] == offer
+        assert parse(translator.done(suggestion=None))[1]["suggestion"] is None
+        assert "suggestion" not in parse(translator.done())[1]
+
     def test_the_largest_done_event_fits_the_bff_cap(self) -> None:
         """`done` with `dataset` at every schema maximum, JSON-escaped at its worst, stays within the BFF's cap for `done`.
 
@@ -154,9 +161,20 @@ class TestTranslator:
             description="\x01" * (MAX_ROLE_DESCRIPTION_CHARS + 10),
         )
         roles = [_role_body(role)] * MAX_DONE_ROLES
+        # The `.to_long()` offer at its widest: every column melted or kept, every one a sibling, two new names.
+        suggestion = {
+            "kind": "to_long",
+            "columns": names,
+            "names_to": '"' * MAX_COLUMN_NAME_CHARS,
+            "values_to": '"' * MAX_COLUMN_NAME_CHARS,
+            "keys": names,
+            "rows": MAX_ROWS,
+            "siblings": names,
+        }
         dataset = {
             **dataset_payload(stored, bindings, 999),
             "roles": roles,
+            "suggestion": suggestion,
             "changes": ["\x01" * MAX_NOTE_CHARS] * lines,
         }
         payload = {
@@ -167,6 +185,7 @@ class TestTranslator:
             "dataset": dataset,
             # The longest language the pattern admits, with the longest source word.
             "language": {"language": "x" * MAX_LANGUAGE_CHARS, "source": "detected"},
+            "suggestion": suggestion,
         }
 
         event = sse("done", payload)

@@ -942,7 +942,14 @@ async function streamTurn(req, res, session, body, ref) {
       // two review findings, its repair round one that stays open; a first plot passes at once.
       const rounds = refine
         ? [
-            { attempt: 1, outcome: 'review', findings: 2, step: 'reviewing', shipped: false },
+            {
+              attempt: 1,
+              outcome: 'review',
+              findings: 2,
+              step: 'reviewing',
+              shipped: false,
+              defects: ['VQ-01', 'VQ-05'],
+            },
             { attempt: 2, outcome: 'review', findings: 1, step: 'reviewing', shipped: true },
           ]
         : [{ attempt: 1, outcome: 'ok', findings: 0, step: 'reviewing', shipped: true }];
@@ -953,7 +960,13 @@ async function streamTurn(req, res, session, body, ref) {
         send(
           'status',
           before
-            ? { step, attempt, outcome: before.outcome, findings: before.findings }
+            ? {
+                step,
+                attempt,
+                outcome: before.outcome,
+                findings: before.findings,
+                defects: before.defects ?? [],
+              }
             : { step, attempt }
         );
         await wait(STEP_MS);
@@ -1013,6 +1026,7 @@ async function streamTurn(req, res, session, body, ref) {
       bindings: session.bindings,
       data_confirmed: session.confirmed,
       language: { language: session.language, source: session.languageSource },
+      ...(session.dataset ? { suggestion: longSuggestion(session, session.dataset) } : {}),
       ...(session.changed ? { dataset: session.changed } : {}),
     });
     res.end();
@@ -1190,22 +1204,35 @@ function longSuggestion(session, dataset) {
   const values = single.filter(numericOnly);
   // Exactly one of each, as on the service: two labels would leave one open.
   if (labels.length !== 1 || values.length !== 1) return null;
-  const label = labels[0];
   const columns = dataset.profile.columns;
   if (columns.some(c => c.dtype === 'text' || c.dtype === 'boolean')) return null;
   const numeric = columns.filter(c => c.dtype === 'integer' || c.dtype === 'number');
   const keys = columns.filter(c => c.dtype === 'datetime').map(c => c.name);
   if (numeric.length < 2 || numeric.length > 20 || numeric.length + keys.length !== columns.length)
     return null;
+  // The new columns' names are generated text in the session language (`shape.LONG_NAMES`), as on the service.
+  const words = LONG_WORDS[session.language] ?? LONG_WORDS.en;
   return {
     kind: 'to_long',
     columns: numeric.map(c => c.name),
-    names_to: label.name,
-    values_to: values[0].name,
+    names_to: words[0],
+    values_to: words[1],
     keys,
     rows: dataset.profile.rows * numeric.length,
   };
 }
+
+/** The `.to_long()` names column (a category) and values column by session language; English otherwise. */
+const LONG_WORDS = {
+  en: ['Category', 'Value'],
+  de: ['Kategorie', 'Wert'],
+  fr: ['Catégorie', 'Valeur'],
+  es: ['Categoría', 'Valor'],
+  it: ['Categoria', 'Valore'],
+  pt: ['Categoria', 'Valor'],
+  nl: ['Categorie', 'Waarde'],
+  pl: ['Kategoria', 'Wartość'],
+};
 
 /** The unit token at either end of a cell (`12,5 %`, `€ 12`), or null; a plain number has none. */
 function unitOf(cell) {
@@ -1766,7 +1793,9 @@ async function route(req, res) {
     if (extra || !LANGUAGE_RE.test(value)) return fail(res, 422, 'invalid', ref);
     session.language = normaliseLanguage(value);
     session.languageSource = 'chosen';
-    return json(res, 200, { language: session.language, source: 'chosen' }, ref);
+    // With data, the `.to_long()` offer recomputed in the new language, as the service answers it.
+    const offer = session.dataset ? { suggestion: longSuggestion(session, session.dataset) } : {};
+    return json(res, 200, { language: session.language, source: 'chosen', ...offer }, ref);
   }
   if (method === 'POST' && rest === '/dataset/convert') {
     // The renderer reads the file in production; here the first bytes pick a canned answer. A zip is a

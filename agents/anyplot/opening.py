@@ -30,7 +30,7 @@ import json
 import re
 import unicodedata
 from collections import Counter
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field, replace
 from typing import Any
 
@@ -311,6 +311,35 @@ class JudgedView:
     sample: list[list[str]]
 
 
+MAX_JUDGED_VARIANTS = 5
+"""The full values judged behind one listed display copy at most, the most frequent first."""
+MAX_JUDGED_VALUE_CHARS = 8_000
+"""The characters of one column's judged top values at most (40 values of the parser's 200 characters)."""
+
+
+def _capped_variants(values: Iterable[str]) -> list[str]:
+    """`values` (in order of frequency) with at most `MAX_JUDGED_VARIANTS` per display copy and
+    `MAX_JUDGED_VALUE_CHARS` in all, the first value of every copy always kept.
+
+    Review of #12206: values that share a 40-character prefix (1,000 long URLs of one site) were all pulled
+    in, which multiplied the judge's parts and calls. The model only ever reads the display copies (the
+    profile lists those), so the most frequent full values behind each copy are what the judge needs; the
+    first of each copy is judged whatever the cap, so every copy the profile lists stays covered.
+    """
+    kept: list[str] = []
+    per_copy: Counter[str] = Counter()
+    chars = 0
+    for value in values:
+        copy_ = display_copy(value)
+        first = per_copy[copy_] == 0
+        if not first and (per_copy[copy_] >= MAX_JUDGED_VARIANTS or chars + len(value) > MAX_JUDGED_VALUE_CHARS):
+            continue
+        per_copy[copy_] += 1
+        chars += len(value)
+        kept.append(value)
+    return kept
+
+
 def judged_view(parsed: ParsedDataset) -> JudgedView:
     """Every header, the top values of every text and boolean column, and the first sample rows, cells in full.
 
@@ -322,7 +351,8 @@ def judged_view(parsed: ParsedDataset) -> JudgedView:
     frequency, until `listed_values` distinct display copies are found. Values whose
     display copies coincide count once in the profile, so every full value behind a
     listed copy is judged, however rare and wherever it ranks (review of #12206: a rare
-    variant ranked past the last listed copy went unjudged), in the order of frequency.
+    variant ranked past the last listed copy went unjudged), in the order of frequency, up to
+    `MAX_JUDGED_VARIANTS` per copy and `MAX_JUDGED_VALUE_CHARS` per column (`_capped_variants`).
     """
     reader = csv.reader(io.StringIO(parsed.csv))
     columns = next(reader)
@@ -342,7 +372,7 @@ def judged_view(parsed: ParsedDataset) -> JudgedView:
                 break
             if display_copy(value) not in listed:
                 listed.append(display_copy(value))
-        values = [value for value in ranked if display_copy(value) in listed]
+        values = _capped_variants(value for value in ranked if display_copy(value) in listed)
         if values:
             top_values[name] = values
     return JudgedView(columns=columns, top_values=top_values, sample=rows[:MAX_SAMPLE_ROWS])

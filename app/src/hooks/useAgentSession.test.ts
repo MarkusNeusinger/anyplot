@@ -1271,6 +1271,32 @@ describe('useAgentSession: .to_long()', () => {
     expect(toLongCalls()).toHaveLength(1);
   });
 
+  it('renames the offer when the language changes, by the chip or during a turn', async () => {
+    // Live round 9 of 2026-10-16: the new columns' names are generated text in the session language, so the
+    // card must name what `.to_long()` applies after the language changed.
+    const GERMAN = { ...OFFER, names_to: 'Kategorie', values_to: 'Wert' };
+    const FRENCH = { ...OFFER, names_to: 'Catégorie', values_to: 'Valeur' };
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/dataset'] = () => json(200, WIDE);
+    routes['PUT /sessions/S1/language'] = () =>
+      json(200, { language: 'de', source: 'chosen', suggestion: GERMAN });
+    routes['POST /sessions/S1/messages'] = () =>
+      sse([
+        ['ready', { v: 'anyplot/1', run_id: 'run1' }],
+        ['message', { text: "D'accord." }],
+        ['done', { language: { language: 'fr', source: 'chosen' }, suggestion: FRENCH }],
+      ]);
+    const { result } = await openSession(routes);
+    await act(() => result.current.parseData('Sensor_A,Sensor_B\n1.5,2.5\n'));
+
+    await act(() => result.current.setLanguage('Deutsch'));
+    expect(result.current.state.dataset?.parsed.suggestion).toEqual(GERMAN);
+    expect(result.current.state.plotLanguage).toEqual({ language: 'de', source: 'chosen' });
+
+    await act(() => result.current.sendMessage('réponds en français'));
+    expect(result.current.state.dataset?.parsed.suggestion).toEqual(FRENCH);
+  });
+
   it('keeps a refusal until the next paste clears it', async () => {
     const routes = baseRoutes();
     routes['POST /sessions/S1/dataset'] = () => json(200, WIDE);

@@ -3,7 +3,13 @@ import { describe, expect, it } from 'vitest';
 import type { RunState, TimelineStep } from 'src/hooks/useAgentSession';
 import type { Round } from 'src/lib/agent';
 import { ProgressTimeline } from 'src/sections/agent-chat/ProgressTimeline';
-import { gridRows, liveRows, outcomeText, roundLabel } from 'src/sections/agent-chat/timeline';
+import {
+  gridRows,
+  liveRows,
+  outcomeText,
+  roundLabel,
+  triesText,
+} from 'src/sections/agent-chat/timeline';
 import { render, screen, within } from 'src/test-utils';
 
 function run(steps: [TimelineStep, number | null][], extra: Partial<RunState> = {}): RunState {
@@ -21,7 +27,7 @@ const show = (rows: ReturnType<typeof gridRows>) =>
   rows.map(
     row =>
       `${row.label}: ${row.cells.map(cell => `${cell.step}:${cell.state}`).join(' ')}` +
-      (row.outcome ? ` | ${row.outcome.text}` : '')
+      (row.outcome ? ` | ${row.outcome.text}` : row.repairs ? ` | ${row.repairs}` : '')
   );
 
 const FIRST: [TimelineStep, number][] = [
@@ -46,8 +52,21 @@ describe('timeline grid', () => {
 
     expect(show(liveRows(state))).toEqual([
       'first try: adapting:done checking:done rendering:done reviewing:failed | ✗ review: 3 findings',
-      'repair 1: repairing:done checking:done rendering:active reviewing:upcoming',
+      'second try: repairing:done checking:done rendering:active reviewing:upcoming | repairing review findings',
     ]);
+  });
+
+  it('names what a repair round repairs in words while it runs', () => {
+    // Live round 9 of 2026-10-16: a forced repair of VQ-01 and VQ-05 ran and the page showed only the first try.
+    const state = run([...FIRST, ['repairing', 2]], {
+      rounds: [
+        { attempt: 1, outcome: 'review', findings: 2, defects: ['VQ-01', 'VQ-05', 'ZZ-99'] },
+      ],
+    });
+
+    expect(show(liveRows(state))[1]).toBe(
+      'second try: repairing:active checking:upcoming rendering:upcoming reviewing:upcoming | repairing text size, layout'
+    );
   });
 
   it('marks the step a round stopped at and skips the ones after it', () => {
@@ -73,7 +92,7 @@ describe('timeline grid', () => {
 
     expect(show(gridRows(rounds, [], 'needs_attention'))).toEqual([
       'first try: adapting:done checking:done rendering:failed reviewing:skipped | ✗ 2 measured',
-      'repair 1: repairing:done checking:done rendering:done reviewing:failed | ~ 1 finding open',
+      'second try: repairing:done checking:done rendering:done reviewing:failed | ~ 1 finding open',
     ]);
     expect(show(gridRows([{ attempt: 1, outcome: 'ok', findings: 0 }], [], 'ok'))).toEqual([
       'first try: adapting:done checking:done rendering:done reviewing:done | ✓ ok',
@@ -132,7 +151,27 @@ describe('timeline grid', () => {
       '~ not reviewed',
       '✗ error',
     ]);
-    expect([1, 2, 3].map(roundLabel)).toEqual(['first try', 'repair 1', 'repair 2']);
+    expect([1, 2, 3, 6].map(roundLabel)).toEqual(['first try', 'second try', 'third try', 'try 6']);
+  });
+
+  it("names the card's tries, and which round shipped when an earlier one won", () => {
+    expect(
+      triesText({
+        attempts: 1,
+        rounds: [{ attempt: 1, outcome: 'ok', findings: 0, shipped: true }],
+      })
+    ).toBe('first try');
+    const won = (shipped: number): Round[] =>
+      [1, 2].map(attempt => ({
+        attempt,
+        outcome: 'review',
+        findings: 1,
+        shipped: attempt === shipped,
+      }));
+    expect(triesText({ attempts: 2, rounds: won(2) })).toBe('second try');
+    expect(triesText({ attempts: 2, rounds: won(1) })).toBe('first try shipped of 2');
+    expect(triesText({ attempts: 2, rounds: won(0) })).toBe('2 tries'); // nothing shipped
+    expect(triesText({ attempts: 2 })).toBe('second try'); // an older result without rounds
   });
 });
 

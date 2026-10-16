@@ -105,8 +105,8 @@ and dataset names written out.
 |---|---|---|
 | `01_events.sql` | `events` | One row per line, deduplicated by `idempotency_key` (`QUALIFY ROW_NUMBER()`), with the envelope as columns and the line as `payload` |
 | `02_event_views.sql` | `data_inputs`, `chat_turns`, `pipeline_runs`, `outcomes` | One typed column per field |
-| `03_sessions.sql` | `sessions` | One row per session: data inputs, transcription offers, turns, runs, `not_ready` asks, shipped plots, `turns_to_first_plot`, keeps, `funnel_last_step` (from `outcome_only` and `data_refused` through `transcription_offered`, `data_ok`, `chatted`, `plot_not_ready`, `plot_run` and `plot_shipped` to `kept`), and `state` under a 30-minute inactivity rule (`active`, `kept`, `refined`, `abandoned_after_plot`, `abandoned_before_plot`). A transcription writes two `data_input` rows, the offer (outcome `transcribed`) and the confirmed paste; every view counts the input once and the offers apart. `not_ready` runs are never counted as runs or in the repair rate |
-| `04_usage_failures.sql` | `usage`, `input_formats`, `failures` | Usage by day, spec and library (each line under the library it was written under, so a library switch splits a session's runs correctly); data inputs by format and entry, each input under its own format; one row per failure with its kind and closed code |
+| `03_sessions.sql` | `sessions` | One row per session: data inputs, transcription offers, turns, runs, `not_ready` asks, shipped plots, `turns_to_first_plot`, keeps (copies and downloads), saves, feedback, rejections (feedback with `thumbs_down` or `bug`), `kept`, `funnel_last_step` (from `outcome_only` and `data_refused` through `transcription_offered`, `data_ok`, `chatted`, `plot_not_ready`, `plot_run` and `plot_shipped` to `kept`), and `state` under a 30-minute inactivity rule (`active`, `rejected`, `kept`, `saved`, `refined`, `abandoned_after_plot`, `abandoned_before_plot`). A session is `kept` when, after its last pipeline run, the user copied or downloaded a result (`copied_code`, `copied_image`, `downloaded_png`, `downloaded_code`, `downloaded_data`) and sent no feedback with `thumbs_down` or `bug`. A saved session is never a keep, because users also save a session to report a plot they did not like: a session whose only take-away is a save ends `saved`, and one with a `thumbs_down` or `bug` ends `rejected`. The view's header lists example sessions and how each is classified. A transcription writes two `data_input` rows, the offer (outcome `transcribed`) and the confirmed paste; every view counts the input once and the offers apart. `not_ready` runs are never counted as runs or in the repair rate |
+| `04_usage_failures.sql` | `usage`, `input_formats`, `failures` | Usage by day, spec and library (each line under the library it was written under, so a library switch splits a session's runs correctly; `sessions_kept` counts the sessions the `sessions` view calls `kept`, so run it after `03_sessions.sql`); data inputs by format and entry, each input under its own format; one row per failure with its kind and closed code |
 | `05_prices_cost.sql` | `model_prices`, `cost` | The `eu` list prices of `agents/evals/pricing.py` (a test keeps both equal) and the cost of every turn step and data-input judge call |
 
 The cost view prices the `chat_turn` and `data_input` lines only: `pipeline_run.steps` repeats the adapter's
@@ -214,8 +214,9 @@ Run these steps once, as a project owner. They write nothing but the resources n
 ## The /debug card
 
 The admin page `/debug` shows an "agent usage" card for the last 7 or 30 days: sessions, plots shipped,
-the kept rate (sessions whose user kept a result, among the sessions with a shipped plot), the repair rate
-(runs that needed more than one round), and the five most frequent specs, input formats and refusal codes.
+the kept rate (`kept` sessions as the `sessions` view defines them, among the sessions with a shipped plot),
+the repair rate (runs that needed more than one round), each with the counts behind it ("5 of 12"), and the
+five most frequent specs, input formats and refusal codes.
 It reads `GET /debug/agent-usage?days=7|30` (`api/agent_usage.py`). The API needs the linked log dataset to
 be named like the views dataset plus `_logs` (`anyplot.agent_telemetry_logs` for
 `AGENT_TELEMETRY_DATASET=anyplot.agent_telemetry`), because it queries the log view `_AllLogs` directly: it

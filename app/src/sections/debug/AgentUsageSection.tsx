@@ -3,8 +3,10 @@
  * telemetry adds up to over the last 7 or 30 days (`GET /debug/agent-usage`).
  *
  * - Four tiles: sessions, plots shipped, the kept rate (sessions with a shipped
- *   plot whose user copied, downloaded or saved it) and the repair rate (runs
- *   that needed more than one round); a rate without a base reads `—`.
+ *   plot whose user copied or downloaded a result after the last run and gave
+ *   no thumbs_down or bug; a saved session alone is no keep) and the repair rate
+ *   (runs that needed more than one round), each rate with its counts ("5 of
+ *   12"); a rate without a base reads `—`.
  * - Three short ranked lists: the specs, the data formats and the refusal
  *   codes seen most often.
  * - BigQuery not set up yet (`not_configured`), a failed query (`unavailable`)
@@ -42,7 +44,14 @@ export interface AgentUsage {
   sessions: number;
   plots_shipped: number;
   kept_rate: number | null;
+  /** Sessions kept (a copy or download after the last run, no thumbs_down or bug; a save alone is no keep). */
+  kept_sessions: number;
+  /** Sessions with a shipped plot: the kept rate's base. */
+  shipped_sessions: number;
   repair_rate: number | null;
+  repaired_runs: number;
+  /** Pipeline runs that started: the repair rate's base. */
+  runs: number;
   top_specs: UsageCount[];
   top_formats: UsageCount[];
   top_refusals: UsageCount[];
@@ -85,7 +94,11 @@ function readAgentUsage(body: unknown): AgentUsage | null {
     sessions: count(record.sessions),
     plots_shipped: count(record.plots_shipped),
     kept_rate: rate(record.kept_rate),
+    kept_sessions: count(record.kept_sessions),
+    shipped_sessions: count(record.shipped_sessions),
     repair_rate: rate(record.repair_rate),
+    repaired_runs: count(record.repaired_runs),
+    runs: count(record.runs),
     top_specs: topList(record.top_specs),
     top_formats: topList(record.top_formats),
     top_refusals: topList(record.top_refusals),
@@ -95,6 +108,10 @@ function readAgentUsage(body: unknown): AgentUsage | null {
 
 const percent = (value: number | null): string =>
   value === null ? '—' : `${Math.round(value * 100)}%`;
+
+/** The counts behind a rate ("1 of 3"), so a percentage of three sessions reads as what it is. */
+const ofTotal = (part: number, total: number): string | undefined =>
+  total > 0 ? `${part.toLocaleString('en-US')} of ${total.toLocaleString('en-US')}` : undefined;
 
 const EMPTY_TEXT: Record<'not_configured' | 'unavailable' | 'empty', string> = {
   not_configured: 'BigQuery telemetry is not configured yet',
@@ -201,8 +218,16 @@ export function AgentUsageSection({ token, reloadCounter }: AgentUsageSectionPro
           >
             <UsageTile label="sessions" value={usage.sessions.toLocaleString('en-US')} />
             <UsageTile label="plots shipped" value={usage.plots_shipped.toLocaleString('en-US')} />
-            <UsageTile label="kept rate" value={percent(usage.kept_rate)} />
-            <UsageTile label="repair rate" value={percent(usage.repair_rate)} />
+            <UsageTile
+              label="kept rate"
+              value={percent(usage.kept_rate)}
+              detail={ofTotal(usage.kept_sessions, usage.shipped_sessions)}
+            />
+            <UsageTile
+              label="repair rate"
+              value={percent(usage.repair_rate)}
+              detail={ofTotal(usage.repaired_runs, usage.runs)}
+            />
           </Box>
           <Box
             sx={{
@@ -222,7 +247,7 @@ export function AgentUsageSection({ token, reloadCounter }: AgentUsageSectionPro
 }
 
 /** One KPI tile, as the page's own KPI grid draws them. */
-function UsageTile({ label, value }: { label: string; value: string }) {
+function UsageTile({ label, value, detail }: { label: string; value: string; detail?: string }) {
   return (
     <Box
       role="group"
@@ -240,6 +265,7 @@ function UsageTile({ label, value }: { label: string; value: string }) {
       >
         {value}
       </Typography>
+      {detail && <Typography sx={{ ...listMutedSx, mt: 0.25 }}>{detail}</Typography>}
       <Typography sx={{ ...listMutedSx, mt: 0.5 }}>{label}</Typography>
     </Box>
   );

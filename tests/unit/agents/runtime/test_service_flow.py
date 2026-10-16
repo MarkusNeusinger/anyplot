@@ -52,7 +52,7 @@ from agents.anyplot.render.watermark import add_footer
 from agents.anyplot.run_queue import RunQueue
 from agents.anyplot.schemas import AdaptPlan, Verdict
 from agents.anyplot.services import Services, get_services
-from agents.anyplot.session_state import LANGUAGE, LANGUAGE_SOURCE, read_session
+from agents.anyplot.session_state import LANGUAGE, LANGUAGE_SOURCE, PENDING_REQUEST, read_session
 from agents.anyplot.settings import get_settings
 from agents.anyplot.sub_agents.adapter import ADAPTERS
 from agents.main import ACTION_LANGUAGE_LINE, MAX_CAUSE_CHARS, MAX_MESSAGE_CHARS, Runtime, app, clip_cause, get_runtime
@@ -1048,10 +1048,14 @@ async def test_the_repaired_render_is_reviewed_again_and_can_end_ok(
     assert (plot["status"], plot["attempts"], plot["residual_defects"]) == ("ok", 2, [])
     # The page's grid: the first round ended with the review's finding, the repair round passed.
     findings = len(VERDICT_REJECT["defects"])
+    # `defects`: the rubric ids the round passed on, which the page names for the repair round (live round 9).
+    first = {"attempt": 1, "outcome": "review", "findings": findings, "step": "reviewing", "shipped": False}
     assert plot["rounds"] == [
-        {"attempt": 1, "outcome": "review", "findings": findings, "step": "reviewing", "shipped": False},
-        {"attempt": 2, "outcome": "ok", "findings": 0, "step": "reviewing", "shipped": True},
+        {**first, "defects": ["VQ-03"]},
+        {"attempt": 2, "outcome": "ok", "findings": 0, "step": "reviewing", "shipped": True, "defects": []},
     ]
+    repairing = [data for name, data in events if name == "status" and data.get("step") == "repairing"]
+    assert repairing[0]["defects"] == ["VQ-03"]
     assert "24 sparse markers" in adapter_inputs(fake)[1]  # the first review's line went to the repair
     reviews = attribution_lines(caplog, "pipeline_review")
     assert [(line["attempt"], line["verdict"]) for line in reviews] == [(1, "defects"), (2, "ok")]
@@ -1265,13 +1269,28 @@ async def test_failed_render_twice_is_a_failed_result(
         "changes": [],
         "residual_defects": [],
         "rounds": [
-            {"attempt": 1, "outcome": "render_failed", "findings": 1, "step": "rendering", "shipped": False},
-            {"attempt": 2, "outcome": "render_failed", "findings": 1, "step": "rendering", "shipped": False},
+            {
+                "attempt": 1,
+                "outcome": "render_failed",
+                "findings": 1,
+                "step": "rendering",
+                "shipped": False,
+                "defects": [],
+            },
+            {
+                "attempt": 2,
+                "outcome": "render_failed",
+                "findings": 1,
+                "step": "rendering",
+                "shipped": False,
+                "defects": [],
+            },
         ],
     }
-    # The repair round's first step says how the first round ended, for the page's progress grid.
+    # The repair round's first step says how the first round ended, for the page's progress grid; a render
+    # error names no rubric id.
     repairing = [data for name, data in events if name == "status" and data.get("step") == "repairing"]
-    assert repairing == [{"step": "repairing", "attempt": 2, "outcome": "render_failed", "findings": 1}]
+    assert repairing == [{"step": "repairing", "attempt": 2, "outcome": "render_failed", "findings": 1, "defects": []}]
     assert len(backend.jobs) == 2
     (result,) = attribution_lines(caplog, "pipeline_result")
     assert (result["stage"], result["stages"]) == ("render", ["render", "render"])
@@ -2589,17 +2608,19 @@ async def test_a_wide_table_on_a_box_plot_is_offered_long_and_to_long_applies_it
     context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid))
     profile = await get_dataset_profile(context)
     assert "<user_data>" in profile["to_long"] and '"names_to": "Category"' in profile["to_long"]
-    # A language change after the paste leaves the offer the page shows exactly what `.to_long()` applies
-    # (review of #12206: names in the session language had changed under the cached card).
+    # The new names are generated text, so a language change renames them (live round 9 of 2026-10-16), and
+    # the language route answers the recomputed offer, so the page's card names what `.to_long()` applies.
     language = await client.put(f"/v1/sessions/{sid}/language", headers=HEADERS, json={"language": "de"})
     assert language.status_code == 200, language.text
+    german = {**offer, "names_to": "Kategorie", "values_to": "Wert"}
+    assert language.json()["suggestion"] == {**german, "siblings": ["Sensor_A", "Sensor_B", "Sensor_C"]}
 
     long = await client.post(f"/v1/sessions/{sid}/dataset/to_long", headers=HEADERS)
 
     assert long.status_code == 200, long.text
     body = long.json()
     assert (body["version"], body["suggestion"], body["profile"]["rows"]) == (2, None, 9)
-    assert body["bindings"] == [{"role": "category", "column": "Category"}, {"role": "value", "column": "Value"}]
+    assert body["bindings"] == [{"role": "category", "column": "Kategorie"}, {"role": "value", "column": "Wert"}]
     assert body["changes"] and body["changes"][0].startswith("pivoted 3 columns")
     view = read_session(await _session_state(client, sid))
     assert view is not None and view.dataset_version == 2 and not view.data_confirmed
@@ -2608,7 +2629,7 @@ async def test_a_wide_table_on_a_box_plot_is_offered_long_and_to_long_applies_it
     assert (again.status_code, again.json()) == (422, {"detail": "no_suggestion"})
     undone = await client.post(f"/v1/sessions/{sid}/dataset/undo", headers=HEADERS)
     assert undone.status_code == 200
-    assert undone.json()["suggestion"] == pasted.json()["suggestion"]
+    assert undone.json()["suggestion"] == language.json()["suggestion"]
 
     scatter = await open_session(client)
     refused = await client.post(f"/v1/sessions/{scatter}/dataset/to_long", headers=HEADERS)
@@ -2914,7 +2935,8 @@ async def test_a_language_chosen_in_the_chip_reaches_the_root_and_the_adapter(
     fake = swap_models("gemini", default_script())
     sid = await open_session(client)
     chosen = await put_language(client, sid, {"language": "Japanese"})
-    assert chosen.status_code == 200 and chosen.json() == {"language": "ja", "source": "chosen"}
+    # A scatter's data has no `.to_long()` offer: `suggestion` is null.
+    assert chosen.status_code == 200 and chosen.json() == {"language": "ja", "source": "chosen", "suggestion": None}
 
     events = await create_plot(client, sid)
 
@@ -3117,7 +3139,7 @@ async def test_the_language_route_sets_chosen_and_detection_never_overrides_it(
 
     chosen = await put_language(client, sid, {"language": "Klingon"})
 
-    assert (chosen.status_code, chosen.json()) == (200, {"language": "Klingon", "source": "chosen"})
+    assert (chosen.status_code, chosen.json()) == (200, {"language": "Klingon", "source": "chosen", "suggestion": None})
     assert chosen.headers["cache-control"] == "private, no-store"
     judge.script = [JudgeVerdict(verdict="in_scope", lang="de")]
     events = await say(client, sid, "Mach die Punkte größer")
@@ -3128,7 +3150,7 @@ async def test_the_language_route_sets_chosen_and_detection_never_overrides_it(
     # The answer is the stored form, which the chip shows: a code for a known name, free text as typed.
     for body, stored in (("DE", "de"), ("Deutsch", "de"), ("English", "en"), ("old  norse", "old norse")):
         answer = await put_language(client, sid, {"language": body})
-        assert answer.json() == {"language": stored, "source": "chosen"}, body
+        assert answer.json() == {"language": stored, "source": "chosen", "suggestion": None}, body
     leading = await put_language(client, sid, {"language": " de"})  # the pattern runs before `normalise`
     assert leading.status_code == 422
     view = read_session(await _session_state(client, sid))
@@ -3745,3 +3767,57 @@ async def test_the_first_typed_message_still_replaces_a_pasted_language(
 
     judge.script = [JudgeVerdict(verdict="in_scope", lang="fr")]
     assert (await paste(client, sid, GERMAN_HEADERS))["language"] == {"language": "en", "source": "detected"}
+
+
+TITLE_REQUEST = "Title: Umsatz QX7 nach Filiale und Quartal"
+
+
+async def test_a_title_asked_for_before_the_confirmation_reaches_the_first_plot(
+    client: httpx.AsyncClient, swap_models
+) -> None:
+    """Live round 9 of 2026-10-16: the user asked for a title before `.confirm()`, the root said it had noted
+    it, and the plot `.create_plot()` drew had another title. The root keeps such a request through
+    `plot_pipeline` (`not_ready`, `request_kept`), and the bare `.create_plot()` after the confirmation
+    hands it to the adapter, with the title as an expected text."""
+    script = default_script()
+    script["root"] = [
+        {
+            "call": "plot_pipeline",
+            "args": {"change_request": TITLE_REQUEST, "expected_texts": ["Umsatz QX7 nach Filiale und Quartal"]},
+        },
+        {"text": "Kept: the title comes with the first plot once you confirm the data."},
+        *script["root"],
+    ]
+    fake = swap_models("gemini", script)
+    sid = await open_session(client, with_data=False)
+    data = (CASES / "scatter-basic-matplotlib" / "data.csv").read_text()
+    pasted = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": data})
+    assert pasted.status_code == 200, pasted.text
+
+    asked = await client.post(
+        f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "Setz den Titel auf Umsatz QX7 nach Filiale"}
+    )
+
+    blocked = next(data for name, data in parse_sse(asked.text) if name == "plot")
+    assert (blocked["status"], blocked["reason"]) == ("not_ready", "data_unconfirmed")
+    assert "request_kept" not in blocked  # a root-only fact, never on the page's event
+    responses = [
+        part.function_response.response
+        for request in requests_of(fake, "root")
+        for content in request.contents
+        for part in content.parts or []
+        if part.function_response is not None and part.function_response.name == "plot_pipeline"
+    ]
+    assert responses and responses[-1]["request_kept"] is True
+
+    confirmed = await client.post(f"/v1/sessions/{sid}/dataset/confirm", headers=HEADERS)
+    assert confirmed.status_code == 200, confirmed.text
+    events = await create_plot(client, sid)
+
+    plot = next(data for name, data in events if name == "plot")
+    # Shipped; the fake render draws no such title, so the kept expected text is checked and reported missing.
+    assert plot["status"] == "needs_attention"
+    first = adapter_inputs(fake)[0]
+    assert TITLE_REQUEST in first and "Umsatz QX7 nach Filiale und Quartal" in first
+    state = await _session_state(client, sid)
+    assert state.get(PENDING_REQUEST) is None  # the shipped plot used the note

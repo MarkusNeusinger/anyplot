@@ -25,9 +25,9 @@ The coupling heuristics, all static and deliberately simple:
   a date built from literals). A literal 0 alone is a baseline, not a data-scale
   literal, and is not flagged; `max(y) * 1.15` is computed and is not flagged.
 * `color-scale`: a color mapping pinned to the catalogue's value range: `vmin`, `vmax`,
-  `center`, `vcenter`, `clim`, plotly's `zmin`/`zmax`/`zmid`, `range_color` and
-  `color_continuous_midpoint` with a literal, `levels` as a list or
-  range of literals (a count is not flagged), colorbar ticks (`cbar_kws={"ticks": [...]}`,
+  `center` (on seaborn's `heatmap` and `clustermap` only), `vcenter`, `clim`, plotly's
+  `zmin`/`zmax`/`zmid`, `range_color` and `color_continuous_midpoint` with a literal, `levels`
+  of a contour as a list or range of literals (a count is not flagged), colorbar ticks (`cbar_kws={"ticks": [...]}`,
   `colorbar(ticks=...)`, `cbar.set_ticks(...)`), `set_clim`/`clim` and a norm
   (`Normalize`, `TwoSlopeNorm`, ...) built from literals; the same 0 rule. Live test
   round 8 of 2026-10-16: heatmap-basic in seaborn kept `vmin=0, vmax=100, center=50` and
@@ -105,6 +105,8 @@ MIN_PALETTE_ENTRIES = 6
 CRITICAL_VALUES = frozenset({1.645, 1.96, 2.326, 2.576, 3.291})
 MAX_SECURITY_REASONS = 5
 MAX_SNIPPET_CHARS = 48
+MAX_LINE_SNIPPET_CHARS = 2 * MAX_SNIPPET_CHARS
+"""A line's flagged parts together (`vmin=0, vmax=100, center=50`), each part at most `MAX_SNIPPET_CHARS`."""
 
 LIMIT_METHODS = frozenset(
     {
@@ -142,6 +144,12 @@ COLOR_SCALE_KEYWORDS = frozenset(
 )
 """Keywords that pin a color mapping's range or midpoint (matplotlib, seaborn, plotly). Not `cmin`/`cmax`:
 matplotlib's `hist2d` uses them as count thresholds that hide bins, no color range."""
+CENTER_CALLS = frozenset({"heatmap", "clustermap"})
+"""The calls whose `center` is a color mapping's midpoint (seaborn); elsewhere `center` places marks (a pie,
+`nx.spring_layout`, a patch) and is no color scale (review of #12206)."""
+CONTOUR_CALLS = frozenset({"contour", "contourf", "tricontour", "tricontourf"})
+"""The calls whose `levels` are values on the color scale; seaborn's `kdeplot` takes `levels` as density
+proportions (0 to 1), which fit any data (review of #12206)."""
 COLORBAR_KEYWORDS = frozenset({"cbar_kws", "colorbar_kws"})
 NORM_CALLS: dict[str, tuple[tuple[int, ...], frozenset[str]]] = {
     "Normalize": ((0, 1), frozenset({"vmin", "vmax"})),
@@ -281,13 +289,22 @@ def _security(code: str, library: str) -> list[str]:
 
 
 def _coupling(code: str, tree: ast.Module) -> dict[str, list[tuple[int, str]]]:
-    """Per category, `(line, snippet)` for each flagged line, in line order, one per line."""
+    """Per category, `(line, snippet)` for each flagged line, in line order, one per line.
+
+    A line's snippet names every flagged part of it, joined with `, ` (review of #12206: only the first literal
+    reached the hint, so `vmax` and `center` after `vmin` were dropped), and a part inside another flagged part
+    of the line counts once (a `Normalize(vmin=0, vmax=1)` call and its keywords).
+    """
     aliases = _aliases(tree)
     generators = _generator_names(tree, aliases)
-    found: dict[str, dict[int, str]] = {category: {} for category, _, _ in _CATEGORIES}
+    found: dict[str, dict[int, list[ast.expr | ast.keyword]]] = {category: {} for category, _, _ in _CATEGORIES}
+    snippets: dict[str, dict[int, str]] = {category: {} for category, _, _ in _CATEGORIES}
 
     def flag(category: str, node: ast.expr | ast.keyword) -> None:
-        found[category].setdefault(node.lineno, _snippet(ast.get_source_segment(code, node) or ast.unparse(node)))
+        parts = found[category].setdefault(node.lineno, [])
+        if any(_inside(node, part) for part in parts):
+            return
+        parts[:] = [part for part in parts if not _inside(part, node)] + [node]
 
     for node in ast.walk(tree):
         if isinstance(node, ast.Call):
@@ -315,13 +332,28 @@ def _coupling(code: str, tree: ast.Module) -> dict[str, list[tuple[int, str]]]:
             elif isinstance(node.value, str) and _STATISTIC.search(node.value):
                 flag("statistics", node)
 
+    for category, lines in found.items():
+        for line, parts in lines.items():
+            ordered = sorted(parts, key=lambda part: (part.col_offset, part.end_col_offset or 0))
+            texts = [_snippet(ast.get_source_segment(code, part) or ast.unparse(part)) for part in ordered]
+            snippets[category][line] = _snippet(", ".join(dict.fromkeys(texts)), MAX_LINE_SNIPPET_CHARS)
     regions = find_regions(code, tree)
     for palette in regions.palettes:
         is_imprint = palette.name in IMPRINT_NAMES or palette.entries[0].upper() == _IMPRINT_GREEN
         if is_imprint and len(palette.entries) < MIN_PALETTE_ENTRIES:
             snippet = f"{palette.name} ({len(palette.entries)} entries)"
-            found["palette"].setdefault(palette.span.first_line, snippet)
-    return {category: sorted(lines.items()) for category, lines in found.items() if lines}
+            snippets["palette"].setdefault(palette.span.first_line, snippet)
+    return {category: sorted(lines.items()) for category, lines in snippets.items() if lines}
+
+
+def _inside(inner: ast.expr | ast.keyword, outer: ast.expr | ast.keyword) -> bool:
+    """Whether `inner`'s source span lies within `outer`'s (the same node included)."""
+    start = (inner.lineno, inner.col_offset)
+    end = (inner.end_lineno or inner.lineno, inner.end_col_offset or 0)
+    return (outer.lineno, outer.col_offset) <= start and end <= (
+        outer.end_lineno or outer.lineno,
+        outer.end_col_offset or 0,
+    )
 
 
 def _aliases(tree: ast.Module) -> dict[str, str]:
@@ -425,9 +457,11 @@ def _color_scale_literals(node: ast.Call, method: str | None) -> list[ast.expr |
     found: list[ast.expr | ast.keyword] = []
     for keyword in node.keywords:
         value = keyword.value
+        if keyword.arg == "center" and method not in CENTER_CALLS:
+            continue  # a pie's, a network layout's or a patch's center places marks, it maps no color
         if keyword.arg in COLOR_SCALE_KEYWORDS and _has_literal([value]):
             found.append(keyword)
-        elif keyword.arg == "levels" and _number(value) is None and _has_literal([value]):
+        elif keyword.arg == "levels" and method in CONTOUR_CALLS and _number(value) is None and _has_literal([value]):
             found.append(keyword)
         elif keyword.arg == "ticks" and method == "colorbar" and _has_literal([value]):
             found.append(keyword)
@@ -488,9 +522,9 @@ def _annotation_literal(node: ast.Call, method: str) -> bool:
 # --- formatting ----------------------------------------------------------------------------
 
 
-def _snippet(text: str) -> str:
+def _snippet(text: str, limit: int = MAX_SNIPPET_CHARS) -> str:
     text = _WHITESPACE.sub(" ", text).strip()
-    return text if len(text) <= MAX_SNIPPET_CHARS else text[: MAX_SNIPPET_CHARS - 1] + "…"
+    return text if len(text) <= limit else text[: limit - 1] + "…"
 
 
 def _clip(text: str) -> str:

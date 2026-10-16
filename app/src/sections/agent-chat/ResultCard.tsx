@@ -45,7 +45,7 @@ import { IMAGE_FAILURE } from 'src/sections/agent-chat/messages';
 import { ResultFeedback } from 'src/sections/agent-chat/ResultFeedback';
 import { RoundGrid } from 'src/sections/agent-chat/RoundGrid';
 import { actionButtonSx, bodyTextSx, labelSx, smallText } from 'src/sections/agent-chat/styles';
-import { gridRows } from 'src/sections/agent-chat/timeline';
+import { gridRows, triesText } from 'src/sections/agent-chat/timeline';
 import { colors, fontSize, overlayButtonSx, typography } from 'src/theme';
 
 const CodeHighlighter = lazy(() => import('src/components/CodeHighlighter'));
@@ -201,9 +201,8 @@ export function ResultCard({
   };
 
   const overlayBtnSx = overlayButtonSx(isDark);
-  // Counted as repair rounds, the way the progress timeline names them: "2 attempts" read as many runs.
-  const repairs = result.attempts - 1;
-  const attempts = repairs < 1 ? 'first try' : `${repairs} repair${repairs === 1 ? '' : 's'}`;
+  // Named the way the progress grid names its rounds, and which round shipped when an earlier one won.
+  const attempts = triesText(result);
   const rounds = gridRows(result.rounds ?? [], [], result.status);
   const header = (
     <Box

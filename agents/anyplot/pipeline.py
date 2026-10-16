@@ -112,7 +112,7 @@ from google.adk.workflow._errors import DynamicNodeFailError
 from google.genai import types
 from pydantic import ValidationError
 
-from core.defects import DEFECT_RE
+from core.defects import DEFECT_RE, KNOWN_IDS
 
 from . import telemetry
 from .briefs import adapter_profile, profile_summary, spec_brief
@@ -147,6 +147,7 @@ from .schemas import (
     MAX_NOTE_CHARS,
     MAX_NOTES,
     MAX_RESIDUAL_DEFECTS,
+    MAX_ROUND_DEFECTS,
     MAX_USER_REQUESTS,
     MAX_USER_REQUESTS_CHARS,
     AdaptPlan,
@@ -522,13 +523,14 @@ def _end_attempt(run: Run, stage: Stage, feedback: Sequence[str] = ()) -> None:
         run.retried_rounds.add(current)
         run.same_round_after.append(run.attempts)
         return
-    findings = len(_clip_feedback(list(feedback)))
+    clipped = _clip_feedback(list(feedback))
     run.rounds.append(
         Round(
             attempt=max(round_number(run, run.attempts), 1),
             outcome=ROUND_OUTCOMES[stage],
-            findings=findings,
+            findings=len(clipped),
             step=run.step,
+            defects=[found for found in _defect_ids(clipped) if found in KNOWN_IDS][:MAX_ROUND_DEFECTS],
         )
     )
 
@@ -556,7 +558,7 @@ def _status(run: Run, step: RoundStep, attempt: int, previous: Round | None = No
     run.step = step
     status: dict[str, Any] = {"step": step, "attempt": round_number(run, attempt)}
     if previous is not None:
-        status.update(outcome=previous.outcome, findings=previous.findings)
+        status.update(outcome=previous.outcome, findings=previous.findings, defects=list(previous.defects))
     return Event(custom_metadata={STATUS_KEY: status})
 
 
@@ -591,17 +593,23 @@ PENDING_REASONS: frozenset[str] = frozenset({"data_unconfirmed", "incomplete_bin
 """The `not_ready` reasons a first plot's request waits through: the user confirms or binds, then plots again."""
 
 
-def keep_pending_request(state: Any, args: PipelineArgs, reason: NotReadyReason | None) -> None:
-    """Keep a first plot's `change_request` that stopped on `reason` for the next run (`PENDING_REQUEST`).
+def keep_pending_request(state: Any, args: PipelineArgs, reason: NotReadyReason | None) -> bool:
+    """Keep a first plot's `change_request` that stopped on `reason` for the next run (`PENDING_REQUEST`);
+    whether this run's own request or texts were kept (`PlotResult.request_kept`).
 
     A live test of 2026-10-15: the user's step-2 note ("only co2_per_capita, title ...") made
     the root change the bindings, which asked for `.confirm()` again; the plot stopped on
     `data_unconfirmed`, and the title never reached the plot that the next `.create_plot()`
     drew. A change of an existing version (`base="previous"`) is not kept: it names a plot
     that is there, and the root repeats it once the reason is gone.
+
+    Live round 9 of 2026-10-16: a title asked for before `.confirm()` is the same case, and the root
+    keeps it only through this path (`root.md`); the result's `request_kept` says that it did.
     """
-    if reason in PENDING_REASONS:
-        hold_request(state, args)
+    if reason not in PENDING_REASONS or args.base == "previous" or not (args.change_request or args.expected_texts):
+        return False
+    hold_request(state, args)
+    return True
 
 
 def hold_request(state: Any, args: PipelineArgs) -> None:
@@ -1283,7 +1291,7 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     ledger = ledger_for(ctx.invocation_id)
     view, dataset, not_ready = load_inputs(ctx, services)
     if not_ready is not None or view is None or dataset is None:
-        keep_pending_request(ctx.state, node_input, not_ready)
+        kept = keep_pending_request(ctx.state, node_input, not_ready)
         # An attempted plot the data was not ready for is a run of its own in the telemetry: the funnel sees it.
         index = telemetry.run_index(ctx.session.id, ctx.invocation_id)
         telemetry.write(
@@ -1295,7 +1303,7 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
             status="not_ready",
             reason=not_ready or "no_dataset",
         )
-        yield _result_event(PlotResult.not_ready(not_ready or "no_dataset"))
+        yield _result_event(PlotResult.not_ready(not_ready or "no_dataset", request_kept=kept))
         return
     ledger.pipeline_active = True
     if ledger.run_slot is not None and not await ledger.run_slot():
