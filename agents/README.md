@@ -105,7 +105,7 @@ Three rules hold for everything here:
 | `AGENT_SELF_REVIEW` | `true` | The adapter proofreads its render once before the review, against the rubric the reviewer scores with |
 | `AGENT_REPAIR_SELF_REVIEW` | `false` | A repair round proofreads its render too (before 2026-10-14 every round did) |
 | `AGENT_SHIP_CLEAN_MARGIN` | `3` | `catalogue` reviews with `AGENT_SHIP_BEST`: a render without measured findings ships over a higher-scored one with them when it meets the ship bar or scores at most this many points below it |
-| `AGENT_CHECK_RETRY` | `true` | An adapter answer that fails its check (edits that do not apply, a validator finding, a broken schema, code that crashes) gets one more call in the same round, which may send a full file; a second miss ends the round |
+| `AGENT_CHECK_RETRY` | `true` | An adapter answer that fails its check (edits that do not apply, a validator finding, a broken schema, code that crashes) gets one more call in the same round, which may send a full file; a second miss ends the round, unless its only failure is a changed protected theme statement, which is then restored (`edits.restore_protected`) |
 | `AGENT_ROOT_THINKING_BUDGET` | `1024` | Claude only: adaptive thinking of the root, with that many tokens added to its output cap; 0 turns it off |
 | `AGENT_ADAPTER_THINKING_BUDGET` | `8192` | The same for the adapter (2,048 before 2026-10-14, when effort `high` thought past it); the eval harness overrides both with `--thinking-budget ROOT,ADAPTER` |
 | `AGENT_REVIEWER_THINKING_BUDGET` | `4096` | The same for the reviewer; 0 turns its thinking off |

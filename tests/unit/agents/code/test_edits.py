@@ -2,6 +2,7 @@
 
 import pytest
 
+from agents.anyplot.code import edits
 from agents.anyplot.code.edits import (
     FAILURE_KINDS,
     MAX_CHANGE_LITERAL_CHARS,
@@ -12,6 +13,7 @@ from agents.anyplot.code.edits import (
     new_literal_chars,
     new_literals,
     protected_drift,
+    restore_protected,
 )
 from agents.anyplot.schemas import MAX_EDITS, MAX_FEEDBACK, MAX_LINE_CHARS, AdaptPlan, Edit
 
@@ -342,6 +344,104 @@ class TestThemeTokenDrift:
 
         assert result.kinds == ("drift:theme_token",)
         assert "theme token PAGE_BG; copy its line unchanged from the current code" in result.failures[0]
+
+
+PLOT_CHANGE = ("ax.set_ylim(0, 100)\n", "ax.set_ylim(0, 50)\n")
+"""A plot change the restore must keep: it is outside every protected statement."""
+
+
+class TestRestoreProtected:
+    """Owner decision 2026-10-16: drift of the protected theme statements alone is restored, a rebind never."""
+
+    @staticmethod
+    def drifted(*replacements: tuple[str, str]) -> str:
+        code = WORKING.replace(*PLOT_CHANGE)
+        for old, new in replacements:
+            assert old in code
+            code = code.replace(old, new)
+        return code
+
+    @pytest.mark.parametrize(
+        ("replacements", "kinds"),
+        [
+            ((('getenv("ANYPLOT_THEME", "light")', 'getenv("ANYPLOT_THEME", "dark")'),), {"drift:theme"}),
+            ((('THEME = os.getenv("ANYPLOT_THEME", "light")', 'THEME = "light"'),), {"drift:theme"}),
+            ((('else "#1A1A17"\nINK', 'else "#000000"\nINK'),), {"drift:theme_token"}),
+            # A token that no longer tests the theme is no token in the plan's code; it is found by name.
+            (
+                (('PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"', 'PAGE_BG = "#FFFFFF"'),),
+                {"drift:theme_token"},
+            ),
+            ((("dpi=400, facecolor=PAGE_BG)", "dpi=100, facecolor=PAGE_BG)"),), {"drift:savefig"}),
+            (
+                (
+                    ('getenv("ANYPLOT_THEME", "light")', 'getenv("ANYPLOT_THEME", "dark")'),
+                    ('INK = "#1A1A17" if', 'INK = "#FF00FF" if'),
+                    ("dpi=400, facecolor=PAGE_BG)", "dpi=100)"),
+                ),
+                {"drift:theme", "drift:theme_token", "drift:savefig"},
+            ),
+        ],
+    )
+    def test_each_restorable_kind_is_restored_and_the_plot_change_kept(
+        self, replacements: tuple[tuple[str, str], ...], kinds: set[str]
+    ) -> None:
+        drifted = self.drifted(*replacements)
+        applied = apply_plan(WORKING, AdaptPlan(full_code=drifted))
+        assert applied.code is None and set(applied.kinds) == kinds and applied.drifted == drifted
+
+        restored = restore_protected(WORKING, drifted)
+
+        assert restored == WORKING.replace(*PLOT_CHANGE)
+        assert protected_drift(WORKING, restored) == []
+
+    def test_a_protected_statement_at_the_end_of_the_file_keeps_the_code_after_it(self) -> None:
+        base = WORKING.rstrip("\n")  # the savefig ends the file without a line break
+        drifted = base.replace("dpi=400, facecolor=PAGE_BG)", "dpi=100)") + "\nplt.close()\n"
+
+        assert restore_protected(base, drifted) == base + "\nplt.close()\n"
+
+    def test_a_rebind_is_never_restored(self) -> None:
+        drifted = self.drifted(
+            ('INK = "#1A1A17" if', 'INK = "#FF00FF" if'),
+            ("df = load_user_data()\n", 'df = load_user_data()\nPAGE_BG = "#FF00FF"\n'),
+        )
+        applied = apply_plan(WORKING, AdaptPlan(full_code=drifted))
+        assert "drift:rebind" in applied.kinds and applied.drifted == drifted
+
+        assert restore_protected(WORKING, drifted) is None
+
+    def test_a_removed_protected_statement_is_not_restored(self) -> None:
+        drifted = self.drifted(('INK = "#1A1A17" if THEME == "light" else "#F0EFE8"\n', ""))
+
+        assert restore_protected(WORKING, drifted) is None
+
+    def test_a_statement_sharing_its_line_is_not_restored(self) -> None:
+        drifted = self.drifted(('INK = "#1A1A17" if', 'x = 1; INK = "#FF00FF" if'))
+
+        assert restore_protected(WORKING, drifted) is None
+
+    def test_a_base_line_shared_with_another_statement_is_not_restored(self) -> None:
+        """Copying the base's lines back would also bring back the old `size = 130` the repair changed (#12209)."""
+        page_bg = 'PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"'
+        base = WORKING.replace(page_bg, f"size = 130; {page_bg}")
+        drifted = base.replace(f"size = 130; {page_bg}", 'size = 90\nPAGE_BG = "#FFFFFF"')
+
+        assert protected_drift(base, drifted) != []
+        assert restore_protected(base, drifted) is None
+
+    def test_a_splice_that_does_not_parse_is_not_restored(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        drifted = self.drifted(('else "#1A1A17"\nINK', 'else "#000000"\nINK'))
+        monkeypatch.setattr(edits, "_splice", lambda code, splices: code + "\nif (:\n")
+
+        assert restore_protected(WORKING, drifted) is None
+
+    def test_code_without_drift_or_without_a_parse_has_nothing_to_restore(self) -> None:
+        assert restore_protected(WORKING, WORKING.replace(*PLOT_CHANGE)) is None
+        assert restore_protected(WORKING, "if (:\n") is None
+
+    def test_failed_edits_carry_no_drifted_code(self) -> None:
+        assert apply(("missing", "x")).drifted is None
 
 
 class TestTolerantMatching:

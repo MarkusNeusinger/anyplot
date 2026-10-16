@@ -49,6 +49,16 @@ re-stated token with the same value in other quotes, spacing or comment passes),
 THEME and the theme tokens may not be bound again anywhere (a later `PAGE_BG = ...`
 passes the overlap check above but would recolour the plot).
 
+**Restoring drift.** A plan refused only because it changed protected statements
+(`drift:theme`, `drift:theme_token`, `drift:savefig`, never `drift:rebind`) keeps its
+result in `AppliedPlan.drifted`. `restore_protected` puts the base's text of each
+changed statement back over the plan's version of it, by name (the module-level
+assignment of THEME or of the token, the final module-level savefig statement). It
+restores nothing when a protected statement is gone, shares its lines with another
+statement in the plan's code or the base, or the result does not parse or still drifts. The pipeline calls it only
+when the round's check retry is spent (owner decision, 2026-10-16), so the adapter
+first gets its guided retry.
+
 Failure lines are repair feedback (`Line`): one line each, at most `MAX_LINE_CHARS`
 characters, quoting at most `MAX_QUOTE_CHARS` characters of code. Next to them,
 `AppliedPlan.kinds` names each failure by a fixed, content-free kind (`FAILURE_KINDS`)
@@ -132,6 +142,12 @@ class AppliedPlan:
     failures: list[str] = field(default_factory=list)
     kinds: tuple[str, ...] = ()
     tolerant: tuple[str, ...] = ()
+    drifted: str | None = None
+    """The plan's result when only `protected_drift` refused it (every edit applied), for `restore_protected`."""
+
+
+RESTORABLE_DRIFT: frozenset[str] = frozenset({"drift:theme", "drift:theme_token", "drift:savefig"})
+"""The drift kinds `restore_protected` may undo; a theme name bound again (`drift:rebind`) is never restored."""
 
 
 def apply_plan(working: str, plan: AdaptPlan) -> AppliedPlan:
@@ -143,7 +159,97 @@ def apply_plan(working: str, plan: AdaptPlan) -> AppliedPlan:
     if not drift:
         return applied
     lines = _with_drift_reminder([line for _, line in drift])
-    return AppliedPlan(None, lines[:MAX_FEEDBACK], tuple(kind for kind, _ in drift), applied.tolerant)
+    kinds = tuple(kind for kind, _ in drift)
+    return AppliedPlan(None, lines[:MAX_FEEDBACK], kinds, applied.tolerant, drifted=applied.code)
+
+
+def restore_protected(base: str, code: str) -> str | None:
+    """`code` with the base's text put back over every protected statement it changed, or None.
+
+    Only when every drift of `code` against `base` is in `RESTORABLE_DRIFT`; a rebind,
+    a removed protected statement, one that shares its lines with another statement
+    (in the plan's code or in the base),
+    a result that does not parse or one that still drifts restores nothing. Each
+    replaced region is a whole module-level statement's lines, so the splice keeps
+    the code around it as the plan wrote it.
+    """
+    drift = _drift(base, code)
+    if not drift or not {kind for kind, _ in drift} <= RESTORABLE_DRIFT:
+        return None
+    try:
+        before_tree, after_tree = ast.parse(base), ast.parse(code)
+    except SyntaxError:
+        return None
+    before, after = find_regions(base, before_tree), find_regions(code, after_tree)
+    index = SourceIndex(code)
+    assigned: dict[str, list[ast.stmt]] = {}
+    for stmt in after_tree.body:
+        names = _module_assignment(stmt)
+        if names is not None:
+            assigned.setdefault(names, []).append(stmt)
+
+    def statement(names: str) -> Span | None:
+        found = assigned.get(names, [])
+        return index.lines_span(found[0]) if len(found) == 1 else None
+
+    splices: list[tuple[Span, str]] = []
+    pairs: list[tuple[Span, Span | None]] = []
+    if before.theme is not None:
+        pairs.append((before.theme.span, statement(THEME_NAME)))
+    pairs += [(region.span, statement(region.name)) for region in before.theme_tokens]
+    if before.savefig is not None and before.savefig.statement is not None:
+        pairs.append((before.savefig.statement, after.savefig.statement if after.savefig is not None else None))
+    for base_span, target in pairs:
+        if target is not None and _meaning(base, base_span) == _meaning(code, target):
+            continue
+        text = base[base_span.start : base_span.end]
+        # Both sides must be one statement on their lines: a line shared on either side would drop or copy another.
+        if target is None or not _single_statement(code[target.start : target.end]) or not _single_statement(text):
+            return None
+        if not text.endswith(("\n", "\r")) and target.end < len(code):
+            text += "\n"  # the base's statement ended the file; here code follows it
+        splices.append((target, text))
+    restored = _splice(code, splices)
+    if restored is None:
+        return None
+    try:
+        ast.parse(restored)
+    except SyntaxError:
+        return None
+    return None if _drift(base, restored) else restored
+
+
+def _module_assignment(stmt: ast.stmt) -> str | None:
+    """The names a module-level `Assign` or `AnnAssign` binds, joined as `Region.name` joins them."""
+    if isinstance(stmt, ast.Assign):
+        targets = stmt.targets
+    elif isinstance(stmt, ast.AnnAssign) and stmt.value is not None:
+        targets = [stmt.target]
+    else:
+        return None
+    if not all(isinstance(target, ast.Name) for target in targets):
+        return None
+    return ", ".join(target.id for target in targets if isinstance(target, ast.Name))
+
+
+def _single_statement(text: str) -> bool:
+    """Whether whole lines hold exactly one statement, so replacing them drops nothing else."""
+    try:
+        return len(ast.parse(text).body) == 1
+    except SyntaxError:
+        return False
+
+
+def _splice(code: str, splices: list[tuple[Span, str]]) -> str | None:
+    """`code` with each span replaced by its text; None when two spans overlap."""
+    cursor, parts = 0, []
+    for span, replacement in sorted(splices, key=lambda splice: splice[0].start):
+        if span.start < cursor:
+            return None
+        parts += [code[cursor : span.start], replacement]
+        cursor = span.end
+    parts.append(code[cursor:])
+    return "".join(parts)
 
 
 def protected_drift(base: str, code: str) -> list[str]:

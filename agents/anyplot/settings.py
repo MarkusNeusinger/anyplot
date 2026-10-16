@@ -268,7 +268,8 @@ class AgentSettings(BaseSettings):
     """`AGENT_CHECK_RETRY`: an adapter answer that fails its check (edits that do not apply, a validator
     finding, a broken schema, code that crashes) gets one more call in the same round, which may send a
     full file, instead of ending the round; a second miss ends it. On since 2026-10-13: a failed edit
-    apply in a repair round had shipped an earlier, unreviewed render."""
+    apply in a repair round had shipped an earlier, unreviewed render. A miss that only changed the
+    protected theme statements, with no retry left, is restored instead (`edits.restore_protected`)."""
 
     repair_sees_render: bool = False
     """Experiments (`AGENT_REPAIR_SEES_RENDER`): a repair sees the render the review's findings describe,

@@ -387,6 +387,9 @@ class PipelineRun(_Event):
     reviewer_defects: list[DefectId] = _list()
     residual_defects: list[DefectId] = _list()
     sandbox_failures: list[SandboxFailure] = _list()
+    drift_restored: bool = False
+    """A plan's drift of the protected theme statements was restored after the round's check retry
+    (`edits.restore_protected`)."""
     adapt_ms: Ms = 0
     check_ms: Ms = 0
     render_ms: Ms = 0
