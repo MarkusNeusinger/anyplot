@@ -9,4 +9,4 @@
   most 201 lines besides its 4,000 characters, and a reading that runs out of time or
   output room is `422 unparseable` with a cause that names the text's lines and characters
   and asks for a separator; only an error, a quota or an unparseable answer stays
-  `503 guard_unavailable`.
+  `503 guard_unavailable`. (#12202)
