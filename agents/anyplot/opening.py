@@ -320,8 +320,9 @@ def judged_view(parsed: ParsedDataset) -> JudgedView:
     200 characters) instead of the profile's 40-character display copy. The top
     values walk the column the way the profile does (`parse._profile_column`): by
     frequency, until `listed_values` distinct display copies are found. Values whose
-    display copies coincide count once in the profile, so every one of them is judged,
-    and the lower-ranked values the profile reaches past them are judged too.
+    display copies coincide count once in the profile, so every full value behind a
+    listed copy is judged, however rare and wherever it ranks (review of #12206: a rare
+    variant ranked past the last listed copy went unjudged), in the order of frequency.
     """
     reader = csv.reader(io.StringIO(parsed.csv))
     columns = next(reader)
@@ -331,15 +332,17 @@ def judged_view(parsed: ParsedDataset) -> JudgedView:
     for index, name in enumerate(columns):
         if dtypes.get(name) not in ("text", "boolean"):
             continue
-        counts = Counter(row[index] for row in rows if index < len(row) and row[index])
-        values: list[str] = []
-        copies: set[str] = set()
-        limit = listed_values(len({display_copy(value) for value in counts}))
-        for value, _ in counts.most_common():
-            values.append(value)
-            copies.add(display_copy(value))
-            if len(copies) == limit:
+        ranked = [
+            value for value, _ in Counter(row[index] for row in rows if index < len(row) and row[index]).most_common()
+        ]
+        limit = listed_values(len({display_copy(value) for value in ranked}))
+        listed: list[str] = []  # the display copies the profile lists, in its order
+        for value in ranked:
+            if len(listed) == limit:
                 break
+            if display_copy(value) not in listed:
+                listed.append(display_copy(value))
+        values = [value for value in ranked if display_copy(value) in listed]
         if values:
             top_values[name] = values
     return JudgedView(columns=columns, top_values=top_values, sample=rows[:MAX_SAMPLE_ROWS])

@@ -48,6 +48,18 @@ class TestParity:
         assert len(view.top_values["label"]) == MAX_TOP_VALUES == len(parsed.profile.columns[0].top)
         assert INJECTION in judged_text(text)  # the fourth most frequent value, missed before
 
+    def test_a_rare_variant_behind_a_listed_display_copy_is_judged_wherever_it_ranks(self) -> None:
+        """Review of #12206: the walk stopped at the last listed copy, before a rarer full value of an earlier one."""
+        stem = "x" * 45
+        values = [f"{stem} first"] * 6 + ["other"] * 5 + [f"{stem} {INJECTION}"]
+        text = "label\n" + "\n".join(values) + "\n"
+        assert display_copy(f"{stem} first") == display_copy(f"{stem} {INJECTION}")
+
+        view = judged_view(parse_dataset(text))
+
+        assert view.top_values["label"] == [f"{stem} first", "other", f"{stem} {INJECTION}"]
+        assert INJECTION in judged_text(text)
+
     def test_the_judge_sees_every_value_of_a_column_the_profile_lists_in_full(self) -> None:
         values = ["alpha"] * 3 + ["beta"] * 2 + ["gamma", "delta", "omega", INJECTION]
         text = "label\n" + "\n".join(values) + "\n"
