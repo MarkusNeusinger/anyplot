@@ -506,16 +506,13 @@ class TestJudge:
             await FakeJudge(delay_s=0.2, timeout_s=0.05).judge("text", "rubric")
         assert slow.value.failure == "timeout"
 
-        cut = AnswerCutOff("the judge stopped at its output cap")
+        cut_judge = FakeJudge(transcriptions=[AnswerCutOff("the judge stopped at its output cap")])
         with pytest.raises(JudgeUnavailable) as long:
-            await FakeJudge(transcriptions=[cut, AnswerCutOff("again")]).transcribe("text", "rubric")
+            await cut_judge.transcribe("text", "rubric")
         assert long.value.failure == "cut_off"
+        assert len(cut_judge.transcribe_calls) == 1  # deterministic: the same text meets the same cap, no retry
 
         monkeypatch.setattr(models, "JUDGE_RETRY_BACKOFF_S", 0.2)
-        with pytest.raises(JudgeUnavailable) as cut_then_slow:  # the budget ends in the wait after a cut-off
-            await FakeJudge(transcriptions=[cut], timeout_s=0.05).transcribe("text", "rubric")
-        assert cut_then_slow.value.failure == "cut_off"
-
         with pytest.raises(JudgeUnavailable) as quota_then_slow:  # after a quota the timeout is the outage's
             await FakeJudge([RuntimeError("quota")], timeout_s=0.05).judge("text", "rubric")
         assert quota_then_slow.value.failure == "error"
@@ -528,14 +525,26 @@ class TestJudge:
         judge = make_judge_client(CLAUDE)
         assert isinstance(judge, AnthropicJudge)
         table = {"columns": ["v"], "rows": [["1"]], "note": ""}
-        client = FakeAnthropic(
-            {"unknown": [{"json": table, "stop": "max_tokens"}, {"json": table, "stop": "max_tokens"}]}
-        )
+        client = FakeAnthropic({"unknown": [{"json": table, "stop": "max_tokens"}]})
         judge.__dict__["_client"] = client
 
         with pytest.raises(JudgeUnavailable) as caught:
             await judge.transcribe("<user_text>1 2 3</user_text>", "# Table transcriber")
-        assert caught.value.failure == "cut_off" and len(client.calls) == 2
+        assert caught.value.failure == "cut_off" and len(client.calls) == 1
+
+    async def test_an_answer_past_the_schemas_bounds_is_cut_off(self) -> None:
+        """Review of #12202: 201 rows break `TranscribedTable`; that is the text's size, not an outage."""
+        from agents.anyplot.data.transcribe import MAX_TRANSCRIBE_ROWS
+
+        judge = make_judge_client(CLAUDE)
+        assert isinstance(judge, AnthropicJudge)
+        table = {"columns": ["v"], "rows": [["1"]] * (MAX_TRANSCRIBE_ROWS + 1), "note": ""}
+        client = FakeAnthropic({"unknown": [{"json": table}]})
+        judge.__dict__["_client"] = client
+
+        with pytest.raises(JudgeUnavailable) as caught:
+            await judge.transcribe("<user_text>1 2 3</user_text>", "# Table transcriber")
+        assert caught.value.failure == "cut_off" and len(client.calls) == 1
 
     async def test_anthropic_judge_transcribes_under_the_table_format(self) -> None:
         """The same client reads free text as a table: a larger cap, the table schema, thinking off."""

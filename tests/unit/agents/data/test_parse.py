@@ -3288,13 +3288,16 @@ class TestHeaderlessList:
 
         assert parsed.profile.columns[0].name == "2024" and parsed.profile.rows == 2
 
-    def test_a_list_one_row_short_of_the_cap_with_its_first_line_keeps_the_first_reading(self) -> None:
-        text = "1\n" * (MAX_ROWS + 1)  # the first line as a row would be one row too many
+    def test_a_list_one_value_past_the_cap_is_refused_not_cut(self) -> None:
+        """Review of #12202: read as a header, the first value would be lost; read as a row, one row too many."""
+        with pytest.raises(ParseError) as caught:
+            parse_dataset("1\n" * (MAX_ROWS + 1))
 
-        parsed = parse_dataset(text)
-
-        assert parsed.profile.rows == MAX_ROWS and parsed.profile.columns[0].name == "1"
-        assert "every header looks like a value" in " ".join(parsed.warnings)
+        assert caught.value.code == "too_many_rows"
+        assert caught.value.message == (
+            f"the list has {MAX_ROWS + 1:,} values and no header line; at most {MAX_ROWS:,} rows are read"
+        )
+        assert parse_dataset("1\n" * MAX_ROWS).profile.rows == MAX_ROWS  # at the cap every value is a row
 
 
 XY_ROLES = [

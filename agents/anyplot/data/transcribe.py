@@ -50,17 +50,24 @@ class TranscribedTable(BaseModel):
     note: str = Field(default="", max_length=MAX_TRANSCRIBE_NOTE_CHARS)
 
 
-MAX_TRANSCRIBE_LINES = MAX_TRANSCRIBE_ROWS + 1
-"""The most non-blank lines of text the model reads as a table: a header and `MAX_TRANSCRIBE_ROWS`
-rows. Text of more lines would need a longer table than the model may write, and a model
-does not copy hundreds of lines reliably within `models.TRANSCRIBE_TIMEOUT_S` (live round 7
-of 2026-10-16: 800 lines of numbers timed out every time); above it the parser's answer stands."""
+MAX_TRANSCRIBE_LINES = MAX_TRANSCRIBE_ROWS
+"""The most non-blank lines of text the model reads as a table: `MAX_TRANSCRIBE_ROWS`, so that also
+a list without a header line, every line a row, fits the schema (`TranscribedTable`). Text of more
+lines would need a longer table than the model may write, and a model does not copy hundreds of
+lines reliably within `models.TRANSCRIBE_TIMEOUT_S` (live round 7 of 2026-10-16: 800 lines of
+numbers timed out every time); above it free text is refused with this limit as its cause. A line
+that holds several rows can still make a longer table: the model's answer past the schema's bounds
+is `models.AnswerCutOff`, which the route words as the text's size."""
 
-MAX_CATEGORY_WORDS = 4
-"""The most words a cell of a one-column category list holds; a longer line reads as prose."""
+MAX_CATEGORY_WORDS = 5
+"""The most words a cell of a one-column category list holds (a Likert answer such as `stimme eher
+nicht zu`); a longer line reads as prose."""
+MIN_SENTENCE_WORDS = 3
+"""The fewest words that make a line ending in `.`, `!` or `?` a sentence; `ca.` or `Nr.` is a label."""
 
 _NUMBER_TOKEN = re.compile(r"(?:^|\s)[-+]?\.?\d")
 """A number that stands as a word of its own, as in `Hund 7`: a label with its value, no category."""
+_DIGITS = re.compile(r"\d+")
 _SENTENCE_END = (".", "!", "?", ":", ";")
 
 
@@ -82,6 +89,16 @@ def transcribe_refusal(text: str) -> str | None:
     if lines > MAX_TRANSCRIBE_LINES:
         return f"the text has {lines:,} lines, more than the {MAX_TRANSCRIBE_LINES:,} the model that reads free text as a table takes"
     return None
+
+
+def near_transcribe_cap(text: str) -> bool:
+    """Whether the text is at least half of what the transcriber takes, by characters or by lines.
+
+    Only such a text can be why a transcription ran out of time: a short one that times out
+    met a stalled endpoint, an outage (Fable and Gemini review of #12202)."""
+    stripped = text.strip()
+    lines = sum(1 for line in stripped.splitlines() if line.strip())
+    return 2 * len(stripped) >= MAX_TRANSCRIBE_CHARS or 2 * lines >= MAX_TRANSCRIBE_LINES
 
 
 def transcribable(text: str) -> bool:
@@ -107,19 +124,48 @@ def looks_like_free_text(parsed: ParsedDataset) -> bool:
     column = parsed.profile.columns[0]
     if column.dtype != "text":
         return False
-    return not _category_list(column.name, parsed)
+    cells = _cells(parsed)
+    return not (_digit_codes(cells) or _category_list(column.name, cells))
 
 
-def _category_list(header: str, parsed: ParsedDataset) -> bool:
+def category_header_warning(parsed: ParsedDataset) -> str | None:
+    """The warning a one-column category list is stored with, None for any other table.
+
+    Its header line cannot be told from a first category by form (`Tier` above `Hund`, `Katze`
+    reads like `Apfel` above `Birne`, `Kirsche`), so the user learns which line became the
+    column's name rather than losing a category silently (review of #12202).
+    """
+    if len(parsed.profile.columns) != 1 or parsed.profile.source_format.startswith("json"):
+        return None
+    column = parsed.profile.columns[0]
+    cells = _cells(parsed)
+    if column.dtype != "text" or _digit_codes(cells) or not _category_list(column.name, cells):
+        return None
+    return (
+        f"the first line '{column.name}' is read as the column's name; if it is a category, add a header line above it"
+    )
+
+
+def _cells(parsed: ParsedDataset) -> list[str]:
+    """The one column's filled cells, as `data.csv` holds them."""
+    return [row[0] for row in list(csv.reader(io.StringIO(parsed.csv)))[1:] if row and row[0]]
+
+
+def _digit_codes(cells: list[str]) -> bool:
+    """Whether every cell is a run of digits kept as text, such as postal codes with a leading zero (`01067`)."""
+    return bool(cells) and all(_DIGITS.fullmatch(cell) for cell in cells)
+
+
+def _category_list(header: str, cells: list[str]) -> bool:
     """Whether a one-column text parse is a list of categories under a header line.
 
     Every cell is a short label (at most `MAX_CATEGORY_WORDS` words, no number standing as a
     word of its own, no sentence ending), at least one category repeats (a list of counts, not
     a list of names typed one per line, whose first line the transcriber must tell from a
     header), and the header is none of the categories (so it is a name, not the first value).
+    A label with a number as a word of its own (`Typ 1`) has the form of `Hund 7`, a label
+    with its value, and stays free text.
     """
-    rows = list(csv.reader(io.StringIO(parsed.csv)))[1:]
-    cells = [row[0] for row in rows if row and row[0]]
     if not cells or len(set(cells)) == len(cells):
         return False
     if header.casefold() in {cell.casefold() for cell in cells}:
@@ -128,11 +174,9 @@ def _category_list(header: str, parsed: ParsedDataset) -> bool:
 
 
 def _label(cell: str) -> bool:
-    return (
-        len(cell.split()) <= MAX_CATEGORY_WORDS
-        and not _NUMBER_TOKEN.search(cell)
-        and not cell.rstrip().endswith(_SENTENCE_END)
-    )
+    words = cell.split()
+    sentence = len(words) >= MIN_SENTENCE_WORDS and cell.rstrip().endswith(_SENTENCE_END)  # `ca.` is a label
+    return len(words) <= MAX_CATEGORY_WORDS and not _NUMBER_TOKEN.search(cell) and not sentence
 
 
 def table_to_csv(table: TranscribedTable) -> str:

@@ -457,7 +457,11 @@ def without_context(parsed: ParsedDataset, warning: str) -> ParsedDataset:
     the table itself is unchanged, except that constant columns whose values had moved into
     the notes are columns again (`with_constant_columns`), so no value is lost with the notes.
     """
-    parsed = with_constant_columns(parsed)
+    return replace(with_warning(with_constant_columns(parsed), warning), context_lines=[])
+
+
+def with_warning(parsed: ParsedDataset, warning: str) -> ParsedDataset:
+    """`parsed` with `warning` first among its warnings (profile included), within `MAX_WARNINGS`."""
     kept = list(parsed.warnings)
     omitted = 0
     if kept and (match := _OMITTED.fullmatch(kept[-1])):
@@ -470,7 +474,7 @@ def without_context(parsed: ParsedDataset, warning: str) -> ParsedDataset:
         lines = [*lines[:keep], f"{omitted} more warnings omitted"]
     warnings = lines
     profile = parsed.profile.model_copy(update={"warnings": warnings})
-    return replace(parsed, profile=profile, warnings=warnings, context_lines=[])
+    return replace(parsed, profile=profile, warnings=warnings)
 
 
 @dataclass
@@ -607,7 +611,14 @@ def parse_dataset(
         )
 
     parsed = None
-    if find_table and not canonical and len(rows) < MAX_ROWS and _header_as_row(headers, source_format):
+    headerless = find_table and not canonical and _header_as_row(headers, source_format)
+    if headerless and len(rows) >= MAX_ROWS and _header_is_value(headers[0]):
+        # Read as a header, the first value would be lost; read as a row, the list is one row too long.
+        raise ParseError(
+            "too_many_rows",
+            f"the list has {len(rows) + 1:,} values and no header line; at most {MAX_ROWS:,} rows are read",
+        )
+    if headerless and len(rows) < MAX_ROWS:
         # A list of values without a header line: its first line is the first value, not a name.
         # A refusal of that reading (one row too many, a cell too long) leaves the first reading to answer.
         trial_context, trial_warnings = list(context), [*warnings, HEADERLESS_LIST_WARNING]

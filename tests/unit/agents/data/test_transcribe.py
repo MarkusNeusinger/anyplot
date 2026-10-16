@@ -10,7 +10,9 @@ from agents.anyplot.data.transcribe import (
     MAX_TRANSCRIBE_LINES,
     MAX_TRANSCRIBE_ROWS,
     TranscribedTable,
+    category_header_warning,
     looks_like_free_text,
+    near_transcribe_cap,
     table_to_csv,
     transcribable,
     transcribe_refusal,
@@ -39,6 +41,18 @@ def test_transcribable_caps_the_lines_and_says_why() -> None:
     assert transcribe_refusal(" \n") == "the text is empty"
 
 
+def test_the_line_cap_fits_the_schema_also_without_a_header() -> None:
+    """Review of #12202: a 201-line list without a header is 201 rows, one more than the schema holds."""
+    assert MAX_TRANSCRIBE_LINES <= MAX_TRANSCRIBE_ROWS
+
+
+def test_near_the_cap_is_half_the_characters_or_half_the_lines() -> None:
+    assert not near_transcribe_cap("Hund 7\nKatze 3\n")
+    assert near_transcribe_cap("a\n" * (MAX_TRANSCRIBE_LINES // 2))
+    assert not near_transcribe_cap("a\n" * (MAX_TRANSCRIBE_LINES // 2 - 1))
+    assert near_transcribe_cap("x" * (MAX_TRANSCRIBE_CHARS // 2))
+
+
 R7_COMMUTE_TIMES = "Pendelzeit_min\n" + "".join(f"{12 + (i * 7) % 61}\n" for i in range(800))
 """The shape of live round 7's `pendelzeiten.csv`: a header and 800 integers, 2.4 KB."""
 
@@ -54,6 +68,9 @@ R7_COMMUTE_TIMES = "Pendelzeit_min\n" + "".join(f"{12 + (i * 7) % 61}\n" for i i
         pytest.param("Gewicht\n5 kg\n7 kg\n", id="numbers-with-a-unit"),
         pytest.param("Verkehrsmittel\nAuto\nBahn\nAuto\nFahrrad\nBahn\nAuto\n", id="categories"),
         pytest.param("Lieblingsfarbe\nhell blau\nrot\nhell blau\n", id="categories-of-two-words"),
+        pytest.param("PLZ\n01067\n01069\n01067\n", id="codes-with-leading-zeros"),
+        pytest.param("Antwort\nstimme gar nicht zu\nstimme eher nicht zu\nstimme gar nicht zu\n", id="likert"),
+        pytest.param("Menge\nca.\ngenau\nca.\n", id="an-abbreviation"),
     ],
 )
 def test_one_column_of_values_or_categories_is_a_table(text: str) -> None:
@@ -61,6 +78,16 @@ def test_one_column_of_values_or_categories_is_a_table(text: str) -> None:
 
     assert len(parsed.profile.columns) == 1
     assert not looks_like_free_text(parsed)
+
+
+def test_a_category_list_names_the_line_that_became_its_header() -> None:
+    """Review of #12202: `Apfel` above `Birne, Birne, Kirsche` cannot be told from a header by form."""
+    assert category_header_warning(parse_dataset("Apfel\nBirne\nBirne\nKirsche\n")) == (
+        "the first line 'Apfel' is read as the column's name; if it is a category, add a header line above it"
+    )
+    assert category_header_warning(parse_dataset("PLZ\n01067\n01069\n01067\n")) is None  # codes
+    assert category_header_warning(parse_dataset(R7_COMMUTE_TIMES)) is None  # typed values
+    assert category_header_warning(parse_dataset("Tier,Anzahl\nHund,7\n")) is None  # two columns
 
 
 @pytest.mark.parametrize(

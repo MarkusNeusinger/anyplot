@@ -616,8 +616,16 @@ async def _within_budget[Answer](
     Fails closed with `JudgeUnavailable`, whose message names the type of the last
     failure (for example `RateLimitError`), also when the budget ran out during the wait
     or the retry, so a caller can tell a quota from a timeout without the exception text.
-    Its `failure` is `cut_off` when the last attempt stopped at its output cap, `timeout`
-    when the budget ran out with no failed attempt before, and `error` otherwise.
+    Its `failure` is `cut_off` when an attempt stopped at its output cap or wrote more than
+    its schema allows (`AnswerCutOff`, which is not retried: the same text meets the same
+    cap), `timeout` when the budget ran out with no failed attempt before, and `error`
+    otherwise.
+
+    No attempt has a timeout of its own (the clients are built with `max_retries=0` and the
+    SDK's default per-request timeout, minutes long): this budget is the only clock, so an
+    endpoint that stalls spends it on the first attempt and the result is `timeout`. A
+    caller that reads `timeout` as the text's size must check the size itself
+    (`main._transcribe`); a short text that times out is an outage.
     """
     last: BaseException | None = None
     try:
@@ -629,14 +637,27 @@ async def _within_budget[Answer](
                     return await attempt(text, rubric)
                 except asyncio.CancelledError:
                     raise
+                except AnswerCutOff as exc:  # deterministic: a retry writes the same too-long answer
+                    raise JudgeUnavailable("the answer was cut off at its cap", "cut_off") from exc
                 except Exception as exc:  # any transport, API or parse failure gets the one retry
                     last = exc
     except TimeoutError as exc:
         after = f" (after {type(last).__name__})" if last is not None else ""
-        failure: JudgeFailure = "timeout" if last is None else "cut_off" if isinstance(last, AnswerCutOff) else "error"
-        raise JudgeUnavailable(f"the judge did not answer in time{after}", failure) from exc
-    failure = "cut_off" if isinstance(last, AnswerCutOff) else "error"
-    raise JudgeUnavailable(f"the judge failed twice ({type(last).__name__})", failure) from last
+        raise JudgeUnavailable(
+            f"the judge did not answer in time{after}", "timeout" if last is None else "error"
+        ) from exc
+    raise JudgeUnavailable(f"the judge failed twice ({type(last).__name__})") from last
+
+
+def _validated[Schema: BaseModel](schema: type[Schema], answer: str) -> Schema:
+    """The answer under `schema`; an answer longer than the schema's list bounds (more rows or columns
+    than a table may hold) is `AnswerCutOff`, the size's failure, not an outage's."""
+    try:
+        return schema.model_validate_json(answer)
+    except ValidationError as exc:
+        if any(error["type"] == "too_long" for error in exc.errors()):
+            raise AnswerCutOff("the answer holds more items than its schema allows") from exc
+        raise
 
 
 @dataclass
@@ -683,7 +704,7 @@ class AnthropicJudge:
             for name in ("input_tokens", "cache_read_input_tokens", "cache_creation_input_tokens")
         )
         output_tokens = int(getattr(usage, "output_tokens", 0) or 0)
-        return schema.model_validate_json(answer), input_tokens, output_tokens
+        return _validated(schema, answer), input_tokens, output_tokens
 
     async def _attempt(self, text: str, rubric: str) -> JudgeVerdict:
         answer, input_tokens, output_tokens = await self._structured(
@@ -750,7 +771,7 @@ class GeminiJudge:
         candidates = getattr(response, "candidates", None) or []
         if candidates and candidates[0].finish_reason == types.FinishReason.MAX_TOKENS:
             raise AnswerCutOff("the judge stopped at its output cap")
-        answer = schema.model_validate_json(response.text or "")
+        answer = _validated(schema, response.text or "")
         usage = response.usage_metadata
 
         def count(name: str) -> int:
