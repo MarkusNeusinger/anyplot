@@ -128,7 +128,8 @@ MIN_NAMED_HEADERS = 3
 
 def long_names(columns: list[str], keys: list[str], language: str) -> tuple[str, str] | None:
     """The names column's and the values column's name for melting `columns` (`LONG_NAMES`), or None when one of
-    them is already a kept column's name (case-insensitive)."""
+    them is already a column's name, kept or melted (case-insensitive): pandas' `melt` refuses a `value_name`
+    that names an input column (review of #12206: `Value,Other` melted into `Value` was a 500)."""
     words = LONG_NAMES.get(canonical(language), LONG_NAMES[DEFAULT_LANGUAGE])
     folded = [fold(column).rstrip(".").strip() for column in columns]
     if all(_YEAR_HEADER.fullmatch(column) for column in folded) and len(set(folded)) >= MIN_NAMED_HEADERS:
@@ -140,7 +141,7 @@ def long_names(columns: list[str], keys: list[str], language: str) -> tuple[str,
     else:
         kind = "category"
     names_to, values_to = words[kind], words["value"]
-    taken = {key.casefold() for key in keys}
+    taken = {name.casefold() for name in [*keys, *columns]}
     if names_to.casefold() in taken or values_to.casefold() in taken:
         return None
     return names_to, values_to
@@ -232,8 +233,8 @@ def long_suggestion(
         return None
     names_role, values_role = names_to, values[0].name
     names_to, values_to = long_names(measures, keys, language) or (names_role, values_role)
-    if names_to == values_to or {names_to, values_to} & set(keys):
-        return None
+    if names_to == values_to or {names_to, values_to} & {*keys, *measures}:
+        return None  # the role names are a column's too: no offer that `melt` would refuse
     rows = profile.rows * len(measures)
     if rows > MAX_ROWS:
         return None

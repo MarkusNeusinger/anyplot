@@ -231,6 +231,17 @@ class TestLongNames:
             }
             assert by_name["category"] == names  # what the names alone would have bound
 
+    def test_a_melted_column_with_the_name_is_never_the_new_name(self) -> None:
+        """Review of #12206: `Value,Other` melted into `Value` made pandas' `melt` raise, a 500 on `.to_long()`."""
+        for language, text in (("en", "Value,Other\n1.5,2.5\n3.5,4.5\n"), ("de", "Wert,Anderes\n1.5,2.5\n3.5,4.5\n")):
+            suggestion = long_suggestion(roles("box-basic"), parse_dataset(text).profile, language)
+            assert suggestion is not None and (suggestion.names_to, suggestion.values_to) == ("category", "value")
+            operations = TypeAdapter(list[Operation]).validate_python([suggestion.operation()])
+            assert apply_operations(parse_dataset(text), operations).csv.splitlines()[0] == "category,value"
+
+        # The role names are a melted column's too: no offer.
+        assert suggest("box-basic", "value,Category\n1.5,2.5\n3.5,4.5\n") is None
+
     def test_a_kept_column_with_the_name_keeps_the_role_names(self) -> None:
         assert long_names(["2019", "2020", "2021"], ["jahr"], "de") is None
         text = "Wert,Sensor_A,Sensor_B\n2024-01-01,1.5,2.5\n2024-01-02,1.7,2.1\n"

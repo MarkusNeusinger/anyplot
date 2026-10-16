@@ -784,6 +784,18 @@ class TestPivotLonger:
         assert prepared.changes == ["pivoted 2 columns into series/value: 6 rows"]
         assert dtypes(prepared) == {"Monat": "datetime", "series": "text", "value": "integer"}
 
+    def test_a_melted_columns_name_is_refused_as_a_new_name(self) -> None:
+        """pandas' `melt` raises a ValueError for a `value_name` that names an input column (review of #12206)."""
+        for names in (("Artikel", "Hüte"), ("Schuhe", "Stück")):
+            operation = {
+                "op": "pivot_longer",
+                "columns": ["Hüte", "Schuhe"],
+                "names_to": names[0],
+                "values_to": names[1],
+            }
+
+            assert failure(WIDE, operation)[0] == "invalid_operation"
+
     def test_own_names(self) -> None:
         operation = {"op": "pivot_longer", "columns": ["Hüte", "Schuhe"], "names_to": "Artikel", "values_to": "Stück"}
 
