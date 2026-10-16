@@ -11,7 +11,7 @@
   (`POST /debug/agent/sessions/{sid}/outcome`), and the eval harnesses tag their lines `harness`.
   Committed BigQuery views (`agents/telemetry/views/`) deduplicate by idempotency key and add
   sessions with a 30-minute inactivity rule, usage, failures and cost; `docs/reference/agent-telemetry.md`
-  lists the one-time setup.
+  lists the one-time setup. (#12205)
 - **Agent usage card on `/debug`.** Sessions, plots shipped, kept and repair rates, and the top specs,
   input formats and refusal codes of the last 7 or 30 days, read through the new admin-only
-  `GET /debug/agent-usage` (aggregates only; an empty state while `AGENT_TELEMETRY_DATASET` is unset).
+  `GET /debug/agent-usage` (aggregates only; an empty state while `AGENT_TELEMETRY_DATASET` is unset). (#12205)
