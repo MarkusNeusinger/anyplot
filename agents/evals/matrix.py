@@ -1301,9 +1301,11 @@ async def run_matrix(
 ) -> MatrixResult:
     """Run every case `config.repeats` times, write the report, the summary and the galleries, compare and decide."""
     from agents import main as service
+    from agents.anyplot import telemetry
     from agents.anyplot.services import Services, set_services
     from agents.anyplot.settings import get_settings
 
+    telemetry.set_source("harness")  # the usage views count live sessions only (docs/reference/agent-telemetry.md)
     settings = get_settings()
     services = services or Services()
     recorder: AttemptRecorder | None = None

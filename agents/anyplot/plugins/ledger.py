@@ -32,8 +32,10 @@ hash).
 """
 
 import hashlib
+import hmac
 import json
 import logging
+import secrets
 import time
 from collections import OrderedDict, deque
 from collections.abc import Awaitable, Callable
@@ -45,10 +47,27 @@ from typing import Any, Literal
 from ..settings import AgentSettings
 
 
-logger = logging.getLogger("anyplot.agents.attribution")
+ATTRIBUTION_LOGGER = "anyplot.agents.attribution"
+"""The logger of the attribution lines and of the usage telemetry (`telemetry.py`), shipped to stdout by
+`agents/main.py` `enable_attribution_log`."""
+logger = logging.getLogger(ATTRIBUTION_LOGGER)
 
 RequestKind = Literal["action", "text"]
 MAX_ADHOC_LEDGERS = 64
+
+
+@dataclass
+class StepUsage:
+    """What one agent (or the judges, under `judge`) spent in a request: calls and tokens by kind, and the model."""
+
+    calls: int = 0
+    input: int = 0
+    """Prompt tokens, cached and cache-write ones included, plus the Gemini tool-use prompt."""
+    output: int = 0
+    """Candidates plus thoughts."""
+    cached: int = 0
+    cache_write: int = 0
+    model: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -121,6 +140,40 @@ class RequestLedger:
     cancelled, after the route failed the turn with `capacity` (or ended it). None without a route (`adk web`),
     whose runs bypass the queue. The one helper for every sandbox run of a turn: `plot_pipeline` and
     `run_data_code` await it before they render or run code."""
+    spec_id: str = ""
+    library: str = ""
+    turn: int = 0
+    """The session's spec, library and user turn, set once by the `/v1` route from session state, for the
+    usage telemetry's envelope (`telemetry.py`); never set per call site."""
+    steps: dict[str, StepUsage] = field(default_factory=dict)
+    """Calls and tokens by agent name (`book_step`), and the judges' under `judge` (`book_judge`)."""
+    tools: list[str] = field(default_factory=list)
+    """The tools the root called and ToolSafety allowed, in order (closed names only: `telemetry.TOOL_NAMES`)."""
+    prep_ops: list[str] = field(default_factory=list)
+    """The operation names of every `prepare_data` call that changed the data (closed: `telemetry.PREP_OPS`)."""
+    reply_question: bool = False
+    """The root's last reply sent to the page ends with a question mark (`stream.Translator`); the text is never kept."""
+
+    def book_step(self, agent: str, *, model: str | None, usage: dict[str, int], cached: int) -> None:
+        """Add one model call to the agent's step usage (`usage` as `usage_breakdown` counts it)."""
+        step = self.steps.setdefault(agent, StepUsage())
+        step.calls += 1
+        step.input += usage.get("prompt", 0) + usage.get("tool_use_prompt", 0)
+        step.output += usage.get("candidates", 0) + usage.get("thoughts", 0)
+        step.cached += cached
+        step.cache_write += usage.get("cache_write", 0)
+        if model:
+            step.model = model
+
+    def book_judge(self, input_tokens: int, output_tokens: int, tokens: int = 0) -> None:
+        """Add one judge verdict (scope, dataset, notes, file name, transcriber) to the `judge` step."""
+        step = self.steps.setdefault("judge", StepUsage())
+        step.calls += 1
+        if input_tokens or output_tokens:
+            step.input += input_tokens
+            step.output += output_tokens
+        else:
+            step.input += tokens  # no split reported: the plain total counts as input
 
     def refuse(self, code: str, text: str) -> None:
         if self.refusal is None and self.error is None:
@@ -170,13 +223,19 @@ class _Day:
     user_messages: dict[str, int] = field(default_factory=dict)
     user_pastes: dict[str, int] = field(default_factory=dict)
     user_conversions: dict[str, int] = field(default_factory=dict)
+    user_outcomes: dict[str, int] = field(default_factory=dict)
 
 
 MESSAGE_WINDOW_S = 60.0
 """The sliding window of `AGENT_USER_MESSAGES_PER_MINUTE` and `AGENT_USER_PASTES_PER_MINUTE`."""
 MessageLimit = Literal["rate_limited", "daily_limit"]
 """Why `message_limit` or `paste_limit` refuses: the minute's count, or the day's."""
-WindowKind = Literal["message", "paste", "convert"]
+WindowKind = Literal["message", "paste", "convert", "outcome"]
+OUTCOMES_PER_MINUTE = 30
+OUTCOMES_PER_DAY = 2000
+"""The page's outcome beacons per user (`POST /v1/sessions/{sid}/outcome`): a copy or a download is one click, so
+30 in a minute is far beyond use; more get `429 rate_limited`, which the page ignores. Constants, not settings: the
+beacon spends no model call and no sandbox time, the cap only bounds the telemetry lines one user can write."""
 
 
 class UsageBook:
@@ -312,6 +371,16 @@ class UsageBook:
         day = self._current()
         day.user_conversions[user_id] = day.user_conversions.get(user_id, 0) + 1
         self._stamp("convert", user_id)
+
+    def outcome_limit(self, user_id: str) -> MessageLimit | None:
+        """Why the user's page may not write another outcome beacon now, or None (`OUTCOMES_PER_MINUTE`, `_PER_DAY`)."""
+        count = self._current().user_outcomes.get(user_id, 0)
+        return self._limit("outcome", user_id, count, OUTCOMES_PER_MINUTE, OUTCOMES_PER_DAY)
+
+    def add_outcome(self, user_id: str) -> None:
+        day = self._current()
+        day.user_outcomes[user_id] = day.user_outcomes.get(user_id, 0) + 1
+        self._stamp("outcome", user_id)
 
     def _limit(
         self, kind: WindowKind, user_id: str, today_count: int, per_minute: int, per_day: int
@@ -492,8 +561,25 @@ def argument_hash(arguments: Any) -> str:
     return hashlib.sha256(text.encode()).hexdigest()[:12]
 
 
+SESSION_SALT = secrets.token_bytes(32)
+"""The per-process salt of every session hash a log line carries: the attribution lines' `session` and the usage
+telemetry's (`telemetry.session_key`). The session id travels in every `/v1` request URL Cloud Run logs, so a plain
+hash of it could be recomputed and joined to the request log; sessions live in memory and end with the instance,
+so a salt that ends with the process keeps a session's lines together for exactly as long as it exists. Never
+logged, never configured."""
+
+
+def salted(session_id: str, domain: str, length: int) -> str:
+    """HMAC-SHA256 of the session id under `SESSION_SALT`, separated by `domain`, so the attribution hash and the
+    telemetry hash of one session differ and the two kinds of lines cannot be joined by it."""
+    if not session_id:
+        return ""
+    return hmac.new(SESSION_SALT, f"{domain}:{session_id}".encode(), hashlib.sha256).hexdigest()[:length]
+
+
 def session_hash(session_id: str) -> str:
-    return hashlib.sha256(session_id.encode()).hexdigest()[:12] if session_id else ""
+    """The attribution lines' `session`: 12 hex digits, salted (`salted`)."""
+    return salted(session_id, "attribution", 12)
 
 
 def attribution(hook: str, ledger: RequestLedger, **fields: Any) -> None:

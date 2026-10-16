@@ -565,10 +565,31 @@ class RenderThemeBody(_StrictBody):
     theme: Literal["light", "dark"]
 
 
+OutcomeAction = Literal[
+    "copied_code", "copied_image", "downloaded_png", "downloaded_code", "downloaded_data", "saved_session", "feedback"
+]
+"""What the page reports a user did with a result (`agents/anyplot/telemetry.py` `OutcomeAction`; copied, because
+the API image does not ship the agents package)."""
+
+
 def _check_reaction(value: str) -> str:
     if value not in FEEDBACK_REACTIONS:
         raise ValueError(f"reaction must be one of {', '.join(FEEDBACK_REACTIONS)}")
     return value
+
+
+class OutcomeBody(_StrictBody):
+    # The page's content-free outcome beacon: a closed action, the version it was on (0 for the session),
+    # and with `feedback` the reaction. Nothing the user wrote or the result held ever travels here.
+    action: OutcomeAction
+    version: Annotated[int, Field(strict=True, ge=0, le=999)] = 0
+    reaction: Annotated[str, AfterValidator(_check_reaction)] | None = None
+
+    @model_validator(mode="after")
+    def _reaction_with_feedback(self) -> OutcomeBody:
+        if self.reaction is not None and self.action != "feedback":
+            raise ValueError("reaction goes with the feedback action only")
+        return self
 
 
 def _feedback_message(value: str | None) -> str | None:
@@ -1248,6 +1269,20 @@ async def post_message(upstream: UpstreamStream = Depends(open_message_stream)) 
 async def cancel_run(sid: SessionId, ctx: Ctx, client: Client) -> Response:
     """Stop the session's active run."""
     await _call_upstream(client, ctx, "POST", f"/sessions/{sid}/cancel")
+    return _no_content(ctx)
+
+
+@router.post("/sessions/{sid}/outcome", status_code=204)
+async def post_outcome(sid: SessionId, body: OutcomeBody, ctx: Ctx, client: Client) -> Response:
+    """The page's outcome beacon (a copy, a download, a session save, a feedback send), forwarded to the agents
+    service, which writes the content-free `outcome` telemetry line (`docs/reference/agent-telemetry.md`).
+
+    Fire and forget for the page: `429 rate_limited` / `daily_limit` past the agents service's per-user beacon
+    limits, `404 session_expired`, and an unreachable service are answered as for any route and ignored there.
+    """
+    await _call_upstream(
+        client, ctx, "POST", f"/sessions/{sid}/outcome", json_body=body.model_dump(mode="json", exclude_none=True)
+    )
     return _no_content(ctx)
 
 

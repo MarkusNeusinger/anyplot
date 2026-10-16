@@ -588,9 +588,11 @@ async def run_cases(
 ) -> list[CaseResult]:
     """Every case through the in-process app, one at a time and paced by `pacer`, in the case order."""
     from agents import main as service
+    from agents.anyplot import telemetry
     from agents.anyplot.services import set_services
     from agents.anyplot.settings import get_settings
 
+    telemetry.set_source("harness")  # the usage views count live sessions only (docs/reference/agent-telemetry.md)
     settings = get_settings()
     set_services(services)
     saved_overrides = dict(service.app.dependency_overrides)

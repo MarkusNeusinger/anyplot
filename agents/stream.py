@@ -37,6 +37,7 @@ from agents.anyplot.output_guard import plain_line, sanitize
 from agents.anyplot.pipeline import STATUS_KEY
 from agents.anyplot.plugins.ledger import RequestLedger
 from agents.anyplot.schemas import RoundOutcome
+from agents.anyplot.telemetry import ends_with_question
 
 
 PROTOCOL = "anyplot/1"
@@ -146,6 +147,9 @@ class Translator:
         if self.ledger.error is not None:
             return self.error(self.ledger.error)
         clean = sanitize(text, spec_id=self.spec_id)
+        if clean:
+            # The usage telemetry's `asked_question`: a bool computed here, the reply itself is never kept.
+            self.ledger.reply_question = ends_with_question(clean)
         return [sse("message", {"text": clean})] if clean else []
 
     def error(self, code: str) -> list[str]:

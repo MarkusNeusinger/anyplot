@@ -66,6 +66,7 @@ from google.adk import Workflow
 from google.adk.tools.tool_context import ToolContext
 from pydantic import TypeAdapter, ValidationError
 
+from .. import telemetry
 from ..briefs import bindings_text, spec_brief, trimmed_profiles
 from ..code.data_code import check_data_code
 from ..data.generate import Generate, GenerateError, generate
@@ -243,6 +244,7 @@ async def set_bindings(bindings: list[dict[str, str]], tool_context: ToolContext
         "data_confirmed": bool(confirmed and confirmed.data_confirmed),
     }
     if check.warnings:  # valid, but a role that needs values of 0 or more got negative ones; they name columns
+        telemetry.note_binding_warnings(tool_context.session.id, check.warnings)  # closed codes for `chat_turn`
         result["warnings"] = DATA_PREAMBLE + "\n" + fence("user_data", json.dumps(check.warnings, ensure_ascii=False))
     return result
 
@@ -333,6 +335,7 @@ async def prepare_data(operations: list[dict[str, Any]], tool_context: ToolConte
     for key, value in version.delta.items():
         tool_context.state[key] = value
     ledger.dataset_changes.extend(prepared.changes)
+    ledger.prep_ops.extend(operation.op for operation in parsed_operations)  # the names only, for the telemetry
     base = {
         "status": "ok",
         "rows": parsed.profile.rows,

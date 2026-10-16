@@ -21,6 +21,7 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `POST /v1/sessions/{sid}/dataset/to_long` | | The undo route's shape plus `changes`: the page's `.to_long()` applies the wide-table suggestion, recomputed on the server, as the next dataset version with the default bindings for the new columns; no model call | `409 run_active`, `422 no_suggestion` |
 | `POST /v1/sessions/{sid}/messages` | `{text}` or `{action}` (`create_plot`, `summarize_data`) | SSE `anyplot/1`; the `done` event carries `dataset` (with `roles` and `changes`) after a turn whose `prepare_data` or `generate_data` changed the data, version 1 when `generate_data` made the session's first data, and `language` (`{language, source}`) after every run | `413 too_long`, `409 run_active` |
 | `POST /v1/sessions/{sid}/cancel` | | `204` | |
+| `POST /v1/sessions/{sid}/outcome` | `{action, version?, reaction?}` (closed sets: `telemetry.OutcomeAction`, `telemetry.Reaction`, the latter with `feedback` only) | `204`: the content-free `outcome` telemetry line (`anyplot/telemetry.py`) | `422`, `429 rate_limited` / `429 daily_limit` (`OUTCOMES_PER_MINUTE` / `_PER_DAY`) |
 | `POST /v1/sessions/{sid}/versions/{version}/render` | `{theme}` | `{status, reason?, artifacts}` | `404 not_found`, `409 run_active`, `503 capacity` (no render slot in time, or the render store is full) |
 | `GET /v1/sessions/{sid}/artifacts/{name}?v=` | | the file | `404` |
 | `GET /v1/sessions/{sid}/bundle?version=&include_data=` | | the feedback case bundle: every version, or the one numbered `version`, or with `version=0` the conversation alone (no version; `data_csv`, the current data, with `include_data`); with `AGENT_KEEP_REFUSALS` also `refusals`, the session's refused messages `[{verdict, lang, text, at}]` | `404` |
@@ -108,7 +109,7 @@ import sys
 import time
 from collections.abc import AsyncIterator, Callable
 from dataclasses import asdict, dataclass, field
-from typing import Annotated, Any, Literal, TextIO
+from typing import Annotated, Any, Literal, TextIO, get_args
 
 from fastapi import Body, Depends, FastAPI, Header, Path, Query, Request
 from fastapi.responses import JSONResponse, Response, StreamingResponse
@@ -123,8 +124,9 @@ from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError,
 from starlette.background import BackgroundTask
 
 from agents.anyplot import agent as agent_module
+from agents.anyplot import telemetry
 from agents.anyplot.code.readiness import MAP_SPECS
-from agents.anyplot.data.bindings import label_siblings
+from agents.anyplot.data.bindings import check_bindings, label_siblings
 from agents.anyplot.data.classify import classify_paste
 from agents.anyplot.data.parse import (
     MAX_COMPUTED_BYTES,
@@ -177,7 +179,14 @@ from agents.anyplot.opening import (
     source_name,
     store_dataset,
 )
-from agents.anyplot.plugins.ledger import CURRENT_LEDGER, RequestLedger, attribution, budget_allows, judge_budget_tokens
+from agents.anyplot.plugins.ledger import (
+    ATTRIBUTION_LOGGER,
+    CURRENT_LEDGER,
+    RequestLedger,
+    attribution,
+    budget_allows,
+    judge_budget_tokens,
+)
 from agents.anyplot.plugins.scope_guard import LOCKED_OUT, SESSION_CLOSED, scope_refusals
 from agents.anyplot.policy import fence, file_name_block, refusal, scope_rubric, transcribe_rubric, user_notes_block
 from agents.anyplot.render.contract import ConvertJob, RendererUnavailable
@@ -269,9 +278,6 @@ def disable_content_capture() -> None:
 disable_content_capture()
 
 
-ATTRIBUTION_LOGGER = "anyplot.agents.attribution"
-
-
 class _AttributionHandler(logging.StreamHandler[TextIO]):
     """The stdout handler of the attribution lines, a class of its own so `enable_attribution_log` finds it."""
 
@@ -285,13 +291,18 @@ def enable_attribution_log() -> None:
     model SDKs stay at WARNING (`disable_content_capture`). The lines carry ids, counts, verdicts and rule ids,
     never text, code or data. It still propagates, so a test's log capture sees it; the root has no handler of
     its own in the service. Idempotent: a second call adds no second handler.
+
+    The usage telemetry's logger (`telemetry.TELEMETRY_LOGGER`) gets the same treatment with a handler of its
+    own: its lines carry `log_type: "agent_telemetry"`, which the Cloud Logging sink selects
+    (`docs/reference/agent-telemetry.md`), and never the user id the attribution lines carry.
     """
-    attribution_logger = logging.getLogger(ATTRIBUTION_LOGGER)
-    attribution_logger.setLevel(logging.INFO)
-    if not any(isinstance(handler, _AttributionHandler) for handler in attribution_logger.handlers):
-        handler = _AttributionHandler(sys.stdout)
-        handler.setFormatter(logging.Formatter("%(message)s"))
-        attribution_logger.addHandler(handler)
+    for name in (ATTRIBUTION_LOGGER, telemetry.TELEMETRY_LOGGER):
+        named = logging.getLogger(name)
+        named.setLevel(logging.INFO)
+        if not any(isinstance(handler, _AttributionHandler) for handler in named.handlers):
+            handler = _AttributionHandler(sys.stdout)
+            handler.setFormatter(logging.Formatter("%(message)s"))
+            named.addHandler(handler)
 
 
 enable_attribution_log()
@@ -527,6 +538,7 @@ class Runtime:
             self.stop(run)
         await self.session_service.delete_session(app_name=APP_NAME, user_id=user, session_id=sid)
         services.purge_session(sid)
+        telemetry.forget(sid)
 
     def stop(self, run: ActiveRun) -> None:
         """Abort a run and take it out of the queue if it still waits; a running one keeps its slot until it ends."""
@@ -740,6 +752,15 @@ def _library(library: str, settings: AgentSettings) -> str:
     return library
 
 
+def _stamp(ledger: RequestLedger, view: SessionView | None, session: Session) -> RequestLedger:
+    """The ledger with the session's spec, library and user turns so far: the usage telemetry's envelope
+    (`telemetry.py`), set once per request from session state, never per call site."""
+    if view is not None:
+        ledger.spec_id, ledger.library = view.spec_id, view.library
+    ledger.turn = telemetry.user_turns(session.events)
+    return ledger
+
+
 # --- Routes ------------------------------------------------------------------------------
 
 
@@ -890,18 +911,28 @@ async def upload_dataset(
     view = read_session(session.state)
     if view is None:
         raise AgentsError(404, "session_expired")
-    if len(body.text.encode("utf-8", errors="surrogatepass")) > MAX_INPUT_BYTES:
-        raise AgentsError(413, "too_long")
-    _paste_budget(services, user, settings)
-    limit = services.usage.paste_limit(user, settings)
-    if limit is not None:
-        attribution("paste_limit", RequestLedger(request_id=rid, user_id=user, session_id=sid), verdict=limit)
-        raise AgentsError(429, limit)
-    runtime.pasting.add(user)  # no await since the check above, so no second paste slipped in between
+    ledger = _stamp(RequestLedger(request_id=rid, user_id=user, session_id=sid, kind="action"), view, session)
+    size = len(body.text.encode("utf-8", errors="surrogatepass"))
+    facts = telemetry.InputFacts.for_paste(sid, size=size, source=body.source is not None, confirmed=body.confirmed)
+    clock = telemetry.Clock()
     try:
-        return await _ingest_paste(services, runtime, body, user, sid, rid, view)
+        if size > MAX_INPUT_BYTES:
+            raise AgentsError(413, "too_long")
+        _paste_budget(services, user, settings)
+        limit = services.usage.paste_limit(user, settings)
+        if limit is not None:
+            attribution("paste_limit", ledger, verdict=limit)
+            raise AgentsError(429, limit)
+        runtime.pasting.add(user)  # no await since the check above, so no second paste slipped in between
+        try:
+            return await _ingest_paste(services, runtime, body, user, sid, ledger, view, facts)
+        finally:
+            runtime.pasting.discard(user)
+    except AgentsError as exc:
+        facts.refused(exc.code)
+        raise
     finally:
-        runtime.pasting.discard(user)
+        facts.write(ledger, clock, settings.judge_model)
 
 
 CONVERT_FAILURES: dict[str, str] = {
@@ -945,10 +976,33 @@ async def convert_dataset_file(
         raise AgentsError(422, "invalid") from None
     if not data:
         raise AgentsError(422, "invalid")
+    ledger = _stamp(
+        RequestLedger(request_id=rid, user_id=user, session_id=sid, kind="action"), read_session(session.state), session
+    )
+    clock = telemetry.Clock()
+    try:
+        return await _convert(services, settings, runtime, body, data, user, sid, ledger, clock)
+    except AgentsError as exc:
+        telemetry.file_refusal(sid, ledger, size=len(data), kind=None, code=exc.code, clock=clock)
+        raise
+
+
+async def _convert(
+    services: Services,
+    settings: AgentSettings,
+    runtime: Runtime,
+    body: ConvertBody,
+    data: bytes,
+    user: str,
+    sid: str,
+    ledger: RequestLedger,
+    clock: telemetry.Clock,
+) -> JSONResponse:
+    """The conversion route past its decode: its limits, the sandbox run, the answer; the route writes the
+    `data_input` line of a refusal raised here, this function the one of a file the converter refused."""
     if len(data) > MAX_CONVERT_INPUT_BYTES:
         raise AgentsError(413, "too_long")
     _paste_budget(services, user, settings)
-    ledger = RequestLedger(request_id=rid, user_id=user, session_id=sid, kind="action")
     limit = services.usage.convert_limit(user, settings)
     if limit is not None:
         attribution("convert_limit", ledger, verdict=limit)
@@ -984,6 +1038,8 @@ async def convert_dataset_file(
             bytes=len(data),
             wall_s=round(output.wall_s, 3),
         )
+        # The paste that follows with the file's name is this kind of file: its `data_input` line says so.
+        telemetry.converted(sid, kind=meta.kind, sheets=meta.sheet_count)
         return JSONResponse(
             {
                 "text": output.text,
@@ -1021,6 +1077,7 @@ async def convert_dataset_file(
         bytes=len(data),
         wall_s=round(output.wall_s, 3),
     )
+    telemetry.file_refusal(sid, ledger, size=len(data), kind=kind, code=code, clock=clock)
     content: dict[str, Any] = {"detail": code}
     if output.refusal is not None:
         content.update(
@@ -1039,10 +1096,19 @@ def _paste_budget(services: Services, user: str, settings: AgentSettings) -> Non
 
 
 async def _ingest_paste(
-    services: Services, runtime: Runtime, body: DatasetBody, user: str, sid: str, rid: str, view: SessionView
+    services: Services,
+    runtime: Runtime,
+    body: DatasetBody,
+    user: str,
+    sid: str,
+    ledger: RequestLedger,
+    view: SessionView,
+    facts: telemetry.InputFacts,
 ) -> JSONResponse:
-    """The paste route past its limits: classify, parse or transcribe, judge, screen the notes, store."""
-    ledger = RequestLedger(request_id=rid, user_id=user, session_id=sid, kind="action")
+    """The paste route past its limits: classify, parse or transcribe, judge, screen the notes, store.
+
+    `facts` collects the paste's content-free facts for its `data_input` telemetry line, which the route writes.
+    """
     if not body.confirmed:  # a confirmed transcription is the service's own CSV
         _refuse_code_or_formula(ledger, body.text)
     try:
@@ -1051,6 +1117,7 @@ async def _ingest_paste(
         json_lines = body.source is not None and body.source.lower().rstrip().endswith((".jsonl", ".ndjson"))
         parsed = parse_dataset(body.text, find_table=not body.confirmed, table=body.table or 1, json_lines=json_lines)
     except ParseError as exc:
+        facts.cause = exc.code
         if exc.code == "too_long":
             raise AgentsError(413, "too_long", exc.message) from None
         # Text with no table in it (prose, a list on one line) is the transcriber's; a broken
@@ -1058,17 +1125,19 @@ async def _ingest_paste(
         # which names its cause (owner rule of 2026-10-16).
         refusal = transcribe_refusal(body.text)
         if exc.code == "no_table" and refusal is None:
-            return await _transcribe(services, ledger, body.text)
+            return await _transcribe(services, ledger, body.text, facts)
         cause = exc.message
         if exc.code == "no_table":
             cause = f"{cause}, and {refusal}"
         raise AgentsError(422, "unparseable", cause) from None
+    facts.parsed(parsed)
     if not body.confirmed and looks_like_free_text(parsed):
         # One column of prose, `label value` lines or names: the transcriber's, or a refusal that says why
         # not. Never stored as it parsed: its first line would be a column name nobody wrote (review of #12202).
         refusal = transcribe_refusal(body.text)
         if refusal is None:
-            return await _transcribe(services, ledger, body.text)
+            return await _transcribe(services, ledger, body.text, facts)
+        facts.cause = "free_text_one_column"
         attribution("data_transcribe", ledger, outcome="too_large")
         raise AgentsError(
             422,
@@ -1078,6 +1147,7 @@ async def _ingest_paste(
         )
     if not body.confirmed and (header_warning := category_header_warning(parsed)) is not None:
         parsed = with_warning(parsed, header_warning)  # its first line may be a category: said, never silent
+        facts.parsed(parsed)
     services.usage.add_paste(user)  # the first model call of this paste: only a paste that reaches one counts
     try:
         header_lang = await check_dataset(services, ledger, parsed)
@@ -1103,6 +1173,14 @@ async def _ingest_paste(
         )
     except StoreFull:
         raise AgentsError(503, "capacity") from None
+    roles = view.snapshot.roles()
+    facts.stored(
+        ingested.parsed,
+        complete=check_bindings(ingested.bindings, roles, ingested.parsed.profile).complete,
+        bound=len(ingested.bindings),
+        reshape=long_suggestion(roles, ingested.parsed.profile) is not None,
+        file_name=file_name is not None,
+    )
     delta = ingested.state_delta()
     # Read again: the chip's choice may have landed while the judges ran, and a choice is never overwritten.
     # From this read to the append below nothing suspends: `InMemorySessionService.get_session` and
@@ -1164,6 +1242,7 @@ async def _screen_file_name(services: Services, ledger: RequestLedger, raw: str)
     except JudgeUnavailable:
         attribution("file_name_judge", ledger, verdict="guard_unavailable", chars=chars)
         return FILE_NAME_WITHHELD
+    ledger.book_judge(answer.input_tokens, answer.output_tokens, answer.tokens)
     services.usage.add_tokens(
         ledger.user_id,
         judge_budget_tokens(answer.tokens, answer.input_tokens, answer.output_tokens, get_settings().judge_model),
@@ -1202,6 +1281,7 @@ async def _screen_notes(
     except JudgeUnavailable:
         attribution("notes_judge", ledger, verdict="guard_unavailable", **counts)
         return without_context(parsed, NOTES_UNCHECKED_WARNING), None
+    ledger.book_judge(answer.input_tokens, answer.output_tokens, answer.tokens)
     services.usage.add_tokens(
         ledger.user_id,
         judge_budget_tokens(answer.tokens, answer.input_tokens, answer.output_tokens, get_settings().judge_model),
@@ -1254,7 +1334,9 @@ def _transcribe_failure_cause(failure: JudgeFailure, text: str) -> str:
     )
 
 
-async def _transcribe(services: Services, ledger: RequestLedger, text: str) -> JSONResponse:
+async def _transcribe(
+    services: Services, ledger: RequestLedger, text: str, facts: telemetry.InputFacts
+) -> JSONResponse:
     """Read free text as a table with the transcriber and answer with it, storing nothing.
 
     The answer carries `transcribed: true` and the table's CSV in `text`; the user
@@ -1265,8 +1347,10 @@ async def _transcribe(services: Services, ledger: RequestLedger, text: str) -> J
     call books its tokens like a judge call and writes a `data_transcribe` attribution line.
     """
     user = ledger.user_id
+    facts.format = "transcribed"  # free text the transcriber reads: the input's format, whatever it parsed as
     services.usage.add_paste(user)  # a paste counts against `paste_limit` when it reaches a model (or its pre-filter)
     if INSTRUCTION_LIKE.search(text):
+        facts.cause = "prefilter"
         attribution("data_transcribe", ledger, outcome="prefilter")
         raise AgentsError(403, "data_refused")
     try:
@@ -1276,11 +1360,13 @@ async def _transcribe(services: Services, ledger: RequestLedger, text: str) -> J
         # the transcriber's limits; the user can change either. A short text that times out met a
         # stalled endpoint, and an error, a quota or an unparseable answer is an outage too.
         sized = exc.failure == "cut_off" or (exc.failure == "timeout" and near_transcribe_cap(text))
+        facts.cause = exc.failure if exc.failure in ("cut_off", "timeout") else "other"
         if not sized:
             attribution("data_transcribe", ledger, outcome="guard_unavailable", failure=exc.failure)
             raise AgentsError(503, "guard_unavailable") from None
         attribution("data_transcribe", ledger, outcome=exc.failure)
         raise AgentsError(422, "unparseable", _transcribe_failure_cause(exc.failure, text)) from None
+    ledger.book_judge(reading.input_tokens, reading.output_tokens, reading.tokens)
     services.usage.add_tokens(
         user,
         judge_budget_tokens(reading.tokens, reading.input_tokens, reading.output_tokens, get_settings().judge_model),
@@ -1289,12 +1375,14 @@ async def _transcribe(services: Services, ledger: RequestLedger, text: str) -> J
     try:
         parsed = parse_dataset(csv_text, find_table=False)
     except ParseError as exc:
+        facts.cause = "transcribed_unparseable"
         attribution("data_transcribe", ledger, outcome="unparseable", judge_tokens=reading.tokens)
         raise AgentsError(
             422, "unparseable", f"the model read the text as a table, but that table was refused: {exc.message}"
         ) from None
     if looks_like_free_text(parsed) and parsed.profile.columns[0].name == "text":
         # The rubric's answer for text that holds no table: one column named `text`.
+        facts.cause = "transcribed_no_table"
         attribution("data_transcribe", ledger, outcome="no_table", judge_tokens=reading.tokens)
         raise AgentsError(
             422,
@@ -1312,6 +1400,7 @@ async def _transcribe(services: Services, ledger: RequestLedger, text: str) -> J
         judge_input=reading.input_tokens,
         judge_output=reading.output_tokens,
     )
+    facts.transcribed(parsed)
     return JSONResponse(
         {
             "transcribed": True,
@@ -1353,6 +1442,11 @@ def _page_roles(roles: list[DataRole]) -> list[dict[str, Any]]:
     return [_role_body(role) for role in roles]
 
 
+def _binding_pairs(bindings: list[dict[str, Any]]) -> set[tuple[Any, Any]]:
+    """Bindings as a set of (role, column) pairs, so their order never reads as a change."""
+    return {(item.get("role"), item.get("column")) for item in bindings}
+
+
 @app.put("/v1/sessions/{sid}/bindings", dependencies=v1_dependencies)
 async def put_bindings(
     sid: SessionId,
@@ -1380,6 +1474,12 @@ async def put_bindings(
         )
     # Other bindings than the user confirmed leave the confirmation's fingerprint behind: step 1 again.
     await runtime.write_state(session, delta)
+    # The next `chat_turn` line says the user changed a binding by hand, and the warnings' closed codes. The page
+    # also PUTs the parse's own defaults after every paste (to learn `complete`), which changes nothing: only a PUT
+    # whose bindings differ from the ones the session held counts, so that echo never reads as a manual change.
+    if _binding_pairs(delta[BINDINGS]) != _binding_pairs([binding.model_dump() for binding in view.bindings]):
+        telemetry.marks(sid).manual_binding_changed = True
+    telemetry.note_binding_warnings(sid, check.warnings)
     return JSONResponse(
         {
             "bindings": delta[BINDINGS],
@@ -1456,6 +1556,7 @@ async def undo_dataset(sid: SessionId, user: User, runtime: RuntimeDep) -> JSONR
     if restored is None:
         raise AgentsError(422, "nothing_to_undo")
     await runtime.write_state(session, restored.delta)
+    telemetry.marks(sid).undo = True  # the next `chat_turn` line's `undo`
     return JSONResponse(
         {
             **restored.payload(),
@@ -1505,6 +1606,7 @@ async def dataset_to_long(sid: SessionId, user: User, runtime: RuntimeDep) -> JS
     except StoreFull:
         raise AgentsError(503, "capacity") from None
     await runtime.write_state(session, version.delta)
+    telemetry.marks(sid).to_long = True  # the next `chat_turn` line's `to_long`
     return JSONResponse(
         {
             **version.payload(),
@@ -1571,23 +1673,66 @@ async def _session_sync(
     return payload
 
 
-async def _refused(translator: Translator, ledger: RequestLedger) -> AsyncIterator[str]:
+@dataclass(frozen=True)
+class TurnFacts:
+    """What the `chat_turn` telemetry line needs from the route besides the ledger: the action, the session
+    language's source before the turn, and the turn's stopwatch."""
+
+    action: Action | None
+    language_source: str | None
+    clock: telemetry.Clock = field(default_factory=telemetry.Clock)
+
+
+def _telemetry_turn(ledger: RequestLedger, facts: TurnFacts, failure: str | None = None) -> None:
+    """The usage telemetry's `chat_turn` line (`telemetry.py`): kinds, flags, closed names and counts, never text.
+
+    The request id goes into the idempotency key only (hashed), so two turns of the same number, such as a turn
+    refused before the judge and the turn sent after it, stay two rows.
+    """
+    error = failure or ledger.error
+    telemetry.write(
+        telemetry.ChatTurn,
+        ledger,
+        attempt=f"turn:{ledger.request_id}",
+        kind="error" if error is not None and ledger.refusal is None else telemetry.turn_kind(ledger),
+        action=facts.action or "text",
+        asked_question=ledger.reply_question and ledger.refusal is None,
+        tools=sorted({tool for tool in ledger.tools if tool in telemetry.TOOL_NAMES}),
+        prep_ops=sorted({op for op in ledger.prep_ops if op in telemetry.PREP_OPS}),
+        prep_calls=ledger.tools.count("prepare_data"),
+        refusal=telemetry.closed(ledger.refusal[0] if ledger.refusal else None, get_args(telemetry.RefusalCode)),
+        error=telemetry.closed(error, get_args(telemetry.ErrorCode)),
+        reply_reasked=ledger.reply_reasked,
+        language_source=telemetry.closed(facts.language_source, get_args(telemetry.LanguageSource), "default"),
+        llm_calls=ledger.llm_calls,
+        steps=telemetry.step_tokens(
+            ledger.steps, steps=("root", "adapter", "reviewer", "judge"), judge_model=get_settings().judge_model
+        ),
+        latency_ms=facts.clock.ms(),
+        **telemetry.take_turn_marks(ledger.session_id),
+    )
+
+
+async def _refused(translator: Translator, ledger: RequestLedger, facts: TurnFacts) -> AsyncIterator[str]:
     """A turn the ledger refused before the scope judge and any model call: `ready`, the refusal, `done`."""
     yield translator.ready()
     for chunk in translator.refusal():
         yield chunk
     attribution("run", ledger, model_versions=[], kind=ledger.kind)
+    _telemetry_turn(ledger, facts)
     yield translator.done()
 
 
 def _refuse_now(
-    translator: Translator, ledger: RequestLedger, code: str, hook: str, **fields: Any
+    translator: Translator, ledger: RequestLedger, facts: TurnFacts, code: str, hook: str, **fields: Any
 ) -> StreamingResponse:
     """The fixed refusal `code` as the whole turn, sent before the judge: no model call, no queue, no message counted."""
     ledger.refuse(code, refusal(code, ledger.lang))
     attribution(hook, ledger, verdict=code, **fields)
     return StreamingResponse(
-        _refused(translator, ledger), media_type="text/event-stream", headers={**_NO_STORE, "X-Accel-Buffering": "no"}
+        _refused(translator, ledger, facts),
+        media_type="text/event-stream",
+        headers={**_NO_STORE, "X-Accel-Buffering": "no"},
     )
 
 
@@ -1645,22 +1790,25 @@ async def post_message(
         # session language, never the browser's locale; after the judge, the message's.
         lang=refusal_lang(view.language) if view else DEFAULT_LANGUAGE,
     )
+    _stamp(ledger, view, session)
+    ledger.turn += 1  # this turn's number: the user turns before it, plus one
+    facts = TurnFacts(action=body.action, language_source=view.language_source if view else None)
     translator = Translator(ledger, run_id=secrets.token_hex(8), spec_id=view.spec_id if view else None)
     # The fixed refusals sent before the scope judge, so none of these turns costs a model call.
     # A closed session answers `session_closed` first: its third `attack` refusal also reaches the strike lockout,
     # which would otherwise mask the closure behind `budget` here (the lockout still covers the user's other sessions).
     refused = scope_refusals(session.events)
     if refused >= settings.session_refusals:
-        return _refuse_now(translator, ledger, SESSION_CLOSED, "session_closed", refusals=refused)
+        return _refuse_now(translator, ledger, facts, SESSION_CLOSED, "session_closed", refusals=refused)
     if services.usage.locked_out(user, settings):
         # Past the day's `attack` strikes: its own refusal, never the misleading "usage limit" text (2026-10-14).
-        return _refuse_now(translator, ledger, LOCKED_OUT, "budget_halt", agent="route")
+        return _refuse_now(translator, ledger, facts, LOCKED_OUT, "budget_halt", agent="route")
     if not budget_allows(ledger, services.usage, settings):
         # The refusal the root would send, sent now: a user over the daily budget spends nothing.
-        return _refuse_now(translator, ledger, "budget", "budget_halt", agent="route")
+        return _refuse_now(translator, ledger, facts, "budget", "budget_halt", agent="route")
     limit = services.usage.message_limit(user, settings)
     if limit is not None:
-        return _refuse_now(translator, ledger, limit, "message_limit")
+        return _refuse_now(translator, ledger, facts, limit, "message_limit")
     services.usage.add_message(user)
     run = ActiveRun(abort=asyncio.Event(), user=user, started=runtime.now())
     # Registered here so a second request cannot slip in before the stream starts; the
@@ -1733,6 +1881,7 @@ async def post_message(
                 for chunk in translator.error(failure):
                     yield chunk
             attribution("run", ledger, model_versions=sorted(ledger.model_versions), kind=ledger.kind)
+            _telemetry_turn(ledger, facts, failure)
             # Read while the run is still active: no undo or paste can slip in between the run's end
             # and the `done` that reports its dataset, so the version and the change lines agree.
             sync = await _session_sync(runtime, user, sid, dataset_before=dataset_before, ledger=ledger)
@@ -1948,6 +2097,49 @@ async def bundle(
         # The transcript holds only the placeholder of a refused message; the ring holds its text.
         payload["refusals"] = [asdict(item) for item in services.refusals.all(sid)]
     return JSONResponse(payload, headers=_NO_STORE)
+
+
+class OutcomeBody(_Body):
+    """The page's outcome beacon: what the user did with a result, never what it held."""
+
+    action: telemetry.OutcomeAction
+    version: int = Field(default=0, strict=True, ge=0, le=999)
+    """The result version the action was on; 0 for a session-level action (`saved_session`, feedback on the chat)."""
+    reaction: telemetry.Reaction | None = None
+
+    @model_validator(mode="after")
+    def _reaction_with_feedback(self) -> "OutcomeBody":
+        if self.reaction is not None and self.action != "feedback":
+            raise ValueError("reaction goes with the feedback action only")
+        return self
+
+
+@app.post("/v1/sessions/{sid}/outcome", status_code=204, dependencies=v1_dependencies)
+async def post_outcome(sid: SessionId, body: OutcomeBody, user: User, runtime: RuntimeDep, rid: RequestId) -> Response:
+    """The usage telemetry's `outcome` line for one beacon of the page (`telemetry.py`).
+
+    The page sends it after a copy, a download, a session save or a feedback send; the BFF forwards it, so every
+    telemetry line comes from this one writer with the same salted session hash. Content-free by its schema
+    (closed `action` and `reaction`, a version number). `429 rate_limited` / `daily_limit` past
+    `OUTCOMES_PER_MINUTE` / `_PER_DAY` per user, which the page ignores; `404 session_expired` as everywhere.
+    No model call, no state write: the session's events are untouched.
+    """
+    session = await runtime.session(user, sid)
+    services = get_services()
+    limit = services.usage.outcome_limit(user)
+    if limit is not None:
+        raise AgentsError(429, limit)
+    services.usage.add_outcome(user)
+    ledger = _stamp(RequestLedger(request_id=rid, user_id=user, session_id=sid), read_session(session.state), session)
+    telemetry.write(
+        telemetry.Outcome,
+        ledger,
+        attempt=f"{body.action}:{body.version}:{body.reaction or ''}",
+        action=body.action,
+        version=body.version,
+        reaction=body.reaction,
+    )
+    return Response(status_code=204, headers=_NO_STORE)
 
 
 @app.delete("/v1/sessions/{sid}", status_code=204, dependencies=v1_dependencies)

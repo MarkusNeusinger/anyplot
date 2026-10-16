@@ -319,6 +319,8 @@ class ToolSafetyPlugin(BasePlugin):
                 "tool", ledger, agent=agent, tool=tool.name, args=argument_hash(tool_args), verdict=verdict or "allowed"
             )
             if verdict is None:
+                # The usage telemetry's `tools` (`telemetry.TOOL_NAMES` keeps only the root's known tools).
+                ledger.tools.append(tool.name)
                 return None
             refusal = tool_error(verdict)
             if verdict == "invalid_arguments" and tool.name in ARGUMENT_ERROR_TOOLS:

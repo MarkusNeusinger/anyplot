@@ -333,6 +333,7 @@ ALL_ROUTES = [
     ("POST", "/debug/agent/sessions/s1/dataset/to_long", None),
     ("POST", "/debug/agent/sessions/s1/messages", {"action": "create_plot"}),
     ("POST", "/debug/agent/sessions/s1/cancel", None),
+    ("POST", "/debug/agent/sessions/s1/outcome", {"action": "copied_code", "version": 1}),
     ("POST", "/debug/agent/sessions/s1/versions/1/render", {"theme": "dark"}),
     ("GET", "/debug/agent/sessions/s1/artifacts/plot-light.png", None),
     ("GET", "/debug/agent/sessions/s1/bundle?include_data=true", None),
@@ -2056,6 +2057,51 @@ class TestPassThroughRoutes:
         assert response.status_code == 204
         assert response.headers["X-Request-Id"]
         assert str(upstream.requests[0].url) == f"{SERVICE_URL}/v1/sessions/s1/cancel"
+
+
+class TestOutcomeBeacon:
+    """`POST /sessions/{sid}/outcome`: the page's content-free beacon, forwarded to the agents service."""
+
+    def test_forwards_the_closed_fields_only(self, client, upstream) -> None:
+        upstream.handler = lambda request: httpx.Response(204)
+        body = {"action": "feedback", "version": 2, "reaction": "thumbs_up"}
+        response = client.post("/debug/agent/sessions/s1/outcome", headers=CLIENT_HEADERS, json=body)
+        assert response.status_code == 204 and response.headers["X-Request-Id"]
+        assert str(upstream.requests[0].url) == f"{SERVICE_URL}/v1/sessions/s1/outcome"
+        assert upstream.last_json == body
+
+    def test_leaves_out_an_absent_reaction(self, client, upstream) -> None:
+        upstream.handler = lambda request: httpx.Response(204)
+        client.post("/debug/agent/sessions/s1/outcome", headers=CLIENT_HEADERS, json={"action": "saved_session"})
+        assert upstream.last_json == {"action": "saved_session", "version": 0}
+
+    @pytest.mark.parametrize(
+        "body",
+        [
+            {"action": "copied_code", "reaction": "bug"},
+            {"action": "pasted_into_slack"},
+            {"action": "feedback", "reaction": "love"},
+            {"action": "copied_code", "version": "1"},
+            {"action": "copied_code", "version": 1000},
+            {"action": "copied_code", "message": "the legend hides the points"},
+        ],
+    )
+    def test_refuses_anything_outside_the_closed_sets(self, client, upstream, body) -> None:
+        response = client.post("/debug/agent/sessions/s1/outcome", headers=CLIENT_HEADERS, json=body)
+        assert response.status_code == 422
+        assert upstream.requests == []
+
+    def test_relays_the_rate_limit(self, client, upstream) -> None:
+        upstream.handler = lambda request: httpx.Response(429, json={"detail": "rate_limited"})
+        response = client.post(
+            "/debug/agent/sessions/s1/outcome", headers=CLIENT_HEADERS, json={"action": "copied_image"}
+        )
+        assert response.status_code == 429 and response.json()["detail"] == "rate_limited"
+
+    def test_needs_the_client_header(self, client, upstream) -> None:
+        response = client.post("/debug/agent/sessions/s1/outcome", json={"action": "copied_image"})
+        assert response.status_code == 403
+        assert upstream.requests == []
 
 
 def _seed(cases: FakeBucket, rows: FakeRows, *, include_data: bool = True, **row_overrides: Any) -> AgentFeedback:

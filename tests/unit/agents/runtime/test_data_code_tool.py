@@ -413,7 +413,9 @@ async def test_a_turn_that_runs_code_reports_the_version_with_its_code(
     dataset: dict[str, Any] = done["dataset"]
     assert dataset["version"] == 1 and dataset["code"] == SNIPPET
     assert dataset["changes"] == [f"{DATA_CODE_CHANGE}: 4 rows, 2 columns"]
-    lines = [json.loads(record.getMessage()) for record in caplog.records]
+    lines = [
+        json.loads(record.getMessage()) for record in caplog.records if record.name == "anyplot.agents.attribution"
+    ]
     data_code = [line for line in lines if line["hook"] == "data_code"]
     assert data_code and data_code[0]["outcome"] == "ran" and data_code[0]["language"] == "javascript"
     assert "arange" not in caplog.text
@@ -441,7 +443,7 @@ async def test_code_in_the_data_field_is_refused_before_any_parser(
     outcomes = [
         json.loads(record.getMessage())["outcome"]
         for record in caplog.records
-        if json.loads(record.getMessage())["hook"] == "data_transcribe"
+        if record.name == "anyplot.agents.attribution" and json.loads(record.getMessage())["hook"] == "data_transcribe"
     ]
     assert outcomes == ["code"] * len(snippets) + ["formula"]
 
