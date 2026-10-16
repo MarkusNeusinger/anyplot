@@ -178,6 +178,18 @@ async def test_the_beacon_takes_closed_values_only(client: httpx.AsyncClient) ->
     assert (unknown.status_code, unknown.json()["detail"]) == (404, "not_found")
 
 
+async def test_two_actions_never_share_a_key(client: httpx.AsyncClient, caplog: pytest.LogCaptureFixture) -> None:
+    """The key holds the action and the version besides the request id: even under one request id (a proxy that
+    reuses it) two different actions on one version stay two rows."""
+    caplog.set_level(logging.INFO)
+    sid = await open_session(client)
+    for action in ("saved_session", "feedback"):
+        response = await client.post(f"/v1/sessions/{sid}/outcome", headers=HEADERS, json={"action": action})
+        assert response.status_code == 204
+    keys = [line["idempotency_key"] for line in telemetry_lines(caplog) if line["event"] == "outcome"]
+    assert len(keys) == 2 and keys[0] != keys[1]
+
+
 async def test_the_beacon_is_rate_limited_per_user(client: httpx.AsyncClient) -> None:
     sid = await open_session(client)
     url = f"/v1/sessions/{sid}/outcome"
@@ -306,6 +318,17 @@ def test_a_rerun_node_keeps_its_run_index() -> None:
     telemetry.forget("sess-x")
 
 
+def test_a_converted_file_kind_survives_a_refused_paste() -> None:
+    telemetry.forget("sess-z")
+    telemetry.converted("sess-z", kind="xlsx", sheets=3)
+    first = telemetry.InputFacts.for_paste("sess-z", size=10, source=True, confirmed=False)
+    retry = telemetry.InputFacts.for_paste("sess-z", size=10, source=True, confirmed=False)  # after a 429
+    assert (first.format, first.sheets) == (retry.format, retry.sheets) == ("xlsx", 3)
+    telemetry.clear_converted("sess-z")  # the paste passed its limits
+    assert telemetry.InputFacts.for_paste("sess-z", size=10, source=True, confirmed=False).format is None
+    telemetry.forget("sess-z")
+
+
 def test_the_turn_marks_are_taken_once() -> None:
     telemetry.forget("sess-y")
     telemetry.marks("sess-y").undo = True
@@ -391,6 +414,29 @@ def test_the_harness_tags_its_lines(caplog: pytest.LogCaptureFixture) -> None:
     after = telemetry.write(telemetry.Outcome, ledger, action="saved_session")
     assert record is not None and record["source"] == "harness"
     assert after is not None and after["source"] == "live"
+
+
+async def test_a_live_request_beside_a_harness_run_stays_live() -> None:
+    """The source is a context variable: a harness run in another task of the same loop tags only its own lines."""
+    import asyncio
+
+    ledger = RequestLedger(session_id="s1", spec_id="scatter-basic", library="matplotlib")
+    inside, release = asyncio.Event(), asyncio.Event()
+    records: list[dict[str, Any] | None] = []
+
+    async def harness_run() -> None:
+        with telemetry.harness():
+            records.append(telemetry.write(telemetry.Outcome, ledger, action="copied_code"))
+            inside.set()
+            await release.wait()
+
+    task = asyncio.create_task(harness_run())
+    await inside.wait()
+    live = telemetry.write(telemetry.Outcome, ledger, action="copied_image")
+    release.set()
+    await task
+    assert records[0] is not None and records[0]["source"] == "harness"
+    assert live is not None and live["source"] == "live"
 
 
 def test_the_harness_source_is_restored_after_a_failure() -> None:

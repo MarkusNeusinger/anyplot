@@ -2,13 +2,18 @@
 -- Run after 02_event_views.sql.
 --
 -- `funnel_last_step` is the furthest step the session reached:
---   data_refused  every data input was refused or failed
---   data_ok       a dataset was stored
---   chatted       a chat turn ran
---   plot_run      a pipeline run ran
---   plot_shipped  a pipeline run shipped a plot (status ok or needs_attention)
---   kept          the user copied or downloaded a result or saved the session
--- A session that never sent a data input or a turn writes no line, so the funnel starts at the first input.
+--   outcome_only           only outcome beacons (feedback on a chat, a save) and no input, turn or run
+--   data_refused           every data input was refused or failed
+--   transcription_offered  free text was read as a table, and the user never confirmed it
+--   data_ok                a dataset was stored
+--   chatted                a chat turn ran
+--   plot_not_ready         a plot was asked for before the data was confirmed, and none started
+--   plot_run               a pipeline run started (`not_ready` ones are not runs here)
+--   plot_shipped           a pipeline run shipped a plot (status ok or needs_attention)
+--   kept                   the user copied or downloaded a result or saved the session
+-- A session that never sent a data input, a turn or a beacon writes no line, so the funnel starts there.
+-- A transcription writes two data_input rows (the offer, outcome `transcribed`, and the confirmed paste);
+-- `data_inputs` counts the input once, without the offer.
 --
 -- `state` applies a 30-minute inactivity rule: a session whose last line is younger than 30 minutes is
 -- `active`; any other session ended, as
@@ -33,7 +38,13 @@ spans AS (
   GROUP BY session, source
 ),
 inputs AS (
-  SELECT session, source, COUNT(*) AS data_inputs, COUNTIF(outcome = 'ok') AS data_ok
+  SELECT
+    session,
+    source,
+    COUNTIF(outcome != 'transcribed') AS data_inputs,
+    COUNTIF(outcome = 'ok') AS data_ok,
+    COUNTIF(outcome = 'transcribed') AS transcriptions_offered,
+    COUNTIF(outcome NOT IN ('ok', 'transcribed')) AS data_refused
   FROM `anyplot.agent_telemetry.data_inputs`
   GROUP BY session, source
 ),
@@ -46,10 +57,11 @@ runs AS (
   SELECT
     session,
     source,
-    COUNT(*) AS runs,
+    COUNTIF(status != 'not_ready') AS runs,
+    COUNTIF(status = 'not_ready') AS not_ready_runs,
     COUNTIF(shipped) AS plots_shipped,
     MIN(IF(shipped, turn, NULL)) AS first_plot_turn,
-    COUNTIF(rounds > 1) AS repaired_runs
+    COUNTIF(status != 'not_ready' AND rounds > 1) AS repaired_runs
   FROM `anyplot.agent_telemetry.pipeline_runs`
   GROUP BY session, source
 ),
@@ -69,8 +81,10 @@ SELECT
   TIMESTAMP_DIFF(spans.last_at, spans.first_at, SECOND) AS duration_s,
   IFNULL(inputs.data_inputs, 0) AS data_inputs,
   IFNULL(inputs.data_ok, 0) AS data_ok,
+  IFNULL(inputs.transcriptions_offered, 0) AS transcriptions_offered,
   IFNULL(turns.turns, 0) AS turns,
   IFNULL(runs.runs, 0) AS runs,
+  IFNULL(runs.not_ready_runs, 0) AS not_ready_runs,
   IFNULL(runs.plots_shipped, 0) AS plots_shipped,
   IFNULL(runs.repaired_runs, 0) AS repaired_runs,
   runs.first_plot_turn AS turns_to_first_plot,
@@ -80,9 +94,12 @@ SELECT
     WHEN IFNULL(kept.keeps, 0) > 0 THEN 'kept'
     WHEN IFNULL(runs.plots_shipped, 0) > 0 THEN 'plot_shipped'
     WHEN IFNULL(runs.runs, 0) > 0 THEN 'plot_run'
+    WHEN IFNULL(runs.not_ready_runs, 0) > 0 THEN 'plot_not_ready'
     WHEN IFNULL(turns.turns, 0) > 0 THEN 'chatted'
     WHEN IFNULL(inputs.data_ok, 0) > 0 THEN 'data_ok'
-    ELSE 'data_refused'
+    WHEN IFNULL(inputs.transcriptions_offered, 0) > 0 THEN 'transcription_offered'
+    WHEN IFNULL(inputs.data_refused, 0) > 0 THEN 'data_refused'
+    ELSE 'outcome_only'
   END AS funnel_last_step,
   CASE
     WHEN spans.last_at > TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 30 MINUTE) THEN 'active'

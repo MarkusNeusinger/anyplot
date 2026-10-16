@@ -24,7 +24,7 @@ WITH steps AS (
   SELECT
     turns.ts, turns.source, turns.session, turns.spec_id, turns.library, 'chat_turn' AS origin,
     JSON_VALUE(step.step) AS step,
-    REGEXP_EXTRACT(JSON_VALUE(step.model), r'^[^@]+') AS model,
+    REGEXP_REPLACE(JSON_VALUE(step.model), r'(@.*|-[0-9]{8})$', '') AS model,
     IFNULL(LAX_INT64(step.calls), 0) AS calls,
     IFNULL(LAX_INT64(step.input), 0) AS input_tokens,
     IFNULL(LAX_INT64(step.output), 0) AS output_tokens,
@@ -34,7 +34,7 @@ WITH steps AS (
   UNION ALL
   SELECT
     ts, source, session, spec_id, library, 'data_input', 'judge',
-    REGEXP_EXTRACT(judge_model, r'^[^@]+'),
+    REGEXP_REPLACE(judge_model, r'(@.*|-[0-9]{8})$', ''),
     IF(judge_input + judge_output > 0, 1, 0),
     judge_input, judge_output, 0, 0
   FROM `anyplot.agent_telemetry.data_inputs`

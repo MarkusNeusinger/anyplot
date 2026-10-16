@@ -35,6 +35,7 @@ from agents.anyplot.data.parse import (
 )
 from agents.anyplot.data.prepare import Operation, apply_operations
 from agents.anyplot.data.roles import DataRole
+from agents.anyplot.opening import NOTES_INSTRUCTION_WARNING, NOTES_REFUSED_WARNING, NOTES_UNCHECKED_WARNING
 from agents.anyplot.schemas import (
     MAX_CELL_CHARS,
     MAX_COLUMN_NAME_CHARS,
@@ -725,21 +726,23 @@ class TestContextLines:
     def test_without_context_drops_the_notes_and_puts_its_warning_first(self) -> None:
         parsed = parse_dataset(f"Title\n{OPEN_METEO}")
 
-        dropped = without_context(parsed, "the notes were left out")
+        dropped = without_context(parsed, NOTES_REFUSED_WARNING)
 
         assert dropped.context_lines == [] and dropped.csv == parsed.csv
-        assert dropped.warnings[0] == dropped.profile.warnings[0] == "the notes were left out"
+        assert dropped.warnings[0] == dropped.profile.warnings[0] == NOTES_REFUSED_WARNING
         assert dropped.warnings[1:] == parsed.warnings
 
     def test_without_context_keeps_the_warning_cap_and_the_omitted_count(self) -> None:
         parsed = parse_dataset("x,y\n1,2\n3,4\n5,6\n")
-        full = [f"w{index}" for index in range(MAX_WARNINGS - 1)] + ["7 more warnings omitted"]
+        # Real sentences (the data tests check that every warning has a telemetry code, conftest.py).
+        full = [f"column 'c{index}': spaces around the text removed in 1 cell" for index in range(MAX_WARNINGS - 1)]
+        full += ["7 more warnings omitted"]
         capped = replace(parsed, warnings=full, profile=parsed.profile.model_copy(update={"warnings": full}))
 
-        dropped = without_context(capped, "first")
+        dropped = without_context(capped, NOTES_INSTRUCTION_WARNING)
 
         assert len(dropped.warnings) == MAX_WARNINGS
-        assert dropped.warnings[0] == "first" and dropped.warnings[-1] == "8 more warnings omitted"
+        assert dropped.warnings[0] == NOTES_INSTRUCTION_WARNING and dropped.warnings[-1] == "8 more warnings omitted"
 
 
 class TestPythonLiterals:
@@ -1683,10 +1686,10 @@ class TestConstantColumns:
 
     def test_refused_notes_bring_the_columns_back(self) -> None:
         """The notes judge refuses the notes: the values they carried come back as columns, never lost."""
-        parsed = without_context(parse_dataset(OFFICE_EXPORT), "notes dropped")
+        parsed = without_context(parse_dataset(OFFICE_EXPORT), NOTES_UNCHECKED_WARNING)
 
         assert [column.name for column in parsed.profile.columns] == ["Year", "Region", "Origin", "Sex", "Population"]
-        assert parsed.context_lines == [] and parsed.warnings[0] == "notes dropped"
+        assert parsed.context_lines == [] and parsed.warnings[0] == NOTES_UNCHECKED_WARNING
         assert not any("moved to the notes" in warning for warning in parsed.warnings)
         assert read_back(parsed)["Region"].tolist() == ["Country"] * 4
 

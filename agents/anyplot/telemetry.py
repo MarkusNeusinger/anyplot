@@ -26,7 +26,7 @@ feedback-case submission (`api/agent_cases.py`).
 
 Envelope (every line): `log_type`, `schema`, `event`, `service` and `revision` (Cloud
 Run's `K_SERVICE` and `K_REVISION`), `source` (`live`, or `harness` for the eval
-harnesses, `set_source`), `session` (a salted hash), `spec_id`, `library`, `turn` (the
+harnesses, `harness()`), `session` (a salted hash), `spec_id`, `library`, `turn` (the
 session's user turns so far, from the request ledger), and `idempotency_key`, a hash of
 session, turn, attempt and event: the BigQuery base view keeps one row per key, so a
 line Cloud Logging delivers twice or a pipeline node ADK re-runs counts once.
@@ -51,6 +51,7 @@ import time
 from collections import OrderedDict
 from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Annotated, Any, Literal, cast, get_args
 
@@ -81,26 +82,21 @@ SCHEMA: Literal[1] = 1
 """The line format's version: a field renamed or removed is a new schema; a field added is not."""
 
 Source = Literal["live", "harness"]
-_source: Source = "live"
-
-
-def set_source(source: Source) -> None:
-    """Tag every later line with `source`: the eval harnesses (`evals/matrix.py`, `evals/prep.py`) call it with
-    `harness` before their first request, so the views can leave their runs out."""
-    global _source
-    _source = source
+SOURCE: ContextVar[Source] = ContextVar("anyplot_telemetry_source", default="live")
+"""The source of the lines written in this context. A context variable, not a module global: the eval harnesses
+run the app in process (`evals/matrix.py`, `evals/prep.py`), and only the requests they send, which run in the
+harness's own context, may be tagged `harness`; a live request served by the same process keeps `live`."""
 
 
 @contextmanager
 def harness() -> Iterator[None]:
-    """Tag every line written inside the block `harness`, and restore the previous source on every exit, an
-    exception included, so ordinary requests after an eval run in the same process count as `live` again."""
-    previous = _source
-    set_source("harness")
+    """Tag every line written inside the block, in this context and the tasks it starts, `harness`; the previous
+    source is back on every exit, an exception included."""
+    token = SOURCE.set("harness")
     try:
         yield
     finally:
-        set_source(previous)
+        SOURCE.reset(token)
 
 
 def session_key(session_id: str) -> str:
@@ -124,8 +120,9 @@ def _library(value: str) -> str:
 Library = Annotated[str, AfterValidator(_library)]
 """One of `core.constants.SUPPORTED_LIBRARIES`."""
 SpecId = Annotated[str, Field(pattern=r"^[a-z0-9-]{1,100}$")]
-ModelId = Annotated[str, Field(pattern=r"^[a-z0-9][a-z0-9.@_-]{0,79}$")]
-"""A model id as the provider names it (`claude-haiku-5-5`, `gemini-3.8-flash`, `...@20261001`)."""
+ModelId = Annotated[str, Field(pattern=r"^[a-z0-9][a-z0-9._-]{0,79}$")]
+"""A model id as the price table keys it (`claude-haiku-5-5`, `gemini-3.8-flash`): `model_id` drops version
+suffixes before a line is written."""
 DefectId = Annotated[str, Field(pattern=r"^[A-Z]{2}-[0-9]{2}$")]
 GateId = Annotated[str, Field(pattern=r"^(?:R[0-9](?:-[a-z_]{1,24})?|G[0-9]{1,2})$")]
 
@@ -443,7 +440,7 @@ def emit(event: AnyEvent, ledger: RequestLedger, *, attempt: str = "0") -> dict[
         envelope = _Envelope(
             service=service,
             revision=revision,
-            source=_source,
+            source=SOURCE.get(),
             session=session,
             spec_id=ledger.spec_id or None,
             library=ledger.library or None,
@@ -668,33 +665,42 @@ def step_of(agent: str) -> Step:
 def step_tokens(
     usage: dict[str, StepUsage], *, steps: Iterable[Step], judge_model: str | None = None
 ) -> list[dict[str, Any]]:
-    """The ledger's per-agent usage folded by step, for the steps asked for, in a fixed order."""
+    """The ledger's per-agent usage folded by step and model, for the steps asked for, in a fixed step order.
+
+    One entry per (step, model), so two models in one step (an experiment's adapter model beside the default)
+    are each priced at their own rate by the cost view. The judges book no model of their own (`book_judge`):
+    their entry carries `judge_model`, the settings' judge model, so the cost view can price it.
+    """
     wanted = list(steps)
-    folded: dict[Step, dict[str, Any]] = {}
+    folded: dict[tuple[Step, str | None], dict[str, Any]] = {}
     for agent, spent in usage.items():
         step: Step = "judge" if agent == "judge" else step_of(agent)
         if step not in wanted:
             continue
+        model = model_id(spent.model or (judge_model if step == "judge" else None))
         item = folded.setdefault(
-            step, {"step": step, "model": None, "calls": 0, "input": 0, "output": 0, "cached": 0, "cache_write": 0}
+            (step, model),
+            {"step": step, "model": model, "calls": 0, "input": 0, "output": 0, "cached": 0, "cache_write": 0},
         )
         item["calls"] += spent.calls
         item["input"] += spent.input
         item["output"] += spent.output
         item["cached"] += spent.cached
         item["cache_write"] += spent.cache_write
-        item["model"] = item["model"] or _model_id(spent.model or (judge_model if step == "judge" else None))
-    return [folded[step] for step in wanted if step in folded]
+    return [folded[key] for key in sorted(folded, key=lambda key: (wanted.index(key[0]), key[1] or ""))]
 
 
-_MODEL_ID = re.compile(r"^[a-z0-9][a-z0-9.@_-]{0,79}$")
+_MODEL_ID = re.compile(r"^[a-z0-9][a-z0-9._-]{0,79}$")
+_MODEL_SUFFIX = re.compile(r"(?:@.*|-[0-9]{8})$")
 
 
-def _model_id(value: str | None) -> str | None:
-    """A model id that fits `ModelId`, else None: a provider's odd version string never fails the whole line."""
+def model_id(value: str | None) -> str | None:
+    """A model id as the price table keys it, else None: lower case, without a `models/` prefix and without a
+    version suffix (`claude-haiku-5-5@20261001` and `claude-haiku-5-5-20261001` are `claude-haiku-5-5`). A
+    provider's odd version string becomes None and never fails the whole line."""
     if not value:
         return None
-    text = value.strip().lower().removeprefix("models/")
+    text = _MODEL_SUFFIX.sub("", value.strip().lower().removeprefix("models/"))
     return text if _MODEL_ID.fullmatch(text) else None
 
 
@@ -852,10 +858,12 @@ class InputFacts:
 
     @classmethod
     def for_paste(cls, session_id: str, *, size: int, source: bool, confirmed: bool) -> InputFacts:
-        """A paste's facts; a paste that names a file after a conversion takes the converted file's kind, once."""
+        """A paste's facts; a paste that names a file after a conversion takes the converted file's kind.
+
+        The kind is only read here: the route clears it (`clear_converted`) once the paste passed its limits, so a
+        paste refused at the rate limit and sent again still knows the file it came from."""
         mark = marks(session_id)
         kind, sheets = mark.convert_kind, mark.convert_sheets
-        mark.convert_kind, mark.convert_sheets = None, 0
         fmt: str | None = None
         if source and kind is not None:
             fmt = kind
@@ -899,7 +907,7 @@ class InputFacts:
             sheets=self.sheets,
             judge_input=judge.input if judge else 0,
             judge_output=judge.output if judge else 0,
-            judge_model=_model_id(judge_model) if judge else None,
+            judge_model=model_id(judge_model) if judge else None,
             latency_ms=clock.ms(),
             **self.fields,
         )
@@ -920,6 +928,12 @@ def file_refusal(
         cause, outcome = None, REFUSAL_OUTCOMES.get(code, "other")
     facts = InputFacts(session_id, "file", size, kind or "other", outcome=outcome, cause=cause)
     return facts.write(ledger, clock)
+
+
+def clear_converted(session_id: str) -> None:
+    """The paste that followed a conversion reached the parser: the file's kind is spent."""
+    mark = marks(session_id)
+    mark.convert_kind, mark.convert_sheets = None, 0
 
 
 def converted(session_id: str, *, kind: str, sheets: int) -> None:

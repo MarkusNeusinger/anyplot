@@ -923,6 +923,7 @@ async def upload_dataset(
         if limit is not None:
             attribution("paste_limit", ledger, verdict=limit)
             raise AgentsError(429, limit)
+        telemetry.clear_converted(sid)  # past the limits: this paste is the converted file's one
         runtime.pasting.add(user)  # no await since the check above, so no second paste slipped in between
         try:
             return await _ingest_paste(services, runtime, body, user, sid, ledger, view, facts)

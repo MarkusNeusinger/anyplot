@@ -4,13 +4,25 @@ Tests for GET /debug/agent-usage and api/agent_usage.py — the agent usage high
 No test reaches BigQuery: `get_usage_query` is overridden with a fake that records the SQL and answers rows.
 """
 
+from collections.abc import Iterator
+from datetime import UTC, datetime, timedelta
 from typing import Any
 from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
 
-from api.agent_usage import DATASET_PATTERN, decode_rows, read_usage, usage_sql
+from api import agent_usage
+from api.agent_usage import (
+    CACHE_TTL_S,
+    DATASET_PATTERN,
+    clear_usage_cache,
+    decode_rows,
+    read_usage,
+    usage_query,
+    usage_sql,
+    window_start,
+)
 from api.main import app, fastapi_app
 from api.routers.debug import get_usage_query, require_admin
 from core.config import settings
@@ -30,15 +42,22 @@ ROW: dict[str, Any] = {
 
 class FakeQuery:
     def __init__(self, rows: list[dict[str, Any]] | None = None, error: Exception | None = None) -> None:
-        self.calls: list[tuple[str, int]] = []
+        self.calls: list[tuple[str, datetime]] = []
         self._rows = rows if rows is not None else [ROW]
         self._error = error
 
-    def rows(self, sql: str, days: int) -> list[dict[str, Any]]:
-        self.calls.append((sql, days))
+    def rows(self, sql: str, since: datetime) -> list[dict[str, Any]]:
+        self.calls.append((sql, since))
         if self._error is not None:
             raise self._error
         return self._rows
+
+
+@pytest.fixture(autouse=True)
+def fresh_cache() -> Iterator[None]:
+    clear_usage_cache()
+    yield
+    clear_usage_cache()
 
 
 @pytest.fixture
@@ -66,11 +85,19 @@ class TestEndpoint:
         assert body["top_specs"] == [{"key": "scatter-basic", "count": 5}, {"key": "bar-basic", "count": 3}]
         assert body["top_refusals"] == [{"key": "unparseable", "count": 3}]  # a null key is dropped
         assert body["generated_at"].endswith("Z")
-        assert fake.calls[0][1] == 30 and f"`{DATASET}.events`" in fake.calls[0][0]
+        sql, since = fake.calls[0]
+        assert f"`{DATASET}_logs._AllLogs`" in sql
+        assert timedelta(days=30) <= datetime.now(UTC) - since < timedelta(days=30, minutes=11)
 
     def test_defaults_to_seven_days(self, client, fake) -> None:
         assert client.get("/debug/agent-usage").json()["days"] == 7
-        assert fake.calls[0][1] == 7
+        assert datetime.now(UTC) - fake.calls[0][1] < timedelta(days=7, minutes=11)
+
+    def test_a_second_load_runs_no_query(self, client, fake) -> None:
+        client.get("/debug/agent-usage")
+        client.get("/debug/agent-usage")
+        client.get("/debug/agent-usage?days=30")
+        assert len(fake.calls) == 2  # one per window
 
     @pytest.mark.parametrize("days", ["8", "0", "365", "seven"])
     def test_other_windows_are_refused(self, client, fake, days) -> None:
@@ -100,6 +127,50 @@ class TestEndpoint:
         finally:
             fastapi_app.dependency_overrides.clear()
         assert response.status_code == 401
+
+
+class TestCache:
+    def test_an_answer_is_kept_for_the_ttl(self) -> None:
+        fake, now = FakeQuery(), [100.0]
+        read_usage(fake, DATASET, 7, clock=lambda: now[0])
+        now[0] += CACHE_TTL_S - 1
+        read_usage(fake, DATASET, 7, clock=lambda: now[0])
+        assert len(fake.calls) == 1
+        now[0] += 2
+        read_usage(fake, DATASET, 7, clock=lambda: now[0])
+        assert len(fake.calls) == 2
+
+    def test_a_failure_is_never_kept(self) -> None:
+        failing = FakeQuery(error=RuntimeError("timeout"))
+        assert read_usage(failing, DATASET, 7).status == "unavailable"
+        working = FakeQuery()
+        assert read_usage(working, DATASET, 7).status == "ok" and len(working.calls) == 1
+
+    def test_the_window_start_moves_in_ten_minute_steps(self) -> None:
+        a = window_start(7, datetime(2026, 10, 16, 12, 1, 5, tzinfo=UTC))
+        b = window_start(7, datetime(2026, 10, 16, 12, 9, 59, tzinfo=UTC))
+        c = window_start(7, datetime(2026, 10, 16, 12, 10, 0, tzinfo=UTC))
+        assert a == b == datetime(2026, 10, 9, 12, 0, tzinfo=UTC)
+        assert c == datetime(2026, 10, 9, 12, 10, tzinfo=UTC)
+
+    def test_a_client_that_failed_to_start_is_tried_again(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        attempts: list[str] = []
+
+        class Flaky:
+            def __init__(self, project: str) -> None:
+                attempts.append(project)
+                if len(attempts) == 1:
+                    raise RuntimeError("no credentials yet")
+
+            def rows(self, sql: str, since: datetime) -> list[dict[str, Any]]:
+                return []
+
+        monkeypatch.setattr(agent_usage, "BigQueryUsage", Flaky)
+        monkeypatch.setattr(agent_usage, "_CLIENTS", {})
+        assert usage_query(DATASET) is None
+        first = usage_query(DATASET)
+        assert first is not None and usage_query(DATASET) is first
+        assert attempts == ["anyplot", "anyplot"]
 
 
 class TestRestAnswer:
@@ -147,7 +218,7 @@ class TestRestAnswer:
 
     def test_feeds_the_card(self) -> None:
         class Rest:
-            def rows(self, sql: str, days: int) -> list[dict[str, Any]]:
+            def rows(self, sql: str, since: datetime) -> list[dict[str, Any]]:
                 return decode_rows(TestRestAnswer.ANSWER)
 
         usage = read_usage(Rest(), DATASET, 7)
@@ -156,7 +227,7 @@ class TestRestAnswer:
 
     def test_an_incomplete_job_is_unavailable(self) -> None:
         class Slow:
-            def rows(self, sql: str, days: int) -> list[dict[str, Any]]:
+            def rows(self, sql: str, since: datetime) -> list[dict[str, Any]]:
                 return decode_rows({"jobComplete": False})
 
         assert read_usage(Slow(), DATASET, 7).status == "unavailable"
@@ -166,10 +237,16 @@ class TestRestAnswer:
 
 
 class TestQuery:
-    def test_counts_live_sessions_only_and_takes_days_as_a_parameter(self) -> None:
+    def test_prunes_to_the_window_before_it_deduplicates(self) -> None:
         sql = usage_sql(DATASET)
-        assert "source = 'live'" in sql and "INTERVAL @days DAY" in sql
-        assert "LIMIT 5" in sql
+        assert sql.index("timestamp >= @since") < sql.index("QUALIFY ROW_NUMBER()")
+        assert "CURRENT_TIMESTAMP" not in sql  # the text stays byte-identical, so the result cache can answer
+        assert "'live'" in sql and "LIMIT 5" in sql
+
+    def test_counts_an_input_once_and_leaves_not_ready_runs_out(self) -> None:
+        sql = usage_sql(DATASET)
+        assert "JSON_VALUE(payload.outcome) != 'transcribed'" in sql
+        assert "JSON_VALUE(payload.status) != 'not_ready'" in sql
 
     @pytest.mark.parametrize("dataset", ["anyplot.agent_telemetry", "my-project-1.usage_views"])
     def test_accepts_a_dataset_name(self, dataset) -> None:

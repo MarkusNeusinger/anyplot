@@ -105,7 +105,7 @@ and dataset names written out.
 |---|---|---|
 | `01_events.sql` | `events` | One row per line, deduplicated by `idempotency_key` (`QUALIFY ROW_NUMBER()`), with the envelope as columns and the line as `payload` |
 | `02_event_views.sql` | `data_inputs`, `chat_turns`, `pipeline_runs`, `outcomes` | One typed column per field |
-| `03_sessions.sql` | `sessions` | One row per session: data inputs, turns, runs, shipped plots, `turns_to_first_plot`, keeps, `funnel_last_step`, and `state` under a 30-minute inactivity rule (`active`, `kept`, `refined`, `abandoned_after_plot`, `abandoned_before_plot`) |
+| `03_sessions.sql` | `sessions` | One row per session: data inputs, transcription offers, turns, runs, `not_ready` asks, shipped plots, `turns_to_first_plot`, keeps, `funnel_last_step` (from `outcome_only` and `data_refused` through `transcription_offered`, `data_ok`, `chatted`, `plot_not_ready`, `plot_run` and `plot_shipped` to `kept`), and `state` under a 30-minute inactivity rule (`active`, `kept`, `refined`, `abandoned_after_plot`, `abandoned_before_plot`). A transcription writes two `data_input` rows, the offer (outcome `transcribed`) and the confirmed paste; every view counts the input once and the offers apart. `not_ready` runs are never counted as runs or in the repair rate |
 | `04_usage_failures.sql` | `usage`, `input_formats`, `failures` | Usage by day, spec and library (each line under the library it was written under, so a library switch splits a session's runs correctly); data inputs by format and entry, each input under its own format; one row per failure with its kind and closed code |
 | `05_prices_cost.sql` | `model_prices`, `cost` | The `eu` list prices of `agents/evals/pricing.py` (a test keeps both equal) and the cost of every turn step and data-input judge call |
 
@@ -216,10 +216,16 @@ Run these steps once, as a project owner. They write nothing but the resources n
 The admin page `/debug` shows an "agent usage" card for the last 7 or 30 days: sessions, plots shipped,
 the kept rate (sessions whose user kept a result, among the sessions with a shipped plot), the repair rate
 (runs that needed more than one round), and the five most frequent specs, input formats and refusal codes.
-It reads `GET /debug/agent-usage?days=7|30` (`api/agent_usage.py`), one query over the `events` view of the
-dataset that `AGENT_TELEMETRY_DATASET` names. The answer holds aggregates only. `status` is
+It reads `GET /debug/agent-usage?days=7|30` (`api/agent_usage.py`). The API needs the linked log dataset to
+be named like the views dataset plus `_logs` (`anyplot.agent_telemetry_logs` for
+`AGENT_TELEMETRY_DATASET=anyplot.agent_telemetry`), because it queries the log view `_AllLogs` directly: it
+filters `timestamp` to the window before it deduplicates, so a load scans the window's partitions only and
+never the whole 180 days, which the `events` view, deduplicated over the whole bucket, cannot avoid. The
+window starts at the current time floored to 10 minutes, passed as a query parameter, so repeated loads send
+the same query and BigQuery may answer from its result cache; on top of that the API keeps each answer for 10
+minutes, so reloading `/debug` runs no query at all. The answer holds aggregates only. `status` is
 `not_configured` while the variable is unset, and `unavailable` when the query fails (no table yet, no
-permission, a timeout); both come with zeros, and the card shows its empty state.
+permission, a timeout); both come with zeros, the card shows its empty state, and a failure is never kept.
 
 ## Before the chat opens to the public
 
