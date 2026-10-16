@@ -16,6 +16,7 @@ import { useAnalytics, useCopyCode } from 'src/hooks';
 import { fetchWithAuth } from 'src/lib/api';
 import { specPath } from 'src/routes/paths';
 import { AgentCasesSection } from 'src/sections/debug/AgentCasesSection';
+import { AgentUsageSection } from 'src/sections/debug/AgentUsageSection';
 import { timeAgo } from 'src/sections/debug/format';
 import { debugControlSx } from 'src/sections/debug/styles';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
@@ -1291,6 +1292,9 @@ export function DebugPage() {
           ))}
         </Box>
       )}
+
+      {/* Agent usage: the agent chat's content-free telemetry, 7 or 30 days */}
+      <AgentUsageSection token={adminToken} reloadCounter={reloadCounter} />
 
       {/* Agent cases: the triage of the agent chat's quick feedback */}
       <AgentCasesSection token={adminToken} reloadCounter={reloadCounter} />

@@ -29,6 +29,7 @@ function renderCard(props: Partial<ResultCardProps> = {}) {
     onRequestTheme: vi.fn(),
     onFetchArtifact: vi.fn(async () => new Blob(['a,b\n1,2\n'], { type: 'text/csv' })),
     onTrack: vi.fn(),
+    onOutcome: vi.fn(),
   };
   render(
     <ResultCard
@@ -102,32 +103,37 @@ describe('ResultCard', () => {
       value: { write, writeText: vi.fn() },
       configurable: true,
     });
-    renderCard();
+    const { onOutcome } = renderCard();
     await userEvent.click(screen.getByRole('button', { name: 'Copy image' }));
     expect(write).toHaveBeenCalledTimes(1);
     const [items] = write.mock.calls[0] as unknown as [{ items: Record<string, Blob> }[]];
     expect(items[0].items['image/png']).toBe(pngBlob);
     expect(await screen.findByText('>>> .copied')).toBeInTheDocument();
     expect(clicked).toEqual([]);
+    expect(onOutcome.mock.calls).toEqual([['copied_image', 2]]);
   });
 
   it('downloads the PNG when the browser cannot copy images', async () => {
     vi.stubGlobal('ClipboardItem', undefined);
-    renderCard();
+    const { onOutcome } = renderCard();
     await userEvent.click(screen.getByRole('button', { name: 'Copy image' }));
     expect(clicked).toEqual([
       { href: 'blob:download', download: 'scatter-basic-matplotlib-v2-light.png' },
     ]);
     expect(await screen.findByText('>>> .downloaded')).toBeInTheDocument();
+    // The user got a download, not a copy, and the beacon says so.
+    expect(onOutcome.mock.calls).toEqual([['downloaded_png', 2]]);
   });
 
   it('downloads the PNG and opens it full size', async () => {
     const open = vi.spyOn(window, 'open').mockImplementation(() => null);
-    renderCard();
+    const { onOutcome } = renderCard();
     await userEvent.click(screen.getByRole('button', { name: 'Download PNG' }));
     expect(clicked.map(entry => entry.download)).toEqual(['scatter-basic-matplotlib-v2-light.png']);
     await userEvent.click(screen.getByRole('button', { name: 'Open full size' }));
     expect(open).toHaveBeenCalledWith('blob:light', '_blank', 'noopener,noreferrer');
+    // Opening full size is no outcome of its own.
+    expect(onOutcome.mock.calls).toEqual([['downloaded_png', 2]]);
   });
 
   it('copies the code and records copy_code for the agent chat', async () => {
@@ -136,7 +142,7 @@ describe('ResultCard', () => {
       value: { writeText },
       configurable: true,
     });
-    const { onTrack } = renderCard();
+    const { onTrack, onOutcome } = renderCard();
     await userEvent.click(screen.getByRole('button', { name: 'Copy code' }));
     expect(writeText).toHaveBeenCalledWith('import pandas as pd\ndf = pd.read_csv("data.csv")\n');
     expect(onTrack).toHaveBeenCalledWith('copy_code', {
@@ -145,10 +151,22 @@ describe('ResultCard', () => {
       method: 'agent',
       page: 'agent_chat',
     });
+    expect(onOutcome.mock.calls).toEqual([['copied_code', 2]]);
+  });
+
+  it('reports no copied code when the clipboard refuses it', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText: vi.fn(async () => Promise.reject(new Error('denied'))) },
+      configurable: true,
+    });
+    const { onOutcome } = renderCard();
+    await userEvent.click(screen.getByRole('button', { name: 'Copy code' }));
+    expect(onOutcome).not.toHaveBeenCalled();
   });
 
   it('downloads plot.py and data.csv under the names the code expects', async () => {
-    const { onFetchArtifact } = renderCard();
+    const { onFetchArtifact, onOutcome } = renderCard();
     await userEvent.click(screen.getByRole('button', { name: 'Download plot.py' }));
     await userEvent.click(screen.getByRole('button', { name: 'Download data.csv' }));
     await waitFor(() =>
@@ -157,6 +175,19 @@ describe('ResultCard', () => {
     // plot.py comes from the code on screen; data.csv from the artifact route.
     expect(onFetchArtifact).toHaveBeenCalledTimes(1);
     expect(onFetchArtifact).toHaveBeenCalledWith(2, 'data.csv');
+    expect(onOutcome.mock.calls).toEqual([
+      ['downloaded_code', 2],
+      ['downloaded_data', 2],
+    ]);
+  });
+
+  it('reports no download when the file could not be fetched', async () => {
+    const { onOutcome } = renderCard({
+      onFetchArtifact: vi.fn(async () => Promise.reject(new Error('gone'))),
+    });
+    await userEvent.click(screen.getByRole('button', { name: 'Download data.csv' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('could not download data.csv');
+    expect(onOutcome).not.toHaveBeenCalled();
   });
 
   it('asks for the other theme and shows that it renders', async () => {

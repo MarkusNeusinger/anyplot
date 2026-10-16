@@ -783,6 +783,51 @@ describe('agentFetch', () => {
   });
 });
 
+describe('agentApi.reportOutcome', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('posts the beacon with keepalive, the CSRF header and the three fields only', async () => {
+    const fetchMock = vi.fn(async () => new Response(null, { status: 204 }));
+    vi.stubGlobal('fetch', fetchMock);
+    // A caller that slips in more than the contract allows: the client rebuilds the body.
+    const smuggled = {
+      action: 'feedback',
+      version: 3,
+      reaction: 'bug',
+      message: 'the legend hides points',
+      columns: ['revenue'],
+    } as unknown as Parameters<typeof agentApi.reportOutcome>[2];
+    await agentApi.reportOutcome('', 'S/1', smuggled);
+    await agentApi.reportOutcome('', 'S/1', { action: 'downloaded_data', version: 3 });
+
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toMatch(/\/debug\/agent\/sessions\/S%2F1\/outcome$/);
+    expect(init).toMatchObject({ method: 'POST', keepalive: true });
+    expect((init.headers as Record<string, string>)['X-Anyplot-Client']).toBe('agent-chat/1');
+    expect(JSON.parse(init.body as string)).toEqual({
+      action: 'feedback',
+      version: 3,
+      reaction: 'bug',
+    });
+    const [, second] = fetchMock.mock.calls[1] as unknown as [string, RequestInit];
+    expect(JSON.parse(second.body as string)).toEqual({ action: 'downloaded_data', version: 3 });
+  });
+
+  it.each([
+    ['a 429', () => Promise.resolve(new Response('{}', { status: 429 }))],
+    ['a 404', () => Promise.resolve(new Response('{"detail":"not_found"}', { status: 404 }))],
+    ['a 502', () => Promise.resolve(new Response('', { status: 502 }))],
+    ['no network', () => Promise.reject(new TypeError('Failed to fetch'))],
+  ])('swallows %s', async (_name, answer) => {
+    vi.stubGlobal('fetch', vi.fn(answer));
+    await expect(
+      agentApi.reportOutcome('', 'S1', { action: 'saved_session', version: 0 })
+    ).resolves.toBeUndefined();
+  });
+});
+
 describe('helpers', () => {
   it('buckets sizes without exposing them', () => {
     expect(sizeBucket(10)).toBe('lt_1kb');

@@ -371,6 +371,30 @@ export interface FeedbackBody {
   replaces?: string;
 }
 
+/**
+ * What the user did with a result, for the content-free usage telemetry (`POST
+ * .../outcome`, `api/routers/agent.py`): a closed set, never a name or a text.
+ */
+export const OUTCOME_ACTIONS = [
+  'copied_code',
+  'copied_image',
+  'downloaded_png',
+  'downloaded_code',
+  'downloaded_data',
+  'saved_session',
+  'feedback',
+] as const;
+export type OutcomeAction = (typeof OUTCOME_ACTIONS)[number];
+
+/**
+ * The body of `POST .../outcome`: the action, the result version it was on (0
+ * for the session itself: `saved_session`, feedback on the chat) and, only with
+ * `feedback`, the reaction. Nothing else ever travels.
+ */
+export type OutcomeBody =
+  | { action: Exclude<OutcomeAction, 'feedback'>; version: number }
+  | { action: 'feedback'; version: number; reaction: FeedbackReaction };
+
 /** A case's version as the triage shows it: `v2`, or `chat, no plot` for version 0. */
 export function caseVersionLabel(resultVersion: number): string {
   return resultVersion === 0 ? 'chat, no plot' : `v${resultVersion}`;
@@ -965,6 +989,24 @@ export const agentApi = {
    */
   sendFeedback: (token: string, sid: string, body: FeedbackBody) =>
     agentJson<FeedbackStored>(`${sessionPath(sid)}/feedback`, token, post(body)),
+  /**
+   * The usage beacon (`POST .../outcome`, `204`): fire and forget. The body is
+   * rebuilt from its three fields, so nothing else can ride along; `keepalive`
+   * lets it outlive a page that closes right after a download. Every failure
+   * (a refused body, `429`, an expired session, no network) is swallowed: the
+   * beacon never shows an error and never blocks the page.
+   */
+  reportOutcome: async (token: string, sid: string, body: OutcomeBody): Promise<void> => {
+    const payload =
+      body.action === 'feedback'
+        ? { action: body.action, version: body.version, reaction: body.reaction }
+        : { action: body.action, version: body.version };
+    try {
+      await agentFetch(`${sessionPath(sid)}/outcome`, token, { ...post(payload), keepalive: true });
+    } catch {
+      /* best effort: telemetry never surfaces */
+    }
+  },
   /**
    * The feedback cases, newest first (`GET /cases`). An answer without an
    * `items` list reads as an empty page.

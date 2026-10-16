@@ -591,6 +591,7 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
             onRequestTheme={(version, theme) => void session.requestTheme(version, theme)}
             onFetchArtifact={session.fetchArtifact}
             onTrack={trackEvent}
+            onOutcome={session.reportOutcome}
             onSendFeedback={session.sendFeedback}
           />
 
