@@ -218,7 +218,7 @@ Data elements must be visible and adapted to data density.
 
 **Legend glyphs count as elements.** Size-legend circles, color swatches and line samples must be visible in **both** themes and must match the marks they explain (same fill, outline, alpha and shape). A glyph drawn in the page color, at near-zero alpha, or without the marks' fill is an invisible element: deduct VQ-03 in proportion, and also SC-04 when the encoding it explains becomes unreadable. Look at the legend in each render — do not assume it inherited the marks' styling. The weakness should name the likely fix (e.g. ggplot2 `guides(size = guide_legend(override.aes = list(fill = ..., alpha = ...)))`, or setting the legend marker color explicitly from the palette).
 
-**Per-mark labels and decorations count as elements.** Value labels, dots on bar ends and shadows drawn once per bar or point must stay legible at the plot's number of marks (style guide, "Per-mark Labels and Decorations"). When they crowd the marks (a label wider than its bar's slot, rotated or shrunk to squeeze in, a band of text over many bars), deduct VQ-03 in proportion to how much of the plot they bury, and VQ-02 where they overlap. Labels that fit, or a few labelled extremes, are no deduction.
+**Per-mark labels and decorations count as elements.** Value labels, dots on bar ends and shadows drawn once per bar or point must stay legible at the plot's number of marks (style guide, "Per-mark Labels and Decorations"). When they crowd the marks (a label wider than its bar's slot, rotated or shrunk to squeeze in, a band of text over many bars), deduct VQ-03 in proportion to how much of the plot they bury, and VQ-02 where they overlap. Labels that fit, or a few labelled extremes, are no deduction. A label that tells the reader nothing is clutter at any mark count — a value the same by construction on every mark (each bar of a 100 % stacked chart labelled "100 %"), or a text that repeats exactly what an axis already states: deduct VQ-03 in proportion to how much of the plot it fills.
 
 ### VQ-04: Color Accessibility (2 Points)
 
@@ -254,20 +254,24 @@ This check covers **contrast and CVD safety beyond palette choice** — e.g., ad
 | 1 | Descriptive without units: "Temperature" |
 | 0 | Generic: "x", "y", or empty |
 
+An axis title is text for a reader (style guide, "Axis and Legend Titles"): a raw column identifier such as `Reaktionszeit_ms`, with underscores or a unit glued on, is not descriptive with units even though the unit is in it, and scores 1 at most; "Reaktionszeit (ms)" scores 2. The same holds for a legend title, which SC-04 scores.
+
 ### VQ-07: Palette Compliance (2 Points)
 
 The implementation must use the **Imprint categorical palette** (defined in `prompts/default-style-guide.md` "Categorical Palette") for categorical data and one of the **Imprint continuous colormaps** (`imprint_seq` or `imprint_div`) for continuous data — no other cmaps. Both light and dark renders are inspected — the data colors (positions 1–8) must be identical across themes; only the theme-adaptive chrome (background, text, grid, legend box) may flip. Three semantic anchors (`#DDCC77` amber, theme-adaptive `neutral` and `muted`) sit outside the categorical pool and are only used intentionally for their semantic role. Always refer to the palette as **Imprint** (capitalised) in your review notes — never "anyplot palette".
 
 | Points | Criterion |
 |--------|-----------|
-| 2 | Perfect palette + perfect theme chrome: first categorical series is `#009E73`; if multi-series, colors come from the Imprint palette — canonical order (`#C475FD`, `#4467A3`, `#BD8233`, `#AE3030`, `#2ABCCD`, `#954477`, `#99B314`) by default, or reassigned to palette members that match strong semantic cues (grass→green, wood→ochre, blood→red, sky→blue); continuous data uses `imprint_seq` (single-polarity) or `imprint_div` (diverging) — no other cmaps; plot background is `#FAF8F1` (light) or `#1A1A17` (dark) — never pure white/black; text, grid, and legend-box colors are theme-correct in both renders |
-| 1 | Partial compliance: palette is the Imprint palette but first series is not `#009E73`; OR continuous data uses an Imprint cmap but the wrong polarity (e.g. `imprint_seq` on diverging-polarity data); OR chrome is mostly theme-correct with one or two off elements (e.g., dark render has one black label) |
-| 0 | Non-compliant: legacy `#306998` (Python Blue) or legacy variant-D hexes (`#9418DB`, `#B71D27`, `#16B8F3`, `#D359A7`, `#BA843E`) still present; categorical palette is arbitrary custom hexes, `Set2`, `tab10`, or `colorblind`; continuous data uses `jet`/`hsv`/`rainbow`; categorical palette applied to continuous data (banding); plot background is pure `#FFFFFF`/`#000000`; or chrome is wrong-theme (e.g., dark page with dark text) |
+| 2 | Perfect palette + perfect theme chrome: first categorical series is `#009E73` (ordered categories excepted, below); if multi-series, colors come from the Imprint palette — canonical order (`#C475FD`, `#4467A3`, `#BD8233`, `#AE3030`, `#2ABCCD`, `#954477`, `#99B314`) by default, or reassigned to palette members that match strong semantic cues (grass→green, wood→ochre, blood→red, sky→blue); ordered categories (Likert levels, grades, sizes) in ordered steps of an Imprint ramp in their natural order (style guide, "Ordered Categories"); continuous data uses `imprint_seq` (single-polarity) or `imprint_div` (diverging) — no other cmaps; plot background is `#FAF8F1` (light) or `#1A1A17` (dark) — never pure white/black; text, grid, and legend-box colors are theme-correct in both renders |
+| 1 | Partial compliance: palette is the Imprint palette but first series is not `#009E73` on unordered categories; OR continuous data uses an Imprint cmap but the wrong polarity (e.g. `imprint_seq` on diverging-polarity data); OR ordered categories drawn in the categorical palette as if they were unrelated groups, or in an order that is not theirs; OR chrome is mostly theme-correct with one or two off elements (e.g., dark render has one black label) |
+| 0 | Non-compliant: legacy `#306998` (Python Blue) or legacy variant-D hexes (`#9418DB`, `#B71D27`, `#16B8F3`, `#D359A7`, `#BA843E`) still present; categorical palette is arbitrary custom hexes, `Set2`, `tab10`, or `colorblind`; continuous data uses `jet`/`hsv`/`rainbow`; categorical palette applied to continuous data (banding); semantic poles inverted (the good or agree side on the red anchor, the bad or disagree side on green); plot background is pure `#FFFFFF`/`#000000`; or chrome is wrong-theme (e.g., dark page with dark text) |
+
+**Ordered categories** (style guide, "Ordered Categories") — Likert levels, grades, small / medium / large, age bands — are colored by discrete steps of one Imprint ramp in their natural order, and the first-series and canonical-order checks do not apply to them: steps of `imprint_seq` for one direction (low → high); steps of `imprint_div` around a neutral midpoint (disagree ↔ agree), with a middle level in the `muted` anchor rather than the page-colored midpoint. When the poles mean bad and good, matte red `#AE3030` may anchor the bad side and brand green `#009E73` the good side instead of red ↔ blue. Steps stay distinguishable from their neighbours and the background in both themes.
 
 **Evaluation steps for VQ-07:**
-1. Look at `plot-light.png`: does the primary data series render in `#009E73`? Does the background look like `#FAF8F1`?
-2. Look at `plot-dark.png`: is the data series still `#009E73` (identical to light)? Is the background `#1A1A17`? Is all text light-colored?
-3. If multi-series, confirm the next colors in order match Imprint palette positions 2–N (or the semantic-exception assignment when category labels imply real-world colors).
+1. Look at `plot-light.png`: does the primary data series render in `#009E73` (unless the categories are ordered, step 3)? Does the background look like `#FAF8F1`?
+2. Look at `plot-dark.png`: are the fixed palette colors identical to light? Theme-adaptive anchors (`neutral`, `muted`) and the steps of an ordered ramp take their dark-theme values. Is the background `#1A1A17`? Is all text light-colored?
+3. If multi-series, confirm the next colors in order match Imprint palette positions 2–N (or the semantic-exception assignment when category labels imply real-world colors). If the categories have a natural order (Likert levels, grades, sizes), confirm instead that they run through the steps of one ramp in that order and that a red or green pole sits on the matching side.
 4. If continuous: check the source code for `cmap=` / `scheme=` / `color_continuous_scale=`. Reject anything other than `imprint_seq` (single-polarity) or `imprint_div` (diverging). Common rejections: `jet`/`hsv`/`rainbow`/`viridis`/`cividis`/`BrBG`/`Reds`/`Blues`/`Greens` — all forbidden.
 5. If either render fails theme-chrome (unreadable text, wrong background), score drops accordingly.
 
@@ -368,6 +372,8 @@ This category evaluates aesthetic sophistication beyond mere correctness. A plot
 | 2 | Title format correct but legend issues, or vice versa |
 | 1 | Partially correct |
 | 0 | Missing or wrong |
+
+**Legend labels are text for a reader** (style guide, "Axis and Legend Titles"). A legend title that is a raw column identifier (`Reaktionszeit_ms`) is a legend issue, and so are entries for series reshaped from wide columns that repeat each full original header (`Umsatz Q1 (CHF)`, `Umsatz Q2 (CHF)`) where the level that tells them apart (`Q1`, `Q2`) would do. A full header that is itself readable and is the only distinguishing text ("Temperature (°C)" beside "Rainfall (mm)") is correct.
 
 ---
 
