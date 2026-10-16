@@ -50,7 +50,7 @@ anyplot uses the **Imprint palette** — a bespoke, colorblind-safe categorical 
 | 8 | `#99B314` | lime | green | growth / nature |
 
 **Hard rules:**
-- **First series is ALWAYS `#009E73`** — across every library, every plot type. A "Gentoo penguin" is the same green in matplotlib as it is in plotly.
+- **First series is ALWAYS `#009E73`** — across every library, every plot type. A "Gentoo penguin" is the same green in matplotlib as it is in plotly. Ordered categories are the one exception: their ramp sets the colors, so a Likert chart may start on its red pole.
 - Use positions 1→N in order by default. Don't cherry-pick for aesthetic reasons. Ordered categories take a ramp instead (see "Ordered Categories" below).
 - All 8 categorical positions stay identical across light and dark themes so a category keeps its identity.
 - Never introduce custom hex values when the Imprint palette already covers the need.

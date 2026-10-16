@@ -286,8 +286,18 @@ class TestSessionLanguage:
         assert "or cannot judge the language at all, it is not a defect" in row
         assert "keep their spelling in every language" in row
         assert "or when an axis or legend title is a raw identifier" in row
-        assert "(a raw identifier as an axis or legend title is the VQ-06 exception above)" in reviewer
+        assert "are the VQ-06 exception above)" in reviewer
         assert "a text whose language you cannot judge" in reviewer
+
+    def test_the_catalogue_reviewer_carries_the_ordered_category_rule(self) -> None:
+        # The default reviewer mode reads rubric excerpts, not the style guide (owner, 2026-10-16).
+        instruction = policy.catalogue_reviewer_instruction()
+
+        assert "**Ordered categories** (style guide" in instruction
+        assert "the first-series and canonical-order checks do not apply to them" in instruction
+        assert "**Legend labels are text for a reader**" in instruction
+        assert "An axis title is text for a reader" in instruction
+        assert "A label that tells the reader nothing is clutter at any mark count" in instruction
 
     def test_the_judge_keeps_a_language_request_in_scope_and_names_the_written_language(self) -> None:
         scope = policy.scope_rubric()
