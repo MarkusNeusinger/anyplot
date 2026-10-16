@@ -93,6 +93,40 @@ describe('LegalPage', () => {
     expect(screen.getByText(/Cloudflare stands in front of the site/)).toBeInTheDocument();
   });
 
+  // The data assistant's section, each claim pinned with the qualifier that
+  // makes it true: a preview only admins reach, training excluded only under
+  // Vertex AI's terms, telemetry pseudonymous (not anonymous), the data file
+  // ticked by default, and a case row that has no timer while its files do.
+  it('describes the data assistant preview without overclaiming', () => {
+    render(<LegalPage />);
+
+    expect(
+      screen.getByText(/only the operator and the\s+site.s admins can open/)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/served through Google Cloud Vertex AI in the\s+EU/)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/processed under Google Cloud.s data\s+processing terms/)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/don.t paste personal data you are not allowed to\s+share/)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/there is no session database/)).toBeInTheDocument();
+    expect(screen.getByText(/pseudonymous, not\s+anonymous/)).toBeInTheDocument();
+    expect(screen.getByText(/up to 180 days/)).toBeInTheDocument();
+    expect(screen.getByText(/keyed hash \(HMAC\)/)).toBeInTheDocument();
+    expect(screen.getByText(/it is by\s+default, untick it/)).toBeInTheDocument();
+    expect(screen.getByText(/nothing deletes it on a timer/)).toBeInTheDocument();
+    expect(screen.getByText(/Art\. 6\(1\)\(b\) GDPR/)).toBeInTheDocument();
+    expect(screen.getByText(/Art\. 6\(1\)\(f\) GDPR/)).toBeInTheDocument();
+    expect(
+      screen.getByText('Google Cloud Vertex AI, Claude models by Anthropic (EU)')
+    ).toBeInTheDocument();
+    // Browsing the catalogue still involves no model; only the assistant does.
+    expect(screen.getByText(/never sees a visitor.s request/)).toBeInTheDocument();
+  });
+
   it('renders the technology stack', () => {
     render(<LegalPage />);
 
