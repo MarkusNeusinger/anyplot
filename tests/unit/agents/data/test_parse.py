@@ -3245,6 +3245,23 @@ class TestHeaderlessList:
         assert weights.csv == "value (kg)\n5\n7\n3\n" and weights.warnings[0] == HEADERLESS_LIST_WARNING
 
     @pytest.mark.parametrize(
+        ("text", "first"),
+        [
+            pytest.param("007\n12\n15\n", "007", id="a-leading-zero"),  # the column stays text to keep the zeros
+            pytest.param("123456789012345678901234567890\n12\n15\n", "123456789012345678901234567890", id="past-int64"),
+            pytest.param("true\nfalse\ntrue\n", "true", id="booleans"),
+            pytest.param("TRUE\nFalse\ntrue\n", "TRUE", id="booleans-in-mixed-case"),
+        ],
+    )
+    def test_a_first_value_the_column_cannot_type_is_kept_too(self, text: str, first: str) -> None:
+        """Copilot on #12202: a first value that makes the column text, or a boolean, is still no header."""
+        parsed = parse_dataset(text)
+
+        assert parsed.profile.columns[0].name == LIST_COLUMN_NAME and parsed.profile.rows == 3
+        assert parsed.preview[0][0].casefold() == first.casefold()
+        assert HEADERLESS_LIST_WARNING in parsed.warnings
+
+    @pytest.mark.parametrize(
         "text",
         [
             pytest.param("Pendelzeit_min\n12\n15\n", id="a-name"),

@@ -613,7 +613,7 @@ def parse_dataset(
         trial_context, trial_warnings = list(context), [*warnings, HEADERLESS_LIST_WARNING]
         with contextlib.suppress(ParseError):
             trial = build([LIST_COLUMN_NAME], [headers, *rows], trial_context, trial_warnings)
-            if trial.profile.columns[0].dtype != "text":
+            if trial.profile.columns[0].dtype != "text" or _header_is_value(headers[0]):
                 parsed, context = trial, trial_context
     if parsed is None:
         parsed = build(headers, rows, context, warnings)
@@ -3578,15 +3578,25 @@ def _write_csv(names: list[str], rows: list[list[str]]) -> str:
 def _header_as_row(headers: list[str], source_format: SourceFormat) -> bool:
     """Whether a pasted one-column text's header line may be a value: the first row of a list without a header.
 
-    The caller keeps that reading only when the column, header line included, then types as
-    values (integers, numbers, dates, booleans; `5 kg` and `€7` with their unit too), so a value
-    is never lost to the header (owner rule: no silent value change); a name such as
-    `Pendelzeit_min` makes that column text, and the first reading stands. A text list keeps its
-    first line as the header, and the transcriber, which can tell a name from a first category,
-    reads a short one (`transcribe.looks_like_free_text`). Only a header with a digit in it is
-    tried (a number, a date, `5 kg`), so a name costs no second reading.
+    The caller keeps that reading when the header is a value by its form (`_header_is_value`:
+    a number, a date, a boolean, whatever the column then types as, so `007` above integers
+    stays a value in a text column), or when the column, header line included, types as values
+    (`5 kg` and `€7` with their unit too). So a value is never lost to the header (owner rule:
+    no silent value change); a name such as `Pendelzeit_min` makes that column text, and the
+    first reading stands. A text list keeps its first line as the header, and the transcriber,
+    which can tell a name from a first category, reads a short one
+    (`transcribe.looks_like_free_text`). Only a header with a digit in it or a boolean is tried,
+    so a name costs no second reading.
     """
-    return len(headers) == 1 and not source_format.startswith("json") and any(c.isdigit() for c in headers[0])
+    if len(headers) != 1 or source_format.startswith("json"):
+        return False
+    return any(c.isdigit() for c in headers[0]) or _header_is_value(headers[0])
+
+
+def _header_is_value(header: str) -> bool:
+    """A header that is a value by its form alone: a number, a date or a boolean (`true` / `false`, any case)."""
+    text = header.strip()
+    return _looks_like_value(text) or text.casefold() in ("true", "false")
 
 
 def _looks_like_value(name: str) -> bool:
