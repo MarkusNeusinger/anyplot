@@ -681,7 +681,7 @@ jobs:
         id: review
         continue-on-error: true
         timeout-minutes: 30
-        uses: anthropics/claude-code-action@ed670b4cf9de2a5a570d130d2f6197b9e543cd64  # v1
+        uses: anthropics/claude-code-action@1d6de8cb0c237e7c15e9e1bdf973826ebae490cc  # v1
         env:
           LIBRARY: ${{ steps.pr.outputs.library }}
           SPEC_ID: ${{ steps.pr.outputs.specification_id }}
@@ -1098,7 +1098,7 @@ jobs:
         if: steps.pair.outputs.dir != ''
         continue-on-error: true
         timeout-minutes: 5
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7
         with:
           name: regen-pair-${{ steps.pr.outputs.pr_number }}-${{ github.run_attempt }}
           path: ${{ steps.pair.outputs.dir }}
