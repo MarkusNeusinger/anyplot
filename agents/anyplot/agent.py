@@ -144,7 +144,9 @@ async def session_context(context: ReadonlyContext) -> str:
             )
         if check.warnings:
             # The lines name the user's columns, so they stand inside a data fence.
-            lines.append(f"- Binding warnings: {len(check.warnings)}, roles bound to a column that does not fit them as it is")
+            lines.append(
+                f"- Binding warnings: {len(check.warnings)}, roles bound to a column that does not fit them as it is"
+            )
             lines.append(fence("user_data", "\n".join(check.warnings)))
         if view.data_confirmed:
             lines.append("- Data: confirmed by the user; the plot can be made")

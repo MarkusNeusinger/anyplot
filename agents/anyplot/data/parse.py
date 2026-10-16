@@ -3132,7 +3132,9 @@ def _as_periods(column: _Column, present: list[str]) -> bool:
         if fields is None:
             continue
         low, high = MONTH_YEARS
-        if not all(low <= year <= high and 1 <= number <= (12 if part == "month" else 4) for year, number in fields.values()):
+        if not all(
+            low <= year <= high and 1 <= number <= (12 if part == "month" else 4) for year, number in fields.values()
+        ):
             return False
         firsts = {
             cell: datetime(year, number if part == "month" else 3 * (number - 1) + 1, 1)
@@ -3143,7 +3145,9 @@ def _as_periods(column: _Column, present: list[str]) -> bool:
         column.dates = [firsts[cell] for cell in column.source if cell]
         column.cells = [_iso(firsts[cell], False) if cell else "" for cell in column.source]
         shape = "YYYY-MM" if part == "month" else "YYYY-Qn"
-        column.notes.append(f"{_count(len(present), 'cell')} read as {part}s ({shape}, each as the first day of the {part})")
+        column.notes.append(
+            f"{_count(len(present), 'cell')} read as {part}s ({shape}, each as the first day of the {part})"
+        )
         return True
     return False
 
