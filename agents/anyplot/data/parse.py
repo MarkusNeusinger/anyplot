@@ -132,6 +132,7 @@ Error messages never quote the user's data; at most they name a column.
 """
 
 import ast
+import contextlib
 import csv
 import io
 import json
@@ -207,6 +208,12 @@ CONTEXT_JOINERS: dict[str | None, str] = {",": ", ", ";": "; ", "\t": " ", "|": 
 reads as it was pasted, a tab becomes a space so the line stays one line on the page."""
 MAX_NESTING = 50  # bracket levels a literal may open; counted before `ast.literal_eval` sees the text
 PAIR_HEADERS = ("category", "value")  # the columns of an object of scalars or an array of pairs
+LIST_COLUMN_NAME = "value"
+"""The name of a pasted list of values without a header line (`_header_as_row`), a list of `5 kg`
+cells with its unit as every other unit column (`value (kg)`)."""
+HEADERLESS_LIST_WARNING = (
+    f"no header line: the first line is a value, kept as the first row, and the column is named '{LIST_COLUMN_NAME}'"
+)
 NA_TOKEN = "NA"
 MIN_OTHER_CODES = 2
 """The distinct letter codes beside `NA` that make a pasted `NA` a code rather than missing (`_keep_na_codes`)."""
@@ -457,7 +464,11 @@ def without_context(parsed: ParsedDataset, warning: str) -> ParsedDataset:
     the table itself is unchanged, except that constant columns whose values had moved into
     the notes are columns again (`with_constant_columns`), so no value is lost with the notes.
     """
-    parsed = with_constant_columns(parsed)
+    return replace(with_warning(with_constant_columns(parsed), warning), context_lines=[])
+
+
+def with_warning(parsed: ParsedDataset, warning: str) -> ParsedDataset:
+    """`parsed` with `warning` first among its warnings (profile included), within `MAX_WARNINGS`."""
     kept = list(parsed.warnings)
     omitted = 0
     if kept and (match := _OMITTED.fullmatch(kept[-1])):
@@ -470,7 +481,7 @@ def without_context(parsed: ParsedDataset, warning: str) -> ParsedDataset:
         lines = [*lines[:keep], f"{omitted} more warnings omitted"]
     warnings = lines
     profile = parsed.profile.model_copy(update={"warnings": warnings})
-    return replace(parsed, profile=profile, warnings=warnings, context_lines=[])
+    return replace(parsed, profile=profile, warnings=warnings)
 
 
 @dataclass
@@ -591,18 +602,39 @@ def parse_dataset(
         raise ParseError("unparseable", f"the data holds one table; there is no table {table}")
     marks = frozenset(declared)
     headers, rows, source_format = read
-    parsed = _build(
-        headers,
-        rows,
-        source_format,
-        warnings,
-        frozenset(text_columns),
-        canonical=canonical,
-        context=context,
-        missing_marks=marks,
-        listed=frozenset(listed),
-        row_names=find_table,
-    )
+
+    def build(heads: list[str], body: list[list[str]], notes: list[str], said: list[str]) -> ParsedDataset:
+        return _build(
+            heads,
+            body,
+            source_format,
+            said,
+            frozenset(text_columns),
+            canonical=canonical,
+            context=notes,
+            missing_marks=marks,
+            listed=frozenset(listed),
+            row_names=find_table,
+        )
+
+    parsed = None
+    headerless = find_table and not canonical and _header_as_row(headers, source_format)
+    if headerless and len(rows) >= MAX_ROWS and _header_is_value(headers[0]):
+        # Read as a header, the first value would be lost; read as a row, the list is one row too long.
+        raise ParseError(
+            "too_many_rows",
+            f"the list has {len(rows) + 1:,} values and no header line; at most {MAX_ROWS:,} rows are read",
+        )
+    if headerless and len(rows) < MAX_ROWS:
+        # A list of values without a header line: its first line is the first value, not a name.
+        # A refusal of that reading (one row too many, a cell too long) leaves the first reading to answer.
+        trial_context, trial_warnings = list(context), [*warnings, HEADERLESS_LIST_WARNING]
+        with contextlib.suppress(ParseError):
+            trial = build([LIST_COLUMN_NAME], [headers, *rows], trial_context, trial_warnings)
+            if trial.profile.columns[0].dtype != "text" or _header_is_value(headers[0]):
+                parsed, context = trial, trial_context
+    if parsed is None:
+        parsed = build(headers, rows, context, warnings)
     if len(parsed.csv.encode("utf-8")) > MAX_CANONICAL_BYTES:
         raise ParseError("too_long", f"the data is larger than {MAX_CANONICAL_BYTES // 1024:,} KB once written out")
     if tables:
@@ -3588,6 +3620,34 @@ def _write_csv(names: list[str], rows: list[list[str]]) -> str:
     writer.writerow(names)
     writer.writerows(rows)
     return buffer.getvalue()
+
+
+def _header_as_row(headers: list[str], source_format: SourceFormat) -> bool:
+    """Whether a pasted one-column text's header line may be a value: the first row of a list without a header.
+
+    The caller keeps that reading when the header is a value by its form (`_header_is_value`:
+    a number, a date, a boolean, whatever the column then types as, so `007` above integers
+    stays a value in a text column), or when the column, header line included, types as values
+    (`5 kg` and `€7` with their unit too). So a value is never lost to the header (owner rule:
+    no silent value change); a name such as `Pendelzeit_min` makes that column text, and the
+    first reading stands. A text list keeps its first line as the header, and the transcriber,
+    which can tell a name from a first category, reads a short one
+    (`transcribe.looks_like_free_text`). Only a header with a digit in it or a boolean is tried,
+    so a name costs no second reading.
+    """
+    if len(headers) != 1 or source_format.startswith("json"):
+        return False
+    return any(c.isdigit() for c in headers[0]) or _header_is_value(headers[0])
+
+
+def _header_is_value(header: str) -> bool:
+    """A header that is a value by its form alone: a number, also with a unit (`007 kg`, `€5`), a date or a
+    boolean (`true` / `false`, any case)."""
+    text = header.strip()
+    if _looks_like_value(text) or text.casefold() in ("true", "false"):
+        return True
+    split = _split_unit(text)
+    return split is not None and _looks_like_value(split[0].strip())
 
 
 def _looks_like_value(name: str) -> bool:

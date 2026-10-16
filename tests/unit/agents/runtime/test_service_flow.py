@@ -24,14 +24,20 @@ from google.genai import types
 from agents.anyplot import pipeline
 from agents.anyplot.agent import LANGUAGE_SOURCE_LINES, NOTES_LINE, REPLY_LANGUAGE_LINE, session_context
 from agents.anyplot.data.generate import looks_like_formula
-from agents.anyplot.data.parse import MAX_INPUT_BYTES
-from agents.anyplot.data.transcribe import MAX_TRANSCRIBE_CHARS, TranscribedTable
+from agents.anyplot.data.parse import HEADERLESS_LIST_WARNING, MAX_INPUT_BYTES
+from agents.anyplot.data.transcribe import (
+    MAX_TRANSCRIBE_CHARS,
+    MAX_TRANSCRIBE_LINES,
+    TranscribedTable,
+    near_transcribe_cap,
+)
 from agents.anyplot.dataset_guard import DATASET_JUDGE_CONCURRENCY
 from agents.anyplot.dev_fixture import snapshot_from_repo
 from agents.anyplot.models import (
     ADAPTER_FULL_MAX_OUTPUT_TOKENS,
     GEMINI_ADAPTER_FULL_MAX_OUTPUT_TOKENS,
     GEMINI_ADAPTER_MAX_OUTPUT_TOKENS,
+    AnswerCutOff,
     JudgeVerdict,
     Transcription,
 )
@@ -1914,6 +1920,112 @@ async def test_transcription_fails_closed(client: httpx.AsyncClient, judge) -> N
             "cause": "the model read the text as a table, but that table was refused: the data has a header but no rows",
         },
     )
+
+
+R7_COMMUTE_TIMES = "Pendelzeit_min\n" + "".join(f"{12 + (i * 7) % 61}\n" for i in range(800))
+"""The shape of live round 7's `pendelzeiten.csv`: a header and 800 integers, 2.4 KB, under the character cap."""
+
+
+@pytest.mark.parametrize("source", [None, "pendelzeiten.csv"], ids=["pasted", "dropped"])
+async def test_a_list_of_numbers_is_a_table_and_never_transcribed(
+    client: httpx.AsyncClient, judge, source: str | None
+) -> None:
+    """Live round 7 (R7-1): one column of 800 integers went to the transcriber, which timed out every time."""
+    sid = await open_session(client, with_data=False)
+    body: dict[str, Any] = {"text": R7_COMMUTE_TIMES, **({"source": source} if source else {})}
+
+    stored = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json=body)
+
+    assert stored.status_code == 200, stored.text
+    profile = stored.json()["profile"]
+    assert "transcribed" not in stored.json() and profile["rows"] == 800
+    assert [(column["name"], column["dtype"]) for column in profile["columns"]] == [("Pendelzeit_min", "integer")]
+    assert judge.transcribe_calls == [] and len(judge.calls) >= 1  # the dataset judge read it, no transcriber
+
+    headerless = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": "12\n15\n17\n9\n"})
+    assert headerless.status_code == 200 and "transcribed" not in headerless.json()
+    assert headerless.json()["profile"]["rows"] == 4 and headerless.json()["warnings"] == [HEADERLESS_LIST_WARNING]
+    assert judge.transcribe_calls == []
+
+
+async def test_a_transcription_out_of_time_or_room_names_the_text_not_an_outage(
+    client: httpx.AsyncClient, judge
+) -> None:
+    """Live round 7: a slow reading of a long text or a cut-off one is the text's size; a short text timing out
+    or an error is an outage, 503 (Fable and Gemini review of #12202: a stall is no "your text is too long")."""
+    sid = await open_session(client, with_data=False)
+    short = "Hund 7\nKatze 3\nVogel 4\n"
+    long = "".join(f"Hund {i}\n" for i in range(MAX_TRANSCRIBE_LINES // 2))  # half the line cap
+    assert near_transcribe_cap(long) and not near_transcribe_cap(short)
+
+    judge.delay_s, judge.timeout_s = 0.2, 0.05
+    slow = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": long})
+    assert (slow.status_code, slow.json()["detail"]) == (422, "unparseable")
+    assert slow.json()["cause"] == (
+        "no table found: the text has no separators between columns, and the model that reads free text as a table "
+        f"did not finish in the time it has for this text ({MAX_TRANSCRIBE_LINES // 2} lines, {len(long.strip()):,} "
+        "characters); paste the data with a separator between columns (CSV or TSV), or a shorter part"
+    )
+    stalled = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": short})
+    assert (stalled.status_code, stalled.json()) == (503, {"detail": "guard_unavailable"})
+
+    judge.delay_s, judge.timeout_s = 0.0, 4.0
+    calls = len(judge.transcribe_calls)
+    judge.transcriptions = [AnswerCutOff("cap")]
+    cut = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": short})
+    assert (cut.status_code, cut.json()["detail"]) == (422, "unparseable")
+    assert "would have to write a longer table than it may for this text (3 lines" in cut.json()["cause"]
+    assert len(judge.transcribe_calls) == calls + 1  # a cut-off answer is not asked for again
+
+    judge.transcriptions = [RuntimeError("quota"), RuntimeError("quota")]
+    outage = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": short})
+    assert (outage.status_code, outage.json()) == (503, {"detail": "guard_unavailable"})
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        pytest.param("".join(f"Hund {i}\n" for i in range(MAX_TRANSCRIBE_LINES + 1)), id="label-value-lines"),
+        pytest.param("".join(f"Name{i}\n" for i in range(250)), id="unique-names"),
+    ],
+)
+async def test_free_text_past_the_transcribers_limits_is_refused_never_stored(
+    client: httpx.AsyncClient, judge, text: str
+) -> None:
+    """Review of #12202: stored as parsed, its first line would be a column name nobody wrote."""
+    sid = await open_session(client, with_data=False)
+    assert len(text) <= MAX_TRANSCRIBE_CHARS
+
+    refused = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": text})
+
+    assert (refused.status_code, refused.json()["detail"]) == (422, "unparseable")
+    lines = len(text.splitlines())
+    assert refused.json()["cause"] == (
+        "no table found: the text is one column without separators between columns that holds neither numbers, "
+        f"dates nor repeating categories, and the text has {lines} lines, more than the {MAX_TRANSCRIBE_LINES} the "
+        "model that reads free text as a table takes; paste the data with a separator between columns (CSV or TSV)"
+    )
+    assert judge.transcribe_calls == [] and judge.calls == []
+    state = read_session(await _session_state(client, sid))
+    assert state is not None and state.dataset_id is None
+
+
+async def test_a_category_list_says_which_line_became_its_name(client: httpx.AsyncClient, judge) -> None:
+    """Review of #12202: `Apfel` above `Birne, Birne, Kirsche` reads as a header; the warning says so."""
+    sid = await open_session(client, with_data=False)
+
+    stored = await client.post(
+        f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": "Apfel\nBirne\nBirne\nKirsche\n"}
+    )
+
+    assert stored.status_code == 200 and "transcribed" not in stored.json()
+    assert stored.json()["warnings"][0] == "read 'Apfel' as the column name"
+    assert judge.transcribe_calls == []
+
+    named = await client.post(
+        f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": "Tier_Art\nHund\nKatze\nHund\n"}
+    )
+    assert named.status_code == 200 and named.json()["warnings"] == []  # a name's form: no note
 
 
 async def test_a_confirmed_one_column_table_is_stored_not_read_again(client: httpx.AsyncClient, judge) -> None:
