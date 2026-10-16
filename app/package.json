@@ -30,10 +30,10 @@
     "fuse.js": "^7.5.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
-    "react-force-graph-2d": "^1.29.1",
+    "react-force-graph-2d": "^1.29.2",
     "react-helmet-async": "^3.0.0",
     "react-router-dom": "^7.18.4",
-    "react-syntax-highlighter": "^16.1.1",
+    "react-syntax-highlighter": "^16.1.2",
     "web-vitals": "^6.2.2"
   },
   "devDependencies": {
