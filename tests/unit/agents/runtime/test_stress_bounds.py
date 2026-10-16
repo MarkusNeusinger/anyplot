@@ -95,6 +95,18 @@ def test_the_cap_holds_after_the_fence_escapes_tag_text_in_the_data() -> None:
     assert trimmed and fenced_bytes(text) <= limit
 
 
+def test_the_values_past_the_five_most_frequent_go_before_the_rest_of_the_top_values() -> None:
+    """A column that lists all its values (`schemas.listed_values`) first drops back to five, then to none."""
+    rows = "\n".join(f"category {index % 12},{index}" for index in range(24))
+    profile = parse_dataset("label,value\n" + rows + "\n").profile
+    assert len(profile.columns[0].top) == 12
+
+    versions = [text for text, _ in trimmed_profiles(profile)]
+    start = next(index for index, text in enumerate(versions) if '"sample":[]' in text)
+
+    assert [text.count("category ") for text in versions[start : start + 3]] == [12, 5, 0]
+
+
 def test_below_the_smallest_version_the_last_version_still_goes_out(wide_profile) -> None:
     *_, last = trimmed_profiles(wide_profile)
     assert adapter_profile(wide_profile, limit=10) == last

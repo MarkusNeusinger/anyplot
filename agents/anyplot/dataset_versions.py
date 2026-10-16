@@ -31,7 +31,7 @@ with a change list, and the user can undo. The state keys (`session_state.py`):
 from dataclasses import dataclass, replace
 from typing import Any
 
-from .data.bindings import carry_bindings, default_bindings
+from .data.bindings import carry_bindings, default_bindings, filled_bindings
 from .data.parse import ParsedDataset
 from .data.store import DatasetStore, StoredDataset
 from .schemas import Binding
@@ -91,6 +91,7 @@ def push_version(
     snapshot: CatalogueSnapshot,
     *,
     rebind: bool = False,
+    pinned: list[Binding] | None = None,
     code: str | None = None,
     source: str | None = None,
 ) -> DatasetVersion:
@@ -101,7 +102,9 @@ def push_version(
     data (`prepare_data`); `rebind` gives the defaults for the new profile instead
     (`default_bindings`), for a table that replaces the data (`generate_data`), where a
     choice made for the old columns says nothing about the new ones even when a name
-    such as `x` returns.
+    such as `x` returns. `pinned` gives those bindings and the defaults for the other
+    roles (`filled_bindings`), for `.to_long()`, which knows the roles its new columns
+    are made for.
 
     The notes pasted with the data (`context_lines`) belong to the session's data, not to one
     version: the new version carries the current version's notes, also after `generate_data`.
@@ -129,11 +132,12 @@ def push_version(
     roles = snapshot.roles()
     # The version before: a date column it did not have fills an open required date role (`carry_bindings`).
     previous = current.profile if current is not None else None
-    bindings = (
-        default_bindings(roles, stored.profile)
-        if rebind
-        else carry_bindings(view.bindings, roles, stored.profile, previous)
-    )
+    if pinned is not None:
+        bindings = filled_bindings(pinned, roles, stored.profile)
+    elif rebind:
+        bindings = default_bindings(roles, stored.profile)
+    else:
+        bindings = carry_bindings(view.bindings, roles, stored.profile, previous)
     version = view.dataset_version + 1
     return DatasetVersion(dataset_id, stored, bindings, version, _delta(dataset_id, bindings, history, version))
 

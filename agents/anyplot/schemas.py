@@ -53,6 +53,11 @@ MAX_COLUMN_NAME_CHARS = 64
 MAX_CELL_CHARS = 40
 MAX_SAMPLE_ROWS = 5
 MAX_TOP_VALUES = 5
+MAX_LISTED_VALUES = 12
+"""A text or boolean column with at most this many distinct values lists every one of them in its profile's `top`
+(`listed_values`); a column with more lists its `MAX_TOP_VALUES` most frequent. Live test round 8 of 2026-10-16:
+the profile of a six-row energy mix listed five sources, the root never saw `Übrige` and told the user the plot
+had added it to fill the ring."""
 MAX_CHANGE_REQUEST_CHARS = 600
 MAX_USER_REQUESTS = 8
 """Earlier change requests of a plot's lineage that a change run carries as the user's standing decisions."""
@@ -203,6 +208,11 @@ class ColumnProfile(_ServerContract):
     `data/months.named_months`): the months it holds, 1 to 12 ascending, so the root states
     the range from them and not from the five `top` values (live test round 4 of
     2026-10-15: "Jan bis Mai" for a column of Jan to Jun).
+
+    `top` holds a text or boolean column's values by frequency: every distinct value when
+    the column has at most `MAX_LISTED_VALUES` of them, otherwise the `MAX_TOP_VALUES`
+    most frequent (`listed_values`), so `unique` above the number listed says the list is
+    partial. A profile cut to fit a cap (`briefs.trimmed_profiles`) may list fewer.
     """
 
     name: ColumnName
@@ -213,8 +223,14 @@ class ColumnProfile(_ServerContract):
     max: int | float | Cell | None = None
     mean: float | None = None
     median: float | None = None
-    top: list[Cell] = Field(default_factory=list, max_length=MAX_TOP_VALUES)
+    top: list[Cell] = Field(default_factory=list, max_length=MAX_LISTED_VALUES)
     months: list[Annotated[int, Field(ge=1, le=12)]] | None = Field(default=None, max_length=12)
+
+
+def listed_values(distinct: int) -> int:
+    """How many values a column with `distinct` distinct values lists in `ColumnProfile.top`: all of them up to
+    `MAX_LISTED_VALUES`, else `MAX_TOP_VALUES`."""
+    return distinct if distinct <= MAX_LISTED_VALUES else MAX_TOP_VALUES
 
 
 class DatasetProfile(_ServerContract):

@@ -158,12 +158,12 @@ from ..schemas import (
     MAX_NOTE_CHARS,
     MAX_ROWS,
     MAX_SAMPLE_ROWS,
-    MAX_TOP_VALUES,
     MAX_WARNINGS,
     ColumnDtype,
     ColumnProfile,
     DatasetProfile,
     SourceFormat,
+    listed_values,
 )
 from .months import named_months
 
@@ -3582,11 +3582,14 @@ def _profile_column(column: _Column) -> ColumnProfile:
     elif column.dtype == "datetime" and column.dates:
         minimum, maximum = _iso(min(column.dates), column.with_time), _iso(max(column.dates), column.with_time)
     elif column.dtype in ("text", "boolean"):
-        for value, _ in Counter(present).most_common():
+        # Every value of a column with few (`listed_values`): a category the root never saw is one it calls added.
+        counts = Counter(present)
+        limit = listed_values(len({_clip(value) for value in counts}))
+        for value, _ in counts.most_common():
             clipped = _clip(value)
             if clipped not in top:
                 top.append(clipped)
-            if len(top) == MAX_TOP_VALUES:
+            if len(top) == limit:
                 break
     return ColumnProfile(
         name=column.name,

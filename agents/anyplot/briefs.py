@@ -12,7 +12,7 @@ from typing import Any
 
 from .data.roles import DataRole
 from .policy import fence
-from .schemas import Binding, DatasetProfile
+from .schemas import MAX_TOP_VALUES, Binding, DatasetProfile
 from .session_state import SessionView
 
 
@@ -122,7 +122,9 @@ def adapter_profile(profile: DatasetProfile, limit: int = MAX_ADAPTER_PROFILE_BY
 def trimmed_profiles(profile: DatasetProfile) -> Iterator[tuple[str, bool]]:
     """The profile JSON, then ever smaller versions of it, each with whether it was trimmed.
 
-    The order of what goes: the sample rows one by one, then every column's top values,
+    The order of what goes: the sample rows one by one, then the values past the
+    `MAX_TOP_VALUES` most frequent of a column that lists all of its values
+    (`schemas.listed_values`; `unique` still counts them), then every column's top values,
     then the ranges and the statistics (min, max, mean, median). Every version keeps
     every column name, its type and counts, so a caller with a size cap takes the first
     version that fits.
@@ -130,6 +132,9 @@ def trimmed_profiles(profile: DatasetProfile) -> Iterator[tuple[str, bool]]:
     yield profile_json(profile), False
     for keep in range(len(profile.sample) - 1, -1, -1):
         yield _dump(profile.model_copy(update={"sample": profile.sample[:keep]})), True
+    if any(len(column.top) > MAX_TOP_VALUES for column in profile.columns):
+        short = [column.model_copy(update={"top": column.top[:MAX_TOP_VALUES]}) for column in profile.columns]
+        yield _dump(profile.model_copy(update={"sample": [], "columns": short})), True
     bare = profile.model_copy(
         update={"sample": [], "columns": [column.model_copy(update={"top": []}) for column in profile.columns]}
     )
