@@ -421,6 +421,15 @@ class TestRestoreProtected:
 
         assert restore_protected(WORKING, drifted) is None
 
+    def test_a_base_line_shared_with_another_statement_is_not_restored(self) -> None:
+        """Copying the base's lines back would also bring back the old `size = 130` the repair changed (#12209)."""
+        page_bg = 'PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"'
+        base = WORKING.replace(page_bg, f"size = 130; {page_bg}")
+        drifted = base.replace(f"size = 130; {page_bg}", 'size = 90\nPAGE_BG = "#FFFFFF"')
+
+        assert protected_drift(base, drifted) != []
+        assert restore_protected(base, drifted) is None
+
     def test_a_splice_that_does_not_parse_is_not_restored(self, monkeypatch: pytest.MonkeyPatch) -> None:
         drifted = self.drifted(('else "#1A1A17"\nINK', 'else "#000000"\nINK'))
         monkeypatch.setattr(edits, "_splice", lambda code, splices: code + "\nif (:\n")

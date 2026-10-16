@@ -55,7 +55,7 @@ result in `AppliedPlan.drifted`. `restore_protected` puts the base's text of eac
 changed statement back over the plan's version of it, by name (the module-level
 assignment of THEME or of the token, the final module-level savefig statement). It
 restores nothing when a protected statement is gone, shares its lines with another
-statement, or the result does not parse or still drifts. The pipeline calls it only
+statement in the plan's code or the base, or the result does not parse or still drifts. The pipeline calls it only
 when the round's check retry is spent (owner decision, 2026-10-16), so the adapter
 first gets its guided retry.
 
@@ -167,7 +167,8 @@ def restore_protected(base: str, code: str) -> str | None:
     """`code` with the base's text put back over every protected statement it changed, or None.
 
     Only when every drift of `code` against `base` is in `RESTORABLE_DRIFT`; a rebind,
-    a removed protected statement, one that shares its lines with another statement,
+    a removed protected statement, one that shares its lines with another statement
+    (in the plan's code or in the base),
     a result that does not parse or one that still drifts restores nothing. Each
     replaced region is a whole module-level statement's lines, so the splice keeps
     the code around it as the plan wrote it.
@@ -201,9 +202,10 @@ def restore_protected(base: str, code: str) -> str | None:
     for base_span, target in pairs:
         if target is not None and _meaning(base, base_span) == _meaning(code, target):
             continue
-        if target is None or not _single_statement(code[target.start : target.end]):
-            return None
         text = base[base_span.start : base_span.end]
+        # Both sides must be one statement on their lines: a line shared on either side would drop or copy another.
+        if target is None or not _single_statement(code[target.start : target.end]) or not _single_statement(text):
+            return None
         if not text.endswith(("\n", "\r")) and target.end < len(code):
             text += "\n"  # the base's statement ended the file; here code follows it
         splices.append((target, text))
