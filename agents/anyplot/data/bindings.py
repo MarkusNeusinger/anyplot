@@ -48,7 +48,7 @@ from .shape import long_suggestion, takes_labels
 from .signs import has_negative, sign_line
 from .temporal import CAMEL as _CAMEL
 from .temporal import WORDS as _WORDS
-from .temporal import date_part, time_keys, year_score
+from .temporal import date_part, year_score
 
 
 # A variadic family binds at most this many columns by default (charts with more series stop
