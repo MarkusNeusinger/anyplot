@@ -68,6 +68,7 @@ def test_one_column_of_values_or_categories_is_a_table(text: str) -> None:
     [
         pytest.param("Hund 7\nKatze 3\nVogel 4\n", id="label-value-lines"),
         pytest.param("Tier Anzahl\nHund 7\nKatze 3\nHund 2\n", id="label-value-lines-under-a-header"),
+        pytest.param("Tier Anzahl\nHund .5\nKatze -.3\nHund .5\n", id="label-value-lines-with-leading-dots"),
         pytest.param(
             "Wir hatten letztes Jahr sieben Hunde.\nDann kamen drei Katzen dazu.\nDann kamen drei Katzen dazu.\n",
             id="prose",

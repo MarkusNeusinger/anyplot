@@ -59,7 +59,7 @@ of 2026-10-16: 800 lines of numbers timed out every time); above it the parser's
 MAX_CATEGORY_WORDS = 4
 """The most words a cell of a one-column category list holds; a longer line reads as prose."""
 
-_NUMBER_TOKEN = re.compile(r"(?:^|\s)[-+]?\d")
+_NUMBER_TOKEN = re.compile(r"(?:^|\s)[-+]?\.?\d")
 """A number that stands as a word of its own, as in `Hund 7`: a label with its value, no category."""
 _SENTENCE_END = (".", "!", "?", ":", ";")
 

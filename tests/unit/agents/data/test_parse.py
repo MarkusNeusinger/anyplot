@@ -3251,6 +3251,8 @@ class TestHeaderlessList:
             pytest.param("123456789012345678901234567890\n12\n15\n", "123456789012345678901234567890", id="past-int64"),
             pytest.param("true\nfalse\ntrue\n", "true", id="booleans"),
             pytest.param("TRUE\nFalse\ntrue\n", "TRUE", id="booleans-in-mixed-case"),
+            pytest.param("007 kg\n12 kg\n15 kg\n", "007 kg", id="a-leading-zero-with-a-unit"),
+            pytest.param("5 kg\n7 g\n3 g\n", "5 kg", id="mixed-units"),
         ],
     )
     def test_a_first_value_the_column_cannot_type_is_kept_too(self, text: str, first: str) -> None:

@@ -3594,9 +3594,13 @@ def _header_as_row(headers: list[str], source_format: SourceFormat) -> bool:
 
 
 def _header_is_value(header: str) -> bool:
-    """A header that is a value by its form alone: a number, a date or a boolean (`true` / `false`, any case)."""
+    """A header that is a value by its form alone: a number, also with a unit (`007 kg`, `€5`), a date or a
+    boolean (`true` / `false`, any case)."""
     text = header.strip()
-    return _looks_like_value(text) or text.casefold() in ("true", "false")
+    if _looks_like_value(text) or text.casefold() in ("true", "false"):
+        return True
+    split = _split_unit(text)
+    return split is not None and _looks_like_value(split[0].strip())
 
 
 def _looks_like_value(name: str) -> bool:
