@@ -9,7 +9,7 @@
  */
 
 import { type BindingMap, familyMembers, nthMember } from 'src/hooks/useAgentSession';
-import type { ColumnProfile, RoleSpec } from 'src/lib/agent';
+import type { ColumnProfile, LongSuggestion, RoleSpec } from 'src/lib/agent';
 
 /** The BFF's limit on one binding set. */
 const MAX_BINDINGS = 50;
@@ -69,6 +69,24 @@ export function signHint(role: RoleSpec, column: ColumnProfile | undefined): str
     return null;
   }
   return `has negative values (down to ${column.min}); ${role.name} needs values of 0 or more`;
+}
+
+/**
+ * The warning under a dropdown when a role that takes labels (its kinds include
+ * `categorical` or `text`, as a heatmap's `x` and `y` do) is bound to one of the
+ * number columns of a wide table (the suggestion's `siblings`, the server's
+ * `bindings.label_siblings`); `null` otherwise. Never a refusal: `.to_long()` is
+ * the fix the page offers.
+ */
+export function siblingHint(
+  role: RoleSpec,
+  column: string | undefined,
+  suggestion: LongSuggestion | null
+): string | null {
+  if (!column || !suggestion || !suggestion.siblings.includes(column)) return null;
+  if (!role.kinds.some(kind => kind === 'categorical' || kind === 'text')) return null;
+  const count = suggestion.siblings.length;
+  return `one of ${count} number columns that hold one measure side by side; ${role.name} wants labels: .to_long() first`;
 }
 
 /** What a role accepts, under its name: `numeric / datetime`, `any column`. */

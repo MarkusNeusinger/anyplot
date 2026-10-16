@@ -38,6 +38,7 @@ from ..schemas import Binding, ColumnDtype, ColumnProfile, DatasetProfile
 from .computed import match_score, window_line, window_rank
 from .parse import value_like
 from .roles import DataRole, RoleKind
+from .shape import long_suggestion, takes_labels
 from .signs import has_negative, sign_line
 
 
@@ -128,7 +129,8 @@ class BindingCheck:
     bound to a column with a negative value, or left open because every column that
     fits it has one (`signs.py`); and one per computed role bound to a column whose name
     carries another window than the spec's (`computed.window_line`: `SMA 200` for a
-    20-period band).
+    20-period band); and one per role that takes labels bound to a measurement column of a
+    table that is wide for the spec (`sibling_line`: a heatmap's `y` on the numbers of `Mo`).
     """
 
     complete: bool
@@ -158,6 +160,33 @@ def row_number_columns(profile: DatasetProfile) -> set[str]:
         and column.unique == rows
         and (column.min, column.max) in ((1, rows), (0, rows - 1))
     }
+
+
+def label_siblings(roles: list[DataRole], profile: DatasetProfile) -> list[str]:
+    """The number columns of a table that is wide for this spec (`shape.long_suggestion`): one measure side by side.
+
+    A role that takes labels (`shape.takes_labels`) never takes one of them by default, and bound to one by
+    hand it carries a warning (`sibling_line`): in live test round 7 of 2026-10-16 a heatmap of
+    `Stunde;Mo;...;So` got `y` = `Mo` and `value` = `Di` by default, the user confirmed, and the run drew a
+    meaningless mostly empty matrix after 170 s. The role stays open instead, so the bindings are incomplete
+    and the page offers `.to_long()`. A column of years or of a part of a date (`weak_measures`) is no
+    sibling: `Jahr` beside `CO2` and `Bevölkerung` is the category of a bar chart.
+    """
+    suggestion = long_suggestion(roles, profile)
+    if suggestion is None:
+        return []
+    weak = weak_measures(profile)
+    return [name for name in suggestion.columns if name not in weak]
+
+
+def sibling_line(role: str, column: str, siblings: list[str]) -> str:
+    """The warning of a label role bound to one of the measurement columns of a wide table."""
+    shown = ", ".join(f"'{name}'" for name in siblings[:4]) + (", ..." if len(siblings) > 4 else "")
+    return (
+        f"{role}: bound to '{column}', one of {len(siblings)} number columns ({shown}) that hold one measure side "
+        f"by side; {role} wants labels, so each number would become a category of its own: turn the columns into "
+        "rows first (.to_long())"
+    )
 
 
 def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Binding]:
@@ -228,6 +257,8 @@ def _default_bindings(roles: list[DataRole], profile: DatasetProfile, row_number
     per_group = record_values(profile) if any(is_axis(role) for role in roles if role.kinds) else set()
     keys = {name for name in per_group if _record_key(name)}
     weak = weak_measures(profile) | per_group
+    # The measurement columns of a wide table never label the marks (`label_siblings`).
+    siblings = set(label_siblings(roles, profile))
     # A column of years named so is a time key, never a series of a number family: a single role may take it.
     # A weak measure the family leaves out stays reserved too: `Dauer (Minuten)` or a constant `target` is no
     # series label (review of 2026-10-15).
@@ -263,6 +294,7 @@ def _default_bindings(roles: list[DataRole], profile: DatasetProfile, row_number
                     column.name not in used
                     and _norm(column.name) == _norm(role.name)
                     and _tier(role, column) is not None
+                    and not (column.name in siblings and takes_labels(role))
                 ):
                     single[role.name] = column.name
                     used.add(column.name)
@@ -355,6 +387,7 @@ def _default_bindings(roles: list[DataRole], profile: DatasetProfile, row_number
                 and (tier := _tier(role, column)) is not None
                 and (tier <= 1 or column.name not in reserved)
                 and (role.required or (column.name not in avoid and column.name not in row_numbers))
+                and not (column.name in siblings and takes_labels(role))
             )
             if ranked:
                 single[role.name] = ranked[0][-1]
@@ -456,10 +489,13 @@ def check_bindings(bindings: list[Binding], roles: list[DataRole], profile: Data
     the plot can compute (`DataRole.computed`: bound, the plot uses the column; open, it
     computes the value); a
     required variadic family needs at least one member. `warnings`: a valid binding of
-    a non-negative role to a column with a negative value (`signs.sign_line`), and an
-    unbound non-negative role whose every fitting column that no other role holds has one.
+    a non-negative role to a column with a negative value (`signs.sign_line`), an
+    unbound non-negative role whose every fitting column that no other role holds has one,
+    and a role that takes labels bound to a measurement column of a wide table
+    (`label_siblings`, `sibling_line`).
     """
     columns = {column.name: column for column in profile.columns}
+    siblings = label_siblings(roles, profile)
     errors: list[str] = []
     warnings: list[str] = []
     seen_roles: set[str] = set()
@@ -489,6 +525,8 @@ def check_bindings(bindings: list[Binding], roles: list[DataRole], profile: Data
             errors.append(f"role '{binding.role}' needs {wanted} data, but column '{column.name}' is {column.dtype}")
             continue
         bound.add(role.name)
+        if column.name in siblings and takes_labels(role):
+            warnings.append(sibling_line(binding.role, column.name, siblings))
         if role.non_negative and has_negative(column):
             warnings.append(sign_line(binding.role, column))
         if role.computed and (line := window_line(role.name, column.name)):

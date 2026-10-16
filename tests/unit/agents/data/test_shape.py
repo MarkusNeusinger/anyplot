@@ -61,6 +61,56 @@ class TestSuggestion:
         assert (suggestion.columns, suggestion.keys, suggestion.rows) == (["Sensor_A", "Sensor_B"], ["Datum"], 4)
 
 
+class TestMatrix:
+    """Live test round 7 of 2026-10-16: a heatmap of visitors per hour and weekday, pasted wide."""
+
+    def test_the_wide_heatmap_gets_the_long_form_with_its_row_labels_kept(self) -> None:
+        suggestion = suggest("heatmap-basic", VISITORS)
+
+        assert suggestion is not None
+        assert suggestion.operation() == {
+            "op": "pivot_longer",
+            "columns": ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"],
+            "names_to": "y",
+            "values_to": "value",
+        }
+        assert (suggestion.keys, suggestion.rows) == (["Stunde"], 28)
+
+    def test_applied_it_binds_every_role(self) -> None:
+        suggestion = suggest("heatmap-basic", VISITORS)
+        assert suggestion is not None
+        operations = TypeAdapter(list[Operation]).validate_python([suggestion.operation()])
+
+        prepared = apply_operations(parse_dataset(VISITORS), operations)
+        parsed = parse_dataset(prepared.csv, text_columns=prepared.text_columns)
+
+        assert prepared.csv.splitlines()[:2] == ["Stunde,y,value", "08:00,Mo,42"]
+        bound = {binding.role: binding.column for binding in default_bindings(roles("heatmap-basic"), parsed.profile)}
+        assert bound == {"x": "Stunde", "y": "y", "value": "value"}
+        assert long_suggestion(roles("heatmap-basic"), parsed.profile) is None
+
+    def test_long_heatmap_data_with_an_integer_key_stays(self) -> None:
+        text = "day,hour,count\n" + "".join(f"{day},{hour},{hour * 2}\n" for day in ("Mon", "Tue") for hour in (9, 10))
+
+        assert suggest("heatmap-basic", text) is None
+
+    def test_row_labels_that_repeat_are_no_matrix(self) -> None:
+        assert suggest("heatmap-basic", "label,a,b,c\nA,1,2,3\nA,4,5,6\nB,7,8,9\n") is None
+
+    def test_two_number_columns_are_no_matrix(self) -> None:
+        assert suggest("heatmap-basic", "label,a,b\nA,1,2\nB,4,5\nC,7,8\n") is None
+
+
+# Four rows of the owner's paste of round 7.
+VISITORS = (
+    "Stunde;Mo;Di;Mi;Do;Fr;Sa;So\n"
+    "08:00;42;35;35;46;32;48;40\n"
+    "09:00;48;39;43;51;38;61;41\n"
+    "10:00;46;53;56;57;51;57;57\n"
+    "11:00;55;44;64;60;60;63;68\n"
+)
+
+
 class TestNoSuggestion:
     def test_a_scatter_wants_two_numbers(self) -> None:
         assert suggest("scatter-basic", "x,y\n1,2\n3,4\n") is None

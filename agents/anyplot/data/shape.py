@@ -26,6 +26,28 @@ The rule, every condition required:
   is pivoted.
 * **The result fits:** at most `MAX_ROWS` rows, and the new names (the two role
   names) are not already a kept column's name.
+
+The matrix rule (live test round 7 of 2026-10-16): a heatmap's `x` and `y` (string or
+numeric labels) and `value`, or a grouped box's `category`, `subcategory` and `value`,
+take a wide matrix such as `Stunde;Mo;Di;...;So` the same way, with one label column
+kept. Every condition required:
+
+* **The spec wants a long matrix:** its required single roles are exactly two roles
+  that take labels (their kinds include categorical or text; a heatmap's also take
+  numbers) and one numeric-only role, and no variadic numeric family.
+* **The table is a wide matrix:** exactly one text column, the row labels, with a
+  distinct label in every row and none missing, which is kept as the key; at least
+  `MIN_MATRIX_COLUMNS` numeric columns (at most `MAX_LONGER_COLUMNS`); and no other
+  column. Long data such as `day, hour, count` (two number columns, the day repeated)
+  stays as it is.
+* **The result fits:** as above. The column names go into the second label role in
+  spec order (`y`, `subcategory`), the values into the value role; the default
+  bindings give the kept label column to the first (`x`, `category`), as they do for
+  the wide table already.
+
+Before this rule the default bindings put a heatmap's `y` on the numbers of `Mo` and
+its `value` on `Di`, and the plot drew 14 rows of nonsense; `bindings.label_siblings`
+now keeps a label role off the measurement columns of a table this module calls wide.
 """
 
 from dataclasses import dataclass
@@ -39,6 +61,9 @@ from .roles import DataRole
 _LABEL_KINDS = frozenset({"categorical", "text"})
 _NUMERIC_COLUMNS = frozenset({"integer", "number"})
 _LABEL_COLUMNS = frozenset({"text", "boolean"})
+MIN_MATRIX_COLUMNS = 3
+"""The measurement columns a wide matrix has at least (the heatmap specs ask for 5 to 50); two number columns
+beside a label column are more often a long table with an integer key."""
 
 
 @dataclass(frozen=True)
@@ -72,24 +97,44 @@ class LongSuggestion:
         }
 
 
+def takes_labels(role: DataRole) -> bool:
+    """Whether a role labels or splits the marks: its kinds include categorical or text (a heatmap's `x` and `y`,
+    which also take numbers, included)."""
+    return bool(set(role.kinds) & _LABEL_KINDS)
+
+
 def long_suggestion(roles: list[DataRole], profile: DatasetProfile) -> LongSuggestion | None:
-    """The suggestion for this spec and table, or None when the rule above does not hold."""
+    """The suggestion for this spec and table, or None when neither rule above holds."""
     single = [role for role in roles if not role.variadic and not role.computed]  # a computed role takes no column
     if any(role.variadic and set(role.kinds) == {"numeric"} for role in roles):
         return None
-    labels = [role for role in single if role.required and role.kinds and set(role.kinds) <= _LABEL_KINDS]
     values = [role for role in single if role.required and set(role.kinds) == {"numeric"}]
-    # Exactly one of each: box-grouped's `category` and `subcategory` would leave one label open.
-    if len(labels) != 1 or len(values) != 1:
+    if len(values) != 1:
         return None
     dtypes = {column.name: column.dtype for column in profile.columns}
-    if any(dtype in _LABEL_COLUMNS for dtype in dtypes.values()):
-        return None
     numeric = [name for name, dtype in dtypes.items() if dtype in _NUMERIC_COLUMNS]
-    keys = [name for name, dtype in dtypes.items() if dtype == "datetime"]
-    if not 2 <= len(numeric) <= MAX_LONGER_COLUMNS or len(numeric) + len(keys) != len(dtypes):
+    if not 2 <= len(numeric) <= MAX_LONGER_COLUMNS:
         return None
-    names_to, values_to = labels[0].name, values[0].name
+    labels = [role for role in single if role.required and role.kinds and set(role.kinds) <= _LABEL_KINDS]
+    if len(labels) == 1 and not any(dtype in _LABEL_COLUMNS for dtype in dtypes.values()):
+        keys = [name for name, dtype in dtypes.items() if dtype == "datetime"]
+        names_to = labels[0].name
+    else:
+        # The matrix rule: two label roles, one of them for the kept label column.
+        pair = [role for role in single if role.required and takes_labels(role)]
+        required = [role for role in single if role.required]
+        texts = [column for column in profile.columns if column.dtype == "text"]
+        if len(pair) != 2 or len(required) != 3 or len(texts) != 1 or "boolean" in dtypes.values():
+            return None
+        # A matrix: one distinct label per row and at least `MIN_MATRIX_COLUMNS` measures. Long data of
+        # `day, hour, count` (an integer key, the label repeated per hour) stays as it is.
+        if len(numeric) < MIN_MATRIX_COLUMNS or texts[0].missing or texts[0].unique != profile.rows:
+            return None
+        keys = [texts[0].name]
+        names_to = pair[1].name
+    if len(numeric) + len(keys) != len(dtypes):
+        return None
+    values_to = values[0].name
     if names_to == values_to or {names_to, values_to} & set(keys):
         return None
     rows = profile.rows * len(numeric)

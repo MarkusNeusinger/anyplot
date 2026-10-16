@@ -135,7 +135,7 @@ export interface RoleSpec {
  * The service's wide-table offer (`agents/anyplot/data/shape.py`): the table holds
  * the same quantity side by side (`columns`) where the spec wants one category and
  * one value column. `.to_long()` turns `columns` into `names_to` and `values_to`
- * (`keys`, date columns, stay), `rows` long.
+ * (`keys`, date columns or a matrix's row labels, stay), `rows` long.
  */
 export interface LongSuggestion {
   kind: 'to_long';
@@ -144,6 +144,12 @@ export interface LongSuggestion {
   values_to: string;
   keys: string[];
   rows: number;
+  /**
+   * The columns a role that takes labels should not be bound to (the server's
+   * `bindings.label_siblings`): `columns` without years or parts of a date. Empty
+   * from an older server.
+   */
+  siblings: string[];
 }
 
 export interface DatasetParsed {
@@ -1221,6 +1227,7 @@ export function longSuggestion(value: unknown): LongSuggestion | null {
     values_to: value.values_to,
     keys: strings(value.keys),
     rows: value.rows,
+    siblings: strings(value.siblings),
   };
 }
 

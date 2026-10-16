@@ -11,6 +11,7 @@ from agents.anyplot.data.bindings import (
     carry_bindings,
     check_bindings,
     default_bindings,
+    label_siblings,
     name_similarity,
     record_values,
     resolve_role,
@@ -812,6 +813,42 @@ class TestCarryBindings:
         carried = carry_bindings(bind(("y2", "c"), ("x", "gone")), self.ROLES, data)
 
         assert as_pairs(carried) == [("x", "a"), ("y1", "b"), ("y2", "c")]
+
+
+class TestWideTableSiblings:
+    """Live test round 7 of 2026-10-16: a heatmap's `y` and `value` on `Mo` and `Di` of a wide matrix."""
+
+    ROLES = [role("x", "text", "numeric"), role("y", "text", "numeric"), role("value", "numeric")]
+    DATA = "Stunde;Mo;Di;Mi\n08:00;42;35;35\n09:00;48;39;43\n10:00;46;53;56\n"
+
+    def test_no_role_that_takes_labels_gets_a_side_by_side_column_by_default(self) -> None:
+        data = profile(self.DATA)
+
+        bindings = default_bindings(self.ROLES, data)
+
+        assert as_pairs(bindings) == [("x", "Stunde"), ("value", "Mo")]
+        assert check_bindings(bindings, self.ROLES, data).missing_roles == ["y"]  # incomplete: `.to_long()` first
+
+    def test_bound_by_hand_it_is_warned_about(self) -> None:
+        data = profile(self.DATA)
+
+        check = check_bindings(bind(("x", "Stunde"), ("y", "Mo"), ("value", "Di")), self.ROLES, data)
+
+        assert check.complete
+        assert check.warnings == [
+            "y: bound to 'Mo', one of 3 number columns ('Mo', 'Di', 'Mi') that hold one measure side by side; "
+            "y wants labels, so each number would become a category of its own: turn the columns into rows first "
+            "(.to_long())"
+        ]
+        assert label_siblings(self.ROLES, data) == ["Mo", "Di", "Mi"]
+
+    def test_a_year_column_is_no_sibling(self) -> None:
+        # bar-basic on the Swiss CO2 paste: the table is all numbers, `Jahr` still labels the bars.
+        roles = [role("category", "categorical"), role("value", "numeric")]
+        data = profile("Jahr,CO2,Bevölkerung\n2000,43.6,7184003\n2001,45.1,7226391\n2002,43.5,7278744\n")
+
+        assert as_pairs(default_bindings(roles, data)) == [("category", "Jahr"), ("value", "CO2")]
+        assert check_bindings(bind(("category", "Jahr"), ("value", "CO2")), roles, data).warnings == []
 
 
 class TestCheckBindings:

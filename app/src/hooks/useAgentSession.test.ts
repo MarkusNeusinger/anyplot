@@ -1227,6 +1227,7 @@ describe('useAgentSession: .to_long()', () => {
     values_to: 'value',
     keys: [],
     rows: 4,
+    siblings: ['Sensor_A', 'Sensor_B'],
   };
   const WIDE = { ...DATASET, suggestion: OFFER };
   const LONG = {

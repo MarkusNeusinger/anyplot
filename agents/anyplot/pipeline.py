@@ -246,6 +246,16 @@ PADDED_LINE = "canvas padded after render ({theme})"
 NOT_REVIEWED_LINE = "the plot was not reviewed ({why})"
 LOW_SCORE_LINE = "the review scored the plot {score} of 100, below the ship score of {bar}"
 """The residual line of a render that meets the ship bar but not `AGENT_STATUS_SCORE`."""
+VISIBLE_DEFECT_IDS = frozenset({"AR-09", "VQ-02", "VQ-05"})
+"""Review ids of a defect the user sees at a glance: text cut off at the canvas edge (AR-09), overlapping text or
+marks (VQ-02), and a layout that cuts or crams the plot (VQ-05). The reviewer's twins of the measured gate lines G3
+and G7, which no review score waives either (`AGENT_GATE_REPAIR=review`).
+
+A review that names one of them sends the round to the repair even when its points pass the review bar
+(`AGENT_REVIEW_BAR`, 0.95 of the technical points: two lost points pass): live test round 7 of 2026-10-16 shipped
+a heatmap after the first try with its axis label at the right edge and a crammed colorbar, and the reply listed
+them. The ship bar is untouched: a render that meets it still shows without the review's notes, and
+`AGENT_SHIP_BEST` keeps a repair that scores lower from shipping."""
 BLOCKING_RULES = frozenset({"placeholder-count", "placeholder-use", "syntax", "size", "encoding"})
 """ADAPTATION findings that keep the code from running: without one placeholder there is no loader."""
 ADAPTATION_IDS = {"rng": "DQ-03", "literal-data": "DQ-03", "palette-prefix": "VQ-07"}
@@ -1136,7 +1146,8 @@ class ReviewOutcome:
     """A read review in either mode: the verdict, the defect lines for the repair, their ids, the score."""
 
     ok: bool
-    """No repair needed: every technical point (`AGENT_REVIEW_BAR`), or the checklist passed."""
+    """No repair needed: the technical points at the review bar (`AGENT_REVIEW_BAR`) and no defect line under
+    `VISIBLE_DEFECT_IDS`, or the checklist passed."""
     lines: list[str]
     ids: list[str]
     score: int | None = None
@@ -1176,6 +1187,9 @@ async def _review(ctx: Context, scope: str, request: ReviewRequest, theme: Theme
         logger.warning("catalogue review deducted without defect lines: %s", ", ".join(result.silent))
         return None
     ids = sorted({found for line in result.defects if (m := DEFECT_RE.match(line)) for found in m["ids"].split(", ")})
+    if ok and VISIBLE_DEFECT_IDS & set(ids):
+        # A visible defect gets the repair round whatever the points (`VISIBLE_DEFECT_IDS`); the ship bar stays.
+        ok = False
     return ReviewOutcome(
         ok,
         [] if ok and status_ok else result.defects,

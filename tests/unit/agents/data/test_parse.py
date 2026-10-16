@@ -11,6 +11,7 @@ from typing import Any
 
 import pandas as pd
 import pytest
+from pydantic import TypeAdapter
 
 from agents.anyplot.data import parse as parse_module
 from agents.anyplot.data.bindings import default_bindings
@@ -30,6 +31,7 @@ from agents.anyplot.data.parse import (
     sniff_delimiter,
     without_context,
 )
+from agents.anyplot.data.prepare import Operation, apply_operations
 from agents.anyplot.data.roles import DataRole
 from agents.anyplot.schemas import (
     MAX_CELL_CHARS,
@@ -1032,6 +1034,11 @@ class TestTyping:
             (["31.12.2024 23:59"], "datetime", ["2024-12-31T23:59:00"]),
             (["25/12/2024", "01/02/2024"], "datetime", ["2024-12-25", "2024-02-01"]),
             (["12/25/2024", "01/02/2024"], "datetime", ["2024-12-25", "2024-01-02"]),
+            (["2025-01", "2025-12"], "datetime", ["2025-01-01", "2025-12-01"]),
+            (["2025-Q1", "2025-q4"], "datetime", ["2025-01-01", "2025-10-01"]),
+            (["2025-13"], "text", ["2025-13"]),
+            (["0999-01"], "text", ["0999-01"]),
+            (["2025-01", "2025-Q2"], "text", ["2025-01", "2025-Q2"]),
             (["31.02.2024"], "text", ["31.02.2024"]),
             (["25/12/2024", "12/25/2024"], "text", ["25/12/2024", "12/25/2024"]),
             (["2024-01-05", "05.01.2024"], "text", ["2024-01-05", "05.01.2024"]),
@@ -1092,6 +1099,37 @@ class TestTyping:
 
         assert column(parsed, "b").dtype == "text"
         assert column(parsed, "b").missing == 2
+
+
+class TestMonthsAndQuarters:
+    """Live test round 7 of 2026-10-16: `2025-01` read as text made `GWh` the x of a monthly line."""
+
+    TEXT = "Monat,Quelle,GWh\n2025-01,Wasser,2228\n2025-01,Kern,1740\n2025-02,Wasser,2010\n2025-02,Kern,1702\n"
+
+    def test_a_month_column_is_dates_with_the_reading_announced(self) -> None:
+        parsed = parse_dataset(self.TEXT)
+
+        assert parsed.column_dtypes["Monat"] == "datetime"
+        assert parsed.csv.splitlines()[1] == "2025-01-01,Wasser,2228"
+        assert "column 'Monat': 4 cells read as months (YYYY-MM, each as the first day of the month)" in parsed.warnings
+
+    def test_it_reads_as_set_type_with_yyyy_mm_does(self) -> None:
+        text_first = parse_dataset(self.TEXT, text_columns=["Monat"])
+        operations = TypeAdapter(list[Operation]).validate_python(
+            [{"op": "set_type", "column": "Monat", "type": "datetime", "date_format": "YYYY-MM"}]
+        )
+
+        converted = apply_operations(text_first, operations)
+
+        assert converted.csv == parse_dataset(self.TEXT).csv
+
+    def test_quarters_announce_their_first_day(self) -> None:
+        parsed = parse_dataset("Quartal,Umsatz\n2025-Q1,10\n2025-Q2,12\n")
+
+        assert parsed.csv.splitlines()[1:] == ["2025-01-01,10", "2025-04-01,12"]
+        assert "column 'Quartal': 2 cells read as quarters (YYYY-Qn, each as the first day of the quarter)" in (
+            parsed.warnings
+        )
 
 
 class TestProfile:

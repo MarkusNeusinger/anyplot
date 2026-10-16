@@ -1091,6 +1091,7 @@ describe('DataPanel wide-table offer', () => {
     values_to: 'value',
     keys: [],
     rows: 9,
+    siblings: ['Sensor_A', 'Sensor_B', 'Sensor_C'],
   };
   const offered = (overrides: Partial<AgentSessionState> = {}) => {
     const state = stateWith({}, { bindingsComplete: false, ...overrides });
@@ -1145,6 +1146,26 @@ describe('DataPanel wide-table offer', () => {
 
     rerender(panel(stateWith({})));
     expect(screen.queryByTestId('data-long-hint')).not.toBeInTheDocument();
+  });
+
+  it('warns under a role that wants labels when it is bound to one of the side-by-side columns', () => {
+    // Live test round 7: a heatmap's `y` on the numbers of `Mo` drew a meaningless matrix.
+    const state = offered({ bindings: { x: 'month', series: 'shoes' } });
+    const withSiblings = {
+      ...state,
+      dataset: state.dataset && {
+        ...state.dataset,
+        parsed: {
+          ...state.dataset.parsed,
+          suggestion: { ...OFFER, columns: ['shoes', 'hats'], siblings: ['shoes', 'hats'] },
+        },
+      },
+    };
+    render(panel(withSiblings));
+
+    expect(screen.getByTestId('sign-hint')).toHaveTextContent(
+      'one of 2 number columns that hold one measure side by side; series wants labels: .to_long() first'
+    );
   });
 });
 

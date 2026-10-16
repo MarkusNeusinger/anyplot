@@ -749,7 +749,11 @@ class TestRepairExhaustion:
     def _exhaust(self, tmp_path: Path, files: tuple[str, ...], **env: str):
         work = _origin_with(tmp_path, files)
         head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=work, capture_output=True, text=True).stdout
-        result, calls = _run(_step("impl-review.yml", VERDICT_STEP)["run"], work, tmp_path, **{**self.ENV, **env})
+        # The comment body goes to `$RUNNER_TEMP`, one directory per test: a fixed /tmp path raced under xdist.
+        runner_temp = tmp_path / "runner_temp"
+        runner_temp.mkdir()
+        env = {"RUNNER_TEMP": str(runner_temp), **self.ENV, **env}
+        result, calls = _run(_step("impl-review.yml", VERDICT_STEP)["run"], work, tmp_path, **env)
         after = subprocess.run(["git", "rev-parse", "HEAD"], cwd=work, capture_output=True, text=True).stdout
         assert after == head, "the exhaustion path must never commit"
         assert (work / self.IMPL).exists() == (self.IMPL in files)
@@ -823,7 +827,8 @@ class TestRepairExhaustion:
     def test_unreadable_main_sets_no_terminal_label_and_ends_red(self, tmp_path):
         work = _origin_with(tmp_path, ())
         subprocess.run(["git", "remote", "set-url", "origin", str(tmp_path / "gone.git")], cwd=work, check=True)
-        result, calls = _run(_step("impl-review.yml", VERDICT_STEP)["run"], work, tmp_path, **self.ENV)
+        env = {"RUNNER_TEMP": str(tmp_path), **self.ENV}
+        result, calls = _run(_step("impl-review.yml", VERDICT_STEP)["run"], work, tmp_path, **env)
         assert result.returncode == 1, result.stdout + result.stderr
         assert "Implementation live on main: unknown" in result.stdout
         assert ["pr", "close", "7"] in calls

@@ -846,6 +846,8 @@ def _aggregate(frame: pd.DataFrame, op: Aggregate, carried: _Carried) -> tuple[p
         carried.with_time.update(dict.fromkeys(date_keys, op.period == "hour"))
     elif op.period:
         carried.forget(date_keys)  # period labels are text now
+        # ... and stay text through the re-parse, which reads `2024-03` and `2024-Q1` as dates since live round 7.
+        carried.text_columns.update(date_keys)
 
     period = _PERIOD_WORDS.get(op.period, op.period) if op.period else ""
     zones = sorted({str(frame[name].dt.tz) for name in date_keys if frame[name].dt.tz is not None})

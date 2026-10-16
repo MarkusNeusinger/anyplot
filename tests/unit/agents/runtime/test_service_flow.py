@@ -2467,7 +2467,8 @@ async def test_a_wide_table_on_a_box_plot_is_offered_long_and_to_long_applies_it
         "keys": [],
         "rows": 9,
     }
-    assert pasted.json()["suggestion"] == offer
+    # The page also learns which columns no label role should take (`bindings.label_siblings`).
+    assert pasted.json()["suggestion"] == {**offer, "siblings": ["Sensor_A", "Sensor_B", "Sensor_C"]}
     # The root's summary reads the same offer from its profile tool, fenced as the user's data.
     from types import SimpleNamespace
 
@@ -2490,7 +2491,7 @@ async def test_a_wide_table_on_a_box_plot_is_offered_long_and_to_long_applies_it
     again = await client.post(f"/v1/sessions/{sid}/dataset/to_long", headers=HEADERS)
     assert (again.status_code, again.json()) == (422, {"detail": "no_suggestion"})
     undone = await client.post(f"/v1/sessions/{sid}/dataset/undo", headers=HEADERS)
-    assert undone.status_code == 200 and undone.json()["suggestion"] == offer
+    assert undone.status_code == 200 and undone.json()["suggestion"] == pasted.json()["suggestion"]
 
     scatter = await open_session(client)
     refused = await client.post(f"/v1/sessions/{scatter}/dataset/to_long", headers=HEADERS)

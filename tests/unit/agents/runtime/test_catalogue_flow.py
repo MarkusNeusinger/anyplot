@@ -292,6 +292,59 @@ async def test_two_lost_technical_points_need_no_repair(client: httpx.AsyncClien
     assert len(adapter_inputs(fake)) == 2  # adapt, proofread
 
 
+@pytest.mark.parametrize("visible", ["VQ-05", "VQ-02"])
+async def test_a_visible_defect_above_the_review_bar_still_gets_the_repair(
+    client: httpx.AsyncClient, swap_models, visible: str
+) -> None:
+    """Live test round 7 of 2026-10-16: a heatmap shipped after the first try with its axis label cut at the edge.
+
+    Two lost points pass the review bar, but a clipped, overlapping or crammed layout (`VISIBLE_DEFECT_IDS`) is
+    what the user sees first: the round goes to the repair with the review's lines."""
+    script = default_script(plans=[SCATTER_PLAN, EMPTY_PLAN, SECOND_PLAN])
+    script["reviewer"] = [{"json": score(**{visible: 2})}, {"json": score()}]
+    fake = swap_models("gemini", script)
+    sid = await open_session(client)
+
+    events = await create_plot(client, sid)
+
+    plot = next(data for name, data in events if name == "plot")
+    assert (plot["status"], plot["attempts"], plot["residual_defects"]) == ("ok", 2, [])
+    inputs = adapter_inputs(fake)
+    assert len(inputs) == 3 and "24 sparse markers" in inputs[2]
+
+
+async def test_an_auto_reject_line_for_clipped_text_gets_the_repair(client: httpx.AsyncClient, swap_models) -> None:
+    """AR-09 carries no points of its own: a review with every point and a clipping line used to pass as is."""
+    clipped = score()
+    clipped["defects"] = ["AR-09 (light): the y axis label 'Wochentag' is cut at the right edge → keep it inside."]
+    script = default_script(plans=[SCATTER_PLAN, EMPTY_PLAN, SECOND_PLAN])
+    script["reviewer"] = [{"json": clipped}, {"json": score()}]
+    fake = swap_models("gemini", script)
+    sid = await open_session(client)
+
+    events = await create_plot(client, sid)
+
+    plot = next(data for name, data in events if name == "plot")
+    assert (plot["status"], plot["attempts"]) == ("ok", 2)
+    assert "Wochentag" in adapter_inputs(fake)[2]
+
+
+async def test_a_visible_defect_no_round_fixes_ships_above_the_ship_bar_without_notes(
+    client: httpx.AsyncClient, swap_models
+) -> None:
+    """The ship bar is untouched: the repair round is spent, the better-scored render ships without notes."""
+    script = default_script(plans=[SCATTER_PLAN, EMPTY_PLAN, SECOND_PLAN])
+    script["reviewer"] = [{"json": score(**{"VQ-05": 1})}, {"json": score(**{"VQ-05": 2})}]
+    swap_models("gemini", script)
+    sid = await open_session(client)
+
+    events = await create_plot(client, sid)
+
+    plot = next(data for name, data in events if name == "plot")
+    assert (plot["status"], plot["attempts"], plot["residual_defects"]) == ("ok", 2, [])
+    assert [r["attempt"] for r in plot["rounds"] if r["shipped"]] == [1]
+
+
 async def test_below_the_ship_bar_the_review_lines_are_the_notes(client: httpx.AsyncClient, swap_models) -> None:
     script = default_script(plans=[SCATTER_PLAN, EMPTY_PLAN, SECOND_PLAN, EMPTY_PLAN])
     below = score(**{"VQ-03": 4})  # 51 of 55 technical points: 93 %

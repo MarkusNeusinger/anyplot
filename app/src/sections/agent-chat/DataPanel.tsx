@@ -123,7 +123,13 @@ import {
   toBase64,
   utf8Bytes,
 } from 'src/lib/agent';
-import { bindingRows, emptyChoice, kindsHint, signHint } from 'src/sections/agent-chat/bindings';
+import {
+  bindingRows,
+  emptyChoice,
+  kindsHint,
+  siblingHint,
+  signHint,
+} from 'src/sections/agent-chat/bindings';
 import { Ellipsis } from 'src/sections/agent-chat/Ellipsis';
 import {
   countLines,
@@ -1626,10 +1632,13 @@ export function DataPanel({
                 const missing = row.first && state.missingRoles.includes(row.role.name);
                 const id = `agent-role-${row.name}`;
                 const bound = state.bindings[row.name];
-                const sign = signHint(
-                  row.role,
-                  columns.find(column => column.name === bound)
-                );
+                // A wide table's number column in a role that wants labels comes first: the plot would be meaningless.
+                const sign =
+                  siblingHint(row.role, bound, suggestion) ??
+                  signHint(
+                    row.role,
+                    columns.find(column => column.name === bound)
+                  );
                 return (
                   <Box key={row.name} sx={{ display: 'contents' }}>
                     <Box

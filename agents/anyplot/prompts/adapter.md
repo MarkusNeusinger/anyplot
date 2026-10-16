@@ -90,7 +90,7 @@ Answer with one JSON object with these fields:
 - `edits`: a list of at most 20 `{"find": ..., "replace": ...}` hunks, applied in order. Copy each `find` verbatim from the code as it stands after the previous edits, including indentation and quotes, and make it match exactly once: one to three whole lines is usually enough; add a neighbouring line when a line repeats. `replace` is the new text for exactly that span. Keep the code formatted as the catalogue writes it.
 - `full_code`: only when `allow_full` is true, and only instead of `edits` (then `edits` is empty): the complete working form, with exactly one `df = load_user_data()` line and the protected lines unchanged. Use it when the edits would be long or fragile.
 - `title`: the plot title you set, as described under "User plots".
-- `changes`: up to five short English notes (one sentence each, at most 200 characters) that tell the user what you changed, for example "Mapped Month to the x-axis and Revenue (EUR) to the bars".
+- `changes`: up to five short English notes (one sentence each, at most 200 characters) that tell the user what you changed, for example "Mapped Month to the x-axis and Revenue (EUR) to the bars". Describe what the code does with this data, never a branch that does not run for it (a remainder slice when the shares already add up to 100), and never say that a row or value was added to the data: the code draws the user's rows.
 
 When `feedback` is present, fix every defect line it names and every failed edit, and keep what already worked.
 

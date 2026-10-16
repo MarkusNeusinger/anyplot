@@ -388,6 +388,13 @@ _ISO_STAMP = re.compile(
 )
 """An ISO date, or a timestamp with seconds, a fraction of up to nine digits and an offset (`_as_iso_stamps`)."""
 
+_YEAR_MONTH = re.compile(r"([0-9]{4})-([0-9]{2})")
+"""A month as ISO 8601 writes it (`2025-01`), read as its first day (`_as_periods`)."""
+_YEAR_QUARTER = re.compile(r"([0-9]{4})-[Qq]([1-4])")
+"""A quarter (`2025-Q1`), read as its first day (`_as_periods`)."""
+MONTH_YEARS = (1000, 2200)
+"""The years a month or quarter column may hold (`prepare.MONTH_YEAR_RANGE`, the `set_type` reading of `YYYY-MM`)."""
+
 _DATE_FORMATS: tuple[tuple[re.Pattern[str], str], ...] = (
     (_ISO_DATE, "iso"),
     (_DOT_DATE, "dot"),
@@ -3049,7 +3056,7 @@ def _as_dates(column: _Column, present: list[str]) -> bool:
             kind = candidate
             break
     if fields is None:
-        return False
+        return _as_periods(column, present)
 
     day_first = True
     if kind == "slash":
@@ -3078,6 +3085,35 @@ def _as_dates(column: _Column, present: list[str]) -> bool:
     column.dates = [parsed[cell] for cell in column.source if cell]
     column.cells = [_iso(parsed[cell], column.with_time) if cell else "" for cell in column.source]
     return True
+
+
+def _as_periods(column: _Column, present: list[str]) -> bool:
+    """Months (`2025-01`) or quarters (`2025-Q1`) as dates, each its first day, with a note (live test round 7).
+
+    The month of `YYYY-MM` read as text made a monthly series' `x` fall on the GWh column, and the root
+    converted it on request with `set_type` (`YYYY-MM`, the first day of each month); the parser now reads it
+    the same way at the paste, and the note names the reading, so no value changes unannounced. A year from
+    `MONTH_YEARS` and a month from 1 to 12 (a quarter from 1 to 4) in every cell, or the column stays text.
+    """
+    for pattern, part in ((_YEAR_MONTH, "month"), (_YEAR_QUARTER, "quarter")):
+        fields = _match_all(pattern, present)
+        if fields is None:
+            continue
+        low, high = MONTH_YEARS
+        if not all(low <= year <= high and 1 <= number <= (12 if part == "month" else 4) for year, number in fields.values()):
+            return False
+        firsts = {
+            cell: datetime(year, number if part == "month" else 3 * (number - 1) + 1, 1)
+            for cell, (year, number) in fields.items()
+        }
+        column.dtype = "datetime"
+        column.with_time = False
+        column.dates = [firsts[cell] for cell in column.source if cell]
+        column.cells = [_iso(firsts[cell], False) if cell else "" for cell in column.source]
+        shape = "YYYY-MM" if part == "month" else "YYYY-Qn"
+        column.notes.append(f"{_count(len(present), 'cell')} read as {part}s ({shape}, each as the first day of the {part})")
+        return True
+    return False
 
 
 def _iso(value: datetime, with_time: bool) -> str:
