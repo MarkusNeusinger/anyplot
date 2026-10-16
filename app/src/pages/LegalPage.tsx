@@ -191,8 +191,8 @@ export function LegalPage() {
             <Typography sx={textStyle}>
               Markus Neusinger (see legal notice above). the ground for the site itself is an
               operator&apos;s legitimate interest in protecting the site and knowing how often it is
-              read; the data assistant below names its own grounds. swiss data protection law
-              applies, and the GDPR on top for visitors from the EU.
+              read; the data assistant below, which only its users meet, names its own grounds.
+              swiss data protection law applies, and the GDPR on top for visitors from the EU.
             </Typography>
 
             <Typography sx={subheadingStyle}>what we collect</Typography>
@@ -248,12 +248,15 @@ export function LegalPage() {
               front of a request — and to absorb DDoS attacks.
             </Typography>
 
-            <Typography sx={subheadingStyle}>data assistant (preview)</Typography>
+            <Typography sx={subheadingStyle}>
+              only if you use the data assistant (preview)
+            </Typography>
             <Typography sx={textStyle}>
-              anyplot is building an assistant that adapts a catalogue plot to data you bring
-              (&quot;use with my data&quot;). today it is a preview that only the operator and the
-              site&apos;s admins can open; nobody else can reach it yet. this is what it does with
-              what you give it.
+              everything in this part applies only to people who use the data assistant. if you only
+              browse the catalogue, none of it touches you. anyplot is building an assistant that
+              adapts a catalogue plot to data you bring (&quot;use with my data&quot;). today it is
+              a preview that only the operator and the site&apos;s admins can open; nobody else can
+              reach it yet. this is what it does with what you give it.
             </Typography>
             <Typography sx={textStyle}>
               <strong>what the model sees.</strong> what you paste or drop and the messages you
@@ -266,7 +269,9 @@ export function LegalPage() {
             <Typography sx={textStyle}>
               <strong>sessions.</strong> a session — your data, the conversation and the plots made
               from it — is held in the server&apos;s memory only. it is cleared after an hour
-              without activity or when the server instance stops; there is no session database.
+              without activity or when the server instance stops; there is no session database. the
+              separate render service also keeps its last 16 results (converted data, plot images)
+              in memory, until newer renders push them out or its instance stops.
             </Typography>
             <Typography sx={textStyle}>
               <strong>usage telemetry.</strong> to see how the assistant is used and where it fails,
@@ -286,14 +291,15 @@ export function LegalPage() {
             </Typography>
             <Typography sx={textStyle}>
               <strong>feedback cases.</strong> only when you send feedback on a result or on the
-              chat does the assistant store a case: the conversation, the profile of your data, the
-              plot&apos;s code and images if one was made and, while the &quot;# include
-              data.csv&quot; box is ticked — it is by default, untick it to leave your data out —
-              the data file itself. the files go to a private bucket in the Netherlands
-              (europe-west4) and are deleted after 180 days. a row with your reaction, your short
-              message, a keyed hash of your identity and the technical details of the run (plot
-              type, library, model) stays for the triage, and nothing deletes it on a timer — ask
-              and yours is gone.
+              chat does the assistant store a case: the conversation, the profile of your data
+              (column types and the first 5 rows as a sample), the plot&apos;s code and images if
+              one was made and, while the &quot;# include data.csv&quot; box is ticked — it is by
+              default — the whole data file. unticking leaves out that file only: what the
+              conversation, the sample, the code and the images show of your data stays in the case.
+              the files go to a private bucket in the Netherlands (europe-west4) and are deleted
+              after 180 days. a row with your reaction, your short message, a keyed hash of your
+              identity and the technical details of the run (plot type, library, model) stays for
+              the triage, and nothing deletes it on a timer — ask and yours is gone.
             </Typography>
             <Typography sx={textStyle}>
               <strong>legal basis.</strong> making the plot you asked for is the performance of your
@@ -327,8 +333,8 @@ export function LegalPage() {
             <Typography sx={textStyle}>
               the site, its database and its images run in the EU (Netherlands, europe-west4);
               Cloudflare&apos;s network is global, Plausible is a service of its own on its own EU
-              servers, and the data assistant&apos;s models are called in Vertex AI&apos;s EU
-              region:
+              servers, and the data assistant&apos;s models — used only when you use the assistant —
+              are called in Vertex AI&apos;s EU region:
             </Typography>
             <Table sx={{ ...tableStyle, ...firstColStyle }}>
               <TableBody>
@@ -354,7 +360,10 @@ export function LegalPage() {
                 </TableRow>
                 <TableRow>
                   <TableCell>ai assistant</TableCell>
-                  <TableCell>Google Cloud Vertex AI, Claude models by Anthropic (EU)</TableCell>
+                  <TableCell>
+                    Google Cloud Vertex AI, Claude models by Anthropic (EU) — only when you use the
+                    data assistant
+                  </TableCell>
                 </TableRow>
               </TableBody>
             </Table>

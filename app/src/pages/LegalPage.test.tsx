@@ -116,12 +116,19 @@ describe('LegalPage', () => {
     expect(screen.getByText(/pseudonymous, not\s+anonymous/)).toBeInTheDocument();
     expect(screen.getByText(/up to 180 days/)).toBeInTheDocument();
     expect(screen.getByText(/keyed hash \(HMAC\)/)).toBeInTheDocument();
-    expect(screen.getByText(/it is by\s+default, untick it/)).toBeInTheDocument();
+    // Unticking the box drops data.csv only; the profile sample stays.
+    expect(screen.getByText(/unticking leaves out that file only/)).toBeInTheDocument();
+    expect(screen.getByText(/first 5 rows as a sample/)).toBeInTheDocument();
+    // The renderer's answer cache has no idle timer of its own.
+    expect(screen.getByText(/keeps its last 16 results/)).toBeInTheDocument();
     expect(screen.getByText(/nothing deletes it on a timer/)).toBeInTheDocument();
     expect(screen.getByText(/Art\. 6\(1\)\(b\) GDPR/)).toBeInTheDocument();
     expect(screen.getByText(/Art\. 6\(1\)\(f\) GDPR/)).toBeInTheDocument();
+    // Scope: the assistant's processing touches only the people who use it.
+    expect(screen.getByText('only if you use the data assistant (preview)')).toBeInTheDocument();
+    expect(screen.getByText(/if you\s+only browse the catalogue, none of it/)).toBeInTheDocument();
     expect(
-      screen.getByText('Google Cloud Vertex AI, Claude models by Anthropic (EU)')
+      screen.getByText(/Claude models by Anthropic \(EU\) — only when you use the\s+data assistant/)
     ).toBeInTheDocument();
     // Browsing the catalogue still involves no model; only the assistant does.
     expect(screen.getByText(/never sees a visitor.s request/)).toBeInTheDocument();
