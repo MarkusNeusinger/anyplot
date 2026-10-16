@@ -74,6 +74,7 @@ SELECT
   JSON_VALUE_ARRAY(payload.reviewer_defects) AS reviewer_defects,
   JSON_VALUE_ARRAY(payload.residual_defects) AS residual_defects,
   JSON_VALUE_ARRAY(payload.sandbox_failures) AS sandbox_failures,
+  IFNULL(LAX_BOOL(payload.drift_restored), FALSE) AS drift_restored,
   LAX_INT64(payload.adapt_ms) AS adapt_ms,
   LAX_INT64(payload.check_ms) AS check_ms,
   LAX_INT64(payload.render_ms) AS render_ms,

@@ -13,7 +13,10 @@ eval harness may set one or three):
 1. **adapt**: the library's adapter agent turns the working form into an `AdaptPlan`
    (`ctx.run_node`, under its own isolation scope so the root never reads its answer);
 2. **check**: `edits.apply_plan` (which also keeps the protected theme statements
-   intact), then the SECURITY validator (a finding rejects the code), the plan's
+   intact; an answer that failed its check gets one retry in its round, and a plan
+   whose only failure is drift of those statements, once that retry is spent, has
+   them restored by `edits.restore_protected` and goes on, owner decision of
+   2026-10-16), then the SECURITY validator (a finding rejects the code), the plan's
    literal budget (more than `MAX_NEW_LITERAL_CHARS` of new string literals, or
    `MAX_CHANGE_LITERAL_CHARS` on a change of a previous version, or more than
    `MAX_NEW_LITERAL_CHARS` against the catalogue code over all versions, rejects the
@@ -79,9 +82,9 @@ which the stream translator turns into `status` events and no model ever reads.
 Every step also writes one content-free attribution line (`plugins/ledger.attribution`):
 `pipeline_adapt` (the answer's outcome, `plan`, `schema`, `truncated` or
 `full_code_refused`, the plan's shape, and the call's finish reason and output tokens),
-`pipeline_check` (edit-apply failure count and kinds, how many edits a tolerant
-matching tier applied, blocking validator rule ids, the labels of banned imports
-(`validate.module_label`: a word of a closed vocabulary, or `?`), ADAPTATION rule
+`pipeline_check` (edit-apply failure count and kinds, outcome `drift_restored` with
+the restored drift kinds, how many edits a tolerant matching tier applied, blocking
+validator rule ids, the labels of banned imports (`validate.module_label`: a word of a closed vocabulary, or `?`), ADAPTATION rule
 ids), `pipeline_render` (render and wall time, the gate ids that
 failed or reported), `pipeline_review` (the verdict, its defect ids and the call's
 finish reason) and `pipeline_result` (status, reason, attempts, the `Stage` that ended
@@ -122,6 +125,7 @@ from .code.edits import (
     REWRITE_LITERAL_FACTOR,
     apply_plan,
     new_literals,
+    restore_protected,
 )
 from .code.export import export_code
 from .code.regions import find_regions
@@ -470,6 +474,9 @@ class Run:
     """Every gate id any render of the run failed (`GateReport.failed_gates`)."""
     sandbox_failures: set[str] = field(default_factory=set)
     """The closed classes of the renders that failed in the sandbox (`telemetry.sandbox_failure`)."""
+    drift_restored: bool = False
+    """A plan whose only failure was drift of the protected theme statements had them restored
+    (`edits.restore_protected`) after the round's check retry was spent."""
     stage_s: dict[str, float] = field(default_factory=dict)
     """Seconds spent in `adapt`, `check`, `render` and `review`, summed over the attempts."""
 
@@ -516,7 +523,7 @@ def _end_attempt(run: Run, stage: Stage, feedback: Sequence[str] = ()) -> None:
         run.same_round_after.append(run.attempts)
         return
     current = round_number(run, run.attempts)
-    if stage in RETRY_STAGES and get_settings().check_retry and current not in run.retried_rounds:
+    if stage in RETRY_STAGES and _retry_left(run):
         # An answer that failed its check (edits that do not apply, a validator finding, a broken
         # schema, code that crashes) gets one more adapter call in the same round, which may send a
         # full file: a round never ends unfinished for a formal miss (owner rule, 2026-10-13).
@@ -533,6 +540,11 @@ def _end_attempt(run: Run, stage: Stage, feedback: Sequence[str] = ()) -> None:
             defects=[found for found in _defect_ids(clipped) if found in KNOWN_IDS][:MAX_ROUND_DEFECTS],
         )
     )
+
+
+def _retry_left(run: Run) -> bool:
+    """Whether a failed check of the current attempt's answer still gets the round's one retry (`RETRY_STAGES`)."""
+    return get_settings().check_retry and round_number(run, run.attempts) not in run.retried_rounds
 
 
 def round_number(run: Run, attempt: int) -> int:
@@ -1431,6 +1443,7 @@ def _telemetry_run(
         reviewer_defects=sorted(run.review_ids),
         residual_defects=_defect_ids(result.residual_defects),
         sandbox_failures=sorted(run.sandbox_failures),
+        drift_restored=run.drift_restored,
         adapt_ms=telemetry.ms(run.stage_s.get("adapt", 0.0)),
         check_ms=telemetry.ms(run.stage_s.get("check", 0.0)),
         render_ms=telemetry.ms(run.stage_s.get("render", 0.0)),
@@ -1571,7 +1584,17 @@ async def _attempts(
         yield _status(run, "checking", attempt)
         started = time.monotonic()
         applied = apply_plan(working, plan)
-        if applied.code is None:
+        # Drift of the protected theme statements alone, once the round's retry is spent: put the base's
+        # statements back and check the rest as usual (owner decision, 2026-10-16), instead of ending the round.
+        restored = (
+            restore_protected(working, applied.drifted)
+            if applied.code is None and applied.drifted is not None and not _retry_left(run)
+            else None
+        )
+        if restored is not None:
+            run.drift_restored = True
+        code = applied.code if applied.code is not None else restored
+        if code is None:
             run.timed("check", time.monotonic() - started)
             attribution(
                 "pipeline_check",
@@ -1586,7 +1609,7 @@ async def _attempts(
             _end_attempt(run, "edit_apply", feedback)
             continue
         check = _check(
-            applied.code,
+            code,
             library=view.library,
             palette=palette,
             base=working,
@@ -1597,23 +1620,27 @@ async def _attempts(
         )
         run.timed("check", time.monotonic() - started)
         adaptation_lines = check.defects
+        # A restored plan is logged once, by the drift kinds it had: `drift_restored`, or `rejected` when the
+        # restored code then failed the validator.
+        drift_fields = {"drift_restored": dict(sorted(Counter(applied.kinds).items()))} if restored is not None else {}
         attribution(
             "pipeline_check",
             ledger,
             attempt=attempt,
-            outcome="ok" if check.may_render else "rejected",
+            outcome=("drift_restored" if restored is not None else "ok") if check.may_render else "rejected",
             edit_failures=0,
             edit_tolerant=dict(sorted(Counter(applied.tolerant).items())),
             validator=check.blocking_rules,
             banned_imports=check.banned_imports,
             adaptation=check.adaptation_rules,
+            **drift_fields,
         )
         if not check.may_render:
             feedback, previous_plan = check.blocking, plan
             _end_attempt(run, "validator", feedback)
             continue
-        note_changes(run, plan, changed=applied.code != working, proofread=proofreading)
-        working, previous_plan = applied.code, None
+        note_changes(run, plan, changed=code != working, proofread=proofreading)
+        working, previous_plan = code, None
         try:
             run_form = runtime.loader_block(
                 runtime.normalise(working, view.library),

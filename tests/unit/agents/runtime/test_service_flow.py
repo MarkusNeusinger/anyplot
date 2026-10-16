@@ -21,8 +21,9 @@ import httpx
 import pytest
 from google.genai import types
 
-from agents.anyplot import pipeline
+from agents.anyplot import pipeline, telemetry
 from agents.anyplot.agent import LANGUAGE_SOURCE_LINES, NOTES_LINE, REPLY_LANGUAGE_LINE, session_context
+from agents.anyplot.code.edits import apply_plan
 from agents.anyplot.data.generate import looks_like_formula
 from agents.anyplot.data.parse import HEADERLESS_LIST_WARNING, MAX_INPUT_BYTES
 from agents.anyplot.data.transcribe import (
@@ -41,7 +42,7 @@ from agents.anyplot.models import (
     JudgeVerdict,
     Transcription,
 )
-from agents.anyplot.opening import NOTES_INSTRUCTION_WARNING, NOTES_REFUSED_WARNING, NOTES_UNCHECKED_WARNING
+from agents.anyplot.opening import NOTES_INSTRUCTION_WARNING, NOTES_REFUSED_WARNING, NOTES_UNCHECKED_WARNING, assess
 from agents.anyplot.pipeline import SoftDeadline
 from agents.anyplot.policy import refusal, scope_rubric
 from agents.anyplot.render.backends.fake import FakeBackend, FakeOutcome
@@ -782,6 +783,71 @@ async def test_failed_edits_are_logged_by_kind_without_their_text(
     (result,) = attribution_lines(caplog, "pipeline_result")
     assert result["stages"] == ["edit_apply", "reviewer_ok"]
     assert not any(SCHEMA_CANARY in record.getMessage() for record in caplog.records)
+
+
+THEME_LINE = 'THEME = os.getenv("ANYPLOT_THEME", "light")'
+PAGE_BG_LINE = 'PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"'
+
+
+def theme_drifting_repair() -> tuple[str, str]:
+    """The adapted scatter code, and a full-file repair of it that changes the marker size and also the protected
+    THEME assignment and PAGE_BG token, as the full-code repair of live case "heat3" (round 8) did."""
+    _, normalised = assess(snapshot_from_repo("scatter-basic", "matplotlib"), "matplotlib", get_settings())
+    adapted = apply_plan(normalised, AdaptPlan.model_validate(SCATTER_PLAN)).code
+    assert adapted is not None and THEME_LINE in adapted and PAGE_BG_LINE in adapted and "s=130," in adapted
+    repaired = adapted.replace("s=130,", "s=90,")
+    drifted = repaired.replace(THEME_LINE, 'THEME = "light"').replace(PAGE_BG_LINE, 'PAGE_BG = "#FFFFFF"')
+    return repaired, drifted
+
+
+async def test_a_repair_that_drifts_the_theme_twice_renders_with_the_theme_restored(
+    client: httpx.AsyncClient,
+    swap_models,
+    backend: FakeBackend,
+    services: Services,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Owner decision 2026-10-16: no third round; the retry's drift is restored and the round goes on."""
+    monkeypatch.setenv("AGENT_CHECK_RETRY", "true")
+    get_settings.cache_clear()
+    caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
+    caplog.set_level(logging.INFO, logger=telemetry.TELEMETRY_LOGGER)
+    repaired, drifted = theme_drifting_repair()
+    retry = {"full_code": drifted, "changes": ["smaller markers"]}
+    script = default_script(plans=[SCATTER_PLAN, {"full_code": drifted, "changes": []}, retry])
+    script["reviewer"] = [{"json": VERDICT_REJECT}, {"json": VERDICT_OK}]
+    fake = swap_models("gemini", script)
+    sid = await open_session(client)
+
+    plot = next(data for name, data in await create_plot(client, sid) if name == "plot")
+
+    # Round 1 renders and is rejected; round 2's answer drifts, its check retry drifts again, and the
+    # restored code renders and passes the review.
+    assert (plot["status"], plot["attempts"]) == ("ok", 2)
+    assert "keep the THEME assignment" in adapter_inputs(fake)[2]  # the retry got the drift lines first
+    assert len(backend.jobs) == 2
+    rendered = backend.jobs[1].source
+    assert "s=90," in rendered and THEME_LINE in rendered and PAGE_BG_LINE in rendered
+    assert 'PAGE_BG = "#FFFFFF"' not in rendered
+    assert services.versions.latest_rendered(sid, library="matplotlib").working == repaired
+    checks = attribution_lines(caplog, "pipeline_check")
+    assert [(line["attempt"], line["outcome"]) for line in checks] == [
+        (1, "ok"),
+        (2, "edits_failed"),
+        (3, "drift_restored"),
+    ]
+    assert checks[2]["drift_restored"] == {"drift:theme": 1, "drift:theme_token": 1}
+    (result,) = attribution_lines(caplog, "pipeline_result")
+    assert result["stages"] == ["reviewer_defects", "edit_apply", "reviewer_ok"]
+    assert (result["shipped_attempt"], result["reviewed_attempt"]) == (3, 3)
+    (run,) = [
+        line
+        for record in caplog.records
+        if record.name == telemetry.TELEMETRY_LOGGER
+        and (line := json.loads(record.getMessage()))["event"] == "pipeline_run"
+    ]
+    assert (run["drift_restored"], run["shipped_round"], run["shipped_attempt"]) == (True, 2, 3)
 
 
 async def test_plan_over_the_literal_budget_is_repaired(
