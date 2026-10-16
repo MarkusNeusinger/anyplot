@@ -1400,7 +1400,7 @@ def _telemetry_run(
         status=result.status,
         reason=result.reason,
         stage=run.stage,
-        attempts=result.attempts,
+        attempts=run.attempts,  # every adapter call, retries and proofreads included; `rounds` is what the page shows
         rounds=len(run.rounds),
         reviews=run.reviews,
         score_round1=telemetry.score_bucket(run.round_scores.get(1)),

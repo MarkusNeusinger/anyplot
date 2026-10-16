@@ -49,7 +49,8 @@ import os
 import re
 import time
 from collections import OrderedDict
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Annotated, Any, Literal, cast, get_args
 
@@ -88,6 +89,18 @@ def set_source(source: Source) -> None:
     `harness` before their first request, so the views can leave their runs out."""
     global _source
     _source = source
+
+
+@contextmanager
+def harness() -> Iterator[None]:
+    """Tag every line written inside the block `harness`, and restore the previous source on every exit, an
+    exception included, so ordinary requests after an eval run in the same process count as `live` again."""
+    previous = _source
+    set_source("harness")
+    try:
+        yield
+    finally:
+        set_source(previous)
 
 
 def session_key(session_id: str) -> str:
@@ -242,7 +255,8 @@ RefusalCode = Literal[
     "daily_limit",
     "other",
 ]
-ErrorCode = Literal["guard_unavailable", "capacity", "deadline", "internal", "other"]
+ErrorCode = Literal["guard_unavailable", "capacity", "deadline", "internal", "cancelled", "other"]
+"""`cancelled`: the client closed the stream before the turn ended (the page's cancel, a reload, a lost connection)."""
 LanguageSource = Literal["default", "pasted", "detected", "chosen"]
 Step = Literal["root", "adapter", "reviewer", "judge", "other"]
 

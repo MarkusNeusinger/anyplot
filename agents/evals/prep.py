@@ -586,13 +586,24 @@ class CaseRunner:
 async def run_cases(
     cases: Sequence[PrepCase], *, runtime: Runtime, services: Services, pacer: Pacer | None = None, echo: Any = None
 ) -> list[CaseResult]:
-    """Every case through the in-process app, one at a time and paced by `pacer`, in the case order."""
-    from agents import main as service
+    """Every case through the in-process app, one at a time and paced by `pacer`, in the case order.
+
+    Every usage-telemetry line is tagged `harness` (docs/reference/agent-telemetry.md); the process's source is
+    restored on every exit.
+    """
     from agents.anyplot import telemetry
+
+    with telemetry.harness():
+        return await _run_cases(cases, runtime=runtime, services=services, pacer=pacer, echo=echo)
+
+
+async def _run_cases(
+    cases: Sequence[PrepCase], *, runtime: Runtime, services: Services, pacer: Pacer | None, echo: Any
+) -> list[CaseResult]:
+    from agents import main as service
     from agents.anyplot.services import set_services
     from agents.anyplot.settings import get_settings
 
-    telemetry.set_source("harness")  # the usage views count live sessions only (docs/reference/agent-telemetry.md)
     settings = get_settings()
     set_services(services)
     saved_overrides = dict(service.app.dependency_overrides)

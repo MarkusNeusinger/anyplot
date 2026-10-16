@@ -358,9 +358,16 @@ def test_spec_fit() -> None:
 def test_the_harness_tags_its_lines(caplog: pytest.LogCaptureFixture) -> None:
     caplog.set_level(logging.INFO)
     ledger = RequestLedger(session_id="s1", spec_id="scatter-basic", library="matplotlib")
-    try:
-        telemetry.set_source("harness")
+    with telemetry.harness():
         record = telemetry.write(telemetry.Outcome, ledger, action="saved_session")
-    finally:
-        telemetry.set_source("live")
+    after = telemetry.write(telemetry.Outcome, ledger, action="saved_session")
     assert record is not None and record["source"] == "harness"
+    assert after is not None and after["source"] == "live"
+
+
+def test_the_harness_source_is_restored_after_a_failure() -> None:
+    ledger = RequestLedger(session_id="s1", spec_id="scatter-basic", library="matplotlib")
+    with pytest.raises(RuntimeError), telemetry.harness():
+        raise RuntimeError("the eval run failed")
+    record = telemetry.write(telemetry.Outcome, ledger, action="saved_session")
+    assert record is not None and record["source"] == "live"

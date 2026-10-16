@@ -1845,6 +1845,7 @@ async def post_message(
         ledger.run_slot = TurnSlot(runtime, run, sid, ledger, deadline, outbox).take
         producer: asyncio.Task[None] | None = None
         failure: str | None = None
+        closed_early = False
         try:
             yield translator.ready()
             deadline.arm(runtime.now())
@@ -1863,6 +1864,7 @@ async def post_message(
             logger.warning("run failed (ref %s): %s", rid, type(exc).__name__)
             failure = _error_code(exc)
         except BaseException:  # the generator is closed or cancelled (the client went): release the run now
+            closed_early = True
             runtime.finish(sid, run)
             raise
         finally:
@@ -1872,16 +1874,20 @@ async def post_message(
                 with contextlib.suppress(BaseException):
                     await producer
             CURRENT_LEDGER.reset(token)
+            if closed_early:
+                # The client went: the turn's line still books what it spent, once, after the producer stopped.
+                _telemetry_turn(ledger, facts, "cancelled")
         try:
             if ledger.error is not None:
                 failure = ledger.error
             elif run.deadline_hit and not translator.plot_sent:
                 failure = "deadline"
+            attribution("run", ledger, model_versions=sorted(ledger.model_versions), kind=ledger.kind)
+            # Written before anything else is yielded: a client that goes during the error event loses no line.
+            _telemetry_turn(ledger, facts, failure)
             if failure is not None:
                 for chunk in translator.error(failure):
                     yield chunk
-            attribution("run", ledger, model_versions=sorted(ledger.model_versions), kind=ledger.kind)
-            _telemetry_turn(ledger, facts, failure)
             # Read while the run is still active: no undo or paste can slip in between the run's end
             # and the `done` that reports its dataset, so the version and the change lines agree.
             sync = await _session_sync(runtime, user, sid, dataset_before=dataset_before, ledger=ledger)

@@ -106,7 +106,7 @@ and dataset names written out.
 | `01_events.sql` | `events` | One row per line, deduplicated by `idempotency_key` (`QUALIFY ROW_NUMBER()`), with the envelope as columns and the line as `payload` |
 | `02_event_views.sql` | `data_inputs`, `chat_turns`, `pipeline_runs`, `outcomes` | One typed column per field |
 | `03_sessions.sql` | `sessions` | One row per session: data inputs, turns, runs, shipped plots, `turns_to_first_plot`, keeps, `funnel_last_step`, and `state` under a 30-minute inactivity rule (`active`, `kept`, `refined`, `abandoned_after_plot`, `abandoned_before_plot`) |
-| `04_usage_failures.sql` | `usage`, `failures` | Usage by day, spec, library and input format; one row per failure with its kind and closed code |
+| `04_usage_failures.sql` | `usage`, `input_formats`, `failures` | Usage by day, spec and library (each line under the library it was written under, so a library switch splits a session's runs correctly); data inputs by format and entry, each input under its own format; one row per failure with its kind and closed code |
 | `05_prices_cost.sql` | `model_prices`, `cost` | The `eu` list prices of `agents/evals/pricing.py` (a test keeps both equal) and the cost of every turn step and data-input judge call |
 
 The cost view prices the `chat_turn` and `data_input` lines only: `pipeline_run.steps` repeats the adapter's
