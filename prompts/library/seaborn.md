@@ -96,10 +96,10 @@ See `prompts/default-style-guide.md` "Proportional Sizing" for the review-step c
 
 ```python
 # WARNING: palette without hue
-sns.boxplot(data=df, x='group', y='value', palette='Set2')  # Warning
+sns.boxplot(data=df, x='group', y='value', palette=IMPRINT_PALETTE[:N])  # Warning
 
-# CORRECT: hue with palette
-sns.boxplot(data=df, x='group', y='value', hue='group', palette='Set2', legend=False)
+# CORRECT: hue with palette (the Imprint palette, see Colors below)
+sns.boxplot(data=df, x='group', y='value', hue='group', palette=IMPRINT_PALETTE[:N], legend=False)
 ```
 
 ## Colors
