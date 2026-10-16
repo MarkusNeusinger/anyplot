@@ -606,7 +606,9 @@ class TestSetTypeText:
         assert prepared.text_columns == ["Datum"]
         again = reparse(prepared)
         assert again.column_dtypes["Datum"] == "text" and again.text_columns == ["Datum"]
-        assert again.profile.columns[0].top == ["2024-01-05", "2024-01-20", "2024-02-14", "2024-02-28", "2024-03-15"]
+        assert again.profile.columns[0].top == [
+            *("2024-01-05", "2024-01-20", "2024-02-14", "2024-02-28", "2024-03-15", "2024-03-31")
+        ]  # six distinct dates: every one listed
 
     def test_a_column_kept_text_stays_text_in_later_versions_until_set_back(self) -> None:
         """The hint travels with the stored version: a later change re-parses with it, and `set_type number` lifts it."""
@@ -781,6 +783,18 @@ class TestPivotLonger:
         ]
         assert prepared.changes == ["pivoted 2 columns into series/value: 6 rows"]
         assert dtypes(prepared) == {"Monat": "datetime", "series": "text", "value": "integer"}
+
+    def test_a_melted_columns_name_is_refused_as_a_new_name(self) -> None:
+        """pandas' `melt` raises a ValueError for a `value_name` that names an input column (review of #12206)."""
+        for names in (("Artikel", "Hüte"), ("Schuhe", "Stück")):
+            operation = {
+                "op": "pivot_longer",
+                "columns": ["Hüte", "Schuhe"],
+                "names_to": names[0],
+                "values_to": names[1],
+            }
+
+            assert failure(WIDE, operation)[0] == "invalid_operation"
 
     def test_own_names(self) -> None:
         operation = {"op": "pivot_longer", "columns": ["Hüte", "Schuhe"], "names_to": "Artikel", "values_to": "Stück"}

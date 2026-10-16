@@ -24,6 +24,17 @@ The coupling heuristics, all static and deliberately simple:
   argument (also inside a list or tuple, a `range`/`arange`/`linspace` of literals, or
   a date built from literals). A literal 0 alone is a baseline, not a data-scale
   literal, and is not flagged; `max(y) * 1.15` is computed and is not flagged.
+* `color-scale`: a color mapping pinned to the catalogue's value range: `vmin`, `vmax`,
+  `center`, `vcenter`, `clim`, plotly's `zmin`/`zmax`/`zmid`, `range_color` and
+  `color_continuous_midpoint` with a literal, `levels` as a list or
+  range of literals (a count is not flagged), colorbar ticks (`cbar_kws={"ticks": [...]}`,
+  `colorbar(ticks=...)`, `cbar.set_ticks(...)`), `set_clim`/`clim` and a norm
+  (`Normalize`, `TwoSlopeNorm`, ...) built from literals; the same 0 rule. Live test
+  round 8 of 2026-10-16: heatmap-basic in seaborn kept `vmin=0, vmax=100, center=50` and
+  ticks 0 to 100 for data of 32 to 93, a washed-out scale with two ticks.
+* `colorbar-position`: `cbar_pos` with literal figure coordinates (a seaborn
+  `clustermap`): the same round kept the catalogue's top-left colorbar after the adapter
+  dropped the dendrogram it sat beside.
 * `annotations`: `annotate` (`xy` in data coordinates), `text` (not on a figure, no
   `transform=` other than `transData`), `axhline`, `axvline`, `axhspan`, `axvspan`,
   `hlines` and `vlines` placed by a numeric literal, with the same 0 rule.
@@ -126,6 +137,23 @@ DATA_COORDINATES: dict[str, tuple[tuple[int, ...], tuple[str, ...]]] = {
     "hlines": ((0, 1, 2), ("y", "xmin", "xmax")),
     "vlines": ((0, 1, 2), ("x", "ymin", "ymax")),
 }
+COLOR_SCALE_KEYWORDS = frozenset(
+    {"vmin", "vmax", "center", "vcenter", "clim", "zmin", "zmax", "zmid", "range_color", "color_continuous_midpoint"}
+)
+"""Keywords that pin a color mapping's range or midpoint (matplotlib, seaborn, plotly). Not `cmin`/`cmax`:
+matplotlib's `hist2d` uses them as count thresholds that hide bins, no color range."""
+COLORBAR_KEYWORDS = frozenset({"cbar_kws", "colorbar_kws"})
+NORM_CALLS: dict[str, tuple[tuple[int, ...], frozenset[str]]] = {
+    "Normalize": ((0, 1), frozenset({"vmin", "vmax"})),
+    "LogNorm": ((0, 1), frozenset({"vmin", "vmax"})),
+    "TwoSlopeNorm": ((0, 1, 2), frozenset({"vcenter", "vmin", "vmax"})),
+    "CenteredNorm": ((0, 1), frozenset({"vcenter", "halfrange"})),
+    "BoundaryNorm": ((0,), frozenset({"boundaries"})),
+    "PowerNorm": ((1, 2), frozenset({"vmin", "vmax"})),
+    "SymLogNorm": ((2, 3), frozenset({"vmin", "vmax"})),
+}
+"""Each norm's range, center or boundary arguments, by position and keyword; never an encoding parameter such
+as `PowerNorm`'s `gamma` or `SymLogNorm`'s `linthresh` (review of #12206)."""
 RANGE_CALLS = frozenset({"range", "arange", "linspace"})
 DATE_CALLS = frozenset({"Timestamp", "datetime", "datetime64", "date", "to_datetime"})
 GENERATOR_FACTORIES = frozenset({"default_rng", "RandomState", "Generator"})
@@ -138,6 +166,18 @@ _IMPRINT_GREEN = IMPRINT[0].upper()
 # Category id, hint prefix, hint advice; the order is the order of `hints`.
 _CATEGORIES: tuple[tuple[str, str, str], ...] = (
     ("limits", "Literal axis limits or ticks at", "derive them from df or drop them."),
+    (
+        "color-scale",
+        "Literal color-scale range or colorbar ticks at",
+        "derive them from df (min, max; a center only for diverging data) unless the values fix the scale "
+        "(a correlation's -1 to 1).",
+    ),
+    (
+        "colorbar-position",
+        "Colorbar placed at literal figure coordinates at",
+        "they fit the catalogue's layout; when you change the clustering, dendrograms or figure, keep the colorbar "
+        "beside the plot: let the library place it (sns.heatmap's own colorbar when the clustering goes).",
+    ),
     ("annotations", "Annotations at literal data coordinates at", "place them from df values or drop them."),
     ("statistics", "Literal statistics at", "compute them from df or drop them."),
     (
@@ -246,7 +286,7 @@ def _coupling(code: str, tree: ast.Module) -> dict[str, list[tuple[int, str]]]:
     generators = _generator_names(tree, aliases)
     found: dict[str, dict[int, str]] = {category: {} for category, _, _ in _CATEGORIES}
 
-    def flag(category: str, node: ast.expr) -> None:
+    def flag(category: str, node: ast.expr | ast.keyword) -> None:
         found[category].setdefault(node.lineno, _snippet(ast.get_source_segment(code, node) or ast.unparse(node)))
 
     for node in ast.walk(tree):
@@ -256,6 +296,11 @@ def _coupling(code: str, tree: ast.Module) -> dict[str, list[tuple[int, str]]]:
             resolved = _resolve(callee, aliases) if callee else ""
             if method in LIMIT_METHODS and _has_literal([*node.args, *(kw.value for kw in node.keywords)]):
                 flag("limits", node)
+            for keyword in _color_scale_literals(node, method):
+                flag("color-scale", keyword)
+            for keyword in node.keywords:
+                if keyword.arg == "cbar_pos" and _has_literal([keyword.value]):
+                    flag("colorbar-position", keyword)
             if method is not None and _annotation_literal(node, method):
                 flag("annotations", node)
             if resolved.startswith("matplotlib.dates."):
@@ -367,6 +412,54 @@ def _literal_values(node: ast.expr) -> list[float | str]:
 def _has_literal(nodes: list[ast.expr]) -> bool:
     """Any data-scale literal among `nodes`: a non-zero number or a literal date."""
     return any(value != 0 for node in nodes for value in _literal_values(node))
+
+
+def _color_scale_literals(node: ast.Call, method: str | None) -> list[ast.expr | ast.keyword]:
+    """The parts of `node` that fix a color mapping to the catalogue's value range by literals, with the 0 rule.
+
+    A keyword of `COLOR_SCALE_KEYWORDS` (`vmin=0, vmax=100, center=50` on a heatmap, plotly's
+    `zmin`), `levels` given as a list or range (a count such as `levels=10` is no value),
+    colorbar `ticks` (`cbar_kws={"ticks": [...]}`, `colorbar(ticks=...)`), and the calls
+    `set_clim`, `clim`, a norm of `NORM_CALLS` and `set_ticks` on a colorbar or its axes.
+    """
+    found: list[ast.expr | ast.keyword] = []
+    for keyword in node.keywords:
+        value = keyword.value
+        if keyword.arg in COLOR_SCALE_KEYWORDS and _has_literal([value]):
+            found.append(keyword)
+        elif keyword.arg == "levels" and _number(value) is None and _has_literal([value]):
+            found.append(keyword)
+        elif keyword.arg == "ticks" and method == "colorbar" and _has_literal([value]):
+            found.append(keyword)
+        elif keyword.arg in COLORBAR_KEYWORDS and _ticks_literal(value):
+            found.append(keyword)
+    arguments = [*node.args, *(keyword.value for keyword in node.keywords)]
+    if method in ("set_clim", "clim"):
+        if _has_literal(arguments):
+            found.append(node)
+    elif method is not None and method in NORM_CALLS:
+        positions, names = NORM_CALLS[method]
+        bounds = [node.args[index] for index in positions if index < len(node.args)]
+        bounds += [keyword.value for keyword in node.keywords if keyword.arg in names]
+        if _has_literal(bounds):
+            found.append(node)
+    elif method == "set_ticks" and isinstance(node.func, ast.Attribute):
+        receiver = (dotted_name(node.func.value) or "").casefold()
+        if any(part in receiver for part in ("cbar", "colorbar", "cax")) and _has_literal(arguments):
+            found.append(node)
+    return found
+
+
+def _ticks_literal(value: ast.expr) -> bool:
+    """Whether a colorbar keyword dict (`{"ticks": [0, 50, 100]}` or `dict(ticks=...)`) sets literal ticks."""
+    if isinstance(value, ast.Dict):
+        return any(
+            isinstance(key, ast.Constant) and key.value == "ticks" and _has_literal([item])
+            for key, item in zip(value.keys, value.values, strict=True)
+        )
+    if isinstance(value, ast.Call) and dotted_name(value.func) == "dict":
+        return any(keyword.arg == "ticks" and _has_literal([keyword.value]) for keyword in value.keywords)
+    return False
 
 
 def _annotation_literal(node: ast.Call, method: str) -> bool:

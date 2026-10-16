@@ -896,7 +896,9 @@ def _pivot_longer(frame: pd.DataFrame, op: PivotLonger, carried: _Carried) -> tu
         raise PrepareError("invalid_operation", "names_to and values_to must differ")
     rest = [str(name) for name in frame.columns if name not in columns]
     for name in (op.names_to, op.values_to):
-        if name in rest:
+        # A melted column's name too: pandas' `melt` refuses a `value_name` that names an input column with a
+        # ValueError, which no caller expects (review of #12206: the `.to_long()` route answered 500).
+        if name in rest or name in columns:
             raise PrepareError("invalid_operation", f"a column named '{name}' already exists; choose another name")
     rows = len(frame) * len(columns)
     if rows > MAX_ROWS:

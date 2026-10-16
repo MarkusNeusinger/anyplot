@@ -18,7 +18,7 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `PUT /v1/sessions/{sid}/language` | `{language}` (a short name or code, `^[A-Za-z][A-Za-z -]{0,39}$`) | `{language, source}`: the session language in its stored form (`English` is `en`), source `chosen`, which detection never overrides | `409 run_active`, `422` (the pattern) |
 | `POST /v1/sessions/{sid}/dataset/confirm` | | `{confirmed, rows, columns}`: step 1 of two, the user confirmed the dataset with its bindings; the pipeline runs only then | `409 run_active`, `422 no_dataset` |
 | `POST /v1/sessions/{sid}/dataset/undo` | | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version}`: the dataset version before the root's last `prepare_data` or `generate_data` is the current one again, its bindings carried over (`dataset_versions.py`); unconfirmed, like any version the user has not confirmed | `409 run_active`, `422 nothing_to_undo` |
-| `POST /v1/sessions/{sid}/dataset/to_long` | | The undo route's shape plus `changes`: the page's `.to_long()` applies the wide-table suggestion, recomputed on the server, as the next dataset version with the default bindings for the new columns; no model call | `409 run_active`, `422 no_suggestion` |
+| `POST /v1/sessions/{sid}/dataset/to_long` | | The undo route's shape plus `changes`: the page's `.to_long()` applies the wide-table suggestion, recomputed on the server, as the next dataset version with the new columns bound to the roles they were made for; no model call | `409 run_active`, `422 no_suggestion` |
 | `POST /v1/sessions/{sid}/messages` | `{text}` or `{action}` (`create_plot`, `summarize_data`) | SSE `anyplot/1`; the `done` event carries `dataset` (with `roles` and `changes`) after a turn whose `prepare_data` or `generate_data` changed the data, version 1 when `generate_data` made the session's first data, and `language` (`{language, source}`) after every run | `413 too_long`, `409 run_active` |
 | `POST /v1/sessions/{sid}/cancel` | | `204` | |
 | `POST /v1/sessions/{sid}/outcome` | `{action, version?, reaction?}` (closed sets: `telemetry.OutcomeAction`, `telemetry.Reaction`, the latter with `feedback` only) | `204`: the content-free `outcome` telemetry line (`anyplot/telemetry.py`) | `422`, `429 rate_limited` / `429 daily_limit` (`OUTCOMES_PER_MINUTE` / `_PER_DAY`) |
@@ -1574,8 +1574,9 @@ async def dataset_to_long(sid: SessionId, user: User, runtime: RuntimeDep) -> JS
     The server recomputes the suggestion (`data/shape.py`) from the session's spec and
     current profile, so the client never names an operation; `422 no_suggestion` when
     the table is not wide for this spec (any more). The result is stored as the next
-    dataset version like a `prepare_data` (undo, history), with the default bindings for
-    the new columns, unconfirmed, and the answer is the undo route's shape plus
+    dataset version like a `prepare_data` (undo, history), with the new columns bound to the
+    roles they were made for and the defaults for the rest (`LongSuggestion.bindings`),
+    unconfirmed, and the answer is the undo route's shape plus
     `changes`, the operation's change line.
     """
     services = get_services()
@@ -1602,7 +1603,8 @@ async def dataset_to_long(sid: SessionId, user: User, runtime: RuntimeDep) -> JS
     except (PrepareError, ParseError, ValidationError):
         raise AgentsError(422, "no_suggestion") from None
     try:
-        version = push_version(services.datasets, sid, view, parsed, view.snapshot, rebind=True)
+        # The new columns go to the roles they were made for, whatever their names (`LongSuggestion.bindings`).
+        version = push_version(services.datasets, sid, view, parsed, view.snapshot, pinned=suggestion.bindings())
     except StoreFull:
         raise AgentsError(503, "capacity") from None
     await runtime.write_state(session, version.delta)

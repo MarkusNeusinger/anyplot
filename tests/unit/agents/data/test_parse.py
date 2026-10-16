@@ -39,6 +39,7 @@ from agents.anyplot.schemas import (
     MAX_CELL_CHARS,
     MAX_COLUMN_NAME_CHARS,
     MAX_COLUMNS,
+    MAX_LISTED_VALUES,
     MAX_MESSAGE_CHARS,
     MAX_ROWS,
     MAX_SAMPLE_ROWS,
@@ -1226,13 +1227,33 @@ class TestProfile:
         assert column(parse_dataset("Monat,v\n1,5\n2,6\n3,7\n"), "Monat").months is None
 
     def test_top_values_are_capped_and_clipped(self) -> None:
-        values = [f"value-{i}-" + "z" * 60 for i in range(8)]
+        values = [f"value-{i}-" + "z" * 60 for i in range(MAX_LISTED_VALUES + 1)]
         parsed = parse_dataset("t\n" + "\n".join(values) + "\n")
         top = column(parsed, "t").top
 
         assert len(top) == MAX_TOP_VALUES
         assert all(len(value) <= MAX_CELL_CHARS for value in top)
         assert top[0].endswith("…")
+
+    def test_a_column_of_few_values_lists_every_one(self) -> None:
+        """Live test round 8 of 2026-10-16: the profile listed five of six sources, so the root never saw `Übrige`
+        and told the user the plot had added it to fill the donut."""
+        text = (
+            "Quelle,Anteil_Prozent\nWasserkraft,56.3\nKernenergie,32.4\nSolar,6.8\nWind,0.4\nBiomasse,2.1\nÜbrige,2.0\n"
+        )
+        quelle = column(parse_dataset(text), "Quelle")
+
+        assert quelle.top == ["Wasserkraft", "Kernenergie", "Solar", "Wind", "Biomasse", "Übrige"]
+        assert quelle.unique == len(quelle.top)
+
+    def test_twelve_values_are_listed_and_thirteen_are_the_five_most_frequent(self) -> None:
+        def top(count: int) -> list[str]:
+            rows = [f"v{i}" for i in range(count)] + ["v3"] * 2
+            return column(parse_dataset("t\n" + "\n".join(rows) + "\n"), "t").top
+
+        assert len(top(MAX_LISTED_VALUES)) == MAX_LISTED_VALUES
+        assert top(MAX_LISTED_VALUES)[0] == "v3"  # most frequent first
+        assert top(MAX_LISTED_VALUES + 1) == ["v3", "v0", "v1", "v2", "v4"]
 
     def test_preview_is_the_first_20_rows_with_clipped_cells(self) -> None:
         parsed = parse_dataset("t\n" + "\n".join(f"row {i} " + "y" * 50 for i in range(30)) + "\n")

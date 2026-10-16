@@ -27,6 +27,7 @@ from agents.anyplot.schemas import (
     PlotResult,
     ReviewRequest,
     Verdict,
+    listed_values,
     repair_plan,
     repair_verdict,
 )
@@ -70,9 +71,13 @@ class TestDatasetProfile:
         with pytest.raises(ValidationError):
             ColumnProfile.model_validate(column("n" * 65))
 
-    def test_more_than_five_top_values_are_refused(self) -> None:
+    def test_more_than_twelve_top_values_are_refused(self) -> None:
+        assert len(ColumnProfile.model_validate(column(top=[f"v{i}" for i in range(12)])).top) == 12
         with pytest.raises(ValidationError):
-            ColumnProfile.model_validate(column(top=["a", "b", "c", "d", "e", "f"]))
+            ColumnProfile.model_validate(column(top=[f"v{i}" for i in range(13)]))
+
+    def test_a_column_lists_every_value_up_to_twelve_else_five(self) -> None:
+        assert [listed_values(count) for count in (0, 6, 12, 13, 400)] == [0, 6, 12, 5, 5]
 
     def test_min_and_max_take_numbers_or_short_text(self) -> None:
         parsed = ColumnProfile.model_validate(column(dtype="datetime", min="2024-01-01", max="2024-12-31"))
