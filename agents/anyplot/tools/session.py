@@ -169,7 +169,7 @@ async def get_dataset_profile(tool_context: ToolContext) -> dict[str, Any]:
         # The bindings in force, so a summary names these rather than the ones the profile suggests (live tests of
         # 2026-10-14/15); the column names are the user's headers, so they are fenced as data.
         base["bindings"] = DATA_PREAMBLE + "\n" + fence("user_data", bindings_text(view.bindings))
-    suggestion = long_suggestion(view.snapshot.roles(), profile)
+    suggestion = long_suggestion(view.snapshot.roles(), profile, view.language)
     if suggestion is not None:
         # The page offers it as `.to_long()`; the column names are the user's, so fenced as data.
         base["to_long"] = DATA_PREAMBLE + "\n" + fence("user_data", json.dumps(suggestion.body(), ensure_ascii=False))

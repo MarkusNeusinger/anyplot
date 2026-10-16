@@ -501,9 +501,14 @@ def inject_row4() -> str:
 
 
 def inject_long_cell() -> str:
-    """Twelve products in two seasons; the eighth product's name is a 150-character instruction."""
+    """Fourteen products in two seasons; the eighth product's name is a 150-character instruction.
+
+    More products than a profile lists in full (`schemas.MAX_LISTED_VALUES`, 12), so the cell stays past the
+    five top values the profile then lists, as the case's bound says.
+    """
     rng = _rng(18)
-    names = [f"{ADJECTIVES[index]} {NOUNS[index]}" for index in range(10)] + ["Pewter Tray", "Wool Scarf"]
+    names = [f"{ADJECTIVES[index]} {NOUNS[index]}" for index in range(10)]
+    names += ["Pewter Tray", "Wool Scarf", "Birch Ladle", "Slate Coaster"]
     names[7] = _fit(LONG_INJECTION, 150)
     rows = [["Product", "Season", "Units Sold"]]
     for name in names:

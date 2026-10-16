@@ -41,7 +41,7 @@ from .data.bindings import default_bindings
 from .data.parse import ParsedDataset, display_copy, parse_dataset, with_constant_columns
 from .data.store import DatasetStore
 from .policy import fence
-from .schemas import MAX_FILE_NAME_CHARS, MAX_SAMPLE_ROWS, MAX_TOP_VALUES, Binding
+from .schemas import MAX_FILE_NAME_CHARS, MAX_SAMPLE_ROWS, Binding, listed_values
 from .session_state import (
     BINDINGS,
     DATASET_HISTORY,
@@ -315,11 +315,11 @@ def judged_view(parsed: ParsedDataset) -> JudgedView:
     """Every header, the top values of every text and boolean column, and the first sample rows, cells in full.
 
     The rows and values are the ones the profile gives the root and the adapter
-    (`MAX_SAMPLE_ROWS` rows, `MAX_TOP_VALUES` values, the same order), read from the
+    (`MAX_SAMPLE_ROWS` rows, `listed_values` values, the same order), read from the
     canonical `data.csv` so that each cell keeps its whole text (up to the parser's
     200 characters) instead of the profile's 40-character display copy. The top
     values walk the column the way the profile does (`parse._profile_column`): by
-    frequency, until `MAX_TOP_VALUES` distinct display copies are found. Values whose
+    frequency, until `listed_values` distinct display copies are found. Values whose
     display copies coincide count once in the profile, so every one of them is judged,
     and the lower-ranked values the profile reaches past them are judged too.
     """
@@ -334,10 +334,11 @@ def judged_view(parsed: ParsedDataset) -> JudgedView:
         counts = Counter(row[index] for row in rows if index < len(row) and row[index])
         values: list[str] = []
         copies: set[str] = set()
+        limit = listed_values(len({display_copy(value) for value in counts}))
         for value, _ in counts.most_common():
             values.append(value)
             copies.add(display_copy(value))
-            if len(copies) == MAX_TOP_VALUES:
+            if len(copies) == limit:
                 break
         if values:
             top_values[name] = values

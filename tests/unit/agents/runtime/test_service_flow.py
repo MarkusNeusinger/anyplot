@@ -2574,8 +2574,8 @@ async def test_a_wide_table_on_a_box_plot_is_offered_long_and_to_long_applies_it
     offer = {
         "kind": "to_long",
         "columns": ["Sensor_A", "Sensor_B", "Sensor_C"],
-        "names_to": "category",
-        "values_to": "value",
+        "names_to": "Category",  # the session language (English: the locale is no language), not the role names
+        "values_to": "Value",
         "keys": [],
         "rows": 9,
     }
@@ -2588,14 +2588,17 @@ async def test_a_wide_table_on_a_box_plot_is_offered_long_and_to_long_applies_it
 
     context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid))
     profile = await get_dataset_profile(context)
-    assert "<user_data>" in profile["to_long"] and '"names_to": "category"' in profile["to_long"]
+    assert "<user_data>" in profile["to_long"] and '"names_to": "Category"' in profile["to_long"]
+    # A German session gets German names, in the offer and in the table `.to_long()` writes.
+    language = await client.put(f"/v1/sessions/{sid}/language", headers=HEADERS, json={"language": "de"})
+    assert language.status_code == 200, language.text
 
     long = await client.post(f"/v1/sessions/{sid}/dataset/to_long", headers=HEADERS)
 
     assert long.status_code == 200, long.text
     body = long.json()
     assert (body["version"], body["suggestion"], body["profile"]["rows"]) == (2, None, 9)
-    assert body["bindings"] == [{"role": "category", "column": "category"}, {"role": "value", "column": "value"}]
+    assert body["bindings"] == [{"role": "category", "column": "Kategorie"}, {"role": "value", "column": "Wert"}]
     assert body["changes"] and body["changes"][0].startswith("pivoted 3 columns")
     view = read_session(await _session_state(client, sid))
     assert view is not None and view.dataset_version == 2 and not view.data_confirmed
@@ -2603,7 +2606,8 @@ async def test_a_wide_table_on_a_box_plot_is_offered_long_and_to_long_applies_it
     again = await client.post(f"/v1/sessions/{sid}/dataset/to_long", headers=HEADERS)
     assert (again.status_code, again.json()) == (422, {"detail": "no_suggestion"})
     undone = await client.post(f"/v1/sessions/{sid}/dataset/undo", headers=HEADERS)
-    assert undone.status_code == 200 and undone.json()["suggestion"] == pasted.json()["suggestion"]
+    assert undone.status_code == 200
+    assert undone.json()["suggestion"] == {**pasted.json()["suggestion"], "names_to": "Kategorie", "values_to": "Wert"}
 
     scatter = await open_session(client)
     refused = await client.post(f"/v1/sessions/{scatter}/dataset/to_long", headers=HEADERS)

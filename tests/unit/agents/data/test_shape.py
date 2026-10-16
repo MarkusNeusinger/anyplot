@@ -2,10 +2,10 @@
 
 from pydantic import TypeAdapter
 
-from agents.anyplot.data.bindings import default_bindings
+from agents.anyplot.data.bindings import default_bindings, filled_bindings
 from agents.anyplot.data.parse import parse_dataset
 from agents.anyplot.data.prepare import Operation, apply_operations
-from agents.anyplot.data.shape import long_suggestion
+from agents.anyplot.data.shape import long_names, long_suggestion
 from agents.anyplot.dev_fixture import snapshot_from_repo
 
 
@@ -29,8 +29,8 @@ class TestSuggestion:
         assert suggestion.operation() == {
             "op": "pivot_longer",
             "columns": ["Sensor_A", "Sensor_B", "Sensor_C"],
-            "names_to": "category",
-            "values_to": "value",
+            "names_to": "Category",
+            "values_to": "Value",
         }
         assert (suggestion.keys, suggestion.rows) == ([], 9)
         assert suggestion.body()["kind"] == "to_long"
@@ -43,9 +43,9 @@ class TestSuggestion:
         prepared = apply_operations(parse_dataset(SENSORS), operations)
         parsed = parse_dataset(prepared.csv, text_columns=prepared.text_columns)
 
-        assert prepared.csv.splitlines()[:4] == ["category,value", "Sensor_A,51.74", "Sensor_A,48.65", "Sensor_A,50.23"]
+        assert prepared.csv.splitlines()[:4] == ["Category,Value", "Sensor_A,51.74", "Sensor_A,48.65", "Sensor_A,50.23"]
         bound = {binding.role: binding.column for binding in default_bindings(roles("box-basic"), parsed.profile)}
-        assert bound == {"category": "category", "value": "value"}
+        assert bound == {"category": "Category", "value": "Value"}
         assert long_suggestion(roles("box-basic"), parsed.profile) is None  # long now: no second offer
 
     def test_other_long_data_specs_get_it_too(self) -> None:
@@ -71,22 +71,22 @@ class TestMatrix:
         assert suggestion.operation() == {
             "op": "pivot_longer",
             "columns": ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"],
-            "names_to": "y",
-            "values_to": "value",
+            "names_to": "Weekday",
+            "values_to": "Value",
         }
         assert (suggestion.keys, suggestion.rows) == (["Stunde"], 28)
 
     def test_applied_it_binds_every_role(self) -> None:
-        suggestion = suggest("heatmap-basic", VISITORS)
+        suggestion = long_suggestion(roles("heatmap-basic"), parse_dataset(VISITORS).profile, "de")
         assert suggestion is not None
         operations = TypeAdapter(list[Operation]).validate_python([suggestion.operation()])
 
         prepared = apply_operations(parse_dataset(VISITORS), operations)
         parsed = parse_dataset(prepared.csv, text_columns=prepared.text_columns)
 
-        assert prepared.csv.splitlines()[:2] == ["Stunde,y,value", "08:00,Mo,42"]
+        assert prepared.csv.splitlines()[:2] == ["Stunde,Wochentag,Wert", "08:00,Mo,42"]
         bound = {binding.role: binding.column for binding in default_bindings(roles("heatmap-basic"), parsed.profile)}
-        assert bound == {"x": "Stunde", "y": "y", "value": "value"}
+        assert bound == {"x": "Stunde", "y": "Wochentag", "value": "Wert"}
         assert long_suggestion(roles("heatmap-basic"), parsed.profile) is None
 
     def test_long_heatmap_data_with_an_integer_key_stays(self) -> None:
@@ -179,3 +179,61 @@ class TestNoSuggestion:
 
     def test_one_numeric_column_is_not_wide(self) -> None:
         assert suggest("box-basic", "Sensor_A\n1\n2\n") is None
+
+
+class TestLongNames:
+    """Live test round 8 of 2026-10-16: the role names `y` and `value` became the title "Wert nach Wochentag und
+    Stunde"; the new columns are named in the session language after what the melted headers are."""
+
+    def test_names_follow_the_session_language(self) -> None:
+        profile = parse_dataset(SENSORS).profile
+        names = {
+            language: (suggestion.names_to, suggestion.values_to)
+            for language in ("de", "Deutsch", "fr", "zh", "Swedish")
+            if (suggestion := long_suggestion(roles("box-basic"), profile, language)) is not None
+        }
+
+        assert names == {
+            "de": ("Kategorie", "Wert"),
+            "Deutsch": ("Kategorie", "Wert"),
+            "fr": ("Catégorie", "Valeur"),
+            "zh": ("类别", "数值"),
+            "Swedish": ("Category", "Value"),  # outside the table: English
+        }
+
+    def test_the_names_column_says_what_the_headers_are(self) -> None:
+        assert long_names(["Mo", "Di", "Mi", "Do", "Fr"], [], "de") == ("Wochentag", "Wert")
+        assert long_names(["Monday", "Tuesday", "Wednesday"], [], "en") == ("Weekday", "Value")
+        assert long_names(["Jan", "Feb", "März"], [], "de") == ("Monat", "Wert")
+        assert long_names(["2019", "2020", "2021"], ["Region"], "de") == ("Jahr", "Wert")
+        assert long_names(["Sensor_A", "Mo", "Di"], [], "de") == ("Kategorie", "Wert")
+        assert long_names(["Mo", "Mo.", "Di"], [], "de") == ("Kategorie", "Wert")  # two distinct days only
+
+    def test_the_new_columns_keep_the_roles_they_are_made_for_whatever_their_names(self) -> None:
+        """`Category` would take bar-grouped's `category` by its name; the headers are meant for its `group`."""
+        text = "Region,Alpha,Beta,Gamma\nNord,1,2,3\nSüd,5,6,7\nOst,9,1,2\n"
+        for language, names in (("en", "Category"), ("de", "Kategorie")):
+            suggestion = long_suggestion(roles("bar-grouped"), parse_dataset(text).profile, language)
+            assert suggestion is not None and suggestion.names_to == names
+            operations = TypeAdapter(list[Operation]).validate_python([suggestion.operation()])
+            prepared = apply_operations(parse_dataset(text), operations)
+            parsed = parse_dataset(prepared.csv, text_columns=prepared.text_columns)
+
+            pinned = filled_bindings(suggestion.bindings(), roles("bar-grouped"), parsed.profile)
+
+            assert {binding.role: binding.column for binding in pinned} == {
+                "category": "Region",
+                "group": names,
+                "value": suggestion.values_to,
+            }
+            by_name = {
+                binding.role: binding.column for binding in default_bindings(roles("bar-grouped"), parsed.profile)
+            }
+            assert by_name["category"] == names  # what the names alone would have bound
+
+    def test_a_kept_column_with_the_name_keeps_the_role_names(self) -> None:
+        assert long_names(["2019", "2020", "2021"], ["jahr"], "de") is None
+        text = "Wert,Sensor_A,Sensor_B\n2024-01-01,1.5,2.5\n2024-01-02,1.7,2.1\n"
+        suggestion = long_suggestion(roles("box-basic"), parse_dataset(text).profile, "de")
+
+        assert suggestion is not None and (suggestion.names_to, suggestion.values_to) == ("category", "value")

@@ -80,6 +80,17 @@ def test_normalised_catalogue_file_is_coupled() -> None:
         ("ax.set_yticks(np.arange(0, 101, 20))", "limits"),
         ('ax.set_xlim(pd.Timestamp("2024-01-01"), df["d"].max())', "limits"),
         ("plt.ylim(-1.05, 1.05)", "limits"),
+        ('ax.imshow(df[["a", "b"]], vmin=0, vmax=100)', "color-scale"),
+        ('sns.heatmap(df[["a", "b"]], center=50)', "color-scale"),
+        ('sns.heatmap(df[["a", "b"]], cbar_kws={"ticks": [0, 25, 50, 75, 100]})', "color-scale"),
+        ('sns.heatmap(df[["a", "b"]], cbar_kws=dict(ticks=[0, 50, 100]))', "color-scale"),
+        ('ax.contourf(df[["a", "b"]], levels=[0, 10, 20])', "color-scale"),
+        ('ax.contourf(df[["a", "b"]], levels=np.linspace(0, 100, 11))', "color-scale"),
+        ("fig.colorbar(mesh, ticks=[0, 50, 100])", "color-scale"),
+        ("cbar.set_ticks([0, 50, 100])", "color-scale"),
+        ("mesh.set_clim(10, 90)", "color-scale"),
+        ("from matplotlib.colors import TwoSlopeNorm\nnorm = TwoSlopeNorm(vcenter=50)", "color-scale"),
+        ('g = sns.clustermap(df[["a", "b"]], cbar_pos=(0.05, 0.15, 0.04, 0.6))', "colorbar-position"),
         ('ax.annotate("Peak", xy=(5, 92.3))', "annotations"),
         ('ax.annotate("Peak", (df["x"][3], 92.3), xytext=(10, 10), textcoords="offset points")', "annotations"),
         ('ax.text(2.5, 40, "label")', "annotations"),
@@ -120,10 +131,30 @@ def test_each_coupling_rule(body: str, category: str) -> None:
         "ax.xaxis.set_major_locator(mdates.AutoDateLocator())",
         'IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]',
         'GRAYS = ["#111111", "#222222"]',
+        'ax.imshow(df[["a", "b"]], vmin=0, vmax=df["a"].max())',
+        'sns.heatmap(df[["a", "b"]], center=0)',
+        'ax.contourf(df[["a", "b"]], levels=10)',
+        'ax.hist2d(df["a"], df["b"], cmin=1)',
+        "ax.set_ticks([1, 2, 3])",
     ],
 )
 def test_not_coupled(body: str) -> None:
     assert check(body).status == "clean"
+
+
+@pytest.mark.skipif(not CATALOGUE_FILES, reason="plots/ is not checked out")
+def test_the_seaborn_heatmap_names_its_color_scale_and_colorbar_place() -> None:
+    """Live test round 8 of 2026-10-16: the adapter kept `vmin=0, vmax=100, center=50` and the colorbar ticks for
+    data of 32 to 93, and the top-left `cbar_pos` after it dropped the dendrogram; the scan named neither."""
+    path = next(path for path in CATALOGUE_FILES if path.parts[-4] == "heatmap-basic" and path.stem == "seaborn")
+    code = normalise(path.read_text(encoding="utf-8"), library="seaborn")
+
+    result = scan(code, spec_id="heatmap-basic", library="seaborn", enabled_libraries=ENABLED)
+
+    assert categories(result)[:2] == ["color-scale", "colorbar-position"]
+    color, place = result.hints[:2]
+    assert "`center=50`" in color and "`vmax=100`" in color and '"ticks": [0, 25, 50, 75, 100]' in color
+    assert "`cbar_pos=(0.05, 0.15, 0.04, 0.6)`" in place
 
 
 def test_one_hint_per_category_names_lines_and_counts() -> None:

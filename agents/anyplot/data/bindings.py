@@ -433,6 +433,19 @@ def carry_bindings(
     if len(kept) == len(bindings):
         dated = _new_dates(kept, roles, profile, previous)
         return _in_spec_order([*kept, *dated], roles, profile) if dated else list(bindings)
+    return filled_bindings(kept, roles, profile)
+
+
+def filled_bindings(kept: list[Binding], roles: list[DataRole], profile: DatasetProfile) -> list[Binding]:
+    """`kept` (valid bindings) plus the defaults for every other role on the columns `kept` leaves free.
+
+    The second half of `carry_bindings`, and how `.to_long()` binds its new columns to the roles the
+    suggestion made them for (`shape.LongSuggestion.bindings`) whatever their names: a German `Kategorie`
+    or an English `Category` must not take a spec's `category` role by its name when the melted headers
+    are meant for its `group` (live test round 8 of 2026-10-16). A binding that does not hold on `profile`
+    (`check_bindings`) is left out, and its role is bound like any other.
+    """
+    kept = [binding for binding in kept if not check_bindings([binding], roles, profile).errors]
     used = {binding.column for binding in kept}
     taken = {binding.role for binding in kept}
     open_roles = [role for role in roles if role.variadic or role.name not in taken]
