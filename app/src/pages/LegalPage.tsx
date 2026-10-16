@@ -189,9 +189,10 @@ export function LegalPage() {
           <Box sx={{ maxWidth: 760, mx: 'auto' }}>
             <Typography sx={subheadingStyle}>data controller</Typography>
             <Typography sx={textStyle}>
-              Markus Neusinger (see legal notice above). the ground for all of it is an
+              Markus Neusinger (see legal notice above). the ground for the site itself is an
               operator&apos;s legitimate interest in protecting the site and knowing how often it is
-              read; swiss data protection law applies, and the GDPR on top for visitors from the EU.
+              read; the data assistant below, which only its users meet, names its own grounds.
+              swiss data protection law applies, and the GDPR on top for visitors from the EU.
             </Typography>
 
             <Typography sx={subheadingStyle}>what we collect</Typography>
@@ -247,6 +248,65 @@ export function LegalPage() {
               front of a request — and to absorb DDoS attacks.
             </Typography>
 
+            <Typography sx={subheadingStyle}>
+              only if you use the data assistant (preview)
+            </Typography>
+            <Typography sx={textStyle}>
+              everything in this part applies only to people who use the data assistant. if you only
+              browse the catalogue, none of it touches you. anyplot is building an assistant that
+              adapts a catalogue plot to data you bring (&quot;use with my data&quot;). today it is
+              a preview that only the operator and the site&apos;s admins can open; nobody else can
+              reach it yet. this is what it does with what you give it.
+            </Typography>
+            <Typography sx={textStyle}>
+              <strong>what the model sees.</strong> what you paste or drop and the messages you
+              write go to Claude models by Anthropic, served through Google Cloud Vertex AI in the
+              EU, to make the plot you asked for. they are processed under Google Cloud&apos;s data
+              processing terms, and under Google Cloud&apos;s terms for Vertex AI your prompts are
+              not used to train the models. don&apos;t paste personal data you are not allowed to
+              share.
+            </Typography>
+            <Typography sx={textStyle}>
+              <strong>sessions.</strong> a session — your data, the conversation and the plots made
+              from it — is held in the server&apos;s memory only. it is cleared after an hour
+              without activity or when the server instance stops; there is no session database. the
+              separate render service also keeps its last 16 results (converted data, plot images)
+              in memory, until newer renders push them out or its instance stops.
+            </Typography>
+            <Typography sx={textStyle}>
+              <strong>usage telemetry.</strong> to see how the assistant is used and where it fails,
+              it writes content-free lines: event types, data formats, size buckets, the plot type
+              and library, attempts, review defect ids, statuses, latencies and token counts. a line
+              never holds your text, your data, your column names or your file names. the lines of
+              one session share a salted hash of the session, whose salt lives only as long as the
+              server instance, and they carry no user id — pseudonymous, not anonymous. they are
+              kept for up to 180 days in a Google Cloud Logging bucket in the Netherlands
+              (europe-west4) and read through BigQuery.
+            </Typography>
+            <Typography sx={textStyle}>
+              <strong>attribution and rate limits.</strong> the assistant&apos;s own log lines,
+              which debug it and enforce the per-user limits, carry a keyed hash (HMAC) of your
+              identity in place of it, and no content. they sit in the server logs above, for 30
+              days.
+            </Typography>
+            <Typography sx={textStyle}>
+              <strong>feedback cases.</strong> only when you send feedback on a result or on the
+              chat does the assistant store a case: the conversation, the profile of your data
+              (column types and the first 5 rows as a sample), the plot&apos;s code and images if
+              one was made and, while the &quot;# include data.csv&quot; box is ticked — it is by
+              default — the whole data file. unticking leaves out that file only: what the
+              conversation, the sample, the code and the images show of your data stays in the case.
+              the files go to a private bucket in the Netherlands (europe-west4) and are deleted
+              after 180 days. a row with your reaction, your short message, a keyed hash of your
+              identity and the technical details of the run (plot type, library, model) stays for
+              the triage, and nothing deletes it on a timer — ask and yours is gone.
+            </Typography>
+            <Typography sx={textStyle}>
+              <strong>legal basis.</strong> making the plot you asked for is the performance of your
+              request (Art. 6(1)(b) GDPR); the telemetry and the rate limits rest on legitimate
+              interest (Art. 6(1)(f) GDPR); a feedback case rests on your explicit submission.
+            </Typography>
+
             <Typography sx={subheadingStyle}>what we do not collect</Typography>
             <Typography sx={textStyle}>
               • no user accounts or personal profiles
@@ -257,8 +317,10 @@ export function LegalPage() {
               • no cookies at all (localStorage holds UI preferences — theme, image size — a cached
               release number, and, once you use the feedback widget, the random id above)
               <br />• <strong>no ai training</strong>: nothing you send is used to train ai models.
-              the ai in this project writes the catalogue, at build time; it never sees a
-              visitor&apos;s request
+              when you browse the catalogue, the ai in this project has already done its part: it
+              writes the catalogue at build time and never sees a visitor&apos;s request. only the
+              data assistant above sends what you give it to a model, under the terms described
+              there
             </Typography>
 
             <Typography sx={textStyle}>
@@ -270,8 +332,9 @@ export function LegalPage() {
             <Typography sx={subheadingStyle}>hosting &amp; third parties</Typography>
             <Typography sx={textStyle}>
               the site, its database and its images run in the EU (Netherlands, europe-west4);
-              Cloudflare&apos;s network is global, and Plausible is a service of its own on its own
-              EU servers:
+              Cloudflare&apos;s network is global, Plausible is a service of its own on its own EU
+              servers, and the data assistant&apos;s models — used only when you use the assistant —
+              are called in Vertex AI&apos;s EU region:
             </Typography>
             <Table sx={{ ...tableStyle, ...firstColStyle }}>
               <TableBody>
@@ -295,6 +358,13 @@ export function LegalPage() {
                   <TableCell>analytics</TableCell>
                   <TableCell>Plausible Analytics (EU, proxied)</TableCell>
                 </TableRow>
+                <TableRow>
+                  <TableCell>ai assistant</TableCell>
+                  <TableCell>
+                    Google Cloud Vertex AI, Claude models by Anthropic (EU) — only when you use the
+                    data assistant
+                  </TableCell>
+                </TableRow>
               </TableBody>
             </Table>
 
@@ -302,12 +372,13 @@ export function LegalPage() {
             <Typography sx={textStyle}>
               you can ask what is stored about you and have it corrected, erased or its use
               restricted, object to the processing on grounds relating to your particular situation,
-              and complain to a supervisory authority. in practice that means a feedback entry or a
-              log line; a few lines to{' '}
+              and complain to a supervisory authority. in practice that means a feedback entry, an
+              assistant feedback case or a log line; a few lines to{' '}
               <Link href="mailto:admin@anyplot.ai" sx={proseLinkStyle}>
                 admin@anyplot.ai
               </Link>{' '}
-              are enough.
+              are enough, also to have an assistant feedback case deleted early, its files and its
+              row.
             </Typography>
           </Box>
         </Box>

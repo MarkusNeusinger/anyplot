@@ -228,9 +228,11 @@ minutes, so reloading `/debug` runs no query at all. The answer holds aggregates
 `not_configured` while the variable is unset, and `unavailable` when the query fails (no table yet, no
 permission, a timeout); both come with zeros, the card shows its empty state, and a failure is never kept.
 
-## Before the chat opens to the public
+## On the legal page
 
 The telemetry is content-free and keyed by a salted, per-instance session hash, but it is still a record of
-use. Before real users reach the chat, the legal page (`app/src/pages/LegalPage.tsx`) needs an entry for it:
-purpose (improving the chat), the fields in plain words, the 180-day retention, the EU location, and that
-no content is recorded. The chat is admin-only on 2026-10-16, so the page stays unchanged for now.
+use. The privacy section of the legal page (`app/src/pages/LegalPage.tsx`, "data assistant (preview)")
+describes it: the purpose, the fields in plain words, that no content is recorded, the 180-day retention,
+the EU location, and that it is pseudonymous rather than anonymous. The section describes the chat as a
+preview that only admins can open, so it stays true when the chat opens. If you change a field, the
+retention or the location here, update that section too; `app/src/pages/LegalPage.test.tsx` pins its claims.
