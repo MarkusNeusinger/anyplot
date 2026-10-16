@@ -152,6 +152,14 @@ with `VITE_ENABLE_AGENT_CHAT=true`, and like every event they fire only on
 `copy_code` on a result card carries `method: agent` and `page: agent_chat`
 plus the `spec` and `library` of the version.
 
+These Plausible events count page interactions in the browser. Since 2026-10-16
+the chat also has a server-side usage telemetry in BigQuery, with its own
+content-free events (`data_input`, `chat_turn`, `pipeline_run`, `outcome`): the
+copy, download, save and feedback actions above additionally send an outcome
+beacon (`POST /debug/agent/sessions/{sid}/outcome`) that the agents service writes
+as an `outcome` line. That beacon is not a Plausible event and fires on every host,
+not only `anyplot.ai`. See [Agent usage telemetry](agent-telemetry.md).
+
 ### Discovery
 
 | Event Name | Properties | Where | Description |

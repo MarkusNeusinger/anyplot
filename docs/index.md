@@ -11,6 +11,7 @@ Welcome to the anyplot documentation. Start here to find what you're looking for
 | Understand the project | [Vision](concepts/vision.md) |
 | Read the "Use with my data" agent design | [Agent network](concepts/agent-network.md) |
 | Read how catalogue code adapts to other data | [Adaptable code](concepts/adaptable-code.md) |
+| Read or set up the agent chat's usage telemetry | [Agent usage telemetry](reference/agent-telemetry.md) |
 | Contribute plot ideas | [Contributing](contributing.md) |
 | Set up local development | [Development Guide](development.md) |
 | See how automation works | [Workflows](workflows/overview.md) |
@@ -52,6 +53,7 @@ docs/
     ├── seo.md            # SEO configuration
     ├── style-guide.md    # Brand, frontend, plot design system
     ├── gcp-budget-guard.md  # Function that disables Vertex AI when its budget is reached
+    ├── agent-telemetry.md   # Content-free usage telemetry of the agent chat, BigQuery setup
     └── performance.md    # API latency measurements
 ```
 
@@ -91,6 +93,7 @@ Technical details for development and integration.
 - **[SEO](reference/seo.md)** - Search engine optimization setup
 - **[Style Guide](reference/style-guide.md)** - Brand, frontend, and plot design system
 - **[GCP Budget Guard](reference/gcp-budget-guard.md)** - Cloud Run function that disables the Vertex AI API when its Cloud Billing budget is reached: decision rules, logging, retries, permissions, limits (as of 2026-10-09, in the repository and not yet deployed)
+- **[Agent usage telemetry](reference/agent-telemetry.md)** - The agent chat's four content-free events, the log bucket, sink and BigQuery views, the `/debug` card, and the one-time setup (as of 2026-10-16, in the repository; the Google Cloud resources are not created yet)
 - **[Performance](reference/performance.md)** - Backend API response-time measurements
 
 ---

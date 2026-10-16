@@ -114,6 +114,7 @@ from pydantic import ValidationError
 
 from core.defects import DEFECT_RE
 
+from . import telemetry
 from .briefs import adapter_profile, profile_summary, spec_brief
 from .code.edits import (
     MAX_CHANGE_LITERAL_CHARS,
@@ -457,6 +458,22 @@ class Run:
     """The `changes` notes of every adapter call so far whose plan changed the code, in order (`note_changes`)."""
     expected_texts: list[str] = field(default_factory=list)
     """The texts and number formats the user asked to see (`PipelineArgs.expected_texts`), checked per render."""
+    base: Literal["catalogue", "previous"] = "catalogue"
+    round_scores: dict[int, int] = field(default_factory=dict)
+    """The catalogue review score of each reviewed round's latest review, by round: the telemetry's score buckets."""
+    forced_ids: set[str] = field(default_factory=set)
+    """Review ids under `VISIBLE_DEFECT_IDS` that forced a repair round."""
+    review_ids: set[str] = field(default_factory=set)
+    """Every review id any review of the run named."""
+    gate_ids: set[str] = field(default_factory=set)
+    """Every gate id any render of the run failed (`GateReport.failed_gates`)."""
+    sandbox_failures: set[str] = field(default_factory=set)
+    """The closed classes of the renders that failed in the sandbox (`telemetry.sandbox_failure`)."""
+    stage_s: dict[str, float] = field(default_factory=dict)
+    """Seconds spent in `adapt`, `check`, `render` and `review`, summed over the attempts."""
+
+    def timed(self, stage: str, seconds: float) -> None:
+        self.stage_s[stage] = self.stage_s.get(stage, 0.0) + seconds
 
 
 ROUND_OUTCOMES: dict[Stage, RoundOutcome] = {
@@ -1267,6 +1284,17 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     view, dataset, not_ready = load_inputs(ctx, services)
     if not_ready is not None or view is None or dataset is None:
         keep_pending_request(ctx.state, node_input, not_ready)
+        # An attempted plot the data was not ready for is a run of its own in the telemetry: the funnel sees it.
+        index = telemetry.run_index(ctx.session.id, ctx.invocation_id)
+        telemetry.write(
+            telemetry.PipelineRun,
+            ledger,
+            attempt=f"run{index}",
+            run_index=index,
+            base=node_input.base,
+            status="not_ready",
+            reason=not_ready or "no_dataset",
+        )
         yield _result_event(PlotResult.not_ready(not_ready or "no_dataset"))
         return
     ledger.pipeline_active = True
@@ -1287,7 +1315,9 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
         language=view.language,
         change_request=node_input.change_request,
         expected_texts=list(node_input.expected_texts),
+        base=node_input.base,
     )
+    started = time.monotonic()
     scope = f"pipeline-{secrets.token_hex(6)}"
     try:
         async for event in _attempts(ctx, services, settings, run, node_input, scope):
@@ -1318,6 +1348,7 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     ledger.plot_shipped = result.status in ("ok", "needs_attention")
     settle_pending_request(ctx.state, node_input, ledger.plot_shipped)
     _attribute_result(ledger, run, result)
+    _telemetry_run(ledger, ctx.session.id, ctx.invocation_id, run, result, time.monotonic() - started)
     yield close_scope(scope)
     yield _result_event(result)
 
@@ -1353,6 +1384,51 @@ def _attribute_result(ledger: RequestLedger, run: Run, result: PlotResult) -> No
         advisory=list(shipped.advisory_gates) if shipped else [],
         residual=len(result.residual_defects),
         error=run.error_type if result.reason == "error" else None,
+    )
+
+
+def _defect_ids(lines: Sequence[str]) -> list[str]:
+    """The review ids of defect lines (`DEFECT_RE`); a line without the grammar names none."""
+    return sorted({found for line in lines if (m := DEFECT_RE.match(line)) for found in m["ids"].split(", ")})
+
+
+def _telemetry_run(
+    ledger: RequestLedger, session_id: str, invocation_id: str, run: Run, result: PlotResult, seconds: float
+) -> None:
+    """The usage telemetry's `pipeline_run` line (`telemetry.py`): ids, buckets, counts and times, never text.
+
+    One line per run: `run_index` is the session's run number for this invocation, so a node ADK re-runs
+    writes the same idempotency key and the BigQuery base view keeps one row.
+    """
+    shipped = shipped_candidate(run) if result.status in ("ok", "needs_attention") else None
+    index = telemetry.run_index(session_id, invocation_id)
+    telemetry.write(
+        telemetry.PipelineRun,
+        ledger,
+        attempt=f"run{index}",
+        run_index=index,
+        base=run.base,
+        status=result.status,
+        reason=result.reason,
+        stage=run.stage,
+        attempts=run.attempts,  # every adapter call, retries and proofreads included; `rounds` is what the page shows
+        rounds=len(run.rounds),
+        reviews=run.reviews,
+        score_round1=telemetry.score_bucket(run.round_scores.get(1)),
+        score_round2=telemetry.score_bucket(run.round_scores.get(2)),
+        shipped_attempt=shipped.attempt if shipped else None,
+        shipped_round=round_number(run, shipped.attempt) if shipped else None,
+        forced_repair=sorted(run.forced_ids),
+        gates_failed=sorted(run.gate_ids),
+        reviewer_defects=sorted(run.review_ids),
+        residual_defects=_defect_ids(result.residual_defects),
+        sandbox_failures=sorted(run.sandbox_failures),
+        adapt_ms=telemetry.ms(run.stage_s.get("adapt", 0.0)),
+        check_ms=telemetry.ms(run.stage_s.get("check", 0.0)),
+        render_ms=telemetry.ms(run.stage_s.get("render", 0.0)),
+        review_ms=telemetry.ms(run.stage_s.get("review", 0.0)),
+        total_ms=telemetry.ms(seconds),
+        steps=telemetry.step_tokens(ledger.steps, steps=("adapter", "reviewer")),
     )
 
 
@@ -1459,7 +1535,9 @@ async def _attempts(
             file_name=file_name,
         )
         ledger.adapter_allow_full = request.allow_full
+        started = time.monotonic()
         answer = await _adapt(ctx, scope, render_adapt_request(request, view), view.library)
+        run.timed("adapt", time.monotonic() - started)
         call = _call_fields(ledger, adapter)
         if isinstance(answer, AdaptMiss):
             attribution("pipeline_adapt", ledger, attempt=attempt, outcome=answer.outcome, **call)
@@ -1483,8 +1561,10 @@ async def _attempts(
         )
 
         yield _status(run, "checking", attempt)
+        started = time.monotonic()
         applied = apply_plan(working, plan)
         if applied.code is None:
+            run.timed("check", time.monotonic() - started)
             attribution(
                 "pipeline_check",
                 ledger,
@@ -1507,6 +1587,7 @@ async def _attempts(
             origin=view.normalised,
             data_texts=data_texts,
         )
+        run.timed("check", time.monotonic() - started)
         adaptation_lines = check.defects
         attribution(
             "pipeline_check",
@@ -1551,7 +1632,13 @@ async def _attempts(
         started = time.monotonic()
         rendered = await services.backend.render(job)
         render_s = time.monotonic() - started
+        run.timed("render", render_s)
         report = evaluate(rendered, themes=job.themes, library=view.library, rows=rows, plot_language=run.language)
+        run.gate_ids.update(report.failed_gates)
+        for theme_output in rendered.outputs.values():
+            failure = telemetry.sandbox_failure(theme_output)
+            if failure is not None:
+                run.sandbox_failures.add(failure)
         if report.passed_host_gates:
             run.repair_hints = list(report.repair_hints)
         attribution(
@@ -1669,7 +1756,9 @@ async def _attempts(
             dataset_context=context,
             file_name=file_name,
         )
+        started = time.monotonic()
         verdict = await _review(ctx, scope, review_request, run.theme)
+        run.timed("review", time.monotonic() - started)
         if verdict is None and settings.check_retry and deadline.allows(REVIEWER_P95_S):
             # An unreadable review is asked once more before the render ships unreviewed (owner rule:
             # never unfinished for a formal miss; one in 26 Vertex runs on 2026-10-14).
@@ -1680,7 +1769,9 @@ async def _attempts(
                 verdict="unreadable_retry",
                 **_call_fields(ledger, REVIEWER_NAME),
             )
+            started = time.monotonic()
             verdict = await _review(ctx, scope, review_request, run.theme)
+            run.timed("review", time.monotonic() - started)
         review_call = _call_fields(ledger, REVIEWER_NAME)
         if verdict is None:
             attribution("pipeline_review", ledger, attempt=attempt, verdict="unreadable", **review_call)
@@ -1697,6 +1788,10 @@ async def _attempts(
             **review_call,
         )
         run.reviewed = True
+        run.review_ids.update(verdict.ids)
+        run.forced_ids.update(set(_defect_ids(verdict.visible)) & VISIBLE_DEFECT_IDS)
+        if verdict.score is not None:
+            run.round_scores[round_number(run, attempt)] = verdict.score
         candidate.reviewed_ok = verdict.ok
         candidate.status_ok = verdict.ok if verdict.status_ok is None else verdict.status_ok
         candidate.review_score = verdict.score

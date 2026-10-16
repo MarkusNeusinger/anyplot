@@ -16,6 +16,8 @@
  *   theme on screen.
  * - The code is the exported `plot.py`, byte-identical to what rendered; it
  *   runs unchanged next to `data.csv`, so both download under those names.
+ * - A copy or a download that succeeded calls `onOutcome` with the action and
+ *   the version, the content-free usage beacon; nothing else travels.
  * - Below the code, the quick-feedback control (`ResultFeedback`) stores the
  *   version as a feedback case; it shows when the page passes `onSendFeedback`.
  *
@@ -37,7 +39,7 @@ import Tooltip from '@mui/material/Tooltip';
 import type { FeedbackInput, PlotVersion } from 'src/hooks/useAgentSession';
 import { useCopyCode } from 'src/hooks/useCopyCode';
 import { useTheme } from 'src/hooks/useLayoutContext';
-import { type ArtifactName, type Theme } from 'src/lib/agent';
+import { type ArtifactName, type OutcomeAction, type Theme } from 'src/lib/agent';
 import { copyImage, downloadBlob } from 'src/sections/agent-chat/files';
 import { IMAGE_FAILURE } from 'src/sections/agent-chat/messages';
 import { ResultFeedback } from 'src/sections/agent-chat/ResultFeedback';
@@ -55,6 +57,9 @@ const TOAST_MS = 1500;
  * PNG's own aspect, so the square format (2400x2448) fits without a band.
  */
 const PLACEHOLDER_ASPECT = '3200/1864';
+
+/** The beacon actions a card reports; the save and the feedback report themselves. */
+export type CardOutcome = Exclude<OutcomeAction, 'saved_session' | 'feedback'>;
 
 const STATUS_LABEL: Record<string, string> = {
   ok: 'ok',
@@ -77,6 +82,11 @@ export interface ResultCardProps {
   onFetchArtifact: (version: number, name: ArtifactName) => Promise<Blob>;
   onTrack: (event: string, props?: Record<string, string | undefined>) => void;
   /**
+   * The usage beacon, called once a copy or a download succeeded, with the
+   * action and this card's version only; fire and forget.
+   */
+  onOutcome?: (action: CardOutcome, version: number) => void;
+  /**
    * Store the version as a feedback case (`.send()` in the quick-feedback
    * control); without it the card shows no control. Never held back by `busy`.
    */
@@ -92,6 +102,7 @@ export function ResultCard({
   onRequestTheme,
   onFetchArtifact,
   onTrack,
+  onOutcome,
   onSendFeedback,
 }: ResultCardProps) {
   const { isDark } = useTheme();
@@ -128,8 +139,10 @@ export function ResultCard({
   const pngName = `${specId}-${library}-v${number}-${shownTheme}.png`;
 
   const { copied, copyToClipboard } = useCopyCode({
-    onCopy: () =>
-      onTrack('copy_code', { spec: specId, library, method: 'agent', page: 'agent_chat' }),
+    onCopy: () => {
+      onTrack('copy_code', { spec: specId, library, method: 'agent', page: 'agent_chat' });
+      onOutcome?.('copied_code', number);
+    },
   });
 
   /** Whether showing `theme` needs a render on the server first. */
@@ -150,12 +163,15 @@ export function ResultCard({
     if (!readyImage) return;
     const outcome = await copyImage(readyImage.blob, pngName);
     showToast(outcome === 'copied' ? '>>> .copied' : '>>> .downloaded');
+    // Where the browser cannot copy an image, the user got the PNG as a download.
+    onOutcome?.(outcome === 'copied' ? 'copied_image' : 'downloaded_png', number);
   };
 
   const handleDownloadPng = () => {
     if (!readyImage) return;
     downloadBlob(readyImage.blob, pngName);
     showToast('>>> .downloaded');
+    onOutcome?.('downloaded_png', number);
   };
 
   const handleOpen = () => {
@@ -178,6 +194,7 @@ export function ResultCard({
       // The exported code reads `data.csv` from its own directory, so the pair
       // keeps exactly these names.
       downloadBlob(blob, name);
+      onOutcome?.(name === 'plot.py' ? 'downloaded_code' : 'downloaded_data', number);
     } catch {
       setFileError(`could not download ${name}`);
     }

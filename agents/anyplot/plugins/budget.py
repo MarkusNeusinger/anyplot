@@ -94,6 +94,8 @@ def book_response(ledger: RequestLedger, agent_name: str, session_user: str, llm
     breakdown = usage_breakdown(llm_response.usage_metadata)
     finish = finish_name(llm_response.finish_reason)
     ledger.last_calls[agent_name] = CallFacts(finish, breakdown["candidates"], breakdown["thoughts"])
+    # The usage telemetry's tokens per step (`telemetry.step_tokens`): counts and the model id only.
+    ledger.book_step(agent_name, model=llm_response.model_version, usage=breakdown, cached=cached)
     attribution(
         "model",
         ledger,

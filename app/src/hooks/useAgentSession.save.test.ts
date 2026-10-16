@@ -31,9 +31,13 @@ interface Call {
 let calls: Call[];
 let bundle: (call: Call) => Response | Promise<Response>;
 let dataset: (call: Call) => Response | Promise<Response>;
+/** The usage beacons sent, and the answer the next one gets. */
+let outcomes: { body: unknown; keepalive?: boolean }[];
+let outcome: () => Response | Promise<Response>;
 
 function mockFetch() {
   calls = [];
+  outcomes = [];
   vi.stubGlobal(
     'fetch',
     vi.fn(async (input: string, init: RequestInit = {}) => {
@@ -44,6 +48,10 @@ function mockFetch() {
         search: url.search,
       };
       calls.push(call);
+      if (call.method === 'POST' && call.path === '/sessions/S1abcdefgh/outcome') {
+        outcomes.push({ body: JSON.parse(String(init.body)), keepalive: init.keepalive });
+        return outcome();
+      }
       if (call.method === 'POST' && call.path === '/sessions') {
         return json(200, {
           session_id: 'S1abcdefgh',
@@ -84,6 +92,7 @@ beforeEach(() => {
       'Content-Disposition': 'attachment; filename="anyplot-session-S1abcdef.json"',
     });
   dataset = () => json(422, { detail: 'unparseable', ref: 'ref-u' });
+  outcome = () => new Response(null, { status: 204 });
   URL.createObjectURL = vi.fn(() => 'blob:bundle');
   URL.revokeObjectURL = vi.fn();
   vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
@@ -107,6 +116,20 @@ describe('useAgentSession: .save()', () => {
     expect(call?.search).toBe('?include_data=true');
     expect(downloads).toEqual([{ href: 'blob:bundle', download: 'anyplot-session-S1abcdef.json' }]);
     expect(trackEvent).toHaveBeenCalledWith('agent_session_saved', { include_data: 'yes' });
+    // The usage beacon: the session-level action as version 0, nothing else.
+    await waitFor(() =>
+      expect(outcomes).toEqual([{ body: { action: 'saved_session', version: 0 }, keepalive: true }])
+    );
+  });
+
+  it('keeps a save that worked when its usage beacon fails', async () => {
+    outcome = () => Promise.reject(new TypeError('Failed to fetch'));
+    const { result } = await openSession();
+    await act(() => result.current.saveSession(true));
+
+    await waitFor(() => expect(outcomes).toHaveLength(1));
+    expect(downloads).toHaveLength(1);
+    expect(result.current.state.phase).toBe('ready');
   });
 
   it('asks without the data and names the file itself where the header is unreadable', async () => {
@@ -134,6 +157,7 @@ describe('useAgentSession: .save()', () => {
     expect(error).toMatchObject({ status: 502, code: 'too_large', ref: 'ref-big' });
     expect(downloads).toEqual([]);
     expect(trackEvent).not.toHaveBeenCalledWith('agent_session_saved', expect.anything());
+    expect(outcomes).toEqual([]);
     expect(result.current.state.phase).toBe('ready');
   });
 

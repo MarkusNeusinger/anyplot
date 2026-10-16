@@ -2,7 +2,7 @@ import { fireEvent } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { DebugPage } from 'src/pages/DebugPage';
-import { render, screen, waitFor } from 'src/test-utils';
+import { render, screen, waitFor, within } from 'src/test-utils';
 
 const mockDebugData = {
   total_specs: 100,
@@ -424,5 +424,138 @@ describe('DebugPage', () => {
     expect(copied).toContain('bug report');
     expect(copied).toContain('> Axis labels overlap on mobile');
     expect(copied).toContain('Open a pull request');
+  });
+});
+
+describe('DebugPage agent usage', () => {
+  const USAGE = {
+    status: 'ok',
+    days: 7,
+    sessions: 12,
+    plots_shipped: 30,
+    kept_rate: 0.42,
+    repair_rate: null,
+    top_specs: [
+      { key: 'scatter-basic', count: 5 },
+      { key: 'bar-grouped', count: 2 },
+    ],
+    top_formats: [{ key: 'csv', count: 9 }],
+    top_refusals: [],
+    generated_at: '2026-10-16T12:00:00Z',
+  };
+
+  /** The page's own calls answered as in the tests above; the usage call by `usage`. */
+  function stubFetch(usage: (days: string) => Promise<unknown>) {
+    const fetchMock = vi.fn((url: string) => {
+      if (url.includes('/debug/agent-usage')) {
+        return usage(new URL(url).searchParams.get('days') ?? '');
+      }
+      if (url.includes('/debug/agent/cases')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ items: [], has_more: false }),
+        });
+      }
+      if (url.includes('/debug/feedback/')) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve(mockDebugData) });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    return fetchMock;
+  }
+
+  const ok = (body: unknown) => Promise.resolve({ ok: true, json: () => Promise.resolve(body) });
+
+  it('shows the tiles and the ranked lists of an ok answer', async () => {
+    const fetchMock = stubFetch(() => ok(USAGE));
+    render(<DebugPage />);
+
+    const section = await screen.findByRole('region', { name: 'Agent usage section' });
+    expect(await within(section).findByRole('group', { name: 'sessions' })).toHaveTextContent('12');
+    expect(within(section).getByRole('group', { name: 'plots shipped' })).toHaveTextContent('30');
+    expect(within(section).getByRole('group', { name: 'kept rate' })).toHaveTextContent('42%');
+    // No runs in the window: the rate has no base.
+    expect(within(section).getByRole('group', { name: 'repair rate' })).toHaveTextContent('—');
+    const specs = within(section).getByRole('group', { name: 'top specs' });
+    expect(
+      within(specs)
+        .getAllByRole('listitem')
+        .map(item => item.textContent)
+    ).toEqual(['5scatter-basic', '2bar-grouped']);
+    expect(within(section).getByRole('group', { name: 'top formats' })).toHaveTextContent('9csv');
+    expect(within(section).getByRole('group', { name: 'top refusal codes' })).toHaveTextContent(
+      'none in this window'
+    );
+    const urls = fetchMock.mock.calls.map(call => call[0]);
+    expect(urls.filter(url => url.includes('/debug/agent-usage'))).toEqual([
+      expect.stringMatching(/\/debug\/agent-usage\?days=7$/),
+    ]);
+  });
+
+  it('says that BigQuery is not configured yet, without tiles', async () => {
+    stubFetch(() =>
+      ok({ ...USAGE, status: 'not_configured', sessions: 0, plots_shipped: 0, kept_rate: null })
+    );
+    render(<DebugPage />);
+
+    expect(await screen.findByTestId('agent-usage-empty')).toHaveTextContent(
+      'BigQuery telemetry is not configured yet'
+    );
+    expect(screen.queryByRole('group', { name: 'kept rate' })).not.toBeInTheDocument();
+  });
+
+  it('says so for an empty window, a failed query and a failed request', async () => {
+    let answer: () => Promise<unknown> = () =>
+      ok({ ...USAGE, sessions: 0, plots_shipped: 0, top_specs: [], top_formats: [] });
+    stubFetch(() => answer());
+    render(<DebugPage />);
+    expect(await screen.findByTestId('agent-usage-empty')).toHaveTextContent(
+      'no sessions in this window'
+    );
+
+    answer = () => ok({ ...USAGE, status: 'unavailable' });
+    fireEvent.click(screen.getByRole('button', { name: '30d' }));
+    await waitFor(() =>
+      expect(screen.getByTestId('agent-usage-empty')).toHaveTextContent(
+        'usage data unavailable right now'
+      )
+    );
+
+    answer = () => Promise.reject(new TypeError('Failed to fetch'));
+    fireEvent.click(screen.getByRole('button', { name: '7d' }));
+    await waitFor(() =>
+      expect(screen.getByTestId('agent-usage-empty')).toHaveTextContent(
+        'usage data unavailable right now'
+      )
+    );
+    // The rest of the page stays.
+    expect(screen.getAllByText('scatter-basic').length).toBeGreaterThan(0);
+  });
+
+  it('fetches the 30-day window on the toggle', async () => {
+    const fetchMock = stubFetch(days =>
+      ok({ ...USAGE, days: Number(days), sessions: days === '30' ? 77 : 12 })
+    );
+    render(<DebugPage />);
+
+    expect(await screen.findByRole('group', { name: 'sessions' })).toHaveTextContent('12');
+    expect(screen.getByRole('button', { name: '7d' })).toHaveAttribute('aria-pressed', 'true');
+
+    fireEvent.click(screen.getByRole('button', { name: '30d' }));
+    await waitFor(() =>
+      expect(screen.getByRole('group', { name: 'sessions' })).toHaveTextContent('77')
+    );
+    expect(screen.getByRole('button', { name: '30d' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('region', { name: 'Agent usage section' })).toHaveTextContent(
+      'content-free telemetry · last 30 days'
+    );
+    const usageUrls = fetchMock.mock.calls
+      .map(call => call[0])
+      .filter(url => url.includes('/debug/agent-usage'));
+    expect(usageUrls).toEqual([
+      expect.stringMatching(/\?days=7$/),
+      expect.stringMatching(/\?days=30$/),
+    ]);
   });
 });

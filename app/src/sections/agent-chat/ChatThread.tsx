@@ -22,7 +22,7 @@ import type { ArtifactName, Theme } from 'src/lib/agent';
 import { Ellipsis } from 'src/sections/agent-chat/Ellipsis';
 import { ERROR_TEXT, PLOT_FAILED_TEXT } from 'src/sections/agent-chat/messages';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
-import { ResultCard } from 'src/sections/agent-chat/ResultCard';
+import { type CardOutcome, ResultCard } from 'src/sections/agent-chat/ResultCard';
 import { type PendingReply, pendingReply } from 'src/sections/agent-chat/steps';
 import { bodyTextSx, labelSx } from 'src/sections/agent-chat/styles';
 import { colors, typography } from 'src/theme';
@@ -41,6 +41,8 @@ interface ChatThreadProps {
   onRequestTheme: (version: number, theme: Theme) => void;
   onFetchArtifact: (version: number, name: ArtifactName) => Promise<Blob>;
   onTrack: (event: string, props?: Record<string, string | undefined>) => void;
+  /** The result cards' usage beacon (`ResultCard`'s `onOutcome`). */
+  onOutcome?: (action: CardOutcome, version: number) => void;
   /** The result cards' quick feedback; without it they show no control. */
   onSendFeedback?: (version: number, input: FeedbackInput) => Promise<void>;
 }
@@ -156,6 +158,7 @@ function Item({
           onRequestTheme={props.onRequestTheme}
           onFetchArtifact={props.onFetchArtifact}
           onTrack={props.onTrack}
+          onOutcome={props.onOutcome}
           onSendFeedback={props.onSendFeedback}
         />
       );

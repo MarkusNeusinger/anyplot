@@ -495,6 +495,7 @@ The routes mirror the agents service's `/v1` API. All paths below start with
 | `POST /sessions/{sid}/dataset/to_long` | none | Make a wide table long for the plot's category and value roles (the page's `.to_long()`, see [Data changes](#data-changes)): the service recomputes its `suggestion` and applies that `pivot_longer` without a model call, as the next version with the default bindings for the new columns, answered like the undo route plus `changes`, unconfirmed. `422 no_suggestion` when the table is not wide for this plot, `409 run_active` while a turn or a render is in flight |
 | `POST /sessions/{sid}/messages` | `{text}` (at most 2,000 characters), `{"action": "create_plot"}` or `{"action": "summarize_data"}` | An SSE stream in protocol `anyplot/1`; `413 too_long` above the limit, `409 run_active` while you have a turn or a theme render in flight in any session; a full run queue ends the turn's stream with `error {"code": "capacity"}` (see [SSE protocol](#sse-protocol-anyplot1)). `summarize_data` asks the assistant for the step-1 summary of the data (rows, columns with types and units, missing values, percentages, the proposed bindings, one question when something is ambiguous) without the scope judge, like `create_plot`; when the stored dataset kept notes pasted with the table (`context_lines`, judged when they were pasted), the turn carries them to the assistant fenced as `<user_notes>`, so it can act on a request in them, such as "make it a line chart" |
 | `POST /sessions/{sid}/cancel` | None | `204`; a turn that still waits leaves the run queue |
+| `POST /sessions/{sid}/outcome` | `{action, version?, reaction?}`: `action` is `copied_code`, `copied_image`, `downloaded_png`, `downloaded_code`, `downloaded_data`, `saved_session` or `feedback`; `version` a JSON integer from 0 to 999 (0 for the session); `reaction` only with `feedback`, one of the four reactions; nothing else | `204`: the page's content-free outcome beacon, forwarded to the agents service, which writes the `outcome` telemetry line ([Agent usage telemetry](agent-telemetry.md)); `429 rate_limited` / `daily_limit` past 30 a minute or 2,000 a day per user. The page ignores every error |
 | `POST /sessions/{sid}/versions/{version}/render` | `{"theme": "light"}` or `{"theme": "dark"}`; `version` is 0 to 999, where 0 is the latest version | `{status, reason?, artifacts}` once the render is done (see [Theme toggle](#theme-toggle)) |
 | `GET /sessions/{sid}/artifacts/{name}?v=` | `name` is one of `plot-light.png`, `plot-dark.png`, `plot.py`, `data.csv` | The file, with `Cache-Control: private, no-store` and `X-Content-Type-Options: nosniff`; any other name is `404`, and so is the PNG of a theme the version has not rendered. A PNG carries the footer strip (see [Footer strip](#footer-strip)) |
 | `GET /sessions/{sid}/bundle?include_data=&version=` | `include_data` is `true` or `false` (the default); `version` is 0 to 999, where 0 or none means every version (the BFF then asks the agents service without one, since there `version=0` is the chat's feedback case) | The session as one JSON file to save (the chat page's `.save()`), with `Content-Disposition: attachment; filename="anyplot-session-<first 8 characters of the session id>.json"`, `Cache-Control: private, no-store` and `X-Content-Type-Options: nosniff`. `404 not_found` for a version the session does not have; a bundle over 32 MiB can't be saved (see [Session bundle](#session-bundle)) |
@@ -858,6 +859,33 @@ table (`alembic/versions/b4e7a9c2d6f1_add_agent_feedback_table.py`).
 Until it has run, the feedback route stores the case and answers
 `502 row_missing`, and the case routes answer `500`.
 
+### Usage highlights
+
+`GET /debug/agent-usage?days=7` (also `days=30`; any other value is `400`) is
+the admin-gated, read-only source of the "agent usage" card on `/debug`
+(`api/routers/debug.py`, `api/agent_usage.py`). It never calls the agents
+service: it runs one query over the BigQuery telemetry views of
+`AGENT_TELEMETRY_DATASET` and answers aggregates of live sessions only:
+
+```json
+{
+  "status": "ok",
+  "days": 7,
+  "sessions": 12,
+  "plots_shipped": 30,
+  "kept_rate": 0.4167,
+  "repair_rate": 0.3125,
+  "top_specs": [{"key": "scatter-basic", "count": 5}],
+  "top_formats": [{"key": "csv", "count": 9}],
+  "top_refusals": [{"key": "unparseable", "count": 3}],
+  "generated_at": "2026-10-16T12:00:00Z"
+}
+```
+
+`status` is `not_configured` while the variable is unset and `unavailable`
+when the query fails; both come with zeros, `null` rates and empty lists. See
+[Agent usage telemetry](agent-telemetry.md).
+
 ### SSE protocol `anyplot/1`
 
 | Event | Data |
@@ -988,11 +1016,13 @@ could not be read; `PATCH /cases/{id}` answers `422 no_data` and
 | `AGENT_USER_ID_KEY` | Unset | HMAC key for the user id; from Secret Manager in production |
 | `AGENT_REQUEST_TIMEOUT_S` | `550` | Upstream timeout, and the cap on one chat stream outside the run queue; above the agents service's 540-second deadline |
 | `AGENT_TURN_MAX_S` | `1190` | Hard cap on one chat turn, queue wait included; keep it below anyplot-api's Cloud Run `--timeout` (1,200 seconds in `api/cloudbuild.yaml`) |
+| `AGENT_TELEMETRY_DATASET` | Unset | `<project>.<dataset>` of the usage telemetry's BigQuery views (`anyplot.agent_telemetry`), which `GET /debug/agent-usage` reads; unset, that route answers `status: not_configured` ([Agent usage telemetry](agent-telemetry.md)) |
 | `AGENT_CASES_BUCKET` | `anyplot-agent-cases` | The private EU bucket the feedback cases go to and the case routes read from (see [Feedback case](#feedback-case)); never the public image bucket. The default is the production bucket, so a local API with Application Default Credentials stores its cases there too; set a bucket of your own for local runs |
 
-In production, `AGENT_ENABLED` and `AGENT_SERVICE_URL` come from the
-`_AGENT_ENABLED` and `_AGENT_SERVICE_URL` substitutions in `api/cloudbuild.yaml`.
-Change them there: the deploy rewrites both variables on every build.
+In production, `AGENT_ENABLED`, `AGENT_SERVICE_URL` and `AGENT_TELEMETRY_DATASET`
+come from the `_AGENT_ENABLED`, `_AGENT_SERVICE_URL` and `_AGENT_TELEMETRY_DATASET`
+substitutions in `api/cloudbuild.yaml`. Change them there: the deploy rewrites all
+three variables on every build.
 
 ---
 

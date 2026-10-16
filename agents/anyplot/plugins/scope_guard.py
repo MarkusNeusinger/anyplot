@@ -304,6 +304,7 @@ class ScopeGuardPlugin(BasePlugin):
             verdict.tokens, verdict.input_tokens, verdict.output_tokens, settings.judge_model
         )
         ledger.judge_tokens += verdict.tokens
+        ledger.book_judge(verdict.input_tokens, verdict.output_tokens, verdict.tokens)
         ledger.budget_tokens += weighted
         services.usage.add_tokens(user, weighted)
         ledger.lang = verdict.lang

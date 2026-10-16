@@ -57,6 +57,9 @@ const PAGE = '/debug/agent?spec=scatter-basic&library=matplotlib&language=python
 
 let feedbackBodies: unknown[];
 let feedbackAnswer: () => Response;
+/** The usage beacons the page sent, with the request options that matter. */
+let outcomes: { body: unknown; keepalive?: boolean; client?: string }[];
+let outcomeAnswer: () => Response | Promise<Response>;
 /** A turn that answers in words only: the session keeps no plot. */
 let wordsOnly: boolean;
 /** Set to hold the next turn's answer until the test resolves it. */
@@ -64,6 +67,7 @@ let hold: Promise<void> | null;
 
 function stubFetch() {
   feedbackBodies = [];
+  outcomes = [];
   vi.stubGlobal(
     'fetch',
     vi.fn(async (input: string, init: RequestInit = {}) => {
@@ -98,6 +102,14 @@ function stubFetch() {
       if (url.pathname.endsWith('/sessions/S1/feedback') && method === 'POST') {
         feedbackBodies.push(JSON.parse(String(init.body)));
         return feedbackAnswer();
+      }
+      if (url.pathname.endsWith('/sessions/S1/outcome') && method === 'POST') {
+        outcomes.push({
+          body: JSON.parse(String(init.body)),
+          keepalive: init.keepalive,
+          client: (init.headers as Record<string, string>)['X-Anyplot-Client'],
+        });
+        return outcomeAnswer();
       }
       if (url.pathname.endsWith('/debug/agent/status')) {
         return json(200, { libraries: ['matplotlib', 'seaborn'], enabled: true });
@@ -137,6 +149,7 @@ beforeEach(() => {
       case_id: `20261012T14300${feedbackBodies.length}Z-1a2b3c4d`,
       stored: ['plot.py', 'manifest.json'],
     });
+  outcomeAnswer = () => new Response(null, { status: 204 });
   URL.createObjectURL = vi.fn(() => 'blob:png');
   URL.revokeObjectURL = vi.fn();
   stubFetch();
@@ -180,6 +193,12 @@ describe('AgentChatPage quick feedback', () => {
     expect(feedbackBodies).toEqual([
       { reaction: 'idea', message: null, include_data: false, result_version: 0 },
     ]);
+    // The beacon: the chat is version 0, and only the reaction travels with it.
+    await waitFor(() =>
+      expect(outcomes.map(item => item.body)).toEqual([
+        { action: 'feedback', version: 0, reaction: 'idea' },
+      ])
+    );
   });
 
   it('sends feedback on a version, shows it as sent, and sends an edit', async () => {
@@ -209,6 +228,16 @@ describe('AgentChatPage quick feedback', () => {
       include_data: 'yes',
       subject: 'result',
     });
+    // The beacon carries the action, the version and the reaction; never the message.
+    await waitFor(() =>
+      expect(outcomes).toEqual([
+        {
+          body: { action: 'feedback', version: 1, reaction: 'thumbs_down' },
+          keepalive: true,
+          client: 'agent-chat/1',
+        },
+      ])
+    );
     // Once a plot exists, its card takes the feedback: the chat's own control is gone.
     expect(screen.queryByTestId('chat-feedback')).not.toBeInTheDocument();
 
@@ -247,6 +276,8 @@ describe('AgentChatPage quick feedback', () => {
       'agent_result_feedback',
       expect.anything()
     );
+    // Nothing was stored, so nothing is reported.
+    expect(outcomes).toEqual([]);
   });
 
   it('records a case stored without its row and names it in the next send', async () => {
@@ -286,5 +317,76 @@ describe('AgentChatPage quick feedback', () => {
     expect(await within(form).findByRole('alert')).toHaveTextContent(
       'the server is not ready; the case was not stored'
     );
+  });
+});
+
+describe('AgentChatPage usage beacon', () => {
+  let clicked: string[];
+
+  beforeEach(() => {
+    clicked = [];
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
+      this: HTMLAnchorElement
+    ) {
+      clicked.push(this.download);
+    });
+  });
+
+  it('reports a plot.py download as the action and the version, nothing else', async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await plotVersionOne();
+    await user.click(await screen.findByRole('button', { name: 'Download plot.py' }));
+
+    await waitFor(() => expect(outcomes).toHaveLength(1));
+    expect(clicked).toEqual(['plot.py']);
+    expect(outcomes[0]).toEqual({
+      body: { action: 'downloaded_code', version: 1 },
+      keepalive: true,
+      client: 'agent-chat/1',
+    });
+    expect(Object.keys(outcomes[0].body as object).sort()).toEqual(['action', 'version']);
+  });
+
+  it('reports a copied image', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      'ClipboardItem',
+      class {
+        constructor(readonly items: Record<string, Blob>) {}
+      }
+    );
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { write: vi.fn(async () => undefined), writeText: vi.fn() },
+      configurable: true,
+    });
+    renderPage();
+    await plotVersionOne();
+    const copy = await screen.findByRole('button', { name: 'Copy image' });
+    await waitFor(() => expect(copy).toBeEnabled());
+    await user.click(copy);
+
+    await waitFor(() =>
+      expect(outcomes.map(item => item.body)).toEqual([{ action: 'copied_image', version: 1 }])
+    );
+  });
+
+  it.each([
+    ['a 500', () => json(500, { detail: 'boom', ref: 'ref-500' })],
+    ['a 429', () => json(429, { detail: 'rate_limited' })],
+    ['a 401', () => json(401, { status: 401, message: 'admin required' })],
+    ['no network', () => Promise.reject(new TypeError('Failed to fetch'))],
+  ])('shows nothing when the beacon meets %s', async (_name, answer) => {
+    const user = userEvent.setup();
+    outcomeAnswer = answer;
+    renderPage();
+    await plotVersionOne();
+    await user.click(await screen.findByRole('button', { name: 'Download plot.py' }));
+
+    await waitFor(() => expect(outcomes).toHaveLength(1));
+    expect(clicked).toEqual(['plot.py']);
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    // The page carries on: no sign-in notice, the composer is still there.
+    expect(screen.getByLabelText('Message')).toBeInTheDocument();
   });
 });

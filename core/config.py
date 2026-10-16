@@ -305,6 +305,16 @@ class Settings(BaseSettings):
     public `gcs_bucket`. The API's runtime identity needs object create rights
     on it; the route writes nothing else."""
 
+    agent_telemetry_dataset: str | None = None
+    """`<project>.<dataset>` of the agent usage telemetry's BigQuery views
+    (`agents/telemetry/views/*.sql`, `docs/reference/agent-telemetry.md`), such as
+    `anyplot.agent_telemetry`; the card's query reads the linked log dataset of
+    the same name plus `_logs` (`anyplot.agent_telemetry_logs`). Unset or empty,
+    `GET /debug/agent-usage` answers
+    `status: not_configured` with empty numbers. The API's runtime identity
+    needs `roles/bigquery.dataViewer` on that dataset and on the linked log
+    dataset the views read, and `roles/bigquery.jobUser` on the project."""
+
     # =============================================================================
     # CORS
     # =============================================================================

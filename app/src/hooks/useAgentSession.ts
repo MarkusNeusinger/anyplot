@@ -128,6 +128,12 @@
  * `agent_plot_rendered{library, status, repaired, spec}`,
  * `agent_guardrail_block{reason}`, `agent_session_saved{include_data}` and
  * `agent_result_feedback{reaction, include_data, subject}`.
+ *
+ * Usage telemetry: after a copy, a download, a save or a sent feedback, a
+ * fire-and-forget beacon (`POST .../outcome`) tells the BFF which action it
+ * was and on which version (with the reaction for feedback), and nothing else:
+ * no text, no file or column name, no code, no data. `reportOutcome` is the
+ * result card's way in; the save and the feedback send it themselves.
  */
 
 import { useCallback, useEffect, useReducer, useRef } from 'react';
@@ -151,6 +157,7 @@ import {
   MAX_DATASET_BYTES,
   MAX_FEEDBACK_CHARS,
   MAX_MESSAGE_CHARS,
+  type OutcomeAction,
   parseAgentEvent,
   type PipelineStep,
   type PlotLanguage,
@@ -1277,6 +1284,20 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
     [token]
   );
 
+  /**
+   * The usage beacon for what the user did with a result (`copied_image`,
+   * `downloaded_code`, ...): the action and the version only, sent after the
+   * action succeeded. Fire and forget: without a session it sends nothing, and
+   * a failure never reaches the page (`agentApi.reportOutcome`).
+   */
+  const reportOutcome = useCallback(
+    (action: Exclude<OutcomeAction, 'feedback'>, number: number): void => {
+      const sid = stateRef.current.sessionId;
+      if (sid) void agentApi.reportOutcome(token, sid, { action, version: number });
+    },
+    [token]
+  );
+
   // A dropped binary file read on the server; the data card keeps its own state for it (nothing is stored).
   const convertFile = useCallback(
     async (dataBase64: string, sheet?: string): Promise<ConvertAnswer> => {
@@ -1722,6 +1743,7 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
         if (!mounted.current) return;
         downloadBlob(blob, filename);
         trackEvent('agent_session_saved', { include_data: includeData ? 'yes' : 'no' });
+        void agentApi.reportOutcome(token, sid, { action: 'saved_session', version: 0 });
       } catch (err) {
         const failure = handleFailure(err);
         throw err instanceof AgentApiError ? err : new AgentApiError(0, failure.code);
@@ -1819,6 +1841,11 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
             include_data: input.includeData ? 'yes' : 'no',
             subject: chat ? 'chat' : 'result',
           });
+          void agentApi.reportOutcome(token, sid, {
+            action: 'feedback',
+            version: number,
+            reaction: input.reaction,
+          });
         } catch (err) {
           // `502 row_missing`: the case IS in the bucket, only its triage row is
           // missing. Record it, so the next edit names it in `replaces` and the
@@ -1864,6 +1891,7 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
     switchLibrary,
     requestTheme,
     fetchArtifact,
+    reportOutcome,
     convertFile,
     saveSession,
     setLanguage,

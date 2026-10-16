@@ -7,14 +7,16 @@ from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from functools import lru_cache
-from typing import Literal
+from typing import Annotated, Literal
 
 import jwt as pyjwt
-from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
+from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from api.agent_usage import USAGE_WINDOWS, AgentUsage, UsageQuery, read_usage, usage_query
 from api.cache import clear_cache, get_cache_stats
 from api.dependencies import require_db
 from api.exceptions import raise_validation_error
@@ -507,6 +509,26 @@ async def ping(db: AsyncSession = Depends(require_db)) -> PingResponse:
         response_time_ms=round((time.time() - start) * 1000, 2),
         timestamp=datetime.now(timezone.utc).isoformat(),
     )
+
+
+def get_usage_query() -> UsageQuery | None:
+    """The BigQuery reader of the agent usage views; tests override it with a fake."""
+    return usage_query(settings.agent_telemetry_dataset)
+
+
+@router.get("/agent-usage", response_model=AgentUsage, dependencies=[Depends(require_admin)])
+async def agent_usage(
+    days: Annotated[int, Query()] = 7, query: UsageQuery | None = Depends(get_usage_query)
+) -> AgentUsage:
+    """The agent chat's usage highlights for the last 7 or 30 days, read-only from the BigQuery telemetry views.
+
+    Aggregates only (counts, two rates, the top five specs, input formats and refusal codes); `status`
+    `not_configured` while `AGENT_TELEMETRY_DATASET` is unset and `unavailable` when the query fails, both
+    with zeros (`api/agent_usage.py`, `docs/reference/agent-telemetry.md`). `days` other than 7 or 30 is a 400.
+    """
+    if days not in USAGE_WINDOWS:
+        raise_validation_error(f"days must be one of {', '.join(map(str, USAGE_WINDOWS))}")
+    return await run_in_threadpool(read_usage, query, settings.agent_telemetry_dataset, days)
 
 
 class CacheInvalidateResponse(BaseModel):

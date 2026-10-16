@@ -399,6 +399,17 @@ Built since 2026-10-12, the capture half. Every result card carries the control 
 - **Analytics.** `agent_result_feedback{reaction, include_data, subject}` with enum properties only; `subject` is `result` or `chat`.
 - **Privacy.** Phase 1 holds owner data only. Before real users can submit: consent text on the control, a legal-page entry for the case store (purpose, retention of 180 days, EU bucket), `include_data` off by default, and a delete-my-case route keyed by the case id shown to the user.
 
+## Usage telemetry
+
+Built since 2026-10-16 in the repository; the Google Cloud side is a one-time setup ([Agent usage telemetry](../reference/agent-telemetry.md)). Feedback cases answer "what went wrong in this session"; the telemetry answers "how is the chat used": which inputs arrive and which are refused, how many turns a first plot takes, how often a run needs a repair, which sessions end with a kept result, and what each step costs.
+
+- **Content-free by construction.** Owner rule of 2026-10-16: no user input, question, reply, data value, column name, file or sheet name, or cell, ever; only enums, coarse buckets, counts, durations and ids from closed sets. Each event is a strict pydantic model (`agents/anyplot/telemetry.py`), warning sentences become closed codes before they reach a line (`agents/anyplot/data/warning_codes.py`), and a canary test runs a whole session with distinctive content and fails if any of it appears in a line. Content still reaches the owner only through the explicit feedback case above.
+- **Four events, one writer.** `data_input`, `chat_turn`, `pipeline_run` and `outcome`, one wide JSON line each, all written by anyplot-agents on its own logger; the page's outcome beacon (copy, download, save, feedback) goes through the BFF to `POST /v1/sessions/{sid}/outcome`, so every line carries the same salted session hash. The per-hook attribution lines stay for debugging and keep the HMAC user id; telemetry lines never carry it.
+- **Session hash.** HMAC-SHA256 of the session id under a random per-process salt: the id is in every request URL Cloud Run logs, so a plain hash could be joined to the request log. Sessions die with the instance, so the salt lives exactly as long as they do.
+- **Storage and analysis.** A sink routes `jsonPayload.log_type="agent_telemetry"` from anyplot-agents into the log bucket `agent-telemetry` (europe-west4, 180 days, owner decision of 2026-10-16), which BigQuery reads through a linked dataset. The committed views (`agents/telemetry/views/*.sql`) deduplicate by idempotency key and add sessions with a 30-minute inactivity rule, usage, failures and cost; Looker Studio reads them, and the admin `/debug` page shows a small "agent usage" card through `GET /debug/agent-usage` (aggregates only).
+- **Harness runs.** The eval harnesses tag their lines `source: harness`; the views and the card count `live` sessions.
+- **Privacy.** Before the chat opens to the public, the legal page needs an entry for the telemetry (purpose, the fields in plain words, 180 days, EU location, no content). The chat is admin-only on 2026-10-16, so the legal page is unchanged.
+
 ## Model-version regression harness
 
 Testing a newer model version, the other provider's arm, a different judge model, or a prompt or validator change is one command locally or one workflow dispatch in CI, and the answer is a diff against the pinned baseline.
