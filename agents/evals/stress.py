@@ -158,8 +158,8 @@ def dataset_outcome(text: str) -> tuple[str, ParsedDataset | None, str | None]:
         if exc.code == "no_table" and transcribable(text):
             return "200 transcribed", None, exc.code
         return "422 unparseable", None, exc.code
-    if looks_like_free_text(parsed) and transcribable(text):
-        return "200 transcribed", parsed, None
+    if looks_like_free_text(parsed):  # free text past the transcriber's limits is refused, never stored
+        return ("200 transcribed", parsed, None) if transcribable(text) else ("422 unparseable", None, "too_large")
     return "ok", parsed, None
 
 

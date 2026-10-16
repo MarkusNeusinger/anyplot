@@ -15,6 +15,8 @@ import pytest
 from agents.anyplot.data import parse as parse_module
 from agents.anyplot.data.bindings import default_bindings
 from agents.anyplot.data.parse import (
+    HEADERLESS_LIST_WARNING,
+    LIST_COLUMN_NAME,
     MAX_COMPUTED_BYTES,
     MAX_CONTEXT_CHARS,
     MAX_INPUT_BYTES,
@@ -3221,6 +3223,81 @@ class TestRefusalsNameTheirCause:
             f"the cell in row 2 of column 'name' has {MAX_INPUT_CELL_CHARS + 5:,} characters; "
             f"at most {MAX_INPUT_CELL_CHARS} are read"
         )
+
+
+class TestHeaderlessList:
+    """A pasted list of values without a header line keeps its first value (owner rule: no silent value change)."""
+
+    def test_the_first_number_is_a_row_and_the_column_is_named(self) -> None:
+        parsed = parse_dataset("12\n15\n17\n9\n")
+
+        assert [(column.name, column.dtype) for column in parsed.profile.columns] == [(LIST_COLUMN_NAME, "integer")]
+        assert parsed.csv == "value\n12\n15\n17\n9\n"
+        assert parsed.warnings == [HEADERLESS_LIST_WARNING]
+        assert "every header looks like a value" not in " ".join(parsed.warnings)
+
+    def test_dates_and_unit_values_keep_their_first_line_too(self) -> None:
+        dates = parse_dataset("2024-01-01\n2024-02-01\n2024-03-05\n")
+        weights = parse_dataset("5 kg\n7 kg\n3 kg\n")
+
+        assert (dates.profile.columns[0].dtype, dates.profile.rows) == ("datetime", 3)
+        assert (weights.profile.columns[0].name, weights.profile.rows) == ("value (kg)", 3)
+        assert weights.csv == "value (kg)\n5\n7\n3\n" and weights.warnings[0] == HEADERLESS_LIST_WARNING
+
+    @pytest.mark.parametrize(
+        ("text", "first"),
+        [
+            pytest.param("007\n12\n15\n", "007", id="a-leading-zero"),  # the column stays text to keep the zeros
+            pytest.param("123456789012345678901234567890\n12\n15\n", "123456789012345678901234567890", id="past-int64"),
+            pytest.param("true\nfalse\ntrue\n", "true", id="booleans"),
+            pytest.param("TRUE\nFalse\ntrue\n", "TRUE", id="booleans-in-mixed-case"),
+            pytest.param("007 kg\n12 kg\n15 kg\n", "007 kg", id="a-leading-zero-with-a-unit"),
+            pytest.param("5 kg\n7 g\n3 g\n", "5 kg", id="mixed-units"),
+        ],
+    )
+    def test_a_first_value_the_column_cannot_type_is_kept_too(self, text: str, first: str) -> None:
+        """Copilot on #12202: a first value that makes the column text, or a boolean, is still no header."""
+        parsed = parse_dataset(text)
+
+        assert parsed.profile.columns[0].name == LIST_COLUMN_NAME and parsed.profile.rows == 3
+        assert parsed.preview[0][0].casefold() == first.casefold()
+        assert HEADERLESS_LIST_WARNING in parsed.warnings
+
+    @pytest.mark.parametrize(
+        "text",
+        [
+            pytest.param("Pendelzeit_min\n12\n15\n", id="a-name"),
+            pytest.param("Messung 2024\n12\n15\n", id="a-name-with-a-year"),
+            pytest.param("Q1\n12\n15\n", id="a-code"),
+        ],
+    )
+    def test_a_header_that_names_the_column_stays_the_header(self, text: str) -> None:
+        parsed = parse_dataset(text)
+
+        assert parsed.profile.columns[0].name == text.split("\n")[0] and parsed.profile.rows == 2
+        assert HEADERLESS_LIST_WARNING not in parsed.warnings
+
+    def test_a_list_of_text_keeps_its_first_line_as_the_header(self) -> None:
+        """Only typed values are read as rows: a first category may as well be a name (the transcriber's call)."""
+        parsed = parse_dataset("7 Zwerge\n3 Bären\n")
+
+        assert parsed.profile.columns[0].name == "7 Zwerge" and parsed.profile.rows == 1
+
+    def test_a_table_the_service_wrote_is_never_read_again_this_way(self) -> None:
+        parsed = parse_dataset("2024\n12\n15\n", find_table=False)
+
+        assert parsed.profile.columns[0].name == "2024" and parsed.profile.rows == 2
+
+    def test_a_list_one_value_past_the_cap_is_refused_not_cut(self) -> None:
+        """Review of #12202: read as a header, the first value would be lost; read as a row, one row too many."""
+        with pytest.raises(ParseError) as caught:
+            parse_dataset("1\n" * (MAX_ROWS + 1))
+
+        assert caught.value.code == "too_many_rows"
+        assert caught.value.message == (
+            f"the list has {MAX_ROWS + 1:,} values and no header line; at most {MAX_ROWS:,} rows are read"
+        )
+        assert parse_dataset("1\n" * MAX_ROWS).profile.rows == MAX_ROWS  # at the cap every value is a row
 
 
 XY_ROLES = [
