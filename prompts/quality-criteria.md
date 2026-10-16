@@ -270,7 +270,7 @@ The implementation must use the **Imprint categorical palette** (defined in `pro
 
 **Evaluation steps for VQ-07:**
 1. Look at `plot-light.png`: does the primary data series render in `#009E73` (unless the categories are ordered, step 3)? Does the background look like `#FAF8F1`?
-2. Look at `plot-dark.png`: are the data colors identical to light? Is the background `#1A1A17`? Is all text light-colored?
+2. Look at `plot-dark.png`: are the fixed palette colors identical to light? Theme-adaptive anchors (`neutral`, `muted`) and the steps of an ordered ramp take their dark-theme values. Is the background `#1A1A17`? Is all text light-colored?
 3. If multi-series, confirm the next colors in order match Imprint palette positions 2–N (or the semantic-exception assignment when category labels imply real-world colors). If the categories have a natural order (Likert levels, grades, sizes), confirm instead that they run through the steps of one ramp in that order and that a red or green pole sits on the matching side.
 4. If continuous: check the source code for `cmap=` / `scheme=` / `color_continuous_scale=`. Reject anything other than `imprint_seq` (single-polarity) or `imprint_div` (diverging). Common rejections: `jet`/`hsv`/`rainbow`/`viridis`/`cividis`/`BrBG`/`Reds`/`Blues`/`Greens` — all forbidden.
 5. If either render fails theme-chrome (unreadable text, wrong background), score drops accordingly.
