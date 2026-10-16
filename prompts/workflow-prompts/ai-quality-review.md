@@ -39,7 +39,7 @@ You MUST use the Read tool to open **both** `plot_images/plot-light.png` AND `pl
 
 ### 5b. Consult the Style Guide for Palette + Theme Rules
 
-Read `prompts/default-style-guide.md` — the "Categorical Palette" (Imprint palette), "Continuous Data" (`imprint_seq` / `imprint_div` only), and "Theme-adaptive Chrome" sections are the authoritative reference for VQ-07 scoring. Always refer to the palette as **Imprint** (capitalised) in review notes — never "anyplot palette".
+Read `prompts/default-style-guide.md` — the "Categorical Palette" (Imprint palette), "Continuous Data" (`imprint_seq` / `imprint_div` only), "Ordered Categories", and "Theme-adaptive Chrome" sections are the authoritative reference for VQ-07 scoring. Always refer to the palette as **Imprint** (capitalised) in review notes — never "anyplot palette".
 
 ### 5c. MANDATORY: Theme-Readability Check (both renders)
 
@@ -98,7 +98,7 @@ Visually estimate from each PNG — no pixel measurement needed. These are soft 
 - **No overflow:** No text extends beyond axis bounds, plot bounds, or the canvas frame → deduct VQ-05.
 - **Marker / line density appropriateness:** Sparse data (< 50 points) should have prominent markers; dense data (> 500 points) should have smaller markers + `alpha < 1` to combat overplotting → deduct VQ-03 when poorly chosen.
 - **Legend glyphs visible:** Look at every legend in **both** renders. Size circles, color swatches and line samples must be visible against the page and match the marks they explain (fill, outline, alpha, shape). A glyph drawn in the background color or without the marks' fill → deduct VQ-03 (+ SC-04 when the encoding becomes unreadable), and name the likely fix in the weakness (e.g. ggplot2 `guide_legend(override.aes = list(fill = ...))`).
-- **Per-mark label density:** Value labels, dots on bar ends or shadows on every bar or point that crowd the marks → deduct VQ-03 in proportion (+ VQ-02 where they overlap), per the VQ-03 rule in `quality-criteria.md`. Labels that fit their marks, or a few labelled extremes, are no deduction.
+- **Per-mark label density:** Value labels, dots on bar ends or shadows on every bar or point that crowd the marks → deduct VQ-03 in proportion (+ VQ-02 where they overlap), per the VQ-03 rule in `quality-criteria.md`. Labels that fit their marks, or a few labelled extremes, are no deduction. Labels that tell the reader nothing (a "100 %" on every bar of a 100 % stacked chart, a text that repeats exactly what an axis states) → deduct VQ-03 in proportion at any mark count.
 - **Marks at their data values:** Check the code for force/collision simulations, nudge or declutter passes, or offsets applied to data marks after the data was generated. Displacement deducts SC-03 in proportion to how far marks move relative to the axis range — never list it as a strength. Changing the generated data, the marker size or the alpha is the endorsed answer to overlap. Exempt: categorical strip/swarm jitter, layout-positioned types (networks, treemaps, word clouds), and any jitter, dodge or offset the spec's Data or Notes ask for (then it is a required feature, not displacement).
 
 **Required:** Note specific violations in `weaknesses` as defect lines (8a), with enough context for the next generation to fix them. Examples:
@@ -175,8 +175,8 @@ Score so that the reviews of the other libraries of this spec, written without s
 | VQ-03 | Element Visibility | 6 | Markers/lines adapted to density? Legend glyphs (size circles, swatches, line samples) visible in BOTH themes and matching the marks? See 5d. |
 | VQ-04 | Color Accessibility | 2 | Adequate contrast + CVD-safe (beyond palette)? No red-green as sole signal? |
 | VQ-05 | Layout & Canvas | 4 | Good proportions? Nothing cut off? Title 50–70% width, balanced axis labels, no overflow — see 5d. |
-| VQ-06 | Axis Labels & Title | 2 | Descriptive with units? |
-| VQ-07 | Palette Compliance | 2 | First categorical series = `#009E73`? Multi-series uses Imprint palette (canonical order, or semantic-exception order when category labels imply real-world colors)? Continuous data uses `imprint_seq` (single-polarity) or `imprint_div` (diverging) — no other colormaps allowed? Plot backgrounds are `#FAF8F1` (light) / `#1A1A17` (dark)? Both renders theme-correct? |
+| VQ-06 | Axis Labels & Title | 2 | Descriptive with units? Text for a reader, not a raw column identifier (`Reaktionszeit_ms` → "Reaktionszeit (ms)")? |
+| VQ-07 | Palette Compliance | 2 | First categorical series = `#009E73`? Multi-series uses Imprint palette (canonical order, or semantic-exception order when category labels imply real-world colors)? Ordered categories (Likert levels, grades, sizes) in ordered steps of one Imprint ramp, in their natural order, with a red or green pole on the matching side? Continuous data uses `imprint_seq` (single-polarity) or `imprint_div` (diverging) — no other colormaps allowed? Plot backgrounds are `#FAF8F1` (light) / `#1A1A17` (dark)? Both renders theme-correct? |
 
 #### Design Excellence (20 pts)
 | ID | Criterion | Max | Check |
@@ -195,7 +195,7 @@ Score so that the reviews of the other libraries of this spec, written without s
 | SC-01 | Plot Type | 5 | Correct chart type? On a `-basic` id: no encodings or elements the spec neither requires nor offers as optional (a Data column or a Notes bullet that allows color by category is asked for; a channel driven by a derived fourth variable is not)? Unasked additions (derived color channel, per-group fits, reference lines, highlights, callouts, annotation layers; one is enough, listed in the variant bullet or not) are the wrong variant (partial SC-01) and earn no DE-03/LM-02 credit. A related but different form (a donut for a pie) is partial SC-01 on any spec. |
 | SC-02 | Required Features | 4 | All features from spec? Check each Notes bullet and each `A good version shows:` bullet against the render, and name any missed one in the comment. (Its `Expected, not a defect:` bullets are permissions, not features.) |
 | SC-03 | Data Mapping | 3 | X/Y correct? Axes show all data? Marks sit at their data values — no force/collision layout, nudge or declutter pass moving data marks (exempt: categorical jitter, layout-positioned types, and any jitter, dodge or offset the spec's Data or Notes ask for)? A smoothed curve that swings past the values it connects (spline overshoot) shows values the data does not have — deduct in proportion. |
-| SC-04 | Title & Legend | 3 | Title is `{spec-id} · {language} · {library} · anyplot.ai`, optionally prefixed with `{Descriptive Title} · ` (language ∈ {python, r, julia, javascript}). Legend labels match? |
+| SC-04 | Title & Legend | 3 | Title is `{spec-id} · {language} · {library} · anyplot.ai`, optionally prefixed with `{Descriptive Title} · ` (language ∈ {python, r, julia, javascript}). Legend labels match? Legend title and entries text for a reader, not raw identifiers or full original headers? |
 
 #### Data Quality (15 pts)
 | ID | Criterion | Max | Check |

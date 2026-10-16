@@ -51,7 +51,7 @@ anyplot uses the **Imprint palette** — a bespoke, colorblind-safe categorical 
 
 **Hard rules:**
 - **First series is ALWAYS `#009E73`** — across every library, every plot type. A "Gentoo penguin" is the same green in matplotlib as it is in plotly.
-- Use positions 1→N in order by default. Don't cherry-pick for aesthetic reasons.
+- Use positions 1→N in order by default. Don't cherry-pick for aesthetic reasons. Ordered categories take a ramp instead (see "Ordered Categories" below).
 - All 8 categorical positions stay identical across light and dark themes so a category keeps its identity.
 - Never introduce custom hex values when the Imprint palette already covers the need.
 
@@ -91,6 +91,15 @@ Categorical palettes on continuous data produce misleading banding. anyplot ship
 - **`imprint_div` (diverging):** matte-red ↔ near-neutral ↔ blue. Use when the data has a meaningful midpoint (correlations, residuals, signed deviations, diverging heatmaps). The midpoint is theme-adaptive — use `#FAF8F1` on light bg, `#1A1A17` on dark bg. Build with `LinearSegmentedColormap.from_list("imprint_div", ["#AE3030", midpoint, "#4467A3"])`.
 
 Pick `imprint_seq` vs `imprint_div` from the data's polarity. Never substitute a matplotlib/library-native cmap "because it looks nicer" — Imprint identity is part of the brand.
+
+### Ordered Categories
+
+Categories with a natural order — Likert levels ("strongly disagree" … "strongly agree"), grades, small / medium / large, age bands — are not unrelated groups: the categorical palette would present them as such and hide their order. Color them with discrete steps of one Imprint ramp in their natural order, and keep that order in the legend:
+
+- **One direction** (low → high, small → large): steps of `imprint_seq`.
+- **A neutral midpoint** (disagree ↔ agree, worse ↔ better): steps of `imprint_div`, with a middle level in the `muted` anchor, because the ramp's page-colored midpoint would vanish against the background. When the poles mean bad and good, the semantic exception may anchor them in red and green: matte red `#AE3030` on the bad side (disagree, poor), brand green `#009E73` on the good side (agree, good) — never the other way round.
+
+Every step stays distinguishable from its neighbours and from the background in both themes.
 
 ### Color Restraint & series-count guidance
 
@@ -213,6 +222,10 @@ Output file names: `plot-light.png` / `plot-dark.png` (static libraries) plus `p
 - **Tick labels, legend text**: Regular weight, smaller but still legible
 - **Tertiary text** (annotations, source notes): Lighter weight, smallest readable size
 
+### Axis and Legend Titles
+
+Axis titles and legend titles are text for a reader, not identifiers: words separated by spaces and a unit in parentheses — "Reaktionszeit (ms)", never the column name `Reaktionszeit_ms` — in the data's language. A legend whose series came from reshaping wide columns names the level that tells them apart ("Q1", "Q2"), not each full original header ("Umsatz Q1 (CHF)"); what the series share, such as the measure and the unit, belongs in the legend title or the axis title.
+
 ### Grid Guidelines
 
 - **Prefer no grid** for simple plots with few data points
@@ -286,6 +299,8 @@ Marker and line sizes should adapt to how dense the data is — no fixed values:
 ### Per-mark Labels and Decorations
 
 Some elements are drawn once per bar or point: value labels, dots on bar ends, shadows, a text next to each point. Unlike a title, a legend or a single callout, their count grows with the data, so a choice that suits 8 bars can bury 50. Keep them only while each label fits the space of its mark (a bar label no wider than its bar's slot) and the plot stays legible, which rarely holds past about 25 marks. With more marks, drop them, or label only the extremes (the largest and the smallest value) when the plot needs numbers. Text that is the encoding itself (heatmap cell values, a word cloud, a table) follows its spec instead.
+
+A label that tells the reader nothing is clutter at any mark count: a value that is the same by construction on every mark (each bar of a 100 % stacked chart labelled "100 %") or a text that repeats exactly what an axis already states. Leave it out.
 
 ### General Rules
 - Elements should be **~2-3× larger** than the library's standard defaults.
