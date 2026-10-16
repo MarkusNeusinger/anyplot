@@ -34,6 +34,1911 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ## [Unreleased]
 
+## [3.5.0] — 2026-10-16 — Bring your own data
+
+anyplot 3.5 adds the agent network behind "Use with my data": an admin-only chat that takes a
+catalogue plot and redraws it with your own data. It runs in two steps. First the data: a
+parser reads pasted or dropped tables, JSON, JSON-stat, spreadsheets and columnar files, and
+announces every change it makes to a value. Then the plot: the adapter rewrites the catalogue
+code, the `anyplot-renderer` service runs it in a Cloud Run sandbox behind a two-profile code
+validator, and the result is reviewed with the catalogue rubric and repaired where it falls short.
+Around that core: the design document, the eval and ladder harnesses, quick feedback that
+becomes a triage case, content-free usage telemetry with a `/debug` card, a privacy section
+for the preview, and nine rounds of fixes from live tests.
+
+### Added
+
+- **Content-free usage telemetry for the agent chat.** The agents service writes four events,
+  `data_input`, `chat_turn`, `pipeline_run` and `outcome`, one wide JSON line each, on a logger of
+  their own with `log_type: "agent_telemetry"` for a Cloud Logging sink into a 180-day log bucket
+  that BigQuery reads. Every field is a closed enum, a bucket, a count or an id from a closed set
+  (strict pydantic models, parser warnings mapped to closed codes in
+  `agents/anyplot/data/warning_codes.py`), the session is a salted per-process hash, no line carries
+  the user id, and a canary test fails if a column name, cell, note, file name or message reaches a
+  line. The page reports copies, downloads, saves and feedback through a new beacon
+  (`POST /debug/agent/sessions/{sid}/outcome`), and the eval harnesses tag their lines `harness`.
+  Committed BigQuery views (`agents/telemetry/views/`) deduplicate by idempotency key and add
+  sessions with a 30-minute inactivity rule, usage, failures and cost; `docs/reference/agent-telemetry.md`
+  lists the one-time setup. (#12205)
+- **Agent usage card on `/debug`.** Sessions, plots shipped, kept and repair rates, and the top specs,
+  input formats and refusal codes of the last 7 or 30 days, read through the new admin-only
+  `GET /debug/agent-usage` (aggregates only; an empty state while `AGENT_TELEMETRY_DATASET` is unset). (#12205)
+- **JSON Lines in the agent chat's data box.** A paste or a dropped file with
+  one JSON object per line (a log export, `to_json(lines=True)`) reads as JSON
+  records, source format `json_lines`; a line that is no object is refused with
+  its line number and the JSON error. A title above the objects becomes a note,
+  and a dropped `.jsonl` file of one record is one row. Live test round 6 had
+  refused a 600-line `events.ndjson` as unreadable. (#12201)
+- **A damaged file names its broken part.** A spreadsheet, Parquet, Arrow or
+  NumPy file the converter refuses as damaged says which part is broken: the
+  zip container, the workbook, a sheet's cells, a Parquet footer or page, an
+  Arrow stream, a NumPy header or its data. The names are a closed set carried
+  from the sandbox to the page, never an exception's text (owner decision of
+  2026-10-16). (#12201)
+- **Daily, weekly and hourly buckets for `prepare_data` aggregates.** `aggregate` takes the
+  periods `hour`, `day` and `week` (ISO, each as its Monday) beside `month`, `quarter` and
+  `year`, and keeps the key a datetime, so "a daily mean per sensor" over 13-minute readings
+  keeps a time axis; the bucket follows the column's own UTC offset as stored, which the
+  change line names. A new prep eval case covers it. (#12200)
+- **A table picker for pastes with several tables.** A report sheet with two tables one below
+  the other (a title, a table, a blank row, a caption, a second table) is read as its first
+  table instead of one table with the second header as a data row; a warning names the others,
+  and the data panel offers them in a picker that parses the same text again, as the sheet
+  picker reads another sheet. (#12200)
+- **Excel, OpenDocument, Parquet, Feather, Arrow and NumPy files go into the agent chat's data box.**
+  A dropped, chosen or pasted binary file (at most 5 MB) goes to the new
+  `POST .../dataset/convert` route, which reads it in the renderer's sandbox
+  (`harness.py --convert`, the guard armed after the readers are loaded) and
+  answers the text the paste box takes; nothing is stored, and the user's
+  `.parse()` sends the text through the ordinary paste route with the file name
+  and sheet as `source`. The format comes from the first bytes: workbooks
+  through calamine, which reads stored values only (no formula, link or macro
+  runs; a formula without a saved value is empty and counted, a sheet of only
+  such formulas is refused with "open it in Excel and save it once"), Parquet
+  and Arrow through pyarrow (row groups counted first, at most 20,001 rows
+  read; slimmed in the image from 163 MB to 99 MB), NumPy with
+  `allow_pickle=False`; every zip is checked from its directory and inflated to
+  prove its declared sizes, an xlsx sheet's cell span is measured before it is
+  loaded, an encrypted workbook gets "remove the password", and pickle, joblib
+  and HDF5 are never read. Values keep their precision: timestamps every
+  fraction digit and their offset, decimals and 64-bit integers exactly, and
+  dropped columns (durations, intervals, binary) are named. A sheet comes as
+  its raw cell grid, so a title above the header stays a note; a workbook with
+  several sheets gets a sheet picker (empty sheets left out) that reads the
+  chosen one again; a table with list columns comes as JSON records, which the
+  parser expands into one row per value. Over a cap (20,000 rows, 50 columns,
+  1 MB of text) the file is refused with its numbers. Conversions have their own
+  limits (5 a minute, 30 a day per user, one at a time, 10 s) and wait behind
+  every pipeline render. (#12194)
+- **The data parser reads ISO timestamps with fractions and UTC offsets as datetimes.**
+  Up to nine fraction digits and an offset (`Z`, `+01`, `+0100`, `+01:00`) are
+  kept as written, so the plot's loader reads the column as zone-aware
+  timestamps with full precision; a column with several offsets is written in
+  UTC with a note, and `prepare_data` keeps fractions and offsets through its
+  changes. (#12194)
+- **Date column from year and month in the agent chat.** A new `prepare_data`
+  operation, `make_date`, builds a date column from whole-number columns that
+  hold the parts of a date: a year with a month and an optional day, a quarter,
+  or an ISO week. Out-of-range values and rows that are no calendar date are
+  refused, never moved. `set_type` to a date also reads `DD/MM/YYYY`,
+  `YYYYMMDD`, `YYYYMM`, `YYYY-MM`, `MM/YYYY`, `MM.YYYY` and `YYYY`. The root prompt now
+  uses these operations and no longer asks the user to add a column that an
+  operation can build. (#12193)
+- **Month names, date order and computed roles in the agent chat.** `make_date`
+  reads month names and abbreviations in eleven languages. A date column whose
+  day and month could be read either way can be switched in both directions,
+  also in a later version. A new date column fills an open required date
+  role. A role the plot computes, such as the rolling average of
+  `line-timeseries-rolling`, takes no column. (#12193)
+- **The agent chat reads tables aligned with spaces.** A weather or statistics
+  office's `.txt` (MeteoSwiss' homogenised monthly series in the live test of
+  2026-10-15) came in as one text column. Where no comma, semicolon, tab or
+  pipe finds a table, the parser now splits at runs of two or more spaces, so a
+  header such as `Max Temp` stays one name, and at single spaces only for a
+  table of numbers; prose, a headerless list (`Hund 7`), a key-value block and a
+  table with two-word names still go to the transcriber. A blank cell of a
+  fixed-width row stays in its column by position, and a row that does not line
+  up is refused rather than guessed. The metadata block above the table becomes
+  notes, and a declared mark such as `Missing values: -999` reads as missing in
+  number and date columns. (#12191)
+- **The agent chat reads JSON as data APIs answer it.** The World Bank's
+  `[{page metadata}, [records]]` was refused. Records wrapped with metadata (an
+  array beside a metadata object, or `{"data" | "results" | "records": [...]}`
+  with sibling fields) and schema-plus-rows payloads (CKAN, Socrata, Frictionless,
+  pandas `orient="split"`) now read, the metadata going to the notes; nested
+  objects become dotted columns (`country.value`) down to three levels, and
+  list fields such as a measured curve's `x` and `y` expand to one row per
+  point, with a `record_id` when nothing else tells the records apart. (#12191)
+- **Text files go into the agent chat's data box by drop, `.open()` or paste.**
+  The browser sniffs the binary formats first (a spreadsheet, Parquet, Arrow or
+  NumPy file is answered with "a later step, copy the cells or export as CSV
+  for now", pickle and HDF5 with "never"), finds the encoding (UTF-8 with or
+  without a byte order mark, Excel's UTF-16LE "Unicode text", UTF-16BE,
+  windows-1252 rather than ISO-8859-1, whose C1 range the parser refuses) and
+  fills the box with the file's text, line breaks as `\n`; the user presses
+  `.parse()`, a box with text asks before it is replaced, and a running step
+  refuses the file. The name travels as the dataset route's new `source` field,
+  never inside the text and never as a note: the agents service sanitises it,
+  screens it on its own call and keeps it as the dataset's `file_name`, which
+  the assistant reads fenced as data, a name and never a request, so a file
+  named like a wish for the plot is not acted on. Plausible gets
+  `agent_data_file{kind, encoding, outcome}`, never the name. (#12192)
+- **Agent chat: gates for crowded value labels and the plot language's
+  number format.** G11 counts the value labels, dots and shadows the
+  catalogue draws once per bar or point and writes a measured VQ-03 line
+  when more than 25 crowd a plot, or bar labels are wider than the space
+  per bar (the live case: 52 labelled, dotted, shadowed bars of 26
+  regions). G12 writes a VQ-06 line when a numeric tick label or annotation
+  uses the other decimal mark than the plot language (`5.30` and `6.0 M`
+  in a German plot). A server-side table of decimal and thousands marks and
+  large-number words per language (`de`: `5,30`, `6,5 Mio.`) goes into the
+  adapter's instruction, and the house-style exemption of the reviewer and
+  scorer no longer covers elements whose count grows with the data
+  (#12184).
+- **Agent rules and skills for non-Claude agents.** `AGENTS.md` is a symlink to
+  `CLAUDE.md` and `.agents/skills/` a symlink to `.claude/skills/`, so the
+  Antigravity CLI (`agy`), Codex, and other tools that read those paths load the
+  same rules and skills from one source instead of a third file to keep in sync.
+  A unit test fails if either link is replaced by a real file or points
+  elsewhere. (#12187)
+- **The assistant answers questions about the data without changing it.** A new
+  root tool, `query_data`, applies the same closed set of operations as
+  `prepare_data` to a copy of the data and returns at most 25 rows in at most 8
+  columns; nothing is stored, so the data version, the bindings and the
+  confirmation stay as they are. In the live test the root had filtered the
+  user's table to one year to answer "which country was highest in 2023?" and
+  then asked the user to undo it; the prompt now sends questions to
+  `query_data` and keeps `prepare_data` for changes the user asked for. (#12182)
+- **A request for the plot in another library gets a pointer, not a strike
+  toward closing.** The scope judge has a new verdict, `other_library` ("this
+  plot in Chart.js, give me the code"): a fixed answer in 11 languages says the
+  chat adapts matplotlib and seaborn and points to the plot's catalogue page,
+  which has it in up to 15 libraries. By default it never counts toward
+  closing the session (`AGENT_OTHER_LIBRARY_COUNTS`); a live test had refused
+  it as the third out-of-scope request and closed the session unwarned
+  (#12180).
+- **A warning before a chat closes.** The counted refusal one before the
+  closing one ends with a fixed sentence in the message's language ("One more
+  request outside this scope will close this chat.",
+  `AGENT_SESSION_CLOSE_WARNING`) (#12180).
+- **Paste limits.** The data panel's paste route now has its own per-user
+  limits (`AGENT_USER_PASTES_PER_MINUTE` 10, `AGENT_USER_PASTES_PER_DAY` 100;
+  only a paste that reaches the checks counts), one paste per user at a time,
+  none while the user's turn runs in any session, and none in a closed session
+  (`403 session_closed`); while a paste is in flight, the session's data routes
+  (bindings, confirm, undo, `.to_long()`, library) wait for it, so a version
+  stored from another tab is never dropped. Each paste spends dataset-judge, notes-judge and
+  maybe transcriber calls, and was bounded only by the daily token budget
+  (#12180).
+- **`derive`, a computed number column in `prepare_data`.** The assistant can
+  add a ratio, a difference, a row sum, a share of a group's total, or, in the
+  order of a number or date column, a percent change from the previous row, a
+  running total or an index (first row = 100), computed server-side in pandas from a closed set
+  of formulas (no free expressions), so it answers "which year has the largest
+  share of foreigners?" by deriving the share instead of asking you to add the
+  column. (#12179)
+- **A reply-language check for the assistant.** After each final reply, an
+  offline classifier compares the reply's language with the session language;
+  on a sure mismatch the assistant is asked once more to write the same reply in
+  the session language. (#12179)
+- **Data from your own code in "Use with my data".** You can paste or type code that
+  generates your data (Python, JavaScript, R, or a formula from a textbook). The
+  assistant translates it into Python, and its new `run_data_code` tool runs it in the
+  renderer's sandbox through a new `POST /run-data` route. The resulting table becomes a
+  new data version that you confirm, and the data panel shows the Python that ran under
+  `# code that made this data`. The validator's new DATA profile (which also counts text
+  values and repeated lists as written-out rows), an audit hook in the harness (no file
+  access, new imports, frames, native code, processes, or sockets), per-user and per-minute
+  limits, and the dataset judge on the computed table keep the sandbox to the plot's
+  data. The tool never passes the snippet's own output back to the model. A request in
+  words that needs a computation (the Lorenz attractor, a random walk) goes this way too;
+  a closed formula stays on `generate_data`. (#12172)
+- **`422 code` for code pasted into the data field.** A classifier now runs before any
+  parser or the transcriber reads a paste. It catches code such as
+  `np.linspace(0, 10, 100)`, which used to parse as a one-row table, and the page offers
+  to send it to the chat instead. (#12172)
+- **The data field reads JSON-stat datasets from statistics offices.** A
+  JSON-stat 2.0 dataset as the Swiss BFS PxWeb API, Eurostat, Statistik Austria
+  or Statistics Norway answer it (and a JSON-stat 1.x bundle of one dataset) is
+  no longer refused as `unparseable`: the parser checks its sizes, categories and
+  values strictly and flattens it into one long table, a column per dimension
+  with more than one category, named by its label and holding the category
+  labels as text, then `value`, the only typed column, in the dataset's own
+  order (source format `json_stat`). The dataset's title, source and notes and
+  its dimensions of one category become the notes pasted with the data,
+  screened like any other note before the assistant reads them, so the table
+  stays long and tidy; the status symbols, the update date, the roles and the
+  extensions are not carried. (#12173)
+- **The assistant reads the notes pasted with a table.** The lines the parser
+  leaves out above and below a pasted table (a title, an export's metadata, a
+  source line, "time is the date column, make it a line chart") are kept as
+  `context_lines`, at most 2,000 characters, instead of vanishing. The dataset
+  route runs the cells' pre-filter and then the scope judge on them; a refusal or
+  an outage drops only the notes with a warning, stores the table and costs no
+  strike. The kept notes reach the root fenced as `<user_notes>` with the
+  `summarize_data` turn and through `get_dataset_profile`, travel with every data
+  version, and show in the data panel as `# notes sent to the assistant`. The
+  root uses them as context for the whole chat and acts on a clear request in
+  them right away, the plot still waiting for the user's confirmation; the scope
+  rubric and seven new scope-eval cases cover ordinary notes and an injection
+  hidden among them. (#12168)
+- **Agent experiments on the Claude subscription.** `AGENT_TRANSPORT=claude-cli`
+  (development and test only) sends the agents' Claude calls through the local Claude Code
+  CLI instead of Vertex AI, below ADK, so an experiment runs the live code unchanged:
+  agents, prompts, plugins, pipeline, the deployed renderer and the gates. The root's chat
+  with tools stays on Vertex AI. `AGENT_ADAPTER_MODEL` and `AGENT_REVIEWER_MODEL` pick a
+  model per agent, `scripts/agents-experiment.sh` runs the harness and the rubric scorer
+  in one command, and `agents/evals/score.py --transport claude-cli` and the ladder lab
+  use the same transport (#12159).
+- **Ladder lab for the agent's repair loop.** `agents/evals/ladder_lab.py` compares, on
+  the same seed renders, how much the Opus scorer moves on one render, which rubric
+  deductions Haiku, Sonnet, Opus and today's reviewer name, and which repairer and
+  feedback form (defect lines, lines plus suggestions, a Sonnet or Opus advisor's plan)
+  lifts the score. Every model call goes through the local Claude Code CLI with the
+  agent's own prompts and schemas, and every answer through the pipeline's own edit,
+  validator, render and gate code (#12158).
+- **Agent results scored with the catalogue rubric.** `agents/evals/score.py` scores a
+  harness run's first and shipped renders on Claude Opus 5.5 with the catalogue's own
+  rubric, read verbatim from `prompts/quality-criteria.md` and the review prompt and
+  restricted to the 16 criteria a user sees (`agents/anyplot/scoring.py`,
+  `agents/anyplot/prompts/scorer.md`): the code adds up and applies the caps, and the
+  report gives the score distributions, what repair 1 gains, the runs each threshold
+  would send to an advisor, and the points lost by criterion. The harness keeps every
+  attempt's render with `--keep-attempts`. It is the measurement behind the owner's
+  quality ladder; the agent itself is unchanged (#12157).
+- **A wide table is offered in long form.** A paste such as `Sensor_A,Sensor_B,Sensor_C`
+  on a box, violin or strip plot, which wants one category and one value column,
+  gets a `# wide table` hint with `.to_long()` in the data card: the agents service
+  turns the columns into the plot's category and value columns (date columns kept)
+  without a model call, as the next data version with fresh bindings, and `.undo()`
+  takes it back. The rule is code (`agents/anyplot/data/shape.py`), and the
+  assistant's data summary names the offer (#12156).
+- **A chat that made no plot can be reported too.** Below the composer, a session
+  without a plot version offers `.feedback()` on the chat itself, the same four
+  reactions, text and `# include data.csv`. It is stored as a feedback case with
+  `result_version` 0: the conversation, the profile, the bindings and, when ticked,
+  the session's current data, but no image and no `plot.py` (`422 no_data` when the
+  data is asked for before there is any). The triage labels it `chat, no plot`,
+  shows no renders and refuses its promotion (`422 no_plot`), and `import_case`
+  refuses it. No migration: `result_version` had no constraint (#12155).
+- **Roles that cannot be negative never get a negative column by default.** A radius,
+  a size, a count, a standard deviation, a weight, and the value of a pie, donut,
+  treemap, sunburst, icicle, waffle, marimekko, sankey, rose or basic funnel need
+  values of 0 or more (`agents/anyplot/data/signs.py`): the default bindings pass
+  over a column with a negative value, and a binding of one by hand stays valid but
+  is warned about in the session block, the `set_bindings` result, the bindings
+  route's new `warnings` and under the page's dropdown. Signed plots such as
+  waterfall or diverging bars keep their signed `value`. The fixtures are the owner's
+  cases of 2026-10-12: a sine as a polar radius, and a signed `y` given to `std`
+  (#12154).
+- **A repair moves a polar plot's radial labels to a measured free direction.** The
+  render probe now describes each polar axes (the radial labels' angle and a
+  histogram of the plotted points by angle and radius), and when the labels sit on
+  the data the next repair attempt gets the measured target, such as "at 67.5° they
+  sit on 10 plotted points → ax.set_rlabel_position(270), 0 points there", instead
+  of guessing an angle. The line never starts a repair on its own (#12153).
+- **Scripts for the local agent stack and the PR loop.** `scripts/agents-dev.sh`
+  starts the agents service, ADK's development UI, the API with the agent routes and
+  the app, each against the real models and the deployed renderer, with the identity
+  token renewed every 55 minutes and the API keys read from files that are never
+  printed; `scripts/agent-cases.sh` reads the production feedback cases. The
+  `open-pr` skill bundles the watchers it asks for: the PR's checks, the Copilot
+  review rounds with their unresolved threads, and a merge's Cloud Build deploys
+  (#12151).
+- **The assistant derives a category column from your data.** The new `prepare_data`
+  operation `classify` adds a text column whose cells are labels, chosen per row by
+  the first of up to ten rules whose conditions hold: two classes ("y above 0 is
+  class 1, the rest class 2") or levels ("above 70 high, above 40 medium, else
+  low"), so a table of numbers gets a column for a text role such as a
+  feature or a category. The conditions are the ones `drop_rows` uses, compared and
+  never evaluated; labels are at most 40 characters and stay text in every later
+  version. The prep eval gains a case for each (#12148).
+- **The agent chat has one session language, shown as a chip.** A `lang: en`
+  chip in the chat header, next to the library pills, opens the site's ten most
+  used visitor languages in Plausible (en, zh, de, vi, es, fr, nl, pt, ru, it)
+  and a field for any other language in Latin letters. The first in-scope typed message sets the language
+  it is written in (`lang: de · detected`, with one quiet line in the thread),
+  a later message never changes it, and a choice from the chip or a request
+  such as "labels in English" (the root's new `set_language` tool,
+  `PUT /v1/sessions/{sid}/language` and its BFF mirror) is kept for good
+  (`chosen`). English stays the default, also for a German browser, so
+  "sin x" gets an English plot; the browser locale is only recorded with a
+  feedback case. The `done` event carries `language: {language, source}` so
+  the chip follows the chat, and the feedback bundle carries the session's
+  language and each version's. (#12145)
+- **An eval case and scope cases for the session language.** The hand-written
+  case `scatter-basic-matplotlib-german-message` has German column names and a
+  German follow-up with no word about the language, so its first plot is
+  English and its second must carry German plot text; the full matrix now has
+  123 cases. A case may name a `language`, which the harness chooses through
+  the language route before the first turn, an imported feedback case carries
+  the language its version's text was written in when the session's was
+  detected or chosen, and every run records the
+  last `done` event's language. Six in-scope scope-eval cases (`plot_language`,
+  three English, three German) guard the rubric's new line that a request for
+  the plot's own text in another language is no translation. (#12145)
+- **Fixed refusals in Chinese, Vietnamese and Russian.** Every chip language
+  now has its own hand-written refusals; the Portuguese and Polish lines were
+  revised. Without a native speaker at hand, each text passed a
+  back-translation review and a separate naturalness review. (#12145)
+- **Plot text in many scripts.** The renderer image installs Noto Sans, Noto
+  Sans CJK and the Noto Sans faces of the scripts DejaVu Sans lacks (37 files,
+  46.8 MB, Regular and Bold, with their OFL notices), and the harness appends
+  them to every font lookup after the font the code chose, so a Chinese,
+  Japanese, Korean, Arabic, Devanagari or Thai title draws with real glyphs
+  while the catalogue's DejaVu Sans stays the first font. The lookup-level
+  append is what survives seaborn's `set_theme`, which rewrites `font.family`
+  in 306 catalogue files, and a `monospace` or `serif` set on one text. The
+  image build fails when a fallback family is missing from the cache. Arabic
+  and Hebrew already rendered shaped and right to left through the pinned
+  matplotlib's libraqm; the documented limits are `$…$` math text, the Han
+  regional forms and the scripts outside the installed set. (#12144)
+- **G10, the glyph gate.** The harness records every code point matplotlib
+  reports as having no glyph in any font of its text, plain text and `$…$`
+  math alike, as `missing_glyphs` in the probe; the host turns it into a
+  VQ-01 line that names the count and up to three characters with their code
+  points, tells the repair that a user's column name stays as it is, and
+  stays in the result's residual lines even after a reviewer `ok`, because a
+  measured missing glyph is not a judgement. The CI image job renders a
+  seven-script fixture through the image and a DejaVu-only control, and
+  asserts the probe on both. (#12144)
+- **Agent cases: the triage half of quick feedback.** A new table
+  `agent_feedback` (Alembic revision `b4e7a9c2d6f1`) holds one row per feedback
+  case of the agent chat. `POST /debug/agent/sessions/{sid}/feedback` inserts it
+  right after the case's files are in the private bucket, and answers
+  `502 row_missing` with the stored case id when the files are stored but the
+  row is not, so the page names that case in its next edit. The debug page's
+  new "agent cases" section lists the cases with filters (reaction, status,
+  spec, library, model version, tag; superseded cases hidden by default), opens
+  one (its PNGs, the code with a unified diff against the catalogue original,
+  the transcript, the defect lines, the config stamp, the message), sets its
+  status and tags, and promotes it to an eval case, through
+  `GET /debug/agent/cases`, `GET /debug/agent/cases/{id}`,
+  `GET /debug/agent/cases/{id}/files/{name}` and `PATCH /debug/agent/cases/{id}`.
+  An edit's `replaces` supersedes the earlier row only for the same session
+  hash and result version. The row is the source of truth for status, tags and
+  promotion; the bucket holds the files until its lifecycle rule deletes them,
+  and the row keeps the failure-class statistics after that. (#12142)
+- **`agents.evals.sync_cases` pulls promoted cases into the harness.** On the
+  dev machine it reads the table, downloads each promoted, active case from the
+  bucket and imports it through `import_case` into the git-ignored
+  `agents/evals/.cases/`, removes the directories of retired, superseded or
+  unpromoted cases, and with `--backfill` indexes the cases that reached the
+  bucket without a row (a dry run unless `--apply`). (#12142)
+- **CI verifies every migration before merge.** The new workflow
+  `ci-migrations.yml` (check `Verify Migrations`) runs the checks of
+  `/verify-migrations` on a PostgreSQL 18 service container for every PR that
+  touches `alembic/`, `alembic.ini`, `core/database/`, `pyproject.toml` or
+  `uv.lock`: one head, `upgrade head`, `alembic check`, and a downgrade to the
+  base commit's head and back, plus a CHECK-constraint parity query that
+  `alembic check` cannot do. Until now the first database to see a new revision
+  was production, after the merge. (#12142)
+- **Quick feedback on an agent chat result stores the case for tuning.** Every
+  result card has a feedback control: thumbs up, thumbs down, bug or idea (the
+  site feedback's set), an optional text of at most 500 characters and
+  `# include data.csv`, ticked by default for admins in phase 1. `.send()`
+  never waits for a turn and never starts one; the card then shows
+  `sent · v<n>`, and an edit stores a new case that names the one it replaces
+  (`replaces` in its manifest). The BFF's new
+  `POST /debug/agent/sessions/{sid}/feedback` fetches that version's bundle from
+  the agents service, under the same admin gate, ownership and size cap as
+  `.save()`, and writes it to the private bucket `AGENT_CASES_BUCKET`
+  (`anyplot-agent-cases`) as `cases/<case_id>/`: the PNG of each rendered theme,
+  `plot.py`, `data.csv` only with the box ticked, and `manifest.json` last. The
+  manifest carries every column the planned `agent_feedback` table needs, so the
+  table can be filled from the cases later. No upload replaces an object, and a
+  failed upload answers `502 storage` and leaves no manifest, so a half-written
+  case never counts. Analytics: `agent_result_feedback{reaction, include_data}`.
+  (#12139)
+- **`agents.evals.import_case` turns a real session into an eval case.** It reads
+  a bundle that `.save()` downloaded, or a stored case directory, and writes
+  `case.json`, `data.csv` and, when the version came from a typed change,
+  `change_request.txt` into the git-ignored `agents/evals/.cases/`, which the
+  harness runs as promoted cases. It never writes into the committed fixtures,
+  because a case holds a user's data. It matches a version's request by
+  position only when the transcript's plot turns and the versions agree in
+  number, and otherwise lists the turns and asks for `--change-request` or
+  `--no-change-request`. (#12139)
+- **`.save()` downloads an agent chat session as one JSON file.** The chat
+  header's new button saves the feedback case the agents service already
+  assembles (the conversation, every version's code, plan, result and PNGs, the
+  data profile, the bindings and the config stamp), with each version's
+  `data.csv` while `# include data.csv` is ticked, the phase-1 default for
+  admins. A session can now be kept and shown to whoever tunes the assistant
+  before the stored feedback cases exist. The BFF's new
+  `GET /debug/agent/sessions/{sid}/bundle?include_data=&version=` relays the
+  agents service's bundle as an attachment (`anyplot-session-<id>.json`) behind
+  the same admin gate, ownership and error mapping as the other session routes,
+  and compresses it in a worker thread, off the event loop. A bundle over
+  32 MiB, Cloud Run's limit on a response that is not streamed, can't be saved:
+  the page shows an error line instead of a cut-off file. Analytics:
+  `agent_session_saved{include_data}`. (#12138)
+- **The assistant computes your data from a formula in step 1.** Ask for a function
+  or curve instead of a table ("zeichne sin(x) von -pi bis pi", a parabola, a
+  parametric circle, a surface `z = sin(x)*cos(y)`), and the root agent's new
+  `generate_data` tool chooses a spec, never rows: one or two variable ranges and one
+  to ten series, each an expression over them. The agents service computes the table
+  with NumPy (`agents/anyplot/data/generate.py`) through a whitelist over Python's
+  `ast` (numbers, the variables, `pi`, `e`, `tau`, `+ - * / ** % //` and a fixed set
+  of functions), never `eval`, so a forbidden construct is refused with a message that
+  names it ("'^' is not a power; write x**2") and an overflow or a logarithm of a
+  negative number becomes an empty cell, never an exception. Every row holds the
+  formula for the `x` it shows (the variables are rounded first), and the change line
+  quotes only the checked expression. The table is an ordinary dataset version: the
+  next one, which `.undo()` takes back, when the session has data, or version 1 when
+  it has none, with the default bindings for its columns; the user confirms it like a
+  paste, and the plot and its export use it unchanged. `ToolSafety` validates the spec
+  against the same model first. (#12134)
+- **Formulas pasted into the data field answer `422 formula`.** The dataset route
+  refuses text that looks like a formula before the free-text transcriber reads it,
+  because that model would compute the rows itself; the BFF passes the code on, and
+  the page can point to the chat instead. Text that holds its own values stays data
+  ("Mieten von 500 bis 900 Euro pro Quadratmeter: Berlin 12, Hamburg 14, München
+  19"), and the transcriber's rubric now says to compute nothing. The `done` event's `dataset` now carries the
+  spec's `roles` too, so a first dataset made in the chat has its binding controls. (#12134)
+- **The chat page takes a formula from either box.** Until there is data, the data box
+  and the chat both name the other source ("or ask for a curve in the chat: y = sin(x),
+  x from -pi to pi"), and the chat is open without a paste. A formula pasted into the
+  data box gets the server's `422 formula` as a line with `.send()`, not as an error:
+  the button sends the text to the chat as a turn and empties the box. The table
+  `generate_data` computes arrives like a data change, with its roles: version 1 in a
+  session without data, whose `# changed` block names the generated rows and offers no
+  `.undo()`, or the next version over data that exists, which `.undo()` takes back. (#12134)
+- **Formula cases in the evals.** The scope judge treats a request to draw a function,
+  curve or distribution shape as in scope, never `needs_data` (six new English and
+  German scope cases), and the prep eval scores `generate_data` calls on four new
+  cases (21 in all): two calls match when they compute the same table. The root's
+  step-1 rules now read a user who says how a column is meant to be read ("the dates
+  are month first") as a request for a change. (#12134)
+- **The assistant changes your data in step 1, and you can undo it.** Ask in words
+  to read a column as numbers or dates, drop a total row, sum per month, rename,
+  sort or pivot, and the root agent's new `prepare_data` tool chooses from a fixed
+  set of operations (`rename`, `drop_columns`, `drop_rows`, `set_type`, `aggregate`,
+  `sort`, `pivot_longer`, `pivot_wider`, at most five per call) that the agents
+  service applies with pandas to the stored canonical CSV (`agents/anyplot/data/prepare.py`)
+  and stores as the next dataset version (`agents/anyplot/dataset_versions.py`, the
+  last five kept). The model never writes data rows. The turn's `done` event carries
+  the new version with one change line per operation, unconfirmed, and
+  `POST .../dataset/undo` restores the previous version. `ToolSafety` validates the
+  operations against the same models first; a condition value and a rename's name
+  are the only tool arguments exempt from the link rule, because they are compared or
+  written, never followed. (#12133)
+- **The step-1 summary.** The messages action `summarize_data` asks the assistant to
+  describe the data in two to four sentences (rows, columns with types and units,
+  missing values, percentages, the proposed bindings, one question when something
+  is ambiguous) without the scope judge; the profile now carries `mean` and
+  `median` for numeric columns, and the model-facing profile JSON leaves empty
+  fields out. (#12133)
+- **The prep eval.** `python -m agents.evals.prep` drives 17 German and English data
+  requests through `/v1` in process with the real model and scores the root's
+  `prepare_data` calls by exact operation match, order-insensitive, with an 80 % gate
+  (`agents/evals/fixtures/prep/`). (#12133)
+- **The data panel shows what the assistant changed, with `.undo()`.** After every
+  parse that stores a dataset (a paste, or a transcription's `.use()`) the page asks
+  for the step-1 summary, so the assistant's description of the data is the first
+  turn in the thread, and the composer takes data requests ("read Anteil as numbers",
+  "sum per month") before the confirmation. A turn whose `done` carries a new data
+  version replaces the preview, the profile and the bindings, takes the page back to
+  step 1 and shows a `# changed` block above the preview with one line per operation
+  and `.undo()`, which restores the version before, unconfirmed and without a new
+  summary. Two enum-only analytics events count it, `agent_data_prepared{changes}`
+  and `agent_data_undo{version}`. (#12133)
+- **The mock BFF plays the data changes.** `app/scripts/agent-bff-mock.mjs` answers
+  `summarize_data` with a scripted summary, plays a `set_type`, an `aggregate` (by the
+  column the message names, such as "gruppier nach x") or a `rename` on messages that
+  ask for percentages, grouping or a rename, carries the new version in
+  `done.dataset`, and restores it through the undo route. (#12133)
+- **The data field reads units, flat objects and Python literals without a
+  model.** A column whose every cell carries the same unit (`65 %`, `15,6 h`,
+  `€ 5`, `CHF 1.200`) is read as numbers, the unit moving into the column name
+  (`Anteil (%)`) with a warning, so a pie chart's numeric role binds to a
+  percent column pasted from a spreadsheet; a column where only some cells
+  carry a unit, or two units, stays text. A JSON object of plain values and an
+  array of `[category, value]` pairs become a two-column table (`category`,
+  the keys as text, and `value`; source format `json_pairs`; a repeated key
+  keeps its last value with a warning). A Python literal, also behind an
+  assignment such as `cat_day = {...}`, with single quotes, trailing commas,
+  tuples and `True` / `False` / `None`, is read like JSON: `ast.literal_eval`
+  evaluates literals only, a name or a call is refused, and a bracket count
+  that skips quoted strings refuses more than 50 nesting levels before anything
+  is evaluated, so a 200 KB nested blob never reaches the stack. Text that
+  starts with a bare `(` and is no literal stays delimited text. (#12132)
+- **The data field reads free text as a table, and you confirm it first.** Pasted
+  text that is no table the parser can read, such as "a bar chart with dog 7, cat 3
+  and bird 4" or a list typed one value per line, is read by the judge model into a
+  table (column names, rows, a short note on anything ambiguous). The page shows that
+  table as a preview with `.use()` and `.discard()`, and nothing is stored until you
+  use it: the confirmation posts the table's CSV through the ordinary parse, pre-filter
+  and judge path. Text over 4,000 characters, JSON arrays and objects, and real tables
+  take the old path unchanged. (#12130)
+- **A thinking measurement for the agent root and adapter.**
+  `AGENT_ROOT_THINKING_BUDGET` and `AGENT_ADAPTER_THINKING_BUDGET` (0, off, by
+  default; at most 4,096), set by the eval harness with `--thinking-budget
+  ROOT,ADAPTER`, turn on Claude's adaptive thinking for that agent and add the
+  budget to its output cap, so the answer keeps its headroom. Claude Haiku 5.5
+  takes no thinking budget of its own, so the value is room, not a limit; the
+  stamp records it and the summary names the measurement. With both at 0 no
+  request changes. (#12124)
+- **The agent chat refuses requests for data it would have to fetch.** A
+  message that wants stock prices, the weather, inflation figures, exchange
+  rates, sports results, the contents of a URL or a public dataset now ends at
+  the first turn with a fixed answer, in the user's language, that no internet
+  source can be tapped and that the data must be pasted as a table. The scope
+  judge has a new verdict `needs_data`, the stream a matching `refusal` code,
+  and the chat page counts it as its own `agent_guardrail_block` reason.
+  (#12126)
+- **A scope eval measures the scope judge.** `python -m agents.evals.scope`
+  sends the 176 synthetic cases of `agents/evals/scope.evalset.json` (58 in
+  scope, four of them with personal data such as payee names, an e-mail
+  address in a byline or a payment reminder on the user's own tax plot; 53
+  off-topic; 65 adversarial: overrides, role play,
+  German, base64, multi-turn drift, plot-framed and mixed requests,
+  advertisements and calls to action in plot text, data to fetch) straight to
+  the judge, with no agent and no render, and fails below the design's gates:
+  every adversarial case refused and at most 5 % false refusals. A run costs
+  about $0.05 and takes about seven minutes, paced below the Vertex quota; a
+  `--tags` subset gates only what it measures and writes its own report. The
+  first run passed both gates: every adversarial case refused, no false
+  refusal. (#12126)
+- **`AGENT_KEEP_REFUSALS` and `AGENT_ATTACK_STRIKES`.** With the first switch
+  on, the text and verdict of each refused message stay in a bounded in-memory
+  ring per session that the feedback bundle of the `/v1` route shows while the
+  session lives, a phase-1 stub until refusals are stored with the quick
+  feedback. Three `attack` verdicts of the scope or dataset judge in a day, on
+  three different messages or datasets, give a user the budget refusal for the
+  rest of it. (#12126)
+- **Stress cases and a model-free static stage for the agent eval harness.**
+  `agents/evals/make_stress.py` writes 23 seeded cases (`stress-*`): data
+  exactly at and one past the parser's caps, 100 bars and 30 pie slices,
+  degenerate data, prompt injection in a header, row 4 and a long cell, and
+  requests that make the code compute mass data. Each case names the bound
+  that must stop it. `python -m agents.evals.matrix --cases stress --static`
+  runs every step before and around the models (parse, eligibility, bindings,
+  the loader, prompt sizes, where injected text lands, and renders of
+  hand-written stand-ins for the adapter's answer) without spending a token,
+  and exits 1 when a bound did not hold. `--cases full` leaves the stress
+  cases out, so a full run and its baseline keep their 122 cases. (#12125)
+- **The anyplot-agents image and its Cloud Build deploy.** `agents/Dockerfile`
+  builds the private `/v1` service on `python:3.13-slim` with the `agents`
+  extra and no plotting extra, because every render goes to anyplot-renderer.
+  It copies the source tree rather than a wheel, so the prompts,
+  `refusals.yaml`, the footer-strip fonts and the catalogue prompt sources sit
+  at the paths the service reads them from. It runs as uid 1000 and fails its
+  own build when one of those files is missing, the judge rubrics that the
+  service reads only on first use included.
+  `agents/cloudbuild.yaml` deploys it with the renderer's steps: a `candidate`
+  revision without traffic (the first build creates the service), a smoke on
+  the tag URL, and a promote of exactly that revision. The smoke expects
+  exactly `403` from Cloud Run IAM for an anonymous `GET /v1/status`, then
+  calls it with an ID token of the service account and checks the reported
+  provider, model, location and libraries. The deploy uses one instance, 2 vCPU
+  and 4 GiB, a concurrency of 20 and a 900 s timeout for the run queue's open
+  streams, no sandbox launcher, and `--update-env-vars` only. The provider, the
+  models and the libraries are substitutions, so a deploy switches the model
+  arm without a code change, while the budgets stay at the settings defaults.
+  The deploy refuses to run without the renderer's URL, and it always lets
+  anyplot-api's identity and the smoke's account call the service. The config's
+  header lists the owner's bootstrap steps. (#12121)
+- **A CI job that builds and smokes the agents image before merge.**
+  `ci-image.yml` builds `agents/Dockerfile` when the service, `core/`, the
+  catalogue prompts it reads or the dependency lock change. It checks that
+  `/v1/status` reports the configuration its environment sets, that the
+  production default refuses an anonymous caller with `401`, that the prompts
+  and fonts are in the image and the eval cases are not, and that the service
+  runs as uid 1000. `tests/unit/agents/test_image.py` holds the Dockerfile's
+  COPY list, its build check and the root `.dockerignore` against every file
+  the service reads, and the deploy's substitutions and variables against the
+  settings; it also runs the deploy step's script against a fake `gcloud`.
+  (#12121)
+- **`AGENT_MAX_ATTEMPTS` bounds the agent pipeline's adapter attempts.** The
+  plot pipeline makes 1 to 3 attempts, 2 by default, so the design's "at most
+  one repair round" stays what the service runs. The eval harness takes
+  `--max-attempts` and records the effective value in the report's stamp, so a
+  run can measure what a second repair round buys, or what the first attempt
+  achieves without one. Every attempt after the first needs the repair's 75 s
+  of the soft deadline and allows a full file, and feedback goes to the next
+  attempt before any review while one is left. `PlotResult.attempts` now
+  accepts 3, and the report counts a pass from any repair attempt as repaired. (#12119)
+- **A footer strip on every user plot the agents service serves.** The PNGs of
+  the artifact route and the images of the feedback bundle carry a strip below
+  the plot, "made with any.plot()" on the left and "anyplot.ai/<spec-id>" on the
+  right, in JetBrains Mono with the dot drawn as a brand-green square (the
+  owner's variant `s1c-jb-sq2` of 2026-10-10). `agents/anyplot/render/watermark.py`
+  composites it at image level after the run and scales it with the canvas, so
+  a 3200x1800 render is served as 3200x1864 and the square format as
+  2400x2448; the plot above the strip stays pixel-identical. The gates, the
+  reviewer, the render store and the exported `plot.py` keep working with the
+  raw render, so the downloaded code reproduces the plot without the strip.
+  The route composes it once per theme and caches it in the render store, a
+  cache that gives way to new renders before the store reports itself full;
+  `AGENT_WATERMARK=false` serves the raw renders, and the eval harness sets it
+  so its renders stay comparable with its baselines. JetBrains Mono 2.304 is
+  vendored unmodified under the SIL Open Font License 1.1 with a notice in
+  `agents/anyplot/render/fonts/` and loads when the service starts. The chat
+  page's result card takes the loaded PNG's own aspect instead of a fixed 16:9,
+  and the local BFF mock draws the same strip. (#12117)
+- **The "Use with my data" chat page, for admins.** `/debug/agent?spec=&library=&language=`
+  (`app/src/pages/AgentChatPage.tsx`) talks to the agent chat BFF: paste up to
+  200 KB of CSV, TSV, semicolon CSV or JSON, check the 20-row preview, the
+  parser's warnings and a column dropdown for every spec role (the server's
+  defaults preselected, a series family such as `y1, y2, ...` one dropdown per
+  member plus one for the next), then `.create_plot()` and refine in plain
+  words. A progress timeline follows the stream's `status` events, a small
+  counter in the chat's corner shows the place in the run queue, `.stop()`
+  calls the cancel route and waits for the server to end the run, the library
+  pills switch the session's library, and refusals and errors show their code
+  and request id. The page starts nothing the server would refuse while a
+  turn, a theme render, a parse or a binding change is in flight, deletes its
+  server session on a reload or a closed tab, and reloads once when an
+  expired Cloudflare Access session leaves a request without an answer. It is
+  built only with `VITE_ENABLE_AGENT_CHAT=true` (off in `app/cloudbuild.yaml`,
+  where the route answers the 404 page and the chunk is not in the bundle) and
+  opens only for local development or an admin's browser. (#12114)
+- **A result card per plot version.** `app/src/sections/agent-chat/ResultCard.tsx`
+  shows the rendered plot from its blob URL with the plot page's overlay
+  actions (copy the PNG to the clipboard, with a download where the browser
+  cannot, download it, open it full size), a light and dark switch that
+  renders the other theme through the theme toggle route without a model call,
+  the adapted `plot.py` with syntax highlighting and one-click copy, downloads
+  of `plot.py` and `data.csv` under the names the code reads, what changed,
+  the residual notes, a refine composer and a slot for the quick-feedback
+  control. Earlier versions stay in the thread, collapsed. (#12114)
+- **A `.adapt()` button on the plot page.** The fourth overlay button of the
+  implementation view opens the chat page for that spec and library with a
+  full navigation, so Cloudflare Access can intercept it. It shows only when
+  the build has the chat, the browser is in local development or carries the
+  admin hint that the debug page now sets after a successful `/debug/status`,
+  and the BFF's eligibility route accepts the pair, so a public visitor never
+  sends a request to the debug API. (#12114)
+- **Analytics for the agent chat, with enum properties only.** The pageview
+  `/debug/agent` and the events `agent_open`, `agent_data_parsed`,
+  `agent_plot_rendered` and `agent_guardrail_block`, plus `copy_code` with
+  `page: agent_chat`; none of them carries message text or data. (#12114)
+- **A local mock of the agent chat BFF.** `node app/scripts/agent-bff-mock.mjs`
+  serves the documented `/debug/agent/*` routes on the loopback interface, a
+  scripted `anyplot/1` stream (queue positions, the pipeline steps, a plot, a
+  reply) and PNGs drawn from the pasted data, plus the catalogue routes the
+  plot page needs for `scatter-basic` and `line-multi`, so the whole flow runs
+  in a browser without the API, the agents service, a model or the production
+  database. (#12114)
+- **A model-regression harness for the agent network.** `uv run --extra
+  agents python -m agents.evals.matrix` runs eval cases through the real
+  `/v1` flow in process (the same plugins, run queue, judge, pipeline and
+  gates as a user's request) with the models the flags name (`--provider`,
+  `--model`, `--judge-model`, `--location`) and the render backend
+  `--renderer` names (`remote`, `local`, or `fake` for a dry run). Per case it
+  records the status, attempts, gate failures by gate, validator rejections,
+  edit-apply failures, the reviewer's verdict, LLM calls, tokens by kind,
+  `model_version`, the cost at list price and the latencies, writes a JSON
+  report and a Markdown summary, prints a diff table against the pinned
+  model's baseline over the cases both runs hold, and exits non-zero when the
+  pass rate on those cases drops below it or a run crashes in the harness.
+  A preflight render before the first case, an outage stop (the renderer
+  unavailable, or three errors in a row) and `--gcloud-token`, which renews
+  the developer's renderer token during a long run, keep an outage from
+  turning into a matrix of failed runs or a baseline. `--budget-usd` stops a
+  run before a case that could take the estimated cost past the budget. A
+  review page samples 30 renders that passed the gates with an accept and
+  reject pair each and exports the owner's judgements as JSON, so one command
+  answers spike X and every later model or prompt comparison. (#12116)
+- **A blind two-run review gallery.** `python -m agents.evals.report blind`
+  merges two harness reports into one page that shows both runs' renders of
+  the same cases in random order without naming the run, and `report score`
+  turns the exported judgements into an acceptance rate per run, so spike X
+  picks the phase-1 model by an unbiased judgement. (#12116)
+- **A catalogue eligibility sweep.** `python -m agents.evals.eligibility`
+  normalises and scans every matplotlib and seaborn file in `plots/`, without
+  a model call, and counts the eligible, coupled and blocked pairs, the
+  blocked ones by reason (SECURITY findings by rule id, a missing `THEME`
+  block, a savefig target other than `f"plot-{THEME}.png"`, the map specs).
+  (#12116)
+- **The spike-X eval cases and the first baseline.** 120 synthetic cases: 10 specs from 10 plot
+  families, each eligible in matplotlib and seaborn, times six datasets
+  (renamed headers, values times 10, 12 rows, 5,000 rows, `DD.MM.YYYY` and ISO
+  dates, and semicolon text with decimal commas), written by the seeded,
+  rerunnable `agents/evals/make_fixtures.py`, which a unit test keeps in sync
+  with the committed files. The smoke set is 12 of them plus the two
+  hand-written cases. `agents/evals/baselines/claude-haiku-5-5.json` is the
+  first baseline: the spike-X run of 2026-10-10 on the Claude Haiku 5.5 arm,
+  where 102 of the 122 runs passed the gates (83.6 %) at $0.52 list price.
+  (#12116)
+- **The anyplot-renderer service that runs adapted plot code in Cloud Run
+  sandboxes.** `agents/renderer/` is a small FastAPI service with
+  `POST /render`, `POST /render/{job_id}/cancel` and `GET /status` behind
+  Cloud Run IAM and the same ID-token claims check as the agents service. It
+  runs every theme of a job in a sandbox of its own, one at a time, built on
+  what spikes S and S2 measured: no `--write` and no egress, an explicit
+  `PATH`, the run directories on a 512 MiB in-memory volume that the service
+  requires on Cloud Run, a host watchdog that kills a run past 64 MiB,
+  10,000 files or a 512 MiB `MemAvailable` floor and checks the directory
+  budgets once more after the code exits, a kill that counts only once the
+  launcher has exited, one retry when the launcher fails before the harness
+  starts, bounded stdout and stderr, a cleaned probe, and the rlimits 60 s
+  CPU, 50 MiB per file, 1 GiB address space and 64 processes. `job_id` and
+  the requested themes are an idempotency key: a replayed request joins the
+  render in flight or gets the stored answer, never a second run, and
+  another payload under the same key is refused with `409 job_conflict`. The last caller to leave, or a cancel,
+  stops the sandbox, an unexpected error answers a JSON `500 internal`
+  without its message, and a launcher that outlives its kill ends the
+  instance so Cloud Run starts a fresh one.
+  It only runs code; the host gates stay in the agents service. Its image
+  installs the plotting libraries without ADK, CI builds it and renders a
+  seaborn plot through the harness before merge, and
+  `agents/renderer/cloudbuild.yaml` builds it, deploys a candidate (creating
+  the service on the first build, and only when the service is not found),
+  smokes it with an anonymous call and a real render, and promotes it. (#12115)
+- **A `remote` render backend, now the default.** `AGENT_RENDERER=remote`
+  sends each render to `AGENT_RENDER_URL` with an ID token from the metadata
+  server, or in development from `AGENT_RENDER_TOKEN` or the developer's
+  Application Default Credentials, so a local `adk web` and the deployed
+  agents service render in the same sandboxes. It rides out a cold start by
+  retrying connection errors and Cloud Run front-end 429 and 5xx answers
+  after 1, 3, 8 and 15 seconds, asks the renderer to cancel a render it
+  abandons, and logs every failure it maps to a renderer error. When the
+  renderer stopped a run at a limit, the repair feedback names the limit and
+  the measured value. The in-process `sandbox` backend stays as an unused
+  stub. (#12115)
+- **A run queue in front of every agent chat turn.** The anyplot-agents
+  service now runs one pipeline run at a time (`AGENT_RUN_CONCURRENCY`, 1)
+  and starts at most one a minute (`AGENT_RUNS_PER_MINUTE`, 1, a sliding
+  window), so one 4 GiB instance never holds more than the one sandbox that
+  spikes S and S2 showed it serves safely. A turn waits at most
+  `AGENT_QUEUE_MAX_WAIT_S` (600 s) and the queue holds as many turns as that
+  wait allows (10); past that the turn gets `503 capacity`, or
+  `error{code:"capacity"}` when it waited the maximum. While it waits, the
+  stream sends `status{step:"queued", position, waiting}` and the request
+  deadline has not started; `GET /v1/status` reports `waiting` and
+  `in_flight`, and a user with a queued turn gets `409 run_active` like one
+  with a running turn. A user already over the daily token budget gets the
+  `budget` refusal at once instead of a place in the queue. A `premium` lane
+  goes before the normal one but nothing sets it yet. (#12112)
+- **Serial renders for every backend.** `AGENT_RENDER_CONCURRENCY` now
+  defaults to 1 and is enforced in one place, `SerialRenderer` in front of
+  whichever backend renders, one theme per slot, so the sandbox, local and
+  fake backends cannot run two renders at once. A freed slot goes to a
+  waiting pipeline render before a waiting theme toggle. (#12112)
+- **One theme per run, and a theme toggle that costs no tokens.** A run
+  renders and reviews only the theme the user asked for (light unless they
+  ask for a dark plot), so the host gates, the reviewer's defect lines, the
+  padded fallback, the artifacts and the exported `plot.py` run line all name
+  that one theme. `POST /debug/agent/sessions/{sid}/versions/{version}/render
+  {theme}` (and its `/v1` original) renders the other theme of a finished
+  version from its stored code and data through the render backend and the
+  host gates, with no adapter, no reviewer and no queue, and answers `ok`,
+  `needs_attention` (a padded canvas) or `failed` with the version's
+  artifacts. A toggle and a turn refuse each other in a session, a user has
+  one run or toggle in flight, a toggle waits at most 120 s for the render
+  slot, and a theme that failed the host gates is rendered at most twice. (#12112)
+- **A hard cap on one relayed chat turn.** The BFF ends a turn by
+  `AGENT_TURN_MAX_S` (590 s), below anyplot-api's 600-second request
+  timeout, so every stream still ends with `error` and `done`: a turn still
+  queued when its run could no longer finish inside the cap ends with
+  `capacity` and leaves the queue before it spends a token. (#12112)
+- **The ADK runtime core of the agent network ("Use with my data").**
+  `agents/` now runs: the root agent `anyplot` with four session tools and
+  the `plot_pipeline` NodeTool, one single-turn adapter per enabled library,
+  and a tool-less reviewer that sees both renders; a bounded pipeline (two
+  adapter attempts, one review, one repair, a soft deadline and a budget
+  check before every model call) that always ends in a `PlotResult`; the
+  ScopeGuard, Budget and ToolSafety plugins with a content-free attribution
+  log; the render layer (probe harness, R1-R3 host gates with PNG hardening
+  and a padding fallback, advisory G-gates, fake and local Docker backends;
+  the Cloud Run sandbox backend waits for its spike); and the private `/v1`
+  FastAPI service with the `anyplot/1` stream the BFF relays. The model is
+  Claude Haiku 5.5 on Vertex AI by default, with Gemini 3.8 Flash as the
+  second arm behind `AGENT_PROVIDER`, so price and quality can be compared
+  later; ADK 2.11 sends no response schema to Claude, so a structured answer
+  goes through a forced tool call. Instructions are composed from prompt
+  files plus the catalogue's style guide, library rules and repair and review
+  excerpts, read verbatim. `AGENT_DEV_FIXTURE` seeds `adk web` sessions from
+  two fixture cases in development only. Untrusted text (pasted headers, spec
+  text, model-written notes) reaches every model only inside fences, a render
+  error reaches the repair as its exception class and line but never its
+  message, a render ships only with both themes, the protected theme lines
+  survive any plan, and `ENVIRONMENT` defaults to `production` so a missing
+  variable never skips the caller check. (#12111)
+- **Deterministic code handling for "Use with my data" in `agents/anyplot/code/`.**
+  Plain Python with no ADK import that turns a catalogue implementation into
+  code the agent network can adapt and run: `regions.py` finds the THEME
+  block, the Imprint palette, the `df = load_user_data()` placeholder, the
+  savefig calls and the canvas keywords by AST; `normalise.py` removes the
+  catalogue header, empties the catalogue title string (648 of 650 files),
+  removes the `sys.path` guard family (`sys`, `__file__`,
+  `importlib`, `pathlib`, `os.chdir`) and path-wrapped savefig targets, drops
+  `bbox_inches` and rescales the dpi so that `figsize * dpi` renders exactly
+  3200x1800 or 2400x2400 (638 of 650 matplotlib and seaborn files; 10 of 10
+  rendered legacy `bbox_inches="tight"` files came out exact); `readiness.py`
+  classifies a pair as blocked (13 map specs, disabled library, SECURITY
+  findings, no THEME block, single-theme or other non-standard savefig
+  target), coupled (literal limits, data-coordinate annotations, literal
+  statistics, short palettes, fixed date locators, synthetic data, each a
+  line-naming hint for the adapter) or clean (78, 535 and 37 of the 650
+  matplotlib and seaborn files); `edits.py` applies an
+  `AdaptPlan` with exact-once matching and protected regions; `loader.py`
+  swaps the placeholder for a relative `pd.read_csv("data.csv", ...)` with
+  dtypes from the dataset profile; `export.py` adds the attribution header to
+  the downloadable `plot.py`. A catalogue sweep in the unit tests keeps the
+  normaliser idempotent and on the canvas for every reachable figure size.
+  (#12110)
+- **Two-profile AST validator for the plot pipeline.** `agents/anyplot/code/validate.py`
+  implements the SECURITY and ADAPTATION profiles of the agent-network design
+  (`docs/concepts/agent-network.md`, "Adapt and validate") with no ADK import:
+  `validate_security` checks the import surface (COMMON plus the matplotlib or
+  seaborn allowlist, every component of an import path so an alias cannot hide
+  `pandas.io`, `os` only as the THEME lookup), the banned builtins and
+  attributes, every dunder in identifiers and string literals, the pandas and
+  numpy I/O calls (also when reached as a string through `df.agg(...)`), classes
+  and async or generator statements, URL and oversize literals and the exact
+  `f"plot-{THEME}.png"` savefig target; `validate_adaptation` checks the single
+  `df = load_user_data()` placeholder, bans random data generation except a seeded
+  `default_rng` used for jitter and subsampling, caps numeric literal lists at 20
+  values and keeps the Imprint palette prefix, also against later mutation of the
+  list. Invalid code never raises: size, encoding and syntax problems, including
+  those only the compiler reports, are findings too. The tests cover every rule with a
+  failing snippet and its nearest allowed sibling, every bypass the design names,
+  and the whole catalogue corpus, which prints a per-rule summary under `-s`.
+  (#12107)
+- **Vertex AI budget guard.** A Cloud Run function in `automation/gcp/budget-guard/`
+  receives the Cloud Billing notifications of the budget `anyplot Vertex AI cap`
+  through an Eventarc Pub/Sub trigger and disables `aiplatform.googleapis.com`
+  through the Service Usage API once the month's cost reaches the budget amount.
+  It acts only on that budget's name, never enables anything, is idempotent
+  under Pub/Sub redelivery, logs one structured line per message without the raw
+  message, and has a dry-run switch for the first proof at 5 CHF. Budget
+  notifications lag the spend by hours, so it bounds the damage rather than
+  making the cap exact. Code only, not deployed: the runbook in its README and
+  `docs/reference/gcp-budget-guard.md` carry the deploy, test and recovery steps.
+  (#12109)
+- **Adaptable catalogue code design document.** `docs/concepts/adaptable-code.md`
+  describes how catalogue implementations become code that people who copy it
+  from the code tab, and the planned "Use with my data" agent, can point at
+  other data: one `# Data` block ending in a tidy `df`, domain-named column
+  constants with a role comment, a static checker plus a perturbation smoke run
+  in impl-generate, the regen gate's adapt route and adapt regression, and a
+  rollout through the normal daily regeneration. It records the owner's
+  decisions of 2026-10-09 (score-neutral first, all 15 libraries, no targeted
+  pass) so the rules PR is reviewable before anything is built. (#12108)
+- **Deterministic data handling for the agent network: parser, data roles,
+  default bindings and the dataset store.** `agents/anyplot/data/` turns pasted
+  CSV, TSV, semicolon, pipe or JSON text (at most 200 KB, 50 columns, 20,000
+  rows and 200 characters per cell; control characters refused, zero-width and
+  bidi characters stripped) into a canonical `data.csv` with comma delimiters,
+  dot decimals, ISO dates and canonical headers, plus the `DatasetProfile`, a
+  20-row preview and the dtypes the loader passes to `pd.read_csv`. Typing is
+  explicit rather than left to pandas: dates are tried before numbers, so a
+  `DD.MM.YYYY` column never reads as a thousands-dot number, and a decimal
+  comma is accepted only when the whole column has that shape. The roles
+  parser reads a spec's stored `## Data` bullets into typed roles, including
+  variadic families such as `y1, y2, ...` (all 325 catalogue specs parse),
+  default bindings match role kinds to column dtypes before name similarity,
+  `check_bindings` validates roles, columns and dtype compatibility, and an
+  in-memory, session-owned dataset store with an idle sweep and a 64 MB cap
+  keeps parsed data out of ADK state. None of it imports ADK or ships in a
+  service yet. (#12106)
+- **Agent chat BFF under `/debug/agent`, shipped dark.** `api/routers/agent.py`
+  puts the admin-only routes of the planned "Use with my data" chat in front of
+  the private anyplot-agents service: status, eligibility, sessions, dataset,
+  bindings, messages, cancel, artifacts, and delete. They sit behind the
+  existing `/debug` admin gate, a kill switch (every route answers 404 until
+  `AGENT_ENABLED` is on and both `AGENT_SERVICE_URL` and `AGENT_USER_ID_KEY`
+  are set), and a CSRF guard (`X-Anyplot-Client` header, Origin check, JSON
+  bodies). The agents service sees an HMAC user id, never an email; request
+  bodies are allowlisted; a catalogue snapshot comes from the database; and the
+  chat stream is re-framed into the `anyplot/1` SSE events, so unknown events,
+  `error_details`, and stack traces never reach the browser, and every stream
+  ends with `done`. `require_admin_identity()` now returns who passed the admin
+  gate, and `require_admin` wraps it unchanged. The deploy writes
+  `AGENT_ENABLED=false` and its smoke test expects 401 on
+  `/debug/agent/status`; the routes are documented in `docs/reference/api.md`.
+  (#12103)
+- **Shared canvas gate in `core/canvas.py`.** The canvas check that
+  `impl-review.yml` runs inline (3200×1800 or 2400×2400 within ±16 px, the
+  nearer target, the signed delta and the per-library likely cause) is now a
+  pure function, `check_canvas`, plus a PNG reader that refuses files without
+  the PNG signature and a `python -m core.canvas <png>` CLI that prints the
+  workflow's lines and exits non-zero on drift. The module also holds the PNG
+  auto-reject checks AR-04 (blank) and AR-07 (format), ported from
+  `scripts/evaluate-plot.py`. AR-04 counts the most common color instead of
+  that script's near-white and near-black thresholds: the near-white rule
+  can never flag a blank render on the light `#FAF8F1` page, and the
+  near-black rule flagged 6 of 24 sampled dark catalogue renders, while the
+  one-color rule flags none of 48. A parity test runs the workflow's own
+  script on the same PNGs and requires identical output, so the workflow can
+  switch to the module later without changing a byte of the repair feedback.
+  (#12102)
+- **Review feedback grammar in `core/defects.py`.** The defect-line and
+  suggestion-line grammar, the criterion IDs, `nothing_to_repair` and the spec
+  characteristics parser now have a canonical, stdlib-only home that the
+  planned agents service can import, plus a `format_defect` builder whose
+  lines read back through the same parser. `regen_gate.py` keeps its own copy
+  for now, because the workflows run it as a single-file copy where `core` is
+  not importable; a parity test checks both copies against the catalogue's
+  stored weaknesses and every spec. (#12102)
+- **`agents/` package skeleton with the ADK pin and the pipeline contracts.**
+  The first code of the agent network: optional extras `agents` and
+  `agents-eval` pin `google-adk==2.11.0` exactly, `AgentSettings` reads the
+  `AGENT_*` variables with the pinned Gemini model, judge model and `eu`
+  location as defaults and refuses `-latest` aliases, regional locations such
+  as `europe-west4` and the local renderer outside development, and
+  `agents/anyplot/schemas.py` holds every contract of the design's "Contracts"
+  section with its size limits, including a `Defect.as_line()` that renders
+  the regen gate's defect grammar. CI installs the extra for tests and type
+  checks `agents/`; the Docker allowlist admits `agents/` and the two prompt
+  sources the adapter reads. No agent runtime ships yet, and the API image
+  does not grow; its only change is `google-auth` 2.48.0 → 2.61.0 in the
+  shared lock, because `google-genai` 2.29 (pulled in by ADK) needs 2.56 or
+  later. (#12101)
+- **Agent network design document.** `docs/concepts/agent-network.md` describes
+  the planned "Use with my data" agent network on Google ADK 2.11 and Gemini
+  3.8 Flash through Vertex AI: the agent roster, the adapt, render and review
+  pipeline, the two-profile code validator, the Cloud Run sandbox renderer, the
+  guardrail layers, quick-feedback capture, a model-version regression harness,
+  serving on a separate Cloud Run service behind the `/debug` gate, the phased
+  roadmap with spikes and exit criteria, and the owner tasks. Design only; no
+  code ships with it, so the decisions are reviewable before anything is built.
+  (#12099)
+
+### Changed
+
+- **The privacy policy covers the data assistant preview.** The legal page now says,
+  in a part scoped to the people who use it (browsing the catalogue is unaffected),
+  what the admin-only "use with my data" chat does with what you give it: Claude models
+  through Vertex AI in the EU, in-memory sessions, the content-free and pseudonymous usage
+  telemetry (180 days), the HMAC-keyed attribution lines (30 days), the feedback cases
+  (files 180 days, the row until you ask), and a legal basis per purpose. The "the ai never
+  sees a visitor's request" line now separates browsing the catalogue from using the
+  assistant, and the processor table gains an "ai assistant" row (#12208).
+- **`.to_long()` names its new columns in the session language.** German sessions get `Wochentag`
+  and `Wert` instead of `Weekday` and `Value` (French, Spanish, Italian, Portuguese, Dutch and
+  Polish too; English otherwise). The language route and every turn's `done` return the
+  recomputed offer, so the data panel's card always names what `.to_long()` applies. (#12207)
+- **A session is kept only when the user took a result away and was content.** The `sessions` view
+  and the `/debug` card count a copy or a download after the last run without a `thumbs_down` or
+  `bug` feedback; a saved session alone is no keep (new states `rejected` and `saved`). The card
+  shows the counts behind the kept and repair rates (`5 of 12`), and the `usage` view counts a kept
+  session once, under the day, spec and library of its last shipped plot. (#12207)
+- **`.to_long()` gives the new columns meaningful names.** The names column says what the melted
+  headers are (`Weekday`, `Month`, `Year`) or `Category`, and the values column is `Value`, instead
+  of the roles' names `y` and `value`, which became the plot's text; a name an input column already
+  has gives way, so the route never fails on pandas' `melt`. The new columns stay
+  bound to the roles they were made for whatever their names, and the summary offers a rename when
+  the notes or the file name say what the values measure. (#12206)
+- **The agents service writes its attribution log to stdout**, so the content-free `pipeline_*`
+  lines reach Cloud Logging. (#12204)
+- **The adapter keeps the data's first-appearance order for categories** unless they are ordinal,
+  and the checklist reviewer can file SC-04 for legend defects. (#12204)
+- **Three plot-quality rules from the agent chat's live tests, in the shared
+  style guide and rubric.** Ordered categories (Likert levels, grades, sizes)
+  take ordered steps of one Imprint ramp in their natural order, with a red or
+  green pole only on its matching side (VQ-07); labels that tell the reader
+  nothing, such as "100 %" on every bar of a 100 % stacked chart, are clutter
+  (VQ-03); axis and legend titles are text for a reader, not raw column
+  identifiers (`Reaktionszeit_ms` → "Reaktionszeit (ms)", VQ-06), and a legend
+  after a reshape names the level ("Q1"), not the full header (SC-04). They
+  live in `prompts/default-style-guide.md` and `prompts/quality-criteria.md`,
+  which the catalogue pipeline and the agent's adapter and reviewer both read,
+  so one edit changes the rule for both; the agent prompts that used to exempt
+  every column name as written now point at the shared rule (#12203).
+- **A refused paste says what it fails on.** The agents service answers
+  `unparseable` and `too_long` with a `cause`, which the BFF passes on one
+  capped line (cut at a word, control characters removed) and the page shows
+  in place of its own text: "the header has 3 fields, but line 3 has 4; line 4
+  has 2", the line and column of a JSON or Python error counted from the
+  paste's first line, the row and length of an over-long cell, the actual row
+  count past the cap. Owner rule of 2026-10-16: people paste reasonably clean
+  data, but a refusal names its cause. (#12201)
+- **Ragged rows are listed, never repaired.** A table with values past its
+  header's last column names every ragged line with its field count, short
+  ones included; empty fields past the last column are left out with a counted
+  warning, and the warning about short rows names their lines. (#12201)
+- **Computed roles take a column when the data has one.** A role the plot can
+  compute, such as the rolling average of `line-timeseries-rolling`, the
+  Bollinger bands of `indicator-bollinger` and the fitness, fatigue and form
+  of `line-training-load-pmc`, is now optional. The default bindings bind it to
+  a column whose name clearly holds it (`SMA 20`, `BBU_20_2.0`, `Fitness (CTL)`),
+  never one a required role needs or whose name says it is something else
+  (`Upper Shadow`, `Volume SMA`), and warn when its window differs from the
+  spec's (`SMA 200`),
+  you can bind any column by hand, and the data panel shows
+  `— computed by the plot —` while it is open. The adapter learns per role
+  whether to use the bound column or compute the value from the data. (#12195)
+- **Catalogue rubric: per-mark labels must fit their marks.** The style
+  guide gains a "Per-mark Labels and Decorations" rule (value labels, dots on
+  bar ends and shadows drawn once per bar or point stay only while each fits
+  its mark, which rarely holds past about 25 marks; otherwise drop them or
+  label the extremes), and the VQ-03 rubric and the review's proportional
+  sizing check deduct crowded per-mark labels in proportion. The agent's
+  adapter now points at this one shared rule instead of carrying its own
+  copy (#12189).
+- **Copilot gets the "proper lint fixes only" rule.** The lint task line in
+  `.github/copilot-instructions.md` now says to fix the cause and never add
+  disable comments (`eslint-disable`, `noqa`, and similar) without the owner's
+  explicit approval, matching `CLAUDE.md`; the instruction tests pin the rule on
+  both sides. (#12190)
+- **Copilot instructions agree with CLAUDE.md.** `.github/copilot-instructions.md`
+  now carries the "fix small build/test blockers directly, even when out of
+  scope" rule (under ~20 lines, ask first above that) instead of telling Copilot
+  to leave pre-existing failures alone, drops the `pip` fallback in favour of
+  `uv` only (now stated in both guides), and lists new plot types as a
+  `spec-request` issue rather than a hand-written implementation. The
+  instruction tests pin both rules on both sides. (#12188)
+- **The plot of the day features standout plots and rotates without repeats.**
+  It used to be a random pick among every implementation scored 90 or more, so
+  a plain chart such as a Pygal precision-recall curve could take the front
+  page. It now draws from a featured pool (score 92 or more, no `-basic` spec,
+  falling back to every 90+ implementation when the pool is empty), walks the
+  pool's specs in an order shuffled per cycle so no spec repeats within a
+  cycle, and picks the library per day among that spec's featured
+  implementations. (#12185)
+- **The agent's adapter works to the reviewer's rubric, and fewer plots go to a repair.** The adapter's
+  instruction now holds the very rubric sections the reviewer scores with (scoring principles, anchors,
+  the 5c and 5d checks) instead of thirteen one-line criteria rows, so the first try knows what will be
+  judged. A render needs 95 % of the technical points instead of all of them to skip the repair round
+  (`AGENT_REVIEW_BAR`, owner decision pending), measured gate findings such as clipped or overlapping
+  text go to the self-review and the review before they start a repair (`AGENT_GATE_REPAIR`), and a
+  repair round is no longer proofread before its review (`AGENT_REPAIR_SELF_REVIEW`). (#12178)
+- **The G9 plotted-points limit is 500,000.** Dense user data such as 20,000 rows of 24 series no
+  longer draws a DQ-03 note; the stress cases' 610,000 and 1,000,000 computed points still do.
+  (#12178)
+- **Constant text columns of a paste move to the notes.** A pasted column with
+  the same text in every row, such as `Kanton` = `Schweiz` in a statistics
+  export, becomes a note line (`Kanton: Schweiz`), as a one-category JSON-stat
+  dimension already did, unless fewer than two columns would remain; when the
+  notes are not kept, the columns come back. (#12179)
+- **Pasted data takes up to 1 MB, computed data up to 2 MB.** The paste cap
+  rose from 200 KB to 1 MB in the parser, the agents route, the BFF and the
+  data card's counter; rows (20,000) and columns (50) keep their caps. Data the
+  assistant computes keeps full float precision under its own 2 MB cap, so a
+  10,000-step run with six columns (about 1.1 MB) fits as it is. A parse whose
+  canonical CSV passes 4 MiB, the render job's limit, is refused. (#12176)
+- **Agent chat answers at once; only sandbox work waits in the run queue.** A
+  chat turn no longer enters the run queue or the one-start-a-minute rate
+  window: a question, a refusal, `prepare_data` and `generate_data` answer
+  right away, and only a `plot_pipeline` or `run_data_code` call takes the
+  queue's slot and the turn's start, mid-turn, while the stream reports
+  `status{step:"queued"}` and the request deadline pauses, resuming with the
+  time it had left once the slot comes. A full queue now
+  ends the turn with `error{code:"capacity"}` instead of `503 capacity` before
+  the stream. To keep chat turns bounded, each user may send 10 messages a
+  minute and 200 a day (`AGENT_USER_MESSAGES_PER_MINUTE`,
+  `AGENT_USER_MESSAGES_PER_DAY`), checked before the scope judge and answered
+  with the fixed `rate_limited` or `daily_limit` refusal, and a session closes
+  at its third `out_of_scope` or `attack` refusal (`AGENT_SESSION_REFUSALS`;
+  `needs_data` never counts), answering every later turn with
+  `session_closed`. Owner decision of 2026-10-14, after a live test in which
+  plain answers waited about 60 seconds each. (#12175)
+- **The scope judge treats data-generating code as in scope.** A snippet or formula
+  whose job is to generate the plot's data is now in scope in any language. Code with
+  another purpose is out of scope, and code that touches files, the network, or the
+  system is an attack. Scope case `off-053`, a sine wave for homework, is now in scope.
+  (#12172)
+- **Pasted data sets the chat's language.** When you paste data into "Use with
+  my data" before typing anything, the session language follows the notes
+  around the table, or else the column names, with the new source `pasted`
+  (`lang: de · from data` in the chat header). The two judges that already
+  screen a paste name the language, so no model call is added; English or
+  unclear notes and headers such as `temperature_2m_max` leave the current
+  language unchanged. A typed message still replaces it,
+  and a paste never overrides a typed or chosen language. The dataset route
+  answers the session language as `language: {language, source}`. (#12171)
+- **Pasted data with notes, metadata or a total around the table parses.** The agent's
+  parser finds the table among the pasted lines by its data rows: a title, an export's
+  metadata (such as the two lines above an Open-Meteo download's header) or a sentence
+  that explains the columns above it, a source line or a note below it, and up to three
+  summary rows at the end (`Total`, `Summe`, `Mittelwert`…) are left out, each with a
+  warning in the preview. Before, the first line was always the header, so a raw
+  Open-Meteo download lost its data columns. (#12166)
+- **The agent's plot pipeline reviews with the catalogue rubric and proofreads itself.** The
+  reviewer now scores each render with the catalogue rubric (the offline scorer's twin; the
+  code decides from the points), every round is reviewed and the best-scored version ships,
+  and before each review the adapter checks its own render against the rubric's technical
+  rows, which never counts as a repair. A shipped plot at or above 95 % of the technical
+  points shows without notes. The experiment switches behind it (`AGENT_REVIEWER_MODE`,
+  `AGENT_REVIEW_BAR`, `AGENT_STATUS_BAR`, `AGENT_SHIP_BEST`, `AGENT_SELF_REVIEW`, and the
+  highlight switches) stay settings. (#12165)
+- **A complicated plot gets the time and the tokens to finish.** The adapter and the
+  reviewer think at high effort with 8,192 and 4,096 tokens of thinking room (2,048 cut 10
+  of 80 first adapter calls on Vertex) and the root at medium; the pipeline's soft deadline
+  rises from 140 s to 480 s (hard 540 s, Cloud Run timeouts 1200 s) and the per-request
+  token budget to 800k, so a repair round is no longer skipped for time. A repair whose edits do
+  not apply gets one retry in the same round, and an unreadable review is asked once more
+  instead of shipping the render unreviewed. (#12165)
+- **After the first plot, `.create_plot()` is `.start_over()`.** Next to `.send()`,
+  which changes the latest version, the button now says what it does: a new plot
+  from the catalogue plot with this data, without the earlier changes (#12156).
+- **The language example is a real language.** The chip's free-text field and the
+  tool descriptions name `Swedish` instead of `Klingon`, an example that invited a
+  language the plot text then did not use (#12156).
+- **The overlap gate G7 measures every drawn text, not only tick labels.** An axis
+  label, title, legend text or annotation that overlaps any other text by more than
+  3 px becomes an advisory VQ-02 line naming both roles and the depth, such as "the
+  radial axis label overlaps the tick label by 36 px", with a polar hint when polar
+  axes are involved. The owner's polar case had the label `y` on the `270°` tick
+  label, which the reviewer read as a missing label; the probe now catches it
+  (#12152).
+- **The plot run's progress is a grid of rounds that says how each round ended.** One
+  row per round (`first try`, `repair 1`), the same four steps lined up in the same
+  columns, and the outcome on the right: `✓ ok`, `✗ review: 3 findings`,
+  `✗ 2 measured`, `✗ code check failed`, or `~ 1 finding open` for a shipped result
+  that still needs attention. The step a round stopped at is marked. The pipeline
+  reports each round's outcome as `PlotResult.rounds` and on the `repairing` status,
+  and the result card keeps the grid under `# rounds` (#12150).
+- **A repair reads as one more round, not as every step again.** The chat's progress
+  timeline folds a finished round into one entry (`first try done`) and lists only
+  the current round's steps, instead of repeating each step with `· attempt 2`; the
+  result card says `1 repair` instead of `2 attempts` (#12149).
+- **Text in an agent plot follows the session language instead of always
+  English.** The adapter writes the title, axis titles, legend entries and
+  annotations in it, while column names and labels from the data keep their
+  spelling; a change whose base version was written in another language
+  rewrites them (`language_changed`, whose 300-character literal budget grows
+  by 1.5 times the text the plan replaces, so a long new annotation does not
+  ride along); and the reviewer judges the plot text against it under VQ-06,
+  fail-open. Code, comments and the internal change notes stay English, and
+  earlier versions keep their text. A chosen language is free text, so every
+  prompt that carries it, the root's session block included, fences it as
+  `<plot_language>`. The refusals sent before the scope judge runs follow the
+  session language instead of the browser locale. Prompts changed: `root.md`,
+  `adapter.md`, `reviewer.md` and `scope_judge.md`. (#12145)
+- **The agent chat shows when it works, and why the controls wait.** After
+  `.parse()` the card says `# parsing your data …` under the button, and every
+  turn without pipeline steps (the summary, a question, a data request) puts an
+  in-progress line in the assistant's slot of the thread, `summarizing your
+  data …` or `working on your message …`, until the reply or the first pipeline
+  step replaces it; the progress timeline shows only for a plot run, a queue
+  position or pipeline steps, so the two never say the same thing. While
+  anything is in flight the bindings block says `# bindings and .confirm() wait
+  while the assistant works …` instead of leaving the dropdowns silently
+  disabled. The lock itself stays, because the server runs one thing per
+  session. (#12143)
+- **`.create_plot()` is always in the composer once there is data.** Before the
+  confirmation it is the quiet button next to `.send()`, and a click calls
+  nothing: a notice under the composer says `# confirm the data first ·
+  .confirm() sits at the foot of the data card`, and its `.show()` scrolls to
+  the button and focuses it (to `.use()` while a table read from text waits;
+  the notice follows the card when such a table arrives or is discarded after
+  the click). Someone who scrolled to the foot no longer meets a composer that
+  hides the step. The server's `data_unconfirmed` stays the backstop. (#12143)
+- **A lost confirmation is named where it happens.** When a binding change, a
+  data request, an undo or a new paste drops a confirmation the user had given,
+  the thread gets a warning notice (`# bindings changed · confirm the data
+  again`), the card's step line repeats it next to `.confirm()`, and the pinned
+  `! confirm again` header reads as a warning, the phrase in bold on a
+  warning-tinted surface, rather than as a neutral line. The step line follows
+  the data the card shows: a later data request or undo names the changed
+  data, and a later paste, which nobody has confirmed yet, names no loss. The
+  first binding setup after a paste, where nothing was confirmed yet, says
+  nothing. (#12143)
+- **The agent chat has one composer.** The result card no longer carries its
+  own `.refine()` box under the code: it duplicated the thread's composer, which
+  already reads "ask about this plot, or ask for a change" and sends the same
+  turn, and the assistant decides either way whether the text is a change or a
+  question. The card keeps the image, the code, the downloads and the
+  quick-feedback control; follow-ups go through the one box at the foot of the
+  thread. (#12140)
+- **The agent chat is one column, and the data is its first turn.** The data card
+  (paste, preview, bindings, the `# changed` block with `.undo()`, `.confirm()`) opens
+  the thread, the assistant's summary follows it, and a correction in words updates the
+  card in place. After `.confirm()` the card collapses into a header pinned at the top
+  of the thread, `✓ data fits · N rows · M columns · version V`, whose `.show()` opens
+  the full card again without leaving step 2; any binding change, undo, data request or
+  new paste takes the page back to step 1 with the card open, and the header stays as
+  `! confirm again`, so the card is one `.show()` away from anywhere in the thread. A
+  table read from free text holds the page in step 1 until `.use()` or `.discard()`.
+  Keyboard focus follows the steps without stealing it from the composer, and a second
+  key press never stops the run the first one started. In step 2 the composer's
+  filled `.create_plot()` starts the first plot as it is, or, with a note typed first
+  ("log scale on y"), sends the note as the turn that makes it; once the library has a
+  plot, the composer refines as before. The contracts and the analytics events are
+  unchanged; the session hook keeps the confirmation while a table read from text
+  waits, so `.discard()` returns to step 2; the root prompt gains two lines: a message in step 2
+  before any plot is the first plot with that request (`plot_pipeline` with the
+  `change_request`), and numbers about the data in a reply come from the latest tool
+  result, never from an earlier turn. (#12137)
+- **Step-1 turns skip the run queue's minute rule.** A turn that starts while the
+  data is unconfirmed cannot render (the pipeline answers `not_ready`, and nothing can
+  confirm the data during a turn), so the queue gives it the slot but counts no start
+  in the sliding window: the summary after a paste, a data request and the plot that
+  follows the confirmation no longer wait a minute for each other, while whole
+  pipeline runs keep one start a minute (`agents/anyplot/run_queue.py`). (#12133)
+- **"Use with my data" runs in two steps: the data first, then the plot.** The data
+  panel ends step 1 with `.confirm()`: you check the preview and the bindings, confirm
+  that they fit, and only then does `.create_plot()` appear. The agents service enforces
+  it (`POST .../dataset/confirm`; a plot on unconfirmed data is `not_ready` with
+  `data_unconfirmed`), a new paste, a transcription's `.use()` or a binding change drops
+  the confirmation, and a library switch keeps it. A step header `1 data · 2 plot` shows
+  where you are. The design section "Two steps: data first, then the plot" in the
+  agent-network concept doc records the owner's rule and the planned data operations.
+  (#12131)
+- **The agents think by default.** Claude's adaptive thinking is on for the
+  root (`AGENT_ROOT_THINKING_BUDGET`, 1,024 tokens of extra output room) and
+  the adapter (`AGENT_ADAPTER_THINKING_BUDGET`, 2,048); 0 turns it off, and
+  Gemini ignores both budgets. The measurement of 2026-10-11 on the 122 cases
+  through the deployed renderer decided it: with both budgets every run passed
+  the gates and 51.6 % ended `ok`, with thinking off 91.0 % and 28.7 % (the
+  structured answer then misses its edit anchors in a third of the runs), for a
+  median of $0.0063 instead of $0.0038 per plot and a p50 of 31.5 s instead of
+  13.6 s. The thinking run is the new Claude baseline
+  (`agents/evals/baselines/claude-haiku-5-5.json`). A replayed root thinking block
+  whose signature no longer matches the conversation is dropped by the API instead
+  of failing the call. (#12129)
+- **The API binds the agent user-id secret.** `api/cloudbuild.yaml` adds
+  `AGENT_USER_ID_KEY` to the secrets of `anyplot-api`, so the `/debug/agent`
+  routes can derive their user ids. Together with `_AGENT_ENABLED=true` and
+  `_AGENT_SERVICE_URL` on the deploy-api trigger (set on 2026-10-11), this
+  switches the admin-only agent chat on in production (#12128).
+- **The agent network's two services are deployed.** The design doc, the
+  agents README and the docs index now say that `anyplot-renderer` and
+  `anyplot-agents` run in Cloud Run (europe-west4) since 2026-10-11, deployed
+  by the `deploy-renderer` and `deploy-agents` triggers, and that owner tasks
+  2, 8 and 14 are done except the API trigger's settings; the API side stays
+  dark until the user-id secret exists and the API trigger sets the service
+  URL and `_AGENT_ENABLED=true`. The recipes stay in the owner tasks for the
+  record. (#12127)
+- **Claude answers every structured question under a structured-output
+  format.** The adapter plan, the reviewer verdict and the judge verdict use
+  `output_config.format` with the schema made strict by the SDK's
+  `transform_schema`, instead of a forced tool call, so constrained decoding
+  guarantees the JSON shape, the types, the enums and the required fields; the
+  repairs keep mending the lengths and counts a grammar cannot enforce. Unlike
+  a forced tool call, the format lets a thinking model think first. (#12124)
+- **The agent validator admits pure computing modules.** By the owner's
+  decision, adapted code may import `warnings`, `typing`, `calendar`,
+  `decimal`, `fractions`, `zoneinfo`, `enum`, `dataclasses`, `operator`,
+  `bisect`, `heapq`, `numbers`, `cmath`, `scipy.fft`, `scipy.linalg` and
+  `scipy.constants`. Each was walked for names that read, write, fetch,
+  evaluate or set the process locale, and those stay banned, as do `io`, `sys`,
+  `pathlib`, `random`, `locale` and `string`. `calendar.main` is banned on the
+  calendar module only, so a column read as `df.main` still passes. A banned import's repair line names the module and
+  what to use instead, and the eval record counts banned imports by module. The
+  log names a module only by a word of a fixed list (the standard library, the
+  allowlists and a few known packages), and any other import as `?`, so no word
+  the model writes as an import path reaches the log. (#12124)
+- **Edits match tolerantly, never fuzzily.** After an exact match, the edit
+  applier tries the same text with the blanks before line breaks ignored, then
+  whole lines whose words agree once indentation and spaces outside string
+  literals are ignored, with the replacement re-indented; a literal's text must
+  agree exactly. The first tier with any match decides, and the
+  unique-match and protected-region checks stay. A `find` that only matches the
+  code before an earlier edit of the same plan gets its own repair line, and
+  the eval record counts the edits each tier applied. (#12124)
+- **The scope judge refuses mixed and plot-framed requests and sees the last
+  turns.** A message that also asks for anything out of scope, text meant for
+  use outside the plot (emails, posts, newsletters, summaries, translations)
+  and plot text whose purpose is an advertisement, a call to action or a
+  message to other people are out of scope, judged by intent, with twelve
+  examples in the rubric; the root's prompt says the same. The judge now also
+  gets the user's last three turns (1,500 characters at most), so a request
+  split across turns is judged as a whole, and after a refusal the refusal
+  itself as the last assistant turn. (#12126)
+- **Personal data is allowed in plots and in the chat.** A user may plot
+  their own tax return, contact list or customer table: names, postal and
+  e-mail addresses, phone numbers, web addresses and amounts may appear in
+  tick labels, titles, annotations and the conversation, and no guardrail
+  refuses them for what they are. Links stay out of what the model writes, as
+  link hygiene: a bare web address such as `jana-novak.de` passes, a link
+  such as `https://…` or `www.…` is stripped from replies and refused in a
+  change request, and a dataset cell plots whatever it holds. The root may name a
+  single value of the table but never pastes rows. The guardrails stop misuse
+  of the model (spam text, off-topic generation, advertisements, calls to
+  action, messages to other people), and the dataset judge and its pre-filter
+  look for injection only: no URL scheme refuses a dataset. The agents
+  service keeps a session's data in memory for the session's lifetime;
+  anyplot stores content only when the user submits quick feedback. That case
+  always holds the conversation, the code, the images and the dataset profile
+  with its sample rows, any of which can show personal data, and the data
+  file only when its data box is ticked. (#12126)
+- **Plot text that a change adds is bounded.** A change of a previous version
+  may add at most 300 characters of new string literals instead of 2,000, and
+  all versions together at most 2,000 against the catalogue code; dataset
+  headers and cells are free. The budget bounds how much text the model
+  writes, not what it says. (#12126)
+- **Root replies over 1,200 characters become the fixed refusal, in every
+  language.** The output guard replaces a sanitised reply longer than root.md's
+  "two to five sentences, or a short list" allows with the fixed
+  `out_of_scope` refusal before it is stored, so it never reaches the next
+  turn's context. A turn that ran the plot pipeline is the exception: its
+  reply describes a plot the user already has, so it is cut at 1,200
+  characters instead of ending in a scope refusal after the plot. The guard
+  counts characters, not sentences, and uses no word list, so it works the
+  same in every language and script. Root replies were cut at 3,000
+  characters before. (#12126)
+- **The fixed refusals speak eight languages.** The out-of-scope, data,
+  budget and text-only refusals are hand-written in English, German, French,
+  Spanish, Italian, Portuguese, Dutch and Polish, in the informal address;
+  every other language gets the English text, and no model writes or
+  translates a refusal. (#12126)
+- **The dataset judge sees what the root and the adapter see.** It now gets the
+  same five sample rows and five top values as the profile, cells in full, in
+  parts of about 4,000 characters instead of a cut-down view; a deterministic
+  pre-filter refuses a header or cell addressed to an AI anywhere in the
+  dataset before the judge runs. (#12126)
+- **The agent pipeline bounds what the stress cases showed unbounded.** The
+  adapter request carries the dataset profile trimmed to 16 KiB (47 text
+  columns of long values made it 27,907 characters); the new advisory gate
+  G9 reports plots that draw more than 200,000 points, which a
+  1,000,000-step Lorenz request reached in 2.0 s of CPU at a 479 MiB peak, far
+  under the sandbox limits (10,000,000 steps peak at 889 MiB, within a few
+  MiB of the 1 GiB address space); the render probe measures at most 2,000
+  texts and keeps the ones past a canvas edge first when it keeps only 400,
+  so G3 sees a clipped label drawn late without the probe eating into the
+  CPU limit; and a renderer limit that stopped a run is counted as
+  `R1-<reason>`. (#12125)
+- **The agent pipeline reviews a repaired render once more.** After a
+  rejected first review, the render that the repair produced used to ship
+  unreviewed (stage `not_rereviewed`, 39 of 244 runs in the rerun of spike X),
+  so a repaired run could never end `ok`. The pipeline now makes up to two
+  reviewer calls (`MAX_REVIEWS`), and the second verdict decides the shipped
+  render; the `pipeline_result` line counts the calls as `reviews`. (#12122)
+- **Output caps with ample headroom above the measured answers.** On Claude
+  Haiku 5.5 the adapter's edit-only call may now write 8,192 tokens (23 of 244
+  first calls were cut off at 2,048), a full-file repair 16,384, the reviewer
+  and the root 4,096, and the judges 256. Gemini keeps 8,192 and 12,288 for
+  the adapter, which its soft-deadline arithmetic bounds. An answer that
+  finishes costs the same under any cap, and a Claude call that uses its whole
+  cap still fits the time the deadline check reserves for it. (#12122)
+- **The agent token budgets count cost-weighted tokens.** The request,
+  user-day and global-day budgets weigh each token by its list price relative
+  to an uncached input token (cache read 0.1, cache write 1.25, output 5;
+  `BUDGET_WEIGHTS`), the judges included. With a warm prompt cache the median
+  run books about 37,000 instead of 70,000 tokens. A cold cache weighs more
+  (a reviewed run books about 78,000), so the request budget rises from
+  80,000 to 160,000, about 36 % above the costliest reviewed run simulated
+  cold with a second review (about 115,000, or 117,300 with three attempts),
+  and the user-day and global-day budgets double to 2,000,000 and 6,000,000:
+  about 54 warm runs per user, so the 40-run cap binds first, or about 26
+  when every request starts cold. A review starts
+  only while 35,000 are left for it and the root's closing reply, so a tight
+  budget skips the review instead of answering a shipped plot with the
+  usage-limit refusal, and once a plot has shipped the root's next call is
+  exempt from the budget halt, once and without tools, so it can only be the
+  closing reply. The `done` event keeps the plain count. (#12122)
+- **The Claude eval baseline is the spike-X rerun on main.**
+  `agents/evals/baselines/claude-haiku-5-5.json` now holds the 244 runs of the
+  evening of 2026-10-10 (report schema 2, the drawn-text G3 probe, 90.6 %
+  passed the gates, 23.4 % ended `ok`) instead of the first spike-X run. Of
+  the 50 G3 lines it still reports, the 48 on heatmap-basic seaborn and
+  matplotlib and scatter-basic seaborn are real clips that the catalogue
+  originals already carry; the 2 on adapted renders were not examined.
+  (#12122)
+- **The legal page names JetBrains Mono and its own licence.** The typography
+  row of the transparency section lists JetBrains Mono 2.304 under the SIL Open
+  Font License 1.1, the font that draws the attribution strip under plots
+  created from your own data, and the source-code paragraph now says that
+  bundled third-party fonts keep their own licences beside the MIT-licensed
+  code. The repository has vendored the font since the footer strip landed, so
+  "the entire codebase is publicly available under the MIT License" needed that
+  qualifier to stay true. (#12120)
+- **The eval run record says where each run stopped.** Report schema 2 of
+  `agents/evals/matrix.py` records the stage that ended each attempt and the
+  run (`adapter_truncated`, `edit_apply`, `validator`, `gates`,
+  `reviewer_defects` and so on) instead of the bare `failed (validation)`, the
+  shipped and the reviewed attempt, an attempt log with the adapter's outcome,
+  finish reason, output tokens and plan shape, every model call's finish
+  reason and tokens, and the edit-failure kinds (`zero_match`, `multi_match`,
+  `protected:*`, `drift:*`). All of it is content-free, read from the
+  pipeline's attribution lines. A schema-1 baseline still loads and diffs.
+  An unparseable file now counts as one `syntax` rejection instead of two, so
+  `validator_rejections.syntax` reads lower than in older reports. (#12118)
+- **More than eight groups have a palette rule.** The adapter keeps the Imprint
+  palette one literal list and, past eight groups, draws all but the seven
+  largest in the theme's muted ink as one "Other" group, which the reviewer
+  accepts under VQ-07. The style guide's small-multiples advice contradicted
+  the adapter's "keep the plot" rule. (#12118)
+- **The `plot` event carries its version number.** The agents service stores
+  an `ok` or `needs_attention` result as the session's next version and sends
+  that number as `version`, which the BFF now passes on; a client addresses
+  the artifact and theme toggle routes by it instead of counting plot events,
+  which showed another version's files when an event got lost. (#12114)
+- **The dataset answer lists the spec's data roles.** `POST
+  /debug/agent/sessions/{sid}/dataset` now returns `roles`, each
+  `{name, kinds, required, variadic, description}`, so a client can offer a
+  column choice for every role, and a refused binding set (`422 invalid`)
+  keeps the binding check's lines (at most 20) instead of only the code. (#12114)
+- **Content-free attribution lines for every pipeline step.** The plot
+  pipeline now logs the adapter's outcome, edit-apply failures, blocking
+  validator rules, the gate ids that failed or reported with the render time,
+  the reviewer's verdict and defect ids, and the run's result with the
+  exception class of a run that ended in an error; the model line carries the
+  token counts by kind, and the judges report input and output tokens
+  separately. The harness prices and counts from these lines, and none of
+  them carries code, data or model text. (#12116)
+- **The eval harness stays out of the container images.** `.dockerignore`
+  excludes `agents/evals/` (about 3 MB of fixture cases, local reports, and
+  promoted cases that hold users' data) from the root build context. (#12116)
+- **The probe harness reports its own start and end.** It prints a
+  `HARNESS` start line before anything else and a closing line with its peak
+  memory and CPU time, sets every limit soft and hard alike, takes optional
+  address-space and process limits, and copies the image's baked matplotlib
+  font cache into the sandbox before matplotlib loads. (#12115)
+- **The caller check reads the header Cloud Run verified.** The agents
+  service and the renderer read `X-Serverless-Authorization` whenever a
+  request carries it, because Cloud Run then checks only that header and
+  passes `Authorization` through unverified. (#12115)
+- **A chat turn may wait the full queue maximum.** anyplot-api's Cloud Run
+  request timeout rises from 600 to 900 seconds and the BFF's turn cap
+  `AGENT_TURN_MAX_S` from 590 to 890 seconds. The old cap already ended a
+  turn cleanly, but only after about 385 seconds of waiting; now a turn at
+  the back of a full run queue (600 seconds of waiting plus the 180-second
+  run) reaches its run instead of ending with `capacity`. The design
+  document records the owner's decisions of 2026-10-10: the queue's capacity
+  formula stays, and one run or theme toggle in flight per user stays. (#12113)
+
+### Removed
+
+- **The unused `agents-eval` extra.** It installed `google-adk[eval]`, whose
+  eval stack brought litellm and nltk into `uv.lock` (29 packages in all),
+  and with them two Dependabot alerts: litellm's SSRF (no fixed version
+  reachable on Python 3.13, because google-cloud-aiplatform caps it below
+  1.86) and nltk's path check (no fixed version at all). No workflow, image
+  or script used the extra: the evals under `agents/evals/` run on the
+  `agents` extra. (#12146)
+
+### Fixed
+
+- **A repair that only changes the protected theme statements still renders.** When an adapter
+  answer fails its check only because it changed the `THEME` assignment, a theme token or the final
+  savefig, and the round's check retry fails the same way, the pipeline puts the original
+  statements back (`edits.restore_protected`) and checks, renders and reviews the rest of the
+  repair, instead of ending the round and shipping the earlier render. A theme name bound a second
+  time is never restored. `pipeline_check` logs the outcome `drift_restored`, and the
+  `pipeline_run` telemetry line and the `pipeline_runs` view gain a `drift_restored` flag. (#12209)
+- **A plot request made before the confirmation reaches the first plot.** A title asked for before
+  `.confirm()`, or a plot wish in the pasted notes, is kept by the new `keep_plot_request` tool
+  without a run, and the next `.create_plot()` draws it. The tool, and a `plot_pipeline` call that
+  stopped on unconfirmed data, answer `request_kept`, so the assistant only says a request is kept
+  when the server kept it. (#12207)
+- **The progress grid shows the repair round.** Rounds are named `first try`, `second try`, and a
+  running repair round says what it repairs in words (`repairing text size, layout`, from the
+  rubric ids the round before passed on). The result card names the round that shipped when an
+  earlier one won (`first try shipped of 2`). (#12207)
+- **Review fixes for `.to_long()` and the readiness scan.** `.to_long()` keeps the user's bindings
+  on the columns it keeps; weekday headers must all come from one language (Portuguese and Dutch
+  names added, and two-letter codes such as `FR, SA, SO` need five distinct days); a line with
+  several color-scale literals names all of them once; `center` counts only on seaborn's heatmap
+  and clustermap and `levels` only on contours; and the dataset judge reads at most five full
+  values per 40-character display copy and 8,000 characters per column. (#12207)
+- **The assistant sees every category of a short column.** The dataset profile now lists every value
+  of a text column with at most 12 distinct ones (else its five most frequent), so a six-source
+  energy mix no longer hides its sixth source, `Übrige`, which the reply had called a row the plot
+  added. The dataset judge reads the same values, and a profile over its size cap first drops the
+  values past the five most frequent. (#12206)
+- **Adapted heatmaps derive their color scale from the data.** The readiness scan now names literal
+  color-scale limits, centers and colorbar ticks (`vmin=0, vmax=100, center=50`) and a colorbar at
+  literal figure coordinates (`cbar_pos`) as hints for the adapter, so a heatmap of values from 32 to
+  93 no longer keeps a 0 to 100 scale and a stray top-left colorbar. (#12206)
+- **A wide heatmap matrix is offered in long form instead of plotting nonsense.** A paste such as
+  `Stunde;Mo;...;So` on a heatmap or a grouped chart now gets the `.to_long()` offer (row labels
+  kept, also a date or hour column; never for flows, hierarchies or color roles), and no role that
+  wants labels is bound to one of the side-by-side number columns by default; bound so by hand, the
+  data panel and the session block warn and point to `.to_long()`. (#12204)
+- **A visible defect the review names gets the repair round.** A review that names clipped text
+  (AR-09), unreadable text (VQ-01), overlap (VQ-02) or a cut or crammed layout (VQ-05) sends the
+  round to the repair even when its points pass the review bar, and a render that still shows one
+  is not clean for ship-best and ships with it as a note. (#12204)
+- **Replies no longer claim data changes the plot never made.** A shipped plot result tells the
+  assistant `data_changed: false`, and the prompts keep data-change claims to the data tools'
+  change lines. (#12204)
+- **Months are dates at the paste.** A column of `2025-01` is read as the first day of each month,
+  with a warning that names the reading; seasons, bins, quarters and code columns stay text, and a
+  label role still takes the months. (#12204)
+- **The repair-exhaustion comment of `impl-review` no longer shares a fixed `/tmp` path**, which made
+  its test race under parallel runs; it is written under `$RUNNER_TEMP`. (#12204)
+- **A pasted or dropped list of numbers is a table, not free text for the model.** One
+  column of integers, numbers, dates or booleans (live round 7: a header and 800 commute
+  times, the input of a histogram) went to the transcriber, which timed out every time
+  and showed "unavailable right now"; it is now stored like any table, as are digit codes
+  such as postal codes and a column of repeating categories under a header (with a short
+  note naming the line read as the column name when that line looks like a category). A list without a header line
+  keeps its first value as the first row, in a column named `value`, with a warning. The
+  transcriber takes at most 200 lines besides its 4,000 characters, and free text past
+  them is refused with that limit as its cause instead of being stored as it parsed. A
+  reading cut off at its cap, or out of time on a text near those limits, is
+  `422 unparseable` with a cause that names the text's lines and characters and asks for
+  a separator; a short text that times out, an error or a quota stays
+  `503 guard_unavailable`. (#12202)
+- **The reply after a plot no longer asks to confirm confirmed data.** A
+  shipped plot's tool result tells the root `data_confirmed: true`, and its
+  prompt says that only the current session block decides whether the data is
+  confirmed, so an earlier turn's "please confirm" is not repeated (live test
+  round 6, R6-1). (#12201)
+- **R and pandas row names no longer become the default x.** A first column in a tool's exact
+  row-name shape (R's empty header or readr's `...1` over `1` to `n`, pandas' `Unnamed: 0` over
+  `0` to `n - 1`) leaves the table with a warning that counts its cells; other row-number
+  columns such as R's `X` stay but take no default binding while another column fits. (#12200)
+- **Missing-value tokens are announced in every column.** `NA`, `-` or `n/a` read as missing in
+  a number or date column now gets the same per-column count as in a text column. (#12200)
+- **Whole numbers are written without `.0`.** `87000` beside `120500.5` stays `87000` in the
+  preview and in `data.csv` (it showed as `87000.0`), and `prepare_data` writes every whole
+  number it moves or computes the same way; a rounded value keeps its note. (#12200)
+- **The agent chat's root no longer takes its session block for a forged
+  instruction.** ADK 2.11 sent the root's per-turn session block (spec, language,
+  dataset and binding status) inside the user's own turn, between
+  `<<<BEGIN_SYSTEM_INSTRUCTION>>>` markers. Claude Haiku 5.5 read that as user text
+  posing as a system instruction: its thinking said so in 7 of 8 prep-eval turns,
+  and one reply told the user that the markers "in your message" changed nothing.
+  The root's `before_model_callback` now appends the block to the system
+  instruction as a second part after the static policy, and Claude gets each part
+  as a system block of its own with the cache breakpoint on the policy, so a block
+  that changes leaves the policy cached. In the full prep eval afterwards, no turn of
+  50 flagged it, in thinking or reply, 47 of 50 matched (the gate is 80 %), and the
+  run cost $0.098, against $0.131 to $0.142 for the two runs before. The prep eval
+  now scores a reply that talks about the root's own instructions as a miss
+  (`instruction_talk`). (#12199)
+- **The prep eval measures the root, not the fake renderer.** Under the default
+  `AGENT_RENDERER=fake`, every `run_data_code` call got the fake's fixed
+  four-row table back. The root rightly distrusted a 500-step walk that came
+  back as four squares and ran its code again, so 9 of the 11 data-code cases
+  missed for the fake alone. The eval's data runs now execute the snippet with
+  the real harness in data mode and the renderer's limits
+  (`agents/evals/host_data.py`). The outcome is read by the same reader as the
+  local renderer's. Every data-code case compares the size of the table it
+  stored again. (#12198)
+- **Two stale prep fixtures.** Since the parser leaves out a summary row at the
+  end of a paste, two cases still expected the root to drop that row. The
+  English total-row case now has its total at the top, where the parser keeps
+  it. The German chain case expects no second drop. A fixture test now refuses
+  an expected `drop_rows` that drops nothing. (#12198)
+- **Count requests and filters by place stay in step 1.** The scope judge
+  refused "only the orders from Bern that were delivered" as data to fetch, and
+  read pasted JavaScript data code as a request for another library. The root
+  answered "count the bookings per category" as a question instead of
+  aggregating. Both prompts now name these cases, and the scope eval has six
+  new cases, two of them filters on an outside source that stay `needs_data`.
+  (#12198)
+- **Local data runs get the renderer's CPU cap.** The renderer clamps a run's
+  CPU seconds to its timeout, 20 s for a data run. The local backend gave data
+  runs the render's 60 s. Both now use one helper (`wire.run_cpu_seconds`). An
+  oversized `out.csv` also reports its size and cap, as the renderer does.
+  (#12198)
+- **Measurement curves bind their time to x, never a per-curve value.** Three
+  curves pasted as JSON records with list fields put `temperatur_c` (one value
+  per curve) on x of a line chart. The profile now names the columns that came
+  from the lists (`list_columns`); on a spec with an x axis the other number
+  columns of such a table (one value per record) rank like weak measures, a
+  parameter before a record number, and x prefers a list column named like an
+  independent variable (`zeit_s`, `Frequency (Hz)`). A pasted table binds as
+  before, and a bar chart may still show the per-curve value. (#12197)
+- **One register per language in the chat.** A German summary said "Aus Ihren
+  Notizen" where every other text said "du". The root now keeps the informal
+  address the fixed refusals use (du, tu, tú, je), and a unit test checks the
+  fixed texts for the formal words of German, French, Spanish and Dutch. (#12197)
+- **The data line never nests quotes.** A converted workbook's source reads
+  `Museen_2025.xlsx · sheet ‹Übersicht›`, so the data panel shows
+  `from "Museen_2025.xlsx · sheet ‹Übersicht›"` instead of quotes inside quotes. (#12197)
+- **Month names state their whole range.** A summary called Jan to Jun "Jan bis
+  Mai" because the profile lists only five top values. The profile now carries
+  the months of a text column of month names (`months`), the root names the
+  range from it, and `sort` orders such a column by the calendar instead of the
+  alphabet. (#12197)
+- **Pasted data keeps every digit, or a warning says what changed.** Owner rule of
+  2026-10-15: precision is never lost silently. The exported `plot.py` and the render
+  read `data.csv` with `float_precision="round_trip"` (pandas' default reader had
+  misread about one in four 17-digit numbers); a number with more digits than a float
+  holds, from CSV, JSON or a Python literal, is stored rounded with a warning that
+  counts the cells; whole numbers past the 64-bit range stay text; one warning counts
+  the numbers whose spelling went (`1.50` as `1.5`, `1e3` as `1000.0`); a text cell
+  that lost surrounding spaces or became missing (`None`, `-`), and NFC composition, are
+  counted in warnings, and so are JSON's `NaN` and `Infinity`; nanosecond times beside a
+  date outside 1677 to 2262 stay text with a warning instead of turning text in the
+  loader; the profile's integer `min` and `max` are exact; the data panel's preview
+  shows line breaks as `↵`, tabs as `→` and space runs as `·` instead of folding them
+  (#12196).
+- **Data operations no longer round or wrap numbers without a word.** `set_type number`
+  reads whole numbers exactly; an `aggregate` sum of whole numbers no longer wraps
+  around past 2^63; `cumsum`, row sums and differences stay whole; `pivot_longer`
+  counts the whole numbers its shared column rounds, and no change line can lose its
+  count to the length cap. Date-times keep their fraction of a second and their UTC
+  offset, a year-first time such as `2024-06-01T13:00:00Z` is no longer read as
+  6 January, and `set_type datetime` on different UTC offsets reads them in UTC with a
+  change line naming the offsets instead of crashing the operation. Conditions on a
+  column with a UTC offset compare moments instead of crashing the tool, and conditions
+  on whole numbers compare exactly (#12196).
+- **Default bindings skip non-measures and codes.** A number role that holds
+  measures no longer takes a constant column, a year, or a month, quarter or
+  week number when another column fits. An optional measure role stays empty
+  instead. A series or category role prefers a name column such as `Austria`
+  over a code column such as `AT` when their names are related. An `x` axis
+  keeps a month, rank or year column. Compact date formats take exactly their
+  digits, and years outside 1677 to 2262 no longer crash `set_type`. (#12193)
+- **The assistant names only controls the chat page has.** Asked to read only
+  the table of a paste, it told the user to choose "a separator that recognises
+  spaces", a setting that does not exist. Its prompt now lists every control of
+  the page and says to suggest re-pasting only the table when its tools cannot
+  fix the data; a unit test checks each named control against the page's code.
+  (#12191)
+- **The dataset pre-filter reads constant columns too.** A constant text column
+  moved to the notes returned to the stored table when the notes were dropped,
+  without the instruction pre-filter having read it. (#12191)
+- **A kept plot note keeps its requested texts.** When a first plot stops
+  before the confirmation, the texts and number formats the user asked to see
+  (`expected_texts`) are now kept with the note, so the next bare
+  `.create_plot()` checks the render for the same title or format; a run that
+  brings its own request or texts checks only its own, so a withdrawn title is
+  never reported missing. The note follows one lifecycle: kept until a plot
+  ships, kept through a binding change that only fills roles that were still
+  open, dropped by any other change to the bindings, the data or the library.
+  (#12186)
+- **Empty columns leave a pasted table.** A column with a header but no value
+  in any row (an ECB export carried 14) is dropped with one warning that names
+  them, before the 50-column check, for JSON records and column lists too. (#12182)
+- **Grouped thousands read as numbers.** `7.184.003`, `1,234,567`, `1,234.5`,
+  Swiss `1'234'567` and space-grouped `1 234,5` (also with no-break and thin
+  spaces) are numbers instead of text; a `1,234` or `1.234` column follows a
+  grouped column of the same file, and a decimal comma keeps no needless warning
+  in a file that writes `6,07`. Dotted dates, IP addresses, single space groups
+  (`123 456`) and columns named as ids, codes, versions or phone numbers stay as
+  they are. (#12182)
+- **Default bindings take a measure as the value and a category or the year as
+  the category.** A text column of numbers ranks after a year column for a
+  category role, a real category of 2 to 60 values ranks first, and a value role
+  ranks year columns after every measure; a time axis prefers the year. A price
+  in the year range counts as a year only with a year name or a full yearly
+  run. (#12182)
+- **A step-2 note that drops a line keeps the confirmation and its title.**
+  Bindings set by the assistant that only leave out confirmed number series
+  ("only co2_per_capita") keep the user's confirmation (`AGENT_NARROWED_BINDINGS`,
+  default `keep`), so the plot runs in the same turn; any other binding change
+  asks for `.confirm()` again. A first plot's request that stops before the plot
+  is kept until a plot ships, and dropped by any later change to the bindings or
+  the data. (#12182)
+- **Agent replies describe the rendered plot, not the plan.** The render probe now
+  reports the drawn texts by role, and the plot result hands them to the root as
+  `shows` with the review's verdict. The root names titles, labels and number
+  formats only as the plot draws them. Before, its closing reply came from the
+  adapter's notes, written before the render, so it claimed "6,5 Mio." on an axis
+  that drew "6.0 M". (#12183)
+- **Requested texts and number formats are checked in code.** The root lists the
+  texts the user wrote out (`expected_texts`), and the pipeline checks the drawn
+  texts for each. A miss gets a repair round (`AGENT_EXPECT_CHECK=repair`), and a
+  miss that no round fixes stays as a residual line, so the reply says so. (#12183)
+- **Data summaries name the real bindings.** `get_dataset_profile` returns the
+  bindings in force, so the summary no longer describes the columns the profile
+  suggests. (#12183)
+- **Titles know where the data comes from.** The adapter and the reviewer get a
+  fenced dataset context: the screened notes pasted with the data and the source
+  of a computed table (formulas, or the names in the user's code, such as
+  `lorenz`). A Lorenz attractor is no longer titled "Trajektorie im Raum". (#12183)
+- **`ok` no longer hides a measured defect.** A shipped plot keeps every advisory gate line (clipping,
+  overlapping text, annotations outside their axes) in its notes whatever its review score; until now
+  only a missing glyph stayed above the ship bar. An optional review-score condition for `ok`
+  (`AGENT_STATUS_SCORE`, off by default) waits for the owner's decision. (#12178)
+- **Data code that reads a URL is a data request, not an attack.** The scope
+  judge classed `pd.read_csv(urlopen("https://…"))` as `attack`, a strike
+  toward the day's lockout; it is now `needs_data` with the hint to paste the
+  table, and `attack` is kept for code that reaches the system, its
+  environment or secrets, or sends data out (#12180).
+- **A question about the table's own figures is no data request.** The judge
+  never sees the pasted table, so "Welches Jahr hat den grössten
+  Ausländeranteil?" read as a statistics lookup and was refused `needs_data`;
+  a question that picks, ranks, compares or summarises entries now counts as
+  being about the table, in any language and without "my data" (#12180).
+- **The strike lockout says what it is.** Three `attack` verdicts in a day now
+  answer with their own `locked_out` refusal ("paused until tomorrow after
+  several refused requests") instead of the `budget` text "usage limit
+  reached", and the paste route answers `429 locked_out` or `429 daily_limit`
+  instead of a `rate_limited` whose text read "daily limit reached" (#12180).
+- **The render harness refuses frames to plot code.** In plot mode the agent
+  chat's audit hook (`PlotGuard`) now refuses `gi_frame`, `cr_frame`,
+  `ag_frame`, `tb_frame`, `sys._getframe` and `sys._current_frames` while plot
+  code is on the stack, as data mode already did, so a frame's `f_builtins`
+  cannot hand out `open` and `__import__` past the validator. Import bodies, a
+  short list of library readers (pandas' chained-assignment check, statsmodels'
+  graphics, the `traceback` summaries pyparsing builds for mathtext) and the
+  traceback the interpreter prints after a failed plot stay allowed; a worker
+  thread running a callable the plot submitted gets no frame. Both guards
+  refuse `gc.get_objects` and its kin, which hand out the guard, and the
+  callbacks that receive real frames: `sys.settrace`, `sys.setprofile`,
+  `sys.monitoring` callbacks and signal handlers. A sweep of
+  the 572 eligible catalogue matplotlib and seaborn files rendered the same 565
+  before and after, with no refusal. (#12181)
+- **The code validator bans cache and spill directories.** The keywords
+  `memory=`, `temp_folder=` and `cachedir=` and the helpers `Memory`,
+  `check_memory` and `Parallel` are findings, so exported code with a
+  scikit-learn `Pipeline(memory=...)` no longer writes a cache directory on the
+  user's machine. (#12181)
+- **A category named `NA` no longer turns into a missing value.** The exported
+  loader reads missing values per column when the data has a text column (only
+  the empty cell in text, the usual tokens elsewhere), so `NA` (Namibia, North
+  America) from a JSON key or a JSON-stat category survives, a pasted `NA` in a
+  column of letter codes stays a code, and an R export with `NA` in a number
+  column still loads. (#12179)
+- **A data snippet over the size cap says how much and what to do.** Cloud Run's
+  sandbox launcher reports every non-zero exit as its own SIGPIPE (-13), so a
+  10,000-step ODE that broke the 200 KB CSV cap came back as an unnamed error
+  twice. The harness now writes its exit code and the measured size and cap to
+  `status.json`, the renderer and the local backend read it, and the
+  `run_data_code` refusal names the size, the cap and the row step that fits; the
+  tool description and the root prompt name the cap and the rounding up front. (#12176)
+- **The data summary follows a language set by a pasted CSV.** After a German
+  CSV without notes the summary came in English in 3 of 4 probe runs. The
+  session block and the action message now name a known session language in
+  English words (11 of 11 runs in German afterwards). (#12176)
+- **Default bindings never group by a single-valued column.** A categorical,
+  text or boolean role such as `series` ranks a column with one distinct value
+  after every column with two or more, so a constant `Kanton` no longer takes
+  the series from `Staatsangehörigkeit`. (#12176)
+- **A transient network glitch no longer leaves a page empty.** A short edge or
+  network failure (a request blocked without CORS headers, surfacing as
+  "Failed to fetch") used to leave the homepage numbers at "—" and a plot page
+  at "Failed to load spec" until a full reload. `apiGet` now retries network
+  errors and 408/425/429/500/502/503/504 responses twice with backoff, honouring
+  `Retry-After` and the caller's abort signal, while a 404 still fails at once
+  and POSTs, the authenticated debug and agent-chat requests and the chat's
+  stream never retry; the API exposes `Retry-After` to the page. If a load still
+  fails, the plot page and the homepage numbers offer `.retry()`, which reloads
+  the data in place. (#12174)
+- **No false refusal right after a refusal.** The scope judge saw the previous
+  fixed refusal as the assistant's last turn, so after a German weather question
+  was refused, the next message, a question about the user's own data, was
+  refused as `needs_data` too. The judge now sees the last reply a model wrote,
+  never a fixed refusal, and its rubric says that a question about your own
+  data ("which day was the warmest?") is in scope. A withheld message's
+  placeholder now names its verdict (`[message withheld by scope policy:
+  needs_data]`), so "do it anyway" after a data refusal gets the data refusal
+  again. Ten scope eval cases reproduce the sequences in German and English.
+  (#12171)
+- **The plot-code validator refuses frame and generator introspection.** A security review
+  of 2026-10-14 found that a generator's frame (`gi_frame`, then `f_builtins`) reached the
+  interpreter's builtins without a dunder name, which the SECURITY profile allowed. Frame,
+  generator, coroutine, traceback and code-object attributes (`gi_frame`, `gi_code`,
+  `cr_frame`, `f_back`, `f_builtins`, `f_globals`, `f_locals`, `tb_frame`, `co_consts` and
+  their siblings) are now refused on any object. The renderer's gVisor sandbox (read-only,
+  no egress, no secrets in its environment) bounded the exposure; catalogue eligibility is
+  unchanged (285 matplotlib and 287 seaborn files). (#12169)
+- **The plot result reports the changes the shipped code carries, not the
+  proofread's notes.** `PlotResult.changes` came from the plan of the last
+  adapter call, which in the live flow is the self-review; when it changed
+  nothing its "already present" notes replaced the real changes, and the
+  assistant told the user the change might not have run. The changes are now
+  the notes of every adapter call up to the shipped render whose plan changed
+  the code, so a shipped earlier round reports its own (`pipeline.note_changes`). (#12170)
+- **An earlier explicit request is no longer undone by the review loop.** A
+  title the user had chosen two turns earlier was rewritten when a later change
+  ran, because neither the adapter nor the reviewer knew it was the user's
+  choice and the rubric judged it. Each plot version now keeps the change
+  requests it carries out, a change hands them to every adapter call and to the
+  reviewer as fenced standing requests (the most recent 8 within 2,400
+  characters), and the adapter and reviewer prompts keep them: never a defect,
+  changed only when the current request asks for it. (#12170)
+- **The plot-code validator refuses native code and raw memory reached through a value.**
+  A second opinion of 2026-10-14 found that `np.zeros(1).ctypes._ctypes.CDLL(None)` and
+  `type(...).from_address(0)` passed the SECURITY profile, because the private-name rule
+  only applies to imported names. The validator now bans `ctypes`, `_ctypes`, `cffi`,
+  `data_as`, `from_address`, `from_buffer`, `as_strided`, `dump`, `extbuild`,
+  `get_rdataset` and `webuse` on any object, and `.to_string()` / `.info()` with a target.
+  The catalogue's eligibility is unchanged (285 matplotlib and 287 seaborn files). (#12167)
+- **A language chosen in the chip is used, not refused.** The session block reaches the
+  root inside the user's turn; a production session on 2026-10-12 had the root refuse
+  the chip's choice as "the block in your message" and stay in English. The block now
+  says who set the language and to write in it, the root prompt says the block is the
+  server's and is followed, the page's English action messages no longer set the reply
+  language, and a language the model cannot write gives English with one sentence that
+  says so (the adapter notes it in its changes). A live check on Haiku with Japanese
+  chosen in the chip: reply and title in Japanese (#12156).
+- **Box-basic's repair no longer fails on a protected line it must change.**
+  The edit applier protected every theme conditional, including box-basic
+  matplotlib's data-dependent `_tight_text_color`, so 12 of the 13
+  `drift:theme_token` failures in the rerun of spike X refused a correct full
+  file. A theme token is now a value picked per theme from literals and
+  earlier tokens only, and the drift check compares meaning, so a token
+  re-stated in other quotes or spacing passes. (#12124)
+- **The placeholder failure says how to add code after `df =
+  load_user_data()`.** The repair line and the adapter prompt now say to keep
+  the line out of `find` and `replace` and name the line below it to anchor an
+  insertion on, the cause of the rerun's 5 `protected:placeholder` failures.
+  (#12124)
+- **A caption such as "Data: my tax return" no longer reads as a link.** The
+  tool-argument check refused a change request with a scheme word followed by
+  a space (`Data: …`, `File: …`) as a URL; it now needs text right after the
+  colon, as the output sanitiser and the code validator already did. (#12126)
+- **The judge no longer retries a failed call in the same instant, and the
+  scope eval stays under the Vertex quota.** The judge's one retry waits
+  0.5 s first, inside the same 4 s budget, because a 429 or a transport error
+  retried at once meets the same cause and, on a per-minute quota, doubles the
+  burn. The scope eval spaces its judge calls at 25 a minute by default
+  (`--calls-per-minute`), below the project's 30-per-minute quota for Claude
+  Haiku in `eu`, and records the cause of every case the judge could not
+  answer, so a quota error no longer reads as a bare missing verdict. (#12126)
+- **The root agent no longer reports a shipped plot as failed.** The chat UI
+  added `version` to the plot result, but the tool-safety allowlist for the
+  `plot_pipeline` result did not know the field, so every shipped plot reached
+  the root as `invalid_result` and its closing reply told the user that the
+  run had failed while the plot was already on screen. The allowlist is now
+  derived from the `PlotResult` schema, and a test holds the two together.
+  (#12123)
+- **Reviewer and adapter answers that miss only a formal rule are mended.**
+  The rerun of spike X could not read 44 of 218 reviewer answers, none of them
+  cut off. `schema_guard` now clips over-long texts, keeps the first five
+  defects and derives `ok` from them, drops defects whose id is outside the
+  checklist (a pass that names only such ids stays a pass, a rejection that
+  names only such ids stays unread), and mends change notes and a blank
+  `full_code` in adapter plans, then validates the result against the same
+  strict schema; the edit contract is never repaired. Each failed answer writes a content-free `answer_schema` line with
+  the broken rules, which the eval report counts. (#12122)
+- **The agent reviewer judges sizes and colors by the style guide's own
+  table.** It called the prescribed sizes (axis titles 10 pt, ticks 8 pt at
+  dpi 400) too small in 50 of 56 VQ-01 lines and flagged Imprint colors by
+  their look in the render, so repairs enlarged fonts against the house style.
+  `reviewer.md` now quotes the table, judges colors from the code, lists what
+  is never a defect, and treats a gate note as a measurement to confirm.
+  (#12122)
+- **The Gemini adapter's edit call has room for its thinking.** Gemini counts
+  thinking tokens toward the output cap, and the 2,048-token edit cap ended
+  every first adapter call of the spike-X Gemini arm with `MAX_TOKENS`, so no
+  run had a repair round. The Gemini edit cap is now 8,192 tokens, which holds
+  101 of the run's 112 measured plans; a first answer that still hits the cap
+  leaves the repair its time, and the full-file repair runs at 12,288 tokens
+  with LOW thinking. Claude stays at 2,048 tokens with thinking disabled. The
+  repair also no longer reserves the whole 60 s render timeout, so the first
+  attempt keeps 65 s of the 140 s soft deadline instead of 35 s. (#12118)
+- **A cut-off adapter answer gets its own repair line.** The repair now hears
+  that the previous answer ran out of output tokens instead of a generic
+  schema miss, and a cut-off answer is never used as a plan, even when a
+  truncated Claude tool input still validates. The schema-miss and
+  refused-full-file lines no longer tell the repair to send edits when it may
+  send a full file. (#12118)
+- **The palette repair target matches the palette rule.** Every soft
+  ADAPTATION finding asked the repair to "derive it from df and the Imprint
+  palette", while the validator wants a literal list; that finding decided 10
+  of Claude Haiku 5.5's 20 non-passes in spike X. Each rule now has its own
+  target. (#12118)
+- **The G3 probe gate measures only drawn text.** The render probe counted
+  tick labels that matplotlib never draws (the locator's edge ticks outside
+  the view, labels of hidden axes), so G3 (text beyond the canvas) fired on
+  every line plot of spike X and spent the repair before the review. It now
+  measures the texts its own draw renders, for G3 and the tick-overlap gate
+  G7. Remote renders pick it up when the renderer image is rebuilt. (#12118)
+- **The agent BFF accepts every spec role and passes on retryable codes.**
+  `PUT /debug/agent/sessions/{sid}/bindings` refused roles such as
+  `temperature_K` or `X1`, which 12 catalogue specs use; the BFF now applies
+  the agents contract's role pattern. `guard_unavailable`, `capacity`,
+  `no_dataset` and `rate_limited` reach the browser by name instead of as
+  `upstream` or `invalid`. (#12111)
+- **Retest workflow records the action pin it actually runs.** The Dependabot
+  bump of `claude-code-action` updated the `uses:` pins of `impl-review.yml`
+  and `review-retest.yml` but not the workflow-level `ACTION_SHA` that the
+  retest records write into every record, so the unit test that keeps the two
+  aligned failed on `main` without CI noticing (the Dependabot PR ran no
+  tests). `ACTION_SHA` now matches the pinned action again. (#12099)
+
+### Security
+
+- **The agent chat's code validator closes exec and process routes through
+  allowed modules.** It accepted `np.testing.measure("...")`, which compiles
+  and runs any string. A survey of every public function and re-exported module
+  of the admitted packages now bans their test, build, process and
+  import-by-name submodules and helpers (`testing`, `backends`, `animation`,
+  `test()`, `switch_backend`, `x13_*`, `mpl.tempfile`, ...), keeps resolved
+  attribute paths inside the import surface (`scipy.datasets` after
+  `import scipy.stats`), and refuses matplotlib and pandas settings that start
+  LaTeX, ffmpeg or Ghostscript or import a backend by name (`rc-key`,
+  `usetex=`, `backend=`). A test pins every first-level submodule of the
+  packages admitted whole as reviewed or banned, so a library upgrade cannot
+  add one unnoticed. (#12177)
+- **The render harness arms an audit hook in plot mode too.** `PlotGuard`
+  refuses every `exec` of plot code, processes, sockets, native libraries and
+  any write beyond the PNG and its probe, while imports, reads and drawing go
+  on; all 474 catalogue matplotlib and seaborn files that pass the validator
+  render under it. Data mode's `DataGuard` now refuses `exec` and `compile`
+  past the snippet's own run, and lets `namedtuple` through, so
+  `DataFrame.itertuples()` works in a data snippet. (#12177)
+- **The agent validator closes module re-exports and private helpers.** An
+  allowed module could hand out a module the import rules keep out
+  (`statistics.sys.modules`, `collections._sys`, `enum.bltns`) or a private
+  helper that runs `exec` (`dataclasses._FuncBuilder`); some of these passed
+  the validator before. Such names are now banned as attributes, as `from`
+  imports and as components of an import path below its root, and so is any
+  private name or private submodule of an imported module. A module bound by
+  `import` may no longer be used as a value, so `[calendar][0]._locale` cannot
+  launder it, and the dangerous private helpers a walk of the allowed modules
+  found (`_locale`, `_random`, `_tzpath`, `_FuncBuilder`, numpy's `_datasource`
+  and a few more) are banned by name on any object. No catalogue file changes
+  eligibility. (#12124)
+
+*Catalog: no changes since v3.4.0 — no new implementations, regenerations or spec PRs merged in
+the window; 315 of 325 specs stay at full 15-library coverage.*
+
 ## [3.4.0] — 2026-10-12 — Earned, not assumed
 
 anyplot 3.4 makes a score something a plot has to earn. A quality review runs on Opus by
@@ -2691,7 +4596,8 @@ interactive HTML previews.
   Actions workflows (spec creation, impl generation, AI review, auto-merge); Cloud Run +
   Cloud SQL + GCS; 1,081 unit tests.
 
-[Unreleased]: https://github.com/MarkusNeusinger/anyplot/compare/v3.4.0...HEAD
+[Unreleased]: https://github.com/MarkusNeusinger/anyplot/compare/v3.5.0...HEAD
+[3.5.0]: https://github.com/MarkusNeusinger/anyplot/compare/v3.4.0...v3.5.0
 [3.4.0]: https://github.com/MarkusNeusinger/anyplot/compare/v3.3.0...v3.4.0
 [3.3.0]: https://github.com/MarkusNeusinger/anyplot/compare/v3.2.0...v3.3.0
 [3.2.0]: https://github.com/MarkusNeusinger/anyplot/compare/v3.1.0...v3.2.0
