@@ -142,10 +142,25 @@ def test_each_coupling_rule(body: str, category: str) -> None:
         "from matplotlib.colors import PowerNorm\nnorm = PowerNorm(0.5)",
         'from matplotlib.colors import SymLogNorm\nnorm = SymLogNorm(linthresh=1.0, vmin=df["a"].min())',
         "ax.set_ticks([1, 2, 3])",
+        # `center` that places marks and `levels` that are density proportions map no color (review of #12206).
+        'ax.pie(df["a"], center=(0.5, 0.5))',
+        "pos = nx.spring_layout(G, center=(1, 1))",
+        'label = "abc".center(10)',
+        'sns.kdeplot(data=df, x="a", y="b", levels=[0.2, 0.5, 0.8])',
     ],
 )
 def test_not_coupled(body: str) -> None:
     assert check(body).status == "clean"
+
+
+def test_every_literal_of_a_line_reaches_the_hint_once() -> None:
+    """Review of #12206: only the first literal of a line reached the hint, and a norm counted twice."""
+    result = check('sns.heatmap(df[["a", "b"]], vmin=0, vmax=100, center=50, cbar_kws={"ticks": [0, 50, 100]})')
+
+    (hint,) = result.hints
+    assert "vmax=100" in hint and "center=50" in hint and '"ticks": [0, 50, 100]' in hint
+    norm = check("from matplotlib.colors import Normalize\nnorm = Normalize(vmin=10, vmax=90)").hints[0]
+    assert norm.count("vmin=10") == 1 and "Normalize(vmin=10, vmax=90)" in norm
 
 
 @pytest.mark.skipif(not CATALOGUE_FILES, reason="plots/ is not checked out")

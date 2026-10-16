@@ -58,10 +58,12 @@ The new columns' names (`long_names`, live test round 8 of 2026-10-16): words, n
 the roles' names, which became the plot's text ("Wert nach Wochentag und Stunde" came
 from a column `value`, `Wochentag` only from the root's guess). The names column says
 what the melted headers are when every header is a weekday, a month or a year
-(`Weekday`, `Month`, `Year`), else `Category`; the values column is `Value` (English,
-see `LONG_NAMES`). The new columns stay bound to the roles they were made for whatever
-their names (`LongSuggestion.bindings`). What the values measure is the user's to say:
-the root offers a rename when the notes or the file name tell it.
+(`Weekday`, `Month`, `Year`), else `Category`; the values column is `Value`. The words
+are generated text, so they follow the session language (`LONG_NAMES`, live round 9 of
+2026-10-16: `Weekday` and `Value` became the axis and colorbar titles of a German
+heatmap); the user's own headers are never translated. The new columns stay bound to the
+roles they were made for whatever their names (`LongSuggestion.bindings`). What the values
+measure is the user's to say: the root offers a rename when the notes or the file name tell it.
 """
 
 import itertools
@@ -69,6 +71,7 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
+from ..language import DEFAULT_LANGUAGE, canonical
 from ..schemas import MAX_ROWS, Binding, ColumnProfile, DatasetProfile
 from .months import fold, named_months
 from .parse import ID_WORDS
@@ -95,37 +98,126 @@ MATRIX_ROLES: frozenset[str] = frozenset(
 geometry, a color or a code (`party`, `color`, `newick_string`): their wide tables are no matrix of one measure."""
 
 
-LONG_NAMES: dict[str, str] = {
-    "category": "Category",
-    "weekday": "Weekday",
-    "month": "Month",
-    "year": "Year",
-    "value": "Value",
+LONG_NAMES: dict[str, dict[str, str]] = {
+    "en": {"category": "Category", "weekday": "Weekday", "month": "Month", "year": "Year", "value": "Value"},
+    "de": {"category": "Kategorie", "weekday": "Wochentag", "month": "Monat", "year": "Jahr", "value": "Wert"},
+    "fr": {"category": "Catégorie", "weekday": "Jour", "month": "Mois", "year": "Année", "value": "Valeur"},
+    "es": {"category": "Categoría", "weekday": "Día", "month": "Mes", "year": "Año", "value": "Valor"},
+    "it": {"category": "Categoria", "weekday": "Giorno", "month": "Mese", "year": "Anno", "value": "Valore"},
+    "pt": {"category": "Categoria", "weekday": "Dia da semana", "month": "Mês", "year": "Ano", "value": "Valor"},
+    "nl": {"category": "Categorie", "weekday": "Weekdag", "month": "Maand", "year": "Jaar", "value": "Waarde"},
+    "pl": {"category": "Kategoria", "weekday": "Dzień tygodnia", "month": "Miesiąc", "year": "Rok", "value": "Wartość"},
 }
-"""The `.to_long()` column names (`long_names`): the names column by what its headers are, and the values column.
+"""The `.to_long()` column names (`long_names`) by session language: the names column by what its headers are,
+and the values column. Generated text, so in the session language (owner rule: generated text follows the
+session language, the user's own column names are never translated; live round 9 of 2026-10-16). A language
+outside the table gets the English words. The page's offer card and the route compute the names from the same
+session language, and the language route and every turn's `done` return the recomputed offer, so the card and
+the applied operation agree when the language changes."""
 
-English whatever the session language (decided in the review of #12206): the data panel around the offer is
-English, and a name that followed the session language would change under the offer the page already shows
-when the first typed message or the chip changes the language, so the card and the route could disagree. The
-adapter writes the plot's labels in the plot language from these names."""
-_WEEKDAY_WORDS: tuple[tuple[str, ...], ...] = (
-    # One tuple per day, Monday first: names and abbreviations (en, de, fr, es, it, pt, nl), compared folded.
-    ("monday", "mon", "montag", "mo", "lundi", "lun", "lunes", "lunedi", "segunda", "seg", "maandag", "ma"),
-    ("tuesday", "tue", "tues", "dienstag", "di", "mardi", "martes", "martedi", "terca", "ter", "dinsdag"),
-    ("wednesday", "wed", "mittwoch", "mi", "mercredi", "mer", "miercoles", "mie", "mercoledi", "quarta", "woensdag"),
-    ("thursday", "thu", "thur", "thurs", "donnerstag", "do", "jeudi", "jeu", "jueves", "jue", "giovedi", "gio"),
-    ("friday", "fri", "freitag", "fr", "vendredi", "ven", "viernes", "vie", "venerdi", "sexta", "sex", "vrijdag"),
-    ("saturday", "sat", "samstag", "sa", "samedi", "sam", "sabado", "sab", "sabato", "zaterdag", "za"),
-    ("sunday", "sun", "sonntag", "so", "dimanche", "dim", "domingo", "dom", "domenica", "zondag", "zo"),
-)
-_WEEKDAYS: dict[str, int] = {word: day for day, words in enumerate(_WEEKDAY_WORDS) for word in words}
+
+def long_words(language: str) -> dict[str, str]:
+    """The `LONG_NAMES` words for a session language (`de`, `Deutsch` and `German` share them), else English."""
+    return LONG_NAMES.get(canonical(language), LONG_NAMES[DEFAULT_LANGUAGE])
+
+
+_WEEKDAY_WORDS: dict[str, tuple[tuple[str, ...], ...]] = {
+    # One tuple per day, Monday first: full names and standard abbreviations, compared folded (`terça` is `terca`).
+    "en": (
+        ("monday", "mon", "mo"),
+        ("tuesday", "tue", "tues", "tu"),
+        ("wednesday", "wed", "we"),
+        ("thursday", "thu", "thur", "thurs", "th"),
+        ("friday", "fri", "fr"),
+        ("saturday", "sat", "sa"),
+        ("sunday", "sun", "su"),
+    ),
+    "de": (
+        ("montag", "mo", "mon"),
+        ("dienstag", "di", "die"),
+        ("mittwoch", "mi", "mit"),
+        ("donnerstag", "do", "don"),
+        ("freitag", "fr", "fre"),
+        ("samstag", "sa", "sam", "sonnabend"),
+        ("sonntag", "so", "son"),
+    ),
+    "fr": (
+        ("lundi", "lun", "lu"),
+        ("mardi", "mar", "ma"),
+        ("mercredi", "mer", "me"),
+        ("jeudi", "jeu", "je"),
+        ("vendredi", "ven", "ve"),
+        ("samedi", "sam", "sa"),
+        ("dimanche", "dim", "di"),
+    ),
+    "es": (
+        ("lunes", "lun", "lu"),
+        ("martes", "mar", "ma"),
+        ("miercoles", "mie", "mi"),
+        ("jueves", "jue", "ju"),
+        ("viernes", "vie", "vi"),
+        ("sabado", "sab", "sa"),
+        ("domingo", "dom", "do"),
+    ),
+    "it": (
+        ("lunedi", "lun", "lu"),
+        ("martedi", "mar", "ma"),
+        ("mercoledi", "mer", "me"),
+        ("giovedi", "gio", "gi"),
+        ("venerdi", "ven", "ve"),
+        ("sabato", "sab", "sa"),
+        ("domenica", "dom", "do"),
+    ),
+    "pt": (
+        ("segunda", "seg", "2a"),
+        ("terca", "ter", "3a"),
+        ("quarta", "qua", "4a"),
+        ("quinta", "qui", "5a"),
+        ("sexta", "sex", "6a"),
+        ("sabado", "sab"),
+        ("domingo", "dom"),
+    ),
+    "nl": (
+        ("maandag", "ma"),
+        ("dinsdag", "di"),
+        ("woensdag", "wo"),
+        ("donderdag", "do"),
+        ("vrijdag", "vr"),
+        ("zaterdag", "za"),
+        ("zondag", "zo"),
+    ),
+}
+"""Weekday names by language (review of #12206: Portuguese and Dutch had gaps, and the one mixed set read the
+country codes `FR`, `ZA`, `MA` as days). The headers must all come from ONE language's set (`_weekdays`)."""
+_WEEKDAYS: dict[str, dict[str, int]] = {
+    language: {word: day for day, words in enumerate(days) for word in words}
+    for language, days in _WEEKDAY_WORDS.items()
+}
+_FEIRA = re.compile(r"[- ]?feira$")
+"""The Portuguese suffix of a weekday (`segunda-feira`), left off before the lookup."""
 _YEAR_HEADER = re.compile(r"(?:1[5-9]|2[0-9])[0-9]{2}")
 MIN_NAMED_HEADERS = 3
 """The distinct weekdays or years among the melted headers from which the names column is named after them."""
+MIN_SHORT_WEEKDAYS = 5
+"""The distinct days headers of at most two characters need (`Mo, Di, Mi, Do, Fr`): three such codes are as
+likely country or state codes (`FR, SA, SO`, `MO, MI, MA`)."""
 
 
-def long_names(columns: list[str], keys: list[str], roles: tuple[str, str]) -> tuple[str, str]:
-    """The names column's and the values column's name for melting `columns` beside `keys` (`LONG_NAMES`).
+def _weekdays(folded: list[str]) -> bool:
+    """Whether every header is a weekday of one and the same language, enough distinct days among them."""
+    words = [_FEIRA.sub("", column) for column in folded]
+    least = MIN_SHORT_WEEKDAYS if all(len(word) <= 2 for word in words) else MIN_NAMED_HEADERS
+    for days in _WEEKDAYS.values():
+        if all(word in days for word in words) and len({days[word] for word in words}) >= least:
+            return True
+    return False
+
+
+def long_names(
+    columns: list[str], keys: list[str], roles: tuple[str, str], language: str = DEFAULT_LANGUAGE
+) -> tuple[str, str]:
+    """The names column's and the values column's name for melting `columns` beside `keys` (`LONG_NAMES`, in the
+    session `language`).
 
     Never a column's name, kept or melted (case-insensitive): pandas' `melt` refuses a `value_name` that names
     an input column (review of #12206: `Value,Other` melted into `Value` was a 500). A taken word gives way to
@@ -137,13 +229,14 @@ def long_names(columns: list[str], keys: list[str], roles: tuple[str, str]) -> t
         kind = "year"
     elif named_months(columns) is not None:
         kind = "month"
-    elif all(column in _WEEKDAYS for column in folded) and len({_WEEKDAYS[c] for c in folded}) >= MIN_NAMED_HEADERS:
+    elif _weekdays(folded):
         kind = "weekday"
     else:
         kind = "category"
+    words = long_words(language)
     taken = {name.casefold() for name in [*keys, *columns]}
-    names_to = _free(LONG_NAMES[kind], roles[0], taken)
-    values_to = _free(LONG_NAMES["value"], roles[1], taken | {names_to.casefold()})
+    names_to = _free(words[kind], roles[0], taken)
+    values_to = _free(words["value"], roles[1], taken | {names_to.casefold()})
     return names_to, values_to
 
 
@@ -200,9 +293,11 @@ def takes_labels(role: DataRole) -> bool:
     return bool(set(role.kinds) & _LABEL_KINDS)
 
 
-def long_suggestion(roles: list[DataRole], profile: DatasetProfile) -> LongSuggestion | None:
+def long_suggestion(
+    roles: list[DataRole], profile: DatasetProfile, language: str = DEFAULT_LANGUAGE
+) -> LongSuggestion | None:
     """The suggestion for this spec and table, or None when neither rule above holds; the new columns' names
-    (`long_names`) never decide it."""
+    (`long_names`, in the session `language`) never decide it."""
     single = [role for role in roles if not role.variadic and not role.computed]  # a computed role takes no column
     if any(role.variadic and set(role.kinds) == {"numeric"} for role in roles):
         return None
@@ -234,7 +329,7 @@ def long_suggestion(roles: list[DataRole], profile: DatasetProfile) -> LongSugge
     if not least <= len(measures) <= MAX_LONGER_COLUMNS or len(measures) + len(keys) != len(dtypes):
         return None
     names_role, values_role = names_to, values[0].name
-    names_to, values_to = long_names(measures, keys, (names_role, values_role))
+    names_to, values_to = long_names(measures, keys, (names_role, values_role), language)
     rows = profile.rows * len(measures)
     if rows > MAX_ROWS:
         return None

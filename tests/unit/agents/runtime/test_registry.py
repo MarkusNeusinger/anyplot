@@ -71,6 +71,7 @@ class TestRegistry:
             "get_current_code",
             "set_bindings",
             "set_language",
+            "keep_plot_request",
             "prepare_data",
             "query_data",
             "generate_data",

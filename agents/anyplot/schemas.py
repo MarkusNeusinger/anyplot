@@ -298,6 +298,24 @@ class PipelineArgs(_ServerContract):
     a format example such as `6,5 Mio.`): the pipeline checks the render's drawn texts for each (`grounding.py`)."""
 
 
+class KeepRequestArgs(_ServerContract):
+    """The `keep_plot_request` tool input: a request for the first plot, kept without running anything.
+
+    Live round 9 of 2026-10-16: a title asked for before `.confirm()`, and a plot wish in the pasted notes,
+    reached no plot, because the bare `.create_plot()` carries no request. The tool stores it as the kept note
+    (`pipeline.hold_request`) that the next first-plot run takes.
+    """
+
+    change_request: str = Field(default="", max_length=MAX_CHANGE_REQUEST_CHARS)
+    expected_texts: list[ExpectedText] = Field(default_factory=list, max_length=MAX_EXPECTED_TEXTS)
+
+    @model_validator(mode="after")
+    def _something_to_keep(self) -> Self:
+        if not self.change_request.strip() and not self.expected_texts:
+            raise ValueError("a kept request needs a change_request or expected_texts")
+        return self
+
+
 class Edit(_ModelOutput):
     """One search-and-replace hunk; the applier requires exactly one match of `find`."""
 
@@ -557,6 +575,9 @@ limit reached); `error`: an exception.
 
 RoundStep = Literal["adapting", "repairing", "checking", "rendering", "reviewing"]
 """The pipeline steps the progress events name, the ones a round can end in."""
+RubricId = Annotated[str, Field(pattern=r"^[A-Z]{2}-[0-9]{2}$")]
+"""A rubric or auto-reject id (`VQ-05`, `AR-09`): a closed code, never text."""
+MAX_ROUND_DEFECTS = 6
 
 
 class Round(_ServerContract):
@@ -566,7 +587,9 @@ class Round(_ServerContract):
     ends at `reviewing`, a limit before the review at `rendering`, an error anywhere).
     `shipped` marks the round whose render the result shipped, which is not always the
     last one: a repair round that fails its check leaves the earlier render shipped.
-    `findings` counts the lines the round passed on as the next attempt reads them.
+    `findings` counts the lines the round passed on as the next attempt reads them, and `defects`
+    the rubric ids among them (`VQ-01`, `VQ-05`), which the page names in words for the repair
+    round that follows (live round 9 of 2026-10-16: the repair was invisible on the page).
     """
 
     attempt: int = Field(ge=1, le=MAX_ATTEMPTS)
@@ -574,6 +597,7 @@ class Round(_ServerContract):
     findings: int = Field(default=0, ge=0, le=99)
     step: RoundStep | None = None
     shipped: bool = False
+    defects: list[RubricId] = Field(default_factory=list, max_length=MAX_ROUND_DEFECTS)
 
 
 ShownGroup = Literal[
@@ -629,6 +653,10 @@ class PlotResult(_ServerContract):
 
     `shows` is what the shipped render shows (`PlotShows`), on `ok` and `needs_attention`
     only; it goes to the root, never to the page's `plot` event (`stream.PLOT_FIELDS`).
+
+    `request_kept` is `true` on a `not_ready` result whose own `change_request` or `expected_texts` the
+    server keeps for the first plot (`pipeline.keep_pending_request`), so the root says the request is kept
+    only when it is (live round 9 of 2026-10-16: the root said so without calling the tool). Root-only too.
     """
 
     status: PlotStatus
@@ -640,9 +668,12 @@ class PlotResult(_ServerContract):
     version: int | None = Field(default=None, ge=1)
     rounds: list[Round] = Field(default_factory=list, max_length=MAX_ATTEMPTS)
     shows: PlotShows | None = None
+    request_kept: bool | None = None
 
     @model_validator(mode="after")
     def _status_rules(self) -> Self:
+        if self.request_kept is not None and self.status != "not_ready":
+            raise ValueError("only a not_ready result keeps a request")
         if self.status in ("failed", "not_ready") and self.version is not None:
             raise ValueError(f"a {self.status!r} result stores no version")
         if self.status in ("failed", "not_ready") and self.shows is not None:
@@ -669,6 +700,6 @@ class PlotResult(_ServerContract):
         return self
 
     @classmethod
-    def not_ready(cls, reason: NotReadyReason) -> Self:
+    def not_ready(cls, reason: NotReadyReason, *, request_kept: bool = False) -> Self:
         """The result before any LLM call when the session lacks a dataset, bindings or the user's confirmation."""
-        return cls(status="not_ready", reason=reason)
+        return cls(status="not_ready", reason=reason, request_kept=request_kept or None)

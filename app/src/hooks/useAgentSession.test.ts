@@ -1271,6 +1271,42 @@ describe('useAgentSession: .to_long()', () => {
     expect(toLongCalls()).toHaveLength(1);
   });
 
+  it('renames the offer when the language changes, by the chip or during a turn', async () => {
+    // Live round 9 of 2026-10-16: the new columns' names are generated text in the session language, so the
+    // card must name what `.to_long()` applies after the language changed.
+    const GERMAN = { ...OFFER, names_to: 'Kategorie', values_to: 'Wert' };
+    const FRENCH = { ...OFFER, names_to: 'Catégorie', values_to: 'Valeur' };
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/dataset'] = () => json(200, WIDE);
+    routes['PUT /sessions/S1/language'] = () =>
+      json(200, { language: 'de', source: 'chosen', suggestion: GERMAN });
+    const DUTCH = { ...OFFER, names_to: 'Categorie', values_to: 'Waarde' };
+    let turns = 0;
+    routes['POST /sessions/S1/messages'] = () =>
+      sse([
+        ['ready', { v: 'anyplot/1', run_id: 'run1' }],
+        ['message', { text: "D'accord." }],
+        // The second turn's `done` names a lower-ranked language, which the chip ignores, and its offer with it.
+        // Turn 0 is the summary after the paste, turn 1 the first typed message.
+        turns++ < 2
+          ? ['done', { language: { language: 'fr', source: 'chosen' }, suggestion: FRENCH }]
+          : ['done', { language: { language: 'nl', source: 'detected' }, suggestion: DUTCH }],
+      ]);
+    const { result } = await openSession(routes);
+    await act(() => result.current.parseData('Sensor_A,Sensor_B\n1.5,2.5\n'));
+
+    await act(() => result.current.setLanguage('Deutsch'));
+    expect(result.current.state.dataset?.parsed.suggestion).toEqual(GERMAN);
+    expect(result.current.state.plotLanguage).toEqual({ language: 'de', source: 'chosen' });
+
+    await act(() => result.current.sendMessage('réponds en français'));
+    expect(result.current.state.dataset?.parsed.suggestion).toEqual(FRENCH);
+
+    await act(() => result.current.sendMessage('maak de punten groter'));
+    expect(result.current.state.plotLanguage).toEqual({ language: 'fr', source: 'chosen' });
+    expect(result.current.state.dataset?.parsed.suggestion).toEqual(FRENCH);
+  });
+
   it('keeps a refusal until the next paste clears it', async () => {
     const routes = baseRoutes();
     routes['POST /sessions/S1/dataset'] = () => json(200, WIDE);

@@ -141,8 +141,8 @@ _NO_STORE = "private, no-store"
 _EVENT_FIELDS: dict[str, frozenset[str]] = {
     "ready": frozenset({"v", "run_id"}),
     # `attempt` on a pipeline step, plus `outcome` and `findings` (how the round before ended) on
-    # `repairing`; `position` and `waiting` on `step: "queued"`.
-    "status": frozenset({"step", "attempt", "outcome", "findings", "position", "waiting"}),
+    # `repairing`, with `defects`, the rubric ids it repairs (`VQ-05`); `position` and `waiting` on `step: "queued"`.
+    "status": frozenset({"step", "attempt", "outcome", "findings", "defects", "position", "waiting"}),
     "message": frozenset({"text"}),
     # `version` is the agents service's number of the stored version (ok and needs_attention only);
     # `rounds` lists how each attempt ended (`{attempt, outcome, findings}`), for the page's progress grid.
@@ -154,8 +154,9 @@ _EVENT_FIELDS: dict[str, frozenset[str]] = {
     # `bindings` and `data_confirmed` sync the page after a turn in which the root changed the bindings;
     # `dataset` carries the new data version after a turn in which the root's `prepare_data` or
     # `generate_data` changed the data (version 1 when `generate_data` made the session's first data);
-    # `language` carries the session language `{language, source}` after every run, so the page syncs its chip.
-    "done": frozenset({"llm_calls", "tokens", "bindings", "data_confirmed", "dataset", "language"}),
+    # `language` carries the session language `{language, source}` after every run, so the page syncs its chip;
+    # `suggestion` the `.to_long()` offer in that language (or null) on a session with data, so its card follows.
+    "done": frozenset({"llm_calls", "tokens", "bindings", "data_confirmed", "dataset", "language", "suggestion"}),
 }
 _ERROR_CODES = frozenset({"capacity", "deadline", "guard_unavailable", "upstream", "internal"})
 _MAX_BINDING_ERRORS = 20
@@ -1179,7 +1180,8 @@ async def put_language(sid: SessionId, body: LanguageBody, ctx: Ctx, client: Cli
     """Set the session language for the replies and the plot text (the chat header's chip).
 
     The agents service answers `{language, source}`: the stored form (`English` comes back
-    as `en`, `Klingon` as typed) and the source `chosen`, which detection never overrides.
+    as `en`, `Klingon` as typed) and the source `chosen`, which detection never overrides, plus, when the
+    session has data, `suggestion`: the `.to_long()` offer (or null) with its new column names in that language.
     `409 run_active` while a turn or a render is in flight, `422 invalid` for a value the
     agents service refuses.
     """

@@ -1,7 +1,8 @@
 /**
  * The rounds of a plot run as a grid (`timeline.ts`): one row per round, its
  * label, the four steps in fixed columns so the same step of every round lines
- * up, and the round's outcome on the right. A phone-width grid shows the short
+ * up, and the round's outcome on the right (while a repair round runs, what it
+ * repairs: `repairing layout, text size`). A phone-width grid shows the short
  * step names without arrows and puts the round's label and outcome on a line
  * above its steps, so the four step columns stay aligned and fit a result card
  * on a 360 px screen (the card scrolls the grid sideways below that).
@@ -147,7 +148,7 @@ export function RoundGrid({ rows, label }: { rows: GridRow[]; label: string }) {
                 color: row.outcome ? TONE_COLOR[row.outcome.tone] : 'var(--ink-muted)',
               }}
             >
-              {row.outcome?.text ?? ''}
+              {row.outcome?.text ?? row.repairs ?? ''}
             </Box>
           </Box>
         );

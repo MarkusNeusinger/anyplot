@@ -110,6 +110,15 @@ export interface PlotLanguage {
 }
 
 /**
+ * The language route's answer: the session language, and on a session with
+ * data the `.to_long()` offer recomputed in it (`null` for none; absent
+ * without data or from an older server).
+ */
+export interface LanguageAnswer extends PlotLanguage {
+  suggestion?: LongSuggestion | null;
+}
+
+/**
  * One data role the spec declares. A single role binds under its own name; a
  * variadic family (`y`) binds its members `y1`, `y2`, ... and never its bare
  * name. A role without kinds accepts any column but has no default.
@@ -331,6 +340,8 @@ export interface Round {
   step?: PipelineStep;
   /** The round whose render the result shipped; not always the last (a repair that failed its check). */
   shipped?: boolean;
+  /** The rubric ids the round passed on to the repair (`VQ-05`), which the grid names in words. */
+  defects?: string[];
 }
 
 export interface PlotResult {
@@ -909,14 +920,19 @@ export const agentApi = {
    * detection never overrides. Answers the stored form (`English` comes back as
    * `en`); an answer the page cannot read falls back to the value as sent.
    * `409 run_active` while a turn or a render runs, `422 invalid` for a value
-   * outside `LANGUAGE_PATTERN`.
+   * outside `LANGUAGE_PATTERN`. On a session with data the answer also carries
+   * `suggestion`, the `.to_long()` offer with its new column names in the new
+   * language (or `null`), so the data panel's card follows the language.
    */
-  setLanguage: async (token: string, sid: string, language: string): Promise<PlotLanguage> => {
+  setLanguage: async (token: string, sid: string, language: string): Promise<LanguageAnswer> => {
     const answer = await agentJson<unknown>(`${sessionPath(sid)}/language`, token, {
       method: 'PUT',
       body: JSON.stringify({ language }),
     });
-    return plotLanguage(answer) ?? { language, source: 'chosen' };
+    const applied = plotLanguage(answer) ?? { language, source: 'chosen' as const };
+    return isRecord(answer) && 'suggestion' in answer
+      ? { ...applied, suggestion: longSuggestion(answer.suggestion) }
+      : applied;
   },
   /** Step 1's end: the stored dataset and its current bindings fit (`422 no_dataset` without one). */
   confirmDataset: (token: string, sid: string) =>
@@ -1104,6 +1120,13 @@ export type AgentEvent =
        * none (a refused turn, a gone session, an older server).
        */
       language: PlotLanguage | null;
+      /**
+       * The `.to_long()` offer after the run, its new column names in the
+       * session language, which the turn may have changed: `null` for none,
+       * `undefined` when the server sent no `suggestion` (no data, an older
+       * server), which leaves the page's card as it is.
+       */
+      suggestion?: LongSuggestion | null;
     };
 
 const isInt = (value: unknown): value is number =>
@@ -1112,7 +1135,7 @@ const isInt = (value: unknown): value is number =>
 /** One round from the stream, or `null` when its attempt, outcome or count is not one the server sends. */
 function toRound(value: unknown): Round | null {
   if (!value || typeof value !== 'object') return null;
-  const { attempt, outcome, findings, step, shipped } = value as Record<string, unknown>;
+  const { attempt, outcome, findings, step, shipped, defects } = value as Record<string, unknown>;
   if (!isInt(attempt) || attempt < 1 || !isInt(findings)) return null;
   if (!ROUND_OUTCOMES.includes(outcome as RoundOutcome)) return null;
   // Absent stays absent (an older server); a value of the wrong kind refuses the round.
@@ -1123,8 +1146,13 @@ function toRound(value: unknown): Round | null {
   const round: Round = { attempt, outcome: outcome as RoundOutcome, findings };
   if (typeof step === 'string') round.step = step as PipelineStep;
   if (shipped !== undefined) round.shipped = shipped;
+  // Closed rubric ids only; anything else is left out, never shown.
+  const ids = strings(defects).filter(id => RUBRIC_ID.test(id));
+  if (ids.length) round.defects = ids;
   return round;
 }
+
+const RUBRIC_ID = /^[A-Z]{2}-[0-9]{2}$/;
 
 /**
  * The binding list of a `done` sync, or `null`. The list replaces the page's
@@ -1307,7 +1335,12 @@ export function parseAgentEvent(raw: SseEvent): AgentEvent | null {
         attempt: isInt(d.attempt) ? d.attempt : null,
         previous:
           isInt(d.attempt) && d.attempt > 1
-            ? toRound({ attempt: d.attempt - 1, outcome: d.outcome, findings: d.findings })
+            ? toRound({
+                attempt: d.attempt - 1,
+                outcome: d.outcome,
+                findings: d.findings,
+                defects: d.defects,
+              })
             : null,
       };
     case 'message':
@@ -1354,6 +1387,7 @@ export function parseAgentEvent(raw: SseEvent): AgentEvent | null {
         dataConfirmed: typeof d.data_confirmed === 'boolean' ? d.data_confirmed : null,
         dataset: datasetChanged(d.dataset),
         language: plotLanguage(d.language),
+        ...('suggestion' in d ? { suggestion: longSuggestion(d.suggestion) } : {}),
       };
     default:
       return null;

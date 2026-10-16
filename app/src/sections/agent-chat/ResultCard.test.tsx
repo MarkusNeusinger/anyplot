@@ -74,7 +74,7 @@ describe('ResultCard', () => {
     expect(screen.getByText('VQ-03 light: markers overlap the label')).toBeInTheDocument();
     expect(screen.getByTestId('result-status')).toHaveTextContent('needs attention');
     // Two attempts are the first try and one repair round, named as the progress timeline names them.
-    expect(screen.getByText('1 repair')).toBeInTheDocument();
+    expect(screen.getByText('second try')).toBeInTheDocument();
     expect(screen.getByTestId('result-feedback-slot')).toBeInTheDocument();
   });
 

@@ -33,7 +33,11 @@ ROW: dict[str, Any] = {
     "sessions": 12,
     "plots_shipped": 30,
     "kept_rate": 0.4166666,
+    "kept_sessions": 5,
+    "shipped_sessions": 12,
     "repair_rate": 0.3125,
+    "repaired_runs": 5,
+    "runs": 16,
     "top_specs": [{"key": "scatter-basic", "count": 5}, {"key": "bar-basic", "count": 3}],
     "top_formats": [{"key": "csv", "count": 9}],
     "top_refusals": [{"key": "unparseable", "count": 3}, {"key": None, "count": 1}],
@@ -82,6 +86,9 @@ class TestEndpoint:
         assert body["status"] == "ok" and body["days"] == 30
         assert (body["sessions"], body["plots_shipped"]) == (12, 30)
         assert body["kept_rate"] == 0.4167 and body["repair_rate"] == 0.3125
+        # The counts behind both rates, for the card's "5 of 12".
+        assert (body["kept_sessions"], body["shipped_sessions"]) == (5, 12)
+        assert (body["repaired_runs"], body["runs"]) == (5, 16)
         assert body["top_specs"] == [{"key": "scatter-basic", "count": 5}, {"key": "bar-basic", "count": 3}]
         assert body["top_refusals"] == [{"key": "unparseable", "count": 3}]  # a null key is dropped
         assert body["generated_at"].endswith("Z")
@@ -242,6 +249,20 @@ class TestQuery:
         assert sql.index("timestamp >= @since") < sql.index("QUALIFY ROW_NUMBER()")
         assert "CURRENT_TIMESTAMP" not in sql  # the text stays byte-identical, so the result cache can answer
         assert "'live'" in sql and "LIMIT 5" in sql
+
+    def test_a_save_is_no_keep_and_a_rejection_or_a_later_run_undoes_one(self) -> None:
+        """Owner rule of 2026-10-16: users save a session to report a plot they did not like."""
+        sql = usage_sql(DATASET)
+        keeps = "'copied_code', 'copied_image', 'downloaded_png', 'downloaded_code', 'downloaded_data'"
+        assert f"IN ({keeps}), ts, NULL)) AS last_keep_at" in sql and "saved_session" not in sql
+        assert "IN ('thumbs_down', 'bug')" in sql
+        assert "outcomes.last_keep_at > per_session.last_run_at" in sql
+        # Review of #12207: a thumbs_down sent just before the window still rejects a session that straddles it.
+        assert "timestamp >= TIMESTAMP_SUB(@since, INTERVAL 2 DAY)" in sql
+        assert "NOT IN (SELECT session FROM rejections" in sql
+        # A plot shipped just before the window and kept inside it counts as shipped and kept.
+        runs = sql[sql.index("per_session AS") : sql.index("outcomes AS")]
+        assert "INTERVAL 2 DAY" in runs and "IN (SELECT session FROM ev)" in runs
 
     def test_counts_an_input_once_and_leaves_not_ready_runs_out(self) -> None:
         sql = usage_sql(DATASET)

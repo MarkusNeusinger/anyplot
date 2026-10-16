@@ -434,7 +434,11 @@ describe('DebugPage agent usage', () => {
     sessions: 12,
     plots_shipped: 30,
     kept_rate: 0.42,
+    kept_sessions: 5,
+    shipped_sessions: 12,
     repair_rate: null,
+    repaired_runs: 0,
+    runs: 0,
     top_specs: [
       { key: 'scatter-basic', count: 5 },
       { key: 'bar-grouped', count: 2 },
@@ -474,9 +478,14 @@ describe('DebugPage agent usage', () => {
     const section = await screen.findByRole('region', { name: 'Agent usage section' });
     expect(await within(section).findByRole('group', { name: 'sessions' })).toHaveTextContent('12');
     expect(within(section).getByRole('group', { name: 'plots shipped' })).toHaveTextContent('30');
-    expect(within(section).getByRole('group', { name: 'kept rate' })).toHaveTextContent('42%');
-    // No runs in the window: the rate has no base.
-    expect(within(section).getByRole('group', { name: 'repair rate' })).toHaveTextContent('—');
+    // The counts behind the rate, so a percentage of a few sessions reads as what it is.
+    expect(within(section).getByRole('group', { name: 'kept rate' })).toHaveTextContent(
+      '42%5 of 12'
+    );
+    // No runs in the window: the rate has no base, and no counts.
+    expect(within(section).getByRole('group', { name: 'repair rate' })).toHaveTextContent(
+      /^—repair rate$/
+    );
     const specs = within(section).getByRole('group', { name: 'top specs' });
     expect(
       within(specs)

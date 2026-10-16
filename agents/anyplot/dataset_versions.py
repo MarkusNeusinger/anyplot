@@ -102,9 +102,9 @@ def push_version(
     data (`prepare_data`); `rebind` gives the defaults for the new profile instead
     (`default_bindings`), for a table that replaces the data (`generate_data`), where a
     choice made for the old columns says nothing about the new ones even when a name
-    such as `x` returns. `pinned` gives those bindings and the defaults for the other
-    roles (`filled_bindings`), for `.to_long()`, which knows the roles its new columns
-    are made for.
+    such as `x` returns. `pinned` gives those bindings, keeps the current bindings that
+    still hold on the kept columns, and the defaults for the other roles (`filled_bindings`),
+    for `.to_long()`, which knows the roles its new columns are made for.
 
     The notes pasted with the data (`context_lines`) belong to the session's data, not to one
     version: the new version carries the current version's notes, also after `generate_data`.
@@ -133,7 +133,16 @@ def push_version(
     # The version before: a date column it did not have fills an open required date role (`carry_bindings`).
     previous = current.profile if current is not None else None
     if pinned is not None:
-        bindings = filled_bindings(pinned, roles, stored.profile)
+        # The user's bindings on the kept columns stay (review of #12206: `.to_long()` dropped them for the
+        # defaults); a role or a column the pinned bindings take is theirs, and a melted column is gone anyway.
+        pinned_roles = {binding.role for binding in pinned}
+        pinned_columns = {binding.column for binding in pinned}
+        carried = [
+            binding
+            for binding in view.bindings
+            if binding.role not in pinned_roles and binding.column not in pinned_columns
+        ]
+        bindings = filled_bindings([*pinned, *carried], roles, stored.profile)
     elif rebind:
         bindings = default_bindings(roles, stored.profile)
     else:

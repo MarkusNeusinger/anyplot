@@ -7,12 +7,12 @@ re-validates (`api/routers/agent.py`, `_EVENT_FIELDS`):
 |---|---|---|
 | `ready` | `v`, `run_id` | the start of the request; a turn starts at once, without the run queue |
 | `status` | `step: "queued"`, `position`, `waiting` | the run queue, mid-turn, while the turn's first sandbox run (`plot_pipeline` or `run_data_code`) waits for the slot: at once, on every change, and every 15 s unchanged (`position` 1 runs next; `waiting` counts every queued entry, this one included); a turn without a sandbox run never sends it |
-| `status` | `step`, `attempt`, and on `repairing` `outcome`, `findings` | the pipeline's content-free `custom_metadata` progress events; the step that opens a repair round says how the round before it ended (`RoundOutcome`, a count) |
+| `status` | `step`, `attempt`, and on `repairing` `outcome`, `findings`, `defects` | the pipeline's content-free `custom_metadata` progress events; the step that opens a repair round says how the round before it ended (`RoundOutcome`, a count) and the rubric ids it repairs (`VQ-05`, closed codes) |
 | `message` | `text` | a final, non-partial text response authored by the root (`anyplot`) |
-| `plot` | `status`, `reason`, `attempts`, `artifacts`, `changes`, `residual_defects`, `version`, `rounds` | the pipeline's `PlotResult` output event; `version`, the stored version's number, only on `ok` and `needs_attention`; `rounds`, how each attempt ended (`{attempt, outcome, findings, step, shipped}`: the step it ended in, and whether its render is the one shipped) |
+| `plot` | `status`, `reason`, `attempts`, `artifacts`, `changes`, `residual_defects`, `version`, `rounds` | the pipeline's `PlotResult` output event; `version`, the stored version's number, only on `ok` and `needs_attention`; `rounds`, how each attempt ended (`{attempt, outcome, findings, step, shipped, defects}`: the step it ended in, whether its render is the one shipped, and the rubric ids it passed on to the repair) |
 | `refusal` | `code`, `text` | the request ledger's refusal, in place of the message: `out_of_scope`, `needs_data` (data that would have to be fetched), `other_library` (this plot in another library or language: a fixed pointer to the catalogue, not counted toward closing by default), `unsupported_content`, `locked_out` (past the day's `attack` strikes) and `session_closed` (the session's third counted refusal) from the scope guard, `budget` from the budgets; the refusal one before the closing one ends with the fixed `close_warning` sentence; right after `ready`, before the scope judge: `locked_out`, `budget` for a user over the daily budget, `rate_limited` or `daily_limit` past the user's message limits, `session_closed` in a closed session |
 | `error` | `code`, `ref` | `guard_unavailable`, `capacity` (also when a sandbox run found the queue full or waited its maximum; the turn ends there, without a `plot`), `deadline` or `internal` |
-| `done` | `llm_calls`, `tokens`, and after a run `bindings`, `data_confirmed`, `language` (`{language, source}`, the session language and how it was set) and, when the turn changed the data (`prepare_data`, `generate_data`), `dataset` | the end of every run, always last; the route adds the session's sync fields (`_session_sync` in `agents/main.py`) |
+| `done` | `llm_calls`, `tokens`, and after a run `bindings`, `data_confirmed`, `language` (`{language, source}`, the session language and how it was set), `suggestion` (the `.to_long()` offer in the session language, or null, when the session has data) and, when the turn changed the data (`prepare_data`, `generate_data`), `dataset` | the end of every run, always last; the route adds the session's sync fields (`_session_sync` in `agents/main.py`) |
 
 Function calls and responses, tool outputs, thoughts, partial chunks, adapter and
 reviewer answers, and `error_details` are dropped. A message goes through the
@@ -29,6 +29,7 @@ and a reply after a `plot_pipeline` call arrives already cut at the cap.
 """
 
 import json
+import re
 from typing import Any, get_args
 
 from google.adk.events.event import Event
@@ -50,6 +51,9 @@ lines, up to `MAX_DONE_ROLES` spec roles and
 the session language, every string at its schema maximum and JSON-escaped at its worst about 393,000 characters;
 the bound is proven by `tests/unit/agents/runtime/test_stream.py`, so a changed dataset
 always reaches the page."""
+NO_SUGGESTION: Any = object()
+"""`Translator.done`'s default for `suggestion`: no data, so the event carries no `suggestion` key (a `null` one
+says that the data has no offer)."""
 MAX_DONE_ROLES = 50
 """The spec roles a `done` event's `dataset` lists at most. No catalogue spec comes near (a
 binding set holds at most 50 columns), but a role list has no bound of its own: one bullet
@@ -62,6 +66,8 @@ QUEUED_STEP = "queued"
 """The status step the route sends while the run waits in the run queue; no pipeline event carries it."""
 PLOT_FIELDS = ("status", "reason", "attempts", "artifacts", "changes", "residual_defects", "version", "rounds")
 ROUND_OUTCOMES = frozenset(get_args(RoundOutcome))
+RUBRIC_ID = re.compile(r"[A-Z]{2}-[0-9]{2}")
+"""A rubric id a repairing status names (`schemas.RubricId`)."""
 MODEL_WRITTEN_FIELDS = ("changes", "residual_defects")
 
 
@@ -105,6 +111,10 @@ class Translator:
             findings = status.get("findings")
             if status.get("outcome") in ROUND_OUTCOMES and isinstance(findings, int):
                 data.update(outcome=status["outcome"], findings=findings)
+                defects = status.get("defects")
+                if isinstance(defects, list):
+                    # Rubric ids only (`VQ-05`): closed codes the page names in words, never text.
+                    data["defects"] = [item for item in defects if isinstance(item, str) and RUBRIC_ID.fullmatch(item)]
             out.append(sse("status", data))
             return out
         if event.author == PIPELINE_AUTHOR and isinstance(event.output, dict) and "status" in event.output:
@@ -165,6 +175,7 @@ class Translator:
         data_confirmed: bool | None = None,
         dataset: dict[str, Any] | None = None,
         language: dict[str, Any] | None = None,
+        suggestion: object = NO_SUGGESTION,
     ) -> str:
         """The closing event; with the session's bindings, confirmation state and a changed dataset when the route has them.
 
@@ -178,7 +189,9 @@ class Translator:
         session's first data. `language` is the session language as `{language, source}`
         (`source` one of `default`, `pasted`, `detected` and `chosen`), which the scope guard's
         detection or the root's `set_language` may have set during the turn; the page's
-        chip follows it.
+        chip follows it. `suggestion` is the wide-table offer (`.to_long()`) as the dataset route answers it, or
+        `null` for none, after every run on a session with data: its new column names follow the session
+        language, which the turn may have changed, so the page's card always names what `.to_long()` applies.
         """
         payload: dict[str, Any] = {
             "llm_calls": self.ledger.llm_calls,
@@ -192,4 +205,6 @@ class Translator:
             payload["dataset"] = dataset
         if language is not None:
             payload["language"] = language
+        if suggestion is not NO_SUGGESTION:
+            payload["suggestion"] = suggestion
         return sse("done", payload)

@@ -51,7 +51,15 @@ The dataset leaves room for the `_logs` suffix of the linked log dataset (1,024 
 LOGS_SUFFIX = "_logs"
 """The linked log dataset is the views dataset's name plus this suffix (`docs/reference/agent-telemetry.md`)."""
 
-KEEP_ACTIONS = ("copied_code", "copied_image", "downloaded_png", "downloaded_code", "downloaded_data", "saved_session")
+KEEP_ACTIONS = ("copied_code", "copied_image", "downloaded_png", "downloaded_code", "downloaded_data")
+"""The outcomes that keep a result; never `saved_session`, which users also send to report a plot they did not like."""
+REJECT_REACTIONS = ("thumbs_down", "bug")
+"""Feedback reactions that make a session not kept, whatever else the user did."""
+REJECT_LOOKBACK_DAYS = 2
+"""How far before the window a session's rejections and runs are still read (reviews of #12207): a session that
+straddles the window's start keeps a thumbs_down sent before it, and a plot shipped before it and kept inside it
+counts as shipped and kept. Sessions live in memory on one instance, so two days covers them; the extra range is
+a pruned partition scan, and the window's own counts (plots shipped, the repair rate) never reach into it."""
 
 
 class UsageItem(BaseModel):
@@ -65,9 +73,16 @@ class AgentUsage(BaseModel):
     sessions: int = 0
     plots_shipped: int = 0
     kept_rate: float | None = None
-    """Sessions whose user kept a result (copied, downloaded, saved) among the sessions with a shipped plot."""
+    """Kept sessions among the sessions with a shipped plot (`kept_sessions` of `shipped_sessions`)."""
+    kept_sessions: int = 0
+    """Sessions with a copy or a download after their last run and no thumbs_down or bug feedback; a saved session
+    alone is no keep (owner rule of 2026-10-16, the `sessions` view's `kept`)."""
+    shipped_sessions: int = 0
     repair_rate: float | None = None
-    """Pipeline runs that needed more than one round among the runs that started (not the `not_ready` ones)."""
+    """Pipeline runs that needed more than one round among the runs that started (`repaired_runs` of `runs`)."""
+    repaired_runs: int = 0
+    runs: int = 0
+    """Pipeline runs that started (not the `not_ready` ones)."""
     top_specs: list[UsageItem] = Field(default_factory=list)
     top_formats: list[UsageItem] = Field(default_factory=list)
     top_refusals: list[UsageItem] = Field(default_factory=list)
@@ -173,12 +188,17 @@ def usage_sql(dataset: str) -> str:
     partitions to the window. Transcription offers (`outcome: transcribed`) are left out of the
     formats: the confirmed paste that follows carries the same format, so each input counts once.
     `not_ready` runs (a plot asked for before the data was confirmed) count neither as shipped
-    nor in the repair rate's base.
+    nor in the repair rate's base. A session counts as kept as the `sessions` view's `kept` says
+    (`agents/telemetry/views/03_sessions.sql`): a copy or a download after its last run, and no
+    thumbs_down or bug feedback; a saved session alone is no keep. The counts behind both rates come along,
+    so the card shows "1 of 3" beside the percentage.
     """
     keep = ", ".join(f"'{action}'" for action in KEEP_ACTIONS)
+    reject = ", ".join(f"'{reaction}'" for reaction in REJECT_REACTIONS)
     return f"""
 WITH ev AS (
   SELECT
+    timestamp AS ts,
     JSON_VALUE(json_payload.event) AS event,
     JSON_VALUE(json_payload.session) AS session,
     JSON_VALUE(json_payload.spec_id) AS spec_id,
@@ -190,14 +210,50 @@ WITH ev AS (
   QUALIFY ROW_NUMBER() OVER (PARTITION BY JSON_VALUE(json_payload.idempotency_key) ORDER BY timestamp) = 1
 ),
 runs AS (
-  SELECT JSON_VALUE(payload.status) AS status, LAX_INT64(payload.rounds) AS rounds, session
+  SELECT JSON_VALUE(payload.status) AS status, LAX_INT64(payload.rounds) AS rounds, session, ts
   FROM ev WHERE event = 'pipeline_run' AND JSON_VALUE(payload.status) != 'not_ready'
 ),
-shipped_sessions AS (
-  SELECT DISTINCT session FROM runs WHERE status IN ('ok', 'needs_attention')
+per_session AS (
+  -- Every session of the window, its runs read from up to {REJECT_LOOKBACK_DAYS} days before it: a plot shipped
+  -- just before the window and kept inside it counts as shipped and kept, as the session counts in `sessions`
+  -- (review of #12207). The window's own run counts (plots shipped, the repair rate) stay in `runs`.
+  SELECT
+    JSON_VALUE(json_payload.session) AS session,
+    MAX(timestamp) AS last_run_at,
+    COUNTIF(JSON_VALUE(json_payload.status) IN ('ok', 'needs_attention')) AS shipped
+  FROM `{dataset}{LOGS_SUFFIX}._AllLogs`
+  WHERE timestamp >= TIMESTAMP_SUB(@since, INTERVAL {REJECT_LOOKBACK_DAYS} DAY)
+    AND JSON_VALUE(json_payload.log_type) = 'agent_telemetry'
+    AND JSON_VALUE(json_payload.source) = 'live'
+    AND JSON_VALUE(json_payload.event) = 'pipeline_run'
+    AND JSON_VALUE(json_payload.status) != 'not_ready'
+    AND JSON_VALUE(json_payload.session) IN (SELECT session FROM ev)
+  GROUP BY session
 ),
-kept_sessions AS (
-  SELECT DISTINCT session FROM ev WHERE event = 'outcome' AND JSON_VALUE(payload.action) IN ({keep})
+outcomes AS (
+  SELECT session, MAX(IF(JSON_VALUE(payload.action) IN ({keep}), ts, NULL)) AS last_keep_at
+  FROM ev WHERE event = 'outcome' GROUP BY session
+),
+rejections AS (
+  -- A rejection counts from up to {REJECT_LOOKBACK_DAYS} days before the window, so a session that straddles the
+  -- window's start keeps a thumbs_down or bug sent before it; still a pruned partition range.
+  SELECT DISTINCT JSON_VALUE(json_payload.session) AS session
+  FROM `{dataset}{LOGS_SUFFIX}._AllLogs`
+  WHERE timestamp >= TIMESTAMP_SUB(@since, INTERVAL {REJECT_LOOKBACK_DAYS} DAY)
+    AND JSON_VALUE(json_payload.log_type) = 'agent_telemetry'
+    AND JSON_VALUE(json_payload.source) = 'live'
+    AND JSON_VALUE(json_payload.event) = 'outcome'
+    AND JSON_VALUE(json_payload.action) = 'feedback'
+    AND JSON_VALUE(json_payload.reaction) IN ({reject})
+),
+shipped_sessions AS (
+  SELECT per_session.session, (
+    per_session.session NOT IN (SELECT session FROM rejections WHERE session IS NOT NULL)
+    AND outcomes.last_keep_at IS NOT NULL
+    AND outcomes.last_keep_at > per_session.last_run_at
+  ) AS kept
+  FROM per_session LEFT JOIN outcomes USING (session)
+  WHERE per_session.shipped > 0
 ),
 refusals AS (
   SELECT IFNULL(JSON_VALUE(payload.cause), JSON_VALUE(payload.outcome)) AS key
@@ -208,8 +264,11 @@ refusals AS (
 SELECT
   (SELECT COUNT(DISTINCT session) FROM ev) AS sessions,
   (SELECT COUNTIF(status IN ('ok', 'needs_attention')) FROM runs) AS plots_shipped,
-  (SELECT SAFE_DIVIDE(COUNTIF(session IN (SELECT session FROM kept_sessions)), COUNT(*)) FROM shipped_sessions)
-    AS kept_rate,
+  (SELECT COUNTIF(kept) FROM shipped_sessions) AS kept_sessions,
+  (SELECT COUNT(*) FROM shipped_sessions) AS shipped_sessions,
+  (SELECT SAFE_DIVIDE(COUNTIF(kept), COUNT(*)) FROM shipped_sessions) AS kept_rate,
+  (SELECT COUNTIF(rounds > 1) FROM runs) AS repaired_runs,
+  (SELECT COUNT(*) FROM runs) AS runs,
   (SELECT SAFE_DIVIDE(COUNTIF(rounds > 1), COUNT(*)) FROM runs) AS repair_rate,
   ARRAY(
     SELECT AS STRUCT spec_id AS key, COUNT(DISTINCT session) AS count FROM ev
@@ -240,6 +299,10 @@ def _items(value: Any) -> list[UsageItem]:
         if isinstance(key, str) and isinstance(count, int):
             items.append(UsageItem(key=key, count=count))
     return items
+
+
+def _count(value: Any) -> int:
+    return value if isinstance(value, int) and not isinstance(value, bool) and value >= 0 else 0
 
 
 def _rate(value: Any) -> float | None:
@@ -284,7 +347,11 @@ def read_usage(
         sessions=int(row.get("sessions") or 0),
         plots_shipped=int(row.get("plots_shipped") or 0),
         kept_rate=_rate(row.get("kept_rate")),
+        kept_sessions=_count(row.get("kept_sessions")),
+        shipped_sessions=_count(row.get("shipped_sessions")),
         repair_rate=_rate(row.get("repair_rate")),
+        repaired_runs=_count(row.get("repaired_runs")),
+        runs=_count(row.get("runs")),
         top_specs=_items(row.get("top_specs")),
         top_formats=_items(row.get("top_formats")),
         top_refusals=_items(row.get("top_refusals")),
