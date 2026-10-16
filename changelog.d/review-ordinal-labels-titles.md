@@ -11,4 +11,4 @@
   live in `prompts/default-style-guide.md` and `prompts/quality-criteria.md`,
   which the catalogue pipeline and the agent's adapter and reviewer both read,
   so one edit changes the rule for both; the agent prompts that used to exempt
-  every column name as written now point at the shared rule.
+  every column name as written now point at the shared rule (#12203).
