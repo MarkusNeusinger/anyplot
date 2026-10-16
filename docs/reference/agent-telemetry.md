@@ -34,7 +34,7 @@ The agents service writes one wide JSON line per event to stdout on its own logg
 |---|---|---|
 | `data_input` | A paste or a dropped file reaches the dataset route, or the file conversion refuses a file | `format`, `entry` (`paste` or `file`), `outcome`, `cause`, `size_bucket`, `rows_bucket`, `cols_bucket`, column counts by type, `max_categories_bucket`, `missing_bucket`, `warnings` (codes), `tables`, `sheets`, `notes` and `file_name` (booleans), `spec_fit`, judge tokens, `latency_ms` |
 | `chat_turn` | A `/messages` turn ends, refused ones included; `manual_binding_changed` counts only a `PUT /bindings` whose bindings differ from the ones the session held, because the page echoes the parse's defaults after every paste | `kind` (`plot`, `prep`, `formula`, `code`, `talk`, `refused`, `error`), `action`, `asked_question`, `tools`, `prep_ops`, `undo`, `to_long`, `manual_binding_changed`, `binding_warnings`, `refusal`, `error`, `reply_reasked`, `language_source`, `steps` (calls, tokens and model per agent), `latency_ms` |
-| `pipeline_run` | A `plot_pipeline` run ends | `run_index` (1 is the session's first plot), `base`, `status`, `reason`, `stage`, `attempts`, `rounds`, `score_round1`, `score_round2` (buckets), `shipped_attempt`, `forced_repair`, `gates_failed`, `reviewer_defects`, `residual_defects`, `sandbox_failures` (`syntax`, `name`, `key`, `value`, `type`, `timeout`, `memory`, `other`), time per stage, `steps` |
+| `pipeline_run` | A `plot_pipeline` run ends, or the root asked for one before the data was ready (`status: not_ready` with its reason) | `run_index` (1 is the session's first plot), `base`, `status`, `reason`, `stage`, `attempts`, `rounds`, `score_round1`, `score_round2` (buckets), `shipped_attempt`, `forced_repair`, `gates_failed`, `reviewer_defects`, `residual_defects`, `sandbox_failures` (`syntax`, `name`, `key`, `value`, `type`, `timeout`, `memory`, `other`), time per stage, `steps` |
 | `outcome` | The page's beacon after a copy, a download, a session save, or a feedback send | `action` (`copied_code`, `copied_image`, `downloaded_png`, `downloaded_code`, `downloaded_data`, `saved_session`, `feedback`), `version`, `reaction` |
 
 Every line carries the same envelope:
@@ -194,13 +194,19 @@ Run these steps once, as a project owner. They write nothing but the resources n
      --role=roles/bigquery.dataViewer anyplot:agent_telemetry_logs
    ```
 
-10. Point the API at the views. `--update-env-vars` adds the variable, and the next deploy keeps it
-    (`api/cloudbuild.yaml` updates its variables additively):
+10. Point the API at the views through the deploy pipeline, like `_AGENT_SERVICE_URL`: set the
+    `_AGENT_TELEMETRY_DATASET` substitution on the `deploy-api` trigger. The pipeline writes the variable on
+    every deploy, smoke-tests the new revision and moves the pinned traffic to it; a
+    `gcloud run services update` would create a revision that serves no traffic and that the next deploy
+    overwrites.
 
     ```bash
-    gcloud run services update anyplot-api --region=europe-west4 \
-      --update-env-vars=AGENT_TELEMETRY_DATASET=anyplot.agent_telemetry
+    gcloud builds triggers update github deploy-api --region=europe-west4 \
+      --update-substitutions=_AGENT_TELEMETRY_DATASET=anyplot.agent_telemetry
     ```
+
+    The setting takes effect with the next API deploy; run the trigger by hand if you want it at once
+    (`gcloud builds triggers run deploy-api --region=europe-west4 --branch=main`).
 
 11. Connect Looker Studio to the `anyplot.agent_telemetry` views with your own account, which needs the same
     two roles.

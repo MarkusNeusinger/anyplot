@@ -1284,6 +1284,17 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     view, dataset, not_ready = load_inputs(ctx, services)
     if not_ready is not None or view is None or dataset is None:
         keep_pending_request(ctx.state, node_input, not_ready)
+        # An attempted plot the data was not ready for is a run of its own in the telemetry: the funnel sees it.
+        index = telemetry.run_index(ctx.session.id, ctx.invocation_id)
+        telemetry.write(
+            telemetry.PipelineRun,
+            ledger,
+            attempt=f"run{index}",
+            run_index=index,
+            base=node_input.base,
+            status="not_ready",
+            reason=not_ready or "no_dataset",
+        )
         yield _result_event(PlotResult.not_ready(not_ready or "no_dataset"))
         return
     ledger.pipeline_active = True

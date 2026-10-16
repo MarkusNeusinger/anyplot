@@ -1019,9 +1019,10 @@ could not be read; `PATCH /cases/{id}` answers `422 no_data` and
 | `AGENT_TELEMETRY_DATASET` | Unset | `<project>.<dataset>` of the usage telemetry's BigQuery views (`anyplot.agent_telemetry`), which `GET /debug/agent-usage` reads; unset, that route answers `status: not_configured` ([Agent usage telemetry](agent-telemetry.md)) |
 | `AGENT_CASES_BUCKET` | `anyplot-agent-cases` | The private EU bucket the feedback cases go to and the case routes read from (see [Feedback case](#feedback-case)); never the public image bucket. The default is the production bucket, so a local API with Application Default Credentials stores its cases there too; set a bucket of your own for local runs |
 
-In production, `AGENT_ENABLED` and `AGENT_SERVICE_URL` come from the
-`_AGENT_ENABLED` and `_AGENT_SERVICE_URL` substitutions in `api/cloudbuild.yaml`.
-Change them there: the deploy rewrites both variables on every build.
+In production, `AGENT_ENABLED`, `AGENT_SERVICE_URL` and `AGENT_TELEMETRY_DATASET`
+come from the `_AGENT_ENABLED`, `_AGENT_SERVICE_URL` and `_AGENT_TELEMETRY_DATASET`
+substitutions in `api/cloudbuild.yaml`. Change them there: the deploy rewrites all
+three variables on every build.
 
 ---
 

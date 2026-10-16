@@ -96,9 +96,15 @@ async def test_a_whole_session_writes_the_four_events_and_none_of_its_content(
         f"/v1/sessions/{sid}/outcome", headers=HEADERS, json={"action": "copied_code", "version": 1}
     )
     assert beacon.status_code == 204
+    again = await client.post(  # a second click on the same button is a second row, not a duplicate
+        f"/v1/sessions/{sid}/outcome",
+        headers={**HEADERS, "X-Request-Id": "req-telemetry-2"},
+        json={"action": "copied_code", "version": 1},
+    )
+    assert again.status_code == 204
 
     lines = telemetry_lines(caplog)
-    assert [line["event"] for line in lines] == ["data_input", "pipeline_run", "chat_turn", "outcome"]
+    assert [line["event"] for line in lines] == ["data_input", "pipeline_run", "chat_turn", "outcome", "outcome"]
     raw = json.dumps(lines)
     for canary in (COLUMN_CANARY, CELL_CANARY, NOTE_CANARY, FILE_CANARY, MESSAGE_CANARY, USER, sid, "Exam Score"):
         assert canary not in raw, canary
@@ -108,7 +114,7 @@ async def test_a_whole_session_writes_the_four_events_and_none_of_its_content(
         assert line["spec_id"] == "scatter-basic" and line["library"] == "matplotlib"
         assert len(line["session"]) == 16 and line["session"] == lines[0]["session"]
 
-    data_input, run, chat_turn, outcome = lines
+    data_input, run, chat_turn, outcome, _ = lines
     assert data_input["outcome"] == "ok" and data_input["format"] == "csv" and data_input["entry"] == "file"
     assert data_input["file_name"] is True and data_input["notes"] is True and data_input["text_cols"] == 1
     assert data_input["rows_bucket"] == "11_100" and data_input["cols_bucket"] == "3_5"
@@ -119,7 +125,7 @@ async def test_a_whole_session_writes_the_four_events_and_none_of_its_content(
     assert chat_turn["tools"] == ["plot_pipeline"] and chat_turn["manual_binding_changed"] is True
     assert {step["step"] for step in chat_turn["steps"]} >= {"root", "adapter", "reviewer"}
     assert outcome["action"] == "copied_code" and outcome["version"] == 1 and outcome["turn"] == 1
-    assert len({line["idempotency_key"] for line in lines}) == 4
+    assert len({line["idempotency_key"] for line in lines}) == 5
 
 
 async def test_the_attribution_lines_still_carry_the_user_and_the_telemetry_lines_never(
@@ -168,6 +174,8 @@ async def test_the_beacon_takes_closed_values_only(client: httpx.AsyncClient) ->
         assert (await client.post(url, headers=HEADERS, json=body)).status_code == 422, body
     gone = await client.post("/v1/sessions/nope/outcome", headers=HEADERS, json={"action": "copied_code"})
     assert gone.status_code == 404
+    unknown = await client.post(url, headers=HEADERS, json={"action": "copied_code", "version": 7})
+    assert (unknown.status_code, unknown.json()["detail"]) == (404, "not_found")
 
 
 async def test_the_beacon_is_rate_limited_per_user(client: httpx.AsyncClient) -> None:
@@ -225,6 +233,26 @@ def test_an_envelope_value_outside_its_set_writes_no_line(caplog: pytest.LogCapt
 
 def test_the_reactions_are_the_feedback_reactions() -> None:
     assert get_args(telemetry.Reaction) == FEEDBACK_REACTIONS
+
+
+def test_the_run_reasons_are_the_pipeline_reasons() -> None:
+    from agents.anyplot.schemas import FailureReason, NotReadyReason
+
+    assert get_args(telemetry.FailureReason) == get_args(FailureReason)
+    assert get_args(telemetry.NotReadyReason) == get_args(NotReadyReason)
+
+
+async def test_a_plot_before_the_data_is_ready_is_a_not_ready_run(
+    client: httpx.AsyncClient, swap_models, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.INFO)
+    swap_models("gemini", default_script())
+    sid = await open_session(client)
+    await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": CANARY_DATA})
+    # No `.confirm()`: the pipeline answers not_ready, and the telemetry still counts the attempt.
+    await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"action": "create_plot"})
+    runs = [line for line in telemetry_lines(caplog) if line["event"] == "pipeline_run"]
+    assert [(run["status"], run["reason"], run["run_index"]) for run in runs] == [("not_ready", "data_unconfirmed", 1)]
 
 
 def test_the_prep_ops_are_the_operations() -> None:

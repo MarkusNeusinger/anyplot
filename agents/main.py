@@ -2127,20 +2127,29 @@ async def post_outcome(sid: SessionId, body: OutcomeBody, user: User, runtime: R
     The page sends it after a copy, a download, a session save or a feedback send; the BFF forwards it, so every
     telemetry line comes from this one writer with the same salted session hash. Content-free by its schema
     (closed `action` and `reaction`, a version number). `429 rate_limited` / `daily_limit` past
-    `OUTCOMES_PER_MINUTE` / `_PER_DAY` per user, which the page ignores; `404 session_expired` as everywhere.
+    `OUTCOMES_PER_MINUTE` / `_PER_DAY` per user, which the page ignores; `404 session_expired` as everywhere, and
+    `404 not_found` for a version the session does not have. A version's line carries that version's library,
+    so a card made before a library switch counts for its own library; version 0 carries the session's.
     No model call, no state write: the session's events are untouched.
     """
     session = await runtime.session(user, sid)
     services = get_services()
+    version = services.versions.get(sid, body.version) if body.version else None
+    if body.version and version is None:
+        raise AgentsError(404, "not_found")
     limit = services.usage.outcome_limit(user)
     if limit is not None:
         raise AgentsError(429, limit)
     services.usage.add_outcome(user)
     ledger = _stamp(RequestLedger(request_id=rid, user_id=user, session_id=sid), read_session(session.state), session)
+    if version is not None:
+        # A result card of an earlier library stays usable after a switch: its outcome counts for its own library.
+        ledger.library = version.library
     telemetry.write(
         telemetry.Outcome,
         ledger,
-        attempt=f"{body.action}:{body.version}:{body.reaction or ''}",
+        # Every click is its own row (the request id, hashed into the key only); a line delivered twice still repeats it.
+        attempt=f"{body.action}:{body.version}:{rid}",
         action=body.action,
         version=body.version,
         reaction=body.reaction,
