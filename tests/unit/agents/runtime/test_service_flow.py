@@ -3821,3 +3821,59 @@ async def test_a_title_asked_for_before_the_confirmation_reaches_the_first_plot(
     assert TITLE_REQUEST in first and "Umsatz QX7 nach Filiale und Quartal" in first
     state = await _session_state(client, sid)
     assert state.get(PENDING_REQUEST) is None  # the shipped plot used the note
+
+
+def tool_responses(fake: object, name: str) -> list[dict[str, Any]]:
+    """What the root read back from each call of the tool `name`, in order."""
+    return [
+        part.function_response.response or {}
+        for request in requests_of(fake, "root")
+        for content in request.contents
+        for part in content.parts or []
+        if part.function_response is not None and part.function_response.name == name
+    ]
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        {"text": "Setz den Titel auf Umsatz QX7 nach Filiale"},  # typed before `.confirm()`
+        {"action": "summarize_data"},  # a wish in the pasted notes, kept in the summary turn (owner, 2026-10-16)
+    ],
+)
+async def test_a_kept_request_without_a_run_reaches_the_first_plot(
+    client: httpx.AsyncClient, swap_models, body: dict[str, str]
+) -> None:
+    """`keep_plot_request` keeps a first-plot request without a run: no `plot` event, no not_ready card; the
+    bare `.create_plot()` after the confirmation hands it to the adapter, and a library with a plot keeps none."""
+    script = default_script()
+    keep = {
+        "call": "keep_plot_request",
+        "args": {"change_request": TITLE_REQUEST, "expected_texts": ["Umsatz QX7 nach Filiale und Quartal"]},
+    }
+    script["root"] = [keep, {"text": "Kept for the first plot."}, *script["root"], keep, {"text": "Not kept."}]
+    fake = swap_models("gemini", script)
+    sid = await open_session(client, with_data=False)
+    data = (CASES / "scatter-basic-matplotlib" / "data.csv").read_text()
+    pasted = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": data})
+    assert pasted.status_code == 200, pasted.text
+
+    asked = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json=body)
+
+    assert not any(name == "plot" for name, _ in parse_sse(asked.text))
+    assert tool_responses(fake, "keep_plot_request")[-1] == {"status": "ok", "request_kept": True}
+    confirmed = await client.post(f"/v1/sessions/{sid}/dataset/confirm", headers=HEADERS)
+    assert confirmed.status_code == 200, confirmed.text
+    await create_plot(client, sid)
+    first = adapter_inputs(fake)[0]
+    assert TITLE_REQUEST in first and "Umsatz QX7 nach Filiale und Quartal" in first
+    assert (await _session_state(client, sid)).get(PENDING_REQUEST) is None
+
+    # With a plot, a request is a change of it: nothing is kept, and the answer says why.
+    await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "Titel ändern"})
+    assert tool_responses(fake, "keep_plot_request")[-1] == {
+        "status": "ok",
+        "request_kept": False,
+        "reason": "plot_exists",
+    }
+    assert (await _session_state(client, sid)).get(PENDING_REQUEST) is None

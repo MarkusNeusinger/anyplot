@@ -2,35 +2,47 @@
 
 -- One row per day, spec and library: what was pasted, what ran, what shipped, what was kept. Every line carries
 -- the library it was written under, so a session that switched from matplotlib to seaborn counts each library's
--- runs under that library (and is one session under each). `sessions_kept` counts the sessions of the row whose
--- keep line falls on it and that the `sessions` view calls `kept` (a copy or a download after the last run, no
--- thumbs_down or bug; a saved session alone is no keep).
+-- runs under that library (and is one session under each). `sessions_kept` counts each session the `sessions`
+-- view calls `kept` (a copy or a download after the last run, no thumbs_down or bug; a saved session alone is no
+-- keep) exactly once, under the day, spec and library of its LAST shipped run: the keep comes after that run, so
+-- it is the plot the user took away (review of #12207: a superseded matplotlib copy and the final seaborn download
+-- had counted the session under both libraries).
 CREATE OR REPLACE VIEW `anyplot.agent_telemetry.usage` AS
-SELECT
-  DATE(events.ts) AS day,
-  events.source AS source,
-  events.spec_id AS spec_id,
-  events.library AS library,
-  COUNT(DISTINCT events.session) AS sessions,
-  COUNTIF(events.event = 'data_input' AND JSON_VALUE(events.payload.outcome) != 'transcribed') AS data_inputs,
-  COUNTIF(events.event = 'chat_turn') AS turns,
-  COUNTIF(events.event = 'pipeline_run' AND JSON_VALUE(events.payload.status) != 'not_ready') AS runs,
-  COUNTIF(
-    events.event = 'pipeline_run' AND JSON_VALUE(events.payload.status) IN ('ok', 'needs_attention')
-  ) AS plots_shipped,
-  COUNT(DISTINCT IF(
-    events.event = 'outcome'
-    AND JSON_VALUE(events.payload.action) IN (
-      'copied_code', 'copied_image', 'downloaded_png', 'downloaded_code', 'downloaded_data'
-    )
-    AND sessions.kept,
-    events.session,
-    NULL
-  )) AS sessions_kept
-FROM `anyplot.agent_telemetry.events` AS events
-LEFT JOIN `anyplot.agent_telemetry.sessions` AS sessions
-  ON sessions.session = events.session AND sessions.source = events.source
-GROUP BY 1, 2, 3, 4;
+WITH base AS (
+  SELECT
+    DATE(ts) AS day,
+    source,
+    spec_id,
+    library,
+    COUNT(DISTINCT session) AS sessions,
+    COUNTIF(event = 'data_input' AND JSON_VALUE(payload.outcome) != 'transcribed') AS data_inputs,
+    COUNTIF(event = 'chat_turn') AS turns,
+    COUNTIF(event = 'pipeline_run' AND JSON_VALUE(payload.status) != 'not_ready') AS runs,
+    COUNTIF(event = 'pipeline_run' AND JSON_VALUE(payload.status) IN ('ok', 'needs_attention')) AS plots_shipped
+  FROM `anyplot.agent_telemetry.events`
+  GROUP BY day, source, spec_id, library
+),
+last_shipped AS (
+  SELECT session, source, DATE(ts) AS day, spec_id, library
+  FROM `anyplot.agent_telemetry.pipeline_runs`
+  WHERE shipped
+  QUALIFY ROW_NUMBER() OVER (PARTITION BY session, source ORDER BY ts DESC, idempotency_key DESC) = 1
+),
+kept AS (
+  SELECT last_shipped.day, last_shipped.source, last_shipped.spec_id, last_shipped.library, COUNT(*) AS sessions_kept
+  FROM last_shipped
+  JOIN `anyplot.agent_telemetry.sessions` AS sessions
+    ON sessions.session = last_shipped.session AND sessions.source = last_shipped.source
+  WHERE sessions.kept
+  GROUP BY 1, 2, 3, 4
+)
+SELECT base.*, IFNULL(kept.sessions_kept, 0) AS sessions_kept
+FROM base
+LEFT JOIN kept
+  ON kept.day = base.day
+  AND kept.source = base.source
+  AND kept.spec_id IS NOT DISTINCT FROM base.spec_id
+  AND kept.library IS NOT DISTINCT FROM base.library;
 
 -- One row per day, spec, library and input format: the data inputs of that format and how they ended. Each
 -- input counts under its own format only; the session totals live in `usage`, never copied onto every format.

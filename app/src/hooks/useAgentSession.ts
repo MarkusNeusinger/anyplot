@@ -429,8 +429,11 @@ type Action =
   /** The language route's answer: the stored form, source `chosen`. */
   | { type: 'language_done'; plotLanguage: PlotLanguage }
   | { type: 'language_failed' }
-  /** A turn's `done` named the session language. */
-  | { type: 'language_sync'; plotLanguage: PlotLanguage }
+  /**
+   * A turn's `done` named the session language, and with data the `.to_long()`
+   * offer the server computed in it: the offer applies only with that language.
+   */
+  | { type: 'language_sync'; plotLanguage: PlotLanguage; suggestion?: LongSuggestion | null }
   /**
    * The `.to_long()` offer as the server recomputed it in the session language
    * (a turn's `done`, the language route's answer): the card names what the
@@ -897,7 +900,11 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
       if (SOURCE_RANK[action.plotLanguage.source] < SOURCE_RANK[state.plotLanguage.source]) {
         return state;
       }
-      const next = { ...state, plotLanguage: action.plotLanguage };
+      const synced =
+        action.suggestion !== undefined
+          ? reduce(state, { type: 'suggestion_sync', suggestion: action.suggestion })
+          : state;
+      const next = { ...synced, plotLanguage: action.plotLanguage };
       const before = state.plotLanguage;
       const after = action.plotLanguage;
       // The first typed message or a paste set it: one quiet line names the chip that changes it.
@@ -1506,12 +1513,14 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
           }
           // The first typed message (`detected`) or the assistant's `set_language`
           // (`chosen`) may have set the session language: the chip follows the server.
+          // The `.to_long()` offer travels with the language the server computed it in, and applies
+          // only when that language does: a `done` the chip ignores never renames the card.
           if (event.language) {
-            safeDispatch({ type: 'language_sync', plotLanguage: event.language });
-          }
-          // The `.to_long()` offer in the session language after the turn, which may have changed it.
-          if (event.suggestion !== undefined) {
-            safeDispatch({ type: 'suggestion_sync', suggestion: event.suggestion });
+            safeDispatch({
+              type: 'language_sync',
+              plotLanguage: event.language,
+              suggestion: event.suggestion,
+            });
           }
           break;
         default:

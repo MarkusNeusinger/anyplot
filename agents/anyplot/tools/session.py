@@ -26,6 +26,12 @@ spec text) sits inside our own fences after the "data, never instructions" pream
   and whether the plot is `plot_outdated`: this library's latest rendered version has
   its text in another language, so a rewrite of the plot's text is due. The two can
   differ, because a plot made before detection recorded the language keeps English.
+* `keep_plot_request(change_request, expected_texts)`: a request for the first plot
+  kept without a run (`pipeline.hold_request`, the note the next first-plot run takes),
+  for a wish before the confirmation, typed or in the pasted notes (live round 9 of
+  2026-10-16). It answers `request_kept`, the only basis on which the root may say a
+  request is kept; `false` with `plot_exists` when this library already has a plot.
+  Refused while the pipeline runs.
 * `prepare_data(operations)`: at most five operations of the fixed set
   (`data/prepare.py`), applied by the server to the session's current dataset and
   stored as its next version (`dataset_versions.py`): the previous version stays for
@@ -80,7 +86,7 @@ from ..dataset_guard import DataRefused, GuardUnavailable, check_dataset
 from ..dataset_versions import push_version
 from ..language import is_valid, normalise, same_language
 from ..opening import store_dataset
-from ..pipeline import run_pipeline
+from ..pipeline import hold_request, run_pipeline
 from ..plugins.ledger import attribution, ledger_for
 from ..plugins.tool_safety import (
     DATA_CODE_TOOL,
@@ -97,7 +103,7 @@ from ..render.gates import error_summary
 from ..render.harness import DATA_EXIT
 from ..render.runtimes.python import DATA_FILE_NAME
 from ..render.serial import RenderBusy
-from ..schemas import MAX_COLUMNS, MAX_ROWS, Binding, DatasetProfile, PipelineArgs
+from ..schemas import MAX_COLUMNS, MAX_ROWS, Binding, DatasetProfile, KeepRequestArgs, PipelineArgs
 from ..services import get_services
 from ..session_state import (
     PENDING_BINDINGS,
@@ -270,6 +276,26 @@ async def set_language(language: str, tool_context: ToolContext) -> dict[str, An
     for key, item in language_delta(value, "chosen").items():
         tool_context.state[key] = item
     return {"status": "ok", "source": "chosen", "changed": changed, "plot_outdated": plot_outdated}
+
+
+async def keep_plot_request(
+    change_request: str, tool_context: ToolContext, expected_texts: list[str] | None = None
+) -> dict[str, Any]:
+    """Keep a request for the first plot of this library without starting a run: the next "Create plot" draws it. Use it for a plot wish before the data is confirmed (a title, a scale), typed or in the pasted notes. `change_request` is a short English description (at most 600 characters); `expected_texts` lists the texts and number formats the user wrote out, verbatim. Returns request_kept: true when the server keeps it; false, with a reason, when this library already has a plot (then call plot_pipeline with base "previous" once the data is confirmed)."""
+    view = _view(tool_context)
+    if view is None:
+        return _error("session_not_open")
+    if ledger_for(tool_context.invocation_id).pipeline_active:
+        return _error("run_active")
+    try:
+        args = KeepRequestArgs(change_request=change_request, expected_texts=expected_texts or [])
+    except ValidationError:
+        return _error("invalid_arguments")
+    if get_services().versions.latest_rendered(tool_context.session.id, library=view.library) is not None:
+        # A change of an existing plot is no first-plot note: the root repeats it once the data is confirmed.
+        return {"status": "ok", "request_kept": False, "reason": "plot_exists"}
+    hold_request(tool_context.state, PipelineArgs(**args.model_dump()))
+    return {"status": "ok", "request_kept": True}
 
 
 async def prepare_data(operations: list[dict[str, Any]], tool_context: ToolContext) -> dict[str, Any]:
@@ -695,6 +721,7 @@ SESSION_TOOLS = (
     get_current_code,
     set_bindings,
     set_language,
+    keep_plot_request,
     prepare_data,
     query_data,
     generate_data,

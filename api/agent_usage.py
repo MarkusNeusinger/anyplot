@@ -56,9 +56,10 @@ KEEP_ACTIONS = ("copied_code", "copied_image", "downloaded_png", "downloaded_cod
 REJECT_REACTIONS = ("thumbs_down", "bug")
 """Feedback reactions that make a session not kept, whatever else the user did."""
 REJECT_LOOKBACK_DAYS = 2
-"""How far before the window a rejection is still read (review of #12207): a session that straddles the window's
-start keeps a thumbs_down sent before it. Sessions live in memory on one instance, so two days covers them; the
-extra range is a pruned partition scan of the outcome lines only."""
+"""How far before the window a session's rejections and runs are still read (reviews of #12207): a session that
+straddles the window's start keeps a thumbs_down sent before it, and a plot shipped before it and kept inside it
+counts as shipped and kept. Sessions live in memory on one instance, so two days covers them; the extra range is
+a pruned partition scan, and the window's own counts (plots shipped, the repair rate) never reach into it."""
 
 
 class UsageItem(BaseModel):
@@ -213,11 +214,21 @@ runs AS (
   FROM ev WHERE event = 'pipeline_run' AND JSON_VALUE(payload.status) != 'not_ready'
 ),
 per_session AS (
+  -- Every session of the window, its runs read from up to {REJECT_LOOKBACK_DAYS} days before it: a plot shipped
+  -- just before the window and kept inside it counts as shipped and kept, as the session counts in `sessions`
+  -- (review of #12207). The window's own run counts (plots shipped, the repair rate) stay in `runs`.
   SELECT
-    session,
-    MAX(ts) AS last_run_at,
-    COUNTIF(status IN ('ok', 'needs_attention')) AS shipped
-  FROM runs GROUP BY session
+    JSON_VALUE(json_payload.session) AS session,
+    MAX(timestamp) AS last_run_at,
+    COUNTIF(JSON_VALUE(json_payload.status) IN ('ok', 'needs_attention')) AS shipped
+  FROM `{dataset}{LOGS_SUFFIX}._AllLogs`
+  WHERE timestamp >= TIMESTAMP_SUB(@since, INTERVAL {REJECT_LOOKBACK_DAYS} DAY)
+    AND JSON_VALUE(json_payload.log_type) = 'agent_telemetry'
+    AND JSON_VALUE(json_payload.source) = 'live'
+    AND JSON_VALUE(json_payload.event) = 'pipeline_run'
+    AND JSON_VALUE(json_payload.status) != 'not_ready'
+    AND JSON_VALUE(json_payload.session) IN (SELECT session FROM ev)
+  GROUP BY session
 ),
 outcomes AS (
   SELECT session, MAX(IF(JSON_VALUE(payload.action) IN ({keep}), ts, NULL)) AS last_keep_at

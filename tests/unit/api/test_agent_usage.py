@@ -260,6 +260,9 @@ class TestQuery:
         # Review of #12207: a thumbs_down sent just before the window still rejects a session that straddles it.
         assert "timestamp >= TIMESTAMP_SUB(@since, INTERVAL 2 DAY)" in sql
         assert "NOT IN (SELECT session FROM rejections" in sql
+        # A plot shipped just before the window and kept inside it counts as shipped and kept.
+        runs = sql[sql.index("per_session AS") : sql.index("outcomes AS")]
+        assert "INTERVAL 2 DAY" in runs and "IN (SELECT session FROM ev)" in runs
 
     def test_counts_an_input_once_and_leaves_not_ready_runs_out(self) -> None:
         sql = usage_sql(DATASET)

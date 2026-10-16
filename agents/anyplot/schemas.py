@@ -298,6 +298,24 @@ class PipelineArgs(_ServerContract):
     a format example such as `6,5 Mio.`): the pipeline checks the render's drawn texts for each (`grounding.py`)."""
 
 
+class KeepRequestArgs(_ServerContract):
+    """The `keep_plot_request` tool input: a request for the first plot, kept without running anything.
+
+    Live round 9 of 2026-10-16: a title asked for before `.confirm()`, and a plot wish in the pasted notes,
+    reached no plot, because the bare `.create_plot()` carries no request. The tool stores it as the kept note
+    (`pipeline.hold_request`) that the next first-plot run takes.
+    """
+
+    change_request: str = Field(default="", max_length=MAX_CHANGE_REQUEST_CHARS)
+    expected_texts: list[ExpectedText] = Field(default_factory=list, max_length=MAX_EXPECTED_TEXTS)
+
+    @model_validator(mode="after")
+    def _something_to_keep(self) -> Self:
+        if not self.change_request.strip() and not self.expected_texts:
+            raise ValueError("a kept request needs a change_request or expected_texts")
+        return self
+
+
 class Edit(_ModelOutput):
     """One search-and-replace hunk; the applier requires exactly one match of `find`."""
 

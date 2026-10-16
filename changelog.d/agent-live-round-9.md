@@ -1,9 +1,10 @@
 ### Fixed
 
 - **A plot request made before the confirmation reaches the first plot.** A title asked for before
-  `.confirm()` now goes through `plot_pipeline`, which keeps it for the next `.create_plot()`, and
-  the result says `request_kept`, so the assistant only says a request is kept when the server
-  kept it. (#12207)
+  `.confirm()`, or a plot wish in the pasted notes, is kept by the new `keep_plot_request` tool
+  without a run, and the next `.create_plot()` draws it. The tool, and a `plot_pipeline` call that
+  stopped on unconfirmed data, answer `request_kept`, so the assistant only says a request is kept
+  when the server kept it. (#12207)
 - **The progress grid shows the repair round.** Rounds are named `first try`, `second try`, and a
   running repair round says what it repairs in words (`repairing text size, layout`, from the
   rubric ids the round before passed on). The result card names the round that shipped when an
@@ -24,4 +25,5 @@
 - **A session is kept only when the user took a result away and was content.** The `sessions` view
   and the `/debug` card count a copy or a download after the last run without a `thumbs_down` or
   `bug` feedback; a saved session alone is no keep (new states `rejected` and `saved`). The card
-  shows the counts behind the kept and repair rates (`5 of 12`). (#12207)
+  shows the counts behind the kept and repair rates (`5 of 12`), and the `usage` view counts a kept
+  session once, under the day, spec and library of its last shipped plot. (#12207)
