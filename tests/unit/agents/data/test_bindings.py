@@ -815,6 +815,13 @@ class TestCarryBindings:
         assert as_pairs(carried) == [("x", "a"), ("y1", "b"), ("y2", "c")]
 
 
+def test_an_optional_label_role_takes_no_dates_by_its_name() -> None:
+    """Review of #12204: a date column named `series` stays the x of a line chart, not its optional group."""
+    data = profile("series,revenue\n2025-01-01,10\n2025-01-02,12\n2025-01-03,9\n")
+
+    assert as_pairs(default_bindings(parse_roles(LINE_MULTI), data)) == [("x", "series"), ("y1", "revenue")]
+
+
 class TestWideTableSiblings:
     """Live test round 7 of 2026-10-16: a heatmap's `y` and `value` on `Mo` and `Di` of a wide matrix."""
 

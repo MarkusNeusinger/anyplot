@@ -114,6 +114,12 @@ class TestMatrix:
 
         assert suggestion is not None and suggestion.keys == ["Datum"]
 
+    def test_a_second_time_key_is_no_measurement(self) -> None:
+        """Review of #12204: `Year` beside the row labels would have been melted with `A`, `B`, `C`."""
+        text = "Region,Year,A,B,C\nNord,2025,1,2,3\nSüd,2025,4,5,6\nOst,2025,7,8,9\n"
+
+        assert suggest("heatmap-basic", text) is None
+
     def test_grouped_charts_get_it_flows_hierarchies_and_codes_do_not(self) -> None:
         """Review of #12204: melting a wide table into a flow's target or a party's color means nothing."""
         for spec_id in ("box-grouped", "bar-grouped", "bar-stacked", "heatmap-annotated"):

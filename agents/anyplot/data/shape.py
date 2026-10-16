@@ -139,7 +139,8 @@ def long_suggestion(roles: list[DataRole], profile: DatasetProfile) -> LongSugge
         if len(pair) != 2 or len(required) != 3 or any(role.name not in MATRIX_ROLES for role in pair):
             return None
         key = _row_key(profile, time)
-        if key is None or "boolean" in dtypes.values():
+        # Another year or date-part column besides the row labels is a second key, no measurement to melt.
+        if key is None or "boolean" in dtypes.values() or time - {key}:
             return None
         keys = [key]
         names_to, least = pair[1].name, MIN_MATRIX_COLUMNS

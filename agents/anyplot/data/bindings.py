@@ -294,6 +294,7 @@ def _default_bindings(
                     and _norm(column.name) == _norm(role.name)
                     and _tier(role, column) is not None
                     and not (column.name in siblings and takes_labels(role))
+                    and (role.required or not _label_dates(role, column))
                 ):
                     single[role.name] = column.name
                     used.add(column.name)
