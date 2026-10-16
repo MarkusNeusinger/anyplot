@@ -6,4 +6,4 @@
   telemetry (180 days), the HMAC-keyed attribution lines (30 days), the feedback cases
   (files 180 days, the row until you ask), and a legal basis per purpose. The "the ai never
   sees a visitor's request" line now separates browsing the catalogue from using the
-  assistant, and the processor table gains an "ai assistant" row.
+  assistant, and the processor table gains an "ai assistant" row (#12208).
