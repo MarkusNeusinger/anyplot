@@ -8,4 +8,4 @@
   `/insights/related` now caches the catalogue once as a plain-value index under
   a single key and ranks against it in memory. The results are identical: 1,266
   spec, library, mode and limit combinations on the live catalogue gave
-  byte-equal responses.
+  byte-equal responses. (#12214)
