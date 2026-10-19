@@ -13,6 +13,7 @@ import hashlib
 import logging
 import random
 from collections import Counter, defaultdict
+from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
 
 import httpx
@@ -553,58 +554,81 @@ async def get_plot_of_the_day(db: AsyncSession = Depends(require_db)) -> PlotOfT
 # =============================================================================
 
 
-def _collect_impl_tags(spec: Spec, library: str | None = None) -> set[str]:
-    """Collect spec-level tags + impl-level tags for a spec.
+@dataclass(frozen=True)
+class _RelatedEntry:
+    """One spec as the related-plots ranking reads it: plain values, no ORM objects.
 
-    If library is specified, only include that library's impl_tags.
-    Otherwise, collect impl_tags from all implementations.
+    `preview` is the best-scored implementation that has a preview, as
+    `(preview_url, preview_url_light, preview_url_dark, library_id, language)`.
     """
-    tags = _flatten_tags(spec.tags)
-    for impl in spec.impls:
-        if library and impl.library_id != library:
-            continue
-        if impl.impl_tags and isinstance(impl.impl_tags, dict):
-            tags |= _flatten_tags(impl.impl_tags)
-    return tags
+
+    id: str
+    title: str
+    spec_tags: frozenset[str]
+    impl_tags: dict[str, frozenset[str]]
+    all_tags: frozenset[str]
+    preview: tuple[str | None, str | None, str | None, str, str | None] | None
+
+    def tags(self, mode: str, library: str | None) -> frozenset[str]:
+        """The tags to compare: spec tags, plus impl tags in full mode (one library's, or all)."""
+        if mode != "full":
+            return self.spec_tags
+        if library:
+            return self.spec_tags | self.impl_tags.get(library, frozenset())
+        return self.all_tags
 
 
-async def _build_related(
-    repo: SpecRepository, spec_id: str, limit: int, mode: str, library: str | None = None
+def _related_entry(spec: Spec) -> _RelatedEntry:
+    spec_tags = frozenset(_flatten_tags(spec.tags))
+    impl_tags = {
+        impl.library_id: frozenset(_flatten_tags(impl.impl_tags))
+        for impl in spec.impls
+        if impl.impl_tags and isinstance(impl.impl_tags, dict)
+    }
+    impls_with_preview = [i for i in spec.impls if i.preview_url]
+    best = max(impls_with_preview, key=lambda i: i.quality_score or 0) if impls_with_preview else None
+    return _RelatedEntry(
+        id=spec.id,
+        title=spec.title,
+        spec_tags=spec_tags,
+        impl_tags=impl_tags,
+        all_tags=spec_tags.union(*impl_tags.values()),
+        preview=(
+            (
+                best.preview_url,
+                best.preview_url_light,
+                best.preview_url_dark,
+                best.library_id,
+                best.library.language if best.library else None,
+            )
+            if best
+            else None
+        ),
+    )
+
+
+def _build_related(
+    index: list[_RelatedEntry], spec_id: str, limit: int, mode: str, library: str | None = None
 ) -> RelatedSpecsResponse:
     """Find related specs using Jaccard similarity on tags.
 
     mode="spec": only spec-level tags (for overview page)
     mode="full": spec + impl tags for the given library (for impl detail page)
     """
-    all_specs = await repo.get_all()
-
-    # Find target spec
-    target = None
-    for s in all_specs:
-        if s.id == spec_id:
-            target = s
-            break
+    target = next((entry for entry in index if entry.id == spec_id), None)
     if target is None:
         return RelatedSpecsResponse(related=[])
 
-    # Build target tags based on mode
-    if mode == "full":
-        target_tags = _collect_impl_tags(target, library)
-    else:
-        target_tags = _flatten_tags(target.tags)
+    target_tags = target.tags(mode, library)
     if not target_tags:
         return RelatedSpecsResponse(related=[])
 
     # Compute similarity for all other specs
-    scored: list[tuple[float, list[str], Spec]] = []
-    for spec in all_specs:
+    scored: list[tuple[float, list[str], _RelatedEntry]] = []
+    for spec in index:
         if spec.id == spec_id:
             continue
-        # For other specs: use same library's impl_tags if available, else best match
-        if mode == "full":
-            other_tags = _collect_impl_tags(spec, library)
-        else:
-            other_tags = _flatten_tags(spec.tags)
+        other_tags = spec.tags(mode, library)
         if not other_tags:
             continue
         intersection = target_tags & other_tags
@@ -629,17 +653,16 @@ async def _build_related(
     # Build response with best-quality preview per spec
     related: list[RelatedSpecItem] = []
     for similarity, shared_tags, spec in top_pool[:limit]:
-        impls_with_preview = [i for i in spec.impls if i.preview_url]
-        best_impl = max(impls_with_preview, key=lambda i: i.quality_score or 0) if impls_with_preview else None
+        preview_url, preview_url_light, preview_url_dark, library_id, language = spec.preview or (None,) * 5
         related.append(
             RelatedSpecItem(
                 id=spec.id,
                 title=spec.title,
-                preview_url=best_impl.preview_url if best_impl else None,
-                preview_url_light=best_impl.preview_url_light if best_impl else None,
-                preview_url_dark=best_impl.preview_url_dark if best_impl else None,
-                library_id=best_impl.library_id if best_impl else None,
-                language=(best_impl.library.language if best_impl and best_impl.library else None),
+                preview_url=preview_url,
+                preview_url_light=preview_url_light,
+                preview_url_dark=preview_url_dark,
+                library_id=library_id,
+                language=language,
                 similarity=round(similarity, 3),
                 shared_tags=shared_tags,
             )
@@ -662,13 +685,19 @@ async def get_related_specs(
     mode=spec: only spec-level tags (plot_type, domain, etc.)
     mode=full: spec tags + impl tags for the given library
     library: in full mode, use this library's impl_tags (required for accurate tag matching)
+
+    The catalogue is cached once as a plain-value index under a single key and every
+    request ranks against it in memory. A response cache keyed per spec, library, mode
+    and limit had thousands of keys, which evicted each other from the shared cache, so
+    nearly every call reloaded all specs from the database.
     """
     repo = SpecRepository(db)
 
-    async def _fetch() -> RelatedSpecsResponse:
-        return await _build_related(repo, spec_id, limit, mode, library)
+    async def _fetch_index() -> list[_RelatedEntry]:
+        return [_related_entry(spec) for spec in await repo.get_all()]
 
-    return await get_or_set_cache(cache_key("insights", "related", spec_id, str(limit), mode, library or ""), _fetch)
+    index = await get_or_set_cache(cache_key("insights", "related_index"), _fetch_index)
+    return _build_related(index, spec_id, limit, mode, library)
 
 
 # =============================================================================

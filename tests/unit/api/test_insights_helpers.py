@@ -6,8 +6,9 @@ that don't require database or HTTP setup.
 """
 
 from datetime import timezone
+from unittest.mock import MagicMock
 
-from api.routers.insights import _collect_impl_tags, _flatten_tags, _parse_iso, _score_bucket
+from api.routers.insights import _flatten_tags, _parse_iso, _related_entry, _score_bucket
 
 
 class TestScoreBucket:
@@ -105,76 +106,71 @@ class TestParseIso:
         assert result.year == 2025
 
 
-class TestCollectImplTags:
-    """Tests for _collect_impl_tags."""
+def _impl(library_id: str, impl_tags: object, score: float | None = None, preview: str | None = None) -> MagicMock:
+    impl = MagicMock()
+    impl.library_id = library_id
+    impl.impl_tags = impl_tags
+    impl.quality_score = score
+    impl.preview_url = preview
+    impl.preview_url_light = preview
+    impl.preview_url_dark = None
+    impl.library.language = "python"
+    return impl
+
+
+def _spec(tags: dict | None, impls: list[MagicMock]) -> MagicMock:
+    spec = MagicMock()
+    spec.id = "scatter-basic"
+    spec.title = "Basic Scatter"
+    spec.tags = tags
+    spec.impls = impls
+    return spec
+
+
+class TestRelatedEntryTags:
+    """Tests for the tag sets of _related_entry."""
 
     def test_spec_with_no_tags(self) -> None:
-        from unittest.mock import MagicMock
+        entry = _related_entry(_spec(None, []))
+        assert entry.tags("spec", None) == set()
+        assert entry.tags("full", None) == set()
 
-        spec = MagicMock()
-        spec.tags = None
-        spec.impls = []
-        result = _collect_impl_tags(spec)
-        assert result == set()
+    def test_spec_mode_ignores_impl_tags(self) -> None:
+        entry = _related_entry(
+            _spec({"plot_type": ["scatter"]}, [_impl("matplotlib", {"techniques": ["annotations"]})])
+        )
+        assert entry.tags("spec", "matplotlib") == {"plot_type:scatter"}
 
-    def test_spec_with_tags_and_impl_tags(self) -> None:
-        from unittest.mock import MagicMock
+    def test_full_mode_without_library_collects_every_impl(self) -> None:
+        impls = [_impl("matplotlib", {"techniques": ["annotations"]}), _impl("seaborn", {"techniques": ["regression"]})]
+        entry = _related_entry(_spec({"plot_type": ["scatter"]}, impls))
+        assert entry.tags("full", None) == {"plot_type:scatter", "techniques:annotations", "techniques:regression"}
 
-        impl = MagicMock()
-        impl.library_id = "matplotlib"
-        impl.impl_tags = {"techniques": ["annotations"]}
-
-        spec = MagicMock()
-        spec.tags = {"plot_type": ["scatter"]}
-        spec.impls = [impl]
-
-        result = _collect_impl_tags(spec)
-        assert "plot_type:scatter" in result
-        assert "techniques:annotations" in result
-
-    def test_filter_by_library(self) -> None:
-        from unittest.mock import MagicMock
-
-        impl1 = MagicMock()
-        impl1.library_id = "matplotlib"
-        impl1.impl_tags = {"techniques": ["annotations"]}
-
-        impl2 = MagicMock()
-        impl2.library_id = "seaborn"
-        impl2.impl_tags = {"techniques": ["regression"]}
-
-        spec = MagicMock()
-        spec.tags = {"plot_type": ["scatter"]}
-        spec.impls = [impl1, impl2]
-
-        result = _collect_impl_tags(spec, library="matplotlib")
-        assert "techniques:annotations" in result
-        assert "techniques:regression" not in result
+    def test_full_mode_filters_by_library(self) -> None:
+        impls = [_impl("matplotlib", {"techniques": ["annotations"]}), _impl("seaborn", {"techniques": ["regression"]})]
+        entry = _related_entry(_spec({"plot_type": ["scatter"]}, impls))
+        assert entry.tags("full", "matplotlib") == {"plot_type:scatter", "techniques:annotations"}
+        assert entry.tags("full", "plotly") == {"plot_type:scatter"}
 
     def test_impl_tags_none(self) -> None:
-        from unittest.mock import MagicMock
-
-        impl = MagicMock()
-        impl.library_id = "matplotlib"
-        impl.impl_tags = None
-
-        spec = MagicMock()
-        spec.tags = {"plot_type": ["scatter"]}
-        spec.impls = [impl]
-
-        result = _collect_impl_tags(spec)
-        assert result == {"plot_type:scatter"}
+        entry = _related_entry(_spec({"plot_type": ["scatter"]}, [_impl("matplotlib", None)]))
+        assert entry.tags("full", None) == {"plot_type:scatter"}
 
     def test_impl_tags_not_dict(self) -> None:
-        from unittest.mock import MagicMock
+        entry = _related_entry(_spec({}, [_impl("matplotlib", "not-a-dict")]))
+        assert entry.tags("full", None) == set()
 
-        impl = MagicMock()
-        impl.library_id = "matplotlib"
-        impl.impl_tags = "not-a-dict"
 
-        spec = MagicMock()
-        spec.tags = {}
-        spec.impls = [impl]
+class TestRelatedEntryPreview:
+    """Tests for the preview _related_entry picks."""
 
-        result = _collect_impl_tags(spec)
-        assert result == set()
+    def test_best_scored_impl_with_a_preview(self) -> None:
+        impls = [
+            _impl("matplotlib", None, score=88.0, preview="m.png"),
+            _impl("seaborn", None, score=95.0, preview="s.png"),
+            _impl("plotly", None, score=99.0, preview=None),
+        ]
+        assert _related_entry(_spec(None, impls)).preview == ("s.png", "s.png", None, "seaborn", "python")
+
+    def test_no_preview(self) -> None:
+        assert _related_entry(_spec(None, [_impl("matplotlib", None, score=90.0)])).preview is None
