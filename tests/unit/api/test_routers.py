@@ -2375,6 +2375,50 @@ class TestInsightsRouter:
             assert len(data["related"]) == 1
             assert "annotations" in data["related"][0]["shared_tags"]
 
+    def test_related_loads_the_catalogue_once(self, client: TestClient) -> None:
+        """Every spec, library, mode and limit ranks against one cached index, so the DB is read once."""
+
+        def spec(spec_id: str, plot_type: str) -> MagicMock:
+            impl = MagicMock()
+            impl.library_id = "matplotlib"
+            impl.quality_score = 90.0
+            impl.preview_url = TEST_IMAGE_URL
+            impl.preview_url_light = TEST_IMAGE_URL
+            impl.preview_url_dark = None
+            impl.library.language = "python"
+            impl.impl_tags = {"techniques": ["annotations"]}
+            mock_spec = MagicMock()
+            mock_spec.id = spec_id
+            mock_spec.title = spec_id
+            mock_spec.tags = {"plot_type": [plot_type], "domain": ["statistics"]}
+            mock_spec.impls = [impl]
+            return mock_spec
+
+        mock_spec_repo = MagicMock()
+        mock_spec_repo.get_all = AsyncMock(
+            return_value=[spec("scatter-basic", "scatter"), spec("bar-basic", "bar"), spec("line-basic", "line")]
+        )
+
+        with (
+            patch(DB_CONFIG_PATCH, return_value=True),
+            patch("api.routers.insights.SpecRepository", return_value=mock_spec_repo),
+        ):
+            urls = [
+                "/insights/related/scatter-basic",
+                "/insights/related/bar-basic?limit=1",
+                "/insights/related/line-basic?mode=full&library=matplotlib",
+                "/insights/related/unknown-spec",
+            ]
+            responses = [client.get(url) for url in urls]
+            assert mock_spec_repo.get_all.await_count == 1
+
+            clear_cache()  # what the post-sync /debug/cache/invalidate does
+            assert client.get("/insights/related/scatter-basic").status_code == 200
+            assert mock_spec_repo.get_all.await_count == 2
+
+        assert [r.status_code for r in responses] == [200, 200, 200, 200]
+        assert [len(r.json()["related"]) for r in responses] == [2, 1, 2, 0]
+
     def test_visitors_no_api_key(self, client: TestClient) -> None:
         """Visitors endpoint returns an empty points list when no Plausible key is set,
         so the frontend can show the "visitor data unavailable" placeholder."""
