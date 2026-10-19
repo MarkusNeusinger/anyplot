@@ -308,7 +308,7 @@ Deterministically selects an implementation based on today's date. It prefers th
 | `mode` | string | `spec` | `spec` = spec tags only, `full` = spec + impl tags |
 | `library` | string | null | In `full` mode, match against this library's impl_tags |
 
-Returns related specs sorted by Jaccard similarity with preview thumbnails and shared tags. The catalogue is cached once as an in-memory index under a single key, which is cleared with the rest of the cache after a database sync. Each request ranks against that index in about a millisecond.
+Returns related specs sorted by Jaccard similarity with preview thumbnails and shared tags. The catalogue is cached once as an in-memory index under a single key. The index is refreshed in the background once it is an hour old, and it is cleared with the rest of the cache after a database sync. Each request ranks against that index in about a millisecond.
 
 ### GET `/specs/{spec_id}/{library}/code`
 

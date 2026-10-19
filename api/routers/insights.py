@@ -554,7 +554,7 @@ async def get_plot_of_the_day(db: AsyncSession = Depends(require_db)) -> PlotOfT
 # =============================================================================
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, eq=False)
 class _RelatedEntry:
     """One spec as the related-plots ranking reads it: plain values, no ORM objects.
 
@@ -580,11 +580,11 @@ class _RelatedEntry:
 
 def _related_entry(spec: Spec) -> _RelatedEntry:
     spec_tags = frozenset(_flatten_tags(spec.tags))
-    impl_tags = {
-        impl.library_id: frozenset(_flatten_tags(impl.impl_tags))
-        for impl in spec.impls
-        if impl.impl_tags and isinstance(impl.impl_tags, dict)
-    }
+    # Union per library: the unique key is (spec, language, library), so one library may appear twice.
+    impl_tags: dict[str, frozenset[str]] = {}
+    for impl in spec.impls:
+        if impl.impl_tags and isinstance(impl.impl_tags, dict):
+            impl_tags[impl.library_id] = impl_tags.get(impl.library_id, frozenset()) | _flatten_tags(impl.impl_tags)
     impls_with_preview = [i for i in spec.impls if i.preview_url]
     best = max(impls_with_preview, key=lambda i: i.quality_score or 0) if impls_with_preview else None
     return _RelatedEntry(
@@ -605,6 +605,16 @@ def _related_entry(spec: Spec) -> _RelatedEntry:
             else None
         ),
     )
+
+
+async def _load_related_index(repo: SpecRepository) -> list[_RelatedEntry]:
+    return [_related_entry(spec) for spec in await repo.get_all()]
+
+
+async def _refresh_related_index() -> list[_RelatedEntry]:
+    """Standalone factory for background refresh."""
+    async with get_db_context() as db:
+        return await _load_related_index(SpecRepository(db))
 
 
 def _build_related(
@@ -694,9 +704,14 @@ async def get_related_specs(
     repo = SpecRepository(db)
 
     async def _fetch_index() -> list[_RelatedEntry]:
-        return [_related_entry(spec) for spec in await repo.get_all()]
+        return await _load_related_index(repo)
 
-    index = await get_or_set_cache(cache_key("insights", "related_index"), _fetch_index)
+    index = await get_or_set_cache(
+        cache_key("insights", "related_index"),
+        _fetch_index,
+        refresh_after=settings.cache_refresh_after,
+        refresh_factory=_refresh_related_index,
+    )
     return _build_related(index, spec_id, limit, mode, library)
 
 

@@ -152,6 +152,11 @@ class TestRelatedEntryTags:
         assert entry.tags("full", "matplotlib") == {"plot_type:scatter", "techniques:annotations"}
         assert entry.tags("full", "plotly") == {"plot_type:scatter"}
 
+    def test_one_library_in_two_languages_unions_its_tags(self) -> None:
+        impls = [_impl("plotly", {"techniques": ["hover"]}), _impl("plotly", {"techniques": ["animation"]})]
+        entry = _related_entry(_spec({}, impls))
+        assert entry.tags("full", "plotly") == {"techniques:hover", "techniques:animation"}
+
     def test_impl_tags_none(self) -> None:
         entry = _related_entry(_spec({"plot_type": ["scatter"]}, [_impl("matplotlib", None)]))
         assert entry.tags("full", None) == {"plot_type:scatter"}

@@ -2377,7 +2377,6 @@ class TestInsightsRouter:
 
     def test_related_loads_the_catalogue_once(self, client: TestClient) -> None:
         """Every spec, library, mode and limit ranks against one cached index, so the DB is read once."""
-        from api.cache import clear_cache
 
         def spec(spec_id: str, plot_type: str) -> MagicMock:
             impl = MagicMock()
@@ -2400,25 +2399,25 @@ class TestInsightsRouter:
             return_value=[spec("scatter-basic", "scatter"), spec("bar-basic", "bar"), spec("line-basic", "line")]
         )
 
-        clear_cache()
-        try:
-            with (
-                patch(DB_CONFIG_PATCH, return_value=True),
-                patch("api.routers.insights.SpecRepository", return_value=mock_spec_repo),
-            ):
-                urls = [
-                    "/insights/related/scatter-basic",
-                    "/insights/related/bar-basic?limit=1",
-                    "/insights/related/line-basic?mode=full&library=matplotlib",
-                    "/insights/related/unknown-spec",
-                ]
-                responses = [client.get(url) for url in urls]
-        finally:
-            clear_cache()
+        with (
+            patch(DB_CONFIG_PATCH, return_value=True),
+            patch("api.routers.insights.SpecRepository", return_value=mock_spec_repo),
+        ):
+            urls = [
+                "/insights/related/scatter-basic",
+                "/insights/related/bar-basic?limit=1",
+                "/insights/related/line-basic?mode=full&library=matplotlib",
+                "/insights/related/unknown-spec",
+            ]
+            responses = [client.get(url) for url in urls]
+            assert mock_spec_repo.get_all.await_count == 1
+
+            clear_cache()  # what the post-sync /debug/cache/invalidate does
+            assert client.get("/insights/related/scatter-basic").status_code == 200
+            assert mock_spec_repo.get_all.await_count == 2
 
         assert [r.status_code for r in responses] == [200, 200, 200, 200]
         assert [len(r.json()["related"]) for r in responses] == [2, 1, 2, 0]
-        assert mock_spec_repo.get_all.await_count == 1
 
     def test_visitors_no_api_key(self, client: TestClient) -> None:
         """Visitors endpoint returns an empty points list when no Plausible key is set,
