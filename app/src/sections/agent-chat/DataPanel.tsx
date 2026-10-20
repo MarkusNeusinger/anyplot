@@ -801,6 +801,8 @@ export function DataPanel({
   const boxRef = useRef<HTMLTextAreaElement>(null);
   // Counts file reads, so the result of a superseded one is dropped.
   const readSeq = useRef(0);
+  // The read whose server conversion `convertLine` shows.
+  const convertSeq = useRef(0);
   // The box's text as of the last render, for a file read that ends after an edit.
   const textRef = useRef(text);
   textRef.current = text;
@@ -958,6 +960,7 @@ export function DataPanel({
     const line = sheet
       ? `reading the sheet ${sheetLabel(sheet)} of "${file.name}" on the server`
       : `reading "${file.name}" on the server`;
+    convertSeq.current = seq;
     setConvertLine(line);
     setFileNotice({ tone: 'ok', text: `${line} …` });
     let answer: ConvertAnswer;
@@ -982,7 +985,9 @@ export function DataPanel({
       trackFile(file.browserKind, null, failure.code.startsWith('file_') ? 'refused' : 'failed');
       return;
     } finally {
-      if (seq === readSeq.current) setConvertLine(null);
+      // Only the conversion that set the line clears it; a later read that converted
+      // nothing (refused, or a text file) must not leave the box waiting forever.
+      if (seq === convertSeq.current) setConvertLine(null);
     }
     if (seq !== readSeq.current) return;
     offerFile(
@@ -1211,7 +1216,6 @@ export function DataPanel({
       <Box
         data-testid="data-drop-zone"
         data-drag={dragOver ? (dropReady ? 'ready' : 'busy') : undefined}
-        aria-busy={converting || state.parsing || undefined}
         onDragEnter={handleDragEnter}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -1226,6 +1230,7 @@ export function DataPanel({
           spellCheck={false}
           aria-describedby={dataset ? undefined : 'agent-data-hint'}
           placeholder={'month,revenue\n2026-01,120\n2026-02,135'}
+          aria-busy={converting || state.parsing || undefined}
           ref={boxRef}
           onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => {
             setText(event.target.value);
@@ -1293,8 +1298,12 @@ export function DataPanel({
           </Box>
         )}
         {/* A file read on the server or a parse takes seconds: the box says so while it waits. */}
-        {!dragOver && (converting || state.parsing) && (
-          <BoxWorking key={convertLine ?? 'parse'} line={convertLine ?? 'parsing your data'} />
+        {(converting || state.parsing) && (
+          <BoxWorking
+            key={convertLine ?? 'parse'}
+            line={convertLine ?? 'parsing your data'}
+            hidden={dragOver}
+          />
         )}
       </Box>
       <Box

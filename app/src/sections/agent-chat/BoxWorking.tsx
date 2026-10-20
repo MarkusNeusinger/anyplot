@@ -15,7 +15,8 @@ import { Ellipsis } from 'src/sections/agent-chat/Ellipsis';
 import { labelSx } from 'src/sections/agent-chat/styles';
 import { fontSize } from 'src/theme';
 
-export function BoxWorking({ line }: { line: string }) {
+/** `hidden`: a drag over the box shows its own hint; the counter keeps running underneath. */
+export function BoxWorking({ line, hidden = false }: { line: string; hidden?: boolean }) {
   const [seconds, setSeconds] = useState(0);
   useEffect(() => {
     const started = Date.now();
@@ -40,6 +41,10 @@ export function BoxWorking({ line }: { line: string }) {
         textAlign: 'center',
         pointerEvents: 'none',
         overflow: 'hidden',
+        visibility: hidden ? 'hidden' : 'visible',
+        // Dims the text underneath, so the line stands out on the box's own surface in both themes.
+        bgcolor: 'color-mix(in srgb, var(--bg-elevated) 55%, transparent)',
+        borderRadius: '4px',
       }}
     >
       <Box

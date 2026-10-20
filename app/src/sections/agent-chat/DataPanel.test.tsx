@@ -539,7 +539,7 @@ describe('DataPanel working states', () => {
 
     expect(screen.getByTestId('parse-hint')).toHaveTextContent('# parsing your data …');
     expect(screen.getByTestId('box-working')).toHaveTextContent('# parsing your data …');
-    expect(screen.getByTestId('data-drop-zone')).toHaveAttribute('aria-busy', 'true');
+    expect(screen.getByLabelText(/# your data/)).toHaveAttribute('aria-busy', 'true');
     const parse = screen.getByRole('button', { name: '.parse() …' });
     expect(parse).toBeDisabled();
     expect(parse).toHaveAccessibleDescription('# parsing your data');
