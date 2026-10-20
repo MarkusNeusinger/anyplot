@@ -803,6 +803,10 @@ export function DataPanel({
   const readSeq = useRef(0);
   // The read whose server conversion `convertLine` shows.
   const convertSeq = useRef(0);
+  // When the box's current conversion and the panel's last parse began, set where they start (every
+  // parse starts here: `.parse()`, the table picker, `.use()`), so the overlay's count survives its remount.
+  const convertStart = useRef(0);
+  const parseStart = useRef(0);
   // The box's text as of the last render, for a file read that ends after an edit.
   const textRef = useRef(text);
   textRef.current = text;
@@ -890,11 +894,13 @@ export function DataPanel({
   const handleUse = () => {
     if (!transcription) return;
     setText(transcription.text);
+    parseStart.current = Date.now();
     onConfirmTranscription();
   };
 
   // `.parse()`: the file's name rides along only when the text came from a file.
   const handleParse = () => {
+    parseStart.current = Date.now();
     if (source) onParse(text, source);
     else onParse(text);
   };
@@ -902,6 +908,7 @@ export function DataPanel({
   // The table picker: the stored paste's text again, another of its tables.
   const handleTable = (table: number) => {
     if (!paste || !ready || busy || converting || table === choice?.table) return;
+    parseStart.current = Date.now();
     onParse(paste.text, paste.source, table);
   };
 
@@ -961,6 +968,7 @@ export function DataPanel({
       ? `reading the sheet ${sheetLabel(sheet)} of "${file.name}" on the server`
       : `reading "${file.name}" on the server`;
     convertSeq.current = seq;
+    convertStart.current = Date.now();
     setConvertLine(line);
     setFileNotice({ tone: 'ok', text: `${line} …` });
     let answer: ConvertAnswer;
@@ -1300,8 +1308,8 @@ export function DataPanel({
         {/* A file read on the server or a parse takes seconds: the box says so while it waits. */}
         {(converting || state.parsing) && (
           <BoxWorking
-            key={convertLine ?? 'parse'}
             line={convertLine ?? 'parsing your data'}
+            since={converting ? convertStart.current : parseStart.current}
             hidden={dragOver}
           />
         )}

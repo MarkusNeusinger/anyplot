@@ -15,17 +15,28 @@ import { Ellipsis } from 'src/sections/agent-chat/Ellipsis';
 import { labelSx } from 'src/sections/agent-chat/styles';
 import { fontSize } from 'src/theme';
 
-/** `hidden`: a drag over the box shows its own hint; the counter keeps running underneath. */
-export function BoxWorking({ line, hidden = false }: { line: string; hidden?: boolean }) {
-  const [seconds, setSeconds] = useState(0);
+/**
+ * `since`: when the step began (`Date.now()`), kept by the caller so a remount (a collapsed
+ * and reopened card) does not restart the count. `hidden`: a drag over the box shows its own
+ * hint; the count runs on underneath.
+ */
+export function BoxWorking({
+  line,
+  since,
+  hidden = false,
+}: {
+  line: string;
+  since: number;
+  hidden?: boolean;
+}) {
+  const [mounted] = useState(() => Date.now());
+  const [now, setNow] = useState(mounted);
   useEffect(() => {
-    const started = Date.now();
-    const timer = window.setInterval(
-      () => setSeconds(Math.floor((Date.now() - started) / 1000)),
-      1000
-    );
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(timer);
   }, []);
+  // A step the caller did not time (0) counts from the mount.
+  const seconds = Math.max(0, Math.floor((now - (since > 0 ? since : mounted)) / 1000));
 
   return (
     <Box
@@ -58,6 +69,10 @@ export function BoxWorking({ line, hidden = false }: { line: string; hidden?: bo
           borderRadius: '4px',
           px: 1.5,
           py: 0.75,
+          // A long file or sheet name without spaces wraps instead of being clipped on a phone.
+          minWidth: 0,
+          maxWidth: '100%',
+          overflowWrap: 'anywhere',
         }}
       >
         # {line} <Ellipsis />
