@@ -12,4 +12,4 @@
   turn with the new stream error `run_limit`, which the page words as "you
   already have 3 plots or data runs in progress in other windows", instead of
   `capacity`. The per-user rate limits and daily budgets are unchanged (owner
-  decision of 2026-10-21).
+  decision of 2026-10-21). (#12220)
