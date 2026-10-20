@@ -6,4 +6,4 @@
   or `# parsing your data … · 3 s` over itself: a pulsing `…`, a seconds counter
   and a thin bar along its foot. Before, only the buttons greyed out and a quiet
   line under them changed, so the page looked stuck for the several seconds a
-  sandbox read takes.
+  sandbox read takes. (#12221)
