@@ -389,6 +389,33 @@ async def test_a_users_fourth_sandbox_run_ends_with_run_limit_and_another_user_s
     assert [name for name, _ in await asyncio.wait_for(retry, 5)] == ["ready", "status", "done"]
 
 
+async def test_a_stale_run_in_another_window_does_not_count_toward_the_cap(
+    client: httpx.AsyncClient, runtime: Runtime, clock: Clock, swap_models
+) -> None:
+    """A run in another window whose stream vanished is dropped before the cap counts it, so it never causes
+    `run_limit`. This covers the sweep at the request's start; `TurnSlot.take` sweeps again for a run that goes
+    stale during the turn's root call, a window of seconds this test cannot place a clock jump in."""
+    from agents.main import STALE_RUN_MARGIN_S, ActiveRun
+
+    swap_models("gemini", {"root": [{"call": "plot_pipeline", "args": {}}]})
+    window = await open_session(client)
+    queue = runtime.run_queue()
+    abandoned = queue.submit(USER, "s-abandoned")  # running, its stream gone
+    runtime.active["s-abandoned"] = ActiveRun(abort=asyncio.Event(), user=USER, started=runtime.now(), ticket=abandoned)
+    clock.advance(get_settings().request_deadline_s + STALE_RUN_MARGIN_S + 1)
+    queue.submit(USER, "s-window-1")
+    queue.submit(USER, "s-window-2")
+    assert queue.user_entries(USER) == 3
+
+    plot = asyncio.create_task(create_plot(client, window))
+    await until(
+        lambda: window in runtime.active and runtime.active[window].ticket is not None, "the plot to take an entry"
+    )
+    assert "s-abandoned" not in runtime.active and queue.user_entries(USER) == 3
+    await client.post(f"/v1/sessions/{window}/cancel", headers=HEADERS)
+    assert [name for name, _ in await asyncio.wait_for(plot, 5)] == ["ready", "status", "done"]
+
+
 async def test_a_run_that_waited_the_maximum_ends_with_capacity(
     client: httpx.AsyncClient, runtime: Runtime, clock: Clock, swap_models
 ) -> None:

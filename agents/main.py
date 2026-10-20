@@ -459,6 +459,9 @@ class TurnSlot:
             return self.run.ticket.running
         if self.run.abort.is_set():
             return False
+        # A run of the user whose stream vanished mid-turn would still count toward their cap. The request's
+        # start already swept (`_active`); this catches a run that went stale during this turn's root call.
+        self.runtime.drop_stale(get_settings())
         queue = self.runtime.run_queue()
         try:
             ticket = queue.submit(self.run.user, self.session_id)
