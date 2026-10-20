@@ -130,6 +130,7 @@ import {
   siblingHint,
   signHint,
 } from 'src/sections/agent-chat/bindings';
+import { BoxWorking } from 'src/sections/agent-chat/BoxWorking';
 import { Ellipsis } from 'src/sections/agent-chat/Ellipsis';
 import {
   countLines,
@@ -779,8 +780,10 @@ export function DataPanel({
   onConvert,
 }: DataPanelProps) {
   const [text, setText] = useState('');
-  // A binary file on its way to the server and back; the box, `.open()` and `.parse()` wait for it.
-  const [converting, setConverting] = useState(false);
+  // A binary file on its way to the server and back, as the line the box shows meanwhile
+  // (`reading "x.parquet" on the server`); the box, `.open()` and `.parse()` wait for it.
+  const [convertLine, setConvertLine] = useState<string | null>(null);
+  const converting = convertLine !== null;
   // The converted file whose text is in the box, for the sheet picker; a text paste or an empty box drops it.
   const [converted, setConverted] = useState<ConvertedFile | null>(null);
   // The name of the file the box's text came from; typing keeps it, a text paste or an empty box drops it.
@@ -952,13 +955,11 @@ export function DataPanel({
       trackFile(file.browserKind, null, 'refused');
       return;
     }
-    setConverting(true);
-    setFileNotice({
-      tone: 'ok',
-      text: sheet
-        ? `reading the sheet ${sheetLabel(sheet)} of "${file.name}" on the server …`
-        : `reading "${file.name}" on the server …`,
-    });
+    const line = sheet
+      ? `reading the sheet ${sheetLabel(sheet)} of "${file.name}" on the server`
+      : `reading "${file.name}" on the server`;
+    setConvertLine(line);
+    setFileNotice({ tone: 'ok', text: `${line} …` });
     let answer: ConvertAnswer;
     try {
       answer = await onConvert(file.base64, sheet);
@@ -981,7 +982,7 @@ export function DataPanel({
       trackFile(file.browserKind, null, failure.code.startsWith('file_') ? 'refused' : 'failed');
       return;
     } finally {
-      if (seq === readSeq.current) setConverting(false);
+      if (seq === readSeq.current) setConvertLine(null);
     }
     if (seq !== readSeq.current) return;
     offerFile(
@@ -1210,6 +1211,7 @@ export function DataPanel({
       <Box
         data-testid="data-drop-zone"
         data-drag={dragOver ? (dropReady ? 'ready' : 'busy') : undefined}
+        aria-busy={converting || state.parsing || undefined}
         onDragEnter={handleDragEnter}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -1289,6 +1291,10 @@ export function DataPanel({
                   : 'a step is still running: drop the file when it is done'}
             </Box>
           </Box>
+        )}
+        {/* A file read on the server or a parse takes seconds: the box says so while it waits. */}
+        {!dragOver && (converting || state.parsing) && (
+          <BoxWorking key={convertLine ?? 'parse'} line={convertLine ?? 'parsing your data'} />
         )}
       </Box>
       <Box
