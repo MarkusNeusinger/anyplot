@@ -126,6 +126,14 @@ describe('parseAgentEvent', () => {
     });
   });
 
+  it("keeps the user's run limit as its own code", () => {
+    expect(parseAgentEvent(raw('error', { code: 'run_limit', ref: 'abc' }))).toEqual({
+      type: 'error',
+      code: 'run_limit',
+      ref: 'abc',
+    });
+  });
+
   it('drops unknown types, non-object data, malformed JSON and bad statuses', () => {
     expect(parseAgentEvent(raw('debug', { a: 1 }))).toBeNull();
     expect(parseAgentEvent(raw('message', '[1,2]'))).toBeNull();

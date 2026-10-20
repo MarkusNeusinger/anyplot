@@ -39,6 +39,7 @@ another provider, model or location.
 | `AGENT_RUN_CONCURRENCY` | `1` | Sandbox runs (a `plot_pipeline` or `run_data_code` call, held until its turn ends) in flight per instance; the run queue holds the rest. A chat turn without one never enters the queue |
 | `AGENT_RUNS_PER_MINUTE` | `1` | Sandbox runs that may start within any 60 seconds (a sliding window); one start per turn |
 | `AGENT_QUEUE_MAX_WAIT_S` | `600` | Longest wait in the run queue; it also sizes the queue (`AGENT_RUNS_PER_MINUTE` x this / 60 entries) |
+| `AGENT_USER_MAX_RUNS` | `3` | Sandbox runs one user may have queued or running at the same time, across all their sessions (browser windows); one more ends its turn with `error{code:"run_limit"}`. Everything else in a session (chat turns, pastes, data steps, the theme toggle, file conversions) runs at once, whatever the user's other sessions do |
 | `AGENT_USER_MESSAGES_PER_MINUTE` | `10` | Chat turns (typed messages and actions) per user within any 60 seconds; more get the `rate_limited` refusal before the scope judge runs |
 | `AGENT_USER_MESSAGES_PER_DAY` | `200` | Chat turns per user and UTC day; more get the `daily_limit` refusal before the scope judge runs |
 | `AGENT_SESSION_REFUSALS` | `3` | Scope-judge refusals (`out_of_scope` or `attack`, not `needs_data`, and `other_library` only with `AGENT_OTHER_LIBRARY_COUNTS`) after which the session is closed: the last of them and every later turn, and every paste, get the `session_closed` refusal |
@@ -328,6 +329,12 @@ class AgentSettings(BaseSettings):
     count toward the request deadline; the queue holds `runs_per_minute * queue_max_wait_s / 60`
     entries and refuses more with `capacity`. That length assumes runs shorter than the 60 s
     rate window: longer runs delay later starts, so admission does not guarantee a start."""
+
+    user_max_runs: PositiveInt = 3
+    """Sandbox runs one user may have in the run queue at the same time, waiting and running together, across all
+    their sessions (`AGENT_USER_MAX_RUNS`). Owner decision of 2026-10-21: a user's browser windows work in parallel,
+    and only their sandbox runs share the queue; one more than this ends its turn with `error{code:"run_limit"}`
+    instead of `capacity`, so the page can say that the user's own runs fill it."""
 
     user_messages_per_minute: PositiveInt = 10
     """Chat turns per user within any 60 seconds (`AGENT_USER_MESSAGES_PER_MINUTE`), typed messages and actions

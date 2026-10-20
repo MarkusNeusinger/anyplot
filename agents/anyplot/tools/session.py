@@ -565,12 +565,18 @@ async def run_data_code(code: str, source_language: str, tool_context: ToolConte
         return _error_lines("invalid_code", lines)
     services = get_services()
     user = ledger.user_id or "anonymous"
+    # Checked before the queue wait and counted after it, so a run that never starts is never counted; the user's
+    # runs waiting in their other sessions at the same time (at most `AGENT_USER_MAX_RUNS` - 1) can each pass this
+    # check and overshoot the day's count by as many, a small overshoot accepted with the parallel windows (2026-10-21).
     if not services.usage.data_runs_ok(user, settings):
         attribution("data_code", ledger, outcome="daily_limit", language=language)
         return _error("daily_limit")
     if ledger.run_slot is not None and not await ledger.run_slot():  # the run queue's slot and the turn's start
-        attribution("data_code", ledger, outcome="capacity", language=language)
-        return _error("capacity")
+        # The route failed the turn with `run_limit` (the user's runs in other sessions fill their share) or
+        # `capacity` (a full queue, an expired wait), or the wait was cancelled; the turn is aborted either way.
+        code = "run_limit" if ledger.error == "run_limit" else "capacity"
+        attribution("data_code", ledger, outcome=code, language=language)
+        return _error(code)
     services.usage.add_data_run(user)
     job = DataJob(job_id=f"d{secrets.token_hex(8)}", source=prepared, timeout_s=settings.data_run_timeout_s)
     try:

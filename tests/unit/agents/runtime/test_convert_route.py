@@ -188,17 +188,48 @@ class TestConvertRoute:
         clock.advance(MESSAGE_WINDOW_S)
         assert (await convert(client, sid)).status_code == 200
 
-    async def test_one_conversion_per_user_at_a_time(
+    async def test_one_conversion_per_session_at_a_time(
         self, client: httpx.AsyncClient, backend: FakeBackend, runtime: Runtime
     ) -> None:
+        """Per session since 2026-10-21 (owner decision): the user's other window converts its own file meanwhile."""
         sid = await open_session(client, with_data=False)
-        runtime.converting.add(USER)
+        other = await open_session(client, with_data=False)
+        runtime.converting.add(sid)  # a conversion in flight in this session
 
         response = await convert(client, sid)
+        meanwhile = await convert(client, other)
 
         assert (response.status_code, response.json()) == (409, {"detail": "run_active"})
-        runtime.converting.discard(USER)
-        assert (await convert(client, sid)).status_code == 200 and USER not in runtime.converting
+        assert meanwhile.status_code == 200 and runtime.converting == {sid}
+        runtime.converting.discard(sid)
+        assert (await convert(client, sid)).status_code == 200 and runtime.converting == set()
+
+    async def test_two_windows_convert_at_the_same_time(
+        self, client: httpx.AsyncClient, backend: FakeBackend, services: Services, runtime: Runtime
+    ) -> None:
+        """Both conversions are in flight together, one per session, and wait for the render slot in turn."""
+        first = await open_session(client, with_data=False)
+        second = await open_session(client, with_data=False)
+        seen: list[set[str]] = []
+        meta = ConvertMeta(kind="xlsx", rows=1, columns=2, sheet="Sheet1", sheets=["Sheet1"], sheet_count=1)
+
+        def script(job: ConvertJob) -> ConvertOutput:
+            seen.append(set(runtime.converting))
+            return ConvertOutput(exit_code=0, text="x,y\n1,2\n", meta=meta, wall_s=0.1)
+
+        backend.convert_script = script
+        slots = services.backend.slots
+        await slots.acquire("run")  # a pipeline render holds the slot, so both conversions wait for it
+        answers = asyncio.gather(convert(client, first), convert(client, second))
+        for _ in range(200):
+            if runtime.converting == {first, second}:
+                break
+            await asyncio.sleep(0.01)
+        assert runtime.converting == {first, second} and slots.waiting == 2
+        slots.release()
+
+        assert [response.status_code for response in await answers] == [200, 200]
+        assert seen[0] == {first, second} and runtime.converting == set()
 
     async def test_a_busy_slot_is_capacity(
         self, client: httpx.AsyncClient, services: Services, monkeypatch: pytest.MonkeyPatch

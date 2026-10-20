@@ -411,9 +411,10 @@ class TestPasteGuards:
 
         assert (refused.status_code, refused.json()) == (429, {"detail": "daily_limit"})
 
-    async def test_one_paste_per_user_at_a_time_and_none_during_a_turn_in_another_session(
+    async def test_one_paste_per_session_at_a_time_and_none_during_the_sessions_turn(
         self, client: httpx.AsyncClient, runtime: Runtime
     ) -> None:
+        """Per session since 2026-10-21 (owner decision): the user's other windows paste and chat in parallel."""
         sid = await open_session(client, with_data=False)
         other = await open_session(client, with_data=False)
         stranger = await open_session(client, with_data=False, user=OTHER)
@@ -421,17 +422,20 @@ class TestPasteGuards:
         def paste(session: str, headers: dict[str, str] = HEADERS) -> Any:
             return client.post(f"/v1/sessions/{session}/dataset", headers=headers, json={"text": "x,y\n1,2\n"})
 
-        runtime.pasting.add(USER)  # a paste of the user in flight, in any session
-        assert ((await paste(sid)).status_code, (await paste(other)).status_code) == (409, 409)
-        assert (await paste(stranger, headers_for(OTHER))).status_code == 200  # per user
-        # The inverse direction: no turn starts while the user's paste may replace the data it reads.
-        turn = await client.post(f"/v1/sessions/{other}/messages", headers=HEADERS, json={"text": "Which columns?"})
-        assert (turn.status_code, turn.json()) == (409, {"detail": "run_active"})
-        runtime.pasting.discard(USER)
-
-        runtime.active[other] = ActiveRun(abort=asyncio.Event(), user=USER, started=runtime.now())
+        runtime.pasting.add(sid)  # a paste in flight in this session
         assert (await paste(sid)).json() == {"detail": "run_active"}
-        del runtime.active[other]
+        # The inverse direction: no turn of the session starts while its paste may replace the data it reads.
+        turn = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "Which columns?"})
+        assert (turn.status_code, turn.json()) == (409, {"detail": "run_active"})
+        # The user's other window and another user paste meanwhile.
+        assert (await paste(other)).status_code == 200
+        assert (await paste(stranger, headers_for(OTHER))).status_code == 200
+        runtime.pasting.discard(sid)
+
+        runtime.active[sid] = ActiveRun(abort=asyncio.Event(), user=USER, started=runtime.now())
+        assert (await paste(sid)).json() == {"detail": "run_active"}  # the session's own turn blocks its paste
+        assert (await paste(other)).status_code == 200  # a turn in another window never does
+        del runtime.active[sid]
         assert (await paste(sid)).status_code == 200
         assert runtime.pasting == set()  # released after the paste, also on success
 
@@ -456,11 +460,18 @@ class TestPasteGuards:
         judge.script = []
         assert (await paste("a,b\n1,2\n")).status_code == 200  # nothing left behind blocks the next paste
 
-    async def test_the_data_routes_wait_for_the_users_paste(self, client: httpx.AsyncClient, runtime: Runtime) -> None:
-        """Two tabs: a paste waiting on its judges holds the view it read; a version another tab stored meanwhile
-        (`.to_long()`, an undo, new bindings) would be dropped when the paste writes the next dataset from it."""
+    async def test_the_data_routes_wait_for_the_sessions_paste(
+        self, client: httpx.AsyncClient, runtime: Runtime
+    ) -> None:
+        """A paste waiting on its judges holds the view it read; a version the session stored meanwhile (`.to_long()`,
+        an undo, new bindings) would be dropped when the paste writes the next dataset from it. Keyed by the session,
+        so it holds whoever sends the request; a paste in the user's other window never blocks them."""
         sid = await open_session(client)
-        runtime.pasting.add(USER)
+        other = await open_session(client)
+        runtime.pasting.add(other)
+        assert (await client.post(f"/v1/sessions/{sid}/dataset/confirm", headers=HEADERS)).status_code == 200
+        runtime.pasting.discard(other)
+        runtime.pasting.add(sid)
 
         calls = {
             "library": client.post(
@@ -482,5 +493,5 @@ class TestPasteGuards:
         chosen = await client.put(f"/v1/sessions/{sid}/language", headers=HEADERS, json={"language": "de"})
         assert chosen.status_code == 200
 
-        runtime.pasting.discard(USER)
+        runtime.pasting.discard(sid)
         assert (await client.post(f"/v1/sessions/{sid}/dataset/confirm", headers=HEADERS)).status_code == 200

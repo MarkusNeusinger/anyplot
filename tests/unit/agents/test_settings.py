@@ -36,6 +36,7 @@ class TestDefaults:
         assert settings.run_concurrency == 1
         assert settings.runs_per_minute == 1
         assert settings.queue_max_wait_s == 600
+        assert settings.user_max_runs == 3  # sandbox runs per user across sessions (owner decision of 2026-10-21)
         assert settings.service_urls == []
         assert settings.dev_fixture is None
         assert settings.libraries == ["matplotlib", "seaborn"]

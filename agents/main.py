@@ -12,8 +12,8 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `GET /v1/eligibility?spec=&library=` | | `{eligible, status, reasons}` | |
 | `POST /v1/sessions` | `{user, spec_id, library, locale, snapshot}` | `{session_id, eligibility}` | `422 not_eligible` |
 | `POST /v1/sessions/{sid}/library` | `{library, snapshot}` | `{session_id, eligibility}` | `422 not_eligible`, `409 run_active` |
-| `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?, source?, table?}` (`source`: the name of the file the page read the text from, at most 1,024 characters; screened on its own, never a note; `table`: 1 to 10, which of several tables in the text to read, from the previous answer's `tables`) | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version, language, file_name?, tables?, table?}` (`file_name`: the dropped file's name as the session keeps it, `(name withheld)` when the screen refused it; `tables`: one label per table, its header names and its row count, when the text held two or more tables each under its own header after a blank line, and `table` the one read, see `data/parse.py` `_one_table`;`suggestion`: the wide-table offer of `data/shape.py` with `siblings`, the columns a role that takes labels should not take (`bindings.label_siblings`), or null; `context_lines`: the notes pasted above or below the table that passed the pre-filter and the scope judge, which the root gets with the next `summarize_data` turn; `language`: the session language as `{language, source}`, which a paste before any typed message or choice sets from the notes' or the column names' language, source `pasted`), stored as version 1 (the undo history of an earlier paste is dropped); or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips that fallback and keeps every row) | `413 too_long`, `422 unparseable` (both with `cause`, the parser's sentence naming what the data fails on, at most 300 characters), `422 formula` (text of at most 2,000 characters that asks for a formula, which the chat's `generate_data` computes; never transcribed), `403 data_refused`, `403 session_closed` (the scope judge closed the session), `409 run_active` (a turn of the user in any session, or another paste of the user in flight), `429 rate_limited` / `429 daily_limit` (`AGENT_USER_PASTES_PER_MINUTE` / `_PER_DAY`, or the daily token budgets for `daily_limit`), `429 locked_out` (the day's `attack` strikes), `503 guard_unavailable` |
-| `POST /v1/sessions/{sid}/dataset/convert` | `{data_base64, sheet?}` (a dropped Excel, OpenDocument, Parquet, Feather, Arrow or NumPy file, at most 5 MiB; `sheet` a sheet or `.npz` array the previous answer named) | `{text, format, kind, rows, columns, sheet, sheets, sheet_count, warnings, dropped}`: the file read in the renderer's sandbox (`harness.py --convert`) into the text the paste box takes (CSV, or JSON records for a table with list columns, `format`), every value with the precision it came with, the sheet read and at most 10 visible ones with cells (`sheet_count` all of them), `warnings` counts (`formulas_without_value`, `hidden_sheets`, `dropped_columns`, `list_columns`, `utc_timestamps`, `renamed_columns`), `dropped` the names of the columns left out; nothing stored, no model call | `413 too_long`, `422 invalid`, `422 file_<refusal>` (`wire.CONVERT_REASONS`, with `measured` and `limit` for a broken cap) and `file_timeout`, `file_too_complex` (also a reader that died without its `status.json`), `file_too_large`, `file_unreadable`, `403 session_closed`, `409 run_active` (another conversion of the user in flight), `429 rate_limited` / `429 daily_limit` (`AGENT_USER_CONVERSIONS_PER_MINUTE` / `_PER_DAY`, or the daily token budgets), `429 locked_out`, `503 capacity` (no render slot within `AGENT_CONVERT_SLOT_WAIT_S`), `503 convert_unavailable` (no renderer, or one without `/convert`) |
+| `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?, source?, table?}` (`source`: the name of the file the page read the text from, at most 1,024 characters; screened on its own, never a note; `table`: 1 to 10, which of several tables in the text to read, from the previous answer's `tables`) | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version, language, file_name?, tables?, table?}` (`file_name`: the dropped file's name as the session keeps it, `(name withheld)` when the screen refused it; `tables`: one label per table, its header names and its row count, when the text held two or more tables each under its own header after a blank line, and `table` the one read, see `data/parse.py` `_one_table`;`suggestion`: the wide-table offer of `data/shape.py` with `siblings`, the columns a role that takes labels should not take (`bindings.label_siblings`), or null; `context_lines`: the notes pasted above or below the table that passed the pre-filter and the scope judge, which the root gets with the next `summarize_data` turn; `language`: the session language as `{language, source}`, which a paste before any typed message or choice sets from the notes' or the column names' language, source `pasted`), stored as version 1 (the undo history of an earlier paste is dropped); or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips that fallback and keeps every row) | `413 too_long`, `422 unparseable` (both with `cause`, the parser's sentence naming what the data fails on, at most 300 characters), `422 formula` (text of at most 2,000 characters that asks for a formula, which the chat's `generate_data` computes; never transcribed), `403 data_refused`, `403 session_closed` (the scope judge closed the session), `409 run_active` (a turn, a theme toggle or another paste in flight in this session), `429 rate_limited` / `429 daily_limit` (`AGENT_USER_PASTES_PER_MINUTE` / `_PER_DAY`, or the daily token budgets for `daily_limit`), `429 locked_out` (the day's `attack` strikes), `503 guard_unavailable` |
+| `POST /v1/sessions/{sid}/dataset/convert` | `{data_base64, sheet?}` (a dropped Excel, OpenDocument, Parquet, Feather, Arrow or NumPy file, at most 5 MiB; `sheet` a sheet or `.npz` array the previous answer named) | `{text, format, kind, rows, columns, sheet, sheets, sheet_count, warnings, dropped}`: the file read in the renderer's sandbox (`harness.py --convert`) into the text the paste box takes (CSV, or JSON records for a table with list columns, `format`), every value with the precision it came with, the sheet read and at most 10 visible ones with cells (`sheet_count` all of them), `warnings` counts (`formulas_without_value`, `hidden_sheets`, `dropped_columns`, `list_columns`, `utc_timestamps`, `renamed_columns`), `dropped` the names of the columns left out; nothing stored, no model call | `413 too_long`, `422 invalid`, `422 file_<refusal>` (`wire.CONVERT_REASONS`, with `measured` and `limit` for a broken cap) and `file_timeout`, `file_too_complex` (also a reader that died without its `status.json`), `file_too_large`, `file_unreadable`, `403 session_closed`, `409 run_active` (another conversion in flight in this session), `429 rate_limited` / `429 daily_limit` (`AGENT_USER_CONVERSIONS_PER_MINUTE` / `_PER_DAY`, or the daily token budgets), `429 locked_out`, `503 capacity` (no render slot within `AGENT_CONVERT_SLOT_WAIT_S`), `503 convert_unavailable` (no renderer, or one without `/convert`) |
 | `PUT /v1/sessions/{sid}/bindings` | `[{role, column}]` | `{bindings, complete, missing_roles, warnings}`: `warnings` names a role that needs values of 0 or more bound to a column with a negative value, or left open for that reason (`data/signs.py`); never a refusal | `409 run_active`, `422 invalid` (with `errors`, at most 20 lines) |
 | `PUT /v1/sessions/{sid}/language` | `{language}` (a short name or code, `^[A-Za-z][A-Za-z -]{0,39}$`) | `{language, source, suggestion?}`: the session language in its stored form (`English` is `en`), source `chosen`, which detection never overrides; `suggestion`, when the session has data, the `.to_long()` offer (or null) with its new column names in that language | `409 run_active`, `422` (the pattern) |
 | `POST /v1/sessions/{sid}/dataset/confirm` | | `{confirmed, rows, columns}`: step 1 of two, the user confirmed the dataset with its bindings; the pipeline runs only then | `409 run_active`, `422 no_dataset` |
@@ -43,8 +43,17 @@ turn's start in the rate window (`TurnSlot`, the ledger's `run_slot`), and the s
 sends `status{step:"queued", position, waiting}` while it waits, mid-turn, then the
 run's own events. The request deadline is paused while the turn waits and resumes
 with the time it had left when the slot comes, so queued time never counts. A full queue, or a
-wait of `AGENT_QUEUE_MAX_WAIT_S`, ends the turn with `error{code:"capacity"}`. A user
-with a turn in flight gets `409 run_active` on a second turn in any session.
+wait of `AGENT_QUEUE_MAX_WAIT_S`, ends the turn with `error{code:"capacity"}`.
+
+Every exclusion is per session (owner decision of 2026-10-21): the page opens one session per
+browser window, and a user's windows work in parallel. A session runs one thing at a time, so
+a second turn while its turn runs is `409 run_active`, and a paste in flight blocks the
+session's turns, its theme toggle and its data routes; the user's other sessions never block
+it. What the sessions of one user share is the run queue: a user may have at most
+`AGENT_USER_MAX_RUNS` sandbox runs queued or running at the same time, across sessions, and the
+turn whose sandbox run would be one more ends with `error{code:"run_limit"}` (`TurnSlot`),
+before the queue's length is looked at. The per-user rate limits and daily budgets stay per
+user.
 
 Before the scope judge runs, and before any model call, the route answers with a fixed
 refusal right after `ready`: `locked_out` for a user past the day's `attack` strikes
@@ -57,7 +66,8 @@ the user's message limits (`AGENT_USER_MESSAGES_PER_MINUTE`,
 The theme toggle (`/versions/{version}/render`) renders the other theme of a finished
 version outside the queue, because it costs no tokens, but behind waiting pipeline
 renders in the render slot (`render/serial.py`); while it renders it holds the
-session's registry entry, so a user has one run or toggle in flight at a time.
+session's registry entry, so a session has one run or toggle in flight at a time (the
+user's other sessions are not blocked).
 `adk web` runs the agents without this service, so its runs bypass the queue; its
 renders still go through the one render slot.
 
@@ -198,6 +208,7 @@ from agents.anyplot.run_queue import (
     QueueFull,
     QueuePosition,
     QueueTimeout,
+    QueueUserLimit,
     QueueWithdrawn,
     RunQueue,
     Ticket,
@@ -430,8 +441,10 @@ class TurnSlot:
     `status{step:"queued"}`), and resumes the deadline with the time it had left when the entry starts.
     A later call in the same turn answers at once: one start per turn. A full queue or
     an expired wait fails the turn with `capacity` and aborts the run, so the stream ends
-    with `error{code:"capacity"}` and the root spends no further call; a cancelled wait
-    ends the run like any cancel. The entry is released with the turn (`Runtime.finish`).
+    with `error{code:"capacity"}` and the root spends no further call; a user who already
+    holds `AGENT_USER_MAX_RUNS` entries in other sessions fails it the same way with
+    `run_limit` (`QueueUserLimit`); a cancelled wait ends the run like any cancel. The entry
+    is released with the turn (`Runtime.finish`).
     """
 
     runtime: "Runtime"
@@ -449,10 +462,14 @@ class TurnSlot:
         queue = self.runtime.run_queue()
         try:
             ticket = queue.submit(self.run.user, self.session_id)
+        except QueueUserLimit:  # the user's runs in their other sessions fill their share: not `capacity`
+            attribution("queue", self.ledger, verdict="run_limit", waited_s=0.0)
+            self._fail("run_limit")
+            return False
         except QueueFull:
             logger.info("run queue full (ref %s): %d waiting", self.ledger.request_id, queue.waiting_count)
             attribution("queue", self.ledger, verdict="full", waited_s=0.0)
-            self._fail()
+            self._fail("capacity")
             return False
         self.run.ticket = ticket
         outcome = "started"
@@ -470,15 +487,15 @@ class TurnSlot:
             outcome = "withdrawn"
         attribution("queue", self.ledger, verdict=outcome, waited_s=round(self.runtime.now() - ticket.enqueued_at, 1))
         if outcome == "expired":
-            self._fail()
+            self._fail("capacity")
         if outcome != "started":
             return False
         if waited:
             self.deadline.arm(self.runtime.now())
         return True
 
-    def _fail(self) -> None:
-        self.ledger.fail("capacity")
+    def _fail(self, code: Literal["capacity", "run_limit"]) -> None:
+        self.ledger.fail(code)
         self.run.abort.set()
 
 
@@ -488,17 +505,23 @@ class Runtime:
 
     `active` is the run registry: one entry per session with a queued or running
     `/messages` turn or a theme toggle in flight, which is what `409 run_active`
-    checks. `pasting` holds the users with a dataset paste in flight, so a user has one
-    paste at a time across sessions (`409 run_active` for a second one). The queue is built
-    from the settings on first use; its clock is the registry's clock too.
+    checks. `pasting` holds the sessions with a dataset paste in flight, so a session has
+    one paste at a time (`409 run_active` for a second one). `active`, `pasting` and `converting`
+    are keyed by session, never by user (owner decision of 2026-10-21): a user's other sessions never
+    block a session, and only the run queue counts a user's runs across sessions
+    (`AGENT_USER_MAX_RUNS`). A user may therefore hold several entries here at once, one per
+    session; `drop_stale`, `finish` and the idle sweep work per entry and release each
+    entry's own ticket. The queue is built from the settings on first use; its clock is the
+    registry's clock too.
     """
 
     session_service: InMemorySessionService = field(default_factory=InMemorySessionService)
     artifact_service: InMemoryArtifactService = field(default_factory=InMemoryArtifactService)
     active: dict[str, ActiveRun] = field(default_factory=dict)
     pasting: set[str] = field(default_factory=set)
+    """The sessions with a dataset paste in flight."""
     converting: set[str] = field(default_factory=set)
-    """The users with a file conversion in flight: one per user at a time (`409 run_active` for a second)."""
+    """The sessions with a file conversion in flight: one per session at a time (`409 run_active` for a second)."""
     eligibility_cache: dict[tuple[str, str], Eligibility] = field(default_factory=dict)
     runner: Runner | None = None
     queue: RunQueue | None = None
@@ -853,23 +876,23 @@ def _fixture_seed(
     return delta
 
 
-def _active(runtime: Runtime, sid: str, user: str | None = None) -> None:
-    """409 while the session has a queued or running run, or, with `user`, while that user has one in any session
-    or a dataset paste in flight (`Runtime.pasting`), so a turn, a theme toggle and a paste exclude each other."""
+def _active(runtime: Runtime, sid: str, *, paste: bool = True) -> None:
+    """409 while the session has a queued or running turn or a theme toggle in flight (`Runtime.active`), or, with
+    `paste`, a dataset paste in flight (`Runtime.pasting`).
+
+    Per session only (owner decision of 2026-10-21): a turn, a paste, a theme toggle and the data routes (library,
+    bindings, confirm, undo, to_long) exclude each other within the session, and the user's other sessions (other
+    browser windows) never block them; their sandbox runs meet only in the run queue (`TurnSlot`). The exclusion
+    guards the session's own data: a paste holds the view it read before its judges ran and writes the next dataset
+    from it, so a version stored meanwhile in the same session (a data route, a turn's `prepare_data`) would be
+    dropped silently. Every guard is keyed by the session id, so it holds whoever sends the request, also two tabs
+    that share one session id; the page opens a session per window and keeps its id in memory only, so its tabs
+    never share one. Sessions never share data: the stores are keyed by session id, and no state is user-scoped.
+    The language chip passes `paste=False`: the paste reads the session again before it writes the language, so a
+    choice that lands while the judges run is kept.
+    """
     runtime.drop_stale(get_settings())
-    if sid in runtime.active:
-        raise AgentsError(409, "run_active")
-    if user is not None and (user in runtime.pasting or any(run.user == user for run in runtime.active.values())):
-        raise AgentsError(409, "run_active")
-
-
-def _data_route_free(runtime: Runtime, sid: str, user: str) -> None:
-    """`_active` for the session's data routes (library, bindings, confirm, undo, to_long): 409 while the session
-    has a run, or while the user's paste is in flight in any session. A paste holds the view it read before its
-    judges ran and writes the next dataset from it, so a version another tab stored meanwhile would be dropped
-    silently. A run of the user in another session does not block them, as before."""
-    _active(runtime, sid)
-    if user in runtime.pasting:
+    if sid in runtime.active or (paste and sid in runtime.pasting):
         raise AgentsError(409, "run_active")
 
 
@@ -877,7 +900,7 @@ def _data_route_free(runtime: Runtime, sid: str, user: str) -> None:
 async def switch_library(sid: SessionId, body: SwitchLibraryBody, user: User, runtime: RuntimeDep) -> JSONResponse:
     settings = get_settings()
     session = await runtime.session(user, sid)
-    _data_route_free(runtime, sid, user)
+    _active(runtime, sid)
     view = read_session(session.state)
     if view is None or body.snapshot.spec_id != view.spec_id:
         raise AgentsError(422, "invalid")
@@ -907,7 +930,7 @@ async def upload_dataset(
     # A closed session takes no paste either: each one spends judge calls, and the chat it would feed is closed.
     if scope_refusals(session.events) >= settings.session_refusals:
         raise AgentsError(403, SESSION_CLOSED)
-    _active(runtime, sid, user)  # also one paste per user at a time, across sessions
+    _active(runtime, sid)  # one paste per session at a time; the user's other sessions may paste meanwhile
     view = read_session(session.state)
     if view is None:
         raise AgentsError(404, "session_expired")
@@ -918,17 +941,22 @@ async def upload_dataset(
     try:
         if size > MAX_INPUT_BYTES:
             raise AgentsError(413, "too_long")
+        # The limits stay per user while the user's sessions paste in parallel (2026-10-21). The paste count is
+        # checked here and booked in `_ingest_paste` (`add_paste`) before its first suspending `await`, so no paste
+        # of another session slips in between and the counts never overshoot. The daily token budget is checked here,
+        # before the judges, and booked after each judge call: pastes in several sessions at once can overshoot it
+        # by the judge calls they have in flight, a few thousand tokens each.
         _paste_budget(services, user, settings)
         limit = services.usage.paste_limit(user, settings)
         if limit is not None:
             attribution("paste_limit", ledger, verdict=limit)
             raise AgentsError(429, limit)
         telemetry.clear_converted(sid)  # past the limits: this paste is the converted file's one
-        runtime.pasting.add(user)  # no await since the check above, so no second paste slipped in between
+        runtime.pasting.add(sid)  # no await since the check above, so no second paste slipped in between
         try:
             return await _ingest_paste(services, runtime, body, user, sid, ledger, view, facts)
         finally:
-            runtime.pasting.discard(user)
+            runtime.pasting.discard(sid)
     except AgentsError as exc:
         facts.refused(exc.code)
         raise
@@ -959,8 +987,12 @@ async def convert_dataset_file(
     own counter (`AGENT_USER_CONVERSIONS_PER_MINUTE` / `_PER_DAY`, counted when the file goes to
     the sandbox), checked after the paste route's daily budget and strikes, so a user who may
     not paste spends no sandbox time; the paste that follows counts as one paste (owner
-    decision of 2026-10-15). One conversion per user at a time (`Runtime.converting`), across
-    sessions; it waits for the render slot behind every pipeline render. The attribution line
+    decision of 2026-10-15). One conversion per session at a time (`Runtime.converting`); the
+    user's other sessions may convert meanwhile (owner decision of 2026-10-21), and each one waits
+    for the render slot behind every pipeline render, at most `AGENT_CONVERT_SLOT_WAIT_S`, so
+    parallel conversions queue in the slot and the per-user counter still bounds them. The
+    counter is checked and booked with no suspending `await` between, so parallel sessions never
+    overshoot it. The attribution line
     carries the kind, the outcome, the byte count and the time, never the file, its text or its
     sheet names.
     """
@@ -969,7 +1001,7 @@ async def convert_dataset_file(
     session = await runtime.session(user, sid)
     if scope_refusals(session.events) >= settings.session_refusals:
         raise AgentsError(403, SESSION_CLOSED)
-    if user in runtime.converting:
+    if sid in runtime.converting:
         raise AgentsError(409, "run_active")
     try:
         data = base64.b64decode(body.data_base64, validate=True)
@@ -1008,7 +1040,7 @@ async def _convert(
     if limit is not None:
         attribution("convert_limit", ledger, verdict=limit)
         raise AgentsError(429, limit)
-    runtime.converting.add(user)  # no await since the check above, so no second conversion slipped in between
+    runtime.converting.add(sid)  # no await since the check above, so no second conversion slipped in between
     try:
         services.usage.add_conversion(user)
         job = ConvertJob(
@@ -1023,7 +1055,7 @@ async def _convert(
             attribution("data_convert", ledger, outcome="unavailable", bytes=len(data))
             raise AgentsError(503, "convert_unavailable") from None
     finally:
-        runtime.converting.discard(user)
+        runtime.converting.discard(sid)
     kind = output.meta.kind if output.meta is not None else None
     if output.exit_code == 0 and output.text is not None and output.meta is not None:
         meta = output.meta
@@ -1458,7 +1490,7 @@ async def put_bindings(
 ) -> JSONResponse:
     services = get_services()
     session = await runtime.session(user, sid)
-    _data_route_free(runtime, sid, user)
+    _active(runtime, sid)
     view = read_session(session.state)
     if view is None:
         raise AgentsError(404, "session_expired")
@@ -1501,11 +1533,12 @@ async def put_language(sid: SessionId, body: LanguageBody, user: User, runtime: 
     same change. The next reply and the next plot version use it; earlier versions keep
     their text. The pattern runs before `normalise` (a leading space is a `422`), and the
     answer carries the stored form, which the page shows: `English` comes back as `en`,
-    `Swedish` as typed. `409 run_active` while a turn or a theme render is in flight, so
-    a choice never races detection inside a run.
+    `Swedish` as typed. `409 run_active` while a turn or a theme render is in flight in the
+    session, so a choice never races detection inside a run; a paste in flight does not block
+    it, because the paste reads the session again before it writes the language.
     """
     session = await runtime.session(user, sid)
-    _active(runtime, sid)
+    _active(runtime, sid, paste=False)
     if read_session(session.state) is None:
         raise AgentsError(404, "session_expired")
     value = normalise(body.language)
@@ -1531,7 +1564,7 @@ async def confirm_dataset(sid: SessionId, user: User, runtime: RuntimeDep) -> JS
     """
     services = get_services()
     session = await runtime.session(user, sid)
-    _data_route_free(runtime, sid, user)
+    _active(runtime, sid)
     view = read_session(session.state)
     if view is None:
         raise AgentsError(404, "session_expired")
@@ -1556,7 +1589,7 @@ async def undo_dataset(sid: SessionId, user: User, runtime: RuntimeDep) -> JSONR
     """
     services = get_services()
     session = await runtime.session(user, sid)
-    _data_route_free(runtime, sid, user)
+    _active(runtime, sid)
     view = read_session(session.state)
     if view is None:
         raise AgentsError(404, "session_expired")
@@ -1589,7 +1622,7 @@ async def dataset_to_long(sid: SessionId, user: User, runtime: RuntimeDep) -> JS
     """
     services = get_services()
     session = await runtime.session(user, sid)
-    _data_route_free(runtime, sid, user)
+    _active(runtime, sid)
     view = read_session(session.state)
     if view is None:
         raise AgentsError(404, "session_expired")
@@ -1791,7 +1824,7 @@ async def post_message(
     if body.text is not None and len(body.text) > MAX_MESSAGE_CHARS:
         raise AgentsError(413, "too_long")
     session = await runtime.session(user, sid)
-    _active(runtime, sid, user)
+    _active(runtime, sid)  # one turn per session; the user's other sessions run their turns in parallel
     settings = get_settings()
     services = get_services()
     view = read_session(session.state)
@@ -1811,6 +1844,13 @@ async def post_message(
     # The fixed refusals sent before the scope judge, so none of these turns costs a model call.
     # A closed session answers `session_closed` first: its third `attack` refusal also reaches the strike lockout,
     # which would otherwise mask the closure behind `budget` here (the lockout still covers the user's other sessions).
+    # The limits stay per user while the user's sessions run turns in parallel (2026-10-21), and may overlap:
+    # - messages: checked and counted below with no suspending `await` between, so they never overshoot;
+    # - the daily token budget: checked here and before every model call (`plugins/budget.py`), booked after each
+    #   call, so parallel turns overshoot it by at most the model calls they have in flight;
+    # - daily pipeline runs: checked and counted in one step (`BudgetPlugin.before_tool_callback`), no overshoot;
+    # - daily data runs: checked before the queue wait and counted after it (`tools/session.run_data_code`), so the
+    #   user's runs waiting in other sessions, at most `AGENT_USER_MAX_RUNS` - 1, can overshoot it by as many.
     refused = scope_refusals(session.events)
     if refused >= settings.session_refusals:
         return _refuse_now(translator, ledger, facts, SESSION_CLOSED, "session_closed", refusals=refused)
@@ -1940,12 +1980,13 @@ async def render_version_theme(
     Version 0 is the latest. Synchronous (a render takes seconds): it renders in the
     render slot's `toggle` lane, behind waiting pipeline renders, but not through the
     run queue. It is registered in the run registry while it renders, so it and a turn
-    refuse each other with `409 run_active` in both directions, and a user has one run
-    or toggle in flight at a time. `503 capacity` when no render slot came free in time
-    or the render store is full.
+    of the same session refuse each other with `409 run_active` in both directions, and a
+    session has one run or toggle in flight at a time; it holds only this session's entry,
+    so the user's other sessions go on meanwhile (owner decision of 2026-10-21). `503
+    capacity` when no render slot came free in time or the render store is full.
     """
     await runtime.session(user, sid)
-    _active(runtime, sid, user)
+    _active(runtime, sid)
     services = get_services()
     stored = services.versions.get(sid, version or None)
     if stored is None:

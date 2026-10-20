@@ -253,8 +253,9 @@ RefusalCode = Literal[
     "daily_limit",
     "other",
 ]
-ErrorCode = Literal["guard_unavailable", "capacity", "deadline", "internal", "cancelled", "other"]
-"""`cancelled`: the client closed the stream before the turn ended (the page's cancel, a reload, a lost connection)."""
+ErrorCode = Literal["guard_unavailable", "capacity", "run_limit", "deadline", "internal", "cancelled", "other"]
+"""`cancelled`: the client closed the stream before the turn ended (the page's cancel, a reload, a lost connection);
+`run_limit`: the turn's sandbox run would have been one more than `AGENT_USER_MAX_RUNS` across the user's sessions."""
 LanguageSource = Literal["default", "pasted", "detected", "chosen"]
 Step = Literal["root", "adapter", "reviewer", "judge", "other"]
 

@@ -27,6 +27,16 @@ entries and 90-second runs, the last four wait the full maximum and leave with
 `capacity`. Admission therefore promises a place, not a start. A run holds its slot
 until its turn ends, the root's closing reply included.
 
+**Per user.** A user may hold at most `AGENT_USER_MAX_RUNS` entries (default 3),
+waiting and running together, across all their sessions (owner decision of
+2026-10-21: each browser window is a session of its own, and a user's windows work in
+parallel, so the cap bounds what one user puts into the shared queue). `submit` refuses
+one more with `QueueUserLimit`, which the route ends as `error{code:"run_limit"}`, before
+it looks at the queue's length: a user at the cap learns that from their own runs, not
+from `capacity`. The cap is checked in `submit` because the queue already holds every
+entry with its user; it changes neither the queue's capacity nor its order, and an
+entry the cap refuses never took a place, a start or a position.
+
 **Lanes.** An entry carries a lane: `premium` entries go before every `normal` entry,
 first come first served within a lane. Nothing sets `premium` yet; it is the lane for
 users who later pay for their own tokens. It bypasses the normal lane only: the
@@ -72,6 +82,10 @@ MIN_WAKE_S = 0.01
 
 class QueueFull(Exception):
     """The entry would wait longer than the maximum; nothing was queued."""
+
+
+class QueueUserLimit(Exception):
+    """The user already holds the most entries a user may hold, waiting or running; nothing was queued."""
 
 
 class QueueTimeout(Exception):
@@ -127,13 +141,18 @@ class RunQueue:
         max_wait_s: float,
         clock: Callable[[], float] = time.monotonic,
         window_s: float = RATE_WINDOW_S,
+        per_user: int | None = None,
     ) -> None:
         if concurrency < 1 or per_minute < 1 or max_wait_s <= 0 or window_s <= 0:
             raise ValueError("concurrency, rate, maximum wait and window must be positive")
+        if per_user is not None and per_user < 1:
+            raise ValueError("the per-user cap must be positive")
         self.concurrency = concurrency
         self.per_minute = per_minute
         self.max_wait_s = max_wait_s
         self.window_s = window_s
+        self.per_user = per_user
+        """Entries one user may hold, waiting and running (`AGENT_USER_MAX_RUNS`); None sets no cap."""
         self._clock = clock
         self._waiting: list[Ticket] = []
         self._running: list[Ticket] = []
@@ -147,6 +166,7 @@ class RunQueue:
             per_minute=settings.runs_per_minute,
             max_wait_s=settings.queue_max_wait_s,
             clock=clock,
+            per_user=settings.user_max_runs,
         )
 
     def now(self) -> float:
@@ -166,10 +186,20 @@ class RunQueue:
     def in_flight(self) -> int:
         return len(self._running)
 
+    def user_entries(self, user: str) -> int:
+        """The user's entries in the queue, waiting and running, in every session."""
+        return sum(1 for entry in (*self._waiting, *self._running) if entry.user == user)
+
     def submit(self, user: str, session_id: str, lane: Lane = "normal") -> Ticket:
-        """Queue a run, or start it at once; raises `QueueFull` when it would wait past the maximum."""
+        """Queue a run, or start it at once.
+
+        Raises `QueueUserLimit` when the user already holds `per_user` entries (checked first), and `QueueFull`
+        when the run would wait past the maximum.
+        """
         now = self._clock()
-        self._pump(now)
+        self._pump(now)  # an entry that expired just now no longer counts against its user
+        if self.per_user is not None and self.user_entries(user) >= self.per_user:
+            raise QueueUserLimit(f"the user already holds {self.per_user} entries")
         ticket = Ticket(user=user, session_id=session_id, lane=lane, seq=next(self._seq), enqueued_at=now)
         position = 1 + sum(1 for other in self._waiting if other.order < ticket.order)
         if position > self.capacity and not (position == 1 and self._can_start(now)):

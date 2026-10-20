@@ -1774,9 +1774,10 @@ async def test_run_active_is_a_409(client: httpx.AsyncClient, runtime: Runtime, 
     assert cancel.status_code == 204 and runtime.active[sid].abort.is_set()
 
 
-async def test_one_active_run_per_user_across_sessions(
+async def test_a_run_in_one_session_never_blocks_the_users_other_session(
     client: httpx.AsyncClient, runtime: Runtime, swap_models
 ) -> None:
+    """Owner decision of 2026-10-21: each window is a session, and a user's sessions work in parallel."""
     import asyncio
 
     from agents.main import ActiveRun
@@ -1784,10 +1785,26 @@ async def test_one_active_run_per_user_across_sessions(
     swap_models("gemini", default_script())
     first = await open_session(client)
     second = await open_session(client)
-    runtime.active[first] = ActiveRun(abort=asyncio.Event(), user=USER)
+    runtime.active[first] = ActiveRun(abort=asyncio.Event(), user=USER)  # the first window's turn runs
 
-    response = await client.post(f"/v1/sessions/{second}/messages", headers=HEADERS, json={"action": "create_plot"})
+    data = (CASES / "scatter-basic-matplotlib" / "data.csv").read_text()
+    pasted = await client.post(f"/v1/sessions/{second}/dataset", headers=HEADERS, json={"text": data})
+    bindings = await client.put(
+        f"/v1/sessions/{second}/bindings",
+        headers=HEADERS,
+        json=[{"role": "x", "column": "Study Hours"}, {"role": "y", "column": "Exam Score"}],
+    )
+    confirmed = await client.post(f"/v1/sessions/{second}/dataset/confirm", headers=HEADERS)
+    for response in (pasted, bindings, confirmed):
+        assert response.status_code == 200, response.text
+    events = await create_plot(client, second)
+    language = await client.put(f"/v1/sessions/{second}/language", headers=HEADERS, json={"language": "de"})
 
+    assert next(data for name, data in events if name == "plot")["status"] == "ok"
+    assert language.status_code == 200, language.text
+    assert list(runtime.active) == [first]  # the second window's turn ended; the first one's still runs
+    # The first window itself still runs one thing at a time.
+    response = await client.post(f"/v1/sessions/{first}/messages", headers=HEADERS, json={"text": "hi"})
     assert (response.status_code, response.json()) == (409, {"detail": "run_active"})
 
 

@@ -9,12 +9,16 @@ import type { ConfirmLoss } from 'src/hooks/useAgentSession';
 /** Errors of a turn (stream `error` events and failed requests). */
 export const ERROR_TEXT: Record<string, string> = {
   capacity: 'the run queue is full or the wait ran out; try again in a few minutes',
+  // The server's `AGENT_USER_MAX_RUNS` (3): plots and data runs queued or running across the user's windows.
+  run_limit:
+    'you already have 3 plots or data runs in progress in other windows; wait until one finishes, then try again',
   deadline: 'the run took too long and was stopped',
   guard_unavailable: 'the scope check is unavailable right now; try again',
   upstream: 'the agents service did not answer or cut the stream',
   internal: 'something went wrong on the server',
+  // Per window since 2026-10-21: the user's other windows never cause it.
   run_active:
-    'a run or a theme render is still in progress, in this tab or another one (a stopped run ends after its current step); try again in a moment',
+    'a run, a theme render or a paste is still in progress in this window (a stopped run ends after its current step); try again in a moment',
   too_long: 'the message is longer than 2,000 characters',
   not_eligible: 'this plot cannot be adapted in that library',
   not_found: 'that plot or library is not in the catalogue',
@@ -50,7 +54,7 @@ export const DATA_FAILURE: Record<string, string> = {
   locked_out: 'paused until tomorrow after several refused requests today',
   session_closed: 'this chat is closed; reload the page to start a new session',
   capacity: 'the server is busy; try again in a minute',
-  run_active: 'a run or another paste is in progress; wait for it to finish',
+  run_active: 'a run or another paste is still in progress in this window; wait for it to finish',
   no_dataset: 'parse the data first',
   // The service keeps the last five versions, so the history can end above version 1.
   nothing_to_undo: 'there is no earlier version to go back to',

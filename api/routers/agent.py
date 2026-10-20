@@ -158,7 +158,7 @@ _EVENT_FIELDS: dict[str, frozenset[str]] = {
     # `suggestion` the `.to_long()` offer in that language (or null) on a session with data, so its card follows.
     "done": frozenset({"llm_calls", "tokens", "bindings", "data_confirmed", "dataset", "language", "suggestion"}),
 }
-_ERROR_CODES = frozenset({"capacity", "deadline", "guard_unavailable", "upstream", "internal"})
+_ERROR_CODES = frozenset({"capacity", "run_limit", "deadline", "guard_unavailable", "upstream", "internal"})
 _MAX_BINDING_ERRORS = 20
 _MAX_BINDING_ERROR_CHARS = 300
 _MAX_CAUSE_CHARS = 300  # agents/main.py MAX_CAUSE_CHARS; copied, because the API image does not ship the agents package
