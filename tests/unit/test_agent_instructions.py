@@ -419,7 +419,7 @@ GUARDRAIL_SECTION_ANCHORS = {
         "escalate to fable for high-risk reviews",
         "`/gemini-task`",
         "claude never runs `agy` itself",
-        "through the gemini api with the owner's ai studio key",
+        "through vertex ai in project `anyplot`",
         "never extract, copy, or proxy the agy login",
     ],
     "External-system writes need explicit, named authorization": ["explicit, named authorization"],

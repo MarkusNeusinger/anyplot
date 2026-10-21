@@ -29,7 +29,7 @@ the owner's Google AI Ultra quota, so the work is split by what it needs.
 | Changes state: `gcloud`, `gh` writes, labels, merges, prod | Opus | Owner: he does not trust Haiku with writes |
 | Reads or polls with credentials (CI, deploys, `gh`/`gcloud` state); creates Todoist tasks | Haiku | Cheap; never changes state |
 | High-risk reviews (security, prod data, sandbox, privacy); genuinely hard reasoning | Fable | About 2.5 times Opus per token at API prices, so only where it pays |
-| Credential-free analysis of briefings and fetched files, drafts, first review of a normal PR | Gemini 4 Argon through the Gemini API with the owner's AI Studio key (`zweitmeinung` user skill) | Paid per token and covered by the $100 monthly Google Cloud credit that comes with Google AI Ultra; Gemini sees only the briefing and the attached files, with no tools and no credentials |
+| Credential-free analysis of briefings and fetched files, drafts, first review of a normal PR | Gemini 4 Argon through Vertex AI in project `anyplot`, location `global` (`zweitmeinung` user skill) | Paid per token and covered by the $100 monthly Google Cloud credit that comes with Google AI Ultra; Gemini reads tracked repository files, prefetched data, and the public API through read-only tools, with no shell and no credentials |
 | Credential-free implementation, including long refactors | Gemini, in the owner's interactive agy session, through a `gemini`-labelled issue (`/gemini-task`) | The owner approves every command; Claude reviews and ships |
 
 Sonnet has no lane in interactive sessions; Gemini covers that work, and the
@@ -63,9 +63,12 @@ Antigravity can get the account suspended. A Google staff reply on 2026-10-16
 (Google AI Developers Forum, topic 189905) answered a setup like ours with "No
 under consumer plans", even for the unmodified binary run as a local
 subprocess without touching the token. Only the owner's own scripts and CI are
-allowed. For third-party agents Google recommends a Google AI Studio or Gemini
-Enterprise API key. So second opinions go through the Gemini API with the
-owner's key, and only the owner starts agy, for `/gemini-task`.
+allowed. For third-party agents Google recommends calling Gemini models
+through Gemini Enterprise (Google Cloud) or a Google AI Studio API key. So
+second opinions call Gemini 4 Argon through Vertex AI, which is plain Google
+Cloud usage, and only the owner starts agy, for `/gemini-task`.
+The site's own agents stay on the `eu` location; second opinions use `global`,
+which is 10 % cheaper.
 
 Escalation is for judgment calls, not for every detail. Within its briefed
 scope a delegate decides routine matters itself and documents them; otherwise

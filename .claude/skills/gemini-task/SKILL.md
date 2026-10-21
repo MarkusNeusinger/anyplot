@@ -22,8 +22,8 @@ FAQ forbids running it from third-party coding agents such as Claude Code under
 a consumer login, and a Google staff reply of 2026-10-16 confirmed that for the
 unmodified binary. Nothing extracts, copies, or proxies the agy token, and
 nothing calls Google endpoints with it (Antigravity terms, section 6). Claude's
-second opinions use the Gemini API with the owner's key instead (the
-`zweitmeinung` user skill).
+second opinions call Gemini through Vertex AI instead (the `zweitmeinung` user
+skill).
 
 ## 1. Claude: write the task
 
