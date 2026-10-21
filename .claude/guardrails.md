@@ -53,7 +53,7 @@ then runs in an Opus session.
   third-party tools or proxies accessing the service), for which Google
   suspended accounts in 2026, so it was removed the same day.
 
-So nothing extracts, copies or proxies the agy login.
+So nothing extracts, copies, or proxies the agy login.
 
 Escalation is for judgment calls, not for every detail. Within its briefed
 scope a delegate decides routine matters itself and documents them; otherwise

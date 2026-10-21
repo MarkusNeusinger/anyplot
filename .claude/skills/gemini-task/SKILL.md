@@ -16,7 +16,7 @@ approves every command Gemini runs. Work flows in three steps:
 Gemini never pushes, never writes to GitHub, and never touches gcloud or
 production. Credentials and every write outside the machine stay with Claude.
 
-Nobody automates around the agy login. Nothing extracts, copies or proxies the
+Nobody automates around the agy login. Nothing extracts, copies, or proxies the
 agy token, and nothing calls Google endpoints with it. The Antigravity terms
 (section 6) forbid third-party tools and proxies, and Google suspended accounts
 for exactly that in 2026. Claude may still run `agy -p` read-only for second
@@ -68,7 +68,7 @@ Repo-relative paths, related PRs or issues, and the facts Gemini cannot look up.
 Scope boundaries, what must not change, and the repository rules that matter most here.
 
 ## Acceptance
-The exact commands that must pass, and the behaviour to check by hand, if any.
+The exact commands that must pass, and the behavior to check by hand, if any.
 
 ## Decide yourself / report back
 The routine choices Gemini makes and documents, and the questions it returns
@@ -101,36 +101,44 @@ This section is for the Gemini agent in the owner's agy session.
 1. **Read the task.** Use `gh issue view <number>`; with no number given, list
    the open tasks with `gh issue list --label gemini --state open` and ask the
    owner which one to take. Reading GitHub is fine. Never create, edit, comment
-   on, label or close anything on GitHub.
+   on, label, or close anything on GitHub.
 2. **Work in the dedicated clone on your own branch.** That clone is
    `~/projects/anyplot-agy`; if you find yourself in any other checkout, stop
-   and tell the owner. Use absolute paths throughout. To start a task:
+   and tell the owner. Use absolute paths throughout. To start a new task, and
+   only then, fetch:
 
    ```bash
    git fetch origin
    git switch -c gemini/<number>-<slug> origin/main
    ```
 
-   To continue a task from an earlier session, switch to its branch, read
-   `git log origin/main..HEAD`, and resume at the first open step.
-3. **Set `PYTHON_DOTENV_DISABLED=1`** for every command, and never create or
-   copy a `.env` into the clone.
+   To continue a task from an earlier session, switch to its branch without
+   fetching, run `git status` and `git log origin/main..HEAD` (full messages,
+   not `--oneline`), and resume at the first step no commit names as done.
+3. **Keep production out.** The clone holds no `.env`; never create or copy one.
+   Prefix Python commands with `PYTHON_DOTENV_DISABLED=1` as a second guard;
+   each command runs in a fresh shell, so an `export` does not carry over.
 4. **Implement one step at a time, inside the issue's scope.** The rules in
    `AGENTS.md` apply: English everywhere, files edited with your edit tool, no
-   lint-disable comments, documentation updated with behaviour, and a changelog
-   fragment under `changelog.d/` for any change that is not exempt.
+   lint-disable comments, and documentation updated with behavior. A change
+   that is not exempt adds a changelog fragment under `changelog.d/` without
+   any `(#...)` reference; Claude adds the PR number later.
 5. **Run the acceptance commands and the gates for what you changed:**
 
    ```bash
-   uv run ruff check . && uv run ruff format --check .
-   uv run --extra typecheck mypy api core --pretty            # Python changes
-   uv run pytest tests/unit tests/integration                 # or the narrower set the issue names
-   cd app && yarn lint && yarn type-check && yarn test --run && yarn build   # app/ changes
+   PYTHON_DOTENV_DISABLED=1 uv run ruff check . && uv run ruff format --check .
+   PYTHON_DOTENV_DISABLED=1 uv run --extra typecheck mypy api core --pretty     # Python changes
+   PYTHON_DOTENV_DISABLED=1 uv run pytest tests/unit tests/integration -n auto  # or the narrower set the issue names
+   PYTHON_DOTENV_DISABLED=1 uv run python -m tools.changelog check --base origin/main
+   cd app && yarn lint && yarn fm:check && yarn type-check && yarn test && yarn build   # app/ changes
    ```
 
-6. **Commit each finished step** on your branch with a conventional message
-   whose body ends with `Refs #<number>`. Do not push.
-7. **Hand over** in the body of your last commit, under the heading `Hand-over`:
+6. **Commit each finished step** on your branch with a conventional message.
+   Its body names the step (for example `Step 2 of 5: …`) and ends with
+   `Refs #<number>`. Do not push.
+7. **Hand over** when you finish or stop, whether on a blocker or at the end of
+   the session. Add an empty commit (`git commit --allow-empty`) whose message
+   starts with `Hand-over` and lists:
    - what changed and why,
    - the commands you ran and their results,
    - the decisions you made,
@@ -145,6 +153,7 @@ This section is for the Gemini agent in the owner's agy session.
 - any `gcloud` command,
 - `alembic upgrade` against anything but a throwaway database,
 - read or edit `.env`, or read files under `~/.config`,
+- edit anything under `.git/`, including its config and hooks,
 - run the app or tests against the production database,
 - install tools globally,
 - merge or rebase other branches into yours.
@@ -152,8 +161,9 @@ This section is for the Gemini agent in the owner's agy session.
 ## 3. Claude: take the branch over
 
 1. **Fetch the work.** Bring the branch over from the clone into a fresh
-   worktree of your own checkout. Fetching from a local repository runs none of
-   its hooks or config.
+   worktree of your own checkout. The fetch runs `git upload-pack` in the clone,
+   which checks nothing out and ignores repository-level settings that could run
+   commands, such as `uploadpack.packObjectsHook` (see `git help config`).
 
    ```bash
    git fetch ~/projects/anyplot-agy gemini/<number>-<slug>:gemini/<number>-<slug>
@@ -162,6 +172,12 @@ This section is for the Gemini agent in the owner's agy session.
 
    Read the hand-over with `git log origin/main..gemini/<number>-<slug>`. Open
    steps or questions go back to the owner first.
+
+   When Gemini continues in a later session and you have not changed the branch
+   yet, update your worktree with
+   `git -C .claude/worktrees/gemini-<number> pull --ff-only ~/projects/anyplot-agy gemini/<number>-<slug>`.
+   Once you have committed or rebased on it, the remaining steps go into a new
+   issue rather than back onto the same branch.
 2. **Review independently.** Start a fresh Opus subagent and give it only two
    things: the issue's Acceptance section and
    `git diff origin/main...gemini/<number>-<slug>`. Leave out the brief's
@@ -169,13 +185,13 @@ This section is for the Gemini agent in the owner's agy session.
    - Add Fable for high-risk diffs: security, production data, sandboxing,
      privacy.
    - Gemini never reviews its own work.
-3. **Fix, gate and ship.** Work in that worktree and rebase onto `origin/main`
-   there. Fix what the review
-   found, run the open-pr gates, then open the PR with `/pull_request`. The PR
-   body says:
-   - `Closes #<number>`,
-   - that the change was implemented by Gemini 4 Argon in the owner's
-     interactive agy session and reviewed by Claude.
+3. **Fix, gate, and ship.** Work in that worktree and rebase onto
+   `origin/main` there. Fix what the review found, run the open-pr gates, then
+   open the PR with `/pull_request`. In the PR body:
+   - one Summary bullet says the change was implemented by Gemini 4 Argon in
+     the owner's interactive agy session and reviewed by Claude; this is
+     provenance for the reviewer, not a "Generated with" footer;
+   - the body carries `Closes #<number>`.
 
    Follow the PR through as `/open-pr` describes; Copilot reviews last, as on
    every PR.
@@ -193,7 +209,7 @@ Append one JSON line per task to `~/.claude/team-ledger.jsonl`, for example:
 
 - `claude_tokens` comes from the review subagent's completion notification plus
   the take-over work.
-- `outcome` is `accepted`, `reworked` or `discarded`.
+- `outcome` is `accepted`, `reworked`, or `discarded`.
 
 Gemini's own usage shows in the owner's agy quota and is not recorded here. The
 ledger answers the question that matters: how many Claude tokens one accepted
