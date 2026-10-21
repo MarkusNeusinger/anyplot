@@ -5,7 +5,7 @@
   interactive agy session, in a separate clone with pushing disabled. Claude
   then reviews the branch and ships it as a PR (`/gemini-task`). Gemini's quota
   does the implementation, while credentials and every outside write stay with
-  Claude.
+  Claude. (#12223)
 
 ### Changed
 
@@ -16,4 +16,4 @@
   first reviews, and implementation. Sonnet no longer has a lane in interactive
   sessions. The guardrails also record why headless Gemini implementation was
   dropped: agy's login is a project-owner token, Google front ends route by
-  `Host` header, and proxying the token breaks the Antigravity terms.
+  `Host` header, and proxying the token breaks the Antigravity terms. (#12223)
