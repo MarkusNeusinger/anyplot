@@ -8,4 +8,4 @@
   and `deploy-agents` on 2026-10-12). A `wait-turn` step in all four Cloud Build
   configs (`scripts/cloudbuild-wait-turn.sh`) now holds each deploy until every
   older build of the same service has finished, so the newest commit deploys
-  last; image builds still run in parallel.
+  last; image builds still run in parallel. (#12222)
