@@ -76,8 +76,14 @@ instead of guessing.
 ```
 
 Tell the owner the issue number. He works in a dedicated clone, never in the
-checkout Claude uses. The clone holds no `.env`, so nothing in it can reach the
-production database, and pushing is disabled. One-time setup:
+checkout Claude uses. Three things keep production out of that session:
+
+- the clone holds no `.env`,
+- agy starts with a minimal environment, so no database setting or credential
+  variable from the owner's shell reaches Gemini or the commands it runs,
+- pushing is disabled.
+
+One-time setup:
 
 ```bash
 git clone https://github.com/MarkusNeusinger/anyplot.git ~/projects/anyplot-agy
@@ -87,9 +93,13 @@ git -C ~/projects/anyplot-agy remote set-url --push origin no-push
 Then, for each task:
 
 ```bash
-cd ~/projects/anyplot-agy && agy --mode accept-edits
+cd ~/projects/anyplot-agy && env -i HOME="$HOME" USER="$USER" SHELL="$SHELL" PATH="$PATH" \
+  TERM="$TERM" LANG="${LANG:-C.UTF-8}" PYTHON_DOTENV_DISABLED=1 agy --mode accept-edits
 ```
 
+`env -i` passes only the variables named, so a `DATABASE_URL`,
+`INSTANCE_CONNECTION_NAME`, or `GOOGLE_APPLICATION_CREDENTIALS` exported in the
+owner's shell never reaches `core/database/connection.py` in a child command.
 In this mode file edits are accepted without asking, and every command still
 asks him. Then he types `/gemini-task <number>`, or tells Gemini to work on the
 issue.
@@ -117,7 +127,10 @@ This section is for the Gemini agent in the owner's agy session.
    not `--oneline`), and resume at the first step no commit names as done.
 3. **Keep production out.** The clone holds no `.env`; never create or copy one.
    Prefix Python commands with `PYTHON_DOTENV_DISABLED=1` as a second guard;
-   each command runs in a fresh shell, so an `export` does not carry over.
+   each command runs in a fresh shell, so an `export` does not carry over. If a
+   check needs a database, use a throwaway local one, as the
+   `/verify-migrations` skill does. Never set `DATABASE_URL` or
+   `INSTANCE_CONNECTION_NAME` to anything else.
 4. **Implement one step at a time, inside the issue's scope.** The rules in
    `AGENTS.md` apply: English everywhere, files edited with your edit tool, no
    lint-disable comments, and documentation updated with behavior. A change
