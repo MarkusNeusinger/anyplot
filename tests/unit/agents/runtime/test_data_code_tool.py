@@ -313,6 +313,23 @@ class TestLimits:
         assert await run_data_code(SNIPPET, "python", context) == {"status": "error", "code": "capacity"}
         assert backend.data_jobs == [] and services.usage.user_data_runs("anonymous") == 0
 
+    async def test_the_users_run_limit_has_its_own_code(
+        self, client: httpx.AsyncClient, services: Services, backend: FakeBackend
+    ) -> None:
+        """The route failed the turn with `run_limit` (the user's runs in other windows fill their share)."""
+        sid = await open_session(client, with_data=False)
+        context = await context_for(client, sid, "inv-slot-3")
+        ledger = ledger_for("inv-slot-3")
+
+        async def limited() -> bool:
+            ledger.fail("run_limit")
+            return False
+
+        ledger.run_slot = limited
+
+        assert await run_data_code(SNIPPET, "python", context) == {"status": "error", "code": "run_limit"}
+        assert backend.data_jobs == [] and services.usage.user_data_runs("anonymous") == 0
+
     async def test_the_run_slot_is_taken_before_the_run(
         self, client: httpx.AsyncClient, services: Services, backend: FakeBackend
     ) -> None:

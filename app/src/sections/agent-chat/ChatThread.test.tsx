@@ -99,6 +99,32 @@ describe('ChatThread', () => {
     expect(screen.getAllByTestId('confirm-lost')).toHaveLength(1);
     expect(screen.getByText('# stopped')).toBeInTheDocument();
   });
+
+  it("says in plain words that the user's other windows hold their three runs", () => {
+    renderThread({
+      ...initialAgentState('matplotlib'),
+      phase: 'ready',
+      sessionId: 'S1',
+      items: [{ id: 1, kind: 'error', code: 'run_limit', ref: 'r-lim' }],
+    });
+    const alert = screen.getByRole('alert');
+    expect(alert).toHaveTextContent('error · run_limit · ref r-lim');
+    expect(alert).toHaveTextContent(
+      'you already have 3 plots or data runs in progress in other windows; wait until one finishes, then try again'
+    );
+  });
+
+  it('names this window, not the others, for a run_active turn', () => {
+    renderThread({
+      ...initialAgentState('matplotlib'),
+      phase: 'ready',
+      sessionId: 'S1',
+      items: [{ id: 1, kind: 'error', code: 'run_active', ref: null }],
+    });
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'a run, a theme render or a paste is still in progress in this window'
+    );
+  });
 });
 
 describe('ChatThread in-progress line', () => {

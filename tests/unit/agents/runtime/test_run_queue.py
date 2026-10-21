@@ -13,6 +13,7 @@ from agents.anyplot.run_queue import (
     QueueFull,
     QueuePosition,
     QueueTimeout,
+    QueueUserLimit,
     QueueWithdrawn,
     RunQueue,
     Ticket,
@@ -157,6 +158,56 @@ class TestCapacity:
         premium = queue.submit("p", "s-p", lane="premium")
 
         assert queue.position(premium) == QueuePosition(position=1, waiting=3)
+
+
+class TestPerUser:
+    """`AGENT_USER_MAX_RUNS`: a user's entries, waiting and running, across their sessions (2026-10-21)."""
+
+    def test_the_default_cap_is_three(self) -> None:
+        assert RunQueue.from_settings(AgentSettings()).per_user == 3
+
+    def test_the_fourth_entry_of_a_user_is_refused_and_another_user_still_queues(self, clock: Clock) -> None:
+        queue = RunQueue(concurrency=1, per_minute=1_000, max_wait_s=600, clock=clock, per_user=3)
+        mine = [queue.submit("u", f"s-{window}") for window in range(3)]  # one running, two waiting
+
+        with pytest.raises(QueueUserLimit):
+            queue.submit("u", "s-4")
+        other = queue.submit("v", "s-v")
+
+        assert [ticket.state for ticket in mine] == ["running", "waiting", "waiting"]
+        assert other.waiting and queue.position(other) == QueuePosition(position=3, waiting=3)
+        assert queue.user_entries("u") == 3 and queue.user_entries("v") == 1
+
+    def test_the_cap_is_checked_before_the_queue_length(self, clock: Clock) -> None:
+        """A user at their cap learns that from their own runs, even when the queue is full too."""
+        queue = RunQueue(concurrency=1, per_minute=1, max_wait_s=60, clock=clock, per_user=2)  # capacity 1
+        queue.submit("u", "s-1")
+        queue.submit("u", "s-2")
+
+        with pytest.raises(QueueUserLimit):
+            queue.submit("u", "s-3")
+        with pytest.raises(QueueFull):
+            queue.submit("v", "s-v")
+
+    def test_a_released_withdrawn_or_expired_entry_frees_its_place(self, clock: Clock) -> None:
+        queue = RunQueue(concurrency=1, per_minute=1_000, max_wait_s=600, clock=clock, per_user=3)
+        first, second, third = (queue.submit("u", f"s-{window}") for window in range(3))
+
+        queue.release(first)  # the second starts in its place
+        assert queue.submit("u", "s-3").waiting  # the run that ended no longer counts
+        queue.withdraw(third)
+        assert queue.submit("u", "s-4").waiting  # nor does a cancelled wait
+        clock.advance(600)
+        queue.pump()  # every waiting entry expired; the running one still holds its place
+        assert queue.user_entries("u") == 1 and second.running
+        assert queue.submit("u", "s-5").waiting and queue.user_entries("u") == 2
+
+    def test_without_a_cap_a_user_may_hold_any_number(self, clock: Clock) -> None:
+        queue = make(clock)
+        for window in range(5):
+            queue.submit("u", f"s-{window}")
+
+        assert queue.per_user is None and queue.user_entries("u") == 5
 
 
 class TestMaxWait:
@@ -332,3 +383,5 @@ class TestRelease:
     def test_invalid_limits_are_refused(self, clock: Clock) -> None:
         with pytest.raises(ValueError):
             RunQueue(concurrency=0, per_minute=1, max_wait_s=600, clock=clock)
+        with pytest.raises(ValueError):
+            RunQueue(concurrency=1, per_minute=1, max_wait_s=600, clock=clock, per_user=0)

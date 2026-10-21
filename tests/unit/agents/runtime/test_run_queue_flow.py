@@ -1,15 +1,18 @@
 """The run queue through `/v1`: two users, a full queue, the maximum wait, cancel and disconnect.
 
 Only sandbox work queues (owner decision of 2026-10-14): a turn starts at once, and its
-`plot_pipeline` or `run_data_code` call waits for the slot mid-turn. The runtime's queue
-runs at the production defaults (one run in flight, one start a minute, a 600-second
-maximum wait) on a fake clock, so the tests advance time instead of sleeping. A gated
+`plot_pipeline` or `run_data_code` call waits for the slot mid-turn. A user's windows
+(sessions) work in parallel, and only their sandbox runs share the queue, at most three per
+user (owner decision of 2026-10-21). The runtime's queue runs at the production defaults
+(one run in flight, one start a minute, a 600-second maximum wait, three entries per user)
+on a fake clock, so the tests advance time instead of sleeping. A gated
 fake renderer holds a run or a theme toggle in flight until the test opens the gate.
 The theme toggle's place next to the queue (the registry, the render slot) and the
 checks before a turn starts (budget, dataset) are here too.
 """
 
 import asyncio
+import json
 from collections.abc import AsyncIterator, Callable, Iterator
 from dataclasses import dataclass, field
 from typing import Any
@@ -17,6 +20,8 @@ from typing import Any
 import httpx
 import pytest
 
+from agents.anyplot import telemetry
+from agents.anyplot.plugins.ledger import ATTRIBUTION_LOGGER
 from agents.anyplot.render.backends.fake import FakeBackend
 from agents.anyplot.render.contract import RenderJob, RenderResult
 from agents.anyplot.run_queue import RunQueue
@@ -31,6 +36,8 @@ from .test_service_flow import CASES, HEADERS, USER, create_plot, headers_for, o
 
 
 OTHER = "adm_fedcba9876543210"
+LOGGERS = (ATTRIBUTION_LOGGER, telemetry.TELEMETRY_LOGGER)
+"""The content-free attribution and telemetry lines, both JSON."""
 
 
 @dataclass
@@ -58,7 +65,7 @@ def clock() -> Clock:
 
 @pytest.fixture
 def runtime(clock: Clock) -> Iterator[Runtime]:
-    fresh = Runtime(queue=RunQueue(concurrency=1, per_minute=1, max_wait_s=600, clock=clock))
+    fresh = Runtime(queue=RunQueue(concurrency=1, per_minute=1, max_wait_s=600, clock=clock, per_user=3))
     app.dependency_overrides[get_runtime] = lambda: fresh
     yield fresh
     app.dependency_overrides.clear()
@@ -255,26 +262,23 @@ async def test_a_run_without_a_queue_place_keeps_the_kept_note_and_its_own(
     assert state[PENDING_REQUEST] == "Title: A\nlog y"
 
 
-async def test_a_user_with_a_queued_run_gets_409_and_cancel_leaves_the_queue(
+async def test_a_session_with_a_queued_run_gets_409_and_cancel_leaves_the_queue(
     client: httpx.AsyncClient, runtime: Runtime, swap_models
 ) -> None:
     swap_models("gemini", two_runs())
     first = await open_session(client)
-    second = await open_session(client)
     queue = runtime.run_queue()
     queue.submit("adm_running", "s-running")  # another user's run holds the only slot
 
     queued = asyncio.create_task(create_plot(client, first))
     await until(lambda: queue.waiting_count == 1, "the run to queue")
 
+    # Within one session it stays one thing at a time: a second turn, a toggle and a paste all wait.
     same_session = await client.post(f"/v1/sessions/{first}/messages", headers=HEADERS, json={"text": "hi"})
-    other_session = await client.post(
-        f"/v1/sessions/{second}/messages", headers=HEADERS, json={"action": "create_plot"}
-    )
     toggle = await client.post(f"/v1/sessions/{first}/versions/1/render", headers=HEADERS, json={"theme": "dark"})
-    assert (same_session.status_code, same_session.json()) == (409, {"detail": "run_active"})
-    assert (other_session.status_code, other_session.json()) == (409, {"detail": "run_active"})
-    assert (toggle.status_code, toggle.json()) == (409, {"detail": "run_active"})
+    paste = await client.post(f"/v1/sessions/{first}/dataset", headers=HEADERS, json={"text": "x,y\n1,2\n"})
+    for refused in (same_session, toggle, paste):
+        assert (refused.status_code, refused.json()) == (409, {"detail": "run_active"})
 
     cancel = await client.post(f"/v1/sessions/{first}/cancel", headers=HEADERS)
     events = await asyncio.wait_for(queued, 5)
@@ -283,6 +287,133 @@ async def test_a_user_with_a_queued_run_gets_409_and_cancel_leaves_the_queue(
     assert [name for name, _ in events] == ["ready", "status", "done"]
     assert events[1][1] == {"step": "queued", "position": 1, "waiting": 1}
     assert queue.waiting_count == 0 and first not in runtime.active
+
+
+async def test_a_users_other_window_pastes_and_chats_while_the_first_renders(
+    client: httpx.AsyncClient, runtime: Runtime, backend: GatedBackend, swap_models
+) -> None:
+    """Two windows of one user (owner decision of 2026-10-21): while window A's plot renders, a paste and a chat turn in
+    window B are accepted at once and take no queue entry; only a second thing in window A itself waits."""
+    swap_models(
+        "gemini",
+        {
+            "root": [{"call": "plot_pipeline", "args": {}}, {"text": "It has 2 rows."}, {"text": ROOT_REPLY}],
+            "adapter": [{"json": SCATTER_PLAN}],
+            "reviewer": [{"json": VERDICT_OK}],
+        },
+    )
+    window_a = await open_session(client)
+    window_b = await open_session(client, with_data=False)
+    queue = runtime.run_queue()
+    plot = asyncio.create_task(create_plot(client, window_a))
+    await asyncio.wait_for(backend.entered.wait(), 5)
+
+    pasted = await client.post(f"/v1/sessions/{window_b}/dataset", headers=HEADERS, json={"text": "x,y\n1,2\n3,4\n"})
+    turn = await client.post(
+        f"/v1/sessions/{window_b}/messages", headers=HEADERS, json={"text": "How many rows has my data?"}
+    )
+    again = await client.post(f"/v1/sessions/{window_a}/messages", headers=HEADERS, json={"text": "hi"})
+
+    assert pasted.status_code == 200, pasted.text
+    events = parse_sse(turn.text)
+    assert turn.status_code == 200 and [name for name, _ in events] == ["ready", "message", "done"]
+    assert events[1][1] == {"text": "It has 2 rows."}
+    assert (again.status_code, again.json()) == (409, {"detail": "run_active"})  # window A: one thing at a time
+    assert (queue.waiting_count, queue.in_flight) == (0, 1)  # window B's turn ran no sandbox, so it took no entry
+    backend.gate.set()
+    assert next(data for name, data in await asyncio.wait_for(plot, 10) if name == "plot")["status"] == "ok"
+    assert runtime.active == {} and runtime.pasting == set()
+
+
+async def test_a_users_second_window_queues_its_own_plot(
+    client: httpx.AsyncClient, runtime: Runtime, swap_models
+) -> None:
+    """Until 2026-10-21 the second window's plot was `409 run_active`; now it waits in the queue like any run."""
+    swap_models("gemini", interleaved_runs())
+    window_a = await open_session(client)
+    window_b = await open_session(client)
+    queue = runtime.run_queue()
+    queue.submit("adm_running", "s-running")  # another user's run holds the only slot
+
+    first = asyncio.create_task(create_plot(client, window_a))
+    await until(lambda: queue.waiting_count == 1, "window A's run to queue")
+    second = asyncio.create_task(create_plot(client, window_b))
+    await until(lambda: queue.waiting_count == 2, "window B's run to queue")
+
+    assert queue.user_entries(USER) == 2 and set(runtime.active) == {window_a, window_b}
+    for sid in (window_a, window_b):
+        assert (await client.post(f"/v1/sessions/{sid}/cancel", headers=HEADERS)).status_code == 204
+    for events in await asyncio.wait_for(asyncio.gather(first, second), 5):
+        names = [name for name, _ in events]
+        assert names[0] == "ready" and names[-1] == "done" and "error" not in names
+        assert all(data["step"] == "queued" for data in statuses(events))
+    assert queue.waiting_count == 0 and runtime.active == {}
+
+
+async def test_a_users_fourth_sandbox_run_ends_with_run_limit_and_another_user_still_queues(
+    client: httpx.AsyncClient, runtime: Runtime, swap_models, caplog: pytest.LogCaptureFixture
+) -> None:
+    """`AGENT_USER_MAX_RUNS` (3): the user's runs in three other windows fill their share, so a fourth window's plot
+    ends at once with `run_limit`, never `capacity`, and spends no pipeline call; another user is unaffected."""
+    caplog.set_level("INFO")
+    fake = swap_models("gemini", {"root": [{"call": "plot_pipeline", "args": {}}] * 3})
+    window = await open_session(client)
+    stranger = await open_session(client, user=OTHER)
+    queue = runtime.run_queue()
+    others = [queue.submit(USER, f"s-window-{index}") for index in range(3)]  # one running, two waiting
+
+    events = await create_plot(client, window)
+
+    assert [name for name, _ in events] == ["ready", "error", "done"]
+    assert events[1][1] == {"code": "run_limit", "ref": "req-1"}
+    assert root_calls(fake) == 1 and len(fake.requests) == 1  # aborted before the pipeline's first model call
+    assert window not in runtime.active and queue.user_entries(USER) == 3 and queue.waiting_count == 2
+    logged = [json.loads(record.getMessage()) for record in caplog.records if record.name in LOGGERS]
+    assert {"hook": "queue", "verdict": "run_limit"}.items() <= next(
+        line for line in logged if line.get("hook") == "queue"
+    ).items()
+    assert next(line for line in logged if line.get("event") == "chat_turn")["error"] == "run_limit"
+
+    # Another user's plot is not refused: it waits behind the user's two waiting runs.
+    waiting = asyncio.create_task(create_plot(client, stranger, headers_for(OTHER)))
+    await until(lambda: queue.waiting_count == 3, "the other user's run to queue")
+    await client.post(f"/v1/sessions/{stranger}/cancel", headers=headers_for(OTHER))
+    assert [name for name, _ in await asyncio.wait_for(waiting, 5)] == ["ready", "status", "done"]
+
+    # One of the user's runs ends: the fourth window's next plot queues instead of being refused.
+    queue.release(others[2])
+    retry = asyncio.create_task(create_plot(client, window))
+    await until(lambda: queue.waiting_count == 2, "the retry to queue")
+    assert queue.user_entries(USER) == 3
+    await client.post(f"/v1/sessions/{window}/cancel", headers=HEADERS)
+    assert [name for name, _ in await asyncio.wait_for(retry, 5)] == ["ready", "status", "done"]
+
+
+async def test_a_stale_run_in_another_window_does_not_count_toward_the_cap(
+    client: httpx.AsyncClient, runtime: Runtime, clock: Clock, swap_models
+) -> None:
+    """A run in another window whose stream vanished is dropped before the cap counts it, so it never causes
+    `run_limit`. This covers the sweep at the request's start; `TurnSlot.take` sweeps again for a run that goes
+    stale during the turn's root call, a window of seconds this test cannot place a clock jump in."""
+    from agents.main import STALE_RUN_MARGIN_S, ActiveRun
+
+    swap_models("gemini", {"root": [{"call": "plot_pipeline", "args": {}}]})
+    window = await open_session(client)
+    queue = runtime.run_queue()
+    abandoned = queue.submit(USER, "s-abandoned")  # running, its stream gone
+    runtime.active["s-abandoned"] = ActiveRun(abort=asyncio.Event(), user=USER, started=runtime.now(), ticket=abandoned)
+    clock.advance(get_settings().request_deadline_s + STALE_RUN_MARGIN_S + 1)
+    queue.submit(USER, "s-window-1")
+    queue.submit(USER, "s-window-2")
+    assert queue.user_entries(USER) == 3
+
+    plot = asyncio.create_task(create_plot(client, window))
+    await until(
+        lambda: window in runtime.active and runtime.active[window].ticket is not None, "the plot to take an entry"
+    )
+    assert "s-abandoned" not in runtime.active and queue.user_entries(USER) == 3
+    await client.post(f"/v1/sessions/{window}/cancel", headers=HEADERS)
+    assert [name for name, _ in await asyncio.wait_for(plot, 5)] == ["ready", "status", "done"]
 
 
 async def test_a_run_that_waited_the_maximum_ends_with_capacity(
@@ -368,11 +499,18 @@ async def test_queued_time_does_not_count_toward_the_deadline(
     assert "error" not in [name for name, _ in events]
 
 
-async def test_a_toggle_in_flight_and_a_turn_refuse_each_other(
+async def test_a_toggle_in_flight_and_a_turn_of_its_session_refuse_each_other(
     client: httpx.AsyncClient, runtime: Runtime, backend: GatedBackend, swap_models
 ) -> None:
     backend.gate.set()
-    swap_models("gemini", two_runs())
+    swap_models(
+        "gemini",
+        {
+            "root": [{"call": "plot_pipeline", "args": {}}, {"text": ROOT_REPLY}, {"text": "It has 24 rows."}],
+            "adapter": [{"json": SCATTER_PLAN}],
+            "reviewer": [{"json": VERDICT_OK}],
+        },
+    )
     sid = await open_session(client)
     other = await open_session(client)
     await create_plot(client, sid)
@@ -382,10 +520,14 @@ async def test_a_toggle_in_flight_and_a_turn_refuse_each_other(
     await asyncio.wait_for(backend.entered.wait(), 5)
 
     same_session = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "hi"})
-    other_session = await client.post(f"/v1/sessions/{other}/messages", headers=HEADERS, json={"action": "create_plot"})
     second_toggle = await render_theme(client, sid, "dark")
-    for refused in (same_session, other_session, second_toggle):
+    for refused in (same_session, second_toggle):
         assert (refused.status_code, refused.json()) == (409, {"detail": "run_active"})
+    # The toggle holds only its own session's entry: the user's other window chats meanwhile (2026-10-21).
+    other_session = await client.post(
+        f"/v1/sessions/{other}/messages", headers=HEADERS, json={"text": "How many rows has my data?"}
+    )
+    assert [name for name, _ in parse_sse(other_session.text)] == ["ready", "message", "done"]
 
     backend.gate.set()
     response = await asyncio.wait_for(toggle, 5)

@@ -1076,6 +1076,8 @@ export type PipelineStep = (typeof PIPELINE_STEPS)[number];
 
 export const STREAM_ERROR_CODES = [
   'capacity',
+  // The user already has `AGENT_USER_MAX_RUNS` (3) sandbox runs queued or running in other windows.
+  'run_limit',
   'deadline',
   'guard_unavailable',
   'upstream',

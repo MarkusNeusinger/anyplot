@@ -1491,6 +1491,24 @@ describe('useAgentSession: turns', () => {
     });
   });
 
+  it("records the user's run limit across windows as its own error and ends the run", async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/messages'] = () =>
+      sse([
+        ['ready', {}],
+        ['error', { code: 'run_limit', ref: 'rl' }],
+        ['done', {}],
+      ]);
+    const { result } = await openSession(routes);
+    await act(() => result.current.createPlot());
+    expect(lastItem(result.current.state.items)).toMatchObject({
+      kind: 'error',
+      code: 'run_limit',
+      ref: 'rl',
+    });
+    expect(result.current.state.run).toBeNull();
+  });
+
   it("Stop cancels, keeps the stream until the server's done and still shows a late plot", async () => {
     const routes = baseRoutes();
     const stream = liveSse([

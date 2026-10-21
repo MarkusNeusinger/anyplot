@@ -21,8 +21,9 @@ Bounds, so a toggle never crowds out the runs that cost tokens:
   before it raises `RenderBusy` (`503 capacity`), so wait plus render stay inside the
   request deadline, like a run.
 * **One at a time.** The route registers the toggle in the run registry, so a
-  session with a toggle in flight refuses `/messages` and a second toggle, and a user
-  has at most one run or toggle in flight (`409 run_active`).
+  session with a toggle in flight refuses `/messages` and a second toggle, and a session
+  has at most one run or toggle in flight (`409 run_active`); the user's other sessions
+  are not blocked.
 * **Records.** A theme the version already holds is answered from its record without
   a render. A `render` failure is recorded too: the same code and data fail the same
   way, so it is rendered again only while it failed fewer than `MAX_THEME_TRIES`

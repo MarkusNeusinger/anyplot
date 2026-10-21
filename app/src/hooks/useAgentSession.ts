@@ -78,8 +78,9 @@
  * (`formulaKind`), and the assistant's `run_data_code` runs it in the chat;
  * the version it stores carries the Python that ran (`code`).
  *
- * One thing at a time: the agents service runs one turn or theme render per
- * user and answers anything else with `409 run_active`, a parse, an undo or a
+ * One thing at a time: the agents service runs one turn, theme render or paste
+ * per session (each window opens its own, and the user's other windows never
+ * block it) and answers anything else with `409 run_active`, a parse, an undo or a
  * binding change rewrites the data a turn reads, and a confirmation must cover
  * exactly the data it was given. So the hook starts none of these while
  * another is in flight, and Stop keeps the stream open until the server's

@@ -648,10 +648,10 @@ describe('DataPanel data changes', () => {
     rerender(changedState(2, { undoBusy: true }));
     expect(screen.getByRole('button', { name: '.undo() …' })).toBeDisabled();
 
-    // A run in another tab: the undo can be tried again.
+    // A run the server still holds for this window (a stopped run's last step): the undo can be tried again.
     rerender(changedState(2, { undoError: { code: 'run_active', ref: 'r409' } }));
     expect(screen.getByRole('alert')).toHaveTextContent(
-      'a run or another paste is in progress; wait for it to finish · ref r409'
+      'a run or another paste is still in progress in this window; wait for it to finish · ref r409'
     );
     expect(screen.getByRole('button', { name: '.undo()' })).toBeEnabled();
 

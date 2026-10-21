@@ -928,6 +928,14 @@ class TestMessagesStream:
         events = _sse_events(self._post(client).text)
         assert events[0] == ("error", {"code": "internal", "ref": events[0][1]["ref"]})
 
+    def test_the_users_run_limit_passes_through(self, client, upstream) -> None:
+        """The per-user cap on sandbox runs across sessions has its own code, which the page words."""
+        upstream.handler = lambda request: httpx.Response(
+            200, content=b'event: error\ndata: {"code": "run_limit"}\n\nevent: done\ndata: {}\n\n'
+        )
+        events = _sse_events(self._post(client).text)
+        assert events[0] == ("error", {"code": "run_limit", "ref": events[0][1]["ref"]})
+
     def test_plot_keeps_its_version(self, client, upstream) -> None:
         """The stored version's number reaches the browser, so it never counts plot events."""
         plot = {"status": "ok", "attempts": 1, "artifacts": ["plot-light.png"], "version": 2, "plan": "secret"}
