@@ -148,10 +148,19 @@ This section is for the Gemini agent in the owner's agy session.
 
 6. **Commit each finished step** on your branch with a conventional message.
    Its body names the step (for example `Step 2 of 5: …`) and ends with
-   `Refs #<number>`. Do not push.
+   `Refs #<number>`, followed by a co-author trailer naming the model you run
+   as in this session, the way Claude signs its commits:
+
+   ```text
+   Refs #12345
+
+   Co-Authored-By: Gemini 4 Argon <noreply@google.com>
+   ```
+
+   Do not push.
 7. **Hand over** when you finish or stop, whether on a blocker or at the end of
    the session. Add an empty commit (`git commit --allow-empty`) whose message
-   starts with `Hand-over` and lists:
+   starts with `Hand-over`, carries the same co-author trailer, and lists:
    - what changed and why,
    - the commands you ran and their results,
    - the decisions you made,
