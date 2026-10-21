@@ -16,13 +16,14 @@ approves every command Gemini runs. Work flows in three steps:
 Gemini never pushes, never writes to GitHub, and never touches gcloud or
 production. Credentials and every write outside the machine stay with Claude.
 
-Nobody automates around the agy login. Nothing extracts, copies, or proxies the
-agy token, and nothing calls Google endpoints with it. The Antigravity terms
-(section 6) forbid third-party tools and proxies, and Google suspended accounts
-for exactly that in 2026. Claude may still run `agy -p` read-only for second
-opinions (the `zweitmeinung` user skill). Claude never runs `agy -p` with
-`--dangerously-skip-permissions` on this machine: that would let Gemini run
-commands unattended with the owner's credentials.
+Nobody automates around the agy login. Only the owner starts agy, and he works
+it himself. Claude never runs `agy`, not even read-only: Google's Antigravity
+FAQ forbids running it from third-party coding agents such as Claude Code under
+a consumer login, and a Google staff reply of 2026-10-16 confirmed that for the
+unmodified binary. Nothing extracts, copies, or proxies the agy token, and
+nothing calls Google endpoints with it (Antigravity terms, section 6). Claude's
+second opinions use the Gemini API with the owner's key instead (the
+`zweitmeinung` user skill).
 
 ## 1. Claude: write the task
 

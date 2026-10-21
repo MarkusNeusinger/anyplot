@@ -29,7 +29,7 @@ the owner's Google AI Ultra quota, so the work is split by what it needs.
 | Changes state: `gcloud`, `gh` writes, labels, merges, prod | Opus | Owner: he does not trust Haiku with writes |
 | Reads or polls with credentials (CI, deploys, `gh`/`gcloud` state); creates Todoist tasks | Haiku | Cheap; never changes state |
 | High-risk reviews (security, prod data, sandbox, privacy); genuinely hard reasoning | Fable | About 2.5 times Opus per token at API prices, so only where it pays |
-| Credential-free reading, exploration, log and data analysis on fetched files, drafts, first review of a normal PR | Gemini 4 Argon, headless read-only `agy -p` (`zweitmeinung` user skill) | Uses the Google quota; plan mode on a throwaway worktree runs no commands |
+| Credential-free analysis of briefings and fetched files, drafts, first review of a normal PR | Gemini 4 Argon through the Gemini API with the owner's AI Studio key (`zweitmeinung` user skill) | Paid per token and covered by the $100 monthly Google Cloud credit that comes with Google AI Ultra; Gemini sees only the briefing and the attached files, with no tools and no credentials |
 | Credential-free implementation, including long refactors | Gemini, in the owner's interactive agy session, through a `gemini`-labelled issue (`/gemini-task`) | The owner approves every command; Claude reviews and ships |
 
 Sonnet has no lane in interactive sessions; Gemini covers that work, and the
@@ -54,6 +54,18 @@ then runs in an Opus session.
   suspended accounts in 2026, so it was removed the same day.
 
 So nothing extracts, copies, or proxies the agy login.
+
+**Why Claude never runs agy (2026-10-21).** Until that day Claude ran
+read-only `agy -p` for second opinions. Google's Antigravity FAQ says that
+wrapping `agy` inside third-party coding agents is not supported under
+consumer plans, and that using third-party tools such as Claude Code to access
+Antigravity can get the account suspended. A Google staff reply on 2026-10-16
+(Google AI Developers Forum, topic 189905) answered a setup like ours with "No
+under consumer plans", even for the unmodified binary run as a local
+subprocess without touching the token. Only the owner's own scripts and CI are
+allowed. For third-party agents Google recommends a Google AI Studio or Gemini
+Enterprise API key. So second opinions go through the Gemini API with the
+owner's key, and only the owner starts agy, for `/gemini-task`.
 
 Escalation is for judgment calls, not for every detail. Within its briefed
 scope a delegate decides routine matters itself and documents them; otherwise
