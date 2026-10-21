@@ -1,8 +1,9 @@
 # Cloud Build configuration for anyplot Frontend
 #
 # This file follows the same candidate-rollout PATTERN as api/cloudbuild.yaml:
-# build -> push the build tag -> deploy --no-traffic --tag=candidate -> smoke
-# the candidate -> update-traffic to exactly that revision. The step chains are
+# build -> push the build tag -> wait until no older build of this service runs
+# -> deploy --no-traffic --tag=candidate -> smoke the candidate -> update-traffic
+# to exactly that revision. The step chains are
 # not identical: this one pushes `:latest` only after the promotion (the API
 # still pushes it alongside the deploy) and has no final get-url step.
 #
@@ -62,6 +63,15 @@ steps:
       - 'europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/${_SERVICE_NAME}:$BUILD_ID'
     id: 'push-image'
     waitFor: ['build-image']
+
+  # One deploy of this service at a time, oldest build first: two overlapping
+  # builds fight over the shared `candidate` tag, and the loser's smoke refuses
+  # to promote (scripts/cloudbuild-wait-turn.sh has the incidents).
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args: ['scripts/cloudbuild-wait-turn.sh', '${_SERVICE_NAME}', '${_REGION}', '$BUILD_ID']
+    id: 'wait-turn'
+    waitFor: ['push-image']
 
   # Deploy container image to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -126,7 +136,7 @@ steps:
       - '--tag=candidate'
       - '--revision-suffix=b$BUILD_ID'
     id: 'deploy'
-    waitFor: ['push-image']
+    waitFor: ['wait-turn']
 
   # Pre-traffic smoke against the CANDIDATE revision (tag URL, serving no
   # traffic yet). Both halves of the split matter and only one of them is

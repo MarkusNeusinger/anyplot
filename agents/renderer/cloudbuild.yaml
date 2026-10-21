@@ -15,7 +15,7 @@
 # Run from the repository root (the build context is `.`, filtered by the root
 # `.dockerignore`), for example:
 #
-#   gcloud builds submit --config=agents/renderer/cloudbuild.yaml \
+#   gcloud builds submit --config=agents/renderer/cloudbuild.yaml --region=europe-west4 \
 #     --gcs-source-staging-dir=gs://anyplot-cloudbuild-eu/source \
 #     "--substitutions=^|^_ALLOWED_CALLERS=...|_AUDIENCES=...|_SMOKE_RENDER=true" .
 #
@@ -67,6 +67,15 @@ steps:
       - "europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/${_SERVICE_NAME}:$BUILD_ID"
     id: "push-image"
     waitFor: ["build-image"]
+
+  # One deploy of this service at a time, oldest build first: two overlapping
+  # builds fight over the shared `candidate` tag, and the loser's smoke refuses
+  # to promote (scripts/cloudbuild-wait-turn.sh has the incidents).
+  - name: "gcr.io/cloud-builders/gcloud"
+    entrypoint: "bash"
+    args: ["scripts/cloudbuild-wait-turn.sh", "${_SERVICE_NAME}", "${_REGION}", "$BUILD_ID"]
+    id: "wait-turn"
+    waitFor: ["push-image"]
 
   # Deploy WITHOUT traffic (except on the first build, see the header), tagged
   # `candidate`, with a deterministic revision suffix so promote targets exactly
@@ -128,7 +137,7 @@ steps:
           --tag=candidate \
           --revision-suffix=b$BUILD_ID
     id: "deploy"
-    waitFor: ["push-image"]
+    waitFor: ["wait-turn"]
 
   # Pre-traffic smoke against the CANDIDATE revision on its tag URL.
   - name: "gcr.io/cloud-builders/gcloud"

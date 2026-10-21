@@ -139,6 +139,15 @@ steps:
     id: "push-image"
     waitFor: ["build-image"]
 
+  # One deploy of this service at a time, oldest build first: two overlapping
+  # builds fight over the shared `candidate` tag, and the loser's smoke refuses
+  # to promote (scripts/cloudbuild-wait-turn.sh has the incidents).
+  - name: "gcr.io/cloud-builders/gcloud"
+    entrypoint: "bash"
+    args: ["scripts/cloudbuild-wait-turn.sh", "${_SERVICE_NAME}", "${_REGION}", "$BUILD_ID"]
+    id: "wait-turn"
+    waitFor: ["push-image"]
+
   # Deploy WITHOUT traffic (except on the first build, see the header), tagged
   # `candidate`, with a deterministic revision suffix so promote targets exactly
   # this build's revision (`b` prefix: the suffix must start with a letter).
@@ -206,7 +215,7 @@ steps:
           --tag=candidate \
           --revision-suffix=b$BUILD_ID
     id: "deploy"
-    waitFor: ["push-image"]
+    waitFor: ["wait-turn"]
 
   # Pre-traffic smoke against the CANDIDATE revision on its tag URL. Any failure
   # here stops the build before promote.
