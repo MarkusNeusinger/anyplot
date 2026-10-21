@@ -130,6 +130,7 @@ import {
   siblingHint,
   signHint,
 } from 'src/sections/agent-chat/bindings';
+import { BoxWorking } from 'src/sections/agent-chat/BoxWorking';
 import { Ellipsis } from 'src/sections/agent-chat/Ellipsis';
 import {
   countLines,
@@ -779,8 +780,10 @@ export function DataPanel({
   onConvert,
 }: DataPanelProps) {
   const [text, setText] = useState('');
-  // A binary file on its way to the server and back; the box, `.open()` and `.parse()` wait for it.
-  const [converting, setConverting] = useState(false);
+  // A binary file on its way to the server and back, as the line the box shows meanwhile
+  // (`reading "x.parquet" on the server`); the box, `.open()` and `.parse()` wait for it.
+  const [convertLine, setConvertLine] = useState<string | null>(null);
+  const converting = convertLine !== null;
   // The converted file whose text is in the box, for the sheet picker; a text paste or an empty box drops it.
   const [converted, setConverted] = useState<ConvertedFile | null>(null);
   // The name of the file the box's text came from; typing keeps it, a text paste or an empty box drops it.
@@ -798,6 +801,12 @@ export function DataPanel({
   const boxRef = useRef<HTMLTextAreaElement>(null);
   // Counts file reads, so the result of a superseded one is dropped.
   const readSeq = useRef(0);
+  // The read whose server conversion `convertLine` shows.
+  const convertSeq = useRef(0);
+  // When the box's current conversion and the panel's last parse began, set where they start (every
+  // parse starts here: `.parse()`, the table picker, `.use()`), so the overlay's count survives its remount.
+  const convertStart = useRef(0);
+  const parseStart = useRef(0);
   // The box's text as of the last render, for a file read that ends after an edit.
   const textRef = useRef(text);
   textRef.current = text;
@@ -885,11 +894,13 @@ export function DataPanel({
   const handleUse = () => {
     if (!transcription) return;
     setText(transcription.text);
+    parseStart.current = Date.now();
     onConfirmTranscription();
   };
 
   // `.parse()`: the file's name rides along only when the text came from a file.
   const handleParse = () => {
+    parseStart.current = Date.now();
     if (source) onParse(text, source);
     else onParse(text);
   };
@@ -897,6 +908,7 @@ export function DataPanel({
   // The table picker: the stored paste's text again, another of its tables.
   const handleTable = (table: number) => {
     if (!paste || !ready || busy || converting || table === choice?.table) return;
+    parseStart.current = Date.now();
     onParse(paste.text, paste.source, table);
   };
 
@@ -952,13 +964,13 @@ export function DataPanel({
       trackFile(file.browserKind, null, 'refused');
       return;
     }
-    setConverting(true);
-    setFileNotice({
-      tone: 'ok',
-      text: sheet
-        ? `reading the sheet ${sheetLabel(sheet)} of "${file.name}" on the server …`
-        : `reading "${file.name}" on the server …`,
-    });
+    const line = sheet
+      ? `reading the sheet ${sheetLabel(sheet)} of "${file.name}" on the server`
+      : `reading "${file.name}" on the server`;
+    convertSeq.current = seq;
+    convertStart.current = Date.now();
+    setConvertLine(line);
+    setFileNotice({ tone: 'ok', text: `${line} …` });
     let answer: ConvertAnswer;
     try {
       answer = await onConvert(file.base64, sheet);
@@ -981,7 +993,9 @@ export function DataPanel({
       trackFile(file.browserKind, null, failure.code.startsWith('file_') ? 'refused' : 'failed');
       return;
     } finally {
-      if (seq === readSeq.current) setConverting(false);
+      // Only the conversion that set the line clears it; a later read that converted
+      // nothing (refused, or a text file) must not leave the box waiting forever.
+      if (seq === convertSeq.current) setConvertLine(null);
     }
     if (seq !== readSeq.current) return;
     offerFile(
@@ -1224,6 +1238,7 @@ export function DataPanel({
           spellCheck={false}
           aria-describedby={dataset ? undefined : 'agent-data-hint'}
           placeholder={'month,revenue\n2026-01,120\n2026-02,135'}
+          aria-busy={converting || state.parsing || undefined}
           ref={boxRef}
           onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => {
             setText(event.target.value);
@@ -1289,6 +1304,14 @@ export function DataPanel({
                   : 'a step is still running: drop the file when it is done'}
             </Box>
           </Box>
+        )}
+        {/* A file read on the server or a parse takes seconds: the box says so while it waits. */}
+        {(converting || state.parsing) && (
+          <BoxWorking
+            line={convertLine ?? 'parsing your data'}
+            since={converting ? convertStart.current : parseStart.current}
+            hidden={dragOver}
+          />
         )}
       </Box>
       <Box
