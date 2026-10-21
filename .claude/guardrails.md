@@ -16,12 +16,44 @@ Sections follow the order in which `CLAUDE.md` states the rules.
 
 ## Delegated agents run on Opus by default
 
-Owner directive, 2026-08-11, refined 2026-08-16.
+Owner directive, 2026-08-11, refined 2026-08-16 and 2026-10-21.
 
-Pass `model: opus` when spawning subagents or workflows — the tier the
-`agentic/README.md` model table already uses for large tasks. Escalate to
-Fable for genuinely hard reasoning, drop to Sonnet or Haiku for mechanical
-grinding, but Opus is the default answer.
+Pass `model: opus` when spawning subagents or workflows. Opus is the default
+answer, and it is the only tier that changes state outside its own worktree.
+
+**The lanes (2026-10-21).** The Anthropic weekly limit runs out long before
+the owner's Google AI Ultra quota, so the work is split by what it needs.
+
+| Work | Who | Why |
+|---|---|---|
+| Changes state: `gcloud`, `gh` writes, labels, merges, prod | Opus | Owner: he does not trust Haiku with writes |
+| Reads or polls with credentials (CI, deploys, `gh`/`gcloud` state); creates Todoist tasks | Haiku | Cheap; never changes state |
+| High-risk reviews (security, prod data, sandbox, privacy); genuinely hard reasoning | Fable | About 2.5 times Opus per token at API prices, so only where it pays |
+| Credential-free reading, exploration, log and data analysis on fetched files, drafts, first review of a normal PR | Gemini 4 Argon, headless read-only `agy -p` (`zweitmeinung` user skill) | Uses the Google quota; plan mode on a throwaway worktree runs no commands |
+| Credential-free implementation, including long refactors | Gemini, in the owner's interactive agy session, through a `gemini`-labelled issue (`/gemini-task`) | The owner approves every command; Claude reviews and ships |
+
+Sonnet has no lane in interactive sessions; Gemini covers that work, and the
+pipeline's model choices are separate. Planning or architecture sessions may
+run on Fable as the main model when the owner starts them that way; execution
+then runs in an Opus session.
+
+**Why not headless Gemini implementation.** Measured on 2026-10-21:
+
+- **Commands would run unattended.** `agy -p` cannot ask for permission, so
+  letting Gemini run commands needs `--dangerously-skip-permissions`. On this
+  machine that means unattended commands with the owner's credentials.
+- **A container does not fix it.** agy's login is a `cloud-platform` token of
+  an account that is project owner, so copying it into a container moves owner
+  rights in with it. A hostname allowlist does not confine it: Google front
+  ends route by the `Host` header, so a request sent to
+  `daily-cloudcode-pa.googleapis.com` with `Host: sqladmin.googleapis.com`
+  reaches Cloud SQL Admin.
+- **The token broker hit the terms.** A broker that kept the token outside the
+  container worked technically. It breaks the Antigravity terms (section 6:
+  third-party tools or proxies accessing the service), for which Google
+  suspended accounts in 2026, so it was removed the same day.
+
+So nothing extracts, copies or proxies the agy login.
 
 Escalation is for judgment calls, not for every detail. Within its briefed
 scope a delegate decides routine matters itself and documents them; otherwise
