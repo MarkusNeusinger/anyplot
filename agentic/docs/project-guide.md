@@ -1066,32 +1066,37 @@ gcloud builds submit --config=app/cloudbuild.yaml --project=YOUR_PROJECT_ID
 - **`app/cloudbuild.yaml`**: Frontend build + deploy
 - **`app/Dockerfile`**: Multi-stage build (Node -> nginx)
 
-Both cloudbuild files deploy through a **candidate revision**: `gcloud run deploy
---no-traffic --tag=candidate --revision-suffix=b$BUILD_ID`, a smoke step against the
-candidate's tag URL, then `gcloud run services update-traffic --to-revisions=…=100`. A
-revision that fails its smoke therefore never takes **live traffic** — the only requests
-it ever answers are the smoke's own, sent deliberately to its tag URL. (For the app that
-holds even with two builds in flight; for the API it holds for one build at a time — see
-the candidate-tag recheck below.) The app's smoke
-covers both halves of the crawler split (browser UA -> SPA shell, Googlebot ->
-prerendered page via `@seo_proxy`) plus the `location =` bypasses for `robots.txt` and
-`llms.txt`; the API's covers `/health`, the public read paths and the fail-closed admin
-gate.
+Both cloudbuild files deploy through a **candidate revision**: a `wait-turn` step, then
+`gcloud run deploy --no-traffic --tag=candidate --revision-suffix=b$BUILD_ID`, a smoke
+step against the candidate's tag URL, then `gcloud run services update-traffic
+--to-revisions=…=100`. `agents/cloudbuild.yaml` and `agents/renderer/cloudbuild.yaml`
+follow the same shape. A revision that fails its smoke therefore never takes **live
+traffic** — the only requests it ever answers are the smoke's own, sent deliberately to
+its tag URL. The app's smoke covers both halves of the crawler split (browser UA -> SPA
+shell, Googlebot -> prerendered page via `@seo_proxy`) plus the `location =` bypasses for
+`robots.txt` and `llms.txt`; the API's covers `/health`, the public read paths and the
+fail-closed admin gate.
 
-The two chains differ in two places, both on the app's side:
-
-- **`:latest`.** `app/cloudbuild.yaml` pushes it only after the promotion, so the tag
-  cannot name an image that was never rolled out; `api/cloudbuild.yaml` still pushes it
-  alongside the deploy. Neither pipeline *reads* `:latest` — both deploy `:$BUILD_ID` — so
-  the tag is a convenience for humans, and with two overlapping builds the later push wins
-  regardless.
-- **The candidate-tag recheck.** `candidate` is a shared tag, so a concurrent build of the
-  same service can move it mid-smoke. `app/cloudbuild.yaml` re-asserts after its probes
-  that the tag still names this build's revision and refuses to promote otherwise; a
-  competing build only ever tags its own revision and never ours back, so matching at both
-  ends means the tag was never re-assigned during the smoke. `api/cloudbuild.yaml` checks
-  only before its probes, so two overlapping API builds can still promote a revision that
-  was not the one smoked — the same four lines would close it there.
+- **One deploy per service at a time.** `candidate` is one tag per service, so two
+  builds of the same service in flight fight over it: the later deploy moves the tag to
+  its own revision, and the other build's smoke refuses to promote. When the loser was
+  the newer commit, production stayed on the older one until someone reran the trigger
+  (`deploy-app` on 2026-10-16 and 2026-10-21, `deploy-api` and `deploy-agents` on
+  2026-10-12). The `wait-turn` step (`scripts/cloudbuild-wait-turn.sh`) holds each build,
+  after its image push, until no older build with the same `_SERVICE_NAME` is queued or
+  running, so the deploys of one service run in the order their builds were created and
+  the newest commit deploys last. The image builds still run in parallel. A
+  hand-submitted build without `--region` runs in `global` and is not in the regional
+  list, so it waits until no build of its service runs in the region; the regional
+  builds cannot see it in turn.
+- **`:latest`.** Both pipelines push it only after the promotion, so the tag cannot name
+  an image that was never rolled out. Neither pipeline *reads* `:latest` — both deploy
+  `:$BUILD_ID` — so the tag is a convenience for humans.
+- **The candidate-tag recheck.** Both smokes assert before and after their probes that
+  `candidate` still names this build's revision and refuse to promote otherwise; a
+  competing build only ever tags its own revision and never ours back, so matching at
+  both ends means the tag was never re-assigned during the smoke. Since `wait-turn`, this
+  only catches a build the queue cannot see.
 
 Both checks read `status.traffic`, which is the **control-plane tag assignment** and not
 proof of which revision answered a given request: because `candidate` is reused across
