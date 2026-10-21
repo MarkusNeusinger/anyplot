@@ -6,4 +6,4 @@
   login, even read-only. `CLAUDE.md`, `.claude/guardrails.md` and the
   `gemini-task` skill now send first reviews and second opinions to the Gemini
   API with the owner's AI Studio key. Only the owner starts agy, for
-  `gemini`-labelled tasks.
+  `gemini`-labelled tasks. (#12226)
