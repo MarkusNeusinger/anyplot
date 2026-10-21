@@ -148,13 +148,14 @@ This section is for the Gemini agent in the owner's agy session.
 
 6. **Commit each finished step** on your branch with a conventional message.
    Its body names the step (for example `Step 2 of 5: …`) and ends with
-   `Refs #<number>`, followed by a co-author trailer naming the model you run
-   as in this session, the way Claude signs its commits:
+   `Refs #<number>`, followed by a co-author trailer crediting yourself, the
+   way Claude signs its commits. Fill in the name of the model you actually
+   run as in this session; never copy a model name from an older commit:
 
    ```text
-   Refs #12345
+   Refs #<number>
 
-   Co-Authored-By: Gemini 4 Argon <noreply@google.com>
+   Co-Authored-By: Antigravity (<your current model name>) <noreply@google.com>
    ```
 
    Do not push.
