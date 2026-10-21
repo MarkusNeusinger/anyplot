@@ -15,7 +15,7 @@
 # Run from the repository root (the build context is `.`, filtered by the root
 # `.dockerignore`), for example:
 #
-#   gcloud builds submit --config=agents/renderer/cloudbuild.yaml \
+#   gcloud builds submit --config=agents/renderer/cloudbuild.yaml --region=europe-west4 \
 #     --gcs-source-staging-dir=gs://anyplot-cloudbuild-eu/source \
 #     "--substitutions=^|^_ALLOWED_CALLERS=...|_AUDIENCES=...|_SMOKE_RENDER=true" .
 #

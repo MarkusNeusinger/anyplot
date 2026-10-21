@@ -1053,10 +1053,10 @@ observable at all.
 
 ```bash
 # Backend
-gcloud builds submit --config=api/cloudbuild.yaml --project=YOUR_PROJECT_ID
+gcloud builds submit --config=api/cloudbuild.yaml --region=europe-west4 --project=YOUR_PROJECT_ID
 
 # Frontend
-gcloud builds submit --config=app/cloudbuild.yaml --project=YOUR_PROJECT_ID
+gcloud builds submit --config=app/cloudbuild.yaml --region=europe-west4 --project=YOUR_PROJECT_ID
 ```
 
 ### Configuration Files
@@ -1086,9 +1086,8 @@ fail-closed admin gate.
   after its image push, until no older build with the same `_SERVICE_NAME` is queued or
   running, so the deploys of one service run in the order their builds were created and
   the newest commit deploys last. The image builds still run in parallel. A
-  hand-submitted build without `--region` runs in `global` and is not in the regional
-  list, so it waits until no build of its service runs in the region; the regional
-  builds cannot see it in turn.
+  hand-submitted build without `--region` runs in `global`, outside the queue, so its
+  `wait-turn` step fails and asks for `--region=europe-west4`.
 - **`:latest`.** Both pipelines push it only after the promotion, so the tag cannot name
   an image that was never rolled out. Neither pipeline *reads* `:latest` — both deploy
   `:$BUILD_ID` — so the tag is a convenience for humans.
