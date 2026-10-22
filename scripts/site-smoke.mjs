@@ -5,14 +5,16 @@
 // Vite minor bump (#12225) passed every check and blanked every page with
 // `TypeError: t is not a function` until #12235.
 //
-// Per page it fails on a status other than 200, an uncaught page error, or a
-// page whose #root holds next to no text; the <h1> is printed for the reader
-// only, since some pages (`/plots`) have none. It also checks the API's
-// /health. Console
+// Per page it fails on a status other than 200, an uncaught page error, a
+// page whose #root holds next to no text, or the app's error boundary ("Something
+// went wrong", "A new version is available"), which keeps the masthead and
+// footer around a failed route; the <h1> is printed for the reader only, since
+// some pages (`/plots`) have none, and so is the entry bundle (`index-*.js`),
+// which tells which deploy answered. It also checks the API's /health. Console
 // errors are printed as warnings only, since third-party noise (an analytics
 // blocker, a GitHub rate limit) is not an outage. Exit code 0 means every
-// check passed, 1 means at least one failed, 2 means the browser could not
-// start.
+// check passed, 1 means at least one failed, 2 means no browser could be found
+// or started, so nothing was checked.
 //
 // Run (playwright-core lives in the scratchpad, not the repo):
 //   SCRATCH=<the session scratchpad>
@@ -77,7 +79,14 @@ if (!executablePath) {
   console.log('FAIL\tno browser found (CHROME_PATH, PLAYWRIGHT_BROWSERS_PATH, /opt/pw-browsers, ~/.cache/ms-playwright)');
   process.exit(2);
 }
-const browser = await chromium.launch({ executablePath });
+let browser;
+try {
+  browser = await chromium.launch({ executablePath });
+} catch (e) {
+  // A browser that will not start (missing libraries, a sandbox) checked nothing: not an incident.
+  console.log(`FAIL\tthe browser at ${executablePath} did not start: ${e.message.split('\n')[0]}`);
+  process.exit(2);
+}
 for (const path of pages) {
   const url = `${SITE}${path.startsWith('/') ? path : `/${path}`}`;
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
@@ -97,20 +106,34 @@ for (const path of pages) {
         timeout: 15000,
       })
       .catch(() => {});
+    // The layout chrome alone can pass the text threshold while the route's lazy chunk still
+    // loads, so let the network settle (bounded) before the route is judged.
+    await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {});
   } catch (e) {
     pageErrors.push(`navigation: ${e.message.split('\n')[0]}`);
   }
   const seen = await page
-    .evaluate(() => ({
-      text: document.getElementById('root')?.innerText.length ?? 0,
-      h1: document.querySelector('h1')?.innerText.trim().slice(0, 60) ?? null,
-    }))
-    .catch(() => ({ text: 0, h1: null }));
-  const ok = status === 200 && pageErrors.length === 0 && seen.text >= MIN_TEXT;
+    .evaluate(() => {
+      const text = document.getElementById('root')?.innerText ?? '';
+      const entry = document.querySelector('script[type="module"][src*="/assets/index-"]')?.getAttribute('src');
+      return {
+        text: text.length,
+        boundary: text.match(/Something went wrong|A new version is available/)?.[0] ?? null,
+        h1: document.querySelector('h1')?.innerText.trim().slice(0, 60) ?? null,
+        bundle: entry ? entry.split('/').pop() : null,
+      };
+    })
+    .catch(() => ({ text: 0, boundary: null, h1: null, bundle: null }));
+  const ok = status === 200 && pageErrors.length === 0 && seen.text >= MIN_TEXT && !seen.boundary;
   if (!ok) failed += 1;
-  const detail = pageErrors.length ? `\tpageerror: ${pageErrors.slice(0, 2).join(' | ')}` : '';
+  const detail =
+    (pageErrors.length ? `\tpageerror: ${pageErrors.slice(0, 2).join(' | ')}` : '') +
+    (seen.boundary ? `\terror boundary: "${seen.boundary}"` : '');
   const warn = consoleErrors.length ? `\tconsole errors (warning): ${consoleErrors.length}` : '';
-  console.log(`${ok ? 'OK  ' : 'FAIL'}\t${url}\tstatus=${status}\ttext=${seen.text}\th1=${JSON.stringify(seen.h1)}${detail}${warn}`);
+  console.log(
+    `${ok ? 'OK  ' : 'FAIL'}\t${url}\tstatus=${status}\ttext=${seen.text}\th1=${JSON.stringify(seen.h1)}` +
+      `\tbundle=${seen.bundle}${detail}${warn}`,
+  );
   await page.close();
 }
 await browser.close();
