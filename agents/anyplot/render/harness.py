@@ -317,7 +317,7 @@ DATA_BLOCKED_PREFIXES = (
     "sys.monitoring.",
 )
 """Audit events `DataGuard` refuses once it is armed (https://docs.python.org/3/library/audit_events.html), next to
-every `open` and every `import`. CPython 3.13 raises no event for `os.stat` and its family (`os.path.exists`,
+every `open` and every `import`. CPython 3.14 raises no event for `os.stat` and its family (`os.path.exists`,
 `os.lstat`), for reading `os.environ` or calling `os.getenv`, or for `function.__globals__`: those are the
 validator's (`os` is a banned import, dunder attributes are banned), and the sandbox has no secrets in its
 environment and a read-only image. An `import` of a module that is loaded already raises no event either (`import
@@ -528,6 +528,8 @@ UNAUDITED_CALLS = (
 """Callables that create a directory entry, start a process or install a frame callback with no audit event in
 CPython 3.13 (#12177 review: `os.mkfifo` and `os.mknod`; `_posixsubprocess.fork_exec` is what `subprocess.Popen` runs
 after its own event; Fable review of #12181: `signal.signal`, whose handler is called with the interrupted frame).
+CPython 3.14 still raises none for `os.mkfifo`, `os.mknod` and `signal.signal`; `_posixsubprocess.fork_exec` raises
+an event of its own from 3.14 on, and stays replaced all the same.
 The guards replace them with `refused_call` before arming, in `os`, `posix`, `signal` and the module that holds each
 by name, so code past the validator cannot reach them there."""
 

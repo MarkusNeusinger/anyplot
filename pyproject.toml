@@ -4,7 +4,7 @@ name = "anyplot"
 version = "3.5.0"
 description = "AI-powered plotting examples"
 authors = [{ name = "Markus Neusinger", email = "admin@anyplot.ai" }]
-requires-python = ">=3.13"
+requires-python = ">=3.14"
 readme = "README.md"
 license = "MIT"
 keywords = [
@@ -209,7 +209,7 @@ split-on-trailing-comma = false
 # ===== Mypy Configuration =====
 
 [tool.mypy]
-python_version = "3.13"
+python_version = "3.14"
 warn_return_any = true
 warn_unused_configs = true
 no_implicit_optional = true
@@ -282,10 +282,12 @@ markers = [
 source = ["core", "api", "automation", "agentic/workflows/modules", "agents"]
 omit = ["*/tests/*", "*/migrations/*"]
 # sys.monitoring instead of the C tracer: on Python 3.13 the C tracer made the
-# serial CI-equivalent run about 45 % slower (301 s against 208 s, 2026-10-11),
-# and sysmon is coverage's own default from Python 3.14. On 3.13 sysmon measures
-# lines only: with `branch` on, coverage warns ("no-sysmon") and falls back to
-# the C tracer, so `branch` stays off.
+# serial CI-equivalent run about 45 % slower (301 s against 208 s, 2026-10-11).
+# From Python 3.14 sysmon is coverage's own default, so this line states the
+# choice rather than changing it. On 3.14 sysmon also measures branches (coverage
+# 7.12 runs `branch = true` on it without the "no-sysmon" fallback to the C
+# tracer); `branch` stays off because turning it on changes the reported
+# coverage, which is a decision of its own.
 core = "sysmon"
 
 [tool.coverage.report]

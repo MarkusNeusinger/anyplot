@@ -6,7 +6,7 @@ Guide for setting up a local development environment.
 
 ## Prerequisites
 
-- **Python 3.13+**
+- **Python 3.14+**
 - **Node.js 24** and yarn — `app/.nvmrc` names the version to use (`nvm use` in `app/`), the
   same one CI runs. `app/package.json` enforces only the build path's floor (22.12); the
   dev-only test stack reaches higher (jsdom installs on `^22.22.2 || ^24.15.0 || >=26.0.0`, so
@@ -100,9 +100,10 @@ process.
 
 **Coverage target**: 90%+ on tested modules (`core/`, `api/`, `automation/`, `agentic/workflows/modules/`, `agents/`).
 Coverage config is in `pyproject.toml` (`[tool.coverage]`) and `codecov.yml`. Coverage
-measures through `sys.monitoring` (`core = "sysmon"`): on Python 3.13 the C tracer
-made a serial run about 45 % slower. On 3.13 sysmon measures lines only, so leave
-`branch` off; with it on, coverage falls back to the C tracer.
+measures through `sys.monitoring` (`core = "sysmon"`), coverage's default on
+Python 3.14; on Python 3.13 the C tracer made a serial run about 45 % slower.
+`branch` stays off: sysmon measures branches on 3.14, but turning it on changes
+the reported coverage.
 
 ---
 

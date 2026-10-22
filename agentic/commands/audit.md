@@ -126,7 +126,7 @@ Each specialist receives a focused prompt loaded from `agentic/commands/audit/<n
 |---|---|---|
 | **5 — Critical** | Production-breaking bugs, real security risks, data-loss potential, broken builds | Workflow uses unquoted `${{ github.event.issue.title }}` in `run:` (script injection); raw `ANTHROPIC_API_KEY` logged; Alembic migration without `downgrade()`; SQL constructed via f-string |
 | **4 — High** | Significant code smells with concrete failure modes, test gaps for core paths, clear performance bottlenecks, or a high-impact exemplary gap | N+1 query in `core/database/repositories/`; missing retry/timeout on Anthropic SDK call; `any` covering an entire MUI component tree; prompt file references a removed library; no dark-mode contrast on a primary surface |
-| **3 — Medium** | Modernization, consistency, maintainability — non-urgent but real debt; medium-impact exemplary gap | Outdated 3.10-style typing where 3.13 idioms apply; inconsistent router naming; duplicated pydantic schemas; missing CONTRIBUTING.md |
+| **3 — Medium** | Modernization, consistency, maintainability — non-urgent but real debt; medium-impact exemplary gap | Outdated 3.10-style typing where 3.14 idioms apply; inconsistent router naming; duplicated pydantic schemas; missing CONTRIBUTING.md |
 | **2 — Low** | Cosmetic, comment-only, nit-level | Inconsistent docstring style; unused dev-only `print`; trailing whitespace not auto-fixed |
 | **1 — Positive** | Patterns worth preserving (no action needed; informational) | Solid repository pattern in `core/database/`; well-isolated cache layer in `api/cache.py`; clean theme-token usage |
 
@@ -154,7 +154,7 @@ Beyond "is anything broken?", each auditor should ask "what would the best repo 
 - **Security (exemplary):** least-privilege everywhere; secrets only in Secret Manager with rotation; all `pull_request_target`/`issue_comment` workflows gated by `author_association` and never interpolate untrusted `${{ github.event.* }}` into `run:`/prompts; third-party actions pinned to SHA; zero High/Critical dependency CVEs; documented threat model (`SECURITY.md`).
 - **Speed (exemplary):** all Core Web Vitals in the "good" bucket (field + lab); a tracked JS/CSS bundle budget; no N+1; indexes on every filtered/ordered column; warm Cloud Run (min-instances tuned to traffic); cache hit-rate observable.
 - **Looks (exemplary):** a single coherent design system; dark + light mode both correct (contrast, no hardcoded colors, theme tokens only); responsive at mobile/tablet/desktop; consistent spacing/typography scale; polished empty/loading/error states; WCAG AA.
-- **Modern (exemplary):** current language idioms (Python ≥3.13, React 19, MUI 9 patterns), no deprecated APIs, dependencies near-current, modern CI (caching, matrix, pinned actions), structured data / JSON-LD for content pages.
+- **Modern (exemplary):** current language idioms (Python ≥3.14, React 19, MUI 9 patterns), no deprecated APIs, dependencies near-current, modern CI (caching, matrix, pinned actions), structured data / JSON-LD for content pages.
 - **Correctness (exemplary):** green CI on every required check; meaningful test coverage on core paths; no swallowed errors; migrations reversible; spec→impl pipeline idempotent.
 - **Maintainability (exemplary):** complete repo-health set (README, CONTRIBUTING, CODE_OF_CONDUCT, SECURITY.md, issue/PR templates, `.editorconfig`); docs match code; no dead code; consistent naming; clean agent ergonomics (right-sized commands, fresh CLAUDE.md).
 

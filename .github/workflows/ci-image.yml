@@ -724,7 +724,7 @@ jobs:
         run: |
           set -euo pipefail
           echo "image size: $(docker image inspect --format '{{.Size}}' anyplot-renderer:ci) bytes"
-          docker run --rm anyplot-renderer:ci du -sh /app/.venv/lib/python3.13/site-packages/pyarrow
+          docker run --rm anyplot-renderer:ci du -sh /app/.venv/lib/python3.14/site-packages/pyarrow
           docker run --rm anyplot-renderer:ci sh -c 'grep PRETTY_NAME /etc/os-release; cat /usr/share/doc/fonts-noto/versions.txt; ls -l /usr/share/fonts/noto; du -sh /usr/share/fonts/noto; head -n 5 /usr/share/doc/fonts-noto/fonts-noto-core.copyright'
 
       # Also after a failed assert, so the PNGs show what went wrong.

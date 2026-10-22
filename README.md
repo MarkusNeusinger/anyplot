@@ -2,7 +2,7 @@
 
 **→ [anyplot.ai](https://anyplot.ai)**
 
-[![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/)
+[![Python 3.14+](https://img.shields.io/badge/python-3.14+-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Tests](https://github.com/MarkusNeusinger/anyplot/actions/workflows/ci-tests.yml/badge.svg?branch=main)](https://github.com/MarkusNeusinger/anyplot/actions/workflows/ci-tests.yml)
 [![Ruff](https://github.com/MarkusNeusinger/anyplot/actions/workflows/ci-lint.yml/badge.svg?branch=main)](https://github.com/MarkusNeusinger/anyplot/actions/workflows/ci-lint.yml)
@@ -75,7 +75,7 @@ See [docs/reference/](docs/reference/) for details.
 
 ## Tech stack
 
-**Backend**: FastAPI • PostgreSQL • SQLAlchemy • Python 3.13+
+**Backend**: FastAPI • PostgreSQL • SQLAlchemy • Python 3.14+
 
 **Frontend**: React 19 • Vite • TypeScript • MUI
 

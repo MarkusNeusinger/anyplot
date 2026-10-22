@@ -15,14 +15,14 @@
 # `agents/evals`), `core`, the catalogue prompt files below, `pyproject.toml`,
 # `uv.lock` and `README.md` are in it, so the COPYs below see them and nothing else.
 
-FROM python:3.13-slim AS builder
+FROM python:3.14-slim AS builder
 
 WORKDIR /app
 
 RUN pip install --no-cache-dir uv==0.10.9
 
 ENV UV_COMPILE_BYTECODE=1
-ENV UV_PYTHON=/usr/local/bin/python3.13
+ENV UV_PYTHON=/usr/local/bin/python3.14
 ENV UV_PYTHON_DOWNLOADS=never
 
 COPY pyproject.toml uv.lock README.md ./
@@ -37,7 +37,7 @@ COPY pyproject.toml uv.lock README.md ./
 RUN uv venv && uv sync --frozen --extra agents
 
 
-FROM python:3.13-slim
+FROM python:3.14-slim
 
 WORKDIR /app
 

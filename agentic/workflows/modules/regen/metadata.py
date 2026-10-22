@@ -34,7 +34,7 @@ def _now_iso() -> str:
 
 def _python_version() -> str:
     out = subprocess.check_output(["uv", "run", "python", "--version"], text=True).strip()
-    # "Python 3.13.12"
+    # "Python 3.14.9"
     return out.split()[-1]
 
 

@@ -215,7 +215,7 @@ Plot implementations are **simple, readable scripts** - like matplotlib gallery 
 ```python
 """ anyplot.ai
 scatter-basic: Basic Scatter Plot
-Library: matplotlib 3.10.0 | Python 3.13
+Library: matplotlib 3.10.0 | Python 3.14
 Quality: 92/100 | Created: 2025-01-10
 """
 
@@ -246,7 +246,7 @@ plt.savefig(f'plot-{THEME}.png', dpi=300, bbox_inches='tight')  # THEME = os.get
 
 ## Tech Stack
 
-- **Backend**: FastAPI, SQLAlchemy (async), PostgreSQL, Python 3.13+
+- **Backend**: FastAPI, SQLAlchemy (async), PostgreSQL, Python 3.14+
 - **Frontend**: React 19, TypeScript 6, Vite 8, MUI 9
 - **Package Manager**: uv (Python), yarn (Node.js)
 - **Linting**: Ruff (Python), ESLint (TypeScript)

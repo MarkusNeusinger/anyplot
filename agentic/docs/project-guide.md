@@ -256,7 +256,7 @@ workflow_run: 12345678
 issue: 42
 
 # Versions
-python_version: "3.13"
+python_version: "3.14"
 library_version: "3.10.0"
 
 # Previews
@@ -317,7 +317,7 @@ review:
 ```python
 """ anyplot.ai
 scatter-basic: Basic Scatter Plot
-Library: matplotlib 3.10.0 | Python 3.13
+Library: matplotlib 3.10.0 | Python 3.14
 Quality: 92/100 | Created: 2025-01-10
 """
 ```
@@ -430,7 +430,7 @@ an object URL must return 200 anonymously, while
 
 ## Tech Stack
 
-- **Backend**: FastAPI, SQLAlchemy (async), PostgreSQL, Python 3.13+
+- **Backend**: FastAPI, SQLAlchemy (async), PostgreSQL, Python 3.14+
 - **Frontend**: React 19, Vite 8, TypeScript 6, MUI 9
 - **Plotting (Python)**: matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, lets-plot
 - **Plotting (R)**: ggplot2 · **Plotting (Julia)**: Makie.jl
@@ -1062,7 +1062,7 @@ gcloud builds submit --config=app/cloudbuild.yaml --region=europe-west4 --projec
 ### Configuration Files
 
 - **`api/cloudbuild.yaml`**: Backend build + deploy (includes Cloud SQL connection)
-- **`api/Dockerfile`**: Python 3.13 + uv + FastAPI
+- **`api/Dockerfile`**: Python 3.14 + uv + FastAPI
 - **`app/cloudbuild.yaml`**: Frontend build + deploy
 - **`app/Dockerfile`**: Multi-stage build (Node -> nginx)
 

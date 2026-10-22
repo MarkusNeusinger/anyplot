@@ -122,7 +122,7 @@ A simple script with the structure below. The example is Python; ggplot2 follows
 ```python
 """ anyplot.ai
 scatter-basic: Basic Scatter Plot
-Library: matplotlib | Python 3.13
+Library: matplotlib | Python 3.14
 Quality: pending | Created: 2025-12-21
 """
 
@@ -319,7 +319,7 @@ Julia (use `#` comments — Julia has no Python-style docstring):
 ```python
 """ anyplot.ai
 scatter-basic: Basic Scatter Plot
-Library: matplotlib | Python 3.13
+Library: matplotlib | Python 3.14
 Quality: pending | Created: 2025-12-21
 """
 ```

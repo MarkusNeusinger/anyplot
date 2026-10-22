@@ -128,7 +128,7 @@ CREATE TABLE impls
     preview_html    VARCHAR,                    -- Interactive: gs://anyplot-images/plots/.../plot.html
 
     -- Version info
-    python_version  VARCHAR,                    -- e.g., "3.13"
+    python_version  VARCHAR,                    -- e.g., "3.14"
     library_version VARCHAR,                    -- e.g., "3.9.0"
 
     -- Test results: [{"py": "3.11", "lib": "3.8.5", "ok": true}, ...]
