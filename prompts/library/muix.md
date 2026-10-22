@@ -102,8 +102,9 @@ gate rejects anything off by more than 16 px and re-triggers repair):
 Exact pixels come from Playwright `deviceScaleFactor: 2` over the pre-sized mount
 (1600×900 / 1200×1200 CSS). **Size the chart to `window.ANYPLOT_SIZE`**
 (`width={window.ANYPLOT_SIZE.width} height={window.ANYPLOT_SIZE.height}`, minus
-the legend band when a legend shows) — never hard-code other dimensions. For a square spec (pie / radial / heatmap-style),
-put this on its own line at the very top of the file:
+the legend band when a legend shows) — never hard-code other dimensions. For a
+square spec (pie / radial / heatmap-style), put this on its own line at the very
+top of the file:
 
 ```tsx
 //# anyplot-orientation: square
@@ -251,11 +252,11 @@ React 19**. Code written for v7 either fails to bundle or silently loses its
 styling, so write against v9:
 
 - **Composition:** `ChartsContainer` from `@mui/x-charts/ChartsContainer`. The
-  v7 `ChartContainer` / `ResponsiveChartContainer` and the
-  `@mui/x-charts/ChartContainer` path no longer exist, and the bundle fails. A
-  legend is HTML, never part of the SVG: in a composed chart render
-  `<ChartsLegend />` inside `ChartsDataProvider` (wrapped in `ChartsWrapper`)
-  and outside `<ChartsSurface>`.
+  v7 `ChartContainer` / `ResponsiveChartContainer`, the
+  `@mui/x-charts/ChartContainer` path and `DefaultChartsLegend` no longer
+  exist, and the bundle fails. A legend is HTML, never part of the SVG: in a
+  composed chart render `<ChartsLegend />` inside `ChartsDataProvider` (wrapped
+  in `ChartsWrapper`) and outside `<ChartsSurface>`.
 - **Legend:** hide it with the chart's `hideLegend` prop (not
   `slotProps.legend.hidden`). `slotProps.legend.direction` is `"horizontal"` or
   `"vertical"`; `position` is `{ vertical: "top" | "middle" | "bottom",
@@ -270,8 +271,9 @@ styling, so write against v9:
   y axis takes `position: "right"`. Fonts go through `labelStyle` /
   `tickLabelStyle` (`labelFontSize` / `tickFontSize` are gone), and the axis
   band needs `height` / `width` as described under Sizing.
-- **Line charts:** `showMark` defaults to `false`, and marks cycle through
-  shapes per series, so set `shape: "circle"` for uniform dots. The x domain is
+- **Line charts:** `showMark` defaults to `false`, so set `showMark: true` on a
+  series to draw its dots. Marks cycle through shapes per series; add
+  `shape: "circle"` for uniform dots. The x domain is
   strict; set `domainLimit: "nice"` on the x axis to pad it to round ticks.
 - **CSS classes are per chart:** `.MuiLineChart-line`, `.MuiLineChart-area`,
   `.MuiLineChart-mark`, `.MuiBarChart-element`, `.MuiBarChart-label`,
