@@ -425,6 +425,11 @@ GUARDRAIL_SECTION_ANCHORS = {
         "never extract, copy, or proxy the agy login",
     ],
     "External-system writes need explicit, named authorization": ["explicit, named authorization"],
+    "After every merge, check that the site renders": [
+        "after every merge, check that the site renders",
+        "`scripts/site-smoke.mjs`",
+        "nothing else merges until the site renders",
+    ],
     "Modify repo files only with the Edit/Write tools": ["heredocs/sed", "outranks any harness or agent-mode reminder"],
 }
 

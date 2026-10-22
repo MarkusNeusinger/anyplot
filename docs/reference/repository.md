@@ -194,6 +194,7 @@ anyplot/
 │   └── cloudflare/                    # Source for the apex Worker + its rollout notes
 │
 ├── scripts/                           # One-time and manual scripts
+│   ├── site-smoke.mjs                 # Does the site render? After every merge, and in CI
 │   ├── evaluate-plot.py               # Manual plot evaluation
 │   ├── regenerate-thumbnails.py       # Image processing
 │   ├── backfill_review_metadata.py    # One-time migration

@@ -454,6 +454,28 @@ jobs:
           want "armed, no secret: empty header too"   "$(code -H 'X-Origin-Secret;' localhost:8083/)" 403
           want "armed, no secret: /_health exempt"    "$(code localhost:8083/_health)"   200
 
+      # Served is not booted. On 2026-10-22 a Vite minor bump (#12225) passed
+      # every step above and blanked every page in production: Rolldown put its
+      # runtime helper into a chunk cycle, and the bundle threw `TypeError: t is
+      # not a function` at module load (fixed by #12235). The runner's Google
+      # Chrome loads the gate-off container's home page and fails on an
+      # uncaught page error or an empty #root; scripts/site-smoke.mjs is the
+      # same check the post-merge rule runs against production. No API check:
+      # the page's data calls go to production, whose CORS does not know this
+      # origin, so only the boot is asserted.
+      - name: Browser boot (the bundle renders)
+        if: steps.check.outputs.should_build == 'true'
+        env:
+          SITE: http://localhost:8081
+          API: none
+          CHROME_PATH: /usr/bin/google-chrome
+          MIN_TEXT: "50"
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+        run: |
+          set -euo pipefail
+          npm install --no-save --no-audit --no-fund --silent --prefix "$RUNNER_TEMP/smoke" playwright-core@1.64.1
+          NODE_PATH="$RUNNER_TEMP/smoke/node_modules" node scripts/site-smoke.mjs /
+
       - name: Container logs on failure
         if: failure() && steps.check.outputs.should_build == 'true'
         run: |

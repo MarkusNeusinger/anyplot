@@ -1,6 +1,6 @@
 ---
 name: open-pr
-description: Take a finished change from diff to an open, green, review-clean PR — run the matching verify skills and local CI gates first, then commit, push and open the PR via /pull_request, watch the pipeline AND the Copilot review, fix sensible findings, resolve the review threads, and watch any Cloud Build deploy after merge. Detects local vs. cloud GitHub tooling (gh vs. GitHub MCP). Never merges unless the user explicitly authorizes it in this session. Use when asked to open or create a PR, ship a change, or finish up a change.
+description: Take a finished change from diff to an open, green, review-clean PR — run the matching verify skills and local CI gates first, then commit, push and open the PR via /pull_request, watch the pipeline AND the Copilot review, fix sensible findings, resolve the review threads, and after a merge watch the Cloud Build deploys and check in a browser that the live site still renders (scripts/site-smoke.mjs). Detects local vs. cloud GitHub tooling (gh vs. GitHub MCP). Never merges unless the user explicitly authorizes it in this session. Use when asked to open or create a PR, ship a change, or finish up a change.
 ---
 
 # Open a PR (ship a change)
@@ -315,6 +315,42 @@ list` answers with a handful of months-old global builds — all
 while both deploys are already done (2026-08-28, #10808 follow-through:
 a 20-minute poll on the global list never saw the builds). Match the
 `SHORT_SHA` column against the merge commit before trusting a row.
+
+**Then check that the site renders — after every merge, whatever it
+touched.** A green PR and a green deploy do not prove the bundle boots:
+on 2026-10-22 vite 8.1.6 (#12225) passed every check and both, and every
+page on anyplot.ai stayed blank for about 45 minutes until #12235. Once
+the merge's deploys have finished (the watcher above shows them
+`SUCCESS`; right after the merge when it triggered none), run:
+
+```bash
+SCRATCH=<the session scratchpad>
+[ -d "$SCRATCH/node_modules/playwright-core" ] || \
+  (cd "$SCRATCH" && PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm i --silent playwright-core@1.64.1)
+NODE_PATH="$SCRATCH/node_modules" node scripts/site-smoke.mjs
+```
+
+It loads `/`, `/plots` and `/scatter-basic` in headless Chromium,
+checks `api.anyplot.ai/health`, and prints one `OK` or `FAIL` line per
+check, with the entry bundle (`bundle=index-*.js`) that answered; it
+never downloads a browser. A failed route counts too: the app's error
+boundary ("Something went wrong") keeps the masthead and footer, so
+the script looks for its text, not only for an empty page.
+
+Without `gcloud` (a cloud session) the deploy cannot be watched, and
+elapsed time proves nothing: Cloud Build may still be waiting for an
+earlier deploy. For a merge that touches `app/`, run the script once
+before the merge and wait until `bundle=` changes; until it does, or
+when you cannot tell, report the post-merge check as unconfirmed
+rather than passed.
+
+- **Exit 1 is an incident.** Tell the owner at once with the failing
+  lines and every merge since the last passing run, propose reverting
+  the suspect merge (a revert PR is the fastest rollback), and land no
+  further merge until the site renders again.
+- **Exit 2** means no browser was found, so nothing was checked: say
+  so, then load `/` and a spec page with the Playwright MCP and read
+  its console errors instead.
 
 ## Gotchas
 

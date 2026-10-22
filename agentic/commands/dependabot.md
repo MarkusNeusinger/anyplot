@@ -11,6 +11,15 @@ known GitHub quirks. Every gotcha below cost real session round-trips.
 - Auto-merge is the mechanism of choice: `gh pr merge <num> --auto --squash` — the PR merges
   itself when checks pass; no polling needed.
 - Grouped bumps (npm-minor, python-minor, actions) are one PR each — treat like any other.
+- **One lock-file PR at a time, and every `app/` bump checked in the browser.** Of the PRs that
+  touch the same lock file (`uv.lock`, `app/yarn.lock`), only one has auto-merge at a time: several
+  squash-merged within a minute have duplicated package blocks in `uv.lock`. After an `app/` PR
+  merges, wait for its `deploy-app` build and run the site smoke (`/open-pr` skill §4,
+  `scripts/site-smoke.mjs`) before the next `app/` PR gets auto-merge. On 2026-10-22 vite 8.1.6
+  (#12225) passed every check, blanked every page, and stayed unnoticed for about 45 minutes
+  inside a batch. Comment `@dependabot rebase` on the next PR of a chain before you enable its
+  auto-merge, and expect Dependabot to close and regroup a PR now and then ("updatable in another
+  way"); list the PRs again when it does.
 - Per the changelog contract, individual Dependabot bumps get NO `CHANGELOG.md` entries —
   they are aggregated into one **Dependencies:** bullet at release time (`/release` step 2).
 
@@ -40,11 +49,13 @@ known GitHub quirks. Every gotcha below cost real session round-trips.
 3. A dep bump breaking tests/config (e.g. a major with changed exports): consult **Context7**
    for the library's current API (CLAUDE.md MCP tools section) — do not grep `node_modules`
    `.d.ts` files. Fix on the Dependabot branch or note the PR for manual handling.
-4. When all PRs have auto-merge set, **stop — do not leave a background monitor running.**
-   Auto-merge needs no supervision, and orphaned monitors fire notifications into later
-   sessions. Report the list with each PR's end state instead.
+4. When the last PR has merged and its deploys finished, run the site smoke once more
+   (`/open-pr` skill §4). A failure is an incident: report it at once with the merges since the
+   last passing run. Then **stop — do not leave a background monitor running.** Orphaned
+   monitors fire notifications into later sessions. Report the list with each PR's end state
+   instead.
 
 ## Report
 
 Per PR: number, title, action taken (auto-merge set / updated+re-triggered / needs manual
-attention + why).
+attention + why), and the site smoke's result after the last merge.
