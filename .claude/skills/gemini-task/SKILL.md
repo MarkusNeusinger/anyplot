@@ -35,6 +35,8 @@ second opinions call Gemini through Vertex AI instead (`/zweitmeinung`).
 **Good Gemini tasks** need no credentials and no production access, can be
 verified by commands that run locally, and are worth an hour of work or more.
 Claude does a quick fix directly; the hand-over costs more than it saves there.
+Propose this route yourself: when planning turns up a longer task that fits,
+offer it to the owner as an option (owner, 2026-10-22).
 The longer Gemini is to run, the more planning goes in first: for a large task,
 get a second opinion on the plan (`/zweitmeinung`) and write the owner's
 decisions into the issue. Examples:
@@ -55,6 +57,19 @@ decisions into the issue. Examples:
 
 - Never write `@claude` in it: the util-claude workflow reacts to that mention.
 - Never put secrets or personal data in it. The repository is public.
+- For a change to a rule or heuristic, Acceptance also lists cases where the
+  existing rules must still win, not only the new rule's positive and negative
+  cases. #12224 listed none, and Gemini built a currency rule to spec that
+  overrode a German file's own decimal-comma column; only the independent
+  review caught it.
+- Constraints name the files the gates make Gemini touch as well. For example,
+  a new parser warning needs its code in `agents/anyplot/data/warning_codes.py`
+  and a sample in its test, because an autouse fixture in
+  `tests/unit/agents/data/conftest.py` fails every test that emits an unknown
+  warning. A "change only" list without them contradicts the gates.
+- Wherever you tell Gemini or the owner to read an issue, write
+  `gh issue view <number> --json title,body,comments`: a bare `gh issue view`
+  and `gh pr edit` fail on this repository (Projects classic).
 - Put the body in a private temp file, then create the issue:
 
 ```bash
@@ -74,10 +89,12 @@ Repo-relative paths, related PRs or issues, and the facts Gemini cannot look up.
 - [ ] One checkbox per reviewable step; a long refactor gets several.
 
 ## Constraints
-Scope boundaries, what must not change, and the repository rules that matter most here.
+Scope boundaries, what must not change, the files the gates make you touch as
+well, and the repository rules that matter most here.
 
 ## Acceptance
-The exact commands that must pass, and the behavior to check by hand, if any.
+The exact commands that must pass, the cases where the existing rules must still
+win, and the behavior to check by hand, if any.
 
 ## Decide yourself / report back
 The routine choices Gemini makes and documents, and the questions it returns
@@ -120,9 +137,11 @@ the issue.
 
 This section is for the Gemini agent in the owner's agy session.
 
-1. **Read the task.** Use `gh issue view <number>`; with no number given, list
-   the open tasks with `gh issue list --label gemini --state open` and ask the
-   owner which one to take. Reading GitHub is fine. Your only writes are your
+1. **Read the task.** Use `gh issue view <number> --json title,body,comments`
+   (without `--json` it fails on this repository: Projects classic); with no
+   number given, list the open tasks with
+   `gh issue list --label gemini --state open` and ask the owner which one to
+   take. Reading GitHub is fine. Your only writes are your
    own branch and your own draft PR (step 7); never create, edit, comment on,
    label, or close anything else.
 2. **Work in the dedicated clone on your own branch.** That clone is
@@ -134,6 +153,11 @@ This section is for the Gemini agent in the owner's agy session.
    git fetch origin
    git switch -c gemini/<number>-<slug> origin/main
    ```
+
+   In a fresh clone, or after `pyproject.toml` or `uv.lock` changed, sync the
+   environment once with the extras CI and the gates use; without `agents` the
+   tests under `tests/unit/agents/` fail at collection:
+   `uv sync --extra test --extra dev --extra typecheck --extra agents`.
 
    To continue a task from an earlier session, switch to its branch and bring
    in what Claude may have pushed to it with
@@ -154,16 +178,21 @@ This section is for the Gemini agent in the owner's agy session.
    `AGENTS.md` apply: English everywhere, files edited with your edit tool, no
    lint-disable comments, and documentation updated with behavior. A change
    that is not exempt adds a changelog fragment under `changelog.d/` without
-   any `(#...)` reference; Claude adds the PR number later.
+   any `(#...)` reference; Claude adds the PR number later. A file the gates
+   make you change as well, such as a registry a test fixture enforces, is in
+   scope even when the issue's Constraints miss it; name it in the hand-over.
 5. **Run the acceptance commands and the gates for what you changed:**
 
    ```bash
    PYTHON_DOTENV_DISABLED=1 uv run ruff check . && uv run ruff format --check .
    PYTHON_DOTENV_DISABLED=1 uv run --extra typecheck mypy api core --pretty     # Python changes
    PYTHON_DOTENV_DISABLED=1 uv run pytest tests/unit tests/integration -n auto  # or the narrower set the issue names
-   PYTHON_DOTENV_DISABLED=1 uv run python -m tools.changelog check --base origin/main
+   PYTHON_DOTENV_DISABLED=1 uv run python -m tools.changelog check --base origin/main  # after committing the fragment
    cd app && yarn lint && yarn fm:check && yarn type-check && yarn test && yarn build   # app/ changes
    ```
+
+   The changelog check reads `origin/main...HEAD`, as CI does, so it fails
+   until the fragment is committed; staging it is not enough.
 
 6. **Commit each finished step** on your branch with a conventional message.
    Its body names the step (for example `Step 2 of 5: …`) and ends with
@@ -179,19 +208,37 @@ This section is for the Gemini agent in the owner's agy session.
 
 7. **Hand over** when you finish or stop, whether on a blocker or at the end of
    the session. Push your branch and open a draft PR, or update the one you
-   opened before. Write the body into a temp file first. It carries
-   `Closes #<number>` and lists:
-   - what changed and why,
-   - the commands you ran and their results,
-   - the decisions you made,
-   - the steps still open,
-   - your questions.
+   opened before. Write the body into a temp file first, in the repository's
+   PR format, so Claude can ship it without rewriting it:
+
+   ```markdown
+   Closes #<number>
+
+   ## Summary
+   - What changed and why, one bullet per change; name every file outside
+     the issue's Constraints and the gate that made you touch it.
+
+   ## Plan
+   Issue #<number>.
+
+   ## Test plan
+   - [x] Each command you ran, with its result line.
+
+   ## Decisions
+   - The choices the issue left to you, and what you chose.
+
+   ## Open steps and questions
+   - The steps still open and your questions, or "None".
+   ```
 
    ```bash
    git push -u origin gemini/<number>-<slug>
    gh pr create --draft --label gemini --title "<type>: <summary>" --body-file <file>   # first hand-over
-   gh pr edit <pr> --body-file <file>                                                   # later ones
+   gh api -X PATCH repos/{owner}/{repo}/pulls/<pr> -F body=@<file>                     # later ones
    ```
+
+   `gh pr edit` fails on this repository (Projects classic), so a later
+   hand-over updates the body through `gh api`.
 
    Then tell the owner the PR number, and stop.
 
@@ -213,13 +260,19 @@ This section is for the Gemini agent in the owner's agy session.
 1. **Find the drafts.** When the owner says Gemini is done, or at the start of a
    session, list them with `gh pr list --draft --label gemini`. Read the PR body
    (the hand-over) and the CI results on the draft. Open steps or questions go
-   back to the owner first.
+   back to the owner first. Skills load from the shared checkout, so when its
+   `main` is behind `origin/main` and clean, fast-forward it
+   (`git pull --ff-only origin main`) before you follow these steps; on
+   2026-10-22 a stale checkout still described the take-over from the clone.
 2. **Check it out** into a fresh worktree of your own checkout:
 
    ```bash
    git fetch origin gemini/<number>-<slug>:gemini/<number>-<slug>
    git worktree add .claude/worktrees/gemini-<number> gemini/<number>-<slug>
    ```
+
+   A new worktree has no environment; sync it with the extras from section 2,
+   step 2, before you run anything in it.
 
    When Gemini hands over again after step 4, the worktree exists and Git
    refuses to fetch into its checked-out branch, so bring in its new commits
@@ -239,10 +292,12 @@ This section is for the Gemini agent in the owner's agy session.
    continue. Bring in a newer `origin/main` by merging it into the branch, never
    by rebasing a pushed branch.
 5. **Ship.** Run the open-pr gates, add the PR number to the changelog
-   fragment, and add one Summary bullet to the PR body: the change was
-   implemented by Gemini 4 Argon in the owner's interactive agy session and
-   reviewed by Claude. This is provenance for the reviewer, not a "Generated
-   with" footer. Then `gh pr ready <pr>` starts the Copilot review; follow the
+   fragment, and add one Summary bullet to the PR body, which Gemini wrote in
+   the repository's format (section 2, step 7): the change was implemented by
+   Gemini 4 Argon in the owner's interactive agy session and reviewed by
+   Claude, with the defects the review found and the commits that fixed them.
+   This is provenance for the reviewer, not a "Generated with" footer. Then
+   `gh pr ready <pr>` starts the Copilot review; follow the
    PR through as `/open-pr` describes. Merge only on the owner's explicit OK in
    the session.
 6. **Clean up.** After the merge, remove your worktree. Deleting a local

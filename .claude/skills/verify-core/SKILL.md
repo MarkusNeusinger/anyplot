@@ -89,9 +89,12 @@ To check against **real** data, don't reach for the DB from a script
   (PostgreSQL in prod, SQLite in tests). When adding a column type,
   verify it on both: an integration test (SQLite) plus one e2e run
   or a careful review of the PostgreSQL branch.
-- **Plain `uv run ruff` can fail on a fresh venv** — dev tools live
-  in extras; `uv sync --extra dev` (or `--all-extras`) first, and
-  mypy always needs `--extra typecheck`.
+- **A fresh venv (a new worktree or clone) lacks the extras** — dev
+  tools live in extras, and the tests under `tests/unit/agents/` fail
+  at collection without `google-adk`. Sync once with what CI and the
+  gates use: `uv sync --extra test --extra dev --extra typecheck --extra agents`
+  (CI's "Run Tests" syncs `--extra test --extra agents`); mypy always
+  needs `--extra typecheck`.
 
 ## Troubleshooting
 

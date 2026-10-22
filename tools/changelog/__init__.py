@@ -458,9 +458,18 @@ def check_pr(base: str, *, root: Path = REPO_ROOT) -> list[str]:
     touches_fragments = any(p.startswith(f"{FRAGMENT_DIR_NAME}/") for p in changed)
     exempt = bool(changed) and all(p.startswith(EXEMPT_PREFIXES) for p in changed)
     if changed and not (touches_fragments or release_cut or exempt):
-        problems.insert(
-            0,
+        problem = (
             f"no changelog fragment: add {FRAGMENT_DIR_NAME}/<slug>.md (format: {FRAGMENT_DIR_NAME}/README.md), "
-            f"or label the PR '{SKIP_LABEL}' if it truly changes nothing worth a line",
+            f"or label the PR '{SKIP_LABEL}' if it truly changes nothing worth a line"
         )
+        if pending := _uncommitted_fragments(root):
+            problem += f"; {', '.join(pending)} is not committed yet, and the check reads commits only"
+        problems.insert(0, problem)
     return problems
+
+
+def _uncommitted_fragments(root: Path) -> list[str]:
+    """Fragments in the working tree that no commit holds yet: the gate, like CI, reads only `base...HEAD`."""
+    out = _git(root, "status", "--porcelain", "--untracked-files=all", "--", FRAGMENT_DIR_NAME)
+    paths = [line[3:] for line in out.splitlines()]
+    return [p for p in paths if p.endswith(".md") and Path(p).name != "README.md"]
