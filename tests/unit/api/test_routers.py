@@ -2676,6 +2676,24 @@ class TestSpecCodeEndpoint:
             assert response.status_code == 404
 
 
+class TestForwardedProto:
+    """Redirects keep https behind Cloud Run (served by ForwardedProtoMiddleware).
+
+    uvicorn ignored Cloud Run's `X-Forwarded-Proto`, so the trailing-slash
+    redirect sent `https://api.anyplot.ai/specs/` to `http://api.anyplot.ai/specs`
+    (seen 2026-10-22).
+    """
+
+    def test_trailing_slash_redirect_keeps_https(self, client: TestClient) -> None:
+        response = client.get("/specs/", headers={"X-Forwarded-Proto": "https"}, follow_redirects=False)
+        assert response.status_code == 307
+        assert response.headers["location"] == "https://testserver/specs"
+
+    def test_without_the_header_the_scheme_stays(self, client: TestClient) -> None:
+        response = client.get("/specs/", follow_redirects=False)
+        assert response.headers["location"] == "http://testserver/specs"
+
+
 class TestHeadRequests:
     """HEAD must answer like GET without a body (served by HeadAsGetMiddleware).
 

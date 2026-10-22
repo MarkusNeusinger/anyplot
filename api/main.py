@@ -220,8 +220,9 @@ app.add_exception_handler(Exception, generic_exception_handler)
 #
 #   security headers → cache headers → CORS → origin gate → bot counter → gzip → router
 #
-# (`HeadAsGetMiddleware` and `MCPTrailingSlashMiddleware` wrap the whole app
-# further out still; both only rewrite the scope.)
+# (`HeadAsGetMiddleware`, `MCPTrailingSlashMiddleware` and
+# `ForwardedProtoMiddleware` wrap the whole app further out still; all three
+# only rewrite the scope.)
 #
 # Two of those positions are load-bearing:
 #
@@ -397,6 +398,28 @@ class MCPTrailingSlashMiddleware:
         await self.asgi_app(scope, receive, send)
 
 
+class ForwardedProtoMiddleware:
+    """Take the scheme from Cloud Run's front end, so redirects stay on https.
+
+    TLS ends at Cloud Run's front end, which forwards plain HTTP and says so in
+    `X-Forwarded-Proto: https`. uvicorn trusts that header only from 127.0.0.1
+    (`--forwarded-allow-ips`), so the app saw every request as http, and
+    Starlette's trailing-slash redirect sent `https://api.anyplot.ai/specs/` to
+    `http://api.anyplot.ai/specs`. Only the scheme is taken from the header:
+    trusting all proxies in uvicorn would also replace the socket peer with the
+    leftmost `X-Forwarded-For` entry, which the client controls and which
+    `api/request_context.py` deliberately never trusts.
+    """
+
+    def __init__(self, asgi_app):
+        self.asgi_app = asgi_app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "http" and (b"x-forwarded-proto", b"https") in scope["headers"]:
+            scope = {**scope, "scheme": "https"}
+        await self.asgi_app(scope, receive, send)
+
+
 class HeadAsGetMiddleware:
     """Answer HEAD requests with the matching GET route's headers and no body.
 
@@ -433,7 +456,7 @@ class HeadAsGetMiddleware:
 # This must be done after all routers are registered
 # Keep reference to FastAPI instance for tests
 fastapi_app = app
-app = HeadAsGetMiddleware(MCPTrailingSlashMiddleware(app))
+app = HeadAsGetMiddleware(MCPTrailingSlashMiddleware(ForwardedProtoMiddleware(app)))
 
 
 if __name__ == "__main__":
