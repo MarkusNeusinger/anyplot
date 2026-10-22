@@ -94,7 +94,8 @@ would, for example, read `01.02.2024` as a number under `thousands='.'`).
 5. **Type each column**, see `_type_column`: dates, then booleans, integers,
    numbers (also with unambiguous thousands groups: `7.184.003`, `1'234'567`,
    `1 234,5`, `1,234,567`, see `_as_grouped_numbers`; a column of `1,234` shapes reads
-   as comma thousands only beside a comma-grouped column, `_commas_as_thousands`), then the
+   as comma thousands in a currency column or beside a comma-grouped column,
+   `_commas_as_thousands`), then the
    same numbers behind one unit shared by every cell (`65 %`, `15,6 h`, `€ 5`, also
    with a no-break space; the unit leaves the cells), otherwise text. A whole number
    written without a fraction in a number column keeps that form (`87000` beside
@@ -2777,13 +2778,17 @@ def _id_like(name: str) -> bool:
 
 
 def _commas_as_thousands(columns: list[_Column]) -> None:
-    """A column of `1,234` shapes reads by what the file's other columns settle, else keeps its decimal comma.
+    """A column of `1,234` shapes reads by its currency or what the file's other columns settle, else keeps its decimal comma.
 
     A column whose commas could be decimals or thousands (every cell a whole number or `1,234`,
     typed as decimal commas with the `AMBIGUOUS_COMMAS` note) is settled only by strong evidence
     (review of 2026-10-15: a dot number elsewhere is none, since `12.30` may be a time and a
     rating of `4.5` says nothing about a price of `1,250`):
 
+    * the column's own unit is a currency (`_CURRENCY`: `€ $ £ CHF EUR USD GBP`) and every
+      cell is a whole number or a three-digit comma group (`$1,200`, `1,200 USD`): a money
+      amount has at most two decimals, so the column reads as whole numbers with comma
+      thousands, with a note;
     * another column writes a decimal comma that is no such shape (`6,07`): the decimal comma
       stays and the note goes, so the root asks no question the file answers (live test of
       2026-10-15, `43,621` Mio. t beside `6,07` t);
@@ -2791,8 +2796,8 @@ def _commas_as_thousands(columns: list[_Column]) -> None:
       `1,234.5`, `_as_grouped_numbers`): the column reads as whole numbers with comma
       thousands, with a note.
 
-    Without either the decimal comma stays with its note. A column named as an id or a code
-    (`_id_like`) is never retyped.
+    Without any of these the decimal comma stays with its note. A column named as an id or a
+    code (`_id_like`) is never retyped.
     """
     ambiguous = [column for column in columns if column.decimal_comma and AMBIGUOUS_COMMAS in column.notes]
     if not ambiguous:
