@@ -9,7 +9,9 @@ inputs:
   r-version:
     description: "R version to install"
     required: false
-    default: "4.4.1"
+    # Bump together with the snapshot date below: Posit Package Manager serves
+    # noble binaries per R minor version, so a new R needs a snapshot that has them.
+    default: "4.6.1"
 
 runs:
   using: "composite"
@@ -51,12 +53,16 @@ runs:
       # matches the current ubuntu-latest runner image — update if GitHub moves
       # the runner OS, and bump the snapshot date deliberately.
       #
-      # Snapshot 2025-01-15 ships ggplot2 3.5.1. The repository has no R lock
+      # Snapshot 2026-10-20 ships ggplot2 4.0.3. The repository has no R lock
       # file, so this line stands in for one: core/library_versions.py reads
       # ggplot2's version from it for the database sync, but only while its date
       # is the one in the URL below. A new snapshot date fails
       # tests/unit/core/test_version_sources.py until this line names the ggplot2
       # version the new snapshot installs (packageVersion("ggplot2") in a run).
+      #
+      # Every package below installs from this snapshot as a noble binary for
+      # R 4.6.1. ggplot2 4.0 changes rendering defaults; the changes that matter
+      # to generated code are listed in prompts/library/ggplot2.md.
       #
       # dependencies is restricted to required types (Depends/Imports/LinkingTo);
       # the default `NA` is identical but explicit is clearer. `TRUE` would also
@@ -67,7 +73,7 @@ runs:
       run: |
         Rscript -e '
           options(
-            repos = c(CRAN = "https://packagemanager.posit.co/cran/__linux__/noble/2025-01-15"),
+            repos = c(CRAN = "https://packagemanager.posit.co/cran/__linux__/noble/2026-10-20"),
             Ncpus = parallel::detectCores()
           )
           install.packages(
