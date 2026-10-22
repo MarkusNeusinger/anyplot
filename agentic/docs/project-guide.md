@@ -704,6 +704,7 @@ impl-generate.yml
     |-- Generates implementation code
     |-- Tests with MPLBACKEND=Agg
     |-- Verifies implementation exists before committing metadata
+    |-- Fails if the commit changes a dependency file (uv.lock, package-lock.json, Manifest.toml, ...)
     |-- Uploads preview to GCS staging
     |-- Creates PR: implementation/{specification-id}/{library} -> main
     +-- Triggers impl-review.yml
@@ -715,7 +716,7 @@ impl-review.yml
     |-- Adds labels: quality:XX, ai-approved OR ai-rejected
     |
     |-- If APPROVED -> triggers impl-merge.yml
-    |       |-- Validates PR completeness (blocks merge if implementation file missing)
+    |       |-- Validates PR completeness (blocks merge if implementation file missing or a dependency file changed)
     |       |-- Squash-merges PR to main
     |       |-- Creates metadata/python/{library}.yaml
     |       |-- Promotes GCS: staging -> production

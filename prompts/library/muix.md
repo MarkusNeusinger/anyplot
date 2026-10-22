@@ -172,7 +172,7 @@ reason — **do not** shell out to Recharts/D3/Chart.js or reach into
 ```tsx
 // anyplot.ai
 // bar-basic: Basic Bar Chart
-// Library: MUI X Charts | React | Node 22
+// Library: MUI X Charts 7.29.1 | React | Node 22
 // License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
 // Quality: pending | Created: 2026-06-09
 ```
@@ -187,7 +187,7 @@ its own line at the very top.
 //# anyplot-orientation: landscape
 // anyplot.ai
 // bar-basic: Basic Bar Chart
-// Library: MUI X Charts | React | Node 22
+// Library: MUI X Charts 7.29.1 | React | Node 22
 // License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
 // Quality: pending | Created: 2026-06-09
 import { BarChart } from "@mui/x-charts/BarChart";

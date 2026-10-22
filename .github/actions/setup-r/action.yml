@@ -51,6 +51,12 @@ runs:
       # matches the current ubuntu-latest runner image — update if GitHub moves
       # the runner OS, and bump the snapshot date deliberately.
       #
+      # Snapshot 2025-01-15 ships ggplot2 3.5.1. The repository has no R lock
+      # file, so this line stands in for one: tests/unit/core/test_version_sources.py
+      # holds its date to the URL below and its version to core/constants.py.
+      # A new snapshot date fails that test until this line names the ggplot2
+      # version the new snapshot installs (packageVersion("ggplot2") in a run).
+      #
       # dependencies is restricted to required types (Depends/Imports/LinkingTo);
       # the default `NA` is identical but explicit is clearer. `TRUE` would also
       # pull in Suggests (sf, Hmisc, maps, quantreg, ...) — none of which the

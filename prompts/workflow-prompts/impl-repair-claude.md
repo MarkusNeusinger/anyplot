@@ -158,6 +158,8 @@ Attempt {ATTEMPT}/4 - fixes based on AI review"
 git push origin {BRANCH}
 ```
 
+Commit only the implementation file, and use only the packages the runner already has: never run `Pkg.add`, `uv add`, `pip install` or `npm install`. `impl-merge.yml` refuses to merge a PR that changes `Manifest.toml`, `Project.toml`, `uv.lock`, `pyproject.toml`, `package.json` or `package-lock.json`.
+
 If you declined any weakness in Step 1, add a `Declined:` list to the commit body, one line per weakness with its reason, for example:
 
 ```

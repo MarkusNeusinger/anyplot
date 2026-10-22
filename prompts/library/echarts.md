@@ -171,7 +171,7 @@ chart.setOption({
 ```js
 // anyplot.ai
 // bar-basic: Basic Bar Chart
-// Library: echarts 5.5.1 | JavaScript 22
+// Library: echarts 6.1.0 | JavaScript 22
 // Quality: pending | Created: 2026-06-02
 ```
 

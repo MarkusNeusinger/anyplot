@@ -66,8 +66,9 @@ LANGUAGES_METADATA = [
         "id": "javascript",
         "name": "JavaScript",
         "file_extension": ".js",
-        # Node 22 LTS — the runtime that drives the browser render harness
-        # (automation/js-render/render.mjs). Confirm against CI on first run.
+        # Node 22 LTS, the runtime that drives the browser render harness
+        # (automation/js-render/render.mjs): the default of
+        # .github/actions/setup-node, held equal by test_version_sources.py.
         "runtime_version": "22",
         "documentation_url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
         "description": "The language of the web. Every dashboard, embed, and BI tool renders charts in the browser via JavaScript. anyplot authors snippets in plain JS (TSX for React-only libraries); TypeScript is treated as the same language.",
@@ -96,13 +97,20 @@ LANGUAGE_FILE_EXTENSIONS = {lang["id"]: lang["file_extension"] for lang in LANGU
 # React lib MUI X (`muix`) is `.tsx`. MUI X is the first — and currently only —
 # library to set it; the mechanism is wired through language_file_extensions() +
 # sync_to_postgres so JavaScript discovery scans both `.js` and `.tsx`.
+#
+# `version` is the full version the pipeline pins, shown on the Libraries page
+# as "vX": uv.lock for Python, the root package-lock.json for JavaScript,
+# Manifest.toml for Makie, and the Posit snapshot in .github/actions/setup-r for
+# ggplot2. tests/unit/core/test_version_sources.py fails when a lock moves and
+# this table does not, so a Dependabot bump of a plotting library updates it in
+# the same PR.
 LIBRARIES_METADATA = [
     {
         "id": "altair",
         "name": "Altair",
         "language_id": "python",
         "framework": "none",
-        "version": "5.2.0",
+        "version": "6.3.0",
         "documentation_url": "https://altair-viz.github.io",
         "description": "Declarative visualization library for Python. Its simple, friendly and consistent API, built on top of the powerful Vega-Lite grammar, empowers you to spend less time writing code and more time exploring your data.",
     },
@@ -111,7 +119,7 @@ LIBRARIES_METADATA = [
         "name": "Bokeh",
         "language_id": "python",
         "framework": "none",
-        "version": "3.4.0",
+        "version": "3.10.1",
         "documentation_url": "https://bokeh.org",
         "description": "Interactive visualization library that makes it simple to create common plots, while also handling custom or specialized use-cases. Work in Python close to all the PyData tools you're already familiar with.",
     },
@@ -138,7 +146,7 @@ LIBRARIES_METADATA = [
         "name": "Apache ECharts",
         "language_id": "javascript",
         "framework": "none",
-        "version": "5.5.1",
+        "version": "6.1.0",
         "documentation_url": "https://echarts.apache.org",
         "description": "Powerful, interactive charting and data-visualization library for the browser. Apache-licensed, Canvas/SVG rendering, an enormous catalog of chart types.",
     },
@@ -169,7 +177,7 @@ LIBRARIES_METADATA = [
         "name": "lets-plot",
         "language_id": "python",
         "framework": "none",
-        "version": "4.5.0",
+        "version": "4.11.0",
         "documentation_url": "https://lets-plot.org",
         "description": "Multiplatform plotting library built on the principles of the Grammar of Graphics. A faithful adaptation of R's ggplot2 that extends Grammar of Graphics principles to both Python and Kotlin.",
     },
@@ -178,7 +186,7 @@ LIBRARIES_METADATA = [
         "name": "Makie.jl",
         "language_id": "julia",
         "framework": "none",
-        "version": "0.22",
+        "version": "0.21.9",
         "documentation_url": "https://docs.makie.org",
         "description": "High-performance, extensible visualization ecosystem for Julia. CairoMakie renders publication-quality static PNG/SVG/PDF; GLMakie/WGLMakie handle interactive use. anyplot uses CairoMakie for the static gallery.",
     },
@@ -187,7 +195,7 @@ LIBRARIES_METADATA = [
         "name": "Matplotlib",
         "language_id": "python",
         "framework": "none",
-        "version": "3.9.0",
+        "version": "3.11.2",
         "documentation_url": "https://matplotlib.org",
         "description": "Comprehensive library for creating static, animated, and interactive visualizations in Python. Matplotlib makes easy things easy and hard things possible.",
     },
@@ -215,7 +223,7 @@ LIBRARIES_METADATA = [
         "name": "Plotly",
         "language_id": "python",
         "framework": "none",
-        "version": "5.18.0",
+        "version": "7.1.0",
         "documentation_url": "https://plotly.com/python",
         "description": "Python graphing library that makes interactive, publication-quality graphs. Create line plots, scatter plots, area charts, bar charts, error bars, box plots, histograms, heatmaps, subplots, and more.",
     },
@@ -224,7 +232,7 @@ LIBRARIES_METADATA = [
         "name": "plotnine",
         "language_id": "python",
         "framework": "none",
-        "version": "0.13.0",
+        "version": "0.15.7",
         "documentation_url": "https://plotnine.org",
         "description": "A grammar of graphics for Python. Data visualization package based on the grammar of graphics, a coherent system for describing and building graphs. From ad-hoc plots to publication-ready figures.",
     },
@@ -233,7 +241,7 @@ LIBRARIES_METADATA = [
         "name": "Pygal",
         "language_id": "python",
         "framework": "none",
-        "version": "3.0.0",
+        "version": "3.1.3",
         "documentation_url": "http://www.pygal.org",
         "description": "Beautiful python charting. Simple python charting library that creates SVG charts that are both beautiful and easy to customize.",
     },
@@ -242,7 +250,7 @@ LIBRARIES_METADATA = [
         "name": "Seaborn",
         "language_id": "python",
         "framework": "none",
-        "version": "0.13.0",
+        "version": "0.13.2",
         "documentation_url": "https://seaborn.pydata.org",
         "description": "Python data visualization library based on matplotlib. Provides a high-level interface for drawing attractive and informative statistical graphics.",
     },

@@ -10,7 +10,14 @@ known GitHub quirks. Every gotcha below cost real session round-trips.
   cycles once. Process per PR: verify checks, then enable auto-merge.
 - Auto-merge is the mechanism of choice: `gh pr merge <num> --auto --squash` — the PR merges
   itself when checks pass; no polling needed.
-- Grouped bumps (npm-minor, python-minor, actions) are one PR each — treat like any other.
+- Grouped bumps (npm-minor, python-minor, js-render-minor, actions) are one PR each — treat like any other.
+- **A plotting-library bump fails "Run Tests" until the hand-written versions follow.**
+  `tests/unit/core/test_version_sources.py` holds `version` in `core/constants.py` to `uv.lock`
+  and the root `package-lock.json`, and the example header in `prompts/library/<lib>.md` to the
+  same pin. Push that edit to the Dependabot branch as yourself, then enable auto-merge; Dependabot
+  stops rebasing a branch with a foreign commit, so merge it before the next bump touches the same
+  lock. A JS render-harness major (`deps(js-render):`, ungrouped) also needs its library prompt
+  checked against the new API (Context7) before it merges.
 - **One lock-file PR at a time, and every `app/` bump checked in the browser.** Of the PRs that
   touch the same lock file (`uv.lock`, `app/yarn.lock`), only one has auto-merge at a time: several
   squash-merged within a minute have duplicated package blocks in `uv.lock`. After an `app/` PR

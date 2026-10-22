@@ -528,6 +528,18 @@ jobs:
             git checkout -B "$BRANCH" origin/main
           fi
 
+          # An implementation PR never changes dependency files, and impl-merge.yml
+          # refuses one that does. #9398 (qrcode-basic, makie) committed the
+          # Manifest.toml that a `Pkg.add` had re-resolved, which moved Makie from
+          # 0.22.10 to 0.21.9 for every Julia implementation. A spec that needs a
+          # new package needs a dependency PR first.
+          DEP_CHANGES=$(git diff --name-only origin/main...HEAD \
+            | grep -E '(^|/)(pyproject\.toml|uv\.lock|package\.json|package-lock\.json|Project\.toml|Manifest\.toml)$' || true)
+          if [ -n "$DEP_CHANGES" ]; then
+            echo "::error::The implementation commit changes dependency files: $(echo "$DEP_CHANGES" | tr '\n' ' '). Implementations use only the installed packages; a new package needs its own dependency PR first."
+            exit 1
+          fi
+
           # Restore plot files after git operations
           mkdir -p "${IMPL_DIR}"
           for f in plot-light.png plot-dark.png plot-light.html plot-dark.html plot.png plot.html; do

@@ -293,7 +293,7 @@ for Python (triple-quoted docstring) and R (`#'` roxygen block).
 ```julia
 # anyplot.ai
 # scatter-basic: Basic Scatter Plot
-# Library: Makie.jl 0.22 | Julia 1.11
+# Library: Makie.jl 0.21.9 | Julia 1.11
 # Quality: pending | Created: 2026-05-22
 ```
 

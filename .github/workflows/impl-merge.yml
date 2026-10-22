@@ -234,6 +234,24 @@ jobs:
             echo "::warning::This is unusual but not blocking - metadata will be created on next review"
           fi
 
+          # An implementation PR never changes dependency files (impl-generate.yml
+          # already fails a generation that does; this also covers repair and
+          # review commits). #9398 merged the Manifest.toml that a `Pkg.add` had
+          # re-resolved, which moved Makie from 0.22.10 to 0.21.9 for every Julia
+          # implementation. The PR stays open for a human to decide.
+          if [ "$STATE" != "MERGED" ]; then
+            git fetch origin main
+            CHANGED=$(git diff --name-only "origin/main...${REF}")
+            DEP_CHANGES=$(echo "$CHANGED" \
+              | grep -E '(^|/)(pyproject\.toml|uv\.lock|package\.json|package-lock\.json|Project\.toml|Manifest\.toml)$' || true)
+            if [ -n "$DEP_CHANGES" ]; then
+              LIST=$(echo "$DEP_CHANGES" | tr '\n' ' ')
+              echo "::error::PR #${PR_NUM} changes dependency files: ${LIST}"
+              gh pr comment "$PR_NUM" --body "**Merge blocked:** this implementation PR changes dependency files: ${LIST}. Implementation PRs use only the installed packages, because a re-resolved lock file moves every implementation of the language (#9398 downgraded Makie this way). Add the package in a dependency PR first and then regenerate, or close this PR." || true
+              exit 1
+            fi
+          fi
+
           echo "::notice::PR completeness validated: both implementation and metadata present"
 
       - name: Get parent issue from PR body
