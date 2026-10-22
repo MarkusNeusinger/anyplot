@@ -20,12 +20,14 @@ from __future__ import annotations
 
 import argparse
 import fnmatch
+import http.client
 import json
 import posixpath
 import re
 import signal
 import subprocess
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -73,7 +75,7 @@ PRICES = {
 # only for some models (3.8 Flash yes, 4 Argon no; Vertex docs, 2026-10-21).
 FLEX_MODELS = {"gemini-3.8-flash"}
 FLEX_HEADERS = {"X-Vertex-AI-LLM-Shared-Request-Type": "flex", "X-Vertex-AI-LLM-Request-Type": "shared"}
-FLEX_WAIT_MS = 300_000  # a Flex request still queued after this goes online
+FLEX_WAIT_MS = 300_000  # Flex time per run, and per request; after that the run goes online
 
 SECRET_NAME_PATTERNS = [
     ".env",
@@ -117,7 +119,8 @@ def fail(message: str, code: int = 2) -> NoReturn:
 def looks_secret(rel: Path) -> bool:
     if any(part in SECRET_DIRS for part in rel.parts):
         return True
-    return any(fnmatch.fnmatch(rel.name.lower(), pattern) for pattern in SECRET_NAME_PATTERNS)
+    # Every component, so secrets/payload.json and credentials/sa.json are caught too.
+    return any(fnmatch.fnmatch(part.lower(), pattern) for part in rel.parts for pattern in SECRET_NAME_PATTERNS)
 
 
 class SearchExpired(Exception):
@@ -195,8 +198,10 @@ class Workspace:
         out, size = [], 0
         for number in range(start, end + 1):
             row = f"{number}: {lines[number - 1]}"
+            if len(row) > MAX_TOOL_CHARS:  # one-line JSON: show its start, then move on
+                row = row[:MAX_TOOL_CHARS] + f" ... line cut at {MAX_TOOL_CHARS} characters"
             size += len(row) + 1
-            if size > MAX_TOOL_CHARS:
+            if size > MAX_TOOL_CHARS and out:
                 out.append(f"... truncated at line {number - 1} of {len(lines)}; read on with start_line={number}")
                 break
             out.append(row)
@@ -259,6 +264,8 @@ class _NoRedirect(urllib.request.HTTPRedirectHandler):
 
 
 def http_get(url: str) -> str:
+    if any(ord(c) <= 0x20 or c == "\x7f" for c in url):
+        return "refused: percent-encode spaces and control characters (for example %20)"
     parsed = urllib.parse.urlparse(url)
     if parsed.scheme != "https" or parsed.hostname != HTTP_HOST or parsed.port not in (None, 443):
         return f"refused: only https://{HTTP_HOST}/ is allowed"
@@ -276,7 +283,7 @@ def http_get(url: str) -> str:
     except urllib.error.HTTPError as exc:
         location = exc.headers.get("Location") if exc.headers else None
         return f"HTTP {exc.code}" + (f" (redirect to {location}, not followed)" if location else "")
-    except (urllib.error.URLError, TimeoutError) as exc:
+    except (urllib.error.URLError, http.client.HTTPException, TimeoutError) as exc:
         return f"request failed: {exc}"
     if len(body) > MAX_TOOL_CHARS:
         body = body[:MAX_TOOL_CHARS] + "\n... truncated"
@@ -511,7 +518,10 @@ def cmd_review(args: argparse.Namespace) -> None:
     cut_off = False
     tool_turns = 0
     nudges = 0
+    flex_spent = 0.0
+    seconds: list[float] = []
     while True:
+        started = time.monotonic()
         try:
             response = client.models.generate_content(model=args.model, contents=contents, config=config)
         except Exception as exc:
@@ -520,6 +530,14 @@ def cmd_review(args: argparse.Namespace) -> None:
             # No Flex capacity now: this turn and the rest of the run go online.
             flex, client = False, online
             continue
+        elapsed = time.monotonic() - started
+        seconds.append(round(elapsed, 1))
+        if flex:
+            # Each turn can queue again, so the waits add up: with five minutes per
+            # request, one review still ran for over 25 minutes (2026-10-22).
+            flex_spent += elapsed
+            if flex_spent * 1000 > FLEX_WAIT_MS:
+                flex, client = False, online
         usage = response.usage_metadata
         if usage:
             totals["prompt"] += usage.prompt_token_count or 0
@@ -594,6 +612,7 @@ def cmd_review(args: argparse.Namespace) -> None:
                 "prompt_tokens": totals["prompt"],
                 "cached_tokens": totals["cached"],
                 "per_turn_prompt_cached": per_turn,
+                "per_turn_seconds": seconds,
                 "output_tokens": totals["output"],
                 "thought_tokens": totals["thoughts"],
                 "est_cost_usd": cost,

@@ -98,9 +98,9 @@ question; for real security probing use Fable.
 ## 4. Run the second opinion
 
 For a change under review, point `--root` at a throwaway detached worktree of its head.
-A Flex request waits up to 5 minutes in the queue; after that, or after a 429 or 5xx, the
-turn and the rest of the run go online (`flex_fallback` in the summary). Run the review in
-the background:
+Flex gets 5 minutes per run. Once its turns add up to that, or one times out or meets a 429
+or 5xx, the rest of the run goes online (`flex_fallback` in the summary, the wait per turn
+in `per_turn_seconds`). Run the review in the background:
 
 ```bash
 mkdir -p "$D/data"

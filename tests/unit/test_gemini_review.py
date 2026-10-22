@@ -66,6 +66,8 @@ def data(tmp_path: Path) -> Path:
     (folder / "review.txt").write_text("prefetched\n")
     (folder / "server.pem").write_text("PEM-TOKEN\n")
     os.symlink("server.pem", folder / "notes.txt")  # harmless name, filtered target
+    (folder / "secrets").mkdir()
+    (folder / "secrets" / "payload.json").write_text("NESTED-TOKEN\n")
     return folder
 
 
@@ -80,8 +82,19 @@ def test_read_file_cannot_leave_the_workspace(gr, repo, data):
 
     assert ws.read_file(str(repo / "a.py")) == "1: print(1)"
     hidden = ("../outside/secret.txt", "link.txt", "alias.txt", ".env", "/etc/passwd", "data/server.pem")
-    for path in (*hidden, "data/notes.txt"):
+    for path in (*hidden, "data/notes.txt", "data/secrets/payload.json"):
         assert ws.read_file(path).startswith("not found or not readable"), path
+
+
+def test_read_file_moves_past_a_line_longer_than_the_limit(gr, repo):
+    (repo / "docs" / "b.md").write_text("x" * (gr.MAX_TOOL_CHARS + 10) + "\nnext\n")
+    ws = gr.Workspace(repo, None)
+
+    first = ws.read_file("docs/b.md")
+
+    assert f"line cut at {gr.MAX_TOOL_CHARS} characters" in first
+    assert first.endswith("read on with start_line=2")
+    assert ws.read_file("docs/b.md", start_line=2) == "2: next"
 
 
 def test_search_sees_no_hidden_content(gr, repo, data):
@@ -122,6 +135,7 @@ def test_read_files_reads_several_files_and_caps_the_count(gr, repo, data):
         "https://api.anyplot.ai/v1/../debug",
         "https://api.anyplot.ai/DEBUG",
         "https://api.anyplot.ai/mcp/",
+        "https://api.anyplot.ai/specs?search=bar plot",
     ],
 )
 def test_http_get_refuses_before_any_request(gr, url):
@@ -199,12 +213,14 @@ class FakeModels:
         self.responses = list(responses)
         self.requests = []
         self.clients = []  # the flex flag of every client made
+        self.flex_used = []  # the flex flag of the client behind every request
 
     def count_tokens(self, model, contents):
         return SimpleNamespace(total_tokens=10)
 
-    def generate_content(self, model, contents, config):
+    def generate_content(self, model, contents, config, flex=False):
         self.requests.append((list(contents), config))
+        self.flex_used.append(flex)
         result = self.responses.pop(0)
         if isinstance(result, Exception):
             raise result
@@ -216,7 +232,13 @@ def review(gr, monkeypatch, tmp_path, repo, responses, *extra):
 
     def make_client(flex=False):
         models.clients.append(flex)
-        return SimpleNamespace(models=models)
+
+        def generate_content(**kwargs):
+            return models.generate_content(flex=flex, **kwargs)
+
+        return SimpleNamespace(
+            models=SimpleNamespace(count_tokens=models.count_tokens, generate_content=generate_content)
+        )
 
     monkeypatch.setattr(gr, "make_client", make_client)
     briefing = tmp_path / "briefing.md"
@@ -307,8 +329,22 @@ def test_flex_without_capacity_goes_online(gr, types, monkeypatch, tmp_path, rep
     assert models.clients == [False, True]  # online for counting, Flex for the turns
     # The refused turn is sent again unchanged, and the run stays online.
     assert models.requests[1][0] == models.requests[0][0]
+    assert models.flex_used == [True, False, False]
     summary = json.loads(capsys.readouterr().out)
     assert (summary["flex_requested"], summary["flex_fallback"]) == (True, True)
+
+
+def test_flex_time_is_budgeted_per_run(gr, types, monkeypatch, tmp_path, repo, capsys):
+    monkeypatch.setattr(gr, "FLEX_WAIT_MS", -1)  # the first Flex turn uses the budget up
+    responses = [calls(types, "a.py"), answer(types, "Done.")]
+
+    code, text, models = review(gr, monkeypatch, tmp_path, repo, responses)
+
+    assert (code, text) == (0, "Done.")
+    assert models.flex_used == [True, False]
+    summary = json.loads(capsys.readouterr().out)
+    assert summary["flex_fallback"] is True
+    assert len(summary["per_turn_seconds"]) == 2
 
 
 def test_other_flex_errors_are_raised(gr, types, monkeypatch, tmp_path, repo):

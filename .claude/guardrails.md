@@ -80,10 +80,10 @@ conversation, so the cost is mostly turns:
   `read_files` reads several files in one call.
 - The tool configuration stays the same on every turn. A last turn without
   tools lost Vertex's implicit cache, and Flash kept calling tools anyway.
-- Flex PayGo halves the price of 3.8 Flash; Argon has no Flex. A Flex request
-  is tried once and waits at most 5 minutes before the run goes online: the SDK
-  retries timeouts too, and one review waited over an hour that way on
-  2026-10-22.
+- Flex PayGo halves the price of 3.8 Flash; Argon has no Flex. Flex gets 5
+  minutes per run, then the run goes online. The SDK retries timeouts too, so
+  one review waited over an hour on 15-minute attempts on 2026-10-22, and
+  with 5 minutes per request the next one still ran for over 25 minutes.
 - Not worth it: explicit caching (not offered for Argon), Batch (asynchronous,
   up to 24 hours), the Interactions API (the history is still processed and
   paid), and pruning old tool output (it breaks the cached prefix).
