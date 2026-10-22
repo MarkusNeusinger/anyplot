@@ -287,10 +287,13 @@ jobs:
         env:
           LIBRARY: ${{ steps.inputs.outputs.library }}
         run: |
-          uv venv .venv
-          source .venv/bin/activate
-          # Source of truth: pyproject.toml lib-${LIBRARY} extras
-          uv pip install -e ".[lib-${LIBRARY}]" ruff pillow pyyaml
+          # The lib-${LIBRARY} extra exactly as uv.lock pins it (`--frozen`: never
+          # re-resolve), the way agents/renderer/Dockerfile and CI install. The
+          # former `uv pip install -e ".[lib-X]"` resolved pyproject.toml's ranges
+          # afresh, so Dependabot's lock bumps never reached the pipeline and the
+          # recorded library_version drifted from the lock. The base set carries
+          # pillow and pyyaml; `dev` carries ruff. Creates .venv.
+          uv sync --frozen --extra "lib-${LIBRARY}" --extra dev
 
       - name: Install Python helper deps (for non-Python implementations)
         if: steps.inputs.outputs.language != 'python'

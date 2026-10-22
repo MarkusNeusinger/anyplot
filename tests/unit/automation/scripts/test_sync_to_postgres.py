@@ -997,6 +997,35 @@ class TestSyncToDatabase:
         assert {"name", "description", "version", "language_id", "framework"} <= lib_updated
         assert "created" not in lang_updated
 
+    def test_seed_versions_come_from_the_pins_and_keep_the_stored_one_when_unresolved(self):
+        """libraries.version and languages.runtime_version are read from the pin files
+        (core/library_versions.py), not from core/constants.py. One that does not
+        resolve is sent as NULL, and COALESCE keeps the stored value."""
+        from sqlalchemy.dialects import postgresql
+
+        from core.database import LANGUAGES_SEED, LIBRARIES_SEED
+        from core.library_versions import PinnedVersions
+
+        pins = PinnedVersions(libraries={"matplotlib": "3.11.2"}, runtimes={"python": "3.13"}, errors=["simulated"])
+        mock_session = MagicMock()
+        mock_session.execute.return_value.fetchall.return_value = []
+        with patch("automation.scripts.sync_to_postgres.pinned_versions", return_value=pins):
+            sync_to_database(mock_session, [])
+
+        lang_sql = mock_session.execute.call_args_list[0][0][0].compile(dialect=postgresql.dialect())
+        lib_sql = mock_session.execute.call_args_list[1][0][0].compile(dialect=postgresql.dialect())
+        assert "runtime_version = coalesce(excluded.runtime_version, languages.runtime_version)" in str(lang_sql)
+        assert "version = coalesce(excluded.version, libraries.version)" in str(lib_sql)
+
+        runtimes = {
+            lang_sql.params[f"id_m{i}"]: lang_sql.params[f"runtime_version_m{i}"] for i in range(len(LANGUAGES_SEED))
+        }
+        versions = {lib_sql.params[f"id_m{i}"]: lib_sql.params[f"version_m{i}"] for i in range(len(LIBRARIES_SEED))}
+        assert runtimes["python"] == "3.13"
+        assert runtimes["julia"] is None
+        assert versions["matplotlib"] == "3.11.2"
+        assert versions["makie"] is None
+
     def test_sync_batches_multiple_specs_and_impls(self):
         """Should batch multiple specs and impls, calling execute fewer times than row count."""
         mock_session = MagicMock()

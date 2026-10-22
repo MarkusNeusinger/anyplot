@@ -6,6 +6,9 @@ entries; the file extension is **`.js`** and the runtime is the **browser render
 harness** (`node automation/js-render/render.mjs`), **not** Python, Rscript, or
 julia.
 
+**API level:** Chart.js 4. The root `package-lock.json` pins this major; write
+against its API.
+
 JavaScript charts render in a browser DOM — there is no headless CLI that writes
 a PNG. You author an **idiomatic Chart.js snippet** that draws into the mount
 node `#container`; the harness wraps it in an HTML page, loads the pinned
@@ -180,7 +183,7 @@ the Python/R/Julia conventions:
 ```js
 // anyplot.ai
 // bar-basic: Basic Bar Chart
-// Library: chartjs 4.4.7 | JavaScript 22
+// Library: chartjs | JavaScript
 // Quality: pending | Created: 2026-06-02
 ```
 

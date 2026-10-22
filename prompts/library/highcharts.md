@@ -7,6 +7,9 @@ JavaScript** library — the file extension is **`.js`** and the runtime is the
 **browser render harness** (`node automation/js-render/render.mjs`), **not**
 Python (`highcharts-core`), Rscript, or julia.
 
+**API level:** Highcharts 12. The root `package-lock.json` pins this major;
+write against its API.
+
 > **Commercial license — keep it visible.** Highcharts is free for personal /
 > non-commercial use but requires a paid license for commercial use
 > (https://www.highcharts.com/license). Keep the `// License:` line in the
@@ -192,7 +195,7 @@ Highcharts.chart("container", {
 ```js
 // anyplot.ai
 // bar-basic: Basic Bar Chart
-// Library: Highcharts 12.6.0 | Node 22
+// Library: Highcharts | Node
 // License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
 // Quality: pending | Created: 2026-06-09
 ```

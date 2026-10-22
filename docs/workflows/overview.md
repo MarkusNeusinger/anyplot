@@ -160,7 +160,7 @@ Each language's plotting stack is pinned in the repository:
 
 | Language | Pin | Installed in the pipeline by | Kept current by |
 |----------|-----|------------------------------|-----------------|
-| Python | `uv.lock` | `uv pip install -e ".[lib-{library}]"` in `impl-generate.yml`, which resolves the ranges in `pyproject.toml` and does not read the lock | Dependabot (`uv`, `/`) |
+| Python | `uv.lock` | `uv sync --frozen --extra lib-{library}` in `impl-generate.yml` and `impl-repair.yml`, as `agents/renderer/Dockerfile` and CI install | Dependabot (`uv`, `/`) |
 | JavaScript | `package.json` + `package-lock.json` at the root | `npm ci` in `.github/actions/setup-node` | Dependabot (`npm`, `/`) |
 | Julia | `Project.toml` + `Manifest.toml` | `Pkg.instantiate()` in `.github/actions/setup-julia` | Hand-made PRs |
 | R | Dated Posit snapshot in `.github/actions/setup-r` | `install.packages()` from the snapshot | Hand-made PRs |
@@ -168,21 +168,26 @@ Each language's plotting stack is pinned in the repository:
 Implementation PRs never change these files. A generation whose commit changes
 `pyproject.toml`, `uv.lock`, `package.json`, `package-lock.json`,
 `Project.toml`, `Manifest.toml` or `.python-version` fails in
-`impl-generate.yml`, and
-`impl-merge.yml` refuses to merge an implementation PR that changes one, which
-also covers repair commits. A re-resolved lock file moves the library version
-for every implementation of the language: #9398 committed a `Manifest.toml`
-that a `Pkg.add` had re-resolved and moved Makie from 0.22.10 to 0.21.9. A spec
-that needs a new package needs a dependency PR first.
+`impl-generate.yml`, and `impl-merge.yml` refuses to merge an implementation PR
+that changes one, which also covers repair commits. A re-resolved lock file
+moves the library version for every implementation of the language: #9398
+committed a `Manifest.toml` that a `Pkg.add` had re-resolved and moved Makie
+from 0.22.10 to 0.21.9. A spec that needs a new package needs a dependency PR
+first.
 
-The version an implementation was made with is measured at generation time and
-stored in its metadata as `library_version`. For Python it can be newer than
-`uv.lock`, because the install does not read the lock. The version on the
-Libraries page comes from `version` in `core/constants.py`, and the example
-header in each JavaScript and Julia library prompt names the version too. Both
-are written by hand, so `tests/unit/core/test_version_sources.py` holds them to
-the pins: a PR that moves a pin, Dependabot's included, updates them in the
-same PR.
+No version is written down by hand. The version an implementation was made
+with is measured at generation time and stored in its metadata as
+`library_version`, and `impl-review.yml` writes it into the file header. The
+version on the Libraries page and each language's runtime version are read
+from the pins by `core/library_versions.py` when `sync-postgres.yml` runs; a pin
+that does not resolve keeps the stored value and logs a warning. So a minor or
+patch bump, Dependabot's included, needs no other edit.
+
+The example headers in `prompts/library/*.md` carry no version. The JavaScript
+and Makie prompts state the API level the generator writes against
+(`**API level:** ECharts 6.`), and `tests/unit/core/test_version_sources.py`
+holds it to the lock's major, so a major bump updates the prompt in the same
+PR. The same test checks that every pin resolves.
 
 ---
 

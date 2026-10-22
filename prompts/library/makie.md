@@ -4,6 +4,9 @@ Makie.jl is the high-performance visualization ecosystem for Julia. This is
 anyplot's first Julia-language entry; the file extension is **`.jl`** and the
 runtime is **`julia --project=.`**, not Python and not Rscript.
 
+**API level:** Makie 0.21. `Manifest.toml` pins this release series, and Makie
+changes its API between 0.x releases; write against this one.
+
 anyplot uses the **CairoMakie** backend exclusively — pure-Cairo, headless,
 PNG/SVG/PDF out of the box, no GPU or display server required. `GLMakie` and
 `WGLMakie` are interactive backends that are explicitly out of scope.
@@ -293,7 +296,7 @@ for Python (triple-quoted docstring) and R (`#'` roxygen block).
 ```julia
 # anyplot.ai
 # scatter-basic: Basic Scatter Plot
-# Library: Makie.jl 0.21.9 | Julia 1.11
+# Library: Makie.jl | Julia
 # Quality: pending | Created: 2026-05-22
 ```
 

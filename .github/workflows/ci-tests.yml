@@ -73,8 +73,8 @@ jobs:
         # Also run tests when the test configuration, a lock file or pinned runtime, a
         # workflow or action, or a prompt changes: tests/unit/workflows parses every
         # workflow YAML, tests/unit/prompts reads the prompt files, and
-        # tests/unit/core/test_version_sources.py holds core/constants.py to the
-        # versions uv.lock, package-lock.json, Manifest.toml and .python-version pin.
+        # tests/unit/core/test_version_sources.py checks that every version resolves
+        # from uv.lock, package-lock.json, Manifest.toml and .python-version.
         CONFIG_CHANGES=$(echo "$CHANGED_FILES" | grep -E '^(pyproject\.toml|pytest\.ini|conftest\.py|uv\.lock|package\.json|package-lock\.json|Project\.toml|Manifest\.toml|\.python-version)$|^(\.github/workflows/|\.github/actions/|prompts/)' || true)
 
         # Force run on workflow_dispatch with force_run=true

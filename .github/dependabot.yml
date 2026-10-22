@@ -83,9 +83,10 @@ updates:
       prefix: "deps(js-render):"
     groups:
       # Group minor/patch updates. A major stays its own PR: it changes the API
-      # the library prompt (prompts/library/*.md) describes. Any bump of a chart
-      # library also moves its `version` in core/constants.py and the prompt's
-      # header line (tests/unit/core/test_version_sources.py).
+      # the library prompt (prompts/library/*.md) describes, and its
+      # `**API level:**` line must follow (tests/unit/core/test_version_sources.py).
+      # Minor and patch bumps need no other edit; the database sync reads the
+      # new version from the lock.
       js-render-minor:
         patterns:
           - "*"

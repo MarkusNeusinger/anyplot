@@ -11,13 +11,14 @@ known GitHub quirks. Every gotcha below cost real session round-trips.
 - Auto-merge is the mechanism of choice: `gh pr merge <num> --auto --squash` — the PR merges
   itself when checks pass; no polling needed.
 - Grouped bumps (npm-minor, python-minor, js-render-minor, actions) are one PR each — treat like any other.
-- **A plotting-library bump fails "Run Tests" until the hand-written versions follow.**
-  `tests/unit/core/test_version_sources.py` holds `version` in `core/constants.py` to `uv.lock`
-  and the root `package-lock.json`, and the example header in `prompts/library/<lib>.md` to the
-  same pin. Push that edit to the Dependabot branch as yourself, then enable auto-merge; Dependabot
-  stops rebasing a branch with a foreign commit, so merge it before the next bump touches the same
-  lock. A JS render-harness major (`deps(js-render):`, ungrouped) also needs its library prompt
-  checked against the new API (Context7) before it merges.
+- **A plotting-library major is not a routine bump.** Minor and patch bumps need no edit: the
+  pipeline installs from the locks and the database sync reads the versions from them. A major
+  arrives ungrouped. For a JavaScript library (`deps(js-render):`) or Makie it fails "Run Tests"
+  while `prompts/library/<lib>.md` still names the old `**API level:**`; for any library, check
+  the prompt against the new API (Context7) and update it on the Dependabot branch before you
+  enable auto-merge. Dependabot
+  stops rebasing a branch with a foreign commit, so merge it before the next bump touches the
+  same lock.
 - **One lock-file PR at a time, and every `app/` bump checked in the browser.** Of the PRs that
   touch the same lock file (`uv.lock`, `app/yarn.lock`), only one has auto-merge at a time: several
   squash-merged within a minute have duplicated package blocks in `uv.lock`. After an `app/` PR

@@ -6,6 +6,9 @@ JavaScript-language entries; the file extension is **`.js`** and the runtime is
 the **browser render harness** (`node automation/js-render/render.mjs`), **not**
 Python, Rscript, or julia.
 
+**API level:** ECharts 6. The root `package-lock.json` pins this major; write
+against its API.
+
 ECharts charts render in a browser DOM — there is no headless CLI that writes a
 PNG. You author an **idiomatic ECharts snippet** that initializes a chart on the
 mount node `#container`; the harness wraps it in an HTML page, loads the pinned
@@ -171,7 +174,7 @@ chart.setOption({
 ```js
 // anyplot.ai
 // bar-basic: Basic Bar Chart
-// Library: echarts 6.1.0 | JavaScript 22
+// Library: echarts | JavaScript
 // Quality: pending | Created: 2026-06-02
 ```
 

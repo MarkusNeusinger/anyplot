@@ -1,160 +1,58 @@
 """
-The versions anyplot writes down by hand match the files that pin them.
+Library and runtime versions come from the files that pin them, never from a hand-written number.
 
-Two places state versions by hand: core/constants.py (each library's `version`,
-shown on the Libraries page, and each language's `runtime_version`) and the
-example header line in prompts/library/*.md, which tells the generator the API
-level it writes for. Both drifted for months: the Libraries page showed
-matplotlib 3.9.0 while uv.lock pinned 3.11.2, and the ECharts prompt said 5.5.1
-while the render harness shipped 6.1.0.
+core/library_versions.py reads uv.lock, the root package-lock.json, Manifest.toml,
+.python-version, the setup actions and the R snapshot note; the database sync
+writes what it reads. These tests check that every pin source parses and every
+library and language resolves, so a broken or ambiguous pin file fails a PR
+instead of a sync. A Dependabot bump changes a pinned version and nothing here.
 
-The pinned versions are the truth:
-
-- Python: uv.lock, the entry that applies on the Linux runner for the
-  interpreter in .python-version (plotnine forks per platform).
-- JavaScript: the root package-lock.json, which `npm ci` in
-  .github/actions/setup-node restores.
-- Julia: Manifest.toml, which `Pkg.instantiate()` in .github/actions/setup-julia
-  restores.
-- R: the repository has no lock file. .github/actions/setup-r installs from a
-  dated Posit snapshot, and a comment next to it names the ggplot2 version that
-  snapshot ships. The test holds the comment's date to the snapshot URL, so a
-  new date cannot land without a new version. Reading the version from the
-  snapshot itself would need the network.
+The library prompts state no version in their example headers (impl-review
+rewrites the header from the versions it measures). The JavaScript and Julia
+prompts state the API level the generator writes against, and that level must
+match the lock's major; it moves only in a deliberate bump PR, because
+Dependabot groups minor and patch updates only.
 """
 
 from __future__ import annotations
 
-import json
 import re
-import tomllib
-from functools import cache
 from pathlib import Path
-from typing import Any
 
 import pytest
-import yaml
-from packaging.markers import Marker
 
-from core.constants import LANGUAGES_METADATA, LIBRARIES_METADATA, LIBRARY_LANGUAGES
+from core.constants import LANGUAGES_METADATA, LIBRARIES_METADATA, LIBRARY_LANGUAGES, SUPPORTED_LANGUAGES
+from core.library_versions import PINNED_PACKAGES, PinError, api_level, pinned_versions, snapshot_pinned, uv_locked
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-ACTIONS_DIR = REPO_ROOT / ".github" / "actions"
 LIBRARY_PROMPTS_DIR = REPO_ROOT / "prompts" / "library"
-
-LIBRARY_VERSIONS = {str(lib["id"]): str(lib["version"]) for lib in LIBRARIES_METADATA}
-RUNTIME_VERSIONS = {str(lang["id"]): str(lang["runtime_version"]) for lang in LANGUAGES_METADATA}
-
-# The package each library is pinned under, per language.
-PINNED_PACKAGES = {
-    "python": {
-        "altair": "altair",
-        "bokeh": "bokeh",
-        "letsplot": "lets-plot",
-        "matplotlib": "matplotlib",
-        "plotly": "plotly",
-        "plotnine": "plotnine",
-        "pygal": "pygal",
-        "seaborn": "seaborn",
-    },
-    "javascript": {
-        "chartjs": "chart.js",
-        "d3": "d3",
-        "echarts": "echarts",
-        "highcharts": "highcharts",
-        "muix": "@mui/x-charts",
-    },
-    "julia": {"makie": "Makie"},
-    "r": {"ggplot2": "ggplot2"},
-}
-
-# The library prompts that show the generator an example header with a version.
-PROMPTS_WITH_HEADER_EXAMPLES = {"chartjs", "d3", "echarts", "highcharts", "makie", "muix"}
-
-SNAPSHOT_URL_RE = re.compile(r"packagemanager\.posit\.co/cran/__linux__/[a-z]+/(\d{4}-\d{2}-\d{2})")
-SNAPSHOT_NOTE_RE = re.compile(r"# Snapshot (\d{4}-\d{2}-\d{2}) ships ggplot2 (\d+(?:\.\d+)+)\.")
+VERSION_RE = re.compile(r"^\d+(?:\.\d+)*$")
+DOTTED_NUMBER_RE = re.compile(r"\b\d+(?:\.\d+)+\b|\b\d{2,}\b")
 # `// Library:` (JavaScript), `# Library:` (Julia), `#' Library:` (R) and a bare
 # `Library:` line (a Python docstring).
-HEADER_RE = re.compile(r"^(?:(?://|#'?) )?Library: (?P<label>[^|\n]*)\|", re.MULTILINE)
-VERSION_RE = re.compile(r"\b\d+(?:\.\d+)+\b")
+HEADER_RE = re.compile(r"^(?:(?://|#'?) )?Library: (?P<rest>.+)$", re.MULTILINE)
+API_LEVEL_RE = re.compile(r"^\*\*API level:\*\* (?P<name>.+?) (?P<level>\d+(?:\.\d+)?)\. ", re.MULTILINE)
+
+# The prompts whose generator output depends on an API level: the libraries
+# Dependabot or a hand-made bump can move a major under.
+PROMPTS_WITH_API_LEVEL = {"chartjs", "d3", "echarts", "highcharts", "makie", "muix"}
 
 
-def _major_minor(version: str) -> str:
-    return ".".join(version.split(".")[:2])
+@pytest.fixture(scope="module")
+def pins():
+    return pinned_versions()
 
 
-def _python_version() -> str:
-    """The interpreter the repository pins, for example "3.13.12"."""
-    return (REPO_ROOT / ".python-version").read_text().strip()
+def test_every_library_and_runtime_resolves(pins) -> None:
+    assert pins.errors == []
+    assert set(pins.libraries) == set(LIBRARY_LANGUAGES)
+    assert set(pins.runtimes) == SUPPORTED_LANGUAGES
 
 
-def _action_default(action: str, name: str) -> str:
-    """The default of input `name` of the composite action `.github/actions/<action>`."""
-    action_yaml = yaml.safe_load((ACTIONS_DIR / action / "action.yml").read_text())
-    return str(action_yaml["inputs"][name]["default"])
-
-
-@cache
-def _uv_lock() -> dict[str, Any]:
-    return tomllib.loads((REPO_ROOT / "uv.lock").read_text())
-
-
-def uv_locked(package: str) -> str:
-    """The version uv.lock pins for `package` on the Linux runner."""
-    environment = {
-        "python_full_version": _python_version(),
-        "python_version": _major_minor(_python_version()),
-        "sys_platform": "linux",
-        "platform_system": "Linux",
-    }
-    versions = [
-        entry["version"]
-        for entry in _uv_lock()["package"]
-        if entry["name"] == package
-        and (
-            "resolution-markers" not in entry
-            or any(Marker(marker).evaluate(environment) for marker in entry["resolution-markers"])
-        )
-    ]
-    assert len(versions) == 1, f"uv.lock pins {package} as {versions} on Linux; expected exactly one version"
-    return str(versions[0])
-
-
-def npm_locked(package: str) -> str:
-    """The version the root package-lock.json pins for `package`."""
-    lock = json.loads((REPO_ROOT / "package-lock.json").read_text())
-    return str(lock["packages"][f"node_modules/{package}"]["version"])
-
-
-def manifest_locked(package: str) -> str:
-    """The version Manifest.toml pins for `package`."""
-    manifest = tomllib.loads((REPO_ROOT / "Manifest.toml").read_text())
-    (entry,) = manifest["deps"][package]
-    return str(entry["version"])
-
-
-def snapshot_pinned(package: str) -> str:
-    """The ggplot2 version the setup-r action's snapshot note names."""
-    assert package == "ggplot2", "only ggplot2 has a snapshot note in .github/actions/setup-r/action.yml"
-    text = (ACTIONS_DIR / "setup-r" / "action.yml").read_text()
-    note = SNAPSHOT_NOTE_RE.search(text)
-    assert note, "the setup-r action lost its '# Snapshot <date> ships ggplot2 <version>.' note"
-    return note.group(2)
-
-
-PIN_READERS = {"python": uv_locked, "javascript": npm_locked, "julia": manifest_locked, "r": snapshot_pinned}
-PIN_SOURCES = {
-    "python": "uv.lock",
-    "javascript": "package-lock.json",
-    "julia": "Manifest.toml",
-    "r": "the snapshot note in .github/actions/setup-r/action.yml",
-}
-
-
-def pinned_version(library: str) -> str:
-    language = LIBRARY_LANGUAGES[library]
-    return PIN_READERS[language](PINNED_PACKAGES[language][library])
+def test_resolved_values_are_versions(pins) -> None:
+    for name, version in {**pins.libraries, **pins.runtimes}.items():
+        assert VERSION_RE.match(version), f"{name}: {version!r}"
 
 
 def test_every_library_has_a_pin_source() -> None:
@@ -162,62 +60,122 @@ def test_every_library_has_a_pin_source() -> None:
     assert mapped == LIBRARY_LANGUAGES
 
 
-@pytest.mark.parametrize("library", sorted(LIBRARY_VERSIONS))
-def test_constants_version_is_the_pinned_version(library: str) -> None:
-    pinned = pinned_version(library)
-    source = PIN_SOURCES[LIBRARY_LANGUAGES[library]]
-    assert LIBRARY_VERSIONS[library] == pinned, (
-        f"core/constants.py says {library} {LIBRARY_VERSIONS[library]}, {source} pins {pinned}: "
-        "set its `version` to the pinned one in the same PR that moves the pin"
-    )
+def test_constants_carry_no_hand_written_versions() -> None:
+    """A version in core/constants.py would drift again; the sync writes the pinned one."""
+    assert not [lib["id"] for lib in LIBRARIES_METADATA if "version" in lib]
+    assert not [lang["id"] for lang in LANGUAGES_METADATA if "runtime_version" in lang]
 
 
-def test_r_snapshot_note_names_the_installed_snapshot() -> None:
-    text = (ACTIONS_DIR / "setup-r" / "action.yml").read_text()
-    urls = set(SNAPSHOT_URL_RE.findall(text))
-    note = SNAPSHOT_NOTE_RE.search(text)
-    assert len(urls) == 1, f"expected one Posit snapshot date in setup-r, found {sorted(urls)}"
-    assert note, "the setup-r action lost its '# Snapshot <date> ships ggplot2 <version>.' note"
-    assert note.group(1) == next(iter(urls)), (
-        f"setup-r installs snapshot {next(iter(urls))} but its note describes {note.group(1)}: "
-        "write the ggplot2 version the new snapshot installs into the note and core/constants.py"
-    )
+def test_a_broken_checkout_reports_errors_instead_of_raising(tmp_path: Path) -> None:
+    pins = pinned_versions(tmp_path)
+    assert pins.libraries == {}
+    assert pins.runtimes == {}
+    assert len(pins.errors) == len(LIBRARY_LANGUAGES) + len(SUPPORTED_LANGUAGES)
 
 
-def test_python_runtime_is_the_pinned_interpreter() -> None:
-    assert RUNTIME_VERSIONS["python"] == _major_minor(_python_version())
+UV_LOCK_FORKS = """
+version = 1
+requires-python = ">=3.13"
+
+[[package]]
+name = "plotnine"
+version = "0.15.7"
+resolution-markers = [
+    "python_full_version < '3.14' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version == '3.14.*' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+]
+
+[[package]]
+name = "plotnine"
+version = "0.15.8"
+resolution-markers = ["python_full_version == '3.14.*' and sys_platform == 'emscripten'"]
+
+[[package]]
+name = "plotnine"
+version = "0.16.0a12"
+resolution-markers = ["python_full_version < '3.14' and sys_platform == 'emscripten'"]
+
+[[package]]
+name = "seaborn"
+version = "0.13.2"
+
+[[package]]
+name = "seaborn"
+version = "0.13.2"
+"""
 
 
-def test_javascript_runtime_is_the_setup_node_default() -> None:
-    assert RUNTIME_VERSIONS["javascript"] == _action_default("setup-node", "node-version")
+@pytest.mark.parametrize("interpreter", ["3.13.12", "3.14.0"])
+def test_uv_lock_resolves_the_linux_fork_for_the_pinned_interpreter(tmp_path: Path, interpreter: str) -> None:
+    (tmp_path / "uv.lock").write_text(UV_LOCK_FORKS, encoding="utf-8")
+    (tmp_path / ".python-version").write_text(f"{interpreter}\n", encoding="utf-8")
+    assert uv_locked(tmp_path, "plotnine") == "0.15.7"
 
 
-def test_julia_runtime_is_the_setup_julia_default() -> None:
-    assert RUNTIME_VERSIONS["julia"] == _action_default("setup-julia", "julia-version")
+def test_uv_lock_with_a_duplicated_block_does_not_resolve(tmp_path: Path) -> None:
+    """Dependabot PRs merged close together have duplicated package blocks in uv.lock before."""
+    (tmp_path / "uv.lock").write_text(UV_LOCK_FORKS, encoding="utf-8")
+    (tmp_path / ".python-version").write_text("3.13.12\n", encoding="utf-8")
+    with pytest.raises(PinError):
+        uv_locked(tmp_path, "seaborn")
 
 
-def test_r_runtime_is_the_setup_r_default() -> None:
-    assert RUNTIME_VERSIONS["r"] == _major_minor(_action_default("setup-r", "r-version"))
+SETUP_R = """
+      # Snapshot {note} ships ggplot2 3.5.1. The repository has no R lock file.
+      run: |
+        Rscript -e 'options(repos = c(CRAN = "https://packagemanager.posit.co/cran/__linux__/noble/{url}"))'
+"""
 
 
-def _prompt_header_labels(library: str) -> list[str]:
-    """The library part of each example `Library: <label> | <runtime>` line in the prompt."""
-    text = (LIBRARY_PROMPTS_DIR / f"{library}.md").read_text()
-    return [match.group("label").strip() for match in HEADER_RE.finditer(text)]
+def _setup_r(root: Path, note: str, url: str) -> None:
+    action = root / ".github" / "actions" / "setup-r" / "action.yml"
+    action.parent.mkdir(parents=True)
+    action.write_text(SETUP_R.format(note=note, url=url), encoding="utf-8")
 
 
-LIBRARIES_WITH_HEADERS = sorted(library for library in LIBRARY_VERSIONS if _prompt_header_labels(library))
+def test_r_snapshot_note_resolves_when_its_date_is_the_snapshot(tmp_path: Path) -> None:
+    _setup_r(tmp_path, "2025-01-15", "2025-01-15")
+    assert snapshot_pinned(tmp_path, "ggplot2") == "3.5.1"
 
 
-def test_header_examples_are_found() -> None:
-    """Guards the next test against passing vacuously after a format change."""
-    assert PROMPTS_WITH_HEADER_EXAMPLES <= set(LIBRARIES_WITH_HEADERS)
+def test_a_stale_r_snapshot_note_does_not_resolve(tmp_path: Path) -> None:
+    """A new snapshot date without a new note would show the old ggplot2 version."""
+    _setup_r(tmp_path, "2025-01-15", "2026-04-01")
+    with pytest.raises(PinError, match="2026-04-01"):
+        snapshot_pinned(tmp_path, "ggplot2")
 
 
-@pytest.mark.parametrize("library", LIBRARIES_WITH_HEADERS)
-def test_prompt_header_names_the_pinned_version(library: str) -> None:
-    pinned = pinned_version(library)
-    for label in _prompt_header_labels(library):
-        assert VERSION_RE.findall(label) == [pinned], (
-            f"prompts/library/{library}.md shows 'Library: {label}', the pinned version is {pinned}"
+@pytest.mark.parametrize(("version", "level"), [("6.1.0", "6"), ("12.6.0", "12"), ("0.21.9", "0.21"), ("22", "22")])
+def test_api_level(version: str, level: str) -> None:
+    assert api_level(version) == level
+
+
+def _prompt(library: str) -> str:
+    return (LIBRARY_PROMPTS_DIR / f"{library}.md").read_text(encoding="utf-8")
+
+
+@pytest.mark.parametrize("library", sorted(LIBRARY_LANGUAGES))
+def test_prompt_header_examples_carry_no_version(library: str) -> None:
+    for match in HEADER_RE.finditer(_prompt(library)):
+        assert not DOTTED_NUMBER_RE.search(match.group("rest")), (
+            f"prompts/library/{library}.md: 'Library: {match.group('rest')}' names a version; "
+            "impl-review writes the measured one into the header"
         )
+
+
+LIBRARIES_WITH_API_LEVEL = sorted(library for library in LIBRARY_LANGUAGES if API_LEVEL_RE.search(_prompt(library)))
+
+
+def test_api_level_lines_are_found() -> None:
+    """Guards the next test against passing vacuously after a format change."""
+    assert PROMPTS_WITH_API_LEVEL <= set(LIBRARIES_WITH_API_LEVEL)
+
+
+@pytest.mark.parametrize("library", LIBRARIES_WITH_API_LEVEL)
+def test_prompt_api_level_is_the_locked_major(library: str, pins) -> None:
+    (statement,) = API_LEVEL_RE.finditer(_prompt(library))
+    locked = api_level(pins.libraries[library])
+    assert statement.group("level") == locked, (
+        f"prompts/library/{library}.md writes for {statement.group('name')} {statement.group('level')}, "
+        f"the lock pins {pins.libraries[library]} (API level {locked}): a major bump updates the prompt"
+    )

@@ -36,13 +36,14 @@ load_dotenv(Path(__file__).resolve().parent.parent.parent / ".env")
 
 from itertools import islice  # noqa: E402
 
-from sqlalchemy import delete, select, tuple_  # noqa: E402
+from sqlalchemy import delete, func, select, tuple_  # noqa: E402
 from sqlalchemy.dialects.postgresql import insert  # noqa: E402
 from sqlalchemy.orm import Session  # noqa: E402
 
 from core.constants import language_file_extensions  # noqa: E402
 from core.database import LANGUAGES_SEED, LIBRARIES_SEED, Impl, Language, Library, Spec  # noqa: E402
 from core.database.connection import close_db_sync, get_db_context_sync, init_db_sync, is_db_configured  # noqa: E402
+from core.library_versions import pinned_versions  # noqa: E402
 
 
 # Configuration
@@ -462,27 +463,38 @@ def sync_to_database(session: Session, plots: list[dict]) -> dict:
     stats = {"specs_synced": 0, "specs_removed": 0, "impls_synced": 0, "impls_removed": 0}
 
     # Seed languages first (libraries.language_id FK requires languages to exist).
-    # Upsert (not DO NOTHING): version/description edits in core/constants.py must
+    # Upsert (not DO NOTHING): registry edits in core/constants.py must
     # reach existing rows — DO NOTHING only ever inserted new ones, so registry
     # updates never made it to prod (highcharts' language flip needed a manual
     # data migration, a1c7e2f9b8d3). Only the seeded columns are updated; columns
     # absent from the seed (e.g. languages.created, a server_default timestamp)
     # are left untouched.
+    #
+    # The versions are not in core/constants.py: core/library_versions.py reads
+    # them from the pin files (uv.lock, package-lock.json, Manifest.toml, the
+    # setup actions). One that does not resolve is written as NULL and COALESCE
+    # keeps the stored value, so a broken pin file costs a warning, not the sync.
+    pins = pinned_versions(BASE_DIR)
+    for problem in pins.errors:
+        logger.warning(f"Pinned version not resolved, keeping the stored one: {problem}")
+
     if LANGUAGES_SEED:
-        language_update_fields = sorted({field for row in LANGUAGES_SEED for field in row} - {"id"})
-        stmt = insert(Language).values(LANGUAGES_SEED)
-        stmt = stmt.on_conflict_do_update(
-            index_elements=["id"], set_={field: stmt.excluded[field] for field in language_update_fields}
-        )
+        languages = [{**row, "runtime_version": pins.runtimes.get(row["id"])} for row in LANGUAGES_SEED]
+        language_update_fields = sorted({field for row in languages for field in row} - {"id"})
+        stmt = insert(Language).values(languages)
+        set_ = {field: stmt.excluded[field] for field in language_update_fields}
+        set_["runtime_version"] = func.coalesce(stmt.excluded.runtime_version, Language.runtime_version)
+        stmt = stmt.on_conflict_do_update(index_elements=["id"], set_=set_)
         session.execute(stmt)
 
     # Batch upsert all libraries in one statement (same rationale as languages)
     if LIBRARIES_SEED:
-        library_update_fields = sorted({field for row in LIBRARIES_SEED for field in row} - {"id"})
-        stmt = insert(Library).values(LIBRARIES_SEED)
-        stmt = stmt.on_conflict_do_update(
-            index_elements=["id"], set_={field: stmt.excluded[field] for field in library_update_fields}
-        )
+        libraries = [{**row, "version": pins.libraries.get(row["id"])} for row in LIBRARIES_SEED]
+        library_update_fields = sorted({field for row in libraries for field in row} - {"id"})
+        stmt = insert(Library).values(libraries)
+        set_ = {field: stmt.excluded[field] for field in library_update_fields}
+        set_["version"] = func.coalesce(stmt.excluded.version, Library.version)
+        stmt = stmt.on_conflict_do_update(index_elements=["id"], set_=set_)
         session.execute(stmt)
 
     # Collect all spec values and impl values
