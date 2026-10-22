@@ -533,8 +533,11 @@ jobs:
           # Manifest.toml that a `Pkg.add` had re-resolved, which moved Makie from
           # 0.22.10 to 0.21.9 for every Julia implementation. A spec that needs a
           # new package needs a dependency PR first.
-          DEP_CHANGES=$(git diff --name-only origin/main...HEAD \
-            | grep -E '(^|/)(pyproject\.toml|uv\.lock|package\.json|package-lock\.json|Project\.toml|Manifest\.toml)$' || true)
+          # The diff runs on its own line so a git failure stops the step
+          # instead of reading as "no changes".
+          CHANGED=$(git diff --name-only origin/main...HEAD)
+          DEP_CHANGES=$(echo "$CHANGED" \
+            | grep -E '(^|/)(pyproject\.toml|uv\.lock|package\.json|package-lock\.json|Project\.toml|Manifest\.toml|\.python-version)$' || true)
           if [ -n "$DEP_CHANGES" ]; then
             echo "::error::The implementation commit changes dependency files: $(echo "$DEP_CHANGES" | tr '\n' ' '). Implementations use only the installed packages; a new package needs its own dependency PR first."
             exit 1

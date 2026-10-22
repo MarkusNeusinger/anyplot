@@ -74,7 +74,9 @@ PROMPTS_WITH_HEADER_EXAMPLES = {"chartjs", "d3", "echarts", "highcharts", "makie
 
 SNAPSHOT_URL_RE = re.compile(r"packagemanager\.posit\.co/cran/__linux__/[a-z]+/(\d{4}-\d{2}-\d{2})")
 SNAPSHOT_NOTE_RE = re.compile(r"# Snapshot (\d{4}-\d{2}-\d{2}) ships ggplot2 (\d+(?:\.\d+)+)\.")
-HEADER_RE = re.compile(r"^(?://|#'?) Library: (?P<label>[^|\n]*)\|", re.MULTILINE)
+# `// Library:` (JavaScript), `# Library:` (Julia), `#' Library:` (R) and a bare
+# `Library:` line (a Python docstring).
+HEADER_RE = re.compile(r"^(?:(?://|#'?) )?Library: (?P<label>[^|\n]*)\|", re.MULTILINE)
 VERSION_RE = re.compile(r"\b\d+(?:\.\d+)+\b")
 
 
@@ -204,13 +206,15 @@ def _prompt_header_labels(library: str) -> list[str]:
     return [match.group("label").strip() for match in HEADER_RE.finditer(text)]
 
 
+LIBRARIES_WITH_HEADERS = sorted(library for library in LIBRARY_VERSIONS if _prompt_header_labels(library))
+
+
 def test_header_examples_are_found() -> None:
     """Guards the next test against passing vacuously after a format change."""
-    with_headers = {library for library in LIBRARY_VERSIONS if _prompt_header_labels(library)}
-    assert PROMPTS_WITH_HEADER_EXAMPLES <= with_headers
+    assert PROMPTS_WITH_HEADER_EXAMPLES <= set(LIBRARIES_WITH_HEADERS)
 
 
-@pytest.mark.parametrize("library", sorted(LIBRARY_VERSIONS))
+@pytest.mark.parametrize("library", LIBRARIES_WITH_HEADERS)
 def test_prompt_header_names_the_pinned_version(library: str) -> None:
     pinned = pinned_version(library)
     for label in _prompt_header_labels(library):

@@ -167,7 +167,8 @@ Each language's plotting stack is pinned in the repository:
 
 Implementation PRs never change these files. A generation whose commit changes
 `pyproject.toml`, `uv.lock`, `package.json`, `package-lock.json`,
-`Project.toml` or `Manifest.toml` fails in `impl-generate.yml`, and
+`Project.toml`, `Manifest.toml` or `.python-version` fails in
+`impl-generate.yml`, and
 `impl-merge.yml` refuses to merge an implementation PR that changes one, which
 also covers repair commits. A re-resolved lock file moves the library version
 for every implementation of the language: #9398 committed a `Manifest.toml`

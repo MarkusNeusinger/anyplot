@@ -25,7 +25,15 @@ SPEC, LIB = "qrcode-basic", "makie"
 BRANCH = f"implementation/{SPEC}/{LIB}"
 IMPL = f"plots/{SPEC}/implementations/julia/{LIB}.jl"
 META = f"plots/{SPEC}/metadata/julia/{LIB}.yaml"
-DEPENDENCY_FILES = ["pyproject.toml", "uv.lock", "package.json", "package-lock.json", "Project.toml", "Manifest.toml"]
+DEPENDENCY_FILES = [
+    "pyproject.toml",
+    "uv.lock",
+    "package.json",
+    "package-lock.json",
+    "Project.toml",
+    "Manifest.toml",
+    ".python-version",
+]
 GUARD_RE = re.compile(r"grep -E '(\(\^\|/\)\([^']*\)\$)'")
 
 FAKE_GH = """#!/bin/sh
@@ -45,6 +53,12 @@ def _script(workflow: str, name: str) -> str:
 
 GENERATE = _script("impl-generate.yml", "Create library metadata file")
 MERGE = _script("impl-merge.yml", "Validate PR completeness before merge")
+# impl-generate's guard, cut out of its long step: from the diff to the end of its `if`.
+GENERATE_GUARD = GENERATE[
+    GENERATE.index("CHANGED=$(git diff --name-only origin/main...HEAD)") : GENERATE.index(
+        "# Restore plot files after git operations"
+    )
+]
 
 
 def test_both_guards_match_the_same_dependency_files() -> None:
@@ -120,6 +134,17 @@ class Origin:
         self.commit(other, files, "deps: bump")
         self.git(other, "push", "-q", "origin", "HEAD:refs/heads/main")
 
+    def run_generate_guard(self) -> subprocess.CompletedProcess[str]:
+        script = self.tmp / "guard.sh"
+        script.write_text(GENERATE_GUARD, encoding="utf-8")
+        return subprocess.run(
+            ["bash", "--noprofile", "--norc", "-eo", "pipefail", str(script)],
+            cwd=self.ws,
+            env=_env(self.tmp),
+            capture_output=True,
+            text=True,
+        )
+
     def run_merge_gate(self) -> subprocess.CompletedProcess[str]:
         script = self.tmp / "step.sh"
         script.write_text(MERGE.replace("/tmp/", f"{self.tmp}/"), encoding="utf-8")
@@ -152,6 +177,26 @@ class Origin:
 @pytest.fixture
 def origin(tmp_path: Path) -> Origin:
     return Origin(tmp_path)
+
+
+def test_generate_guard_passes_an_implementation_only_commit(origin: Origin) -> None:
+    result = origin.run_generate_guard()
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_generate_guard_fails_a_commit_that_changes_a_lock_file(origin: Origin) -> None:
+    origin.commit(origin.ws, {"Manifest.toml": "Makie 0.21.9\n"}, "Pkg.add")
+    result = origin.run_generate_guard()
+    assert result.returncode == 1
+    assert "::error::The implementation commit changes dependency files: Manifest.toml" in result.stdout
+
+
+def test_generate_guard_fails_closed_when_the_diff_fails(origin: Origin) -> None:
+    origin.commit(origin.ws, {"Manifest.toml": "Makie 0.21.9\n"}, "Pkg.add")
+    origin.git(origin.ws, "update-ref", "-d", "refs/remotes/origin/main")
+    result = origin.run_generate_guard()
+    assert result.returncode != 0
+    assert "::error::" not in result.stdout
 
 
 def test_merge_gate_passes_an_implementation_only_pr(origin: Origin) -> None:

@@ -288,7 +288,7 @@ git commit -m "feat({LIBRARY}): implement {SPEC_ID}"
 git push -u origin implementation/{SPEC_ID}/{LIBRARY}
 ```
 
-Commit only the implementation file, and use only the packages the runner already has: never run `Pkg.add`, `uv add`, `pip install` or `npm install`. The workflow fails the run when your commit changes `Manifest.toml`, `Project.toml`, `uv.lock`, `pyproject.toml`, `package.json` or `package-lock.json`, because a re-resolved lock file moves the library version for every implementation of the language.
+Commit only the implementation file, and use only the packages the runner already has: never run `Pkg.add`, `uv add`, `pip install` or `npm install`. The workflow fails the run when your commit changes `Manifest.toml`, `Project.toml`, `uv.lock`, `pyproject.toml`, `package.json`, `package-lock.json` or `.python-version`, because a re-resolved lock file moves the library version for every implementation of the language.
 
 If `IS_REGENERATION=true`, use an expanded commit body that names the weaknesses you addressed and the ones you declined, by W id with the tag the previous review gave them, each declined one with its reason. Example:
 
