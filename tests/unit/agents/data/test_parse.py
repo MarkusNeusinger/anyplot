@@ -1908,11 +1908,14 @@ class TestThousandsGroups:
         self, cells: list[str], expected: list[float]
     ) -> None:
         parsed = parse_dataset("price\n" + "\n".join(cells) + "\n")
+        semicolon = parse_dataset("Preis;Menge\n3,50;1.200\n")
 
         assert parsed.column_dtypes == {"price ($)": "number"}
         assert parsed.profile.decimal == ","
         assert read_back(parsed)["price ($)"].tolist() == expected
         assert not warned(parsed, "commas read as thousands separators")
+        assert semicolon.csv == "Preis,Menge\n3.5,1200\n"
+        assert semicolon.profile.decimal == ","
 
     def test_an_id_or_oversized_currency_comma_column_is_not_retyped_as_integers(self) -> None:
         code = parse_dataset('Code\n"$1,200"\n"$2,500"\n')

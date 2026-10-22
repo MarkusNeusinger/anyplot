@@ -88,6 +88,9 @@ SAMPLES: dict[str, str] = {
         "decimal_commas_ambiguous"
     ),
     "column 'x': dots read as thousands separators, as in the file's other columns": "thousands_separators",
+    "column 'x': commas read as thousands separators, as a currency amount has at most two decimals": (
+        "thousands_separators"
+    ),
     "column 'x': commas read as thousands separators": "thousands_separators",
     "column 't': times with the UTC offsets +01:00, +02:00 written in UTC (+00:00); the instants are the same": (
         "utc_offsets_normalised"

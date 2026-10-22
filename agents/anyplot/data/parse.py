@@ -359,6 +359,7 @@ _INTEGER_INDEX = re.compile(r"0|[1-9][0-9]{0,8}")  # a position key of a sparse 
 _NUMBER_PART = r"[+-]?(?:[0-9][0-9.,'’]*|\.[0-9]+)(?:[eE][+-]?[0-9]+)?"  # `'` and `’`: Swiss `CHF 1'200`
 _UNIT_SPACE = r"[^\S\r\n\t]?"
 _CURRENCY = r"[€$£]|CHF|EUR|USD|GBP"
+_CURRENCY_UNIT = re.compile(_CURRENCY)
 _TRAILING_UNIT = re.compile(
     rf"(?P<number>{_NUMBER_PART}){_UNIT_SPACE}(?P<unit>%|‰|°[CF]?|[€$£]|[A-Za-zµμ]{{1,4}}[²³]?\.?)"
 )
@@ -2796,19 +2797,36 @@ def _commas_as_thousands(columns: list[_Column]) -> None:
     ambiguous = [column for column in columns if column.decimal_comma and AMBIGUOUS_COMMAS in column.notes]
     if not ambiguous:
         return
+    for column in ambiguous:
+        if column.unit is not None and _CURRENCY_UNIT.fullmatch(column.unit):
+            _retype_thousands_commas(
+                column, "commas read as thousands separators, as a currency amount has at most two decimals"
+            )
+    rest = [column for column in ambiguous if AMBIGUOUS_COMMAS in column.notes]
+    if not rest:
+        return
     if any(column.decimal_comma and column not in ambiguous and column.group_mark != "," for column in columns):
-        for column in ambiguous:
+        for column in rest:
             column.notes.remove(AMBIGUOUS_COMMAS)
         return
     if not any(column.group_mark == "," for column in columns):
         return
-    for column in ambiguous:
-        if column.id_like or not all(_COMMA_GROUP.fullmatch(cell) for cell in column.bare if cell):
-            continue
-        if _as_integers(column, [cell.replace(",", "") for cell in column.bare]):
-            column.decimal_comma = False
-            column.notes.remove(AMBIGUOUS_COMMAS)
-            column.notes.append("commas read as thousands separators, as in the file's other columns")
+    for column in rest:
+        _retype_thousands_commas(column, "commas read as thousands separators, as in the file's other columns")
+
+
+def _retype_thousands_commas(column: _Column, note: str) -> None:
+    if column.id_like or not all(_COMMA_GROUP.fullmatch(cell) for cell in column.bare if cell):
+        return
+    column.decimal_comma = False
+    column.notes.remove(AMBIGUOUS_COMMAS)
+    if not _as_integers(column, [cell.replace(",", "") for cell in column.bare]):
+        # Every cell is a whole number (`_COMMA_GROUP`), one past int64: text keeps every digit, as rule 3 does.
+        column.dtype, column.cells, column.numbers, column.unit = "text", list(column.source), [], None
+        column.rounded = column.respelled = 0
+        column.notes.append(BIG_INTEGERS)
+        return
+    column.notes.append(note)
 
 
 def _split_units(present: list[str]) -> tuple[str, dict[str, str]] | None:

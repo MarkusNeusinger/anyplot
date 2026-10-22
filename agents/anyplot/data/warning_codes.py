@@ -179,7 +179,11 @@ _RULES: tuple[tuple[re.Pattern[str], WarningCode], ...] = tuple(
             _COLUMN + r"commas read as decimal commas; remove them first if they separate thousands$",
             "decimal_commas_ambiguous",
         ),
-        (_COLUMN + r".* read as thousands separators(?:, as in the file's other columns)?$", "thousands_separators"),
+        (
+            _COLUMN
+            + r".* read as thousands separators(?:, as (?:in the file's other columns|a currency amount has at most two decimals))?$",
+            "thousands_separators",
+        ),
         (
             _COLUMN + r"times with the UTC offsets .* written in UTC \(\+00:00\); the instants are the same$",
             "utc_offsets_normalised",
