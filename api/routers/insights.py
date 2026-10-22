@@ -776,7 +776,7 @@ async def _fetch_plausible_visitors() -> VisitorsResponse:
         day_str = str(dims[0])[:10]
         try:
             count = int(metrics[0] or 0)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             count = 0
         by_date[day_str] = count
 

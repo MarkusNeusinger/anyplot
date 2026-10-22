@@ -340,7 +340,7 @@ def _assigned_names(stmt: ast.stmt) -> list[str] | None:
 def _literal(node: ast.expr) -> tuple[object, bool]:
     try:
         return ast.literal_eval(node), True
-    except (ValueError, TypeError, SyntaxError, MemoryError, RecursionError):
+    except ValueError, TypeError, SyntaxError, MemoryError, RecursionError:
         return None, False
 
 

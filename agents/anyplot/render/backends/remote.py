@@ -146,7 +146,7 @@ def token_expiry(token: str) -> float | None:
         return None
     try:
         claims = json.loads(base64.urlsafe_b64decode(parts[1] + "=" * (-len(parts[1]) % 4)))
-    except (ValueError, binascii.Error):
+    except ValueError, binascii.Error:
         return None
     expiry = claims.get("exp") if isinstance(claims, dict) else None
     return float(expiry) if isinstance(expiry, int | float) else None
@@ -229,7 +229,7 @@ def _png(value: str | None) -> bytes | None:
         return None
     try:
         return base64.b64decode(value, validate=True)
-    except (ValueError, binascii.Error):
+    except ValueError, binascii.Error:
         return None
 
 

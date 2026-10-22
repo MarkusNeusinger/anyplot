@@ -153,7 +153,7 @@ def test_the_fixture_corpus_has_no_unknown_warning() -> None:
     for path in files:
         try:
             parsed = parse_dataset(path.read_text(encoding="utf-8"))
-        except (ParseError, UnicodeDecodeError):
+        except ParseError, UnicodeDecodeError:
             continue
         unknown += [line for line in parsed.warnings if warning_code(line) == "other"]
     assert unknown == []

@@ -388,7 +388,7 @@ def parse_expression(text: str, variables: frozenset[str] | None, where: str, *,
         tree = ast.parse(source, mode="eval")
     except SyntaxError as exc:
         raise GenerateError("invalid_expression", f"{where}: {_syntax_hint(source, exc)}") from None
-    except (ValueError, RecursionError, MemoryError):
+    except ValueError, RecursionError, MemoryError:
         raise GenerateError("invalid_expression", f"{where}: the expression cannot be read") from None
     _check(tree.body, variables, where, endpoint)
     if "#" in source:

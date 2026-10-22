@@ -640,7 +640,7 @@ def png_data_uri(path: Path, max_width: int = GALLERY_MAX_WIDTH) -> str:
                 buffer = io.BytesIO()
                 image.save(buffer, format="PNG", optimize=True)
                 data = buffer.getvalue()
-    except (OSError, ValueError):
+    except OSError, ValueError:
         pass  # not a decodable PNG: embed it as it is
     return "data:image/png;base64," + base64.b64encode(data).decode("ascii")
 

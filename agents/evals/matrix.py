@@ -462,7 +462,7 @@ def token_expiry(token: str) -> float | None:
         return None
     try:
         claims = json.loads(base64.urlsafe_b64decode(parts[1] + "=" * (-len(parts[1]) % 4)))
-    except (ValueError, binascii.Error):
+    except ValueError, binascii.Error:
         return None
     expiry = claims.get("exp") if isinstance(claims, dict) else None
     return float(expiry) if isinstance(expiry, int | float) and not isinstance(expiry, bool) else None
@@ -590,7 +590,7 @@ class AttributionCollector(logging.Handler):
     def emit(self, record: logging.LogRecord) -> None:
         try:
             data = json.loads(record.getMessage())
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return
         if isinstance(data, dict) and isinstance(data.get("request_id"), str):
             self.lines.setdefault(data["request_id"], []).append(data)
@@ -1183,7 +1183,7 @@ def _git_sha() -> str | None:
         done = subprocess.run(
             ["git", "rev-parse", "HEAD"], cwd=REPO_ROOT, capture_output=True, text=True, timeout=5, check=False
         )
-    except (OSError, subprocess.SubprocessError):
+    except OSError, subprocess.SubprocessError:
         return None
     return done.stdout.strip() or None
 

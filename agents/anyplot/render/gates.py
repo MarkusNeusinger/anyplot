@@ -459,7 +459,7 @@ def _probe_lines(
     for check in checks:
         try:
             lines += check()
-        except (ValueError, TypeError, OverflowError, AttributeError):
+        except ValueError, TypeError, OverflowError, AttributeError:
             continue
     return lines
 

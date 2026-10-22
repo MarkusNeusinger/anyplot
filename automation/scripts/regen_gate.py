@@ -531,7 +531,7 @@ def load_checklist_scores(path: Path | None) -> dict[str, int]:
         return {}
     try:
         return checklist_scores(json.loads(path.read_text(encoding="utf-8")))
-    except (OSError, ValueError):
+    except OSError, ValueError:
         return {}
 
 
@@ -1093,7 +1093,7 @@ def load_weakness_classes(path: Path | None) -> dict[str, str]:
         return {}
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
+    except OSError, ValueError:
         return {}
     if not isinstance(data, list):
         return {}
@@ -1111,7 +1111,7 @@ def load_weakness_texts(path: Path | None) -> dict[str, str]:
         return {}
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
+    except OSError, ValueError:
         return {}
     if not isinstance(data, list):
         return {}
@@ -1131,7 +1131,7 @@ def load_source(path_text: str | None) -> str | None:
         if not path.is_file() or path.stat().st_size > SOURCE_LIMIT:
             return None
         return path.read_text(encoding="utf-8")
-    except (OSError, UnicodeDecodeError):
+    except OSError, UnicodeDecodeError:
         return None
 
 
@@ -1951,7 +1951,7 @@ def load_known_weakness_ids(path: Path | None) -> frozenset[str]:
         return frozenset()
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
+    except OSError, ValueError:
         return frozenset()
     if not isinstance(data, list):
         return frozenset()

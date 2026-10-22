@@ -51,7 +51,7 @@ def decode_claims(authorization: str | None) -> dict[str, Any] | None:
     try:
         payload = parts[1] + "=" * (-len(parts[1]) % 4)
         claims = json.loads(base64.urlsafe_b64decode(payload.encode()))
-    except (ValueError, binascii.Error):
+    except ValueError, binascii.Error:
         return None
     return claims if isinstance(claims, dict) else None
 

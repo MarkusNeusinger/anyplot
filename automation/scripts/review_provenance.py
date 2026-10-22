@@ -169,7 +169,7 @@ def _messages_or_empty(path: str | Path | None) -> list[dict[str, Any]]:
         return []
     try:
         return load_messages(Path(path))
-    except (OSError, UnicodeDecodeError):
+    except OSError, UnicodeDecodeError:
         return []
 
 

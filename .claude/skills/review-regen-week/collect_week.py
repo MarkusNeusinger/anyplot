@@ -393,7 +393,7 @@ def render_markdown(
         if previous:
             try:
                 cells.append(str(value(previous)))
-            except (KeyError, TypeError):
+            except KeyError, TypeError:
                 cells.append("–")
         lines.append("| " + " | ".join(cells) + " |")
     lines += ["", f"Reason codes: {', '.join(f'{k} {v}' for k, v in summary['codes'].items()) or 'none'}", ""]

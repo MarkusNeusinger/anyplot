@@ -240,7 +240,7 @@ def sniff(data):
 def _open_zip(data):
     try:
         return zipfile.ZipFile(io.BytesIO(data))
-    except (zipfile.BadZipFile, ValueError, OSError, EOFError):
+    except zipfile.BadZipFile, ValueError, OSError, EOFError:
         raise _corrupt("zip") from None
 
 
@@ -313,7 +313,7 @@ def _zip_kind(data):
         if "mimetype" in names:
             try:
                 mimetype = archive.read("mimetype")[:200].strip()
-            except (zipfile.BadZipFile, OSError, ValueError, EOFError):
+            except zipfile.BadZipFile, OSError, ValueError, EOFError:
                 raise _corrupt("zip") from None
             if mimetype == ODS_MIMETYPE:
                 return "ods"
@@ -323,7 +323,7 @@ def _zip_kind(data):
             if "xl/workbook.xml" in names:
                 try:
                     types = archive.read("[Content_Types].xml")
-                except (zipfile.BadZipFile, OSError, ValueError, EOFError):
+                except zipfile.BadZipFile, OSError, ValueError, EOFError:
                     raise _corrupt("zip") from None
                 return "xlsm" if b"macroEnabled" in types else "xlsx"
         if names and all(name.endswith(".npy") for name in names):
@@ -711,7 +711,7 @@ def sheet_scan(data, sheet_name):
                 return None
             path = part.lstrip("/") if part.startswith("/") else "xl/" + part
             xml = archive.read(path)  # its size was checked against the archive caps by inflating it
-    except (KeyError, zipfile.BadZipFile, OSError, ValueError, EOFError):
+    except KeyError, zipfile.BadZipFile, OSError, ValueError, EOFError:
         return None
     return scan_sheet_xml(xml)
 
@@ -1069,7 +1069,7 @@ def read_numpy(data, kind, sheet_name, warnings):
         for label in candidates:
             try:
                 raw = archive.read(label + ".npy")
-            except (zipfile.BadZipFile, OSError, ValueError, EOFError, KeyError):
+            except zipfile.BadZipFile, OSError, ValueError, EOFError, KeyError:
                 raise _corrupt("zip") from None
             try:
                 array = _npy_array(raw)

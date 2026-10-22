@@ -575,7 +575,7 @@ def apply_operations(parsed: ParsedDataset, operations: list[Operation]) -> Prep
     for operation in operations:
         try:
             frame, change = _apply(frame, operation, carried)
-        except (pd.errors.OutOfBoundsDatetime, OverflowError):
+        except pd.errors.OutOfBoundsDatetime, OverflowError:
             # A date pandas cannot hold is a refusal, never a crash of the tool (review of 2026-10-15).
             raise PrepareError("invalid_operation", "a date would lie outside the years the data can hold") from None
         if not frame.shape[1]:

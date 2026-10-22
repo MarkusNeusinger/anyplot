@@ -204,7 +204,7 @@ def mem_available_mb(path: Path = MEMINFO) -> int | None:
         for line in path.read_text(encoding="ascii").splitlines():
             if line.startswith("MemAvailable:"):
                 return int(line.split()[1]) // 1024
-    except (OSError, ValueError, IndexError):
+    except OSError, ValueError, IndexError:
         return None
     return None
 
@@ -280,7 +280,7 @@ def tree_size(root: Path, max_bytes: int, max_entries: int, max_depth: int = MAX
                         pending.append((Path(entry.path), depth + 1))
                     if total > max_bytes or entries > max_entries:
                         return TreeUsage(total, entries)
-        except (FileNotFoundError, NotADirectoryError):
+        except FileNotFoundError, NotADirectoryError:
             continue  # removed or replaced while the walk reached it
         except OSError:
             return TreeUsage(total, entries, measurable=False)
@@ -523,7 +523,7 @@ class Attempt:
                 continue
             try:
                 report = json.loads(line.split(" ", 1)[1])
-            except (ValueError, IndexError, RecursionError):
+            except ValueError, IndexError, RecursionError:
                 return {}
             if not isinstance(report, dict):
                 return {}

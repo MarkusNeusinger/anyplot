@@ -97,7 +97,7 @@ def _validate_quality_score(score) -> float | None:
             return score_float
         logger.warning(f"Quality score {score_float} out of range 0-100, setting to None")
         return None
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         logger.warning(f"Invalid quality score '{score}', setting to None")
         return None
 

@@ -746,7 +746,7 @@ class PlotGuard(DataGuard):
         with self.paused():
             try:
                 return os.path.realpath(os.fsdecode(path)) not in self.outputs
-            except (OSError, ValueError, TypeError):
+            except OSError, ValueError, TypeError:
                 return True
 
     def __call__(self, event, args):
@@ -834,7 +834,7 @@ def _limit(kind: int, value: int) -> None:
         if hard != resource.RLIM_INFINITY:
             value = min(value, hard)
         resource.setrlimit(kind, (value, value))
-    except (ValueError, OSError):
+    except ValueError, OSError:
         pass  # a limit the platform refuses is left to the sandbox and the host timeout
 
 
@@ -1711,7 +1711,7 @@ def frame_csv(frame, measure=None):
     if not default_index:
         try:
             frame = frame.reset_index()
-        except (ValueError, TypeError):  # an index name that is also a column, a MultiIndex level clash
+        except ValueError, TypeError:  # an index name that is also a column, a MultiIndex level clash
             return None, "frame_shape"
     frame = frame.copy()
     frame.columns = [str(column) for column in frame.columns]
@@ -1786,7 +1786,7 @@ def run_data_snippet(path, guard, measure):
     try:
         with open(path, encoding="utf-8") as handle:
             code = compile(handle.read(), os.path.basename(path), "exec", dont_inherit=True)
-    except (OSError, SyntaxError, ValueError):
+    except OSError, SyntaxError, ValueError:
         traceback.print_exc()
         return DATA_EXIT["error"]
     namespace = {"__name__": "__main__", "__builtins__": builtins}
@@ -1965,7 +1965,7 @@ def run_conversion(path, guard, measure):
         if os.path.exists(CONVERT_REQUEST_FILE):
             with open(CONVERT_REQUEST_FILE, encoding="utf-8") as handle:
                 request = json.loads(handle.read(CONVERT_MAX_REQUEST_BYTES))
-    except (OSError, ValueError):
+    except OSError, ValueError:
         return CONVERT_EXIT["usage"]
     sheet = request.get("sheet") if isinstance(request, dict) else None
     if sheet is not None and not isinstance(sheet, str):

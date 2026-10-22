@@ -128,7 +128,7 @@ def clean_probe(raw: bytes | None) -> dict[str, Any] | None:
         return None
     try:
         loaded = json.loads(raw, parse_constant=lambda _: None)
-    except (ValueError, RecursionError):
+    except ValueError, RecursionError:
         return None
     if not isinstance(loaded, dict) or not _probe_value_ok(loaded, 1):
         return None
@@ -325,7 +325,7 @@ class ConvertRequest(BaseModel):
     def _base64(cls, value: str) -> str:
         try:
             raw = base64.b64decode(value, validate=True)
-        except (ValueError, binascii.Error):
+        except ValueError, binascii.Error:
             raise ValueError("data_base64 is not base64") from None
         if not raw or len(raw) > MAX_CONVERT_INPUT_BYTES:
             raise ValueError("the file is empty or over the cap")

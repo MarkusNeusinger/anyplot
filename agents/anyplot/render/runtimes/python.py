@@ -118,6 +118,6 @@ class PythonRuntime:
             raw = read_output(run_dir / f"probe-{theme}.json", MAX_PROBE_BYTES)
             loaded = json.loads(raw) if raw else None
             probe = loaded if isinstance(loaded, dict) else None
-        except (ValueError, OSError):
+        except ValueError, OSError:
             probe = None  # the probe is advisory; a broken one is simply absent
         return png, probe
