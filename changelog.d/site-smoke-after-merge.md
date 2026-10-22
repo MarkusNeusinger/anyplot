@@ -7,4 +7,4 @@
   that breaks the boot fails its PR, and a new rule in `CLAUDE.md` (with the
   recipe in the `open-pr` skill and the Dependabot batch command) runs it
   against production after every merge. On 2026-10-22 a vite bump passed
-  every check and left every page blank for about 45 minutes.
+  every check and left every page blank for about 45 minutes. (#12236)
