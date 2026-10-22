@@ -1937,6 +1937,15 @@ class TestThousandsGroups:
             # a column of dot groups or `1.234` shapes speaks for dot thousands
             ('price,population\n"€ 1,200","7.184.003"\n"€ 950","7.226.391"\n', "price (€)", [1.2, 950.0], True),
             ('price,weight\n"$1,200",1.250\n"$950",2.500\n', "price ($)", [1.2, 950.0], True),
+            # dot groups kept as text past int64 still speak for dot thousands
+            (
+                'price,total\n"€ 1,789",12.345.678.901.234.567.890.123\n"€ 1,759",7.226.391\n',
+                "price (€)",
+                [1.789, 1.759],
+                True,
+            ),
+            # `0,125` is no thousands group, so its comma is a decimal comma
+            ("Preis\tLiter\n1,789 €\t0,125\n1,759 €\t0,250\n", "Preis (€)", [1.789, 1.759], True),
         ],
     )
     def test_a_file_that_speaks_for_decimal_commas_keeps_them_in_a_currency_column(

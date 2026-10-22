@@ -2761,8 +2761,9 @@ def _as_grouped_numbers(column: _Column, cells: list[str], present: list[str]) -
             continue
         bare = [cell.replace(mark, "").replace(",", ".") if cell else "" for cell in cells]
         if not (_as_numbers(column, bare) if decimal else _as_integers(column, bare)):
-            if not decimal:  # a whole number past int64: text keeps every digit, and says why
+            if not decimal:  # a whole number past int64: text keeps every digit, and says why; the mark still counts
                 column.notes.append(BIG_INTEGERS)
+                column.group_mark = mark
             return False
         column.decimal_comma = decimal == ","
         column.group_mark = mark
@@ -2793,9 +2794,10 @@ def _commas_as_thousands(columns: list[_Column], *, semicolon: bool = False) -> 
       amount mostly has at most two decimals, so the column reads as whole numbers with comma
       thousands, with a note (issue #12224). A file that speaks for a decimal comma keeps the
       question instead (owner decision of 2026-10-22): `semicolon` (the file is delimited by
-      semicolons, as spreadsheets write it where the comma is the decimal mark), or another
-      column of dot groups (`7.184.003`) or of `1.234` shapes, since a fuel price of `1,789 €`
-      has three decimals;
+      semicolons, as spreadsheets write it where the comma is the decimal mark), a column of
+      dot groups (`7.184.003`, also one kept as text past int64) or of `1.234` shapes, or a
+      comma column with a zero-led group (`0,125`), since a fuel price of `1,789 €` has three
+      decimals;
     * otherwise, another column groups its thousands with commas unambiguously (`1,234,567`,
       `1,234.5`, `_as_grouped_numbers`): the column reads as whole numbers with comma
       thousands, with a note.
@@ -2815,7 +2817,9 @@ def _commas_as_thousands(columns: list[_Column], *, semicolon: bool = False) -> 
         or (column.dtype == "number" and not column.decimal_comma and not column.id_like and _dot_groups_only(column))
         for column in columns
     )
-    if not semicolon and not dot_groups:
+    # `0,125` has the `1,234` shape but is no thousands group, so its comma is a decimal comma.
+    zero_led = any(not all(_COMMA_GROUP.fullmatch(cell) for cell in column.bare if cell) for column in ambiguous)
+    if not (semicolon or dot_groups or zero_led):
         for column in ambiguous:
             if column.unit is not None and _CURRENCY_UNIT.fullmatch(column.unit):
                 _retype_thousands_commas(
