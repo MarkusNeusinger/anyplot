@@ -89,7 +89,8 @@ SECRET_NAME_PATTERNS = [
     "*credentials*",
     "*secret*",
     "*oauth*",
-    "api-key",
+    "*api-key*",
+    "*api_key*",
 ]
 SECRET_DIRS = {".ssh", ".gnupg", ".config", ".gemini", ".aws", ".kube", ".docker", ".git"}
 
@@ -405,7 +406,10 @@ def inline_changes(workspace: Workspace, base: str) -> list[str]:
     if len(diff) > MAX_INLINE_DIFF_CHARS:
         diff = diff[:MAX_INLINE_DIFF_CHARS] + "\n... diff truncated; read the changed files with the tools"
     parts = [f'<diff base="{base}">\n{diff}\n</diff>']
-    names = git_text(root, "diff", "--name-only", "--diff-filter=AMR", f"{base}...HEAD").splitlines()
+    # -z keeps paths with spaces or umlauts unquoted, as `ls-files -z` does above.
+    names = [
+        n for n in git_text(root, "diff", "-z", "--name-only", "--diff-filter=AMR", f"{base}...HEAD").split("\0") if n
+    ]
     budget = MAX_INLINE_TOTAL_BYTES
     skipped = []
     for rel in names:

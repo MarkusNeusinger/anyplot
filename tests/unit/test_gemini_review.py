@@ -68,6 +68,7 @@ def data(tmp_path: Path) -> Path:
     os.symlink("server.pem", folder / "notes.txt")  # harmless name, filtered target
     (folder / "secrets").mkdir()
     (folder / "secrets" / "payload.json").write_text("NESTED-TOKEN\n")
+    (folder / "api_key.txt").write_text("KEY-TOKEN\n")
     return folder
 
 
@@ -168,6 +169,17 @@ def test_inline_changes_skips_lock_files_large_and_binary_files(gr, repo):
     assert parts[-1].startswith("Changed but not included")
     for name in ("big.txt", "blob.dat", "uv.lock"):
         assert name in parts[-1]
+
+
+def test_inline_changes_keeps_unusual_file_names(gr, repo):
+    git(repo, "switch", "-q", "-c", "work")
+    (repo / "docs" / "Größe und Breite.md").write_text("# G\n")
+    git(repo, "add", "docs")
+    git(repo, "commit", "-q", "-m", "work")
+
+    parts = gr.inline_changes(gr.Workspace(repo, None), "main")
+
+    assert '<file path="docs/Größe und Breite.md">\n# G\n\n</file>' in parts
 
 
 def test_inline_changes_caps_the_diff(gr, repo, monkeypatch):
