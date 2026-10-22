@@ -6,3 +6,4 @@
   merge commits, authored by `github-actions[bot]`, held each PR's CI at
   `action_required` until someone approved the runs by hand (eight times on
   one PR on 2026-10-22). Auto-merge now fires on the PR's own green head.
+  (#12237)
