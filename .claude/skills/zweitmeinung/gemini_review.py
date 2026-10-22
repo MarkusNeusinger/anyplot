@@ -23,6 +23,7 @@ import fnmatch
 import json
 import posixpath
 import re
+import signal
 import subprocess
 import sys
 import urllib.error
@@ -42,6 +43,7 @@ MAX_TOOL_CHARS = 60_000
 MAX_LIST_ENTRIES = 500
 MAX_SEARCH_HITS = 200
 MAX_SEARCH_LINE = 4_000  # longer lines (minified bundles, base64) are skipped
+MAX_SEARCH_SECONDS = 10  # a backtracking pattern such as (a+)+$ is stopped, not waited out
 MAX_READ_FILES = 10
 DEFAULT_MAX_TURNS = 8
 DEFAULT_MAX_INPUT_TOKENS = 600_000  # summed over all turns, cached tokens included
@@ -116,6 +118,14 @@ def looks_secret(rel: Path) -> bool:
     if any(part in SECRET_DIRS for part in rel.parts):
         return True
     return any(fnmatch.fnmatch(rel.name.lower(), pattern) for pattern in SECRET_NAME_PATTERNS)
+
+
+class SearchExpired(Exception):
+    pass
+
+
+def _search_expired(signum: int, frame: object) -> NoReturn:
+    raise SearchExpired
 
 
 class Workspace:
@@ -215,22 +225,31 @@ class Workspace:
         prefix = self.normalise(path).rstrip("/")
         prefix = "" if prefix in ("", ".") else prefix + "/"
         hits: list[str] = []
-        for rel, file in sorted(self.visible().items()):
-            if not rel.startswith(prefix) or (
-                glob and not fnmatch.fnmatch(Path(rel).name, glob) and not fnmatch.fnmatch(rel, glob)
-            ):
-                continue
-            try:
-                if file.stat().st_size > 2_000_000:
+        # The pattern comes from the model; SIGALRM interrupts the re matcher.
+        previous = signal.signal(signal.SIGALRM, _search_expired)
+        signal.setitimer(signal.ITIMER_REAL, MAX_SEARCH_SECONDS)
+        try:
+            for rel, file in sorted(self.visible().items()):
+                if not rel.startswith(prefix) or (
+                    glob and not fnmatch.fnmatch(Path(rel).name, glob) and not fnmatch.fnmatch(rel, glob)
+                ):
                     continue
-                text = file.read_text(encoding="utf-8")
-            except (UnicodeDecodeError, OSError):
-                continue
-            for number, line in enumerate(text.splitlines(), 1):
-                if len(line) <= MAX_SEARCH_LINE and regex.search(line):
-                    hits.append(f"{rel}:{number}: {line.strip()[:240]}")
-                    if len(hits) >= MAX_SEARCH_HITS:
-                        return "\n".join(hits + ["... more hits; narrow the pattern, path or glob"])
+                try:
+                    if file.stat().st_size > 2_000_000:
+                        continue
+                    text = file.read_text(encoding="utf-8")
+                except (UnicodeDecodeError, OSError):
+                    continue
+                for number, line in enumerate(text.splitlines(), 1):
+                    if len(line) <= MAX_SEARCH_LINE and regex.search(line):
+                        hits.append(f"{rel}:{number}: {line.strip()[:240]}")
+                        if len(hits) >= MAX_SEARCH_HITS:
+                            return "\n".join(hits + ["... more hits; narrow the pattern, path or glob"])
+        except SearchExpired:
+            hits.append(f"... search stopped after {MAX_SEARCH_SECONDS} s; simplify the pattern or narrow the path")
+        finally:
+            signal.setitimer(signal.ITIMER_REAL, 0)
+            signal.signal(signal.SIGALRM, previous)
         return "\n".join(hits) or "(no matches)"
 
 

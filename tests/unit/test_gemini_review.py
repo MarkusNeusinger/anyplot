@@ -13,6 +13,7 @@ import importlib.util
 import json
 import os
 import subprocess
+import time
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -88,6 +89,17 @@ def test_search_sees_no_hidden_content(gr, repo, data):
 
     assert ws.search("TOKEN") == "(no matches)"
     assert ws.search("print") == "a.py:1: print(1)\nsame.py:1: print(1)"
+
+
+def test_search_stops_a_backtracking_pattern(gr, repo, monkeypatch):
+    (repo / "docs" / "b.md").write_text("a" * 40 + "!\n")
+    monkeypatch.setattr(gr, "MAX_SEARCH_SECONDS", 0.5)
+    started = time.monotonic()
+
+    result = gr.Workspace(repo, None).search(r"(a+)+$")
+
+    assert time.monotonic() - started < 5
+    assert result.endswith("search stopped after 0.5 s; simplify the pattern or narrow the path")
 
 
 def test_read_files_reads_several_files_and_caps_the_count(gr, repo, data):
