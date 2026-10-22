@@ -1,10 +1,10 @@
 # Adaptable catalogue code
 
-> **Status (2026-10-09):** design only; nothing is built yet.
+> **Status (2026-10-23):** PR 1 (the checker) is in progress; the rollout was revised on 2026-10-23 after a second opinion. Nothing is in the pipeline yet.
 
-This document describes how catalogue implementations become code that you can point at other data: one replaceable data block, columns named once, and plot code that derives everything else from the table. It covers the convention, the checks that enforce it, the pipeline changes, the rollout through the daily regeneration, and how the planned "Use with my data" agent ([Agent network design](agent-network.md)) uses the result.
+This document describes how catalogue implementations become code that you can point at other data: one replaceable data block, columns named once, and plot code that derives everything else from the table. It covers the convention, the checks that enforce it, the pipeline changes, the rollout through a targeted conversion pass and the daily regeneration, and how the planned "Use with my data" agent ([Agent network design](agent-network.md)) uses the result.
 
-It draws on a review panel of 2026-10-09 (three proposals, each tested against the repository by two skeptics). Refuted claims appear as non-goals, and the owner's decisions of that day are fixed inputs ([Decisions](#decisions)).
+It draws on a review panel of 2026-10-09 (three proposals, each tested against the repository by two skeptics) and on a second opinion of 2026-10-23 (Gemini 4 Argon and a Fable reviewer, both verified against the code). Refuted claims appear as non-goals, and the owner's decisions of both days are fixed inputs ([Decisions](#decisions)).
 
 ## Why
 
@@ -51,9 +51,25 @@ Two typical files:
 | Scoring | Score-neutral first. The adaptability check starts as a metadata flag, a generator self-check, and a repair trigger, with no rubric change. A rubric step that reuses CQ-01 for at most 1 point, never a 25th criterion, is a separate decision after a shadow phase proves the check's precision |
 | Constant names | Column constants use domain names (`MONTH`, `SALES`), not generic role names (`CATEGORY_COL`), so the code stays readable; a reader who groups by year instead of month renames the constant. Each constant carries a trailing comment naming its spec role, for example `MONTH = "Month"  # role: x`. The checker verifies that every required role has exactly one constant, and the agent rewrites the string value from its bindings. The implementation PR settles the exact comment grammar |
 | Libraries | The convention goes into all 15 library prompts: R with `tibble` and `.data[[X]]`, Julia with `DataFrame`, JavaScript as records (later `window.ANYPLOT_DATA`). The deterministic checker exists for Python first; the other languages convert through their prompts alone and stay unverified until their checkers exist |
-| Conversion | Only through the normal daily regeneration, one spec per night with all its libraries. No targeted bulk pass, so token spend stays low and the catalogue improves slowly |
-| Daily regen | Paused (workflow disabled manually on 2026-10-09) until the rules PR has merged, so no spec is regenerated under half the rules; re-enabled after it, with the first nights watched through the weekly review skill |
+| Conversion | Superseded on 2026-10-23, see below. Was: only through the normal daily regeneration, one spec per night with all its libraries |
+| Daily regen | Paused (workflow disabled manually on 2026-10-09) until the rules PR has merged, so no spec is regenerated under half the rules; re-enabled after it, with the first nights watched through the weekly review skill. Confirmed on 2026-10-23 |
 | One source of rules | The generator and the agent's adapter load the same convention text verbatim from the prompts. The checker lives once in `core/`, with a single-file mirror for the workflow runner (the parity pattern of `automation/scripts/regen_gate.py` and `core/defects.py`), and the agent's readiness hints come from the same checker |
+
+The second opinion of 2026-10-23 found three things the 2026-10-09 design got wrong, each verified against the code before the owner decided:
+
+- The adapt route's score tolerance (`new >= prev_rescored - 1`) cannot protect a good chart. The reviewer's run-to-run spread on one file is about 2 points (`docs/workflows/review-retest.md`), the re-scored predecessor lands on average 10 points below its stored score (gate report over the 35 decisions since 2026-10-01), and the reviewer-named `regressions` list rarely catches a legend that shifted or a bar that narrowed. The gate already merges 77 % of regenerations, above its own 50 % alarm, so a route with a lower bar moves the wrong way.
+- The first-generation repair trigger collided with `impl-review.yml`: a score at or above the threshold sets `ai-approved` in the early verdict step and dispatches `impl-merge.yml`; `impl-repair` reads defects only from the review, which never sees the checker's lines; and every repair attempt lowers the next review's threshold by 10 points, so a 92 could come back as an 81 and merge.
+- Seven libraries (R, Julia, and the five JavaScript libraries) have no checker, so by the route's own rule their conversions could never merge: every nightly conversion of those pairs would spend a Sonnet generation and an Opus review for a kept PR.
+
+| Topic | Decision (owner, 2026-10-23) |
+|---|---|
+| Gate | A conversion merges on **render identity**, not on a score tolerance: both sources are rendered in the same runner (never against the stored production PNG, which comes from an older library version and font set), the pixel difference stays under a bound of about 0.5 % per theme, the checker and the smoke run pass, and the review is a sanity floor (no technical item below its re-score, no canvas failure). Outside the bound, a conversion is an ordinary regeneration and needs a carrier like any other |
+| Vehicle | A capped **targeted pass over matplotlib and seaborn**, the two libraries the agent serves in phase 1 (about 650 pairs through `bulk-generate.yml`, for example 10 specs a day, under the stop rules below). The daily regeneration enforces the convention only on regenerations that run anyway. The regen-mindset amendments apply to Python only; the convention goes into the first-generation prompts of all 15 libraries, where Opus and the repair loop catch breakage |
+| Review | The Opus review runs on the first 50 identical conversions, so the identity bound is measured against it; after that an identical conversion merges without a review, and only a pair outside the bound is reviewed |
+| Repair trigger | Dropped. The checker and the smoke run are the generator's self-check (Step 3c); a first generation that still fails merges with the flag set and converts on its next regeneration |
+| Checker precision | The count-literal part of rule 4 applies only to `range`, `arange`, `linspace` and slice positions; fixed domains (0 to 1, 0 to 100, −1 to 1, 0 to 360) and the statistical constants are exempt; rule 6 is advisory from the start; rule 5 demands eight `IMPRINT` positions only when the spec has a colour-driving role |
+| Smoke run | No nullable-dtype perturbation: the agent's loader hands over `float64` with `NaN`, so catalogue code carries no `.astype(float)` boilerplate; the single-group perturbation runs only where the spec's shape allows one group; the example pivot carries no `fill_value`, because a missing group must stay missing, not become a zero bar |
+| Stop rules | From 20 decisions on: more than 30 % of adapt merges below the re-score halts the pass; a perturbation that fails more than 25 % of pairs is cut; a rule whose self-check first-attempt pass rate is under 70 % becomes advisory; the owner looks at five pair artifacts a week, and two vetoes in a week halt the pass |
 
 ## The convention
 
@@ -127,9 +143,9 @@ df = pd.DataFrame(
 )
 
 # Plot: reads only df and the constants above
-table = df.pivot_table(index=QUARTER, columns=PRODUCT_LINE, values=SALES, sort=False, fill_value=0).astype(float)
+table = df.pivot_table(index=QUARTER, columns=PRODUCT_LINE, values=SALES, sort=False)
 x = np.arange(len(table.index))
-width = 0.8 / len(table.columns)
+width = 0.75 / len(table.columns)
 top = table.to_numpy().max()
 
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
@@ -165,7 +181,7 @@ ax.legend(title=PRODUCT_LINE, fontsize=8)
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
 ```
 
-`sort=False` keeps the data's category order, because a plain `pivot` sorts labels and puts months in alphabetical order. `fill_value=0` and `.astype(float)` are there because a perturbation run of the first draft crashed on the agent loader's nullable dtypes (see [Perturbation smoke run](#perturbation-smoke-run)).
+`sort=False` keeps the data's category order, because a plain `pivot` sorts labels and puts months in alphabetical order. The pivot has no `fill_value`: a group that is missing in a quarter stays `NaN` and matplotlib skips the bar, so the plot never invents a zero. The agent's loader hands over plain `float64` columns with `NaN` for missing values, so the code needs no `.astype(float)`. `0.75 / n` reproduces the predecessor's literal width of 0.25 for three groups: a conversion aims at the same picture, because the gate merges it on render identity ([The adapt route](#the-adapt-route)).
 
 **What you change to use your own CSV:** the three strings and the block.
 
@@ -224,9 +240,9 @@ Retyping a role is a spec change. It goes through the spec pipeline (the nightly
 1. **Layout:** one block between column-0 `# Data` and `# Plot` marker lines (the marker alone or followed by a colon and a hint), ending in a statement that binds `df`, with no plotting or styling call and no theme token inside.
 2. **Columns:** every required column-valued role has exactly one constant with a `# role:` comment, no comment names an unknown role, and every value is a string (or a list of strings for a family). The rule follows the shape: in a table and in a network's edge list every role is column-valued; in a matrix the matrix role is satisfied by `df` itself, a labeled square DataFrame, and only column-valued roles (such as a value label for the color bar) need constants; generated specs need none.
 3. **Interface:** no name bound in the block other than `df` is read below it.
-4. **Literals below the block:** no string equal to a column constant's value or to a sample category; no statistic written as text; no numeric literal in a data-coordinate position (limits, ticks, reference lines, data-coordinate text, and the libraries' equivalents such as plotly ranges, `alt.Scale(domain=...)`, plotnine `limits=`, bokeh `Range1d`); no comparison of `df` with a literal, also through one alias such as `peak_month = 7`; no count literal equal to `len(df)` or a role's number of unique values.
-5. **Palette:** all eight `IMPRINT` positions in order, and no `zip` with `strict=True` over the palette.
-6. **`# Constants`:** no list or dict whose values match sample categories or data coordinates, which closes the loophole of hoisting the sample into the head.
+4. **Literals below the block:** no string equal to a column constant's value or to a sample category; no statistic written as text; no numeric literal in a data-coordinate position (limits, ticks, reference lines, data-coordinate text, and the libraries' equivalents such as plotly ranges, `alt.Scale(domain=...)`, plotnine `limits=`, bokeh `Range1d`); no comparison of `df` with a literal, also through one alias such as `peak_month = 7`; no count literal equal to `len(df)` or a role's number of unique values in a `range`, `arange`, `linspace` or slice position (a keyword such as `fontsize=12` or `s=100` never counts). Fixed domains (0 to 1, 0 to 100, −1 to 1, 0 to 360) and the statistical constants (1.645, 1.96, 2.326, 2.576, 3.291) are exempt everywhere.
+5. **Palette:** when the spec has a colour-driving role, all eight `IMPRINT` positions in order, and no `zip` with `strict=True` over the palette; a single-series plot uses `BRAND` alone, as the generator prompt shows.
+6. **`# Constants`, advisory:** no list or dict whose values match sample categories or data coordinates, which closes the loophole of hoisting the sample into the head. An ordered scale (weekday names, Likert levels) is indistinguishable from a hoisted sample by static means, so this rule produces an advisory line and never fails the check.
 
 Rules 1 and 3 read the block's structure, and rules 4 and 6 use its values as the sample to compare against, but no rule flags a literal inside the block (values, seeds, sizes, category names). The checker also ignores the head, the mandated title and its font-size arithmetic, `savefig`, `figsize`, `dpi`, style numbers, offsets in points or axes fractions, f-strings, comments, seeded jitter sized from `df`, and data-independent constants inside computations (1.96 in a formula).
 
@@ -254,11 +270,11 @@ The static checker tests proxies. A file can pass every rule and still break on 
 It runs the head and the block, derives tables from the sample `df`, and for each one replaces the block, rewrites the column constants through their role comments, and runs the whole file:
 
 - renamed columns, one with spaces, units, and a dot, and renamed category values;
-- one more and one fewer category and group, within eight, and a single group;
+- one more and one fewer category and group, within eight, and a single group where the spec's shape allows one (a paired, dumbbell, diverging or correlation spec needs two by definition, so the shape rule skips it);
 - a much smaller and a ten times larger row count, and values scaled by 1,000 and shifted;
-- the agent loader's dtypes (`string`, `Int64`, `boolean`) with a missing value.
+- a missing value as `NaN` in a `float64` column, the form the agent's loader hands over. Nullable pandas dtypes (`string`, `Int64`, `boolean`) are not perturbed: the loader converts them, so the catalogue carries no `.astype(float)` boilerplate (decision of 2026-10-23).
 
-A run passes when it raises nothing, writes both PNGs on the canvas (`core/canvas.py`), and, for matplotlib and seaborn, leaves no text artist showing a renamed sample category. A prototype run of the example above on 2026-10-09:
+A run passes when it raises nothing, writes both PNGs on the canvas (`core/canvas.py`), and, for matplotlib and seaborn, leaves no text artist showing a renamed sample category. A prototype run of the example above on 2026-10-09, before the loader decision:
 
 | Table | Result |
 |---|---|
@@ -275,7 +291,7 @@ The smoke run belongs in impl-generate, because impl-review has no plotting envi
 ### Non-goals
 
 - **A static pass does not prove adaptability.** In the panel's adapted test renders the code ran on new data, but a legend covered a bar, a near-tie callout fired on a gap of 11 out of 293, and `{:.0f}` labels rounded values between 2 and 9 to whole numbers. Mechanical substitution guarantees that the code runs and plots the right columns, not that the layout suits the data, so the agent keeps its host gates and its reviewer call.
-- **Render-identical conversion is rare.** Derived values move things (the example's bar width changes from 0.25 to 0.8 / 3), and a measurement put about 77 % of non-map matplotlib and seaborn files outside render identity. No conversion mode skips the review: every conversion is a normal regeneration with its single review.
+- **Render identity is a target, not a given.** A measurement on 2026-10-09 put about 77 % of non-map matplotlib and seaborn files outside render identity, but those conversions were not asked to keep the picture: derived values moved things (the example's bar width became 0.8 / 3 instead of 0.25). With identity as the generator's stated goal (`0.75 / n`), the share that reaches it is unknown and is what the first 50 reviewed conversions measure. A conversion outside the bound is a normal regeneration with its single review and the carrier rule.
 - **Layout robustness stays a review judgment** on the sample render: number formats, legend placement, and margins tuned to the sample's labels.
 
 ## Pipeline changes
@@ -285,11 +301,11 @@ Line numbers refer to `main` on 2026-10-09.
 - **Generator prompt, `prompts/plot-generator.md`:** rewrite the Output template (l.118-170) and Structure (l.220) to the six zones; add the rules to Data Generation Strategy (l.232-283); add rule-chosen callout targets to Data storytelling (l.526-531); remove `bbox_inches='tight'` at l.164, l.459, and l.541 and in `prompts/default-style-guide.md` (l.207), which contradict `prompts/library/matplotlib.md` (l.35) and `prompts/library/seaborn.md` (l.34).
 - **All 15 library prompts:** one idiom paragraph each ([Other libraries](#other-libraries)); drop the `[:N]` slice in `prompts/library/matplotlib.md` (l.123). The style guide's Color Restraint section (l.95) gets one sentence: list all eight hues, use the first `n`.
 - **Generation and repair prompts:** `prompts/workflow-prompts/impl-generate-claude.md` gets a Step 3c next to the Step 3b canvas self-check (l.218) that runs the checker and the smoke run until both are clean; `prompts/workflow-prompts/impl-repair-claude.md` treats checker lines as real defects, like canvas lines.
-- **Regen mindset:** amend the five places in `impl-generate-claude.md` that block a decoupling regeneration (next section), and the same sentence in `impl-repair-claude.md` (l.33).
-- **impl-generate:** a step runs the smoke run on the new and, on a regeneration, the previous source, and stages the result.
+- **Regen mindset, Python only:** amend the five places in `impl-generate-claude.md` that block a decoupling regeneration (next section), and the same sentence in `impl-repair-claude.md` (l.33), for the Python libraries. The other languages keep today's regen mindset until their checkers exist; their first-generation prompts carry the convention.
+- **impl-generate:** a step runs the smoke run on the new and, on a regeneration, the previous source, renders the predecessor's source in the same runner next to the new render, and stages the smoke result and the predecessor's render. The gate's identity measure needs two renders from one environment: the stored production PNG often comes from an older library version (209 matplotlib files were rendered under 3.10.9 on 2026-10-23) and would fail identity for reasons that have nothing to do with the code.
 - **impl-review, record-only:** a step after the canvas dimension gate (l.521-614) runs the checker mirror on both sources, reads the staged smoke results, writes `/tmp/anyplot-adapt-new.json` and `/tmp/anyplot-adapt-prev.json`, and emits `::notice::adapt_check spec=... lib=... status=... rules=...`. It never ends in a raw `exit 1` (the canvas gate's comment, l.517-520, gives the reason), and the reviewer never sees it. The mirror joins the regen-tools copy (l.242-255), with a test that keeps the copy list complete.
-- **Repair trigger:** on a first generation, the verdict step (l.1916) routes a PR whose check failed to impl-repair once with the checker's lines, even when the score passes. If the repair does not fix it, the implementation merges with the flag set; adaptability never blocks the catalogue. A regeneration has no repair; its check feeds the gate.
-- **Regen gate:** the record gains `adapt: {version, prev, new, counted, why}`, plus the adapt route and adapt regression below.
+- **No repair trigger** (decision of 2026-10-23). The checker and the smoke run act on a first generation only inside the generator's Step 3c self-check, with up to three local attempts before the PR opens. A first generation that still fails merges with the flag set and converts on its next regeneration; adaptability never blocks the catalogue. The earlier plan to route a passing PR to `impl-repair` collided with the early `ai-approved` label (`impl-review.yml`, "Add preliminary verdict label (early)"), with `impl-repair` reading defects only from the review, and with the attempt count lowering the next threshold by 10 points.
+- **Regen gate:** the record gains `adapt: {version, prev, new, identity: {light, dark}, counted, why}`, plus the adapt route and adapt regression below. `core/render_identity.py` (PR 1) measures the pixel fraction with PIL, which `impl-review.yml` already imports for the canvas gate.
 - **Status, `impls.adaptation` (the decision's metadata flag):** an Alembic migration and a change to `automation/scripts/sync_to_postgres.py`, which already reads each implementation's code (l.323) and stores it (l.372), compute the static record at sync time: version, status, findings, block lines, the role-to-constant map, the color-driving role, and the shape. No metadata YAML field and no backfill; a checker version bump recomputes every row on the next sync. The API and MCP payloads expose it.
 - **Later, optional:** the CQ-01 rubric step (at most 1 point) with a `review-retest.yml` candidate arm (`docs/workflows/review-retest.md`).
 
@@ -307,27 +323,30 @@ A decouple-only regeneration therefore ends as `no_visible_improvement` and is k
 
 ### The adapt route
 
-The gate computes the route from the two records, never from a reviewer field. It counts when all of these hold:
+The gate computes the route from the two records and the two renders, never from a reviewer field and never from a score tolerance (decision of 2026-10-23). It counts when all of these hold:
 
 - the predecessor fails the check (static or smoke) and the new source passes both, all or nothing, so a half-converted pair never merges;
+- **render identity:** the new render and the predecessor's render, both produced in the same impl-generate runner, differ in at most 0.5 % of their pixels per theme, at equal size (a size mismatch is a failure, not a diff);
 - the review's `scenario_changed` is not true and `encodings_added` is empty, as for the CQ-04 path;
 - the new source has at most `max(1.25 × prev, prev + 15)` lines;
-- the score tolerance (`new_score >= prev_rescored - 1`) and every regression rule hold.
+- the review is a sanity floor, when it runs: a score above 0, no canvas failure, and no technical item (VQ, SC, DQ, CQ) below its value in the re-score. There is no score tolerance: the reviewer's run-to-run spread of about 2 points and the re-score offset of about 10 points make any tolerance a coin flip in both directions.
 
-In `_judge` (l.1368), the two no-carrier exits (l.1440 and l.1446) accept the adapt route as they accept the code path; the CQ-04 path stays as it is. The **adapt regression** applies on every spec: a predecessor that passes and a new source that fails means keep, so converted pairs stay converted. A missing or malformed record turns the route off and records why; it never counts as a pass.
+A conversion outside the identity bound takes no shortcut: it is an ordinary regeneration and merges only with a carrier under today's rules. In `_judge` (l.1368), the two no-carrier exits (l.1440 and l.1446) accept the adapt route as they accept the code path; the CQ-04 path stays as it is. The **adapt regression** applies on every spec: a predecessor that passes and a new source that fails means keep, so converted pairs stay converted. A missing or malformed record, or a missing predecessor render, turns the route off and records why; it never counts as a pass.
+
+**The review on identical conversions.** For the first 50 conversions inside the bound the Opus review runs as usual, and the weekly review reads its scores against the re-scores: that is the measurement of whether identity plus checker plus smoke is enough. After 50, an identical conversion merges on the route without a review, which removes the expensive call from the pass; a conversion outside the bound is always reviewed.
 
 ## Rollout
 
-1. **PR 1, the checker, with no pipeline effect:** `core/adaptability.py`, the role parser in `core/`, the shape rule and override list, the runner mirror with its parity test, unit tests for every rule and ignore class, and a `report` CLI. The PR body carries the catalogue baseline and a 30-line precision sample per rule; rules below 90 % become advisory. The daily regeneration stays paused.
-2. **PR 2, the rules, in one PR:** the prompts, the smoke-run step, the record-only impl-review step, the repair trigger, the adapt route and regression, and the Regen gate section of `docs/workflows/overview.md`. The review prompt and the rubric do not change, so no retest arm is needed. Workflow edits have no local verification loop, and claude-code-action refuses branch runs of PRs that change its workflows, so the PR is verified on `main`.
-3. **Re-enable the daily regeneration:** dispatch `daily-regen.yml` once with `specification_id` set, read the gate records and notices of its pairs, then enable the schedule (02:17 UTC, one spec per night).
-4. **Shadow phase:** from PR 2 on, the check acts through the self-check, the repair trigger, and the gate, while scores stay untouched. The weekly review (`/review-regen-week`) adds: adapt status per pair, prev to new; merges split by path (carrier, CQ-04 code, adapt), keeping the 5 to 50 % merge-rate target for the carrier path only; adapt regressions; adapt-route merges counted as carried in "merges without a carrier"; the self-check's first-attempt pass rate per library; smoke failures by perturbation; and checker lines judged false, which is the precision evidence for the rubric decision.
-5. **PR 3, status and display, in parallel with the shadow phase:** `impls.adaptation`, the API and MCP fields, the agent's eligibility, and optionally a band on the code tab marking the data block of passing pairs.
-6. **Later:** checkers for R, Julia, and JavaScript, then the optional rubric step.
+1. **PR 1, the checker, with no pipeline effect** (in progress since 2026-10-23): `core/adaptability.py`, the role parser in `core/`, the shape rule and override list, the pure parts of the smoke harness (the perturbed tables, the block replacement and constant rewriting), `core/render_identity.py`, the runner mirror with its parity test, unit tests for every rule and ignore class, and a `report` CLI. The PR body carries the catalogue baseline and a 30-line precision sample per rule; rules below 90 % become advisory. The daily regeneration stays paused.
+2. **PR 2, the rules, in one PR:** the convention in the first-generation prompts of all 15 libraries, the Step 3c self-check, the Python-only regen-mindset amendments, the smoke-run and predecessor-render step in impl-generate, the record-only impl-review step, the identity-based adapt route and the adapt regression, and the Regen gate section of `docs/workflows/overview.md`. The review prompt and the rubric do not change, so no retest arm is needed. Workflow edits have no local verification loop, and claude-code-action refuses branch runs of PRs that change its workflows, so the PR is verified on `main`.
+3. **Re-enable the daily regeneration:** dispatch `daily-regen.yml` once with `specification_id` set, read the gate records and notices of its pairs, then enable the schedule (02:17 UTC, one spec per night). The daily regeneration converts only what it regenerates anyway.
+4. **The targeted pass:** matplotlib and seaborn through `bulk-generate.yml`, capped (for example 10 specs a day, about 650 pairs in five weeks), under the stop rules in [Decisions](#decisions). The first 50 conversions inside the identity bound keep their Opus review; after that, identical conversions merge without one. The weekly review (`/review-regen-week`) adds: adapt status per pair, prev to new; merges split by path (carrier, CQ-04 code, adapt), keeping the 5 to 50 % merge-rate target for the carrier path only; adapt regressions; the identity fraction per theme and the share of conversions inside the bound; adapt-route merges counted as carried in "merges without a carrier"; the self-check's first-attempt pass rate per library; smoke failures by perturbation; and checker lines judged false, which is the precision evidence for the rubric decision.
+5. **PR 3, status and display, in parallel with the pass:** `impls.adaptation`, the API and MCP fields, the agent's eligibility, and optionally a band on the code tab marking the data block of passing pairs.
+6. **Later:** checkers for R, Julia, and JavaScript, then their conversion passes, then the optional rubric step.
 
-One spec per night means about 325 nights for a full pass, and matplotlib and seaborn convert at the same pace as the rest; until a pair converts, the agent serves it through its adapter model with the checker's lines as hints. Specs regenerated between the 2026-10-08 restart and the pause wait for the next pass.
+Until a pair converts, the agent serves it through its adapter model with the checker's lines as hints. The other 13 libraries convert only through regenerations that happen anyway, so their coverage grows slowly; that is acceptable because the agent does not serve them in phase 1.
 
-The cost shape stays that of the daily regeneration: one generation and one Opus review per pair, no extra generations. The checks add seconds of CPU and no model calls. The adapt route turns some kept regenerations into merges, which adds impl-merge runs and website code changes, not model calls. First generations add at most one repair.
+The cost shape of the pass: one Sonnet generation per pair, an Opus review for the first 50 identical conversions and for every conversion outside the bound, and no review for the rest. The checks and the identity measure add seconds of CPU and no model calls. First generations add no extra model call; the self-check runs inside the generator's own loop.
 
 ## Agent integration
 
@@ -338,7 +357,8 @@ The cost shape stays that of the daily regeneration: one generation and one Opus
 
 ## Open questions
 
-- **The `# Constants` allowlist:** which values may live there, and how the checker tells an ordered scale (weekday names) from hoisted sample categories that happen to be ordered.
+- **The `# Constants` allowlist:** which values may live there. The checker cannot tell an ordered scale (weekday names) from hoisted sample categories that happen to be ordered, which is why rule 6 is advisory; the allowlist decides what the advisory line ignores.
+- **Column constants as labels:** `ax.set_ylabel(SALES)` draws the user's raw CSV header (`rev_usd`) after substitution. Either the agent humanizes the bound names before it rewrites the constants, or the convention separates a label constant from the column constant; the agent's readiness PR decides.
 - **Columns that are not spec roles:** candlestick examples carry `volume` and a moving average. Is there an optional `# role: extra` constant, or do such columns move below the block?
 - **Scenario text that cannot be computed,** such as an event label at a date: a `# Constants` entry drawn only when the date lies inside the data, or not allowed.
 - **`df.to_string(buf=...)`:** it writes a file and is not on the agent validator's banned I/O list (PR #12107), while `to_string()` without `buf` returns text a summary table may want. Ban the `buf` keyword in the checker and the validator, or ban the call; no catalogue file uses it on 2026-10-09.
