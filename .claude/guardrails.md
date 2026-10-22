@@ -164,6 +164,43 @@ instead of trusting a "done" in chat. A runbook that shipped this way belongs
 in the owning README, so the next round starts from a reviewed text rather
 than a fresh improvisation.
 
+## After every merge, check that the site renders
+
+Owner rule, 2026-10-22, after an outage nothing caught.
+
+**What happened.** A Dependabot batch merged nine PRs in an afternoon, one
+lock file at a time, each with green checks. One of them, vite 8.0.16 to
+8.1.6 (#12225), deployed at 17:55 UTC. Rolldown 1.1.5 put its CJS-interop
+runtime helper into the app's `theme` chunk, which imports `mui`, while
+`mui` imports the helper back. The chunk cycle left the helper undefined, the
+bundle threw `TypeError: t is not a function` at module load, and every page
+on anyplot.ai rendered blank. Every PR check passed, including "Build app
+image and smoke the origin gate", which proves nginx serves the shell but
+never runs the JavaScript. The deploy was green too. The owner noticed about
+45 minutes later; a cloud session found the cause and shipped vite 8.3.5
+(#12235), which emits the helper as its own `rolldown-runtime` chunk.
+
+**The check.** `scripts/site-smoke.mjs` loads `/`, `/plots` and
+`/scatter-basic` in headless Chromium and fails on a status other than 200,
+an uncaught page error, or a `#root` with next to no text; it also checks
+`api.anyplot.ai/health`. It takes about two seconds. The recipe is in
+`/open-pr` §4. Run against a build of the broken commit, it fails exactly as
+the outage did; against a healthy one it passes, with the CORS error of a
+foreign origin reported as a warning only.
+
+**Two layers.** The `app-image` job of `ci-image.yml` runs the same script
+against the built container before the merge, so a bump that breaks the boot
+fails its PR. It runs when the container's inputs change (`package.json`,
+`yarn.lock`, `vite.config.ts` and the like), not for `app/src` edits, and it
+cannot see what only production has: the CDN, the origin gate armed, the real
+data. The post-merge run covers those, and every merge that never builds the
+container.
+
+**Why after every merge.** A merge that touches no `app/` file can still
+break the site through the API, a Cloudflare rule, or a data change, and the
+run costs seconds. A `FAIL` stops further merges until the site renders,
+because each extra merge widens the set of suspects and the revert.
+
 ## Modify repo files only with the Edit/Write tools
 
 Appending with `>>` counts — appending at the end of a file is exactly the
