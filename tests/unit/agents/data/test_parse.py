@@ -1859,6 +1859,124 @@ class TestThousandsGroups:
         assert warned(parsed, "column 'population': commas read as thousands separators, as in the file's other")
         assert not warned(parsed, "commas read as decimal commas")
 
+    def test_a_currency_column_of_three_digit_comma_groups_is_thousands(self) -> None:
+        alone = parse_dataset('price\n"$1,200"\n"$950"\n"$12,500"\n')
+        beside = parse_dataset('price,rating\n"$1,200",4.5\n"$950",3.8\n"$12,500",4.9\n')
+
+        assert alone.column_dtypes == {"price ($)": "integer"}
+        assert alone.csv == "price ($)\n1200\n950\n12500\n"
+        assert alone.profile.decimal == "."
+        assert read_back(alone)["price ($)"].tolist() == [1200, 950, 12500]
+        assert warned(
+            alone, "column 'price ($)': commas read as thousands separators, as a currency amount has at most two"
+        )
+        assert not warned(alone, "commas read as decimal commas")
+        assert beside.csv == "price ($),rating\n1200,4.5\n950,3.8\n12500,4.9\n"
+        assert warned(
+            beside, "column 'price ($)': commas read as thousands separators, as a currency amount has at most two"
+        )
+        assert not warned(beside, "commas read as decimal commas")
+
+    @pytest.mark.parametrize(
+        ("cells", "unit"),
+        [
+            (['"1,200 USD"', '"950 USD"', '"12,500 USD"'], "USD"),
+            (['"€ 1,200"', '"€ 950"', '"€ 12,500"'], "€"),
+            (['"CHF 1,200"', '"CHF 950"', '"CHF 12,500"'], "CHF"),
+        ],
+    )
+    def test_other_currencies_read_three_digit_comma_groups_as_thousands(self, cells: list[str], unit: str) -> None:
+        rows = "".join(f"{cell},{rating}\n" for cell, rating in zip(cells, ["4.5", "3.8", "4.9"], strict=True))
+        parsed = parse_dataset("price,rating\n" + rows)
+        name = f"price ({unit})"
+
+        assert parsed.column_dtypes[name] == "integer"
+        assert read_back(parsed)[name].tolist() == [1200, 950, 12500]
+        assert read_back(parsed)["rating"].tolist() == [4.5, 3.8, 4.9]
+        assert warned(parsed, f"column '{name}': commas read as thousands separators, as a currency")
+        assert not warned(parsed, "commas read as decimal commas")
+
+    @pytest.mark.parametrize(
+        ("cells", "expected"),
+        [
+            (['"$1,25"', '"$3,50"'], [1.25, 3.5]),  # two-digit fractions: decimal commas
+            (['"$1,200"', '"$3,50"'], [1.2, 3.5]),  # a short fraction in the column keeps decimal commas
+            (['"$1,2000"', '"$950"'], [1.2, 950.0]),  # a four-digit group: not a thousands group
+            (['"$0,125"', '"$1,250"'], [0.125, 1.25]),  # a zero-leading group: not a thousands group
+        ],
+    )
+    def test_currency_commas_that_are_not_three_digit_groups_stay_decimal_commas(
+        self, cells: list[str], expected: list[float]
+    ) -> None:
+        parsed = parse_dataset("price\n" + "\n".join(cells) + "\n")
+
+        assert parsed.column_dtypes == {"price ($)": "number"}
+        assert parsed.profile.decimal == ","
+        assert read_back(parsed)["price ($)"].tolist() == expected
+        assert not warned(parsed, "commas read as thousands separators")
+
+    def test_a_semicolon_file_with_decimal_commas_is_unchanged(self) -> None:
+        parsed = parse_dataset("Preis;Menge\n3,50;1.200\n")
+
+        assert parsed.csv == "Preis,Menge\n3.5,1200\n"
+        assert parsed.profile.decimal == ","
+
+    @pytest.mark.parametrize(
+        ("text", "name", "expected", "asks"),
+        [
+            # a decimal-comma column settles the comma (a fuel receipt: `1,789 €` per litre)
+            (
+                "Datum;Preis;Liter\n01.10.2026;1,789 €;45,5\n02.10.2026;1,759 €;30,2\n",
+                "Preis (€)",
+                [1.789, 1.759],
+                False,
+            ),
+            ('a,b\n"$1,200","$1,25"\n"$950","$2,50"\n', "a ($)", [1.2, 950.0], False),
+            # a semicolon file is written where the comma is the decimal mark
+            ("Datum;Preis\n01.10.2026;1,789 €\n02.10.2026;1,759 €\n", "Preis (€)", [1.789, 1.759], True),
+            # a column of dot groups or `1.234` shapes speaks for dot thousands
+            ('price,population\n"€ 1,200","7.184.003"\n"€ 950","7.226.391"\n', "price (€)", [1.2, 950.0], True),
+            ('price,weight\n"$1,200",1.250\n"$950",2.500\n', "price ($)", [1.2, 950.0], True),
+            # dot groups kept as text past int64 still speak for dot thousands
+            (
+                'price,total\n"€ 1,789",12.345.678.901.234.567.890.123\n"€ 1,759",7.226.391\n',
+                "price (€)",
+                [1.789, 1.759],
+                True,
+            ),
+            # `0,125` is no thousands group, so its comma is a decimal comma
+            ("Preis\tLiter\n1,789 €\t0,125\n1,759 €\t0,250\n", "Preis (€)", [1.789, 1.759], True),
+        ],
+    )
+    def test_a_file_that_speaks_for_decimal_commas_keeps_them_in_a_currency_column(
+        self, text: str, name: str, expected: list[float], asks: bool
+    ) -> None:
+        parsed = parse_dataset(text)
+
+        assert parsed.column_dtypes[name] == "number"
+        assert read_back(parsed)[name].tolist() == expected
+        assert not warned(parsed, "as a currency amount")
+        assert warned(parsed, f"column '{name}': commas read as decimal commas") is asks
+
+    def test_an_id_or_oversized_currency_comma_column_is_not_retyped_as_integers(self) -> None:
+        code = parse_dataset('Code\n"$1,200"\n"$2,500"\n')
+        huge = parse_dataset('price\n"$1,200"\n"$12345678901234567890123"\n')
+
+        assert code.column_dtypes == {"Code ($)": "number"}
+        assert read_back(code)["Code ($)"].tolist() == [1.2, 2.5]
+        assert huge.column_dtypes == {"price": "text"}
+        assert huge.csv == 'price\n"$1,200"\n$12345678901234567890123\n'
+        assert f"column 'price': {parse_module.BIG_INTEGERS}" in huge.warnings
+        assert not warned(huge, "commas read as decimal commas")
+
+    def test_an_oversized_comma_column_beside_comma_groups_stays_text(self) -> None:
+        parsed = parse_dataset('a,b\n"1,234","1,234,567"\n9223372036854775808,"2,000"\n')
+
+        assert parsed.column_dtypes["a"] == "text"
+        assert read_back(parsed)["a"].tolist() == ["1,234", "9223372036854775808"]
+        assert f"column 'a': {parse_module.BIG_INTEGERS}" in parsed.warnings
+        assert not warned(parsed, "commas read as decimal commas")
+
     def test_one_dot_group_beside_a_dot_grouped_column_is_thousands(self) -> None:
         parsed = parse_dataset("a;b;c\nx;7.184.003;1.234\ny;7.226.391;2.500\nz;7.278.744;980\n")
 
