@@ -56,7 +56,9 @@ LAST_TOOL_TURN = "This was the last tool turn. Do not call tools again; write th
 # Gemini does not spend tool turns on them (every turn re-sends the whole history).
 MAX_INLINE_FILE_BYTES = 60_000
 MAX_INLINE_TOTAL_BYTES = 240_000  # about 60k tokens
-NO_INLINE = {"uv.lock", "yarn.lock", "package-lock.json", "pnpm-lock.yaml", "CHANGELOG.md"}
+MAX_INLINE_DIFF_CHARS = 120_000  # about 30k tokens; lock files are left out of the diff
+LOCK_FILES = {"uv.lock", "yarn.lock", "package-lock.json", "pnpm-lock.yaml"}
+NO_INLINE = LOCK_FILES | {"CHANGELOG.md"}
 
 # USD per 1M tokens on Vertex AI global: (input, output incl. thinking, cached input).
 # From the billing pricing export, 2026-10-21. Regional (eu) is 10 % more.
@@ -125,24 +127,24 @@ class Workspace:
         listing = subprocess.run(["git", "-C", str(root), "ls-files", "-z"], capture_output=True)
         if listing.returncode != 0:
             fail(f"--root must be a git working tree: {root}")
-        allowed = [root.resolve()] + ([data.resolve()] if data else [])
-        candidates = {rel: root / rel for rel in listing.stdout.decode("utf-8", "replace").split("\0") if rel}
+        tracked = [rel for rel in listing.stdout.decode("utf-8", "replace").split("\0") if rel]
+        prefetched = [p.relative_to(data) for p in data.rglob("*")] if data else []
+        prefetched = [rel for rel in prefetched if (data / rel).is_file() and not looks_secret(rel)]
+        candidates = {rel: root / rel for rel in tracked}
         if data:
-            candidates.update(
-                {
-                    f"data/{p.relative_to(data)}": p
-                    for p in data.rglob("*")
-                    if p.is_file() and not looks_secret(p.relative_to(data))
-                }
-            )
+            candidates.update({f"data/{rel}": data / rel for rel in prefetched})
         # Built once: every entry, symlinks included, must resolve to a regular file
-        # inside --root or --data, so list_files, read_file and search see the same
-        # set. Tracked files of a public repository are public already and are not
-        # name-filtered; untracked files (.env, local settings) never appear.
+        # that is itself an entry, so list_files, read_file and search see the same
+        # set and a tracked `review.txt -> .env` or a data `notes.txt -> server.pem`
+        # shows nothing. Tracked files of a public repository are public already and
+        # are not name-filtered; untracked files (.env, local settings) never appear.
+        targets = {root.resolve() / rel for rel in tracked}
+        if data:
+            targets |= {data.resolve() / rel for rel in prefetched}
         self._visible: dict[str, Path] = {}
         for rel, path in candidates.items():
             real = path.resolve()
-            if real.is_file() and any(real.is_relative_to(a) for a in allowed):
+            if real.is_file() and real in targets:
                 self._visible[rel] = real
 
     def visible(self) -> dict[str, Path]:
@@ -372,7 +374,11 @@ def git_text(root: Path, *args: str) -> str:
 def inline_changes(workspace: Workspace, base: str) -> list[str]:
     """The diff against base plus the changed files' full text, within the size caps."""
     root = workspace.root
-    parts = [f'<diff base="{base}">\n{git_text(root, "diff", f"{base}...HEAD")}\n</diff>']
+    excluded = [f":(exclude,glob)**/{name}" for name in sorted(LOCK_FILES)]
+    diff = git_text(root, "diff", f"{base}...HEAD", "--", ".", *excluded)
+    if len(diff) > MAX_INLINE_DIFF_CHARS:
+        diff = diff[:MAX_INLINE_DIFF_CHARS] + "\n... diff truncated; read the changed files with the tools"
+    parts = [f'<diff base="{base}">\n{diff}\n</diff>']
     names = git_text(root, "diff", "--name-only", "--diff-filter=AMR", f"{base}...HEAD").splitlines()
     budget = MAX_INLINE_TOTAL_BYTES
     skipped = []
@@ -483,6 +489,7 @@ def cmd_review(args: argparse.Namespace) -> None:
     tool_calls: dict[str, int] = {}
     response = None
     stopped_by = None
+    cut_off = False
     tool_turns = 0
     nudges = 0
     while True:
@@ -514,7 +521,8 @@ def cmd_review(args: argparse.Namespace) -> None:
         if stopped_by is not None:
             nudges += 1
             if nudges > MAX_NUDGES:
-                break  # still calling tools after the budget: no review, exit 3
+                cut_off = True  # still calling tools after the budget: no review, exit 3
+                break
         tool_turns += 1
         last = stopped_by is None and tool_turns >= args.max_turns
         # Every call gets a response, so the history stays valid. The turn holds
@@ -576,7 +584,8 @@ def cmd_review(args: argparse.Namespace) -> None:
             }
         )
     )
-    if block:
+    # Text beside pending tool calls ("next I will read ...") is not a review.
+    if block or cut_off:
         sys.exit(3)
     if finish and finish != "STOP":
         sys.exit(4)

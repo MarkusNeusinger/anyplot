@@ -49,8 +49,10 @@ def repo(tmp_path: Path) -> Path:
     (root / "a.py").write_text("print(1)\n")
     (root / "docs" / "b.md").write_text("# B\n")
     os.symlink("../outside/secret.txt", root / "link.txt")
+    os.symlink(".env", root / "alias.txt")  # tracked link to an untracked file
+    os.symlink("a.py", root / "same.py")  # tracked link to a tracked file
     git(root, "init", "-q", "-b", "main")
-    git(root, "add", "a.py", "docs/b.md", "link.txt")
+    git(root, "add", "a.py", "docs/b.md", "link.txt", "alias.txt", "same.py")
     git(root, "commit", "-q", "-m", "base")
     (root / ".env").write_text("DATABASE_URL=UNTRACKED-TOKEN\n")
     return root
@@ -62,20 +64,22 @@ def data(tmp_path: Path) -> Path:
     folder.mkdir()
     (folder / "review.txt").write_text("prefetched\n")
     (folder / "server.pem").write_text("PEM-TOKEN\n")
+    os.symlink("server.pem", folder / "notes.txt")  # harmless name, filtered target
     return folder
 
 
 def test_workspace_shows_tracked_files_and_data_only(gr, repo, data):
     visible = set(gr.Workspace(repo, data).visible())
 
-    assert visible == {"a.py", "docs/b.md", "data/review.txt"}
+    assert visible == {"a.py", "docs/b.md", "same.py", "data/review.txt"}
 
 
 def test_read_file_cannot_leave_the_workspace(gr, repo, data):
     ws = gr.Workspace(repo, data)
 
     assert ws.read_file(str(repo / "a.py")) == "1: print(1)"
-    for path in ("../outside/secret.txt", "link.txt", ".env", "/etc/passwd", "data/server.pem"):
+    hidden = ("../outside/secret.txt", "link.txt", "alias.txt", ".env", "/etc/passwd", "data/server.pem")
+    for path in (*hidden, "data/notes.txt"):
         assert ws.read_file(path).startswith("not found or not readable"), path
 
 
@@ -83,7 +87,7 @@ def test_search_sees_no_hidden_content(gr, repo, data):
     ws = gr.Workspace(repo, data)
 
     assert ws.search("TOKEN") == "(no matches)"
-    assert ws.search("print") == "a.py:1: print(1)"
+    assert ws.search("print") == "a.py:1: print(1)\nsame.py:1: print(1)"
 
 
 def test_read_files_reads_several_files_and_caps_the_count(gr, repo, data):
@@ -132,11 +136,24 @@ def test_inline_changes_skips_lock_files_large_and_binary_files(gr, repo):
     parts = gr.inline_changes(gr.Workspace(repo, None), "main")
 
     assert parts[0].startswith('<diff base="main">')
+    assert "uv.lock" not in parts[0]
     assert '<file path="a.py">\nprint(2)\n\n</file>' in parts
     assert not any(part.startswith('<file path="uv.lock">') for part in parts)
     assert parts[-1].startswith("Changed but not included")
     for name in ("big.txt", "blob.dat", "uv.lock"):
         assert name in parts[-1]
+
+
+def test_inline_changes_caps_the_diff(gr, repo, monkeypatch):
+    git(repo, "switch", "-q", "-c", "work")
+    (repo / "a.py").write_text("print(2)\n" * 100)
+    git(repo, "commit", "-q", "-am", "work")
+    monkeypatch.setattr(gr, "MAX_INLINE_DIFF_CHARS", 200)
+
+    diff = gr.inline_changes(gr.Workspace(repo, None), "main")[0]
+
+    assert diff.endswith("... diff truncated; read the changed files with the tools\n</diff>")
+    assert len(diff) < 400
 
 
 # --- the tool loop, against a fake Vertex client ---------------------------------
@@ -242,11 +259,14 @@ def test_last_tool_turn_carries_function_responses_only(gr, types, monkeypatch, 
 
 
 def test_model_that_keeps_calling_tools_is_cut_off(gr, types, monkeypatch, tmp_path, repo):
-    responses = [calls(types, "a.py") for _ in range(2 + gr.MAX_NUDGES)]
+    responses = [calls(types, "a.py") for _ in range(1 + gr.MAX_NUDGES)]
+    # The last response explains its next read in text: still no review.
+    read_next = types.Part(function_call=types.FunctionCall(name="read_file", args={"path": "docs/b.md"}))
+    responses.append(response(types, [types.Part(text="Next I read docs/b.md."), read_next], 100))
 
-    code, text, models = review(gr, monkeypatch, tmp_path, repo, responses, "--max-turns", "1")
+    code, _, models = review(gr, monkeypatch, tmp_path, repo, responses, "--max-turns", "1")
 
-    assert (code, text) == (3, "")
+    assert code == 3
     assert len(models.requests) == 2 + gr.MAX_NUDGES
     for request in models.requests[2:]:
         assert [part.function_response.response for part in tool_replies(request)] == [{"result": gr.BUDGET_USED}]

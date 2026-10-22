@@ -97,6 +97,10 @@ One-time setup:
 git clone https://github.com/MarkusNeusinger/anyplot.git ~/projects/anyplot-agy
 ```
 
+A clone set up before 2026-10-22 had its push URL set to `no-push`. The owner
+restores it once, because Gemini never edits `.git/config`:
+`git -C ~/projects/anyplot-agy remote set-url --push origin https://github.com/MarkusNeusinger/anyplot.git`.
+
 Then, for each task:
 
 ```bash
@@ -213,6 +217,11 @@ This section is for the Gemini agent in the owner's agy session.
    git fetch origin gemini/<number>-<slug>:gemini/<number>-<slug>
    git worktree add .claude/worktrees/gemini-<number> gemini/<number>-<slug>
    ```
+
+   When Gemini hands over again after step 4, the worktree exists and Git
+   refuses to fetch into its checked-out branch, so bring in its new commits
+   there instead:
+   `git -C .claude/worktrees/gemini-<number> pull --ff-only origin gemini/<number>-<slug>`.
 
 3. **Review independently.** Start a fresh Opus subagent and give it only two
    things: the issue's Acceptance section and
