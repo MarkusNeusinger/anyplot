@@ -1,8 +1,8 @@
 """The Python runtime (matplotlib and seaborn in phase 1).
 
 The command is the catalogue's CI render command (`MPLBACKEND=Agg
-ANYPLOT_THEME=<theme> python plot.py`) with the isolated interpreter and the probe
-harness in front. The environment is complete, never inherited: the theme, the Agg
+ANYPLOT_THEME=<theme> python plot.py`) with the isolated interpreter (no remote
+debugging either, `harness.INTERPRETER_FLAGS`) and the probe harness in front. The environment is complete, never inherited: the theme, the Agg
 backend, a writable matplotlib cache and `HOME` under `/tmp` (the root filesystem is
 read-only), and the harness's resource limits.
 
@@ -20,7 +20,7 @@ from ...code.loader import to_run_form
 from ...code.normalise import normalise
 from ...code.validate import validate_security
 from ..contract import Theme
-from ..harness import CONVERT_FLAG, DATA_FLAG
+from ..harness import CONVERT_FLAG, DATA_FLAG, INTERPRETER_FLAGS
 from ..png import MAX_PNG_BYTES, MAX_PROBE_BYTES, read_output
 
 
@@ -60,7 +60,7 @@ class PythonRuntime:
         self.mplconfig = mplconfig
 
     def command(self, theme: Theme) -> list[str]:
-        return [self.python, "-I", self.harness, self.file_name]
+        return [self.python, *INTERPRETER_FLAGS, self.harness, self.file_name]
 
     def env(self, theme: Theme) -> dict[str, str]:
         return {
@@ -76,7 +76,7 @@ class PythonRuntime:
         }
 
     def data_command(self) -> list[str]:
-        return [self.python, "-I", self.harness, DATA_FLAG, DATA_FILE_NAME]
+        return [self.python, *INTERPRETER_FLAGS, self.harness, DATA_FLAG, DATA_FILE_NAME]
 
     def data_env(self, timeout_s: float | None = None) -> dict[str, str]:
         """A data run's environment: the renderer's `sandbox_env` limits for a data run, address space and processes
@@ -96,7 +96,7 @@ class PythonRuntime:
 
     def convert_command(self) -> list[str]:
         """A conversion: the harness in convert mode on the file written as `input.bin`."""
-        return [self.python, "-I", self.harness, CONVERT_FLAG, CONVERT_INPUT_NAME]
+        return [self.python, *INTERPRETER_FLAGS, self.harness, CONVERT_FLAG, CONVERT_INPUT_NAME]
 
     def convert_env(self) -> dict[str, str]:
         """A data run's environment, with Arrow's system allocator (the renderer's `sandbox_env` for a conversion)."""

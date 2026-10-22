@@ -31,6 +31,7 @@ class TestContract:
         assert wire.MAX_CSV_BYTES == MAX_COMPUTED_BYTES == harness.DATA_MAX_CSV_BYTES
         assert wire.MAX_DATA_CSV_CHARS == MAX_CANONICAL_BYTES > MAX_COMPUTED_BYTES
         assert executor.OUT_FILE == harness.DATA_OUT_FILE and executor.DATA_FLAG == harness.DATA_FLAG
+        assert executor.INTERPRETER_FLAGS == harness.INTERPRETER_FLAGS
         assert wire.DATA_STATUS_FILE == harness.DATA_STATUS_FILE
         assert max(harness.DATA_EXIT.values()) <= wire.MAX_DATA_EXIT
 

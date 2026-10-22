@@ -4,7 +4,7 @@
 #
 # Two jobs in one image. The service process (uvicorn agents.renderer.main:app)
 # launches sandboxes through Cloud Run's `sandbox do`, and every sandbox runs
-# `/app/.venv/bin/python -I /opt/anyplot/harness.py plot.py` from this same image:
+# `/app/.venv/bin/python -I -X disable-remote-debug /opt/anyplot/harness.py plot.py` from this same image:
 # a sandbox sees the image read-only (spike S), so the venv and the harness here
 # are what model-written code runs with. The `fonts` stage below supplies the
 # multi-script fallback fonts the harness appends to every lookup. The local

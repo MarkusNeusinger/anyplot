@@ -58,7 +58,7 @@ def run(data, sheet=None):
         if sheet is not None:
             (work / "request.json").write_text(json.dumps({"sheet": sheet}), encoding="utf-8")
         done = subprocess.run(
-            [PYTHON, "-I", HARNESS, "--convert", "input.bin"],
+            [PYTHON, "-I", "-X", "disable-remote-debug", HARNESS, "--convert", "input.bin"],
             cwd=work,
             env=ENV,
             capture_output=True,

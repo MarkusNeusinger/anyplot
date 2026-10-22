@@ -39,7 +39,7 @@ from agents.anyplot.code.data_code import check_data_code
 from agents.anyplot.render.backends.fake import FakeBackend
 from agents.anyplot.render.backends.local import collect_data_run, read_tail
 from agents.anyplot.render.contract import DataJob, DataOutput, RendererUnavailable
-from agents.anyplot.render.harness import DATA_EXIT, DATA_FLAG
+from agents.anyplot.render.harness import DATA_EXIT, DATA_FLAG, INTERPRETER_FLAGS
 from agents.anyplot.render.runtimes.python import DATA_FILE_NAME, HARNESS_SOURCE, PythonRuntime
 from agents.anyplot.settings import FAKE_RENDERER_ENVIRONMENTS
 
@@ -89,7 +89,7 @@ class HostDataBackend(FakeBackend):
 
     def data_argv(self) -> list[str]:
         """The harness in data mode, as `PythonRuntime.data_command` runs it in the renderer's image."""
-        return [self.python, "-I", str(HARNESS_SOURCE), DATA_FLAG, DATA_FILE_NAME]
+        return [self.python, *INTERPRETER_FLAGS, str(HARNESS_SOURCE), DATA_FLAG, DATA_FILE_NAME]
 
     async def run_data(self, job: DataJob) -> DataOutput:
         """Run the snippet in a fresh private directory and read what it left there as the renderer does.

@@ -617,7 +617,7 @@ jobs:
             -e ANYPLOT_THEME=light -e MPLBACKEND=Agg -e MPLCONFIGDIR=/tmp/mpl -e ANYPLOT_MPL_SEED=/opt/mplconfig \
             -e HOME=/tmp -e PYTHONDONTWRITEBYTECODE=1 -e OPENBLAS_NUM_THREADS=1 -e OMP_NUM_THREADS=1 \
             -e ANYPLOT_RLIMIT_CPU_S=60 -e ANYPLOT_RLIMIT_FSIZE_MB=50 -e ANYPLOT_RLIMIT_AS_MB=1024 \
-            anyplot-renderer:ci /app/.venv/bin/python -I /opt/anyplot/harness.py plot.py > harness.out
+            anyplot-renderer:ci /app/.venv/bin/python -I -X disable-remote-debug /opt/anyplot/harness.py plot.py > harness.out
           grep -qxF 'HARNESS {"event": "start"}' harness.out || { echo "::error::no HARNESS start line"; cat harness.out; exit 1; }
           grep -q '^HARNESS {"event": "end"' harness.out || { echo "::error::no HARNESS end line"; cat harness.out; exit 1; }
           python3 - <<'EOF'
@@ -687,7 +687,8 @@ jobs:
               -e ANYPLOT_THEME=light -e MPLBACKEND=Agg -e MPLCONFIGDIR=/tmp/mpl \
               -e HOME=/tmp -e PYTHONDONTWRITEBYTECODE=1 -e OPENBLAS_NUM_THREADS=1 -e OMP_NUM_THREADS=1 \
               -e ANYPLOT_RLIMIT_CPU_S=60 -e ANYPLOT_RLIMIT_FSIZE_MB=50 -e ANYPLOT_RLIMIT_AS_MB=1024 \
-              "$@" anyplot-renderer:ci /app/.venv/bin/python -I /opt/anyplot/harness.py plot.py > "$work/harness.out"
+              "$@" anyplot-renderer:ci /app/.venv/bin/python -I -X disable-remote-debug /opt/anyplot/harness.py plot.py \
+              > "$work/harness.out"
             grep -q '^HARNESS {"event": "end"' "$work/harness.out" || { echo "::error::no HARNESS end line in $work"; cat "$work/harness.out"; exit 1; }
           }
           render work-i18n -e ANYPLOT_MPL_SEED=/opt/mplconfig

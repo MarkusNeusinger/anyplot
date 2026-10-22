@@ -126,6 +126,7 @@ def test_the_cpu_cap_is_clamped_to_the_runs_timeout_as_the_renderer_clamps_it() 
     )
     argv = local.data_argv(DataJob(job_id="dtest0004", source="x", timeout_s=20.0), Path("/tmp/run"))
     assert "ANYPLOT_RLIMIT_CPU_S=20" in argv
+    assert HostDataBackend().data_argv()[1:4] == ["-I", "-X", "disable-remote-debug"]  # the sandbox interpreter's
 
 
 def test_a_cancelled_run_kills_its_process_group_and_removes_its_directory(monkeypatch: pytest.MonkeyPatch) -> None:

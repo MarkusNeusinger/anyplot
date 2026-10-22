@@ -56,7 +56,15 @@ class TestCommand:
         assert argv[:4] == [config.sandbox_binary, "do", "--sandbox-name", "r-abc-dark"]
         assert f"type=bind,source={run_dir / 'work'},destination=/work" in argv
         assert argv[argv.index("-w") + 1] == "/work"
-        assert argv[argv.index("--") :] == ["--", config.python, "-I", config.harness, "plot.py"]
+        assert argv[argv.index("--") :] == [
+            "--",
+            config.python,
+            "-I",
+            "-X",
+            "disable-remote-debug",
+            config.harness,
+            "plot.py",
+        ]
         assert "--write" not in argv and not any(part.startswith("--allow-egress") for part in argv)
         values = envs(argv)
         assert values["PATH"] == SANDBOX_PATH  # a sandbox has no PATH of its own (spike S2)
@@ -410,7 +418,16 @@ class TestDataRun:
     ) -> None:
         argv = build_argv(config, "r-abc-data", tmp_path / "r", None, 20)
 
-        assert argv[argv.index("--") :] == ["--", config.python, "-I", config.harness, "--data", "snippet.py"]
+        assert argv[argv.index("--") :] == [
+            "--",
+            config.python,
+            "-I",
+            "-X",
+            "disable-remote-debug",
+            config.harness,
+            "--data",
+            "snippet.py",
+        ]
         assert "--write" not in argv and not any(part.startswith("--allow-egress") for part in argv)
         values = envs(argv)
         assert values["PATH"] == SANDBOX_PATH and values["ANYPLOT_RLIMIT_CPU_S"] == "20"
@@ -528,7 +545,16 @@ class TestConvert:
     ) -> None:
         argv = build_argv(config, "r-abc-convert", tmp_path / "r", None, 10, convert=True)
 
-        assert argv[argv.index("--") :] == ["--", config.python, "-I", config.harness, "--convert", "input.bin"]
+        assert argv[argv.index("--") :] == [
+            "--",
+            config.python,
+            "-I",
+            "-X",
+            "disable-remote-debug",
+            config.harness,
+            "--convert",
+            "input.bin",
+        ]
         values = envs(argv)
         assert values["ARROW_DEFAULT_MEMORY_POOL"] == "system" and values["ANYPLOT_RLIMIT_CPU_S"] == "10"
         assert not {"ANYPLOT_THEME", "MPLBACKEND"} & set(values)

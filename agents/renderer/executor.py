@@ -5,7 +5,7 @@ Every theme runs in a sandbox of its own, in a run directory of its own:
     /usr/local/gcp/bin/sandbox do --sandbox-name r-<random>-<theme>
         --mount type=bind,source=/tmp/runs/r-<random>-<theme>/work,destination=/work -w /work
         --env PATH=/app/.venv/bin:/usr/local/bin:/usr/bin:/bin --env HOME=/tmp --env ANYPLOT_THEME=<theme> ...
-        -- /app/.venv/bin/python -I /opt/anyplot/harness.py plot.py
+        -- /app/.venv/bin/python -I -X disable-remote-debug /opt/anyplot/harness.py plot.py
 
 started with `asyncio.create_subprocess_exec` (never a shell) in a session of its own.
 Each rule below comes from spike S or S2 (docs/concepts/agent-network.md, "Render"):
@@ -141,6 +141,8 @@ DATA_LABEL = "data"
 """The sandbox name suffix and log label of a data run, where a render has its theme."""
 CONVERT_FLAG = "--convert"
 """The harness's convert-mode flag (`harness.CONVERT_FLAG`)."""
+INTERPRETER_FLAGS = ("-I", "-X", "disable-remote-debug")
+"""The sandbox interpreter's flags (`harness.INTERPRETER_FLAGS`): isolated, and no Python 3.14 remote debugging."""
 CONVERT_LABEL = "convert"
 """The sandbox name suffix and log label of a conversion."""
 LAUNCHER_FAILURE = "failed to exec in container"
@@ -455,7 +457,7 @@ def build_argv(
     for key, value in sandbox_env(config, theme, cpu_s, convert=convert).items():
         argv += ["--env", f"{key}={value}"]
     flags = list(argv)
-    argv += ["--", config.python, "-I", config.harness]
+    argv += ["--", config.python, *INTERPRETER_FLAGS, config.harness]
     if convert:
         argv += [CONVERT_FLAG, CONVERT_INPUT_FILE]
     else:

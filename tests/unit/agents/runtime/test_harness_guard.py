@@ -28,7 +28,7 @@ def render(tmp_path: Path, body: str) -> tuple[int, str]:
     """Exit code and stderr of one plot-mode run of HEADER + body + SAVE in `tmp_path`."""
     (tmp_path / "plot.py").write_text(HEADER + body + SAVE, encoding="utf-8")
     done = subprocess.run(
-        [sys.executable, "-I", str(HARNESS_SOURCE), "plot.py"],
+        [sys.executable, *harness.INTERPRETER_FLAGS, str(HARNESS_SOURCE), "plot.py"],
         cwd=tmp_path,
         capture_output=True,
         text=True,
@@ -49,7 +49,7 @@ def run_data(tmp_path: Path, code: str) -> tuple[int, str | None, str]:
     """Exit code, `out.csv` (None when missing) and stderr of one data-mode run in `tmp_path`."""
     (tmp_path / "snippet.py").write_text(code, encoding="utf-8")
     done = subprocess.run(
-        [sys.executable, "-I", str(HARNESS_SOURCE), harness.DATA_FLAG, "snippet.py"],
+        [sys.executable, *harness.INTERPRETER_FLAGS, str(HARNESS_SOURCE), harness.DATA_FLAG, "snippet.py"],
         cwd=tmp_path,
         capture_output=True,
         text=True,
@@ -79,6 +79,13 @@ PLOT_ROUTES = [
     pytest.param(f"import os\nos.posix_spawn('/usr/bin/touch', ['touch', '{MARKER}'], {{}})\n", id="posix_spawn"),
     pytest.param("import socket\nsocket.socket()\n", id="socket"),
     pytest.param("lib = np.zeros(1).ctypes._ctypes.CDLL(None)\n", id="native code through an array"),
+    # Python 3.14: every call through a ctypes function pointer raises `ctypes.call_function`; only ctypes' own
+    # cast, memmove and memset pass (`CTYPES_HELPERS`), so `string_at` through an array stays refused.
+    pytest.param(
+        "a = np.zeros(8)\nraw = a.ctypes._ctypes.string_at(a.ctypes.data, 8)\n", id="string_at through an array"
+    ),
+    # Python 3.14's PEP 768: `sys.remote_exec` makes a process, this one included, run a script file.
+    pytest.param("import os, sys\nsys.remote_exec(os.getpid(), 'plot.py')\n", id="sys.remote_exec into the plot"),
     pytest.param(f"{WRITE_MARKER}\n", id="open for writing"),
     pytest.param(f"import os\nos.open('{MARKER}', os.O_CREAT | os.O_WRONLY)\n", id="os.open for writing"),
     pytest.param("plt.figure().savefig('plot-dark.png')\n", id="a save to another name"),
@@ -360,6 +367,10 @@ class TestPlotGuardUnit:
         assert harness.reads_frames(type("Frame", (), {"f_code": walker, "f_back": consumed}))
         assert not harness.reads_frames(None)
 
+    def test_refuses_remote_debugging(self, tmp_path: Path) -> None:
+        guard = self.guard(tmp_path)
+        assert guard.refuses("sys.remote_exec", (1, "x.py")) and guard.refuses("cpython.remote_debugger_script", ())
+
     def test_exec_from_the_test_is_refused_but_the_entry_runs_once(self, tmp_path: Path) -> None:
         guard = self.guard(tmp_path)
         code = compile("1", "plot.py", "eval")
@@ -420,3 +431,61 @@ class TestDataGuardCode:
         with pytest.raises(RuntimeError):
             guard("exec", (code,))
         assert guard.blocked == "exec"
+
+    @pytest.mark.parametrize(
+        "code",
+        [
+            pytest.param(
+                "import numpy as np\na = np.zeros(8)\nraw = a.ctypes._ctypes.string_at(a.ctypes.data, 8)\n",
+                id="string_at through an array",
+            ),
+            pytest.param("import os, sys\nsys.remote_exec(os.getpid(), 'snippet.py')\n", id="sys.remote_exec"),
+        ],
+    )
+    def test_native_and_remote_routes_fail_the_run(self, tmp_path: Path, code: str) -> None:
+        exit_code, out, stderr = run_data(tmp_path, "import pandas as pd\n" + code + "df = pd.DataFrame({'a': [1]})\n")
+        assert exit_code == DATA_EXIT["blocked"], stderr
+        assert out == ""
+
+
+GUARDS = [
+    pytest.param(lambda tmp_path: harness.PlotGuard((str(tmp_path / "plot-light.png"),)), id="PlotGuard"),
+    pytest.param(lambda tmp_path: harness.DataGuard(), id="DataGuard"),
+    pytest.param(lambda tmp_path: harness.ConvertGuard(), id="ConvertGuard"),
+]
+
+
+@pytest.mark.parametrize("make_guard", GUARDS)
+def test_only_ctypes_own_helpers_call_through(tmp_path: Path, make_guard) -> None:
+    """Python 3.14 raises `ctypes.call_function` for every call through a ctypes function pointer; scipy's import
+    calls `ctypes.cast`. Every guard lets exactly `CTYPES_HELPERS` through (3.13 ran them with no event) and refuses
+    every other address, `string_at`, `wstring_at` and `memoryview_at` included, and every other `ctypes.*` event."""
+    import _ctypes
+
+    guard = make_guard(tmp_path)
+    for name in harness.CTYPES_HELPERS:
+        assert not guard.refuses("ctypes.call_function", (getattr(_ctypes, name), ())), name
+    for name in ("_string_at_addr", "_wstring_at_addr", "_memoryview_at_addr"):
+        if hasattr(_ctypes, name):
+            assert guard.refuses("ctypes.call_function", (getattr(_ctypes, name), ())), name
+    assert guard.refuses("ctypes.call_function", (0, ()))
+    assert guard.refuses("ctypes.call_function", ())
+    assert guard.refuses("ctypes.dlopen", ("libc.so.6",))
+    assert guard.refuses("sys.remote_exec", (1, "x.py"))
+
+
+def test_the_sandbox_flags_turn_remote_debugging_off(tmp_path: Path) -> None:
+    """`INTERPRETER_FLAGS` (`-X disable-remote-debug`): `sys.remote_exec` against the interpreter's own pid is refused
+    by the interpreter itself, before any guard, and the script never runs."""
+    payload = tmp_path / "payload.py"
+    payload.write_text(f"open({str(tmp_path / MARKER)!r}, 'w').write('x')\n", encoding="utf-8")
+    code = (
+        "import os, sys, time\nprint(sys.is_remote_debug_enabled())\n"
+        f"try:\n    sys.remote_exec(os.getpid(), {str(payload)!r})\nexcept RuntimeError as error:\n    print(error)\n"
+        "time.sleep(0.2)\n"
+    )
+    done = subprocess.run(
+        [sys.executable, *harness.INTERPRETER_FLAGS, "-c", code], capture_output=True, text=True, timeout=60
+    )
+    assert done.stdout.splitlines() == ["False", "Remote debugging is not enabled"], done.stderr
+    assert not (tmp_path / MARKER).exists()

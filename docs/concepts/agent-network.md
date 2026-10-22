@@ -302,7 +302,7 @@ The sandbox command per theme, started with `asyncio.create_subprocess_exec` in 
   --env PATH=/app/.venv/bin:/usr/local/bin:/usr/bin:/bin --env HOME=/tmp --env ANYPLOT_THEME=<theme> \
   --env MPLBACKEND=Agg --env MPLCONFIGDIR=/tmp/mpl --env ANYPLOT_MPL_SEED=/opt/mplconfig \
   --env ANYPLOT_RLIMIT_CPU_S=60 --env ANYPLOT_RLIMIT_FSIZE_MB=50 --env ANYPLOT_RLIMIT_AS_MB=1024 --env ANYPLOT_RLIMIT_NPROC=64 ... \
-  -- /app/.venv/bin/python -I /opt/anyplot/harness.py plot.py
+  -- /app/.venv/bin/python -I -X disable-remote-debug /opt/anyplot/harness.py plot.py
 ```
 
 What spikes S and S2 measured in europe-west4, and what the executor (`agents/renderer/executor.py`) does about it:

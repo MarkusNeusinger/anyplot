@@ -897,7 +897,14 @@ class TestBackends:
         assert argv[argv.index("--network") + 1] == "none"
         assert "--read-only" in argv and "--allow-egress" not in argv
         assert "/tmp/run:/work" in argv
-        assert argv[-4:] == ["/app/.venv/bin/python", "-I", "/opt/anyplot/harness.py", "plot.py"]
+        assert argv[-6:] == [
+            "/app/.venv/bin/python",
+            "-I",
+            "-X",
+            "disable-remote-debug",
+            "/opt/anyplot/harness.py",
+            "plot.py",
+        ]
         assert "ANYPLOT_THEME=light" in argv
 
     def test_local_backend_data_command_keeps_the_network_off_and_has_no_theme(self) -> None:
@@ -908,7 +915,15 @@ class TestBackends:
 
         assert argv[argv.index("--network") + 1] == "none" and "--read-only" in argv
         assert "/tmp/run:/work" in argv and "r-d1-data" in argv
-        assert argv[-5:] == ["/app/.venv/bin/python", "-I", "/opt/anyplot/harness.py", "--data", "snippet.py"]
+        assert argv[-7:] == [
+            "/app/.venv/bin/python",
+            "-I",
+            "-X",
+            "disable-remote-debug",
+            "/opt/anyplot/harness.py",
+            "--data",
+            "snippet.py",
+        ]
         assert not any(part.startswith(("ANYPLOT_THEME", "MPLBACKEND")) for part in argv)
         # The renderer's limits for a data run, address space and processes included (parity with `sandbox_env`).
         from agents.renderer.settings import RendererSettings
@@ -930,7 +945,7 @@ class TestBackends:
             "image = args.index('anyplot-agents:dev')\n"
             "command = args[image + 1:]\n"
             f"command[0] = {sys.executable!r}\n"
-            f"command[2] = {str(HARNESS_SOURCE)!r}\n"
+            f"command[command.index('/opt/anyplot/harness.py')] = {str(HARNESS_SOURCE)!r}\n"
             "os.chdir(work)\n"
             "os.execv(command[0], command)\n",
             encoding="utf-8",
@@ -962,7 +977,7 @@ class TestBackends:
             "image = args.index('anyplot-agents:dev')\n"
             "command = args[image + 1:]\n"
             f"command[0] = {sys.executable!r}\n"
-            f"command[2] = {str(HARNESS_SOURCE)!r}\n"
+            f"command[command.index('/opt/anyplot/harness.py')] = {str(HARNESS_SOURCE)!r}\n"
             "os.environ['ARROW_DEFAULT_MEMORY_POOL'] = 'system'\n"
             "os.chdir(work)\n"
             "os.execv(command[0], command)\n",
@@ -973,7 +988,15 @@ class TestBackends:
             image="anyplot-agents:dev", runtime=PythonRuntime(), environment="development", docker=str(docker)
         )
         argv = backend.convert_argv(ConvertJob(job_id="c1", data=b"x"), Path("/tmp/run"))
-        assert argv[-5:] == ["/app/.venv/bin/python", "-I", "/opt/anyplot/harness.py", "--convert", "input.bin"]
+        assert argv[-7:] == [
+            "/app/.venv/bin/python",
+            "-I",
+            "-X",
+            "disable-remote-debug",
+            "/opt/anyplot/harness.py",
+            "--convert",
+            "input.bin",
+        ]
         assert "ARROW_DEFAULT_MEMORY_POOL=system" in argv and argv[argv.index("--network") + 1] == "none"
 
         data = xlsx([Sheet("A", [["a"]]), Sheet("B", [["b"], [2]])])

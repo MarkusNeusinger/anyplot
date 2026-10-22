@@ -227,13 +227,15 @@ THEME_VARIABLE = "ANYPLOT_THEME"
 
 # The pure standard modules from `warnings` on were admitted by the owner (2026-10-10).
 # Each was walked for public names that read, load, save, open, fetch or evaluate, and
-# for the modules it re-exports (Python 3.13.12):
+# for the modules it re-exports (Python 3.13.12; walked again on 3.14.9, whose additions
+# are noted per module and in the last item):
 # * warnings: `formatwarning`, `showwarning` and `warn_explicit` read a line of any file
 #   through `linecache` (the first returns it as text) or write to a file object, so
 #   they are in `BANNED_IO`; re-exports `sys`.
 # * typing: `get_type_hints` and `ForwardRef` evaluate annotation strings, which is
 #   `eval`; re-exports `sys` and `types` (whose `CodeType` and `FunctionType` build
-#   code): all in `ESCAPE_ATTRIBUTES`.
+#   code): all in `ESCAPE_ATTRIBUTES`. 3.14 adds `evaluate_forward_ref`, which evaluates a
+#   `ForwardRef`: in `ESCAPE_ATTRIBUTES`.
 # * calendar: `LocaleTextCalendar`, `LocaleHTMLCalendar` and `different_locale` set the
 #   process locale through `_locale.setlocale`, which the `locale` ban keeps out: in
 #   `ESCAPE_ATTRIBUTES`. `main` reaches them through its `-L` option, but a column may be
@@ -246,11 +248,20 @@ THEME_VARIABLE = "ANYPLOT_THEME"
 # * enum: `bltns` is the `builtins` module and `global_enum` writes into a module's
 #   namespace: in `ESCAPE_ATTRIBUTES`; re-exports `sys`.
 # * dataclasses: re-exports `inspect` (source reads) and `sys`; the private
-#   `_FuncBuilder` runs `exec` on text, which the private-name rule covers.
+#   `_FuncBuilder` runs `exec` on text, which the private-name rule covers. 3.14 also
+#   re-exports `annotationlib`, whose `get_annotations(..., eval_str=True)`,
+#   `call_evaluate_function`, `call_annotate_function` and `ForwardRef.evaluate` evaluate
+#   code (`from dataclasses import annotationlib` passed the walk of 3.13): the module and
+#   those names are in `ESCAPE_ATTRIBUTES`.
 # * operator: `attrgetter` and `methodcaller` look attributes up by string, which is
 #   `getattr`: in `ESCAPE_ATTRIBUTES`.
 # * decimal, fractions, numbers, cmath, bisect, heapq: nothing (fractions re-exports
 #   `sys`, `re`, `math`, `operator`, `numbers` and `functools`).
+# * 3.14.9, the rest: `decimal.IEEEContext`, `operator.is_none` and `is_not_none`, the
+#   `heapq` `*_max` functions, `functools.Placeholder`, the types `functools` now
+#   re-exports (`MethodType`, `MappingProxyType`, `UnionType`) and `collections.heapq`
+#   compute only; `statistics` swaps its `math.erf` re-export for `erfc`, `fractions`
+#   drops `Decimal` and `enum` drops `partial`. The walk of `random` below is unchanged.
 COMMON_IMPORTS: frozenset[str] = frozenset(
     {
         "numpy",
@@ -323,7 +334,7 @@ LIBRARY_IMPORTS: dict[str, frozenset[str]] = {
 }
 # The DATA profile: no plotting stack, no sklearn (its `datasets` fetch over the network) and
 # no statsmodels (`statsmodels.api.datasets` and `webuse` read files and URLs). The standard
-# `random` was walked (Python 3.13.12): its public names compute; `main` parses `sys.argv`
+# `random` was walked (Python 3.13.12, unchanged on 3.14.9): its public names compute; `main` parses `sys.argv`
 # and prints, so it is banned on its module (`MODULE_ESCAPES`), and its private names
 # (`_os`, `_urandom`, `_inst`) fall under the DATA profile's private-attribute rule.
 DATA_IMPORTS: frozenset[str] = (
@@ -529,6 +540,12 @@ ESCAPE_ATTRIBUTES: frozenset[str] = frozenset(
         "linecache",
         "get_type_hints",
         "ForwardRef",
+        # Python 3.14: `dataclasses.annotationlib` and `typing.evaluate_forward_ref` evaluate annotation strings.
+        "annotationlib",
+        "get_annotations",
+        "call_evaluate_function",
+        "call_annotate_function",
+        "evaluate_forward_ref",
         "CodeType",
         "FunctionType",
         "attrgetter",
