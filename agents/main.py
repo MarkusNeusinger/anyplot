@@ -135,7 +135,6 @@ from starlette.background import BackgroundTask
 
 from agents.anyplot import agent as agent_module
 from agents.anyplot import telemetry
-from agents.anyplot.code.readiness import MAP_SPECS
 from agents.anyplot.data.bindings import check_bindings, label_siblings
 from agents.anyplot.data.classify import classify_paste
 from agents.anyplot.data.parse import (
@@ -149,7 +148,6 @@ from agents.anyplot.data.parse import (
     without_context,
 )
 from agents.anyplot.data.prepare import Operation, PrepareError, apply_operations, with_date_notes
-from agents.anyplot.data.roles import DataRole
 from agents.anyplot.data.shape import long_suggestion
 from agents.anyplot.data.store import StoreFull
 from agents.anyplot.data.transcribe import (
@@ -238,6 +236,7 @@ from agents.renderer.wire import (
 )
 from agents.stream import MAX_DONE_ROLES, Translator
 from core.constants import SUPPORTED_LIBRARIES
+from core.spec_roles import MAP_SPECS, DataRole
 
 
 logger = logging.getLogger("anyplot.agents")

@@ -13,9 +13,9 @@ import pytest
 
 from agents.anyplot.data.bindings import check_bindings, default_bindings
 from agents.anyplot.data.parse import parse_dataset
-from agents.anyplot.data.roles import DataRole, parse_roles
 from agents.anyplot.data.signs import NON_NEGATIVE_ROLES, has_negative, is_non_negative, mark_non_negative
 from agents.anyplot.schemas import Binding, DatasetProfile
+from core.spec_roles import DataRole, parse_roles
 
 
 PLOTS = Path(__file__).resolve().parents[4] / "plots"

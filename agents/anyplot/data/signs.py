@@ -25,8 +25,9 @@ Two tables decide, both by exact name:
 from collections.abc import Iterable
 from dataclasses import replace
 
+from core.spec_roles import DataRole
+
 from ..schemas import ColumnProfile
-from .roles import DataRole
 
 
 NON_NEGATIVE_ROLES: frozenset[str] = frozenset(

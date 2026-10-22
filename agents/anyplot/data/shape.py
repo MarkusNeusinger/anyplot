@@ -71,12 +71,13 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
+from core.spec_roles import DataRole
+
 from ..language import DEFAULT_LANGUAGE, canonical
 from ..schemas import MAX_ROWS, Binding, ColumnProfile, DatasetProfile
 from .months import fold, named_months
 from .parse import ID_WORDS
 from .prepare import MAX_LONGER_COLUMNS
-from .roles import DataRole
 from .temporal import WORDS, time_keys
 
 

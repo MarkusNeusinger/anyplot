@@ -1,15 +1,27 @@
-"""Tests for agents/anyplot/data/roles.py: the `## Data` bullet grammar and a sweep over the catalogue."""
+"""Tests for core/spec_roles.py: the `## Data` bullet grammar, the data shape, the colour role, and catalogue sweeps."""
 
 import re
 from pathlib import Path
 
 import pytest
 
-from agents.anyplot.data.roles import MAX_ROLE_NAME_CHARS, MAX_VARIADIC_NAME_CHARS, DataRole, parse_roles, type_words
-from agents.anyplot.schemas import ROLE_PATTERN
+from core.spec_roles import (
+    MAP_SPECS,
+    MAX_ROLE_NAME_CHARS,
+    MAX_VARIADIC_NAME_CHARS,
+    ROLE_PATTERN,
+    SHAPE_OVERRIDES,
+    DataRole,
+    color_role,
+    data_bullets,
+    is_structure_role,
+    parse_roles,
+    spec_shape,
+    type_words,
+)
 
 
-REPO_ROOT = Path(__file__).resolve().parents[4]
+REPO_ROOT = Path(__file__).resolve().parents[3]
 PLOTS = REPO_ROOT / "plots"
 
 
@@ -284,3 +296,139 @@ LINE_MULTI = [
     "Size: 10-200 points per series, 2-6 series recommended",
     "Example: Monthly sales for 3 product lines, daily stock prices for 4 companies",
 ]
+
+
+def _spec_roles(spec_id: str) -> list[DataRole]:
+    return parse_roles(data_bullets((PLOTS / spec_id / "specification.md").read_text(encoding="utf-8")))
+
+
+class TestDataBullets:
+    def test_extracts_the_bullets_of_the_data_section(self) -> None:
+        text = "# t\n\n## Description\n\n- not data\n\n## Data\n\n- `x` (numeric) - a\n* `y` (numeric) - b\nprose\n\n## Notes\n\n- n"
+        assert data_bullets(text) == ["`x` (numeric) - a", "`y` (numeric) - b"]
+
+    def test_no_data_section(self) -> None:
+        assert data_bullets("# t\n\n## Description\n\ntext\n") == []
+
+    @pytest.mark.skipif(not PLOTS.is_dir(), reason="plots/ is not checked out")
+    def test_matches_the_sync_script_on_every_spec(self) -> None:
+        """`Spec.data` comes from sync_to_postgres.py; the checker must read the same bullets from the file."""
+        specs = _catalogue_data_bullets()
+        assert len(specs) > 300
+        for spec_id, bullets in specs:
+            text = (PLOTS / spec_id / "specification.md").read_text(encoding="utf-8")
+            assert data_bullets(text) == bullets, spec_id
+
+
+class TestSpecShape:
+    @staticmethod
+    def roles(*bullets: str) -> list[DataRole]:
+        return parse_roles(list(bullets))
+
+    def test_a_table_is_the_default(self) -> None:
+        roles = self.roles("`category` (categorical) - labels", "`value` (numeric) - heights")
+        assert spec_shape("any-spec", roles) == "table"
+
+    def test_map_specs_are_excluded_whatever_their_roles(self) -> None:
+        roles = self.roles("`lat` (numeric) - latitude", "`lon` (numeric) - longitude")
+        assert len(MAP_SPECS) == 13
+        assert all(spec_shape(spec_id, roles) == "excluded" for spec_id in MAP_SPECS)
+
+    def test_nodes_or_edges_make_a_network(self) -> None:
+        roles = self.roles(
+            "`nodes` (list of dicts) - entities", "`edges` (list of tuples) - links", "`weight` (numeric)"
+        )
+        assert spec_shape("any-network", roles) == "network"
+        assert [is_structure_role(role, "network") for role in roles] == [True, True, False]
+
+    def test_a_matrix_role_makes_a_matrix(self) -> None:
+        roles = self.roles("`variables` (string) - names", "`correlation_matrix` (numeric) - square matrix")
+        assert spec_shape("any-heatmap", roles) == "matrix"
+        assert all(is_structure_role(role, "matrix") for role in roles)
+
+    def test_text_only_roles_make_a_generated_spec(self) -> None:
+        roles = self.roles("`content` (string) - text to encode", "`error_correction` (string) - level")
+        assert spec_shape("any-code", roles) == "generated"
+
+    def test_an_untyped_role_alone_is_generated(self) -> None:
+        assert spec_shape("any-puzzle", self.roles("`grid` (2D array) - the puzzle")) == "generated"
+
+    def test_no_roles_is_a_table(self) -> None:
+        assert spec_shape("any-spec", []) == "table"
+
+    def test_overrides_win_over_the_roles(self) -> None:
+        roles = self.roles("`x` (numeric) - a", "`y` (numeric) - b")
+        for spec_id, (shape, reason) in SHAPE_OVERRIDES.items():
+            assert spec_shape(spec_id, roles) == shape
+            assert reason
+
+    @pytest.mark.skipif(not PLOTS.is_dir(), reason="plots/ is not checked out")
+    def test_every_override_names_a_spec_and_changes_its_shape(self) -> None:
+        """An override that the role rule already agrees with is dead weight; one for a deleted spec is stale."""
+        for spec_id, (shape, _) in SHAPE_OVERRIDES.items():
+            assert (PLOTS / spec_id / "specification.md").is_file(), spec_id
+            roles = _spec_roles(spec_id)
+            without = spec_shape("not-overridden", roles)
+            assert without != shape, (spec_id, shape)
+
+    @pytest.mark.skipif(not PLOTS.is_dir(), reason="plots/ is not checked out")
+    @pytest.mark.parametrize(
+        ("spec_id", "shape"),
+        [
+            ("bar-grouped", "table"),
+            ("line-basic", "table"),
+            ("sankey-basic", "table"),
+            ("candlestick-volume", "table"),
+            ("heatmap-correlation", "matrix"),
+            ("heatmap-clustered", "matrix"),
+            ("network-basic", "network"),
+            ("network-weighted", "network"),
+            ("network-bipartite", "table"),
+            ("qrcode-basic", "generated"),
+            ("sudoku-basic", "generated"),
+            ("line-tanabe-sugano", "generated"),
+            ("choropleth-basic", "excluded"),
+        ],
+    )
+    def test_catalogue_specs(self, spec_id: str, shape: str) -> None:
+        assert spec_shape(spec_id, _spec_roles(spec_id)) == shape
+
+
+class TestColorRole:
+    @staticmethod
+    def color(*bullets: str) -> str | None:
+        role = color_role(parse_roles(list(bullets)))
+        return role.name if role else None
+
+    def test_a_group_role_drives_colour(self) -> None:
+        assert self.color("`category` (categorical) - x labels", "`group` (categorical) - series") == "group"
+
+    def test_a_description_naming_colour(self) -> None:
+        assert self.color("`x` (numeric) - a", "`category` (categorical) - Group identifier for color coding") == (
+            "category"
+        )
+
+    def test_an_axis_category_alone_is_single_series(self) -> None:
+        assert self.color("`category` (categorical) - Labels for each bar", "`value` (numeric) - heights") is None
+
+    def test_numeric_roles_never_drive_the_palette(self) -> None:
+        assert self.color("`color` (numeric) - colour-mapped values") is None
+
+    @pytest.mark.skipif(not PLOTS.is_dir(), reason="plots/ is not checked out")
+    @pytest.mark.parametrize(
+        ("spec_id", "role"),
+        [
+            ("bar-grouped", "group"),
+            ("bar-stacked", "component"),
+            ("area-stacked", "category"),
+            ("line-multi", "series"),
+            ("scatter-embedding", "label"),
+            ("bar-basic", None),
+            ("line-basic", None),
+            ("heatmap-periodic-table", None),
+            ("heatmap-cohort-retention", None),
+        ],
+    )
+    def test_catalogue_specs(self, spec_id: str, role: str | None) -> None:
+        found = color_role(_spec_roles(spec_id))
+        assert (found.name if found else None) == role

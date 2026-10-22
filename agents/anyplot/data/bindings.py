@@ -41,10 +41,11 @@ import re
 from dataclasses import dataclass, field
 from difflib import SequenceMatcher
 
+from core.spec_roles import DataRole, RoleKind
+
 from ..schemas import Binding, ColumnDtype, ColumnProfile, DatasetProfile
 from .computed import match_score, window_line, window_rank
 from .parse import value_like
-from .roles import DataRole, RoleKind
 from .shape import long_suggestion, takes_labels
 from .signs import has_negative, sign_line
 from .temporal import CAMEL as _CAMEL

@@ -6,9 +6,10 @@ import pytest
 
 from agents.anyplot.code import readiness
 from agents.anyplot.code.normalise import normalise
-from agents.anyplot.code.readiness import MAP_SPECS, Readiness, scan
+from agents.anyplot.code.readiness import Readiness, scan
 from agents.anyplot.code.validate import Finding, validate_security
 from agents.anyplot.schemas import MAX_NOTE_CHARS
+from core.spec_roles import MAP_SPECS
 
 from .conftest import CATALOGUE_FILES, CATALOGUE_NORMALISED, source
 

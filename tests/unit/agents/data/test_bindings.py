@@ -18,9 +18,9 @@ from agents.anyplot.data.bindings import (
 )
 from agents.anyplot.data.parse import parse_dataset
 from agents.anyplot.data.prepare import Operation, apply_operations
-from agents.anyplot.data.roles import DataRole, RoleKind, parse_roles
 from agents.anyplot.schemas import Binding, ColumnDtype, DatasetProfile
-from tests.unit.agents.data.test_roles import AREA_STACKED, LINE_MULTI
+from core.spec_roles import DataRole, RoleKind, parse_roles
+from tests.unit.core.test_spec_roles import AREA_STACKED, LINE_MULTI
 
 
 OPERATIONS = TypeAdapter(list[Operation])

@@ -43,6 +43,8 @@ from pydantic import (
     model_validator,
 )
 
+from core.spec_roles import ROLE_PATTERN
+
 from .language import DEFAULT_LANGUAGE, LANGUAGE_PATTERN
 
 
@@ -158,10 +160,7 @@ def artifact_names(themes: Iterable[str]) -> list[ArtifactName]:
     return names + code_and_data
 
 
-# A role is matched against the spec's `## Data` bullets later; the pattern only keeps
-# arbitrary text out. Digits and capitals are allowed because 21 of 325 specs name
-# roles such as `log2_fold_change`, `lower_95` or `temperature_K`.
-ROLE_PATTERN = r"^[A-Za-z_][A-Za-z0-9_]{0,31}$"
+# ROLE_PATTERN (imported above) lives with the role parser in core/spec_roles.py.
 RENDER_ID_PATTERN = r"^[A-Za-z0-9_-]{1,64}$"
 
 _WHITESPACE = re.compile(r"\s+")

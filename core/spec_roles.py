@@ -1,10 +1,16 @@
-"""Data roles from a spec's stored `## Data` bullets.
+"""Data roles from a spec's stored `## Data` bullets, and the data shape they imply.
 
 The input is `Spec.data` (core/database/models.py): the `## Data` bullets as
 `automation/scripts/sync_to_postgres.py` stores them, one string per `- ` or `* `
 line with the marker stripped (nested bullets arrive flattened, continuation lines
-are lost). No ADK import. The parser never raises; a bullet it cannot read as a
-role is skipped.
+are lost); `data_bullets` extracts the same list from a `specification.md`. The
+parser never raises; a bullet it cannot read as a role is skipped.
+
+The module is shared by the agent (bindings, session state) and the adaptability
+checker (`core/adaptability.py`), and it uses the standard library only: the
+checker's single-file mirror, `automation/scripts/adaptability_check.py`, carries
+a verbatim copy of it for the workflow runner's system Python
+(`core/adaptability_mirror.py` builds that file).
 
 A role bullet starts with backticked names, optionally a parenthesised type, then
 a separator (`-`, `–`, `—` or `:`) and a description:
@@ -41,14 +47,38 @@ description; otherwise it is required. Names are made to satisfy `ROLE_PATTERN`
 variadic family so its members up to `<name>50` still fit, a leading `_` before a
 digit); a name without a letter or digit, or one already taken by an earlier
 bullet, is skipped, so names are unique.
+
+The data shape (`spec_shape`, docs/concepts/adaptable-code.md "Data shapes")
+decides what the adaptable form of an implementation holds, in this order:
+
+* `excluded`: the 13 map specs (`MAP_SPECS`), which fetch geometry over the network.
+* An entry of `SHAPE_OVERRIDES`: a spec whose role bullets misfile it, with the reason.
+* `network`: a role named `nodes` or `edges` (`STRUCTURE_ROLES`). `df` is the edge
+  list, a second `nodes` table holds node attributes.
+* `matrix`: a role whose name contains `matrix`. `df` is a labeled square DataFrame.
+* `generated`: no role carries a numeric, categorical, datetime or boolean kind (only
+  text or untyped roles: encoded text, puzzle grids). The block holds parameters.
+* `table`, the default: every role is a column of one table.
+
+The colour-driving role (`color_role`) is the first categorical or text role whose
+name is one of `COLOR_ROLE_NAMES` or whose description names a colour encoding
+(`COLOR_WORDS`). A spec without one is a single-series plot as far as the palette
+rule is concerned. The rule favours precision: a pie's `category` ("category
+labels") is not detected, so the palette rule stays lenient there.
 """
 
+from __future__ import annotations
+
 import re
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Literal
 
-from ..schemas import ROLE_PATTERN
 
+# A role is matched against the spec's `## Data` bullets later; the pattern only keeps
+# arbitrary text out. Digits and capitals are allowed because 21 of 325 specs name
+# roles such as `log2_fold_change`, `lower_95` or `temperature_K`.
+ROLE_PATTERN = r"^[A-Za-z_][A-Za-z0-9_]{0,31}$"
 
 RoleKind = Literal["numeric", "categorical", "datetime", "text", "boolean"]
 
@@ -292,3 +322,145 @@ def _clean_name(name: str, limit: int) -> str | None:
     if not any(char.isalnum() for char in clean):
         return None
     return clean if _ROLE_NAME.fullmatch(clean) else None
+
+
+# --- the `## Data` section of a specification.md ------------------------------------------
+
+_DATA_SECTION = re.compile(r"## Data\s*\n(.+?)(?=\n##|\Z)", re.DOTALL)
+
+
+def data_bullets(spec_markdown: str) -> list[str]:
+    """The `## Data` bullets of a `specification.md`, as `sync_to_postgres.py` stores them in `Spec.data`.
+
+    One string per line that starts with `- ` or `* ` once stripped, the marker removed;
+    an empty list when the spec has no `## Data` section.
+    """
+    match = _DATA_SECTION.search(spec_markdown)
+    if not match:
+        return []
+    bullets: list[str] = []
+    for line in match.group(1).strip().split("\n"):
+        line = line.strip()
+        if line.startswith(("- ", "* ")):
+            bullets.append(line[2:].strip())
+    return bullets
+
+
+# --- data shape ------------------------------------------------------------------------------
+
+Shape = Literal["table", "matrix", "network", "generated", "excluded"]
+SHAPES: tuple[Shape, ...] = ("table", "matrix", "network", "generated", "excluded")
+
+MAP_SPECS = frozenset(
+    {
+        "bubble-map-geographic",
+        "cartogram-area-distortion",
+        "choropleth-basic",
+        "contour-map-geographic",
+        "flowmap-origin-destination",
+        "heatmap-geographic",
+        "map-connection-lines",
+        "map-marker-clustered",
+        "map-projections",
+        "map-route-path",
+        "map-tile-background",
+        "map-tilegrid",
+        "scatter-map-geographic",
+    }
+)
+"""The 13 map specs: tagged both `plot_type: map` and `data_type: geospatial`. Their implementations
+pull basemaps, tiles or Natural Earth geometry over the network. `scatter-pitch-events` (a sports pitch
+tagged `map`) and `hexbin-map-geographic` (drawn from inline coordinates) are not on the list."""
+
+SHAPE_OVERRIDES: dict[str, tuple[Shape, str]] = {
+    "learning-curve-basic": ("matrix", "train_scores and validation_scores are per-fold score matrices"),
+    "pdp-basic": ("matrix", "the roles name a computed dependence and ICE curve matrix, not observations"),
+    "network-transport-static": ("network", "stations and routes are the node and edge tables"),
+    "upset-basic": ("table", "one row per element with its set memberships"),
+    "venn-labeled-items": ("table", "one row per item with the zone it falls in"),
+    "bifurcation-basic": ("generated", "a simulation of the logistic map over a parameter range"),
+    "chessboard-basic": ("generated", "rows and columns are the board size, not data columns"),
+    "curve-bias-variance-tradeoff": ("generated", "every curve follows from formulas over model complexity"),
+    "heatmap-mandelbrot": ("generated", "the roles are the window and iteration parameters of a fractal"),
+    "line-impurity-comparison": ("generated", "Gini and entropy curves computed from a probability grid"),
+    "line-tanabe-sugano": ("generated", "term energies computed from ligand-field formulas"),
+    "maze-circular": ("generated", "a maze generated from its ring count and seed"),
+    "maze-printable": ("generated", "a maze generated from its size and seed"),
+    "mohr-circle": ("generated", "three stress components define the circle"),
+    "psychrometric-basic": ("generated", "the chart's curves follow from psychrometric formulas"),
+    "tree-phylogenetic": ("generated", "the tree is encoded as a Newick string"),
+}
+"""Specs whose role bullets misfile them (docs/concepts/adaptable-code.md "Data shapes"), with the reason.
+heatmap-correlation and heatmap-clustered need no entry: their `matrix` roles already make them matrices, the
+lenient shape until a spec change retypes them as observations. An entry goes away when the spec pipeline
+retypes the roles so that the rule below files the spec correctly."""
+
+STRUCTURE_ROLES = frozenset({"nodes", "edges"})
+"""Roles that name a network's node or edge table rather than a column."""
+
+_DATA_KINDS = frozenset({"numeric", "categorical", "datetime", "boolean"})
+
+
+def spec_shape(spec_id: str, roles: Sequence[DataRole]) -> Shape:
+    """The data shape of `spec_id` with the parsed `roles` (the module docstring has the rule)."""
+    if spec_id in MAP_SPECS:
+        return "excluded"
+    if spec_id in SHAPE_OVERRIDES:
+        return SHAPE_OVERRIDES[spec_id][0]
+    names = [role.name.lower() for role in roles]
+    if any(name in STRUCTURE_ROLES for name in names):
+        return "network"
+    if any("matrix" in name for name in names):
+        return "matrix"
+    if roles and not any(kind in _DATA_KINDS for role in roles for kind in role.kinds):
+        return "generated"
+    return "table"
+
+
+def is_structure_role(role: DataRole, shape: Shape) -> bool:
+    """A role the shape satisfies without a column constant: a network's node or edge table, a matrix role."""
+    name = role.name.lower()
+    if shape == "network":
+        return name in STRUCTURE_ROLES or name in {"stations", "routes"}
+    if shape == "matrix":
+        return True
+    return False
+
+
+# --- colour-driving role ---------------------------------------------------------------------
+
+COLOR_ROLE_NAMES = frozenset(
+    {
+        "group",
+        "series",
+        "component",
+        "subcategory",
+        "split_group",
+        "fill_category",
+        "hue",
+        "color",
+        "colour",
+        "cluster",
+        "clusters",
+        "compound",
+        "branch",
+        "term",
+    }
+)
+"""Role names that colour the marks by their values: groups, series, stacked components, line identities. Not
+`symbol` or `cohort`: heatmap-periodic-table's element symbol and heatmap-cohort-retention's cohort label
+rows of a heatmap. Not `entity`: slope charts colour their lines by direction, not by entity."""
+COLOR_WORDS = re.compile(r"\b(?:colou?r(?:s|ed|ing)?|hue|legend|series|stacked|stacking|segments?)\b", re.IGNORECASE)
+"""Description words that name a colour encoding of a categorical role ("labels identifying each series",
+"Group identifier for color coding curves", "shown as stacked segments")."""
+_LABEL_KINDS = frozenset({"categorical", "text", "boolean"})
+
+
+def color_role(roles: Sequence[DataRole]) -> DataRole | None:
+    """The spec's colour-driving role, or None for a single-series plot (the module docstring has the rule)."""
+    for role in roles:
+        if not any(kind in _LABEL_KINDS for kind in role.kinds):
+            continue
+        if role.name.lower() in COLOR_ROLE_NAMES or COLOR_WORDS.search(role.description):
+            return role
+    return None

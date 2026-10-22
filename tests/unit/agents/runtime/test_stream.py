@@ -10,7 +10,6 @@ from google.genai import types
 from agents.anyplot.data.generate import MAX_SERIES
 from agents.anyplot.data.parse import MAX_CONTEXT_CHARS, PREVIEW_ROWS
 from agents.anyplot.data.prepare import MAX_OPERATIONS
-from agents.anyplot.data.roles import TYPE_WORDS, DataRole
 from agents.anyplot.data.store import StoredDataset
 from agents.anyplot.dataset_versions import dataset_payload
 from agents.anyplot.language import MAX_LANGUAGE_CHARS
@@ -32,6 +31,7 @@ from agents.anyplot.schemas import (
 )
 from agents.main import MAX_ROLE_DESCRIPTION_CHARS, AgentsError, _role_body, check_caller, decode_claims
 from agents.stream import MAX_DONE_EVENT_CHARS, MAX_DONE_ROLES, Translator, sse
+from core.spec_roles import TYPE_WORDS, DataRole
 
 
 def parse(chunk: str) -> tuple[str, dict]:

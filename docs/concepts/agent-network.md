@@ -450,7 +450,7 @@ agents/anyplot/sub_agents/{adapter.py, reviewer.py}            # relative import
 agents/anyplot/tools/{session.py, catalogue.py}
 agents/anyplot/plugins/{ledger.py, scope_guard.py, budget.py, tool_safety.py}
 agents/anyplot/prompts/{root,adapter,reviewer,scope_judge,data_judge}.md  refusals.yaml
-agents/anyplot/data/{parse.py, roles.py, bindings.py, store.py}           # no ADK import; built
+agents/anyplot/data/{parse.py, bindings.py, store.py}           # no ADK import; built; the role parser lives in core/spec_roles.py
 agents/anyplot/code/{regions.py, normalise.py, readiness.py, edits.py, validate.py, loader.py, export.py}   # no ADK import; built
 agents/anyplot/render/{contract.py, gates.py, png.py, harness.py, serial.py, store.py, watermark.py, runtimes/python.py, backends/{remote.py, local.py, sandbox.py, fake.py}}
 agents/anyplot/render/fonts/{JetBrainsMono-Regular.ttf, JetBrainsMono-Bold.ttf, OFL.txt, README.md}   # SIL OFL 1.1, unmodified

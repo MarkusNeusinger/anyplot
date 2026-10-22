@@ -9,13 +9,13 @@ import pytest
 
 from agents.anyplot.data.bindings import check_bindings
 from agents.anyplot.data.parse import RESPELLED, parse_dataset
-from agents.anyplot.data.roles import parse_roles
 from agents.anyplot.dev_fixture import CASES_DIR, snapshot_from_repo
 from agents.anyplot.opening import assess
 from agents.anyplot.schemas import Binding
 from agents.anyplot.settings import AgentSettings
 from agents.evals import make_fixtures
 from agents.evals.make_fixtures import LIBRARIES, PERTURBATIONS, SMOKE_TAG, SPECS, case_id, render_cases
+from core.spec_roles import parse_roles
 
 
 CASE_KEYS = {"spec_id", "library", "locale", "perturbation", "bindings", "expected", "tags", "source"}
