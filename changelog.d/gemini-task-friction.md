@@ -6,4 +6,4 @@
   cases where the existing rules must still win and for the files the gates
   couple; names the environment sync with the `agents` extra; and has Gemini
   hand over in the repository's PR format. The changelog check names a
-  fragment that is on disk but not yet committed.
+  fragment that is on disk but not yet committed. (#12229)
