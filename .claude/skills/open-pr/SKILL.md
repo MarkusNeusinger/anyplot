@@ -352,6 +352,21 @@ rather than passed.
   so, then load `/` and a spec page with the Playwright MCP and read
   its console errors instead.
 
+**Finally, clean up without asking** (owner, 2026-10-22: a merge should
+take its branch with it). GitHub deletes the remote branch on merge
+(`delete_branch_on_merge`), but never the local one, and 212 merged
+local branches had piled up by then. Remove the PR's worktree, then
+its local branch:
+
+```bash
+git worktree remove .claude/worktrees/<name>
+git fetch --prune origin && git branch -D <branch>   # only once origin/<branch> is gone
+```
+
+This covers merged PRs only. A branch whose PR is still open, a
+branch with commits that never reached a PR, and someone else's
+worktree stay; deleting those still needs the owner's OK.
+
 ## Gotchas
 
 - **Never update a PR branch with `GITHUB_TOKEN`** (`update-branch`

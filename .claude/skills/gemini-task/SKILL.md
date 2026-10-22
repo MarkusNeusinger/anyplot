@@ -300,8 +300,9 @@ This section is for the Gemini agent in the owner's agy session.
    `gh pr ready <pr>` starts the Copilot review; follow the
    PR through as `/open-pr` describes. Merge only on the owner's explicit OK in
    the session.
-6. **Clean up.** After the merge, remove your worktree. Deleting a local
-   branch needs the owner's OK, here and in the clone, like any branch deletion.
+6. **Clean up.** After the merge, remove your worktree and the local branch,
+   as `/open-pr` §4 describes; GitHub has already deleted the remote branch.
+   The branch in the owner's clone (`~/projects/anyplot-agy`) is his to delete.
 7. **Record the task in the ledger.**
 
 ## Ledger
