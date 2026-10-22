@@ -10,4 +10,4 @@
   the first 50 identical conversions, and removes the nullable-dtype
   perturbation and the `fill_value=0` pivot that invented zero bars. The
   reasons are recorded next to the owner's decisions of 2026-10-23, so the
-  document stays the single source for PR 2.
+  document stays the single source for PR 2. (#12239)
