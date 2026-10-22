@@ -29,8 +29,9 @@ the owner's Google AI Ultra quota, so the work is split by what it needs.
 | Changes state: `gcloud`, `gh` writes, labels, merges, prod | Opus | Owner: he does not trust Haiku with writes |
 | Reads or polls with credentials (CI, deploys, `gh`/`gcloud` state); creates Todoist tasks | Haiku | Cheap; never changes state |
 | High-risk reviews (security, prod data, sandbox, privacy); genuinely hard reasoning | Fable | About 2.5 times Opus per token at API prices, so only where it pays |
-| Credential-free reading, exploration, log and data analysis on fetched files, drafts, first review of a normal PR | Gemini 4 Argon, headless read-only `agy -p` (`zweitmeinung` user skill) | Uses the Google quota; plan mode on a throwaway worktree runs no commands |
-| Credential-free implementation, including long refactors | Gemini, in the owner's interactive agy session, through a `gemini`-labelled issue (`/gemini-task`) | The owner approves every command; Claude reviews and ships |
+| First review of a normal PR | Gemini 3.8 Flash through Vertex AI in project `anyplot`, location `global`, on Flex PayGo (`/zweitmeinung`) | Half price on Flex, $0.07–0.28 per review; on probation since 2026-10-22, measured against Copilot's findings on real PRs |
+| Plans, second opinions, analysis of briefings and fetched files | Gemini 4 Argon on the same route, thinking high, next to Fable for a second opinion | Stronger across files; $0.57–1.16 per run. Both Gemini lanes are paid per token and covered by the $100 monthly Google Cloud credit that comes with Google AI Ultra; Gemini reads tracked repository files, prefetched data, and the public API through read-only tools, with no shell and no credentials |
+| Credential-free implementation worth an hour or more, including long refactors | Gemini, in the owner's interactive agy session, through a `gemini`-labelled issue (`/gemini-task`) | The owner decides what runs without asking; Gemini pushes a `gemini/*` branch and opens a draft PR; Claude reviews it, marks it ready, and follows it through |
 
 Sonnet has no lane in interactive sessions; Gemini covers that work, and the
 pipeline's model choices are separate. Planning or architecture sessions may
@@ -54,6 +55,44 @@ then runs in an Opus session.
   suspended accounts in 2026, so it was removed the same day.
 
 So nothing extracts, copies, or proxies the agy login.
+
+**Why Claude never runs agy (2026-10-21).** Until that day Claude ran
+read-only `agy -p` for second opinions. Google's Antigravity FAQ says that
+wrapping `agy` inside third-party coding agents is not supported under
+consumer plans, and that using third-party tools such as Claude Code to access
+Antigravity can get the account suspended. A Google staff reply on 2026-10-16
+(Google AI Developers Forum, topic 189905) answered a setup like ours with "No
+under consumer plans", even for the unmodified binary run as a local
+subprocess without touching the token. Only the owner's own scripts and CI are
+allowed. For third-party agents Google recommends calling Gemini models
+through Gemini Enterprise (Google Cloud) or a Google AI Studio API key. So
+second opinions call Gemini through Vertex AI, which is plain Google Cloud
+usage, and only the owner starts agy, for `/gemini-task`.
+The site's own agents stay on the `eu` location; second opinions use `global`,
+which is 10 % cheaper and the only location with Flex PayGo.
+
+**What the Vertex route costs (2026-10-21 and 2026-10-22).** The first Argon
+review cost $1.01, and the owner's account merges about 8 PRs a day, so
+routine reviews moved to Flash. Every tool turn re-sends the whole
+conversation, so the cost is mostly turns:
+
+- `--diff-base` puts the diff and the changed files into the first prompt, and
+  `read_files` reads several files in one call.
+- The tool configuration stays the same on every turn. A last turn without
+  tools lost Vertex's implicit cache, and Flash kept calling tools anyway.
+- Flex PayGo halves the price of 3.8 Flash; Argon has no Flex. Flex gets 5
+  minutes per run, then the run goes online. The SDK retries timeouts too, so
+  one review waited over an hour on 15-minute attempts on 2026-10-22, and
+  with 5 minutes per request the next one still ran for over 25 minutes.
+- Not worth it: explicit caching (not offered for Argon), Batch (asynchronous,
+  up to 24 hours), the Interactions API (the history is still processed and
+  paid), and pruning old tool output (it breaks the cached prefix).
+
+**Long agy tasks run unattended (owner, 2026-10-22).** The owner trusts Gemini
+in his own session to keep to the rules as he trusts Claude, so for a long task
+he lets it run tests and builds without asking. That is his interactive use of
+his own account, not automation around it. The clone holds no `.env`, and agy
+starts with a minimal environment.
 
 Escalation is for judgment calls, not for every detail. Within its briefed
 scope a delegate decides routine matters itself and documents them; otherwise
