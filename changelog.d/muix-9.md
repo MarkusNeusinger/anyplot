@@ -14,4 +14,4 @@
   The render harness itself needed no change. Existing MUI X implementations
   were written for v7: 164 of 323 no longer bundle under v9, and most of the
   rest render differently, so they need regeneration before they can be
-  re-rendered.
+  re-rendered. (#12243)
