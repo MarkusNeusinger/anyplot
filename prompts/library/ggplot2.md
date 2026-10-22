@@ -4,7 +4,7 @@ ggplot2 is the canonical implementation of the grammar of graphics in R. This
 is anyplot's first R-language entry; the file extension is **`.R`** and the
 runtime is **Rscript**, not Python. The CI runtime is **R 4.6 with ggplot2 4.0**
 (pinned in `.github/actions/setup-r/action.yml`): write against the 4.0 API in
-"ggplot2 4.0 rules" below, not 3.x habits.
+"ggplot2 4.0 notes" below, not 3.x habits.
 
 ## IMPORTANT: No Workarounds
 
@@ -292,9 +292,9 @@ ggsave(
 - Avoid `print(p)` at script end — `ggsave()` already renders the plot, and an
   extra `print()` opens an unused interactive device.
 
-## ggplot2 4.0 rules
+## ggplot2 4.0 notes
 
-Each rule below changed between ggplot2 3.5 and 4.0: the old form still runs,
+Each item below changed between ggplot2 3.5 and 4.0: the old form still runs,
 but renders differently or prints a deprecation warning.
 
 - **Label borders:** set the border width with `linewidth` (`0` for no border)
@@ -323,7 +323,12 @@ but renders differently or prints a deprecation warning.
 - **Several legends:** fix their order with `guides(colour = guide_legend(order
   = 1), size = guide_legend(order = 2))`. The default order changed in 4.0 and is
   not stable across versions.
-- **Subtitle and caption** inherit from `text`, no longer from `title`: style
-  `plot.subtitle` and `plot.caption` explicitly instead of through `title`.
+- **Subtitle, caption and tag** inherit from `text`, no longer from `title`:
+  style `plot.subtitle`, `plot.caption` and `plot.tag` explicitly instead of
+  through `title`.
 - **Renamed:** `coord_transform()` replaces `coord_trans()`, and
-  `facet_wrap(dir = )` replaces `as.table`.
+  `annotation_borders()` replaces `borders()`.
+- **Facet panel order:** `facet_wrap(as.table = )` is deprecated. Set the order
+  with a two-letter `dir` instead: the letters name the starting corner and the
+  first one the filling direction, so `dir = "lb"` starts bottom-left and fills
+  left to right, as `as.table = FALSE` did.
