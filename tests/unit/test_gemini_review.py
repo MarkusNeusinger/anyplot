@@ -169,18 +169,27 @@ class FakeModels:
     def __init__(self, responses):
         self.responses = list(responses)
         self.requests = []
+        self.clients = []  # the flex flag of every client made
 
     def count_tokens(self, model, contents):
         return SimpleNamespace(total_tokens=10)
 
     def generate_content(self, model, contents, config):
         self.requests.append((list(contents), config))
-        return self.responses.pop(0)
+        result = self.responses.pop(0)
+        if isinstance(result, Exception):
+            raise result
+        return result
 
 
 def review(gr, monkeypatch, tmp_path, repo, responses, *extra):
     models = FakeModels(responses)
-    monkeypatch.setattr(gr, "make_client", lambda flex=False: SimpleNamespace(models=models))
+
+    def make_client(flex=False):
+        models.clients.append(flex)
+        return SimpleNamespace(models=models)
+
+    monkeypatch.setattr(gr, "make_client", make_client)
     briefing = tmp_path / "briefing.md"
     briefing.write_text("Review the change.")
     out = tmp_path / "out.md"
@@ -251,3 +260,27 @@ def test_token_budget_stops_tool_use(gr, types, monkeypatch, tmp_path, repo, cap
     assert (code, text) == (0, "Done.")
     assert tool_replies(models.requests[2])[0].function_response.response == {"result": gr.BUDGET_USED}
     assert json.loads(capsys.readouterr().out)["stopped_by"] == "max_input_tokens"
+
+
+@pytest.mark.parametrize("kind", ["queue timeout", "429"])
+def test_flex_without_capacity_goes_online(gr, types, monkeypatch, tmp_path, repo, capsys, kind):
+    httpx = pytest.importorskip("httpx")
+    errors = pytest.importorskip("google.genai.errors")
+    refused = httpx.ReadTimeout("queued") if kind == "queue timeout" else errors.ClientError(429, {"error": {}})
+    responses = [refused, calls(types, "a.py"), answer(types, "Done.")]
+
+    code, text, models = review(gr, monkeypatch, tmp_path, repo, responses)
+
+    assert (code, text) == (0, "Done.")
+    assert models.clients == [False, True]  # online for counting, Flex for the turns
+    # The refused turn is sent again unchanged, and the run stays online.
+    assert models.requests[1][0] == models.requests[0][0]
+    summary = json.loads(capsys.readouterr().out)
+    assert (summary["flex_requested"], summary["flex_fallback"]) == (True, True)
+
+
+def test_other_flex_errors_are_raised(gr, types, monkeypatch, tmp_path, repo):
+    errors = pytest.importorskip("google.genai.errors")
+
+    with pytest.raises(errors.ClientError):
+        review(gr, monkeypatch, tmp_path, repo, [errors.ClientError(400, {"error": {}})])

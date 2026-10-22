@@ -98,7 +98,9 @@ question; for real security probing use Fable.
 ## 4. Run the second opinion
 
 For a change under review, point `--root` at a throwaway detached worktree of its head.
-Flex can queue for 10 minutes or more, so run the review in the background:
+A Flex request waits up to 5 minutes in the queue; after that, or after a 429 or 5xx, the
+turn and the rest of the run go online (`flex_fallback` in the summary). Run the review in
+the background:
 
 ```bash
 mkdir -p "$D/data"
@@ -115,11 +117,11 @@ of `origin/main`, or the current branch's worktree, which the tools only read.
 - **Exit 0:** read `$D/gemini.md`. `$D/gemini.json` holds turns, tool calls, token counts
   (also per turn, to see the cache hit rate), `traffic_type` (`ON_DEMAND_FLEX` confirms
   Flex) and `est_cost_usd` at Vertex list price for `global`, per 1M tokens: Argon $4 /
-  $20 / cached $0.20; Flash $1.50 / $7.50 / $0.15, and half of that on Flex.
+  $20 / cached $0.20; Flash $1.50 / $7.50 / $0.15, and half of that when every turn ran
+  on Flex.
 - **Exit 2:** setup or input problem; the message says which. **Exit 3:** blocked, or no
   answer (the model kept calling tools after the budget). **Exit 4:** the answer stopped
-  early (`finish_reason`); use what is there and say so. After repeated 429s on Flex,
-  rerun with `--no-flex`.
+  early (`finish_reason`); use what is there and say so.
 - **Bounds:** 8 tool turns and 600k input tokens summed over all turns (`--max-turns`,
   `--max-input-tokens`). Then the tool responses tell Gemini to answer from what it has
   (`stopped_by`), and two more tool calls at most are refused before the run ends.

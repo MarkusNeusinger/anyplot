@@ -69,6 +69,7 @@ PRICES = {
 # only for some models (3.8 Flash yes, 4 Argon no; Vertex docs, 2026-10-21).
 FLEX_MODELS = {"gemini-3.8-flash"}
 FLEX_HEADERS = {"X-Vertex-AI-LLM-Shared-Request-Type": "flex", "X-Vertex-AI-LLM-Request-Type": "shared"}
+FLEX_WAIT_MS = 300_000  # a Flex request still queued after this goes online
 
 SECRET_NAME_PATTERNS = [
     ".env",
@@ -408,18 +409,29 @@ def make_client(flex: bool = False):
     from google import genai
     from google.genai import types
 
+    # A Flex request is tried once: the SDK retries timeouts as well, and five
+    # 15-minute attempts per turn kept one review waiting for over an hour
+    # (2026-10-22). cmd_review sends the turn online instead.
     return genai.Client(
         vertexai=True,
         project=PROJECT,
         location=LOCATION,
         http_options=types.HttpOptions(
-            timeout=900_000,
+            timeout=FLEX_WAIT_MS if flex else 900_000,
             headers=FLEX_HEADERS if flex else None,
             retry_options=types.HttpRetryOptions(
-                attempts=5 if flex else 3, initial_delay=2.0, http_status_codes=[429, 500, 503]
+                attempts=1 if flex else 3, initial_delay=2.0, http_status_codes=[429, 500, 503]
             ),
         ),
     )
+
+
+def flex_unavailable(exc: Exception) -> bool:
+    """Flex had no capacity: the request timed out in the queue or was refused."""
+    import httpx
+    from google.genai import errors
+
+    return isinstance(exc, httpx.TimeoutException) or (isinstance(exc, errors.APIError) and exc.code in (429, 500, 503))
 
 
 def cmd_check(args: argparse.Namespace) -> None:
@@ -445,9 +457,10 @@ def cmd_review(args: argparse.Namespace) -> None:
     flex = args.model in FLEX_MODELS if args.flex is None else args.flex
     if flex and args.model not in FLEX_MODELS:
         fail(f"Flex PayGo is not available for {args.model}; known: {', '.join(sorted(FLEX_MODELS))}")
-    client = make_client(flex)
+    flex_requested = flex
+    online = make_client()
 
-    counted = client.models.count_tokens(model=args.model, contents=prompt).total_tokens or 0
+    counted = online.models.count_tokens(model=args.model, contents=prompt).total_tokens or 0
     if counted > args.max_input_tokens // 4:
         fail(f"the briefing and attachments have {counted} tokens; trim them (cap {args.max_input_tokens // 4})")
 
@@ -462,6 +475,7 @@ def cmd_review(args: argparse.Namespace) -> None:
         tools=[tool_declarations()],
     )
 
+    client = make_client(True) if flex else online
     contents = [types.Content(role="user", parts=[types.Part(text=prompt)])]
     totals = {"prompt": 0, "cached": 0, "output": 0, "thoughts": 0}
     per_turn: list[list[int]] = []  # [prompt, cached] per call, to see the cache hit rate
@@ -472,7 +486,14 @@ def cmd_review(args: argparse.Namespace) -> None:
     tool_turns = 0
     nudges = 0
     while True:
-        response = client.models.generate_content(model=args.model, contents=contents, config=config)
+        try:
+            response = client.models.generate_content(model=args.model, contents=contents, config=config)
+        except Exception as exc:
+            if not flex or not flex_unavailable(exc):
+                raise
+            # No Flex capacity now: this turn and the rest of the run go online.
+            flex, client = False, online
+            continue
         usage = response.usage_metadata
         if usage:
             totals["prompt"] += usage.prompt_token_count or 0
@@ -537,7 +558,8 @@ def cmd_review(args: argparse.Namespace) -> None:
                 "model": args.model,
                 "model_version": response.model_version if response else None,
                 "location": LOCATION,
-                "flex_requested": flex,
+                "flex_requested": flex_requested,
+                "flex_fallback": flex_requested and not flex,
                 "traffic_type": sorted(traffic),
                 "turns": len([c for c in contents if c.role == "model"]),
                 "tool_calls": tool_calls,
