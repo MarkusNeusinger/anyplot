@@ -764,7 +764,6 @@ Issue ready for maintainer review
 | **notify-deployment.yml** | Deployment notifications |
 | **util-claude.yml** | Claude utility workflow |
 | **daily-regen.yml** | Scheduled: picks the oldest specs, runs spec polish + cross-library similarity audit, then dispatches bulk-generate |
-| **auto-update-pr-branches.yml** | When `main` advances, updates open PRs that have auto-merge enabled, except Dependabot and spec (`specification/`) PRs — its `GITHUB_TOKEN` merge commit would hold their CI at `action_required` |
 | **watchdog-stuck-jobs.yml** | Periodic safety net: detects and unsticks stalled impl-pipeline PRs |
 | **bot-serving-check.yml** | Daily synthetic monitor for the nginx bot -> seo-proxy path; routes and titles derived from `api/routers/seo.py` and the spec files, and a failure opens/comments the fixed-title issue "Bot serving check is red" (closed again by the next green run) |
 

@@ -95,11 +95,10 @@ Then open the PR. Use a HEREDOC for the body so multi-line markdown survives:
     )")
 
     # Enable auto-merge so the PR squash-merges automatically once required
-    # checks (Run Linting / Tests / Frontend Tests) go green and the head
-    # is in sync with main. Auto-merge handles the strict status-check
-    # policy by updating the branch on our behalf. If auto-merge cannot be
-    # enabled (e.g. checks already complete and branch is up-to-date), this
-    # is non-fatal — the PR still exists for human follow-up.
+    # checks (Run Linting / Tests / Frontend Tests) go green. The main
+    # ruleset's status checks are not strict, so a branch behind main
+    # merges too. If auto-merge cannot be enabled (e.g. checks already
+    # complete), this is non-fatal — the PR still exists for human follow-up.
     gh pr merge "$PR_URL" --auto --squash --delete-branch || \
       echo "::warning::Could not enable auto-merge for $PR_URL — leaving PR open for manual handling"
 

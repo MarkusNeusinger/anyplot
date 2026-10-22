@@ -354,6 +354,15 @@ rather than passed.
 
 ## Gotchas
 
+- **Never update a PR branch with `GITHUB_TOKEN`** (`update-branch`
+  from a workflow, or any push as `github-actions[bot]`) when its CI
+  has to run: GitHub holds every run on that head at
+  `action_required`, and the PR sits BLOCKED with no checks until
+  someone approves them (`gh api -X POST
+  repos/{owner}/{repo}/actions/runs/<id>/approve`). The `main` ruleset
+  is not strict, so a branch behind `main` merges anyway; this is why
+  `auto-update-pr-branches.yml` was retired after it put eight such
+  commits on #12229 (2026-10-22).
 - **`isOutdated` ≠ `isResolved`.** A fix-push can outdate a Copilot
   thread while it stays unresolved; outdated threads still count
   against review-clean — resolve them explicitly.
