@@ -275,6 +275,16 @@ def test_a_pr_without_a_fragment_fails_and_names_the_way_out(repo: Path) -> None
     assert cl.SKIP_LABEL in problem
 
 
+def test_an_uncommitted_fragment_is_named_in_the_failure(repo: Path) -> None:
+    """The gate reads commits, as CI does; a fragment still on disk only gets a pointer, not a pass."""
+    (repo / "core.py").write_text("x = 2\n", encoding="utf-8")
+    _commit_all(repo, "change")
+    (repo / "changelog.d" / "topic.md").write_text(FRAGMENT, encoding="utf-8")
+    (problem,) = cl.check_pr("main", root=repo)
+    assert "no changelog fragment" in problem
+    assert "changelog.d/topic.md is not committed yet" in problem
+
+
 def test_a_catalogue_only_pr_needs_no_fragment(repo: Path) -> None:
     """What the automated plot pipeline produces, and what a release summarizes
     in one italic *Catalog* line rather than per PR."""
