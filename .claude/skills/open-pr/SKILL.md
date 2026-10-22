@@ -352,6 +352,31 @@ rather than passed.
   so, then load `/` and a spec page with the Playwright MCP and read
   its console errors instead.
 
+**Finally, clean up without asking** (owner, 2026-10-22: a merge should
+take its branch with it). GitHub deletes the remote branch on merge
+(`delete_branch_on_merge`), but never the local one, and 212 merged
+local branches had piled up by then. Work from the shared checkout,
+never from inside the worktree you remove, and delete only what
+merged: the local tip must be the PR head GitHub merged (not the
+squash commit), or a commit pushed after the merge, or never pushed,
+goes with it.
+
+```bash
+MAIN=$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")   # the shared checkout
+cd "$MAIN"
+MERGED=$(gh pr view <pr> --json state,headRefOid --jq 'select(.state == "MERGED") | .headRefOid')
+if [ -n "$MERGED" ] && [ "$MERGED" = "$(git rev-parse <branch>)" ]; then
+  git worktree remove "$MAIN/.claude/worktrees/<name>"   # refuses if it has uncommitted changes
+  git branch -D <branch>
+else
+  echo "local tip differs from the merged head: keep both and ask the owner"
+fi
+```
+
+This covers merged PRs only. A branch whose PR is still open, a
+branch whose tip differs from the merged head, and someone else's
+worktree stay; deleting those still needs the owner's OK.
+
 ## Gotchas
 
 - **Never update a PR branch with `GITHUB_TOKEN`** (`update-branch`
