@@ -2,63 +2,64 @@
 // acf-pacf: Autocorrelation and Partial Autocorrelation (ACF/PACF) Plot
 // Library: muix 7.29.1 | JavaScript 22.22.3
 // Quality: 84/100 | Created: 2026-06-10
-//# anyplot-orientation: landscape
-// anyplot.ai
-// acf-pacf: Autocorrelation and Partial Autocorrelation (ACF/PACF) Plot
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-06-10
 
 import { BarChart } from "@mui/x-charts/BarChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Deterministic LCG RNG (seed = 42) ---------------------------------------
-function lcgRng(seed) {
-  let s = seed >>> 0;
-  return () => {
-    s = (Math.imul(s, 1664525) + 1013904223) >>> 0;
-    return s / 4294967296;
-  };
-}
+// Columns: set these to your data's column names
+const VALUE = "Observation Value"; // role: value
 
-function randn(rng) {
-  const u = Math.max(rng(), 1e-10);
-  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * rng());
-}
+// Data: replace this block with your own records, one object per row
+// AR(2) time series: x_t = 0.65 * x_{t-1} + 0.15 * x_{t-2} + e_t
+const data = (() => {
+  function lcgRng(seed: number) {
+    let s = seed >>> 0;
+    return () => {
+      s = (Math.imul(s, 1664525) + 1013904223) >>> 0;
+      return s / 4294967296;
+    };
+  }
 
-// --- AR(2) time series: x_t = 0.65·x_{t-1} + 0.15·x_{t-2} + ε_t -----------
-const rng = lcgRng(42);
-const N = 300;
-const ts = [0, randn(rng) * 0.5];
-for (let i = 2; i < N; i++) {
-  ts.push(0.65 * ts[i - 1] + 0.15 * ts[i - 2] + randn(rng));
-}
+  function randn(rng: () => number) {
+    const u = Math.max(rng(), 1e-10);
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * rng());
+  }
 
-// Centre and scale
+  const rng = lcgRng(42);
+  const count = 300;
+  const series = [0, randn(rng) * 0.5];
+  for (let i = 2; i < count; i += 1) {
+    series.push(0.65 * series[i - 1] + 0.15 * series[i - 2] + randn(rng));
+  }
+  return series.map((v) => ({ [VALUE]: v }));
+})();
+
+// Plot: reads only data and the constants above
+const ts = data.map((d) => d[VALUE]);
+const N = ts.length;
+
 const mu = ts.reduce((a, b) => a + b, 0) / N;
 const cx = ts.map((x) => x - mu);
 const c0 = cx.reduce((s, v) => s + v * v, 0) / N;
 
-// ACF at lag h
-function acfAt(h) {
+function acfAt(h: number) {
   let s = 0;
-  for (let i = h; i < N; i++) s += cx[i] * cx[i - h];
+  for (let i = h; i < N; i += 1) s += cx[i] * cx[i - h];
   return s / (N * c0);
 }
 
 const MAX_LAG = 30;
 const rho = Array.from({ length: MAX_LAG + 1 }, (_, k) => acfAt(k));
 
-// PACF via Durbin–Levinson recursion
-function computePACF(rhoArr, maxLag) {
+function computePACF(rhoArr: number[], maxLag: number) {
   const pacf = [1, rhoArr[1]];
   let phi = [rhoArr[1]];
-  for (let k = 2; k <= maxLag; k++) {
+  for (let k = 2; k <= maxLag; k += 1) {
     let num = rhoArr[k];
     let den = 1;
-    for (let j = 0; j < k - 1; j++) {
+    for (let j = 0; j < k - 1; j += 1) {
       num -= phi[j] * rhoArr[k - 1 - j];
       den -= phi[j] * rhoArr[j + 1];
     }
@@ -66,7 +67,7 @@ function computePACF(rhoArr, maxLag) {
     pacf.push(pkk);
     const next = Array(k).fill(0);
     next[k - 1] = pkk;
-    for (let j = 0; j < k - 1; j++) next[j] = phi[j] - pkk * phi[k - 2 - j];
+    for (let j = 0; j < k - 1; j += 1) next[j] = phi[j] - pkk * phi[k - 2 - j];
     phi = next;
   }
   return pacf;
@@ -74,17 +75,17 @@ function computePACF(rhoArr, maxLag) {
 
 const pacf = computePACF(rho, MAX_LAG);
 
-// 95% CI: ±1.96 / √N
+// 95% CI: +/- 1.96 / sqrt(N)
 const CI = 1.96 / Math.sqrt(N);
 
-const round4 = (v) => Math.round(v * 10000) / 10000;
+const round4 = (v: number) => Math.round(v * 10000) / 10000;
 
-const acfLags = Array.from({ length: MAX_LAG + 1 }, (_, i) => String(i));
-const pacfLags = Array.from({ length: MAX_LAG }, (_, i) => String(i + 1));
+// Share the exact 0..MAX_LAG axis across both panels so every lag lines up
+// vertically; PACF starts at lag 1 (null at lag 0).
+const sharedLags = Array.from({ length: MAX_LAG + 1 }, (_, i) => String(i));
 const acfData = rho.map(round4);
-const pacfData = pacf.slice(1).map(round4);
+const pacfData: (number | null)[] = [null, ...pacf.slice(1).map(round4)];
 
-// --- Chart -------------------------------------------------------------------
 export default function Chart() {
   const W = window.ANYPLOT_SIZE.width;
   const H = window.ANYPLOT_SIZE.height;
@@ -92,7 +93,7 @@ export default function Chart() {
   const TITLE_H = 54;
   const PANEL_H = Math.floor((H - TITLE_H - 6) / 2);
 
-  const barColor = t.palette[0]; // #009E73 — brand green
+  const barColor = t.palette[0];
 
   const ciLineStyle = {
     stroke: t.inkSoft,
@@ -103,24 +104,26 @@ export default function Chart() {
 
   const zeroLineStyle = {
     stroke: t.inkSoft,
-    strokeWidth: 0.7,
-    strokeOpacity: 0.45,
+    strokeWidth: 0.9,
+    strokeOpacity: 0.55,
   };
 
   const tickStyle = { fontSize: 12, fill: t.inkSoft };
-  const labelStyle = { fontSize: 14, fill: t.ink };
+  const labelStyle = { fontSize: 15, fill: t.ink };
 
   const axisLineSx = {
-    "& .MuiChartsAxis-line": { stroke: t.grid },
+    "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+    "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
   };
 
   const xAxisBase = {
     scaleType: "band" as const,
-    categoryGapRatio: 0.62,
+    categoryGapRatio: 0.9,
     tickLabelStyle: tickStyle,
   };
 
   const yAxisBase = {
+    width: 72,
     tickMinStep: 0.25,
     tickLabelStyle: tickStyle,
     labelStyle,
@@ -137,7 +140,6 @@ export default function Chart() {
         fontFamily: "'Roboto', 'Helvetica Neue', Arial, sans-serif",
       }}
     >
-      {/* Title */}
       <div
         style={{
           height: TITLE_H,
@@ -159,12 +161,13 @@ export default function Chart() {
           width={W}
           height={PANEL_H}
           skipAnimation
+          disableHitArea
+          hideLegend
           colors={[barColor]}
-          xAxis={[{ ...xAxisBase, data: acfLags }]}
+          xAxis={[{ ...xAxisBase, height: 36, data: sharedLags }]}
           yAxis={[{ ...yAxisBase, label: "ACF", min: -0.35, max: 1.05 }]}
           series={[{ data: acfData, label: "ACF" }]}
-          margin={{ top: 20, bottom: 28, left: 80, right: 65 }}
-          slotProps={{ legend: { hidden: true } }}
+          margin={{ top: 18, bottom: 12, left: 60, right: 65 }}
           sx={axisLineSx}
         >
           <ChartsReferenceLine
@@ -185,17 +188,21 @@ export default function Chart() {
           width={W}
           height={PANEL_H}
           skipAnimation
+          disableHitArea
+          hideLegend
           colors={[barColor]}
-          xAxis={[{
-            ...xAxisBase,
-            data: pacfLags,
-            label: "Lag",
-            labelStyle,
-          }]}
-          yAxis={[{ ...yAxisBase, label: "PACF" }]}
+          xAxis={[
+            {
+              ...xAxisBase,
+              height: 54,
+              data: sharedLags,
+              label: "Lag",
+              labelStyle,
+            },
+          ]}
+          yAxis={[{ ...yAxisBase, label: "PACF", min: -0.35, max: 0.85 }]}
           series={[{ data: pacfData, label: "PACF" }]}
-          margin={{ top: 10, bottom: 50, left: 80, right: 65 }}
-          slotProps={{ legend: { hidden: true } }}
+          margin={{ top: 12, bottom: 20, left: 60, right: 65 }}
           sx={axisLineSx}
         >
           <ChartsReferenceLine y={CI} lineStyle={ciLineStyle} />
