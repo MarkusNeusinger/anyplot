@@ -18,8 +18,8 @@ import { useXScale, useYScale } from "@mui/x-charts/hooks";
 const t = window.ANYPLOT_TOKENS;
 
 // Columns: set these to your data's column names
-const X = "Position x"; // role: x
-const DX_DT = "Velocity dx/dt"; // role: dx_dt
+const X = "Position x (m)"; // role: x
+const DX_DT = "Velocity dx/dt (m/s)"; // role: dx_dt
 const TIME = "Time t"; // role: t
 const TRAJECTORY = "Trajectory"; // role: extra
 
@@ -109,25 +109,18 @@ const ARROW_TANGENT_STEP = 2;
 const ARROW_SIZE = 9;
 const ARROW_SPREAD = 0.5;
 
-function arrowPoints(cx: number, cy: number, angle: number, size: number) {
-  const backAngle = angle + Math.PI;
-  const tip = [cx + Math.cos(angle) * size, cy + Math.sin(angle) * size];
-  const left = [
-    cx + Math.cos(backAngle - ARROW_SPREAD) * size,
-    cy + Math.sin(backAngle - ARROW_SPREAD) * size,
-  ];
-  const right = [
-    cx + Math.cos(backAngle + ARROW_SPREAD) * size,
-    cy + Math.sin(backAngle + ARROW_SPREAD) * size,
-  ];
-  return `${tip.join(",")} ${left.join(",")} ${right.join(",")}`;
-}
+// Equilibrium label sits in the empty upper-left corner, joined by a leader line
+const LABEL_TEXT = "Equilibrium (0, 0)";
+const LABEL_X = X_MIN + (X_MAX - X_MIN) * 0.08;
+const LABEL_V = V_MAX - (V_MAX - V_MIN) * 0.08;
 
 function PhaseMarkers() {
   const yScale = useYScale();
   const xScale = useXScale(trajectories[0].axisId);
 
   const origin = { x: xScale(0)!, y: yScale(0)! };
+  const label = { x: xScale(LABEL_X)!, y: yScale(LABEL_V)! };
+  const leadAngle = Math.atan2(label.y - origin.y, label.x - origin.x);
 
   return (
     <g>
@@ -147,10 +140,16 @@ function PhaseMarkers() {
                 y: yScale(traj.v[idx + ARROW_TANGENT_STEP])!,
               };
               const angle = Math.atan2(p1.y - p0.y, p1.x - p0.x);
+              const points = [0, Math.PI - ARROW_SPREAD, Math.PI + ARROW_SPREAD]
+                .map(
+                  (a) =>
+                    `${p0.x + Math.cos(angle + a) * ARROW_SIZE},${p0.y + Math.sin(angle + a) * ARROW_SIZE}`,
+                )
+                .join(" ");
               return (
                 <polygon
                   key={`${traj.axisId}-arrow-${frac}`}
-                  points={arrowPoints(p0.x, p0.y, angle, ARROW_SIZE)}
+                  points={points}
                   fill={traj.color}
                   stroke={t.pageBg}
                   strokeWidth={1}
@@ -168,6 +167,15 @@ function PhaseMarkers() {
           </g>
         );
       })}
+      <line
+        x1={origin.x + Math.cos(leadAngle) * 18}
+        y1={origin.y + Math.sin(leadAngle) * 18}
+        x2={label.x}
+        y2={label.y + 14}
+        stroke={t.inkSoft}
+        strokeWidth={1.5}
+        strokeDasharray="5 4"
+      />
       <circle
         cx={origin.x}
         cy={origin.y}
@@ -176,20 +184,16 @@ function PhaseMarkers() {
         stroke={t.pageBg}
         strokeWidth={3}
       />
-      <rect
-        x={origin.x + 18}
-        y={origin.y - 38}
-        width={190}
-        height={28}
-        rx={5}
-        fill={t.elevatedBg}
-        opacity={0.9}
-      />
       <ChartsText
-        x={origin.x + 26}
-        y={origin.y - 24}
-        text="Equilibrium (0, 0)"
-        style={{ fontSize: 16, fill: t.inkSoft, dominantBaseline: "central" }}
+        x={label.x}
+        y={label.y}
+        text={LABEL_TEXT}
+        style={{
+          fontSize: 16,
+          fill: t.ink,
+          fontWeight: 500,
+          dominantBaseline: "central",
+        }}
       />
     </g>
   );
@@ -281,19 +285,8 @@ export default function Chart() {
             />
             <LinePlot />
             <PhaseMarkers />
-            <ChartsXAxis
-              axisId={trajectories[0].axisId}
-              label={X}
-              labelStyle={{ fontSize: 16, fill: t.ink, fontWeight: 500 }}
-              tickLabelStyle={{ fontSize: 14, fill: t.inkSoft }}
-              stroke={t.inkSoft}
-            />
-            <ChartsYAxis
-              label={DX_DT}
-              labelStyle={{ fontSize: 16, fill: t.ink, fontWeight: 500 }}
-              tickLabelStyle={{ fontSize: 14, fill: t.inkSoft }}
-              stroke={t.inkSoft}
-            />
+            <ChartsXAxis axisId={trajectories[0].axisId} />
+            <ChartsYAxis />
           </ChartsSurface>
           <ChartsLegend
             sx={{
