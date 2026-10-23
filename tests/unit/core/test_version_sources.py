@@ -135,7 +135,7 @@ def test_uv_lock_with_a_duplicated_block_does_not_resolve(tmp_path: Path) -> Non
 SETUP_R = """
       # Snapshot {note} ships ggplot2 3.5.1. The repository has no R lock file.
       run: |
-        Rscript -e 'options(repos = c(CRAN = "https://packagemanager.posit.co/cran/__linux__/noble/{url}"))'
+        Rscript -e 'options(repos = c(CRAN = "https://packagemanager.posit.co/cran/__linux__/resolute/{url}"))'
 """
 
 
