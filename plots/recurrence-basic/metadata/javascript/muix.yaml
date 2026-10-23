@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: recurrence-basic
 created: '2026-06-10T03:05:39Z'
-updated: '2026-10-23T21:06:51Z'
+updated: '2026-10-23T21:11:49Z'
 generated_by: adopted:gemini/12267-muix-9-batch1
 workflow_run: 40023864955
 issue: 4592
@@ -12,96 +12,95 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/recurrenc
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/recurrence-basic/javascript/muix/plot-dark.html
-quality_score: 80
+quality_score: 84
 review:
   strengths:
-  - 'Correct recurrence computation: 2D time-delay embedding (tau = 5) of a logistic-map
-    series (r = 3.95, 300 steps) with a Euclidean distance and a binary threshold
-    of 0.15, exactly as the Notes ask'
-  - 'Threshold and resolution leave a readable matrix: short diagonal segments, isolated
-    points, small blocks near t = 5-10 and laminar vertical/horizontal runs are all
-    distinguishable, mirrored symmetrically across the diagonal'
-  - Square drawing area with identical x/y domains (0-294) and equal tick spacing,
-    both axes labelled as time indices i and j
-  - 'Idiomatic MUI X v9 composition: ChartsContainer with ScatterPlot, ChartsGrid
-    and ChartsXAxis/ChartsYAxis, skipAnimation set, axis bands sized with height/width
-    so no tick label truncates'
-  - 'Theme tokens threaded through title, axis lines, ticks and grid; green #009E73
-    recurrence marks identical in both renders'
+  - 'Correct standard recurrence plot: logistic map (r = 3.95, 300 steps) time-delay
+    embedded (dimension 2, tau = 5), Euclidean distance against a 0.15 threshold,
+    every recurrent pair (i, j) drawn as a mark'
+  - Square plot area with identical 0-294 ranges on both axes (1024 x 1024 CSS px),
+    the main diagonal filled along its whole length and the pattern mirrored across
+    it
+  - 'Threshold and resolution give a readable matrix: diagonal line segments, short
+    laminar vertical/horizontal runs and small blocks (around i = 5-10, 20-30, 110-115)
+    are all distinguishable without a nearly full or nearly empty matrix'
+  - 'Idiomatic MUI X composition API: ChartsContainer with ChartsGrid, ScatterPlot,
+    ChartsXAxis and ChartsYAxis, axis bands sized explicitly (height/width 72) per
+    the library rules, skipAnimation set'
+  - 'Theme-correct in both renders: Imprint #009E73 marks unchanged between themes,
+    ink/inkSoft/grid tokens threaded into axis lines, ticks, labels and grid'
+  - Native MUI scatter tooltips give per-pair inspection in the interactive HTML
   weaknesses:
-  - 'SC-01 (both): an amber dashed identity line plus an "i = j" text label is drawn
-    over the main diagonal; the spec''s basic variant allows no reference lines or
-    callouts besides the recurrence matrix itself, and the overlay hides the green
-    diagonal recurrence marks it sits on → remove the line and the label so the diagonal
-    is shown by the recurrence points alone. Likely cause: the IdentityLine component
-    (lines 58-89) and <IdentityLine /> in the container.'
-  - 'VQ-01 (both): tick labels at 13 px sit below the library prompt''s 14-16 px axis
-    text size and turn small in the 400 px thumbnail → about 15 px (+2 px). Likely
-    cause: tickLabelStyle fontSize: 13 on both axes.'
-  - 'Suggestion: drop the vertical/horizontal ChartsGrid or thin it further; in a
-    dense recurrence matrix the 20-step grid competes with the line structures.'
-  - 'Suggestion: tighten the gap between the x-axis ticks and the ''Time Index i''
-    label (the 72 px band leaves a wide empty strip) to give the matrix more room.'
+  - 'Suggestion: the y-axis title sits about 50 CSS px left of its tick labels and
+    the x-axis title about 45 px below its ticks; a slightly narrower axis band (around
+    56 px) would tighten the frame around the square without truncating the 15 px
+    ticks.'
+  - 'Suggestion: grid lines every 20 steps run through the dense mark field; a sparser
+    grid (every 50 steps) or none would let the recurrence texture read more cleanly.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, no pure white.
-      Chrome: bold dark title "recurrence-basic · javascript · muix · anyplot.ai" centred at top (~48% width); axis titles "Time Index i" (bottom) and "Time Index j" (left, rotated) in dark ink; tick labels 0-280 in steps of 20 in soft dark grey; subtle light-grey grid in both directions; dark axis lines on left and bottom only.
-      Data: ~thousands of small #009E73 green dots forming a symmetric recurrence matrix in a square drawing area (0-294 on both axes): many short diagonal segments, isolated points, small blocks around t=5-10 and t=110-115, laminar vertical/horizontal runs. An amber dashed line runs along the main diagonal over the green diagonal points, with a faint amber "i = j" label near (255, 275) that is barely readable on the cream background.
-      Legibility verdict: PASS (all chrome text readable; only the unrequested "i = j" label is faint)
+      Background: warm off-white #FAF8F1 across the whole 2400x2400 canvas.
+      Chrome: bold dark title "recurrence-basic · javascript · muix · anyplot.ai" centered at top; x-axis title "Time Index i" and y-axis title "Time Index j" in dark ink; tick labels 0-280 in steps of 20 on both axes in inkSoft; subtle light-grey grid every 20 steps; dark axis lines on left and bottom only. All text readable.
+      Data: several thousand small #009E73 dots forming a symmetric recurrence matrix; the main diagonal runs unbroken from (0,0) to (294,294); parallel diagonal segments, short vertical/horizontal runs, a dense block near (5-10, 5-10) and checkerboard textures around (20-30) and (110-115) are visible. Square plot area with equal scales.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17, not pure black.
-      Chrome: title, axis titles and tick labels flip to light ink and read clearly; grid is subtle dark grey; axis lines light. No dark-on-dark text.
-      Data: identical #009E73 green dots and identical amber dashed diagonal; the "i = j" label reads better here than in light.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and tick labels in light ink, clearly readable; grid lines subtle dark grey; light axis lines. No dark-on-dark text.
+      Data: identical #009E73 dots in identical positions to the light render; only chrome flipped. Brand green reads well on the dark surface.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All chrome readable in both themes; tick labels at 13 px slightly
-          small for the thumbnail (defect line)
+        comment: Title 22 px, ticks and axis titles 15 px CSS (x2 device scale); readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions among chrome elements
+        comment: No text collisions; mark contact inside recurrence blocks is the
+          structure itself
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Small 2 px markers suit the dense matrix; every point distinguishable
+        comment: markerSize 2 dots stay distinct at ~4000 points; diagonal, lines
+          and blocks visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single green series, high contrast on both surfaces
+        comment: Single green on contrasting background; no color-only encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 2400x2400 square, plot area square, nothing clipped
+        comment: 2400x2400 square canvas, square plot area, nothing overflows or clips
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time Index i / Time Index j
+        comment: '''Time Index i'' / ''Time Index j'' name the time indices as the
+          Notes ask'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: '#009E73 marks, correct backgrounds in both themes'
+        comment: 'Imprint #009E73 single series, #FAF8F1 / #1A1A17 backgrounds, chrome
+          theme-correct'
     design_excellence:
       score: 8
       max: 20
@@ -111,51 +110,50 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Style-guide baseline, nothing beyond it
+        comment: 'Style-guide baseline: theme tokens, Imprint green, explicit font
+          sizes; nothing beyond it'
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Spine and grid rules met, nothing beyond; full 20-step grid kept
+        comment: Spine and grid rules met, default 20-step grid density; nothing beyond
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Matrix displayed; the only emphasis is an unrequested identity line,
-          which earns no credit
+        comment: Data displayed as specified, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Correct recurrence plot, but an unrequested amber reference line
-          with an 'i = j' callout is added on a -basic spec (defect line)
+        passed: true
+        comment: Thresholded binary recurrence plot, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Diagonal filled, Euclidean distance, time-delay embedding, binary
-          threshold, square equal axes, time-index labels, mirrored pattern, contrasting
-          marks
+        comment: Time-delay embedding, Euclidean distance, binary threshold, filled
+          diagonal, square equal scales, time-index axis labels; all 'A good version
+          shows' bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Marks at (i, j) of each recurrent pair; full embedded range shown
+        comment: Marks at (i, j) indices; both axes span the full 0-294 embedded range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; legend N/A for a single binary series
+        comment: Mandated title format; single series, legend N/A
     data_quality:
       score: 15
       max: 15
@@ -165,20 +163,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Diagonal lines, isolated points, blocks and laminar runs all visible
+        comment: Diagonal lines, laminar runs, blocks, isolated points all present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Logistic map near chaos, the spec's own example
+        comment: Logistic map near chaos, the spec's own example; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 300 steps within 200-1000; threshold 0.15 on a [0,1] signal gives
-          a moderate recurrence rate; no Check values in the spec
+        comment: 300 steps within 200-1000; threshold 0.15 on [0,1] states gives a
+          moderate recurrence rate. No Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -188,7 +186,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat data/plot zones; React components are the harness contract
+        comment: Flat data block, loop and the mandated default-exported component
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -200,22 +198,22 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All five imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Direct double loop for the distance matrix; no library call replaces
-          it
+        comment: Direct pairwise distance loop; no available JS call replaces it
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default export, skipAnimation, v9 ChartsContainer API
+        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation,
+          MUI X v9 API
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -223,30 +221,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ChartsContainer composition with ScatterPlot, ChartsGrid and separate
-          axis components, sized axis bands
+        comment: Composition API (ChartsContainer + ScatterPlot + axis/grid components)
+          and sx class targeting
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: useXScale/useDrawingArea hooks are used only for the unrequested
-          reference line, so no credit
-  verdict: REJECTED
+        comment: Composable container plus sx styling of MuiChartsAxis/Grid classes;
+          little else beyond the library prompt
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-03c2486144
-  rendered_at: '2026-10-23T21:04:14Z'
+  rendered_at: '2026-10-23T21:09:01Z'
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - html-export
   - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   - matrix-construction
-  dataprep:
-  - time-delay-embedding
-  - distance-matrix
+  dataprep: []
   styling:
-  - minimal-chrome
+  - grid-styling
