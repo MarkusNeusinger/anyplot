@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: alluvial-basic
 created: '2026-09-02T11:24:54Z'
-updated: '2026-10-23T20:46:19Z'
+updated: '2026-10-23T20:51:48Z'
 generated_by: adopted:gemini/12267-muix-9-batch1
 workflow_run: 40021183127
 issue: 1878
@@ -12,49 +12,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/javascript/muix/plot-dark.html
-quality_score: 84
+quality_score: 86
 review:
   strengths:
-  - 'Builds the alluvial with the MUI X composition API (Sankey is Pro-only): ChartsContainer
-    with a top-positioned point x axis as column headers and custom SVG layers positioned
-    through useXScale / useYScale, so block heights and band widths share one linear
-    value scale'
-  - 'Flow conservation is computed, not typed: populations come from a row-stochastic
-    transition matrix, so every column sums to 1,000 customers and the end labels
-    (50/150/300/500 → 136/217/230/238/180) are consistent'
-  - 'Theme-correct in both renders: Imprint colors identical across themes, all chrome
-    from ANYPLOT_TOKENS (ink, inkSoft, pageBg), page-colored block separators and
-    label pills flip with the theme'
-  - 'Clear typographic hierarchy: title, italic computed subtitle, bold quarter headers,
-    outward end labels with values and a ''Band width ∝ transition count'' note in
-    the legend row'
-  - Bands translucent at 0.55 and colored by source tier, keeping crossing flows distinguishable
-    in both themes as the Notes suggest
+  - 'Faithful alluvial layout built from community MUI X: ChartsContainer with custom
+    SVG bands and blocks positioned through useXScale/useYScale, and a top point-scale
+    ChartsXAxis as column headers'
+  - Band widths and block heights are exact data values on a linear 0..total scale;
+    flows conserve the 1,000 customers across all four quarters
+  - Imprint palette in canonical order with Enterprise in brand green and Churned
+    landing on the matte-red loss anchor; colors identical in both themes
+  - Translucent bands (0.55) keep crossing flows distinguishable on both backgrounds;
+    page-colored block strokes and pill backings keep stacked blocks and middle labels
+    legible
+  - Values on the first and last columns only show the net migration without cluttering
+    the middle columns
   weaknesses:
-  - 'VQ-01 (both): the middle-column block labels are set at 10 px, against 13 px
-    for the end-column labels and 15 px for the column headers, and blur in the 400
-    px thumbnail → about 13 px (+3 px) to match the end labels. Likely cause: MID_LABEL_FONT
-    = 10.'
-  - 'SC-02 (both): the Q2 and Q3 columns name categories as truncated ''Ent'' and
-    ''Chu'' instead of ''Enterprise'' and ''Churned'', so the spec''s category labels
-    at every column are not clearly readable as category names → full names (the 18
-    px blocks with pill backings have room for them). Likely cause: `cat.length >
-    5 ? cat.slice(0, 3) : cat`.'
-  - 'Suggestion: the `titleFontSize` branch can never fire for the fixed short title
-    and could be dropped.'
-  - 'Suggestion: the empty band between the legend row and the column headers could
-    be tightened so the diagram starts closer to its legend.'
+  - 'VQ-01 (both): node category labels, middle-column pill labels and the ''Customers''
+    value-axis title render at 13 px, below the 14-16 px guidance, and blur in the
+    400 px thumbnail → about 15 px (+2 px). Likely cause: fontSize={13} on the end-column
+    <text>, MID_LABEL_FONT = 13 and fontSize={13} in ValueAxisTitle.'
+  - 'Suggestion: the ~70 px of empty space between the legend row and the column headers
+    could be given back to the diagram height.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across the whole 3200x1800 canvas.
-      Chrome: title "alluvial-basic · javascript · muix · anyplot.ai" top-left in dark ink (~35 % of width), italic subtitle "Simulated SaaS subscription-tier migration · 1,000 customers across 4 quarters", an HTML legend row (Enterprise, Pro, Basic, Free, Churned + italic "Band width ∝ transition count"), bold column headers Q1 2024 – Q4 2024, rotated "Customers" title at the far left. End labels "Enterprise · 50", "Pro · 150", "Basic · 300", "Free · 500" on the left and "Enterprise · 136", "Pro · 217", "Basic · 230", "Free · 238", "Churned · 180" on the right. Middle columns carry small pill labels "Ent", "Pro", "Basic", "Free", "Chu". All text dark on light and readable; the 10 px pills are the smallest text.
-      Data: four columns of stacked blocks — Enterprise #009E73, Pro #C475FD, Basic #4467A3, Free #BD8233, Churned #AE3030 — with translucent (0.55) Bézier bands colored by source tier between neighboring columns. Large stable flows, thin upgrade/downgrade bands crossing down to Churned. First category in #009E73.
+      Background: warm off-white #FAF8F1 across the whole canvas.
+      Chrome: title "alluvial-basic · javascript · muix · anyplot.ai" top-left in dark ink (~35% width), italic subtitle "Simulated SaaS subscription-tier migration · 1,000 customers across 4 quarters", HTML legend row (Enterprise, Pro, Basic, Free, Churned + italic "Band width ∝ transition count"), bold column headers Q1–Q4 2024, rotated "Customers" title at the far left. All dark text, clearly readable.
+      Data: four stacked node columns; Enterprise #009E73, Pro lavender, Basic blue, Free ochre, Churned matte red. Bands at ~0.55 opacity colored by source tier, widths proportional to flow, crossing between neighboring columns only. First column labels "Free · 500" etc., last column "Churned · 180" etc., middle columns name categories on page-colored pills.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, subtitle, legend text, column headers, end labels and "Customers" all in light ink; middle-column pills flip to dark page-colored backings with light text. No dark-on-dark text anywhere.
-      Data: block colors identical to the light render; translucent bands read darker over the near-black page and blend where they overlap (e.g. Basic bands over Free read grey-beige), still distinguishable. Brand green clearly visible.
+      Chrome: title, subtitle, legend, column headers and node labels flip to light ink; middle pills flip to dark backing with light text. No dark-on-dark text.
+      Data: block and band colors identical to the light render (green, lavender, blue, ochre, red); translucent bands read darker over the dark page but remain distinguishable, overlaps blend as permitted.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -66,55 +56,54 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes set explicitly and readable in both themes; the middle-column
-          pill labels at 10 px are much smaller than the 13 px end labels and blur
-          in the 400 px thumbnail (defect line)
+        comment: All text readable in both themes; node labels and the value-axis
+          title at 13 px sit below the 14-16 px guidance and blur at thumbnail size
+          (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; pill labels sit on their blocks with a page-colored
-          backing
+        comment: No text collides with text; middle-column labels sit on page-colored
+          pills over their blocks; band crossings are permitted
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 18 px blocks with page-colored separators, bands at 0.55 opacity;
-          hair-thin rare transitions are permitted by the spec; legend swatches match
-          block colors in both themes
+        comment: Blocks, bands and legend swatches visible in both themes; hair-thin
+          rare transitions are permitted
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Five well-separated Imprint hues; blocks are also identified by text
-          labels, so hue is never the only signal
+        comment: Five distinct Imprint hues, every category also named by a text label
+          at each column
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Diagram fills most of the canvas, end labels fit inside the 150 px
-          side margins, no overflow
+        comment: 3200x1800, title at ~35% width, end labels inside the margins, nothing
+          clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Column headers name each quarter; the value dimension is titled 'Customers'
-          (a count, no further unit needed)
+        comment: Column headers Q1-Q4 2024, value axis titled Customers, legend note
+          explains band width
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First category Enterprise in #009E73, then Imprint positions 2-5
-          in canonical order; data colors identical across themes; backgrounds #FAF8F1
-          / #1A1A17 with theme-correct ink'
+        comment: 'Enterprise #009E73 first, Imprint canonical order with Churned landing
+          on the matte-red loss anchor; backgrounds #FAF8F1 / #1A1A17; data colors
+          identical across themes'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -122,26 +111,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Beyond baseline: title / italic computed subtitle / bold column
-          headers typographic hierarchy, an encoding note ''Band width ∝ transition
-          count'' in the legend row'
+        comment: Title / italic subtitle / legend hierarchy with bold column headers,
+          beyond the baseline
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: 'Beyond baseline: page-colored strokes separating stacked blocks,
-          pill backings for middle-column labels, end labels placed outward with values;
-          band outlines at matching opacity'
+        comment: Page-colored block strokes separate stacked categories and page-colored
+          pill backings keep middle labels readable over bands
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
         passed: true
-        comment: Data displayed; the tier stack order is logical but no hierarchy
-          chosen beyond the Notes
+        comment: Values shown only on the first and last columns frame the start-vs-end
+          change (500 Free -> 180 Churned) without cluttering middle columns
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -149,30 +136,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Single alluvial diagram, no highlights, reference lines or extra
-          panels
+        comment: Single alluvial diagram, no highlights, reference lines or callouts
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Columns in order, proportional bands attached to blocks, consistent
-          colors, transparency all present; the middle columns name categories as
-          truncated 'Ent' / 'Chu' instead of full names (defect line)
+        passed: true
+        comment: Chronological columns, stacked blocks sized by value, bands between
+          neighboring columns only with width proportional to flow, consistent category
+          colors, transparency, headers and category labels at every column
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Block heights and band widths on one linear scale from 0 to the total;
-          bands only between neighboring columns
+        comment: Linear y scale 0..total; block heights and band widths at their data
+          values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'alluvial-basic · javascript · muix · anyplot.ai'; legend entries
-          are the tier names
+        comment: Title alluvial-basic · javascript · muix · anyplot.ai; legend names
+          the five tiers
     data_quality:
       score: 15
       max: 15
@@ -182,23 +168,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 4 time points, 5 categories; categories grow (Enterprise, Churned)
-          and shrink (Free), large stable flows plus thin crossing transitions
+        comment: 4 time points, 5 categories, growing and shrinking blocks, stable
+          and crossing flows, an absorbing Churned state
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: SaaS subscription-tier migration with Free/Basic/Pro/Enterprise/Churned
-          — neutral business scenario
+        comment: SaaS subscription-tier migration, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: every transition row sums to 1.0 so the 1,000 total is
-          conserved (Q4 labels 136+217+230+238+180 = 1,001 after rounding); Q1 values
-          50/150/300/500 match the end labels; quarterly churn of 2-8 % is plausible'
+        comment: 1,000 customers conserved across columns (Q4 136+217+230+238+180
+          ≈ 1,000); transition rates plausible; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -208,14 +192,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Columns / Data / Plot zones; the only functions are the React components
-          the composition API requires
+        comment: Linear module; the small React components are required to use the
+          MUI X scale hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic transition matrix, no randomness
+        comment: Deterministic Markov transition data
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -227,14 +211,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a hand-composed alluvial; nothing available
-          computes the layout
+        comment: Layout math is the minimum a custom alluvial needs; Sankey is Pro-only
+          so no available call replaces it
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation set,
+        comment: Default-exported component sized from ANYPLOT_SIZE, skipAnimation,
           v9 ChartsContainer API
     library_mastery:
       score: 6
@@ -245,33 +229,31 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Uses the MUI X composition API: ChartsContainer with a point-scale
-          x axis whose top-positioned tick labels serve as column headers, and custom
-          SVG layers that read positions from useXScale / useYScale / useDrawingArea'
+        comment: ChartsContainer composition with custom SVG children positioned through
+          useXScale/useYScale/useDrawingArea - the documented MUI X custom-mark pattern
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: true
-        comment: Hook-driven custom layers inside ChartsContainer are a MUI X composition
-          pattern; the legend is plain HTML rather than ChartsLegend
-  verdict: REJECTED
+        comment: A top-positioned point-scale ChartsXAxis supplies the column headers,
+          so the library's axis system lays out the columns
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-03c2486144
-  rendered_at: '2026-10-23T20:43:10Z'
+  rendered_at: '2026-10-23T20:48:54Z'
 impl_tags:
   dependencies: []
   techniques:
-  - bezier-curves
   - custom-legend
-  - layer-composition
-  - annotations
-  - html-export
+  - bezier-curves
+  - manual-layout
   patterns:
   - data-generation
-  - matrix-construction
-  dataprep: []
+  - iteration-over-groups
+  dataprep:
+  - markov-transition
+  - aggregation
   styling:
   - alpha-blending
-  - edge-highlighting
   - minimal-chrome
