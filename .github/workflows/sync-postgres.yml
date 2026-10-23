@@ -16,6 +16,14 @@ on:
     paths:
       - 'plots/**'
       - 'alembic/versions/**'  # Ensure migration-only PRs trigger a sync
+      # The pins core/library_versions.py reads libraries.version and
+      # languages.runtime_version from, so a Dependabot bump reaches the
+      # Libraries page with its own merge.
+      - 'uv.lock'
+      - 'package-lock.json'
+      - 'Manifest.toml'
+      - '.python-version'
+      - '.github/actions/setup-*/action.yml'
   workflow_dispatch:  # Allow manual trigger
 
 concurrency:

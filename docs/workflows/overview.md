@@ -124,6 +124,7 @@ Issue + [generate:{library}] label  OR  workflow_dispatch
 impl-generate.yml
   |-- Creates branch: implementation/{spec-id}/{library}
   |-- AI generates code
+  |-- Fails if the commit changes a dependency file
   |-- Creates metadata/python/{library}.yaml (initial)
   |-- Tests execution
   |-- Uploads preview to GCS staging
@@ -137,6 +138,7 @@ impl-review.yml
   |-- Adds [quality:XX] label
        |
        |-- Meet Threshold --> [ai-approved] --> impl-merge.yml
+       |                                        |-- Refuses a PR that changes a dependency file
        |                                        |-- Squash merge
        |                                        |-- Promotes GCS: staging --> production
        |                                        |-- Triggers sync-postgres.yml
@@ -151,6 +153,42 @@ impl-review.yml
                 |-- Keep    --> [regen:kept] --> PR closed, live code and GCS unchanged
                                    |-- Stored review <-- re-score: [review-writeback] PR --> impl-merge.yml (writeback job)
 ```
+
+### Dependency pins and library versions
+
+Each language's plotting stack is pinned in the repository:
+
+| Language | Pin | Installed in the pipeline by | Kept current by |
+|----------|-----|------------------------------|-----------------|
+| Python | `uv.lock` | `uv sync --frozen --extra lib-{library}` in `impl-generate.yml` and `impl-repair.yml`, as `agents/renderer/Dockerfile` and CI install | Dependabot (`uv`, `/`) |
+| JavaScript | `package.json` + `package-lock.json` at the root | `npm ci` in `.github/actions/setup-node` | Dependabot (`npm`, `/`) |
+| Julia | `Project.toml` + `Manifest.toml` | `Pkg.instantiate()` in `.github/actions/setup-julia` | Hand-made PRs |
+| R | Dated Posit snapshot in `.github/actions/setup-r` | `install.packages()` from the snapshot | Hand-made PRs |
+
+Implementation PRs never change these files. A generation whose commit changes
+`pyproject.toml`, `uv.lock`, `package.json`, `package-lock.json`,
+`Project.toml`, `Manifest.toml` or `.python-version` fails in
+`impl-generate.yml`, and `impl-merge.yml` refuses to merge an implementation PR
+that changes one, which also covers repair commits. A re-resolved lock file
+moves the library version for every implementation of the language: #9398
+committed a `Manifest.toml` that a `Pkg.add` had re-resolved and moved Makie
+from 0.22.10 to 0.21.9. A spec that needs a new package needs a dependency PR
+first.
+
+No version is written down by hand. The version an implementation was made
+with is measured at generation time and stored in its metadata as
+`library_version`, and `impl-review.yml` writes it into the file header. The
+version on the Libraries page and each language's runtime version are read
+from the pins by `core/library_versions.py` when `sync-postgres.yml` runs; a pin
+that does not resolve keeps the stored value and logs a warning. So a minor or
+patch bump, Dependabot's included, needs no other edit.
+
+The example headers in `prompts/library/*.md` carry no version. Every prompt of
+a locked library (Python, JavaScript, Makie) states the API level the generator
+writes against
+(`**API level:** ECharts 6.`), and `tests/unit/core/test_version_sources.py`
+holds it to the lock's major, so a major bump updates the prompt in the same
+PR. The same test checks that every pin resolves.
 
 ---
 
@@ -324,7 +362,7 @@ Located in `.github/workflows/`:
 | `daily-regen.yml` | Cron-driven regeneration of the oldest implementations (once a day at 02:17 UTC, off the top of the hour to dodge GitHub's scheduler overload). A spec's age counts from the newer of its last merged update and the last activity on its spec issue (every regen touches the issue), so a kept regeneration is not re-picked the next night. Any activity on the issue — a comment, a label, a report — postpones that spec's regen the same way |
 | `watchdog-stuck-jobs.yml` | 6-hourly safety net: re-dispatches stuck reviews, repairs (including a repair that crashed after a rejection), merges and generations (straight to `impl-generate.yml`, marked only once the run exists), re-closes open `regen:kept` PRs, never rescues a regeneration into repair or re-dispatches its failed review (it flags it for manual attention instead; "regeneration" = the `regen` label or the implementation file on main, unless `regen:forced`), and rescues daily-regen when its cron is silently starved by GitHub (>26 h without a run) |
 | `report-validate.yml` | Validates user-submitted issue reports |
-| `sync-postgres.yml` | Syncs `plots/` filesystem state to PostgreSQL on push to main, and runs `alembic upgrade head` against Cloud SQL first; a push that only adds a revision under `alembic/versions/` triggers it too |
+| `sync-postgres.yml` | Syncs `plots/` filesystem state to PostgreSQL on push to main, and runs `alembic upgrade head` against Cloud SQL first; a push that only adds a revision under `alembic/versions/` triggers it too, and so does one that changes a pin the library versions are read from (`uv.lock`, `package-lock.json`, `Manifest.toml`, `.python-version`, a setup action) |
 | `sync-labels.yml` | Auto-syncs spec/impl labels after manual PR merges |
 | `indexnow-submit.yml` | Pushes changed page URLs to IndexNow (Bing, Yandex, Seznam, Naver, Yep) on every push to main that touches `plots/`; a push that changes the workflow file itself or bumps `TEMPLATE_LAST_CHANGED` in `api/routers/seo.py` submits the full list, as does `workflow_dispatch` with `scope=sitemap` |
 | `codeql.yml` | CodeQL scanning (actions, JavaScript/TypeScript, Python) on pushes to main, PRs and a weekly cron; `plots/**` is excluded from triggers and analysis, so pipeline PRs never start a scan |

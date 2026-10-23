@@ -1,5 +1,8 @@
 # seaborn
 
+**API level:** seaborn 0.13. `uv.lock` pins this release series, and seaborn
+changes its API between 0.x releases; write against this one.
+
 ## Interactive Spec Handling
 
 seaborn produces **static PNG only** (via matplotlib). When implementing specs that mention interactive features:

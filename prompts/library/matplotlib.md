@@ -1,5 +1,7 @@
 # matplotlib
 
+**API level:** Matplotlib 3. `uv.lock` pins this major; write against its API.
+
 ## Interactive Spec Handling
 
 matplotlib produces **static PNG only**. When implementing specs that mention interactive features:

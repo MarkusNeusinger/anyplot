@@ -179,10 +179,9 @@ jobs:
         env:
           LIBRARY: ${{ inputs.library }}
         run: |
-          uv venv .venv
-          source .venv/bin/activate
-          # Source of truth: pyproject.toml lib-${LIBRARY} extras
-          uv pip install -e ".[lib-${LIBRARY}]" ruff pillow pyyaml
+          # The lib-${LIBRARY} extra exactly as uv.lock pins it, as impl-generate.yml
+          # installs it (see the comment there). Creates .venv.
+          uv sync --frozen --extra "lib-${LIBRARY}" --extra dev
 
       - name: Install Python helper deps (for non-Python implementations)
         if: steps.lang.outputs.language != 'python'

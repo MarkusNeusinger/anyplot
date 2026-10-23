@@ -67,6 +67,47 @@ updates:
             "version-update:semver-major",
           ]
 
+  # JavaScript render harness (root package.json + package-lock.json): the pinned
+  # Chart.js, D3, ECharts, Highcharts and MUI X stack the pipeline renders with
+  # (.github/actions/setup-node restores it with `npm ci`).
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "javascript"
+    commit-message:
+      prefix: "deps(js-render):"
+    groups:
+      # The render toolchain gets PRs of its own: a Playwright bump changes the
+      # bundled Chromium and can shift every JavaScript render, so it never rides
+      # along with a chart-library minor. A dependency joins the first group that
+      # matches, and js-render-minor also excludes these two.
+      js-render-browser:
+        patterns:
+          - "playwright*"
+          - "esbuild"
+        update-types:
+          - "minor"
+          - "patch"
+      # Group minor/patch updates. A major stays its own PR: it changes the API
+      # the library prompt (prompts/library/*.md) describes, and its
+      # `**API level:**` line must follow (tests/unit/core/test_version_sources.py).
+      # Minor and patch bumps need no other edit; the database sync reads the
+      # new version from the lock.
+      js-render-minor:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "playwright*"
+          - "esbuild"
+        update-types:
+          - "minor"
+          - "patch"
+
   # GitHub Actions
   - package-ecosystem: "github-actions"
     # "/" only scans .github/workflows — the composite actions' own `uses:`

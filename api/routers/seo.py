@@ -1160,7 +1160,10 @@ def _build_libraries_body() -> str:
     The page was a 29-word stub even though its entire content already sits in
     core/constants.py (AI-access audit 2026-08-19) — a crawler following
     llms.txt's "the fifteen supported plotting libraries" link found no such
-    list. Registry-derived, so it can never drift from the actual catalog.
+    list. Registry-derived, so it can never drift from the actual catalog. It
+    names no version: versions live in the database (core/library_versions.py
+    reads them from the pin files at sync time), and a number frozen into this
+    import-time body showed crawlers matplotlib 3.9.0 long after 3.11 shipped.
     """
     sections = [
         f"<h1>{_LIBRARY_COUNT} plotting libraries across {len(LANGUAGES_METADATA)} languages</h1>",
@@ -1173,7 +1176,7 @@ def _build_libraries_body() -> str:
             continue
         items = "".join(
             f'<li><a href="{html.escape(str(lib["documentation_url"]), quote=True)}">'
-            f"{html.escape(str(lib['name']))}</a> {html.escape(str(lib['version']))} — "
+            f"{html.escape(str(lib['name']))}</a> — "
             f"{html.escape(str(lib['description']))}</li>"
             for lib in libs
         )

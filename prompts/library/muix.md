@@ -8,6 +8,9 @@ entry: the file extension is **`.tsx`**, `language_id` is **`javascript`**
 **browser render harness** (`node automation/js-render/render.mjs`) via that
 harness's **React (esbuild) branch** — *not* Python, Rscript, or julia.
 
+**API level:** MUI X Charts 7. The root `package-lock.json` pins this major of
+`@mui/x-charts`; write against its API.
+
 > ## 🚫 Community surface ONLY — no MUI X Pro / Premium (hard rule)
 >
 > anyplot vendors **only** the **MIT-licensed community package `@mui/x-charts`**.
@@ -172,7 +175,7 @@ reason — **do not** shell out to Recharts/D3/Chart.js or reach into
 ```tsx
 // anyplot.ai
 // bar-basic: Basic Bar Chart
-// Library: MUI X Charts | React | Node 22
+// Library: MUI X Charts | React | Node
 // License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
 // Quality: pending | Created: 2026-06-09
 ```
@@ -187,7 +190,7 @@ its own line at the very top.
 //# anyplot-orientation: landscape
 // anyplot.ai
 // bar-basic: Basic Bar Chart
-// Library: MUI X Charts | React | Node 22
+// Library: MUI X Charts | React | Node
 // License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
 // Quality: pending | Created: 2026-06-09
 import { BarChart } from "@mui/x-charts/BarChart";

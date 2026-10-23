@@ -71,8 +71,8 @@ class TestLibrariesMetadata:
         assert metadata_ids == SUPPORTED_LIBRARIES
 
     def test_each_library_has_required_fields(self) -> None:
-        """Each library should have all required fields."""
-        required_fields = {"id", "name", "language_id", "framework", "version", "documentation_url", "description"}
+        """Each library should have all required fields (its version comes from core/library_versions.py)."""
+        required_fields = {"id", "name", "language_id", "framework", "documentation_url", "description"}
         for lib in LIBRARIES_METADATA:
             assert required_fields.issubset(lib.keys()), f"Missing fields in {lib.get('id', 'unknown')}"
 
@@ -280,8 +280,8 @@ class TestSupportedLanguages:
         assert metadata_ids == SUPPORTED_LANGUAGES
 
     def test_each_language_has_required_fields(self) -> None:
-        """Each language must declare id, name, file_extension, runtime_version."""
-        required = {"id", "name", "file_extension", "runtime_version", "documentation_url", "description"}
+        """Each language must declare id, name, file_extension (its runtime version comes from core/library_versions.py)."""
+        required = {"id", "name", "file_extension", "documentation_url", "description"}
         for lang in LANGUAGES_METADATA:
             assert required.issubset(lang.keys()), f"Missing fields in language {lang.get('id', 'unknown')}"
 

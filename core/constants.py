@@ -36,13 +36,13 @@ SUPPORTED_LIBRARIES = frozenset(
 # Supported programming languages
 SUPPORTED_LANGUAGES = frozenset(["python", "r", "julia", "javascript"])
 
-# Language metadata for database seeding (analog to LIBRARIES_METADATA)
+# Language metadata for database seeding (analog to LIBRARIES_METADATA). The
+# runtime version is not written here; see the note above LIBRARIES_METADATA.
 LANGUAGES_METADATA = [
     {
         "id": "python",
         "name": "Python",
         "file_extension": ".py",
-        "runtime_version": "3.13",
         "documentation_url": "https://www.python.org",
         "description": "General-purpose, high-level programming language with a clean, readable syntax. The lingua franca of data science, scientific computing, and the SciPy / PyData ecosystem.",
     },
@@ -50,7 +50,6 @@ LANGUAGES_METADATA = [
         "id": "r",
         "name": "R",
         "file_extension": ".R",
-        "runtime_version": "4.4",
         "documentation_url": "https://www.r-project.org",
         "description": "Language and environment for statistical computing and graphics. Widely used in academia, biotech, and finance research, with a rich package ecosystem on CRAN.",
     },
@@ -58,7 +57,6 @@ LANGUAGES_METADATA = [
         "id": "julia",
         "name": "Julia",
         "file_extension": ".jl",
-        "runtime_version": "1.11",
         "documentation_url": "https://julialang.org",
         "description": "High-level, high-performance dynamic language for technical computing. Combines the productivity of Python/R with the speed of compiled languages; popular in scientific computing, numerical analysis, and machine learning research.",
     },
@@ -66,9 +64,6 @@ LANGUAGES_METADATA = [
         "id": "javascript",
         "name": "JavaScript",
         "file_extension": ".js",
-        # Node 22 LTS — the runtime that drives the browser render harness
-        # (automation/js-render/render.mjs). Confirm against CI on first run.
-        "runtime_version": "22",
         "documentation_url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
         "description": "The language of the web. Every dashboard, embed, and BI tool renders charts in the browser via JavaScript. anyplot authors snippets in plain JS (TSX for React-only libraries); TypeScript is treated as the same language.",
     },
@@ -96,13 +91,18 @@ LANGUAGE_FILE_EXTENSIONS = {lang["id"]: lang["file_extension"] for lang in LANGU
 # React lib MUI X (`muix`) is `.tsx`. MUI X is the first — and currently only —
 # library to set it; the mechanism is wired through language_file_extensions() +
 # sync_to_postgres so JavaScript discovery scans both `.js` and `.tsx`.
+#
+# No entry carries a version: `libraries.version` (shown on the Libraries page
+# as "vX") and `languages.runtime_version` are read from the files that pin them
+# (uv.lock, package-lock.json, Manifest.toml, the setup actions) by
+# core/library_versions.py when the database sync runs, so a Dependabot bump
+# needs no edit here.
 LIBRARIES_METADATA = [
     {
         "id": "altair",
         "name": "Altair",
         "language_id": "python",
         "framework": "none",
-        "version": "5.2.0",
         "documentation_url": "https://altair-viz.github.io",
         "description": "Declarative visualization library for Python. Its simple, friendly and consistent API, built on top of the powerful Vega-Lite grammar, empowers you to spend less time writing code and more time exploring your data.",
     },
@@ -111,7 +111,6 @@ LIBRARIES_METADATA = [
         "name": "Bokeh",
         "language_id": "python",
         "framework": "none",
-        "version": "3.4.0",
         "documentation_url": "https://bokeh.org",
         "description": "Interactive visualization library that makes it simple to create common plots, while also handling custom or specialized use-cases. Work in Python close to all the PyData tools you're already familiar with.",
     },
@@ -120,7 +119,6 @@ LIBRARIES_METADATA = [
         "name": "Chart.js",
         "language_id": "javascript",
         "framework": "none",
-        "version": "4.4.7",
         "documentation_url": "https://www.chartjs.org",
         "description": "Simple yet flexible HTML5-canvas charting. The most popular open-source JavaScript charting library; eight core chart types, responsive, animated.",
     },
@@ -129,7 +127,6 @@ LIBRARIES_METADATA = [
         "name": "D3.js",
         "language_id": "javascript",
         "framework": "none",
-        "version": "7.9.0",
         "documentation_url": "https://d3js.org",
         "description": "Data-Driven Documents. The low-level standard for bespoke, SVG-based data visualization on the web — bind data to the DOM and apply data-driven transformations. Maximum control, steep curve.",
     },
@@ -138,7 +135,6 @@ LIBRARIES_METADATA = [
         "name": "Apache ECharts",
         "language_id": "javascript",
         "framework": "none",
-        "version": "5.5.1",
         "documentation_url": "https://echarts.apache.org",
         "description": "Powerful, interactive charting and data-visualization library for the browser. Apache-licensed, Canvas/SVG rendering, an enormous catalog of chart types.",
     },
@@ -147,7 +143,6 @@ LIBRARIES_METADATA = [
         "name": "ggplot2",
         "language_id": "r",
         "framework": "none",
-        "version": "3.5.1",
         "documentation_url": "https://ggplot2.tidyverse.org",
         "description": "The de facto standard for data visualization in R. ggplot2 is an implementation of the grammar of graphics: declarative, layered charts that compose with a small set of primitives (geoms, aesthetics, scales, facets, themes).",
     },
@@ -160,7 +155,6 @@ LIBRARIES_METADATA = [
         "name": "Highcharts",
         "language_id": "javascript",
         "framework": "none",
-        "version": "12.6.0",
         "documentation_url": "https://www.highcharts.com",
         "description": "The industry-standard JavaScript charting library for finance, news, and BI dashboards — SVG-rendered, endlessly flexible, battle-tested. Commercial license, free for non-commercial use.",
     },
@@ -169,7 +163,6 @@ LIBRARIES_METADATA = [
         "name": "lets-plot",
         "language_id": "python",
         "framework": "none",
-        "version": "4.5.0",
         "documentation_url": "https://lets-plot.org",
         "description": "Multiplatform plotting library built on the principles of the Grammar of Graphics. A faithful adaptation of R's ggplot2 that extends Grammar of Graphics principles to both Python and Kotlin.",
     },
@@ -178,7 +171,6 @@ LIBRARIES_METADATA = [
         "name": "Makie.jl",
         "language_id": "julia",
         "framework": "none",
-        "version": "0.22",
         "documentation_url": "https://docs.makie.org",
         "description": "High-performance, extensible visualization ecosystem for Julia. CairoMakie renders publication-quality static PNG/SVG/PDF; GLMakie/WGLMakie handle interactive use. anyplot uses CairoMakie for the static gallery.",
     },
@@ -187,7 +179,6 @@ LIBRARIES_METADATA = [
         "name": "Matplotlib",
         "language_id": "python",
         "framework": "none",
-        "version": "3.9.0",
         "documentation_url": "https://matplotlib.org",
         "description": "Comprehensive library for creating static, animated, and interactive visualizations in Python. Matplotlib makes easy things easy and hard things possible.",
     },
@@ -205,7 +196,6 @@ LIBRARIES_METADATA = [
         "name": "MUI X Charts",
         "language_id": "javascript",
         "framework": "react",
-        "version": "7.29.1",
         "documentation_url": "https://mui.com/x/react-charts/",
         "file_extension": ".tsx",  # per-library override; the JavaScript default is .js
         "description": "Charting components for the MUI (Material UI) React ecosystem. The community @mui/x-charts package (MIT) covers bar, line, pie, scatter and more. anyplot uses only the MIT community surface; Pro/Premium features are out of scope.",
@@ -215,7 +205,6 @@ LIBRARIES_METADATA = [
         "name": "Plotly",
         "language_id": "python",
         "framework": "none",
-        "version": "5.18.0",
         "documentation_url": "https://plotly.com/python",
         "description": "Python graphing library that makes interactive, publication-quality graphs. Create line plots, scatter plots, area charts, bar charts, error bars, box plots, histograms, heatmaps, subplots, and more.",
     },
@@ -224,7 +213,6 @@ LIBRARIES_METADATA = [
         "name": "plotnine",
         "language_id": "python",
         "framework": "none",
-        "version": "0.13.0",
         "documentation_url": "https://plotnine.org",
         "description": "A grammar of graphics for Python. Data visualization package based on the grammar of graphics, a coherent system for describing and building graphs. From ad-hoc plots to publication-ready figures.",
     },
@@ -233,7 +221,6 @@ LIBRARIES_METADATA = [
         "name": "Pygal",
         "language_id": "python",
         "framework": "none",
-        "version": "3.0.0",
         "documentation_url": "http://www.pygal.org",
         "description": "Beautiful python charting. Simple python charting library that creates SVG charts that are both beautiful and easy to customize.",
     },
@@ -242,7 +229,6 @@ LIBRARIES_METADATA = [
         "name": "Seaborn",
         "language_id": "python",
         "framework": "none",
-        "version": "0.13.0",
         "documentation_url": "https://seaborn.pydata.org",
         "description": "Python data visualization library based on matplotlib. Provides a high-level interface for drawing attractive and informative statistical graphics.",
     },

@@ -1,5 +1,7 @@
 # altair
 
+**API level:** Altair 6. `uv.lock` pins this major; write against its API.
+
 ## Import
 
 ```python

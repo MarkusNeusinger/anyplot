@@ -287,10 +287,13 @@ jobs:
         env:
           LIBRARY: ${{ steps.inputs.outputs.library }}
         run: |
-          uv venv .venv
-          source .venv/bin/activate
-          # Source of truth: pyproject.toml lib-${LIBRARY} extras
-          uv pip install -e ".[lib-${LIBRARY}]" ruff pillow pyyaml
+          # The lib-${LIBRARY} extra exactly as uv.lock pins it (`--frozen`: never
+          # re-resolve), the way agents/renderer/Dockerfile and CI install. The
+          # former `uv pip install -e ".[lib-X]"` resolved pyproject.toml's ranges
+          # afresh, so Dependabot's lock bumps never reached the pipeline and the
+          # recorded library_version drifted from the lock. The base set carries
+          # pillow and pyyaml; `dev` carries ruff. Creates .venv.
+          uv sync --frozen --extra "lib-${LIBRARY}" --extra dev
 
       - name: Install Python helper deps (for non-Python implementations)
         if: steps.inputs.outputs.language != 'python'
@@ -526,6 +529,22 @@ jobs:
             # Branch doesn't exist on remote - create fresh from main
             echo "::warning::Remote branch $BRANCH not found, creating fresh from main"
             git checkout -B "$BRANCH" origin/main
+          fi
+
+          # An implementation PR never changes dependency files, and impl-merge.yml
+          # refuses one that does. #9398 (qrcode-basic, makie) committed the
+          # Manifest.toml that a `Pkg.add` had re-resolved, which moved Makie from
+          # 0.22.10 to 0.21.9 for every Julia implementation. A spec that needs a
+          # new package needs a dependency PR first.
+          # The diff runs on its own line so a git failure stops the step
+          # instead of reading as "no changes". `--no-renames` lists both sides
+          # of a rename, so Manifest.toml -> Manifest.toml.bak is caught too.
+          CHANGED=$(git diff --no-renames --name-only origin/main...HEAD)
+          DEP_CHANGES=$(echo "$CHANGED" \
+            | grep -E '(^|/)(pyproject\.toml|uv\.lock|package\.json|package-lock\.json|Project\.toml|Manifest\.toml|\.python-version)$' || true)
+          if [ -n "$DEP_CHANGES" ]; then
+            echo "::error::The implementation commit changes dependency files: $(echo "$DEP_CHANGES" | tr '\n' ' '). Implementations use only the installed packages; a new package needs its own dependency PR first."
+            exit 1
           fi
 
           # Restore plot files after git operations

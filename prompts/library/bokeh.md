@@ -1,5 +1,7 @@
 # bokeh
 
+**API level:** Bokeh 3. `uv.lock` pins this major; write against its API.
+
 ## Import
 
 ```python
