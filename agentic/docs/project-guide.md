@@ -629,7 +629,7 @@ plt.savefig(f'plot-{THEME}.png', dpi=300, bbox_inches='tight')  # THEME = os.get
 - No `preview.png` files in repository (use GCS)
 - No `quality_report.json` files (use GitHub Issues)
 - No hardcoded API keys (use environment variables)
-- Avoid version-specific files unless necessary (prefer single `default.py` for Python 3.10-3.13)
+- No version-specific implementation files: one file per library (`implementations/python/{library}.py`) that runs on the project's Python (3.14)
 
 ## GitHub Actions Workflows
 
