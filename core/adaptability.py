@@ -876,7 +876,7 @@ def _comments(source: str) -> list[tuple[int, int, str]]:
         for token in tokenize.generate_tokens(io.StringIO(source).readline):
             if token.type == tokenize.COMMENT:
                 out.append((token.start[0], token.start[1], token.string))
-    except (tokenize.TokenError, IndentationError, SyntaxError):
+    except tokenize.TokenError, IndentationError, SyntaxError:
         for number, line in enumerate(source.splitlines(), start=1):
             stripped = line.lstrip()
             if stripped.startswith("#"):
