@@ -1,7 +1,7 @@
 // anyplot.ai
 // survival-kaplan-meier: Kaplan-Meier Survival Plot
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-09-09
+// Library: muix 9.16.0 | JavaScript 22.23.3
+// Quality: 85/100 | Updated: 2026-10-23
 import { LineChart } from "@mui/x-charts/LineChart";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
