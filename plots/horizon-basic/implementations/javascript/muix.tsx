@@ -1,7 +1,7 @@
 // anyplot.ai
 // horizon-basic: Horizon Chart
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 85/100 | Created: 2026-08-20
+// Quality: pending | Created: 2026-08-20
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { AreaPlot } from "@mui/x-charts/LineChart";
 import { Box, Typography } from "@mui/material";
