@@ -7,16 +7,24 @@ step in .github/workflows/impl-review.yml.
 
 from __future__ import annotations
 
+import ast
 import json
 import re
+import subprocess
+import sys
 from pathlib import Path
+from typing import Any
 
 import pytest
 import yaml
 
+from automation.scripts import regen_gate as gate_module
 from automation.scripts.regen_gate import (
+    ADAPT_FILE_LIMIT,
+    ADAPT_WHY,
     CARRIER_CRITERIA,
     CRITERIA,
+    IDENTITY_BOUND,
     KEEP,
     KIND_EXPECTED,
     KIND_SHOWS,
@@ -24,7 +32,13 @@ from automation.scripts.regen_gate import (
     REASON_CODES,
     RECORD_KEYS,
     WRITEBACK_CODES,
+    AdaptAssessment,
+    AdaptInput,
     GateInput,
+    GateResult,
+    adapt_assess,
+    adapt_record_errors,
+    adapt_summary_line,
     build_record,
     call_count,
     characteristic_kind,
@@ -34,11 +48,14 @@ from automation.scripts.regen_gate import (
     decide,
     is_cq04_code_defect,
     is_removal,
+    load_adapt_file,
     load_checklist_scores,
     load_weakness_classes,
     load_weakness_texts,
     main,
+    normalize_regen,
     nothing_to_repair,
+    pair_problem,
     parse_characteristics,
     parse_record_markers,
     permission_refs,
@@ -53,7 +70,9 @@ from automation.scripts.regen_gate import (
     validate_regen,
     weakness_class,
     weakness_ids,
+    within_line_bound,
 )
+from core.render_identity import DEFAULT_BOUND, RenderIdentity
 
 
 KNOWN = frozenset({"W1", "W2", "W3"})
@@ -2112,6 +2131,7 @@ class TestRecordCounts:
                 "coerced",
                 "at",
                 "writeback",
+                "adapt",
             }
         )
 
@@ -3051,3 +3071,829 @@ class TestCodeFeedback:
             tmp_path, capsys, checklist={**NEW_CHECKLIST, "CQ-04": 1}, regen=_code_regen(), prev=[CODE_LINE]
         )
         assert "code improvement 1 (W1) claims CQ-04, but your checklist for the new render gives CQ-04 1" in out
+
+
+# ---------------------------------------------------------------------------
+# The adapt route and the adapt regression (docs/concepts/adaptable-code.md,
+# "The adapt route"; PR 2 contract section 5)
+# ---------------------------------------------------------------------------
+
+ADAPT_SPEC = "bar-grouped"
+ADAPT_LIB = "matplotlib"
+# 100 lines before, 110 after: inside max(1.25 × 100, 100 + 15) = 125.
+ADAPT_PREV_SOURCE = "".join(f"value_{i} = {i}\n" for i in range(100))
+ADAPT_NEW_SOURCE = "".join(f"value_{i} = {i}\n" for i in range(110))
+# The static and smoke statuses impl-review derives each record status from.
+_SIDE_STATUSES = {
+    "pass": ("pass", "pass"),
+    "fail": ("fail", "skipped"),
+    "unknown": ("pass", "missing"),
+    "excluded": ("excluded", "skipped"),
+}
+_FILE = object()  # the fixture's default file
+
+
+def _adapt_record(side: str, status: str, **overrides: Any) -> dict:
+    """An adapt record as impl-review's record step writes it (contract section 4)."""
+    static, smoke = _SIDE_STATUSES[status]
+    record: dict[str, Any] = {
+        "v": 1,
+        "side": side,
+        "spec": ADAPT_SPEC,
+        "lib": ADAPT_LIB,
+        "language": "python",
+        "checker_version": 1,
+        "status": status,
+        "why": "-",
+        "lines": 100 if side == "prev" else 110,
+        "code_sha256": "9b2f3c",
+        "static": {
+            "status": static,
+            "exit": 0 if static == "pass" else 1,
+            "version": 1,
+            "shape": "table",
+            "color_role": "group",
+            "block": {"start": 31, "end": 40},
+            "constants": {"category": "QUARTER"},
+            "findings": [],
+            "lines": [],
+        },
+        "smoke": {"status": smoke, "why": "-", "fresh": True, "failed": [], "advisory_failed": [], "results": []},
+    }
+    if side == "new":
+        record["selfcheck"] = {"attempts": 2, "first": "fail"}
+    record.update(overrides)
+    return record
+
+
+def _identity(fraction: float = 0.0011, *, size=(3200, 1800), new_size=None, passed: Any = None) -> dict:
+    """One theme of a pair record: ``core.render_identity.RenderIdentity.to_dict()``, as ``pair`` writes it."""
+    entry = RenderIdentity(size, new_size or size, round(fraction * size[0] * size[1]), DEFAULT_BOUND).to_dict()
+    if passed is not None:
+        entry["passed"] = passed
+    return entry
+
+
+def _pair(light: dict | None = None, dark: dict | None = None, **overrides: Any) -> dict:
+    """``core.smoke_run pair`` output for two identical renders (contract section 1.3)."""
+    render = {"status": "ok", "size": [3200, 1800], "seconds": 2.1}
+    pair: dict[str, Any] = {
+        "v": 1,
+        "tool": "core.smoke_run pair",
+        "library": ADAPT_LIB,
+        "themes": ["light", "dark"],
+        "new": {"code_sha256": "9b2f3c", "renders": {"light": render, "dark": render}, "error": None, "line": None},
+        "prev": {"code_sha256": "51aa07", "renders": {"light": render, "dark": render}, "error": None, "line": None},
+        "identity": {"light": light or _identity(0.0011), "dark": dark or _identity(0.0009)},
+        "status": "identical",
+        "why": "-",
+    }
+    pair.update(overrides)
+    return pair
+
+
+def _adapt(
+    *, new: Any = "pass", prev: Any = "fail", pair: Any = _FILE, language: str | None = "python", **fields: Any
+) -> AdaptInput:
+    """A status string builds that record, a dict is the parsed file as it is, None is a missing file."""
+
+    def load(value: Any, side: str) -> tuple[Any, str | None]:
+        if value is None:
+            return None, "missing"
+        return (_adapt_record(side, value), None) if isinstance(value, str) else (value, None)
+
+    new_value, new_error = load(new, "new")
+    prev_value, prev_error = load(prev, "prev")
+    pair_value, pair_error = (_pair(), None) if pair is _FILE else load(pair, "pair")
+    return AdaptInput(
+        **{
+            "library": ADAPT_LIB,
+            "language": language,
+            "new": new_value,
+            "prev": prev_value,
+            "pair": pair_value,
+            "new_error": new_error,
+            "prev_error": prev_error,
+            "pair_error": pair_error,
+            **fields,
+        }
+    )
+
+
+def _adapt_inp(
+    score: int | None = 85, regen: Any = _FILE, *, adapt: AdaptInput | None = None, **overrides
+) -> GateInput:
+    """A regeneration whose review lists no improvement: kept as no_visible_improvement unless the route counts."""
+    fields: dict[str, Any] = {
+        "spec_id": ADAPT_SPEC,
+        "score": score,
+        "regen": _regen(improvements=[]) if regen is _FILE else regen,
+        "known_weakness_ids": KNOWN,
+        "new_checklist": NEW_CHECKLIST,
+        "prev_source": ADAPT_PREV_SOURCE,
+        "new_source": ADAPT_NEW_SOURCE,
+        "adapt": adapt or _adapt(),
+    }
+    fields.update(overrides)
+    return GateInput(**fields)
+
+
+def _review(regen: Any = _FILE) -> dict:
+    """The normalized review the route's floor reads."""
+    return normalize_regen(_regen(improvements=[]) if regen is _FILE else regen)[0]
+
+
+def _why(inp: GateInput, review: Any = None) -> str:
+    return adapt_assess(inp, review).why
+
+
+class TestAdaptRoute:
+    """``adapt_assess``: every condition, in the contract's order (section 5.3)."""
+
+    def test_the_route_holds_without_a_review(self):
+        adapt = adapt_assess(_adapt_inp(score=None, regen=None), None)
+        assert (adapt.why, adapt.counted, adapt.review, adapt.regression) == ("route", True, "skipped", False)
+        assert adapt.prev == {"status": "fail", "static": "fail", "smoke": "skipped"}
+        assert adapt.new == {"status": "pass", "static": "pass", "smoke": "pass"}
+        assert adapt.identity == {"light": 0.0011, "dark": 0.0009}
+        assert (adapt.version, adapt.prev_lines, adapt.new_lines) == (1, 100, 110)
+
+    def test_the_route_holds_with_a_review(self):
+        adapt = adapt_assess(_adapt_inp(), _review())
+        assert (adapt.why, adapt.counted, adapt.review) == ("route", True, "ran")
+
+    @pytest.mark.parametrize(
+        ("adapt", "why"),
+        [
+            ({"language": "r"}, "not_python"),
+            ({"language": "javascript"}, "not_python"),
+            ({"new": None}, "no_record"),
+            ({"prev": None}, "no_record"),
+            ({"new": _adapt_record("new", "pass", v=2)}, "record_invalid"),
+            ({"new": _adapt_record("prev", "pass")}, "record_invalid"),
+            ({"prev": _adapt_record("new", "fail")}, "record_invalid"),
+            ({"new": _adapt_record("new", "pass", spec="bar-basic")}, "record_invalid"),
+            ({"prev": _adapt_record("prev", "fail", lib="seaborn")}, "record_invalid"),
+            ({"new": _adapt_record("new", "pass", language="r")}, "record_invalid"),
+            ({"new": {**_adapt_record("new", "pass"), "status": "maybe"}}, "record_invalid"),
+            ({"new": _adapt_record("new", "pass", v=True)}, "record_invalid"),
+            ({"prev": ["fail"]}, "record_invalid"),
+            ({"new": "excluded"}, "excluded"),
+            ({"prev": "excluded"}, "excluded"),
+            ({"new": "unknown"}, "new_unknown"),
+            ({"prev": "unknown"}, "prev_unknown"),
+            ({"prev": "pass"}, "prev_passes"),
+            ({"new": "fail"}, "new_fails"),
+            ({"pair": None}, "pair_missing"),
+            ({"pair": ["identical"]}, "pair_missing"),
+            ({"pair": _pair(v=2)}, "pair_missing"),
+            ({"pair": _pair(status="same")}, "pair_missing"),
+            ({"pair": _pair(library="seaborn")}, "pair_missing"),
+            ({"pair": _pair(identity=None)}, "pair_missing"),
+            ({"pair": _pair(identity={"light": _identity()})}, "pair_missing"),
+            ({"pair": _pair(light={**_identity(), "old_size": [3200]})}, "pair_missing"),
+            ({"pair": _pair(light={**_identity(), "passed": "yes"})}, "pair_missing"),
+            ({"pair": _pair(dark={**_identity(), "fraction": "0.001"})}, "pair_missing"),
+            ({"pair": _pair(dark={**_identity(), "fraction": True})}, "pair_missing"),
+            ({"pair": _pair(status="error", why="prev_render_failed", identity=None)}, "pair_error"),
+            ({"pair": _pair(status="error", why="new_render_failed", identity=None)}, "pair_error"),
+            ({"pair": _pair(light=_identity(new_size=(3160, 1760)))}, "size_changed"),
+            ({"pair": _pair(dark=_identity(size=(2400, 2400), new_size=(2400, 2399)))}, "size_changed"),
+            ({"pair": _pair(light=_identity(0.006))}, "identity_light"),
+            ({"pair": _pair(dark=_identity(0.0051))}, "identity_dark"),
+            ({"pair": _pair(light=_identity(0.02), dark=_identity(0.3))}, "identity_both"),
+            # The gate's own bound, whatever the pair says passed.
+            ({"pair": _pair(light=_identity(0.006, passed=True))}, "identity_light"),
+            ({"pair": _pair(dark=_identity(0.001, passed=False))}, "identity_dark"),
+            ({"pair": _pair(light={**_identity(), "fraction": float("nan")})}, "identity_light"),
+            ({"pair": _pair(light={**_identity(), "fraction": None})}, "identity_light"),
+            ({"pair": _pair(light={**_identity(), "fraction": -0.1})}, "identity_light"),
+        ],
+    )
+    def test_conditions_before_the_sources(self, adapt, why):
+        assert _why(_adapt_inp(adapt=_adapt(**adapt))) == why
+        assert _why(_adapt_inp(adapt=_adapt(**adapt)), _review()) == why
+
+    def test_unreadable_files(self):
+        """A file that does not parse is malformed, not missing: ``record_invalid`` and ``pair_missing``."""
+        base = _adapt().__dict__
+        for side in ("new", "prev"):
+            adapt = AdaptInput(**{**base, side: None, f"{side}_error": "unreadable"})
+            assert _why(_adapt_inp(adapt=adapt)) == "record_invalid", side
+            assert AdaptInput(**{f"{side}_error": "unreadable"}).requested
+        pair = AdaptInput(**{**base, "pair": None, "pair_error": "unreadable"})
+        assert _why(_adapt_inp(adapt=pair)) == "pair_missing"
+        assert not AdaptInput().requested and AdaptInput(review_skipped=True).requested
+
+    def test_without_any_adapt_input_the_route_is_off(self):
+        inp = _adapt_inp(adapt=AdaptInput())
+        adapt = adapt_assess(inp, _review())
+        assert (adapt.why, adapt.counted, adapt.requested, adapt.prev, adapt.new, adapt.identity) == (
+            "no_record",
+            False,
+            False,
+            None,
+            None,
+            None,
+        )
+
+    @pytest.mark.parametrize(
+        ("overrides", "why"),
+        [
+            ({"prev_source": None}, "no_sources"),
+            ({"new_source": None}, "no_sources"),
+            ({"new_source": ADAPT_NEW_SOURCE + "x = 1\n" * 16}, "lines_over"),
+            ({"canvas_failed": True}, "canvas_failed"),
+        ],
+    )
+    def test_conditions_after_the_identity(self, overrides, why):
+        assert _why(_adapt_inp(**overrides)) == why
+
+    @pytest.mark.parametrize(
+        ("prev", "new", "within"),
+        [
+            (100, 125, True),
+            (100, 126, False),
+            (40, 55, True),
+            (40, 56, False),
+            (200, 250, True),
+            (200, 251, False),
+            (0, 15, True),
+            (0, 16, False),
+            (100, 60, True),
+        ],
+    )
+    def test_line_bound_is_the_larger_of_a_quarter_and_15_lines(self, prev, new, within):
+        assert within_line_bound(prev, new) is within
+
+    def test_the_first_failing_condition_wins(self):
+        assert _why(_adapt_inp(adapt=_adapt(prev="pass", pair=None))) == "prev_passes"
+        assert _why(_adapt_inp(adapt=_adapt(new="fail", pair=None))) == "new_fails"
+        assert _why(_adapt_inp(adapt=_adapt(new="unknown", prev="pass"))) == "new_unknown"
+        assert _why(_adapt_inp(adapt=_adapt(language="r", new=None))) == "not_python"
+        assert _why(_adapt_inp(canvas_failed=True, prev_source=None)) == "no_sources"
+        light = _pair(light=_identity(0.3, new_size=(3200, 1799)), dark=_identity(0.3))
+        assert _why(_adapt_inp(adapt=_adapt(pair=light))) == "size_changed"
+
+    @pytest.mark.parametrize(
+        ("score", "review", "overrides", "why"),
+        [
+            (0, None, {}, "score_zero"),
+            (None, None, {}, "score_zero"),
+            (85, {"regressions": [{"what": "legend lost", "where_visible": "both"}]}, {}, "review_regression"),
+            (85, {"scenario_changed": True}, {}, "scenario_changed"),
+            (85, {"encodings_added": ["size by revenue"]}, {}, "encodings_added"),
+            (85, {"encodings_added": [" "]}, {}, "route"),
+            (85, {"prev_checklist": {}}, {}, "no_prev_checklist"),
+            (85, None, {"new_checklist": {**NEW_CHECKLIST, "SC-02": 3}}, "technical_below"),
+            (85, None, {"new_checklist": {k: v for k, v in NEW_CHECKLIST.items() if k != "CQ-01"}}, "technical_below"),
+            (85, None, {"new_checklist": {}}, "technical_below"),
+            # The judgment items (DE, LM) are no floor.
+            (85, None, {"new_checklist": {**NEW_CHECKLIST, "DE-01": 2, "LM-02": 1}}, "route"),
+            # No tolerance: a score far below the re-score still counts.
+            (40, None, {}, "route"),
+        ],
+    )
+    def test_the_review_floor(self, score, review, overrides, why):
+        inp = _adapt_inp(score=score, **overrides)
+        assert _why(inp, _review(_regen(improvements=[], **(review or {})))) == why
+        assert _why(inp, None) == "route"  # without a review the floor does not apply
+
+    def test_scenario_and_encodings_on_a_basic_spec_are_review_regressions(self):
+        spec = "bar-basic"
+        adapt = _adapt(new=_adapt_record("new", "pass", spec=spec), prev=_adapt_record("prev", "fail", spec=spec))
+        inp = _adapt_inp(spec_id=spec, adapt=adapt)
+        assert _why(inp, _review(_regen(improvements=[], scenario_changed=True))) == "review_regression"
+        assert _why(inp, _review(_regen(improvements=[], encodings_added=["size"]))) == "review_regression"
+
+    def test_an_empty_review_fails_the_floor(self):
+        """A review that ran but left no valid review_regen.json: nothing to hold the floor against."""
+        assert _why(_adapt_inp(), {}) == "no_prev_checklist"
+
+    def test_the_regression_is_set_whenever_both_records_are_valid(self):
+        regression = adapt_assess(_adapt_inp(adapt=_adapt(prev="pass", new="fail", pair=None)), None)
+        assert (regression.regression, regression.why) == (True, "prev_passes")
+        for adapt in (
+            _adapt(prev="pass", new="fail", language="r"),
+            _adapt(prev="pass", new=_adapt_record("new", "fail", v=2)),
+            _adapt(prev="pass", new=None),
+            _adapt(prev="pass", new="unknown"),
+            _adapt(prev="unknown", new="fail"),
+        ):
+            assert adapt_assess(_adapt_inp(adapt=adapt), None).regression is False
+
+    def test_a_missing_static_or_smoke_block_reads_as_null(self):
+        record = _adapt_record("prev", "fail")
+        del record["smoke"]
+        record["static"] = {"status": "weird"}
+        adapt = adapt_assess(_adapt_inp(adapt=_adapt(prev=record)), None)
+        assert adapt.prev == {"status": "fail", "static": None, "smoke": None}
+        assert adapt.counted  # the gate reads the derived status, never recomputes it
+
+    def test_identity_fractions_for_the_record(self):
+        pair = _pair(light=_identity(new_size=(3160, 1760)), dark=_identity(0.123456789))
+        adapt = adapt_assess(_adapt_inp(adapt=_adapt(pair=pair)), None)
+        assert adapt.identity == {"light": None, "dark": 0.123457}
+        assert adapt_assess(_adapt_inp(adapt=_adapt(pair=None)), None).identity is None
+        error = _pair(status="error", identity=None)
+        assert adapt_assess(_adapt_inp(adapt=_adapt(pair=error)), None).identity is None
+
+    def test_a_non_integer_checker_version_is_null(self):
+        adapt = _adapt(new=_adapt_record("new", "pass", checker_version="1"))
+        assert adapt_assess(_adapt_inp(adapt=adapt), None).version is None
+
+
+class TestAdaptDecision:
+    """Where the route enters ``decide`` (contract section 5.4)."""
+
+    def test_review_free_merge_before_the_score_checks(self):
+        result = decide(_adapt_inp(score=None, regen=None, adapt=_adapt(review_skipped=True)))
+        assert (result.verdict, result.code) == (MERGE, "adapt_identity")
+        assert result.reason.startswith("adapt route, no review: the predecessor fails the adaptability check")
+        assert "0.11 % (light) and 0.09 % (dark)" in result.reason and "100 → 110 lines" in result.reason
+        assert result.adapt is not None and result.adapt.review == "skipped"
+
+    @pytest.mark.parametrize(
+        "adapt", [{"pair": _pair(dark=_identity(0.01))}, {"prev": "pass"}, {"new": None}, {"pair": None}]
+    )
+    def test_review_free_without_the_route_keeps_for_the_missing_score(self, adapt):
+        result = decide(_adapt_inp(score=None, regen=None, adapt=_adapt(review_skipped=True, **adapt)))
+        assert (result.verdict, result.code) == (KEEP, "no_score")
+        assert result.adapt is not None and not result.adapt.counted
+
+    def test_review_free_canvas_failure_comes_first(self):
+        result = decide(_adapt_inp(score=None, regen=None, canvas_failed=True, adapt=_adapt(review_skipped=True)))
+        assert (result.verdict, result.code) == (KEEP, "canvas_failed")
+        assert result.adapt is not None and result.adapt.why == "canvas_failed"
+
+    def test_the_review_free_exit_needs_the_flag(self):
+        result = decide(_adapt_inp(score=None, regen=None))
+        assert (result.verdict, result.code) == (KEEP, "no_score")
+        assert result.adapt is not None and result.adapt.why == "score_zero"
+
+    def test_a_score_next_to_the_flag_means_the_review_ran(self):
+        """The fail-safe direction: the stricter, reviewed path."""
+        merged = decide(_adapt_inp(adapt=_adapt(review_skipped=True)))
+        assert (merged.verdict, merged.code) == (MERGE, "adapt_identity")
+        assert merged.adapt is not None and merged.adapt.review == "ran"
+        floor = decide(_adapt_inp(adapt=_adapt(review_skipped=True), new_checklist={**NEW_CHECKLIST, "VQ-01": 7}))
+        assert (floor.verdict, floor.code) == (KEEP, "no_visible_improvement")
+        assert floor.adapt is not None and floor.adapt.why == "technical_below"
+
+    def test_no_visible_improvement_becomes_adapt_identity(self):
+        result = decide(_adapt_inp())
+        assert (result.verdict, result.code) == (MERGE, "adapt_identity")
+        assert result.reason.startswith("adapt route: the predecessor fails")
+        assert result.reason.endswith("(without the route: no_visible_improvement)")
+        assert decide(_adapt_inp(adapt=AdaptInput())).code == "no_visible_improvement"
+
+    def test_no_defect_improvement_becomes_adapt_identity(self):
+        suggestion = [{"ref": "P1", "rule": "DE-02", "what": "fonts aligned", "where_visible": "both renders"}]
+        regen = _regen(improvements=suggestion)
+        assert decide(_adapt_inp(regen=regen, adapt=AdaptInput())).code == "no_defect_improvement"
+        result = decide(_adapt_inp(regen=regen))
+        assert (result.verdict, result.code) == (MERGE, "adapt_identity")
+        assert result.reason.endswith("(without the route: no_defect_improvement)")
+
+    def test_below_tolerance_never_applies_to_the_route(self):
+        carrier = _regen()  # W2 carries; the re-score is 85
+        assert decide(_adapt_inp(score=80, regen=carrier, adapt=AdaptInput())).code == "below_tolerance"
+        result = decide(_adapt_inp(score=80, regen=carrier))
+        assert (result.verdict, result.code) == (MERGE, "adapt_identity")
+        assert result.reason.endswith("(without the route: below_tolerance)")
+
+    def test_a_carrier_merge_keeps_its_code_and_records_the_route(self):
+        result = decide(_adapt_inp(regen=_regen()))
+        assert (result.verdict, result.code) == (MERGE, "merge")
+        assert result.adapt is not None and result.adapt.counted
+        record = build_record(result, spec_id=ADAPT_SPEC, library=ADAPT_LIB, score=85, prev_stored=94)
+        assert record["adapt"]["counted"] is True and record["code"] == "merge"
+
+    def test_the_regression_exit_is_unchanged(self):
+        regen = _regen(improvements=[], regressions=[{"what": "legend lost", "where_visible": "both renders"}])
+        result = decide(_adapt_inp(regen=regen))
+        assert (result.verdict, result.code) == (KEEP, "regression")
+        assert result.adapt is not None and result.adapt.why == "review_regression"
+
+    def test_the_route_does_not_lift_a_keep_before_the_judgement(self):
+        for overrides, code in (
+            ({"prev_renders": False}, "prev_renders_missing"),
+            ({"context_ok": False}, "context_failed"),
+            ({"regen": None, "regen_error": "missing"}, "regen_json_missing"),
+            ({"regen": _regen(prev_rescored="many")}, "regen_json_invalid"),
+            ({"score": 0}, "score_zero"),
+        ):
+            result = decide(_adapt_inp(**overrides))
+            assert (result.verdict, result.code) == (KEEP, code), overrides
+
+    def test_the_route_is_off_with_an_invalid_review_file(self):
+        result = decide(_adapt_inp(regen=_regen(prev_rescored="many")))
+        assert result.adapt is not None and result.adapt.why == "no_prev_checklist"
+
+    def test_the_cq04_path_keeps_its_tolerance_without_the_route(self):
+        regen = _code_regen(prev_rescored=85)
+        prev_passes = _adapt(prev="pass")
+        result = decide(_code_inp(score=80, regen=regen, spec_id=ADAPT_SPEC, adapt=prev_passes))
+        assert (result.verdict, result.code) == (KEEP, "below_tolerance")
+        merged = decide(_code_inp(regen=regen, spec_id=ADAPT_SPEC, adapt=prev_passes))
+        assert (merged.verdict, merged.code) == (MERGE, "merge")
+
+    def test_older_inputs_decide_exactly_as_before(self):
+        """No adapt input: every fixture of the earlier tests keeps its verdict, code and reason."""
+        for inp in (_inp(), _inp(score=80), _inp(regen=_regen(improvements=[])), _code_inp(), _inp(score=None)):
+            result = decide(inp)
+            assert result.adapt is not None and result.adapt.why == "no_record"
+            assert result.code not in ("adapt_identity", "adapt_regression")
+
+
+class TestAdaptRegression:
+    """A predecessor that passes and a new source that fails: keep, on every spec (contract section 5.4)."""
+
+    def test_a_carrier_merge_becomes_keep(self):
+        result = decide(_adapt_inp(regen=_regen(), adapt=_adapt(prev="pass", new="fail")))
+        assert (result.verdict, result.code) == (KEEP, "adapt_regression")
+        assert result.reason.startswith("adapt regression: the predecessor passes the adaptability check")
+        assert result.reason.endswith("(without it: merge)")
+
+    def test_a_code_path_merge_becomes_keep(self):
+        result = decide(_code_inp(spec_id=ADAPT_SPEC, adapt=_adapt(prev="pass", new="fail")))
+        assert (result.verdict, result.code) == (KEEP, "adapt_regression")
+
+    def test_on_a_basic_spec_too(self):
+        spec = "bar-basic"
+        adapt = _adapt(new=_adapt_record("new", "fail", spec=spec), prev=_adapt_record("prev", "pass", spec=spec))
+        result = decide(_adapt_inp(spec_id=spec, regen=_regen(), adapt=adapt))
+        assert (result.verdict, result.code) == (KEEP, "adapt_regression")
+
+    def test_a_keep_keeps_its_own_code(self):
+        result = decide(_adapt_inp(adapt=_adapt(prev="pass", new="fail")))
+        assert (result.verdict, result.code) == (KEEP, "no_visible_improvement")
+        assert result.adapt is not None and result.adapt.regression
+
+    @pytest.mark.parametrize(
+        "adapt",
+        [
+            {"prev": "pass", "new": "pass"},
+            {"prev": "fail", "new": "fail"},
+            {"prev": "pass", "new": "unknown"},
+            {"prev": "pass", "new": None},
+            {"prev": "pass", "new": "fail", "language": "julia"},
+            {"prev": _adapt_record("prev", "pass", lib="seaborn"), "new": "fail"},
+        ],
+    )
+    def test_no_regression_without_two_valid_records_saying_so(self, adapt):
+        result = decide(_adapt_inp(regen=_regen(), adapt=_adapt(**adapt)))
+        assert (result.verdict, result.code) == (MERGE, "merge")
+
+
+class TestAdaptRecord:
+    """The record's ``adapt`` block (contract section 5.5)."""
+
+    def _record(self, result, **fields) -> dict:
+        return build_record(
+            result, spec_id=ADAPT_SPEC, library=ADAPT_LIB, at="2026-10-24T09:30:11Z", **{"score": None, **fields}
+        )
+
+    def test_the_review_free_merge(self):
+        result = decide(_adapt_inp(score=None, regen=None, adapt=_adapt(review_skipped=True)))
+        record = self._record(result, prev_stored=94, pr=12301)
+        assert (record["verdict"], record["code"], record["prev_rescored"], record["new"]) == (
+            "merge",
+            "adapt_identity",
+            None,
+            None,
+        )
+        assert record["adapt"] == {
+            "version": 1,
+            "prev": {"status": "fail", "static": "fail", "smoke": "skipped"},
+            "new": {"status": "pass", "static": "pass", "smoke": "pass"},
+            "identity": {"light": 0.0011, "dark": 0.0009},
+            "counted": True,
+            "why": "route",
+            "review": "skipped",
+        }
+        assert validate_record(record) == []
+        assert parse_record_markers(render_record_marker(record)) == [record]
+
+    def test_without_adapt_input(self):
+        record = self._record(decide(_inp()), score=85, prev_stored=90)
+        assert record["adapt"] == {
+            "version": None,
+            "prev": None,
+            "new": None,
+            "identity": None,
+            "counted": False,
+            "why": "no_record",
+            "review": "ran",
+        }
+        assert validate_record(record) == []
+
+    def test_a_result_without_an_assessment_records_no_record(self):
+        record = build_record(GateResult(KEEP, "x", "no_score"), spec_id="s", library="b", score=None, prev_stored=None)
+        assert record["adapt"]["why"] == "no_record" and validate_record(record) == []
+
+    def test_not_python(self):
+        result = decide(_inp(adapt=AdaptInput(language="r")))
+        assert self._record(result, score=85, prev_stored=90)["adapt"]["why"] == "not_python"
+
+    def test_a_size_change_records_a_null_fraction(self):
+        pair = _pair(light=_identity(new_size=(3160, 1760)))
+        record = self._record(decide(_adapt_inp(adapt=_adapt(pair=pair))), score=85, prev_stored=90)
+        assert record["adapt"]["identity"] == {"light": None, "dark": 0.0009}
+        assert record["adapt"]["why"] == "size_changed"
+        assert validate_record(record) == []
+
+    def test_every_reason_validates(self):
+        base = self._record(decide(_adapt_inp()), score=85, prev_stored=90)
+        for why in ADAPT_WHY:
+            record = {**base, "adapt": {**base["adapt"], "why": why, "counted": why == "route"}}
+            assert validate_record(record) == [], why
+
+    @pytest.mark.parametrize(
+        ("change", "message"),
+        [
+            ({"extra": 1}, "unknown key 'extra'"),
+            ({"version": "1"}, "version must be an integer or null"),
+            ({"prev": ["fail"]}, "prev must be null or an object"),
+            ({"prev": {"status": "fail", "static": "fail"}}, "prev must be null or an object"),
+            ({"new": {"status": "great", "static": "pass", "smoke": "pass"}}, "new.status is not a known status"),
+            ({"new": {"status": None, "static": "pass", "smoke": "pass"}}, "new.status is not a known status"),
+            ({"new": {"status": "pass", "static": "fine", "smoke": "pass"}}, "new.static is not a known status"),
+            ({"identity": {"light": 0.001}}, "identity must be null or an object with light and dark"),
+            ({"identity": {"light": 1.5, "dark": 0.0}}, "identity.light must be a fraction"),
+            ({"identity": {"light": float("nan"), "dark": 0.0}}, "identity.light must be a fraction"),
+            ({"identity": {"light": True, "dark": 0.0}}, "identity.light must be a fraction"),
+            ({"identity": [0.001, 0.002]}, "identity must be null or an object"),
+            ({"counted": "yes"}, "counted must be true or false"),
+            ({"why": "because"}, "why is not one of ADAPT_WHY"),
+            ({"counted": False}, "counted must be true exactly when why is route"),
+            ({"counted": True, "why": "identity_dark"}, "counted must be true exactly when why is route"),
+            ({"review": "maybe"}, "review must be ran or skipped"),
+        ],
+    )
+    def test_validate_rejects_a_bad_block(self, change, message):
+        record = self._record(decide(_adapt_inp()), score=85, prev_stored=90)
+        record["adapt"] = {**record["adapt"], **change}
+        errors = validate_record(record)
+        assert any(message in e for e in errors), errors
+
+    def test_validate_rejects_a_missing_key_and_a_non_object(self):
+        record = self._record(decide(_adapt_inp()), score=85, prev_stored=90)
+        del record["adapt"]["review"]
+        assert "record.adapt lacks 'review'" in validate_record(record)
+        assert validate_record({**record, "adapt": ["route"]})[0] == "record.adapt is not an object"
+        assert adapt_record_errors(None) == ["record.adapt is not an object"]
+
+    def test_records_written_before_the_route_still_validate(self):
+        record = self._record(decide(_adapt_inp()), score=85, prev_stored=90)
+        del record["adapt"]
+        assert validate_record(record) == []
+        assert parse_record_markers(render_record_marker(record)) == [record]
+
+    def test_both_codes_are_declared(self):
+        assert {"adapt_identity", "adapt_regression"} <= set(REASON_CODES)
+
+
+class TestAdaptSummary:
+    def test_counted_merge(self):
+        summary = render_summary(
+            decide(_adapt_inp(score=None, regen=None, adapt=_adapt(review_skipped=True))), "94", None
+        )
+        line = next(line for line in summary.splitlines() if line.startswith("**Adapt route:**"))
+        assert line.startswith("**Adapt route:** counted: the predecessor fails the adaptability check (static fail,")
+        assert line.endswith("100 → 110 lines; no review ran")
+
+    def test_not_counted_names_the_reason(self):
+        result = decide(_adapt_inp(adapt=_adapt(pair=_pair(dark=_identity(0.01)))))
+        assert (
+            "**Adapt route:** not counted (identity_dark): the dark renders differ in more than 0.50 % of their pixels"
+            in render_summary(result, "94", 85)
+        )
+
+    def test_regression(self):
+        result = decide(_adapt_inp(regen=_regen(), adapt=_adapt(prev="pass", new="fail")))
+        assert "**Adapt route:** regression: the predecessor passes the adaptability check" in render_summary(
+            result, "94", 85
+        )
+
+    def test_no_line_without_adapt_input(self):
+        assert "Adapt route" not in render_summary(decide(_inp()), "90", 85)
+        assert "Adapt route" not in render_summary(decide(_inp(adapt=AdaptInput(language="r"))), "90", 85)
+
+    def test_every_reason_has_a_text(self):
+        for why in ADAPT_WHY:
+            line = adapt_summary_line(AdaptAssessment(why=why))
+            expected = "**Adapt route:** counted: " if why == "route" else f"**Adapt route:** not counted ({why}): "
+            assert line.startswith(expected), why
+            assert "@" not in line
+        assert set(gate_module.ADAPT_WHY_TEXT) == set(ADAPT_WHY) - {"route"}
+
+
+class TestAdaptFiles:
+    def test_load_adapt_file(self, tmp_path):
+        assert load_adapt_file("") == (None, "absent")
+        assert load_adapt_file(str(tmp_path / "absent.json")) == (None, "missing")
+        bad = tmp_path / "bad.json"
+        bad.write_text("{not json", encoding="utf-8")
+        assert load_adapt_file(str(bad)) == (None, "unreadable")
+        deep = tmp_path / "deep.json"
+        deep.write_text("[" * 200_000 + "]" * 200_000, encoding="utf-8")
+        assert load_adapt_file(str(deep)) == (None, "unreadable")
+        huge = tmp_path / "huge.json"
+        huge.write_text(" " * (ADAPT_FILE_LIMIT + 1) + "{}", encoding="utf-8")
+        assert load_adapt_file(str(huge)) == (None, "unreadable")
+        good = tmp_path / "good.json"
+        good.write_text(json.dumps(_pair()), encoding="utf-8")
+        assert load_adapt_file(str(good)) == (_pair(), None)
+        assert load_adapt_file(str(tmp_path)) == (None, "missing")  # a directory is no file
+
+    def test_identity_bound_is_render_identitys_default(self):
+        assert IDENTITY_BOUND == DEFAULT_BOUND
+
+    def test_render_identity_entries_parse(self):
+        """The identity block is core.render_identity's own dict, a size change included."""
+        assert pair_problem(_pair(), ADAPT_LIB) is None
+        changed = _pair(light=RenderIdentity((3200, 1800), (3160, 1760), 0, DEFAULT_BOUND).to_dict())
+        assert pair_problem(changed, ADAPT_LIB) is None
+        assert changed["identity"]["light"]["fraction"] is None
+        assert _why(_adapt_inp(adapt=_adapt(pair=changed))) == "size_changed"
+        assert pair_problem(_pair(status="error", identity=None), ADAPT_LIB) is None
+        assert pair_problem(_pair(), "seaborn") == "library names another library"
+        without_library = _pair()
+        del without_library["library"]
+        assert pair_problem(without_library, ADAPT_LIB) is None
+
+
+def _adapt_files(tmp_path: Path, *, new: str = "pass", prev: str = "fail", pair: dict | None = None) -> list[str]:
+    """The adapt flags with their files, and the two sources, as impl-review passes them."""
+    (tmp_path / "adapt-new.json").write_text(json.dumps(_adapt_record("new", new)), encoding="utf-8")
+    (tmp_path / "adapt-prev.json").write_text(json.dumps(_adapt_record("prev", prev)), encoding="utf-8")
+    (tmp_path / "pair.json").write_text(json.dumps(pair or _pair()), encoding="utf-8")
+    (tmp_path / "anyplot-prev-impl.py").write_text(ADAPT_PREV_SOURCE, encoding="utf-8")
+    (tmp_path / f"{ADAPT_LIB}.py").write_text(ADAPT_NEW_SOURCE, encoding="utf-8")
+    return [
+        "--adapt-new",
+        str(tmp_path / "adapt-new.json"),
+        "--adapt-prev",
+        str(tmp_path / "adapt-prev.json"),
+        "--adapt-pair",
+        str(tmp_path / "pair.json"),
+        "--prev-impl",
+        str(tmp_path / "anyplot-prev-impl.py"),
+        "--new-impl",
+        str(tmp_path / f"{ADAPT_LIB}.py"),
+    ]
+
+
+def _outputs(path: Path) -> dict[str, str]:
+    return dict(line.split("=", 1) for line in path.read_text(encoding="utf-8").splitlines())
+
+
+class TestAdaptCli:
+    def _decide(self, tmp_path, monkeypatch, capsys, extra: list[str], *, score: str = "85", adapt: bool = True):
+        out = tmp_path / "gh_output"
+        monkeypatch.setenv("GITHUB_OUTPUT", str(out))
+        (tmp_path / "review_regen.json").write_text(json.dumps(_regen(improvements=[])), encoding="utf-8")
+        (tmp_path / "review_checklist.json").write_text(json.dumps(_checklist_json(NEW_CHECKLIST)), encoding="utf-8")
+        args = ["decide", "--spec-id", ADAPT_SPEC, "--library", ADAPT_LIB, "--score", score, "--prev-stored", "94"]
+        args += ["--regen-json", str(tmp_path / "review_regen.json"), "--prev-renders", "available"]
+        args += ["--record-out", str(tmp_path / "record.json"), *extra]
+        if adapt:
+            args += _adapt_files(tmp_path)
+        assert main(args) == 0
+        notice = next(line for line in capsys.readouterr().out.splitlines() if line.startswith("::notice::regen_gate"))
+        return notice, _outputs(out), json.loads((tmp_path / "record.json").read_text(encoding="utf-8"))
+
+    def test_decide_with_the_adapt_flags(self, tmp_path, monkeypatch, capsys):
+        notice, outputs, record = self._decide(tmp_path, monkeypatch, capsys, [])
+        expected = (
+            " code=adapt_identity prev_lines=100 new_lines=110 adapt_counted=true adapt_why=route reason=adapt route:"
+        )
+        assert expected in notice
+        assert (outputs["verdict"], outputs["code"], outputs["adapt_counted"], outputs["adapt_why"]) == (
+            "merge",
+            "adapt_identity",
+            "true",
+            "route",
+        )
+        assert record["adapt"]["counted"] is True and record["adapt"]["review"] == "ran"
+        assert validate_record(record) == []
+
+    def test_decide_without_a_review(self, tmp_path, monkeypatch, capsys):
+        notice, outputs, record = self._decide(tmp_path, monkeypatch, capsys, ["--review-skipped"], score="")
+        assert " prev_rescored=n/a new=n/a verdict=merge code=adapt_identity " in notice
+        assert (outputs["code"], outputs["adapt_why"]) == ("adapt_identity", "route")
+        assert (record["new"], record["prev_rescored"], record["adapt"]["review"]) == (None, None, "skipped")
+
+    def test_decide_with_the_review_skipped_and_no_route(self, tmp_path, monkeypatch, capsys):
+        (tmp_path / "x").mkdir()
+        files = _adapt_files(tmp_path / "x", prev="pass")
+        notice, outputs, record = self._decide(
+            tmp_path, monkeypatch, capsys, ["--review-skipped", *files], score="", adapt=False
+        )
+        assert " verdict=keep code=no_score " in notice and " adapt_counted=false adapt_why=prev_passes " in notice
+        assert record["adapt"]["why"] == "prev_passes"
+
+    def test_older_argument_sets_print_the_old_notice(self, tmp_path, monkeypatch, capsys):
+        notice, outputs, record = self._decide(tmp_path, monkeypatch, capsys, [], adapt=False)
+        assert "adapt_" not in notice and " code=no_visible_improvement reason=" in notice
+        assert (outputs["adapt_counted"], outputs["adapt_why"]) == ("false", "no_record")
+        assert record["adapt"]["why"] == "no_record"
+
+    def test_a_non_python_pair_records_not_python(self, tmp_path, monkeypatch, capsys):
+        (tmp_path / "prev.R").write_text("x <- 1\n", encoding="utf-8")
+        (tmp_path / "ggplot2.R").write_text("x <- 2\n", encoding="utf-8")
+        extra = ["--prev-impl", str(tmp_path / "prev.R"), "--new-impl", str(tmp_path / "ggplot2.R")]
+        notice, outputs, record = self._decide(tmp_path, monkeypatch, capsys, extra, adapt=False)
+        assert "adapt_" not in notice
+        assert outputs["adapt_why"] == "not_python" and record["adapt"]["why"] == "not_python"
+
+    def _route(self, tmp_path, monkeypatch, capsys, args: list[str]) -> tuple[str, dict[str, str]]:
+        out = tmp_path / "gh_output"
+        monkeypatch.setenv("GITHUB_OUTPUT", str(out))
+        assert main(["adapt-route", "--spec-id", ADAPT_SPEC, "--library", ADAPT_LIB, *args]) == 0
+        notice = next(line for line in capsys.readouterr().out.splitlines() if line.startswith("::notice::adapt_route"))
+        return notice, _outputs(out)
+
+    def test_adapt_route(self, tmp_path, monkeypatch, capsys):
+        notice, outputs = self._route(tmp_path, monkeypatch, capsys, _adapt_files(tmp_path))
+        assert notice == (
+            "::notice::adapt_route spec=bar-grouped lib=matplotlib prev=fail new=pass light=0.0011 dark=0.0009 "
+            "lines=100->110 route=true why=route"
+        )
+        assert outputs == {"adapt_route": "true", "adapt_why": "route", "adapt_prev": "fail", "adapt_new": "pass"}
+
+    def test_adapt_route_canvas_failed(self, tmp_path, monkeypatch, capsys):
+        _, outputs = self._route(tmp_path, monkeypatch, capsys, [*_adapt_files(tmp_path), "--canvas-failed"])
+        assert (outputs["adapt_route"], outputs["adapt_why"]) == ("false", "canvas_failed")
+
+    def test_adapt_route_without_files(self, tmp_path, monkeypatch, capsys):
+        notice, outputs = self._route(tmp_path, monkeypatch, capsys, [])
+        assert notice.endswith("prev=n/a new=n/a light=n/a dark=n/a lines=n/a->n/a route=false why=no_record")
+        assert outputs == {"adapt_route": "false", "adapt_why": "no_record", "adapt_prev": "n/a", "adapt_new": "n/a"}
+
+    def test_adapt_route_with_an_unreadable_pair(self, tmp_path, monkeypatch, capsys):
+        args = _adapt_files(tmp_path)
+        (tmp_path / "pair.json").write_text("{", encoding="utf-8")
+        _, outputs = self._route(tmp_path, monkeypatch, capsys, args)
+        assert (outputs["adapt_route"], outputs["adapt_why"]) == ("false", "pair_missing")
+
+    def test_adapt_route_never_fails(self, tmp_path, monkeypatch, capsys):
+        def boom(*_args, **_kwargs):
+            raise RuntimeError("bug")
+
+        monkeypatch.setattr(gate_module, "adapt_assess", boom)
+        out = tmp_path / "gh_output"
+        monkeypatch.setenv("GITHUB_OUTPUT", str(out))
+        assert main(["adapt-route", "--spec-id", ADAPT_SPEC, "--library", ADAPT_LIB, *_adapt_files(tmp_path)]) == 0
+        assert "::warning::adapt-route could not assess the pair, so the route is off: bug" in capsys.readouterr().out
+        assert _outputs(out)["adapt_route"] == "false"
+
+    def test_adapt_route_usage_error_exits_2(self):
+        with pytest.raises(SystemExit) as exc:
+            main(["adapt-route", "--library", ADAPT_LIB])
+        assert exc.value.code == 2
+
+
+class TestAdaptRunnerCopy:
+    """The runner runs a single-file copy with its own Python, where ``core`` is not importable."""
+
+    GATE = Path(gate_module.__file__)
+
+    def test_the_gate_imports_only_the_standard_library(self):
+        """PyYAML is the one exception, imported inside ``cmd_context`` only."""
+        tree = ast.parse(self.GATE.read_text(encoding="utf-8"))
+        context = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "cmd_context")
+        in_context = {id(n) for n in ast.walk(context)}
+        modules = {
+            (node.module if isinstance(node, ast.ImportFrom) else alias.name).split(".")[0]
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Import | ast.ImportFrom) and id(node) not in in_context
+            for alias in node.names
+        }
+        assert modules <= set(sys.stdlib_module_names) | {"__future__"}, modules - set(sys.stdlib_module_names)
+
+    def test_adapt_route_and_decide_run_without_core(self, tmp_path):
+        copy = tmp_path / "tools" / "regen_gate.py"
+        copy.parent.mkdir()
+        copy.write_text(self.GATE.read_text(encoding="utf-8"), encoding="utf-8")
+        work = tmp_path / "work"
+        work.mkdir()
+        files = _adapt_files(work)
+        out = work / "gh_output"
+        env = {"GITHUB_OUTPUT": str(out), "PATH": "/usr/bin:/bin"}
+        route = subprocess.run(
+            [sys.executable, "-I", str(copy), "adapt-route", "--spec-id", ADAPT_SPEC, "--library", ADAPT_LIB, *files],
+            cwd=work,
+            env=env,
+            capture_output=True,
+            text=True,
+        )
+        assert route.returncode == 0, route.stderr
+        assert "adapt_route=true" in out.read_text(encoding="utf-8").splitlines()
+        args = ["decide", "--spec-id", ADAPT_SPEC, "--library", ADAPT_LIB, "--score", "", "--review-skipped", *files]
+        decided = subprocess.run(
+            [sys.executable, "-I", str(copy), *args], cwd=work, env=env, capture_output=True, text=True
+        )
+        assert decided.returncode == 0, decided.stderr
+        assert "code=adapt_identity" in out.read_text(encoding="utf-8").splitlines()
