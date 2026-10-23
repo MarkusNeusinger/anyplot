@@ -1,7 +1,7 @@
 // anyplot.ai
 // alluvial-opinion-flow: Opinion Flow Diagram
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 90/100 | Created: 2026-08-26
+// Quality: pending | Created: 2026-08-26
 import * as React from "react";
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
