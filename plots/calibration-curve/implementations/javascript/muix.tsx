@@ -13,12 +13,13 @@ const t = window.ANYPLOT_TOKENS;
 
 // Columns: set these to your data's column names
 const Y_TRUE = "Fraction of Positives"; // role: y_true
-const Y_PROB = "Model A (well-calibrated)"; // role: y_prob
-const Y_PROB_B = "Model B (overconfident)"; // role: extra
+const Y_PROB = "Logistic regression (screening)"; // role: y_prob
+const Y_PROB_B = "Boosted trees, uncalibrated"; // role: extra
 
 // Data: replace this block with your own records, one object per row
-// Predicted probabilities for a well-calibrated screening model (Model A) and
-// an overconfident model (Model B) against ground-truth binary diagnoses.
+// Predicted disease risk from a well-calibrated logistic-regression screening
+// model and an overconfident, uncalibrated boosted-trees model against
+// ground-truth binary diagnoses.
 const data = (() => {
   function mulberry32(seed: number) {
     return function random() {
@@ -59,56 +60,44 @@ const data = (() => {
 
 // Plot: reads only data and the constants above
 const NUM_BINS = 10;
-const N_SAMPLES = data.length;
 const yTrue = data.map((d) => d[Y_TRUE]);
-const predA = data.map((d) => d[Y_PROB]);
-const predB = data.map((d) => d[Y_PROB_B]);
 
-type Bin = { center: number; fracPos: number | null; count: number };
-
-function calibrationBins(yProb: number[]): Bin[] {
-  const sums = Array.from({ length: NUM_BINS }, () => ({ count: 0, sumTrue: 0 }));
-  yProb.forEach((p, i) => {
+// Per model: bin counts, mean predicted probability and fraction of positives
+// per bin, then ECE (bin-weighted |fraction − mean prediction|) and Brier score
+const models = [Y_PROB, Y_PROB_B].map((col) => {
+  const pred = data.map((d) => d[col]);
+  const count = Array(NUM_BINS).fill(0);
+  const sumPred = Array(NUM_BINS).fill(0);
+  const sumTrue = Array(NUM_BINS).fill(0);
+  pred.forEach((p, i) => {
     const idx = Math.min(NUM_BINS - 1, Math.floor(p * NUM_BINS));
-    sums[idx].count += 1;
-    sums[idx].sumTrue += yTrue[i];
+    count[idx] += 1;
+    sumPred[idx] += p;
+    sumTrue[idx] += yTrue[i];
   });
-  return sums.map((b, i) => ({
-    center: (i + 0.5) / NUM_BINS,
-    fracPos: b.count > 0 ? b.sumTrue / b.count : null,
-    count: b.count,
-  }));
-}
-
-function brierScore(yProb: number[]): number {
-  const sse = yProb.reduce((acc, p, i) => acc + (p - yTrue[i]) ** 2, 0);
-  return sse / yProb.length;
-}
-
-function expectedCalibrationError(bins: Bin[], total: number): number {
-  return bins.reduce((acc, b) => {
-    if (b.fracPos === null) return acc;
-    return acc + (b.count / total) * Math.abs(b.fracPos - b.center);
-  }, 0);
-}
-
-const binsA = calibrationBins(predA);
-const binsB = calibrationBins(predB);
-const eceA = expectedCalibrationError(binsA, N_SAMPLES);
-const eceB = expectedCalibrationError(binsB, N_SAMPLES);
-const brierA = brierScore(predA);
-const brierB = brierScore(predB);
-
-const xValues = [0, ...binsA.map((b) => b.center), 1];
-const modelASeries = [null, ...binsA.map((b) => b.fracPos), null];
-const modelBSeries = [null, ...binsB.map((b) => b.fracPos), null];
-const diagonalSeries = xValues;
-
-const binLabels = binsA.map((b) => {
-  const lo = Math.round((b.center - 0.05) * 100);
-  const hi = Math.round((b.center + 0.05) * 100);
-  return `${lo}–${hi}%`;
+  const points = count
+    .map((n, b) => (n > 0 ? { x: sumPred[b] / n, y: sumTrue[b] / n, n } : null))
+    .filter((pt) => pt !== null);
+  const ece = points.reduce((acc, pt) => acc + (pt.n / pred.length) * Math.abs(pt.y - pt.x), 0);
+  const brier = pred.reduce((acc, p, i) => acc + (p - yTrue[i]) ** 2, 0) / pred.length;
+  return { label: col, count, points, ece, brier };
 });
+
+// Shared x axis: every model's own (mean prediction) x values plus the 0/1
+// diagonal endpoints; each series is null away from its own points
+const xValues = [...new Set([0, 1, ...models.flatMap((m) => m.points.map((pt) => pt.x))])].sort(
+  (a, b) => a - b,
+);
+const modelSeries = models.map((m) => {
+  const yAt = new Map(m.points.map((pt) => [pt.x, pt.y]));
+  return xValues.map((x) => yAt.get(x) ?? null);
+});
+const diagonalSeries = xValues.map((x) => (x === 0 || x === 1 ? x : null));
+
+const binLabels = Array.from(
+  { length: NUM_BINS },
+  (_, i) => `${Math.round((i / NUM_BINS) * 100)}–${Math.round(((i + 1) / NUM_BINS) * 100)}%`,
+);
 
 const TITLE_HEIGHT = 78;
 
@@ -149,7 +138,7 @@ export default function Chart() {
           marginTop: "4px",
         }}
       >
-        {`Model A — ECE ${eceA.toFixed(3)}, Brier ${brierA.toFixed(3)}   ·   Model B — ECE ${eceB.toFixed(3)}, Brier ${brierB.toFixed(3)}`}
+        {models.map((m) => `${m.label} — ECE ${m.ece.toFixed(3)}, Brier ${m.brier.toFixed(3)}`).join("   ·   ")}
       </Typography>
 
       <LineChart
@@ -189,31 +178,24 @@ export default function Chart() {
             label: "Perfect calibration",
             color: t.ink,
             showMark: false,
+            connectNulls: true,
             curve: "linear",
           },
-          {
-            id: "modelA",
-            data: modelASeries,
-            label: Y_PROB,
-            color: t.palette[0],
+          ...models.map((m, i) => ({
+            id: `model${i}`,
+            data: modelSeries[i],
+            label: m.label,
+            color: t.palette[i],
             showMark: true,
-            curve: "linear",
-          },
-          {
-            id: "modelB",
-            data: modelBSeries,
-            label: Y_PROB_B,
-            color: t.palette[1],
-            showMark: true,
-            curve: "linear",
-          },
+            connectNulls: true,
+            curve: "linear" as const,
+          })),
         ]}
         margin={{ left: 50, right: 40, top: 16, bottom: 16 }}
         sx={{
           "& .MuiChartsLegend-root": { color: t.ink },
           "& .MuiChartsLegend-label": { fontSize: "14px", color: t.ink },
-          '& [data-series="modelA"].MuiLineChart-line': { strokeWidth: 3 },
-          '& [data-series="modelB"].MuiLineChart-line': { strokeWidth: 3 },
+          '& [data-series^="model"].MuiLineChart-line': { strokeWidth: 3 },
           '& [data-series="diagonal"].MuiLineChart-line': { strokeWidth: 2, strokeDasharray: "8 5" },
           "& .MuiChartsGrid-line": { stroke: t.grid },
           "& .MuiChartsAxis-line": { stroke: t.inkSoft },
@@ -236,22 +218,19 @@ export default function Chart() {
             scaleType: "band",
             data: binLabels,
             label: "Predicted Probability Bin",
-            tickLabelStyle: { fontSize: 12, fill: t.inkSoft },
-            labelStyle: { fontSize: 14, fill: t.ink },
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
         yAxis={[
           {
             width: 84,
             label: "Count",
-            tickLabelStyle: { fontSize: 12, fill: t.inkSoft },
-            labelStyle: { fontSize: 14, fill: t.ink },
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
-        series={[
-          { data: binsA.map((b) => b.count), label: Y_PROB, color: t.palette[0] },
-          { data: binsB.map((b) => b.count), label: Y_PROB_B, color: t.palette[1] },
-        ]}
+        series={models.map((m, i) => ({ data: m.count, label: m.label, color: t.palette[i] }))}
         margin={{ left: 50, right: 40, top: 8, bottom: 20 }}
         sx={{
           "& .MuiChartsAxis-line": { stroke: t.inkSoft },
