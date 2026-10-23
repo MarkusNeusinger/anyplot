@@ -804,10 +804,11 @@ def set_header_score(text: str, score: int) -> str:
     Only the number changes: the ``Created:`` / ``Updated:`` tail stays, and
     so does everything else. Whole header lines in the leading lines only,
     line count unchanged; a file without a header is returned as it is. Only
-    the first header line is rewritten, the one ``header_score`` reads: a few
-    JavaScript files carry a stale second header below an ``//#`` directive
-    (the header writer's prepend fallback), which keeps its number, so a
-    write-back changes exactly one line (``regen_writeback.verify-diff``).
+    the first header line is rewritten, the one ``header_score`` reads, so a
+    write-back changes exactly one line (``regen_writeback.verify-diff``) even
+    in a file with a second header: until 2026-10 impl-review's JavaScript
+    writer left a stale one below an ``//#`` directive. ``impl_header.py`` now
+    drops such a block, and the catalogue was cleaned of it.
     """
     if not _is_int(score) or not 0 <= score <= 100:
         raise ValueError(f"score must be an integer 0-100 (got {score!r})")

@@ -199,6 +199,14 @@ resolved model id from the claude-code-action execution file (first
 one, never the alias. `impl-review.yml` writes both into the metadata's
 `review` block (an empty value removes the key) and the gate record (`n/a`).
 
+### `impl_header.py`
+JavaScript header writer (stdlib). `impl-review.yml`'s "Update metadata and
+implementation header" imports `replace_js_header` from the copy that "Checkout
+PR code" saves at the workflow's ref. It writes the four-line `// anyplot.ai`
+header on line 1, moves `//#` directive lines that sat above the old header
+directly below the new one, and drops a stale second header block among the
+leading lines, so a file always comes out with exactly one header.
+
 ### `spec_characteristics_lint.py`
 Lint for the closing `## What a good version looks like` section of
 `plots/*/specification.md`. Standard library only; it imports the parser from

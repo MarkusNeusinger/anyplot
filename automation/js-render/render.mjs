@@ -28,7 +28,8 @@
 // Canvas — HARD RULE (the impl-review.yml gate rejects > 16 px drift):
 //   landscape  3200 × 1800  (1600 × 900 CSS × deviceScaleFactor 2)   — default
 //   square     2400 × 2400  (1200 × 1200 CSS × deviceScaleFactor 2)
-// Orientation is picked per snippet via a top-of-file directive
+// Orientation is picked per snippet via a directive line, read anywhere in the
+// file (by convention directly below the `// anyplot.ai` header)
 //   //# anyplot-orientation: square
 // or the `--square` flag. Exact pixels come from Playwright `deviceScaleFactor`
 // + a fixed-size mount node, not from anything the snippet does.

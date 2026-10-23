@@ -438,7 +438,7 @@ class TestHeader:
         assert wb.header_diff_problems(header + body, out) == []
 
     def test_only_the_first_of_two_headers_changes(self):
-        """Four JavaScript files on main carry a stale second header below a `//#` directive."""
+        """A stale second header below a `//#` directive (impl-review's JavaScript writer left one until 2026-10)."""
         text = (
             "// anyplot.ai\n// x: y\n// Library: echarts 5.5.1 | JavaScript 22\n// Quality: 84/100 | Created: 2026-06-18\n"
             "//# anyplot-orientation: square\n// anyplot.ai\n// Quality: 78/100 | Created: 2026-06-18\nconst a = 1;\n"
