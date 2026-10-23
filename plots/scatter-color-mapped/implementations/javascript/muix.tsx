@@ -1,145 +1,173 @@
 // anyplot.ai
 // scatter-color-mapped: Color-Mapped Scatter Plot
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 87/100 | Created: 2026-09-05
+// Library: muix 9.16.0 | JavaScript 22.23.3
+// Quality: 87/100 | Updated: 2026-10-23
+
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 import { ScatterChart } from "@mui/x-charts/ScatterChart";
 import { ContinuousColorLegend } from "@mui/x-charts/ChartsLegend";
-import { ChartsText } from "@mui/x-charts/ChartsText";
 
 const t = window.ANYPLOT_TOKENS;
-const { width, height } = window.ANYPLOT_SIZE;
 
-// --- Data (in-memory, deterministic) ----------------------------------------
-// Ocean buoy network: sea-surface temperature sampled across a survey grid.
-// A warm-core current near (0°E, 40°N) fades outward, so temperature (color)
-// traces a spatial pattern rather than pure noise.
-let seed = 42;
-const nextRandom = () => {
-  seed = (Math.imul(seed, 1103515245) + 12345) & 0x7fffffff;
-  return seed / 0x7fffffff;
-};
+// Columns: set these to your data's column names
+const X = "Longitude (°E)"; // role: x
+const Y = "Latitude (°N)"; // role: y
+const COLOR = "Sea-surface temperature (°C)"; // role: color
 
-const STATION_COUNT = 160;
-const buoys = [];
-for (let i = 0; i < STATION_COUNT; i += 1) {
-  const longitude = -14 + nextRandom() * 26;
-  const latitude = 30 + nextRandom() * 22;
-  const distanceFromCore = Math.hypot(longitude - 0, latitude - 40);
-  const temperature = 23 - 0.42 * distanceFromCore + (nextRandom() - 0.5) * 2.4;
-  buoys.push({
-    id: i,
-    x: Number(longitude.toFixed(2)),
-    y: Number(latitude.toFixed(2)),
-    z: Number(temperature.toFixed(2)),
-  });
-}
+// Data: replace this block with your own records, one object per row
+// Ocean buoy network: sea-surface temperature sampled across an open North
+// Atlantic survey box. A warm-core eddy near (30°W, 36°N) fades outward.
+const data = (() => {
+  let seed = 42;
+  const nextRandom = () => {
+    seed = (Math.imul(seed, 1103515245) + 12345) & 0x7fffffff;
+    return seed / 0x7fffffff;
+  };
+
+  const stationCount = 160;
+  const rows: { [X]: number; [Y]: number; [COLOR]: number }[] = [];
+  for (let i = 0; i < stationCount; i += 1) {
+    const longitude = -40 + nextRandom() * 20;
+    const latitude = 25 + nextRandom() * 25;
+    const distanceFromCore = Math.hypot(longitude + 30, latitude - 36);
+    const temperature = 23 - 0.42 * distanceFromCore + (nextRandom() - 0.5) * 2.4;
+    rows.push({
+      [X]: Number(longitude.toFixed(2)),
+      [Y]: Number(latitude.toFixed(2)),
+      [COLOR]: Number(temperature.toFixed(2)),
+    });
+  }
+  return rows;
+})();
+
+// Plot: reads only data and the constants above
+const buoys = data.map((row, i) => ({
+  id: i,
+  x: row[X],
+  y: row[Y],
+  z: row[COLOR],
+}));
 
 const temperatures = buoys.map((buoy) => buoy.z);
-const tempMin = Math.min(...temperatures);
-const tempMax = Math.max(...temperatures);
+const tempMin = Math.floor(Math.min(...temperatures) * 10) / 10;
+const tempMax = Math.ceil(Math.max(...temperatures) * 10) / 10;
+const legendLabel = ({ value }: { value: number | Date }) => `${Number(value).toFixed(1)}°C`;
 
-// Overlapping buoys (dense clusters near the warm core) stay distinguishable
-// with moderate transparency baked into the colormap stops themselves, since
-// the scatter series has no direct opacity prop.
-const withAlpha = (hex: string, alpha: number) => {
-  const n = parseInt(hex.slice(1), 16);
-  const r = (n >> 16) & 255;
-  const g = (n >> 8) & 255;
-  const b = n & 255;
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-};
-const MARKER_ALPHA = 0.85;
+const MARKER_ALPHA_HEX = "E0"; // ~0.88 opacity
 
-// --- Title (fontsize scales with title length, see plot-generator.md) -------
 const TITLE = "scatter-color-mapped · javascript · muix · anyplot.ai";
-const TITLE_FONTSIZE = Math.round(22 * (TITLE.length > 67 ? 67 / TITLE.length : 1));
 
-// --- Chart (default-exported component — the harness mounts it) ------------
 export default function Chart() {
+  const { width, height } = window.ANYPLOT_SIZE;
+  const titleHeight = 64;
+
   return (
-    <ScatterChart
-      width={width}
-      height={height}
-      skipAnimation
-      legend={{ hidden: true }}
-      grid={{ horizontal: true }}
-      margin={{ top: 90, right: 190, bottom: 110, left: 110 }}
-      xAxis={[
-        {
-          id: "longitude",
-          label: "Longitude (°E)",
-          labelStyle: { fontSize: 18 },
-          tickLabelStyle: { fontSize: 14 },
-          valueFormatter: (value: number) => `${value}°`,
-        },
-      ]}
-      yAxis={[
-        {
-          id: "latitude",
-          label: "Latitude (°N)",
-          labelStyle: { fontSize: 18 },
-          tickLabelStyle: { fontSize: 14 },
-          valueFormatter: (value: number) => `${value}°`,
-        },
-      ]}
-      zAxis={[
-        {
-          id: "temperature",
-          min: tempMin,
-          max: tempMax,
-          colorMap: {
-            type: "continuous",
-            min: tempMin,
-            max: tempMax,
-            color: [withAlpha(t.seq[0], MARKER_ALPHA), withAlpha(t.seq[1], MARKER_ALPHA)],
-          },
-        },
-      ]}
-      series={[
-        {
-          id: "buoys",
-          label: "Ocean buoys",
-          data: buoys,
-          markerSize: 17,
-          color: t.palette[0],
-        },
-      ]}
-    >
-      <ChartsText
-        text={TITLE}
-        x={width / 2}
-        y={40}
-        style={{
-          fontSize: TITLE_FONTSIZE,
+    <Box sx={{ width, height, bgcolor: t.pageBg, display: "flex", flexDirection: "column" }}>
+      <Typography
+        sx={{
+          color: t.ink,
+          fontSize: 22,
           fontWeight: 600,
-          fill: t.ink,
-          textAnchor: "middle",
-          dominantBaseline: "hanging",
+          textAlign: "center",
+          lineHeight: 1.2,
+          pt: "18px",
+          height: titleHeight,
+          fontFamily: "inherit",
         }}
-      />
-      <ChartsText
-        text="Sea-surface temp (°C)"
-        x={width - 95}
-        y={64}
-        style={{
-          fontSize: 14,
-          fill: t.inkSoft,
-          textAnchor: "middle",
-          dominantBaseline: "hanging",
-        }}
-      />
-      <ContinuousColorLegend
-        axisDirection="z"
-        direction="column"
-        position={{ horizontal: "right", vertical: "middle" }}
-        length="62%"
-        thickness={22}
-        spacing={10}
-        align="middle"
-        minLabel={({ value }) => `${Number(value).toFixed(1)}°C`}
-        maxLabel={({ value }) => `${Number(value).toFixed(1)}°C`}
-        labelStyle={{ fontSize: 16, fill: t.inkSoft }}
-      />
-    </ScatterChart>
+      >
+        {TITLE}
+      </Typography>
+      <Box sx={{ flex: 1, display: "flex", alignItems: "center", pr: "32px" }}>
+        <ScatterChart
+          width={width - 140}
+          height={height - titleHeight}
+          skipAnimation
+          disableHitArea
+          grid={{ horizontal: true, vertical: true }}
+          margin={{ top: 24, right: 24, bottom: 24, left: 40 }}
+          xAxis={[
+            {
+              id: "longitude",
+              height: 68,
+              label: X,
+              labelStyle: { fontSize: 18, fill: t.ink },
+              tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+              valueFormatter: (value: number) => `${value}°`,
+            },
+          ]}
+          yAxis={[
+            {
+              id: "latitude",
+              width: 84,
+              label: Y,
+              labelStyle: { fontSize: 18, fill: t.ink },
+              tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+              valueFormatter: (value: number) => `${value}°`,
+            },
+          ]}
+          zAxis={[
+            {
+              id: "temperature",
+              min: tempMin,
+              max: tempMax,
+              valueFormatter: (v: number) => `${Number(v).toFixed(1)}°C`,
+              colorMap: {
+                type: "continuous",
+                min: tempMin,
+                max: tempMax,
+                color: [`${t.seq[0]}${MARKER_ALPHA_HEX}`, `${t.seq[1]}${MARKER_ALPHA_HEX}`],
+              },
+            },
+          ]}
+          series={[
+            {
+              id: "buoys",
+              label: "Ocean buoys",
+              data: buoys,
+              markerSize: 9,
+              zAxisId: "temperature",
+              color: t.palette[0],
+            },
+          ]}
+          slots={{ legend: ContinuousColorLegend }}
+          slotProps={{
+            legend: {
+              axisId: "temperature",
+              axisDirection: "z",
+              direction: "vertical",
+              position: { vertical: "middle", horizontal: "end" },
+              thickness: 18,
+              minLabel: legendLabel,
+              maxLabel: legendLabel,
+              sx: {
+                height: "65%",
+                color: t.inkSoft,
+                fontSize: 15,
+                fontFamily: "inherit",
+              },
+            } as any,
+          }}
+          sx={{
+            "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
+            "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+            "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+          }}
+        />
+        <Typography
+          sx={{
+            writingMode: "vertical-rl",
+            transform: "rotate(180deg)",
+            color: t.ink,
+            fontSize: 16,
+            fontWeight: 500,
+            ml: "8px",
+            fontFamily: "inherit",
+          }}
+        >
+          {COLOR}
+        </Typography>
+      </Box>
+    </Box>
   );
 }
