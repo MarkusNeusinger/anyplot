@@ -1,12 +1,8 @@
+//# anyplot-orientation: square
 // anyplot.ai
 // ternary-density: Ternary Density Plot
 // Library: muix 9.16.0 | JavaScript 22.23.3
 // Quality: 82/100 | Updated: 2026-10-23
-//# anyplot-orientation: square
-// anyplot.ai
-// ternary-density: Ternary Density Plot
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-09-02
 
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
@@ -117,7 +113,8 @@ for (let i = 0; i <= GRID_N; i++) {
   }
 }
 
-const COLOR_GAMMA = 1.7;
+// gamma < 1 lifts the weaker loamy and clay-rich modes off the low-density floor
+const COLOR_GAMMA = 0.8;
 for (const p of densityPoints) {
   p.z = Math.pow(p.rawZ / maxDensity, COLOR_GAMMA) * maxDensity;
 }
@@ -187,7 +184,7 @@ function DensityLayer() {
           <path d={clipD} />
         </clipPath>
       </defs>
-      <g clipPath="url(#ternaryTriangleClip)" opacity={0.85}>
+      <g clipPath="url(#ternaryTriangleClip)">
         <ScatterPlot />
       </g>
     </>
@@ -244,7 +241,7 @@ function EdgeTicks() {
       textAnchor={anchor}
       dominantBaseline="middle"
       fontFamily={FONT}
-      fontSize={13}
+      fontSize={16}
       fill={t.inkSoft}
     >
       {tick.pct}%
@@ -253,8 +250,53 @@ function EdgeTicks() {
   return (
     <g>
       {LEFT_TICKS.map((tk) => label(tk, -16, 0, "end"))}
-      {BOTTOM_TICKS.map((tk) => label(tk, 0, 22, "middle"))}
+      {BOTTOM_TICKS.map((tk) => label(tk, 0, 24, "middle"))}
       {RIGHT_TICKS.map((tk) => label(tk, 16, 0, "start"))}
+    </g>
+  );
+}
+
+// Names the component each edge scale measures; the arrow points toward 100 %
+function EdgeTitles() {
+  const xs = useXScale();
+  const ys = useYScale();
+  const mid = (p: { x: number; y: number }, q: { x: number; y: number }) => ({
+    x: (xs(p.x)! + xs(q.x)!) / 2,
+    y: (ys(p.y)! + ys(q.y)!) / 2,
+  });
+  const left = mid(VERTEX_LEFT, VERTEX_TOP);
+  const right = mid(VERTEX_RIGHT, VERTEX_TOP);
+  const bottom = mid(VERTEX_LEFT, VERTEX_RIGHT);
+  const OFFSET = 84;
+  const titles = [
+    {
+      x: left.x - OFFSET * SQRT3_2,
+      y: left.y - OFFSET / 2,
+      angle: -60,
+      text: `${COMPONENT_A} (%) →`,
+    },
+    {
+      x: right.x + OFFSET * SQRT3_2,
+      y: right.y - OFFSET / 2,
+      angle: 60,
+      text: `${COMPONENT_C} (%) →`,
+    },
+    { x: bottom.x, y: bottom.y + 62, angle: 0, text: `← ${COMPONENT_B} (%)` },
+  ];
+  return (
+    <g fontFamily={FONT} fontSize={18} fontWeight={600} fill={t.inkSoft}>
+      {titles.map((tt) => (
+        <text
+          key={tt.text}
+          x={tt.x}
+          y={tt.y}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          transform={`rotate(${tt.angle} ${tt.x} ${tt.y})`}
+        >
+          {tt.text}
+        </text>
+      ))}
     </g>
   );
 }
@@ -330,7 +372,7 @@ function DensityLegend() {
         x={barX}
         y={barY + barHeight + 20}
         textAnchor="start"
-        fontSize={13}
+        fontSize={16}
         fill={t.inkSoft}
       >
         Low
@@ -339,7 +381,7 @@ function DensityLegend() {
         x={barX + barWidth}
         y={barY + barHeight + 20}
         textAnchor="end"
-        fontSize={13}
+        fontSize={16}
         fill={t.inkSoft}
       >
         High
@@ -403,6 +445,7 @@ export default function Chart() {
       <DensityLayer />
       <GridOverlay />
       <EdgeTicks />
+      <EdgeTitles />
       <VertexLabels />
       <DensityLegend />
       <Title />
