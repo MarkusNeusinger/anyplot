@@ -584,6 +584,14 @@ jobs:
         with:
           fetch-depth: 0
 
+      # regen_writeback imports regen_gate, whose PEP 758 `except A, B:` parses
+      # on Python 3.14 only; the runner image's own python3 is not pinned.
+      - name: Set up Python
+        if: steps.branch.outputs.run == 'true'
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with:
+          python-version-file: '.python-version'
+
       # The PR must be the bot's write-back (open, head
       # review-writeback/{spec}/{library}/{kept PR}, label review-writeback,
       # author app/github-actions); anything else is a no-op. Its base must be

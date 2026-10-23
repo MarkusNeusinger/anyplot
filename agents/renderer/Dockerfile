@@ -4,7 +4,7 @@
 #
 # Two jobs in one image. The service process (uvicorn agents.renderer.main:app)
 # launches sandboxes through Cloud Run's `sandbox do`, and every sandbox runs
-# `/app/.venv/bin/python -I /opt/anyplot/harness.py plot.py` from this same image:
+# `/app/.venv/bin/python -I -X disable-remote-debug /opt/anyplot/harness.py plot.py` from this same image:
 # a sandbox sees the image read-only (spike S), so the venv and the harness here
 # are what model-written code runs with. The `fonts` stage below supplies the
 # multi-script fallback fonts the harness appends to every lookup. The local
@@ -19,14 +19,14 @@
 # `agents`, `pyproject.toml`, `uv.lock` and `README.md` are in it, so the COPYs
 # below see them.
 
-FROM python:3.13-slim AS builder
+FROM python:3.14-slim AS builder
 
 WORKDIR /app
 
 RUN pip install --no-cache-dir uv==0.10.9
 
 ENV UV_COMPILE_BYTECODE=1
-ENV UV_PYTHON=/usr/local/bin/python3.13
+ENV UV_PYTHON=/usr/local/bin/python3.14
 ENV UV_PYTHON_DOWNLOADS=never
 
 COPY pyproject.toml uv.lock README.md ./
@@ -48,7 +48,7 @@ RUN uv venv && uv sync --frozen --no-install-project --extra lib-matplotlib --ex
 # three identical copies of libarrow_python only the one the modules load by its soname
 # stays. 163 MB installed become 99 MB; the CI job converts every format inside the
 # built image (`tests/image/convert_smoke.py`), so a removed file that is needed fails it.
-RUN p=.venv/lib/python3.13/site-packages/pyarrow \
+RUN p=.venv/lib/python3.14/site-packages/pyarrow \
     && du -sh "$p" \
     && rm -rf "$p/include" "$p/includes" "$p/src" "$p/tests" \
     && find "$p" \( -name '*.pxd' -o -name '*.pyx' -o -name '*.pxi' \) -delete \
@@ -85,7 +85,7 @@ RUN .venv/bin/python -c "import tomllib; print(tomllib.load(open('pyproject.toml
 # update of the base image, and font packages carry no version-sensitive
 # behaviour that a pin would protect. The installed versions travel with the
 # notices (versions.txt), and the CI job prints them.
-FROM python:3.13-slim AS fonts
+FROM python:3.14-slim AS fonts
 
 # hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -108,7 +108,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && dpkg-query -W fonts-noto-core fonts-noto-cjk > /fonts/doc/versions.txt
 
 
-FROM python:3.13-slim
+FROM python:3.14-slim
 
 WORKDIR /app
 

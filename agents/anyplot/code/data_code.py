@@ -38,7 +38,7 @@ def strip_main_guard(code: str) -> str:
     """
     try:
         tree = ast.parse(code)
-    except (SyntaxError, ValueError, RecursionError):
+    except SyntaxError, ValueError, RecursionError:
         return code
     guards = [node for node in tree.body if isinstance(node, ast.If) and not node.orelse and _is_main_test(node.test)]
     if not guards:

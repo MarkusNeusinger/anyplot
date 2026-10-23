@@ -655,7 +655,7 @@ def decode_claims(authorization: str | None) -> dict[str, Any] | None:
     try:
         payload = parts[1] + "=" * (-len(parts[1]) % 4)
         claims = json.loads(base64.urlsafe_b64decode(payload.encode()))
-    except (ValueError, binascii.Error):
+    except ValueError, binascii.Error:
         return None
     return claims if isinstance(claims, dict) else None
 
@@ -1007,7 +1007,7 @@ async def convert_dataset_file(
         raise AgentsError(409, "run_active")
     try:
         data = base64.b64decode(body.data_base64, validate=True)
-    except (ValueError, binascii.Error):
+    except ValueError, binascii.Error:
         raise AgentsError(422, "invalid") from None
     if not data:
         raise AgentsError(422, "invalid")
@@ -1053,7 +1053,7 @@ async def _convert(
         except RenderBusy:
             attribution("data_convert", ledger, outcome="capacity", bytes=len(data))
             raise AgentsError(503, "capacity") from None
-        except (RendererUnavailable, NotImplementedError):
+        except RendererUnavailable, NotImplementedError:
             attribution("data_convert", ledger, outcome="unavailable", bytes=len(data))
             raise AgentsError(503, "convert_unavailable") from None
     finally:
@@ -1643,7 +1643,7 @@ async def dataset_to_long(sid: SessionId, user: User, runtime: RuntimeDep) -> JS
             canonical=True,
         )
         parsed = with_date_notes(parsed, prepared)
-    except (PrepareError, ParseError, ValidationError):
+    except PrepareError, ParseError, ValidationError:
         raise AgentsError(422, "no_suggestion") from None
     try:
         # The new columns go to the roles they were made for, whatever their names (`LongSuggestion.bindings`).
@@ -1999,7 +1999,7 @@ async def render_version_theme(
         result = await render_theme(services, get_settings(), sid, stored, body.theme)
     except RenderGone:
         raise AgentsError(404, "not_found") from None
-    except (RenderBusy, RenderStoreFull):
+    except RenderBusy, RenderStoreFull:
         raise AgentsError(503, "capacity") from None
     finally:
         runtime.finish(sid, toggle)

@@ -83,7 +83,7 @@ def _repaired(schema: type[BaseModel], repair: Repair | None, text: str) -> str 
         return None
     try:
         return schema.model_validate(repair(data)).model_dump_json()
-    except (ValidationError, ValueError):
+    except ValidationError, ValueError:
         return None
 
 

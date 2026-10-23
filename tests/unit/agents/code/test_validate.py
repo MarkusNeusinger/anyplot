@@ -427,6 +427,16 @@ ESCAPES = [
     ("import typing\nhints = typing.get_type_hints(len)\n", "banned-attribute"),
     ("from typing import get_type_hints\n", "banned-attribute"),
     ("import typing\nref = typing.ForwardRef('x')\n", "banned-attribute"),
+    # Python 3.14: `dataclasses` re-exports `annotationlib`, and `typing.evaluate_forward_ref` is new; both evaluate.
+    ("from dataclasses import annotationlib\n", "banned-attribute"),
+    (
+        "from dataclasses import annotationlib\ndef f(x: '1 + 1'):\n    return x\n"
+        "v = annotationlib.get_annotations(f, eval_str=True)\n",
+        "banned-attribute",
+    ),
+    ("import dataclasses\nv = dataclasses.annotationlib.call_evaluate_function(len, 1)\n", "banned-attribute"),
+    ("import typing\nv = typing.evaluate_forward_ref\n", "banned-attribute"),
+    ("from typing import evaluate_forward_ref\n", "banned-attribute"),
     ("import typing\nbuild = typing.types.CodeType\n", "banned-attribute"),
     ("import operator\ngetter = operator.attrgetter('real')\n", "banned-attribute"),
     ("from operator import methodcaller\n", "banned-attribute"),

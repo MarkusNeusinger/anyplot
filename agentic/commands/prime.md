@@ -33,7 +33,7 @@ gh pr list --limit 5 2>/dev/null || echo "(gh CLI not available)"
 - `automation/` — CI/CD helper scripts
 - `.github/workflows/` — GitHub Actions pipelines
 
-Stack: Python 3.13+ (uv), PostgreSQL, GCP (Cloud Run + Cloud SQL + GCS).
+Stack: Python 3.14+ (uv), PostgreSQL, GCP (Cloud Run + Cloud SQL + GCS).
 
 ## GitHub pipeline (don't bypass it)
 

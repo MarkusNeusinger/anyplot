@@ -313,7 +313,7 @@ workflow_run: 12345678
 issue: 42
 
 # Versions
-python_version: "3.13"
+python_version: "3.14"
 library_version: "3.10.0"
 
 # Previews
@@ -446,7 +446,7 @@ Julia (`julia/`, `.jl`):
 ```python
 """ anyplot.ai
 scatter-basic: Basic Scatter Plot
-Library: matplotlib 3.10.0 | Python 3.13
+Library: matplotlib 3.10.0 | Python 3.14
 Quality: 92/100 | Created: 2025-01-10
 """
 

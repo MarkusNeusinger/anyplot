@@ -7,7 +7,7 @@ transient state passing between scripts via stdin/stdout.
 import json
 import os
 import sys
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Self
 
 
 class WorkflowState:
@@ -130,7 +130,7 @@ class WorkflowState:
         return state_path
 
     @classmethod
-    def load(cls, run_id: str, working_dir: str) -> Optional["WorkflowState"]:
+    def load(cls, run_id: str, working_dir: str) -> Self | None:
         """Load state from file if it exists.
 
         Returns:
@@ -153,7 +153,7 @@ class WorkflowState:
             return None
 
     @classmethod
-    def from_stdin(cls) -> Optional["WorkflowState"]:
+    def from_stdin(cls) -> Self | None:
         """Read state from stdin (for piped input from plan.py).
 
         Returns:

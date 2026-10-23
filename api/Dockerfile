@@ -17,7 +17,7 @@
 # root `.dockerignore`, not by one under `api/`. Read that file before adding a
 # COPY: it is an allowlist, so a path it does not name simply is not there.
 
-FROM python:3.13-slim AS builder
+FROM python:3.14-slim AS builder
 
 WORKDIR /app
 
@@ -32,7 +32,7 @@ WORKDIR /app
 # that. uv.lock fixes every package, but the resolver that reads it floated on
 # whatever PyPI served that morning, and a resolver change is exactly the kind
 # of difference that makes "it built yesterday" true and useless. The image as
-# a whole is still not reproducible: `python:3.13-slim` is a mutable tag, and
+# a whole is still not reproducible: `python:3.14-slim` is a mutable tag, and
 # the apt packages in the runtime stage are deliberately unpinned for the reason
 # given at their DL3008 line. Pinning uv also retires the DL3013 exception.
 RUN pip install --no-cache-dir uv==0.10.9
@@ -47,10 +47,10 @@ RUN pip install --no-cache-dir uv==0.10.9
 # is ~68 MB of pulled layer against ~1.8 s of every container's first request.
 ENV UV_COMPILE_BYTECODE=1
 # Which interpreter the venv is built on, said out loud. uv otherwise picks one
-# by discovery and may DOWNLOAD a managed CPython — a different build of 3.13
+# by discovery and may DOWNLOAD a managed CPython — a different build of 3.14
 # than the runtime stage offers at the same path, which is the one thing the
 # two-stage split cannot survive (see the note above about pyvenv.cfg).
-ENV UV_PYTHON=/usr/local/bin/python3.13
+ENV UV_PYTHON=/usr/local/bin/python3.14
 ENV UV_PYTHON_DOWNLOADS=never
 
 # Copy requirements first for better caching.
@@ -62,13 +62,13 @@ COPY pyproject.toml uv.lock README.md ./
 RUN uv venv && uv sync --frozen
 
 
-FROM python:3.13-slim
+FROM python:3.14-slim
 
 WORKDIR /app
 
 # curl serves the HEALTHCHECK below. libraqm0 is what actually turns Pillow's
 # text shaping on: the manylinux wheel does NOT vendor Raqm, it dlopen()s
-# libraqm at runtime, so in a bare python:3.13-slim `features.check('raqm')` is
+# libraqm at runtime, so in a bare python:3.14-slim `features.check('raqm')` is
 # False and HarfBuzz/FriBiDi report no version at all. That is the whole of
 # #10813's regression — and why the guard it added has failed every build of
 # this image since (the deploy-api trigger has been red since 2026-08-30).

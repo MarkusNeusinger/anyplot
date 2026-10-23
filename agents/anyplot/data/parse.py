@@ -1483,7 +1483,7 @@ def _too_deep(text: str) -> bool:
                     return True
             elif token.string in ("]", "}", ")") and depth:
                 depth -= 1
-    except (tokenize.TokenError, SyntaxError, ValueError):
+    except tokenize.TokenError, SyntaxError, ValueError:
         return False
     return False
 
@@ -1499,12 +1499,12 @@ def _decode_literal(text: str) -> tuple[Any, int, int] | None:
     reader = _JsonReader()
     try:
         return reader.loads(text), reader.repeated, reader.constants
-    except (ValueError, RecursionError):
+    except ValueError, RecursionError:
         pass
     try:
         tree = _FloatTexts(text).visit(ast.parse(text, mode="eval"))
         value = ast.literal_eval(tree)
-    except (ValueError, SyntaxError, TypeError, RecursionError, MemoryError):
+    except ValueError, SyntaxError, TypeError, RecursionError, MemoryError:
         return None
     return value, _repeated_keys(tree), 0
 
@@ -1573,7 +1573,7 @@ def _read_json_lines(
     reader = _JsonReader()
     try:
         first = reader.loads(lines[0][1])
-    except (ValueError, RecursionError):
+    except ValueError, RecursionError:
         return None
     if not isinstance(first, dict):
         return None
@@ -1591,7 +1591,7 @@ def _read_json_lines(
                 f"the data reads as JSON Lines (one JSON object per line), but line {number} is not valid JSON: "
                 f"{exc.msg} at column {exc.colno}",
             ) from None
-        except (ValueError, RecursionError):
+        except ValueError, RecursionError:
             raise ParseError(
                 "unparseable", f"the data reads as JSON Lines, but line {number} is not valid JSON"
             ) from None
@@ -1667,7 +1667,7 @@ def _not_a_literal(text: str, body: str, *, python: bool) -> str:
         if python:
             where = f" on line {exc.lineno + offset}" if exc.lineno else ""
             return f"the data starts like a Python literal but is not one: {exc.msg}{where}"
-    except (ValueError, RecursionError, MemoryError):
+    except ValueError, RecursionError, MemoryError:
         pass
     else:
         if python or not all(isinstance(node, _LITERAL_NODES) for node in ast.walk(tree)):
@@ -1693,7 +1693,7 @@ def _not_a_literal(text: str, body: str, *, python: bool) -> str:
         return (
             f"the data starts like JSON but is not valid JSON: {exc.msg} at line {exc.lineno}, column {exc.colno}{hint}"
         )
-    except (ValueError, RecursionError):
+    except ValueError, RecursionError:
         pass
     return "the data starts like JSON or a Python literal but is neither"
 

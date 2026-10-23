@@ -337,8 +337,8 @@ class TestCopyList:
 
         assert "uv sync --frozen --extra agents" in text
         assert [arguments for keyword, arguments in _instructions(text) if keyword == "FROM"] == [
-            "python:3.13-slim AS builder",
-            "python:3.13-slim",
+            "python:3.14-slim AS builder",
+            "python:3.14-slim",
         ]
         users = [arguments for keyword, arguments in runtime if keyword == "USER"]
         assert users and users[-1] not in ("root", "0")
@@ -356,8 +356,8 @@ class TestRendererImage:
             instructions[start][1]: instructions[start + 1 : end]
             for start, end in zip(starts, [*starts[1:], len(instructions)], strict=True)
         }
-        fonts = " ".join(arguments for keyword, arguments in stages["python:3.13-slim AS fonts"] if keyword == "RUN")
-        runtime = stages["python:3.13-slim"]
+        fonts = " ".join(arguments for keyword, arguments in stages["python:3.14-slim AS fonts"] if keyword == "RUN")
+        runtime = stages["python:3.14-slim"]
 
         # The file stem of each family: `Noto Sans CJK JP` is a face of NotoSansCJK-*.ttc.
         stems = [name.replace(" ", "").removesuffix("JP") for name in harness.FALLBACK_FAMILIES]

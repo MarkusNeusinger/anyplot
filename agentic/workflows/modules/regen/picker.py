@@ -170,7 +170,7 @@ def _timestamp(blob: bytes | None) -> str | None:
         return None
     try:
         data = yaml.load(blob.decode("utf-8"), Loader=_YAML_LOADER) or {}
-    except (UnicodeDecodeError, yaml.YAMLError):
+    except UnicodeDecodeError, yaml.YAMLError:
         return None
     if not isinstance(data, dict):
         return None

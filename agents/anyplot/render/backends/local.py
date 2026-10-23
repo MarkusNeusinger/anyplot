@@ -5,7 +5,8 @@ Every theme runs as
     docker run --rm --name r-<job>-<theme> --network none --read-only --tmpfs /tmp
         --cap-drop ALL --security-opt no-new-privileges --pids-limit 256 --memory 2g
         --user <uid>:<gid> -v <rundir>:/work -v <harness>:/opt/anyplot/harness.py:ro -w /work
-        -e ANYPLOT_THEME=<theme> -e MPLBACKEND=Agg ... <image> /app/.venv/bin/python -I /opt/anyplot/harness.py plot.py
+        -e ANYPLOT_THEME=<theme> -e MPLBACKEND=Agg ... <image>
+        /app/.venv/bin/python -I -X disable-remote-debug /opt/anyplot/harness.py plot.py
 
 started with `asyncio.create_subprocess_exec` (never a shell) in its own process
 group. The image is `AGENT_RENDER_IMAGE`, the production renderer image built from
@@ -327,7 +328,7 @@ class LocalDockerBackend:
                     raise ValueError("missing output")
                 text = raw.decode("utf-8")
                 meta = ConvertMeta.model_validate_json(meta_raw, strict=True)
-            except (PngRejected, ValueError):
+            except PngRejected, ValueError:
                 return ConvertOutput(exit_code=0, reason="output_rejected", wall_s=wall)
             return ConvertOutput(exit_code=0, text=text, meta=meta, wall_s=wall)
         finally:

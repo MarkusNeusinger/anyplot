@@ -66,7 +66,7 @@ def code_source(code: str, language: str) -> str:
     """
     try:
         tree = ast.parse(code)
-    except (SyntaxError, ValueError):
+    except SyntaxError, ValueError:
         return f"computed by Python code (translated from {language})"
     defined: list[str] = []
     calls: list[str] = []

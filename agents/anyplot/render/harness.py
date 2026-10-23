@@ -2,11 +2,12 @@
 
 Usage, from the run directory (the CI render command with the harness in front):
 
-    python -I /opt/anyplot/harness.py plot.py
+    python -I -X disable-remote-debug /opt/anyplot/harness.py plot.py
 
 It is a standalone script with no anyplot import, because it runs inside the
 sandbox with the isolated interpreter (`-I`: no user site, no current directory on
-`sys.path`, no `PYTHON*` environment). The renderer service
+`sys.path`, no `PYTHON*` environment) and without Python 3.14's remote debugging
+(`INTERPRETER_FLAGS`). The renderer service
 (`agents/renderer/`) and the local Docker backend both run it; the renderer's image
 copies it to `/opt/anyplot/harness.py`. In order it:
 
@@ -53,7 +54,8 @@ copies it to `/opt/anyplot/harness.py`. In order it:
    function built by hand or a `__code__` assignment, every `open` that writes anything but
    `plot-<theme>.png` and `probe-<theme>.json`, `subprocess.*`, `os.system`, `os.exec*`,
    `os.posix_spawn`, `os.spawn*`, `os.fork*`, `socket.*`, `ctypes.*` (but threadpoolctl's,
-   `NATIVE_CALLERS`), filesystem changes and `os.chdir`, and every frame (`gi_frame`,
+   `NATIVE_CALLERS`, and the `ctypes.cast` scipy makes while it is imported, `IMPORT_CTYPES_HELPERS`),
+   `sys.remote_exec`, filesystem changes and `os.chdir`, and every frame (`gi_frame`,
    `cr_frame`, `ag_frame`, `tb_frame`, `sys._getframe`) while plot code is on the stack, but
    to `FRAME_READERS` and import bodies (Fable review of #12177; `hide_frames` makes
    `inspect.currentframe` and `logging.currentframe` answer None first). Imports, reads and `compile` stay
@@ -71,7 +73,7 @@ copies it to `/opt/anyplot/harness.py`. In order it:
    file returns or raises; an exception still propagates, so its traceback reaches
    stderr and the exit code stays non-zero.
 
-**Data mode** (`python -I /opt/anyplot/harness.py --data snippet.py`, the renderer's
+**Data mode** (`python -I -X disable-remote-debug /opt/anyplot/harness.py --data snippet.py`, the renderer's
 `POST /run-data`): the harness runs a data-generating snippet (`run_data_code`,
 `agents/anyplot/tools/session.py`) instead of a plot. It prints the start line, sets the
 same limits, imports everything the validator's DATA profile allows (`DATA_PRELOAD`, every
@@ -79,7 +81,7 @@ module of `pandas.core`, `pandas.tseries` and `pandas.api`, which pandas would o
 load lazily, and every time zone), reads and compiles the snippet, opens `out.csv` for
 writing, and only then arms `DataGuard` with `sys.addaudithook`: from there on the
 interpreter refuses every `open` (reading too) and every `import`, `ctypes.*`,
-`os.system`, `os.exec*`, `os.posix_spawn`, `os.spawn*`, `os.fork*`, `subprocess.*`,
+`sys.remote_exec`, `os.system`, `os.exec*`, `os.posix_spawn`, `os.spawn*`, `os.fork*`, `subprocess.*`,
 `socket.*`, every filesystem change and listing (`os.remove`, `os.listdir`,
 `os.scandir`, ...), every route to a frame (`gi_frame`, `cr_frame`, `ag_frame`,
 `tb_frame`, `sys._getframe`), whose `f_builtins` would hand out `open` and `__import__`
@@ -197,6 +199,12 @@ GLYPH_SAMPLE_LIMIT = 16  # code points the probe lists; the host shows a few of 
 MISSING_GLYPHS: set[int] = set()  # code points reported by matplotlib's text layout, this process
 MISSING_MATH_GLYPHS: set[int] = set()  # code points reported by mathtext (no fallback inside `$…$`)
 
+INTERPRETER_FLAGS = ("-I", "-X", "disable-remote-debug")
+"""The flags every sandbox interpreter runs the harness with (the renderer's `executor.INTERPRETER_FLAGS`, the local
+backend's `PythonRuntime` commands): `-I` isolates it, and `-X disable-remote-debug` turns off PEP 768's remote
+debugging, new in Python 3.14, through which `sys.remote_exec` makes another Python process, or this one, run a
+script file. `-I` ignores `PYTHON_DISABLE_REMOTE_DEBUG`, so only the option works here. The guards refuse
+`sys.remote_exec` and `cpython.remote_debugger_script` as well, for a harness started without the flag."""
 DATA_FLAG = "--data"
 DATA_OUT_FILE = "out.csv"
 DATA_STATUS_FILE = "status.json"
@@ -315,9 +323,11 @@ DATA_BLOCKED_PREFIXES = (
     "sys.settrace",
     "sys.setprofile",
     "sys.monitoring.",
+    "sys.remote_exec",
+    "cpython.remote_debugger_script",
 )
 """Audit events `DataGuard` refuses once it is armed (https://docs.python.org/3/library/audit_events.html), next to
-every `open` and every `import`. CPython 3.13 raises no event for `os.stat` and its family (`os.path.exists`,
+every `open` and every `import`. CPython 3.14 raises no event for `os.stat` and its family (`os.path.exists`,
 `os.lstat`), for reading `os.environ` or calling `os.getenv`, or for `function.__globals__`: those are the
 validator's (`os` is a banned import, dunder attributes are banned), and the sandbox has no secrets in its
 environment and a read-only image. An `import` of a module that is loaded already raises no event either (`import
@@ -353,7 +363,19 @@ CODE_OBJECT_EVENTS = ("code.__new__", "function.__new__")
 NATIVE_CALLERS = ("/threadpoolctl.py",)
 """The files whose `ctypes.*` events the plot guard lets through: scikit-learn limits the BLAS threads around
 `KMeans` and its kin with threadpoolctl, which opens the BLAS libraries the process loaded already and calls their
-thread setters. Every other `ctypes.*` event is refused, so a NumPy array's `.ctypes` cannot reach `CDLL`."""
+thread setters. Every other `ctypes.*` event is refused (but `IMPORT_CTYPES_HELPERS`), so a NumPy array's `.ctypes`
+cannot reach `CDLL`."""
+IMPORT_CTYPES_HELPERS = ("_cast_addr",)
+"""The `_ctypes` attributes holding the addresses of ctypes' own C helpers the plot guard lets an import call: only
+`ctypes.cast`'s. Python 3.14 raises `ctypes.call_function` (its first argument the function's address) for every call
+through a ctypes function pointer, `cast`, `memmove` and `memset` included, where 3.13 raised no event for those three.
+scipy's `_lib._ccallback_c` calls `ctypes.cast` while it is imported, so every plot that imports scipy, statsmodels,
+scikit-learn or seaborn after the guard is armed failed. `PlotGuard` lets that call through when the nearest origin
+of its caller is an import (`calls_import_ctypes_helper`), the rule `exec` and frames follow; the same call from plot
+code, `memmove` and `memset` (an in-process write that no allowed library needs), `string_at`, `wstring_at`,
+`memoryview_at` and every other foreign function stay refused (Fable review of the 3.14 bump: the first draft let all
+three helpers through from anywhere, which gave plot code back a write primitive 3.14's event had closed). The data
+and convert guards need none of it: data mode imports scipy before it arms, and neither mode imports after."""
 PLOT_BLOCKED_PREFIXES = (
     "ctypes.",
     "os.system",
@@ -392,6 +414,8 @@ PLOT_BLOCKED_PREFIXES = (
     "sys.settrace",
     "sys.setprofile",
     "sys.monitoring.",
+    "sys.remote_exec",
+    "cpython.remote_debugger_script",
 )
 """Audit events `PlotGuard` refuses once it is armed (`ctypes.*` but `NATIVE_CALLERS`), next to `exec` and
 `CODE_OBJECT_EVENTS` and every `open` that writes anywhere but the plot's PNG and its probe. Unlike data mode it lets
@@ -524,12 +548,23 @@ UNAUDITED_CALLS = (
     ("subprocess", "_fork_exec"),
     ("signal", "signal"),
     ("_signal", "signal"),
+    ("_interpreters", "create"),
+    ("_interpreters", "exec"),
+    ("_interpreters", "run_string"),
+    ("_interpreters", "run_func"),
+    ("_interpreters", "call"),
 )
 """Callables that create a directory entry, start a process or install a frame callback with no audit event in
 CPython 3.13 (#12177 review: `os.mkfifo` and `os.mknod`; `_posixsubprocess.fork_exec` is what `subprocess.Popen` runs
 after its own event; Fable review of #12181: `signal.signal`, whose handler is called with the interrupted frame).
-The guards replace them with `refused_call` before arming, in `os`, `posix`, `signal` and the module that holds each
-by name, so code past the validator cannot reach them there."""
+CPython 3.14 still raises none for `os.mkfifo`, `os.mknod` and `signal.signal`; `_posixsubprocess.fork_exec` raises
+an event of its own from 3.14 on, and stays replaced all the same. The `_interpreters` entries are PEP 734's
+subinterpreters, public from 3.14 as `concurrent.interpreters` and `InterpreterPoolExecutor` (Fable review of the
+3.14 bump): a hook added with `sys.addaudithook` belongs to one interpreter, and creating, entering or running code in
+another raises no event the guard sees, so code run there would write files the guard refuses here. Both public
+modules reach the five calls through the `_interpreters` module object, never a name of their own.
+The guards replace them with `refused_call` before arming, in `os`, `posix`, `signal`, `_interpreters` and the module
+that holds each by name, so code past the validator cannot reach them there."""
 
 
 def refused_call(*args, **kwargs):
@@ -542,7 +577,7 @@ def disable_unaudited_calls():
 
     for module_name, name in UNAUDITED_CALLS:
         module = sys.modules.get(module_name)
-        if module is None and module_name.startswith(("posix", "_posix", "signal", "_signal")):
+        if module is None and module_name.startswith(("posix", "_posix", "signal", "_signal", "_interpreters")):
             try:
                 module = importlib.import_module(module_name)
             except ImportError:
@@ -554,6 +589,16 @@ def disable_unaudited_calls():
 def sets_code(event, args):
     """A `function.__code__` assignment, which would run a compiled code object without an `exec` event."""
     return event == "object.__setattr__" and len(args) > 1 and args[1] == "__code__"
+
+
+def ctypes_helper_addresses():
+    """The addresses of `IMPORT_CTYPES_HELPERS`, read when the plot guard is built, before it is armed (importing
+    `_ctypes` opens its shared library); empty where `_ctypes` is missing."""
+    try:
+        import _ctypes
+    except ImportError:
+        return frozenset()
+    return frozenset(getattr(_ctypes, name) for name in IMPORT_CTYPES_HELPERS if hasattr(_ctypes, name))
 
 
 class DataGuard:
@@ -655,6 +700,7 @@ class PlotGuard(DataGuard):
         super().__init__()
         self.outputs = frozenset(os.path.realpath(path) for path in outputs)
         self.plot_file = None
+        self.import_ctypes_helpers = ctypes_helper_addresses()
 
     def arm(self, entry=None):
         self.plot_file = entry.co_filename if entry is not None else None
@@ -667,6 +713,8 @@ class PlotGuard(DataGuard):
             return False
         if event == "exec" or event in CODE_OBJECT_EVENTS or sets_code(event, args):
             return not self.lets_code_run(event, args)
+        if self.calls_import_ctypes_helper(event, args):
+            return False
         if event.startswith("ctypes."):
             return not self.native_caller()
         if event == "object.__getattr__":
@@ -676,6 +724,13 @@ class PlotGuard(DataGuard):
         if event.startswith(FRAME_EVENTS):
             return not self.lets_frame_out()
         return event.startswith(PLOT_BLOCKED_PREFIXES)
+
+    def calls_import_ctypes_helper(self, event, args):
+        """A `ctypes.call_function` of `IMPORT_CTYPES_HELPERS` (`ctypes.cast`) whose caller's nearest origin is an
+        import, as scipy's `_lib._ccallback_c` makes while it is imported: Python 3.13 ran it with no event at all."""
+        if event != "ctypes.call_function" or not args or args[0] not in self.import_ctypes_helpers:
+            return False
+        return self.nearest_origin(self.caller()) == "import"
 
     def lets_code_run(self, event, args):
         """The plot's code object once, `CODE_BUILDERS`, and code an import runs: walking up from the caller, an
@@ -744,7 +799,7 @@ class PlotGuard(DataGuard):
         with self.paused():
             try:
                 return os.path.realpath(os.fsdecode(path)) not in self.outputs
-            except (OSError, ValueError, TypeError):
+            except OSError, ValueError, TypeError:
                 return True
 
     def __call__(self, event, args):
@@ -832,7 +887,7 @@ def _limit(kind: int, value: int) -> None:
         if hard != resource.RLIM_INFINITY:
             value = min(value, hard)
         resource.setrlimit(kind, (value, value))
-    except (ValueError, OSError):
+    except ValueError, OSError:
         pass  # a limit the platform refuses is left to the sandbox and the host timeout
 
 
@@ -1709,7 +1764,7 @@ def frame_csv(frame, measure=None):
     if not default_index:
         try:
             frame = frame.reset_index()
-        except (ValueError, TypeError):  # an index name that is also a column, a MultiIndex level clash
+        except ValueError, TypeError:  # an index name that is also a column, a MultiIndex level clash
             return None, "frame_shape"
     frame = frame.copy()
     frame.columns = [str(column) for column in frame.columns]
@@ -1784,7 +1839,7 @@ def run_data_snippet(path, guard, measure):
     try:
         with open(path, encoding="utf-8") as handle:
             code = compile(handle.read(), os.path.basename(path), "exec", dont_inherit=True)
-    except (OSError, SyntaxError, ValueError):
+    except OSError, SyntaxError, ValueError:
         traceback.print_exc()
         return DATA_EXIT["error"]
     namespace = {"__name__": "__main__", "__builtins__": builtins}
@@ -1963,7 +2018,7 @@ def run_conversion(path, guard, measure):
         if os.path.exists(CONVERT_REQUEST_FILE):
             with open(CONVERT_REQUEST_FILE, encoding="utf-8") as handle:
                 request = json.loads(handle.read(CONVERT_MAX_REQUEST_BYTES))
-    except (OSError, ValueError):
+    except OSError, ValueError:
         return CONVERT_EXIT["usage"]
     sheet = request.get("sheet") if isinstance(request, dict) else None
     if sheet is not None and not isinstance(sheet, str):

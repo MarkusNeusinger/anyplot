@@ -244,7 +244,7 @@ class Workspace:
                     if file.stat().st_size > 2_000_000:
                         continue
                     text = file.read_text(encoding="utf-8")
-                except (UnicodeDecodeError, OSError):
+                except UnicodeDecodeError, OSError:
                     continue
                 for number, line in enumerate(text.splitlines(), 1):
                     if len(line) <= MAX_SEARCH_LINE and regex.search(line):

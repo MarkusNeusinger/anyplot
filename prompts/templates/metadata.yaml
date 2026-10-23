@@ -14,7 +14,7 @@ workflow_run: null     # GitHub Actions run ID
 issue: null            # GitHub issue number
 
 # Versions used during generation
-python_version: null   # e.g., "3.13.4"
+python_version: null   # e.g., "3.14.9"
 library_version: null  # e.g., "3.9.0"
 
 # Preview URLs (GCS, filled by workflow)

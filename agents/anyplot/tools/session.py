@@ -584,7 +584,7 @@ async def run_data_code(code: str, source_language: str, tool_context: ToolConte
     except RenderBusy:
         attribution("data_code", ledger, outcome="busy", language=language)
         return _error("busy")
-    except (RendererUnavailable, NotImplementedError):  # `DataRunUnsupported` among them: a renderer without the route
+    except RendererUnavailable, NotImplementedError:  # `DataRunUnsupported` among them: a renderer without the route
         attribution("data_code", ledger, outcome="unavailable", language=language)
         return _error("unavailable")
     failure = _run_failure(output)

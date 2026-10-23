@@ -1186,7 +1186,7 @@ def collect(
         spec_file = workspace / "plots" / str(cell["spec_id"]) / "specification.md"
         try:
             spec_text = spec_file.read_text(encoding="utf-8")
-        except (OSError, UnicodeDecodeError):
+        except OSError, UnicodeDecodeError:
             spec_text = ""
         counts = improvement_counts(regen, spec_text, tmp.prev_weaknesses, workspace / "review_checklist.json")
         spec_characteristics = characteristics_summary(spec_text)
@@ -1295,7 +1295,7 @@ def load_cell_records(cells_dir: Path) -> list[dict[str, Any]]:
     for path in paths:
         try:
             records.append(json.loads(path.read_text(encoding="utf-8")))
-        except (OSError, ValueError):
+        except OSError, ValueError:
             continue
     return records
 

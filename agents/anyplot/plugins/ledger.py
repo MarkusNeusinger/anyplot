@@ -556,7 +556,7 @@ def argument_hash(arguments: Any) -> str:
     """A short, stable hash of tool arguments, so logs can correlate calls without their content."""
     try:
         text = json.dumps(arguments, sort_keys=True, default=str)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         text = repr(type(arguments))
     return hashlib.sha256(text.encode()).hexdigest()[:12]
 

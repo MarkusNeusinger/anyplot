@@ -319,7 +319,7 @@ def comparison_key(line: str) -> str:
         return line
     try:
         table = generate(Generate.model_validate({key: value for key, value in data.items() if key != "op"})).csv
-    except (ValidationError, GenerateError):
+    except ValidationError, GenerateError:
         return line
     return json.dumps({"op": GENERATE_TOOL, "table": hashlib.sha256(table.encode("utf-8")).hexdigest()})
 
@@ -724,7 +724,7 @@ def table(cases: Sequence[PrepCase], results: Sequence[CaseResult]) -> str:
 def _safe_describe(line: str) -> str:
     try:
         return describe(line)
-    except (KeyError, TypeError, ValueError):
+    except KeyError, TypeError, ValueError:
         return line
 
 

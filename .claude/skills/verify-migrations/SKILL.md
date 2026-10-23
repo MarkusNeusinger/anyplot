@@ -59,8 +59,8 @@ EOF
 ```
 
 (`--no-project --python 3.12`: pgserver ships no wheels for the
-project's Python 3.13, and `--no-project` sidesteps the
-`requires-python >=3.13` constraint — the server is a separate
+project's Python 3.14, and `--no-project` sidesteps the
+`requires-python >=3.14` constraint — the server is a separate
 process; alembic still runs in the project env.)
 
 ## 2 · The four checks (one Bash invocation)

@@ -893,7 +893,7 @@ def _prepare_bundle(content: bytes, compress: bool) -> bytes | None:
     try:
         if not isinstance(json.loads(content), dict):
             return None
-    except (ValueError, RecursionError):
+    except ValueError, RecursionError:
         return None
     return gzip.compress(content, compresslevel=_BUNDLE_GZIP_LEVEL, mtime=0) if compress else content
 
@@ -1155,7 +1155,7 @@ async def convert_dataset_file(sid: SessionId, request: Request, ctx: Ctx, clien
         raise AgentHTTPError(422, "invalid", ctx.request_id) from None
     try:
         size = len(base64.b64decode(body.data_base64, validate=True))
-    except (ValueError, binascii.Error):
+    except ValueError, binascii.Error:
         raise AgentHTTPError(422, "invalid", ctx.request_id) from None
     if size > MAX_CONVERT_BYTES:
         raise AgentHTTPError(413, "too_long", ctx.request_id)
