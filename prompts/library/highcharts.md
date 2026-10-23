@@ -250,6 +250,10 @@ on its own line.
   `modules/data-sorting.js`, which is not loaded. Sort the data array yourself.
 - **`stackLabels` formatters:** `this.isNegative` was removed in 13.1; test
   `this.total < 0` instead.
+- **`useHTML` content sits in a `<div>`** (Highcharts 13, was a `<span>`), so
+  inline-flow layout tricks shift; style the inner markup explicitly. Keep
+  rotated labels as SVG text: rotated `useHTML` labels log invalid
+  `foreignObject` transforms in 13.1.
 - **Legend symbols take `series.opacity`** (Highcharts 13, column-type series):
   a legend-only proxy series hidden with `opacity: 0` shows an empty legend key.
   Hide a proxy with `color: "transparent"` plus `legendSymbolColor: <key color>`.
