@@ -43,7 +43,9 @@ the text that was drawn, not every `Text` object a figure holds (an undrawn tick
 a hidden axis); it skips the mandated title (any text with "anyplot.ai") and retired
 values that read as prose, numbers or single characters, as the static checker does.
 The executions do not inherit `PYTHONPATH`, so a file runs as Step 3 runs it even when
-the runner itself comes from a workflow-ref copy of `core/`.
+the runner itself comes from a workflow-ref copy of `core/`, and they do not inherit the
+Actions runtime either (`GITHUB_*`, `ACTIONS_*`, `RUNNER_*`, `GH_*`, tokens included): the
+code they run is model-written (`execution_env`).
 
 Usage::
 
@@ -179,9 +181,25 @@ def language_of(library: str | None) -> str | None:
     return LIBRARY_LANGUAGES.get(library) if library else None
 
 
+EXECUTION_ENV_DROPPED_PREFIXES = ("GITHUB_", "ACTIONS_", "RUNNER_", "GH_")
+"""Variable-name prefixes a model-written execution never sees: the runner's tokens, URLs and paths."""
+
+
 def execution_env(theme: str) -> dict[str, str]:
-    """The environment of one execution: the runner's, without `PYTHONPATH`, plus the pipeline's theme settings."""
-    env = {key: value for key, value in os.environ.items() if key != "PYTHONPATH"}
+    """The environment of one execution: the runner's, minus what a plot never needs, plus the theme settings.
+
+    The implementation is model-written code, so it does not get the Actions runtime: every
+    variable whose name starts with `GITHUB_`, `ACTIONS_`, `RUNNER_` or `GH_` (tokens such as
+    `GITHUB_TOKEN`, `GH_TOKEN` and `ACTIONS_RUNTIME_TOKEN`, the cache and results URLs, the
+    runner's paths) is dropped, and so is `PYTHONPATH`, so a file runs as Step 3 runs it even
+    when the runner comes from a workflow-ref copy of `core/`. Everything else stays: `PATH`,
+    `HOME`, `DISPLAY`, the locale and the libraries' own settings.
+    """
+    env = {
+        key: value
+        for key, value in os.environ.items()
+        if key != "PYTHONPATH" and not key.upper().startswith(EXECUTION_ENV_DROPPED_PREFIXES)
+    }
     env.update(ANYPLOT_THEME=theme, MPLBACKEND="Agg", PYTHONHASHSEED="0", PYTHONDONTWRITEBYTECODE="1")
     return env
 

@@ -9,6 +9,7 @@ so the module stays at a few seconds and needs no network.
 from __future__ import annotations
 
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -404,6 +405,31 @@ class TestHelpers:
         assert {
             key: env[key] for key in ("ANYPLOT_THEME", "MPLBACKEND", "PYTHONHASHSEED", "PYTHONDONTWRITEBYTECODE")
         } == {"ANYPLOT_THEME": "dark", "MPLBACKEND": "Agg", "PYTHONHASHSEED": "0", "PYTHONDONTWRITEBYTECODE": "1"}
+
+    def test_the_actions_runtime_never_reaches_model_written_code(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        dropped = {
+            "GITHUB_TOKEN": "ghs_secret",
+            "GITHUB_REPOSITORY": "owner/repo",
+            "GITHUB_OUTPUT": "/runner/_temp/out",
+            "ACTIONS_RUNTIME_TOKEN": "secret",
+            "ACTIONS_ID_TOKEN_REQUEST_URL": "https://token",
+            "RUNNER_TEMP": "/runner/_temp",
+            "GH_TOKEN": "gho_secret",
+            "github_token": "lower-case too",
+        }
+        kept = {"HOME": "/home/runner", "DISPLAY": ":99", "LANG": "C.UTF-8", "MPLCONFIGDIR": "/tmp/mpl", "CI": "true"}
+        for key, value in {**dropped, **kept}.items():
+            monkeypatch.setenv(key, value)
+        env = execution_env("light")
+        assert not set(dropped) & set(env)
+        assert {key: env[key] for key in kept} == kept
+        assert env["PATH"] == os.environ["PATH"]
+
+    def test_an_execution_sees_no_token(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("GITHUB_TOKEN", "ghs_secret")
+        code = "import os, sys; sys.exit(1 if any(k.startswith(('GITHUB_', 'GH_')) for k in os.environ) else 0)"
+        execution = execute([sys.executable, "-c", code], tmp_path, execution_env("light"), timeout=30)
+        assert execution.returncode == 0, execution.stderr
 
     def test_a_timeout_kills_the_process_group(self, tmp_path: Path) -> None:
         marker = tmp_path / "survived"
