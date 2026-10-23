@@ -45,6 +45,25 @@ Merge requires ALL of:
 7. no regressions -- on a ``*-basic`` spec a changed data scenario or added
    encodings count as regressions unless a change request asked for them.
 
+The *adapt route* (``docs/concepts/adaptable-code.md``, "The adapt route";
+``adapt_assess``) merges a conversion to the adaptable-code convention on
+render identity instead of a carrier: the predecessor fails the adaptability
+check (static or smoke) and the new source passes both, the two sources'
+renders from one impl-generate runner differ in at most ``IDENTITY_BOUND`` of
+their pixels per theme at equal size, the new source has at most
+``max(1.25 × prev, prev + 15)`` lines and the canvas gate passed; when a
+review ran, it also needs a score above 0, no regression, an unchanged data
+scenario, no added encoding and no technical item below its re-score. It
+replaces the keeps ``no_visible_improvement``, ``no_defect_improvement`` and
+``below_tolerance`` (the tolerance never applies to it), and with
+``--review-skipped`` it merges before the score checks; both merges carry the
+code ``adapt_identity``. The *adapt regression* -- a predecessor that passes
+and a new source that fails -- turns any merge into keep
+(``adapt_regression``). The gate reads the records impl-review writes and the
+render pair impl-generate stages (``--adapt-new``, ``--adapt-prev``,
+``--adapt-pair``) and never renders; without them the route and the
+regression are off, so every older caller decides as before.
+
 Anything missing or malformed fails closed to ``keep``. The classification
 keys (``prev_checklist``, ``prev_weaknesses``, ``rule``, ``kind``) never
 invalidate the file: a missing or malformed one only leaves fewer carriers.
@@ -92,6 +111,12 @@ Subcommands::
         [--pr N] [--model ID] [--criteria-version V] [--prompts-tree SHA] \
         [--prev-model ID] [--prev-criteria-version V] [--record-out FILE] \
         [--prev-impl /tmp/anyplot-prev-impl.EXT --new-impl plots/S/implementations/L/B.EXT]
+        [--adapt-new /tmp/anyplot-adapt-new.json --adapt-prev /tmp/anyplot-adapt-prev.json \
+         --adapt-pair $RUNNER_TEMP/adapt/pair.json] [--review-skipped]
+
+    regen_gate.py adapt-route --spec-id S --library B --adapt-new FILE --adapt-prev FILE \
+        --adapt-pair FILE --prev-impl /tmp/anyplot-prev-impl.py \
+        --new-impl plots/S/implementations/python/B.py [--canvas-failed]
 
     regen_gate.py sanitize-source --source PREV_IMPL --out /tmp/anyplot-prev-impl.EXT [--pending]
 
@@ -104,8 +129,10 @@ Subcommands::
         [--regen review_regen.json --prev-weaknesses /tmp/anyplot-prev-weaknesses.json \
          --spec-file plots/S/specification.md [--prev-review review_prev.json]] [--warn-only]
 
-``context`` and ``decide`` write ``key=value`` outputs to ``$GITHUB_OUTPUT``
-when it is set. ``decide`` reads the new render's ``review_checklist.json``
+``context``, ``decide`` and ``adapt-route`` write ``key=value`` outputs to
+``$GITHUB_OUTPUT`` when it is set. ``adapt-route`` evaluates the adapt route's
+conditions that need no review, before the review runs, and always exits 0
+(2 on a usage error). ``decide`` reads the new render's ``review_checklist.json``
 from the directory of ``--regen-json``. ``check-feedback`` is the review's
 self-check (step 10 of the review prompt) and the workflow's warn-only format
 check: one line per problem, exit 1 when there is any (``--warn-only``:
@@ -116,6 +143,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import re
 import sys
@@ -123,7 +151,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, TypeGuard
 
 
 MERGE = "merge"
@@ -144,7 +172,9 @@ REASON_CODES = (
     "no_visible_improvement",
     "no_defect_improvement",
     "below_tolerance",
+    "adapt_regression",
     "merge",
+    "adapt_identity",
     "script_crashed",
 )
 
@@ -794,6 +824,603 @@ def header_score(text: str) -> int | None:
 
 
 # ---------------------------------------------------------------------------
+# Adapt route (docs/concepts/adaptable-code.md, "The adapt route")
+# ---------------------------------------------------------------------------
+
+# The gate never renders and imports no PIL: it reads three JSON files. The
+# adapt records of both sources (``/tmp/anyplot-adapt-new.json`` and
+# ``-prev.json``) come from impl-review's record step, which runs the checker
+# mirror and reads the staged smoke runs. The gate reads their derived
+# ``status`` and only cross-checks it against the static and smoke statuses
+# (``derived_adapt_status``): a record whose status does not follow from them
+# was not written by the record step, so it fails closed. The pair record
+# (``$RUNNER_TEMP/adapt/pair.json``) comes from ``core.smoke_run pair`` in
+# impl-generate, which renders both sources in one runner and writes one
+# ``core.render_identity.RenderIdentity.to_dict()`` per theme.
+ADAPT_IDENTITY = "adapt_identity"
+ADAPT_REGRESSION = "adapt_regression"
+# ``v`` of the adapt records and of the pair record.
+ADAPT_RECORD_VERSION = 1
+ADAPT_STATUSES = ("pass", "fail", "unknown", "excluded")
+ADAPT_STATIC_STATUSES = ("pass", "fail", "excluded", "error")
+ADAPT_SMOKE_STATUSES = ("pass", "fail", "skipped", "missing", "stale")
+# A ``skipped`` smoke run for a shape without a table to perturb is no gap: the
+# static check is the whole check there (``adapt_record.SMOKE_NOT_APPLICABLE``;
+# a unit test keeps the two equal).
+ADAPT_SMOKE_NOT_APPLICABLE = ("shape:generated", "shape:network")
+# The one language with a checker; any other reads as ``not_python``, never as a failure.
+ADAPT_LANGUAGE = "python"
+PAIR_STATUSES = ("identical", "different", "error")
+ADAPT_THEMES = ("light", "dark")
+# The largest share of differing pixels per theme. It equals
+# ``core.render_identity.DEFAULT_BOUND`` (a unit test keeps them equal), and
+# the gate applies it whatever bound the pair record names.
+IDENTITY_BOUND = 0.005
+# The new source may grow to max(1.25 × prev, prev + 15) lines.
+ADAPT_LINE_SLACK = 15
+# A staged file larger than this is not read (``unreadable``).
+ADAPT_FILE_LIMIT = 1_000_000
+# Why a flag's file is not there: no flag, or a flag naming no file; a file that
+# does not parse is ``unreadable``.
+ABSENT = "absent"
+MISSING = "missing"
+UNREADABLE = "unreadable"
+ADAPT_ROUTE = "route"
+# The reasons only a review can give (``_adapt_review_why``, in its order): a
+# route that held before the review and ends on one of these was overruled by
+# the review (``AdaptAssessment.overruled``, the ``regen:adapt-overruled`` label).
+ADAPT_REVIEW_WHY = (
+    "score_zero",
+    "review_regression",
+    "scenario_changed",
+    "encodings_added",
+    "no_prev_checklist",
+    "technical_below",
+)
+# Every reason the route can give, in the order ``adapt_assess`` tests them;
+# the first that applies wins, and ``route`` means none did.
+ADAPT_WHY = (
+    "not_python",
+    "no_record",
+    "record_invalid",
+    "excluded",
+    "new_unknown",
+    "prev_unknown",
+    "prev_passes",
+    "new_fails",
+    "pair_missing",
+    "pair_error",
+    "pair_stale",
+    "size_changed",
+    "identity_light",
+    "identity_dark",
+    "identity_both",
+    "no_sources",
+    "lines_over",
+    "canvas_failed",
+    # Only when a review ran:
+    *ADAPT_REVIEW_WHY,
+    ADAPT_ROUTE,
+)
+ADAPT_REVIEW_RAN = "ran"
+ADAPT_REVIEW_SKIPPED = "skipped"
+ADAPT_RECORD_KEYS = ("version", "prev", "new", "identity", "counted", "why", "review")
+# Added after the block's first form; a block without it still validates.
+ADAPT_RECORD_OPTIONAL_KEYS = ("route_pre_review",)
+ADAPT_SIDE_KEYS = ("status", "static", "smoke")
+
+
+@dataclass(frozen=True)
+class AdaptInput:
+    """What the adapt route reads (``decide`` and ``adapt-route`` flags).
+
+    ``new``, ``prev`` and ``pair`` are the parsed files of ``--adapt-new``,
+    ``--adapt-prev`` and ``--adapt-pair``; each ``*_error`` is None when its
+    file was read, else ``absent``, ``missing`` or ``unreadable``
+    (``load_adapt_file``). ``language`` is ``source_language`` of
+    ``--new-impl`` (None without it). ``review_skipped`` is
+    ``--review-skipped``: impl-review skipped the review on the owner's switch.
+    ``route_held`` is ``--adapt-route-held``: impl-review's ``adapt-route``,
+    before the review, said the route holds.
+    """
+
+    library: str = ""
+    language: str | None = None
+    new: Any = None
+    prev: Any = None
+    pair: Any = None
+    new_error: str | None = ABSENT
+    prev_error: str | None = ABSENT
+    pair_error: str | None = ABSENT
+    review_skipped: bool = False
+    route_held: bool = False
+
+    @property
+    def requested(self) -> bool:
+        """Any adapt flag was given (the notice line and the summary then report the route)."""
+        return (
+            self.review_skipped
+            or self.route_held
+            or any(e != ABSENT for e in (self.new_error, self.prev_error, self.pair_error))
+        )
+
+
+@dataclass(frozen=True)
+class AdaptAssessment:
+    """The adapt route's verdict for one pair (``adapt_assess``).
+
+    ``why`` is one of ``ADAPT_WHY``; the route counts exactly when it is
+    ``route``. ``prev``/``new`` summarize a valid record (``status``,
+    ``static``, ``smoke``), ``identity`` gives each theme's differing-pixel
+    fraction (None on a size change; the whole map None without a usable
+    pair), ``version`` is the new record's ``checker_version``. ``regression``
+    is set whenever both records are valid, whatever ``why`` says, in two
+    cases (``adapt_regression``): a predecessor that passes and a new source
+    that fails, or a predecessor whose static check passes and whose smoke
+    run is not known (status ``unknown``) and a new source whose static check
+    fails. The second needs no smoke run: the static check alone already
+    shows that converted code was unconverted. ``route_pre_review`` is what
+    impl-review's ``adapt-route`` said before the review (``--adapt-route-held``):
+    true when it held, false when the gate had adapt input without the flag,
+    None without adapt input or for another language.
+    """
+
+    why: str
+    review: str = ADAPT_REVIEW_RAN
+    version: int | None = None
+    prev: Mapping[str, str | None] | None = None
+    new: Mapping[str, str | None] | None = None
+    identity: Mapping[str, float | None] | None = None
+    regression: bool = False
+    prev_lines: int | None = None
+    new_lines: int | None = None
+    requested: bool = False
+    route_pre_review: bool | None = None
+
+    @property
+    def counted(self) -> bool:
+        return self.why == ADAPT_ROUTE
+
+    @property
+    def overruled(self) -> bool:
+        """The route held before the review, and the review's floor turned it off.
+
+        These PRs and the counted ones (``regen:adapt``) are the route-held
+        PRs the review-free switch (``ADAPT_REVIEW_FREE``) is read against.
+        """
+        return self.route_pre_review is True and self.why in ADAPT_REVIEW_WHY
+
+    @property
+    def static_regression(self) -> bool:
+        """The regression rests on the static check alone (the predecessor's smoke run is not known)."""
+        return self.regression and self.prev is not None and self.prev.get("status") != "pass"
+
+    def to_record(self) -> dict[str, Any]:
+        """The gate record's ``adapt`` block: tokens, numbers, booleans and nulls only."""
+        return {
+            "version": self.version,
+            "prev": dict(self.prev) if self.prev is not None else None,
+            "new": dict(self.new) if self.new is not None else None,
+            "identity": dict(self.identity) if self.identity is not None else None,
+            "counted": self.counted,
+            "why": self.why,
+            "review": self.review,
+            "route_pre_review": self.route_pre_review,
+        }
+
+
+def load_adapt_file(path_text: str | None) -> tuple[Any, str | None]:
+    """A staged adapt JSON file and why it is not there (``absent``, ``missing``, ``unreadable``)."""
+    if not path_text:
+        return None, ABSENT
+    path = Path(path_text)
+    try:
+        if not path.is_file():
+            return None, MISSING
+        if path.stat().st_size > ADAPT_FILE_LIMIT:
+            return None, UNREADABLE
+        return json.loads(path.read_text(encoding="utf-8")), None
+    except OSError, ValueError, RecursionError:
+        return None, UNREADABLE
+
+
+def within_line_bound(prev_lines: int, new_lines: int) -> bool:
+    """The new source has at most max(1.25 × prev, prev + ``ADAPT_LINE_SLACK``) lines (integers only)."""
+    return new_lines * 4 <= prev_lines * 5 or new_lines <= prev_lines + ADAPT_LINE_SLACK
+
+
+def _real(value: Any) -> TypeGuard[int | float]:
+    """A finite int or float, never a bool."""
+    return isinstance(value, int | float) and not isinstance(value, bool) and math.isfinite(value)
+
+
+def derived_adapt_status(static: Any, smoke: Any, smoke_why: Any) -> str:
+    """The status an adapt record must carry for its static and smoke statuses.
+
+    ``adapt_record.derive_status`` reimplemented for the single-file copy (a
+    unit test runs both over every combination): the first matching rule wins.
+    A static ``error`` is ``unknown``; ``excluded`` and ``fail`` decide alone;
+    then a ``missing`` or ``stale`` smoke run is ``unknown``, a failed one
+    ``fail``, a skip ``pass`` only for a shape without a table
+    (``ADAPT_SMOKE_NOT_APPLICABLE``) and ``unknown`` otherwise, and a passed
+    one ``pass``.
+    """
+    if static not in ("pass", "fail", "excluded"):
+        return "unknown"
+    if static in ("excluded", "fail"):
+        return str(static)
+    if smoke in ("missing", "stale"):
+        return "unknown"
+    if smoke == "fail":
+        return "fail"
+    if smoke == "skipped":
+        return "pass" if smoke_why in ADAPT_SMOKE_NOT_APPLICABLE else "unknown"
+    return "pass" if smoke == "pass" else "unknown"
+
+
+def adapt_record_problem(record: Any, side: str, spec_id: str, library: str) -> str | None:
+    """Why an adapt record cannot be read for this pair, or None when it can.
+
+    The gate reads ``v``, ``side``, ``spec``, ``lib``, ``language``,
+    ``checker_version``, ``status``, ``static.status``, ``smoke.status`` and
+    ``smoke.why`` (contract: impl-review's record step owns the format and the
+    derivation). A ``status`` that does not follow from the two blocks
+    (``derived_adapt_status``) makes the record malformed: a crafted
+    ``pass`` over a missing smoke run must never open the route.
+    """
+    if not isinstance(record, Mapping):
+        return "not a JSON object"
+    if not (_is_int(record.get("v")) and record["v"] == ADAPT_RECORD_VERSION):
+        return f"v is not {ADAPT_RECORD_VERSION}"
+    if record.get("side") != side:
+        return f"side is not {side}"
+    if record.get("spec") != spec_id or record.get("lib") != library:
+        return "spec or lib names another pair"
+    if record.get("language") != ADAPT_LANGUAGE:
+        return f"language is not {ADAPT_LANGUAGE}"
+    if record.get("status") not in ADAPT_STATUSES:
+        return "status is not pass, fail, unknown or excluded"
+    # The status is derived from these two; a record without them was not
+    # built by the record step, so it fails closed like any malformed one.
+    for key, allowed in (("static", ADAPT_STATIC_STATUSES), ("smoke", ADAPT_SMOKE_STATUSES)):
+        block = record.get(key)
+        if not isinstance(block, Mapping) or block.get("status") not in allowed:
+            return f"{key}.status is not one of {', '.join(allowed)}"
+    smoke = record["smoke"]
+    if record["status"] != derived_adapt_status(record["static"]["status"], smoke["status"], smoke.get("why")):
+        return "status does not follow from static and smoke"
+    return None
+
+
+def _side_summary(record: Mapping[str, Any]) -> dict[str, str | None]:
+    """``status`` plus the static and smoke statuses (None when absent or unknown) of a valid record."""
+
+    def inner(key: str, allowed: tuple[str, ...]) -> str | None:
+        block = record.get(key)
+        value = block.get("status") if isinstance(block, Mapping) else None
+        return value if isinstance(value, str) and value in allowed else None
+
+    return {
+        "status": record["status"],
+        "static": inner("static", ADAPT_STATIC_STATUSES),
+        "smoke": inner("smoke", ADAPT_SMOKE_STATUSES),
+    }
+
+
+def _size(value: Any) -> tuple[int, int] | None:
+    if isinstance(value, list) and len(value) == 2 and all(_is_int(v) and v >= 0 for v in value):
+        return (value[0], value[1])
+    return None
+
+
+def pair_problem(pair: Any, library: str) -> str | None:
+    """Why a pair record cannot be read for this library, or None when it can.
+
+    It needs ``v``, a known ``status``, a ``library`` equal to this one
+    (``core.smoke_run pair`` always writes it, so a record without one was
+    not written there) and, unless the status is ``error``, an ``identity``
+    entry per theme with both sizes, a boolean ``passed`` and a ``fraction``
+    that is a number or null.
+    """
+    if not isinstance(pair, Mapping):
+        return "not a JSON object"
+    if not (_is_int(pair.get("v")) and pair["v"] == ADAPT_RECORD_VERSION):
+        return f"v is not {ADAPT_RECORD_VERSION}"
+    if pair.get("status") not in PAIR_STATUSES:
+        return "status is not identical, different or error"
+    if pair.get("library") != library:
+        return "library is missing or names another library"
+    if pair["status"] == "error":
+        return None
+    identity = pair.get("identity")
+    if not isinstance(identity, Mapping):
+        return "no identity block"
+    for theme in ADAPT_THEMES:
+        entry = identity.get(theme)
+        if not isinstance(entry, Mapping):
+            return f"no identity for {theme}"
+        if _size(entry.get("old_size")) is None or _size(entry.get("new_size")) is None:
+            return f"{theme} sizes are not two integers each"
+        if not isinstance(entry.get("passed"), bool):
+            return f"{theme} passed is not a boolean"
+        fraction = entry.get("fraction")
+        if fraction is not None and (isinstance(fraction, bool) or not isinstance(fraction, int | float)):
+            return f"{theme} fraction is not a number"
+    return None
+
+
+def _pair_matches(pair: Mapping[str, Any], new: Any, prev: Any) -> bool:
+    """The pair rendered the very sources the two records checked: equal ``code_sha256`` on each side.
+
+    Both hashes come from one rule (``core.smoke_run.code_sha256``, reimplemented
+    in ``adapt_record.py``). A pair rendered from an earlier head or another
+    predecessor measures other code, so it never counts, and neither does a
+    missing hash.
+    """
+    for side, record in (("new", new), ("prev", prev)):
+        rendered = pair.get(side)
+        sha = rendered.get("code_sha256") if isinstance(rendered, Mapping) else None
+        checked = record.get("code_sha256") if isinstance(record, Mapping) else None
+        if not (isinstance(sha, str) and sha and sha == checked):
+            return False
+    return True
+
+
+def _theme_holds(entry: Mapping[str, Any]) -> bool:
+    """Equal sizes, ``passed``, and a fraction from 0 to ``IDENTITY_BOUND`` (the gate's own bound)."""
+    fraction = entry.get("fraction")
+    return (
+        _size(entry.get("old_size")) == _size(entry.get("new_size"))
+        and entry.get("passed") is True
+        and _real(fraction)
+        and 0 <= fraction <= IDENTITY_BOUND
+    )
+
+
+def _identity_fractions(pair: Mapping[str, Any]) -> dict[str, float | None]:
+    """Each theme's fraction for the record, rounded; None on a size change or a non-finite value."""
+    out: dict[str, float | None] = {}
+    for theme in ADAPT_THEMES:
+        entry = pair["identity"][theme]
+        fraction = entry.get("fraction")
+        same = _size(entry.get("old_size")) == _size(entry.get("new_size"))
+        out[theme] = round(float(fraction), 6) if same and _real(fraction) else None
+    return out
+
+
+def _encodings(payload: Mapping[str, Any]) -> list[str]:
+    raw = payload.get("encodings_added")
+    return [e.strip() for e in raw if isinstance(e, str) and e.strip()] if isinstance(raw, list) else []
+
+
+def review_regressions(inp: GateInput, payload: Mapping[str, Any]) -> list[dict[str, str]]:
+    """The review's regressions, plus a replaced scenario or added encodings on a ``-basic`` spec.
+
+    On a ``-basic`` spec only a change request that exists and that the review
+    says it applied may swap the scenario or add encodings. ``_judge`` keeps on
+    any of these; ``adapt_assess`` turns the route off on them.
+    """
+    raw = payload.get("regressions")
+    regressions = [
+        {"what": item["what"].strip(), "where_visible": str(item.get("where_visible") or "").strip()}
+        for item in (raw if isinstance(raw, list) else [])
+        if isinstance(item, Mapping) and isinstance(item.get("what"), str) and item["what"].strip()
+    ]
+    change_request_applied = inp.change_request_present and payload.get("change_request_applied") is True
+    if inp.spec_id.endswith("-basic") and not change_request_applied:
+        if payload.get("scenario_changed") is True:
+            regressions.append(
+                {"what": "data scenario replaced on a -basic spec", "where_visible": "data and labels of both renders"}
+            )
+        encodings = _encodings(payload)
+        if encodings:
+            regressions.append(
+                {"what": f"encodings added on a -basic spec: {', '.join(encodings)}", "where_visible": "both renders"}
+            )
+    return regressions
+
+
+def _adapt_review_why(inp: GateInput, review: Mapping[str, Any]) -> str | None:
+    """The first review-dependent condition that fails (the review's sanity floor), or None."""
+    if inp.score is None or inp.score <= 0:
+        return "score_zero"
+    if review_regressions(inp, review):
+        return "review_regression"
+    if review.get("scenario_changed") is True:
+        return "scenario_changed"
+    if _encodings(review):
+        return "encodings_added"
+    prev_checklist = flat_scores(review.get("prev_checklist"))
+    if not prev_checklist:
+        return "no_prev_checklist"
+    for cid, prev in prev_checklist.items():
+        new = inp.new_checklist.get(cid)
+        if cid[:2] in TECHNICAL_PREFIXES and (new is None or new < prev):
+            return "technical_below"
+    return None
+
+
+def adapt_assess(inp: GateInput, review: Mapping[str, Any] | None) -> AdaptAssessment:
+    """Whether the adapt route counts for this pair, and why not (``ADAPT_WHY``, in order).
+
+    ``review`` is None when no review ran (``adapt-route`` before the review,
+    or ``decide --review-skipped``); otherwise it is the validated, normalized
+    ``review_regen.json`` (an empty mapping when there is none), and the
+    review's floor applies: a score above 0, no regression (``_judge``'s list,
+    the ``-basic`` scenario and encoding rules included), an unchanged data
+    scenario and no added encoding on any spec, a ``prev_checklist``, and no
+    VQ, SC, DQ or CQ item of it missing from the new checklist or below its
+    value there. A missing or malformed record or pair, or a source the gate
+    did not read, turns the route off with its reason; nothing counts as a pass.
+    """
+    adapt = inp.adapt
+    python = adapt.language in (None, ADAPT_LANGUAGE)
+    new_ok = adapt.new_error is None and adapt_record_problem(adapt.new, "new", inp.spec_id, adapt.library) is None
+    prev_ok = adapt.prev_error is None and adapt_record_problem(adapt.prev, "prev", inp.spec_id, adapt.library) is None
+    new = _side_summary(adapt.new) if python and new_ok else None
+    prev = _side_summary(adapt.prev) if python and prev_ok else None
+    version = adapt.new.get("checker_version") if new is not None else None
+    pair_ok = adapt.pair_error is None and pair_problem(adapt.pair, adapt.library) is None
+    usable_pair = python and pair_ok and adapt.pair["status"] != "error"
+    prev_lines = len(inp.prev_source.splitlines()) if inp.prev_source is not None else None
+    new_lines = len(inp.new_source.splitlines()) if inp.new_source is not None else None
+
+    def why() -> str:
+        if not python:
+            return "not_python"
+        if adapt.new_error in (ABSENT, MISSING) or adapt.prev_error in (ABSENT, MISSING):
+            return "no_record"
+        if new is None or prev is None:
+            return "record_invalid"
+        if "excluded" in (new["status"], prev["status"]):
+            return "excluded"
+        if new["status"] == "unknown":
+            return "new_unknown"
+        if prev["status"] == "unknown":
+            return "prev_unknown"
+        if prev["status"] == "pass":
+            return "prev_passes"
+        if new["status"] == "fail":
+            return "new_fails"
+        if not pair_ok:
+            return "pair_missing"
+        if not usable_pair:
+            return "pair_error"
+        if not _pair_matches(adapt.pair, adapt.new, adapt.prev):
+            return "pair_stale"
+        identity = adapt.pair["identity"]
+        if any(_size(identity[t].get("old_size")) != _size(identity[t].get("new_size")) for t in ADAPT_THEMES):
+            return "size_changed"
+        failing = [t for t in ADAPT_THEMES if not _theme_holds(identity[t])]
+        if failing:
+            return "identity_both" if len(failing) == len(ADAPT_THEMES) else f"identity_{failing[0]}"
+        if prev_lines is None or new_lines is None:
+            return "no_sources"
+        if not within_line_bound(prev_lines, new_lines):
+            return "lines_over"
+        if inp.canvas_failed:
+            return "canvas_failed"
+        if review is not None:
+            return _adapt_review_why(inp, review) or ADAPT_ROUTE
+        return ADAPT_ROUTE
+
+    return AdaptAssessment(
+        why=why(),
+        review=ADAPT_REVIEW_SKIPPED if review is None else ADAPT_REVIEW_RAN,
+        version=version if _is_int(version) else None,
+        prev=prev,
+        new=new,
+        identity=_identity_fractions(adapt.pair) if usable_pair else None,
+        regression=_adapt_regression(prev, new),
+        prev_lines=prev_lines,
+        new_lines=new_lines,
+        requested=adapt.requested,
+        route_pre_review=True if adapt.route_held else (False if python and adapt.requested else None),
+    )
+
+
+def _adapt_regression(prev: Mapping[str, str | None] | None, new: Mapping[str, str | None] | None) -> bool:
+    """Converted code that this regeneration unconverted, from two valid records' summaries.
+
+    Either the predecessor passes and the new source fails, or the
+    predecessor's static check passes while its smoke run is not known
+    (``unknown``: missing, stale or skipped) and the new source's static check
+    fails. A predecessor whose own smoke run failed passes nothing, so a
+    failing new source is no regression from it.
+    """
+    if prev is None or new is None or new["status"] != "fail":
+        return False
+    if prev["status"] == "pass":
+        return True
+    return prev["status"] == "unknown" and prev["static"] == "pass" and new["static"] == "fail"
+
+
+def _review_skipped(inp: GateInput) -> bool:
+    """``--review-skipped`` with no score: a score means a review ran, and the stricter path applies."""
+    return inp.adapt.review_skipped and inp.score is None
+
+
+def _adapt_review(inp: GateInput) -> Mapping[str, Any] | None:
+    """The review the route's floor reads: None when it was skipped, ``{}`` when it left no valid file."""
+    if _review_skipped(inp):
+        return None
+    if inp.regen is None:
+        return {}
+    payload, _ = normalize_regen(inp.regen)
+    if validate_regen(payload, inp.known_weakness_ids, inp.characteristic_count):
+        return {}
+    return payload if isinstance(payload, dict) else {}
+
+
+def _percent(fraction: float | None) -> str:
+    return "n/a" if fraction is None else f"{fraction * 100:.2f} %"
+
+
+def adapt_route_text(adapt: AdaptAssessment) -> str:
+    """One line on a counted route: both checks, both themes' identity and the line counts."""
+    prev, identity = adapt.prev or {}, adapt.identity or {}
+    return (
+        f"the predecessor fails the adaptability check (static {prev.get('static') or 'n/a'}, smoke "
+        f"{prev.get('smoke') or 'n/a'}) and the new source passes it; the renders differ in "
+        f"{_percent(identity.get('light'))} (light) and {_percent(identity.get('dark'))} (dark) of their pixels, "
+        f"within {_percent(IDENTITY_BOUND)}; {_score_text(adapt.prev_lines)} → {_score_text(adapt.new_lines)} lines"
+    )
+
+
+# What each reason means, for the PR comment's one-line summary of the route.
+ADAPT_WHY_TEXT = {
+    "not_python": "only Python implementations have the adaptability check",
+    "no_record": "an adaptability record is missing",
+    "record_invalid": "an adaptability record is malformed or names another pair",
+    "excluded": "the spec is excluded from the adaptability check",
+    "new_unknown": "the new source's adaptability check is incomplete",
+    "prev_unknown": "the predecessor's adaptability check is incomplete",
+    "prev_passes": "the predecessor already passes the adaptability check, so this is no conversion",
+    "new_fails": "the new source fails the adaptability check",
+    "pair_missing": "the render pair from impl-generate is missing or malformed",
+    "pair_error": "a render of the pair failed in impl-generate",
+    "pair_stale": "the render pair was made from other source versions than the two checked here",
+    "size_changed": "the two sources' renders differ in size",
+    "identity_light": f"the light renders differ in more than {_percent(IDENTITY_BOUND)} of their pixels",
+    "identity_dark": f"the dark renders differ in more than {_percent(IDENTITY_BOUND)} of their pixels",
+    "identity_both": f"both themes' renders differ in more than {_percent(IDENTITY_BOUND)} of their pixels",
+    "no_sources": "a source was not read",
+    "lines_over": f"the new source is longer than max(1.25 × prev, prev + {ADAPT_LINE_SLACK}) lines",
+    "canvas_failed": "the canvas gate failed",
+    "score_zero": "the review gave no score above 0",
+    "review_regression": "the review names a regression",
+    "scenario_changed": "the review says the data scenario changed",
+    "encodings_added": "the review lists added encodings",
+    "no_prev_checklist": "the review wrote no re-score checklist",
+    "technical_below": "a VQ, SC, DQ or CQ item scores below its re-score",
+}
+
+
+def adapt_regression_text(adapt: AdaptAssessment) -> str:
+    """What the adapt regression rests on: both checks, or the static check alone."""
+    if adapt.static_regression:
+        return (
+            "the predecessor passes the static adaptability check (its smoke run is not known) "
+            "and the new source fails it"
+        )
+    return "the predecessor passes the adaptability check and the new source fails it"
+
+
+def adapt_summary_line(adapt: AdaptAssessment) -> str:
+    """``**Adapt route:** …`` for the PR comment; fixed text, tokens and numbers only."""
+    if adapt.regression:
+        text = f"regression: {adapt_regression_text(adapt)}, so the live implementation stays"
+    elif adapt.counted:
+        review = "no review ran" if adapt.review == ADAPT_REVIEW_SKIPPED else "the review's floor holds"
+        text = f"counted: {adapt_route_text(adapt)}; {review}"
+    else:
+        text = f"not counted ({adapt.why}): {ADAPT_WHY_TEXT.get(adapt.why, adapt.why)}"
+        if adapt.overruled:
+            text += "; the route held before the review, so the review overruled it"
+    return f"**Adapt route:** {text}"
+
+
+# ---------------------------------------------------------------------------
 # Decision
 # ---------------------------------------------------------------------------
 
@@ -826,6 +1453,10 @@ class GateInput:
     # The sources' language (``source_language`` of ``--new-impl``): what
     # ``call_count`` reads as a comment, a string and a definition.
     source_language: str = "python"
+    # The adapt route's records, render pair and review switch
+    # (``--adapt-new``/``--adapt-prev``/``--adapt-pair``/``--review-skipped``).
+    # The default has none, which turns the route and the regression off.
+    adapt: AdaptInput = field(default_factory=AdaptInput)
 
 
 @dataclass
@@ -850,9 +1481,11 @@ class GateResult:
     code_improvements: list[dict[str, Any]] = field(default_factory=list)
     prev_lines: int | None = None
     new_lines: int | None = None
+    # The adapt route's assessment (``decide`` sets it on every result).
+    adapt: AdaptAssessment | None = None
 
 
-def _is_int(value: Any) -> bool:
+def _is_int(value: Any) -> TypeGuard[int]:
     return isinstance(value, int) and not isinstance(value, bool)
 
 
@@ -1021,18 +1654,33 @@ def decide(inp: GateInput) -> GateResult:
     """Apply the regen gate. Every uncertain input resolves to ``keep``.
 
     The two sources' line counts are on every result when both were read,
-    so an early keep still reports them.
+    so an early keep still reports them. The adapt route is assessed once,
+    with the review the decision reads (``_adapt_review``), and its
+    assessment is on every result. Last, the adapt regression turns any merge
+    into keep (``adapt_regression``).
     """
-    result = _decide(inp)
+    adapt = adapt_assess(inp, _adapt_review(inp))
+    result = _decide(inp, adapt)
+    result.adapt = adapt
     if inp.prev_source is not None and inp.new_source is not None:
         result.prev_lines = len(inp.prev_source.splitlines())
         result.new_lines = len(inp.new_source.splitlines())
+    if result.verdict == MERGE and adapt.regression:
+        result.reason = (
+            f"adapt regression: {adapt_regression_text(adapt)}, "
+            f"so the live implementation stays (without it: {result.code})"
+        )
+        result.verdict, result.code = KEEP, ADAPT_REGRESSION
     return result
 
 
-def _decide(inp: GateInput) -> GateResult:
+def _decide(inp: GateInput, adapt: AdaptAssessment | None = None) -> GateResult:
     if inp.canvas_failed:
         return GateResult(KEEP, "canvas dimension gate failed", "canvas_failed")
+    # No review ran (the owner's switch): the route is the only way to merge,
+    # and a pair it does not carry is kept below for the lack of a score.
+    if _review_skipped(inp) and adapt is not None and adapt.counted:
+        return GateResult(MERGE, f"adapt route, no review: {adapt_route_text(adapt)}", ADAPT_IDENTITY)
     if inp.score is None:
         return GateResult(KEEP, "no valid review score", "no_score")
     if inp.score == 0:
@@ -1051,7 +1699,7 @@ def _decide(inp: GateInput) -> GateResult:
         return GateResult(KEEP, f"review_regen.json {error}", code)
 
     regen, coerced = normalize_regen(inp.regen)
-    result = _judge(inp, regen)
+    result = _judge(inp, regen, adapt)
     if coerced:
         result.reason += f" (coerced: {'; '.join(coerced)})"
         result.coerced = True
@@ -1365,7 +2013,17 @@ def classify_code_improvements(payload: Any, inp: GateInput) -> list[dict[str, A
     return out
 
 
-def _judge(inp: GateInput, regen: Any) -> GateResult:
+def _adapt_instead(result: GateResult, adapt: AdaptAssessment | None) -> GateResult:
+    """A no-carrier or below-tolerance keep becomes a merge when the adapt route counts."""
+    if adapt is None or not adapt.counted:
+        return result
+    floor = "no technical item below its re-score"
+    result.reason = f"adapt route: {adapt_route_text(adapt)}; {floor} (without the route: {result.code})"
+    result.verdict, result.code = MERGE, ADAPT_IDENTITY
+    return result
+
+
+def _judge(inp: GateInput, regen: Any, adapt: AdaptAssessment | None = None) -> GateResult:
     errors = validate_regen(regen, inp.known_weakness_ids, inp.characteristic_count)
     if errors:
         return GateResult(KEEP, "invalid review_regen.json: " + "; ".join(errors), "regen_json_invalid")
@@ -1373,24 +2031,9 @@ def _judge(inp: GateInput, regen: Any) -> GateResult:
     payload: dict[str, Any] = regen
     prev_rescored: int = payload["prev_rescored"]
     improvements = classify_improvements(payload, inp)
-    regressions = [
-        {"what": item["what"].strip(), "where_visible": str(item.get("where_visible") or "").strip()}
-        for item in payload["regressions"]
-    ]
-
     # A change request is the only thing that may legitimately swap the
     # scenario or add encodings on a -basic spec — and only one that exists.
-    change_request_applied = inp.change_request_present and payload.get("change_request_applied") is True
-    if inp.spec_id.endswith("-basic") and not change_request_applied:
-        if payload["scenario_changed"]:
-            regressions.append(
-                {"what": "data scenario replaced on a -basic spec", "where_visible": "data and labels of both renders"}
-            )
-        encodings = [e.strip() for e in payload["encodings_added"] if e.strip()]
-        if encodings:
-            regressions.append(
-                {"what": f"encodings added on a -basic spec: {', '.join(encodings)}", "where_visible": "both renders"}
-            )
+    regressions = review_regressions(inp, payload)
 
     result = GateResult(
         KEEP,
@@ -1441,7 +2084,7 @@ def _judge(inp: GateInput, regen: Any) -> GateResult:
         detail = " (every improvement needs a non-empty where_visible)" if counted or not (cited or obsolete) else ""
         result.code = "no_visible_improvement"
         result.reason = f"no visible improvement{detail}{note}{code_note}"
-        return result
+        return _adapt_instead(result, adapt)
 
     if not carriers and not code_counted:
         kinds = [
@@ -1461,12 +2104,16 @@ def _judge(inp: GateInput, regen: Any) -> GateResult:
             f"{len(visible)} visible improvement(s) ({breakdown}), none fixes a verified defect "
             f"or an 'A good version shows' property{note}{code_note}"
         )
-        return result
+        return _adapt_instead(result, adapt)
 
-    if inp.score < prev_rescored - 1:
+    # The tolerance guards the carrier and the CQ-04 code paths; the adapt
+    # route's floor is the technical items, so it takes this keep over too.
+    # ``_decide`` keeps a missing score before ``_judge`` runs.
+    score = inp.score if inp.score is not None else -1
+    if score < prev_rescored - 1:
         result.code = "below_tolerance"
         result.reason = f"new score {inp.score} < re-scored predecessor {prev_rescored} - 1{note}"
-        return result
+        return _adapt_instead(result, adapt)
 
     result.verdict = MERGE
     result.code = "merge"
@@ -2042,6 +2689,9 @@ def render_summary(result: GateResult, prev_stored: str, score: int | None) -> s
             lines.append(f"- `{ref}` {_safe(item['what'])} — {where}{flag}")
     if result.prev_lines is not None and result.new_lines is not None:
         lines += ["", f"**Code size:** {result.prev_lines} → {result.new_lines} lines"]
+    adapt = result.adapt
+    if adapt is not None and (adapt.requested or result.code in (ADAPT_IDENTITY, ADAPT_REGRESSION)):
+        lines += ["", adapt_summary_line(adapt)]
     lines += ["", "**Regressions**"]
     if result.regressions:
         for item in result.regressions:
@@ -2086,6 +2736,7 @@ RECORD_KEYS = frozenset(
         "coerced",
         "at",
         "writeback",
+        "adapt",
     }
 )
 # What happened to the re-score of the live implementation on a keep
@@ -2184,7 +2835,12 @@ def build_record(
     (from P8) counts the code improvements that hold
     (``classify_code_improvements``): with no carrier they carried the merge
     (the code path), with one they rode along; records written before P8
-    lack it.
+    lack it. ``adapt`` (from PR 2 of the adaptable-code rollout) is the
+    adapt route's assessment (``AdaptAssessment.to_record``); a result
+    without one records the route as off for want of a record. Records
+    written before it lack the key. Its ``route_pre_review`` (whether
+    impl-review's ``adapt-route`` held before the review) came after the
+    block's first form, so the validator accepts a block without it.
     """
     kinds = {"W": 0, "P": 0, "C": 0, "new": 0}
     for item in result.improvements:
@@ -2219,7 +2875,62 @@ def build_record(
         "encodings_added": result.encodings_added,
         "coerced": result.coerced,
         "at": at or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "adapt": (result.adapt or AdaptAssessment(why="no_record")).to_record(),
     }
+
+
+def adapt_record_errors(adapt: Any) -> list[str]:
+    """Schema check for a record's ``adapt`` block (``AdaptAssessment.to_record``).
+
+    Known keys only; a ``version`` that is an integer or null; ``prev`` and
+    ``new`` null or the three statuses (``status`` one of ``ADAPT_STATUSES``,
+    ``static`` and ``smoke`` known or null); ``identity`` null or one finite
+    fraction from 0 to 1 (or null) per theme; a boolean ``counted`` that is
+    true exactly when ``why`` is ``route``; ``why`` one of ``ADAPT_WHY``;
+    ``review`` ``ran`` or ``skipped``; ``route_pre_review``, when present,
+    true, false or null. No lists anywhere.
+    """
+    if not isinstance(adapt, dict):
+        return ["record.adapt is not an object"]
+    known = (*ADAPT_RECORD_KEYS, *ADAPT_RECORD_OPTIONAL_KEYS)
+    errors = [f"record.adapt has unknown key {key!r}" for key in adapt if key not in known]
+    errors += [f"record.adapt lacks {key!r}" for key in ADAPT_RECORD_KEYS if key not in adapt]
+    route_pre_review = adapt.get("route_pre_review")
+    if route_pre_review is not None and not isinstance(route_pre_review, bool):
+        errors.append("record.adapt.route_pre_review must be true, false or null")
+    version = adapt.get("version")
+    if version is not None and not _is_int(version):
+        errors.append("record.adapt.version must be an integer or null")
+    allowed = {"status": ADAPT_STATUSES, "static": ADAPT_STATIC_STATUSES, "smoke": ADAPT_SMOKE_STATUSES}
+    for side in ("prev", "new"):
+        value = adapt.get(side)
+        if value is None:
+            continue
+        if not isinstance(value, dict) or set(value) != set(ADAPT_SIDE_KEYS):
+            errors.append(f"record.adapt.{side} must be null or an object with {', '.join(ADAPT_SIDE_KEYS)}")
+            continue
+        for key, values in allowed.items():
+            inner = value[key]
+            if not ((inner is None and key != "status") or (isinstance(inner, str) and inner in values)):
+                errors.append(f"record.adapt.{side}.{key} is not a known status")
+    identity = adapt.get("identity")
+    if identity is not None:
+        if not isinstance(identity, dict) or set(identity) != set(ADAPT_THEMES):
+            errors.append("record.adapt.identity must be null or an object with light and dark")
+        else:
+            for theme, fraction in identity.items():
+                if fraction is not None and not (_real(fraction) and 0 <= fraction <= 1):
+                    errors.append(f"record.adapt.identity.{theme} must be a fraction from 0 to 1 or null")
+    counted, why = adapt.get("counted"), adapt.get("why")
+    if not isinstance(counted, bool):
+        errors.append("record.adapt.counted must be true or false")
+    if not (isinstance(why, str) and why in ADAPT_WHY):
+        errors.append("record.adapt.why is not one of ADAPT_WHY")
+    elif isinstance(counted, bool) and counted != (why == ADAPT_ROUTE):
+        errors.append("record.adapt.counted must be true exactly when why is route")
+    if adapt.get("review") not in (ADAPT_REVIEW_RAN, ADAPT_REVIEW_SKIPPED):
+        errors.append("record.adapt.review must be ran or skipped")
+    return errors
 
 
 def validate_record(record: Any) -> list[str]:
@@ -2228,7 +2939,8 @@ def validate_record(record: Any) -> list[str]:
     Known keys only, no free text anywhere, and a ``v`` / ``verdict`` /
     ``code`` this module can have written: ``RECORD_VERSION``, ``MERGE`` or
     ``KEEP``, and one of ``REASON_CODES``. ``writeback`` is optional, one of
-    ``WRITEBACK_CODES``, and only on a keep.
+    ``WRITEBACK_CODES``, and only on a keep. ``adapt`` is optional and has
+    exactly the keys of ``AdaptAssessment.to_record`` (``adapt_record_errors``).
     """
     if not isinstance(record, dict):
         return ["record is not a JSON object"]
@@ -2247,6 +2959,8 @@ def validate_record(record: Any) -> list[str]:
             errors.append("record.writeback is not one of WRITEBACK_CODES")
         elif record.get("verdict") != KEEP:
             errors.append("record.writeback belongs to a keep record only")
+    if "adapt" in record:
+        errors += adapt_record_errors(record["adapt"])
 
     def walk(value: Any, where: str) -> None:
         if isinstance(value, dict):
@@ -2332,6 +3046,83 @@ def _optional_int(raw: str | None) -> int | None:
     return int(raw)
 
 
+def _sources(args: argparse.Namespace) -> tuple[str | None, str | None, str | None]:
+    """``(prev, new, language)`` of ``--prev-impl``/``--new-impl``.
+
+    A suffix the gate cannot read as code, or two different languages, leaves
+    both sources unread, like an unreadable file.
+    """
+    language = source_language(args.new_impl)
+    if language != source_language(args.prev_impl):
+        language = None
+    if not language:
+        return None, None, None
+    return load_source(args.prev_impl), load_source(args.new_impl), language
+
+
+def _adapt_input(args: argparse.Namespace, review_skipped: bool = False, route_held: bool = False) -> AdaptInput:
+    new, new_error = load_adapt_file(args.adapt_new)
+    prev, prev_error = load_adapt_file(args.adapt_prev)
+    pair, pair_error = load_adapt_file(args.adapt_pair)
+    return AdaptInput(
+        library=args.library,
+        language=source_language(args.new_impl),
+        new=new,
+        prev=prev,
+        pair=pair,
+        new_error=new_error,
+        prev_error=prev_error,
+        pair_error=pair_error,
+        review_skipped=review_skipped,
+        route_held=route_held,
+    )
+
+
+def _bool_text(value: bool) -> str:
+    return "true" if value else "false"
+
+
+def _fraction_text(value: Any) -> str:
+    return f"{value:.4f}" if _real(value) else "n/a"
+
+
+def cmd_adapt_route(args: argparse.Namespace) -> int:
+    """The adapt route's review-free conditions, before the review runs; always exit 0.
+
+    Any failure turns the route off (``record_invalid``) with a warning, so
+    impl-review's record step never reads a route that was not assessed.
+    """
+    try:
+        prev_source, new_source, language = _sources(args)
+        inp = GateInput(
+            spec_id=args.spec_id,
+            score=None,
+            regen=None,
+            canvas_failed=args.canvas_failed,
+            prev_source=prev_source,
+            new_source=new_source,
+            source_language=language or "python",
+            adapt=_adapt_input(args),
+        )
+        adapt = adapt_assess(inp, None)
+    except Exception as exc:
+        print(f"::warning::adapt-route could not assess the pair, so the route is off: {_one_line(str(exc))[:200]}")
+        adapt = AdaptAssessment(why="record_invalid")
+    prev = (adapt.prev or {}).get("status") or "n/a"
+    new = (adapt.new or {}).get("status") or "n/a"
+    identity = adapt.identity or {}
+    print(
+        f"::notice::adapt_route spec={args.spec_id} lib={args.library} prev={prev} new={new} "
+        f"light={_fraction_text(identity.get('light'))} dark={_fraction_text(identity.get('dark'))} "
+        f"lines={_score_text(adapt.prev_lines)}->{_score_text(adapt.new_lines)} "
+        f"route={_bool_text(adapt.counted)} why={adapt.why}"
+    )
+    _write_outputs(
+        {"adapt_route": _bool_text(adapt.counted), "adapt_why": adapt.why, "adapt_prev": prev, "adapt_new": new}
+    )
+    return 0
+
+
 def cmd_decide(args: argparse.Namespace) -> int:
     regen, regen_error = load_regen_json(Path(args.regen_json))
     characteristics: list[str] = []
@@ -2339,9 +3130,7 @@ def cmd_decide(args: argparse.Namespace) -> int:
         characteristics = parse_characteristics(Path(args.spec_file).read_text(encoding="utf-8"))
     score = parse_score(args.score)
     weaknesses_json = Path(args.weaknesses_json) if args.weaknesses_json else None
-    language = source_language(args.new_impl)
-    if language != source_language(args.prev_impl):
-        language = None
+    prev_source, new_source, language = _sources(args)
     inp = GateInput(
         spec_id=args.spec_id,
         score=score,
@@ -2364,11 +3153,15 @@ def cmd_decide(args: argparse.Namespace) -> int:
         weakness_texts=load_weakness_texts(weaknesses_json),
         # A suffix the gate cannot read as code (or two different languages)
         # leaves the code path off, like an unreadable file.
-        prev_source=load_source(args.prev_impl) if language else None,
-        new_source=load_source(args.new_impl) if language else None,
+        prev_source=prev_source,
+        new_source=new_source,
         source_language=language or "python",
+        # All optional too: without them the adapt route and the adapt
+        # regression are off.
+        adapt=_adapt_input(args, review_skipped=args.review_skipped, route_held=args.adapt_route_held),
     )
     result = decide(inp)
+    adapt = result.adapt or AdaptAssessment(why="no_record")
     rescored = str(result.prev_rescored) if result.prev_rescored is not None else "n/a"
     reason = _one_line(result.reason)
     # The stable prefix (spec … verdict) is what readers match on; the new
@@ -2382,10 +3175,17 @@ def cmd_decide(args: argparse.Namespace) -> int:
     lines = ""
     if args.prev_impl or args.new_impl:
         lines = f" prev_lines={_score_text(result.prev_lines)} new_lines={_score_text(result.new_lines)}"
+    # Only with an adapt flag, for the same reason.
+    adapt_fields = ""
+    if inp.adapt.requested:
+        adapt_fields = (
+            f" adapt_counted={_bool_text(adapt.counted)} adapt_why={adapt.why}"
+            f" adapt_overruled={_bool_text(adapt.overruled)}"
+        )
     print(
         f"::notice::regen_gate spec={args.spec_id} lib={args.library} prev_stored={args.prev_stored} "
         f"prev_rescored={rescored} new={score if score is not None else 'n/a'} verdict={result.verdict} "
-        f"code={result.code}{provenance}{lines} reason={reason}"
+        f"code={result.code}{provenance}{lines}{adapt_fields} reason={reason}"
     )
     if args.summary_out:
         Path(args.summary_out).write_text(render_summary(result, args.prev_stored, score), encoding="utf-8")
@@ -2410,7 +3210,19 @@ def cmd_decide(args: argparse.Namespace) -> int:
             Path(args.record_out).write_text(json.dumps(record, separators=(",", ":")) + "\n", encoding="utf-8")
         except Exception as exc:
             print(f"::warning::regen gate record not written: {_one_line(str(exc))[:200]}")
-    _write_outputs({"verdict": result.verdict, "reason": reason, "prev_rescored": rescored, "code": result.code})
+    _write_outputs(
+        {
+            "verdict": result.verdict,
+            "reason": reason,
+            "prev_rescored": rescored,
+            "code": result.code,
+            "adapt_counted": _bool_text(adapt.counted),
+            "adapt_why": adapt.why,
+            # The pre-review route held and the review's floor turned it off
+            # (impl-review labels the PR `regen:adapt-overruled`).
+            "adapt_overruled": _bool_text(adapt.overruled),
+        }
+    )
     return 0
 
 
@@ -2574,8 +3386,35 @@ def build_parser() -> argparse.ArgumentParser:
     # The code path's sources; without both, it is off (older callers unchanged).
     dec.add_argument("--prev-impl", default="", help="the predecessor's source (/tmp/anyplot-prev-impl.EXT)")
     dec.add_argument("--new-impl", default="", help="the regenerated source")
+    # The adapt route's inputs; without them it is off (older callers unchanged).
+    _add_adapt_files(dec)
+    dec.add_argument(
+        "--review-skipped", action="store_true", help="no review ran (ADAPT_REVIEW_FREE): only the adapt route merges"
+    )
+    dec.add_argument(
+        "--adapt-route-held",
+        action="store_true",
+        help="impl-review's adapt-route held before the review (the record's adapt.route_pre_review)",
+    )
     dec.set_defaults(func=cmd_decide)
+
+    route = sub.add_parser(
+        "adapt-route", help="Evaluate the adapt route's review-free conditions before the review (always exits 0)"
+    )
+    route.add_argument("--spec-id", required=True)
+    route.add_argument("--library", required=True)
+    _add_adapt_files(route)
+    route.add_argument("--prev-impl", default="", help="the predecessor's source (/tmp/anyplot-prev-impl.py)")
+    route.add_argument("--new-impl", default="", help="the regenerated source")
+    route.add_argument("--canvas-failed", action="store_true")
+    route.set_defaults(func=cmd_adapt_route)
     return parser
+
+
+def _add_adapt_files(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--adapt-new", default="", help="the new source's record (/tmp/anyplot-adapt-new.json)")
+    parser.add_argument("--adapt-prev", default="", help="the predecessor's record (/tmp/anyplot-adapt-prev.json)")
+    parser.add_argument("--adapt-pair", default="", help="impl-generate's render pair ($RUNNER_TEMP/adapt/pair.json)")
 
 
 def main(argv: list[str] | None = None) -> int:

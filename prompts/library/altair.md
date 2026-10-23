@@ -51,8 +51,8 @@ The HTML save is left untouched — only PNGs are gated.
 
 ```python
 chart = alt.Chart(df).mark_point(size=60).encode(  # size ~2-3x default, density-aware
-    x='col_x:Q',
-    y='col_y:Q'
+    x=alt.X(STUDY_HOURS.translate(ESCAPE), type="quantitative", title=STUDY_HOURS),  # see "Data block"
+    y=alt.Y(EXAM_SCORE.translate(ESCAPE), type="quantitative", title=EXAM_SCORE),
 ).properties(
     width=620,       # see Canvas table — landscape inner-view
     height=320,
@@ -74,19 +74,39 @@ See `prompts/default-style-guide.md` "Proportional Sizing" for review criteria.
 
 ## Encoding Types
 
+Pass the type as `type=` next to the escaped field (see "Data block"); the shorthand codes in a field string (`"Sales:Q"`) break on a column name that contains a colon.
+
 ```python
 # Q = Quantitative (numeric)
-x='value:Q'
+alt.X(SALES.translate(ESCAPE), type="quantitative")
 
 # N = Nominal (categorical, no order)
-color='category:N'
+alt.Color(REGION.translate(ESCAPE), type="nominal")
 
 # O = Ordinal (categorical, with order)
-x='month:O'
+alt.X(MONTH.translate(ESCAPE), type="ordinal")
 
 # T = Temporal (date/time)
-x='date:T'
+alt.X(DATE.translate(ESCAPE), type="temporal")
 ```
+
+## Data block
+
+The file follows the six zones of `prompts/adaptable-code.md`. Altair reads the tidy `df` directly with `alt.Chart(df)` and the column constants as fields. Vega-Lite reads `.` and `[]` in a field name as nested access and `:` as a type suffix, so a column such as `"Sales (k USD.)"` breaks the chart, silently or with an error. Escape the constants once below the block, and give every encoding its `type=` and its `title=`, because an escaped field shows its backslashes in the automatic title:
+
+```python
+# Plot: reads only df and the constants above
+ESCAPE = str.maketrans({".": "\\.", "[": "\\[", "]": "\\]", ":": "\\:"})
+chart = alt.Chart(df).mark_bar().encode(
+    x=alt.X(QUARTER.translate(ESCAPE), type="nominal", title=QUARTER, sort=None),
+    xOffset=alt.XOffset(PRODUCT_LINE.translate(ESCAPE), type="nominal", sort=None),
+    y=alt.Y(SALES.translate(ESCAPE), type="quantitative", title=SALES),
+    color=alt.Color(PRODUCT_LINE.translate(ESCAPE), type="nominal", title=PRODUCT_LINE, sort=None,
+                    scale=alt.Scale(range=IMPRINT_PALETTE)),
+)
+```
+
+`sort=None` keeps the data's order instead of sorting the labels. Scale domains come from the data (`alt.Scale(domain=[0, df[SALES].max() * 1.15])`) or stay automatic, never typed numbers.
 
 ## Marks
 
@@ -116,8 +136,9 @@ chart.save(f'plot-{THEME}.png', scale_factor=4.0)
 # Enable zoom/pan
 chart = chart.interactive()
 
-# Tooltips
-.encode(tooltip=['col_x', 'col_y'])
+# Tooltips (escaped fields, readable titles)
+.encode(tooltip=[alt.Tooltip(QUARTER.translate(ESCAPE), title=QUARTER),
+                 alt.Tooltip(SALES.translate(ESCAPE), title=SALES)])
 ```
 
 ## Colors
@@ -130,19 +151,20 @@ IMPRINT_PALETTE = ['#009E73', '#C475FD', '#4467A3', '#BD8233',
 ANYPLOT_AMBER = '#DDCC77'  # warning / caution (outside the categorical pool)
 
 # Single-series
-alt.Chart(df).mark_circle(color=IMPRINT_PALETTE[0]).encode(x='x', y='y')
+alt.Chart(df).mark_circle(color=IMPRINT_PALETTE[0]).encode(x=..., y=...)
 
-# Multi-series
+# Multi-series: the full list; Vega-Lite hands out the first n in order
 alt.Chart(df).mark_circle().encode(
-    x='x', y='y',
-    color=alt.Color('category:N', scale=alt.Scale(range=IMPRINT_PALETTE)),
+    x=..., y=...,
+    color=alt.Color(SCHOOL.translate(ESCAPE), type="nominal", title=SCHOOL,
+                    scale=alt.Scale(range=IMPRINT_PALETTE)),
 )
 
 # Continuous — only the two Imprint palette-derived cmaps are allowed:
 # Sequential: two-stop range
-alt.Color('value:Q', scale=alt.Scale(range=['#009E73', '#4467A3']))
+alt.Color(DENSITY.translate(ESCAPE), type="quantitative", scale=alt.Scale(range=['#009E73', '#4467A3']))
 # Diverging: three-stop range with domainMid at 0
-alt.Color('delta:Q', scale=alt.Scale(
+alt.Color(CHANGE.translate(ESCAPE), type="quantitative", scale=alt.Scale(
     range=['#AE3030', '#FAF8F1', '#4467A3'],
     domainMid=0,
 ))

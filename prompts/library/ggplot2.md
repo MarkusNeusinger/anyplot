@@ -58,15 +58,46 @@ Optional dataset packages available in the CI runtime: `palmerpenguins`,
 ## Reproducibility
 
 ```r
-set.seed(42)
+set.seed(42)  # first line of the # Data block
 ```
+
+## Data block
+
+The file follows the six zones of `prompts/adaptable-code.md` in R syntax: the column constants above the block, one `# Data` block that builds a `tibble` keyed by them and ends in `df`, and plot code below `# Plot` that reads columns through `.data[[...]]`:
+
+```r
+# Columns: set these to your table's column names
+QUARTER      <- "Quarter"               # role: category
+PRODUCT_LINE <- "Product line"          # role: group
+SALES        <- "Sales (thousand USD)"  # role: value
+
+# Data: replace this block with your own table, for example df <- read.csv("sales.csv", check.names = FALSE)
+df <- tibble::tibble(
+  !!QUARTER      := rep(c("Q1", "Q2", "Q3", "Q4"), times = 3),
+  !!PRODUCT_LINE := rep(c("Electronics", "Clothing", "Home & Garden"), each = 4),
+  !!SALES        := c(245, 312, 287, 425, 178, 195, 285, 310, 125, 210, 195, 165)
+)
+
+# Plot: reads only df and the constants above
+df <- df |> mutate(across(all_of(c(QUARTER, PRODUCT_LINE)), \(v) factor(v, levels = unique(v))))
+p <- ggplot(df, aes(x = .data[[QUARTER]], y = .data[[SALES]], fill = .data[[PRODUCT_LINE]])) +
+  geom_col(position = position_dodge(width = 0.8), width = 0.75) +
+  scale_fill_manual(values = IMPRINT_PALETTE) +
+  labs(x = QUARTER, y = SALES, fill = PRODUCT_LINE, title = "bar-grouped · r · ggplot2 · anyplot.ai")
+```
+
+- `!!QUARTER :=` names a tibble column by the constant's value, so the column name is typed once.
+- `.data[[QUARTER]]` reads a column whose name has spaces or a unit, which a bare name in `aes()` cannot.
+- Set every axis and legend title with `labs()` from the constants: `aes()` with `.data[[...]]` does not reliably title the axes with the column name.
+- A character column sorts alphabetically, on the axis and in the color mapping. The `factor(v, levels = unique(v))` line keeps the data's order, so the first group in the data gets `#009E73`.
+- `scale_fill_manual()` gets all eight hues and uses the first n. Limits come from the data (`ylim(0, max(df[[SALES]], na.rm = TRUE) * 1.15)`) or stay automatic, never typed numbers.
 
 ## Create Plot
 
 ```r
-p <- ggplot(df, aes(x = col_x, y = col_y)) +
+p <- ggplot(df, aes(x = .data[[STUDY_HOURS]], y = .data[[EXAM_SCORE]])) +
   geom_point() +
-  labs(x = x_label, y = y_label, title = plot_title) +
+  labs(x = STUDY_HOURS, y = EXAM_SCORE, title = plot_title) +
   theme_minimal(base_size = 8)
 ```
 
@@ -194,7 +225,7 @@ anyplot_theme <- theme_minimal(base_size = 8) +
 # `alpha` for grid lines, so use a faint INK color and rely on the natural
 # contrast against PAGE_BG instead.
 
-p <- ggplot(df, aes(x, y)) +
+p <- ggplot(df, aes(x = .data[[STUDY_HOURS]], y = .data[[EXAM_SCORE]])) +
   geom_point(color = IMPRINT_PALETTE[1], size = 2.5) +
   anyplot_theme
 ```
@@ -221,16 +252,15 @@ facet_grid(rows ~ cols)
 
 A complete ggplot2 implementation reads `ANYPLOT_THEME`, generates data, builds
 the plot, and saves both themed PNGs by being invoked twice with different env
-values. The same single `.R` file handles both themes — no two-file split.
+values. The same single `.R` file handles both themes — no two-file split. It
+follows the zones of "Data block" above.
 
 ```r
 library(ggplot2)
 library(dplyr)
 library(ragg)
 
-set.seed(42)
-
-# --- Theme tokens -----------------------------------------------------------
+# Theme tokens
 THEME       <- Sys.getenv("ANYPLOT_THEME", "light")
 PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
@@ -238,16 +268,22 @@ INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
                      "#AE3030", "#2ABCCD", "#954477", "#99B314")
 
-# --- Data -------------------------------------------------------------------
+# Columns: set these to your table's column names
+STUDY_HOURS <- "Study hours per day"  # role: x
+EXAM_SCORE  <- "Exam score (%)"       # role: y
+
+# Data: replace this block with your own table, for example df <- read.csv("scores.csv", check.names = FALSE)
+set.seed(42)
+hours <- rnorm(100, mean = 6, sd = 2)
 df <- tibble::tibble(
-  x = rnorm(100),
-  y = rnorm(100)
+  !!STUDY_HOURS := hours,
+  !!EXAM_SCORE  := hours * 8 + rnorm(100, sd = 5) + 30
 )
 
-# --- Plot -------------------------------------------------------------------
-p <- ggplot(df, aes(x, y)) +
+# Plot: reads only df and the constants above
+p <- ggplot(df, aes(x = .data[[STUDY_HOURS]], y = .data[[EXAM_SCORE]])) +
   geom_point(color = IMPRINT_PALETTE[1], size = 2.5, alpha = 0.7) +
-  labs(title = "scatter-basic · r · ggplot2 · anyplot.ai", x = "X", y = "Y") +
+  labs(title = "scatter-basic · r · ggplot2 · anyplot.ai", x = STUDY_HOURS, y = EXAM_SCORE) +
   theme_minimal(base_size = 8) +
   theme(
     plot.background  = element_rect(fill = PAGE_BG, color = PAGE_BG),
@@ -259,7 +295,7 @@ p <- ggplot(df, aes(x, y)) +
     plot.title       = element_text(color = INK,      size = 12)
   )
 
-# --- Save -------------------------------------------------------------------
+# Save
 ggsave(
   filename = sprintf("plot-%s.png", THEME),
   plot     = p,
@@ -289,8 +325,9 @@ ggsave(
 - `ggsave()` resets the active graphics device. Use `device = ragg::agg_png`
   explicitly — the platform default Cairo path is not installed in the CI
   image.
-- Use `tibble::tibble(...)` (or plain `data.frame(...)`) — `dplyr::tibble` was
-  removed in dplyr ≥ 1.0; `tibble::tibble` is the correct path.
+- Use `tibble::tibble(...)` — `dplyr::tibble` was removed in dplyr ≥ 1.0;
+  `tibble::tibble` is the correct path. It also takes the `!!QUARTER :=`
+  column names of the Data block, which plain `data.frame(...)` does not.
 - Avoid `print(p)` at script end — `ggsave()` already renders the plot, and an
   extra `print()` opens an unused interactive device.
 

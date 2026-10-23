@@ -10,6 +10,9 @@ review — score, image description, criteria checklist, strengths, weaknesses,
 verdict, review model and rules version — and puts the score into the
 ``Quality: N/100`` header (owner decision O9). ``updated``, ``rendered_at``,
 ``impl_tags``, the previews and every other key stay: the code did not change.
+The one exception is ``review.carried``, which a review-free adapt merge sets
+on the review it carries over (impl-review "Update metadata and implementation
+header"): a re-score is a review that ran, so the write-back removes the mark.
 
 ``main`` takes changes only through a merged pull request, so the write-back
 travels as one:
@@ -86,6 +89,9 @@ BOT_LOGIN = "github-actions[bot]"
 REVIEW_FIELDS = ("image_description", "criteria_checklist", "strengths", "weaknesses")
 PROVENANCE_FIELDS = ("model", "criteria_version")
 WRITABLE_REVIEW_KEYS = frozenset(REVIEW_FIELDS + ("verdict",) + PROVENANCE_FIELDS)
+# Set on a review that a review-free adapt merge carried over unchanged
+# (impl-review.yml). A write-back may remove it, never add or change it.
+CARRIED_KEY = "carried"
 # A kept implementation stays live, which is what the stored verdict says (the
 # website's `review_verdict`). The reviewer writes no verdict: the bar it would
 # need is not in its prompts, and a kept review_prev.json that still carries
@@ -173,8 +179,9 @@ def apply_review(
     Sets ``quality_score``, the four review fields of ``review_prev.json`` and
     ``review.verdict`` (``KEPT_VERDICT``, whatever the file says); sets
     ``review.model`` and ``review.criteria_version`` or, when the session
-    could not resolve one, removes it (as the metadata writer does). Every
-    other key keeps its value and its place.
+    could not resolve one, removes it (as the metadata writer does); removes
+    ``review.carried``, since the re-score is a review that ran. Every other
+    key keeps its value and its place.
     """
     missing = [key for key in REVIEW_FIELDS if key not in prev_review]
     if missing:
@@ -196,6 +203,7 @@ def apply_review(
             review[key] = value
         else:
             review.pop(key, None)
+    review.pop(CARRIED_KEY, None)
     out["review"] = review
     return out
 
@@ -266,6 +274,8 @@ def metadata_diff_problems(old_text: str, new_text: str) -> list[str]:
     for key in sorted(set(old_review) | set(new_review), key=str):
         if key in WRITABLE_REVIEW_KEYS:
             continue
+        if key == CARRIED_KEY and key not in new_review:
+            continue  # the mark of a carried review goes with the re-score
         if old_review.get(key) != new_review.get(key) or (key in old_review) != (key in new_review):
             problems.append(
                 f"review key {key!r} changed; a write-back changes {', '.join(sorted(WRITABLE_REVIEW_KEYS))}"

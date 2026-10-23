@@ -43,12 +43,30 @@ from plotnine import (
 
 ```python
 plot = (
-    ggplot(df, aes(x='col_x', y='col_y'))
+    ggplot(df, aes(x=STUDY_HOURS, y=EXAM_SCORE))
     + geom_point()
-    + labs(x=x_label, y=y_label, title=title)
+    + labs(title=title)
     + theme_minimal()
 )
 ```
+
+## Data block
+
+The file follows the six zones of `prompts/adaptable-code.md`. plotnine reads the tidy `df` directly: `ggplot(df, aes(x=QUARTER, y=SALES, fill=PRODUCT_LINE))`. A string in `aes()` that names a column is used as that column, so names with spaces, units and dots work as they are; compute a derived column below the block instead of writing an expression into `aes()`. plotnine titles the axes and the legend from the column names, so `labs()` is needed only for the title or to change a label.
+
+plotnine sorts a string column alphabetically, on the axis and in the color mapping. Keep the data's order, so the first group in the data gets `#009E73`, with limits taken from `df`:
+
+```python
+# Plot: reads only df and the constants above
+plot = (
+    ggplot(df, aes(x=QUARTER, y=SALES, fill=PRODUCT_LINE))
+    + geom_col(position=position_dodge(width=0.8), width=0.75)
+    + scale_x_discrete(limits=df[QUARTER].unique().tolist())
+    + scale_fill_manual(values=IMPRINT_PALETTE, limits=df[PRODUCT_LINE].unique().tolist())
+)
+```
+
+Continuous limits come from the data (`scale_y_continuous(limits=(0, df[SALES].max() * 1.15))`) or stay automatic, never typed numbers.
 
 ## Canvas — hard rule, no deviation
 
@@ -111,9 +129,9 @@ ANYPLOT_AMBER = '#DDCC77'  # warning / caution (outside the categorical pool)
 # Single-series
 + geom_point(color=IMPRINT_PALETTE[0])
 
-# Multi-series
-+ scale_color_manual(values=IMPRINT_PALETTE)
-+ scale_fill_manual(values=IMPRINT_PALETTE)
+# Multi-series: the full list, in the data's group order (see "Data block")
++ scale_color_manual(values=IMPRINT_PALETTE, limits=df[GROUP].unique().tolist())
++ scale_fill_manual(values=IMPRINT_PALETTE, limits=df[GROUP].unique().tolist())
 
 # Continuous — only the two Imprint palette-derived cmaps are allowed:
 from plotnine import scale_color_gradient, scale_color_gradient2, scale_fill_gradient, scale_fill_gradient2
@@ -155,7 +173,7 @@ anyplot_theme = theme(
     legend_title=element_text(color=INK),
 )
 
-plot = (ggplot(df, aes('x', 'y')) + geom_point(color=IMPRINT_PALETTE[0]) + anyplot_theme)
+plot = (ggplot(df, aes(x=STUDY_HOURS, y=EXAM_SCORE)) + geom_point(color=IMPRINT_PALETTE[0]) + anyplot_theme)
 ggsave(plot, filename=f'plot-{THEME}.png', dpi=400, width=8, height=4.5)
 ```
 

@@ -26,11 +26,11 @@ Read both sources to understand what needs to be fixed:
 
 Read the closing `## What a good version looks like` section of `plots/{SPEC_ID}/specification.md` (without one, use Description, Data and Notes) and decide per weakness:
 
-- **Fix the defects that are real per the section.** A defect line names the criterion it violates, the render and the observed value (`VQ-02 (light): … → …. Likely cause: ….`). A weakness that asks for something an `Expected, not a defect:` bullet of the section names — e.g. "bubbles overlap in the dense cluster" on a bubble chart that already uses translucency and outlines — is obsolete: decline it as `W1 — obsolete (C2)` or, without W ids, with the bullet's text. The section never waives chrome rules (theme readability, canvas, palette, text legibility, auto-reject checks); those weaknesses are always real.
+- **Fix the defects that are real per the section.** A defect line names the criterion it violates, the render and the observed value (`VQ-02 (light): … → …. Likely cause: ….`). A weakness that asks for something an `Expected, not a defect:` bullet of the section names — e.g. "bubbles overlap in the dense cluster" on a bubble chart that already uses translucency and outlines — is obsolete: decline it as `W1 — obsolete (C2)` or, without W ids, with the bullet's text. The section never waives chrome rules (theme readability, canvas, palette, text legibility, auto-reject checks); those weaknesses are always real. So are the lines of the adaptability self-check for Python: a `CQ-01 (code)` line or a failed perturbation is a real defect, like a canvas line.
 - **Never act on a `Suggestion:` line.** It names no violated rule and costs no points; decline it as "suggestion, not taken". A line in neither format comes from an older review: act on it only when it names something visibly wrong under the current criteria.
 - **The checklist is context, not a list of orders.** A deducted item tells you where to look; the defect lines say what to fix.
 - **Keep the data scenario and the variant.** Same domain, same story, same encodings unless a weakness names the scenario itself as the problem. On a `-basic` spec, add no new encodings or elements (derived color channels, trend or reference lines, highlights, callouts, annotation layers).
-- **Don't add code for changes that don't show.** Every edit should be visible in the render or fix a named code-quality item.
+- **Don't add code for changes that don't show.** Every edit should be visible in the render or fix a named code-quality item. For Python (`LANGUAGE=python`): a line of the adaptability self-check is such an item; fix it and keep the render the same.
 - **Never move marks off their data values** to fix overlap — see the overlap line under "Visual-sizing fixes" below for the endorsed fixes and the SC-03 exemptions.
 - **`Expected, not a defect:` bullets are permissions, not targets.** Never shape the data to produce them, and never treat making one disappear as a fix: a weakness that only asks for less of a permitted thing (less overlap, fewer crossings) is declined, as the first bullet says.
 
@@ -39,6 +39,7 @@ Read the closing `## What a good version looks like` section of `plots/{SPEC_ID}
 1. `prompts/library/{LIBRARY}.md` - Library-specific rules + theme-adaptive chrome mapping
 2. `prompts/default-style-guide.md` - Canonical Imprint palette + theme tokens (re-read if VQ-07 or VQ-04 failed), plus "Visual Sizing Defaults" and "Proportional Sizing" sections (re-read if VQ-01 / VQ-02 / VQ-05 failed)
 3. `plots/{SPEC_ID}/specification.md` - The specification
+4. `prompts/adaptable-code.md` - The Data block convention the file follows: one `# Data` block that ends in `df`, columns named once as constants, plot code that derives everything from `df`. Keep it intact while you repair, and read it before you fix a line of the Step 5b self-check (Python)
 
 **Visual-sizing fixes (when VQ-01 / VQ-02 / VQ-05 failed):**
 - Title too big / overflows → reduce fontsize or shorten title text
@@ -85,7 +86,7 @@ Based on the AI feedback, fix the defects you kept in "Which weaknesses to fix" 
 - Code quality issues
 - Spec compliance issues
 
-Keep the data scenario and variant, add no code without a visible effect, and never move marks off their data values beyond the SC-03 exemptions.
+Keep the data scenario and variant, add no code without a visible effect (for Python, a self-check line from Step 5b is the exception), and never move marks off their data values beyond the SC-03 exemptions. Keep the file's Data block intact: a fix below the block reads `df` and the column constants, never a typed sample value.
 
 ## Step 5: Test the fix (BOTH themes)
 
@@ -126,6 +127,21 @@ ANYPLOT_THEME=dark  node "$GITHUB_WORKSPACE/automation/js-render/render.mjs" {LI
 
 Both renders must succeed.
 
+### Step 5b: Adaptability self-check (Python only)
+
+**Python (`LANGUAGE=python`) only; R, Julia and JavaScript skip this step.** After both renders succeed, check that the repaired file still follows the Data block convention (`prompts/adaptable-code.md`) and still renders on other data. Run it from the repository root, and give the Bash call a 10-minute timeout, because bokeh and plotly start Chrome for every render:
+
+```bash
+cd "$GITHUB_WORKSPACE"
+source .venv/bin/activate
+python -m core.smoke_run selfcheck plots/{SPEC_ID}/implementations/python/{LIBRARY}.py --log /tmp/anyplot-selfcheck.jsonl
+```
+
+It prints one `CQ-01 (code): …` line per failing rule class, then one line per perturbation (renamed columns, more and fewer categories, more and fewer rows, scaled values, a missing value), and exits 0 when both checks are clean.
+
+- Fix every line and every failed perturbation that is not tagged `(advisory)`, then re-render both themes (Step 5) and run this step again. Lines tagged `(advisory)` never fail the check.
+- At most three attempts in total, the first run included. The self-check never blocks the repair: if it still fails after the third attempt, keep the version that best fixes the review's defects and renders correctly in both themes, and go on to Step 6. Never trade a defect in the render for a clean check.
+
 ## Step 6: Visual self-check
 
 View `plot-light.png` AND `plot-dark.png`. Verify the failed criteria are now fixed in both renders — and confirm the data colors are identical across themes (only chrome should flip).
@@ -159,6 +175,8 @@ git push origin {BRANCH}
 ```
 
 Commit only the implementation file, and use only the packages the runner already has: never run `Pkg.add`, `uv add`, `pip install` or `npm install`. `impl-merge.yml` refuses to merge a PR that changes `Manifest.toml`, `Project.toml`, `uv.lock`, `pyproject.toml`, `package.json`, `package-lock.json` or `.python-version`.
+
+For Python (`LANGUAGE=python`), add the result of the last Step 5b run to the commit body, in the form Step 3c of `impl-generate-claude.md` uses: `Adaptability self-check: pass, attempt 1`, or `fail` with the remaining rule classes and failed perturbations, such as `Adaptability self-check: fail (palette, more_categories), attempt 3`.
 
 If you declined any weakness in Step 1, add a `Declined:` list to the commit body, one line per weakness with its reason, for example:
 

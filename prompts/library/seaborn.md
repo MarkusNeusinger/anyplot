@@ -52,12 +52,24 @@ g.figure.set_dpi(400)
 
 ```python
 # Axes-level (preferred)
-sns.scatterplot(data=df, x='col_x', y='col_y', ax=ax)
+sns.scatterplot(data=df, x=STUDY_HOURS, y=EXAM_SCORE, ax=ax)
 
 # Figure-level (for complex layouts)
-g = sns.relplot(data=df, x='col_x', y='col_y')
+g = sns.relplot(data=df, x=STUDY_HOURS, y=EXAM_SCORE)
 fig = g.figure
 ```
+
+## Data block
+
+The file follows the six zones of `prompts/adaptable-code.md`. seaborn reads the tidy `df` directly: pass `data=df` and the column constants, never typed column names. It titles the axes and the legend from the column names, so the constants' values are what the reader sees; set a label explicitly only to change it. Give the palette the first n hues with n counted from the data, because seaborn warns when the palette outnumbers the hue levels:
+
+```python
+# Plot: reads only df and the constants above
+n_lines = df[PRODUCT_LINE].nunique()
+sns.barplot(data=df, x=QUARTER, y=SALES, hue=PRODUCT_LINE, palette=IMPRINT_PALETTE[:n_lines], ax=ax)
+```
+
+A long table needs no reshaping. A `sns.load_dataset(...)` call belongs inside the block, with its columns renamed to the constants there.
 
 ## Save
 
@@ -98,11 +110,13 @@ See `prompts/default-style-guide.md` "Proportional Sizing" for the review-step c
 ## API Compatibility (0.14+)
 
 ```python
+n_groups = df[GROUP].nunique()
+
 # WARNING: palette without hue
-sns.boxplot(data=df, x='group', y='value', palette=IMPRINT_PALETTE[:N])  # Warning
+sns.boxplot(data=df, x=GROUP, y=VALUE, palette=IMPRINT_PALETTE[:n_groups])  # Warning
 
 # CORRECT: hue with palette (the Imprint palette, see Colors below)
-sns.boxplot(data=df, x='group', y='value', hue='group', palette=IMPRINT_PALETTE[:N], legend=False)
+sns.boxplot(data=df, x=GROUP, y=VALUE, hue=GROUP, palette=IMPRINT_PALETTE[:n_groups], legend=False)
 ```
 
 ## Colors
@@ -117,10 +131,10 @@ ANYPLOT_AMBER = '#DDCC77'  # warning / caution (outside the categorical pool)
 
 # Single-series
 color = IMPRINT_PALETTE[0]  # '#009E73'
-sns.scatterplot(data=df, x='x', y='y', color=color)
+sns.scatterplot(data=df, x=STUDY_HOURS, y=EXAM_SCORE, color=color)
 
-# Multi-series (hue)
-sns.scatterplot(data=df, x='x', y='y', hue='category', palette=IMPRINT_PALETTE[:N])
+# Multi-series (hue): the first n hues, n counted from the data, never a literal slice
+sns.scatterplot(data=df, x=STUDY_HOURS, y=EXAM_SCORE, hue=SCHOOL, palette=IMPRINT_PALETTE[: df[SCHOOL].nunique()])
 
 # Set once globally for a whole figure
 sns.set_palette(IMPRINT_PALETTE)

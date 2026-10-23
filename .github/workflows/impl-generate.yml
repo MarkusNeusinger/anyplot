@@ -851,6 +851,65 @@ jobs:
           echo "::notice::Implementation verified present, metadata committed"
 
       # ========================================================================
+      # Adaptability smoke run (record-only, Python only)
+      # ========================================================================
+      # docs/concepts/adaptable-code.md, "Perturbation smoke run" and "The adapt
+      # route": the new source runs on perturbed tables (core/smoke_run.py run);
+      # on a regeneration the predecessor from origin/main is rendered in this
+      # same runner next to a fresh render of the new source (pair: both
+      # themes, `python -P {library}.py` with the theme env, as the generator's
+      # Step 3 renders), so impl-review's gate can measure render identity on
+      # raw renders from one environment, before "Process plot images"
+      # quantizes anything. Results land in $RUNNER_TEMP/adapt and "Upload to
+      # GCS Staging" stages them privately under adapt/. Record-only: no exit
+      # code gates, continue-on-error keeps a crash or a timeout from failing
+      # the job, and a missing artifact reads as `missing` in impl-review (no
+      # repair trigger, design "No repair trigger"). The other languages have
+      # no runner yet (design "Rollout" step 6), so the step skips them.
+      - name: Adaptability smoke run (record-only)
+        id: adapt_smoke
+        if: steps.inputs.outputs.language == 'python'
+        continue-on-error: true
+        timeout-minutes: 20
+        env:
+          SPEC_ID: ${{ steps.inputs.outputs.specification_id }}
+          LIBRARY: ${{ steps.inputs.outputs.library }}
+        run: |
+          OUT="$RUNNER_TEMP/adapt"; TOOLS="$RUNNER_TEMP/adapt-tools"
+          rm -rf "$OUT" "$TOOLS"; mkdir -p "$OUT/prev-src" "$TOOLS"
+          # The runner comes from this workflow's ref, never from the branch the
+          # generator wrote (the pattern of the regen_gate_header copy in "Create
+          # library metadata file"). Without it nothing runs and nothing is staged.
+          if ! git archive "$GITHUB_SHA" core | tar -x -C "$TOOLS" || [ ! -f "$TOOLS/core/smoke_run.py" ]; then
+            echo "::warning::adapt_smoke could not copy core/ from ${GITHUB_SHA}; no adaptability record is staged"
+            rm -rf "$OUT"
+            exit 0
+          fi
+          RUN=(env PYTHONPATH="$TOOLS" .venv/bin/python -P -m core.smoke_run)
+          IMPL="plots/${SPEC_ID}/implementations/python/${LIBRARY}.py"
+          SPEC="plots/${SPEC_ID}/specification.md"
+          "${RUN[@]}" run "$IMPL" --spec "$SPEC" --spec-id "$SPEC_ID" --library "$LIBRARY" \
+            --out "$OUT/new-smoke.json" || true
+          # A regeneration is the implementation file on origin/main, the test
+          # impl-review uses. The predecessor is written under its library's file
+          # name, so the runner applies that library's setup calls.
+          if git cat-file -e "origin/main:${IMPL}" 2>/dev/null; then
+            git show "origin/main:${IMPL}" > "$OUT/prev-src/${LIBRARY}.py"
+            # New first, then the predecessor: the generated code has exited
+            # before the predecessor's PNGs exist.
+            "${RUN[@]}" pair --new "$IMPL" --prev "$OUT/prev-src/${LIBRARY}.py" --library "$LIBRARY" \
+              --out-dir "$OUT" --out "$OUT/pair.json" || true
+            "${RUN[@]}" run "$OUT/prev-src/${LIBRARY}.py" --spec "$SPEC" --spec-id "$SPEC_ID" --library "$LIBRARY" \
+              --skip-if-static-fails --out "$OUT/prev-smoke.json" || true
+          fi
+          # The generator's Step 3c attempt log, when it ran the self-check.
+          if [ -f /tmp/anyplot-selfcheck.jsonl ]; then
+            cp /tmp/anyplot-selfcheck.jsonl "$OUT/selfcheck.jsonl"
+          fi
+          rm -rf "$OUT/prev-src"
+          echo "::notice::adapt_smoke spec=${SPEC_ID} lib=${LIBRARY} staged=$(cd "$OUT" && find . -type f | sed 's|^\./||' | sort | tr '\n' ' ')"
+
+      # ========================================================================
       # Process images: optimize + thumbnail
       # ========================================================================
       - name: Process plot images (light + dark)
@@ -1013,6 +1072,23 @@ jobs:
           IMPL_DIR="plots/${SPEC_ID}/implementations/${LANGUAGE}"
           STAGING_PATH="gs://anyplot-images/staging/${SPEC_ID}/${LANGUAGE}/${LIBRARY}"
           PUBLIC_URL="https://storage.googleapis.com/anyplot-images/staging/${SPEC_ID}/${LANGUAGE}/${LIBRARY}"
+
+          # Adaptability artifacts from "Adaptability smoke run (record-only)".
+          # An earlier run of this pair is cleared first, unconditionally, so a
+          # kept regeneration's prev-* and pair.json never outlive it. They stay
+          # private (no AllUsers ACL) and impl-merge never promotes them.
+          # rsync, not `cp -r dir/*`: copying a directory into a destination
+          # subdirectory that does not exist yet drops the directory's name
+          # (gsutil's naming rule), so new/plot-light.png and
+          # prev/plot-light.png could both land as adapt/plot-light.png.
+          # rsync names every object by its path under $ADAPT.
+          gsutil -m rm -r "${STAGING_PATH}/adapt" 2>/dev/null || true
+          ADAPT="$RUNNER_TEMP/adapt"
+          rm -rf "$ADAPT/prev-src"  # left behind only when the smoke step was cut off
+          if [ -d "$ADAPT" ] && [ -n "$(ls -A "$ADAPT")" ]; then
+            gsutil -m -h "Cache-Control:no-store" rsync -r "$ADAPT" "${STAGING_PATH}/adapt" \
+              || echo "::warning::adapt artifacts not staged; impl-review records them as missing"
+          fi
 
           # Require both theme renders
           if [ ! -f "$IMPL_DIR/plot-light.png" ] || [ ! -f "$IMPL_DIR/plot-dark.png" ]; then

@@ -101,6 +101,55 @@ browser; use a tiny fixed-seed LCG or hard-code the data. **Never `fetch()` or
 load from a CDN/network** — the runtime is offline and the HTML must be
 self-contained.
 
+## Data block
+
+The file follows the six zones of `prompts/adaptable-code.md` in JavaScript
+syntax: role constants above the block, one `// Data` block that ends in
+`const data`, an array of records (one object per row, keyed by the
+constants), and plot code below `// Plot` that reads fields with `d[QUARTER]`:
+
+```js
+// Columns: set these to your data's column names
+const QUARTER = "Quarter";  // role: category
+const PRODUCT_LINE = "Product line";  // role: group
+const SALES = "Sales (thousand USD)";  // role: value
+
+// Data: replace this block with your own records, one object per row
+const data = [
+  { [QUARTER]: "Q1", [PRODUCT_LINE]: "Electronics", [SALES]: 245 },
+  { [QUARTER]: "Q2", [PRODUCT_LINE]: "Electronics", [SALES]: 312 },
+  { [QUARTER]: "Q1", [PRODUCT_LINE]: "Clothing", [SALES]: 178 },
+  { [QUARTER]: "Q2", [PRODUCT_LINE]: "Clothing", [SALES]: 195 },
+];
+
+// Plot: reads only data and the constants above
+const quarters = [...new Set(data.map((d) => d[QUARTER]))];
+const lines = [...new Set(data.map((d) => d[PRODUCT_LINE]))];
+Highcharts.chart("container", {
+  colors: t.palette,
+  xAxis: { categories: quarters, title: { text: QUARTER } },
+  yAxis: { title: { text: SALES } },
+  series: lines.map((line) => ({
+    type: "column",
+    name: line,
+    data: quarters.map((q) => data.find((d) => d[QUARTER] === q && d[PRODUCT_LINE] === line)?.[SALES] ?? null),
+  })),
+  // … palette, chart, credits, animation and chrome as in "Theme-adaptive chrome"
+});
+```
+
+- Categories, groups and their order come from the records (`new Set` keeps
+  the order of appearance), never from a typed list.
+- The palette goes in whole as `colors: t.palette`; Highcharts hands out the
+  first n in order.
+- Axis titles and series names come from the constants.
+- A missing value stays `null`, which Highcharts draws as a gap.
+- Limits come from the data or stay automatic, never typed numbers.
+
+The "Use with my data" agent will later replace the block with
+`const data = window.ANYPLOT_DATA;`. Do not read that global yourself: the
+harness does not set it.
+
 ## Colors — Imprint palette (from `window.ANYPLOT_TOKENS`)
 
 The first categorical series is **always** `#009E73` (`tokens.palette[0]`). Set
@@ -165,15 +214,26 @@ light or dark.
 
 ## Script Skeleton
 
+A complete Highcharts implementation in the zones of "Data block" above:
+
 ```js
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data (in-memory, deterministic) ---------------------------------------
-const categories = ["Mon", "Tue", "Wed", "Thu", "Fri"];
-const values = [12, 19, 7, 15, 11];
+// Columns: set these to your data's column names
+const DAY = "Day";  // role: category
+const VISITS = "Visits";  // role: value
 
-// --- Chart -----------------------------------------------------------------
+// Data: replace this block with your own records, one object per row
+const data = [
+  { [DAY]: "Mon", [VISITS]: 12 },
+  { [DAY]: "Tue", [VISITS]: 19 },
+  { [DAY]: "Wed", [VISITS]: 7 },
+  { [DAY]: "Thu", [VISITS]: 15 },
+  { [DAY]: "Fri", [VISITS]: 11 },
+];
+
+// Plot: reads only data and the constants above
 Highcharts.chart("container", {
   palette: { colorScheme: t.theme },
   chart: { type: "column", backgroundColor: "transparent", animation: false,
@@ -182,16 +242,17 @@ Highcharts.chart("container", {
   colors: t.palette,
   title: { text: "bar-basic · javascript · highcharts · anyplot.ai",
            style: { color: t.ink, fontSize: "22px", fontWeight: "600" } },
-  xAxis: { categories,
+  xAxis: { categories: data.map((d) => d[DAY]),
+           title: { text: DAY, style: { color: t.inkSoft, fontSize: "16px" } },
            lineColor: t.inkSoft, tickColor: t.inkSoft,
            labels: { style: { color: t.inkSoft, fontSize: "14px" } } },
-  yAxis: { title: { text: "Value", style: { color: t.inkSoft, fontSize: "16px" } },
+  yAxis: { title: { text: VISITS, style: { color: t.inkSoft, fontSize: "16px" } },
            gridLineColor: t.grid,
            labels: { style: { color: t.inkSoft, fontSize: "14px" } } },
   legend: { enabled: false },
   plotOptions: { series: { animation: false },
                  column: { borderWidth: 0 } },
-  series: [{ name: "Visits", data: values, colorByPoint: true }],
+  series: [{ name: VISITS, data: data.map((d) => d[VISITS]), colorByPoint: true }],
 });
 ```
 

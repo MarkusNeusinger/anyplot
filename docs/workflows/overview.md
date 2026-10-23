@@ -123,15 +123,17 @@ Issue + [generate:{library}] label  OR  workflow_dispatch
        v
 impl-generate.yml
   |-- Creates branch: implementation/{spec-id}/{library}
-  |-- AI generates code
+  |-- AI generates code (Python: adaptability self-check, Step 3c)
   |-- Fails if the commit changes a dependency file
   |-- Creates metadata/python/{library}.yaml (initial)
+  |-- Python: adaptability smoke run, plus the predecessor's render on a regeneration (record-only)
   |-- Tests execution
-  |-- Uploads preview to GCS staging
+  |-- Uploads preview to GCS staging (adaptability records under a private adapt/ prefix)
   |-- Creates PR --> main
        |
        v
 impl-review.yml
+  |-- Python: adaptability check of the PR's file and its predecessor (record-only)
   |-- AI evaluates code + image
   |-- Posts review comment with score
   |-- Updates metadata/python/{library}.yaml (quality_score, review feedback)
@@ -146,13 +148,30 @@ impl-review.yml
        |-- Below Threshold --> [ai-rejected] --> impl-repair.yml (max 4 attempts)
        |                                       |-- Reads AI feedback
        |                                       |-- Fixes implementation
+       |                                       |-- Python: reruns the adaptability smoke run (record-only)
        |                                       |-- Re-triggers impl-review.yml
        |
        |-- Regeneration (implementation already on main) --> regen gate, one review, no repair
-                |-- Replace --> [regen:improved] + [ai-approved] --> impl-merge.yml
-                |-- Keep    --> [regen:kept] --> PR closed, live code and GCS unchanged
+                |-- Replace --> [regen:improved] (+ [regen:adapt] or [regen:adapt-overruled]) + [ai-approved] --> impl-merge.yml
+                |-- Keep    --> (+ [regen:adapt-overruled]) [regen:kept] --> PR closed, live code and GCS unchanged
                                    |-- Stored review <-- re-score: [review-writeback] PR --> impl-merge.yml (writeback job)
 ```
+
+#### Adaptability steps (Python, record-only)
+
+Python implementations follow the Data block convention of [Adaptable catalogue code](../concepts/adaptable-code.md). These steps measure it. None of them fails a run, and the reviewer never sees their output:
+
+| Workflow | Step | What it does |
+|---|---|---|
+| `impl-generate.yml` | Adaptability smoke run (record-only) | Runs the new source on perturbed tables (`core/smoke_run.py run`). On a regeneration it also renders the predecessor next to the new source in the same runner (`pair`) and runs the smoke run on it. It records the results under `$RUNNER_TEMP/adapt` without gating. |
+| `impl-generate.yml` | Upload to GCS Staging | Clears `staging/{spec}/python/{library}/adapt/` and stages this run's smoke results, pair record, raw pair renders, and the generator's self-check log there, privately and never promoted. |
+| `impl-repair.yml` | Adaptability smoke run (record-only) | Reruns the smoke run on the repaired file. |
+| `impl-repair.yml` | Upload repaired plot to GCS staging | Replaces `adapt/new-smoke.json`, or removes the stale one when the repair run wrote none. |
+| `impl-review.yml` | Set up Python | Pins the job's `python3` to `.python-version`, which the regen tools and the checker mirror need to parse PEP 758 `except A, B:`. |
+| `impl-review.yml` | Adaptability check (record-only) | Runs the workflow-ref checker mirror on the PR's Python file and, on a regeneration, on its predecessor. It combines each with the staged smoke run into `/tmp/anyplot-adapt-new.json` and `/tmp/anyplot-adapt-prev.json`, asks the gate whether the adapt route holds (`regen_gate.py adapt-route`), and skips the review only when the route holds and the owner's `ADAPT_REVIEW_FREE` switch is on. |
+| `impl-review.yml` | Add carried quality score label | On a review-free adapt merge, labels the PR with the stored score that carries over. |
+
+`impl-merge.yml` promotes only the `plot-*` files from staging, so `adapt/` never reaches production; its cleanup removes `adapt/` with the rest of staging.
 
 ### Dependency pins and library versions
 
@@ -223,6 +242,8 @@ PR. The same test checks that every pin resolves.
 | `regen:forced` | Regeneration dispatched with `regen_gate=false`: bypasses the regen gate and takes the fresh-generation path | Workflow |
 | `regen:improved` | The regen gate replaced the live implementation (added before `ai-approved`) | Workflow |
 | `regen:kept` | The regen gate kept the live implementation; the PR is closed unmerged | Workflow |
+| `regen:adapt` | The regen gate replaced the live implementation on the adapt route (added after `regen:improved`); one of the two counts the owner reads before turning on `ADAPT_REVIEW_FREE` | Workflow |
+| `regen:adapt-overruled` | The adapt route held before the review, and the review's floor turned it off (added before the verdict label, on a merge or a keep); the other count the owner reads before turning on `ADAPT_REVIEW_FREE` | Workflow |
 | `review-writeback` | A metadata PR that stores a kept regeneration's re-score as the live implementation's review (branch `review-writeback/{spec}/{library}/{kept PR}`); `impl-merge.yml` merges it | Workflow |
 
 ### Approval labels
@@ -277,7 +298,7 @@ A unit test (`tests/unit/prompts/test_prompts.py`) keeps the thresholds out of t
 `impl-review.yml` re-runs a review at most once by itself, whatever the cause. A comment carrying the `<!-- review-retry:{spec}:{library} -->` marker records that retry:
 
 - **No score.** The review wrote no `quality_score.txt` and no review comment ("Validate review output"): one retry through `repository_dispatch`.
-- **Scored, then a later step failed before any verdict label landed.** For example, a GitHub 5xx on the `quality:N` label ("Re-dispatch review after a post-score failure"): one retry through `gh workflow run --ref` on the run's own ref. If the PR already has a verdict label (`ai-approved`, `ai-rejected`, `regen:improved`, or `regen:kept`), the step does nothing, and the watchdog's merge or repair cases take over. A verdict label that can't be added after three tries fails "Add preliminary verdict label (early)" on every path, including `regen:kept`, so this retry also covers a lost verdict label.
+- **Scored, then a later step failed before any verdict label landed.** For example, a GitHub 5xx on the `quality:N` label ("Re-dispatch review after a post-score failure"): one retry through `gh workflow run --ref` on the run's own ref. If the PR already has a verdict label (`ai-approved`, `ai-rejected`, `regen:improved`, or `regen:kept`), the step does nothing, and the watchdog's merge or repair cases take over. A verdict label that can't be added after three tries fails "Add preliminary verdict label (early)" on every path, including `regen:kept`, so this retry also covers a lost verdict label. A review-free adapt run (the review skipped on `ADAPT_REVIEW_FREE`) has the same retry when a step fails before its verdict label, such as the carried `quality:N` label; its comment names the stored score, because no review scored.
 
 Both paths write the marker comment before they dispatch the retry, and they retry the comment and the dispatch three times each. A marker that can't be read counts as a spent retry, so a GitHub outage can't buy a second one. When the retry is spent, or the marker comment or the dispatch itself fails, the PR gets `ai-review-failed`. The watchdog re-dispatches the review once for a fresh generation and only flags a regeneration. A PR left with only `quality:N` and no verdict is picked up by the watchdog's never-reviewed case. `impl-review.yml` adds these labels with `GITHUB_TOKEN`, which doesn't start workflow runs, so `impl-review-retry.yml` reacts only to a label that a person adds.
 
@@ -302,7 +323,24 @@ A regeneration is an implementation PR for a (spec, library) pair that already h
    - no regressions. On a `*-basic` spec, a replaced data scenario or added encodings count as regressions unless a change request asked for them.
 
    **Code path.** When no improvement fixes a defect, a regeneration still replaces the live implementation when it fixes a code defect the previous review named. The review lists it under `code_improvements`, and the gate counts it when all of these hold: the previous weakness is a `CQ-04 (code): … → \`call\`` (or `→ remove`) line that the re-score classed a CQ-04 defect; CQ-04 scores higher in the new review than in the re-score; the new source calls the named call more often than the predecessor (or the target was a removal), where a comment, a string literal, or a definition of the same name doesn't count as a call; the new source is shorter; and the data scenario and encodings are unchanged, on any spec. The score tolerance and the regression rule apply as above, and visible suggestions ride along. The gate reads both sources (`--prev-impl`, `--new-impl`); without them the code path is off. A code-path replacement is a merge, so like any merge it writes no re-score back.
-4. Replace: `regen:improved`, then `ai-approved`, a PR comment with the same summary (stored, re-scored, and new score, improvements, regressions, reason), then the normal merge. Keep: `regen:kept`, the PR is closed with that comment, the issue gets `impl:{library}:done` back, and the live code and GCS production stay as they are. The re-score of the live implementation becomes its stored review through a separate metadata PR (see [Stored review on a keep](#stored-review-on-a-keep)).
+
+   **Adapt route.** A Python regeneration that converts the implementation to the adaptable-code convention ([Adaptable catalogue code](../concepts/adaptable-code.md)) changes the code but not the picture, so it has no visible improvement to carry it. It replaces the live implementation on render identity instead, when all of these hold:
+   - the predecessor fails the adaptability check (the static check or the smoke run) and the new source passes both;
+   - the two sources' renders, both made in the same `impl-generate.yml` runner ("Adaptability smoke run (record-only)") from the very sources the records checked, differ in at most 0.5 % of their pixels in each theme, at equal size; a size change fails, and so does a pair rendered from other source versions (`pair_stale`);
+   - the new source has at most max(1.25 × prev, prev + 15) lines, and the canvas gate passed;
+   - when the review ran: a score above 0, no regression, an unchanged data scenario and no added encoding (on any spec), and no VQ, SC, DQ, or CQ item below its value in the re-score.
+
+   The route takes the place of three keeps: `no_visible_improvement`, `no_defect_improvement`, and `below_tolerance`. The score tolerance never applies to it: the reviewer's run-to-run spread and the re-score's offset from the stored score make any tolerance a coin flip, so the technical items are the floor instead. The CQ-04 code path keeps its tolerance. A replacement on the route carries the reason code `adapt_identity`. The gate reads three files: the two records that "Adaptability check (record-only)" writes, one per source, and the render pair that impl-generate staged. A missing or malformed record, a missing render pair, or an implementation in another language turns the route off, and the record says why. It never counts as a pass. A record whose status does not follow from its static and smoke results counts as malformed (`record_invalid`), and so does a render pair that does not name the PR's library.
+
+   `impl-review.yml` evaluates the conditions that need no review before the review runs (`regen_gate.py adapt-route`, the `adapt_route` notice). When the repository variable `ADAPT_REVIEW_FREE` is `true` and those conditions hold, the review is skipped and the gate merges on them alone (`decide --review-skipped`), carrying the stored score and review forward. A skipped review whose route does not hold is kept as `no_score`. The variable is off by default, and only the owner turns it on. The evidence is the route-held PRs: `regen:adapt` marks a merge on which the route held before and after the review, and `regen:adapt-overruled` marks a PR whose route held before the review and whose review then turned it off (`decide --adapt-route-held`, the gate output `adapt_overruled`). Route-held PRs are the `regen:adapt` PRs plus the `regen:adapt-overruled` PRs. The owner turns the switch on only when the overruled share stays near zero over at least 50 route-held PRs:
+
+   ```bash
+   gh pr list --state merged --label regen:adapt --limit 1000 --json number --jq length
+   gh pr list --state all --label regen:adapt-overruled --limit 1000 --json number --jq length
+   ```
+
+   **Adapt regression.** On every spec, when the predecessor passes the adaptability check and the new source fails it, the live implementation stays (`adapt_regression`), whatever else would replace it. The same holds without a smoke run: when the predecessor passes the static check, its smoke run is missing, stale, or skipped, and the new source fails the static check. Converted code stays converted.
+4. Replace: `regen:improved`, then `regen:adapt` when the adapt route counted or `regen:adapt-overruled` when the review overruled it, then `ai-approved`, a PR comment with the same summary (stored, re-scored, and new score, improvements, regressions, reason), then the normal merge. Keep: `regen:adapt-overruled` when the review overruled the adapt route, then `regen:kept`, the PR is closed with that comment, the issue gets `impl:{library}:done` back, and the live code and GCS production stay as they are. The re-score of the live implementation becomes its stored review through a separate metadata PR (see [Stored review on a keep](#stored-review-on-a-keep)).
 
 A crashed regen review is auto-retried once by `impl-review.yml`; after that the PR carries `ai-review-failed` and the watchdog only flags it — it never dispatches a further review for a regeneration. The same one-retry budget covers a review of any PR that scored but failed before a verdict label landed, for example on a GitHub 5xx (see [Review recovery](#review-recovery)).
 
@@ -312,9 +350,9 @@ Every review writes its weaknesses in the two formats: defect lines first, then 
 
 Every decision leaves three traces:
 
-- **The gate record in the PR comment.** Both the keep and the replace comment end with an invisible `<!-- regen-gate-record:v1 {...} -->` marker: one line of JSON with the scores, improvement and regression counts (the improvements split into carriers, suggestions, and obsolete citations; the suggestions name additions, polish, and improvements without a kind apart, and a histogram counts the kind of every listed improvement, and `code` counts the code improvements the gate counted), the reason code (`merge`, `below_tolerance`, `no_visible_improvement`, `no_defect_improvement`, `regression`, `regen_json_invalid`, `canvas_failed`, and so on), and the provenance of both reviews (resolved model and rules version of this review and of the stored one). A keep record also says what happened to the re-score (`writeback`, see the next section). It holds no model-written text. PR comments are permanent, so read this first.
-- **The notice line in the run log.** `::notice::regen_gate spec=… lib=… prev_stored=… prev_rescored=… new=… verdict=… code=… model=… criteria=… prev_lines=… new_lines=… reason=…`, where `prev_lines` and `new_lines` are the two sources' line counts. Run logs expire.
-- **The pair artifact.** `regen-pair-<pr>-<attempt>` on the `impl-review.yml` run, kept 60 days: both renders, both sources (the predecessor's with its score hidden), the previous review, this review's files, and the gate record. The predecessor's production renders are overwritten on the next merge, so this is the only copy of what the gate compared.
+- **The gate record in the PR comment.** Both the keep and the replace comment end with an invisible `<!-- regen-gate-record:v1 {...} -->` marker: one line of JSON with the scores, improvement and regression counts (the improvements split into carriers, suggestions, and obsolete citations; the suggestions name additions, polish, and improvements without a kind apart, and a histogram counts the kind of every listed improvement, and `code` counts the code improvements the gate counted), the reason code (`merge`, `below_tolerance`, `no_visible_improvement`, `no_defect_improvement`, `regression`, `adapt_identity`, `adapt_regression`, `regen_json_invalid`, `canvas_failed`, and so on), and the provenance of both reviews (resolved model and rules version of this review and of the stored one). The `adapt` block holds the adapt route: `version` (the checker version), `prev` and `new` (each source's adaptability `status`, with its `static` and `smoke` statuses), `identity` (the share of differing pixels per theme), `counted`, `why` (`route` when it counted, otherwise the first condition that failed, such as `not_python`, `prev_passes`, `identity_dark`, or `technical_below`), `review` (`ran` or `skipped`), and `route_pre_review` (whether `adapt-route` held before the review: `true`, `false`, or `null` without adapt input). A keep record also says what happened to the re-score (`writeback`, see the next section). It holds no model-written text. PR comments are permanent, so read this first.
+- **The notice line in the run log.** `::notice::regen_gate spec=… lib=… prev_stored=… prev_rescored=… new=… verdict=… code=… model=… criteria=… prev_lines=… new_lines=… adapt_counted=… adapt_why=… adapt_overruled=… reason=…`, where `prev_lines` and `new_lines` are the two sources' line counts, and `adapt_counted`, `adapt_why`, and `adapt_overruled` appear when the step passes the adapt files. Run logs expire.
+- **The pair artifact.** `regen-pair-<pr>-<attempt>` on the `impl-review.yml` run, kept 60 days: both renders, both sources (the predecessor's with its score hidden), the previous review, this review's files, and the gate record. For a Python pair, `adapt/` adds both adapt records and what impl-generate staged for them: the smoke runs, `pair.json`, the raw renders of both sources, and the generator's self-check log. The predecessor's production renders are overwritten on the next merge, so this is the only copy of what the gate compared.
 
 `uv run python -m automation.scripts.review_retest gate-report` aggregates the records across pull requests: merge rate, reason codes, how far re-scored predecessors land from their stored scores, the counted visible improvements and carriers, cited permissions and obsolete weaknesses, what happened to the re-scores of kept implementations, the merges the code path carried, and soft alarms. See [Review retest](review-retest.md#monitor-the-regen-gate).
 

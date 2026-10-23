@@ -98,7 +98,7 @@ charts rendered by different engines defeat the point.
 - `plots/{spec-id}/implementations/{language}/{this-library}{ext}` (if regenerating, same library only — `.py` for python, `.R` for ggplot2, `.jl` for makie, `.js` for the JavaScript libs, `.tsx` for muix)
 - `plots/{spec-id}/metadata/{language}/{this-library}.yaml` (its own previous review only)
 - `prompts/library/{this-library}.md`
-- `prompts/plot-generator.md`, `prompts/quality-criteria.md`, `prompts/default-style-guide.md`
+- `prompts/plot-generator.md`, `prompts/adaptable-code.md`, `prompts/quality-criteria.md`, `prompts/default-style-guide.md`
 
 **Forbidden:**
 - Reading another library's source file or `.yaml` under `plots/{spec-id}/implementations/` or `plots/{spec-id}/metadata/` — even "for reference" or "to stay consistent"
@@ -117,7 +117,7 @@ implementation's own decision.
 
 ## Output
 
-A simple script with the structure below. The example is Python; ggplot2 follows the same imports → data → plot → save shape — see `prompts/library/ggplot2.md` for the R-flavoured version and `prompts/library/makie.md` for the Julia-flavoured version.
+A simple script in the six zones of `prompts/adaptable-code.md`: the head, an optional `# Constants` zone, the column constants, one `# Data` block that ends in `df`, the plot code below `# Plot`, and the save. Read that file on every generation: it is the convention that makes the code adaptable to other data, with the rules for the plot code and a full example. The example below is Python; R, Julia and JavaScript use the same zones in their own syntax, shown in the "Data block" section of `prompts/library/{library}.md`.
 
 ```python
 """ anyplot.ai
@@ -127,30 +127,37 @@ Quality: pending | Created: 2025-12-21
 """
 
 import os
+
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+
 
 # Theme tokens (see prompts/default-style-guide.md "Background" + "Theme-adaptive Chrome")
 THEME       = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG     = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK         = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT    = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND       = "#009E73"  # Imprint palette position 1 — ALWAYS first series
+BRAND       = "#009E73"  # Imprint palette position 1 — a single-series plot uses it alone
 
-# Data
+# Columns: set these to your table's column names
+STUDY_HOURS = "Study hours per day"  # role: x
+EXAM_SCORE = "Exam score (%)"  # role: y
+
+# Data: replace this block with your own table, for example df = pd.read_csv("scores.csv")
 np.random.seed(42)
-study_hours = np.random.normal(6, 2, 80)
-exam_scores = study_hours * 8 + np.random.normal(0, 5, 80) + 30
+hours = np.random.normal(6, 2, 80)
+df = pd.DataFrame({STUDY_HOURS: hours, EXAM_SCORE: hours * 8 + np.random.normal(0, 5, 80) + 30})
 
-# Plot — see default-style-guide.md "Visual Sizing Defaults" for the canvas + sizing values
+# Plot: reads only df and the constants above — see default-style-guide.md "Visual Sizing Defaults"
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
-ax.scatter(study_hours, exam_scores, alpha=0.7, s=100,
+ax.scatter(df[STUDY_HOURS], df[EXAM_SCORE], alpha=0.7, s=100,
            color=BRAND, edgecolors=PAGE_BG, linewidth=0.5)
 
 # Style — title kept compact because the mandated anyplot title is ~67 chars long
-ax.set_xlabel('Study Hours per Day', fontsize=12, color=INK)
-ax.set_ylabel('Exam Score (%)', fontsize=12, color=INK)
+ax.set_xlabel(STUDY_HOURS, fontsize=12, color=INK)
+ax.set_ylabel(EXAM_SCORE, fontsize=12, color=INK)
 ax.set_title('scatter-basic · python · matplotlib · anyplot.ai',
              fontsize=14, fontweight='medium', color=INK)
 ax.tick_params(axis='both', labelsize=10, colors=INK_SOFT)
@@ -161,7 +168,7 @@ for s in ('left', 'bottom'):
 ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 
 plt.tight_layout()
-plt.savefig(f'plot-{THEME}.png', dpi=400, bbox_inches='tight', facecolor=PAGE_BG)
+plt.savefig(f'plot-{THEME}.png', dpi=400, facecolor=PAGE_BG)  # never bbox_inches='tight': it trims the canvas
 ```
 
 **The generated script must be run twice by the pipeline** — once with `ANYPLOT_THEME=light`, once with `ANYPLOT_THEME=dark` — producing `plot-light.png` and `plot-dark.png`. Interactive libraries additionally produce `plot-light.html` and `plot-dark.html`.
@@ -219,25 +226,39 @@ The middot (·) separator is required. No color or style requirements - the AI d
 
 ### Structure
 
-1. **Docstring** - 4 lines: anyplot.ai, spec-id:title, library+versions, quality+date
+The six zones of `prompts/adaptable-code.md`, top to bottom:
+
+1. **Head** - the docstring, the imports (only what's needed), the theme tokens, the palette (all eight `IMPRINT_PALETTE` hues, or `BRAND` alone for a single series) and the library's setup calls
+   - Docstring: 4 lines: anyplot.ai, spec-id:title, library+versions, quality+date
    - New implementation: `Quality: pending | Created: {YYYY-MM-DD}`
    - After first review: `Quality: {score}/100 | Created: {YYYY-MM-DD}`
    - After update + review: `Quality: {score}/100 | Updated: {YYYY-MM-DD}`
-2. **Imports** - Only what's needed
-3. **Data** - Prepare/generate data (use spec example if provided, or create realistic sample)
-4. **Plot** - Create figure and plot data
-5. **Style** - Labels, title, grid, etc.
-6. **Save** - Save as `plot-{THEME}.png` (plus `plot-{THEME}.html` for interactive libs). Never a bare `plot.png`.
+2. **`# Constants`** (optional) - values that stay true for any data: thresholds, ordered scales, semantic color maps
+3. **Column constants** - one per spec `## Data` role: `SALES = "Sales (thousand USD)"  # role: value`
+4. **`# Data` block** - prepare or generate the data (use the spec's example if provided, or create a realistic sample); it ends in one tidy DataFrame `df`
+5. **`# Plot`** - create the figure, plot `df`, and style it (labels, title, grid); everything derived from the data is computed here
+6. **Save** - Save as `plot-{THEME}.png` (plus `plot-{THEME}.html` for interactive libs). Never a bare `plot.png`, and never `bbox_inches='tight'`.
+
+R, Julia and JavaScript keep the same order in their own syntax; see the "Data block" section of `prompts/library/{library}.md`.
 
 ### Data Generation Strategy
 
-Choose the appropriate data generation method based on the plot type:
+Choose the appropriate data generation method based on the plot type. Whatever the method, it lives in the one `# Data` block (`prompts/adaptable-code.md`) and obeys these rules:
+
+- **Everything that invents the example sits in the block, and nothing else does:** the seed, random draws, literal lists, category names, the formulas behind synthetic data, a dataset loader call.
+- **The block ends in one tidy DataFrame `df`, keyed by the column constants:** one row per mark or observation, one column per spec role. Three product lines are one `PRODUCT_LINE` column, not three lists. A matrix role makes `df` a labeled square DataFrame; a generated spec (a surface from a formula, a maze) holds named parameters instead.
+- **The plot code reads only `df`:** a helper name bound in the block (`hours`, `base`) is never read below it. What the plot needs (pivots, sorted orders, positions, limits) it derives from `df`.
+- **No plotting, styling or theme token inside the block.**
 
 **1. Synthetic Data with NumPy (default for most plots):**
 ```python
+# Data: replace this block with your own table, for example df = pd.read_csv("salaries.csv")
 np.random.seed(42)  # Always set seed when using random data for reproducibility!
-x = np.random.normal(loc=50000, scale=15000, size=500)  # Salaries
-y = np.random.uniform(0, 100, size=120)  # Test scores
+experience = np.random.uniform(0, 30, size=500)
+df = pd.DataFrame({
+    EXPERIENCE: experience,
+    SALARY: 38000 + 1500 * experience + np.random.normal(0, 8000, size=500),
+})
 ```
 - **Use for**: Basic plots, general examples, custom distributions
 - **Benefits**: Fast, flexible, reproducible, no external dependencies
@@ -245,9 +266,15 @@ y = np.random.uniform(0, 100, size=120)  # Test scores
 
 **2. Scikit-learn Datasets (for ML-related plots):**
 ```python
-from sklearn.datasets import load_iris, make_classification
-iris = load_iris()
-X, y = iris.data, iris.target
+from sklearn.datasets import load_iris
+
+# Data: replace this block with your own table
+iris = load_iris(as_frame=True)
+df = pd.DataFrame({
+    PETAL_LENGTH: iris.data["petal length (cm)"],
+    PETAL_WIDTH: iris.data["petal width (cm)"],
+    SPECIES: iris.target_names[iris.target],
+})
 ```
 - **Use for**: Classification plots, clustering, regression, ML metrics
 - **Available datasets**: `load_iris()`, `load_wine()`, `load_breast_cancer()`, `load_digits()`
@@ -256,23 +283,28 @@ X, y = iris.data, iris.target
 **3. Seaborn Datasets (for realistic domain examples):**
 ```python
 import seaborn as sns
-df = sns.load_dataset('tips')  # Restaurant tipping data
+
+# Data: replace this block with your own table
+df = sns.load_dataset("tips").rename(columns={"total_bill": TOTAL_BILL, "tip": TIP, "day": DAY})
 ```
 - **Use for**: When spec asks for realistic domain data or named datasets
 - **Available**: `'tips'`, `'titanic'`, `'iris'`, `'flights'`, `'planets'`, `'penguins'`
 - **Benefits**: Real-world patterns, clean data, good for demonstrations
+- Rename the dataset's columns to the column constants inside the block, so the axis titles read as words with units (`"Total bill ($)"`), never as `total_bill`.
 
 **4. Domain-specific synthetic (for specialized plots):**
 ```python
 # Time series
-dates = pd.date_range('2024-01-01', periods=100, freq='D')
-values = np.cumsum(np.random.randn(100)) + 100
+dates = pd.date_range("2024-01-01", periods=100, freq="D")
+df = pd.DataFrame({DATE: dates, PRICE: np.cumsum(np.random.randn(100)) + 100})
 
-# Correlation matrix
+# Correlation matrix (a matrix role): df is a labeled square DataFrame
 np.random.seed(42)
-corr_matrix = np.random.rand(5, 5)
-corr_matrix = (corr_matrix + corr_matrix.T) / 2  # Symmetric
-np.fill_diagonal(corr_matrix, 1.0)  # Diagonal = 1
+metrics = ["Revenue", "Costs", "Margin", "Headcount", "Churn"]
+values = np.random.rand(5, 5)
+values = (values + values.T) / 2  # Symmetric
+np.fill_diagonal(values, 1.0)  # Diagonal = 1
+df = pd.DataFrame(values, index=metrics, columns=metrics)
 ```
 
 **Guidelines:**
@@ -280,7 +312,8 @@ np.fill_diagonal(corr_matrix, 1.0)  # Diagonal = 1
 - **Use sklearn/seaborn datasets** when you need realistic patterns or the spec mentions them
 - **Always set** `np.random.seed(42)` when using random data
 - **Make data realistic**: Use meaningful variable names, realistic ranges, proper units
-- **No external files**: Never load CSV/JSON - generate everything in-memory
+- **Name each column once:** the column constant's value is the column name, written as the axis title should read, units included (`"Sales (thousand USD)"`); the plot code labels axes and legends from the constants
+- **No external files**: Never load CSV/JSON - generate everything in-memory. A CSV read appears only in the block's opening comment, as the hint for a reader who swaps in their own table
 
 ### Data Content Guidelines
 
@@ -421,7 +454,7 @@ Code MUST NOT contain comments like:
 
 ### Variable Naming
 
-Use descriptive, domain-appropriate names:
+Use descriptive, domain-appropriate names. Column constants are upper-case domain names (`STUDY_HOURS`, `MONTH`, `SALES`), never role names such as `CATEGORY_COL`: a reader who plots by year instead of by month renames the constant.
 
 ```python
 # Good
@@ -440,10 +473,14 @@ data1 = [1, 2, 3, 4]
 
 ### Section Comments
 
-Short, clear section markers with blank line before each:
+Short, clear section markers with blank line before each. `# Data` and `# Plot` are the block markers of `prompts/adaptable-code.md`: exactly one of each, at column 0, the word alone or followed by a colon and a hint.
 
 ```python
-# Data
+# Columns: set these to your table's column names
+MONTH = "Month"  # role: x
+...
+
+# Data: replace this block with your own table
 np.random.seed(42)
 ...
 
@@ -452,11 +489,11 @@ fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
 ...
 
 # Style
-ax.set_xlabel(...)
+ax.set_xlabel(MONTH, ...)
 ...
 
 # Save
-plt.savefig(f'plot-{THEME}.png', dpi=400, bbox_inches='tight')
+plt.savefig(f'plot-{THEME}.png', dpi=400, facecolor=PAGE_BG)
 ```
 
 ### Import Organization
@@ -485,7 +522,7 @@ Blank line between groups. Only import what you use.
 - Break long calls across multiple lines:
 
 ```python
-ax.scatter(study_hours, exam_scores,
+ax.scatter(df[STUDY_HOURS], df[EXAM_SCORE],
            alpha=0.7, s=100,
            color=BRAND, edgecolors=PAGE_BG)
 ```
@@ -529,6 +566,7 @@ anyplot renders at **3200 × 1800 px** (16:9) or **2400 × 2400 px** (1:1) — l
 - **Annotation restraint (DEFAULT):** Do NOT add text annotations, callout boxes, arrows, or labeled data points unless the specification explicitly asks for them (e.g., spec-id contains "annotated"). Good storytelling comes from visual design — color contrast, size variation, strategic data choice — not text overlays.
 - **When annotations ARE appropriate:** Only when spec-id contains "annotated" or the spec explicitly describes annotations as a required feature. Even then, use sparingly.
 - **Respect the spec variant:** If the spec-id contains `basic`, storytelling comes from well-chosen data and clean design — NOT from adding annotations, trendlines, or extra visual elements. A basic scatter plot should remain a basic scatter plot. Extra encodings on a `-basic` spec (a color channel from a derived variable, per-group fits, reference lines, highlights, callouts, annotation layers) are scored as the wrong variant (SC-01) and earn no storytelling credit.
+- **Callout targets come from a rule over the data:** when a callout or highlight is drawn at all (the restraint rules above decide that), choose its target with a rule over `df` — `idxmax`, the latest row, the smallest gap between the two leading groups, the first crossing of a `# Constants` threshold — never by typing a sample value (`categories.index("Q3")`, `peak_month = 7`). Its text is a computed f-string that claims only what the rule guarantees, and a conditional claim (a near-tie, a record) is drawn only when the data meets it. With other data the callout moves to the right place or disappears, instead of pointing at a value that is no longer there. See `prompts/adaptable-code.md`.
 
 ## Output Files
 
@@ -538,7 +576,8 @@ anyplot renders at **3200 × 1800 px** (16:9) or **2400 × 2400 px** (1:1) — l
 THEME = os.getenv("ANYPLOT_THEME", "light")  # already defined at top
 
 # matplotlib/seaborn/plotnine (static, PNG only) — figsize=(8, 4.5) dpi=400 → 3200×1800
-plt.savefig(f'plot-{THEME}.png', dpi=400, bbox_inches='tight', facecolor=PAGE_BG)
+# (no bbox_inches='tight': it trims the canvas below the fixed size)
+plt.savefig(f'plot-{THEME}.png', dpi=400, facecolor=PAGE_BG)
 
 # plotly (PNG + HTML) — width=800 height=450 scale=4 → 3200×1800
 fig.write_image(f'plot-{THEME}.png', width=800, height=450, scale=4)
@@ -570,5 +609,6 @@ After generating the code:
    - Are top/right spines removed?
    - Is the design polished beyond defaults?
 3. **For interactive libraries**, also check `plot-light.html` and `plot-dark.html` render correctly.
+4. **For Python**, run the adaptability self-check (`prompts/workflow-prompts/impl-generate-claude.md`, Step 3c): the static check of the six zones and a smoke run of the file on perturbed tables (renamed columns, more and fewer categories, more and fewer rows, scaled values, a missing value).
 
 If there are issues, fix them and re-run both themes until both plots look correct.

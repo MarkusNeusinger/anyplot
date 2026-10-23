@@ -100,6 +100,47 @@ invalidates `review_regen.json`. The record's `improvements.code` counts the
 entries that held, the notice line gains `prev_lines=`/`new_lines=` when the
 flags are given, and `check-feedback` checks the entries.
 
+The adapt route (`docs/concepts/adaptable-code.md`, "The adapt route"):
+`adapt_assess` decides whether a conversion to the adaptable-code convention
+merges on render identity. It reads the two adapt records that impl-review's
+"Adaptability check (record-only)" step writes (`--adapt-new`,
+`--adapt-prev`), and the render pair that `core.smoke_run pair` staged in
+impl-generate (`--adapt-pair`). It never renders, so the gate stays stdlib-only.
+The route counts when every one of these holds; the first that fails is the
+record's `why`:
+
+- The new implementation is Python.
+- Both records are valid for this pair, and each status follows from its
+  static and smoke statuses (`derived_adapt_status`, the table of
+  `adapt_record.py` `derive_status`); otherwise `record_invalid`.
+- The predecessor's status is `fail` and the new one's `pass`.
+- The pair names this library and rendered the two sources the records
+  checked (the same `code_sha256` on each side, else `pair_stale`).
+- The pair rendered both themes at equal size, and each differs in at most
+  `IDENTITY_BOUND` (0.5 %, the value of `core.render_identity.DEFAULT_BOUND`)
+  of its pixels. The gate applies its own bound, whatever bound the pair file
+  names.
+- The new source keeps `within_line_bound`: max(1.25 × prev, prev + 15) lines.
+- The canvas gate passed.
+- When a review ran, its score is above 0, it names no regression, the
+  scenario is unchanged, no encoding was added, and no VQ, SC, DQ, or CQ item
+  of `prev_checklist` scores lower in the new checklist.
+
+`decide` turns the keeps `no_visible_improvement`, `no_defect_improvement` and
+`below_tolerance` into a merge with code `adapt_identity` when the route counts.
+With `--review-skipped` and no score, it merges on the route before the score
+checks. A merge whose predecessor passes and whose new source fails becomes keep
+with `adapt_regression`, and so does one whose predecessor passes the static
+check with an unknown smoke run while the new source fails the static check. `adapt-route` writes `adapt_route`, `adapt_why`,
+`adapt_prev`, and `adapt_new` before the review, and always exits 0. impl-review
+passes that result back to `decide` as `--adapt-route-held`. The record gains
+`adapt` (`AdaptAssessment.to_record`, checked by `validate_record`), with
+`route_pre_review` from that flag. The outputs gain `adapt_counted`,
+`adapt_why`, and `adapt_overruled` (the route held before the review and the
+review's floor turned it off, which impl-review labels `regen:adapt-overruled`),
+and with an adapt flag the notice line gains them too, before `reason=`. Without the adapt flags, the route and the
+regression are off, so older argument sets decide as before.
+
 ### `regen_writeback.py`
 Review write-back on a kept regeneration (stdlib and PyYAML; imports
 `regen_gate` from its own directory when it runs as a script, so a workflow's
@@ -114,9 +155,11 @@ implementation, written by the review as `review_prev.json` (step 8b of
 - `apply` — writes the score, the five review fields, `review.model`, and
   `review.criteria_version` into the metadata with the metadata writer's YAML
   settings (an empty provenance value removes the key), and with `--impl` the
-  score into the `Quality: N/100` header. Nothing else changes.
+  score into the `Quality: N/100` header, and removes `review.carried`.
+  Nothing else changes.
 - `verify-diff` — against the merge base: only the pair's metadata (as parsed
-  YAML, `quality_score` and those review keys) and its header number change.
+  YAML, `quality_score` and those review keys) and its header number change;
+  `review.carried` may only be removed.
 - `check-pr` — the PR is an open `review-writeback/{spec}/{library}/{kept PR}`
   PR with the `review-writeback` label by `app/github-actions` (otherwise a
   no-op), and its score equals the `prev_rescored` of the first gate record
@@ -132,6 +175,19 @@ implementation, written by the review as `review_prev.json` (step 8b of
 `apply` and opens the PR; the `writeback` job of `impl-merge.yml` runs
 `check-pr`, `verify-diff`, and `check-fresh` before every merge attempt, then
 merges with the admin token.
+
+### `adapt_record.py`
+Adapt records (stdlib). `impl-review.yml`'s "Adaptability check (record-only)"
+runs `record` once per side of a Python pair: the PR head (`--side new`) and, on
+a regeneration, the predecessor from `origin/main` (`--side prev`). It combines
+the checker mirror's `--out` record (verbatim, plus its exit code) with the
+smoke run that impl-generate staged under `staging/.../adapt/`. A missing staged
+run reads as `missing`, and a run whose `code_sha256` differs from the source's
+reads as `stale`. It derives the record's status (`pass`, `fail`, `excluded`,
+or `unknown`) and prints one `::notice::adapt_check` line. The regen gate reads
+`v`, `side`, `spec`, `lib`, `language`, `checker_version`, `status`,
+`static.status`, and `smoke.status`. `code_sha256` is `core.smoke_run`'s rule,
+and a test ties the two.
 
 ### `review_provenance.py`
 Review provenance (stdlib): `criteria-version` prints the rules version — git

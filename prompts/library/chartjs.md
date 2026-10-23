@@ -83,6 +83,54 @@ browser; if you need pseudo-randomness, use a tiny fixed-seed LCG or hard-code
 the data array. **Never `fetch()` or load from a CDN/network** — the runtime is
 offline and the HTML must be self-contained.
 
+## Data block
+
+The file follows the six zones of `prompts/adaptable-code.md` in JavaScript
+syntax: role constants above the block, one `// Data` block that ends in
+`const data`, an array of records (one object per row, keyed by the
+constants), and plot code below `// Plot` that reads fields with `d[QUARTER]`:
+
+```js
+// Columns: set these to your data's column names
+const QUARTER = "Quarter";  // role: category
+const PRODUCT_LINE = "Product line";  // role: group
+const SALES = "Sales (thousand USD)";  // role: value
+
+// Data: replace this block with your own records, one object per row
+const data = [
+  { [QUARTER]: "Q1", [PRODUCT_LINE]: "Electronics", [SALES]: 245 },
+  { [QUARTER]: "Q2", [PRODUCT_LINE]: "Electronics", [SALES]: 312 },
+  { [QUARTER]: "Q3", [PRODUCT_LINE]: "Electronics", [SALES]: 287 },
+  { [QUARTER]: "Q4", [PRODUCT_LINE]: "Electronics", [SALES]: 425 },
+  { [QUARTER]: "Q1", [PRODUCT_LINE]: "Clothing", [SALES]: 178 },
+  { [QUARTER]: "Q2", [PRODUCT_LINE]: "Clothing", [SALES]: 195 },
+  { [QUARTER]: "Q3", [PRODUCT_LINE]: "Clothing", [SALES]: 285 },
+  { [QUARTER]: "Q4", [PRODUCT_LINE]: "Clothing", [SALES]: 310 },
+];
+
+// Plot: reads only data and the constants above
+const quarters = [...new Set(data.map((d) => d[QUARTER]))];
+const lines = [...new Set(data.map((d) => d[PRODUCT_LINE]))];
+const datasets = lines.map((line, i) => ({
+  label: line,
+  data: quarters.map((q) => data.find((d) => d[QUARTER] === q && d[PRODUCT_LINE] === line)?.[SALES] ?? null),
+  backgroundColor: t.palette[i],
+}));
+// … new Chart(canvas, { type: "bar", data: { labels: quarters, datasets }, options: { scales: {
+//   x: { title: { display: true, text: QUARTER } }, y: { title: { display: true, text: SALES } } } } })
+```
+
+- Categories, groups and their order come from the records (`new Set` keeps the
+  order of appearance), never from a typed list.
+- Each group takes its palette position (`t.palette[i]`).
+- Axis titles and series labels come from the constants.
+- A missing value stays `null`, which Chart.js draws as a gap.
+- Limits come from the data or stay automatic, never typed numbers.
+
+The "Use with my data" agent will later replace the block with
+`const data = window.ANYPLOT_DATA;`. Do not read that global yourself: the
+harness does not set it.
+
 ## Colors — Imprint palette (from `window.ANYPLOT_TOKENS`)
 
 The first categorical series is **always** `#009E73` (`tokens.palette[0]`).
@@ -93,8 +141,10 @@ light and dark — only chrome (text, grid, background) flips.
 const t = window.ANYPLOT_TOKENS;
 // single series
 backgroundColor: t.palette[0]            // #009E73 brand green
-// multi series
-backgroundColor: categories.map((_, i) => t.palette[i % t.palette.length])
+// multi series: one palette position per series, never recycled (no `i % t.palette.length`)
+const datasets = lines.map((line, i) => ({ label: line, backgroundColor: t.palette[i] /* , data: … */ }));
+// one dataset colored per category (pie, doughnut): the same rule per label
+backgroundColor: quarters.map((_, i) => t.palette[i])
 ```
 
 Never use `viridis`/`rainbow`/`jet` or arbitrary hex. For continuous color use
@@ -117,8 +167,8 @@ options: {
     legend: { labels: { color: t.ink, font: { size: 16 } } },
   },
   scales: {
-    x: { ticks: { color: t.inkSoft, font: { size: 14 } }, grid: { color: t.grid }, title: { display: true, text: "X", color: t.ink } },
-    y: { ticks: { color: t.inkSoft, font: { size: 14 } }, grid: { color: t.grid }, title: { display: true, text: "Y", color: t.ink } },
+    x: { ticks: { color: t.inkSoft, font: { size: 14 } }, grid: { color: t.grid }, title: { display: true, text: DAY, color: t.ink } },
+    y: { ticks: { color: t.inkSoft, font: { size: 14 } }, grid: { color: t.grid }, title: { display: true, text: VISITS, color: t.ink } },
   },
 }
 ```
@@ -131,25 +181,34 @@ and rely on `plugins` + per-arc `backgroundColor`.
 A complete Chart.js implementation reads the theme tokens, generates data,
 appends a canvas to `#container`, and builds the chart. The same single `.js`
 file handles both themes (the harness sets `window.ANYPLOT_THEME` per render).
+It follows the zones of "Data block" above.
 
 ```js
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data (in-memory, deterministic) ---------------------------------------
-const labels = ["Mon", "Tue", "Wed", "Thu", "Fri"];
-const values = [12, 19, 7, 15, 11];
+// Columns: set these to your data's column names
+const DAY = "Day";  // role: category
+const VISITS = "Visits";  // role: value
 
-// --- Mount -----------------------------------------------------------------
+// Data: replace this block with your own records, one object per row
+const data = [
+  { [DAY]: "Mon", [VISITS]: 12 },
+  { [DAY]: "Tue", [VISITS]: 19 },
+  { [DAY]: "Wed", [VISITS]: 7 },
+  { [DAY]: "Thu", [VISITS]: 15 },
+  { [DAY]: "Fri", [VISITS]: 11 },
+];
+
+// Plot: reads only data and the constants above
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
 
-// --- Chart -----------------------------------------------------------------
 new Chart(canvas, {
   type: "bar",
   data: {
-    labels,
-    datasets: [{ label: "Visits", data: values, backgroundColor: t.palette[0], borderWidth: 0 }],
+    labels: data.map((d) => d[DAY]),
+    datasets: [{ label: VISITS, data: data.map((d) => d[VISITS]), backgroundColor: t.palette[0], borderWidth: 0 }],
   },
   options: {
     responsive: true,
@@ -160,8 +219,10 @@ new Chart(canvas, {
       legend: { labels: { color: t.ink, font: { size: 16 } } },
     },
     scales: {
-      x: { ticks: { color: t.inkSoft, font: { size: 14 } }, grid: { color: t.grid } },
-      y: { ticks: { color: t.inkSoft, font: { size: 14 } }, grid: { color: t.grid }, beginAtZero: true },
+      x: { ticks: { color: t.inkSoft, font: { size: 14 } }, grid: { color: t.grid },
+           title: { display: true, text: DAY, color: t.ink } },
+      y: { ticks: { color: t.inkSoft, font: { size: 14 } }, grid: { color: t.grid }, beginAtZero: true,
+           title: { display: true, text: VISITS, color: t.ink } },
     },
   },
 });

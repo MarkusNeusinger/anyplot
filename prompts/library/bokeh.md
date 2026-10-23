@@ -8,6 +8,7 @@
 from bokeh.plotting import figure
 from bokeh.models import ColumnDataSource
 from bokeh.io import output_file, save
+from bokeh.transform import dodge  # grouped bars, see "Data block"
 ```
 
 ## Canvas — hard rule, no deviation
@@ -48,25 +49,41 @@ p = figure(
 ## Plot Methods
 
 ```python
-# Numeric data
-p.scatter(x='x', y='y', source=source)
-p.line(x='x', y='y', source=source)
+source = ColumnDataSource(df)
 
-# IMPORTANT: Categorical axes
-p = figure(x_range=categories, ...)  # define x_range!
-source = ColumnDataSource(data={'x': cat_data, 'y': num_data})
-p.scatter(x='x', y='y', source=source)
+# Numeric data
+p.scatter(x=STUDY_HOURS, y=EXAM_SCORE, source=source)
+p.line(x=DATE, y=PRICE, source=source)
+
+# IMPORTANT: Categorical axes — define x_range from the data, in its own order
+p = figure(x_range=list(df[QUARTER].unique()), ...)
+p.vbar(x=QUARTER, top=SALES, width=0.8, source=source)
 ```
+
+## Data block
+
+The file follows the six zones of `prompts/adaptable-code.md`. bokeh reads the tidy `df` through `ColumnDataSource(df)`, and every glyph names its columns with the constants: a string argument is a column name, so names with spaces, units and dots work as they are. bokeh never titles an axis from a column name, so pass `x_axis_label=QUARTER, y_axis_label=SALES` and the legend title from the constants. Groups come from the data, each with its palette position:
+
+```python
+# Plot: reads only df and the constants above
+p = figure(x_range=list(df[QUARTER].unique()), x_axis_label=QUARTER, y_axis_label=SALES, ...)
+lines = list(df[PRODUCT_LINE].unique())
+width = 0.75 / len(lines)
+for i, line in enumerate(lines):
+    rows = ColumnDataSource(df[df[PRODUCT_LINE] == line])
+    offset = (i - (len(lines) - 1) / 2) * width
+    p.vbar(x=dodge(QUARTER, offset, range=p.x_range), top=SALES, width=width, source=rows,
+           color=IMPRINT_PALETTE[i], legend_label=str(line))
+p.legend.title = PRODUCT_LINE
+```
+
+In a tooltip, wrap a column name with spaces in braces: `tooltips=[(SALES, f"@{{{SALES}}}")]`. Ranges come from the data (`Range1d(0, df[SALES].max() * 1.15)`) or stay automatic, never typed numbers.
 
 ## ColumnDataSource
 
 ```python
-# Always use ColumnDataSource for flexibility
-source = ColumnDataSource(data={
-    'x': df['col_x'],
-    'y': df['col_y'],
-    'color': df['col_color']
-})
+# Always use ColumnDataSource, built from the tidy df
+source = ColumnDataSource(df)
 ```
 
 ## Save (HTML + PNG via headless Chrome)
@@ -149,11 +166,12 @@ IMPRINT_PALETTE = ['#009E73', '#C475FD', '#4467A3', '#BD8233',
 ANYPLOT_AMBER = '#DDCC77'  # warning / caution (outside the categorical pool)
 
 # Single-series
-p.scatter(x, y, color=IMPRINT_PALETTE[0])
+p.scatter(x=STUDY_HOURS, y=EXAM_SCORE, source=source, color=IMPRINT_PALETTE[0])
 
-# Multi-series: iterate in canonical order
-for i, group in enumerate(groups):
-    p.scatter(..., color=IMPRINT_PALETTE[i], legend_label=group)
+# Multi-series: iterate the data's groups in canonical palette order
+for i, (school, rows) in enumerate(df.groupby(SCHOOL, sort=False)):
+    p.scatter(x=STUDY_HOURS, y=EXAM_SCORE, source=ColumnDataSource(rows),
+              color=IMPRINT_PALETTE[i], legend_label=str(school))
 
 # Continuous — only the two Imprint palette-derived cmaps are allowed.
 # Build a 256-stop ramp by interpolating between the endpoints:
