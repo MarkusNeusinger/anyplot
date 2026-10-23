@@ -15,27 +15,20 @@ const Y = "Setpoint (°F)"; // role: y
 
 // Data: replace this block with your own records, one object per row
 // Smart-thermostat setpoint schedule, logged every 15 minutes over a day.
-const data = (() => {
-  const samplesPerHour = 4;
-  const schedule = [
-    { hours: 6, setpoint: 62 }, // overnight sleep mode
-    { hours: 2, setpoint: 68 }, // morning warm-up
-    { hours: 9, setpoint: 65 }, // away / eco during work hours
-    { hours: 5, setpoint: 72 }, // evening comfort
-    { hours: 2, setpoint: 62 }, // night wind-down
-  ];
-
-  const rows: { [X]: number; [Y]: number }[] = [];
-  let hour = 0;
-  for (const block of schedule) {
-    const samples = block.hours * samplesPerHour;
-    for (let i = 0; i < samples; i += 1) {
-      rows.push({ [X]: hour, [Y]: block.setpoint });
-      hour += 1 / samplesPerHour;
-    }
-  }
-  return rows;
-})();
+const SAMPLES_PER_HOUR = 4;
+const schedule = [
+  { start: 0, hours: 6, setpoint: 62 }, // overnight sleep mode
+  { start: 6, hours: 2, setpoint: 68 }, // morning warm-up
+  { start: 8, hours: 9, setpoint: 65 }, // away / eco during work hours
+  { start: 17, hours: 5, setpoint: 72 }, // evening comfort
+  { start: 22, hours: 2, setpoint: 62 }, // night wind-down
+];
+const data = schedule.flatMap((block) =>
+  Array.from({ length: block.hours * SAMPLES_PER_HOUR }, (_, i) => ({
+    [X]: block.start + i / SAMPLES_PER_HOUR,
+    [Y]: block.setpoint,
+  })),
+);
 
 // Plot: reads only data and the constants above
 const hoursOfDay = data.map((d) => d[X]);
@@ -45,12 +38,6 @@ const setpoints = data.map((d) => d[Y]);
 const Y_UNIT = Y.match(/\(([^)]*)\)\s*$/)?.[1] ?? "";
 const formatY = (v: number) =>
   Y_UNIT.startsWith("°") || Y_UNIT === "%" ? `${v}${Y_UNIT}` : `${v} ${Y_UNIT}`.trim();
-
-function formatHour(h: number) {
-  const wholeHour = Math.floor(h);
-  const minutes = Math.round((h - wholeHour) * 60);
-  return `${String(wholeHour).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
-}
 
 const TITLE = "line-stepwise · javascript · muix · anyplot.ai";
 const TITLE_H = 56;
@@ -98,7 +85,8 @@ export default function Chart() {
             min: X_MIN,
             max: X_MAX,
             tickNumber: 8,
-            valueFormatter: (h) => formatHour(h),
+            valueFormatter: (h: number) =>
+              `${String(Math.floor(h)).padStart(2, "0")}:${String(Math.round((h % 1) * 60)).padStart(2, "0")}`,
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
             labelStyle: { fontSize: 16, fill: t.ink },
           },
