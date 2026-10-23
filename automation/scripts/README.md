@@ -132,10 +132,13 @@ With `--review-skipped` and no score, it merges on the route before the score
 checks. A merge whose predecessor passes and whose new source fails becomes keep
 with `adapt_regression`, and so does one whose predecessor passes the static
 check with an unknown smoke run while the new source fails the static check. `adapt-route` writes `adapt_route`, `adapt_why`,
-`adapt_prev`, and `adapt_new` before the review, and always exits 0. The record
-gains `adapt` (`AdaptAssessment.to_record`, checked by `validate_record`), the
-outputs gain `adapt_counted` and `adapt_why`, and with an adapt flag the notice
-line gains them too, before `reason=`. Without the adapt flags, the route and the
+`adapt_prev`, and `adapt_new` before the review, and always exits 0. impl-review
+passes that result back to `decide` as `--adapt-route-held`. The record gains
+`adapt` (`AdaptAssessment.to_record`, checked by `validate_record`), with
+`route_pre_review` from that flag. The outputs gain `adapt_counted`,
+`adapt_why`, and `adapt_overruled` (the route held before the review and the
+review's floor turned it off, which impl-review labels `regen:adapt-overruled`),
+and with an adapt flag the notice line gains them too, before `reason=`. Without the adapt flags, the route and the
 regression are off, so older argument sets decide as before.
 
 ### `regen_writeback.py`

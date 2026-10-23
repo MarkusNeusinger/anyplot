@@ -39,8 +39,10 @@
   as `adapt_regression`, on every spec, so converted code stays converted.
   `regen_gate.py adapt-route` evaluates the route before the review. The
   repository variable `ADAPT_REVIEW_FREE` lets identical conversions merge
-  without a review. It is off until the owner turns it on, and the label
-  `regen:adapt` counts these merges. (#12261)
+  without a review. It is off until the owner turns it on. The label
+  `regen:adapt` counts the merges on which the route held through the review,
+  and `regen:adapt-overruled` counts the PRs whose route held before the review
+  and that the review turned off. (#12261)
 
 ### Changed
 

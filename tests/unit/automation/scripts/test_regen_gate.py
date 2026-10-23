@@ -3585,6 +3585,60 @@ class TestAdaptDecision:
             assert result.code not in ("adapt_identity", "adapt_regression")
 
 
+class TestAdaptOverruled:
+    """A route that held before the review and that the review's floor turned off (``regen:adapt-overruled``)."""
+
+    @pytest.mark.parametrize(
+        ("score", "review", "overrides", "why"),
+        [
+            (0, None, {}, "score_zero"),
+            (85, {"regressions": [{"what": "legend lost", "where_visible": "both"}]}, {}, "review_regression"),
+            (85, {"scenario_changed": True}, {}, "scenario_changed"),
+            (85, {"encodings_added": ["size by revenue"]}, {}, "encodings_added"),
+            (85, {"prev_checklist": {}}, {}, "no_prev_checklist"),
+            (85, None, {"new_checklist": {**NEW_CHECKLIST, "VQ-01": 7}}, "technical_below"),
+        ],
+    )
+    def test_every_review_floor_reason_overrules_a_held_route(self, score, review, overrides, why):
+        inp = _adapt_inp(score=score, adapt=_adapt(route_held=True), **overrides)
+        adapt = adapt_assess(inp, _review(_regen(improvements=[], **(review or {}))))
+        assert (adapt.why, adapt.counted, adapt.route_pre_review, adapt.overruled) == (why, False, True, True)
+        assert why in gate_module.ADAPT_REVIEW_WHY
+
+    def test_the_decision_records_an_overruled_route(self):
+        result = decide(_adapt_inp(adapt=_adapt(route_held=True), new_checklist={**NEW_CHECKLIST, "VQ-01": 7}))
+        assert (result.verdict, result.code) == (KEEP, "no_visible_improvement")
+        assert result.adapt is not None and result.adapt.overruled
+        record = build_record(result, spec_id=ADAPT_SPEC, library=ADAPT_LIB, score=85, prev_stored=94)
+        assert (record["adapt"]["why"], record["adapt"]["route_pre_review"]) == ("technical_below", True)
+        line = next(line for line in render_summary(result, "94", 85).splitlines() if "Adapt route" in line)
+        assert line.endswith("; the route held before the review, so the review overruled it")
+
+    def test_a_carrier_merge_can_overrule_the_route_too(self):
+        """The review counted a carrier but its floor failed: merged, not counted, overruled."""
+        result = decide(
+            _adapt_inp(regen=_regen(), adapt=_adapt(route_held=True), new_checklist={**NEW_CHECKLIST, "VQ-01": 7})
+        )
+        assert (result.verdict, result.code) == (MERGE, "merge")
+        assert result.adapt is not None and (result.adapt.counted, result.adapt.overruled) == (False, True)
+
+    @pytest.mark.parametrize(
+        ("adapt", "overrides"),
+        [
+            (_adapt(route_held=True), {}),  # counted: nothing overruled
+            (_adapt(), {"new_checklist": {**NEW_CHECKLIST, "VQ-01": 7}}),  # no route before the review
+            # A reason the review does not give (the reviewed file grew past the bound): not the review's verdict.
+            (_adapt(route_held=True), {"new_source": ADAPT_NEW_SOURCE + "x = 1\n" * 16}),
+            (_adapt(route_held=True, review_skipped=True), {"score": None, "regen": None}),
+        ],
+    )
+    def test_nothing_else_is_overruled(self, adapt, overrides):
+        result = decide(_adapt_inp(adapt=adapt, **overrides))
+        assert result.adapt is not None and not result.adapt.overruled
+        line = adapt_summary_line(result.adapt)
+        assert "overruled" not in line
+
+
 class TestAdaptRegression:
     """A predecessor that passes and a new source that fails: keep, on every spec (contract section 5.4)."""
 
@@ -3678,7 +3732,7 @@ class TestAdaptRecord:
         )
 
     def test_the_review_free_merge(self):
-        result = decide(_adapt_inp(score=None, regen=None, adapt=_adapt(review_skipped=True)))
+        result = decide(_adapt_inp(score=None, regen=None, adapt=_adapt(review_skipped=True, route_held=True)))
         record = self._record(result, prev_stored=94, pr=12301)
         assert (record["verdict"], record["code"], record["prev_rescored"], record["new"]) == (
             "merge",
@@ -3694,6 +3748,7 @@ class TestAdaptRecord:
             "counted": True,
             "why": "route",
             "review": "skipped",
+            "route_pre_review": True,
         }
         assert validate_record(record) == []
         assert parse_record_markers(render_record_marker(record)) == [record]
@@ -3708,7 +3763,35 @@ class TestAdaptRecord:
             "counted": False,
             "why": "no_record",
             "review": "ran",
+            "route_pre_review": None,
         }
+        assert validate_record(record) == []
+
+    @pytest.mark.parametrize(
+        ("adapt", "expected"),
+        [
+            (_adapt(route_held=True), True),
+            (_adapt(), False),  # adapt input without the flag: the route did not hold before the review
+            (AdaptInput(route_held=True), True),
+            (AdaptInput(), None),
+            (AdaptInput(language="r"), None),
+        ],
+    )
+    def test_route_pre_review(self, adapt, expected):
+        record = self._record(decide(_adapt_inp(adapt=adapt)), score=85, prev_stored=90)
+        assert record["adapt"]["route_pre_review"] is expected
+        assert validate_record(record) == []
+
+    @pytest.mark.parametrize("value", ["yes", 1, 0, "true", {"held": True}])
+    def test_validate_rejects_a_route_pre_review_that_is_no_boolean(self, value):
+        record = self._record(decide(_adapt_inp()), score=85, prev_stored=90)
+        record["adapt"]["route_pre_review"] = value
+        assert "record.adapt.route_pre_review must be true, false or null" in validate_record(record)
+
+    def test_a_block_without_route_pre_review_still_validates(self):
+        """The key came after the block's first form: additive, RECORD_VERSION stays 1."""
+        record = self._record(decide(_adapt_inp()), score=85, prev_stored=90)
+        del record["adapt"]["route_pre_review"]
         assert validate_record(record) == []
 
     def test_a_result_without_an_assessment_records_no_record(self):
@@ -3899,7 +3982,8 @@ class TestAdaptCli:
     def test_decide_with_the_adapt_flags(self, tmp_path, monkeypatch, capsys):
         notice, outputs, record = self._decide(tmp_path, monkeypatch, capsys, [])
         expected = (
-            " code=adapt_identity prev_lines=100 new_lines=110 adapt_counted=true adapt_why=route reason=adapt route:"
+            " code=adapt_identity prev_lines=100 new_lines=110 adapt_counted=true adapt_why=route"
+            " adapt_overruled=false reason=adapt route:"
         )
         assert expected in notice
         assert (outputs["verdict"], outputs["code"], outputs["adapt_counted"], outputs["adapt_why"]) == (
@@ -3908,8 +3992,32 @@ class TestAdaptCli:
             "true",
             "route",
         )
+        assert outputs["adapt_overruled"] == "false"
         assert record["adapt"]["counted"] is True and record["adapt"]["review"] == "ran"
+        assert record["adapt"]["route_pre_review"] is False  # no --adapt-route-held
         assert validate_record(record) == []
+
+    def test_decide_with_a_held_route_that_the_review_overrules(self, tmp_path, monkeypatch, capsys):
+        checklist = _checklist_json({**NEW_CHECKLIST, "VQ-01": 7})
+        (tmp_path / "x").mkdir()
+        (tmp_path / "x" / "review_checklist.json").write_text(json.dumps(checklist), encoding="utf-8")
+        (tmp_path / "x" / "review_regen.json").write_text(json.dumps(_regen(improvements=[])), encoding="utf-8")
+        # The review's files sit apart, so its checklist (one item below the re-score) is the one the gate reads.
+        extra = ["--adapt-route-held", "--regen-json", str(tmp_path / "x" / "review_regen.json")]
+        notice, outputs, record = self._decide(tmp_path, monkeypatch, capsys, extra)
+        assert " adapt_counted=false adapt_why=technical_below adapt_overruled=true reason=" in notice
+        assert (outputs["verdict"], outputs["adapt_why"], outputs["adapt_overruled"]) == (
+            "keep",
+            "technical_below",
+            "true",
+        )
+        assert (record["adapt"]["route_pre_review"], record["adapt"]["counted"]) == (True, False)
+        assert validate_record(record) == []
+
+    def test_decide_with_a_held_route_that_counts(self, tmp_path, monkeypatch, capsys):
+        _, outputs, record = self._decide(tmp_path, monkeypatch, capsys, ["--adapt-route-held"])
+        assert (outputs["adapt_counted"], outputs["adapt_overruled"]) == ("true", "false")
+        assert record["adapt"]["route_pre_review"] is True
 
     def test_decide_without_a_review(self, tmp_path, monkeypatch, capsys):
         notice, outputs, record = self._decide(tmp_path, monkeypatch, capsys, ["--review-skipped"], score="")
@@ -3929,8 +4037,12 @@ class TestAdaptCli:
     def test_older_argument_sets_print_the_old_notice(self, tmp_path, monkeypatch, capsys):
         notice, outputs, record = self._decide(tmp_path, monkeypatch, capsys, [], adapt=False)
         assert "adapt_" not in notice and " code=no_visible_improvement reason=" in notice
-        assert (outputs["adapt_counted"], outputs["adapt_why"]) == ("false", "no_record")
-        assert record["adapt"]["why"] == "no_record"
+        assert (outputs["adapt_counted"], outputs["adapt_why"], outputs["adapt_overruled"]) == (
+            "false",
+            "no_record",
+            "false",
+        )
+        assert record["adapt"]["why"] == "no_record" and record["adapt"]["route_pre_review"] is None
 
     def test_a_non_python_pair_records_not_python(self, tmp_path, monkeypatch, capsys):
         (tmp_path / "prev.R").write_text("x <- 1\n", encoding="utf-8")

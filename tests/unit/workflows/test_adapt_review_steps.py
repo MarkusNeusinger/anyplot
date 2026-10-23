@@ -561,9 +561,12 @@ class TestReviewFreeWiring:
             "[ -s /tmp/anyplot-adapt-prev.json ] && ADAPT+=(--adapt-prev /tmp/anyplot-adapt-prev.json)",
             '[ -s "$RUNNER_TEMP/adapt/pair.json" ] && ADAPT+=(--adapt-pair "$RUNNER_TEMP/adapt/pair.json")',
             '[ "$REVIEW_SKIPPED" = "true" ] && ADAPT+=(--review-skipped)',
+            '[ "$ADAPT_ROUTE" = "true" ] && ADAPT+=(--adapt-route-held)',
             '"${FLAGS[@]}" "${ADAPT[@]}"; then',
         ):
             assert line in script, line
+        # The pre-review route, as the adapt step wrote it before the review ran.
+        assert step["env"]["ADAPT_ROUTE"] == "${{ steps.adapt.outputs.route }}"
 
     def test_the_pair_artifact_carries_the_adapt_folder(self):
         script = _step("impl-review.yml", "Stage regen pair")["run"]
@@ -671,6 +674,40 @@ class TestAdaptCountLabel:
     def test_the_label_comes_from_the_gate(self):
         assert _step("impl-review.yml", EARLY)["env"]["ADAPT_COUNTED"] == "${{ steps.gate.outputs.adapt_counted }}"
         assert _step("impl-review.yml", VERDICT)["env"]["ADAPT_COUNTED"] == "${{ steps.gate.outputs.adapt_counted }}"
+        overruled = "${{ steps.gate.outputs.adapt_overruled }}"
+        assert _step("impl-review.yml", EARLY)["env"]["ADAPT_OVERRULED"] == overruled
+        assert _step("impl-review.yml", VERDICT)["env"]["ADAPT_OVERRULED"] == overruled
+
+    @pytest.mark.parametrize(
+        ("verdict", "labels"),
+        [
+            ("keep", ["regen:adapt-overruled", "regen:kept"]),
+            ("merge", ["regen:improved", "regen:adapt-overruled", "ai-approved"]),
+        ],
+    )
+    def test_an_overruled_route_is_labelled_before_the_verdict(self, tmp_path, verdict, labels):
+        result, calls = self._early(tmp_path, ADAPT_OVERRULED="true", GATE_VERDICT=verdict)
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert [c[-1] for c in _calls(calls, "pr", "edit")] == labels
+        assert any(c[:4] == ["label", "create", "regen:adapt-overruled", "--force"] for c in calls)
+        assert "regen:adapt-overruled" in next(line for line in result.stdout.splitlines() if "Regen gate:" in line)
+
+    @pytest.mark.parametrize("overruled", ["false", ""])
+    def test_a_route_that_was_not_overruled_gets_no_label(self, tmp_path, overruled):
+        _, calls = self._early(tmp_path, ADAPT_OVERRULED=overruled, GATE_VERDICT="keep")
+        assert [c[-1] for c in _calls(calls, "pr", "edit")] == ["regen:kept"]
+
+    @pytest.mark.parametrize("verdict", ["keep", "merge"])
+    def test_a_lost_overruled_label_never_holds_up_the_verdict(self, tmp_path, verdict):
+        result, calls = self._early(
+            tmp_path, ADAPT_OVERRULED="true", GATE_VERDICT=verdict, GH_FAIL_ADD_LABEL="regen:adapt-overruled"
+        )
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert calls.count(["pr", "edit", "7", "--add-label", "regen:adapt-overruled"]) == 3
+        final = "regen:kept" if verdict == "keep" else "ai-approved"
+        assert ["pr", "edit", "7", "--add-label", final] in calls
+        assert "::warning::regen:adapt-overruled not added to PR #7" in result.stdout
+        assert "::error::" not in result.stdout
 
 
 def _writer() -> str:
@@ -877,6 +914,19 @@ class TestVerdictStepReviewFree:
         body = self._comment(calls)
         assert "compared this render (score 92)" in body
         assert "The adapt route held as well, so this PR is labelled `regen:adapt`" in body
+        assert "regen:adapt-overruled" not in body
+
+    @pytest.mark.parametrize("verdict", ["merge", "keep"])
+    def test_an_overruled_route_is_named_in_the_comment(self, tmp_path, verdict):
+        result, calls = self._verdict(
+            tmp_path, GATE_VERDICT=verdict, REVIEW_SKIPPED="", SCORE="92", ADAPT_OVERRULED="true", WB_STATUS="opened"
+        )
+        assert result.returncode == 0, result.stdout + result.stderr
+        body = self._comment(calls)
+        assert (
+            "The adapt route held before the review, but the review overruled it (see **Adapt route** below), "
+            "so this PR is labelled `regen:adapt-overruled`." in body
+        )
 
     def test_a_review_free_keep_has_no_rescore(self, tmp_path):
         result, calls = self._verdict(tmp_path, GATE_VERDICT="keep", GATE_CODE="no_score", WB_STATUS="")

@@ -866,6 +866,17 @@ ABSENT = "absent"
 MISSING = "missing"
 UNREADABLE = "unreadable"
 ADAPT_ROUTE = "route"
+# The reasons only a review can give (``_adapt_review_why``, in its order): a
+# route that held before the review and ends on one of these was overruled by
+# the review (``AdaptAssessment.overruled``, the ``regen:adapt-overruled`` label).
+ADAPT_REVIEW_WHY = (
+    "score_zero",
+    "review_regression",
+    "scenario_changed",
+    "encodings_added",
+    "no_prev_checklist",
+    "technical_below",
+)
 # Every reason the route can give, in the order ``adapt_assess`` tests them;
 # the first that applies wins, and ``route`` means none did.
 ADAPT_WHY = (
@@ -888,17 +899,14 @@ ADAPT_WHY = (
     "lines_over",
     "canvas_failed",
     # Only when a review ran:
-    "score_zero",
-    "review_regression",
-    "scenario_changed",
-    "encodings_added",
-    "no_prev_checklist",
-    "technical_below",
+    *ADAPT_REVIEW_WHY,
     ADAPT_ROUTE,
 )
 ADAPT_REVIEW_RAN = "ran"
 ADAPT_REVIEW_SKIPPED = "skipped"
 ADAPT_RECORD_KEYS = ("version", "prev", "new", "identity", "counted", "why", "review")
+# Added after the block's first form; a block without it still validates.
+ADAPT_RECORD_OPTIONAL_KEYS = ("route_pre_review",)
 ADAPT_SIDE_KEYS = ("status", "static", "smoke")
 
 
@@ -912,6 +920,8 @@ class AdaptInput:
     (``load_adapt_file``). ``language`` is ``source_language`` of
     ``--new-impl`` (None without it). ``review_skipped`` is
     ``--review-skipped``: impl-review skipped the review on the owner's switch.
+    ``route_held`` is ``--adapt-route-held``: impl-review's ``adapt-route``,
+    before the review, said the route holds.
     """
 
     library: str = ""
@@ -923,11 +933,16 @@ class AdaptInput:
     prev_error: str | None = ABSENT
     pair_error: str | None = ABSENT
     review_skipped: bool = False
+    route_held: bool = False
 
     @property
     def requested(self) -> bool:
         """Any adapt flag was given (the notice line and the summary then report the route)."""
-        return self.review_skipped or any(e != ABSENT for e in (self.new_error, self.prev_error, self.pair_error))
+        return (
+            self.review_skipped
+            or self.route_held
+            or any(e != ABSENT for e in (self.new_error, self.prev_error, self.pair_error))
+        )
 
 
 @dataclass(frozen=True)
@@ -944,7 +959,10 @@ class AdaptAssessment:
     that fails, or a predecessor whose static check passes and whose smoke
     run is not known (status ``unknown``) and a new source whose static check
     fails. The second needs no smoke run: the static check alone already
-    shows that converted code was unconverted.
+    shows that converted code was unconverted. ``route_pre_review`` is what
+    impl-review's ``adapt-route`` said before the review (``--adapt-route-held``):
+    true when it held, false when the gate had adapt input without the flag,
+    None without adapt input or for another language.
     """
 
     why: str
@@ -957,10 +975,20 @@ class AdaptAssessment:
     prev_lines: int | None = None
     new_lines: int | None = None
     requested: bool = False
+    route_pre_review: bool | None = None
 
     @property
     def counted(self) -> bool:
         return self.why == ADAPT_ROUTE
+
+    @property
+    def overruled(self) -> bool:
+        """The route held before the review, and the review's floor turned it off.
+
+        These PRs and the counted ones (``regen:adapt``) are the route-held
+        PRs the review-free switch (``ADAPT_REVIEW_FREE``) is read against.
+        """
+        return self.route_pre_review is True and self.why in ADAPT_REVIEW_WHY
 
     @property
     def static_regression(self) -> bool:
@@ -977,6 +1005,7 @@ class AdaptAssessment:
             "counted": self.counted,
             "why": self.why,
             "review": self.review,
+            "route_pre_review": self.route_pre_review,
         }
 
 
@@ -1286,6 +1315,7 @@ def adapt_assess(inp: GateInput, review: Mapping[str, Any] | None) -> AdaptAsses
         prev_lines=prev_lines,
         new_lines=new_lines,
         requested=adapt.requested,
+        route_pre_review=True if adapt.route_held else (False if python and adapt.requested else None),
     )
 
 
@@ -1385,6 +1415,8 @@ def adapt_summary_line(adapt: AdaptAssessment) -> str:
         text = f"counted: {adapt_route_text(adapt)}; {review}"
     else:
         text = f"not counted ({adapt.why}): {ADAPT_WHY_TEXT.get(adapt.why, adapt.why)}"
+        if adapt.overruled:
+            text += "; the route held before the review, so the review overruled it"
     return f"**Adapt route:** {text}"
 
 
@@ -2806,7 +2838,9 @@ def build_record(
     lack it. ``adapt`` (from PR 2 of the adaptable-code rollout) is the
     adapt route's assessment (``AdaptAssessment.to_record``); a result
     without one records the route as off for want of a record. Records
-    written before it lack the key.
+    written before it lack the key. Its ``route_pre_review`` (whether
+    impl-review's ``adapt-route`` held before the review) came after the
+    block's first form, so the validator accepts a block without it.
     """
     kinds = {"W": 0, "P": 0, "C": 0, "new": 0}
     for item in result.improvements:
@@ -2853,12 +2887,17 @@ def adapt_record_errors(adapt: Any) -> list[str]:
     ``static`` and ``smoke`` known or null); ``identity`` null or one finite
     fraction from 0 to 1 (or null) per theme; a boolean ``counted`` that is
     true exactly when ``why`` is ``route``; ``why`` one of ``ADAPT_WHY``;
-    ``review`` ``ran`` or ``skipped``. No lists anywhere.
+    ``review`` ``ran`` or ``skipped``; ``route_pre_review``, when present,
+    true, false or null. No lists anywhere.
     """
     if not isinstance(adapt, dict):
         return ["record.adapt is not an object"]
-    errors = [f"record.adapt has unknown key {key!r}" for key in adapt if key not in ADAPT_RECORD_KEYS]
+    known = (*ADAPT_RECORD_KEYS, *ADAPT_RECORD_OPTIONAL_KEYS)
+    errors = [f"record.adapt has unknown key {key!r}" for key in adapt if key not in known]
     errors += [f"record.adapt lacks {key!r}" for key in ADAPT_RECORD_KEYS if key not in adapt]
+    route_pre_review = adapt.get("route_pre_review")
+    if route_pre_review is not None and not isinstance(route_pre_review, bool):
+        errors.append("record.adapt.route_pre_review must be true, false or null")
     version = adapt.get("version")
     if version is not None and not _is_int(version):
         errors.append("record.adapt.version must be an integer or null")
@@ -3021,7 +3060,7 @@ def _sources(args: argparse.Namespace) -> tuple[str | None, str | None, str | No
     return load_source(args.prev_impl), load_source(args.new_impl), language
 
 
-def _adapt_input(args: argparse.Namespace, review_skipped: bool = False) -> AdaptInput:
+def _adapt_input(args: argparse.Namespace, review_skipped: bool = False, route_held: bool = False) -> AdaptInput:
     new, new_error = load_adapt_file(args.adapt_new)
     prev, prev_error = load_adapt_file(args.adapt_prev)
     pair, pair_error = load_adapt_file(args.adapt_pair)
@@ -3035,6 +3074,7 @@ def _adapt_input(args: argparse.Namespace, review_skipped: bool = False) -> Adap
         prev_error=prev_error,
         pair_error=pair_error,
         review_skipped=review_skipped,
+        route_held=route_held,
     )
 
 
@@ -3118,7 +3158,7 @@ def cmd_decide(args: argparse.Namespace) -> int:
         source_language=language or "python",
         # All optional too: without them the adapt route and the adapt
         # regression are off.
-        adapt=_adapt_input(args, review_skipped=args.review_skipped),
+        adapt=_adapt_input(args, review_skipped=args.review_skipped, route_held=args.adapt_route_held),
     )
     result = decide(inp)
     adapt = result.adapt or AdaptAssessment(why="no_record")
@@ -3138,7 +3178,10 @@ def cmd_decide(args: argparse.Namespace) -> int:
     # Only with an adapt flag, for the same reason.
     adapt_fields = ""
     if inp.adapt.requested:
-        adapt_fields = f" adapt_counted={_bool_text(adapt.counted)} adapt_why={adapt.why}"
+        adapt_fields = (
+            f" adapt_counted={_bool_text(adapt.counted)} adapt_why={adapt.why}"
+            f" adapt_overruled={_bool_text(adapt.overruled)}"
+        )
     print(
         f"::notice::regen_gate spec={args.spec_id} lib={args.library} prev_stored={args.prev_stored} "
         f"prev_rescored={rescored} new={score if score is not None else 'n/a'} verdict={result.verdict} "
@@ -3175,6 +3218,9 @@ def cmd_decide(args: argparse.Namespace) -> int:
             "code": result.code,
             "adapt_counted": _bool_text(adapt.counted),
             "adapt_why": adapt.why,
+            # The pre-review route held and the review's floor turned it off
+            # (impl-review labels the PR `regen:adapt-overruled`).
+            "adapt_overruled": _bool_text(adapt.overruled),
         }
     )
     return 0
@@ -3344,6 +3390,11 @@ def build_parser() -> argparse.ArgumentParser:
     _add_adapt_files(dec)
     dec.add_argument(
         "--review-skipped", action="store_true", help="no review ran (ADAPT_REVIEW_FREE): only the adapt route merges"
+    )
+    dec.add_argument(
+        "--adapt-route-held",
+        action="store_true",
+        help="impl-review's adapt-route held before the review (the record's adapt.route_pre_review)",
     )
     dec.set_defaults(func=cmd_decide)
 
