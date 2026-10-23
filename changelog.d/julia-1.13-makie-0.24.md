@@ -9,4 +9,4 @@
   again. The setup action installs Julia 1.13, and the Makie generator prompt
   switches to `Figure(size = …)` and adds notes on the 0.24 APIs that changed
   (arrows, text alignment, layout gaps, and `heatmap!` on a `PolarAxis`,
-  which renders a blank figure).
+  which renders a blank figure) (#12245).
