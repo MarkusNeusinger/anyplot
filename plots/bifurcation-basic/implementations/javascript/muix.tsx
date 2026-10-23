@@ -6,7 +6,7 @@ import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
-import { useXScale, useYScale } from "@mui/x-charts/hooks";
+import { useXScale, useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -14,11 +14,13 @@ const t = window.ANYPLOT_TOKENS;
 const STATE_MIN = 0;
 const STATE_MAX = 1;
 const POINT_ALPHA = 0.55;
+const R_PAD_SHARE = 0.02;
+const LABEL_DX = -8; // labels sit left of their marker line
+// topShare: label height as a share of the drawing area, measured from its top
 const BIFURCATION_POINTS = [
-  { r: 3.0, text: "Period-2", anchor: "end" as const, y: 0.94 },
-  { r: 3.449, text: "Period-4", anchor: "end" as const, y: 0.94 },
-  { r: 3.544, text: "Period-8", anchor: "end" as const, y: 0.14 },
-  { r: 3.5699, text: "Chaos", anchor: "start" as const, y: 0.94 },
+  { r: 3.0, text: "Period-2", topShare: 0.06 },
+  { r: 3.449, text: "Period-4", topShare: 0.06 },
+  { r: 3.544, text: "Period-8", topShare: 0.86 },
 ];
 
 // Columns: set these to your data's column names
@@ -57,39 +59,34 @@ const points = data.map((d, i) => {
   return { x: r, y: x, id: i };
 });
 
+const rPad = (rMax - rMin) * R_PAD_SHARE;
+
 const p0Int = parseInt(t.palette[0].slice(1), 16);
 const pointColor = `rgba(${(p0Int >> 16) & 255}, ${(p0Int >> 8) & 255}, ${p0Int & 255}, ${POINT_ALPHA})`;
 
 const TITLE = "bifurcation-basic · javascript · muix · anyplot.ai";
-const SUBTITLE = `${points.length.toLocaleString("en-US")} steady-state orbit points across ${PARAMETER} ∈ [${rMin.toFixed(1)}, ${rMax.toFixed(1)}]`;
+const SUBTITLE = `${points.length.toLocaleString("en-US")} points · ${PARAMETER}: ${rMin.toLocaleString("en-US")}–${rMax.toLocaleString("en-US")}`;
 const HEADER_H = 78;
 
 function Bifurcations() {
   const xScale = useXScale("r");
-  const yScale = useYScale("x");
-  if (!xScale || !yScale) return null;
-
-  const yTop = yScale(STATE_MAX);
-  const yBottom = yScale(STATE_MIN);
-  if (yTop === undefined || yBottom === undefined) return null;
+  const { top, height } = useDrawingArea();
 
   return (
     <g>
       {BIFURCATION_POINTS.filter((m) => m.r >= rMin && m.r <= rMax).map((m) => {
         const x = xScale(m.r);
-        const labelY = yScale(m.y);
-        if (x === undefined || labelY === undefined) return null;
-        const dx = m.anchor === "end" ? -8 : 8;
+        const labelY = top + m.topShare * height;
         const labelText = `${m.text} (r ≈ ${m.r})`;
         const pillW = labelText.length * 7.6 + 12;
-        const pillX = m.anchor === "end" ? x + dx - pillW + 4 : x + dx - 4;
+        const pillX = x + LABEL_DX - pillW + 4;
         return (
           <g key={m.r}>
             <line
               x1={x}
-              y1={yTop}
+              y1={top}
               x2={x}
-              y2={yBottom}
+              y2={top + height}
               stroke={t.amber}
               strokeWidth={1.5}
               strokeDasharray="7 5"
@@ -105,10 +102,10 @@ function Bifurcations() {
               fillOpacity={0.86}
             />
             <text
-              x={x + dx}
+              x={x + LABEL_DX}
               y={labelY}
               fill={t.ink}
-              textAnchor={m.anchor}
+              textAnchor="end"
               style={{
                 fontSize: 14,
                 fontFamily: "Inter, system-ui, sans-serif",
@@ -173,8 +170,8 @@ export default function Chart() {
         xAxis={[
           {
             id: "r",
-            min: rMin,
-            max: rMax,
+            min: rMin - rPad,
+            max: rMax + rPad,
             tickNumber: 10,
             height: 64,
             label: PARAMETER,
