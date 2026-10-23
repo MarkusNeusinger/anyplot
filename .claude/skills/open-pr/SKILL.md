@@ -289,7 +289,8 @@ stale wait loop with the bracket trick (`pkill -f "x[.]y"`), or
 `.claude/skills/open-pr/scripts/` cover the loops, run from the
 repository root: `watch-checks.sh <num>` (§3a),
 `watch-copilot.sh <num> [count]` (§3b–c: waits for `count` Copilot
-reviews, 2 for the extra round after fixes, then prints the latest
+reviews, 2 only when a high finding was fixed and another round
+was requested, then prints the latest
 summary, every inline comment and the unresolved thread ids) and
 `watch-deploys.sh <merge-sha>` (§4).
 
@@ -395,11 +396,12 @@ worktree stay; deleting those still needs the owner's OK.
   thread while it stays unresolved; outdated threads still count
   against review-clean — resolve them explicitly.
 - **A fix push no longer starts a review round.** `review_on_push` is
-  `false` since 2026-09-03 (§3b), so only an explicit — and
-  substantive — re-request opens another one. When a round does run,
-  new threads on the changed lines are the loop working, not noise —
-  but don't chase cosmetic nits past a couple of rounds; surface
-  stalemates to the user.
+  `false` since 2026-09-03 (§3b), so only an explicit re-request opens
+  another one, and that only while the previous round had high or
+  critical findings whose fixes you pushed (§3b). A round with only
+  low and medium findings ends the loop: push the fixes, resolve the
+  threads, never chase nits into another round; surface a stalemate
+  to the user instead.
 - **Stacked PRs die when their base squash-merges.** Don't stack; if
   work depends on an unmerged PR, wait for its merge (or do the work
   and rebase before opening).

@@ -7,7 +7,7 @@
 # than a PR collects.
 #
 # Usage: watch-copilot.sh <pr> [count, default 1]
-#   count 2 waits for the one extra round requested after fixing the first round's findings.
+#   count 2 waits for a further round, requested only after a high or critical finding was fixed.
 set -uo pipefail
 PR=${1:?usage: watch-copilot.sh <pr> [count]}
 WANT=${2:-1}
