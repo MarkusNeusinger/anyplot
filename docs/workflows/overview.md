@@ -124,6 +124,7 @@ Issue + [generate:{library}] label  OR  workflow_dispatch
 impl-generate.yml
   |-- Creates branch: implementation/{spec-id}/{library}
   |-- AI generates code (Python: adaptability self-check, Step 3c)
+  |     or, with source_ref, takes the file from that ref and renders it (adopt mode)
   |-- Fails if the commit changes a dependency file
   |-- Creates metadata/python/{library}.yaml (initial)
   |-- Python: adaptability smoke run, plus the predecessor's render on a regeneration (record-only)
@@ -227,7 +228,7 @@ PR. The same test checks that every pin resolves.
 | `generate:{library}` | Trigger generation for library | User |
 | `impl:{library}:pending` | Generation in progress | Workflow |
 | `impl:{library}:done` | Implementation merged to main | Workflow |
-| `impl:{library}:failed` | Set by `impl-generate.yml` after three failed generation attempts for the pair within a 12-hour window, or by `impl-review.yml` when the PR still scores below 50 after four repair attempts. Infrastructure failures (provider incident, cloud auth, GitHub API) are retried on a separate cap of 5 and never set this label; a pair paused that way carries no label. | Workflow |
+| `impl:{library}:failed` | Set by `impl-generate.yml` after three failed generation attempts for the pair within a 12-hour window, or by `impl-review.yml` when the PR still scores below 50 after four repair attempts. Infrastructure failures (provider incident, cloud auth, GitHub API) are retried on a separate cap of 5 and never set this label; a pair paused that way carries no label. An adopt-mode source failure never sets it either (see [Adopt implementations from a branch](#adopt-implementations-from-a-branch)). | Workflow |
 
 ### PR labels (on Pull Requests)
 
@@ -239,7 +240,7 @@ PR. The same test checks that every pin resolves.
 | `quality:XX` | Quality score (e.g., quality:92) | Workflow |
 | `quality-poor` | Score < 50, needs fundamental fixes | Workflow |
 | `regen` | Regeneration of an implementation that is live on main (marker for humans and the watchdog; `impl-review.yml` decides "regeneration" from `origin/main`) | Workflow |
-| `regen:forced` | Regeneration dispatched with `regen_gate=false`: bypasses the regen gate and takes the fresh-generation path | Workflow |
+| `regen:forced` | Regeneration dispatched with `regen_gate=false` or in adopt mode (`source_ref`): bypasses the regen gate and takes the fresh-generation path | Workflow |
 | `regen:improved` | The regen gate replaced the live implementation (added before `ai-approved`) | Workflow |
 | `regen:kept` | The regen gate kept the live implementation; the PR is closed unmerged | Workflow |
 | `regen:adapt` | The regen gate replaced the live implementation on the adapt route (added after `regen:improved`); one of the two counts the owner reads before turning on `ADAPT_REVIEW_FREE` | Workflow |
@@ -368,7 +369,7 @@ Any failure leaves the stored review as it was and closes the write-back PR; the
 
 So a stored weakness list in the older format lasts only until the pair's first gated regeneration: a merge stores the new render's review, and a keep stores the re-score, both in the defect and suggestion format.
 
-To replace an implementation without the gate, dispatch with `regen_gate=false` (`impl-generate.yml` or `bulk-generate.yml`): the PR is labelled `regen:forced` and takes the fresh-generation path, including the repair loop. If the repairs are exhausted, the PR is closed and the live implementation stays on main; nothing is deleted.
+To replace an implementation without the gate, dispatch with `regen_gate=false` (`impl-generate.yml` or `bulk-generate.yml`): the PR is labelled `regen:forced` and takes the fresh-generation path, including the repair loop. If the repairs are exhausted, the PR is closed and the live implementation stays on main; nothing is deleted. A run in adopt mode (`source_ref`) is always forced this way; see [Adopt implementations from a branch](#adopt-implementations-from-a-branch).
 
 The local `/regen` command (`agentic/commands/regen.md`) is an owner override without the review gate; it only withholds `ai-approved` when the new score is more than one point below the stored score.
 
@@ -391,7 +392,7 @@ Located in `.github/workflows/`:
 | Workflow | Purpose |
 |----------|---------|
 | `spec-create.yml` | Creates new specifications |
-| `impl-generate.yml` | Generates single implementation |
+| `impl-generate.yml` | Generates single implementation, or adopts one from a ref with `source_ref` |
 | `impl-review.yml` | AI quality review |
 | `impl-repair.yml` | Fixes rejected implementations |
 | `impl-merge.yml` | Merges approved PRs, and the review write-back PRs a kept regeneration opens (job `writeback`) |
@@ -426,6 +427,61 @@ gh workflow run bulk-generate.yml -f specification_id=all -f library=matplotlib
 
 **Concurrency limit**: Max 3 parallel implementations globally.
 
+### Adopt implementations from a branch
+
+Adopt mode takes each implementation file from a branch, tag, or commit SHA of
+the repository instead of generating it. Use it for code written outside the
+pipeline, for example a `gemini/*` branch that migrated every MUI X
+implementation to a new major version. The pipeline still owns everything
+else: render, metadata, review, repair, merge, GCS promotion, and labels.
+Nothing from the source branch is merged directly.
+
+To adopt, pass `source_ref` to `bulk-generate.yml` or `impl-generate.yml`:
+
+```bash
+gh workflow run bulk-generate.yml -f specification_id=all -f library=muix -f source_ref=gemini/muix-9
+```
+
+Name the ref as the repository knows it, such as `main` or `gemini/muix-9`. A
+leading `origin/` is dropped. An adopted run differs from a generation in these
+ways:
+
+- **The file comes from the ref.** The step "Adopt implementation from source
+  ref" fetches the ref and takes exactly
+  `plots/{spec-id}/implementations/{language}/{library}{ext}`, the file the
+  generator would write. The Claude steps and the prompts overlay are skipped,
+  and every later step runs unchanged.
+- **It renders the file the way the generator does.** Both themes run with the
+  generator's commands: `python -P` with `MPLBACKEND=Agg` for Python, and the
+  browser render harness for JavaScript. `core.canvas` then checks both PNGs.
+  A drift from the canvas only warns, because the canvas gate in
+  `impl-review.yml` sends it to repair. Python and JavaScript only: an R or
+  Julia run fails with an error.
+- **It's always a forced regeneration.** The PR is labelled `regen:forced`
+  whatever `regen_gate` says, so it takes the fresh-generation path with the
+  repair loop and never the regen gate.
+- **No model writes the code.** The routed model, Opus under `model=auto` as
+  for any forced regeneration, still runs repair. The PR body names the source
+  on a `**Generation:**` line and keeps the repair model on its `**Model:**`
+  line, which review and repair rescues read. The metadata records
+  `generated_by: adopted:{source_ref}`.
+- **A source failure is not retried.** When the file or the ref is missing, or
+  the file doesn't render, the run comments on the spec issue and stops. It
+  isn't retried, it doesn't count toward the 3-attempt cap, and it never sets
+  `impl:{library}:failed`, because every retry would read the same file. Fix
+  the file on the source branch, then dispatch again. A failure of the runner,
+  such as an unreachable origin or a canvas check that can't run, and a failure
+  in a later step, such as the push, the metadata, the upload, or the PR, are
+  retried as usual, and the retry keeps `source_ref`.
+
+Each adopted PR still gets an Opus review. At the default pace of 180 seconds,
+one `bulk-generate.yml` run dispatches about 115 pairs before its 6-hour job
+timeout, so a library across the whole catalogue needs a lower `pace_seconds`
+or several runs. With `specification_id=all`, every spec whose file is missing
+on the source ref gets an "Adoption Failed" comment. The watchdog's generation
+rescues don't carry `source_ref`: a pair the watchdog re-dispatches is
+generated by Claude.
+
 ---
 
 ## Pipeline models
@@ -446,6 +502,7 @@ and threads it into every repair of that pair's PR:
 | First implementation: the pair has no implementation file on `origin/main` yet | Opus |
 | Regeneration: the pair already has an implementation on `origin/main` | Sonnet |
 | Forced regeneration: a regeneration dispatched with `regen_gate=false` (see [Regen gate](#regen-gate-regenerations)) | Opus |
+| Adopt mode (`source_ref`): the file comes from that ref (see [Adopt implementations from a branch](#adopt-implementations-from-a-branch)) | None generates; the routed model runs repair (Opus, as for a forced regeneration) |
 | Explicit `model` input (`haiku`, `sonnet`, or `opus`) | That model, for every pair |
 
 The routing applies whenever nobody chooses a model: a `generate:{library}`

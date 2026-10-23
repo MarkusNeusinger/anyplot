@@ -5,6 +5,9 @@ run-name: "Generate: ${{ inputs.library || github.event.label.name }} for ${{ in
 # Triggers:
 # - generate:{library} label on spec-ready issue
 # - workflow_dispatch with specification_id + library
+# Adopt mode (workflow_dispatch with source_ref): the implementation file is
+# taken from that ref of origin instead of being generated, then rendered,
+# reviewed, repaired and merged like a forced regeneration.
 
 on:
   issues:
@@ -59,6 +62,11 @@ on:
         required: false
         type: boolean
         default: true
+      source_ref:
+        description: "Adopt mode: take the implementation file from this branch, tag or commit SHA of origin (e.g. main, gemini/muix-9) instead of generating it with Claude. Always a forced regeneration (regen:forced); model still threads to repair. Empty = generate."
+        required: false
+        type: string
+        default: ''
 
 # Global concurrency: max 3 concurrent implementation workflows
 concurrency:
@@ -101,8 +109,11 @@ jobs:
           LABEL_NAME: ${{ github.event.label.name }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
           # Same expression as "Check for existing implementation": only an
-          # explicit dispatch with regen_gate=false forces a regeneration.
-          REGEN_GATE: ${{ (github.event_name == 'workflow_dispatch' && inputs.regen_gate == false) && 'false' || 'true' }}
+          # explicit dispatch with regen_gate=false, or one that adopts a file
+          # from source_ref, forces a regeneration.
+          REGEN_GATE: ${{ (github.event_name == 'workflow_dispatch' && (inputs.regen_gate == false || inputs.source_ref != '')) && 'false' || 'true' }}
+          # Via env, never interpolated into the script: free text from a dispatch.
+          SOURCE_REF_INPUT: ${{ inputs.source_ref }}
         run: |
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
             # From workflow_dispatch
@@ -127,6 +138,23 @@ jobs:
           if [ -z "$LIBRARY" ]; then
             echo "::error::Could not determine library"
             exit 1
+          fi
+
+          # Adopt mode: the implementation comes from this ref of origin
+          # ("Adopt implementation from source ref") instead of Claude.
+          # `git fetch origin <ref>` names the ref as origin itself knows it,
+          # so a leading "origin/" (this checkout's remote-tracking name) is
+          # dropped. The value reaches git, the PR body and the metadata, so
+          # only branch, tag and SHA characters pass. A non-empty input never
+          # becomes an empty ref: the REGEN_GATE expressions read the raw
+          # input, so it must always mean adopt mode.
+          SOURCE_REF="${SOURCE_REF_INPUT:-}"
+          SOURCE_REF="${SOURCE_REF#origin/}"
+          if [ -n "${SOURCE_REF_INPUT:-}" ]; then
+            if ! [[ "$SOURCE_REF" =~ ^[A-Za-z0-9][A-Za-z0-9._/-]{0,79}$ ]] || [[ "$SOURCE_REF" == *..* ]]; then
+              echo "::error::source_ref '${SOURCE_REF}' is not a branch, tag or commit SHA (letters, digits, . _ / -, at most 80 characters)"
+              exit 1
+            fi
           fi
 
           # Derive LANGUAGE + EXT from LIBRARY. Mirrors core/constants.py LIBRARIES_METADATA;
@@ -161,7 +189,8 @@ jobs:
           # own retry. Without one ("auto" from bulk-generate, daily-regen or
           # the watchdog; empty on the label trigger) a pair's first
           # implementation runs on opus and a regeneration on sonnet, except a
-          # forced one (regen_gate=false), which runs on opus. "First"
+          # forced one (regen_gate=false, or adopt mode), which runs on opus.
+          # In adopt mode no model generates; the value only runs repair. "First"
           # means no implementation file on origin/main yet. The resolved value
           # is threaded into repair and recorded in the PR body, so one PR
           # generates and repairs on one model. Reviews are not routed here:
@@ -200,9 +229,20 @@ jobs:
           echo "issue_number=$ISSUE" >> $GITHUB_OUTPUT
           echo "model=$MODEL" >> $GITHUB_OUTPUT
           echo "model_reason=$MODEL_REASON" >> $GITHUB_OUTPUT
-          echo "**Model:** ${MODEL} (${MODEL_REASON})" >> "$GITHUB_STEP_SUMMARY"
+          echo "source_ref=$SOURCE_REF" >> $GITHUB_OUTPUT
 
-          echo "::notice::Generating $LANGUAGE/$LIBRARY for $SPEC_ID (issue: ${ISSUE:-none}, model: ${MODEL} (${MODEL_REASON}), ext: ${EXT})"
+          if [ -n "$SOURCE_REF" ]; then
+            # No model writes the code; the resolved model still runs repair.
+            {
+              echo "**Generation:** adopted from \`${SOURCE_REF}\`"
+              echo ""
+              echo "**Repair model:** ${MODEL} (${MODEL_REASON})"
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::notice::Adopting $LANGUAGE/$LIBRARY for $SPEC_ID (issue: ${ISSUE:-none}, generation: adopted from ${SOURCE_REF}, repair model: ${MODEL} (${MODEL_REASON}), ext: ${EXT})"
+          else
+            echo "**Model:** ${MODEL} (${MODEL_REASON})" >> "$GITHUB_STEP_SUMMARY"
+            echo "::notice::Generating $LANGUAGE/$LIBRARY for $SPEC_ID (issue: ${ISSUE:-none}, model: ${MODEL} (${MODEL_REASON}), ext: ${EXT})"
+          fi
 
       - name: Read issue number from specification.yaml (fallback)
         id: spec_issue
@@ -343,9 +383,10 @@ jobs:
           LIBRARY: ${{ steps.inputs.outputs.library }}
           EXT: ${{ steps.inputs.outputs.ext }}
           # Label-triggered runs have no inputs: only an explicit dispatch with
-          # regen_gate=false opts out (null == false is true in expressions,
-          # hence the event_name guard).
-          REGEN_GATE: ${{ (github.event_name == 'workflow_dispatch' && inputs.regen_gate == false) && 'false' || 'true' }}
+          # regen_gate=false, or one that adopts from source_ref, opts out
+          # (null == false is true in expressions, hence the event_name guard).
+          REGEN_GATE: ${{ (github.event_name == 'workflow_dispatch' && (inputs.regen_gate == false || inputs.source_ref != '')) && 'false' || 'true' }}
+          SOURCE_REF: ${{ steps.inputs.outputs.source_ref }}
         run: |
           METADATA_FILE="plots/${SPEC_ID}/metadata/${LANGUAGE}/${LIBRARY}.yaml"
           IMPL_FILE="plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}${EXT}"
@@ -365,7 +406,11 @@ jobs:
           if [ -f "$IMPL_FILE" ]; then
             if [ "$REGEN_GATE" = "false" ]; then
               echo "regen_label=regen:forced" >> $GITHUB_OUTPUT
-              echo "::notice::Forced regeneration (regen_gate=false) — fresh-generation review path"
+              if [ -n "$SOURCE_REF" ]; then
+                echo "::notice::Forced regeneration (adopted from ${SOURCE_REF}) — fresh-generation review path"
+              else
+                echo "::notice::Forced regeneration (regen_gate=false) — fresh-generation review path"
+              fi
             else
               echo "regen_label=regen" >> $GITHUB_OUTPUT
               echo "::notice::Gated regeneration — one review decides keep vs replace"
@@ -429,9 +474,10 @@ jobs:
       # check for prompts/ guards refs without that tree. impl-generate-claude.md
       # is always restored from the implementation branch (= main) after the
       # overlay, so a branch can't override Claude's `git add plots/...` safety
-      # contract by editing that one file.
+      # contract by editing that one file. Adopt mode runs no Claude step, so
+      # it skips the overlay and the PR never carries prompts/.
       - name: Overlay prompts/ from trigger ref (branch-level prompt iteration)
-        if: github.ref_name != 'main' && github.event_name == 'workflow_dispatch'
+        if: github.ref_name != 'main' && github.event_name == 'workflow_dispatch' && steps.inputs.outputs.source_ref == ''
         env:
           TRIGGER_REF: ${{ github.ref_name }}
         run: |
@@ -451,8 +497,121 @@ jobs:
           git checkout HEAD -- prompts/workflow-prompts/impl-generate-claude.md
           echo "::notice::Overlaid prompts/ from $TRIGGER_REF (impl-generate-claude.md kept from main for safety)"
 
+      # Adopt mode (source_ref set): the implementation comes from a ref of
+      # origin, typically a `gemini/*` branch that migrated it, instead of
+      # from Claude. The step does what the generator does in Steps 3, 3b and
+      # 7 of impl-generate-claude.md: it takes exactly the file the generator
+      # would write, renders it in both themes with the same commands, checks
+      # the canvas with core.canvas, and commits and pushes that one file to
+      # the implementation branch. Every later step runs as for a generated
+      # file. Python and JavaScript only: R and Julia have no adopt render yet.
+      # A failure of the source writes `cause` first (missing, render,
+      # unsupported), so "Handle generation failure" knows that every retry
+      # would read the same file and fail the same way. A failure of the
+      # runner (origin unreachable, numpy not installable, the canvas check
+      # crashing, the push) writes none and takes the ordinary retry path.
+      - name: Adopt implementation from source ref
+        id: adopt
+        if: steps.inputs.outputs.source_ref != ''
+        timeout-minutes: 20
+        env:
+          SOURCE_REF: ${{ steps.inputs.outputs.source_ref }}
+          SPEC_ID: ${{ steps.inputs.outputs.specification_id }}
+          LANGUAGE: ${{ steps.inputs.outputs.language }}
+          LIBRARY: ${{ steps.inputs.outputs.library }}
+          EXT: ${{ steps.inputs.outputs.ext }}
+          BRANCH: ${{ steps.branch.outputs.branch }}
+        run: |
+          IMPL_DIR="plots/${SPEC_ID}/implementations/${LANGUAGE}"
+          IMPL_FILE="${IMPL_DIR}/${LIBRARY}${EXT}"
+          fail() {
+            echo "cause=$1" >> "$GITHUB_OUTPUT"
+            echo "::error::$2"
+            exit 1
+          }
+
+          case "$LANGUAGE" in
+            python|javascript) ;;
+            *) fail unsupported "Adopt mode renders Python and JavaScript implementations only; ${LANGUAGE}/${LIBRARY} has no adopt render yet" ;;
+          esac
+
+          # FETCH_HEAD, not origin/<name>: works for branches, tags and SHAs
+          # alike. A failed fetch is a missing ref only when origin answers
+          # otherwise; an unreachable origin is the runner's failure.
+          if ! git fetch --no-tags origin "$SOURCE_REF"; then
+            if ! git ls-remote --heads origin main >/dev/null; then
+              echo "::error::origin is unreachable; cannot fetch source_ref '${SOURCE_REF}'"
+              exit 1
+            fi
+            fail missing "source_ref '${SOURCE_REF}' not found on origin (expected a branch, tag or full commit SHA)"
+          fi
+          SOURCE_SHA=$(git rev-parse FETCH_HEAD)
+          echo "sha=${SOURCE_SHA}" >> "$GITHUB_OUTPUT"
+          if ! git cat-file -e "FETCH_HEAD:${IMPL_FILE}" 2>/dev/null; then
+            fail missing "${IMPL_FILE} does not exist on source_ref ${SOURCE_REF} (${SOURCE_SHA})"
+          fi
+          git checkout FETCH_HEAD -- "$IMPL_FILE"
+          echo "::notice::Adopted ${IMPL_FILE} from ${SOURCE_REF} (${SOURCE_SHA})"
+
+          # Step 3: both themes, from the implementation directory, with the
+          # generator's commands. The JS harness writes plot-{theme}.png and
+          # plot-{theme}.html itself and exits non-zero on a throw or an
+          # empty #container.
+          for f in plot-light.png plot-dark.png plot-light.html plot-dark.html plot.png plot.html; do
+            rm -f "${IMPL_DIR}/${f}"
+          done
+          for theme in light dark; do
+            if [ "$LANGUAGE" = "python" ]; then
+              ( source .venv/bin/activate && cd "$IMPL_DIR" \
+                && MPLBACKEND=Agg ANYPLOT_THEME="$theme" python -P "${LIBRARY}.py" ) \
+                || fail render "${IMPL_FILE} failed to render the ${theme} theme"
+            else
+              ( cd "$IMPL_DIR" \
+                && ANYPLOT_THEME="$theme" node "$GITHUB_WORKSPACE/automation/js-render/render.mjs" "${LIBRARY}${EXT}" ) \
+                || fail render "${IMPL_FILE} failed to render the ${theme} theme"
+            fi
+            [ -s "${IMPL_DIR}/plot-${theme}.png" ] || fail render "${IMPL_FILE} rendered no plot-${theme}.png"
+          done
+
+          # Step 3b, with core.canvas on both themes. Drift only warns: the
+          # canvas gate in impl-review turns it into a VQ-05 defect that
+          # repair fixes, the path a generated file that drifted takes too.
+          # core.canvas needs numpy, which the helper venv of the non-Python
+          # languages lacks. Exit 1 is drift only when the check printed its
+          # failing verdict: a crash (an import error, say) exits 1 as well,
+          # and must never pass for a measured canvas.
+          if ! .venv/bin/python -c "import numpy" 2>/dev/null; then
+            uv pip install --python .venv/bin/python numpy \
+              && .venv/bin/python -c "import numpy" \
+              || { echo "::error::numpy could not be installed for the canvas check"; exit 1; }
+          fi
+          for theme in light dark; do
+            rc=0
+            verdict=$(.venv/bin/python -m core.canvas "${IMPL_DIR}/plot-${theme}.png" --library "$LIBRARY") || rc=$?
+            printf '%s\n' "$verdict"
+            if [ "$rc" = 1 ] && grep -q '^::notice::canvas_gate .* status=fail ' <<< "$verdict"; then
+              echo "::warning::plot-${theme}.png is off the canvas target; impl-review's canvas gate sends it to repair"
+            elif [ "$rc" = 2 ]; then
+              fail render "plot-${theme}.png of ${IMPL_FILE} is not a readable PNG"
+            elif [ "$rc" != 0 ]; then
+              echo "::error::the canvas check crashed on plot-${theme}.png (exit ${rc})"
+              exit 1
+            fi
+          done
+
+          # Step 7: commit only the implementation file and push the branch.
+          # --allow-empty keeps the adopt commit when the file equals main's
+          # (source_ref=main), so the PR still records where the code came from.
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit --allow-empty -m "feat(${LIBRARY}): implement ${SPEC_ID}" \
+            -m "Adopted from ${SOURCE_REF} (${SOURCE_SHA}); no generation model." -- "$IMPL_FILE"
+          git push -u origin "$BRANCH"
+          echo "**Adopted:** \`${IMPL_FILE}\` from \`${SOURCE_REF}\` (${SOURCE_SHA})" >> "$GITHUB_STEP_SUMMARY"
+
       - name: Run Claude Code to generate implementation
         id: claude
+        if: steps.inputs.outputs.source_ref == ''
         continue-on-error: true
         timeout-minutes: 60
         uses: anthropics/claude-code-action@db77d4d3c98f3f6380e7cd45ffba2342a3dbde3c  # v1
@@ -472,7 +631,7 @@ jobs:
             - IS_REGENERATION: ${{ steps.existing.outputs.is_regeneration }}
 
       - name: Retry Claude (on failure)
-        if: steps.claude.outcome == 'failure'
+        if: steps.claude.outcome == 'failure' && steps.inputs.outputs.source_ref == ''
         id: claude_retry
         timeout-minutes: 60
         uses: anthropics/claude-code-action@db77d4d3c98f3f6380e7cd45ffba2342a3dbde3c  # v1
@@ -504,6 +663,8 @@ jobs:
           ISSUE: ${{ steps.issue.outputs.number }}
           BRANCH: ${{ steps.branch.outputs.branch }}
           MODEL: ${{ steps.inputs.outputs.model }}
+          # Validated in "Extract inputs" (branch, tag and SHA characters only).
+          SOURCE_REF: ${{ steps.inputs.outputs.source_ref }}
         run: |
           IMPL_DIR="plots/${SPEC_ID}/implementations/${LANGUAGE}"
 
@@ -727,6 +888,7 @@ jobs:
           has_html = '$HAS_HTML' == 'true'
           metadata_file = '$METADATA_FILE'
           model = '$MODEL'
+          source_ref = '$SOURCE_REF'
           base_url = f'https://storage.googleapis.com/anyplot-images/plots/{spec}/{language}/{lib}'
 
           # Preserve the original 'created' timestamp on regenerations.
@@ -751,8 +913,9 @@ jobs:
               # Reflects what claude_args='--model {model}' actually runs: whatever
               # Claude Code's current alias for the chosen model resolves to.
               # Use the family name instead of a frozen version string so the
-              # metadata doesn't go stale every model release.
-              'generated_by': f'claude-{model}',
+              # metadata doesn't go stale every model release. An adopted file
+              # was written outside this run, so it names its source instead.
+              'generated_by': f'adopted:{source_ref}' if source_ref else f'claude-{model}',
               'workflow_run': run_id,
               'issue': issue,
               # language_version is the runtime of the implementation's own language
@@ -963,6 +1126,8 @@ jobs:
           PREV_STORED: ${{ steps.prev_review.outputs.prev_stored || 'n/a' }}
           # Via env, never interpolated into the script: the hint is free text.
           CHANGE_REQUEST: ${{ inputs.change_request }}
+          SOURCE_REF: ${{ steps.inputs.outputs.source_ref }}
+          SOURCE_SHA: ${{ steps.adopt.outputs.sha }}
         run: |
           # Label one name per call, retried: the regen label is added after
           # creation (not via --label, which fails the whole create when the
@@ -995,12 +1160,23 @@ jobs:
             exit 0
           fi
 
-          # Create PR body
+          # Create PR body. In adopt mode no model wrote the code: the body says
+          # where it came from, and the **Model:** line stays as the model
+          # repair runs on, because the rescues of impl-review and impl-repair
+          # read it back from exactly that line.
           BODY="## Implementation: \`${SPEC_ID}\` - ${LANGUAGE}/${LIBRARY}
 
           Implements the **${LANGUAGE}/${LIBRARY}** version of \`${SPEC_ID}\`.
 
-          **File:** \`plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}${EXT}\`
+          **File:** \`plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}${EXT}\`"
+
+          if [ -n "$SOURCE_REF" ]; then
+            BODY="${BODY}
+
+          **Generation:** adopted from \`${SOURCE_REF}\`${SOURCE_SHA:+ (${SOURCE_SHA})}, no generation model; the model below runs repair"
+          fi
+
+          BODY="${BODY}
 
           **Model:** ${MODEL}"
 
@@ -1017,7 +1193,9 @@ jobs:
             BODY="${BODY}
 
           **Regeneration:** previous quality ${PREV_STORED}"
-            if [ "$REGEN_LABEL" = "regen:forced" ]; then
+            if [ "$REGEN_LABEL" = "regen:forced" ] && [ -n "$SOURCE_REF" ]; then
+              BODY="${BODY} (forced: adopted from ${SOURCE_REF}, fresh-generation review path)"
+            elif [ "$REGEN_LABEL" = "regen:forced" ]; then
               BODY="${BODY} (forced: regen_gate=false, fresh-generation review path)"
             else
               BODY="${BODY} (gated: one review decides keep vs replace)"
@@ -1133,6 +1311,7 @@ jobs:
           PR_NUMBER: ${{ steps.pr.outputs.pr_number }}
           MODEL: ${{ steps.inputs.outputs.model }}
           MODEL_REASON: ${{ steps.inputs.outputs.model_reason }}
+          SOURCE_REF: ${{ steps.inputs.outputs.source_ref }}
         run: |
           # Use staging URLs (available immediately after upload) — show both themes side by side.
           BASE="https://storage.googleapis.com/anyplot-images/staging/${SPEC_ID}/${LANGUAGE}/${LIBRARY}"
@@ -1161,8 +1340,16 @@ jobs:
           |-------|------|
           | ![${LIBRARY} light](${PNG_LIGHT}) | ![${LIBRARY} dark](${PNG_DARK}) |
 
-          **PR:** #${PR_NUMBER}
+          **PR:** #${PR_NUMBER}"
+
+          if [ -n "$SOURCE_REF" ]; then
+            BODY="${BODY}
+          **Generation:** adopted from \`${SOURCE_REF}\`
+          **Repair model:** ${MODEL} (${MODEL_REASON})"
+          else
+            BODY="${BODY}
           **Model:** ${MODEL} (${MODEL_REASON})"
+          fi
 
           if [ -n "$HTML_LIGHT" ]; then
             BODY="${BODY}
@@ -1257,7 +1444,13 @@ jobs:
           REGEN_LABEL: ${{ steps.existing.outputs.regen_label }}
           LANGUAGE: ${{ steps.inputs.outputs.language }}
           EXT: ${{ steps.inputs.outputs.ext }}
-          REGEN_GATE: ${{ (github.event_name == 'workflow_dispatch' && inputs.regen_gate == false) && 'false' || 'true' }}
+          REGEN_GATE: ${{ (github.event_name == 'workflow_dispatch' && (inputs.regen_gate == false || inputs.source_ref != '')) && 'false' || 'true' }}
+          # Adopt mode: the ref the file came from (forwarded by every retry),
+          # and the cause "Adopt implementation from source ref" wrote before
+          # it failed (missing, render, unsupported). Empty when that step
+          # did not fail.
+          SOURCE_REF: ${{ steps.inputs.outputs.source_ref }}
+          ADOPT_CAUSE: ${{ steps.adopt.outputs.cause }}
           # The ref this run was dispatched on: the auto-retry runs there too,
           # so a branch smoke retries on its branch instead of on main
           # (runs 36400546243/36402058602 retried on main and opened
@@ -1301,6 +1494,48 @@ jobs:
             python3 automation/scripts/close_issue_if_complete.py --issue "$ISSUE" --spec-id "$SPEC_ID" \
               --libraries "$libs" --run-url "$RUN_URL" --source impl-generate || true
           }
+
+          # Adopt mode, source failure: the file is missing on source_ref, it
+          # did not render, or its language has no adopt render. Every retry
+          # would read the same file from the same ref and fail the same way,
+          # so nothing is retried, no attempt is counted (the comment carries
+          # its own marker, never the impl-fail one) and the pair is never
+          # marked failed. A failure after the adopt step (push, metadata,
+          # upload, PR) takes the ordinary path below, whose retry keeps
+          # source_ref.
+          if [ -n "${ADOPT_CAUSE}" ]; then
+            echo "::warning::Adopting ${LIBRARY}/${SPEC_ID} from ${SOURCE_REF} failed (${ADOPT_CAUSE}) — no auto-retry, no attempt counted, not marked failed"
+            for stale in "generate:${LIBRARY}" "impl:${LIBRARY}:pending"; do
+              gh issue edit "$ISSUE" --remove-label "$stale" 2>/dev/null || true
+            done
+            if [ "$IS_LIVE" = "true" ]; then
+              gh issue edit "$ISSUE" --add-label "impl:${LIBRARY}:done" 2>/dev/null || true
+              ADOPT_LIVE="The implementation on main is unchanged and stays live."
+            else
+              ADOPT_LIVE="The pair has no implementation on main yet."
+            fi
+            case "${ADOPT_CAUSE}" in
+              missing) ADOPT_WHY="The file does not exist on that ref, or the ref does not exist on origin." ;;
+              render) ADOPT_WHY="The file did not render both themes with the pipeline's render command." ;;
+              *) ADOPT_WHY="Adopt mode has no render for ${LANGUAGE} implementations yet." ;;
+            esac
+            gh issue comment "$ISSUE" --body "<!-- impl-adopt-fail:${SPEC_ID}:${LIBRARY} -->
+          ## :inbox_tray: ${LIBRARY} Adoption Failed (${ADOPT_CAUSE})
+
+          Adopting \`plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}${EXT}\` from \`${SOURCE_REF}\` failed. ${ADOPT_WHY} ${ADOPT_LIVE}
+
+          Not retried and not counted toward the 3-attempt cap, because a retry would read the same file. Fix the file on \`${SOURCE_REF}\`, then run:
+          \`\`\`
+          gh workflow run impl-generate.yml -f specification_id=${SPEC_ID} -f library=${LIBRARY} -f issue_number=${ISSUE} -f source_ref=${SOURCE_REF}
+          \`\`\`
+
+          ---
+          :robot: *[impl-generate](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*"
+            if [ "$IS_LIVE" = "true" ]; then
+              close_issue_if_complete
+            fi
+            exit 0
+          fi
 
           # Classify the failure. The retry cap exists to stop re-running a pair
           # the model cannot solve; a provider incident, a cloud token refresh
@@ -1387,7 +1622,8 @@ jobs:
           # pre-flight survive the retry — otherwise the first attempt has the
           # hint but the retry doesn't, defeating the audit. CHANGE_REQUEST is
           # read from env to keep raw quotes/$/backticks inside the hint from
-          # breaking shell parsing.
+          # breaking shell parsing. `source_ref` is forwarded too: without it an
+          # adopt run's retry would generate the file with Claude instead.
           dispatch_retry() {
             gh workflow run impl-generate.yml --ref "${TRIGGER_REF:-main}" \
               -f specification_id="${SPEC_ID}" \
@@ -1395,7 +1631,8 @@ jobs:
               -f issue_number="${ISSUE}" \
               -f model="${MODEL}" \
               -f change_request="${CHANGE_REQUEST}" \
-              -f regen_gate="${REGEN_GATE}"
+              -f regen_gate="${REGEN_GATE}" \
+              -f source_ref="${SOURCE_REF}"
             if [ -n "${CHANGE_REQUEST}" ]; then
               echo "::notice::Triggered automatic retry for ${LIBRARY}/${SPEC_ID} ($1, model=${MODEL}, change_request=present)"
             else
@@ -1429,7 +1666,7 @@ jobs:
 
           To retry once the incident is over:
           \`\`\`
-          gh workflow run impl-generate.yml -f specification_id=${SPEC_ID} -f library=${LIBRARY} -f issue_number=${ISSUE} -f model=${MODEL}
+          gh workflow run impl-generate.yml -f specification_id=${SPEC_ID} -f library=${LIBRARY} -f issue_number=${ISSUE} -f model=${MODEL}${SOURCE_REF:+ -f source_ref=${SOURCE_REF}}
           \`\`\`
 
           ---
@@ -1494,6 +1731,11 @@ jobs:
             fi
 
             echo "::warning::Marking $LIBRARY as failed: $CAP_REASON"
+            if [ -n "${SOURCE_REF}" ]; then
+              FAIL_REASON="Adopting the implementation from ${SOURCE_REF} failed in a step after the file was taken; see the linked run."
+            else
+              FAIL_REASON="Claude Code failed to create the implementation file."
+            fi
 
             # Create failed label if needed
             gh label create "impl:${LIBRARY}:failed" --color "d73a4a" \
@@ -1513,11 +1755,11 @@ jobs:
 
           The **${LIBRARY}** implementation for \`${SPEC_ID}\` was marked failed after ${CAP_REASON}.
 
-          **Reason:** Claude Code failed to create the implementation file.
+          **Reason:** ${FAIL_REASON}
 
           To retry manually:
           \`\`\`
-          gh workflow run impl-generate.yml -f specification_id=${SPEC_ID} -f library=${LIBRARY} -f issue_number=${ISSUE} -f model=${MODEL}
+          gh workflow run impl-generate.yml -f specification_id=${SPEC_ID} -f library=${LIBRARY} -f issue_number=${ISSUE} -f model=${MODEL}${SOURCE_REF:+ -f source_ref=${SOURCE_REF}}
           \`\`\`
 
           ---
