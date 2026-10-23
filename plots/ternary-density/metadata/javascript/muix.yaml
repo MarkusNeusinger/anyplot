@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: ternary-density
 created: '2026-09-02T07:37:51Z'
-updated: '2026-10-23T21:23:53Z'
+updated: '2026-10-23T21:29:57Z'
 generated_by: adopted:gemini/12267-muix-9-batch1
 workflow_run: 40024630168
 issue: 3696
@@ -12,110 +12,104 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ternary-d
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-density/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ternary-density/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-density/javascript/muix/plot-dark.html
-quality_score: 82
+quality_score: 86
 review:
   strengths:
-  - Hand-written Gaussian KDE evaluated on a 46-step barycentric grid and drawn through
-    a MUI X ScatterPlot colored by a zAxis continuous colorMap, clipped to the triangle
-    — a clean way to get a density surface from the community package, where Heatmap
-    is Pro-only
-  - Density is confined to the triangle via an SVG clipPath; three sets of dashed
-    grid lines run parallel to the sides and stay inside the triangle
-  - Grid lines are redrawn above the density with a page-colored halo, so the 20/40/60/80
-    % grid stays readable through the peaks in both themes
-  - Uses imprint_seq (t.seq[0] → t.seq[1]) for the density and a labelled Low → High
-    color bar
-  - Soil texture (sand/silt/clay) scenario with three realistic clusters (sandy, loamy,
-    clay-rich) generated from a seeded LCG via Dirichlet sampling
-  - Tooltip valueFormatter reports the composition and % of peak density for each
-    cell in the interactive HTML
+  - 'Composes the ternary density from community MUI X primitives: a ChartsContainer
+    with a continuous zAxis colorMap built from the Imprint stops (t.seq) colors a
+    ScatterPlot of KDE grid cells, clipped to the triangle by an SVG clipPath, so
+    no density color leaks past the edges in either render'
+  - Custom SVG layers read the chart's own scales through useXScale/useYScale/useDrawingArea,
+    keeping the grid, edge ticks, edge titles, vertex labels and color bar registered
+    to the data coordinates
+  - Grid lines are redrawn above the density with a page-colored halo, so all three
+    line families stay visible across the high-density blue peaks in both themes
+  - 'Clear typographic hierarchy: bold 22 px vertex names, semi-bold edge titles with
+    direction arrows toward 100 %, 16 px tick labels, all from theme tokens and readable
+    in both renders'
+  - COLOR_GAMMA = 0.8 lifts the weaker loamy and clay-rich modes off the floor so
+    all three soil clusters read as separate peaks
+  - Tooltip valueFormatter reports each cell's Sand/Silt/Clay composition and percent
+    of peak density in the HTML view
+  - 'Plausible soil-texture scenario: 580 samples in three Dirichlet-style clusters
+    (sandy, loamy, clay-rich) from a fixed-seed LCG'
   weaknesses:
-  - 'VQ-03 (both): the density surface has weak tonal range — the loamy (≈40/40/20)
-    and clay-rich (≈55 % clay) modes are only faintly bluer than the green background,
-    and only the sandy peak reads clearly → make all three modes distinguishable from
-    the low-density floor (higher-contrast mapping, full opacity). Likely cause: COLOR_GAMMA
-    = 1.7 pushes mid densities toward the low end, plus the 0.85 group opacity washing
-    out the colors.'
-  - 'VQ-07 (both): the density colors differ between themes — the 0.85 opacity on
-    the density group blends the page background in, so the low end is a lighter green
-    on #FAF8F1 and a darker green on #1A1A17 → identical data colors in both renders
-    (opacity 1). Likely cause: `<g clipPath=... opacity={0.85}>` in DensityLayer.'
-  - 'VQ-06 (both): the three edge tick scales (20–80 %) carry no indication of which
-    component they measure, so a reader cannot tell whether the left-edge 80 % is
-    Sand or Silt → label each edge with its component (e.g. ''Sand (%)'' along the
-    left edge) or direction arrows. Likely cause: EdgeTicks renders bare percentages
-    only.'
-  - 'VQ-01 (both): edge tick labels and the Low/High color-bar labels at 13 px are
-    small next to the 22 px vertex labels and blur in the 400 px thumbnail → about
-    15–16 px (+2 to +3 px). Likely cause: fontSize={13} in EdgeTicks and DensityLegend.'
-  - 'Suggestion: MUI X community ships a ContinuousColorLegend that reads the zAxis
-    colorMap directly; it would replace the hand-built SVG gradient bar.'
+  - 'SC-02 (both): the density surface shows a faint scalloped, dotted texture where
+    the 13 px circular scatter markers of the 46-step grid meet, most visible around
+    the sandy peak near Sand 70–80 % → a smooth surface with no visible cell pattern.
+    Likely cause: GRID_N = 46 with markerSize 13; raise GRID_N (about 80) and size
+    the markers to overlap the cell spacing.'
+  - 'CQ-04 (code): TriangleGrid draws the full set of 12 dashed grid segments (lines
+    153–164) underneath the density layer, where they are completely covered, and
+    GridOverlay draws the same segments again on top → delete the hidden grid map
+    and keep only the triangle outline in TriangleGrid. Likely cause: grid moved above
+    the density without removing the original copy.'
+  - 'Suggestion: the → / ← glyphs in the edge titles render thin and small next to
+    the semi-bold text; a heavier arrow glyph or an SVG marker would match the title
+    weight.'
   - 'Suggestion: contour lines at a few density levels (the Notes suggest them) would
-    make the weaker loamy and clay-rich modes easier to locate.'
+    make the three peaks easier to compare in the static PNG.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, square 2400x2400.
-      Chrome: title "Soil Texture Density · ternary-density · javascript · muix · anyplot.ai" in dark ink at top (~56 % width); bold vertex labels Sand (top), Silt (bottom-left), Clay (bottom-right); 20/40/60/80 % tick labels in soft ink along all three edges; centred color bar "Relative sample density" with Low/High labels at the bottom. All readable.
-      Data: equilateral triangle filled with a smooth imprint_seq density surface (#009E73 green floor → blue-violet peaks), clipped to the triangle; strongest peak near ~73 % sand, weaker modes near the centre-left (loam) and lower right (clay-rich); whitish dashed grid lines parallel to the three sides drawn over the density.
+      Background: warm off-white #FAF8F1 (sampled 250,248,241), square 2400x2400 canvas.
+      Chrome: title "Soil Texture Density · ternary-density · javascript · muix · anyplot.ai" in dark bold text at the top (~56 % width); vertex names Sand (top), Silt (bottom-left), Clay (bottom-right) in bold dark ink; 20/40/60/80 % tick labels along all three edges in inkSoft; rotated edge titles "Sand (%) →", "Clay (%) →" and "← Silt (%)"; a dark triangle outline. All text readable.
+      Data: an equilateral triangle filled with a continuous imprint_seq density surface (brand green #009E73 low → blue #4467A3 high), clipped to the triangle. Three peaks: a strong blue mode near Sand ~75 %, a ridge around Sand ~40 % / Silt ~40 %, and a clay-rich mode near Clay ~55 %. Light dashed grid lines with a cream halo run parallel to all three sides and stay visible on the peaks. A horizontal color bar below, "Relative sample density", Low → High. Faint dotted texture visible on close inspection of the peaks.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17.
-      Chrome: title, vertex labels in light ink; tick labels and color-bar text in light soft ink; triangle outline light grey. No dark-on-dark text.
-      Data: same density layout and peaks, but the density colors are darker than in light (0.85 opacity lets the dark page through); dashed grid lines appear dark over the density.
+      Background: warm near-black #1A1A17 (sampled 26,26,23).
+      Chrome: title, vertex names, edge titles and tick labels switch to light ink / light inkSoft and are clearly readable; the triangle outline is light gray. No dark-on-dark text.
+      Data: the density colors are identical to the light render (same green → blue ramp); the grid lines flip to dark dashed lines with a dark halo, still visible across the density. Color bar identical with light labels.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; edge tick and color-bar labels
-          at 13 px are small (defect line)
+        comment: Explicit sizes (title 22, vertex 22 bold, edge titles 18, ticks 16,
+          legend 15-16 CSS px); readable in both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; tick labels sit clear of the triangle edges
+        comment: Tick labels sit outside the edges, no text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Density contrast weak: loamy and clay-rich modes barely separate
-          from the low-density floor (defect line)'
+        comment: Density, haloed grid and color bar all clearly visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green→blue sequential ramp, no red-green signal
+        comment: Green-to-blue sequential ramp, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400×2400, triangle well centred, title ~56 % width, nothing
-          clipped
+        comment: Canvas gate passed (2400x2400); triangle fills the square canvas
+          with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Vertices labelled, but edge tick scales do not say which component
-          they measure (defect line)
+        comment: 'Edge titles with units and direction: Sand (%), Clay (%), Silt (%)'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: imprint_seq used and backgrounds correct, but 0.85 opacity makes
-          density colors theme-dependent (defect line)
+        comment: imprint_seq via t.seq for continuous density; correct theme backgrounds
     design_excellence:
       score: 11
       max: 20
@@ -125,23 +119,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Clear typographic hierarchy: bold 22 px vertex labels, soft-ink
-          ticks, centred titled color bar'
+        comment: 'Deliberate hierarchy: bold vertex names, semi-bold edge titles with
+          arrows, lighter ticks'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Page-colored halo under the dashed grid lines keeps the grid legible
-          over the density
+        comment: Page-colored halo under grid lines over the density; ticks offset
+          outward per edge; rounded color bar
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Gamma-compressed color mapping makes the sandy mode the focal peak
+        comment: Color gamma 0.8 chosen so the weaker loamy and clay-rich modes read
+          as distinct peaks
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -149,29 +144,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Ternary density surface, no individual points
+        comment: Ternary KDE density surface, no individual points
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Equilateral triangle, vertex labels, density clipped to triangle
-          and smooth, perceptual colormap with color bar, grid visible inside triangle;
-          contours optional and not drawn
+        comment: Vertex labels, perceptual colormap with Low/High bar, grid visible
+          over peaks, density confined; surface shows a faint dotted texture (defect
+          line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: KDE evaluated at barycentric grid points; peaks sit at the generated
-          cluster centres (~73/15/12, 40/40/20, 20/25/55)
+        comment: Correct barycentric mapping; ticks increase toward each component's
+          vertex
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'Soil Texture Density · ternary-density · javascript · muix
-          · anyplot.ai'; color bar titled 'Relative sample density'
+        comment: Correct title format with descriptive prefix; color bar labeled
     data_quality:
       score: 15
       max: 15
@@ -181,23 +175,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Three separate modes plus large low-density areas show what a ternary
-          density reveals
+        comment: Three separate modes, low-density regions, edge cut-off
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Soil texture sand/silt/clay, neutral and plausible
+        comment: Sand/silt/clay soil texture, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: components normalised to sum 100 % (lines 47-52); 580 samples
-          inside the 100–5000 range; bandwidth 0.055 of edge length'
+        comment: 580 samples, compositions sum to 100 %; no Check values in the spec
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -205,7 +197,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Data → plot; small React components are needed for the scale hooks
+        comment: Linear module-level data and KDE; React components are the muix idiom
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -220,56 +212,51 @@ review:
         comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: KDE written out is permitted (no stats helpers in MUI X)
+        passed: false
+        comment: Hidden duplicate grid in TriangleGrid lines 153-164 (defect line);
+          hand-written KDE is allowed per the library Computation line
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component, skipAnimation, ChartsContainer v9 API
+        comment: Default export, ChartsContainer v9 API, skipAnimation
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: ChartsContainer composition with ScatterPlot and hooks-driven custom
+          SVG layers
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: ChartsContainer composition with ScatterPlot and hooks; color bar
-          hand-built rather than MUI X's legend
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: zAxis continuous colorMap driving scatter colors and useXScale/useYScale
-          for custom SVG layers in data coordinates
-  verdict: REJECTED
+        comment: Continuous zAxis colorMap on scatter data, useDrawingArea/useXScale
+          hooks, ChartsTooltip with item valueFormatter
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-03c2486144
-  rendered_at: '2026-10-23T21:20:51Z'
+  rendered_at: '2026-10-23T21:26:47Z'
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
-  - colorbar
   - custom-legend
   - hover-tooltips
-  - html-export
-  - annotations
+  - manual-ticks
+  - layer-composition
   patterns:
   - data-generation
   - matrix-construction
   dataprep:
   - kde
-  - normalization
   styling:
   - custom-colormap
-  - minimal-chrome
-  - alpha-blending
   - grid-styling
-  - gradient-fill
