@@ -101,7 +101,7 @@ const halfWidth = gridX.map(
     Math.sqrt(1 + 1 / n + (x - xMean) ** 2 / sxx),
 );
 const upperY = fittedY.map((y, i) => y + halfWidth[i]);
-const lowerY = fittedY.map((y, i) => Math.max(0, y - halfWidth[i]));
+const lowerY = fittedY.map((y, i) => y - halfWidth[i]);
 
 const scatterData = standards.map((d, i) => ({
   x: d[CONCENTRATION],
@@ -112,7 +112,7 @@ const scatterData = standards.map((d, i) => ({
 const unknownAbsorbance = unknownRow[ABSORBANCE];
 const unknownConcentration = (unknownAbsorbance - intercept) / slope;
 
-const yAllValues = [...absorbance, ...upperY, unknownAbsorbance, 0];
+const yAllValues = [...absorbance, ...upperY, ...lowerY, unknownAbsorbance, 0];
 const yPad = (Math.max(...yAllValues) - Math.min(...yAllValues)) * 0.08;
 const yDomainMin = Math.min(...yAllValues) - yPad;
 const yDomainMax = Math.max(...yAllValues) + yPad;
@@ -152,7 +152,7 @@ function UnknownGuides() {
 
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
-  const headerH = 104;
+  const headerH = 88;
   const chartH = height - headerH;
 
   return (
@@ -160,7 +160,7 @@ export default function Chart() {
       <div
         style={{
           height: headerH,
-          padding: "16px 64px 0 132px",
+          padding: "12px 64px 0 108px",
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
@@ -172,20 +172,20 @@ export default function Chart() {
             fontWeight: 600,
             color: t.ink,
             textAlign: "center",
-            marginBottom: 8,
+            marginBottom: 4,
           }}
         >
           {title}
         </div>
         <div style={{ fontSize: 15, color: t.inkSoft }}>{equationLabel}</div>
-        <div style={{ fontSize: 13, color: INK_MUTED, marginTop: 2 }}>
+        <div style={{ fontSize: 15, color: INK_MUTED, marginTop: 2 }}>
           Shaded band: {PREDICTION_LEVEL}% prediction interval · {unknownLabel}
         </div>
       </div>
       <ChartsDataProvider
         width={width}
         height={chartH - 40}
-        margin={{ top: 16, right: 64, bottom: 24, left: 48 }}
+        margin={{ top: 4, right: 64, bottom: 24, left: 48 }}
         series={[
           {
             type: "scatter",
@@ -231,7 +231,7 @@ export default function Chart() {
             min: yDomainMin,
             max: yDomainMax,
             label: ABSORBANCE,
-            width: 84,
+            width: 60,
             tickLabelStyle: { fontSize: 14 },
             labelStyle: { fontSize: 16 },
           },
@@ -255,7 +255,7 @@ export default function Chart() {
               x={width - 64}
               y={chartH - 52}
               textAnchor="end"
-              fontSize={12}
+              fontSize={14}
               fill={INK_MUTED}
             >
               n = {n} standards{concentration.includes(0) ? " (incl. blank)" : ""}
