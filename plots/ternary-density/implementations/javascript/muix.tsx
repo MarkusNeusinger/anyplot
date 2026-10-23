@@ -1,32 +1,75 @@
 // anyplot.ai
 // ternary-density: Ternary Density Plot
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 88/100 | Created: 2026-09-02
+// Library: muix 9.16.0 | JavaScript 22.23.3
+// Quality: 86/100 | Updated: 2026-10-23
 //# anyplot-orientation: square
 // anyplot.ai
 // ternary-density: Ternary Density Plot
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-09-02
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+// Library: muix 9.16.0 | JavaScript 22.23.3
+// Quality: 82/100 | Updated: 2026-10-23
+
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { ChartsTooltip } from "@mui/x-charts/ChartsTooltip";
 import { useXScale, useYScale, useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
+
+// Columns: set these to your data's column names
+const COMPONENT_A = "Sand"; // role: component_a
+const COMPONENT_B = "Silt"; // role: component_b
+const COMPONENT_C = "Clay"; // role: component_c
+
+// Data: replace this block with your own records, one object per row
+const data = (() => {
+  let seed = 20260902 >>> 0;
+  const rand = () => {
+    seed = (1664525 * seed + 1013904223) >>> 0;
+    return seed / 4294967296;
+  };
+  const erlang = (k: number) => {
+    let s = 0;
+    for (let i = 0; i < k; i++) s += -Math.log(rand() || 1e-9);
+    return s;
+  };
+
+  const clusters = [
+    { n: 190, shape: [19, 4, 3] }, // sandy soils
+    { n: 220, shape: [8, 8, 4] }, // loamy soils
+    { n: 170, shape: [4, 5, 11] }, // clay-rich soils
+  ];
+
+  const rows: {
+    [COMPONENT_A]: number;
+    [COMPONENT_B]: number;
+    [COMPONENT_C]: number;
+  }[] = [];
+
+  for (const cluster of clusters) {
+    for (let i = 0; i < cluster.n; i++) {
+      const gA = erlang(cluster.shape[0]);
+      const gB = erlang(cluster.shape[1]);
+      const gC = erlang(cluster.shape[2]);
+      const total = gA + gB + gC;
+      rows.push({
+        [COMPONENT_A]: (gA / total) * 100,
+        [COMPONENT_B]: (gB / total) * 100,
+        [COMPONENT_C]: (gC / total) * 100,
+      });
+    }
+  }
+  return rows;
+})();
+
+// Plot: reads only data and the constants above
 const SIZE = window.ANYPLOT_SIZE;
 const TITLE =
   "Soil Texture Density · ternary-density · javascript · muix · anyplot.ai";
 const FONT =
   '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
 
-// --- Ternary <-> Cartesian projection ---------------------------------------
-// Equilateral triangle: Sand (a) at the top apex, Silt (b) at bottom-left,
-// Clay (c) at bottom-right — the classic USDA soil-texture layout. Only two
-// degrees of freedom exist (a+b+c=1), so every composition maps to a unique
-// point inside (or on) the triangle.
 const SQRT3_2 = Math.sqrt(3) / 2;
-function toXY(a, b, c) {
+function toXY(a: number, b: number, c: number) {
   const total = a + b + c;
   const aN = a / total;
   const cN = c / total;
@@ -36,51 +79,24 @@ const VERTEX_TOP = toXY(1, 0, 0);
 const VERTEX_LEFT = toXY(0, 1, 0);
 const VERTEX_RIGHT = toXY(0, 0, 1);
 
-// --- Data: sand/silt/clay soil samples (deterministic, Dirichlet-like) -----
-// Three characteristic soil-texture clouds — sandy, loamy, and clay-rich —
-// each a Dirichlet-distributed cluster around a representative composition.
-// The clusters overlap in the middle of the simplex, giving the KDE surface
-// below a realistic multi-modal shape instead of one tidy blob.
-let seed = 20260902 >>> 0;
-function rand() {
-  seed = (1664525 * seed + 1013904223) >>> 0;
-  return seed / 4294967296;
-}
-function erlang(k) {
-  let s = 0;
-  for (let i = 0; i < k; i++) s += -Math.log(rand() || 1e-9);
-  return s;
-}
+const samplePoints = data.map((d) =>
+  toXY(d[COMPONENT_A], d[COMPONENT_B], d[COMPONENT_C]),
+);
 
-const CLUSTERS = [
-  { n: 190, shape: [19, 4, 3] }, // sandy soils — sand-dominant, tight cluster
-  { n: 220, shape: [8, 8, 4] }, // loamy soils — the most common texture class
-  { n: 170, shape: [4, 5, 11] }, // clay-rich soils — clay-dominant
-];
-
-const samplePoints = [];
-for (const cluster of CLUSTERS) {
-  for (let i = 0; i < cluster.n; i++) {
-    const gSand = erlang(cluster.shape[0]);
-    const gSilt = erlang(cluster.shape[1]);
-    const gClay = erlang(cluster.shape[2]);
-    const total = gSand + gSilt + gClay;
-    samplePoints.push(toXY(gSand / total, gSilt / total, gClay / total));
-  }
-}
-
-// --- Kernel density estimate over a triangular lattice ---------------------
-// A Gaussian KDE evaluated on every lattice point of a barycentric grid
-// (i + j + k = GRID_N) — the natural equal-spacing grid for a simplex, and
-// what the scatter markers below render as a continuous-looking heatmap.
 const GRID_N = 46;
 const BANDWIDTH = 0.055;
 const TWO_H2 = 2 * BANDWIDTH * BANDWIDTH;
 
-const densityPoints = [];
-const sandPct = [];
-const siltPct = [];
-const clayPct = [];
+const densityPoints: {
+  x: number;
+  y: number;
+  z: number;
+  rawZ: number;
+  id: string;
+}[] = [];
+const aPct: number[] = [];
+const bPct: number[] = [];
+const cPct: number[] = [];
 let maxDensity = 0;
 for (let i = 0; i <= GRID_N; i++) {
   for (let j = 0; j <= GRID_N - i; j++) {
@@ -95,29 +111,24 @@ for (let i = 0; i <= GRID_N; i++) {
     density /= samplePoints.length;
     if (density > maxDensity) maxDensity = density;
     densityPoints.push({ x, y, z: density, rawZ: density, id: `cell-${i}-${j}` });
-    sandPct.push(Math.round((i / GRID_N) * 100));
-    siltPct.push(Math.round((j / GRID_N) * 100));
-    clayPct.push(Math.round((k / GRID_N) * 100));
+    aPct.push(Math.round((i / GRID_N) * 100));
+    bPct.push(Math.round((j / GRID_N) * 100));
+    cPct.push(Math.round((k / GRID_N) * 100));
   }
 }
 
-// Steepen the density -> color mapping with a gamma > 1: this pushes the
-// broad low-density field further toward the green end of imprint_seq while
-// leaving true peaks near the blue end, so the three clusters read as
-// distinct hotspots instead of one uniform green wash. `rawZ` (linear,
-// untouched) still drives the opacity mask below and the tooltip percentage.
-const COLOR_GAMMA = 1.7;
+// gamma < 1 lifts the weaker loamy and clay-rich modes off the low-density floor
+const COLOR_GAMMA = 0.8;
 for (const p of densityPoints) {
   p.z = Math.pow(p.rawZ / maxDensity, COLOR_GAMMA) * maxDensity;
 }
 
-// --- Reference grid: lines of constant composition, parallel to each edge --
 const GRID_LEVELS = [0.2, 0.4, 0.6, 0.8];
-const GRID_SEGMENTS = [];
+const GRID_SEGMENTS: { x: number; y: number }[][] = [];
 for (const f of GRID_LEVELS) {
-  GRID_SEGMENTS.push([toXY(f, 1 - f, 0), toXY(f, 0, 1 - f)]); // constant Sand
-  GRID_SEGMENTS.push([toXY(1 - f, f, 0), toXY(0, f, 1 - f)]); // constant Silt
-  GRID_SEGMENTS.push([toXY(1 - f, 0, f), toXY(0, 1 - f, f)]); // constant Clay
+  GRID_SEGMENTS.push([toXY(f, 1 - f, 0), toXY(f, 0, 1 - f)]);
+  GRID_SEGMENTS.push([toXY(1 - f, f, 0), toXY(0, f, 1 - f)]);
+  GRID_SEGMENTS.push([toXY(1 - f, 0, f), toXY(0, 1 - f, f)]);
 }
 const TICK_LEVELS = [20, 40, 60, 80];
 const LEFT_TICKS = TICK_LEVELS.map((pct) => ({
@@ -133,10 +144,6 @@ const RIGHT_TICKS = TICK_LEVELS.map((pct) => ({
   pos: toXY(1 - pct / 100, 0, pct / 100),
 }));
 
-// Domain padding around the [0,1] x [0, sqrt3/2] triangle. Equal x/y spans
-// (1.216) keep the triangle equilateral on the square canvas — extra room
-// above for the title, and generously below for vertex labels + the density
-// legend, which both live outside the triangle itself.
 const X_MIN = -0.108;
 const X_MAX = 1.108;
 const Y_MIN = -0.26;
@@ -181,18 +188,13 @@ function DensityLayer() {
           <path d={clipD} />
         </clipPath>
       </defs>
-      <g clipPath="url(#ternaryTriangleClip)" opacity={0.85}>
+      <g clipPath="url(#ternaryTriangleClip)">
         <ScatterPlot />
       </g>
     </>
   );
 }
 
-// A second, higher-contrast pass of the reference grid drawn ON TOP of the
-// density layer: a page-background-colored halo "cuts through" the density
-// fill, then the actual dashed grid stroke reads over it — guaranteed
-// visible everywhere (including the high-density peaks that fully occlude
-// the beneath-the-density copy in TriangleGrid) in both themes.
 function GridOverlay() {
   const xs = useXScale();
   const ys = useYScale();
@@ -230,15 +232,20 @@ function GridOverlay() {
 function EdgeTicks() {
   const xs = useXScale();
   const ys = useYScale();
-  const label = (tick, dx, dy, anchor) => (
+  const label = (
+    tick: { pct: number; pos: { x: number; y: number } },
+    dx: number,
+    dy: number,
+    anchor: "start" | "middle" | "end",
+  ) => (
     <text
       key={`${dx}-${dy}-${tick.pct}`}
-      x={xs(tick.pos.x) + dx}
-      y={ys(tick.pos.y) + dy}
+      x={xs(tick.pos.x)! + dx}
+      y={ys(tick.pos.y)! + dy}
       textAnchor={anchor}
       dominantBaseline="middle"
       fontFamily={FONT}
-      fontSize={13}
+      fontSize={16}
       fill={t.inkSoft}
     >
       {tick.pct}%
@@ -247,8 +254,53 @@ function EdgeTicks() {
   return (
     <g>
       {LEFT_TICKS.map((tk) => label(tk, -16, 0, "end"))}
-      {BOTTOM_TICKS.map((tk) => label(tk, 0, 22, "middle"))}
+      {BOTTOM_TICKS.map((tk) => label(tk, 0, 24, "middle"))}
       {RIGHT_TICKS.map((tk) => label(tk, 16, 0, "start"))}
+    </g>
+  );
+}
+
+// Names the component each edge scale measures; the arrow points toward 100 %
+function EdgeTitles() {
+  const xs = useXScale();
+  const ys = useYScale();
+  const mid = (p: { x: number; y: number }, q: { x: number; y: number }) => ({
+    x: (xs(p.x)! + xs(q.x)!) / 2,
+    y: (ys(p.y)! + ys(q.y)!) / 2,
+  });
+  const left = mid(VERTEX_LEFT, VERTEX_TOP);
+  const right = mid(VERTEX_RIGHT, VERTEX_TOP);
+  const bottom = mid(VERTEX_LEFT, VERTEX_RIGHT);
+  const OFFSET = 84;
+  const titles = [
+    {
+      x: left.x - OFFSET * SQRT3_2,
+      y: left.y - OFFSET / 2,
+      angle: -60,
+      text: `${COMPONENT_A} (%) →`,
+    },
+    {
+      x: right.x + OFFSET * SQRT3_2,
+      y: right.y - OFFSET / 2,
+      angle: 60,
+      text: `${COMPONENT_C} (%) →`,
+    },
+    { x: bottom.x, y: bottom.y + 62, angle: 0, text: `← ${COMPONENT_B} (%)` },
+  ];
+  return (
+    <g fontFamily={FONT} fontSize={18} fontWeight={600} fill={t.inkSoft}>
+      {titles.map((tt) => (
+        <text
+          key={tt.text}
+          x={tt.x}
+          y={tt.y}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          transform={`rotate(${tt.angle} ${tt.x} ${tt.y})`}
+        >
+          {tt.text}
+        </text>
+      ))}
     </g>
   );
 }
@@ -260,27 +312,27 @@ function VertexLabels() {
     <g fontFamily={FONT} fontSize={22} fontWeight={700} fill={t.ink}>
       <text
         x={xs(VERTEX_TOP.x)}
-        y={ys(VERTEX_TOP.y) - 22}
+        y={ys(VERTEX_TOP.y)! - 22}
         textAnchor="middle"
         dominantBaseline="baseline"
       >
-        Sand
+        {COMPONENT_A}
       </text>
       <text
         x={xs(VERTEX_LEFT.x)}
-        y={ys(VERTEX_LEFT.y) + 30}
+        y={ys(VERTEX_LEFT.y)! + 30}
         textAnchor="middle"
         dominantBaseline="hanging"
       >
-        Silt
+        {COMPONENT_B}
       </text>
       <text
         x={xs(VERTEX_RIGHT.x)}
-        y={ys(VERTEX_RIGHT.y) + 30}
+        y={ys(VERTEX_RIGHT.y)! + 30}
         textAnchor="middle"
         dominantBaseline="hanging"
       >
-        Clay
+        {COMPONENT_C}
       </text>
     </g>
   );
@@ -324,7 +376,7 @@ function DensityLegend() {
         x={barX}
         y={barY + barHeight + 20}
         textAnchor="start"
-        fontSize={13}
+        fontSize={16}
         fill={t.inkSoft}
       >
         Low
@@ -333,7 +385,7 @@ function DensityLegend() {
         x={barX + barWidth}
         y={barY + barHeight + 20}
         textAnchor="end"
-        fontSize={13}
+        fontSize={16}
         fill={t.inkSoft}
       >
         High
@@ -351,7 +403,7 @@ function Title() {
   return (
     <text
       x={xs((X_MIN + X_MAX) / 2)}
-      y={ys(Y_MAX) + fontSize}
+      y={ys(Y_MAX)! + 4}
       textAnchor="middle"
       dominantBaseline="hanging"
       fontFamily={FONT}
@@ -364,10 +416,9 @@ function Title() {
   );
 }
 
-// --- Chart (default-exported component — the harness mounts it) -------------
 export default function Chart() {
   return (
-    <ChartContainer
+    <ChartsContainer
       width={SIZE.width}
       height={SIZE.height}
       margin={{ top: 24, right: 24, bottom: 24, left: 24 }}
@@ -378,12 +429,12 @@ export default function Chart() {
           color: t.seq[0],
           markerSize: 13,
           data: densityPoints,
-          valueFormatter: (_value, ctx) =>
-            `Sand ${sandPct[ctx.dataIndex]}% · Silt ${siltPct[ctx.dataIndex]}% · Clay ${clayPct[ctx.dataIndex]}% — ${Math.round((densityPoints[ctx.dataIndex].rawZ / maxDensity) * 100)}% of peak density`,
+          valueFormatter: (_value: any, ctx: any) =>
+            `${COMPONENT_A} ${aPct[ctx.dataIndex]}% · ${COMPONENT_B} ${bPct[ctx.dataIndex]}% · ${COMPONENT_C} ${cPct[ctx.dataIndex]}% — ${Math.round((densityPoints[ctx.dataIndex].rawZ / maxDensity) * 100)}% of peak density`,
         },
       ]}
-      xAxis={[{ scaleType: "linear", min: X_MIN, max: X_MAX }]}
-      yAxis={[{ scaleType: "linear", min: Y_MIN, max: Y_MAX }]}
+      xAxis={[{ scaleType: "linear", min: X_MIN, max: X_MAX, position: "none" }]}
+      yAxis={[{ scaleType: "linear", min: Y_MIN, max: Y_MAX, position: "none" }]}
       zAxis={[
         {
           id: "density",
@@ -398,10 +449,11 @@ export default function Chart() {
       <DensityLayer />
       <GridOverlay />
       <EdgeTicks />
+      <EdgeTitles />
       <VertexLabels />
       <DensityLegend />
       <Title />
       <ChartsTooltip trigger="item" />
-    </ChartContainer>
+    </ChartsContainer>
   );
 }
