@@ -42,6 +42,11 @@ Reviews always run on Opus whatever `model` says (only a manual
 `impl-review.yml` dispatch with `review_model` changes that).
 impl-generate auto-closes any existing open PR for the same spec/lib.
 
+`-f source_ref=<branch|tag|sha>` (adopt mode, either workflow) takes each
+implementation file from that ref instead of generating it, always as
+`regen:forced`. An "Adoption Failed" issue comment is never retried: fix
+the file on the ref, then re-dispatch.
+
 ## 2 · Monitor — use the bundled scripts, don't hand-roll
 
 Completion signal = the spec issue carries all 15 `impl:{lib}:done`

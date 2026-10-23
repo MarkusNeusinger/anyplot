@@ -223,8 +223,11 @@ def _run_extract_inputs(
     return _run_script(script, repo, tmp_path, **env)
 
 
-def _create_pr_body(tmp_path: Path, *, model: str) -> str:
-    """Run impl-generate's "Create Pull Request" step and return the body it sends."""
+def _create_pr_body(tmp_path: Path, *, model: str, **extra: str) -> str:
+    """Run impl-generate's "Create Pull Request" step and return the body it sends.
+
+    `extra` adds step env, such as the adopt-mode SOURCE_REF and SOURCE_SHA.
+    """
     body_file = tmp_path / "pr_body.md"
     path = _fake_gh(
         tmp_path,
@@ -257,6 +260,7 @@ def _create_pr_body(tmp_path: Path, *, model: str) -> str:
         EXT=".py",
         ISSUE="42",
         BRANCH="implementation/spec-a/plotly",
+        **extra,
     )
     assert outputs["pr_number"] == "123"
     return body_file.read_text(encoding="utf-8")
@@ -490,6 +494,18 @@ class TestImplReviewModel:
         body = _create_pr_body(tmp_path, model="haiku")
         # plotly is a first run: routing would say opus, the recorded pin says haiku.
         assert _review_model(repo, tmp_path, library="plotly", body=body) == "haiku"
+
+    def test_adopted_pr_body_keeps_the_repair_model_for_rescues(self, repo, tmp_path):
+        """Adopt mode names the source, and the **Model:** line still carries the repair model."""
+        body = _create_pr_body(tmp_path, model="opus", SOURCE_REF="gemini/muix-9", SOURCE_SHA="a" * 40)
+        lines = body.splitlines()
+        assert (
+            f"**Generation:** adopted from `gemini/muix-9` ({'a' * 40}), no generation model; the model below runs repair"
+            in lines
+        )
+        assert "**Model:** opus" in lines
+        # matplotlib is on main: routing alone would say sonnet.
+        assert _review_model(repo, tmp_path, library="matplotlib", body=body) == "opus"
 
     def test_missing_origin_main_warns_and_assumes_a_first_run(self, repo_without_main, tmp_path):
         result = _run_review(repo_without_main, tmp_path, library="matplotlib")
@@ -751,6 +767,11 @@ class TestImplRepairModel:
         assert _repair_model(repo, tmp_path, library="plotly", model_input="sonnet", body="**Model:** haiku") == (
             "sonnet"
         )
+
+    def test_adopted_pr_body_round_trips_into_a_rescue_repair(self, repo, tmp_path):
+        body = _create_pr_body(tmp_path, model="opus", SOURCE_REF="main", SOURCE_SHA="b" * 40)
+        # matplotlib is on main: routing alone would say sonnet.
+        assert _repair_model(repo, tmp_path, library="matplotlib", model_input="auto", body=body) == "opus"
 
     def test_missing_origin_main_warns_and_assumes_a_first_run(self, repo_without_main, tmp_path):
         result = _run_repair(repo_without_main, tmp_path, library="matplotlib", model_input="auto")

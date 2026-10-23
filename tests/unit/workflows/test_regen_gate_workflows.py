@@ -593,8 +593,9 @@ class TestImplGenerate:
         detect = script.index('git cat-file -e "origin/main:plots/$SPEC_ID/implementations/$LANGUAGE/$LIBRARY$EXT"')
         assert detect < script.index("dispatch_retry() {")
         code = _code_only(script)
-        # Every live-implementation branch keys on IS_LIVE, never on the label alone.
-        assert code.count('[ "$IS_LIVE" = "true" ]') == 3
+        # Every live-implementation branch keys on IS_LIVE, never on the label alone:
+        # three on the ordinary paths, two on the adopt-mode source-failure path.
+        assert code.count('[ "$IS_LIVE" = "true" ]') == 5
         assert code.count('if [ -n "$REGEN_LABEL" ]; then') == 1  # only feeding IS_LIVE
 
     def test_retry_forwards_regen_gate(self):
