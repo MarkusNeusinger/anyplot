@@ -13,10 +13,11 @@ const MAX_LAG = 30; // number of lags shown in both panels
 const Y_PAD = 0.15; // share of the value span added above and below each panel
 
 // Columns: set these to your data's column names
-const VALUE = "Observation Value"; // role: value
+const VALUE = "Daily Temperature Anomaly (°C)"; // role: value
 
 // Data: replace this block with your own records, one object per row
-// AR(2) time series: x_t = 0.65 * x_{t-1} + 0.15 * x_{t-2} + e_t
+// 300 days of temperature anomalies with AR(2) persistence:
+// x_t = 0.65 * x_{t-1} + 0.15 * x_{t-2} + e_t
 const data = (() => {
   function lcgRng(seed: number) {
     let s = seed >>> 0;
@@ -48,35 +49,31 @@ const mu = ts.reduce((a, b) => a + b, 0) / N;
 const cx = ts.map((x) => x - mu);
 const c0 = cx.reduce((s, v) => s + v * v, 0) / N;
 
-function acfAt(h: number) {
+// Sample ACF for lags 0..MAX_LAG
+const rho: number[] = [];
+for (let h = 0; h <= MAX_LAG; h += 1) {
   let s = 0;
   for (let i = h; i < N; i += 1) s += cx[i] * cx[i - h];
-  return s / (N * c0);
+  rho.push(s / (N * c0));
 }
 
-const rho =Array.from({ length: MAX_LAG + 1 }, (_, k) => acfAt(k));
-
-function computePACF(rhoArr: number[], maxLag: number) {
-  const pacf = [1, rhoArr[1]];
-  let phi = [rhoArr[1]];
-  for (let k = 2; k <= maxLag; k += 1) {
-    let num = rhoArr[k];
-    let den = 1;
-    for (let j = 0; j < k - 1; j += 1) {
-      num -= phi[j] * rhoArr[k - 1 - j];
-      den -= phi[j] * rhoArr[j + 1];
-    }
-    const pkk = den !== 0 ? num / den : 0;
-    pacf.push(pkk);
-    const next = Array(k).fill(0);
-    next[k - 1] = pkk;
-    for (let j = 0; j < k - 1; j += 1) next[j] = phi[j] - pkk * phi[k - 2 - j];
-    phi = next;
+// PACF via the Durbin–Levinson recursion
+const pacf = [1, rho[1]];
+let phi = [rho[1]];
+for (let k = 2; k <= MAX_LAG; k += 1) {
+  let num = rho[k];
+  let den = 1;
+  for (let j = 0; j < k - 1; j += 1) {
+    num -= phi[j] * rho[k - 1 - j];
+    den -= phi[j] * rho[j + 1];
   }
-  return pacf;
+  const pkk = den !== 0 ? num / den : 0;
+  pacf.push(pkk);
+  const next = Array(k).fill(0);
+  next[k - 1] = pkk;
+  for (let j = 0; j < k - 1; j += 1) next[j] = phi[j] - pkk * phi[k - 2 - j];
+  phi = next;
 }
-
-const pacf = computePACF(rho, MAX_LAG);
 
 // 95% CI: +/- 1.96 / sqrt(N)
 const CI = 1.96 / Math.sqrt(N);
@@ -90,15 +87,13 @@ const acfData = rho.map(round4);
 const pacfData: (number | null)[] = [null, ...pacf.slice(1).map(round4)];
 
 // Each panel's y range covers its bars and the +/- CI band, padded by Y_PAD.
-function paddedLimits(values: (number | null)[]) {
-  const finite = values.filter((v): v is number => v != null && Number.isFinite(v));
-  const lo = Math.min(-CI, ...finite);
-  const hi = Math.max(CI, ...finite);
-  const pad = Y_PAD * (hi - lo);
-  return { min: lo - pad, max: hi + pad };
-}
-const acfLimits = paddedLimits(acfData);
-const pacfLimits = paddedLimits(pacfData);
+const acfLo = Math.min(-CI, ...acfData);
+const acfHi = Math.max(CI, ...acfData);
+const acfLimits = { min: acfLo - Y_PAD * (acfHi - acfLo), max: acfHi + Y_PAD * (acfHi - acfLo) };
+const pacfVals = pacfData.filter((v): v is number => v != null);
+const pacfLo = Math.min(-CI, ...pacfVals);
+const pacfHi = Math.max(CI, ...pacfVals);
+const pacfLimits = { min: pacfLo - Y_PAD * (pacfHi - pacfLo), max: pacfHi + Y_PAD * (pacfHi - pacfLo) };
 
 export default function Chart() {
   const W = window.ANYPLOT_SIZE.width;
@@ -122,7 +117,7 @@ export default function Chart() {
     strokeOpacity: 0.55,
   };
 
-  const tickStyle = { fontSize: 12, fill: t.inkSoft };
+  const tickStyle = { fontSize: 14, fill: t.inkSoft };
   const labelStyle = { fontSize: 15, fill: t.ink };
 
   const axisLineSx = {
@@ -166,7 +161,7 @@ export default function Chart() {
           letterSpacing: 0.15,
         }}
       >
-        AR(2) Process · acf-pacf · javascript · muix · anyplot.ai
+        Daily Temperature Anomaly · acf-pacf · javascript · muix · anyplot.ai
       </div>
 
       {/* ACF panel */}
