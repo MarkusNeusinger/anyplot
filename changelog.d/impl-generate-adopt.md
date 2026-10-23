@@ -13,4 +13,4 @@
   the routed model only runs repair, the PR body and the metadata
   (`generated_by: adopted:<ref>`) name the source, and a missing file or a
   failed render is reported once without a retry, because a retry would read
-  the same file. Python and JavaScript only for now.
+  the same file. Python and JavaScript only for now. (#12274)
