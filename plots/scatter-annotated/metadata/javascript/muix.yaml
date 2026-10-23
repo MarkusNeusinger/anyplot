@@ -3,7 +3,8 @@ language: javascript
 specification_id: scatter-annotated
 created: '2026-09-05T13:18:01Z'
 updated: '2026-10-23T21:48:47Z'
-generated_by: adopted:gemini/12267-muix-9-batch1
+generated_by: gemini-4-argon
+adopted_from: gemini/12267-muix-9-batch1 (8cfea568c)
 workflow_run: 40028370434
 issue: 2790
 language_version: 22.23.3

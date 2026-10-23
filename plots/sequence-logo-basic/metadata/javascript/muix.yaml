@@ -3,7 +3,8 @@ language: javascript
 specification_id: sequence-logo-basic
 created: '2026-08-26T11:32:03Z'
 updated: '2026-10-23T21:15:47Z'
-generated_by: adopted:gemini/12267-muix-9-batch1
+generated_by: gemini-4-argon
+adopted_from: gemini/12267-muix-9-batch1 (8cfea568c)
 workflow_run: 40024249661
 issue: 4421
 language_version: 22.23.3
