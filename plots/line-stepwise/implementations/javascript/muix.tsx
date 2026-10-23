@@ -2,41 +2,46 @@
 // line-stepwise: Step Line Plot
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 87/100 | Created: 2026-09-05
+
 import { LineChart } from "@mui/x-charts/LineChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import { Box, Typography } from "@mui/material";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data (in-memory, deterministic) ----------------------------------------
-// Smart-thermostat setpoint schedule, logged every 15 minutes over a day. The
-// schedule engine issues a new setpoint at fixed hours, but the telemetry
-// logger only samples on a fixed cadence — the exact moment a command took
-// effect sits somewhere between two consecutive readings, so mid-point step
-// alignment (`curve="step"`) represents that uncertainty honestly, unlike
-// "stepAfter" (which would claim the change landed exactly on a sample).
-const SAMPLES_PER_HOUR = 4;
-const SCHEDULE = [
-  { hours: 6, setpoint: 62 }, // overnight sleep mode
-  { hours: 2, setpoint: 68 }, // morning warm-up
-  { hours: 9, setpoint: 65 }, // away / eco during work hours
-  { hours: 5, setpoint: 72 }, // evening comfort
-  { hours: 2, setpoint: 62 }, // night wind-down
-];
+// Columns: set these to your data's column names
+const X = "Time of Day"; // role: x
+const Y = "Setpoint (°F)"; // role: y
 
-const hoursOfDay = [];
-const setpoints = [];
-let hour = 0;
-for (const block of SCHEDULE) {
-  const samples = block.hours * SAMPLES_PER_HOUR;
-  for (let i = 0; i < samples; i += 1) {
-    hoursOfDay.push(hour);
-    setpoints.push(block.setpoint);
-    hour += 1 / SAMPLES_PER_HOUR;
+// Data: replace this block with your own records, one object per row
+// Smart-thermostat setpoint schedule, logged every 15 minutes over a day.
+const data = (() => {
+  const samplesPerHour = 4;
+  const schedule = [
+    { hours: 6, setpoint: 62 }, // overnight sleep mode
+    { hours: 2, setpoint: 68 }, // morning warm-up
+    { hours: 9, setpoint: 65 }, // away / eco during work hours
+    { hours: 5, setpoint: 72 }, // evening comfort
+    { hours: 2, setpoint: 62 }, // night wind-down
+  ];
+
+  const rows: { [X]: number; [Y]: number }[] = [];
+  let hour = 0;
+  for (const block of schedule) {
+    const samples = block.hours * samplesPerHour;
+    for (let i = 0; i < samples; i += 1) {
+      rows.push({ [X]: hour, [Y]: block.setpoint });
+      hour += 1 / samplesPerHour;
+    }
   }
-}
+  return rows;
+})();
 
-function formatHour(h) {
+// Plot: reads only data and the constants above
+const hoursOfDay = data.map((d) => d[X]);
+const setpoints = data.map((d) => d[Y]);
+
+function formatHour(h: number) {
   const wholeHour = Math.floor(h);
   const minutes = Math.round((h - wholeHour) * 60);
   return `${String(wholeHour).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
@@ -46,27 +51,31 @@ const TITLE = "line-stepwise · javascript · muix · anyplot.ai";
 const TITLE_H = 56;
 const AREA_GRADIENT_ID = "stepAreaFillGradient";
 
-// The evening-comfort plateau is the schedule's warmest setpoint — call it
-// out with a reference line so the chart has a clear focal point beyond the
-// step shape itself.
-const PEAK_SETPOINT = Math.max(...SCHEDULE.map((b) => b.setpoint));
+const X_MIN = Math.floor(Math.min(...hoursOfDay));
+const X_MAX = Math.ceil(Math.max(...hoursOfDay));
+const MIN_SETPOINT = Math.min(...setpoints);
+const PEAK_SETPOINT = Math.max(...setpoints);
+const Y_MIN = Math.floor(MIN_SETPOINT - 7);
+const Y_MAX = Math.ceil(PEAK_SETPOINT + 6);
 
-// --- Chart (default-exported component — the harness mounts it) ------------
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
 
   return (
-    <Box sx={{ width, height, display: "flex", flexDirection: "column" }}>
-      <Typography sx={{ fontSize: 22, fontWeight: 600, color: "text.primary", px: "40px", pt: "10px", lineHeight: 1 }}>
+    <Box sx={{ width, height, bgcolor: t.pageBg, display: "flex", flexDirection: "column" }}>
+      <Typography sx={{ fontSize: 22, fontWeight: 600, color: t.ink, px: "40px", pt: "14px", lineHeight: 1.2 }}>
         {TITLE}
       </Typography>
       <LineChart
         width={width}
         height={height - TITLE_H}
         skipAnimation
+        disableHitArea
+        hideLegend
         series={[
           {
             data: setpoints,
+            label: Y,
             color: t.palette[0],
             curve: "step",
             area: true,
@@ -76,33 +85,36 @@ export default function Chart() {
         ]}
         xAxis={[
           {
+            height: 64,
             data: hoursOfDay,
             scaleType: "linear",
-            label: "Time of Day",
-            min: 0,
-            max: 24,
+            label: X,
+            min: X_MIN,
+            max: X_MAX,
             tickNumber: 8,
             valueFormatter: (h) => formatHour(h),
-            tickLabelStyle: { fontSize: 14 },
-            labelStyle: { fontSize: 16 },
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
         yAxis={[
           {
-            min: 55,
-            max: 78,
-            label: "Setpoint (°F)",
-            tickLabelStyle: { fontSize: 14 },
-            labelStyle: { fontSize: 16 },
+            width: 76,
+            min: Y_MIN,
+            max: Y_MAX,
+            label: Y,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
-        margin={{ top: 20, right: 56, bottom: 60, left: 70 }}
+        margin={{ top: 20, right: 56, bottom: 24, left: 40 }}
         grid={{ horizontal: true }}
-        slotProps={{ legend: { hidden: true } }}
         sx={{
-          "& .MuiLineElement-root": { strokeWidth: 3 },
-          "& .MuiAreaElement-root": { fill: `url(#${AREA_GRADIENT_ID})` },
+          "& .MuiLineChart-line": { strokeWidth: 3 },
+          "& .MuiLineChart-area": { fill: `url(#${AREA_GRADIENT_ID})` },
           "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
         }}
       >
         <defs>
