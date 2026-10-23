@@ -11,6 +11,9 @@ import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
 
+// Constants
+const HEX_RADIUS_SHARE = 0.075; // hexagon radius as a share of the plotted half-width
+
 // Columns: set these to your data's column names
 const X = "Distance east of plaza (m)"; // role: x
 const Y = "Distance north of plaza (m)"; // role: y
@@ -69,7 +72,7 @@ const data = (() => {
 const DOMAIN = Math.ceil(
   Math.max(...data.map((d) => Math.max(Math.abs(d[X]), Math.abs(d[Y])))),
 );
-const HEX_RADIUS = 4.5;
+const HEX_RADIUS = DOMAIN * HEX_RADIUS_SHARE;
 const hexDx = HEX_RADIUS * Math.sqrt(3);
 const hexDy = HEX_RADIUS * 1.5;
 
