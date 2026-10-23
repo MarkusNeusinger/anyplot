@@ -1,3 +1,7 @@
+// anyplot.ai
+// map-marker-clustered: Clustered Marker Map
+// Library: muix 9.16.0 | JavaScript 22.23.3
+// Quality: 83/100 | Updated: 2026-10-23
 //# anyplot-orientation: square
 // anyplot.ai
 // map-marker-clustered: Clustered Marker Map
