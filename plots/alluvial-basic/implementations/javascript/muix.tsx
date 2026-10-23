@@ -11,8 +11,8 @@ const t = window.ANYPLOT_TOKENS;
 
 // Constants
 const NODE_W = 18;
-const MID_LABEL_MIN_HEIGHT = 16;
-const MID_LABEL_FONT = 10;
+const MID_LABEL_FONT = 13;
+const MID_LABEL_MIN_HEIGHT = MID_LABEL_FONT + 6;
 
 // Columns: set these to your data's column names
 const TIME_POINT = "Quarter"; // role: time_point
@@ -200,8 +200,7 @@ function AlluvialNodes() {
           const segmentH = yBottom - yTop;
           const showMidLabel =
             !isFirst && !isLast && segmentH >= MID_LABEL_MIN_HEIGHT;
-          const midLabel = cat.length > 5 ? cat.slice(0, 3) : cat;
-          const midPillW = midLabel.length * MID_LABEL_FONT * 0.62 + 10;
+          const midPillW = cat.length * MID_LABEL_FONT * 0.6 + 14;
           const midPillH = MID_LABEL_FONT + 8;
           return (
             <React.Fragment key={`${timePoint}-${cat}`}>
@@ -243,7 +242,7 @@ function AlluvialNodes() {
                     fontSize={MID_LABEL_FONT}
                     fill={t.inkSoft}
                   >
-                    {midLabel}
+                    {cat}
                   </text>
                 </>
               )}
