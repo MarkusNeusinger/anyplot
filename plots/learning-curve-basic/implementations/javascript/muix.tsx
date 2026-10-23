@@ -1,6 +1,7 @@
 // anyplot.ai
 // learning-curve-basic: Model Learning Curve
-// Library: muix 7.29.1 | JavaScript 22.23.2
+// Library: MUI X Charts | React | Node
+// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
 // Quality: 89/100 | Created: 2026-09-05
 import { LineChart } from "@mui/x-charts/LineChart";
 import { Box, Typography } from "@mui/material";
@@ -30,12 +31,14 @@ const valLower = valMean.map((m, i) => m - valStd[i]);
 const valWidth = valStd.map((s) => 2 * s);
 
 const TITLE = "learning-curve-basic · javascript · muix · anyplot.ai";
+const pct = (v) => `${(v * 100).toFixed(1)}%`;
 
 // --- Chart (default-exported component — the harness mounts it) ------------
 export default function Chart() {
   const size = window.ANYPLOT_SIZE;
   const titleH = 64;
-  const chartH = size.height - titleH;
+  const legendH = 40;
+  const chartH = size.height - titleH - legendH;
 
   return (
     <Box
@@ -54,29 +57,31 @@ export default function Chart() {
         width={size.width}
         height={chartH}
         skipAnimation
-        margin={{ top: 20, right: 40, bottom: 88, left: 108 }}
+        margin={{ top: 20, right: 40, bottom: 8, left: 24 }}
         series={[
-          { id: "trainLower", data: trainLower, stack: "trainBand", area: true, showMark: false, color: t.palette[0] },
-          { id: "trainBand", data: trainWidth, stack: "trainBand", area: true, showMark: false, color: t.palette[0] },
+          { id: "trainLower", data: trainLower, stack: "trainBand", area: true, curve: "linear", color: t.palette[0] },
+          { id: "trainBand", data: trainWidth, stack: "trainBand", area: true, curve: "linear", color: t.palette[0] },
           {
             id: "trainMean",
             data: trainMean,
             label: "Training score",
             color: t.palette[0],
             showMark: true,
-            curve: "monotoneX",
-            valueFormatter: (v) => `${(v * 100).toFixed(1)}%`,
+            shape: "circle",
+            curve: "linear",
+            valueFormatter: pct,
           },
-          { id: "valLower", data: valLower, stack: "valBand", area: true, showMark: false, color: t.palette[1] },
-          { id: "valBand", data: valWidth, stack: "valBand", area: true, showMark: false, color: t.palette[1] },
+          { id: "valLower", data: valLower, stack: "valBand", area: true, curve: "linear", color: t.palette[1] },
+          { id: "valBand", data: valWidth, stack: "valBand", area: true, curve: "linear", color: t.palette[1] },
           {
             id: "valMean",
             data: valMean,
             label: "Validation score",
             color: t.palette[1],
             showMark: true,
-            curve: "monotoneX",
-            valueFormatter: (v) => `${(v * 100).toFixed(1)}%`,
+            shape: "circle",
+            curve: "linear",
+            valueFormatter: pct,
           },
         ]}
         xAxis={[
@@ -84,6 +89,8 @@ export default function Chart() {
             data: trainSizes,
             scaleType: "linear",
             label: "Training Set Size (labeled emails)",
+            height: 64,
+            tickNumber: 10,
             tickLabelStyle: { fontSize: 14 },
             labelStyle: { fontSize: 16 },
           },
@@ -94,10 +101,7 @@ export default function Chart() {
             max: 1.0,
             label: "Classification Accuracy (%)",
             valueFormatter: (v) => `${Math.round(v * 100)}%`,
-            // tickFontSize drives the label's reserved offset from the tick
-            // text (MUI X sizes that gap off this prop, not tickLabelStyle),
-            // so it must stay wide enough for a 4-char "100%" tick.
-            tickFontSize: 34,
+            width: 84,
             tickLabelStyle: { fontSize: 14 },
             labelStyle: { fontSize: 16 },
           },
@@ -105,24 +109,28 @@ export default function Chart() {
         grid={{ horizontal: true }}
         slotProps={{
           legend: {
-            position: { vertical: "bottom", horizontal: "middle" },
-            direction: "row",
-            labelStyle: { fontSize: 14 },
+            position: { vertical: "bottom", horizontal: "center" },
+            direction: "horizontal",
+            sx: { fontSize: 16 },
           },
         }}
         sx={{
-          "& .MuiLineElement-series-trainMean": { strokeWidth: 3 },
-          "& .MuiLineElement-series-valMean": { strokeWidth: 3 },
-          "& .MuiLineElement-series-trainLower, & .MuiLineElement-series-valLower": { stroke: "none" },
-          "& .MuiLineElement-series-trainBand": { stroke: t.palette[0], strokeWidth: 1, strokeOpacity: 0.5 },
-          "& .MuiLineElement-series-valBand": { stroke: t.palette[1], strokeWidth: 1, strokeOpacity: 0.5 },
-          "& .MuiAreaElement-series-trainLower, & .MuiAreaElement-series-valLower": { fillOpacity: 0 },
-          "& .MuiAreaElement-series-trainBand, & .MuiAreaElement-series-valBand": { fillOpacity: 0.18 },
-          "& .MuiMarkElement-series-trainMean, & .MuiMarkElement-series-valMean": {
-            r: 9,
-            stroke: t.pageBg,
-            strokeWidth: 2,
+          '& .MuiLineChart-line[data-series="trainMean"], & .MuiLineChart-line[data-series="valMean"]': {
+            strokeWidth: 3,
           },
+          '& .MuiLineChart-line[data-series="trainLower"], & .MuiLineChart-line[data-series="valLower"]': {
+            stroke: "none",
+          },
+          '& .MuiLineChart-line[data-series="trainBand"]': { stroke: t.palette[0], strokeWidth: 1, strokeOpacity: 0.5 },
+          '& .MuiLineChart-line[data-series="valBand"]': { stroke: t.palette[1], strokeWidth: 1, strokeOpacity: 0.5 },
+          '& .MuiLineChart-area[data-series="trainLower"], & .MuiLineChart-area[data-series="valLower"]': {
+            fillOpacity: 0,
+          },
+          '& .MuiLineChart-area[data-series="trainBand"], & .MuiLineChart-area[data-series="valBand"]': {
+            fillOpacity: 0.18,
+          },
+          '& .MuiLineChart-mark[data-series="trainMean"]': { r: 7, fill: t.palette[0], stroke: t.pageBg, strokeWidth: 2 },
+          '& .MuiLineChart-mark[data-series="valMean"]': { r: 7, fill: t.palette[1], stroke: t.pageBg, strokeWidth: 2 },
           "& .MuiChartsGrid-line": { stroke: t.grid },
         }}
       />
