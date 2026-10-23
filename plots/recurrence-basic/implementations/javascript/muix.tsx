@@ -3,17 +3,12 @@
 // Library: muix 9.16.0 | JavaScript 22.23.3
 // Quality: 80/100 | Updated: 2026-10-23
 //# anyplot-orientation: square
-// anyplot.ai
-// recurrence-basic: Recurrence Plot for Nonlinear Time Series
-// Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: pending | Created: 2026-06-10
 
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
-import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -58,39 +53,6 @@ for (let i = 0; i < M; i++) {
 const minTime = data[0][TIME];
 const maxTime = data[M - 1][TIME];
 const TITLE_H = 56;
-
-// Identity line i = j across the embedded time range, mapped through the axis
-// scales; the label sits along the diagonal at a fraction of the range.
-function IdentityLine() {
-  const { height } = useDrawingArea();
-  const xScale = useXScale();
-  const yScale = useYScale();
-  const labelTime = minTime + 0.87 * (maxTime - minTime);
-  return (
-    <g>
-      <line
-        x1={xScale(minTime)}
-        y1={yScale(minTime)}
-        x2={xScale(maxTime)}
-        y2={yScale(maxTime)}
-        stroke={t.amber}
-        strokeWidth={2}
-        strokeDasharray="9 5"
-        opacity={0.8}
-      />
-      <text
-        x={xScale(labelTime)}
-        y={yScale(labelTime) - 0.06 * height}
-        fill={t.amber}
-        textAnchor="middle"
-        opacity={0.9}
-        style={{ fontSize: 12, fontFamily: "Inter, system-ui, sans-serif", fontWeight: 500 }}
-      >
-        i = j
-      </text>
-    </g>
-  );
-}
 
 export default function Chart() {
   const W = window.ANYPLOT_SIZE.width;
@@ -141,7 +103,7 @@ export default function Chart() {
             max: maxTime,
             height: 72,
             label: `${TIME} i`,
-            tickLabelStyle: { fontSize: 13, fill: t.inkSoft },
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
             labelStyle: { fontSize: 15, fill: t.ink },
           },
         ]}
@@ -151,7 +113,7 @@ export default function Chart() {
             max: maxTime,
             width: 72,
             label: `${TIME} j`,
-            tickLabelStyle: { fontSize: 13, fill: t.inkSoft },
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
             labelStyle: { fontSize: 15, fill: t.ink },
           },
         ]}
@@ -165,7 +127,6 @@ export default function Chart() {
         <ScatterPlot />
         <ChartsXAxis />
         <ChartsYAxis />
-        <IdentityLine />
       </ChartsContainer>
     </div>
   );
