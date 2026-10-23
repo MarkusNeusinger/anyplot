@@ -362,8 +362,12 @@ async function main() {
     // fall back to fonts-ready + a double rAF, which is sufficient for the
     // animation:false static renders the library prompts mandate. This is the
     // page.waitForFunction(...) signal the design calls for — never a time.sleep.
+    // Playwright's signature is (pageFunction, arg, options): the options object
+    // must sit in the third slot, or it becomes the page function's argument
+    // and the wait runs to the 30 s default timeout on every snippet without
+    // the signal.
     try {
-      await page.waitForFunction(() => window.__anyplotReady === true, { timeout: 2500 });
+      await page.waitForFunction(() => window.__anyplotReady === true, null, { timeout: 2500 });
     } catch {
       // No explicit signal — settle deterministically instead.
       await page.evaluate(async () => {
