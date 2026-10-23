@@ -113,9 +113,9 @@ const reinforcedAligned = alignToGrid(reinforcedCurve, timeGrid);
 // bound) + a filled delta on top of it (renders as the CI band from lower to
 // upper), then the visible KM step line. Only the step line gets a `label`,
 // so the band helpers are automatically excluded from the legend. The base's
-// fill is knocked out via the `& .MuiAreaElement-series-{id}` sx rules below
-// (MUI X always applies its own opaque "brighter" tint to an area fill, so a
-// transparent/rgba `color` on the series itself is not enough to hide it).
+// fill and both helpers' outlines are knocked out via the
+// `.MuiLineChart-area/line[data-series=…]` sx rules below (MUI X always
+// paints an area fill opaque, so a transparent `color` is not enough).
 function buildGroupSeries(key: string, label: string, color: string, aligned: typeof standardAligned) {
   return [
     {
@@ -144,6 +144,7 @@ function buildGroupSeries(key: string, label: string, color: string, aligned: ty
       curve: "stepAfter" as const,
       color,
       label,
+      shape: "circle" as const,
       showMark: ({ index }: { index: number }) => aligned[index].censored,
     },
   ];
@@ -184,7 +185,7 @@ export default function Chart() {
       </Box>
       <LineChart
         width={size.width - paddingX * 2}
-        height={size.height - paddingY * 2 - headerHeight}
+        height={size.height - paddingY * 2 - headerHeight - 40}
         series={series}
         xAxis={[
           {
@@ -193,8 +194,9 @@ export default function Chart() {
             min: 0,
             max: OBSERVATION_WINDOW,
             label: "Time in service (months)",
-            labelStyle: { fontSize: 15 },
-            tickLabelStyle: { fontSize: 13 },
+            labelStyle: { fontSize: 16 },
+            tickLabelStyle: { fontSize: 14 },
+            height: 52,
           },
         ]}
         yAxis={[
@@ -202,33 +204,35 @@ export default function Chart() {
             min: 0,
             max: 1,
             label: "Survival probability",
-            labelStyle: { fontSize: 15 },
-            tickLabelStyle: { fontSize: 13 },
-            // The axis-title offset is driven by `tickFontSize` (not
-            // `tickLabelStyle.fontSize`) in MUI X's layout formula, so bump
-            // this well past the rendered "100%" tick-label width to clear
-            // the rotated title from the tick text without enlarging the
-            // ticks themselves.
-            tickFontSize: 42,
+            labelStyle: { fontSize: 16 },
+            tickLabelStyle: { fontSize: 14 },
+            width: 84,
             valueFormatter: (v: number) => `${Math.round(v * 100)}%`,
           },
         ]}
         grid={{ horizontal: true }}
-        margin={{ top: 8, right: 24, bottom: 56, left: 112 }}
+        margin={{ top: 8, right: 24, bottom: 8, left: 16 }}
         skipAnimation
         slotProps={{
           legend: {
-            position: { vertical: "top", horizontal: "right" },
-            labelStyle: { fontSize: 14 },
+            position: { vertical: "top", horizontal: "end" },
+            sx: { fontSize: 15 },
           },
         }}
         sx={{
-          "& .MuiLineElement-root": { strokeWidth: 3 },
-          "& .MuiMarkElement-root": { strokeWidth: 3 },
-          "& .MuiAreaElement-series-standard-ci-base": { fill: "none" },
-          "& .MuiAreaElement-series-reinforced-ci-base": { fill: "none" },
-          "& .MuiAreaElement-series-standard-ci-band": { fillOpacity: 0.16 },
-          "& .MuiAreaElement-series-reinforced-ci-band": { fillOpacity: 0.16 },
+          "& .MuiLineChart-line": { strokeWidth: 3 },
+          "& .MuiLineChart-mark": { strokeWidth: 2.5 },
+          ...Object.fromEntries(
+            [
+              ["standard", t.palette[0]],
+              ["reinforced", t.palette[1]],
+            ].flatMap(([key, color]) => [
+              [`& .MuiLineChart-area[data-series="${key}-ci-base"]`, { fill: "none" }],
+              [`& .MuiLineChart-area[data-series="${key}-ci-band"]`, { fill: color, fillOpacity: 0.16 }],
+              [`& .MuiLineChart-line[data-series="${key}-ci-base"]`, { display: "none" }],
+              [`& .MuiLineChart-line[data-series="${key}-ci-band"]`, { display: "none" }],
+            ]),
+          ),
         }}
       />
     </Box>
