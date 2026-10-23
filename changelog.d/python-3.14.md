@@ -8,3 +8,17 @@
   October 2026, while 3.14 gets bug fixes until October 2027; 3.15 waits for a
   lets-plot wheel. `google-crc32c` moves from 1.7.1 to 1.9.0 in the lock, because
   1.7.1 publishes no cp314 wheel and the images carry no compiler to build it.
+
+### Security
+
+- **The renderer sandbox stays tight on Python 3.14.** 3.14 raises an audit event
+  for every ctypes call, so the plot guard refused the `ctypes.cast` that scipy
+  makes while it is imported, and with it every plot that uses scipy, statsmodels,
+  scikit-learn or seaborn. The plot guard now lets exactly that call through, and
+  only from an import; the same cast from plot code, `memmove`, `memset` and every
+  other foreign function stay refused, and the data and convert guards allow none
+  (narrowed after a Fable review). The sandbox interpreter also runs with
+  `-X disable-remote-debug`, and the guards refuse `sys.remote_exec`, so 3.14's
+  remote debugging cannot run a script in it. The code validator bans
+  `annotationlib` and `typing.evaluate_forward_ref`, which 3.14 added and which
+  evaluate annotation strings.

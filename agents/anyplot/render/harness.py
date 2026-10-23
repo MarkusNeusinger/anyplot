@@ -54,8 +54,8 @@ copies it to `/opt/anyplot/harness.py`. In order it:
    function built by hand or a `__code__` assignment, every `open` that writes anything but
    `plot-<theme>.png` and `probe-<theme>.json`, `subprocess.*`, `os.system`, `os.exec*`,
    `os.posix_spawn`, `os.spawn*`, `os.fork*`, `socket.*`, `ctypes.*` (but threadpoolctl's,
-   `NATIVE_CALLERS`, and ctypes' own cast, memmove and memset, `CTYPES_HELPERS`), `sys.remote_exec`,
-   filesystem changes and `os.chdir`, and every frame (`gi_frame`,
+   `NATIVE_CALLERS`, and the `ctypes.cast` scipy makes while it is imported, `IMPORT_CTYPES_HELPERS`),
+   `sys.remote_exec`, filesystem changes and `os.chdir`, and every frame (`gi_frame`,
    `cr_frame`, `ag_frame`, `tb_frame`, `sys._getframe`) while plot code is on the stack, but
    to `FRAME_READERS` and import bodies (Fable review of #12177; `hide_frames` makes
    `inspect.currentframe` and `logging.currentframe` answer None first). Imports, reads and `compile` stay
@@ -80,8 +80,8 @@ same limits, imports everything the validator's DATA profile allows (`DATA_PRELO
 module of `pandas.core`, `pandas.tseries` and `pandas.api`, which pandas would otherwise
 load lazily, and every time zone), reads and compiles the snippet, opens `out.csv` for
 writing, and only then arms `DataGuard` with `sys.addaudithook`: from there on the
-interpreter refuses every `open` (reading too) and every `import`, `ctypes.*` (but
-`CTYPES_HELPERS`), `sys.remote_exec`, `os.system`, `os.exec*`, `os.posix_spawn`, `os.spawn*`, `os.fork*`, `subprocess.*`,
+interpreter refuses every `open` (reading too) and every `import`, `ctypes.*`,
+`sys.remote_exec`, `os.system`, `os.exec*`, `os.posix_spawn`, `os.spawn*`, `os.fork*`, `subprocess.*`,
 `socket.*`, every filesystem change and listing (`os.remove`, `os.listdir`,
 `os.scandir`, ...), every route to a frame (`gi_frame`, `cr_frame`, `ag_frame`,
 `tb_frame`, `sys._getframe`), whose `f_builtins` would hand out `open` and `__import__`
@@ -363,16 +363,19 @@ CODE_OBJECT_EVENTS = ("code.__new__", "function.__new__")
 NATIVE_CALLERS = ("/threadpoolctl.py",)
 """The files whose `ctypes.*` events the plot guard lets through: scikit-learn limits the BLAS threads around
 `KMeans` and its kin with threadpoolctl, which opens the BLAS libraries the process loaded already and calls their
-thread setters. Every other `ctypes.*` event is refused (but `CTYPES_HELPERS`), so a NumPy array's `.ctypes` cannot
-reach `CDLL`."""
-CTYPES_HELPERS = ("_cast_addr", "_memmove_addr", "_memset_addr")
-"""The `_ctypes` attributes holding the addresses of ctypes' own C helpers behind `ctypes.cast`, `ctypes.memmove`
-and `ctypes.memset`. Python 3.14 raises `ctypes.call_function` (its first argument the function's address) for every
-call through a ctypes function pointer, these three included; 3.13 raised no event for them. scipy's
-`_lib._ccallback_c` calls `ctypes.cast` while it is imported, so without this list every plot that imports scipy,
-statsmodels or scikit-learn after the guard is armed failed. Every guard lets a `ctypes.call_function` of exactly these
-addresses through (`calls_ctypes_helper`), which is 3.13's behaviour; `string_at`, `wstring_at` and `memoryview_at`
-keep events of their own and stay refused, as does every other foreign function."""
+thread setters. Every other `ctypes.*` event is refused (but `IMPORT_CTYPES_HELPERS`), so a NumPy array's `.ctypes`
+cannot reach `CDLL`."""
+IMPORT_CTYPES_HELPERS = ("_cast_addr",)
+"""The `_ctypes` attributes holding the addresses of ctypes' own C helpers the plot guard lets an import call: only
+`ctypes.cast`'s. Python 3.14 raises `ctypes.call_function` (its first argument the function's address) for every call
+through a ctypes function pointer, `cast`, `memmove` and `memset` included, where 3.13 raised no event for those three.
+scipy's `_lib._ccallback_c` calls `ctypes.cast` while it is imported, so every plot that imports scipy, statsmodels,
+scikit-learn or seaborn after the guard is armed failed. `PlotGuard` lets that call through when the nearest origin
+of its caller is an import (`calls_import_ctypes_helper`), the rule `exec` and frames follow; the same call from plot
+code, `memmove` and `memset` (an in-process write that no allowed library needs), `string_at`, `wstring_at`,
+`memoryview_at` and every other foreign function stay refused (Fable review of the 3.14 bump: the first draft let all
+three helpers through from anywhere, which gave plot code back a write primitive 3.14's event had closed). The data
+and convert guards need none of it: data mode imports scipy before it arms, and neither mode imports after."""
 PLOT_BLOCKED_PREFIXES = (
     "ctypes.",
     "os.system",
@@ -580,13 +583,13 @@ def sets_code(event, args):
 
 
 def ctypes_helper_addresses():
-    """The addresses of `CTYPES_HELPERS`, read when a guard is built, before it is armed (importing `_ctypes` opens
-    its shared library); empty where `_ctypes` is missing."""
+    """The addresses of `IMPORT_CTYPES_HELPERS`, read when the plot guard is built, before it is armed (importing
+    `_ctypes` opens its shared library); empty where `_ctypes` is missing."""
     try:
         import _ctypes
     except ImportError:
         return frozenset()
-    return frozenset(getattr(_ctypes, name) for name in CTYPES_HELPERS if hasattr(_ctypes, name))
+    return frozenset(getattr(_ctypes, name) for name in IMPORT_CTYPES_HELPERS if hasattr(_ctypes, name))
 
 
 class DataGuard:
@@ -604,7 +607,6 @@ class DataGuard:
         self.blocked = None
         self.paused_depth = 0
         self.entry = None  # the code object `arm` lets run once
-        self.ctypes_helpers = ctypes_helper_addresses()
 
     def refuses(self, event, args):
         """Whether `event` with `args` is one the armed guard refuses."""
@@ -616,13 +618,7 @@ class DataGuard:
             return not self.lets_code_run(event, args)
         if event == "sys._getframemodulename":
             return False  # a module name, no frame: `namedtuple` asks for it (`DataFrame.itertuples()`)
-        if self.calls_ctypes_helper(event, args):
-            return False
         return sets_code(event, args) or event.startswith(DATA_BLOCKED_PREFIXES)
-
-    def calls_ctypes_helper(self, event, args):
-        """A `ctypes.call_function` of one of `CTYPES_HELPERS`, which Python 3.13 ran with no event at all."""
-        return event == "ctypes.call_function" and bool(args) and args[0] in self.ctypes_helpers
 
     def lets_code_run(self, event, args):
         """Whether an `exec` or `compile` may run: the entry code object once, then only `CODE_BUILDERS`."""
@@ -695,6 +691,7 @@ class PlotGuard(DataGuard):
         super().__init__()
         self.outputs = frozenset(os.path.realpath(path) for path in outputs)
         self.plot_file = None
+        self.import_ctypes_helpers = ctypes_helper_addresses()
 
     def arm(self, entry=None):
         self.plot_file = entry.co_filename if entry is not None else None
@@ -707,7 +704,7 @@ class PlotGuard(DataGuard):
             return False
         if event == "exec" or event in CODE_OBJECT_EVENTS or sets_code(event, args):
             return not self.lets_code_run(event, args)
-        if self.calls_ctypes_helper(event, args):
+        if self.calls_import_ctypes_helper(event, args):
             return False
         if event.startswith("ctypes."):
             return not self.native_caller()
@@ -718,6 +715,13 @@ class PlotGuard(DataGuard):
         if event.startswith(FRAME_EVENTS):
             return not self.lets_frame_out()
         return event.startswith(PLOT_BLOCKED_PREFIXES)
+
+    def calls_import_ctypes_helper(self, event, args):
+        """A `ctypes.call_function` of `IMPORT_CTYPES_HELPERS` (`ctypes.cast`) whose caller's nearest origin is an
+        import, as scipy's `_lib._ccallback_c` makes while it is imported: Python 3.13 ran it with no event at all."""
+        if event != "ctypes.call_function" or not args or args[0] not in self.import_ctypes_helpers:
+            return False
+        return self.nearest_origin(self.caller()) == "import"
 
     def lets_code_run(self, event, args):
         """The plot's code object once, `CODE_BUILDERS`, and code an import runs: walking up from the caller, an

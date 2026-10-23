@@ -79,11 +79,16 @@ PLOT_ROUTES = [
     pytest.param(f"import os\nos.posix_spawn('/usr/bin/touch', ['touch', '{MARKER}'], {{}})\n", id="posix_spawn"),
     pytest.param("import socket\nsocket.socket()\n", id="socket"),
     pytest.param("lib = np.zeros(1).ctypes._ctypes.CDLL(None)\n", id="native code through an array"),
-    # Python 3.14: every call through a ctypes function pointer raises `ctypes.call_function`; only ctypes' own
-    # cast, memmove and memset pass (`CTYPES_HELPERS`), so `string_at` through an array stays refused.
+    # Python 3.14: every call through a ctypes function pointer raises `ctypes.call_function`; only the `ctypes.cast`
+    # an import makes passes (`IMPORT_CTYPES_HELPERS`), so the plot's own cast, memmove and string_at stay refused.
     pytest.param(
         "a = np.zeros(8)\nraw = a.ctypes._ctypes.string_at(a.ctypes.data, 8)\n", id="string_at through an array"
     ),
+    pytest.param(
+        "import ctypes\np = ctypes.cast(ctypes.c_char_p(b'x'), ctypes.POINTER(ctypes.c_char))\n", id="cast in the plot"
+    ),
+    pytest.param("import ctypes\nb = (ctypes.c_char * 4)()\nctypes.memmove(b, b'abcd', 4)\n", id="memmove in the plot"),
+    pytest.param("import ctypes\nb = (ctypes.c_char * 4)()\nctypes.memset(b, 65, 4)\n", id="memset in the plot"),
     # Python 3.14's PEP 768: `sys.remote_exec` makes a process, this one included, run a script file.
     pytest.param("import os, sys\nsys.remote_exec(os.getpid(), 'plot.py')\n", id="sys.remote_exec into the plot"),
     pytest.param(f"{WRITE_MARKER}\n", id="open for writing"),
@@ -439,6 +444,10 @@ class TestDataGuardCode:
                 "import numpy as np\na = np.zeros(8)\nraw = a.ctypes._ctypes.string_at(a.ctypes.data, 8)\n",
                 id="string_at through an array",
             ),
+            pytest.param(
+                "import ctypes\np = ctypes.cast(ctypes.c_char_p(b'x'), ctypes.POINTER(ctypes.c_char))\n", id="cast"
+            ),
+            pytest.param("import ctypes\nb = (ctypes.c_char * 4)()\nctypes.memmove(b, b'abcd', 4)\n", id="memmove"),
             pytest.param("import os, sys\nsys.remote_exec(os.getpid(), 'snippet.py')\n", id="sys.remote_exec"),
         ],
     )
@@ -448,30 +457,50 @@ class TestDataGuardCode:
         assert out == ""
 
 
-GUARDS = [
-    pytest.param(lambda tmp_path: harness.PlotGuard((str(tmp_path / "plot-light.png"),)), id="PlotGuard"),
-    pytest.param(lambda tmp_path: harness.DataGuard(), id="DataGuard"),
-    pytest.param(lambda tmp_path: harness.ConvertGuard(), id="ConvertGuard"),
-]
+HELPER_NAMES = ("_cast_addr", "_memmove_addr", "_memset_addr", "_string_at_addr", "_wstring_at_addr")
 
 
-@pytest.mark.parametrize("make_guard", GUARDS)
-def test_only_ctypes_own_helpers_call_through(tmp_path: Path, make_guard) -> None:
-    """Python 3.14 raises `ctypes.call_function` for every call through a ctypes function pointer; scipy's import
-    calls `ctypes.cast`. Every guard lets exactly `CTYPES_HELPERS` through (3.13 ran them with no event) and refuses
-    every other address, `string_at`, `wstring_at` and `memoryview_at` included, and every other `ctypes.*` event."""
+def helper_calls() -> dict[str, tuple[int, tuple]]:
+    """`ctypes.call_function` arguments for each of ctypes' own helpers present in this interpreter."""
     import _ctypes
 
+    names = (*HELPER_NAMES, "_memoryview_at_addr")
+    return {name: (getattr(_ctypes, name), ()) for name in names if hasattr(_ctypes, name)}
+
+
+@pytest.mark.parametrize(
+    "make_guard",
+    [
+        pytest.param(lambda tmp_path: harness.DataGuard(), id="DataGuard"),
+        pytest.param(lambda tmp_path: harness.ConvertGuard(), id="ConvertGuard"),
+    ],
+)
+def test_data_and_convert_guards_refuse_every_ctypes_call(tmp_path: Path, make_guard) -> None:
+    """Data mode imports scipy before it arms and neither mode imports after, so neither guard lets any foreign
+    function through on Python 3.14, ctypes' own cast, memmove and memset included."""
     guard = make_guard(tmp_path)
-    for name in harness.CTYPES_HELPERS:
-        assert not guard.refuses("ctypes.call_function", (getattr(_ctypes, name), ())), name
-    for name in ("_string_at_addr", "_wstring_at_addr", "_memoryview_at_addr"):
-        if hasattr(_ctypes, name):
-            assert guard.refuses("ctypes.call_function", (getattr(_ctypes, name), ())), name
-    assert guard.refuses("ctypes.call_function", (0, ()))
+    for name, args in helper_calls().items():
+        assert guard.refuses("ctypes.call_function", args), name
     assert guard.refuses("ctypes.call_function", ())
-    assert guard.refuses("ctypes.dlopen", ("libc.so.6",))
     assert guard.refuses("sys.remote_exec", (1, "x.py"))
+
+
+def test_the_plot_guard_lets_only_an_imports_cast_through(tmp_path: Path) -> None:
+    """Python 3.14 raises `ctypes.call_function` for every call through a ctypes function pointer, and scipy's import
+    calls `ctypes.cast`. The plot guard lets `IMPORT_CTYPES_HELPERS` through only when the caller's nearest origin is
+    an import; the same cast from anywhere else, memmove, memset, string_at and every other address stay refused."""
+    guard = harness.PlotGuard((str(tmp_path / "plot-light.png"),))
+    calls = helper_calls()
+    assert harness.IMPORT_CTYPES_HELPERS == ("_cast_addr",)
+    for origin in (None, "plot"):
+        guard.nearest_origin = lambda frame, origin=origin: origin
+        for name, args in calls.items():
+            assert guard.refuses("ctypes.call_function", args), (origin, name)
+    guard.nearest_origin = lambda frame: "import"
+    for name, args in calls.items():
+        assert guard.refuses("ctypes.call_function", args) == (name != "_cast_addr"), name
+    assert guard.refuses("ctypes.call_function", (0, ())) and guard.refuses("ctypes.call_function", ())
+    assert guard.refuses("ctypes.dlopen", ("libc.so.6",))
 
 
 def test_the_sandbox_flags_turn_remote_debugging_off(tmp_path: Path) -> None:
