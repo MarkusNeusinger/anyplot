@@ -1,15 +1,11 @@
-// anyplot.ai
-// heatmap-periodic-table: Periodic Table Property Heatmap
-// Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 88/100 | Created: 2026-06-15
 //# anyplot-orientation: square
 // anyplot.ai
 // heatmap-periodic-table: Periodic Table Property Heatmap
-// Library: MUI X Charts | React | Node 22
+// Library: MUI X Charts | React | Node
 // License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
 // Quality: pending | Created: 2026-06-15
 
-import { ChartContainer } from "@mui/x-charts";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import Box from "@mui/material/Box";
 
 const t = window.ANYPLOT_TOKENS;
@@ -95,20 +91,20 @@ export default function Chart() {
   const LEFT = 16;
   const TILE = Math.floor((W - LEFT * 2 - 17 * GAP) / 18);
   const F_GAP = 20;
-  const CB_H = 16;
+  const CB_H = 20;
 
   // Vertical centering: compute yOffset so blank space is balanced top/bottom.
   // Content block spans from title-top (~TITLE_Y_BASE - TITLE_FONT) to colorbar note.
-  const TITLE_FONT = 20;
+  const TITLE_FONT = 22;
   const TITLE_Y_BASE = 46;
-  const SUBTITLE_Y_BASE = 68;
-  const INITIAL_TABLE_TOP = 88; // subtitle baseline + 20px gap
+  const SUBTITLE_Y_BASE = 74;
+  const INITIAL_TABLE_TOP = 98; // subtitle baseline + 24px gap
 
   // Distance from TABLE_TOP to bottom of last f-block row:
   // tileY(9)+TILE = TABLE_TOP + 8*(TILE+GAP) + F_GAP + TILE
   const tableBottomOff = 8 * (TILE + GAP) + TILE + F_GAP;
-  // Colorbar note (last element) is at TABLE_TOP + tableBottomOff + 38 + CB_H + 46
-  const contentBottomOff = tableBottomOff + 38 + CB_H + 46;
+  // Colorbar note (last element) is at TABLE_TOP + tableBottomOff + 48 + CB_H + 62
+  const contentBottomOff = tableBottomOff + 48 + CB_H + 62;
 
   const contentTop = TITLE_Y_BASE - TITLE_FONT; // approx 26px
   const contentBottomNoShift = INITIAL_TABLE_TOP + contentBottomOff;
@@ -129,7 +125,7 @@ export default function Chart() {
   }
 
   const tableBottom = tileY(9) + TILE;
-  const cbTop = tableBottom + 38;
+  const cbTop = tableBottom + 48;
   const cbWidth = Math.round(W * 0.52);
   const cbLeft = Math.round((W - cbWidth) / 2);
 
@@ -141,11 +137,11 @@ export default function Chart() {
     { val: 3.98, label: "3.98" },
   ];
 
-  // ChartContainer is the MUI X Charts composition root; its SVG surface
+  // ChartsContainer is the MUI X Charts composition root; its SVG surface
   // hosts the periodic table tiles drawn as direct SVG children.
   return (
     <Box sx={{ width: W, height: H, bgcolor: t.pageBg }}>
-      <ChartContainer width={W} height={H} series={[]} skipAnimation>
+      <ChartsContainer width={W} height={H} series={[]} skipAnimation>
         <defs>
           {/* Imprint sequential gradient for colorbar */}
           <linearGradient id="pt-imprint-seq" x1="0" x2="1" y1="0" y2="0">
@@ -159,7 +155,7 @@ export default function Chart() {
           x={W / 2}
           y={titleY}
           textAnchor="middle"
-          fontSize={20}
+          fontSize={TITLE_FONT}
           fontWeight="500"
           fill={t.ink}
           fontFamily="Inter, Roboto, sans-serif"
@@ -170,7 +166,7 @@ export default function Chart() {
           x={W / 2}
           y={subtitleY}
           textAnchor="middle"
-          fontSize={13}
+          fontSize={16}
           fill={t.inkSoft}
           fontFamily="Inter, Roboto, sans-serif"
         >
@@ -193,9 +189,9 @@ export default function Chart() {
               />
               <text
                 x={x + TILE / 2}
-                y={y + TILE / 2 + 3}
+                y={y + TILE / 2 + 4}
                 textAnchor="middle"
-                fontSize={7}
+                fontSize={11}
                 fill={t.inkSoft}
                 fontFamily="monospace"
               >
@@ -216,8 +212,8 @@ export default function Chart() {
               <rect x={x} y={y} width={TILE} height={TILE} fill={fill} rx={1} />
               {/* Atomic number — top-left corner */}
               <text
-                x={x + 2} y={y + 8}
-                fontSize={7}
+                x={x + 4} y={y + 13}
+                fontSize={11}
                 fill={txt}
                 fontFamily="monospace"
                 opacity={0.9}
@@ -227,9 +223,9 @@ export default function Chart() {
               {/* Element symbol — centered */}
               <text
                 x={x + TILE / 2}
-                y={y + TILE / 2 + 5}
+                y={y + TILE / 2 + 7}
                 textAnchor="middle"
-                fontSize={13}
+                fontSize={22}
                 fontWeight="700"
                 fill={txt}
                 fontFamily="Inter, Roboto, sans-serif"
@@ -240,9 +236,9 @@ export default function Chart() {
               {en !== null && (
                 <text
                   x={x + TILE / 2}
-                  y={y + TILE - 4}
+                  y={y + TILE - 6}
                   textAnchor="middle"
-                  fontSize={8}
+                  fontSize={11}
                   fill={txt}
                   fontFamily="monospace"
                   opacity={0.88}
@@ -257,9 +253,9 @@ export default function Chart() {
         {/* Colorbar label */}
         <text
           x={W / 2}
-          y={cbTop - 10}
+          y={cbTop - 12}
           textAnchor="middle"
-          fontSize={12}
+          fontSize={16}
           fill={t.ink}
           fontFamily="Inter, Roboto, sans-serif"
         >
@@ -283,15 +279,15 @@ export default function Chart() {
             <g key={val}>
               <line
                 x1={nx} y1={cbTop + CB_H}
-                x2={nx} y2={cbTop + CB_H + 4}
+                x2={nx} y2={cbTop + CB_H + 5}
                 stroke={t.inkSoft}
                 strokeWidth={1}
               />
               <text
                 x={nx}
-                y={cbTop + CB_H + 15}
+                y={cbTop + CB_H + 20}
                 textAnchor="middle"
-                fontSize={10}
+                fontSize={13}
                 fill={t.inkSoft}
                 fontFamily="monospace"
               >
@@ -304,9 +300,9 @@ export default function Chart() {
         {/* Low / High labels */}
         <text
           x={cbLeft}
-          y={cbTop + CB_H + 30}
+          y={cbTop + CB_H + 38}
           textAnchor="start"
-          fontSize={10}
+          fontSize={13}
           fill={t.inkSoft}
           fontFamily="Inter, Roboto, sans-serif"
         >
@@ -314,9 +310,9 @@ export default function Chart() {
         </text>
         <text
           x={cbLeft + cbWidth}
-          y={cbTop + CB_H + 30}
+          y={cbTop + CB_H + 38}
           textAnchor="end"
-          fontSize={10}
+          fontSize={13}
           fill={t.inkSoft}
           fontFamily="Inter, Roboto, sans-serif"
         >
@@ -324,16 +320,16 @@ export default function Chart() {
         </text>
         <text
           x={cbLeft + cbWidth / 2}
-          y={cbTop + CB_H + 46}
+          y={cbTop + CB_H + 62}
           textAnchor="middle"
-          fontSize={10}
+          fontSize={13}
           fill={t.inkSoft}
           fontFamily="Inter, Roboto, sans-serif"
           fontStyle="italic"
         >
           Grey tiles = no defined value (noble gases, synthetic elements)
         </text>
-      </ChartContainer>
+      </ChartsContainer>
     </Box>
   );
 }
