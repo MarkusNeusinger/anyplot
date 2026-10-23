@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: confusion-matrix
 created: '2026-09-04T22:27:52Z'
-updated: '2026-10-23T21:19:10Z'
+updated: '2026-10-23T21:24:17Z'
 generated_by: adopted:gemini/12267-muix-9-batch1
 workflow_run: 40025388844
 issue: 2272
@@ -12,102 +12,101 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/confusion
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/javascript/muix/plot-dark.html
-quality_score: 86
+quality_score: 87
 review:
   strengths:
-  - 'Builds the Pro-only heatmap from community parts: a ScatterChart with two band
-    axes, a custom `scatter` slot (ConfusionCell) that draws one rect per class pair,
-    and a zAxis continuous colorMap driving the fill'
-  - The color bar is MUI X's native ContinuousColorLegend bound to the same zAxis,
-    so the bar and the cells share one scale (0 to 182)
-  - 'Clear in-cell hierarchy: a bold count above a smaller row-share percentage, with
-    font sizes derived from the band width'
-  - The predicted axis sits on top of the matrix (the usual confusion-matrix reading
-    order), with tick marks and axis lines removed and thin gaps between cells
-  - The diagonal highlight the Notes allow is a 4 px outline in the ink token, which
-    flips with the theme and leaves the cell colors and numbers readable
-  - Realistic waste-sorting classifier (Paper, Glass, Metal, Plastic, Organic) with
-    plausible confusion between Metal and Plastic and mild class imbalance; every
-    row percentage is computed from the counts
+  - 'Uses MUI X idiomatically: a ScatterChart with two band axes, a custom `scatter`
+    slot (ConfusionCell) drawing one rect per cell from the series'' own xScale/yScale/colorGetter,
+    and a zAxis continuous colorMap feeding a ContinuousColorLegend through the `legend`
+    slot'
+  - 'Imprint sequential ramp built from tokens.seq (#009E73 → #4467A3) with a 0.45
+    power curve, so small confusions (11, 12) still separate visibly from the near-zero
+    cells while the diagonal takes the blue end'
+  - 'Two-level cell typography: a bold count on the diagonal and a lighter row-percentage
+    line underneath, legible on every cell in both themes'
+  - The color-bar title names both encodings ('Count · % = share of true-class row
+    (recall)'), so the normalization of the percentages is explicit
+  - Diagonal outline uses the theme ink token, flipping from near-black to off-white
+    so it reads in both renders without tinting the cell colors
+  - Realistic waste-sorting classifier with imbalanced classes and a plausible Metal↔Plastic
+    confusion; classes derived from the data so a predicted-only class still gets
+    its row and column
   weaknesses:
-  - 'VQ-01 (both): the color bar''s end labels ''0'' and ''182'' are set at 14 px,
-    the smallest text on the canvas, and blur at thumbnail size → about 16 px, the
-    same as the axis tick labels (+2 px). Likely cause: `slotProps.legend.sx.fontSize:
-    14`.'
-  - 'SC-02 (both): the color bar has no title and nothing names the normalization
-    of the percentages, so the spec bullet ''with the normalization, when one is applied,
-    named by the color bar, an axis title or a label'' is missed: the reader cannot
-    tell the color bar means raw counts or that ''93%'' is a share of the true-label
-    row (recall) → name both, for example a color bar title ''Count'' and a note such
-    as ''% of true class (recall)''. Likely cause: the ContinuousColorLegend is configured
-    without a label, and the rowPct texts carry only a ''%''.'
-  - 'Suggestion: a slightly smaller gap between the ''True Label'' axis title and
-    its tick labels would tighten the left margin.'
+  - 'CQ-04 (code): lines 6–9 repeat the header block with stale values (''Library:
+    muix 7.29.1 | JavaScript 22.23.2'', ''Created: 2026-09-04''), contradicting the
+    pinned MUI X 9 the code is written for → remove the second header block so only
+    the rewritten one above the orientation directive remains. Likely cause: the header
+    rewrite inserted a new block instead of replacing the original one.'
+  - 'Suggestion: center the matrix under the title — it sits about 290 CSS px from
+    the left edge but only about 40 px from the right, because the 140 px y-axis band
+    plus 60 px left margin leave a wide gap between ''True Label'' and the tick labels.'
+  - 'Suggestion: end the color bar flush with the matrix''s right edge (it currently
+    runs about 20 px past the Organic column).'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, consistent with #FAF8F1.
-      Chrome: title "confusion-matrix · javascript · muix · anyplot.ai" centered at the top in dark ink; "Predicted Label" axis title above the matrix with class tick labels (Paper, Glass, Metal, Plastic, Organic) on top; rotated "True Label" axis title and the same class names in the same order on the left. Horizontal color bar bottom right with end labels "0" and "182" (small). All text is dark on light and readable.
-      Data: 5×5 grid of square cells colored by count on the Imprint sequential ramp, brand green #009E73 for low counts to blue #4467A3 for the high diagonal counts. Each cell shows a count (bold on the diagonal) and its row share in light text, readable on both the green and blue cells. Diagonal cells carry a dark ink outline.
+      Background: warm off-white #FAF8F1, square 2400x2400.
+      Chrome: title "confusion-matrix · javascript · muix · anyplot.ai" centered at top in dark ink (~48% width); "Predicted Label" axis title above the matrix with the class tick labels Paper/Glass/Metal/Plastic/Organic on top; rotated "True Label" on the left with the same five classes in the same order as row labels. Tick labels in inkSoft gray, axis titles in ink. No axis lines or ticks. All readable.
+      Data: 5x5 grid of square cells with small page-colored gaps, filled with the Imprint sequential ramp — brand green #009E73 for 0, teal for small counts, blue #4467A3 for the diagonal (182, 151, 142, 158, 176). Each cell shows a large count and a smaller row-% (recall) line in light text; diagonal counts are bold and outlined with a 4 px near-black ink stroke. Horizontal color bar bottom-right, titled "Count · % = share of true-class row (recall)", ticks 0 and 182.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black, consistent with #1A1A17.
-      Chrome: title, axis titles and tick labels flip to light ink and read clearly; the color bar end labels are light, small but readable. No dark-on-dark text.
-      Data: cell colors identical to the light render (same green→blue ramp); in-cell text unchanged and readable; the diagonal outline flips to light ink and stays visible against the dark page.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and color-bar title in light ink; tick labels in light gray inkSoft; no dark-on-dark text anywhere.
+      Data: cell colors identical to the light render (green → teal → blue); in-cell text the same light color on every cell and readable; diagonal outline flips to off-white ink and remains clearly visible. Color bar identical.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title, axis and in-cell text readable in both themes; color bar end
-          labels at 14 px are the smallest text and blur in the thumbnail (defect
-          line)
+        comment: Title 22, axis titles 18, ticks 16 CSS px, cell counts scale with
+          the cell; all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions; two-line cell labels fit comfortably
+        comment: No text collisions; cells separated by gaps
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Large cells with clear gaps; color bar and diagonal outline visible
-          in both themes
+        comment: Cells large and distinct; diagonal outline visible in both themes;
+          color bar clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue ramp, no red-green signal; light cell text has strong
-          contrast on every cell
+        comment: Green→blue ramp is CVD-safe; light cell text holds contrast on teal
+          and blue
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas, matrix fills it well, nothing clipped
+        comment: Square canvas, nothing clipped or overflowing; matrix slightly right-offset
+          (suggestion only)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''True Label'' (y) and ''Predicted Label'' (x) exactly as the Notes
-          ask'
+        comment: '''True Label'' / ''Predicted Label'' as the Notes ask; color bar
+          titled'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Continuous fill built from tokens.seq (imprint_seq #009E73 → #4467A3);
-          backgrounds correct; data colors identical across themes'
+        comment: 'imprint_seq built from tokens.seq; correct #FAF8F1 / #1A1A17 backgrounds;
+          data colors identical across themes'
     design_excellence:
       score: 11
       max: 20
@@ -117,24 +116,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Bold count over a smaller, softer percentage; cell-proportional font
-          sizing
+        comment: 'Beyond baseline: two-level cell typography (bold diagonal count
+          over a lighter recall %), color-bar title that explains both encodings'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Predicted axis moved to the top, tick marks and axis lines removed,
-          even cell gaps via categoryGapRatio
+        comment: 'Beyond baseline: gapped cells instead of a gridded heatmap, axis
+          lines and ticks removed, predicted labels moved to the top like a reading
+          table'
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Bold diagonal counts make the correct predictions the focal layer;
-          row shares make recall readable per class
+        comment: Power-0.45 color curve chosen so the small confusions (Metal→Plastic
+          11, Plastic→Metal 12) stand out from the near-empty cells
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -142,27 +142,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Confusion-matrix heatmap with a square grid
+        comment: Confusion-matrix heatmap, square grid
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Axis labels, annotations, sequential colormap, color bar and the
-          allowed diagonal highlight are all present; the color bar is untitled and
-          the row normalization of the percentages is not named (defect line)
+        comment: Axis titles, annotated cells, sequential colormap, color bar, normalization
+          named, diagonal highlight as an outline — all characteristic bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: True on y, predicted on x, same order on both axes, diagonal correct
+        comment: Predicted on x, true on y, same class order on both axes; diagonal
+          correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format; color bar is the only legend
+        comment: Mandated title; color bar title describes values
     data_quality:
       score: 15
       max: 15
@@ -172,23 +172,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Strong diagonal, near-zero and zero off-diagonal cells, a visible
-          Metal/Plastic confusion and imbalanced class totals
+        comment: Imbalanced classes, near-zero cells, a visible off-diagonal confusion
+          pattern
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Waste-sorting image classifier with real material classes; neutral
+        comment: Waste-sorting classifier (Paper/Glass/Metal/Plastic/Organic) — plausible
+          and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked row shares against the counts: 182/196=93%, 151/170=89%,
-          142/158=90%, 158/191=83%, 176/185=95%; all computed, not placed'
+        comment: 'Checked row %: Paper 182/196=93%, Metal 142/158=90%, Plastic 158/191=83%;
+          computed from the data, not placed'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -196,34 +197,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: The slot component is required by the MUI X slot API; the color helpers
-          are short
+        comment: Functions are the slot components the library requires plus two small
+          color helpers
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed count matrix, deterministic
+        comment: Hard-coded counts
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Box, Typography, ScatterChart and ContinuousColorLegend are all used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Appropriate complexity for a heatmap on the community surface; no
-          fake UI
+        comment: Stale duplicate header block (lines 6–9) contradicts the pinned version
+          (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation set,
-          v9 axis height/width bands
+        comment: Default-exported component, skipAnimation, MUI X 9 API, harness writes
+          PNG+HTML
     library_mastery:
       score: 7
       max: 10
@@ -233,31 +234,32 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses the slots API (scatter, legend) and zAxis/colorGetter instead
-          of drawing outside the chart
+        comment: Scatter with band axes + custom scatter slot reading xScale/yScale/colorGetter
+          from the chart, zAxis colorMap
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: zAxis continuous colorMap paired with the native ContinuousColorLegend,
-          a band-scale scatter turned into a heatmap
-  verdict: REJECTED
+        comment: zAxis continuous colorMap with a function color, slot overrides for
+          the series and legend, ContinuousColorLegend
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-03c2486144
-  rendered_at: '2026-10-23T21:16:21Z'
+  rendered_at: '2026-10-23T21:21:25Z'
 impl_tags:
   dependencies: []
   techniques:
-  - colorbar
   - annotations
-  - patches
+  - colorbar
+  - html-export
   patterns:
   - data-generation
-  - groupby-aggregation
   - matrix-construction
+  - groupby-aggregation
   dataprep:
   - normalization
   styling:
   - custom-colormap
-  - publication-ready
+  - minimal-chrome
+  - edge-highlighting
