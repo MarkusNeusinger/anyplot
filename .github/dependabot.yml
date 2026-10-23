@@ -82,6 +82,17 @@ updates:
     commit-message:
       prefix: "deps(js-render):"
     groups:
+      # The render toolchain gets PRs of its own: a Playwright bump changes the
+      # bundled Chromium and can shift every JavaScript render, so it never rides
+      # along with a chart-library minor. A dependency joins the first group that
+      # matches, and js-render-minor also excludes these two.
+      js-render-browser:
+        patterns:
+          - "playwright*"
+          - "esbuild"
+        update-types:
+          - "minor"
+          - "patch"
       # Group minor/patch updates. A major stays its own PR: it changes the API
       # the library prompt (prompts/library/*.md) describes, and its
       # `**API level:**` line must follow (tests/unit/core/test_version_sources.py).
@@ -90,6 +101,9 @@ updates:
       js-render-minor:
         patterns:
           - "*"
+        exclude-patterns:
+          - "playwright*"
+          - "esbuild"
         update-types:
           - "minor"
           - "patch"

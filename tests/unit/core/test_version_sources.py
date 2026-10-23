@@ -17,6 +17,8 @@ Dependabot groups minor and patch updates only.
 from __future__ import annotations
 
 import re
+import tomllib
+from collections import Counter
 from pathlib import Path
 
 import pytest
@@ -110,6 +112,16 @@ def test_uv_lock_resolves_the_linux_fork_for_the_pinned_interpreter(tmp_path: Pa
     (tmp_path / "uv.lock").write_text(UV_LOCK_FORKS, encoding="utf-8")
     (tmp_path / ".python-version").write_text(f"{interpreter}\n", encoding="utf-8")
     assert uv_locked(tmp_path, "plotnine") == "0.15.7"
+
+
+def test_uv_lock_has_no_duplicated_package_blocks() -> None:
+    """Several Dependabot PRs squash-merged within a minute have duplicated package
+    blocks in uv.lock before. The sync keeps the stored version of a library whose
+    block is duplicated and only warns; this makes the corruption fail CI, wherever
+    in the lock it sits. Forks of one package carry different versions."""
+    lock = tomllib.loads((REPO_ROOT / "uv.lock").read_text(encoding="utf-8"))
+    blocks = Counter((entry["name"], entry["version"]) for entry in lock["package"])
+    assert [block for block, count in blocks.items() if count > 1] == []
 
 
 def test_uv_lock_with_a_duplicated_block_does_not_resolve(tmp_path: Path) -> None:

@@ -10,7 +10,9 @@ known GitHub quirks. Every gotcha below cost real session round-trips.
   cycles once. Process per PR: verify checks, then enable auto-merge.
 - Auto-merge is the mechanism of choice: `gh pr merge <num> --auto --squash` — the PR merges
   itself when checks pass; no polling needed.
-- Grouped bumps (npm-minor, python-minor, js-render-minor, actions) are one PR each — treat like any other.
+- Grouped bumps (npm-minor, python-minor, js-render-minor, js-render-browser, actions) are one PR each — treat like any other.
+  `js-render-browser` (Playwright, esbuild) changes the Chromium every JavaScript render runs in, so
+  after it merges, look at the next JavaScript renders for shifted text or layout.
 - **A plotting-library major is not a routine bump.** Minor and patch bumps need no edit: the
   pipeline installs from the locks and the database sync reads the versions from them. A major
   arrives ungrouped. For a JavaScript library (`deps(js-render):`) or Makie it fails "Run Tests"

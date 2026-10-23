@@ -3,7 +3,8 @@
 - **Dependabot watches the JavaScript render harness.** The root `package.json`
   (Chart.js, D3, ECharts, Highcharts, MUI X) gets weekly grouped minor and
   patch PRs; a major arrives as its own PR, because it changes the API the
-  library prompt describes. (#12240)
+  library prompt describes. Playwright and esbuild get a group of their own,
+  so a Chromium change never rides along with a chart-library bump. (#12240)
 
 ### Changed
 
