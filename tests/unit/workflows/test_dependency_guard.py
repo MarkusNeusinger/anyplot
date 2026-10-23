@@ -55,7 +55,7 @@ GENERATE = _script("impl-generate.yml", "Create library metadata file")
 MERGE = _script("impl-merge.yml", "Validate PR completeness before merge")
 # impl-generate's guard, cut out of its long step: from the diff to the end of its `if`.
 GENERATE_GUARD = GENERATE[
-    GENERATE.index("CHANGED=$(git diff --name-only origin/main...HEAD)") : GENERATE.index(
+    GENERATE.index("CHANGED=$(git diff --no-renames --name-only origin/main...HEAD)") : GENERATE.index(
         "# Restore plot files after git operations"
     )
 ]
@@ -73,7 +73,7 @@ def test_both_guards_match_the_same_dependency_files() -> None:
 
 
 def test_generate_checks_the_pushed_commit_before_writing_metadata() -> None:
-    guard = GENERATE.index("git diff --name-only origin/main...HEAD")
+    guard = GENERATE.index("git diff --no-renames --name-only origin/main...HEAD")
     assert GENERATE.index('git checkout -B "$BRANCH" "origin/$BRANCH"') < guard
     assert guard < GENERATE.index('git add "$METADATA_FILE"')
 
@@ -191,6 +191,19 @@ def test_generate_guard_fails_a_commit_that_changes_a_lock_file(origin: Origin) 
     assert "::error::The implementation commit changes dependency files: Manifest.toml" in result.stdout
 
 
+def _rename_pin(origin: Origin) -> None:
+    """Move the pinned Manifest.toml to a name the guard pattern does not match."""
+    origin.git(origin.ws, "mv", "Manifest.toml", "Manifest.toml.bak")
+    origin.git(origin.ws, "commit", "-q", "-m", "rename the pin away")
+
+
+def test_generate_guard_fails_a_commit_that_renames_a_lock_file_away(origin: Origin) -> None:
+    _rename_pin(origin)
+    result = origin.run_generate_guard()
+    assert result.returncode == 1
+    assert "dependency files: Manifest.toml" in result.stdout
+
+
 def test_generate_guard_fails_closed_when_the_diff_fails(origin: Origin) -> None:
     origin.commit(origin.ws, {"Manifest.toml": "Makie 0.21.9\n"}, "Pkg.add")
     origin.git(origin.ws, "update-ref", "-d", "refs/remotes/origin/main")
@@ -215,6 +228,16 @@ def test_merge_gate_refuses_a_pr_that_changes_a_lock_file(origin: Origin) -> Non
     (comment,) = origin.comments()
     assert comment.startswith("pr comment 9398 --body **Merge blocked:**")
     assert "Manifest.toml Project.toml" in comment
+
+
+def test_merge_gate_refuses_a_pr_that_renames_a_lock_file_away(origin: Origin) -> None:
+    _rename_pin(origin)
+    origin.push()
+    result = origin.run_merge_gate()
+    assert result.returncode == 1
+    assert "::error::PR #9398 changes dependency files: Manifest.toml" in result.stdout
+    (comment,) = origin.comments()
+    assert "Manifest.toml" in comment
 
 
 def test_merge_gate_ignores_lock_changes_that_came_from_main(origin: Origin) -> None:

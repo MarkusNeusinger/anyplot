@@ -537,8 +537,9 @@ jobs:
           # 0.22.10 to 0.21.9 for every Julia implementation. A spec that needs a
           # new package needs a dependency PR first.
           # The diff runs on its own line so a git failure stops the step
-          # instead of reading as "no changes".
-          CHANGED=$(git diff --name-only origin/main...HEAD)
+          # instead of reading as "no changes". `--no-renames` lists both sides
+          # of a rename, so Manifest.toml -> Manifest.toml.bak is caught too.
+          CHANGED=$(git diff --no-renames --name-only origin/main...HEAD)
           DEP_CHANGES=$(echo "$CHANGED" \
             | grep -E '(^|/)(pyproject\.toml|uv\.lock|package\.json|package-lock\.json|Project\.toml|Manifest\.toml|\.python-version)$' || true)
           if [ -n "$DEP_CHANGES" ]; then
