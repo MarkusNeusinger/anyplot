@@ -517,7 +517,7 @@ Exit criteria: 401 or 403 smoke tests on both services; the spend cap active bef
 
 ### Parallel workstream: catalogue normalisation (pipeline side)
 
-The pipeline owns this workstream, not the agent network: it makes catalogue code data-derived and canvas-correct at the source. [Adaptable catalogue code](adaptable-code.md) defines the convention and the checks that enforce it, and catalogue code converts to that convention only through the normal daily regeneration. Neither the checker nor `impls.adaptation` is built yet. Once they are, `sync_to_postgres.py` computes each implementation's status into `impls.adaptation` at sync time, and the agent's readiness hints come from the same checker instead of the coupling heuristics in `readiness.py`.
+The pipeline owns this workstream, not the agent network: it makes catalogue code data-derived and canvas-correct at the source. [Adaptable catalogue code](adaptable-code.md) defines the convention and the checks that enforce it, and catalogue code converts to that convention through a capped targeted pass over matplotlib and seaborn plus the ordinary daily regeneration, as the rollout in that document describes. Neither the checker nor `impls.adaptation` is built yet. Once they are, `sync_to_postgres.py` computes each implementation's status into `impls.adaptation` at sync time, and the agent's readiness hints come from the same checker instead of the coupling heuristics in `readiness.py`.
 
 ### Phase 2: toward public use, all 15 libraries and discovery
 
