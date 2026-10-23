@@ -14,7 +14,6 @@ const tokens = window.ANYPLOT_TOKENS;
 // Columns: set these to your data's column names
 const TRUE_LABELS = "True Label"; // role: true_labels
 const PREDICTED_LABELS = "Predicted Label"; // role: predicted_labels
-const CLASS_NAMES = "Class Name"; // role: class_names
 
 // Data: replace this block with your own records, one object per row
 const data = (() => {
@@ -29,7 +28,6 @@ const data = (() => {
   const rows: {
     [TRUE_LABELS]: string;
     [PREDICTED_LABELS]: string;
-    [CLASS_NAMES]: string;
   }[] = [];
   sampleClasses.forEach((trueClass, r) => {
     sampleClasses.forEach((predictedClass, c) => {
@@ -38,7 +36,6 @@ const data = (() => {
         rows.push({
           [TRUE_LABELS]: trueClass,
           [PREDICTED_LABELS]: predictedClass,
-          [CLASS_NAMES]: trueClass,
         });
       }
     });
@@ -47,8 +44,10 @@ const data = (() => {
 })();
 
 // Plot: reads only data and the constants above
+// Every class seen as a true or a predicted label, in order of first appearance,
+// so a class that is only ever predicted still gets its row and column.
 const classes = Array.from(
-  new Set(data.map((d) => d[CLASS_NAMES] ?? d[TRUE_LABELS])),
+  new Set(data.flatMap((d) => [d[TRUE_LABELS], d[PREDICTED_LABELS]])),
 );
 
 const pairCounts = new Map<string, number>();
