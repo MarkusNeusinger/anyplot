@@ -9,9 +9,14 @@ import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data (in-memory, deterministic) ----------------------------------------
+// Columns: set these to your data's column names
+const MONTH = "Month"; // role: x (Date)
+const SOURCE = "Source"; // role: group
+const VISITS = "Monthly Visits"; // role: value
 
-// Tiny fixed-seed LCG — the browser has no seeded RNG
+// Data: replace this block with your own records, one object per row
+// Monthly website traffic by source, Jan 2024 – Dec 2025 (24 months), generated
+// with a tiny fixed-seed LCG — the browser has no seeded RNG
 function lcg(seed: number) {
   let s = seed >>> 0;
   return () => {
@@ -20,61 +25,61 @@ function lcg(seed: number) {
   };
 }
 const rand = lcg(42);
-
-// Monthly website traffic sources, Jan 2024 – Dec 2025 (24 months)
-const MONTHS = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
+const SOURCE_SHAPES: [string, (i: number) => number, number][] = [
+  [
+    "Organic Search",
+    (i) => 4200 + i * 55 + 300 * Math.sin(((i - 6) * Math.PI) / 6),
+    200,
+  ],
+  [
+    "Direct",
+    (i) => 2100 + i * 22 + 120 * Math.sin(((i - 3) * Math.PI) / 6),
+    140,
+  ],
+  [
+    "Referral",
+    (i) => 1150 + i * 9 + 80 * Math.sin(((i - 9) * Math.PI) / 6),
+    90,
+  ],
+  ["Social", (i) => 650 + i * 30 + 150 * Math.sin((i * Math.PI) / 6), 110],
 ];
-const dates = Array.from({ length: 24 }, (_, i) => new Date(2024, i, 1));
-
-// Series ordered largest → smallest so the biggest source stacks at the base
-const organicSearch = dates.map((_, i) =>
-  Math.round(
-    4200 +
-      i * 55 +
-      300 * Math.sin(((i - 6) * Math.PI) / 6) +
-      (rand() - 0.5) * 200,
-  ),
-);
-const direct = dates.map((_, i) =>
-  Math.round(
-    2100 +
-      i * 22 +
-      120 * Math.sin(((i - 3) * Math.PI) / 6) +
-      (rand() - 0.5) * 140,
-  ),
-);
-const referral = dates.map((_, i) =>
-  Math.round(
-    1150 + i * 9 + 80 * Math.sin(((i - 9) * Math.PI) / 6) + (rand() - 0.5) * 90,
-  ),
-);
-const social = dates.map((_, i) =>
-  Math.round(
-    650 + i * 30 + 150 * Math.sin((i * Math.PI) / 6) + (rand() - 0.5) * 110,
-  ),
+const data = SOURCE_SHAPES.flatMap(([source, trend, noise]) =>
+  Array.from({ length: 24 }, (_, i) => ({
+    [MONTH]: new Date(2024, i, 1),
+    [SOURCE]: source,
+    [VISITS]: Math.round(trend(i) + (rand() - 0.5) * noise),
+  })),
 );
 
-// Storytelling aids: the cumulative-total average (reference line) and the
-// fastest-growing channel's overall lift (callout), both derived from the data.
-const totals = dates.map(
-  (_, i) => organicSearch[i] + direct[i] + referral[i] + social[i],
+// Plot: reads only data and the constants above
+const fmtMonth = (v: Date) =>
+  v.toLocaleString("en-US", { month: "short", year: "numeric" });
+
+const months = [
+  ...new Map(data.map((d) => [d[MONTH].getTime(), d[MONTH]])).values(),
+].sort((a, b) => a.getTime() - b.getTime());
+const valueAt = (source: string, m: Date) =>
+  data.find(
+    (d) => d[SOURCE] === source && d[MONTH].getTime() === m.getTime(),
+  )?.[VISITS] ?? null;
+const seriesValues = (source: string) => months.map((m) => valueAt(source, m));
+const sum = (vs: (number | null)[]) => vs.reduce((a, v) => a + (v ?? 0), 0);
+
+// Largest source at the bottom of the stack (the first series stacks first)
+const sources = [...new Set(data.map((d) => d[SOURCE]))].sort(
+  (a, b) => sum(seriesValues(b)) - sum(seriesValues(a)),
 );
-const avgTotal = totals.reduce((sum, v) => sum + v, 0) / totals.length;
-const socialGrowthPct = Math.round(
-  ((social[social.length - 1] - social[0]) / social[0]) * 100,
-);
+
+// Storytelling aids: the average stack total (reference line) and the
+// fastest-growing source's overall lift (callout), both derived from the data.
+const totals = months.map((m) => sum(sources.map((s) => valueAt(s, m))));
+const avgTotal = sum(totals) / totals.length;
+const growth = sources.map((s) => {
+  const vs = seriesValues(s).filter((v): v is number => v != null);
+  return vs.length > 1 && vs[0] ? (vs[vs.length - 1] - vs[0]) / vs[0] : -Infinity;
+});
+const focalIdx = growth.indexOf(Math.max(...growth));
+const focalGrowthPct = Math.round(growth[focalIdx] * 100);
 
 const TITLE =
   "Website Traffic Sources · area-stacked · javascript · muix · anyplot.ai";
@@ -132,7 +137,7 @@ export default function Chart() {
               width: "10px",
               height: "10px",
               borderRadius: "50%",
-              bgcolor: t.palette[3],
+              bgcolor: t.palette[focalIdx % t.palette.length],
             }}
           />
           <Typography
@@ -143,7 +148,7 @@ export default function Chart() {
               lineHeight: 1,
             }}
           >
-            {`Social: fastest-growing channel, +${socialGrowthPct}% since Jan 2024`}
+            {`${sources[focalIdx]}: fastest-growing channel, ${focalGrowthPct >= 0 ? "+" : ""}${focalGrowthPct}% since ${fmtMonth(months[0])}`}
           </Typography>
         </Box>
       </Box>
@@ -152,16 +157,15 @@ export default function Chart() {
         width={width}
         height={height - TITLE_H - LEGEND_H}
         skipAnimation
-        colors={t.palette.slice(0, 4)}
+        colors={t.palette}
         grid={{ horizontal: true }}
         xAxis={[
           {
-            data: dates,
+            data: months,
             scaleType: "time",
-            valueFormatter: (v: Date) =>
-              `${MONTHS[v.getMonth()]} ${v.getFullYear()}`,
+            valueFormatter: fmtMonth,
             tickNumber: 8,
-            label: "Month",
+            label: MONTH,
             height: 72,
             tickLabelStyle: { fontSize: 14 },
             labelStyle: { fontSize: 16 },
@@ -170,56 +174,29 @@ export default function Chart() {
         yAxis={[
           {
             min: 0,
-            label: "Monthly Visits",
+            label: VISITS,
             valueFormatter: (v: number) => `${Math.round(v / 1000)}k`,
             width: 84,
             tickLabelStyle: { fontSize: 14 },
             labelStyle: { fontSize: 16 },
           },
         ]}
-        series={[
-          {
-            id: "organic",
-            data: organicSearch,
-            label: "Organic Search",
-            stack: "traffic",
-            area: true,
-            showMark: false,
-            curve: "monotoneX",
-          },
-          {
-            id: "direct",
-            data: direct,
-            label: "Direct",
-            stack: "traffic",
-            area: true,
-            showMark: false,
-            curve: "monotoneX",
-          },
-          {
-            id: "referral",
-            data: referral,
-            label: "Referral",
-            stack: "traffic",
-            area: true,
-            showMark: false,
-            curve: "monotoneX",
-          },
-          {
-            id: "social",
-            data: social,
-            label: "Social",
-            stack: "traffic",
-            area: true,
-            showMark: false,
-            curve: "monotoneX",
-          },
-        ]}
+        series={sources.map((source, i) => ({
+          id: `s${i}`,
+          data: seriesValues(source),
+          label: source,
+          stack: "traffic",
+          area: true,
+          showMark: false,
+          curve: "monotoneX",
+        }))}
         margin={{ top: 20, bottom: 10, left: 20, right: 40 }}
         sx={{
           "& .MuiLineChart-area": { fillOpacity: 0.82 },
           "& .MuiLineChart-line": { strokeWidth: 2 },
-          '& .MuiLineChart-line[data-series="social"]': { strokeWidth: 3 },
+          [`& .MuiLineChart-line[data-series="s${focalIdx}"]`]: {
+            strokeWidth: 3,
+          },
           "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
         }}
         slotProps={{
