@@ -34,17 +34,39 @@ export default function Chart() {
         dataset={dataset}
         colors={[t.palette[0]]}
         skipAnimation
-        barLabel="value"
-        xAxis={[{ scaleType: "band", dataKey: "country", label: "Country" }]}
-        yAxis={[{ label: "Coffee Consumption (kg per capita/year)" }]}
-        series={[{ dataKey: "kgPerCapita", label: "Coffee consumption" }]}
+        hideLegend
+        xAxis={[
+          {
+            scaleType: "band",
+            dataKey: "country",
+            label: "Country",
+            height: 72,
+            tickLabelStyle: { fontSize: 16 },
+            labelStyle: { fontSize: 18 },
+          },
+        ]}
+        yAxis={[
+          {
+            label: "Coffee Consumption (kg per capita/year)",
+            width: 84,
+            // headroom above the tallest bar so its outside value label is not clipped
+            domainLimit: (min, max) => ({ min, max: max * 1.08 }),
+            tickLabelStyle: { fontSize: 16 },
+            labelStyle: { fontSize: 18 },
+          },
+        ]}
+        series={[
+          {
+            dataKey: "kgPerCapita",
+            label: "Coffee consumption",
+            barLabel: (item) => item.value?.toFixed(1),
+            barLabelPlacement: "outside",
+          },
+        ]}
         grid={{ horizontal: true }}
-        margin={{ top: 32, right: 32, bottom: 64, left: 88 }}
-        slotProps={{ legend: { hidden: true } }}
+        margin={{ top: 32, right: 32, bottom: 8, left: 16 }}
         sx={{
-          "& .MuiChartsAxis-tickLabel": { fontSize: "14px" },
-          "& .MuiChartsAxis-label": { fontSize: "16px" },
-          "& .MuiBarLabel-root": { fontSize: "14px", fill: t.ink },
+          "& .MuiBarChart-label": { fontSize: "16px", fontWeight: 500, fill: t.ink },
         }}
       />
     </Box>
