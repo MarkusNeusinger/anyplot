@@ -1,7 +1,7 @@
 // anyplot.ai
 // acf-pacf: Autocorrelation and Partial Autocorrelation (ACF/PACF) Plot
 // Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 84/100 | Created: 2026-06-10
+// Quality: pending | Created: 2026-06-10
 
 import { BarChart } from "@mui/x-charts/BarChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
