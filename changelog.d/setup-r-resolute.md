@@ -9,4 +9,4 @@
   mid-run. The action now installs the `resolute` binaries from the same
   2026-10-20 snapshot. Its smoke test also loads tidyr and stringr, so a binary
   built for another Ubuntu release fails the setup step instead of a generation
-  run.
+  run. (#12263)
