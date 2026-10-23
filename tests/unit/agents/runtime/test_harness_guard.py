@@ -91,6 +91,23 @@ PLOT_ROUTES = [
     pytest.param("import ctypes\nb = (ctypes.c_char * 4)()\nctypes.memset(b, 65, 4)\n", id="memset in the plot"),
     # Python 3.14's PEP 768: `sys.remote_exec` makes a process, this one included, run a script file.
     pytest.param("import os, sys\nsys.remote_exec(os.getpid(), 'plot.py')\n", id="sys.remote_exec into the plot"),
+    # PEP 734 subinterpreters (Fable review of the 3.14 bump): the audit hook belongs to one interpreter, so code
+    # run in another would write past it; the calls that create or enter one are replaced before arming.
+    pytest.param(
+        f'import _interpreters\ni = _interpreters.create()\n_interpreters.exec(i, "{WRITE_MARKER}")\n',
+        id="_interpreters.exec",
+    ),
+    pytest.param(
+        f'from concurrent import interpreters\ninterpreters.create().exec("{WRITE_MARKER}")\n',
+        id="concurrent.interpreters exec",
+        marks=pytest.mark.skipif(sys.version_info < (3, 14), reason="concurrent.interpreters is new in 3.14"),
+    ),
+    pytest.param(
+        "from concurrent.futures import InterpreterPoolExecutor\n"
+        f'with InterpreterPoolExecutor(1) as pool:\n    pool.submit(exec, "{WRITE_MARKER}").result()\n',
+        id="InterpreterPoolExecutor",
+        marks=pytest.mark.skipif(sys.version_info < (3, 14), reason="InterpreterPoolExecutor is new in 3.14"),
+    ),
     pytest.param(f"{WRITE_MARKER}\n", id="open for writing"),
     pytest.param(f"import os\nos.open('{MARKER}', os.O_CREAT | os.O_WRONLY)\n", id="os.open for writing"),
     pytest.param("plt.figure().savefig('plot-dark.png')\n", id="a save to another name"),
@@ -416,6 +433,13 @@ class TestDataGuardCode:
         exit_code, out, stderr = run_data(tmp_path, code)
         assert exit_code != DATA_EXIT["ok"] and out == ""
         assert "audit hook cannot see" in stderr and not (tmp_path / "fifo").exists()
+
+    def test_a_subinterpreter_cannot_be_created(self, tmp_path: Path) -> None:
+        """`_interpreters` is loaded before arming, so its import raises no event; creating an interpreter is refused."""
+        code = "import _interpreters\nimport pandas as pd\ni = _interpreters.create()\ndf = pd.DataFrame({'a': [1]})\n"
+        exit_code, out, stderr = run_data(tmp_path, code)
+        assert exit_code != DATA_EXIT["ok"] and out == ""
+        assert "audit hook cannot see" in stderr
 
     def test_builders_still_run(self, tmp_path: Path) -> None:
         code = (

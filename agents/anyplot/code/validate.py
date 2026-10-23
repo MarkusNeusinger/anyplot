@@ -546,6 +546,13 @@ ESCAPE_ATTRIBUTES: frozenset[str] = frozenset(
         "call_evaluate_function",
         "call_annotate_function",
         "evaluate_forward_ref",
+        # Python 3.14 (PEP 734): code run in a subinterpreter is outside the render harness's audit hook.
+        "concurrent",
+        "interpreters",
+        "InterpreterPoolExecutor",
+        "_interpreters",
+        "_interpqueues",
+        "_interpchannels",
         "CodeType",
         "FunctionType",
         "attrgetter",

@@ -548,14 +548,23 @@ UNAUDITED_CALLS = (
     ("subprocess", "_fork_exec"),
     ("signal", "signal"),
     ("_signal", "signal"),
+    ("_interpreters", "create"),
+    ("_interpreters", "exec"),
+    ("_interpreters", "run_string"),
+    ("_interpreters", "run_func"),
+    ("_interpreters", "call"),
 )
 """Callables that create a directory entry, start a process or install a frame callback with no audit event in
 CPython 3.13 (#12177 review: `os.mkfifo` and `os.mknod`; `_posixsubprocess.fork_exec` is what `subprocess.Popen` runs
 after its own event; Fable review of #12181: `signal.signal`, whose handler is called with the interrupted frame).
 CPython 3.14 still raises none for `os.mkfifo`, `os.mknod` and `signal.signal`; `_posixsubprocess.fork_exec` raises
-an event of its own from 3.14 on, and stays replaced all the same.
-The guards replace them with `refused_call` before arming, in `os`, `posix`, `signal` and the module that holds each
-by name, so code past the validator cannot reach them there."""
+an event of its own from 3.14 on, and stays replaced all the same. The `_interpreters` entries are PEP 734's
+subinterpreters, public from 3.14 as `concurrent.interpreters` and `InterpreterPoolExecutor` (Fable review of the
+3.14 bump): a hook added with `sys.addaudithook` belongs to one interpreter, and creating, entering or running code in
+another raises no event the guard sees, so code run there would write files the guard refuses here. Both public
+modules reach the five calls through the `_interpreters` module object, never a name of their own.
+The guards replace them with `refused_call` before arming, in `os`, `posix`, `signal`, `_interpreters` and the module
+that holds each by name, so code past the validator cannot reach them there."""
 
 
 def refused_call(*args, **kwargs):
@@ -568,7 +577,7 @@ def disable_unaudited_calls():
 
     for module_name, name in UNAUDITED_CALLS:
         module = sys.modules.get(module_name)
-        if module is None and module_name.startswith(("posix", "_posix", "signal", "_signal")):
+        if module is None and module_name.startswith(("posix", "_posix", "signal", "_signal", "_interpreters")):
             try:
                 module = importlib.import_module(module_name)
             except ImportError:
