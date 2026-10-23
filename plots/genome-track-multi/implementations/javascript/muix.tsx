@@ -11,7 +11,6 @@ import Typography from "@mui/material/Typography";
 const t = window.ANYPLOT_TOKENS;
 
 // Constants
-const MAX_QUALITY = 60;
 const GRID_STEP = 2000;
 const TITLE_HEIGHT = 40;
 const LEGEND_HEIGHT = 30;
@@ -31,7 +30,7 @@ const data = (() => {
   const region = "chr7:140,700,000-140,712,000";
   const genes = [
     {
-      symbol: "GENE1",
+      symbol: "AGK",
       strand: "+",
       exons: [
         [400, 1100],
@@ -41,7 +40,7 @@ const data = (() => {
       ],
     },
     {
-      symbol: "GENE2",
+      symbol: "BRAF",
       strand: "-",
       exons: [
         [6600, 7200],
@@ -146,32 +145,16 @@ const discreteTypes = [
     data.map((d) => d[FEATURE_TYPE]).filter((ft) => ft !== null),
   ),
 ];
+// Slot 5 (matte red) is the semantic anchor for bad/loss/error, so the
+// feature types draw from the categorical pool without it
+const categoricalPool = t.palette.filter((_, i) => i !== 4);
 const featureColor = Object.fromEntries(
-  discreteTypes.map((ft, i) => [ft, t.palette[i]]),
+  discreteTypes.map((ft, i) => [ft, categoricalPool[i]]),
 );
-
-// Each track's renderer is chosen by a rule over its own rows, never by its
-// position: genes carry a strand or a label; coverage rows have no feature type
-// but a value; variants are points (start = end) with a feature type; any other
-// track is drawn as regulatory intervals.
-const present = (v) => v !== null && v !== undefined;
-function trackKind(rows) {
-  if (rows.some((d) => present(d[STRAND]) || present(d[LABEL]))) return "genes";
-  if (
-    rows.every((d) => !present(d[FEATURE_TYPE])) &&
-    rows.some((d) => Number.isFinite(d[VALUE]))
-  ) {
-    return "coverage";
-  }
-  if (rows.every((d) => d[START] === d[END] && present(d[FEATURE_TYPE]))) {
-    return "variants";
-  }
-  return "regulatory";
-}
-const trackBands = tracks.map((label) => {
-  const rows = data.filter((d) => d[TRACK] === label);
-  return { label, kind: trackKind(rows), rows };
-});
+const trackBands = tracks.map((label) => ({
+  label,
+  rows: data.filter((d) => d[TRACK] === label),
+}));
 
 const TITLE = "genome-track-multi · javascript · muix · anyplot.ai";
 
@@ -236,7 +219,7 @@ function GenesTrack({ xScale, top, height, rows }) {
             <text
               x={xScale(geneStart)}
               y={exonTop - 8}
-              fontSize={13}
+              fontSize={15}
               fill={t.inkSoft}
             >
               {`${gene.symbol} (${gene.strand})`}
@@ -303,12 +286,13 @@ function VariantsTrack({ xScale, top, height, rows }) {
   if (rows.length === 0) return null;
   const baseline = top + height - 6;
   const usableHeight = height - 20;
+  const maxQuality = Math.max(...rows.map((d) => d[VALUE]));
 
   return (
     <g>
       {rows.map((variant, i) => {
         const x = xScale(variant[START]);
-        const stemTop = baseline - (variant[VALUE] / MAX_QUALITY) * usableHeight;
+        const stemTop = baseline - (variant[VALUE] / maxQuality) * usableHeight;
         const color = featureColor[variant[FEATURE_TYPE]];
         return (
           <g key={`variant-${i}`}>
@@ -327,13 +311,6 @@ function VariantsTrack({ xScale, top, height, rows }) {
     </g>
   );
 }
-
-const TRACK_RENDERERS = {
-  genes: GenesTrack,
-  regulatory: RegulatoryTrack,
-  coverage: CoverageTrack,
-  variants: VariantsTrack,
-};
 
 function GenomeTracks() {
   const xScale = useXScale();
@@ -388,7 +365,16 @@ function GenomeTracks() {
         </text>
       ))}
       {trackBands.map((band, index) => {
-        const Renderer = TRACK_RENDERERS[band.kind];
+        // Genes carry a strand, coverage rows no feature type, variants are
+        // points; any other track is drawn as regulatory intervals
+        const { rows } = band;
+        const Renderer = rows.some((d) => d[STRAND])
+          ? GenesTrack
+          : rows.every((d) => !d[FEATURE_TYPE])
+            ? CoverageTrack
+            : rows.every((d) => d[START] === d[END])
+              ? VariantsTrack
+              : RegulatoryTrack;
         return (
           <Renderer
             key={`track-${index}`}
@@ -450,7 +436,7 @@ export default function Chart() {
                 bgcolor: featureColor[ft],
               }}
             />
-            <Typography sx={{ fontSize: 13, color: t.inkSoft }}>
+            <Typography sx={{ fontSize: 15, color: t.inkSoft }}>
               {ft}
             </Typography>
           </Box>
@@ -470,9 +456,9 @@ export default function Chart() {
             max: regionEnd,
             height: 64,
             valueFormatter: (value) => value.toLocaleString("en-US"),
-            tickLabelStyle: { fontSize: 13, fill: t.inkSoft },
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
             label: `${START} — ${regionLabel}`,
-            labelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.inkSoft },
           },
         ]}
         yAxis={[{ position: "none" }]}
