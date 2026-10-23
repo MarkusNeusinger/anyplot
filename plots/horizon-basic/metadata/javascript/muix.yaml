@@ -2,141 +2,140 @@ library: muix
 language: javascript
 specification_id: horizon-basic
 created: '2026-08-20T06:46:07Z'
-updated: '2026-08-20T07:00:44Z'
-generated_by: claude-sonnet
-workflow_run: 32339938471
+updated: '2026-10-23T21:04:16Z'
+generated_by: adopted:gemini/12267-muix-9-batch1
+workflow_run: 40022732445
 issue: 1877
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/javascript/muix/plot-dark.html
-quality_score: 85
+quality_score: 86
 review:
   strengths:
-  - Correctly implements the classic horizon-chart fold technique (band stacking +
-    overflow clipping), verified at the pixel level to show a genuine 3-tier color-intensity
-    progression per polarity, not just a 2-tone approximation.
-  - Correct use of the diverging Imprint colormap (t.div, red-blue) for the continuous
-    positive/negative deviation encoding instead of the categorical palette, matching
-    the style guide's 'Continuous Data' rule.
-  - 'Plot backgrounds match the spec hex exactly (#FAF8F1 light / #1A1A17 dark), all
-    chrome (title, subtitle, row labels, tick labels, legend) is theme-adaptive and
-    legible in both renders, and data colors are pixel-identical across themes.'
-  - Descriptive subtitle with units ('Deviation from 24h rolling baseline, in percentage
-    points (pp)') plus a quantitative legend that documents the exact band thresholds
-    (15/30/45) — a thoughtful, unusually rigorous touch for a horizon chart.
-  - No overlap and no edge clipping in either render; deterministic seeded data generation
-    (mulberry32 LCG) per server.
+  - 'Correct horizon folding built with the MUI X composition API: each band is its
+    own ChartsContainer + AreaPlot sharing a 0–max y domain, shifted one band height
+    and clipped, so peaks cut flat at the row top continue in the next, more intense
+    band (orders-db, redis-cache, payment-worker).'
+  - Positive values fold upward in blue and negatives mirror downward in red within
+    the same row, with three equal 15 pp bands and one global maxDeviation, so every
+    color means the same magnitude and sign in all eight rows.
+  - Band colors are derived from the theme-adaptive imprint_div tokens (midpoint mixed
+    toward each pole), so all six steps stay distinguishable in both themes, and the
+    custom legend prints the 15/30/45 pp thresholds under each swatch.
+  - 'Clear typographic hierarchy: bold title, ink-soft subtitle carrying the value
+    unit, right-aligned weight-500 row labels flush against the plot, edge-anchored
+    first and last time ticks.'
+  - Plausible, deterministic (mulberry32-seeded) server-metric scenario with recognizable
+    events — a login storm, an outage followed by a backlog surge, a cache flush,
+    newsletter sends — that the darkest bands pick out at a glance.
+  - monotoneX curves never overshoot the data, and skipAnimation is set on every chart
+    component.
   weaknesses:
-  - Row labels (server names) and the legend threshold numbers (11-17px CSS) become
-    illegible once the image is scaled down to the ~400px mobile thumbnail — the wave
-    pattern still reads, but identifying which row belongs to which server does not
-    survive the mobile scale. Increase row-label and legend-number font weight/size
-    so they hold up at thumbnail scale.
-  - Only 8 series are shown; horizon charts earn their place specifically for compactly
-    comparing dozens of series (spec notes '50+ system metrics'). 8 rows is within
-    the spec's 5-50 range but undersells the technique's core value proposition —
-    consider 15-20 servers.
-  - 'No explicit data-storytelling focal point: rows are in an arbitrary server order
-    with no sorting or highlighting of the most volatile series (e.g., payment-worker
-    has the largest amplitude/walk but isn''t visually called out).'
-  - The fold effect is built from ~48 stacked ChartContainer/AreaPlot instances (8
-    rows x 2 polarities x 3 bands) clipped via CSS overflow rather than a more composed
-    higher-level MUI X pattern — functionally correct and visually clean, but a heavier,
-    more manual approach than the library's idiomatic API surface would suggest.
+  - 'DQ-03 (both): inventory-db drifts from about −22 pp to +22 pp across the week,
+    yet the value is a deviation from a 24 h rolling baseline, which absorbs a slow
+    drift (a linear drift of 44 pp/week lags that baseline by only about 3 pp) — the
+    row shows a full red band for two days and a full blue band for three → keep its
+    sustained offset within about ±3 pp and let the nightly batch bumps carry the
+    row (about −19 pp of drift). Likely cause: the `-22 + (44 * i) / 167` term in
+    the inventory-db shape.'
+  - 'Suggestion: place the time ticks on day boundaries (Day 1 · 00:00, Day 3 · 00:00,
+    …) instead of the quarter indices that land on 18:00, 12:00 and 05:00.'
+  - 'Suggestion: the area fill is set three times (series `color`, the `.MuiLineChart-area`
+    sx rule and `slotProps.area.style`), and the TITLE_FONT_SIZE length branch never
+    fires for this title; one of each is enough.'
+  - 'Suggestion: one ChartsContainer per half with three overlaid series clamped to
+    each band would replace the 48 shifted, clipped containers.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, measured pixel value (250,248,241) — exact match for #FAF8F1.
-      Chrome: Bold dark title "horizon-basic · javascript · muix · anyplot.ai" top-left, a descriptive subtitle below it ("Deviation from 24h rolling baseline, in percentage points (pp)"), a quantitative legend top-right (red swatches labeled 45/30/15 for "Below baseline", blue swatches labeled 15/30/45 for "Above baseline"), 8 right-aligned server-name row labels (api-gateway, auth-service, orders-db, inventory-db, redis-cache, search-index, payment-worker, email-worker) in dark ink, and 5 "Day N · HH:00" x-axis tick labels at the bottom. All chrome text is dark-on-cream and clearly readable at full resolution; zoomed crops confirm no anti-aliasing artifacts or contrast problems.
-      Data: Each of the 8 rows is a folded horizon band: a light-blue outer hump for small positive deviation, a medium-blue mid-tier, and a dark-blue inner core for the largest positive deviation, mirrored below the row's zero baseline with light/medium/dark red bands for negative deviation. A thin baseline rule marks zero in each row. Color intensity visibly increases toward the peak/trough magnitude — confirmed via pixel-level crop of the payment-worker row, which shows 3 distinct blue and 3 distinct red tiers.
-      Legibility verdict: PASS at full canvas resolution. At the ~400px mobile thumbnail (plot-light_400.png), the overall wave pattern is still visible and the title remains legible, but the row labels and legend threshold numbers are too small to read — a mobile-scale weakness noted above, not a hard failure.
+      Background: warm off-white #FAF8F1, no pure white.
+      Chrome: bold dark title "horizon-basic · javascript · muix · anyplot.ai" top-left, ink-soft subtitle "Deviation from 24h rolling baseline, in percentage points (pp)"; legend top-right with three red swatches (45/30/15) "Below baseline", a thin divider, "Above baseline" and three blue swatches (15/30/45); eight right-aligned dark row labels (api-gateway … email-worker); five time ticks along the bottom (Day 1 · 00:00 … Day 7 · 23:00). All readable.
+      Data: eight horizon rows, positive deviations folded upward in three blue intensities (pale → deep blue), negatives mirrored downward in three red intensities (salmon → deep red), a thin grid-colored baseline per row. Peaks flatten at the row edge and continue in darker bands (orders-db evenings, redis-cache flush on Day 5, payment-worker outage and surge, auth-service login storm). Diverging Imprint (imprint_div) colors; no categorical palette needed.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, measured pixel value (26,26,23) — exact match for #1A1A17.
-      Chrome: Same layout as the light render; title and subtitle render in light ink (F0EFE8-family), row labels and axis tick labels render in soft light-gray ink, legend swatches/numbers unchanged in position. Zoomed crops of the legend, a row label ("api-gateway"), and the x-axis tick row all show clearly legible light text on the dark background — no dark-on-dark failures anywhere.
-      Data: Confirmed pixel-identical band colors to the light render — same light/medium/dark blue and red tiers, same 3-tier intensity progression, only the chrome (background, text) flipped as required. Brand accents are not used here since this is a diverging-colormap (not categorical) encoding, which is the correct choice per the style guide for continuous deviation data.
-      Legibility verdict: PASS. All text readable against the dark background; no dark-on-dark or light-on-light issues in either theme.
+      Background: warm near-black #1A1A17, no pure black.
+      Chrome: title, subtitle, legend text, row labels and time ticks all render in light ink and are clearly readable; no dark-on-dark text.
+      Data: same layout and bands; the band steps are mixed from the theme-adaptive imprint_div midpoint, so the lowest band is a muted dark blue/red and the top band the brightest blue/red — intensity still rises with magnitude, and all three steps per hue remain distinguishable against the dark page. The pole hues are the same as in the light render; only the theme-adaptive midpoint tint differs, as the diverging token defines.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 8
         max: 8
         passed: true
-        comment: All fonts explicitly sized and readable at full 3200x1800 resolution
-          in both themes, but row labels and legend threshold numbers become illegible
-          at the ~400px mobile thumbnail scale.
+        comment: Explicit sizes (title 22, row labels 17, legend 15/14, ticks 14 CSS
+          px); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render.
+        comment: No text collisions; rows separated by a 10 px gap
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 3-tier band color intensity is clearly visible and well-proportioned
-          to the 168-point series length; verified via pixel-level crop.
+        comment: All six band steps and legend swatches visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red-blue diverging encoding is CVD-safe (not red-green), good contrast
-          in both themes.
+        comment: Blue/red diverging pair is CVD-safe; intensity is redundant with
+          position
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, no wasted space, no cut-off content; canvas gate
-          passed (3200x1800 confirmed via pixel measurement).
+        comment: 3200x1800, content vertically centred, nothing clipped or overflowing
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive subtitle with units ('percentage points (pp)') plus a
-          quantitative threshold legend.
+        comment: Value and unit (pp) in the subtitle; self-describing Day · hour ticks
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Correctly uses imprint_div (diverging) for the continuous deviation
-          encoding rather than the categorical palette; exact background hexes confirmed
-          via pixel sampling; identical data colors across themes.
+        comment: 'Bands built from imprint_div tokens; correct #FAF8F1 / #1A1A17 backgrounds'
     design_excellence:
-      score: 16
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 5
         max: 8
-        comment: A genuinely custom-built solution to a chart type MUI X has no native
-          support for, with an intentional, verified 3-tier color-intensity system
-          and a documented quantitative legend.
+        passed: true
+        comment: 'Deliberate hierarchy: bold title over ink-soft unit subtitle, weight-500
+          right-aligned row labels, legend with threshold values under each swatch
+          and a divider between the two hues'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
-        comment: No chart chrome/spines at all (custom-built), subtle baseline/divider
-          rules, generous row and section whitespace.
+        passed: true
+        comment: Row labels flush against the plot, first/last ticks edge-anchored,
+          a single hairline baseline per row instead of any grid
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        comment: The horizon-chart form itself creates hierarchy for row-by-row scanning,
-          but there is no explicit focal point (no sorting or highlighting of the
-          most volatile server).
+        passed: true
+        comment: Data designed around distinct incidents (login storm, outage + backlog
+          surge, cache flush, newsletter sends) that the darkest bands make the focal
+          points
     spec_compliance:
       score: 15
       max: 15
@@ -145,109 +144,120 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        comment: Correct horizon chart with proper band-folding technique.
+        passed: true
+        comment: Horizon chart, folded bands, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        comment: Mirrored positive/negative bands, increasing color intensity with
-          magnitude, meaningful zero baseline — all present per spec notes.
+        passed: true
+        comment: Labelled compact rows on a shared time axis, 3 equal bands with rising
+          intensity, mirrored second hue for negatives, same bands in every row
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: X = time (hourly, formatted as Day/HH:00), Y = folded deviation value;
-          axes show all data.
+        passed: true
+        comment: Full time range shown; monotoneX does not overshoot; values at their
+          positions
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title format exactly matches the mandated pattern; legend labels
-          ('Below baseline'/'Above baseline') and thresholds match the data semantics.
+        passed: true
+        comment: Title format correct; legend names both hues and the band thresholds
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
-        comment: 8 series show varied amplitude/phase/walk behavior, but the count
-          is on the low end of the spec's 5-50 range and undersells the 'many series'
-          value proposition the spec explicitly calls out.
+        passed: true
+        comment: Quiet rows in the palest band, peaks continued into darker bands,
+          both signs
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Server-metrics-deviation-from-baseline scenario is realistic, neutral,
-          and comprehensible.
+        passed: true
+        comment: Neutral server-metric scenario with real-sounding service names
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        comment: Deviation values clamped to a sensible ±45pp range consistent with
-          the stated domain.
+        passed: true
+        comment: ±45 pp range sensible, 168 hourly points; inventory-db's ±22 pp weekly
+          drift is inconsistent with a 24 h rolling baseline (defect line). No Check
+          values in the spec.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        comment: React inherently requires function components; several helper components
-          (BandStack, HorizonRow, LegendSwatches) are justified by the fold technique
-          but add real structural depth beyond a minimal script.
+        passed: true
+        comment: Module-level data block and plot code; only the mandated component
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        comment: Deterministic fixed-seed LCG (mulberry32) per server.
+        passed: true
+        comment: Seeded mulberry32 per series
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: Only ChartContainer, AreaPlot, Box, Typography imported and used.
+        passed: true
+        comment: ChartsContainer, AreaPlot, Box, Typography all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        comment: No fake functionality; the layered-clipping approach is heavy but
-          a legitimate, well-commented solution to a library gap.
+        passed: true
+        comment: Appropriate; small redundancies are suggestions only
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: Sized from window.ANYPLOT_SIZE, skipAnimation set on every AreaPlot,
-          no deprecated APIs.
+        passed: true
+        comment: Default-exported component, v9 API, skipAnimation set
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        comment: Correct ChartContainer/AreaPlot usage with strict domains and monotoneX
-          curves, but the ~48-instance manual layering is a low-level workaround rather
-          than the library's higher-level composition patterns.
+        passed: true
+        comment: 'v9 composition API (ChartsContainer + AreaPlot), position: none
+          axes, domainLimit strict, baseline on area series'
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        comment: Uses AreaPlot's area-fill/baseline/curve options, but the core fold
-          technique is generic CSS clipping that isn't especially MUI X-specific.
+        passed: false
+        comment: Composes MUI X plots with MUI Box/Typography layout to build a chart
+          type MUI X lacks
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-03c2486144
+  rendered_at: '2026-10-23T21:00:55Z'
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
-  - custom-legend
   - layer-composition
+  - custom-legend
+  - manual-ticks
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - time-series
   styling:
-  - custom-colormap
+  - minimal-chrome
