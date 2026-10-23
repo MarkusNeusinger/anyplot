@@ -74,7 +74,9 @@ from collections.abc import Iterable
 from dataclasses import dataclass, field
 from typing import Literal
 
+from core.adaptability import CRITICAL_VALUES
 from core.palette import IMPRINT
+from core.spec_roles import MAP_SPECS
 
 from ..schemas import MAX_NOTE_CHARS
 from .normalise import SUPPORTED_LIBRARIES, measure_canvas
@@ -84,25 +86,7 @@ from .validate import validate_security
 
 ReadinessStatus = Literal["blocked", "coupled", "clean"]
 
-MAP_SPECS = frozenset(
-    {
-        "bubble-map-geographic",
-        "cartogram-area-distortion",
-        "choropleth-basic",
-        "contour-map-geographic",
-        "flowmap-origin-destination",
-        "heatmap-geographic",
-        "map-connection-lines",
-        "map-marker-clustered",
-        "map-projections",
-        "map-route-path",
-        "map-tile-background",
-        "map-tilegrid",
-        "scatter-map-geographic",
-    }
-)
 MIN_PALETTE_ENTRIES = 6
-CRITICAL_VALUES = frozenset({1.645, 1.96, 2.326, 2.576, 3.291})
 MAX_SECURITY_REASONS = 5
 MAX_SNIPPET_CHARS = 48
 MAX_LINE_SNIPPET_CHARS = 2 * MAX_SNIPPET_CHARS

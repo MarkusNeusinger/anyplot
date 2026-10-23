@@ -29,7 +29,7 @@ import unicodedata
 from collections.abc import Iterable
 from dataclasses import replace
 
-from .roles import DataRole
+from core.spec_roles import DataRole
 
 
 COMPUTED_ROLES: dict[str, frozenset[str]] = {

@@ -1,6 +1,6 @@
 # Adaptable catalogue code
 
-> **Status (2026-10-23):** PR 1 (the checker) is in progress; the rollout was revised on 2026-10-23 after a second opinion. Nothing is in the pipeline yet.
+> **Status (2026-10-23):** PR 1 (the checker, [#12244](https://github.com/MarkusNeusinger/anyplot/pull/12244)) is in progress; the rollout was revised on 2026-10-23 after a second opinion. Nothing is in the pipeline yet.
 
 This document describes how catalogue implementations become code that you can point at other data: one replaceable data block, columns named once, and plot code that derives everything else from the table. It covers the convention, the checks that enforce it, the pipeline changes, the rollout through a targeted conversion pass and the daily regeneration, and how the planned "Use with my data" agent ([Agent network design](agent-network.md)) uses the result.
 

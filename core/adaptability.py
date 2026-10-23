@@ -1,0 +1,2456 @@
+"""The adaptability checker: is a Python implementation code that you can point at other data?
+
+The convention (docs/concepts/adaptable-code.md, "The convention") gives a Python
+implementation six zones: the head (imports, theme tokens, the 8-entry `IMPRINT`,
+library setup), an optional `# Constants` zone, one column constant per spec role
+(`MONTH = "Month"  # role: x`), exactly one `# Data` block that ends by binding the
+tidy DataFrame `df`, the plot code below a `# Plot` marker, and the output.
+`check_source` reads a source against the spec's roles (`core/spec_roles.py`) and
+its data shape, and returns a `Record`: a status, the findings, the block's marker
+lines, the role-to-constant map, the colour-driving role and the shape.
+
+The rules (`RULE_CLASSES`; the design's numbering):
+
+1. Layout (`layout`): one block between a column-0 `# Data` marker and the next
+   column-0 `# Plot` marker (the word alone, or followed by a colon or a dash and a
+   hint: `# Data: quarterly sales`, `# Data - ...`), ending in a statement that binds
+   `df` (not for a generated spec), with no plotting, styling or setup call and no
+   theme token inside; above the block no figure is created and no plotting call
+   runs except the library's setup calls (`SETUP_CALLS`).
+2. Columns (`columns`): every required column-valued role has exactly one constant
+   with a trailing `# role: <role>` comment, above the block; no comment names an
+   unknown role (`# role: extra` marks a column no spec role names); every value is
+   a string, or a list of strings for a variadic family. A matrix role, a network's
+   node and edge tables and every role of a generated spec need no constant
+   (`spec_roles.is_structure_role`).
+3. Interface (`interface`): no name bound in the block other than `df` (and a
+   network's `nodes`) is read below it before the plot code rebinds it.
+4. Literals below the block: a string equal to a column constant's value or a column
+   the block names (`column-literal`); a string equal to a sample value the block
+   defines (`sample-literal`); a numeric literal or literal date in a data-coordinate
+   position (`data-coordinate`: limits, ticks, reference lines, data-coordinate text,
+   color-scale bounds and the libraries' equivalents); a statistic written as text
+   (`statistic-text`); a comparison of `df` (or a name derived from it) with a
+   literal, also through one alias bound below the block (`df-comparison`); a count
+   literal equal to a count the block defines, in `range`, `arange`, `linspace` and
+   slice positions only (`count-literal`).
+5. Palette (`palette`): when the spec has a colour-driving role, all eight `IMPRINT`
+   positions in canonical order and no literal slice of the palette; in every spec, no
+   `zip(..., strict=True)` over the palette.
+6. `# Constants` (`constants`, advisory): no list, dict or string in the zone whose
+   values match the block's sample values or data numbers.
+
+No rule flags a literal inside the block. The checker ignores the head, the mandated
+title (any string with "anyplot.ai") and its font-size arithmetic, `savefig` and the
+other output calls, style keywords (`STYLE_KEYWORDS`: `fontsize`, `ha`, `marker`,
+...), offsets in points and axes fractions, f-strings, comments, values that span a
+fixed domain (0 to 1, 0 to 100, -1 to 1, 0 to 360, with up to 10 % headroom), the
+neutral values -1, 0 and 1, and the statistical critical values (`CRITICAL_VALUES`).
+
+A rule class marked advisory produces a finding and a defect line tagged
+"(advisory)" but never fails the record. Without a block, the sample-dependent
+classes (interface, column and sample literals, df comparisons, counts, `# Constants`)
+cannot run; data coordinates and statistics are then checked over the whole file.
+
+`Record.defect_lines` writes at most one line per rule class in the grammar of
+`core/defects.py` (`CQ-01 (code): line N ... → .... Likely cause: ....`), naming the
+first finding and the lines of the others. `replace_block` and `rewrite_constants`
+mutate a source through the markers and the role comments, which is how the agent
+substitutes a user's table and how the perturbation smoke run
+(`core/perturbation.py`) swaps in its tables.
+
+The module uses the standard library only. The workflow runner runs it as the
+single-file mirror `automation/scripts/adaptability_check.py`, which
+`core/adaptability_mirror.py` builds from this file and `core/spec_roles.py`;
+`tests/unit/core/test_adaptability_mirror.py` pins the two.
+
+Usage as CLI::
+
+    python -m core.adaptability check plots/bar-grouped/implementations/python/matplotlib.py
+    python -m core.adaptability report plots/ [--library matplotlib] [--sample 30 --seed 1] [--json]
+
+`check` prints the record as JSON and the defect lines (exit 0 on pass or an
+excluded spec, 1 on fail, 2 when the files cannot be read); `report` runs the
+checker over every Python implementation and prints per-library counts and the
+findings histogram per rule class.
+"""
+
+from __future__ import annotations
+
+import argparse
+import ast
+import builtins
+import io
+import json
+import random
+import re
+import sys
+import tokenize
+from collections import Counter
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from dataclasses import dataclass, field
+from pathlib import Path
+
+from core.spec_roles import DataRole, Shape, color_role, data_bullets, is_structure_role, parse_roles, spec_shape
+
+
+CHECKER_VERSION = 1
+DEFECT_ID = "CQ-01"
+CODE_RENDER = "code"
+DEFECT_ARROW = "→"
+
+CANONICAL_IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
+"""The Imprint palette in canonical order (core/palette.py `IMPRINT`; a test pins the two)."""
+PALETTE_NAMES = frozenset({"IMPRINT", "IMPRINT_PALETTE"})
+CRITICAL_VALUES = frozenset({1.645, 1.96, 2.326, 2.576, 3.291})
+"""Statistical critical values: data-independent constants in a computation, never sample coordinates."""
+NEUTRAL_VALUES = frozenset({-1.0, 0.0, 1.0})
+FIXED_DOMAINS = ((0.0, 1.0, 0.2), (-1.0, 1.0, 0.2), (0.0, 100.0, 0.1), (0.0, 360.0, 0.1))
+"""Fixed domains as `(low, high, headroom)`: values span one when they reach both bounds within the headroom,
+a share of the domain's width (`set_ylim(-0.15, 1.02)`, `set_ylim(0, 105)`). Unit domains get more headroom:
+a degree or percentage axis padded by more than a tenth is a data range that happens to start near 0."""
+PADDING = 1.5
+"""A literal bound this small beside a computed one is padding (`set_xlim(-0.5, n - 0.5)`), not a coordinate."""
+MIN_COUNT = 3
+"""Counts below this are too common (a pair, a single panel) to tie a literal to the sample."""
+RESOLUTION_COUNT = 50
+"""A `linspace` of this many points or more is a curve's resolution, not a count of the sample."""
+PROSE_WORDS = frozenset(
+    {"total", "other", "others", "all", "none", "mean", "median", "average", "yes", "no", "true", "false"}
+)
+"""Sample values that read as prose ("Total", "Other"): a label equal to one is not tied to the sample."""
+STYLE_WORDS = frozenset(
+    {
+        "center",
+        "centre",
+        "left",
+        "right",
+        "top",
+        "bottom",
+        "middle",
+        "baseline",
+        "none",
+        "auto",
+        "solid",
+        "dash",
+        "dot",
+        "longdash",
+        "dashed",
+        "dotted",
+        "dashdot",
+        "bold",
+        "normal",
+        "italic",
+        "black",
+        "white",
+        "gray",
+        "grey",
+        "red",
+        "green",
+        "blue",
+    }
+)
+"""Alignment, line-style and color words: a block string equal to one configures the chart, not the sample."""
+_PROPERTY_KEY = re.compile(r"^[a-z_][a-z0-9_]*$")
+"""A dict key below the block written like a property name (`{"size": 7}`), not a sample value."""
+
+LIBRARIES = ("matplotlib", "seaborn", "plotly", "altair", "plotnine", "bokeh", "pygal", "letsplot")
+PLOT_MODULES = (
+    "matplotlib",
+    "seaborn",
+    "plotly",
+    "altair",
+    "plotnine",
+    "bokeh",
+    "pygal",
+    "lets_plot",
+    "mpl_toolkits",
+    "squarify",
+    "pywaffle",
+)
+DATA_HELPERS = (
+    "seaborn.load_dataset",
+    "plotly.express.data.",
+    "plotly.data.",
+    "bokeh.sampledata.",
+    "vega_datasets.",
+    "matplotlib.dates.date2num",
+    "matplotlib.dates.num2date",
+    "matplotlib.dates.datestr2num",
+)
+"""Plotting-library calls that produce data, allowed in the block (a prefix ends with a dot)."""
+_MATPLOTLIB_SETUP = (
+    "matplotlib.use",
+    "matplotlib.pyplot.style.use",
+    "matplotlib.style.use",
+    "matplotlib.pyplot.rcParams.update",
+    "matplotlib.rcParams.update",
+    "matplotlib.pyplot.rc",
+    "matplotlib.rc",
+    "matplotlib.pyplot.switch_backend",
+    "matplotlib.font_manager.fontManager.addfont",
+)
+SETUP_CALLS: dict[str, tuple[str, ...]] = {
+    "matplotlib": _MATPLOTLIB_SETUP,
+    "seaborn": (
+        *_MATPLOTLIB_SETUP,
+        "seaborn.set_theme",
+        "seaborn.set_style",
+        "seaborn.set_context",
+        "seaborn.set_palette",
+        "seaborn.set",
+    ),
+    "plotly": ("matplotlib.use", "plotly.io.templates.default.update"),
+    "altair": (
+        "matplotlib.use",
+        "altair.data_transformers.disable_max_rows",
+        "altair.data_transformers.enable",
+        "altair.themes.enable",
+        "altair.themes.register",
+        "altair.theme.enable",
+        "altair.theme.register",
+        "altair.renderers.enable",
+    ),
+    "plotnine": ("matplotlib.use", "plotnine.theme_set", "plotnine.options.set_option"),
+    "bokeh": ("matplotlib.use", "bokeh.io.output_file", "bokeh.plotting.output_file", "bokeh.io.curdoc"),
+    "pygal": ("matplotlib.use",),
+    "letsplot": ("matplotlib.use", "lets_plot.LetsPlot.setup_html", "lets_plot.LetsPlot.set_theme"),
+}
+"""Per library, the calls the head may make before the block (resolved through the imports)."""
+FIGURE_FACTORIES = frozenset(
+    {
+        "matplotlib.pyplot.subplots",
+        "matplotlib.pyplot.figure",
+        "matplotlib.pyplot.subplot",
+        "matplotlib.pyplot.axes",
+        "matplotlib.pyplot.subplot_mosaic",
+        "matplotlib.pyplot.subplot2grid",
+        "plotly.graph_objects.Figure",
+        "plotly.subplots.make_subplots",
+        "altair.Chart",
+        "altair.layer",
+        "altair.hconcat",
+        "altair.vconcat",
+        "altair.concat",
+        "altair.LayerChart",
+        "plotnine.ggplot",
+        "lets_plot.ggplot",
+        "lets_plot.gggrid",
+        "lets_plot.ggbunch",
+        "bokeh.plotting.figure",
+        "bokeh.layouts.gridplot",
+        "bokeh.layouts.column",
+        "bokeh.layouts.row",
+        "seaborn.FacetGrid",
+        "seaborn.PairGrid",
+        "seaborn.JointGrid",
+        "seaborn.catplot",
+        "seaborn.relplot",
+        "seaborn.displot",
+        "seaborn.lmplot",
+        "seaborn.jointplot",
+        "seaborn.pairplot",
+        "seaborn.clustermap",
+    }
+)
+_PYGAL_CHART = re.compile(r"^pygal\.[A-Z]\w*$")
+_PLOTLY_EXPRESS = "plotly.express."
+OUTPUT_CALLS = frozenset(
+    {
+        "savefig",
+        "save",
+        "ggsave",
+        "write_image",
+        "write_html",
+        "export_png",
+        "export_svg",
+        "render_to_png",
+        "render_to_file",
+        "output_file",
+        "show",
+    }
+)
+"""Output calls: every literal inside one is ignored (file names, dpi, scale)."""
+STYLE_KEYWORDS = frozenset(
+    {
+        "ha",
+        "va",
+        "horizontalalignment",
+        "verticalalignment",
+        "multialignment",
+        "marker",
+        "linestyle",
+        "ls",
+        "drawstyle",
+        "loc",
+        "fontweight",
+        "weight",
+        "fontstyle",
+        "style",
+        "family",
+        "fontfamily",
+        "fontname",
+        "font",
+        "cmap",
+        "colormap",
+        "palette",
+        "textcoords",
+        "xycoords",
+        "coords",
+        "how",
+        "join",
+        "kind",
+        "orient",
+        "orientation",
+        "align",
+        "anchor",
+        "baseline",
+        "rotation_mode",
+        "capstyle",
+        "joinstyle",
+        "solid_capstyle",
+        "dash_capstyle",
+        "hatch",
+        "interpolation",
+        "shading",
+        "aspect",
+        "bbox_inches",
+        "format",
+        "fmt",
+        "mode",
+        "barmode",
+        "template",
+        "stat",
+        "method",
+        "position",
+        "legend_position",
+        "units",
+        "x_units",
+        "y_units",
+        "xref",
+        "yref",
+        "axref",
+        "ayref",
+        "textposition",
+        "textinfo",
+        "hoverinfo",
+        "hovermode",
+        "legend",
+        "errorbar",
+        "estimator",
+        "element",
+        "multiple",
+        "inner",
+        "histtype",
+        "where",
+        "type",
+        "side",
+        "location",
+        "dtype",
+        "errors",
+        "freq",
+        "unit",
+        "nonpositive",
+        "rc",
+        "edgecolor",
+        "facecolor",
+        "linecolor",
+        "markeredgecolor",
+        "markerfacecolor",
+        "fill_color",
+        "line_color",
+        "text_color",
+        "background",
+        "background_fill_color",
+        "border_fill_color",
+        "fontFamily",
+        "labelFont",
+        "titleFont",
+        "symbolType",
+        "interpolate",
+        "strokeDash",
+        "shape",
+        "line_dash",
+        "dash",
+        "symbol",
+        "toolbar_location",
+        "sizing_mode",
+        "axis",
+        "which",
+    }
+)
+"""Keywords whose string values style the chart; a sample value never lives there."""
+GENERIC_DATA_KEYWORDS = frozenset(
+    {
+        "range",
+        "range_x",
+        "range_y",
+        "range_z",
+        "range_r",
+        "range_theta",
+        "range_color",
+        "limits",
+        "breaks",
+        "tickvals",
+        "xintercept",
+        "yintercept",
+        "x_range",
+        "y_range",
+        "vmin",
+        "vmax",
+        "vcenter",
+        "zmin",
+        "zmax",
+        "zmid",
+        "clim",
+        "xlim",
+        "ylim",
+        "zlim",
+        "color_continuous_midpoint",
+    }
+)
+"""Keywords that hold data coordinates in any call or dict (plotly ranges, plotnine limits, color bounds)."""
+_AXIS_DATA_KEYWORD = re.compile(r"^[xyz]axis\d*_(?:range|tickvals)$")
+LIMIT_METHODS = frozenset(
+    {
+        "set_xlim",
+        "set_ylim",
+        "set_zlim",
+        "xlim",
+        "ylim",
+        "set_xticks",
+        "set_yticks",
+        "set_zticks",
+        "xticks",
+        "yticks",
+        "set_xbound",
+        "set_ybound",
+        "set_rlim",
+        "set_rmin",
+        "set_rmax",
+        "set_rticks",
+        "set_thetalim",
+        "axis",
+        "set_clim",
+        "clim",
+    }
+)
+"""Calls whose positional arguments are data coordinates (matplotlib, and plotnine and lets-plot `xlim`/`ylim`)."""
+LIMIT_KEYWORDS = frozenset(
+    {"left", "right", "bottom", "top", "xmin", "xmax", "ymin", "ymax", "zmin", "zmax", "ticks", "vmin", "vmax"}
+)
+"""The keywords of a `LIMIT_METHODS` call that hold bounds or tick positions; any other keyword styles."""
+DATA_CALL_ARGS: dict[str, tuple[tuple[int, ...], tuple[str, ...]]] = {
+    "text": ((0, 1), ("x", "y")),
+    "axhline": ((0,), ("y",)),
+    "axvline": ((0,), ("x",)),
+    "axhspan": ((0, 1), ("ymin", "ymax")),
+    "axvspan": ((0, 1), ("xmin", "xmax")),
+    "hlines": ((0, 1, 2), ("y", "xmin", "xmax")),
+    "vlines": ((0, 1, 2), ("x", "ymin", "ymax")),
+    "add_hline": ((0,), ("y",)),
+    "add_vline": ((0,), ("x",)),
+    "add_hrect": ((0, 1), ("y0", "y1")),
+    "add_vrect": ((0, 1), ("x0", "x1")),
+    "add_annotation": ((), ("x", "y")),
+    "add_shape": ((), ("x0", "x1", "y0", "y1")),
+    "annotate": ((), ("x", "y", "xmin", "xmax", "ymin", "ymax", "xend", "yend")),
+    "expand_limits": ((), ("x", "y")),
+    "Range1d": ((0, 1), ("start", "end")),
+    "Span": ((), ("location",)),
+    "BoxAnnotation": ((), ("top", "bottom", "left", "right")),
+    "Label": ((), ("x", "y")),
+    "FixedTicker": ((), ("ticks",)),
+    "Scale": ((), ("domain",)),
+    "Axis": ((), ("values",)),
+}
+"""Per call name, the positional indexes and keywords that hold data coordinates."""
+_GEOM_COORDINATES = ("x", "y", "xend", "yend", "xmin", "xmax", "ymin", "ymax")
+CONTOUR_CALLS = frozenset({"contour", "contourf", "tricontour", "tricontourf"})
+NORM_CALLS: dict[str, tuple[tuple[int, ...], frozenset[str]]] = {
+    "Normalize": ((0, 1), frozenset({"vmin", "vmax"})),
+    "LogNorm": ((0, 1), frozenset({"vmin", "vmax"})),
+    "TwoSlopeNorm": ((0, 1, 2), frozenset({"vcenter", "vmin", "vmax"})),
+    "CenteredNorm": ((0, 1), frozenset({"vcenter", "halfrange"})),
+    "BoundaryNorm": ((0,), frozenset({"boundaries"})),
+    "PowerNorm": ((1, 2), frozenset({"vmin", "vmax"})),
+    "SymLogNorm": ((2, 3), frozenset({"vmin", "vmax"})),
+}
+DATA_ATTRIBUTES = frozenset({"start", "end", "bounds", "ticker", "y_labels", "x_labels", "range"})
+"""Attributes whose literal assignment pins a data coordinate (bokeh ranges and tickers, pygal labels)."""
+PAPER_REFS = ("paper", "domain", "screen", "axes fraction", "figure fraction", "offset points", "offset pixels")
+RANGE_CALLS = frozenset({"range", "arange", "linspace"})
+DATE_CALLS = frozenset({"Timestamp", "datetime", "datetime64", "date", "to_datetime"})
+_DATE_TEXT = re.compile(r"^\d{4}-\d{2}(?:-\d{2})?(?:[ T]\d{2}:\d{2}(?::\d{2})?)?$")
+RANDOM_SIZE_POSITIONS: dict[str, int | None] = {
+    "randn": 0,
+    "rand": 0,
+    "random": 0,
+    "standard_normal": 0,
+    "choice": 1,
+    "poisson": 1,
+    "exponential": 1,
+    "chisquare": 1,
+    "geometric": 1,
+    "standard_t": 1,
+    "weibull": 1,
+    "pareto": 1,
+    "normal": 2,
+    "uniform": 2,
+    "randint": 2,
+    "integers": 2,
+    "binomial": 2,
+    "lognormal": 2,
+    "gamma": 2,
+    "beta": 2,
+    "laplace": 2,
+    "logistic": 2,
+    "gumbel": 2,
+    "vonmises": 2,
+    "multivariate_normal": 2,
+    "triangular": 3,
+    "rvs": None,
+}
+"""Random draws and the position of their size argument (None: `size=` only); the size is a count of the sample."""
+FRAME_CALLS = frozenset({"DataFrame", "read_csv", "load_dataset", "concat", "merge", "melt", "pivot", "pivot_table"})
+"""Calls whose result is a DataFrame: a string subscript of the name they bind reads a column."""
+COMPARISON_METHODS = frozenset({"eq", "ne", "isin"})
+"""Selections of a value: equality and membership. An inequality (`df[RSI] >= 70`, `if w > 7`) applies a
+threshold, which holds for any data (a precision sample of 2026-10-23 found 11 of 11 such hits false)."""
+SELECTION_OPS = (ast.Eq, ast.NotEq, ast.In, ast.NotIn)
+MIN_SAMPLE_CHARS = 2
+"""A one-character sample value ("C", "M") matches too much unrelated code (an SVG path command, a unit)."""
+_STATISTIC = re.compile(r"(?<![\w.])(?:r|R|R²|R\^2|ρ|τ|p|n|μ|σ)\s*(?:=|≈|~|<|>|≤|≥)\s*[-−+]?\.?\d")
+_HEX = re.compile(r"^#[0-9A-Fa-f]{3,8}$")
+_MARKER_TAIL = r"(?:\s*:.*|\s+[-–—].*)?\s*$"
+DATA_MARKER = re.compile(r"^# Data" + _MARKER_TAIL)
+PLOT_MARKER = re.compile(r"^# Plot" + _MARKER_TAIL)
+CONSTANTS_MARKER = re.compile(r"^# Constants" + _MARKER_TAIL)
+ROLE_COMMENT = re.compile(r"^#\s*role\s*:\s*(?P<rest>.*?)\s*$")
+ROLE_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+EXTRA_ROLE = "extra"
+_ALTAIR_SUFFIX = re.compile(r":[QNOTG]$")
+_ALTAIR_ESCAPE = re.compile(r"\\([.\[\]:\\])")
+_SNIPPET_CHARS = 60
+_MAX_LISTED_LINES = 5
+_BUILTIN_NAMES = frozenset(dir(builtins))
+
+
+@dataclass(frozen=True)
+class RuleClass:
+    """One class of finding: its rule number, the target its defect line names, and whether it is advisory."""
+
+    id: str
+    rule: int
+    target: str
+    advisory: bool = False
+
+
+RULE_CLASSES: dict[str, RuleClass] = {
+    rule.id: rule
+    for rule in (
+        RuleClass(
+            "layout",
+            1,
+            "one block between column-0 # Data and # Plot markers that ends by binding df, with no plotting, styling "
+            "or theme token inside and no plotting call above it",
+        ),
+        RuleClass(
+            "columns",
+            2,
+            "one string constant per required column role above the Data block, each with a trailing "
+            "# role: <role> comment naming a spec role",
+        ),
+        RuleClass("interface", 3, "read only df below the Data block and derive everything else from it"),
+        RuleClass("column-literal", 4, "use the column constant instead of the column name"),
+        # Advisory: 76 of 90 over three samples; the misses are domain vocabulary the block also spells out
+        # (ECG lead names, Venn zones, spectral classes, the 100 % saturation curve).
+        RuleClass("sample-literal", 4, "derive the value from df instead of typing a sample value", advisory=True),
+        # Advisory after the precision samples of 2026-10-23 (PR body): data-coordinate 20 of 30 (annotation
+        # positions in layout units, domain thresholds such as a 95 % variance line, padding), statistic-text
+        # 11 of 30 (thresholds and domain facts: "p < 0.05", "r ≈ 3.57"), count-literal 22 of 30 (domain
+        # grids: a 5 x 5 risk matrix, 7 weekdays, 4 ECG rows).
+        RuleClass(
+            "data-coordinate",
+            4,
+            "derive limits, ticks, reference lines and text positions from df, or name the value in # Constants",
+            advisory=True,
+        ),
+        RuleClass("statistic-text", 4, "compute the statistic from df in an f-string", advisory=True),
+        RuleClass(
+            "df-comparison",
+            4,
+            "select by a rule over df (idxmax, the latest row) or compare with a # Constants threshold",
+        ),
+        RuleClass("count-literal", 4, "count from df (len(df), nunique) instead of typing the count", advisory=True),
+        RuleClass(
+            "palette",
+            5,
+            "list all eight IMPRINT positions in canonical order and look colors up per category "
+            "(IMPRINT[i], dict(zip(groups, IMPRINT)))",
+        ),
+        RuleClass("constants", 6, "keep only values that hold for any data in # Constants", advisory=True),
+    )
+}
+RULE_ORDER = tuple(RULE_CLASSES)
+
+
+@dataclass(frozen=True)
+class Finding:
+    """One violation: its rule class, its line (None for the file as a whole), what was seen and why."""
+
+    cls: str
+    line: int | None
+    observed: str
+    cause: str
+
+    @property
+    def rule(self) -> int:
+        return RULE_CLASSES[self.cls].rule
+
+    @property
+    def advisory(self) -> bool:
+        return RULE_CLASSES[self.cls].advisory
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "rule": self.rule,
+            "class": self.cls,
+            "line": self.line,
+            "observed": self.observed,
+            "cause": self.cause,
+            "advisory": self.advisory,
+        }
+
+
+@dataclass
+class Record:
+    """The checker's result for one source (`to_dict` is the stored form)."""
+
+    shape: Shape
+    color_role: str | None
+    block: tuple[int, int] | None
+    constants: dict[str, str]
+    findings: list[Finding] = field(default_factory=list)
+    version: int = CHECKER_VERSION
+
+    @property
+    def status(self) -> str:
+        """`pass`, `fail` (a finding that is not advisory) or `excluded` (a map spec, never checked)."""
+        if self.shape == "excluded":
+            return "excluded"
+        return "fail" if any(not finding.advisory for finding in self.findings) else "pass"
+
+    def classes(self) -> list[str]:
+        """The rule classes with a finding, in `RULE_ORDER`."""
+        found = {finding.cls for finding in self.findings}
+        return [cls for cls in RULE_ORDER if cls in found]
+
+    def defect_lines(self) -> list[str]:
+        """At most one defect line per rule class (`core.defects.DEFECT_RE` reads each)."""
+        lines: list[str] = []
+        for cls in self.classes():
+            findings = sorted(
+                (finding for finding in self.findings if finding.cls == cls), key=lambda finding: finding.line or 0
+            )
+            lines.append(_defect_line(cls, findings))
+        return lines
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "version": self.version,
+            "status": self.status,
+            "shape": self.shape,
+            "color_role": self.color_role,
+            "block": None if self.block is None else {"start": self.block[0], "end": self.block[1]},
+            "constants": dict(self.constants),
+            "findings": [finding.to_dict() for finding in self.findings],
+            "lines": self.defect_lines(),
+        }
+
+
+def _clause(text: str) -> str:
+    return " ".join(str(text).replace(DEFECT_ARROW, "->").split()).rstrip(". ")
+
+
+def _defect_line(cls: str, findings: Sequence[Finding]) -> str:
+    """`CQ-01 (code): line N <observed>[, and K more at lines ...] → <target>. Likely cause: <cause>.`"""
+    first = findings[0]
+    observed = f"line {first.line} {first.observed}" if first.line is not None else first.observed
+    rest = [finding.line for finding in findings[1:] if finding.line is not None]
+    more = len(findings) - 1
+    if more:
+        shown = ", ".join(str(line) for line in rest[:_MAX_LISTED_LINES])
+        tail = ", …" if len(rest) > _MAX_LISTED_LINES else ""
+        observed += f"; {more} more" + (f" at lines {shown}{tail}" if shown else "")
+    if RULE_CLASSES[cls].advisory:
+        observed = f"(advisory) {observed}"
+    line = f"{DEFECT_ID} ({CODE_RENDER}): {_clause(observed)} {DEFECT_ARROW} {_clause(RULE_CLASSES[cls].target)}."
+    cause = _clause(first.cause)
+    return f"{line} Likely cause: {cause}." if cause else line
+
+
+# --- source model ------------------------------------------------------------------------------
+
+
+@dataclass
+class _Constant:
+    name: str
+    role: str
+    value: ast.expr
+    line: int
+
+
+def _assignment(node: ast.AST) -> tuple[list[ast.expr], ast.expr] | None:
+    """The targets and the value of `x = ...` or of an annotated `x: str = ...`; None for anything else."""
+    if isinstance(node, ast.Assign):
+        return list(node.targets), node.value
+    if isinstance(node, ast.AnnAssign) and node.value is not None:
+        return [node.target], node.value
+    return None
+
+
+def _single_name(node: ast.AST) -> tuple[str, ast.expr] | None:
+    """The name and value of a single-name assignment, annotated or not."""
+    assigned = _assignment(node)
+    if assigned is None or len(assigned[0]) != 1 or not isinstance(assigned[0][0], ast.Name):
+        return None
+    return assigned[0][0].id, assigned[1]
+
+
+@dataclass
+class _Sample:
+    """What the block defines: its values, its record fields, its column names, its data numbers and its counts.
+
+    `strings` are values (list elements, assigned or compared strings); `fields` are the keys of the block's
+    dicts that build no DataFrame and the string subscripts of its records (`node["id"]`), which can be a
+    category map's keys ("Electronics") or a record's field names ("id", "color").
+    """
+
+    strings: set[str] = field(default_factory=set)
+    fields: set[str] = field(default_factory=set)
+    columns: set[str] = field(default_factory=set)
+    numbers: set[float] = field(default_factory=set)
+    counts: set[int] = field(default_factory=set)
+
+
+class _Source:
+    """A parsed source with its comments, markers, imports and zones."""
+
+    def __init__(self, source: str, tree: ast.Module, library: str | None) -> None:
+        self.text = source
+        self.tree = tree
+        self.library = library
+        self.comments = _comments(source)
+        self.markers = {
+            kind: [line for line, col, text in self.comments if col == 0 and pattern.match(text)]
+            for kind, pattern in (("data", DATA_MARKER), ("plot", PLOT_MARKER), ("constants", CONSTANTS_MARKER))
+        }
+        self.aliases, self.star_modules = _imports(tree)
+        self.parents: dict[ast.AST, ast.AST] = {}
+        for node in ast.walk(tree):
+            for child in ast.iter_child_nodes(node):
+                self.parents[child] = node
+        self.defined = _bound_names(tree)
+        data = self.markers["data"]
+        plot = [line for line in self.markers["plot"] if data and line > data[0]]
+        self.block: tuple[int, int] | None = (data[0], plot[0]) if data and plot else None
+        self.figures = self._figure_names()
+
+    # zones ---------------------------------------------------------------------------------
+
+    def head(self) -> list[ast.stmt]:
+        if not self.markers["data"]:
+            return []
+        start = self.markers["data"][0]
+        return [stmt for stmt in self.tree.body if stmt.lineno < start]
+
+    def block_body(self) -> list[ast.stmt]:
+        if self.block is None:
+            return []
+        start, end = self.block
+        return [stmt for stmt in self.tree.body if start < stmt.lineno < end]
+
+    def below(self) -> list[ast.stmt]:
+        if self.block is None:
+            return list(self.tree.body)
+        return [stmt for stmt in self.tree.body if stmt.lineno > self.block[1]]
+
+    def constants_zone(self) -> list[ast.stmt]:
+        markers = self.markers["constants"]
+        if not markers or not self.markers["data"]:
+            return []
+        start, end = markers[0], self.markers["data"][0]
+        return [stmt for stmt in self.tree.body if start < stmt.lineno < end]
+
+    # names and calls -----------------------------------------------------------------------
+
+    def resolve(self, dotted: str) -> str:
+        """`plt.subplots` -> `matplotlib.pyplot.subplots`; a bare name from a star import gets its module."""
+        head, _, rest = dotted.partition(".")
+        if head in self.aliases:
+            base = self.aliases[head]
+        elif head not in self.defined and head not in _BUILTIN_NAMES and self.star_modules:
+            base = f"{self.star_modules[0]}.{head}"
+        else:
+            base = head
+        return f"{base}.{rest}" if rest else base
+
+    def call_root(self, call: ast.Call) -> tuple[str | None, str]:
+        """The base name of a call chain (`alt` in `alt.Chart(df).mark_bar()`) and the innermost call's resolved name."""
+        func: ast.expr = call.func
+        inner = call
+        while True:
+            if isinstance(func, ast.Attribute):
+                func = func.value
+            elif isinstance(func, ast.Call):
+                inner = func
+                func = func.func
+            elif isinstance(func, ast.Subscript):
+                func = func.value
+            else:
+                break
+        root = func.id if isinstance(func, ast.Name) else None
+        dotted = _dotted(inner.func)
+        return root, self.resolve(dotted) if dotted else ""
+
+    def is_plot_module(self, resolved: str) -> bool:
+        return resolved.split(".", 1)[0] in PLOT_MODULES or resolved.startswith("networkx.draw")
+
+    def is_figure_factory(self, resolved: str) -> bool:
+        return (
+            resolved in FIGURE_FACTORIES
+            or (
+                resolved.startswith(_PLOTLY_EXPRESS)
+                and not resolved.startswith(("plotly.express.data", "plotly.express.colors"))
+            )
+            or (bool(_PYGAL_CHART.match(resolved)) and resolved != "pygal.Config")
+        )
+
+    def _figure_names(self) -> set[str]:
+        """Names bound to a figure, axes or chart: by a figure factory or a call on another figure name."""
+        names: set[str] = set()
+        for stmt in self.tree.body:
+            for node in ast.walk(stmt):
+                assigned = _assignment(node)
+                if assigned is None or not isinstance(assigned[1], ast.Call):
+                    continue
+                root, resolved = self.call_root(assigned[1])
+                if self.is_figure_factory(resolved) or (root is not None and root in names):
+                    for target in assigned[0]:
+                        names.update(_target_names(target))
+        return names
+
+    def is_plotting_call(self, call: ast.Call) -> bool:
+        """A call into a plotting library (other than a data helper) or on a figure, axes or chart."""
+        root, resolved = self.call_root(call)
+        if root is not None and root in self.figures:
+            return True
+        if not self.is_plot_module(resolved):
+            return False
+        return not any(
+            resolved.startswith(helper) if helper.endswith(".") else resolved == helper for helper in DATA_HELPERS
+        )
+
+    def setup_calls(self) -> set[str]:
+        if self.library in SETUP_CALLS:
+            return set(SETUP_CALLS[self.library])
+        return {call for calls in SETUP_CALLS.values() for call in calls}
+
+    def snippet(self, node: ast.AST) -> str:
+        return _snippet(ast.get_source_segment(self.text, node) or ast.unparse(node))
+
+    def inside(self, node: ast.AST, kinds: tuple[type, ...]) -> ast.AST | None:
+        current = self.parents.get(node)
+        while current is not None:
+            if isinstance(current, kinds):
+                return current
+            current = self.parents.get(current)
+        return None
+
+
+def _comments(source: str) -> list[tuple[int, int, str]]:
+    """`(line, column, text)` of every comment token."""
+    out: list[tuple[int, int, str]] = []
+    try:
+        for token in tokenize.generate_tokens(io.StringIO(source).readline):
+            if token.type == tokenize.COMMENT:
+                out.append((token.start[0], token.start[1], token.string))
+    except (tokenize.TokenError, IndentationError, SyntaxError):
+        for number, line in enumerate(source.splitlines(), start=1):
+            stripped = line.lstrip()
+            if stripped.startswith("#"):
+                out.append((number, len(line) - len(stripped), stripped))
+    return out
+
+
+def _imports(tree: ast.Module) -> tuple[dict[str, str], list[str]]:
+    """Local name -> imported module or object, and the modules imported with `*`."""
+    aliases: dict[str, str] = {}
+    stars: list[str] = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                if alias.asname:
+                    aliases[alias.asname] = alias.name
+                else:
+                    top = alias.name.split(".")[0]
+                    aliases[top] = top
+        elif isinstance(node, ast.ImportFrom) and node.module and node.level == 0:
+            for alias in node.names:
+                if alias.name == "*":
+                    stars.append(node.module)
+                else:
+                    aliases[alias.asname or alias.name] = f"{node.module}.{alias.name}"
+    plot_stars = [module for module in stars if module.split(".")[0] in PLOT_MODULES]
+    return aliases, plot_stars
+
+
+def _bound_names(tree: ast.Module) -> set[str]:
+    names: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store):
+            names.add(node.id)
+        elif isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
+            names.add(node.name)
+        elif isinstance(node, ast.arg):
+            names.add(node.arg)
+        elif isinstance(node, ast.Import | ast.ImportFrom):
+            for alias in node.names:
+                if alias.name != "*":
+                    names.add((alias.asname or alias.name).split(".")[0])
+    return names
+
+
+def _dotted(node: ast.expr) -> str | None:
+    if isinstance(node, ast.Name):
+        return node.id
+    if isinstance(node, ast.Attribute):
+        base = _dotted(node.value)
+        return f"{base}.{node.attr}" if base else None
+    return None
+
+
+def _call_name(call: ast.Call) -> str | None:
+    """The called function's last name: `set_xlim` for `ax.set_xlim(...)`, `range` for `range(...)`."""
+    if isinstance(call.func, ast.Attribute):
+        return call.func.attr
+    if isinstance(call.func, ast.Name):
+        return call.func.id
+    return None
+
+
+def _target_names(target: ast.expr) -> set[str]:
+    if isinstance(target, ast.Name):
+        return {target.id}
+    if isinstance(target, ast.Tuple | ast.List):
+        return {name for element in target.elts for name in _target_names(element)}
+    if isinstance(target, ast.Starred):
+        return _target_names(target.value)
+    return set()
+
+
+def _snippet(text: str) -> str:
+    text = " ".join(text.split())
+    return text if len(text) <= _SNIPPET_CHARS else text[: _SNIPPET_CHARS - 1] + "…"
+
+
+def _names_in(node: ast.AST) -> set[str]:
+    return {child.id for child in ast.walk(node) if isinstance(child, ast.Name)}
+
+
+# --- literal values ------------------------------------------------------------------------------
+
+
+def _number(node: ast.expr) -> float | None:
+    """The value of a numeric literal, a signed one, or arithmetic on literals."""
+    if isinstance(node, ast.Constant):
+        value = node.value
+        return float(value) if isinstance(value, int | float) and not isinstance(value, bool) else None
+    if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.USub | ast.UAdd):
+        operand = _number(node.operand)
+        if operand is None:
+            return None
+        return -operand if isinstance(node.op, ast.USub) else operand
+    if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add | ast.Sub | ast.Mult | ast.Div):
+        left, right = _number(node.left), _number(node.right)
+        if left is None or right is None:
+            return None
+        if isinstance(node.op, ast.Add):
+            return left + right
+        if isinstance(node.op, ast.Sub):
+            return left - right
+        if isinstance(node.op, ast.Mult):
+            return left * right
+        return left / right if right else None
+    return None
+
+
+def _literal_values(node: ast.expr) -> list[float | str]:
+    """The literal values `node` places on an axis; a literal date counts as `"date"`."""
+    number = _number(node)
+    if number is not None:
+        return [number]
+    if isinstance(node, ast.Constant) and isinstance(node.value, str) and _DATE_TEXT.match(node.value):
+        return ["date"]
+    if isinstance(node, ast.List | ast.Tuple):
+        return [value for element in node.elts for value in _literal_values(element)]
+    if isinstance(node, ast.Call):
+        name = _call_name(node) or ""
+        if name in RANGE_CALLS and node.args:
+            numbers = [_number(arg) for arg in node.args]
+            if all(value is not None for value in numbers):
+                return [value for value in numbers if value is not None]
+        if name in DATE_CALLS and node.args and all(isinstance(arg, ast.Constant) for arg in node.args):
+            return ["date"]
+    return []
+
+
+def _exempt(values: Sequence[float | str]) -> bool:
+    """Values that fit any data: none at all, only neutral or critical values, or a span of a fixed domain."""
+    if any(value == "date" for value in values):
+        return False
+    numbers = [float(value) for value in values if not isinstance(value, str)]
+    if not numbers:
+        return True
+    if all(value in NEUTRAL_VALUES or abs(value) in CRITICAL_VALUES for value in numbers):
+        return True
+    low, high = min(numbers), max(numbers)
+    for lo, hi, headroom in FIXED_DOMAINS:
+        pad = headroom * (hi - lo)
+        if lo - pad <= low <= lo + pad and hi - pad <= high <= hi + pad:
+            return True
+    return False
+
+
+def _count(node: ast.expr) -> int | None:
+    value = _number(node)
+    return int(value) if value is not None and value == int(value) else None
+
+
+def _range_length(call: ast.Call) -> int | None:
+    """The length of `range`/`arange` of literal ints, or a `linspace`'s point count."""
+    name = _call_name(call)
+    if name == "linspace":
+        num = call.args[2] if len(call.args) > 2 else next((kw.value for kw in call.keywords if kw.arg == "num"), None)
+        return _count(num) if num is not None else None
+    if name not in ("range", "arange"):
+        return None
+    ints = [_count(arg) for arg in call.args]
+    if not ints or any(value is None for value in ints):
+        return None
+    start, stop, step = 0, 0, 1
+    if len(ints) == 1:
+        stop = ints[0] or 0
+    else:
+        start, stop = ints[0] or 0, ints[1] or 0
+        step = (ints[2] or 1) if len(ints) > 2 else 1
+    return max(0, -(-(stop - start) // step)) if step else None
+
+
+# --- the checks --------------------------------------------------------------------------------
+
+
+def check_source(source: str, roles: Sequence[DataRole], shape: Shape, *, library: str | None = None) -> Record:
+    """Check one Python implementation against its spec's roles and data shape."""
+    role = color_role(roles)
+    record = Record(shape=shape, color_role=role.name if role else None, block=None, constants={})
+    if shape == "excluded":
+        return record
+    try:
+        tree = ast.parse(source)
+    except SyntaxError as exc:
+        record.findings.append(Finding("layout", exc.lineno, "does not parse", f"SyntaxError: {exc.msg}"))
+        return record
+    src = _Source(source, tree, library)
+    record.block = src.block
+    findings = record.findings
+    constants = _column_constants(src)
+    record.constants = {constant.role: constant.name for constant in constants if constant.role != EXTRA_ROLE}
+
+    findings.extend(_check_layout(src, shape))
+    findings.extend(_check_columns(src, constants, roles, shape))
+    sample = _sample(src, constants) if src.block is not None else None
+    if sample is not None and shape != "generated":
+        findings.extend(_check_interface(src, shape))
+    findings.extend(_check_literals(src, sample))
+    findings.extend(_check_palette(src, role))
+    if sample is not None:
+        findings.extend(_check_constants_zone(src, sample))
+    return record
+
+
+def _check_layout(src: _Source, shape: Shape) -> list[Finding]:
+    found: list[Finding] = []
+    data = src.markers["data"]
+    if not data:
+        found.append(
+            Finding(
+                "layout",
+                None,
+                "the file has no column-0 # Data marker",
+                "the data generation is not marked as one block",
+            )
+        )
+    elif src.block is None:
+        found.append(
+            Finding(
+                "layout",
+                data[0],
+                "opens the Data block with no column-0 # Plot marker after it",
+                "the plot code is not separated from the data generation",
+            )
+        )
+    if len(data) > 1:
+        found.append(
+            Finding(
+                "layout",
+                data[1],
+                f"opens a second # Data block ({len(data)} markers)",
+                "the data generation is split over several blocks",
+            )
+        )
+    found.extend(_check_head(src))
+    if src.block is None:
+        return found
+    body = src.block_body()
+    if not body:
+        found.append(Finding("layout", src.block[0], "opens an empty Data block", "nothing between the markers"))
+        return found
+    tokens = _theme_tokens(src)
+    for stmt in body:
+        for node in ast.walk(stmt):
+            if isinstance(node, ast.Call) and src.is_plotting_call(node):
+                found.append(
+                    Finding(
+                        "layout",
+                        node.lineno,
+                        f"calls `{src.snippet(node.func)}` inside the Data block",
+                        "a plotting, styling or setup call in the data generation",
+                    )
+                )
+                break
+            if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load) and node.id in tokens:
+                found.append(
+                    Finding(
+                        "layout",
+                        node.lineno,
+                        f"reads the theme token `{node.id}` inside the Data block",
+                        "styling in the data generation",
+                    )
+                )
+                break
+    if shape != "generated":
+        last = body[-1]
+        if not _binds_df(last):
+            found.append(
+                Finding(
+                    "layout",
+                    last.lineno,
+                    f"ends the Data block with `{src.snippet(last)}`, not a statement that binds df",
+                    "the block does not end in one tidy DataFrame df",
+                )
+            )
+    return found
+
+
+def _check_head(src: _Source) -> list[Finding]:
+    """Above the block: no figure created and no plotting call outside the library's setup calls."""
+    found: list[Finding] = []
+    allowed = src.setup_calls()
+    for stmt in src.head():
+        if isinstance(stmt, ast.Assign | ast.AnnAssign) and isinstance(stmt.value, ast.Call):
+            root, resolved = src.call_root(stmt.value)
+            if src.is_figure_factory(resolved) or (root is not None and root in src.figures):
+                found.append(
+                    Finding(
+                        "layout",
+                        stmt.lineno,
+                        f"creates `{src.snippet(stmt.value.func)}` above the Data block",
+                        "plot code above the data generation",
+                    )
+                )
+        elif isinstance(stmt, ast.Expr) and isinstance(stmt.value, ast.Call):
+            root, resolved = src.call_root(stmt.value)
+            dotted = _dotted(stmt.value.func)
+            full = src.resolve(dotted) if dotted else resolved
+            if full in allowed:
+                continue
+            if (root is not None and root in src.figures) or src.is_plot_module(full):
+                found.append(
+                    Finding(
+                        "layout",
+                        stmt.lineno,
+                        f"calls `{src.snippet(stmt.value.func)}` above the Data block",
+                        "a plotting call in the head that is not one of the library's setup calls",
+                    )
+                )
+    return found
+
+
+def _theme_tokens(src: _Source) -> set[str]:
+    """`THEME`, names the head derives from it, color strings and palettes."""
+    tokens = {"THEME"}
+    changed = True
+    while changed:
+        changed = False
+        for stmt in src.head():
+            assigned = _assignment(stmt)
+            if assigned is None:
+                continue
+            targets, value = assigned
+            names = {name for target in targets for name in _target_names(target)}
+            if not names or names <= tokens:
+                continue
+            hexes = any(
+                isinstance(node, ast.Constant) and isinstance(node.value, str) and _HEX.match(node.value)
+                for node in ast.walk(value)
+            )
+            if hexes or _names_in(value) & tokens:
+                tokens |= names
+                changed = True
+    return tokens
+
+
+def _binds_df(stmt: ast.stmt) -> bool:
+    """`df = ...`, a column or attribute of df set (`df["x"] = ...`), or an in-place call on df."""
+
+    def on_df(target: ast.expr) -> bool:
+        if "df" in _target_names(target):
+            return True
+        while isinstance(target, ast.Subscript | ast.Attribute):  # df["x"], df.loc[:, "x"], df.attrs
+            target = target.value
+        return isinstance(target, ast.Name) and target.id == "df"
+
+    if isinstance(stmt, ast.Assign):
+        return any(on_df(target) for target in stmt.targets)
+    if isinstance(stmt, ast.AnnAssign | ast.AugAssign):
+        return on_df(stmt.target)
+    if isinstance(stmt, ast.Expr) and isinstance(stmt.value, ast.Call):
+        func = stmt.value.func
+        return isinstance(func, ast.Attribute) and isinstance(func.value, ast.Name) and func.value.id == "df"
+    return False
+
+
+def _column_constants(src: _Source) -> list[_Constant]:
+    """Module-level single-name assignments (annotated or not) with a `# role:` comment on one of their lines."""
+    by_line: dict[int, str] = {}
+    for line, col, text in src.comments:
+        if col > 0:
+            match = ROLE_COMMENT.match(text)
+            if match:  # a further comment after the role (`# role: y  # note`) is not part of it
+                by_line[line] = match.group("rest").split("#", 1)[0].strip()
+    constants: list[_Constant] = []
+    for stmt in src.tree.body:
+        single = _single_name(stmt)
+        if single is None:
+            continue
+        end = stmt.end_lineno or stmt.lineno
+        role = next((by_line[line] for line in range(stmt.lineno, end + 1) if line in by_line), None)
+        if role is not None:
+            constants.append(_Constant(single[0], role, single[1], stmt.lineno))
+    return constants
+
+
+def _check_columns(src: _Source, constants: list[_Constant], roles: Sequence[DataRole], shape: Shape) -> list[Finding]:
+    found: list[Finding] = []
+    by_name = {role.name: role for role in roles}
+    seen: dict[str, _Constant] = {}
+    for constant in constants:
+        role_text = constant.role
+        if not ROLE_NAME.match(role_text):
+            found.append(
+                Finding(
+                    "columns",
+                    constant.line,
+                    f"writes the role comment of `{constant.name}` as `# role: {role_text}`",
+                    "a role comment is `# role: <role>` with the role name alone",
+                )
+            )
+            continue
+        role = by_name.get(role_text)
+        if role_text != EXTRA_ROLE and role is None:
+            known = ", ".join(sorted(by_name)) or "none"
+            found.append(
+                Finding(
+                    "columns",
+                    constant.line,
+                    f"names the unknown role `{role_text}` (spec roles: {known})",
+                    f"`{constant.name}` is tagged with a role the spec does not declare",
+                )
+            )
+            continue
+        value = constant.value
+        variadic = role is not None and role.variadic
+        if variadic:
+            ok = isinstance(value, ast.List | ast.Tuple) and all(
+                isinstance(element, ast.Constant) and isinstance(element.value, str) for element in value.elts
+            )
+        else:
+            ok = isinstance(value, ast.Constant) and isinstance(value.value, str)
+        if not ok:
+            wanted = "a list of column-name strings" if variadic else "a column-name string"
+            found.append(
+                Finding(
+                    "columns",
+                    constant.line,
+                    f"assigns `{constant.name}` the value `{src.snippet(value)}`, not {wanted}",
+                    "the agent rewrites the constant's string from its bindings",
+                )
+            )
+        if src.block is not None and constant.line > src.block[0]:
+            found.append(
+                Finding(
+                    "columns",
+                    constant.line,
+                    f"defines the column constant `{constant.name}` below the # Data marker",
+                    "column constants belong above the Data block",
+                )
+            )
+        if role_text != EXTRA_ROLE:
+            if role_text in seen:
+                found.append(
+                    Finding(
+                        "columns",
+                        constant.line,
+                        f"tags `{constant.name}` with the role `{role_text}` that `{seen[role_text].name}` already has",
+                        "two constants for one role",
+                    )
+                )
+            else:
+                seen[role_text] = constant
+    if shape in ("table", "network"):
+        missing = [
+            role.name
+            for role in roles
+            if role.required and not role.computed and not is_structure_role(role, shape) and role.name not in seen
+        ]
+        if missing:
+            found.append(
+                Finding(
+                    "columns",
+                    src.block[0] if src.block else None,
+                    f"has no column constant for the required role{'s' if len(missing) > 1 else ''} "
+                    + ", ".join(f"`{name}`" for name in missing),
+                    "column names are typed where they are used instead of once, above the block",
+                )
+            )
+    return found
+
+
+def _sample(src: _Source, constants: list[_Constant]) -> _Sample:
+    """The strings, column names, data numbers and counts the block defines (constants' values count as columns)."""
+    sample = _Sample()
+    for constant in constants:
+        for node in ast.walk(constant.value):
+            if isinstance(node, ast.Constant) and isinstance(node.value, str):
+                sample.columns.add(node.value)
+    body = src.block_body()
+    frame_dicts: set[str] = set()
+    frames = {"df"}
+    for stmt in body:
+        for node in ast.walk(stmt):
+            if isinstance(node, ast.Call) and _call_name(node) == "DataFrame":
+                for arg in [*node.args[:1], *(kw.value for kw in node.keywords if kw.arg == "data")]:
+                    if isinstance(arg, ast.Name):
+                        frame_dicts.add(arg.id)
+            assigned = _assignment(node)
+            if assigned is not None and isinstance(assigned[1], ast.Call) and _call_name(assigned[1]) in FRAME_CALLS:
+                for target in assigned[0]:
+                    frames |= _target_names(target)
+    for stmt in body:
+        for node in ast.walk(stmt):
+            _sample_node(src, node, sample, frame_dicts, frames)
+    sample.strings = {text for text in sample.strings - sample.columns if text.strip() and not _HEX.match(text)}
+    sample.fields = {text for text in sample.fields - sample.columns if text.strip() and not _HEX.match(text)}
+    sample.counts = {count for count in sample.counts if count >= MIN_COUNT}
+    return sample
+
+
+def _sample_node(src: _Source, node: ast.AST, sample: _Sample, frame_dicts: set[str], frames: set[str]) -> None:
+    if isinstance(node, ast.Dict):
+        parent = src.parents.get(node)
+        is_frame = (
+            (isinstance(parent, ast.Call) and _call_name(parent) in ("DataFrame", "append"))
+            or (isinstance(parent, ast.keyword) and parent.arg == "data")
+            or (
+                isinstance(parent, ast.Assign)
+                and any(name in frame_dicts for t in parent.targets for name in _target_names(t))
+            )
+        )
+        for key, value in zip(node.keys, node.values, strict=True):
+            if isinstance(key, ast.Constant) and isinstance(key.value, str):
+                (sample.columns if is_frame else sample.fields).add(key.value)
+            if isinstance(value, ast.List | ast.Tuple):
+                sample.counts.add(len(value.elts))
+        if len(node.keys) >= MIN_COUNT and not is_frame:
+            sample.counts.add(len(node.keys))
+        return
+    if isinstance(node, ast.List | ast.Tuple | ast.Set):
+        texts = [e.value for e in node.elts if isinstance(e, ast.Constant) and isinstance(e.value, str)]
+        sample.strings.update(texts)
+        sample.counts.add(len(node.elts))
+        if texts:
+            sample.counts.add(len(set(texts)))
+        sample.numbers.update(number for e in node.elts if (number := _number(e)) is not None)
+        parent = src.parents.get(node)
+        if isinstance(parent, ast.keyword) and parent.arg == "columns":
+            sample.columns.update(texts)
+            sample.strings.difference_update(texts)
+        if isinstance(parent, ast.BinOp) and isinstance(parent.op, ast.Mult):
+            factor = _count(parent.right if parent.left is node else parent.left)
+            if factor is not None:
+                sample.counts.update({factor, factor * len(node.elts)})
+        return
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        parent = src.parents.get(node)
+        if isinstance(parent, ast.Assign | ast.Compare | ast.AnnAssign):
+            sample.strings.add(node.value)
+        elif isinstance(parent, ast.Subscript) and parent.slice is node:
+            frame = isinstance(parent.value, ast.Name) and parent.value.id in frames
+            target = isinstance(parent.ctx, ast.Store)
+            (sample.columns if target or frame else sample.fields).add(node.value)
+        return
+    if isinstance(node, ast.keyword) and node.arg and isinstance(src.parents.get(node), ast.Call):
+        call = src.parents[node]
+        if isinstance(call, ast.Call) and _call_name(call) == "assign":
+            sample.columns.add(node.arg)
+        if node.arg == "columns" and isinstance(node.value, ast.Dict):
+            for value in node.value.values:
+                if isinstance(value, ast.Constant) and isinstance(value.value, str):
+                    sample.columns.add(value.value)
+        return
+    if isinstance(node, ast.Call):
+        name = _call_name(node)
+        length = _range_length(node)
+        if length is not None:
+            sample.counts.add(length)
+        if name in RANDOM_SIZE_POSITIONS:
+            size = next((kw.value for kw in node.keywords if kw.arg == "size"), None)
+            position = RANDOM_SIZE_POSITIONS[name]
+            if size is None and position is not None and len(node.args) > position:
+                size = node.args[position]
+            if size is not None:
+                if isinstance(size, ast.Tuple):
+                    sample.counts.update(c for e in size.elts if (c := _count(e)) is not None)
+                elif (count := _count(size)) is not None:
+                    sample.counts.add(count)
+        if name in ("date_range", "period_range"):
+            periods = next((kw.value for kw in node.keywords if kw.arg == "periods"), None)
+            if periods is not None and (count := _count(periods)) is not None:
+                sample.counts.add(count)
+
+
+# rule 3 ---------------------------------------------------------------------------------------
+
+
+def _check_interface(src: _Source, shape: Shape) -> list[Finding]:
+    body = src.block_body()
+    bound: set[str] = set()
+    for stmt in body:
+        bound |= _statement_bindings(stmt)
+    bound -= {"df", "_"}
+    if shape == "network":
+        bound.discard("nodes")
+    if not bound:
+        return []
+    reads = _reads_before_rebinding(src.below(), bound)
+    found: list[Finding] = []
+    for name, line in sorted(reads.items(), key=lambda item: item[1]):
+        found.append(
+            Finding(
+                "interface",
+                line,
+                f"reads `{name}`, which the Data block binds",
+                f"`{name}` is defined in the Data block instead of derived from df below it",
+            )
+        )
+    return found
+
+
+def _statement_bindings(stmt: ast.stmt) -> set[str]:
+    """Names a module-level statement binds at module scope (not inside a function, class or comprehension)."""
+    names: set[str] = set()
+    if isinstance(stmt, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
+        return {stmt.name}
+    if isinstance(stmt, ast.Import | ast.ImportFrom):
+        return {(alias.asname or alias.name).split(".")[0] for alias in stmt.names if alias.name != "*"}
+    for node in _module_scope_nodes(stmt):
+        if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store):
+            names.add(node.id)
+        elif isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
+            names.add(node.name)
+        elif isinstance(node, ast.Import | ast.ImportFrom):
+            names.update((alias.asname or alias.name).split(".")[0] for alias in node.names if alias.name != "*")
+    return names
+
+
+def _module_scope_nodes(node: ast.AST) -> Iterator[ast.AST]:
+    """Every node in `node` that runs in the module's scope: nested functions, lambdas, classes and comprehensions excluded."""
+    yield node
+    for child in ast.iter_child_nodes(node):
+        if isinstance(child, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
+            yield child  # its name binds here; its body does not
+            for decorator in child.decorator_list:
+                yield from _module_scope_nodes(decorator)
+            continue
+        if isinstance(child, ast.Lambda | ast.ListComp | ast.SetComp | ast.DictComp | ast.GeneratorExp):
+            continue
+        yield from _module_scope_nodes(child)
+
+
+def _free_loads(node: ast.AST, local: frozenset[str] = frozenset()) -> Iterator[tuple[str, int]]:
+    """`(name, line)` of every load in `node` that is not bound by an enclosing function, lambda or comprehension."""
+    if isinstance(node, ast.Name):
+        if isinstance(node.ctx, ast.Load) and node.id not in local:
+            yield node.id, node.lineno
+        return
+    if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.Lambda):
+        args = node.args
+        params = {a.arg for a in [*args.posonlyargs, *args.args, *args.kwonlyargs]}
+        params |= {a.arg for a in (args.vararg, args.kwarg) if a is not None}
+        for default in [*args.defaults, *(d for d in args.kw_defaults if d is not None)]:
+            yield from _free_loads(default, local)
+        body: list[ast.AST] = list(node.body) if isinstance(node.body, list) else [node.body]
+        assigned = {
+            n.id for part in body for n in ast.walk(part) if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Store)
+        }
+        inner = local | params | assigned
+        if not isinstance(node, ast.Lambda):
+            for decorator in node.decorator_list:
+                yield from _free_loads(decorator, local)
+        for part in body:
+            yield from _free_loads(part, frozenset(inner))
+        return
+    if isinstance(node, ast.ListComp | ast.SetComp | ast.DictComp | ast.GeneratorExp):
+        targets = {name for gen in node.generators for name in _target_names(gen.target)}
+        inner = frozenset(local | targets)
+        for index, gen in enumerate(node.generators):
+            yield from _free_loads(gen.iter, local if index == 0 else inner)
+            for condition in gen.ifs:
+                yield from _free_loads(condition, inner)
+        elements = [node.key, node.value] if isinstance(node, ast.DictComp) else [node.elt]
+        for element in elements:
+            yield from _free_loads(element, inner)
+        return
+    for child in ast.iter_child_nodes(node):
+        yield from _free_loads(child, local)
+
+
+def _reads_before_rebinding(stmts: Sequence[ast.stmt], names: set[str]) -> dict[str, int]:
+    """The first line at which each of `names` is read by `stmts` where not every path has rebound it.
+
+    A name counts as rebound only when every path to the read rebinds it: both branches of an `if`
+    (their sets intersect at the join), never a loop's target or body after the loop (it may run zero
+    times), never a `try` body for its handlers or its `finally`, and never a `match` case after the
+    `match` (no case may apply). `del` unbinds.
+    """
+    hits: dict[str, int] = {}
+
+    def load(node: ast.AST | None, bound: frozenset[str]) -> None:
+        if node is None:
+            return
+        for name, line in _free_loads(node):
+            if name in names and name not in bound and name not in hits:
+                hits[name] = line
+
+    def bound_by(node: ast.AST | None) -> frozenset[str]:
+        return frozenset(_target_names(node)) if isinstance(node, ast.expr) else frozenset()
+
+    def sequence(statements: Iterable[ast.stmt], bound: frozenset[str]) -> frozenset[str]:
+        for stmt in statements:
+            bound = step(stmt, bound)
+        return bound
+
+    def step(stmt: ast.stmt, bound: frozenset[str]) -> frozenset[str]:
+        if isinstance(stmt, ast.For | ast.AsyncFor):
+            load(stmt.iter, bound)
+            sequence(stmt.body, bound | bound_by(stmt.target))
+            return sequence(stmt.orelse, bound)
+        if isinstance(stmt, ast.While):
+            load(stmt.test, bound)
+            sequence(stmt.body, bound)
+            return sequence(stmt.orelse, bound)
+        if isinstance(stmt, ast.If):
+            load(stmt.test, bound)
+            return sequence(stmt.body, bound) & sequence(stmt.orelse, bound)
+        if isinstance(stmt, ast.With | ast.AsyncWith):
+            for item in stmt.items:
+                load(item.context_expr, bound)
+                bound = bound | bound_by(item.optional_vars)
+            return sequence(stmt.body, bound)
+        if isinstance(stmt, ast.Try | ast.TryStar):
+            paths = [sequence(stmt.orelse, sequence(stmt.body, bound))]
+            for handler in stmt.handlers:
+                load(handler.type, bound)
+                paths.append(sequence(handler.body, bound | ({handler.name} if handler.name else set())))
+            joined = frozenset.intersection(*paths)
+            return joined | sequence(stmt.finalbody, bound)
+        if isinstance(stmt, ast.Match):
+            load(stmt.subject, bound)
+            for case in stmt.cases:
+                load(case.guard, bound)
+                sequence(case.body, bound | {n.id for n in ast.walk(case.pattern) if isinstance(n, ast.Name)})
+            return bound
+        if isinstance(stmt, ast.Assign):
+            load(stmt.value, bound)
+            for target in stmt.targets:
+                if not isinstance(target, ast.Name | ast.Tuple | ast.List):
+                    load(target, bound)
+            return bound.union(*(bound_by(target) for target in stmt.targets))
+        if isinstance(stmt, ast.AugAssign):
+            load(stmt.value, bound)
+            load(stmt.target, bound)
+            target = stmt.target  # `scale *= 2` reads `scale` first, though its context is Store
+            if isinstance(target, ast.Name) and target.id in names and target.id not in bound and target.id not in hits:
+                hits[target.id] = target.lineno
+            return bound | bound_by(stmt.target)
+        if isinstance(stmt, ast.AnnAssign):
+            load(stmt.value, bound)
+            return bound | bound_by(stmt.target) if stmt.value is not None else bound
+        if isinstance(stmt, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
+            load(stmt, bound)
+            return bound | {stmt.name}
+        if isinstance(stmt, ast.Import | ast.ImportFrom):
+            return bound | _statement_bindings(stmt)
+        if isinstance(stmt, ast.Delete):
+            return bound - frozenset().union(*(bound_by(target) for target in stmt.targets))
+        load(stmt, bound)
+        return bound
+
+    sequence(stmts, frozenset())
+    return hits
+
+
+# rule 4 ---------------------------------------------------------------------------------------
+
+
+def _altair_field(text: str) -> str:
+    """A Vega-Lite field string as the column it names: type suffix dropped, escapes undone."""
+    return _ALTAIR_ESCAPE.sub(r"\1", _ALTAIR_SUFFIX.sub("", text))
+
+
+def _axes_hidden(src: _Source) -> bool:
+    """The file hides an axis, so its coordinates place a drawing (a Venn, a hemicycle, a ternary frame).
+
+    `ax.axis("off")`, `set_axis_off()`, `theme_void()`, altair's `axis=None`, plotly's `visible=False` on an
+    axis, and bokeh's `p.axis.visible = False`.
+    """
+    for node in ast.walk(src.tree):
+        if isinstance(node, ast.Call):
+            name = _call_name(node)
+            if name in ("set_axis_off", "theme_void"):
+                return True
+            if (
+                name == "axis"
+                and node.args
+                and isinstance(node.args[0], ast.Constant)
+                and node.args[0].value in ("off", False)
+            ):
+                return True
+            for keyword in node.keywords:
+                if not isinstance(keyword.value, ast.Constant):
+                    continue
+                value = keyword.value.value
+                if keyword.arg == "axis" and value is None:
+                    return True
+                if value is False and (
+                    (keyword.arg == "visible" and name in ("update_xaxes", "update_yaxes", "dict"))
+                    or (keyword.arg or "").endswith("axis_visible")
+                ):
+                    return True
+        elif isinstance(node, ast.Assign) and isinstance(node.value, ast.Constant) and node.value.value is False:
+            for target in node.targets:
+                if isinstance(target, ast.Attribute) and target.attr == "visible":
+                    owner = _dotted(target.value) or ""
+                    if owner.endswith(("axis", "xaxis", "yaxis")):
+                        return True
+    return False
+
+
+def _check_literals(src: _Source, sample: _Sample | None) -> list[Finding]:
+    found: list[Finding] = []
+    below = src.below()
+    derived = _df_derived(below) if sample is not None else set()
+    aliases = _literal_aliases(below) if sample is not None else {}
+    coordinates = not _axes_hidden(src)
+    seen_coordinates: set[int] = set()
+    for stmt in below:
+        for node in ast.walk(stmt):
+            if src.inside(node, (ast.JoinedStr,)) is not None or _in_output_call(src, node):
+                continue
+            if isinstance(node, ast.Constant) and isinstance(node.value, str):
+                found.extend(_string_finding(src, node, sample))
+            elif isinstance(node, ast.Call):
+                coordinate = _coordinate_finding(src, node, frames=src.block is not None) if coordinates else None
+                if coordinate is not None and coordinate.line not in seen_coordinates:
+                    seen_coordinates.add(coordinate.line or 0)
+                    found.append(coordinate)
+                if sample is not None:
+                    found.extend(_count_finding(src, node, sample))
+                    found.extend(_method_comparison(src, node, derived, aliases))
+            elif isinstance(node, ast.Assign) and coordinates:
+                attribute = _attribute_coordinate(src, node)
+                if attribute is not None:
+                    found.append(attribute)
+            elif isinstance(node, ast.Subscript) and sample is not None:
+                found.extend(_slice_count(src, node, sample))
+            elif isinstance(node, ast.Compare) and sample is not None:
+                found.extend(_compare_finding(src, node, derived, aliases))
+    return found
+
+
+def _in_output_call(src: _Source, node: ast.AST) -> bool:
+    current: ast.AST | None = node
+    while current is not None:
+        if isinstance(current, ast.Call) and _call_name(current) in OUTPUT_CALLS:
+            return True
+        current = src.parents.get(current)
+    return False
+
+
+def _string_finding(src: _Source, node: ast.Constant, sample: _Sample | None) -> list[Finding]:
+    text = node.value
+    assert isinstance(text, str)
+    if "anyplot.ai" in text:
+        return []
+    parent = src.parents.get(node)
+    if isinstance(parent, ast.keyword) and parent.arg in STYLE_KEYWORDS:
+        return []
+    if isinstance(parent, ast.Expr):
+        return []  # a docstring or a bare string statement
+    found: list[Finding] = []
+    if sample is not None:
+        field_name = _altair_field(text)
+        if text in sample.columns or field_name in sample.columns:
+            found.append(
+                Finding(
+                    "column-literal",
+                    node.lineno,
+                    f"types the column name {text!r}",
+                    f"{src.snippet(parent) if parent is not None else repr(text)} repeats a column name below the Data block",
+                )
+            )
+        elif (
+            (text in sample.strings or (text in sample.fields and not _PROPERTY_KEY.match(text)))
+            and len(text.strip()) >= MIN_SAMPLE_CHARS
+            and text.strip().lower() not in PROSE_WORDS | STYLE_WORDS
+            and not (isinstance(parent, ast.Dict) and node in parent.keys and _PROPERTY_KEY.match(text))
+        ):
+            context = src.snippet(parent) if parent is not None else repr(text)
+            found.append(
+                Finding(
+                    "sample-literal",
+                    node.lineno,
+                    f"uses the literal {text!r}, a value the Data block defines",
+                    f"{context} below the Data block",
+                )
+            )
+    if _STATISTIC.search(text):
+        found.append(
+            Finding(
+                "statistic-text",
+                node.lineno,
+                f"states the statistic {text!r} as text",
+                "a number from the sample typed into a label",
+            )
+        )
+    return found
+
+
+def _coordinate_finding(src: _Source, call: ast.Call, frames: bool) -> Finding | None:
+    """A numeric literal or literal date in a data-coordinate position of `call`.
+
+    `frames` checks the literal data of a `DataFrame` built in the plot code (a reference line's
+    frame in altair); it is off when there is no block, since the data generation is then unknown.
+    """
+    name = _call_name(call)
+    keywords = {kw.arg: kw.value for kw in call.keywords if kw.arg}
+    candidates: list[ast.expr] = []
+    if name in LIMIT_METHODS:
+        # positional bounds and the bound keywords only: `set_xticks(x, labels, fontsize=8)` styles its labels
+        candidates = [*call.args, *(value for key, value in keywords.items() if key in LIMIT_KEYWORDS)]
+        if any(not _literal_values(node) and not isinstance(node, ast.List | ast.Tuple) for node in candidates):
+            # padding beside a computed bound: set_xlim(-0.5, n - 0.5), set_ylim(0, top * 1.1)
+            candidates = [node for node in candidates if not _padding(node)]
+    elif name == "text" and call.args and isinstance(call.args[0], ast.Tuple | ast.List):
+        return None  # PIL's ImageDraw.text((x, y), ...) places pixels, not data
+    elif name == "annotate" and ("xy" in keywords or len(call.args) > 1):
+        # matplotlib's annotate(text, xy, xytext=...); plotnine's annotate("text", x=..., y=...) uses the table below
+        if not _paper_ref(keywords.get("xycoords")):
+            xy = call.args[1] if len(call.args) > 1 else keywords.get("xy")
+            if xy is not None:
+                candidates.append(xy)
+            text_coords = keywords.get("textcoords", keywords.get("xycoords"))
+            if "xytext" in keywords and not _paper_ref(text_coords):
+                candidates.append(keywords["xytext"])
+    elif name in DATA_CALL_ARGS:
+        if name == "text" and _figure_text(src, call, keywords):
+            return None
+        if name in ("add_annotation", "add_shape") and (
+            _paper_ref(keywords.get("xref")) or _paper_ref(keywords.get("yref"))
+        ):
+            return None
+        if name == "Label" and (_paper_ref(keywords.get("x_units")) or _paper_ref(keywords.get("y_units"))):
+            return None
+        positions, names = DATA_CALL_ARGS[name]
+        candidates = [call.args[i] for i in positions if i < len(call.args)]
+        candidates += [keywords[key] for key in names if key in keywords]
+    elif name is not None and name.startswith("geom_"):
+        candidates = [keywords[key] for key in _GEOM_COORDINATES if key in keywords]
+    elif name is not None and name in NORM_CALLS:
+        positions, norm_names = NORM_CALLS[name]
+        candidates = [call.args[i] for i in positions if i < len(call.args)]
+        candidates += [value for key, value in keywords.items() if key in norm_names]
+    elif name == "DataFrame" and frames:
+        candidates = [*call.args[:1], *(value for key, value in keywords.items() if key == "data")]
+        candidates = [_frame_values(node) for node in candidates]
+    visual_range = name == "Scale" or (name or "").startswith("scale_")
+    for key, value in keywords.items():
+        if key == "range" and visual_range:
+            continue  # alt.Scale(range=...) and scale_size(range=...) map to sizes or colors, not data
+        if key in GENERIC_DATA_KEYWORDS or _AXIS_DATA_KEYWORD.match(key):
+            candidates.append(value)
+        elif key == "levels" and name in CONTOUR_CALLS and _number(value) is None:
+            candidates.append(value)
+        elif key == "ticks" and name == "colorbar":
+            candidates.append(value)
+        elif key == "bins" and _number(value) is None:
+            candidates.append(value)
+    for node in call.args + list(keywords.values()):
+        if isinstance(node, ast.Dict):
+            candidates.extend(_dict_coordinates(node))
+    values = [value for node in candidates for value in _literal_values(_without_padding(node))]
+    if not values or _exempt(values):
+        return None
+    shown = ", ".join(_format_value(value) for value in values[:4]) + (", …" if len(values) > 4 else "")
+    return Finding(
+        "data-coordinate",
+        call.lineno,
+        f"places data coordinates by the literal{'s' if len(values) > 1 else ''} {shown}",
+        f"`{src.snippet(call)}` fixes the axis to the sample's range",
+    )
+
+
+def _padding(node: ast.expr) -> bool:
+    """A literal of magnitude `PADDING` or less: padding or a baseline beside a computed bound."""
+    value = _number(node)
+    return value is not None and abs(value) <= PADDING
+
+
+def _without_padding(node: ast.expr) -> ast.expr:
+    """A bound pair with a computed member keeps only its literals beyond `PADDING`: `xlim=(-1.5, n + 0.5)`."""
+    if isinstance(node, ast.Tuple | ast.List) and any(_number(element) is None for element in node.elts):
+        return ast.List(elts=[element for element in node.elts if not _padding(element)], ctx=ast.Load())
+    return node
+
+
+def _frame_values(node: ast.expr) -> ast.expr:
+    """The literal data of a `DataFrame` built below the block, as one list node."""
+    if isinstance(node, ast.Dict):
+        return ast.List(elts=[value for value in node.values if value is not None], ctx=ast.Load())
+    return node
+
+
+def _dict_coordinates(node: ast.Dict) -> list[ast.expr]:
+    out: list[ast.expr] = []
+    for key, value in zip(node.keys, node.values, strict=True):
+        if isinstance(key, ast.Constant) and isinstance(key.value, str):
+            if key.value in GENERIC_DATA_KEYWORDS or _AXIS_DATA_KEYWORD.match(key.value):
+                out.append(value)
+            elif key.value == "ticks" and isinstance(value, ast.List | ast.Tuple):
+                out.append(value)
+    return out
+
+
+def _paper_ref(node: ast.expr | None) -> bool:
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return any(ref in node.value for ref in PAPER_REFS)
+    if node is not None:
+        dotted = _dotted(node) or ""
+        return dotted.endswith(("transAxes", "transFigure"))
+    return False
+
+
+def _figure_text(src: _Source, call: ast.Call, keywords: Mapping[str, ast.expr]) -> bool:
+    """A `text` call in figure or axes coordinates."""
+    if isinstance(call.func, ast.Attribute):
+        receiver = _dotted(call.func.value) or ""
+        if "fig" in receiver.rsplit(".", 1)[-1].lower():
+            return True
+    transform = keywords.get("transform")
+    return transform is not None and not (_dotted(transform) or "").endswith("transData")
+
+
+def _format_value(value: float | str) -> str:
+    if isinstance(value, str):
+        return value
+    return str(int(value)) if value == int(value) else f"{value:g}"
+
+
+def _attribute_coordinate(src: _Source, node: ast.Assign) -> Finding | None:
+    for target in node.targets:
+        if isinstance(target, ast.Attribute) and target.attr in DATA_ATTRIBUTES:
+            values = _literal_values(node.value)
+            if values and not _exempt(values):
+                shown = ", ".join(_format_value(value) for value in values[:4])
+                return Finding(
+                    "data-coordinate",
+                    node.lineno,
+                    f"sets `{src.snippet(target)}` to the literal {shown}",
+                    "a range or tick list typed for the sample",
+                )
+    return None
+
+
+def _count_finding(src: _Source, call: ast.Call, sample: _Sample) -> list[Finding]:
+    name = _call_name(call)
+    if name not in RANGE_CALLS:
+        return []
+    length = _range_length(call)
+    if length is None or length not in sample.counts:
+        return []
+    if name == "linspace" and length >= RESOLUTION_COUNT:
+        return []
+    return [
+        Finding(
+            "count-literal",
+            call.lineno,
+            f"counts {length} with `{src.snippet(call)}`, a count the Data block defines",
+            "the number of sample rows or categories typed as a literal",
+        )
+    ]
+
+
+def _slice_count(src: _Source, node: ast.Subscript, sample: _Sample) -> list[Finding]:
+    if not isinstance(node.slice, ast.Slice):
+        return []
+    if isinstance(node.value, ast.Name) and node.value.id in PALETTE_NAMES:
+        return []  # the palette rule reports palette slices
+    lower = _count(node.slice.lower) if node.slice.lower is not None else None
+    upper = _count(node.slice.upper) if node.slice.upper is not None else None
+    if lower is None and upper is not None and upper > 0:
+        length = upper
+    elif upper is None and lower is not None and lower < 0:
+        length = -lower
+    elif lower is not None and upper is not None and upper > lower >= 0:
+        length = upper - lower
+    else:
+        return []
+    if length not in sample.counts:
+        return []
+    return [
+        Finding(
+            "count-literal",
+            node.lineno,
+            f"slices {length} items with `{src.snippet(node)}`, a count the Data block defines",
+            "the number of sample rows or categories typed as a literal",
+        )
+    ]
+
+
+def _df_derived(stmts: Sequence[ast.stmt]) -> set[str]:
+    """`df` and the names the plot code derives from it, in order (loop targets over derived values included)."""
+    derived = {"df"}
+    for stmt in stmts:
+        for node in _module_scope_nodes(stmt):
+            assigned = _assignment(node)
+            if assigned is not None and _names_in(assigned[1]) & derived:
+                for target in assigned[0]:
+                    derived |= _target_names(target)
+            elif isinstance(node, ast.For | ast.AsyncFor) and _names_in(node.iter) & derived:
+                derived |= _target_names(node.target)
+            elif isinstance(node, ast.comprehension) and _names_in(node.iter) & derived:
+                derived |= _target_names(node.target)
+        for node in ast.walk(stmt):
+            if isinstance(node, ast.comprehension) and _names_in(node.iter) & derived:
+                derived |= _target_names(node.target)
+    return derived
+
+
+def _literal_aliases(stmts: Sequence[ast.stmt]) -> dict[str, ast.Constant]:
+    """Names bound once, at module level below the block, to a number, string or date literal."""
+    counts: Counter[str] = Counter()
+    values: dict[str, ast.Constant] = {}
+    for stmt in stmts:
+        assigned = _assignment(stmt)
+        if assigned is not None:
+            for target in assigned[0]:
+                for name in _target_names(target):
+                    counts[name] += 1
+            single = _single_name(stmt)
+            if single is not None:
+                value = single[1]
+                if (
+                    isinstance(value, ast.Constant)
+                    and isinstance(value.value, int | float | str)
+                    and not isinstance(value.value, bool)
+                ):
+                    values[single[0]] = value
+        else:
+            for name in _statement_bindings(stmt):
+                counts[name] += 1
+    return {name: value for name, value in values.items() if counts[name] == 1}
+
+
+def _comparison_literal(node: ast.expr, aliases: Mapping[str, ast.Constant]) -> tuple[str, ast.expr] | None:
+    """The literal a comparison operand stands for, as `(shown, literal node)`, or None."""
+    if isinstance(node, ast.Name) and node.id in aliases:
+        literal: ast.expr = aliases[node.id]
+        shown = f"{node.id} = {ast.unparse(literal)}"
+    else:
+        literal = node
+        shown = ast.unparse(node)
+    if isinstance(literal, ast.Constant) and isinstance(literal.value, str):
+        return (shown, literal) if literal.value.strip() else None
+    values = _literal_values(literal)
+    if values and not _exempt(values):
+        return shown, literal
+    if isinstance(literal, ast.List | ast.Tuple | ast.Set) and any(
+        isinstance(e, ast.Constant) and isinstance(e.value, str) for e in literal.elts
+    ):
+        return shown, literal
+    return None
+
+
+def _compare_finding(
+    src: _Source, node: ast.Compare, derived: set[str], aliases: Mapping[str, ast.Constant]
+) -> list[Finding]:
+    if not all(isinstance(op, SELECTION_OPS) for op in node.ops):
+        return []
+    operands = [node.left, *node.comparators]
+    if not any(_names_in(operand) & derived for operand in operands):
+        return []
+    for operand in operands:
+        if _names_in(operand) & derived:
+            continue
+        literal = _comparison_literal(operand, aliases)
+        if literal is not None:
+            return [
+                Finding(
+                    "df-comparison",
+                    node.lineno,
+                    f"compares df with the literal {literal[0]}",
+                    f"`{src.snippet(node)}` selects a sample value",
+                )
+            ]
+    return []
+
+
+def _method_comparison(
+    src: _Source, call: ast.Call, derived: set[str], aliases: Mapping[str, ast.Constant]
+) -> list[Finding]:
+    name = _call_name(call)
+    if name not in COMPARISON_METHODS:
+        return []
+    if not isinstance(call.func, ast.Attribute) or not (_names_in(call.func.value) & derived):
+        return []
+    for arg in call.args:
+        literal = _comparison_literal(arg, aliases)
+        if literal is not None:
+            return [
+                Finding(
+                    "df-comparison",
+                    call.lineno,
+                    f"compares df with the literal {literal[0]}",
+                    f"`{src.snippet(call)}` selects a sample value",
+                )
+            ]
+    return []
+
+
+# rule 5 ---------------------------------------------------------------------------------------
+
+
+def _palette(src: _Source) -> tuple[str, list[str], int] | None:
+    """The module's Imprint palette: its name, its entries and its line."""
+    for stmt in src.tree.body:
+        single = _single_name(stmt)
+        if single is None:
+            continue
+        name, value = single
+        if not isinstance(value, ast.List | ast.Tuple):
+            continue
+        entries = [e.value.upper() for e in value.elts if isinstance(e, ast.Constant) and isinstance(e.value, str)]
+        if name in PALETTE_NAMES or (len(entries) >= 2 and entries[0] == CANONICAL_IMPRINT[0]):
+            return name, entries, stmt.lineno
+    return None
+
+
+def _check_palette(src: _Source, color: DataRole | None) -> list[Finding]:
+    """Rule 5. A missing palette counts only for a required colour role: an optional one may go unused."""
+    found: list[Finding] = []
+    palette = _palette(src)
+    names = set(PALETTE_NAMES) | ({palette[0]} if palette else set())
+    role = color.name if color is not None else None
+    if color is not None:
+        if palette is None:
+            if color.required:
+                found.append(
+                    Finding(
+                        "palette",
+                        None,
+                        f"has no IMPRINT list while the spec's `{role}` role colors the marks",
+                        "colors come from elsewhere than the Imprint palette",
+                    )
+                )
+        else:
+            name, entries, line = palette
+            canonical = [entry.upper() for entry in CANONICAL_IMPRINT]
+            if entries != canonical:
+                what = (
+                    f"lists {len(entries)} of 8 positions"
+                    if entries == canonical[: len(entries)]
+                    else "lists the Imprint colors out of canonical order"
+                )
+                found.append(
+                    Finding("palette", line, f"`{name}` {what}", f"a palette sized to the sample's `{role}` values")
+                )
+    for stmt in src.tree.body:
+        for node in ast.walk(stmt):
+            if isinstance(node, ast.Call) and _call_name(node) == "zip":
+                strict = any(
+                    kw.arg == "strict" and isinstance(kw.value, ast.Constant) and kw.value.value is True
+                    for kw in node.keywords
+                )
+                if strict and any(_names_in(arg) & names and not _sized_slice(arg) for arg in node.args):
+                    found.append(
+                        Finding(
+                            "palette",
+                            node.lineno,
+                            "zips the palette with strict=True, which raises for one more group",
+                            f"`{src.snippet(node)}`",
+                        )
+                    )
+            elif (
+                role is not None
+                and isinstance(node, ast.Subscript)
+                and isinstance(node.value, ast.Name)
+                and node.value.id in names
+                and isinstance(node.slice, ast.Slice)
+                and node.slice.upper is not None
+                and _count(node.slice.upper) is not None
+            ):
+                found.append(
+                    Finding(
+                        "palette",
+                        node.lineno,
+                        f"slices the palette to a fixed size with `{src.snippet(node)}`",
+                        "a literal slice sized to the sample's groups",
+                    )
+                )
+    return found
+
+
+def _sized_slice(node: ast.expr) -> bool:
+    """A palette slice whose length is computed (`IMPRINT[: len(groups)]`): a strict zip over it raises only past eight."""
+    return (
+        isinstance(node, ast.Subscript)
+        and isinstance(node.slice, ast.Slice)
+        and (node.slice.upper is not None and _count(node.slice.upper) is None)
+    )
+
+
+# rule 6 ---------------------------------------------------------------------------------------
+
+
+def _check_constants_zone(src: _Source, sample: _Sample) -> list[Finding]:
+    found: list[Finding] = []
+    for stmt in src.constants_zone():
+        assigned = _assignment(stmt)
+        if assigned is None or any(
+            line
+            for line, col, text in src.comments
+            if col > 0 and ROLE_COMMENT.match(text) and stmt.lineno <= line <= (stmt.end_lineno or stmt.lineno)
+        ):
+            continue
+        value = assigned[1]
+        strings = {
+            node.value for node in ast.walk(value) if isinstance(node, ast.Constant) and isinstance(node.value, str)
+        }
+        numbers = {
+            number
+            for node in ast.walk(value)
+            if isinstance(node, ast.expr)
+            and not isinstance(node, ast.BinOp | ast.UnaryOp)
+            and (number := _number(node)) is not None
+        }
+        shared = sorted(strings & sample.strings)
+        coordinates = sorted(n for n in numbers & sample.numbers if not _exempt([n]))
+        container = isinstance(value, ast.List | ast.Tuple | ast.Set | ast.Dict)
+        if shared and (container or isinstance(value, ast.Constant)):
+            shown = ", ".join(repr(text) for text in shared[:3]) + (", …" if len(shared) > 3 else "")
+            found.append(
+                Finding(
+                    "constants",
+                    stmt.lineno,
+                    f"lists sample values ({shown}) in # Constants",
+                    "sample categories hoisted out of the Data block, or an ordered scale the block also spells out",
+                )
+            )
+        elif container and len(coordinates) >= 2:
+            shown = ", ".join(_format_value(number) for number in coordinates[:3])
+            found.append(
+                Finding(
+                    "constants",
+                    stmt.lineno,
+                    f"lists the sample's data numbers ({shown}) in # Constants",
+                    "data coordinates hoisted out of the Data block",
+                )
+            )
+    return found
+
+
+# --- source mutations --------------------------------------------------------------------------
+
+
+def replace_block(source: str, replacement: str) -> str:
+    """The source with the statements between the `# Data` and `# Plot` markers replaced; the markers stay.
+
+    Raises ValueError when the source has no block.
+    """
+    tree = ast.parse(source)
+    src = _Source(source, tree, None)
+    if src.block is None:
+        raise ValueError("the source has no # Data ... # Plot block")
+    start, end = src.block
+    lines = source.splitlines(keepends=True)
+    body = replacement if replacement.endswith("\n") else replacement + "\n"
+    return "".join(lines[:start]) + body + "\n" + "".join(lines[end - 1 :])
+
+
+def rewrite_constants(source: str, columns: Mapping[str, str | Sequence[str]]) -> str:
+    """The source with each role's column constant set to the column name(s) in `columns` (role -> name).
+
+    Roles without a constant are ignored; a constant whose role is not in `columns` keeps its value.
+    """
+    return _rewrite(source, lambda constant, _: columns.get(constant.role))
+
+
+def rewrite_columns(source: str, renames: Mapping[str, str]) -> str:
+    """The source with every column constant, `# role: extra` included, renamed through `renames` (old -> new).
+
+    A constant whose value (or one of whose list entries) is an old column name gets the new one; any
+    other constant keeps its value. This is how a table with renamed columns reaches columns that no
+    spec role names.
+    """
+
+    def choose(_: _Constant, current: str | list[str] | None) -> str | list[str] | None:
+        if isinstance(current, str):
+            return renames.get(current)
+        if isinstance(current, list) and any(item in renames for item in current):
+            return [renames.get(item, item) for item in current]
+        return None
+
+    return _rewrite(source, choose)
+
+
+def _literal_columns(value: ast.expr) -> str | list[str] | None:
+    """A constant's column name, or its list of names; None for any other value."""
+    if isinstance(value, ast.Constant) and isinstance(value.value, str):
+        return value.value
+    if isinstance(value, ast.List | ast.Tuple) and all(
+        isinstance(item, ast.Constant) and isinstance(item.value, str) for item in value.elts
+    ):
+        return [item.value for item in value.elts if isinstance(item, ast.Constant) and isinstance(item.value, str)]
+    return None
+
+
+def _rewrite(source: str, choose: Callable[[_Constant, str | list[str] | None], str | Sequence[str] | None]) -> str:
+    """Set each column constant's value to `choose(constant, current value)`, unless that is None.
+
+    The new value is written on one line. A role comment inside the old value's span (`SERIES = [  # role: y`
+    over several lines) moves to the end of the statement's last line, so the constant stays a constant.
+    """
+    tree = ast.parse(source)
+    src = _Source(source, tree, None)
+    offsets = _line_offsets(source)
+    role_comments = [
+        (offsets[line - 1] + col, text) for line, col, text in src.comments if col > 0 and ROLE_COMMENT.match(text)
+    ]
+    edits: list[tuple[int, int, str]] = []
+    for constant in _column_constants(src):
+        new = choose(constant, _literal_columns(constant.value))
+        if new is None:
+            continue
+        value = constant.value
+        start = offsets[value.lineno - 1] + _char_offset(source, offsets, value.lineno, value.col_offset)
+        end_line = value.end_lineno or value.lineno
+        end = offsets[end_line - 1] + _char_offset(source, offsets, end_line, value.end_col_offset or 0)
+        text = json.dumps(new if isinstance(new, str) else list(new), ensure_ascii=False)
+        inside = [comment for position, comment in role_comments if start <= position < end]
+        if inside:
+            line_end = source.find("\n", end)
+            line_end = len(source) if line_end == -1 else line_end
+            tail = source[end:line_end].strip()
+            text += f"  {inside[0]}" + (f"  {tail}" if tail else "")
+            end = line_end
+        edits.append((start, end, text))
+    for start, end, text in sorted(edits, reverse=True):
+        source = source[:start] + text + source[end:]
+    return source
+
+
+def _line_offsets(source: str) -> list[int]:
+    offsets = [0]
+    for line in source.splitlines(keepends=True):
+        offsets.append(offsets[-1] + len(line))
+    return offsets
+
+
+def _char_offset(source: str, offsets: Sequence[int], line: int, byte_col: int) -> int:
+    """A column in characters from the AST's UTF-8 byte column."""
+    text = source[offsets[line - 1] : offsets[line] if line < len(offsets) else len(source)]
+    return len(text.encode("utf-8")[:byte_col].decode("utf-8", errors="ignore"))
+
+
+# --- files and CLI -----------------------------------------------------------------------------
+
+
+def library_of(path: Path) -> str | None:
+    """The library a catalogue implementation file belongs to (its stem), or None for another file name."""
+    return path.stem if path.stem in LIBRARIES else None
+
+
+def spec_context(spec_path: Path, spec_id: str | None = None) -> tuple[str, list[DataRole], Shape]:
+    """The spec id, parsed roles and shape of a `specification.md`."""
+    spec_id = spec_id or spec_path.parent.name
+    roles = parse_roles(data_bullets(spec_path.read_text(encoding="utf-8")))
+    return spec_id, roles, spec_shape(spec_id, roles)
+
+
+def check_file(impl_path: Path, spec_path: Path | None = None, *, spec_id: str | None = None) -> Record:
+    """Check a catalogue file; the spec defaults to `plots/<spec>/specification.md` next to it."""
+    if spec_path is None:
+        spec_path = impl_path.parents[2] / "specification.md"
+    _, roles, shape = spec_context(spec_path, spec_id)
+    return check_source(impl_path.read_text(encoding="utf-8"), roles, shape, library=library_of(impl_path))
+
+
+def _implementations(plots: Path, library: str | None) -> list[Path]:
+    pattern = f"*/implementations/python/{library}.py" if library else "*/implementations/python/*.py"
+    return sorted(path for path in plots.glob(pattern) if library_of(path) is not None)
+
+
+def run_report(plots: Path, library: str | None = None) -> list[tuple[Path, Record]]:
+    """The record of every Python implementation under `plots/`."""
+    results: list[tuple[Path, Record]] = []
+    specs: dict[Path, tuple[str, list[DataRole], Shape]] = {}
+    for path in _implementations(plots, library):
+        spec_path = path.parents[2] / "specification.md"
+        if spec_path not in specs:
+            specs[spec_path] = spec_context(spec_path)
+        _, roles, shape = specs[spec_path]
+        results.append((path, check_source(path.read_text(encoding="utf-8"), roles, shape, library=library_of(path))))
+    return results
+
+
+def format_report(results: Sequence[tuple[Path, Record]]) -> str:
+    """Per-library pass/fail counts and, per rule class, the number of files with a finding."""
+    by_library: dict[str, Counter[str]] = {}
+    classes: dict[str, Counter[str]] = {cls: Counter() for cls in RULE_ORDER}
+    shapes: Counter[str] = Counter()
+    for path, record in results:
+        library = library_of(path) or path.stem
+        by_library.setdefault(library, Counter())[record.status] += 1
+        for cls in record.classes():
+            classes[cls][library] += 1
+        if library == "matplotlib":
+            shapes[record.shape] += 1
+    libraries = [lib for lib in LIBRARIES if lib in by_library]
+    out = ["| Library | Files | Pass | Fail | Excluded |", "|---|---|---|---|---|"]
+    totals: Counter[str] = Counter()
+    for lib in libraries:
+        counts = by_library[lib]
+        total = sum(counts.values())
+        totals.update(counts)
+        out.append(f"| {lib} | {total} | {counts['pass']} | {counts['fail']} | {counts['excluded']} |")
+    out.append(f"| **all** | {sum(totals.values())} | {totals['pass']} | {totals['fail']} | {totals['excluded']} |")
+    out += ["", "Files with a finding, per rule class:", ""]
+    out.append("| Rule | Class | " + " | ".join(libraries) + " | All |")
+    out.append("|---|---|" + "---|" * len(libraries) + "---|")
+    for cls in RULE_ORDER:
+        rule = RULE_CLASSES[cls]
+        label = f"{cls} (advisory)" if rule.advisory else cls
+        cells = [str(classes[cls][lib]) for lib in libraries]
+        out.append(f"| {rule.rule} | {label} | " + " | ".join(cells) + f" | {sum(classes[cls].values())} |")
+    if shapes:
+        out += [
+            "",
+            "Specs per shape (one library's files): " + ", ".join(f"{k} {v}" for k, v in sorted(shapes.items())),
+        ]
+    return "\n".join(out)
+
+
+def sample_findings(
+    results: Sequence[tuple[Path, Record]], per_class: int, seed: int, root: Path | None = None
+) -> dict[str, list[str]]:
+    """Per rule class, up to `per_class` findings drawn at random (one per file), as `file:line  observed`."""
+    rng = random.Random(seed)
+    out: dict[str, list[str]] = {}
+    for cls in RULE_ORDER:
+        pool: list[tuple[Path, Finding]] = []
+        for path, record in results:
+            matches = [finding for finding in record.findings if finding.cls == cls]
+            if matches:
+                pool.append((path, rng.choice(matches)))
+        picked = rng.sample(pool, min(per_class, len(pool)))
+        lines = []
+        for path, finding in sorted(picked, key=lambda item: str(item[0])):
+            shown = path.relative_to(root) if root is not None and path.is_relative_to(root) else path
+            where = f"{shown}:{finding.line}" if finding.line is not None else str(shown)
+            lines.append(f"{where}  {finding.observed}")
+        out[cls] = lines
+    return out
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        prog="python -m core.adaptability", description="Check Python implementations against the adaptable-code rules."
+    )
+    sub = parser.add_subparsers(dest="command", required=True)
+    check = sub.add_parser("check", help="check one implementation file")
+    check.add_argument("source", type=Path)
+    check.add_argument("--spec", type=Path, default=None, help="specification.md (default: the catalogue's)")
+    check.add_argument("--spec-id", default=None)
+    check.add_argument("--out", type=Path, default=None, help="write the record as JSON here")
+    report = sub.add_parser("report", help="check every Python implementation under plots/")
+    report.add_argument("plots", type=Path)
+    report.add_argument("--library", default=None, choices=LIBRARIES)
+    report.add_argument("--sample", type=int, default=0, help="print N random findings per rule class")
+    report.add_argument("--seed", type=int, default=1)
+    report.add_argument("--json", action="store_true", help="print every record as JSON lines")
+    args = parser.parse_args(argv)
+
+    if args.command == "check":
+        try:
+            record = check_file(args.source, args.spec, spec_id=args.spec_id)
+        except OSError as exc:
+            print(f"::error::adaptability check cannot read its input: {exc}")
+            return 2
+        payload = json.dumps(record.to_dict(), ensure_ascii=False)
+        if args.out is not None:
+            args.out.write_text(payload + "\n", encoding="utf-8")
+        print(payload)
+        for line in record.defect_lines():
+            print(line)
+        return 1 if record.status == "fail" else 0
+
+    results = run_report(args.plots, args.library)
+    if args.json:
+        for path, record in results:
+            print(json.dumps({"file": str(path), **record.to_dict()}, ensure_ascii=False))
+        return 0
+    print(format_report(results))
+    if args.sample:
+        root = args.plots.resolve().parent
+        resolved = [(path.resolve(), record) for path, record in results]
+        for cls, lines in sample_findings(resolved, args.sample, args.seed, root).items():
+            print(f"\n## {cls} ({len(lines)} sampled)\n")
+            for line in lines:
+                print(line)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

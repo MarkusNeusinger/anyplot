@@ -34,7 +34,6 @@ from agents.anyplot.data.parse import (
     without_context,
 )
 from agents.anyplot.data.prepare import Operation, apply_operations
-from agents.anyplot.data.roles import DataRole
 from agents.anyplot.opening import NOTES_INSTRUCTION_WARNING, NOTES_REFUSED_WARNING, NOTES_UNCHECKED_WARNING
 from agents.anyplot.schemas import (
     MAX_CELL_CHARS,
@@ -47,6 +46,7 @@ from agents.anyplot.schemas import (
     MAX_TOP_VALUES,
     MAX_WARNINGS,
 )
+from core.spec_roles import DataRole
 
 
 # Named escapes keep invisible and combining characters visible in the source.

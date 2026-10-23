@@ -20,9 +20,10 @@ from typing import Any, Self
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from core.spec_roles import DataRole, parse_roles
+
 from .data.bindings import BindingCheck, check_bindings, resolve_role
 from .data.computed import mark_computed
-from .data.roles import DataRole, parse_roles
 from .data.signs import mark_non_negative
 from .language import DEFAULT_LANGUAGE, SOURCES, LanguageSource, is_valid
 from .schemas import MAX_CODE_CHARS, Binding, DatasetProfile

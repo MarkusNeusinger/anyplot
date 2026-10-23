@@ -10,7 +10,8 @@ import json
 from collections.abc import Iterator, Sequence
 from typing import Any
 
-from .data.roles import DataRole
+from core.spec_roles import DataRole
+
 from .policy import fence
 from .schemas import MAX_TOP_VALUES, Binding, DatasetProfile
 from .session_state import SessionView

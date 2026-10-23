@@ -79,11 +79,16 @@ anyplot/
 │
 ├── core/                              # Shared business logic
 │   ├── __init__.py
+│   ├── adaptability.py                # Adaptability checker (adaptable-code convention)
+│   ├── adaptability_mirror.py         # Builds the checker's single-file mirror
 │   ├── canvas.py                      # Canvas gate + PNG auto-reject checks
 │   ├── config.py                      # Configuration (.env-based)
 │   ├── constants.py                   # Library metadata, constants
 │   ├── defects.py                     # Review feedback grammar (defect lines)
 │   ├── images.py                      # Image processing utilities
+│   ├── perturbation.py                # Perturbed tables for the smoke run
+│   ├── render_identity.py             # Pixel difference between two renders
+│   ├── spec_roles.py                  # Data roles, data shape and color role of a spec
 │   ├── utils.py                       # General utilities
 │   ├── database/                      # Database layer
 │   │   ├── __init__.py
@@ -136,8 +141,7 @@ anyplot/
 │       ├── settings.py                # AgentSettings (AGENT_* variables)
 │       ├── data/                      # Deterministic data handling, no ADK import
 │       │   ├── parse.py               # Pasted text -> canonical data.csv + DatasetProfile
-│       │   ├── roles.py               # Data roles from a spec's ## Data bullets
-│       │   ├── bindings.py            # Default role-to-column bindings and their checks
+│       │   ├── bindings.py            # Default role-to-column bindings and their checks (roles: core/spec_roles.py)
 │       │   └── store.py               # Session-scoped in-memory dataset store
 │       └── code/                      # Deterministic code handling, no ADK import
 │           ├── validate.py            # Two-profile AST validator: SECURITY and ADAPTATION
@@ -504,6 +508,11 @@ plt.savefig('plot.png', dpi=300)
 - `database/repositories.py` - Repository pattern for data access
 - `canvas.py` - Canvas gate (3200×1800 or 2400×2400 within ±16 px, the VQ-05 defect line) and the PNG auto-reject checks AR-04 and AR-07; `python -m core.canvas <png>` runs the gate
 - `defects.py` - Review feedback grammar: defect and suggestion lines, the criterion IDs, spec characteristics, and `format_defect`; `automation/scripts/regen_gate.py` keeps a parity-tested copy
+- `spec_roles.py` - Data roles from a spec's `## Data` bullets, the data shape (table, matrix, network, generated, excluded) and the color-driving role; shared by the agent and the adaptability checker
+- `adaptability.py` - Adaptability checker for Python implementations ([Adaptable catalogue code](../concepts/adaptable-code.md)): the record, the CQ-01 defect lines, and the block and constant substitution; `python -m core.adaptability report plots/` prints the catalogue baseline
+- `adaptability_mirror.py` - Builds `automation/scripts/adaptability_check.py`, the checker as one standard-library file; `uv run python -m core.adaptability_mirror` after a change to `adaptability.py` or `spec_roles.py`
+- `perturbation.py` - The perturbation smoke run's tables (renamed, more and fewer categories, one group, fewer and more rows, scaled values) and the source to run on each
+- `render_identity.py` - Share of differing pixels between two renders against a bound (0.5 % per theme); `python -m core.render_identity old.png new.png`
 
 ---
 
@@ -517,6 +526,7 @@ plt.savefig('plot.png', dpi=300)
 - `scripts/label_manager.py` - Label operations and transitions
 - `scripts/workflow_cli.py` - CLI interface for workflow steps
 - `scripts/regen_gate.py` - Regen gate: keeps or replaces a regeneration (used by impl-review.yml)
+- `scripts/adaptability_check.py` - The adaptability checker as one generated standard-library file for the workflow runner (wired into the pipeline by the adaptable-code rules PR)
 - `scripts/regen_writeback.py` - Stores a kept regeneration's re-score as the live implementation's review (used by impl-review.yml and impl-merge.yml)
 - `gcp/budget-guard/` - Cloud Run function that disables the Vertex AI API when its Cloud Billing budget is reached; a deploy unit, not a Python package (see [GCP budget guard](gcp-budget-guard.md))
 

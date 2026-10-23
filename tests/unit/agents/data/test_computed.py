@@ -8,9 +8,9 @@ from agents.anyplot.briefs import describe_role
 from agents.anyplot.data.bindings import check_bindings, default_bindings
 from agents.anyplot.data.computed import ALIASES, COMPUTED_ROLES, name_match, window_line
 from agents.anyplot.data.parse import parse_dataset
-from agents.anyplot.data.roles import DataRole
 from agents.anyplot.dev_fixture import snapshot_from_repo
 from agents.anyplot.schemas import Binding
+from core.spec_roles import DataRole
 
 
 def roles_of(spec_id: str) -> list[DataRole]:

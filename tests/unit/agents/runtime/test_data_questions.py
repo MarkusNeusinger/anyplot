@@ -19,7 +19,6 @@ import pytest
 
 from agents.anyplot.data.parse import parse_dataset
 from agents.anyplot.data.query import MAX_QUERY_COLUMNS, MAX_QUERY_ROWS, run_query
-from agents.anyplot.data.roles import DataRole
 from agents.anyplot.dev_fixture import snapshot_from_repo
 from agents.anyplot.pipeline import (
     EXPECTED_HEADING,
@@ -47,6 +46,7 @@ from agents.anyplot.session_state import (
 from agents.anyplot.settings import get_settings
 from agents.anyplot.tools.session import query_data, query_result, set_bindings
 from agents.main import Runtime, app, get_runtime
+from core.spec_roles import DataRole
 
 from .fakes import SCATTER_PLAN, VERDICT_OK, ScriptedLlm
 from .test_service_flow import (
