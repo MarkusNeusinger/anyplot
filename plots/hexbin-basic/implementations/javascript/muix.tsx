@@ -3,10 +3,6 @@
 // Library: muix 9.16.0 | JavaScript 22.23.3
 // Quality: 84/100 | Updated: 2026-10-23
 //# anyplot-orientation: square
-// anyplot.ai
-// hexbin-basic: Basic Hexbin Plot
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-08-25
 
 import { ScatterChart } from "@mui/x-charts/ScatterChart";
 import { ContinuousColorLegend } from "@mui/x-charts/ChartsLegend";
@@ -80,104 +76,64 @@ const HEX_RADIUS = DOMAIN * HEX_RADIUS_SHARE;
 const hexDx = HEX_RADIUS * Math.sqrt(3);
 const hexDy = HEX_RADIUS * 1.5;
 
-function hexBin(rawPoints: typeof data) {
-  const binsById = new Map<
-    string,
-    { id: string; cx: number; cy: number; count: number }
-  >();
-  rawPoints.forEach((row) => {
-    const px = row[X];
-    const py = row[Y];
-    const py1 = py / hexDy;
-    let pj = Math.round(py1);
-    const px1 = px / hexDx - (pj & 1) / 2;
-    let pi = Math.round(px1);
-    const py2 = py1 - pj;
-    if (Math.abs(py2) * 3 > 1) {
-      const px2 = px1 - pi;
-      const pi2 = pi + (px1 < pi ? -1 : 1) / 2;
-      const pj2 = pj + (py1 < pj ? -1 : 1);
-      const px3 = px1 - pi2;
-      const py3 = py2 - pj2;
-      if (px2 * px2 + py2 * py2 > px3 * px3 + py3 * py3) {
-        pi = pi2 + (pj & 1 ? 1 : -1) / 2;
-        pj = pj2;
-      }
+// Hexagonal binning: count the points per pointy-top hex cell (id "col-row")
+const countsById = new Map<string, number>();
+data.forEach((row) => {
+  const py1 = row[Y] / hexDy;
+  let pj = Math.round(py1);
+  const px1 = row[X] / hexDx - (pj & 1) / 2;
+  let pi = Math.round(px1);
+  const py2 = py1 - pj;
+  if (Math.abs(py2) * 3 > 1) {
+    const px2 = px1 - pi;
+    const pi2 = pi + (px1 < pi ? -1 : 1) / 2;
+    const pj2 = pj + (py1 < pj ? -1 : 1);
+    const px3 = px1 - pi2;
+    const py3 = py2 - pj2;
+    if (px2 * px2 + py2 * py2 > px3 * px3 + py3 * py3) {
+      pi = pi2 + (pj & 1 ? 1 : -1) / 2;
+      pj = pj2;
     }
-    const id = `${pi}-${pj}`;
-    const existing = binsById.get(id);
-    if (existing) {
-      existing.count += 1;
-    } else {
-      binsById.set(id, {
-        id,
-        cx: (pi + (pj & 1) / 2) * hexDx,
-        cy: pj * hexDy,
-        count: 1,
-      });
-    }
-  });
-  return Array.from(binsById.values());
-}
+  }
+  const id = `${pi}-${pj}`;
+  countsById.set(id, (countsById.get(id) ?? 0) + 1);
+});
+const binCountMax = Math.max(...countsById.values());
+const binCountMin = Math.min(...countsById.values());
 
-const hexBins = hexBin(data);
-const binCountMax = Math.max(...hexBins.map((b) => b.count));
-const binCountMin = Math.min(...hexBins.map((b) => b.count));
+// Full hex grid over the domain, so empty cells show in a faint tint
+const hexBinPoints: { id: string; x: number; y: number; z: number; isEmpty: boolean }[] = [];
+for (let pj = Math.floor(-DOMAIN / hexDy) - 1; pj <= Math.ceil(DOMAIN / hexDy) + 1; pj += 1) {
+  const offset = (pj & 1) / 2;
+  for (let pi = Math.floor(-DOMAIN / hexDx - offset) - 1; pi <= Math.ceil(DOMAIN / hexDx - offset) + 1; pi += 1) {
+    const cx = (pi + offset) * hexDx;
+    const cy = pj * hexDy;
+    if (Math.abs(cx) > DOMAIN + HEX_RADIUS || Math.abs(cy) > DOMAIN + HEX_RADIUS) continue;
+    const count = countsById.get(`${pi}-${pj}`) ?? 0;
+    hexBinPoints.push({ id: `${pi}-${pj}`, x: cx, y: cy, z: count || binCountMin, isEmpty: count === 0 });
+  }
+}
 
 // Color on a log scale so both dense cores and sparse fringes remain distinct.
 const colorDomainMin = Math.log1p(binCountMin);
 const colorDomainMax = Math.log1p(binCountMax);
-
-function mixHex(hexA: string, hexB: string, ratio: number) {
-  const a = parseInt(hexA.slice(1), 16);
-  const b = parseInt(hexB.slice(1), 16);
-  const channel = (shift: number) => {
-    const av = (a >> shift) & 255;
-    const bv = (b >> shift) & 255;
-    return Math.round(av + (bv - av) * Math.min(1, Math.max(0, ratio)));
-  };
-  return `#${[16, 8, 0].map((shift) => channel(shift).toString(16).padStart(2, "0")).join("")}`;
-}
+const seqStart = parseInt(t.seq[0].slice(1), 16);
+const seqEnd = parseInt(t.seq[1].slice(1), 16);
 
 function logSequentialColor(ratio: number) {
   const count = binCountMin + ratio * (binCountMax - binCountMin);
-  const logRatio =
-    (Math.log1p(count) - colorDomainMin) /
-    (colorDomainMax - colorDomainMin || 1);
-  return mixHex(t.seq[0], t.seq[1], logRatio);
+  const logRatio = Math.min(
+    1,
+    Math.max(0, (Math.log1p(count) - colorDomainMin) / (colorDomainMax - colorDomainMin || 1)),
+  );
+  return `#${[16, 8, 0]
+    .map((shift) => {
+      const a = (seqStart >> shift) & 255;
+      const b = (seqEnd >> shift) & 255;
+      return Math.round(a + (b - a) * logRatio).toString(16).padStart(2, "0");
+    })
+    .join("")}`;
 }
-
-function fullHexGrid() {
-  const cells: { id: string; cx: number; cy: number }[] = [];
-  const rowPad = 1;
-  const pjMin = Math.floor(-DOMAIN / hexDy) - rowPad;
-  const pjMax = Math.ceil(DOMAIN / hexDy) + rowPad;
-  for (let pj = pjMin; pj <= pjMax; pj += 1) {
-    const offset = (pj & 1) / 2;
-    const piMin = Math.floor(-DOMAIN / hexDx - offset) - rowPad;
-    const piMax = Math.ceil(DOMAIN / hexDx - offset) + rowPad;
-    for (let pi = piMin; pi <= piMax; pi += 1) {
-      const cx = (pi + (pj & 1) / 2) * hexDx;
-      const cy = pj * hexDy;
-      if (Math.abs(cx) > DOMAIN + HEX_RADIUS || Math.abs(cy) > DOMAIN + HEX_RADIUS) continue;
-      cells.push({ id: `${pi}-${pj}`, cx, cy });
-    }
-  }
-  return cells;
-}
-
-const occupiedById = new Map(hexBins.map((bin) => [bin.id, bin]));
-const hexBinPoints = fullHexGrid().map((cell) => {
-  const occupied = occupiedById.get(cell.id);
-  const count = occupied ? occupied.count : 0;
-  return {
-    id: cell.id,
-    x: cell.cx,
-    y: cell.cy,
-    z: count > 0 ? count : binCountMin,
-    isEmpty: count === 0,
-  };
-});
 
 function HexCell(props: any) {
   const { series, xScale, yScale, colorGetter, color } = props;
@@ -293,7 +249,8 @@ export default function Chart() {
             },
           },
         ]}
-        margin={{ top: 30, right: 134, bottom: 24, left: 80 }}
+        // right margin sized so the plot area is square: equal px per metre keeps hexagons regular
+        margin={{ top: 30, right: 80, bottom: 24, left: 80 }}
         slots={{ scatter: HexCell, legend: ContinuousColorLegend }}
         slotProps={{
           legend: {
