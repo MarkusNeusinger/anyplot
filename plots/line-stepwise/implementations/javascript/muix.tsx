@@ -41,6 +41,11 @@ const data = (() => {
 const hoursOfDay = data.map((d) => d[X]);
 const setpoints = data.map((d) => d[Y]);
 
+// Unit from the y column's name, e.g. "Setpoint (°F)" -> "°F"
+const Y_UNIT = Y.match(/\(([^)]*)\)\s*$/)?.[1] ?? "";
+const formatY = (v: number) =>
+  Y_UNIT.startsWith("°") || Y_UNIT === "%" ? `${v}${Y_UNIT}` : `${v} ${Y_UNIT}`.trim();
+
 function formatHour(h: number) {
   const wholeHour = Math.floor(h);
   const minutes = Math.round((h - wholeHour) * 60);
@@ -55,8 +60,9 @@ const X_MIN = Math.floor(Math.min(...hoursOfDay));
 const X_MAX = Math.ceil(Math.max(...hoursOfDay));
 const MIN_SETPOINT = Math.min(...setpoints);
 const PEAK_SETPOINT = Math.max(...setpoints);
-const Y_MIN = Math.floor(MIN_SETPOINT - 7);
-const Y_MAX = Math.ceil(PEAK_SETPOINT + 6);
+const Y_SPAN = PEAK_SETPOINT - MIN_SETPOINT || 1;
+const Y_MIN = Math.floor(MIN_SETPOINT - 0.7 * Y_SPAN);
+const Y_MAX = Math.ceil(PEAK_SETPOINT + 0.6 * Y_SPAN);
 
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
@@ -80,7 +86,7 @@ export default function Chart() {
             curve: "step",
             area: true,
             showMark: false,
-            valueFormatter: (v) => `${v}°F`,
+            valueFormatter: (v) => (v == null ? "" : formatY(v)),
           },
         ]}
         xAxis={[
@@ -125,7 +131,7 @@ export default function Chart() {
         </defs>
         <ChartsReferenceLine
           y={PEAK_SETPOINT}
-          label={`Peak ${PEAK_SETPOINT}°F · evening comfort`}
+          label={`Peak ${formatY(PEAK_SETPOINT)}`}
           labelAlign="start"
           lineStyle={{ stroke: t.ink, strokeDasharray: "6 4", strokeOpacity: 0.5 }}
           labelStyle={{ fill: t.inkSoft, fontSize: 13 }}
