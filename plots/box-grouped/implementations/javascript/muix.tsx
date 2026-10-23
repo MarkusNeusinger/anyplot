@@ -15,6 +15,8 @@ const IQR_FENCE_MULTIPLIER = 1.5;
 const Y_PAD_SHARE = 0.08;
 const GROUP_WIDTH_SHARE = 0.84;
 const BOX_SLOT_SHARE = 0.72;
+const BOX_FILL_ALPHA = 0.32;
+const BOX_STROKE_PX = 2.2;
 const HEADER_H = 106;
 
 // Columns: set these to your data's column names
@@ -97,26 +99,13 @@ const boxGroups = categories.map((cat) => ({
       return { subcategory: sub, stats: null };
     }
 
-    const q1Pos = (n - 1) * 0.25;
-    const q1Base = Math.floor(q1Pos);
-    const q1 =
-      q1Base + 1 < n
-        ? sorted[q1Base] + (q1Pos - q1Base) * (sorted[q1Base + 1] - sorted[q1Base])
-        : sorted[q1Base];
-
-    const medPos = (n - 1) * 0.5;
-    const medBase = Math.floor(medPos);
-    const median =
-      medBase + 1 < n
-        ? sorted[medBase] + (medPos - medBase) * (sorted[medBase + 1] - sorted[medBase])
-        : sorted[medBase];
-
-    const q3Pos = (n - 1) * 0.75;
-    const q3Base = Math.floor(q3Pos);
-    const q3 =
-      q3Base + 1 < n
-        ? sorted[q3Base] + (q3Pos - q3Base) * (sorted[q3Base + 1] - sorted[q3Base])
-        : sorted[q3Base];
+    const [q1, median, q3] = [0.25, 0.5, 0.75].map((p) => {
+      const pos = (n - 1) * p;
+      const base = Math.floor(pos);
+      return base + 1 < n
+        ? sorted[base] + (pos - base) * (sorted[base + 1] - sorted[base])
+        : sorted[base];
+    });
 
     const iqr = q3 - q1;
     const lowerFence = q1 - IQR_FENCE_MULTIPLIER * iqr;
@@ -130,8 +119,8 @@ const boxGroups = categories.map((cat) => ({
         q1,
         median,
         q3,
-        whiskerMin: inliers.length ? inliers[0] : q1,
-        whiskerMax: inliers.length ? inliers[inliers.length - 1] : q3,
+        whiskerMin: inliers[0],
+        whiskerMax: inliers[inliers.length - 1],
         outliers,
       },
     };
@@ -146,34 +135,30 @@ const yMin = dataMin - valSpan * Y_PAD_SHARE;
 const yMax = dataMax + valSpan * Y_PAD_SHARE;
 
 const TITLE = "box-grouped · javascript · muix · anyplot.ai";
-const SUBTITLE = `${data.length} observations across ${categories.length} ${CATEGORY.toLowerCase()}s × ${subcategories.length} ${SUBCATEGORY.toLowerCase()}s · Whiskers at ${IQR_FENCE_MULTIPLIER}×IQR`;
+const SUBTITLE = `${data.length} observations · ${CATEGORY}: ${categories.length} · ${SUBCATEGORY}: ${subcategories.length} · Whiskers at ${IQR_FENCE_MULTIPLIER}×IQR`;
 
 function BoxWhiskerLayer() {
   const xScale = useXScale("dept");
   const yScale = useYScale("val");
-  if (!xScale || !yScale || !("bandwidth" in xScale)) return null;
-
   const bandwidth = xScale.bandwidth();
   const groupWidth = bandwidth * GROUP_WIDTH_SHARE;
-  const boxSlot = groupWidth / Math.max(1, subcategories.length);
+  const boxSlot = groupWidth / subcategories.length;
   const boxWidth = boxSlot * BOX_SLOT_SHARE;
   const capWidth = boxWidth * 0.62;
 
   return (
     <g>
       {boxGroups.map((group) => {
-        const bandStart = xScale(group.category);
-        if (bandStart === undefined) return null;
-        const groupStart = bandStart + (bandwidth - groupWidth) / 2;
+        const groupStart = xScale(group.category) + (bandwidth - groupWidth) / 2;
         return group.boxes.map((box, subIdx) => {
           if (!box.stats) return null;
           const cx = groupStart + boxSlot * (subIdx + 0.5);
           const color = t.palette[subIdx];
-          const yQ1 = yScale(box.stats.q1) ?? 0;
-          const yQ3 = yScale(box.stats.q3) ?? 0;
-          const yMedian = yScale(box.stats.median) ?? 0;
-          const yWhiskerHigh = yScale(box.stats.whiskerMax) ?? 0;
-          const yWhiskerLow = yScale(box.stats.whiskerMin) ?? 0;
+          const yQ1 = yScale(box.stats.q1);
+          const yQ3 = yScale(box.stats.q3);
+          const yMedian = yScale(box.stats.median);
+          const yWhiskerHigh = yScale(box.stats.whiskerMax);
+          const yWhiskerLow = yScale(box.stats.whiskerMin);
           return (
             <g key={`${group.category}-${box.subcategory}`}>
               <line
@@ -219,9 +204,9 @@ function BoxWhiskerLayer() {
                 height={Math.max(yQ1 - yQ3, 1)}
                 rx={3}
                 fill={color}
-                fillOpacity={0.32}
+                fillOpacity={BOX_FILL_ALPHA}
                 stroke={color}
-                strokeWidth={2.2}
+                strokeWidth={BOX_STROKE_PX}
               />
               <line
                 x1={cx - boxWidth / 2}
@@ -236,7 +221,7 @@ function BoxWhiskerLayer() {
                 <circle
                   key={outlierIndex}
                   cx={cx}
-                  cy={yScale(value) ?? 0}
+                  cy={yScale(value)}
                   r={5}
                   fill={t.pageBg}
                   stroke={color}
@@ -286,15 +271,19 @@ export default function Chart() {
               key={sub}
               style={{ display: "flex", alignItems: "center", gap: 8 }}
             >
-              <span
-                style={{
-                  width: 14,
-                  height: 14,
-                  borderRadius: 3,
-                  background: t.palette[i],
-                  display: "inline-block",
-                }}
-              />
+              <svg width="16" height="16" style={{ display: "inline-block" }}>
+                <rect
+                  x={BOX_STROKE_PX / 2}
+                  y={BOX_STROKE_PX / 2}
+                  width={16 - BOX_STROKE_PX}
+                  height={16 - BOX_STROKE_PX}
+                  rx={3}
+                  fill={t.palette[i]}
+                  fillOpacity={BOX_FILL_ALPHA}
+                  stroke={t.palette[i]}
+                  strokeWidth={BOX_STROKE_PX}
+                />
+              </svg>
               <span style={{ fontSize: 14, color: t.inkSoft }}>{sub}</span>
             </div>
           ))}
