@@ -939,8 +939,12 @@ class AdaptAssessment:
     ``static``, ``smoke``), ``identity`` gives each theme's differing-pixel
     fraction (None on a size change; the whole map None without a usable
     pair), ``version`` is the new record's ``checker_version``. ``regression``
-    -- a predecessor that passes and a new source that fails -- is set
-    whenever both records are valid, whatever ``why`` says.
+    is set whenever both records are valid, whatever ``why`` says, in two
+    cases (``adapt_regression``): a predecessor that passes and a new source
+    that fails, or a predecessor whose static check passes and whose smoke
+    run is not known (status ``unknown``) and a new source whose static check
+    fails. The second needs no smoke run: the static check alone already
+    shows that converted code was unconverted.
     """
 
     why: str
@@ -957,6 +961,11 @@ class AdaptAssessment:
     @property
     def counted(self) -> bool:
         return self.why == ADAPT_ROUTE
+
+    @property
+    def static_regression(self) -> bool:
+        """The regression rests on the static check alone (the predecessor's smoke run is not known)."""
+        return self.regression and self.prev is not None and self.prev.get("status") != "pass"
 
     def to_record(self) -> dict[str, Any]:
         """The gate record's ``adapt`` block: tokens, numbers, booleans and nulls only."""
@@ -1273,11 +1282,27 @@ def adapt_assess(inp: GateInput, review: Mapping[str, Any] | None) -> AdaptAsses
         prev=prev,
         new=new,
         identity=_identity_fractions(adapt.pair) if usable_pair else None,
-        regression=prev is not None and new is not None and prev["status"] == "pass" and new["status"] == "fail",
+        regression=_adapt_regression(prev, new),
         prev_lines=prev_lines,
         new_lines=new_lines,
         requested=adapt.requested,
     )
+
+
+def _adapt_regression(prev: Mapping[str, str | None] | None, new: Mapping[str, str | None] | None) -> bool:
+    """Converted code that this regeneration unconverted, from two valid records' summaries.
+
+    Either the predecessor passes and the new source fails, or the
+    predecessor's static check passes while its smoke run is not known
+    (``unknown``: missing, stale or skipped) and the new source's static check
+    fails. A predecessor whose own smoke run failed passes nothing, so a
+    failing new source is no regression from it.
+    """
+    if prev is None or new is None or new["status"] != "fail":
+        return False
+    if prev["status"] == "pass":
+        return True
+    return prev["status"] == "unknown" and prev["static"] == "pass" and new["static"] == "fail"
 
 
 def _review_skipped(inp: GateInput) -> bool:
@@ -1341,13 +1366,20 @@ ADAPT_WHY_TEXT = {
 }
 
 
+def adapt_regression_text(adapt: AdaptAssessment) -> str:
+    """What the adapt regression rests on: both checks, or the static check alone."""
+    if adapt.static_regression:
+        return (
+            "the predecessor passes the static adaptability check (its smoke run is not known) "
+            "and the new source fails it"
+        )
+    return "the predecessor passes the adaptability check and the new source fails it"
+
+
 def adapt_summary_line(adapt: AdaptAssessment) -> str:
     """``**Adapt route:** …`` for the PR comment; fixed text, tokens and numbers only."""
     if adapt.regression:
-        text = (
-            "regression: the predecessor passes the adaptability check and the new source fails it, "
-            "so the live implementation stays"
-        )
+        text = f"regression: {adapt_regression_text(adapt)}, so the live implementation stays"
     elif adapt.counted:
         review = "no review ran" if adapt.review == ADAPT_REVIEW_SKIPPED else "the review's floor holds"
         text = f"counted: {adapt_route_text(adapt)}; {review}"
@@ -1603,7 +1635,7 @@ def decide(inp: GateInput) -> GateResult:
         result.new_lines = len(inp.new_source.splitlines())
     if result.verdict == MERGE and adapt.regression:
         result.reason = (
-            "adapt regression: the predecessor passes the adaptability check and the new source fails it, "
+            f"adapt regression: {adapt_regression_text(adapt)}, "
             f"so the live implementation stays (without it: {result.code})"
         )
         result.verdict, result.code = KEEP, ADAPT_REGRESSION

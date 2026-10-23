@@ -130,7 +130,8 @@ record's `why`:
 `below_tolerance` into a merge with code `adapt_identity` when the route counts.
 With `--review-skipped` and no score, it merges on the route before the score
 checks. A merge whose predecessor passes and whose new source fails becomes keep
-with `adapt_regression`. `adapt-route` writes `adapt_route`, `adapt_why`,
+with `adapt_regression`, and so does one whose predecessor passes the static
+check with an unknown smoke run while the new source fails the static check. `adapt-route` writes `adapt_route`, `adapt_why`,
 `adapt_prev`, and `adapt_new` before the review, and always exits 0. The record
 gains `adapt` (`AdaptAssessment.to_record`, checked by `validate_record`), the
 outputs gain `adapt_counted` and `adapt_why`, and with an adapt flag the notice

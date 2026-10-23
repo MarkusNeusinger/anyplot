@@ -3385,13 +3385,16 @@ class TestAdaptRoute:
 
     def test_the_regression_is_set_whenever_both_records_are_valid(self):
         regression = adapt_assess(_adapt_inp(adapt=_adapt(prev="pass", new="fail", pair=None)), None)
-        assert (regression.regression, regression.why) == (True, "prev_passes")
+        assert (regression.regression, regression.static_regression, regression.why) == (True, False, "prev_passes")
+        # The fixture's `unknown` predecessor passes the static check and has no smoke run.
+        static = adapt_assess(_adapt_inp(adapt=_adapt(prev="unknown", new="fail")), None)
+        assert (static.regression, static.static_regression, static.why) == (True, True, "prev_unknown")
         for adapt in (
             _adapt(prev="pass", new="fail", language="r"),
             _adapt(prev="pass", new=_adapt_record("new", "fail", v=2)),
             _adapt(prev="pass", new=None),
             _adapt(prev="pass", new="unknown"),
-            _adapt(prev="unknown", new="fail"),
+            _adapt(prev=None, new="fail"),
         ):
             assert adapt_assess(_adapt_inp(adapt=adapt), None).regression is False
 
@@ -3615,11 +3618,55 @@ class TestAdaptRegression:
             {"prev": "pass", "new": None},
             {"prev": "pass", "new": "fail", "language": "julia"},
             {"prev": _adapt_record("prev", "pass", lib="seaborn"), "new": "fail"},
+            {"prev": "unknown", "new": "unknown"},
+            {"prev": "unknown", "new": "pass"},
         ],
     )
     def test_no_regression_without_two_valid_records_saying_so(self, adapt):
         result = decide(_adapt_inp(regen=_regen(), adapt=_adapt(**adapt)))
         assert (result.verdict, result.code) == (MERGE, "merge")
+
+    @pytest.mark.parametrize(("smoke", "smoke_why"), [("missing", "-"), ("stale", "-"), ("skipped", "runner_error")])
+    def test_a_static_only_regression_needs_no_smoke_run(self, smoke, smoke_why):
+        """The predecessor's static check passes, its smoke run is not known, the new static check fails."""
+        prev = _adapt_record("prev", "unknown")
+        prev["smoke"] = {**prev["smoke"], "status": smoke, "why": smoke_why}
+        result = decide(_adapt_inp(regen=_regen(), adapt=_adapt(prev=prev, new="fail")))
+        assert (result.verdict, result.code) == (KEEP, "adapt_regression")
+        assert result.reason.startswith(
+            "adapt regression: the predecessor passes the static adaptability check (its smoke run is not known) "
+            "and the new source fails it, so the live implementation stays"
+        )
+        assert result.reason.endswith("(without it: merge)")
+        assert "**Adapt route:** regression: the predecessor passes the static adaptability check" in (
+            render_summary(result, "94", 85)
+        )
+
+    def test_a_static_only_regression_turns_a_code_path_merge_into_keep(self):
+        result = decide(_code_inp(spec_id=ADAPT_SPEC, adapt=_adapt(prev="unknown", new="fail")))
+        assert (result.verdict, result.code) == (KEEP, "adapt_regression")
+
+    @pytest.mark.parametrize(
+        ("prev", "new"),
+        [
+            # The new source passes the static check; only its smoke run fails, against an unknown one.
+            (("unknown", "pass", "missing"), ("fail", "pass", "fail")),
+            # The predecessor's static check errored: nothing is known about it.
+            (("unknown", "error", "pass"), ("fail", "fail", "skipped")),
+            # The predecessor's own smoke run failed: it passes nothing.
+            (("fail", "pass", "fail"), ("fail", "fail", "skipped")),
+        ],
+    )
+    def test_no_static_only_regression_without_certainty(self, prev, new):
+        records = {}
+        for side, (status, static, smoke) in (("prev", prev), ("new", new)):
+            record = _adapt_record(side, status)
+            record["static"] = {**record["static"], "status": static}
+            record["smoke"] = {**record["smoke"], "status": smoke}
+            records[side] = record
+        result = decide(_adapt_inp(regen=_regen(), adapt=_adapt(**records)))
+        assert (result.verdict, result.code) == (MERGE, "merge")
+        assert result.adapt is not None and not result.adapt.regression
 
 
 class TestAdaptRecord:

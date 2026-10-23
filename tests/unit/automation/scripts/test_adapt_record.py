@@ -401,6 +401,33 @@ class TestRecord:
             f"lines={len(SOURCE.splitlines())} why=static_fail"
         )
 
+    @pytest.mark.parametrize("prev_smoke", [None, "stale"])
+    def test_a_static_only_regression_reaches_the_gate(self, tmp_path, prev_smoke):
+        """A predecessor without a fresh smoke run that passes the static check, a new file that fails it.
+
+        The predecessor's record is `unknown` and keeps `static.status: pass`; the gate reads that as a
+        certain regression without any smoke run.
+        """
+        (tmp_path / "prev").mkdir()
+        (tmp_path / "new").mkdir()
+        smoke = _smoke("other code") if prev_smoke == "stale" else None
+        prev = _record(tmp_path / "prev", side="prev", smoke=smoke)
+        why = f"smoke_{prev_smoke or 'missing'}"
+        assert (prev["status"], prev["why"], prev["static"]["status"]) == ("unknown", why, "pass")
+        static_fail = {**STATIC_PASS, "status": "fail"}
+        new = _record(tmp_path / "new", static=static_fail, exit_code=1, smoke=_smoke(SOURCE))
+        assert (new["status"], new["static"]["status"]) == ("fail", "fail")
+        inp = regen_gate.GateInput(
+            spec_id="bar-grouped",
+            score=None,
+            regen=None,
+            adapt=regen_gate.AdaptInput(
+                library="matplotlib", language="python", new=new, prev=prev, new_error=None, prev_error=None
+            ),
+        )
+        assessed = regen_gate.adapt_assess(inp, None)
+        assert (assessed.regression, assessed.static_regression) == (True, True)
+
     def test_a_record_without_any_input(self, tmp_path):
         record = _record(tmp_path, static=None, exit_code=2, source=None)
         assert (record["status"], record["why"]) == ("unknown", "static_error")
