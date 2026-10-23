@@ -9,4 +9,7 @@
   `gemini/*` branch is gone. The PR body's `**Generation:**` line, the adopt
   commit and the run notices name the model, and every retry forwards it like
   `source_ref`. The value is checked as a model name and ignored with a
-  warning without `source_ref`. (#12297)
+  warning without `source_ref`. Both workflows now reject a malformed
+  `source_ref` or `source_model` without echoing it, since a newline in a
+  dispatch value would start a workflow command, and `bulk-generate.yml` does
+  so before its first dispatch. (#12297)

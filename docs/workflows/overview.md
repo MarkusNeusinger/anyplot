@@ -446,9 +446,11 @@ gh workflow run bulk-generate.yml -f specification_id=all -f library=muix \
 
 Name the ref as the repository knows it, such as `main` or `gemini/muix-9`. A
 leading `origin/` is dropped. `source_model` is optional and takes a model
-name of letters, digits, `.`, `_`, and `-`, at most 40 characters. Any other
-value stops the run. Without `source_ref`, the run ignores `source_model` with
-a warning. An adopted run differs from a generation in these ways:
+name of letters, digits, `.`, `_`, and `-`, at most 40 characters. Both
+workflows check both inputs before they print them, and any other value stops
+the run, so a `bulk-generate.yml` run with a malformed value stops before its
+first dispatch. Without `source_ref`, the run ignores `source_model` with a
+warning. An adopted run differs from a generation in these ways:
 
 - **The file comes from the ref.** The step "Adopt implementation from source
   ref" fetches the ref and takes exactly

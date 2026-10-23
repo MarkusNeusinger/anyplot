@@ -154,12 +154,13 @@ jobs:
           # dropped. The value reaches git, the PR body and the metadata, so
           # only branch, tag and SHA characters pass. A non-empty input never
           # becomes an empty ref: the REGEN_GATE expressions read the raw
-          # input, so it must always mean adopt mode.
+          # input, so it must always mean adopt mode. A rejected value is
+          # never echoed: a newline in it would start a workflow command.
           SOURCE_REF="${SOURCE_REF_INPUT:-}"
           SOURCE_REF="${SOURCE_REF#origin/}"
           if [ -n "${SOURCE_REF_INPUT:-}" ]; then
             if ! [[ "$SOURCE_REF" =~ ^[A-Za-z0-9][A-Za-z0-9._/-]{0,79}$ ]] || [[ "$SOURCE_REF" == *..* ]]; then
-              echo "::error::source_ref '${SOURCE_REF}' is not a branch, tag or commit SHA (letters, digits, . _ / -, at most 80 characters)"
+              echo "::error::source_ref is not a branch, tag or commit SHA (letters, digits, . _ / -, at most 80 characters)"
               exit 1
             fi
           fi
@@ -167,13 +168,14 @@ jobs:
           # The model that wrote the adopted file outside the pipeline, such
           # as gemini-4-argon. It becomes the metadata's generated_by and
           # reaches the PR body, so only model-name characters pass, checked
-          # before anything echoes it. Without source_ref nothing is adopted,
-          # so the value is dropped with a warning instead of naming a model
-          # that never wrote this run's code.
+          # before anything echoes it, and a rejected value is not echoed at
+          # all. Without source_ref nothing is adopted, so the value is
+          # dropped with a warning instead of naming a model that never wrote
+          # this run's code.
           SOURCE_MODEL="${SOURCE_MODEL_INPUT:-}"
           if [ -n "$SOURCE_MODEL" ]; then
             if ! [[ "$SOURCE_MODEL" =~ ^[A-Za-z0-9][A-Za-z0-9._-]{0,39}$ ]]; then
-              echo "::error::source_model '${SOURCE_MODEL}' is not a model name (letters, digits, . _ -, at most 40 characters)"
+              echo "::error::source_model is not a model name (letters, digits, . _ -, at most 40 characters)"
               exit 1
             fi
             if [ -z "$SOURCE_REF" ]; then

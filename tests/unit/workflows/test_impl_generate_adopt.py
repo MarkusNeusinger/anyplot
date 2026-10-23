@@ -47,6 +47,23 @@ REGEN_GATE_EXPR = (
     "${{ (github.event_name == 'workflow_dispatch' && (inputs.regen_gate == false || inputs.source_ref != ''))"
     " && 'false' || 'true' }}"
 )
+# Values both workflows reject without echoing them. The newline ones would inject a
+# workflow command into the runner's output if the error line printed them.
+BAD_REFS = [
+    "gemini/muix 9",
+    "-x",
+    "../main",
+    "a..b",
+    "$(id)",
+    "main;id",
+    "`id`",
+    "a'b",
+    "x" * 81,
+    "main\n::error::injected",
+]
+BAD_MODELS = ["gemini 4", "-x", ".x", "a/b", "$(id)", "a;id", "`id`", "a'b", "a:b", "G" * 41, "x\n::warning::injected"]
+REF_PATTERN = "^[A-Za-z0-9][A-Za-z0-9._/-]{0,79}$"
+MODEL_PATTERN = "^[A-Za-z0-9][A-Za-z0-9._-]{0,39}$"
 
 SPEC = "spec-a"
 LANG_EXT = {
@@ -498,14 +515,15 @@ class TestExtractInputs:
         assert result.returncode == 0, result.stdout + result.stderr
         assert _outputs(tmp_path / "github_output")["source_ref"] == expected
 
-    @pytest.mark.parametrize(
-        "source_ref", ["gemini/muix 9", "-x", "../main", "a..b", "$(id)", "main;id", "`id`", "a'b", "x" * 81, "origin/"]
-    )
+    @pytest.mark.parametrize("source_ref", [*BAD_REFS, "origin/"])
     def test_anything_but_a_ref_name_stops_the_run(self, tmp_path: Path, source_ref: str) -> None:
-        """ "origin/" alone too: the REGEN_GATE expressions read the raw input, so it may never mean "generate"."""
+        """ "origin/" alone too: the REGEN_GATE expressions read the raw input, so it may never mean "generate".
+        The rejected value is never echoed: a newline in it would start a workflow command."""
         result = _extract_inputs(tmp_path, source_ref=source_ref)
         assert result.returncode != 0
-        assert "::error::source_ref '" in result.stdout
+        assert "::error::source_ref is not a branch, tag or commit SHA" in result.stdout
+        assert source_ref not in result.stdout
+        assert "injected" not in result.stdout
         assert "source_ref" not in _outputs(tmp_path / "github_output")
 
     def test_adopting_names_the_source_and_keeps_the_repair_model(self, tmp_path: Path) -> None:
@@ -551,14 +569,14 @@ class TestExtractInputs:
         assert " by " not in (tmp_path / "step_summary").read_text(encoding="utf-8")
 
     @pytest.mark.parametrize("source_ref", ["gemini/muix-9", ""])
-    @pytest.mark.parametrize(
-        "source_model", ["gemini 4", "-x", ".x", "a/b", "$(id)", "a;id", "`id`", "a'b", "a:b", "G" * 41]
-    )
+    @pytest.mark.parametrize("source_model", BAD_MODELS)
     def test_anything_but_a_model_name_stops_the_run(self, tmp_path: Path, source_model: str, source_ref: str) -> None:
-        """Checked before anything else reads it, with or without source_ref."""
+        """Checked before anything else reads it, with or without source_ref, and never echoed."""
         result = _extract_inputs(tmp_path, source_ref=source_ref, source_model=source_model)
         assert result.returncode != 0
-        assert "::error::source_model '" in result.stdout
+        assert "::error::source_model is not a model name" in result.stdout
+        assert source_model not in result.stdout
+        assert "injected" not in result.stdout
         assert "source_model" not in _outputs(tmp_path / "github_output")
 
     def test_a_source_model_without_a_source_ref_is_dropped_with_a_warning(self, tmp_path: Path) -> None:
@@ -1031,3 +1049,44 @@ def test_bulk_preview_warns_about_a_source_model_without_a_source_ref(tmp_path: 
     assert result.returncode == 0, result.stdout + result.stderr
     assert "::warning::source_model is set without source_ref" in result.stdout
     assert "**Adopt mode:**" not in result.stdout
+
+
+@pytest.mark.parametrize("source_ref", ["origin/gemini/muix-9", "main", "0123456789abcdef0123456789abcdef01234567"])
+def test_bulk_preview_accepts_what_impl_generate_accepts(tmp_path: Path, source_ref: str) -> None:
+    result = _bulk_preview(tmp_path, source_ref=source_ref, source_model="")
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+@pytest.mark.parametrize("source_ref", [*BAD_REFS, "origin/"])
+def test_bulk_preview_stops_on_a_bad_ref_before_echoing_it(tmp_path: Path, source_ref: str) -> None:
+    result = _bulk_preview(tmp_path, source_ref=source_ref, source_model="gemini-4-argon")
+    assert result.returncode == 1
+    assert result.stdout == (
+        "::error::source_ref is not a branch, tag or commit SHA (letters, digits, . _ / -, at most 80 characters)\n"
+    )
+
+
+@pytest.mark.parametrize("source_model", BAD_MODELS)
+def test_bulk_preview_stops_on_a_bad_model_before_echoing_it(tmp_path: Path, source_model: str) -> None:
+    """The generate job needs this one, so no dispatch (and no dispatch notice) ever sees the value."""
+    result = _bulk_preview(tmp_path, source_ref="gemini/muix-9", source_model=source_model)
+    assert result.returncode == 1
+    assert (
+        result.stdout == "::error::source_model is not a model name (letters, digits, . _ -, at most 40 characters)\n"
+    )
+
+
+def test_bulk_dispatch_runs_only_after_the_preview_checked_the_inputs() -> None:
+    generate = _workflow("bulk-generate.yml")["jobs"]["generate"]
+    assert "preview" in generate["needs"]
+    # A custom `if` without a status function keeps the implicit success() on `needs`.
+    assert not re.search(r"\b(always|failure|cancelled)\(", generate["if"])
+
+
+@pytest.mark.parametrize(("pattern", "name"), [(REF_PATTERN, "SOURCE_REF"), (MODEL_PATTERN, "SOURCE_MODEL")])
+def test_both_workflows_check_with_the_same_pattern(pattern: str, name: str) -> None:
+    impl = str(_step("impl-generate.yml", "Extract inputs")["run"])
+    bulk = str(_step("bulk-generate.yml", "Preview generation plan")["run"])
+    variable = "$SOURCE_REF" if name == "SOURCE_REF" else "$SOURCE_MODEL"
+    assert f'[[ "{variable}" =~ {pattern} ]]' in impl
+    assert f"=~ {pattern} ]]" in bulk

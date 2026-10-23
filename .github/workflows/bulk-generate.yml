@@ -170,6 +170,22 @@ jobs:
           SOURCE_REF: ${{ inputs.source_ref }}
           SOURCE_MODEL: ${{ inputs.source_model }}
         run: |
+          # Checked before anything echoes them, with impl-generate's rules:
+          # a newline in a raw dispatch value would start a workflow command,
+          # and a bad value would otherwise fail every dispatched run one by
+          # one. The generate job needs this one, so its dispatch step only
+          # sees values that passed. Both still go out verbatim, and
+          # impl-generate normalizes and checks them again.
+          ref="${SOURCE_REF#origin/}"
+          if [ -n "$SOURCE_REF" ] && { ! [[ "$ref" =~ ^[A-Za-z0-9][A-Za-z0-9._/-]{0,79}$ ]] || [[ "$ref" == *..* ]]; }; then
+            echo "::error::source_ref is not a branch, tag or commit SHA (letters, digits, . _ / -, at most 80 characters)"
+            exit 1
+          fi
+          if [ -n "$SOURCE_MODEL" ] && ! [[ "$SOURCE_MODEL" =~ ^[A-Za-z0-9][A-Za-z0-9._-]{0,39}$ ]]; then
+            echo "::error::source_model is not a model name (letters, digits, . _ -, at most 40 characters)"
+            exit 1
+          fi
+
           echo "## Bulk Generation Plan"
           echo ""
           echo "**Total items:** $COUNT"
