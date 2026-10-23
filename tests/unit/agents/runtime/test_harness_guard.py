@@ -481,6 +481,33 @@ class TestDataGuardCode:
         assert out == ""
 
 
+def test_ctypes_helper_addresses_are_empty_without_ctypes(monkeypatch: pytest.MonkeyPatch) -> None:
+    """An interpreter without `_ctypes` gives the plot guard no address to let through."""
+    monkeypatch.setitem(sys.modules, "_ctypes", None)  # `import _ctypes` raises ImportError
+    assert harness.ctypes_helper_addresses() == frozenset()
+
+
+def test_subinterpreter_calls_are_replaced_in_a_module_nothing_loaded(monkeypatch: pytest.MonkeyPatch) -> None:
+    """`disable_unaudited_calls` imports `_interpreters` when no one has and replaces its five calls. Run on a fresh
+    import with the original module's attributes registered for restore, never by arming a guard: an audit hook
+    cannot be removed from the test process."""
+    original = pytest.importorskip("_interpreters")
+    entries = tuple(entry for entry in harness.UNAUDITED_CALLS if entry[0] == "_interpreters")
+    assert {name for _, name in entries} == {"create", "exec", "run_string", "run_func", "call"}
+    for _, name in entries:
+        monkeypatch.setattr(original, name, getattr(original, name))
+    monkeypatch.setattr(harness, "UNAUDITED_CALLS", entries)
+    monkeypatch.delitem(sys.modules, "_interpreters")
+
+    harness.disable_unaudited_calls()
+
+    loaded = sys.modules["_interpreters"]
+    for _, name in entries:
+        assert getattr(loaded, name) is harness.refused_call, name
+    with pytest.raises(PermissionError, match="audit hook cannot see"):
+        loaded.create()
+
+
 HELPER_NAMES = ("_cast_addr", "_memmove_addr", "_memset_addr", "_string_at_addr", "_wstring_at_addr")
 
 
