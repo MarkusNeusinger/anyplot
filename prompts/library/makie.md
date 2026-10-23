@@ -4,7 +4,7 @@ Makie.jl is the high-performance visualization ecosystem for Julia. This is
 anyplot's first Julia-language entry; the file extension is **`.jl`** and the
 runtime is **`julia --project=.`**, not Python and not Rscript.
 
-**API level:** Makie 0.21. `Manifest.toml` pins this release series, and Makie
+**API level:** Makie 0.24. `Manifest.toml` pins this release series, and Makie
 changes its API between 0.x releases; write against this one.
 
 anyplot uses the **CairoMakie** backend exclusively — pure-Cairo, headless,
@@ -63,6 +63,10 @@ Optional dataset packages available in the CI runtime: `RDatasets` (gives
 `CSV` is available for ad-hoc data loading but anyplot implementations
 should generate data in-memory.
 
+Nothing outside `Project.toml` and the Julia standard library is installed.
+In particular, no QR-code encoder is available: `QRCoders` and `QRCode` cap
+ImageCore at 0.9 and cannot coexist with Makie 0.24.
+
 ## Reproducibility
 
 ```julia
@@ -75,14 +79,16 @@ The saved PNG must be **exactly** one of these two sizes (post-render gate
 in `impl-review.yml` rejects anything off by more than 16 px and re-triggers
 repair):
 
-| Orientation | `Figure(resolution=...)` × `save(..., px_per_unit=...)` | Final PNG     |
-|-------------|----------------------------------------------------------|---------------|
-| Landscape   | `resolution = (1600, 900)`, `px_per_unit = 2`            | 3200 × 1800   |
-| Square      | `resolution = (1200, 1200)`, `px_per_unit = 2`           | 2400 × 2400   |
+| Orientation | `Figure(size=...)` × `save(..., px_per_unit=...)` | Final PNG     |
+|-------------|----------------------------------------------------|---------------|
+| Landscape   | `size = (1600, 900)`, `px_per_unit = 2`            | 3200 × 1800   |
+| Square      | `size = (1200, 1200)`, `px_per_unit = 2`           | 2400 × 2400   |
 
-Pick the orientation that suits the spec. CairoMakie honours `resolution`
-and `px_per_unit` exactly — no padding or cropping, so the saved PNG lands
+Pick the orientation that suits the spec. CairoMakie honours `size` and
+`px_per_unit` exactly — no padding or cropping, so the saved PNG lands
 on target without extra tricks. Do **not** deviate from these pairs.
+Use `size`, never the old `resolution` keyword: it is deprecated and prints
+a warning on every run.
 
 ## Figure Size & Sizing for 3200×1800 px (starting values — review loop tunes)
 
@@ -92,8 +98,8 @@ result; tune up or down if review feedback says so.
 
 ```julia
 fig = Figure(
-    resolution = (1600, 900),
-    fontsize   = 14,        # base font; px_per_unit doubles this on save
+    size     = (1600, 900),
+    fontsize = 14,          # base font; px_per_unit doubles this on save
     backgroundcolor = PAGE_BG,
 )
 
@@ -122,7 +128,7 @@ save("plot-$(THEME).png", fig; px_per_unit = 2)
 ```
 
 `px_per_unit = 2` doubles the resolution at write time — combined with the
-canonical `resolution` values above, this is what produces 3200×1800 or
+canonical `size` values above, this is what produces 3200×1800 or
 2400×2400 pixels.
 
 ## Colors
@@ -175,7 +181,7 @@ const INK         = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT    = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
 
 fig = Figure(
-    resolution      = (1600, 900),
+    size            = (1600, 900),
     fontsize        = 14,
     backgroundcolor = PAGE_BG,
 )
@@ -248,7 +254,7 @@ y = randn(100)
 
 # --- Plot -------------------------------------------------------------------
 fig = Figure(
-    resolution      = (1600, 900),
+    size            = (1600, 900),
     fontsize        = 14,
     backgroundcolor = PAGE_BG,
 )
@@ -320,3 +326,37 @@ assigned. If the file has no leading `#` block, the rewrite prepends one.
 - The implementation file must end with a trailing newline — Julia
   parses fine without it, but the impl-review header rewrite assumes
   one.
+
+## Makie 0.24 API Notes
+
+The runtime is Makie 0.24 with CairoMakie 0.15. Older examples on the web
+use APIs that now warn or fail:
+
+- **Arrows:** use `arrows2d!(ax, x, y, u, v; shaftwidth = 2, tipwidth = 12,
+  tiplength = 12, color = ...)`. `arrows!` is deprecated, and its
+  `arrowsize`, `arrowcolor`, `linecolor` and `linewidth` attributes are now
+  `tipwidth`/`tiplength`, `tipcolor`, `shaftcolor` and `shaftwidth`.
+  Arrows no longer take `linestyle`.
+- **Text labels:** `annotations!` is removed; use `text!`. For a label with a
+  connector line to a data point, use the `annotation!` recipe.
+- **Text alignment:** `align` is a tuple such as `(:left, :center)`. A bare
+  symbol like `align = :center` raises an error.
+- **3D shading:** pass `shading = false` to `surface!`/`mesh!`; the
+  `NoShading` algorithm objects are deprecated.
+- **Log-like ticks:** `LogTicks` works only with `log10`-type scales. For
+  `pseudolog10` and `Symlog10` use `PseudologTicks` and `SymlogTicks`.
+- **`series!`:** pass one color per series. If `color` has fewer entries
+  than series, Makie cycles them and prints a warning.
+- **Layout gaps:** build the grid top-down from `fig[1, 1]`. A header
+  `Label` goes in row 1 and the axes start in row 2, never in row 0 or a
+  negative row. `rowgap!`/`colgap!` count gaps in the layout's own
+  numbering, so after a `fig[0, …]` header `rowgap!(fig.layout, 1, px)`
+  resizes the wrong gap or raises "invalid row gap".
+- **Polar heatmaps:** never call `heatmap!` on a `PolarAxis`. CairoMakie
+  0.15 then renders the whole figure blank and raises no error. Draw each
+  cell as a `band!` wedge (angles along the arc, inner and outer radius),
+  map the value to a color yourself, and give the `Colorbar` an explicit
+  `colormap` and `limits`.
+- **Determinism:** never derive colors or ordering from `hash(...)` or from
+  `Dict`/`Set` iteration order. Both change between Julia versions, so the
+  same seed renders a different plot after a runtime upgrade.
