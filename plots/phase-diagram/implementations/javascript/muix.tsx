@@ -1,8 +1,11 @@
 // anyplot.ai
 // phase-diagram: Phase Diagram (State Space Plot)
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 93/100 | Created: 2026-09-05
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+// Library: muix 9.16.0 | JavaScript 22.23.3
+// Quality: 88/100 | Updated: 2026-10-23
+
+import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
+import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
+import { ChartsWrapper } from "@mui/x-charts/ChartsWrapper";
 import { LinePlot } from "@mui/x-charts/LineChart";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
@@ -14,53 +17,76 @@ import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Damped harmonic oscillator: x'' + 2*ZETA*OMEGA*x' + OMEGA^2*x = 0 ------
-// A linear system has a closed-form underdamped solution, so every
-// trajectory is generated analytically instead of via numeric integration.
-const OMEGA = 1; // natural frequency, rad/s
-const ZETA = 0.15; // damping ratio (< 1 -> underdamped, spirals to the origin)
-const OMEGA_D = OMEGA * Math.sqrt(1 - ZETA * ZETA);
-const STEPS_PER_TRAJECTORY = 360;
-const T_MAX = (4.5 * 2 * Math.PI) / OMEGA_D; // ~4.5 decaying oscillation periods
+// Columns: set these to your data's column names
+const X = "Position x (m)"; // role: x
+const DX_DT = "Velocity dx/dt (m/s)"; // role: dx_dt
+const TIME = "Time t"; // role: t
+const TRAJECTORY = "Trajectory"; // role: extra
 
-function trajectory(x0, v0) {
-  const A = x0;
-  const B = (v0 + ZETA * OMEGA * A) / OMEGA_D;
-  const x = [];
-  const v = [];
-  for (let i = 0; i <= STEPS_PER_TRAJECTORY; i++) {
-    const time = (i / STEPS_PER_TRAJECTORY) * T_MAX;
-    const decay = Math.exp(-ZETA * OMEGA * time);
-    const cosTerm = Math.cos(OMEGA_D * time);
-    const sinTerm = Math.sin(OMEGA_D * time);
-    x.push(decay * (A * cosTerm + B * sinTerm));
-    v.push(
-      decay *
-        (-ZETA * OMEGA * (A * cosTerm + B * sinTerm) +
-          OMEGA_D * (-A * sinTerm + B * cosTerm)),
-    );
+// Data: replace this block with your own records, one object per row
+const data = (() => {
+  const omega = 1; // natural frequency, rad/s
+  const zeta = 0.15; // damping ratio (< 1 -> underdamped, spirals to the origin)
+  const omegaD = omega * Math.sqrt(1 - zeta * zeta);
+  const steps = 360;
+  const tMax = (4.5 * 2 * Math.PI) / omegaD;
+  const initials = [
+    [2.2, 0],
+    [-2.0, 0.6],
+    [0, 2.6],
+    [1.3, -2.0],
+  ];
+
+  const rows: {
+    [TRAJECTORY]: string;
+    [TIME]: number;
+    [X]: number;
+    [DX_DT]: number;
+  }[] = [];
+
+  for (const [x0, v0] of initials) {
+    const label = `x₀=${x0}, v₀=${v0}`;
+    const A = x0;
+    const B = (v0 + zeta * omega * A) / omegaD;
+    for (let i = 0; i <= steps; i++) {
+      const time = (i / steps) * tMax;
+      const decay = Math.exp(-zeta * omega * time);
+      const cosTerm = Math.cos(omegaD * time);
+      const sinTerm = Math.sin(omegaD * time);
+      const xVal = decay * (A * cosTerm + B * sinTerm);
+      const vVal =
+        decay *
+        (-zeta * omega * (A * cosTerm + B * sinTerm) +
+          omegaD * (-A * sinTerm + B * cosTerm));
+      rows.push({
+        [TRAJECTORY]: label,
+        [TIME]: time,
+        [X]: xVal,
+        [DX_DT]: vVal,
+      });
+    }
   }
-  return { x, v, x0, v0 };
-}
+  return rows;
+})();
 
-// --- Data: four initial conditions spiralling into the same equilibrium —
-// together they trace the shared basin of attraction. Each trajectory gets
-// its own xAxisId because x is non-monotonic (a spiral revisits x values),
-// which rules out a single shared/sorted xAxis. -----------------------------
-const trajectories = [
-  trajectory(2.2, 0),
-  trajectory(-2.0, 0.6),
-  trajectory(0, 2.6),
-  trajectory(1.3, -2.0),
-].map((traj, i) => ({
-  ...traj,
-  axisId: `x-axis-${i}`,
-  color: t.palette[i],
-  label: `x₀=${traj.x0}, v₀=${traj.v0}`,
-}));
+// Plot: reads only data and the constants above
+const trajectoryLabels = Array.from(new Set(data.map((d) => d[TRAJECTORY])));
+const trajectories = trajectoryLabels.map((label, i) => {
+  // Time order, not row order, decides the path and the direction arrows.
+  const pts = data
+    .filter((d) => d[TRAJECTORY] === label)
+    .sort((a, b) => a[TIME] - b[TIME]);
+  return {
+    axisId: `x-axis-${i}`,
+    color: t.palette[i],
+    label,
+    x: pts.map((d) => d[X]),
+    v: pts.map((d) => d[DX_DT]),
+  };
+});
 
-const allX = trajectories.flatMap((traj) => traj.x);
-const allV = trajectories.flatMap((traj) => traj.v);
+const allX = data.map((d) => d[X]);
+const allV = data.map((d) => d[DX_DT]);
 const xSpan = Math.max(...allX) - Math.min(...allX);
 const vSpan = Math.max(...allV) - Math.min(...allV);
 const X_MIN = Math.min(...allX) - xSpan * 0.12;
@@ -76,66 +102,54 @@ const TITLE_FONT_SIZE = Math.max(
   Math.round(22 * Math.min(1, 67 / TITLE.length)),
 );
 
-const MARGIN = { top: 30, bottom: 150, left: 130, right: 60 };
+const MARGIN = { top: 30, bottom: 20, left: 46, right: 60 };
 
-// --- Time-direction arrowheads: small triangles dropped at fixed points
-// along each trajectory's arc (as fractions of its 0..STEPS_PER_TRAJECTORY
-// index range), oriented along the local tangent. The spec explicitly
-// suggests a direction cue since motion along a spiral is otherwise
-// ambiguous in a static render. -------------------------------------------
 const ARROW_FRACTIONS = [0.08, 0.24, 0.44, 0.68];
 const ARROW_TANGENT_STEP = 2;
 const ARROW_SIZE = 9;
-const ARROW_SPREAD = 0.5; // radians between each back corner and the tip
+const ARROW_SPREAD = 0.5;
 
-function arrowPoints(cx, cy, angle, size) {
-  const backAngle = angle + Math.PI;
-  const tip = [cx + Math.cos(angle) * size, cy + Math.sin(angle) * size];
-  const left = [
-    cx + Math.cos(backAngle - ARROW_SPREAD) * size,
-    cy + Math.sin(backAngle - ARROW_SPREAD) * size,
-  ];
-  const right = [
-    cx + Math.cos(backAngle + ARROW_SPREAD) * size,
-    cy + Math.sin(backAngle + ARROW_SPREAD) * size,
-  ];
-  return `${tip.join(",")} ${left.join(",")} ${right.join(",")}`;
-}
+// Equilibrium label sits in the empty upper-left corner, joined by a leader line
+const LABEL_TEXT = "Equilibrium (0, 0)";
+const LABEL_X = X_MIN + (X_MAX - X_MIN) * 0.08;
+const LABEL_V = V_MAX - (V_MAX - V_MIN) * 0.08;
 
-// --- Custom overlay: the shared equilibrium, each trajectory's starting
-// point, and direction-of-travel arrowheads. Community `@mui/x-charts/hooks`
-// (useXScale/useYScale) map data coordinates to pixels so the markers stay
-// aligned with the lines at any size. Hooks are called unconditionally, once
-// per (fixed) trajectory. ---------------------------------------------------
 function PhaseMarkers() {
   const yScale = useYScale();
-  const xScale0 = useXScale(trajectories[0].axisId);
-  const xScale1 = useXScale(trajectories[1].axisId);
-  const xScale2 = useXScale(trajectories[2].axisId);
-  const xScale3 = useXScale(trajectories[3].axisId);
-  const xScales = [xScale0, xScale1, xScale2, xScale3];
+  const xScale = useXScale(trajectories[0].axisId);
 
-  const origin = { x: xScale0(0), y: yScale(0) };
+  const origin = { x: xScale(0)!, y: yScale(0)! };
+  const label = { x: xScale(LABEL_X)!, y: yScale(LABEL_V)! };
+  const leadAngle = Math.atan2(label.y - origin.y, label.x - origin.x);
 
   return (
     <g>
-      {trajectories.map((traj, i) => {
-        const xScale = xScales[i];
-        const start = { x: xScale(traj.x[0]), y: yScale(traj.v[0]) };
+      {trajectories.map((traj) => {
+        const maxIdx = traj.x.length - 1;
+        const start = { x: xScale(traj.x[0])!, y: yScale(traj.v[0])! };
         return (
           <g key={traj.axisId}>
             {ARROW_FRACTIONS.map((frac) => {
-              const idx = Math.round(frac * STEPS_PER_TRAJECTORY);
-              const p0 = { x: xScale(traj.x[idx]), y: yScale(traj.v[idx]) };
+              const idx = Math.min(
+                maxIdx - ARROW_TANGENT_STEP,
+                Math.round(frac * maxIdx),
+              );
+              const p0 = { x: xScale(traj.x[idx])!, y: yScale(traj.v[idx])! };
               const p1 = {
-                x: xScale(traj.x[idx + ARROW_TANGENT_STEP]),
-                y: yScale(traj.v[idx + ARROW_TANGENT_STEP]),
+                x: xScale(traj.x[idx + ARROW_TANGENT_STEP])!,
+                y: yScale(traj.v[idx + ARROW_TANGENT_STEP])!,
               };
               const angle = Math.atan2(p1.y - p0.y, p1.x - p0.x);
+              const points = [0, Math.PI - ARROW_SPREAD, Math.PI + ARROW_SPREAD]
+                .map(
+                  (a) =>
+                    `${p0.x + Math.cos(angle + a) * ARROW_SIZE},${p0.y + Math.sin(angle + a) * ARROW_SIZE}`,
+                )
+                .join(" ");
               return (
                 <polygon
                   key={`${traj.axisId}-arrow-${frac}`}
-                  points={arrowPoints(p0.x, p0.y, angle, ARROW_SIZE)}
+                  points={points}
                   fill={traj.color}
                   stroke={t.pageBg}
                   strokeWidth={1}
@@ -153,6 +167,15 @@ function PhaseMarkers() {
           </g>
         );
       })}
+      <line
+        x1={origin.x + Math.cos(leadAngle) * 18}
+        y1={origin.y + Math.sin(leadAngle) * 18}
+        x2={label.x}
+        y2={label.y + 14}
+        stroke={t.inkSoft}
+        strokeWidth={1.5}
+        strokeDasharray="5 4"
+      />
       <circle
         cx={origin.x}
         cy={origin.y}
@@ -161,33 +184,28 @@ function PhaseMarkers() {
         stroke={t.pageBg}
         strokeWidth={3}
       />
-      {/* Backing plate keeps the label legible over the densely wound spirals */}
-      <rect
-        x={origin.x + 18}
-        y={origin.y - 38}
-        width={190}
-        height={28}
-        rx={5}
-        fill={t.elevatedBg}
-        opacity={0.9}
-      />
       <ChartsText
-        x={origin.x + 26}
-        y={origin.y - 24}
-        text="Equilibrium (0, 0)"
-        style={{ fontSize: 16, fill: t.inkSoft, dominantBaseline: "central" }}
+        x={label.x}
+        y={label.y}
+        text={LABEL_TEXT}
+        style={{
+          fontSize: 16,
+          fill: t.ink,
+          fontWeight: 500,
+          dominantBaseline: "central",
+        }}
       />
     </g>
   );
 }
 
-// --- Chart (default-exported component — the harness mounts it) -------------
 export default function Chart() {
   return (
     <div
       style={{
         width: window.ANYPLOT_SIZE.width,
         height: window.ANYPLOT_SIZE.height,
+        backgroundColor: t.pageBg,
         display: "flex",
         flexDirection: "column",
       }}
@@ -205,19 +223,34 @@ export default function Chart() {
       >
         {TITLE}
       </div>
-      <ChartContainer
+      <ChartsDataProvider
         width={window.ANYPLOT_SIZE.width}
         height={window.ANYPLOT_SIZE.height - TITLE_HEIGHT}
         margin={MARGIN}
         skipAnimation
-        xAxis={trajectories.map((traj) => ({
+        xAxis={trajectories.map((traj, i) => ({
           id: traj.axisId,
           scaleType: "linear",
           data: traj.x,
           min: X_MIN,
           max: X_MAX,
+          position: i === 0 ? "bottom" : "none",
+          height: i === 0 ? 68 : 0,
+          label: i === 0 ? X : undefined,
+          labelStyle: { fontSize: 16, fill: t.ink, fontWeight: 500 },
+          tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
         }))}
-        yAxis={[{ scaleType: "linear", min: V_MIN, max: V_MAX }]}
+        yAxis={[
+          {
+            scaleType: "linear",
+            min: V_MIN,
+            max: V_MAX,
+            width: 84,
+            label: DX_DT,
+            labelStyle: { fontSize: 16, fill: t.ink, fontWeight: 500 },
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+          },
+        ]}
         series={trajectories.map((traj) => ({
           type: "line",
           data: traj.v,
@@ -228,38 +261,43 @@ export default function Chart() {
           showMark: false,
         }))}
       >
-        <ChartsGrid horizontal vertical />
-        <ChartsReferenceLine
-          x={0}
-          lineStyle={{ stroke: t.grid, strokeWidth: 2 }}
-        />
-        <ChartsReferenceLine
-          y={0}
-          lineStyle={{ stroke: t.grid, strokeWidth: 2 }}
-        />
-        <LinePlot />
-        <PhaseMarkers />
-        <ChartsXAxis
-          axisId={trajectories[0].axisId}
-          label="Position x"
-          labelStyle={{ fontSize: 16, fill: t.ink, fontWeight: 500 }}
-          tickLabelStyle={{ fontSize: 14, fill: t.inkSoft }}
-          stroke={t.inkSoft}
-        />
-        <ChartsYAxis
-          label="Velocity dx/dt"
-          labelStyle={{ fontSize: 16, fill: t.ink, fontWeight: 500 }}
-          tickLabelStyle={{ fontSize: 14, fill: t.inkSoft }}
-          stroke={t.inkSoft}
-        />
-        <ChartsLegend
-          direction="row"
-          position={{ vertical: "bottom", horizontal: "middle" }}
-          slotProps={{
-            legend: { labelStyle: { fontSize: 14, fill: t.inkSoft } },
-          }}
-        />
-      </ChartContainer>
+        <ChartsWrapper
+          legendPosition={{ vertical: "bottom", horizontal: "center" }}
+          legendDirection="horizontal"
+          sx={{ width: "100%", height: "100%" }}
+        >
+          <ChartsSurface
+            sx={{
+              "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+              "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+              "& .MuiChartsGrid-line": { stroke: t.grid },
+            }}
+          >
+            <ChartsGrid horizontal vertical />
+            <ChartsReferenceLine
+              axisId={trajectories[0].axisId}
+              x={0}
+              lineStyle={{ stroke: t.grid, strokeWidth: 2 }}
+            />
+            <ChartsReferenceLine
+              y={0}
+              lineStyle={{ stroke: t.grid, strokeWidth: 2 }}
+            />
+            <LinePlot />
+            <PhaseMarkers />
+            <ChartsXAxis axisId={trajectories[0].axisId} />
+            <ChartsYAxis />
+          </ChartsSurface>
+          <ChartsLegend
+            sx={{
+              fontSize: 14,
+              color: t.inkSoft,
+              pb: "18px",
+              "& .MuiChartsLegend-label": { fontSize: 14, color: t.inkSoft },
+            }}
+          />
+        </ChartsWrapper>
+      </ChartsDataProvider>
     </div>
   );
 }
