@@ -8,7 +8,7 @@ entry: the file extension is **`.tsx`**, `language_id` is **`javascript`**
 **browser render harness** (`node automation/js-render/render.mjs`) via that
 harness's **React (esbuild) branch** — *not* Python, Rscript, or julia.
 
-**API level:** MUI X Charts 7. The root `package-lock.json` pins this major of
+**API level:** MUI X Charts 9. The root `package-lock.json` pins this major of
 `@mui/x-charts`; write against its API.
 
 > ## 🚫 Community surface ONLY — no MUI X Pro / Premium (hard rule)
@@ -63,7 +63,7 @@ export default function Chart() {
   return (
     <BarChart
       width={window.ANYPLOT_SIZE.width}
-      height={window.ANYPLOT_SIZE.height}
+      height={window.ANYPLOT_SIZE.height - 40}   // legend band, see "MUI X v9 API"
       colors={t.palette}
       skipAnimation
       xAxis={[{ scaleType: "band", data: ["Mon", "Tue", "Wed", "Thu", "Fri"] }]}
@@ -101,8 +101,8 @@ gate rejects anything off by more than 16 px and re-triggers repair):
 
 Exact pixels come from Playwright `deviceScaleFactor: 2` over the pre-sized mount
 (1600×900 / 1200×1200 CSS). **Size the chart to `window.ANYPLOT_SIZE`**
-(`width={window.ANYPLOT_SIZE.width} height={window.ANYPLOT_SIZE.height}`) — never
-hard-code other dimensions. For a square spec (pie / radial / heatmap-style),
+(`width={window.ANYPLOT_SIZE.width} height={window.ANYPLOT_SIZE.height}`, minus
+the legend band when a legend shows) — never hard-code other dimensions. For a square spec (pie / radial / heatmap-style),
 put this on its own line at the very top of the file:
 
 ```tsx
@@ -116,6 +116,14 @@ device scale lands the PNG on 3200×1800 / 2400×2400. Size fonts/marks in that 
 space — small numbers like the other JS libs. MUI X defaults are already sized
 for CSS px; only nudge `tickLabelStyle` / `slotProps` font sizes if labels look
 small at the final resolution (axis/legend ≈ 14–16 px, title ≈ 22 px).
+
+Each axis reserves a fixed band for its ticks and title (default 25 px for an x
+axis, 45 px for a y axis), and v9 **truncates tick labels that don't fit — down
+to `0…` or an empty string**. Whenever you enlarge axis fonts or add an axis
+`label`, size the band in the axis config with a number: `height` on x axes
+(e.g. `height: 72`), `width` on y axes (e.g. `width: 84`). Don't rely on
+`"auto"`: in this harness it still truncated at 16–18 px fonts. `margin` is the
+space *outside* the axes, so it no longer has to make room for tick labels.
 
 ## Animation — must be off (static screenshot)
 
@@ -156,7 +164,8 @@ self-contained.
 ## When MUI X can't express the spec
 
 MUI X community covers bar, line, area, pie, scatter, sparkline, gauge, radar,
-funnel, and composed/multi-axis combinations. If the spec's core value is a chart
+and composed/multi-axis combinations; Heatmap, Funnel and Sankey charts are
+Pro-only. If the spec's core value is a chart
 type the **community** surface genuinely can't express (and it isn't a Pro-only
 feature you're tempted to reach for), return **`NOT_FEASIBLE`** with a one-line
 reason — **do not** shell out to Recharts/D3/Chart.js or reach into
@@ -206,7 +215,7 @@ export default function Chart() {
   return (
     <BarChart
       width={window.ANYPLOT_SIZE.width}
-      height={window.ANYPLOT_SIZE.height}
+      height={window.ANYPLOT_SIZE.height - 40}   // legend band, see "MUI X v9 API"
       colors={t.palette}
       skipAnimation
       xAxis={[{ scaleType: "band", data: categories }]}
@@ -235,6 +244,48 @@ export default function Chart() {
 neither has statistics helpers, so short written-out binning, box statistics,
 densities or fits are fine.
 
+## MUI X v9 API — the pinned version
+
+The harness pins **`@mui/x-charts` 9.16 (community), `@mui/material` 9.5 and
+React 19**. Code written for v7 either fails to bundle or silently loses its
+styling, so write against v9:
+
+- **Composition:** `ChartsContainer` from `@mui/x-charts/ChartsContainer`. The
+  v7 `ChartContainer` / `ResponsiveChartContainer` and the
+  `@mui/x-charts/ChartContainer` path no longer exist, and the bundle fails. A
+  legend is HTML, never part of the SVG: in a composed chart render
+  `<ChartsLegend />` inside `ChartsDataProvider` (wrapped in `ChartsWrapper`)
+  and outside `<ChartsSurface>`.
+- **Legend:** hide it with the chart's `hideLegend` prop (not
+  `slotProps.legend.hidden`). `slotProps.legend.direction` is `"horizontal"` or
+  `"vertical"`; `position` is `{ vertical: "top" | "middle" | "bottom",
+  horizontal: "start" | "center" | "end" }`. Style it with
+  `slotProps.legend.sx` (e.g. `{ fontSize: 16 }`); `labelStyle`,
+  `itemMarkWidth`, `markGap`, `itemGap` and `padding` are gone. The legend adds
+  its own height on top of the chart's `height`, so a visible top or bottom
+  legend needs `height={window.ANYPLOT_SIZE.height - 40}` (or more), or the
+  bottom of the chart is cropped from the PNG.
+- **Axes:** hide an axis with `position: "none"` in its config (the
+  `topAxis` / `leftAxis` / `bottomAxis` / `rightAxis` props are gone); a second
+  y axis takes `position: "right"`. Fonts go through `labelStyle` /
+  `tickLabelStyle` (`labelFontSize` / `tickFontSize` are gone), and the axis
+  band needs `height` / `width` as described under Sizing.
+- **Line charts:** `showMark` defaults to `false`, and marks cycle through
+  shapes per series, so set `shape: "circle"` for uniform dots. The x domain is
+  strict; set `domainLimit: "nice"` on the x axis to pad it to round ticks.
+- **CSS classes are per chart:** `.MuiLineChart-line`, `.MuiLineChart-area`,
+  `.MuiLineChart-mark`, `.MuiBarChart-element`, `.MuiBarChart-label`,
+  `.MuiPieChart-arc`, `.MuiPieChart-arcLabel`, `.MuiScatterChart-marker`. A
+  series is selected by `[data-series="<id>"]`: on the path itself for lines
+  and areas (`'& .MuiLineChart-area[data-series="band"]': { fillOpacity: 0.18 }`),
+  on the series group for bars (`'& [data-series="sales"] .MuiBarChart-element'`).
+  The v7 names (`.MuiAreaElement-root`, `.MuiLineElement-series-<id>`,
+  `.MuiBarElement-root`, `lineElementClasses`, …) match nothing, so that styling
+  silently disappears.
+- **Series:** `id` is a string, unique across all series of the chart.
+  `RadarChart` is stable (no `Unstable_` prefix). `SparkLineChart` takes one
+  `color`, not `colors`.
+
 ## MUI X-Specific Gotchas
 
 - **`export default` is mandatory** — the harness imports the component as the
@@ -247,5 +298,5 @@ densities or fits are fine.
 - Tooltip / hover highlighting is interactive-only and won't appear in the static
   PNG — that's expected; don't force it open for the screenshot.
 - MUI X measures real SVG text (getBBox) for axis/legend layout, which is exactly
-  why the browser harness is used — verify labels aren't clipped at the final
-  resolution and add axis `margin` / `slotProps.legend` spacing if they are.
+  why the browser harness is used — verify labels aren't clipped or truncated at
+  the final resolution and give the axis a larger `height` / `width` if they are.
