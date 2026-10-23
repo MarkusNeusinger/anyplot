@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: survival-kaplan-meier
 created: '2026-09-09T20:02:10Z'
-updated: '2026-10-23T15:09:28Z'
+updated: '2026-10-23T15:23:19Z'
 generated_by: claude-opus
 workflow_run: 39973927702
 issue: 2441
@@ -12,44 +12,35 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/survival-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/javascript/muix/plot-dark.html
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - CI band built natively from two stacked `stepAfter` area series (invisible lower
-    base + filled width), so the band steps exactly with its curve
-  - Censoring marks drawn via a per-point `showMark` callback on the survival series
-    itself, so they sit at the curve's height at each censoring time
-  - Correct Kaplan-Meier with Greenwood 95% CI; both groups resampled onto a shared
-    time grid with step-function forward fill
-  - Fully theme-adaptive chrome through the MUI ThemeProvider; identical data colors
-    in both renders
-  - Legend carries group sizes (n=50); subtitle explains bands and circles
+  - 'Correct Kaplan-Meier product-limit estimate with Greenwood 95% CI computed from
+    the records and drawn with MUI X curve: ''stepAfter'' on a linear time axis, starting
+    at 100% at t=0'
+  - CI band built idiomatically from a stacked area pair (lower-bound base + upper-lower
+    delta) with the base fill knocked out via v9 .MuiLineChart-area[data-series] selectors
+  - Censoring marks via a per-point showMark callback, so open circles sit exactly
+    on the curve at each censoring time, including administrative censoring at 36
+    months
+  - Subtitle decodes the bands and circles, and legend labels carry n per group
+  - Native MUI X tooltips and legend in the HTML output
   weaknesses:
-  - 'CQ-01 (code): the file does not follow the six-zone Data block of `prompts/adaptable-code.md`
-    / the muix "Data block" section — no column constants with `// role:` comments,
-    no `// Data` block ending in `const data` (one record per observation with time,
-    event, group), no `// Plot` marker, and data generation plus estimation are spread
-    over six helper functions (`createRng`, `sampleExponential`, `generateGroup`,
-    `kaplanMeier`, `alignToGrid`, `buildGroupSeries`) → role constants `TIME`/`EVENT`/`GROUP`,
-    one `// Data` block that ends in `const data` records, and plot code below `//
-    Plot` that derives the groups and curves from `data` with as few helpers as possible.
-    Likely cause: data generated per group via `generateGroup()` and kept as two separate
-    arrays.'
-  - 'Suggestion: censoring marks as small vertical ticks (the classic "+"/"|" KM convention
-    the Notes name) instead of open circles.'
-  - 'Suggestion: a median-survival annotation where the standard curve crosses 50%
-    (around month 22) would give the chart a focal point.'
+  - 'Suggestion: the at-risk table or a median survival marker the Notes allow would
+    add the reading aids a clinician or reliability engineer expects'
+  - 'Suggestion: legend glyph circles are smaller than the data marks; a slightly
+    larger legend mark would echo the curve markers better'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1
-      Chrome: bold dark title "survival-kaplan-meier · javascript · muix · anyplot.ai", soft-ink subtitle explaining bands and circles, axis titles "Survival probability" / "Time in service (months)", 0-100% and 0-36 ticks, subtle horizontal grid, legend top right with n=50 per group; all readable
-      Data: Standard design step curve in #009E73 (to ~34% at 36 mo), Reinforced design in #C475FD (to ~60%); translucent stepped 95% CI bands per group (grey-ish where they overlap); open-circle censoring marks at curve height
+      Background: warm off-white #FAF8F1 across the whole canvas.
+      Chrome: bold title "survival-kaplan-meier · javascript · muix · anyplot.ai" top-left with a grey subtitle explaining the bands and open circles; y axis "Survival probability" 0%–100% in 10% steps, x axis "Time in service (months)" 0–36 with monthly ticks; subtle horizontal grid; legend top-right. All text dark and readable.
+      Data: green (#009E73) step curve "Standard design (n=50)" falling from 100% to ~34%, purple step curve "Reinforced design (n=50)" falling to ~60%; translucent green and pink CI bands stepping with each curve, overlapping in a grey-blue mix; open circles mark censored units on each curve, with circles at 36 months for units still running.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17
-      Chrome: title, subtitle, axis titles, ticks and legend in light ink, all readable; no dark-on-dark text; grid subtle but visible
-      Data: identical #009E73 and #C475FD curves, circles and band tints; bands read as dark green / plum and stay distinguishable
+      Background: warm near-black #1A1A17.
+      Chrome: title, subtitle, axis titles, tick labels and legend all in light ink, clearly readable; grid lines subtle but visible; no dark-on-dark text.
+      Data: identical green and purple curves, censoring circles and bands as in the light render; bands read as dark green and dark plum tints, still distinguishable from each other and from the background.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -61,48 +52,52 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (title 22, ticks 14, axis titles 16, legend 15 px);
-          readable in both themes
+        comment: Explicit sizes (title 22 px, axis titles 16 px, ticks 14 px, legend
+          15 px); all text readable in both themes, theme ink via MUI ThemeProvider
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; near-coincident censor circles stay distinguishable
+        comment: No text collisions; coincident censoring circles (e.g. ~3.3 and ~4.8
+          months) overlap but stay distinguishable
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 3 px step lines, visible censor circles, legend glyphs match marks
-          in both themes
+        comment: 3 px step lines, open censoring circles sized well below a step height,
+          CI bands at fillOpacity 0.16 visible in both themes; legend glyphs match
+          the line+circle marks
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs lavender is CVD-safe
+        comment: Green vs purple is CVD-safe; groups also separated by position
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, balanced labels, nothing cut off
+        comment: Canvas gate passed; balanced axis labels, plot fills the canvas,
+          nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Survival probability / Time in service (months)
+        comment: '''Time in service (months)'' with unit; ''Survival probability''
+          with percent ticks'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'palette[0] #009E73 first, palette[1] second; correct backgrounds
-          both themes'
+        comment: 'First group #009E73, second Imprint position 2; identical data colors
+          across themes; backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -110,20 +105,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Title/subtitle hierarchy with soft-ink explanatory subtitle; percent
-          tick formatter
+        comment: Title/subtitle deck hierarchy (600-weight title over a secondary-ink
+          explanatory line) beyond the baseline
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Band outlines knocked out, horizontal-only grid, integer month ticks
+        comment: Horizontal-only grid chosen for reading survival levels, monthly
+          x ticks at the study's resolution, legend aligned to the plot's top-right
+          edge
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Data displayed, no focal point chosen beyond the Notes
+        passed: true
+        comment: Subtitle decodes bands and circles for the reader; n per group in
+          legend labels frames the comparison
     spec_compliance:
       score: 15
       max: 15
@@ -133,26 +131,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Kaplan-Meier step curves
+        comment: Kaplan-Meier step-function survival curves
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Step functions from 100% at t=0, stepped CI bands, censor marks at
-          time and height, legend; optional extras not drawn
+        comment: Step function from 100% at t=0, 95% CI shaded bands stepping with
+          curves, censoring marks on the curve at censoring times, distinct colors
+          + legend; optional extras (median, at-risk table, p-value) not drawn, no
+          deduction
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Marks at their values; full 0-36 month range
+        comment: stepAfter on a linear time axis; marks at their data values; full
+          0–36 month range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title; reader-friendly legend labels with n
+        comment: Mandated title; legend entries readable ('Standard design (n=50)')
     data_quality:
       score: 15
       max: 15
@@ -162,32 +163,33 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Early and late censoring, administrative censoring, widening bands,
-          two groups
+        comment: Events, early dropout censoring and administrative censoring at 36
+          months, two groups with separating curves and overlapping bands
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Bearing time-to-failure, standard vs reinforced design
+        comment: Bearing time-to-failure, standard vs reinforced design — neutral
+          reliability engineering
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Checked KM product-limit (lines 60-80) and Greenwood +/-1.96 SE clipped
-          to [0,1]; no check values in spec
+        comment: 100 units, 36-month study, plausible failure rates; KM product-limit
+          and Greenwood CI computed from the data (no Check values in spec)
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: No six-zone Data block (no role constants, no const data, no // Plot);
-          six helper functions (defect line)
+        passed: true
+        comment: Linear module-level flow; only the mandated component and a seeded
+          RNG
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -199,21 +201,23 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: LineChart, Box, Typography all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No JS library computes KM; written-out estimator is fine
+        comment: Written-out KM/Greenwood is allowed by the library prompt's Computation
+          line
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default export, skipAnimation, v9 class selectors
+        comment: Default-exported component, skipAnimation, v9 API (CSS classes, axis
+          width/height)
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -221,19 +225,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: curve stepAfter, axis valueFormatter, data-series sx selectors, MUI
-          Typography with theme tokens
+        comment: 'curve: ''stepAfter'', stack groups for the band, valueFormatter
+          for percent ticks, slotProps.legend'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: Stacked-area series for CI band; per-point showMark callback for
-          censoring
-  verdict: REJECTED
+        comment: Per-point showMark callback for censoring marks and data-series sx
+          selectors to knock out the stack base
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-03c2486144
-  rendered_at: '2026-10-23T15:06:23Z'
+  rendered_at: '2026-10-23T15:20:41Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -246,4 +250,3 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
