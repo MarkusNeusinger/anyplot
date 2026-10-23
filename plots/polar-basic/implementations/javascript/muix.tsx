@@ -3,11 +3,6 @@
 // Library: muix 7.29.1 | JavaScript 22.23.1
 // Quality: 91/100 | Updated: 2026-07-25
 //# anyplot-orientation: square
-// anyplot.ai
-// polar-basic: Basic Polar Chart
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-07-24
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { ChartsTooltip } from "@mui/x-charts/ChartsTooltip";

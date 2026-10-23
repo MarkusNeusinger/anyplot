@@ -3,11 +3,6 @@
 // Library: muix 7.29.1 | JavaScript 22.22.3
 // Quality: 88/100 | Created: 2026-06-25
 //# anyplot-orientation: landscape
-// anyplot.ai
-// ecdf-basic: Basic ECDF Plot
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-06-25
 
 import { LineChart } from "@mui/x-charts/LineChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";

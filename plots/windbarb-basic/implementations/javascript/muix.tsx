@@ -3,11 +3,6 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 91/100 | Created: 2026-09-02
 //# anyplot-orientation: landscape
-// anyplot.ai
-// windbarb-basic: Wind Barb Plot for Meteorological Data
-// Library: MUI X Charts 7.29 | React 18 | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-09-02
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";

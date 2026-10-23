@@ -3,11 +3,6 @@
 // Library: muix 7.29.1 | JavaScript 22.22.3
 // Quality: 91/100 | Created: 2026-06-15
 //# anyplot-orientation: square
-// anyplot.ai
-// audiogram-clinical: Clinical Audiogram
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-06-15
 import * as React from "react";
 import { LineChart } from "@mui/x-charts/LineChart";
 import { useDrawingArea, useYScale } from "@mui/x-charts/hooks";

@@ -3,11 +3,6 @@
 // Library: muix 7.29.1 | JavaScript 22.23.0
 // Quality: 90/100 | Created: 2026-07-01
 //# anyplot-orientation: landscape
-// anyplot.ai
-// lollipop-basic: Basic Lollipop Chart
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-07-01
 
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";

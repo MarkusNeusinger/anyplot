@@ -3,11 +3,6 @@
 // Library: muix 9.16.0 | JavaScript 22.23.3
 // Quality: 87/100 | Updated: 2026-10-23
 //# anyplot-orientation: square
-// anyplot.ai
-// pie-basic: Basic Pie Chart
-// Library: MUI X Charts | React | Node
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-08-20
 import { getContrastRatio } from "@mui/material/styles";
 import { PieChart, PieArcLabel } from "@mui/x-charts/PieChart";
 

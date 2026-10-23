@@ -3,10 +3,6 @@
 // Library: echarts 5.5.1 | JavaScript 22.22.3
 // Quality: 90/100 | Created: 2026-06-02
 //# anyplot-orientation: square
-// anyplot.ai
-// heatmap-basic: Basic Heatmap
-// Library: echarts 5.5.1 | JavaScript 22
-// Quality: pending | Created: 2026-06-02
 
 const t = window.ANYPLOT_TOKENS;
 

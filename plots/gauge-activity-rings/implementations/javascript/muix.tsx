@@ -3,11 +3,6 @@
 // Library: muix 9.16.0 | JavaScript 22.23.3
 // Quality: 86/100 | Updated: 2026-10-23
 //# anyplot-orientation: square
-// anyplot.ai
-// gauge-activity-rings: Activity Rings Progress Chart
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-06-14
 
 import {
   GaugeContainer,

@@ -3,11 +3,6 @@
 // Library: muix 7.29.1 | JavaScript 22.22.3
 // Quality: 94/100 | Created: 2026-06-17
 //# anyplot-orientation: square
-// anyplot.ai
-// chord-basic: Basic Chord Diagram
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-06-17
 //
 // MUI X community has no chord/Sankey primitive, so the diagram is drawn with
 // the supported escape hatch: a <ChartContainer> establishes a square linear

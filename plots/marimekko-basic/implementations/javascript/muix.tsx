@@ -3,10 +3,6 @@
 // Library: muix 7.29.1 | JavaScript 22.23.1
 // Quality: 94/100 | Created: 2026-07-24
 //# anyplot-orientation: landscape
-// anyplot.ai
-// marimekko-basic: Basic Marimekko Chart
-// Library: muix 7.29.1 | JavaScript 22.23.1
-// Quality: pending | Created: 2026-07-24
 
 import * as React from "react";
 import Box from "@mui/material/Box";

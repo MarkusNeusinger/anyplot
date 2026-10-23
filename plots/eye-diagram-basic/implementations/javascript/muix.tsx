@@ -3,11 +3,6 @@
 // Library: muix 7.29.1 | JavaScript 22.22.3
 // Quality: 84/100 | Created: 2026-06-18
 //# anyplot-orientation: landscape
-// anyplot.ai
-// eye-diagram-basic: Signal Integrity Eye Diagram
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-06-18
 
 import { ScatterChart } from "@mui/x-charts/ScatterChart";
 import Box from "@mui/material/Box";

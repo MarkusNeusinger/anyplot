@@ -3,11 +3,6 @@
 // Library: muix 7.29.1 | JavaScript 22.22.3
 // Quality: 89/100 | Created: 2026-06-20
 //# anyplot-orientation: landscape
-// anyplot.ai
-// line-retention-cohort: User Retention Curve by Cohort
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-06-20
 
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";

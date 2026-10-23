@@ -3,11 +3,6 @@
 // Library: highcharts 12.6.0 | JavaScript 22.22.3
 // Quality: 90/100 | Created: 2026-06-16
 //# anyplot-orientation: landscape
-// anyplot.ai
-// psychrometric-basic: Psychrometric Chart for HVAC
-// Library: Highcharts 12.6.0 | Node 22
-// License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
-// Quality: pending | Created: 2026-06-16
 
 const t = window.ANYPLOT_TOKENS;
 const THEME = window.ANYPLOT_THEME;

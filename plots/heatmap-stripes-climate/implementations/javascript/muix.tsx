@@ -3,11 +3,6 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 87/100 | Created: 2026-08-25
 //# anyplot-orientation: landscape
-// anyplot.ai
-// heatmap-stripes-climate: Climate Warming Stripes
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-08-25
 import { BarChart } from "@mui/x-charts/BarChart";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";

@@ -3,15 +3,6 @@
 // Library: muix 9.16.0 | JavaScript 22.23.3
 // Quality: 90/100 | Updated: 2026-10-23
 //# anyplot-orientation: landscape
-// anyplot.ai
-// heatmap-periodic-table: Periodic Table Property Heatmap
-// Library: muix 9.16.0 | JavaScript 22.23.3
-// Quality: 78/100 | Updated: 2026-10-23
-// anyplot.ai
-// heatmap-periodic-table: Periodic Table Property Heatmap
-// Library: MUI X Charts | React | Node
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-06-15
 
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";

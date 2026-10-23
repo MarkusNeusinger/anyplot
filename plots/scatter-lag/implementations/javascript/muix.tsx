@@ -3,11 +3,6 @@
 // Library: muix 7.29.1 | JavaScript 22.23.0
 // Quality: 90/100 | Created: 2026-06-24
 //# anyplot-orientation: landscape
-// anyplot.ai
-// scatter-lag: Lag Plot for Time Series Autocorrelation Diagnosis
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-06-24
 
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";

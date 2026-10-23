@@ -3,10 +3,6 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 88/100 | Created: 2026-09-09
 //# anyplot-orientation: square
-// anyplot.ai
-// tree-phylogenetic: Phylogenetic Tree Diagram
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-09-09
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";

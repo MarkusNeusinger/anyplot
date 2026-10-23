@@ -3,11 +3,6 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 91/100 | Created: 2026-09-05
 //# anyplot-orientation: square
-// anyplot.ai
-// roc-curve: ROC Curve with AUC
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-09-05
 import { LineChart } from "@mui/x-charts/LineChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import Box from "@mui/material/Box";

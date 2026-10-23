@@ -3,11 +3,6 @@
 // Library: muix 7.29.1 | JavaScript 22.23.0
 // Quality: 83/100 | Created: 2026-06-24
 //# anyplot-orientation: square
-// anyplot.ai
-// qrcode-basic: Basic QR Code Generator
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-06-24
 import { ChartContainer } from "@mui/x-charts";
 import { Box } from "@mui/material";
 

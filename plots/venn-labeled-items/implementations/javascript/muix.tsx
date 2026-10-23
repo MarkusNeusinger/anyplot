@@ -3,11 +3,6 @@
 // Library: muix 7.29.1 | JavaScript 22.22.3
 // Quality: 84/100 | Created: 2026-06-25
 //# anyplot-orientation: landscape
-// anyplot.ai
-// venn-labeled-items: Chartgeist-Style Venn Diagram with Labeled Items
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-06-25
 
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 

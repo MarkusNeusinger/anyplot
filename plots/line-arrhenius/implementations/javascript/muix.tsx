@@ -3,11 +3,6 @@
 // Library: muix 7.29.1 | JavaScript 22.22.3
 // Quality: 88/100 | Created: 2026-06-24
 //# anyplot-orientation: landscape
-// anyplot.ai
-// line-arrhenius: Arrhenius Plot for Reaction Kinetics
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-06-24
 
 import { LineChart } from "@mui/x-charts/LineChart";
 import Box from "@mui/material/Box";

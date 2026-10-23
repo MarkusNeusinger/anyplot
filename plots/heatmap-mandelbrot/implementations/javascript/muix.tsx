@@ -3,11 +3,6 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 89/100 | Created: 2026-08-25
 //# anyplot-orientation: square
-// anyplot.ai
-// heatmap-mandelbrot: Mandelbrot Set Fractal Visualization
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-08-25
 
 import * as React from "react";
 import { ChartContainer } from "@mui/x-charts/ChartContainer";

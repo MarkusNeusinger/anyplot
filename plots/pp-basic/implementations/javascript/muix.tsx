@@ -3,11 +3,6 @@
 // Library: muix 7.29.1 | JavaScript 22.22.3
 // Quality: 87/100 | Created: 2026-06-09
 //# anyplot-orientation: square
-// anyplot.ai
-// pp-basic: Probability-Probability (P-P) Plot
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-06-09
 import { ScatterChart } from "@mui/x-charts/ScatterChart";
 import { useDrawingArea } from "@mui/x-charts/hooks";
 

@@ -3,11 +3,6 @@
 // Library: muix 7.29.1 | JavaScript 22.22.3
 // Quality: 94/100 | Created: 2026-06-17
 //# anyplot-orientation: square
-// anyplot.ai
-// star-chart-constellation: Star Chart with Constellations
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-06-17
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";

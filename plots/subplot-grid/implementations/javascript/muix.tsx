@@ -3,11 +3,6 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 85/100 | Created: 2026-09-09
 //# anyplot-orientation: landscape
-// anyplot.ai
-// subplot-grid: Subplot Grid Layout
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-09-09
 import { LineChart } from "@mui/x-charts/LineChart";
 import { BarChart } from "@mui/x-charts/BarChart";
 import { ScatterChart } from "@mui/x-charts/ScatterChart";
