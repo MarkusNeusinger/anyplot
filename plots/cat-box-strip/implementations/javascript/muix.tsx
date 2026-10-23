@@ -2,270 +2,349 @@
 // cat-box-strip: Box Plot with Strip Overlay
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 93/100 | Created: 2026-09-02
-//# anyplot-orientation: landscape
-// anyplot.ai
-// cat-box-strip: Box Plot with Strip Overlay
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-09-02
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
+import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
-import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data (in-memory, deterministic) ----------------------------------------
-// Commute time (minutes) by transport mode — synthetic but realistic: bike
-// and walk are tight low-variance distributions, train is fairly consistent,
-// bus has wider spread from stop-to-stop variability, and car carries a right
-// skew from occasional traffic-jam outliers.
-function mulberry32(seed) {
-  return function rand() {
-    seed |= 0;
-    seed = (seed + 0x6d2b79f5) | 0;
-    let x = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x;
-    return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
-  };
-}
-function gaussian(rand) {
-  const u1 = Math.max(rand(), 1e-9);
-  const u2 = rand();
-  return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-}
-function quantile(sorted, q) {
-  const pos = (sorted.length - 1) * q;
-  const base = Math.floor(pos);
-  const rest = pos - base;
-  return sorted[base + 1] !== undefined
-    ? sorted[base] + rest * (sorted[base + 1] - sorted[base])
-    : sorted[base];
-}
+// Constants
+const Y_PAD_SHARE = 0.08;
+const BOX_WIDTH_SHARE = 0.36;
+const JITTER_WIDTH_SHARE = 0.28;
+const IQR_FENCE_MULT = 1.5;
+const HEADER_H = 112;
 
-const N_PER_CATEGORY = 45;
-const CATEGORY_PARAMS = [
-  { category: "Bike", mean: 17, sd: 4, min: 5 },
-  { category: "Walk", mean: 21, sd: 5, min: 6 },
-  { category: "Train", mean: 26, sd: 5, min: 10 },
-  { category: "Bus", mean: 31, sd: 8, min: 9 },
-  { category: "Car", mean: 24, sd: 9, min: 7, jamProb: 0.12, jamExtra: 25 },
-];
-const CATEGORIES = CATEGORY_PARAMS.map((c) => c.category);
+// Columns: set these to your data's column names
+const CATEGORY = "Transport mode"; // role: x
+const VALUE = "Commute time (minutes)"; // role: y
 
-const dataRand = mulberry32(42);
-const jitterRand = mulberry32(1337);
+// Data: replace this block with your own records, one object per row
+const data = (() => {
+  let seed = 42;
+  const nPerCategory = 45;
+  const params = [
+    { category: "Bike", mean: 17, sd: 4, min: 5, jamProb: 0, jamExtra: 0 },
+    { category: "Walk", mean: 21, sd: 5, min: 6, jamProb: 0, jamExtra: 0 },
+    { category: "Train", mean: 26, sd: 5, min: 10, jamProb: 0, jamExtra: 0 },
+    { category: "Bus", mean: 31, sd: 8, min: 9, jamProb: 0, jamExtra: 0 },
+    { category: "Car", mean: 24, sd: 9, min: 7, jamProb: 0.12, jamExtra: 25 },
+  ];
+  const rows: { [key: string]: string | number }[] = [];
 
-const STATS = CATEGORY_PARAMS.map(
-  ({ category, mean, sd, min, jamProb, jamExtra }) => {
-    const values = [];
-    for (let i = 0; i < N_PER_CATEGORY; i += 1) {
-      let v = mean + gaussian(dataRand) * sd;
-      if (jamProb && dataRand() < jamProb) v += jamExtra + dataRand() * jamExtra;
-      values.push(Math.max(min, Math.round(v * 10) / 10));
+  for (const p of params) {
+    for (let i = 0; i < nPerCategory; i += 1) {
+      seed = (seed + 0x6d2b79f5) | 0;
+      let x1 = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+      x1 = (x1 + Math.imul(x1 ^ (x1 >>> 7), 61 | x1)) ^ x1;
+      const u1 = Math.max(((x1 ^ (x1 >>> 14)) >>> 0) / 4294967296, 1e-9);
+
+      seed = (seed + 0x6d2b79f5) | 0;
+      let x2 = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+      x2 = (x2 + Math.imul(x2 ^ (x2 >>> 7), 61 | x2)) ^ x2;
+      const u2 = ((x2 ^ (x2 >>> 14)) >>> 0) / 4294967296;
+
+      const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+      let v = p.mean + z * p.sd;
+
+      if (p.jamProb > 0) {
+        seed = (seed + 0x6d2b79f5) | 0;
+        let x3 = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+        x3 = (x3 + Math.imul(x3 ^ (x3 >>> 7), 61 | x3)) ^ x3;
+        const u3 = ((x3 ^ (x3 >>> 14)) >>> 0) / 4294967296;
+        if (u3 < p.jamProb) {
+          seed = (seed + 0x6d2b79f5) | 0;
+          let x4 = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+          x4 = (x4 + Math.imul(x4 ^ (x4 >>> 7), 61 | x4)) ^ x4;
+          const u4 = ((x4 ^ (x4 >>> 14)) >>> 0) / 4294967296;
+          v += p.jamExtra + u4 * p.jamExtra;
+        }
+      }
+
+      rows.push({
+        [CATEGORY]: p.category,
+        [VALUE]: Math.max(p.min, Math.round(v * 10) / 10),
+      });
     }
-    const jittered = values.map((value) => ({
-      value,
-      offset: jitterRand() - 0.5,
-    }));
-    const sorted = [...values].sort((a, b) => a - b);
-    const q1 = quantile(sorted, 0.25);
-    const median = quantile(sorted, 0.5);
-    const q3 = quantile(sorted, 0.75);
-    const iqr = q3 - q1;
-    const lowFence = q1 - 1.5 * iqr;
-    const highFence = q3 + 1.5 * iqr;
-    const inFence = sorted.filter((v) => v >= lowFence && v <= highFence);
-    const whiskerLow = inFence.length ? inFence[0] : sorted[0];
-    const whiskerHigh = inFence.length ? inFence[inFence.length - 1] : sorted[sorted.length - 1];
+  }
+  return rows;
+})();
+
+// Plot: reads only data and the constants above
+const categories = Array.from(new Set(data.map((d) => String(d[CATEGORY]))));
+
+let jitterSeed = 1337;
+const stats = categories.map((category, idx) => {
+  const catRows = data.filter((d) => String(d[CATEGORY]) === category);
+  const values = catRows.map((d) => Number(d[VALUE]));
+  const sorted = [...values].sort((a, b) => a - b);
+  const n = sorted.length;
+
+  const qPos1 = (n - 1) * 0.25;
+  const qBase1 = Math.floor(qPos1);
+  const qRest1 = qPos1 - qBase1;
+  const q1 =
+    sorted[qBase1 + 1] !== undefined
+      ? sorted[qBase1] + qRest1 * (sorted[qBase1 + 1] - sorted[qBase1])
+      : sorted[qBase1];
+
+  const qPos2 = (n - 1) * 0.5;
+  const qBase2 = Math.floor(qPos2);
+  const qRest2 = qPos2 - qBase2;
+  const median =
+    sorted[qBase2 + 1] !== undefined
+      ? sorted[qBase2] + qRest2 * (sorted[qBase2 + 1] - sorted[qBase2])
+      : sorted[qBase2];
+
+  const qPos3 = (n - 1) * 0.75;
+  const qBase3 = Math.floor(qPos3);
+  const qRest3 = qPos3 - qBase3;
+  const q3 =
+    sorted[qBase3 + 1] !== undefined
+      ? sorted[qBase3] + qRest3 * (sorted[qBase3 + 1] - sorted[qBase3])
+      : sorted[qBase3];
+
+  const iqr = q3 - q1;
+  const lowFence = q1 - IQR_FENCE_MULT * iqr;
+  const highFence = q3 + IQR_FENCE_MULT * iqr;
+  const inFence = sorted.filter((v) => v >= lowFence && v <= highFence);
+  const whiskerLow = inFence.length > 0 ? inFence[0] : sorted[0];
+  const whiskerHigh =
+    inFence.length > 0 ? inFence[inFence.length - 1] : sorted[n - 1];
+
+  const jittered = values.map((value) => {
+    jitterSeed = (jitterSeed + 0x6d2b79f5) | 0;
+    let jx = Math.imul(jitterSeed ^ (jitterSeed >>> 15), 1 | jitterSeed);
+    jx = (jx + Math.imul(jx ^ (jx >>> 7), 61 | jx)) ^ jx;
+    const u = ((jx ^ (jx >>> 14)) >>> 0) / 4294967296;
     return {
-      category,
-      jittered,
-      q1,
-      median,
-      q3,
-      whiskerLow,
-      whiskerHigh,
-      outliers: sorted.filter((v) => v < whiskerLow || v > whiskerHigh),
+      value,
+      offset: u - 0.5,
     };
-  },
-);
+  });
 
-const ALL_VALUES = STATS.flatMap((s) => s.jittered.map((p) => p.value));
-const RAW_MIN = Math.min(...ALL_VALUES);
-const RAW_MAX = Math.max(...ALL_VALUES);
-const PAD = (RAW_MAX - RAW_MIN) * 0.1;
-const Y_MIN = Math.max(0, Math.floor((RAW_MIN - PAD) / 5) * 5);
-const Y_MAX = Math.ceil((RAW_MAX + PAD) / 5) * 5;
+  return {
+    category,
+    color: t.palette[idx],
+    jittered,
+    q1,
+    median,
+    q3,
+    whiskerLow,
+    whiskerHigh,
+    count: n,
+  };
+});
 
-// --- Custom layer: whiskers, box, median, jittered strip points -------------
-// MUI X community has no boxplot series type, so the box + whisker + strip
-// geometry is drawn directly from the chart's own band/linear scales via
-// useXScale/useYScale — the same composition pattern the harness expects for
-// chart types outside the built-in series set.
+const allValues = data.map((d) => Number(d[VALUE]));
+const rawMin = Math.min(...allValues);
+const rawMax = Math.max(...allValues);
+const span = rawMax - rawMin || 1;
+const yMin = Math.max(0, rawMin - span * Y_PAD_SHARE);
+const yMax = rawMax + span * Y_PAD_SHARE;
+
+const TITLE = "cat-box-strip · javascript · muix · anyplot.ai";
+const SUBTITLE = `Box: median, Q1–Q3, whiskers to ${IQR_FENCE_MULT}×IQR · Dots: jittered individual observations (${data.length} total across ${categories.length} ${CATEGORY.toLowerCase()}s)`;
+
 function BoxStripLayer() {
-  const xScale = useXScale("x");
-  const yScale = useYScale("y");
-  if (!xScale || !yScale) return null;
+  const xScale = useXScale("cat") as unknown as {
+    (v: string): number | undefined;
+    bandwidth?: () => number;
+  };
+  const yScale = useYScale("val");
+  if (!xScale || !yScale || !xScale.bandwidth) return null;
 
-  const bandwidth = (xScale as any).bandwidth();
-  const boxWidth = bandwidth * 0.34;
-  const capHalf = boxWidth * 0.3;
-  const jitterSpread = bandwidth * 0.3;
+  const bandwidth = xScale.bandwidth();
+  const boxWidth = bandwidth * BOX_WIDTH_SHARE;
+  const capHalf = boxWidth * 0.32;
+  const jitterSpread = bandwidth * JITTER_WIDTH_SHARE;
 
   return (
     <g>
-      {STATS.map((s) => {
-        const cx = (xScale as any)(s.category) + bandwidth / 2;
-        const yLow = (yScale as any)(s.whiskerLow);
-        const yQ1 = (yScale as any)(s.q1);
-        const yQ3 = (yScale as any)(s.q3);
-        const yHigh = (yScale as any)(s.whiskerHigh);
-        const yMed = (yScale as any)(s.median);
+      {stats.map((s) => {
+        const xBand = xScale(s.category);
+        const yLow = yScale(s.whiskerLow);
+        const yQ1 = yScale(s.q1);
+        const yQ3 = yScale(s.q3);
+        const yHigh = yScale(s.whiskerHigh);
+        const yMed = yScale(s.median);
+        if (
+          xBand === undefined ||
+          yLow === undefined ||
+          yQ1 === undefined ||
+          yQ3 === undefined ||
+          yHigh === undefined ||
+          yMed === undefined
+        ) {
+          return null;
+        }
+        const cx = xBand + bandwidth / 2;
+
         return (
           <g key={s.category}>
-            <line x1={cx} y1={yLow} x2={cx} y2={yQ1} stroke={t.palette[0]} strokeWidth={2} strokeOpacity={0.85} />
-            <line x1={cx} y1={yQ3} x2={cx} y2={yHigh} stroke={t.palette[0]} strokeWidth={2} strokeOpacity={0.85} />
-            <line x1={cx - capHalf} y1={yLow} x2={cx + capHalf} y2={yLow} stroke={t.palette[0]} strokeWidth={2} strokeOpacity={0.85} />
-            <line x1={cx - capHalf} y1={yHigh} x2={cx + capHalf} y2={yHigh} stroke={t.palette[0]} strokeWidth={2} strokeOpacity={0.85} />
+            <line
+              x1={cx}
+              y1={yLow}
+              x2={cx}
+              y2={yQ1}
+              stroke={s.color}
+              strokeWidth={2.2}
+              strokeOpacity={0.9}
+            />
+            <line
+              x1={cx}
+              y1={yQ3}
+              x2={cx}
+              y2={yHigh}
+              stroke={s.color}
+              strokeWidth={2.2}
+              strokeOpacity={0.9}
+            />
+            <line
+              x1={cx - capHalf}
+              y1={yLow}
+              x2={cx + capHalf}
+              y2={yLow}
+              stroke={s.color}
+              strokeWidth={2.2}
+              strokeOpacity={0.9}
+            />
+            <line
+              x1={cx - capHalf}
+              y1={yHigh}
+              x2={cx + capHalf}
+              y2={yHigh}
+              stroke={s.color}
+              strokeWidth={2.2}
+              strokeOpacity={0.9}
+            />
             <rect
               x={cx - boxWidth / 2}
               y={yQ3}
               width={boxWidth}
               height={Math.max(1, yQ1 - yQ3)}
-              fill={t.palette[0]}
-              fillOpacity={0.14}
-              stroke={t.palette[0]}
+              fill={s.color}
+              fillOpacity={0.18}
+              stroke={s.color}
               strokeWidth={2.5}
+              rx={2}
             />
-            <line x1={cx - boxWidth / 2} y1={yMed} x2={cx + boxWidth / 2} y2={yMed} stroke={t.ink} strokeWidth={3} strokeLinecap="round" />
-          </g>
-        );
-      })}
-      {STATS.map((s) => {
-        const cx = (xScale as any)(s.category) + bandwidth / 2;
-        return s.jittered.map((p, i) => (
-          <circle
-            key={`${s.category}-${i}`}
-            cx={cx + p.offset * jitterSpread}
-            cy={(yScale as any)(p.value)}
-            r={5}
-            fill={t.palette[0]}
-            fillOpacity={0.42}
-            stroke={t.pageBg}
-            strokeWidth={0.75}
-          />
-        ));
-      })}
-      {(() => {
-        // Callout on the category whose outliers reach furthest above its
-        // whisker cap — sharpens the story instead of a fixed, hardcoded label.
-        const withOutliers = STATS.filter((s) => s.outliers.length > 0);
-        if (!withOutliers.length) return null;
-        const target = withOutliers.reduce((a, b) =>
-          Math.max(...b.outliers) > Math.max(...a.outliers) ? b : a,
-        );
-        const topOutlier = Math.max(...target.outliers);
-        const cx = (xScale as any)(target.category) + bandwidth / 2;
-        const cyOutlier = (yScale as any)(topOutlier);
-        const labelY = cyOutlier - 30;
-        return (
-          <g>
             <line
-              x1={cx}
-              y1={cyOutlier - 8}
-              x2={cx}
-              y2={labelY + 8}
-              stroke={t.inkSoft}
-              strokeWidth={1}
-              strokeDasharray="2,3"
+              x1={cx - boxWidth / 2}
+              y1={yMed}
+              x2={cx + boxWidth / 2}
+              y2={yMed}
+              stroke={t.ink}
+              strokeWidth={3.2}
+              strokeLinecap="round"
             />
-            <text
-              x={cx}
-              y={labelY}
-              textAnchor="middle"
-              fontSize={13}
-              fontStyle="italic"
-              fill={t.inkSoft}
-            >
-              traffic-jam outliers
-            </text>
           </g>
         );
-      })()}
+      })}
+      {stats.map((s) => {
+        const xBand = xScale(s.category);
+        if (xBand === undefined) return null;
+        const cx = xBand + bandwidth / 2;
+        return s.jittered.map((p, i) => {
+          const cy = yScale(p.value);
+          if (cy === undefined) return null;
+          return (
+            <circle
+              key={`${s.category}-${i}`}
+              cx={cx + p.offset * jitterSpread}
+              cy={cy}
+              r={5.2}
+              fill={s.color}
+              fillOpacity={0.5}
+              stroke={t.pageBg}
+              strokeWidth={0.9}
+            />
+          );
+        });
+      })}
     </g>
   );
 }
 
-// --- Chart (default-exported component — the harness mounts it) -------------
 export default function Chart() {
-  const W = window.ANYPLOT_SIZE.width;
-  const H = window.ANYPLOT_SIZE.height;
-
-  const title =
-    "Commute Time by Transport Mode · cat-box-strip · javascript · muix · anyplot.ai";
-  const titleSize = title.length > 70 ? Math.round(24 * (70 / title.length)) : 24;
-  const subtitle =
-    "Box: median, Q1–Q3, whiskers to 1.5×IQR · dots: individual commutes (jittered), n=45 per mode";
+  const { width, height } = window.ANYPLOT_SIZE;
+  const chartHeight = height - HEADER_H;
 
   return (
-    <ChartContainer
-      width={W}
-      height={H}
-      series={[]}
-      skipAnimation
-      xAxis={[
-        {
-          id: "x",
-          scaleType: "band",
-          data: CATEGORIES,
-          label: "Transport Mode",
-          labelStyle: { fontSize: 16, fill: t.inkSoft },
-          tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
-        },
-      ]}
-      yAxis={[
-        {
-          id: "y",
-          scaleType: "linear",
-          min: Y_MIN,
-          max: Y_MAX,
-          label: "Commute Time (minutes)",
-          labelStyle: { fontSize: 16, fill: t.inkSoft },
-          tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-        },
-      ]}
-      margin={{ top: 130, bottom: 90, left: 110, right: 60 }}
+    <div
+      style={{
+        width,
+        height,
+        background: t.pageBg,
+        fontFamily: "Inter, system-ui, sans-serif",
+        display: "flex",
+        flexDirection: "column",
+      }}
     >
-      <ChartsGrid horizontal />
-      <BoxStripLayer />
-      <ChartsXAxis axisId="x" />
-      <ChartsYAxis axisId="y" />
-      <text
-        x={W / 2}
-        y={44}
-        textAnchor="middle"
-        dominantBaseline="middle"
-        fontSize={titleSize}
-        fontWeight={600}
-        fill={t.ink}
-        fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+      <div
+        style={{
+          height: HEADER_H,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 8,
+          paddingTop: 6,
+        }}
       >
-        {title}
-      </text>
-      <text
-        x={W / 2}
-        y={78}
-        textAnchor="middle"
-        dominantBaseline="middle"
-        fontSize={16}
-        fontStyle="italic"
-        fill={t.inkSoft}
-        fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>
+          {TITLE}
+        </div>
+        <div style={{ fontSize: 15, color: t.inkSoft }}>{SUBTITLE}</div>
+      </div>
+
+      <ChartsContainer
+        width={width}
+        height={chartHeight}
+        series={[]}
+        skipAnimation
+        margin={{ top: 20, right: 48, bottom: 20, left: 40 }}
+        xAxis={[
+          {
+            id: "cat",
+            scaleType: "band",
+            data: categories,
+            height: 64,
+            label: CATEGORY,
+            labelStyle: { fontSize: 16, fill: t.ink, fontWeight: 500 },
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
+          },
+        ]}
+        yAxis={[
+          {
+            id: "val",
+            scaleType: "linear",
+            min: yMin,
+            max: yMax,
+            tickNumber: 7,
+            width: 84,
+            label: VALUE,
+            labelStyle: { fontSize: 16, fill: t.ink, fontWeight: 500 },
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+          },
+        ]}
+        sx={{
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+          "& .MuiChartsGrid-line": {
+            stroke: t.grid,
+            opacity: 0.65,
+            strokeDasharray: "3 4",
+          },
+        }}
       >
-        {subtitle}
-      </text>
-    </ChartContainer>
+        <ChartsGrid horizontal />
+        <BoxStripLayer />
+        <ChartsXAxis axisId="cat" />
+        <ChartsYAxis axisId="val" />
+      </ChartsContainer>
+    </div>
   );
 }
