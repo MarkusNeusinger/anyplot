@@ -128,10 +128,9 @@ function ZoneArcs() {
 
 // Custom needle + score label rendered inside the gauge SVG
 function NeedleAndLabel() {
-  const { cx, cy, outerRadius, innerRadius, value } = useGaugeState();
-  const currentVal = value ?? score;
-  const frac = (currentVal - VALUE_MIN) / (VALUE_MAX - VALUE_MIN || 1);
-  const angleRad = START_RAD + TOTAL_RAD * frac;
+  const { cx, cy, outerRadius, innerRadius, value, valueAngle } = useGaugeState();
+  if (value === null || valueAngle === null) return null;
+  const angleRad = valueAngle;
   const needleLen = outerRadius * 0.82;
   const tipX = cx + needleLen * Math.sin(angleRad);
   const tipY = cy - needleLen * Math.cos(angleRad);
@@ -163,15 +162,15 @@ function NeedleAndLabel() {
           fontFamily: "Roboto, sans-serif",
         }}
       >
-        {currentVal}
+        {value}
       </text>
       <text
         x={cx}
-        y={cy + outerRadius * 0.50}
+        y={cy + outerRadius * 0.45}
         textAnchor="middle"
         dominantBaseline="middle"
         style={{
-          fontSize: outerRadius * 0.13,
+          fontSize: 22,
           fill: t.inkSoft,
           fontFamily: "Roboto, sans-serif",
         }}
