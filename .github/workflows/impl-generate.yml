@@ -1077,11 +1077,16 @@ jobs:
           # An earlier run of this pair is cleared first, unconditionally, so a
           # kept regeneration's prev-* and pair.json never outlive it. They stay
           # private (no AllUsers ACL) and impl-merge never promotes them.
+          # rsync, not `cp -r dir/*`: copying a directory into a destination
+          # subdirectory that does not exist yet drops the directory's name
+          # (gsutil's naming rule), so new/plot-light.png and
+          # prev/plot-light.png could both land as adapt/plot-light.png.
+          # rsync names every object by its path under $ADAPT.
           gsutil -m rm -r "${STAGING_PATH}/adapt" 2>/dev/null || true
           ADAPT="$RUNNER_TEMP/adapt"
           rm -rf "$ADAPT/prev-src"  # left behind only when the smoke step was cut off
           if [ -d "$ADAPT" ] && [ -n "$(ls -A "$ADAPT")" ]; then
-            gsutil -m -h "Cache-Control:no-store" cp -r "$ADAPT"/* "${STAGING_PATH}/adapt/" \
+            gsutil -m -h "Cache-Control:no-store" rsync -r "$ADAPT" "${STAGING_PATH}/adapt" \
               || echo "::warning::adapt artifacts not staged; impl-review records them as missing"
           fi
 

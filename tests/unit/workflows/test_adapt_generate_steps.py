@@ -57,7 +57,13 @@ FAKE_GSUTIL = """#!/bin/sh
 printf '%s\\n' "$*" >> "$GSUTIL_LOG"
 case "$*" in
   *"cp "*"adapt/new-smoke.json"*) [ -n "$GSUTIL_FAIL_CP" ] && exit 1 ;;
+  *"rsync "*) [ -n "$GSUTIL_FAIL_CP" ] && exit 1 ;;
   *"rm "*) [ -n "$GSUTIL_RM_MISSES" ] && exit 1 ;;
+esac
+# `rsync -r SRC DST` mirrors the tree: one object per file, named DST/<its path under SRC>.
+for arg in "$@"; do src="$dst"; dst="$arg"; done
+case "$*" in
+  *"rsync -r "*) (cd "$src" && find . -type f | sed "s|^\\./|$dst/|") >> "$GSUTIL_OBJECTS" ;;
 esac
 exit 0
 """
@@ -359,6 +365,7 @@ class Staging:
         (bin_dir / "gsutil").chmod(0o755)
         self.path = f"{bin_dir}{os.pathsep}{os.environ['PATH']}"
         self.log = tmp / "gsutil.log"
+        self.objects = tmp / "gsutil.objects"
         self.output = tmp / "github_output"
         self.language = language
         self.staging = f"gs://anyplot-images/staging/{SPEC}/{language}/{LIB}"
@@ -373,6 +380,7 @@ class Staging:
                 PATH=self.path,
                 RUNNER_TEMP=str(self.runner_temp),
                 GSUTIL_LOG=str(self.log),
+                GSUTIL_OBJECTS=str(self.objects),
                 GITHUB_OUTPUT=str(self.output),
                 SPEC_ID=SPEC,
                 LIBRARY=LIB,
@@ -386,6 +394,13 @@ class Staging:
         self.stdout = result.stdout
         return self.log.read_text(encoding="utf-8").splitlines() if self.log.exists() else []
 
+    def object_names(self) -> list[str]:
+        """The objects an `rsync -r` created, relative to the pair's staging folder."""
+        if not self.objects.exists():
+            return []
+        lines = self.objects.read_text(encoding="utf-8").splitlines()
+        return sorted(line.removeprefix(f"{self.staging}/") for line in lines)
+
 
 @pytest.mark.parametrize("shell", SHELLS, ids=["bash-e", "pipefail"])
 class TestGenerateUpload:
@@ -396,13 +411,24 @@ class TestGenerateUpload:
     ) -> None:
         staging = Staging(tmp_path)
         (staging.adapt / "new-smoke.json").write_text("{}", encoding="utf-8")
-        (staging.adapt / "prev").mkdir()
-        (staging.adapt / "prev" / "plot-light.png").write_bytes(b"png")
+        (staging.adapt / "pair.json").write_text("{}", encoding="utf-8")
+        for side in ("new", "prev"):
+            (staging.adapt / side).mkdir()
+            for theme in ("light", "dark"):
+                (staging.adapt / side / f"plot-{theme}.png").write_bytes(b"png")
         calls = staging.run("impl-generate.yml", self.STEP, shell)
         assert calls[0] == f"-m rm -r {staging.staging}/adapt"
-        (upload,) = [call for call in calls if call.endswith(f"{staging.staging}/adapt/")]
-        assert upload.startswith("-m -h Cache-Control:no-store cp -r ")
-        assert f"{staging.adapt}/new-smoke.json" in upload and f"{staging.adapt}/prev" in upload
+        (upload,) = [call for call in calls if "rsync" in call]
+        assert upload == f"-m -h Cache-Control:no-store rsync -r {staging.adapt} {staging.staging}/adapt"
+        # new/ and prev/ keep their names: the two sides' renders never collide.
+        assert staging.object_names() == [
+            "adapt/new-smoke.json",
+            "adapt/new/plot-dark.png",
+            "adapt/new/plot-light.png",
+            "adapt/pair.json",
+            "adapt/prev/plot-dark.png",
+            "adapt/prev/plot-light.png",
+        ]
         assert not [call for call in calls if "acl" in call and "adapt" in call]  # never public
         assert any("plot-light" in call for call in calls)  # the renders still go up
 
