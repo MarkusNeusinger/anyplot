@@ -2,7 +2,7 @@
 // anyplot.ai
 // hexbin-basic: Basic Hexbin Plot
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 88/100 | Created: 2026-08-25
+// Quality: pending | Created: 2026-08-25
 
 import { ScatterChart } from "@mui/x-charts/ScatterChart";
 import { ContinuousColorLegend } from "@mui/x-charts/ChartsLegend";
