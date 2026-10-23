@@ -8,6 +8,7 @@
 // Library: MUI X Charts | React | Node
 // License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
 // Quality: pending | Created: 2026-08-20
+import { getContrastRatio } from "@mui/material/styles";
 import { PieChart, PieArcLabel } from "@mui/x-charts/PieChart";
 
 const t = window.ANYPLOT_TOKENS;
@@ -35,29 +36,22 @@ const data = [
 
 // Plot: reads only data and the constants above
 const total = data.reduce((sum, d) => sum + d[SHARE], 0);
+// Categorical pool without slot 5, the matte red reserved for bad/loss/error roles
+const categorical = t.palette.filter((_, i) => i !== 4);
 const slices = data.map((d, i) => ({
   id: String(i),
   label: d[SOURCE],
   value: d[SHARE],
-  color: t.palette[i],
+  color: categorical[i % categorical.length],
 }));
 const explodedIndex = slices.reduce((best, s, i) => (s.value > slices[best].value ? i : best), 0);
 const percent = (value) => `${Math.round((value / total) * 100)}%`;
 
 // Arc-label ink: whichever of dark ink / white has the higher WCAG contrast
 // against the slice's own fill, so every label stays legible on any Imprint color.
-const luminance = (hex) => {
-  const [r, g, b] = [1, 3, 5].map((k) => {
-    const c = parseInt(hex.slice(k, k + 2), 16) / 255;
-    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-  });
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-};
 const DARK_INK = "#1A1A17";
-const labelInk = (hex) => {
-  const l = luminance(hex);
-  return (l + 0.05) / (luminance(DARK_INK) + 0.05) > 1.05 / (l + 0.05) ? DARK_INK : "#FFFFFF";
-};
+const labelInk = (fill) =>
+  getContrastRatio(fill, DARK_INK) > getContrastRatio(fill, "#FFFFFF") ? DARK_INK : "#FFFFFF";
 const ContrastArcLabel = (props) => <PieArcLabel {...props} style={{ fill: labelInk(props.color) }} />;
 
 export default function Chart() {
