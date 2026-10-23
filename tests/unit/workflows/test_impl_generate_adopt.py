@@ -90,8 +90,12 @@ if [ -n "$NODE_FAIL" ]; then echo "snippet threw" >&2; exit 1; fi
   "plot-$ANYPLOT_THEME.png"
 printf '<html></html>\\n' > "plot-$ANYPLOT_THEME.html"
 """
+# Logs its call; an install makes numpy importable for the venv shim (NUMPY_MARKER),
+# unless UV_FAIL fails it or UV_NOOP succeeds without installing anything.
 FAKE_UV = """#!/bin/sh
 printf '%s\\n' "$*" >> "$UV_LOG"
+[ -n "$UV_FAIL" ] && exit 1
+[ -z "$UV_NOOP" ] && touch "$NUMPY_MARKER"
 exit 0
 """
 # Records every call as one JSON array per line; `gh api` answers the failure count.
@@ -248,7 +252,9 @@ class Origin:
         _executable(
             venv_bin / "python",
             "#!/bin/sh\n"
-            'if [ -n "$NO_NUMPY" ] && [ "$1" = "-c" ] && [ "$2" = "import numpy" ]; then exit 1; fi\n'
+            'if [ -n "$NO_NUMPY" ] && [ ! -f "$NUMPY_MARKER" ] && [ "$1" = "-c" ] && [ "$2" = "import numpy" ]; then\n'
+            "  exit 1\n"
+            "fi\n"
             f'exec "{sys.executable}" "$@"\n',
         )
         (venv_bin / "activate").write_text(f'PATH="{venv_bin}:$PATH"\nexport PATH\n', encoding="utf-8")
@@ -290,6 +296,7 @@ class Origin:
                 BRANCH=self.branch,
                 NODE_LOG=str(self.node_log),
                 UV_LOG=str(self.uv_log),
+                NUMPY_MARKER=str(self.tmp / "numpy-installed"),
                 TEST_PYTHON=sys.executable,
                 **extra,
             ),
@@ -465,11 +472,8 @@ class TestExtractInputs:
         "source_ref", ["gemini/muix 9", "-x", "../main", "a..b", "$(id)", "main;id", "`id`", "a'b", "x" * 81, "origin/"]
     )
     def test_anything_but_a_ref_name_stops_the_run(self, tmp_path: Path, source_ref: str) -> None:
+        """ "origin/" alone too: the REGEN_GATE expressions read the raw input, so it may never mean "generate"."""
         result = _extract_inputs(tmp_path, source_ref=source_ref)
-        if source_ref == "origin/":
-            # "origin/" alone normalizes to empty: an ordinary generation, not an error.
-            assert result.returncode == 0 and _outputs(tmp_path / "github_output")["source_ref"] == ""
-            return
         assert result.returncode != 0
         assert "::error::source_ref '" in result.stdout
         assert "source_ref" not in _outputs(tmp_path / "github_output")
@@ -548,6 +552,37 @@ class TestAdoptStep:
         result = origin.run(shell, "gemini/adopt", NO_NUMPY="1")
         assert result.returncode == 0, result.stdout + result.stderr
         assert origin.uv_log.read_text(encoding="utf-8").splitlines() == ["pip install --python .venv/bin/python numpy"]
+
+    @pytest.mark.parametrize("uv_env", [{"UV_FAIL": "1"}, {"UV_NOOP": "1"}], ids=["install-fails", "still-missing"])
+    def test_numpy_that_cannot_be_installed_is_the_runners_failure(
+        self, tmp_path: Path, shell: list[str], uv_env: dict[str, str]
+    ) -> None:
+        """Never mistaken for drift, never pushed unchecked, and no cause: the ordinary retry path."""
+        origin = Origin(tmp_path, library="muix")
+        result = origin.run(shell, "gemini/adopt", NO_NUMPY="1", **uv_env)
+        assert result.returncode == 1
+        assert "::error::numpy could not be installed for the canvas check" in result.stdout
+        assert "cause" not in origin.outputs()
+        assert not origin.pushed()
+
+    def test_a_crashing_canvas_check_is_never_read_as_drift(self, tmp_path: Path, shell: list[str]) -> None:
+        origin = Origin(tmp_path)
+        _write(origin.ws, {"core/canvas.py": "raise ImportError('broken runner')\n"})
+        result = origin.run(shell, "gemini/adopt")
+        assert result.returncode == 1
+        assert "::error::the canvas check crashed on plot-light.png (exit 1)" in result.stdout
+        assert "off the canvas target" not in result.stdout
+        assert "cause" not in origin.outputs()
+        assert not origin.pushed()
+
+    def test_an_unreachable_origin_is_the_runners_failure(self, tmp_path: Path, shell: list[str]) -> None:
+        """A transport failure must not read as a missing ref, which would never be retried."""
+        origin = Origin(tmp_path)
+        _git(origin.ws, "remote", "set-url", "origin", str(tmp_path / "gone.git"))
+        result = origin.run(shell, "gemini/adopt")
+        assert result.returncode == 1
+        assert "::error::origin is unreachable; cannot fetch source_ref 'gemini/adopt'" in result.stdout
+        assert "cause" not in origin.outputs()
 
     @pytest.mark.parametrize("ref", ["adopt-tag", "sha"])
     def test_a_tag_or_a_commit_sha_works_like_a_branch(self, tmp_path: Path, shell: list[str], ref: str) -> None:

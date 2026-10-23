@@ -145,10 +145,12 @@ jobs:
           # `git fetch origin <ref>` names the ref as origin itself knows it,
           # so a leading "origin/" (this checkout's remote-tracking name) is
           # dropped. The value reaches git, the PR body and the metadata, so
-          # only branch, tag and SHA characters pass.
+          # only branch, tag and SHA characters pass. A non-empty input never
+          # becomes an empty ref: the REGEN_GATE expressions read the raw
+          # input, so it must always mean adopt mode.
           SOURCE_REF="${SOURCE_REF_INPUT:-}"
           SOURCE_REF="${SOURCE_REF#origin/}"
-          if [ -n "$SOURCE_REF" ]; then
+          if [ -n "${SOURCE_REF_INPUT:-}" ]; then
             if ! [[ "$SOURCE_REF" =~ ^[A-Za-z0-9][A-Za-z0-9._/-]{0,79}$ ]] || [[ "$SOURCE_REF" == *..* ]]; then
               echo "::error::source_ref '${SOURCE_REF}' is not a branch, tag or commit SHA (letters, digits, . _ / -, at most 80 characters)"
               exit 1
@@ -503,9 +505,11 @@ jobs:
       # the canvas with core.canvas, and commits and pushes that one file to
       # the implementation branch. Every later step runs as for a generated
       # file. Python and JavaScript only: R and Julia have no adopt render yet.
-      # A failure writes `cause` first (missing, render, unsupported), so
-      # "Handle generation failure" knows that every retry would read the same
-      # file and fail the same way.
+      # A failure of the source writes `cause` first (missing, render,
+      # unsupported), so "Handle generation failure" knows that every retry
+      # would read the same file and fail the same way. A failure of the
+      # runner (origin unreachable, numpy not installable, the canvas check
+      # crashing, the push) writes none and takes the ordinary retry path.
       - name: Adopt implementation from source ref
         id: adopt
         if: steps.inputs.outputs.source_ref != ''
@@ -531,8 +535,14 @@ jobs:
             *) fail unsupported "Adopt mode renders Python and JavaScript implementations only; ${LANGUAGE}/${LIBRARY} has no adopt render yet" ;;
           esac
 
-          # FETCH_HEAD, not origin/<name>: works for branches, tags and SHAs alike.
+          # FETCH_HEAD, not origin/<name>: works for branches, tags and SHAs
+          # alike. A failed fetch is a missing ref only when origin answers
+          # otherwise; an unreachable origin is the runner's failure.
           if ! git fetch --no-tags origin "$SOURCE_REF"; then
+            if ! git ls-remote --heads origin main >/dev/null; then
+              echo "::error::origin is unreachable; cannot fetch source_ref '${SOURCE_REF}'"
+              exit 1
+            fi
             fail missing "source_ref '${SOURCE_REF}' not found on origin (expected a branch, tag or full commit SHA)"
           fi
           SOURCE_SHA=$(git rev-parse FETCH_HEAD)
@@ -567,16 +577,26 @@ jobs:
           # canvas gate in impl-review turns it into a VQ-05 defect that
           # repair fixes, the path a generated file that drifted takes too.
           # core.canvas needs numpy, which the helper venv of the non-Python
-          # languages lacks.
-          .venv/bin/python -c "import numpy" 2>/dev/null || uv pip install --python .venv/bin/python numpy
+          # languages lacks. Exit 1 is drift only when the check printed its
+          # failing verdict: a crash (an import error, say) exits 1 as well,
+          # and must never pass for a measured canvas.
+          if ! .venv/bin/python -c "import numpy" 2>/dev/null; then
+            uv pip install --python .venv/bin/python numpy \
+              && .venv/bin/python -c "import numpy" \
+              || { echo "::error::numpy could not be installed for the canvas check"; exit 1; }
+          fi
           for theme in light dark; do
             rc=0
-            .venv/bin/python -m core.canvas "${IMPL_DIR}/plot-${theme}.png" --library "$LIBRARY" || rc=$?
-            case "$rc" in
-              0) ;;
-              1) echo "::warning::plot-${theme}.png is off the canvas target; impl-review's canvas gate sends it to repair" ;;
-              *) fail render "plot-${theme}.png of ${IMPL_FILE} is not a readable PNG" ;;
-            esac
+            verdict=$(.venv/bin/python -m core.canvas "${IMPL_DIR}/plot-${theme}.png" --library "$LIBRARY") || rc=$?
+            printf '%s\n' "$verdict"
+            if [ "$rc" = 1 ] && grep -q '^::notice::canvas_gate .* status=fail ' <<< "$verdict"; then
+              echo "::warning::plot-${theme}.png is off the canvas target; impl-review's canvas gate sends it to repair"
+            elif [ "$rc" = 2 ]; then
+              fail render "plot-${theme}.png of ${IMPL_FILE} is not a readable PNG"
+            elif [ "$rc" != 0 ]; then
+              echo "::error::the canvas check crashed on plot-${theme}.png (exit ${rc})"
+              exit 1
+            fi
           done
 
           # Step 7: commit only the implementation file and push the branch.
