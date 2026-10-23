@@ -38,6 +38,7 @@ from automation.scripts.regen_gate import (
     GateResult,
     adapt_assess,
     adapt_record_errors,
+    adapt_record_problem,
     adapt_summary_line,
     build_record,
     call_count,
@@ -3402,16 +3403,68 @@ class TestAdaptRoute:
         adapt = adapt_assess(_adapt_inp(adapt=_adapt(prev=record)), None)
         assert (adapt.why, adapt.counted, adapt.prev) == ("record_invalid", False, None)
 
-    def test_the_gate_reads_the_derived_status_and_never_recomputes_it(self):
-        record = _adapt_record("prev", "fail")
-        record["static"]["status"] = "pass"  # inconsistent with `fail`, but the record step owns the derivation
-        adapt = adapt_assess(_adapt_inp(adapt=_adapt(prev=record)), None)
-        assert adapt.prev == {
-            "status": "fail",
-            "static": "pass",
-            "smoke": _adapt_record("prev", "fail")["smoke"]["status"],
+    def test_a_crafted_pass_over_a_missing_smoke_run_is_invalid(self):
+        """The record the second opinion crafted: `pass` with a smoke run that never ran used to route."""
+        crafted = {**_adapt_record("new", "pass"), "static": {"status": "pass"}, "smoke": {"status": "missing"}}
+        assert adapt_record_problem(crafted, "new", ADAPT_SPEC, ADAPT_LIB) == (
+            "status does not follow from static and smoke"
+        )
+        adapt = adapt_assess(_adapt_inp(adapt=_adapt(new=crafted)), None)
+        assert (adapt.why, adapt.counted, adapt.new) == ("record_invalid", False, None)
+
+    @pytest.mark.parametrize(
+        ("side", "status", "static", "smoke", "smoke_why"),
+        [
+            ("prev", "fail", "pass", "pass", "-"),  # a predecessor that passes, relabelled fail
+            ("prev", "fail", "pass", "missing", "-"),
+            ("new", "pass", "fail", "pass", "-"),
+            ("new", "pass", "pass", "stale", "-"),
+            ("new", "pass", "pass", "skipped", "runner_error"),
+            ("new", "pass", "pass", "skipped", "no_perturbations:table"),
+            ("new", "pass", "pass", "fail", "perturbation_failed"),
+            ("new", "pass", "error", "pass", "-"),
+            ("new", "pass", "excluded", "skipped", "shape:excluded"),
+            ("new", "unknown", "pass", "pass", "-"),
+            ("new", "excluded", "pass", "pass", "-"),
+        ],
+    )
+    def test_a_status_that_does_not_follow_from_its_blocks_is_invalid(self, side, status, static, smoke, smoke_why):
+        record = _adapt_record(side, status)
+        record["static"] = {**record["static"], "status": static}
+        record["smoke"] = {**record["smoke"], "status": smoke, "why": smoke_why}
+        problem = adapt_record_problem(record, side, ADAPT_SPEC, ADAPT_LIB)
+        assert problem == "status does not follow from static and smoke"
+        assert _why(_adapt_inp(adapt=_adapt(**{side: record}))) == "record_invalid"
+
+    @pytest.mark.parametrize(
+        ("status", "static", "smoke", "smoke_why"),
+        [
+            ("pass", "pass", "pass", "-"),
+            ("pass", "pass", "skipped", "shape:generated"),
+            ("pass", "pass", "skipped", "shape:network"),
+            ("fail", "fail", "pass", "-"),
+            ("fail", "fail", "skipped", "static_failed"),
+            ("fail", "fail", "missing", "-"),
+            ("fail", "pass", "fail", "perturbation_failed"),
+            ("excluded", "excluded", "skipped", "shape:excluded"),
+            ("excluded", "excluded", "missing", "-"),
+            ("unknown", "error", "pass", "-"),
+            ("unknown", "pass", "missing", "-"),
+            ("unknown", "pass", "stale", "-"),
+            ("unknown", "pass", "skipped", "runner_error"),
+            ("unknown", "pass", "skipped", "no_perturbations:table"),
+        ],
+    )
+    def test_every_consistent_record_is_read(self, status, static, smoke, smoke_why):
+        record = _adapt_record("prev", status)
+        record["static"] = {**record["static"], "status": static}
+        record["smoke"] = {**record["smoke"], "status": smoke, "why": smoke_why}
+        assert adapt_record_problem(record, "prev", ADAPT_SPEC, ADAPT_LIB) is None
+        assert adapt_assess(_adapt_inp(adapt=_adapt(prev=record)), None).prev == {
+            "status": status,
+            "static": static,
+            "smoke": smoke,
         }
-        assert adapt.counted
 
     def test_identity_fractions_for_the_record(self):
         pair = _pair(light=_identity(new_size=(3160, 1760)), dark=_identity(0.123456789))
@@ -3741,10 +3794,19 @@ class TestAdaptFiles:
         assert changed["identity"]["light"]["fraction"] is None
         assert _why(_adapt_inp(adapt=_adapt(pair=changed))) == "size_changed"
         assert pair_problem(_pair(status="error", identity=None), ADAPT_LIB) is None
-        assert pair_problem(_pair(), "seaborn") == "library names another library"
-        without_library = _pair()
-        del without_library["library"]
-        assert pair_problem(without_library, ADAPT_LIB) is None
+        assert pair_problem(_pair(), "seaborn") == "library is missing or names another library"
+
+    @pytest.mark.parametrize("library", [None, "", ["matplotlib"]])
+    def test_a_pair_must_name_its_library(self, library):
+        """``core.smoke_run pair`` always writes ``library``; a record without it was not written there."""
+        pair = _pair()
+        if library is None:
+            del pair["library"]
+        else:
+            pair["library"] = library
+        assert pair_problem(pair, ADAPT_LIB) == "library is missing or names another library"
+        assert pair_problem({**pair, "status": "error", "identity": None}, ADAPT_LIB) is not None
+        assert _why(_adapt_inp(adapt=_adapt(pair=pair))) == "pair_missing"
 
 
 def _adapt_files(tmp_path: Path, *, new: str = "pass", prev: str = "fail", pair: dict | None = None) -> list[str]:

@@ -48,9 +48,12 @@ pass       ``-``                              ``smoke.status`` is ``pass``
 
 The regen gate (``regen_gate.py adapt-route`` and ``decide --adapt-new
 --adapt-prev``) reads ``v``, ``side``, ``spec``, ``lib``, ``language``,
-``checker_version``, ``status``, ``static.status`` and ``smoke.status``, and
-never recomputes the derived status. Everything else is diagnostics for the
-regen-pair artifact and the weekly review.
+``checker_version``, ``status``, ``static.status``, ``smoke.status`` and
+``smoke.why``. It cross-checks the derived status against the two blocks
+with its own copy of this table (``regen_gate.derived_adapt_status``; a unit
+test runs both over every combination) and rejects a record whose status
+does not follow from them. Everything else is diagnostics for the regen-pair
+artifact and the weekly review.
 
 ``code_sha256`` is byte for byte the function of ``core.smoke_run``: the
 SHA-256 of the source without its leading docstring header, which the

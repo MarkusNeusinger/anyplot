@@ -18,6 +18,7 @@ from typing import Any
 import pytest
 
 from automation.scripts import adapt_record as ar
+from automation.scripts import regen_gate
 from core import adaptability
 
 
@@ -154,6 +155,18 @@ class TestSharedCopies:
 
     def test_rule_order_is_the_checkers(self):
         assert ar.RULE_ORDER == adaptability.RULE_ORDER
+
+    def test_the_gates_derivation_is_derive_status(self):
+        """The gate rejects a record whose status does not follow from its blocks, by this very table."""
+        assert ar.SMOKE_NOT_APPLICABLE == regen_gate.ADAPT_SMOKE_NOT_APPLICABLE
+        statics = (*ar.STATIC_STATUSES, "error", "weird")
+        smokes = (*ar.STAGED_SMOKE_STATUSES, "missing", "stale", "weird")
+        whys = ("-", "shape:generated", "shape:network", "shape:excluded", "no_perturbations:table", "runner_error")
+        for static in statics:
+            for smoke in smokes:
+                for why in whys:
+                    expected = ar.derive_status(static, smoke, why)[0]
+                    assert regen_gate.derived_adapt_status(static, smoke, why) == expected, (static, smoke, why)
 
 
 class TestDerivedStatus:

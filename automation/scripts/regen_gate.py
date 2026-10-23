@@ -830,8 +830,10 @@ def header_score(text: str) -> int | None:
 # The gate never renders and imports no PIL: it reads three JSON files. The
 # adapt records of both sources (``/tmp/anyplot-adapt-new.json`` and
 # ``-prev.json``) come from impl-review's record step, which runs the checker
-# mirror and reads the staged smoke runs; the gate takes their derived
-# ``status`` as it is and never recomputes it. The pair record
+# mirror and reads the staged smoke runs. The gate reads their derived
+# ``status`` and only cross-checks it against the static and smoke statuses
+# (``derived_adapt_status``): a record whose status does not follow from them
+# was not written by the record step, so it fails closed. The pair record
 # (``$RUNNER_TEMP/adapt/pair.json``) comes from ``core.smoke_run pair`` in
 # impl-generate, which renders both sources in one runner and writes one
 # ``core.render_identity.RenderIdentity.to_dict()`` per theme.
@@ -842,6 +844,10 @@ ADAPT_RECORD_VERSION = 1
 ADAPT_STATUSES = ("pass", "fail", "unknown", "excluded")
 ADAPT_STATIC_STATUSES = ("pass", "fail", "excluded", "error")
 ADAPT_SMOKE_STATUSES = ("pass", "fail", "skipped", "missing", "stale")
+# A ``skipped`` smoke run for a shape without a table to perturb is no gap: the
+# static check is the whole check there (``adapt_record.SMOKE_NOT_APPLICABLE``;
+# a unit test keeps the two equal).
+ADAPT_SMOKE_NOT_APPLICABLE = ("shape:generated", "shape:network")
 # The one language with a checker; any other reads as ``not_python``, never as a failure.
 ADAPT_LANGUAGE = "python"
 PAIR_STATUSES = ("identical", "different", "error")
@@ -990,12 +996,39 @@ def _real(value: Any) -> TypeGuard[int | float]:
     return isinstance(value, int | float) and not isinstance(value, bool) and math.isfinite(value)
 
 
+def derived_adapt_status(static: Any, smoke: Any, smoke_why: Any) -> str:
+    """The status an adapt record must carry for its static and smoke statuses.
+
+    ``adapt_record.derive_status`` reimplemented for the single-file copy (a
+    unit test runs both over every combination): the first matching rule wins.
+    A static ``error`` is ``unknown``; ``excluded`` and ``fail`` decide alone;
+    then a ``missing`` or ``stale`` smoke run is ``unknown``, a failed one
+    ``fail``, a skip ``pass`` only for a shape without a table
+    (``ADAPT_SMOKE_NOT_APPLICABLE``) and ``unknown`` otherwise, and a passed
+    one ``pass``.
+    """
+    if static not in ("pass", "fail", "excluded"):
+        return "unknown"
+    if static in ("excluded", "fail"):
+        return str(static)
+    if smoke in ("missing", "stale"):
+        return "unknown"
+    if smoke == "fail":
+        return "fail"
+    if smoke == "skipped":
+        return "pass" if smoke_why in ADAPT_SMOKE_NOT_APPLICABLE else "unknown"
+    return "pass" if smoke == "pass" else "unknown"
+
+
 def adapt_record_problem(record: Any, side: str, spec_id: str, library: str) -> str | None:
     """Why an adapt record cannot be read for this pair, or None when it can.
 
     The gate reads ``v``, ``side``, ``spec``, ``lib``, ``language``,
-    ``checker_version``, ``status``, ``static.status`` and ``smoke.status``
-    (contract: impl-review's record step owns the format and the derivation).
+    ``checker_version``, ``status``, ``static.status``, ``smoke.status`` and
+    ``smoke.why`` (contract: impl-review's record step owns the format and the
+    derivation). A ``status`` that does not follow from the two blocks
+    (``derived_adapt_status``) makes the record malformed: a crafted
+    ``pass`` over a missing smoke run must never open the route.
     """
     if not isinstance(record, Mapping):
         return "not a JSON object"
@@ -1015,6 +1048,9 @@ def adapt_record_problem(record: Any, side: str, spec_id: str, library: str) -> 
         block = record.get(key)
         if not isinstance(block, Mapping) or block.get("status") not in allowed:
             return f"{key}.status is not one of {', '.join(allowed)}"
+    smoke = record["smoke"]
+    if record["status"] != derived_adapt_status(record["static"]["status"], smoke["status"], smoke.get("why")):
+        return "status does not follow from static and smoke"
     return None
 
 
@@ -1042,10 +1078,11 @@ def _size(value: Any) -> tuple[int, int] | None:
 def pair_problem(pair: Any, library: str) -> str | None:
     """Why a pair record cannot be read for this library, or None when it can.
 
-    It needs ``v``, a known ``status``, a ``library`` (when present) equal to
-    this one and, unless the status is ``error``, an ``identity`` entry per
-    theme with both sizes, a boolean ``passed`` and a ``fraction`` that is a
-    number or null.
+    It needs ``v``, a known ``status``, a ``library`` equal to this one
+    (``core.smoke_run pair`` always writes it, so a record without one was
+    not written there) and, unless the status is ``error``, an ``identity``
+    entry per theme with both sizes, a boolean ``passed`` and a ``fraction``
+    that is a number or null.
     """
     if not isinstance(pair, Mapping):
         return "not a JSON object"
@@ -1053,8 +1090,8 @@ def pair_problem(pair: Any, library: str) -> str | None:
         return f"v is not {ADAPT_RECORD_VERSION}"
     if pair.get("status") not in PAIR_STATUSES:
         return "status is not identical, different or error"
-    if pair.get("library", library) != library:
-        return "library names another library"
+    if pair.get("library") != library:
+        return "library is missing or names another library"
     if pair["status"] == "error":
         return None
     identity = pair.get("identity")
