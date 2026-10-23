@@ -3106,7 +3106,8 @@ def _adapt_record(side: str, status: str, **overrides: Any) -> dict:
         "status": status,
         "why": "-",
         "lines": 100 if side == "prev" else 110,
-        "code_sha256": "9b2f3c",
+        # The same hashes as `_pair`'s two sides: the pair rendered these sources.
+        "code_sha256": "51aa07" if side == "prev" else "9b2f3c",
         "static": {
             "status": static,
             "exit": 0 if static == "pass" else 1,
@@ -3253,6 +3254,12 @@ class TestAdaptRoute:
             ({"pair": ["identical"]}, "pair_missing"),
             ({"pair": _pair(v=2)}, "pair_missing"),
             ({"pair": _pair(status="same")}, "pair_missing"),
+            # A pair rendered from another version of either source measures other code.
+            ({"pair": {**_pair(), "new": {**_pair()["new"], "code_sha256": "0000aa"}}}, "pair_stale"),
+            ({"pair": {**_pair(), "prev": {**_pair()["prev"], "code_sha256": "0000aa"}}}, "pair_stale"),
+            ({"pair": {**_pair(), "prev": {**_pair()["prev"], "code_sha256": None}}}, "pair_stale"),
+            ({"pair": {k: v for k, v in _pair().items() if k != "new"}}, "pair_stale"),
+            ({"new": {**_adapt_record("new", "pass"), "code_sha256": None}}, "pair_stale"),
             ({"pair": _pair(library="seaborn")}, "pair_missing"),
             ({"pair": _pair(identity=None)}, "pair_missing"),
             ({"pair": _pair(identity={"light": _identity()})}, "pair_missing"),

@@ -419,13 +419,13 @@ class TestAdaptStepRuns:
         assert prev is not None and prev["static"] == {"status": "error", "exit": 2} and prev["lines"] is None
         assert out["prev_status"] == "unknown"
 
-    def test_the_real_gate_routes_this_pair(self, pair):
-        """Part D's adapt-route on the same inputs (skipped until part D is merged)."""
-        gate = TOOLS / "regen_gate.py"
-        if "adapt-route" not in gate.read_text(encoding="utf-8"):
-            pytest.skip("regen_gate.py adapt-route arrives with PR 2 part D")
-        shutil.copyfile(gate, pair.runner / "regen-tools" / "regen_gate.py")
+    @staticmethod
+    def _stage_real_pair(pair, *, new_text: str, prev_text: str) -> None:
+        """The real gate, and a pair.json as `core.smoke_run pair` writes it for these two sources."""
+        shutil.copyfile(TOOLS / "regen_gate.py", pair.runner / "regen-tools" / "regen_gate.py")
         identity = {"old_size": [3200, 1800], "new_size": [3200, 1800], "differing": 0, "fraction": 0.0011}
+        render = {"status": "ok", "size": [3200, 1800], "seconds": 2.0}
+        side = {"renders": {"light": render, "dark": render}, "error": None, "line": None}
         pair.stage(
             "pair.json",
             {
@@ -433,6 +433,8 @@ class TestAdaptStepRuns:
                 "tool": "core.smoke_run pair",
                 "library": LIB,
                 "themes": ["light", "dark"],
+                "new": {**side, "code_sha256": ar.code_sha256(new_text)},
+                "prev": {**side, "code_sha256": ar.code_sha256(prev_text)},
                 "identity": {
                     "light": {**identity, "bound": 0.005, "passed": True},
                     "dark": {**identity, "bound": 0.005, "passed": True},
@@ -441,9 +443,20 @@ class TestAdaptStepRuns:
                 "why": "-",
             },
         )
+
+    def test_the_real_gate_routes_this_pair(self, pair):
+        """Part D's adapt-route on the records this step writes and the pair impl-generate staged."""
+        self._stage_real_pair(pair, new_text=pair.new_text, prev_text=pair.prev_text)
         result, out, ordered = pair.run()
         _done(result, ordered)
         assert (out["route"], out["why"]) == ("true", "route"), result.stdout
+
+    def test_the_real_gate_refuses_a_pair_of_other_sources(self, pair):
+        """A pair rendered from an earlier head measures other code: no route, the review runs."""
+        self._stage_real_pair(pair, new_text=pair.new_text + "\n# an earlier head\n", prev_text=pair.prev_text)
+        result, out, ordered = pair.run()
+        _done(result, ordered)
+        assert (out["route"], out["why"], out["review_skipped"]) == ("false", "pair_stale", "false"), result.stdout
 
 
 class TestAdaptStepWiring:

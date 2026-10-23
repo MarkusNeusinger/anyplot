@@ -112,6 +112,8 @@ record's `why`:
 - The new implementation is Python.
 - Both records are valid for this pair.
 - The predecessor's status is `fail` and the new one's `pass`.
+- The pair rendered the two sources the records checked (the same
+  `code_sha256` on each side, else `pair_stale`).
 - The pair rendered both themes at equal size, and each differs in at most
   `IDENTITY_BOUND` (0.5 %, the value of `core.render_identity.DEFAULT_BOUND`)
   of its pixels. The gate applies its own bound, whatever bound the pair file

@@ -873,6 +873,7 @@ ADAPT_WHY = (
     "new_fails",
     "pair_missing",
     "pair_error",
+    "pair_stale",
     "size_changed",
     "identity_light",
     "identity_dark",
@@ -1073,6 +1074,23 @@ def pair_problem(pair: Any, library: str) -> str | None:
     return None
 
 
+def _pair_matches(pair: Mapping[str, Any], new: Any, prev: Any) -> bool:
+    """The pair rendered the very sources the two records checked: equal ``code_sha256`` on each side.
+
+    Both hashes come from one rule (``core.smoke_run.code_sha256``, reimplemented
+    in ``adapt_record.py``). A pair rendered from an earlier head or another
+    predecessor measures other code, so it never counts, and neither does a
+    missing hash.
+    """
+    for side, record in (("new", new), ("prev", prev)):
+        rendered = pair.get(side)
+        sha = rendered.get("code_sha256") if isinstance(rendered, Mapping) else None
+        checked = record.get("code_sha256") if isinstance(record, Mapping) else None
+        if not (isinstance(sha, str) and sha and sha == checked):
+            return False
+    return True
+
+
 def _theme_holds(entry: Mapping[str, Any]) -> bool:
     """Equal sizes, ``passed``, and a fraction from 0 to ``IDENTITY_BOUND`` (the gate's own bound)."""
     fraction = entry.get("fraction")
@@ -1193,6 +1211,8 @@ def adapt_assess(inp: GateInput, review: Mapping[str, Any] | None) -> AdaptAsses
             return "pair_missing"
         if not usable_pair:
             return "pair_error"
+        if not _pair_matches(adapt.pair, adapt.new, adapt.prev):
+            return "pair_stale"
         identity = adapt.pair["identity"]
         if any(_size(identity[t].get("old_size")) != _size(identity[t].get("new_size")) for t in ADAPT_THEMES):
             return "size_changed"
@@ -1267,6 +1287,7 @@ ADAPT_WHY_TEXT = {
     "new_fails": "the new source fails the adaptability check",
     "pair_missing": "the render pair from impl-generate is missing or malformed",
     "pair_error": "a render of the pair failed in impl-generate",
+    "pair_stale": "the render pair was made from other source versions than the two checked here",
     "size_changed": "the two sources' renders differ in size",
     "identity_light": f"the light renders differ in more than {_percent(IDENTITY_BOUND)} of their pixels",
     "identity_dark": f"the dark renders differ in more than {_percent(IDENTITY_BOUND)} of their pixels",

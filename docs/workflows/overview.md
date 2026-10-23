@@ -325,7 +325,7 @@ A regeneration is an implementation PR for a (spec, library) pair that already h
 
    **Adapt route.** A Python regeneration that converts the implementation to the adaptable-code convention ([Adaptable catalogue code](../concepts/adaptable-code.md)) changes the code but not the picture, so it has no visible improvement to carry it. It replaces the live implementation on render identity instead, when all of these hold:
    - the predecessor fails the adaptability check (the static check or the smoke run) and the new source passes both;
-   - the two sources' renders, both made in the same `impl-generate.yml` runner ("Adaptability smoke run (record-only)"), differ in at most 0.5 % of their pixels in each theme, at equal size; a size change fails;
+   - the two sources' renders, both made in the same `impl-generate.yml` runner ("Adaptability smoke run (record-only)") from the very sources the records checked, differ in at most 0.5 % of their pixels in each theme, at equal size; a size change fails, and so does a pair rendered from other source versions (`pair_stale`);
    - the new source has at most max(1.25 × prev, prev + 15) lines, and the canvas gate passed;
    - when the review ran: a score above 0, no regression, an unchanged data scenario and no added encoding (on any spec), and no VQ, SC, DQ, or CQ item below its value in the re-score.
 
