@@ -507,6 +507,21 @@ class TestImplReviewModel:
         # matplotlib is on main: routing alone would say sonnet.
         assert _review_model(repo, tmp_path, library="matplotlib", body=body) == "opus"
 
+    def test_adopted_pr_body_names_the_source_model_and_keeps_the_repair_model(self, repo, tmp_path):
+        """The author goes on the **Generation:** line; rescues still read the repair model."""
+        body = _create_pr_body(
+            tmp_path, model="opus", SOURCE_REF="gemini/muix-9", SOURCE_SHA="a" * 40, SOURCE_MODEL="gemini-4-argon"
+        )
+        lines = body.splitlines()
+        assert (
+            f"**Generation:** adopted from `gemini/muix-9` ({'a' * 40}) by gemini-4-argon; the model below runs repair"
+            in lines
+        )
+        assert "no generation model" not in body
+        assert "**Model:** opus" in lines
+        assert _review_model(repo, tmp_path, library="matplotlib", body=body) == "opus"
+        assert _repair_model(repo, tmp_path, library="matplotlib", model_input="auto", body=body) == "opus"
+
     def test_missing_origin_main_warns_and_assumes_a_first_run(self, repo_without_main, tmp_path):
         result = _run_review(repo_without_main, tmp_path, library="matplotlib")
         assert result.returncode == 0, result.stdout + result.stderr

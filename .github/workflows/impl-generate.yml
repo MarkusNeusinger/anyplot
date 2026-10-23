@@ -7,7 +7,8 @@ run-name: "Generate: ${{ inputs.library || github.event.label.name }} for ${{ in
 # - workflow_dispatch with specification_id + library
 # Adopt mode (workflow_dispatch with source_ref): the implementation file is
 # taken from that ref of origin instead of being generated, then rendered,
-# reviewed, repaired and merged like a forced regeneration.
+# reviewed, repaired and merged like a forced regeneration. source_model
+# names the model that wrote it, recorded as generated_by.
 
 on:
   issues:
@@ -67,6 +68,11 @@ on:
         required: false
         type: string
         default: ''
+      source_model:
+        description: "Adopt mode only: the model that wrote the adopted implementation (e.g. gemini-4-argon), recorded as generated_by. Only with source_ref; empty keeps generated_by: adopted:<ref>."
+        required: false
+        type: string
+        default: ''
 
 # Global concurrency: max 3 concurrent implementation workflows
 concurrency:
@@ -114,6 +120,7 @@ jobs:
           REGEN_GATE: ${{ (github.event_name == 'workflow_dispatch' && (inputs.regen_gate == false || inputs.source_ref != '')) && 'false' || 'true' }}
           # Via env, never interpolated into the script: free text from a dispatch.
           SOURCE_REF_INPUT: ${{ inputs.source_ref }}
+          SOURCE_MODEL_INPUT: ${{ inputs.source_model }}
         run: |
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
             # From workflow_dispatch
@@ -154,6 +161,24 @@ jobs:
             if ! [[ "$SOURCE_REF" =~ ^[A-Za-z0-9][A-Za-z0-9._/-]{0,79}$ ]] || [[ "$SOURCE_REF" == *..* ]]; then
               echo "::error::source_ref '${SOURCE_REF}' is not a branch, tag or commit SHA (letters, digits, . _ / -, at most 80 characters)"
               exit 1
+            fi
+          fi
+
+          # The model that wrote the adopted file outside the pipeline, such
+          # as gemini-4-argon. It becomes the metadata's generated_by and
+          # reaches the PR body, so only model-name characters pass, checked
+          # before anything echoes it. Without source_ref nothing is adopted,
+          # so the value is dropped with a warning instead of naming a model
+          # that never wrote this run's code.
+          SOURCE_MODEL="${SOURCE_MODEL_INPUT:-}"
+          if [ -n "$SOURCE_MODEL" ]; then
+            if ! [[ "$SOURCE_MODEL" =~ ^[A-Za-z0-9][A-Za-z0-9._-]{0,39}$ ]]; then
+              echo "::error::source_model '${SOURCE_MODEL}' is not a model name (letters, digits, . _ -, at most 40 characters)"
+              exit 1
+            fi
+            if [ -z "$SOURCE_REF" ]; then
+              echo "::warning::source_model '${SOURCE_MODEL}' ignored: it names the author of an adopted file and needs source_ref"
+              SOURCE_MODEL=""
             fi
           fi
 
@@ -230,15 +255,17 @@ jobs:
           echo "model=$MODEL" >> $GITHUB_OUTPUT
           echo "model_reason=$MODEL_REASON" >> $GITHUB_OUTPUT
           echo "source_ref=$SOURCE_REF" >> $GITHUB_OUTPUT
+          echo "source_model=$SOURCE_MODEL" >> $GITHUB_OUTPUT
 
           if [ -n "$SOURCE_REF" ]; then
-            # No model writes the code; the resolved model still runs repair.
+            # No pipeline model writes the code (source_model, when given,
+            # names the one that did); the resolved model still runs repair.
             {
-              echo "**Generation:** adopted from \`${SOURCE_REF}\`"
+              echo "**Generation:** adopted from \`${SOURCE_REF}\`${SOURCE_MODEL:+ by ${SOURCE_MODEL}}"
               echo ""
               echo "**Repair model:** ${MODEL} (${MODEL_REASON})"
             } >> "$GITHUB_STEP_SUMMARY"
-            echo "::notice::Adopting $LANGUAGE/$LIBRARY for $SPEC_ID (issue: ${ISSUE:-none}, generation: adopted from ${SOURCE_REF}, repair model: ${MODEL} (${MODEL_REASON}), ext: ${EXT})"
+            echo "::notice::Adopting $LANGUAGE/$LIBRARY for $SPEC_ID (issue: ${ISSUE:-none}, generation: adopted from ${SOURCE_REF}${SOURCE_MODEL:+ by ${SOURCE_MODEL}}, repair model: ${MODEL} (${MODEL_REASON}), ext: ${EXT})"
           else
             echo "**Model:** ${MODEL} (${MODEL_REASON})" >> "$GITHUB_STEP_SUMMARY"
             echo "::notice::Generating $LANGUAGE/$LIBRARY for $SPEC_ID (issue: ${ISSUE:-none}, model: ${MODEL} (${MODEL_REASON}), ext: ${EXT})"
@@ -516,6 +543,7 @@ jobs:
         timeout-minutes: 20
         env:
           SOURCE_REF: ${{ steps.inputs.outputs.source_ref }}
+          SOURCE_MODEL: ${{ steps.inputs.outputs.source_model }}
           SPEC_ID: ${{ steps.inputs.outputs.specification_id }}
           LANGUAGE: ${{ steps.inputs.outputs.language }}
           LIBRARY: ${{ steps.inputs.outputs.library }}
@@ -524,6 +552,7 @@ jobs:
         run: |
           IMPL_DIR="plots/${SPEC_ID}/implementations/${LANGUAGE}"
           IMPL_FILE="${IMPL_DIR}/${LIBRARY}${EXT}"
+          AUTHOR="${SOURCE_MODEL:+, written by ${SOURCE_MODEL}}"
           fail() {
             echo "cause=$1" >> "$GITHUB_OUTPUT"
             echo "::error::$2"
@@ -551,7 +580,7 @@ jobs:
             fail missing "${IMPL_FILE} does not exist on source_ref ${SOURCE_REF} (${SOURCE_SHA})"
           fi
           git checkout FETCH_HEAD -- "$IMPL_FILE"
-          echo "::notice::Adopted ${IMPL_FILE} from ${SOURCE_REF} (${SOURCE_SHA})"
+          echo "::notice::Adopted ${IMPL_FILE} from ${SOURCE_REF} (${SOURCE_SHA})${AUTHOR}"
 
           # Step 3: both themes, from the implementation directory, with the
           # generator's commands. The JS harness writes plot-{theme}.png and
@@ -604,10 +633,14 @@ jobs:
           # (source_ref=main), so the PR still records where the code came from.
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git commit --allow-empty -m "feat(${LIBRARY}): implement ${SPEC_ID}" \
-            -m "Adopted from ${SOURCE_REF} (${SOURCE_SHA}); no generation model." -- "$IMPL_FILE"
+          if [ -n "$SOURCE_MODEL" ]; then
+            ORIGIN_NOTE="Adopted from ${SOURCE_REF} (${SOURCE_SHA}), written by ${SOURCE_MODEL} outside the pipeline."
+          else
+            ORIGIN_NOTE="Adopted from ${SOURCE_REF} (${SOURCE_SHA}); no generation model."
+          fi
+          git commit --allow-empty -m "feat(${LIBRARY}): implement ${SPEC_ID}" -m "$ORIGIN_NOTE" -- "$IMPL_FILE"
           git push -u origin "$BRANCH"
-          echo "**Adopted:** \`${IMPL_FILE}\` from \`${SOURCE_REF}\` (${SOURCE_SHA})" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Adopted:** \`${IMPL_FILE}\` from \`${SOURCE_REF}\` (${SOURCE_SHA})${AUTHOR}" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Run Claude Code to generate implementation
         id: claude
@@ -663,8 +696,12 @@ jobs:
           ISSUE: ${{ steps.issue.outputs.number }}
           BRANCH: ${{ steps.branch.outputs.branch }}
           MODEL: ${{ steps.inputs.outputs.model }}
-          # Validated in "Extract inputs" (branch, tag and SHA characters only).
+          # SOURCE_REF and SOURCE_MODEL are validated in "Extract inputs" (ref
+          # and model-name characters only). SOURCE_SHA is the commit "Adopt
+          # implementation from source ref" took the file from.
           SOURCE_REF: ${{ steps.inputs.outputs.source_ref }}
+          SOURCE_MODEL: ${{ steps.inputs.outputs.source_model }}
+          SOURCE_SHA: ${{ steps.adopt.outputs.sha }}
         run: |
           IMPL_DIR="plots/${SPEC_ID}/implementations/${LANGUAGE}"
 
@@ -889,6 +926,8 @@ jobs:
           metadata_file = '$METADATA_FILE'
           model = '$MODEL'
           source_ref = '$SOURCE_REF'
+          source_model = '$SOURCE_MODEL'
+          source_sha = '$SOURCE_SHA'
           base_url = f'https://storage.googleapis.com/anyplot-images/plots/{spec}/{language}/{lib}'
 
           # Preserve the original 'created' timestamp on regenerations.
@@ -914,8 +953,9 @@ jobs:
               # Claude Code's current alias for the chosen model resolves to.
               # Use the family name instead of a frozen version string so the
               # metadata doesn't go stale every model release. An adopted file
-              # was written outside this run, so it names its source instead.
-              'generated_by': f'adopted:{source_ref}' if source_ref else f'claude-{model}',
+              # was written outside this run: it names the model that wrote it
+              # (source_model) or, without one, its source ref.
+              'generated_by': (source_model or f'adopted:{source_ref}') if source_ref else f'claude-{model}',
               'workflow_run': run_id,
               'issue': issue,
               # language_version is the runtime of the implementation's own language
@@ -932,6 +972,14 @@ jobs:
               'quality_score': None,
               'review': {'strengths': [], 'weaknesses': []}
           }
+          # Adopt mode: the ref and the commit the file came from, right after
+          # generated_by. Outside the literal above, which review_retest.py
+          # mirrors as the key set of a fresh generation.
+          if source_ref:
+              items = list(data.items())
+              at = [key for key, _ in items].index('generated_by') + 1
+              items.insert(at, ('adopted_from', f'{source_ref} ({source_sha})' if source_sha else source_ref))
+              data = dict(items)
           with open(metadata_file, 'w') as f:
               f.write(f'# Per-library metadata for {lib} implementation of {spec}\n')
               f.write('# Auto-generated by impl-generate.yml\n\n')
@@ -1127,6 +1175,7 @@ jobs:
           # Via env, never interpolated into the script: the hint is free text.
           CHANGE_REQUEST: ${{ inputs.change_request }}
           SOURCE_REF: ${{ steps.inputs.outputs.source_ref }}
+          SOURCE_MODEL: ${{ steps.inputs.outputs.source_model }}
           SOURCE_SHA: ${{ steps.adopt.outputs.sha }}
         run: |
           # Label one name per call, retried: the regen label is added after
@@ -1160,10 +1209,11 @@ jobs:
             exit 0
           fi
 
-          # Create PR body. In adopt mode no model wrote the code: the body says
-          # where it came from, and the **Model:** line stays as the model
-          # repair runs on, because the rescues of impl-review and impl-repair
-          # read it back from exactly that line.
+          # Create PR body. In adopt mode no pipeline model wrote the code: the
+          # body says where it came from and, with source_model, which model
+          # wrote it, and the **Model:** line stays as the model repair runs
+          # on, because the rescues of impl-review and impl-repair read it back
+          # from exactly that line.
           BODY="## Implementation: \`${SPEC_ID}\` - ${LANGUAGE}/${LIBRARY}
 
           Implements the **${LANGUAGE}/${LIBRARY}** version of \`${SPEC_ID}\`.
@@ -1171,9 +1221,14 @@ jobs:
           **File:** \`plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}${EXT}\`"
 
           if [ -n "$SOURCE_REF" ]; then
+            if [ -n "$SOURCE_MODEL" ]; then
+              AUTHOR=" by ${SOURCE_MODEL}"
+            else
+              AUTHOR=", no generation model"
+            fi
             BODY="${BODY}
 
-          **Generation:** adopted from \`${SOURCE_REF}\`${SOURCE_SHA:+ (${SOURCE_SHA})}, no generation model; the model below runs repair"
+          **Generation:** adopted from \`${SOURCE_REF}\`${SOURCE_SHA:+ (${SOURCE_SHA})}${AUTHOR}; the model below runs repair"
           fi
 
           BODY="${BODY}
@@ -1312,6 +1367,7 @@ jobs:
           MODEL: ${{ steps.inputs.outputs.model }}
           MODEL_REASON: ${{ steps.inputs.outputs.model_reason }}
           SOURCE_REF: ${{ steps.inputs.outputs.source_ref }}
+          SOURCE_MODEL: ${{ steps.inputs.outputs.source_model }}
         run: |
           # Use staging URLs (available immediately after upload) — show both themes side by side.
           BASE="https://storage.googleapis.com/anyplot-images/staging/${SPEC_ID}/${LANGUAGE}/${LIBRARY}"
@@ -1344,7 +1400,7 @@ jobs:
 
           if [ -n "$SOURCE_REF" ]; then
             BODY="${BODY}
-          **Generation:** adopted from \`${SOURCE_REF}\`
+          **Generation:** adopted from \`${SOURCE_REF}\`${SOURCE_MODEL:+ by ${SOURCE_MODEL}}
           **Repair model:** ${MODEL} (${MODEL_REASON})"
           else
             BODY="${BODY}
@@ -1445,11 +1501,12 @@ jobs:
           LANGUAGE: ${{ steps.inputs.outputs.language }}
           EXT: ${{ steps.inputs.outputs.ext }}
           REGEN_GATE: ${{ (github.event_name == 'workflow_dispatch' && (inputs.regen_gate == false || inputs.source_ref != '')) && 'false' || 'true' }}
-          # Adopt mode: the ref the file came from (forwarded by every retry),
-          # and the cause "Adopt implementation from source ref" wrote before
-          # it failed (missing, render, unsupported). Empty when that step
-          # did not fail.
+          # Adopt mode: the ref the file came from and the model that wrote it
+          # (both forwarded by every retry), and the cause "Adopt
+          # implementation from source ref" wrote before it failed (missing,
+          # render, unsupported). Empty when that step did not fail.
           SOURCE_REF: ${{ steps.inputs.outputs.source_ref }}
+          SOURCE_MODEL: ${{ steps.inputs.outputs.source_model }}
           ADOPT_CAUSE: ${{ steps.adopt.outputs.cause }}
           # The ref this run was dispatched on: the auto-retry runs there too,
           # so a branch smoke retries on its branch instead of on main
@@ -1526,7 +1583,7 @@ jobs:
 
           Not retried and not counted toward the 3-attempt cap, because a retry would read the same file. Fix the file on \`${SOURCE_REF}\`, then run:
           \`\`\`
-          gh workflow run impl-generate.yml -f specification_id=${SPEC_ID} -f library=${LIBRARY} -f issue_number=${ISSUE} -f source_ref=${SOURCE_REF}
+          gh workflow run impl-generate.yml -f specification_id=${SPEC_ID} -f library=${LIBRARY} -f issue_number=${ISSUE} -f source_ref=${SOURCE_REF}${SOURCE_MODEL:+ -f source_model=${SOURCE_MODEL}}
           \`\`\`
 
           ---
@@ -1623,7 +1680,8 @@ jobs:
           # hint but the retry doesn't, defeating the audit. CHANGE_REQUEST is
           # read from env to keep raw quotes/$/backticks inside the hint from
           # breaking shell parsing. `source_ref` is forwarded too: without it an
-          # adopt run's retry would generate the file with Claude instead.
+          # adopt run's retry would generate the file with Claude instead. And
+          # `source_model`, or the retry's metadata would lose the author.
           dispatch_retry() {
             gh workflow run impl-generate.yml --ref "${TRIGGER_REF:-main}" \
               -f specification_id="${SPEC_ID}" \
@@ -1632,7 +1690,8 @@ jobs:
               -f model="${MODEL}" \
               -f change_request="${CHANGE_REQUEST}" \
               -f regen_gate="${REGEN_GATE}" \
-              -f source_ref="${SOURCE_REF}"
+              -f source_ref="${SOURCE_REF}" \
+              -f source_model="${SOURCE_MODEL}"
             if [ -n "${CHANGE_REQUEST}" ]; then
               echo "::notice::Triggered automatic retry for ${LIBRARY}/${SPEC_ID} ($1, model=${MODEL}, change_request=present)"
             else
@@ -1666,7 +1725,7 @@ jobs:
 
           To retry once the incident is over:
           \`\`\`
-          gh workflow run impl-generate.yml -f specification_id=${SPEC_ID} -f library=${LIBRARY} -f issue_number=${ISSUE} -f model=${MODEL}${SOURCE_REF:+ -f source_ref=${SOURCE_REF}}
+          gh workflow run impl-generate.yml -f specification_id=${SPEC_ID} -f library=${LIBRARY} -f issue_number=${ISSUE} -f model=${MODEL}${SOURCE_REF:+ -f source_ref=${SOURCE_REF}}${SOURCE_MODEL:+ -f source_model=${SOURCE_MODEL}}
           \`\`\`
 
           ---
@@ -1759,7 +1818,7 @@ jobs:
 
           To retry manually:
           \`\`\`
-          gh workflow run impl-generate.yml -f specification_id=${SPEC_ID} -f library=${LIBRARY} -f issue_number=${ISSUE} -f model=${MODEL}${SOURCE_REF:+ -f source_ref=${SOURCE_REF}}
+          gh workflow run impl-generate.yml -f specification_id=${SPEC_ID} -f library=${LIBRARY} -f issue_number=${ISSUE} -f model=${MODEL}${SOURCE_REF:+ -f source_ref=${SOURCE_REF}}${SOURCE_MODEL:+ -f source_model=${SOURCE_MODEL}}
           \`\`\`
 
           ---

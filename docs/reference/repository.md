@@ -310,7 +310,8 @@ created: 2025-01-10T08:00:00Z
 updated: 2025-01-15T10:30:00Z
 
 # Generation
-generated_by: claude-opus-4-7
+generated_by: claude-opus-4-7   # an adopted file: the model that wrote it, e.g. gemini-4-argon
+# adopted_from: gemini/muix-9 (<sha>)   # adopted files only: source ref and commit
 workflow_run: 12345678
 issue: 42
 

@@ -588,6 +588,40 @@ A bar chart.
         impls = {(i["language_id"], i["library_id"]) for i in result["implementations"]}
         assert impls == {("javascript", "echarts"), ("javascript", "muix")}
 
+    def test_scan_adopted_metadata_syncs_the_model_and_skips_adopted_from(self, tmp_path):
+        """Adopt mode writes generated_by: <model> plus adopted_from: <ref> (<sha>).
+        generated_by syncs as a model name; adopted_from has no column and is left out."""
+        plot_dir = tmp_path / "bar-basic"
+        (plot_dir / "implementations" / "javascript").mkdir(parents=True)
+        (plot_dir / "metadata" / "javascript").mkdir(parents=True)
+        (plot_dir / "specification.md").write_text("# bar-basic: Basic Bar\n\n## Description\nA bar chart.\n")
+        (plot_dir / "implementations" / "javascript" / "muix.tsx").write_text("// muix\n")
+        (plot_dir / "metadata" / "javascript" / "muix.yaml").write_text(
+            """library: muix
+language: javascript
+specification_id: bar-basic
+created: '2026-10-23T10:00:00Z'
+updated: '2026-10-23T11:00:00Z'
+generated_by: gemini-4-argon
+adopted_from: gemini/12267-muix-9-batch1 (8cfea568c)
+workflow_run: 123
+issue: 42
+quality_score: 91
+review:
+  strengths: []
+  weaknesses: []
+"""
+        )
+
+        result = scan_plot_directory(plot_dir)
+
+        assert result is not None
+        (impl,) = result["implementations"]
+        assert impl["generated_by"] == "gemini-4-argon"
+        assert impl["quality_score"] == 91
+        assert impl["workflow_run"] == 123
+        assert "adopted_from" not in impl
+
     def test_scan_skips_unknown_language_dir(self, tmp_path):
         """A language directory with no known extensions is skipped, not crashed."""
         plot_dir = tmp_path / "weird"
