@@ -1,7 +1,7 @@
 // anyplot.ai
 // bar-basic: Basic Bar Chart
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-08-20
+// Library: muix 9.16.0 | JavaScript 22.23.3
+// Quality: 83/100 | Updated: 2026-10-23
 import { BarChart } from "@mui/x-charts/BarChart";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
