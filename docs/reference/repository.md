@@ -89,6 +89,7 @@ anyplot/
 │   ├── images.py                      # Image processing utilities
 │   ├── perturbation.py                # Perturbed tables for the smoke run
 │   ├── render_identity.py             # Pixel difference between two renders
+│   ├── smoke_run.py                   # Perturbation smoke run, render pair, generator self-check
 │   ├── spec_roles.py                  # Data roles, data shape and color role of a spec
 │   ├── utils.py                       # General utilities
 │   ├── database/                      # Database layer
@@ -513,8 +514,9 @@ plt.savefig('plot.png', dpi=300)
 - `spec_roles.py` - Data roles from a spec's `## Data` bullets, the data shape (table, matrix, network, generated, excluded) and the color-driving role; shared by the agent and the adaptability checker
 - `adaptability.py` - Adaptability checker for Python implementations ([Adaptable catalogue code](../concepts/adaptable-code.md)): the record, the CQ-01 defect lines, and the block and constant substitution; `python -m core.adaptability report plots/` prints the catalogue baseline
 - `adaptability_mirror.py` - Builds `automation/scripts/adaptability_check.py`, the checker as one standard-library file; `uv run python -m core.adaptability_mirror` after a change to `adaptability.py` or `spec_roles.py`
-- `perturbation.py` - The perturbation smoke run's tables (renamed, more and fewer categories, one group, fewer and more rows, scaled values) and the source to run on each
+- `perturbation.py` - The perturbation smoke run's tables (renamed, more and fewer categories, one group, fewer and more rows, scaled values, a missing value in the loader's dtypes) and the source to run on each
 - `render_identity.py` - Share of differing pixels between two renders against a bound (0.5 % per theme); `python -m core.render_identity old.png new.png`
+- `smoke_run.py` - Runs an implementation: `run` executes it on each perturbed table in both themes, `pair` renders a new source and its predecessor in one environment and compares them, and `selfcheck` is the generator's Step 3c (static check plus smoke run, logged per attempt); `python -m core.smoke_run run plots/{spec}/implementations/python/{library}.py`
 
 ---
 
@@ -528,7 +530,8 @@ plt.savefig('plot.png', dpi=300)
 - `scripts/label_manager.py` - Label operations and transitions
 - `scripts/workflow_cli.py` - CLI interface for workflow steps
 - `scripts/regen_gate.py` - Regen gate: keeps or replaces a regeneration (used by impl-review.yml)
-- `scripts/adaptability_check.py` - The adaptability checker as one generated standard-library file for the workflow runner (wired into the pipeline by the adaptable-code rules PR)
+- `scripts/adaptability_check.py` - The adaptability checker as one generated standard-library file for the workflow runner (impl-review.yml, "Adaptability check (record-only)")
+- `scripts/adapt_record.py` - Combines the checker mirror's record and the staged smoke run into one adapt record per source (used by impl-review.yml)
 - `scripts/regen_writeback.py` - Stores a kept regeneration's re-score as the live implementation's review (used by impl-review.yml and impl-merge.yml)
 - `gcp/budget-guard/` - Cloud Run function that disables the Vertex AI API when its Cloud Billing budget is reached; a deploy unit, not a Python package (see [GCP budget guard](gcp-budget-guard.md))
 

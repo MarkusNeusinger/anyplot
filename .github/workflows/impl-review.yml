@@ -53,6 +53,16 @@ jobs:
         with:
           fetch-depth: 0
 
+      # The regen tools (regen_gate.py, review_provenance.py, the adaptability
+      # checker mirror) carry PEP 758 `except A, B:` since the move to Python
+      # 3.14 (#12247), which an older interpreter cannot parse; the runner
+      # image's python3 is not pinned. From here on every `python3` and `pip`
+      # in this job is the version in this ref's .python-version.
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with:
+          python-version-file: '.python-version'
+
       - name: Extract PR info
         id: pr
         env:
@@ -620,20 +630,6 @@ jobs:
           print(f"::warning::Canvas gate FAILED — wrote synthetic weakness to /tmp/anyplot-canvas-gate.txt: {weakness}")
           PY
 
-      # The checker mirror parses the PR's source with `ast`, and ruff writes
-      # PEP 758 `except A, B:` since the move to Python 3.14 (#12247), which
-      # an older interpreter rejects. Pinned here, without touching PATH:
-      # every other step keeps the runner's python3. A failed setup falls
-      # back to python3 in the next step.
-      - name: Set up Python for the adaptability mirror
-        id: py314
-        if: steps.lang.outputs.language == 'python'
-        continue-on-error: true
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
-        with:
-          python-version: '3.14'
-          update-environment: false   # every other step keeps the runner's python3
-
       # Record-only (docs/concepts/adaptable-code.md, "Pipeline changes"). The
       # checker mirror runs on the PR's implementation and, on a regeneration,
       # on its predecessor from origin/main; with the smoke runs impl-generate
@@ -651,6 +647,9 @@ jobs:
       # the regen context is complete, no change request is pending and the
       # canvas gate passed. review_skipped is the step's last write, so a step
       # that fails or times out before it leaves the review running.
+      # The mirror parses the PR's source with `ast` on the pinned python3
+      # ("Set up Python"): ruff writes PEP 758 `except A, B:` for py314, which
+      # an older interpreter would report as `layout: does not parse`.
       - name: Adaptability check (record-only)
         id: adapt
         if: steps.lang.outputs.language == 'python'
@@ -662,7 +661,6 @@ jobs:
           LANGUAGE: ${{ steps.lang.outputs.language }}
           IS_REGEN: ${{ steps.regen.outputs.is_regen }}
           GCS_OK: ${{ steps.gcs.outcome == 'success' }}
-          PY314: ${{ steps.py314.outputs.python-path }}
           # Off unless the owner sets the repository variable to exactly `true`.
           ADAPT_REVIEW_FREE: ${{ vars.ADAPT_REVIEW_FREE || 'false' }}
           CONTEXT_OUTCOME: ${{ steps.regen_ctx.outcome }}
@@ -670,7 +668,6 @@ jobs:
           CHANGE_REQUEST_PRESENT: ${{ steps.regen_ctx.outputs.change_request_present || 'false' }}
         run: |
           OUT="$RUNNER_TEMP/adapt"
-          PY="${PY314:-python3}"
           IMPL="plots/${SPEC_ID}/implementations/python/${LIBRARY}.py"
           SPEC="plots/${SPEC_ID}/specification.md"
           NEW_REC=/tmp/anyplot-adapt-new.json
@@ -706,10 +703,10 @@ jobs:
           # 3. The checker mirror on the PR's file (exit 0 pass or excluded,
           # 1 fail, 2 unreadable input), then its record.
           NEW_EXIT=0
-          "$PY" "$RUNNER_TEMP/regen-tools/adaptability_check.py" check "$IMPL" \
+          python3 "$RUNNER_TEMP/regen-tools/adaptability_check.py" check "$IMPL" \
             --spec "$SPEC" --spec-id "$SPEC_ID" --out "$OUT/static-new.json" \
             > /dev/null && NEW_EXIT=0 || NEW_EXIT=$?
-          "$PY" "$RUNNER_TEMP/regen-tools/adapt_record.py" record --side new \
+          python3 "$RUNNER_TEMP/regen-tools/adapt_record.py" record --side new \
             --spec "$SPEC_ID" --lib "$LIBRARY" --language "$LANGUAGE" --source "$IMPL" \
             --static "$OUT/static-new.json" --static-exit "$NEW_EXIT" \
             --smoke "$OUT/new-smoke.json" --selfcheck "$OUT/selfcheck.jsonl" --out "$NEW_REC" \
@@ -728,7 +725,7 @@ jobs:
             PREV_SRC="$OUT/prev-src/${LIBRARY}.py"
             PREV_EXIT=0
             if git show "origin/main:${IMPL}" > "$PREV_SRC" 2>/dev/null; then
-              "$PY" "$RUNNER_TEMP/regen-tools/adaptability_check.py" check "$PREV_SRC" \
+              python3 "$RUNNER_TEMP/regen-tools/adaptability_check.py" check "$PREV_SRC" \
                 --spec "$SPEC" --spec-id "$SPEC_ID" --out "$OUT/static-prev.json" \
                 > /dev/null && PREV_EXIT=0 || PREV_EXIT=$?
             else
@@ -736,7 +733,7 @@ jobs:
               rm -f "$PREV_SRC"
               PREV_EXIT=2
             fi
-            "$PY" "$RUNNER_TEMP/regen-tools/adapt_record.py" record --side prev \
+            python3 "$RUNNER_TEMP/regen-tools/adapt_record.py" record --side prev \
               --spec "$SPEC_ID" --lib "$LIBRARY" --language "$LANGUAGE" --source "$PREV_SRC" \
               --static "$OUT/static-prev.json" --static-exit "$PREV_EXIT" \
               --smoke "$OUT/prev-smoke.json" --out "$PREV_REC" \
@@ -752,7 +749,7 @@ jobs:
             : > "$ROUTE_OUT"
             ROUTE_FLAGS=()
             [ -f /tmp/anyplot-canvas-gate.txt ] && ROUTE_FLAGS+=(--canvas-failed)
-            if GITHUB_OUTPUT="$ROUTE_OUT" "$PY" "$RUNNER_TEMP/regen-tools/regen_gate.py" adapt-route \
+            if GITHUB_OUTPUT="$ROUTE_OUT" python3 "$RUNNER_TEMP/regen-tools/regen_gate.py" adapt-route \
                  --spec-id "$SPEC_ID" --library "$LIBRARY" \
                  --adapt-new "$NEW_REC" --adapt-prev "$PREV_REC" --adapt-pair "$OUT/pair.json" \
                  --prev-impl /tmp/anyplot-prev-impl.py --new-impl "$IMPL" "${ROUTE_FLAGS[@]}"; then

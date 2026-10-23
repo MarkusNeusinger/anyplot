@@ -875,6 +875,8 @@ def selfcheck(
         "classes": binding,
         "advisory": advisory,
         "smoke": smoke.status,
+        # impl-review's adapt record reads it: only a skip for the shape counts as a passing attempt.
+        "smoke_why": smoke.why,
         "failed": smoke.failed,
         "advisory_failed": smoke.advisory_failed,
     }

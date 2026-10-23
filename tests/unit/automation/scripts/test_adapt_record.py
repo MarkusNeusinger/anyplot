@@ -299,6 +299,14 @@ class TestSelfcheck:
         log = json.dumps({"attempt": 1, "static": static, "smoke": smoke})
         assert _record(tmp_path, selfcheck=log)["selfcheck"] == {"attempts": 1, "first": first}
 
+    @pytest.mark.parametrize(
+        ("smoke", "smoke_why", "first"),
+        [("skipped", "shape:generated", "pass"), ("skipped", "runner_error", "fail"), ("pass", "-", "pass")],
+    )
+    def test_a_skip_passes_only_for_the_shape(self, tmp_path, smoke, smoke_why, first):
+        log = json.dumps({"attempt": 1, "static": "pass", "smoke": smoke, "smoke_why": smoke_why})
+        assert _record(tmp_path, selfcheck=log)["selfcheck"] == {"attempts": 1, "first": first}
+
     @pytest.mark.parametrize("log", [None, "", "garbage\n[1]\n"])
     def test_no_log_is_null(self, tmp_path, log):
         assert _record(tmp_path, selfcheck=log)["selfcheck"] is None

@@ -40,3 +40,12 @@
   repository variable `ADAPT_REVIEW_FREE` lets identical conversions merge
   without a review. It is off until the owner turns it on, and the label
   `regen:adapt` counts these merges.
+
+### Changed
+
+- **`impl-review.yml` runs on the pinned Python.** A setup step reads
+  `.python-version` before the first regen tool runs, because the regen gate,
+  the provenance script, and the checker mirror use PEP 758 `except A, B:`
+  since the move to Python 3.14, and the runner image's own Python is not
+  pinned. `impl-merge.yml` now promotes only the `plot-*` files from staging,
+  so the private `adapt/` artifacts never reach production.

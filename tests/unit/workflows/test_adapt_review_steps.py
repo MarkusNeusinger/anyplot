@@ -41,7 +41,7 @@ SPEC_ID, LIB = "bar-grouped", "matplotlib"
 IMPL = f"plots/{SPEC_ID}/implementations/python/{LIB}.py"
 SPEC = f"plots/{SPEC_ID}/specification.md"
 ADAPT = "Adaptability check (record-only)"
-PY314 = "Set up Python for the adaptability mirror"
+SETUP_PYTHON = "Set up Python"
 CARRIED_LABEL = "Add carried quality score label"
 EARLY = "Add preliminary verdict label (early)"
 METADATA = "Update metadata and implementation header"
@@ -174,13 +174,16 @@ class Pair:
         bin_dir.mkdir(exist_ok=True)
         (bin_dir / "gsutil").write_text("#!/bin/sh\n" + FAKE_GSUTIL, encoding="utf-8")
         (bin_dir / "gsutil").chmod(0o755)
+        # The step's `python3` is "Set up Python"'s interpreter; here it is this one.
+        python3 = bin_dir / "python3"
+        if not python3.exists():
+            python3.symlink_to(sys.executable)
         defaults = {
             "SPEC_ID": SPEC_ID,
             "LIBRARY": LIB,
             "LANGUAGE": "python",
             "IS_REGEN": "true",
             "GCS_OK": "true",
-            "PY314": sys.executable,
             "ADAPT_REVIEW_FREE": "true",
             "CONTEXT_OUTCOME": "success",
             "PREV_STORED": "94",
@@ -447,7 +450,7 @@ class TestAdaptStepWiring:
     def test_order_canvas_gate_then_mirror_then_the_review(self):
         names = [s.get("name") for s in _steps("impl-review.yml")]
         canvas = names.index("Canvas dimension gate")
-        assert names[canvas + 1 : canvas + 4] == [PY314, ADAPT, "React with eyes emoji"]
+        assert names[canvas + 1 : canvas + 3] == [ADAPT, "React with eyes emoji"]
         assert names.index("Regen context") < names.index(ADAPT)
         assert names.index("Download plot images from staging") < names.index(ADAPT)
         assert names.index(ADAPT) < names.index("Hide the previous review") < names.index("Run AI Quality Review")
@@ -460,16 +463,25 @@ class TestAdaptStepWiring:
         assert step["timeout-minutes"] == 5
         assert "exit 1" not in _code_only(step["run"])
         assert step["env"]["ADAPT_REVIEW_FREE"] == "${{ vars.ADAPT_REVIEW_FREE || 'false' }}"
-        assert step["env"]["PY314"] == "${{ steps.py314.outputs.python-path }}"
         assert step["env"]["CONTEXT_OUTCOME"] == "${{ steps.regen_ctx.outcome }}"
 
-    def test_the_mirror_runs_on_a_pinned_314_without_touching_path(self):
-        step = _step("impl-review.yml", PY314)
-        assert step["id"] == "py314"
-        assert step["uses"].startswith("actions/setup-python@")
-        assert step["with"] == {"python-version": "3.14", "update-environment": False}
-        assert step["continue-on-error"] is True
-        assert 'PY="${PY314:-python3}"' in _step("impl-review.yml", ADAPT)["run"]
+    def test_every_regen_tool_runs_on_the_pinned_python(self):
+        """PEP 758 `except A, B:` parses on 3.14 only: one unconditional setup before the first tool call."""
+        steps = _steps("impl-review.yml")
+        names = [s.get("name") for s in steps]
+        setup = _step("impl-review.yml", SETUP_PYTHON)
+        assert "if" not in setup
+        assert setup["uses"].startswith("actions/setup-python@")
+        assert setup["with"] == {"python-version-file": ".python-version"}
+        assert names.index("Checkout repository") < names.index(SETUP_PYTHON)
+        users = [i for i, s in enumerate(steps) if "regen-tools/" in str(s.get("run", ""))]
+        assert users and names.index(SETUP_PYTHON) < min(users)
+        # No other interpreter: every tool call is the job's python3.
+        assert [s for s in steps if "setup-python" in str(s.get("uses", ""))] == [setup]
+        for step in steps:
+            for line in _code_only(str(step.get("run", ""))).splitlines():
+                if re.search(r"regen-tools/\w+\.py", line) and "cp " not in line:
+                    assert re.search(r"python3 \S*regen-tools/", line) or "TOOL" in line, (step.get("name"), line)
 
     def test_the_regen_tools_run_from_the_workflow_ref(self):
         script = _step("impl-review.yml", ADAPT)["run"]

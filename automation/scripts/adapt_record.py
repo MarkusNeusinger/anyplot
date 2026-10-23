@@ -192,10 +192,10 @@ def smoke_block(path: Path | None, source_sha: str | None) -> dict[str, Any]:
 def selfcheck_block(path: Path | None) -> dict[str, Any] | None:
     """``{"attempts": N, "first": "pass"|"fail"}`` from the generator's Step 3c log, or None.
 
-    An attempt passes when its static check is ``pass`` or ``excluded`` and
-    its smoke run ``pass`` or ``skipped``. The log line carries no skip
-    reason, so a skip for another reason than the shape (rare: ``no_block``
-    comes with a static failure) also reads as a pass.
+    An attempt passes as ``selfcheck`` exits 0: its static check is ``pass``
+    or ``excluded``, and its smoke run is ``pass`` or ``skipped`` for the
+    shape (``smoke_why`` ``shape:*``). A log line without ``smoke_why`` reads
+    any ``skipped`` as a pass.
     """
     if path is None or not path.is_file():
         return None
@@ -214,7 +214,12 @@ def selfcheck_block(path: Path | None) -> dict[str, Any] | None:
     if not attempts:
         return None
     first = attempts[0]
-    passed = first.get("static") in ("pass", "excluded") and first.get("smoke") in ("pass", "skipped")
+    smoke, smoke_why = first.get("smoke"), first.get("smoke_why")
+    if isinstance(smoke_why, str):
+        smoke_ok = smoke == "pass" or (smoke == "skipped" and smoke_why.startswith("shape:"))
+    else:
+        smoke_ok = smoke in ("pass", "skipped")
+    passed = first.get("static") in ("pass", "excluded") and smoke_ok
     return {"attempts": len(attempts), "first": "pass" if passed else "fail"}
 
 

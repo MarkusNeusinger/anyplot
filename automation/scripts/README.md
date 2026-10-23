@@ -147,9 +147,11 @@ implementation, written by the review as `review_prev.json` (step 8b of
 - `apply` — writes the score, the five review fields, `review.model`, and
   `review.criteria_version` into the metadata with the metadata writer's YAML
   settings (an empty provenance value removes the key), and with `--impl` the
-  score into the `Quality: N/100` header. Nothing else changes.
+  score into the `Quality: N/100` header, and removes `review.carried`.
+  Nothing else changes.
 - `verify-diff` — against the merge base: only the pair's metadata (as parsed
-  YAML, `quality_score` and those review keys) and its header number change.
+  YAML, `quality_score` and those review keys) and its header number change;
+  `review.carried` may only be removed.
 - `check-pr` — the PR is an open `review-writeback/{spec}/{library}/{kept PR}`
   PR with the `review-writeback` label by `app/github-actions` (otherwise a
   no-op), and its score equals the `prev_rescored` of the first gate record
@@ -165,6 +167,19 @@ implementation, written by the review as `review_prev.json` (step 8b of
 `apply` and opens the PR; the `writeback` job of `impl-merge.yml` runs
 `check-pr`, `verify-diff`, and `check-fresh` before every merge attempt, then
 merges with the admin token.
+
+### `adapt_record.py`
+Adapt records (stdlib). `impl-review.yml`'s "Adaptability check (record-only)"
+runs `record` once per side of a Python pair: the PR head (`--side new`) and, on
+a regeneration, the predecessor from `origin/main` (`--side prev`). It combines
+the checker mirror's `--out` record (verbatim, plus its exit code) with the
+smoke run that impl-generate staged under `staging/.../adapt/`. A missing staged
+run reads as `missing`, and a run whose `code_sha256` differs from the source's
+reads as `stale`. It derives the record's status (`pass`, `fail`, `excluded`,
+or `unknown`) and prints one `::notice::adapt_check` line. The regen gate reads
+`v`, `side`, `spec`, `lib`, `language`, `checker_version`, `status`,
+`static.status`, and `smoke.status`. `code_sha256` is `core.smoke_run`'s rule,
+and a test ties the two.
 
 ### `review_provenance.py`
 Review provenance (stdlib): `criteria-version` prints the rules version — git

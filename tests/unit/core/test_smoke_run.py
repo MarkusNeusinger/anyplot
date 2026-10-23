@@ -312,9 +312,11 @@ class TestSelfcheck:
             "classes",
             "advisory",
             "smoke",
+            "smoke_why",
             "failed",
             "advisory_failed",
         }
+        assert entries[0]["smoke_why"] == "-"
         assert json.loads(static.read_text(encoding="utf-8"))["status"] == "pass"
         assert json.loads(smoke.read_text(encoding="utf-8"))["status"] == "pass"
 
