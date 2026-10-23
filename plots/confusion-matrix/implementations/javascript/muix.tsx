@@ -170,11 +170,23 @@ function ConfusionCell(props: any) {
   );
 }
 
+// Color bar with a title naming what the color and the in-cell percentages show
+function CountLegend({ sx, ...legendProps }: any) {
+  return (
+    <Box sx={{ gridArea: "legend", width: "50%", mb: "20px", mr: "20px", fontFamily: "inherit" }}>
+      <Typography sx={{ color: tokens.ink, fontSize: 16, fontWeight: 500, fontFamily: "inherit", mb: "6px" }}>
+        Count · % = share of true-class row (recall)
+      </Typography>
+      <ContinuousColorLegend {...legendProps} sx={{ ...sx, width: "100%" }} />
+    </Box>
+  );
+}
+
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
   const TITLE_HEIGHT = 80;
   const RIGHT_BUFFER = 40;
-  const BOTTOM_BUFFER = 24;
+  const BOTTOM_BUFFER = 64;
   const chartWidth = width - RIGHT_BUFFER;
   const chartHeight = height - TITLE_HEIGHT - BOTTOM_BUFFER;
 
@@ -250,7 +262,7 @@ export default function Chart() {
             },
           ]}
           margin={{ top: 20, right: 20, bottom: 24, left: 60 }}
-          slots={{ scatter: ConfusionCell, legend: ContinuousColorLegend }}
+          slots={{ scatter: ConfusionCell, legend: CountLegend }}
           slotProps={{
             legend: {
               axisId: "count",
@@ -259,11 +271,8 @@ export default function Chart() {
               position: { vertical: "bottom", horizontal: "end" },
               thickness: 14,
               sx: {
-                width: "50%",
-                mb: "20px",
-                mr: "20px",
                 color: tokens.inkSoft,
-                fontSize: 14,
+                fontSize: 16,
                 fontFamily: "inherit",
               },
             } as any,
