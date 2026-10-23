@@ -1,7 +1,7 @@
 // anyplot.ai
 // area-stacked: Stacked Area Chart
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-08-17
+// Library: muix 9.16.0 | JavaScript 22.23.3
+// Quality: 85/100 | Updated: 2026-10-23
 import { LineChart } from "@mui/x-charts/LineChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import Box from "@mui/material/Box";
