@@ -1,7 +1,7 @@
 // anyplot.ai
 // area-basic: Basic Area Chart
 // Library: muix 9.16.0 | JavaScript 22.23.3
-// Quality: 82/100 | Updated: 2026-10-23
+// Quality: 86/100 | Updated: 2026-10-23
 
 import { LineChart } from "@mui/x-charts/LineChart";
 import Box from "@mui/material/Box";
