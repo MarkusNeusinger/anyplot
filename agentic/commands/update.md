@@ -521,8 +521,9 @@ Read these files to understand what you're working with:
     - `quality_score` — current score to beat
 4. `prompts/library/{LIBRARY}.md` — library-specific rules (**CRITICAL**: follow these exactly)
 5. `prompts/plot-generator.md` — base generation rules
-6. `prompts/quality-criteria.md` — quality scoring criteria
-7. **Context7 library documentation** — Query up-to-date library docs for idiomatic patterns:
+6. `prompts/adaptable-code.md` — the Data block convention the file follows
+7. `prompts/quality-criteria.md` — quality scoring criteria
+8. **Context7 library documentation** — Query up-to-date library docs for idiomatic patterns:
    - Call `resolve-library-id` with `libraryName: "{CONTEXT7_LIBRARY}"` and `query: "how to create {PLOT_TYPE} chart with {CONTEXT7_LIBRARY}"`
    - Call `query-docs` with the resolved library ID and `query: "idiomatic patterns for creating {SPEC_TITLE} ({PLOT_TYPE}) with {CONTEXT7_LIBRARY}, including best practices for styling and layout"`
    - Use the returned documentation **together with** (not instead of) the static library rules from step 4

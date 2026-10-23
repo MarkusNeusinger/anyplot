@@ -116,6 +116,8 @@ Categorical-color distinguishability falls with n. The hybrid-v3 sort holds ΔE 
 
 **Default to fewer series.** Before adding the Nth color, ask: "could this be small multiples / faceting?" Usually the answer is yes and the chart improves.
 
+**In code, list all eight hues and use the first n.** The palette constant always holds the eight categorical hues in canonical order, and each group takes its color by position (`IMPRINT[i]`, or the library's color cycle fed the full list), with `n` counted from the data, never a literal slice sized to the sample (`[:3]`). The same code then colors one more group correctly on other data, and a ninth group fails loudly instead of recycling a color.
+
 ### Optional outline pattern (AI judgment)
 
 5 of the 8 categorical hues + amber fall below WCAG 2.1 SC 1.4.11's 3:1 contrast on the cream bg (lavender, ochre, cyan, lime, and amber). On dark bg, only matte-red is marginally below. This is the known muted-palette / WCAG tension Okabe-Ito, Paul Tol "muted", and ColorBrewer Set2 all share.
@@ -213,7 +215,7 @@ Output file names: `plot-light.png` / `plot-dark.png` (static libraries) plus `p
 - Generous margins around the plot area
 - Padding between legend and plot, between title and axes
 - Let the data breathe — don't cram elements together
-- `tight_layout()` / `bbox_inches='tight'` to avoid wasted canvas, but don't compress
+- `tight_layout()` or the library's margin settings to avoid wasted canvas, but don't compress. Never `bbox_inches='tight'`: it trims the saved PNG below the fixed canvas size
 
 ### Typography Hierarchy
 

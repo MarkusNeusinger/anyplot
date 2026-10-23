@@ -63,11 +63,12 @@ anyplot/
 │
 ├── prompts/                           # AI agent prompts
 │   ├── plot-generator.md              # Base rules for code generation
+│   ├── adaptable-code.md              # The Data block convention every implementation follows
 │   ├── quality-criteria.md            # Quality evaluation criteria
 │   ├── quality-evaluator.md           # AI quality evaluation prompt
 │   ├── spec-id-generator.md           # Assigns spec IDs
 │   ├── default-style-guide.md         # Default visual style rules
-│   ├── library/                       # Library-specific rules (11 files: 9 Python + ggplot2 + makie)
+│   ├── library/                       # Library-specific rules (15 files: 8 Python + ggplot2 + makie + 5 JavaScript)
 │   │   ├── matplotlib.md
 │   │   ├── seaborn.md
 │   │   └── ...
@@ -485,12 +486,13 @@ plt.savefig('plot.png', dpi=300)
 **Purpose**: AI agent prompts for code generation and quality evaluation
 
 **Subdirectories**:
-- `library/` - Library-specific rules (11 files: 9 Python + ggplot2 + makie)
+- `library/` - Library-specific rules (15 files: 8 Python + ggplot2 + makie + 5 JavaScript)
 - `templates/` - Templates for new specs (`specification.md`, `specification.yaml`)
 - `workflow-prompts/` - Workflow-specific prompt templates
 
 **Files**:
 - `plot-generator.md` - Base rules for all implementations
+- `adaptable-code.md` - The Data block convention: one replaceable block that ends in `df`, columns named once, plot code derived from `df`
 - `quality-criteria.md` - Definition of quality
 - `quality-evaluator.md` - AI quality evaluation
 - `spec-id-generator.md` - Assigns spec IDs

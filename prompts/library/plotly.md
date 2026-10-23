@@ -15,11 +15,32 @@ import plotly.express as px
 ```python
 # Graph Objects
 fig = go.Figure()
-fig.add_trace(go.Scatter(x=x, y=y))
+fig.add_trace(go.Scatter(x=df[DATE], y=df[PRICE]))
 
 # Express (for quick plots)
-fig = px.scatter(df, x='col_x', y='col_y')
+fig = px.scatter(df, x=STUDY_HOURS, y=EXAM_SCORE)
 ```
+
+## Data block
+
+The file follows the six zones of `prompts/adaptable-code.md`. plotly express reads the tidy `df` directly with the column constants and titles the axes and the legend from the column names:
+
+```python
+# Plot: reads only df and the constants above
+fig = px.bar(df, x=QUARTER, y=SALES, color=PRODUCT_LINE, barmode="group",
+             color_discrete_sequence=IMPRINT_PALETTE)
+```
+
+With graph objects, loop over the groups of `df` in their own order and set the titles from the constants:
+
+```python
+fig = go.Figure()
+for i, (line, rows) in enumerate(df.groupby(PRODUCT_LINE, sort=False)):
+    fig.add_trace(go.Bar(x=rows[QUARTER], y=rows[SALES], name=str(line), marker_color=IMPRINT_PALETTE[i]))
+fig.update_layout(xaxis_title=QUARTER, yaxis_title=SALES, legend_title_text=PRODUCT_LINE)
+```
+
+Axis ranges come from the data (`yaxis_range=[0, df[SALES].max() * 1.15]`) or stay automatic, never typed numbers.
 
 ## Canvas — hard rule, no deviation
 
@@ -87,11 +108,11 @@ IMPRINT_PALETTE = ['#009E73', '#C475FD', '#4467A3', '#BD8233',
 ANYPLOT_AMBER = '#DDCC77'  # warning / caution (outside the categorical pool)
 
 # Single-series
-fig = go.Figure(go.Scatter(x=x, y=y, mode='markers',
+fig = go.Figure(go.Scatter(x=df[STUDY_HOURS], y=df[EXAM_SCORE], mode='markers',
                            marker=dict(color=IMPRINT_PALETTE[0])))
 
-# Multi-series via color_discrete_sequence (plotly express)
-fig = px.scatter(df, x='x', y='y', color='category',
+# Multi-series via color_discrete_sequence (plotly express): the full list, never a slice
+fig = px.scatter(df, x=STUDY_HOURS, y=EXAM_SCORE, color=SCHOOL,
                  color_discrete_sequence=IMPRINT_PALETTE)
 
 # Continuous — only the two Imprint palette-derived cmaps are allowed:

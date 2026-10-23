@@ -18,6 +18,8 @@ import pytest
 
 from automation.scripts.regen_gate import DEFECT_RE, SUGGESTION_RE
 from automation.scripts.spec_characteristics_lint import check_contract
+from core.adaptability import LIBRARIES as PYTHON_LIBRARIES
+from core.adaptability import check_source, spec_context
 from core.constants import INTERACTIVE_LIBRARIES, LANGUAGE_FILE_EXTENSIONS, LIBRARIES_METADATA, SUPPORTED_LANGUAGES
 
 
@@ -28,6 +30,7 @@ LIBRARY_PROMPTS_DIR = PROMPTS_DIR / "library"
 # Expected files
 EXPECTED_BASE_PROMPTS = [
     "plot-generator.md",
+    "adaptable-code.md",
     "quality-criteria.md",
     "quality-evaluator.md",
     "spec-id-generator.md",
@@ -1275,3 +1278,156 @@ class TestFirstReviewScoring:
         assert "When in doubt whether evidence raises a design or library item, keep the default" in criteria
         assert "Median implementation should score 72-78" in criteria
         assert "median implementation should score 72-78" in REVIEW_PROMPT.read_text()
+
+
+ADAPTABLE_CODE = PROMPTS_DIR / "adaptable-code.md"
+GENERATE_PROMPT = WORKFLOW_PROMPTS_DIR / "impl-generate-claude.md"
+REPAIR_PROMPT = WORKFLOW_PROMPTS_DIR / "impl-repair-claude.md"
+ALL_LIBRARY_PROMPTS = sorted(path.name for path in LIBRARY_PROMPTS_DIR.glob("*.md"))
+PYTHON_AMENDMENT = "For Python (`LANGUAGE=python`)"
+
+
+def _python_block_after(content: str, heading: str) -> str:
+    """The first ```python block after `heading`."""
+    return re.search(r"```python\n(.*?)\n```", content[content.index(heading) :], re.DOTALL).group(1)
+
+
+def _section(content: str, heading: str) -> str:
+    """The text under a `## ` heading, up to the next `## ` heading."""
+    return content.split(f"\n{heading}\n", 1)[1].split("\n## ", 1)[0]
+
+
+class TestAdaptableCode:
+    """PR 2 of docs/concepts/adaptable-code.md: one copy of the convention, the
+    generator's examples in its six zones, one Data block idiom per library,
+    the Python self-check (Step 3c), and the Python-only regen amendments."""
+
+    def test_the_convention_names_the_six_zones_and_the_markers(self) -> None:
+        content = ADAPTABLE_CODE.read_text()
+        for zone in (
+            "**Head.**",
+            "**`# Constants`, optional.**",
+            "**Column constants.**",
+            "**Exactly one `# Data` block.**",
+            "**Plot code, below a `# Plot` marker.**",
+            "**Output.**",
+        ):
+            assert zone in content, zone
+        assert "# role: <role>" in content
+        assert "`// Data`, `// Plot`" in content  # JavaScript's markers
+        assert 'never with `bbox_inches="tight"`' in content
+
+    @pytest.mark.parametrize(
+        ("path", "heading", "spec_id"),
+        [
+            (ADAPTABLE_CODE, "## Example", "bar-grouped"),
+            (PROMPTS_DIR / "plot-generator.md", "## Output", "scatter-basic"),
+        ],
+        ids=["convention-example", "generator-template"],
+    )
+    def test_the_full_examples_pass_the_checker(self, path: Path, heading: str, spec_id: str) -> None:
+        """The examples the generator copies are the ones the checker passes (core/adaptability.py)."""
+        source = _python_block_after(path.read_text(), heading)
+        _, roles, shape = spec_context(PLOTS_DIR / spec_id / "specification.md")
+        record = check_source(source, roles, shape, library="matplotlib")
+        assert record.status == "pass", record.defect_lines()
+        assert set(record.constants) == {role.name for role in roles if role.required}
+
+    @pytest.mark.parametrize(
+        "path",
+        [PROMPTS_DIR / "plot-generator.md", PROMPTS_DIR / "default-style-guide.md", ADAPTABLE_CODE]
+        + [LIBRARY_PROMPTS_DIR / name for name in ALL_LIBRARY_PROMPTS],
+        ids=lambda p: p.name,
+    )
+    def test_no_prompt_recommends_bbox_inches_tight(self, path: Path) -> None:
+        """It trims the saved PNG below the fixed canvas; every mention says not to use it."""
+        for line in path.read_text().splitlines():
+            if re.search(r"bbox_inches\s*=\s*['\"]tight", line):
+                assert re.search(r"\b(never|not|no|don't)\b", line, re.IGNORECASE), line
+
+    @pytest.mark.parametrize("filename", ALL_LIBRARY_PROMPTS)
+    def test_every_library_prompt_has_its_data_block_idiom(self, filename: str) -> None:
+        section = _section((LIBRARY_PROMPTS_DIR / filename).read_text(), "## Data block")
+        assert "prompts/adaptable-code.md" in section
+        if filename in JS_LIBRARY_PROMPTS:
+            assert "// role:" in section and "// Data" in section and "// Plot" in section
+            assert "const data = window.ANYPLOT_DATA;" in section
+            assert "d[QUARTER]" in section
+        elif filename in ("ggplot2.md", "makie.md"):
+            assert "# role:" in section and "# Data" in section and "# Plot" in section
+        else:  # Python: the zones and the role comments are the convention's example; the section is the idiom
+            assert "`df`" in section
+
+    def test_fifteen_library_prompts(self) -> None:
+        python = {f"{library}.md" for library in PYTHON_LIBRARIES}
+        assert python | set(JS_LIBRARY_PROMPTS) | {"ggplot2.md", "makie.md"} == set(ALL_LIBRARY_PROMPTS)
+
+    def test_r_and_julia_idioms(self) -> None:
+        ggplot2 = _section((LIBRARY_PROMPTS_DIR / "ggplot2.md").read_text(), "## Data block")
+        assert "tibble::tibble(" in ggplot2 and ".data[[QUARTER]]" in ggplot2 and "labs(" in ggplot2
+        makie = _section((LIBRARY_PROMPTS_DIR / "makie.md").read_text(), "## Data block")
+        assert "DataFrame(" in makie and "df[!, QUARTER]" in makie
+
+    def test_altair_escapes_field_names(self) -> None:
+        section = _section((LIBRARY_PROMPTS_DIR / "altair.md").read_text(), "## Data block")
+        assert 'ESCAPE = str.maketrans({".": "\\\\.", "[": "\\\\[", "]": "\\\\]", ":": "\\\\:"})' in section
+        assert "title=QUARTER" in section
+
+    def test_no_palette_slice_sized_to_the_sample(self) -> None:
+        for filename in ("matplotlib.md", "seaborn.md"):
+            assert "IMPRINT_PALETTE[:N]" not in (LIBRARY_PROMPTS_DIR / filename).read_text(), filename
+        style = (PROMPTS_DIR / "default-style-guide.md").read_text()
+        restraint = style[style.index("### Color Restraint") : style.index("### Optional outline pattern")]
+        assert "list all eight hues and use the first n" in restraint
+
+    def test_the_generator_reads_the_convention(self) -> None:
+        reading_list = GENERATE_PROMPT.read_text().split("## Step 1:", 1)[1].split("### If regenerating", 1)[0]
+        assert "`prompts/adaptable-code.md`" in reading_list
+        generator = (PROMPTS_DIR / "plot-generator.md").read_text()
+        allowed = generator.split("**Allowed inputs for this implementation:**", 1)[1].split("**Forbidden:**", 1)[0]
+        assert "`prompts/adaptable-code.md`" in allowed
+        storytelling = generator.split("**Data storytelling (for DE-03 score):**", 1)[1].split("## Output Files", 1)[0]
+        assert "**Callout targets come from a rule over the data:**" in storytelling
+
+    def test_step_3c_follows_3b_and_never_blocks(self) -> None:
+        content = GENERATE_PROMPT.read_text()
+        start = content.index("### Step 3c: Adaptability self-check (Python only)")
+        assert content.index("### Step 3b:") < start < content.index("## Step 4:")
+        step = content[start : content.index("## Step 4:")]
+        assert (
+            "python -m core.smoke_run selfcheck plots/{SPEC_ID}/implementations/python/{LIBRARY}.py "
+            "--log /tmp/anyplot-selfcheck.jsonl"
+        ) in step
+        assert "10-minute timeout" in step
+        assert "**At most three attempts in total,**" in step
+        assert "Adaptability never blocks the implementation" in step
+        assert "python -m core.smoke_run pair --new" in step
+        assert "Adaptability self-check: pass, attempt 1" in content
+
+    @pytest.mark.parametrize(
+        "anchor",
+        [
+            "**Keep the data scenario and the variant.**",
+            "**Don't add code for changes that don't show.**",
+            "Do NOT discard working structure / data generation / layout choices",
+            "No defect listed and nothing in Step 0 or the base style to align",
+            "7. ✅ If regenerating:",
+        ],
+    )
+    def test_the_five_regen_amendments_are_python_only(self, anchor: str) -> None:
+        """The same prompt serves every language; R, Julia and JavaScript keep today's regen mindset."""
+        line = next(line for line in GENERATE_PROMPT.read_text().splitlines() if anchor in line)
+        assert PYTHON_AMENDMENT in line
+
+    def test_repair_treats_checker_lines_as_real_defects(self) -> None:
+        content = REPAIR_PROMPT.read_text()
+        weaknesses = content[content.index("### Which weaknesses to fix") : content.index("## Step 2")]
+        assert "is a real defect, like a canvas line" in weaknesses
+        line = next(
+            line for line in weaknesses.splitlines() if "**Don't add code for changes that don't show.**" in line
+        )
+        assert PYTHON_AMENDMENT in line
+        step = content[
+            content.index("### Step 5b: Adaptability self-check (Python only)") : content.index("## Step 6:")
+        ]
+        assert "python -m core.smoke_run selfcheck" in step and "At most three attempts" in step

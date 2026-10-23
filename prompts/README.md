@@ -12,6 +12,7 @@ Git history shows all changes (`git log -p prompts/plot-generator.md`).
 | File | Agent | Task |
 |------|-------|------|
 | `plot-generator.md` | Plot Generator | Base rules for all plot implementations |
+| `adaptable-code.md` | Plot Generator, Repair | The Data block convention: one replaceable `# Data` block ending in `df`, columns named once, plot code derived from `df` (`docs/concepts/adaptable-code.md`) |
 | `default-style-guide.md` | Plot Generator | Default visual style (colors, typography, layout) |
 | `library/*.md` | Plot Generator | Library-specific rules (15 files: 8 Python + ggplot2 + makie + 5 JavaScript: chartjs, d3, echarts, highcharts, muix) |
 | `quality-criteria.md` | All | Definition of what "good code" means |
