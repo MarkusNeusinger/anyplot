@@ -2,9 +2,11 @@
 
 ggplot2 is the canonical implementation of the grammar of graphics in R. This
 is anyplot's first R-language entry; the file extension is **`.R`** and the
-runtime is **Rscript**, not Python. The CI runtime is **R 4.6 with ggplot2 4.0**
-(pinned in `.github/actions/setup-r/action.yml`): write against the 4.0 API in
-"ggplot2 4.0 notes" below, not 3.x habits.
+runtime is **Rscript**, not Python.
+
+**API level:** ggplot2 4. The Posit snapshot in `.github/actions/setup-r/action.yml`
+pins this major; write against its API, with the changes in "ggplot2 4.0 notes"
+below, not 3.x habits.
 
 ## IMPORTANT: No Workarounds
 
