@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: gauge-basic
 created: '2026-06-30T21:59:37Z'
-updated: '2026-10-23T21:37:37Z'
+updated: '2026-10-23T21:51:22Z'
 generated_by: adopted:gemini/12267-muix-9-batch1
 workflow_run: 40027643993
 issue: 857
@@ -12,49 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gauge-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/javascript/muix/plot-dark.html
-quality_score: 84
+quality_score: 85
 review:
   strengths:
-  - Composes the dial from MUI X's GaugeContainer and the useGaugeState hook, so the
-    zone arcs, needle and value label are positioned from the container's own cx/cy/innerRadius/outerRadius
-    in both renders
-  - Color zones change exactly at the threshold values 30 and 70, in matte red / amber
-    / brand green, the traffic-light convention the Notes ask for, with the scale
-    labelled at 0, 30, 70 and 100
-  - The needle points at 72 (about 53° right of vertical on the 240° sweep) and the
-    large centered value 72 agrees with it; the value takes the color of the zone
-    it falls in
-  - Thresholds and range are read from the data record, not typed into the plot code;
-    all chrome uses ANYPLOT_TOKENS (ink, inkSoft, pageBg), and both themes read cleanly
-  - skipAnimation is set and the component sizes itself from window.ANYPLOT_SIZE,
-    as the harness contract requires
+  - Composes the gauge with MUI X's GaugeContainer and reads cx, cy, radii, value
+    and valueAngle from useGaugeState, so the needle angle comes from the library's
+    own value-to-angle mapping rather than a re-derived formula
+  - 'Zones change exactly at 30 and 70 and follow the traffic-light convention with
+    the Imprint semantic anchors: matte red #AE3030 (poor), amber #DDCC77 (fair),
+    brand green #009E73 (good)'
+  - The current value 72 is the dominant element, centered under the hub in the color
+    of the zone it falls in, with a quiet 'out of 100' subline in the inkSoft token
+  - 'Chrome is fully theme-adaptive: title in ink, tick labels and legend in inkSoft,
+    needle and hub in ink, so both renders read cleanly while the data colors stay
+    identical'
+  - Thresholds, limits and value come from the data record, and the zone legend states
+    each range, so the gauge rebuilds from any record without edits; skipAnimation
+    is set
   weaknesses:
-  - 'VQ-05 (both): the secondary label ''out of 100'' is drawn at about 0.13 × outerRadius
-    (≈45 CSS px), roughly 2.5× the 18 px title and nearly half the height of the 72
-    it qualifies, so a short helper label dominates the lower dial → about 20–24 CSS
-    px (about −20 px). Likely cause: fontSize: outerRadius * 0.13 on the ''out of
-    N'' text in NeedleAndLabel.'
-  - 'CQ-04 (code): NeedleAndLabel recomputes the needle angle from START_RAD, TOTAL_RAD
-    and the value fraction (lines ~118–121) although useGaugeState already returns
-    valueAngle for the same value and scale → read valueAngle from useGaugeState()
-    and drop the manual fraction/angle arithmetic. Likely cause: angle math copied
-    from ZoneArcs instead of the hook''s computed value.'
-  - 'Suggestion: start the needle polygon at the hub (base at the center) so the pointer
-    reads as one piece; it currently floats about 0.35 × innerRadius away from the
-    hub circle.'
-  - 'Suggestion: tick labels at 16 CSS px are small next to the dial; 18–20 px would
-    hold up better in the 400 px thumbnail.'
+  - 'VQ-05 (both): the dial-plus-legend block fills only the middle ~67 % of the square
+    canvas height, leaving empty bands of ~16 % above the title and ~17 % below the
+    legend → let the gauge take most of the free height (about 0.75–0.8 of it instead
+    of 0.62). Likely cause: GaugeContainer height = height * 0.62 inside a justifyContent:
+    center column.'
+  - 'CQ-04 (code): the file carries two header blocks (lines 1–4 and 6–9), the second
+    a stale copy naming muix 7.29.1 and a different date, split by the //# anyplot-orientation
+    directive on line 5 → move the directive to line 1 and keep one header block.
+    Likely cause: the orientation directive was not on the very first line, so the
+    header rewrite added a new block above it instead of replacing the old one.'
+  - 'Suggestion: the needle starts at 0.35 × innerRadius and floats free of the hub
+    circle; joining it to the hub would read more like a single pointer.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across the whole 2400×2400 square canvas.
-      Chrome: centered bold title "Customer Satisfaction Score · gauge-basic · javascript · muix · anyplot.ai" in dark ink, about 53 % of the width; scale labels 0, 30, 70, 100 in soft dark ink outside the arc at the ends and thresholds; a zone legend below the dial (Needs Work (0–30), Developing (30–70), Excellent (70–100)) with rounded swatches. All text readable.
-      Data: a 240° dial (−120° to +120°) split into three bands with thin gaps at the thresholds: matte red #AE3030 for 0–30, amber #DDCC77 for 30–70, brand green #009E73 for 70–100. A dark ink tapered needle points at 72, just inside the green band; a separate dark hub circle sits at the center. Below the hub a very large bold "72" in brand green and a large soft-ink "out of 100".
+      Background: warm off-white #FAF8F1, square 2400×2400 canvas.
+      Chrome: bold dark-ink title "Customer Satisfaction Score · gauge-basic · javascript · muix · anyplot.ai" at ~54 % width; scale labels 0, 30, 70, 100 in inkSoft gray at the arc ends and zone boundaries; legend row "Needs Work (0–30)", "Developing (30–70)", "Excellent (70–100)" with rounded swatches; "out of 100" subline in gray. All readable.
+      Data: 240° dial split into three thick annular zones with small gaps at the thresholds — matte red (0–30), amber #DDCC77 (30–70), brand green #009E73 (70–100). A dark-ink tapered needle points just past the 70 boundary into the green zone (72). Dark hub circle at the center; large bold green "72" directly beneath it.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title in light ink, scale labels and legend text in light soft ink, all clearly readable; no dark-on-dark text. Needle and hub flip to light ink and stand out against the dark page.
-      Data: zone colors (red, amber, green) and the green "72" are identical to the light render; only the chrome, the needle and the hub flip.
+      Chrome: title in light ink, tick labels, legend text and "out of 100" in light gray inkSoft; needle and hub flip to light ink and stand out clearly. No dark-on-dark text.
+      Data: zone colors (red, amber, green) and the green "72" are identical to the light render; only chrome and needle/hub flip.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -66,50 +64,52 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title, scale labels, value and legend explicitly sized and readable
-          in both themes
+        comment: Explicit sizes (title 18 px, ticks 16 px, legend 15 px, value 0.38×radius);
+          all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collides; the hub sits just clear of the 72
+        comment: No text collides with text or marks; the needle tip enters the green
+          zone as intended
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Thick zone bands, needle visible against page in both themes, legend
-          swatches match the zones
+        comment: Thick zone arcs, ink needle and hub visible on both backgrounds;
+          legend swatches match the zones
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Red/green not the sole signal: threshold labels, zone legend text
-          and the numeric value carry it'
+        comment: Red/amber/green also separated by position, gaps and a labelled legend;
+          not color-only
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Balanced square layout, but the 'out of 100' helper label is oversized
-          relative to the title (defect line)
+        comment: Content block fills only the middle ~67 % of the canvas height, leaving
+          wide empty bands top and bottom (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title prefix and labelled zone legend with ranges
+        comment: Scale ends and thresholds labelled; zone names with ranges; 'out
+          of 100' gives the scale
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Semantic exception: matte red #AE3030, amber anchor #DDCC77, brand
-          green #009E73; correct backgrounds in both themes'
+        comment: 'Semantic anchors #AE3030 / amber #DDCC77 / #009E73 for bad/fair/good;
+          correct page backgrounds; data colors identical across themes'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -117,22 +117,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Clear typographic hierarchy with a dominant bold value over a softer
-          qualifier, rounded legend swatches
+        comment: 'Clear typographic hierarchy chosen for the gauge: oversized bold
+          value, light ''out of 100'' subline, weighted title'
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Thin gaps separate the zones, but the needle floats detached from
-          its hub; refinement nets out at the baseline
+        passed: true
+        comment: Thin page-colored gaps separate the zones at the thresholds; tapered
+          needle; tick labels placed only at ends and thresholds
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: The value is colored by the zone it falls in, so the verdict reads
-          at a glance
+        comment: The value is the focal point and takes the color of the zone it sits
+          in, so the verdict reads at a glance
     spec_compliance:
       score: 15
       max: 15
@@ -142,28 +142,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Single dial, one needle, no extra layers
+        comment: Single-dial gauge with needle, zones, scale and value label; no extra
+          layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Arc min→max with ends labelled, needle at value, zones at thresholds
-          red/amber/green, prominent value centered below
+        comment: Dial with labelled ends, needle at the value, zones at thresholds
+          in red/amber/green, prominent value below the hub — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Needle at 72 (≈52.8° on the −120°..120° sweep), thresholds at 30
-          and 70
+        comment: Needle angle from useGaugeState valueAngle (72 → 52.8°), just past
+          the 70 boundary at 48°
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct with descriptive prefix; zone legend labels
-          match
+        comment: Title 'Customer Satisfaction Score · gauge-basic · javascript · muix
+          · anyplot.ai'; zone legend labels match the zones
     data_quality:
       score: 15
       max: 15
@@ -173,20 +174,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Value, range, two thresholds, three zones all shown
+        comment: Value, range, two thresholds and three zones all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Customer satisfaction score, neutral and plausible
+        comment: Customer satisfaction score 72/100 — plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: value 72 on 0–100, thresholds 30/70 match the spec example;
-          needle angle matches 72 in the render'
+        comment: 'Checked: value 72 on a 0–100 scale; zone boundaries computed from
+          thresholds 30 and 70 sit at the 30 and 70 labels'
     code_quality:
       score: 9
       max: 10
@@ -196,33 +197,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Components are required by the React harness; one small sector-path
-          helper
+        comment: Child components are required by MUI X's useGaugeState composition;
+          one small path helper reused three times
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hard-coded data
+        comment: Hard-coded data record
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: GaugeContainer, useGaugeState, Box, Typography all used
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
-        passed: false
-        comment: Needle angle recomputed by hand instead of useGaugeState().valueAngle
-          (defect line)
+        passed: true
+        comment: Duplicate stale header block (lines 6–9) after a misplaced orientation
+          directive (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component, skipAnimation, sized to ANYPLOT_SIZE
+        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation,
+          MUI X v9 Gauge API
     library_mastery:
       score: 6
       max: 10
@@ -232,25 +234,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: GaugeContainer composition with custom children via useGaugeState
-          is MUI X's documented custom-gauge pattern
+        comment: GaugeContainer with custom children reading useGaugeState — the documented
+          MUI X pattern for custom gauges
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: true
-        comment: useGaugeState hook drives geometry of custom SVG children; MUI Box/Typography
-          for HTML legend
-  verdict: REJECTED
+        passed: false
+        comment: useGaugeState hook supplies the gauge geometry and value angle for
+          the custom needle and zones
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-03c2486144
-  rendered_at: '2026-10-23T21:34:45Z'
+  rendered_at: '2026-10-23T21:48:37Z'
 impl_tags:
   dependencies: []
   techniques:
-  - patches
   - custom-legend
-  - annotations
   - layer-composition
   - html-export
   patterns: []
