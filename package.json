@@ -24,7 +24,7 @@
     "react-dom": "19.3.1"
   },
   "devDependencies": {
-    "esbuild": "0.28.1",
-    "playwright": "1.55.1"
+    "esbuild": "0.28.2",
+    "playwright": "1.64.1"
   }
 }
