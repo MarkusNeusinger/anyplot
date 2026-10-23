@@ -138,6 +138,7 @@ const data = (() => {
 
 // Plot: reads only data and the constants above
 const regionLabel = data[0][CHROMOSOME];
+const regionStart = Math.min(...data.map((d) => d[START]));
 const regionEnd = Math.max(...data.map((d) => d[END]));
 const tracks = [...new Set(data.map((d) => d[TRACK]))];
 const discreteTypes = [
@@ -149,35 +150,51 @@ const featureColor = Object.fromEntries(
   discreteTypes.map((ft, i) => [ft, t.palette[i]]),
 );
 
-const geneRows = data.filter((d) => d[TRACK] === tracks[0]);
-const geneSymbols = [...new Set(geneRows.map((d) => d[LABEL]))];
-const genes = geneSymbols.map((sym) => {
-  const rows = geneRows.filter((d) => d[LABEL] === sym);
-  return {
-    symbol: sym,
-    strand: rows[0][STRAND],
-    featureType: rows[0][FEATURE_TYPE],
-    exons: rows.map((r) => [r[START], r[END]]),
-  };
+// Each track's renderer is chosen by a rule over its own rows, never by its
+// position: genes carry a strand or a label; coverage rows have no feature type
+// but a value; variants are points (start = end) with a feature type; any other
+// track is drawn as regulatory intervals.
+const present = (v) => v !== null && v !== undefined;
+function trackKind(rows) {
+  if (rows.some((d) => present(d[STRAND]) || present(d[LABEL]))) return "genes";
+  if (
+    rows.every((d) => !present(d[FEATURE_TYPE])) &&
+    rows.some((d) => Number.isFinite(d[VALUE]))
+  ) {
+    return "coverage";
+  }
+  if (rows.every((d) => d[START] === d[END] && present(d[FEATURE_TYPE]))) {
+    return "variants";
+  }
+  return "regulatory";
+}
+const trackBands = tracks.map((label) => {
+  const rows = data.filter((d) => d[TRACK] === label);
+  return { label, kind: trackKind(rows), rows };
 });
-
-const regulatoryRows = data.filter((d) => d[TRACK] === tracks[1]);
-const coverageRows = data.filter((d) => d[TRACK] === tracks[2]);
-const maxDepth = Math.max(...coverageRows.map((d) => d[VALUE]));
-const variantRows = data.filter((d) => d[TRACK] === tracks[3]);
 
 const TITLE = "genome-track-multi · javascript · muix · anyplot.ai";
 
-function GenesTrack({ xScale, top, height }) {
+function GenesTrack({ xScale, top, height, rows }) {
+  if (rows.length === 0) return null;
   const centerY = top + height / 2;
   const exonHeight = Math.min(28, height * 0.4);
   const exonTop = centerY - exonHeight / 2;
+  const genes = [...new Set(rows.map((d) => d[LABEL]))].map((sym) => {
+    const geneRows = rows.filter((d) => d[LABEL] === sym);
+    return {
+      symbol: sym,
+      strand: geneRows[0][STRAND],
+      featureType: geneRows[0][FEATURE_TYPE],
+      exons: geneRows.map((r) => [r[START], r[END]]),
+    };
+  });
 
   return (
     <g>
       {genes.map((gene) => {
-        const geneStart = gene.exons[0][0];
-        const geneEnd = gene.exons[gene.exons.length - 1][1];
+        const geneStart = Math.min(...gene.exons.map((e) => e[0]));
+        const geneEnd = Math.max(...gene.exons.map((e) => e[1]));
         const arrowOffsets = [];
         for (let offset = geneStart + 300; offset < geneEnd; offset += 500) {
           arrowOffsets.push(offset);
@@ -231,13 +248,14 @@ function GenesTrack({ xScale, top, height }) {
   );
 }
 
-function RegulatoryTrack({ xScale, top, height }) {
+function RegulatoryTrack({ xScale, top, height, rows }) {
+  if (rows.length === 0) return null;
   const rectHeight = height * 0.55;
   const rectTop = top + (height - rectHeight) / 2;
 
   return (
     <g>
-      {regulatoryRows.map((element) => (
+      {rows.map((element) => (
         <rect
           key={`${element[FEATURE_TYPE]}-${element[START]}`}
           x={xScale(element[START])}
@@ -252,16 +270,22 @@ function RegulatoryTrack({ xScale, top, height }) {
   );
 }
 
-function CoverageTrack({ xScale, top, height }) {
+function CoverageTrack({ xScale, top, height, rows }) {
+  const samples = rows
+    .filter((d) => Number.isFinite(d[VALUE]))
+    .sort((a, b) => a[START] - b[START]);
+  if (samples.length === 0) return null;
+  const maxDepth = Math.max(...samples.map((d) => d[VALUE]));
+  const depthScale = maxDepth > 0 ? maxDepth : 1;
   const baseline = top + height - 6;
   const usableHeight = height - 14;
-  const points = coverageRows.map((sample) => {
+  const points = samples.map((sample) => {
     const x = xScale(sample[START]);
-    const y = baseline - (sample[VALUE] / maxDepth) * usableHeight;
+    const y = baseline - (sample[VALUE] / depthScale) * usableHeight;
     return `${x},${y}`;
   });
-  const firstX = xScale(coverageRows[0][START]);
-  const lastX = xScale(coverageRows[coverageRows.length - 1][START]);
+  const firstX = xScale(samples[0][START]);
+  const lastX = xScale(samples[samples.length - 1][START]);
   const areaPath = `M ${firstX},${baseline} L ${points.join(" L ")} L ${lastX},${baseline} Z`;
 
   return (
@@ -275,18 +299,19 @@ function CoverageTrack({ xScale, top, height }) {
   );
 }
 
-function VariantsTrack({ xScale, top, height }) {
+function VariantsTrack({ xScale, top, height, rows }) {
+  if (rows.length === 0) return null;
   const baseline = top + height - 6;
   const usableHeight = height - 20;
 
   return (
     <g>
-      {variantRows.map((variant) => {
+      {rows.map((variant, i) => {
         const x = xScale(variant[START]);
         const stemTop = baseline - (variant[VALUE] / MAX_QUALITY) * usableHeight;
         const color = featureColor[variant[FEATURE_TYPE]];
         return (
-          <g key={`variant-${variant[START]}`}>
+          <g key={`variant-${i}`}>
             <line
               x1={x}
               x2={x}
@@ -303,16 +328,24 @@ function VariantsTrack({ xScale, top, height }) {
   );
 }
 
+const TRACK_RENDERERS = {
+  genes: GenesTrack,
+  regulatory: RegulatoryTrack,
+  coverage: CoverageTrack,
+  variants: VariantsTrack,
+};
+
 function GenomeTracks() {
   const xScale = useXScale();
   const drawing = useDrawingArea();
   const gap = 12;
   const bandHeight =
-    (drawing.height - gap * (tracks.length - 1)) / tracks.length;
+    (drawing.height - gap * (trackBands.length - 1)) / trackBands.length;
   const bandTop = (index) => drawing.top + index * (bandHeight + gap);
+  const firstGrid = Math.ceil(regionStart / GRID_STEP) * GRID_STEP;
   const gridOffsets = Array.from(
-    { length: Math.floor(regionEnd / GRID_STEP) + 1 },
-    (_, i) => i * GRID_STEP,
+    { length: Math.floor((regionEnd - firstGrid) / GRID_STEP) + 1 },
+    (_, i) => firstGrid + i * GRID_STEP,
   );
 
   return (
@@ -328,7 +361,7 @@ function GenomeTracks() {
           strokeWidth={1}
         />
       ))}
-      {tracks.map((_, index) =>
+      {trackBands.map((_, index) =>
         index % 2 === 1 ? (
           <rect
             key={`band-${index}`}
@@ -340,7 +373,7 @@ function GenomeTracks() {
           />
         ) : null,
       )}
-      {tracks.map((label, index) => (
+      {trackBands.map(({ label }, index) => (
         <text
           key={`label-${index}`}
           x={drawing.left - 14}
@@ -354,10 +387,18 @@ function GenomeTracks() {
           {label}
         </text>
       ))}
-      <GenesTrack xScale={xScale} top={bandTop(0)} height={bandHeight} />
-      <RegulatoryTrack xScale={xScale} top={bandTop(1)} height={bandHeight} />
-      <CoverageTrack xScale={xScale} top={bandTop(2)} height={bandHeight} />
-      <VariantsTrack xScale={xScale} top={bandTop(3)} height={bandHeight} />
+      {trackBands.map((band, index) => {
+        const Renderer = TRACK_RENDERERS[band.kind];
+        return (
+          <Renderer
+            key={`track-${index}`}
+            xScale={xScale}
+            top={bandTop(index)}
+            height={bandHeight}
+            rows={band.rows}
+          />
+        );
+      })}
     </g>
   );
 }
@@ -425,7 +466,7 @@ export default function Chart() {
           {
             id: "genomicPosition",
             scaleType: "linear",
-            min: 0,
+            min: regionStart,
             max: regionEnd,
             height: 64,
             valueFormatter: (value) => value.toLocaleString("en-US"),
