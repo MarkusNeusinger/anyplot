@@ -9,4 +9,4 @@
   `gemini/*` branch is gone. The PR body's `**Generation:**` line, the adopt
   commit and the run notices name the model, and every retry forwards it like
   `source_ref`. The value is checked as a model name and ignored with a
-  warning without `source_ref`.
+  warning without `source_ref`. (#12297)
