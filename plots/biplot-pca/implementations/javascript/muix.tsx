@@ -160,7 +160,7 @@ const componentOrder = eigenvalues
   .sort((a, b) => b.value - a.value);
 const pc1Index = componentOrder[0].index;
 const pc2Index = componentOrder[1].index;
-const totalVariance = eigenvalues.reduce((sum, value) => sum + value, 0) || 1;
+const totalVariance = eigenvalues.reduce((sum, value) => sum + value, 0);
 const pc1VarianceShare = (eigenvalues[pc1Index] / totalVariance) * 100;
 const pc2VarianceShare = (eigenvalues[pc2Index] / totalVariance) * 100;
 
@@ -169,16 +169,18 @@ const scores = standardized.map((row) => ({
   y: row.reduce((sum, value, j) => sum + value * eigenvectors[j][pc2Index], 0),
 }));
 
+// PC2's eigenvalue rounds to a tiny negative number when all features are collinear
 const rawLoadings = FEATURES.map((_, j) => ({
-  x: eigenvectors[j][pc1Index] * Math.sqrt(Math.max(0, eigenvalues[pc1Index])),
+  x: eigenvectors[j][pc1Index] * Math.sqrt(eigenvalues[pc1Index]),
   y: eigenvectors[j][pc2Index] * Math.sqrt(Math.max(0, eigenvalues[pc2Index])),
 }));
 
 const maxScoreExtent = Math.max(
   ...scores.map((s) => Math.max(Math.abs(s.x), Math.abs(s.y))),
 );
-const maxLoadingExtent =
-  Math.max(...rawLoadings.map((l) => Math.max(Math.abs(l.x), Math.abs(l.y)))) || 1;
+const maxLoadingExtent = Math.max(
+  ...rawLoadings.map((l) => Math.max(Math.abs(l.x), Math.abs(l.y))),
+);
 const loadingDisplayScale = (maxScoreExtent * LOADING_SCALE_SHARE) / maxLoadingExtent;
 const loadingVectors = rawLoadings.map((loading, j) => ({
   variable: FEATURES[j],
@@ -225,22 +227,19 @@ const unitCirclePoints = Array.from({ length: UNIT_CIRCLE_STEPS + 1 }, (_, i) =>
 });
 
 const TITLE = "biplot-pca · javascript · muix · anyplot.ai";
-const SUBTITLE = `${sampleCount} observations across ${groups.length} groups (${LABELS}) · ${featureCount} standardized features · PC1 + PC2 explain ${(pc1VarianceShare + pc2VarianceShare).toFixed(1)}% variance`;
+const SUBTITLE = `${sampleCount} observations · ${LABELS}: ${groups.length} · ${featureCount} standardized features · PC1 + PC2 explain ${(pc1VarianceShare + pc2VarianceShare).toFixed(1)}% variance`;
 
 function LoadingArrows() {
   const xScale = useXScale("pc1");
   const yScale = useYScale("pc2");
-  if (!xScale || !yScale) return null;
-
   const originX = xScale(0);
   const originY = yScale(0);
-  if (originX === undefined || originY === undefined) return null;
 
   const rawItems = loadingVectors.map((loading) => ({
     variable: loading.variable,
-    tipX: xScale(loading.x) ?? originX,
-    tipY: yScale(loading.y) ?? originY,
-    labelY: yScale(loading.y) ?? originY,
+    tipX: xScale(loading.x),
+    tipY: yScale(loading.y),
+    labelY: yScale(loading.y),
     pointsRight: loading.x >= 0,
   }));
 
