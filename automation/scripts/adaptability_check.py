@@ -1028,8 +1028,25 @@ def _defect_line(cls: str, findings: Sequence[Finding]) -> str:
 class _Constant:
     name: str
     role: str
-    node: ast.Assign
+    value: ast.expr
     line: int
+
+
+def _assignment(node: ast.AST) -> tuple[list[ast.expr], ast.expr] | None:
+    """The targets and the value of `x = ...` or of an annotated `x: str = ...`; None for anything else."""
+    if isinstance(node, ast.Assign):
+        return list(node.targets), node.value
+    if isinstance(node, ast.AnnAssign) and node.value is not None:
+        return [node.target], node.value
+    return None
+
+
+def _single_name(node: ast.AST) -> tuple[str, ast.expr] | None:
+    """The name and value of a single-name assignment, annotated or not."""
+    assigned = _assignment(node)
+    if assigned is None or len(assigned[0]) != 1 or not isinstance(assigned[0][0], ast.Name):
+        return None
+    return assigned[0][0].id, assigned[1]
 
 
 @dataclass
@@ -1146,11 +1163,12 @@ class _Source:
         names: set[str] = set()
         for stmt in self.tree.body:
             for node in ast.walk(stmt):
-                if not isinstance(node, ast.Assign) or not isinstance(node.value, ast.Call):
+                assigned = _assignment(node)
+                if assigned is None or not isinstance(assigned[1], ast.Call):
                     continue
-                root, resolved = self.call_root(node.value)
+                root, resolved = self.call_root(assigned[1])
                 if self.is_figure_factory(resolved) or (root is not None and root in names):
-                    for target in node.targets:
+                    for target in assigned[0]:
                         names.update(_target_names(target))
         return names
 
@@ -1508,16 +1526,18 @@ def _theme_tokens(src: _Source) -> set[str]:
     while changed:
         changed = False
         for stmt in src.head():
-            if not isinstance(stmt, ast.Assign):
+            assigned = _assignment(stmt)
+            if assigned is None:
                 continue
-            names = {name for target in stmt.targets for name in _target_names(target)}
+            targets, value = assigned
+            names = {name for target in targets for name in _target_names(target)}
             if not names or names <= tokens:
                 continue
             hexes = any(
                 isinstance(node, ast.Constant) and isinstance(node.value, str) and _HEX.match(node.value)
-                for node in ast.walk(stmt.value)
+                for node in ast.walk(value)
             )
-            if hexes or _names_in(stmt.value) & tokens:
+            if hexes or _names_in(value) & tokens:
                 tokens |= names
                 changed = True
     return tokens
@@ -1544,7 +1564,7 @@ def _binds_df(stmt: ast.stmt) -> bool:
 
 
 def _column_constants(src: _Source) -> list[_Constant]:
-    """Module-level single-name assignments with a `# role:` comment on one of their lines."""
+    """Module-level single-name assignments (annotated or not) with a `# role:` comment on one of their lines."""
     by_line: dict[int, str] = {}
     for line, col, text in src.comments:
         if col > 0:
@@ -1553,12 +1573,13 @@ def _column_constants(src: _Source) -> list[_Constant]:
                 by_line[line] = match.group("rest")
     constants: list[_Constant] = []
     for stmt in src.tree.body:
-        if not isinstance(stmt, ast.Assign) or len(stmt.targets) != 1 or not isinstance(stmt.targets[0], ast.Name):
+        single = _single_name(stmt)
+        if single is None:
             continue
         end = stmt.end_lineno or stmt.lineno
         role = next((by_line[line] for line in range(stmt.lineno, end + 1) if line in by_line), None)
         if role is not None:
-            constants.append(_Constant(stmt.targets[0].id, role, stmt, stmt.lineno))
+            constants.append(_Constant(single[0], role, single[1], stmt.lineno))
     return constants
 
 
@@ -1590,7 +1611,7 @@ def _check_columns(src: _Source, constants: list[_Constant], roles: Sequence[Dat
                 )
             )
             continue
-        value = constant.node.value
+        value = constant.value
         variadic = role is not None and role.variadic
         if variadic:
             ok = isinstance(value, ast.List | ast.Tuple) and all(
@@ -1652,8 +1673,7 @@ def _sample(src: _Source, constants: list[_Constant]) -> _Sample:
     """The strings, column names, data numbers and counts the block defines (constants' values count as columns)."""
     sample = _Sample()
     for constant in constants:
-        value = constant.node.value
-        for node in ast.walk(value):
+        for node in ast.walk(constant.value):
             if isinstance(node, ast.Constant) and isinstance(node.value, str):
                 sample.columns.add(node.value)
     body = src.block_body()
@@ -1665,12 +1685,9 @@ def _sample(src: _Source, constants: list[_Constant]) -> _Sample:
                 for arg in [*node.args[:1], *(kw.value for kw in node.keywords if kw.arg == "data")]:
                     if isinstance(arg, ast.Name):
                         frame_dicts.add(arg.id)
-            if (
-                isinstance(node, ast.Assign)
-                and isinstance(node.value, ast.Call)
-                and _call_name(node.value) in FRAME_CALLS
-            ):
-                for target in node.targets:
+            assigned = _assignment(node)
+            if assigned is not None and isinstance(assigned[1], ast.Call) and _call_name(assigned[1]) in FRAME_CALLS:
+                for target in assigned[0]:
                     frames |= _target_names(target)
     for stmt in body:
         for node in ast.walk(stmt):
@@ -2250,8 +2267,9 @@ def _df_derived(stmts: Sequence[ast.stmt]) -> set[str]:
     derived = {"df"}
     for stmt in stmts:
         for node in _module_scope_nodes(stmt):
-            if isinstance(node, ast.Assign) and _names_in(node.value) & derived:
-                for target in node.targets:
+            assigned = _assignment(node)
+            if assigned is not None and _names_in(assigned[1]) & derived:
+                for target in assigned[0]:
                     derived |= _target_names(target)
             elif isinstance(node, ast.For | ast.AsyncFor) and _names_in(node.iter) & derived:
                 derived |= _target_names(node.target)
@@ -2268,18 +2286,20 @@ def _literal_aliases(stmts: Sequence[ast.stmt]) -> dict[str, ast.Constant]:
     counts: Counter[str] = Counter()
     values: dict[str, ast.Constant] = {}
     for stmt in stmts:
-        if isinstance(stmt, ast.Assign):
-            for target in stmt.targets:
+        assigned = _assignment(stmt)
+        if assigned is not None:
+            for target in assigned[0]:
                 for name in _target_names(target):
                     counts[name] += 1
-            if len(stmt.targets) == 1 and isinstance(stmt.targets[0], ast.Name):
-                value = stmt.value
+            single = _single_name(stmt)
+            if single is not None:
+                value = single[1]
                 if (
                     isinstance(value, ast.Constant)
                     and isinstance(value.value, int | float | str)
                     and not isinstance(value.value, bool)
                 ):
-                    values[stmt.targets[0].id] = value
+                    values[single[0]] = value
         else:
             for name in _statement_bindings(stmt):
                 counts[name] += 1
@@ -2358,13 +2378,13 @@ def _method_comparison(
 def _palette(src: _Source) -> tuple[str, list[str], int] | None:
     """The module's Imprint palette: its name, its entries and its line."""
     for stmt in src.tree.body:
-        if not isinstance(stmt, ast.Assign) or len(stmt.targets) != 1 or not isinstance(stmt.targets[0], ast.Name):
+        single = _single_name(stmt)
+        if single is None:
             continue
-        value = stmt.value
+        name, value = single
         if not isinstance(value, ast.List | ast.Tuple):
             continue
         entries = [e.value.upper() for e in value.elts if isinstance(e, ast.Constant) and isinstance(e.value, str)]
-        name = stmt.targets[0].id
         if name in PALETTE_NAMES or (len(entries) >= 2 and entries[0] == CANONICAL_IMPRINT[0]):
             return name, entries, stmt.lineno
     return None
@@ -2450,13 +2470,14 @@ def _sized_slice(node: ast.expr) -> bool:
 def _check_constants_zone(src: _Source, sample: _Sample) -> list[Finding]:
     found: list[Finding] = []
     for stmt in src.constants_zone():
-        if not isinstance(stmt, ast.Assign) or any(
+        assigned = _assignment(stmt)
+        if assigned is None or any(
             line
             for line, col, text in src.comments
             if col > 0 and ROLE_COMMENT.match(text) and stmt.lineno <= line <= (stmt.end_lineno or stmt.lineno)
         ):
             continue
-        value = stmt.value
+        value = assigned[1]
         strings = {
             node.value for node in ast.walk(value) if isinstance(node, ast.Constant) and isinstance(node.value, str)
         }
@@ -2523,7 +2544,7 @@ def rewrite_constants(source: str, columns: Mapping[str, str | Sequence[str]]) -
     for constant in _column_constants(src):
         if constant.role not in columns:
             continue
-        value = constant.node.value
+        value = constant.value
         start = offsets[value.lineno - 1] + _char_offset(source, offsets, value.lineno, value.col_offset)
         end_line = value.end_lineno or value.lineno
         end = offsets[end_line - 1] + _char_offset(source, offsets, end_line, value.end_col_offset or 0)

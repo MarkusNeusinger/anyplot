@@ -306,6 +306,18 @@ class TestColumns:
         single = head.replace('["North", "South"]', '"North"')
         assert found(check(source(head=single, block=block, plot=""), roles=roles), "columns")
 
+    def test_annotated_constants_and_palette(self) -> None:
+        """`QUARTER: str = "Quarter"  # role: category` is a constant like the plain form (Gemini review)."""
+        head = HEAD.replace('QUARTER = "Quarter"', 'QUARTER: str = "Quarter"').replace(
+            "IMPRINT = [", "IMPRINT: list[str] = ["
+        )
+        record = check(source(head=head))
+        assert record.findings == []
+        assert record.constants["category"] == "QUARTER"
+        assert 'QUARTER: str = "Region"  # role: category' in rewrite_constants(
+            source(head=head), {"category": "Region"}
+        )
+
     def test_the_comment_may_sit_on_any_line_of_a_list(self) -> None:
         roles = parse_roles(["`x` (numeric) - time", "`y1, y2, ...` (numeric) - series"])
         head = (
