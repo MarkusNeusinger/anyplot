@@ -16,8 +16,8 @@ const Y = "Latitude (°N)"; // role: y
 const COLOR = "Sea-surface temperature (°C)"; // role: color
 
 // Data: replace this block with your own records, one object per row
-// Ocean buoy network: sea-surface temperature sampled across a survey grid.
-// A warm-core current near (0°E, 40°N) fades outward.
+// Ocean buoy network: sea-surface temperature sampled across an open North
+// Atlantic survey box. A warm-core eddy near (30°W, 36°N) fades outward.
 const data = (() => {
   let seed = 42;
   const nextRandom = () => {
@@ -28,9 +28,9 @@ const data = (() => {
   const stationCount = 160;
   const rows: { [X]: number; [Y]: number; [COLOR]: number }[] = [];
   for (let i = 0; i < stationCount; i += 1) {
-    const longitude = -14 + nextRandom() * 26;
-    const latitude = 30 + nextRandom() * 22;
-    const distanceFromCore = Math.hypot(longitude - 0, latitude - 40);
+    const longitude = -40 + nextRandom() * 20;
+    const latitude = 25 + nextRandom() * 25;
+    const distanceFromCore = Math.hypot(longitude + 30, latitude - 36);
     const temperature = 23 - 0.42 * distanceFromCore + (nextRandom() - 0.5) * 2.4;
     rows.push({
       [X]: Number(longitude.toFixed(2)),
@@ -50,17 +50,11 @@ const buoys = data.map((row, i) => ({
 }));
 
 const temperatures = buoys.map((buoy) => buoy.z);
-const tempMin = Number(Math.min(...temperatures).toFixed(1));
-const tempMax = Number(Math.max(...temperatures).toFixed(1));
+const tempMin = Math.floor(Math.min(...temperatures) * 10) / 10;
+const tempMax = Math.ceil(Math.max(...temperatures) * 10) / 10;
+const legendLabel = ({ value }: { value: number | Date }) => `${Number(value).toFixed(1)}°C`;
 
-const withAlpha = (hex: string, alpha: number) => {
-  const n = parseInt(hex.slice(1), 16);
-  const r = (n >> 16) & 255;
-  const g = (n >> 8) & 255;
-  const b = n & 255;
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-};
-const MARKER_ALPHA = 0.88;
+const MARKER_ALPHA_HEX = "E0"; // ~0.88 opacity
 
 const TITLE = "scatter-color-mapped · javascript · muix · anyplot.ai";
 
@@ -122,7 +116,7 @@ export default function Chart() {
                 type: "continuous",
                 min: tempMin,
                 max: tempMax,
-                color: [withAlpha(t.seq[0], MARKER_ALPHA), withAlpha(t.seq[1], MARKER_ALPHA)],
+                color: [`${t.seq[0]}${MARKER_ALPHA_HEX}`, `${t.seq[1]}${MARKER_ALPHA_HEX}`],
               },
             },
           ]}
@@ -144,6 +138,8 @@ export default function Chart() {
               direction: "vertical",
               position: { vertical: "middle", horizontal: "end" },
               thickness: 18,
+              minLabel: legendLabel,
+              maxLabel: legendLabel,
               sx: {
                 height: "65%",
                 color: t.inkSoft,
