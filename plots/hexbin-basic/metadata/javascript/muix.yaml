@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: hexbin-basic
 created: '2026-08-25T01:49:00Z'
-updated: '2026-10-23T21:32:02Z'
+updated: '2026-10-23T21:47:24Z'
 generated_by: adopted:gemini/12267-muix-9-batch1
 workflow_run: 40025767465
 issue: 859
@@ -12,51 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/javascript/muix/plot-dark.html
-quality_score: 84
+quality_score: 85
 review:
   strengths:
-  - Hexagons are drawn through a custom `scatter` slot on ScatterChart. Each slot
-    uses the chart's own xScale/yScale and colorGetter, so the bins sit at their true
-    data centres and take their colour from the zAxis colorMap. This is an idiomatic
-    MUI X way to add a mark type the community package lacks.
-  - A log-scaled imprint_seq colorMap (green → blue), applied through zAxis and shown
-    by a native ContinuousColorLegend, separates the three hotspots (plaza core, transit
-    hub, waterfront promenade) clearly from the ambient fringe. The colour bar caption
-    'Ping count per bin (log scale)' states the scale.
-  - 'A realistic, specific scenario: 30,000 pedestrian GPS pings in metres from a
-    plaza, from a seeded LCG, so the data is fully deterministic.'
-  - 'Theme handling is clean: data colours are identical in both renders. Hex outlines
-    use the page colour, empty cells are a faint seq[0] tint, and all chrome uses
-    ink/inkSoft tokens, so every text element is readable on #FAF8F1 and #1A1A17.'
+  - Square plot area (margins tuned so 1 m spans the same pixels on both axes) keeps
+    every hexagon regular; the binning uses the standard pointy-top nearest-centre
+    assignment and tiles the domain edge to edge
+  - imprint_seq green-to-blue ramp applied on a log1p scale through a zAxis continuous
+    colorMap, so the dense plaza/transit/waterfront cores and the sparse fringes both
+    read; the colour bar is captioned 'Ping count per bin (log scale)'
+  - 'Idiomatic MUI X customisation: the ScatterChart''s scatter slot is replaced by
+    a HexCell renderer that reads the chart''s own xScale/yScale/colorGetter, and
+    the ContinuousColorLegend slot is bound to the same z axis, so marks and colour
+    bar share one colour mapping'
+  - 1 px page-coloured seams between hexagons give a clean mosaic in both themes;
+    empty cells are a faint tint (light) / near-black tint (dark) that stays distinct
+    from the lowest filled colour
+  - Plausible, neutral scenario (30,000 pedestrian GPS pings around a plaza with three
+    foot-traffic hotspots), deterministic via a seeded LCG; skipAnimation and disableHitArea
+    set
   weaknesses:
-  - 'SC-02 (both): the hexagons are not regular on screen. The equal ±60 m ranges
-    map to a plot area of about 1793 × 1901 px, so each hexagon is about 6 % taller
-    than wide → equal pixel extent per metre on both axes (plot width = plot height,
-    about +108 px of plot width or −108 px of height). Likely cause: the asymmetric
-    margin (right 134 / left 80) and y-axis band width 88 leave the drawing area wider-than-tall
-    mismatched against height − titleHeight − captionHeight − x-axis band 68.'
-  - 'CQ-01 (code): the binning, the full-grid construction and the colour mixing are
-    wrapped in single-use helper functions (`hexBin` lines 79–117, `fullHexGrid` lines
-    146–163, `mixHex` lines 127–136) → inline them at module level as straight-line
-    Data → Plot code. Keep only the `HexCell` slot component and the `logSequentialColor`
-    callback that MUI X requires. Likely cause: generator habit of factoring each
-    step into a function.'
-  - 'Suggestion: the colour bar shows only its end values (1 and 1,244). Intermediate
-    log-spaced ticks (10, 100, 1,000) would let a reader read mid-density bins.'
-  - 'Suggestion: a slightly smaller hexagon radius (for example HEX_RADIUS_SHARE ≈
-    0.055) would resolve the cluster gradients more finely with 30,000 points while
-    still reading as a continuous surface.'
+  - 'SC-02 (both): the hexagons are too coarse for 30,000 points — about 16 columns
+    across the ±60 m domain, so each hotspot core spans only 2–3 hexagons and the
+    gradients around them step in large tiles rather than resolving the cluster shapes
+    (spec: ''small enough to resolve clusters and gradients'') → about 28–32 columns
+    (radius share about 0.04, roughly −0.035). Likely cause: HEX_RADIUS_SHARE = 0.075.'
+  - 'Suggestion: the log-scale colour bar carries only its endpoint labels (1 and
+    1,244); intermediate ticks such as 10 and 100 would let a reader decode the log
+    mapping.'
+  - 'Suggestion: the colour-bar caption sits about 40 px below the bar''s labels;
+    tightening the caption band would tie it visually to the bar.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, about #FAF8F1, square 2400×2400 canvas.
-      Chrome: bold dark title "hexbin-basic · javascript · muix · anyplot.ai" centred at the top. Dark axis titles "Distance east of plaza (m)" / "Distance north of plaza (m)" and dark-grey tick labels −60…60 in steps of 5 on both axes. A horizontal colour bar at the bottom with end labels "1" and "1,244" and the caption "Ping count per bin (log scale)". All text is readable.
-      Data: about 15 × 18 pointy-top hexagons tile the whole ±60 m square, outlined in the page colour. Colour runs from brand green #009E73 (sparse fringe) through teal to blue #4467A3 (dense cores). Three dense hotspots are visible: centre (0, 5), lower right (34, −25) and an elongated upper-left one (−30, 21). Empty cells are a faint green tint. The hexagons are slightly taller than wide.
+      Background: warm off-white #FAF8F1, square 2400x2400 canvas, square plot area.
+      Chrome: bold dark title "hexbin-basic · javascript · muix · anyplot.ai" centred at top (~44 % width); y-axis "Distance north of plaza (m)" and x-axis "Distance east of plaza (m)" in dark ink; ticks −60…60 every 5 in soft ink, all readable; horizontal colour bar centred below the x label with endpoint labels 1 and 1,244 and caption "Ping count per bin (log scale)". No clipping.
+      Data: ~16-column pointy-top hex grid with 1 px page-coloured seams; colours run from brand green #009E73 (sparse) to blue #4467A3 (dense) on a log scale; three blue hotspots (centre ~0,5; transit ~32,−27; waterfront ~−30,22); empty cells near the edges in a pale mint tint; edge hexes clipped at the plot frame.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black, about #1A1A17.
-      Chrome: title and axis titles in light ink, tick labels and colour bar labels in light grey, axis lines light. No dark-on-dark text.
-      Data: hex colours are identical to the light render (green → blue log scale). Outlines switch to the dark page colour and empty cells show as a very dark green tint. Brand green stays clearly visible.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis labels and colour-bar caption in light ink; tick labels and endpoint labels in light soft ink — all readable, no dark-on-dark text.
+      Data: identical green-to-blue hexagon colours to the light render; seams now dark page colour; empty cells a dark green-black tint, still distinct from the green sparse cells. Brand green clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -68,50 +64,46 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (title 26, axis titles 16, ticks 14, legend 14 CSS
-          px). Readable in both themes and at thumbnail size.
+        comment: Explicit sizes (title 26 px, labels 16 px, ticks 14 px CSS); all
+          text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions. The colour bar, x title and caption are cleanly
-          separated.
+        comment: No text collisions; hexagons tile without overlap
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Hexagons are large and outlined in the page colour. The sparsest
-          filled bins (green) stand out from the page in both themes.
+        comment: Hexagons with page-coloured seams clearly visible; sparsest filled
+          cells stand out from the page in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: The green → blue sequential ramp is CVD-safe, with monotonic luminance
-          change.
+        comment: Green-to-blue ramp with a lightness step; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square canvas, balanced margins, nothing clipped. The title fills
-          about 45 % of the width.
+        comment: Square canvas, square plot area, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles with units (m). The colour bar caption names
-          the quantity and the log scale.
+        comment: Descriptive axis labels with units (m)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq (t.seq) only. Backgrounds are #FAF8F1 / #1A1A17 and
-          data colours are identical across themes.'
+        comment: 'imprint_seq (#009E73 -> #4467A3) for continuous density; correct
+          backgrounds and chrome in both themes'
     design_excellence:
       score: 9
       max: 20
@@ -120,22 +112,23 @@ review:
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: false
-        comment: The style-guide baseline, nothing beyond it.
+        passed: true
+        comment: 'Style-guide baseline: Imprint ramp, theme tokens, explicit font
+          sizes; nothing beyond it'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Page-coloured hex outlines give a crisp mosaic in both themes, and
-          hexagons are clipped to the plot rect so the outer edge is a clean square.
+        passed: true
+        comment: 1 px page-coloured seams chosen for the hex mosaic and a centred
+          45 %-width horizontal colour bar, beyond the baseline
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed. The log scale follows the Notes; no hierarchy chosen
-          beyond that.
+        comment: Density displayed; log scale is what the Notes suggest; no hierarchy
+          chosen beyond that
     spec_compliance:
       score: 14
       max: 15
@@ -145,30 +138,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'True hexagonal binning. Only hexagons plus colour bar: no points,
-          marginals, contours or callouts.'
+        comment: Correct hexbin, hexagons only plus colour bar; no extra layers
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
-        passed: false
-        comment: Colour bar, sequential perceptual map, gridsize constant and log
-          colour scale are all present. Hexagons are drawn about 6 % taller than wide,
-          so they are not regular on screen (defect line).
+        passed: true
+        comment: Colour bar, perceptually uniform ramp and log scale present; hexagons
+          too coarse to resolve the cluster shapes (defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Bins are centred at their computed hex centres. The axes cover the
-          full ±60 m domain.
+        comment: x/y correct, full ±60 m domain shown, cells at their bin centres
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format. The colour bar is labelled as
-          a log count.
+        comment: Title format correct; colour bar captioned as a log count
     data_quality:
       score: 15
       max: 15
@@ -178,57 +167,59 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Dense cores, gradients, sparse fringe and empty cells are all shown.
+        comment: Dense cores, sparse fringes, empty cells and a wide count range (1-1,244)
+          justifying the log scale
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Pedestrian GPS pings around a plaza, transit hub and waterfront.
-          Neutral and concrete.
+        comment: Pedestrian GPS pings around a plaza, transit hub and waterfront;
+          neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: hex radius 4.5 m (area about 53 m²). The plaza core with
-          12.6k pings over 2π·9·8 m² gives about 1,470 pings per hex at the peak,
-          consistent with the 1,244 maximum. 30,000 points are inside the spec range.'
+        comment: 30,000 points within the spec range; ±60 m district and counts up
+          to 1,244 per bin are plausible; no Check values in spec
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Single-use helpers hexBin / fullHexGrid / mixHex (defect line).
+        passed: true
+        comment: Linear script; HexCell is the slot component the library needs, the
+          colour function the colorMap callback
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (42).
+        comment: Seeded LCG (42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Written-out hex binning is permitted (no JS stats helper is available).
+        comment: Written-out binning permitted by the library prompt's Computation
+          line; no dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default export, skipAnimation, sized to ANYPLOT_SIZE, v9 slots/zAxis
-          API.
+        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation,
+          community @mui/x-charts v9 only
     library_mastery:
       score: 7
       max: 10
@@ -238,23 +229,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: The custom `slots.scatter` component consumes the chart's scales
-          and colorGetter instead of drawing outside the chart.
+        comment: Uses the ScatterChart slot system, zAxis colorMap and ContinuousColorLegend
+          rather than a hand-drawn SVG chart
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: zAxis continuous colorMap with a function colour, the ContinuousColorLegend
-          slot, and the slot-override system to add a hex mark type.
-  verdict: REJECTED
+        comment: Custom scatter slot reading the chart's xScale/yScale/colorGetter
+          plus a z-axis-bound ContinuousColorLegend
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-03c2486144
-  rendered_at: '2026-10-23T21:28:40Z'
+  rendered_at: '2026-10-23T21:43:47Z'
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
+  - patches
+  - html-export
   patterns:
   - data-generation
   dataprep:
@@ -262,4 +255,3 @@ impl_tags:
   styling:
   - custom-colormap
   - edge-highlighting
-  - minimal-chrome
