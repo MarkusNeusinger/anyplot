@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: datamatrix-basic
 created: '2026-09-02T00:15:32Z'
-updated: '2026-10-23T21:03:29Z'
+updated: '2026-10-23T21:08:51Z'
 generated_by: adopted:gemini/12267-muix-9-batch1
 workflow_run: 40021959836
 issue: 3811
@@ -12,59 +12,53 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/datamatri
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/javascript/muix/plot-dark.html
-quality_score: 79
+quality_score: 81
 review:
   strengths:
-  - 'Uses the v9 composition idiom: an empty ChartsContainer with hidden axes and
-    a custom child that reads useDrawingArea() to place the modules, so module size
-    follows the drawing area instead of hard-coded pixels'
-  - L-shaped finder pattern is solid and unbroken along the left and bottom edges
-    and meets in the lower-left corner; square modules of one size sit on a regular
-    24×24 grid with sharp edges
-  - Generous quiet zone (2 modules plus card padding) on all four sides, free of text
-    and marks
-  - Elevated rounded card with a hairline border frames the symbol, and a soft-ink
-    caption naming the content and symbol size gives a clear title / symbol / caption
-    hierarchy
-  - Deterministic data region (FNV hash seeding a fixed LCG); skipAnimation set; square
-    orientation directive; title and caption readable in both themes
+  - L-shaped finder pattern is two unbroken solid edges (left column, bottom row)
+    meeting in the lower-left corner, and the clock pattern alternates module-for-module
+    along the top row and right column, in step with the 24×24 grid (both renders)
+  - Square modules of one size on a regular grid with shapeRendering="crispEdges"
+    and a 0.6 px overlap that removes anti-aliasing seams between adjacent black modules
+    — sharp, gradient-free cells
+  - Generous quiet zone (2 modules plus the tile padding) on all four sides, free
+    of text; the symbol stays black on a light tile in the dark theme while title
+    and caption flip to theme tokens (t.ink / t.inkSoft)
+  - 'Composes the symbol as a custom child of ChartsContainer and positions it with
+    the useDrawingArea hook — the MUI X v9 composition idiom for custom SVG marks,
+    with axes hidden via position: "none" and skipAnimation set'
+  - Rounded symbol tile with a subtle t.grid border, a left-aligned title and a centred
+    muted caption give the single symbol a clean presentation hierarchy
+  - Plausible, neutral industrial part-marking scenario (PCB serial number) at a valid
+    ECC 200 square size (24×24)
   weaknesses:
-  - 'SC-02 (both): modules are drawn in brand green #009E73 instead of black, and
-    in the dark render the symbol sits on the dark #242420 card, so the code is green-on-cream
-    / green-on-near-black rather than the high-contrast black on white the Notes and
-    the ''A good version shows'' bullet require → black (or the darkest ink) modules
-    on a white/near-white tile in both themes (a white tile behind the symbol in the
-    dark theme is explicitly permitted). Likely cause: fill={t.palette[0]} on the
-    module rects and backgroundColor: t.elevatedBg on the card.'
-  - 'SC-02 (both): the clock pattern is out of phase at both ends — the top row is
-    dark at col 0 and col 1 (a two-module dark block next to the finder corner) and
-    the right column is dark at rows 0 and 1 (a two-module dark block in the top-right
-    corner), so the alternation is not in step with the grid → top row dark on even
-    columns (col 0, 2, 4 …), right column dark on odd rows, which leaves the top-right
-    corner light on an even-sized symbol. Likely cause: grid[0][c] = c % 2 === 1 in
-    buildMatrix (should be c % 2 === 0).'
-  - 'DQ-03 (both): the caption states ''Encodes "PCB-SN:48291X7A" · ECC 200'', but
-    the data region is the raw 8-bit ASCII of the text followed by hash-seeded LCG
-    noise with no ECC 200 codewords, Reed-Solomon blocks or module placement, so the
-    symbol does not encode what the caption claims → either generate a real ECC 200
-    symbol or drop the ''Encodes … ECC 200'' claim from the caption. Likely cause:
-    encodeBits() padding with an LCG instead of ECC 200 encoding.'
-  - 'CQ-01 (code): three module-level helper functions (hashString, encodeBits, buildMatrix)
-    besides the required component structure → inline the matrix construction as straight-line
-    module-level code. Likely cause: function-wrapped matrix build.'
-  - 'Suggestion: a slightly larger title (about 26–28 px) would balance the large
-    square symbol.'
+  - 'DQ-01 (both): the data region is not an ECC 200 encoding of the content — the
+    code places the raw 8-bit ASCII of "PCB-SN:48291X7A" row-major and fills the rest
+    with LCG noise, so there are no ECC 200 codewords, no Reed-Solomon error correction
+    and no standard module placement, and the symbol would not decode (the Notes name
+    ECC 200 as the standard) → encode the content as ECC 200: ASCII codewords (digit
+    pairs as 130+value), pad codewords, Reed-Solomon ECC over GF(256) with polynomial
+    301, and the standard utah placement into the 22×22 data region. Likely cause:
+    lines 38–63 build dataBits from charCodeAt bits plus an LCG instead of computing
+    the symbology.'
+  - 'CQ-04 (code): the header is duplicated — lines 6–9 repeat the anyplot header
+    with a stale "Library: muix 7.29.1 | JavaScript 22.23.2" that contradicts the
+    pinned muix 9.16 the code is written against → delete lines 6–9 so a single header
+    remains. Likely cause: a header from an earlier generation that was prepended
+    to instead of replaced.'
+  - 'Suggestion: once the data region is a real ECC 200 encoding, the caption''s "illustrative
+    data region" qualifier can be dropped.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white page (#FAF8F1, sampled 250,248,241) with a slightly lighter rounded card with a hairline border centred on the 2400x2400 square canvas.
-      Chrome: title "datamatrix-basic · javascript · muix · anyplot.ai" top-left in dark ink, about 40% of the width; caption 'Encodes "PCB-SN:48291X7A" · 24×24 modules · ECC 200' centred at the bottom in soft ink. No axes, ticks, grid or legend (expected for this type). All text readable.
-      Data: 24x24 grid of square modules filled brand green #009E73 (sampled 0,158,115) on the cream card — not black on white. Solid L finder on left and bottom edges; clock pattern on top and right edges, but with two-module dark blocks at the top-left (cols 0–1) and top-right (rows 0–1) corners. Data region looks like random noise. Quiet zone of 2 modules plus card padding on all sides.
+      Background: warm off-white page (#FAF8F1), 2400×2400 square canvas; the symbol sits on a rounded tile of the same off-white with a faint grey 1 px border.
+      Chrome: title "datamatrix-basic · javascript · muix · anyplot.ai" top-left in dark ink, ~40 % of the width; muted dark-grey caption centred at the bottom: 'Part marking "PCB-SN:48291X7A" · 24×24 modules · illustrative data region'. All text readable.
+      Data: a 24×24 Data Matrix in near-black (#1A1A17) square modules: solid left column and bottom row form the L finder meeting at the lower-left corner; top row and right column alternate black/white; interior is a noise-like data region. Quiet zone of ~2 modules plus tile padding on all sides. Single-colour symbology, no palette series.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black page (#1A1A17, sampled 26,26,23) with a slightly lighter dark card (elevatedBg) and subtle border.
-      Chrome: title in light ink, caption in soft light ink — both clearly readable; no dark-on-dark text.
-      Data: module colors identical to the light render (#009E73) and identical module layout; green on near-black, so the symbol is inverted in contrast relative to black-on-white.
+      Background: warm near-black page (#1A1A17); the symbol tile stays off-white (#FAF8F1) as a light card, as the spec permits.
+      Chrome: title in light ink top-left and caption in light-grey muted ink at the bottom — both clearly readable, no dark-on-dark text.
+      Data: the module grid is pixel-identical to the light render (same near-black modules on the off-white tile); only page background and text flipped.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -76,47 +70,48 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 22 px and caption 16 px (CSS) readable in both themes; theme
-          ink tokens threaded through
+        comment: Title and caption have explicit font sizes and read cleanly in both
+          themes; the symbol itself carries no text
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; modules tile edge to edge as intended
+        comment: No text collisions; caption and title sit well clear of the tile
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Modules large and crisp at 24x24; finder and clock clearly visible
+        comment: Large, crisp square modules; seam-free via crispEdges and a 0.6 px
+          overlap
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single hue with strong luminance contrast against both cards; no
-          red-green signal
+        comment: Near-black on off-white, maximal contrast, no hue signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square canvas, symbol centred, nothing cut off; canvas gate passed
+        comment: 2400×2400 square canvas, symbol tile centred, nothing clipped or
+          overflowing
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'N/A: no data axes for a barcode; caption is reader text'
+        comment: N/A for axes (a barcode has none); caption describes content and
+          size for a reader
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint green #009E73 identical in both renders; backgrounds #FAF8F1
-          / #1A1A17; chrome theme-correct (the black-on-white requirement is routed
-          to SC-02)'
+        comment: 'Page backgrounds #FAF8F1 / #1A1A17, chrome from theme tokens; black-on-white
+          symbology is required by the spec and the white tile in dark is permitted'
     design_excellence:
       score: 10
       max: 20
@@ -126,23 +121,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Elevated rounded card with hairline border and a soft-ink caption
-          create a deliberate title / symbol / caption hierarchy beyond the baseline
+        comment: 'Raised: the symbol is presented on a rounded tile with a subtle
+          t.grid border and a title / muted caption hierarchy chosen for this plot
+          type'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: 'Generous, balanced whitespace: quiet zone plus card padding, symbol
-          optically centred in the card'
+        comment: 'Raised: crispEdges plus a 0.6 px module overlap removes anti-aliasing
+          seams; generous balanced whitespace around the centred tile'
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: 'Default: symbol displayed, no hierarchy chosen beyond the Notes'
+        comment: 'Default: the symbol is displayed; the caption gives context but
+          no hierarchy beyond the spec'
     spec_compliance:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -150,67 +147,70 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Single Data Matrix-style symbol; no unasked layers
+        comment: A single square Data Matrix symbol; no tinted modules, logos, callouts
+          or reference layers on the code
       - id: SC-02
         name: Required Features
-        score: 1
+        score: 4
         max: 4
-        passed: false
-        comment: Finder L and quiet zone met; black-on-white missed (green modules,
-          dark card in dark theme) and clock pattern out of phase at both top corners
-          (defect lines)
+        passed: true
+        comment: L finder (left + bottom, unbroken, meeting lower-left), clock pattern
+          on top and right in step with the grid, square uniform modules, quiet zone
+          ≥1 module, high-contrast black on white — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Layout-positioned type; module positions from the matrix
+        comment: Module positions follow the symbology grid, not data axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend N/A
+        comment: Title follows the mandated format; legend N/A
     data_quality:
-      score: 14
+      score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: Finder, clock, data region and quiet zone all present
+        passed: false
+        comment: Data region is raw ASCII bits plus LCG filler, not an ECC 200 encoding
+          with Reed-Solomon error correction (defect line)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: PCB serial number for electronics part marking — plausible and neutral
+        comment: PCB serial-number part marking — plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: 24x24 is a valid ECC 200 size; but the caption claims the symbol
-          encodes the text with ECC 200 while the data region is ASCII bits plus LCG
-          noise (defect line)
+        passed: true
+        comment: 'Checked: 24×24 is a valid ECC 200 square size that holds 15 ASCII
+          characters; clock parity (top-left black, top-right white, right column
+          alternating up from the black bottom corner) matches an even-sized symbol'
     code_quality:
       score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Three helper functions besides the component (defect line)
+        passed: true
+        comment: Constants → data → grid → one hook-using child component required
+          by MUI X → default export
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hash + fixed LCG
+        comment: Fixed-seed LCG, fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -219,17 +219,18 @@ review:
         comment: ChartsContainer and useDrawingArea both used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Appropriate complexity; no fake UI
+        passed: false
+        comment: Duplicated header with a stale muix 7.29.1 line (lines 6–9) contradicts
+          the code (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component, skipAnimation, v9 ChartsContainer path;
-          harness writes plot-{theme}.png/html
+        comment: 'Default-exported component, MUI X v9 API (ChartsContainer, position:
+          "none"), skipAnimation; harness writes PNG + HTML'
     library_mastery:
       score: 4
       max: 10
@@ -239,18 +240,19 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: 'Default: v9 ChartsContainer composition with hidden axes and useDrawingArea'
+        comment: 'Default: ChartsContainer composition with useDrawingArea is the
+          documented route for custom SVG marks'
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: 'Default: nothing beyond what the library prompt mandates; modules
-          are plain SVG rects'
-  verdict: REJECTED
+        comment: 'Default: nothing beyond what the library prompt mandates; MUI X
+          serves only as an SVG surface'
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-03c2486144
-  rendered_at: '2026-10-23T21:00:30Z'
+  rendered_at: '2026-10-23T21:05:50Z'
 impl_tags:
   dependencies: []
   techniques:
