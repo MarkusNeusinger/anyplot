@@ -72,10 +72,13 @@ const data = (() => {
 // Plot: reads only data and the constants above
 const trajectoryLabels = Array.from(new Set(data.map((d) => d[TRAJECTORY])));
 const trajectories = trajectoryLabels.map((label, i) => {
-  const pts = data.filter((d) => d[TRAJECTORY] === label);
+  // Time order, not row order, decides the path and the direction arrows.
+  const pts = data
+    .filter((d) => d[TRAJECTORY] === label)
+    .sort((a, b) => a[TIME] - b[TIME]);
   return {
     axisId: `x-axis-${i}`,
-    color: t.palette[i % t.palette.length],
+    color: t.palette[i],
     label,
     x: pts.map((d) => d[X]),
     v: pts.map((d) => d[DX_DT]),
