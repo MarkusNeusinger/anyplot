@@ -63,29 +63,13 @@ const boxStats = categories.map((name) => {
     .sort((a, b) => a - b);
   const n = scores.length;
 
-  const q1Pos = (n - 1) * 0.25;
-  const q1Base = Math.floor(q1Pos);
-  const q1Rest = q1Pos - q1Base;
-  const q1 =
-    q1Base + 1 < n
-      ? scores[q1Base] + q1Rest * (scores[q1Base + 1] - scores[q1Base])
-      : scores[q1Base];
-
-  const medPos = (n - 1) * 0.5;
-  const medBase = Math.floor(medPos);
-  const medRest = medPos - medBase;
-  const median =
-    medBase + 1 < n
-      ? scores[medBase] + medRest * (scores[medBase + 1] - scores[medBase])
-      : scores[medBase];
-
-  const q3Pos = (n - 1) * 0.75;
-  const q3Base = Math.floor(q3Pos);
-  const q3Rest = q3Pos - q3Base;
-  const q3 =
-    q3Base + 1 < n
-      ? scores[q3Base] + q3Rest * (scores[q3Base + 1] - scores[q3Base])
-      : scores[q3Base];
+  const [q1, median, q3] = [0.25, 0.5, 0.75].map((p) => {
+    const pos = (n - 1) * p;
+    const base = Math.floor(pos);
+    return base + 1 < n
+      ? scores[base] + (pos - base) * (scores[base + 1] - scores[base])
+      : scores[base];
+  });
 
   const iqr = q3 - q1;
   const lowerFence = q1 - IQR_FENCE_MULTIPLIER * iqr;
@@ -98,8 +82,8 @@ const boxStats = categories.map((name) => {
     q1,
     median,
     q3,
-    whiskerLow: inliers.length ? inliers[0] : q1,
-    whiskerHigh: inliers.length ? inliers[inliers.length - 1] : q3,
+    whiskerLow: inliers[0],
+    whiskerHigh: inliers[inliers.length - 1],
     outliers,
   };
 });
@@ -113,13 +97,11 @@ const yMax = maxVal + valSpan * Y_PAD_SHARE;
 
 const totalOutliers = boxStats.reduce((sum, s) => sum + s.outliers.length, 0);
 const TITLE = "box-basic · javascript · muix · anyplot.ai";
-const SUBTITLE = `${data.length} observations across ${categories.length} ${CATEGORY.toLowerCase()}s · Whiskers at ${IQR_FENCE_MULTIPLIER}×IQR (${totalOutliers} outliers marked)`;
+const SUBTITLE = `${data.length} observations · ${CATEGORY}: ${categories.length} · Whiskers at ${IQR_FENCE_MULTIPLIER}×IQR · ${totalOutliers} outliers`;
 
 function BoxWhiskers() {
   const xScale = useXScale("classes");
   const yScale = useYScale("scores");
-  if (!xScale || !yScale || !("bandwidth" in xScale)) return null;
-
   const bandwidth = xScale.bandwidth();
   const boxWidth = bandwidth * BOX_WIDTH_SHARE;
   const capWidth = boxWidth * 0.65;
@@ -127,19 +109,17 @@ function BoxWhiskers() {
   return (
     <g>
       {boxStats.map((s, i) => {
-        const bandStart = xScale(s.name);
-        if (bandStart === undefined) return null;
-        const center = bandStart + bandwidth / 2;
+        const center = xScale(s.name) + bandwidth / 2;
         const left = center - boxWidth / 2;
         const right = center + boxWidth / 2;
         const capLeft = center - capWidth / 2;
         const capRight = center + capWidth / 2;
         const color = t.palette[i];
-        const yWhiskerHigh = yScale(s.whiskerHigh) ?? 0;
-        const yWhiskerLow = yScale(s.whiskerLow) ?? 0;
-        const yQ3 = yScale(s.q3) ?? 0;
-        const yQ1 = yScale(s.q1) ?? 0;
-        const yMedian = yScale(s.median) ?? 0;
+        const yWhiskerHigh = yScale(s.whiskerHigh);
+        const yWhiskerLow = yScale(s.whiskerLow);
+        const yQ3 = yScale(s.q3);
+        const yQ1 = yScale(s.q1);
+        const yMedian = yScale(s.median);
 
         return (
           <g key={s.name}>
@@ -204,7 +184,7 @@ function BoxWhiskers() {
               <circle
                 key={j}
                 cx={center}
-                cy={yScale(v) ?? 0}
+                cy={yScale(v)}
                 r={5.5}
                 fill={t.pageBg}
                 stroke={color}
