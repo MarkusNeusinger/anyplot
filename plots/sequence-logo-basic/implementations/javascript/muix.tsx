@@ -176,6 +176,7 @@ export default function Chart() {
         width={W}
         height={H - TITLE_H}
         series={[]}
+        skipAnimation
         margin={{ top: 30, right: 40, bottom: 20, left: 20 }}
         xAxis={[
           {
