@@ -1,7 +1,7 @@
 // anyplot.ai
 // phase-diagram: Phase Diagram (State Space Plot)
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-09-05
+// Library: muix 9.16.0 | JavaScript 22.23.3
+// Quality: 84/100 | Updated: 2026-10-23
 
 import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
 import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
