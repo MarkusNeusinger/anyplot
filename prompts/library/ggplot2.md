@@ -4,6 +4,10 @@ ggplot2 is the canonical implementation of the grammar of graphics in R. This
 is anyplot's first R-language entry; the file extension is **`.R`** and the
 runtime is **Rscript**, not Python.
 
+**API level:** ggplot2 4. The Posit snapshot in `.github/actions/setup-r/action.yml`
+pins this major; write against its API, with the changes in "ggplot2 4.0 notes"
+below, not 3.x habits.
+
 ## IMPORTANT: No Workarounds
 
 **If ggplot2 cannot implement a plot type natively, DO NOT shell out to
@@ -277,7 +281,8 @@ ggsave(
 ## R-Specific Gotchas
 
 - Use `linewidth =` for `geom_line()` and `element_line()` in modern ggplot2
-  (≥ 3.4). `size =` triggers a deprecation warning.
+  (≥ 3.4). `size =` triggers a deprecation warning, and on `geom_bar()` /
+  `geom_col()` outlines ggplot2 4.0 ignores it entirely.
 - `theme()` chains compose right-to-left: a later `theme()` overrides an
   earlier one. Start with `theme_minimal(base_size = ...)`, then layer
   `anyplot_theme`.
@@ -288,3 +293,44 @@ ggsave(
   removed in dplyr ≥ 1.0; `tibble::tibble` is the correct path.
 - Avoid `print(p)` at script end — `ggsave()` already renders the plot, and an
   extra `print()` opens an unused interactive device.
+
+## ggplot2 4.0 notes
+
+Each item below changed between ggplot2 3.5 and 4.0: the old form still runs,
+but renders differently or prints a deprecation warning.
+
+- **Label borders:** set the border width with `linewidth` (`0` for no border)
+  and its colour with `border.colour`. `label.size` is deprecated, and
+  `annotate("label", ..., label.size = 0)` is ignored outright ("Ignoring
+  unknown parameters"), so the label gets the default 0.25 mm border.
+- **Horizontal error bars:** `geom_errorbar(aes(y = term, xmin = lo, xmax = hi),
+  orientation = "y", width = 0.2)`. `geom_errorbarh()` is deprecated.
+- **Box, crossbar, pointrange:** `fatten` is deprecated. Style the parts
+  directly: `geom_boxplot(median.linewidth = , box.linewidth = ,
+  whisker.linewidth = )`, `geom_crossbar(middle.linewidth = )`, and the point
+  `size` in `geom_pointrange()`.
+- **Violin quantiles:** `geom_violin(quantiles = c(0.25, 0.5, 0.75),
+  quantile.linetype = 1)`. `draw_quantiles` is deprecated, and quantiles are now
+  computed from the data rather than from the density.
+- **Histograms and other binning stats:** pass `boundary` (or explicit `breaks`)
+  together with `binwidth` or `bins`, for example `binwidth = 5, boundary = 0`.
+  ggplot2 4.0 moved the default bin edges, so unanchored bins shift between
+  versions and rarely land on round values.
+- **`theme_void()` borders:** its root `rect` now has `linewidth = 0`, so a border
+  such as `legend.background = element_rect(fill = ELEVATED_BG, color = INK_SOFT)`
+  disappears. Give every bordered `element_rect()` an explicit `linewidth`.
+- **Rotated axis text:** set both `hjust` and `vjust`. On a top axis
+  (`scale_x_discrete(position = "top")`) use `vjust = 0`; without it ggplot2 4.0
+  pushes the labels up into the title.
+- **Several legends:** fix their order with `guides(colour = guide_legend(order
+  = 1), size = guide_legend(order = 2))`. The default order changed in 4.0 and is
+  not stable across versions.
+- **Subtitle, caption and tag** inherit from `text`, no longer from `title`:
+  style `plot.subtitle`, `plot.caption` and `plot.tag` explicitly instead of
+  through `title`.
+- **Renamed:** `coord_transform()` replaces `coord_trans()`, and
+  `annotation_borders()` replaces `borders()`.
+- **Facet panel order:** `facet_wrap(as.table = )` is deprecated. Set the order
+  with a two-letter `dir` instead: the letters name the starting corner and the
+  first one the filling direction, so `dir = "lb"` starts bottom-left and fills
+  left to right, as `as.table = FALSE` did.
