@@ -2,125 +2,127 @@ library: muix
 language: javascript
 specification_id: bar-basic
 created: '2026-08-20T17:06:19Z'
-updated: '2026-08-20T17:14:31Z'
-generated_by: claude-sonnet
-workflow_run: 32395428460
+updated: '2026-10-23T15:08:06Z'
+generated_by: claude-opus
+workflow_run: 39974822349
 issue: 612
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-basic/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-basic/javascript/muix/plot-dark.html
-quality_score: 87
+quality_score: 83
 review:
   strengths:
-  - 'First series color is the required brand green #009E73, identical between light
-    and dark renders — only chrome flips as expected'
-  - Value labels (barLabel="value") are colored from t.ink, so they stay readable
-    in both themes (dark text on light, light text on dark) instead of a fixed color
-  - Data sorted descending by consumption creates a clear ranking narrative that supports
-    the comparison use case from the spec
-  - Grid restricted to horizontal-only, legend correctly hidden for a single series,
-    and margins are tuned so the long y-axis label and x-axis category labels never
-    clip
-  - Deterministic in-memory dataset with a real-world, neutral topic (Nordic coffee
-    consumption) appropriate to the domain and scale
+  - 'Single brand-green #009E73 bar series sorted by value from a true zero baseline,
+    so the ranking and the dominant Finland bar read instantly; the y axis is never
+    truncated'
+  - 'Value labels via the native barLabel formatter with barLabelPlacement: "outside"
+    sit just above each bar end, one decimal, readable in both themes and never colliding'
+  - 'Idiomatic MUI X v9 usage: dataset + dataKey binding, explicit axis band sizes
+    (height: 72 / width: 84) so no tick labels truncate, a domainLimit callback that
+    derives label headroom from the data max, hideLegend for the single series, skipAnimation'
+  - 'Theme handling is clean: chrome comes from the harness ThemeProvider plus t.ink
+    for the title and bar labels; both renders are fully readable with identical data
+    colours'
+  - 'Realistic, neutral data: per-capita coffee consumption for seven countries (Finland
+    12.0 kg down to Switzerland 7.9 kg), with a descriptive y-axis title that carries
+    units'
   weaknesses:
-  - Library usage is fairly standard MUI X BarChart configuration (dataset + band
-    xAxis + single series) — no distinctive MUI X-only feature (e.g. highlightScope,
-    custom bar rendering, reference lines) is demonstrated beyond barLabel and grid
-    config
-  - 'Design Excellence is functional but generic: aside from the horizontal-only grid
-    and value labels, there is no additional visual hierarchy or refinement (e.g.
-    subtle emphasis on the top bar, custom tick formatting) to elevate it beyond a
-    competent default'
+  - 'Suggestion: restructure the data into the library prompt''s data block (role
+    constants such as COUNTRY / CONSUMPTION and one `const data` array of records)
+    instead of two parallel arrays zipped into `dataset`, so the ''Use with my data''
+    agent can swap the block.'
+  - 'Suggestion: the 22 px title is only slightly larger than the 18 px axis titles;
+    a little more size or weight would give the title a clearer place in the type
+    hierarchy.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1, not pure white.
-      Chrome: Title "bar-basic · javascript · muix · anyplot.ai" centered at top in dark ink, clearly readable. Y-axis label "Coffee Consumption (kg per capita/year)" and x-axis label "Country" both dark and legible. Tick labels (0-12 on y, country names on x) are dark and crisp. Subtle light-gray horizontal gridlines only.
-      Data: Seven bars in the brand green #009E73, sorted descending from Finland (12) to Switzerland (7.9). Value labels are centered inside each bar in dark text, clearly legible against the green fill. Bar widths and spacing are consistent.
+      Background: warm off-white #FAF8F1, no white panel painted over it.
+      Chrome: centred title "bar-basic · javascript · muix · anyplot.ai" in dark ink; y-axis title "Coffee Consumption (kg per capita/year)" rotated on the left, x-axis title "Country" below; tick labels 0–12 and the seven country names all dark and readable; L-shaped frame (left and bottom axis lines only); subtle horizontal grid at each integer.
+      Data: seven equal-width bars in #009E73 with even gaps, sorted descending (Finland 12.0, Norway 9.9, Iceland 9.0, Denmark 8.7, Netherlands 8.4, Sweden 8.2, Switzerland 7.9), rising from 0; one-decimal value labels just above each bar end, no collisions. No legend (single series).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17, not pure black.
-      Chrome: Title, axis labels, and tick labels all rendered in light ink, clearly visible against the dark background — no dark-on-dark issues. Gridlines are subtle and visible without dominating.
-      Data: Same seven green (#009E73) bars, identical heights and values to the light render — confirms data colors are unchanged across themes. Value labels are centered inside each bar in light text, clearly legible against the green fill (the implementation swaps label color from t.ink, which flips between themes).
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles, tick labels and value labels all render in light ink and read clearly; axis lines light; grid lines subtle light-on-dark. No dark-on-dark text anywhere.
+      Data: bars are the identical #009E73 green as in the light render, same heights, widths and order; only chrome flipped.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes (14/16/22px), fully readable in both themes;
-          slightly small tick labels for extreme thumbnail downscaling
+        comment: Explicit sizes (ticks 16, axis titles 18, labels 16, title 22 CSS
+          px); all text readable in both themes and at thumbnail scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between value labels, ticks, axis labels, or title
+        comment: No text collisions; value labels clear of each other and of the bars
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Sparse data (7 bars) with prominent, well-separated bars
+        comment: Seven wide bars; value labels fit their slots and do not crowd the
+          marks
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-color series with good contrast; no red-green reliance
+        comment: Single colour, strong contrast on both surfaces; no colour-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Nothing clipped, margins tuned for long y-axis label, balanced proportions
+        comment: 3200x1800 canvas (gate passed); balanced margins, balanced axis titles,
+          nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis label includes units (kg per capita/year); x-axis label 'Country'
+        comment: Descriptive y title with units (kg per capita/year); x title 'Country'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, identical across themes; backgrounds match
-          Imprint light/dark tokens'
+        comment: 'All bars Imprint #009E73 via t.palette[0]; backgrounds #FAF8F1 /
+          #1A1A17; identical data colour across themes'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: false
-        comment: Competent single-color styling with value labels and hidden legend,
-          but no elaborate custom treatment
+        passed: true
+        comment: The style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: false
-        comment: Horizontal-only grid, generous whitespace, no visible frame/spine
-          clutter
+        passed: true
+        comment: L-shaped frame and subtle horizontal grid met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
-        passed: false
-        comment: Descending sort gives a mild ranking narrative; no additional emphasis
-          or focal point
+        passed: true
+        comment: Value ordering is what the spec asks for; no hierarchy chosen beyond
+          it
     spec_compliance:
       score: 15
       max: 15
@@ -130,27 +132,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct vertical bar chart
+        comment: Basic vertical bar chart, no variant creep (no reference lines, highlights
+          or callouts)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Consistent bar widths, single color, adequate spacing, value labels
-          for precise reading
+        comment: 'Zero baseline, untruncated axis, consistent widths, even gaps, value
+          order, single colour, value labels clear of bar ends: all present'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: category on x, value (kgPerCapita) on y, full dataset shown
+        comment: Countries on x, kg on y; bars at their values; axis spans 0 to above
+          the max
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly; legend correctly hidden for
-          single series
+        comment: Title follows the mandated format; legend N/A for a single series
+          (hidden)
     data_quality:
       score: 15
       max: 15
@@ -160,21 +164,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all core bar-chart aspects: category comparison, value labels,
-          consistent bar widths'
+        comment: 'Seven categories (within 3-15) with a dominant bar and a gradual
+          tail: ranking and comparison both shown'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral real-world topic (coffee consumption by country)
+        comment: 'Per-capita coffee consumption by country: real, neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values (7.9-12 kg/capita) and axis range (0-12) are sensible for
-          the domain
+        comment: No check values in the spec; checked that 7.9-12.0 kg/person/year
+          matches the commonly cited ranking order and magnitude, and that the render
+          reads each value off the axis
     code_quality:
       score: 10
       max: 10
@@ -184,34 +189,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Single component function, no unnecessary abstraction
+        comment: Data at module level, one default-exported component (the harness
+          contract), no helpers
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded dataset
+        comment: Hard-coded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only BarChart, Box, Typography imported and used
+        comment: BarChart, Box, Typography all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake interactivity
+        comment: Appropriate complexity; nothing written out that a call computes
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct harness contract: default export, sized to ANYPLOT_SIZE,
-          skipAnimation set'
+        comment: Default export into the harness mount, skipAnimation, current v9
+          API (hideLegend, axis height/width bands, domainLimit)
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
@@ -219,22 +225,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic dataset + xAxis/series API, sx overrides for typography,
-          tuned margin
+        comment: dataset + dataKey binding instead of hand-mapped arrays, and a domainLimit
+          callback deriving headroom from the data max
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
-        passed: false
-        comment: Uses barLabel for value labels but no other distinctive MUI X-only
-          feature (highlightScope, custom bar rendering, reference lines)
+        passed: true
+        comment: Nothing beyond what the library prompt mandates; barLabel draws the
+          value labels the Notes ask for with the call every MUI X version would use
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-03c2486144
+  rendered_at: '2026-10-23T15:05:21Z'
 impl_tags:
   dependencies: []
   techniques:
-  - data-labels
-  patterns:
-  - data-generation
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns: []
   dataprep: []
-  styling:
-  - grid-styling
+  styling: []
