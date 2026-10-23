@@ -29,14 +29,26 @@ the pipeline's (PR 2).
   suffixes the values of the categorical columns. The colour-driving role's column keeps
   its values, numeric codes included (groups 0 and 1 stay two groups).
 * `scaled`: every numeric column times 1,000 plus 100,000.
+* `missing_number` and `missing_nullable`: the sample in the dtypes the agent's loader
+  hands a table over in (`agents/anyplot/code/loader.py`, `PANDAS_DTYPES`: text becomes
+  `string`, integers `Int64`, floats `float64`, booleans `boolean`; datetimes stay as they
+  are), with one missing cell per column of a kind: `NaN` in every `float64` column, and
+  `<NA>` in every `Int64`, `boolean` and `string` column. The i-th such column gets its
+  missing cell in row `(len(df) // 2 + i) % len(df)`, so no row is entirely missing. No
+  other dtype is perturbed (datetimes in particular are not). Each is left out when the cast
+  table has no column of its kind. `missing_nullable` is `advisory` (open decision O2 of
+  the PR 2 contract): whether the convention allows `.astype(float)` on a drawn nullable
+  integer column, or the loader changes, is still open, so its failure is reported but does
+  not fail the run.
 
 A matrix (`df` a labeled square DataFrame) gets `renamed` (index and columns), `more`
-and `fewer` (one label added or dropped on both axes) and `scaled`. Generated and
-excluded specs have no table to perturb, and network specs are deferred: their block may
-bind a `nodes` table beside the edge list, whose identifiers must follow the perturbed
-endpoints, which comes with network eligibility (networks are not eligible for the agent in
-phase 1). There is no nullable-dtype perturbation: the agent's loader hands over float64
-with NaN (decision of 2026-10-23).
+and `fewer` (one label added or dropped on both axes) and `scaled`, and no missing-value
+perturbation: the loader reads one flat `data.csv` into a table, never a labeled square
+matrix, so a matrix never meets the loader's dtypes (and the agent serves tables only in
+phase 1). Generated and excluded specs have no table to perturb, and network specs are
+deferred: their block may bind a `nodes` table beside the edge list, whose identifiers
+must follow the perturbed endpoints, which comes with network eligibility (networks are
+not eligible for the agent in phase 1).
 
 `smoke_source(source, perturbation, data_path)` is the source to run: the block replaced
 by a `pandas.read_pickle` of the table and every column constant renamed through
@@ -51,6 +63,7 @@ from dataclasses import dataclass, field
 
 import numpy as np
 import pandas as pd
+from pandas.api.extensions import ExtensionDtype
 
 from core.adaptability import replace_block, rewrite_columns
 from core.spec_roles import DataRole, Shape
@@ -63,6 +76,9 @@ SCALE = 1_000
 SHIFT = 100_000
 NEW_LABEL = "Added"
 _SINGLE_GROUP_WORDS = ("binary", "two ", "pair", "split", "both", "left/right", "versus", " vs")
+LOADER_NUMBER = "float64"
+LOADER_NULLABLE = ("Int64", "boolean", "string")
+"""The dtypes of `agents/anyplot/code/loader.py` `PANDAS_DTYPES`: number, then integer, boolean and text."""
 
 
 @dataclass(frozen=True)
@@ -76,6 +92,8 @@ class Perturbation:
     retired: frozenset[str] = field(default_factory=frozenset)
     renames: dict[str, str] = field(default_factory=dict)
     """Old column name -> new one, for every renamed column (spec roles and extras alike)."""
+    advisory: bool = False
+    """A failure on this table is reported but does not fail the smoke run (`missing_nullable`)."""
 
 
 def fixed_group_count(roles: Sequence[DataRole], color_role: str | None) -> bool:
@@ -134,7 +152,93 @@ def perturbations(
     out.append(_fewer_rows(df, role_columns, color_column))
     out.append(_more_rows(df, role_columns, categorical, color_column))
     out.append(_scaled(df, role_columns))
+    out.extend(_missing_values(df, role_columns))
     return out
+
+
+def loader_dtypes(df: pd.DataFrame) -> pd.DataFrame:
+    """The table in the dtypes the agent's loader reads `data.csv` into (`agents/anyplot/code/loader.py`).
+
+    `PANDAS_DTYPES` maps text to `string`, integers to `Int64`, floats to `float64` and booleans to
+    `boolean`; dates are parsed and stay datetimes. A categorical column is text. An object column
+    takes the dtype its values would be read as: the loader profiles values, not the sample's dtype,
+    so an object column of ints reads as `Int64` and one of `datetime.date` objects stays as it is.
+    Any other dtype (timedelta, period, complex) stays as it is.
+    """
+    out = df.copy()
+    for position in range(df.shape[1]):
+        series = df.iloc[:, position]
+        target = _loader_dtype(series)
+        if target is not None:
+            out.isetitem(position, series.astype(target).array)
+    return out
+
+
+def _loader_dtype(series: pd.Series) -> ExtensionDtype | np.dtype | None:
+    text, integer, boolean, number = pd.StringDtype(), pd.Int64Dtype(), pd.BooleanDtype(), np.dtype(LOADER_NUMBER)
+    if pd.api.types.is_bool_dtype(series):
+        return boolean
+    if pd.api.types.is_integer_dtype(series):
+        return integer
+    if pd.api.types.is_float_dtype(series):
+        return number
+    if pd.api.types.is_datetime64_any_dtype(series):
+        return None
+    if isinstance(series.dtype, pd.CategoricalDtype) or pd.api.types.is_string_dtype(series):
+        return text
+    if pd.api.types.is_object_dtype(series):
+        inferred = pd.api.types.infer_dtype(series, skipna=True)
+        if inferred == "boolean":
+            return boolean
+        if inferred == "integer":
+            return integer
+        if inferred in ("floating", "mixed-integer-float", "decimal"):
+            return number
+        if inferred in ("date", "datetime", "datetime64", "time", "timedelta", "period"):
+            return None
+        return text
+    return None
+
+
+def _missing_values(df: pd.DataFrame, columns: Mapping[str, str | list[str]]) -> list[Perturbation]:
+    """`missing_number` (binding) and `missing_nullable` (advisory), each left out without a column of its kind."""
+    if df.empty:
+        return []
+    cast = loader_dtypes(df)
+    numbers = [position for position in range(cast.shape[1]) if str(cast.dtypes.iloc[position]) == LOADER_NUMBER]
+    nullable = [position for position in range(cast.shape[1]) if str(cast.dtypes.iloc[position]) in LOADER_NULLABLE]
+    out: list[Perturbation] = []
+    if numbers:
+        out.append(
+            Perturbation(
+                "missing_number",
+                "loader dtypes, NaN in every float64 column",
+                _with_missing(cast, numbers),
+                dict(columns),
+            )
+        )
+    if nullable:
+        out.append(
+            Perturbation(
+                "missing_nullable",
+                "loader dtypes, <NA> in every Int64, boolean and string column",
+                _with_missing(cast, nullable),
+                dict(columns),
+                advisory=True,
+            )
+        )
+    return out
+
+
+def _with_missing(cast: pd.DataFrame, positions: Sequence[int]) -> pd.DataFrame:
+    """The i-th column of `positions` gets its dtype's missing value (`NaN` for float64, `<NA>` for the nullable
+    dtypes) in row `(len // 2 + i) % len`, so no row is entirely missing."""
+    table = cast.copy()
+    rows = len(table)
+    for i, position in enumerate(positions):
+        hole = np.arange(rows) == (rows // 2 + i) % rows
+        table.isetitem(position, table.iloc[:, position].mask(hole).array)
+    return table
 
 
 def _is_categorical(series: pd.Series) -> bool:

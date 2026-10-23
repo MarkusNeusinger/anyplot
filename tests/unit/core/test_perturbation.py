@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import datetime
 from pathlib import Path
 
 import numpy as np
@@ -10,7 +11,16 @@ import pandas as pd
 import pytest
 
 from core.adaptability import check_source
-from core.perturbation import MAX_GROUPS, ROW_FACTOR, SCALE, SHIFT, perturbations, single_group_allowed, smoke_source
+from core.perturbation import (
+    MAX_GROUPS,
+    ROW_FACTOR,
+    SCALE,
+    SHIFT,
+    loader_dtypes,
+    perturbations,
+    single_group_allowed,
+    smoke_source,
+)
 from core.spec_roles import parse_roles
 
 
@@ -47,6 +57,7 @@ class TestTablePerturbations:
             "fewer_rows",
             "more_rows",
             "scaled",
+            "missing_nullable",  # integer sales: no float64 column, so no missing_number
         ]
 
     def test_the_sample_is_never_changed(self, sample: pd.DataFrame) -> None:
@@ -118,7 +129,7 @@ class TestTablePerturbations:
         df = pd.DataFrame({"x": np.arange(10.0), "y": np.arange(10.0) ** 2})
         roles = parse_roles(["`x` (numeric) - x", "`y` (numeric) - y"])
         names = [item.name for item in perturbations(df, {"x": "x", "y": "y"}, roles, "table")]
-        assert names == ["renamed", "fewer_rows", "more_rows", "scaled"]
+        assert names == ["renamed", "fewer_rows", "more_rows", "scaled", "missing_number"]
 
     def test_generated_excluded_and_network_specs_have_none(self, sample: pd.DataFrame) -> None:
         """A network block may bind `nodes` beside the edges; its smoke run waits for network eligibility (Copilot)."""
@@ -153,6 +164,122 @@ class TestTablePerturbations:
         more = {i.name: i for i in perturbations(df, {"x": "x", "y": "y", "group": "g"}, roles, "table", "group")}
         assert set(more["more_rows"].df["g"]) == {0, 1}
         assert more["more_rows"].df["x"].nunique() == 2 * ROW_FACTOR
+
+
+MIXED_COLUMNS = {"category": "Quarter", "group": "Product line", "value": "Sales"}
+
+
+class TestMissingValues:
+    """The loader's dtypes with one missing cell per column of a kind (contract section 1.4, design "Smoke run")."""
+
+    @pytest.fixture
+    def mixed(self) -> pd.DataFrame:
+        return pd.DataFrame(
+            {
+                "Quarter": ["Q1", "Q2", "Q3", "Q4"] * 3,
+                "Product line": pd.Categorical(["Electronics"] * 4 + ["Clothing"] * 4 + ["Home & Garden"] * 4),
+                "Sales": np.linspace(100.0, 210.0, 12),
+                "Units": np.arange(12),
+                "Promoted": [True, False] * 6,
+                "Day": pd.date_range("2024-01-01", periods=12, freq="D"),
+            }
+        )
+
+    def test_the_loader_dtypes(self, mixed: pd.DataFrame) -> None:
+        cast = loader_dtypes(mixed)
+        assert {name: str(dtype) for name, dtype in cast.dtypes.items()} == {
+            "Quarter": "string",
+            "Product line": "string",
+            "Sales": "float64",
+            "Units": "Int64",
+            "Promoted": "boolean",
+            "Day": str(mixed["Day"].dtype),  # datetimes stay as they are
+        }
+        assert not cast.isna().any().any()
+
+    def test_object_columns_read_as_their_values(self) -> None:
+        df = pd.DataFrame(
+            {
+                "ints": pd.Series([1, 2, 3], dtype=object),
+                "floats": pd.Series([1.5, 2, 3], dtype=object),
+                "dates": [datetime.date(2024, 1, day) for day in (1, 2, 3)],
+                "words": pd.Series(["a", "b", None], dtype=object),
+            }
+        )
+        dtypes = {name: str(dtype) for name, dtype in loader_dtypes(df).dtypes.items()}
+        assert dtypes == {"ints": "Int64", "floats": "float64", "dates": "object", "words": "string"}
+
+    def test_missing_number_puts_nan_in_every_float_column(self, mixed: pd.DataFrame) -> None:
+        mixed["Price"] = mixed["Sales"] / 10
+        items = {item.name: item for item in perturbations(mixed, MIXED_COLUMNS, ROLES, "table", "group")}
+        item = items["missing_number"]
+        assert not item.advisory
+        missing = item.df.isna()
+        assert missing.sum().to_dict() == {
+            "Quarter": 0,
+            "Product line": 0,
+            "Sales": 1,
+            "Units": 0,
+            "Promoted": 0,
+            "Day": 0,
+            "Price": 1,
+        }
+        # the i-th float column gets row (len // 2 + i) % len: rows 6 and 7
+        assert missing.index[missing["Sales"]].tolist() == [6] and missing.index[missing["Price"]].tolist() == [7]
+        assert str(item.df["Sales"].dtype) == "float64"
+
+    def test_missing_nullable_is_advisory_and_spreads_over_rows(self, mixed: pd.DataFrame) -> None:
+        items = {item.name: item for item in perturbations(mixed, MIXED_COLUMNS, ROLES, "table", "group")}
+        item = items["missing_nullable"]
+        assert item.advisory
+        missing = item.df.isna()
+        assert missing.sum().to_dict() == {
+            "Quarter": 1,
+            "Product line": 1,
+            "Sales": 0,
+            "Units": 1,
+            "Promoted": 1,
+            "Day": 0,
+        }
+        rows = {
+            name: missing.index[missing[name]].tolist()[0] for name in ("Quarter", "Product line", "Units", "Promoted")
+        }
+        assert rows == {"Quarter": 6, "Product line": 7, "Units": 8, "Promoted": 9}
+        assert not missing.all(axis=1).any()
+        assert item.df["Units"].isna().iloc[8] and item.df["Units"].iloc[8] is pd.NA
+        assert all(not item.advisory for item in items.values() if item.name != "missing_nullable")
+
+    def test_each_is_left_out_without_a_column_of_its_kind(self) -> None:
+        roles = parse_roles(["`x` (numeric) - x", "`y` (numeric) - y"])
+        floats = pd.DataFrame({"x": np.arange(4.0), "y": np.arange(4.0)})
+        ints = pd.DataFrame({"x": np.arange(4), "y": np.arange(4)})
+        assert [i.name for i in perturbations(floats, {"x": "x", "y": "y"}, roles, "table")][-1] == "missing_number"
+        names = [i.name for i in perturbations(ints, {"x": "x", "y": "y"}, roles, "table")]
+        assert "missing_number" not in names and names[-1] == "missing_nullable"
+        dates = pd.DataFrame({"d": pd.date_range("2024-01-01", periods=3)})
+        assert not {"missing_number", "missing_nullable"} & {
+            i.name for i in perturbations(dates, {"x": "d"}, roles, "table")
+        }
+
+    def test_the_sample_is_never_changed(self, mixed: pd.DataFrame) -> None:
+        before = mixed.copy()
+        perturbations(mixed, MIXED_COLUMNS, ROLES, "table", "group")
+        pd.testing.assert_frame_equal(mixed, before)
+
+    def test_matrices_get_no_missing_values(self) -> None:
+        labels = ["a", "b", "c"]
+        df = pd.DataFrame(np.eye(3), index=labels, columns=labels)
+        names = {item.name for item in perturbations(df, {}, [], "matrix")}
+        assert not names & {"missing_number", "missing_nullable"}
+
+    def test_the_smoke_source_reads_the_nullable_dtypes_back(self, tmp_path: Path, mixed: pd.DataFrame) -> None:
+        item = {i.name: i for i in perturbations(mixed, MIXED_COLUMNS, ROLES, "table", "group")}["missing_nullable"]
+        path = tmp_path / "data.pkl"
+        item.df.to_pickle(path)
+        source = (FIXTURES / "bar_grouped_matplotlib.py").read_text(encoding="utf-8")
+        code = smoke_source(source, item, str(path))
+        assert f"df = pd.read_pickle({str(path)!r})" in code
+        pd.testing.assert_frame_equal(pd.read_pickle(path), item.df)
 
 
 class TestSingleGroupRule:
