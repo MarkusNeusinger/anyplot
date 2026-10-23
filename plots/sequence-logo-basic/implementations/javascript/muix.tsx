@@ -75,6 +75,14 @@ const positions = Array.from(new Set(data.map((d) => `${d[POSITION]}`)));
 const letters = Array.from(new Set(data.map((d) => d[LETTER])));
 const MAX_BITS = Math.log2(letters.length);
 
+// Letters without a fixed colour (an RNA U, amino acids) take the palette
+// slots LETTER_COLOR leaves free, in order of appearance, never a used hue.
+const usedColors = new Set(Object.values(LETTER_COLOR));
+const freeColors = t.palette.filter((c: string) => !usedColors.has(c));
+const otherLetters = letters.filter((l) => !(l in LETTER_COLOR));
+const letterColor = (letter: string) =>
+  LETTER_COLOR[letter] ?? freeColors[otherLetters.indexOf(letter)];
+
 const STACKS = positions.map((posLabel) => {
   const rows = data.filter((d) => `${d[POSITION]}` === posLabel);
   const entropy = rows.reduce((bits, r) => {
@@ -93,9 +101,7 @@ const STACKS = positions.map((posLabel) => {
         letter,
         from: cumulative,
         to: cumulative + bits,
-        color:
-          LETTER_COLOR[letter] ??
-          t.palette[letters.indexOf(letter) % t.palette.length],
+        color: letterColor(letter),
       };
       cumulative += bits;
       return segment;
