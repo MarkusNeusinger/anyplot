@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: pie-basic
 created: '2026-08-20T23:22:13Z'
-updated: '2026-10-23T15:04:04Z'
+updated: '2026-10-23T15:17:40Z'
 generated_by: claude-opus
 workflow_run: 39972174256
 issue: 678
@@ -12,52 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pie-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pie-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pie-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pie-basic/javascript/muix/plot-dark.html
-quality_score: 86
+quality_score: 87
 review:
   strengths:
-  - 'Exploded largest slice (Organic Search, 38%) is built from native MUI X series
-    options: a one-item overlay series with startAngle/endAngle and an offset cx/cy
-    along the bisector, while the main series keeps data order and drives the legend;
-    the other five slices stay joined'
-  - Percentage labels via arcLabel plus a custom pieArcLabel slot that picks dark
-    ink or white per slice fill, so all six labels (including the 4% sliver) read
-    clearly on every Imprint color in both themes
-  - Slice separators stroke in t.pageBg, so the gaps follow the theme (cream in light,
-    near-black in dark) and adjacent slices stay distinct
-  - Data sorted descending from 12 o'clock and the percentages are computed from the
-    records (38/22/16/12/8/4 of a total of 100), with a plausible web-traffic-source
-    scenario
-  - Native HTML legend at the bottom in data order, sized at 18 px and themed by the
-    harness ThemeProvider; tooltips are available in the interactive HTML
+  - Exploded largest slice (Organic Search, 38%) is pulled out along its bisector
+    by an overlay series that redraws the exact arc with startAngle/endAngle and an
+    offset cx/cy, while the main series keeps every slice and drives the legend in
+    data order; the other five slices stay joined
+  - Arc-label ink is chosen per slice through MUI's own getContrastRatio inside a
+    slots.pieArcLabel override of PieArcLabel, so 38%/22%/12%/8% read in dark ink
+    and 16%/4% in white, legible on every Imprint fill in both themes
+  - 'Slice separators are 3 px strokes in the page token (t.pageBg), so the slices
+    separate cleanly on #FAF8F1 and #1A1A17 alike without a foreign outline color'
+  - 'Categorical pool drops Imprint slot 5 (matte red) so no traffic source reads
+    as a loss, and brand green #009E73 leads as the first slice'
+  - Plausible, neutral scenario (website traffic sources summing to 100%) with one
+    dominant slice and a thin 4% sliver, square 2400x2400 canvas, skipAnimation set
+    and native hover tooltips in the HTML output
   weaknesses:
-  - 'VQ-07 (both): the fifth category, Paid Search, is drawn in matte red #AE3030,
-    the deferred semantic anchor for bad/loss/error, although nothing about paid search
-    is a loss → skip slot 5 for a neutral category, e.g. the cyan #2ABCCD for Paid
-    Search and rose #954477 for Email. Likely cause: color: t.palette[i] maps the
-    sixth category straight onto the ordinal positions 1–6.'
-  - 'CQ-04 (code): lines 45–56 write out the WCAG relative-luminance formula and the
-    contrast-ratio comparison by hand, which @mui/material/styles computes with getContrastRatio
-    (or getLuminance) → replace luminance/labelInk with getContrastRatio(fill, DARK_INK)
-    > getContrastRatio(fill, ''#FFFFFF'') ? DARK_INK : ''#FFFFFF''. Likely cause:
-    the contrast helper written from scratch instead of importing the MUI color utility.'
-  - 'Suggestion: the gap between the title and the top of the pie (about 170 px) is
-    larger than the gap above the legend; trimming MARGIN.top would let the pie grow
-    a little and balance the vertical whitespace.'
+  - 'Suggestion: the file carries two header comment blocks (the rewritten one above
+    the //# anyplot-orientation directive and the original one below it); keeping
+    only one would tidy the top of the file.'
+  - 'Suggestion: the legend at 18 px could go a step larger to balance the 22 px slice
+    labels in the 400 px thumbnail.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, matches #FAF8F1; no pure white.
-      Chrome: title "pie-basic · javascript · muix · anyplot.ai" centered at the top in dark bold ink, about 40 % of the width; horizontal legend at the bottom (Organic Search, Direct, Social Media, Referral, Paid Search, Email) with colored dots and dark text. No axes or grid, as expected for a pie. All text readable.
-      Data: 6-slice flat pie starting at 12 o'clock, clockwise in data order: Organic Search 38 % (#009E73 brand green, exploded outward along its bisector with a clear gap), Direct 22 % (lavender #C475FD), Social Media 16 % (blue #4467A3), Referral 12 % (ochre #BD8233), Paid Search 8 % (matte red #AE3030), Email 4 % (cyan #2ABCCD). Slices separated by cream page-colored strokes. Bold percentage labels on every slice: dark ink on green, lavender, ochre, cyan; white on blue and red — all legible, the 4 % label fits inside the cyan sliver.
+      Background: warm off-white #FAF8F1, square 2400x2400 canvas, no axes or grid.
+      Chrome: bold dark title "pie-basic · javascript · muix · anyplot.ai" centered at the top (~40% of width); horizontal legend centered at the bottom with six circular swatches (Organic Search, Direct, Social Media, Referral, Paid Search, Email) in dark ink — all readable.
+      Data: one round, undistorted pie with six slices in data order clockwise from 12 o'clock: Organic Search #009E73 (38%, pulled out to the right with a clear page-colored gap), Direct #C475FD (22%), Social Media #4467A3 (16%), Referral #BD8233 (12%), Paid Search #2ABCCD (8%), Email #954477 (4%). Bold percentage labels sit inside every slice, dark ink on light fills and white on the blue and rose slices; no collisions. Slices separated by thin page-colored strokes.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black, matches #1A1A17; not pure black.
-      Chrome: title and legend text flip to light ink and are clearly readable; no dark-on-dark text anywhere. Slice separators flip to the near-black page color.
-      Data: slice colors identical to the light render (green, lavender, blue, ochre, red, cyan); the same exploded green slice and the same per-slice label inks (dark on light fills, white on blue/red), all readable.
+      Background: warm near-black #1A1A17.
+      Chrome: title and legend text flip to light ink and are clearly readable; no dark-on-dark text.
+      Data: slice colors identical to the light render; separators and the explode gap now show the dark page color; arc label inks unchanged (chosen against the slice fill), all readable. Brand green clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -65,48 +57,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 26 px, legend 18 px, bold 22 px arc labels with per-slice contrast
-          ink; readable in both themes and at thumbnail size
+        comment: Title 26 px bold, arc labels 22 px bold, legend 18 px; all readable
+          in both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No label collisions; the 4% label fits inside its sliver
+        comment: No text collisions; the 4% sliver's label fits inside its slice
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Large pie, page-colored separators, legend dots visible in both themes
+        comment: Six slices clearly visible; legend swatches match the slice fills
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Distinct Imprint hues, every slice labeled; color is not the sole
-          signal
+        comment: Imprint hues, CVD-safe; label ink picked by WCAG contrast per slice
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 2400x2400 square canvas, pie centered and dominant, nothing clipped
+        comment: Square canvas, pie centered and filling the area, balanced title/legend
+          bands, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: N/A for axes (pie); legend labels are reader-friendly category names
+        comment: N/A for axes (pie has none); legend names are reader-friendly category
+          names
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'First slice #009E73 and theme-correct backgrounds, but Paid Search
-          takes the deferred semantic red #AE3030 by ordinal position (defect line)'
+        passed: true
+        comment: 'First slice #009E73, Imprint order with slot 5 red skipped, identical
+          data colors across themes, correct page backgrounds'
     design_excellence:
-      score: 11
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -114,23 +108,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Per-slice contrast-aware label ink (dark vs white chosen per fill)
-          beyond the baseline; otherwise baseline typography
+        comment: 'Beyond baseline: per-slice label ink chosen by contrast ratio against
+          each fill, so labels stay legible on every Imprint color'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Theme-following page-colored slice separators with a small corner
-          radius give clean slice boundaries
+        comment: 'Beyond baseline: 3 px page-colored slice separators and slight corner
+          radius give clean slice division in both themes'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: Data ordered descending from 12 o'clock so shares read largest to
-          smallest clockwise, an ordering choice beyond the Notes; the explode itself
-          is spec-mandated
+        passed: false
+        comment: Explosion of the largest slice is what the Notes ask; no further
+          hierarchy chosen
     spec_compliance:
       score: 15
       max: 15
@@ -147,20 +140,19 @@ review:
         max: 4
         passed: true
         comment: Percentage labels on every slice, distinct colors, legend, largest
-          slice exploded with the others joined
+          slice exploded with the rest joined; all good-version bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Angles proportional to values, full circle closed
+        comment: Slice angles proportional to values, full circle closed
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in the mandated format; legend names all six categories in
-          data order
+        comment: Title matches the mandated format; legend entries match categories
     data_quality:
       score: 15
       max: 15
@@ -170,22 +162,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 6 categories with a dominant slice and a thin 4% sliver
+        comment: Dominant slice, mid slices and a thin 4% sliver show the full parts-to-whole
+          range
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Website traffic sources for an e-commerce site: plausible and neutral'
+        comment: Website traffic sources of an e-commerce site; neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Shares sum to 100; labels 38/22/16/12/8/4% computed from the total
-          and match the slice angles
+        comment: Shares sum to 100; labels 38/22/16/12/8/4% match the data (checked
+          render vs. data block); no Check values in the spec
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -193,33 +186,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat zones (columns, data, plot) and one default-exported component
+        comment: Constants → data → plot; only the mandated default-export component
+          plus a slot component required by MUI's slots API
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hard-coded data, deterministic
+        comment: Hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: PieChart and PieArcLabel both used
+        comment: getContrastRatio, PieChart, PieArcLabel all used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Lines 45-56 hand-write the WCAG luminance/contrast that @mui/material/styles
-          getContrastRatio computes (defect line)
+        passed: true
+        comment: Overlay series for the explode is the leanest community-API route;
+          no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default export, skipAnimation, sized to ANYPLOT_SIZE, v9 API (slots,
-          slotProps.legend.position/sx, data-series selectors)
+        comment: Default-exported component, skipAnimation, v9 API (slots, slotProps.legend.sx,
+          .MuiPieChart-arc classes)
     library_mastery:
       score: 7
       max: 10
@@ -229,28 +223,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Series-level arcLabel/arcLabelMinAngle/cornerRadius, per-series startAngle/endAngle/cx/cy,
-          sx targeting [data-series] and data-index
+        comment: Series-level arcLabel callback, arcLabelMinAngle, cornerRadius, data-series/data-index
+          sx selectors per the v9 class scheme
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Custom pieArcLabel slot component wrapping PieArcLabel, and a multi-series
-          overlay to explode a slice with community-only APIs
-  verdict: REJECTED
+        comment: slots.pieArcLabel override of PieArcLabel combined with @mui/material
+          getContrastRatio; multi-series pie with per-series startAngle/endAngle/cx/cy
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-03c2486144
-  rendered_at: '2026-10-23T15:00:10Z'
+  rendered_at: '2026-10-23T15:14:50Z'
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - layer-composition
-  - hover-tooltips
-  - html-export
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
   - minimal-chrome
   - edge-highlighting
