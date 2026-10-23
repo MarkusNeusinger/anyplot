@@ -18,7 +18,7 @@ const THEME = window.ANYPLOT_THEME === "dark" ? "dark" : "light";
 const INK_MUTED = THEME === "dark" ? "#A8A79F" : "#6B6A63";
 
 // Constants
-const T_CRIT_95 = 2.571; // two-tailed 95% critical value, t-distribution df=5
+const PREDICTION_LEVEL = 95; // two-sided prediction interval, percent
 const GRID_POINTS = 40;
 
 // Columns: set these to your data's column names
@@ -41,7 +41,8 @@ const data = [
 // Plot: reads only data and the constants above
 const standards = data.filter((d) => d[CONCENTRATION] !== null);
 const unknownRow = data.find((d) => d[CONCENTRATION] === null) ?? standards[Math.floor(standards.length / 2)];
-const sampleTypes = [...new Set(data.map((d) => d[SAMPLE_TYPE]))];
+const standardsLabel = standards[0][SAMPLE_TYPE];
+const unknownSampleLabel = unknownRow[SAMPLE_TYPE];
 const concentration = standards.map((d) => d[CONCENTRATION]);
 const absorbance = standards.map((d) => d[ABSORBANCE]);
 
@@ -65,7 +66,23 @@ for (let i = 0; i < n; i += 1) {
   ssTot += (absorbance[i] - yMean) ** 2;
 }
 const rSquared = 1 - ssRes / ssTot;
-const residualStdErr = Math.sqrt(ssRes / Math.max(1, n - 2));
+const df = Math.max(1, n - 2);
+const residualStdErr = Math.sqrt(ssRes / df);
+
+// Two-tailed t critical values by interval level (percent): df 1..30, then the
+// normal quantile. A level without a table fails loudly instead of mislabelling.
+const T_CRIT: Record<number, { byDf: number[]; normal: number }> = {
+  95: {
+    byDf: [
+      12.706, 4.303, 3.182, 2.776, 2.571, 2.447, 2.365, 2.306, 2.262, 2.228,
+      2.201, 2.179, 2.16, 2.145, 2.131, 2.12, 2.11, 2.101, 2.093, 2.086,
+      2.08, 2.074, 2.069, 2.064, 2.06, 2.056, 2.052, 2.048, 2.045, 2.042,
+    ],
+    normal: 1.96,
+  },
+};
+const tTable = T_CRIT[PREDICTION_LEVEL];
+const tCrit = df <= tTable.byDf.length ? tTable.byDf[df - 1] : tTable.normal;
 
 const xMin = Math.min(...concentration);
 const xMax = Math.max(...concentration);
@@ -79,7 +96,7 @@ const gridX = Array.from(
 const fittedY = gridX.map((x) => intercept + slope * x);
 const halfWidth = gridX.map(
   (x) =>
-    T_CRIT_95 *
+    tCrit *
     residualStdErr *
     Math.sqrt(1 + 1 / n + (x - xMean) ** 2 / sxx),
 );
@@ -103,7 +120,7 @@ const yDomainMax = Math.max(...yAllValues) + yPad;
 const unitMatch = CONCENTRATION.match(/\(([^)]+)\)/);
 const unitSuffix = unitMatch ? ` ${unitMatch[1]}` : "";
 const equationLabel = `y = ${slope.toFixed(4)}x + ${intercept.toFixed(4)}   ·   R² = ${rSquared.toFixed(4)}`;
-const unknownLabel = `${sampleTypes[1] ?? "Unknown"}: A = ${unknownAbsorbance.toFixed(2)} → c ≈ ${unknownConcentration.toFixed(2)}${unitSuffix}`;
+const unknownLabel = `${unknownSampleLabel}: A =${unknownAbsorbance.toFixed(2)} → c ≈ ${unknownConcentration.toFixed(2)}${unitSuffix}`;
 
 const title = "calibration-beer-lambert · javascript · muix · anyplot.ai";
 
@@ -162,7 +179,7 @@ export default function Chart() {
         </div>
         <div style={{ fontSize: 15, color: t.inkSoft }}>{equationLabel}</div>
         <div style={{ fontSize: 13, color: INK_MUTED, marginTop: 2 }}>
-          Shaded band: 95% prediction interval · {unknownLabel}
+          Shaded band: {PREDICTION_LEVEL}% prediction interval · {unknownLabel}
         </div>
       </div>
       <ChartsDataProvider
@@ -173,7 +190,7 @@ export default function Chart() {
           {
             type: "scatter",
             id: "standards",
-            label: sampleTypes[0],
+            label: standardsLabel,
             data: scatterData,
             markerSize: 13,
             color: t.palette[0],
@@ -181,7 +198,7 @@ export default function Chart() {
           {
             type: "scatter",
             id: "unknown",
-            label: sampleTypes[1] ?? "Unknown sample",
+            label: unknownSampleLabel,
             data: [{ x: unknownConcentration, y: unknownAbsorbance, id: "unknown" }],
             markerSize: 15,
             color: t.palette[1],
@@ -241,7 +258,7 @@ export default function Chart() {
               fontSize={12}
               fill={INK_MUTED}
             >
-              n = {n} standards (incl. blank)
+              n = {n} standards{concentration.includes(0) ? " (incl. blank)" : ""}
             </text>
           </ChartsSurface>
         </ChartsWrapper>
