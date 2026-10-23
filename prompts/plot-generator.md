@@ -228,7 +228,7 @@ The middot (·) separator is required. No color or style requirements - the AI d
 
 The six zones of `prompts/adaptable-code.md`, top to bottom:
 
-1. **Head** - the docstring, the imports (only what's needed), the theme tokens, the palette (all eight `IMPRINT` hues, or `BRAND` alone for a single series) and the library's setup calls
+1. **Head** - the docstring, the imports (only what's needed), the theme tokens, the palette (all eight `IMPRINT_PALETTE` hues, or `BRAND` alone for a single series) and the library's setup calls
    - Docstring: 4 lines: anyplot.ai, spec-id:title, library+versions, quality+date
    - New implementation: `Quality: pending | Created: {YYYY-MM-DD}`
    - After first review: `Quality: {score}/100 | Created: {YYYY-MM-DD}`

@@ -8,8 +8,8 @@ This file is the convention, in one place. `prompts/plot-generator.md` applies i
 
 A Python implementation has six zones, top to bottom:
 
-1. **Head.** The docstring header, the imports, the theme tokens, and the palette: the full 8-entry `IMPRINT` list in canonical order (the style guide's `IMPRINT_PALETTE` is the same list; the checker reads both names), or `BRAND` alone for a single-series plot. Library setup goes here, never into the data block: `sns.set_theme(...)`, `LetsPlot.setup_html()`, `theme_set(...)`, an Altair theme. No figure is created and nothing is plotted here.
-2. **`# Constants`, optional.** Values of the plot type or the domain that stay true for any data: thresholds (RSI 30 and 70, a target the spec names), ordered scales (weekday names, Likert levels), and semantic color maps looked up with a palette fallback (`SEMANTIC.get(level, IMPRINT[i])`). Never sample categories, sample values or data coordinates.
+1. **Head.** The docstring header, the imports, the theme tokens, and the palette: the full 8-entry `IMPRINT_PALETTE` list in canonical order, the name the style guide and every library prompt use (the checker also accepts the short name `IMPRINT` for the same list), or `BRAND` alone for a single-series plot. Library setup goes here, never into the data block: `sns.set_theme(...)`, `LetsPlot.setup_html()`, `theme_set(...)`, an Altair theme. No figure is created and nothing is plotted here.
+2. **`# Constants`, optional.** Values of the plot type or the domain that stay true for any data: thresholds (RSI 30 and 70, a target the spec names), ordered scales (weekday names, Likert levels), and semantic color maps looked up with a palette fallback (`SEMANTIC.get(level, IMPRINT_PALETTE[i])`). Never sample categories, sample values or data coordinates.
 3. **Column constants.** One constant per spec `## Data` role the code uses: a domain name (`MONTH`, `SALES`, never `CATEGORY_COL`), the column name as its value, written the way the axis title should read with the unit included, and a trailing role comment: `SALES = "Sales (thousand USD)"  # role: value`. A variadic family (`y1, y2, ...`) gets one constant that holds a list. A column that no spec role names gets `# role: extra`.
 4. **Exactly one `# Data` block.** Everything that invents the example: the seed, random draws, literal lists, category names, the formulas behind synthetic data, a `sns.load_dataset` call. It ends in one tidy DataFrame `df`: one row per mark or observation, one column per role, keyed by the column constants. It binds nothing else that later code reads, and it holds no plotting or styling call and no theme token. The data stays synthetic and in memory; a CSV read appears only in the block's opening comment.
 5. **Plot code, below a `# Plot` marker.** Everything derived: pivots, statistics, fits, sorting, positions, widths, limits. It reads only `df`, the column constants, `# Constants`, the theme tokens and the palette.
@@ -19,7 +19,7 @@ The markers are comment lines at column 0: `# Data` and `# Plot`, the word alone
 
 ## Rules for the plot code
 
-- **Colors are looked up per category:** `IMPRINT[i]`, `dict(zip(groups, IMPRINT))`, or the library's color cycle fed the full list. Never `zip(groups, IMPRINT, strict=True)` and never a literal slice sized to the sample (`IMPRINT[:3]`). seaborn takes `IMPRINT[:n]` with `n` counted from `df`, because it warns when the palette outnumbers the hue levels. With `IMPRINT[i]` (an `IndexError`) or a lookup such as `colors[group]` in `dict(zip(groups, IMPRINT))` (a `KeyError`), a ninth group fails loudly, which matches the style guide's "9+: out of palette, use small multiples". A library's color cycle repeats colors instead, so prefer a lookup by position or by group where the code assigns colors itself.
+- **Colors are looked up per category:** `IMPRINT_PALETTE[i]`, `dict(zip(groups, IMPRINT_PALETTE))`, or the library's color cycle fed the full list. Never `zip(groups, IMPRINT_PALETTE, strict=True)` and never a literal slice sized to the sample (`IMPRINT_PALETTE[:3]`). seaborn takes `IMPRINT_PALETTE[:n]` with `n` counted from `df`, because it warns when the palette outnumbers the hue levels. With `IMPRINT_PALETTE[i]` (an `IndexError`) or a lookup such as `colors[group]` in `dict(zip(groups, IMPRINT_PALETTE))` (a `KeyError`), a ninth group fails loudly, which matches the style guide's "9+: out of palette, use small multiples". A library's color cycle repeats colors instead, so prefer a lookup by position or by group where the code assigns colors itself.
 - **Labels, ticks and limits come from `df` and the constants:** `ax.set_xlabel(QUARTER)`, `ax.set_xticks(x, table.index)`, `ax.set_ylim(0, top * 1.15)`. Below the block, never type a column name, a sample category, or a data coordinate (a limit, a tick, a reference-line position, a text position in data units). Text placed in axes fractions or offset points is fine, and so are fixed domains such as 0 to 1, 0 to 100 and 0 to 360.
 - **Statistics are computed f-strings:** `f"r = {df[HOURS].corr(df[SCORE]):.2f}"`, never `"r = 0.87"`.
 - **Callout targets come from a rule over `df`:** `idxmax`, the latest row, the smallest gap between the two leading groups, or the first crossing of a `# Constants` threshold. Never a literal such as `categories.index("Q3")`, and never a comparison such as `df[MONTH] == 7`, also not through an alias like `peak_month = 7`. The text claims only what the rule guarantees, and a conditional claim (a near-tie, a record) is drawn only when `df` meets it.
@@ -59,7 +59,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Imprint palette: all eight positions, one per group in order
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Constants
 NEAR_TIE = 0.05  # a gap below this share of the tallest bar counts as a near-tie
@@ -88,7 +88,7 @@ fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 for i, line in enumerate(table.columns):
     offset = (i - (len(table.columns) - 1) / 2) * width
-    ax.bar(x + offset, table[line], width, label=line, color=IMPRINT[i], edgecolor=INK_SOFT, linewidth=1.0)
+    ax.bar(x + offset, table[line], width, label=line, color=IMPRINT_PALETTE[i], edgecolor=INK_SOFT, linewidth=1.0)
 
 # Callout: target chosen by a rule over df, drawn only when the claim holds
 if len(table.columns) > 1:
