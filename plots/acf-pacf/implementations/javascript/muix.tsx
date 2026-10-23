@@ -8,6 +8,10 @@ import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 
 const t = window.ANYPLOT_TOKENS;
 
+// Constants
+const MAX_LAG = 30; // number of lags shown in both panels
+const Y_PAD = 0.15; // share of the value span added above and below each panel
+
 // Columns: set these to your data's column names
 const VALUE = "Observation Value"; // role: value
 
@@ -50,8 +54,7 @@ function acfAt(h: number) {
   return s / (N * c0);
 }
 
-const MAX_LAG = 30;
-const rho = Array.from({ length: MAX_LAG + 1 }, (_, k) => acfAt(k));
+const rho =Array.from({ length: MAX_LAG + 1 }, (_, k) => acfAt(k));
 
 function computePACF(rhoArr: number[], maxLag: number) {
   const pacf = [1, rhoArr[1]];
@@ -85,6 +88,17 @@ const round4 = (v: number) => Math.round(v * 10000) / 10000;
 const sharedLags = Array.from({ length: MAX_LAG + 1 }, (_, i) => String(i));
 const acfData = rho.map(round4);
 const pacfData: (number | null)[] = [null, ...pacf.slice(1).map(round4)];
+
+// Each panel's y range covers its bars and the +/- CI band, padded by Y_PAD.
+function paddedLimits(values: (number | null)[]) {
+  const finite = values.filter((v): v is number => v != null && Number.isFinite(v));
+  const lo = Math.min(-CI, ...finite);
+  const hi = Math.max(CI, ...finite);
+  const pad = Y_PAD * (hi - lo);
+  return { min: lo - pad, max: hi + pad };
+}
+const acfLimits = paddedLimits(acfData);
+const pacfLimits = paddedLimits(pacfData);
 
 export default function Chart() {
   const W = window.ANYPLOT_SIZE.width;
@@ -165,7 +179,7 @@ export default function Chart() {
           hideLegend
           colors={[barColor]}
           xAxis={[{ ...xAxisBase, height: 36, data: sharedLags }]}
-          yAxis={[{ ...yAxisBase, label: "ACF", min: -0.35, max: 1.05 }]}
+          yAxis={[{ ...yAxisBase, label: "ACF", ...acfLimits }]}
           series={[{ data: acfData, label: "ACF" }]}
           margin={{ top: 18, bottom: 12, left: 60, right: 65 }}
           sx={axisLineSx}
@@ -200,7 +214,7 @@ export default function Chart() {
               labelStyle,
             },
           ]}
-          yAxis={[{ ...yAxisBase, label: "PACF", min: -0.35, max: 0.85 }]}
+          yAxis={[{ ...yAxisBase, label: "PACF", ...pacfLimits }]}
           series={[{ data: pacfData, label: "PACF" }]}
           margin={{ top: 12, bottom: 20, left: 60, right: 65 }}
           sx={axisLineSx}
