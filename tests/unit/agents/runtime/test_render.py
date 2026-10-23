@@ -834,15 +834,22 @@ class TestHarness:
 class TestBackends:
     async def test_local_backend_kills_the_container_on_cancellation(self, tmp_path: Path) -> None:
         killed = tmp_path / "killed.txt"
+        started = tmp_path / "started.txt"
         docker = tmp_path / "docker"
-        docker.write_text(f'#!/bin/sh\nif [ "$1" = kill ]; then echo "$2" >> {killed}; exit 0; fi\nexec sleep 30\n')
+        docker.write_text(
+            f'#!/bin/sh\nif [ "$1" = kill ]; then echo "$2" >> {killed}; exit 0; fi\necho run >> {started}\nexec sleep 30\n'
+        )
         docker.chmod(0o755)
         backend = LocalDockerBackend(
             image="anyplot-agents:dev", runtime=PythonRuntime(), environment="development", docker=str(docker)
         )
 
         task = asyncio.create_task(backend.render(job(job_id="cancelme")))
-        await asyncio.sleep(0.5)
+        # Cancel once both theme containers run: a fixed sleep lost the race on a loaded CI runner.
+        for _ in range(200):
+            if started.exists() and len(started.read_text().split()) == 2:
+                break
+            await asyncio.sleep(0.05)
         task.cancel()
         with pytest.raises(asyncio.CancelledError):
             await task
