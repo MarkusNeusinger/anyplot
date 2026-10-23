@@ -60,7 +60,7 @@ const seqHighRgb = [(seqHighInt >> 16) & 255, (seqHighInt >> 8) & 255, seqHighIn
 
 const barColors = means.map((v) => {
   const norm = (v - minMean) / meanSpan;
-  const ratio = SEQ_MIN_MIX + (1 - SEQ_MIN_MIX) * Math.min(1, Math.max(0, norm));
+  const ratio = SEQ_MIN_MIX + (1 - SEQ_MIN_MIX) * norm;
   const r = Math.round(seqLowRgb[0] + (seqHighRgb[0] - seqLowRgb[0]) * ratio);
   const g = Math.round(seqLowRgb[1] + (seqHighRgb[1] - seqLowRgb[1]) * ratio);
   const b = Math.round(seqLowRgb[2] + (seqHighRgb[2] - seqLowRgb[2]) * ratio);
@@ -80,25 +80,20 @@ const xMin = rawMin - xSpan * X_PAD_SHARE;
 const xMax = rawMax + xSpan * X_PAD_SHARE;
 
 const TITLE = "Churn Prediction Model · bar-permutation-importance · javascript · muix · anyplot.ai";
-const SUBTITLE = `${IMPORTANCE_MEAN} (±1 ${IMPORTANCE_STD}) across ${features.length} features · Top: ${features[0]} (${means[0].toFixed(3)} ± ${stds[0].toFixed(3)})`;
+const SUBTITLE = `${FEATURE}: ${features.length} · Whiskers: ±1 ${IMPORTANCE_STD} · Top: ${features[0]}, ${means[0].toFixed(3)} ± ${stds[0].toFixed(3)}`;
 
 function ErrorBars() {
   const xScale = useXScale("x");
   const yScale = useYScale("y");
-  if (!xScale || !yScale || !("bandwidth" in yScale)) return null;
-
   const bw = yScale.bandwidth();
   const cap = bw * 0.34;
 
   return (
     <g>
       {features.map((feature, i) => {
-        const yBand = yScale(feature);
-        if (yBand === undefined) return null;
-        const cy = yBand + bw / 2;
+        const cy = yScale(feature) + bw / 2;
         const xLo = xScale(means[i] - stds[i]);
         const xHi = xScale(means[i] + stds[i]);
-        if (xLo === undefined || xHi === undefined) return null;
         return (
           <g
             key={feature}
@@ -146,10 +141,8 @@ export default function Chart() {
               xAxisId: "x",
               yAxisId: "y",
               label: IMPORTANCE_MEAN,
-              valueFormatter: (v: number | null, ctx: { dataIndex: number }) => {
-                const i = ctx?.dataIndex ?? 0;
-                return `${(v ?? 0).toFixed(3)} ± ${stds[i].toFixed(3)}`;
-              },
+              valueFormatter: (v: number, { dataIndex }: { dataIndex: number }) =>
+                `${v.toFixed(3)} ± ${stds[dataIndex].toFixed(3)}`,
             },
           ]}
           xAxis={[
