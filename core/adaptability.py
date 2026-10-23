@@ -1601,6 +1601,9 @@ def _reads_before_rebinding(stmts: Sequence[ast.stmt], names: set[str]) -> dict[
         if isinstance(stmt, ast.AugAssign):
             load(stmt.value, bound)
             load(stmt.target, bound)
+            target = stmt.target  # `scale *= 2` reads `scale` first, though its context is Store
+            if isinstance(target, ast.Name) and target.id in names and target.id not in bound and target.id not in hits:
+                hits[target.id] = target.lineno
             return bound | bound_by(stmt.target)
         if isinstance(stmt, ast.AnnAssign):
             load(stmt.value, bound)

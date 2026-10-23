@@ -288,7 +288,11 @@ def _matrix_perturbations(df: pd.DataFrame, columns: Mapping[str, str | Sequence
         {label: f"Item {position}" for position, label in enumerate(df.columns, start=1) if label not in relabel}
     )
     renamed = df.rename(index=relabel, columns=relabel)
-    out = [Perturbation("renamed", "matrix labels renamed", renamed, dict(roles), frozenset(labels))]
+    # the column labels are the matrix's columns: a constant that names one (`# role: extra`) follows it
+    renames = {str(label): relabel[label] for label in df.columns}
+    out = [
+        Perturbation("renamed", "matrix labels renamed", renamed, _remap(roles, renames), frozenset(labels), renames)
+    ]
     if len(df.index) < MAX_GROUPS and len(df.index) == len(df.columns):
         bigger = df.copy().astype(float)
         bigger.loc[NEW_LABEL] = bigger.iloc[-1] * 0.9

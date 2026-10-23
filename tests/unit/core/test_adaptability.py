@@ -416,6 +416,7 @@ class TestInterface:
             "try:\n    scale = 1 / len(df)\nexcept ZeroDivisionError:\n    print(scale)\n",  # the handler
             "scale = 1\ndel scale\nprint(scale)\n",
             "match len(df):\n    case 0:\n        scale = 1\nprint(scale)\n",
+            "scale *= 2\n",  # an augmented assignment reads its target first (Copilot, second round)
         ],
     )
     def test_a_rebinding_on_some_paths_only(self, extra: str) -> None:
@@ -431,6 +432,7 @@ class TestInterface:
             "for _ in range(3):\n    scale = 1\n    print(scale)\n",  # read inside the body, after the rebinding
             "try:\n    scale = 1\nexcept ValueError:\n    scale = 2\nprint(scale)\n",
             "with open(__file__) as scale:\n    print(scale)\n",
+            "scale = 1\nscale *= 2\nprint(scale)\n",  # the augmented target was already rebound
         ],
     )
     def test_a_rebinding_on_every_path(self, extra: str) -> None:

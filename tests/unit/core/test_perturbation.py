@@ -188,6 +188,16 @@ class TestMatrix:
         assert not items["more_categories"].df.isna().to_numpy().any()
         assert items["fewer_categories"].df.shape == (2, 2)
 
+    def test_an_extra_constant_naming_a_matrix_column_follows_the_rename(self) -> None:
+        """Copilot, second round: `FIRST = "a"  # role: extra` must become the renamed label, or df[FIRST] fails."""
+        labels = ["a", "b", "c"]
+        df = pd.DataFrame(np.eye(3), index=labels, columns=labels)
+        renamed = perturbations(df, {}, [], "matrix")[0]
+        assert renamed.renames == {"a": "Item 1", "b": "Item 2", "c": "Item 3"}
+        source = 'FIRST = "a"  # role: extra\n\n# Data\ndf = None\n\n# Plot\nprint(df[FIRST])\n'
+        constants = _string_constants(smoke_source(source, renamed, "/tmp/matrix.pkl"))
+        assert constants["FIRST"] == "Item 1" and constants["FIRST"] in renamed.df.columns
+
 
 class TestSmokeSource:
     def test_the_block_is_replaced_and_the_constants_rewritten(self) -> None:
