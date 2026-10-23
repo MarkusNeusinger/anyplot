@@ -3,10 +3,6 @@
 // Library: chartjs 4.4.7 | JavaScript 22.22.3
 // Quality: 90/100 | Created: 2026-06-15
 //# anyplot-orientation: square
-// anyplot.ai
-// heatmap-periodic-table: Periodic Table Property Heatmap
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-06-15
 
 const t = window.ANYPLOT_TOKENS;
 

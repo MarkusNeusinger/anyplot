@@ -3,10 +3,6 @@
 // Library: echarts 6.1.0 | JavaScript 22.23.1
 // Quality: 91/100 | Created: 2026-07-24
 //# anyplot-orientation: landscape
-// anyplot.ai
-// marimekko-basic: Basic Marimekko Chart
-// Library: echarts 5.5.1 | JavaScript 22
-// Quality: pending | Created: 2026-07-24
 
 const t = window.ANYPLOT_TOKENS;
 const size = window.ANYPLOT_SIZE;

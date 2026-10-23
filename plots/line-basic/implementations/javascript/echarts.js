@@ -3,10 +3,6 @@
 // Library: echarts 5.5.1 | JavaScript 22.22.3
 // Quality: 87/100 | Created: 2026-06-02
 //# anyplot-orientation: landscape
-// anyplot.ai
-// line-basic: Basic Line Plot
-// Library: echarts 5.x | JavaScript 22
-// Quality: pending | Created: 2026-06-02
 
 const t = window.ANYPLOT_TOKENS;
 

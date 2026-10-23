@@ -3,11 +3,6 @@
 // Library: muix 7.29.1 | JavaScript 22.22.3
 // Quality: 90/100 | Created: 2026-06-20
 //# anyplot-orientation: landscape
-// anyplot.ai
-// line-growth-percentile: Pediatric Growth Chart with Percentile Curves
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-06-20
 
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";

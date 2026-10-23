@@ -3,11 +3,6 @@
 // Library: muix 7.29.1 | JavaScript 22.22.3
 // Quality: 93/100 | Created: 2026-06-17
 //# anyplot-orientation: landscape
-// anyplot.ai
-// ecg-twelve-lead: ECG/EKG 12-Lead Waveform Display
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-06-17
 import { LineChart } from "@mui/x-charts/LineChart";
 
 const t = window.ANYPLOT_TOKENS;

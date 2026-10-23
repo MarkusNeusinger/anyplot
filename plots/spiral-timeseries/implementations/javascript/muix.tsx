@@ -3,11 +3,6 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 87/100 | Created: 2026-09-09
 //# anyplot-orientation: square
-// anyplot.ai
-// spiral-timeseries: Spiral Time Series Chart
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-09-09
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { ChartsText } from "@mui/x-charts/ChartsText";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";

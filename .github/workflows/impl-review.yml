@@ -256,10 +256,13 @@ jobs:
           # it, and a PR branched off an older main does not carry them.
           # The adaptability checker and its record builder join them for the
           # same reason: a PR head must not choose the rules it is checked by.
+          # So does the JavaScript header writer (impl_header.py), which
+          # "Update metadata and implementation header" imports.
           mkdir -p "$RUNNER_TEMP/regen-tools"
           cp automation/scripts/regen_gate.py automation/scripts/close_issue_if_complete.py \
              automation/scripts/review_provenance.py automation/scripts/regen_writeback.py \
              automation/scripts/adaptability_check.py automation/scripts/adapt_record.py \
+             automation/scripts/impl_header.py \
              "$RUNNER_TEMP/regen-tools/"
           # The reviewer's step-10 self-check (`check-feedback`) runs this
           # same workflow-ref copy of the gate.
@@ -1792,6 +1795,7 @@ jobs:
             python3 - <<'EOF'
           import os
           import re
+          import sys
 
           impl_file = os.environ["IMPL_FILE"]
           language = os.environ["LANGUAGE"]
@@ -1866,19 +1870,18 @@ jobs:
                   f"// Library: {library} {lib_version} | {RUNTIME_LABEL} {lang_version}\n"
                   f"// Quality: {score}/100 | {date_info}"
               )
-              # Match a leading run of `//`-comment lines (the existing header).
-              # The negative lookahead `(?!#)` excludes `//#`-prefixed lines —
-              # those are anyplot directives (e.g. `//# anyplot-orientation:
-              # square`) the harness reads, NOT header lines, so they must
-              # survive the rewrite. The run therefore stops at the first
-              # directive; if a directive is the first line of the file the
-              # regex falls through and the canonical header is prepended above
-              # it. (#6947 prepend-fallback.)
-              pattern = r"\A(?://(?!#)[^\n]*\n)+"
-              if re.match(pattern, content):
-                  new_content = re.sub(pattern, new_header + "\n", content, count=1)
-              else:
-                  new_content = new_header + "\n" + content
+              # `//#` lines (e.g. `//# anyplot-orientation: square`) are
+              # directives the harness reads, not header lines. The writer
+              # puts the header on line 1, moves a directive that sat above
+              # the old header directly below the new one, and drops a stale
+              # second `// anyplot.ai` block (the old prepend fallback left one
+              # below the directive). Tested in
+              # tests/unit/automation/scripts/test_impl_header.py; this is the
+              # workflow-ref copy "Checkout PR code" saved.
+              sys.path.insert(0, os.path.join(os.environ["RUNNER_TEMP"], "regen-tools"))
+              from impl_header import replace_js_header
+
+              new_content = replace_js_header(content, new_header)
           else:
               # Python: triple-quoted module docstring at the top of the file.
               title_safe = title.replace('"""', '\\"\\"\\"')

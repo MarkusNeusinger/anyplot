@@ -3,10 +3,6 @@
 // Library: echarts 5.5.1 | JavaScript 22.22.3
 // Quality: 89/100 | Created: 2026-06-20
 //# anyplot-orientation: landscape
-// anyplot.ai
-// curve-oc: Operating Characteristic (OC) Curve
-// Library: echarts 5.5.1 | JavaScript 22
-// Quality: pending | Created: 2026-06-20
 
 const t = window.ANYPLOT_TOKENS;
 

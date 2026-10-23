@@ -3,11 +3,6 @@
 // Library: muix 7.29.1 | JavaScript 22.23.1
 // Quality: 92/100 | Created: 2026-08-05
 //# anyplot-orientation: square
-// anyplot.ai
-// windrose-basic: Wind Rose Chart
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-08-05
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { useDrawingArea } from "@mui/x-charts/hooks";
 import { ChartsLegend } from "@mui/x-charts/ChartsLegend";

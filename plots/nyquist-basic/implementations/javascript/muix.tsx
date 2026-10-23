@@ -3,11 +3,6 @@
 // Library: muix 7.29.1 | JavaScript 22.22.3
 // Quality: 86/100 | Created: 2026-06-17
 //# anyplot-orientation: square
-// anyplot.ai
-// nyquist-basic: Nyquist Plot for Control Systems
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-06-17
 
 import { ScatterChart } from "@mui/x-charts/ScatterChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";

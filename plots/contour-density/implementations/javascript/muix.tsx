@@ -3,11 +3,6 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 93/100 | Created: 2026-09-04
 //# anyplot-orientation: square
-// anyplot.ai
-// contour-density: Density Contour Plot
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-09-04
 
 // MUI X community has no native contour/isoline chart. We compose one on top
 // of ScatterChart: a raw sample overlay (native ScatterPlot) plus a custom

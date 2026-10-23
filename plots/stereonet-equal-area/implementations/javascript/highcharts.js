@@ -3,11 +3,6 @@
 // Library: highcharts 12.6.0 | JavaScript 22.22.3
 // Quality: 88/100 | Created: 2026-06-16
 //# anyplot-orientation: square
-// anyplot.ai
-// stereonet-equal-area: Structural Geology Stereonet (Equal-Area Projection)
-// Library: Highcharts 12.6.0 | Node 22
-// License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
-// Quality: pending | Created: 2026-06-16
 
 const t = window.ANYPLOT_TOKENS;
 const DEG = Math.PI / 180;

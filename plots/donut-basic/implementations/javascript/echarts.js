@@ -3,10 +3,6 @@
 // Library: echarts 5.5.1 | JavaScript 22.22.3
 // Quality: 90/100 | Created: 2026-06-25
 //# anyplot-orientation: square
-// anyplot.ai
-// donut-basic: Basic Donut Chart
-// Library: echarts 5.5.1 | JavaScript 22
-// Quality: pending | Created: 2026-06-25
 
 const t = window.ANYPLOT_TOKENS;
 const size = window.ANYPLOT_SIZE;

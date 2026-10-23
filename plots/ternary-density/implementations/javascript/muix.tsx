@@ -3,10 +3,6 @@
 // Library: muix 9.16.0 | JavaScript 22.23.3
 // Quality: 86/100 | Updated: 2026-10-23
 //# anyplot-orientation: square
-// anyplot.ai
-// ternary-density: Ternary Density Plot
-// Library: muix 9.16.0 | JavaScript 22.23.3
-// Quality: 82/100 | Updated: 2026-10-23
 
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";

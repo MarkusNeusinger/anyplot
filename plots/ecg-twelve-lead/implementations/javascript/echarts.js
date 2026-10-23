@@ -3,10 +3,6 @@
 // Library: echarts 5.5.1 | JavaScript 22.22.3
 // Quality: 91/100 | Created: 2026-06-17
 //# anyplot-orientation: landscape
-// anyplot.ai
-// ecg-twelve-lead: ECG/EKG 12-Lead Waveform Display
-// Library: echarts 5.5.1 | JavaScript 22
-// Quality: pending | Created: 2026-06-17
 
 const t = window.ANYPLOT_TOKENS;
 const THEME = window.ANYPLOT_THEME;

@@ -3,10 +3,6 @@
 // Library: echarts 5.5.1 | JavaScript 22.22.3
 // Quality: 92/100 | Created: 2026-06-15
 //# anyplot-orientation: square
-// anyplot.ai
-// heatmap-periodic-table: Periodic Table Property Heatmap
-// Library: echarts 5.5.1 | JavaScript 22
-// Quality: pending | Created: 2026-06-15
 
 const t = window.ANYPLOT_TOKENS;
 const W = window.ANYPLOT_SIZE.width;

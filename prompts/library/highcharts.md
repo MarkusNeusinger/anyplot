@@ -79,7 +79,7 @@ gate rejects anything off by more than 16 px and re-triggers repair):
 
 The harness produces these exactly (1600×900 / 1200×1200 CSS × `deviceScaleFactor 2`);
 Highcharts fills the mount. For a square spec (pie / gauge / radial / heatmap),
-put this on its own line near the top:
+put this on its own line directly below the header block (see "Header Style"):
 
 ```js
 //# anyplot-orientation: square
@@ -217,6 +217,11 @@ light or dark.
 A complete Highcharts implementation in the zones of "Data block" above:
 
 ```js
+// anyplot.ai
+// bar-basic: Basic Bar Chart
+// Library: Highcharts | Node
+// License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
+// Quality: pending | Created: 2026-06-09
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;
 
@@ -274,9 +279,12 @@ Highcharts.chart("container", {
 // Quality: pending | Created: 2026-06-09
 ```
 
-The `impl-review.yml` header-rewrite replaces the leading `//` block and skips
-`//#` directive lines, so the `//# anyplot-orientation:` line survives — keep it
-on its own line.
+After the review scores the plot, `impl-review.yml` replaces the header block,
+from `// anyplot.ai` through the `// Quality:` line, with a four-line header that
+carries the score. The rewrite keeps every `//#` directive line: the header stays
+on line 1, and a directive written above it moves directly below it. Put the
+`//# anyplot-orientation:` directive on its own line directly below the header
+block, as the script skeleton shows.
 
 ## Forbidden patterns
 

@@ -3,11 +3,6 @@
 // Library: muix 7.29.1 | JavaScript 22.22.3
 // Quality: 90/100 | Created: 2026-06-16
 //# anyplot-orientation: landscape
-// anyplot.ai
-// psychrometric-basic: Psychrometric Chart for HVAC
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-06-16
 import { LineChart } from "@mui/x-charts/LineChart";
 import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
 

@@ -72,7 +72,8 @@ gate rejects anything off by more than 16 px and re-triggers repair):
 
 The harness produces these exactly via Playwright `deviceScaleFactor: 2` over a
 fixed mount; ECharts auto-sizes to the mount. You only pick orientation. For a
-square spec (pie/radar/heatmap/sunburst), put this on its own line near the top:
+square spec (pie/radar/heatmap/sunburst), put this on its own line directly
+below the header block (see "Header Style"):
 
 ```js
 //# anyplot-orientation: square
@@ -185,6 +186,10 @@ Pie/radar/sunburst have no `xAxis`/`yAxis` — drop those and style via `label` 
 A complete ECharts implementation in the zones of "Data block" above:
 
 ```js
+// anyplot.ai
+// bar-basic: Basic Bar Chart
+// Library: echarts | JavaScript
+// Quality: pending | Created: 2026-06-02
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;
 
@@ -242,9 +247,12 @@ chart.setOption({
 // Quality: pending | Created: 2026-06-02
 ```
 
-The `impl-review.yml` header-rewrite replaces the leading `//` block and skips
-`//#` directive lines, so the `//# anyplot-orientation:` line survives — keep it
-on its own line.
+After the review scores the plot, `impl-review.yml` replaces the header block,
+from `// anyplot.ai` through the `// Quality:` line, with a four-line header that
+carries the score. The rewrite keeps every `//#` directive line: the header stays
+on line 1, and a directive written above it moves directly below it. Put the
+`//# anyplot-orientation:` directive on its own line directly below the header
+block, as the script skeleton shows.
 
 ## ECharts-Specific Gotchas
 

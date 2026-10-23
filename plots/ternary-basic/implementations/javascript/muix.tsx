@@ -3,11 +3,6 @@
 // Library: muix 7.29.1 | JavaScript 22.23.1
 // Quality: 88/100 | Created: 2026-08-04
 //# anyplot-orientation: square
-// anyplot.ai
-// ternary-basic: Basic Ternary Plot
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-08-04
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { ChartsTooltip } from "@mui/x-charts/ChartsTooltip";

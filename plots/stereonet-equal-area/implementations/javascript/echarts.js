@@ -3,10 +3,6 @@
 // Library: echarts 5.5.1 | JavaScript 22.22.3
 // Quality: 90/100 | Created: 2026-06-16
 //# anyplot-orientation: square
-// anyplot.ai
-// stereonet-equal-area: Structural Geology Stereonet (Equal-Area Projection)
-// Library: echarts 5.5.1 | JavaScript
-// Quality: pending | Created: 2026-06-16
 //
 // Schmidt lower-hemisphere equal-area net rendered idiomatically in ECharts.
 // ECharts has no native stereonet, so we build the projection ourselves on a

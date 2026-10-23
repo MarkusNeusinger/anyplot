@@ -3,11 +3,6 @@
 // Library: muix 7.29.1 | JavaScript 22.23.1
 // Quality: 83/100 | Created: 2026-08-05
 //# anyplot-orientation: landscape
-// anyplot.ai
-// line-multi: Multi-Line Comparison Plot
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-08-05
 
 import { LineChart } from "@mui/x-charts/LineChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";

@@ -3,11 +3,6 @@
 // Library: muix 7.29.1 | JavaScript 22.23.1
 // Quality: 91/100 | Created: 2026-07-26
 //# anyplot-orientation: square
-// anyplot.ai
-// sunburst-basic: Basic Sunburst Chart
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-07-26
 
 import { PieChart } from "@mui/x-charts/PieChart";
 

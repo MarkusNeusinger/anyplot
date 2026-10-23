@@ -111,8 +111,8 @@ Exact pixels come from Playwright `deviceScaleFactor: 2` over the pre-sized moun
 (1600×900 / 1200×1200 CSS). **Size the chart to `window.ANYPLOT_SIZE`**
 (`width={window.ANYPLOT_SIZE.width} height={window.ANYPLOT_SIZE.height}`, minus
 the legend band when a legend shows) — never hard-code other dimensions. For a
-square spec (pie / radial / heatmap-style), put this on its own line at the very
-top of the file:
+square spec (pie / radial / heatmap-style), put this on its own line directly
+below the header block (see "Header Style"):
 
 ```tsx
 //# anyplot-orientation: square
@@ -255,19 +255,22 @@ reason — **do not** shell out to Recharts/D3/Chart.js or reach into
 // Quality: pending | Created: 2026-06-09
 ```
 
-The `impl-review.yml` header-rewrite replaces the leading `//` block and skips
-`//#` directive lines, so a `//# anyplot-orientation:` line survives — keep it on
-its own line at the very top.
+After the review scores the plot, `impl-review.yml` replaces the header block,
+from `// anyplot.ai` through the `// Quality:` line, with a four-line header that
+carries the score. The rewrite keeps every `//#` directive line: the header stays
+on line 1, and a directive written above it moves directly below it. Put the
+`//# anyplot-orientation:` directive on its own line directly below the header
+block, as the script skeleton shows.
 
 ## Script Skeleton
 
 ```tsx
-//# anyplot-orientation: landscape
 // anyplot.ai
 // bar-basic: Basic Bar Chart
 // Library: MUI X Charts | React | Node
 // License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
 // Quality: pending | Created: 2026-06-09
+//# anyplot-orientation: landscape
 import { BarChart } from "@mui/x-charts/BarChart";
 
 const t = window.ANYPLOT_TOKENS;

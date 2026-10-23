@@ -3,11 +3,6 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 90/100 | Created: 2026-09-02
 //# anyplot-orientation: landscape
-// anyplot.ai
-// bar-error: Bar Chart with Error Bars
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-09-02
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { BarPlot } from "@mui/x-charts/BarChart";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";

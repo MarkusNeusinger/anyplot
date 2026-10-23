@@ -4,11 +4,6 @@
 // Quality: 93/100 | Created: 2026-06-21
 //# anyplot-orientation: square
 
-// anyplot.ai
-// scatter-shot-chart: Basketball Shot Chart
-// Library: echarts 5.5.1 | JavaScript 22
-// Quality: pending | Created: 2026-06-21
-
 const t = window.ANYPLOT_TOKENS;
 
 // --- Deterministic RNG (seeded LCG) ---

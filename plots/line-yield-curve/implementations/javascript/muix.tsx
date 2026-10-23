@@ -3,11 +3,6 @@
 // Library: muix 7.29.1 | JavaScript 22.23.3
 // Quality: 87/100 | Updated: 2026-10-09
 //# anyplot-orientation: landscape
-// anyplot.ai
-// line-yield-curve: Yield Curve (Interest Rate Term Structure)
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-06-10
 
 import { LineChart } from "@mui/x-charts/LineChart";
 import { useDrawingArea, useXScale } from "@mui/x-charts/hooks";
