@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: genome-track-multi
 created: '2026-08-25T00:36:14Z'
-updated: '2026-10-23T20:55:09Z'
+updated: '2026-10-23T21:00:22Z'
 generated_by: adopted:gemini/12267-muix-9-batch1
 workflow_run: 40022346040
 issue: 4422
@@ -12,70 +12,58 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/genome-tr
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/genome-track-multi/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/genome-track-multi/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/genome-track-multi/javascript/muix/plot-dark.html
-quality_score: 80
+quality_score: 85
 review:
   strengths:
-  - Composes the tracks inside ChartsContainer and draws them through the useXScale/useDrawingArea
-    hooks, so every exon, regulatory element, coverage sample and variant shares the
-    one native MUI X linear position axis and features line up exactly across tracks
-  - 'Gene track follows the genome-browser idiom: exon rectangles joined by thin intron
-    lines with repeated chevrons pointing in each gene''s strand direction, and the
-    strand repeated in the gene label'
-  - Coverage area rises from its own zero baseline with exon-driven peaks, variants
-    are lollipops measured from the track baseline, and alternating elevatedBg bands
-    separate the tracks subtly in both themes
-  - Region identifier folded into the x-axis title (Position (bp) — chr7:140,700,000-140,712,000)
-    with thousands-separated tick labels via valueFormatter
-  - All chrome reads from ANYPLOT_TOKENS, so ink, grid and band shading flip correctly
-    between the light and dark renders while data colors stay identical
+  - Composes the chart from ChartsContainer + ChartsXAxis and draws every track inside
+    it with the useXScale / useDrawingArea hooks, so all tracks share the library's
+    single linear x scale and line up exactly.
+  - 'Every spec element is present: exon rectangles joined by intron lines with strand
+    chevrons, a coverage area from its own zero baseline, quality-encoded lollipops
+    from the track baseline, and promoter/enhancer rectangles named in a legend.'
+  - Theme tokens are threaded through every hand-drawn element (ink, inkSoft, grid,
+    elevatedBg), so both renders read cleanly; the palette skips the red anchor slot
+    deliberately.
+  - Deterministic data via a fixed-seed LCG; data block follows the role-constant
+    / records contract.
   weaknesses:
-  - 'VQ-07 (both): Indel is drawn in #AE3030, the matte-red semantic anchor, only
-    because it is the fifth feature type in order; an indel is not a bad/loss/error
-    role → the next non-anchor Imprint position, cyan #2ABCCD. Likely cause: featureColor
-    maps discreteTypes to t.palette[i] by index, so slot 5 is reached ordinally.'
-  - 'VQ-01 (both): x tick labels, legend entries and gene labels at 13 CSS px sit
-    below the 14–16 px the muix prompt sets for axis and legend text and blur in the
-    400 px thumbnail → about 15 px (+2 px). Likely cause: tickLabelStyle fontSize
-    13, legend Typography fontSize 13, gene <text> fontSize 13.'
-  - 'DQ-02 (both): the genes are labelled GENE1 and GENE2, which read as placeholders
-    → gene-style symbols that fit the scenario. Likely cause: the symbol fields in
-    the genes list of the data block.'
-  - 'CQ-01 (code): beyond the component the harness needs, the file adds the `present`
-    and `trackKind` helper functions (lines 157–170) plus a TRACK_RENDERERS dispatch
-    table → remove the heuristic classifier and select each track''s renderer directly
-    from its rows inside GenomeTracks. Likely cause: a generic renderer-dispatch design.'
-  - 'LM-01 (code): the variant stem scale uses the typed limit MAX_QUALITY = 60 although
-    the muix prompt says limits come from the data → derive the maximum from the variant
-    rows'' values. Likely cause: the MAX_QUALITY constant.'
-  - 'Suggestion: a small max-value label (e.g. depth and quality) on the coverage
-    and variant tracks would let the reader read the heights, which the spec permits
-    as a per-track scale.'
-  - 'Suggestion: start the chevrons inside introns only, so the one at about 7,850
-    bp is not half-hidden by the edge of GENE2''s second exon.'
+  - 'DQ-02 (both): real gene symbols AGK and BRAF carry invented exon structures (BRAF
+    drawn with 5 exons over 5 kb; the real gene has 18 exons over ~190 kb) → use fictional
+    gene symbols for the synthetic locus, or real coordinates for the real genes.
+    Likely cause: the `genes` list in the data block.'
+  - 'CQ-01 (code): four helper components (GenesTrack, RegulatoryTrack, CoverageTrack,
+    VariantsTrack) plus a heuristic renderer dispatch add structure beyond the one
+    hook-using component that the composition API needs → draw the four tracks inline
+    in GenomeTracks, branching on the track rows. Likely cause: per-track component
+    split.'
+  - 'Suggestion: skip chevron offsets that fall on or inside an exon — the BRAF chevron
+    at 7,900 bp is half hidden behind the exon edge.'
+  - 'Suggestion: the coverage area uses the same green as the Exon legend swatch;
+    a neutral or second hue would keep "Exon" from reading as the coverage key.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, with alternating slightly lighter elevatedBg bands behind the Regulatory and Variants tracks.
-      Chrome: title "genome-track-multi · javascript · muix · anyplot.ai" top-left in dark ink; an HTML legend row below it (Exon, Promoter, Enhancer, SNP, Indel); track labels Genes / Regulatory / Coverage / Variants right-aligned on the left in dark ink; shared x axis 0–12,000 bp with ticks every 500 and title "Position (bp) — chr7:140,700,000-140,712,000"; faint vertical grid every 2,000 bp. All text readable; ticks and legend are on the small side.
-      Data: Genes track with GENE1 (+) four green #009E73 exons and right-pointing chevrons, GENE2 (-) five exons with left-pointing chevrons; Regulatory track with lavender promoters and blue enhancers; Coverage as a translucent green filled area from a zero baseline with peaks over exons; Variants as ochre (SNP) and red (Indel) lollipops of varying heights.
+      Background: warm off-white #FAF8F1; Regulatory and Variants bands carry subtle elevated shading
+      Chrome: title, HTML legend row (Exon, Promoter, Enhancer, SNP, Indel), left track labels (Genes, Regulatory, Coverage, Variants), comma-formatted ticks 0–12,000 bp and axis title "Position (bp) — chr7:140,700,000-140,712,000" — all dark text, readable
+      Data: green #009E73 exons for AGK (+) and BRAF (-) joined by intron lines with strand chevrons; purple promoters and blue enhancers; translucent green coverage area peaking over exons; amber SNP and cyan Indel lollipops with quality-encoded heights; 2,000 bp vertical grid through all tracks
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17, alternating bands slightly lighter.
-      Chrome: title, legend text, track labels, tick labels and axis title in light ink; gridlines subtle dark grey; intron lines and chevrons light grey. No dark-on-dark text.
-      Data: colors identical to the light render (green exons and coverage, lavender/blue regulatory, ochre/red lollipops); brand green clearly visible.
+      Background: warm near-black #1A1A17 with slightly lighter elevated bands
+      Chrome: all text in light ink and readable; intron lines and chevrons light grey; no dark-on-dark
+      Data: colors identical to the light render; only chrome flips
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Readable in both themes; ticks, legend and gene labels at 13 px are
-          below the 14–16 px target (defect line)
+        comment: Fonts set explicitly (title 22, ticks/labels 15–16 CSS px); readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -87,57 +75,57 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Exons, regulatory blocks, coverage area and lollipops all clearly
-          visible; legend swatches match marks
+        comment: Exons, chevrons, coverage area and lollipops all clearly visible;
+          legend swatches match marks
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Distinct hues, color backed by track position
+        comment: Amber/cyan and purple/blue pairs distinguishable; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; balanced tracks, nothing clipped
+        comment: 3200x1800, tracks fill the canvas, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Position (bp) with region identifier; track labels on the left
+        comment: Position (bp) with region; descriptive track labels
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Backgrounds and first color correct; Indel reaches the red semantic
-          anchor by ordinal position (defect line)
+        comment: 'First feature type #009E73, Imprint order skipping the red anchor;
+          correct backgrounds in both themes'
     design_excellence:
-      score: 9
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: true
-        comment: 'Style-guide baseline: token chrome, Imprint colors, explicit font
-          sizes'
+        passed: false
+        comment: Style-guide baseline; nothing beyond it
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: true
-        comment: Grid density chosen for this chart (2,000 bp, coarser than the 500
-          bp ticks), 12 px gaps between tracks, right-aligned track labels
+        passed: false
+        comment: A coarse 2,000 bp alignment grid through all tracks, chosen apart
+          from the 500 bp tick density
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Data displayed; no focal hierarchy beyond the Notes
+        comment: Coverage peaks and most variants sit over exons, making the cross-track
+          alignment the focal relationship
     spec_compliance:
       score: 15
       max: 15
@@ -147,28 +135,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Multi-track genome viewer on a shared axis
+        comment: Multi-track genome viewer with shared x axis
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All Notes and good-version bullets met: labeled tracks, exons/introns/chevrons,
-          filled coverage from zero, lollipops from baseline, regulatory colors in
-          legend, track shading'
+        comment: Exons/introns/chevrons, coverage area, lollipop variants, regulatory
+          rectangles with legend, left track labels, band shading — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Features drawn from start to end on one linear scale; full region
-          shown
+        comment: Features drawn start to end on the shared linear scale; coverage
+          and variants from their baselines
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title; legend labels match feature types
+        comment: Correct title format; legend names all feature types
     data_quality:
       score: 14
       max: 15
@@ -178,22 +165,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Two genes on opposite strands, promoters and enhancers, coverage
-          peaks over exons, SNPs and indels
+        comment: Both strands, SNP and indel, promoter and enhancer, uneven coverage
       - id: DQ-02
         name: Realistic Context
         score: 4
         max: 5
-        passed: true
-        comment: Plausible locus; gene labels GENE1/GENE2 read as placeholders (defect
+        passed: false
+        comment: Real gene symbols AGK/BRAF with invented exon structures (defect
           line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: coverage 6–81x with peaks over exons, variant quality 28–55
-          (Phred-like), 12 kb region; no Check values in spec'
+        comment: Depths ~6–75x, quality 28–55, 12 kb window; plausible. No Check values
+          in spec
     code_quality:
       score: 9
       max: 10
@@ -202,9 +188,8 @@ review:
         name: KISS Structure
         score: 2
         max: 3
-        passed: true
-        comment: Extra helper functions present/trackKind and renderer dispatch beyond
-          the needed components (defect line)
+        passed: false
+        comment: Four helper track components plus heuristic dispatch (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -222,45 +207,46 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Nothing an available call computes
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component, v9 ChartsContainer, skipAnimation
+        comment: Default export, skipAnimation, MUI X v9 composition API
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
-        max: 5
-        passed: true
-        comment: 'ChartsContainer composition with a native linear x axis; does not
-          rise: typed MAX_QUALITY limit against the data-block rule (defect line)'
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
         passed: false
-        comment: Custom SVG layers driven by MUI X hooks useXScale and useDrawingArea
-          inside the chart coordinate system
-  verdict: REJECTED
+        comment: ChartsContainer composition with ChartsXAxis valueFormatter and sized
+          axis band; custom marks via hooks
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: useXScale / useDrawingArea hooks to draw custom SVG tracks on the
+          library's scale
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-03c2486144
-  rendered_at: '2026-10-23T20:52:03Z'
+  rendered_at: '2026-10-23T20:57:26Z'
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
   - layer-composition
-  - small-multiples
+  - custom-legend
+  - annotations
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
   - alpha-blending
-  - publication-ready
