@@ -100,6 +100,39 @@ invalidates `review_regen.json`. The record's `improvements.code` counts the
 entries that held, the notice line gains `prev_lines=`/`new_lines=` when the
 flags are given, and `check-feedback` checks the entries.
 
+The adapt route (`docs/concepts/adaptable-code.md`, "The adapt route"):
+`adapt_assess` decides whether a conversion to the adaptable-code convention
+merges on render identity. It reads the two adapt records that impl-review's
+"Adaptability check (record-only)" step writes (`--adapt-new`,
+`--adapt-prev`), and the render pair that `core.smoke_run pair` staged in
+impl-generate (`--adapt-pair`). It never renders, so the gate stays stdlib-only.
+The route counts when every one of these holds; the first that fails is the
+record's `why`:
+
+- The new implementation is Python.
+- Both records are valid for this pair.
+- The predecessor's status is `fail` and the new one's `pass`.
+- The pair rendered both themes at equal size, and each differs in at most
+  `IDENTITY_BOUND` (0.5 %, the value of `core.render_identity.DEFAULT_BOUND`)
+  of its pixels. The gate applies its own bound, whatever bound the pair file
+  names.
+- The new source keeps `within_line_bound`: max(1.25 × prev, prev + 15) lines.
+- The canvas gate passed.
+- When a review ran, its score is above 0, it names no regression, the
+  scenario is unchanged, no encoding was added, and no VQ, SC, DQ, or CQ item
+  of `prev_checklist` scores lower in the new checklist.
+
+`decide` turns the keeps `no_visible_improvement`, `no_defect_improvement` and
+`below_tolerance` into a merge with code `adapt_identity` when the route counts.
+With `--review-skipped` and no score, it merges on the route before the score
+checks. A merge whose predecessor passes and whose new source fails becomes keep
+with `adapt_regression`. `adapt-route` writes `adapt_route`, `adapt_why`,
+`adapt_prev`, and `adapt_new` before the review, and always exits 0. The record
+gains `adapt` (`AdaptAssessment.to_record`, checked by `validate_record`), the
+outputs gain `adapt_counted` and `adapt_why`, and with an adapt flag the notice
+line gains them too, before `reason=`. Without the adapt flags, the route and the
+regression are off, so older argument sets decide as before.
+
 ### `regen_writeback.py`
 Review write-back on a kept regeneration (stdlib and PyYAML; imports
 `regen_gate` from its own directory when it runs as a script, so a workflow's
