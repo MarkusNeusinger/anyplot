@@ -2,95 +2,95 @@ library: muix
 language: javascript
 specification_id: hexbin-basic
 created: '2026-08-25T01:49:00Z'
-updated: '2026-08-25T02:06:50Z'
-generated_by: claude-sonnet
-workflow_run: 32798420172
+updated: '2026-10-23T21:47:24Z'
+generated_by: adopted:gemini/12267-muix-9-batch1
+workflow_run: 40025767465
 issue: 859
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/javascript/muix/plot-dark.html
-quality_score: 88
+quality_score: 85
 review:
   strengths:
-  - 'True hexagonal tiling reproduced via a custom slots-based marker override (ScatterChart
-    + slots={{ scatter: HexCell }}) despite MUI X community having no native hexbin/heatmap
-    component - a clever, idiomatic use of the documented customization surface rather
-    than a fake bubble-scatter substitute'
-  - Log-scale color mapping (log1p) correctly separates hotspot density tiers, while
-    the ContinuousColorLegend still shows the raw min/max counts (1-1244) so the legend
-    stays human-readable
-  - Deterministic, realistic dataset (three named pedestrian hotspots plus a wide
-    ambient cluster) produces a strong, legible density gradient
-  - Imprint imprint_seq (green -> blue) applied correctly and identically across both
-    themes; chrome (background, title, axis labels, legend text) is theme-adaptive
-    and legible in both renders
-  - skipAnimation is set and ContinuousColorLegend is used idiomatically for the density
-    scale
+  - Square plot area (margins tuned so 1 m spans the same pixels on both axes) keeps
+    every hexagon regular; the binning uses the standard pointy-top nearest-centre
+    assignment and tiles the domain edge to edge
+  - imprint_seq green-to-blue ramp applied on a log1p scale through a zAxis continuous
+    colorMap, so the dense plaza/transit/waterfront cores and the sparse fringes both
+    read; the colour bar is captioned 'Ping count per bin (log scale)'
+  - 'Idiomatic MUI X customisation: the ScatterChart''s scatter slot is replaced by
+    a HexCell renderer that reads the chart''s own xScale/yScale/colorGetter, and
+    the ContinuousColorLegend slot is bound to the same z axis, so marks and colour
+    bar share one colour mapping'
+  - 1 px page-coloured seams between hexagons give a clean mosaic in both themes;
+    empty cells are a faint tint (light) / near-black tint (dark) that stays distinct
+    from the lowest filled colour
+  - Plausible, neutral scenario (30,000 pedestrian GPS pings around a plaza with three
+    foot-traffic hotspots), deterministic via a seeded LCG; skipAnimation and disableHitArea
+    set
   weaknesses:
-  - At the domain fringe, the empty-bin filler hexagons (0.12-opacity tint) create
-    a somewhat noisy, irregular boundary; in the dark render several of these near-zero-opacity
-    cells are almost indistinguishable from the page background, reading as missing
-    tiles rather than intentional low-density cells - consider a slightly higher minimum
-    opacity in dark theme so the fringe reads as deliberate design
-  - The three named hotspots (Central Plaza, Transit Hub, Waterfront Promenade) exist
-    only in code comments with no on-chart callout - a light annotation would push
-    data storytelling further (optional polish, not a spec requirement)
-  - The leading comment header in the .tsx file is duplicated (two stacked '// anyplot.ai'
-    blocks stacked at the top of the file) - likely an artifact of the header-rewrite
-    step; worth cleaning up so only one header block remains
+  - 'SC-02 (both): the hexagons are too coarse for 30,000 points — about 16 columns
+    across the ±60 m domain, so each hotspot core spans only 2–3 hexagons and the
+    gradients around them step in large tiles rather than resolving the cluster shapes
+    (spec: ''small enough to resolve clusters and gradients'') → about 28–32 columns
+    (radius share about 0.04, roughly −0.035). Likely cause: HEX_RADIUS_SHARE = 0.075.'
+  - 'Suggestion: the log-scale colour bar carries only its endpoint labels (1 and
+    1,244); intermediate ticks such as 10 and 100 would let a reader decode the log
+    mapping.'
+  - 'Suggestion: the colour-bar caption sits about 40 px below the bar''s labels;
+    tightening the caption band would tie it visually to the bar.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
-      Chrome: Title "hexbin-basic · javascript · muix · anyplot.ai" is bold, dark, centered, and clearly legible. Both axis titles ("Distance east of plaza (m)" / "Distance north of plaza (m)") and all tick labels render in dark ink against the light background, fully readable. The bottom color-legend track shows "1" and "1244" endpoint labels plus the caption "Ping count per bin (log scale)", all legible.
-      Data: A square 2400x2400 canvas filled edge-to-edge with a true hexagonal tiling. Color runs on the Imprint imprint_seq sequential ramp (brand green -> blue) representing ping-count density on a log scale. Three darker blue-purple hotspot regions are visible (matching the Central Plaza, Transit Hub, and Waterfront Promenade clusters in the data), fading to green/pale mint toward the sparse fringe. Sparse "empty" bins render as a very pale, low-opacity green tint rather than blank gaps, avoiding a "swiss cheese" look.
-      Legibility verdict: PASS - no dark-on-light or light-on-light failures observed.
+      Background: warm off-white #FAF8F1, square 2400x2400 canvas, square plot area.
+      Chrome: bold dark title "hexbin-basic · javascript · muix · anyplot.ai" centred at top (~44 % width); y-axis "Distance north of plaza (m)" and x-axis "Distance east of plaza (m)" in dark ink; ticks −60…60 every 5 in soft ink, all readable; horizontal colour bar centred below the x label with endpoint labels 1 and 1,244 and caption "Ping count per bin (log scale)". No clipping.
+      Data: ~16-column pointy-top hex grid with 1 px page-coloured seams; colours run from brand green #009E73 (sparse) to blue #4467A3 (dense) on a log scale; three blue hotspots (centre ~0,5; transit ~32,−27; waterfront ~−30,22); empty cells near the edges in a pale mint tint; edge hexes clipped at the plot frame.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 - not pure black.
-      Chrome: Title and axis titles render in light ink, clearly legible against the dark background. Tick labels and the legend track's "1"/"1244" endpoint labels and caption are all in light/soft-light ink and readable. No dark-on-dark failures.
-      Data: Identical hexagonal layout and identical Imprint imprint_seq data colors (green -> blue) as the light render - only the chrome (background, text) flipped, as required. The same three hotspot clusters are visible in the same positions with the same relative intensity. Some of the low-opacity "empty" filler hexagons at the fringe are nearly the same tone as the near-black background, reading as faint dark patches rather than fully invisible gaps - a minor but real polish nit noted in weaknesses.
-      Legibility verdict: PASS - all text is readable; the only caveat is the low-contrast empty-cell fringe, which is a data/design nit, not a text-legibility failure.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis labels and colour-bar caption in light ink; tick labels and endpoint labels in light soft ink — all readable, no dark-on-dark text.
+      Data: identical green-to-blue hexagon colours to the light render; seams now dark page colour; empty cells a dark green-black tint, still distinct from the green sparse cells. Brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 26px, axis labels 16px, ticks/legend
-          14px); all readable in both themes, no overflow
+        comment: Explicit sizes (title 26 px, labels 16 px, ticks 14 px CSS); all
+          text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/element collisions in either render
+        comment: No text collisions; hexagons tile without overlap
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Hex bins clearly visible and appropriately sized for 30k points;
-          empty-bin fringe tint is very faint (especially in dark theme) but by design
+        comment: Hexagons with page-coloured seams clearly visible; sparsest filled
+          cells stand out from the page in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Sequential green-to-blue ramp, no red-green reliance, adequate contrast
+        comment: Green-to-blue ramp with a lightness step; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas confirmed (no canvas-gate failure); plot
-          fills canvas well, legend placed near the plot, no cut-off content
+        comment: Square canvas, square plot area, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -102,37 +102,35 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq (t.seq[0]->t.seq[1]) used correctly for continuous density
-          data; backgrounds theme-correct; chrome theme-correct in both renders
+        comment: 'imprint_seq (#009E73 -> #4467A3) for continuous density; correct
+          backgrounds and chrome in both themes'
     design_excellence:
-      score: 14
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
         passed: true
-        comment: Custom true-hex tiling and thoughtful log-scaled continuous ramp
-          go well beyond a library default, but the noisy empty-cell fringe holds
-          it back from top marks
+        comment: 'Style-guide baseline: Imprint ramp, theme tokens, explicit font
+          sizes; nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: No spines/grid, generous whitespace, subtle hex stroke matching page
-          background; the near-invisible empty cells in dark theme read as unintentional
-          holes rather than refined detail
+        comment: 1 px page-coloured seams chosen for the hex mosaic and a centred
+          45 %-width horizontal colour bar, beyond the baseline
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Color-driven hierarchy immediately shows hotspots vs. ambient traffic,
-          but the named hotspots are not called out on the chart itself
+        passed: false
+        comment: Density displayed; log scale is what the Notes suggest; no hierarchy
+          chosen beyond that
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -140,91 +138,90 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct hexagonal binning plot
+        comment: Correct hexbin, hexagons only plus colour bar; no extra layers
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Color bar present, perceptually-uniform (imprint_seq) colormap, gridsize-equivalent
-          (HEX_RADIUS) resolution control, log-scale color mapping
+        comment: Colour bar, perceptually uniform ramp and log scale present; hexagons
+          too coarse to resolve the cluster shapes (defect line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped and both axes show the full [-60, 60] domain
+        comment: x/y correct, full ±60 m domain shown, cells at their bin centres
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the exact mandated format; legend endpoint labels and
-          caption correctly describe the (log-scaled) density metric
+        comment: Title format correct; colour bar captioned as a log count
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Wide dynamic range from sparse fringe (count=1) to dense hotspot
-          (count=1244) across multiple named clusters
+        comment: Dense cores, sparse fringes, empty cells and a wide count range (1-1,244)
+          justifying the log scale
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Pedestrian GPS-ping density scenario is realistic and neutral
+        comment: Pedestrian GPS pings around a plaza, transit hub and waterfront;
+          neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 30,000 points and count magnitudes are plausible for a city-district
-          foot-traffic simulation
+        comment: 30,000 points within the spec range; ±60 m district and counts up
+          to 1,244 per bin are plausible; no Check values in spec
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Helper functions (LCG, gaussian, hexBin, fullHexGrid, HexCell) are
-          necessary given MUI X community has no native hexbin - structure is clean
-          and purposeful for a React component, not gratuitous
+        comment: Linear script; HexCell is the slot component the library needs, the
+          colour function the colorMap callback
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic seeded LCG (seed 42)
+        comment: Seeded LCG (42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports (ScatterChart, ContinuousColorLegend, Box, Typography)
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI/functionality; complexity is justified by the custom hex-tiling
-          workaround
+        comment: Written-out binning permitted by the library prompt's Computation
+          line; no dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: skipAnimation set; harness mount-node contract respected; current
-          MUI X API
+        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation,
+          community @mui/x-charts v9 only
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -232,25 +229,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses the documented slots/slotProps customization surface plus zAxis
-          colorMap and ContinuousColorLegend idiomatically
+        comment: Uses the ScatterChart slot system, zAxis colorMap and ContinuousColorLegend
+          rather than a hand-drawn SVG chart
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Slots-based marker override + zAxis continuous colorMap + ContinuousColorLegend
-          are MUI X-specific patterns not trivially portable to another library
+        comment: Custom scatter slot reading the chart's xScale/yScale/colorGetter
+          plus a z-axis-bound ContinuousColorLegend
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-03c2486144
+  rendered_at: '2026-10-23T21:43:47Z'
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - patches
+  - html-export
   patterns:
   - data-generation
   dataprep:
   - binning
   styling:
   - custom-colormap
-  - alpha-blending
+  - edge-highlighting
