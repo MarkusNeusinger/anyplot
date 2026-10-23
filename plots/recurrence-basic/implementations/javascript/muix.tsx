@@ -2,7 +2,7 @@
 // anyplot.ai
 // recurrence-basic: Recurrence Plot for Nonlinear Time Series
 // Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 87/100 | Created: 2026-06-10
+// Quality: pending | Created: 2026-06-10
 
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
