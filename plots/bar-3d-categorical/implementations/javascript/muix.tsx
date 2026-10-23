@@ -2,166 +2,161 @@
 // bar-3d-categorical: 3D Bar Chart for Categorical Comparison
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 95/100 | Created: 2026-09-04
-//# anyplot-orientation: landscape
-// anyplot.ai
-// bar-3d-categorical: 3D Bar Chart for Categorical Comparison
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: 88/100 | Created: 2026-09-04
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
-import { ChartsLegend } from "@mui/x-charts/ChartsLegend";
-import { ChartsText } from "@mui/x-charts/ChartsText";
 import { useXScale, useYScale, useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data (in-memory, deterministic) ----------------------------------------
-// Factorial-design experiment: tensile strength across alloy × heat-treatment.
-const alloys = ["Al 6061", "Ti-6Al-4V", "Steel 4140", "Inconel 718", "Mg AZ31"];
-// Depth order runs weakest → strongest per alloy, so the row offset (which
-// pushes further rows up-and-right) always reinforces the value-driven
-// height difference between neighbors instead of fighting it — that keeps
-// the value labels of adjacent rows from colliding even where two treatments
-// land close together (see Al 6061 / Mg AZ31 below).
-const treatments = ["Annealed", "Tempered", "Quenched", "Aged"];
-// tensileStrengthMPa[treatmentIndex][alloyIndex], in MPa — strictly
-// increasing down each column (alloy) from Annealed to Aged.
-const tensileStrengthMPa = [
-  [124, 830, 655, 965, 145], // Annealed
-  [200, 950, 780, 1100, 200], // Tempered
-  [275, 1100, 900, 1250, 240], // Quenched
-  [310, 1170, 1080, 1400, 290], // Aged
+// Constants
+const ISO_DX = 20;
+const ISO_DY = -14;
+const STAGGER_DX = ISO_DX * 1.35;
+const STAGGER_DY = ISO_DY * 1.35;
+const Y_PAD_SHARE = 0.08;
+
+// Columns: set these to your data's column names
+const X_CATEGORY = "Alloy"; // role: x_category
+const Y_CATEGORY = "Heat treatment"; // role: y_category
+const VALUE = "Tensile strength (MPa)"; // role: value
+
+// Data: replace this block with your own records, one object per row
+const data = [
+  { [X_CATEGORY]: "Al 6061", [Y_CATEGORY]: "Annealed", [VALUE]: 124 },
+  { [X_CATEGORY]: "Ti-6Al-4V", [Y_CATEGORY]: "Annealed", [VALUE]: 830 },
+  { [X_CATEGORY]: "Steel 4140", [Y_CATEGORY]: "Annealed", [VALUE]: 655 },
+  { [X_CATEGORY]: "Inconel 718", [Y_CATEGORY]: "Annealed", [VALUE]: 965 },
+  { [X_CATEGORY]: "Mg AZ31", [Y_CATEGORY]: "Annealed", [VALUE]: 145 },
+  { [X_CATEGORY]: "Al 6061", [Y_CATEGORY]: "Tempered", [VALUE]: 200 },
+  { [X_CATEGORY]: "Ti-6Al-4V", [Y_CATEGORY]: "Tempered", [VALUE]: 950 },
+  { [X_CATEGORY]: "Steel 4140", [Y_CATEGORY]: "Tempered", [VALUE]: 780 },
+  { [X_CATEGORY]: "Inconel 718", [Y_CATEGORY]: "Tempered", [VALUE]: 1100 },
+  { [X_CATEGORY]: "Mg AZ31", [Y_CATEGORY]: "Tempered", [VALUE]: 200 },
+  { [X_CATEGORY]: "Al 6061", [Y_CATEGORY]: "Quenched", [VALUE]: 275 },
+  { [X_CATEGORY]: "Ti-6Al-4V", [Y_CATEGORY]: "Quenched", [VALUE]: 1100 },
+  { [X_CATEGORY]: "Steel 4140", [Y_CATEGORY]: "Quenched", [VALUE]: 900 },
+  { [X_CATEGORY]: "Inconel 718", [Y_CATEGORY]: "Quenched", [VALUE]: 1250 },
+  { [X_CATEGORY]: "Mg AZ31", [Y_CATEGORY]: "Quenched", [VALUE]: 240 },
+  { [X_CATEGORY]: "Al 6061", [Y_CATEGORY]: "Aged", [VALUE]: 310 },
+  { [X_CATEGORY]: "Ti-6Al-4V", [Y_CATEGORY]: "Aged", [VALUE]: 1170 },
+  { [X_CATEGORY]: "Steel 4140", [Y_CATEGORY]: "Aged", [VALUE]: 1080 },
+  { [X_CATEGORY]: "Inconel 718", [Y_CATEGORY]: "Aged", [VALUE]: 1400 },
+  { [X_CATEGORY]: "Mg AZ31", [Y_CATEGORY]: "Aged", [VALUE]: 290 },
 ];
 
-const MAX_STRENGTH = 1500;
-const ROW_COLORS = [t.palette[0], t.palette[1], t.palette[2], t.palette[3]];
+// Plot: reads only data and the constants above
+const alloys = [...new Set(data.map((d) => d[X_CATEGORY]))];
+const treatments = [...new Set(data.map((d) => d[Y_CATEGORY]))];
+const values = data.map((d) => d[VALUE]);
+const maxVal = Math.max(...values);
+const minVal = Math.min(...values);
+const yMax = maxVal * (1 + Y_PAD_SHARE);
+
+const rowColors = treatments.map((_, i) => t.palette[i]);
+const topColors = rowColors.map((hex) => {
+  const num = parseInt(hex.slice(1), 16);
+  const r = Math.round(((num >> 16) & 255) + (255 - ((num >> 16) & 255)) * 0.34);
+  const g = Math.round(((num >> 8) & 255) + (255 - ((num >> 8) & 255)) * 0.34);
+  const b = Math.round((num & 255) + (255 - (num & 255)) * 0.34);
+  return `rgb(${r}, ${g}, ${b})`;
+});
+const sideColors = rowColors.map((hex) => {
+  const num = parseInt(hex.slice(1), 16);
+  const r = Math.round(((num >> 16) & 255) * 0.7);
+  const g = Math.round(((num >> 8) & 255) * 0.7);
+  const b = Math.round((num & 255) * 0.7);
+  return `rgb(${r}, ${g}, ${b})`;
+});
 
 const series = treatments.map((label, i) => ({
-  type: "bar",
+  type: "bar" as const,
   id: label,
   label,
-  data: alloys.map((_, j) => tensileStrengthMPa[i][j]),
-  color: ROW_COLORS[i],
+  data: alloys.map(
+    (alloy) =>
+      data.find((d) => d[X_CATEGORY] === alloy && d[Y_CATEGORY] === label)?.[
+        VALUE
+      ] ?? null,
+  ),
+  color: rowColors[i],
 }));
 
-// Isometric depth vector, in CSS px within the mount's coordinate space —
-// this is each cuboid's own front-to-back thickness.
-const ISO_DX = 20;
-const ISO_DY = -13;
+const paintOrder = [...treatments.keys()].sort((a, b) => b - a);
 
-// Per-treatment row stagger: slightly larger than the cuboid depth vector so
-// consecutive rows don't sit edge-to-edge — the extra step opens a thin gap
-// between the back face of one row and the front face of the next, per the
-// spec's "slight spacing between them for visual clarity and depth
-// perception".
-const STAGGER_DX = ISO_DX * 1.3;
-const STAGGER_DY = ISO_DY * 1.3;
-
-const TITLE = "bar-3d-categorical · javascript · muix · anyplot.ai";
-const TITLE_HEIGHT = 64;
-const MARGIN = { top: 140, right: 230, bottom: 90, left: 120 };
-
-function shade(hex, amount) {
-  const num = parseInt(hex.slice(1), 16);
-  const r = (num >> 16) & 0xff;
-  const g = (num >> 8) & 0xff;
-  const b = num & 0xff;
-  const target = amount > 0 ? 255 : 0;
-  const k = Math.abs(amount);
-  const mix = (c) => Math.round(c + (target - c) * k);
-  return `rgb(${mix(r)}, ${mix(g)}, ${mix(b)})`;
-}
-
-// --- Custom Y-axis title -----------------------------------------------------
-// ChartsYAxis's own `label` places the rotated title at a fixed
-// `tickFontSize + tickSize + 10` offset from the axis line (ChartsYAxis.js),
-// which assumes short tick text; it collides with wide numeric tick labels
-// like "1,500". Rendering the title separately with a hand-picked offset
-// sidesteps that.
-function YAxisTitle() {
-  const { top, height } = useDrawingArea();
-  return (
-    <ChartsText
-      x={38}
-      y={top + height / 2}
-      text="Tensile Strength (MPa)"
-      style={{ fontSize: 16, fill: t.ink, fontWeight: 500, textAnchor: "middle", dominantBaseline: "auto", angle: -90 }}
-    />
-  );
-}
-
-// --- Custom overlay: a 2D categorical grid (alloy × treatment) rendered as
-// isometric cuboids, height-encoded by value. Community `@mui/x-charts/hooks`
-// (useXScale/useYScale) map data coordinates to pixels so the grid stays
-// aligned with the axes at any size — the same composition pattern used for
-// mohr-circle's custom geometry, applied here to a chart type (3D bars) the
-// declarative BarChart can't express on its own. -----------------------------
 function Bars3D() {
-  const xScale = useXScale();
-  const yScale = useYScale();
+  const xScale = useXScale() as any;
+  const yScale = useYScale() as any;
   const { left, width } = useDrawingArea();
   const bandwidth = xScale.bandwidth();
-  const barWidth = bandwidth * 0.55;
+  const barWidth = bandwidth * 0.52;
   const baseline = yScale(0);
 
-  // Paint back row first so nearer (lower-index) rows correctly occlude it.
-  const paintOrder = [...treatments.keys()].sort((a, b) => b - a);
-
-  // Base-plane grid: faint iso-projected floor lines tying each bar back to
-  // its (alloy, treatment) cell — one receding line per treatment depth, and
-  // one line per alloy running front-to-back through all four depths.
-  const floorRowLines = treatments.map((_, row) => {
-    const dx = row * STAGGER_DX;
-    const dy = row * STAGGER_DY;
-    return (
-      <line
-        key={`row-${row}`}
-        x1={left + dx}
-        y1={baseline + dy}
-        x2={left + width + dx}
-        y2={baseline + dy}
-        stroke={t.inkSoft}
-        strokeWidth={1.5}
-        opacity={0.35}
-      />
-    );
-  });
-  const floorColumnLines = alloys.map((alloy) => {
-    const cx = xScale(alloy) + bandwidth / 2;
-    const points = treatments
-      .map((_, row) => `${cx + row * STAGGER_DX},${baseline + row * STAGGER_DY}`)
-      .join(" ");
-    return (
-      <polyline
-        key={`col-${alloy}`}
-        points={points}
-        fill="none"
-        stroke={t.inkSoft}
-        strokeWidth={1.5}
-        opacity={0.35}
-      />
-    );
-  });
-
   return (
-    <>
+    <g data-drawing-container>
       <g>
-        {floorRowLines}
-        {floorColumnLines}
+        {treatments.map((treatment, row) => {
+          const dx = row * STAGGER_DX;
+          const dy = row * STAGGER_DY;
+          return (
+            <g key={`floor-row-${treatment}`}>
+              <line
+                x1={left + dx}
+                y1={baseline + dy}
+                x2={left + width + dx}
+                y2={baseline + dy}
+                stroke={t.inkSoft}
+                strokeWidth={1.5}
+                opacity={0.35}
+              />
+              <text
+                x={left + width + dx + ISO_DX + 12}
+                y={baseline + dy + 4}
+                fontSize={14}
+                fontWeight={500}
+                fill={t.inkSoft}
+              >
+                {treatment}
+              </text>
+            </g>
+          );
+        })}
+        {alloys.map((alloy) => {
+          const cx = xScale(alloy) + bandwidth / 2;
+          const points = treatments
+            .map(
+              (_, row) =>
+                `${cx + row * STAGGER_DX},${baseline + row * STAGGER_DY}`,
+            )
+            .join(" ");
+          return (
+            <polyline
+              key={`floor-col-${alloy}`}
+              points={points}
+              fill="none"
+              stroke={t.inkSoft}
+              strokeWidth={1.5}
+              opacity={0.35}
+            />
+          );
+        })}
       </g>
       {paintOrder.map((row) => {
+        const treatment = treatments[row];
         const dx = row * STAGGER_DX;
         const dy = row * STAGGER_DY;
-        const color = ROW_COLORS[row];
-        const topColor = shade(color, 0.34);
-        const sideColor = shade(color, -0.3);
+        const color = rowColors[row];
+        const topColor = topColors[row];
+        const sideColor = sideColors[row];
         return (
-          <g key={treatments[row]} transform={`translate(${dx}, ${dy})`}>
-            {alloys.map((alloy, col) => {
-              const value = tensileStrengthMPa[row][col];
+          <g key={treatment} transform={`translate(${dx}, ${dy})`}>
+            {alloys.map((alloy) => {
+              const rowObj = data.find(
+                (d) => d[X_CATEGORY] === alloy && d[Y_CATEGORY] === treatment,
+              );
+              if (!rowObj || rowObj[VALUE] === null) return null;
+              const value = rowObj[VALUE];
               const x = xScale(alloy) + (bandwidth - barWidth) / 2;
               const y = yScale(value);
               const barHeight = baseline - y;
@@ -177,72 +172,168 @@ function Bars3D() {
                 `${x + barWidth + ISO_DX},${y + barHeight + ISO_DY}`,
                 `${x + barWidth + ISO_DX},${y + ISO_DY}`,
               ].join(" ");
+              const labelCx = x + barWidth / 2 + ISO_DX / 2;
+              const labelCy = y + ISO_DY - 7;
+              const labelStr = String(value);
+              const pillW = labelStr.length * 8.5 + 10;
               return (
                 <g key={alloy}>
-                  <rect x={x} y={y} width={barWidth} height={barHeight} fill={color} />
+                  <rect
+                    x={x}
+                    y={y}
+                    width={barWidth}
+                    height={barHeight}
+                    fill={color}
+                  />
                   <polygon points={sideFace} fill={sideColor} />
                   <polygon points={topFace} fill={topColor} />
-                  <ChartsText
-                    x={x + barWidth / 2 + ISO_DX / 2}
-                    y={y + ISO_DY - 8}
-                    text={String(value)}
-                    style={{ fontSize: 12, fill: t.ink, textAnchor: "middle", dominantBaseline: "auto" }}
-                  />
+                  {row < treatments.length - 1 && (
+                    <rect
+                      x={labelCx - pillW / 2}
+                      y={labelCy - 14}
+                      width={pillW}
+                      height={18}
+                      rx={3}
+                      fill={t.pageBg}
+                      fillOpacity={0.85}
+                    />
+                  )}
+                  <text
+                    x={labelCx}
+                    y={labelCy}
+                    textAnchor="middle"
+                    fontSize={14}
+                    fontWeight={600}
+                    fill={t.ink}
+                  >
+                    {labelStr}
+                  </text>
                 </g>
               );
             })}
           </g>
         );
       })}
-    </>
+    </g>
   );
 }
 
-// --- Chart (default-exported component — the harness mounts it) -------------
+const TITLE = "bar-3d-categorical · javascript · muix · anyplot.ai";
+const SUBTITLE = `${alloys.length} ${X_CATEGORY.toLowerCase()}s × ${treatments.length} ${Y_CATEGORY.toLowerCase()}s (${VALUE}: ${minVal}–${maxVal})`;
+const HEADER_H = 104;
+
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
-  const chartHeight = height - TITLE_HEIGHT;
 
   return (
-    <div style={{ width, height, display: "flex", flexDirection: "column" }}>
+    <div
+      style={{
+        width,
+        height,
+        backgroundColor: t.pageBg,
+        display: "flex",
+        flexDirection: "column",
+        fontFamily:
+          '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+      }}
+    >
       <div
         style={{
-          height: TITLE_HEIGHT,
+          height: HEADER_H,
+          padding: "14px 48px 0 48px",
           display: "flex",
+          flexDirection: "column",
           alignItems: "center",
-          justifyContent: "center",
-          fontSize: 26,
-          fontWeight: 500,
-          color: t.ink,
-          fontFamily: "'Roboto', 'Helvetica', 'Arial', sans-serif",
+          boxSizing: "border-box",
         }}
       >
-        {TITLE}
+        <div
+          style={{
+            fontSize: 22,
+            fontWeight: 600,
+            color: t.ink,
+            lineHeight: 1.25,
+          }}
+        >
+          {TITLE}
+        </div>
+        <div
+          style={{
+            fontSize: 15,
+            color: t.inkSoft,
+            marginTop: 4,
+          }}
+        >
+          {SUBTITLE}
+        </div>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 20,
+            marginTop: 6,
+            fontSize: 14,
+            color: t.inkSoft,
+          }}
+        >
+          <span style={{ fontWeight: 600, color: t.ink }}>{Y_CATEGORY}:</span>
+          {treatments.map((tr, i) => (
+            <span
+              key={tr}
+              style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+            >
+              <span
+                style={{
+                  width: 12,
+                  height: 12,
+                  borderRadius: 3,
+                  backgroundColor: rowColors[i],
+                  display: "inline-block",
+                }}
+              />
+              <span>{tr}</span>
+            </span>
+          ))}
+        </div>
       </div>
-      <ChartContainer
+      <ChartsContainer
         width={width}
-        height={chartHeight}
-        margin={MARGIN}
+        height={height - HEADER_H}
+        margin={{ top: 80, right: 200, bottom: 24, left: 40 }}
         skipAnimation
         series={series}
-        xAxis={[{ scaleType: "band", data: alloys, label: "Alloy" }]}
-        yAxis={[{ scaleType: "linear", min: 0, max: MAX_STRENGTH }]}
+        xAxis={[
+          {
+            scaleType: "band",
+            data: alloys,
+            label: X_CATEGORY,
+            height: 68,
+            labelStyle: { fontSize: 16, fill: t.ink, fontWeight: 500 },
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+          },
+        ]}
+        yAxis={[
+          {
+            scaleType: "linear",
+            min: 0,
+            max: yMax,
+            label: VALUE,
+            width: 96,
+            labelStyle: { fontSize: 16, fill: t.ink, fontWeight: 500 },
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+          },
+        ]}
+        sx={{
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+          "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
+        }}
       >
         <ChartsGrid horizontal />
         <Bars3D />
-        <ChartsXAxis
-          labelStyle={{ fontSize: 16, fill: t.ink, fontWeight: 500 }}
-          tickLabelStyle={{ fontSize: 14, fill: t.inkSoft }}
-          stroke={t.inkSoft}
-        />
-        <ChartsYAxis tickLabelStyle={{ fontSize: 14, fill: t.inkSoft }} stroke={t.inkSoft} />
-        <YAxisTitle />
-        <ChartsLegend
-          direction="column"
-          position={{ horizontal: "right", vertical: "middle" }}
-          labelStyle={{ fontSize: 15, fill: t.ink }}
-        />
-      </ChartContainer>
+        <ChartsXAxis />
+        <ChartsYAxis />
+      </ChartsContainer>
     </div>
   );
 }
