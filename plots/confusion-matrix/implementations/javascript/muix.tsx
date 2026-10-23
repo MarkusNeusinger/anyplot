@@ -1,13 +1,8 @@
+//# anyplot-orientation: square
 // anyplot.ai
 // confusion-matrix: Confusion Matrix Heatmap
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 89/100 | Created: 2026-09-04
-//# anyplot-orientation: square
-// anyplot.ai
-// confusion-matrix: Confusion Matrix Heatmap
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-09-04
 
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
@@ -16,24 +11,70 @@ import { ContinuousColorLegend } from "@mui/x-charts/ChartsLegend";
 
 const tokens = window.ANYPLOT_TOKENS;
 
-// --- Data (in-memory, deterministic) — recycling-sorter classifier example -
-// Rows = true material, columns = predicted material. Off-diagonal counts
-// model plausible confusions (glass/plastic/metal look alike on a conveyor).
-const classes = ["Paper", "Glass", "Metal", "Plastic", "Organic"];
-const matrix = [
-  [182, 4, 1, 6, 3],
-  [5, 151, 3, 9, 2],
-  [1, 4, 142, 11, 0],
-  [7, 9, 12, 158, 5],
-  [2, 1, 0, 6, 176],
-];
-const maxCount = Math.max(...matrix.flat());
+// Columns: set these to your data's column names
+const TRUE_LABELS = "True Label"; // role: true_labels
+const PREDICTED_LABELS = "Predicted Label"; // role: predicted_labels
+const CLASS_NAMES = "Class Name"; // role: class_names
 
-const points = [];
+// Data: replace this block with your own records, one object per row
+const data = (() => {
+  const sampleClasses = ["Paper", "Glass", "Metal", "Plastic", "Organic"];
+  const countsMatrix = [
+    [182, 4, 1, 6, 3],
+    [5, 151, 3, 9, 2],
+    [1, 4, 142, 11, 0],
+    [7, 9, 12, 158, 5],
+    [2, 1, 0, 6, 176],
+  ];
+  const rows: {
+    [TRUE_LABELS]: string;
+    [PREDICTED_LABELS]: string;
+    [CLASS_NAMES]: string;
+  }[] = [];
+  sampleClasses.forEach((trueClass, r) => {
+    sampleClasses.forEach((predictedClass, c) => {
+      const n = countsMatrix[r][c];
+      for (let k = 0; k < n; k += 1) {
+        rows.push({
+          [TRUE_LABELS]: trueClass,
+          [PREDICTED_LABELS]: predictedClass,
+          [CLASS_NAMES]: trueClass,
+        });
+      }
+    });
+  });
+  return rows;
+})();
+
+// Plot: reads only data and the constants above
+const classes = Array.from(
+  new Set(data.map((d) => d[CLASS_NAMES] ?? d[TRUE_LABELS])),
+);
+
+const pairCounts = new Map<string, number>();
+const rowTotals = new Map<string, number>();
+data.forEach((d) => {
+  const tLabel = d[TRUE_LABELS];
+  const pLabel = d[PREDICTED_LABELS];
+  const key = `${tLabel}__${pLabel}`;
+  pairCounts.set(key, (pairCounts.get(key) ?? 0) + 1);
+  rowTotals.set(tLabel, (rowTotals.get(tLabel) ?? 0) + 1);
+});
+
+const points: {
+  id: string;
+  x: string;
+  y: string;
+  z: number;
+  count: number;
+  rowPct: number;
+}[] = [];
+let maxCount = 0;
 classes.forEach((trueClass, row) => {
-  const rowTotal = matrix[row].reduce((sum, v) => sum + v, 0);
+  const rowTotal = rowTotals.get(trueClass) ?? 1;
   classes.forEach((predictedClass, col) => {
-    const count = matrix[row][col];
+    const count = pairCounts.get(`${trueClass}__${predictedClass}`) ?? 0;
+    if (count > maxCount) maxCount = count;
     points.push({
       id: `${row}-${col}`,
       x: predictedClass,
@@ -45,11 +86,10 @@ classes.forEach((trueClass, row) => {
   });
 });
 
-// --- Sequential Imprint color scale (imprint_seq: brand green -> blue) -----
-function mixHex(hexA, hexB, ratio) {
+function mixHex(hexA: string, hexB: string, ratio: number) {
   const a = parseInt(hexA.slice(1), 16);
   const b = parseInt(hexB.slice(1), 16);
-  const channel = (shift) => {
+  const channel = (shift: number) => {
     const av = (a >> shift) & 255;
     const bv = (b >> shift) & 255;
     return Math.round(av + (bv - av) * ratio);
@@ -57,18 +97,12 @@ function mixHex(hexA, hexB, ratio) {
   return `#${[16, 8, 0].map((shift) => channel(shift).toString(16).padStart(2, "0")).join("")}`;
 }
 
-// `t` arrives pre-normalized to [0, 1] by the zAxis colorMap's scaleSequential
-// (from the 0..maxCount domain below). The diagonal's high counts dominate
-// that domain, crushing every off-diagonal misclassification count into a
-// near-identical sliver near t=0 — gamma-compress so low counts spread across
-// more of the range while t=1 (the diagonal) still lands on the same `high`
-// endpoint, keeping it visually dominant.
-function sequentialColor(t) {
+function sequentialColor(t: number) {
   const [low, high] = tokens.seq;
   return mixHex(low, high, Math.pow(t, 0.45));
 }
 
-function relativeLuminance(hex) {
+function relativeLuminance(hex: string) {
   const n = parseInt(hex.slice(1), 16);
   const r = ((n >> 16) & 255) / 255;
   const g = ((n >> 8) & 255) / 255;
@@ -76,9 +110,7 @@ function relativeLuminance(hex) {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
-// Custom marker: filled square cells with count + row-normalized percentage,
-// and an ink outline on the diagonal to call out correct predictions.
-function ConfusionCell(props) {
+function ConfusionCell(props: any) {
   const { series, xScale, yScale, colorGetter, color } = props;
   const cellWidth = xScale.bandwidth();
   const cellHeight = yScale.bandwidth();
@@ -87,7 +119,7 @@ function ConfusionCell(props) {
 
   return (
     <g>
-      {series.data.map((point, i) => {
+      {series.data.map((point: any, i: number) => {
         const x0 = xScale(point.x) ?? 0;
         const y0 = yScale(point.y) ?? 0;
         const fill = colorGetter ? colorGetter(i) : color;
@@ -138,14 +170,10 @@ function ConfusionCell(props) {
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
   const TITLE_HEIGHT = 80;
-  const RIGHT_BUFFER = 40; // room for the legend's max-value label at the true edge
-  const TOP_MARGIN = 100; // top-axis tick labels + "Predicted Label" axis title
-  const LEFT_MARGIN = 220; // left-axis tick labels + "True Label" axis title
-  const RIGHT_MARGIN = 20;
-  const LEGEND_SPACE = 80;
-
+  const RIGHT_BUFFER = 40;
+  const BOTTOM_BUFFER = 24;
   const chartWidth = width - RIGHT_BUFFER;
-  const chartHeight = height - TITLE_HEIGHT;
+  const chartHeight = height - TITLE_HEIGHT - BOTTOM_BUFFER;
 
   return (
     <Box sx={{ width, height, bgcolor: tokens.pageBg, display: "flex", flexDirection: "column" }}>
@@ -168,7 +196,7 @@ export default function Chart() {
           width={chartWidth}
           height={chartHeight}
           skipAnimation
-          disableVoronoi
+          disableHitArea
           series={[
             {
               id: "confusion",
@@ -183,10 +211,12 @@ export default function Chart() {
           xAxis={[
             {
               id: "predicted",
+              position: "top",
+              height: 84,
               scaleType: "band",
               data: classes,
               categoryGapRatio: 0.08,
-              label: "Predicted Label",
+              label: PREDICTED_LABELS,
               labelStyle: { fontSize: 18, fill: tokens.ink, fontFamily: "inherit" },
               tickLabelStyle: { fontSize: 16, fill: tokens.inkSoft, fontFamily: "inherit" },
               disableTicks: true,
@@ -196,16 +226,14 @@ export default function Chart() {
           yAxis={[
             {
               id: "actual",
+              position: "left",
+              width: 140,
               scaleType: "band",
               data: classes,
               categoryGapRatio: 0.08,
-              label: "True Label",
+              label: TRUE_LABELS,
               labelStyle: { fontSize: 18, fill: tokens.ink, fontFamily: "inherit" },
               tickLabelStyle: { fontSize: 16, fill: tokens.inkSoft, fontFamily: "inherit" },
-              // Pushes the rotated axis title clear of the widest tick label
-              // ("Plastic"/"Organic") — the title's own offset is computed
-              // from this value, not the actual rendered tickLabelStyle size.
-              tickFontSize: 70,
               disableTicks: true,
               disableLine: true,
             },
@@ -218,24 +246,26 @@ export default function Chart() {
               colorMap: { type: "continuous", min: 0, max: maxCount, color: sequentialColor },
             },
           ]}
-          topAxis="predicted"
-          bottomAxis={null}
-          leftAxis="actual"
-          rightAxis={null}
-          margin={{ top: TOP_MARGIN, right: RIGHT_MARGIN, bottom: LEGEND_SPACE, left: LEFT_MARGIN }}
-          slots={{ scatter: ConfusionCell }}
-          slotProps={{ legend: { hidden: true } }}
-        >
-          <ContinuousColorLegend
-            axisId="count"
-            axisDirection="z"
-            position={{ horizontal: "right", vertical: "bottom" }}
-            direction="row"
-            length="50%"
-            thickness={14}
-            labelStyle={{ fontSize: 14, fill: tokens.inkSoft, fontFamily: "inherit" }}
-          />
-        </ScatterChart>
+          margin={{ top: 20, right: 20, bottom: 24, left: 60 }}
+          slots={{ scatter: ConfusionCell, legend: ContinuousColorLegend }}
+          slotProps={{
+            legend: {
+              axisId: "count",
+              axisDirection: "z",
+              direction: "horizontal",
+              position: { vertical: "bottom", horizontal: "end" },
+              thickness: 14,
+              sx: {
+                width: "50%",
+                mb: "20px",
+                mr: "20px",
+                color: tokens.inkSoft,
+                fontSize: 14,
+                fontFamily: "inherit",
+              },
+            } as any,
+          }}
+        />
       </Box>
     </Box>
   );
