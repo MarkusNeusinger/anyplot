@@ -68,7 +68,7 @@ The second opinion of 2026-10-23 found three things the 2026-10-09 design got wr
 | Review | The Opus review runs on the first 50 identical conversions, so the identity bound is measured against it; after that an identical conversion merges without a review, and only a pair outside the bound is reviewed |
 | Repair trigger | Dropped. The checker and the smoke run are the generator's self-check (Step 3c); a first generation that still fails merges with the flag set and converts on its next regeneration |
 | Checker precision | The count-literal part of rule 4 applies only to `range`, `arange`, `linspace` and slice positions; fixed domains (0 to 1, 0 to 100, −1 to 1, 0 to 360) and the statistical constants are exempt; rule 6 is advisory from the start; rule 5 demands eight `IMPRINT` positions only when the spec has a colour-driving role |
-| Smoke run | No nullable-dtype perturbation: the agent's loader hands over `float64` with `NaN`, so catalogue code carries no `.astype(float)` boilerplate; the single-group perturbation runs only where the spec's shape allows one group; the example pivot carries no `fill_value`, because a missing group must stay missing, not become a zero bar |
+| Smoke run | Missing values arrive the way the agent's loader hands them over (`agents/anyplot/code/loader.py`): `NaN` in a `float64` number column, `<NA>` in a nullable `Int64`, `boolean` or `string` column. The smoke run perturbs exactly those forms and no other dtype (corrected on 2026-10-23 after the Copilot review of #12239: the earlier wording claimed the loader normalises every column to `float64`, which it does not); whether the convention allows `.astype(float)` for nullable integers is an open question for the prototype run; the single-group perturbation runs only where the spec's shape allows one group; the example pivot carries no `fill_value`, because a missing group must stay missing, not become a zero bar |
 | Stop rules | From 20 decisions on: more than 30 % of adapt merges below the re-score halts the pass; a perturbation that fails more than 25 % of pairs is cut; a rule whose self-check first-attempt pass rate is under 70 % becomes advisory; the owner looks at five pair artifacts a week, and two vetoes in a week halt the pass |
 
 ## The convention
@@ -146,7 +146,7 @@ df = pd.DataFrame(
 table = df.pivot_table(index=QUARTER, columns=PRODUCT_LINE, values=SALES, sort=False)
 x = np.arange(len(table.index))
 width = 0.75 / len(table.columns)
-top = table.to_numpy().max()
+top = np.nanmax(table.to_numpy())
 
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
@@ -156,7 +156,7 @@ for i, line in enumerate(table.columns):
 
 # Callout: target chosen by a rule over df, drawn only when the claim holds
 if len(table.columns) > 1:
-    ranked = np.sort(table.to_numpy(), axis=1)
+    ranked = np.sort(np.nan_to_num(table.to_numpy(), nan=-np.inf), axis=1)
     gaps = ranked[:, -1] - ranked[:, -2]
     tie = int(np.argmin(gaps))
     if gaps[tie] <= NEAR_TIE * top:
@@ -181,7 +181,7 @@ ax.legend(title=PRODUCT_LINE, fontsize=8)
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
 ```
 
-`sort=False` keeps the data's category order, because a plain `pivot` sorts labels and puts months in alphabetical order. The pivot has no `fill_value`: a group that is missing in a quarter stays `NaN` and matplotlib skips the bar, so the plot never invents a zero. The agent's loader hands over plain `float64` columns with `NaN` for missing values, so the code needs no `.astype(float)`. `0.75 / n` reproduces the predecessor's literal width of 0.25 for three groups: a conversion aims at the same picture, because the gate merges it on render identity ([The adapt route](#the-adapt-route)).
+`sort=False` keeps the data's category order, because a plain `pivot` sorts labels and puts months in alphabetical order. The pivot has no `fill_value`: a group that is missing in a quarter stays `NaN` and matplotlib skips the bar, so the plot never invents a zero. The axis maximum and the ranking skip those cells (`np.nanmax`, and `-inf` for a missing group), so a missing cell neither raises on the axis limit nor fakes a near-tie. The agent's loader hands over `float64` with `NaN` for number columns and the nullable `Int64`, `boolean` and `string` dtypes for the others (`agents/anyplot/code/loader.py`); the smoke run feeds exactly those forms, see [Perturbation smoke run](#perturbation-smoke-run). `0.75 / n` reproduces the predecessor's literal width of 0.25 for three groups: a conversion aims at the same picture, because the gate merges it on render identity ([The adapt route](#the-adapt-route)).
 
 **What you change to use your own CSV:** the three strings and the block.
 
@@ -272,7 +272,7 @@ It runs the head and the block, derives tables from the sample `df`, and for eac
 - renamed columns, one with spaces, units, and a dot, and renamed category values;
 - one more and one fewer category and group, within eight, and a single group where the spec's shape allows one (a paired, dumbbell, diverging or correlation spec needs two by definition, so the shape rule skips it);
 - a much smaller and a ten times larger row count, and values scaled by 1,000 and shifted;
-- a missing value as `NaN` in a `float64` column, the form the agent's loader hands over. Nullable pandas dtypes (`string`, `Int64`, `boolean`) are not perturbed: the loader converts them, so the catalogue carries no `.astype(float)` boilerplate (decision of 2026-10-23).
+- a missing value in each dtype the agent's loader produces: `NaN` in a `float64` number column, and `<NA>` in an `Int64`, `boolean` or `string` column (`agents/anyplot/code/loader.py` maps the column dtypes this way, and `tests/unit/agents/code/test_loader.py` pins it). No other dtype is perturbed. Whether catalogue code may carry `.astype(float)` for a nullable integer column, or the loader contract changes, is decided by the prototype run ([Open questions](#open-questions)).
 
 A run passes when it raises nothing, writes both PNGs on the canvas (`core/canvas.py`), and, for matplotlib and seaborn, leaves no text artist showing a renamed sample category. A prototype run of the example above on 2026-10-09, before the loader decision:
 
@@ -327,11 +327,11 @@ The gate computes the route from the two records and the two renders, never from
 
 - the predecessor fails the check (static or smoke) and the new source passes both, all or nothing, so a half-converted pair never merges;
 - **render identity:** the new render and the predecessor's render, both produced in the same impl-generate runner, differ in at most 0.5 % of their pixels per theme, at equal size (a size mismatch is a failure, not a diff);
-- the review's `scenario_changed` is not true and `encodings_added` is empty, as for the CQ-04 path;
+- when a review ran, its `scenario_changed` is not true and `encodings_added` is empty, as for the CQ-04 path;
 - the new source has at most `max(1.25 × prev, prev + 15)` lines;
 - the review is a sanity floor, when it runs: a score above 0, no canvas failure, and no technical item (VQ, SC, DQ, CQ) below its value in the re-score. There is no score tolerance: the reviewer's run-to-run spread of about 2 points and the re-score offset of about 10 points make any tolerance a coin flip in both directions.
 
-A conversion outside the identity bound takes no shortcut: it is an ordinary regeneration and merges only with a carrier under today's rules. In `_judge` (l.1368), the two no-carrier exits (l.1440 and l.1446) accept the adapt route as they accept the code path; the CQ-04 path stays as it is. The **adapt regression** applies on every spec: a predecessor that passes and a new source that fails means keep, so converted pairs stay converted. A missing or malformed record, or a missing predecessor render, turns the route off and records why; it never counts as a pass.
+A conversion outside the identity bound takes no shortcut: it is an ordinary regeneration and merges only with a carrier under today's rules. Two gate changes carry the route. With a review, `_judge` (l.1368) accepts the adapt route at its two no-carrier exits (l.1440 and l.1446) as it accepts the code path; the CQ-04 path stays as it is. Without a review, `_decide` (l.1033) needs an exit of its own, because it keeps on a missing score and on a missing `review_regen.json` before `_judge` runs: when the adapt record reports the route (predecessor fails, new source passes, identity inside the bound in both themes, line bound kept) and `review_skipped` is set, `_decide` returns merge with the code `adapt_identity` before the score checks, so an unreviewed conversion inside the bound follows a deterministic path and is never kept for the lack of a score. The review-dependent conditions (`scenario_changed`, `encodings_added`, the sanity floor) apply only when a review ran. The **adapt regression** applies on every spec: a predecessor that passes and a new source that fails means keep, so converted pairs stay converted. A missing or malformed record, or a missing predecessor render, turns the route off and records why; it never counts as a pass.
 
 **The review on identical conversions.** For the first 50 conversions inside the bound the Opus review runs as usual, and the weekly review reads its scores against the re-scores: that is the measurement of whether identity plus checker plus smoke is enough. After 50, an identical conversion merges on the route without a review, which removes the expensive call from the pass; a conversion outside the bound is always reviewed.
 
@@ -365,3 +365,4 @@ The cost shape of the pass: one Sonnet generation per pair, an Opus review for t
 - **R loader:** base `read.csv(..., check.names = FALSE)` with today's R image, or `readr`, which is missing from the R package list (`prompts/plot-generator.md`, l.35) but is what [agent-network.md](agent-network.md) plans for R.
 - **Persisting the smoke result:** should impl-merge write the merged version's smoke result forward, with no backfill, so the mechanical path can require it and a static-pass, smoke-fail pair never spends a render on the mechanical attempt?
 - **Constant names in exported code:** after substitution the code reads `QUARTER = "Region"`. Is a deterministic rename to a slug of the bound column worth doing?
+- **Nullable integers in plot code:** the loader hands an integer column over as `Int64`, and a missing value in it is `<NA>`, which matplotlib does not take. Either the convention allows `.astype(float)` on the columns the plot draws, or the loader converts integer columns with missing values to `float64`; the prototype smoke run on the first converted pairs decides.
