@@ -1,339 +1,223 @@
 // anyplot.ai
 // heatmap-periodic-table: Periodic Table Property Heatmap
-// Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 88/100 | Created: 2026-06-15
-//# anyplot-orientation: square
+// Library: muix 9.16.0 | JavaScript 22.23.3
+// Quality: 90/100 | Updated: 2026-10-23
+//# anyplot-orientation: landscape
 // anyplot.ai
 // heatmap-periodic-table: Periodic Table Property Heatmap
-// Library: MUI X Charts | React | Node 22
+// Library: muix 9.16.0 | JavaScript 22.23.3
+// Quality: 78/100 | Updated: 2026-10-23
+// anyplot.ai
+// heatmap-periodic-table: Periodic Table Property Heatmap
+// Library: MUI X Charts | React | Node
 // License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
 // Quality: pending | Created: 2026-06-15
 
-import { ChartContainer } from "@mui/x-charts";
 import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
+import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
+import { ContinuousColorLegend } from "@mui/x-charts/ChartsLegend";
+import { useXScale, useYScale, useZColorScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// Element data: [Z, symbol, row (1-7 main, 8=lanthanides, 9=actinides), col (1-18), en|null]
-// Pauling electronegativity scale; null = no well-defined value
-const ELEMENTS = [
-  [1,"H",1,1,2.20],[2,"He",1,18,null],
-  [3,"Li",2,1,0.98],[4,"Be",2,2,1.57],[5,"B",2,13,2.04],[6,"C",2,14,2.55],
-  [7,"N",2,15,3.04],[8,"O",2,16,3.44],[9,"F",2,17,3.98],[10,"Ne",2,18,null],
-  [11,"Na",3,1,0.93],[12,"Mg",3,2,1.31],[13,"Al",3,13,1.61],[14,"Si",3,14,1.90],
-  [15,"P",3,15,2.19],[16,"S",3,16,2.58],[17,"Cl",3,17,3.16],[18,"Ar",3,18,null],
-  [19,"K",4,1,0.82],[20,"Ca",4,2,1.00],[21,"Sc",4,3,1.36],[22,"Ti",4,4,1.54],
-  [23,"V",4,5,1.63],[24,"Cr",4,6,1.66],[25,"Mn",4,7,1.55],[26,"Fe",4,8,1.83],
-  [27,"Co",4,9,1.88],[28,"Ni",4,10,1.91],[29,"Cu",4,11,1.90],[30,"Zn",4,12,1.65],
-  [31,"Ga",4,13,1.81],[32,"Ge",4,14,2.01],[33,"As",4,15,2.18],[34,"Se",4,16,2.55],
-  [35,"Br",4,17,2.96],[36,"Kr",4,18,3.00],
-  [37,"Rb",5,1,0.82],[38,"Sr",5,2,0.95],[39,"Y",5,3,1.22],[40,"Zr",5,4,1.33],
-  [41,"Nb",5,5,1.60],[42,"Mo",5,6,2.16],[43,"Tc",5,7,1.90],[44,"Ru",5,8,2.20],
-  [45,"Rh",5,9,2.28],[46,"Pd",5,10,2.20],[47,"Ag",5,11,1.93],[48,"Cd",5,12,1.69],
-  [49,"In",5,13,1.78],[50,"Sn",5,14,1.96],[51,"Sb",5,15,2.05],[52,"Te",5,16,2.10],
-  [53,"I",5,17,2.66],[54,"Xe",5,18,2.60],
-  [55,"Cs",6,1,0.79],[56,"Ba",6,2,0.89],
-  [72,"Hf",6,4,1.30],[73,"Ta",6,5,1.50],[74,"W",6,6,2.36],[75,"Re",6,7,1.90],
-  [76,"Os",6,8,2.20],[77,"Ir",6,9,2.20],[78,"Pt",6,10,2.28],[79,"Au",6,11,2.54],
-  [80,"Hg",6,12,2.00],[81,"Tl",6,13,1.62],[82,"Pb",6,14,2.33],[83,"Bi",6,15,2.02],
-  [84,"Po",6,16,2.00],[85,"At",6,17,2.20],[86,"Rn",6,18,null],
-  [87,"Fr",7,1,0.70],[88,"Ra",7,2,0.90],
-  [104,"Rf",7,4,null],[105,"Db",7,5,null],[106,"Sg",7,6,null],[107,"Bh",7,7,null],
-  [108,"Hs",7,8,null],[109,"Mt",7,9,null],[110,"Ds",7,10,null],[111,"Rg",7,11,null],
-  [112,"Cn",7,12,null],[113,"Nh",7,13,null],[114,"Fl",7,14,null],[115,"Mc",7,15,null],
-  [116,"Lv",7,16,null],[117,"Ts",7,17,null],[118,"Og",7,18,null],
-  // Lanthanides (f-block row 1, cols 3-17)
-  [57,"La",8,3,1.10],[58,"Ce",8,4,1.12],[59,"Pr",8,5,1.13],[60,"Nd",8,6,1.14],
-  [61,"Pm",8,7,null],[62,"Sm",8,8,1.17],[63,"Eu",8,9,null],[64,"Gd",8,10,1.20],
-  [65,"Tb",8,11,null],[66,"Dy",8,12,1.22],[67,"Ho",8,13,1.23],[68,"Er",8,14,1.24],
-  [69,"Tm",8,15,1.25],[70,"Yb",8,16,null],[71,"Lu",8,17,1.27],
-  // Actinides (f-block row 2, cols 3-17)
-  [89,"Ac",9,3,1.10],[90,"Th",9,4,1.30],[91,"Pa",9,5,1.50],[92,"U",9,6,1.38],
-  [93,"Np",9,7,1.36],[94,"Pu",9,8,1.28],[95,"Am",9,9,1.30],[96,"Cm",9,10,1.30],
-  [97,"Bk",9,11,1.30],[98,"Cf",9,12,1.30],[99,"Es",9,13,1.30],[100,"Fm",9,14,1.30],
-  [101,"Md",9,15,1.30],[102,"No",9,16,1.30],[103,"Lr",9,17,null],
+// Columns: set these to your data's column names
+const ATOMIC_NUMBER = "Atomic number"; // role: id
+const SYMBOL = "Symbol"; // role: label
+const GROUP = "Group"; // role: column (null = f-block, placed in the detached rows)
+const PERIOD = "Period"; // role: row
+const VALUE = "Pauling electronegativity"; // role: value (null = no value)
+
+// Data: replace this block with your own records, one object per row
+const el = (z, symbol, group, period, value) => ({
+  [ATOMIC_NUMBER]: z, [SYMBOL]: symbol, [GROUP]: group, [PERIOD]: period, [VALUE]: value,
+});
+const data = [
+  el(1, "H", 1, 1, 2.20), el(2, "He", 18, 1, null),
+  el(3, "Li", 1, 2, 0.98), el(4, "Be", 2, 2, 1.57), el(5, "B", 13, 2, 2.04), el(6, "C", 14, 2, 2.55),
+  el(7, "N", 15, 2, 3.04), el(8, "O", 16, 2, 3.44), el(9, "F", 17, 2, 3.98), el(10, "Ne", 18, 2, null),
+  el(11, "Na", 1, 3, 0.93), el(12, "Mg", 2, 3, 1.31), el(13, "Al", 13, 3, 1.61), el(14, "Si", 14, 3, 1.90),
+  el(15, "P", 15, 3, 2.19), el(16, "S", 16, 3, 2.58), el(17, "Cl", 17, 3, 3.16), el(18, "Ar", 18, 3, null),
+  el(19, "K", 1, 4, 0.82), el(20, "Ca", 2, 4, 1.00), el(21, "Sc", 3, 4, 1.36), el(22, "Ti", 4, 4, 1.54),
+  el(23, "V", 5, 4, 1.63), el(24, "Cr", 6, 4, 1.66), el(25, "Mn", 7, 4, 1.55), el(26, "Fe", 8, 4, 1.83),
+  el(27, "Co", 9, 4, 1.88), el(28, "Ni", 10, 4, 1.91), el(29, "Cu", 11, 4, 1.90), el(30, "Zn", 12, 4, 1.65),
+  el(31, "Ga", 13, 4, 1.81), el(32, "Ge", 14, 4, 2.01), el(33, "As", 15, 4, 2.18), el(34, "Se", 16, 4, 2.55),
+  el(35, "Br", 17, 4, 2.96), el(36, "Kr", 18, 4, 3.00),
+  el(37, "Rb", 1, 5, 0.82), el(38, "Sr", 2, 5, 0.95), el(39, "Y", 3, 5, 1.22), el(40, "Zr", 4, 5, 1.33),
+  el(41, "Nb", 5, 5, 1.60), el(42, "Mo", 6, 5, 2.16), el(43, "Tc", 7, 5, 1.90), el(44, "Ru", 8, 5, 2.20),
+  el(45, "Rh", 9, 5, 2.28), el(46, "Pd", 10, 5, 2.20), el(47, "Ag", 11, 5, 1.93), el(48, "Cd", 12, 5, 1.69),
+  el(49, "In", 13, 5, 1.78), el(50, "Sn", 14, 5, 1.96), el(51, "Sb", 15, 5, 2.05), el(52, "Te", 16, 5, 2.10),
+  el(53, "I", 17, 5, 2.66), el(54, "Xe", 18, 5, 2.60),
+  el(55, "Cs", 1, 6, 0.79), el(56, "Ba", 2, 6, 0.89),
+  el(57, "La", null, 6, 1.10), el(58, "Ce", null, 6, 1.12), el(59, "Pr", null, 6, 1.13), el(60, "Nd", null, 6, 1.14),
+  el(61, "Pm", null, 6, null), el(62, "Sm", null, 6, 1.17), el(63, "Eu", null, 6, null), el(64, "Gd", null, 6, 1.20),
+  el(65, "Tb", null, 6, null), el(66, "Dy", null, 6, 1.22), el(67, "Ho", null, 6, 1.23), el(68, "Er", null, 6, 1.24),
+  el(69, "Tm", null, 6, 1.25), el(70, "Yb", null, 6, null), el(71, "Lu", null, 6, 1.27),
+  el(72, "Hf", 4, 6, 1.30), el(73, "Ta", 5, 6, 1.50), el(74, "W", 6, 6, 2.36), el(75, "Re", 7, 6, 1.90),
+  el(76, "Os", 8, 6, 2.20), el(77, "Ir", 9, 6, 2.20), el(78, "Pt", 10, 6, 2.28), el(79, "Au", 11, 6, 2.54),
+  el(80, "Hg", 12, 6, 2.00), el(81, "Tl", 13, 6, 1.62), el(82, "Pb", 14, 6, 2.33), el(83, "Bi", 15, 6, 2.02),
+  el(84, "Po", 16, 6, 2.00), el(85, "At", 17, 6, 2.20), el(86, "Rn", 18, 6, null),
+  el(87, "Fr", 1, 7, 0.70), el(88, "Ra", 2, 7, 0.90),
+  el(89, "Ac", null, 7, 1.10), el(90, "Th", null, 7, 1.30), el(91, "Pa", null, 7, 1.50), el(92, "U", null, 7, 1.38),
+  el(93, "Np", null, 7, 1.36), el(94, "Pu", null, 7, 1.28), el(95, "Am", null, 7, 1.30), el(96, "Cm", null, 7, 1.30),
+  el(97, "Bk", null, 7, 1.30), el(98, "Cf", null, 7, 1.30), el(99, "Es", null, 7, 1.30), el(100, "Fm", null, 7, 1.30),
+  el(101, "Md", null, 7, 1.30), el(102, "No", null, 7, 1.30), el(103, "Lr", null, 7, null),
+  el(104, "Rf", 4, 7, null), el(105, "Db", 5, 7, null), el(106, "Sg", 6, 7, null), el(107, "Bh", 7, 7, null),
+  el(108, "Hs", 8, 7, null), el(109, "Mt", 9, 7, null), el(110, "Ds", 10, 7, null), el(111, "Rg", 11, 7, null),
+  el(112, "Cn", 12, 7, null), el(113, "Nh", 13, 7, null), el(114, "Fl", 14, 7, null), el(115, "Mc", 15, 7, null),
+  el(116, "Lv", 16, 7, null), el(117, "Ts", 17, 7, null), el(118, "Og", 18, 7, null),
 ];
 
-const EN_MIN = 0.70;
-const EN_MAX = 3.98;
+// Plot: reads only data and the constants above
+const F_START_GROUP = 3; // f-block rows start under group 3, as in the canonical layout
+const F_GAP = 0.4; // gap between the main body and the f-block rows, in tile pitches
+const TILE_INSET = 2; // px of page showing between neighbouring tiles
 
-// Imprint sequential colormap: #009E73 → #4467A3
-const C0 = [0, 158, 115];
-const C1 = [68, 103, 163];
+const valued = data.filter((d) => d[VALUE] !== null);
+const minEl = valued.reduce((a, b) => (b[VALUE] < a[VALUE] ? b : a));
+const maxEl = valued.reduce((a, b) => (b[VALUE] > a[VALUE] ? b : a));
+const nGroups = Math.max(...data.map((d) => d[GROUP] ?? 0));
+const nPeriods = Math.max(...data.map((d) => d[PERIOD]));
 
-function tileColor(en) {
-  if (en === null) return null;
-  const norm = (en - EN_MIN) / (EN_MAX - EN_MIN);
-  const r = Math.round(C0[0] + norm * (C1[0] - C0[0]));
-  const g = Math.round(C0[1] + norm * (C1[1] - C0[1]));
-  const b = Math.round(C0[2] + norm * (C1[2] - C0[2]));
-  return `rgb(${r},${g},${b})`;
+// f-block elements fill their detached row in atomic-number order
+const fPeriods = [...new Set(data.filter((d) => d[GROUP] === null).map((d) => d[PERIOD]))].sort((a, b) => a - b);
+const tiles = data.map((d) => {
+  if (d[GROUP] !== null) return { ...d, col: d[GROUP] - 1, row: d[PERIOD] - 1 };
+  const series = data
+    .filter((e) => e[GROUP] === null && e[PERIOD] === d[PERIOD])
+    .sort((a, b) => a[ATOMIC_NUMBER] - b[ATOMIC_NUMBER]);
+  return {
+    ...d,
+    col: F_START_GROUP - 1 + series.indexOf(d),
+    row: nPeriods + F_GAP + fPeriods.indexOf(d[PERIOD]),
+  };
+});
+const placeholders = fPeriods.map((p) => {
+  const zs = data.filter((d) => d[GROUP] === null && d[PERIOD] === p).map((d) => d[ATOMIC_NUMBER]);
+  return { period: p, label: `${Math.min(...zs)}–${Math.max(...zs)}` };
+});
+const nRows = nPeriods + F_GAP + fPeriods.length;
+
+// Dark or light tile text by the WCAG relative luminance of the fill
+function textOn(fill) {
+  const lin = fill.match(/\d+/g).slice(0, 3).map((c) => {
+    const v = c / 255;
+    return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2] > 0.18 ? "#1A1A17" : "#F0EFE8";
 }
 
-// WCAG-based luminance to pick readable text on colored tile
-function tileTextColor(en) {
-  if (en === null) return t.inkSoft;
-  const norm = (en - EN_MIN) / (EN_MAX - EN_MIN);
-  const r = C0[0] + norm * (C1[0] - C0[0]);
-  const g = C0[1] + norm * (C1[1] - C0[1]);
-  const b = C0[2] + norm * (C1[2] - C0[2]);
-  const lin = [r / 255, g / 255, b / 255].map(
-    (v) => (v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4))
+function Tiles({ nullFill }) {
+  const xScale = useXScale();
+  const yScale = useYScale();
+  const colorScale = useZColorScale();
+  const pitch = xScale(1) - xScale(0);
+  const size = pitch - 2 * TILE_INSET;
+
+  return (
+    <g>
+      {placeholders.map(({ period, label }) => {
+        const x = xScale(F_START_GROUP - 1) + TILE_INSET;
+        const y = yScale(period - 1) + TILE_INSET;
+        return (
+          <g key={label}>
+            <rect x={x} y={y} width={size} height={size} rx={2} fill="none"
+              stroke={t.inkSoft} strokeWidth={1} strokeDasharray="4,3" />
+            <text x={x + size / 2} y={y + size / 2 + 5} textAnchor="middle"
+              fontSize={14} fill={t.inkSoft} fontFamily="monospace">
+              {label}
+            </text>
+          </g>
+        );
+      })}
+      {tiles.map((d) => {
+        const x = xScale(d.col) + TILE_INSET;
+        const y = yScale(d.row) + TILE_INSET;
+        const hasValue = d[VALUE] !== null;
+        const fill = hasValue ? colorScale(d[VALUE]) : nullFill;
+        const ink = hasValue ? textOn(fill) : t.inkSoft;
+        return (
+          <g key={d[ATOMIC_NUMBER]}>
+            <rect x={x} y={y} width={size} height={size} rx={2} fill={fill} />
+            <text x={x + 5} y={y + 16} fontSize={14} fill={ink} fontFamily="monospace">
+              {d[ATOMIC_NUMBER]}
+            </text>
+            <text x={x + size / 2} y={y + size / 2 + 9} textAnchor="middle" fontSize={28}
+              fontWeight={700} fill={ink} fontFamily="Inter, Roboto, sans-serif">
+              {d[SYMBOL]}
+            </text>
+            {hasValue && (
+              <text x={x + size / 2} y={y + size - 7} textAnchor="middle" fontSize={14}
+                fill={ink} fontFamily="monospace">
+                {d[VALUE].toFixed(2)}
+              </text>
+            )}
+          </g>
+        );
+      })}
+    </g>
   );
-  const lum = 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2];
-  return lum > 0.18 ? "#1A1A17" : "#F0EFE8";
 }
 
 export default function Chart() {
   const W = window.ANYPLOT_SIZE.width;
   const H = window.ANYPLOT_SIZE.height;
-  const THEME = window.ANYPLOT_THEME;
+  const nullFill = window.ANYPLOT_THEME === "light" ? "#CCCBC3" : "#3E3E3A";
 
-  const NULL_FILL = THEME === "light" ? "#CCCBC3" : "#3E3E3A";
+  // Square tiles: one pitch for both axes, the table centred below the title band
+  const TOP = 96;
+  const pitch = Math.floor(Math.min((W - 80) / nGroups, (H - TOP - 20) / nRows));
+  const left = Math.round((W - pitch * nGroups) / 2);
+  const margin = { top: TOP, left, right: W - left - pitch * nGroups, bottom: H - TOP - pitch * nRows };
 
-  const GAP = 2;
-  const LEFT = 16;
-  const TILE = Math.floor((W - LEFT * 2 - 17 * GAP) / 18);
-  const F_GAP = 20;
-  const CB_H = 16;
+  // The empty band between groups 2 and 13 in periods 1–3 holds the color legend
+  const legendLeft = left + pitch * 2.6;
+  const legendWidth = pitch * (12 - 2.6) - pitch * 0.3;
 
-  // Vertical centering: compute yOffset so blank space is balanced top/bottom.
-  // Content block spans from title-top (~TITLE_Y_BASE - TITLE_FONT) to colorbar note.
-  const TITLE_FONT = 20;
-  const TITLE_Y_BASE = 46;
-  const SUBTITLE_Y_BASE = 68;
-  const INITIAL_TABLE_TOP = 88; // subtitle baseline + 20px gap
-
-  // Distance from TABLE_TOP to bottom of last f-block row:
-  // tileY(9)+TILE = TABLE_TOP + 8*(TILE+GAP) + F_GAP + TILE
-  const tableBottomOff = 8 * (TILE + GAP) + TILE + F_GAP;
-  // Colorbar note (last element) is at TABLE_TOP + tableBottomOff + 38 + CB_H + 46
-  const contentBottomOff = tableBottomOff + 38 + CB_H + 46;
-
-  const contentTop = TITLE_Y_BASE - TITLE_FONT; // approx 26px
-  const contentBottomNoShift = INITIAL_TABLE_TOP + contentBottomOff;
-  const contentHeight = contentBottomNoShift - contentTop;
-  const yOffset = Math.max(0, Math.round((H - contentHeight) / 2 - contentTop));
-
-  const TABLE_TOP = INITIAL_TABLE_TOP + yOffset;
-  const titleY = TITLE_Y_BASE + yOffset;
-  const subtitleY = SUBTITLE_Y_BASE + yOffset;
-
-  function tileX(col) {
-    return LEFT + (col - 1) * (TILE + GAP);
-  }
-  function tileY(row) {
-    if (row <= 7) return TABLE_TOP + (row - 1) * (TILE + GAP);
-    const fTop = TABLE_TOP + 7 * (TILE + GAP) + F_GAP;
-    return fTop + (row - 8) * (TILE + GAP);
-  }
-
-  const tableBottom = tileY(9) + TILE;
-  const cbTop = tableBottom + 38;
-  const cbWidth = Math.round(W * 0.52);
-  const cbLeft = Math.round((W - cbWidth) / 2);
-
-  const cbTicks = [
-    { val: 0.70, label: "0.70" },
-    { val: 1.50, label: "1.50" },
-    { val: 2.50, label: "2.50" },
-    { val: 3.50, label: "3.50" },
-    { val: 3.98, label: "3.98" },
-  ];
-
-  // ChartContainer is the MUI X Charts composition root; its SVG surface
-  // hosts the periodic table tiles drawn as direct SVG children.
   return (
-    <Box sx={{ width: W, height: H, bgcolor: t.pageBg }}>
-      <ChartContainer width={W} height={H} series={[]} skipAnimation>
-        <defs>
-          {/* Imprint sequential gradient for colorbar */}
-          <linearGradient id="pt-imprint-seq" x1="0" x2="1" y1="0" y2="0">
-            <stop offset="0%" stopColor="#009E73" />
-            <stop offset="100%" stopColor="#4467A3" />
-          </linearGradient>
-        </defs>
-
-        {/* Title */}
-        <text
-          x={W / 2}
-          y={titleY}
-          textAnchor="middle"
-          fontSize={20}
-          fontWeight="500"
-          fill={t.ink}
-          fontFamily="Inter, Roboto, sans-serif"
-        >
-          heatmap-periodic-table · javascript · muix · anyplot.ai
-        </text>
-        <text
-          x={W / 2}
-          y={subtitleY}
-          textAnchor="middle"
-          fontSize={13}
-          fill={t.inkSoft}
-          fontFamily="Inter, Roboto, sans-serif"
-        >
-          Pauling Electronegativity — periodic trends across all elements
-        </text>
-
-        {/* Placeholder tiles at period 6 & 7, group 3 (f-block location markers) */}
-        {[{ pr: 6, lbl: "57–71" }, { pr: 7, lbl: "89–103" }].map(({ pr, lbl }) => {
-          const x = tileX(3);
-          const y = tileY(pr);
-          return (
-            <g key={`ph${pr}`}>
-              <rect
-                x={x} y={y} width={TILE} height={TILE}
-                fill="none"
-                stroke={t.inkSoft}
-                strokeWidth={0.75}
-                strokeDasharray="3,2"
-                rx={1}
-              />
-              <text
-                x={x + TILE / 2}
-                y={y + TILE / 2 + 3}
-                textAnchor="middle"
-                fontSize={7}
-                fill={t.inkSoft}
-                fontFamily="monospace"
-              >
-                {lbl}
-              </text>
-            </g>
-          );
-        })}
-
-        {/* Element tiles */}
-        {ELEMENTS.map(([Z, sym, row, col, en]) => {
-          const x = tileX(col);
-          const y = tileY(row);
-          const fill = tileColor(en) ?? NULL_FILL;
-          const txt = tileTextColor(en);
-          return (
-            <g key={Z}>
-              <rect x={x} y={y} width={TILE} height={TILE} fill={fill} rx={1} />
-              {/* Atomic number — top-left corner */}
-              <text
-                x={x + 2} y={y + 8}
-                fontSize={7}
-                fill={txt}
-                fontFamily="monospace"
-                opacity={0.9}
-              >
-                {Z}
-              </text>
-              {/* Element symbol — centered */}
-              <text
-                x={x + TILE / 2}
-                y={y + TILE / 2 + 5}
-                textAnchor="middle"
-                fontSize={13}
-                fontWeight="700"
-                fill={txt}
-                fontFamily="Inter, Roboto, sans-serif"
-              >
-                {sym}
-              </text>
-              {/* Electronegativity value — bottom */}
-              {en !== null && (
-                <text
-                  x={x + TILE / 2}
-                  y={y + TILE - 4}
-                  textAnchor="middle"
-                  fontSize={8}
-                  fill={txt}
-                  fontFamily="monospace"
-                  opacity={0.88}
-                >
-                  {en.toFixed(2)}
-                </text>
-              )}
-            </g>
-          );
-        })}
-
-        {/* Colorbar label */}
-        <text
-          x={W / 2}
-          y={cbTop - 10}
-          textAnchor="middle"
-          fontSize={12}
-          fill={t.ink}
-          fontFamily="Inter, Roboto, sans-serif"
-        >
-          Electronegativity (Pauling Scale)
-        </text>
-
-        {/* Colorbar gradient rect */}
-        <rect
-          x={cbLeft}
-          y={cbTop}
-          width={cbWidth}
-          height={CB_H}
-          fill="url(#pt-imprint-seq)"
-          rx={2}
-        />
-
-        {/* Colorbar ticks and labels */}
-        {cbTicks.map(({ val, label }) => {
-          const nx = cbLeft + ((val - EN_MIN) / (EN_MAX - EN_MIN)) * cbWidth;
-          return (
-            <g key={val}>
-              <line
-                x1={nx} y1={cbTop + CB_H}
-                x2={nx} y2={cbTop + CB_H + 4}
-                stroke={t.inkSoft}
-                strokeWidth={1}
-              />
-              <text
-                x={nx}
-                y={cbTop + CB_H + 15}
-                textAnchor="middle"
-                fontSize={10}
-                fill={t.inkSoft}
-                fontFamily="monospace"
-              >
-                {label}
-              </text>
-            </g>
-          );
-        })}
-
-        {/* Low / High labels */}
-        <text
-          x={cbLeft}
-          y={cbTop + CB_H + 30}
-          textAnchor="start"
-          fontSize={10}
-          fill={t.inkSoft}
-          fontFamily="Inter, Roboto, sans-serif"
-        >
-          Low (Fr = 0.70)
-        </text>
-        <text
-          x={cbLeft + cbWidth}
-          y={cbTop + CB_H + 30}
-          textAnchor="end"
-          fontSize={10}
-          fill={t.inkSoft}
-          fontFamily="Inter, Roboto, sans-serif"
-        >
-          High (F = 3.98)
-        </text>
-        <text
-          x={cbLeft + cbWidth / 2}
-          y={cbTop + CB_H + 46}
-          textAnchor="middle"
-          fontSize={10}
-          fill={t.inkSoft}
-          fontFamily="Inter, Roboto, sans-serif"
-          fontStyle="italic"
-        >
-          Grey tiles = no defined value (noble gases, synthetic elements)
-        </text>
-      </ChartContainer>
+    <Box sx={{ position: "relative", width: W, height: H }}>
+      <ChartsDataProvider
+        width={W}
+        height={H}
+        margin={margin}
+        series={[]}
+        skipAnimation
+        xAxis={[{ id: "group", scaleType: "linear", min: 0, max: nGroups, position: "none" }]}
+        yAxis={[{ id: "row", scaleType: "linear", min: 0, max: nRows, reverse: true, position: "none" }]}
+        zAxis={[{
+          id: "value",
+          colorMap: { type: "continuous", min: minEl[VALUE], max: maxEl[VALUE], color: [t.seq[0], t.seq[1]] },
+        }]}
+      >
+        <ChartsSurface>
+          <text x={W / 2} y={44} textAnchor="middle" fontSize={24} fontWeight={500}
+            fill={t.ink} fontFamily="Inter, Roboto, sans-serif">
+            heatmap-periodic-table · javascript · muix · anyplot.ai
+          </text>
+          <text x={W / 2} y={74} textAnchor="middle" fontSize={17}
+            fill={t.inkSoft} fontFamily="Inter, Roboto, sans-serif">
+            {VALUE} — rising toward fluorine at the top right, falling toward francium at the bottom left
+          </text>
+          <Tiles nullFill={nullFill} />
+        </ChartsSurface>
+        <Box sx={{ position: "absolute", left: legendLeft, top: TOP + pitch * 0.35, width: legendWidth }}>
+          <Typography sx={{ fontSize: 17, fontWeight: 500, color: t.ink, textAlign: "center" }}>
+            {VALUE} (Pauling scale, dimensionless)
+          </Typography>
+          <ContinuousColorLegend
+            axisDirection="z"
+            axisId="value"
+            thickness={22}
+            minLabel={`Low: ${minEl[SYMBOL]} ${minEl[VALUE].toFixed(2)}`}
+            maxLabel={`High: ${maxEl[SYMBOL]} ${maxEl[VALUE].toFixed(2)}`}
+            sx={{ width: "100%", m: 0, mt: 1, color: t.inkSoft, "& *": { fontSize: 15, whiteSpace: "nowrap" } }}
+          />
+          <Typography sx={{ mt: 1.5, fontSize: 15, fontStyle: "italic", color: t.inkSoft, textAlign: "center" }}>
+            Grey tiles: no {VALUE} value
+          </Typography>
+        </Box>
+      </ChartsDataProvider>
     </Box>
   );
 }
