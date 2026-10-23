@@ -8,33 +8,39 @@ sample `df` and the source text for each run; the runner that executes the file 
 the plotting environment, checks the PNGs on the canvas and looks for stale labels is
 the pipeline's (PR 2).
 
-`perturbations(df, columns, roles, shape)` returns, for a table (and a network's edge
-list, which is a table), in this order:
+`perturbations(df, columns, roles, shape)` returns, for a table, in this order:
 
 * `renamed`: every column renamed, one of them with spaces, a unit and a dot
   (`"Value no. 1 (k EUR)"`), and every categorical column's values renamed
-  (`"Group 1"`, ...). `retired` lists the old category values, so the runner can find a
-  text artist that still shows one.
+  (`"Group 1"`, ...). `renames` maps each old column name to its new one, so columns no
+  spec role names (`# role: extra`) follow too; `retired` lists the old category values,
+  so the runner can find a text artist that still shows one.
 * `more_categories` and `fewer_categories`: one more value in every categorical column
   (the rows of its last value copied under a new label, numbers scaled by 1.1), and one
   fewer (the rows of its last value dropped), both within eight values and at least one;
-  left out for a table without categorical columns.
-* `single_group`: only the rows of the colour-driving role's first value, when the shape
+  left out for a table without categorical columns. A colour-driving role whose group
+  count the spec fixes (`fixed_group_count`: a split violin's two halves) keeps its groups.
+* `single_group`: only the rows of the colour-driving role's first value, when the spec
   allows a single group (`single_group_allowed`).
 * `fewer_rows`: per value of the colour-driving role (or overall), the first
   `max(2, ceil(n / 10))` rows.
 * `more_rows`: ten copies; copy k continues every numeric column past the sample's range
   (k times the range plus one step), every datetime column past its last date, and
-  suffixes the values of the categorical columns other than the colour-driving role.
+  suffixes the values of the categorical columns. The colour-driving role's column keeps
+  its values, numeric codes included (groups 0 and 1 stay two groups).
 * `scaled`: every numeric column times 1,000 plus 100,000.
 
 A matrix (`df` a labeled square DataFrame) gets `renamed` (index and columns), `more`
 and `fewer` (one label added or dropped on both axes) and `scaled`. Generated and
-excluded specs have no table to perturb. There is no nullable-dtype perturbation: the
-agent's loader hands over float64 with NaN (decision of 2026-10-23).
+excluded specs have no table to perturb, and network specs are deferred: their block may
+bind a `nodes` table beside the edge list, whose identifiers must follow the perturbed
+endpoints, which comes with network eligibility (networks are not eligible for the agent in
+phase 1). There is no nullable-dtype perturbation: the agent's loader hands over float64
+with NaN (decision of 2026-10-23).
 
-`smoke_source(source, columns, data_path)` is the source to run: the block replaced by
-a `pandas.read_pickle` of the table and each constant set to its new column name.
+`smoke_source(source, perturbation, data_path)` is the source to run: the block replaced
+by a `pandas.read_pickle` of the table and every column constant renamed through
+`perturbation.renames`.
 """
 
 from __future__ import annotations
@@ -46,7 +52,7 @@ from dataclasses import dataclass, field
 import numpy as np
 import pandas as pd
 
-from core.adaptability import replace_block, rewrite_constants
+from core.adaptability import replace_block, rewrite_columns
 from core.spec_roles import DataRole, Shape
 
 
@@ -61,29 +67,35 @@ _SINGLE_GROUP_WORDS = ("binary", "two ", "pair", "split", "both", "left/right", 
 
 @dataclass(frozen=True)
 class Perturbation:
-    """One table to run the file on, the column name each role binds in it, and the labels it retired."""
+    """One table to run the file on: the column each role binds in it, the column renames, the retired labels."""
 
     name: str
     description: str
     df: pd.DataFrame
     columns: dict[str, str | list[str]]
     retired: frozenset[str] = field(default_factory=frozenset)
+    renames: dict[str, str] = field(default_factory=dict)
+    """Old column name -> new one, for every renamed column (spec roles and extras alike)."""
+
+
+def fixed_group_count(roles: Sequence[DataRole], color_role: str | None) -> bool:
+    """The spec fixes how many groups its colour-driving role has.
+
+    A boolean role, or one whose description says so ("binary", "two", "pair", "split", "both",
+    "versus"): a split violin or a two-sample comparison needs exactly its two groups.
+    """
+    role = next((role for role in roles if role.name == color_role), None)
+    if role is None:
+        return False
+    if "boolean" in role.kinds:
+        return True
+    text = f" {role.description.lower()} "
+    return any(word in text for word in _SINGLE_GROUP_WORDS)
 
 
 def single_group_allowed(roles: Sequence[DataRole], shape: Shape, color_role: str | None) -> bool:
-    """The single-group perturbation runs on a table whose colour-driving role can hold one value.
-
-    The rule: a table or a network's edge list with a colour-driving role that is not boolean and
-    whose description does not fix the number of groups ("binary", "two", "pair", "split", "both",
-    "versus"): a split violin or a two-sample comparison needs its two groups.
-    """
-    if shape not in ("table", "network") or color_role is None:
-        return False
-    role = next((role for role in roles if role.name == color_role), None)
-    if role is None or "boolean" in role.kinds:
-        return False
-    text = f" {role.description.lower()} "
-    return not any(word in text for word in _SINGLE_GROUP_WORDS)
+    """The single-group perturbation runs on a table whose colour-driving role can hold one value."""
+    return shape == "table" and color_role is not None and not fixed_group_count(roles, color_role)
 
 
 def perturbations(
@@ -93,8 +105,11 @@ def perturbations(
     shape: Shape,
     color_role: str | None = None,
 ) -> list[Perturbation]:
-    """The perturbed tables for the sample `df`, whose role columns `columns` names (role -> column)."""
-    if shape in ("generated", "excluded"):
+    """The perturbed tables for the sample `df`, whose role columns `columns` names (role -> column).
+
+    Empty for a generated, excluded or network spec (the module docstring says why networks wait).
+    """
+    if shape in ("generated", "excluded", "network"):
         return []
     if shape == "matrix":
         return _matrix_perturbations(df, columns)
@@ -104,8 +119,10 @@ def perturbations(
     color_value = role_columns.get(color_role) if color_role else None
     color_column = color_value if isinstance(color_value, str) else None
     categorical = [name for name in df.columns if _is_categorical(df[name])]
+    fixed = color_column if color_column is not None and fixed_group_count(roles, color_role) else None
+    varied = [name for name in categorical if name != fixed]
     out = [_renamed(df, role_columns, categorical)]
-    for changed in (_more_categories(df, role_columns, categorical), _fewer_categories(df, role_columns, categorical)):
+    for changed in (_more_categories(df, role_columns, varied), _fewer_categories(df, role_columns, varied)):
         if len(changed.df) != len(df):  # a table without categorical columns has no categories to change
             out.append(changed)
     if color_column is not None and single_group_allowed(roles, shape, color_role):
@@ -180,6 +197,7 @@ def _renamed(df: pd.DataFrame, columns: Mapping[str, str | list[str]], categoric
         table.rename(columns=mapping),
         _remap(columns, mapping),
         frozenset(retired),
+        {str(old): new for old, new in mapping.items()},
     )
 
 
@@ -230,8 +248,9 @@ def _fewer_rows(df: pd.DataFrame, columns: Mapping[str, str | list[str]], color_
 def _more_rows(
     df: pd.DataFrame, columns: Mapping[str, str | list[str]], categorical: list[str], color_column: str | None
 ) -> Perturbation:
-    numeric = _numeric(df)
-    datetimes = [name for name in df.columns if pd.api.types.is_datetime64_any_dtype(df[name])]
+    # the colour-driving column keeps its values: numeric group codes (0 and 1) must stay two groups
+    numeric = [name for name in _numeric(df) if name != color_column]
+    datetimes = [name for name in df.columns if pd.api.types.is_datetime64_any_dtype(df[name]) and name != color_column]
     copies = [df.copy()]
     for k in range(1, ROW_FACTOR):
         part = df.copy()
@@ -285,7 +304,10 @@ def _matrix_perturbations(df: pd.DataFrame, columns: Mapping[str, str | Sequence
     return out
 
 
-def smoke_source(source: str, columns: Mapping[str, str | Sequence[str]], data_path: str) -> str:
-    """The source with its block replaced by a read of `data_path` (a pickle) and its constants rewritten."""
+def smoke_source(source: str, perturbation: Perturbation, data_path: str) -> str:
+    """The source with its block replaced by a read of `data_path` (a pickle) and its column constants renamed.
+
+    Every column constant, `# role: extra` included, follows `perturbation.renames`.
+    """
     block = f"import pandas as pd\n\ndf = pd.read_pickle({data_path!r})"
-    return rewrite_constants(replace_block(source, block), columns)
+    return rewrite_columns(replace_block(source, block), perturbation.renames)

@@ -120,9 +120,39 @@ class TestTablePerturbations:
         names = [item.name for item in perturbations(df, {"x": "x", "y": "y"}, roles, "table")]
         assert names == ["renamed", "fewer_rows", "more_rows", "scaled"]
 
-    def test_generated_and_excluded_specs_have_none(self, sample: pd.DataFrame) -> None:
+    def test_generated_excluded_and_network_specs_have_none(self, sample: pd.DataFrame) -> None:
+        """A network block may bind `nodes` beside the edges; its smoke run waits for network eligibility (Copilot)."""
         assert perturbations(sample, COLUMNS, ROLES, "generated") == []
         assert perturbations(sample, COLUMNS, ROLES, "excluded") == []
+        assert perturbations(sample, COLUMNS, ROLES, "network", "group") == []
+
+    def test_a_fixed_two_group_column_keeps_its_groups(self) -> None:
+        """violin-split's binary halves stay two in every perturbation; the axis categories still vary (Copilot)."""
+        roles = parse_roles(
+            [
+                "`category` (string) - group labels for the x-axis",
+                "`value` (numeric) - values",
+                "`split_group` (string/binary) - binary grouping variable for left/right halves",
+            ]
+        )
+        df = pd.DataFrame(
+            {"Dept": ["A", "A", "B", "B", "C", "C"], "Salary": [1.0, 2.0, 3.0, 4.0, 5.0, 6.0], "Gender": ["F", "M"] * 3}
+        )
+        columns = {"category": "Dept", "value": "Salary", "split_group": "Gender"}
+        items = {item.name: item for item in perturbations(df, columns, roles, "table", "split_group")}
+        assert "single_group" not in items
+        for item in items.values():
+            assert item.df[item.columns["split_group"]].nunique() == 2, item.name
+        assert items["more_categories"].df["Dept"].nunique() == 4
+        assert items["fewer_categories"].df["Dept"].nunique() == 2
+
+    def test_numeric_group_codes_stay_groups_in_more_rows(self) -> None:
+        """Groups coded 0 and 1 are a valid binding; ten copies must not make twenty groups (Copilot)."""
+        roles = parse_roles(["`x` (numeric) - x", "`y` (numeric) - y", "`group` (categorical) - series"])
+        df = pd.DataFrame({"x": [1.0, 2.0, 1.0, 2.0], "y": [3.0, 4.0, 5.0, 6.0], "g": [0, 0, 1, 1]})
+        more = {i.name: i for i in perturbations(df, {"x": "x", "y": "y", "group": "g"}, roles, "table", "group")}
+        assert set(more["more_rows"].df["g"]) == {0, 1}
+        assert more["more_rows"].df["x"].nunique() == 2 * ROW_FACTOR
 
 
 class TestSingleGroupRule:
@@ -144,6 +174,7 @@ class TestSingleGroupRule:
     def test_no_colour_role_or_another_shape(self) -> None:
         assert not single_group_allowed(ROLES, "table", None)
         assert not single_group_allowed(ROLES, "matrix", "group")
+        assert not single_group_allowed(ROLES, "network", "group")
 
 
 class TestMatrix:
@@ -168,17 +199,37 @@ class TestSmokeSource:
             "table",
             "group",
         )[0]
-        code = smoke_source(source, item.columns, "/tmp/table.pkl")
+        code = smoke_source(source, item, "/tmp/table.pkl")
         ast.parse(code)
         assert "df = pd.read_pickle('/tmp/table.pkl')" in code
         assert "Electronics" not in code
         record = check_source(code, ROLES, "table", library="matplotlib")
         assert record.findings == []
-        constants = {
-            node.targets[0].id: node.value.value
-            for node in ast.parse(code).body
-            if isinstance(node, ast.Assign)
-            and isinstance(node.targets[0], ast.Name)
-            and isinstance(node.value, ast.Constant)
-        }
+        constants = _string_constants(code)
         assert {constants[name] for name in record.constants.values()} == set(item.columns.values())
+
+    def test_extra_columns_follow_the_renames(self) -> None:
+        """`# role: extra` constants are not role-keyed; the renamed run must still rename them (Copilot)."""
+        source = (FIXTURES / "bar_grouped_matplotlib.py").read_text(encoding="utf-8")
+        source = source.replace(
+            'SALES = "Sales (thousand USD)"  # role: value\n',
+            'SALES = "Sales (thousand USD)"  # role: value\nNOTE = "Note"  # role: extra\nRANK = "Rank"  # role: extra\n',
+        )
+        sample = pd.DataFrame(
+            {"Quarter": ["Q1"], "Product line": ["A"], "Sales (thousand USD)": [1], "Note": ["n"], "Rank": [1]}
+        )
+        item = perturbations(sample, COLUMNS, ROLES, "table", "group")[0]
+        constants = _string_constants(smoke_source(source, item, "/tmp/table.pkl"))
+        assert {constants["NOTE"], constants["RANK"]} <= set(item.df.columns)
+        assert {constants["QUARTER"], constants["PRODUCT_LINE"], constants["SALES"]} <= set(item.df.columns)
+
+
+def _string_constants(code: str) -> dict[str, str]:
+    return {
+        node.targets[0].id: node.value.value
+        for node in ast.parse(code).body
+        if isinstance(node, ast.Assign)
+        and isinstance(node.targets[0], ast.Name)
+        and isinstance(node.value, ast.Constant)
+        and isinstance(node.value.value, str)
+    }

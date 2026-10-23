@@ -87,7 +87,7 @@ import re
 import sys
 import tokenize
 from collections import Counter
-from collections.abc import Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -1238,8 +1238,8 @@ def _column_constants(src: _Source) -> list[_Constant]:
     for line, col, text in src.comments:
         if col > 0:
             match = ROLE_COMMENT.match(text)
-            if match:
-                by_line[line] = match.group("rest")
+            if match:  # a further comment after the role (`# role: y  # note`) is not part of it
+                by_line[line] = match.group("rest").split("#", 1)[0].strip()
     constants: list[_Constant] = []
     for stmt in src.tree.body:
         single = _single_name(stmt)
@@ -1538,69 +1538,84 @@ def _free_loads(node: ast.AST, local: frozenset[str] = frozenset()) -> Iterator[
 
 
 def _reads_before_rebinding(stmts: Sequence[ast.stmt], names: set[str]) -> dict[str, int]:
-    """The first line at which each of `names` is read by `stmts` before they rebind it."""
+    """The first line at which each of `names` is read by `stmts` where not every path has rebound it.
+
+    A name counts as rebound only when every path to the read rebinds it: both branches of an `if`
+    (their sets intersect at the join), never a loop's target or body after the loop (it may run zero
+    times), never a `try` body for its handlers or its `finally`, and never a `match` case after the
+    `match` (no case may apply). `del` unbinds.
+    """
     hits: dict[str, int] = {}
-    rebound: set[str] = set()
 
-    def visit(statements: Iterable[ast.stmt]) -> None:
-        for stmt in statements:
-            visit_one(stmt)
-
-    def load(node: ast.AST | None) -> None:
+    def load(node: ast.AST | None, bound: frozenset[str]) -> None:
         if node is None:
             return
         for name, line in _free_loads(node):
-            if name in names and name not in rebound and name not in hits:
+            if name in names and name not in bound and name not in hits:
                 hits[name] = line
 
-    def bind(node: ast.AST) -> None:
-        rebound.update(_target_names(node) if isinstance(node, ast.expr) else set())
+    def bound_by(node: ast.AST | None) -> frozenset[str]:
+        return frozenset(_target_names(node)) if isinstance(node, ast.expr) else frozenset()
 
-    def visit_one(stmt: ast.stmt) -> None:
+    def sequence(statements: Iterable[ast.stmt], bound: frozenset[str]) -> frozenset[str]:
+        for stmt in statements:
+            bound = step(stmt, bound)
+        return bound
+
+    def step(stmt: ast.stmt, bound: frozenset[str]) -> frozenset[str]:
         if isinstance(stmt, ast.For | ast.AsyncFor):
-            load(stmt.iter)
-            bind(stmt.target)
-            visit(stmt.body)
-            visit(stmt.orelse)
-        elif isinstance(stmt, ast.With | ast.AsyncWith):
+            load(stmt.iter, bound)
+            sequence(stmt.body, bound | bound_by(stmt.target))
+            return sequence(stmt.orelse, bound)
+        if isinstance(stmt, ast.While):
+            load(stmt.test, bound)
+            sequence(stmt.body, bound)
+            return sequence(stmt.orelse, bound)
+        if isinstance(stmt, ast.If):
+            load(stmt.test, bound)
+            return sequence(stmt.body, bound) & sequence(stmt.orelse, bound)
+        if isinstance(stmt, ast.With | ast.AsyncWith):
             for item in stmt.items:
-                load(item.context_expr)
-                if item.optional_vars is not None:
-                    bind(item.optional_vars)
-            visit(stmt.body)
-        elif isinstance(stmt, ast.If | ast.While):
-            load(stmt.test)
-            visit(stmt.body)
-            visit(stmt.orelse)
-        elif isinstance(stmt, ast.Try):
-            visit(stmt.body)
+                load(item.context_expr, bound)
+                bound = bound | bound_by(item.optional_vars)
+            return sequence(stmt.body, bound)
+        if isinstance(stmt, ast.Try | ast.TryStar):
+            paths = [sequence(stmt.orelse, sequence(stmt.body, bound))]
             for handler in stmt.handlers:
-                load(handler.type)
-                visit(handler.body)
-            visit(stmt.orelse)
-            visit(stmt.finalbody)
-        elif isinstance(stmt, ast.Assign):
-            load(stmt.value)
+                load(handler.type, bound)
+                paths.append(sequence(handler.body, bound | ({handler.name} if handler.name else set())))
+            joined = frozenset.intersection(*paths)
+            return joined | sequence(stmt.finalbody, bound)
+        if isinstance(stmt, ast.Match):
+            load(stmt.subject, bound)
+            for case in stmt.cases:
+                load(case.guard, bound)
+                sequence(case.body, bound | {n.id for n in ast.walk(case.pattern) if isinstance(n, ast.Name)})
+            return bound
+        if isinstance(stmt, ast.Assign):
+            load(stmt.value, bound)
             for target in stmt.targets:
                 if not isinstance(target, ast.Name | ast.Tuple | ast.List):
-                    load(target)
-                bind(target)
-        elif isinstance(stmt, ast.AugAssign):
-            load(stmt.value)
-            load(stmt.target)
-            bind(stmt.target)
-        elif isinstance(stmt, ast.AnnAssign):
-            load(stmt.value)
-            bind(stmt.target)
-        elif isinstance(stmt, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
-            load(stmt)
-            rebound.add(stmt.name)
-        elif isinstance(stmt, ast.Import | ast.ImportFrom):
-            rebound.update(_statement_bindings(stmt))
-        else:
-            load(stmt)
+                    load(target, bound)
+            return bound.union(*(bound_by(target) for target in stmt.targets))
+        if isinstance(stmt, ast.AugAssign):
+            load(stmt.value, bound)
+            load(stmt.target, bound)
+            return bound | bound_by(stmt.target)
+        if isinstance(stmt, ast.AnnAssign):
+            load(stmt.value, bound)
+            return bound | bound_by(stmt.target) if stmt.value is not None else bound
+        if isinstance(stmt, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
+            load(stmt, bound)
+            return bound | {stmt.name}
+        if isinstance(stmt, ast.Import | ast.ImportFrom):
+            return bound | _statement_bindings(stmt)
+        if isinstance(stmt, ast.Delete):
+            return bound - frozenset().union(*(bound_by(target) for target in stmt.targets))
+        load(stmt, bound)
+        return bound
 
-    visit(stmts)
+    sequence(stmts, frozenset())
     return hits
 
 
@@ -2206,21 +2221,67 @@ def rewrite_constants(source: str, columns: Mapping[str, str | Sequence[str]]) -
 
     Roles without a constant are ignored; a constant whose role is not in `columns` keeps its value.
     """
+    return _rewrite(source, lambda constant, _: columns.get(constant.role))
+
+
+def rewrite_columns(source: str, renames: Mapping[str, str]) -> str:
+    """The source with every column constant, `# role: extra` included, renamed through `renames` (old -> new).
+
+    A constant whose value (or one of whose list entries) is an old column name gets the new one; any
+    other constant keeps its value. This is how a table with renamed columns reaches columns that no
+    spec role names.
+    """
+
+    def choose(_: _Constant, current: str | list[str] | None) -> str | list[str] | None:
+        if isinstance(current, str):
+            return renames.get(current)
+        if isinstance(current, list) and any(item in renames for item in current):
+            return [renames.get(item, item) for item in current]
+        return None
+
+    return _rewrite(source, choose)
+
+
+def _literal_columns(value: ast.expr) -> str | list[str] | None:
+    """A constant's column name, or its list of names; None for any other value."""
+    if isinstance(value, ast.Constant) and isinstance(value.value, str):
+        return value.value
+    if isinstance(value, ast.List | ast.Tuple) and all(
+        isinstance(item, ast.Constant) and isinstance(item.value, str) for item in value.elts
+    ):
+        return [item.value for item in value.elts if isinstance(item, ast.Constant) and isinstance(item.value, str)]
+    return None
+
+
+def _rewrite(source: str, choose: Callable[[_Constant, str | list[str] | None], str | Sequence[str] | None]) -> str:
+    """Set each column constant's value to `choose(constant, current value)`, unless that is None.
+
+    The new value is written on one line. A role comment inside the old value's span (`SERIES = [  # role: y`
+    over several lines) moves to the end of the statement's last line, so the constant stays a constant.
+    """
     tree = ast.parse(source)
     src = _Source(source, tree, None)
     offsets = _line_offsets(source)
+    role_comments = [
+        (offsets[line - 1] + col, text) for line, col, text in src.comments if col > 0 and ROLE_COMMENT.match(text)
+    ]
     edits: list[tuple[int, int, str]] = []
     for constant in _column_constants(src):
-        if constant.role not in columns:
+        new = choose(constant, _literal_columns(constant.value))
+        if new is None:
             continue
         value = constant.value
         start = offsets[value.lineno - 1] + _char_offset(source, offsets, value.lineno, value.col_offset)
         end_line = value.end_lineno or value.lineno
         end = offsets[end_line - 1] + _char_offset(source, offsets, end_line, value.end_col_offset or 0)
-        new = columns[constant.role]
-        text = (
-            json.dumps(new, ensure_ascii=False) if isinstance(new, str) else json.dumps(list(new), ensure_ascii=False)
-        )
+        text = json.dumps(new if isinstance(new, str) else list(new), ensure_ascii=False)
+        inside = [comment for position, comment in role_comments if start <= position < end]
+        if inside:
+            line_end = source.find("\n", end)
+            line_end = len(source) if line_end == -1 else line_end
+            tail = source[end:line_end].strip()
+            text += f"  {inside[0]}" + (f"  {tail}" if tail else "")
+            end = line_end
         edits.append((start, end, text))
     for start, end, text in sorted(edits, reverse=True):
         source = source[:start] + text + source[end:]

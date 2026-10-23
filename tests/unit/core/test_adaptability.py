@@ -27,6 +27,7 @@ from core.adaptability import (
     format_report,
     main,
     replace_block,
+    rewrite_columns,
     rewrite_constants,
     run_report,
     sample_findings,
@@ -404,6 +405,37 @@ class TestInterface:
         code = source(block=block, plot="print(size)\n")
         assert found(check(code, roles=parse_roles(["`content` (string)"]), shape="generated"), "interface") == []
 
+    SCALE_BLOCK = BLOCK.replace("df = pd.DataFrame(", "scale = 2\ndf = pd.DataFrame(", 1)
+
+    @pytest.mark.parametrize(
+        "extra",
+        [
+            "if len(df) > 3:\n    scale = 1\nprint(scale)\n",  # only one branch rebinds
+            "for _ in range(len(df)):\n    scale = 1\nprint(scale)\n",  # the loop may run zero times
+            "while len(df) > 99:\n    scale = 1\nprint(scale)\n",
+            "try:\n    scale = 1 / len(df)\nexcept ZeroDivisionError:\n    print(scale)\n",  # the handler
+            "scale = 1\ndel scale\nprint(scale)\n",
+            "match len(df):\n    case 0:\n        scale = 1\nprint(scale)\n",
+        ],
+    )
+    def test_a_rebinding_on_some_paths_only(self, extra: str) -> None:
+        """Copilot: a conditional reassignment is no rebinding on the path where it does not run."""
+        assert [f.observed for f in found(check(source(block=self.SCALE_BLOCK, extra=extra)), "interface")] == [
+            "reads `scale`, which the Data block binds"
+        ]
+
+    @pytest.mark.parametrize(
+        "extra",
+        [
+            "if len(df) > 3:\n    scale = 1\nelse:\n    scale = 2\nprint(scale)\n",  # every branch rebinds
+            "for _ in range(3):\n    scale = 1\n    print(scale)\n",  # read inside the body, after the rebinding
+            "try:\n    scale = 1\nexcept ValueError:\n    scale = 2\nprint(scale)\n",
+            "with open(__file__) as scale:\n    print(scale)\n",
+        ],
+    )
+    def test_a_rebinding_on_every_path(self, extra: str) -> None:
+        assert found(check(source(block=self.SCALE_BLOCK, extra=extra)), "interface") == []
+
 
 class TestColumnAndSampleLiterals:
     def test_a_column_name_below_the_block(self) -> None:
@@ -776,6 +808,37 @@ class TestMutations:
         assert rewrite_constants(code, {"y": ["North", "South", "East"]}) == (
             'A = "x"  # role: x\nB = ["North", "South", "East"]  # role: y\n'
         )
+
+    def test_a_role_comment_inside_a_multiline_value_survives_twice(self) -> None:
+        """Copilot: replacing the whole span used to delete `# role: y` on the opening line."""
+        roles = parse_roles(["`x` (numeric) - time", "`y1, y2, ...` (numeric) - series"])
+        head = (
+            HEAD.split("QUARTER =")[0]
+            + 'TIME = "Time"  # role: x\nSERIES = [  # role: y\n    "North",\n    "South",\n]\n'
+        )
+        block = '\n# Data\ndf = pd.DataFrame({TIME: [1, 2], "North": [3, 4], "South": [5, 6]})\n\n# Plot\n'
+        code = source(head=head, block=block, plot="")
+        once = rewrite_constants(code, {"y": ["East", "West", "Up"]})
+        assert 'SERIES = ["East", "West", "Up"]  # role: y\n' in once
+        assert check(once, roles=roles).constants == {"x": "TIME", "y": "SERIES"}
+        twice = rewrite_constants(once, {"y": ["A", "B"]})
+        assert 'SERIES = ["A", "B"]  # role: y\n' in twice
+        assert found(check(twice, roles=roles), "columns") == []
+
+    def test_a_trailing_comment_after_the_moved_role_comment_is_kept(self) -> None:
+        code = 'S = [  # role: y\n    "a",\n]  # sample series\n'
+        out = rewrite_constants(code, {"y": ["b"]})
+        assert out == 'S = ["b"]  # role: y  # sample series\n'
+        assert rewrite_constants(out, {"y": ["c"]}) == 'S = ["c"]  # role: y  # sample series\n'
+
+    def test_rewrite_columns_renames_extras_by_their_old_name(self) -> None:
+        code = 'A = "Old A"  # role: x\nNOTE = "Note"  # role: extra\nRANK = "Rank"  # role: extra\nB = ["Note", "B"]  # role: y\n'
+        out = rewrite_columns(code, {"Old A": "New A", "Note": "Memo", "Rank": "Order"})
+        assert out == (
+            'A = "New A"  # role: x\nNOTE = "Memo"  # role: extra\nRANK = "Order"  # role: extra\n'
+            'B = ["Memo", "B"]  # role: y\n'
+        )
+        assert rewrite_columns(code, {}) == code
 
 
 class TestCatalogue:
