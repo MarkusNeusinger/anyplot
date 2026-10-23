@@ -1,110 +1,146 @@
 // anyplot.ai
 // alluvial-basic: Basic Alluvial Diagram
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 88/100 | Created: 2026-09-02
+// Library: muix 9.16.0 | JavaScript 22.23.3
+// Quality: 86/100 | Updated: 2026-10-23
 import * as React from "react";
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { useXScale, useYScale, useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data: SaaS subscription-tier migration across four quarters -----------
-// A Markov-style transition matrix drives every quarter-to-quarter step, so
-// node values (populations) and flow values (transitions) stay perfectly
-// consistent by construction — no separate bookkeeping needed.
-const CATEGORIES = ["Free", "Basic", "Pro", "Enterprise", "Churned"];
-// Visual stack order, top to bottom: higher tiers rise to the top of each
-// column, churn sinks to the bottom.
-const STACK_ORDER = ["Enterprise", "Pro", "Basic", "Free", "Churned"];
-const TIME_POINTS = ["Q1 2024", "Q2 2024", "Q3 2024", "Q4 2024"];
+// Constants
+const NODE_W = 18;
+const MID_LABEL_FONT = 13;
+const MID_LABEL_MIN_HEIGHT = MID_LABEL_FONT + 6;
 
-// Only adjacent-tier upgrades/downgrades (plus churn, which can originate
-// from any paid tier) — skip-tier jumps like Enterprise <-> Free would both
-// be unrealistic customer behavior and force ribbons into wide, crossing
-// detours that muddy the diagram. A small win-back rate (Churned -> Free)
-// keeps churn from being a fully absorbing state, matching real SaaS
-// reactivation behavior.
-const TRANSITION = {
-  Free: { Free: 0.7, Basic: 0.22, Pro: 0, Enterprise: 0, Churned: 0.08 },
-  Basic: { Free: 0.1, Basic: 0.55, Pro: 0.28, Enterprise: 0, Churned: 0.07 },
-  Pro: { Free: 0, Basic: 0.1, Pro: 0.65, Enterprise: 0.2, Churned: 0.05 },
-  Enterprise: { Free: 0, Basic: 0, Pro: 0.08, Enterprise: 0.9, Churned: 0.02 },
-  Churned: { Free: 0.03, Basic: 0, Pro: 0, Enterprise: 0, Churned: 0.97 },
-};
+// Columns: set these to your data's column names
+const TIME_POINT = "Quarter"; // role: time_point
+const NEXT_TIME_POINT = "Next quarter"; // role: extra
+const CATEGORY = "Subscription tier"; // role: category
+const TO_CATEGORY = "Next tier"; // role: extra
+const VALUE = "Customers"; // role: value
+const FLOW = "Transition count"; // role: flow
 
-const INITIAL_POPULATION = {
-  Free: 500,
-  Basic: 300,
-  Pro: 150,
-  Enterprise: 50,
-  Churned: 0,
-};
-const TOTAL = CATEGORIES.reduce((sum, cat) => sum + INITIAL_POPULATION[cat], 0);
+// Data: replace this block with your own records, one object per row
+const data = (() => {
+  const stackOrder = ["Enterprise", "Pro", "Basic", "Free", "Churned"];
+  const timePoints = ["Q1 2024", "Q2 2024", "Q3 2024", "Q4 2024"];
+  const transition = {
+    Free: { Free: 0.7, Basic: 0.22, Pro: 0, Enterprise: 0, Churned: 0.08 },
+    Basic: { Free: 0.1, Basic: 0.55, Pro: 0.28, Enterprise: 0, Churned: 0.07 },
+    Pro: { Free: 0, Basic: 0.1, Pro: 0.65, Enterprise: 0.2, Churned: 0.05 },
+    Enterprise: { Free: 0, Basic: 0, Pro: 0.08, Enterprise: 0.9, Churned: 0.02 },
+    Churned: { Free: 0.03, Basic: 0, Pro: 0, Enterprise: 0, Churned: 0.97 },
+  };
+  const populations = [
+    { Free: 500, Basic: 300, Pro: 150, Enterprise: 50, Churned: 0 },
+  ];
+  for (let i = 1; i < timePoints.length; i += 1) {
+    const prev = populations[i - 1];
+    const next = {};
+    stackOrder.forEach((to) => {
+      next[to] = stackOrder.reduce(
+        (sum, from) => sum + prev[from] * transition[from][to],
+        0,
+      );
+    });
+    populations.push(next);
+  }
 
-const nextPopulation = (pop) => {
-  const next = {};
-  CATEGORIES.forEach((to) => {
-    next[to] = CATEGORIES.reduce(
-      (sum, from) => sum + pop[from] * TRANSITION[from][to],
-      0,
-    );
+  const rows = [];
+  for (let step = 0; step < timePoints.length - 1; step += 1) {
+    const pop = populations[step];
+    stackOrder.forEach((from) => {
+      stackOrder.forEach((to) => {
+        const rate = transition[from][to];
+        rows.push({
+          [TIME_POINT]: timePoints[step],
+          [NEXT_TIME_POINT]: timePoints[step + 1],
+          [CATEGORY]: from,
+          [TO_CATEGORY]: to,
+          [VALUE]: pop[from],
+          [FLOW]: pop[from] * rate,
+        });
+      });
+    });
+  }
+  return rows;
+})();
+
+// Plot: reads only data and the constants above
+const categories = [...new Set(data.map((d) => d[CATEGORY]))];
+const timePoints = [
+  ...new Set([
+    ...data.map((d) => d[TIME_POINT]),
+    ...data.map((d) => d[NEXT_TIME_POINT]),
+  ]),
+];
+const categoryColor = Object.fromEntries(
+  categories.map((cat, i) => [cat, t.palette[i]]),
+);
+
+const populations = timePoints.map((tp, idx) => {
+  const pop = {};
+  categories.forEach((cat) => {
+    if (idx < timePoints.length - 1) {
+      pop[cat] = data
+        .filter((d) => d[TIME_POINT] === tp && d[CATEGORY] === cat)
+        .reduce((sum, d) => sum + d[FLOW], 0);
+    } else {
+      const prevTp = timePoints[idx - 1];
+      pop[cat] = data
+        .filter((d) => d[TIME_POINT] === prevTp && d[TO_CATEGORY] === cat)
+        .reduce((sum, d) => sum + d[FLOW], 0);
+    }
   });
-  return next;
-};
+  return pop;
+});
 
-const POPULATIONS = [INITIAL_POPULATION];
-for (let i = 1; i < TIME_POINTS.length; i += 1) {
-  POPULATIONS.push(nextPopulation(POPULATIONS[i - 1]));
-}
+const total = categories.reduce((sum, cat) => sum + populations[0][cat], 0);
 
-// Stack each column's categories (top to bottom) into cumulative [top,
-// bottom] value-space extents — shared by both the node rects and the flow
-// ribbons that attach to them.
-const stackExtents = (pop) => {
-  let cursor = TOTAL;
+const nodeExtents = populations.map((pop) => {
+  let cursor = total;
   const extents = {};
-  STACK_ORDER.forEach((cat) => {
+  categories.forEach((cat) => {
     const bottom = cursor - pop[cat];
     extents[cat] = { top: cursor, bottom };
     cursor = bottom;
   });
   return extents;
-};
+});
 
-const NODE_EXTENTS = POPULATIONS.map(stackExtents);
-
-// Subdivide each node's extent among its flows, ordered by the counterpart
-// category's stack rank — this keeps ribbons visually coherent instead of
-// crossing more than the tier changes themselves require.
-const buildFlows = () => {
-  const flows = [];
-  for (let step = 0; step < TIME_POINTS.length - 1; step += 1) {
-    const srcCol = step;
-    const dstCol = step + 1;
+const flows = (() => {
+  const result = [];
+  for (let step = 0; step < timePoints.length - 1; step += 1) {
+    const tp = timePoints[step];
     const outCursor = {};
     const inCursor = {};
-    STACK_ORDER.forEach((cat) => {
-      outCursor[cat] = NODE_EXTENTS[srcCol][cat].top;
-      inCursor[cat] = NODE_EXTENTS[dstCol][cat].top;
+    categories.forEach((cat) => {
+      outCursor[cat] = nodeExtents[step][cat].top;
+      inCursor[cat] = nodeExtents[step + 1][cat].top;
     });
-    STACK_ORDER.forEach((from) => {
-      STACK_ORDER.forEach((to) => {
-        const rate = TRANSITION[from][to];
-        if (!rate) return;
-        const value = POPULATIONS[srcCol][from] * rate;
-        if (value < 0.5) return;
+    categories.forEach((from) => {
+      categories.forEach((to) => {
+        const row = data.find(
+          (d) =>
+            d[TIME_POINT] === tp &&
+            d[CATEGORY] === from &&
+            d[TO_CATEGORY] === to,
+        );
+        const val = row ? row[FLOW] : 0;
+        if (val < 0.5) return;
         const srcTop = outCursor[from];
-        const srcBottom = srcTop - value;
+        const srcBottom = srcTop - val;
         outCursor[from] = srcBottom;
         const dstTop = inCursor[to];
-        const dstBottom = dstTop - value;
+        const dstBottom = dstTop - val;
         inCursor[to] = dstBottom;
-        flows.push({
+        result.push({
           step,
           from,
           to,
-          value,
+          value: val,
           srcTop,
           srcBottom,
           dstTop,
@@ -113,45 +149,17 @@ const buildFlows = () => {
       });
     });
   }
-  return flows;
-};
+  return result;
+})();
 
-const FLOWS = buildFlows();
-
-// First series is ALWAYS brand green; "Churned" is the semantic exception
-// for loss (see default-style-guide "Semantic exception").
-const CATEGORY_COLOR = {
-  Free: t.palette[0],
-  Basic: t.palette[1],
-  Pro: t.palette[2],
-  Enterprise: t.palette[3],
-  Churned: t.palette[4],
-};
-
-const NODE_W = 18;
-
-// Compact codes for the mid-diagram node chips (Q2/Q3) — short enough to sit
-// centered on the narrow node column without swallowing the ribbons on
-// either side.
-const CATEGORY_ABBR = {
-  Free: "Free",
-  Basic: "Basic",
-  Pro: "Pro",
-  Enterprise: "Ent",
-  Churned: "Chu",
-};
-const MID_LABEL_MIN_HEIGHT = 16;
-const MID_LABEL_FONT = 10;
-
-// --- Custom SVG layers, positioned via the chart's own scales --------------
 function AlluvialFlows() {
   const xScale = useXScale();
   const yScale = useYScale();
   return (
     <g data-drawing-container>
-      {FLOWS.map((f, i) => {
-        const x1 = xScale(TIME_POINTS[f.step]) + NODE_W / 2;
-        const x2 = xScale(TIME_POINTS[f.step + 1]) - NODE_W / 2;
+      {flows.map((f, i) => {
+        const x1 = xScale(timePoints[f.step]) + NODE_W / 2;
+        const x2 = xScale(timePoints[f.step + 1]) - NODE_W / 2;
         const midX = (x1 + x2) / 2;
         const ySrcTop = yScale(f.srcTop);
         const ySrcBottom = yScale(f.srcBottom);
@@ -161,9 +169,9 @@ function AlluvialFlows() {
           <path
             key={`flow-${i}`}
             d={`M ${x1} ${ySrcTop} C ${midX} ${ySrcTop}, ${midX} ${yDstTop}, ${x2} ${yDstTop} L ${x2} ${yDstBottom} C ${midX} ${yDstBottom}, ${midX} ${ySrcBottom}, ${x1} ${ySrcBottom} Z`}
-            fill={CATEGORY_COLOR[f.from]}
+            fill={categoryColor[f.from]}
             fillOpacity={0.55}
-            stroke={CATEGORY_COLOR[f.from]}
+            stroke={categoryColor[f.from]}
             strokeOpacity={0.55}
             strokeWidth={1}
           />
@@ -178,22 +186,21 @@ function AlluvialNodes() {
   const yScale = useYScale();
   return (
     <g data-drawing-container>
-      {TIME_POINTS.map((timePoint, colIndex) => {
+      {timePoints.map((timePoint, colIndex) => {
         const cx = xScale(timePoint);
         const isFirst = colIndex === 0;
-        const isLast = colIndex === TIME_POINTS.length - 1;
-        return STACK_ORDER.map((cat) => {
-          const value = POPULATIONS[colIndex][cat];
+        const isLast = colIndex === timePoints.length - 1;
+        return categories.map((cat) => {
+          const value = populations[colIndex][cat];
           if (value < 0.5) return null;
-          const { top, bottom } = NODE_EXTENTS[colIndex][cat];
+          const { top, bottom } = nodeExtents[colIndex][cat];
           const yTop = yScale(top);
           const yBottom = yScale(bottom);
           const midY = (yTop + yBottom) / 2;
           const segmentH = yBottom - yTop;
           const showMidLabel =
             !isFirst && !isLast && segmentH >= MID_LABEL_MIN_HEIGHT;
-          const midLabel = CATEGORY_ABBR[cat];
-          const midPillW = midLabel.length * MID_LABEL_FONT * 0.62 + 10;
+          const midPillW = cat.length * MID_LABEL_FONT * 0.6 + 14;
           const midPillH = MID_LABEL_FONT + 8;
           return (
             <React.Fragment key={`${timePoint}-${cat}`}>
@@ -202,7 +209,7 @@ function AlluvialNodes() {
                 y={yTop}
                 width={NODE_W}
                 height={segmentH}
-                fill={CATEGORY_COLOR[cat]}
+                fill={categoryColor[cat]}
                 stroke={t.pageBg}
                 strokeWidth={1.5}
               />
@@ -235,7 +242,7 @@ function AlluvialNodes() {
                     fontSize={MID_LABEL_FONT}
                     fill={t.inkSoft}
                   >
-                    {midLabel}
+                    {cat}
                   </text>
                 </>
               )}
@@ -259,20 +266,18 @@ function ValueAxisTitle() {
       fill={t.inkSoft}
       transform={`rotate(-90, 16, ${cy})`}
     >
-      Customers
+      {VALUE}
     </text>
   );
 }
 
-// --- Title + legend chrome ---------------------------------------------------
 const TITLE = "alluvial-basic · javascript · muix · anyplot.ai";
 const TITLE_FONT_DEFAULT = 28;
 const titleFontSize =
   TITLE.length > 67
     ? Math.round(TITLE_FONT_DEFAULT * (67 / TITLE.length))
     : TITLE_FONT_DEFAULT;
-const SUBTITLE =
-  "Simulated SaaS subscription-tier migration · 1,000 customers across 4 quarters";
+const SUBTITLE = `Simulated SaaS subscription-tier migration · ${Math.round(total).toLocaleString("en-US")} ${VALUE.toLowerCase()} across ${timePoints.length} ${TIME_POINT.toLowerCase()}s`;
 const TITLE_H = 44;
 const SUBTITLE_H = 26;
 const LEGEND_H = 34;
@@ -288,7 +293,7 @@ function Legend() {
         flexWrap: "wrap",
       }}
     >
-      {STACK_ORDER.map((cat) => (
+      {categories.map((cat) => (
         <div
           key={cat}
           style={{ display: "flex", alignItems: "center", gap: "7px" }}
@@ -298,7 +303,7 @@ function Legend() {
               width: "13px",
               height: "13px",
               borderRadius: "3px",
-              backgroundColor: CATEGORY_COLOR[cat],
+              backgroundColor: categoryColor[cat],
               display: "inline-block",
             }}
           />
@@ -306,13 +311,12 @@ function Legend() {
         </div>
       ))}
       <span style={{ fontSize: "14px", color: t.inkSoft, fontStyle: "italic" }}>
-        Band width ∝ transition volume
+        Band width ∝ {FLOW.toLowerCase()}
       </span>
     </div>
   );
 }
 
-// --- Chart (default-exported component — the harness mounts it) ------------
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
   const chartHeight = height - TITLE_H - SUBTITLE_H - LEGEND_H;
@@ -344,30 +348,39 @@ export default function Chart() {
         </div>
         <Legend />
       </div>
-      <ChartContainer
+      <ChartsContainer
         width={width}
         height={chartHeight}
         series={[]}
-        margin={{ top: 40, bottom: 10, left: 150, right: 150 }}
+        margin={{ top: 20, bottom: 20, left: 150, right: 150 }}
         xAxis={[
           {
             id: "time",
             scaleType: "point",
-            data: TIME_POINTS,
+            data: timePoints,
             position: "top",
             disableLine: true,
             disableTicks: true,
+            height: 40,
             tickLabelStyle: { fontSize: 15, fill: t.inkSoft, fontWeight: 600 },
           },
         ]}
-        yAxis={[{ id: "value", scaleType: "linear", min: 0, max: TOTAL }]}
+        yAxis={[
+          {
+            id: "value",
+            scaleType: "linear",
+            min: 0,
+            max: total,
+            position: "none",
+          },
+        ]}
         skipAnimation
       >
         <ChartsXAxis axisId="time" />
         <ValueAxisTitle />
         <AlluvialFlows />
         <AlluvialNodes />
-      </ChartContainer>
+      </ChartsContainer>
     </div>
   );
 }
