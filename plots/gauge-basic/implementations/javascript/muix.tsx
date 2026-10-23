@@ -16,12 +16,13 @@ const t = window.ANYPLOT_TOKENS;
 const VALUE = "value"; // role: value
 const MIN_VALUE = "min_value"; // role: min_value
 const MAX_VALUE = "max_value"; // role: max_value
-const THRESHOLDS = "thresholds"; // role: thresholds
+const LOW_THRESHOLD = "Low threshold"; // role: thresholds
+const HIGH_THRESHOLD = "High threshold"; // role: thresholds
 
 // Data: replace this block with your own records, one object per row
 // Customer satisfaction score on a 0–100 scale with zone thresholds at 30 and 70.
 const data = [
-  { [VALUE]: 72, [MIN_VALUE]: 0, [MAX_VALUE]: 100, [THRESHOLDS]: [30, 70] },
+  { [VALUE]: 72, [MIN_VALUE]: 0, [MAX_VALUE]: 100, [LOW_THRESHOLD]: 30, [HIGH_THRESHOLD]: 70 },
 ];
 
 // Plot: reads only data and the constants above
@@ -29,7 +30,8 @@ const record = data[0];
 const score = record[VALUE];
 const VALUE_MIN = record[MIN_VALUE];
 const VALUE_MAX = record[MAX_VALUE];
-const [LOW_THRESHOLD, HIGH_THRESHOLD] = record[THRESHOLDS];
+const lowThreshold = record[LOW_THRESHOLD];
+const highThreshold = record[HIGH_THRESHOLD];
 
 // Imprint semantic colors: red=poor, amber=fair, green=good
 const COLOR_POOR = t.palette[4];
@@ -37,9 +39,9 @@ const COLOR_FAIR = t.amber;
 const COLOR_GOOD = t.palette[0];
 
 const scoreColor =
-  score < LOW_THRESHOLD
+  score < lowThreshold
     ? COLOR_POOR
-    : score < HIGH_THRESHOLD
+    : score < highThreshold
     ? COLOR_FAIR
     : COLOR_GOOD;
 
@@ -74,8 +76,8 @@ function sectorPath(
 function ZoneArcs() {
   const { cx, cy, outerRadius, innerRadius } = useGaugeState();
   const range = VALUE_MAX - VALUE_MIN || 1;
-  const lowFrac = (LOW_THRESHOLD - VALUE_MIN) / range;
-  const highFrac = (HIGH_THRESHOLD - VALUE_MIN) / range;
+  const lowFrac = (lowThreshold - VALUE_MIN) / range;
+  const highFrac = (highThreshold - VALUE_MIN) / range;
   const gapRad = TOTAL_RAD * 0.007;
 
   const z1S = START_RAD;
@@ -85,7 +87,7 @@ function ZoneArcs() {
   const z3S = START_RAD + TOTAL_RAD * highFrac + gapRad;
   const z3E = START_RAD + TOTAL_RAD;
 
-  const ticks = [VALUE_MIN, LOW_THRESHOLD, HIGH_THRESHOLD, VALUE_MAX];
+  const ticks = [VALUE_MIN, lowThreshold, highThreshold, VALUE_MAX];
   const labelR = outerRadius + 24;
 
   return (
@@ -184,9 +186,9 @@ export default function Chart() {
   const titleFontSize = Math.round(22 * (67 / 80));
 
   const zones = [
-    { label: "Needs Work", range: `${VALUE_MIN}–${LOW_THRESHOLD}`, color: COLOR_POOR },
-    { label: "Developing", range: `${LOW_THRESHOLD}–${HIGH_THRESHOLD}`, color: COLOR_FAIR },
-    { label: "Excellent", range: `${HIGH_THRESHOLD}–${VALUE_MAX}`, color: COLOR_GOOD },
+    { label: "Needs Work", range: `${VALUE_MIN}–${lowThreshold}`, color: COLOR_POOR },
+    { label: "Developing", range: `${lowThreshold}–${highThreshold}`, color: COLOR_FAIR },
+    { label: "Excellent", range: `${highThreshold}–${VALUE_MAX}`, color: COLOR_GOOD },
   ];
 
   return (
