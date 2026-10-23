@@ -14,6 +14,10 @@ const X_PAD_SHARE = 0.04;
 const Y_DOMAIN_MAX = 1.05;
 const MIN_ARC_HEIGHT = 0.12;
 const MAX_ARC_SPAN = 0.88;
+const STROKE_MIN_PX = 1.6;
+const STROKE_MAX_PX = 3.4;
+const STROKE_ALPHA_MIN = 0.52;
+const STROKE_ALPHA_MAX = 0.82;
 const SEMANTIC_COLORS: Record<string, string> = {
   Activates: t.palette[0],
   Represses: t.palette[4],
@@ -57,7 +61,7 @@ const nodes = [
   ...new Set([...data.map((d) => d[SOURCE]), ...data.map((d) => d[TARGET])]),
 ];
 const nodeIndex = Object.fromEntries(nodes.map((n, i) => [n, i]));
-const maxDistance = Math.max(1, nodes.length - 1);
+const maxDistance = nodes.length - 1;
 
 const types = [...new Set(data.map((d) => d[INTERACTION_TYPE]))];
 const usedColors = new Set(
@@ -75,24 +79,25 @@ types.forEach((k, i) => {
 const weights = data.map((d) => d[WEIGHT]);
 const minWeight = Math.min(...weights);
 const maxWeight = Math.max(...weights);
+const weightSpan = Math.max(1e-9, maxWeight - minWeight);
 const xPad = maxDistance * X_PAD_SHARE;
 
 function ArcLayer() {
   const xScale = useXScale();
   const yScale = useYScale();
-  const baselineY = yScale(0) ?? 0;
+  const baselineY = yScale(0);
   return (
     <g data-drawing-container>
       {data.map((row, i) => {
         const a = nodeIndex[row[SOURCE]];
         const b = nodeIndex[row[TARGET]];
-        const strength = row[WEIGHT];
+        const strength = (row[WEIGHT] - minWeight) / weightSpan;
         const kind = row[INTERACTION_TYPE];
-        const x1 = xScale(a) ?? 0;
-        const x2 = xScale(b) ?? 0;
+        const x1 = xScale(a);
+        const x2 = xScale(b);
         const archH =
           MIN_ARC_HEIGHT + MAX_ARC_SPAN * (Math.abs(b - a) / maxDistance);
-        const apexY = yScale(archH) ?? 0;
+        const apexY = yScale(archH);
         const controlY = baselineY - 2 * (baselineY - apexY);
         return (
           <path
@@ -100,14 +105,16 @@ function ArcLayer() {
             d={`M ${x1} ${baselineY} Q ${(x1 + x2) / 2} ${controlY} ${x2} ${baselineY}`}
             fill="none"
             stroke={typeColor[kind]}
-            strokeWidth={1 + strength * 0.6}
-            strokeOpacity={0.42 + strength * 0.1}
+            strokeWidth={STROKE_MIN_PX + strength * (STROKE_MAX_PX - STROKE_MIN_PX)}
+            strokeOpacity={
+              STROKE_ALPHA_MIN + strength * (STROKE_ALPHA_MAX - STROKE_ALPHA_MIN)
+            }
             strokeDasharray={typeDash[kind]}
           />
         );
       })}
       {nodes.map((name, i) => {
-        const x = xScale(i) ?? 0;
+        const x = xScale(i);
         const labelX = x - 4;
         const labelY = baselineY + NODE_RADIUS + 18;
         return (
@@ -139,7 +146,7 @@ function ArcLayer() {
 }
 
 const TITLE = "arc-basic · javascript · muix · anyplot.ai";
-const SUBTITLE = `${nodes.length} ordered nodes · ${data.length} arcs (${WEIGHT}: ${minWeight}–${maxWeight})`;
+const SUBTITLE = `${nodes.length} nodes · ${data.length} arcs · ${WEIGHT}: ${minWeight}–${maxWeight}`;
 const HEADER_H = 100;
 
 export default function Chart() {
@@ -214,7 +221,7 @@ export default function Chart() {
               <span>{kind}</span>
             </span>
           ))}
-          <span>· Arc height ∝ sequence distance · Stroke width ∝ {WEIGHT.toLowerCase()}</span>
+          <span>· Arc height ∝ sequence distance · Stroke width ∝ {WEIGHT}</span>
         </div>
       </div>
       <ChartsContainer
