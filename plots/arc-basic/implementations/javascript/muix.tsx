@@ -3,133 +3,131 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 93/100 | Created: 2026-08-24
 import * as React from "react";
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data: synthetic gene regulatory network along a chromosome ------------
-// Genes are ordered by their (illustrative) position along the chromosome —
-// the axis an arc diagram is built to read. Each edge is a regulatory
-// interaction: "activate" (up-regulates the target) or "repress"
-// (down-regulates it), with a strength in [1, 4].
-const GENES = [
-  "FOXP2",
-  "GATA3",
-  "MYC",
-  "KRAS",
-  "EGFR",
-  "PIK3CA",
-  "PTEN",
-  "TP53",
-  "ATM",
-  "BRCA1",
-  "BRCA2",
-  "CDK4",
-  "ESR1",
-  "NOTCH1",
-  "AKT1",
-  "VEGFA",
-  "APOE",
-  "ACE2",
+// Constants
+const NODE_RADIUS = 8;
+const X_PAD_SHARE = 0.04;
+const Y_DOMAIN_MAX = 1.05;
+const MIN_ARC_HEIGHT = 0.12;
+const MAX_ARC_SPAN = 0.88;
+const SEMANTIC_COLORS: Record<string, string> = {
+  Activates: t.palette[0],
+  Represses: t.palette[4],
+};
+
+// Columns: set these to your data's column names
+const SOURCE = "Source gene"; // role: nodes
+const TARGET = "Target gene"; // role: edges
+const WEIGHT = "Interaction strength"; // role: weights
+const INTERACTION_TYPE = "Regulation type"; // role: extra
+
+// Data: replace this block with your own records, one object per row
+const data = [
+  { [SOURCE]: "FOXP2", [TARGET]: "GATA3", [WEIGHT]: 2, [INTERACTION_TYPE]: "Activates" },
+  { [SOURCE]: "GATA3", [TARGET]: "MYC", [WEIGHT]: 3, [INTERACTION_TYPE]: "Activates" },
+  { [SOURCE]: "MYC", [TARGET]: "KRAS", [WEIGHT]: 2, [INTERACTION_TYPE]: "Activates" },
+  { [SOURCE]: "KRAS", [TARGET]: "EGFR", [WEIGHT]: 3, [INTERACTION_TYPE]: "Activates" },
+  { [SOURCE]: "EGFR", [TARGET]: "PIK3CA", [WEIGHT]: 2, [INTERACTION_TYPE]: "Activates" },
+  { [SOURCE]: "PIK3CA", [TARGET]: "PTEN", [WEIGHT]: 4, [INTERACTION_TYPE]: "Represses" },
+  { [SOURCE]: "PTEN", [TARGET]: "TP53", [WEIGHT]: 3, [INTERACTION_TYPE]: "Activates" },
+  { [SOURCE]: "TP53", [TARGET]: "ATM", [WEIGHT]: 2, [INTERACTION_TYPE]: "Activates" },
+  { [SOURCE]: "ATM", [TARGET]: "BRCA1", [WEIGHT]: 3, [INTERACTION_TYPE]: "Activates" },
+  { [SOURCE]: "BRCA1", [TARGET]: "BRCA2", [WEIGHT]: 4, [INTERACTION_TYPE]: "Activates" },
+  { [SOURCE]: "BRCA2", [TARGET]: "CDK4", [WEIGHT]: 1, [INTERACTION_TYPE]: "Represses" },
+  { [SOURCE]: "CDK4", [TARGET]: "ESR1", [WEIGHT]: 2, [INTERACTION_TYPE]: "Activates" },
+  { [SOURCE]: "ESR1", [TARGET]: "NOTCH1", [WEIGHT]: 2, [INTERACTION_TYPE]: "Represses" },
+  { [SOURCE]: "NOTCH1", [TARGET]: "AKT1", [WEIGHT]: 3, [INTERACTION_TYPE]: "Activates" },
+  { [SOURCE]: "AKT1", [TARGET]: "VEGFA", [WEIGHT]: 2, [INTERACTION_TYPE]: "Activates" },
+  { [SOURCE]: "VEGFA", [TARGET]: "APOE", [WEIGHT]: 1, [INTERACTION_TYPE]: "Activates" },
+  { [SOURCE]: "APOE", [TARGET]: "ACE2", [WEIGHT]: 2, [INTERACTION_TYPE]: "Activates" },
+  { [SOURCE]: "MYC", [TARGET]: "TP53", [WEIGHT]: 3, [INTERACTION_TYPE]: "Represses" },
+  { [SOURCE]: "PIK3CA", [TARGET]: "AKT1", [WEIGHT]: 4, [INTERACTION_TYPE]: "Activates" },
+  { [SOURCE]: "TP53", [TARGET]: "BRCA1", [WEIGHT]: 3, [INTERACTION_TYPE]: "Activates" },
+  { [SOURCE]: "BRCA1", [TARGET]: "ACE2", [WEIGHT]: 1, [INTERACTION_TYPE]: "Represses" },
+  { [SOURCE]: "FOXP2", [TARGET]: "ACE2", [WEIGHT]: 1, [INTERACTION_TYPE]: "Activates" },
+  { [SOURCE]: "KRAS", [TARGET]: "BRCA2", [WEIGHT]: 2, [INTERACTION_TYPE]: "Represses" },
 ];
 
-// [sourceIndex, targetIndex, strength, kind]
-const INTERACTIONS = [
-  [0, 1, 2, "activate"],
-  [1, 2, 3, "activate"],
-  [2, 3, 2, "activate"],
-  [3, 4, 3, "activate"],
-  [4, 5, 2, "activate"],
-  [5, 6, 4, "repress"],
-  [6, 7, 3, "activate"],
-  [7, 8, 2, "activate"],
-  [8, 9, 3, "activate"],
-  [9, 10, 4, "activate"],
-  [10, 11, 1, "repress"],
-  [11, 12, 2, "activate"],
-  [12, 13, 2, "repress"],
-  [13, 14, 3, "activate"],
-  [14, 15, 2, "activate"],
-  [15, 16, 1, "activate"],
-  [16, 17, 2, "activate"],
-  [2, 7, 3, "repress"],
-  [5, 14, 4, "activate"],
-  [7, 9, 3, "activate"],
-  [9, 17, 1, "repress"],
-  [0, 17, 1, "activate"],
-  [3, 10, 2, "repress"],
+// Plot: reads only data and the constants above
+const nodes = [
+  ...new Set([...data.map((d) => d[SOURCE]), ...data.map((d) => d[TARGET])]),
 ];
+const nodeIndex = Object.fromEntries(nodes.map((n, i) => [n, i]));
+const maxDistance = Math.max(1, nodes.length - 1);
 
-const degree = new Array(GENES.length).fill(0);
-INTERACTIONS.forEach(([a, b]) => {
-  degree[a] += 1;
-  degree[b] += 1;
+const types = [...new Set(data.map((d) => d[INTERACTION_TYPE]))];
+const usedColors = new Set(
+  types.map((k) => SEMANTIC_COLORS[k]).filter(Boolean),
+);
+const unusedPalette = t.palette.filter((c) => !usedColors.has(c));
+let unusedIdx = 0;
+const typeColor: Record<string, string> = {};
+const typeDash: Record<string, string | undefined> = {};
+types.forEach((k, i) => {
+  typeColor[k] = SEMANTIC_COLORS[k] ?? unusedPalette[unusedIdx++];
+  typeDash[k] = i % 2 === 1 ? "6 4" : undefined;
 });
-const maxDegree = Math.max(...degree);
-const nodeRadius = (i) => 6 + (degree[i] / maxDegree) * 9;
 
-const maxDistance = GENES.length - 1;
-// Arc "height" (normalized 0..1) grows with node distance — the reading a
-// basic arc diagram is built around — with a floor so adjacent-gene edges
-// stay visible above the baseline.
-const archHeight = (dist) => 0.12 + 0.88 * (dist / maxDistance);
+const weights = data.map((d) => d[WEIGHT]);
+const minWeight = Math.min(...weights);
+const maxWeight = Math.max(...weights);
+const xPad = maxDistance * X_PAD_SHARE;
 
-// Up-regulation (activate) reads as "gain", down-regulation (repress) as
-// "loss" — the same green/red convention as a P&L chart, so brand green
-// stays the mandatory first series and matte-red is the deferred semantic
-// anchor for the negative case (see default-style-guide "Semantic exception").
-const kindColor = (kind) => (kind === "activate" ? t.palette[0] : t.palette[4]);
-
-// --- Custom SVG layers, positioned via the chart's own scales --------------
-function ArcEdges() {
+function ArcLayer() {
   const xScale = useXScale();
   const yScale = useYScale();
-  const baselineY = yScale(0);
+  const baselineY = yScale(0) ?? 0;
   return (
     <g data-drawing-container>
-      {INTERACTIONS.map(([a, b, strength, kind], i) => {
-        const x1 = xScale(a);
-        const x2 = xScale(b);
-        // A quadratic bezier's apex sits at the *midpoint* between the
-        // baseline and the control point (both endpoints are level), so the
-        // control point must overshoot by 2x for the rendered apex to land
-        // exactly at yScale(archHeight).
-        const controlY = baselineY - 2 * (baselineY - yScale(archHeight(Math.abs(b - a))));
+      {data.map((row, i) => {
+        const a = nodeIndex[row[SOURCE]];
+        const b = nodeIndex[row[TARGET]];
+        const strength = row[WEIGHT];
+        const kind = row[INTERACTION_TYPE];
+        const x1 = xScale(a) ?? 0;
+        const x2 = xScale(b) ?? 0;
+        const archH =
+          MIN_ARC_HEIGHT + MAX_ARC_SPAN * (Math.abs(b - a) / maxDistance);
+        const apexY = yScale(archH) ?? 0;
+        const controlY = baselineY - 2 * (baselineY - apexY);
         return (
           <path
             key={`edge-${i}`}
             d={`M ${x1} ${baselineY} Q ${(x1 + x2) / 2} ${controlY} ${x2} ${baselineY}`}
             fill="none"
-            stroke={kindColor(kind)}
+            stroke={typeColor[kind]}
             strokeWidth={1 + strength * 0.6}
             strokeOpacity={0.42 + strength * 0.1}
-            strokeDasharray={kind === "repress" ? "6 4" : undefined}
+            strokeDasharray={typeDash[kind]}
           />
         );
       })}
-    </g>
-  );
-}
-
-function ArcNodes() {
-  const xScale = useXScale();
-  const yScale = useYScale();
-  const baselineY = yScale(0);
-  return (
-    <g data-drawing-container>
-      {GENES.map((name, i) => {
-        const x = xScale(i);
+      {nodes.map((name, i) => {
+        const x = xScale(i) ?? 0;
+        const labelX = x - 4;
+        const labelY = baselineY + NODE_RADIUS + 18;
         return (
           <React.Fragment key={name}>
-            <circle cx={x} cy={baselineY} r={nodeRadius(i)} fill={t.palette[0]} stroke={t.pageBg} strokeWidth={1.5} />
+            <circle
+              cx={x}
+              cy={baselineY}
+              r={NODE_RADIUS}
+              fill={t.palette[0]}
+              stroke={t.pageBg}
+              strokeWidth={1.5}
+            />
             <text
-              x={x - 4}
-              y={baselineY + nodeRadius(i) + 16}
+              x={labelX}
+              y={labelY}
               textAnchor="end"
-              fontSize={13}
+              fontSize={14}
+              fontWeight={500}
               fill={t.inkSoft}
-              transform={`rotate(-40 ${x - 4} ${baselineY + nodeRadius(i) + 16})`}
+              transform={`rotate(-40 ${labelX} ${labelY})`}
             >
               {name}
             </text>
@@ -140,65 +138,112 @@ function ArcNodes() {
   );
 }
 
-// --- Title + legend chrome ---------------------------------------------------
 const TITLE = "arc-basic · javascript · muix · anyplot.ai";
-const TITLE_FONT_DEFAULT = 25;
-const titleFontSize =
-  TITLE.length > 67 ? Math.round(TITLE_FONT_DEFAULT * (67 / TITLE.length)) : TITLE_FONT_DEFAULT;
-const TITLE_H = 46;
-const LEGEND_H = 34;
+const SUBTITLE = `${nodes.length} ordered nodes · ${data.length} arcs (${WEIGHT}: ${minWeight}–${maxWeight})`;
+const HEADER_H = 100;
 
-function Legend() {
-  return (
-    <div style={{ height: LEGEND_H, display: "flex", alignItems: "center", gap: "22px", flexWrap: "wrap" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
-        <span style={{ width: "18px", height: "3px", backgroundColor: t.palette[0], display: "inline-block" }} />
-        <span style={{ fontSize: "14px", color: t.inkSoft }}>Activates</span>
-      </div>
-      <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
-        <svg width="18" height="3" style={{ display: "inline-block" }}>
-          <line x1="0" y1="1.5" x2="18" y2="1.5" stroke={t.palette[4]} strokeWidth="3" strokeDasharray="6 4" />
-        </svg>
-        <span style={{ fontSize: "14px", color: t.inkSoft }}>Represses (dashed)</span>
-      </div>
-      <span style={{ fontSize: "14px", color: t.inkSoft }}>Arc height ∝ distance along the chromosome</span>
-    </div>
-  );
-}
-
-// --- Chart (default-exported component — the harness mounts it) ------------
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
-  const chartHeight = height - TITLE_H - LEGEND_H;
 
   return (
-    <div style={{ width, height, display: "flex", flexDirection: "column" }}>
-      <div style={{ paddingLeft: "50px" }}>
+    <div
+      style={{
+        width,
+        height,
+        backgroundColor: t.pageBg,
+        display: "flex",
+        flexDirection: "column",
+        fontFamily:
+          '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+      }}
+    >
+      <div
+        style={{
+          height: HEADER_H,
+          padding: "14px 50px 0 50px",
+          display: "flex",
+          flexDirection: "column",
+          boxSizing: "border-box",
+        }}
+      >
         <div
           style={{
-            height: `${TITLE_H}px`,
-            lineHeight: `${TITLE_H}px`,
-            fontSize: `${titleFontSize}px`,
-            fontWeight: 500,
+            fontSize: 22,
+            fontWeight: 600,
             color: t.ink,
+            lineHeight: 1.25,
           }}
         >
           {TITLE}
         </div>
-        <Legend />
+        <div
+          style={{
+            fontSize: 15,
+            color: t.inkSoft,
+            marginTop: 4,
+          }}
+        >
+          {SUBTITLE}
+        </div>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 22,
+            marginTop: 6,
+            fontSize: 14,
+            color: t.inkSoft,
+          }}
+        >
+          {types.map((kind) => (
+            <span
+              key={kind}
+              style={{ display: "inline-flex", alignItems: "center", gap: 7 }}
+            >
+              <svg width="20" height="4" style={{ display: "inline-block" }}>
+                <line
+                  x1="0"
+                  y1="2"
+                  x2="20"
+                  y2="2"
+                  stroke={typeColor[kind]}
+                  strokeWidth="3"
+                  strokeDasharray={typeDash[kind]}
+                />
+              </svg>
+              <span>{kind}</span>
+            </span>
+          ))}
+          <span>· Arc height ∝ sequence distance · Stroke width ∝ {WEIGHT.toLowerCase()}</span>
+        </div>
       </div>
-      <ChartContainer
+      <ChartsContainer
         width={width}
-        height={chartHeight}
+        height={height - HEADER_H}
         series={[]}
-        margin={{ top: 30, bottom: 110, left: 50, right: 50 }}
-        xAxis={[{ id: "x", scaleType: "linear", min: -0.6, max: GENES.length - 0.4 }]}
-        yAxis={[{ id: "y", scaleType: "linear", min: 0, max: 1 }]}
+        margin={{ top: 20, bottom: 110, left: 60, right: 50 }}
+        xAxis={[
+          {
+            id: "x",
+            scaleType: "linear",
+            min: -xPad,
+            max: maxDistance + xPad,
+            position: "none",
+          },
+        ]}
+        yAxis={[
+          {
+            id: "y",
+            scaleType: "linear",
+            min: 0,
+            max: Y_DOMAIN_MAX,
+            position: "none",
+          },
+        ]}
         skipAnimation
       >
-        <ArcEdges />
-        <ArcNodes />
-      </ChartContainer>
+        <ArcLayer />
+      </ChartsContainer>
     </div>
   );
 }
