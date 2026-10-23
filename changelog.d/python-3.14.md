@@ -20,6 +20,8 @@
   other foreign function stay refused, and the data and convert guards allow none
   (narrowed after a Fable review). The sandbox interpreter also runs with
   `-X disable-remote-debug`, and the guards refuse `sys.remote_exec`, so 3.14's
-  remote debugging cannot run a script in it. The code validator bans
+  remote debugging cannot run a script in it. Subinterpreters (PEP 734, public
+  from 3.14), whose code runs outside the guard's audit hook, cannot be created
+  or entered, and the validator bans their modules. The code validator bans
   `annotationlib` and `typing.evaluate_forward_ref`, which 3.14 added and which
   evaluate annotation strings. (#12247)
