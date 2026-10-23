@@ -116,7 +116,7 @@ Categorical-color distinguishability falls with n. The hybrid-v3 sort holds ΔE 
 
 **Default to fewer series.** Before adding the Nth color, ask: "could this be small multiples / faceting?" Usually the answer is yes and the chart improves.
 
-**In code, list all eight hues and use the first n.** The palette constant always holds the eight categorical hues in canonical order, and each group takes its color by position (`IMPRINT[i]`, or the library's color cycle fed the full list), with `n` counted from the data, never a literal slice sized to the sample (`[:3]`). The same code then colors one more group correctly on other data, and a ninth group fails loudly instead of recycling a color.
+**In code, list all eight hues and use the first n.** The palette constant always holds the eight categorical hues in canonical order, and each group takes its color by position (`IMPRINT[i]`, or the library's color cycle fed the full list), with `n` counted from the data, never a literal slice sized to the sample (`[:3]`). The same code then colors one more group correctly on other data. Where the code picks colors by position or by group (`IMPRINT[i]`, `colors[group]`), a ninth group fails loudly instead of recycling a color; a library's color cycle repeats colors instead, so prefer the explicit lookup where the code assigns colors itself.
 
 ### Optional outline pattern (AI judgment)
 

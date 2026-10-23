@@ -109,6 +109,7 @@ const data = [
 // Plot: reads only data and the constants above
 const quarters = [...new Set(data.map((d) => d[QUARTER]))];
 const lines = [...new Set(data.map((d) => d[PRODUCT_LINE]))];
+const chart = echarts.init(document.getElementById("container"));
 chart.setOption({
   color: t.palette,
   xAxis: { type: "category", data: quarters, name: QUARTER },
