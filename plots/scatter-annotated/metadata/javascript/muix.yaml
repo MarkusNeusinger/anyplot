@@ -2,138 +2,130 @@ library: muix
 language: javascript
 specification_id: scatter-annotated
 created: '2026-09-05T13:18:01Z'
-updated: '2026-09-05T13:23:04Z'
-generated_by: claude-sonnet
-workflow_run: 33968051868
+updated: '2026-10-23T21:48:47Z'
+generated_by: adopted:gemini/12267-muix-9-batch1
+workflow_run: 40028370434
 issue: 2790
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/javascript/muix/plot-dark.html
-quality_score: 91
+quality_score: 86
 review:
   strengths:
-  - 'Distinctive scale-synced overlay: PointAnnotations reads the chart''s live x/y
-    scales via useXScale/useYScale/getValueToPositionMapper, so the label + leader-line
-    layer is a real child of ScatterChart that stays perfectly aligned to the same
-    coordinate system the ScatterPlot itself uses — an idiomatic community-only technique,
-    not a hack.'
-  - 'Strong data storytelling: only the 12 ''highlighted'' companies that deviate
-    from the general revenue-to-cap trend (green, markerSize 16, alpha 0.78) carry
-    labels, while 18 unlabeled ''peers'' (gray, markerSize 9, alpha 0.6) quietly establish
-    the baseline trend — matches the spec''s guidance to annotate only a subset on
-    a moderately dense scatter and gives the chart a clear focal point.'
-  - Hand-tuned per-point dx/dy offsets plus subtle leader lines keep all 12 labels
-    fully legible with zero overlaps across a fairly dense cluster, in both themes.
-  - 'Fully palette/theme compliant: first series is brand green #009E73, the muted
-    gray uses the documented ''other/rest'' semantic-anchor exception, chrome is FAF8F1/1A1A17,
-    and data colors are identical between light and dark renders.'
+  - All 12 labels sit beside their points with thin muted leader lines (opacity 0.65,
+    1.2 px) that stay subtler than both markers and text; no label collides with another
+    label or a marker in either render
+  - Labels on the 12 notable companies only, with the 18 peer companies drawn smaller
+    in the muted anchor, so the labeled outliers read first while every point stays
+    at its exact (x, y)
+  - 'Edge-aware label sides: points near the left or right axis bound flip their label
+    inward (nearLeft/nearRight), so no label leaves the plot area'
+  - Annotations are drawn as a composed child of ScatterChart using the useXScale/useYScale
+    hooks, so leaders and labels share the chart's own scales instead of hand-computed
+    pixel positions
+  - 'Theme tokens threaded through every chrome element (t.ink, t.inkSoft, t.grid,
+    t.pageBg); markers at fillOpacity 0.7 as the Notes ask; first series is #009E73
+    and identical in both renders'
   weaknesses:
-  - 'yAxis `tickFontSize: 54` is used purely as an undocumented spacing hack to push
-    the rotated axis label away from the tick numbers (the actual rendered tick font
-    size comes from `tickLabelStyle.fontSize: 14`, not this prop) — fragile since
-    it leans on legacy label-offset behavior instead of an explicit margin/gap prop;
-    a future muix release could change how tickFontSize maps to labelRefPoint and
-    silently reintroduce the overlap it''s working around.'
-  - Y-axis label font-size (13px via sx override) and x-axis label font-size (16px)
-    differ noticeably without a strong semantic reason.
-  - The chosen axis domains (0-165 x, 0-430 y) leave a large empty region in the upper-right
-    of the canvas since no data falls there — not wrong, but a tighter domain or annotation
-    in that space would use the frame more efficiently.
-  - Title occupies only ~40% of the plot width at fontsize 19 despite a generous top
-    margin — legible but could carry a touch more presence.
+  - 'VQ-05 (both): the title sits about 8 CSS px below the top canvas edge (all pixels
+    visible, but cramped) while the 56 px title band is meant to center it → about
+    20 px clearance above the title (+12 px). Likely cause: the flex column shrinks
+    the title div because the ScatterChart (height - titleHeight) plus its legend
+    overflows; set flexShrink: 0 on the title div or reduce the chart height.'
+  - 'Suggestion: an x-axis tick step of 10 instead of 5 would halve the 34 tick labels
+    and vertical grid lines and quiet the background.'
+  - 'Suggestion: a legend entry such as "Notable companies" would tell the reader
+    more than "Highlighted".'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "Tech Company Valuations · scatter-annotated · javascript · muix · anyplot.ai" is dark ink, centered top, fully visible with no clipping. X-axis label "Annual Revenue ($B)" and rotated Y-axis label "Market Cap ($B)" are dark and clearly readable. Tick labels (0-165 on x, 0-420 on y) are dark and legible against the light background. Grid lines are light gray, subtle but visible. Legend ("Highlighted" green swatch, "Peer companies" gray swatch) sits below the x-axis, fully legible.
-      Data: First series (12 highlighted companies) renders in translucent brand green (#009E73 at alpha 0.78), larger markers (16px). Second series (18 peer companies) renders in translucent muted gray (alpha 0.6), smaller markers (9px). Each highlighted point has a thin gray leader line to its company-name label, all 12 labels legible with no overlaps.
+      Background: warm off-white #FAF8F1 across the whole canvas.
+      Chrome: title "Tech Company Valuations · scatter-annotated · javascript · muix · anyplot.ai" in dark bold ink at the top (close to the top edge, fully visible); y-axis "Market Cap ($B)" 0–420 step 20, x-axis "Annual Revenue ($B)" 0–165 step 5; tick labels in soft dark ink; subtle grid on both axes; horizontal legend at the bottom ("Highlighted", "Peer companies"). All text readable.
+      Data: 12 larger translucent brand-green #009E73 markers, each labeled with a company name (Aurora Semiconductors, Vertex Analytics, Nimbus Software, NexaCloud, Lumen Bioworks, Zephyr Mobility, Solstice Robotics, Halcyon Games, Granite Payments, Ferrotech Dynamics, Ridgeline Hardware, Cascade Networks) via thin gray leader lines, labels on both sides; 18 smaller muted gray (#6B6A63) peer markers forming a rising band. No label overlaps another label or a marker.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title, now rendered in light ink, fully visible with no clipping. Axis labels and tick labels are light-colored and clearly readable against the dark background — no dark-on-dark failures observed. Grid lines are a subtle light gray, visible without dominating. Legend swatches and text are legible.
-      Data: Same brand green (#009E73, alpha 0.78) for highlighted points and muted gray (alpha 0.6, theme-adjusted to a lighter gray for dark mode) for peers — data hues are identical to the light render as required; only chrome (background/text/grid) flipped. All 12 leader lines and labels remain legible with no overlaps.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and tick labels in light ink, grid subtle light lines, legend text light. No dark-on-dark text.
+      Data: same #009E73 green markers as the light render (identical data color); peers in the dark muted anchor #A8A79F; leader lines and labels in light tones; label positions identical to the light render.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; minor x/y-axis label font-size
-          imbalance (16px vs 13px)
+        comment: Title 20 px, axis titles 16 px, ticks 14 px, labels 14 px (CSS, dpr
+          2); all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between any of the 12 labels, leader lines, or data
-          points
+        comment: No label collides with another label or a marker
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Marker sizes (9px peers / 16px highlighted) well-suited to ~30 sparse
-          points
+        comment: 30 points at 9 / 5.5 px, alpha 0.7; legend glyphs visible in both
+          themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs. gray, no red-green reliance, adequate contrast on both
-          surfaces
+        comment: Green vs muted gray differ in lightness and size; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Canvas gate passed; large unused upper-right region and axis-label
-          size imbalance cost a point
+        comment: Title cramped against the top canvas edge (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes descriptive with ($B) units
+        comment: Both axes descriptive with units ($B)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, correct FAF8F1/1A1A17 chrome, identical data
-          hues across themes'
+        comment: 'First series #009E73, peers in the muted anchor for ''rest''; backgrounds
+          correct in both themes'
     design_excellence:
-      score: 16
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom overlay and size/color hierarchy elevate it above defaults,
-          though much of the chrome is stock MUI styling
+        comment: 'Typographic hierarchy decided: 600-weight title, 500-weight labels,
+          size split 9 vs 5.5 px between labeled and peer markers'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Grid subtle and clean, but sizable empty canvas region and standard
-          MUI legend/axis chrome
+        comment: Leader lines at 1.2 px / 0.65 opacity in muted, edge-aware label
+          sides; the 5-unit x grid stays busy
       - id: DE-03
         name: Data Storytelling
-        score: 6
+        score: 3
         max: 6
         passed: true
-        comment: 'Clear focal point: labeled outliers-from-trend vs. unlabeled peer
-          baseline'
+        comment: Labels chosen for the outliers off the peer trend band, peers muted
+          as context, giving a focal layer
     spec_compliance:
       score: 15
       max: 15
@@ -143,27 +135,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter chart
+        comment: Annotated scatter plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Text labels, subset annotation, leader lines, moderate alpha all
-          present
+        comment: 'Labels beside points, leader lines when offset, alpha 0.7, no collisions,
+          legible in both themes: all good-version bullets met'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped, all data within axis bounds
+        comment: Markers at their exact values; only labels are offset; axes cover
+          all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format with descriptive prefix; legend labels
-          match series
+        comment: Title format correct with descriptive prefix; legend entries are
+          reader text
     data_quality:
       score: 15
       max: 15
@@ -173,22 +166,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Labeled outliers + unlabeled peer trend both shown
+        comment: Labeled subset, labels on both sides, leaders of varied length, translucent
+          markers
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible fictional tech-company revenue/market-cap values, neutral
-          naming
+        comment: Fictional tech companies, revenue vs market cap; neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Revenue 8-150B, market cap 40-420B — sensible for large-cap tech
+        comment: Revenue 7–150 $B and market cap 38–410 $B are plausible; no Check
+          values in the spec
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -196,57 +190,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Only the component functions React requires; no unneeded abstraction
+        comment: One overlay component, required by MUI X for scale hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic in-memory data
+        comment: Deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ScatterChart + the three hooks used, all consumed
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: tickFontSize:54 abused purely as a spacing hack for the y-axis label
-          offset — fragile, non-obvious
+        passed: true
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: skipAnimation set, harness mount-node contract respected
+        comment: Default-exported component, skipAnimation, sized to ANYPLOT_SIZE,
+          MUI X v9 API
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Hooks usage is idiomatic, but the tickFontSize hack for axis-label
-          spacing is not
+        comment: Composition child inside ScatterChart, axis height/width bands, sx
+          class overrides
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 2
         max: 5
-        passed: true
-        comment: Scale-synced custom SVG annotation overlay via useXScale/useYScale/getValueToPositionMapper
-          is a genuinely advanced, uncommon technique
+        passed: false
+        comment: useXScale/useYScale hooks drive a custom SVG annotation layer on
+          the chart's scales
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-03c2486144
+  rendered_at: '2026-10-23T21:46:00Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  patterns:
-  - data-generation
+  - layer-composition
+  patterns: []
   dataprep: []
   styling:
   - alpha-blending
+  - grid-styling

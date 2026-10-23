@@ -2,12 +2,12 @@ library: muix
 language: javascript
 specification_id: acf-pacf
 created: '2026-06-10T02:06:14Z'
-updated: '2026-06-10T02:25:19Z'
-generated_by: claude-sonnet
-workflow_run: 27247982010
+updated: '2026-10-23T21:37:23Z'
+generated_by: adopted:gemini/12267-muix-9-batch1
+workflow_run: 40026893518
 issue: 4663
-language_version: 22.22.3
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/javascript/muix/plot-light.html
@@ -15,39 +15,39 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/acf-pacf/
 quality_score: 84
 review:
   strengths:
-  - 'Deterministic LCG RNG + Durbin-Levinson PACF recursion: rigorous, reproducible
-    time series analysis in pure browser JS'
-  - AR(2) data perfectly demonstrates the textbook ACF/PACF diagnostic pattern (exponential
-    decay vs. cutoff)
-  - Theme tokens correctly plumbed throughout (t.pageBg, t.ink, t.inkSoft, t.grid,
-    t.palette[0]) — seamless light/dark adaptation
-  - ChartsReferenceLine with proper dashed CI styling shows good MUI X-specific API
-    usage
-  - Clean dual-panel layout with thoughtful margins and bar gap ratio
+  - Both panels share the same 0-30 band axis with a null at PACF lag 0, so every
+    lag lines up vertically and the PACF starts at lag 1 as the spec asks
+  - categoryGapRatio 0.9 turns MUI X bars into thin stems from the zero baseline,
+    each ending at its computed correlation
+  - ChartsReferenceLine draws the ±1.96/sqrt(N) dashed bounds and a fainter zero hairline,
+    with the native label/labelAlign tagging the band as '95% CI'
+  - 'AR(2) temperature-anomaly data shows the textbook signature: slowly decaying
+    ACF and a PACF that cuts off after lag 2'
+  - Chrome threads ink/inkSoft tokens through ticks, axis lines and titles, so both
+    themes are fully readable with identical brand-green stems
   weaknesses:
-  - Filled bars used instead of spec-required stem lines (vertical line from zero
-    + marker at tip); MUI X community lacks native stem chart
-  - ACF and PACF panels are two separate BarChart instances — x-axis ranges align
-    visually but axes are not truly shared
-  - PACF panel omits the 95% CI label present on the ACF panel — inconsistent documentation
-    of CI bounds
-  - 'DQ-02: context is abstract AR(2) without a real-world domain label — a domain
-    label would make it more concrete'
+  - 'VQ-01 (both): the in-panel ''95% CI'' reference-line label is set at 11 px, well
+    below the 14 px ticks, and blurs into an unreadable smudge in the 400 px thumbnail
+    → about 13-14 px (+2 to +3 px). Likely cause: labelStyle={{ fontSize: 11 }} on
+    the ACF ChartsReferenceLine.'
+  - 'Suggestion: hide the tick labels on the ACF panel''s x axis so the lag numbers
+    appear only once, under the PACF panel, which would read more clearly as one shared
+    axis.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "AR(2) Process · acf-pacf · javascript · muix · anyplot.ai" in dark text (~65% canvas width). Y-axis labels "ACF" and "PACF" readable. X-axis label "Lag" on PACF panel. Tick labels 0-30 and correlation values visible. "95% CI" label at right margin of ACF panel.
-      Data: Brand green (#009E73) bars for all series. 31 bars in ACF (lags 0-30), 30 bars in PACF (lags 1-30). Dashed CI reference lines at ±0.113. Zero baseline reference line.
+      Background: warm off-white #FAF8F1 across the whole canvas, no white plot panel.
+      Chrome: bold dark title "Daily Temperature Anomaly · acf-pacf · javascript · muix · anyplot.ai" centered at top (~45% width); y-axis titles "ACF" (top) and "PACF" (bottom), x-axis title "Lag" under the bottom panel; tick labels 0-30 under both panels and -0.2..1.0 / -0.2..0.8 on the y axes in soft dark ink, all readable. Small "95% CI" label at the right end of the upper ACF bound (11 px, small).
+      Data: thin #009E73 stems. ACF: lag 0 at 1.0, then 0.72, 0.59, 0.49 ... decaying inside the bounds by lag 11, small negative stems at lags 26-30. PACF: no stem at lag 0, 0.72 at lag 1, ~0.13 at lag 2, all later lags inside the bounds. Gray dashed lines at about ±0.113 span all lags in both panels; a faint solid zero line.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title in off-white/light text — clearly readable. All axis tick labels (0-30, -0.5 to 1.0), y-axis labels, and x-axis label are light-colored. Dashed CI reference lines visible against dark background. No dark-on-dark failures observed.
-      Data: Same brand green (#009E73) bars — identical colors to light render as required. Dashed CI reference lines and zero baseline visible.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and tick labels flip to light ink and are clearly readable; dashed CI lines and the zero line flip to light gray and stay visible; no dark-on-dark text.
+      Data: stems identical #009E73 at identical positions and heights as the light render; only chrome flipped.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -55,106 +55,112 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (tick: 12px, label: 14px, title: 22px
-          CSS). Readable in both themes. 31 x-axis ticks create mild density but labels
-          remain legible.'
+        comment: Title 22 px, ticks 14 px, axis titles 15 px are readable in both
+          themes; the in-panel '95% CI' label at 11 px blurs in the 400 px thumbnail
+          (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 'No overlapping elements. Bars well-spaced with categoryGapRatio:
-          0.62.'
+        comment: No text collides with text or data; the '95% CI' label sits above
+          the dashed line at the right end, clear of the lag-30 stem
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Bars clearly visible; near-zero bars at high lags are very small
-          but reflect the data. CI lines visible.
+        comment: 31 + 30 thin green stems clearly visible on both backgrounds; dashed
+          CI lines visible in both themes; near-zero stems are short because the values
+          are
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single brand-green series on both surfaces; CVD-safe.
+        comment: Single brand-green series; no color-only encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Two panels fill canvas well. No clipping. Good margins.
+        comment: 3200x1800 canvas, two balanced panels filling the width, title ~45%
+          of the width, nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: ACF, PACF, and Lag are descriptive; correlation values need no units.
+        comment: x axis 'Lag', y axes 'ACF' and 'PACF' as the spec asks; dimensionless
+          correlations need no unit
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; background #FAF8F1 (light) / #1A1A17 (dark);
-          all chrome from ANYPLOT_TOKENS.'
+        comment: 'Stems in Imprint #009E73 in both renders; backgrounds #FAF8F1 /
+          #1A1A17; chrome flips via ink/inkSoft tokens'
     design_excellence:
-      score: 13
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Clean dual-panel layout with intentional Imprint palette usage and
-          soft CI styling. Above default but not publication-grade.
+        passed: false
+        comment: 'Clean style-guide baseline: bold title, soft tick ink, no grid;
+          nothing beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: 'Deliberate refinements: axis lines styled with t.grid, bar gap ratio
-          tuned, CI reference lines with dashes and opacity.'
+        passed: false
+        comment: 'Hierarchy of reference lines chosen for this chart: a faint 0.55-opacity
+          zero hairline under the stronger dashed CI bounds, and per-panel y limits
+          padded from the data so neither panel wastes space'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: 'AR(2) process is pedagogically ideal: ACF shows exponential decay,
-          PACF shows cutoff. Classic ARIMA diagnostic story.'
+        passed: false
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correct ACF/PACF in two stacked panels. Spec requires stem lines,
-          implementation uses filled bars (MUI X limitation).
+        comment: ACF/PACF stem panels stacked vertically; categoryGapRatio 0.9 makes
+          the bars read as thin stems
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 95% CI dashed lines, lag 0 in ACF, PACF from lag 1, 30 lags, axis
-          labels all present. Loses 1 for bars not stems and non-shared x-axis.
+        comment: ACF top / PACF bottom on the same 0-30 lag axis (columns line up),
+          thin stems from zero, dashed ±1.96/sqrt(N) bounds across all lags in both
+          themes, ACF from lag 0 (1.0), PACF from lag 1, y axes include negative room;
+          labels Lag/ACF/PACF; 30 lags
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Lag on x-axis, correlation on y-axis, correct range and scaling.
+        comment: Each stem at its own lag ending at its computed value; both y ranges
+          cover the bounds and all values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows {Descriptive Title} · {spec-id} · {language} · {library}
-          · anyplot.ai format. Legend correctly hidden.
+        comment: '''Daily Temperature Anomaly · acf-pacf · javascript · muix · anyplot.ai'';
+          legend N/A for a single series per panel (hidden)'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -162,61 +168,63 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Lag-0 anchor at 1.0, exponential ACF decay, PACF cutoff after lag
-          2, CI bounds. Excellent AR(2) demonstration.
+        comment: ACF decays slowly with lags 1-9 outside the bounds; PACF cuts off
+          after lag 2, the AR(2) signature the plot exists to reveal
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: AR(2) is a standard context but lacks a specific real-world domain
-          label.
+        comment: '300 days of daily temperature anomalies with AR(2) persistence:
+          plausible and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: ACF in [-1,1], CI at ±1.96/sqrt(300)=±0.113 mathematically correct,
-          PACF values realistic.
+        comment: N=300 in the recommended range; CI = 1.96/sqrt(300) ≈ 0.113 matches
+          the dashed lines read off the axis; ACF lag 0 = 1.0; lag-1 ACF ≈ 0.72 near
+          the theoretical 0.65/(1-0.15) ≈ 0.76 for this AR(2); no Check values in
+          the spec
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Multiple utility functions (lcgRng, randn, acfAt, computePACF) are
-          genuinely necessary for browser JS without seeded RNG. Technically above
-          KISS.
+        comment: Linear module-level flow; the only helpers are the seeded LCG/normal
+          draw inside the data block, which the library prompt endorses
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic LCG with seed 42. Fully reproducible.
+        comment: Fixed-seed LCG (seed 42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only BarChart and ChartsReferenceLine imported, both used.
+        comment: BarChart and ChartsReferenceLine both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean idiomatic React. Complexity justified by algorithm requirements.
+        comment: 'Written-out ACF and Durbin-Levinson PACF are allowed: the muix Computation
+          line names no statistics helper'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct component export; harness produces plot-light.png + plot-dark.png
-          + HTML.
+        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation on
+          both charts, v9 API (hideLegend, axis width/height bands)
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -224,23 +232,31 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct BarChart with skipAnimation, ANYPLOT_SIZE sizing, slotProps.legend,
-          margin prop, categoryGapRatio.
+        comment: Composes BarChart children with ChartsReferenceLine for the bounds
+          and baseline, and uses a shared band scale with null for the missing PACF
+          lag 0
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Uses ChartsReferenceLine (MUI X-specific), slotProps customization
-          API, sx prop targeting .MuiChartsAxis-line internal elements.
+        passed: false
+        comment: ChartsReferenceLine's built-in label/labelAlign for the '95% CI'
+          tag and band-scale categoryGapRatio to turn bars into stems
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-03c2486144
+  rendered_at: '2026-10-23T21:34:24Z'
 impl_tags:
   dependencies: []
   techniques:
   - subplots
+  - layer-composition
   - annotations
   - html-export
+  - hover-tooltips
   patterns:
   - data-generation
-  dataprep: []
-  styling: []
+  dataprep:
+  - time-series
+  styling:
+  - minimal-chrome

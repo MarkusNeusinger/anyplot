@@ -2,12 +2,12 @@ library: muix
 language: javascript
 specification_id: scatter-color-mapped
 created: '2026-09-05T14:07:04Z'
-updated: '2026-09-05T14:20:46Z'
-generated_by: claude-sonnet
-workflow_run: 33970385185
+updated: '2026-10-23T21:33:36Z'
+generated_by: adopted:gemini/12267-muix-9-batch1
+workflow_run: 40026518653
 issue: 2004
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/javascript/muix/plot-light.html
@@ -15,120 +15,115 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-c
 quality_score: 87
 review:
   strengths:
-  - 'Spatial data tells a genuine story: temperature decays outward from a synthetic
-    warm-core current near (0°E, 40°N), giving the color mapping real meaning instead
-    of random noise.'
-  - Colorbar (ContinuousColorLegend) has clear units and explicit min/max value labels,
-    and correctly uses the Imprint imprint_seq sequential palette (t.seq) rather than
-    a default/named colormap like viridis.
-  - Deterministic LCG-seeded data generation, clean minimal imports, and correct use
-    of skipAnimation + window.ANYPLOT_SIZE sizing per the muix harness contract.
-  - 'Title fontsize dynamically scales with title length; both canvases verified pixel-exact
-    at 3200x1800 with correct theme backgrounds (#FAF8F1 light / #1A1A17 dark, confirmed
-    via pixel sampling).'
+  - 'Native MUI X continuous color pipeline: a zAxis with a continuous colorMap (min/max
+    from the data) drives the marker fill, and the ContinuousColorLegend slot (axisDirection
+    ''z'', vertical, middle/end) draws the color bar from the same axis, so bar and
+    markers cannot drift apart'
+  - 'imprint_seq is built from the harness tokens (t.seq[0] #009E73 to t.seq[1] #4467A3)
+    with the same ~0.88 alpha on both stops, so the color bar matches the translucent
+    markers exactly, and data colors are identical in light and dark'
+  - 'Plausible, neutral scenario: 160 ocean buoys in a North Atlantic survey box,
+    sea-surface temperature 15.4 to 23.3 °C around a warm-core eddy near 30°W 36°N,
+    generated with a fixed-seed LCG'
+  - 'Reader-oriented axes: degree-suffixed tick labels (via valueFormatter), descriptive
+    axis titles with units, and explicitly sized axis bands (height 68, width 84),
+    so nothing is truncated'
+  - Chrome is themed through tokens (ink, inkSoft, grid) and readable in both renders;
+    skipAnimation and disableHitArea are set for a clean static capture while the
+    HTML keeps MUI's tooltips
   weaknesses:
-  - 'Dark-render markers at the high-temperature end of the scale (t.seq[1], indigo-blue,
-    sampled ~rgb(44,104,130) at alpha 0.85) measure only ~2.7-2.8:1 contrast against
-    the #1A1A17 background — below the WCAG 3:1 non-text-contrast guideline for meaningful
-    graphical objects. Slightly raise the alpha or lighten the top-of-scale sequential
-    stop specifically for dark mode.'
-  - Densely overlapping clusters (e.g. near 9-10°E/32°N and -14°E/44°N) rely solely
-    on alpha blending with no marker stroke, making it slightly harder to count exact
-    overlap depth in the thickest clusters — a subtle stroke/border would help separate
-    stacked points.
-  - Distinctive MUI X usage is limited to zAxis colorMap + ContinuousColorLegend;
-    no further library-specific differentiators (e.g. custom tooltip valueFormatter,
-    series highlightScope) are leveraged beyond the required continuous color-mapping
-    set.
+  - 'Suggestion: the color bar shows only its min and max labels (15.4 °C, 23.3 °C);
+    one or two intermediate values would make mid-range markers easier to read off.'
+  - 'Suggestion: the vertical color-bar title sits about 50 px right of the endpoint
+    labels; placing it closer to the bar would tie it to the scale more visibly.'
+  - 'Suggestion: the longitudes are all west of Greenwich, so a ''(°W)'' axis with
+    positive values may read more naturally to an oceanographer than negative ''°E''
+    values.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, sampled exactly rgb(250,248,241) = #FAF8F1, matching spec.
-      Chrome: Bold dark title "scatter-color-mapped · javascript · muix · anyplot.ai" centered at top, clearly legible. "Longitude (°E)" / "Latitude (°N)" axis titles and tick labels (with ° suffix formatter) are dark ink on the light background, fully readable. Subtle horizontal gridlines only. Colorbar label "Sea-surface temp (°C)" plus "23.0°C" / "15.4°C" min/max labels sit in the right margin, legible against the light background.
-      Data: ~160 circular markers scattered across a longitude/latitude grid (-14° to 12°E, 30° to 52°N), colored along a green-to-blue sequential (imprint_seq) gradient. Markers near (0°E, 40-42°N) skew toward the blue/high-temperature end, consistent with the coded "warm core" spatial pattern; outlying markers skew green/low-temperature. Colors read clearly against the light background.
+      Background: warm off-white #FAF8F1 (sampled 250,248,241), 3200x1800.
+      Chrome: bold dark title "scatter-color-mapped · javascript · muix · anyplot.ai" centered at the top; axis titles "Longitude (°E)" and "Latitude (°N)" in dark ink; degree-suffixed ticks -40° to -20° and 24° to 50° in soft ink; subtle gray grid in both directions; all readable.
+      Data: 160 round markers at about 0.88 opacity, colored on imprint_seq from brand green #009E73 (cool, 15.4 °C) to blue #4467A3 (warm, 23.3 °C); bluer points cluster around 30°W 36°N, greener ones toward the edges. On the right is a vertical color bar with endpoint labels 15.4°C and 23.3°C and a rotated title "Sea-surface temperature (°C)".
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, sampled exactly rgb(26,26,23) = #1A1A17, matching spec (not pure black, not light).
-      Chrome: Title, axis titles, and tick labels flip to light ink and remain fully readable against the dark background — no dark-on-dark failures observed. Gridlines and colorbar labels are likewise legible.
-      Data: Same ~160 markers in the same positions with the identical green-to-blue color gradient as the light render (colors unchanged, only chrome flipped, as required). Pixel-sampled marker colors confirm the data palette is unchanged between renders.
-      Legibility verdict: PASS, with one caveat — the darkest/most-blue markers (highest temperature, e.g. rgb(44,104,130)) measure only ~2.7-2.8:1 luminance contrast against the #1A1A17 background, below the WCAG 3:1 non-text-contrast guideline; they remain visible but are the least distinguishable element in the dark render.
+      Background: warm near-black #1A1A17 (sampled 26,26,23).
+      Chrome: title, axis titles, tick labels, color-bar labels and title all in light ink; grid lines subtle but visible; no dark-on-dark text.
+      Data: marker colors and the color-bar gradient are identical to the light render; both ends of the ramp (green and blue) stand out clearly against the dark page.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes throughout; title scales with length; all text
-          readable in both themes
+        comment: Title 22 px, axis titles 18 px, ticks 14 px, color-bar labels 15
+          px (CSS); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between title, axis labels, colorbar labels, or data
+        comment: No text collisions; the few marker overlaps stay distinguishable
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Marker size 17 with alpha=0.85 works well for 160 points; densest
-          clusters slightly hard to separate
+        comment: 160 markers at size 9 are clearly visible; both ends of the ramp
+          read against both backgrounds
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'High-temperature markers measure ~2.7-2.8:1 contrast against #1A1A17
-          dark background, below the 3:1 non-text guideline'
+        passed: true
+        comment: Green-to-blue ramp, no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 confirmed exact via pixel sampling; title ~55-60% width,
-          generous margins, nothing clipped
+        comment: 3200x1800, balanced axis bands, nothing clipped or overflowing
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude/Latitude axes with unit suffixes; colorbar labeled with
-          units and min/max values
+        comment: Longitude (°E), Latitude (°N), Sea-surface temperature (°C)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Uses Imprint imprint_seq via t.seq for the continuous scale; backgrounds
-          exactly #FAF8F1/#1A1A17; data colors identical across themes'
+        comment: imprint_seq from t.seq; correct page backgrounds in both themes
     design_excellence:
-      score: 13
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Custom Imprint palette, dynamic title sizing, alpha-tuned overlap
-          handling; solid but not exceptional polish
+        comment: Clean style-guide baseline; nothing distinctive beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Horizontal-only grid, no spines (MUI default), generous margins
+        comment: Degree-suffixed tick formatters and a vertically centered color bar
+          at 65% height with unit-formatted endpoints go beyond the baseline
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Spatial warm-core gradient gives the color mapping a real, visible
-          focal point
+        comment: The data is built around a warm-core eddy, so a blue focal core near
+          30°W 36°N emerges from the green periphery
     spec_compliance:
       score: 15
       max: 15
@@ -138,28 +133,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct color-mapped scatter plot
+        comment: Color-mapped scatter with a continuous color bar
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Colorbar with clear labels, moderate marker size, alpha for overlap,
-          perceptually-uniform-equivalent imprint_seq scale
+        comment: Perceptually uniform Imprint ramp, labeled color bar covering every
+          value, moderate markers, mild transparency matching the bar; ends visible
+          in both themes
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=longitude, y=latitude, color=temperature, full data range shown
-          on axes
+        comment: Marks at exact (x, y); color domain = data min/max
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches required format; colorbar labels match the
-          mapped variable
+        comment: Mandated title format; color bar titled with variable and unit
     data_quality:
       score: 15
       max: 15
@@ -169,22 +163,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All three dimensions (x, y, color) shown with colorbar range fully
-          spanning the data
+        comment: Full color range used, spatial pattern plus noise
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible ocean buoy sea-surface temperature scenario, neutral subject
-          matter
+        comment: Ocean buoy SST survey, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic lat/long range (North Atlantic/Europe) and realistic 15.4-23.0°C
-          temperature range
+        comment: 15–23 °C SST for 25–50°N, 20–40°W is realistic; 160 points within
+          50–500
     code_quality:
       score: 10
       max: 10
@@ -194,33 +186,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, only small helper functions (nextRandom, withAlpha)
+        comment: 'Linear module: constants, data block, one component'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG, fully deterministic
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ScatterChart, ContinuousColorLegend, ChartsText imported and
-          all used
+        comment: All four imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI or simulated interactivity
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exports Chart component per harness contract; current zAxis/colorMap
-          API
+        comment: Default export, skipAnimation, v9 API, sized to ANYPLOT_SIZE
     library_mastery:
       score: 7
       max: 10
@@ -230,21 +220,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of zAxis colorMap continuous mapping and ContinuousColorLegend,
-          MUI X's recommended pattern for color-mapped scatter
+        comment: zAxis + zAxisId color mapping and the legend slot instead of per-point
+          colors
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: ContinuousColorLegend and zAxis are distinctive, but no further MUI
-          X-specific differentiators used
+        comment: ContinuousColorLegend bound to the z axis and the continuous colorMap
+          are MUI X-specific
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-03c2486144
+  rendered_at: '2026-10-23T21:30:41Z'
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
-  - annotations
   patterns:
   - data-generation
   dataprep: []
