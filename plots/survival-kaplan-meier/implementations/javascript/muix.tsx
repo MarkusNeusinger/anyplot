@@ -8,106 +8,67 @@ import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data (in-memory, deterministic) ----------------------------------------
-// Reliability engineering: time-to-failure of a machine bearing, comparing a
-// standard design against a reinforced design under the same test protocol.
-const GROUP_SIZE = 50;
-const OBSERVATION_WINDOW = 36; // months — study ends here (administrative censoring)
+// Constants
+const Z_95 = 1.96; // normal quantile for the 95% confidence interval
 
-// Small fixed-seed LCG — the browser has no seeded RNG.
-function createRng(seed: number) {
-  let state = seed >>> 0;
-  return () => {
-    state = (state * 1664525 + 1013904223) >>> 0;
-    return state / 4294967296;
-  };
-}
-const rng = createRng(424242);
+// Columns: set these to your data's column names
+const TIME = "Time in service (months)"; // role: time
+const EVENT = "Failure"; // role: event
+const GROUP = "Bearing design"; // role: group
 
-function sampleExponential(rate: number) {
-  return -Math.log(1 - rng()) / rate;
-}
-
-// Simulates a cohort under two competing risks: mechanical failure (the event
-// of interest) and early dropout (e.g. unit pulled from service for an
-// unrelated reason). Anyone still running at OBSERVATION_WINDOW is censored.
-function generateGroup(failureRatePerMonth: number, dropoutRatePerMonth: number) {
-  const observations = [];
-  for (let i = 0; i < GROUP_SIZE; i += 1) {
-    const failureTime = sampleExponential(failureRatePerMonth);
-    const dropoutTime = sampleExponential(dropoutRatePerMonth);
-    const time = Math.min(failureTime, dropoutTime, OBSERVATION_WINDOW);
-    const event = failureTime <= dropoutTime && failureTime <= OBSERVATION_WINDOW ? 1 : 0;
-    observations.push({ time, event });
+// Data: replace this block with your own records, one object per observation
+// Reliability engineering: time-to-failure of a machine bearing, standard vs
+// reinforced design. Each unit either fails, is pulled from service early for
+// an unrelated reason, or is still running when the 36-month study ends.
+let seed = 424242;
+const rng = () => {
+  seed = (seed * 1664525 + 1013904223) >>> 0; // fixed-seed LCG — the browser has no seeded RNG
+  return seed / 4294967296;
+};
+const data: Record<string, string | number>[] = [];
+[
+  { design: "Standard design", failureRate: 0.045 },
+  { design: "Reinforced design", failureRate: 0.022 },
+].forEach(({ design, failureRate }) => {
+  for (let i = 0; i < 50; i += 1) {
+    const failureTime = -Math.log(1 - rng()) / failureRate;
+    const dropoutTime = -Math.log(1 - rng()) / 0.01;
+    const time = Math.min(failureTime, dropoutTime, 36);
+    const failed = failureTime <= dropoutTime && failureTime <= 36;
+    data.push({ [TIME]: time, [EVENT]: failed ? 1 : 0, [GROUP]: design });
   }
-  return observations;
-}
+});
 
-const standardObservations = generateGroup(0.045, 0.01);
-const reinforcedObservations = generateGroup(0.022, 0.01);
+// Plot: reads only data and the constants above
+const groups = [...new Set(data.map((d) => d[GROUP] as string))];
+const timeGrid = [...new Set([0, ...data.map((d) => d[TIME] as number)])].sort((a, b) => a - b);
+const maxTime = timeGrid[timeGrid.length - 1];
 
-// Kaplan-Meier estimator with Greenwood's formula for the 95% CI. Returns the
-// step points: survival holds at each value from its own time onward.
-function kaplanMeier(observations: { time: number; event: number }[]) {
-  const sorted = [...observations].sort((a, b) => a.time - b.time);
-  const eventTimes = Array.from(new Set(sorted.map((o) => o.time))).sort((a, b) => a - b);
-
-  let atRisk = sorted.length;
+// Kaplan-Meier product-limit estimate with Greenwood's 95% CI, evaluated on the
+// shared time grid. Step-function semantics: a value holds from its time onward.
+const curves = groups.map((group) => {
+  const rows = data.filter((d) => d[GROUP] === group);
+  let atRisk = rows.length;
   let survival = 1;
   let varianceSum = 0;
-  const points = [{ time: 0, survival: 1, lower: 1, upper: 1, censored: false }];
-
-  eventTimes.forEach((time) => {
-    const atThisTime = sorted.filter((o) => o.time === time);
-    const deaths = atThisTime.filter((o) => o.event === 1).length;
-
+  const points = timeGrid.map((time) => {
+    const atThisTime = rows.filter((d) => d[TIME] === time);
+    const deaths = atThisTime.filter((d) => d[EVENT] === 1).length;
     if (deaths > 0) {
       survival *= 1 - deaths / atRisk;
-      const denom = atRisk * (atRisk - deaths);
-      if (denom > 0) varianceSum += deaths / denom;
+      if (atRisk > deaths) varianceSum += deaths / (atRisk * (atRisk - deaths));
     }
-
-    const standardError = survival * Math.sqrt(varianceSum);
-    points.push({
-      time,
-      survival,
-      lower: Math.max(0, survival - 1.96 * standardError),
-      upper: Math.min(1, survival + 1.96 * standardError),
-      censored: deaths === 0,
-    });
-
     atRisk -= atThisTime.length;
-  });
-
-  return points;
-}
-
-const standardCurve = kaplanMeier(standardObservations);
-const reinforcedCurve = kaplanMeier(reinforcedObservations);
-
-// Both curves are re-sampled onto one shared, sorted time grid (forward-fill,
-// matching step-function semantics) so they can share a single x-axis.
-const timeGrid = Array.from(
-  new Set([...standardCurve, ...reinforcedCurve].map((p) => p.time)),
-).sort((a, b) => a - b);
-
-function alignToGrid(points: typeof standardCurve, grid: number[]) {
-  let cursor = 0;
-  return grid.map((time) => {
-    while (cursor + 1 < points.length && points[cursor + 1].time <= time) cursor += 1;
-    const current = points[cursor];
+    const standardError = survival * Math.sqrt(varianceSum);
     return {
-      time,
-      survival: current.survival,
-      lower: current.lower,
-      upper: current.upper,
-      censored: current.censored && current.time === time,
+      survival,
+      lower: Math.max(0, survival - Z_95 * standardError),
+      upper: Math.min(1, survival + Z_95 * standardError),
+      censored: atThisTime.length > deaths,
     };
   });
-}
-
-const standardAligned = alignToGrid(standardCurve, timeGrid);
-const reinforcedAligned = alignToGrid(reinforcedCurve, timeGrid);
+  return { group, n: rows.length, points };
+});
 
 // Each group contributes 3 series: an invisible base (stacked to the CI lower
 // bound) + a filled delta on top of it (renders as the CI band from lower to
@@ -116,48 +77,49 @@ const reinforcedAligned = alignToGrid(reinforcedCurve, timeGrid);
 // fill and both helpers' outlines are knocked out via the
 // `.MuiLineChart-area/line[data-series=…]` sx rules below (MUI X always
 // paints an area fill opaque, so a transparent `color` is not enough).
-function buildGroupSeries(key: string, label: string, color: string, aligned: typeof standardAligned) {
-  return [
-    {
-      id: `${key}-ci-base`,
-      data: aligned.map((p) => p.lower),
-      stack: `ci-${key}`,
-      area: true,
-      curve: "stepAfter" as const,
-      color,
-      showMark: false,
-      disableHighlight: true,
-    },
-    {
-      id: `${key}-ci-band`,
-      data: aligned.map((p) => Math.max(0, p.upper - p.lower)),
-      stack: `ci-${key}`,
-      area: true,
-      curve: "stepAfter" as const,
-      color,
-      showMark: false,
-      disableHighlight: true,
-    },
-    {
-      id: `${key}-survival`,
-      data: aligned.map((p) => p.survival),
-      curve: "stepAfter" as const,
-      color,
-      label,
-      shape: "circle" as const,
-      showMark: ({ index }: { index: number }) => aligned[index].censored,
-    },
-  ];
-}
+const series = curves.flatMap(({ group, n, points }, i) => [
+  {
+    id: `ci-base-${i}`,
+    data: points.map((p) => p.lower),
+    stack: `ci-${i}`,
+    area: true,
+    curve: "stepAfter" as const,
+    color: t.palette[i],
+    showMark: false,
+    disableHighlight: true,
+  },
+  {
+    id: `ci-band-${i}`,
+    data: points.map((p) => Math.max(0, p.upper - p.lower)),
+    stack: `ci-${i}`,
+    area: true,
+    curve: "stepAfter" as const,
+    color: t.palette[i],
+    showMark: false,
+    disableHighlight: true,
+  },
+  {
+    id: `survival-${i}`,
+    data: points.map((p) => p.survival),
+    curve: "stepAfter" as const,
+    color: t.palette[i],
+    label: `${group} (n=${n})`,
+    shape: "circle" as const,
+    showMark: ({ index }: { index: number }) => points[index].censored,
+  },
+]);
 
-const series = [
-  ...buildGroupSeries("standard", `Standard design (n=${GROUP_SIZE})`, t.palette[0], standardAligned),
-  ...buildGroupSeries("reinforced", `Reinforced design (n=${GROUP_SIZE})`, t.palette[1], reinforcedAligned),
-];
+const bandStyles = Object.fromEntries(
+  curves.flatMap((_, i) => [
+    [`& .MuiLineChart-area[data-series="ci-base-${i}"]`, { fill: "none" }],
+    [`& .MuiLineChart-area[data-series="ci-band-${i}"]`, { fill: t.palette[i], fillOpacity: 0.16 }],
+    [`& .MuiLineChart-line[data-series="ci-base-${i}"]`, { display: "none" }],
+    [`& .MuiLineChart-line[data-series="ci-band-${i}"]`, { display: "none" }],
+  ]),
+);
 
 const TITLE = "survival-kaplan-meier · javascript · muix · anyplot.ai";
 
-// --- Chart (default-exported component — the harness mounts it) -------------
 export default function Chart() {
   const size = window.ANYPLOT_SIZE;
   const paddingX = 40;
@@ -192,8 +154,8 @@ export default function Chart() {
             data: timeGrid,
             scaleType: "linear",
             min: 0,
-            max: OBSERVATION_WINDOW,
-            label: "Time in service (months)",
+            max: maxTime,
+            label: TIME,
             labelStyle: { fontSize: 16 },
             tickLabelStyle: { fontSize: 14 },
             height: 52,
@@ -222,17 +184,7 @@ export default function Chart() {
         sx={{
           "& .MuiLineChart-line": { strokeWidth: 3 },
           "& .MuiLineChart-mark": { strokeWidth: 2.5 },
-          ...Object.fromEntries(
-            [
-              ["standard", t.palette[0]],
-              ["reinforced", t.palette[1]],
-            ].flatMap(([key, color]) => [
-              [`& .MuiLineChart-area[data-series="${key}-ci-base"]`, { fill: "none" }],
-              [`& .MuiLineChart-area[data-series="${key}-ci-band"]`, { fill: color, fillOpacity: 0.16 }],
-              [`& .MuiLineChart-line[data-series="${key}-ci-base"]`, { display: "none" }],
-              [`& .MuiLineChart-line[data-series="${key}-ci-band"]`, { display: "none" }],
-            ]),
-          ),
+          ...bandStyles,
         }}
       />
     </Box>
