@@ -2,121 +2,134 @@ library: muix
 language: javascript
 specification_id: line-styled
 created: '2026-09-05T08:33:11Z'
-updated: '2026-09-05T08:48:20Z'
-generated_by: claude-sonnet
-workflow_run: 33955059471
+updated: '2026-10-23T14:53:43Z'
+generated_by: claude-opus
+workflow_run: 39972611694
 issue: 2598
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-styled/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-styled/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-styled/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-styled/javascript/muix/plot-dark.html
-quality_score: 91
+quality_score: 86
 review:
   strengths:
-  - 'Directly resolves both attempt-1 weaknesses: p99 dash pattern is now denser and
-    stays legible through the p99/p99.9 crossing zones, and the peak p99.9 spike now
-    has a deliberate reference-line callout'
-  - Correctly implements all four required line styles via a MUI X-specific utility-class
-    technique, with consistent line width across styles
-  - Custom legend renders an actual dashed-line swatch per series, correctly mapping
-    style to name per the spec
-  - Realistic, well-chosen latency-percentile dataset with a periodic tail-spike pattern
-    isolated to p99.9
-  - Correct Imprint palette usage and theme-adaptive chrome in both renders; no clipping
-    at any canvas edge
+  - All four standard line styles in their Notes order (solid p50, dashed p90, dotted
+    p99, dash-dot p99.9) at one stroke width (LINE_WIDTH = 3) applied through the
+    v9 `.MuiLineChart-line[data-series=...]` selectors, so the series stay distinguishable
+    in monochrome while the Imprint colors sit on top
+  - Legend swatches are custom 44 px line samples passed through MUI X's native `labelMarkType`
+    slot, drawn with the series' own dash pattern and stroke width, so every legend
+    entry shows its full pattern in both themes
+  - The p50 → p99.9 latency percentiles are a real, neutral monitoring scenario with
+    a built-in ordering (each percentile above the one below by construction) and
+    periodic tail spikes that give the tail series a visibly different character from
+    the stable median
+  - '`curve: "monotoneX"` smooths the lines without overshooting the data values;
+    `dataset` + `dataKey` drive the series from the records idiomatically'
+  - 'Explicit typography throughout (title 22 px, axis titles 16 px in ink, ticks
+    14 px in inkSoft, legend 14 px); text is fully legible on both the #FAF8F1 and
+    #1A1A17 surfaces'
+  - Library-native hover tooltips and legend interaction in the HTML output
   weaknesses:
-  - The native legend and y-axis label positioning are still handled via manual HTML
-    / a tickFontSize offset hack rather than tuned slotProps, keeping Library Mastery
-    capped on idiomatic usage
-  - Design excellence, while improved by the reference-line focal point, still reads
-    closer to a refined default than a fully bespoke publication design
+  - 'Suggestion: the gray `4 4` dashed vertical reference line at the p99.9 peak is
+    a fifth dash pattern on a chart whose encoding is line style; in a monochrome
+    print it competes with the p90 dashes, and the peak is already obvious without
+    it — consider dropping it or drawing it solid and lighter.'
+  - 'Suggestion: in the 400 px thumbnail the dotted #4467A3 p99 line thins out on
+    the dark surface; a slightly larger dot (`3 5` → `4 5` with round caps) would
+    keep it reading as dots at small scale.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark
-      Chrome: Dark title top-left ("line-styled · javascript · muix · anyplot.ai"), dark axis captions with units, soft dark tick labels, subtle horizontal-only gridlines. New reference-line label ("peak p99.9 · 191.1ms") renders cleanly with no overlap. All readable.
-      Data: Brand-green solid (p50), lavender dashed (p90), blue dotted (p99, now denser than attempt 1), ochre dash-dot (p99.9). First series is #009E73. Vertical grey reference line marks the single largest p99.9 spike.
+      Background: warm off-white, consistent with #FAF8F1; no pure white.
+      Chrome: left-aligned title "line-styled · javascript · muix · anyplot.ai" in dark ink at the top; y-axis title "Response Latency (ms)" rotated on the left, x-axis title "Time (minutes)" centered below; tick labels 40–200 (step 10) and 0–58 (step 2) in soft dark ink; subtle horizontal-only grid; left and bottom axis lines only. A thin gray dashed vertical reference line at minute 51 with the label "peak p99.9 · 191.1ms" near the top. All text readable.
+      Data: four lines over 60 minutes — p50 solid #009E73 (~40–48 ms), p90 dashed #C475FD (~55–69 ms), p99 dotted #4467A3 (~91–113 ms), p99.9 dash-dot #BD8233 (~93–191 ms with spikes at 0, 17, 34 and 51). Same stroke width for all; dots read as dots and dashes as dashes along the whole lines. Bottom-centered horizontal legend with 44 px pattern swatches: "p50 latency", "p90 latency", "p99 latency", "p99.9 latency". First series is #009E73.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light
-      Chrome: Title, axis captions, tick labels, and reference-line label all render in light ink, clearly legible; gridlines remain subtle but visible. No dark-on-dark text found anywhere.
-      Data: Confirmed identical hex colors to light render for all four series and the reference line — only chrome flipped.
+      Background: warm near-black, consistent with #1A1A17; no pure black.
+      Chrome: title, axis titles and legend text in light ink, tick labels in light soft ink, grid lines subtle dark gray; reference line and its label in light gray. No dark-on-dark text anywhere.
+      Data: identical line colors and dash patterns to the light render (green solid, purple dashed, blue dotted, ochre dash-dot); only chrome flipped. Brand green clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicit and readable in both themes; reference-line
-          label at 13px is smallest but legible
+        comment: All sizes set explicitly (title 22, axis titles 16, ticks 14, legend
+          14, reference label 13 CSS px); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions, including the new reference-line label
+        comment: No text collisions; the reference-line label sits clear of the lines;
+          close-running p99/p99.9 lines are permitted by the spec
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: p99 dash density fix resolves attempt-1 congestion at crossings with
-          p99.9
+        comment: 3 px lines suit 60 points; dash, dot and dash-dot patterns stay recognizable;
+          44 px legend swatches show full patterns in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Four distinct hues + distinct dash patterns give redundant encoding
+        comment: Series separated by line style first, hue second; no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; nothing clipped at any edge
+        comment: 3200x1800; plot fills most of the canvas, legend directly below the
+          axis, balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axis labels include units
+        comment: '''Response Latency (ms)'' and ''Time (minutes)'' with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical order, theme-correct backgrounds'
+        comment: 'Imprint positions 1-4 in canonical order (#009E73, #C475FD, #4467A3,
+          #BD8233), identical in both themes; correct backgrounds and theme chrome'
     design_excellence:
-      score: 14
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: false
-        comment: New ChartsReferenceLine peak annotation is a genuine deliberate touch,
-          still reads closer to refined default
+        passed: true
+        comment: The style-guide baseline (Imprint palette, theme tokens, explicit
+          sizes, ink/inkSoft hierarchy); nothing decided clearly beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Subtle horizontal-only grid, generous whitespace, minimal axis chrome
+        passed: false
+        comment: 'Horizontal-only subtle grid and two axis lines: the baseline, nothing
+          beyond'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Explicit reference line on the largest tail-latency spike creates
-          a clear guided focal point
+        comment: 'Data choice gives a hierarchy of its own: the stable p50/p90 band
+          against the spiking deep tail reads at once. The peak reference line is
+          an unrequested annotation and earns no credit'
     spec_compliance:
       score: 15
       max: 15
@@ -126,26 +139,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct styled multi-series line chart
+        comment: Multi-series styled line plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All 4 standard line styles present, consistent width, legend maps
-          style to name
+        comment: 'Checked: solid/dashed/dotted/dash-dot in order, legend mapping styles
+          to names, one line width (also in the swatches), patterns recognizable along
+          the lines, swatches long enough for the full pattern'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = minute, Y = each percentile series, axes show all data
+        comment: x = minute, y = latency; monotoneX smoothing has no overshoot; all
+          data inside the axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format matches mandate exactly; legend labels match series
+        comment: Title 'line-styled · javascript · muix · anyplot.ai' correct; legend
+          entries readable
     data_quality:
       score: 15
       max: 15
@@ -155,19 +171,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Baseline fluctuation plus periodic tail spikes isolated to p99.9
+        comment: Four series, all four standard styles, lines running close together
+          and spiking
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, comprehensible SRE/monitoring latency scenario
+        comment: 'Service latency percentiles over an hour: real and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Percentile ordering/magnitudes realistic for API/service latency
+        comment: 'Checked: p50 < p90 < p99 < p99.9 holds by construction (all gaps
+          positive, lines 39-48); ms ranges plausible for an API; peak 191.1 ms label
+          matches the curve at minute 51'
     code_quality:
       score: 10
       max: 10
@@ -177,58 +196,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions/classes
+        comment: Flat data block; the seeded RNG and the swatch component factory
+          are what the harness/legend slot require
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic seeded mulberry32(42)
+        comment: mulberry32(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: LineChart and ChartsReferenceLine both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, no fake UI
+        comment: Appropriate complexity; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct default-export contract, skipAnimation set
+        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation,
+          current v9 API
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
-        max: 5
-        passed: false
-        comment: Native legend and axis-label positioning still bypassed with manual
-          workarounds
-      - id: LM-02
-        name: Distinctive Features
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: ChartsReferenceLine plus getLineElementUtilityClass + per-series
-          sx dasharray technique
+        comment: dataset + dataKey series, v9 data-series CSS targeting via sx, axis
+          label/tick styles, composed child component
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: MUI X's labelMarkType slot to render custom pattern swatches in the
+          native HTML legend, and per-series styling through the data-series attribute
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-03c2486144
+  rendered_at: '2026-10-23T14:50:26Z'
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - custom-legend
+  - annotations
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - time-series
   styling:
   - grid-styling
-  - publication-ready
