@@ -1,3 +1,4 @@
+//# anyplot-orientation: square
 // anyplot.ai
 // map-marker-clustered: Clustered Marker Map
 // Library: muix 9.16.0 | JavaScript 22.23.3
@@ -16,7 +17,7 @@ const t = window.ANYPLOT_TOKENS;
 // Constants
 const LAT_CELL = 0.55;
 const LON_CELL = 0.75;
-const EXTENT_PAD_DEG = 0.25; // degrees added around the data extent before rounding
+const EXTENT_PAD_DEG = 0.25; // degrees added around the data extent
 
 // Columns: set these to your data's column names
 const LAT = "Latitude (°)"; // role: lat
@@ -73,25 +74,47 @@ const data = (() => {
 
 // Plot: reads only data and the constants above
 const { width, height } = window.ANYPLOT_SIZE;
-const MARGIN = { top: 24, right: 56, bottom: 20, left: 20 };
+const MARGIN = { top: 24, right: 40, bottom: 20, left: 20 };
 const X_AXIS_HEIGHT = 64;
 const Y_AXIS_WIDTH = 76;
 const TITLE_HEIGHT = 56;
-const LEGEND_HEIGHT = 48;
+const LEGEND_HEIGHT = 56;
 
+// Equal-distance framing: one degree of longitude is cos(latitude) of a degree of
+// latitude, so the data extent is fitted into the plot box at that ratio and the
+// looser dimension is widened around the data center to fill the box.
 const allLats = data.map((d) => d[LAT]);
 const allLons = data.map((d) => d[LON]);
-const LAT_RANGE = [
-  Math.floor((Math.min(...allLats) - EXTENT_PAD_DEG) * 2) / 2,
-  Math.ceil((Math.max(...allLats) + EXTENT_PAD_DEG) * 10) / 10,
-];
-const LON_RANGE = [
-  Math.floor((Math.min(...allLons) - EXTENT_PAD_DEG) * 5) / 5,
-  Math.ceil((Math.max(...allLons) + EXTENT_PAD_DEG) * 5) / 5,
-];
+const latMin = Math.min(...allLats) - EXTENT_PAD_DEG;
+const latMax = Math.max(...allLats) + EXTENT_PAD_DEG;
+const lonMin = Math.min(...allLons) - EXTENT_PAD_DEG;
+const lonMax = Math.max(...allLons) + EXTENT_PAD_DEG;
+const lonShrink = Math.cos((((latMin + latMax) / 2) * Math.PI) / 180);
+const plotWidthPx = width - MARGIN.left - MARGIN.right - Y_AXIS_WIDTH;
+const plotHeightPx =
+  height - TITLE_HEIGHT - LEGEND_HEIGHT - MARGIN.top - MARGIN.bottom - X_AXIS_HEIGHT;
+const pxPerLat = Math.min(
+  plotHeightPx / (latMax - latMin),
+  plotWidthPx / ((lonMax - lonMin) * lonShrink),
+);
+const latHalfSpan = plotHeightPx / pxPerLat / 2;
+const lonHalfSpan = plotWidthPx / (pxPerLat * lonShrink) / 2;
+const LAT_RANGE = [(latMin + latMax) / 2 - latHalfSpan, (latMin + latMax) / 2 + latHalfSpan];
+const LON_RANGE = [(lonMin + lonMax) / 2 - lonHalfSpan, (lonMin + lonMax) / 2 + lonHalfSpan];
 
 const categories = Array.from(new Set(data.map((d) => d[CATEGORY])));
 const categoryColors = categories.map((_, i) => t.palette[i]);
+// Count text: dark or light ink, whichever contrasts more with the marker fill
+const countInk = Object.fromEntries(
+  categories.map((cat, i) => {
+    const [r, g, b] = [1, 3, 5].map((k) => {
+      const c = parseInt(categoryColors[i].slice(k, k + 2), 16) / 255;
+      return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+    });
+    const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    return [cat, luminance > 0.18 ? "#1A1A17" : "#FAF8F1"];
+  }),
+);
 
 const cells = new Map<string, typeof data>();
 data.forEach((store) => {
@@ -100,80 +123,38 @@ data.forEach((store) => {
   cells.get(key)!.push(store);
 });
 
-function dominantCategory(members: typeof data) {
+const clusters = Array.from(cells.values()).map((members, i) => {
   const counts: Record<string, number> = {};
   members.forEach((m) => {
     counts[m[CATEGORY]] = (counts[m[CATEGORY]] || 0) + 1;
   });
-  return categories.reduce(
-    (best, cat) => ((counts[cat] || 0) > (counts[best] || 0) ? cat : best),
-    categories[0],
-  );
-}
-
-const clusters = Array.from(cells.values()).map((members, i) => ({
-  id: `cluster-${i}`,
-  x: members.reduce((sum, m) => sum + m[LON], 0) / members.length,
-  y: members.reduce((sum, m) => sum + m[LAT], 0) / members.length,
-  z: dominantCategory(members),
-  count: members.length,
-}));
-
-function radiusPxFor(count: number) {
-  if (count > 6) return 30;
-  if (count >= 2) return 17;
-  return 7;
-}
-
-const plotWidthPx = width - MARGIN.left - MARGIN.right - Y_AXIS_WIDTH;
-const plotHeightPx =
-  height - TITLE_HEIGHT - LEGEND_HEIGHT - MARGIN.top - MARGIN.bottom - X_AXIS_HEIGHT;
-const pxPerLon = plotWidthPx / (LON_RANGE[1] - LON_RANGE[0]);
-const pxPerLat = plotHeightPx / (LAT_RANGE[1] - LAT_RANGE[0]);
-const MIN_GAP_PX = 8;
-for (let pass = 0; pass < 40; pass++) {
-  let moved = false;
-  for (let i = 0; i < clusters.length; i++) {
-    for (let j = i + 1; j < clusters.length; j++) {
-      const a = clusters[i];
-      const b = clusters[j];
-      const dxPx = (b.x - a.x) * pxPerLon;
-      const dyPx = (b.y - a.y) * pxPerLat;
-      const distPx = Math.hypot(dxPx, dyPx) || 0.001;
-      const minDistPx = radiusPxFor(a.count) + radiusPxFor(b.count) + MIN_GAP_PX;
-      if (distPx < minDistPx) {
-        const pushPx = (minDistPx - distPx) / 2;
-        const nx = dxPx / distPx;
-        const ny = dyPx / distPx;
-        a.x -= (nx * pushPx) / pxPerLon;
-        a.y -= (ny * pushPx) / pxPerLat;
-        b.x += (nx * pushPx) / pxPerLon;
-        b.y += (ny * pushPx) / pxPerLat;
-        moved = true;
-      }
-    }
-  }
-  if (!moved) break;
-}
+  return {
+    id: `cluster-${i}`,
+    x: members.reduce((sum, m) => sum + m[LON], 0) / members.length,
+    y: members.reduce((sum, m) => sum + m[LAT], 0) / members.length,
+    z: categories.reduce((best, cat) => ((counts[cat] || 0) > (counts[best] || 0) ? cat : best)),
+    count: members.length,
+  };
+});
 
 const individualStores = clusters.filter((c) => c.count === 1);
 const smallClusters = clusters.filter((c) => c.count >= 2 && c.count <= 6);
 const largeClusters = clusters.filter((c) => c.count > 6);
 
-const TITLE =
-  "TrailBrew Coffee Co. · map-marker-clustered · javascript · muix · anyplot.ai";
+const TITLE = "TrailBrew Coffee Co. · map-marker-clustered · javascript · muix · anyplot.ai";
 const TITLE_FONT_DEFAULT = 22;
 const titleFontSize =
   TITLE.length > 67 ? Math.round(TITLE_FONT_DEFAULT * (67 / TITLE.length)) : TITLE_FONT_DEFAULT;
 
+const MARKER_SIZE = { single: 6, small: 17, large: 27 };
 const SIZE_LEGEND = [
-  { label: "1 store", diameter: 7 },
-  { label: "2–6 stores", diameter: 17 },
-  { label: "7+ stores", diameter: 30 },
+  { label: "1 store", diameter: 2 * MARKER_SIZE.single },
+  { label: "2–6 stores", diameter: 2 * MARKER_SIZE.small },
+  { label: "7+ stores", diameter: 2 * MARKER_SIZE.large },
 ];
 
 const PACIFIC_COAST = [
-  [-124.35, LAT_RANGE[0]],
+  [-124.2, 42.0],
   [-124.15, 44.2],
   [-124.35, 44.9],
   [-124.4, 45.6],
@@ -181,7 +162,8 @@ const PACIFIC_COAST = [
   [-124.35, 46.5],
   [-124.4, 47.3],
   [-124.45, 47.9],
-  [-124.5, 48.3],
+  [-124.7, 48.4],
+  [-124.7, 50.0],
 ];
 
 const PUGET_SOUND = [
@@ -205,42 +187,32 @@ function GeographicBackdrop() {
   const yScale = useYScale();
   if (!xScale || !yScale) return null;
 
-  const project = ([lon, lat]: number[]) => `${xScale(lon)},${yScale(lat)}`;
-
-  const oceanPoints = [
-    [LON_RANGE[0], LAT_RANGE[0]],
-    ...PACIFIC_COAST,
-    [LON_RANGE[0], LAT_RANGE[1]],
-  ]
+  // Clamp to the axis ranges so the water stays inside the plot area
+  const project = ([lon, lat]: number[]) =>
+    `${xScale(Math.max(lon, LON_RANGE[0]))},${yScale(Math.min(Math.max(lat, LAT_RANGE[0]), LAT_RANGE[1]))}`;
+  const oceanPoints = [[LON_RANGE[0], 42.0], ...PACIFIC_COAST, [LON_RANGE[0], 50.0]]
     .map(project)
     .join(" ");
-
   const soundPoints = PUGET_SOUND.map(project).join(" ");
-  const waterColor = t.palette[2];
+  const border = { stroke: t.inkSoft, strokeWidth: 1.25, strokeDasharray: "6 4", opacity: 0.5 };
 
   return (
     <g pointerEvents="none">
-      <polygon points={oceanPoints} fill={waterColor} opacity={0.22} stroke="none" />
-      <polygon points={soundPoints} fill={waterColor} opacity={0.22} stroke="none" />
+      <polygon points={oceanPoints} fill={t.inkSoft} opacity={0.1} />
+      <polygon points={soundPoints} fill={t.inkSoft} opacity={0.1} />
       <line
-        x1={xScale(LON_RANGE[0])}
+        x1={xScale(-123.3)}
         y1={yScale(CANADA_BORDER_LAT)}
         x2={xScale(LON_RANGE[1])}
         y2={yScale(CANADA_BORDER_LAT)}
-        stroke={t.inkSoft}
-        strokeWidth={1.25}
-        strokeDasharray="6 4"
-        opacity={0.5}
+        {...border}
       />
       <line
-        x1={xScale(-123.6)}
+        x1={xScale(-124.0)}
         y1={yScale(WA_OR_BORDER_LAT)}
         x2={xScale(LON_RANGE[1])}
         y2={yScale(WA_OR_BORDER_LAT)}
-        stroke={t.inkSoft}
-        strokeWidth={1.25}
-        strokeDasharray="6 4"
-        opacity={0.5}
+        {...border}
       />
     </g>
   );
@@ -258,9 +230,9 @@ function ClusterCountLabels() {
           key={c.id}
           x={xScale(c.x)}
           y={yScale(c.y)}
-          fontSize={c.count > 6 ? 13 : 11}
-          fontWeight={600}
-          fill={t.pageBg}
+          fontSize={c.count > 6 ? 16 : 13}
+          fontWeight={700}
+          fill={countInk[c.z]}
           textAnchor="middle"
           dominantBaseline="central"
         >
@@ -272,8 +244,6 @@ function ClusterCountLabels() {
 }
 
 export default function Chart() {
-  const chartHeight = height - TITLE_HEIGHT - LEGEND_HEIGHT;
-
   return (
     <div style={{ width, height, backgroundColor: t.pageBg }}>
       <div
@@ -291,7 +261,7 @@ export default function Chart() {
       </div>
       <ChartsContainer
         width={width}
-        height={chartHeight}
+        height={height - TITLE_HEIGHT - LEGEND_HEIGHT}
         margin={MARGIN}
         series={[
           {
@@ -299,7 +269,7 @@ export default function Chart() {
             id: "individual",
             data: individualStores,
             label: "Single location",
-            markerSize: 7,
+            markerSize: MARKER_SIZE.single,
             zAxisId: "category",
           },
           {
@@ -307,7 +277,7 @@ export default function Chart() {
             id: "small-cluster",
             data: smallClusters,
             label: "Small cluster (2–6 stores)",
-            markerSize: 17,
+            markerSize: MARKER_SIZE.small,
             zAxisId: "category",
           },
           {
@@ -315,7 +285,7 @@ export default function Chart() {
             id: "large-cluster",
             data: largeClusters,
             label: "Large cluster (7+ stores)",
-            markerSize: 30,
+            markerSize: MARKER_SIZE.large,
             zAxisId: "category",
           },
         ]}
@@ -361,8 +331,8 @@ export default function Chart() {
         <ChartsGrid horizontal vertical />
         <ScatterPlot skipAnimation />
         <ClusterCountLabels />
-        <ChartsXAxis tickLabelStyle={{ fontSize: 14, fill: t.inkSoft }} labelStyle={{ fontSize: 16, fill: t.ink }} />
-        <ChartsYAxis tickLabelStyle={{ fontSize: 14, fill: t.inkSoft }} labelStyle={{ fontSize: 16, fill: t.ink }} />
+        <ChartsXAxis />
+        <ChartsYAxis />
         <ChartsTooltip trigger="item" />
       </ChartsContainer>
       <div
@@ -375,24 +345,24 @@ export default function Chart() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <span style={{ fontSize: 13, color: t.inkSoft }}>{CATEGORY}:</span>
+          <span style={{ fontSize: 14, color: t.inkSoft }}>{CATEGORY}:</span>
           {categories.map((cat, i) => (
             <div key={cat} style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <span
                 style={{
-                  width: 12,
-                  height: 12,
+                  width: 14,
+                  height: 14,
                   borderRadius: "50%",
                   backgroundColor: categoryColors[i],
                   flexShrink: 0,
                 }}
               />
-              <span style={{ fontSize: 13, color: t.ink }}>{cat}</span>
+              <span style={{ fontSize: 14, color: t.ink }}>{cat}</span>
             </div>
           ))}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <span style={{ fontSize: 13, color: t.inkSoft }}>Cluster size:</span>
+          <span style={{ fontSize: 14, color: t.inkSoft }}>Cluster size:</span>
           {SIZE_LEGEND.map((entry) => (
             <div key={entry.label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <span
@@ -405,7 +375,7 @@ export default function Chart() {
                   flexShrink: 0,
                 }}
               />
-              <span style={{ fontSize: 13, color: t.ink }}>{entry.label}</span>
+              <span style={{ fontSize: 14, color: t.ink }}>{entry.label}</span>
             </div>
           ))}
         </div>
