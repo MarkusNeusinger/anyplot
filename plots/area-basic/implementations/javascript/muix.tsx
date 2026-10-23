@@ -4,6 +4,7 @@
 // Quality: 83/100 | Created: 2026-08-20
 
 import { LineChart } from "@mui/x-charts/LineChart";
+import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
@@ -40,6 +41,9 @@ const data = (() => {
 // Plot: reads only data and the constants above
 const dates = data.map((d) => d[X]);
 const visitors = data.map((d) => d[Y]);
+const knownVisitors = visitors.filter((v) => v != null && Number.isFinite(v));
+const avgVisitors = knownVisitors.reduce((a, b) => a + b, 0) / knownVisitors.length;
+const formatY = (v: number) => `${(v / 1000).toFixed(1)}k`;
 
 const TITLE = "Website Visitors · area-basic · javascript · muix · anyplot.ai";
 const TITLE_H = 58;
@@ -103,7 +107,7 @@ export default function Chart() {
             min: 0,
             width: 84,
             label: Y,
-            valueFormatter: (v: number) => `${(v / 1000).toFixed(1)}k`,
+            valueFormatter: formatY,
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
             labelStyle: { fontSize: 16, fill: t.ink },
           },
@@ -116,7 +120,7 @@ export default function Chart() {
             color: t.palette[0],
             area: true,
             showMark: false,
-            curve: "linear",
+            curve: "monotoneX",
             baseline: 0,
           },
         ]}
@@ -135,6 +139,15 @@ export default function Chart() {
             <stop offset="100%" stopColor={t.palette[0]} stopOpacity={0.04} />
           </linearGradient>
         </defs>
+        {knownVisitors.length > 0 && (
+          <ChartsReferenceLine
+            y={avgVisitors}
+            label={`Avg ${formatY(avgVisitors)}`}
+            labelAlign="end"
+            lineStyle={{ stroke: t.ink, strokeDasharray: "6 4", strokeOpacity: 0.5 }}
+            labelStyle={{ fill: t.inkSoft, fontSize: 13 }}
+          />
+        )}
       </LineChart>
     </Box>
   );
