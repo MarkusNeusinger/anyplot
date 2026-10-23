@@ -79,6 +79,7 @@ const socialGrowthPct = Math.round(
 const TITLE =
   "Website Traffic Sources · area-stacked · javascript · muix · anyplot.ai";
 const TITLE_H = 58;
+const LEGEND_H = 44;
 
 // --- Chart (default-exported component — the harness mounts it) ------------
 
@@ -149,7 +150,7 @@ export default function Chart() {
 
       <LineChart
         width={width}
-        height={height - TITLE_H}
+        height={height - TITLE_H - LEGEND_H}
         skipAnimation
         colors={t.palette.slice(0, 4)}
         grid={{ horizontal: true }}
@@ -161,6 +162,9 @@ export default function Chart() {
               `${MONTHS[v.getMonth()]} ${v.getFullYear()}`,
             tickNumber: 8,
             label: "Month",
+            height: 72,
+            tickLabelStyle: { fontSize: 14 },
+            labelStyle: { fontSize: 16 },
           },
         ]}
         yAxis={[
@@ -168,6 +172,9 @@ export default function Chart() {
             min: 0,
             label: "Monthly Visits",
             valueFormatter: (v: number) => `${Math.round(v / 1000)}k`,
+            width: 84,
+            tickLabelStyle: { fontSize: 14 },
+            labelStyle: { fontSize: 16 },
           },
         ]}
         series={[
@@ -208,21 +215,17 @@ export default function Chart() {
             curve: "monotoneX",
           },
         ]}
-        margin={{ top: 20, bottom: 90, left: 90, right: 40 }}
+        margin={{ top: 20, bottom: 10, left: 20, right: 40 }}
         sx={{
-          "& .MuiAreaElement-root": { fillOpacity: 0.82 },
-          "& .MuiLineElement-root": { strokeWidth: 2 },
-          "& .MuiLineElement-series-social": { strokeWidth: 3 },
-          "& .MuiChartsAxis-tickLabel": { fontSize: "14px" },
-          "& .MuiChartsAxis-label": { fontSize: "16px" },
-          "& .MuiChartsLegend-label": { fontSize: "14px" },
+          "& .MuiLineChart-area": { fillOpacity: 0.82 },
+          "& .MuiLineChart-line": { strokeWidth: 2 },
+          '& .MuiLineChart-line[data-series="social"]': { strokeWidth: 3 },
           "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
         }}
         slotProps={{
           legend: {
-            position: { vertical: "bottom", horizontal: "middle" },
-            itemMarkWidth: 20,
-            itemMarkHeight: 4,
+            position: { vertical: "bottom", horizontal: "center" },
+            sx: { fontSize: 14 },
           },
         }}
       >
