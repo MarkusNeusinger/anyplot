@@ -189,13 +189,16 @@ re-reviewed. Two consequences for this loop. A FIX push starts no new
 Copilot run, so a `copilot-*` check on the new head SHA is
 legitimately ABSENT; waiting for one that will never come is the
 failure mode to avoid — see §3e for what to require instead. And a
-fresh review is requested only after a SUBSTANTIVE rework (new
-behaviour, a reworked mechanism), never after every push: each
-request re-reads the whole diff and surfaces "previously missed"
-findings in files the push never touched, which draws another push
-(kurrentschrift#406 collected ~15 requests in a day over a one-line
-docstring fix). Stop once a round yields no new inline comments but
-only carried-over items.
+second review is requested only when the first found something big —
+a high-severity finding (a real bug, a security or correctness
+issue, a wrong mechanism) whose fix you pushed — and a third is never
+requested, whatever the second round says (owner, 2026-10-23: each
+round costs premium requests, and a docs PR had collected three).
+Small and medium findings get their fixes pushed and their threads
+resolved with no new round. Each request re-reads the whole diff and
+surfaces "previously missed" findings in files the push never
+touched, which draws another push (kurrentschrift#406 collected ~15
+requests in a day over a one-line docstring fix).
 
 Fetch all three comment surfaces — they carry different content:
 
