@@ -1,7 +1,7 @@
 // anyplot.ai
 // learning-curve-basic: Model Learning Curve
 // Library: muix 9.16.0 | JavaScript 22.23.3
-// Quality: 86/100 | Updated: 2026-10-23
+// Quality: 85/100 | Updated: 2026-10-23
 import { LineChart } from "@mui/x-charts/LineChart";
 import { Box, Typography } from "@mui/material";
 
