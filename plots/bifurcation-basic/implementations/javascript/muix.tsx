@@ -2,100 +2,120 @@
 // bifurcation-basic: Bifurcation Diagram for Dynamical Systems
 // Library: muix 7.29.1 | JavaScript 22.22.3
 // Quality: 91/100 | Created: 2026-06-17
-//# anyplot-orientation: landscape
-// anyplot.ai
-// bifurcation-basic: Bifurcation Diagram for Dynamical Systems
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-06-17
-
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
-import { useDrawingArea } from "@mui/x-charts/hooks";
+import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data: logistic map  x(n+1) = r · x(n) · (1 − x(n)) -------------------
-// Iterate deterministically from a fixed start, discard the transient, then
-// record long-term orbit points. 1000 r-steps × 120 records = 120 k points —
-// dense enough to meet the spec's 100 k+ target and fill the chaotic band.
-const R_MIN = 2.5;
-const R_MAX = 4.0;
-const R_STEPS = 1000;   // parameter resolution along the x-axis
-const TRANSIENT = 300;  // discarded initial iterations (settle onto attractor)
-const RECORD = 120;     // states kept per r value (the steady-state orbit)
-const X0 = 0.4;         // fixed seed (avoids the 0.5 trap at r=4)
-
-const points: { x: number; y: number; id: number }[] = [];
-let pid = 0;
-for (let i = 0; i < R_STEPS; i++) {
-  const r = R_MIN + ((R_MAX - R_MIN) * i) / (R_STEPS - 1);
-  let x = X0;
-  for (let n = 0; n < TRANSIENT; n++) x = r * x * (1 - x);
-  for (let n = 0; n < RECORD; n++) {
-    x = r * x * (1 - x);
-    points.push({ x: r, y: x, id: pid++ });
-  }
-}
-
-// Key period-doubling bifurcations (analytic values).
-// Labels alternate left (anchor "end") / right (anchor "start") so the
-// clustered r=3.544 and r=3.5699 references don't crowd on the same side.
-// Two vertical levels spread each left/right pair apart vertically.
-const MARKERS = [
-  { r: 3.0,    text: "period-2", anchor: "end",   level: 0 },
-  { r: 3.449,  text: "period-4", anchor: "end",   level: 1 },
-  { r: 3.544,  text: "period-8", anchor: "start", level: 0 },
-  { r: 3.5699, text: "chaos",    anchor: "start", level: 1 },
+// Constants
+const STATE_MIN = 0;
+const STATE_MAX = 1;
+const POINT_ALPHA = 0.55;
+const BIFURCATION_POINTS = [
+  { r: 3.0, text: "Period-2", anchor: "end" as const, y: 0.94 },
+  { r: 3.449, text: "Period-4", anchor: "end" as const, y: 0.94 },
+  { r: 3.544, text: "Period-8", anchor: "end" as const, y: 0.14 },
+  { r: 3.5699, text: "Chaos", anchor: "start" as const, y: 0.94 },
 ];
-const LABEL_Y_OFFSETS = [18, 54];   // two distinct heights (px from top of drawing area)
 
-const TITLE_H = 60;
+// Columns: set these to your data's column names
+const PARAMETER = "Growth rate (r)"; // role: parameter
+const STATE = "Steady-state population (x)"; // role: state
 
-// Overlay drawn in SVG space via the drawing-area hook. Linear axes map each
-// r value to an exact x pixel coordinate without guessing scale factors.
+// Data: replace this block with your own records, one object per row
+const data = (() => {
+  const rMin = 2.5;
+  const rMax = 4.0;
+  const rSteps = 1000;
+  const transient = 300;
+  const record = 120;
+  const x0 = 0.4;
+  const rows: { [key: string]: number }[] = [];
+  for (let i = 0; i < rSteps; i++) {
+    const r = rMin + ((rMax - rMin) * i) / (rSteps - 1);
+    let x = x0;
+    for (let n = 0; n < transient; n++) x = r * x * (1 - x);
+    for (let n = 0; n < record; n++) {
+      x = r * x * (1 - x);
+      rows.push({ [PARAMETER]: r, [STATE]: x });
+    }
+  }
+  return rows;
+})();
+
+// Plot: reads only data and the constants above
+let rMin = Infinity;
+let rMax = -Infinity;
+const points = data.map((d, i) => {
+  const r = d[PARAMETER];
+  const x = d[STATE];
+  if (r < rMin) rMin = r;
+  if (r > rMax) rMax = r;
+  return { x: r, y: x, id: i };
+});
+
+const p0Int = parseInt(t.palette[0].slice(1), 16);
+const pointColor = `rgba(${(p0Int >> 16) & 255}, ${(p0Int >> 8) & 255}, ${p0Int & 255}, ${POINT_ALPHA})`;
+
+const TITLE = "bifurcation-basic · javascript · muix · anyplot.ai";
+const SUBTITLE = `${points.length.toLocaleString("en-US")} steady-state orbit points across ${PARAMETER} ∈ [${rMin.toFixed(1)}, ${rMax.toFixed(1)}]`;
+const HEADER_H = 78;
+
 function Bifurcations() {
-  const { left, top, width, height } = useDrawingArea();
-  const xOf = (r: number) => left + ((r - R_MIN) / (R_MAX - R_MIN)) * width;
+  const xScale = useXScale("r");
+  const yScale = useYScale("x");
+  if (!xScale || !yScale) return null;
+
+  const yTop = yScale(STATE_MAX);
+  const yBottom = yScale(STATE_MIN);
+  if (yTop === undefined || yBottom === undefined) return null;
 
   return (
     <g>
-      {MARKERS.map((m) => {
-        const x = xOf(m.r);
+      {BIFURCATION_POINTS.filter((m) => m.r >= rMin && m.r <= rMax).map((m) => {
+        const x = xScale(m.r);
+        const labelY = yScale(m.y);
+        if (x === undefined || labelY === undefined) return null;
         const dx = m.anchor === "end" ? -8 : 8;
-        const labelY = top + LABEL_Y_OFFSETS[m.level];
+        const labelText = `${m.text} (r ≈ ${m.r})`;
+        const pillW = labelText.length * 7.6 + 12;
+        const pillX = m.anchor === "end" ? x + dx - pillW + 4 : x + dx - 4;
         return (
           <g key={m.r}>
             <line
               x1={x}
-              y1={top}
+              y1={yTop}
               x2={x}
-              y2={top + height}
+              y2={yBottom}
               stroke={t.amber}
               strokeWidth={1.5}
               strokeDasharray="7 5"
-              opacity={0.7}
+              opacity={0.75}
+            />
+            <rect
+              x={pillX}
+              y={labelY - 15}
+              width={pillW}
+              height={22}
+              rx={4}
+              fill={t.pageBg}
+              fillOpacity={0.86}
             />
             <text
               x={x + dx}
               y={labelY}
-              fill={t.inkSoft}
+              fill={t.ink}
               textAnchor={m.anchor}
-              style={{ fontSize: 13, fontFamily: "Inter, system-ui, sans-serif", fontWeight: 600 }}
+              style={{
+                fontSize: 14,
+                fontFamily: "Inter, system-ui, sans-serif",
+                fontWeight: 600,
+              }}
             >
-              {m.text}
-            </text>
-            <text
-              x={x + dx}
-              y={labelY + 16}
-              fill={t.inkSoft}
-              textAnchor={m.anchor}
-              opacity={0.8}
-              style={{ fontSize: 11, fontFamily: "Inter, system-ui, sans-serif" }}
-            >
-              r ≈ {m.r}
+              {labelText}
             </text>
           </g>
         );
@@ -121,62 +141,69 @@ export default function Chart() {
     >
       <div
         style={{
-          height: TITLE_H,
+          height: HEADER_H,
           display: "flex",
+          flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
+          gap: 4,
         }}
       >
         <span style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>
-          bifurcation-basic · javascript · muix · anyplot.ai
+          {TITLE}
         </span>
+        <span style={{ fontSize: 15, color: t.inkSoft }}>{SUBTITLE}</span>
       </div>
-      <ChartContainer
+      <ChartsContainer
         width={W}
-        height={H - TITLE_H}
+        height={H - HEADER_H}
         skipAnimation
-        // Density via low-alpha brand green (Imprint palette position 1).
-        colors={["rgba(0, 158, 115, 0.55)"]}
-        margin={{ top: 16, bottom: 70, left: 86, right: 28 }}
+        colors={[pointColor]}
+        margin={{ top: 16, bottom: 20, left: 36, right: 36 }}
         series={[
           {
             type: "scatter",
             data: points,
             markerSize: 1,
-            label: "Steady-state orbit",
-            disableHover: true,
+            label: STATE,
+            xAxisId: "r",
+            yAxisId: "x",
           },
         ]}
         xAxis={[
           {
-            min: R_MIN,
-            max: R_MAX,
-            label: "Growth rate  r",
-            tickLabelStyle: { fontSize: 14 },
-            labelStyle: { fontSize: 16 },
+            id: "r",
+            min: rMin,
+            max: rMax,
+            tickNumber: 10,
+            height: 64,
+            label: PARAMETER,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink, fontWeight: 500 },
           },
         ]}
         yAxis={[
           {
-            min: 0,
-            max: 1,
-            label: "Steady-state population  x",
+            id: "x",
+            min: STATE_MIN,
+            max: STATE_MAX,
+            width: 84,
             tickNumber: 11,
-            tickLabelStyle: { fontSize: 14 },
-            labelStyle: { fontSize: 16 },
+            label: STATE,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink, fontWeight: 500 },
           },
         ]}
         sx={{
-          "& .MuiChartsLegend-root": { display: "none" },
           "& .MuiChartsAxis-line": { stroke: t.inkSoft },
           "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
         }}
       >
         <ScatterPlot />
-        <ChartsXAxis />
-        <ChartsYAxis />
+        <ChartsXAxis axisId="r" />
+        <ChartsYAxis axisId="x" />
         <Bifurcations />
-      </ChartContainer>
+      </ChartsContainer>
     </div>
   );
 }
