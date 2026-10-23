@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: line-stepwise
 created: '2026-09-05T08:11:13Z'
-updated: '2026-10-23T21:25:40Z'
+updated: '2026-10-23T21:30:33Z'
 generated_by: adopted:gemini/12267-muix-9-batch1
 workflow_run: 40026139165
 issue: 2600
@@ -12,44 +12,57 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-step
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/javascript/muix/plot-dark.html
-quality_score: 84
+quality_score: 86
 review:
   strengths:
-  - 'Native MUI X curve: ''step'' draws the series purely as horizontal and vertical
-    segments with one consistent (mid) alignment, so every plateau reads as a single
-    flat line at its exact setpoint'
-  - 'Realistic smart-thermostat schedule logged every 15 minutes: jumps of different
-    height in both directions and plateaus from 2 h to 9 h'
-  - Time axis formatted as HH:MM via valueFormatter on a whole-day 00:00–24:00 domain
-    with two-hour ticks
-  - Axis bands sized explicitly (x height 64, y width 76) so no v9 tick truncation;
-    chrome fully token-driven and readable in both themes
-  - Library-native tooltip with formatted °F values in the HTML output
+  - 'Native `curve: "step"` on a LineChart series draws the staircase with only horizontal
+    and vertical segments; the 96 quarter-hour samples collapse into five clean plateaus
+    with no comb of vertical strokes.'
+  - Real, neutral smart-thermostat schedule (62/68/65/72/62 °F) gives jumps up and
+    down of different heights and plateaus from 2 to 9 hours, so the data exercises
+    the whole plot type.
+  - 'Theme handling is complete: page, ink, ink-soft and grid tokens drive the title,
+    axis labels, ticks, axis lines and grid, and both renders read cleanly while the
+    #009E73 series stays identical.'
+  - 'Time axis formatted as HH:MM through the axis `valueFormatter`, with axis bands
+    sized explicitly (`height: 64`, `width: 76`) so no tick label is truncated.'
+  - The area under the step line uses a vertical gradient defined in an SVG `<defs>`
+    child of the chart and targeted through the v9 `.MuiLineChart-area` class, a MUI
+    X composition idiom.
+  - Animation disabled with `skipAnimation`, the component sized from `window.ANYPLOT_SIZE`,
+    and the value formatter adds °F to the HTML tooltips.
   weaknesses:
-  - 'CQ-01 (code): a named `formatHour` function and an IIFE data builder sit outside
-    the component, against the Imports → Data → Plot structure → inline the hour formatting
-    as an arrow in the axis valueFormatter and build the rows with a flat loop or
-    `flatMap` at module level. Likely cause: helper-function style for the data and
-    formatter.'
-  - 'Suggestion: drop the dashed ''Peak 72°F'' reference line; it repeats what the
-    y axis and the plateau already show.'
-  - 'Suggestion: tighten the y headroom above the peak (the 72–78 band is empty) so
-    the staircase fills more of the plot height.'
+  - 'VQ-05 (both): the data spans 62–72 °F inside a 55–78 °F y axis, so about a quarter
+    of the plot height above the 72 °F plateau stays empty and the staircase uses
+    well under half of the vertical space → pad the domain by about 10–15 % of the
+    span on each side (roughly 60–74 °F). Likely cause: `Y_MIN = MIN_SETPOINT - 0.7
+    * Y_SPAN` and `Y_MAX = PEAK_SETPOINT + 0.6 * Y_SPAN`.'
+  - 'Suggestion: `curve: "stepAfter"` would place each jump on the hour the schedule
+    changes (06:00, 08:00, 17:00, 22:00) instead of halfway between samples (05:52
+    …); mid alignment is allowed by the spec, but post alignment matches how a thermostat
+    schedule holds its value.'
+  - 'Suggestion: the area fill runs down to a padded floor of 55 °F rather than a
+    meaningful baseline, so fill height suggests proportions the setpoints do not
+    have (the 72 °F block looks about 2.4 times the 62 °F one); a plain step line,
+    or the line without fill, would avoid that reading.'
+  - 'Suggestion: the dashed "Peak 72°F" reference line repeats the 72 gridline and
+    its label sits at the left edge, far from the evening plateau it describes; dropping
+    it would leave the staircase as the only focus.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1 across the whole canvas.
-      Chrome: bold dark title "line-stepwise · javascript · muix · anyplot.ai" top-left; y title "Setpoint (°F)" (ticks 56–78 every 2), x title "Time of Day" (ticks 00:00–24:00 every 2 h); subtle horizontal grid; L-shaped axis lines; dashed reference line at 72 labelled "Peak 72°F". All readable.
-      Data: single #009E73 step line (3 px) with a translucent green gradient fill: 62 until ~06:00, 68 until ~08:00, 65 until ~17:00, 72 until ~22:00, 62 to 23:45. Only horizontal/vertical segments, jumps halfway between samples (mid alignment).
+      Chrome: bold dark title "line-stepwise · javascript · muix · anyplot.ai" top left (~30 % of width); y axis "Setpoint (°F)" with ticks 56–78 every 2; x axis "Time of Day" with HH:MM ticks 00:00–24:00 every 2 h; left and bottom axis lines only; subtle horizontal gridlines; a dashed grey "Peak 72°F" reference line with a small label at the left. All text dark on light and readable.
+      Data: one #009E73 step line (3 px) with a green gradient area fill below it; plateaus at 62 (00:00–~05:52), 68 (~05:52–~07:52), 65 (~07:52–~16:52), 72 (~16:52–~21:52), 62 (~21:52–23:45); only horizontal and vertical segments, mid-step alignment. Empty band from ~73 to 78 °F above the peak.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, axis titles and tick labels in light ink; grid subtle dark gray; dashed peak line and label light gray. No dark-on-dark text.
-      Data: identical #009E73 line and green gradient fill (reads darker over the dark page), same geometry as light.
+      Chrome: title, axis titles and tick labels flip to light ink and are clearly readable; gridlines subtle dark grey; axis lines light; the "Peak 72°F" label light grey, readable. No dark-on-dark text.
+      Data: identical #009E73 step line and the same green gradient fill (reads as a darker green over the dark page); same plateaus and jump positions as the light render.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -57,70 +70,70 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes (title 22, axis titles 16, ticks 14 CSS px);
-          all text readable in both themes
+        comment: Explicit sizes (title 22, axis titles 16, ticks 14 CSS px); readable
+          in both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; the Peak label sits clear of the line
+        comment: No text collisions; the reference-line label sits clear of the data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 3 px step line clearly visible over the translucent fill in both
-          themes; no markers needed at 96 samples
+        comment: 3 px step line clearly visible on both backgrounds; no markers needed
+          for a staircase of 96 samples; no legend (single series)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single green series, high contrast on both surfaces
+        comment: Single green series with strong contrast on both pages
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 3200x1800, axis bands sized, nothing clipped; title ~31% width is
-          fine for the mandated title
+        comment: Data 62–72 °F inside a 55–78 °F axis leaves about a quarter of the
+          plot height empty above the peak (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Time of Day'' and ''Setpoint (°F)'' with unit'
+        comment: '"Setpoint (°F)" with unit, "Time of Day" with HH:MM ticks'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Series in #009E73 (t.palette[0]); backgrounds #FAF8F1 / #1A1A17;
-          chrome from theme tokens'
+        comment: 'First series #009E73; backgrounds #FAF8F1 / #1A1A17; chrome from
+          theme tokens in both renders'
     design_excellence:
-      score: 9
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: The style-guide baseline (tokens, Imprint, explicit fonts); nothing
-          decided clearly beyond it
+        passed: true
+        comment: 'Above baseline: a vertical gradient fill (0.35 → 0.03 opacity) gives
+          the staircase weight without competing with the line; semibold title hierarchy'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: 'Beyond baseline: HH:MM ticks every two hours on a whole-day 00:00–24:00
-          domain, horizontal-only grid chosen for a value-reading chart'
+        passed: true
+        comment: Horizontal-only grid chosen for a value-reading chart and HH:MM ticks
+          every 2 h; otherwise the baseline
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
-        passed: false
+        passed: true
         comment: Data displayed; the peak reference line is an unrequested annotation
           and earns no credit
     spec_compliance:
@@ -132,27 +145,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Step line chart via native curve:'step'
+        comment: 'Step line plot via curve: "step"'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Only horizontal/vertical segments, one consistent (mid) alignment,
-          plateaus read as single flat segments, no markers
+        comment: 'Checked every good-version bullet: only horizontal/vertical segments;
+          one alignment (mid) for the whole series with flat segments at exact y;
+          plateaus read as single segments; no markers drawn'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x = hour of day on a linear axis, y = setpoint; flat segments at
-          exact values 62/68/65/72/62
+        comment: x = hour of day, y = setpoint; all data visible, plateaus at their
+          exact values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; single series, legend hidden (N/A)
+        comment: Title format correct; legend N/A for a single series
     data_quality:
       score: 15
       max: 15
@@ -162,43 +176,44 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Up and down jumps of different heights, short and long plateaus
+        comment: Rising and falling jumps of different heights, plateaus of 2–9 hours
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Smart-thermostat daily setpoint schedule, neutral and real
+        comment: Smart-thermostat daily setpoint schedule, neutral and comprehensible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 62–72 °F are realistic setpoints; 15-minute logging over 24 h (96
-          points, inside 50–500)
+        comment: 'Checked: plateaus read 62/68/65/72/62 °F off the axis, matching
+          the schedule block in the code; 62–72 °F is a typical US residential setpoint
+          range'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Named formatHour function and an IIFE data builder outside the component
-          (defect line)
+        passed: true
+        comment: Columns → data → plot zones; only the harness-required component
+          and a tiny formatter
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic schedule
+        comment: Deterministic schedule data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: LineChart, ChartsReferenceLine, Box, Typography all used
       - id: CQ-04
         name: Code Elegance
         score: 2
@@ -210,35 +225,33 @@ review:
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component sized from ANYPLOT_SIZE, skipAnimation,
-          v9 axis height/width and CSS classes
+        comment: Default-exported component, skipAnimation, v9 API (hideLegend, axis
+          height/width, per-chart CSS classes)
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: false
-        comment: High-level LineChart with native curve:'step', axis valueFormatter,
-          axis band sizing, theme tokens
+        passed: true
+        comment: High-level LineChart with series curve, axis valueFormatter/labelStyle,
+          grid prop and sx class targeting
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: SVG <defs> linearGradient composed as a LineChart child and targeted
-          through .MuiLineChart-area in sx
-  verdict: REJECTED
+        passed: true
+        comment: SVG <defs> gradient composed as a LineChart child and wired through
+          the .MuiLineChart-area class
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-03c2486144
-  rendered_at: '2026-10-23T21:22:48Z'
+  rendered_at: '2026-10-23T21:27:36Z'
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
-  - layer-composition
   - hover-tooltips
   - html-export
   patterns:
