@@ -65,7 +65,7 @@ EOF
 8. **The Copilot review runs ONCE**, when the PR opens (or leaves draft) — review-on-push is off in
    the "Automated Copilot Code Review" ruleset (owner, 2026-09-03), so step 7's follow-up commit and
    every later push trigger nothing. Do not re-request a review per push; the rule and its one
-   exception (a second round after a fixed high-severity finding, never a third) are in
+   exception (another round only while the previous one had high or critical findings) are in
    `CLAUDE.md` § "PR Follow-Through", step 3.
 
 ## Report
