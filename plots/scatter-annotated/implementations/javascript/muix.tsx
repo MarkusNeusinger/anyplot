@@ -25,40 +25,35 @@ const data = [
   { [X]: 120, [Y]: 95, [LABEL]: "Ferrotech Dynamics" },
   { [X]: 15, [Y]: 180, [LABEL]: "Lumen Bioworks" },
   { [X]: 88, [Y]: 410, [LABEL]: "Aurora Semiconductors" },
-  { [X]: 150, [Y]: 60, [LABEL]: "Cascade Freight" },
+  { [X]: 150, [Y]: 60, [LABEL]: "Cascade Networks" },
   { [X]: 30, [Y]: 265, [LABEL]: "Nimbus Software" },
-  { [X]: 95, [Y]: 70, [LABEL]: "Ridgeline Materials" },
-  { [X]: 55, [Y]: 40, [LABEL]: "Halcyon Energy" },
+  { [X]: 95, [Y]: 70, [LABEL]: "Ridgeline Hardware" },
+  { [X]: 55, [Y]: 40, [LABEL]: "Halcyon Games" },
   { [X]: 22, [Y]: 155, [LABEL]: "Zephyr Mobility" },
-  { [X]: 110, [Y]: 130, [LABEL]: "Granite Financial" },
-  { [X]: 10, [Y]: 45, [LABEL]: "" },
-  { [X]: 18, [Y]: 70, [LABEL]: "" },
-  { [X]: 25, [Y]: 80, [LABEL]: "" },
-  { [X]: 33, [Y]: 95, [LABEL]: "" },
-  { [X]: 40, [Y]: 110, [LABEL]: "" },
-  { [X]: 48, [Y]: 120, [LABEL]: "" },
-  { [X]: 52, [Y]: 135, [LABEL]: "" },
-  { [X]: 60, [Y]: 150, [LABEL]: "" },
-  { [X]: 68, [Y]: 155, [LABEL]: "" },
-  { [X]: 75, [Y]: 165, [LABEL]: "" },
-  { [X]: 82, [Y]: 175, [LABEL]: "" },
-  { [X]: 90, [Y]: 185, [LABEL]: "" },
-  { [X]: 98, [Y]: 195, [LABEL]: "" },
-  { [X]: 105, [Y]: 200, [LABEL]: "" },
-  { [X]: 115, [Y]: 205, [LABEL]: "" },
-  { [X]: 125, [Y]: 215, [LABEL]: "" },
-  { [X]: 135, [Y]: 225, [LABEL]: "" },
-  { [X]: 145, [Y]: 235, [LABEL]: "" },
+  { [X]: 110, [Y]: 130, [LABEL]: "Granite Payments" },
+  { [X]: 7, [Y]: 38, [LABEL]: "" },
+  { [X]: 12, [Y]: 72, [LABEL]: "" },
+  { [X]: 19, [Y]: 58, [LABEL]: "" },
+  { [X]: 27, [Y]: 104, [LABEL]: "" },
+  { [X]: 31, [Y]: 79, [LABEL]: "" },
+  { [X]: 38, [Y]: 126, [LABEL]: "" },
+  { [X]: 44, [Y]: 98, [LABEL]: "" },
+  { [X]: 51, [Y]: 141, [LABEL]: "" },
+  { [X]: 58, [Y]: 112, [LABEL]: "" },
+  { [X]: 64, [Y]: 168, [LABEL]: "" },
+  { [X]: 71, [Y]: 139, [LABEL]: "" },
+  { [X]: 77, [Y]: 192, [LABEL]: "" },
+  { [X]: 84, [Y]: 158, [LABEL]: "" },
+  { [X]: 92, [Y]: 214, [LABEL]: "" },
+  { [X]: 101, [Y]: 176, [LABEL]: "" },
+  { [X]: 107, [Y]: 238, [LABEL]: "" },
+  { [X]: 118, [Y]: 197, [LABEL]: "" },
+  { [X]: 126, [Y]: 252, [LABEL]: "" },
+  { [X]: 133, [Y]: 214, [LABEL]: "" },
+  { [X]: 141, [Y]: 271, [LABEL]: "" },
 ];
 
 // Plot: reads only data and the constants above
-function hexToRgba(hex: string, alpha: number) {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
-
 const allX = data.map((d) => d[X]);
 const allY = data.map((d) => d[Y]);
 const X_MAX = Math.ceil((Math.max(...allX) * 1.1) / 5) * 5;
@@ -204,14 +199,14 @@ export default function Chart() {
             label: "Highlighted",
             data: highlighted,
             markerSize: 9,
-            color: hexToRgba(t.palette[0], 0.78),
+            color: t.palette[0],
           },
           {
             id: "peers",
             label: "Peer companies",
             data: peers,
             markerSize: 5.5,
-            color: hexToRgba(MUTED, 0.6),
+            color: MUTED,
           },
         ]}
         slotProps={{
@@ -221,6 +216,7 @@ export default function Chart() {
           },
         }}
         sx={{
+          "& .MuiScatterChart-marker": { fillOpacity: 0.7 },
           "& .MuiChartsLegend-root": { color: t.ink, pb: "12px" },
           "& .MuiChartsLegend-label": { fontSize: "15px !important", color: t.ink },
           "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
