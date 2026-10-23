@@ -2,7 +2,7 @@
 // violin-basic: Basic Violin Plot
 // Library: MUI X Charts | React | Node
 // License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: 88/100 | Created: 2026-08-26
+// Quality: pending | Created: 2026-08-26
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
