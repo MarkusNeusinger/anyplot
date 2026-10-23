@@ -11,4 +11,4 @@
   surfaced: the `dataLabels.distance` gap, legend symbols that take
   `series.opacity`, near-black default outlines in the dark theme, and the
   cropping of unsorted line data. Existing implementations stay as they are,
-  and regeneration refreshes them.
+  and regeneration refreshes them. (#12246)
