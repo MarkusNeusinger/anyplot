@@ -2,124 +2,142 @@ library: muix
 language: javascript
 specification_id: datamatrix-basic
 created: '2026-09-02T00:15:32Z'
-updated: '2026-09-02T00:32:38Z'
-generated_by: claude-sonnet
-workflow_run: 33574023781
+updated: '2026-10-23T21:08:51Z'
+generated_by: adopted:gemini/12267-muix-9-batch1
+workflow_run: 40021959836
 issue: 3811
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/javascript/muix/plot-dark.html
-quality_score: 87
+quality_score: 81
 review:
   strengths:
-  - 'Margin-balance fix from attempt 1 is verified in both renders: the card''s horizontal
-    and vertical whitespace now read as symmetric, resolving the prior VQ-05 deduction'
-  - The new elevated card (t.elevatedBg fill, t.grid hairline border, rounded corners)
-    is a legitimate, non-fake decorative touch that lifts Design Excellence without
-    simulating any interactive/UI element
-  - Correct L-shaped finder pattern and alternating timing pattern, matching ISO/IEC
-    16022 conventions
-  - Fully deterministic content encoding (FNV-1a seed + fixed-seed LCG filler), reproducible
-    pixel-for-pixel across renders
-  - Correct Imprint palette application — brand green (#009E73) is the sole data color,
-    identical between light and dark renders, both theme backgrounds and the new card
-    chrome are theme-correct
+  - L-shaped finder pattern is two unbroken solid edges (left column, bottom row)
+    meeting in the lower-left corner, and the clock pattern alternates module-for-module
+    along the top row and right column, in step with the 24×24 grid (both renders)
+  - Square modules of one size on a regular grid with shapeRendering="crispEdges"
+    and a 0.6 px overlap that removes anti-aliasing seams between adjacent black modules
+    — sharp, gradient-free cells
+  - Generous quiet zone (2 modules plus the tile padding) on all four sides, free
+    of text; the symbol stays black on a light tile in the dark theme while title
+    and caption flip to theme tokens (t.ink / t.inkSoft)
+  - 'Composes the symbol as a custom child of ChartsContainer and positions it with
+    the useDrawingArea hook — the MUI X v9 composition idiom for custom SVG marks,
+    with axes hidden via position: "none" and skipAnimation set'
+  - Rounded symbol tile with a subtle t.grid border, a left-aligned title and a centred
+    muted caption give the single symbol a clean presentation hierarchy
+  - Plausible, neutral industrial part-marking scenario (PCB serial number) at a valid
+    ECC 200 square size (24×24)
   weaknesses:
-  - Composition is still visually mechanical — the barcode pattern itself has limited
-    room for a focal point, so Design Excellence remains mid-pack despite the card
-    framing
-  - (Inherent, not actionable) Real Data Matrix codes are conventionally black-on-white
-    for scanner contrast; using Imprint brand green correctly follows anyplot's mandatory
-    first-series-is-#009E73 rule, so this is a resolved tension, not a defect
+  - 'DQ-01 (both): the data region is not an ECC 200 encoding of the content — the
+    code places the raw 8-bit ASCII of "PCB-SN:48291X7A" row-major and fills the rest
+    with LCG noise, so there are no ECC 200 codewords, no Reed-Solomon error correction
+    and no standard module placement, and the symbol would not decode (the Notes name
+    ECC 200 as the standard) → encode the content as ECC 200: ASCII codewords (digit
+    pairs as 130+value), pad codewords, Reed-Solomon ECC over GF(256) with polynomial
+    301, and the standard utah placement into the 22×22 data region. Likely cause:
+    lines 38–63 build dataBits from charCodeAt bits plus an LCG instead of computing
+    the symbology.'
+  - 'CQ-04 (code): the header is duplicated — lines 6–9 repeat the anyplot header
+    with a stale "Library: muix 7.29.1 | JavaScript 22.23.2" that contradicts the
+    pinned muix 9.16 the code is written against → delete lines 6–9 so a single header
+    remains. Likely cause: a header from an earlier generation that was prepended
+    to instead of replaced.'
+  - 'Suggestion: once the data region is a real ECC 200 encoding, the caption''s "illustrative
+    data region" qualifier can be dropped.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "datamatrix-basic · javascript · muix · anyplot.ai" top-left in dark ink, clearly legible. The matrix now sits inside a distinct elevated card (soft cream fill, thin hairline border, rounded corners), well-centered with balanced horizontal/vertical whitespace. Caption below the card states the encoded content, module count, and ECC level in soft dark gray, clearly legible.
-      Data: 24×24 module grid in brand green (#009E73): solid green left column and bottom row (L-shaped finder pattern), alternating green/cream top row and right column (timing pattern), pseudo-random green/cream fill in the interior data region.
-      Legibility verdict: PASS — all text is dark-on-light and clearly readable; the green modules have strong contrast against the card and page background.
+      Background: warm off-white page (#FAF8F1), 2400×2400 square canvas; the symbol sits on a rounded tile of the same off-white with a faint grey 1 px border.
+      Chrome: title "datamatrix-basic · javascript · muix · anyplot.ai" top-left in dark ink, ~40 % of the width; muted dark-grey caption centred at the bottom: 'Part marking "PCB-SN:48291X7A" · 24×24 modules · illustrative data region'. All text readable.
+      Data: a 24×24 Data Matrix in near-black (#1A1A17) square modules: solid left column and bottom row form the L finder meeting at the lower-left corner; top row and right column alternate black/white; interior is a noise-like data region. Quiet zone of ~2 modules plus tile padding on all sides. Single-colour symbology, no palette series.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title and caption text, now rendered in light ink/soft-light gray, clearly legible against the dark background. The card uses the dark elevated surface with a matching hairline border and rounded corners, same balanced framing as the light render. No dark-on-dark issues observed.
-      Data: The exact same 24×24 module grid in the identical brand green (#009E73) — finder pattern, timing pattern, and data region positions match the light render pixel-for-pixel; only the chrome (page background, card background, text color) flipped to the dark theme.
-      Legibility verdict: PASS — no dark-on-dark text, data color identical to the light render, contrast strong in both themes.
+      Background: warm near-black page (#1A1A17); the symbol tile stays off-white (#FAF8F1) as a light card, as the spec permits.
+      Chrome: title in light ink top-left and caption in light-grey muted ink at the bottom — both clearly readable, no dark-on-dark text.
+      Data: the module grid is pixel-identical to the light render (same near-black modules on the off-white tile); only page background and text flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes (title 22px, caption 16px) via theme ink tokens;
-          readable in both themes
+        comment: Title and caption have explicit font sizes and read cleanly in both
+          themes; the symbol itself carries no text
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between title, card, matrix, and caption
+        comment: No text collisions; caption and title sit well clear of the tile
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Module cells sized to the drawing-area pitch exactly, clearly distinguishable
+        comment: Large, crisp square modules; seam-free via crispEdges and a 0.6 px
+          overlap
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Monochrome brand green vs. card/page background gives strong contrast
-          in both themes; no red-green-only signal
+        comment: Near-black on off-white, maximal contrast, no hue signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 2400x2400 square canvas, no clipping; the prior horizontal/vertical
-          margin asymmetry is now balanced via OUTER_MARGIN plus the card's own centering
+        comment: 2400×2400 square canvas, symbol tile centred, nothing clipped or
+          overflowing
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes needed; title format correct, caption gives units/content
+        comment: N/A for axes (a barcode has none); caption describes content and
+          size for a reader
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Brand green #009E73 as sole data color, correct theme-adaptive backgrounds
-          and card chrome, identical data color both themes'
+        comment: 'Page backgrounds #FAF8F1 / #1A1A17, chrome from theme tokens; black-on-white
+          symbology is required by the spec and the white tile in dark is permitted'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        comment: New elevated card (fill, hairline border, rounded corners) frames
-          the matrix with intentional product-label styling; still a mechanical repeated-block
-          pattern underneath
+        passed: true
+        comment: 'Raised: the symbol is presented on a rounded tile with a subtle
+          t.grid border and a title / muted caption hierarchy chosen for this plot
+          type'
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        comment: Subtle border + rounded corners + now-balanced whitespace read as
-          deliberate refinement, up from a bare flat background
-      - id: DE-03
-        name: Data Storytelling
         score: 3
         max: 6
-        comment: Title → card → caption stack gives some hierarchy, but the barcode
-          pattern itself still doesn't guide the viewer toward an insight
+        passed: true
+        comment: 'Raised: crispEdges plus a 0.6 px module overlap removes anti-aliasing
+          seams; generous balanced whitespace around the centred tile'
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: 'Default: the symbol is displayed; the caption gives context but
+          no hierarchy beyond the spec'
     spec_compliance:
       score: 15
       max: 15
@@ -129,101 +147,112 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Data Matrix 2D barcode visualization
+        comment: A single square Data Matrix symbol; no tinted modules, logos, callouts
+          or reference layers on the code
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: L-shaped finder (left+bottom solid), alternating timing pattern (top+right),
-          quiet zone >= 1 module (uses 2), ECC 200 noted in caption
+        comment: L finder (left + bottom, unbroken, meeting lower-left), clock pattern
+          on top and right in step with the grid, square uniform modules, quiet zone
+          ≥1 module, high-contrast black on white — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Content correctly bit-packed into the matrix; no axes needed for
-          this plot type
+        comment: Module positions follow the symbology grid, not data axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches '{spec-id} · {language} · {library} · anyplot.ai';
-          no legend needed for a single-series matrix
+        comment: Title follows the mandated format; legend N/A
     data_quality:
-      score: 14
+      score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 4
         max: 6
-        comment: Covers content encoding, module size, quiet zone, finder/timing patterns,
-          ECC 200 label
+        passed: false
+        comment: Data region is raw ASCII bits plus LCG filler, not an ECC 200 encoding
+          with Reed-Solomon error correction (defect line)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Neutral, plausible electronics part-marking serial number, matching
-          the spec's Applications section
+        passed: true
+        comment: PCB serial-number part marking — plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        comment: 24x24 is a valid ISO/IEC 16022 square symbol size
+        passed: true
+        comment: 'Checked: 24×24 is a valid ECC 200 square size that holds 15 ASCII
+          characters; clock parity (top-left black, top-right white, right column
+          alternating up from the black bottom corner) matches an even-sized symbol'
     code_quality:
       score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        comment: Uses a few small helper functions (hash, encode, build) — justified
-          by the algorithmic matrix generation, not over-engineered
+        passed: true
+        comment: Constants → data → grid → one hook-using child component required
+          by MUI X → default export
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic fixed-seed hash + LCG
+        comment: Fixed-seed LCG, fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ChartContainer and useDrawingArea imported, both used
+        comment: ChartsContainer and useDrawingArea both used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Appropriate complexity for the algorithm, no fake UI/interactivity
+        passed: false
+        comment: Duplicated header with a stale muix 7.29.1 line (lines 6–9) contradicts
+          the code (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: skipAnimation set, no manual save/mount calls, current MUI X hook
-          API
+        comment: 'Default-exported component, MUI X v9 API (ChartsContainer, position:
+          "none"), skipAnimation; harness writes PNG + HTML'
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
-        comment: ChartContainer + useDrawingArea is the documented composition pattern
-          for custom drawing in MUI X's coordinate space
+        passed: true
+        comment: 'Default: ChartsContainer composition with useDrawingArea is the
+          documented route for custom SVG marks'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 1
         max: 5
-        comment: Creative use of the headless drawing-area hook to render a chart
-          type MUI X has no built-in series for
+        passed: false
+        comment: 'Default: nothing beyond what the library prompt mandates; MUI X
+          serves only as an SVG surface'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-03c2486144
+  rendered_at: '2026-10-23T21:05:50Z'
 impl_tags:
   dependencies: []
   techniques:
