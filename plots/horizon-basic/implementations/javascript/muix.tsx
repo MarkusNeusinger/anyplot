@@ -1,229 +1,154 @@
 // anyplot.ai
 // horizon-basic: Horizon Chart
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 85/100 | Created: 2026-08-20
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+// Library: muix 9.16.0 | JavaScript 22.23.3
+// Quality: 86/100 | Updated: 2026-10-23
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { AreaPlot } from "@mui/x-charts/LineChart";
 import { Box, Typography } from "@mui/material";
 
 const t = window.ANYPLOT_TOKENS;
 const SIZE = window.ANYPLOT_SIZE;
 
-// --- Layout constants (CSS px in the mount's coordinate space) -------------
+// Constants
 const OUTER_PAD = 32;
 const LABEL_COL_WIDTH = 180;
 const RIGHT_PAD = 16;
 const CHART_WIDTH = SIZE.width - OUTER_PAD * 2 - LABEL_COL_WIDTH - RIGHT_PAD;
-
 const ROW_HEIGHT = 70;
 const HALF_HEIGHT = ROW_HEIGHT / 2;
 const ROW_GAP = 10;
 const BAND_COUNT = 3;
-const MAX_DEVIATION = 45; // percentage points from the 24h rolling baseline
-const POINT_COUNT = 168; // hourly readings over 7 days
 const ZERO_MARGIN = { top: 0, right: 0, bottom: 0, left: 0 };
-// Upper bound of each band's percentage-point range (e.g. 0-15 / 15-30 / 30-45).
-const BAND_THRESHOLDS = Array.from({ length: BAND_COUNT }, (_, k) => Math.round((MAX_DEVIATION * (k + 1)) / BAND_COUNT));
+const SWATCH_WIDTH = 24;
 
-const TITLE = "horizon-basic · javascript · muix · anyplot.ai";
-const TITLE_FONT_SIZE = Math.round(22 * (TITLE.length > 67 ? 67 / TITLE.length : 1));
+// Columns: set these to your data's column names
+const DATE = "Time"; // role: date
+const VALUE = "Deviation from 24h rolling baseline, in percentage points (pp)"; // role: value
+const SERIES = "Service"; // role: series
 
-// --- Data (in-memory, deterministic) ----------------------------------------
-// Fixed-seed LCG — the browser has no seeded RNG (see prompts/library/muix.md
-// "Reproducibility").
-function mulberry32(seed) {
-  let s = seed;
-  return () => {
-    s = (s + 0x6d2b79f5) | 0;
-    let v = Math.imul(s ^ (s >>> 15), 1 | s);
-    v = (v + Math.imul(v ^ (v >>> 7), 61 | v)) ^ v;
-    return ((v ^ (v >>> 14)) >>> 0) / 4294967296;
+// Data: replace this block with your own records, one object per row
+const data = (() => {
+  const pointCount = 168;
+  const maxDev = 45;
+  const mulberry32 = (seed) => {
+    let s = seed;
+    return () => {
+      s = (s + 0x6d2b79f5) | 0;
+      let v = Math.imul(s ^ (s >>> 15), 1 | s);
+      v = (v + Math.imul(v ^ (v >>> 7), 61 | v)) ^ v;
+      return ((v ^ (v >>> 14)) >>> 0) / 4294967296;
+    };
   };
-}
+  const bump = (i, center, width) => Math.exp(-(((i - center) / width) ** 2));
+  const daily = (i, phase) => Math.sin((2 * Math.PI * i) / 24 + phase);
+  // Each service has its own load profile: i = hour since start, d = day index (0-6)
+  const servers = [
+    // Business-hours traffic, quieter at the weekend
+    { name: "api-gateway", noise: 5, seed: 1013, shape: (i, d) => (d >= 5 ? 9 : 20) * daily(i, -1.9) },
+    // Quiet all week until a login storm on Day 3 morning
+    { name: "auth-service", noise: 3, seed: 1069, shape: (i) => 4 * daily(i, -1.9) + 40 * bump(i, 57, 2.5) },
+    // Evening order peaks that grow toward the weekend
+    { name: "orders-db", noise: 6, seed: 1151, shape: (i, d) => (14 + 4 * d) * daily(i, -2.8) },
+    // Slow drift across the week plus a nightly 02:00 batch job
+    {
+      name: "inventory-db",
+      noise: 4,
+      seed: 1223,
+      shape: (i, d) => -22 + (44 * i) / 167 + 16 * bump(i % 24, 2, 1.2) * (d < 5 ? 1 : 0.4),
+    },
+    // Flat, then a cache flush on Day 5 that drops the hit rate
+    { name: "redis-cache", noise: 2.5, seed: 1291, shape: (i) => -42 * bump(i, 106, 3) * (i >= 103 ? 1 : 0.4) },
+    // Nightly re-index bursts, slightly under baseline during the day
+    { name: "search-index", noise: 3, seed: 1373, shape: (i) => -7 + 34 * bump(i % 24, 4, 1.4) },
+    // Strong daily cycle, an outage on Day 4 afternoon and the backlog surge after it
+    {
+      name: "payment-worker",
+      noise: 5,
+      seed: 1447,
+      shape: (i) => 18 * daily(i, -2.2) - 60 * bump(i, 87, 2) + 52 * bump(i, 93, 2.5),
+    },
+    // Near idle except two newsletter sends at 09:00
+    { name: "email-worker", noise: 2, seed: 1523, shape: (i) => -3 + 30 * bump(i, 33, 1.5) + 36 * bump(i, 129, 1.5) },
+  ];
+  const rows = [];
+  servers.forEach((server) => {
+    const rand = mulberry32(server.seed);
+    let walk = 0;
+    for (let i = 0; i < pointCount; i += 1) {
+      const day = Math.floor(i / 24);
+      walk += (rand() - 0.5) * server.noise - walk * 0.3;
+      const val = Math.max(-maxDev, Math.min(maxDev, server.shape(i, day) + walk));
+      rows.push({
+        [DATE]: `Day ${day + 1} · ${String(i % 24).padStart(2, "0")}:00`,
+        [SERIES]: server.name,
+        [VALUE]: val,
+      });
+    }
+  });
+  return rows;
+})();
 
-// Deviation of a server metric (e.g. CPU load) from its 24h rolling baseline:
-// a daily sine cycle plus a mean-reverting random walk, clamped to the domain.
-function seriesValues(amplitude, phase, walkScale, seed) {
-  const rand = mulberry32(seed);
-  let walk = 0;
-  const values = [];
-  for (let i = 0; i < POINT_COUNT; i += 1) {
-    walk += (rand() - 0.5) * walkScale * 0.6 - walk * 0.15;
-    const daily = amplitude * Math.sin((2 * Math.PI * i) / 24 + phase);
-    values.push(Math.max(-MAX_DEVIATION, Math.min(MAX_DEVIATION, daily + walk)));
-  }
-  return values;
-}
+// Plot: reads only data and the constants above
+const seriesNames = [...new Set(data.map((d) => d[SERIES]))];
+const dates = [...new Set(data.map((d) => d[DATE]))];
+const pointCount = dates.length;
+const xIndex = Array.from({ length: pointCount }, (_, i) => i);
+const maxDeviation =
+  Math.ceil(Math.max(...data.map((d) => Math.abs(d[VALUE]))) / 15) * 15 || 45;
+const bandThresholds = Array.from({ length: BAND_COUNT }, (_, k) =>
+  Math.round((maxDeviation * (k + 1)) / BAND_COUNT),
+);
 
-const SERVERS = [
-  { name: "api-gateway", amplitude: 22, phase: 0.0, walkScale: 6, seed: 1013 },
-  { name: "auth-service", amplitude: 18, phase: 1.1, walkScale: 5, seed: 1069 },
-  { name: "orders-db", amplitude: 30, phase: 2.4, walkScale: 9, seed: 1151 },
-  { name: "inventory-db", amplitude: 26, phase: 0.6, walkScale: 8, seed: 1223 },
-  { name: "redis-cache", amplitude: 15, phase: 3.0, walkScale: 4, seed: 1291 },
-  { name: "search-index", amplitude: 20, phase: 1.8, walkScale: 6, seed: 1373 },
-  { name: "payment-worker", amplitude: 35, phase: 0.3, walkScale: 10, seed: 1447 },
-  { name: "email-worker", amplitude: 12, phase: 2.1, walkScale: 3, seed: 1523 },
-];
-
-const X_INDEX = Array.from({ length: POINT_COUNT }, (_, i) => i);
-
-const SERIES_DATA = SERVERS.map((server) => {
-  const values = seriesValues(server.amplitude, server.phase, server.walkScale, server.seed);
+const seriesData = seriesNames.map((name) => {
+  const values = data.filter((d) => d[SERIES] === name).map((d) => d[VALUE]);
   return {
-    name: server.name,
+    name,
     positive: values.map((v) => Math.max(v, 0)),
     negative: values.map((v) => Math.max(-v, 0)),
   };
 });
 
-// --- Imprint diverging colours — mirrored positive/negative bands ----------
-// t.div = [red pole, page-bg midpoint, blue pole] (see default-style-guide.md
-// "Continuous Data"). Bands fade from the midpoint toward the pole so the
-// folded magnitude reads as increasing colour intensity.
-function mixHex(hexA, hexB, ratio) {
-  const a = parseInt(hexA.slice(1), 16);
-  const b = parseInt(hexB.slice(1), 16);
-  const channel = (shift) => {
-    const va = (a >> shift) & 255;
-    const vb = (b >> shift) & 255;
-    return Math.round(va + (vb - va) * ratio);
-  };
-  const [r, g, bl] = [16, 8, 0].map(channel);
-  return `#${[r, g, bl].map((c) => c.toString(16).padStart(2, "0")).join("")}`;
-}
+const TITLE = "horizon-basic · javascript · muix · anyplot.ai";
+const TITLE_FONT_SIZE = Math.round(22 * (TITLE.length > 67 ? 67 / TITLE.length : 1));
 
-function bandColors(pole) {
+// Band colors: each step mixes the theme-adaptive diverging midpoint toward a pole
+const mid = parseInt(t.div[1].slice(1), 16);
+const [POS_BAND_COLORS, NEG_BAND_COLORS] = [t.div[2], t.div[0]].map((poleHex) => {
+  const pole = parseInt(poleHex.slice(1), 16);
   return Array.from({ length: BAND_COUNT }, (_, k) => {
     const strength = 0.45 + 0.55 * ((k + 1) / BAND_COUNT);
-    return mixHex(t.div[1], pole, strength);
+    const rgb = [16, 8, 0].map((shift) => {
+      const from = (mid >> shift) & 255;
+      const to = (pole >> shift) & 255;
+      return Math.round(from + (to - from) * strength);
+    });
+    return `#${rgb.map((c) => c.toString(16).padStart(2, "0")).join("")}`;
   });
-}
+});
 
-const POS_BAND_COLORS = bandColors(t.div[2]); // above baseline — blue
-const NEG_BAND_COLORS = bandColors(t.div[0]); // below baseline — red
+// Top half folds positive values upward; bottom half mirrors negatives downward
+const HALVES = [
+  { key: "positive", colors: POS_BAND_COLORS, top: 0, transform: "none" },
+  { key: "negative", colors: NEG_BAND_COLORS, top: HALF_HEIGHT, transform: "scaleY(-1)" },
+];
 
-// --- Chart geometry ----------------------------------------------------------
-// Classic CSS "horizon chart" fold: every band layer renders the SAME area
-// (baseline 0 → value) at full virtual height (HALF_HEIGHT * BAND_COUNT), then
-// is shifted down by `bandIndex * HALF_HEIGHT` and clipped to one HALF_HEIGHT
-// window. Lower bands are always fully covered wherever the value reaches
-// them, so stacking band 0 → band N-1 in DOM order (later = on top) reveals
-// exactly the highest reached band's colour at each point — no opacity
-// blending needed.
-function BandStack({ values, colors }) {
-  return (
-    <>
-      {colors.map((color, bandIndex) => (
-        <Box
-          key={bandIndex}
-          sx={{
-            position: "absolute",
-            left: 0,
-            bottom: 0,
-            width: CHART_WIDTH,
-            height: HALF_HEIGHT * BAND_COUNT,
-            transform: `translateY(${bandIndex * HALF_HEIGHT}px)`,
-          }}
-        >
-          <ChartContainer
-            width={CHART_WIDTH}
-            height={HALF_HEIGHT * BAND_COUNT}
-            margin={ZERO_MARGIN}
-            disableAxisListener
-            series={[
-              {
-                type: "line",
-                data: values,
-                area: true,
-                baseline: 0,
-                curve: "monotoneX",
-                color,
-              },
-            ]}
-            xAxis={[{ scaleType: "linear", data: X_INDEX, min: 0, max: POINT_COUNT - 1, domainLimit: "strict" }]}
-            yAxis={[{ scaleType: "linear", min: 0, max: MAX_DEVIATION, domainLimit: "strict" }]}
-          >
-            {/* slotProps forces the exact Imprint hex — AreaPlot's default style brightens `color` */}
-            <AreaPlot skipAnimation slotProps={{ area: { style: { fill: color, fillOpacity: 1 } } }} />
-          </ChartContainer>
-        </Box>
-      ))}
-    </>
-  );
-}
+const LEGEND = [
+  {
+    label: "Below baseline",
+    colors: [...NEG_BAND_COLORS].reverse(),
+    thresholds: [...bandThresholds].reverse(),
+    direction: "row-reverse",
+  },
+  { label: "Above baseline", colors: POS_BAND_COLORS, thresholds: bandThresholds, direction: "row" },
+];
 
-function HorizonRow({ name, positive, negative }) {
-  return (
-    <Box sx={{ display: "flex", alignItems: "center", height: ROW_HEIGHT }}>
-      <Box sx={{ width: LABEL_COL_WIDTH, pr: "14px", boxSizing: "border-box", textAlign: "right" }}>
-        <Typography
-          sx={{
-            m: 0,
-            fontSize: 17,
-            fontWeight: 500,
-            color: t.ink,
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-          }}
-        >
-          {name}
-        </Typography>
-      </Box>
-      <Box sx={{ position: "relative", width: CHART_WIDTH, height: ROW_HEIGHT }}>
-        <Box sx={{ position: "absolute", top: 0, left: 0, width: CHART_WIDTH, height: HALF_HEIGHT, overflow: "hidden" }}>
-          <BandStack values={positive} colors={POS_BAND_COLORS} />
-        </Box>
-        <Box
-          sx={{
-            position: "absolute",
-            top: HALF_HEIGHT,
-            left: 0,
-            width: CHART_WIDTH,
-            height: HALF_HEIGHT,
-            overflow: "hidden",
-            transform: "scaleY(-1)",
-          }}
-        >
-          <BandStack values={negative} colors={NEG_BAND_COLORS} />
-        </Box>
-        {/* baseline (0 deviation) reference rule */}
-        <Box sx={{ position: "absolute", top: HALF_HEIGHT, left: 0, width: CHART_WIDTH, height: "1px", bgcolor: t.grid }} />
-      </Box>
-    </Box>
-  );
-}
-
-function LegendSwatches({ colors, thresholds, label, align }) {
-  return (
-    <Box sx={{ display: "flex", alignItems: "center", gap: "6px", flexDirection: align === "left" ? "row-reverse" : "row" }}>
-      <Typography sx={{ m: 0, fontSize: 13, color: t.inkSoft, whiteSpace: "nowrap" }}>{label}</Typography>
-      <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
-        <Box sx={{ display: "flex", gap: "3px" }}>
-          {colors.map((color, i) => (
-            <Box key={i} sx={{ width: 14, height: 14, borderRadius: "3px", bgcolor: color }} />
-          ))}
-        </Box>
-        <Box sx={{ display: "flex", gap: "3px" }}>
-          {thresholds.map((th, i) => (
-            <Typography key={i} sx={{ m: 0, fontSize: 11, color: t.inkSoft, width: 14, textAlign: "center", whiteSpace: "nowrap" }}>
-              {th}
-            </Typography>
-          ))}
-        </Box>
-      </Box>
-    </Box>
-  );
-}
-
-function formatTick(index) {
-  const day = Math.floor(index / 24) + 1;
-  const hour = index % 24;
-  return `Day ${day} · ${String(hour).padStart(2, "0")}:00`;
-}
-
-const TICKS = [0, Math.round((POINT_COUNT - 1) / 4), Math.round((POINT_COUNT - 1) / 2), Math.round((3 * (POINT_COUNT - 1)) / 4), POINT_COUNT - 1];
+const TICKS = [
+  0,
+  Math.round((pointCount - 1) / 4),
+  Math.round((pointCount - 1) / 2),
+  Math.round((3 * (pointCount - 1)) / 4),
+  pointCount - 1,
+];
 
 export default function Chart() {
   return (
@@ -239,25 +164,136 @@ export default function Chart() {
       }}
     >
       <Typography sx={{ m: 0, fontSize: TITLE_FONT_SIZE, fontWeight: 600, color: t.ink }}>{TITLE}</Typography>
-      <Typography sx={{ m: 0, mb: "14px", fontSize: 14, color: t.inkSoft }}>
-        Deviation from 24h rolling baseline, in percentage points (pp)
+      <Typography sx={{ m: 0, mb: "10px", fontSize: 14, color: t.inkSoft }}>
+        {VALUE}
       </Typography>
 
-      <Box sx={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: "18px", mb: "20px" }}>
-        <LegendSwatches
-          label="Below baseline"
-          colors={[...NEG_BAND_COLORS].reverse()}
-          thresholds={[...BAND_THRESHOLDS].reverse()}
-          align="left"
-        />
-        <Box sx={{ width: "1px", height: "16px", bgcolor: t.grid }} />
-        <LegendSwatches label="Above baseline" colors={POS_BAND_COLORS} thresholds={BAND_THRESHOLDS} align="right" />
+      <Box sx={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: "20px", mb: "14px" }}>
+        {LEGEND.map((entry, entryIndex) => (
+          <Box key={entry.label} sx={{ display: "flex", alignItems: "center", gap: "20px" }}>
+            {entryIndex > 0 && <Box sx={{ width: "1px", height: "20px", bgcolor: t.grid }} />}
+            <Box sx={{ display: "flex", alignItems: "center", gap: "8px", flexDirection: entry.direction }}>
+              <Typography sx={{ m: 0, fontSize: 15, color: t.inkSoft, whiteSpace: "nowrap" }}>{entry.label}</Typography>
+              <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
+                <Box sx={{ display: "flex", gap: "3px" }}>
+                  {entry.colors.map((color) => (
+                    <Box key={color} sx={{ width: SWATCH_WIDTH, height: 14, borderRadius: "3px", bgcolor: color }} />
+                  ))}
+                </Box>
+                <Box sx={{ display: "flex", gap: "3px" }}>
+                  {entry.thresholds.map((threshold) => (
+                    <Typography
+                      key={threshold}
+                      sx={{ m: 0, fontSize: 14, color: t.inkSoft, width: SWATCH_WIDTH, textAlign: "center", whiteSpace: "nowrap" }}
+                    >
+                      {threshold}
+                    </Typography>
+                  ))}
+                </Box>
+              </Box>
+            </Box>
+          </Box>
+        ))}
       </Box>
 
       <Box>
-        {SERIES_DATA.map((series, i) => (
-          <Box key={series.name} sx={{ mb: i === SERIES_DATA.length - 1 ? 0 : `${ROW_GAP}px` }}>
-            <HorizonRow name={series.name} positive={series.positive} negative={series.negative} />
+        {seriesData.map((series, rowIndex) => (
+          <Box
+            key={series.name}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              height: ROW_HEIGHT,
+              mb: rowIndex === seriesData.length - 1 ? 0 : `${ROW_GAP}px`,
+            }}
+          >
+            <Box sx={{ width: LABEL_COL_WIDTH, pr: "14px", boxSizing: "border-box", textAlign: "right" }}>
+              <Typography
+                sx={{
+                  m: 0,
+                  fontSize: 17,
+                  fontWeight: 500,
+                  color: t.ink,
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
+                {series.name}
+              </Typography>
+            </Box>
+            <Box sx={{ position: "relative", width: CHART_WIDTH, height: ROW_HEIGHT }}>
+              {HALVES.map((half) => (
+                <Box
+                  key={half.key}
+                  sx={{
+                    position: "absolute",
+                    top: half.top,
+                    left: 0,
+                    width: CHART_WIDTH,
+                    height: HALF_HEIGHT,
+                    overflow: "hidden",
+                    transform: half.transform,
+                  }}
+                >
+                  {/* Each band shares the 0–max domain, shifted down one band height and clipped */}
+                  {half.colors.map((color, bandIndex) => (
+                    <Box
+                      key={color}
+                      sx={{
+                        position: "absolute",
+                        left: 0,
+                        bottom: 0,
+                        width: CHART_WIDTH,
+                        height: HALF_HEIGHT * BAND_COUNT,
+                        transform: `translateY(${bandIndex * HALF_HEIGHT}px)`,
+                      }}
+                    >
+                      <ChartsContainer
+                        width={CHART_WIDTH}
+                        height={HALF_HEIGHT * BAND_COUNT}
+                        margin={ZERO_MARGIN}
+                        disableAxisListener
+                        skipAnimation
+                        series={[
+                          {
+                            type: "line",
+                            data: series[half.key],
+                            area: true,
+                            baseline: 0,
+                            curve: "monotoneX",
+                            color,
+                          },
+                        ]}
+                        xAxis={[
+                          {
+                            scaleType: "linear",
+                            data: xIndex,
+                            min: 0,
+                            max: pointCount - 1,
+                            domainLimit: "strict",
+                            position: "none",
+                          },
+                        ]}
+                        yAxis={[
+                          {
+                            scaleType: "linear",
+                            min: 0,
+                            max: maxDeviation,
+                            domainLimit: "strict",
+                            position: "none",
+                          },
+                        ]}
+                        sx={{ "& .MuiLineChart-area": { fill: color, fillOpacity: 1 } }}
+                      >
+                        <AreaPlot skipAnimation slotProps={{ area: { style: { fill: color, fillOpacity: 1 } } }} />
+                      </ChartsContainer>
+                    </Box>
+                  ))}
+                </Box>
+              ))}
+              <Box sx={{ position: "absolute", top: HALF_HEIGHT, left: 0, width: CHART_WIDTH, height: "1px", bgcolor: t.grid }} />
+            </Box>
           </Box>
         ))}
       </Box>
@@ -272,14 +308,14 @@ export default function Chart() {
               sx={{
                 m: 0,
                 position: "absolute",
-                left: `${(index / (POINT_COUNT - 1)) * 100}%`,
-                transform: index === 0 ? "none" : index === POINT_COUNT - 1 ? "translateX(-100%)" : "translateX(-50%)",
+                left: `${(index / (pointCount - 1)) * 100}%`,
+                transform: index === 0 ? "none" : index === pointCount - 1 ? "translateX(-100%)" : "translateX(-50%)",
                 fontSize: 14,
                 color: t.inkSoft,
                 whiteSpace: "nowrap",
               }}
             >
-              {formatTick(index)}
+              {dates[index]}
             </Typography>
           ))}
         </Box>
