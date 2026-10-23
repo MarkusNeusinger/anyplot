@@ -427,8 +427,13 @@ class TestCiTestsSpecSectionCheck:
         assert "specification\\.md$" in check
 
     def test_step_needs_no_dependency_install(self) -> None:
+        # The step runs on the pinned interpreter (regen_gate's `except A, B:` needs 3.14),
+        # so setup-python precedes it unconditionally; uv and the project install do not.
         names = [s.get("name") for s in self._steps()]
-        assert names.index("Check spec characteristic sections") < names.index("Set up Python")
+        assert names.index("Set up Python") < names.index("Check spec characteristic sections")
+        assert "if" not in self._step("Set up Python")
+        assert names.index("Check spec characteristic sections") < names.index("Install uv")
+        assert names.index("Check spec characteristic sections") < names.index("Install dependencies")
 
 
 class TestCiMigrationsWorkflow:
