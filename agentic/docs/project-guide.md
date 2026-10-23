@@ -250,9 +250,11 @@ specification_id: scatter-basic
 created: 2025-01-10T08:00:00Z
 updated: 2025-01-15T10:30:00Z
 
-# Generation
-generated_by: claude-opus-4-7   # an adopted file: the model that wrote it, e.g. gemini-4-argon
-# adopted_from: gemini/muix-9 (<sha>)   # adopted files only: source ref and commit
+# Generation. An adopted file names the model that wrote it and its source
+# instead, for example:
+#   generated_by: gemini-4-argon
+#   adopted_from: gemini/muix-9 (<commit sha>)
+generated_by: claude-opus-4-7
 workflow_run: 12345678
 issue: 42
 
