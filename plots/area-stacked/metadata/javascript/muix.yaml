@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: area-stacked
 created: '2026-08-17T12:47:19Z'
-updated: '2026-10-23T15:06:01Z'
+updated: '2026-10-23T15:11:25Z'
 generated_by: claude-opus
 workflow_run: 39974361192
 issue: 2022
@@ -12,53 +12,55 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stac
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked/javascript/muix/plot-dark.html
-quality_score: 85
+quality_score: 86
 review:
   strengths:
-  - 'Native MUI X stacking (`stack: "traffic"` with `area: true`) produces contiguous
-    layers from a zero baseline, ordered largest at the bottom, with the y axis reaching
-    past the 10.8k peak total'
-  - 'Imprint palette in canonical order (#009E73 organic search first) with identical
-    data colors across themes; chrome flips correctly on #FAF8F1 and #1A1A17'
-  - monotoneX curves smooth the monthly series without overshooting the data values
-  - 'Correct v9 API throughout: skipAnimation, axis band sizing via height/width,
-    slotProps.legend.sx, `.MuiLineChart-*` and `[data-series]` selectors'
-  - Designed header row and a 3 px Social stroke with a computed +114% caption give
-    the chart a clear focal series
+  - 'Native MUI X stacking: four `area: true` series share `stack: "traffic"`, so
+    each layer starts exactly where the one below ends with no gaps and the top edge
+    reads as the total'
+  - Series are sorted by their summed visits from the records (Organic Search at the
+    bottom, Social on top), so the Notes' largest-at-bottom order holds at every month
+    without a typed list
+  - 'Zero baseline (`min: 0`) on a value axis that runs to 11k, just past the highest
+    total of about 10.8k'
+  - 'Imprint palette in canonical order (#009E73, #C475FD, #4467A3, #BD8233), identical
+    in both renders, with theme tokens threaded through the title, callout pill, grid
+    and reference-line label so both themes read cleanly'
+  - Crisp full-opacity boundary strokes over 0.82-opacity fills keep neighboring layers
+    distinct in both themes
+  - Time-scale x axis with a `valueFormatter` ("Jan 2024") and a compact `k` formatter
+    on the y axis, with axis bands sized explicitly so nothing truncates
+  - Plausible website-traffic scenario with differing growth rates and seasonal phases,
+    so the composition visibly shifts toward Social and Organic Search over two years
   - Interactive HTML keeps MUI X's native axis tooltip for per-month inspection of
     every layer
   weaknesses:
-  - 'CQ-01 (code): the sample lives in four separate per-series arrays plus a `dates`
-    array, with no role constants and no single `const data` records array, so the
-    plot code cannot be pointed at other data → one `// Data` block ending in `const
-    data` (one record per month and source, keyed by MONTH / SOURCE / VISITS constants)
-    and series built below `// Plot` from `new Set(data.map(d => d[SOURCE]))`. Likely
-    cause: the data block written per series instead of following the muix prompt''s
-    "Data block" section.'
-  - 'CQ-04 (code): `colors={t.palette.slice(0, 4)}` is a literal slice sized to the
-    four sample series, which the style guide forbids → `colors={t.palette}` (MUI
-    X hands out the first n in order). Likely cause: palette sized to the sample instead
-    of passed whole.'
-  - 'Suggestion: the y-axis zero tick reads "0k"; formatting it as "0" would read
-    more cleanly.'
-  - 'Suggestion: the growth caption sits in the header far from the Social layer;
-    tying it visually to the layer (for example aligning it to the right edge at the
-    Social band) would strengthen the focal point.'
+  - 'VQ-03 (both): the legend shows thin 2 px line samples for layers drawn as filled
+    areas, so the glyphs do not carry the marks'' fill → filled square swatches in
+    each series'' color. Likely cause: line series default to the `line` legend mark;
+    set `labelMarkType: "square"` on each series.'
+  - 'Suggestion: the y-axis bottom tick reads "0k"; a formatter that prints "0" for
+    zero would read cleaner.'
+  - 'Suggestion: the dashed "Avg total" line cuts through the Referral and Social
+    layers and can read as a layer boundary; a lighter stroke or dropping it would
+    keep the stack edges unambiguous.'
+  - 'Suggestion: the 13 px callout pill in the top-right is small next to the 22 px
+    title; a size closer to the 14 px tick labels would balance the header.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across the whole canvas, no white panel.
-      Chrome: bold dark title "Website Traffic Sources · area-stacked · javascript · muix · anyplot.ai" top-left (~47% of width); a light elevated chip top-right with an ochre dot reading "Social: fastest-growing channel, +114% since Jan 2024"; y axis "Monthly Visits" 0k–11k, x axis "Month" with ticks Jan 2024 … Oct 2025 every quarter; subtle horizontal grid; dashed ink-soft "Avg total: 9.4k" reference line; bottom-centered legend (Organic Search, Direct, Referral, Social). All text dark and readable.
-      Data: four stacked semi-transparent areas: Organic Search #009E73 at the base (~4.1k → 5.6k), Direct lavender #C475FD (~2k–2.5k), Referral blue #4467A3 (~1.2k–1.4k), Social ochre #BD8233 on top (~0.6k → 1.3k); total rises from ~8.1k to ~10.8k. Layers contiguous, 2 px boundary strokes, Social stroke thicker.
+      Background: warm off-white, matches #FAF8F1 (not pure white).
+      Chrome: bold dark title "Website Traffic Sources · area-stacked · javascript · muix · anyplot.ai" top-left (~47% of width); top-right a pale pill with an ochre dot and "Social: fastest-growing channel, +114% since Jan 2024". Y axis "Monthly Visits" with ticks 0k–11k, x axis "Month" with quarterly ticks Jan 2024 … Oct 2025. Subtle horizontal grid. Dashed ink-soft line at ~9.45k labelled "Avg total: 9.4k". Bottom-centered legend: Organic Search, Direct, Referral, Social with thin line samples. All text dark and readable.
+      Data: four stacked filled areas (0.82 opacity) with crisp boundary strokes — Organic Search #009E73 at the bottom (~4.1k rising to ~5.6k), Direct #C475FD (~2–2.5k), Referral #4467A3 (~1.2–1.4k), Social #BD8233 on top (~0.6k growing to ~1.3k). Total rises from ~8.1k to ~10.8k. Layer order constant, zero baseline, no gaps.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17.
-      Chrome: title, axis titles, tick labels, legend text and the chip text all light ink and clearly readable; chip on a dark elevated fill; grid subtle but visible; reference line and label in light ink-soft. No dark-on-dark text.
-      Data: same four palette colors in the same order and positions as the light render (the 0.82 fill opacity blends slightly toward each background, but the series colors are identical); brand green clearly visible.
+      Background: warm near-black, matches #1A1A17 (not pure black).
+      Chrome: title, axis titles, tick labels and legend text in light ink; the callout pill uses the elevated dark surface with light soft text; grid lines subtle dark grey; the avg-total line and label in light ink-soft. No dark-on-dark text.
+      Data: same four Imprint colors in the same order as the light render (fills look deeper only because the 0.82 opacity blends with the dark page); boundary strokes identical; brand green clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -66,49 +68,49 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (title 22 px, ticks/legend 14 px, axis titles 16 px
-          CSS); all text readable in both themes
+        comment: All sizes set explicitly (title 22, ticks 14, axis titles 16, legend
+          14, callout and ref label 13 CSS px); balanced and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; the reference-line label sits clear above the
-          stack
+        comment: No text collisions; the avg-total label sits clear of the stack edge
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Layers fully visible with 2 px boundary strokes; legend line samples
-          match series colors in both themes
+        comment: Areas and boundary strokes well sized; legend uses thin line samples
+          for filled layers (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint green/lavender/blue/ochre are CVD-distinguishable; neighboring
-          layers separable in both themes
+        comment: Adjacent layers differ in hue and luminance and are separated by
+          strokes; no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills the 3200x1800 canvas well; title ~47% width; no overflow
-          or clipping
+        comment: Plot fills most of the canvas, balanced margins, legend directly
+          under the axis, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Month'' and ''Monthly Visits'' with k-formatted ticks'
+        comment: '"Monthly Visits" (visits as unit, k-formatted ticks) and "Month"
+          are descriptive reader text'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, then Imprint positions 2-4 in canonical order;
-          #FAF8F1 / #1A1A17 backgrounds; data colors identical across themes'
+        comment: 'Imprint canonical order starting #009E73, identical across themes;
+          #FAF8F1 / #1A1A17 backgrounds with theme-correct chrome'
     design_excellence:
       score: 11
       max: 20
@@ -118,23 +120,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Raised: a designed header row (bold title plus a right-aligned elevatedBg
-          chip with a series-colored dot) gives a typographic hierarchy beyond the
-          baseline'
+        comment: 'Beyond baseline: header band composed with MUI Box/Typography and
+          a theme-token elevated pill, translucent fills paired with full-opacity
+          edge strokes for layered depth'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: 'Raised: tuned fillOpacity 0.82 with 2 px boundary strokes for crisp
-          layer seams, halo (paintOrder stroke) on the reference label'
+        comment: 'Beyond baseline: explicit axis bands and tick density (tickNumber
+          8, quarterly labels), horizontal-only grid, 2 px edge strokes chosen for
+          the layer seams'
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: 'Raised: Social chosen as focal series by a thicker 3 px stroke and
-          a computed growth caption in its own color'
+        comment: Data chosen with distinct growth rates and seasonal phases so the
+          composition shift (Social doubling, Organic rising) is visible; no credit
+          for the unrequested callout or reference line
     spec_compliance:
       score: 15
       max: 15
@@ -144,29 +148,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked area chart via stack + area
+        comment: Stacked area chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All Notes and ''A good version shows'' bullets met: contiguous layers,
-          zero baseline with axis past the 10.8k total, largest-at-bottom order, distinct
-          colors with legend, semi-transparent fills'
+        comment: Distinct harmonious colors, largest at bottom, legend, semi-transparent
+          fills, zero baseline; all four 'A good version shows' bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: monotoneX curve does not overshoot; full 24-month range shown; y
-          axis from 0 to 11k
+        comment: Time on x, stacked visits on y; monotoneX curve does not overshoot;
+          axis reaches past the max total
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'Website Traffic Sources · area-stacked · javascript · muix
-          · anyplot.ai'; legend labels readable channel names
+        comment: Title follows the descriptive-prefix format; legend entries are the
+          source names
     data_quality:
       score: 15
       max: 15
@@ -176,34 +179,34 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Four series, 24 points, varying total and layer thickness, seasonal
-          and growth patterns
+        comment: Four series with thick and thin layers, varying total, changing composition
+          over 24 months
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Website traffic by source, neutral and plausible
+        comment: Website traffic by source (Organic Search, Direct, Referral, Social),
+          a spec application
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'No check values in spec; checked: 8-11k monthly visits with organic
-          search the dominant channel is plausible; avg total 9.4k and +114% computed
-          from the data'
+        comment: 'Checked: totals ~8.1k–10.8k/month plausible for a small site; Social
+          +114% callout consistent with the data code (650 → ~1.3k); comment ''Jan
+          2024 – Dec 2025 (24 months)'' matches the code; no Check values in spec'
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Data not organised as the library prompt's Data block (role constants
-          + one records array); see defect line. The LCG helper is endorsed by the
-          library prompt
+        comment: Columns → Data → Plot zones; the LCG is the library prompt's endorsed
+          seeded RNG, helpers are one-line lambdas
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -215,21 +218,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All four imports used
+        comment: LineChart, ChartsReferenceLine, Box, Typography all used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: colors={t.palette.slice(0, 4)} is a literal slice sized to the sample;
-          see defect line
+        comment: Appropriate complexity; nothing written out that MUI X computes
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component, skipAnimation, v9 API (slotProps.legend.sx,
-          .MuiLineChart-* classes, axis height/width)
+        comment: Default-exported component, skipAnimation, v9 API (axis height/width,
+          slotProps.legend.sx, MuiLineChart-* classes)
     library_mastery:
       score: 6
       max: 10
@@ -239,28 +241,32 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Raised: native stack groups with area series, time scaleType with
-          valueFormatter, per-series [data-series] sx selectors in v9 form'
+        comment: Series-level stack groups, time scaleType with valueFormatter, sx
+          styling via v9 MuiLineChart-* classes and data-series selectors
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: 'Raised slightly: MUI Box/Typography composition alongside the chart
-          and v9 data-series CSS targeting'
-  verdict: REJECTED
+        passed: true
+        comment: MUI system composition (Box/Typography sx with theme tokens) around
+          the chart and per-series data-series CSS targeting
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-03c2486144
-  rendered_at: '2026-10-23T15:02:03Z'
+  rendered_at: '2026-10-23T15:08:19Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - layer-composition
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep:
   - time-series
   styling:
   - alpha-blending
+  - edge-highlighting
   - grid-styling
