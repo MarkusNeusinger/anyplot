@@ -19,7 +19,7 @@
     "chart.js": "4.4.7",
     "d3": "7.9.0",
     "echarts": "6.1.0",
-    "highcharts": "12.6.0",
+    "highcharts": "13.1.1",
     "react": "18.3.1",
     "react-dom": "18.3.1"
   },
