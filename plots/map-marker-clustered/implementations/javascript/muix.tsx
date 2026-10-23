@@ -16,6 +16,7 @@ const t = window.ANYPLOT_TOKENS;
 // Constants
 const LAT_CELL = 0.55;
 const LON_CELL = 0.75;
+const EXTENT_PAD_DEG = 0.25; // degrees added around the data extent before rounding
 
 // Columns: set these to your data's column names
 const LAT = "Latitude (°)"; // role: lat
@@ -81,16 +82,16 @@ const LEGEND_HEIGHT = 48;
 const allLats = data.map((d) => d[LAT]);
 const allLons = data.map((d) => d[LON]);
 const LAT_RANGE = [
-  Math.floor(Math.min(...allLats) * 2) / 2,
-  Math.ceil(Math.max(...allLats) * 10) / 10,
+  Math.floor((Math.min(...allLats) - EXTENT_PAD_DEG) * 2) / 2,
+  Math.ceil((Math.max(...allLats) + EXTENT_PAD_DEG) * 10) / 10,
 ];
 const LON_RANGE = [
-  Math.floor(Math.min(...allLons) * 5) / 5,
-  Math.ceil(Math.max(...allLons) * 5) / 5,
+  Math.floor((Math.min(...allLons) - EXTENT_PAD_DEG) * 5) / 5,
+  Math.ceil((Math.max(...allLons) + EXTENT_PAD_DEG) * 5) / 5,
 ];
 
 const categories = Array.from(new Set(data.map((d) => d[CATEGORY])));
-const categoryColors = categories.map((_, i) => t.palette[i % t.palette.length]);
+const categoryColors = categories.map((_, i) => t.palette[i]);
 
 const cells = new Map<string, typeof data>();
 data.forEach((store) => {
