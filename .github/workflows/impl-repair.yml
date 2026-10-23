@@ -293,6 +293,33 @@ jobs:
           echo "::notice::Processed both themes after repair (light + dark)"
           ls -la "$IMPL_DIR/"
 
+      # The perturbation smoke run of the repaired file (core/smoke_run.py run),
+      # as impl-generate runs it on the generated one; "Upload repaired plot to
+      # GCS staging" replaces the staged adapt/new-smoke.json with it. No pair
+      # and no predecessor run: a gated regeneration never enters repair.
+      # Record-only, like impl-generate's step: no exit code gates, and
+      # continue-on-error keeps a crash or a timeout from failing the repair.
+      - name: Adaptability smoke run (record-only)
+        id: adapt_smoke
+        if: success() && steps.lang.outputs.language == 'python'
+        continue-on-error: true
+        timeout-minutes: 20
+        env:
+          SPEC_ID: ${{ inputs.specification_id }}
+          LIBRARY: ${{ inputs.library }}
+        run: |
+          OUT="$RUNNER_TEMP/adapt"; TOOLS="$RUNNER_TEMP/adapt-tools"
+          rm -rf "$OUT" "$TOOLS"; mkdir -p "$OUT" "$TOOLS"
+          # The runner comes from this workflow's ref, never from the PR branch.
+          if ! git archive "$GITHUB_SHA" core | tar -x -C "$TOOLS" || [ ! -f "$TOOLS/core/smoke_run.py" ]; then
+            echo "::warning::adapt_smoke could not copy core/ from ${GITHUB_SHA}; no adaptability record is staged"
+            exit 0
+          fi
+          IMPL="plots/${SPEC_ID}/implementations/python/${LIBRARY}.py"
+          env PYTHONPATH="$TOOLS" .venv/bin/python -P -m core.smoke_run run "$IMPL" \
+            --spec "plots/${SPEC_ID}/specification.md" --spec-id "$SPEC_ID" --library "$LIBRARY" \
+            --out "$OUT/new-smoke.json" || true
+
       - name: Authenticate to GCP
         if: success()
         uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093  # v3
@@ -330,6 +357,20 @@ jobs:
               gsutil acl ch -u AllUsers:R "${STAGING_PATH}/plot-${theme}.html" 2>/dev/null || true
             fi
           done
+
+          # The smoke run of the repaired file replaces the staged one (private,
+          # never promoted). Without a new one the stale record from before the
+          # repair goes, so impl-review reads `missing`, never a result for code
+          # that no longer exists.
+          if [ "$LANGUAGE" = "python" ]; then
+            SMOKE="$RUNNER_TEMP/adapt/new-smoke.json"
+            if [ -s "$SMOKE" ] && gsutil -h "Cache-Control:no-store" cp "$SMOKE" "${STAGING_PATH}/adapt/new-smoke.json"; then
+              echo "::notice::Staged the repaired file's adapt/new-smoke.json"
+            else
+              [ -s "$SMOKE" ] && echo "::warning::adapt/new-smoke.json not staged; impl-review records it as missing"
+              gsutil rm "${STAGING_PATH}/adapt/new-smoke.json" 2>/dev/null || true
+            fi
+          fi
 
           rm -f /tmp/gcs-key.json
 
