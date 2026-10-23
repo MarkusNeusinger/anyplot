@@ -362,18 +362,27 @@ async function main() {
     // fall back to fonts-ready + a double rAF, which is sufficient for the
     // animation:false static renders the library prompts mandate. This is the
     // page.waitForFunction(...) signal the design calls for — never a time.sleep.
+    // The signal can only arrive from a snippet whose source names it or from
+    // the React entry (which sets it after fonts + three rAFs), so every other
+    // snippet settles directly instead of idling through the timeout.
     // Playwright's signature is (pageFunction, arg, options): the options object
     // must sit in the third slot, or it becomes the page function's argument
-    // and the wait runs to the 30 s default timeout on every snippet without
-    // the signal.
-    try {
-      await page.waitForFunction(() => window.__anyplotReady === true, null, { timeout: 2500 });
-    } catch {
-      // No explicit signal — settle deterministically instead.
-      await page.evaluate(async () => {
+    // and the wait runs to the 30 s default timeout.
+    const settle = () =>
+      page.evaluate(async () => {
         await (document.fonts ? document.fonts.ready : Promise.resolve());
         await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
       });
+    const expectsReadySignal = bundleInfo.framework === "react" || snippetSource.includes("__anyplotReady");
+    if (expectsReadySignal) {
+      try {
+        await page.waitForFunction(() => window.__anyplotReady === true, null, { timeout: 2500 });
+      } catch {
+        // The signal never came (a guarded `finished` handler, say) — settle instead.
+        await settle();
+      }
+    } else {
+      await settle();
     }
 
     // Surface snippet failures loudly — a blank/half-drawn PNG must fail the
