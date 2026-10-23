@@ -1,91 +1,74 @@
 // anyplot.ai
 // datamatrix-basic: Basic Data Matrix 2D Barcode
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 87/100 | Created: 2026-09-02
+// Library: muix 9.16.0 | JavaScript 22.23.3
+// Quality: 81/100 | Updated: 2026-10-23
 //# anyplot-orientation: square
 // anyplot.ai
 // datamatrix-basic: Basic Data Matrix 2D Barcode
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
+// Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: pending | Created: 2026-09-02
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const TITLE = "datamatrix-basic · javascript · muix · anyplot.ai";
 
-// --- Data (in-memory, deterministic): part serial number for a small item ---
-const CONTENT = "PCB-SN:48291X7A";
-const MODULE_COUNT = 24; // ISO/IEC 16022 valid square symbol size
+// Constants
 const QUIET_ZONE = 2; // modules of blank margin (spec requires >= 1)
-const CAPTION = `Encodes "${CONTENT}" · ${MODULE_COUNT}×${MODULE_COUNT} modules · ECC 200`;
 const TITLE_HEIGHT = 64;
 const CAPTION_HEIGHT = 48;
-const OUTER_MARGIN = 40; // page-level breathing room above/below the card, balancing the horizontal margin from centering it in the full-width canvas
-const CARD_PADDING = 32; // uniform inset on all four sides between the card edge and the matrix's own quiet zone
+const OUTER_MARGIN = 40;
+const CARD_PADDING = 32;
+// Barcode symbology is black on white in both themes; only the page chrome flips
+const MODULE_INK = "#1A1A17";
+const SYMBOL_TILE = "#FAF8F1";
 
-// FNV-1a hash — used only to seed the deterministic filler LCG below.
-function hashString(text) {
-  let hash = 2166136261;
-  for (let i = 0; i < text.length; i++) {
-    hash ^= text.charCodeAt(i);
-    hash = Math.imul(hash, 16777619);
-  }
-  return hash >>> 0;
+// Columns: set these to your data's column names
+const CONTENT = "Content"; // role: content
+const SIZE = "Size"; // role: size
+
+// Data: replace this block with your own records, one object per row
+const data = [{ [CONTENT]: "PCB-SN:48291X7A", [SIZE]: "24x24" }];
+
+// Plot: reads only data and the constants above
+const encodedText = String(data[0][CONTENT]);
+const moduleCount = parseInt(String(data[0][SIZE]).split("x")[0], 10) || 24;
+const TITLE = "datamatrix-basic · javascript · muix · anyplot.ai";
+const CAPTION = `Part marking "${encodedText}" · ${moduleCount}×${moduleCount} modules · illustrative data region`;
+
+// Data region: the content's 8-bit ASCII, then a fixed-seed LCG fills the rest
+const capacity = (moduleCount - 2) * (moduleCount - 2);
+const dataBits = [];
+for (const ch of encodedText) {
+  for (let shift = 7; shift >= 0; shift--) dataBits.push((ch.charCodeAt(0) >> shift) & 1);
+}
+let lcgState = 20260902;
+while (dataBits.length < capacity) {
+  lcgState = (Math.imul(lcgState, 1103515245) + 12345) >>> 0;
+  dataBits.push((lcgState >>> 16) & 1);
 }
 
-// Packs the content's bits first, then fills remaining capacity with a
-// fixed-seed LCG so the pattern is fully reproducible across renders.
-function encodeBits(text, capacity) {
-  const bits = [];
-  for (let i = 0; i < text.length && bits.length < capacity; i++) {
-    const code = text.charCodeAt(i);
-    for (let shift = 7; shift >= 0 && bits.length < capacity; shift--) {
-      bits.push((code >> shift) & 1);
-    }
-  }
-  let state = hashString(text) || 1;
-  while (bits.length < capacity) {
-    state = (Math.imul(state, 1103515245) + 12345) >>> 0;
-    bits.push((state >>> 16) & 1);
-  }
-  return bits;
+// Symbol grid: finder L on the left column and bottom row, clock on top and right
+const GRID = Array.from({ length: moduleCount }, () => new Array(moduleCount).fill(0));
+for (let r = 0; r < moduleCount; r++) {
+  GRID[r][0] = 1;
+  GRID[r][moduleCount - 1] = (moduleCount - 1 - r) % 2 === 0 ? 1 : 0;
+}
+for (let c = 0; c < moduleCount; c++) {
+  GRID[moduleCount - 1][c] = 1;
+  GRID[0][c] = c % 2 === 0 ? 1 : 0;
+}
+let bitIndex = 0;
+for (let r = 1; r < moduleCount - 1; r++) {
+  for (let c = 1; c < moduleCount - 1; c++) GRID[r][c] = dataBits[bitIndex++];
 }
 
-// Builds the module grid: a solid L-shaped finder (left column + bottom row),
-// an alternating clock track (top row + right column) for timing reference,
-// and a data region carrying the encoded content.
-function buildMatrix(text, size) {
-  const grid = Array.from({ length: size }, () => new Array(size).fill(0));
-
-  for (let r = 0; r < size; r++) grid[r][0] = 1;
-  for (let c = 0; c < size; c++) grid[size - 1][c] = 1;
-  for (let c = 1; c < size; c++) grid[0][c] = c % 2 === 1 ? 1 : 0;
-  for (let r = 1; r < size - 1; r++) grid[r][size - 1] = r % 2 === 1 ? 1 : 0;
-
-  const dataBits = encodeBits(text, (size - 2) * (size - 2));
-  let bitIndex = 0;
-  for (let r = 1; r < size - 1; r++) {
-    for (let c = 1; c < size - 1; c++) {
-      grid[r][c] = dataBits[bitIndex++];
-    }
-  }
-  return grid;
-}
-
-const GRID = buildMatrix(CONTENT, MODULE_COUNT);
-
-// --- Module squares, drawn directly in pixel space from the drawing area ---
-// ScatterChart's marker is a fixed-radius circle, unsuited to gapless square
-// modules — plain rects sized to the drawing area's own pitch tile exactly.
 function DataMatrixModules() {
   const { left, top, width } = useDrawingArea();
-  const totalUnits = MODULE_COUNT + QUIET_ZONE * 2;
-  const cellSize = width / totalUnits;
+  const cellSize = width / (moduleCount + QUIET_ZONE * 2);
 
   const modules = [];
-  for (let r = 0; r < MODULE_COUNT; r++) {
-    for (let c = 0; c < MODULE_COUNT; c++) {
+  for (let r = 0; r < moduleCount; r++) {
+    for (let c = 0; c < moduleCount; c++) {
       if (!GRID[r][c]) continue;
       modules.push(
         <rect
@@ -94,7 +77,8 @@ function DataMatrixModules() {
           y={top + (QUIET_ZONE + r) * cellSize}
           width={cellSize + 0.6}
           height={cellSize + 0.6}
-          fill={t.palette[0]}
+          fill={MODULE_INK}
+          shapeRendering="crispEdges"
         />,
       );
     }
@@ -145,7 +129,7 @@ export default function Chart() {
             height: cardSide,
             boxSizing: "border-box",
             padding: CARD_PADDING,
-            backgroundColor: t.elevatedBg,
+            backgroundColor: SYMBOL_TILE,
             border: `1px solid ${t.grid}`,
             borderRadius: 20,
             display: "flex",
@@ -153,15 +137,17 @@ export default function Chart() {
             justifyContent: "center",
           }}
         >
-          <ChartContainer
+          <ChartsContainer
             width={matrixSide}
             height={matrixSide}
             series={[]}
+            xAxis={[{ position: "none" }]}
+            yAxis={[{ position: "none" }]}
             margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
             skipAnimation
           >
             <DataMatrixModules />
-          </ChartContainer>
+          </ChartsContainer>
         </div>
       </div>
       <div

@@ -2,52 +2,57 @@ library: muix
 language: javascript
 specification_id: phase-diagram
 created: '2026-09-05T10:50:05Z'
-updated: '2026-09-05T11:01:51Z'
-generated_by: claude-sonnet
-workflow_run: 33961430933
+updated: '2026-10-23T21:10:37Z'
+generated_by: adopted:gemini/12267-muix-9-batch1
+workflow_run: 40023470231
 issue: 3004
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/javascript/muix/plot-dark.html
-quality_score: 93
+quality_score: 88
 review:
   strengths:
-  - Direction-of-travel arrowheads (new this attempt) directly resolve the previous
-    review's top weakness — motion along the spirals is now unambiguous in the static
-    render, satisfying the spec's explicit suggestion.
-  - Correct phase-diagram construction (x vs dx/dt) from a closed-form damped-harmonic-oscillator
-    solution; four initial conditions spiral into a shared equilibrium, revealing
-    basin-of-attraction structure.
-  - Explicit equilibrium marker at (0, 0) with a legible backing plate, plus ChartsReferenceLine
-    axes at x=0/y=0.
-  - 'Both renders theme-correct: correct backgrounds, first series is brand green,
-    identical data and arrowhead colors across themes, only chrome flips.'
-  - No clipping in either render — title, axis labels, tick labels, and legend are
-    all fully visible with generous margins.
+  - Analytic underdamped-oscillator solution (zeta = 0.15) from four initial conditions
+    gives four clean inward spirals that end at the origin; the start points render
+    exactly at (2.2, 0), (-2, 0.6), (0, 2.6) and (1.3, -2)
+  - Direction arrows are computed from the time-ordered path tangent and run rightward
+    above the dx/dt = 0 axis and leftward below it, as the spec requires
+  - 'Composable MUI X API used idiomatically: ChartsDataProvider + ChartsSurface +
+    LinePlot, one hidden x axis per trajectory so each series carries its own x data,
+    and a custom SVG layer drawn through useXScale/useYScale'
+  - Start markers, arrows and the equilibrium dot carry a page-colored halo, so they
+    stay separable where trajectories cross; the equilibrium marker flips ink with
+    the theme and stays visible in the converging center
+  - Theme tokens threaded through title, axes, grid, legend and annotation; Imprint
+    palette in canonical order with brand green first, identical across both renders
+  - Axis limits derived from the data, records carry a Time column and are sorted
+    by it before drawing; skipAnimation set
   weaknesses:
-  - The four spirals still bunch tightly right around the shared equilibrium and remain
-    harder to individually trace there at a glance — an inset zoom near the origin
-    was not added.
-  - Only the damped (spiraling) regime is demonstrated; the spec's optional closed-loop/periodic
-    (limit-cycle) variant isn't shown.
+  - 'Suggestion: the dashed leader from the ''Equilibrium (0, 0)'' label runs diagonally
+    across six trajectory curves; placing the label close to the origin marker (or
+    shortening the leader) would keep the data area clear.'
+  - 'Suggestion: the x axis carries 26 tick labels at 0.2 m steps; a 0.5 m step would
+    match the y axis and lighten the vertical grid.'
+  - 'Suggestion: drop the small tick marks (the style guide removes them where possible)
+    to quiet the axis chrome.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1.
-      Chrome: Title "Damped Oscillator · phase-diagram · javascript · muix · anyplot.ai" centered at top in dark ink; "Position x" / "Velocity dx/dt" axis titles and tick labels dark and clearly legible; subtle light-gray grid plus bold x=0/y=0 reference lines; bottom legend with 4 swatches all legible.
-      Data: Four spiral trajectories in teal/green (#009E73, first series), magenta, blue, and amber, each spiraling from a colored start-point circle into a shared black equilibrium marker labeled "Equilibrium (0, 0)" on an opaque backing plate. New: small colored triangular arrowheads at intervals along each spiral, tangent-oriented to show direction of travel.
+      Background: warm off-white #FAF8F1 across the whole canvas.
+      Chrome: title "Damped Oscillator · phase-diagram · javascript · muix · anyplot.ai" centered at top in dark ink (~70 % width); y-axis "Velocity dx/dt (m/s)" (-2.5 to 3.0), x-axis "Position x (m)" (-2.4 to 2.6); dark-grey tick labels, subtle grid, slightly stronger x = 0 and dx/dt = 0 lines; horizontal legend at bottom with four line glyphs labelled x₀=…, v₀=…; label "Equilibrium (0, 0)" upper-left with a dashed leader to a black dot at the origin. All readable.
+      Data: four inward spirals — green #009E73 from (2.2, 0), purple from (-2, 0.6), blue from (0, 2.6), ochre from (1.3, -2) — each with a filled start marker and four small arrowheads pointing clockwise (right above the axis, left below). Spirals wind into the origin.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17.
-      Chrome: Same title and axis chrome now in light/near-white text, clearly legible, no dark-on-dark issues; grid lines dim but visible; legend text legible.
-      Data: Trajectory and arrowhead colors identical to light render; only chrome (background, grid, ink, and the equilibrium marker fill, which flips black->white via the ink token) adapted to the theme.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles, tick labels and legend text in light ink; grid subtle; leader line and equilibrium label light; the equilibrium dot flips to cream so it stays visible. No dark-on-dark text.
+      Data: identical green, purple, blue and ochre trajectories, start markers and arrows as the light render; only chrome changed.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -55,69 +60,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes
+        comment: Explicit sizes (title 22, axis titles 16, ticks/legend 14 CSS px);
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions; equilibrium label has backing plate
+        comment: No text collisions; overlap of spirals near the center is permitted
+          by the spec
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Direction arrows help, but innermost windings near equilibrium remain
-          visually dense
+        comment: Lines, start markers, arrows and the equilibrium dot visible in both
+          themes; legend line glyphs match the series
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Adequate contrast, CVD-safe palette
+        comment: Four distinct Imprint hues plus start-point positions; no red-green
+          reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed, good proportions, nothing clipped
+        comment: 3200x1800, balanced axis labels, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with clear units
+        comment: Position x (m) and Velocity dx/dt (m/s) with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, identical data colors across themes, correct
-          backgrounds'
+        comment: 'Imprint canonical order with #009E73 first; correct backgrounds
+          in both themes'
     design_excellence:
-      score: 15
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom equilibrium annotation and new arrowheads add polish; still
-          reads as a well-executed standard phase-portrait
+        comment: Descriptive title prefix and a deliberate marker hierarchy (large
+          dark equilibrium dot, colored start dots) beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Subtle grid, theme-adaptive thin strokes, generous whitespace
+        comment: Page-colored halos on start markers, arrows and the equilibrium dot
+          separate them from crossing lines; grid is dense in both directions
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: New arrowheads give explicit time-direction cue, resolving prior
-          weakness
+        comment: All four spirals converge on an emphasized, labelled equilibrium
+          as the focal point
     spec_compliance:
       score: 15
       max: 15
@@ -127,25 +136,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct phase diagram (x vs dx/dt)
+        comment: x vs dx/dt phase portrait
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Now also implements the spec's suggested direction arrows
+        comment: Inward spiral to equilibrium, arrows running with time (right above,
+          left below), several ICs with start markers, fixed point on dx/dt = 0
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped, all data shown
+        comment: Marks at their data values; all data within limits derived from the
+          data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format, legend labels match trajectories
+        comment: Correct title format with descriptive prefix; legend names each initial
+          condition
     data_quality:
       score: 15
       max: 15
@@ -155,19 +167,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Time-direction indicator now present
+        comment: Damped spirals, multiple initial conditions, direction, fixed point
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible damped oscillator physics, neutral context
+        comment: Damped harmonic oscillator, neutral physics context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible amplitude/velocity ranges
+        comment: No Check values in Notes; verified start points match the initial
+          conditions and x-axis crossings shrink by the zeta=0.15 decay; 4 x 361 points
+          within 200-2000
     code_quality:
       score: 10
       max: 10
@@ -177,33 +191,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary classes; simple functions
+        comment: Data block, plot constants, one marker component (needed for scale
+          hooks) and the default export
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic closed-form trajectories
+        comment: Deterministic analytic solution
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean tangent-angle arrowhead geometry, no fake UI
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Harness mount contract respected, skipAnimation set
+        comment: Default-exported component, v9 API, skipAnimation
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -211,24 +226,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Composition API (ChartContainer) rather than all-in-one LineChart
+        comment: Composable ChartsDataProvider/ChartsSurface/ChartsWrapper pipeline;
+          one hidden x axis per series to give each trajectory its own x data
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: Per-series xAxisId + useXScale/useYScale hooks driving custom SVG
-          overlay including new tangent-oriented arrowheads
+        comment: Custom SVG layer via useXScale/useYScale hooks, ChartsReferenceLine
+          for the axes through zero, ChartsText
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-03c2486144
+  rendered_at: '2026-10-23T21:07:15Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - patches
+  - layer-composition
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - alpha-blending
   - edge-highlighting

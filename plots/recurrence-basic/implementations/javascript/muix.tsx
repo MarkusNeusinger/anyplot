@@ -1,84 +1,58 @@
 // anyplot.ai
 // recurrence-basic: Recurrence Plot for Nonlinear Time Series
-// Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 87/100 | Created: 2026-06-10
+// Library: muix 9.16.0 | JavaScript 22.23.3
+// Quality: 84/100 | Updated: 2026-10-23
 //# anyplot-orientation: square
-// anyplot.ai
-// recurrence-basic: Recurrence Plot for Nonlinear Time Series
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-06-10
 
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
-import { useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// Logistic map — chaotic regime (r = 3.95), deterministic seed via fixed start
-const N = 300;
-const r = 3.95;
-const ts: number[] = [0.4];
-for (let i = 1; i < N; i++) {
-  ts.push(r * ts[i - 1] * (1 - ts[i - 1]));
-}
+// Constants
+const THRESHOLD = 0.15;
+const DELAY_TAU = 5;
 
-// Time-delay embedding: state[i] = [ts[i], ts[i + tau]] (Takens' theorem)
-const tau = 5;
-const M = N - tau;
-const states = Array.from({ length: M }, (_, i) => [ts[i], ts[i + tau]]);
+// Columns: set these to your data's column names
+const TIME = "Time Index"; // role: time
+const VALUE = "Signal Value"; // role: value
 
-// Binary recurrence: pairs (i, j) where Euclidean distance < epsilon
-const epsilon = 0.15;
+// Data: replace this block with your own records, one object per row
+const data = (() => {
+  const n = 300;
+  const r = 3.95;
+  const ts: number[] = [0.4];
+  for (let i = 1; i < n; i++) {
+    ts.push(r * ts[i - 1] * (1 - ts[i - 1]));
+  }
+  return ts.map((v, i) => ({ [TIME]: i, [VALUE]: v }));
+})();
+
+// Plot: reads only data and the constants above
+const M = data.length - DELAY_TAU;
+const states = Array.from({ length: M }, (_, i) => [
+  data[i][VALUE],
+  data[i + DELAY_TAU][VALUE],
+]);
+
 const recPts: { x: number; y: number; id: number }[] = [];
 let ptId = 0;
 for (let i = 0; i < M; i++) {
   for (let j = 0; j < M; j++) {
     const dx = states[i][0] - states[j][0];
     const dy = states[i][1] - states[j][1];
-    if (dx * dx + dy * dy < epsilon * epsilon) {
-      recPts.push({ x: i, y: j, id: ptId++ });
+    if (dx * dx + dy * dy < THRESHOLD * THRESHOLD) {
+      recPts.push({ x: data[i][TIME], y: data[j][TIME], id: ptId++ });
     }
   }
 }
 
+const minTime = data[0][TIME];
+const maxTime = data[M - 1][TIME];
 const TITLE_H = 56;
-
-// Annotated identity line (i = j) — drawn via useDrawingArea hook in SVG space.
-// In MUI X linear scatter axes, data (0,0) maps to SVG (left, top+height) and
-// data (M-1, M-1) maps to SVG (left+width, top), so this diagonal is exact.
-function IdentityLine() {
-  const { left, top, width, height } = useDrawingArea();
-  const labelX = left + width * 0.87;
-  const labelY = top + height * 0.07;
-  return (
-    <g>
-      <line
-        x1={left}
-        y1={top + height}
-        x2={left + width}
-        y2={top}
-        stroke={t.amber}
-        strokeWidth={2}
-        strokeDasharray="9 5"
-        opacity={0.8}
-      />
-      <text
-        x={labelX}
-        y={labelY}
-        fill={t.amber}
-        textAnchor="middle"
-        opacity={0.9}
-        style={{ fontSize: 12, fontFamily: "Inter, system-ui, sans-serif", fontWeight: 500 }}
-      >
-        i = j
-      </text>
-    </g>
-  );
-}
 
 export default function Chart() {
   const W = window.ANYPLOT_SIZE.width;
@@ -109,12 +83,12 @@ export default function Chart() {
           recurrence-basic · javascript · muix · anyplot.ai
         </span>
       </div>
-      <ChartContainer
+      <ChartsContainer
         width={side}
         height={side}
         skipAnimation
         colors={[t.palette[0]]}
-        margin={{ top: 15, bottom: 72, left: 80, right: 25 }}
+        margin={{ top: 24, bottom: 24, left: 20, right: 28 }}
         series={[
           {
             type: "scatter",
@@ -125,25 +99,27 @@ export default function Chart() {
         ]}
         xAxis={[
           {
-            min: 0,
-            max: M - 1,
-            label: "Time Index i",
-            tickLabelStyle: { fontSize: 11 },
-            labelStyle: { fontSize: 13 },
+            min: minTime,
+            max: maxTime,
+            height: 72,
+            label: `${TIME} i`,
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
+            labelStyle: { fontSize: 15, fill: t.ink },
           },
         ]}
         yAxis={[
           {
-            min: 0,
-            max: M - 1,
-            label: "Time Index j",
-            tickLabelStyle: { fontSize: 11 },
-            labelStyle: { fontSize: 13 },
+            min: minTime,
+            max: maxTime,
+            width: 72,
+            label: `${TIME} j`,
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
+            labelStyle: { fontSize: 15, fill: t.ink },
           },
         ]}
         sx={{
-          "& .MuiChartsLegend-root": { display: "none" },
-          "& .MuiChartsAxis-line": { display: "none" },
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
           "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
         }}
       >
@@ -151,8 +127,7 @@ export default function Chart() {
         <ScatterPlot />
         <ChartsXAxis />
         <ChartsYAxis />
-        <IdentityLine />
-      </ChartContainer>
+      </ChartsContainer>
     </div>
   );
 }
