@@ -1,30 +1,33 @@
+//# anyplot-orientation: square
 // anyplot.ai
 // datamatrix-basic: Basic Data Matrix 2D Barcode
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 87/100 | Created: 2026-09-02
-//# anyplot-orientation: square
-// anyplot.ai
-// datamatrix-basic: Basic Data Matrix 2D Barcode
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-09-02
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const TITLE = "datamatrix-basic · javascript · muix · anyplot.ai";
 
-// --- Data (in-memory, deterministic): part serial number for a small item ---
-const CONTENT = "PCB-SN:48291X7A";
-const MODULE_COUNT = 24; // ISO/IEC 16022 valid square symbol size
+// Constants
 const QUIET_ZONE = 2; // modules of blank margin (spec requires >= 1)
-const CAPTION = `Encodes "${CONTENT}" · ${MODULE_COUNT}×${MODULE_COUNT} modules · ECC 200`;
 const TITLE_HEIGHT = 64;
 const CAPTION_HEIGHT = 48;
-const OUTER_MARGIN = 40; // page-level breathing room above/below the card, balancing the horizontal margin from centering it in the full-width canvas
-const CARD_PADDING = 32; // uniform inset on all four sides between the card edge and the matrix's own quiet zone
+const OUTER_MARGIN = 40;
+const CARD_PADDING = 32;
 
-// FNV-1a hash — used only to seed the deterministic filler LCG below.
+// Columns: set these to your data's column names
+const CONTENT = "Content"; // role: content
+const SIZE = "Size"; // role: size
+
+// Data: replace this block with your own records, one object per row
+const data = [{ [CONTENT]: "PCB-SN:48291X7A", [SIZE]: "24x24" }];
+
+// Plot: reads only data and the constants above
+const encodedText = String(data[0][CONTENT]);
+const moduleCount = parseInt(String(data[0][SIZE]).split("x")[0], 10) || 24;
+const TITLE = "datamatrix-basic · javascript · muix · anyplot.ai";
+const CAPTION = `Encodes "${encodedText}" · ${moduleCount}×${moduleCount} modules · ECC 200`;
+
 function hashString(text) {
   let hash = 2166136261;
   for (let i = 0; i < text.length; i++) {
@@ -34,8 +37,6 @@ function hashString(text) {
   return hash >>> 0;
 }
 
-// Packs the content's bits first, then fills remaining capacity with a
-// fixed-seed LCG so the pattern is fully reproducible across renders.
 function encodeBits(text, capacity) {
   const bits = [];
   for (let i = 0; i < text.length && bits.length < capacity; i++) {
@@ -52,9 +53,6 @@ function encodeBits(text, capacity) {
   return bits;
 }
 
-// Builds the module grid: a solid L-shaped finder (left column + bottom row),
-// an alternating clock track (top row + right column) for timing reference,
-// and a data region carrying the encoded content.
 function buildMatrix(text, size) {
   const grid = Array.from({ length: size }, () => new Array(size).fill(0));
 
@@ -73,19 +71,16 @@ function buildMatrix(text, size) {
   return grid;
 }
 
-const GRID = buildMatrix(CONTENT, MODULE_COUNT);
+const GRID = buildMatrix(encodedText, moduleCount);
 
-// --- Module squares, drawn directly in pixel space from the drawing area ---
-// ScatterChart's marker is a fixed-radius circle, unsuited to gapless square
-// modules — plain rects sized to the drawing area's own pitch tile exactly.
 function DataMatrixModules() {
   const { left, top, width } = useDrawingArea();
-  const totalUnits = MODULE_COUNT + QUIET_ZONE * 2;
+  const totalUnits = moduleCount + QUIET_ZONE * 2;
   const cellSize = width / totalUnits;
 
   const modules = [];
-  for (let r = 0; r < MODULE_COUNT; r++) {
-    for (let c = 0; c < MODULE_COUNT; c++) {
+  for (let r = 0; r < moduleCount; r++) {
+    for (let c = 0; c < moduleCount; c++) {
       if (!GRID[r][c]) continue;
       modules.push(
         <rect
@@ -153,15 +148,17 @@ export default function Chart() {
             justifyContent: "center",
           }}
         >
-          <ChartContainer
+          <ChartsContainer
             width={matrixSide}
             height={matrixSide}
             series={[]}
+            xAxis={[{ position: "none" }]}
+            yAxis={[{ position: "none" }]}
             margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
             skipAnimation
           >
             <DataMatrixModules />
-          </ChartContainer>
+          </ChartsContainer>
         </div>
       </div>
       <div
