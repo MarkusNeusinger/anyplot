@@ -2,148 +2,131 @@ library: muix
 language: javascript
 specification_id: sequence-logo-basic
 created: '2026-08-26T11:32:03Z'
-updated: '2026-08-26T11:37:05Z'
-generated_by: claude-sonnet
-workflow_run: 32962801340
+updated: '2026-10-23T21:15:47Z'
+generated_by: adopted:gemini/12267-muix-9-batch1
+workflow_run: 40024249661
 issue: 4421
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/javascript/muix/plot-dark.html
-quality_score: 93
+quality_score: 85
 review:
   strengths:
-  - Correct, spec-accurate sequence logo built from scratch using SVG glyphs stretched
-    via textLength + a vertical scale transform, exactly matching the 'stretched glyphs,
-    not plain text' requirement.
-  - Real Shannon-entropy information-content calculation (max 2 bits for DNA), with
-    letters correctly stacked in ascending-frequency order so the most frequent letter
-    ends up on top.
-  - Idiomatic, sophisticated use of MUI X's useXScale/useYScale hooks to synchronize
-    custom SVG marks with the chart's own axes -- a genuinely distinctive library
-    feature, not a generic bar/line chart with labels bolted on.
-  - Semantically appropriate nucleotide color mapping (A=green, C=blue, G=ochre, T=red)
-    drawn from the Imprint palette tokens, matching the standard bioinformatics color
-    convention while staying within the Imprint pool.
-  - Clean theme-adaptive chrome -- both renders are fully readable, backgrounds are
-    theme-correct, and data colors are identical across light and dark.
-  - Realistic, well-motivated synthetic ChIP-seq/SELEX-style motif data with a clearly
-    conserved core (positions 3-7) and weakly conserved flanks, giving good dynamic
-    range in stack heights.
+  - 'Letters are real scaled glyphs: an SVG <text> per segment with textLength + lengthAdjust="spacingAndGlyphs"
+    fills the column width and a vertical scale stretches each glyph to its bit height,
+    as the Notes ask'
+  - Stacks are built by construction from frequency and Shannon information content
+    (MAX_BITS = log2 of the alphabet size), ordered by frequency with the most frequent
+    letter on top, on a 0–2 bit axis from zero
+  - 'Idiomatic MUI X v9 composition: ChartsContainer + ChartsGrid + ChartsXAxis/ChartsYAxis
+    with a custom mark layer driven by the useXScale/useYScale hooks, so the band
+    axis positions the stacks'
+  - 'Standard DNA colors from the Imprint palette (A #009E73, C #4467A3, G #BD8233,
+    T #AE3030), identical in both themes; chrome threaded through ink/inkSoft/grid
+    tokens and readable on both backgrounds'
+  - 'Adaptable data block: positions, alphabet and bit maximum come from the records,
+    and unknown letters (RNA U, amino acids) fall back to unused palette slots'
   weaknesses:
-  - Missing `skipAnimation` on `<ChartContainer>` -- the muix library rules mandate
-    it on every chart component as a hard, no-deviation belt-and-suspenders measure
-    alongside the harness's reduced-motion emulation. Currently low-risk because `series=[]`
-    leaves nothing to animate, but add it for compliance and future-proofing.
-  - Glyphs are large, solid color fills with no outline/stroke; ochre (G) sits below
-    the 3:1 contrast floor on the light cream background per the style guide. Not
-    a failure at this glyph size, but consider a thin ink-color stroke (style guide's
-    'Optional outline pattern') if this technique is reused at smaller sizes (e.g.
-    a denser protein-alphabet logo).
-  - Vertically-stretched system-font glyphs (scale(1, 1/0.72) on Arial/Liberation
-    Sans) produce slightly warped letterforms for some letters (e.g. C, G) compared
-    to the bespoke seqlogo fonts used by tools like WebLogo/ggseqlogo -- acceptable
-    and clearly identifiable, but not pixel-perfect typography.
+  - 'SC-03 (both): the glyphs are drawn about 4 % shorter than their bit height, so
+    every stack top sits below its information content — position 3 T tops out at
+    about 1.11 bits vs the computed 1.15 (−0.04), position 4 A at about 1.32 vs 1.37
+    (−0.05), position 8 A at about 0.63 vs 0.65 (−0.02) → glyph tops at the stack''s
+    information content (±0.01 bits). Likely cause: CAP_HEIGHT_RATIO = 0.72 overestimates
+    the rendered font''s cap height, so scale(1, 1/0.72) under-stretches; measure
+    the glyph with getBBox() or derive the ratio from the actual font metrics.'
+  - 'Suggestion: the mandated title at 22 px fills only about 31 % of the width; a
+    slightly larger title would give it more presence.'
+  - 'Suggestion: the useXScale()/useYScale() `as any` casts are unnecessary in an
+    esbuild-only bundle and could be dropped.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
-      Chrome: Title "sequence-logo-basic · javascript · muix · anyplot.ai" centered at top in dark ink, clearly legible. X-axis labeled "Position" with tick labels 1-10 below the chart. Y-axis labeled "Information content (bits)" (rotated) with tick labels 0.0-2.0 in steps of 0.2, all in dark/soft-dark ink. Subtle horizontal gridlines only, faint and non-competing with data.
-      Data: A ten-position sequence logo. Positions 3-7 form a tall, clearly conserved core (T, A, G, C, G reaching roughly 1.0-1.3 bits), flanked by shorter, more mixed stacks at positions 2 and 8, and near-invisible stacks at positions 1, 9, and 10 (near-zero information content, consistent with near-uniform frequencies in the source data). Each stack is composed of vertically stretched, color-coded letters: A=brand green (#009E73), C=blue, G=ochre, T=matte red -- these are the Imprint palette tokens applied via a semantic nucleotide-color convention. All data elements are clearly distinguishable from the light background.
+      Background: warm off-white #FAF8F1 across the whole 3200x1800 canvas.
+      Chrome: centered title "sequence-logo-basic · javascript · muix · anyplot.ai" in dark ink; y axis "Information content (bits)" 0.0–2.0 in 0.2 steps, x axis "Position" 1–10 as band ticks; subtle horizontal grid only; all text dark on light and readable.
+      Data: ten letter stacks of stretched bold glyphs — A green #009E73, C blue #4467A3, G orange #BD8233, T red #AE3030. Positions 3–8 spell the conserved core T A G C G A (tallest ~1.3 bits at positions 4 and 6), position 2 a short C-topped stack, positions 1, 9, 10 nearly empty (uniform). Smaller letters stack beneath the dominant one, most frequent on top.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
-      Chrome: Same title, axis labels, and tick labels as the light render, but rendered in light ink/off-white -- fully legible against the dark background, no dark-on-dark text anywhere. Gridlines remain subtle and visible.
-      Data: Identical stack heights, letter identities, and letter colors as the light render (A=green, C=blue, G=ochre, T=red) -- confirms only chrome (background, text, grid) flipped between themes while the four categorical data colors stayed constant, as required.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and tick labels in light ink, axis lines and grid lighter grey; no dark-on-dark text.
+      Data: glyph colors and geometry identical to the light render; brand green A clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes throughout; readable in both themes and at scale.
-          Slight deduction for the inherent warping of vertically-stretched system-font
-          glyphs.
+        comment: Explicit sizes (title 22, axis titles 16, ticks 14 CSS px); readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between letters, ticks, axis labels, or title.
+        comment: No text collisions; glyphs stack without overlapping
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stack heights scale cleanly with information content; near-zero stacks
-          at positions 1/9/10 are a faithful representation of near-uniform (uninformative)
-          frequencies, not a sizing defect.
+        comment: Dominant glyphs prominent; tiny letters at weak positions are permitted
+          by the spec
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Letters are large enough that WCAG large-text contrast thresholds
-          are comfortably met; color is redundantly encoded by the letter's shape/identity,
-          not relied on alone.
+        comment: Letter identity is carried by glyph shape as well as color
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart occupies a large, well-balanced portion of the canvas with
-          generous, even margins; nothing cut off.
+        comment: 3200x1800, plot fills the canvas, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Position" and "Information content (bits)" -- descriptive with
-          units.'
+        comment: '''Position'' and ''Information content (bits)'' as the Notes ask'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Nucleotide colors are Imprint palette tokens applied via a well-established
-          semantic convention; backgrounds and chrome are theme-correct in both renders;
-          data colors identical across themes.
+        comment: Imprint colors in the standard DNA scheme, correct theme backgrounds
     design_excellence:
-      score: 15
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Custom glyph-stretching technique and semantic color choice go clearly
-          beyond a configured default, though letterform warping keeps it short of
-          publication-ready.
+        passed: false
+        comment: 'Style-guide baseline: bold sans glyphs, theme tokens, nothing beyond'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Subtle single-axis grid, clean L-shaped spines, generous whitespace
-          between stacks and around the plot.
+        passed: false
+        comment: Horizontal-only grid chosen for a band axis and 8 % column padding
+          that separates stacks
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Stack-height variation itself creates a strong, immediate visual
-          hierarchy that highlights the conserved core -- inherent to the chart type
-          and well executed here.
+        passed: false
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -151,29 +134,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correctly implements a sequence logo, not a generic stacked bar chart.
+        comment: Sequence logo, basic variant, no extra layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Ascending-frequency stacking, information-content scaling, standard
-          color scheme, scaled glyph letters, and both required axis labels are all
-          present.
+        comment: Frequency ordering, IC scaling, stretched glyphs, DNA colors, axis
+          labels all present
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: X = position, Y = information content in bits, full data range shown
-          (positions 1-10).
+        passed: false
+        comment: Glyphs ~4 % shorter than their bit heights; stack tops sit 0.02–0.05
+          bits low (defect line)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format exactly; no separate legend needed
-          since letter identity + color together already label the data.
+        comment: Mandated title; legend N/A — glyphs self-label
     data_quality:
       score: 15
       max: 15
@@ -183,24 +164,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows a full range of conservation strength, from strongly conserved
-          core to weakly/uninformative flanks, with varied top letters.
+        comment: Conserved core, mixed positions and uniform flanks show the full
+          IC range
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral ChIP-seq/SELEX-style transcription-factor motif
-          scenario.
+        comment: Plausible 10-position transcription factor binding motif
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Bits values stay within [0, 2] (log2(4) max for DNA); frequencies
-          sum to 1 per position.
+        comment: Frequencies sum to 1 per position; IC computed as 2 − H, checked
+          pos 3 (1.15), 4 and 6 (1.37), 8 (0.65) in the code
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -208,61 +188,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward data -> derived stacks -> component structure; the
-          two small helper functions are the React/MUI X idiom, not over-engineering.
+        comment: Single glyph-layer component required by the scale hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, hard-coded frequency table.
+        comment: Hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Every import is used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Complexity is justified by the from-scratch glyph rendering; no fake
-          UI.
+        comment: Entropy and stacking are short and necessary
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: '`<ChartContainer>` is missing the mandatory `skipAnimation` prop
-          required by the muix library rules.'
+        passed: true
+        comment: Default export, skipAnimation, v9 API, sized to ANYPLOT_SIZE
     library_mastery:
-      score: 10
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Uses ChartContainer plus useXScale/useYScale hooks exactly as MUI
-          X recommends for custom overlay marks.
+        passed: false
+        comment: ChartsContainer composition with band/linear axis configs and ChartsGrid
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Hook-synced custom SVG marks are a feature genuinely distinctive
-          to MUI X's architecture, not a trivial reskin of another library's chart.
+        passed: false
+        comment: Custom SVG mark layer driven by useXScale/useYScale inside the MUI
+          X composition API
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-03c2486144
+  rendered_at: '2026-10-23T21:12:58Z'
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
+  - layer-composition
+  - html-export
   patterns:
-  - data-generation
   - iteration-over-groups
-  - matrix-construction
-  dataprep: []
-  styling:
-  - publication-ready
+  dataprep:
+  - cumulative-sum
+  styling: []
