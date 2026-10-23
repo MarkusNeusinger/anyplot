@@ -15,11 +15,10 @@ known GitHub quirks. Every gotcha below cost real session round-trips.
   after it merges, look at the next JavaScript renders for shifted text or layout.
 - **A plotting-library major is not a routine bump.** Minor and patch bumps need no edit: the
   pipeline installs from the locks and the database sync reads the versions from them. A major
-  arrives ungrouped. For a JavaScript library (`deps(js-render):`) or Makie it fails "Run Tests"
-  while `prompts/library/<lib>.md` still names the old `**API level:**`; for any library, check
-  the prompt against the new API (Context7) and update it on the Dependabot branch before you
-  enable auto-merge. Dependabot
-  stops rebasing a branch with a foreign commit, so merge it before the next bump touches the
+  arrives ungrouped and fails "Run Tests" while `prompts/library/<lib>.md` still names the old
+  `**API level:**`. Check the prompt against the new API (Context7), update it on the Dependabot
+  branch, then enable auto-merge. Dependabot stops rebasing a branch with a foreign commit, so
+  merge it before the next bump touches the
   same lock.
 - **One lock-file PR at a time, and every `app/` bump checked in the browser.** Of the PRs that
   touch the same lock file (`uv.lock`, `app/yarn.lock`), only one has auto-merge at a time: several

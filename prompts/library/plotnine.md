@@ -1,5 +1,8 @@
 # plotnine
 
+**API level:** plotnine 0.15. `uv.lock` pins this release series, and plotnine
+changes its API between 0.x releases; write against this one.
+
 ## IMPORTANT: No Workarounds
 
 **If plotnine cannot implement a plot type natively, DO NOT use matplotlib as a workaround.**

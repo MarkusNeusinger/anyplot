@@ -8,10 +8,10 @@ library and language resolves, so a broken or ambiguous pin file fails a PR
 instead of a sync. A Dependabot bump changes a pinned version and nothing here.
 
 The library prompts state no version in their example headers (impl-review
-rewrites the header from the versions it measures). The JavaScript and Julia
-prompts state the API level the generator writes against, and that level must
-match the lock's major; it moves only in a deliberate bump PR, because
-Dependabot groups minor and patch updates only.
+rewrites the header from the versions it measures). Every prompt of a locked
+library (Python, JavaScript, Makie) states the API level the generator writes
+against, and that level must match the lock's major; it moves only in a
+deliberate bump PR, because Dependabot groups minor and patch updates only.
 """
 
 from __future__ import annotations
@@ -36,9 +36,9 @@ DOTTED_NUMBER_RE = re.compile(r"\b\d+(?:\.\d+)+\b|\b\d{2,}\b")
 HEADER_RE = re.compile(r"^(?:(?://|#'?) )?Library: (?P<rest>.+)$", re.MULTILINE)
 API_LEVEL_RE = re.compile(r"^\*\*API level:\*\* (?P<name>.+?) (?P<level>\d+(?:\.\d+)?)\. ", re.MULTILINE)
 
-# The prompts whose generator output depends on an API level: the libraries
-# Dependabot or a hand-made bump can move a major under.
-PROMPTS_WITH_API_LEVEL = {"chartjs", "d3", "echarts", "highcharts", "makie", "muix"}
+# The prompts that state the API level the generator writes against: every
+# library with a lock file (ggplot2 has none, its snapshot moves by hand).
+PROMPTS_WITH_API_LEVEL = set(LIBRARY_LANGUAGES) - {"ggplot2"}
 
 
 @pytest.fixture(scope="module")

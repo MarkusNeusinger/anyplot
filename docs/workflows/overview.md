@@ -183,8 +183,9 @@ from the pins by `core/library_versions.py` when `sync-postgres.yml` runs; a pin
 that does not resolve keeps the stored value and logs a warning. So a minor or
 patch bump, Dependabot's included, needs no other edit.
 
-The example headers in `prompts/library/*.md` carry no version. The JavaScript
-and Makie prompts state the API level the generator writes against
+The example headers in `prompts/library/*.md` carry no version. Every prompt of
+a locked library (Python, JavaScript, Makie) states the API level the generator
+writes against
 (`**API level:** ECharts 6.`), and `tests/unit/core/test_version_sources.py`
 holds it to the lock's major, so a major bump updates the prompt in the same
 PR. The same test checks that every pin resolves.

@@ -1,5 +1,7 @@
 # plotly
 
+**API level:** Plotly 7. `uv.lock` pins this major; write against its API.
+
 ## Import
 
 ```python

@@ -2,6 +2,8 @@
 
 ggplot2-style grammar of graphics by JetBrains.
 
+**API level:** lets-plot 4. `uv.lock` pins this major; write against its API.
+
 ## Import
 
 ```python

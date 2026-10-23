@@ -15,8 +15,10 @@
   `core/constants.py` carries no version any more. Ten of its fifteen numbers
   had drifted (matplotlib 3.9.0 against 3.11.2 locked, ECharts 5.5.1 against
   6.1.0), and a Dependabot bump now needs no edit. The library prompts' example
-  headers carry no version; the JavaScript and Makie prompts state the API
-  level they write for, and a test holds it to the lock's major. (#12240)
+  headers carry no version; every prompt of a locked library (Python,
+  JavaScript, Makie) states the API level it writes for, and a test holds it
+  to the lock's major. CI now also fails when `uv.lock` is out of date with
+  `pyproject.toml`. (#12240)
 
 ### Fixed
 

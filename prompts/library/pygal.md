@@ -1,5 +1,7 @@
 # pygal
 
+**API level:** Pygal 3. `uv.lock` pins this major; write against its API.
+
 ## Import
 
 ```python
