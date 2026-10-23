@@ -1,14 +1,9 @@
 // anyplot.ai
 // sequence-logo-basic: Sequence Logo for Motif Visualization
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 93/100 | Created: 2026-08-26
-//# anyplot-orientation: landscape
-// anyplot.ai
-// sequence-logo-basic: Sequence Logo for Motif Visualization
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-08-26
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+// Library: muix 9.16.0 | JavaScript 22.23.3
+// Quality: 85/100 | Updated: 2026-10-23
+
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
@@ -18,73 +13,107 @@ import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data (in-memory, deterministic) ---------------------------------------
-// Relative letter frequencies at each aligned position of a synthetic 10-bp
-// transcription-factor binding site motif (rows sum to 1). Positions 3-7 form
-// a conserved core (TAGCG); the flanks are weakly conserved, as is typical for
-// real ChIP-seq / SELEX motifs.
-const LETTERS = ["A", "C", "G", "T"];
-
-const FREQUENCIES = [
-  { A: 0.3, C: 0.25, G: 0.2, T: 0.25 },
-  { A: 0.15, C: 0.55, G: 0.1, T: 0.2 },
-  { A: 0.05, C: 0.05, G: 0.05, T: 0.85 },
-  { A: 0.9, C: 0.04, G: 0.03, T: 0.03 },
-  { A: 0.04, C: 0.04, G: 0.88, T: 0.04 },
-  { A: 0.03, C: 0.9, G: 0.04, T: 0.03 },
-  { A: 0.05, C: 0.05, G: 0.85, T: 0.05 },
-  { A: 0.7, C: 0.1, G: 0.12, T: 0.08 },
-  { A: 0.2, C: 0.3, G: 0.3, T: 0.2 },
-  { A: 0.25, C: 0.25, G: 0.25, T: 0.25 },
-];
-
-const MAX_BITS = 2; // DNA: log2(4 possible letters)
-const positions = FREQUENCIES.map((_, i) => `${i + 1}`);
-
-// Standard nucleotide color code (per the specification), mapped onto the
-// Imprint palette: A -> brand green, C -> blue, G -> ochre, T -> matte red.
-const LETTER_COLOR = {
+// Constants
+const LETTER_COLOR: Record<string, string> = {
   A: t.palette[0], // #009E73
   C: t.palette[2], // #4467A3
   G: t.palette[3], // #BD8233
   T: t.palette[4], // #AE3030
 };
 
-function informationContent(freqs) {
-  const entropy = LETTERS.reduce((bits, letter) => {
-    const p = freqs[letter];
+// Columns: set these to your data's column names
+const POSITION = "Position"; // role: position
+const LETTER = "Nucleotide"; // role: letter
+const FREQUENCY = "Frequency"; // role: frequency
+
+// Data: replace this block with your own records, one object per row
+const data = [
+  { [POSITION]: 1, [LETTER]: "A", [FREQUENCY]: 0.3 },
+  { [POSITION]: 1, [LETTER]: "C", [FREQUENCY]: 0.25 },
+  { [POSITION]: 1, [LETTER]: "G", [FREQUENCY]: 0.2 },
+  { [POSITION]: 1, [LETTER]: "T", [FREQUENCY]: 0.25 },
+  { [POSITION]: 2, [LETTER]: "A", [FREQUENCY]: 0.15 },
+  { [POSITION]: 2, [LETTER]: "C", [FREQUENCY]: 0.55 },
+  { [POSITION]: 2, [LETTER]: "G", [FREQUENCY]: 0.1 },
+  { [POSITION]: 2, [LETTER]: "T", [FREQUENCY]: 0.2 },
+  { [POSITION]: 3, [LETTER]: "A", [FREQUENCY]: 0.05 },
+  { [POSITION]: 3, [LETTER]: "C", [FREQUENCY]: 0.05 },
+  { [POSITION]: 3, [LETTER]: "G", [FREQUENCY]: 0.05 },
+  { [POSITION]: 3, [LETTER]: "T", [FREQUENCY]: 0.85 },
+  { [POSITION]: 4, [LETTER]: "A", [FREQUENCY]: 0.9 },
+  { [POSITION]: 4, [LETTER]: "C", [FREQUENCY]: 0.04 },
+  { [POSITION]: 4, [LETTER]: "G", [FREQUENCY]: 0.03 },
+  { [POSITION]: 4, [LETTER]: "T", [FREQUENCY]: 0.03 },
+  { [POSITION]: 5, [LETTER]: "A", [FREQUENCY]: 0.04 },
+  { [POSITION]: 5, [LETTER]: "C", [FREQUENCY]: 0.04 },
+  { [POSITION]: 5, [LETTER]: "G", [FREQUENCY]: 0.88 },
+  { [POSITION]: 5, [LETTER]: "T", [FREQUENCY]: 0.04 },
+  { [POSITION]: 6, [LETTER]: "A", [FREQUENCY]: 0.03 },
+  { [POSITION]: 6, [LETTER]: "C", [FREQUENCY]: 0.9 },
+  { [POSITION]: 6, [LETTER]: "G", [FREQUENCY]: 0.04 },
+  { [POSITION]: 6, [LETTER]: "T", [FREQUENCY]: 0.03 },
+  { [POSITION]: 7, [LETTER]: "A", [FREQUENCY]: 0.05 },
+  { [POSITION]: 7, [LETTER]: "C", [FREQUENCY]: 0.05 },
+  { [POSITION]: 7, [LETTER]: "G", [FREQUENCY]: 0.85 },
+  { [POSITION]: 7, [LETTER]: "T", [FREQUENCY]: 0.05 },
+  { [POSITION]: 8, [LETTER]: "A", [FREQUENCY]: 0.7 },
+  { [POSITION]: 8, [LETTER]: "C", [FREQUENCY]: 0.1 },
+  { [POSITION]: 8, [LETTER]: "G", [FREQUENCY]: 0.12 },
+  { [POSITION]: 8, [LETTER]: "T", [FREQUENCY]: 0.08 },
+  { [POSITION]: 9, [LETTER]: "A", [FREQUENCY]: 0.2 },
+  { [POSITION]: 9, [LETTER]: "C", [FREQUENCY]: 0.3 },
+  { [POSITION]: 9, [LETTER]: "G", [FREQUENCY]: 0.3 },
+  { [POSITION]: 9, [LETTER]: "T", [FREQUENCY]: 0.2 },
+  { [POSITION]: 10, [LETTER]: "A", [FREQUENCY]: 0.25 },
+  { [POSITION]: 10, [LETTER]: "C", [FREQUENCY]: 0.25 },
+  { [POSITION]: 10, [LETTER]: "G", [FREQUENCY]: 0.25 },
+  { [POSITION]: 10, [LETTER]: "T", [FREQUENCY]: 0.25 },
+];
+
+// Plot: reads only data and the constants above
+const positions = Array.from(new Set(data.map((d) => `${d[POSITION]}`)));
+const letters = Array.from(new Set(data.map((d) => d[LETTER])));
+const MAX_BITS = Math.log2(letters.length);
+
+// Letters without a fixed colour (an RNA U, amino acids) take the palette
+// slots LETTER_COLOR leaves free, in order of appearance, never a used hue.
+const usedColors = new Set(Object.values(LETTER_COLOR));
+const freeColors = t.palette.filter((c: string) => !usedColors.has(c));
+const otherLetters = letters.filter((l) => !(l in LETTER_COLOR));
+const letterColor = (letter: string) =>
+  LETTER_COLOR[letter] ?? freeColors[otherLetters.indexOf(letter)];
+
+const STACKS = positions.map((posLabel) => {
+  const rows = data.filter((d) => `${d[POSITION]}` === posLabel);
+  const entropy = rows.reduce((bits, r) => {
+    const p = r[FREQUENCY];
     return p > 0 ? bits - p * Math.log2(p) : bits;
   }, 0);
-  return MAX_BITS - entropy;
-}
-
-// Stacked segments per position, ascending by frequency so the most frequent
-// letter ends up on top, per the specification.
-const STACKS = FREQUENCIES.map((freqs) => {
-  const ic = informationContent(freqs);
-  const order = [...LETTERS].sort((a, b) => freqs[a] - freqs[b]);
+  const ic = MAX_BITS - entropy;
+  const sorted = [...rows].sort((a, b) => a[FREQUENCY] - b[FREQUENCY]);
   let cumulative = 0;
-  return order
-    .filter((letter) => freqs[letter] > 0)
-    .map((letter) => {
-      const bits = freqs[letter] * ic;
-      const segment = { letter, from: cumulative, to: cumulative + bits };
+  return sorted
+    .filter((r) => r[FREQUENCY] > 0)
+    .map((r) => {
+      const bits = r[FREQUENCY] * ic;
+      const letter = r[LETTER];
+      const segment = {
+        letter,
+        from: cumulative,
+        to: cumulative + bits,
+        color: letterColor(letter),
+      };
       cumulative += bits;
       return segment;
     });
 });
 
-// Bold uppercase letters (Arial/Liberation Sans) render at ~72% cap-height of
-// their font-size; stretching the glyph vertically by the inverse ratio makes
-// the visible letter fill its allocated box exactly (fontSize is set to the
-// box height, so this factor is constant across every glyph).
 const CAP_HEIGHT_RATIO = 0.72;
 const VERTICAL_STRETCH = 1 / CAP_HEIGHT_RATIO;
 
-// --- Sequence logo layer: letters as scaled glyphs, not plain labels --------
 function SequenceLogoGlyphs() {
-  const xScale = useXScale();
-  const yScale = useYScale();
+  const xScale = useXScale() as any;
+  const yScale = useYScale() as any;
   const bandwidth = xScale.bandwidth();
   const paddingX = bandwidth * 0.08;
   const usableWidth = bandwidth - 2 * paddingX;
@@ -98,8 +127,6 @@ function SequenceLogoGlyphs() {
           const yTop = yScale(seg.to);
           const heightPx = yBottom - yTop;
           if (heightPx < 1.5) return null;
-          // Stretch about the segment's own baseline (yBottom) so it grows
-          // upward to fill heightPx without shifting its footing.
           const translateY = yBottom * (1 - VERTICAL_STRETCH);
           return (
             <text
@@ -112,7 +139,7 @@ function SequenceLogoGlyphs() {
               fontSize={heightPx}
               fontWeight={700}
               fontFamily="Arial, Liberation Sans, DejaVu Sans, sans-serif"
-              fill={LETTER_COLOR[seg.letter]}
+              fill={seg.color}
               transform={`translate(0 ${translateY}) scale(1 ${VERTICAL_STRETCH})`}
             >
               {seg.letter}
@@ -124,7 +151,6 @@ function SequenceLogoGlyphs() {
   );
 }
 
-// --- Chart (default-exported component — the harness mounts it) -------------
 const TITLE_H = 56;
 
 export default function Chart() {
@@ -146,16 +172,18 @@ export default function Chart() {
       >
         sequence-logo-basic · javascript · muix · anyplot.ai
       </Typography>
-      <ChartContainer
+      <ChartsContainer
         width={W}
         height={H - TITLE_H}
         series={[]}
-        margin={{ top: 30, right: 40, bottom: 74, left: 96 }}
+        skipAnimation
+        margin={{ top: 30, right: 40, bottom: 20, left: 20 }}
         xAxis={[
           {
             scaleType: "band",
             data: positions,
-            label: "Position",
+            height: 64,
+            label: POSITION,
             labelStyle: { fontSize: 16, fill: t.ink },
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
           },
@@ -165,6 +193,7 @@ export default function Chart() {
             scaleType: "linear",
             min: 0,
             max: MAX_BITS,
+            width: 84,
             label: "Information content (bits)",
             labelStyle: { fontSize: 16, fill: t.ink },
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
@@ -180,7 +209,7 @@ export default function Chart() {
         <SequenceLogoGlyphs />
         <ChartsXAxis />
         <ChartsYAxis />
-      </ChartContainer>
+      </ChartsContainer>
     </Box>
   );
 }
