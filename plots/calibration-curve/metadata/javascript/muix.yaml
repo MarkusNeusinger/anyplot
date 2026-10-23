@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: calibration-curve
 created: '2026-09-02T14:26:38Z'
-updated: '2026-10-23T21:34:58Z'
+updated: '2026-10-23T21:40:08Z'
 generated_by: adopted:gemini/12267-muix-9-batch1
 workflow_run: 40027270877
 issue: 2331
@@ -12,105 +12,98 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/calibrati
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/javascript/muix/plot-dark.html
-quality_score: 83
+quality_score: 87
 review:
   strengths:
-  - 'Complete reliability diagram: dashed perfect-calibration diagonal, 10 equal-width
-    bins, ECE and Brier for each model named in the subtitle'
-  - Histogram panel sits under the main panel with bins aligned to the probability
-    axis and reuses the model colors, showing Model B's predictions bunching at the
-    extremes
-  - 'Theme tokens threaded through every element: diagonal flips from ink-black to
-    ink-white, all text readable in both renders'
-  - Per-series [data-series] sx selectors set stroke widths and the dash pattern idiomatically
-    for MUI X v9
-  - Distinct marker shapes (square vs diamond) back up the color difference
+  - 'Calibration points sit exactly at each bin''s computed (mean prediction, fraction
+    of positives) pair on a linear MUI X x axis, joined with curve: "linear" so nothing
+    is smoothed; the empty-free 10 equal-width bins match the Notes.'
+  - ECE and Brier score for each model are computed from the data and written in the
+    subtitle next to the model name, so it is unambiguous which metric belongs to
+    which curve; the logistic model's Brier 0.167 matches the theoretical 1/6 for
+    uniformly distributed true risk.
+  - 'Two contrasting models (a well-calibrated logistic regression and an overconfident
+    boosted-trees model) make the reliability diagram tell its story: the lavender
+    curve leaves the diagonal in the expected inverted-S, and the histogram shows
+    its predictions bunching in the 0–10% and 90–100% bins.'
+  - The prediction histogram is a smaller secondary BarChart whose ten bins sit directly
+    under the matching 10% spans of the calibration axis, using the same green/lavender
+    series colours.
+  - Dashed ink diagonal (strokeDasharray via sx on the data-series attribute selector)
+    is clearly told apart from the solid 3 px model lines and stays visible in both
+    themes; all chrome uses ANYPLOT_TOKENS and flips correctly.
+  - 'Library-native interactivity: the HTML version keeps MUI X axis tooltips with
+    percentage valueFormatters on both axes.'
   weaknesses:
-  - 'SC-03 (both): every calibration point sits at its bin center (5%, 15%, … 95%)
-    instead of the bin''s mean predicted probability, so Model B''s points (whose
-    predictions bunch near 0 and 1 inside the edge bins) are drawn up to ~4 percentage
-    points off their true x → plot each model at its own computed (mean predicted
-    probability, fraction of positives) pair, e.g. a ScatterChart/LineChart per model
-    with its own x values, and use the same mean in the ECE. Likely cause: xValues
-    built from binsA.map(b => b.center) and shared by both series.'
-  - 'VQ-01 (both): histogram tick labels at 12 px and its axis titles at 14 px blur
-    in the 400 px thumbnail and are smaller than the main panel''s 14/16 px → 14 px
-    ticks, 16 px titles (+2 px). Likely cause: BarChart tickLabelStyle fontSize 12
-    / labelStyle fontSize 14.'
-  - 'DQ-02 (both): the series are labelled ''Model A (well-calibrated)'' and ''Model
-    B (overconfident)''; the screening scenario lives only in a code comment → name
-    the models for the domain, e.g. ''Logistic regression (screening)'' and ''Boosted
-    trees, uncalibrated''. Likely cause: Y_PROB / Y_PROB_B label strings.'
-  - 'CQ-01 (code): module-level helper functions calibrationBins, brierScore and expectedCalibrationError
-    plus a Bin type → inline the binning and metrics as flat statements. Likely cause:
-    function-based structure.'
-  - 'Suggestion: give the histogram a light horizontal grid like the main panel so
-    counts read off more easily.'
+  - 'Suggestion: a legend or a short caption on the histogram panel would let it be
+    read on its own without referring back to the main legend.'
+  - 'Suggestion: x ticks every 10% instead of every 5% would match the histogram bins
+    and lighten the main axis.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1.
-      Chrome: centered title "calibration-curve · javascript · muix · anyplot.ai", grey subtitle with "Model A — ECE 0.016, Brier 0.167 · Model B — ECE 0.103, Brier 0.180", legend row (Perfect calibration, Model A (well-calibrated), Model B (overconfident)). Main panel: y "Fraction of Positives" 0–100%, x "Mean Predicted Probability" 0–100% in 5% ticks, subtle horizontal grid. Lower histogram: "Count" 0–1,000 vs "Predicted Probability Bin" 0–10% … 90–100%. All text dark and readable; histogram ticks small.
-      Data: dashed black diagonal; Model A green #009E73 square markers hugging the diagonal; Model B purple diamonds above the diagonal below 40% and below it above 50% (inverted S, a dip at 45%). Histogram: green bars ~300 per bin, purple bars ~850 in the two edge bins and ~120–230 elsewhere.
+      Background: warm off-white #FAF8F1 across the whole 3200x1800 canvas.
+      Chrome: title "calibration-curve · javascript · muix · anyplot.ai" centred in dark ink; subtitle in inkSoft lists "Logistic regression (screening) — ECE 0.016, Brier 0.167 · Boosted trees, uncalibrated — ECE 0.118, Brier 0.180"; legend row (Perfect calibration / Logistic regression (screening) / Boosted trees, uncalibrated). Main panel: y axis "Fraction of Positives" 0–100%, x axis "Mean Predicted Probability" 0–100% in 5% ticks, subtle horizontal grid. Lower panel (about a third of the height): grouped bar histogram with "Count" (0–1,000) y axis and "Predicted Probability Bin" x axis labelled 0–10% … 90–100%. All text dark and readable.
+      Data: dashed black diagonal from (0,0) to (100%,100%); brand green #009E73 line with square markers hugging the diagonal; lavender #C475FD line with diamond markers above the diagonal at low predictions and below at high predictions (inverted S), with a jagged bump at 35%. Histogram: green bars flat at ~270–330 per bin, lavender bars ~850 in the extreme bins and ~120–230 in the middle.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, subtitle, legend and axis text in light ink; grid dim but visible; axis lines light. No dark-on-dark text.
-      Data: identical green and purple to the light render; diagonal flips to a white dashed line and stays visible.
+      Chrome: title, subtitle, legend, axis titles and tick labels in light ink / inkSoft, all clearly readable; grid lines subtle dark grey; axis lines light. No dark-on-dark text.
+      Data: green and lavender series and markers identical to the light render; the diagonal flips to a light dashed line (ink token) and stays visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Main panel text readable in both themes; histogram tick labels at
-          12 px are small for the thumbnail (defect line)
+        comment: Explicit font sizes (title 22, axis titles 16, ticks/legend/subtitle
+          14 CSS px); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; curves cross the diagonal cleanly
+        comment: No text collisions; subtitle, legend, panels and axis titles each
+          have their own band
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 3 px lines with distinct square/diamond markers on 10 sparse bins;
-          bars clearly visible; legend glyphs match
+        comment: Ten sparse bins per model with clear square/diamond markers and 3
+          px lines; legend glyphs match the marks
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs purple plus differing marker shapes and dashed diagonal;
-          CVD-safe
+        comment: Green vs lavender plus marker shape (square vs diamond) and dashed
+          diagonal; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, main panel ~62% of height, histogram smaller below, no
-          overflow
+        comment: 3200x1800, main panel ~62% of chart height, histogram aligned under
+          the probability span; nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Mean Predicted Probability / Fraction of Positives with percent ticks;
-          Count / Predicted Probability Bin
+        comment: Descriptive axis titles with percent tick formatting
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Model A #009E73 first, Model B second Imprint color, diagonal in
-          ink token; #FAF8F1 / #1A1A17 backgrounds; data colors identical across themes'
+        comment: 'Imprint #009E73 then #C475FD; diagonal in ink token; backgrounds
+          #FAF8F1 / #1A1A17'
     design_excellence:
       score: 11
       max: 20
@@ -120,25 +113,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Clear three-level header hierarchy (title, inkSoft metric subtitle,
-          legend); histogram reuses the model colors so it reads without its own legend
+        comment: Raised for a deliberate title/inkSoft-subtitle/legend hierarchy and
+          weight contrast (3 px model lines vs 2 px dashed reference)
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Histogram bins aligned under the main panel's probability axis via
-          matching y-axis band and margins; dashed diagonal with thinner stroke than
-          the model curves
+        comment: 'Raised: histogram bins aligned to the 10% spans of the calibration
+          axis with matching y-axis widths; gridless histogram vs gridded main panel'
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Overconfident model's prediction bunching at 0–10% and 90–100% is
-          made visible in the histogram, explaining its curve
+        comment: 'Raised: chose a calibrated vs overconfident pair so the curve contrast
+          and the bunched extreme histogram bars explain each other'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -146,29 +138,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Reliability diagram with optional histogram panel
+        comment: Reliability diagram with optional histogram panel and model comparison,
+          both allowed by the Notes
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Diagonal, 10 equal bins, ECE + Brier per model in subtitle, histogram,
-          legend for two models
+        comment: Diagonal, 10 equal bins, ECE + Brier per model, legend; all A-good-version
+          bullets met
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Points sit at bin centers, not at each bin's mean predicted probability
-          (defect line)
+        passed: true
+        comment: Points at computed bin means, linear segments, shared 0–1 scale on
+          both axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title format; legend labels readable
+        comment: Correct title format; legend names reference and both models
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -176,39 +169,38 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Well-calibrated vs overconfident model, inverted-S departure, prediction
+        comment: Shows a well-calibrated and an overconfident model plus the prediction
           distribution
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Medical screening context exists only in a code comment; series are
-          named Model A / Model B (defect line)
+        comment: Medical screening risk models, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 3000 samples, probabilities 0–1, Brier 0.167/0.180 plausible; no
-          Check values in spec
+        comment: 3000 samples in the recommended range; checked logistic Brier 0.167
+          = theoretical 1/6 for uniform true risk, ECE 0.016 small as expected
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Module-level helper functions calibrationBins/brierScore/expectedCalibrationError
-          plus a Bin type (defect line)
+        comment: Columns → data → plot; only the seeded PRNG/Box-Muller helpers the
+          library prompt sanctions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: mulberry32 seed 42
+        comment: mulberry32(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -220,13 +212,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Written-out binning allowed per library Computation line
+        comment: Short written-out binning is the endorsed approach (no stats helpers
+          available)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default export, skipAnimation on both charts, v9 axis band sizing
+        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation on
+          both charts, MUI X v9 axis height/width
     library_mastery:
       score: 6
       max: 10
@@ -236,28 +230,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: LineChart + BarChart, ChartsGrid as child, valueFormatter on axes,
-          null gaps for padding points
+        comment: 'Raised: linear-scale LineChart with connectNulls series, ChartsGrid
+          composed as a child, valueFormatter on axes'
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: true
-        comment: Per-series [data-series] sx styling for dash arrays and stroke widths;
-          native HTML tooltips
-  verdict: REJECTED
+        comment: 'Raised: sx targeting MUI X data-series attribute selectors for per-series
+          stroke widths and the dash pattern'
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-03c2486144
-  rendered_at: '2026-10-23T21:31:52Z'
+  rendered_at: '2026-10-23T21:37:19Z'
 impl_tags:
   dependencies: []
   techniques:
   - subplots
-  - hover-tooltips
-  - html-export
+  - reference-line
+  - legend
+  - custom-tick-formatter
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep:
   - binning
   styling:
-  - grid-styling
+  - publication-ready
