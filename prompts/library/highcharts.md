@@ -7,7 +7,7 @@ JavaScript** library — the file extension is **`.js`** and the runtime is the
 **browser render harness** (`node automation/js-render/render.mjs`), **not**
 Python (`highcharts-core`), Rscript, or julia.
 
-**API level:** Highcharts 12. The root `package-lock.json` pins this major;
+**API level:** Highcharts 13. The root `package-lock.json` pins this major;
 write against its API.
 
 > **Commercial license — keep it visible.** Highcharts is free for personal /
@@ -124,9 +124,21 @@ Map tokens onto the chart chrome. The `#container` background is already
 `t.pageBg`, so set `chart.backgroundColor: "transparent"` (the page shows
 through) — **never white**. Always disable the credits watermark.
 
+**Pin the color scheme: `palette: { colorScheme: t.theme }`.** Since
+Highcharts 13, every color you leave at its default (marker outlines,
+column/pie borders, tooltip, any text you do not style) comes from the
+`palette` CSS variables, and the default `colorScheme: "light dark"` follows
+the *viewer's* OS dark-mode setting. Unpinned, `plot-light.html` opened on a
+dark-mode machine draws dark borders and a dark tooltip on the light page.
+In the dark theme those defaults are Highcharts' own dark background
+(`#141414`), so a default marker outline or column border is near-black there:
+set `marker.lineColor` / `borderColor` from the tokens wherever the outline
+itself carries data (censor ticks, custom `line`-style marker symbols).
+
 ```js
 const t = window.ANYPLOT_TOKENS;
 Highcharts.chart("container", {
+  palette: { colorScheme: t.theme },   // "light" | "dark"; never the OS setting
   chart: { type: "column", backgroundColor: "transparent", animation: false,
            style: { fontFamily: "inherit" } },
   credits: { enabled: false },
@@ -163,6 +175,7 @@ const values = [12, 19, 7, 15, 11];
 
 // --- Chart -----------------------------------------------------------------
 Highcharts.chart("container", {
+  palette: { colorScheme: t.theme },
   chart: { type: "column", backgroundColor: "transparent", animation: false,
            style: { fontFamily: "inherit" } },
   credits: { enabled: false },
@@ -230,3 +243,17 @@ on its own line.
 - Highcharts renders SVG (the harness's draw check passes on `<svg>`); you may
   set `window.__anyplotReady = true` after the chart call for precise timing, but
   with `animation: false` the harness's fonts-ready + double-rAF settle is enough.
+- **Data-label gap is `dataLabels.distance`** (Highcharts 13, default 4 px):
+  `padding` no longer pushes the label off its point or column. Set `distance`
+  for the gap; keep `x` / `y` for deliberate offsets.
+- **`dataSorting` is not available**: since Highcharts 13 it lives in
+  `modules/data-sorting.js`, which is not loaded. Sort the data array yourself.
+- **`stackLabels` formatters:** `this.isNegative` was removed in 13.1; test
+  `this.total < 0` instead.
+- **Legend symbols take `series.opacity`** (Highcharts 13, column-type series):
+  a legend-only proxy series hidden with `opacity: 0` shows an empty legend key.
+  Hide a proxy with `color: "transparent"` plus `legendSymbolColor: <key color>`.
+- **Unsorted line data needs `cropThreshold: Infinity`.** A `line` series whose
+  x values are not ascending (null-separated paths, contours, graticules) is
+  cropped by x range once it exceeds 300 points, which silently drops segments;
+  Highcharts 13 drops different ones than 12 did.
