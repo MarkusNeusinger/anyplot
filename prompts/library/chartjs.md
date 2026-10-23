@@ -141,8 +141,10 @@ light and dark — only chrome (text, grid, background) flips.
 const t = window.ANYPLOT_TOKENS;
 // single series
 backgroundColor: t.palette[0]            // #009E73 brand green
-// multi series: one palette position per category, never recycled (no `i % t.palette.length`)
-backgroundColor: categories.map((_, i) => t.palette[i])
+// multi series: one palette position per series, never recycled (no `i % t.palette.length`)
+const datasets = lines.map((line, i) => ({ label: line, backgroundColor: t.palette[i] /* , data: … */ }));
+// one dataset colored per category (pie, doughnut): the same rule per label
+backgroundColor: quarters.map((_, i) => t.palette[i])
 ```
 
 Never use `viridis`/`rainbow`/`jet` or arbitrary hex. For continuous color use

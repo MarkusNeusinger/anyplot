@@ -3238,6 +3238,11 @@ class TestAdaptRoute:
             ({"new": {**_adapt_record("new", "pass"), "status": "maybe"}}, "record_invalid"),
             ({"new": _adapt_record("new", "pass", v=True)}, "record_invalid"),
             ({"prev": ["fail"]}, "record_invalid"),
+            # The status without the two blocks it is derived from fails closed.
+            ({"new": {k: v for k, v in _adapt_record("new", "pass").items() if k != "static"}}, "record_invalid"),
+            ({"new": {k: v for k, v in _adapt_record("new", "pass").items() if k != "smoke"}}, "record_invalid"),
+            ({"new": {**_adapt_record("new", "pass"), "smoke": {"status": "ok"}}}, "record_invalid"),
+            ({"prev": {**_adapt_record("prev", "fail"), "static": "fail"}}, "record_invalid"),
             ({"new": "excluded"}, "excluded"),
             ({"prev": "excluded"}, "excluded"),
             ({"new": "unknown"}, "new_unknown"),
@@ -3382,13 +3387,24 @@ class TestAdaptRoute:
         ):
             assert adapt_assess(_adapt_inp(adapt=adapt), None).regression is False
 
-    def test_a_missing_static_or_smoke_block_reads_as_null(self):
+    def test_a_missing_static_or_smoke_block_fails_closed(self):
+        """The derived status needs both blocks; without them the record is malformed, never a pass."""
         record = _adapt_record("prev", "fail")
         del record["smoke"]
         record["static"] = {"status": "weird"}
         adapt = adapt_assess(_adapt_inp(adapt=_adapt(prev=record)), None)
-        assert adapt.prev == {"status": "fail", "static": None, "smoke": None}
-        assert adapt.counted  # the gate reads the derived status, never recomputes it
+        assert (adapt.why, adapt.counted, adapt.prev) == ("record_invalid", False, None)
+
+    def test_the_gate_reads_the_derived_status_and_never_recomputes_it(self):
+        record = _adapt_record("prev", "fail")
+        record["static"]["status"] = "pass"  # inconsistent with `fail`, but the record step owns the derivation
+        adapt = adapt_assess(_adapt_inp(adapt=_adapt(prev=record)), None)
+        assert adapt.prev == {
+            "status": "fail",
+            "static": "pass",
+            "smoke": _adapt_record("prev", "fail")["smoke"]["status"],
+        }
+        assert adapt.counted
 
     def test_identity_fractions_for_the_record(self):
         pair = _pair(light=_identity(new_size=(3160, 1760)), dark=_identity(0.123456789))

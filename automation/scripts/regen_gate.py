@@ -1008,6 +1008,12 @@ def adapt_record_problem(record: Any, side: str, spec_id: str, library: str) -> 
         return f"language is not {ADAPT_LANGUAGE}"
     if record.get("status") not in ADAPT_STATUSES:
         return "status is not pass, fail, unknown or excluded"
+    # The status is derived from these two; a record without them was not
+    # built by the record step, so it fails closed like any malformed one.
+    for key, allowed in (("static", ADAPT_STATIC_STATUSES), ("smoke", ADAPT_SMOKE_STATUSES)):
+        block = record.get(key)
+        if not isinstance(block, Mapping) or block.get("status") not in allowed:
+            return f"{key}.status is not one of {', '.join(allowed)}"
     return None
 
 
