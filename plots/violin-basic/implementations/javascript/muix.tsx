@@ -1,8 +1,9 @@
 // anyplot.ai
 // violin-basic: Basic Violin Plot
-// Library: muix 7.29.1 | JavaScript 22.23.2
+// Library: MUI X Charts | React | Node
+// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
 // Quality: 88/100 | Created: 2026-08-26
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
@@ -54,7 +55,6 @@ const groups = [
     // Bimodal: a struggling cluster and a thriving cluster — the shape a
     // plain box plot would flatten into a single, misleading median.
     sample: () => clamp(rand() < 0.45 ? randomNormal(rand, 62, 5) : randomNormal(rand, 87, 5), 50, 100),
-    note: "bimodal",
   },
   {
     name: "Class Group D",
@@ -100,8 +100,9 @@ const statsByCategory = valuesByCategory.map(boxStats);
 
 // --- Gaussian KDE per group, Silverman bandwidth, normalized to its own peak
 // so each violin shows shape (including Class Group C's two humps), not n.
+// Each group's grid spans only its own data range plus one bandwidth, so the
+// tails end near the data instead of trailing down to the axis floor.
 const GRID_N = 140;
-const grid = Array.from({ length: GRID_N }, (_, k) => Y_MIN + (k * (Y_MAX - Y_MIN)) / (GRID_N - 1));
 function stdOf(values) {
   const m = values.reduce((a, b) => a + b, 0) / values.length;
   const variance = values.reduce((a, b) => a + (b - m) ** 2, 0) / (values.length - 1);
@@ -110,16 +111,19 @@ function stdOf(values) {
 function kde(values) {
   const n = values.length;
   const bandwidth = 0.9 * stdOf(values) * Math.pow(n, -0.2);
+  const lo = Math.max(Y_MIN, Math.min(...values) - bandwidth);
+  const hi = Math.min(Y_MAX, Math.max(...values) + bandwidth);
+  const grid = Array.from({ length: GRID_N }, (_, k) => lo + (k * (hi - lo)) / (GRID_N - 1));
   const raw = grid.map((gy) => values.reduce((sum, v) => sum + Math.exp(-0.5 * ((gy - v) / bandwidth) ** 2), 0));
   const peak = Math.max(...raw);
-  return raw.map((v) => v / peak);
+  return { grid, density: raw.map((v) => v / peak) };
 }
-const densityByCategory = valuesByCategory.map(kde);
+const kdeByCategory = valuesByCategory.map(kde);
 
 // --- Mirrored violin (KDE on both sides) + inner quartile box --------------
-// The community package (7.29.1) has no violin/box-plot component. A custom
+// The community package has no violin/box-plot component. A custom
 // SVG layer positioned via the chart's own band/linear scale hooks reproduces
-// one while staying entirely within the community ChartContainer surface —
+// one while staying entirely within the community ChartsContainer surface —
 // the documented "composition" technique for chart types MUI X doesn't ship.
 function Violins() {
   const xScale = useXScale();
@@ -133,14 +137,13 @@ function Violins() {
       {categories.map((cat, i) => {
         const color = t.palette[i % t.palette.length];
         const center = xScale(cat) + bandwidth / 2;
-        const density = densityByCategory[i];
+        const { grid, density } = kdeByCategory[i];
 
         const leftSide = grid.map((gy, k) => `${center - density[k] * violinHalfWidth},${yScale(gy)}`);
         const rightSide = grid.map((gy, k) => `${center + density[k] * violinHalfWidth},${yScale(gy)}`).reverse();
         const violinPath = `M${leftSide.join(" L")} L${rightSide.join(" L")} Z`;
 
         const { q1, median, q3, whiskerLow, whiskerHigh } = statsByCategory[i];
-        const isDistinctive = Boolean(groups[i].note);
 
         return (
           <g key={cat}>
@@ -149,14 +152,9 @@ function Violins() {
               fill={color}
               fillOpacity={0.5}
               stroke={color}
-              strokeWidth={isDistinctive ? 2.75 : 1.75}
+              strokeWidth={1.75}
               strokeLinejoin="round"
             />
-            {isDistinctive && (
-              <text x={center} y={20} textAnchor="middle" fontSize={13} fontStyle="italic" fill={t.inkSoft}>
-                {groups[i].note}
-              </text>
-            )}
             <line x1={center} x2={center} y1={yScale(whiskerLow)} y2={yScale(whiskerHigh)} stroke={t.ink} strokeWidth={1.5} />
             <rect
               x={center - boxHalfWidth}
@@ -198,18 +196,19 @@ export default function Chart() {
       >
         {TITLE}
       </div>
-      <ChartContainer
+      <ChartsContainer
         width={window.ANYPLOT_SIZE.width}
         height={chartHeight}
         series={[]}
         skipAnimation
-        margin={{ top: 32, right: 50, bottom: 64, left: 90 }}
+        margin={{ top: 32, right: 50, bottom: 16, left: 24 }}
         xAxis={[
           {
             id: "groups",
             data: categories,
             scaleType: "band",
-            tickLabelStyle: { fontSize: 14 },
+            height: 48,
+            tickLabelStyle: { fontSize: 16 },
           },
         ]}
         yAxis={[
@@ -217,6 +216,7 @@ export default function Chart() {
             id: "scores",
             min: Y_MIN,
             max: Y_MAX,
+            width: 84,
             label: "Exam Score (%)",
             labelStyle: { fontSize: 16 },
             tickLabelStyle: { fontSize: 14 },
@@ -235,7 +235,7 @@ export default function Chart() {
         <Violins />
         <ChartsXAxis axisId="groups" disableTicks />
         <ChartsYAxis axisId="scores" />
-      </ChartContainer>
+      </ChartsContainer>
     </div>
   );
 }
