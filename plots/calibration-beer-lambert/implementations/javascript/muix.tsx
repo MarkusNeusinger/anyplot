@@ -2,7 +2,9 @@
 // calibration-beer-lambert: Beer-Lambert Calibration Curve
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 91/100 | Created: 2026-08-20
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
+import { ChartsWrapper } from "@mui/x-charts/ChartsWrapper";
+import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { LinePlot } from "@mui/x-charts/LineChart";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
@@ -13,17 +15,37 @@ import { useXScale, useYScale, useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 const THEME = window.ANYPLOT_THEME === "dark" ? "dark" : "light";
-// ANYPLOT_TOKENS has no "muted" anchor — derive it from default-style-guide.md
-// "Theme-adaptive Chrome" (tertiary text / confidence-band fill token).
 const INK_MUTED = THEME === "dark" ? "#A8A79F" : "#6B6A63";
 
-// --- Data: UV-Vis calibration standards for a drug-substance assay (243 nm) -
-// Blank plus six standards spanning the assay's working range.
-const concentration = [0, 2, 4, 6, 8, 10, 12]; // mg/L
-const absorbance = [0.008, 0.178, 0.325, 0.512, 0.671, 0.845, 1.029]; // dimensionless
+// Constants
+const T_CRIT_95 = 2.571; // two-tailed 95% critical value, t-distribution df=5
+const GRID_POINTS = 40;
 
-// --- Ordinary least-squares fit (Beer-Lambert: A = εlc, i.e. y = mx + b) ----
-const n = concentration.length;
+// Columns: set these to your data's column names
+const CONCENTRATION = "Concentration (mg/L)"; // role: concentration
+const ABSORBANCE = "Absorbance"; // role: absorbance
+const SAMPLE_TYPE = "Sample type"; // role: extra
+
+// Data: replace this block with your own records, one object per row
+const data = [
+  { [CONCENTRATION]: 0, [ABSORBANCE]: 0.008, [SAMPLE_TYPE]: "Calibration standards" },
+  { [CONCENTRATION]: 2, [ABSORBANCE]: 0.178, [SAMPLE_TYPE]: "Calibration standards" },
+  { [CONCENTRATION]: 4, [ABSORBANCE]: 0.325, [SAMPLE_TYPE]: "Calibration standards" },
+  { [CONCENTRATION]: 6, [ABSORBANCE]: 0.512, [SAMPLE_TYPE]: "Calibration standards" },
+  { [CONCENTRATION]: 8, [ABSORBANCE]: 0.671, [SAMPLE_TYPE]: "Calibration standards" },
+  { [CONCENTRATION]: 10, [ABSORBANCE]: 0.845, [SAMPLE_TYPE]: "Calibration standards" },
+  { [CONCENTRATION]: 12, [ABSORBANCE]: 1.029, [SAMPLE_TYPE]: "Calibration standards" },
+  { [CONCENTRATION]: null, [ABSORBANCE]: 0.6, [SAMPLE_TYPE]: "Unknown sample" },
+];
+
+// Plot: reads only data and the constants above
+const standards = data.filter((d) => d[CONCENTRATION] !== null);
+const unknownRow = data.find((d) => d[CONCENTRATION] === null) ?? standards[Math.floor(standards.length / 2)];
+const sampleTypes = [...new Set(data.map((d) => d[SAMPLE_TYPE]))];
+const concentration = standards.map((d) => d[CONCENTRATION]);
+const absorbance = standards.map((d) => d[ABSORBANCE]);
+
+const n = standards.length;
 const xMean = concentration.reduce((a, b) => a + b, 0) / n;
 const yMean = absorbance.reduce((a, b) => a + b, 0) / n;
 let sxy = 0;
@@ -43,14 +65,13 @@ for (let i = 0; i < n; i += 1) {
   ssTot += (absorbance[i] - yMean) ** 2;
 }
 const rSquared = 1 - ssRes / ssTot;
-const residualStdErr = Math.sqrt(ssRes / (n - 2));
-const T_CRIT_95 = 2.571; // two-tailed 95% critical value, t-distribution df=5
+const residualStdErr = Math.sqrt(ssRes / Math.max(1, n - 2));
 
-// --- 95% prediction interval band (single future observation, not the mean
-// response — includes the extra "+1" term that widens it beyond a CI band) --
-const GRID_POINTS = 40;
 const xMin = Math.min(...concentration);
 const xMax = Math.max(...concentration);
+const xPad = (xMax - xMin) * 0.03;
+const xDomainMin = xMin - xPad;
+const xDomainMax = xMax + xPad;
 const gridX = Array.from(
   { length: GRID_POINTS },
   (_, i) => xMin + ((xMax - xMin) * i) / (GRID_POINTS - 1),
@@ -63,18 +84,15 @@ const halfWidth = gridX.map(
     Math.sqrt(1 + 1 / n + (x - xMean) ** 2 / sxx),
 );
 const upperY = fittedY.map((y, i) => y + halfWidth[i]);
-// Clamp the lower bound at zero — absorbance has no physical negative range,
-// even though the statistical interval dips slightly below it near the blank.
 const lowerY = fittedY.map((y, i) => Math.max(0, y - halfWidth[i]));
 
-const scatterData = concentration.map((x, i) => ({
-  x,
-  y: absorbance[i],
+const scatterData = standards.map((d, i) => ({
+  x: d[CONCENTRATION],
+  y: d[ABSORBANCE],
   id: `std-${i}`,
 }));
 
-// --- Unknown sample: measured absorbance -> concentration read off the fit -
-const unknownAbsorbance = 0.6;
+const unknownAbsorbance = unknownRow[ABSORBANCE];
 const unknownConcentration = (unknownAbsorbance - intercept) / slope;
 
 const yAllValues = [...absorbance, ...upperY, unknownAbsorbance, 0];
@@ -82,9 +100,10 @@ const yPad = (Math.max(...yAllValues) - Math.min(...yAllValues)) * 0.08;
 const yDomainMin = Math.min(...yAllValues) - yPad;
 const yDomainMax = Math.max(...yAllValues) + yPad;
 
-const unknownColor = t.palette[1]; // lavender — distinct category from the standards
+const unitMatch = CONCENTRATION.match(/\(([^)]+)\)/);
+const unitSuffix = unitMatch ? ` ${unitMatch[1]}` : "";
 const equationLabel = `y = ${slope.toFixed(4)}x + ${intercept.toFixed(4)}   ·   R² = ${rSquared.toFixed(4)}`;
-const unknownLabel = `Unknown: A = ${unknownAbsorbance.toFixed(2)} → c ≈ ${unknownConcentration.toFixed(2)} mg/L`;
+const unknownLabel = `${sampleTypes[1] ?? "Unknown"}: A = ${unknownAbsorbance.toFixed(2)} → c ≈ ${unknownConcentration.toFixed(2)}${unitSuffix}`;
 
 const title = "calibration-beer-lambert · javascript · muix · anyplot.ai";
 
@@ -99,9 +118,6 @@ function PredictionBand() {
   return <path d={`M ${top} L ${bottom} Z`} fill={INK_MUTED} opacity={0.2} stroke="none" />;
 }
 
-// Dashed guide lines from the unknown sample down to the x-axis and across to
-// the y-axis, illustrating how the fit converts a measured absorbance into a
-// concentration — not a fake tooltip, just a static geometric annotation.
 function UnknownGuides() {
   const xScale = useXScale();
   const yScale = useYScale();
@@ -117,97 +133,119 @@ function UnknownGuides() {
   );
 }
 
-// --- Chart (default-exported component — the harness mounts it) -----------
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
+  const headerH = 104;
+  const chartH = height - headerH;
 
   return (
-    <ChartContainer
-      width={width}
-      height={height}
-      margin={{ top: 92, right: 64, bottom: 76, left: 132 }}
-      series={[
-        {
-          type: "scatter",
-          id: "standards",
-          label: "Calibration standards",
-          data: scatterData,
-          markerSize: 13,
-          color: t.palette[0],
-        },
-        {
-          type: "scatter",
-          id: "unknown",
-          label: "Unknown sample",
-          data: [{ x: unknownConcentration, y: unknownAbsorbance, id: "unknown" }],
-          markerSize: 15,
-          color: unknownColor,
-        },
-        {
-          type: "line",
-          id: "fit",
-          data: fittedY,
-          curve: "linear",
-          color: t.ink,
-          showMark: false,
-          disableHighlight: true,
-        },
-      ]}
-      xAxis={[
-        {
-          data: gridX,
-          scaleType: "linear",
-          min: xMin,
-          max: xMax,
-          label: "Concentration (mg/L)",
-          tickLabelStyle: { fontSize: 14 },
-          labelStyle: { fontSize: 16 },
-        },
-      ]}
-      yAxis={[
-        {
-          scaleType: "linear",
-          min: yDomainMin,
-          max: yDomainMax,
-          label: "Absorbance",
-          tickLabelStyle: { fontSize: 14 },
-          labelStyle: { fontSize: 16 },
-        },
-      ]}
-      skipAnimation
-    >
-      <ChartsGrid horizontal />
-      <PredictionBand />
-      <LinePlot skipAnimation slotProps={{ line: { style: { strokeWidth: 3 } } }} />
-      <UnknownGuides />
-      <ChartsXAxis />
-      <ChartsYAxis />
-      <ScatterPlot />
-      <ChartsLegend
-        direction="row"
-        position={{ horizontal: "right", vertical: "top" }}
-        itemMarkWidth={14}
-        itemMarkHeight={14}
-        labelStyle={{ fontSize: 13, fill: t.inkSoft }}
-      />
-      <text x={width / 2} y={44} textAnchor="middle" fontSize={30} fontWeight={600} fill={t.ink}>
-        {title}
-      </text>
-      <text x={140} y={78} fontSize={15} fill={t.inkSoft}>
-        {equationLabel}
-      </text>
-      <text x={140} y={98} fontSize={13} fill={INK_MUTED}>
-        Shaded band: 95% prediction interval · {unknownLabel}
-      </text>
-      <text
-        x={width - 64}
-        y={height - 30}
-        textAnchor="end"
-        fontSize={12}
-        fill={INK_MUTED}
+    <div style={{ width, height, display: "flex", flexDirection: "column" }}>
+      <div
+        style={{
+          height: headerH,
+          padding: "16px 64px 0 132px",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+        }}
       >
-        n = {n} standards (incl. blank)
-      </text>
-    </ChartContainer>
+        <div
+          style={{
+            fontSize: 28,
+            fontWeight: 600,
+            color: t.ink,
+            textAlign: "center",
+            marginBottom: 8,
+          }}
+        >
+          {title}
+        </div>
+        <div style={{ fontSize: 15, color: t.inkSoft }}>{equationLabel}</div>
+        <div style={{ fontSize: 13, color: INK_MUTED, marginTop: 2 }}>
+          Shaded band: 95% prediction interval · {unknownLabel}
+        </div>
+      </div>
+      <ChartsDataProvider
+        width={width}
+        height={chartH - 40}
+        margin={{ top: 16, right: 64, bottom: 24, left: 48 }}
+        series={[
+          {
+            type: "scatter",
+            id: "standards",
+            label: sampleTypes[0],
+            data: scatterData,
+            markerSize: 13,
+            color: t.palette[0],
+          },
+          {
+            type: "scatter",
+            id: "unknown",
+            label: sampleTypes[1] ?? "Unknown sample",
+            data: [{ x: unknownConcentration, y: unknownAbsorbance, id: "unknown" }],
+            markerSize: 15,
+            color: t.palette[1],
+          },
+          {
+            type: "line",
+            id: "fit",
+            data: fittedY,
+            curve: "linear",
+            color: t.ink,
+            showMark: false,
+            disableHighlight: true,
+          },
+        ]}
+        xAxis={[
+          {
+            data: gridX,
+            scaleType: "linear",
+            min: xDomainMin,
+            max: xDomainMax,
+            label: CONCENTRATION,
+            height: 72,
+            tickLabelStyle: { fontSize: 14 },
+            labelStyle: { fontSize: 16 },
+          },
+        ]}
+        yAxis={[
+          {
+            scaleType: "linear",
+            min: yDomainMin,
+            max: yDomainMax,
+            label: ABSORBANCE,
+            width: 84,
+            tickLabelStyle: { fontSize: 14 },
+            labelStyle: { fontSize: 16 },
+          },
+        ]}
+        skipAnimation
+      >
+        <ChartsWrapper
+          legendPosition={{ horizontal: "end", vertical: "top" }}
+          legendDirection="horizontal"
+        >
+          <ChartsLegend sx={{ fontSize: 14, color: t.inkSoft, pr: 8 }} />
+          <ChartsSurface sx={{ "& .MuiLineChart-line": { strokeWidth: 3 } }}>
+            <ChartsGrid horizontal />
+            <PredictionBand />
+            <LinePlot skipAnimation />
+            <UnknownGuides />
+            <ChartsXAxis />
+            <ChartsYAxis />
+            <ScatterPlot />
+            <text
+              x={width - 64}
+              y={chartH - 52}
+              textAnchor="end"
+              fontSize={12}
+              fill={INK_MUTED}
+            >
+              n = {n} standards (incl. blank)
+            </text>
+          </ChartsSurface>
+        </ChartsWrapper>
+      </ChartsDataProvider>
+    </div>
   );
 }
