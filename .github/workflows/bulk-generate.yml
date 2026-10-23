@@ -67,6 +67,11 @@ on:
         required: false
         type: string
         default: ''
+      source_model:
+        description: "Adopt mode only: the model that wrote the adopted implementations (e.g. gemini-4-argon), recorded as generated_by. Only with source_ref; empty keeps generated_by: adopted:<ref>."
+        required: false
+        type: string
+        default: ''
 
 env:
   ALL_LIBRARIES: "matplotlib seaborn plotly bokeh altair plotnine pygal highcharts letsplot ggplot2 makie chartjs d3 echarts muix"
@@ -163,14 +168,33 @@ jobs:
           DRY_RUN: ${{ inputs.dry_run }}
           PACE_SECONDS: ${{ inputs.pace_seconds || ((inputs.model == 'sonnet' || inputs.model == 'haiku') && '120' || '180') }}
           SOURCE_REF: ${{ inputs.source_ref }}
+          SOURCE_MODEL: ${{ inputs.source_model }}
         run: |
+          # Checked before anything echoes them, with impl-generate's rules:
+          # a newline in a raw dispatch value would start a workflow command,
+          # and a bad value would otherwise fail every dispatched run one by
+          # one. The generate job needs this one, so its dispatch step only
+          # sees values that passed. Both still go out verbatim, and
+          # impl-generate normalizes and checks them again.
+          ref="${SOURCE_REF#origin/}"
+          if [ -n "$SOURCE_REF" ] && { ! [[ "$ref" =~ ^[A-Za-z0-9][A-Za-z0-9._/-]{0,79}$ ]] || [[ "$ref" == *..* ]]; }; then
+            echo "::error::source_ref is not a branch, tag or commit SHA (letters, digits, . _ / -, at most 80 characters)"
+            exit 1
+          fi
+          if [ -n "$SOURCE_MODEL" ] && ! [[ "$SOURCE_MODEL" =~ ^[A-Za-z0-9][A-Za-z0-9._-]{0,39}$ ]]; then
+            echo "::error::source_model is not a model name (letters, digits, . _ -, at most 40 characters)"
+            exit 1
+          fi
+
           echo "## Bulk Generation Plan"
           echo ""
           echo "**Total items:** $COUNT"
           echo "**Pacing:** ${PACE_SECONDS}s between dispatches (0 = fire all)"
           echo "**Dry run:** $DRY_RUN"
           if [ -n "$SOURCE_REF" ]; then
-            echo "**Adopt mode:** every file is taken from \`${SOURCE_REF}\` instead of being generated"
+            echo "**Adopt mode:** every file is taken from \`${SOURCE_REF}\` instead of being generated${SOURCE_MODEL:+ (written by ${SOURCE_MODEL})}"
+          elif [ -n "$SOURCE_MODEL" ]; then
+            echo "::warning::source_model is set without source_ref; every impl-generate run ignores it"
           fi
           echo ""
           echo "### Items to generate:"
@@ -212,9 +236,11 @@ jobs:
           MODEL: ${{ inputs.model || 'auto' }}
           CHANGE_REQUESTS: ${{ inputs.change_requests || '{}' }}
           REGEN_GATE: ${{ inputs.regen_gate == false && 'false' || 'true' }}
-          # Passed through verbatim; impl-generate validates it and forces the
-          # regeneration whenever it is set.
+          # Passed through verbatim; impl-generate validates both, forces the
+          # regeneration whenever source_ref is set, and ignores source_model
+          # without it.
           SOURCE_REF: ${{ inputs.source_ref }}
+          SOURCE_MODEL: ${{ inputs.source_model }}
         run: |
           set -u
 
@@ -229,7 +255,7 @@ jobs:
             CHANGE_REQUESTS='{}'
           fi
           flagged_count=$(echo "$CHANGE_REQUESTS" | jq 'length')
-          echo "::notice::Dispatching $total item(s) with ${pace}s pacing between each (model=${MODEL}, change_requests for ${flagged_count} libs, source_ref=${SOURCE_REF:-none})"
+          echo "::notice::Dispatching $total item(s) with ${pace}s pacing between each (model=${MODEL}, change_requests for ${flagged_count} libs, source_ref=${SOURCE_REF:-none}, source_model=${SOURCE_MODEL:-none})"
 
           i=0
           failed=0
@@ -269,7 +295,8 @@ jobs:
                   -f model="${MODEL}" \
                   -f change_request="${HINT}" \
                   -f regen_gate="${REGEN_GATE}" \
-                  -f source_ref="${SOURCE_REF}" && dispatched=1 && break
+                  -f source_ref="${SOURCE_REF}" \
+                  -f source_model="${SOURCE_MODEL}" && dispatched=1 && break
               else
                 gh workflow run impl-generate.yml --repo "${{ github.repository }}" \
                   -f specification_id="${SPEC_ID}" \
@@ -277,7 +304,8 @@ jobs:
                   -f model="${MODEL}" \
                   -f change_request="${HINT}" \
                   -f regen_gate="${REGEN_GATE}" \
-                  -f source_ref="${SOURCE_REF}" && dispatched=1 && break
+                  -f source_ref="${SOURCE_REF}" \
+                  -f source_model="${SOURCE_MODEL}" && dispatched=1 && break
               fi
               echo "::warning::Dispatch attempt $attempt failed for ${SPEC_ID}/${LIBRARY}, retrying in 10s"
               sleep 10

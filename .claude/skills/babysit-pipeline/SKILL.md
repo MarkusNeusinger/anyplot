@@ -44,7 +44,9 @@ impl-generate auto-closes any existing open PR for the same spec/lib.
 
 `-f source_ref=<branch|tag|sha>` (adopt mode, either workflow) takes each
 implementation file from that ref instead of generating it, always as
-`regen:forced`. An "Adoption Failed" issue comment is never retried: fix
+`regen:forced`. Add `-f source_model=<model>` (e.g. `gemini-4-argon`)
+when you know who wrote the code: it becomes the metadata's
+`generated_by`. An "Adoption Failed" issue comment is never retried: fix
 the file on the ref, then re-dispatch.
 
 ## 2 · Monitor — use the bundled scripts, don't hand-roll
