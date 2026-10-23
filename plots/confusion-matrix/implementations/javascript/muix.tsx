@@ -2,7 +2,7 @@
 // anyplot.ai
 // confusion-matrix: Confusion Matrix Heatmap
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 89/100 | Created: 2026-09-04
+// Quality: pending | Created: 2026-09-04
 
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
