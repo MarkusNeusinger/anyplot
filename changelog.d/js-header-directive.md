@@ -9,4 +9,4 @@
   it, and a stale second header block among the leading lines is dropped. The
   five JavaScript library prompts now place the directive directly below the
   header. The stale block was removed from the 182 catalogue files that carried
-  it (139 muix, 19 Highcharts, 14 ECharts, 9 D3, 1 Chart.js).
+  it (139 muix, 19 Highcharts, 14 ECharts, 9 D3, 1 Chart.js). (#12299)
