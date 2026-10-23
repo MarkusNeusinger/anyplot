@@ -7,6 +7,7 @@ probe harness with this interpreter, so every run here is a real subprocess.
 import asyncio
 import base64
 import os
+import resource
 import signal
 import stat
 import time
@@ -148,13 +149,20 @@ class TestRender:
         executor = SandboxExecutor(replace(config, kill_grace_s=0.2))
         monkeypatch.setattr(executor_module, "READER_GRACE_S", 0.2)
         monkeypatch.setattr(executor_module.os, "killpg", lambda pid, sig: None)  # the kill has no effect
+        # The fake launcher execs the harness, so the survivor carries the run's RLIMIT_CPU, which a real
+        # `sandbox do` on the host never does. With the one second of a one-second job, the kernel's SIGKILL
+        # ended the "stuck" launcher inside the grace window whenever the harness start (matplotlib, a fresh
+        # font cache) spent that second, as it did on a loaded CI runner (2026-10-23). The full host cap
+        # leaves the survivor nothing but the test's own kill to die of.
+        monkeypatch.setattr(executor_module, "run_cpu_seconds", lambda limit_s, timeout_s: limit_s)
 
         run = await executor.run_theme(job(SLEEPER, timeout_s=1.0), "light")
 
         assert run.timed_out and executor.stuck == 1
+        survivor = executor._stuck[0]
+        assert resource.prlimit(survivor.pid, resource.RLIMIT_CPU) == (config.rlimit_cpu_s,) * 2
         with pytest.raises(Unavailable, match="stuck"):
             await executor.run_theme(job(PLOT), "light")
-        survivor = executor._stuck[0]
         os.kill(survivor.pid, signal.SIGKILL)
         await survivor.wait()
         assert executor.stuck == 0
