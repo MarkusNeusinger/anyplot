@@ -1,13 +1,9 @@
+//# anyplot-orientation: square
 // anyplot.ai
 // hexbin-basic: Basic Hexbin Plot
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 88/100 | Created: 2026-08-25
-//# anyplot-orientation: square
-// anyplot.ai
-// hexbin-basic: Basic Hexbin Plot
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-08-25
+
 import { ScatterChart } from "@mui/x-charts/ScatterChart";
 import { ContinuousColorLegend } from "@mui/x-charts/ChartsLegend";
 import Box from "@mui/material/Box";
@@ -15,73 +11,82 @@ import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
 
-// Deterministic LCG (seed 42) — no Math.random() in the browser harness
-function makeLcg(seed) {
-  let state = seed >>> 0;
-  return () => {
-    state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
-    return state / 4294967296;
-  };
-}
-const rng = makeLcg(42);
+// Constants
+const HEX_RADIUS_SHARE = 0.075; // hexagon radius as a share of the plotted half-width
 
-// Box-Muller standard normal draw, fed by the LCG above.
-function gaussian() {
-  const u1 = Math.max(rng(), 1e-9);
-  const u2 = rng();
-  return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-}
+// Columns: set these to your data's column names
+const X = "Distance east of plaza (m)"; // role: x
+const Y = "Distance north of plaza (m)"; // role: y
 
-// --- Data: pedestrian GPS pings across a city district ---------------------
-// Three named foot-traffic hotspots plus a wide, low-weight ambient cluster
-// standing in for baseline city-wide movement — the kind of dataset where a
-// scatter plot degenerates into a solid smear of overlapping points and a
-// hexbin is the tool that recovers the density structure.
-const DOMAIN = 60; // both axes span [-DOMAIN, DOMAIN] meters from the plaza
-const CLUSTERS = [
-  { cx: 0, cy: 6, sx: 9, sy: 8, weight: 0.42 }, // Central Plaza
-  { cx: 34, cy: -24, sx: 7, sy: 10, weight: 0.28 }, // Transit Hub
-  { cx: -31, cy: 21, sx: 11, sy: 6, weight: 0.22 }, // Waterfront Promenade
-  { cx: 0, cy: 0, sx: 30, sy: 26, weight: 0.08 }, // Ambient foot traffic
-];
-
-const POINT_COUNT = 30000;
-const points = [];
-let attempts = 0;
-while (points.length < POINT_COUNT && attempts < POINT_COUNT * 4) {
-  attempts += 1;
-  const r = rng();
-  let acc = 0;
-  let cluster = CLUSTERS[CLUSTERS.length - 1];
-  for (let c = 0; c < CLUSTERS.length; c += 1) {
-    acc += CLUSTERS[c].weight;
-    if (r <= acc) {
-      cluster = CLUSTERS[c];
-      break;
-    }
+// Data: replace this block with your own records, one object per row
+// Pedestrian GPS pings across a city district (three foot-traffic hotspots plus
+// an ambient background cluster).
+const data = (() => {
+  function makeLcg(seed: number) {
+    let state = seed >>> 0;
+    return () => {
+      state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
+      return state / 4294967296;
+    };
   }
-  const x = cluster.cx + gaussian() * cluster.sx;
-  const y = cluster.cy + gaussian() * cluster.sy;
-  if (Math.abs(x) > DOMAIN || Math.abs(y) > DOMAIN) continue;
-  points.push({ x, y });
-}
+  const rng = makeLcg(42);
 
-// --- Hexagonal binning -------------------------------------------------
-// HEX_RADIUS (data-space units) is the hexbin equivalent of a "gridsize"
-// knob: smaller radius -> more, smaller hexagons; larger radius -> coarser,
-// smoother density. Offset-grid math follows the standard flat/pointy-top
-// hexbin layout (as used by d3-hexbin): columns spaced `r*sqrt(3)` apart,
-// rows spaced `1.5r` apart, odd rows offset by half a column.
-const HEX_RADIUS = 4.5;
+  function gaussian() {
+    const u1 = Math.max(rng(), 1e-9);
+    const u2 = rng();
+    return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+  }
+
+  const domainLimit = 60;
+  const clusters = [
+    { cx: 0, cy: 6, sx: 9, sy: 8, weight: 0.42 }, // Central Plaza
+    { cx: 34, cy: -24, sx: 7, sy: 10, weight: 0.28 }, // Transit Hub
+    { cx: -31, cy: 21, sx: 11, sy: 6, weight: 0.22 }, // Waterfront Promenade
+    { cx: 0, cy: 0, sx: 30, sy: 26, weight: 0.08 }, // Ambient foot traffic
+  ];
+
+  const pointCount = 30000;
+  const rows: { [X]: number; [Y]: number }[] = [];
+  let attempts = 0;
+  while (rows.length < pointCount && attempts < pointCount * 4) {
+    attempts += 1;
+    const r = rng();
+    let acc = 0;
+    let cluster = clusters[clusters.length - 1];
+    for (let c = 0; c < clusters.length; c += 1) {
+      acc += clusters[c].weight;
+      if (r <= acc) {
+        cluster = clusters[c];
+        break;
+      }
+    }
+    const x = cluster.cx + gaussian() * cluster.sx;
+    const y = cluster.cy + gaussian() * cluster.sy;
+    if (Math.abs(x) > domainLimit || Math.abs(y) > domainLimit) continue;
+    rows.push({ [X]: x, [Y]: y });
+  }
+  return rows;
+})();
+
+// Plot: reads only data and the constants above
+const DOMAIN = Math.ceil(
+  Math.max(...data.map((d) => Math.max(Math.abs(d[X]), Math.abs(d[Y])))),
+);
+const HEX_RADIUS = DOMAIN * HEX_RADIUS_SHARE;
 const hexDx = HEX_RADIUS * Math.sqrt(3);
 const hexDy = HEX_RADIUS * 1.5;
 
-function hexBin(rawPoints) {
-  const binsById = new Map();
-  rawPoints.forEach(({ x: px, y: py }) => {
+function hexBin(rawPoints: typeof data) {
+  const binsById = new Map<
+    string,
+    { id: string; cx: number; cy: number; count: number }
+  >();
+  rawPoints.forEach((row) => {
+    const px = row[X];
+    const py = row[Y];
     const py1 = py / hexDy;
     let pj = Math.round(py1);
-    let px1 = px / hexDx - (pj & 1) / 2;
+    const px1 = px / hexDx - (pj & 1) / 2;
     let pi = Math.round(px1);
     const py2 = py1 - pj;
     if (Math.abs(py2) * 3 > 1) {
@@ -111,22 +116,35 @@ function hexBin(rawPoints) {
   return Array.from(binsById.values());
 }
 
-const hexBins = hexBin(points);
+const hexBins = hexBin(data);
 const binCountMax = Math.max(...hexBins.map((b) => b.count));
 const binCountMin = Math.min(...hexBins.map((b) => b.count));
 
-// Color on a log scale — a handful of hotspot bins vastly outnumber the
-// sparse fringe bins, so log contrast separates the density tiers far
-// better than a linear ramp would.
+// Color on a log scale so both dense cores and sparse fringes remain distinct.
 const colorDomainMin = Math.log1p(binCountMin);
 const colorDomainMax = Math.log1p(binCountMax);
 
-// Every hex cell that overlaps the domain, occupied or not — filling in the
-// zero-count cells (instead of only plotting occupied bins) avoids blank
-// "swiss cheese" gaps in the sparse fringe; empty cells get a faint fixed
-// tint below instead of participating in the log-count color scale.
+function mixHex(hexA: string, hexB: string, ratio: number) {
+  const a = parseInt(hexA.slice(1), 16);
+  const b = parseInt(hexB.slice(1), 16);
+  const channel = (shift: number) => {
+    const av = (a >> shift) & 255;
+    const bv = (b >> shift) & 255;
+    return Math.round(av + (bv - av) * Math.min(1, Math.max(0, ratio)));
+  };
+  return `#${[16, 8, 0].map((shift) => channel(shift).toString(16).padStart(2, "0")).join("")}`;
+}
+
+function logSequentialColor(ratio: number) {
+  const count = binCountMin + ratio * (binCountMax - binCountMin);
+  const logRatio =
+    (Math.log1p(count) - colorDomainMin) /
+    (colorDomainMax - colorDomainMin || 1);
+  return mixHex(t.seq[0], t.seq[1], logRatio);
+}
+
 function fullHexGrid() {
-  const cells = [];
+  const cells: { id: string; cx: number; cy: number }[] = [];
   const rowPad = 1;
   const pjMin = Math.floor(-DOMAIN / hexDy) - rowPad;
   const pjMax = Math.ceil(DOMAIN / hexDy) + rowPad;
@@ -152,24 +170,16 @@ const hexBinPoints = fullHexGrid().map((cell) => {
     id: cell.id,
     x: cell.cx,
     y: cell.cy,
-    z: count > 0 ? Math.log1p(count) : colorDomainMin,
+    z: count > 0 ? count : binCountMin,
     isEmpty: count === 0,
   };
 });
 
-// Community @mui/x-charts has no hexbin/heatmap component (Pro-only) — a
-// ScatterChart with a custom hexagon-path marker, positioned from the
-// underlying linear scales, reproduces a true hexagonal tiling instead of
-// circular bubbles.
-function HexCell(props) {
+function HexCell(props: any) {
   const { series, xScale, yScale, colorGetter, color } = props;
   const radiusX = Math.abs(xScale(HEX_RADIUS) - xScale(0));
   const radiusY = Math.abs(yScale(HEX_RADIUS) - yScale(0));
 
-  // Bins whose data-space center lands just past [-DOMAIN, DOMAIN] (the
-  // offset hex grid doesn't align exactly to the axis edge) would otherwise
-  // draw over the axis ticks/labels — clip the whole layer to the plot's own
-  // drawing rect, read straight from the scales' pixel ranges.
   const [xr0, xr1] = xScale.range();
   const [yr0, yr1] = yScale.range();
   const clipX = Math.min(xr0, xr1);
@@ -184,7 +194,7 @@ function HexCell(props) {
           <rect x={clipX} y={clipY} width={clipWidth} height={clipHeight} />
         </clipPath>
       </defs>
-      {series.data.map((point, i) => {
+      {series.data.map((point: any, i: number) => {
         const ccx = xScale(point.x);
         const ccy = yScale(point.y);
         let d = "";
@@ -209,10 +219,10 @@ function HexCell(props) {
   );
 }
 
-// --- Chart (default-exported component — the harness mounts it) -----------
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
   const titleHeight = 70;
+  const captionHeight = 56;
 
   return (
     <Box sx={{ width, height, bgcolor: t.pageBg, display: "flex", flexDirection: "column" }}>
@@ -230,85 +240,89 @@ export default function Chart() {
       >
         hexbin-basic · javascript · muix · anyplot.ai
       </Typography>
-      <Box sx={{ position: "relative", flex: 1 }}>
-        <ScatterChart
-          width={width}
-          height={height - titleHeight}
-          series={[
-            {
-              id: "hex-density",
-              type: "scatter",
-              data: hexBinPoints,
-              label: "Ping count",
-              zAxisId: "count",
+      <ScatterChart
+        width={width}
+        height={height - titleHeight - captionHeight}
+        skipAnimation
+        disableHitArea
+        series={[
+          {
+            id: "hex-density",
+            type: "scatter",
+            data: hexBinPoints,
+            label: "Ping count",
+            zAxisId: "count",
+          },
+        ]}
+        xAxis={[
+          {
+            height: 68,
+            scaleType: "linear",
+            min: -DOMAIN,
+            max: DOMAIN,
+            label: X,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
+          },
+        ]}
+        yAxis={[
+          {
+            width: 88,
+            scaleType: "linear",
+            min: -DOMAIN,
+            max: DOMAIN,
+            label: Y,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
+          },
+        ]}
+        zAxis={[
+          {
+            id: "count",
+            min: binCountMin,
+            max: binCountMax,
+            colorMap: {
+              type: "continuous",
+              min: binCountMin,
+              max: binCountMax,
+              color: logSequentialColor,
             },
-          ]}
-          xAxis={[
-            {
-              scaleType: "linear",
-              min: -DOMAIN,
-              max: DOMAIN,
-              label: "Distance east of plaza (m)",
-              tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-              labelStyle: { fontSize: 16, fill: t.ink },
+          },
+        ]}
+        margin={{ top: 30, right: 134, bottom: 24, left: 80 }}
+        slots={{ scatter: HexCell, legend: ContinuousColorLegend }}
+        slotProps={{
+          legend: {
+            axisId: "count",
+            axisDirection: "z",
+            direction: "horizontal",
+            position: { vertical: "bottom", horizontal: "center" },
+            thickness: 16,
+            sx: {
+              width: "45%",
+              color: t.inkSoft,
+              fontSize: 14,
+              fontFamily: "inherit",
             },
-          ]}
-          yAxis={[
-            {
-              scaleType: "linear",
-              min: -DOMAIN,
-              max: DOMAIN,
-              label: "Distance north of plaza (m)",
-              tickFontSize: 42,
-              tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-              labelStyle: { fontSize: 16, fill: t.ink },
-            },
-          ]}
-          zAxis={[
-            {
-              id: "count",
-              min: colorDomainMin,
-              max: colorDomainMax,
-              colorMap: {
-                type: "continuous",
-                min: colorDomainMin,
-                max: colorDomainMax,
-                color: [t.seq[0], t.seq[1]],
-              },
-            },
-          ]}
-          margin={{ top: 40, right: 90, bottom: 90, left: 190 }}
-          slots={{ scatter: HexCell }}
-          slotProps={{ legend: { hidden: true } }}
-          skipAnimation
-        >
-          <ContinuousColorLegend
-            axisId="count"
-            axisDirection="z"
-            direction="row"
-            position={{ horizontal: "middle", vertical: "bottom" }}
-            length="45%"
-            thickness={16}
-            minLabel={`${binCountMin}`}
-            maxLabel={`${binCountMax}`}
-            labelStyle={{ fontSize: 14, fill: t.inkSoft, fontFamily: "inherit" }}
-          />
-        </ScatterChart>
-        <Typography
-          sx={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            bottom: 26,
-            textAlign: "center",
-            color: t.inkSoft,
-            fontSize: 14,
-            fontFamily: "inherit",
-          }}
-        >
-          Ping count per bin (log scale)
-        </Typography>
-      </Box>
+          } as any,
+        }}
+        sx={{
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+        }}
+      />
+      <Typography
+        sx={{
+          height: captionHeight,
+          pt: "6px",
+          textAlign: "center",
+          color: t.inkSoft,
+          fontSize: 14,
+          fontFamily: "inherit",
+        }}
+      >
+        Ping count per bin (log scale)
+      </Typography>
     </Box>
   );
 }
