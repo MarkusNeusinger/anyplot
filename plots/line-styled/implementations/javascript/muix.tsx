@@ -2,7 +2,7 @@
 // line-styled: Styled Line Plot
 // Library: MUI X Charts | React | Node
 // License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: 91/100 | Created: 2026-09-05
+// Quality: pending | Created: 2026-09-05
 import { LineChart } from "@mui/x-charts/LineChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 
