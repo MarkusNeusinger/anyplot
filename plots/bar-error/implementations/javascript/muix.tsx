@@ -12,7 +12,6 @@ import { useXScale, useYScale } from "@mui/x-charts/hooks";
 const t = window.ANYPLOT_TOKENS;
 
 // Constants
-const SCORE_SCALE_MAX = 10;
 const X_PAD_SHARE = 0.08;
 const CAP_WIDTH_SHARE = 0.24;
 
@@ -34,10 +33,17 @@ const data = [
 // Plot: reads only data and the constants above
 const channels = data.map((d) => d[CATEGORY]);
 const scores = data.map((d) => d[VALUE]);
-const upperBounds = data.map((d) => d[VALUE] + d[ERROR]);
-const maxUpper = Math.max(...upperBounds);
-const xMax = Math.max(SCORE_SCALE_MAX, maxUpper * (1 + X_PAD_SHARE));
-const totalRespondents = data.reduce((sum, d) => sum + d[SAMPLE_SIZE], 0);
+const maxUpper = Math.max(...data.map((d) => d[VALUE] + d[ERROR]));
+const minLower = Math.min(...data.map((d) => d[VALUE] - d[ERROR]));
+const xMax = maxUpper * (1 + X_PAD_SHARE);
+const xMin = Math.min(0, minLower * (1 + X_PAD_SHARE));
+const formatValue = (v: number) => v.toLocaleString("en-US");
+const minSample = Math.min(...data.map((d) => d[SAMPLE_SIZE]));
+const maxSample = Math.max(...data.map((d) => d[SAMPLE_SIZE]));
+const sampleText =
+  minSample === maxSample
+    ? minSample.toLocaleString("en-US")
+    : `${minSample.toLocaleString("en-US")}–${maxSample.toLocaleString("en-US")}`;
 
 function ErrorBars() {
   const xScale = useXScale("x") as any;
@@ -50,7 +56,7 @@ function ErrorBars() {
       {data.map((row) => {
         const channel = row[CATEGORY];
         const cy = yScale(channel) + bw / 2;
-        const xLow = xScale(Math.max(0, row[VALUE] - row[ERROR]));
+        const xLow = xScale(row[VALUE] - row[ERROR]);
         const xHigh = xScale(row[VALUE] + row[ERROR]);
         return (
           <g key={channel}>
@@ -88,7 +94,7 @@ function ErrorBars() {
               fontWeight={600}
               fill={t.inkSoft}
             >
-              {`${row[VALUE].toFixed(1)} ± ${row[ERROR].toFixed(2)}`}
+              {`${formatValue(row[VALUE])} ± ${formatValue(row[ERROR])}`}
             </text>
           </g>
         );
@@ -98,7 +104,7 @@ function ErrorBars() {
 }
 
 const TITLE = "bar-error · javascript · muix · anyplot.ai";
-const SUBTITLE = `${VALUE} with ${ERROR} whiskers · n = ${totalRespondents.toLocaleString("en-US")} (${SAMPLE_SIZE.toLowerCase()})`;
+const SUBTITLE = `${CATEGORY}: ${channels.length} · ${SAMPLE_SIZE}: ${sampleText}`;
 const HEADER_H = 100;
 
 export default function Chart() {
@@ -197,8 +203,9 @@ export default function Chart() {
           {
             id: "x",
             scaleType: "linear",
-            min: 0,
+            min: xMin,
             max: xMax,
+            valueFormatter: formatValue,
             height: 68,
             label: VALUE,
             labelStyle: { fontSize: 16, fill: t.ink, fontWeight: 500 },
