@@ -50,6 +50,22 @@ ax.bar(x, y)
 plt.scatter(x, y)
 ```
 
+## Data block
+
+The file follows the six zones of `prompts/adaptable-code.md`, whose full example is a matplotlib bar chart. matplotlib reads the tidy `df` through the column constants and never titles an axis from a column name, so set the axis labels and the legend title from the constants. Groups come from the data in its own order, each with its palette position:
+
+```python
+# Plot: reads only df and the constants above
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+for i, (region, rows) in enumerate(df.groupby(REGION, sort=False)):
+    ax.plot(rows[MONTH], rows[SALES], color=IMPRINT_PALETTE[i], linewidth=2.5, label=region)
+ax.set_xlabel(MONTH, fontsize=10, color=INK)
+ax.set_ylabel(SALES, fontsize=10, color=INK)
+ax.legend(title=REGION, fontsize=8)
+```
+
+Ticks and limits come from the data too: `ax.set_xticks(x, table.index)` after a `pivot_table(..., sort=False)`, `ax.set_ylim(0, df[SALES].max() * 1.15)`, never a typed list or number.
+
 ## Save
 
 ```python
@@ -121,8 +137,9 @@ ANYPLOT_AMBER = '#DDCC77'  # warning / caution
 # Single-series: always position 1 (brand green)
 color = IMPRINT_PALETTE[0]  # '#009E73'
 
-# Multi-series: take the first N colors in order, don't cherry-pick
-ax.set_prop_cycle(color=IMPRINT_PALETTE[:N])
+# Multi-series: list all eight; the cycle hands out the first n in order, so don't cherry-pick
+# and don't slice the list to the sample's group count
+ax.set_prop_cycle(color=IMPRINT_PALETTE)
 
 # Continuous data — only the two Imprint palette-derived cmaps are allowed
 # (no viridis/cividis/BrBG/Reds/Blues/Greens/jet/hsv/rainbow):

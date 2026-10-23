@@ -43,12 +43,16 @@ pygal.Histogram()    # Histogram
 ## Add Data
 
 ```python
-chart.add('Series 1', [1, 2, 3, 4])
-chart.add('Series 2', [4, 3, 2, 1])
-
-# X-axis labels
-chart.x_labels = ['A', 'B', 'C', 'D']
+# Plot: pygal takes plain lists, built from df below the Data block
+table = df.pivot_table(index=QUARTER, columns=PRODUCT_LINE, values=SALES, sort=False)
+chart.x_labels = table.index.tolist()
+for line in table.columns:
+    chart.add(str(line), table[line].tolist())
 ```
+
+## Data block
+
+The file follows the six zones of `prompts/adaptable-code.md`: the block still ends in a tidy `df`. pygal takes plain Python lists, never a DataFrame, so build them from `df` below the block with `.tolist()`: `df[SALES].tolist()` for one series, a `pivot_table(..., sort=False)` per group as above, and `list(zip(df[STUDY_HOURS], df[EXAM_SCORE]))` for the `(x, y)` points of an XY chart. pygal never titles an axis from a column name, so pass `x_title=QUARTER, y_title=SALES` from the constants. The palette goes in whole through `Style(colors=IMPRINT_PALETTE)`; pygal hands out the first n in order.
 
 ## Save
 

@@ -15,11 +15,26 @@ LetsPlot.setup_html()  # Required for notebook/export
 
 ```python
 plot = (
-    ggplot(df, aes(x='col_x', y='col_y'))
+    ggplot(df, aes(x=STUDY_HOURS, y=EXAM_SCORE))
     + geom_point()
-    + labs(x=x_label, y=y_label, title=title)
+    + labs(title=title)
 )
 ```
+
+## Data block
+
+The file follows the six zones of `prompts/adaptable-code.md`. lets-plot reads the tidy `df` directly with the column constants: `ggplot(df, aes(x=QUARTER, y=SALES, fill=PRODUCT_LINE))`. Column names with spaces, units and dots work as they are. lets-plot titles the axes and the legend from the column names, so `labs()` is needed only for the title or to change a label, and it keeps the data's order of a string column on the axis and in the color mapping. `LetsPlot.setup_html()` belongs in the head, above the column constants, never in the block.
+
+```python
+# Plot: reads only df and the constants above
+plot = (
+    ggplot(df, aes(x=QUARTER, y=SALES, fill=PRODUCT_LINE))
+    + geom_bar(stat="identity", position=position_dodge(width=0.8), width=0.75)
+    + scale_fill_manual(values=IMPRINT_PALETTE)
+)
+```
+
+Continuous limits come from the data (`scale_y_continuous(limits=[0, df[SALES].max() * 1.15])`) or stay automatic, never typed numbers.
 
 ## Canvas — hard rule, no deviation
 
@@ -73,11 +88,11 @@ ggsave(plot, f'plot-{THEME}.html')
 ## Aesthetics
 
 ```python
-# Mappings
-aes(x='col_x', y='col_y', color='category', size='value')
+# Mappings: the column constants, never typed column names
+aes(x=STUDY_HOURS, y=EXAM_SCORE, color=SCHOOL, size=CLASS_SIZE)
 
 # Fixed aesthetics (outside aes)
-geom_point(color='blue', size=5, alpha=0.7)
+geom_point(color=IMPRINT_PALETTE[0], size=5, alpha=0.7)
 ```
 
 ## Geoms
@@ -132,8 +147,8 @@ geom_density()     # Density
 ## Facets
 
 ```python
-+ facet_wrap('category', ncol=3)
-+ facet_grid(x='row_var', y='col_var')
++ facet_wrap(REGION, ncol=3)
++ facet_grid(x=REGION, y=CHANNEL)
 ```
 
 ## Colors
@@ -179,7 +194,7 @@ anyplot_theme = theme(
     legend_title=element_text(color=INK),
 )
 
-plot = (ggplot(df, aes('x', 'y')) + geom_point(color=IMPRINT_PALETTE[0]) + anyplot_theme)
+plot = (ggplot(df, aes(x=STUDY_HOURS, y=EXAM_SCORE)) + geom_point(color=IMPRINT_PALETTE[0]) + anyplot_theme)
 ```
 
 ## Output Files

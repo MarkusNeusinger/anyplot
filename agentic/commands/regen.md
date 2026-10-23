@@ -181,7 +181,8 @@ CHANGE_REQUEST=$(echo "$NEXT" | cut -f4)   # may be empty
 4. `plots/{SPEC_ID}/metadata/python/{LIBRARY}.yaml` — `review.strengths`, `review.weaknesses`, `review.criteria_checklist`
 5. `prompts/library/{LIBRARY}.md` (CRITICAL — follow exactly)
 6. `prompts/plot-generator.md`
-7. `prompts/quality-criteria.md`
+7. `prompts/adaptable-code.md` — the Data block convention the file follows
+8. `prompts/quality-criteria.md`
 
 Skip Context7 by default — only consult it if step 2d reveals a clear library-API issue.
 

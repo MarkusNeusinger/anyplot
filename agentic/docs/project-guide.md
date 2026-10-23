@@ -547,6 +547,7 @@ The `prompts/` directory contains AI agent prompts for code generation, quality 
 | File | Purpose |
 |------|---------|
 | `plot-generator.md` | Base rules for all plot implementations |
+| `adaptable-code.md` | The Data block convention: one replaceable block ending in `df`, columns named once, plot code derived from `df` |
 | `default-style-guide.md` | Default visual style rules (colors, typography, layout) |
 | `library/*.md` | Library-specific rules (15 files, one per library) |
 | `quality-criteria.md` | Definition of code/visual quality |

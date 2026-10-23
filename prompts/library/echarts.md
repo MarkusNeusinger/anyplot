@@ -85,6 +85,57 @@ browser; use a tiny fixed-seed LCG or hard-code the data. **Never `fetch()` or
 load from a CDN/network** — the runtime is offline and the HTML must be
 self-contained.
 
+## Data block
+
+The file follows the six zones of `prompts/adaptable-code.md` in JavaScript
+syntax: role constants above the block, one `// Data` block that ends in
+`const data`, an array of records (one object per row, keyed by the
+constants), and plot code below `// Plot` that reads fields with `d[QUARTER]`:
+
+```js
+// Columns: set these to your data's column names
+const QUARTER = "Quarter";  // role: category
+const PRODUCT_LINE = "Product line";  // role: group
+const SALES = "Sales (thousand USD)";  // role: value
+
+// Data: replace this block with your own records, one object per row
+const data = [
+  { [QUARTER]: "Q1", [PRODUCT_LINE]: "Electronics", [SALES]: 245 },
+  { [QUARTER]: "Q2", [PRODUCT_LINE]: "Electronics", [SALES]: 312 },
+  { [QUARTER]: "Q1", [PRODUCT_LINE]: "Clothing", [SALES]: 178 },
+  { [QUARTER]: "Q2", [PRODUCT_LINE]: "Clothing", [SALES]: 195 },
+];
+
+// Plot: reads only data and the constants above
+const quarters = [...new Set(data.map((d) => d[QUARTER]))];
+const lines = [...new Set(data.map((d) => d[PRODUCT_LINE]))];
+chart.setOption({
+  color: t.palette,
+  xAxis: { type: "category", data: quarters, name: QUARTER },
+  yAxis: { type: "value", name: SALES },
+  legend: { data: lines },
+  series: lines.map((line) => ({
+    type: "bar",
+    name: line,
+    data: quarters.map((q) => data.find((d) => d[QUARTER] === q && d[PRODUCT_LINE] === line)?.[SALES] ?? null),
+  })),
+  // … animation, chrome and grid as in "Theme-adaptive chrome"
+});
+```
+
+- Categories, groups and their order come from the records (`new Set` keeps
+  the order of appearance), never from a typed list.
+- The palette goes in whole as `color: t.palette`; ECharts hands out the first
+  n in order.
+- Axis names and series names come from the constants.
+- A missing value stays `null`, which ECharts draws as a gap.
+- Limits come from the data or stay automatic, never typed numbers.
+
+A single series can also read the records directly: `dataset: { source: data }`
+with `encode: { x: DAY, y: VISITS }` on the series. The "Use with my data"
+agent will later replace the block with `const data = window.ANYPLOT_DATA;`.
+Do not read that global yourself: the harness does not set it.
+
 ## Colors — Imprint palette (from `window.ANYPLOT_TOKENS`)
 
 The first categorical series is **always** `#009E73` (`tokens.palette[0]`). Set
@@ -130,18 +181,28 @@ Pie/radar/sunburst have no `xAxis`/`yAxis` — drop those and style via `label` 
 
 ## Script Skeleton
 
+A complete ECharts implementation in the zones of "Data block" above:
+
 ```js
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data (in-memory, deterministic) ---------------------------------------
-const labels = ["Mon", "Tue", "Wed", "Thu", "Fri"];
-const values = [12, 19, 7, 15, 11];
+// Columns: set these to your data's column names
+const DAY = "Day";  // role: category
+const VISITS = "Visits";  // role: value
 
-// --- Init -------------------------------------------------------------------
+// Data: replace this block with your own records, one object per row
+const data = [
+  { [DAY]: "Mon", [VISITS]: 12 },
+  { [DAY]: "Tue", [VISITS]: 19 },
+  { [DAY]: "Wed", [VISITS]: 7 },
+  { [DAY]: "Thu", [VISITS]: 15 },
+  { [DAY]: "Fri", [VISITS]: 11 },
+];
+
+// Plot: reads only data and the constants above
 const chart = echarts.init(document.getElementById("container"));
 
-// --- Option -----------------------------------------------------------------
 chart.setOption({
   animation: false,
   color: t.palette,
@@ -149,15 +210,17 @@ chart.setOption({
   title: { text: "bar-basic · javascript · echarts · anyplot.ai", left: "center",
            textStyle: { color: t.ink, fontSize: 22 } },
   grid: { left: 80, right: 60, top: 90, bottom: 70 },
-  xAxis: { type: "category", data: labels,
+  xAxis: { type: "category", data: data.map((d) => d[DAY]), name: DAY,
+           nameLocation: "middle", nameGap: 36, nameTextStyle: { color: t.ink, fontSize: 16 },
            axisLabel: { color: t.inkSoft, fontSize: 14 },
            axisLine: { lineStyle: { color: t.inkSoft } },
            splitLine: { show: false } },
-  yAxis: { type: "value",
+  yAxis: { type: "value", name: VISITS,
+           nameTextStyle: { color: t.ink, fontSize: 16 },
            axisLabel: { color: t.inkSoft, fontSize: 14 },
            axisLine: { lineStyle: { color: t.inkSoft } },
            splitLine: { lineStyle: { color: t.grid } } },
-  series: [{ type: "bar", data: values, itemStyle: { color: t.palette[0] } }],
+  series: [{ type: "bar", name: VISITS, data: data.map((d) => d[VISITS]), itemStyle: { color: t.palette[0] } }],
 });
 ```
 

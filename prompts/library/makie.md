@@ -70,8 +70,39 @@ ImageCore at 0.9 and cannot coexist with Makie 0.24.
 ## Reproducibility
 
 ```julia
-Random.seed!(42)
+Random.seed!(42)  # first line of the # Data block
 ```
+
+## Data block
+
+The file follows the six zones of `prompts/adaptable-code.md` in Julia syntax: the column constants above the block, one `# Data` block that builds a `DataFrame` keyed by them and ends in `df`, and plot code below `# Plot` that reads columns with `df[!, QUARTER]`:
+
+```julia
+# Columns: set these to your table's column names
+const QUARTER = "Quarter"               # role: category
+const PRODUCT_LINE = "Product line"     # role: group
+const SALES = "Sales (thousand USD)"    # role: value
+
+# Data: replace this block with your own table, for example df = CSV.read("sales.csv", DataFrame)
+df = DataFrame(
+    QUARTER => repeat(["Q1", "Q2", "Q3", "Q4"], 3),
+    PRODUCT_LINE => repeat(["Electronics", "Clothing", "Home & Garden"]; inner = 4),
+    SALES => [245, 312, 287, 425, 178, 195, 285, 310, 125, 210, 195, 165],
+)
+
+# Plot: reads only df and the constants above
+quarters = unique(df[!, QUARTER])
+lines = unique(df[!, PRODUCT_LINE])
+x = [findfirst(==(q), quarters) for q in df[!, QUARTER]]
+group = [findfirst(==(l), lines) for l in df[!, PRODUCT_LINE]]
+ax = Axis(fig[1, 1]; xlabel = QUARTER, ylabel = SALES, xticks = (1:length(quarters), quarters))
+barplot!(ax, x, df[!, SALES]; dodge = group, color = IMPRINT_PALETTE[group])
+Legend(fig[1, 2], [PolyElement(color = IMPRINT_PALETTE[i]) for i in eachindex(lines)], lines, PRODUCT_LINE)
+```
+
+- `QUARTER => ...` names a column by the constant's value, so the column name is typed once; `df[!, QUARTER]` reads it back, spaces and units included.
+- Categories, groups and their order come from `unique(...)` over the data, never from a typed list, and each group takes its palette position. Set the axis labels from the constants.
+- Limits come from the data (`ylims!(ax, 0, maximum(skipmissing(df[!, SALES])) * 1.15)`) or stay automatic, never typed numbers. `skipmissing` keeps a missing value from a user's CSV out of the reduction instead of turning it into an error.
 
 ## Canvas — hard rule, no deviation
 
@@ -229,16 +260,15 @@ ax1 = Axis(fig[1, 1]); ax2 = Axis(fig[1, 2])
 A complete Makie implementation reads `ANYPLOT_THEME`, generates data,
 builds the figure, and saves both themed PNGs by being invoked twice with
 different env values. The same single `.jl` file handles both themes — no
-two-file split.
+two-file split. It follows the zones of "Data block" above.
 
 ```julia
 using CairoMakie
 using Colors
+using DataFrames
 using Random
 
-Random.seed!(42)
-
-# --- Theme tokens -----------------------------------------------------------
+# Theme tokens
 const THEME    = get(ENV, "ANYPLOT_THEME", "light")
 const PAGE_BG  = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
 const INK      = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
@@ -248,11 +278,16 @@ const IMPRINT_PALETTE = [
     colorant"#AE3030", colorant"#2ABCCD", colorant"#954477", colorant"#99B314",
 ]
 
-# --- Data -------------------------------------------------------------------
-x = randn(100)
-y = randn(100)
+# Columns: set these to your table's column names
+const STUDY_HOURS = "Study hours per day"  # role: x
+const EXAM_SCORE = "Exam score (%)"        # role: y
 
-# --- Plot -------------------------------------------------------------------
+# Data: replace this block with your own table, for example df = CSV.read("scores.csv", DataFrame)
+Random.seed!(42)
+hours = 6 .+ 2 .* randn(100)
+df = DataFrame(STUDY_HOURS => hours, EXAM_SCORE => hours .* 8 .+ 5 .* randn(100) .+ 30)
+
+# Plot: reads only df and the constants above
 fig = Figure(
     size            = (1600, 900),
     fontsize        = 14,
@@ -264,8 +299,8 @@ ax = Axis(
     title              = "scatter-basic · julia · makie · anyplot.ai",
     titlesize          = 20,
     titlecolor         = INK,
-    xlabel             = "X",
-    ylabel             = "Y",
+    xlabel             = STUDY_HOURS,
+    ylabel             = EXAM_SCORE,
     xlabelcolor        = INK,
     ylabelcolor        = INK,
     xticklabelcolor    = INK_SOFT,
@@ -279,9 +314,9 @@ ax = Axis(
     ygridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.15),
 )
 
-scatter!(ax, x, y; color = IMPRINT_PALETTE[1], markersize = 12, strokewidth = 0)
+scatter!(ax, df[!, STUDY_HOURS], df[!, EXAM_SCORE]; color = IMPRINT_PALETTE[1], markersize = 12, strokewidth = 0)
 
-# --- Save -------------------------------------------------------------------
+# Save
 save("plot-$(THEME).png", fig; px_per_unit = 2)
 ```
 
@@ -320,9 +355,12 @@ assigned. If the file has no leading `#` block, the rewrite prepends one.
   the runner; keep the script silent except for the `save` call.
 - `colorant"#RRGGBB"` (from `Colors`) is the canonical hex-to-color
   helper. Prefer it over manual `RGB(r/255, g/255, b/255)` constructors.
-- For multi-series categorical color, pass an `IMPRINT_PALETTE[1:n]` slice to
-  `colormap = ...` rather than letting Makie's default cycle pick the
-  first color (which is **not** anyplot brand green).
+- For multi-series categorical color, index the palette by group position
+  (`IMPRINT_PALETTE[group]`, as in "Data block") or pass
+  `IMPRINT_PALETTE[1:n]` with `n = length(unique(df[!, GROUP]))` to
+  `colormap = ...`, rather than letting Makie's default cycle pick the first
+  color (which is **not** anyplot brand green). Count `n` from the data, never
+  type it.
 - The implementation file must end with a trailing newline — Julia
   parses fine without it, but the impl-review header rewrite assumes
   one.

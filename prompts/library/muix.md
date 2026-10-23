@@ -59,6 +59,14 @@ import { BarChart } from "@mui/x-charts/BarChart";
 
 const t = window.ANYPLOT_TOKENS;            // see "Globals" below
 
+// Columns: set these to your data's column names
+const DAY = "Day";  // role: category
+const VISITS = "Visits";  // role: value
+
+// Data: replace this block with your own records (see "Data block" below)
+const data = [{ [DAY]: "Mon", [VISITS]: 12 }, { [DAY]: "Tue", [VISITS]: 19 }, { [DAY]: "Wed", [VISITS]: 7 }];
+
+// Plot: reads only data and the constants above
 export default function Chart() {
   return (
     <BarChart
@@ -66,8 +74,8 @@ export default function Chart() {
       height={window.ANYPLOT_SIZE.height - 40}   // legend band, see "MUI X v9 API"
       colors={t.palette}
       skipAnimation
-      xAxis={[{ scaleType: "band", data: ["Mon", "Tue", "Wed", "Thu", "Fri"] }]}
-      series={[{ data: [12, 19, 7, 15, 11], label: "Visits" }]}
+      xAxis={[{ scaleType: "band", data: data.map((d) => d[DAY]) }]}
+      series={[{ data: data.map((d) => d[VISITS]), label: VISITS }]}
     />
   );
 }
@@ -162,6 +170,63 @@ browser; use a tiny fixed-seed LCG or hard-code the data. **Never `fetch()` or
 load from a CDN/network** — the runtime is offline and the HTML must be
 self-contained.
 
+## Data block
+
+The file follows the six zones of `prompts/adaptable-code.md` in JavaScript
+syntax: role constants above the block, one `// Data` block that ends in
+`const data`, an array of records (one object per row, keyed by the
+constants), and plot code below `// Plot` that reads fields with `d[QUARTER]`.
+All three sit at module level, above the default-exported component:
+
+```tsx
+// Columns: set these to your data's column names
+const QUARTER = "Quarter";  // role: category
+const PRODUCT_LINE = "Product line";  // role: group
+const SALES = "Sales (thousand USD)";  // role: value
+
+// Data: replace this block with your own records, one object per row
+const data = [
+  { [QUARTER]: "Q1", [PRODUCT_LINE]: "Electronics", [SALES]: 245 },
+  { [QUARTER]: "Q2", [PRODUCT_LINE]: "Electronics", [SALES]: 312 },
+  { [QUARTER]: "Q1", [PRODUCT_LINE]: "Clothing", [SALES]: 178 },
+  { [QUARTER]: "Q2", [PRODUCT_LINE]: "Clothing", [SALES]: 195 },
+];
+
+// Plot: reads only data and the constants above
+const quarters = [...new Set(data.map((d) => d[QUARTER]))];
+const lines = [...new Set(data.map((d) => d[PRODUCT_LINE]))];
+
+export default function Chart() {
+  return (
+    <BarChart
+      width={window.ANYPLOT_SIZE.width}
+      height={window.ANYPLOT_SIZE.height - 40}
+      colors={t.palette}
+      skipAnimation
+      xAxis={[{ scaleType: "band", data: quarters, label: QUARTER, height: 72 }]}
+      yAxis={[{ label: SALES, width: 84 }]}
+      series={lines.map((line) => ({
+        label: line,
+        data: quarters.map((q) => data.find((d) => d[QUARTER] === q && d[PRODUCT_LINE] === line)?.[SALES] ?? null),
+      }))}
+    />
+  );
+}
+```
+
+- Categories, groups and their order come from the records (`new Set` keeps
+  the order of appearance), never from a typed list.
+- The palette goes in whole as `colors={t.palette}`; MUI X hands out the first
+  n in order.
+- Axis labels and series labels come from the constants; size the axis band
+  for a label as described under "Sizing".
+- A missing value stays `null`, which MUI X draws as a gap.
+- Limits come from the data or stay automatic, never typed numbers.
+
+The "Use with my data" agent will later replace the block with
+`const data = window.ANYPLOT_DATA;`. Do not read that global yourself: the
+harness does not set it.
+
 ## When MUI X can't express the spec
 
 MUI X community covers bar, line, area, pie, scatter, sparkline, gauge, radar,
@@ -207,11 +272,20 @@ import { BarChart } from "@mui/x-charts/BarChart";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data (in-memory, deterministic) ---------------------------------------
-const categories = ["Mon", "Tue", "Wed", "Thu", "Fri"];
-const values = [12, 19, 7, 15, 11];
+// Columns: set these to your data's column names
+const DAY = "Day";  // role: category
+const VISITS = "Visits";  // role: value
 
-// --- Chart (default-exported component — the harness mounts it) -------------
+// Data: replace this block with your own records, one object per row
+const data = [
+  { [DAY]: "Mon", [VISITS]: 12 },
+  { [DAY]: "Tue", [VISITS]: 19 },
+  { [DAY]: "Wed", [VISITS]: 7 },
+  { [DAY]: "Thu", [VISITS]: 15 },
+  { [DAY]: "Fri", [VISITS]: 11 },
+];
+
+// Plot: the default-exported component reads only data and the constants above
 export default function Chart() {
   return (
     <BarChart
@@ -219,8 +293,8 @@ export default function Chart() {
       height={window.ANYPLOT_SIZE.height - 40}   // legend band, see "MUI X v9 API"
       colors={t.palette}
       skipAnimation
-      xAxis={[{ scaleType: "band", data: categories }]}
-      series={[{ data: values, label: "Visits" }]}
+      xAxis={[{ scaleType: "band", data: data.map((d) => d[DAY]) }]}
+      series={[{ data: data.map((d) => d[VISITS]), label: VISITS }]}
     />
   );
 }
