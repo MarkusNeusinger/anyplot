@@ -6,4 +6,4 @@
   run for Chart.js, D3, ECharts, Highcharts and MUI X failed in its setup step.
   Playwright moves to 1.64.1, which knows the new image and brings Chromium 156
   instead of 140; a sample of 17 catalogue snippets in both themes renders
-  pixel-identical to the 1.55.1 renders.
+  pixel-identical to the 1.55.1 renders. (#12259)
