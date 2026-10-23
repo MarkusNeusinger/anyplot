@@ -45,6 +45,7 @@ SETUP_PYTHON = "Set up Python"
 CARRIED_LABEL = "Add carried quality score label"
 EARLY = "Add preliminary verdict label (early)"
 METADATA = "Update metadata and implementation header"
+RESCUE = "Re-dispatch review after a post-score failure"
 VERDICT = "Add verdict label and take action"
 REVIEW_FREE = "steps.adapt.outputs.review_skipped == 'true'"
 PINNED_RECORDS = ("/tmp/anyplot-adapt-new.json", "/tmp/anyplot-adapt-prev.json")
@@ -527,7 +528,15 @@ class TestReviewFreeWiring:
 
     @pytest.mark.parametrize(
         "name",
-        ["Regen gate", "Stage regen pair", EARLY, "Install Python dependencies for metadata update", METADATA, VERDICT],
+        [
+            "Regen gate",
+            "Stage regen pair",
+            EARLY,
+            "Install Python dependencies for metadata update",
+            METADATA,
+            RESCUE,
+            VERDICT,
+        ],
     )
     def test_the_review_free_path_runs_these(self, name):
         assert REVIEW_FREE in _step("impl-review.yml", name)["if"], name
@@ -541,11 +550,21 @@ class TestReviewFreeWiring:
             "Add quality score label",
             "Check review feedback format (never gating)",
             "Write back the re-score (regen keep)",
-            "Re-dispatch review after a post-score failure",
         ],
     )
     def test_and_never_these(self, name):
         assert "review_skipped" not in _step("impl-review.yml", name).get("if", ""), name
+
+    def test_a_review_free_failure_before_the_verdict_is_re_dispatched(self):
+        """Without it, a failed carried label or early verdict left the PR with no verdict and no retry."""
+        step = _step("impl-review.yml", RESCUE)
+        assert step["if"] == (
+            "failure() && steps.early_verdict.conclusion != 'success' && "
+            "((steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true') "
+            f"|| {REVIEW_FREE})"
+        )
+        assert step["env"]["SCORE"] == _step("impl-review.yml", METADATA)["env"]["SCORE"]
+        assert step["env"]["REVIEW_SKIPPED"] == "${{ steps.adapt.outputs.review_skipped }}"
 
     def test_the_gate_and_the_metadata_need_a_regeneration_and_a_merge(self):
         assert _step("impl-review.yml", "Regen gate")["if"].startswith("steps.regen.outputs.is_regen == 'true' && (")
@@ -595,6 +614,49 @@ class TestReviewFreeWiring:
             'git show "origin/main:${META_FILE}" > /tmp/anyplot-prev-metadata.yaml'
             in _step("impl-review.yml", "Regen context")["run"]
         )
+
+
+class TestReviewFreeRescue:
+    """The rescue step's script on the review-free path: the stored score, never a review score."""
+
+    ENV = {
+        "PR_NUM": "7",
+        "SPEC_ID": "spec-a",
+        "LIBRARY": "plotly",
+        "REPOSITORY": "owner/repo",
+        "RUN_ID": "1",
+        "MODEL": "sonnet",
+        "REVIEW_MODEL_ALIAS": "opus",
+        "WORKFLOW_REF": "main",
+    }
+
+    def _rescue(self, tmp_path: Path, **env: str):
+        return _run(_step("impl-review.yml", RESCUE)["run"], tmp_path, tmp_path, **{**self.ENV, **env})
+
+    def _comments(self, calls: list[list[str]]) -> list[str]:
+        return [Path(c[c.index("--body-file") + 1]).read_text(encoding="utf-8") for c in _calls(calls, "pr", "comment")]
+
+    def test_the_review_free_path_re_dispatches_once_with_the_stored_score(self, tmp_path):
+        result, calls = self._rescue(tmp_path, REVIEW_SKIPPED="true", SCORE="94", GH_LABELS="regen quality:94")
+        assert result.returncode == 1, result.stdout + result.stderr  # the run stays red
+        (body,) = self._comments(calls)
+        assert "No review ran (the adapt route skipped it; stored score 94/100), but a later step failed" in body
+        assert "impl-review is dispatched once more, and decides again whether the review runs." in body
+        assert "The review scored" not in body
+        assert len(_calls(calls, "workflow", "run")) == 1
+
+    def test_a_spent_budget_says_no_review_ran(self, tmp_path):
+        result, calls = self._rescue(tmp_path, REVIEW_SKIPPED="true", SCORE="", GH_MARKERS="1")
+        assert result.returncode == 1
+        (body,) = self._comments(calls)
+        assert body.splitlines()[3].startswith("No review ran (the adapt route skipped it; stored score n/a/100), but")
+        assert not _calls(calls, "workflow", "run")
+
+    def test_the_reviewed_path_keeps_its_wording(self, tmp_path):
+        _, calls = self._rescue(tmp_path, REVIEW_SKIPPED="", SCORE="86")
+        (body,) = self._comments(calls)
+        assert "The review scored 86/100, but a later step failed" in body
+        assert "A fresh review is dispatched once." in body
 
 
 class TestCarriedQualityLabel:

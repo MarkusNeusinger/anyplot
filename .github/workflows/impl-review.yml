@@ -1330,9 +1330,10 @@ jobs:
       # carries over ("Update metadata and implementation header") is the PR's
       # score label, ahead of the verdict labels (quality:N, regen:improved,
       # regen:adapt, ai-approved). impl-merge reads it for the issue comment.
-      # A failure stops the run before any verdict label: with quality:N the
-      # watchdog flags the PR, without it the watchdog re-dispatches this
-      # review once.
+      # A failure stops the run before any verdict label, and "Re-dispatch
+      # review after a post-score failure" re-dispatches this review once
+      # (the shared `review-retry` marker); after that the PR carries
+      # `ai-review-failed` and the watchdog only flags it (a regeneration).
       - name: Add carried quality score label
         if: steps.adapt.outputs.review_skipped == 'true' && steps.gate.outputs.verdict == 'merge'
         env:
@@ -1928,7 +1929,11 @@ jobs:
       # would ever run. Run 36712916551 (PR #11984, 2026-09-30): "Add quality
       # score label" hit HTTP 502 twice and the PR sat without a verdict for
       # ~7 h. A crashed or empty review never gets here (has_output is false:
-      # "Validate review output" owns it). Once a verdict label is on the PR
+      # "Validate review output" owns it). The review-free adapt path
+      # (review_skipped, no review step at all) has the same window: a
+      # failure before its verdict label (the carried quality label, the
+      # early verdict) gets the same one re-dispatch, with the stored score
+      # in place of a review score. Once a verdict label is on the PR
       # the watchdog's merge/repair cases own the state, and a second review
       # could add a contradicting verdict, so this step then does nothing.
       # It shares the `review-retry` marker with "Validate review output": at
@@ -1939,13 +1944,16 @@ jobs:
       # regeneration is only flagged).
       # The retry runs on this run's ref, so a branch smoke stays on its branch.
       - name: Re-dispatch review after a post-score failure
-        if: failure() && steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true' && steps.early_verdict.conclusion != 'success'
+        if: failure() && steps.early_verdict.conclusion != 'success' && ((steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true') || steps.adapt.outputs.review_skipped == 'true')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUM: ${{ steps.pr.outputs.pr_number }}
           SPEC_ID: ${{ steps.pr.outputs.specification_id }}
           LIBRARY: ${{ steps.pr.outputs.library }}
-          SCORE: ${{ steps.score.outputs.score }}
+          # On the review-free path no review scored: the stored score that
+          # carries over, as "Update metadata and implementation header" uses.
+          SCORE: ${{ steps.adapt.outputs.review_skipped == 'true' && steps.regen_ctx.outputs.prev_stored || steps.score.outputs.score }}
+          REVIEW_SKIPPED: ${{ steps.adapt.outputs.review_skipped }}
           REPOSITORY: ${{ github.repository }}
           RUN_ID: ${{ github.run_id }}
           MODEL: ${{ steps.pr.outputs.model }}
@@ -1954,6 +1962,15 @@ jobs:
         run: |
           RUN_URL="https://github.com/${REPOSITORY}/actions/runs/${RUN_ID}"
           MARKER="<!-- review-retry:${SPEC_ID}:${LIBRARY} -->"
+          # What the comments say came before the failure: a review score, or
+          # on the review-free adapt path the stored score that carries over.
+          if [ "$REVIEW_SKIPPED" = "true" ]; then
+            SCORED="No review ran (the adapt route skipped it; stored score ${SCORE:-n/a}/100)"
+            RETRY="impl-review is dispatched once more, and decides again whether the review runs."
+          else
+            SCORED="The review scored ${SCORE}/100"
+            RETRY="A fresh review is dispatched once."
+          fi
           # Same shape as the verdict step's helper; one GitHub brown-out is
           # the likely reason this step runs at all.
           gh_retry() {
@@ -1976,7 +1993,7 @@ jobs:
               echo "${MARKER}"
               echo "## :x: AI Review Failed After Scoring"
               echo ""
-              echo "The review scored ${SCORE}/100, but $1 No verdict was applied."
+              echo "${SCORED}, but $1 No verdict was applied."
               echo ""
               echo "**Manual rerun:**"
               echo "\`\`\`"
@@ -2040,7 +2057,7 @@ jobs:
             echo "${MARKER}"
             echo "## :wrench: AI Review Failed After Scoring — Re-Reviewing"
             echo ""
-            echo "The review scored ${SCORE}/100, but a later step failed before a verdict was applied (see the run log). A fresh review is dispatched once."
+            echo "${SCORED}, but a later step failed before a verdict was applied (see the run log). ${RETRY}"
             echo ""
             echo "---"
             echo ":robot: *[impl-review](${RUN_URL})*"
