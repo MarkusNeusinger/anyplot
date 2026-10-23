@@ -2,6 +2,7 @@
 // calibration-curve: Calibration Curve
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 90/100 | Created: 2026-09-02
+
 import { LineChart } from "@mui/x-charts/LineChart";
 import { BarChart } from "@mui/x-charts/BarChart";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
@@ -10,48 +11,58 @@ import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data (in-memory, deterministic) ----------------------------------------
+// Columns: set these to your data's column names
+const Y_TRUE = "Fraction of Positives"; // role: y_true
+const Y_PROB = "Model A (well-calibrated)"; // role: y_prob
+const Y_PROB_B = "Model B (overconfident)"; // role: extra
 
-// mulberry32 PRNG — small, fast, fixed-seed (the browser has no seeded RNG)
-function mulberry32(seed: number) {
-  return function random() {
-    seed = (seed + 0x6d2b79f5) | 0;
-    let x = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x;
-    return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
-  };
-}
+// Data: replace this block with your own records, one object per row
+// Predicted probabilities for a well-calibrated screening model (Model A) and
+// an overconfident model (Model B) against ground-truth binary diagnoses.
+const data = (() => {
+  function mulberry32(seed: number) {
+    return function random() {
+      seed = (seed + 0x6d2b79f5) | 0;
+      let x = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+      x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x;
+      return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+    };
+  }
 
-// Standard normal via Box-Muller, driven by the same PRNG stream
-function gaussian(random: () => number): number {
-  const u = Math.max(random(), 1e-9);
-  const v = random();
-  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
-}
+  function gaussian(random: () => number): number {
+    const u = Math.max(random(), 1e-9);
+    const v = random();
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  }
 
-const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
-const logit = (p: number) => Math.log(p / (1 - p));
-const sigmoid = (z: number) => 1 / (1 + Math.exp(-z));
+  const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
+  const logit = (p: number) => Math.log(p / (1 - p));
+  const sigmoid = (z: number) => 1 / (1 + Math.exp(-z));
 
-const N_SAMPLES = 3000;
+  const nSamples = 3000;
+  const random = mulberry32(42);
+  const overconfidenceScale = 2.4;
+
+  const trueRisk = Array.from({ length: nSamples }, () => random());
+  const yTrueArr = trueRisk.map((risk) => (random() < risk ? 1 : 0));
+  const predAArr = trueRisk.map((risk) => clamp01(risk + 0.05 * gaussian(random)));
+  const predBArr = trueRisk.map((risk) =>
+    sigmoid(logit(clamp01(risk) * 0.998 + 0.001) * overconfidenceScale),
+  );
+
+  return yTrueArr.map((truth, i) => ({
+    [Y_TRUE]: truth,
+    [Y_PROB]: predAArr[i],
+    [Y_PROB_B]: predBArr[i],
+  }));
+})();
+
+// Plot: reads only data and the constants above
 const NUM_BINS = 10;
-const random = mulberry32(42);
-
-// Latent true disease risk for each patient, and the observed diagnosis
-// drawn from a Bernoulli trial at that risk — this is the ground truth
-// both classifiers below are scored against.
-const trueRisk = Array.from({ length: N_SAMPLES }, () => random());
-const yTrue = trueRisk.map((risk) => (random() < risk ? 1 : 0));
-
-// Model A: well-calibrated screening classifier — small prediction noise.
-const predA = trueRisk.map((risk) => clamp01(risk + 0.05 * gaussian(random)));
-
-// Model B: overconfident classifier — pushes predictions toward 0/1 by
-// sharpening the log-odds, so mid-risk patients get extreme scores.
-const OVERCONFIDENCE_SCALE = 2.4;
-const predB = trueRisk.map((risk) =>
-  sigmoid(logit(clamp01(risk) * 0.998 + 0.001) * OVERCONFIDENCE_SCALE),
-);
+const N_SAMPLES = data.length;
+const yTrue = data.map((d) => d[Y_TRUE]);
+const predA = data.map((d) => d[Y_PROB]);
+const predB = data.map((d) => d[Y_PROB_B]);
 
 type Bin = { center: number; fracPos: number | null; count: number };
 
@@ -88,9 +99,6 @@ const eceB = expectedCalibrationError(binsB, N_SAMPLES);
 const brierA = brierScore(predA);
 const brierB = brierScore(predB);
 
-// Shared x-axis: bin centers bracketed by 0 and 1 so the diagonal reaches
-// both corners; the bracket points are `null` on the model series (gaps),
-// so only the 10 real bins draw markers.
 const xValues = [0, ...binsA.map((b) => b.center), 1];
 const modelASeries = [null, ...binsA.map((b) => b.fracPos), null];
 const modelBSeries = [null, ...binsB.map((b) => b.fracPos), null];
@@ -104,8 +112,6 @@ const binLabels = binsA.map((b) => {
 
 const TITLE_HEIGHT = 78;
 
-// --- Chart (default-exported component — the harness mounts it) ------------
-
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
   const chartAreaHeight = height - TITLE_HEIGHT;
@@ -117,6 +123,7 @@ export default function Chart() {
       sx={{
         width,
         height,
+        bgcolor: t.pageBg,
         display: "flex",
         flexDirection: "column",
         paddingTop: "16px",
@@ -149,29 +156,30 @@ export default function Chart() {
         width={width}
         height={mainHeight}
         skipAnimation
+        disableHitArea
         colors={t.palette}
         xAxis={[
           {
+            height: 60,
             data: xValues,
             scaleType: "linear",
             min: 0,
             max: 1,
             label: "Mean Predicted Probability",
             valueFormatter: (v: number) => `${Math.round(v * 100)}%`,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
         yAxis={[
           {
+            width: 84,
             min: 0,
             max: 1,
-            label: "Fraction of Positives",
+            label: Y_TRUE,
             valueFormatter: (v: number) => `${Math.round(v * 100)}%`,
-            // tickFontSize drives the label's reserved offset from the tick
-            // text (MUI X sizes that gap off this prop, not tickLabelStyle),
-            // so it must stay wide enough for a 4-char "100%" tick.
-            tickFontSize: 32,
-            labelFontSize: 16,
-            tickLabelStyle: { fontSize: 14 },
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
         series={[
@@ -186,7 +194,7 @@ export default function Chart() {
           {
             id: "modelA",
             data: modelASeries,
-            label: "Model A (well-calibrated)",
+            label: Y_PROB,
             color: t.palette[0],
             showMark: true,
             curve: "linear",
@@ -194,21 +202,22 @@ export default function Chart() {
           {
             id: "modelB",
             data: modelBSeries,
-            label: "Model B (overconfident)",
+            label: Y_PROB_B,
             color: t.palette[1],
             showMark: true,
             curve: "linear",
           },
         ]}
-        margin={{ left: 90, right: 40, top: 20, bottom: 70 }}
+        margin={{ left: 50, right: 40, top: 16, bottom: 16 }}
         sx={{
-          "& .MuiChartsAxis-tickLabel": { fontSize: "14px" },
-          "& .MuiChartsAxis-label": { fontSize: "16px" },
-          "& .MuiChartsLegend-label": { fontSize: "14px" },
-          "& .MuiLineElement-series-modelA": { strokeWidth: 3 },
-          "& .MuiLineElement-series-modelB": { strokeWidth: 3 },
-          "& .MuiLineElement-series-diagonal": { strokeWidth: 2, strokeDasharray: "8 5" },
+          "& .MuiChartsLegend-root": { color: t.ink },
+          "& .MuiChartsLegend-label": { fontSize: "14px", color: t.ink },
+          '& [data-series="modelA"].MuiLineChart-line': { strokeWidth: 3 },
+          '& [data-series="modelB"].MuiLineChart-line': { strokeWidth: 3 },
+          '& [data-series="diagonal"].MuiLineChart-line': { strokeWidth: 2, strokeDasharray: "8 5" },
           "& .MuiChartsGrid-line": { stroke: t.grid },
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
         }}
       >
         <ChartsGrid horizontal />
@@ -218,31 +227,35 @@ export default function Chart() {
         width={width}
         height={histHeight}
         skipAnimation
+        disableHitArea
+        hideLegend
         borderRadius={2}
         xAxis={[
           {
+            height: 56,
             scaleType: "band",
             data: binLabels,
             label: "Predicted Probability Bin",
+            tickLabelStyle: { fontSize: 12, fill: t.inkSoft },
+            labelStyle: { fontSize: 14, fill: t.ink },
           },
         ]}
         yAxis={[
           {
+            width: 84,
             label: "Count",
-            tickFontSize: 40,
-            labelFontSize: 14,
-            tickLabelStyle: { fontSize: 12 },
+            tickLabelStyle: { fontSize: 12, fill: t.inkSoft },
+            labelStyle: { fontSize: 14, fill: t.ink },
           },
         ]}
         series={[
-          { data: binsA.map((b) => b.count), label: "Model A", color: t.palette[0] },
-          { data: binsB.map((b) => b.count), label: "Model B", color: t.palette[1] },
+          { data: binsA.map((b) => b.count), label: Y_PROB, color: t.palette[0] },
+          { data: binsB.map((b) => b.count), label: Y_PROB_B, color: t.palette[1] },
         ]}
-        margin={{ left: 90, right: 40, top: 10, bottom: 60 }}
-        slotProps={{ legend: { hidden: true } }}
+        margin={{ left: 50, right: 40, top: 8, bottom: 20 }}
         sx={{
-          "& .MuiChartsAxis-tickLabel": { fontSize: "12px" },
-          "& .MuiChartsAxis-label": { fontSize: "14px" },
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
         }}
       />
     </Box>
