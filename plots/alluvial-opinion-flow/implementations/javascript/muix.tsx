@@ -149,12 +149,19 @@ const populations = waves.map((wave, idx) => {
   return pop;
 });
 
-const waveTotal = categories.reduce((sum, cat) => sum + populations[0][cat], 0);
+const waveTotals = waves.map((wave) =>
+  Math.max(
+    data.filter((d) => d[WAVE] === wave).reduce((sum, d) => sum + d[FLOW_COUNT], 0),
+    data.filter((d) => d[NEXT_WAVE] === wave).reduce((sum, d) => sum + d[FLOW_COUNT], 0),
+  ),
+);
+const stackTotal = Math.max(...waveTotals);
+const minWaveTotal = Math.min(...waveTotals);
 const gapUnits =
   categories.length > 1
-    ? (waveTotal * GAP_SHARE) / (categories.length - 1)
+    ? (stackTotal * GAP_SHARE) / (categories.length - 1)
     : 0;
-const domainMax = waveTotal + gapUnits * Math.max(0, categories.length - 1);
+const domainMax = stackTotal + gapUnits * (categories.length - 1);
 
 const nodeExtents = populations.map((pop) => {
   let cursor = domainMax;
@@ -226,13 +233,13 @@ function OpinionFlowLayer() {
   return (
     <g data-drawing-container>
       {flows.map((f, i) => {
-        const x1 = (xScale(waves[f.step]) ?? 0) + NODE_W / 2;
-        const x2 = (xScale(waves[f.step + 1]) ?? 0) - NODE_W / 2;
+        const x1 = xScale(waves[f.step]) + NODE_W / 2;
+        const x2 = xScale(waves[f.step + 1]) - NODE_W / 2;
         const midX = (x1 + x2) / 2;
-        const ySrcTop = yScale(f.srcTop) ?? 0;
-        const ySrcBottom = yScale(f.srcBottom) ?? 0;
-        const yDstTop = yScale(f.dstTop) ?? 0;
-        const yDstBottom = yScale(f.dstBottom) ?? 0;
+        const ySrcTop = yScale(f.srcTop);
+        const ySrcBottom = yScale(f.srcBottom);
+        const yDstTop = yScale(f.dstTop);
+        const yDstBottom = yScale(f.dstBottom);
         return (
           <path
             key={`flow-${i}`}
@@ -243,13 +250,13 @@ function OpinionFlowLayer() {
         );
       })}
       {waves.map((wave, wIdx) => {
-        const cx = xScale(wave) ?? 0;
+        const cx = xScale(wave);
         const isLast = wIdx === waves.length - 1;
         return categories.map((cat) => {
           const ext = nodeExtents[wIdx][cat];
           if (ext.value <= 0) return null;
-          const yTop = yScale(ext.top) ?? 0;
-          const yBottom = yScale(ext.bottom) ?? 0;
+          const yTop = yScale(ext.top);
+          const yBottom = yScale(ext.bottom);
           const midY = (yTop + yBottom) / 2;
           const delta = isLast ? ext.value - populations[0][cat] : 0;
           const lx = cx + NODE_W / 2 + 10;
@@ -293,9 +300,10 @@ function OpinionFlowLayer() {
                   textAnchor="start"
                   fontSize={14}
                   fontWeight={600}
-                  fill={categoryColor[cat]}
+                  fill={t.inkSoft}
                 >
-                  {delta >= 0 ? `▲ +${delta} vs ${waves[0]}` : `▼ ${delta} vs ${waves[0]}`}
+                  <tspan fill={categoryColor[cat]}>{delta >= 0 ? "▲" : "▼"}</tspan>
+                  {delta >= 0 ? ` +${delta} vs ${waves[0]}` : ` ${delta} vs ${waves[0]}`}
                 </text>
               )}
             </React.Fragment>
@@ -307,7 +315,11 @@ function OpinionFlowLayer() {
 }
 
 const TITLE = "alluvial-opinion-flow · javascript · muix · anyplot.ai";
-const SUBTITLE = `${waveTotal.toLocaleString("en-US")} ${FLOW_COUNT.toLowerCase()} tracked across ${waves.length} ${WAVE.toLowerCase()}s (${waves[0]}–${waves[waves.length - 1]})`;
+const countText =
+  minWaveTotal === stackTotal
+    ? stackTotal.toLocaleString("en-US")
+    : `${minWaveTotal.toLocaleString("en-US")}–${stackTotal.toLocaleString("en-US")}`;
+const SUBTITLE = `${FLOW_COUNT}: ${countText} · ${WAVE}: ${waves[0]}–${waves[waves.length - 1]}`;
 const HEADER_H = 104;
 
 export default function Chart() {
