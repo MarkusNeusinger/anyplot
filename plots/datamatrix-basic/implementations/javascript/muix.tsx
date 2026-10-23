@@ -18,6 +18,9 @@ const TITLE_HEIGHT = 64;
 const CAPTION_HEIGHT = 48;
 const OUTER_MARGIN = 40;
 const CARD_PADDING = 32;
+// Barcode symbology is black on white in both themes; only the page chrome flips
+const MODULE_INK = "#1A1A17";
+const SYMBOL_TILE = "#FAF8F1";
 
 // Columns: set these to your data's column names
 const CONTENT = "Content"; // role: content
@@ -30,57 +33,38 @@ const data = [{ [CONTENT]: "PCB-SN:48291X7A", [SIZE]: "24x24" }];
 const encodedText = String(data[0][CONTENT]);
 const moduleCount = parseInt(String(data[0][SIZE]).split("x")[0], 10) || 24;
 const TITLE = "datamatrix-basic · javascript · muix · anyplot.ai";
-const CAPTION = `Encodes "${encodedText}" · ${moduleCount}×${moduleCount} modules · ECC 200`;
+const CAPTION = `Part marking "${encodedText}" · ${moduleCount}×${moduleCount} modules · illustrative data region`;
 
-function hashString(text) {
-  let hash = 2166136261;
-  for (let i = 0; i < text.length; i++) {
-    hash ^= text.charCodeAt(i);
-    hash = Math.imul(hash, 16777619);
-  }
-  return hash >>> 0;
+// Data region: the content's 8-bit ASCII, then a fixed-seed LCG fills the rest
+const capacity = (moduleCount - 2) * (moduleCount - 2);
+const dataBits = [];
+for (const ch of encodedText) {
+  for (let shift = 7; shift >= 0; shift--) dataBits.push((ch.charCodeAt(0) >> shift) & 1);
+}
+let lcgState = 20260902;
+while (dataBits.length < capacity) {
+  lcgState = (Math.imul(lcgState, 1103515245) + 12345) >>> 0;
+  dataBits.push((lcgState >>> 16) & 1);
 }
 
-function encodeBits(text, capacity) {
-  const bits = [];
-  for (let i = 0; i < text.length && bits.length < capacity; i++) {
-    const code = text.charCodeAt(i);
-    for (let shift = 7; shift >= 0 && bits.length < capacity; shift--) {
-      bits.push((code >> shift) & 1);
-    }
-  }
-  let state = hashString(text) || 1;
-  while (bits.length < capacity) {
-    state = (Math.imul(state, 1103515245) + 12345) >>> 0;
-    bits.push((state >>> 16) & 1);
-  }
-  return bits;
+// Symbol grid: finder L on the left column and bottom row, clock on top and right
+const GRID = Array.from({ length: moduleCount }, () => new Array(moduleCount).fill(0));
+for (let r = 0; r < moduleCount; r++) {
+  GRID[r][0] = 1;
+  GRID[r][moduleCount - 1] = (moduleCount - 1 - r) % 2 === 0 ? 1 : 0;
 }
-
-function buildMatrix(text, size) {
-  const grid = Array.from({ length: size }, () => new Array(size).fill(0));
-
-  for (let r = 0; r < size; r++) grid[r][0] = 1;
-  for (let c = 0; c < size; c++) grid[size - 1][c] = 1;
-  for (let c = 1; c < size; c++) grid[0][c] = c % 2 === 1 ? 1 : 0;
-  for (let r = 1; r < size - 1; r++) grid[r][size - 1] = r % 2 === 1 ? 1 : 0;
-
-  const dataBits = encodeBits(text, (size - 2) * (size - 2));
-  let bitIndex = 0;
-  for (let r = 1; r < size - 1; r++) {
-    for (let c = 1; c < size - 1; c++) {
-      grid[r][c] = dataBits[bitIndex++];
-    }
-  }
-  return grid;
+for (let c = 0; c < moduleCount; c++) {
+  GRID[moduleCount - 1][c] = 1;
+  GRID[0][c] = c % 2 === 0 ? 1 : 0;
 }
-
-const GRID = buildMatrix(encodedText, moduleCount);
+let bitIndex = 0;
+for (let r = 1; r < moduleCount - 1; r++) {
+  for (let c = 1; c < moduleCount - 1; c++) GRID[r][c] = dataBits[bitIndex++];
+}
 
 function DataMatrixModules() {
   const { left, top, width } = useDrawingArea();
-  const totalUnits = moduleCount + QUIET_ZONE * 2;
-  const cellSize = width / totalUnits;
+  const cellSize = width / (moduleCount + QUIET_ZONE * 2);
 
   const modules = [];
   for (let r = 0; r < moduleCount; r++) {
@@ -93,7 +77,8 @@ function DataMatrixModules() {
           y={top + (QUIET_ZONE + r) * cellSize}
           width={cellSize + 0.6}
           height={cellSize + 0.6}
-          fill={t.palette[0]}
+          fill={MODULE_INK}
+          shapeRendering="crispEdges"
         />,
       );
     }
@@ -144,7 +129,7 @@ export default function Chart() {
             height: cardSide,
             boxSizing: "border-box",
             padding: CARD_PADDING,
-            backgroundColor: t.elevatedBg,
+            backgroundColor: SYMBOL_TILE,
             border: `1px solid ${t.grid}`,
             borderRadius: 20,
             display: "flex",
