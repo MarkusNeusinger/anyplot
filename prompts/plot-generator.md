@@ -38,11 +38,11 @@ What each runtime installs is what you compute with (see "Lean code" below). The
   - `survival::survfit`.
 
 **Julia — compute with:**
-- CairoMakie, Makie, DataFrames, CSV, Colors, ColorSchemes, RDatasets, PalmerPenguins, PNGFiles, QRCoders, Random and Statistics, plus the standard libraries LinearAlgebra, Dates and Printf. Examples:
+- CairoMakie, Makie, DataFrames, CSV, Colors, ColorSchemes, RDatasets, PalmerPenguins, PNGFiles, Random and Statistics, plus the standard libraries LinearAlgebra, Dates and Printf. Examples:
   - Makie recipes that compute for you: `density!`, `hist!`, `stephist!`, `boxplot!`, `violin!`, `qqplot!`, `ecdfplot!`, `rainclouds!`, `contour!`;
   - Statistics: `mean`, `median`, `quantile`, `std`, `cor`;
   - least squares with `X \ y`.
-- Not loadable: StatsBase, KernelDensity, FFTW, Clustering, GLM and Loess. A short written-out ACF, FFT or linkage is therefore fine.
+- Not loadable: StatsBase, KernelDensity, FFTW, Clustering, GLM, Loess and QRCoders. A short written-out ACF, FFT or linkage is therefore fine.
 
 **JavaScript — compute with:**
 - Only the snippet's own library is loaded: chartjs, d3, echarts, highcharts or muix. No JavaScript runtime here has a 1-D KDE, an FFT, a regression or clustering, so short written-out versions are fine. What each library computes for you is in `prompts/library/{library}.md` → **Computation**.

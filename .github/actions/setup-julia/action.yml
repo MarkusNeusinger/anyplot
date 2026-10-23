@@ -8,7 +8,10 @@ inputs:
   julia-version:
     description: "Julia version to install"
     required: false
-    default: "1.11"
+    # Keep in step with Manifest.toml's julia_version (and Project.toml's
+    # julia compat): Pkg.instantiate() on another minor version re-resolves
+    # stdlib versions and can drift from the committed lockfile.
+    default: "1.13"
 
 runs:
   using: "composite"
@@ -69,7 +72,7 @@ runs:
         julia --project=. -e '
           using CairoMakie
           tmp = tempname() * ".png"
-          fig = Figure(resolution = (400, 300))
+          fig = Figure(size = (400, 300))
           ax  = Axis(fig[1, 1])
           scatter!(ax, 1:10, rand(10))
           save(tmp, fig)
