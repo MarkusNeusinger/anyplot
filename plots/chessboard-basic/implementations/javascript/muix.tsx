@@ -3,151 +3,186 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 90/100 | Created: 2026-09-01
 //# anyplot-orientation: square
-// anyplot.ai
-// chessboard-basic: Chess Board Grid Visualization
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-09-01
-
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
-import { ScatterPlot } from "@mui/x-charts/ScatterChart";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
+import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const FONT = "system-ui, -apple-system, sans-serif";
-const TITLE = "chessboard-basic · javascript · muix · anyplot.ai";
 
-// Classic wood-board colors, drawn from the Imprint palette's semantic
-// exception (wood → ochre) plus the amber anchor for the lighter square —
-// both fixed across themes, like real board colors are.
-const DARK_SQUARE = t.palette[3]; // "#BD8233" — ochre, wood
-const LIGHT_SQUARE = t.amber; // "#DDCC77" — warm light wood
+// Constants
+const HEADER_H = 96;
+const AXIS_SIZE = 48;
+const PAD = 20;
 
-const COLUMNS = ["a", "b", "c", "d", "e", "f", "g", "h"];
-const RANKS_TOP_TO_BOTTOM = ["8", "7", "6", "5", "4", "3", "2", "1"];
+// Columns: set these to your data's column names
+const FILE = "File"; // role: x
+const RANK = "Rank"; // role: y
+const TONE = "Square tone"; // role: color
 
-// 64 squares — a1 is dark, h1 is light (white's near-right corner), matching
-// standard chess-diagram convention. Square parity: (file index + rank - 1)
-// odd -> light square.
-const squares = [];
-COLUMNS.forEach((file, fileIdx) => {
-  for (let rank = 1; rank <= 8; rank += 1) {
-    const light = (fileIdx + rank - 1) % 2 === 1;
-    squares.push({ id: `${file}${rank}`, x: file, y: String(rank), light });
+// Data: replace this block with your own records, one object per row
+const data = (() => {
+  const files = ["a", "b", "c", "d", "e", "f", "g", "h"];
+  const rows: { [key: string]: string | number }[] = [];
+  for (let r = 8; r >= 1; r -= 1) {
+    for (let fIdx = 0; fIdx < files.length; fIdx += 1) {
+      const isLight = (fIdx + r - 1) % 2 === 1;
+      rows.push({
+        [FILE]: files[fIdx],
+        [RANK]: r,
+        [TONE]: isLight ? "Light" : "Dark",
+      });
+    }
   }
-});
+  return rows;
+})();
 
-// Custom scatter mark: opaque squares tiling the band grid exactly (no gaps),
-// colored by the precomputed light/dark parity rather than a data value.
-function BoardSquares({ series, xScale, yScale }) {
+// Plot: reads only data and the constants above
+const files = Array.from(new Set(data.map((d) => String(d[FILE]))));
+const ranksTopToBottom = Array.from(new Set(data.map((d) => Number(d[RANK]))))
+  .sort((a, b) => b - a)
+  .map((r) => String(r));
+const tones = Array.from(new Set(data.map((d) => String(d[TONE]))));
+const toneColors: { [key: string]: string } = {
+  [tones[0]]: t.amber,
+  [tones[1] ?? ""]: t.palette[3],
+};
+
+const squares = data.map((d) => ({
+  id: `${String(d[FILE])}${String(d[RANK])}`,
+  file: String(d[FILE]),
+  rank: String(d[RANK]),
+  tone: String(d[TONE]),
+  fill: toneColors[String(d[TONE])] ?? t.palette[3],
+}));
+
+const TITLE = "chessboard-basic · javascript · muix · anyplot.ai";
+const SUBTITLE = `${squares.length} squares (${files.length}×${ranksTopToBottom.length}) · Algebraic notation (${files[0]}–${files[files.length - 1]}, ${ranksTopToBottom[ranksTopToBottom.length - 1]}–${ranksTopToBottom[0]})`;
+
+function BoardLayer() {
+  const xScale = useXScale("file") as unknown as {
+    (v: string): number | undefined;
+    bandwidth?: () => number;
+  };
+  const yScale = useYScale("rank") as unknown as {
+    (v: string): number | undefined;
+    bandwidth?: () => number;
+  };
+  const { left, top, width, height } = useDrawingArea();
+  if (!xScale || !yScale || !xScale.bandwidth || !yScale.bandwidth) return null;
+
   const cellW = xScale.bandwidth();
   const cellH = yScale.bandwidth();
+
   return (
     <g>
-      {series.data.map((pt) => (
-        <rect
-          key={pt.id}
-          x={xScale(pt.x) ?? 0}
-          y={yScale(pt.y) ?? 0}
-          width={cellW}
-          height={cellH}
-          fill={pt.light ? LIGHT_SQUARE : DARK_SQUARE}
-          stroke={t.pageBg}
-          strokeWidth={1.5}
-        />
-      ))}
+      {squares.map((sq) => {
+        const x = xScale(sq.file);
+        const y = yScale(sq.rank);
+        if (x === undefined || y === undefined) return null;
+        return (
+          <rect
+            key={sq.id}
+            x={x}
+            y={y}
+            width={cellW}
+            height={cellH}
+            fill={sq.fill}
+            stroke={t.pageBg}
+            strokeWidth={1.5}
+          />
+        );
+      })}
+      <rect
+        x={left}
+        y={top}
+        width={width}
+        height={height}
+        fill="none"
+        stroke={t.ink}
+        strokeWidth={3}
+      />
     </g>
   );
 }
 
 export default function Chart() {
-  const W = window.ANYPLOT_SIZE.width;
-  const H = window.ANYPLOT_SIZE.height;
-
-  // Reserve space for the title (top), rank labels (left) and file labels
-  // (bottom), then size the board to the largest square that fits the
-  // remaining area so every one of the 64 cells is a true square.
-  const TITLE_SPACE = 60;
-  const PAD_TOP = 20;
-  const PAD_RIGHT = 24;
-  const AXIS_LEFT = 60;
-  const AXIS_BOTTOM = 56;
-
-  const availW = W - AXIS_LEFT - PAD_RIGHT;
-  const availH = H - TITLE_SPACE - PAD_TOP - AXIS_BOTTOM;
-  const board = Math.min(availW, availH);
-
-  const margin = {
-    left: AXIS_LEFT + (availW - board) / 2,
-    right: PAD_RIGHT + (availW - board) / 2,
-    top: TITLE_SPACE + PAD_TOP + (availH - board) / 2,
-    bottom: AXIS_BOTTOM + (availH - board) / 2,
-  };
+  const { width, height } = window.ANYPLOT_SIZE;
+  const availH = height - HEADER_H;
+  const containerSide = Math.min(width, availH);
 
   return (
-    <ChartContainer
-      width={W}
-      height={H}
-      margin={margin}
-      skipAnimation
-      series={[
-        {
-          type: "scatter",
-          id: "board",
-          data: squares,
-          color: DARK_SQUARE,
-        },
-      ]}
-      xAxis={[
-        {
-          scaleType: "band",
-          data: COLUMNS,
-          categoryGapRatio: 0,
-          disableTicks: true,
-          tickLabelStyle: { fontSize: 15, fill: t.inkSoft, fontFamily: FONT },
-        },
-      ]}
-      yAxis={[
-        {
-          scaleType: "band",
-          data: RANKS_TOP_TO_BOTTOM,
-          categoryGapRatio: 0,
-          disableTicks: true,
-          tickLabelStyle: { fontSize: 15, fill: t.inkSoft, fontFamily: FONT },
-        },
-      ]}
+    <div
+      style={{
+        width,
+        height,
+        background: t.pageBg,
+        fontFamily: "Inter, system-ui, sans-serif",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+      }}
     >
-      {/* Chart title */}
-      <text
-        x={W / 2}
-        y={36}
-        textAnchor="middle"
-        fontSize={22}
-        fontWeight="500"
-        fill={t.ink}
-        fontFamily={FONT}
+      <div
+        style={{
+          height: HEADER_H,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 6,
+          paddingTop: 6,
+        }}
       >
-        {TITLE}
-      </text>
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>
+          {TITLE}
+        </div>
+        <div style={{ fontSize: 15, color: t.inkSoft }}>{SUBTITLE}</div>
+      </div>
 
-      {/* Checkerboard squares, tiled edge-to-edge across the 8x8 band grid */}
-      <ScatterPlot slots={{ scatter: BoardSquares }} />
-
-      {/* Outer board frame */}
-      <rect
-        x={margin.left}
-        y={margin.top}
-        width={board}
-        height={board}
-        fill="none"
-        stroke={t.ink}
-        strokeWidth={3}
-      />
-
-      {/* File labels (a-h) at the bottom, rank labels (1-8) on the left */}
-      <ChartsXAxis disableLine tickLabelStyle={{ fontSize: 15, fill: t.inkSoft, fontFamily: FONT }} />
-      <ChartsYAxis disableLine tickLabelStyle={{ fontSize: 15, fill: t.inkSoft, fontFamily: FONT }} />
-    </ChartContainer>
+      <ChartsContainer
+        width={containerSide}
+        height={containerSide}
+        margin={{ top: PAD, right: PAD, bottom: PAD, left: PAD }}
+        skipAnimation
+        series={[]}
+        xAxis={[
+          {
+            id: "file",
+            scaleType: "band",
+            data: files,
+            categoryGapRatio: 0,
+            height: AXIS_SIZE,
+            disableLine: true,
+            disableTicks: true,
+            tickLabelStyle: {
+              fontSize: 16,
+              fontWeight: 600,
+              fill: t.inkSoft,
+            },
+          },
+        ]}
+        yAxis={[
+          {
+            id: "rank",
+            scaleType: "band",
+            data: ranksTopToBottom,
+            categoryGapRatio: 0,
+            width: AXIS_SIZE,
+            disableLine: true,
+            disableTicks: true,
+            tickLabelStyle: {
+              fontSize: 16,
+              fontWeight: 600,
+              fill: t.inkSoft,
+            },
+          },
+        ]}
+      >
+        <BoardLayer />
+        <ChartsXAxis axisId="file" />
+        <ChartsYAxis axisId="rank" />
+      </ChartsContainer>
+    </div>
   );
 }
