@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: heatmap-periodic-table
 created: '2026-06-15T05:23:45Z'
-updated: '2026-10-23T14:48:26Z'
+updated: '2026-10-23T14:55:37Z'
 generated_by: claude-opus
 workflow_run: 39971735583
 issue: 8659
@@ -12,137 +12,133 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-p
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-periodic-table/javascript/muix/plot-dark.html
-quality_score: 78
+quality_score: 90
 review:
   strengths:
-  - 'Canonical periodic-table layout is exact: 18 groups × 7 periods, the lanthanides
-    and actinides detached by a 20 px gap, and dashed ''57–71'' / ''89–103'' placeholder
-    tiles marking the group-3 gap'
-  - Tile text switches between dark and light using a WCAG relative-luminance test,
-    so symbols stay legible from green Fr to blue F in both themes
-  - 'Correct imprint_seq ramp (#009E73 → #4467A3) for a unipolar property, with theme-adaptive
-    grey tiles (#CCCBC3 light / #3E3E3A dark) that sit clearly outside the colormap'
-  - 'Clear type hierarchy: bold 22 px symbols, monospace atomic numbers and values,
-    a labeled colorbar whose ends name the extremes (Fr, F)'
-  - Accurate Pauling electronegativity data for all valued elements
+  - 'Canonical periodic-table layout driven by the records: 18 groups x 7 periods,
+    lanthanides and actinides placed in atomic-number order in two detached rows below
+    a visible gap, with dashed 57–71 and 89–103 placeholder tiles marking the group-3
+    gap in periods 6 and 7'
+  - 'Idiomatic MUI X v9 composition: ChartsDataProvider + ChartsSurface with hidden
+    linear axes, custom tiles drawn through the useXScale / useYScale / useZColorScale
+    hooks, and the zAxis continuous colorMap feeding ContinuousColorLegend, so tiles
+    and color bar share one scale'
+  - 'Correct imprint_seq ramp (t.seq #009E73 → #4467A3) for a unipolar property, identical
+    in both themes, with real Pauling electronegativity values (F 3.98, Fr 0.70, Cs
+    0.79, Au 2.54) and greyed theme-adaptive tiles for elements without a value'
+  - 'Tile text switches between #1A1A17 and #F0EFE8 by the WCAG luminance of each
+    fill, keeping symbol, atomic number and value legible on every tile in both renders'
+  - 'The color legend sits in the table''s own empty band between groups 2 and 13,
+    labelled with property and unit, its endpoints naming the extreme elements (Low:
+    Fr 0.70, High: F 3.98), plus a ''Grey tiles'' key line'
+  - 'Clear typographic hierarchy: bold sans element symbols, monospace atomic numbers
+    and values, and a subtitle stating the trend direction toward fluorine and francium'
   weaknesses:
-  - 'VQ-05 (both): the 18×9-tile table (about 2:1) sits on a square 1200×1200 canvas,
-    leaving roughly 300 CSS px (~25 % of the height) empty above the title and another
-    ~250 px below the caption → a landscape canvas, or larger tiles/type that fill
-    the square. Likely cause: `//# anyplot-orientation: square` with TILE derived
-    from the width only.'
-  - 'VQ-01 (both): atomic numbers and electronegativity values inside the tiles are
-    drawn at 11 CSS px (monospace, opacity 0.88–0.9) and become unreadable specks
-    in the 400 px thumbnail → about 13–14 px (+2 to +3 px) at full opacity. Likely
-    cause: fontSize={11} and opacity on the atomic-number and value <text> elements.'
-  - 'DQ-03 (both): the caption says grey tiles are ''noble gases, synthetic elements'',
-    but Eu, Tb and Yb are greyed and are neither → a caption that matches the data,
-    e.g. ''no Pauling value''. Likely cause: the hard-coded caption string.'
-  - 'CQ-01 (code): helper functions tileColor/tileTextColor at module level and no
-    // Data / // Plot zones; EN_MIN/EN_MAX are typed numbers instead of derived from
-    the data → one // Data block of records with role constants, limits via Math.min/Math.max
-    over the values. Likely cause: positional element arrays plus hand-written constants.'
-  - 'CQ-04 (code): lines 62–65 and 72–75 write out the same RGB interpolation twice
-    → remove the second copy and have the text-color logic reuse the interpolated
-    tile color. Likely cause: tileTextColor recomputing what tileColor already computed.'
-  - 'LM-01 (code): ChartsContainer is used only as an empty SVG host (series={[]})
-    and the colorbar is a hand-built gradient rect with manual ticks → drive the colors
-    through a zAxis colorMap built from t.seq and render the scale with MUI X''s ContinuousColorLegend.
-    Likely cause: drawing everything as raw SVG children.'
-  - 'Suggestion: the ''Low (Fr = 0.70)'' / ''High (F = 3.98)'' labels repeat the end
-    tick values directly above them; dropping the 0.70/3.98 ticks would tidy the colorbar.'
+  - 'CQ-01 (code): lines 98–105 define a standalone `textOn()` helper that writes
+    out the WCAG relative-luminance formula → inline the choice at the call site with
+    MUI''s own `getLuminance(fill) > 0.18` from `@mui/material/styles` and drop the
+    function. Likely cause: hand-rolled luminance helper instead of the installed
+    MUI color utility.'
+  - 'Suggestion: a few intermediate ticks on the color bar (e.g. 1.0, 2.0, 3.0) would
+    let readers place the many mid-range teal tiles without reading their printed
+    values.'
+  - 'Suggestion: the mid-range tiles (about 1.3–2.3) share very similar teal shades;
+    a slightly larger color-bar thickness would make the gradient easier to match
+    against them.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, not pure white.
-      Chrome: title 'heatmap-periodic-table · javascript · muix · anyplot.ai' in dark ink, centered, about 48 % of the width; grey subtitle 'Pauling Electronegativity — periodic trends across all elements'; colorbar title 'Electronegativity (Pauling Scale)', ticks 0.70/1.50/2.50/3.50/3.98, 'Low (Fr = 0.70)' and 'High (F = 3.98)' and an italic caption about grey tiles, all readable dark text. Large empty bands above the title and below the caption (square canvas for a ~2:1 table).
-      Data: 118 equal square tiles in the canonical layout, lanthanide/actinide rows detached below, dashed placeholder tiles '57–71'/'89–103' at group 3. Tiles shaded from brand green #009E73 (Fr, Cs, K) to blue #4467A3 (F); N, O, F, Cl, Au darkest blue. Text dark on green tiles, light on the bluer ones. Noble gases He–Ar, Rn, period-7 transactinides, Pm, Eu, Tb, Yb, Lr in light grey #CCCBC3 with grey text. Each tile: atomic number top-left, bold symbol center, value bottom (small 11 px).
+      Background: warm off-white #FAF8F1, no white panel.
+      Chrome: title "heatmap-periodic-table · javascript · muix · anyplot.ai" in dark ink at the top centre, a grey subtitle on the electronegativity trend below it; color-bar title "Pauling electronegativity (Pauling scale, dimensionless)", end labels "Low: Fr 0.70" / "High: F 3.98" and the italic "Grey tiles: no Pauling electronegativity value" key, all in dark ink and readable. No axes or grid (none needed).
+      Data: 118 equal square tiles with a small gap in the canonical layout; lanthanide and actinide rows detached below a visible gap, dashed 57–71 / 89–103 placeholders at group 3. Tiles colored by imprint_seq from brand green #009E73 (Fr, Cs, K) to blue #4467A3 (F); noble gases He/Ne/Ar/Rn, Pm/Eu/Tb/Yb, Lr and 104–118 are grey #CCCBC3 with dark-grey text. Each tile shows atomic number top-left, bold symbol centred, value below; text flips dark/light with tile luminance (light on F, O, N, Au, Xe, I; dark elsewhere).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17, not pure black.
-      Chrome: title, subtitle, colorbar title, ticks and caption flip to light ink and are clearly readable; no dark-on-dark text.
-      Data: tile colors identical to the light render (same green→blue ramp); the missing-value tiles flip to dark grey #3E3E3A with light-grey text, still clearly outside the colormap; the dashed placeholders take a light-grey outline.
+      Background: warm near-black #1A1A17.
+      Chrome: title, subtitle, color-bar title, end labels and grey-tile key all in light ink and readable; no dark-on-dark text.
+      Data: tile colors identical to the light render (same imprint_seq ramp, same per-tile text color); only the no-value tiles flip to dark grey #3E3E3A with light-grey text, and the dashed placeholders show a light-grey outline. Brand green clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title, subtitle, symbols and colorbar text readable in both themes;
-          tile atomic numbers and values at 11 CSS px blur in the 400 px thumbnail
-          (defect line)
+        comment: Explicit sizes (title 24, symbols 28 bold, numbers/values 14 mono,
+          legend 15–17 px CSS); every label readable in both themes thanks to luminance-based
+          tile text
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; tile text stays inside its tile, colorbar ticks
-          clear of each other
+        comment: No collisions; the color legend sits in the empty band of periods
+          1–3
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 118 tiles plus the two dashed f-block placeholders visible; greyed
-          tiles clearly distinct in both themes
+        comment: All 118 tiles and the no-value grey tiles clearly visible on both
+          backgrounds; color bar and placeholders visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue sequential ramp is CVD-safe; tile text switches dark/light
-          by WCAG luminance
+        comment: Green→blue sequential ramp is CVD-safe; values printed on tiles as
+          a second channel
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Square canvas for a ~2:1 table leaves ~370 px empty bands above and
-          below (defect line)
+        comment: Table fills the 3200x1800 canvas, centred, balanced margins, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Colorbar labeled 'Electronegativity (Pauling Scale)'; no axes needed
+        comment: Color bar titled with property and unit (Pauling scale, dimensionless);
+          no axes needed for a fixed layout
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq #009E73 → #4467A3 for a unipolar property; backgrounds
-          #FAF8F1 / #1A1A17; data colors identical across themes'
+        comment: 'imprint_seq via t.seq, correct #FAF8F1 / #1A1A17 backgrounds, data
+          colors identical across themes'
     design_excellence:
-      score: 10
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Monospace numerals (atomic numbers, values, colorbar ticks) against
-          bold sans symbols give a deliberate type hierarchy; dashed '57–71' / '89–103'
-          placeholder tiles
+        comment: 'Deliberate type hierarchy beyond the baseline: bold sans symbols
+          against monospace atomic numbers and values, subdued subtitle, italic legend
+          key'
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Clean tile gaps, nothing beyond the baseline; large empty bands top
-          and bottom
+        passed: true
+        comment: Color legend nested into the table's empty band, dashed range placeholders
+          at group 3, consistent 2 px tile inset and centred square pitch
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Colorbar ends name the extremes (Fr 0.70, F 3.98), anchoring the
-          gradient to the two famous corners of the table
+        passed: true
+        comment: Subtitle states the trend direction (toward F, away from Fr) and
+          the color-bar endpoints name the extreme elements, guiding the eye to the
+          corners
     spec_compliance:
       score: 15
       max: 15
@@ -152,32 +148,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Periodic-table heatmap in the canonical 18×7 layout with detached
-          f-block rows
+        comment: Periodic-table heatmap with the canonical fixed layout
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All Notes and ''A good version shows'' bullets met: canonical layout
-          with group-3 gap, equal square tiles, symbol + corner atomic number + value
-          below, luminance-switched text, sequential map with labeled colorbar, greyed
-          tiles for missing values'
+        comment: Canonical 18x7 layout with detached f-block rows and group-3 gap;
+          equal square tiles with gap; symbol + corner atomic number + value below;
+          luminance-switched text; sequential map; color bar with name and unit; greyed
+          no-value tiles — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Every element at its group/period; only color encodes the value
+        comment: Every element at its group/period; tile size fixed, only color encodes
+          the value
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'heatmap-periodic-table · javascript · muix · anyplot.ai';
-          single property, colorbar is the legend
+        comment: Title matches the required format; legend labels readable text, not
+          identifiers
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -185,23 +181,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full table with valued and missing tiles, clear periodic trend toward
-          top-right
+        comment: Shows the full table, both periodic trends, anomalies (Au, W, Pb)
+          and no-value tiles in main body and f-block
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real Pauling electronegativity, neutral
+        comment: Real Pauling electronegativity, neutral scientific content
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Checked F 3.98, Fr 0.70, O 3.44, Au 2.54, W 2.36, Kr 3.00, Xe 2.60
-          — all standard; the grey-tile caption mislabels Eu, Tb, Yb (defect line)
+        comment: 'Checked against standard Pauling values: F 3.98, O 3.44, Cl 3.16,
+          Kr 3.00, Fr 0.70, Cs 0.79, Au 2.54, W 2.36, Pb 2.33; color-bar range 0.70–3.98
+          computed from the data'
     code_quality:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -209,65 +206,63 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Module-level helper functions and no // Data / // Plot zones; EN_MIN/EN_MAX
-          typed (defect line)
+        comment: Standalone textOn() helper (lines 98–105) beyond the React components
+          the harness needs (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hard-coded data, deterministic
+        comment: Hard-coded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: ChartsContainer and Box both used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Color interpolation written out twice (defect line)
+        comment: Layout derived from the records, limits from data; appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Harness contract respected, skipAnimation set, v9 ChartsContainer
-          import
+        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation,
+          current v9 API
     library_mastery:
-      score: 3
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: ChartsContainer is only an empty SVG host (series={[]}); tiles and
-          colorbar are hand-built raw SVG, the colorbar a stand-in for the native
-          continuous color legend (defect line)
+        passed: true
+        comment: v9 composition API (ChartsDataProvider + ChartsSurface) with scale
+          hooks instead of hand-computed geometry
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: Nothing MUI X-specific beyond the mandated container
-  verdict: REJECTED
+        passed: true
+        comment: zAxis continuous colorMap consumed by both useZColorScale and ContinuousColorLegend
+          — a MUI X-specific shared color scale
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-03c2486144
-  rendered_at: '2026-10-23T14:44:29Z'
+  rendered_at: '2026-10-23T14:52:18Z'
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
+  - custom-colormap
   - annotations
-  - patches
-  - custom-legend
-  - html-export
-  patterns: []
-  dataprep:
-  - normalization
+  patterns:
+  - data-generation
+  dataprep: []
   styling:
   - publication-ready

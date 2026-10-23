@@ -1,3 +1,7 @@
+// anyplot.ai
+// heatmap-periodic-table: Periodic Table Property Heatmap
+// Library: muix 9.16.0 | JavaScript 22.23.3
+// Quality: 90/100 | Updated: 2026-10-23
 //# anyplot-orientation: landscape
 // anyplot.ai
 // heatmap-periodic-table: Periodic Table Property Heatmap
