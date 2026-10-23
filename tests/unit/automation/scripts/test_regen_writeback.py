@@ -375,6 +375,14 @@ class TestApply:
         del review["verdict"]
         assert wb.apply_review({}, review, 80)["review"]["verdict"] == "APPROVED"
 
+    def test_a_carried_review_loses_its_mark(self):
+        """A review-free adapt merge carried the stored review over; a re-score is a review that ran."""
+        old = yaml.safe_load(METADATA_TEXT)
+        old["review"]["carried"] = True
+        new = wb.apply_review(old, _prev_review(), 80, "claude-opus-5", "qc-a.aqr-b.sg-c.lib-d")
+        assert "carried" not in new["review"]
+        assert old["review"]["carried"] is True  # the input is not mutated
+
     def test_cli_writes_the_writer_format(self, tmp_path, capsys):
         meta, impl, prev = tmp_path / "meta.yaml", tmp_path / "impl.R", tmp_path / "review_prev.json"
         meta.write_text(METADATA_TEXT, encoding="utf-8")
@@ -605,6 +613,27 @@ class TestVerifyDiff:
         data["quality_score"] = "80"
         problems = wb.metadata_diff_problems(METADATA_TEXT, wb.dump_metadata(data))
         assert any("quality_score at the head must be an integer" in p for p in problems)
+
+    def test_the_carried_mark_may_go_but_never_come(self):
+        carried = yaml.safe_load(METADATA_TEXT)
+        carried["review"]["carried"] = True
+        carried_text = wb.dump_metadata(carried)
+        written = wb.dump_metadata(wb.apply_review(carried, _prev_review(), 80, "claude-opus-5", ""))
+        assert "carried" not in yaml.safe_load(written)["review"]
+        assert wb.metadata_diff_problems(carried_text, written) == []
+        # A write-back that adds the mark, or keeps it with another value, is refused.
+        added = yaml.safe_load(_written_back())
+        added["review"]["carried"] = True
+        assert any(
+            "review key 'carried' changed" in p
+            for p in wb.metadata_diff_problems(METADATA_TEXT, wb.dump_metadata(added))
+        )
+        flipped = yaml.safe_load(written)
+        flipped["review"]["carried"] = False
+        assert any(
+            "review key 'carried' changed" in p
+            for p in wb.metadata_diff_problems(carried_text, wb.dump_metadata(flipped))
+        )
 
 
 # ---------------------------------------------------------------------------

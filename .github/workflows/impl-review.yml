@@ -244,9 +244,12 @@ jobs:
           # Keep the regen helpers from THIS workflow's ref before switching to
           # the PR head: the gate's parser must match the workflow that calls
           # it, and a PR branched off an older main does not carry them.
+          # The adaptability checker and its record builder join them for the
+          # same reason: a PR head must not choose the rules it is checked by.
           mkdir -p "$RUNNER_TEMP/regen-tools"
           cp automation/scripts/regen_gate.py automation/scripts/close_issue_if_complete.py \
              automation/scripts/review_provenance.py automation/scripts/regen_writeback.py \
+             automation/scripts/adaptability_check.py automation/scripts/adapt_record.py \
              "$RUNNER_TEMP/regen-tools/"
           # The reviewer's step-10 self-check (`check-feedback`) runs this
           # same workflow-ref copy of the gate.
@@ -426,7 +429,11 @@ jobs:
           # someone re-dispatched the review by hand (#11360 on 2026-09-05,
           # #11678 on 2026-09-09; staging was complete both times). Keep stderr:
           # a transfer blip and a missing staging folder need different answers.
-          SRC="gs://anyplot-images/staging/${SPEC_ID}/${LANGUAGE}/${LIBRARY}/*"
+          # `plot-*` only: everything the reviewer needs starts with `plot-`,
+          # and the adapt/ artifacts beside it (the predecessor's raw renders
+          # among them) must never land in the folder the blind review reads.
+          # "Adaptability check (record-only)" fetches those on its own.
+          SRC="gs://anyplot-images/staging/${SPEC_ID}/${LANGUAGE}/${LIBRARY}/plot-*"
           for attempt in 1 2 3; do
             if gsutil -m cp "$SRC" plot_images/ 2> /tmp/gsutil.err \
                && [ -f plot_images/plot-light.png ] && [ -f plot_images/plot-dark.png ]; then
@@ -613,6 +620,197 @@ jobs:
           print(f"::warning::Canvas gate FAILED — wrote synthetic weakness to /tmp/anyplot-canvas-gate.txt: {weakness}")
           PY
 
+      # The checker mirror parses the PR's source with `ast`, and ruff writes
+      # PEP 758 `except A, B:` since the move to Python 3.14 (#12247), which
+      # an older interpreter rejects. Pinned here, without touching PATH:
+      # every other step keeps the runner's python3. A failed setup falls
+      # back to python3 in the next step.
+      - name: Set up Python for the adaptability mirror
+        id: py314
+        if: steps.lang.outputs.language == 'python'
+        continue-on-error: true
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with:
+          python-version: '3.14'
+          update-environment: false   # every other step keeps the runner's python3
+
+      # Record-only (docs/concepts/adaptable-code.md, "Pipeline changes"). The
+      # checker mirror runs on the PR's implementation and, on a regeneration,
+      # on its predecessor from origin/main; with the smoke runs impl-generate
+      # staged under staging/.../adapt/, each side becomes one record:
+      # /tmp/anyplot-adapt-new.json and /tmp/anyplot-adapt-prev.json. Only the
+      # regen gate reads them (the adapt route and the adapt regression); the
+      # review prompt never mentions them, and the staged predecessor renders
+      # stay under $RUNNER_TEMP, outside the reviewer's /tmp/* reads. Never a
+      # raw `exit 1` (see "Canvas dimension gate"): a failure here only means
+      # no record, and the gate then decides as it did before.
+      # On a regeneration the step also asks the gate whether the adapt route
+      # holds before any review (`adapt-route`), and skips the review only when
+      # the route holds, the owner's ADAPT_REVIEW_FREE variable is `true`, and
+      # nothing else needs a reviewer: the stored score is an integer above 0,
+      # the regen context is complete, no change request is pending and the
+      # canvas gate passed. review_skipped is the step's last write, so a step
+      # that fails or times out before it leaves the review running.
+      - name: Adaptability check (record-only)
+        id: adapt
+        if: steps.lang.outputs.language == 'python'
+        continue-on-error: true
+        timeout-minutes: 5
+        env:
+          SPEC_ID: ${{ steps.pr.outputs.specification_id }}
+          LIBRARY: ${{ steps.pr.outputs.library }}
+          LANGUAGE: ${{ steps.lang.outputs.language }}
+          IS_REGEN: ${{ steps.regen.outputs.is_regen }}
+          GCS_OK: ${{ steps.gcs.outcome == 'success' }}
+          PY314: ${{ steps.py314.outputs.python-path }}
+          # Off unless the owner sets the repository variable to exactly `true`.
+          ADAPT_REVIEW_FREE: ${{ vars.ADAPT_REVIEW_FREE || 'false' }}
+          CONTEXT_OUTCOME: ${{ steps.regen_ctx.outcome }}
+          PREV_STORED: ${{ steps.regen_ctx.outputs.prev_stored || 'n/a' }}
+          CHANGE_REQUEST_PRESENT: ${{ steps.regen_ctx.outputs.change_request_present || 'false' }}
+        run: |
+          OUT="$RUNNER_TEMP/adapt"
+          PY="${PY314:-python3}"
+          IMPL="plots/${SPEC_ID}/implementations/python/${LIBRARY}.py"
+          SPEC="plots/${SPEC_ID}/specification.md"
+          NEW_REC=/tmp/anyplot-adapt-new.json
+          PREV_REC=/tmp/anyplot-adapt-prev.json
+
+          # 1. A stale record must never stand in for this run's.
+          rm -f "$NEW_REC" "$PREV_REC"
+          rm -rf "$OUT"
+          mkdir -p "$OUT"
+
+          # 2. What impl-generate staged: new-smoke.json, the Step 3c log and,
+          # on a regeneration, prev-smoke.json, pair.json and both sources' raw
+          # renders. Best effort: a file that is not there reads as missing.
+          if [ "$GCS_OK" = "true" ]; then
+            SRC="gs://anyplot-images/staging/${SPEC_ID}/${LANGUAGE}/${LIBRARY}/adapt/*"
+            for attempt in 1 2 3; do
+              if gsutil -m cp -r "$SRC" "$OUT/" 2> "$RUNNER_TEMP/adapt-gsutil.err"; then
+                break
+              fi
+              if grep -q "No URLs matched" "$RUNNER_TEMP/adapt-gsutil.err"; then
+                echo "::notice::no adapt artifacts staged for ${SPEC_ID}/${LIBRARY}"
+                break
+              fi
+              echo "::warning::adapt artifact download failed (attempt ${attempt}/3): $(head -c 300 "$RUNNER_TEMP/adapt-gsutil.err" | tr '\n' ' ')"
+              [ "$attempt" -lt 3 ] && sleep $((attempt * 10))
+            done
+          else
+            echo "::warning::GCP auth failed — no adapt artifacts; the smoke runs read as missing"
+          fi
+          # Only the mirror writes these two, and only this step writes the source copy.
+          rm -rf "$OUT/prev-src" "$OUT/static-new.json" "$OUT/static-prev.json"
+
+          # 3. The checker mirror on the PR's file (exit 0 pass or excluded,
+          # 1 fail, 2 unreadable input), then its record.
+          NEW_EXIT=0
+          "$PY" "$RUNNER_TEMP/regen-tools/adaptability_check.py" check "$IMPL" \
+            --spec "$SPEC" --spec-id "$SPEC_ID" --out "$OUT/static-new.json" \
+            > /dev/null && NEW_EXIT=0 || NEW_EXIT=$?
+          "$PY" "$RUNNER_TEMP/regen-tools/adapt_record.py" record --side new \
+            --spec "$SPEC_ID" --lib "$LIBRARY" --language "$LANGUAGE" --source "$IMPL" \
+            --static "$OUT/static-new.json" --static-exit "$NEW_EXIT" \
+            --smoke "$OUT/new-smoke.json" --selfcheck "$OUT/selfcheck.jsonl" --out "$NEW_REC" \
+            || echo "::warning::adapt record (new) not written — the gate sees no adapt record"
+
+          PREV_STATUS=n/a
+          ROUTE=n/a
+          WHY=n/a
+          if [ "$IS_REGEN" = "true" ]; then
+            # 4. The predecessor, under its library's file name: the checker
+            # infers the library, and so its setup-call allowlist, from the
+            # stem (never /tmp/anyplot-prev-impl.py). Its header holds the
+            # stored score, so the copy lives under $RUNNER_TEMP and goes
+            # right after the check.
+            mkdir -p "$OUT/prev-src"
+            PREV_SRC="$OUT/prev-src/${LIBRARY}.py"
+            PREV_EXIT=0
+            if git show "origin/main:${IMPL}" > "$PREV_SRC" 2>/dev/null; then
+              "$PY" "$RUNNER_TEMP/regen-tools/adaptability_check.py" check "$PREV_SRC" \
+                --spec "$SPEC" --spec-id "$SPEC_ID" --out "$OUT/static-prev.json" \
+                > /dev/null && PREV_EXIT=0 || PREV_EXIT=$?
+            else
+              echo "::warning::${IMPL} is not readable on origin/main — the predecessor's record reads unknown"
+              rm -f "$PREV_SRC"
+              PREV_EXIT=2
+            fi
+            "$PY" "$RUNNER_TEMP/regen-tools/adapt_record.py" record --side prev \
+              --spec "$SPEC_ID" --lib "$LIBRARY" --language "$LANGUAGE" --source "$PREV_SRC" \
+              --static "$OUT/static-prev.json" --static-exit "$PREV_EXIT" \
+              --smoke "$OUT/prev-smoke.json" --out "$PREV_REC" \
+              || echo "::warning::adapt record (prev) not written — the gate sees no adapt record"
+            rm -rf "$OUT/prev-src"
+
+            # 5. The adapt route's conditions that need no review. adapt-route
+            # always exits 0 (2 on a usage error) and writes its adapt_* keys
+            # to the file it is given, which this step turns into its own
+            # outputs. Anything it does not say clearly is "no route": a
+            # failed call, an unknown value, or `true` without `why=route`.
+            ROUTE_OUT="$RUNNER_TEMP/adapt-route.out"
+            : > "$ROUTE_OUT"
+            ROUTE_FLAGS=()
+            [ -f /tmp/anyplot-canvas-gate.txt ] && ROUTE_FLAGS+=(--canvas-failed)
+            if GITHUB_OUTPUT="$ROUTE_OUT" "$PY" "$RUNNER_TEMP/regen-tools/regen_gate.py" adapt-route \
+                 --spec-id "$SPEC_ID" --library "$LIBRARY" \
+                 --adapt-new "$NEW_REC" --adapt-prev "$PREV_REC" --adapt-pair "$OUT/pair.json" \
+                 --prev-impl /tmp/anyplot-prev-impl.py --new-impl "$IMPL" "${ROUTE_FLAGS[@]}"; then
+              ROUTE=$(sed -n 's/^adapt_route=//p' "$ROUTE_OUT" | tail -n 1)
+              WHY=$(sed -n 's/^adapt_why=//p' "$ROUTE_OUT" | tail -n 1)
+            else
+              echo "::warning::regen_gate.py adapt-route failed — no adapt route, the review runs"
+            fi
+            if ! [[ "$ROUTE" =~ ^(true|false)$ ]] || ! [[ "$WHY" =~ ^[a-z_]{1,40}$ ]]; then
+              ROUTE=false
+              WHY=route_error
+            elif [ "$ROUTE" = "true" ] && [ "$WHY" != "route" ]; then
+              ROUTE=false
+            fi
+            PREV_STATUS=$(jq -r '.status' "$PREV_REC" 2>/dev/null) || PREV_STATUS=n/a
+          fi
+          NEW_STATUS=$(jq -r '.status' "$NEW_REC" 2>/dev/null) || NEW_STATUS=n/a
+          for side in NEW_STATUS PREV_STATUS; do
+            case "${!side}" in
+              pass|fail|excluded|unknown|n/a) ;;
+              *) printf -v "$side" '%s' n/a ;;
+            esac
+          done
+
+          # 6. Review or not. The fail-safe direction is to review.
+          REVIEW_SKIPPED=false
+          if [ "$ADAPT_REVIEW_FREE" != "true" ]; then
+            REVIEW_WHY=switch_off
+          elif [ "$IS_REGEN" != "true" ]; then
+            REVIEW_WHY=first_generation
+          elif [ "$ROUTE" != "true" ]; then
+            REVIEW_WHY=no_route
+          elif [ "$CONTEXT_OUTCOME" != "success" ]; then
+            REVIEW_WHY=context_failed
+          elif ! [[ "$PREV_STORED" =~ ^[1-9][0-9]{0,2}$ ]] || [ "$PREV_STORED" -gt 100 ]; then
+            REVIEW_WHY=no_stored_score
+          elif [ "$CHANGE_REQUEST_PRESENT" = "true" ]; then
+            REVIEW_WHY=change_request
+          elif [ -f /tmp/anyplot-canvas-gate.txt ]; then
+            REVIEW_WHY=canvas_failed
+          else
+            REVIEW_SKIPPED=true
+            REVIEW_WHY=route
+          fi
+          SWITCH=off
+          [ "$ADAPT_REVIEW_FREE" = "true" ] && SWITCH=on
+          REVIEW=run
+          [ "$REVIEW_SKIPPED" = "true" ] && REVIEW=skipped
+          {
+            echo "new_status=${NEW_STATUS}"
+            echo "prev_status=${PREV_STATUS}"
+            echo "route=${ROUTE}"
+            echo "why=${WHY}"
+          } >> "$GITHUB_OUTPUT"
+          echo "::notice::adapt_review spec=${SPEC_ID} lib=${LIBRARY} switch=${SWITCH} route=${ROUTE} review=${REVIEW} why=${REVIEW_WHY}"
+          # Last write of the step (see above).
+          echo "review_skipped=${REVIEW_SKIPPED}" >> "$GITHUB_OUTPUT"
+
       - name: React with eyes emoji
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -677,8 +875,12 @@ jobs:
           fi
           echo "::notice::blind review: header $(grep -m1 -o 'Quality: [a-z0-9]*' "$IMPL_FILE" || echo 'Quality: n/a'), stored review hidden=$([ -f "$META_FILE" ] && echo false || echo true)"
 
+      # Skipped only on a review-free adapt merge ("Adaptability check
+      # (record-only)"); every step keyed on this one's success then skips by
+      # itself, and the steps the review-free path needs say so in their `if`.
       - name: Run AI Quality Review
         id: review
+        if: steps.adapt.outputs.review_skipped != 'true'
         continue-on-error: true
         timeout-minutes: 30
         uses: anthropics/claude-code-action@db77d4d3c98f3f6380e7cd45ffba2342a3dbde3c  # v1
@@ -995,9 +1197,14 @@ jobs:
       # verdict is keep (fail closed). The gate record (scores, counts, reason
       # code, model and rules provenance — no model-written text) goes into the
       # PR comment on both paths below, where it outlives this run's log.
+      # The adapt records of "Adaptability check (record-only)" and the staged
+      # pair.json feed the adapt route and the adapt regression; without them
+      # the gate decides as before. On a review-free adapt merge the gate runs
+      # without a score (`--score ""` reads as none) and with
+      # --review-skipped, which only a counted adapt route turns into a merge.
       - name: Regen gate
         id: gate
-        if: steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true' && steps.regen.outputs.is_regen == 'true'
+        if: steps.regen.outputs.is_regen == 'true' && ((steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true') || steps.adapt.outputs.review_skipped == 'true')
         env:
           PR_NUM: ${{ steps.pr.outputs.pr_number }}
           SPEC_ID: ${{ steps.pr.outputs.specification_id }}
@@ -1014,6 +1221,7 @@ jobs:
           PREV_CRITERIA_VERSION: ${{ steps.regen_ctx.outputs.prev_criteria_version || 'n/a' }}
           LANGUAGE: ${{ steps.lang.outputs.language }}
           EXT: ${{ steps.lang.outputs.ext }}
+          REVIEW_SKIPPED: ${{ steps.adapt.outputs.review_skipped }}
         run: |
           RECORD=/tmp/anyplot-regen-record.json
           rm -f "$RECORD"
@@ -1021,6 +1229,11 @@ jobs:
           [ -f /tmp/anyplot-canvas-gate.txt ] && FLAGS+=(--canvas-failed)
           [ "$CHANGE_REQUEST_PRESENT" = "true" ] && FLAGS+=(--change-request-present)
           [ "$CONTEXT_OUTCOME" = "success" ] || FLAGS+=(--context-failed)
+          ADAPT=()
+          [ -s /tmp/anyplot-adapt-new.json ] && ADAPT+=(--adapt-new /tmp/anyplot-adapt-new.json)
+          [ -s /tmp/anyplot-adapt-prev.json ] && ADAPT+=(--adapt-prev /tmp/anyplot-adapt-prev.json)
+          [ -s "$RUNNER_TEMP/adapt/pair.json" ] && ADAPT+=(--adapt-pair "$RUNNER_TEMP/adapt/pair.json")
+          [ "$REVIEW_SKIPPED" = "true" ] && ADAPT+=(--review-skipped)
           if ! python3 "$RUNNER_TEMP/regen-tools/regen_gate.py" decide \
                --spec-id "$SPEC_ID" --library "$LIBRARY" \
                --score "$SCORE" --prev-stored "$PREV_STORED" \
@@ -1035,8 +1248,8 @@ jobs:
                --record-out "$RECORD" \
                --prev-impl "/tmp/anyplot-prev-impl${EXT}" \
                --new-impl "plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}${EXT}" \
-               "${FLAGS[@]}"; then
-            echo "::notice::regen_gate spec=${SPEC_ID} lib=${LIBRARY} prev_stored=${PREV_STORED} prev_rescored=n/a new=${SCORE} verdict=keep code=script_crashed model=${MODEL_ID} criteria=${CRITERIA_VERSION} reason=gate script crashed"
+               "${FLAGS[@]}" "${ADAPT[@]}"; then
+            echo "::notice::regen_gate spec=${SPEC_ID} lib=${LIBRARY} prev_stored=${PREV_STORED} prev_rescored=n/a new=${SCORE:-n/a} verdict=keep code=script_crashed model=${MODEL_ID} criteria=${CRITERIA_VERSION} reason=gate script crashed"
             {
               echo "verdict=keep"
               echo "reason=gate script crashed"
@@ -1057,10 +1270,12 @@ jobs:
       # and the gate record. The predecessor's production renders are
       # overwritten by the next merge, so this is the only copy. Staged into
       # one directory first (mixed /tmp + workspace paths would be rooted at
-      # `/`). Never gating.
+      # `/`). adapt/ holds both adapt records and what impl-generate staged for
+      # them (smoke runs, pair.json, the raw renders of both sources, the
+      # Step 3c log), which the weekly review samples. Never gating.
       - name: Stage regen pair
         id: pair
-        if: steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true' && steps.regen.outputs.is_regen == 'true'
+        if: steps.regen.outputs.is_regen == 'true' && ((steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true') || steps.adapt.outputs.review_skipped == 'true')
         continue-on-error: true
         timeout-minutes: 5
         env:
@@ -1085,6 +1300,10 @@ jobs:
           cp review_*.json review_*.txt quality_score.txt "$DIR/" 2>/dev/null || true
           cp /tmp/anyplot-regen-record.json "$DIR/gate-record.json" 2>/dev/null || true
           cp /tmp/anyplot-regen-summary.md "$DIR/gate-summary.md" 2>/dev/null || true
+          mkdir -p "$DIR/adapt"
+          cp -r "$RUNNER_TEMP/adapt/." "$DIR/adapt/" 2>/dev/null || true
+          rm -rf "$DIR/adapt/prev-src"
+          cp /tmp/anyplot-adapt-new.json /tmp/anyplot-adapt-prev.json "$DIR/adapt/" 2>/dev/null || true
           MAIN_SHA=$(git rev-parse -q --verify origin/main 2>/dev/null || echo "")
           jq -n --arg pr "$PR_NUM" --arg head "$HEAD_SHA" --arg main "$MAIN_SHA" --arg spec "$SPEC_ID" \
              --arg lib "$LIBRARY" --arg lang "$LANGUAGE" --arg ext "$EXT" --arg model "$MODEL_ID" \
@@ -1105,9 +1324,64 @@ jobs:
           retention-days: 60
           if-no-files-found: warn
 
+      # Review-free adapt merge only: no review ran, so the stored score that
+      # carries over ("Update metadata and implementation header") is the PR's
+      # score label, ahead of the verdict labels (quality:N, regen:improved,
+      # regen:adapt, ai-approved). impl-merge reads it for the issue comment.
+      # A failure stops the run before any verdict label: with quality:N the
+      # watchdog flags the PR, without it the watchdog re-dispatches this
+      # review once.
+      - name: Add carried quality score label
+        if: steps.adapt.outputs.review_skipped == 'true' && steps.gate.outputs.verdict == 'merge'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUM: ${{ steps.pr.outputs.pr_number }}
+          SCORE: ${{ steps.regen_ctx.outputs.prev_stored }}
+        run: |
+          if ! [[ "$SCORE" =~ ^[1-9][0-9]{0,2}$ ]] || [ "$SCORE" -gt 100 ]; then
+            echo "::error::no stored score to carry over (prev_stored='${SCORE}')"
+            exit 1
+          fi
+          LABEL="quality:${SCORE}"
+          gh_retry() {
+            local what="$1"; shift
+            local attempt
+            for attempt in 1 2 3 4; do
+              if "$@" 2> /tmp/quality-label.err; then
+                return 0
+              fi
+              echo "::warning::${what} failed (attempt ${attempt}/4): $(head -c 500 /tmp/quality-label.err | tr '\n' ' ')"
+              [ "$attempt" -lt 4 ] && sleep $((attempt * 10))
+            done
+            echo "::error::${what} failed after 4 attempts for PR #${PR_NUM}"
+            return 1
+          }
+          gh_retry "quality label creation" gh label create "$LABEL" --force --color "0e8a16" --description "Quality score ${SCORE}/100" \
+            || echo "::warning::could not create ${LABEL} — the add below fails unless the label already exists"
+          # Exactly one quality:* label, as "Add quality score label" keeps it.
+          STALE=""
+          READ_OK=0
+          for attempt in 1 2 3 4; do
+            if STALE=$(gh pr view "$PR_NUM" --json labels --jq '[.labels[].name | select(startswith("quality:")) | select(. != "'"$LABEL"'")] | join(",")' 2> /tmp/quality-label.err); then
+              READ_OK=1
+              break
+            fi
+            echo "::warning::gh pr view (labels) failed (attempt ${attempt}/4): $(head -c 500 /tmp/quality-label.err | tr '\n' ' ')"
+            [ "$attempt" -lt 4 ] && sleep $((attempt * 10))
+          done
+          if [ "$READ_OK" -ne 1 ]; then
+            echo "::error::Could not read labels for PR #${PR_NUM} after 4 attempts"
+            exit 1
+          fi
+          if [ -n "$STALE" ]; then
+            gh_retry "stale quality label removal" gh pr edit "$PR_NUM" --remove-label "$STALE"
+          fi
+          gh_retry "quality label" gh pr edit "$PR_NUM" --add-label "$LABEL"
+          echo "::notice::carried quality label ${LABEL} (no review ran: adapt route)"
+
       - name: Add preliminary verdict label (early)
         id: early_verdict
-        if: steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true'
+        if: (steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true') || steps.adapt.outputs.review_skipped == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUM: ${{ steps.pr.outputs.pr_number }}
@@ -1115,6 +1389,8 @@ jobs:
           ATTEMPT_COUNT: ${{ steps.attempts.outputs.count }}
           IS_REGEN: ${{ steps.regen.outputs.is_regen }}
           GATE_VERDICT: ${{ steps.gate.outputs.verdict }}
+          # The gate's adapt route held (regen_gate.py decide, adapt_counted).
+          ADAPT_COUNTED: ${{ steps.gate.outputs.adapt_counted }}
         run: |
           # Add verdict label early to ensure it's set even if later steps fail
           # This is idempotent - re-running won't cause issues
@@ -1143,12 +1419,31 @@ jobs:
           # keep → `regen:kept` only. Never `ai-rejected`: that would start
           # the repair loop, which a regeneration never enters (one review,
           # then the gate).
+          # A merge on which the adapt route held also gets `regen:adapt`,
+          # between the two: the count of adapt conversions the owner reads
+          # before turning on ADAPT_REVIEW_FREE (`gh pr list --state merged
+          # --label regen:adapt`). Best effort: a lost count label never holds
+          # up the merge.
           if [ "$IS_REGEN" = "true" ]; then
             gh label create "regen:improved" --color "0e8a16" --description "Regeneration replaced the live implementation (regen gate)" 2>/dev/null || true
             gh label create "regen:kept" --color "bfdadc" --description "Regeneration closed, live implementation kept (regen gate)" 2>/dev/null || true
             if [ "$GATE_VERDICT" = "merge" ]; then
               echo "approved=true" >> "$GITHUB_OUTPUT"
               add_label "regen:improved" || { echo "::error::regen:improved could not be added — not adding ai-approved"; exit 1; }
+              if [ "$ADAPT_COUNTED" = "true" ]; then
+                gh label create "regen:adapt" --force --color "1d76db" --description "Regeneration merged on the adapt route (render identity, adaptability check)" 2>/dev/null \
+                  || echo "::warning::could not create regen:adapt — the add below fails unless the label exists"
+                ADAPT_LABELLED=0
+                for attempt in 1 2 3; do
+                  if gh pr edit "$PR_NUM" --add-label "regen:adapt" 2> /tmp/label.err; then
+                    ADAPT_LABELLED=1
+                    break
+                  fi
+                  echo "::warning::adding regen:adapt failed (attempt ${attempt}/3): $(head -c 300 /tmp/label.err | tr '\n' ' ')"
+                  [ "$attempt" -lt 3 ] && sleep $((attempt * 10))
+                done
+                [ "$ADAPT_LABELLED" = "1" ] || echo "::warning::regen:adapt not added to PR #${PR_NUM} — the merge goes ahead; the adapt count misses this PR"
+              fi
               add_label "ai-approved" || exit 1
               echo "::notice::Regen gate: merge (regen:improved + ai-approved)"
             else
@@ -1204,7 +1499,7 @@ jobs:
           fi
 
       - name: Install Python dependencies for metadata update
-        if: steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true'
+        if: (steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true') || steps.adapt.outputs.review_skipped == 'true'
         run: pip install pyyaml
 
       # Monitoring only: every weakness line is a defect (`<ID> (<render>): …`)
@@ -1230,16 +1525,23 @@ jobs:
       # Skipped on a kept regeneration: the PR is closed unmerged, so there is
       # nothing to record on its branch (the live implementation's re-score
       # goes to main through "Write back the re-score (regen keep)").
+      # On a review-free adapt merge it runs in carried mode (REVIEW_CARRIED):
+      # impl-generate reset quality_score to null and emptied the review, and
+      # impl-merge merges the branch's metadata as it stands, so the stored
+      # score and review are written back unchanged, marked as carried, and
+      # the header gets the carried score with the measured versions.
       - name: Update metadata and implementation header
-        if: steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true' && (steps.regen.outputs.is_regen != 'true' || steps.gate.outputs.verdict == 'merge')
+        if: (steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true' && (steps.regen.outputs.is_regen != 'true' || steps.gate.outputs.verdict == 'merge')) || (steps.adapt.outputs.review_skipped == 'true' && steps.gate.outputs.verdict == 'merge')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SPEC_ID: ${{ steps.pr.outputs.specification_id }}
           LIBRARY: ${{ steps.pr.outputs.library }}
           LANGUAGE: ${{ steps.lang.outputs.language }}
           EXT: ${{ steps.lang.outputs.ext }}
-          SCORE: ${{ steps.score.outputs.score }}
+          SCORE: ${{ steps.adapt.outputs.review_skipped == 'true' && steps.regen_ctx.outputs.prev_stored || steps.score.outputs.score }}
           BRANCH: ${{ steps.pr.outputs.branch }}
+          REVIEW_CARRIED: ${{ steps.adapt.outputs.review_skipped == 'true' }}
+          CARRY_FROM: /tmp/anyplot-prev-metadata.yaml
           # Review provenance (not synced to the database: sync_to_postgres
           # picks review keys by name). An empty value removes the key.
           REVIEW_MODEL: ${{ steps.review_model.outputs.model_id }}
@@ -1281,7 +1583,23 @@ jobs:
           score = int(sys.argv[2])
           timestamp = sys.argv[3]
 
-          # Read existing review data files
+          # Carried mode, a review-free adapt merge only: no review ran and the
+          # render is identical to the predecessor's, so main's stored score
+          # and review (CARRY_FROM, the copy "Regen context" wrote) carry over
+          # unchanged and are marked `review.carried`. Nothing of the review_*
+          # files or this run's provenance is used; the measured versions
+          # impl-generate wrote stay as they are.
+          carried = os.environ.get('REVIEW_CARRIED', '').strip() == 'true'
+          prev = {}
+          if carried:
+              carry_from = os.environ.get('CARRY_FROM', '').strip()
+              with open(carry_from) as f:
+                  prev = yaml.safe_load(f) or {}
+              prev_score = prev.get('quality_score') if isinstance(prev, dict) else None
+              if isinstance(prev_score, bool) or not isinstance(prev_score, int) or prev_score != score or not 0 < score <= 100:
+                  sys.exit(f'carried review: {carry_from} stores quality_score {prev_score!r}, not {score}')
+
+          # Read existing review data files (carried mode uses none of them)
           strengths = []
           weaknesses = []
           image_description = None
@@ -1347,39 +1665,49 @@ jobs:
           if 'review' not in data:
               data['review'] = {}
 
-          # Update review section with all fields
-          data['review']['strengths'] = strengths
-          data['review']['weaknesses'] = weaknesses
+          if carried:
+              prev_review = prev.get('review')
+              data['review'] = dict(prev_review) if isinstance(prev_review, dict) else {}
+              data['review']['carried'] = True
+              # impl-generate rewrote the metadata without them.
+              if prev.get('impl_tags'):
+                  data['impl_tags'] = prev['impl_tags']
+          else:
+              # Update review section with all fields
+              data['review']['strengths'] = strengths
+              data['review']['weaknesses'] = weaknesses
 
-          # Add extended review data (issue #2845)
-          if image_description:
-              data['review']['image_description'] = image_description
-          if criteria_checklist:
-              data['review']['criteria_checklist'] = criteria_checklist
-          if verdict:
-              data['review']['verdict'] = verdict
+              # Add extended review data (issue #2845)
+              if image_description:
+                  data['review']['image_description'] = image_description
+              if criteria_checklist:
+                  data['review']['criteria_checklist'] = criteria_checklist
+              if verdict:
+                  data['review']['verdict'] = verdict
 
-          # Review provenance: resolved model id, rules version, render time.
-          # Each is optional — a missing value never stops this script. A
-          # value this review could not determine removes the key: a repair
-          # review starts from the metadata the previous review wrote, whose
-          # model, rules or render time would otherwise pass for this one's.
-          review_model = os.environ.get('REVIEW_MODEL', '').strip()
-          criteria_version = os.environ.get('CRITERIA_VERSION', '').strip()
-          rendered_at = os.environ.get('RENDERED_AT', '').strip()
-          for key, value in (
-              ('model', review_model),
-              ('criteria_version', criteria_version),
-              ('rendered_at', rendered_at),
-          ):
-              if value:
-                  data['review'][key] = value
-              else:
-                  data['review'].pop(key, None)
+              # Review provenance: resolved model id, rules version, render time.
+              # Each is optional — a missing value never stops this script. A
+              # value this review could not determine removes the key: a repair
+              # review starts from the metadata the previous review wrote, whose
+              # model, rules or render time would otherwise pass for this one's.
+              review_model = os.environ.get('REVIEW_MODEL', '').strip()
+              criteria_version = os.environ.get('CRITERIA_VERSION', '').strip()
+              rendered_at = os.environ.get('RENDERED_AT', '').strip()
+              for key, value in (
+                  ('model', review_model),
+                  ('criteria_version', criteria_version),
+                  ('rendered_at', rendered_at),
+              ):
+                  if value:
+                      data['review'][key] = value
+                  else:
+                      data['review'].pop(key, None)
+              # This review ran: nothing in it is carried.
+              data['review'].pop('carried', None)
 
-          # Add impl_tags (issue #2434)
-          if impl_tags:
-              data['impl_tags'] = impl_tags
+              # Add impl_tags (issue #2434)
+              if impl_tags:
+                  data['impl_tags'] = impl_tags
 
           def str_representer(dumper, data):
               if isinstance(data, str) and data.endswith('Z') and 'T' in data:
@@ -1396,7 +1724,11 @@ jobs:
           EOF
 
             python3 /tmp/update_metadata.py "$METADATA_FILE" "$SCORE" "$TIMESTAMP"
-            echo "::notice::Updated metadata with quality score ${SCORE} and extended review data"
+            if [ "$REVIEW_CARRIED" = "true" ]; then
+              echo "::notice::Carried the stored score ${SCORE} and its review over (no review ran: adapt route)"
+            else
+              echo "::notice::Updated metadata with quality score ${SCORE} and extended review data"
+            fi
           fi
 
           # Update implementation header with quality score
@@ -1560,7 +1892,11 @@ jobs:
           if ! git diff --cached --quiet; then
             # No score in the subject: `git log` on the PR branch is the first
             # thing a later reviewer would see.
-            git commit -m "chore(${LIBRARY}): store the review for ${SPEC_ID}"
+            if [ "$REVIEW_CARRIED" = "true" ]; then
+              git commit -m "chore(${LIBRARY}): carry the stored review over for ${SPEC_ID}"
+            else
+              git commit -m "chore(${LIBRARY}): store the review for ${SPEC_ID}"
+            fi
             git push origin "$BRANCH"
             echo "::notice::Changes committed to ${BRANCH}"
           fi
@@ -1914,7 +2250,7 @@ jobs:
           set_status opened "#${WB_PR}"
 
       - name: Add verdict label and take action
-        if: steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true'
+        if: (steps.review.conclusion == 'success' && steps.score.outputs.has_output == 'true') || steps.adapt.outputs.review_skipped == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUM: ${{ steps.pr.outputs.pr_number }}
@@ -1939,6 +2275,8 @@ jobs:
           WB_PR: ${{ steps.writeback.outputs.pr }}
           WB_SCORE: ${{ steps.writeback.outputs.score }}
           NOTHING_TO_REPAIR: ${{ steps.early_verdict.outputs.nothing_to_repair }}
+          REVIEW_SKIPPED: ${{ steps.adapt.outputs.review_skipped }}
+          ADAPT_COUNTED: ${{ steps.gate.outputs.adapt_counted }}
         run: |
           # Cascading thresholds:
           # Attempt 0 (Review 1): >= 90
@@ -1984,10 +2322,19 @@ jobs:
             if [ ! -s "$SUMMARY_FILE" ]; then
               printf '**Reason:** %s\n' "${GATE_REASON:-regen gate produced no verdict}" > "$SUMMARY_FILE"
             fi
+            # What the comments say about this run's review: its score, or
+            # that the adapt route skipped it.
+            if [ "$REVIEW_SKIPPED" = "true" ]; then
+              RENDER="this render (no review: the adapt route skipped it)"
+            else
+              RENDER="this render (score ${SCORE})"
+            fi
             # Keep only: what happened to the re-score of the live
             # implementation ("Write back the re-score", previous step). A
-            # missing status (the step was skipped or cut off) reads as failed.
+            # missing status (the step was skipped or cut off) reads as failed;
+            # without a review there is no re-score to write back.
             if [ "$GATE_VERDICT" != "merge" ]; then
+              [ "$REVIEW_SKIPPED" = "true" ] && WB_STATUS=no_rescore
               case "$WB_STATUS" in
                 opened|unchanged|no_rescore|invalid|stale|failed) ;;
                 *) WB_STATUS=failed ;;
@@ -2015,7 +2362,15 @@ jobs:
               {
                 echo "## :arrows_counterclockwise: Regeneration replaces the live implementation"
                 echo ""
-                echo "The regen gate compared this render (score ${SCORE}) with the implementation on main and approved the replacement; the merge follows."
+                if [ "$REVIEW_SKIPPED" = "true" ]; then
+                  echo "No review ran: the adapt route held. The implementation on main fails the adaptability check, this one passes it and its smoke run, and both render alike within the identity bound in one runner. The stored score (${PREV_STORED}) and its review carry over unchanged; the merge follows."
+                else
+                  echo "The regen gate compared ${RENDER} with the implementation on main and approved the replacement; the merge follows."
+                  if [ "$ADAPT_COUNTED" = "true" ]; then
+                    echo ""
+                    echo "The adapt route held as well, so this PR is labelled \`regen:adapt\`: one more reviewed conversion in the count that the review-free switch (\`ADAPT_REVIEW_FREE\`) waits for."
+                  fi
+                fi
                 echo ""
                 cat "$SUMMARY_FILE"
                 echo ""
@@ -2051,7 +2406,7 @@ jobs:
               echo "<!-- regen-kept:${SPEC_ID}:${LIBRARY} -->"
               echo "## :leftwards_arrow_with_hook: Regeneration kept the live implementation"
               echo ""
-              echo "The regen gate compared this render (score ${SCORE}) with the implementation on main and kept the latter. This PR is closed without merging; the live code and the production images are unchanged."
+              echo "The regen gate compared ${RENDER} with the implementation on main and kept the latter. This PR is closed without merging; the live code and the production images are unchanged."
               echo ""
               cat "$SUMMARY_FILE"
               echo ""
