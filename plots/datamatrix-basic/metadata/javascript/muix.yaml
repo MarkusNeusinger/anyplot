@@ -3,7 +3,8 @@ language: javascript
 specification_id: datamatrix-basic
 created: '2026-09-02T00:15:32Z'
 updated: '2026-10-23T21:08:51Z'
-generated_by: adopted:gemini/12267-muix-9-batch1
+generated_by: gemini-4-argon
+adopted_from: gemini/12267-muix-9-batch1 (8cfea568c)
 workflow_run: 40021959836
 issue: 3811
 language_version: 22.23.3
