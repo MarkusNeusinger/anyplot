@@ -48,11 +48,10 @@ const cumPercent = counts.map((c) => {
 });
 
 const countMax = Math.ceil(counts[0] * (1 + COUNT_PAD_SHARE));
-const vitalCount =
-  cumPercent.findIndex((p) => p >= PARETO_THRESHOLD) + 1 || categories.length;
+const vitalCount = cumPercent.findIndex((p) => p >= PARETO_THRESHOLD) + 1;
 const cumLabel = "Cumulative share (%)";
 const TITLE = "bar-pareto · javascript · muix · anyplot.ai";
-const SUBTITLE = `${COUNT}: ${total.toLocaleString("en-US")} total across ${categories.length} categories · Top ${vitalCount} reach ${cumPercent[vitalCount - 1]}%`;
+const SUBTITLE = `${COUNT}: ${total.toLocaleString("en-US")} · ${CATEGORY}: ${categories.length} · Top ${vitalCount} reach ${cumPercent[vitalCount - 1]}%`;
 
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
@@ -223,7 +222,7 @@ export default function Chart() {
             strokeDasharray: "8 5",
             strokeWidth: 2.5,
           }}
-          labelStyle={{ fill: t.amber, fontSize: 14, fontWeight: 700 }}
+          labelStyle={{ fill: t.ink, fontSize: 14, fontWeight: 700 }}
         />
         <ChartsXAxis axisId="x" />
         <ChartsYAxis axisId="counts" />
