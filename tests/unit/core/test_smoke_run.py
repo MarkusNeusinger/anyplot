@@ -205,6 +205,16 @@ class TestRun:
         smoke = run(impl, spec_id=spec_id, themes=LIGHT)
         assert (smoke.status, smoke.why, smoke.sample) == ("skipped", why, None)
 
+    def test_a_table_sample_with_nothing_to_perturb_has_its_own_reason(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Not `shape:table`: the shape has tables, only this sample yields none."""
+        monkeypatch.setattr(smoke_run, "perturbations", lambda *_args, **_kwargs: [])
+        smoke = run(_catalogue(tmp_path, PASSING), themes=LIGHT)
+        assert (smoke.status, smoke.why, smoke.results) == ("skipped", "no_perturbations:table", [])
+        assert smoke.sample is not None and smoke.sample["status"] == "pass"  # the probe ran
+        assert smoke.exit_code() == 0
+
     def test_no_block_is_skipped(self, tmp_path: Path) -> None:
         source = _replace(PASSING, "# Plot: reads only df", "# Drawing: reads only df")
         smoke = run(_catalogue(tmp_path, source), themes=LIGHT)
@@ -344,6 +354,24 @@ class TestSelfcheck:
         skipped = SmokeRun(impl, "matplotlib", LIGHT, status="skipped", why="shape:generated")
         assert selfcheck(impl, runner=lambda _: skipped, **paths)[0] == 0
         assert selfcheck(impl, runner=lambda _: failing_run, **paths)[0] == 1
+
+    @pytest.mark.parametrize(
+        ("why", "code"),
+        [
+            ("shape:network", 0),
+            ("no_perturbations:table", 0),  # nothing the model can fix
+            ("no_perturbations:matrix", 0),
+            ("no_block", 1),
+            ("static_failed", 1),
+            ("runner_error", 2),
+        ],
+    )
+    def test_which_skips_pass_the_selfcheck(self, tmp_path: Path, why: str, code: int) -> None:
+        impl = _catalogue(tmp_path, PASSING)
+        paths = {"log": tmp_path / "log.jsonl", "static_out": tmp_path / "s.json", "smoke_out": tmp_path / "m.json"}
+        skipped = SmokeRun(impl, "matplotlib", LIGHT, status="skipped", why=why)
+        assert selfcheck(impl, runner=lambda _: skipped, **paths)[0] == code
+        assert json.loads(paths["log"].read_text(encoding="utf-8"))["smoke_why"] == why
 
     def test_an_unknown_file_name_is_an_input_error(self, tmp_path: Path) -> None:
         assert selfcheck(tmp_path / "plot.py", log=tmp_path / "log.jsonl")[0] == 2

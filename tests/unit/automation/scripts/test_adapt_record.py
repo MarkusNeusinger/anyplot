@@ -19,7 +19,7 @@ import pytest
 
 from automation.scripts import adapt_record as ar
 from automation.scripts import regen_gate
-from core import adaptability
+from core import adaptability, smoke_run
 
 
 REPO_ROOT = Path(__file__).parent.parent.parent.parent.parent
@@ -156,6 +156,10 @@ class TestSharedCopies:
     def test_rule_order_is_the_checkers(self):
         assert ar.RULE_ORDER == adaptability.RULE_ORDER
 
+    def test_selfcheck_skip_prefixes_are_core_smoke_runs(self):
+        """The first-attempt pass rate agrees with selfcheck's exit code."""
+        assert ar.SELFCHECK_SKIP_PREFIXES == smoke_run.SELFCHECK_SKIP_PREFIXES
+
     def test_the_gates_derivation_is_derive_status(self):
         """The gate rejects a record whose status does not follow from its blocks, by this very table."""
         assert ar.SMOKE_NOT_APPLICABLE == regen_gate.ADAPT_SMOKE_NOT_APPLICABLE
@@ -185,6 +189,8 @@ class TestDerivedStatus:
             ("pass", "skipped", "shape:excluded", ("unknown", "smoke_skipped")),
             ("pass", "skipped", "runner_error", ("unknown", "smoke_skipped")),
             ("pass", "skipped", "no_block", ("unknown", "smoke_skipped")),
+            # The sample gave nothing to perturb: the smoke run checked nothing.
+            ("pass", "skipped", "no_perturbations:table", ("unknown", "smoke_skipped")),
             ("pass", "pass", "-", ("pass", "-")),
         ],
     )
@@ -314,7 +320,13 @@ class TestSelfcheck:
 
     @pytest.mark.parametrize(
         ("smoke", "smoke_why", "first"),
-        [("skipped", "shape:generated", "pass"), ("skipped", "runner_error", "fail"), ("pass", "-", "pass")],
+        [
+            ("skipped", "shape:generated", "pass"),
+            ("skipped", "no_perturbations:table", "pass"),  # selfcheck exits 0 on it too
+            ("skipped", "runner_error", "fail"),
+            ("skipped", "no_block", "fail"),
+            ("pass", "-", "pass"),
+        ],
     )
     def test_a_skip_passes_only_for_the_shape(self, tmp_path, smoke, smoke_why, first):
         log = json.dumps({"attempt": 1, "static": "pass", "smoke": smoke, "smoke_why": smoke_why})

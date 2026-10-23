@@ -28,7 +28,9 @@ Three commands (exit codes are for people; the workflows record the JSON and nev
   each theme. Exit 0 identical, 1 different, 2 error.
 * `selfcheck SOURCE`: the generator's Step 3c, the static check and `run` in one command,
   with one line per attempt appended to a JSON-lines log. Exit 0 when the static check
-  passes (or the spec is excluded) and the smoke run passes or is skipped for its shape.
+  passes (or the spec is excluded) and the smoke run passes or is skipped for its shape
+  (`shape:<shape>`) or because the sample gives nothing to perturb
+  (`no_perturbations:<shape>`); neither skip is something the model can fix.
 
 The library's setup calls in the head (`core.adaptability.SETUP_CALLS`) run unchanged in
 the probe and in every execution; nothing is stripped. Only the 8 Python libraries
@@ -104,6 +106,12 @@ LIBRARY_WORKERS = {"bokeh": 2, "plotly": 2}
 """Libraries whose every execution starts a headless Chrome get fewer parallel executions."""
 STALE_LABEL_LIBRARIES = frozenset({"matplotlib", "seaborn"})
 SKIPPED_SHAPES = ("generated", "network", "excluded")
+SELFCHECK_SKIP_PREFIXES = ("shape:", "no_perturbations:")
+"""A skipped smoke run with one of these reasons is no failure of the self-check: nothing the model can fix.
+
+`shape:<shape>` skips a shape without tables, `no_perturbations:<shape>` a sample with nothing
+to perturb. `automation/scripts/adapt_record.py` keeps a copy (a unit test keeps the two equal).
+"""
 TITLE_MARK = "anyplot.ai"
 DEFAULT_SELFCHECK_LOG = Path("/tmp/anyplot-selfcheck.jsonl")
 DEFAULT_SELFCHECK_STATIC = Path("/tmp/anyplot-selfcheck-static.json")
@@ -545,7 +553,8 @@ def _run(
             return
         items = perturbations(sample.df, sample.columns, roles, shape, record.color_role)
         if not items:
-            smoke.why = f"shape:{shape}"
+            # Not a shape skip: the shape has tables, this sample yields none to perturb.
+            smoke.why = f"no_perturbations:{shape}"
             return
         count = workers or LIBRARY_WORKERS.get(library, DEFAULT_WORKERS)
         tasks = [_Task(index, item, theme) for index, item in enumerate(items, start=1) for theme in smoke.themes]
@@ -903,7 +912,7 @@ def selfcheck(
         handle.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
     static_ok = record.status in ("pass", "excluded")
-    smoke_ok = smoke.status == "pass" or (smoke.status == "skipped" and smoke.why.startswith("shape:"))
+    smoke_ok = smoke.status == "pass" or (smoke.status == "skipped" and smoke.why.startswith(SELFCHECK_SKIP_PREFIXES))
     if smoke.why == "runner_error":
         code = 2
     else:

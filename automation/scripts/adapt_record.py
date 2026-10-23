@@ -42,7 +42,7 @@ fail       static_fail                        ``static.status`` is ``fail``
 unknown    smoke_missing, smoke_stale         ``smoke.status`` is ``missing`` or ``stale``
 fail       smoke_fail                         ``smoke.status`` is ``fail``
 pass       smoke_na                           ``skipped`` for ``shape:generated`` or ``shape:network``
-unknown    smoke_skipped                      any other ``skipped``
+unknown    smoke_skipped                      any other ``skipped`` (``no_perturbations:*`` too)
 pass       ``-``                              ``smoke.status`` is ``pass``
 =========  =================================  ============================================
 
@@ -83,6 +83,12 @@ STAGED_SMOKE_STATUSES = ("pass", "fail", "skipped")
 # A `skipped` smoke run whose shape has no table to perturb is not a gap: the
 # static check is the whole check there.
 SMOKE_NOT_APPLICABLE = ("shape:generated", "shape:network")
+# core.smoke_run.SELFCHECK_SKIP_PREFIXES (tests/unit/automation/scripts/
+# test_adapt_record.py ties the two; this script is copied alone and imports no
+# core): a skip with one of these reasons passes a self-check attempt, as
+# `selfcheck` exits 0 on it. `no_perturbations:` still reads `unknown` in the
+# record (derive_status): the smoke run checked nothing.
+SELFCHECK_SKIP_PREFIXES = ("shape:", "no_perturbations:")
 # core.adaptability.RULE_ORDER (tests/unit/automation/scripts/test_adapt_record.py
 # ties the two): the notice lists rule classes in this order.
 RULE_ORDER = (
@@ -197,8 +203,9 @@ def selfcheck_block(path: Path | None) -> dict[str, Any] | None:
 
     An attempt passes as ``selfcheck`` exits 0: its static check is ``pass``
     or ``excluded``, and its smoke run is ``pass`` or ``skipped`` for the
-    shape (``smoke_why`` ``shape:*``). A log line without ``smoke_why`` reads
-    any ``skipped`` as a pass.
+    shape or for a sample with nothing to perturb (``smoke_why`` ``shape:*``
+    or ``no_perturbations:*``, ``SELFCHECK_SKIP_PREFIXES``). A log line
+    without ``smoke_why`` reads any ``skipped`` as a pass.
     """
     if path is None or not path.is_file():
         return None
@@ -219,7 +226,7 @@ def selfcheck_block(path: Path | None) -> dict[str, Any] | None:
     first = attempts[0]
     smoke, smoke_why = first.get("smoke"), first.get("smoke_why")
     if isinstance(smoke_why, str):
-        smoke_ok = smoke == "pass" or (smoke == "skipped" and smoke_why.startswith("shape:"))
+        smoke_ok = smoke == "pass" or (smoke == "skipped" and smoke_why.startswith(SELFCHECK_SKIP_PREFIXES))
     else:
         smoke_ok = smoke in ("pass", "skipped")
     passed = first.get("static") in ("pass", "excluded") and smoke_ok
