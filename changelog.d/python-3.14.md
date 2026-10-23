@@ -8,7 +8,11 @@
   October 2026, while 3.14 gets bug fixes until October 2027; 3.15 waits for a
   lets-plot wheel. `google-crc32c` moves from 1.7.1 to 1.9.0 in the lock, because
   1.7.1 publishes no cp314 wheel and the images carry no compiler to build it.
-  (#12247)
+  The steps that ran repository Python on the runner's own `python3` (the spec
+  check in CI, impl-merge's write-back, review-retest) now set up the pinned
+  interpreter, because the code uses 3.14-only syntax. Rebuild a local
+  `anyplot-renderer:dev` image after this change: the local renderer mounts the
+  checkout's harness, which no longer parses on 3.13. (#12247)
 
 ### Security
 

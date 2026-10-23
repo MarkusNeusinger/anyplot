@@ -120,6 +120,13 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      # review_retest, review_provenance and regen_gate use PEP 758 `except A, B:`,
+      # which parses on Python 3.14 only; the runner image's python3 is not pinned.
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with:
+          python-version-file: '.python-version'
+
       - name: Resolve rules_ref
         id: rules
         env:
@@ -222,6 +229,11 @@ jobs:
         with:
           fetch-depth: 1
           persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with:
+          python-version-file: '.python-version'
 
       # The harness runs from a copy outside the workspace: the next step
       # overlays prompts/ and regen_gate.py from the rules under test.
@@ -368,6 +380,11 @@ jobs:
         with:
           fetch-depth: 1
           persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with:
+          python-version-file: '.python-version'
 
       - name: Download cells
         continue-on-error: true

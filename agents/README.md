@@ -191,7 +191,7 @@ Claude runs with adaptive thinking on the root (`AGENT_ROOT_THINKING_BUDGET`, 1,
 4. Choose a renderer:
 
    - `AGENT_RENDERER=remote` renders through the deployed renderer service; see [Render through the deployed renderer](#render-through-the-deployed-renderer).
-   - `AGENT_RENDERER=local` renders in Docker with the image in `AGENT_RENDER_IMAGE`. Build it once from the repository root with `docker build -f agents/renderer/Dockerfile -t anyplot-renderer:dev .`; the local backend mounts the harness from your checkout.
+   - `AGENT_RENDERER=local` renders in Docker with the image in `AGENT_RENDER_IMAGE`. Build it from the repository root with `docker build -f agents/renderer/Dockerfile -t anyplot-renderer:dev .`; the local backend mounts the harness from your checkout. Rebuild the image when the project's Python changes: after the move to Python 3.14, an image built on 3.13 fails every render with `SyntaxError: multiple exception types must be parenthesized`, because the mounted harness uses 3.14 syntax.
    - `AGENT_RENDERER=fake` returns fixture PNGs and runs no code.
 
 ### Try the agents in ADK's development UI
