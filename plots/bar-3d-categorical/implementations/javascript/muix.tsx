@@ -16,6 +16,10 @@ const ISO_DY = -14;
 const STAGGER_DX = ISO_DX * 1.35;
 const STAGGER_DY = ISO_DY * 1.35;
 const Y_PAD_SHARE = 0.08;
+const VALUE_LABEL_H = 22; // px a value label needs above a bar's top face
+const LABEL_CHAR_PX = 8.5; // px advance of one 14 px label character
+const ROW_LABEL_GAP = 12;
+const EDGE_PAD = 16;
 
 // Columns: set these to your data's column names
 const X_CATEGORY = "Alloy"; // role: x_category
@@ -53,6 +57,12 @@ const values = data.map((d) => d[VALUE]);
 const maxVal = Math.max(...values);
 const minVal = Math.min(...values);
 const yMax = maxVal * (1 + Y_PAD_SHARE);
+const formatValue = (v: number) => v.toLocaleString("en-US");
+const marginTop =
+  (treatments.length - 1) * Math.abs(STAGGER_DY) + Math.abs(ISO_DY) + VALUE_LABEL_H;
+const rowLabelW = Math.max(...treatments.map((tr) => tr.length)) * LABEL_CHAR_PX;
+const marginRight =
+  (treatments.length - 1) * STAGGER_DX + ISO_DX + ROW_LABEL_GAP + rowLabelW + EDGE_PAD;
 
 const rowColors = treatments.map((_, i) => t.palette[i]);
 const topColors = rowColors.map((hex) => {
@@ -69,19 +79,6 @@ const sideColors = rowColors.map((hex) => {
   const b = Math.round((num & 255) * 0.7);
   return `rgb(${r}, ${g}, ${b})`;
 });
-
-const series = treatments.map((label, i) => ({
-  type: "bar" as const,
-  id: label,
-  label,
-  data: alloys.map(
-    (alloy) =>
-      data.find((d) => d[X_CATEGORY] === alloy && d[Y_CATEGORY] === label)?.[
-        VALUE
-      ] ?? null,
-  ),
-  color: rowColors[i],
-}));
 
 const paintOrder = [...treatments.keys()].sort((a, b) => b - a);
 
@@ -111,7 +108,7 @@ function Bars3D() {
                 opacity={0.35}
               />
               <text
-                x={left + width + dx + ISO_DX + 12}
+                x={left + width + dx + ISO_DX + ROW_LABEL_GAP}
                 y={baseline + dy + 4}
                 fontSize={14}
                 fontWeight={500}
@@ -174,8 +171,8 @@ function Bars3D() {
               ].join(" ");
               const labelCx = x + barWidth / 2 + ISO_DX / 2;
               const labelCy = y + ISO_DY - 7;
-              const labelStr = String(value);
-              const pillW = labelStr.length * 8.5 + 10;
+              const labelStr = formatValue(value);
+              const pillW = labelStr.length * LABEL_CHAR_PX + 10;
               return (
                 <g key={alloy}>
                   <rect
@@ -219,7 +216,7 @@ function Bars3D() {
 }
 
 const TITLE = "bar-3d-categorical · javascript · muix · anyplot.ai";
-const SUBTITLE = `${alloys.length} ${X_CATEGORY.toLowerCase()}s × ${treatments.length} ${Y_CATEGORY.toLowerCase()}s (${VALUE}: ${minVal}–${maxVal})`;
+const SUBTITLE = `${X_CATEGORY}: ${alloys.length} · ${Y_CATEGORY}: ${treatments.length} · ${VALUE}: ${formatValue(minVal)}–${formatValue(maxVal)}`;
 const HEADER_H = 104;
 
 export default function Chart() {
@@ -299,9 +296,9 @@ export default function Chart() {
       <ChartsContainer
         width={width}
         height={height - HEADER_H}
-        margin={{ top: 80, right: 200, bottom: 24, left: 40 }}
+        margin={{ top: marginTop, right: marginRight, bottom: 24, left: 40 }}
         skipAnimation
-        series={series}
+        series={[]}
         xAxis={[
           {
             scaleType: "band",
@@ -317,6 +314,7 @@ export default function Chart() {
             scaleType: "linear",
             min: 0,
             max: yMax,
+            valueFormatter: formatValue,
             label: VALUE,
             width: 96,
             labelStyle: { fontSize: 16, fill: t.ink, fontWeight: 500 },
