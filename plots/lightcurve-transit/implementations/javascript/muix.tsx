@@ -1,7 +1,7 @@
 // anyplot.ai
 // lightcurve-transit: Astronomical Light Curve
 // Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 92/100 | Created: 2026-06-20
+// Quality: pending | Created: 2026-06-20
 
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { LinePlot } from "@mui/x-charts/LineChart";
