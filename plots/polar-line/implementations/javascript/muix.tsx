@@ -1,268 +1,292 @@
 // anyplot.ai
 // polar-line: Polar Line Plot
-// Library: muix 7.29.1 | JavaScript 22.23.2
+// Library: muix 9.2.1 | JavaScript 22.23.2
 // Quality: 87/100 | Created: 2026-09-05
 //# anyplot-orientation: square
-// anyplot.ai
-// polar-line: Polar Line Plot
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-09-05
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
-import { ChartsLegend } from "@mui/x-charts/ChartsLegend";
-import { ChartsTooltip } from "@mui/x-charts/ChartsTooltip";
-import { useDrawingArea } from "@mui/x-charts/hooks";
-
-// @mui/x-charts 7.x community has no polar/radial-line chart component (a
-// PolarProvider exists internally but isn't part of the public export
-// surface), so the plot is composed on MUI X's own charting surface:
-// ChartContainer sizes the <svg> + theme, and useDrawingArea() gives the plot
-// rect the hand-drawn ring/spoke/polyline geometry is mapped onto — real
-// trigonometry from the real gain values, not faked chrome. Each series'
-// angle/gain pairs are ALSO registered as a genuine `scatter` series (mapped
-// through a matching linear xAxis/yAxis so the pixels line up exactly with
-// the hand-drawn polylines), so ChartsLegend and ChartsTooltip read real
-// series data and MUI's own hover-highlight works — nothing here is faked.
+import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 const size = window.ANYPLOT_SIZE;
+const TITLE = "polar-line · javascript · muix · anyplot.ai";
 
-// Theme-adaptive chrome (ThemeProvider handles MUI text; these are for our SVG).
-const INK = t.ink;
-const INK_SOFT = t.inkSoft;
-const GRID = t.grid;
-const PAGE_BG = t.pageBg;
-const OMNI_COLOR = t.palette[0]; // Imprint palette position 1 — always first series
-const YAGI_COLOR = t.palette[1];
+// Constants
+const SERIES_COL = "Antenna Type";
+const AZIMUTH_COL = "Azimuth (°)";
+const GAIN_COL = "Normalized gain";
 
-// --- Data (in-memory, deterministic): simulated far-field radiation patterns
-// for two antenna types, sampled every 15° of azimuth — the classic "line
-// plot in polar coordinates" use case from RF/antenna engineering ------------
-const ANGLE_STEP = 15;
-const ANGLES = Array.from({ length: 360 / ANGLE_STEP }, (_, i) => i * ANGLE_STEP);
-const GAIN_MAX = 1; // normalized gain, 0-1
-const RINGS = [0.2, 0.4, 0.6, 0.8, 1.0];
-const DEGREE_TICKS = [0, 45, 90, 135, 180, 225, 270, 315];
+const ANGLE_STEP_DEG = 15;
+const FULL_CIRCLE_DEG = 360;
+const SPOKE_STEP_DEG = 45;
+const RING_COUNT = 5;
+const MARKER_SIZE = 7;
+const HEADER_HEIGHT = 64;
+const FOOTER_HEIGHT = 56;
+const CHART_MARGIN = 36;
+const DOMAIN_PAD_FACTOR = 1.18;
+const LABEL_RADIUS_FACTOR = 1.09;
 
-// Omnidirectional dipole: near-circular with the small real-world ripple that
-// distinguishes an actual antenna from an idealized isotropic radiator.
-const omniGain = (deg) => {
+// Data — simulated far-field antenna radiation patterns sampled every 15° of azimuth
+const DATA = [];
+for (let deg = 0; deg < FULL_CIRCLE_DEG; deg += ANGLE_STEP_DEG) {
   const rad = (deg * Math.PI) / 180;
-  return 0.78 + 0.05 * Math.cos(3 * rad) + 0.03 * Math.cos(7 * rad);
-};
-
-// Directional Yagi: a narrow forward main lobe (boresight at 0°) plus a small
-// back lobe — modeled with clamped cosine powers rather than measured data.
-const yagiGain = (deg) => {
+  const omniVal = Math.round((0.78 + 0.05 * Math.cos(3 * rad) + 0.03 * Math.cos(7 * rad)) * 1000) / 1000;
+  DATA.push({
+    [SERIES_COL]: "Omnidirectional dipole",
+    [AZIMUTH_COL]: deg,
+    [GAIN_COL]: omniVal,
+  });
+}
+for (let deg = 0; deg < FULL_CIRCLE_DEG; deg += ANGLE_STEP_DEG) {
   const rad = (deg * Math.PI) / 180;
-  const c = Math.cos(rad);
-  const mainLobe = Math.pow(Math.max(0, c), 6);
-  const backLobe = 0.18 * Math.pow(Math.max(0, -c), 10);
-  return Math.min(1, 0.06 + 0.94 * mainLobe + backLobe);
-};
+  const cosVal = Math.cos(rad);
+  const mainLobe = Math.pow(Math.max(0, cosVal), 6);
+  const backLobe = 0.18 * Math.pow(Math.max(0, -cosVal), 10);
+  const yagiVal = Math.round(Math.min(1, 0.06 + 0.94 * mainLobe + backLobe) * 1000) / 1000;
+  DATA.push({
+    [SERIES_COL]: "Directional Yagi",
+    [AZIMUTH_COL]: deg,
+    [GAIN_COL]: yagiVal,
+  });
+}
 
-const omni = ANGLES.map((deg) => ({ deg, gain: omniGain(deg) }));
-const yagi = ANGLES.map((deg) => ({ deg, gain: yagiGain(deg) }));
+// Derive series names in order of first appearance and radial domain from DATA
+const seriesNames = [];
+for (const row of DATA) {
+  const sName = String(row[SERIES_COL]);
+  if (!seriesNames.includes(sName)) seriesNames.push(sName);
+}
 
-// 0° points to the top (boresight), gain grows clockwise with azimuth — same
-// convention as a compass rose, matching the spoke labels drawn below.
-const toRad = (deg) => ((deg - 90) * Math.PI) / 180;
+const rawMaxGain = Math.max(...DATA.map((r) => Number(r[GAIN_COL])), 0.1);
+const gainMax = Math.ceil(rawMaxGain * 10) / 10;
+const ringStep = gainMax / RING_COUNT;
+const rings = [];
+for (let k = 1; k <= RING_COUNT; k += 1) {
+  rings.push(Math.round(k * ringStep * 100) / 100);
+}
 
-// --- Real MUI X scatter series for the sampled points ------------------------
-// A shared linear xAxis/yAxis pair whose domain is sized so that gain 1
-// (GAIN_MAX) lands exactly `DATA_R` px from centre — the same radius the
-// hand-drawn rings/polylines below use — so the real MUI scatter dots
-// register precisely on top of the custom SVG geometry. The yAxis grows
-// upward in data space while SVG grows downward in pixel space, so the y
-// component is negated here to compensate.
-const MARGIN = 110;
-const HALF = Math.min(size.width, size.height) / 2 - MARGIN;
-const DATA_R = HALF - 76;
-const DOMAIN = HALF / DATA_R;
-const toPoint = (deg, gain) => {
-  const a = toRad(deg);
-  const frac = gain / GAIN_MAX;
-  return { x: frac * Math.cos(a), y: -frac * Math.sin(a) };
-};
-const SERIES = [
-  {
-    type: "scatter",
-    data: omni.map(({ deg, gain }) => ({ ...toPoint(deg, gain), id: `omni-${deg}`, deg, gain })),
-    color: OMNI_COLOR,
-    markerSize: 8,
-    label: "Omnidirectional dipole",
-    valueFormatter: (v) => `${v.deg}° · gain ${v.gain.toFixed(2)}`,
-  },
-  {
-    type: "scatter",
-    data: yagi.map(({ deg, gain }) => ({ ...toPoint(deg, gain), id: `yagi-${deg}`, deg, gain })),
-    color: YAGI_COLOR,
-    markerSize: 8,
-    label: "Directional Yagi",
-    valueFormatter: (v) => `${v.deg}° · gain ${v.gain.toFixed(2)}`,
-  },
-];
+const degreeTicks = [];
+for (let deg = 0; deg < FULL_CIRCLE_DEG; deg += SPOKE_STEP_DEG) {
+  degreeTicks.push(deg);
+}
 
-// --- Polar layer: rendered as children inside MUI X's ChartsSurface ----------
+const azUnitMatch = AZIMUTH_COL.match(/\(([^)]+)\)/);
+const azUnit = azUnitMatch ? azUnitMatch[1] : "°";
+
+// Group and sort rows by azimuth for each series (0° at top, clockwise)
+const seriesGroups = seriesNames.map((name, idx) => {
+  const groupRows = DATA.filter((r) => String(r[SERIES_COL]) === name).sort(
+    (a, b) => Number(a[AZIMUTH_COL]) - Number(b[AZIMUTH_COL]),
+  );
+  const label = String(groupRows[0]?.[SERIES_COL] ?? name);
+  const color = t.palette[idx];
+  const points = groupRows.map((row) => {
+    const deg = Number(row[AZIMUTH_COL]);
+    const gain = Number(row[GAIN_COL]);
+    const angle = ((deg - 90) * Math.PI) / 180;
+    return {
+      id: `${label}-${deg}`,
+      deg,
+      gain,
+      angle,
+      x: gain * Math.cos(angle),
+      y: -gain * Math.sin(angle),
+    };
+  });
+  return { label, color, points };
+});
+
+const domainLimit = gainMax * DOMAIN_PAD_FACTOR;
+const labelRadiusVal = gainMax * LABEL_RADIUS_FACTOR;
+
+const SERIES = seriesGroups.map((group) => ({
+  type: "scatter",
+  id: group.label,
+  label: group.label,
+  color: group.color,
+  markerSize: MARKER_SIZE,
+  data: group.points,
+}));
+
 function PolarLayer() {
-  const area = useDrawingArea();
-  const cx = area.left + area.width / 2;
-  const cy = area.top + area.height / 2;
-  const half = Math.min(area.width, area.height) / 2;
-  const R = half - 76; // data radius; the margin to `half` holds degree labels
-  const labelR = half - 18;
+  const xScale = useXScale();
+  const yScale = useYScale();
+  if (!xScale || !yScale) return null;
 
-  const point = (deg, gain) => {
-    const a = toRad(deg);
-    const r = (gain / GAIN_MAX) * R;
-    return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
-  };
-  const polylinePoints = (series) =>
-    series.map(({ deg, gain }) => point(deg, gain).join(",")).join(" ");
+  const cx = xScale(0);
+  const cy = yScale(0);
+  const midRingY = yScale(rings[Math.floor(rings.length / 2)]);
 
   return (
     <g>
-      {/* Concentric gain rings — outer solid, inner lighter so the grid stays subtle */}
-      {RINGS.map((level) => (
+      {/* Concentric gain rings */}
+      {rings.map((level) => (
         <circle
           key={`ring-${level}`}
           cx={cx}
           cy={cy}
-          r={(level / GAIN_MAX) * R}
+          r={Math.abs(xScale(level) - cx)}
           fill="none"
-          stroke={GRID}
-          strokeWidth={level === GAIN_MAX ? 2 : 1}
-          strokeOpacity={level === GAIN_MAX ? 1 : 0.6}
+          stroke={t.grid}
+          strokeWidth={level === gainMax ? 2 : 1}
+          strokeOpacity={level === gainMax ? 1 : 0.65}
         />
       ))}
 
-      {/* Radial spokes at every 45° of azimuth, with degree labels */}
-      {DEGREE_TICKS.map((deg) => {
-        const [ox, oy] = point(deg, GAIN_MAX);
-        const a = toRad(deg);
-        const lx = cx + labelR * Math.cos(a);
-        const ly = cy + labelR * Math.sin(a);
-        const cos = Math.cos(a);
-        const sin = Math.sin(a);
+      {/* Radial spokes at every 45° of azimuth */}
+      {degreeTicks.map((deg) => {
+        const angle = ((deg - 90) * Math.PI) / 180;
+        const ox = xScale(gainMax * Math.cos(angle));
+        const oy = yScale(-gainMax * Math.sin(angle));
+        const lx = xScale(labelRadiusVal * Math.cos(angle));
+        const ly = yScale(-labelRadiusVal * Math.sin(angle));
+        const cos = Math.cos(angle);
+        const sin = Math.sin(angle);
         const anchor = cos > 0.3 ? "start" : cos < -0.3 ? "end" : "middle";
         const baseline = sin > 0.5 ? "hanging" : sin < -0.5 ? "auto" : "central";
         const isCardinal = deg % 90 === 0;
         return (
           <g key={`spoke-${deg}`}>
-            <line x1={cx} y1={cy} x2={ox} y2={oy} stroke={GRID} strokeWidth={1} />
+            <line x1={cx} y1={cy} x2={ox} y2={oy} stroke={t.grid} strokeWidth={1} />
             <text
               x={lx}
               y={ly}
-              fill={isCardinal ? INK : INK_SOFT}
-              fontSize={isCardinal ? 18 : 14}
-              fontWeight={isCardinal ? 700 : 400}
+              fill={isCardinal ? t.ink : t.inkSoft}
+              fontSize={isCardinal ? 17 : 14}
+              fontWeight={isCardinal ? 700 : 500}
               textAnchor={anchor}
               dominantBaseline={baseline}
             >
-              {`${deg}°`}
+              {`${deg}${azUnit}`}
             </text>
           </g>
         );
       })}
 
-      {/* The two radiation-pattern lines — closed loops since azimuth wraps at 360° */}
-      <polygon
-        points={polylinePoints(omni)}
-        fill="none"
-        stroke={OMNI_COLOR}
-        strokeWidth={3}
-        strokeLinejoin="round"
-      />
-      <polygon
-        points={polylinePoints(yagi)}
-        fill="none"
-        stroke={YAGI_COLOR}
-        strokeWidth={3}
-        strokeLinejoin="round"
-      />
-
-      {/* Gain (radius) tick labels, offset off the top spoke, drawn last so
-          they sit above the pattern lines that cross it. A page-background
-          stroke halo (instead of a flat rect) keeps them legible without the
-          utilitarian pill look. */}
-      {RINGS.map((level) => {
-        const ty = cy - (level / GAIN_MAX) * R;
-        const label = level.toFixed(1);
+      {/* Radiation-pattern closed loops */}
+      {seriesGroups.map((group) => {
+        const polyPoints = group.points.map((p) => `${xScale(p.x)},${yScale(p.y)}`).join(" ");
         return (
-          <text
-            key={`tick-${level}`}
-            x={cx + 12}
-            y={ty}
-            fill={INK_SOFT}
-            fontSize={15}
-            textAnchor="start"
-            dominantBaseline="central"
-            stroke={PAGE_BG}
-            strokeWidth={4}
+          <polygon
+            key={`poly-${group.label}`}
+            points={polyPoints}
+            fill="none"
+            stroke={group.color}
+            strokeWidth={3}
             strokeLinejoin="round"
-            paintOrder="stroke"
-          >
-            {label}
-          </text>
+          />
         );
       })}
 
-      {/* Descriptive label for the radial (gain) axis, running alongside the
-          ring ticks so the numbers aren't bare digits */}
-      <text
-        x={cx + 58}
-        y={cy - (RINGS[2] / GAIN_MAX) * R}
-        fill={INK_SOFT}
-        fontSize={13}
-        fontWeight={600}
-        textAnchor="middle"
-        dominantBaseline="central"
-        stroke={PAGE_BG}
-        strokeWidth={4}
-        strokeLinejoin="round"
-        paintOrder="stroke"
-        transform={`rotate(-90, ${cx + 58}, ${cy - (RINGS[2] / GAIN_MAX) * R})`}
-      >
-        Normalized gain
-      </text>
+      {/* Gain tick labels along the top spoke with pageBg pill badges */}
+      {rings.map((level) => {
+        const ty = yScale(level);
+        const label = level.toFixed(1);
+        const pillWidth = label.length * 8.5 + 12;
+        return (
+          <g key={`tick-${level}`}>
+            <rect x={cx + 8} y={ty - 11} width={pillWidth} height={22} rx={4} fill={t.pageBg} />
+            <text
+              x={cx + 14}
+              y={ty}
+              fill={t.inkSoft}
+              fontSize={14}
+              textAnchor="start"
+              dominantBaseline="central"
+            >
+              {label}
+            </text>
+          </g>
+        );
+      })}
+
+      {/* Radial axis title alongside the gain ticks */}
+      <g transform={`translate(${cx + 58}, ${midRingY}) rotate(-90)`}>
+        <rect x={-62} y={-11} width={124} height={22} rx={4} fill={t.pageBg} />
+        <text
+          x={0}
+          y={0}
+          fill={t.inkSoft}
+          fontSize={14}
+          fontWeight={600}
+          textAnchor="middle"
+          dominantBaseline="central"
+        >
+          {GAIN_COL}
+        </text>
+      </g>
     </g>
   );
 }
 
-// --- Title drawn on the surface -----------------------------------------------
-function Title() {
-  return (
-    <text x={size.width / 2} y={52} fill={INK} fontSize={30} fontWeight={700} textAnchor="middle">
-      polar-line · javascript · muix · anyplot.ai
-    </text>
-  );
-}
-
-// --- Chart (default-exported component — the harness mounts it) --------------
 export default function Chart() {
+  const chartSize = size.height - HEADER_HEIGHT - FOOTER_HEIGHT;
+
   return (
-    <ChartContainer
-      width={size.width}
-      height={size.height}
-      series={SERIES}
-      xAxis={[{ scaleType: "linear", min: -DOMAIN, max: DOMAIN }]}
-      yAxis={[{ scaleType: "linear", min: -DOMAIN, max: DOMAIN }]}
-      margin={{ top: MARGIN, bottom: MARGIN, left: MARGIN, right: MARGIN }}
-      skipAnimation
+    <div
+      style={{
+        width: size.width,
+        height: size.height,
+        backgroundColor: t.pageBg,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        boxSizing: "border-box",
+      }}
     >
-      <Title />
-      <PolarLayer />
-      <ScatterPlot />
-      <ChartsLegend
-        position={{ vertical: "bottom", horizontal: "middle" }}
-        labelStyle={{ fontSize: 16 }}
-        itemMarkWidth={22}
-        itemMarkHeight={22}
-        markGap={8}
-        itemGap={36}
-      />
-      <ChartsTooltip trigger="item" />
-    </ChartContainer>
+      <div
+        style={{
+          height: HEADER_HEIGHT,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 22,
+          fontWeight: 700,
+          color: t.ink,
+        }}
+      >
+        {TITLE}
+      </div>
+      <ChartsContainer
+        width={chartSize}
+        height={chartSize}
+        series={SERIES}
+        xAxis={[{ scaleType: "linear", min: -domainLimit, max: domainLimit, position: "none" }]}
+        yAxis={[{ scaleType: "linear", min: -domainLimit, max: domainLimit, position: "none" }]}
+        margin={{ top: CHART_MARGIN, bottom: CHART_MARGIN, left: CHART_MARGIN, right: CHART_MARGIN }}
+        skipAnimation
+      >
+        <PolarLayer />
+        <ScatterPlot />
+      </ChartsContainer>
+      <div
+        style={{
+          height: FOOTER_HEIGHT,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 36,
+        }}
+      >
+        {seriesGroups.map((group) => (
+          <div
+            key={`legend-${group.label}`}
+            style={{ display: "flex", alignItems: "center", gap: 10 }}
+          >
+            <span
+              style={{
+                width: 18,
+                height: 18,
+                borderRadius: "50%",
+                backgroundColor: group.color,
+                display: "inline-block",
+              }}
+            />
+            <span style={{ fontSize: 15, color: t.ink, fontWeight: 500 }}>{group.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
