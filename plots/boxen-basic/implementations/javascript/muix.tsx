@@ -1,7 +1,7 @@
 // anyplot.ai
 // boxen-basic: Basic Boxen Plot (Letter-Value Plot)
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-09-01
+// Library: muix 9.16.0 | JavaScript 22.23.3
+// Quality: 88/100 | Updated: 2026-10-24
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
