@@ -1,6 +1,6 @@
 // anyplot.ai
 // network-hierarchical: Hierarchical Network Graph with Tree Layout
-// Library: muix 9.x | JavaScript 22.23.2
+// Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 90/100 | Created: 2026-09-02
 
 import * as React from "react";
@@ -18,69 +18,59 @@ const LEVEL_RADII = [22, 16, 12, 9];
 const X_PAD_SHARE = 0.08;
 const Y_TOP_PAD_SHARE = 0.22;
 const Y_BOTTOM_PAD_SHARE = 0.34;
-const ROOT_BRANCH = "Executive";
 
-const NODE_ID_COL = "node_id";
-const LABEL_COL = "label";
-const PARENT_ID_COL = "parent_id";
-const LEVEL_COL = "level";
-const BRANCH_COL = "branch";
+// Columns: set these to your data's column names
+const NODE_ID = "Node ID"; // role: id
+const LABEL = "Role"; // role: label
+const PARENT_ID = "Reports to"; // role: parent
 
-// Data: 4-level company org chart (flat scalar hierarchy records)
-const DATA: Array<Record<string, string | number>> = [
-  { node_id: "ceo", label: "CEO", parent_id: "", level: 0, branch: "Executive" },
+// Data: replace this block with your own records
+const data: Array<Record<string, string | null>> = [
+  { [NODE_ID]: "ceo", [LABEL]: "CEO", [PARENT_ID]: null },
 
   // Engineering branch
-  { node_id: "vp-eng", label: "VP Engineering", parent_id: "ceo", level: 1, branch: "Engineering" },
-  { node_id: "dir-plat", label: "Platform Eng", parent_id: "vp-eng", level: 2, branch: "Engineering" },
-  { node_id: "dir-prod", label: "Product Eng", parent_id: "vp-eng", level: 2, branch: "Engineering" },
-  { node_id: "rep-be1", label: "Backend Eng 1", parent_id: "dir-plat", level: 3, branch: "Engineering" },
-  { node_id: "rep-be2", label: "Backend Eng 2", parent_id: "dir-plat", level: 3, branch: "Engineering" },
-  { node_id: "rep-inf", label: "Infra Eng", parent_id: "dir-plat", level: 3, branch: "Engineering" },
-  { node_id: "rep-fe1", label: "Frontend Eng 1", parent_id: "dir-prod", level: 3, branch: "Engineering" },
-  { node_id: "rep-fe2", label: "Frontend Eng 2", parent_id: "dir-prod", level: 3, branch: "Engineering" },
+  { [NODE_ID]: "vp-eng", [LABEL]: "VP Engineering", [PARENT_ID]: "ceo" },
+  { [NODE_ID]: "dir-plat", [LABEL]: "Platform Eng", [PARENT_ID]: "vp-eng" },
+  { [NODE_ID]: "dir-prod", [LABEL]: "Product Eng", [PARENT_ID]: "vp-eng" },
+  { [NODE_ID]: "rep-be1", [LABEL]: "Backend Eng 1", [PARENT_ID]: "dir-plat" },
+  { [NODE_ID]: "rep-be2", [LABEL]: "Backend Eng 2", [PARENT_ID]: "dir-plat" },
+  { [NODE_ID]: "rep-inf", [LABEL]: "Infra Eng", [PARENT_ID]: "dir-plat" },
+  { [NODE_ID]: "rep-fe1", [LABEL]: "Frontend Eng 1", [PARENT_ID]: "dir-prod" },
+  { [NODE_ID]: "rep-fe2", [LABEL]: "Frontend Eng 2", [PARENT_ID]: "dir-prod" },
 
   // Sales branch
-  { node_id: "vp-sales", label: "VP Sales", parent_id: "ceo", level: 1, branch: "Sales" },
-  { node_id: "dir-ent", label: "Enterprise Sales", parent_id: "vp-sales", level: 2, branch: "Sales" },
-  { node_id: "dir-smb", label: "SMB Sales", parent_id: "vp-sales", level: 2, branch: "Sales" },
-  { node_id: "rep-ae1", label: "Account Exec 1", parent_id: "dir-ent", level: 3, branch: "Sales" },
-  { node_id: "rep-ae2", label: "Account Exec 2", parent_id: "dir-ent", level: 3, branch: "Sales" },
-  { node_id: "rep-ae3", label: "Account Exec 3", parent_id: "dir-smb", level: 3, branch: "Sales" },
-  { node_id: "rep-ae4", label: "Account Exec 4", parent_id: "dir-smb", level: 3, branch: "Sales" },
+  { [NODE_ID]: "vp-sales", [LABEL]: "VP Sales", [PARENT_ID]: "ceo" },
+  { [NODE_ID]: "dir-ent", [LABEL]: "Enterprise Sales", [PARENT_ID]: "vp-sales" },
+  { [NODE_ID]: "dir-smb", [LABEL]: "SMB Sales", [PARENT_ID]: "vp-sales" },
+  { [NODE_ID]: "rep-ae1", [LABEL]: "Account Exec 1", [PARENT_ID]: "dir-ent" },
+  { [NODE_ID]: "rep-ae2", [LABEL]: "Account Exec 2", [PARENT_ID]: "dir-ent" },
+  { [NODE_ID]: "rep-ae3", [LABEL]: "Account Exec 3", [PARENT_ID]: "dir-smb" },
+  { [NODE_ID]: "rep-ae4", [LABEL]: "Account Exec 4", [PARENT_ID]: "dir-smb" },
 
   // Marketing branch
-  { node_id: "vp-mkt", label: "VP Marketing", parent_id: "ceo", level: 1, branch: "Marketing" },
-  { node_id: "dir-brand", label: "Brand", parent_id: "vp-mkt", level: 2, branch: "Marketing" },
-  { node_id: "dir-growth", label: "Growth", parent_id: "vp-mkt", level: 2, branch: "Marketing" },
-  { node_id: "rep-bm", label: "Brand Manager", parent_id: "dir-brand", level: 3, branch: "Marketing" },
-  { node_id: "rep-cl", label: "Content Lead", parent_id: "dir-brand", level: 3, branch: "Marketing" },
-  { node_id: "rep-ga", label: "Growth Analyst", parent_id: "dir-growth", level: 3, branch: "Marketing" },
-  { node_id: "rep-seo", label: "SEO Specialist", parent_id: "dir-growth", level: 3, branch: "Marketing" },
+  { [NODE_ID]: "vp-mkt", [LABEL]: "VP Marketing", [PARENT_ID]: "ceo" },
+  { [NODE_ID]: "dir-brand", [LABEL]: "Brand", [PARENT_ID]: "vp-mkt" },
+  { [NODE_ID]: "dir-growth", [LABEL]: "Growth", [PARENT_ID]: "vp-mkt" },
+  { [NODE_ID]: "rep-bm", [LABEL]: "Brand Manager", [PARENT_ID]: "dir-brand" },
+  { [NODE_ID]: "rep-cl", [LABEL]: "Content Lead", [PARENT_ID]: "dir-brand" },
+  { [NODE_ID]: "rep-ga", [LABEL]: "Growth Analyst", [PARENT_ID]: "dir-growth" },
+  { [NODE_ID]: "rep-seo", [LABEL]: "SEO Specialist", [PARENT_ID]: "dir-growth" },
 
   // Operations branch
-  { node_id: "vp-ops", label: "VP Operations", parent_id: "ceo", level: 1, branch: "Operations" },
-  { node_id: "dir-fin", label: "Finance", parent_id: "vp-ops", level: 2, branch: "Operations" },
-  { node_id: "dir-ppl", label: "People", parent_id: "vp-ops", level: 2, branch: "Operations" },
-  { node_id: "rep-ctrl", label: "Controller", parent_id: "dir-fin", level: 3, branch: "Operations" },
-  { node_id: "rep-fpa", label: "FP&A Analyst", parent_id: "dir-fin", level: 3, branch: "Operations" },
-  { node_id: "rep-rec", label: "Recruiter", parent_id: "dir-ppl", level: 3, branch: "Operations" },
-  { node_id: "rep-hr", label: "HR Partner", parent_id: "dir-ppl", level: 3, branch: "Operations" },
+  { [NODE_ID]: "vp-ops", [LABEL]: "VP Operations", [PARENT_ID]: "ceo" },
+  { [NODE_ID]: "dir-fin", [LABEL]: "Finance", [PARENT_ID]: "vp-ops" },
+  { [NODE_ID]: "dir-ppl", [LABEL]: "People", [PARENT_ID]: "vp-ops" },
+  { [NODE_ID]: "rep-ctrl", [LABEL]: "Controller", [PARENT_ID]: "dir-fin" },
+  { [NODE_ID]: "rep-fpa", [LABEL]: "FP&A Analyst", [PARENT_ID]: "dir-fin" },
+  { [NODE_ID]: "rep-rec", [LABEL]: "Recruiter", [PARENT_ID]: "dir-ppl" },
+  { [NODE_ID]: "rep-hr", [LABEL]: "HR Partner", [PARENT_ID]: "dir-ppl" },
 ];
 
-// Derive department branches in order of first appearance (excluding root Executive)
-const branches: string[] = [];
-for (const row of DATA) {
-  const b = String(row[BRANCH_COL]);
-  if (b !== ROOT_BRANCH && !branches.includes(b)) {
-    branches.push(b);
-  }
-}
-
+// Plot: reads only data and the constants above
 interface TreeNode {
   id: string;
   label: string;
-  parentId: string;
+  parentId: string | null;
   level: number;
   branchIndex: number;
   children: string[];
@@ -93,24 +83,20 @@ interface TreeNode {
 const nodesById = new Map<string, TreeNode>();
 const allNodes: TreeNode[] = [];
 
-for (const row of DATA) {
-  const id = String(row[NODE_ID_COL]);
-  const label = String(row[LABEL_COL]);
-  const parentId = String(row[PARENT_ID_COL]);
-  const level = Number(row[LEVEL_COL]);
-  const branch = String(row[BRANCH_COL]);
-  const branchIndex = branch === ROOT_BRANCH ? -1 : branches.indexOf(branch);
-  const radius = LEVEL_RADII[Math.min(level, LEVEL_RADII.length - 1)];
-  const color = branchIndex === -1 ? t.ink : t.palette[branchIndex];
+for (const row of data) {
+  const id = String(row[NODE_ID]);
+  const label = String(row[LABEL]);
+  const parentVal = row[PARENT_ID];
+  const parentId = parentVal !== null && parentVal !== undefined && String(parentVal) !== "" ? String(parentVal) : null;
   const node: TreeNode = {
     id,
     label,
     parentId,
-    level,
-    branchIndex,
+    level: 0,
+    branchIndex: -1,
     children: [],
-    radius,
-    color,
+    radius: LEVEL_RADII[0],
+    color: t.ink,
     x: 0,
     y: 0,
   };
@@ -119,25 +105,31 @@ for (const row of DATA) {
 }
 
 for (const node of allNodes) {
-  if (node.parentId && nodesById.has(node.parentId)) {
+  if (node.parentId !== null) {
     nodesById.get(node.parentId)!.children.push(node.id);
   }
 }
 
-const maxLevel = Math.max(1, ...allNodes.map((n) => n.level));
+const rootNode = allNodes.find((n) => n.parentId === null)!;
+const branchRootIds = rootNode.children;
+const branches = branchRootIds.map((id) => nodesById.get(id)!.label);
 
-// Iterative bottom-up tidy tree layout: leaves get sequential x in DFS order, parents average children
-const rootNode = allNodes.find((n) => !n.parentId) ?? allNodes[0];
 const dfsOrder: TreeNode[] = [];
 const stack: TreeNode[] = [rootNode];
 while (stack.length > 0) {
   const curr = stack.pop()!;
   dfsOrder.push(curr);
   for (let i = curr.children.length - 1; i >= 0; i -= 1) {
-    const child = nodesById.get(curr.children[i]);
-    if (child) stack.push(child);
+    const child = nodesById.get(curr.children[i])!;
+    child.level = curr.level + 1;
+    child.branchIndex = curr.id === rootNode.id ? branchRootIds.indexOf(child.id) : curr.branchIndex;
+    child.radius = LEVEL_RADII[Math.min(child.level, LEVEL_RADII.length - 1)];
+    child.color = t.palette[child.branchIndex];
+    stack.push(child);
   }
 }
+
+const maxLevel = Math.max(...allNodes.map((n) => n.level));
 
 let nextLeafX = 0;
 for (let i = 0; i < dfsOrder.length; i += 1) {
@@ -161,12 +153,12 @@ for (let i = dfsOrder.length - 1; i >= 0; i -= 1) {
 
 const edges: Array<{ parent: TreeNode; child: TreeNode }> = [];
 for (const node of allNodes) {
-  if (node.parentId && nodesById.has(node.parentId)) {
+  if (node.parentId !== null) {
     edges.push({ parent: nodesById.get(node.parentId)!, child: node });
   }
 }
 
-const xSpan = Math.max(1, nextLeafX - 1);
+const xSpan = nextLeafX - 1;
 const xPad = xSpan * X_PAD_SHARE;
 const domain = {
   xMin: -xPad,
@@ -193,8 +185,8 @@ function HierarchicalTreeOverlay() {
         />
       ))}
       {allNodes.map((node) => {
-        const cx = xScale(node.x);
-        const cy = yScale(node.y);
+        const cx = Number(xScale(node.x));
+        const cy = Number(yScale(node.y));
         const isLeaf = node.children.length === 0;
         return (
           <React.Fragment key={node.id}>
