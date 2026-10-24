@@ -2,139 +2,132 @@ library: muix
 language: javascript
 specification_id: histogram-kde
 created: '2026-08-05T04:07:33Z'
-updated: '2026-08-05T04:20:41Z'
-generated_by: claude-sonnet
-workflow_run: 30973737010
+updated: '2026-10-24T09:58:49Z'
+generated_by: gemini-4-argon
+adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
+workflow_run: 40083798069
 issue: 1823
-language_version: 22.23.1
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-kde/javascript/muix/plot-dark.html
-quality_score: 89
+quality_score: 87
 review:
   strengths:
-  - 'Repair directly addressed the attempt-1 feedback: a dashed mean reference line
-    with a `Mean -0.03%` label now calls out where the shock-day left tail pulls the
-    average below the 0% cluster point, giving the chart real visual storytelling
-    instead of a bare histogram+KDE'
-  - 'Solves MUI X''s band-scale-vs-continuous-axis constraint elegantly: draws histogram
-    bars via `useDrawingArea` + raw SVG rects mapped onto the same continuous x-axis
-    the KDE `LinePlot` uses'
-  - Realistic, well-motivated dataset (daily portfolio returns with occasional shock
-    days) produces a genuine left-skewed, fat-tailed shape that the KDE overlay reveals
-    clearly
-  - Both themes render correctly with identical histogram/KDE data colors — only chrome
-    (background, text, grid, mean-line stroke) flips; canvas is exactly 3200x1800
-    with no clipping or overlap
-  - 'Follows the spec notes precisely: density-scaled y-axis, alpha 0.5 semi-transparent
-    bars, Silverman''s-rule bandwidth, contrasting green/blue colors'
-  - Clean custom legend, descriptive axis labels with units, legible text in both
-    themes
+  - 'Correct density normalisation: bars are count/(n·binWidth) and the Gaussian KDE
+    (Silverman h = 0.34%) is on the same scale, so the curve runs at the level of
+    the bar tops; the KDE peak of ~0.43 matches the analytic mixture density 0.91/(0.85·√(2π))
+    ≈ 0.427'
+  - 'Idiomatic MUI X v9 composition: ChartsContainer with LinePlot, ChartsGrid, ChartsXAxis/ChartsYAxis
+    plus a custom SVG bar layer positioned through the useDrawingArea hook, since
+    community BarChart only offers band scales'
+  - Contiguous semi-transparent (fillOpacity 0.5) brand-green bars with a 1 px seam
+    and a 3.5 px Imprint-blue KDE line that reads as its own layer in both themes
+  - 'Realistic data story: 500 daily stock returns with 9% shock days, giving a fat
+    left tail that the histogram and KDE both show while the curve tails stop near
+    the data range'
+  - 'Clear typographic hierarchy: 22 px title, 15 px inkSoft subtitle carrying n,
+    mean, SD and bandwidth, and a bold top-left legend aligned with the title'
+  - Theme tokens threaded through every chrome element (ink, inkSoft, grid); data
+    colours identical in both renders; skipAnimation set on container and LinePlot
   weaknesses:
-  - 'KDE line uses t.palette[2] (#4467A3, blue) instead of the canonical position-2
-    color t.palette[1] (#C475FD, lavender) for the second legend series — the code
-    comment justifies this purely for contrast (''contrasts against the green bars''),
-    which is an aesthetic reason, not a semantic real-world color association, so
-    it deviates from the style guide''s ''use positions 1→N in order by default, don''t
-    cherry-pick for aesthetic reasons'' rule. Fix: either switch to palette[1] (lavender)
-    for the KDE line, or keep blue only if a semantic justification is documented.'
-  - Design excellence is still fairly restrained — the mean reference line is a good
-    addition, but there is no visual emphasis (e.g. shading/annotation) specifically
-    on the shock-day tail region itself that the dataset was designed to showcase
-  - The manual bar-drawing workaround adds several helper functions/components (`lcg`,
-    `randn`, `kernelDensity`, `HistogramBars`) beyond a minimal flat script — justified
-    by the MUI X band-scale constraint, but keeps CQ-01 (KISS) short of full marks
+  - 'Suggestion: the dashed mean reference line is an annotation layer the spec does
+    not request; the distribution reads fully without it, and dropping it would let
+    the KDE peak be the single focal point.'
+  - 'Suggestion: the hand-built HTML legend could be replaced by ChartsLegend fed
+    from series definitions, so legend glyphs stay tied to the rendered marks.'
+  - 'Suggestion: in the dark render the #4467A3 KDE line over the dark-green bar fill
+    has modest contrast; a slightly heavier stroke (about 4 px) would keep it as prominent
+    as in the light render.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: title "histogram-kde · javascript · muix · anyplot.ai" in dark ink top-left, custom legend below it (green swatch "Observed density", blue line swatch "KDE estimate"), dark-ink axis titles ("Daily Return (%)", "Density") and tick labels, subtle horizontal-only grid, dashed mean-reference line labeled "Mean -0.03%" in soft ink. All chrome text is clearly legible against the light background.
-      Data: green (#009E73) semi-transparent histogram bars (alpha ~0.5) form a left-skewed, fat-tailed distribution peaked near 0%, with a small secondary bump around -3% to -6% (shock days); a navy-blue (#4467A3) smooth KDE line tracks the bars closely; the dashed mean line sits just left of the tallest bar, visually explaining the negative mean.
+      Background: warm off-white #FAF8F1, not pure white.
+      Chrome: bold dark title "histogram-kde · javascript · muix · anyplot.ai" top-left (~37% of width), inkSoft subtitle with n = 500, mean -0.03%, SD 1.10%, Silverman h = 0.34%; HTML legend row ("Observed density (30 bins)" green swatch, "Gaussian KDE estimate" blue line). Y axis "Probability Density" 0.00–0.60 in 0.05 steps, x axis "Daily return (%)" -6.0% … 3.0%. Subtle horizontal grid only. All text dark and readable.
+      Data: 30 contiguous brand-green #009E73 bars at 0.5 opacity with thin page-coloured seams, density-scaled; peak bar 0.54 at ~0%, long sparse left tail to -6%; smooth #4467A3 KDE line peaking ~0.43 that follows the skew and ends near the data range; dashed inkSoft mean line at -0.03% with a bold "Mean -0.03%" label at the top.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: title, legend, axis titles/ticks, and the mean-line label all render in light ink and remain fully legible — no dark-on-dark issues found. The mean reference line itself renders as a light dashed line (theme-adaptive ink token), clearly visible against the dark background.
-      Data: histogram bars and KDE line are the same underlying hex values as the light render (#009E73 green fill, #4467A3 blue line) — only the alpha-blended appearance differs slightly because the same semi-transparent green composites differently over a dark vs. light background, which is expected alpha-compositing behavior, not a palette change. Only the chrome (background, text, grid, mean-line stroke) flips between themes.
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title, subtitle, legend labels, axis titles and tick labels all render in light ink; grid lines subtle but visible; no dark-on-dark text. Mean line and its label in light inkSoft.
+      Data: identical colours to the light render — the same 0.5-opacity brand green (reads as darker green over the dark page) and the same #4467A3 KDE line; the curve stays visible along its full length over the bars.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set, readable in both themes at full size;
-          mean-label and tick text are on the smaller side (13px) which would shrink
-          further at 400px mobile scale
+        comment: Explicit sizes (title 22, subtitle 15, axis titles 15, ticks 14 CSS
+          px) within the library prompt range; all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between title, legend, axis labels, tick labels, or the
-          new mean-line label
+        comment: No text collisions; mean label sits clear above the bars
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bar alpha 0.5 and 3.5px KDE line are well-adapted to 500-point, 30-bin
-          density
+        comment: Bars and 3.5 px KDE line clearly visible in both themes; legend swatch
+          and line sample match the marks
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/blue pairing is CVD-safe and high-contrast; not relying on
-          red-green
+        comment: Green vs blue is CVD-safe and differs in form (fill vs line)
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, plot fills a healthy majority of the canvas, nothing
-          cut off
+        comment: 3200x1800, balanced axis labels, plot fills the canvas, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axis labels are descriptive with units (% and density)
+        comment: '''Daily return (%)'' with unit and ''Probability Density'''
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'First series correctly #009E73, background/chrome theme-correct
-          in both renders, but KDE line uses palette[2] (blue) instead of the canonical
-          palette[1] (lavender) for series 2 without a semantic justification'
+        passed: true
+        comment: 'Bars #009E73 first; KDE line Imprint blue #4467A3 for the contrast
+          the Notes ask for; correct backgrounds in both themes'
     design_excellence:
-      score: 13
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        comment: Thoughtful color pairing, custom legend, dynamic title sizing, and
-          the new mean-reference-line treatment lift it above a plain default
+        passed: true
+        comment: 'Raised by one: deliberate title / stats subtitle / bold legend hierarchy
+          aligned on a common left inset'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        comment: No boxed frame, subtle single-axis grid, generous whitespace, but
-          nothing beyond that baseline refinement
+        passed: true
+        comment: 'Raised by one: 1 px seams between contiguous bins and a y headroom
+          of 15% chosen for this chart'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        comment: Mean reference line + label now explicitly calls out the negative-mean/left-skew
-          story; still no direct emphasis on the shock-day tail bins themselves
+        passed: true
+        comment: Default; the mean line is an unrequested annotation layer and earns
+          no credit
     spec_compliance:
       score: 15
       max: 15
@@ -143,23 +136,28 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        comment: Correct histogram + KDE overlay
+        passed: true
+        comment: Histogram with KDE overlay
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        comment: Density scaling, alpha-blended bars, KDE overlay, bandwidth selection
-          all present
+        passed: true
+        comment: Alpha 0.5 bars, density y axis, 30 bins with Silverman bandwidth,
+          contrasting curve colour; all 'A good version shows' bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: Return values on X, density on Y, full data range shown
+        passed: true
+        comment: Bars span exact bin edges; KDE evaluated on the same x domain; full
+          data range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title format exact; legend labels match the two series
+        passed: true
+        comment: Mandated title format; legend labels describe both layers
     data_quality:
       score: 15
       max: 15
@@ -168,72 +166,88 @@ review:
         name: Feature Coverage
         score: 6
         max: 6
-        comment: Distribution shows both the calm-day mode and the shock-day fat tail
+        passed: true
+        comment: Shows peak, skew and fat left tail, with curve following the shape
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Plausible, neutral daily portfolio-return scenario
+        passed: true
+        comment: Daily stock returns with shock days, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        comment: Return magnitudes and shock-day frequency (9%) are realistic
+        passed: true
+        comment: 'Checked: histogram normalised by n·binWidth; KDE peak ~0.43 matches
+          the mixture density 0.427; returns within -6%..+3% plausible'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        comment: A few helper functions/components beyond a flat script, justified
-          by the RNG and band-scale-vs-continuous-axis constraints
+        passed: true
+        comment: Only the React component and the hook-based layer component the composition
+          API needs
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        comment: Fixed-seed LCG, fully deterministic
+        passed: true
+        comment: Fixed-seed LCG with Box-Muller
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: Only used MUI X / MUI material imports, including the newly added
-          ChartsReferenceLine
+        passed: true
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        comment: No fake UI, appropriate complexity for the constraint being solved
+        passed: true
+        comment: Binning and KDE written out, allowed per the library prompt's Computation
+          line
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: 'Correct harness contract: default-exported component, skipAnimation
-          set'
+        passed: true
+        comment: Default-exported component sized to ANYPLOT_SIZE, v9 ChartsContainer
+          API, skipAnimation
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        comment: Idiomatic ChartContainer composition using ChartsGrid, LinePlot,
-          ChartsReferenceLine, ChartsXAxis/ChartsYAxis together
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
-        comment: useDrawingArea hook to manually project histogram bars onto the shared
-          continuous coordinate space is a genuinely advanced, library-specific technique
+        passed: true
+        comment: 'Raised: composed ChartsContainer with LinePlot, ChartsGrid and explicit
+          axis components bound by axisId'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Raised: custom SVG layer positioned via the useDrawingArea hook
+          inside the chart''s coordinate system'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-10-24T09:55:48Z'
 impl_tags:
   dependencies: []
   techniques:
+  - layer-composition
   - custom-legend
-  - reference-line
   - annotations
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   dataprep:
@@ -241,5 +255,4 @@ impl_tags:
   - binning
   styling:
   - alpha-blending
-  - publication-ready
   - grid-styling
