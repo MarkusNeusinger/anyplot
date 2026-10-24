@@ -1,240 +1,248 @@
 // anyplot.ai
 // network-bipartite: Bipartite Network Graph
-// Library: muix 7.29.1 | JavaScript 22.23.2
+// Library: muix 9.2.1 | JavaScript 22.23.2
 // Quality: 93/100 | Created: 2026-09-05
 //# anyplot-orientation: square
-// anyplot.ai
-// network-bipartite: Bipartite Network Graph
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-09-05
 
 import { useState } from "react";
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
-import { ChartsLegend } from "@mui/x-charts/ChartsLegend";
-import { useXScale, useYScale, useDrawingArea } from "@mui/x-charts/hooks";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
+import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
+
+// Constants
 const TITLE = "network-bipartite · javascript · muix · anyplot.ai";
-
-// --- Data: student-course enrollment network (in-memory, deterministic) ----
-// Bipartite: every edge connects a student (set A) to a course (set B) —
-// never student-student or course-course. Weight = weekly contact hours.
-// "Talia Novak" and "Advanced Robotics" carry no edges on purpose, to show
-// the isolated-node pattern the spec calls out.
-const STUDENTS = [
-  "Ava Chen", "Liam Brooks", "Noor Malik", "Ethan Diaz", "Priya Nair",
-  "Marcus Lee", "Sofia Reyes", "Jamal Carter", "Elena Popov", "Diego Silva",
-  "Grace Kim", "Omar Haddad", "Isla Fraser", "Victor Alves", "Talia Novak",
-];
-
-const COURSES = [
-  "Linear Algebra", "Data Structures", "Organic Chemistry", "Microeconomics",
-  "Cell Biology", "Machine Learning", "Thermodynamics", "World History",
-  "Statistics", "Digital Design", "Advanced Robotics",
-];
-
-const EDGES = [
-  { student: 0, course: 0, hours: 4 },
-  { student: 0, course: 1, hours: 5 },
-  { student: 0, course: 5, hours: 3 },
-  { student: 0, course: 8, hours: 3 },
-  { student: 1, course: 1, hours: 5 },
-  { student: 1, course: 5, hours: 4 },
-  { student: 1, course: 9, hours: 3 },
-  { student: 2, course: 2, hours: 6 },
-  { student: 2, course: 4, hours: 4 },
-  { student: 2, course: 8, hours: 3 },
-  { student: 3, course: 3, hours: 4 },
-  { student: 3, course: 7, hours: 2 },
-  { student: 3, course: 8, hours: 4 },
-  { student: 4, course: 2, hours: 4 },
-  { student: 4, course: 4, hours: 5 },
-  { student: 4, course: 8, hours: 3 },
-  { student: 5, course: 0, hours: 3 },
-  { student: 5, course: 6, hours: 5 },
-  { student: 5, course: 8, hours: 3 },
-  { student: 6, course: 3, hours: 3 },
-  { student: 6, course: 7, hours: 3 },
-  { student: 7, course: 1, hours: 4 },
-  { student: 7, course: 5, hours: 5 },
-  { student: 7, course: 9, hours: 4 },
-  { student: 8, course: 0, hours: 4 },
-  { student: 8, course: 6, hours: 4 },
-  { student: 9, course: 3, hours: 5 },
-  { student: 9, course: 7, hours: 3 },
-  { student: 9, course: 8, hours: 2 },
-  { student: 10, course: 4, hours: 4 },
-  { student: 10, course: 5, hours: 3 },
-  { student: 10, course: 8, hours: 4 },
-  { student: 11, course: 1, hours: 3 },
-  { student: 11, course: 9, hours: 5 },
-  { student: 12, course: 2, hours: 5 },
-  { student: 12, course: 4, hours: 3 },
-  { student: 13, course: 0, hours: 3 },
-  { student: 13, course: 6, hours: 3 },
-  { student: 13, course: 9, hours: 3 },
-];
-
-const MIN_HOURS = Math.min(...EDGES.map((e) => e.hours));
-const MAX_HOURS = Math.max(...EDGES.map((e) => e.hours));
-
-const studentDegree = STUDENTS.map(() => 0);
-const courseDegree = COURSES.map(() => 0);
-EDGES.forEach((e) => {
-  studentDegree[e.student] += 1;
-  courseDegree[e.course] += 1;
-});
-
-const studentNeighbors = STUDENTS.map(() => []);
-const courseNeighbors = COURSES.map(() => []);
-EDGES.forEach((e) => {
-  studentNeighbors[e.student].push(e.course);
-  courseNeighbors[e.course].push(e.student);
-});
-
-function ranksFromOrder(order) {
-  const ranks = order.map(() => 0);
-  order.forEach((idx, rank) => {
-    ranks[idx] = rank;
-  });
-  return ranks;
-}
-
-// Order each column primarily by descending degree, so hub students / hub
-// courses cluster near the top and the fan-out pattern reads clearly top to
-// bottom (isolated, zero-degree nodes naturally sink to the bottom). Ties
-// within the same degree are broken by the barycenter of each node's
-// neighbor ranks in the other column, a standard two-layer crossing-
-// minimization heuristic — this keeps edges from crossing more than needed
-// among otherwise-equivalent nodes.
-function orderByDegreeThenBarycenter(degree, neighbors, otherRanks) {
-  return degree
-    .map((d, i) => {
-      const neigh = neighbors[i];
-      const bary = neigh.length === 0 ? Infinity : neigh.reduce((sum, j) => sum + otherRanks[j], 0) / neigh.length;
-      return { i, d, bary };
-    })
-    .sort((a, b) => b.d - a.d || a.bary - b.bary || a.i - b.i)
-    .map((x) => x.i);
-}
-
-const initialStudentOrder = STUDENTS.map((_, i) => i).sort((a, b) => studentDegree[b] - studentDegree[a] || a - b);
-const initialCourseOrder = COURSES.map((_, i) => i).sort((a, b) => courseDegree[b] - courseDegree[a] || a - b);
-const initialStudentRanks = ranksFromOrder(initialStudentOrder);
-const initialCourseRanks = ranksFromOrder(initialCourseOrder);
-
-const courseOrder = orderByDegreeThenBarycenter(courseDegree, courseNeighbors, initialStudentRanks);
-const studentOrder = orderByDegreeThenBarycenter(studentDegree, studentNeighbors, initialCourseRanks);
-
-const studentRow = studentOrder.map(() => 0);
-studentOrder.forEach((idx, rank) => {
-  studentRow[idx] = rank;
-});
-const courseRow = courseOrder.map(() => 0);
-courseOrder.forEach((idx, rank) => {
-  courseRow[idx] = rank;
-});
-
-// rank 0 (top of the sorted order) lands at y=1, the last rank at y=0 — each
-// column spans the full height independently since the sets differ in size.
-function rowY(rank, count) {
-  return 1 - (rank + 0.5) / count;
-}
-
+const TITLE_HEIGHT = 60;
+const LEGEND_HEIGHT = 86;
+const MARGIN = { top: 44, right: 220, bottom: 24, left: 220 };
 const NODE_MIN_R = 12;
-const NODE_MAX_R = 28;
-const ISOLATED_R = 7;
-const MIN_DEGREE = 1;
-const MAX_DEGREE = Math.max(...studentDegree, ...courseDegree);
-
-function nodeRadius(degree) {
-  if (degree === 0) return ISOLATED_R;
-  const ratio = (degree - MIN_DEGREE) / (MAX_DEGREE - MIN_DEGREE || 1);
-  return NODE_MIN_R + ratio * (NODE_MAX_R - NODE_MIN_R);
-}
-
-const EDGE_MIN_W = 1.5;
+const NODE_MAX_R = 26;
+const ISOLATED_R = 7.5;
+const EDGE_MIN_W = 1.6;
 const EDGE_MAX_W = 6;
 
-function edgeWidth(hours) {
-  const ratio = (hours - MIN_HOURS) / (MAX_HOURS - MIN_HOURS || 1);
-  return EDGE_MIN_W + ratio * (EDGE_MAX_W - EDGE_MIN_W);
-}
+// Data
+const STUDENT_COL = "Student (Set A)";
+const COURSE_COL = "Course (Set B)";
+const HOURS_COL = "Weekly Contact Hours";
 
-function edgeOpacity(hours) {
-  const ratio = (hours - MIN_HOURS) / (MAX_HOURS - MIN_HOURS || 1);
-  return 0.25 + ratio * 0.45;
-}
-
-const { width: CANVAS_W, height: CANVAS_H } = window.ANYPLOT_SIZE;
-const MARGIN = { top: 90, right: 220, bottom: 230, left: 220 };
-
-// Phantom series carrying no points: they exist purely so the native
-// ChartsLegend component (a real MUI X primitive, not hand-drawn SVG) has
-// series metadata to read the set-membership colors and labels from. The
-// nodes themselves are still hand-drawn (their radius encodes degree, which
-// the community ScatterChart series can't size per-point).
-const LEGEND_SERIES = [
-  { type: "scatter", id: "set-a", data: [], color: t.palette[0], label: "Students (set A) · size = enrolled courses" },
-  { type: "scatter", id: "set-b", data: [], color: t.palette[1], label: "Courses (set B) · size = enrolled students" },
+const DATA: Array<Record<string, string | number>> = [
+  { [STUDENT_COL]: "Ava Chen", [COURSE_COL]: "Linear Algebra", [HOURS_COL]: 4 },
+  { [STUDENT_COL]: "Ava Chen", [COURSE_COL]: "Data Structures", [HOURS_COL]: 5 },
+  { [STUDENT_COL]: "Ava Chen", [COURSE_COL]: "Machine Learning", [HOURS_COL]: 3 },
+  { [STUDENT_COL]: "Ava Chen", [COURSE_COL]: "Statistics", [HOURS_COL]: 3 },
+  { [STUDENT_COL]: "Liam Brooks", [COURSE_COL]: "Data Structures", [HOURS_COL]: 5 },
+  { [STUDENT_COL]: "Liam Brooks", [COURSE_COL]: "Machine Learning", [HOURS_COL]: 4 },
+  { [STUDENT_COL]: "Liam Brooks", [COURSE_COL]: "Digital Design", [HOURS_COL]: 3 },
+  { [STUDENT_COL]: "Noor Malik", [COURSE_COL]: "Organic Chemistry", [HOURS_COL]: 6 },
+  { [STUDENT_COL]: "Noor Malik", [COURSE_COL]: "Cell Biology", [HOURS_COL]: 4 },
+  { [STUDENT_COL]: "Noor Malik", [COURSE_COL]: "Statistics", [HOURS_COL]: 3 },
+  { [STUDENT_COL]: "Ethan Diaz", [COURSE_COL]: "Microeconomics", [HOURS_COL]: 4 },
+  { [STUDENT_COL]: "Ethan Diaz", [COURSE_COL]: "World History", [HOURS_COL]: 2 },
+  { [STUDENT_COL]: "Ethan Diaz", [COURSE_COL]: "Statistics", [HOURS_COL]: 4 },
+  { [STUDENT_COL]: "Priya Nair", [COURSE_COL]: "Organic Chemistry", [HOURS_COL]: 4 },
+  { [STUDENT_COL]: "Priya Nair", [COURSE_COL]: "Cell Biology", [HOURS_COL]: 5 },
+  { [STUDENT_COL]: "Priya Nair", [COURSE_COL]: "Statistics", [HOURS_COL]: 3 },
+  { [STUDENT_COL]: "Marcus Lee", [COURSE_COL]: "Linear Algebra", [HOURS_COL]: 3 },
+  { [STUDENT_COL]: "Marcus Lee", [COURSE_COL]: "Thermodynamics", [HOURS_COL]: 5 },
+  { [STUDENT_COL]: "Marcus Lee", [COURSE_COL]: "Statistics", [HOURS_COL]: 3 },
+  { [STUDENT_COL]: "Sofia Reyes", [COURSE_COL]: "Microeconomics", [HOURS_COL]: 3 },
+  { [STUDENT_COL]: "Sofia Reyes", [COURSE_COL]: "World History", [HOURS_COL]: 3 },
+  { [STUDENT_COL]: "Jamal Carter", [COURSE_COL]: "Data Structures", [HOURS_COL]: 4 },
+  { [STUDENT_COL]: "Jamal Carter", [COURSE_COL]: "Machine Learning", [HOURS_COL]: 5 },
+  { [STUDENT_COL]: "Jamal Carter", [COURSE_COL]: "Digital Design", [HOURS_COL]: 4 },
+  { [STUDENT_COL]: "Elena Popov", [COURSE_COL]: "Linear Algebra", [HOURS_COL]: 4 },
+  { [STUDENT_COL]: "Elena Popov", [COURSE_COL]: "Thermodynamics", [HOURS_COL]: 4 },
+  { [STUDENT_COL]: "Diego Silva", [COURSE_COL]: "Microeconomics", [HOURS_COL]: 5 },
+  { [STUDENT_COL]: "Diego Silva", [COURSE_COL]: "World History", [HOURS_COL]: 3 },
+  { [STUDENT_COL]: "Diego Silva", [COURSE_COL]: "Statistics", [HOURS_COL]: 2 },
+  { [STUDENT_COL]: "Grace Kim", [COURSE_COL]: "Cell Biology", [HOURS_COL]: 4 },
+  { [STUDENT_COL]: "Grace Kim", [COURSE_COL]: "Machine Learning", [HOURS_COL]: 3 },
+  { [STUDENT_COL]: "Grace Kim", [COURSE_COL]: "Statistics", [HOURS_COL]: 4 },
+  { [STUDENT_COL]: "Omar Haddad", [COURSE_COL]: "Data Structures", [HOURS_COL]: 3 },
+  { [STUDENT_COL]: "Omar Haddad", [COURSE_COL]: "Digital Design", [HOURS_COL]: 5 },
+  { [STUDENT_COL]: "Isla Fraser", [COURSE_COL]: "Organic Chemistry", [HOURS_COL]: 5 },
+  { [STUDENT_COL]: "Isla Fraser", [COURSE_COL]: "Cell Biology", [HOURS_COL]: 3 },
+  { [STUDENT_COL]: "Victor Alves", [COURSE_COL]: "Linear Algebra", [HOURS_COL]: 3 },
+  { [STUDENT_COL]: "Victor Alves", [COURSE_COL]: "Thermodynamics", [HOURS_COL]: 3 },
+  { [STUDENT_COL]: "Victor Alves", [COURSE_COL]: "Digital Design", [HOURS_COL]: 3 },
+  // Isolated entities with zero enrollments
+  { [STUDENT_COL]: "Talia Novak", [COURSE_COL]: "", [HOURS_COL]: 0 },
+  { [STUDENT_COL]: "", [COURSE_COL]: "Advanced Robotics", [HOURS_COL]: 0 },
 ];
 
-// --- Overlay: title, drawn inside the reserved top margin -------------------
-function GraphTitle() {
-  return (
-    <text
-      x={CANVAS_W / 2}
-      y={46}
-      textAnchor="middle"
-      dominantBaseline="hanging"
-      fontSize={26}
-      fontWeight={600}
-      fill={t.ink}
-    >
-      {TITLE}
-    </text>
-  );
+// Derive unique students (Set A), courses (Set B), and active edges in appearance order
+const students: string[] = [];
+const courses: string[] = [];
+const edges: Array<{ student: number; course: number; hours: number }> = [];
+
+for (let i = 0; i < DATA.length; i++) {
+  const sName = String(DATA[i][STUDENT_COL]);
+  const cName = String(DATA[i][COURSE_COL]);
+  if (sName && !students.includes(sName)) students.push(sName);
+  if (cName && !courses.includes(cName)) courses.push(cName);
 }
 
-// --- Overlay: edges + nodes, hoverable for the interactive HTML export ------
-function BipartiteOverlay({ onHoverChange }) {
+for (let i = 0; i < DATA.length; i++) {
+  const sName = String(DATA[i][STUDENT_COL]);
+  const cName = String(DATA[i][COURSE_COL]);
+  const hours = Number(DATA[i][HOURS_COL]);
+  if (sName && cName && hours > 0) {
+    edges.push({
+      student: students.indexOf(sName),
+      course: courses.indexOf(cName),
+      hours,
+    });
+  }
+}
+
+const minHours = Math.min(...edges.map((e) => e.hours));
+const maxHours = Math.max(...edges.map((e) => e.hours));
+
+const studentDegree = students.map(() => 0);
+const courseDegree = courses.map(() => 0);
+const studentNeighbors: number[][] = students.map(() => []);
+const courseNeighbors: number[][] = courses.map(() => []);
+
+for (let i = 0; i < edges.length; i++) {
+  const e = edges[i];
+  studentDegree[e.student] += 1;
+  courseDegree[e.course] += 1;
+  studentNeighbors[e.student].push(e.course);
+  courseNeighbors[e.course].push(e.student);
+}
+
+// Initial degree order + barycenter crossing-reduction
+const initStudentOrder = students
+  .map((_, i) => i)
+  .sort((a, b) => studentDegree[b] - studentDegree[a] || a - b);
+const initCourseOrder = courses
+  .map((_, i) => i)
+  .sort((a, b) => courseDegree[b] - courseDegree[a] || a - b);
+
+const initStudentRanks = students.map(() => 0);
+for (let r = 0; r < initStudentOrder.length; r++) initStudentRanks[initStudentOrder[r]] = r;
+const initCourseRanks = courses.map(() => 0);
+for (let r = 0; r < initCourseOrder.length; r++) initCourseRanks[initCourseOrder[r]] = r;
+
+const courseOrder = courseDegree
+  .map((d, i) => {
+    const neigh = courseNeighbors[i];
+    const bary =
+      neigh.length === 0
+        ? Infinity
+        : neigh.reduce((sum, j) => sum + initStudentRanks[j], 0) / neigh.length;
+    return { i, d, bary };
+  })
+  .sort((a, b) => b.d - a.d || a.bary - b.bary || a.i - b.i)
+  .map((x) => x.i);
+
+const studentOrder = studentDegree
+  .map((d, i) => {
+    const neigh = studentNeighbors[i];
+    const bary =
+      neigh.length === 0
+        ? Infinity
+        : neigh.reduce((sum, j) => sum + initCourseRanks[j], 0) / neigh.length;
+    return { i, d, bary };
+  })
+  .sort((a, b) => b.d - a.d || a.bary - b.bary || a.i - b.i)
+  .map((x) => x.i);
+
+const studentRow = students.map(() => 0);
+for (let r = 0; r < studentOrder.length; r++) studentRow[studentOrder[r]] = r;
+const courseRow = courses.map(() => 0);
+for (let r = 0; r < courseOrder.length; r++) courseRow[courseOrder[r]] = r;
+
+const minDegree = 1;
+const maxDegree = Math.max(...studentDegree, ...courseDegree);
+
+const studentRadii = studentDegree.map((deg) =>
+  deg === 0
+    ? ISOLATED_R
+    : NODE_MIN_R + ((deg - minDegree) / (maxDegree - minDegree || 1)) * (NODE_MAX_R - NODE_MIN_R),
+);
+const courseRadii = courseDegree.map((deg) =>
+  deg === 0
+    ? ISOLATED_R
+    : NODE_MIN_R + ((deg - minDegree) / (maxDegree - minDegree || 1)) * (NODE_MAX_R - NODE_MIN_R),
+);
+
+interface HoverInfo {
+  label: string;
+  detail: string;
+  x: number;
+  y: number;
+}
+
+function BipartiteOverlay({
+  hover,
+  onHoverChange,
+}: {
+  hover: HoverInfo | null;
+  onHoverChange: (info: HoverInfo | null) => void;
+}) {
+  const { top } = useDrawingArea();
   const xScale = useXScale();
   const yScale = useYScale();
+  const canvasW = window.ANYPLOT_SIZE.width;
 
-  const studentX = xScale(0);
-  const courseX = xScale(1);
+  const studentX = Number(xScale(0));
+  const courseX = Number(xScale(1));
 
   return (
     <g>
-      {EDGES.map((edge, i) => {
-        const x1 = studentX;
-        const y1 = yScale(rowY(studentRow[edge.student], STUDENTS.length));
-        const x2 = courseX;
-        const y2 = yScale(rowY(courseRow[edge.course], COURSES.length));
-        const tooltip = {
-          label: `${STUDENTS[edge.student]} → ${COURSES[edge.course]}`,
+      {/* Column headers */}
+      <text
+        x={studentX}
+        y={top - 22}
+        textAnchor="middle"
+        fontSize={16}
+        fontWeight={700}
+        fill={t.palette[0]}
+      >
+        Students (Set A)
+      </text>
+      <text
+        x={courseX}
+        y={top - 22}
+        textAnchor="middle"
+        fontSize={16}
+        fontWeight={700}
+        fill={t.palette[1]}
+      >
+        Courses (Set B)
+      </text>
+
+      {/* Bipartite edges */}
+      {edges.map((edge, i) => {
+        const y1 = Number(yScale(1 - (studentRow[edge.student] + 0.5) / students.length));
+        const y2 = Number(yScale(1 - (courseRow[edge.course] + 0.5) / courses.length));
+        const hRatio = (edge.hours - minHours) / (maxHours - minHours || 1);
+        const strokeW = EDGE_MIN_W + hRatio * (EDGE_MAX_W - EDGE_MIN_W);
+        const strokeOp = 0.25 + hRatio * 0.45;
+        const tooltip: HoverInfo = {
+          label: `${students[edge.student]} → ${courses[edge.course]}`,
           detail: `${edge.hours} h/week`,
-          x: (x1 + x2) / 2,
+          x: (studentX + courseX) / 2,
           y: (y1 + y2) / 2,
         };
         return (
           <g key={`edge-${i}`}>
             <line
-              x1={x1}
+              x1={studentX}
               y1={y1}
-              x2={x2}
+              x2={courseX}
               y2={y2}
               stroke={t.inkSoft}
-              strokeOpacity={edgeOpacity(edge.hours)}
-              strokeWidth={edgeWidth(edge.hours)}
+              strokeOpacity={strokeOp}
+              strokeWidth={strokeW}
               strokeLinecap="round"
             />
-            {/* Wider transparent hit path: the visible stroke is often too thin to hover reliably. */}
             <line
-              x1={x1}
+              x1={studentX}
               y1={y1}
-              x2={x2}
+              x2={courseX}
               y2={y2}
               stroke="transparent"
               strokeWidth={16}
@@ -245,20 +253,21 @@ function BipartiteOverlay({ onHoverChange }) {
           </g>
         );
       })}
-      {STUDENTS.map((label, i) => {
-        const cx = studentX;
-        const cy = yScale(rowY(studentRow[i], STUDENTS.length));
-        const r = nodeRadius(studentDegree[i]);
-        const tooltip = {
+
+      {/* Student nodes (Set A) */}
+      {students.map((label, i) => {
+        const cy = Number(yScale(1 - (studentRow[i] + 0.5) / students.length));
+        const r = studentRadii[i];
+        const tooltip: HoverInfo = {
           label,
           detail: `${studentDegree[i]} course${studentDegree[i] === 1 ? "" : "s"}`,
-          x: cx,
+          x: studentX,
           y: cy,
         };
         return (
           <g key={`student-${i}`}>
             <circle
-              cx={cx}
+              cx={studentX}
               cy={cy}
               r={r}
               fill={t.palette[0]}
@@ -271,7 +280,7 @@ function BipartiteOverlay({ onHoverChange }) {
               onMouseLeave={() => onHoverChange(null)}
             />
             <text
-              x={cx - r - 10}
+              x={studentX - r - 12}
               y={cy}
               textAnchor="end"
               dominantBaseline="middle"
@@ -284,20 +293,21 @@ function BipartiteOverlay({ onHoverChange }) {
           </g>
         );
       })}
-      {COURSES.map((label, i) => {
-        const cx = courseX;
-        const cy = yScale(rowY(courseRow[i], COURSES.length));
-        const r = nodeRadius(courseDegree[i]);
-        const tooltip = {
+
+      {/* Course nodes (Set B) */}
+      {courses.map((label, i) => {
+        const cy = Number(yScale(1 - (courseRow[i] + 0.5) / courses.length));
+        const r = courseRadii[i];
+        const tooltip: HoverInfo = {
           label,
           detail: `${courseDegree[i]} student${courseDegree[i] === 1 ? "" : "s"}`,
-          x: cx,
+          x: courseX,
           y: cy,
         };
         return (
           <g key={`course-${i}`}>
             <circle
-              cx={cx}
+              cx={courseX}
               cy={cy}
               r={r}
               fill={t.palette[1]}
@@ -310,7 +320,7 @@ function BipartiteOverlay({ onHoverChange }) {
               onMouseLeave={() => onHoverChange(null)}
             />
             <text
-              x={cx + r + 10}
+              x={courseX + r + 12}
               y={cy}
               textAnchor="start"
               dominantBaseline="middle"
@@ -323,102 +333,159 @@ function BipartiteOverlay({ onHoverChange }) {
           </g>
         );
       })}
+
+      {/* Interactive hover tooltip */}
+      {hover && (
+        <g style={{ pointerEvents: "none" }}>
+          {(() => {
+            const boxW = Math.max(hover.label.length, hover.detail.length) * 8 + 24;
+            const boxH = 50;
+            const tx = Math.min(Math.max(hover.x - boxW / 2, 8), canvasW - boxW - 8);
+            const ty = Math.max(hover.y - boxH - 16, 8);
+            return (
+              <>
+                <rect
+                  x={tx}
+                  y={ty}
+                  width={boxW}
+                  height={boxH}
+                  rx={6}
+                  fill={t.elevatedBg}
+                  stroke={t.inkSoft}
+                  strokeOpacity={0.45}
+                />
+                <text
+                  x={tx + boxW / 2}
+                  y={ty + 20}
+                  textAnchor="middle"
+                  fontSize={14}
+                  fontWeight={600}
+                  fill={t.ink}
+                >
+                  {hover.label}
+                </text>
+                <text
+                  x={tx + boxW / 2}
+                  y={ty + 39}
+                  textAnchor="middle"
+                  fontSize={14}
+                  fill={t.inkSoft}
+                >
+                  {hover.detail}
+                </text>
+              </>
+            );
+          })()}
+        </g>
+      )}
     </g>
   );
 }
 
-// --- Overlay: hover tooltip for edges and nodes ------------------------------
-function HoverTooltip({ hover }) {
-  if (!hover) return null;
-  const charWidth = 7.2;
-  const width = Math.max(hover.label.length, hover.detail.length) * charWidth + 24;
-  const height = 46;
-  const x = Math.min(Math.max(hover.x - width / 2, 8), CANVAS_W - width - 8);
-  const y = Math.max(hover.y - height - 16, 8);
-  return (
-    <g style={{ pointerEvents: "none" }}>
-      <rect x={x} y={y} width={width} height={height} rx={6} fill={t.elevatedBg} stroke={t.inkSoft} strokeOpacity={0.4} />
-      <text x={x + width / 2} y={y + 19} textAnchor="middle" fontSize={13} fontWeight={600} fill={t.ink}>
-        {hover.label}
-      </text>
-      <text x={x + width / 2} y={y + 36} textAnchor="middle" fontSize={12} fill={t.inkSoft}>
-        {hover.detail}
-      </text>
-    </g>
-  );
-}
-
-// --- Overlay: edge-weight scale + isolated-node note, below the native
-// ChartsLegend row (set-membership colors/labels are handled by that real
-// MUI X component instead of hand-drawn swatches).
-function WeightLegend() {
-  const drawingArea = useDrawingArea();
-  const rowY2 = drawingArea.top + drawingArea.height + 115;
-  const rowY3 = rowY2 + 62;
-
-  const hourSamples = [MIN_HOURS, Math.round((MIN_HOURS + MAX_HOURS) / 2), MAX_HOURS];
-
-  return (
-    <g>
-      <text x={drawingArea.left} y={rowY2 - 8} fontSize={14} fill={t.inkSoft}>
-        Edge weight = weekly contact hours
-      </text>
-      {hourSamples.map((h, i) => {
-        const x = drawingArea.left + i * 140;
-        const lineY = rowY2 + 20;
-        return (
-          <g key={h}>
-            <line
-              x1={x}
-              y1={lineY}
-              x2={x + 60}
-              y2={lineY}
-              stroke={t.inkSoft}
-              strokeOpacity={edgeOpacity(h)}
-              strokeWidth={edgeWidth(h)}
-              strokeLinecap="round"
-            />
-            <text x={x + 30} y={lineY + 22} textAnchor="middle" fontSize={14} fill={t.inkSoft}>
-              {h}h
-            </text>
-          </g>
-        );
-      })}
-      <text x={drawingArea.left} y={rowY3} fontSize={14} fill={t.inkSoft}>
-        Dashed outline, faded fill = isolated node (no enrollments)
-      </text>
-    </g>
-  );
-}
-
-// --- Chart (default-exported component — the harness mounts it) -------------
 export default function Chart() {
-  const [hover, setHover] = useState(null);
+  const [hover, setHover] = useState<HoverInfo | null>(null);
+  const { width, height } = window.ANYPLOT_SIZE;
+  const chartHeight = height - TITLE_HEIGHT - LEGEND_HEIGHT;
+  const hourSamples = [minHours, Math.round((minHours + maxHours) / 2), maxHours];
+
   return (
-    <ChartContainer
-      width={CANVAS_W}
-      height={CANVAS_H}
-      margin={MARGIN}
-      series={LEGEND_SERIES}
-      skipAnimation
-      disableAxisListener
-      xAxis={[{ scaleType: "linear", min: 0, max: 1 }]}
-      yAxis={[{ scaleType: "linear", min: 0, max: 1 }]}
+    <div
+      style={{
+        width,
+        height,
+        backgroundColor: t.pageBg,
+        display: "flex",
+        flexDirection: "column",
+        fontFamily: "Inter, system-ui, sans-serif",
+      }}
     >
-      <BipartiteOverlay onHoverChange={setHover} />
-      <GraphTitle />
-      <ChartsLegend
-        position={{ horizontal: "middle", vertical: "bottom" }}
-        direction="row"
-        padding={{ top: 0, right: 0, bottom: 130, left: 0 }}
-        itemMarkWidth={18}
-        itemMarkHeight={18}
-        markGap={10}
-        itemGap={50}
-        labelStyle={{ fontSize: 16, fill: t.inkSoft }}
-      />
-      <WeightLegend />
-      <HoverTooltip hover={hover} />
-    </ChartContainer>
+      <div
+        style={{
+          height: TITLE_HEIGHT,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 22,
+          fontWeight: 600,
+          color: t.ink,
+        }}
+      >
+        {TITLE}
+      </div>
+      <ChartsContainer
+        width={width}
+        height={chartHeight}
+        margin={MARGIN}
+        skipAnimation
+        series={[]}
+        xAxis={[{ position: "none", scaleType: "linear", min: 0, max: 1 }]}
+        yAxis={[{ position: "none", scaleType: "linear", min: 0, max: 1 }]}
+      >
+        <BipartiteOverlay hover={hover} onHoverChange={setHover} />
+      </ChartsContainer>
+      <div
+        style={{
+          height: LEGEND_HEIGHT,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 10,
+          fontSize: 14,
+          color: t.inkSoft,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 36 }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 8, color: t.ink }}>
+            <span
+              style={{
+                width: 14,
+                height: 14,
+                borderRadius: "50%",
+                backgroundColor: t.palette[0],
+                display: "inline-block",
+              }}
+            />
+            Students (Set A) · node size = enrolled courses
+          </span>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 8, color: t.ink }}>
+            <span
+              style={{
+                width: 14,
+                height: 14,
+                borderRadius: "50%",
+                backgroundColor: t.palette[1],
+                display: "inline-block",
+              }}
+            />
+            Courses (Set B) · node size = enrolled students
+          </span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+          <span>Edge width = {HOURS_COL}:</span>
+          {hourSamples.map((h) => {
+            const hRatio = (h - minHours) / (maxHours - minHours || 1);
+            const w = EDGE_MIN_W + hRatio * (EDGE_MAX_W - EDGE_MIN_W);
+            const op = 0.25 + hRatio * 0.45;
+            return (
+              <span key={h} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                <span
+                  style={{
+                    width: 34,
+                    height: Math.round(w),
+                    backgroundColor: t.inkSoft,
+                    opacity: op,
+                    borderRadius: 2,
+                    display: "inline-block",
+                  }}
+                />
+                <span>{h}h</span>
+              </span>
+            );
+          })}
+          <span>· Dashed outline = isolated node (0 enrollments)</span>
+        </div>
+      </div>
+    </div>
   );
 }
