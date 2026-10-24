@@ -1,8 +1,7 @@
 // anyplot.ai
 // histogram-epidemic: Epidemic Curve (Epi Curve)
-// Library: muix 9.2.1 | JavaScript 22.23.2
+// Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 94/100 | Created: 2026-08-26
-
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { BarPlot } from "@mui/x-charts/BarChart";
 import { LinePlot } from "@mui/x-charts/LineChart";
@@ -14,28 +13,34 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
-const FONT = "system-ui, -apple-system, sans-serif";
 
 // Constants
-const ONSET_DATE_COL = "onset_date";
-const CASE_TYPE_COL = "case_type";
-const CASE_COUNT_COL = "case_count";
-const EVENT_LABEL_COL = "event_label";
-
+const FONT = "system-ui, -apple-system, sans-serif";
+const TITLE = "histogram-epidemic · javascript · muix · anyplot.ai";
 const Y_HEADROOM_RATIO = 0.14;
+const MONTH_ABBR = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
 
-// Data
+// Columns: set these to your data's column names
+const ONSET_DATE = "Symptom Onset Date"; // role: onset_date
+const CASE_TYPE = "Case Classification"; // role: case_type
+const DAILY_CASES = "Daily New Cases"; // role: case_count
+const EVENT_LABEL = "Intervention Event"; // role: events
+
+// Data: replace this block with your own records
 type EpiRow = {
-  [ONSET_DATE_COL]: string;
-  [CASE_TYPE_COL]: string;
-  [CASE_COUNT_COL]: number;
-  [EVENT_LABEL_COL]: string;
+  [ONSET_DATE]: string;
+  [CASE_TYPE]: string;
+  [DAILY_CASES]: number;
+  [EVENT_LABEL]: string;
 };
 
-const DATA: EpiRow[] = [];
+const data: EpiRow[] = [];
 let seed = 42;
 const dayCount = 63;
-const startDate = new Date(2024, 0, 1);
+const startMs = Date.UTC(2024, 0, 1);
 const eventByDayIndex: Record<number, string> = {
   20: "Lockdown start",
   45: "Vaccination campaign",
@@ -69,57 +74,52 @@ for (let day = 0; day < dayCount; day++) {
 }
 
 for (let day = 0; day < dayCount; day++) {
-  const d = new Date(startDate);
-  d.setDate(d.getDate() + day);
-  const dateLabel = d.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  });
+  const isoDate = new Date(startMs + day * 86400000).toISOString().slice(0, 10);
   const ev = eventByDayIndex[day] ?? "";
   const conf = rawConfirmed[day];
   const prob = rawProbable[day];
   const susp = Math.max(0, rawDailyTotals[day] - conf - prob);
 
-  DATA.push(
+  data.push(
     {
-      [ONSET_DATE_COL]: dateLabel,
-      [CASE_TYPE_COL]: "Confirmed",
-      [CASE_COUNT_COL]: conf,
-      [EVENT_LABEL_COL]: ev,
+      [ONSET_DATE]: isoDate,
+      [CASE_TYPE]: "Confirmed",
+      [DAILY_CASES]: conf,
+      [EVENT_LABEL]: ev,
     },
     {
-      [ONSET_DATE_COL]: dateLabel,
-      [CASE_TYPE_COL]: "Probable",
-      [CASE_COUNT_COL]: prob,
-      [EVENT_LABEL_COL]: ev,
+      [ONSET_DATE]: isoDate,
+      [CASE_TYPE]: "Probable",
+      [DAILY_CASES]: prob,
+      [EVENT_LABEL]: ev,
     },
     {
-      [ONSET_DATE_COL]: dateLabel,
-      [CASE_TYPE_COL]: "Suspect",
-      [CASE_COUNT_COL]: susp,
-      [EVENT_LABEL_COL]: ev,
+      [ONSET_DATE]: isoDate,
+      [CASE_TYPE]: "Suspect",
+      [DAILY_CASES]: susp,
+      [EVENT_LABEL]: ev,
     },
   );
 }
 
-const onsetDates: string[] = [];
+// Plot: reads only data and the constants above
+const onsetDates = Array.from(new Set(data.map((r) => r[ONSET_DATE]))).sort();
 const caseTypes: string[] = [];
 const eventsByDate = new Map<string, string>();
 
-for (const row of DATA) {
-  const dt = row[ONSET_DATE_COL];
-  const ct = row[CASE_TYPE_COL];
-  if (!onsetDates.includes(dt)) onsetDates.push(dt);
+for (const row of data) {
+  const dt = row[ONSET_DATE];
+  const ct = row[CASE_TYPE];
   if (!caseTypes.includes(ct)) caseTypes.push(ct);
-  if (row[EVENT_LABEL_COL] && !eventsByDate.has(dt)) {
-    eventsByDate.set(dt, row[EVENT_LABEL_COL]);
+  if (row[EVENT_LABEL] && !eventsByDate.has(dt)) {
+    eventsByDate.set(dt, row[EVENT_LABEL]);
   }
 }
 
 const countLookup = new Map<string, number>();
-for (const row of DATA) {
-  const key = `${row[ONSET_DATE_COL]}__${row[CASE_TYPE_COL]}`;
-  countLookup.set(key, (countLookup.get(key) ?? 0) + row[CASE_COUNT_COL]);
+for (const row of data) {
+  const key = `${row[ONSET_DATE]}__${row[CASE_TYPE]}`;
+  countLookup.set(key, (countLookup.get(key) ?? 0) + row[DAILY_CASES]);
 }
 
 const dailyTotals = onsetDates.map((dt) =>
@@ -137,10 +137,9 @@ for (const tot of dailyTotals) {
   );
 }
 
-const maxDaily = Math.ceil(Math.max(...dailyTotals) * (1 + Y_HEADROOM_RATIO));
-const maxCumulative = Math.ceil(
-  (cumulativeCases[cumulativeCases.length - 1] ?? 1) * (1 + Y_HEADROOM_RATIO * 0.5),
-);
+const maxDaily = Math.max(...dailyTotals) * (1 + Y_HEADROOM_RATIO);
+const maxCumulative =
+  cumulativeCases[cumulativeCases.length - 1] * (1 + Y_HEADROOM_RATIO * 0.5);
 
 const barSeries = caseTypes.map((ct, idx) => ({
   type: "bar" as const,
@@ -168,12 +167,16 @@ const series = [
   },
 ];
 
-const totalOutbreakCases = cumulativeCases[cumulativeCases.length - 1] ?? 0;
+const totalOutbreakCases = cumulativeCases[cumulativeCases.length - 1];
 const peakDaily = Math.max(...dailyTotals);
-const peakDate = onsetDates[dailyTotals.indexOf(peakDaily)] ?? "";
+const peakDate = onsetDates[dailyTotals.indexOf(peakDaily)];
 
-const TITLE = "histogram-epidemic · javascript · muix · anyplot.ai";
-const SUBTITLE = `${onsetDates.length}-day propagated outbreak (${onsetDates[0]}–${onsetDates[onsetDates.length - 1]}) · Total ${totalOutbreakCases.toLocaleString("en-US")} cases, peak ${peakDaily}/day on ${peakDate}`;
+const fmtDate = (iso: string) => {
+  const parts = iso.split("-").map(Number);
+  return `${MONTH_ABBR[parts[1] - 1]} ${parts[2]}`;
+};
+
+const SUBTITLE = `${onsetDates.length} days (${fmtDate(onsetDates[0])}–${fmtDate(onsetDates[onsetDates.length - 1])}) · Total ${totalOutbreakCases.toLocaleString("en-US")} cases, peak ${peakDaily}/day on ${fmtDate(peakDate)}`;
 
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
@@ -275,7 +278,8 @@ export default function Chart() {
             data: onsetDates,
             categoryGapRatio: 0.04,
             height: 60,
-            label: "Symptom Onset Date",
+            label: ONSET_DATE,
+            valueFormatter: fmtDate,
             tickLabelInterval: (_value: string, index: number) =>
               index % 7 === 0,
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft, fontFamily: FONT },
@@ -289,7 +293,7 @@ export default function Chart() {
             min: 0,
             max: maxDaily,
             width: 80,
-            label: "Daily New Cases",
+            label: DAILY_CASES,
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft, fontFamily: FONT },
             labelStyle: { fontSize: 15, fill: t.ink, fontFamily: FONT },
           },
