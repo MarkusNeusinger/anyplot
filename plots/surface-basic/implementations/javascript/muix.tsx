@@ -2,258 +2,369 @@
 // surface-basic: Basic 3D Surface Plot
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 84/100 | Created: 2026-09-10
-//# anyplot-orientation: landscape
-// anyplot.ai
-// surface-basic: Basic 3D Surface Plot
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-09-10
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
-import { ContinuousColorLegend } from "@mui/x-charts/ChartsLegend";
+
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const size = window.ANYPLOT_SIZE;
 
-// --- Data: a smooth response surface z = sin(x) * cos(y) over a 30x30 grid --
-// @mui/x-charts has no native 3D surface component (community or Pro), so the
-// surface is hand-projected: an isometric transform turns each (x, y, z) grid
-// vertex into a 2D (px, py) point, then adjacent vertices are joined into
-// filled quads and painted back-to-front, the same technique used for the
-// hand-rolled axis frame in scatter-3d — here driving the fill itself.
-const GRID_N = 30;
-const X_MIN = -3;
-const X_MAX = 3;
-const Y_MIN = -3;
-const Y_MAX = 3;
-const HEIGHT_SCALE = 3.2; // visually exaggerates the [-1, 1] function range
+// Constants
+const HEIGHT_SCALE = 3.2;
+const ISO_ANGLE = Math.PI / 6;
+const COS_ISO = Math.cos(ISO_ANGLE);
+const SIN_ISO = Math.sin(ISO_ANGLE);
+const Z_TICKS = [-1.0, -0.5, 0.0, 0.5, 1.0];
 
-const grid = [];
-for (let row = 0; row < GRID_N; row += 1) {
-  const y = Y_MIN + (row / (GRID_N - 1)) * (Y_MAX - Y_MIN);
-  const line = [];
-  for (let col = 0; col < GRID_N; col += 1) {
-    const x = X_MIN + (col / (GRID_N - 1)) * (X_MAX - X_MIN);
+// Columns: set these to your data's column names
+const X_COORD = "x"; // role: x
+const Y_COORD = "y"; // role: y
+const Z_HEIGHT = "z = sin(x)·cos(y)"; // role: z
+
+// Data: replace this block with your own records
+const gridNGen = 30;
+const xMinGen = -3;
+const xMaxGen = 3;
+const yMinGen = -3;
+const yMaxGen = 3;
+
+const data: Array<Record<string, number>> = [];
+for (let row = 0; row < gridNGen; row += 1) {
+  const y = yMinGen + (row / (gridNGen - 1)) * (yMaxGen - yMinGen);
+  for (let col = 0; col < gridNGen; col += 1) {
+    const x = xMinGen + (col / (gridNGen - 1)) * (xMaxGen - xMinGen);
     const z = Math.sin(x) * Math.cos(y);
-    line.push({ x, y, z });
+    data.push({
+      [X_COORD]: Number(x.toFixed(4)),
+      [Y_COORD]: Number(y.toFixed(4)),
+      [Z_HEIGHT]: Number(z.toFixed(4)),
+    });
   }
-  grid.push(line);
 }
 
-// --- Isometric projection: (x, y, z) -> 2D (px, py) data-space coordinates -
-// x/y form the ground plane (down-right / down-left), z (the function value)
-// is height, scaled up so the relief reads clearly at isometric angle.
-const ISO_ANGLE = Math.PI / 6; // 30 degrees
-function project(x, y, z) {
-  return {
-    px: (x - y) * Math.cos(ISO_ANGLE),
-    py: z * HEIGHT_SCALE - (x + y) * Math.sin(ISO_ANGLE),
-  };
+// Plot: reads only data and the constants above
+const uniqueXs: number[] = [];
+const uniqueYs: number[] = [];
+for (const row of data) {
+  const xv = Number(row[X_COORD]);
+  const yv = Number(row[Y_COORD]);
+  if (!uniqueXs.includes(xv)) uniqueXs.push(xv);
+  if (!uniqueYs.includes(yv)) uniqueYs.push(yv);
+}
+uniqueXs.sort((a, b) => a - b);
+uniqueYs.sort((a, b) => a - b);
+
+const nx = uniqueXs.length;
+const ny = uniqueYs.length;
+const xMin = uniqueXs[0];
+const xMax = uniqueXs[nx - 1];
+const yMin = uniqueYs[0];
+const yMax = uniqueYs[ny - 1];
+
+const grid: Array<
+  Array<{ x: number; y: number; z: number; px: number; py: number }>
+> = Array.from({ length: ny }, () => []);
+
+for (const row of data) {
+  const x = Number(row[X_COORD]);
+  const y = Number(row[Y_COORD]);
+  const z = Number(row[Z_HEIGHT]);
+  const rIdx = uniqueYs.indexOf(y);
+  const px = (x - y) * COS_ISO;
+  const py = z * HEIGHT_SCALE - (x + y) * SIN_ISO;
+  grid[rIdx].push({ x, y, z, px, py });
+}
+for (const line of grid) {
+  line.sort((a, b) => a.x - b.x);
 }
 
-grid.forEach((line) =>
-  line.forEach((node) => {
-    const projected = project(node.x, node.y, node.z);
-    node.px = projected.px;
-    node.py = projected.py;
-  })
-);
-
-// --- Quads: one filled polygon per grid cell, colored by average height ----
-const heightValues = grid.flat().map((node) => node.z);
+const allNodes = grid.flat();
+const heightValues = allNodes.map((n) => n.z);
 const heightMin = Math.min(...heightValues);
 const heightMax = Math.max(...heightValues);
 
-// Diverging Imprint scale (matte red -> theme midpoint -> blue): the surface
-// has a genuine zero baseline (a flat plane), so low/high are signed
-// deviations around it — the textbook case for imprint_div.
-const midpointHex = t.div[1];
-const lowHex = t.div[0];
-const highHex = t.div[2];
-const hexToRgb = (hex) => {
-  const n = parseInt(hex.slice(1), 16);
-  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-};
-const lerpHex = (a, b, ratio) => {
-  const [ar, ag, ab] = hexToRgb(a);
-  const [br, bg, bb] = hexToRgb(b);
-  const r = Math.round(ar + (br - ar) * ratio);
-  const g = Math.round(ag + (bg - ag) * ratio);
-  const bch = Math.round(ab + (bb - ab) * ratio);
-  return `rgb(${r}, ${g}, ${bch})`;
-};
-const colorForUnit = (unitT) =>
-  unitT <= 0.5
-    ? lerpHex(lowHex, midpointHex, unitT / 0.5)
-    : lerpHex(midpointHex, highHex, (unitT - 0.5) / 0.5);
-const colorForHeight = (value) =>
-  colorForUnit((value - heightMin) / (heightMax - heightMin));
+const divR0 = parseInt(t.div[0].slice(1, 3), 16);
+const divG0 = parseInt(t.div[0].slice(3, 5), 16);
+const divB0 = parseInt(t.div[0].slice(5, 7), 16);
+const divR1 = parseInt(t.div[1].slice(1, 3), 16);
+const divG1 = parseInt(t.div[1].slice(3, 5), 16);
+const divB1 = parseInt(t.div[1].slice(5, 7), 16);
+const divR2 = parseInt(t.div[2].slice(1, 3), 16);
+const divG2 = parseInt(t.div[2].slice(3, 5), 16);
+const divB2 = parseInt(t.div[2].slice(5, 7), 16);
 
-const quads = [];
-for (let row = 0; row < GRID_N - 1; row += 1) {
-  for (let col = 0; col < GRID_N - 1; col += 1) {
-    const p00 = grid[row][col];
-    const p10 = grid[row][col + 1];
-    const p11 = grid[row + 1][col + 1];
-    const p01 = grid[row + 1][col];
+const quads: Array<{
+  points: Array<{ px: number; py: number }>;
+  depthKey: number;
+  fill: string;
+}> = [];
+
+for (let r = 0; r < ny - 1; r += 1) {
+  for (let c = 0; c < nx - 1; c += 1) {
+    const p00 = grid[r][c];
+    const p10 = grid[r][c + 1];
+    const p11 = grid[r + 1][c + 1];
+    const p01 = grid[r + 1][c];
     const avgHeight = (p00.z + p10.z + p11.z + p01.z) / 4;
+    const unitT = Math.min(
+      1,
+      Math.max(0, (avgHeight - heightMin) / (heightMax - heightMin || 1)),
+    );
+    let rCh = 0;
+    let gCh = 0;
+    let bCh = 0;
+    if (unitT <= 0.5) {
+      const f = unitT / 0.5;
+      rCh = Math.round(divR0 + (divR1 - divR0) * f);
+      gCh = Math.round(divG0 + (divG1 - divG0) * f);
+      bCh = Math.round(divB0 + (divB1 - divB0) * f);
+    } else {
+      const f = (unitT - 0.5) / 0.5;
+      rCh = Math.round(divR1 + (divR2 - divR1) * f);
+      gCh = Math.round(divG1 + (divG2 - divG1) * f);
+      bCh = Math.round(divB1 + (divB2 - divB1) * f);
+    }
     quads.push({
       points: [p00, p10, p11, p01],
-      depthKey: row + col, // painter's algorithm: far (low row+col) first
-      fill: colorForHeight(avgHeight),
+      depthKey: r + c,
+      fill: `rgb(${rCh}, ${gCh}, ${bCh})`,
     });
   }
 }
 quads.sort((a, b) => a.depthKey - b.depthKey);
 
-// --- Domain bounds for the linear x/y scales, padded for axis labels -------
-// Padding is a fraction of the projected data range (not a fixed data-unit
-// constant) — the isometric domain here is ~O(20) units, an order of
-// magnitude smaller than scatter-3d's ~O(100)-unit spatial domain, so a fixed
-// pad borrowed from that scale would swallow most of the plot area.
-const allProjected = grid.flat();
-const rawPxMin = Math.min(...allProjected.map((n) => n.px));
-const rawPxMax = Math.max(...allProjected.map((n) => n.px));
-const rawPyMin = Math.min(...allProjected.map((n) => n.py));
-const rawPyMax = Math.max(...allProjected.map((n) => n.py));
-const padX = (rawPxMax - rawPxMin) * 0.08;
-const padY = (rawPyMax - rawPyMin) * 0.08;
+const rawPxMin = Math.min(...allNodes.map((n) => n.px));
+const rawPxMax = Math.max(...allNodes.map((n) => n.px));
+const rawPyMin = Math.min(...allNodes.map((n) => n.py));
+const rawPyMax = Math.max(...allNodes.map((n) => n.py));
+const padX = (rawPxMax - rawPxMin) * 0.12;
+const padY = (rawPyMax - rawPyMin) * 0.1;
 const pxMin = rawPxMin - padX;
 const pxMax = rawPxMax + padX;
-const pyMin = rawPyMin - padY;
-const pyMax = rawPyMax + padY * 2.8; // extra headroom for the z-axis label
+const pyMin = rawPyMin - padY * 1.4;
+const pyMax = rawPyMax + padY * 2.6;
 
-// --- Reference frame: ground corners + a height axis, drawn in data space
-// via the chart's own scale hooks (same pattern as scatter-3d's Iso3DFrame) -
-const originPoint = project(X_MIN, Y_MIN, 0);
-const xEndPoint = project(X_MAX, Y_MIN, 0);
-const yEndPoint = project(X_MIN, Y_MAX, 0);
-const heightEndPoint = project(X_MIN, Y_MIN, heightMax);
-const farCorner = project(X_MAX, Y_MAX, 0);
+const zBotPoint = {
+  px: (xMin - yMin) * COS_ISO,
+  py: heightMin * HEIGHT_SCALE - (xMin + yMin) * SIN_ISO,
+};
+const zTopPoint = {
+  px: (xMin - yMin) * COS_ISO,
+  py: heightMax * HEIGHT_SCALE - (xMin + yMin) * SIN_ISO,
+};
+const xEndPoint = {
+  px: (xMax - yMin) * COS_ISO,
+  py: 0 * HEIGHT_SCALE - (xMax + yMin) * SIN_ISO,
+};
+const yEndPoint = {
+  px: (xMin - yMax) * COS_ISO,
+  py: 0 * HEIGHT_SCALE - (xMin + yMax) * SIN_ISO,
+};
+const farCorner = {
+  px: (xMax - yMax) * COS_ISO,
+  py: 0 * HEIGHT_SCALE - (xMax + yMax) * SIN_ISO,
+};
 
-function IsoFrame() {
-  const xScale = useXScale();
-  const yScale = useYScale();
-  const toPixels = (p) => ({ x: xScale(p.px), y: yScale(p.py) });
-
-  const origin = toPixels(originPoint);
-  const xEnd = toPixels(xEndPoint);
-  const yEnd = toPixels(yEndPoint);
-  const heightEnd = toPixels(heightEndPoint);
-  const far = toPixels(farCorner);
-
-  const groundEdge = (from, to) => (
-    <line
-      x1={from.x}
-      y1={from.y}
-      x2={to.x}
-      y2={to.y}
-      stroke={t.grid}
-      strokeWidth={1.5}
-      strokeDasharray="6 5"
-    />
-  );
-  const axisLabel = (point, text, dx, dy) => (
-    <text
-      x={point.x + dx}
-      y={point.y + dy}
-      fill={t.ink}
-      fontSize={16}
-      fontWeight={600}
-      fontFamily="system-ui, sans-serif"
-      textAnchor="middle"
-    >
-      {text}
-    </text>
-  );
-
-  return (
-    <g>
-      {groundEdge(xEnd, far)}
-      {groundEdge(yEnd, far)}
-      <line
-        x1={origin.x}
-        y1={origin.y}
-        x2={heightEnd.x}
-        y2={heightEnd.y}
-        stroke={t.inkSoft}
-        strokeWidth={2}
-      />
-      {axisLabel(xEnd, `x · [${X_MIN}, ${X_MAX}]`, 30, 10)}
-      {axisLabel(yEnd, `y · [${Y_MIN}, ${Y_MAX}]`, -32, 10)}
-      {axisLabel(heightEnd, "z = sin(x)·cos(y)", 0, -26)}
-    </g>
-  );
-}
-
-const chartTitle = "surface-basic · javascript · muix · anyplot.ai";
-
-// --- Chart (default-exported component — the harness mounts it) ------------
-export default function Chart() {
-  return (
-    <ChartContainer
-      width={size.width}
-      height={size.height}
-      series={[]}
-      zAxis={[
-        {
-          id: "heightColor",
-          min: heightMin,
-          max: heightMax,
-          colorMap: { type: "continuous", min: heightMin, max: heightMax, color: colorForUnit },
-        },
-      ]}
-      xAxis={[{ id: "iso-x", scaleType: "linear", min: pxMin, max: pxMax }]}
-      yAxis={[{ id: "iso-y", scaleType: "linear", min: pyMin, max: pyMax }]}
-      margin={{ top: 70, right: 70, bottom: 90, left: 70 }}
-      disableAxisListener
-      skipAnimation
-    >
-      <text
-        x={size.width / 2}
-        y={38}
-        textAnchor="middle"
-        fontSize={26}
-        fontWeight={600}
-        fill={t.ink}
-        fontFamily="system-ui, sans-serif"
-      >
-        {chartTitle}
-      </text>
-      <SurfaceMesh />
-      <IsoFrame />
-      <ContinuousColorLegend
-        axisDirection="z"
-        axisId="heightColor"
-        direction="row"
-        position={{ horizontal: "middle", vertical: "bottom" }}
-        length="26%"
-        thickness={10}
-        minLabel={() => `${heightMin.toFixed(2)} (valley)`}
-        maxLabel={() => `${heightMax.toFixed(2)} (peak)`}
-        labelStyle={{ fontSize: 15, fill: t.inkSoft }}
-      />
-    </ChartContainer>
-  );
-}
-
-// --- The surface itself: painter's-algorithm-sorted filled quads -----------
 function SurfaceMesh() {
-  const xScale = useXScale();
-  const yScale = useYScale();
-  const toPixels = (p) => `${xScale(p.px)},${yScale(p.py)}`;
+  const xScale = useXScale() as (v: number) => number;
+  const yScale = useYScale() as (v: number) => number;
 
   return (
     <g>
       {quads.map((quad, i) => (
         <polygon
           key={`quad-${quad.depthKey}-${i}`}
-          points={quad.points.map(toPixels).join(" ")}
+          points={quad.points
+            .map((p) => `${xScale(p.px)},${yScale(p.py)}`)
+            .join(" ")}
           fill={quad.fill}
           stroke={t.pageBg}
           strokeWidth={0.6}
         />
       ))}
     </g>
+  );
+}
+
+function IsoFrame() {
+  const { width, height } = window.ANYPLOT_SIZE;
+  const xScale = useXScale() as (v: number) => number;
+  const yScale = useYScale() as (v: number) => number;
+
+  const zBot = { x: xScale(zBotPoint.px), y: yScale(zBotPoint.py) };
+  const zTop = { x: xScale(zTopPoint.px), y: yScale(zTopPoint.py) };
+  const xEnd = { x: xScale(xEndPoint.px), y: yScale(xEndPoint.py) };
+  const yEnd = { x: xScale(yEndPoint.px), y: yScale(yEndPoint.py) };
+  const far = { x: xScale(farCorner.px), y: yScale(farCorner.py) };
+
+  const cbW = 360;
+  const cbH = 14;
+  const cbX = (width - cbW) / 2;
+  const cbY = height - 48;
+
+  return (
+    <g>
+      <line
+        x1={xEnd.x}
+        y1={xEnd.y}
+        x2={far.x}
+        y2={far.y}
+        stroke={t.grid}
+        strokeWidth={1.5}
+        strokeDasharray="6 5"
+      />
+      <line
+        x1={yEnd.x}
+        y1={yEnd.y}
+        x2={far.x}
+        y2={far.y}
+        stroke={t.grid}
+        strokeWidth={1.5}
+        strokeDasharray="6 5"
+      />
+      <line
+        x1={zBot.x}
+        y1={zBot.y}
+        x2={zTop.x}
+        y2={zTop.y}
+        stroke={t.inkSoft}
+        strokeWidth={2}
+      />
+      {Z_TICKS.map((zt) => {
+        const ty = yScale(zt * HEIGHT_SCALE - (xMin + yMin) * SIN_ISO);
+        return (
+          <g key={zt}>
+            <line
+              x1={zBot.x - 6}
+              y1={ty}
+              x2={zBot.x}
+              y2={ty}
+              stroke={t.inkSoft}
+              strokeWidth={1.5}
+            />
+            <text
+              x={zBot.x - 10}
+              y={ty}
+              fill={t.inkSoft}
+              fontSize={14}
+              textAnchor="end"
+              dominantBaseline="middle"
+            >
+              {zt.toFixed(1)}
+            </text>
+          </g>
+        );
+      })}
+      <text
+        x={xEnd.x + 36}
+        y={xEnd.y + 10}
+        fill={t.ink}
+        fontSize={16}
+        fontWeight={600}
+        textAnchor="middle"
+      >
+        {`${X_COORD} · [${xMin}, ${xMax}]`}
+      </text>
+      <text
+        x={yEnd.x - 36}
+        y={yEnd.y + 10}
+        fill={t.ink}
+        fontSize={16}
+        fontWeight={600}
+        textAnchor="middle"
+      >
+        {`${Y_COORD} · [${yMin}, ${yMax}]`}
+      </text>
+      <text
+        x={zTop.x}
+        y={zTop.y - 22}
+        fill={t.ink}
+        fontSize={16}
+        fontWeight={600}
+        textAnchor="middle"
+      >
+        {Z_HEIGHT}
+      </text>
+
+      <defs>
+        <linearGradient id="surfHeightGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor={t.div[0]} />
+          <stop offset="50%" stopColor={t.div[1]} />
+          <stop offset="100%" stopColor={t.div[2]} />
+        </linearGradient>
+      </defs>
+      <rect
+        x={cbX}
+        y={cbY}
+        width={cbW}
+        height={cbH}
+        rx={3}
+        fill="url(#surfHeightGrad)"
+      />
+      <text
+        x={cbX - 10}
+        y={cbY + cbH / 2}
+        fill={t.inkSoft}
+        fontSize={15}
+        textAnchor="end"
+        dominantBaseline="middle"
+      >
+        {`${heightMin.toFixed(2)} (valley)`}
+      </text>
+      <text
+        x={cbX + cbW + 10}
+        y={cbY + cbH / 2}
+        fill={t.inkSoft}
+        fontSize={15}
+        textAnchor="start"
+        dominantBaseline="middle"
+      >
+        {`${heightMax.toFixed(2)} (peak)`}
+      </text>
+    </g>
+  );
+}
+
+export default function Chart() {
+  const { width, height } = window.ANYPLOT_SIZE;
+  return (
+    <div style={{ width, height, background: t.pageBg }}>
+      <ChartsContainer
+        width={width}
+        height={height}
+        series={[]}
+        xAxis={[
+          {
+            id: "iso-x",
+            scaleType: "linear",
+            min: pxMin,
+            max: pxMax,
+            position: "none",
+          },
+        ]}
+        yAxis={[
+          {
+            id: "iso-y",
+            scaleType: "linear",
+            min: pyMin,
+            max: pyMax,
+            position: "none",
+          },
+        ]}
+        margin={{ top: 70, right: 70, bottom: 90, left: 70 }}
+      >
+        <text
+          x={width / 2}
+          y={38}
+          textAnchor="middle"
+          fontSize={22}
+          fontWeight={600}
+          fill={t.ink}
+        >
+          Response Surface z = sin(x)·cos(y) · surface-basic · javascript · muix · anyplot.ai
+        </text>
+        <SurfaceMesh />
+        <IsoFrame />
+      </ChartsContainer>
+    </div>
   );
 }
