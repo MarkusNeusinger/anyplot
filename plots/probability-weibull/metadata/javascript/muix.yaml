@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: probability-weibull
 created: '2026-08-24T08:12:54Z'
-updated: '2026-10-24T12:00:08Z'
+updated: '2026-10-24T12:05:19Z'
 generated_by: gemini-4-argon
 adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
 workflow_run: 40091871386
@@ -13,54 +13,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/probabili
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/probability-weibull/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/probability-weibull/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/probability-weibull/javascript/muix/plot-dark.html
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - 'Correct Weibull probability paper: ChartsContainer x axis uses scaleType "log"
-    and the y axis is the linearized ln(-ln(1-F)) scale with tickInterval/valueFormatter
-    mapping back to readable percentage ticks (1%…99%, including 63.2%)'
-  - Median-rank plotting positions (i-0.3)/(n+0.4) with Johnson adjusted ranks for
-    the suspensions, a proper treatment of right-censored data rather than simply
-    dropping it
-  - Rank-regression fit gives beta ≈ 2.09 and eta ≈ 453 kcycles; the dashed fit line
-    visibly crosses the 63.2% ChartsReferenceLine at about 450 kcycles, so the annotated
-    values agree with the line
-  - Censored observations are hollow Imprint-green rings against filled failures,
-    and the difference reads clearly in both themes
-  - Composes the chart from ChartsContainer + LinePlot + ChartsReferenceLine + ChartsGrid
-    and draws the markers through useXScale/useYScale/useDrawingArea, so marks sit
-    exactly at their data values
-  - 'Fully theme-token driven: fit line in ink, reference line in inkSoft, callout
-    on elevatedBg, so both renders are legible with identical data colours'
-  - Deterministic LCG-generated turbine-blade fatigue data (24 units, 4 suspensions)
-    in a realistic kcycle range
+  - 'Correct Weibull probability paper: log-scaled time axis (scaleType ''log'') and
+    a linearized ln(-ln(1-F)) y axis with reliability-standard probability ticks (1
+    %…99 %, plus 63.2 %) placed via tickInterval and a valueFormatter, so the fit
+    is a straight line.'
+  - Plotting positions follow the median rank (i-0.3)/(n+0.4) with Johnson's adjusted
+    rank for suspensions; the first failure sits at 2.87 % as computed, and the fitted
+    beta/eta (2.09 / 453 kcycles) agree with the line, which crosses the 63.2 % reference
+    line at about 450 kcycles.
+  - Censored observations are hollow brand-green rings against filled failures, clearly
+    distinct in both themes; all data colors are identical between renders and chrome
+    flips cleanly.
+  - 'Uses MUI X v9 composition idiomatically: ChartsContainer with a log x axis, LinePlot
+    for the fit, ChartsReferenceLine for the 63.2 % line, ChartsGrid, and the useDrawingArea/useXScale/useYScale
+    hooks to draw the point overlay in data coordinates; skipAnimation is set.'
+  - Compact header row puts the title on the left and the legend (with the fit's beta
+    and eta in the fit entry) on the right, leaving the full height to the plot.
   weaknesses:
-  - 'VQ-05 (both): the log x axis uses 50-kcycle linear tick steps, so the labels
-    bunch together on the right ("750 800 850 900" sit about 10–15 px apart and the
-    950/1050 ticks carry no label) while the left third has a single "100" label →
-    log-friendly ticks (e.g. 100, 150, 200, 300, 500, 700, 1000) with roughly even
-    spacing. Likely cause: no tickInterval set on the log x axis, so MUI''s default
-    linear-step ticks are used.'
-  - 'Suggestion: draw the failures and suspensions as two ScatterPlot series (hollow
-    via slotProps/sx) so MUI''s native ChartsLegend and tooltips cover them instead
-    of the hand-built HTML legend.'
-  - 'Suggestion: anchor the 63.2% callout near the fit/reference-line crossing at
-    eta instead of the far right edge so the eye connects the label with the crossing.'
+  - 'Suggestion: anchor the eta callout at the crossing of the fit line and the 63.2
+    % reference line (about 453 kcycles) instead of the right edge, so the characteristic
+    life is read where it occurs.'
+  - 'Suggestion: the fit line and the reference line are both dashed; a solid fit
+    line would separate the model from the reference more clearly.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (#FAF8F1), not pure white.
-      Chrome: bold dark title "probability-weibull · javascript · muix · anyplot.ai" top-left; HTML legend top-right (dashed "Fit: β ≈ 2.09, η ≈ 453 kcycles", filled "Failure", hollow "Suspended (censored)"); y-axis "Cumulative Failure Probability (%)" with ticks 1%…99% incl. 63.2%; x-axis "Cycles to Failure (kcycles)" log scale 100–1100 (labels crowd on the right: 750 800 850 900). Subtle grid. All text readable dark-on-light.
-      Data: 20 filled #009E73 failure markers and 4 hollow green suspension rings around a black dashed fit line spanning the plot; dotted horizontal reference at 63.2% with a boxed callout "63.2% · η ≈ 453 kcycles" at the right; line crosses the reference near 450.
+      Background: warm off-white #FAF8F1 across the whole canvas, no white panel.
+      Chrome: bold dark title "probability-weibull · javascript · muix · anyplot.ai" top-left (about a third of the width); legend top-right ("Fit: β ≈ 2.09, η ≈ 453 kcycles" dashed line, filled green "Failure", hollow green "Suspended (censored)"); y-axis "Cumulative Failure Probability (%)" with ticks 1 %–99 % plus 63.2 %; x-axis "Cycles to Failure (kcycles)" with log ticks 70–1000; subtle grey grid in both directions. All text dark and readable.
+      Data: 20 filled #009E73 failure dots and 4 hollow green censored rings along a dark dashed fit line from ~1.8 % at 65 kcycles to 99 % at ~950; thin dotted 63.2 % reference line with a boxed callout "63.2% · η ≈ 453 kcycles" at the right; fit crosses the reference line near 450 kcycles. Nothing clipped or overlapping.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black (#1A1A17), not pure black.
-      Chrome: title, legend text, axis labels and tick labels in light ink, clearly readable; grid subtle grey; callout box on elevated dark surface with light text. No dark-on-dark text.
-      Data: identical #009E73 filled and hollow markers; fit line flips to light ink; reference line light dotted. Data colours identical to the light render.
+      Background: warm near-black #1A1A17.
+      Chrome: title, legend text, axis titles and tick labels all light ink and readable; grid subtle grey; callout box on elevated dark surface with light text. No dark-on-dark text.
+      Data: identical #009E73 filled dots and hollow rings at the same positions; fit line flips to light ink as chrome; brand green clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -68,32 +60,33 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 22px, ticks 14px, labels 15px; readable in both themes
+        comment: Title 22 px, axis titles 15 px, ticks and legend 14 px (CSS), all
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; callout clear of markers
+        comment: No text collisions; callout box clear of data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 24 sparse points at r=7 clearly visible; legend glyphs match marks
-          in both themes
+        comment: 24 sparse points at r=7 with page-colored outline; hollow rings distinct;
+          legend glyphs match marks
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Filled vs hollow encodes censoring, not colour; good contrast
+        comment: Single hue; filled vs hollow carries the censoring distinction, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: x-axis tick labels bunch on the right of the log axis (defect line)
+        comment: 3200x1800; balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -105,7 +98,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: '#009E73 for data, theme-correct backgrounds, chrome via tokens'
+        comment: 'Data in #009E73, fit and reference in ink tokens, correct backgrounds
+          in both renders'
     design_excellence:
       score: 10
       max: 20
@@ -114,22 +108,23 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: 'Custom header band: title left, compact inline legend right, clear
-          weight hierarchy beyond baseline'
+        passed: false
+        comment: Header row integrating title and a legend that carries the fit parameters;
+          clear ink-vs-green hierarchy between model and data
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: true
-        comment: Distinct dash rhythms for fit (12/7) vs reference (4/4), page-colour
-          marker outlines, rounded elevated callout
+        passed: false
+        comment: Probability ticks chosen at reliability-paper positions with the
+          63.2 % tick, log ticks at 1-1.5-2-3-5-7 mantissas, generous plot area
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Displays what the Notes ask; no further hierarchy chosen
+        comment: Displays the spec's annotations; no focal point chosen beyond the
+          Notes
     spec_compliance:
       score: 15
       max: 15
@@ -139,26 +134,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Weibull probability plot with fitted line
+        comment: Weibull probability plot on probability paper
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Log x, linearized Weibull y, median ranks, beta/eta annotated, hollow
-          censored markers, 63.2% reference line — all present
+        comment: Log x, linearized y, median ranks, fit with beta/eta, hollow censored
+          markers, 63.2 % reference line all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Marks at their data values via scale hooks
+        comment: Points at their time and plotting position, no displacement; axes
+          cover all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; legend entries match marks
+        comment: Mandated title; legend entries readable and correct
     data_quality:
       score: 15
       max: 15
@@ -168,20 +164,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Failures, suspensions, fit, char-life crossing all shown
+        comment: Failures, suspensions mixed in, scatter around the fit at both ends
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Turbine blade fatigue life in kcycles
+        comment: Fatigue life in kcycles with suspensions, neutral engineering context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: fit line crosses 63.2% at ~450 kcycles matching η ≈ 453;
-          β 2.09 plausible for wear-out (true 2.4, n=24)'
+        comment: 'Checked: first failure at (1-0.3)/24.4 = 2.87 % matches the render;
+          beta 2.09 and eta 453 are consistent with the generating Weibull(2.4, 420)
+          for n=24; fit crosses 63.2 % at about 450'
     code_quality:
       score: 10
       max: 10
@@ -191,7 +188,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear module-level flow; one overlay component needed for hooks
+        comment: Flat module-level code; the only extra function is the React overlay
+          component that needs the scale hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -209,46 +207,48 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Short written-out regression is allowed per library prompt
+        comment: Closed-form least squares and rank computation are short and appropriate;
+          no library call replaces them
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default export, skipAnimation, v9 ChartsContainer API
+        comment: Default-exported component, v9 API, skipAnimation set
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Composition API (ChartsContainer, LinePlot, ChartsReferenceLine,
-          ChartsGrid, axes) with log scaleType and valueFormatter
+        passed: false
+        comment: v9 composition (ChartsContainer, LinePlot, ChartsGrid, ChartsXAxis/YAxis)
+          with log scaleType, tickInterval and valueFormatter for probability-paper
+          ticks
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Custom SVG overlay via useXScale/useYScale/useDrawingArea hooks
-  verdict: REJECTED
+        comment: useDrawingArea/useXScale/useYScale hooks to draw custom SVG marks
+          in data coordinates, ChartsReferenceLine for the 63.2 % line
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T11:57:26Z'
+  rendered_at: '2026-10-24T12:02:14Z'
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   - custom-legend
-  - annotations
   - manual-ticks
-  - hover-tooltips
+  - annotations
   - html-export
   patterns:
   - data-generation
   dataprep:
   - regression
   styling:
-  - publication-ready
+  - edge-highlighting
