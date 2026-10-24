@@ -1,519 +1,864 @@
 // anyplot.ai
 // map-projections: World Map with Different Projections
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 85/100 | Created: 2026-08-26
-//# anyplot-orientation: landscape
-// anyplot.ai
-// map-projections: World Map with Different Projections
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-08-26
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+// Library: muix 9.2.1 | JavaScript 22.23.1
+// Quality: 90/100 | Created: 2026-08-06
+
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const THEME = window.ANYPLOT_THEME === "dark" ? "dark" : "light";
-// The community @mui/x-charts token set exposes ink/inkSoft but not a
-// separate "muted" anchor — derive it locally (same hex the style guide
-// assigns to the tertiary-text / muted-anchor role) for land fill + captions.
-const INK_MUTED = THEME === "dark" ? "#A8A79F" : "#6B6A63";
+
+// Constants
 const TITLE = "map-projections · javascript · muix · anyplot.ai";
+const TITLE_HEIGHT = 56;
+const FOOTER_HEIGHT = 44;
+const PANEL_HEADER_HEIGHT = 68;
+const PANEL_FOOTER_HEIGHT = 36;
+const PANEL_GAP = 16;
+const OUTER_PAD_X = 24;
+const DEG2RAD = Math.PI / 180;
+const RAD2DEG = 180 / Math.PI;
+const SQRT2 = Math.SQRT2;
+const MERCATOR_LAT_CLIP = 82;
+const ORTHO_LON0 = 0;
+const ORTHO_LAT0 = 20;
+const TISSOT_RADIUS_RAD = 550 / 6371;
+const TISSOT_STEPS = 48;
+const DOMAIN_PAD_SHARE = 0.04;
 
-// --- Simplified world outline (in-memory, deterministic; ~200 hand-traced
-// vertices, not survey-accurate). @mui/x-charts has no polygon/basemap
-// primitive, so continents are plain [lon, lat] point lists that we project
-// ourselves and hand to a MUI X ChartContainer purely for its linear pixel
-// scale + theming — the same "custom SVG overlay over a chart coordinate
-// system" technique used for the connection-lines and geographic-hexbin maps,
-// applied through three different non-linear projection functions instead of
-// one flat equirectangular one. --------------------------------------------
-const CONTINENTS = [
+// Data
+const FEATURE_KIND_COL = "Feature Kind";
+const FEATURE_NAME_COL = "Feature Name";
+const SEQ_COL = "Vertex Sequence";
+const LON_COL = "Longitude (°)";
+const LAT_COL = "Latitude (°)";
+const PROJ_ID_COL = "Projection ID";
+const PROJ_TITLE_COL = "Projection Title";
+const PROJ_SUBTITLE_COL = "Projection Subtitle";
+const PROJ_NOTE_COL = "Distortion Note";
+
+const RAW_POLYGONS: Array<{ kind: string; name: string; pts: Array<[number, number]> }> = [
   {
+    kind: "continent",
     name: "North America",
-    points: [
-      [-165, 68], [-165, 60], [-145, 60], [-140, 55], [-130, 54], [-125, 49],
-      [-124, 40], [-118, 34], [-108, 31], [-105, 20], [-97, 16], [-92, 15],
-      [-88, 14], [-84, 10], [-80, 8], [-77, 8], [-82, 22], [-90, 21],
-      [-97, 26], [-97, 29], [-90, 29], [-81, 25], [-80, 32], [-75, 35],
-      [-70, 41], [-67, 45], [-60, 47], [-55, 50], [-65, 58], [-75, 62],
-      [-85, 67], [-95, 69], [-110, 72], [-125, 71], [-140, 70], [-155, 71],
-      [-165, 68],
+    pts: [
+      [-168, 65], [-160, 70], [-140, 70], [-125, 72], [-95, 74], [-80, 70], [-65, 62],
+      [-55, 52], [-60, 46], [-70, 42], [-76, 35], [-81, 25], [-90, 21], [-88, 16],
+      [-83, 10], [-78, 8], [-85, 11], [-92, 15], [-97, 19], [-105, 20], [-110, 24],
+      [-117, 32], [-122, 37], [-124, 48], [-135, 58], [-150, 60], [-162, 55], [-168, 65],
     ],
   },
   {
+    kind: "continent",
     name: "Greenland",
-    points: [
-      [-45, 60], [-52, 61], [-55, 65], [-53, 70], [-45, 75], [-35, 78],
-      [-25, 80], [-20, 77], [-25, 70], [-30, 65], [-38, 61], [-45, 60],
+    pts: [
+      [-52, 60], [-44, 60], [-22, 70], [-18, 77], [-30, 83], [-55, 82], [-68, 76],
+      [-56, 68], [-52, 60],
     ],
   },
   {
+    kind: "continent",
     name: "South America",
-    points: [
-      [-77, 8], [-72, 1], [-79, -3], [-80, -6], [-81, -15], [-75, -18],
-      [-70, -22], [-68, -30], [-70, -40], [-73, -45], [-72, -52], [-68, -55],
-      [-65, -53], [-62, -45], [-58, -38], [-57, -33], [-48, -26], [-40, -15],
-      [-35, -8], [-38, -4], [-45, 2], [-51, 4], [-60, 9], [-67, 10], [-77, 8],
+    pts: [
+      [-78, 9], [-72, 12], [-62, 10], [-50, 2], [-35, -6], [-38, -15], [-40, -22],
+      [-48, -28], [-54, -34], [-62, -40], [-66, -48], [-68, -55], [-74, -52], [-73, -42],
+      [-71, -30], [-70, -18], [-76, -12], [-81, -5], [-79, 2], [-78, 9],
     ],
   },
   {
-    name: "Africa",
-    points: [
-      [-17, 15], [-16, 21], [-10, 30], [-5, 35], [10, 37], [20, 32],
-      [25, 31], [32, 31], [35, 30], [35, 20], [43, 12], [51, 12], [43, 4],
-      [41, -2], [40, -10], [35, -18], [35, -24], [32, -28], [27, -33],
-      [20, -34], [16, -29], [12, -18], [13, -8], [9, 4], [3, 6], [-4, 5],
-      [-9, 5], [-11, 7], [-17, 15],
-    ],
-  },
-  {
+    kind: "continent",
     name: "Europe",
-    points: [
-      [-9, 43], [-9, 38], [-5, 36], [3, 36], [9, 44], [8, 44], [10, 45],
-      [13, 45], [13, 42], [18, 40], [20, 40], [24, 35], [26, 40], [28, 41],
-      [30, 45], [38, 45], [40, 44], [45, 42], [48, 46], [45, 50], [40, 55],
-      [35, 60], [30, 65], [25, 70], [20, 68], [14, 66], [8, 58], [10, 54],
-      [8, 54], [5, 51], [3, 51], [-2, 50], [-5, 48], [-1, 46], [-2, 44],
-      [-9, 43],
+    pts: [
+      [-10, 36], [-9, 43], [-2, 44], [-5, 48], [2, 51], [8, 55], [10, 58], [5, 62],
+      [15, 68], [28, 71], [42, 68], [58, 68], [60, 55], [48, 46], [38, 45], [29, 41],
+      [26, 38], [22, 37], [18, 40], [15, 38], [12, 42], [8, 44], [3, 42], [-2, 37],
+      [-6, 36], [-10, 36],
     ],
   },
   {
+    kind: "continent",
+    name: "Great Britain",
+    pts: [[-6, 50], [-5, 58], [-2, 58], [1, 52], [-6, 50]],
+  },
+  {
+    kind: "continent",
+    name: "Africa",
+    pts: [
+      [-17, 15], [-13, 28], [-6, 35], [10, 37], [25, 32], [33, 31], [38, 22], [43, 12],
+      [51, 12], [45, 2], [40, -10], [35, -22], [28, -33], [18, -35], [14, -22], [12, -6],
+      [9, 4], [2, 6], [-8, 5], [-16, 11], [-17, 15],
+    ],
+  },
+  {
+    kind: "continent",
+    name: "Madagascar",
+    pts: [[44, -25], [49, -13], [50, -16], [47, -25], [44, -25]],
+  },
+  {
+    kind: "continent",
     name: "Asia",
-    points: [
-      [30, 45], [38, 45], [45, 42], [48, 46], [55, 50], [60, 55], [65, 60],
-      [70, 65], [80, 72], [100, 75], [120, 73], [140, 70], [160, 68],
-      [170, 65], [180, 66], [178, 60], [165, 55], [158, 53], [145, 45],
-      [140, 42], [130, 35], [122, 31], [120, 23], [110, 20], [108, 10],
-      [104, 1], [103, 1], [100, 5], [98, 8], [95, 15], [90, 22], [88, 22],
-      [80, 10], [77, 8], [73, 20], [68, 24], [61, 25], [57, 26], [52, 29],
-      [48, 30], [42, 29], [35, 30], [35, 32], [36, 36], [37, 37], [42, 37],
-      [45, 39], [42, 40], [35, 37], [30, 37], [27, 37], [28, 41], [30, 45],
+    pts: [
+      [28, 41], [40, 42], [50, 40], [58, 55], [60, 68], [75, 73], [105, 76], [140, 73],
+      [175, 66], [170, 60], [155, 52], [142, 50], [135, 38], [128, 36], [122, 31],
+      [118, 23], [108, 21], [105, 10], [102, 2], [98, 8], [92, 21], [88, 22], [80, 10],
+      [76, 8], [72, 20], [67, 24], [58, 25], [55, 22], [48, 14], [43, 13], [38, 22],
+      [34, 30], [36, 36], [28, 41],
     ],
   },
   {
+    kind: "continent",
+    name: "Japan",
+    pts: [[130, 31], [136, 35], [141, 41], [145, 44], [141, 38], [134, 33], [130, 31]],
+  },
+  {
+    kind: "continent",
+    name: "Maritime SE Asia",
+    pts: [[96, 5], [104, -2], [114, -7], [120, -8], [116, -2], [106, 2], [96, 5]],
+  },
+  {
+    kind: "continent",
     name: "Australia",
-    points: [
-      [113, -22], [114, -28], [115, -33], [118, -35], [128, -32], [137, -33],
-      [140, -38], [145, -38], [150, -37], [153, -28], [153, -22], [145, -15],
-      [142, -11], [137, -12], [131, -12], [126, -14], [122, -18], [113, -22],
+    pts: [
+      [114, -22], [122, -16], [132, -12], [136, -15], [142, -11], [148, -20], [153, -28],
+      [150, -37], [140, -38], [132, -32], [122, -34], [115, -34], [114, -22],
     ],
   },
   {
+    kind: "continent",
+    name: "New Zealand",
+    pts: [[166, -46], [172, -41], [178, -37], [175, -42], [168, -46], [166, -46]],
+  },
+  {
+    kind: "continent",
     name: "Antarctica",
-    points: [
-      [-180, -63], [-150, -66], [-120, -70], [-90, -72], [-60, -70],
-      [-30, -68], [0, -66], [30, -67], [60, -70], [90, -73], [120, -70],
-      [150, -66], [180, -63], [180, -90], [-180, -90], [-180, -63],
-    ],
-  },
-];
-
-// A few well-known, non-disputed border lines (not a full country layer --
-// @mui/x-charts has no geo primitive and hand-tracing all ~200 country
-// borders accurately/neutrally is out of scope) to partially answer the
-// spec's "country borders" ask without risking disputed-boundary inaccuracy.
-const COUNTRY_BORDERS = [
-  {
-    // US-Canada: Pacific coast along the 49th parallel, then the Great
-    // Lakes / St. Lawrence corridor to the Atlantic.
-    points: [
-      [-123, 49], [-110, 49], [-95, 49], [-95, 49.4], [-94.8, 48.8], [-89.5, 48],
-      [-84.5, 46.5], [-83.5, 46], [-82.5, 45.3], [-79.2, 43.3], [-76.5, 44.2],
-      [-75.3, 45], [-71.5, 45], [-70.3, 45.9], [-67.8, 47.1], [-67, 45.1],
+    pts: [
+      [-179, -72], [-120, -73], [-62, -65], [-58, -74], [-20, -72], [20, -70], [70, -68],
+      [120, -67], [170, -71], [179, -78], [120, -82], [0, -82], [-120, -82], [-179, -78],
+      [-179, -72],
     ],
   },
   {
-    // US-Mexico: Pacific coast to the Gulf of Mexico, roughly the Rio Grande.
-    points: [
-      [-117, 32.5], [-114.8, 32.5], [-111, 31.3], [-108.2, 31.3], [-106.5, 31.8],
-      [-104.5, 29.5], [-102.3, 29.9], [-99.5, 27.5], [-97.5, 26],
-    ],
+    kind: "border",
+    name: "Canada-US",
+    pts: [[-124, 49], [-95, 49], [-83, 46], [-75, 45], [-67, 47]],
+  },
+  {
+    kind: "border",
+    name: "US-Mexico",
+    pts: [[-117, 32], [-106, 31], [-97, 26]],
+  },
+  {
+    kind: "border",
+    name: "Brazil West",
+    pts: [[-52, 4], [-60, 2], [-70, -4], [-70, -11], [-58, -20], [-54, -33]],
+  },
+  {
+    kind: "border",
+    name: "Andes South",
+    pts: [[-70, -18], [-68, -27], [-70, -38], [-72, -50]],
+  },
+  {
+    kind: "border",
+    name: "Europe-Russia",
+    pts: [[28, 70], [30, 60], [38, 50], [40, 44]],
+  },
+  {
+    kind: "border",
+    name: "Sahara South",
+    pts: [[-16, 15], [0, 15], [15, 14], [32, 12], [43, 12]],
+  },
+  {
+    kind: "border",
+    name: "Egypt-Sudan",
+    pts: [[25, 31], [25, 22], [36, 22]],
+  },
+  {
+    kind: "border",
+    name: "Equatorial Africa",
+    pts: [[12, -6], [28, -4], [30, -10], [40, -11]],
+  },
+  {
+    kind: "border",
+    name: "Southern Africa",
+    pts: [[14, -17], [25, -18], [33, -26]],
+  },
+  {
+    kind: "border",
+    name: "Russia-Kazakhstan-China",
+    pts: [[50, 46], [68, 52], [87, 49], [105, 50], [120, 50], [134, 48]],
+  },
+  {
+    kind: "border",
+    name: "India-China",
+    pts: [[67, 25], [75, 35], [88, 28], [97, 28]],
   },
 ];
 
-const MERIDIANS = [-150, -120, -90, -60, -30, 0, 30, 60, 90, 120, 150];
-const PARALLELS = [-60, -30, 0, 30, 60];
-const TISSOT_LATS = [-60, -30, 0, 30, 60];
-const TISSOT_LONS = [-150, -90, -30, 30, 90, 150];
-const TISSOT_RHO_DEG = 6; // angular radius of each reference circle on the sphere
-
-// --- Spherical helpers -------------------------------------------------------
-function toRad(deg) {
-  return (deg * Math.PI) / 180;
-}
-
-// Destination point at bearing/angular-distance from a lat/lon origin
-// (great-circle "direct" formula) — used to trace Tissot indicatrix circles.
-function destPoint(lonDeg, latDeg, bearingRad, rhoRad) {
-  const lat1 = toRad(latDeg);
-  const lon1 = toRad(lonDeg);
-  const lat2 = Math.asin(
-    Math.sin(lat1) * Math.cos(rhoRad) + Math.cos(lat1) * Math.sin(rhoRad) * Math.cos(bearingRad),
-  );
-  const lon2 =
-    lon1 +
-    Math.atan2(
-      Math.sin(bearingRad) * Math.sin(rhoRad) * Math.cos(lat1),
-      Math.cos(rhoRad) - Math.sin(lat1) * Math.sin(lat2),
-    );
-  const lonDeg2 = ((((lon2 * 180) / Math.PI) + 540) % 360) - 180;
-  return [lonDeg2, (lat2 * 180) / Math.PI];
-}
-
-function tissotCircle(lonDeg, latDeg, rhoDeg, n) {
-  const rhoRad = toRad(rhoDeg);
-  const pts = [];
-  for (let i = 0; i <= n; i += 1) {
-    pts.push(destPoint(lonDeg, latDeg, (i / n) * 2 * Math.PI, rhoRad));
-  }
-  return pts;
-}
-
-// --- Projections: [lon, lat] in degrees -> [X, Y] in projection units, or
-// null when the point falls on the far side of the globe (orthographic). ---
-const MERC_LAT_CLIP = 80;
-
-function projMercator([lon, lat]) {
-  const clat = Math.max(-MERC_LAT_CLIP, Math.min(MERC_LAT_CLIP, lat));
-  return [toRad(lon), Math.log(Math.tan(Math.PI / 4 + toRad(clat) / 2))];
-}
-
-function mollweideTheta(latRad) {
-  if (Math.abs(Math.abs(latRad) - Math.PI / 2) < 1e-9) return Math.sign(latRad) * (Math.PI / 2);
-  let theta = latRad;
-  for (let i = 0; i < 10; i += 1) {
-    const denom = 2 + 2 * Math.cos(2 * theta);
-    if (Math.abs(denom) < 1e-9) break;
-    theta -= (2 * theta + Math.sin(2 * theta) - Math.PI * Math.sin(latRad)) / denom;
-  }
-  return theta;
-}
-
-function projMollweide([lon, lat]) {
-  const theta = mollweideTheta(toRad(lat));
-  const x = ((2 * Math.SQRT2) / Math.PI) * toRad(lon) * Math.cos(theta);
-  const y = Math.SQRT2 * Math.sin(theta);
-  return [x, y];
-}
-
-const ORTHO_LON0 = -20;
-const ORTHO_LAT0 = 15;
-
-function projOrthographic([lon, lat]) {
-  const latR = toRad(lat);
-  const lonR = toRad(lon);
-  const lat0R = toRad(ORTHO_LAT0);
-  const lon0R = toRad(ORTHO_LON0);
-  const cosc = Math.sin(lat0R) * Math.sin(latR) + Math.cos(lat0R) * Math.cos(latR) * Math.cos(lonR - lon0R);
-  if (cosc < 0.001) return null;
-  const x = Math.cos(latR) * Math.sin(lonR - lon0R);
-  const y = Math.cos(lat0R) * Math.sin(latR) - Math.sin(lat0R) * Math.cos(latR) * Math.cos(lonR - lon0R);
-  return [x, y];
-}
-
-const PROJECTIONS = [
-  {
-    key: "mercator",
-    name: "Mercator",
-    subtitle: "Conformal — area inflates sharply toward the poles",
-    project: projMercator,
-  },
-  {
-    key: "mollweide",
-    name: "Mollweide",
-    subtitle: "Equal-area — shape stretches near the outer edges",
-    project: projMollweide,
-  },
-  {
-    key: "orthographic",
-    name: "Orthographic",
-    subtitle: "True perspective from space — only one hemisphere shown",
-    project: projOrthographic,
-  },
-];
-
-// Split a [lon, lat] polyline into runs of consecutively-projectable points,
-// breaking wherever the projection hides a point (orthographic far side).
-function toRuns(points, projFn) {
-  const runs = [];
-  let current = [];
-  points.forEach((p) => {
-    const proj = projFn(p);
-    if (proj) {
-      current.push(proj);
-    } else if (current.length > 1) {
-      runs.push(current);
-      current = [];
-    } else {
-      current = [];
-    }
-  });
-  if (current.length > 1) runs.push(current);
-  return runs;
-}
-
-function boundaryFor(config) {
-  if (config.key === "orthographic") {
-    const pts = [];
-    for (let i = 0; i <= 72; i += 1) {
-      const a = (i / 72) * 2 * Math.PI;
-      pts.push([Math.cos(a), Math.sin(a)]);
-    }
-    return pts;
-  }
-  if (config.key === "mollweide") {
-    const pts = [];
-    for (let lat = 90; lat >= -90; lat -= 5) pts.push(projMollweide([180, lat]));
-    for (let lat = -90; lat <= 90; lat += 5) pts.push(projMollweide([-180, lat]));
-    return pts;
-  }
-  const [x0, yTop] = projMercator([-180, MERC_LAT_CLIP]);
-  const [x1, yBottom] = projMercator([180, -MERC_LAT_CLIP]);
-  return [
-    [x0, yTop],
-    [x1, yTop],
-    [x1, yBottom],
-    [x0, yBottom],
-  ];
-}
-
-function buildProjectionData(config) {
-  const projFn = config.project;
-  const boundary = boundaryFor(config);
-
-  const continents = CONTINENTS.map((c) => {
-    const runs = toRuns(c.points, projFn);
-    const closed = runs.length === 1 && runs[0].length === c.points.length;
-    return { runs, closed };
-  });
-
-  const graticule = [];
-  MERIDIANS.forEach((lon) => {
-    const pts = [];
-    for (let lat = -80; lat <= 80; lat += 10) pts.push([lon, lat]);
-    graticule.push(toRuns(pts, projFn));
-  });
-  PARALLELS.forEach((lat) => {
-    const pts = [];
-    for (let lon = -180; lon <= 180; lon += 10) pts.push([lon, lat]);
-    graticule.push(toRuns(pts, projFn));
-  });
-
-  const tissots = [];
-  TISSOT_LATS.forEach((lat) => {
-    TISSOT_LONS.forEach((lon) => {
-      if (!projFn([lon, lat])) return; // center on the hidden side — skip
-      const circlePts = tissotCircle(lon, lat, TISSOT_RHO_DEG, 24);
-      const runs = toRuns(circlePts, projFn);
-      if (runs.length === 1 && runs[0].length === circlePts.length) tissots.push(runs[0]);
+const DATA: Array<Record<string, string | number>> = [];
+for (let p = 0; p < RAW_POLYGONS.length; p++) {
+  const poly = RAW_POLYGONS[p];
+  for (let i = 0; i < poly.pts.length; i++) {
+    DATA.push({
+      [FEATURE_KIND_COL]: poly.kind,
+      [FEATURE_NAME_COL]: poly.name,
+      [SEQ_COL]: i,
+      [LON_COL]: poly.pts[i][0],
+      [LAT_COL]: poly.pts[i][1],
+      [PROJ_ID_COL]: "Mercator",
+      [PROJ_TITLE_COL]: "Mercator (Cylindrical)",
+      [PROJ_SUBTITLE_COL]: "Conformal — angles preserved",
+      [PROJ_NOTE_COL]: "Area inflates as sec²(φ) toward the poles",
     });
-  });
-
-  const borders = COUNTRY_BORDERS.map((b) => toRuns(b.points, projFn));
-
-  return { boundary, continents, graticule, tissots, borders };
-}
-
-function bboxOf(points) {
-  const xs = points.map((p) => p[0]);
-  const ys = points.map((p) => p[1]);
-  return { minX: Math.min(...xs), maxX: Math.max(...xs), minY: Math.min(...ys), maxY: Math.max(...ys) };
-}
-
-// Natural width:height ratio of a projection's own outline (e.g. Mercator's
-// clipped rectangle, Mollweide's wide ellipse, Orthographic's circle) --
-// used to size each panel to its projection instead of forcing every panel
-// into one shared box aspect.
-function boundaryAspect(config) {
-  const { minX, maxX, minY, maxY } = bboxOf(boundaryFor(config));
-  return (maxX - minX) / (maxY - minY);
-}
-
-// Fit a data range into a pixel box, expanding the shorter axis so a true
-// circle (orthographic) is never rendered as an ellipse by unequal scaling.
-function fitDomain(minX, maxX, minY, maxY, boxW, boxH, padFrac) {
-  const midX = (minX + maxX) / 2;
-  const midY = (minY + maxY) / 2;
-  const boxAspect = boxW / boxH;
-  const dataAspect = (maxX - minX) / (maxY - minY);
-  let halfW;
-  let halfH;
-  if (dataAspect > boxAspect) {
-    halfW = (maxX - minX) / 2 / (1 - 2 * padFrac);
-    halfH = halfW / boxAspect;
-  } else {
-    halfH = (maxY - minY) / 2 / (1 - 2 * padFrac);
-    halfW = halfH * boxAspect;
   }
-  return { min: [midX - halfW, midY - halfH], max: [midX + halfW, midY + halfH] };
 }
 
-function pathFromRuns(runs, closed) {
-  return runs
-    .filter((run) => run.length > 1)
-    .map((run) => {
-      const d = run.map((p, i) => `${i === 0 ? "M" : "L"} ${p[0].toFixed(2)},${p[1].toFixed(2)}`).join(" ");
-      return closed ? `${d} Z` : d;
-    })
-    .join(" ");
+const PROJECTION_META: Array<Record<string, string | number>> = [
+  {
+    [FEATURE_KIND_COL]: "projection",
+    [FEATURE_NAME_COL]: "Mercator",
+    [SEQ_COL]: 0,
+    [LON_COL]: 0,
+    [LAT_COL]: 0,
+    [PROJ_ID_COL]: "Mercator",
+    [PROJ_TITLE_COL]: "Mercator (Cylindrical)",
+    [PROJ_SUBTITLE_COL]: "Conformal — angles preserved",
+    [PROJ_NOTE_COL]: "Area inflates as sec²(φ) toward the poles",
+  },
+  {
+    [FEATURE_KIND_COL]: "projection",
+    [FEATURE_NAME_COL]: "Mollweide",
+    [SEQ_COL]: 1,
+    [LON_COL]: 0,
+    [LAT_COL]: 0,
+    [PROJ_ID_COL]: "Mollweide",
+    [PROJ_TITLE_COL]: "Mollweide (Pseudocylindrical)",
+    [PROJ_SUBTITLE_COL]: "Equal-area — true relative size",
+    [PROJ_NOTE_COL]: "Shapes shear near the outer limb",
+  },
+  {
+    [FEATURE_KIND_COL]: "projection",
+    [FEATURE_NAME_COL]: "Orthographic",
+    [SEQ_COL]: 2,
+    [LON_COL]: ORTHO_LON0,
+    [LAT_COL]: ORTHO_LAT0,
+    [PROJ_ID_COL]: "Orthographic",
+    [PROJ_TITLE_COL]: "Orthographic (Azimuthal)",
+    [PROJ_SUBTITLE_COL]: `Globe view centered at ${ORTHO_LAT0}°N, ${ORTHO_LON0}°E`,
+    [PROJ_NOTE_COL]: "Foreshortened to zero at the horizon",
+  },
+];
+for (let m = 0; m < PROJECTION_META.length; m++) {
+  DATA.push(PROJECTION_META[m]);
 }
 
-// --- Overlay: reads the ChartContainer's own linear scale, so every path
-// lands in the right pixel spot for this panel's projection. ----------------
-function GeoOverlay({ data }) {
+// Reconstruct continent and border polylines from flat DATA rows
+const featureMap = new Map<string, { kind: string; pts: Array<[number, number]> }>();
+for (let i = 0; i < DATA.length; i++) {
+  const row = DATA[i];
+  const kind = String(row[FEATURE_KIND_COL]);
+  if (kind !== "continent" && kind !== "border") continue;
+  const name = String(row[FEATURE_NAME_COL]);
+  const key = `${kind}:${name}`;
+  let entry = featureMap.get(key);
+  if (!entry) {
+    entry = { kind, pts: [] };
+    featureMap.set(key, entry);
+  }
+  entry.pts.push([Number(row[LON_COL]), Number(row[LAT_COL])]);
+}
+
+interface InputPolyline {
+  layer: "continent" | "border" | "graticule" | "equator" | "meridian" | "tissot";
+  pts: Array<[number, number]>;
+  jumpMax: number;
+  minPts: number;
+  singleRunOnly: boolean;
+  centerLonLat: [number, number] | null;
+}
+
+const inputPolylines: InputPolyline[] = [];
+for (const entry of featureMap.values()) {
+  if (entry.kind === "continent") {
+    inputPolylines.push({
+      layer: "continent",
+      pts: entry.pts,
+      jumpMax: 1.6,
+      minPts: 3,
+      singleRunOnly: false,
+      centerLonLat: null,
+    });
+  } else if (entry.kind === "border") {
+    inputPolylines.push({
+      layer: "border",
+      pts: entry.pts,
+      jumpMax: 1.6,
+      minPts: 2,
+      singleRunOnly: false,
+      centerLonLat: null,
+    });
+  }
+}
+
+// Graticules (30° intervals)
+for (const lat of [-60, -30, 30, 60]) {
+  const pts: Array<[number, number]> = [];
+  for (let lon = -180; lon <= 180; lon += 3) pts.push([lon, lat]);
+  inputPolylines.push({
+    layer: "graticule",
+    pts,
+    jumpMax: 1.6,
+    minPts: 2,
+    singleRunOnly: false,
+    centerLonLat: null,
+  });
+}
+for (const lon of [-150, -120, -90, -60, -30, 30, 60, 90, 120, 150]) {
+  const pts: Array<[number, number]> = [];
+  for (let lat = -80; lat <= 80; lat += 2) pts.push([lon, lat]);
+  inputPolylines.push({
+    layer: "graticule",
+    pts,
+    jumpMax: 1.6,
+    minPts: 2,
+    singleRunOnly: false,
+    centerLonLat: null,
+  });
+}
+
+// Equator & Prime Meridian
+const eqPts: Array<[number, number]> = [];
+for (let lon = -180; lon <= 180; lon += 2) eqPts.push([lon, 0]);
+inputPolylines.push({
+  layer: "equator",
+  pts: eqPts,
+  jumpMax: 1.6,
+  minPts: 2,
+  singleRunOnly: false,
+  centerLonLat: null,
+});
+
+const pmPts: Array<[number, number]> = [];
+for (let lat = -82; lat <= 82; lat += 2) pmPts.push([0, lat]);
+inputPolylines.push({
+  layer: "meridian",
+  pts: pmPts,
+  jumpMax: 1.6,
+  minPts: 2,
+  singleRunOnly: false,
+  centerLonLat: null,
+});
+
+// Tissot indicatrix circles at 30° intervals
+for (const latC of [-60, -30, 0, 30, 60]) {
+  for (const lonC of [-120, -60, 0, 60, 120]) {
+    const ring: Array<[number, number]> = [];
+    const phi1 = latC * DEG2RAD;
+    const lam1 = lonC * DEG2RAD;
+    const sinPhi1 = Math.sin(phi1);
+    const cosPhi1 = Math.cos(phi1);
+    const sinD = Math.sin(TISSOT_RADIUS_RAD);
+    const cosD = Math.cos(TISSOT_RADIUS_RAD);
+    for (let i = 0; i <= TISSOT_STEPS; i++) {
+      const brng = (i / TISSOT_STEPS) * 2 * Math.PI;
+      const sinPhi2 = sinPhi1 * cosD + cosPhi1 * sinD * Math.cos(brng);
+      const phi2 = Math.asin(Math.max(-1, Math.min(1, sinPhi2)));
+      const y = Math.sin(brng) * sinD * cosPhi1;
+      const x = cosD - sinPhi1 * Math.sin(phi2);
+      const lam2 = lam1 + Math.atan2(y, x);
+      const normLon = ((((lam2 * RAD2DEG) + 180) % 360) + 360) % 360 - 180;
+      ring.push([normLon, phi2 * RAD2DEG]);
+    }
+    inputPolylines.push({
+      layer: "tissot",
+      pts: ring,
+      jumpMax: 0.9,
+      minPts: 10,
+      singleRunOnly: true,
+      centerLonLat: [lonC, latC],
+    });
+  }
+}
+
+// Precompute projected geometry for each of the 3 projections
+interface ProjectedBundle {
+  id: string;
+  title: string;
+  subtitle: string;
+  note: string;
+  boundary: Array<[number, number]>;
+  continents: Array<Array<[number, number]>>;
+  borders: Array<Array<[number, number]>>;
+  graticules: Array<Array<[number, number]>>;
+  equator: Array<Array<[number, number]>>;
+  primeMeridian: Array<Array<[number, number]>>;
+  tissot: Array<Array<[number, number]>>;
+  bboxMin: [number, number];
+  bboxMax: [number, number];
+}
+
+const projectedBundles: ProjectedBundle[] = [];
+const sinLat0 = Math.sin(ORTHO_LAT0 * DEG2RAD);
+const cosLat0 = Math.cos(ORTHO_LAT0 * DEG2RAD);
+
+for (let pIdx = 0; pIdx < PROJECTION_META.length; pIdx++) {
+  const meta = PROJECTION_META[pIdx];
+  const projId = String(meta[PROJ_ID_COL]);
+
+  const boundary: Array<[number, number]> = [];
+  if (projId === "Mercator") {
+    const xMax = Math.PI;
+    const yMax = Math.log(Math.tan(Math.PI / 4 + (MERCATOR_LAT_CLIP * DEG2RAD) / 2));
+    boundary.push([-xMax, -yMax], [xMax, -yMax], [xMax, yMax], [-xMax, yMax], [-xMax, -yMax]);
+  } else if (projId === "Mollweide") {
+    const rx = 2 * SQRT2;
+    const ry = SQRT2;
+    for (let i = 0; i <= 120; i++) {
+      const a = (i / 120) * 2 * Math.PI;
+      boundary.push([rx * Math.cos(a), ry * Math.sin(a)]);
+    }
+  } else {
+    for (let i = 0; i <= 120; i++) {
+      const a = (i / 120) * 2 * Math.PI;
+      boundary.push([Math.cos(a), Math.sin(a)]);
+    }
+  }
+
+  const continents: Array<Array<[number, number]>> = [];
+  const borders: Array<Array<[number, number]>> = [];
+  const graticules: Array<Array<[number, number]>> = [];
+  const equator: Array<Array<[number, number]>> = [];
+  const primeMeridian: Array<Array<[number, number]>> = [];
+  const tissot: Array<Array<[number, number]>> = [];
+
+  for (let polyIdx = 0; polyIdx < inputPolylines.length; polyIdx++) {
+    const poly = inputPolylines[polyIdx];
+    if (projId === "Orthographic" && poly.centerLonLat !== null) {
+      const lamC = (poly.centerLonLat[0] - ORTHO_LON0) * DEG2RAD;
+      const phiC = poly.centerLonLat[1] * DEG2RAD;
+      const cosCC = sinLat0 * Math.sin(phiC) + cosLat0 * Math.cos(phiC) * Math.cos(lamC);
+      if (cosCC < 0) continue;
+    }
+
+    const runs: Array<Array<[number, number]>> = [];
+    let cur: Array<[number, number]> = [];
+    let prevLon: number | null = null;
+
+    for (let i = 0; i < poly.pts.length; i++) {
+      const [lon, lat] = poly.pts[i];
+      if (prevLon !== null && Math.abs(lon - prevLon) > 170) {
+        if (cur.length > 1) runs.push(cur);
+        cur = [];
+      }
+      prevLon = lon;
+
+      let projPt: [number, number] | null = null;
+      if (projId === "Mercator") {
+        const clamped = Math.max(-MERCATOR_LAT_CLIP, Math.min(MERCATOR_LAT_CLIP, lat));
+        const phi = clamped * DEG2RAD;
+        projPt = [lon * DEG2RAD, Math.log(Math.tan(Math.PI / 4 + phi / 2))];
+      } else if (projId === "Mollweide") {
+        const phi = lat * DEG2RAD;
+        if (Math.abs(Math.abs(phi) - Math.PI / 2) < 1e-7) {
+          projPt = [0, SQRT2 * (phi > 0 ? 1 : -1)];
+        } else {
+          let theta = phi;
+          const target = Math.PI * Math.sin(phi);
+          for (let it = 0; it < 12; it++) {
+            const d = (2 * theta + Math.sin(2 * theta) - target) / (2 + 2 * Math.cos(2 * theta));
+            theta -= d;
+            if (Math.abs(d) < 1e-9) break;
+          }
+          projPt = [((2 * SQRT2) / Math.PI) * (lon * DEG2RAD) * Math.cos(theta), SQRT2 * Math.sin(theta)];
+        }
+      } else {
+        const lam = (lon - ORTHO_LON0) * DEG2RAD;
+        const phi = lat * DEG2RAD;
+        const cosC = sinLat0 * Math.sin(phi) + cosLat0 * Math.cos(phi) * Math.cos(lam);
+        if (cosC >= 0) {
+          projPt = [
+            Math.cos(phi) * Math.sin(lam),
+            cosLat0 * Math.sin(phi) - sinLat0 * Math.cos(phi) * Math.cos(lam),
+          ];
+        }
+      }
+
+      if (projPt === null) {
+        if (cur.length > 1) runs.push(cur);
+        cur = [];
+      } else {
+        if (cur.length > 0) {
+          const last = cur[cur.length - 1];
+          if (Math.hypot(projPt[0] - last[0], projPt[1] - last[1]) > poly.jumpMax) {
+            if (cur.length > 1) runs.push(cur);
+            cur = [];
+          }
+        }
+        cur.push(projPt);
+      }
+    }
+    if (cur.length > 1) runs.push(cur);
+
+    if (poly.singleRunOnly) {
+      if (runs.length === 1 && runs[0].length >= poly.minPts) {
+        tissot.push(runs[0]);
+      }
+    } else {
+      for (let r = 0; r < runs.length; r++) {
+        if (runs[r].length < poly.minPts) continue;
+        if (poly.layer === "continent") continents.push(runs[r]);
+        else if (poly.layer === "border") borders.push(runs[r]);
+        else if (poly.layer === "graticule") graticules.push(runs[r]);
+        else if (poly.layer === "equator") equator.push(runs[r]);
+        else if (poly.layer === "meridian") primeMeridian.push(runs[r]);
+      }
+    }
+  }
+
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (let i = 0; i < boundary.length; i++) {
+    const [x, y] = boundary[i];
+    if (x < minX) minX = x;
+    if (y < minY) minY = y;
+    if (x > maxX) maxX = x;
+    if (y > maxY) maxY = y;
+  }
+
+  projectedBundles.push({
+    id: projId,
+    title: String(meta[PROJ_TITLE_COL]),
+    subtitle: String(meta[PROJ_SUBTITLE_COL]),
+    note: String(meta[PROJ_NOTE_COL]),
+    boundary,
+    continents,
+    borders,
+    graticules,
+    equator,
+    primeMeridian,
+    tissot,
+    bboxMin: [minX, minY],
+    bboxMax: [maxX, maxY],
+  });
+}
+
+function GeoOverlay({ bundleIndex }: { bundleIndex: number }) {
   const xScale = useXScale();
   const yScale = useYScale();
-  const toPx = (p) => [xScale(p[0]), yScale(p[1])];
-  const boundaryPx = data.boundary.map(toPx);
+  const bundle = projectedBundles[bundleIndex];
+  const clipId = `proj-clip-${bundle.id}`;
+
+  let boundaryD = "";
+  for (let i = 0; i < bundle.boundary.length; i++) {
+    const px = Number(xScale(bundle.boundary[i][0]));
+    const py = Number(yScale(bundle.boundary[i][1]));
+    boundaryD += `${i === 0 ? "M" : "L"}${px.toFixed(1)},${py.toFixed(1)}`;
+  }
+  boundaryD += "Z";
+
+  let continentsD = "";
+  for (let r = 0; r < bundle.continents.length; r++) {
+    const run = bundle.continents[r];
+    for (let i = 0; i < run.length; i++) {
+      const px = Number(xScale(run[i][0]));
+      const py = Number(yScale(run[i][1]));
+      continentsD += `${i === 0 ? "M" : "L"}${px.toFixed(1)},${py.toFixed(1)}`;
+    }
+    continentsD += "Z";
+  }
+
+  let bordersD = "";
+  for (let r = 0; r < bundle.borders.length; r++) {
+    const run = bundle.borders[r];
+    for (let i = 0; i < run.length; i++) {
+      const px = Number(xScale(run[i][0]));
+      const py = Number(yScale(run[i][1]));
+      bordersD += `${i === 0 ? "M" : "L"}${px.toFixed(1)},${py.toFixed(1)}`;
+    }
+  }
+
+  let graticuleD = "";
+  for (let r = 0; r < bundle.graticules.length; r++) {
+    const run = bundle.graticules[r];
+    for (let i = 0; i < run.length; i++) {
+      const px = Number(xScale(run[i][0]));
+      const py = Number(yScale(run[i][1]));
+      graticuleD += `${i === 0 ? "M" : "L"}${px.toFixed(1)},${py.toFixed(1)}`;
+    }
+  }
+
+  let equatorD = "";
+  for (let r = 0; r < bundle.equator.length; r++) {
+    const run = bundle.equator[r];
+    for (let i = 0; i < run.length; i++) {
+      const px = Number(xScale(run[i][0]));
+      const py = Number(yScale(run[i][1]));
+      equatorD += `${i === 0 ? "M" : "L"}${px.toFixed(1)},${py.toFixed(1)}`;
+    }
+  }
+
+  let meridianD = "";
+  for (let r = 0; r < bundle.primeMeridian.length; r++) {
+    const run = bundle.primeMeridian[r];
+    for (let i = 0; i < run.length; i++) {
+      const px = Number(xScale(run[i][0]));
+      const py = Number(yScale(run[i][1]));
+      meridianD += `${i === 0 ? "M" : "L"}${px.toFixed(1)},${py.toFixed(1)}`;
+    }
+  }
+
+  let tissotD = "";
+  for (let r = 0; r < bundle.tissot.length; r++) {
+    const run = bundle.tissot[r];
+    for (let i = 0; i < run.length; i++) {
+      const px = Number(xScale(run[i][0]));
+      const py = Number(yScale(run[i][1]));
+      tissotD += `${i === 0 ? "M" : "L"}${px.toFixed(1)},${py.toFixed(1)}`;
+    }
+    tissotD += "Z";
+  }
 
   return (
     <g>
-      <path
-        d={pathFromRuns([boundaryPx], true)}
-        fill={t.elevatedBg}
-        stroke={t.inkSoft}
-        strokeOpacity={0.55}
-        strokeWidth={1.5}
-      />
-      {data.graticule.map((runs, i) => (
+      <defs>
+        <clipPath id={clipId}>
+          <path d={boundaryD} />
+        </clipPath>
+      </defs>
+      <path d={boundaryD} fill={t.elevatedBg} />
+      <g clipPath={`url(#${clipId})`}>
+        <path d={graticuleD} fill="none" stroke={t.inkSoft} strokeOpacity={0.28} strokeWidth={0.9} />
         <path
-          // eslint-disable-next-line react/no-array-index-key
-          key={`grid-${i}`}
-          d={pathFromRuns(runs.map((run) => run.map(toPx)), false)}
+          d={equatorD}
           fill="none"
-          stroke={t.grid}
-          strokeWidth={1}
-        />
-      ))}
-      {data.continents.map((c) => (
-        <path
-          key={c.name}
-          d={pathFromRuns(
-            c.runs.map((run) => run.map(toPx)),
-            c.closed,
-          )}
-          fill={c.closed ? INK_MUTED : "none"}
-          fillOpacity={0.32}
-          stroke={INK_MUTED}
-          strokeWidth={1.1}
-        />
-      ))}
-      {data.borders.map((runs, i) => (
-        <path
-          // eslint-disable-next-line react/no-array-index-key
-          key={`border-${i}`}
-          d={pathFromRuns(runs.map((run) => run.map(toPx)), false)}
-          fill="none"
-          stroke={t.ink}
-          strokeOpacity={0.6}
-          strokeWidth={1}
+          stroke={t.inkSoft}
+          strokeOpacity={0.62}
+          strokeWidth={1.3}
           strokeDasharray="4 3"
         />
-      ))}
-      {data.tissots.map((run, i) => (
         <path
-          // eslint-disable-next-line react/no-array-index-key
-          key={`tissot-${i}`}
-          d={pathFromRuns([run.map(toPx)], true)}
-          fill={t.palette[0]}
-          fillOpacity={0.22}
-          stroke={t.palette[0]}
-          strokeWidth={1.4}
+          d={meridianD}
+          fill="none"
+          stroke={t.inkSoft}
+          strokeOpacity={0.62}
+          strokeWidth={1.3}
+          strokeDasharray="4 3"
         />
-      ))}
+        <path
+          d={continentsD}
+          fill={t.palette[0]}
+          fillOpacity={0.32}
+          stroke={t.palette[0]}
+          strokeOpacity={0.95}
+          strokeWidth={1.3}
+          strokeLinejoin="round"
+        />
+        <path
+          d={bordersD}
+          fill="none"
+          stroke={t.inkSoft}
+          strokeOpacity={0.55}
+          strokeWidth={0.9}
+          strokeDasharray="2 2"
+        />
+        <path
+          d={tissotD}
+          fill={t.palette[1]}
+          fillOpacity={0.34}
+          stroke={t.palette[1]}
+          strokeOpacity={0.95}
+          strokeWidth={1.2}
+        />
+      </g>
+      <path d={boundaryD} fill="none" stroke={t.inkSoft} strokeOpacity={0.75} strokeWidth={1.6} />
     </g>
   );
 }
 
-function ProjectionPanel({ config, width, mapAreaH, headerH }) {
-  const data = buildProjectionData(config);
-  const { minX, maxX, minY, maxY } = bboxOf(data.boundary);
-  const domain = fitDomain(minX, maxX, minY, maxY, width, mapAreaH, 0.06);
-
-  return (
-    <div style={{ width, display: "flex", flexDirection: "column", alignItems: "center" }}>
-      <div style={{ height: headerH, textAlign: "center" }}>
-        <div style={{ fontSize: 17, fontWeight: 600, color: t.ink }}>{config.name}</div>
-        <div style={{ fontSize: 14, color: t.inkSoft, marginTop: 2 }}>{config.subtitle}</div>
-      </div>
-      <ChartContainer
-        width={width}
-        height={mapAreaH}
-        margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
-        series={[]}
-        skipAnimation
-        disableAxisListener
-        xAxis={[{ scaleType: "linear", min: domain.min[0], max: domain.max[0] }]}
-        yAxis={[{ scaleType: "linear", min: domain.min[1], max: domain.max[1] }]}
-      >
-        <GeoOverlay data={data} />
-      </ChartContainer>
-    </div>
-  );
-}
-
-// --- Chart (default-exported component — the harness mounts it) -------------
 export default function Chart() {
-  const { width: W, height: H } = window.ANYPLOT_SIZE;
-  const TITLE_H = 56;
-  const CAPTION_H = 42;
-  const OUTER_PAD = 24;
-  const GAP = 22;
-  const PANEL_HEADER_H = 54;
-  const MIN_PANEL_W = 460; // keeps the longest one-line subtitle from wrapping
+  const { width, height } = window.ANYPLOT_SIZE;
+  const rowHeight = height - TITLE_HEIGHT - FOOTER_HEIGHT;
+  const totalWidth = width - OUTER_PAD_X * 2 - PANEL_GAP * (projectedBundles.length - 1);
 
-  // A single 3-across row starves every panel of height: world maps are wide
-  // (~1.3-2:1), so at a third of the canvas width none of them come close to
-  // needing the full leftover row height, leaving 40%+ of the canvas as a
-  // dead band below the maps (VQ-05). Two rows (2 + 1) roughly double the
-  // width each panel gets, which is exactly what wide-format maps need to
-  // grow into the available height instead of leaving it blank.
-  const ROWS = [PROJECTIONS.slice(0, 2), PROJECTIONS.slice(2)];
-  const panelsRowH = H - TITLE_H - CAPTION_H;
-  const rowGap = GAP;
-  const mapAreaH = (panelsRowH - (ROWS.length - 1) * rowGap - ROWS.length * PANEL_HEADER_H) / ROWS.length;
-
-  // Size each panel to its own projection's natural aspect (rather than one
-  // shared box) so the wide Mollweide ellipse and the near-square
-  // Orthographic globe both fill their frame without internal letterboxing.
-  const panelWidth = (config) => Math.max(MIN_PANEL_W, mapAreaH * boundaryAspect(config));
-  const availableW = W - 2 * OUTER_PAD;
-  const maxRowW = Math.max(...ROWS.map((row) => row.reduce((sum, c) => sum + panelWidth(c), 0) + (row.length - 1) * GAP));
-  const widthScale = maxRowW > availableW ? availableW / maxRowW : 1;
+  const weights: number[] = [];
+  let weightSum = 0;
+  for (let i = 0; i < projectedBundles.length; i++) {
+    const b = projectedBundles[i];
+    const aspect = (b.bboxMax[0] - b.bboxMin[0]) / (b.bboxMax[1] - b.bboxMin[1]);
+    const w = Math.pow(aspect, 0.45);
+    weights.push(w);
+    weightSum += w;
+  }
 
   return (
-    <div style={{ width: W, height: H, display: "flex", flexDirection: "column" }}>
-      <div style={{ height: TITLE_H, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <span style={{ fontSize: 22, fontWeight: 500, color: t.ink }}>{TITLE}</span>
+    <div
+      style={{
+        width,
+        height,
+        backgroundColor: t.pageBg,
+        display: "flex",
+        flexDirection: "column",
+        fontFamily: "Inter, system-ui, sans-serif",
+      }}
+    >
+      <div
+        style={{
+          height: TITLE_HEIGHT,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 22,
+          fontWeight: 600,
+          color: t.ink,
+        }}
+      >
+        {TITLE}
       </div>
-      <div style={{ height: panelsRowH, display: "flex", flexDirection: "column", gap: rowGap }}>
-        {ROWS.map((row) => (
-          <div
-            key={row.map((c) => c.key).join("-")}
+      <div
+        style={{
+          height: rowHeight,
+          padding: `0 ${OUTER_PAD_X}px`,
+          display: "flex",
+          flexDirection: "row",
+          gap: PANEL_GAP,
+          alignItems: "center",
+        }}
+      >
+        {projectedBundles.map((bundle, idx) => {
+          const panelW = Math.floor((totalWidth * weights[idx]) / weightSum);
+          const mapH = rowHeight - PANEL_HEADER_HEIGHT - PANEL_FOOTER_HEIGHT;
+          const margin = { top: 8, right: 12, bottom: 8, left: 12 };
+          const drawW = panelW - margin.left - margin.right;
+          const drawH = mapH - margin.top - margin.bottom;
+
+          const dx = (bundle.bboxMax[0] - bundle.bboxMin[0]) * (1 + DOMAIN_PAD_SHARE);
+          const dy = (bundle.bboxMax[1] - bundle.bboxMin[1]) * (1 + DOMAIN_PAD_SHARE);
+          const cx = (bundle.bboxMin[0] + bundle.bboxMax[0]) / 2;
+          const cy = (bundle.bboxMin[1] + bundle.bboxMax[1]) / 2;
+          const targetAspect = drawW / drawH;
+          const dataAspect = dx / dy;
+          const halfW = dataAspect >= targetAspect ? dx / 2 : (dy * targetAspect) / 2;
+          const halfH = dataAspect >= targetAspect ? dx / targetAspect / 2 : dy / 2;
+
+          return (
+            <div
+              key={bundle.id}
+              style={{
+                width: panelW,
+                height: rowHeight,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+              }}
+            >
+              <div
+                style={{
+                  height: PANEL_HEADER_HEIGHT,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "flex-end",
+                  paddingBottom: 6,
+                }}
+              >
+                <div style={{ fontSize: 18, fontWeight: 600, color: t.ink, lineHeight: 1.25 }}>
+                  {bundle.title}
+                </div>
+                <div style={{ fontSize: 14, color: t.inkSoft, marginTop: 3 }}>
+                  {bundle.subtitle}
+                </div>
+              </div>
+              <ChartsContainer
+                width={panelW}
+                height={mapH}
+                margin={margin}
+                skipAnimation
+                series={[]}
+                xAxis={[
+                  {
+                    position: "none",
+                    scaleType: "linear",
+                    min: cx - halfW,
+                    max: cx + halfW,
+                  },
+                ]}
+                yAxis={[
+                  {
+                    position: "none",
+                    scaleType: "linear",
+                    min: cy - halfH,
+                    max: cy + halfH,
+                  },
+                ]}
+              >
+                <GeoOverlay bundleIndex={idx} />
+              </ChartsContainer>
+              <div
+                style={{
+                  height: PANEL_FOOTER_HEIGHT,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 14,
+                  color: t.inkSoft,
+                }}
+              >
+                {bundle.note}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div
+        style={{
+          height: FOOTER_HEIGHT,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 28,
+          fontSize: 14,
+          color: t.inkSoft,
+        }}
+      >
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+          <span
             style={{
-              height: PANEL_HEADER_H + mapAreaH,
-              display: "flex",
-              flexDirection: "row",
-              justifyContent: "center",
-              gap: GAP,
+              width: 14,
+              height: 14,
+              borderRadius: 3,
+              background: t.palette[0],
+              opacity: 0.55,
+              border: `1.5px solid ${t.palette[0]}`,
+              display: "inline-block",
             }}
-          >
-            {row.map((config) => (
-              <ProjectionPanel
-                key={config.key}
-                config={config}
-                width={panelWidth(config) * widthScale}
-                mapAreaH={mapAreaH}
-                headerH={PANEL_HEADER_H}
-              />
-            ))}
-          </div>
-        ))}
-      </div>
-      <div style={{ height: CAPTION_H, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <span style={{ fontSize: 14, color: INK_MUTED }}>
-          Green circles are equal-size reference regions (Tissot indicatrices, ~670 km radius) — their changing
-          shape and area reveal each projection&apos;s distortion.
+          />
+          Landmasses & country borders
+        </span>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+          <span
+            style={{
+              width: 14,
+              height: 14,
+              borderRadius: "50%",
+              background: t.palette[1],
+              opacity: 0.55,
+              border: `1.5px solid ${t.palette[1]}`,
+              display: "inline-block",
+            }}
+          />
+          Tissot indicatrix (equal 550 km radius circles on the globe — reveals local scale & angular distortion)
+        </span>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+          <span
+            style={{
+              width: 18,
+              height: 0,
+              borderTop: `1.5px dashed ${t.inkSoft}`,
+              display: "inline-block",
+            }}
+          />
+          30° graticule (equator & prime meridian dashed)
         </span>
       </div>
     </div>
