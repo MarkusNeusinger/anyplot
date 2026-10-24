@@ -11,12 +11,16 @@ and `uv`.
 - Done: Opus pilot (8), Gemini batch 1 (#12267, 20 files), chunk 1a (10 files, fixes on
   `claude/muix-9-c1a`), chunk 1b-1 (12 files, fixes on `claude/muix-9-c1b1`). 50 of 323
   muix files run on MUI X 9.
-- Held back: 76 chunk-1 files (`lists/specs-drifted.txt`) that dropped the adaptable-code
-  convention; Gemini was asked (two comments on #12304, 2026-10-24 03:39 UTC) for a
-  convention pass and a new hand-over SHA. Gemini restarted in a fresh session at about
-  06:30 UTC.
-- Remaining after that: chunk 2 and chunk 3 (`lists/gemini-chunk-1`, `-2` hold 98 specs
-  each; chunk 0 is done).
+- Chunk 1 convention pass: Gemini redid the 76 held-back files (`lists/specs-drifted.txt`)
+  in a fresh session, handed over at `5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69`; all 76
+  passed `conv-check.sh` and `acceptance2.sh` and were dispatched on 2026-10-24 at
+  08:07:11 UTC (bulk run 40076791336) without a separate Claude review, because Gemini
+  had applied the review findings from the PR comments. Collect the results with
+  `START=2026-10-24T08:07:11Z tools/muix9/collect.sh <outdir>`, then site smoke and the
+  ledger line. Chunk 1 (98 files) is then complete.
+- Remaining: chunk 2 and chunk 3 (`lists/gemini-chunk-1`, `-2` hold 98 specs each;
+  chunk 0 is done). Gemini continues on chunk 2 in the same branch; the owner restarts
+  agy at each hand-over (about 25 files).
 - Numbers so far: chunk 1a $1.60 per pair, first review mean 86.1, 5/10 without repair;
   chunk 1b-1 $1.48, 86.6, 7/12. Baselines: Gemini batch 1 $2.33, 83.0, 1/20; Opus pilot
   $3.15, 86, 2/8.
