@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: heatmap-basic
 created: '2026-08-20T20:20:47Z'
-updated: '2026-10-24T09:26:31Z'
+updated: '2026-10-24T09:31:53Z'
 generated_by: gemini-4-argon
 adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
 workflow_run: 40081588596
@@ -13,53 +13,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-basic/javascript/muix/plot-dark.html
-quality_score: 73
+quality_score: 85
 review:
   strengths:
-  - Composes the heatmap from the community ChartsContainer with band x/y axes, a
-    zAxis colorMap and the useXScale / useYScale / useZColorScale / useDrawingArea
-    hooks, so cell geometry and colors come from MUI's own scales rather than hand-computed
-    positions
-  - In-cell value labels switch between dark and light ink by the cell's luminance,
-    staying legible on every cell in both themes
-  - 'Theme-correct chrome in both renders: warm off-white and near-black pages, ink/inkSoft
-    tokens on title, subtitle, tick labels and color-bar text'
-  - Plausible, neutral business-metrics correlation matrix (8 × 8, symmetric, unit
-    diagonal) with both positive and negative coefficients
+  - 'Builds the heatmap from the community composition API: ChartsContainer with band
+    x/y axes, a zAxis continuous colorMap, and a custom cell layer that reads useXScale,
+    useYScale, useZColorScale and useDrawingArea, so cells, tick labels and the color
+    scale share one coordinate system without any Pro import'
+  - Diverging Imprint ramp (t.div) centered on zero with a fixed ±1 domain, so the
+    page-colored midpoint sits at 0.0 on the color bar in both themes
+  - In-cell values switch between dark and light ink by the luminance of each cell's
+    fill, staying legible on pale and saturated cells in both renders
+  - Color bar spans exactly the grid height with ticks at -1.0 to 1.0 and a rotated
+    'Correlation coefficient' label; axis lines and ticks are disabled so the labels
+    sit cleanly at their cells
+  - Title, subtitle and cell numbers form a clear typographic hierarchy (22 px semibold
+    title, 15 px subtitle, 16 px semibold values)
   weaknesses:
-  - 'SC-03, SC-02, VQ-07 (both): the cell colors contradict the color bar: positive
-    correlations (0.72, 0.81) render pale pink and the -1…+1 range runs red → neutral
-    only, so no cell is ever blue while the bar shows blue at +1.0; the diverging
-    ramp is not centered on zero → cells must follow the three-stop imprint_div ramp
-    (#AE3030 at -1, page-colored midpoint at 0, #4467A3 at +1), exactly as the bar
-    draws it. Likely cause: zAxis colorMap type ''continuous'' takes a two-color [min,
-    max] array; the third stop t.div[2] is silently dropped (the `as unknown as [string,
-    string]` cast hides the type error) — pass a function `color: (t) => …` interpolating
-    the three stops, or compute the fill per cell from the three stops.'
-  - 'VQ-03, SC-02 (both): the eight diagonal 1.00 cells are filled with the page color
-    and vanish into the background, leaving holes in the grid instead of a filled
-    rectangle per cell → the +1.0 cells in the saturated blue pole. Likely cause:
-    the same two-stop colorMap that maps the maximum to t.div[1], the page-colored
-    midpoint.'
-  - 'Suggestion: the community ContinuousColorLegend could replace the hand-drawn
-    SVG gradient bar so the legend is driven by the same zAxis as the cells.'
-  - 'Suggestion: ordering rows and columns by similarity (e.g. grouping Churn with
-    its negatively correlated partners) would let blocks emerge more clearly.'
+  - 'SC-02 (both): rows and columns follow an arbitrary list order (Revenue, Marketing,
+    CSAT, Headcount, R&D, Mkt Share, OpEx, Churn) that is neither alphabetical, by
+    magnitude, nor by similarity, so the strongly correlated pairs (Revenue–Mkt Share
+    0.81, Headcount–OpEx 0.71) sit apart and no block emerges, missing the Notes bullet
+    and the ''rows and columns in a logical order so blocks and gradients emerge''
+    property → order the metrics by similarity (e.g. by mean correlation or a fixed
+    cluster order) so related metrics sit adjacent. Likely cause: the METRIC_NAMES
+    list order.'
+  - 'Suggestion: MUI X community ships a ContinuousColorLegend that could replace
+    the hand-drawn gradient bar.'
+  - 'Suggestion: the 0.08 category gap with rounded corners reads as separate tiles;
+    a slightly thinner gap would tile the matrix more tightly.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, square 2400x2400 canvas.
-      Chrome: bold title "heatmap-basic · javascript · muix · anyplot.ai" centered at top, subtitle "Correlation coefficient matrix (8 × 8)"; row labels (Revenue … Churn) left, column labels below; vertical color bar right with ticks -1.0 … 1.0 and rotated title "Correlation coefficient". All text dark and readable.
-      Data: 8x8 grid of rounded cells with bold two-decimal values. Cells run from pale pink (0.81) to deep matte red (-0.78); no cell is blue although the bar is blue at +1.0, and the diagonal 1.00 cells are page-colored and invisible (only the number shows). Cell text flips light on the darkest reds.
-      Legibility verdict: PASS (text), but the color mapping contradicts the color bar.
+      Background: warm off-white, consistent with #FAF8F1.
+      Chrome: title "heatmap-basic · javascript · muix · anyplot.ai" in dark semibold at the top, subtitle "Correlation coefficient matrix (8 × 8)" in soft ink below; row labels (Revenue … Churn) right-aligned left of the grid, column labels below the grid, color bar tick labels 1.0/0.5/0.0/-0.5/-1.0 and rotated "Correlation coefficient" label on the right. All text readable, nothing clipped.
+      Data: 8×8 symmetric correlation matrix of rounded tiles; positive values in Imprint blue (diagonal 1.00 deepest), negatives in Imprint red (Churn row/column, strongest -0.78 CSAT–Churn), near-zero cells pale toward the page color. In-cell two-decimal values switch to light text on the dark diagonal and -0.78 cell, dark text elsewhere. Color bar diverges red→page→blue, midpoint at 0.0.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17.
-      Chrome: title, subtitle, tick labels and color-bar labels in light ink; no dark-on-dark text.
-      Data: same mapping with the dark midpoint: positive cells are near-black maroon, negatives brighter red; diagonal cells again identical to the page. Pole colors (#AE3030 red, #4467A3 blue on the bar) identical to light; only the theme-adaptive midpoint flips. All cell values rendered in light ink and readable.
-      Legibility verdict: PASS (text), same color-mapping defect as light.
+      Background: warm near-black, consistent with #1A1A17.
+      Chrome: title in light ink, subtitle, row/column labels and color bar ticks in light soft ink; no dark-on-dark text.
+      Data: same blue/red endpoint colors as the light render; the diverging midpoint now follows the dark page color, so near-zero cells are dark and all in-cell values switch to light text, all readable. Color bar mirrors the cells.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -67,73 +64,67 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes; title, ticks, cell values and color-bar labels
-          readable in both themes
+        comment: Explicit sizes (22/15/16 px); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions
+        comment: No text collisions; values centered in their cells
       - id: VQ-03
         name: Element Visibility
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: Diagonal cells drawn in the page color vanish in both renders (defect
-          line)
+        passed: true
+        comment: 64 large cells, color bar clearly visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Luminance-switched cell text keeps contrast; values printed in every
-          cell
+        comment: Blue/red diverging ramp is CVD-safe; values also printed
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square canvas used well, balanced margins, nothing clipped
+        comment: 2400×2400 square, balanced margins, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Self-explanatory metric labels, color bar titled
+        comment: Readable metric names; color bar labelled 'Correlation coefficient'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Chrome correct, but the cells use only the red half of imprint_div;
-          the blue pole never appears (defect line)
+        passed: true
+        comment: imprint_div from t.div centered on zero; correct page backgrounds
     design_excellence:
-      score: 8
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: 'Style-guide baseline: clean typography, subtitle, rounded cells;
-          nothing decisive beyond it'
+        passed: true
+        comment: Title/subtitle/semibold value hierarchy beyond baseline
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: 'Baseline: no axis lines/ticks, cell gaps; nothing beyond'
+        passed: true
+        comment: Axis lines/ticks removed, color bar aligned to the grid height
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed; the broken ramp hides the positive/negative contrast
-          rather than guiding the eye
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 10
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -144,25 +135,23 @@ review:
         comment: Basic heatmap, no extra layers
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: 'Colorbar and value annotations present; missed: diverging colormap
-          centered on zero, and every cell as a filled rectangle (diagonal invisible)
-          (defect lines)'
+        passed: true
+        comment: Diverging map, values, color bar present; rows/columns not in a logical
+          order (defect line)
       - id: SC-03
         name: Data Mapping
-        score: 0
+        score: 3
         max: 3
-        passed: false
-        comment: 'Cell colors do not match the color bar: positive values render pink/neutral
-          instead of blue (defect line)'
+        passed: true
+        comment: Each cell at its row/column band
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; color bar labeled
+        comment: Mandated title; color bar labelled
     data_quality:
       score: 15
       max: 15
@@ -172,21 +161,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Mixed-sign values, symmetric matrix, unit diagonal, hot spots (CSAT–Churn
-          -0.78)
+        comment: Positive and negative values exercise the diverging scale
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral business-metric correlations
+        comment: Plausible business-metric correlation matrix, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All values in [-1, 1], diagonal 1.00, matrix symmetric (checked in
-          code and render); no Check values in the spec
+        comment: Symmetric matrix, unit diagonal, values within [-1, 1]; checked in
+          code and render
     code_quality:
       score: 10
       max: 10
@@ -196,8 +184,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: One hook-using component, required for custom marks in a composed
-          chart
+        comment: Only the required component and the colorMap function
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -221,39 +208,40 @@ review:
         score: 1
         max: 1
         passed: true
-        comment: Mount-node contract via default-export Chart, skipAnimation, square
-          orientation pragma
+        comment: Default export, skipAnimation, v9 ChartsContainer API, sized from
+          ANYPLOT_SIZE
     library_mastery:
-      score: 4
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: 'Default: composition API with band axes and scale hooks'
+        comment: ChartsContainer composition with band axes and drawing-area/scale
+          hooks
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Nothing beyond what the library prompt mandates
-  verdict: REJECTED
+        comment: zAxis continuous colorMap consumed via useZColorScale in a custom
+          layer
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T09:22:20Z'
+  rendered_at: '2026-10-24T09:28:53Z'
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - annotations
+  - layer-composition
   - custom-legend
+  - html-export
   patterns:
   - matrix-construction
-  - iteration-over-groups
-  dataprep:
-  - correlation-matrix
+  dataprep: []
   styling:
-  - custom-colormap
-  - rounded-corners
+  - publication-ready
