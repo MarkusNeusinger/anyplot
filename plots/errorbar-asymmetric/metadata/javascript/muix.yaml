@@ -2,45 +2,63 @@ library: muix
 language: javascript
 specification_id: errorbar-asymmetric
 created: '2026-09-05T01:18:03Z'
-updated: '2026-09-05T01:30:39Z'
-generated_by: claude-sonnet
-workflow_run: 33935482030
+updated: '2026-10-24T09:00:12Z'
+generated_by: gemini-4-argon
+adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
+workflow_run: 40079598442
 issue: 2781
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/javascript/muix/plot-dark.html
-quality_score: 92
+quality_score: 84
 review:
   strengths:
-  - Plateau shading + annotation deliver real data storytelling tied directly to the
-    diminishing-returns / widening-spread pattern in the data
-  - Subtitle explicitly names the percentile range, satisfying the spec's asymmetric-bounds
-    explanation requirement
-  - Marker halo (stroke={t.pageBg}) gives clean figure-ground separation without extra
-    colors
-  - Correctly falls back to a custom SVG overlay (via useXScale/useYScale) for a chart
-    type the MUI X community surface doesn't natively support, rather than reaching
-    for Pro/Premium or a different library
-  - Theme-adaptive chrome and identical data color confirmed correct in both renders
+  - Composes the error bars as a custom SVG layer inside ChartsContainer, using the
+    useXScale/useYScale hooks, so every arm, cap and marker sits exactly on the MUI
+    X band and linear scales. This is the idiomatic MUI X way to draw a mark type
+    the community surface does not ship.
+  - 'Each arm''s length comes from its own error column (lines 121–123), and the data
+    shows the full asymmetric range: upper-heavy arms at low doses, near-symmetric
+    arms around 200 kg/ha, and a lower-heavy arm at 240 kg/ha.'
+  - The marker has a 3 px page-coloured ring that separates it from the bar line,
+    so where the median sits between the two arms is unmistakable in both themes.
+  - The legend names both the median marker and the '10th–90th percentile range' with
+    matching glyphs (a ringed dot and a capped I-bar), as the Notes ask.
+  - 'The nitrogen dose-response scenario is realistic: diminishing returns and a slight
+    decline past 200 kg/ha, with uncertainty widening as the dose rises.'
+  - 'Theme tokens reach every element: ink for the title and axis titles, inkSoft
+    for ticks and the secondary legend label, and a grid at 50 % opacity. The Imprint
+    green #009E73 is identical in both renders, and skipAnimation is set.'
   weaknesses:
-  - Tick labels and plateau annotation at 13px CSS are slightly below the 14-16px
-    guidance for axis/legend text in the mount's CSS coordinate space
-  - Custom SVG error-bar elements aren't wired into MUI X's tooltip system, so the
-    interactive HTML output has no hover detail on the error bars themselves
+  - 'VQ-01 (both): tick labels at 14 px and legend text at 15 px (CSS) blur to about
+    3.5 px in the 400 px thumbnail, so the dose and percentage ticks are hard to read
+    on mobile → tick labels about 16 px (+2 px), legend text about 16 px (+1 px).
+    Likely cause: tickLabelStyle fontSize: 14 on both axes and fontSize: 15 on the
+    legend Typography.'
+  - 'CQ-04 (code): lines 65–71 hand-roll a reverse for-loop that finds the last index
+    meeting the spread threshold → `totalSpreads.findLastIndex((s) => s >= maxSpread
+    * PLATEAU_SPREAD_SHARE)`. Lines 52 and 54–55 also recompute the sums from the
+    raw records although lowerErrors/upperErrors already exist. Likely cause: the
+    plateau-band computation was written out by hand.'
+  - 'Suggestion: the ''Spread ≥ 85% of maximum'' shaded band is an annotation layer
+    the spec does not request. Dropping it (with lines 23 and 63–117) would simplify
+    the chart and the code, and it earns no storytelling credit.'
+  - 'Suggestion: pass the medians as a real ScatterChart/scatter series in ChartsContainer
+    so the HTML view gets MUI X''s native tooltip with the dose and median on hover.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 target, not pure white.
-      Chrome: Title and subtitle centered in dark ink / soft gray; axis labels and tick labels in ink/ink-soft tones; all clearly readable.
-      Data: Brand green (#009E73) markers with cream/pageBg halo stroke, error bars with visible caps; plateau region (doses 160-240) tinted pale green with italic annotation "Diminishing returns, widening spread".
+      Background: warm off-white #FAF8F1. The 120–240 kg/ha region carries a slightly lighter elevated-bg band with a dashed grid-coloured border and an italic "Spread ≥ 85% of maximum" label at the top.
+      Chrome: bold dark title "errorbar-asymmetric · javascript · muix · anyplot.ai" centred at the top (~40 % of the width). Below it is an HTML legend: a ringed green dot labelled "Median yield increase (%)" and a green capped I-glyph labelled "10th–90th percentile range". The y-axis title is "Median yield increase (%)" and the x-axis title is "Nitrogen dose (kg/ha)", both semibold dark ink. Ticks 0–50 step 5 and 0–240 step 40 are in soft ink. Grid lines are subtle horizontal lines, and the left and bottom axis lines show with no tick marks. All text is readable; ticks are small in the 400 px thumbnail.
+      Data: 7 points in #009E73. Each has a 3 px vertical bar, 3 px caps at both ends and a 10 px filled circle with a page-coloured ring at the median. The arms are clearly asymmetric (e.g. 160: 28–48 around 35; 240: 26–45 around 36, lower arm longer). The y-axis spans every bar.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 target, not pure black.
-      Chrome: Title and axis labels in light ink, tick labels/subtitle in softer light gray; annotation text legible light-gray-on-near-black italic; no dark-on-dark failures.
-      Data: Same brand green (#009E73) markers and error bars as light render - confirmed identical data color, only chrome flipped.
+      Background: warm near-black #1A1A17. The plateau band is slightly lighter with a dashed border and the same soft-ink italic label.
+      Chrome: title and axis titles in light ink, ticks and the secondary legend label in a softer light grey, grid lines subtle dark grey, axis lines light. No dark-on-dark text anywhere.
+      Data: identical #009E73 bars, caps and markers. The marker ring now uses the dark page colour, which keeps the marker separated from the bar.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -52,69 +70,75 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text explicitly sized and readable in both themes; 13px annotation/tick
-          labels slightly small for mobile
+        comment: Font sizes are set explicitly and readable in both themes at full
+          size. Tick labels at 14 px blur in the 400 px thumbnail (defect line).
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between error bars, markers, plateau shading, or text
+        comment: No text collisions. The band label sits clear of the caps.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Sparse data (7 points) with prominent r=10 markers and 3px error-bar
-          strokes
+        comment: 7 sparse points with 10 px markers, 3 px bars and caps. The legend
+          glyphs match the marks in both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: White/cream marker halo provides figure-ground separation
+        comment: Single green series with strong contrast on both surfaces. No colour-only
+          encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Clean proportions, generous margins, nothing clipped
+        comment: Canvas gate passed (3200x1800). Balanced margins, no overflow, axis
+          titles balanced.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units
+        comment: '''Nitrogen dose (kg/ha)'' and ''Median yield increase (%)'' are
+          descriptive and carry units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Brand green first series, correct theme backgrounds in both renders
+        comment: 'Series in #009E73 from t.palette[0]. Backgrounds are #FAF8F1 and
+          #1A1A17; chrome flips correctly.'
     design_excellence:
-      score: 15
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Title fontsize scaling formula, marker halo, tinted plateau region
-          show deliberate polish
+        comment: Deliberate three-level type hierarchy (600-weight title, semibold
+          axis titles, inkSoft ticks) and a legend that grades its two entries ink
+          vs inkSoft, beyond the baseline.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: L-shaped implicit frame, subtle horizontal grid, generous whitespace
+        comment: Page-coloured marker ring that separates the median from the bar,
+          tick marks removed (tickSize 0), cap width scaled to the band (CAP_BAND_SHARE).
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Plateau shading + annotation is genuine, well-placed storytelling
-          tied to the data pattern
+        passed: false
+        comment: Default. The only focal device is the unrequested plateau band, which
+          earns no credit.
     spec_compliance:
       score: 15
       max: 15
@@ -124,27 +148,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct asymmetric error-bar plot
+        comment: Asymmetric error bar plot with point markers. Not a -basic spec.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Visible caps; subtitle explains the 10th-90th percentile bounds
+        comment: Caps at both ends, marker distinct from the bar, legend naming '10th–90th
+          percentile range', each arm sized by its own error. Single series, so the
+          multi-series bullet is N/A.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y mapped correctly, all 7 points shown with correct asymmetric
-          spans
+        comment: Marks at their data values. The y-axis spans every bar (−2 to ~55).
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly; single series correctly omits
-          legend
+        comment: Title format correct. Legend entries are reader text.
     data_quality:
       score: 15
       max: 15
@@ -154,24 +178,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Median + independent upper/lower error magnitudes shown for every
-          category
+        comment: Upper-heavy, near-symmetric and lower-heavy intervals, with ratios
+          that vary from point to point.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Nitrogen fertilizer dose-response with diminishing returns is plausible
-          and neutral
+        comment: 'Nitrogen fertiliser dose response: neutral and plausible.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible agronomic dose and yield-increase values; 7 points within
-          spec range
+        comment: 'No check values in spec. Checked: bounds read off the axis match
+          y−lower/y+upper (e.g. 160: 28/48, 240: 26/45). Yield gains of 0–38 % with
+          a plateau past 200 kg/ha are plausible.'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -179,34 +203,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Helper component required by hook-access pattern, not incidental
-          complexity
+        comment: The ErrorBars component is needed for the scale hooks. Otherwise
+          the code runs linearly through columns, data and plot.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, hard-coded arrays
+        comment: Hard-coded data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Every import is used
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Appropriate complexity, no fake UI
+        passed: false
+        comment: Lines 65–71 hand-roll findLastIndex, and lines 52–55 recompute sums
+          already available (defect line).
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: skipAnimation set, default export, current API
+        comment: Default-exported component, skipAnimation, v9 ChartsContainer API.
+          The harness writes plot-{theme}.png/html.
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -214,22 +240,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Scale-hook overlay is the documented pattern when no built-in series
-          covers asymmetric error bars
+        comment: v9 composition API (ChartsContainer + ChartsGrid + ChartsXAxis/YAxis)
+          with axis-config label/tick styles and sized axis bands.
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
-        passed: true
-        comment: Distinctive scale-driven SVG composition; custom marks aren't wired
-          into MUI X tooltip system
+        passed: false
+        comment: A custom mark layer drawn through the useXScale/useYScale hooks,
+          MUI X's extension point for marks it does not ship.
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-10-24T08:57:17Z'
 impl_tags:
   dependencies: []
   techniques:
+  - layer-composition
+  - custom-legend
   - annotations
+  - html-export
   patterns: []
   dataprep: []
   styling:
-  - alpha-blending
   - edge-highlighting
+  - grid-styling
