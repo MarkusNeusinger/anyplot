@@ -38,27 +38,52 @@ type LossTriangleRow = {
   [DEV_FACTOR]: number;
 };
 
-const data: LossTriangleRow[] = [];
 let lcgState = 42;
-const nPeriods = SEED_FACTORS.length;
-
-for (let i = 0; i < SEED_YEARS.length; i++) {
+const nextRand = () => {
   lcgState = (lcgState * 1103515245 + 12345) & 0x7fffffff;
-  const rand = lcgState / 0x7fffffff;
-  const baseLoss = Math.round(820 + i * 35 + (rand - 0.5) * 60);
-  let cumulative = baseLoss;
+  return lcgState / 0x7fffffff;
+};
+const nPeriods = SEED_FACTORS.length;
+const nYears = SEED_YEARS.length;
 
+// Observed triangle: each year's link ratios scatter around the seed factors
+const grid: number[][] = SEED_YEARS.map((_, i) => {
+  const row = [Math.round(820 + i * 35 + (nextRand() - 0.5) * 60)];
+  for (let j = 1; j < nPeriods - i; j++) {
+    const growth = SEED_FACTORS[j - 1] - 1;
+    const noisy = 1 + growth * (1 + (nextRand() - 0.5) * 0.5);
+    row.push(Math.round(row[j - 1] * noisy));
+  }
+  return row;
+});
+
+// Chain-ladder: volume-weighted age-to-age factors from the observed cells
+const selectedFactors = SEED_FACTORS.map((seed, j) => {
+  let num = 0;
+  let den = 0;
+  for (const row of grid) {
+    if (row.length > j + 1) {
+      num += row[j + 1];
+      den += row[j];
+    }
+  }
+  return den > 0 ? num / den : seed;
+});
+
+const data: LossTriangleRow[] = [];
+for (let i = 0; i < nYears; i++) {
+  const observedCount = grid[i].length;
+  let cumulative = grid[i][0];
   for (let j = 0; j < nPeriods; j++) {
-    const period = j + 1;
     if (j > 0) {
-      cumulative = cumulative * SEED_FACTORS[j - 1];
+      cumulative = j < observedCount ? grid[i][j] : cumulative * selectedFactors[j - 1];
     }
     data.push({
       [ACCIDENT_YEAR]: SEED_YEARS[i],
-      [DEV_PERIOD]: period,
+      [DEV_PERIOD]: j + 1,
       [CUMULATIVE_CLAIMS]: Math.round(cumulative),
-      [IS_PROJECTED]: i + period > nPeriods ? 1 : 0,
-      [DEV_FACTOR]: SEED_FACTORS[j],
+      [IS_PROJECTED]: j < observedCount ? 0 : 1,
+      [DEV_FACTOR]: selectedFactors[j],
     });
   }
 }
@@ -421,7 +446,7 @@ export default function Chart() {
       width={SIZE.width}
       height={SIZE.height}
       series={[]}
-      margin={{ top: 138, right: 132, bottom: 64, left: 74 }}
+      margin={{ top: 138, right: 210, bottom: 64, left: 74 }}
       skipAnimation
       xAxis={[
         {
