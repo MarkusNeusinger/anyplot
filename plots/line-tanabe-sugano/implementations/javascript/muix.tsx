@@ -3,7 +3,8 @@
 // Library: muix 7.29.1 | JavaScript 22.23.3
 // Quality: 90/100 | Created: 2026-10-01
 //# anyplot-orientation: square
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { LinePlot } from "@mui/x-charts/LineChart";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
@@ -14,199 +15,455 @@ import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 const { width: WIDTH, height: HEIGHT } = window.ANYPLOT_SIZE;
-const MARGIN = { top: 96, right: 172, bottom: 88, left: 96 };
 
-// Data — d³ (Cr³⁺) in an octahedral field at C/B = 4.5, energies in units of B
-const C_OVER_B = 4.5;
-const FIELD_MAX = 40;
-const ENERGY_MAX = 90;
-const fieldStrengths = Array.from({ length: 321 }, (_, i) => (i * FIELD_MAX) / 320);
-
-// ⁴T₁g is the only Tanabe-Sugano block of d³ bigger than 1×1. In the weak-field
-// basis (⁴F and ⁴P parents), relative to the ⁴A₂g ground term, with d = Δo/B:
-//     [ 1.8d         0.4d  ]
-//     [ 0.4d    15 + 1.2d  ]
-// Both ⁴T₁g curves are eigenvalues of that symmetric matrix, so the avoided
-// crossing is the 12B gap the matrix itself keeps at d = 9 — never a spline.
-const t1gEigenvalues = (d) => {
-  const [t1gF, t1gP, mixing] = [1.8 * d, 15 + 1.2 * d, 0.4 * d];
-  const centre = (t1gF + t1gP) / 2;
-  const splitting = Math.hypot((t1gF - t1gP) / 2, mixing);
-  return [centre - splitting, centre + splitting];
+// Constants
+const LABEL_MIN_GAP_PX = 32;
+const ENERGY_TOP_PAD_SHARE = 0.03;
+const SHIFT: Record<"base" | "sup" | "sub", number> = {
+  base: 0,
+  sup: -0.42,
+  sub: 0.26,
+};
+const SUP_MAP: Record<string, string> = {
+  "⁰": "0",
+  "¹": "1",
+  "²": "2",
+  "³": "3",
+  "⁴": "4",
+  "⁵": "5",
+  "⁶": "6",
+  "⁷": "7",
+  "⁸": "8",
+  "⁹": "9",
+  "⁺": "+",
+  "⁻": "-",
+};
+const SUB_MAP: Record<string, string> = {
+  "₀": "0",
+  "₁": "1",
+  "₂": "2",
+  "₃": "3",
+  "₄": "4",
+  "₅": "5",
+  "₆": "6",
+  "₇": "7",
+  "₈": "8",
+  "⁹": "9",
+  "ₒ": "o",
 };
 
-// Term symbols as [kind, text] runs, typeset below into true super/subscripts.
-// The spin-forbidden doublets both belong to the same t₂g³ configuration as the
-// ⁴A₂g ground term, so their Racah energies carry no first-order Dq term at all
-// and the curves run horizontally — 9B + 3C and 15B + 3C.
-const TERMS = [
-  { id: "a2g", key: "⁴A₂g", runs: [["sup", "4"], ["base", "A"], ["sub", "2g"]],
-    spinAllowed: true, energy: () => 0 },
-  { id: "t2g", key: "⁴T₂g", runs: [["sup", "4"], ["base", "T"], ["sub", "2g"]],
-    spinAllowed: true, energy: (d) => d },
-  { id: "t1gF", key: "⁴T₁g(F)", runs: [["sup", "4"], ["base", "T"], ["sub", "1g"], ["base", "(F)"]],
-    spinAllowed: true, energy: (d) => t1gEigenvalues(d)[0] },
-  { id: "t1gP", key: "⁴T₁g(P)", runs: [["sup", "4"], ["base", "T"], ["sub", "1g"], ["base", "(P)"]],
-    spinAllowed: true, energy: (d) => t1gEigenvalues(d)[1] },
-  { id: "eg", key: "²Eg", runs: [["sup", "2"], ["base", "E"], ["sub", "g"]],
-    spinAllowed: false, energy: () => 9 + 3 * C_OVER_B },
-  { id: "t2gDoublet", key: "²T₂g", runs: [["sup", "2"], ["base", "T"], ["sub", "2g"]],
-    spinAllowed: false, energy: () => 15 + 3 * C_OVER_B },
-];
+// Columns: set these to your data's column names
+const DELTA_OVER_B = "Ligand-field strength Δo / B"; // role: delta_over_b
+const TERM = "Term symbol"; // role: term
+const ENERGY_OVER_B = "Term energy E / B"; // role: energy_over_b
+const SPIN_ALLOWED = "Spin allowed"; // role: spin_allowed
 
-// [Cr(H₂O)₆]³⁺: Δo = 17 400 cm⁻¹ against B = 700 cm⁻¹ — where a chemist reads
-// the diagram off after matching two observed UV-Vis bands.
+// Data: replace this block with your own records
+const CONFIG = "d³ (Cr³⁺)";
+const C_OVER_B = 4.5;
+const EXAMPLE_COMPLEX = "[Cr(H₂O)₆]³⁺";
 const EXAMPLE_FIELD = 17400 / 700;
 
-// Typography — the library's own markup is SVG tspans, so multiplicities become
-// real superscripts and the numeral plus the g a real subscript.
-const SHIFT = { base: 0, sup: -0.42, sub: 0.26 };
-const typeset = (runs, size) => {
-  let offset = 0;
-  return runs.map(([kind, text], i) => {
-    const dy = (SHIFT[kind] - offset) * size;
-    offset = SHIFT[kind];
-    return (
-      <tspan key={i} dy={dy} fontSize={kind === "base" ? size : size * 0.66}>
-        {text}
-      </tspan>
-    );
-  });
-};
+const TERM_SPECS: Array<{ name: string; spinAllowed: boolean }> = [
+  { name: "⁴A₂g", spinAllowed: true },
+  { name: "⁴T₂g", spinAllowed: true },
+  { name: "⁴T₁g(F)", spinAllowed: true },
+  { name: "⁴T₁g(P)", spinAllowed: true },
+  { name: "²Eg", spinAllowed: false },
+  { name: "²T₂g", spinAllowed: false },
+];
 
-// Curve labels sit just outside the right edge at each term's final energy, with
-// a greedy vertical declutter so converging labels stay readable (the curves
-// themselves never move off their computed energies).
-function TermLabels() {
-  const { left, width } = useDrawingArea();
-  const yScale = useYScale();
-  let lowest = -Infinity;
-  return (
-    <g>
-      {TERMS.map((term, i) => ({ term, color: t.palette[i], y: yScale(term.energy(FIELD_MAX)) }))
-        .sort((a, b) => a.y - b.y)
-        .map(({ term, color, y }) => {
-          const placed = Math.max(y, lowest + 32);
-          lowest = placed;
-          return (
-            <text
-              key={term.id}
-              x={left + width + 14}
-              y={placed}
-              fill={color}
-              fontSize={20}
-              fontWeight={term.spinAllowed ? 600 : 500}
-              dominantBaseline="middle"
-            >
-              {typeset(term.runs, 20)}
-            </text>
-          );
-        })}
-    </g>
-  );
+const N_STEPS = 320;
+const data: Array<Record<string, number | string | boolean>> = [];
+for (let step = 0; step <= N_STEPS; step += 1) {
+  const d = (step * 40) / N_STEPS;
+  const t1gFDiag = 1.8 * d;
+  const t1gPDiag = 15 + 1.2 * d;
+  const mixing = 0.4 * d;
+  const centre = (t1gFDiag + t1gPDiag) / 2;
+  const splitting = Math.hypot((t1gFDiag - t1gPDiag) / 2, mixing);
+
+  const energies = [
+    0,
+    d,
+    centre - splitting,
+    centre + splitting,
+    9 + 3 * C_OVER_B,
+    15 + 3 * C_OVER_B,
+  ];
+
+  for (let k = 0; k < TERM_SPECS.length; k += 1) {
+    data.push({
+      [DELTA_OVER_B]: d,
+      [TERM]: TERM_SPECS[k].name,
+      [ENERGY_OVER_B]: energies[k],
+      [SPIN_ALLOWED]: TERM_SPECS[k].spinAllowed,
+    });
+  }
 }
 
-// The marker the Notes offer as optional: a vertical line at the Δo/B a chemist
-// reads off for [Cr(H₂O)₆]³⁺, with its two observed d–d bands as arrows running
-// from the ground term up to the terms they reach.
-function ExampleComplex() {
-  const xScale = useXScale();
-  const yScale = useYScale();
-  const x = xScale(EXAMPLE_FIELD);
-  const bands = [
-    { id: "nu1", runs: [["base", "ν"], ["sub", "1"]], term: TERMS[1], dx: -12 },
-    { id: "nu2", runs: [["base", "ν"], ["sub", "2"]], term: TERMS[2], dx: 12 },
-  ];
+// Plot: reads only data and the constants above
+interface TypesetRun {
+  text: string;
+  dyFactor: number;
+  fontScale: number;
+}
+
+const stringsToParse = new Set<string>([
+  DELTA_OVER_B,
+  `${CONFIG} in an octahedral field · C/B = ${C_OVER_B} · spin-allowed quartets solid, spin-forbidden doublets dashed`,
+  `${EXAMPLE_COMPLEX} · Δo / B = ${EXAMPLE_FIELD.toFixed(1)}`,
+  "ν₁",
+  "ν₂",
+]);
+for (const row of data) {
+  stringsToParse.add(String(row[TERM]));
+}
+
+const parsedRunsByText: Record<string, TypesetRun[]> = {};
+for (const rawText of stringsToParse) {
+  const rawSegments: Array<{ kind: "base" | "sup" | "sub"; text: string }> = [];
+  let inMulliken = false;
+  for (let i = 0; i < rawText.length; i += 1) {
+    const ch = rawText[i];
+    const prev = i > 0 ? rawText[i - 1] : "";
+    let kind: "base" | "sup" | "sub" = "base";
+    let mapped = ch;
+    if (ch in SUP_MAP) {
+      kind = "sup";
+      mapped = SUP_MAP[ch];
+      inMulliken = false;
+    } else if (ch in SUB_MAP) {
+      kind = "sub";
+      mapped = SUB_MAP[ch];
+    } else if ((ch === "g" || ch === "u") && inMulliken) {
+      kind = "sub";
+      inMulliken = false;
+    } else if (ch === "o" && prev === "Δ") {
+      kind = "sub";
+    } else {
+      inMulliken = ch === "A" || ch === "B" || ch === "E" || ch === "T";
+    }
+    const last = rawSegments[rawSegments.length - 1];
+    if (last && last.kind === kind) {
+      last.text += mapped;
+    } else {
+      rawSegments.push({ kind, text: mapped });
+    }
+  }
+  let offset = 0;
+  parsedRunsByText[rawText] = rawSegments.map((seg) => {
+    const dyFactor = SHIFT[seg.kind] - offset;
+    offset = SHIFT[seg.kind];
+    return {
+      text: seg.text,
+      dyFactor,
+      fontScale: seg.kind === "base" ? 1 : 0.66,
+    };
+  });
+}
+
+const terms: string[] = [];
+for (const row of data) {
+  const termName = String(row[TERM]);
+  if (!terms.includes(termName)) terms.push(termName);
+}
+
+const fieldSet: number[] = [];
+for (const row of data) {
+  const f = Number(row[DELTA_OVER_B]);
+  if (!fieldSet.includes(f)) fieldSet.push(f);
+}
+const fieldStrengths = [...fieldSet].sort((a, b) => a - b);
+const fieldMin = fieldStrengths[0];
+const fieldMax = fieldStrengths[fieldStrengths.length - 1];
+
+const allEnergies = data.map((r) => Number(r[ENERGY_OVER_B]));
+const energyMin = Math.min(...allEnergies);
+const maxRawEnergy = Math.max(...allEnergies);
+const energyMax = maxRawEnergy * (1 + ENERGY_TOP_PAD_SHARE);
+
+const termSeries = terms.map((termName, i) => {
+  const rows = data
+    .filter((r) => String(r[TERM]) === termName)
+    .sort((a, b) => Number(a[DELTA_OVER_B]) - Number(b[DELTA_OVER_B]));
+  const spinAllowed = Boolean(rows[0][SPIN_ALLOWED]);
+  const points = rows.map((r) => ({
+    x: Number(r[DELTA_OVER_B]),
+    y: Number(r[ENERGY_OVER_B]),
+  }));
+  const yValues = points.map((p) => p.y);
+  const finalEnergy = points[points.length - 1].y;
+  let exampleEnergy = 0;
+  for (let j = 0; j < points.length - 1; j += 1) {
+    if (
+      EXAMPLE_FIELD >= points[j].x &&
+      EXAMPLE_FIELD <= points[j + 1].x
+    ) {
+      const span = points[j + 1].x - points[j].x;
+      const frac = (EXAMPLE_FIELD - points[j].x) / span;
+      exampleEnergy = points[j].y + frac * (points[j + 1].y - points[j].y);
+      break;
+    }
+  }
+  return {
+    id: `term-${i}`,
+    label: termName,
+    runs: parsedRunsByText[termName],
+    color: t.palette[i],
+    spinAllowed,
+    yValues,
+    finalEnergy,
+    exampleEnergy,
+  };
+});
+
+// Identify excited spin-allowed transitions from ground state sorted by energy at EXAMPLE_FIELD
+const spinAllowedExcited = termSeries
+  .filter((s) => s.spinAllowed && s.finalEnergy > 0)
+  .sort((a, b) => a.exampleEnergy - b.exampleEnergy);
+const bandTransitions = spinAllowedExcited.slice(0, 2).map((s, idx) => {
+  const lbl = idx === 0 ? "ν₁" : "ν₂";
+  return {
+    id: `nu-${idx + 1}`,
+    runs: parsedRunsByText[lbl],
+    targetEnergy: s.exampleEnergy,
+    dx: idx === 0 ? -12 : 12,
+  };
+});
+
+const subtitleText = `${CONFIG} in an octahedral field · C/B = ${C_OVER_B} · spin-allowed quartets solid, spin-forbidden doublets dashed`;
+const complexMarkerText = `${EXAMPLE_COMPLEX} · Δo / B = ${EXAMPLE_FIELD.toFixed(1)}`;
+
+function TanabeSuganoLayer() {
+  const { left, top, width, height } = useDrawingArea();
+  const xScale = useXScale("field") as (v: number) => number;
+  const yScale = useYScale("energy") as (v: number) => number;
+
+  // Declutter right-margin term labels in top-to-bottom pixel order
+  const rawLabels = termSeries
+    .map((s) => ({
+      ...s,
+      rawY: yScale(s.finalEnergy),
+    }))
+    .sort((a, b) => a.rawY - b.rawY);
+
+  let lowestY = -Infinity;
+  const placedLabels = rawLabels.map((item) => {
+    const placedY = Math.max(item.rawY, lowestY + LABEL_MIN_GAP_PX);
+    lowestY = placedY;
+    return { ...item, placedY };
+  });
+
+  const exX = xScale(EXAMPLE_FIELD);
+  const yZero = yScale(0);
+
   return (
     <g>
       <defs>
-        <marker id="band-arrow" markerUnits="userSpaceOnUse" markerWidth={14} markerHeight={14}
-                refX={7} refY={7} orient="auto">
+        <marker
+          id="band-arrow"
+          markerUnits="userSpaceOnUse"
+          markerWidth={14}
+          markerHeight={14}
+          refX={7}
+          refY={7}
+          orient="auto"
+        >
           <path d="M0,0 L14,7 L0,14 z" fill={t.inkSoft} />
         </marker>
       </defs>
-      {bands.map(({ id, runs, term, dx }) => (
-        <g key={id}>
-          <line
-            x1={x + dx} y1={yScale(0)} x2={x + dx} y2={yScale(term.energy(EXAMPLE_FIELD)) + 7}
-            stroke={t.inkSoft} strokeWidth={2} markerEnd="url(#band-arrow)"
-          />
-          <text
-            x={x + dx + Math.sign(dx) * 9} y={(yScale(0) + yScale(term.energy(EXAMPLE_FIELD))) / 2}
-            fill={t.inkSoft} fontSize={17} textAnchor={dx < 0 ? "end" : "start"} dominantBaseline="middle"
-          >
-            {typeset(runs, 17)}
-          </text>
-        </g>
+
+      {/* Observed UV-Vis transition arrows at example complex field strength */}
+      {bandTransitions.map((b) => {
+        const yTarget = yScale(b.targetEnergy);
+        return (
+          <g key={b.id}>
+            <line
+              x1={exX + b.dx}
+              y1={yZero}
+              x2={exX + b.dx}
+              y2={yTarget + 7}
+              stroke={t.inkSoft}
+              strokeWidth={2}
+              markerEnd="url(#band-arrow)"
+            />
+            <text
+              x={exX + b.dx + Math.sign(b.dx) * 9}
+              y={(yZero + yTarget) / 2}
+              fill={t.inkSoft}
+              fontSize={17}
+              textAnchor={b.dx < 0 ? "end" : "start"}
+              dominantBaseline="middle"
+            >
+              {b.runs.map((r, idx) => (
+                <tspan
+                  key={idx}
+                  dy={r.dyFactor * 17}
+                  fontSize={17 * r.fontScale}
+                >
+                  {r.text}
+                </tspan>
+              ))}
+            </text>
+          </g>
+        );
+      })}
+
+      {/* Vertical label for example complex */}
+      <text
+        x={0}
+        y={0}
+        fill={t.inkSoft}
+        fontSize={15}
+        textAnchor="end"
+        transform={`translate(${exX - 12} ${top + 16}) rotate(-90)`}
+      >
+        {parsedRunsByText[complexMarkerText].map((r, idx) => (
+          <tspan key={idx} dy={r.dyFactor * 15} fontSize={15 * r.fontScale}>
+            {r.text}
+          </tspan>
+        ))}
+      </text>
+
+      {/* Direct right-margin term symbol labels with true super/subscripts */}
+      {placedLabels.map((lbl) => (
+        <text
+          key={lbl.id}
+          x={left + width + 14}
+          y={lbl.placedY}
+          fill={lbl.color}
+          fontSize={20}
+          fontWeight={lbl.spinAllowed ? 600 : 500}
+          dominantBaseline="middle"
+        >
+          {lbl.runs.map((r, idx) => (
+            <tspan key={idx} dy={r.dyFactor * 20} fontSize={20 * r.fontScale}>
+              {r.text}
+            </tspan>
+          ))}
+        </text>
       ))}
-      <text x={0} y={0} fill={t.inkSoft} fontSize={15} textAnchor="end"
-            transform={`translate(${x - 12} ${yScale(ENERGY_MAX) + 16}) rotate(-90)`}>
-        {typeset([["base", "[Cr(H"], ["sub", "2"], ["base", "O)"], ["sub", "6"], ["base", "]"], ["sup", "3+"], ["base", " · Δ"], ["sub", "o"], ["base", " / B = 24.9"]], 15)}
+
+      {/* Title, subtitle, and axis titles */}
+      <text
+        x={left + width / 2}
+        y={40}
+        fill={t.ink}
+        fontSize={22}
+        fontWeight={600}
+        textAnchor="middle"
+      >
+        line-tanabe-sugano · javascript · muix · anyplot.ai
+      </text>
+      <text
+        x={left + width / 2}
+        y={70}
+        fill={t.inkSoft}
+        fontSize={15}
+        textAnchor="middle"
+      >
+        {parsedRunsByText[subtitleText].map((r, idx) => (
+          <tspan key={idx} dy={r.dyFactor * 15} fontSize={15 * r.fontScale}>
+            {r.text}
+          </tspan>
+        ))}
+      </text>
+      <text
+        x={left + width / 2}
+        y={HEIGHT - 24}
+        fill={t.ink}
+        fontSize={17}
+        textAnchor="middle"
+      >
+        {parsedRunsByText[DELTA_OVER_B].map((r, idx) => (
+          <tspan key={idx} dy={r.dyFactor * 17} fontSize={17 * r.fontScale}>
+            {r.text}
+          </tspan>
+        ))}
+      </text>
+      <text
+        x={28}
+        y={top + height / 2}
+        fill={t.ink}
+        fontSize={17}
+        textAnchor="middle"
+        transform={`rotate(-90 28 ${top + height / 2})`}
+      >
+        {ENERGY_OVER_B}
       </text>
     </g>
   );
 }
 
-// Chart
 export default function Chart() {
   return (
-    <ChartContainer
-      width={WIDTH}
-      height={HEIGHT}
-      margin={MARGIN}
-      colors={t.palette}
-      series={TERMS.map((term) => ({
-        type: "line",
-        id: term.id,
-        label: term.key,
-        showMark: false,
-        curve: "linear",
-        data: fieldStrengths.map(term.energy),
-      }))}
-      xAxis={[{ id: "field", data: fieldStrengths, scaleType: "linear", min: 0, max: FIELD_MAX, tickNumber: 9 }]}
-      yAxis={[{ id: "energy", min: 0, max: ENERGY_MAX, tickNumber: 9 }]}
-      sx={Object.fromEntries(
-        TERMS.map((term) => [
-          `& .MuiLineElement-series-${term.id}`,
-          term.spinAllowed
-            ? { strokeWidth: 4.2 }
-            : { strokeWidth: 2.4, strokeDasharray: "13 8" },
-        ]),
-      )}
-    >
-      <ChartsGrid vertical horizontal />
-      <ChartsReferenceLine
-        x={EXAMPLE_FIELD}
-        axisId="field"
-        lineStyle={{ stroke: t.inkSoft, strokeWidth: 2, strokeDasharray: "6 7" }}
-      />
-      <LinePlot skipAnimation />
-      <ChartsXAxis axisId="field" tickLabelStyle={{ fontSize: 15, fill: t.inkSoft }} tickSize={7} />
-      <ChartsYAxis axisId="energy" tickLabelStyle={{ fontSize: 15, fill: t.inkSoft }} tickSize={7} />
-      <ExampleComplex />
-      <TermLabels />
-      <ChartsTooltip trigger="axis" />
-
-      {/* Title, subtitle and axis titles — SVG text so every term symbol and
-          formula keeps its super- and subscripts. */}
-      <text x={MARGIN.left + (WIDTH - MARGIN.left - MARGIN.right) / 2} y={40} fill={t.ink}
-            fontSize={22} fontWeight={600} textAnchor="middle">
-        line-tanabe-sugano · javascript · muix · anyplot.ai
-      </text>
-      <text x={MARGIN.left + (WIDTH - MARGIN.left - MARGIN.right) / 2} y={70} fill={t.inkSoft}
-            fontSize={15} textAnchor="middle">
-        {typeset([["base", "d"], ["sup", "3"], ["base", " (Cr"], ["sup", "3+"],
-          ["base", `) in an octahedral field · C/B = ${C_OVER_B} · spin-allowed quartets solid, spin-forbidden doublets dashed`]], 15)}
-      </text>
-      <text x={MARGIN.left + (WIDTH - MARGIN.left - MARGIN.right) / 2} y={HEIGHT - 26} fill={t.ink}
-            fontSize={17} textAnchor="middle">
-        {typeset([["base", "Ligand-field strength Δ"], ["sub", "o"], ["base", " / B"]], 17)}
-      </text>
-      <text x={30} y={MARGIN.top + (HEIGHT - MARGIN.top - MARGIN.bottom) / 2} fill={t.ink}
-            fontSize={17} textAnchor="middle"
-            transform={`rotate(-90 30 ${MARGIN.top + (HEIGHT - MARGIN.top - MARGIN.bottom) / 2})`}>
-        Term energy E / B
-      </text>
-    </ChartContainer>
+    <div style={{ width: WIDTH, height: HEIGHT, background: t.pageBg }}>
+      <ChartsContainer
+        width={WIDTH}
+        height={HEIGHT}
+        skipAnimation
+        margin={{ top: 96, right: 172, bottom: 48, left: 44 }}
+        series={termSeries.map((s) => ({
+          type: "line",
+          id: s.id,
+          xAxisId: "field",
+          yAxisId: "energy",
+          label: s.label,
+          color: s.color,
+          showMark: false,
+          curve: "linear",
+          data: s.yValues,
+        }))}
+        xAxis={[
+          {
+            id: "field",
+            data: fieldStrengths,
+            scaleType: "linear",
+            min: fieldMin,
+            max: fieldMax,
+            tickNumber: 9,
+            height: 40,
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
+            tickSize: 7,
+          },
+        ]}
+        yAxis={[
+          {
+            id: "energy",
+            min: energyMin,
+            max: energyMax,
+            tickNumber: 9,
+            width: 52,
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
+            tickSize: 7,
+          },
+        ]}
+        sx={Object.fromEntries(
+          termSeries.map((s) => [
+            `& .MuiLineChart-line[data-series="${s.id}"]`,
+            s.spinAllowed
+              ? { strokeWidth: 4.2 }
+              : { strokeWidth: 2.4, strokeDasharray: "13 8" },
+          ]),
+        )}
+      >
+        <ChartsGrid vertical horizontal />
+        <ChartsReferenceLine
+          x={EXAMPLE_FIELD}
+          axisId="field"
+          lineStyle={{
+            stroke: t.inkSoft,
+            strokeWidth: 2,
+            strokeDasharray: "6 7",
+          }}
+        />
+        <LinePlot skipAnimation />
+        <ChartsXAxis axisId="field" />
+        <ChartsYAxis axisId="energy" />
+        <TanabeSuganoLayer />
+        <ChartsTooltip trigger="axis" />
+      </ChartsContainer>
+    </div>
   );
 }
