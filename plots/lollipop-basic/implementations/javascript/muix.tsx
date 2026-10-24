@@ -140,7 +140,9 @@ export default function Chart() {
             id: "genre",
             scaleType: "band",
             data: genres,
-            width: 148,
+            width: 180,
+            label: CATEGORY,
+            labelStyle: { fontSize: 15, fill: t.ink },
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
           },
         ]}
