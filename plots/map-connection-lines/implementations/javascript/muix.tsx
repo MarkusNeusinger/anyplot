@@ -2,8 +2,8 @@
 // map-connection-lines: Connection Lines Map (Origin-Destination)
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 92/100 | Created: 2026-08-26
-//# anyplot-orientation: landscape
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
@@ -11,197 +11,285 @@ import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import { useXScale, useYScale, useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
+
+// Constants
 const TITLE = "map-connection-lines · javascript · muix · anyplot.ai";
+const LON_PAD_FRAC = 0.08;
+const LAT_PAD_FRAC = 0.08;
+const ARC_BOW_FACTOR = 0.16;
+const NEIGHBOR_THRESHOLD_SHARE = 0.045;
 
-// --- Data: major airports (in-memory, deterministic) ------------------------
-const airports = {
-  JFK: { name: "New York", lat: 40.64, lon: -73.78 },
-  LHR: { name: "London", lat: 51.47, lon: -0.45 },
-  CDG: { name: "Paris", lat: 49.01, lon: 2.55 },
-  LAX: { name: "Los Angeles", lat: 33.94, lon: -118.41 },
-  NRT: { name: "Tokyo", lat: 35.76, lon: 140.39 },
-  SYD: { name: "Sydney", lat: -33.95, lon: 151.18 },
-  SFO: { name: "San Francisco", lat: 37.62, lon: -122.38 },
-  HKG: { name: "Hong Kong", lat: 22.31, lon: 113.91 },
-  ORD: { name: "Chicago", lat: 41.98, lon: -87.9 },
-  FRA: { name: "Frankfurt", lat: 50.03, lon: 8.57 },
-  DXB: { name: "Dubai", lat: 25.25, lon: 55.36 },
-  SIN: { name: "Singapore", lat: 1.35, lon: 103.99 },
-  GRU: { name: "São Paulo", lat: -23.43, lon: -46.47 },
-  JNB: { name: "Johannesburg", lat: -26.13, lon: 28.24 },
-  DEL: { name: "New Delhi", lat: 28.56, lon: 77.1 },
-  PEK: { name: "Beijing", lat: 40.08, lon: 116.58 },
-};
-
-// Flight routes: passenger volume in thousands per year (line weight)
-const routes = [
-  { from: "JFK", to: "LHR", passengers: 820 },
-  { from: "JFK", to: "CDG", passengers: 610 },
-  { from: "LAX", to: "NRT", passengers: 540 },
-  { from: "LAX", to: "SYD", passengers: 310 },
-  { from: "SFO", to: "HKG", passengers: 460 },
-  { from: "ORD", to: "FRA", passengers: 390 },
-  { from: "DXB", to: "LHR", passengers: 705 },
-  { from: "DXB", to: "JFK", passengers: 480 },
-  { from: "SIN", to: "SYD", passengers: 520 },
-  { from: "SIN", to: "NRT", passengers: 445 },
-  { from: "GRU", to: "JFK", passengers: 385 },
-  { from: "GRU", to: "CDG", passengers: 260 },
-  { from: "JNB", to: "DXB", passengers: 300 },
-  { from: "DEL", to: "LHR", passengers: 560 },
-  { from: "PEK", to: "LAX", passengers: 415 },
-  { from: "HKG", to: "SYD", passengers: 330 },
-];
-
-const passengerValues = routes.map((r) => r.passengers);
-const minPassengers = Math.min(...passengerValues);
-const maxPassengers = Math.max(...passengerValues);
-
-// Hub size = number of routes touching an airport
-const degreeByAirport = {};
-routes.forEach((r) => {
-  degreeByAirport[r.from] = (degreeByAirport[r.from] || 0) + 1;
-  degreeByAirport[r.to] = (degreeByAirport[r.to] || 0) + 1;
-});
-
-// Manual label nudges for the closely clustered European hubs (LHR/CDG/FRA)
-// so their code labels don't collide — markers stay at true coordinates.
-const labelNudge = {
-  LHR: { dx: -18, dy: -8 },
-  CDG: { dx: -6, dy: 22 },
-  FRA: { dx: 22, dy: -2 },
-};
-
-const lons = Object.values(airports).map((a) => a.lon);
-const lats = Object.values(airports).map((a) => a.lat);
-const LON_MIN = Math.min(...lons) - 14;
-const LON_MAX = Math.max(...lons) + 14;
-const LAT_MIN = Math.min(...lats) - 8;
-const LAT_MAX = Math.max(...lats) + 8;
-
-// Simplified world coastlines (lon/lat vertices, hand-traced low-poly
-// continent outlines) so the chart reads as a map rather than a bare
-// lon/lat grid. Rendered via the same xScale/yScale hooks as the route
-// arcs and clipped to the drawing area, so out-of-range vertices (e.g. the
-// Canadian arctic) simply fall outside the visible plot.
-const CONTINENTS = [
+// Simplified world coastlines (lon/lat vertices)
+const CONTINENTS: Array<Array<[number, number]>> = [
   [
     [-165, 65], [-140, 60], [-125, 49], [-124, 40], [-117, 32], [-105, 22], [-97, 16],
     [-90, 14], [-88, 21], [-81, 25], [-80, 32], [-75, 40], [-70, 44], [-65, 47],
     [-75, 55], [-95, 62], [-110, 68], [-140, 68], [-165, 65],
-  ], // North America
+  ],
   [
     [-77, 8], [-80, 0], [-81, -6], [-71, -18], [-70, -33], [-68, -45], [-68, -54],
     [-65, -52], [-58, -38], [-48, -25], [-40, -13], [-35, -6], [-50, 0], [-60, 8],
     [-72, 10], [-77, 8],
-  ], // South America
+  ],
   [
     [-9, 43], [-9, 37], [3, 36], [10, 44], [15, 38], [20, 40], [28, 41], [30, 46],
     [38, 55], [30, 60], [10, 58], [5, 51], [-1, 51], [-5, 55], [-9, 43],
-  ], // Europe
+  ],
   [
     [-17, 21], [-17, 14], [-10, 6], [3, 6], [9, 4], [13, -6], [18, -34], [26, -33],
     [35, -20], [40, -3], [45, 11], [43, 12], [38, 15], [32, 31], [10, 37], [-6, 35],
     [-17, 21],
-  ], // Africa
+  ],
   [
     [27, 41], [35, 30], [42, 13], [56, 25], [61, 25], [72, 19], [77, 8], [80, 13],
     [88, 22], [96, 16], [100, 13], [104, 10], [109, 21], [121, 25], [122, 31],
     [130, 38], [140, 36], [142, 43], [135, 50], [100, 55], [60, 55], [48, 42],
     [35, 45], [27, 41],
-  ], // Asia
+  ],
   [
     [113, -22], [115, -32], [131, -12], [142, -11], [145, -17], [153, -28],
     [151, -34], [140, -38], [135, -35], [113, -22],
-  ], // Australia
+  ],
 ];
 
-// --- Overlay: title drawn in the reserved top margin -------------------------
-// Plain SVG <text>, not ChartsText: ChartsText applies its own measured-width
-// anchor offset on top of the native SVG text-anchor, which for a long
-// middle-anchored string like this double-shifts it off-center.
-function MapTitle() {
-  const { width } = window.ANYPLOT_SIZE;
-  return (
-    <text x={width / 2} y={40} textAnchor="middle" dominantBaseline="hanging" fontSize={22} fontWeight={500} fill={t.ink}>
-      {TITLE}
-    </text>
+// Columns: set these to your data's column names
+const ORIGIN_CODE = "Origin airport"; // role: label
+const ORIGIN_LAT = "Origin latitude (°)"; // role: origin_lat
+const ORIGIN_LON = "Origin longitude (°)"; // role: origin_lon
+const DEST_CODE = "Destination airport"; // role: dest_label
+const DEST_LAT = "Destination latitude (°)"; // role: dest_lat
+const DEST_LON = "Destination longitude (°)"; // role: dest_lon
+const PASSENGERS = "Annual passengers (thousands)"; // role: value
+
+// Data: replace this block with your own records
+const data: Array<Record<string, string | number>> = [
+  { [ORIGIN_CODE]: "JFK", [ORIGIN_LAT]: 40.64, [ORIGIN_LON]: -73.78, [DEST_CODE]: "LHR", [DEST_LAT]: 51.47, [DEST_LON]: -0.45, [PASSENGERS]: 820 },
+  { [ORIGIN_CODE]: "JFK", [ORIGIN_LAT]: 40.64, [ORIGIN_LON]: -73.78, [DEST_CODE]: "CDG", [DEST_LAT]: 49.01, [DEST_LON]: 2.55, [PASSENGERS]: 610 },
+  { [ORIGIN_CODE]: "LAX", [ORIGIN_LAT]: 33.94, [ORIGIN_LON]: -118.41, [DEST_CODE]: "NRT", [DEST_LAT]: 35.76, [DEST_LON]: 140.39, [PASSENGERS]: 540 },
+  { [ORIGIN_CODE]: "LAX", [ORIGIN_LAT]: 33.94, [ORIGIN_LON]: -118.41, [DEST_CODE]: "SYD", [DEST_LAT]: -33.95, [DEST_LON]: 151.18, [PASSENGERS]: 310 },
+  { [ORIGIN_CODE]: "SFO", [ORIGIN_LAT]: 37.62, [ORIGIN_LON]: -122.38, [DEST_CODE]: "HKG", [DEST_LAT]: 22.31, [DEST_LON]: 113.91, [PASSENGERS]: 460 },
+  { [ORIGIN_CODE]: "ORD", [ORIGIN_LAT]: 41.98, [ORIGIN_LON]: -87.9, [DEST_CODE]: "FRA", [DEST_LAT]: 50.03, [DEST_LON]: 8.57, [PASSENGERS]: 390 },
+  { [ORIGIN_CODE]: "DXB", [ORIGIN_LAT]: 25.25, [ORIGIN_LON]: 55.36, [DEST_CODE]: "LHR", [DEST_LAT]: 51.47, [DEST_LON]: -0.45, [PASSENGERS]: 705 },
+  { [ORIGIN_CODE]: "DXB", [ORIGIN_LAT]: 25.25, [ORIGIN_LON]: 55.36, [DEST_CODE]: "JFK", [DEST_LAT]: 40.64, [DEST_LON]: -73.78, [PASSENGERS]: 480 },
+  { [ORIGIN_CODE]: "SIN", [ORIGIN_LAT]: 1.35, [ORIGIN_LON]: 103.99, [DEST_CODE]: "SYD", [DEST_LAT]: -33.95, [DEST_LON]: 151.18, [PASSENGERS]: 520 },
+  { [ORIGIN_CODE]: "SIN", [ORIGIN_LAT]: 1.35, [ORIGIN_LON]: 103.99, [DEST_CODE]: "NRT", [DEST_LAT]: 35.76, [DEST_LON]: 140.39, [PASSENGERS]: 445 },
+  { [ORIGIN_CODE]: "GRU", [ORIGIN_LAT]: -23.43, [ORIGIN_LON]: -46.47, [DEST_CODE]: "JFK", [DEST_LAT]: 40.64, [DEST_LON]: -73.78, [PASSENGERS]: 385 },
+  { [ORIGIN_CODE]: "GRU", [ORIGIN_LAT]: -23.43, [ORIGIN_LON]: -46.47, [DEST_CODE]: "CDG", [DEST_LAT]: 49.01, [DEST_LON]: 2.55, [PASSENGERS]: 260 },
+  { [ORIGIN_CODE]: "JNB", [ORIGIN_LAT]: -26.13, [ORIGIN_LON]: 28.24, [DEST_CODE]: "DXB", [DEST_LAT]: 25.25, [DEST_LON]: 55.36, [PASSENGERS]: 300 },
+  { [ORIGIN_CODE]: "DEL", [ORIGIN_LAT]: 28.56, [ORIGIN_LON]: 77.1, [DEST_CODE]: "LHR", [DEST_LAT]: 51.47, [DEST_LON]: -0.45, [PASSENGERS]: 560 },
+  { [ORIGIN_CODE]: "PEK", [ORIGIN_LAT]: 40.08, [ORIGIN_LON]: 116.58, [DEST_CODE]: "LAX", [DEST_LAT]: 33.94, [DEST_LON]: -118.41, [PASSENGERS]: 415 },
+  { [ORIGIN_CODE]: "HKG", [ORIGIN_LAT]: 22.31, [ORIGIN_LON]: 113.91, [DEST_CODE]: "SYD", [DEST_LAT]: -33.95, [DEST_LON]: 151.18, [PASSENGERS]: 330 },
+];
+
+// Plot: reads only data and the constants above
+const airportsMap = new Map<
+  string,
+  { code: string; lat: number; lon: number; degree: number }
+>();
+for (const row of data) {
+  const oCode = String(row[ORIGIN_CODE]);
+  const dCode = String(row[DEST_CODE]);
+  if (!airportsMap.has(oCode)) {
+    airportsMap.set(oCode, {
+      code: oCode,
+      lat: Number(row[ORIGIN_LAT]),
+      lon: Number(row[ORIGIN_LON]),
+      degree: 0,
+    });
+  }
+  if (!airportsMap.has(dCode)) {
+    airportsMap.set(dCode, {
+      code: dCode,
+      lat: Number(row[DEST_LAT]),
+      lon: Number(row[DEST_LON]),
+      degree: 0,
+    });
+  }
+  airportsMap.get(oCode)!.degree += 1;
+  airportsMap.get(dCode)!.degree += 1;
+}
+const airportList = Array.from(airportsMap.values());
+
+const passengerValues = data.map((r) => Number(r[PASSENGERS]));
+const minPassengers = Math.min(...passengerValues);
+const maxPassengers = Math.max(...passengerValues);
+
+const lons = airportList.map((a) => a.lon);
+const lats = airportList.map((a) => a.lat);
+const rawLonMin = Math.min(...lons);
+const rawLonMax = Math.max(...lons);
+const rawLatMin = Math.min(...lats);
+const rawLatMax = Math.max(...lats);
+
+const { width: W, height: H } = window.ANYPLOT_SIZE;
+const MARGIN = { top: 82, right: 56, bottom: 52, left: 22 };
+const X_AXIS_H = 56;
+const Y_AXIS_W = 68;
+const DRAW_W = W - MARGIN.left - MARGIN.right - Y_AXIS_W;
+const DRAW_H = H - MARGIN.top - MARGIN.bottom - X_AXIS_H;
+
+const meanLatDeg = (rawLatMin + rawLatMax) / 2;
+const cosMeanLat = Math.cos((meanLatDeg * Math.PI) / 180);
+const paddedLonSpan = (rawLonMax - rawLonMin) * (1 + 2 * LON_PAD_FRAC);
+const paddedLatSpan = (rawLatMax - rawLatMin) * (1 + 2 * LAT_PAD_FRAC);
+const targetAspect = DRAW_W / DRAW_H;
+const groundAspect = (paddedLonSpan * cosMeanLat) / paddedLatSpan;
+
+const finalLonSpan =
+  groundAspect >= targetAspect
+    ? paddedLonSpan
+    : (paddedLatSpan * targetAspect) / cosMeanLat;
+const finalLatSpan =
+  groundAspect >= targetAspect
+    ? (paddedLonSpan * cosMeanLat) / targetAspect
+    : paddedLatSpan;
+
+const lonCenter = (rawLonMin + rawLonMax) / 2;
+const latCenter = (rawLatMin + rawLatMax) / 2;
+const LON_MIN = lonCenter - finalLonSpan / 2;
+const LON_MAX = lonCenter + finalLonSpan / 2;
+const LAT_MIN = latCenter - finalLatSpan / 2;
+const LAT_MAX = latCenter + finalLatSpan / 2;
+
+const neighborThresholdDeg = finalLonSpan * NEIGHBOR_THRESHOLD_SHARE;
+const airportLabelOffsets: Record<string, { dx: number; dy: number }> = {};
+for (const a of airportList) {
+  const radius = 5 + a.degree * 1.8;
+  const neighbors = airportList.filter(
+    (b) =>
+      b.code !== a.code &&
+      Math.hypot((b.lon - a.lon) * cosMeanLat, b.lat - a.lat) <
+        neighborThresholdDeg,
   );
+  if (neighbors.length === 0) {
+    airportLabelOffsets[a.code] = { dx: 0, dy: -(radius + 9) };
+  } else {
+    const meanLon = neighbors.reduce((s, n) => s + n.lon, 0) / neighbors.length;
+    const meanLat = neighbors.reduce((s, n) => s + n.lat, 0) / neighbors.length;
+    const vx = (a.lon - meanLon) * cosMeanLat;
+    const vy = -(a.lat - meanLat);
+    const len = Math.hypot(vx, vy);
+    const dist = radius + 16;
+    airportLabelOffsets[a.code] = {
+      dx: (vx / len) * dist * 1.25,
+      dy: (vy / len) * dist + 4,
+    };
+  }
 }
 
-// --- Overlay: simplified land masses behind the connection arcs -------------
-function WorldOutline() {
-  const xScale = useXScale();
-  const yScale = useYScale();
+const lonUnitMatch = ORIGIN_LON.match(/\(([^)]+)\)/);
+const LON_UNIT = lonUnitMatch ? lonUnitMatch[1] : "";
+const latUnitMatch = ORIGIN_LAT.match(/\(([^)]+)\)/);
+const LAT_UNIT = latUnitMatch ? latUnitMatch[1] : "";
+
+function ConnectionMapLayer() {
+  const xScale = useXScale("lon") as (v: number) => number;
+  const yScale = useYScale("lat") as (v: number) => number;
   const drawingArea = useDrawingArea();
+
   return (
     <g>
       <defs>
         <clipPath id="worldClip">
-          <rect x={drawingArea.left} y={drawingArea.top} width={drawingArea.width} height={drawingArea.height} />
+          <rect
+            x={drawingArea.left}
+            y={drawingArea.top}
+            width={drawingArea.width}
+            height={drawingArea.height}
+          />
         </clipPath>
       </defs>
+
+      {/* Simplified land masses */}
       <g clipPath="url(#worldClip)">
         {CONTINENTS.map((points, i) => {
-          const d = points.map(([lon, lat], j) => `${j === 0 ? "M" : "L"} ${xScale(lon)},${yScale(lat)}`).join(" ") + " Z";
-          return <path key={i} d={d} fill={t.grid} fillOpacity={0.6} stroke={t.inkSoft} strokeWidth={1} strokeOpacity={0.5} />;
+          const d =
+            points
+              .map(
+                ([lon, lat], j) =>
+                  `${j === 0 ? "M" : "L"} ${xScale(lon)},${yScale(lat)}`,
+              )
+              .join(" ") + " Z";
+          return (
+            <path
+              key={i}
+              d={d}
+              fill={t.grid}
+              fillOpacity={0.6}
+              stroke={t.inkSoft}
+              strokeWidth={1}
+              strokeOpacity={0.5}
+            />
+          );
+        })}
+
+        {/* Geodesic-style connection arcs (splitting trans-antimeridian routes) */}
+        {data.map((row, i) => {
+          const lon1 = Number(row[ORIGIN_LON]);
+          const lat1 = Number(row[ORIGIN_LAT]);
+          const lon2 = Number(row[DEST_LON]);
+          const lat2 = Number(row[DEST_LAT]);
+
+          const pax = Number(row[PASSENGERS]);
+          const ratio =
+            (pax - minPassengers) / (maxPassengers - minPassengers);
+          const strokeWidth = 2.5 + ratio * 6;
+          const strokeOpacity = 0.3 + ratio * 0.3;
+
+          const segments: Array<[number, number, number, number]> = [];
+          if (Math.abs(lon2 - lon1) <= 180) {
+            segments.push([lon1, lat1, lon2, lat2]);
+          } else {
+            const lon2Unwrapped = lon2 > lon1 ? lon2 - 360 : lon2 + 360;
+            const edgeLon1 = lon1 < 0 ? -180 : 180;
+            const edgeLon2 = -edgeLon1;
+            const frac = (edgeLon1 - lon1) / (lon2Unwrapped - lon1);
+            const crossLat = lat1 + frac * (lat2 - lat1);
+            segments.push([lon1, lat1, edgeLon1, crossLat]);
+            segments.push([edgeLon2, crossLat, lon2, lat2]);
+          }
+
+          return (
+            <g key={`${row[ORIGIN_CODE]}-${row[DEST_CODE]}-${i}`}>
+              {segments.map(([sLon1, sLat1, sLon2, sLat2], sIdx) => {
+                const x1 = xScale(sLon1);
+                const y1 = yScale(sLat1);
+                const x2 = xScale(sLon2);
+                const y2 = yScale(sLat2);
+                const dx = x2 - x1;
+                const dy = y2 - y1;
+                const dist = Math.hypot(dx, dy);
+                const midX = (x1 + x2) / 2;
+                const midY = (y1 + y2) / 2;
+                const bowSign = y1 + y2 < yScale(0) * 2 ? -1 : 1;
+                const bow = dist * ARC_BOW_FACTOR * bowSign;
+                const controlX = midX;
+                const controlY = midY + bow;
+                return (
+                  <path
+                    key={sIdx}
+                    d={`M ${x1},${y1} Q ${controlX},${controlY} ${x2},${y2}`}
+                    fill="none"
+                    stroke={t.palette[0]}
+                    strokeWidth={strokeWidth}
+                    strokeOpacity={strokeOpacity}
+                    strokeLinecap="round"
+                  />
+                );
+              })}
+            </g>
+          );
         })}
       </g>
-    </g>
-  );
-}
 
-// --- Overlay: geodesic-style connection arcs + endpoint markers -------------
-function ConnectionOverlay() {
-  const xScale = useXScale();
-  const yScale = useYScale();
-
-  return (
-    <g>
-      {routes.map((route, i) => {
-        const origin = airports[route.from];
-        const dest = airports[route.to];
-        const x1 = xScale(origin.lon);
-        const y1 = yScale(origin.lat);
-        const x2 = xScale(dest.lon);
-        const y2 = yScale(dest.lat);
-
-        const dx = x2 - x1;
-        const dy = y2 - y1;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const midX = (x1 + x2) / 2;
-        const midY = (y1 + y2) / 2;
-        // Perpendicular offset bows the line into a great-circle-like arc.
-        const ux = dist === 0 ? 0 : -dy / dist;
-        const uy = dist === 0 ? 0 : dx / dist;
-        const bow = dist * 0.16;
-        const controlX = midX + ux * bow;
-        const controlY = midY + uy * bow;
-
-        const ratio =
-          (route.passengers - minPassengers) / (maxPassengers - minPassengers || 1);
-        const strokeWidth = 2.5 + ratio * 6;
-        const strokeOpacity = 0.3 + ratio * 0.3;
-
-        return (
-          <path
-            key={`${route.from}-${route.to}-${i}`}
-            d={`M ${x1},${y1} Q ${controlX},${controlY} ${x2},${y2}`}
-            fill="none"
-            stroke={t.palette[0]}
-            strokeWidth={strokeWidth}
-            strokeOpacity={strokeOpacity}
-            strokeLinecap="round"
-          />
-        );
-      })}
-      {Object.entries(airports).map(([code, airport]) => {
+      {/* Airport endpoint markers and collision-avoiding labels */}
+      {airportList.map((airport) => {
         const cx = xScale(airport.lon);
         const cy = yScale(airport.lat);
-        const radius = 5 + (degreeByAirport[code] || 1) * 1.8;
-        const nudge = labelNudge[code] || { dx: 0, dy: -(radius + 8) };
+        const radius = 5 + airport.degree * 1.8;
+        const nudge = airportLabelOffsets[airport.code];
         return (
-          <g key={code}>
+          <g key={airport.code}>
             <circle
               cx={cx}
               cy={cy}
@@ -210,88 +298,109 @@ function ConnectionOverlay() {
               stroke={t.pageBg}
               strokeWidth={2}
             />
-            <text x={cx + nudge.dx} y={cy + nudge.dy} textAnchor="middle" fontSize={14} fontWeight={500} fill={t.ink}>
-              {code}
+            <text
+              x={cx + nudge.dx}
+              y={cy + nudge.dy}
+              textAnchor="middle"
+              fontSize={14}
+              fontWeight={500}
+              fill={t.ink}
+            >
+              {airport.code}
             </text>
           </g>
         );
       })}
+
+      {/* Title */}
+      <text
+        x={W / 2}
+        y={36}
+        textAnchor="middle"
+        dominantBaseline="hanging"
+        fontSize={22}
+        fontWeight={500}
+        fill={t.ink}
+      >
+        {TITLE}
+      </text>
+
+      {/* Encoding caption */}
+      <text
+        x={drawingArea.left}
+        y={drawingArea.top + drawingArea.height + 68}
+        textAnchor="start"
+        dominantBaseline="hanging"
+        fontSize={14}
+        fontWeight={400}
+        fill={t.inkSoft}
+      >
+        {`Line thickness and opacity encode ${PASSENGERS}; marker size encodes route degree.`}
+      </text>
     </g>
   );
 }
 
-// --- Overlay: caption explaining the encoding --------------------------------
-function Caption() {
-  const drawingArea = useDrawingArea();
-  return (
-    <text
-      x={drawingArea.left}
-      y={drawingArea.top + drawingArea.height + 74}
-      textAnchor="start"
-      dominantBaseline="hanging"
-      fontSize={14}
-      fontWeight={400}
-      fill={t.inkSoft}
-    >
-      Line thickness and opacity encode annual passenger volume (thousands).
-    </text>
-  );
-}
-
-// --- Chart (default-exported component — the harness mounts it) -------------
 export default function Chart() {
   return (
-    <ChartContainer
-      width={window.ANYPLOT_SIZE.width}
-      height={window.ANYPLOT_SIZE.height}
-      margin={{ top: 90, right: 60, bottom: 100, left: 70 }}
-      series={[]}
-      skipAnimation
-      disableAxisListener
-      xAxis={[
-        {
-          scaleType: "linear",
-          min: LON_MIN,
-          max: LON_MAX,
-          label: "Longitude (°)",
-          valueFormatter: (v) => `${v}°`,
-          labelStyle: { fontSize: 16, fill: t.ink },
-          tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-        },
-      ]}
-      yAxis={[
-        {
-          scaleType: "linear",
-          min: LAT_MIN,
-          max: LAT_MAX,
-          label: "Latitude (°)",
-          valueFormatter: (v) => `${v}°`,
-          labelStyle: { fontSize: 16, fill: t.ink },
-          tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-        },
-      ]}
-    >
-      <ChartsGrid horizontal vertical />
-      <WorldOutline />
-      <ChartsReferenceLine
-        y={0}
-        label="Equator"
-        labelAlign="end"
-        lineStyle={{ stroke: t.inkSoft, strokeDasharray: "6 6", strokeOpacity: 0.6 }}
-        labelStyle={{ fontSize: 13, fill: t.inkSoft }}
-      />
-      <ChartsReferenceLine
-        x={0}
-        label="Prime Meridian"
-        labelAlign="start"
-        lineStyle={{ stroke: t.inkSoft, strokeDasharray: "6 6", strokeOpacity: 0.6 }}
-        labelStyle={{ fontSize: 13, fill: t.inkSoft }}
-      />
-      <ConnectionOverlay />
-      <ChartsXAxis />
-      <ChartsYAxis />
-      <MapTitle />
-      <Caption />
-    </ChartContainer>
+    <div style={{ width: W, height: H, backgroundColor: t.pageBg }}>
+      <ChartsContainer
+        width={W}
+        height={H}
+        margin={MARGIN}
+        series={[]}
+        skipAnimation
+        disableAxisListener
+        xAxis={[
+          {
+            id: "lon",
+            scaleType: "linear",
+            min: LON_MIN,
+            max: LON_MAX,
+            height: X_AXIS_H,
+            label: ORIGIN_LON,
+            valueFormatter: (v: number | null) =>
+              v === null ? "" : `${Math.round(v)}${LON_UNIT}`,
+            labelStyle: { fontSize: 16, fill: t.ink },
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+          },
+        ]}
+        yAxis={[
+          {
+            id: "lat",
+            scaleType: "linear",
+            min: LAT_MIN,
+            max: LAT_MAX,
+            width: Y_AXIS_W,
+            label: ORIGIN_LAT,
+            valueFormatter: (v: number | null) =>
+              v === null ? "" : `${Math.round(v)}${LAT_UNIT}`,
+            labelStyle: { fontSize: 16, fill: t.ink },
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+          },
+        ]}
+      >
+        <ChartsGrid horizontal vertical />
+        <ChartsReferenceLine
+          y={0}
+          axisId="lat"
+          label="Equator"
+          labelAlign="end"
+          lineStyle={{ stroke: t.inkSoft, strokeDasharray: "6 6", strokeOpacity: 0.6 }}
+          labelStyle={{ fontSize: 14, fill: t.inkSoft }}
+        />
+        <ChartsReferenceLine
+          x={0}
+          axisId="lon"
+          label="Prime Meridian"
+          labelAlign="start"
+          lineStyle={{ stroke: t.inkSoft, strokeDasharray: "6 6", strokeOpacity: 0.6 }}
+          labelStyle={{ fontSize: 14, fill: t.inkSoft }}
+        />
+        <ConnectionMapLayer />
+        <ChartsXAxis axisId="lon" />
+        <ChartsYAxis axisId="lat" />
+      </ChartsContainer>
+    </div>
   );
 }
