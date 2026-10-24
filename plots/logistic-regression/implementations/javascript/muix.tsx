@@ -69,40 +69,20 @@ const jitteredRows = data.map((r, idx) => {
   jitterSeed = (Math.imul(1664525, jitterSeed) + 1013904223) >>> 0;
   const jitter = (jitterSeed / 4294967296 - 0.5) * JITTER_SPREAD;
   const yBin = Number(r[OUTCOME]);
-  const label = r[OUTCOME_LABEL]
-    ? String(r[OUTCOME_LABEL])
-    : `${OUTCOME} = ${yBin}`;
   return {
     id: idx,
     x: Number(r[SCORE]),
     yBin,
     yJittered: yBin + jitter,
-    label,
+    label: String(r[OUTCOME_LABEL]),
   };
 });
 
-// Discover binary outcomes in order [0, 1] and assign semantic/palette colors
-const outcomeBins: number[] = [0, 1].filter((b) =>
-  jitteredRows.some((r) => r.yBin === b),
-);
-for (const r of jitteredRows) {
-  if (!outcomeBins.includes(r.yBin)) outcomeBins.push(r.yBin);
-}
-
-const usedPalette = new Set(Object.values(SEMANTIC_COLORS));
-let nextSlot = 0;
-const classColorMap: Record<number, string> = {};
+// Binary outcome: 0 and 1 map straight to their fixed colors and labels
+const outcomeBins = [0, 1];
 const classLabelMap: Record<number, string> = {};
 for (const b of outcomeBins) {
-  const firstMatch = jitteredRows.find((r) => r.yBin === b)!;
-  classLabelMap[b] = firstMatch.label;
-  if (b in SEMANTIC_COLORS) {
-    classColorMap[b] = SEMANTIC_COLORS[b];
-  } else {
-    while (usedPalette.has(t.palette[nextSlot])) nextSlot++;
-    classColorMap[b] = t.palette[nextSlot];
-    usedPalette.add(t.palette[nextSlot]);
-  }
+  classLabelMap[b] = jitteredRows.find((r) => r.yBin === b)?.label ?? `${OUTCOME} = ${b}`;
 }
 
 // Fit logistic regression by batch gradient descent on standardized x
@@ -188,7 +168,7 @@ const scatterSeries = outcomeBins.map((bin, idx) => {
       id: `${idx}-${r.id}`,
     })),
     label: classLabelMap[bin],
-    color: `${classColorMap[bin]}${POINT_ALPHA_HEX}`,
+    color: `${SEMANTIC_COLORS[bin]}${POINT_ALPHA_HEX}`,
     markerSize: 7,
     xAxisId: "engagement",
     yAxisId: "probability",
@@ -249,19 +229,30 @@ const TITLE_HEIGHT = 64;
 const LEGEND_ITEMS = [
   ...outcomeBins.map((b) => ({
     type: "circle" as const,
-    color: classColorMap[b],
+    color: SEMANTIC_COLORS[b],
     label: classLabelMap[b],
   })),
   { type: "line" as const, color: t.ink, label: "Fitted probability (95% CI)" },
 ];
 
+// Legend sits in the plot's empty upper-left area (few conversions at low scores)
+const MARGIN = { top: 24, right: 64, bottom: 20, left: 20 };
+const X_AXIS_HEIGHT = 60;
+const Y_AXIS_WIDTH = 76;
+const LEGEND_TOP_PROB = 0.88;
+const plotHeight = height - TITLE_HEIGHT - MARGIN.top - MARGIN.bottom - X_AXIS_HEIGHT;
+const legendTop =
+  TITLE_HEIGHT +
+  MARGIN.top +
+  (plotHeight * (yAxisMax - LEGEND_TOP_PROB)) / (yAxisMax - yAxisMin);
+const legendLeft = MARGIN.left + Y_AXIS_WIDTH + 24;
+
 export default function Chart() {
   return (
-    <div style={{ width, height, backgroundColor: t.pageBg }}>
+    <div style={{ width, height, backgroundColor: t.pageBg, position: "relative" }}>
       <div
         style={{
           height: TITLE_HEIGHT,
-          position: "relative",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -271,50 +262,50 @@ export default function Chart() {
         }}
       >
         {TITLE}
-        <div
-          style={{
-            position: "absolute",
-            top: "50%",
-            right: 64,
-            transform: "translateY(-50%)",
-            display: "flex",
-            flexDirection: "column",
-            gap: 5,
-            alignItems: "flex-start",
-          }}
-        >
-          {LEGEND_ITEMS.map((item) => (
-            <div key={item.label} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              {item.type === "circle" ? (
-                <span
-                  style={{
-                    width: 10,
-                    height: 10,
-                    borderRadius: "50%",
-                    backgroundColor: item.color,
-                    flexShrink: 0,
-                  }}
-                />
-              ) : (
-                <span
-                  style={{
-                    width: 18,
-                    height: 3,
-                    backgroundColor: item.color,
-                    flexShrink: 0,
-                  }}
-                />
-              )}
-              <span style={{ fontSize: 14, color: t.ink }}>{item.label}</span>
-            </div>
-          ))}
-        </div>
+      </div>
+      <div
+        style={{
+          position: "absolute",
+          top: legendTop,
+          left: legendLeft,
+          zIndex: 1,
+          display: "flex",
+          flexDirection: "column",
+          gap: 6,
+          alignItems: "flex-start",
+        }}
+      >
+        {LEGEND_ITEMS.map((item) => (
+          <div key={item.label} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            {item.type === "circle" ? (
+              <span
+                style={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: "50%",
+                  backgroundColor: item.color,
+                  flexShrink: 0,
+                }}
+              />
+            ) : (
+              <span
+                style={{
+                  width: 18,
+                  height: 3,
+                  backgroundColor: item.color,
+                  flexShrink: 0,
+                }}
+              />
+            )}
+            <span style={{ fontSize: 14, color: t.ink }}>{item.label}</span>
+          </div>
+        ))}
       </div>
       <ChartsContainer
         width={width}
         height={height - TITLE_HEIGHT}
         skipAnimation
-        margin={{ top: 24, right: 64, bottom: 20, left: 20 }}
+        margin={MARGIN}
         series={scatterSeries}
         xAxis={[
           {
@@ -323,7 +314,7 @@ export default function Chart() {
             data: curveXs,
             min: xDataMin,
             max: xDataMax,
-            height: 60,
+            height: X_AXIS_HEIGHT,
             label: SCORE,
             tickNumber: 6,
             valueFormatter: (v: number | null) =>
@@ -337,7 +328,7 @@ export default function Chart() {
             id: "probability",
             min: yAxisMin,
             max: yAxisMax,
-            width: 76,
+            width: Y_AXIS_WIDTH,
             label: PROBABILITY_AXIS_LABEL,
             tickInterval: [0, 0.2, 0.4, 0.6, 0.8, 1],
             valueFormatter: (v: number | null) => (v != null ? v.toFixed(1) : ""),
