@@ -2,68 +2,63 @@ library: muix
 language: javascript
 specification_id: heatmap-risk-matrix
 created: '2026-06-20T06:13:41Z'
-updated: '2026-06-20T06:48:12Z'
-generated_by: claude-sonnet
-workflow_run: 27862320568
+updated: '2026-10-24T09:51:44Z'
+generated_by: gemini-4-argon
+adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
+workflow_run: 40082998489
 issue: 4567
-language_version: 22.22.3
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/javascript/muix/plot-dark.html
-quality_score: 88
+quality_score: 87
 review:
   strengths:
-  - Perfect spec compliance — all 5 required features (color-coded cells, descriptive
-    axis labels, jittered labeled markers, zone legend, grid delineation) implemented
-    correctly
-  - Realistic IT security risk register data with 12 named risks distributed meaningfully
-    across all 4 risk zones (Low through Critical)
-  - 'Smart jitter algorithm: circular offset based on sibling count ensures co-located
-    risks remain distinguishable without cluttering cells'
-  - Excellent use of MUI X's useDrawingArea hook for coordinate-aware custom SVG overlays
-    (ZoneBackground, RiskCircles, RiskLabels all positioned correctly in chart space)
-  - 'Proper semantic use of Imprint palette: green (#009E73) = Low, amber (#DDCC77)
-    = Medium/warning, ochre (#BD8233) = High, matte red (#AE3030) = Critical — all
-    semantically justified by the style guide'
-  - Both themes render with correct backgrounds and fully readable text; no dark-on-dark
-    or light-on-light failures
-  - Risk score numbers (likelihood × impact) shown as faint cell annotations — informative
-    without competing with the primary risk markers
-  - Square canvas orientation chosen correctly for the symmetric 5×5 grid
+  - 'Composes the chart from MUI X v9 building blocks: ChartsContainer + ScatterPlot
+    for the risk markers, with useDrawingArea-driven SVG layers for the 5x5 cells,
+    cell scores and labels, so cells and markers share one coordinate system'
+  - Cell backgrounds follow the risk score (likelihood x impact) on a green (#009E73)
+    - amber - ochre - matte red (#AE3030) gradient, with the Low/Medium/High/Critical
+    legend spaced under the matrix and matching the cell colors
+  - Each cell carries its score in the corner, with ink chosen by computed luminance
+    so the numbers stay readable on every cell in both themes
+  - Axes use the descriptive rating terms from the spec, ordered Rare→Almost Certain
+    and Negligible→Catastrophic, with the numeric rating in parentheses
+  - Risk labels sit on page-colored pills, which keeps them readable over every zone
+    color in both themes; the two risks sharing the Unlikely/Major cell are jittered
+    apart within the cell, with labels above and below
+  - The data-driven subtitle (12 risks, 1 Critical, 5 High) gives the takeaway, and
+    the scatter series gives hover tooltips in the HTML output
   weaknesses:
-  - Zone fill opacity (fillOpacity=0.38) causes the zone colors to appear as pale
-    pastels in the light theme and muted darks in the dark theme — the same hex value
-    reads visually differently across themes. Consider using full or near-full opacity
-    zone colors and adjusting the hex per theme, or choosing opacity values that produce
-    visually consistent perceptual differences.
-  - Co-located risks in the Major/Unlikely cell (Cloud Outage + Supply Chain + score
-    '8' label) feel slightly crowded despite the jitter — the circular offset radius
-    (0.22) is modest relative to the cell size. A larger jitter radius or an alternative
-    offset direction would reduce the crowding.
-  - 'Dual-mechanism for circle rendering: ScatterPlot with slots={{ scatter: RiskMark
-    }} AND a separate RiskCircles overlay. The comment acknowledges the ScatterPlot
-    slot may not forward in MUI X v7, so both coexist as a belt-and-suspenders workaround.
-    This is functional but adds dead code if the slot approach consistently fails
-    — consider removing the ScatterPlot and its slot definition and relying solely
-    on RiskCircles + useDrawingArea for cleaner code.'
-  - Design Excellence could be raised by visually emphasizing the Critical zone risks
-    (e.g., larger markers for Ransomware, or a slight glow/shadow on the critical
-    cell fill) to create stronger visual hierarchy and immediate risk-prioritization
-    storytelling.
+  - 'VQ-07 (both): the cell fills are drawn at fillOpacity 0.62 over the page, so
+    the effective zone colors change with the theme: Medium reads pale yellow in light
+    and khaki/olive in dark, High reads tan in light and dark brown in dark → data
+    colors identical in both renders (opaque fills of the zone tokens, keeping the
+    luminance-based score ink). Likely cause: CELL_FILL_OPACITY = 0.62 on the cell
+    rects and legend swatches.'
+  - 'VQ-02 (both): the ''Ransomware'' label runs past both ends of its pill box, so
+    the first and last letters sit on the pill border → pill wider than the text by
+    about 7 px on each side (about +10 px total). Likely cause: pillW = name.length
+    * 8.2 + 14 underestimates wide glyphs at 14 px bold; measure the text or use a
+    larger per-character factor.'
+  - 'Suggestion: give the markers of the Critical cells more presence (larger marker
+    or ring) so the single Critical risk draws the eye first.'
+  - 'Suggestion: encode the optional category column with marker shape or color, with
+    its own legend entries.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
-      Chrome: Title "heatmap-risk-matrix · javascript · muix · anyplot.ai" is dark, centered, readable at top. Y-axis label "Likelihood" (rotated) and X-axis label "Impact" are dark and clearly visible. Tick labels (Rare/Unlikely/Possible/Likely/Almost Certain on Y; Negligible/Minor/Moderate/Major/Catastrophic on X) are readable in dark ink on the warm background. Zone legend at bottom shows four color swatches with labels (Low (1–4) / Medium (5–9) / High (10–16) / Critical (20–25)) — all readable.
-      Data: 5×5 grid of colored cells at 38% opacity over the warm background. Low zone (top-left diagonal) appears as soft teal-green, Medium zone as pale yellow, High zone as light tan/ochre, Critical zone (top-right corner) as muted rose-pink. Risk score numbers appear as faint ink text centered in each cell. 12 risk items rendered as open circles (elevated-bg fill, ink stroke) with bold labels above — all items legible. Two co-located risks (Cloud Outage + Supply Chain, score 8) appear in the Major/Unlikely cell with circular jitter, slightly crowded but readable.
-      Legibility verdict: PASS — all text is readable against the light background. No light-on-light failures.
+      Background: warm off-white #FAF8F1, square 2400x2400 canvas.
+      Chrome: bold title "heatmap-risk-matrix · javascript · muix · anyplot.ai" at the top (~53 % width), soft-ink subtitle "12 Risks across 5×5 Likelihood × Consequence Impact matrix (1 Critical, 5 High)". Y axis "Likelihood" with ticks Rare (1) … Almost Certain (5); x axis "Consequence Impact" with ticks Negligible (1) … Catastrophic (5). Legend row at the bottom: Low (1–4), Medium (5–9), High (10–16), Critical (20–25). All text dark and readable.
+      Data: 5x5 grid delineated by thin ink lines; cells colored by score: green (#009E73 at 62 % opacity) for Low, pale yellow (amber) Medium, tan (ochre) High, rose (#AE3030 at 62 %) Critical; lowest corner green, top-right red. Each cell shows its score bottom-right. Twelve black dots with bold labels on light pills; Supply Chain and Cloud Outage share the Unlikely/Major cell and are jittered horizontally. The "Ransomware" text slightly overflows its pill.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme surface, not pure black.
-      Chrome: Title, axis labels, tick labels, and legend text all appear in light off-white text against the dark background — no dark-on-dark failures. Zone legend text is clearly readable in light ink.
-      Data: Same Imprint palette hex values (#009E73, #DDCC77, #BD8233, #AE3030) at fillOpacity=0.38 interact with the dark background to produce darker visual zones: the Low teal-green appears as a deep forest green, Medium amber as dark olive, High ochre as dark brown, Critical red as dark maroon. The zone identity (green/amber/ochre/red) is still perceptible but the palette appears significantly muted compared to the light render. The open circle markers retain their visibility with an ink-stroke outline. Risk name labels appear as light text above each marker — readable throughout.
-      Legibility verdict: PASS — all text is readable against the dark background. No dark-on-dark failures. Note: zone colors appear substantially darker than in the light render due to opacity interaction with the dark background surface; this is a visual consistency concern across themes but does not cause a readability failure.
+      Background: warm near-black #1A1A17.
+      Chrome: title, subtitle, tick labels, axis titles and legend text all light ink, readable; no dark-on-dark text.
+      Data: same zone tokens, but at 62 % opacity over the dark page they read as dark teal, khaki/olive, dark brown and dark red, so effective cell colors differ from the light render. Markers flip to light ink, label pills to dark fill with light text; score numbers switch between dark and light ink by luminance and remain readable. Brand green remains visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 28
@@ -71,88 +66,77 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=20px, axis labels=15px, tick
-          labels=13px, risk labels=13px). All text readable in both themes. Minor:
-          risk score numbers at fillOpacity=0.42 are intentionally faint but secondary-level.'
+        comment: Title 22 px, ticks 14 px, axis titles 15 px (CSS) per library guidance;
+          all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
-        passed: true
-        comment: Mostly clean. Two co-located risks (Cloud Outage + Supply Chain in
-          Major/Unlikely cell) with jitter offset — labels are readable but slightly
-          crowded. All other items in separate cells with good spacing.
+        passed: false
+        comment: '''Ransomware'' label overflows its pill box (defect line)'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Circle markers (r=10 CSS px) are appropriately sized for 12 items
-          on a 5x5 grid. All markers clearly visible in both themes.
+        comment: Prominent markers for 12 sparse risks; legend swatches visible in
+          both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette colors used semantically. Green/amber/ochre/red spectrum
-          spans sufficient perceptual distance. No red-green only encoding.
+        comment: Zone colour is backed by the per-cell score numbers and labelled
+          legend, so red-green is not the sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square canvas correctly chosen for 5x5 grid. Plot fills good proportion
-          of canvas. Zone legend cleanly placed at bottom. Margins generous and balanced.
+        comment: Square 2400x2400 canvas, matrix fills the space, balanced axis labels,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X-axis: ''Impact'', Y-axis: ''Likelihood'' — descriptive and appropriate
-          (no units needed for ordinal risk scales). Title format correct.'
+        comment: Descriptive axis titles with rating terms
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Zone colors are all Imprint palette members/anchors: #009E73 (brand
-          green=Low), #DDCC77 (amber semantic anchor=Medium/warning), #BD8233 (ochre=High),
-          #AE3030 (matte red=Critical). Semantically justified by style guide. Backgrounds:
-          #FAF8F1 light / #1A1A17 dark — correct.'
+        passed: false
+        comment: Correct Imprint tokens and theme backgrounds, but translucent cell
+          fills make the effective zone colors differ between light and dark (defect
+          line)
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: Clearly above generic defaults. Custom SVG zone cells with opacity,
-          styled circle markers with elevated-bg fill and ink stroke, smart jitter
-          algorithm, faint score annotations — all show intentional design. Not quite
-          FiveThirtyEight publication-ready but a polished implementation.
+        passed: false
+        comment: 'Clear hierarchy: bold title, soft subtitle, page-colored label pills,
+          luminance-adaptive score ink'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: true
-        comment: Clean grid structure, subtle cell stroke opacity (0.18), appropriate
-          spacing. Zone opacity creates a softer look. Some refinement visible throughout.
-          Dark theme zone colors become muted darks due to opacity interaction — slightly
-          reduces visual clarity.
+        passed: false
+        comment: Corner-placed cell scores, legend items aligned under the five columns,
+          subtle cell borders
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Color progression green→red guides the eye to the critical zone.
-          Zone legend makes interpretation immediate. Risk item names at their plotted
-          positions tell a clear story about the IT security risk landscape. Good
-          visual hierarchy.
+        passed: false
+        comment: Data-driven subtitle states the Critical/High count; no visual focal
+          point on the critical risk
     spec_compliance:
       score: 15
       max: 15
@@ -162,29 +146,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 5x5 grid heatmap risk matrix with labeled markers.
+        comment: 5x5 risk matrix heatmap with labeled risk markers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All 5 spec features: green-red color coding ✓, descriptive axis
-          labels ✓, jittered labeled markers ✓, zone legend ✓, grid delineation ✓.'
+        comment: Score-based green-yellow-orange-red gradient, descriptive axis terms,
+          jitter for shared cell, zone legend, cell grid lines all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Impact (Negligible→Catastrophic), Y=Likelihood (Rare→Almost Certain).
-          Risk scores (likelihood×impact) shown in cells. All 12 risks correctly plotted.
+        comment: Markers in their likelihood/impact cells; spec-requested jitter keeps
+          them inside the cell
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''heatmap-risk-matrix · javascript · muix · anyplot.ai''
-          ✓. Zone legend: Low (1–4) / Medium (5–9) / High (10–16) / Critical (20–25)
-          ✓.'
+        comment: Title format correct; legend labels name levels with score ranges
     data_quality:
       score: 15
       max: 15
@@ -194,97 +176,93 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 12 risks distributed across all 4 zones. Demonstrates co-location
-          with jitter (Cloud Outage + Supply Chain). Covers all 5 likelihood and all
-          5 impact levels with at least one risk per column.
+        comment: All four zones present, a shared cell with jitter, empty cells, both
+          extremes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: IT security risk register scenario — real-world, professional, non-controversial.
-          Named risks (Ransomware, Data Breach, DDoS Attack, etc.) are recognizable
-          industry terms.
+        comment: Plausible IT/enterprise risk register (ransomware, DDoS, key staff
+          loss), neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Risk placements are factually plausible: Ransomware at Likely/Catastrophic
-          (score 20, Critical) is accurate; Budget Cut at Likely/Minor (score 8, Medium)
-          is reasonable; HW Failure at Rare/Moderate (score 3, Low) makes sense.'
+        comment: Ratings 1–5 integers; checked scores = likelihood x impact in every
+          cell (e.g. 4x5=20 Critical, 2x4=8 Medium), zone bounds 4/9/16/25 as spec
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: React component structure is appropriate. However, dual-mechanism
-          for circle rendering (ScatterPlot with slots + RiskCircles overlay as fallback)
-          adds complexity. Comment explains the MUI X v7 compatibility reason, but
-          it's still potentially dead code if the slot approach never fires.
+        comment: Layer components are required by the useDrawingArea hook; otherwise
+          Data → Plot flow
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Data fully hardcoded. Jitter is deterministic (based on array order
-          and count). No randomness.
+        comment: Hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All 5 imports used: ChartContainer, ScatterPlot, ChartsXAxis, ChartsYAxis,
-          useDrawingArea.'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactive elements. Helper components are logically named
-          and scoped. Jitter algorithm is clean.
+        comment: Appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: '//# anyplot-orientation: square directive present. Default-export
-          component correctly structured for harness. Community-only @mui/x-charts
-          imports.'
+        comment: Default-exported component, skipAnimation, v9 API, harness writes
+          PNG/HTML
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Uses ChartContainer + ScatterPlot + ChartsXAxis/ChartsYAxis idiomatically.
-          Custom SVG children inside ChartContainer is the recommended MUI X pattern
-          for overlay content. Slight deduction for the fallback workaround pattern.
+        passed: false
+        comment: v9 composition with ChartsContainer, axis valueFormatter/tickInterval
+          and sized axis bands
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
-        passed: true
-        comment: useDrawingArea hook from @mui/x-charts/hooks is MUI X-distinctive
-          — gives coordinate-aware positioning for ZoneBackground, RiskCircles, and
-          RiskLabels. ChartContainer + SVG children pattern is MUI X-specific. Scatter
-          slot customization is MUI X-specific.
+        passed: false
+        comment: useDrawingArea custom SVG layers composed with ScatterPlot inside
+          one ChartsContainer; scatter tooltips in HTML
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-10-24T09:48:55Z'
 impl_tags:
   dependencies: []
   techniques:
+  - layer-composition
   - annotations
   - custom-legend
+  - hover-tooltips
+  - html-export
+  - manual-ticks
   patterns:
-  - data-generation
-  - matrix-construction
+  - explicit-figure
+  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
+  - minimal-chrome
