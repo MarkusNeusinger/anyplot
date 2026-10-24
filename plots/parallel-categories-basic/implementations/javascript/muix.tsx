@@ -1,9 +1,8 @@
 // anyplot.ai
 // parallel-categories-basic: Basic Parallel Categories Plot
-// Library: muix 9.x | JavaScript 22.23.2
+// Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 92/100 | Created: 2026-09-05
 
-import * as React from "react";
 import { useState } from "react";
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { useDrawingArea } from "@mui/x-charts/hooks";
@@ -17,83 +16,81 @@ const HEADER_H = 118;
 const PAD = 40;
 const GAP = 34;
 const NODE_HALF = 13;
-const MIN_SEG = 8;
+const OUTCOME_SEMANTICS: Record<string, { color: string; hatched: boolean }> = {
+  Survived: { color: t.palette[0], hatched: false },
+  "Did not survive": { color: t.palette[4], hatched: true },
+};
+const UNUSED_PALETTE = [t.palette[1], t.palette[2], t.palette[3], t.palette[5]];
 
-const CLASS_COL = "passenger_class";
-const SEX_COL = "sex";
-const OUTCOME_COL = "outcome";
-const COUNT_COL = "passenger_count";
+// Columns: set these to your data's column names
+const DIMENSIONS = ["Passenger class", "Sex", "Outcome"]; // role: dimension
+const COUNT = "Passengers"; // role: value
 
-// Data: Titanic passengers by class, sex, and outcome (flat scalar records)
-const DATA: Array<Record<string, string | number>> = [
-  { passenger_class: "1st", sex: "Female", outcome: "Survived", passenger_count: 91 },
-  { passenger_class: "1st", sex: "Female", outcome: "Did not survive", passenger_count: 3 },
-  { passenger_class: "1st", sex: "Male", outcome: "Survived", passenger_count: 45 },
-  { passenger_class: "1st", sex: "Male", outcome: "Did not survive", passenger_count: 77 },
-  { passenger_class: "2nd", sex: "Female", outcome: "Survived", passenger_count: 70 },
-  { passenger_class: "2nd", sex: "Female", outcome: "Did not survive", passenger_count: 6 },
-  { passenger_class: "2nd", sex: "Male", outcome: "Survived", passenger_count: 17 },
-  { passenger_class: "2nd", sex: "Male", outcome: "Did not survive", passenger_count: 91 },
-  { passenger_class: "3rd", sex: "Female", outcome: "Survived", passenger_count: 72 },
-  { passenger_class: "3rd", sex: "Female", outcome: "Did not survive", passenger_count: 72 },
-  { passenger_class: "3rd", sex: "Male", outcome: "Survived", passenger_count: 47 },
-  { passenger_class: "3rd", sex: "Male", outcome: "Did not survive", passenger_count: 300 },
+// Data: replace this block with your own records
+const data: Array<Record<string, string | number>> = [
+  { [DIMENSIONS[0]]: "1st", [DIMENSIONS[1]]: "Female", [DIMENSIONS[2]]: "Survived", [COUNT]: 91 },
+  { [DIMENSIONS[0]]: "1st", [DIMENSIONS[1]]: "Female", [DIMENSIONS[2]]: "Did not survive", [COUNT]: 3 },
+  { [DIMENSIONS[0]]: "1st", [DIMENSIONS[1]]: "Male", [DIMENSIONS[2]]: "Survived", [COUNT]: 45 },
+  { [DIMENSIONS[0]]: "1st", [DIMENSIONS[1]]: "Male", [DIMENSIONS[2]]: "Did not survive", [COUNT]: 77 },
+  { [DIMENSIONS[0]]: "2nd", [DIMENSIONS[1]]: "Female", [DIMENSIONS[2]]: "Survived", [COUNT]: 70 },
+  { [DIMENSIONS[0]]: "2nd", [DIMENSIONS[1]]: "Female", [DIMENSIONS[2]]: "Did not survive", [COUNT]: 6 },
+  { [DIMENSIONS[0]]: "2nd", [DIMENSIONS[1]]: "Male", [DIMENSIONS[2]]: "Survived", [COUNT]: 17 },
+  { [DIMENSIONS[0]]: "2nd", [DIMENSIONS[1]]: "Male", [DIMENSIONS[2]]: "Did not survive", [COUNT]: 91 },
+  { [DIMENSIONS[0]]: "3rd", [DIMENSIONS[1]]: "Female", [DIMENSIONS[2]]: "Survived", [COUNT]: 72 },
+  { [DIMENSIONS[0]]: "3rd", [DIMENSIONS[1]]: "Female", [DIMENSIONS[2]]: "Did not survive", [COUNT]: 72 },
+  { [DIMENSIONS[0]]: "3rd", [DIMENSIONS[1]]: "Male", [DIMENSIONS[2]]: "Survived", [COUNT]: 47 },
+  { [DIMENSIONS[0]]: "3rd", [DIMENSIONS[1]]: "Male", [DIMENSIONS[2]]: "Did not survive", [COUNT]: 300 },
 ];
 
-// Derive category orders in order of first appearance
-const classOrder: string[] = [];
-const sexOrder: string[] = [];
-const outcomeOrder: string[] = [];
-let totalCount = 0;
+// Plot: reads only data and the constants above
+const totalCount = data.reduce((sum, row) => sum + Number(row[COUNT]), 0);
 
-const classTotals = new Map<string, number>();
-const sexTotals = new Map<string, number>();
-const outcomeTotals = new Map<string, number>();
+const columnDefs = DIMENSIONS.map((col) => {
+  const order: string[] = [];
+  const totals = new Map<string, number>();
+  for (const row of data) {
+    const val = String(row[col]);
+    const cnt = Number(row[COUNT]);
+    if (!order.includes(val)) order.push(val);
+    totals.set(val, (totals.get(val) ?? 0) + cnt);
+  }
+  return { col, order, totals };
+});
 
-for (const row of DATA) {
-  const cls = String(row[CLASS_COL]);
-  const sex = String(row[SEX_COL]);
-  const out = String(row[OUTCOME_COL]);
-  const cnt = Number(row[COUNT_COL]);
-  if (!classOrder.includes(cls)) classOrder.push(cls);
-  if (!sexOrder.includes(sex)) sexOrder.push(sex);
-  if (!outcomeOrder.includes(out)) outcomeOrder.push(out);
-  totalCount += cnt;
-  classTotals.set(cls, (classTotals.get(cls) ?? 0) + cnt);
-  sexTotals.set(sex, (sexTotals.get(sex) ?? 0) + cnt);
-  outcomeTotals.set(out, (outcomeTotals.get(out) ?? 0) + cnt);
+const outcomeDim = DIMENSIONS[DIMENSIONS.length - 1];
+const outcomeOrder = columnDefs[columnDefs.length - 1].order;
+const outcomeStyles: Record<string, { color: string; hatched: boolean }> = {};
+let fallbackIdx = 0;
+for (const name of outcomeOrder) {
+  if (OUTCOME_SEMANTICS[name]) {
+    outcomeStyles[name] = OUTCOME_SEMANTICS[name];
+  } else {
+    outcomeStyles[name] = {
+      color: UNUSED_PALETTE[fallbackIdx % UNUSED_PALETTE.length],
+      hatched: false,
+    };
+    fallbackIdx += 1;
+  }
 }
 
-// Semantic outcome colors: first outcome (Survived) -> brand green, second (Did not survive) -> matte red
-const outcomeColorMap: Record<string, string> = {};
-for (let i = 0; i < outcomeOrder.length; i += 1) {
-  outcomeColorMap[outcomeOrder[i]] = i === 0 ? t.palette[0] : t.palette[4];
-}
-
-const columnDefs = [
-  { col: CLASS_COL, header: "Class", order: classOrder, totals: classTotals },
-  { col: SEX_COL, header: "Sex", order: sexOrder, totals: sexTotals },
-  { col: OUTCOME_COL, header: "Outcome", order: outcomeOrder, totals: outcomeTotals },
-];
-
-const maxNodes = Math.max(classOrder.length, sexOrder.length, outcomeOrder.length);
+const maxNodes = Math.max(...columnDefs.map((d) => d.order.length));
 
 function ParallelCategories() {
   const area = useDrawingArea();
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
 
   const k = (area.height - GAP * (maxNodes - 1)) / totalCount;
-  const colX = [area.left, area.left + area.width / 2, area.left + area.width];
+  const colCount = columnDefs.length;
+  const colX = columnDefs.map((_, ci) => area.left + (ci * area.width) / (colCount - 1));
 
-  // Compute node boxes and stacked row segments per column
   const colNodes: Array<Record<string, { y0: number; y1: number; total: number }>> = [];
   const colSegs: Array<Array<{ y0: number; y1: number }>> = [];
 
   for (const def of columnDefs) {
     const heights = new Map<string, number>();
-    for (const row of DATA) {
+    for (const row of data) {
       const name = String(row[def.col]);
-      const h = Math.max(Number(row[COUNT_COL]) * k, MIN_SEG);
+      const h = Number(row[COUNT]) * k;
       heights.set(name, (heights.get(name) ?? 0) + h);
     }
 
@@ -115,32 +112,33 @@ function ParallelCategories() {
     colNodes.push(nodesMap);
 
     const segsForCol: Array<{ y0: number; y1: number }> = [];
-    for (const row of DATA) {
+    for (const row of data) {
       const name = String(row[def.col]);
       const y0 = segCursor[name];
-      const y1 = y0 + Math.max(Number(row[COUNT_COL]) * k, MIN_SEG);
+      const y1 = y0 + Number(row[COUNT]) * k;
       segCursor[name] = y1;
       segsForCol.push({ y0, y1 });
     }
     colSegs.push(segsForCol);
   }
 
-  const [clsNodes, sexNodes, outcomeNodes] = colNodes;
-  const [clsSegs, sexSegs, outcomeSegs] = colSegs;
-  const xm01 = (colX[0] + NODE_HALF + (colX[1] - NODE_HALF)) / 2;
-  const xm12 = (colX[1] + NODE_HALF + (colX[2] - NODE_HALF)) / 2;
-
   return (
     <g>
       <defs>
-        <pattern id="outcome-hatch" patternUnits="userSpaceOnUse" width={6} height={6} patternTransform="rotate(45)">
+        <pattern
+          id="outcome-hatch"
+          patternUnits="userSpaceOnUse"
+          width={6}
+          height={6}
+          patternTransform="rotate(45)"
+        >
           <line x1={0} y1={0} x2={0} y2={6} stroke={t.ink} strokeOpacity={0.45} strokeWidth={1.5} />
         </pattern>
       </defs>
 
       {columnDefs.map((def, i) => (
         <text
-          key={def.header}
+          key={def.col}
           x={colX[i]}
           y={area.top - 22}
           textAnchor="middle"
@@ -148,57 +146,53 @@ function ParallelCategories() {
           fontWeight={600}
           fill={t.inkSoft}
         >
-          {def.header}
+          {def.col}
         </text>
       ))}
 
-      {DATA.map((row, i) => {
-        const outcome = String(row[OUTCOME_COL]);
-        const isSecondOutcome = outcome === outcomeOrder[1];
+      {data.map((row, i) => {
+        const outcome = String(row[outcomeDim]);
+        const style = outcomeStyles[outcome];
         const isHovered = hoveredRow === i;
         const isDimmed = hoveredRow !== null && !isHovered;
         const fillOpacity = isDimmed ? 0.12 : isHovered ? 0.92 : 0.78;
         const strokeOpacity = isDimmed ? 0.06 : isHovered ? 0.35 : 0.12;
         const strokeWidth = isHovered ? 1.5 : 1;
 
-        const x0 = colX[0] + NODE_HALF;
-        const x1 = colX[1] - NODE_HALF;
-        const d01 = `M${x0},${clsSegs[i].y0} C${xm01},${clsSegs[i].y0} ${xm01},${sexSegs[i].y0} ${x1},${sexSegs[i].y0} L${x1},${sexSegs[i].y1} C${xm01},${sexSegs[i].y1} ${xm01},${clsSegs[i].y1} ${x0},${clsSegs[i].y1} Z`;
-
-        const x2 = colX[1] + NODE_HALF;
-        const x3 = colX[2] - NODE_HALF;
-        const d12 = `M${x2},${sexSegs[i].y0} C${xm12},${sexSegs[i].y0} ${xm12},${outcomeSegs[i].y0} ${x3},${outcomeSegs[i].y0} L${x3},${outcomeSegs[i].y1} C${xm12},${outcomeSegs[i].y1} ${xm12},${sexSegs[i].y1} ${x2},${sexSegs[i].y1} Z`;
-
         return (
           <g key={`flow-${i}`}>
-            <path
-              d={d01}
-              fill={outcomeColorMap[outcome]}
-              stroke={t.ink}
-              cursor="pointer"
-              fillOpacity={fillOpacity}
-              strokeOpacity={strokeOpacity}
-              strokeWidth={strokeWidth}
-              onMouseEnter={() => setHoveredRow(i)}
-              onMouseLeave={() => setHoveredRow(null)}
-            />
-            {isSecondOutcome && (
-              <path d={d01} fill="url(#outcome-hatch)" fillOpacity={fillOpacity} pointerEvents="none" />
-            )}
-            <path
-              d={d12}
-              fill={outcomeColorMap[outcome]}
-              stroke={t.ink}
-              cursor="pointer"
-              fillOpacity={fillOpacity}
-              strokeOpacity={strokeOpacity}
-              strokeWidth={strokeWidth}
-              onMouseEnter={() => setHoveredRow(i)}
-              onMouseLeave={() => setHoveredRow(null)}
-            />
-            {isSecondOutcome && (
-              <path d={d12} fill="url(#outcome-hatch)" fillOpacity={fillOpacity} pointerEvents="none" />
-            )}
+            {Array.from({ length: colCount - 1 }, (_, ci) => {
+              const xStart = colX[ci] + NODE_HALF;
+              const xEnd = colX[ci + 1] - NODE_HALF;
+              const xMid = (xStart + xEnd) / 2;
+              const segA = colSegs[ci][i];
+              const segB = colSegs[ci + 1][i];
+              const d = `M${xStart},${segA.y0} C${xMid},${segA.y0} ${xMid},${segB.y0} ${xEnd},${segB.y0} L${xEnd},${segB.y1} C${xMid},${segB.y1} ${xMid},${segA.y1} ${xStart},${segA.y1} Z`;
+
+              return (
+                <g key={`seg-${ci}`}>
+                  <path
+                    d={d}
+                    fill={style.color}
+                    stroke={t.ink}
+                    cursor="pointer"
+                    fillOpacity={fillOpacity}
+                    strokeOpacity={strokeOpacity}
+                    strokeWidth={strokeWidth}
+                    onMouseEnter={() => setHoveredRow(i)}
+                    onMouseLeave={() => setHoveredRow(null)}
+                  />
+                  {style.hatched && (
+                    <path
+                      d={d}
+                      fill="url(#outcome-hatch)"
+                      fillOpacity={fillOpacity}
+                      pointerEvents="none"
+                    />
+                  )}
+                </g>
+              );
+            })}
           </g>
         );
       })}
@@ -218,44 +212,32 @@ function ParallelCategories() {
         )),
       )}
 
-      {Object.entries(clsNodes).map(([name, node]) => (
-        <text
-          key={`label-cls-${name}`}
-          x={colX[0] - NODE_HALF - 12}
-          y={(node.y0 + node.y1) / 2}
-          textAnchor="end"
-          dominantBaseline="middle"
-          fontSize={14}
-          fill={t.ink}
-        >
-          {`${name} · ${node.total}`}
-        </text>
-      ))}
-      {Object.entries(sexNodes).map(([name, node]) => (
-        <text
-          key={`label-sex-${name}`}
-          x={colX[1]}
-          y={node.y0 - 12}
-          textAnchor="middle"
-          fontSize={14}
-          fill={t.ink}
-        >
-          {`${name} · ${node.total}`}
-        </text>
-      ))}
-      {Object.entries(outcomeNodes).map(([name, node]) => (
-        <text
-          key={`label-outcome-${name}`}
-          x={colX[2] + NODE_HALF + 12}
-          y={(node.y0 + node.y1) / 2}
-          textAnchor="start"
-          dominantBaseline="middle"
-          fontSize={14}
-          fill={t.ink}
-        >
-          {`${name} · ${node.total}`}
-        </text>
-      ))}
+      {colNodes.map((nodes, ci) => {
+        const isFirst = ci === 0;
+        const isLast = ci === colCount - 1;
+        const xPos = isFirst
+          ? colX[ci] - NODE_HALF - 12
+          : isLast
+            ? colX[ci] + NODE_HALF + 12
+            : colX[ci];
+        const textAnchor = isFirst ? "end" : isLast ? "start" : "middle";
+        return Object.entries(nodes).map(([name, node]) => {
+          const yPos = isFirst || isLast ? (node.y0 + node.y1) / 2 : node.y0 - 12;
+          return (
+            <text
+              key={`label-${ci}-${name}`}
+              x={xPos}
+              y={yPos}
+              textAnchor={textAnchor}
+              dominantBaseline={isFirst || isLast ? "middle" : "auto"}
+              fontSize={14}
+              fill={t.ink}
+            >
+              {`${name} · ${node.total}`}
+            </text>
+          );
+        });
+      })}
     </g>
   );
 }
@@ -277,27 +259,29 @@ export default function Chart() {
       <div style={{ position: "absolute", top: 26, left: PAD, right: PAD }}>
         <div style={{ color: t.ink, fontSize: TITLE_FONT_SIZE, fontWeight: 600 }}>{TITLE}</div>
         <div style={{ color: t.inkSoft, fontSize: 15, marginTop: 6 }}>
-          {`Class, sex and survival outcome for ${totalCount} Titanic passengers — ribbon width is proportional to passenger count.`}
+          {`${DIMENSIONS.join(" → ")} across ${totalCount} (${COUNT}) — ribbon width is proportional to ${COUNT}.`}
         </div>
         <div style={{ display: "flex", gap: 24, marginTop: 12, alignItems: "center" }}>
-          {outcomeOrder.map((name, idx) => (
-            <div key={name} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span
-                style={{
-                  width: 14,
-                  height: 14,
-                  borderRadius: 3,
-                  backgroundColor: outcomeColorMap[name],
-                  backgroundImage:
-                    idx === 1
+          {outcomeOrder.map((name) => {
+            const style = outcomeStyles[name];
+            return (
+              <div key={name} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span
+                  style={{
+                    width: 14,
+                    height: 14,
+                    borderRadius: 3,
+                    backgroundColor: style.color,
+                    backgroundImage: style.hatched
                       ? "repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(0,0,0,0.4) 2px, rgba(0,0,0,0.4) 3px)"
                       : undefined,
-                  display: "inline-block",
-                }}
-              />
-              <span style={{ color: t.inkSoft, fontSize: 14 }}>{name}</span>
-            </div>
-          ))}
+                    display: "inline-block",
+                  }}
+                />
+                <span style={{ color: t.inkSoft, fontSize: 14 }}>{name}</span>
+              </div>
+            );
+          })}
         </div>
       </div>
       <div style={{ position: "absolute", top: HEADER_H, left: PAD }}>
