@@ -19,7 +19,7 @@ const R_LABEL_SHARE = 0.422;
 // Columns: set these to your data's column names
 const SOURCE = "Origin region"; // role: source
 const TARGET = "Destination region"; // role: target
-const VALUE = "Migrants per year (millions)"; // role: value
+const VALUE = "Migrants per five years (millions)"; // role: value
 
 // Data: replace this block with your own records, one object per row
 const data = [
