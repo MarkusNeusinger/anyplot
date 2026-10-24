@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: dumbbell-basic
 created: '2026-06-30T23:13:34Z'
-updated: '2026-10-24T08:48:26Z'
+updated: '2026-10-24T08:53:22Z'
 generated_by: gemini-4-argon
 adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
 workflow_run: 40079206057
@@ -16,52 +16,45 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dumbbell-
 quality_score: 86
 review:
   strengths:
-  - 'Uses the MUI X v9 composition API idiomatically: ChartsContainer with two scatter
-    series, ChartsGrid, ChartsXAxis/ChartsYAxis, and a custom SVG layer that reads
-    useXScale/useYScale so the connecting lines sit exactly on the data scale'
-  - 'Both themes are correct: the background, ink, inkSoft and grid all come from
-    ANYPLOT_TOKENS; brand green #009E73 marks the before values and lavender #C475FD
-    marks the after values, identically in both renders'
-  - Categories are sorted by their start value along a horizontal value axis, and
-    the thin, semi-transparent connecting line (2.5 px at 0.55 opacity) keeps the
-    dots dominant while staying visible on both surfaces
-  - Plain signed difference labels at the right end of each row (+2.5 Operations,
-    -0.2 Legal) make the size and direction of each change readable without adding
-    another layer
-  - The data scenario includes a reversal (Legal), a near-coincident pair and a long
-    gap (Operations), so the example shows every aspect of the plot type
-  - With the y-axis line and ticks turned off and only a vertical grid along the value
-    axis, the chrome stays minimal
+  - 'Composes the dumbbell from MUI X building blocks: ChartsDataProvider + ScatterPlot
+    for the two dot series and a DumbbellOverlay that reads useXScale/useYScale, so
+    connectors span exactly from start to end value with no dot displaced'
+  - Rows sorted by the before value, horizontal layout with categories on the y axis,
+    as the Notes ask
+  - 'Connector is thin (2.5 px, inkSoft at 55 % opacity) so the dots dominate while
+    it stays visible on both #FAF8F1 and #1A1A17'
+  - Plain signed difference labels (+2.5, -0.2) right of each pair make the Legal
+    decline and the Operations jump readable at a glance
+  - Realistic HR scenario with a believable spread, including a reversed row (Legal)
+    and a large gain (Operations)
+  - 'Theme tokens threaded through every chrome element; Imprint green #009E73 and
+    the second Imprint position identical in both renders'
+  - skipAnimation set and the HTML output keeps MUI X's native scatter tooltips
   weaknesses:
-  - 'VQ-06 (both): the x-axis title reads ''Before program (satisfaction score) vs
-    After program (satisfaction score)'', which repeats the measure twice and names
-    the series rather than the shared axis quantity → a single title for the value
-    axis such as ''Satisfaction score (0–10)''. Likely cause: X_AXIS_LABEL built as
-    `${START_VALUE} vs ${END_VALUE}`.'
-  - 'CQ-04 (code): lines 134–159 hand-build an HTML legend (two styled spans with
-    colored circles) that MUI X''s native `<ChartsLegend />` produces from the series
-    labels and colors → render ChartsLegend inside ChartsDataProvider/ChartsWrapper,
-    as the library prompt describes, and delete the manual spans. Likely cause: hand-rolled
-    legend instead of the composed-chart legend component.'
-  - 'Suggestion: ticks every 0.2 (24 vertical gridlines) are denser than this 8-row
-    chart needs; a 0.5 step would lighten the grid.'
-  - 'Suggestion: add <ChartsTooltip /> to the composition so the HTML view shows hover
-    values for each dot.'
+  - 'SC-04 (both): legend entries read ''Before program (satisfaction score)'' and
+    ''After program (satisfaction score)'', each repeating the ''(satisfaction score)''
+    the x-axis title already states → series labels that carry only what tells them
+    apart, e.g. ''Before program'' / ''After program''. Likely cause: START_VALUE
+    / END_VALUE column constants used verbatim as series labels.'
+  - 'Suggestion: an x-tick step of 0.5 instead of 0.2 would thin the 24 vertical grid
+    lines and ticks to a calmer density.'
+  - 'Suggestion: a slightly larger tick and difference-label font (about 16 px) would
+    hold up better in the 400 px thumbnail.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, matching #FAF8F1; not pure white.
-      Chrome: bold dark title "dumbbell-basic · javascript · muix · anyplot.ai" centred at the top, spanning about 36% of the width. Below it, a centred legend row: a green dot for "Before program (satisfaction score)" and a lavender dot for "After program (satisfaction score)". Department names (Design, HR, Engineering, Operations, Sales, Marketing, Legal, Finance) on the y axis in dark ink. The x axis runs 5.0–9.6 with ticks every 0.2 in inkSoft, under a bold title "Before program (satisfaction score) vs After program (satisfaction score)". Subtle vertical gridlines only. All text is readable.
-      Data: 8 rows, sorted by the before value (Finance 5.4 at the bottom, Design 7.4 at the top). Green (#009E73) before dots and lavender (#C475FD) after dots are joined by a thin grey line, with signed difference labels right of each row (+0.5, -0.2, +1.6, +0.5, +2.5, +0.9, +1.3, +0.6). In the Legal row the order reverses (after 5.5 sits left of before 5.7).
+      Background: warm off-white #FAF8F1, 3200x1800.
+      Chrome: bold title "dumbbell-basic · javascript · muix · anyplot.ai" centered at top (~35 % width); horizontal legend below it (green dot "Before program (satisfaction score)", lavender dot "After program (satisfaction score)"); y-axis department names Finance…Design in dark ink, no axis line; x-axis 5.0–9.6 in 0.2 steps with bold title "Satisfaction score (0–10)"; subtle vertical grid. All text readable.
+      Data: 8 rows sorted by before value (Finance 5.4 bottom → Design 7.4 top); green #009E73 start dots, lavender end dots, thin grey connectors, signed difference labels (+0.5, -0.2, +1.6, +0.5, +2.5, +0.9, +1.3, +0.6) right of each pair. Legal's after dot sits left of its before dot.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black, matching #1A1A17; not pure black.
-      Chrome: title, legend text and category labels in light ink; tick labels and difference labels in a lighter grey (inkSoft); gridlines are dim but visible. No dark-on-dark text anywhere.
-      Data: dot colors are identical to the light render (green before, lavender after); the connecting lines read as mid-grey and stay visible against the dark surface. Brand green is clearly visible.
+      Background: warm near-black #1A1A17.
+      Chrome: title, legend text, department names and axis title in light ink; tick labels and difference labels in light soft ink; grid lines dim but visible. No dark-on-dark text.
+      Data: green and lavender dots identical to the light render; connectors in a lighter grey still visible against the page.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -69,48 +62,46 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes (title 22, ticks 14, categories 15, axis title
-          16 CSS px); everything readable in both themes
+        comment: Explicit sizes (title 22, ticks 14, categories 15, axis title 16);
+          all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; difference labels clear of the dots
+        comment: No collisions; difference labels sit clear right of the end dots
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Dots at markerSize 10 suit 8 rows; connecting lines visible; legend
-          glyphs match the marks in both themes
+        comment: Markers size 10 prominent for 16 points; connectors subtle yet visible;
+          legend glyphs match the dots
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green and lavender stay distinct under CVD; position also encodes
-          the values
+        comment: Green vs lavender is CVD-safe; position also distinguishes
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced landscape layout, nothing clipped, right padding holds the
-          difference labels
+        comment: 3200x1800, balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: The x-axis title repeats both series names instead of naming the
-          shared measure (defect line)
+        passed: true
+        comment: '''Satisfaction score (0–10)'' with scale; departments self-explanatory'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint #009E73 first and #C475FD second; correct theme backgrounds'
+        comment: 'Start = #009E73, end = Imprint position 2; correct backgrounds in
+          both themes'
     design_excellence:
       score: 11
       max: 20
@@ -119,26 +110,25 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: 'Deliberate type hierarchy: category labels in full ink, ticks and
-          difference labels in inkSoft at weight 500, bold axis title, compact legend
-          centred under the title'
+        passed: true
+        comment: 'Typographic hierarchy decided beyond baseline: bold title, semibold
+          axis title, ink-weight category labels vs inkSoft ticks and difference labels'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: y-axis line and ticks turned off, with only a vertical grid along
-          the value axis chosen for this horizontal chart; the 0.2 tick step is dense
+        passed: true
+        comment: Y-axis line and ticks removed, vertical-only grid aligned to the
+          value axis, right padding sized for the difference labels
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: Signed difference labels aligned at each row's right end make the
-          +2.5 Operations jump and the Legal reversal the focal points
+        passed: true
+        comment: Signed difference labels surface the Operations jump and the Legal
+          decline, beyond what the Notes require
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -146,28 +136,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct dumbbell chart; only the plain difference labels the spec
-          permits
+        comment: Correct dumbbell; difference labels are explicitly allowed on the
+          basic variant
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Horizontal layout, distinct start and end colors with a legend, sorted
-          by start value, thin and subtle connector
+        comment: Horizontal, two distinct colors with legend, sorted by start value,
+          thin subtle connector; all 'A good version shows' bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Dots sit at their values; the connectors span exactly the gap between
-          them
+        comment: Dots at their values; connectors span exactly the gap; axis covers
+          all data
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Correct mandated title; legend labels match the series
+        comment: Title correct; legend entries repeat '(satisfaction score)' already
+          on the axis (defect line)
     data_quality:
       score: 15
       max: 15
@@ -177,23 +168,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Gaps of varying size, one reversal and one near-coincident pair
+        comment: Gaps of varied size, a reversed row, a near-coincident pair
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Department satisfaction before and after a program: plausible and
-          neutral'
+        comment: Employee satisfaction by department before/after a program; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Scores 5.4–9.0 on a 10-point satisfaction scale are sensible; the
-          spec has no Check values
+        comment: Scores 5.4–9.0 on a 0–10 scale; difference labels checked against
+          the data (e.g. Operations 9.0−6.5=+2.5, Legal 5.5−5.7=−0.2)
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -201,8 +191,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat module; the only extra component is the overlay, which needs
-          the scale hooks
+        comment: Flat module; the overlay component is required by the hooks API
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -217,47 +206,48 @@ review:
         comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Hand-built HTML legend (lines 134–159) that ChartsLegend replaces
-          (defect line)
+        passed: true
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default export, skipAnimation, sized from ANYPLOT_SIZE, v9 API
+        comment: Default export, v9 API, skipAnimation, sized from ANYPLOT_SIZE
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: false
-        comment: Composition API (ChartsContainer + ScatterPlot + axis components)
-          used as MUI X intends
+        passed: true
+        comment: Composed chart via ChartsDataProvider/ChartsWrapper/ChartsSurface
+          with v9 axis config (tickInterval, valueFormatter, height/width bands)
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: false
-        comment: A custom SVG layer that reads the chart's useXScale/useYScale hooks,
-          a distinctive MUI X composition technique
-  verdict: REJECTED
+        comment: Custom SVG layer driven by useXScale/useYScale hooks inside the composition
+          API
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T08:45:44Z'
+  rendered_at: '2026-10-24T08:51:01Z'
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
-  - custom-legend
   - annotations
+  - layer-composition
+  - manual-ticks
+  - hover-tooltips
   - html-export
   patterns: []
   dataprep: []
   styling:
+  - alpha-blending
   - grid-styling
