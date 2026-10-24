@@ -2,140 +2,132 @@ library: muix
 language: javascript
 specification_id: contour-filled
 created: '2026-09-04T23:36:26Z'
-updated: '2026-09-05T00:04:06Z'
-generated_by: claude-sonnet
-workflow_run: 33929424173
+updated: '2026-10-24T08:33:55Z'
+generated_by: gemini-4-argon
+adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
+workflow_run: 40077818038
 issue: 2500
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-filled/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-filled/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-filled/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-filled/javascript/muix/plot-dark.html
-quality_score: 84
+quality_score: 87
 review:
   strengths:
-  - 'Correct diverging-colormap math: t.div stops reversed so position 0 lands on
-    blue (cool/low) and position 1 on red (warm/high), with a theme-adaptive pageBg
-    midpoint'
-  - Creative, functioning custom filled-contour renderer (marching-triangles + painter's
-    algorithm) built via ChartContainer's composition API (useXScale/useYScale) since
-    MUI X has no native contour chart type -- an idiomatic use of the library's advanced
-    composition pattern
-  - Correct title format, descriptive axis labels with units, and a ContinuousColorLegend
-    plus rotated axis title for the value scale
-  - 'Both themes render correctly: identical data colors between light/dark, theme-adaptive
-    chrome, no dark-on-dark or light-on-light legibility failures'
-  - Isolines overlaid on top of the filled bands per the spec's suggestion, aiding
-    precise level identification
-  - Deterministic, reproducible data (fixed analytic formula, no RNG)
+  - Marching-triangles pass on a 90x90 grid (with cell-centre subdivision) gives smooth,
+    gap-free band boundaries across the whole extent in both themes
+  - imprint_div built from t.div with the theme-adaptive midpoint, centred on 0 and
+    oriented warm=red / cool=blue, matching the temperature-anomaly semantics
+  - Discrete stepped colorbar with the same 10 levels as the bands, outlined and titled
+    with the quantity and unit
+  - Custom SVG layer composed into ChartsContainer via useXScale/useYScale/useDrawingArea,
+    so bands, isolines and colorbar share MUI X's scales and axes
+  - Thin isolines at 0.28 opacity in the ink token mark every band boundary while
+    the fills stay the main signal
   weaknesses:
-  - Visible jagged/stair-step artifacts along filled-contour boundaries, most noticeable
-    on the diagonal zero-crossing boundary in the low-gradient region between the
-    two Gaussian patches, in BOTH light and dark renders. The spec explicitly calls
-    for 'grid resolution sufficient to avoid jagged color boundaries' and a smooth
-    gradient visualization. Root cause is likely the 4-triangles-around-centroid cell
-    split in buildTriangles(), which introduces spurious zig-zag kinks along low-gradient
-    level curves independent of grid density -- try increasing GRID and/or replacing
-    the centroid-quad split with a standard 2-triangle-per-cell (fixed-diagonal) split
-    for smoother boundaries.
-  - Title occupies only ~40-47% of the plot width at the current auto-scaled font
-    size (TITLE_FONT_SIZE formula), a bit small/lost relative to the 50-70% guideline
-    -- consider a slightly larger multiplier or minimum size.
-  - The file leans on many small helper functions (hexToRgb, lerpChannel, imprintDivInterpolator,
-    buildTriangles, triangleFill, polysToPath, segmentsToPath) -- justified by the
-    custom contour engine but on the higher end of complexity for a KISS baseline;
-    consider consolidating the color-interpolation helpers.
+  - 'CQ-04 (code): `levels` (line 74) recomputes the same values as `levelEdges` (lines
+    75-78) without the last edge → derive one from the other, e.g. `const levels =
+    levelEdges.slice(0, -1)` (−3 lines). Likely cause: two separate Array.from level
+    generators.'
+  - 'Suggestion: use the typographic minus (−) in the colorbar tick labels to match
+    the axis ticks, which MUI X renders with U+2212.'
+  - 'Suggestion: an equal x/y aspect for the plot area would keep the isotropic Gaussian
+    features circular instead of stretched into ellipses.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) -- matches the required light-theme surface, not pure white.
-      Chrome: Title "Sea-Surface Temperature Anomaly · contour-filled · javascript · muix · anyplot.ai" centered at top in dark ink; "Zonal offset (°)" / "Meridional offset (°)" axis titles and numeric tick labels (-3.0..3.0) in dark/soft-dark ink; a vertical ContinuousColorLegend on the right with "-2.0"/"2.0" endpoint labels and a rotated "Temperature anomaly (°C)" label. All text is clearly legible against the light background.
-      Data: A filled contour field with a warm red blob (peak near x=1.3, y=0.9) and a cool blue blob (trough near x=-1.4, y=-1.0), each rendered as 4-5 nested elliptical color bands with thin semi-transparent isolines tracing each level boundary; the surrounding low-gradient area is a very pale pinkish-grey (upper right, mildly positive) vs. pale bluish-grey (lower left, mildly negative), split by a diagonal zero-crossing boundary. Colors run blue (low) -> near-neutral (zero) -> red (high), matching the Imprint diverging palette.
-      Legibility verdict: PASS.
+      Background: warm off-white #FAF8F1 page; the plot area is fully covered by contour bands.
+      Chrome: bold dark title "contour-filled · javascript · muix · anyplot.ai" centred top, grey subtitle "Temperature anomaly (°C) across 90×90 grid · 10 filled contour bands"; left and bottom axis lines with dark tick labels (−3.0 … 3.0 every 0.5) and axis titles "Zonal offset (°)" and "Meridional offset (°)"; vertical discrete colorbar on the right, -2.0 to +2.0 labelled every other edge, rotated title "Temperature anomaly (°C)". All text readable.
+      Data: imprint_div bands — deep matte red closed ellipses around a warm peak near (1.3, 0.9), blue closed ellipses around a cool basin near (−1.4, −1.0), near-neutral grey and pale-pink bands either side of the zero line running diagonally from the top-left to the bottom-centre. Thin semi-transparent ink isolines along every band boundary. Boundaries smooth, no holes. (Continuous data: no categorical first series.)
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) -- matches the required dark-theme surface, not pure black.
-      Chrome: Same title, axis titles, tick labels, and colorbar layout as the light render, all rendered in light ink/off-white text, clearly readable against the dark background. No dark-on-dark text found.
-      Data: Same red/blue blob positions and same band colors as the light render (data colors are identical between themes; only the neutral background hue shifted from pale grey/beige to a dark warm-grey), confirming chrome-only theme adaptation.
-      Legibility verdict: PASS.
-
-    Shared observation (both renders): the filled-contour band boundaries show a visible jagged/stair-step texture, most noticeable along the diagonal zero-crossing line in the low-gradient area between the two peaks -- flagged as a weakness below.
+      Background: warm near-black #1A1A17 page.
+      Chrome: title, subtitle, tick labels, axis titles and colorbar labels in light ink; axis lines light grey. No dark-on-dark text.
+      Data: the same red and blue poles and band geometry as the light render; the diverging midpoint flips to the dark page colour as the style guide prescribes, so the near-zero bands are dark grey-blue and dark maroon. Isolines render light and stay visible on every band.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes at appropriate sizes
+        comment: Explicit sizes (title 22, subtitle 15, axis labels 15, ticks and
+          colorbar labels 14 CSS px); ink/inkSoft tokens keep every label readable
+          on both surfaces
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions in either render
+        comment: No text collisions; colorbar labels and title clear of the bands
       - id: VQ-03
         name: Element Visibility
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: Contour band boundaries show visible jagged/stair-step artifacts,
-          most noticeable on the diagonal zero-crossing line
+        passed: true
+        comment: Bands fill the whole grid; thin isolines at 0.28 opacity stay visible
+          in both themes without dominating the fills
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red-blue diverging scale has adequate contrast; not red-green
+        comment: Red-blue diverging ramp is CVD-safe; lightness steps carry the levels
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Nothing cut off; title is a bit small (~40-47% of plot width) relative
-          to the 50-70% guideline
+        comment: 3200x1800 canvas, plot area fills the width, colorbar balanced on
+          the right, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units, correct title format
+        comment: 'Zonal offset (°), Meridional offset (°), Temperature anomaly (°C):
+          descriptive with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Correct imprint_div usage, theme-adaptive midpoint, correct backgrounds
-          in both themes
+        comment: 'imprint_div from t.div (#AE3030, theme-adaptive midpoint, #4467A3),
+          red on the warm side; backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom color math and contour geometry show real design intent, but
-          jagged edges undercut full polish
+        comment: Title/subtitle hierarchy (700 weight ink over inkSoft subtitle) and
+          a stepped, outlined discrete colorbar matching the bands
       - id: DE-02
         name: Visual Refinement
-        score: 2
-        max: 6
-        passed: false
-        comment: Jagged band boundaries are a direct refinement flaw
-      - id: DE-03
-        name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Clear two-focal-point narrative (warm vs. cool anomaly) with colorbar
-          and isolines guiding the reader
+        comment: Grid dropped in favour of the field itself; isoline opacity tuned
+          so boundaries read without competing; colorbar vertically centred at 78%
+          of the plot height
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Warm anomaly on the red pole and cool basin on the blue pole make
+          the two features read at a glance as warm vs cool
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -143,26 +135,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correctly a filled contour with color bands
+        comment: Filled contour bands from a marching-triangles pass over a regular
+          grid
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Colorbar and overlaid contour lines present; grid resolution/algorithm
-          does not fully avoid jagged boundaries per spec note
+        comment: Diverging cmap centred on 0, discrete colorbar naming the quantity
+          with the same 10 levels, overlaid contour lines, 10 evenly stepped levels,
+          smooth boundaries from a 90x90 grid, no holes
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped, full grid extent shown
+        comment: Axes span the full grid extent; bands at their interpolated positions
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format matches spec exactly; legend labels correct
+        comment: Title is contour-filled · javascript · muix · anyplot.ai; colorbar
+          title is the quantity with units
     data_quality:
       score: 15
       max: 15
@@ -172,56 +167,60 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows fill bands, isolines, and colorbar mapping
+        comment: Closed bands around a peak and a basin, a broad near-zero region,
+          narrow vs broad bands
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral sea-surface temperature anomaly scenario
+        comment: 'Temperature anomaly field over zonal/meridional offsets: plausible
+          and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: -2..2 degC anomaly range is realistic for SST anomalies
+        comment: Anomalies of -1.6 to +2.0 °C over a ±3° window are sensible; no Check
+          values in the spec
     code_quality:
       score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Many small helper functions, justified by the custom contour engine
-          but non-trivial structure
+        comment: Module-level computation plus the layer component the MUI X hooks
+          require
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic analytic formula, no RNG
+        comment: Deterministic analytic field
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used @mui/x-charts imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Well-commented, no fake UI/interactivity
+        passed: false
+        comment: levels (lines 74) duplicates levelEdges (lines 75-78) minus its last
+          element (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: skipAnimation set, sized from ANYPLOT_SIZE, harness contract respected
+        comment: Default-exported component, skipAnimation, v9 ChartsContainer API
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -229,20 +228,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of ChartContainer composition API and scale hooks for a
-          custom layer
+        comment: ChartsContainer composition with ChartsXAxis/ChartsYAxis and per-axis
+          labelStyle/tickLabelStyle, axis bands sized with height/width as v9 expects
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Continuous zAxis colorMap and ContinuousColorLegend are genuinely
-          distinctive MUI X features
+        comment: Custom SVG layer driven by useXScale/useYScale/useDrawingArea inside
+          the chart context, so bands and colorbar share MUI X's scales
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-10-24T08:31:02Z'
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
+  - custom-legend
   - layer-composition
   patterns:
   - data-generation
@@ -250,5 +253,5 @@ impl_tags:
   dataprep:
   - interpolation
   styling:
-  - custom-colormap
+  - publication-ready
   - alpha-blending
