@@ -70,7 +70,7 @@ for (let i = totalSpreads.length - 1; i >= 0; i--) {
   }
 }
 const PLATEAU_ANNOTATION = `Spread ≥ ${Math.round(PLATEAU_SPREAD_SHARE * 100)}% of maximum`;
-const BOUNDS_LABEL = `Asymmetric bounds (−${LOWER_ERROR}, +${UPPER_ERROR})`;
+const BOUNDS_LABEL = "10th–90th percentile range";
 
 function ErrorBars() {
   const xScale = useXScale() as any;
@@ -218,10 +218,10 @@ export default function Chart() {
           </Typography>
         </Box>
         <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <svg width={22} height={16} viewBox="0 0 22 16">
-            <line x1={2} x2={2} y1={3} y2={13} stroke={POINT_COLOR} strokeWidth={2.5} />
-            <line x1={20} x2={20} y1={3} y2={13} stroke={POINT_COLOR} strokeWidth={2.5} />
-            <line x1={2} x2={20} y1={8} y2={8} stroke={POINT_COLOR} strokeWidth={2.5} />
+          <svg width={16} height={22} viewBox="0 0 16 22">
+            <line x1={3} x2={13} y1={2} y2={2} stroke={POINT_COLOR} strokeWidth={2.5} />
+            <line x1={3} x2={13} y1={20} y2={20} stroke={POINT_COLOR} strokeWidth={2.5} />
+            <line x1={8} x2={8} y1={2} y2={20} stroke={POINT_COLOR} strokeWidth={2.5} />
           </svg>
           <Typography sx={{ color: t.inkSoft, fontSize: 15, fontFamily: FONT }}>
             {BOUNDS_LABEL}
