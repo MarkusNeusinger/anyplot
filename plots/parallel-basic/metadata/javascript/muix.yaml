@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: parallel-basic
 created: '2026-07-24T11:11:24Z'
-updated: '2026-10-24T11:29:31Z'
+updated: '2026-10-24T11:34:02Z'
 generated_by: gemini-4-argon
 adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
 workflow_run: 40089862541
@@ -13,45 +13,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/javascript/muix/plot-dark.html
-quality_score: 84
+quality_score: 86
 review:
   strengths:
-  - Every axis is min-max scaled with padding while tick values stay in original units,
-    so lines spread along each axis and the reader still sees real values
-  - Straight polylines at 0.58 opacity cross every axis at their exact values; bundles
-    of similar observations read darker than single lines
-  - 'Theme tokens threaded through all chrome (ink, inkSoft, pageBg): both renders
-    read cleanly, Imprint palette in canonical order with CNN on brand green'
-  - Composes a custom chart inside MUI X ChartsContainer, using the useXScale/useDrawingArea
-    hooks for coordinates, with skipAnimation set
-  - Deterministic LCG seed and a clean column/data/plot separation
+  - Each of the five axes is min-max normalized with an 8 % pad and gets its own nice-step
+    ticks in original units, so lines spread over the full height of every axis and
+    no variable squeezes the others flat
+  - Composes the chart from MUI X's ChartsContainer with the useXScale and useDrawingArea
+    hooks, so the evenly spaced axes and the polylines are positioned by the library's
+    own scale and drawing area
+  - 'The ML-hyperparameter data forms three readable bundles (Transformers: many layers,
+    high accuracy, long training; RNNs: high dropout, low accuracy) while single lines
+    still stray from their bundle'
+  - 'Imprint palette in canonical order (CNN #009E73 first), straight polyline segments
+    at 0.75 stroke opacity, identical data colors in both themes, and theme-token
+    chrome that reads cleanly on #FAF8F1 and #1A1A17'
+  - Tick labels sit on small page-colored halos so they stay legible where the line
+    bundles cross the axes
   weaknesses:
-  - 'VQ-03 (dark): the Transformer lines in #4467A3 at 0.58 opacity sit at low contrast
-    on #1A1A17 and read much dimmer than the green and lilac lines → about 0.75 opacity
-    (+0.17) for the 30 lines, same in both themes. Likely cause: strokeOpacity={0.58}
-    on the polyline group.'
-  - 'DQ-03 (both): integer hyperparameters carry fractional values — lines cross ''Hidden
-    layers'' between ticks at values such as 3.4 or 7.5 layers, and batch sizes are
-    values such as 137.42 → round Hidden layers to integers and draw batch sizes from
-    16/32/64/128/256. Likely cause: toFixed(2) applied to every dimension in the data
-    loop.'
-  - 'Suggestion: render the legend with MUI X''s own ChartsLegend instead of hand-built
-    HTML spans.'
+  - 'Suggestion: the legend is a hand-built HTML row in the title band; feeding the
+    three architectures as series to ChartsLegend would use the library''s own legend
+    component.'
+  - 'Suggestion: a slightly larger axis-name font (about 16-17 px) would give the
+    variable names more weight than the tick labels in the 400 px thumbnail.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, matches #FAF8F1
-      Chrome: title top-left, HTML legend top-right, five bold axis names, soft-ink axes with tick values on halos — all readable
-      Data: 30 straight polylines at 0.58 opacity; CNN #009E73, RNN #C475FD, Transformer #4467A3
+      Background: warm off-white #FAF8F1 across the whole canvas, no white frame.
+      Chrome: title "parallel-basic · javascript · muix · anyplot.ai" bold dark ink at top left (~34 % width); legend (CNN, RNN, Transformer with round swatches) at top right; five bold axis names above five evenly spaced vertical axes (Batch size, Hidden layers, Dropout (%), Validation accuracy (%), Training time (min)); tick marks with labels in original units (0/100/200, 2/4/6/8, 10/20/30, 70/80/90/100, 50/100/150) on page-colored halos. All text dark on light, readable; nothing clipped.
+      Data: 30 straight polylines at 0.75 opacity — CNN #009E73, RNN purple (Imprint 2), Transformer blue (Imprint 3). Clear bundles: Transformers high on layers/accuracy/training time, RNNs peaking at 25-33 % dropout and dropping to ~70 % accuracy, CNNs in between with low dropout.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black, matches #1A1A17
-      Chrome: title, legend, axis names and tick values in light ink — no dark-on-dark text
-      Data: identical Imprint colors to light render; Transformer blue lines read dimmer on dark but remain distinguishable
+      Background: warm near-black #1A1A17.
+      Chrome: title, legend labels and axis names in light ink, axes and tick labels in light soft ink; no dark-on-dark text anywhere; tick halos are dark page color.
+      Data: identical green/purple/blue line colors and positions as the light render; the blue Transformer lines are darker against the surface but still clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -59,46 +58,47 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 22 px, axis names 15 px, ticks 14 px CSS; all readable in both
-          themes
+        comment: Explicit sizes (title 22, axis names 15, ticks 14, legend 15 CSS
+          px) per the muix sizing guidance; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Tick values sit on page-colored halos; no text collisions
+        comment: No text collisions; tick labels on halos stay readable where lines
+          cross
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Transformer blue lines at 0.58 opacity are dim on the dark surface
-          (defect line)
+        comment: 30 lines at 1.8 px and 0.75 opacity, visible in both themes; legend
+          swatches match line colors
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint hues are CVD-safe; no red-green signal
+        comment: Green/purple/blue Imprint trio, CVD-safe, adequate contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced layout, axes evenly spaced, nothing cut off
+        comment: 3200x1800, axes fill the canvas, nothing clipped, balanced labels
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis names with units
+        comment: Axis names descriptive with units (%, min)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint canonical order, CNN on #009E73, correct backgrounds in
-          both themes'
+        comment: 'Imprint canonical order, CNN #009E73 first, correct backgrounds
+          in both themes'
     design_excellence:
       score: 11
       max: 20
@@ -108,22 +108,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Combined title/legend header row, semibold axis names over halo-backed
-          tick values
+        comment: Legend folded into the title row and bold axis names above each axis
+          give a clean header hierarchy beyond the baseline
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Per-axis nice ticks at ~3.5 divisions, 8% axis padding, tick halos
-          over lines
+        comment: Page-colored halos behind tick labels and per-axis nice tick steps
+          chosen for this chart
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Axis order and cluster profiles make the dropout/accuracy crossing
-          contrast the architectures
+        comment: Data designed so the three architectures form distinct bundles, showing
+          the accuracy/training-time trade-off at a glance
     spec_compliance:
       score: 15
       max: 15
@@ -133,29 +133,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Plain parallel coordinates with category color and legend, no extra
-          layers
+        comment: Plain parallel coordinates with category color; no extra layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Evenly spaced named axes, normalization, transparency, category color
-          all present
+        comment: Normalized axes, evenly spaced named axes, straight polylines, transparency,
+          color by category with legend — all characteristic bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Straight segments at exact values on each axis
+        comment: Each polyline crosses every axis at its value; axes cover all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; legend labels CNN/RNN/Transformer
+        comment: Mandated title format; legend labels are readable architecture names
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -163,19 +162,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Clusters, crossings and outlier lines all visible
+        comment: Clusters, crossings between opposite-running axes, and outliers all
+          visible
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neural network hyperparameter tuning, neutral
+        comment: ML hyperparameter tuning, a spec application, neutral
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Hidden layers and batch sizes carry fractional values (defect line)
+        comment: Batch sizes powers of two 16-256, 1-8 layers, dropout 5-33 %, accuracy
+          ~69-98 %, training 55-185 min — plausible; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -185,7 +186,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Only the overlay component the hooks require
+        comment: Flat script plus the overlay component the composition API requires
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -197,20 +198,19 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Only ChartsContainer and two hooks, all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; nice-tick computation is permitted per the
-          Computation line
+        comment: Short nice-tick routine is fine (no JS helper available)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default export, skipAnimation, v9 ChartsContainer API
+        comment: Default export, skipAnimation, ANYPLOT_SIZE, v9 import paths
     library_mastery:
       score: 5
       max: 10
@@ -220,26 +220,24 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: ChartsContainer composition; legend hand-built in HTML instead of
-          ChartsLegend
+        comment: Composition via ChartsContainer; legend is hand-built HTML instead
+          of ChartsLegend
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: useXScale/useDrawingArea hooks drive a custom SVG overlay inside
-          the MUI X container
-  verdict: REJECTED
+        comment: Uses useXScale/useDrawingArea hooks to place a custom SVG layer inside
+          the MUI X drawing area
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T11:26:55Z'
+  rendered_at: '2026-10-24T11:31:25Z'
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
   - manual-ticks
-  - layer-composition
-  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
