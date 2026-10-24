@@ -1,6 +1,6 @@
 // anyplot.ai
 // line-3d-trajectory: 3D Line Plot for Trajectory Visualization
-// Library: muix 9.0.0 | JavaScript 22.23.2
+// Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 88/100 | Created: 2026-09-10
 
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
@@ -9,21 +9,12 @@ import { useDrawingArea } from "@mui/x-charts/hooks";
 const t = window.ANYPLOT_TOKENS;
 
 // Constants
-const TRAJECTORY_COL = "Trajectory";
-const TIME_COL = "Simulation Time (t)";
-const X_COL = "Convection Rate (X)";
-const Y_COL = "Horizontal Temp Var (Y)";
-const Z_COL = "Vertical Temp Var (Z)";
-
-const SIGMA = 10;
-const RHO = 28;
-const BETA = 8 / 3;
-const DT = 0.01;
-const STEPS = 4000;
-const TRANSIENT = 400;
-const SUBSAMPLE = 2;
-const ELEV_RAD = (20 * Math.PI) / 180;
-const AZIM_RAD = (32 * Math.PI) / 180;
+const FONT = '"Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, sans-serif';
+const MONO = '"JetBrains Mono", "SFMono-Regular", Menlo, monospace';
+const ELEV_DEG = 20;
+const AZIM_DEG = 32;
+const ELEV_RAD = (ELEV_DEG * Math.PI) / 180;
+const AZIM_RAD = (AZIM_DEG * Math.PI) / 180;
 const COS_AZ = Math.cos(AZIM_RAD);
 const SIN_AZ = Math.sin(AZIM_RAD);
 const COS_EL = Math.cos(ELEV_RAD);
@@ -31,18 +22,31 @@ const SIN_EL = Math.sin(ELEV_RAD);
 const PAD_X_SHARE = 0.12;
 const PAD_Y_SHARE = 0.14;
 
-// Data: Lorenz attractor integrated via RK4 from two perturbed initial states
+// Columns: set these to your data's column names
+const X = "Convection rate (X)"; // role: x
+const Y = "Horizontal temp var (Y)"; // role: y
+const Z = "Vertical temp var (Z)"; // role: z
+const TRAJECTORY = "Trajectory"; // role: color
+
+// Data: replace this block with your own records
+const SIGMA = 10;
+const RHO = 28;
+const BETA = 8 / 3;
+const DT = 0.01;
+const STEPS = 4000;
+const TRANSIENT = 400;
+const SUBSAMPLE = 2;
+
 const INITIAL_STATES: Array<{ label: string; init: [number, number, number] }> = [
   { label: "Trajectory A (x₀ = 0.1000)", init: [0.1, 0, 0] },
   { label: "Trajectory B (x₀ = 0.1001)", init: [0.1001, 0, 0] },
 ];
 
-const DATA: Array<{
-  [TRAJECTORY_COL]: string;
-  [TIME_COL]: number;
-  [X_COL]: number;
-  [Y_COL]: number;
-  [Z_COL]: number;
+const data: Array<{
+  [TRAJECTORY]: string;
+  [X]: number;
+  [Y]: number;
+  [Z]: number;
 }> = [];
 
 for (let s = 0; s < INITIAL_STATES.length; s += 1) {
@@ -82,24 +86,24 @@ for (let s = 0; s < INITIAL_STATES.length; s += 1) {
     z += (DT / 6) * (k1z + 2 * k2z + 2 * k3z + k4z);
 
     if (i >= TRANSIENT && (i - TRANSIENT) % SUBSAMPLE === 0) {
-      DATA.push({
-        [TRAJECTORY_COL]: label,
-        [TIME_COL]: Number(((i - TRANSIENT) * DT).toFixed(2)),
-        [X_COL]: x,
-        [Y_COL]: y,
-        [Z_COL]: z,
+      data.push({
+        [TRAJECTORY]: label,
+        [X]: x,
+        [Y]: y,
+        [Z]: z,
       });
     }
   }
 }
 
+// Plot: reads only data and the constants above
 const trajectoryNames = Array.from(
-  new Set(DATA.map((d) => d[TRAJECTORY_COL])),
+  new Set(data.map((d) => d[TRAJECTORY])),
 );
 
-const allX = DATA.map((d) => d[X_COL]);
-const allY = DATA.map((d) => d[Y_COL]);
-const allZ = DATA.map((d) => d[Z_COL]);
+const allX = data.map((d) => d[X]);
+const allY = data.map((d) => d[Y]);
+const allZ = data.map((d) => d[Z]);
 const X_MIN = Math.min(...allX);
 const X_MAX = Math.max(...allX);
 const Y_MIN = Math.min(...allY);
@@ -110,7 +114,7 @@ const Z_MAX = Math.max(...allZ);
 interface ProjectedTrajectory {
   name: string;
   color: string;
-  points: Array<{ sx: number; sy: number; t: number }>;
+  points: Array<{ sx: number; sy: number }>;
 }
 
 const projectedTrajectories: ProjectedTrajectory[] = [];
@@ -118,20 +122,18 @@ const allScreenPts: Array<{ sx: number; sy: number }> = [];
 
 for (let idx = 0; idx < trajectoryNames.length; idx += 1) {
   const name = trajectoryNames[idx];
-  const rows = DATA.filter((d) => d[TRAJECTORY_COL] === name).sort(
-    (a, b) => a[TIME_COL] - b[TIME_COL],
-  );
-  const pts: Array<{ sx: number; sy: number; t: number }> = [];
+  const rows = data.filter((d) => d[TRAJECTORY] === name);
+  const pts: Array<{ sx: number; sy: number }> = [];
   for (let i = 0; i < rows.length; i += 1) {
     const r = rows[i];
-    const nx = (2 * (r[X_COL] - X_MIN)) / (X_MAX - X_MIN) - 1;
-    const ny = (2 * (r[Y_COL] - Y_MIN)) / (Y_MAX - Y_MIN) - 1;
-    const nz = (2 * (r[Z_COL] - Z_MIN)) / (Z_MAX - Z_MIN) - 1;
+    const nx = (2 * (r[X] - X_MIN)) / (X_MAX - X_MIN) - 1;
+    const ny = (2 * (r[Y] - Y_MIN)) / (Y_MAX - Y_MIN) - 1;
+    const nz = (2 * (r[Z] - Z_MIN)) / (Z_MAX - Z_MIN) - 1;
     const xRot = nx * COS_AZ - ny * SIN_AZ;
     const yRot = nx * SIN_AZ + ny * COS_AZ;
     const sx = xRot;
     const sy = yRot * SIN_EL + nz * COS_EL;
-    pts.push({ sx, sy, t: r[TIME_COL] });
+    pts.push({ sx, sy });
     allScreenPts.push({ sx, sy });
   }
   projectedTrajectories.push({
@@ -194,43 +196,49 @@ function TrajectoriesLayer() {
 
   const xDomSpan = DOM_X1 - DOM_X0;
   const yDomSpan = DOM_Y1 - DOM_Y0;
-  const scaleY = areaHeight / yDomSpan;
-  const scaleX = Math.min(width / xDomSpan, scaleY * 1.38);
-  const offsetX = left + (width - xDomSpan * scaleX) / 2;
-  const offsetY = top + (areaHeight - yDomSpan * scaleY) / 2;
+  const scale = Math.min(width / xDomSpan, areaHeight / yDomSpan);
+  const offsetX = left + (width - xDomSpan * scale) / 2;
+  const offsetY = top + (areaHeight - yDomSpan * scale) / 2;
 
   const c0 = {
-    x: offsetX + (projectedCube[0].sx - DOM_X0) * scaleX,
-    y: offsetY + (DOM_Y1 - projectedCube[0].sy) * scaleY,
+    x: offsetX + (projectedCube[0].sx - DOM_X0) * scale,
+    y: offsetY + (DOM_Y1 - projectedCube[0].sy) * scale,
   };
   const c1 = {
-    x: offsetX + (projectedCube[1].sx - DOM_X0) * scaleX,
-    y: offsetY + (DOM_Y1 - projectedCube[1].sy) * scaleY,
+    x: offsetX + (projectedCube[1].sx - DOM_X0) * scale,
+    y: offsetY + (DOM_Y1 - projectedCube[1].sy) * scale,
   };
   const c2 = {
-    x: offsetX + (projectedCube[2].sx - DOM_X0) * scaleX,
-    y: offsetY + (DOM_Y1 - projectedCube[2].sy) * scaleY,
+    x: offsetX + (projectedCube[2].sx - DOM_X0) * scale,
+    y: offsetY + (DOM_Y1 - projectedCube[2].sy) * scale,
   };
   const c3 = {
-    x: offsetX + (projectedCube[3].sx - DOM_X0) * scaleX,
-    y: offsetY + (DOM_Y1 - projectedCube[3].sy) * scaleY,
+    x: offsetX + (projectedCube[3].sx - DOM_X0) * scale,
+    y: offsetY + (DOM_Y1 - projectedCube[3].sy) * scale,
   };
   const c5 = {
-    x: offsetX + (projectedCube[5].sx - DOM_X0) * scaleX,
-    y: offsetY + (DOM_Y1 - projectedCube[5].sy) * scaleY,
+    x: offsetX + (projectedCube[5].sx - DOM_X0) * scale,
+    y: offsetY + (DOM_Y1 - projectedCube[5].sy) * scale,
   };
   const c6 = {
-    x: offsetX + (projectedCube[6].sx - DOM_X0) * scaleX,
-    y: offsetY + (DOM_Y1 - projectedCube[6].sy) * scaleY,
+    x: offsetX + (projectedCube[6].sx - DOM_X0) * scale,
+    y: offsetY + (DOM_Y1 - projectedCube[6].sy) * scale,
   };
 
   const firstPt = projectedTrajectories[0].points[0];
+  const startsClose =
+    projectedTrajectories.length > 1 &&
+    projectedTrajectories.every(
+      (tr) =>
+        Math.hypot(tr.points[0].sx - firstPt.sx, tr.points[0].sy - firstPt.sy) <
+        0.02,
+    );
   const startPx = {
-    x: offsetX + (firstPt.sx - DOM_X0) * scaleX,
-    y: offsetY + (DOM_Y1 - firstPt.sy) * scaleY,
+    x: offsetX + (firstPt.sx - DOM_X0) * scale,
+    y: offsetY + (DOM_Y1 - firstPt.sy) * scale,
   };
   const labelAnchor = { x: c3.x + 156, y: c5.y + 44 };
-  const gizmoOrigin = { x: left + 96, y: top + areaHeight - 78 };
+  const gizmoOrigin = { x: left + 108, y: top + areaHeight - 78 };
   const ARM = 58;
 
   return (
@@ -277,7 +285,7 @@ function TrajectoriesLayer() {
         fontWeight={600}
         textAnchor="middle"
       >
-        {X_COL} [{X_MIN.toFixed(0)} to +{X_MAX.toFixed(0)}]
+        {X} [{X_MIN.toFixed(0)} to +{X_MAX.toFixed(0)}]
       </text>
 
       <line
@@ -296,7 +304,7 @@ function TrajectoriesLayer() {
         fontWeight={600}
         textAnchor="start"
       >
-        {Y_COL} [{Y_MIN.toFixed(0)} to +{Y_MAX.toFixed(0)}]
+        {Y} [{Y_MIN.toFixed(0)} to +{Y_MAX.toFixed(0)}]
       </text>
 
       <line
@@ -316,7 +324,7 @@ function TrajectoriesLayer() {
         textAnchor="end"
         dominantBaseline="middle"
       >
-        {Z_COL} [{Z_MIN.toFixed(0)} to {Z_MAX.toFixed(0)}]
+        {Z} [{Z_MIN.toFixed(0)} to {Z_MAX.toFixed(0)}]
       </text>
 
       {/* Trajectories */}
@@ -324,15 +332,15 @@ function TrajectoriesLayer() {
         const poly = traj.points
           .map(
             (p) =>
-              `${(offsetX + (p.sx - DOM_X0) * scaleX).toFixed(1)},${(
+              `${(offsetX + (p.sx - DOM_X0) * scale).toFixed(1)},${(
                 offsetY +
-                (DOM_Y1 - p.sy) * scaleY
+                (DOM_Y1 - p.sy) * scale
               ).toFixed(1)}`,
           )
           .join(" ");
         const endPt = traj.points[traj.points.length - 1];
-        const endX = offsetX + (endPt.sx - DOM_X0) * scaleX;
-        const endY = offsetY + (DOM_Y1 - endPt.sy) * scaleY;
+        const endX = offsetX + (endPt.sx - DOM_X0) * scale;
+        const endY = offsetY + (DOM_Y1 - endPt.sy) * scale;
 
         return (
           <g key={traj.name}>
@@ -355,36 +363,55 @@ function TrajectoriesLayer() {
         );
       })}
 
-      {/* Shared start marker and leader callout */}
-      <circle
-        cx={startPx.x}
-        cy={startPx.y}
-        r={6.5}
-        fill={t.ink}
-        stroke={t.pageBg}
-        strokeWidth={1.5}
-      />
-      <line
-        x1={startPx.x}
-        y1={startPx.y}
-        x2={labelAnchor.x + 8}
-        y2={labelAnchor.y + 4}
-        stroke={t.inkSoft}
-        strokeWidth={1.3}
-        strokeDasharray="4 3"
-        opacity={0.8}
-      />
-      <text
-        x={labelAnchor.x}
-        y={labelAnchor.y}
-        fill={t.ink}
-        fontSize={14}
-        fontWeight={600}
-        fontFamily={t.mono}
-        textAnchor="end"
-      >
-        Shared start (t = {firstPt.t.toFixed(1)})
-      </text>
+      {/* Start marker and conditional shared-start callout */}
+      {startsClose ? (
+        <g>
+          <circle
+            cx={startPx.x}
+            cy={startPx.y}
+            r={6.5}
+            fill={t.ink}
+            stroke={t.pageBg}
+            strokeWidth={1.5}
+          />
+          <line
+            x1={startPx.x}
+            y1={startPx.y}
+            x2={labelAnchor.x + 8}
+            y2={labelAnchor.y + 4}
+            stroke={t.inkSoft}
+            strokeWidth={1.3}
+            strokeDasharray="4 3"
+            opacity={0.8}
+          />
+          <text
+            x={labelAnchor.x}
+            y={labelAnchor.y}
+            fill={t.ink}
+            fontSize={14}
+            fontWeight={600}
+            fontFamily={MONO}
+            textAnchor="end"
+          >
+            Shared start
+          </text>
+        </g>
+      ) : (
+        projectedTrajectories.map((traj) => {
+          const s0 = traj.points[0];
+          return (
+            <circle
+              key={`start-${traj.name}`}
+              cx={offsetX + (s0.sx - DOM_X0) * scale}
+              cy={offsetY + (DOM_Y1 - s0.sy) * scale}
+              r={5}
+              fill={t.ink}
+              stroke={traj.color}
+              strokeWidth={2}
+            />
+          );
+        })
+      )}
 
       {/* 3D orientation triad gizmo */}
       {gizmoAxes.map((a) => {
@@ -420,9 +447,9 @@ function TrajectoriesLayer() {
         fill={t.inkSoft}
         textAnchor="middle"
         fontSize={14}
-        fontFamily={t.mono}
+        fontFamily={MONO}
       >
-        isometric triad
+        elev {ELEV_DEG}°, azim {AZIM_DEG}°
       </text>
     </g>
   );
@@ -441,7 +468,7 @@ export default function Chart() {
         height: H,
         background: t.pageBg,
         color: t.ink,
-        fontFamily: t.sans,
+        fontFamily: FONT,
         display: "flex",
         flexDirection: "column",
         boxSizing: "border-box",
@@ -473,16 +500,12 @@ export default function Chart() {
               fontSize: 14,
               color: t.inkSoft,
               marginTop: 4,
-              fontFamily: t.mono,
+              fontFamily: MONO,
             }}
           >
-            Lorenz attractor (σ = {SIGMA}, ρ = {RHO}, β = 8/3) ·{" "}
-            {projectedTrajectories[0].points.length.toLocaleString()} steps per
-            trajectory ({TIME_COL} 0 →{" "}
-            {projectedTrajectories[0].points[
-              projectedTrajectories[0].points.length - 1
-            ].t.toFixed(0)}
-            )
+            {projectedTrajectories.length} trajectories ·{" "}
+            {projectedTrajectories[0].points.length.toLocaleString()} points per
+            trajectory ({X}, {Y}, {Z})
           </div>
         </div>
 
