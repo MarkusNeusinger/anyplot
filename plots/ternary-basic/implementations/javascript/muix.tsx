@@ -3,102 +3,116 @@
 // Library: muix 7.29.1 | JavaScript 22.23.1
 // Quality: 88/100 | Created: 2026-08-04
 //# anyplot-orientation: square
-// anyplot.ai
-// ternary-basic: Basic Ternary Plot
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-08-04
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { ChartsTooltip } from "@mui/x-charts/ChartsTooltip";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const SIZE = window.ANYPLOT_SIZE;
-const TITLE = "Bronze Alloy Composition · ternary-basic · javascript · muix · anyplot.ai";
-const FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
 
-// --- Ternary <-> Cartesian projection ---------------------------------------
-// Equilateral triangle: Copper (a) at the top apex, Tin (b) at bottom-left,
-// Zinc (c) at bottom-right. Only two degrees of freedom exist (a+b+c=1), so
-// every composition maps to a unique point inside (or on) the triangle.
+// Constants
 const SQRT3_2 = Math.sqrt(3) / 2;
-function toXY(a, b, c) {
-  const total = a + b + c;
-  const aN = a / total;
-  const cN = c / total;
-  return { x: cN + aN / 2, y: SQRT3_2 * aN };
-}
-const VERTEX_TOP = toXY(1, 0, 0);
-const VERTEX_LEFT = toXY(0, 1, 0);
-const VERTEX_RIGHT = toXY(0, 0, 1);
-
-// --- Data: bronze/gunmetal alloy samples (Cu-Sn-Zn, deterministic) ---------
-// Foundry bronze is copper-dominant with smaller tin and zinc fractions, so
-// the sample cloud naturally clusters toward the Copper apex while still
-// spreading across the simplex — the "story" comes from that real material
-// tendency, not from an added annotation.
-let seed = 20260804 >>> 0;
-function rand() {
-  seed = (1664525 * seed + 1013904223) >>> 0;
-  return seed / 4294967296;
-}
-function gammaShape(k) {
-  let s = 0;
-  for (let i = 0; i < k; i++) s += -Math.log(rand() || 1e-9);
-  return s;
-}
-
-const N = 65;
-const cu = new Array(N);
-const sn = new Array(N);
-const zn = new Array(N);
-const points = new Array(N);
-for (let i = 0; i < N; i++) {
-  const gCu = gammaShape(5);
-  const gSn = gammaShape(2);
-  const gZn = gammaShape(2);
-  const total = gCu + gSn + gZn;
-  const a = gCu / total;
-  const b = gSn / total;
-  const c = gZn / total;
-  cu[i] = a * 100;
-  sn[i] = b * 100;
-  zn[i] = c * 100;
-  const { x, y } = toXY(a, b, c);
-  points[i] = { x, y, id: `alloy-${i}` };
-}
-
-// --- Grid: lines of constant composition, parallel to each edge ------------
 const GRID_LEVELS = [0.2, 0.4, 0.6, 0.8];
-const GRID_SEGMENTS = [];
-for (const f of GRID_LEVELS) {
-  GRID_SEGMENTS.push([toXY(f, 1 - f, 0), toXY(f, 0, 1 - f)]); // constant Copper
-  GRID_SEGMENTS.push([toXY(1 - f, f, 0), toXY(0, f, 1 - f)]); // constant Tin
-  GRID_SEGMENTS.push([toXY(1 - f, 0, f), toXY(0, 1 - f, f)]); // constant Zinc
-}
-
-// --- Edge tick marks (0-100 in steps of 20) ---------------------------------
 const TICK_LEVELS = [0, 20, 40, 60, 80, 100];
-const LEFT_TICKS = TICK_LEVELS.map((pct) => ({ pct, pos: toXY(pct / 100, 1 - pct / 100, 0) }));
-const BOTTOM_TICKS = TICK_LEVELS.map((pct) => ({ pct, pos: toXY(0, pct / 100, 1 - pct / 100) }));
-const RIGHT_TICKS = TICK_LEVELS.map((pct) => ({ pct, pos: toXY(1 - pct / 100, 0, pct / 100) }));
-
-// Half-extent margins around the [0,1] x [0, sqrt3/2] triangle. Equal x/y
-// spans (1.12) keep the triangle equilateral while filling most of the
-// square canvas — just enough room above for the title + apex label and
-// below/beside for the tick and vertex labels.
 const X_MIN = -0.06;
 const X_MAX = 1.06;
 const Y_MIN = -0.09;
 const Y_MAX = 1.03;
 
+// Columns: set these to your data's column names
+const COMPONENT_A = "Copper (%)"; // role: component_a
+const COMPONENT_B = "Tin (%)"; // role: component_b
+const COMPONENT_C = "Zinc (%)"; // role: component_c
+
+// Data: replace this block with your own records
+const nSamplesGen = 65;
+let lcgSeed = 20260804 >>> 0;
+const data: Array<Record<string, number>> = [];
+
+for (let i = 0; i < nSamplesGen; i++) {
+  let gCu = 0;
+  for (let k = 0; k < 5; k++) {
+    lcgSeed = (1664525 * lcgSeed + 1013904223) >>> 0;
+    gCu += -Math.log(lcgSeed / 4294967296 || 1e-9);
+  }
+  let gSn = 0;
+  for (let k = 0; k < 2; k++) {
+    lcgSeed = (1664525 * lcgSeed + 1013904223) >>> 0;
+    gSn += -Math.log(lcgSeed / 4294967296 || 1e-9);
+  }
+  let gZn = 0;
+  for (let k = 0; k < 2; k++) {
+    lcgSeed = (1664525 * lcgSeed + 1013904223) >>> 0;
+    gZn += -Math.log(lcgSeed / 4294967296 || 1e-9);
+  }
+  const total = gCu + gSn + gZn;
+  data.push({
+    [COMPONENT_A]: Number(((gCu / total) * 100).toFixed(2)),
+    [COMPONENT_B]: Number(((gSn / total) * 100).toFixed(2)),
+    [COMPONENT_C]: Number(((gZn / total) * 100).toFixed(2)),
+  });
+}
+
+// Plot: reads only data and the constants above
+const vertexTop = { x: 0.5, y: SQRT3_2 };
+const vertexLeft = { x: 0, y: 0 };
+const vertexRight = { x: 1, y: 0 };
+
+const cuVals = data.map((r) => Number(r[COMPONENT_A]));
+const snVals = data.map((r) => Number(r[COMPONENT_B]));
+const znVals = data.map((r) => Number(r[COMPONENT_C]));
+
+const points = data.map((row, i) => {
+  const a = Number(row[COMPONENT_A]);
+  const b = Number(row[COMPONENT_B]);
+  const c = Number(row[COMPONENT_C]);
+  const total = a + b + c || 1;
+  const aN = a / total;
+  const cN = c / total;
+  return {
+    x: cN + aN / 2,
+    y: SQRT3_2 * aN,
+    id: `alloy-${i}`,
+  };
+});
+
+const gridSegments: Array<[{ x: number; y: number }, { x: number; y: number }]> = [];
+for (const f of GRID_LEVELS) {
+  gridSegments.push([
+    { x: 0 + f / 2, y: SQRT3_2 * f },
+    { x: (1 - f) + f / 2, y: SQRT3_2 * f },
+  ]);
+  gridSegments.push([
+    { x: 0 + (1 - f) / 2, y: SQRT3_2 * (1 - f) },
+    { x: (1 - f) + 0 / 2, y: 0 },
+  ]);
+  gridSegments.push([
+    { x: f + (1 - f) / 2, y: SQRT3_2 * (1 - f) },
+    { x: f + 0 / 2, y: 0 },
+  ]);
+}
+
+const leftTicks = TICK_LEVELS.map((pct) => {
+  const aN = pct / 100;
+  return { pct, pos: { x: aN / 2, y: SQRT3_2 * aN } };
+});
+const bottomTicks = TICK_LEVELS.map((pct) => {
+  const cN = (100 - pct) / 100;
+  return { pct, pos: { x: cN, y: 0 } };
+});
+const rightTicks = TICK_LEVELS.map((pct) => {
+  const aN = (100 - pct) / 100;
+  const cN = pct / 100;
+  return { pct, pos: { x: cN + aN / 2, y: SQRT3_2 * aN } };
+});
+
 function TriangleGrid() {
-  const xs = useXScale();
-  const ys = useYScale();
+  const xs = useXScale() as (v: number) => number;
+  const ys = useYScale() as (v: number) => number;
   return (
     <g>
-      {GRID_SEGMENTS.map((seg, i) => (
+      {gridSegments.map((seg, i) => (
         <line
           key={i}
           x1={xs(seg[0].x)}
@@ -111,7 +125,7 @@ function TriangleGrid() {
         />
       ))}
       <path
-        d={`M${xs(VERTEX_TOP.x)} ${ys(VERTEX_TOP.y)} L${xs(VERTEX_LEFT.x)} ${ys(VERTEX_LEFT.y)} L${xs(VERTEX_RIGHT.x)} ${ys(VERTEX_RIGHT.y)} Z`}
+        d={`M${xs(vertexTop.x)} ${ys(vertexTop.y)} L${xs(vertexLeft.x)} ${ys(vertexLeft.y)} L${xs(vertexRight.x)} ${ys(vertexRight.y)} Z`}
         fill="none"
         stroke={t.inkSoft}
         strokeWidth={2.5}
@@ -122,99 +136,127 @@ function TriangleGrid() {
 }
 
 function EdgeTicks() {
-  const xs = useXScale();
-  const ys = useYScale();
-  const label = (tick, dx, dy, anchor) => (
-    <text
-      key={`${dx}-${dy}-${tick.pct}`}
-      x={xs(tick.pos.x) + dx}
-      y={ys(tick.pos.y) + dy}
-      textAnchor={anchor}
-      dominantBaseline="middle"
-      fontFamily={FONT}
-      fontSize={14}
-      fill={t.inkSoft}
-    >
-      {tick.pct}
-    </text>
-  );
+  const xs = useXScale() as (v: number) => number;
+  const ys = useYScale() as (v: number) => number;
   return (
     <g>
-      {LEFT_TICKS.map((tk) => label(tk, -16, 0, "end"))}
-      {BOTTOM_TICKS.map((tk) => label(tk, 0, 22, "middle"))}
-      {RIGHT_TICKS.map((tk) => label(tk, 16, 0, "start"))}
+      {leftTicks.map((tk) => (
+        <text
+          key={`l-${tk.pct}`}
+          x={xs(tk.pos.x) - 16}
+          y={ys(tk.pos.y)}
+          textAnchor="end"
+          dominantBaseline="middle"
+          fontSize={14}
+          fill={t.inkSoft}
+        >
+          {tk.pct}
+        </text>
+      ))}
+      {bottomTicks.map((tk) => (
+        <text
+          key={`b-${tk.pct}`}
+          x={xs(tk.pos.x)}
+          y={ys(tk.pos.y) + 22}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          fontSize={14}
+          fill={t.inkSoft}
+        >
+          {tk.pct}
+        </text>
+      ))}
+      {rightTicks.map((tk) => (
+        <text
+          key={`r-${tk.pct}`}
+          x={xs(tk.pos.x) + 16}
+          y={ys(tk.pos.y)}
+          textAnchor="start"
+          dominantBaseline="middle"
+          fontSize={14}
+          fill={t.inkSoft}
+        >
+          {tk.pct}
+        </text>
+      ))}
     </g>
   );
 }
 
-function VertexLabels() {
-  const xs = useXScale();
-  const ys = useYScale();
+function VertexLabelsAndTitle() {
+  const xs = useXScale() as (v: number) => number;
+  const ys = useYScale() as (v: number) => number;
   return (
-    <g fontFamily={FONT} fontSize={22} fontWeight={700} fill={t.ink}>
-      <text x={xs(VERTEX_TOP.x)} y={ys(VERTEX_TOP.y) - 24} textAnchor="middle" dominantBaseline="baseline">
-        Copper (%)
+    <g>
+      <text
+        x={xs((X_MIN + X_MAX) / 2)}
+        y={ys(Y_MAX) + 22}
+        textAnchor="middle"
+        dominantBaseline="hanging"
+        fontSize={22}
+        fontWeight={600}
+        fill={t.ink}
+      >
+        Bronze Alloy Composition · ternary-basic · javascript · muix · anyplot.ai
       </text>
-      <text x={xs(VERTEX_LEFT.x)} y={ys(VERTEX_LEFT.y) + 32} textAnchor="middle" dominantBaseline="hanging">
-        Tin (%)
-      </text>
-      <text x={xs(VERTEX_RIGHT.x)} y={ys(VERTEX_RIGHT.y) + 32} textAnchor="middle" dominantBaseline="hanging">
-        Zinc (%)
-      </text>
+      <g fontSize={22} fontWeight={700} fill={t.ink}>
+        <text
+          x={xs(vertexTop.x)}
+          y={ys(vertexTop.y) - 24}
+          textAnchor="middle"
+          dominantBaseline="baseline"
+        >
+          {COMPONENT_A}
+        </text>
+        <text
+          x={xs(vertexLeft.x)}
+          y={ys(vertexLeft.y) + 32}
+          textAnchor="middle"
+          dominantBaseline="hanging"
+        >
+          {COMPONENT_B}
+        </text>
+        <text
+          x={xs(vertexRight.x)}
+          y={ys(vertexRight.y) + 32}
+          textAnchor="middle"
+          dominantBaseline="hanging"
+        >
+          {COMPONENT_C}
+        </text>
+      </g>
     </g>
   );
 }
 
-function Title() {
-  const xs = useXScale();
-  const ys = useYScale();
-  const n = TITLE.length;
-  const ratio = n > 67 ? 67 / n : 1.0;
-  const fontSize = Math.max(15, Math.round(22 * ratio));
-  return (
-    <text
-      x={xs((X_MIN + X_MAX) / 2)}
-      y={ys(Y_MAX) + fontSize}
-      textAnchor="middle"
-      dominantBaseline="hanging"
-      fontFamily={FONT}
-      fontSize={fontSize}
-      fontWeight={600}
-      fill={t.ink}
-    >
-      {TITLE}
-    </text>
-  );
-}
-
-// --- Chart (default-exported component — the harness mounts it) -------------
 export default function Chart() {
+  const { width, height } = window.ANYPLOT_SIZE;
   return (
-    <ChartContainer
-      width={SIZE.width}
-      height={SIZE.height}
-      margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
-      series={[
-        {
-          type: "scatter",
-          label: "Alloy sample",
-          color: "rgba(0, 158, 115, 0.85)",
-          markerSize: 8,
-          data: points,
-          valueFormatter: (_value, ctx) =>
-            `Cu ${cu[ctx.dataIndex].toFixed(0)}% · Sn ${sn[ctx.dataIndex].toFixed(0)}% · Zn ${zn[ctx.dataIndex].toFixed(0)}%`,
-        },
-      ]}
-      xAxis={[{ scaleType: "linear", min: X_MIN, max: X_MAX }]}
-      yAxis={[{ scaleType: "linear", min: Y_MIN, max: Y_MAX }]}
-      skipAnimation
-    >
-      <TriangleGrid />
-      <ScatterPlot />
-      <EdgeTicks />
-      <VertexLabels />
-      <Title />
-      <ChartsTooltip trigger="item" />
-    </ChartContainer>
+    <div style={{ width, height, background: t.pageBg }}>
+      <ChartsContainer
+        width={width}
+        height={height}
+        margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+        series={[
+          {
+            type: "scatter",
+            label: "Alloy sample",
+            color: "rgba(0, 158, 115, 0.85)",
+            markerSize: 8,
+            data: points,
+            valueFormatter: (_value: unknown, ctx: { dataIndex: number }) =>
+              `Cu ${cuVals[ctx.dataIndex].toFixed(0)}% · Sn ${snVals[ctx.dataIndex].toFixed(0)}% · Zn ${znVals[ctx.dataIndex].toFixed(0)}%`,
+          },
+        ]}
+        xAxis={[{ scaleType: "linear", min: X_MIN, max: X_MAX, position: "none" }]}
+        yAxis={[{ scaleType: "linear", min: Y_MIN, max: Y_MAX, position: "none" }]}
+      >
+        <TriangleGrid />
+        <ScatterPlot skipAnimation />
+        <EdgeTicks />
+        <VertexLabelsAndTitle />
+        <ChartsTooltip trigger="item" />
+      </ChartsContainer>
+    </div>
   );
 }
