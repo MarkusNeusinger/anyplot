@@ -1,7 +1,7 @@
 // anyplot.ai
-// marimekko-basic: Marimekko Chart
-// Library: muix 9.2.1 | JavaScript 22.23.1
-// Quality: 90/100 | Created: 2026-08-03
+// marimekko-basic: Basic Marimekko Chart
+// Library: muix 7.29.1 | JavaScript 22.23.1
+// Quality: 94/100 | Created: 2026-07-24
 
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
@@ -12,6 +12,7 @@ const t = window.ANYPLOT_TOKENS;
 
 // Constants
 const TITLE = "marimekko-basic · javascript · muix · anyplot.ai";
+const Y_AXIS_LABEL = "Share within column (%)";
 const TITLE_HEIGHT = 56;
 const LEGEND_HEIGHT = 44;
 const Y_AXIS_WIDTH = 86;
@@ -19,36 +20,46 @@ const MARGIN = { top: 20, right: 32, bottom: 72, left: 16 };
 const MIN_LABEL_SHARE = 0.08;
 const MIN_LABEL_WIDTH_PX = 64;
 
-// Data
-const REGION_COL = "Region";
-const PRODUCT_COL = "Product Category";
-const REVENUE_COL = "Revenue ($M)";
+// Columns: set these to your data's column names
+const REGION = "Region"; // role: x_category
+const PRODUCT = "Product line"; // role: y_category
+const REVENUE = "Revenue ($M)"; // role: value
 
-const DATA: Array<Record<string, string | number>> = [
-  { [REGION_COL]: "North", [PRODUCT_COL]: "Electronics", [REVENUE_COL]: 120 },
-  { [REGION_COL]: "North", [PRODUCT_COL]: "Apparel", [REVENUE_COL]: 80 },
-  { [REGION_COL]: "North", [PRODUCT_COL]: "Home & Garden", [REVENUE_COL]: 60 },
-  { [REGION_COL]: "North", [PRODUCT_COL]: "Sports", [REVENUE_COL]: 40 },
-  { [REGION_COL]: "South", [PRODUCT_COL]: "Electronics", [REVENUE_COL]: 60 },
-  { [REGION_COL]: "South", [PRODUCT_COL]: "Apparel", [REVENUE_COL]: 70 },
-  { [REGION_COL]: "South", [PRODUCT_COL]: "Home & Garden", [REVENUE_COL]: 40 },
-  { [REGION_COL]: "South", [PRODUCT_COL]: "Sports", [REVENUE_COL]: 30 },
-  { [REGION_COL]: "East", [PRODUCT_COL]: "Electronics", [REVENUE_COL]: 150 },
-  { [REGION_COL]: "East", [PRODUCT_COL]: "Apparel", [REVENUE_COL]: 90 },
-  { [REGION_COL]: "East", [PRODUCT_COL]: "Home & Garden", [REVENUE_COL]: 70 },
-  { [REGION_COL]: "East", [PRODUCT_COL]: "Sports", [REVENUE_COL]: 40 },
-  { [REGION_COL]: "West", [PRODUCT_COL]: "Electronics", [REVENUE_COL]: 50 },
-  { [REGION_COL]: "West", [PRODUCT_COL]: "Apparel", [REVENUE_COL]: 45 },
-  { [REGION_COL]: "West", [PRODUCT_COL]: "Home & Garden", [REVENUE_COL]: 35 },
-  { [REGION_COL]: "West", [PRODUCT_COL]: "Sports", [REVENUE_COL]: 20 },
+// Data: replace this block with your own records
+const data: Array<Record<string, string | number>> = [
+  { [REGION]: "North", [PRODUCT]: "Electronics", [REVENUE]: 42 },
+  { [REGION]: "North", [PRODUCT]: "Apparel", [REVENUE]: 18 },
+  { [REGION]: "North", [PRODUCT]: "Home Goods", [REVENUE]: 15 },
+  { [REGION]: "North", [PRODUCT]: "Grocery", [REVENUE]: 25 },
+  { [REGION]: "South", [PRODUCT]: "Electronics", [REVENUE]: 20 },
+  { [REGION]: "South", [PRODUCT]: "Apparel", [REVENUE]: 22 },
+  { [REGION]: "South", [PRODUCT]: "Home Goods", [REVENUE]: 10 },
+  { [REGION]: "South", [PRODUCT]: "Grocery", [REVENUE]: 8 },
+  { [REGION]: "East", [PRODUCT]: "Electronics", [REVENUE]: 55 },
+  { [REGION]: "East", [PRODUCT]: "Apparel", [REVENUE]: 30 },
+  { [REGION]: "East", [PRODUCT]: "Home Goods", [REVENUE]: 25 },
+  { [REGION]: "East", [PRODUCT]: "Grocery", [REVENUE]: 40 },
+  { [REGION]: "West", [PRODUCT]: "Electronics", [REVENUE]: 15 },
+  { [REGION]: "West", [PRODUCT]: "Apparel", [REVENUE]: 12 },
+  { [REGION]: "West", [PRODUCT]: "Home Goods", [REVENUE]: 8 },
+  { [REGION]: "West", [PRODUCT]: "Grocery", [REVENUE]: 5 },
+  { [REGION]: "Central", [PRODUCT]: "Electronics", [REVENUE]: 30 },
+  { [REGION]: "Central", [PRODUCT]: "Apparel", [REVENUE]: 25 },
+  { [REGION]: "Central", [PRODUCT]: "Home Goods", [REVENUE]: 20 },
+  { [REGION]: "Central", [PRODUCT]: "Grocery", [REVENUE]: 15 },
 ];
 
-// Derive regions and product categories in order of first appearance
+// Plot: reads only data and the constants above
+const unitMatch = REVENUE.match(/\(([^)]+)\)/);
+const rawUnit = unitMatch ? unitMatch[1] : "";
+const unitPrefix = rawUnit.startsWith("$") ? "$" : "";
+const unitSuffix = rawUnit.startsWith("$") ? rawUnit.slice(1) : rawUnit;
+
 const regions: string[] = [];
 const products: string[] = [];
-for (let i = 0; i < DATA.length; i++) {
-  const reg = String(DATA[i][REGION_COL]);
-  const prod = String(DATA[i][PRODUCT_COL]);
+for (let i = 0; i < data.length; i++) {
+  const reg = String(data[i][REGION]);
+  const prod = String(data[i][PRODUCT]);
   if (!regions.includes(reg)) regions.push(reg);
   if (!products.includes(prod)) products.push(prod);
 }
@@ -70,9 +81,9 @@ for (let i = 0; i < products.length; i++) {
 // Compute region totals and Marimekko layout in data percentage space (0..100)
 const regionTotals = new Map<string, number>();
 let grandTotal = 0;
-for (let i = 0; i < DATA.length; i++) {
-  const reg = String(DATA[i][REGION_COL]);
-  const val = Number(DATA[i][REVENUE_COL]);
+for (let i = 0; i < data.length; i++) {
+  const reg = String(data[i][REGION]);
+  const val = Number(data[i][REVENUE]);
   regionTotals.set(reg, (regionTotals.get(reg) ?? 0) + val);
   grandTotal += val;
 }
@@ -99,7 +110,7 @@ const columns: MarimekkoColumn[] = [];
 let cumX = 0;
 for (let r = 0; r < regions.length; r++) {
   const reg = regions[r];
-  const total = regionTotals.get(reg) ?? 0;
+  const total = regionTotals.get(reg)!;
   const widthPct = (total / grandTotal) * 100;
   const x0 = cumX;
   const x1 = cumX + widthPct;
@@ -110,10 +121,10 @@ for (let r = 0; r < regions.length; r++) {
   const segments: MarimekkoSegment[] = [];
   for (let p = 0; p < products.length; p++) {
     const prod = products[p];
-    const matchingRow = DATA.find(
-      (row) => String(row[REGION_COL]) === reg && String(row[PRODUCT_COL]) === prod,
+    const matchingRow = data.find(
+      (row) => String(row[REGION]) === reg && String(row[PRODUCT]) === prod,
     );
-    const val = matchingRow ? Number(matchingRow[REVENUE_COL]) : 0;
+    const val = matchingRow ? Number(matchingRow[REVENUE]) : 0;
     const share = total > 0 ? val / total : 0;
     const heightPct = share * 100;
     const y1 = cumY;
@@ -140,24 +151,24 @@ for (let r = 0; r < regions.length; r++) {
 }
 
 function MarimekkoCells() {
-  const xScale = useXScale();
-  const yScale = useYScale();
+  const xScale = useXScale("x") as (v: number) => number;
+  const yScale = useYScale("y") as (v: number) => number;
   const { top, height } = useDrawingArea();
   const bottomY = top + height;
 
   return (
     <g>
       {columns.map((col) => {
-        const px0 = Number(xScale(col.x0));
-        const px1 = Number(xScale(col.x1));
+        const px0 = xScale(col.x0);
+        const px1 = xScale(col.x1);
         const colW = px1 - px0;
         const colMidX = px0 + colW / 2;
 
         return (
           <g key={col.region}>
             {col.segments.map((seg) => {
-              const pyTop = Number(yScale(seg.y1));
-              const pyBottom = Number(yScale(seg.y0));
+              const pyTop = yScale(seg.y1);
+              const pyBottom = yScale(seg.y0);
               const segH = pyBottom - pyTop;
               const showLabel = seg.share >= MIN_LABEL_SHARE && colW >= MIN_LABEL_WIDTH_PX;
 
@@ -176,7 +187,7 @@ function MarimekkoCells() {
                     <ChartsText
                       x={colMidX}
                       y={pyTop + segH / 2}
-                      text={`$${seg.value}M (${Math.round(seg.share * 100)}%)`}
+                      text={`${unitPrefix}${seg.value}${unitSuffix} (${Math.round(seg.share * 100)}%)`}
                       style={{
                         fill: productTextColors[seg.productIdx],
                         fontSize: 14,
@@ -205,7 +216,7 @@ function MarimekkoCells() {
             <ChartsText
               x={colMidX}
               y={bottomY + 46}
-              text={`$${col.total}M (${Math.round(col.widthPct)}%)`}
+              text={`${unitPrefix}${col.total}${unitSuffix} (${Math.round(col.widthPct)}%)`}
               style={{
                 fill: t.inkSoft,
                 fontSize: 14,
@@ -294,7 +305,7 @@ export default function Chart() {
             min: 0,
             max: 100,
             width: Y_AXIS_WIDTH,
-            label: "Share of Regional Revenue (%)",
+            label: Y_AXIS_LABEL,
             labelStyle: { fontSize: 16, fill: t.ink, fontWeight: 500 },
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
             valueFormatter: (v: number) => `${v}%`,
