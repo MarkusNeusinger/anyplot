@@ -1,168 +1,252 @@
 // anyplot.ai
 // polar-bar: Polar Bar Chart (Wind Rose)
-// Library: muix 7.29.1 | JavaScript 22.23.2
+// Library: muix 9.2.1 | JavaScript 22.23.2
 // Quality: 92/100 | Created: 2026-09-05
 //# anyplot-orientation: square
-// anyplot.ai
-// polar-bar: Polar Bar Chart (Wind Rose)
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-09-05
-
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { useDrawingArea } from "@mui/x-charts/hooks";
-
-// @mui/x-charts 7.x community has no polar-bar / wind-rose component (BarChart
-// only offers `layout: 'vertical' | 'horizontal'`, and PieChart encodes value as
-// angle, not radius) — so the rose is composed on MUI X's own charting surface:
-// ChartContainer sizes the theme-aware <svg>, and useDrawingArea() gives the plot
-// rect the wedge/ring/spoke geometry is mapped onto, exactly like the polar-basic
-// and radar-basic muix implementations in this catalog.
 
 const t = window.ANYPLOT_TOKENS;
 const size = window.ANYPLOT_SIZE;
+const TITLE = "polar-bar · javascript · muix · anyplot.ai";
 
-// Theme-adaptive chrome (ThemeProvider handles MUI text; these are for our SVG).
-const INK = t.ink;
-const INK_SOFT = t.inkSoft;
-const GRID = t.grid;
-const PAGE_BG = t.pageBg;
+// Constants
+const DIRECTION_COL = "Direction";
+const SPEED_BIN_COL = "Wind Speed";
+const COUNT_COL = "Observations (obs)";
 
-// --- Data (in-memory, deterministic) — monthly wind observations by direction --
-const DIRECTIONS = [
-  "N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
-  "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW",
+const RING_COUNT = 4;
+const WEDGE_GAP_RAD = 0.035;
+const OUTER_PAD_PX = 64;
+const LABEL_OFFSET_PX = 28;
+const HEADER_HEIGHT = 64;
+const FOOTER_HEIGHT = 56;
+
+// Data — monthly wind observations by compass direction and speed range
+const DATA = [
+  { [DIRECTION_COL]: "N", [SPEED_BIN_COL]: "Light (0–10 mph)", [COUNT_COL]: 18 },
+  { [DIRECTION_COL]: "NNE", [SPEED_BIN_COL]: "Light (0–10 mph)", [COUNT_COL]: 15 },
+  { [DIRECTION_COL]: "NE", [SPEED_BIN_COL]: "Light (0–10 mph)", [COUNT_COL]: 12 },
+  { [DIRECTION_COL]: "ENE", [SPEED_BIN_COL]: "Light (0–10 mph)", [COUNT_COL]: 10 },
+  { [DIRECTION_COL]: "E", [SPEED_BIN_COL]: "Light (0–10 mph)", [COUNT_COL]: 14 },
+  { [DIRECTION_COL]: "ESE", [SPEED_BIN_COL]: "Light (0–10 mph)", [COUNT_COL]: 20 },
+  { [DIRECTION_COL]: "SE", [SPEED_BIN_COL]: "Light (0–10 mph)", [COUNT_COL]: 25 },
+  { [DIRECTION_COL]: "SSE", [SPEED_BIN_COL]: "Light (0–10 mph)", [COUNT_COL]: 30 },
+  { [DIRECTION_COL]: "S", [SPEED_BIN_COL]: "Light (0–10 mph)", [COUNT_COL]: 35 },
+  { [DIRECTION_COL]: "SSW", [SPEED_BIN_COL]: "Light (0–10 mph)", [COUNT_COL]: 40 },
+  { [DIRECTION_COL]: "SW", [SPEED_BIN_COL]: "Light (0–10 mph)", [COUNT_COL]: 45 },
+  { [DIRECTION_COL]: "WSW", [SPEED_BIN_COL]: "Light (0–10 mph)", [COUNT_COL]: 42 },
+  { [DIRECTION_COL]: "W", [SPEED_BIN_COL]: "Light (0–10 mph)", [COUNT_COL]: 38 },
+  { [DIRECTION_COL]: "WNW", [SPEED_BIN_COL]: "Light (0–10 mph)", [COUNT_COL]: 30 },
+  { [DIRECTION_COL]: "NW", [SPEED_BIN_COL]: "Light (0–10 mph)", [COUNT_COL]: 24 },
+  { [DIRECTION_COL]: "NNW", [SPEED_BIN_COL]: "Light (0–10 mph)", [COUNT_COL]: 20 },
+
+  { [DIRECTION_COL]: "N", [SPEED_BIN_COL]: "Moderate (10–20 mph)", [COUNT_COL]: 10 },
+  { [DIRECTION_COL]: "NNE", [SPEED_BIN_COL]: "Moderate (10–20 mph)", [COUNT_COL]: 8 },
+  { [DIRECTION_COL]: "NE", [SPEED_BIN_COL]: "Moderate (10–20 mph)", [COUNT_COL]: 6 },
+  { [DIRECTION_COL]: "ENE", [SPEED_BIN_COL]: "Moderate (10–20 mph)", [COUNT_COL]: 5 },
+  { [DIRECTION_COL]: "E", [SPEED_BIN_COL]: "Moderate (10–20 mph)", [COUNT_COL]: 8 },
+  { [DIRECTION_COL]: "ESE", [SPEED_BIN_COL]: "Moderate (10–20 mph)", [COUNT_COL]: 14 },
+  { [DIRECTION_COL]: "SE", [SPEED_BIN_COL]: "Moderate (10–20 mph)", [COUNT_COL]: 18 },
+  { [DIRECTION_COL]: "SSE", [SPEED_BIN_COL]: "Moderate (10–20 mph)", [COUNT_COL]: 24 },
+  { [DIRECTION_COL]: "S", [SPEED_BIN_COL]: "Moderate (10–20 mph)", [COUNT_COL]: 30 },
+  { [DIRECTION_COL]: "SSW", [SPEED_BIN_COL]: "Moderate (10–20 mph)", [COUNT_COL]: 38 },
+  { [DIRECTION_COL]: "SW", [SPEED_BIN_COL]: "Moderate (10–20 mph)", [COUNT_COL]: 46 },
+  { [DIRECTION_COL]: "WSW", [SPEED_BIN_COL]: "Moderate (10–20 mph)", [COUNT_COL]: 40 },
+  { [DIRECTION_COL]: "W", [SPEED_BIN_COL]: "Moderate (10–20 mph)", [COUNT_COL]: 32 },
+  { [DIRECTION_COL]: "WNW", [SPEED_BIN_COL]: "Moderate (10–20 mph)", [COUNT_COL]: 22 },
+  { [DIRECTION_COL]: "NW", [SPEED_BIN_COL]: "Moderate (10–20 mph)", [COUNT_COL]: 16 },
+  { [DIRECTION_COL]: "NNW", [SPEED_BIN_COL]: "Moderate (10–20 mph)", [COUNT_COL]: 12 },
+
+  { [DIRECTION_COL]: "N", [SPEED_BIN_COL]: "Strong (20+ mph)", [COUNT_COL]: 2 },
+  { [DIRECTION_COL]: "NNE", [SPEED_BIN_COL]: "Strong (20+ mph)", [COUNT_COL]: 1 },
+  { [DIRECTION_COL]: "NE", [SPEED_BIN_COL]: "Strong (20+ mph)", [COUNT_COL]: 1 },
+  { [DIRECTION_COL]: "ENE", [SPEED_BIN_COL]: "Strong (20+ mph)", [COUNT_COL]: 1 },
+  { [DIRECTION_COL]: "E", [SPEED_BIN_COL]: "Strong (20+ mph)", [COUNT_COL]: 2 },
+  { [DIRECTION_COL]: "ESE", [SPEED_BIN_COL]: "Strong (20+ mph)", [COUNT_COL]: 4 },
+  { [DIRECTION_COL]: "SE", [SPEED_BIN_COL]: "Strong (20+ mph)", [COUNT_COL]: 6 },
+  { [DIRECTION_COL]: "SSE", [SPEED_BIN_COL]: "Strong (20+ mph)", [COUNT_COL]: 10 },
+  { [DIRECTION_COL]: "S", [SPEED_BIN_COL]: "Strong (20+ mph)", [COUNT_COL]: 14 },
+  { [DIRECTION_COL]: "SSW", [SPEED_BIN_COL]: "Strong (20+ mph)", [COUNT_COL]: 20 },
+  { [DIRECTION_COL]: "SW", [SPEED_BIN_COL]: "Strong (20+ mph)", [COUNT_COL]: 28 },
+  { [DIRECTION_COL]: "WSW", [SPEED_BIN_COL]: "Strong (20+ mph)", [COUNT_COL]: 22 },
+  { [DIRECTION_COL]: "W", [SPEED_BIN_COL]: "Strong (20+ mph)", [COUNT_COL]: 15 },
+  { [DIRECTION_COL]: "WNW", [SPEED_BIN_COL]: "Strong (20+ mph)", [COUNT_COL]: 8 },
+  { [DIRECTION_COL]: "NW", [SPEED_BIN_COL]: "Strong (20+ mph)", [COUNT_COL]: 4 },
+  { [DIRECTION_COL]: "NNW", [SPEED_BIN_COL]: "Strong (20+ mph)", [COUNT_COL]: 3 },
 ];
-const SPEED_BINS = [
-  { label: "Light (0–10 mph)", color: t.palette[0],
-    values: [18, 15, 12, 10, 14, 20, 25, 30, 35, 40, 45, 42, 38, 30, 24, 20] },
-  { label: "Moderate (10–20 mph)", color: t.palette[1],
-    values: [10, 8, 6, 5, 8, 14, 18, 24, 30, 38, 46, 40, 32, 22, 16, 12] },
-  { label: "Strong (20+ mph)", color: t.palette[2],
-    values: [2, 1, 1, 1, 2, 4, 6, 10, 14, 20, 28, 22, 15, 8, 4, 3] },
-];
-const N = DIRECTIONS.length;
-const RINGS = [30, 60, 90, 120];
-const MAX_VALUE = 120;
-// Only the 8 primary compass points get a spoke + label — a full 16-spoke grid
-// would compete visually with the wedges themselves.
-const MAJOR_INDICES = [0, 2, 4, 6, 8, 10, 12, 14];
 
-// Direction 0 (N) points to the top (-90°); angle grows clockwise around the compass.
-const angleOf = (i) => (-90 + (i * 360) / N) * (Math.PI / 180);
-const SECTOR_HALF_WIDTH = Math.PI / N;
-const WEDGE_GAP = 0.035; // radians of padding on each side of a wedge
-
-function sectorPath(cx, cy, innerR, outerR, startAngle, endAngle) {
-  const at = (r, a) => [cx + r * Math.cos(a), cy + r * Math.sin(a)];
-  const [ox0, oy0] = at(outerR, startAngle);
-  const [ox1, oy1] = at(outerR, endAngle);
-  if (innerR < 0.5) {
-    return `M ${cx},${cy} L ${ox0},${oy0} A ${outerR} ${outerR} 0 0 1 ${ox1},${oy1} Z`;
-  }
-  const [ix0, iy0] = at(innerR, startAngle);
-  const [ix1, iy1] = at(innerR, endAngle);
-  return (
-    `M ${ix0},${iy0} L ${ox0},${oy0} ` +
-    `A ${outerR} ${outerR} 0 0 1 ${ox1},${oy1} L ${ix1},${iy1} ` +
-    `A ${innerR} ${innerR} 0 0 0 ${ix0},${iy0} Z`
-  );
+// Derive directions and speed bins in order of first appearance
+const directions = [];
+const speedBinLabels = [];
+for (const row of DATA) {
+  const dir = String(row[DIRECTION_COL]);
+  const bin = String(row[SPEED_BIN_COL]);
+  if (!directions.includes(dir)) directions.push(dir);
+  if (!speedBinLabels.includes(bin)) speedBinLabels.push(bin);
 }
 
-// --- Wind rose layer: rendered as children inside MUI X's ChartsSurface --------
-function WindRose() {
+const speedBins = speedBinLabels.map((label, idx) => ({
+  label,
+  color: t.palette[idx],
+}));
+
+const countUnitMatch = COUNT_COL.match(/\(([^)]+)\)/);
+const countUnit = countUnitMatch ? countUnitMatch[1] : "";
+
+const dirCount = directions.length;
+const sectorHalfWidth = Math.PI / dirCount;
+
+// Group values by direction and compute radial domain
+const directionStacks = directions.map((dir, i) => {
+  const angle = (-90 + (i * 360) / dirCount) * (Math.PI / 180);
+  let cumulative = 0;
+  const segments = speedBins.map((bin) => {
+    const match = DATA.find(
+      (r) => String(r[DIRECTION_COL]) === dir && String(r[SPEED_BIN_COL]) === bin.label,
+    );
+    const val = match ? Number(match[COUNT_COL]) : 0;
+    const startVal = cumulative;
+    cumulative += val;
+    return {
+      binLabel: bin.label,
+      color: bin.color,
+      startVal,
+      endVal: cumulative,
+    };
+  });
+  return { dir, index: i, angle, total: cumulative, segments };
+});
+
+const rawMaxTotal = Math.max(...directionStacks.map((d) => d.total), 1);
+const ringStep = Math.ceil(rawMaxTotal / RING_COUNT / 10) * 10;
+const maxValue = ringStep * RING_COUNT;
+const rings = [];
+for (let k = 1; k <= RING_COUNT; k += 1) {
+  rings.push(k * ringStep);
+}
+
+function WindRoseOverlay() {
   const area = useDrawingArea();
   const cx = area.left + area.width / 2;
   const cy = area.top + area.height / 2;
   const half = Math.min(area.width, area.height) / 2;
-  const R = half - 70; // data radius; margin between R and half holds labels
-  const labelR = half - 8;
-  const pxPerUnit = R / MAX_VALUE;
+  const radius = half - OUTER_PAD_PX;
+  const labelRadius = radius + LABEL_OFFSET_PX;
+  const pxPerUnit = radius / maxValue;
 
   return (
     <g>
-      {/* Concentric frequency rings — outer ring solid, inner rings lighter so
-          the grid stays subtle near the center */}
-      {RINGS.map((level) => (
+      {/* Concentric frequency rings */}
+      {rings.map((level) => (
         <circle
           key={`ring-${level}`}
           cx={cx}
           cy={cy}
-          r={(level / MAX_VALUE) * R}
+          r={(level / maxValue) * radius}
           fill="none"
-          stroke={GRID}
-          strokeWidth={level === MAX_VALUE ? 2 : 1}
-          strokeOpacity={level === MAX_VALUE ? 1 : 0.6}
+          stroke={t.grid}
+          strokeWidth={level === maxValue ? 2 : 1}
+          strokeOpacity={level === maxValue ? 1 : 0.65}
         />
       ))}
 
-      {/* Spokes + labels at the 8 primary compass points */}
-      {MAJOR_INDICES.map((i) => {
-        const a = angleOf(i);
-        const ox = cx + R * Math.cos(a);
-        const oy = cy + R * Math.sin(a);
-        const lx = cx + labelR * Math.cos(a);
-        const ly = cy + labelR * Math.sin(a);
-        const cos = Math.cos(a);
-        const anchor = cos > 0.3 ? "start" : cos < -0.3 ? "end" : "middle";
-        const sin = Math.sin(a);
-        const baseline = sin > 0.5 ? "hanging" : sin < -0.5 ? "auto" : "central";
+      {/* Spokes and rim labels for all compass directions */}
+      {directionStacks.map((item) => {
+        const isPrimary = item.index % 2 === 0;
+        const ox = cx + radius * Math.cos(item.angle);
+        const oy = cy + radius * Math.sin(item.angle);
+        const lx = cx + labelRadius * Math.cos(item.angle);
+        const ly = cy + labelRadius * Math.sin(item.angle);
+        const cos = Math.cos(item.angle);
+        const sin = Math.sin(item.angle);
+        const anchor = cos > 0.25 ? "start" : cos < -0.25 ? "end" : "middle";
+        const baseline = sin > 0.4 ? "hanging" : sin < -0.4 ? "auto" : "central";
         return (
-          <g key={`spoke-${DIRECTIONS[i]}`}>
-            <line x1={cx} y1={cy} x2={ox} y2={oy} stroke={GRID} strokeWidth={1.25} />
+          <g key={`spoke-${item.dir}`}>
+            <line
+              x1={cx}
+              y1={cy}
+              x2={ox}
+              y2={oy}
+              stroke={t.grid}
+              strokeWidth={isPrimary ? 1.25 : 0.85}
+              strokeOpacity={isPrimary ? 0.9 : 0.5}
+            />
             <text
               x={lx}
               y={ly}
-              fill={INK}
-              fontSize={18}
-              fontWeight={600}
+              fill={isPrimary ? t.ink : t.inkSoft}
+              fontSize={isPrimary ? 16 : 14}
+              fontWeight={isPrimary ? 600 : 500}
               textAnchor={anchor}
               dominantBaseline={baseline}
             >
-              {DIRECTIONS[i]}
+              {item.dir}
             </text>
           </g>
         );
       })}
 
-      {/* Stacked wedges: each direction's speed bins radiate outward from the
-          center, radius encoding cumulative observation count */}
-      {DIRECTIONS.map((label, i) => {
-        const a0 = angleOf(i) - SECTOR_HALF_WIDTH + WEDGE_GAP;
-        const a1 = angleOf(i) + SECTOR_HALF_WIDTH - WEDGE_GAP;
-        let cum = 0;
-        return SPEED_BINS.map((bin) => {
-          const r0 = cum * pxPerUnit;
-          cum += bin.values[i];
-          const r1 = cum * pxPerUnit;
+      {/* Stacked wedges */}
+      {directionStacks.map((item) => {
+        const a0 = item.angle - sectorHalfWidth + WEDGE_GAP_RAD;
+        const a1 = item.angle + sectorHalfWidth - WEDGE_GAP_RAD;
+        const cos0 = Math.cos(a0);
+        const sin0 = Math.sin(a0);
+        const cos1 = Math.cos(a1);
+        const sin1 = Math.sin(a1);
+
+        return item.segments.map((seg) => {
+          const r0 = seg.startVal * pxPerUnit;
+          const r1 = seg.endVal * pxPerUnit;
+          if (r1 <= r0) return null;
+          const ox0 = cx + r1 * cos0;
+          const oy0 = cy + r1 * sin0;
+          const ox1 = cx + r1 * cos1;
+          const oy1 = cy + r1 * sin1;
+          let pathD = "";
+          if (r0 < 0.5) {
+            pathD = `M ${cx},${cy} L ${ox0},${oy0} A ${r1} ${r1} 0 0 1 ${ox1},${oy1} Z`;
+          } else {
+            const ix0 = cx + r0 * cos0;
+            const iy0 = cy + r0 * sin0;
+            const ix1 = cx + r0 * cos1;
+            const iy1 = cy + r0 * sin1;
+            pathD =
+              `M ${ix0},${iy0} L ${ox0},${oy0} ` +
+              `A ${r1} ${r1} 0 0 1 ${ox1},${oy1} L ${ix1},${iy1} ` +
+              `A ${r0} ${r0} 0 0 0 ${ix0},${iy0} Z`;
+          }
           return (
             <path
-              key={`wedge-${label}-${bin.label}`}
-              d={sectorPath(cx, cy, r0, r1, a0, a1)}
-              fill={bin.color}
-              stroke={PAGE_BG}
+              key={`wedge-${item.dir}-${seg.binLabel}`}
+              d={pathD}
+              fill={seg.color}
+              stroke={t.pageBg}
               strokeWidth={2}
             />
           );
         });
       })}
 
-      {/* Frequency tick labels along the top spoke, with a backing chip so they
-          stay legible over whatever wedge color sits underneath */}
-      {RINGS.map((level) => {
-        const ty = cy - (level / MAX_VALUE) * R;
+      {/* Frequency tick labels along the top spoke with pageBg pill badges */}
+      {rings.map((level) => {
+        const ty = cy - (level / maxValue) * radius;
+        const tickText = countUnit ? `${level} ${countUnit}` : `${level}`;
+        const pillWidth = tickText.length * 8.5 + 14;
         return (
           <g key={`tick-${level}`}>
-            <rect x={cx + 6} y={ty - 11} width={66} height={22} rx={4} fill={PAGE_BG} />
+            <rect x={cx + 6} y={ty - 11} width={pillWidth} height={22} rx={4} fill={t.pageBg} />
             <text
               x={cx + 12}
               y={ty}
-              fill={INK_SOFT}
-              fontSize={15}
+              fill={t.inkSoft}
+              fontSize={14}
               textAnchor="start"
               dominantBaseline="central"
             >
-              {`${level} obs`}
+              {tickText}
             </text>
           </g>
         );
@@ -171,65 +255,71 @@ function WindRose() {
   );
 }
 
-// --- Title + legend drawn on the surface, then the wind-rose layer ------------
-function Chrome() {
-  const swatch = 26;
-  const swatchGap = 12;
-  const itemGap = 44;
-  const fontSize = 17;
-  const charWidth = fontSize * 0.56;
-  const itemWidths = SPEED_BINS.map((bin) => swatch + swatchGap + bin.label.length * charWidth);
-  const totalWidth = itemWidths.reduce((sum, w) => sum + w, 0) + itemGap * (SPEED_BINS.length - 1);
-  const legendY = size.height - 44;
-  let x = size.width / 2 - totalWidth / 2;
-
-  return (
-    <g>
-      <text
-        x={size.width / 2}
-        y={52}
-        fill={INK}
-        fontSize={28}
-        fontWeight={700}
-        textAnchor="middle"
-      >
-        polar-bar · javascript · muix · anyplot.ai
-      </text>
-      {SPEED_BINS.map((bin, i) => {
-        const itemX = x;
-        x += itemWidths[i] + itemGap;
-        return (
-          <g key={`legend-${bin.label}`}>
-            <rect x={itemX} y={legendY - 13} width={swatch} height={swatch} rx={5} fill={bin.color} />
-            <text
-              x={itemX + swatch + swatchGap}
-              y={legendY}
-              fill={INK}
-              fontSize={fontSize}
-              textAnchor="start"
-              dominantBaseline="central"
-            >
-              {bin.label}
-            </text>
-          </g>
-        );
-      })}
-    </g>
-  );
-}
-
-// --- Chart (default-exported component — the harness mounts it) ---------------
 export default function Chart() {
+  const chartHeight = size.height - HEADER_HEIGHT - FOOTER_HEIGHT;
+
   return (
-    <ChartContainer
-      width={size.width}
-      height={size.height}
-      series={[]}
-      margin={{ top: 90, bottom: 90, left: 90, right: 90 }}
-      skipAnimation
+    <div
+      style={{
+        width: size.width,
+        height: size.height,
+        backgroundColor: t.pageBg,
+        display: "flex",
+        flexDirection: "column",
+        boxSizing: "border-box",
+      }}
     >
-      <Chrome />
-      <WindRose />
-    </ChartContainer>
+      <div
+        style={{
+          height: HEADER_HEIGHT,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 22,
+          fontWeight: 700,
+          color: t.ink,
+        }}
+      >
+        {TITLE}
+      </div>
+      <ChartsContainer
+        width={size.width}
+        height={chartHeight}
+        series={[]}
+        xAxis={[{ position: "none" }]}
+        yAxis={[{ position: "none" }]}
+        margin={{ top: 16, bottom: 16, left: 24, right: 24 }}
+        skipAnimation
+      >
+        <WindRoseOverlay />
+      </ChartsContainer>
+      <div
+        style={{
+          height: FOOTER_HEIGHT,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 36,
+        }}
+      >
+        {speedBins.map((bin) => (
+          <div
+            key={`legend-${bin.label}`}
+            style={{ display: "flex", alignItems: "center", gap: 10 }}
+          >
+            <span
+              style={{
+                width: 20,
+                height: 20,
+                borderRadius: 4,
+                backgroundColor: bin.color,
+                display: "inline-block",
+              }}
+            />
+            <span style={{ fontSize: 15, color: t.ink, fontWeight: 500 }}>{bin.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
