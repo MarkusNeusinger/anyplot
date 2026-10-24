@@ -18,7 +18,10 @@ const CAPTION_H = 32;
 const HUB_RADIUS = 46;
 const BASE_STATION_RADIUS = 17;
 const DEGREE_RADIUS_STEP = 1.4;
-const DOMAIN_SPAN_MULT = 1.3;
+const CODE_FONT_SIZE = 14;
+const CODE_CHAR_W = 11;
+const CODE_CLEARANCE = 6;
+const PLOT_MARGIN = { top: 64, right: 130, bottom: 64, left: 130 };
 const DEFAULT_BOW_PX = 18;
 const ROUTE_TYPE_STYLES: Record<
   string,
@@ -150,24 +153,71 @@ for (const station of stationList) {
   if (station.isHub) hubStation = station;
   station.radius = station.isHub
     ? HUB_RADIUS
-    : BASE_STATION_RADIUS + station.degree * DEGREE_RADIUS_STEP;
+    : Math.max(
+        BASE_STATION_RADIUS + station.degree * DEGREE_RADIUS_STEP,
+        (station.id.length * CODE_CHAR_W) / 2 + CODE_CLEARANCE,
+      );
 }
 
 const xs = stationList.map((s) => s.x);
 const ys = stationList.map((s) => s.y);
-const minX = Math.min(...xs);
-const maxX = Math.max(...xs);
-const minY = Math.min(...ys);
-const maxY = Math.max(...ys);
-const centerX = (minX + maxX) / 2;
-const centerY = (minY + maxY) / 2;
-const halfSpan = (Math.max(maxX - minX, maxY - minY) / 2) * DOMAIN_SPAN_MULT;
-const xDomain = [centerX - halfSpan, centerX + halfSpan];
-const yDomain = [centerY - halfSpan, centerY + halfSpan];
+const xDomain = [Math.min(...xs), Math.max(...xs)];
+const yDomain = [Math.min(...ys), Math.max(...ys)];
 
 function TransportNetworkOverlay() {
   const xScale = useXScale();
   const yScale = useYScale();
+
+  const edges = routes.map((route) => {
+    const source = stationById.get(route.sourceId)!;
+    const target = stationById.get(route.targetId)!;
+    const sx = Number(xScale(source.x));
+    const sy = Number(yScale(source.y));
+    const tx = Number(xScale(target.x));
+    const ty = Number(yScale(target.y));
+    const dx = tx - sx;
+    const dy = ty - sy;
+    const length = Math.hypot(dx, dy);
+
+    const [aId, bId] =
+      route.sourceId < route.targetId
+        ? [route.sourceId, route.targetId]
+        : [route.targetId, route.sourceId];
+    const aStation = stationById.get(aId)!;
+    const bStation = stationById.get(bId)!;
+    const aPoint = { x: Number(xScale(aStation.x)), y: Number(yScale(aStation.y)) };
+    const bPoint = { x: Number(xScale(bStation.x)), y: Number(yScale(bStation.y)) };
+    const canonLength = Math.hypot(bPoint.x - aPoint.x, bPoint.y - aPoint.y);
+    const perpX = -(bPoint.y - aPoint.y) / canonLength;
+    const perpY = (bPoint.x - aPoint.x) / canonLength;
+    const sign = route.sourceId === aId ? -1 : 1;
+
+    const rStyle = ROUTE_TYPE_STYLES[route.routeType] ?? DEFAULT_ROUTE_STYLE;
+    const offset = rStyle.bowShare !== undefined ? length * rStyle.bowShare : DEFAULT_BOW_PX;
+    const startX = sx + (dx / length) * (source.radius + 2);
+    const startY = sy + (dy / length) * (source.radius + 2);
+    const endX = tx - (dx / length) * (target.radius + 5);
+    const endY = ty - (dy / length) * (target.radius + 5);
+    const midX = (startX + endX) / 2 + perpX * offset * sign;
+    const midY = (startY + endY) / 2 + perpY * offset * sign;
+
+    const lt = rStyle.labelT;
+    const curveX = (1 - lt) ** 2 * startX + 2 * (1 - lt) * lt * midX + lt ** 2 * endX;
+    const curveY = (1 - lt) ** 2 * startY + 2 * (1 - lt) * lt * midY + lt ** 2 * endY;
+    const text = `${route.routeId} ${route.departureTime}→${route.arrivalTime}`;
+    const boxW = text.length * 7.4 + 10;
+
+    return {
+      route,
+      rStyle,
+      d: `M ${startX} ${startY} Q ${midX} ${midY} ${endX} ${endY}`,
+      text,
+      boxW,
+      labelX: curveX + perpX * sign * (boxW * 0.5 + 10),
+      labelY: curveY + perpY * sign * 22,
+      tooltip: `${route.routeId}: ${source.label} → ${target.label} (${route.departureTime} → ${route.arrivalTime}, ${route.routeType})`,
+    };
+  });
 
   return (
     <g fontFamily={FONT}>
@@ -187,88 +237,45 @@ function TransportNetworkOverlay() {
         ))}
       </defs>
 
-      {routes.map((route) => {
-        const source = stationById.get(route.sourceId)!;
-        const target = stationById.get(route.targetId)!;
-        const sx = Number(xScale(source.x));
-        const sy = Number(yScale(source.y));
-        const tx = Number(xScale(target.x));
-        const ty = Number(yScale(target.y));
-        const dx = tx - sx;
-        const dy = ty - sy;
-        const length = Math.hypot(dx, dy);
+      {edges.map(({ route, rStyle, d, tooltip }) => (
+        <path
+          key={`edge-${route.routeId}`}
+          d={d}
+          fill="none"
+          stroke={typeColorMap[route.routeType]}
+          strokeWidth={rStyle.strokeWidth}
+          strokeDasharray={rStyle.dashed ? "9 6" : undefined}
+          markerEnd={`url(#arrow-${route.routeType})`}
+        >
+          <title>{tooltip}</title>
+        </path>
+      ))}
 
-        const [aId, bId] =
-          route.sourceId < route.targetId
-            ? [route.sourceId, route.targetId]
-            : [route.targetId, route.sourceId];
-        const aStation = stationById.get(aId)!;
-        const bStation = stationById.get(bId)!;
-        const aPoint = { x: Number(xScale(aStation.x)), y: Number(yScale(aStation.y)) };
-        const bPoint = { x: Number(xScale(bStation.x)), y: Number(yScale(bStation.y)) };
-        const canonLength = Math.hypot(bPoint.x - aPoint.x, bPoint.y - aPoint.y);
-        const perpX = -(bPoint.y - aPoint.y) / canonLength;
-        const perpY = (bPoint.x - aPoint.x) / canonLength;
-        const sign = route.sourceId === aId ? -1 : 1;
-
-        const rStyle = ROUTE_TYPE_STYLES[route.routeType] ?? DEFAULT_ROUTE_STYLE;
-        const offset = rStyle.bowShare !== undefined ? length * rStyle.bowShare : DEFAULT_BOW_PX;
-        const startX = sx + (dx / length) * (source.radius + 2);
-        const startY = sy + (dy / length) * (source.radius + 2);
-        const endX = tx - (dx / length) * (target.radius + 5);
-        const endY = ty - (dy / length) * (target.radius + 5);
-        const midX = (startX + endX) / 2 + perpX * offset * sign;
-        const midY = (startY + endY) / 2 + perpY * offset * sign;
-
-        const d = `M ${startX} ${startY} Q ${midX} ${midY} ${endX} ${endY}`;
-
-        const lt = rStyle.labelT;
-        const curveX = (1 - lt) ** 2 * startX + 2 * (1 - lt) * lt * midX + lt ** 2 * endX;
-        const curveY = (1 - lt) ** 2 * startY + 2 * (1 - lt) * lt * midY + lt ** 2 * endY;
-        const text = `${route.routeId} ${route.departureTime}→${route.arrivalTime}`;
-        const boxW = text.length * 7.4 + 10;
-        const normPerpX = perpX * sign;
-        const normPerpY = perpY * sign;
-        const labelX = curveX + normPerpX * (boxW * 0.5 + 10);
-        const labelY = curveY + normPerpY * 22;
-        const tooltip = `${route.routeId}: ${source.label} → ${target.label} (${route.departureTime} → ${route.arrivalTime}, ${route.routeType})`;
-
-        return (
-          <g key={route.routeId}>
-            <path
-              d={d}
-              fill="none"
-              stroke={typeColorMap[route.routeType]}
-              strokeWidth={rStyle.strokeWidth}
-              strokeDasharray={rStyle.dashed ? "9 6" : undefined}
-              markerEnd={`url(#arrow-${route.routeType})`}
-            >
-              <title>{tooltip}</title>
-            </path>
-            <rect
-              x={labelX - boxW / 2}
-              y={labelY - 11}
-              width={boxW}
-              height={20}
-              rx={3}
-              fill={t.elevatedBg}
-              opacity={0.94}
-            >
-              <title>{tooltip}</title>
-            </rect>
-            <text
-              x={labelX}
-              y={labelY}
-              fontSize={14}
-              fill={t.ink}
-              textAnchor="middle"
-              dominantBaseline="middle"
-            >
-              {text}
-            </text>
-          </g>
-        );
-      })}
+      {edges.map(({ route, text, boxW, labelX, labelY, tooltip }) => (
+        <g key={`label-${route.routeId}`}>
+          <rect
+            x={labelX - boxW / 2}
+            y={labelY - 11}
+            width={boxW}
+            height={20}
+            rx={3}
+            fill={t.elevatedBg}
+            opacity={0.94}
+          >
+            <title>{tooltip}</title>
+          </rect>
+          <text
+            x={labelX}
+            y={labelY}
+            fontSize={14}
+            fill={t.ink}
+            textAnchor="middle"
+            dominantBaseline="middle"
+          >
+            {text}
+          </text>
+        </g>
+      ))}
 
       {stationList.map((station) => {
         const cx = Number(xScale(station.x));
@@ -332,7 +339,7 @@ function TransportNetworkOverlay() {
             <text
               x={cx}
               y={cy}
-              fontSize={14}
+              fontSize={CODE_FONT_SIZE}
               fontWeight={600}
               fill={codeColor}
               textAnchor="middle"
@@ -414,7 +421,7 @@ export default function Chart() {
         height={chartH}
         skipAnimation
         series={[]}
-        margin={{ top: 14, right: 30, bottom: 14, left: 30 }}
+        margin={PLOT_MARGIN}
         xAxis={[{ min: xDomain[0], max: xDomain[1], scaleType: "linear", position: "none" }]}
         yAxis={[{ min: yDomain[0], max: yDomain[1], scaleType: "linear", position: "none" }]}
       >
