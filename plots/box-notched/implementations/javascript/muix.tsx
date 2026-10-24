@@ -67,34 +67,18 @@ const salaryGroups = categories.map((name) => {
     .map((row) => Number(row[VALUE]))
     .sort((a, b) => a - b);
   const n = sorted.length;
-
-  const q1Pos = (n - 1) * 0.25;
-  const q1Base = Math.floor(q1Pos);
-  const q1 =
-    q1Base + 1 < n
-      ? sorted[q1Base] + (q1Pos - q1Base) * (sorted[q1Base + 1] - sorted[q1Base])
-      : sorted[q1Base];
-
-  const medPos = (n - 1) * 0.5;
-  const medBase = Math.floor(medPos);
-  const median =
-    medBase + 1 < n
-      ? sorted[medBase] + (medPos - medBase) * (sorted[medBase + 1] - sorted[medBase])
-      : sorted[medBase];
-
-  const q3Pos = (n - 1) * 0.75;
-  const q3Base = Math.floor(q3Pos);
-  const q3 =
-    q3Base + 1 < n
-      ? sorted[q3Base] + (q3Pos - q3Base) * (sorted[q3Base + 1] - sorted[q3Base])
-      : sorted[q3Base];
+  const [q1, median, q3] = [0.25, 0.5, 0.75].map((q) => {
+    const p = (n - 1) * q;
+    const b = Math.floor(p);
+    return b + 1 < n ? sorted[b] + (p - b) * (sorted[b + 1] - sorted[b]) : sorted[b];
+  });
 
   const iqr = q3 - q1;
   const lowerFence = q1 - IQR_FENCE_MULTIPLIER * iqr;
   const upperFence = q3 + IQR_FENCE_MULTIPLIER * iqr;
   const inliers = sorted.filter((v) => v >= lowerFence && v <= upperFence);
   const outliers = sorted.filter((v) => v < lowerFence || v > upperFence);
-  const notch = (NOTCH_FACTOR * iqr) / Math.sqrt(Math.max(1, n));
+  const notch = (NOTCH_FACTOR * iqr) / Math.sqrt(n);
 
   return {
     name,
@@ -103,8 +87,8 @@ const salaryGroups = categories.map((name) => {
       q1,
       median,
       q3,
-      whiskerLow: inliers.length ? inliers[0] : q1,
-      whiskerHigh: inliers.length ? inliers[inliers.length - 1] : q3,
+      whiskerLow: inliers[0],
+      whiskerHigh: inliers[inliers.length - 1],
       outliers,
       notch,
     },
@@ -119,13 +103,11 @@ const yMin = minVal - valSpan * Y_PAD_SHARE;
 const yMax = maxVal + valSpan * Y_PAD_SHARE;
 
 const TITLE = "box-notched · javascript · muix · anyplot.ai";
-const SUBTITLE = `${data.length} observations across ${categories.length} ${CATEGORY.toLowerCase()}s · Notches at ±${NOTCH_FACTOR}×IQR/√n (95% CI around median)`;
+const SUBTITLE = `${data.length} observations · ${categories.length} groups (${CATEGORY}) · Notches at ±${NOTCH_FACTOR}×IQR/√n (95% CI around median)`;
 
 function NotchedBoxes() {
   const xScale = useXScale("dept");
   const yScale = useYScale("salary");
-  if (!xScale || !yScale || !("bandwidth" in xScale)) return null;
-
   const bandwidth = xScale.bandwidth();
   const boxWidth = bandwidth * BOX_WIDTH_SHARE;
   const notchHalf = boxWidth * NOTCH_INSET_SHARE;
@@ -134,21 +116,19 @@ function NotchedBoxes() {
   return (
     <g>
       {salaryGroups.map((g, i) => {
-        const bandStart = xScale(g.name);
-        if (bandStart === undefined) return null;
         const color = t.palette[i];
-        const cx = bandStart + bandwidth / 2;
+        const cx = xScale(g.name) + bandwidth / 2;
         const xLeft = cx - boxWidth / 2;
         const xRight = cx + boxWidth / 2;
         const xNotchLeft = cx - notchHalf;
         const xNotchRight = cx + notchHalf;
-        const yQ3 = yScale(g.stats.q3) ?? 0;
-        const yQ1 = yScale(g.stats.q1) ?? 0;
-        const yMed = yScale(g.stats.median) ?? 0;
-        const yMedTop = yScale(g.stats.median + g.stats.notch) ?? 0;
-        const yMedBot = yScale(g.stats.median - g.stats.notch) ?? 0;
-        const yWhiskerHigh = yScale(g.stats.whiskerHigh) ?? 0;
-        const yWhiskerLow = yScale(g.stats.whiskerLow) ?? 0;
+        const yQ3 = yScale(g.stats.q3);
+        const yQ1 = yScale(g.stats.q1);
+        const yMed = yScale(g.stats.median);
+        const yMedTop = yScale(g.stats.median + g.stats.notch);
+        const yMedBot = yScale(g.stats.median - g.stats.notch);
+        const yWhiskerHigh = yScale(g.stats.whiskerHigh);
+        const yWhiskerLow = yScale(g.stats.whiskerLow);
 
         const boxPath = [
           `M ${xLeft} ${yQ3}`,
@@ -223,7 +203,7 @@ function NotchedBoxes() {
               <circle
                 key={j}
                 cx={cx}
-                cy={yScale(v) ?? 0}
+                cy={yScale(v)}
                 r={5.5}
                 fill={t.pageBg}
                 stroke={color}
