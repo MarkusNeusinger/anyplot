@@ -2,110 +2,115 @@ library: muix
 language: javascript
 specification_id: ma-differential-expression
 created: '2026-06-21T01:23:10Z'
-updated: '2026-06-21T01:57:15Z'
-generated_by: claude-sonnet
-workflow_run: 27889416834
+updated: '2026-10-24T10:53:38Z'
+generated_by: gemini-4-argon
+adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
+workflow_run: 40087013754
 issue: 4420
-language_version: 22.22.3
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ma-differential-expression/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ma-differential-expression/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ma-differential-expression/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ma-differential-expression/javascript/muix/plot-dark.html
-quality_score: 87
+quality_score: 85
 review:
   strengths:
-  - 'Complete MA plot with all required features: M=0 reference line, ±1 fold-change
-    dashed lines, LOESS-like trend, transparency on non-significant genes'
-  - 'Excellent CVD safety via shape redundancy: triangles (pointing up/down for up/down-regulated)
-    drawn in addition to color coding, with explicit CVD comment in code'
-  - 'Idiomatic MUI X composition: ChartContainer with ScatterPlot, LinePlot, ChartsAxis,
-    ChartsLegend, ChartsReferenceLine, ChartsGrid — all from community @mui/x-charts'
-  - 'Semantically correct Imprint palette: brand green (#009E73) for up-regulated,
-    matte red (#AE3030) for down-regulated (semantic exception justified by biology),
-    inkSoft muted for non-significant'
-  - Deterministic LCG RNG (seed=42) ensures full reproducibility of the 10,000-gene
-    synthetic dataset
+  - 'All spec Notes met: significant genes highlighted against gray, solid M = 0 line
+    and dashed ±1 thresholds across the full expression range, a tricube-weighted
+    local trend, and translucent points that make the dense band read as density'
+  - 'Semantic Imprint use: up-regulated in brand green #009E73, down-regulated in
+    the matte-red loss anchor, not-significant in the theme-adaptive muted ink, trend
+    in the next free Imprint hue'
+  - 'Realistic simulated RNA-seq data: 10,000 genes, gamma-distributed baseMean, standard
+    error shrinking with counts, so the cloud funnels in at high expression the way
+    real MA plots do'
+  - 'Idiomatic MUI X v9 composition: ChartsContainer with ScatterPlot, ChartsGrid
+    and axis components plus a custom overlay drawn through the useXScale/useYScale
+    hooks'
+  - Threshold lines labelled in a reserved right margin, clear of the data, with theme-adaptive
+    soft ink
   weaknesses:
-  - Legend icons show circles for Up-regulated/Down-regulated (ScatterPlot series
-    icons) but the visually dominant markers are the SVG triangles drawn by SignificantMarks
-    — this symbol mismatch in the legend may confuse readers expecting triangles
-  - Local trend line (cyan, t.palette[5]) is very difficult to distinguish inside
-    the dense 10,000-point scatter cloud — consider a thicker stroke (2-3px) or drawing
-    the line on top of the scatter layers
-  - SignificantMarks draws SVG triangles on top of the ScatterPlot circles for significant
-    genes, resulting in double-rendered elements — the circles underneath are hidden
-    by triangles but still consume render budget unnecessarily; the chart would be
-    cleaner with significant genes only in the SVG layer
+  - 'Suggestion: draw the significant genes as native scatter series with a custom
+    marker slot and use ChartsLegend instead of raw SVG polygons and a hand-built
+    legend, so they get MUI X tooltips and highlighting in the HTML view.'
+  - 'Suggestion: label a few of the top differentially expressed genes by name, as
+    the Notes allow.'
+  - 'Suggestion: a slightly higher fill opacity on the down-regulated triangles would
+    make them stand out more on the dark background.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct anyplot light surface; no pure white.
-      Chrome: Title "ma-differential-expression · javascript · muix · anyplot.ai" clearly readable in dark ink at top. Y-axis label "Log₂ Fold Change (M)" and X-axis label "Mean Expression (log₂ A)" both readable in dark ink. Tick labels visible at appropriate size. Reference line labels "log₂FC = 1" and "log₂FC = −1" visible in inkSoft. Legend at bottom shows all four series legibly.
-      Data: Classic MA plot funnel — 10,000 genes with higher M-dispersion at low A (left) narrowing toward right. Non-significant genes rendered as small semi-transparent gray circles. Up-regulated genes shown as brand green (#009E73) upward-pointing triangles. Down-regulated shown as matte red (#AE3030) downward-pointing triangles. Horizontal reference line at M=0 (solid dark), dashed reference lines at M=±1. Thin cyan local trend line visible in center of cloud.
-      Legibility verdict: PASS — all text readable against light background; no light-on-light issues.
+      Background: warm off-white #FAF8F1 across the full 3200x1800 canvas.
+      Chrome: centered title "ma-differential-expression · javascript · muix · anyplot.ai" in dark ink; x-axis "Mean expression (log₂ A)" ticks 0–14, y-axis "Log₂ fold change (M)" ticks −8–8; subtle horizontal grid; solid dark M = 0 line, dashed M = ±1 lines labelled "log₂FC = +1/−1" in the right margin; bottom legend (Not significant, Up-regulated, Down-regulated, LOESS trend). All readable.
+      Data: ~10,000 translucent gray dots forming a dense band around zero, widest at low expression; up-regulated genes as green #009E73 upward triangles above +1, down-regulated as matte-red downward triangles below −1; lavender #C475FD trend line lying almost on the zero line.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct anyplot dark surface; no pure black.
-      Chrome: Title visible in light cream text against dark background (ThemeProvider + explicit fill:t.ink). Axis labels and tick labels flip to light-on-dark via t.ink/t.inkSoft tokens. Legend text readable. No dark-on-dark text failures detected.
-      Data: Same MA funnel shape. Data colors are identical to light render — green (#009E73) up-regulated triangles, red (#AE3030) down-regulated triangles, same cyan trend line. Non-significant genes appear as semi-transparent light-gray blobs (t.inkSoft in dark mode ≈ #B8B7B0 at 40% opacity) against the dark background. Reference lines visible.
-      Legibility verdict: PASS — all text readable against dark background; explicit t.ink/t.inkSoft fill props correctly apply theme-adaptive colors to axis elements.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles, tick labels, threshold labels and legend text in light ink; the zero and ±1 reference lines flip to light ink; grid subtle. No dark-on-dark text.
+      Data: green, red and lavender identical to the light render; the not-significant cloud flips to the light muted ink as a theme-adaptive anchor, as intended.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'Title, axis labels, tick labels all readable in both themes. Minor:
-          legend icons show circles but visual markers are triangles — symbol mismatch.'
+        comment: All font sizes set explicitly (title 22, axis titles 16, ticks/legend/threshold
+          labels 14 CSS px at 2x); all text readable in both themes, X/Y labels and
+          ticks balanced
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Dense 10k scatter handled well by transparency. Reference line labels
-          positioned cleanly. Minor crowding in dense scatter region.
+        comment: No text collisions; threshold labels sit in the right margin clear
+          of the data; dense-band overplotting is permitted by the spec and reads
+          as density
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Significant gene triangles clearly visible. Local trend line (cyan)
-          difficult to see inside dense scatter cloud.
+        comment: 10,000 gray points at small size and ~0.33 alpha; significant genes
+          as larger 0.6-alpha triangles drawn above the gray cloud; legend glyphs
+          match marks in shape, color and alpha in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Shape redundancy (triangle up/down + color) explicitly added for
-          CVD safety. Green/red not sole signal.
+        comment: 'Green/red is not the sole signal: up/down triangles and position
+          above/below zero carry direction redundantly'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 confirmed. Good proportions. Legend at bottom doesn't crowd
-          plot. No clipping.
+        comment: 3200x1800 canvas, gate passed; plot fills the canvas, legend directly
+          under the axis, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: Mean Expression (log2 A), Y: Log2 Fold Change (M) — descriptive
-          with units. Title format correct.'
+        comment: '''Mean expression (log₂ A)'' and ''Log₂ fold change (M)'' are descriptive
+          with scale/units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Up-regulated uses t.palette[0]=#009E73. Down-regulated uses t.palette[4]=#AE3030
-          (semantic exception: down=red justified). Not-significant uses inkSoft muted
-          anchor. Trend uses t.palette[5]=#2ABCCD. Both backgrounds correct.'
+        comment: 'Up-regulated #009E73 (first series), down-regulated matte red #AE3030
+          as the semantic loss anchor, LOESS in the next free Imprint hue #C475FD,
+          not-significant in the theme-adaptive muted ink; backgrounds #FAF8F1 / #1A1A17,
+          chrome flips correctly'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -113,22 +118,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Thoughtful CVD-safe design with shape redundancy, semantic color
-          mapping. Above generic defaults.
+        comment: Directional up/down triangle glyphs for significant genes and a typographic
+          hierarchy of title / axis titles / soft-ink margin labels decided beyond
+          the baseline
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Horizontal grid only (clean), semi-transparent non-significant genes.
-          Minimal chrome extras.
+        comment: Threshold lines labelled in the reserved right margin rather than
+          over the data; horizontal-only grid chosen to support reading M values
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Reference lines at M=0, ±1 directly support interpretation. Trend
-          line reveals systematic bias. Clear focal point.
+        comment: Data displayed as the Notes ask; no further focal point chosen (no
+          top genes called out)
     spec_compliance:
       score: 15
       max: 15
@@ -138,29 +144,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct MA plot: scatter of M (log2 FC) vs A (mean expression).'
+        comment: MA scatter of mean expression vs log2 fold change
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required: significant gene highlighting, M=0 ref line, ±1 dashed
-          lines, LOESS-like trend, alpha~40% for non-significant.'
+        comment: Significant genes colored vs gray; solid M=0 line and dashed M=±1
+          lines across the full range; tricube-weighted local-average trend; alpha
+          on points; optional gene labels omitted (allowed). All 'A good version shows'
+          bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=mean expression (A), Y=log2 fold change (M). 10,000 genes in spec
-          range. Dispersion funnel realistic.
+        comment: Every gene at its (A, M) values, no jitter; axes cover all data;
+          smoother is a weighted average and cannot overshoot
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''ma-differential-expression · javascript · muix · anyplot.ai''
-          — correct. Legend: Not significant, Up-regulated, Down-regulated, Local
-          trend.'
+        comment: Title 'ma-differential-expression · javascript · muix · anyplot.ai';
+          legend entries readable and match the marks
     data_quality:
       score: 15
       max: 15
@@ -170,83 +177,95 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Full MA plot features: funnel shape, both up/down regulated, non-significant
-          majority, trend, reference lines.'
+        comment: Shows funnel-shaped spread widest at low expression, significant
+          genes in both directions, some inside the ±1 lines at high expression, dense
+          band around zero
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: RNA-seq MA plot context is standard bioinformatics. 10,000 genes,
-          A range 0-6, M range ±8 all biologically plausible.
+        comment: 'Simulated RNA-seq DE result: gamma-distributed log2 baseMean, SE
+          shrinking with counts, 15% truly changed genes, Wald |z| cutoff — plausible
+          and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'A: 0-6 log2 expression appropriate. M: ±8 log2 fold change appropriate.
-          ~1-2% significant genes realistic.'
+        comment: 10,000 genes (within 10k–20k); log2 mean 0–15.5 and log2FC within
+          about ±9 are realistic; no Check values in the spec
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: SignificantMarks helper component is justified for useDrawingArea
-          hook requirement, but adds complexity. Could be inlined.
+        comment: Linear script; the only component besides Chart is MaOverlay, required
+          to call the scale hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: LCG RNG with seed=42 — fully deterministic.
+        comment: Seeded LCG (seed 42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. Community @mui/x-charts only.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI. Clean JSX. Custom SVG overlay well-implemented.
+        comment: Written-out tricube smoother is fine per the muix Computation line
+          (no statistics helpers available)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: skipAnimation present. Default export. Harness handles file output.
+        comment: Default export, sized to ANYPLOT_SIZE, skipAnimation, v9 ChartsContainer
+          API
     library_mastery:
-      score: 9
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: ChartContainer composition, ScatterPlot+LinePlot sub-components,
-          ChartsAxis/Legend/Grid — the canonical MUI X multi-type chart pattern.
+        comment: ChartsContainer composition with ScatterPlot, ChartsGrid and axis
+          components; significant genes and the legend are hand-drawn rather than
+          native series/ChartsLegend, so no credit beyond the default
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
         passed: true
-        comment: useDrawingArea hook for coordinate-mapped SVG overlays, ChartsReferenceLine
-          with labels, ChartContainer composition — strong MUI X specifics.
+        comment: Custom SVG overlay layer composed into the chart via useXScale/useYScale
+          hooks
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-10-24T10:50:21Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - custom-legend
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - smoothing
   styling:
   - alpha-blending
+  - publication-ready
