@@ -14,131 +14,94 @@ const ROOT_ROLE_LABEL = "root";
 const LEGEND_LOW_PREFIX = "fewer";
 const LEGEND_HIGH_PREFIX = "more";
 
-const WARM_STOPS: [number, number, number][] = [t.amber, t.palette[3], t.palette[4]].map((hex) => [
+type RGB = [number, number, number];
+const hexToRgb = (hex: string): RGB => [
   parseInt(hex.slice(1, 3), 16),
   parseInt(hex.slice(3, 5), 16),
   parseInt(hex.slice(5, 7), 16),
-]);
-const ROOT_RGB: [number, number, number] = [
-  parseInt(t.inkSoft.slice(1, 3), 16),
-  parseInt(t.inkSoft.slice(3, 5), 16),
-  parseInt(t.inkSoft.slice(5, 7), 16),
 ];
+// Warm ramp: amber → ochre → matte red. The root holds every sample, so it takes the hot end.
+const WARM_STOPS: RGB[] = [t.amber, t.palette[3], t.palette[4]].map(hexToRgb);
+const ROOT_RGB: RGB = WARM_STOPS[WARM_STOPS.length - 1];
+const LABEL_INKS = ["#1A1A17", "#FAF8F1"];
 
 const ROW_H_SHARE = 0.92;
 const LABEL_FONT_SIZE = 14;
 const CHAR_WIDTH_RATIO = 0.58;
-const MARGIN = { top: 126, right: 40, bottom: 28, left: 118 };
+const MARGIN = { top: 150, right: 40, bottom: 28, left: 118 };
 
 // Columns: set these to your data's column names
 const STACK = "Stack"; // role: stack
 const FUNCTION = "Function"; // role: function
 const SAMPLES = "Samples"; // role: value
 
-// Data: replace this block with your own records
-const VERBS = [
-  "parse",
-  "validate",
-  "compute",
-  "fetch",
-  "serialize",
-  "cache",
-  "dispatch",
-  "format",
-  "aggregate",
-  "filter",
-  "normalize",
-  "encode",
-  "decode",
-  "resolve",
-  "persist",
-  "merge",
+// Data: replace this block with your own records, e.g. folded stacks from a CPU profiler
+const foldedStacks: [string, number][] = [
+  ["main;parse_request;read_body;socket_recv", 260],
+  ["main;parse_request;read_body;buffer_append", 120],
+  ["main;parse_request;read_body;inflate_gzip;inflate_block", 180],
+  ["main;parse_request;read_body;inflate_gzip;crc32_update", 60],
+  ["main;parse_request;json_decode;scan_tokens;utf8_validate", 140],
+  ["main;parse_request;json_decode;scan_tokens;next_token", 220],
+  ["main;parse_request;json_decode;build_object;alloc_dict", 110],
+  ["main;parse_request;json_decode;build_object;intern_string", 90],
+  ["main;parse_request;parse_headers;split_lines", 70],
+  ["main;parse_request;parse_headers;normalize_header_name", 50],
+  ["main;parse_request;parse_query_string;url_decode", 60],
+  ["main;parse_request;parse_query_string;split_params", 40],
+  ["main;authenticate_user;verify_jwt;base64_decode", 90],
+  ["main;authenticate_user;verify_jwt;rsa_verify;bignum_modexp;mont_mul", 280],
+  ["main;authenticate_user;verify_jwt;rsa_verify;bignum_modexp;mont_reduce", 60],
+  ["main;authenticate_user;verify_jwt;rsa_verify;sha256_digest", 120],
+  ["main;authenticate_user;verify_jwt;check_claims", 40],
+  ["main;authenticate_user;load_session;redis_get;socket_send", 60],
+  ["main;authenticate_user;load_session;redis_get;socket_recv", 140],
+  ["main;authenticate_user;load_session;deserialize_session", 80],
+  ["main;authenticate_user;check_permissions;load_role_grants", 70],
+  ["main;authenticate_user;check_permissions;match_policy", 50],
+  ["main;handle_business_logic;fetch_orders;db_query;pg_send_query", 180],
+  ["main;handle_business_logic;fetch_orders;db_query;pg_wait_result;poll_socket;epoll_wait", 820],
+  ["main;handle_business_logic;fetch_orders;db_query;pg_wait_result;poll_socket;sys_futex", 80],
+  ["main;handle_business_logic;fetch_orders;db_query;pg_wait_result;read_packet", 260],
+  ["main;handle_business_logic;fetch_orders;db_query;decode_rows;parse_numeric", 310],
+  ["main;handle_business_logic;fetch_orders;db_query;decode_rows;parse_timestamp", 240],
+  ["main;handle_business_logic;fetch_orders;db_query;decode_rows;alloc_row", 150],
+  ["main;handle_business_logic;fetch_orders;orm_hydrate;map_columns", 260],
+  ["main;handle_business_logic;fetch_orders;orm_hydrate;build_relations;lazy_load_customer", 220],
+  ["main;handle_business_logic;fetch_orders;orm_hydrate;build_relations;lazy_load_items", 380],
+  ["main;handle_business_logic;compute_totals;apply_discounts;match_promo_rules", 420],
+  ["main;handle_business_logic;compute_totals;apply_discounts;round_currency", 90],
+  ["main;handle_business_logic;compute_totals;calculate_tax;lookup_tax_rate;cache_get", 150],
+  ["main;handle_business_logic;compute_totals;calculate_tax;lookup_tax_rate;db_query_tax", 210],
+  ["main;handle_business_logic;compute_totals;calculate_tax;multiply_decimal", 130],
+  ["main;handle_business_logic;compute_totals;sum_line_items", 260],
+  ["main;handle_business_logic;enrich_recommendations;load_user_history", 340],
+  ["main;handle_business_logic;enrich_recommendations;score_products;dot_product", 760],
+  ["main;handle_business_logic;enrich_recommendations;score_products;sort_candidates", 280],
+  ["main;handle_business_logic;enrich_recommendations;filter_in_stock", 160],
+  ["main;handle_business_logic;validate_order;check_inventory", 230],
+  ["main;handle_business_logic;validate_order;validate_address;regex_match", 170],
+  ["main;handle_business_logic;validate_order;validate_address;postal_lookup", 110],
+  ["main;write_response;render_template;compile_template", 120],
+  ["main;write_response;render_template;render_nodes;escape_html", 320],
+  ["main;write_response;render_template;render_nodes;format_currency", 140],
+  ["main;write_response;render_template;render_nodes;render_partial;concat_strings", 210],
+  ["main;write_response;render_template;render_nodes;render_partial;escape_html", 90],
+  ["main;write_response;json_encode;serialize_dict", 380],
+  ["main;write_response;json_encode;encode_string", 240],
+  ["main;write_response;json_encode;float_to_string", 160],
+  ["main;write_response;compress_gzip;deflate_block", 460],
+  ["main;write_response;compress_gzip;crc32_update", 70],
+  ["main;write_response;socket_write;tcp_send", 180],
+  ["main;write_response;socket_write;flush_buffer", 60],
+  ["main;gc_collect;mark_objects", 220],
+  ["main;gc_collect;sweep_heap", 130],
 ];
-const NOUNS = [
-  "headers",
-  "payload",
-  "record",
-  "query",
-  "response",
-  "token",
-  "schema",
-  "row",
-  "buffer",
-  "session",
-  "event",
-  "job",
-  "metric",
-  "column",
-  "batch",
-  "socket",
-];
-
-let lcgSeed = 20260820;
-const usedFnNames = new Set([
-  "main",
-  "parse_request",
-  "authenticate_user",
-  "handle_business_logic",
-  "write_response",
-]);
-
-type ExpandItem = { stack: string; name: string; samples: number; remainingDepth: number };
-const expandStack: ExpandItem[] = [
-  { stack: "main;write_response", name: "write_response", samples: 2800, remainingDepth: 4 },
-  { stack: "main;handle_business_logic", name: "handle_business_logic", samples: 7700, remainingDepth: 5 },
-  { stack: "main;authenticate_user", name: "authenticate_user", samples: 1400, remainingDepth: 4 },
-  { stack: "main;parse_request", name: "parse_request", samples: 2100, remainingDepth: 4 },
-];
-
-const data: Record<string, string | number>[] = [];
-
-while (expandStack.length > 0) {
-  const current = expandStack.pop()!;
-  if (current.remainingDepth <= 0 || current.samples < 220) {
-    data.push({
-      [STACK]: current.stack,
-      [FUNCTION]: current.name,
-      [SAMPLES]: current.samples,
-    });
-    continue;
-  }
-  lcgSeed = (lcgSeed * 48271) % 2147483647;
-  const childCount = 2 + Math.floor((lcgSeed / 2147483647) * 2);
-  const weights: number[] = [];
-  let weightSum = 0;
-  for (let i = 0; i < childCount; i++) {
-    lcgSeed = (lcgSeed * 48271) % 2147483647;
-    const w = 0.5 + lcgSeed / 2147483647;
-    weights.push(w);
-    weightSum += w;
-  }
-  let remaining = current.samples;
-  const childrenToPush: ExpandItem[] = [];
-  for (let i = 0; i < childCount; i++) {
-    let fnName = "";
-    do {
-      lcgSeed = (lcgSeed * 48271) % 2147483647;
-      const vIdx = Math.floor((lcgSeed / 2147483647) * VERBS.length);
-      lcgSeed = (lcgSeed * 48271) % 2147483647;
-      const nIdx = Math.floor((lcgSeed / 2147483647) * NOUNS.length);
-      fnName = `${VERBS[vIdx]}_${NOUNS[nIdx]}`;
-    } while (usedFnNames.has(fnName));
-    usedFnNames.add(fnName);
-
-    const childSamples =
-      i === childCount - 1 ? remaining : Math.round((weights[i] / weightSum) * current.samples);
-    remaining -= childSamples;
-    childrenToPush.push({
-      stack: `${current.stack};${fnName}`,
-      name: fnName,
-      samples: childSamples,
-      remainingDepth: current.remainingDepth - 1,
-    });
-  }
-  for (let i = childrenToPush.length - 1; i >= 0; i--) {
-    expandStack.push(childrenToPush[i]);
-  }
-}
+const data: Record<string, string | number>[] = foldedStacks.map(([stack, samples]) => ({
+  [STACK]: stack,
+  [FUNCTION]: stack.split(";").pop()!,
+  [SAMPLES]: samples,
+}));
 
 // Plot: reads only data and the constants above
 type FrameNode = {
@@ -234,31 +197,38 @@ const nonRootPcts = rawFrames.filter((f) => f.depth > 0).map((f) => f.samples / 
 const minPct = Math.min(...nonRootPcts);
 const maxPct = Math.max(...nonRootPcts);
 
+const relLuminance = (rgb: RGB) => {
+  const [r, g, b] = rgb.map((v) => {
+    const c = v / 255;
+    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+const contrast = (a: RGB, b: RGB) => {
+  const [hi, lo] = [relLuminance(a), relLuminance(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+};
+
 const frames: PositionedFrame[] = rawFrames.map((f) => {
   const isRoot = f.depth === 0;
   const pct = (f.samples / totalSamples) * 100;
-  let rgb: [number, number, number] = ROOT_RGB;
+  let rgb: RGB = ROOT_RGB;
   if (!isRoot) {
     const u = (pct / 100 - minPct) / (maxPct - minPct);
     const scaled = u * (WARM_STOPS.length - 1);
     const idx = Math.min(WARM_STOPS.length - 2, Math.floor(scaled));
     const frac = scaled - idx;
-    rgb = [
-      Math.round(WARM_STOPS[idx][0] + (WARM_STOPS[idx + 1][0] - WARM_STOPS[idx][0]) * frac),
-      Math.round(WARM_STOPS[idx][1] + (WARM_STOPS[idx + 1][1] - WARM_STOPS[idx][1]) * frac),
-      Math.round(WARM_STOPS[idx][2] + (WARM_STOPS[idx + 1][2] - WARM_STOPS[idx][2]) * frac),
-    ];
+    rgb = WARM_STOPS[idx].map((c, k) => Math.round(c + (WARM_STOPS[idx + 1][k] - c) * frac)) as RGB;
   }
-  const srgb = rgb.map((v) => {
-    const c = v / 255;
-    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
-  });
-  const lum = 0.2126 * srgb[0] + 0.7152 * srgb[1] + 0.0722 * srgb[2];
+  // Pick whichever label ink reads better against this fill.
+  const labelFill = LABEL_INKS.reduce((best, ink) =>
+    contrast(hexToRgb(ink), rgb) > contrast(hexToRgb(best), rgb) ? ink : best,
+  );
   return {
     ...f,
     pct,
-    fill: `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`,
-    labelFill: lum > 0.45 ? "#1A1A17" : "#FAF8F1",
+    fill: `rgb(${rgb.join(",")})`,
+    labelFill,
   };
 });
 
@@ -267,41 +237,26 @@ function FlameGraphCanvas() {
   const ys = useYScale();
   const { width } = window.ANYPLOT_SIZE;
 
+  // Legend: gradient bar with its end labels anchored beneath it, root swatch to the right.
   const legendFs = 14;
-  const legendCharW = legendFs * 0.58;
-  const legendY = 104;
-  const barW = 220;
+  const barW = 360;
   const barH = 14;
+  const barY = 92;
+  const barX = width / 2 - barW - 40;
+  const endLabelY = barY + barH + 18;
+  const rootSwatchX = width / 2 + 40;
   const rootName = rootKeys.join(", ");
   const rootLabel = `${rootName} (${ROOT_ROLE_LABEL} · 100% ${SAMPLES})`;
   const leftLabel = `${LEGEND_LOW_PREFIX} ${SAMPLES} (${(minPct * 100).toFixed(1)}%)`;
   const rightLabel = `${LEGEND_HIGH_PREFIX} ${SAMPLES} (${(maxPct * 100).toFixed(1)}%)`;
-  const rootSwatchW = 14;
-  const rootBlockW = rootSwatchW + 8 + rootLabel.length * legendCharW;
-  const leftLabelW = leftLabel.length * legendCharW;
-  const rightLabelW = rightLabel.length * legendCharW;
-  const legendPad = 14;
-  const sectionGap = 36;
-  const barBlockW = leftLabelW + legendPad + barW + legendPad + rightLabelW;
-  const totalLegendW = rootBlockW + sectionGap + barBlockW;
-
-  let lx = width / 2 - totalLegendW / 2;
-  const rootSwatchX = lx;
-  const rootLabelX = rootSwatchX + rootSwatchW + 8;
-  lx += rootBlockW + sectionGap;
-  const leftLabelX = lx;
-  lx += leftLabelW + legendPad;
-  const barX = lx;
-  lx += barW + legendPad;
-  const rightLabelX = lx;
 
   return (
     <g>
       <defs>
         <linearGradient id="flamegraphHeatGradient" x1="0%" x2="100%" y1="0%" y2="0%">
-          <stop offset="0%" stopColor={`rgb(${WARM_STOPS[0].join(",")})`} />
-          <stop offset="50%" stopColor={`rgb(${WARM_STOPS[1].join(",")})`} />
-          <stop offset="100%" stopColor={`rgb(${WARM_STOPS[2].join(",")})`} />
+          {WARM_STOPS.map((rgb, i) => (
+            <stop key={i} offset={`${(i / (WARM_STOPS.length - 1)) * 100}%`} stopColor={`rgb(${rgb.join(",")})`} />
+          ))}
         </linearGradient>
       </defs>
 
@@ -356,30 +311,16 @@ function FlameGraphCanvas() {
 
       {/* Heat scale legend */}
       <g fontSize={legendFs} fill={t.inkSoft}>
-        <rect
-          x={rootSwatchX}
-          y={legendY - rootSwatchW + 2}
-          width={rootSwatchW}
-          height={rootSwatchW}
-          rx={2}
-          fill={`rgb(${ROOT_RGB.join(",")})`}
-        />
-        <text x={rootLabelX} y={legendY}>
-          {rootLabel}
-        </text>
-        <text x={leftLabelX} y={legendY}>
+        <rect x={barX} y={barY} width={barW} height={barH} rx={2} fill="url(#flamegraphHeatGradient)" />
+        <text x={barX} y={endLabelY} textAnchor="start">
           {leftLabel}
         </text>
-        <rect
-          x={barX}
-          y={legendY - barH + 2}
-          width={barW}
-          height={barH}
-          rx={2}
-          fill="url(#flamegraphHeatGradient)"
-        />
-        <text x={rightLabelX} y={legendY}>
+        <text x={barX + barW} y={endLabelY} textAnchor="end">
           {rightLabel}
+        </text>
+        <rect x={rootSwatchX} y={barY} width={barH} height={barH} rx={2} fill={`rgb(${ROOT_RGB.join(",")})`} />
+        <text x={rootSwatchX + barH + 8} y={barY + barH / 2} dominantBaseline="central">
+          {rootLabel}
         </text>
       </g>
     </g>
