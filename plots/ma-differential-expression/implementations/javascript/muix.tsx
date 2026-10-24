@@ -19,6 +19,7 @@ const LFC_THRESHOLD = 1;
 const N_SMOOTH_BINS = 24;
 const SMOOTH_BW_FACTOR = 2.2;
 const NOT_SIG_ALPHA_HEX = "55";
+const SIG_ALPHA = 0.6;
 const X_PAD_SHARE = 0.02;
 const Y_PAD_SHARE = 0.06;
 
@@ -38,26 +39,30 @@ const SIG = "Significant"; // role: significant
 
 // Data: replace this block with your own records
 const N_GENES = 10000;
-const PADJ_CUTOFF = 0.05;
-const MIN_SIG_LFC = 0.5;
+const DE_SHARE = 0.15; // share of genes truly changed by the treatment
+const MAX_LOG2_MEAN = 15.5;
+const Z_CUTOFF = 3.3; // Wald |z| equivalent of padj < 0.05 after BH correction
 let seed = 42 >>> 0;
+const rand = () => {
+  seed = (Math.imul(1664525, seed) + 1013904223) >>> 0;
+  return (seed + 1) / 0x100000001;
+};
+const randNormal = () => Math.sqrt(-2 * Math.log(rand())) * Math.cos(2 * Math.PI * rand());
 
 const data: Array<Record<string, number | boolean>> = [];
 for (let i = 0; i < N_GENES; i++) {
-  seed = (Math.imul(1664525, seed) + 1013904223) >>> 0;
-  const r1 = seed / 0x100000000;
-  seed = (Math.imul(1664525, seed) + 1013904223) >>> 0;
-  const r2 = seed / 0x100000000;
-  seed = (Math.imul(1664525, seed) + 1013904223) >>> 0;
-  const r3 = seed / 0x100000000;
-  seed = (Math.imul(1664525, seed) + 1013904223) >>> 0;
-  const r4 = seed / 0x100000000;
+  // log2 baseMean: right-skewed gamma(3, 1.9), many low-count genes, long tail to ~15
+  let a: number;
+  do {
+    a = -1.9 * Math.log(rand() * rand() * rand());
+  } while (a > MAX_LOG2_MEAN);
 
-  const a = r1 * 6;
-  const dispersion = 2.5 / (a + 0.8);
-  const m = (r2 - 0.5) * 5 * dispersion + (r3 - 0.5) * 0.3;
-  const padj = Math.exp(-Math.abs(m) * (a + 0.3) * 0.8) * r4;
-  const sig = padj < PADJ_CUTOFF && Math.abs(m) > MIN_SIG_LFC;
+  // Standard error of the fold change shrinks as counts grow
+  const se = 0.12 + 2.0 / (a + 1.2);
+  const isDE = rand() < DE_SHARE;
+  const trueLfc = isDE ? Math.sign(rand() - 0.5) * (0.6 - 1.1 * Math.log(rand())) : 0;
+  const m = trueLfc + se * randNormal();
+  const sig = Math.abs(m) / se > Z_CUTOFF;
 
   data.push({
     [MEAN_EXPR]: a,
@@ -139,7 +144,7 @@ function MaOverlay() {
   const xScale = useXScale("x") as (v: number) => number;
   const yScale = useYScale("y") as (v: number) => number;
 
-  const R = 6.5;
+  const R = 4.5;
   const H = R * 0.866;
 
   const smoothD = smoothPoints
@@ -156,6 +161,7 @@ function MaOverlay() {
             key={p.id}
             points={`${x},${y - R} ${x - H},${y + R * 0.5} ${x + H},${y + R * 0.5}`}
             fill={statusColorMap[UP_REG_LABEL]}
+            fillOpacity={SIG_ALPHA}
           />
         );
       })}
@@ -167,6 +173,7 @@ function MaOverlay() {
             key={p.id}
             points={`${x},${y + R} ${x - H},${y - R * 0.5} ${x + H},${y - R * 0.5}`}
             fill={statusColorMap[DOWN_REG_LABEL]}
+            fillOpacity={SIG_ALPHA}
           />
         );
       })}
@@ -347,11 +354,11 @@ export default function Chart() {
               />
             ) : item.kind === "up" ? (
               <svg width={14} height={14} viewBox="0 0 14 14">
-                <polygon points="7,1 1,12 13,12" fill={item.color} />
+                <polygon points="7,1 1,12 13,12" fill={item.color} fillOpacity={SIG_ALPHA} />
               </svg>
             ) : item.kind === "down" ? (
               <svg width={14} height={14} viewBox="0 0 14 14">
-                <polygon points="7,13 1,2 13,2" fill={item.color} />
+                <polygon points="7,13 1,2 13,2" fill={item.color} fillOpacity={SIG_ALPHA} />
               </svg>
             ) : (
               <Box
