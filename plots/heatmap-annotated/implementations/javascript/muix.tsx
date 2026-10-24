@@ -1,6 +1,6 @@
 // anyplot.ai
 // heatmap-annotated: Annotated Heatmap
-// Library: muix 9.2.1 | JavaScript 22.23.1
+// Library: muix 7.29.1 | JavaScript 22.23.1
 // Quality: 90/100 | Created: 2026-08-05
 //# anyplot-orientation: square
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
@@ -9,85 +9,84 @@ import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const W = window.ANYPLOT_SIZE.width;
-const H = window.ANYPLOT_SIZE.height;
 
 // Constants
-const X_COL = "x";
-const Y_COL = "y";
-const VALUE_COL = "value";
-
+const W = window.ANYPLOT_SIZE.width;
+const H = window.ANYPLOT_SIZE.height;
 const FONT = "system-ui, -apple-system, sans-serif";
 const TITLE = "heatmap-annotated · javascript · muix · anyplot.ai";
-const SUBTITLE_PREFIX = "Pearson correlation matrix across daily wellness metrics";
-const COLORBAR_LABEL = "Pearson r";
 const DOMAIN_MIN = -1;
 const DOMAIN_MID = 0;
 const DOMAIN_MAX = 1;
 const COLORBAR_TICKS = [-1.0, -0.5, 0.0, 0.5, 1.0];
 
-// Data — symmetric 7x7 Pearson correlation matrix across daily wellness metrics
+// Columns: set these to your data's column names
+const COL_VAR = "Column variable"; // role: x
+const ROW_VAR = "Row variable"; // role: y
+const CORRELATION = "Pearson r"; // role: value
+
+// Data: replace this block with your own records
 const data: Record<string, string | number>[] = [
-  { [Y_COL]: "Sleep", [X_COL]: "Sleep", [VALUE_COL]: 1.0 },
-  { [Y_COL]: "Sleep", [X_COL]: "Exercise", [VALUE_COL]: 0.35 },
-  { [Y_COL]: "Sleep", [X_COL]: "Screen Time", [VALUE_COL]: -0.42 },
-  { [Y_COL]: "Sleep", [X_COL]: "Stress", [VALUE_COL]: -0.58 },
-  { [Y_COL]: "Sleep", [X_COL]: "Water", [VALUE_COL]: 0.22 },
-  { [Y_COL]: "Sleep", [X_COL]: "Steps", [VALUE_COL]: 0.31 },
-  { [Y_COL]: "Sleep", [X_COL]: "Mood", [VALUE_COL]: 0.61 },
+  { [ROW_VAR]: "Sleep", [COL_VAR]: "Sleep", [CORRELATION]: 1.0 },
+  { [ROW_VAR]: "Sleep", [COL_VAR]: "Exercise", [CORRELATION]: 0.35 },
+  { [ROW_VAR]: "Sleep", [COL_VAR]: "Screen Time", [CORRELATION]: -0.42 },
+  { [ROW_VAR]: "Sleep", [COL_VAR]: "Stress", [CORRELATION]: -0.58 },
+  { [ROW_VAR]: "Sleep", [COL_VAR]: "Water", [CORRELATION]: 0.22 },
+  { [ROW_VAR]: "Sleep", [COL_VAR]: "Steps", [CORRELATION]: 0.31 },
+  { [ROW_VAR]: "Sleep", [COL_VAR]: "Mood", [CORRELATION]: 0.61 },
 
-  { [Y_COL]: "Exercise", [X_COL]: "Sleep", [VALUE_COL]: 0.35 },
-  { [Y_COL]: "Exercise", [X_COL]: "Exercise", [VALUE_COL]: 1.0 },
-  { [Y_COL]: "Exercise", [X_COL]: "Screen Time", [VALUE_COL]: -0.28 },
-  { [Y_COL]: "Exercise", [X_COL]: "Stress", [VALUE_COL]: -0.33 },
-  { [Y_COL]: "Exercise", [X_COL]: "Water", [VALUE_COL]: 0.45 },
-  { [Y_COL]: "Exercise", [X_COL]: "Steps", [VALUE_COL]: 0.82 },
-  { [Y_COL]: "Exercise", [X_COL]: "Mood", [VALUE_COL]: 0.57 },
+  { [ROW_VAR]: "Exercise", [COL_VAR]: "Sleep", [CORRELATION]: 0.35 },
+  { [ROW_VAR]: "Exercise", [COL_VAR]: "Exercise", [CORRELATION]: 1.0 },
+  { [ROW_VAR]: "Exercise", [COL_VAR]: "Screen Time", [CORRELATION]: -0.28 },
+  { [ROW_VAR]: "Exercise", [COL_VAR]: "Stress", [CORRELATION]: -0.33 },
+  { [ROW_VAR]: "Exercise", [COL_VAR]: "Water", [CORRELATION]: 0.45 },
+  { [ROW_VAR]: "Exercise", [COL_VAR]: "Steps", [CORRELATION]: 0.82 },
+  { [ROW_VAR]: "Exercise", [COL_VAR]: "Mood", [CORRELATION]: 0.57 },
 
-  { [Y_COL]: "Screen Time", [X_COL]: "Sleep", [VALUE_COL]: -0.42 },
-  { [Y_COL]: "Screen Time", [X_COL]: "Exercise", [VALUE_COL]: -0.28 },
-  { [Y_COL]: "Screen Time", [X_COL]: "Screen Time", [VALUE_COL]: 1.0 },
-  { [Y_COL]: "Screen Time", [X_COL]: "Stress", [VALUE_COL]: 0.49 },
-  { [Y_COL]: "Screen Time", [X_COL]: "Water", [VALUE_COL]: -0.18 },
-  { [Y_COL]: "Screen Time", [X_COL]: "Steps", [VALUE_COL]: -0.39 },
-  { [Y_COL]: "Screen Time", [X_COL]: "Mood", [VALUE_COL]: -0.44 },
+  { [ROW_VAR]: "Screen Time", [COL_VAR]: "Sleep", [CORRELATION]: -0.42 },
+  { [ROW_VAR]: "Screen Time", [COL_VAR]: "Exercise", [CORRELATION]: -0.28 },
+  { [ROW_VAR]: "Screen Time", [COL_VAR]: "Screen Time", [CORRELATION]: 1.0 },
+  { [ROW_VAR]: "Screen Time", [COL_VAR]: "Stress", [CORRELATION]: 0.49 },
+  { [ROW_VAR]: "Screen Time", [COL_VAR]: "Water", [CORRELATION]: -0.18 },
+  { [ROW_VAR]: "Screen Time", [COL_VAR]: "Steps", [CORRELATION]: -0.39 },
+  { [ROW_VAR]: "Screen Time", [COL_VAR]: "Mood", [CORRELATION]: -0.44 },
 
-  { [Y_COL]: "Stress", [X_COL]: "Sleep", [VALUE_COL]: -0.58 },
-  { [Y_COL]: "Stress", [X_COL]: "Exercise", [VALUE_COL]: -0.33 },
-  { [Y_COL]: "Stress", [X_COL]: "Screen Time", [VALUE_COL]: 0.49 },
-  { [Y_COL]: "Stress", [X_COL]: "Stress", [VALUE_COL]: 1.0 },
-  { [Y_COL]: "Stress", [X_COL]: "Water", [VALUE_COL]: -0.15 },
-  { [Y_COL]: "Stress", [X_COL]: "Steps", [VALUE_COL]: -0.36 },
-  { [Y_COL]: "Stress", [X_COL]: "Mood", [VALUE_COL]: -0.71 },
+  { [ROW_VAR]: "Stress", [COL_VAR]: "Sleep", [CORRELATION]: -0.58 },
+  { [ROW_VAR]: "Stress", [COL_VAR]: "Exercise", [CORRELATION]: -0.33 },
+  { [ROW_VAR]: "Stress", [COL_VAR]: "Screen Time", [CORRELATION]: 0.49 },
+  { [ROW_VAR]: "Stress", [COL_VAR]: "Stress", [CORRELATION]: 1.0 },
+  { [ROW_VAR]: "Stress", [COL_VAR]: "Water", [CORRELATION]: -0.15 },
+  { [ROW_VAR]: "Stress", [COL_VAR]: "Steps", [CORRELATION]: -0.36 },
+  { [ROW_VAR]: "Stress", [COL_VAR]: "Mood", [CORRELATION]: -0.71 },
 
-  { [Y_COL]: "Water", [X_COL]: "Sleep", [VALUE_COL]: 0.22 },
-  { [Y_COL]: "Water", [X_COL]: "Exercise", [VALUE_COL]: 0.45 },
-  { [Y_COL]: "Water", [X_COL]: "Screen Time", [VALUE_COL]: -0.18 },
-  { [Y_COL]: "Water", [X_COL]: "Stress", [VALUE_COL]: -0.15 },
-  { [Y_COL]: "Water", [X_COL]: "Water", [VALUE_COL]: 1.0 },
-  { [Y_COL]: "Water", [X_COL]: "Steps", [VALUE_COL]: 0.28 },
-  { [Y_COL]: "Water", [X_COL]: "Mood", [VALUE_COL]: 0.19 },
+  { [ROW_VAR]: "Water", [COL_VAR]: "Sleep", [CORRELATION]: 0.22 },
+  { [ROW_VAR]: "Water", [COL_VAR]: "Exercise", [CORRELATION]: 0.45 },
+  { [ROW_VAR]: "Water", [COL_VAR]: "Screen Time", [CORRELATION]: -0.18 },
+  { [ROW_VAR]: "Water", [COL_VAR]: "Stress", [CORRELATION]: -0.15 },
+  { [ROW_VAR]: "Water", [COL_VAR]: "Water", [CORRELATION]: 1.0 },
+  { [ROW_VAR]: "Water", [COL_VAR]: "Steps", [CORRELATION]: 0.28 },
+  { [ROW_VAR]: "Water", [COL_VAR]: "Mood", [CORRELATION]: 0.19 },
 
-  { [Y_COL]: "Steps", [X_COL]: "Sleep", [VALUE_COL]: 0.31 },
-  { [Y_COL]: "Steps", [X_COL]: "Exercise", [VALUE_COL]: 0.82 },
-  { [Y_COL]: "Steps", [X_COL]: "Screen Time", [VALUE_COL]: -0.39 },
-  { [Y_COL]: "Steps", [X_COL]: "Stress", [VALUE_COL]: -0.36 },
-  { [Y_COL]: "Steps", [X_COL]: "Water", [VALUE_COL]: 0.28 },
-  { [Y_COL]: "Steps", [X_COL]: "Steps", [VALUE_COL]: 1.0 },
-  { [Y_COL]: "Steps", [X_COL]: "Mood", [VALUE_COL]: 0.52 },
+  { [ROW_VAR]: "Steps", [COL_VAR]: "Sleep", [CORRELATION]: 0.31 },
+  { [ROW_VAR]: "Steps", [COL_VAR]: "Exercise", [CORRELATION]: 0.82 },
+  { [ROW_VAR]: "Steps", [COL_VAR]: "Screen Time", [CORRELATION]: -0.39 },
+  { [ROW_VAR]: "Steps", [COL_VAR]: "Stress", [CORRELATION]: -0.36 },
+  { [ROW_VAR]: "Steps", [COL_VAR]: "Water", [CORRELATION]: 0.28 },
+  { [ROW_VAR]: "Steps", [COL_VAR]: "Steps", [CORRELATION]: 1.0 },
+  { [ROW_VAR]: "Steps", [COL_VAR]: "Mood", [CORRELATION]: 0.52 },
 
-  { [Y_COL]: "Mood", [X_COL]: "Sleep", [VALUE_COL]: 0.61 },
-  { [Y_COL]: "Mood", [X_COL]: "Exercise", [VALUE_COL]: 0.57 },
-  { [Y_COL]: "Mood", [X_COL]: "Screen Time", [VALUE_COL]: -0.44 },
-  { [Y_COL]: "Mood", [X_COL]: "Stress", [VALUE_COL]: -0.71 },
-  { [Y_COL]: "Mood", [X_COL]: "Water", [VALUE_COL]: 0.19 },
-  { [Y_COL]: "Mood", [X_COL]: "Steps", [VALUE_COL]: 0.52 },
-  { [Y_COL]: "Mood", [X_COL]: "Mood", [VALUE_COL]: 1.0 },
+  { [ROW_VAR]: "Mood", [COL_VAR]: "Sleep", [CORRELATION]: 0.61 },
+  { [ROW_VAR]: "Mood", [COL_VAR]: "Exercise", [CORRELATION]: 0.57 },
+  { [ROW_VAR]: "Mood", [COL_VAR]: "Screen Time", [CORRELATION]: -0.44 },
+  { [ROW_VAR]: "Mood", [COL_VAR]: "Stress", [CORRELATION]: -0.71 },
+  { [ROW_VAR]: "Mood", [COL_VAR]: "Water", [CORRELATION]: 0.19 },
+  { [ROW_VAR]: "Mood", [COL_VAR]: "Steps", [CORRELATION]: 0.52 },
+  { [ROW_VAR]: "Mood", [COL_VAR]: "Mood", [CORRELATION]: 1.0 },
 ];
 
-// Derive ordered category lists in order of first appearance
-const xCategories = Array.from(new Set(data.map((r) => String(r[X_COL]))));
-const yCategories = Array.from(new Set(data.map((r) => String(r[Y_COL]))));
+// Plot: reads only data and the constants above
+const xCategories = Array.from(new Set(data.map((r) => String(r[COL_VAR]))));
+const yCategories = Array.from(new Set(data.map((r) => String(r[ROW_VAR]))));
 
 const divStopInts = t.div.map((hex) => parseInt(hex.replace("#", ""), 16));
 const divStopsRgb: [number, number, number][] = divStopInts.map((v) => [
@@ -97,9 +96,9 @@ const divStopsRgb: [number, number, number][] = divStopInts.map((v) => [
 ]);
 
 const cells = data.map((row) => {
-  const xKey = String(row[X_COL]);
-  const yKey = String(row[Y_COL]);
-  const value = Number(row[VALUE_COL]);
+  const xKey = String(row[COL_VAR]);
+  const yKey = String(row[ROW_VAR]);
+  const value = Number(row[CORRELATION]);
   const [r0, g0, b0] = divStopsRgb[0];
   const [r1, g1, b1] = divStopsRgb[1];
   const [r2, g2, b2] = divStopsRgb[2];
@@ -108,8 +107,8 @@ const cells = data.map((row) => {
   const [ra, ga, ba] = isNeg ? [r0, g0, b0] : [r1, g1, b1];
   const [rb, gb, bb] = isNeg ? [r1, g1, b1] : [r2, g2, b2];
   const f = isNeg
-    ? (value - DOMAIN_MIN) / (DOMAIN_MID - DOMAIN_MIN || 1)
-    : (value - DOMAIN_MID) / (DOMAIN_MAX - DOMAIN_MID || 1);
+    ? (value - DOMAIN_MIN) / (DOMAIN_MID - DOMAIN_MIN)
+    : (value - DOMAIN_MID) / (DOMAIN_MAX - DOMAIN_MID);
 
   const r = Math.round(ra + (rb - ra) * f);
   const g = Math.round(ga + (gb - ga) * f);
@@ -128,13 +127,12 @@ const cells = data.map((row) => {
 });
 
 function HeatmapLayer() {
-  const xScale = useXScale("vars_x");
-  const yScale = useYScale("vars_y");
+  const xScale = useXScale("vars_x") as unknown as ((v: string) => number) & { bandwidth: () => number };
+  const yScale = useYScale("vars_y") as unknown as ((v: string) => number) & { bandwidth: () => number };
   const { left, top, width, height } = useDrawingArea();
 
-  if (!xScale || !yScale || typeof (xScale as any).bandwidth !== "function") return null;
-  const bw = (xScale as any).bandwidth() as number;
-  const bh = (yScale as any).bandwidth() as number;
+  const bw = xScale.bandwidth();
+  const bh = yScale.bandwidth();
   const barX = left + width + 26;
 
   return (
@@ -150,20 +148,19 @@ function HeatmapLayer() {
       {cells.map((cell) => {
         const x0 = xScale(cell.xKey);
         const y0 = yScale(cell.yKey);
-        if (x0 === undefined || y0 === undefined) return null;
         return (
           <g key={cell.key}>
             <rect
-              x={Number(x0) + 2}
-              y={Number(y0) + 2}
+              x={x0 + 2}
+              y={y0 + 2}
               width={bw - 4}
               height={bh - 4}
               fill={cell.fill}
               rx={4}
             />
             <text
-              x={Number(x0) + bw / 2}
-              y={Number(y0) + bh / 2 + 7}
+              x={x0 + bw / 2}
+              y={y0 + bh / 2 + 7}
               textAnchor="middle"
               fontSize={20}
               fontWeight="600"
@@ -186,7 +183,7 @@ function HeatmapLayer() {
         fill={t.inkSoft}
         fontFamily={FONT}
       >
-        {COLORBAR_LABEL}
+        {CORRELATION}
       </text>
       <rect x={barX} y={top} width={20} height={height} fill="url(#divGrad)" rx={3} />
       {COLORBAR_TICKS.map((tick) => {
@@ -206,7 +203,7 @@ function HeatmapLayer() {
 
 export default function Chart() {
   const margin = { left: 20, top: 96, right: 118, bottom: 28 };
-  const subtitle = `${SUBTITLE_PREFIX} (${xCategories.length}×${yCategories.length})`;
+  const subtitle = `${CORRELATION} matrix (${xCategories.length} × ${yCategories.length})`;
 
   return (
     <ChartsContainer
