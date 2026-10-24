@@ -10,34 +10,39 @@ import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
 
-// Data
-const X = "Zonal Offset (°)";
-const Y = "Meridional Offset (°)";
-const Z = "Temperature Anomaly (°C)";
-const SUBTITLE = "Sea-surface temperature anomaly field · Marching-triangles filled contour bands";
-
-const SAMPLE_GRID = 36;
-const SAMPLE_SPAN = 6;
-const DATA = [];
-for (let j = 0; j < SAMPLE_GRID; j += 1) {
-  const y = -SAMPLE_SPAN / 2 + (j / (SAMPLE_GRID - 1)) * SAMPLE_SPAN;
-  for (let i = 0; i < SAMPLE_GRID; i += 1) {
-    const x = -SAMPLE_SPAN / 2 + (i / (SAMPLE_GRID - 1)) * SAMPLE_SPAN;
-    const warm = 2.0 * Math.exp(-((x - 1.3) * (x - 1.3) + (y - 0.9) * (y - 0.9)) * 0.55);
-    const cool = -1.6 * Math.exp(-((x + 1.4) * (x + 1.4) + (y + 1.0) * (y + 1.0)) * 0.65);
-    DATA.push({ [X]: x, [Y]: y, [Z]: warm + cool });
-  }
-}
-
-// Constants
 const t = window.ANYPLOT_TOKENS;
 const SIZE = window.ANYPLOT_SIZE;
+
+// Constants
+const TITLE = "contour-filled · javascript · muix · anyplot.ai";
 const FONT = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
 const NUM_BANDS = 10;
 
-// Preparation
-const xs = Array.from(new Set(DATA.map((d) => d[X]))).sort((a, b) => a - b);
-const ys = Array.from(new Set(DATA.map((d) => d[Y]))).sort((a, b) => a - b);
+// Columns: set these to your data's column names
+const X = "Zonal offset (°)"; // role: x
+const Y = "Meridional offset (°)"; // role: y
+const Z = "Temperature anomaly (°C)"; // role: z
+
+// Data: replace this block with your own records
+const data = (() => {
+  const sampleGrid = 36;
+  const sampleSpan = 6;
+  const rows: Record<string, number>[] = [];
+  for (let j = 0; j < sampleGrid; j += 1) {
+    const y = -sampleSpan / 2 + (j / (sampleGrid - 1)) * sampleSpan;
+    for (let i = 0; i < sampleGrid; i += 1) {
+      const x = -sampleSpan / 2 + (i / (sampleGrid - 1)) * sampleSpan;
+      const warm = 2.0 * Math.exp(-((x - 1.3) * (x - 1.3) + (y - 0.9) * (y - 0.9)) * 0.55);
+      const cool = -1.6 * Math.exp(-((x + 1.4) * (x + 1.4) + (y + 1.0) * (y + 1.0)) * 0.65);
+      rows.push({ [X]: x, [Y]: y, [Z]: warm + cool });
+    }
+  }
+  return rows;
+})();
+
+// Plot: reads only data and the constants above
+const xs = Array.from(new Set(data.map((d) => Number(d[X])))).sort((a, b) => a - b);
+const ys = Array.from(new Set(data.map((d) => Number(d[Y])))).sort((a, b) => a - b);
 const nX = xs.length;
 const nY = ys.length;
 const xMin = xs[0];
@@ -45,17 +50,21 @@ const xMax = xs[nX - 1];
 const yMin = ys[0];
 const yMax = ys[nY - 1];
 
-const zGrid = Array.from({ length: nY }, () => new Array(nX).fill(0));
+const zGrid = Array.from({ length: nY }, () => new Array(nX).fill(NaN));
 const xIndex = new Map(xs.map((v, i) => [v, i]));
 const yIndex = new Map(ys.map((v, j) => [v, j]));
-for (const row of DATA) {
-  zGrid[yIndex.get(row[Y])][xIndex.get(row[X])] = row[Z];
+for (const row of data) {
+  const val = Number(row[Z]);
+  if (Number.isFinite(val)) {
+    zGrid[yIndex.get(Number(row[Y]))!][xIndex.get(Number(row[X]))!] = val;
+  }
 }
 
-const allZ = DATA.map((d) => d[Z]);
-const zMin = Math.min(...allZ);
-const zMax = Math.max(...allZ);
+const validZ = data.map((d) => Number(d[Z])).filter((v) => Number.isFinite(v));
+const zMin = Math.min(...validZ);
+const zMax = Math.max(...validZ);
 const vAbs = Math.max(Math.abs(zMin), Math.abs(zMax));
+const SUBTITLE = `${Z} across ${nX}×${nY} grid · ${NUM_BANDS} filled contour bands`;
 
 const divStops = [t.div[2], t.div[1], t.div[0]].map((hex) => {
   const n = parseInt(hex.slice(1), 16);
@@ -65,7 +74,7 @@ const divStops = [t.div[2], t.div[1], t.div[0]].map((hex) => {
 const levels = Array.from({ length: NUM_BANDS }, (_, k) => -vAbs + (k * 2 * vAbs) / NUM_BANDS);
 const levelEdges = Array.from(
   { length: NUM_BANDS + 1 },
-  (_, k) => -vAbs + (k * 2 * vAbs) / NUM_BANDS
+  (_, k) => -vAbs + (k * 2 * vAbs) / NUM_BANDS,
 );
 
 const bandColors = Array.from({ length: NUM_BANDS }, (_, k) => {
@@ -80,7 +89,7 @@ const bandColors = Array.from({ length: NUM_BANDS }, (_, k) => {
   return `rgb(${r}, ${g}, ${b})`;
 });
 
-const triangles = [];
+const triangles: { x: number; y: number; z: number }[][] = [];
 for (let j = 0; j < nY - 1; j += 1) {
   for (let i = 0; i < nX - 1; i += 1) {
     const sw = { x: xs[i], y: ys[j], z: zGrid[j][i] };
@@ -96,13 +105,17 @@ for (let j = 0; j < nY - 1; j += 1) {
   }
 }
 
-const bandGeometry = [];
-const isolineGeometry = [];
+const validTriangles = triangles.filter(
+  ([a, b, c]) => !Number.isNaN(a.z) && !Number.isNaN(b.z) && !Number.isNaN(c.z),
+);
+
+const bandGeometry: { x: number; y: number }[][][] = [];
+const isolineGeometry: { x: number; y: number }[][][] = [];
 for (let k = 1; k < NUM_BANDS; k += 1) {
   const threshold = levels[k];
-  const polys = [];
-  const segments = [];
-  for (const [a, b, c] of triangles) {
+  const polys: { x: number; y: number }[][] = [];
+  const segments: { x: number; y: number }[][] = [];
+  for (const [a, b, c] of validTriangles) {
     const inA = a.z >= threshold;
     const inB = b.z >= threshold;
     const inC = c.z >= threshold;
@@ -146,16 +159,18 @@ for (let k = 1; k < NUM_BANDS; k += 1) {
 }
 
 function FilledContourLayer() {
-  const xScale = useXScale("x");
-  const yScale = useYScale("y");
+  const xScale = useXScale("x") as any;
+  const yScale = useYScale("y") as any;
   const { left, top, width, height } = useDrawingArea();
-  if (!xScale || !yScale) return null;
 
-  const rx0 = xScale(xMin) ?? 0;
-  const ry0 = yScale(yMin) ?? 0;
-  const rx1 = xScale(xMax) ?? 0;
-  const ry1 = yScale(yMax) ?? 0;
-  const baseRect = `M ${rx0.toFixed(1)},${ry0.toFixed(1)} L ${rx1.toFixed(1)},${ry0.toFixed(1)} L ${rx1.toFixed(1)},${ry1.toFixed(1)} L ${rx0.toFixed(1)},${ry1.toFixed(1)} Z`;
+  const basePath = validTriangles
+    .map(
+      (tri) =>
+        tri
+          .map((p, k) => `${k === 0 ? "M" : "L"} ${xScale(p.x).toFixed(1)},${yScale(p.y).toFixed(1)}`)
+          .join(" ") + " Z",
+    )
+    .join(" ");
 
   const barX = left + width + 36;
   const barW = 22;
@@ -165,17 +180,18 @@ function FilledContourLayer() {
 
   return (
     <g fontFamily={FONT}>
-      <path d={baseRect} fill={bandColors[0]} stroke={bandColors[0]} strokeWidth={0.75} />
+      <path d={basePath} fill={bandColors[0]} stroke={bandColors[0]} strokeWidth={0.75} />
       {bandGeometry.map((polys, idx) => {
         const dPath = polys
-          .map((poly) =>
-            poly
-              .map((p, k) => {
-                const px = (xScale(p.x) ?? 0).toFixed(1);
-                const py = (yScale(p.y) ?? 0).toFixed(1);
-                return `${k === 0 ? "M" : "L"} ${px},${py}`;
-              })
-              .join(" ") + " Z"
+          .map(
+            (poly) =>
+              poly
+                .map((p, k) => {
+                  const px = xScale(p.x).toFixed(1);
+                  const py = yScale(p.y).toFixed(1);
+                  return `${k === 0 ? "M" : "L"} ${px},${py}`;
+                })
+                .join(" ") + " Z",
           )
           .join(" ");
         return (
@@ -191,10 +207,10 @@ function FilledContourLayer() {
       {isolineGeometry.map((segments, idx) => {
         const dPath = segments
           .map(([p0, p1]) => {
-            const x0 = (xScale(p0.x) ?? 0).toFixed(1);
-            const y0 = (yScale(p0.y) ?? 0).toFixed(1);
-            const x1 = (xScale(p1.x) ?? 0).toFixed(1);
-            const y1 = (yScale(p1.y) ?? 0).toFixed(1);
+            const x0 = xScale(p0.x).toFixed(1);
+            const y0 = yScale(p0.y).toFixed(1);
+            const x1 = xScale(p1.x).toFixed(1);
+            const y1 = yScale(p1.y).toFixed(1);
             return `M ${x0},${y0} L ${x1},${y1}`;
           })
           .join(" ");
@@ -304,7 +320,7 @@ export default function Chart() {
           lineHeight: 1.2,
         }}
       >
-        contour-filled · javascript · muix · anyplot.ai
+        {TITLE}
       </Typography>
       <Typography
         sx={{
