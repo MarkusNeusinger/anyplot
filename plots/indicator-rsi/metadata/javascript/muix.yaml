@@ -2,147 +2,141 @@ library: muix
 language: javascript
 specification_id: indicator-rsi
 created: '2026-09-05T06:14:21Z'
-updated: '2026-09-05T06:20:09Z'
-generated_by: claude-sonnet
-workflow_run: 33948905960
+updated: '2026-10-24T10:22:40Z'
+generated_by: gemini-4-argon
+adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
+workflow_run: 40084999514
 issue: 3229
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/javascript/muix/plot-dark.html
-quality_score: 91
+quality_score: 88
 review:
   strengths:
-  - Correct Wilder's RSI(14) implementation with a fixed 0-100 y-axis scale, exactly
-    as the spec requires
-  - All three reference lines present (70 overbought, 30 oversold, and the optional
-    50 centerline), each with a distinct line style (solid amber, solid muted, dashed
-    neutral) so they read as separate signals at a glance
-  - Overbought/oversold zones are shaded using the Imprint semantic anchors correctly
-    (amber = warning/caution for overbought, muted = neutral/other for oversold) rather
-    than arbitrary custom hexes
-  - Idiomatic MUI X composition API usage (ChartContainer + LinePlot + ChartsGrid
-    + ChartsReferenceLine + ChartsTooltip) instead of just the high-level <LineChart>
-    wrapper, enabling the custom reference lines and grid styling
-  - Deterministic, seeded synthetic data (fixed-seed LCG) that oscillates through
-    a full bull/bear cycle so the RSI naturally visits both the oversold and overbought
-    extremes
-  - 'Both renders are fully theme-correct: identical brand-green data line, warm off-white/near-black
-    backgrounds, and all chrome (title, ticks, grid, legend) readable in both themes'
-  - Clean composition and correct output contract for a muix/React implementation
-    — skipAnimation set, sizes driven by window.ANYPLOT_SIZE, no manual mounting
+  - 'Every element the Notes ask for is present: y-axis fixed to 0–100, dashed reference
+    lines at 30 and 70 with right-aligned ''Overbought (70)'' / ''Oversold (30)''
+    labels, a subordinate thinner, lighter centerline at 50, and both extreme zones
+    tinted lightly enough that the green RSI line stays clearly readable inside them
+    in both themes.'
+  - The RSI is computed properly with Wilder's smoothing (lines 57–77) from a deterministic
+    LCG price walk, with the 14-day warm-up computed off-screen so all 120 visible
+    periods carry valid values; the date, close and RSI arrays are index-aligned.
+  - The lookback is noted in the chart as the spec asks, both in the series label
+    'RSI (14-period)' and in a monospaced subtitle that also reports the date span,
+    the close move ($69.6 → $85.5) and the counts of overbought (63) and oversold
+    (33) periods, all computed from the data.
+  - 'Idiomatic MUI X v9 composition: ChartsContainer with LinePlot, ChartsGrid, three
+    ChartsReferenceLine components (label, labelAlign, lineStyle) and the axis components,
+    plus a custom SVG zone layer that reads the chart''s own scale through useDrawingArea
+    and useYScale, so the shading follows the axis exactly.'
+  - 'Theme tokens are passed through every element (title ink, subtitle and ticks
+    in inkSoft, grid in t.grid, zones in inkSoft at 0.12 opacity); the light and dark
+    renders differ only in chrome, and the RSI line is #009E73 in both.'
+  - Interactive HTML output keeps MUI X's native axis tooltip on the line series,
+    so readers can inspect each day's RSI value.
   weaknesses:
-  - Reference-line labels (Overbought/Oversold/Neutral) are set at 12px, the smallest
-    text in the chart — bump to ~13-14px to match the tick-label size and stay legible
-    when the PNG is scaled down to mobile width
-  - 'Design excellence is solid but conventional: the shading + threshold-line pattern
-    is the expected way to render RSI per the spec, so it satisfies the requirement
-    rather than adding a distinctive extra layer of storytelling (e.g. no annotation
-    calling out a specific overbought/oversold crossing)'
-  - Legend zone swatches (opacity 0.5 fill, no border) read slightly muddy on the
-    dark render — a thin 1px border in the swatch's own hue would keep them crisp
-    against the near-black background
+  - 'Suggestion: the band-scale x axis draws a tick mark for every one of the 120
+    trading days while labelling only every tenth, which leaves a dense comb along
+    the baseline; a tickInterval matching the labelled days would clean it up.'
+  - 'Suggestion: the zone swatches in the hand-built legend use the same 0.12 opacity
+    as the zones and almost disappear on the #1A1A17 background; a thin inkSoft outline
+    on the swatch would keep them legible without changing the zones.'
+  - 'Suggestion: the 70/30 reference lines are drawn at 1.75 px in near-ink; a slightly
+    lighter stroke would make the RSI line stand out from them even more.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "indicator-rsi · javascript · muix · anyplot.ai" in bold dark ink, clearly readable. X-axis "Trading Date" and Y-axis "RSI" labels in dark ink, tick labels (dates, 0/20/40/60/80/100) in a slightly softer dark gray. Horizontal grid lines are thin and subtle. Reference-line labels ("Overbought (70)" in amber, "Oversold (30)" in muted gray, "Neutral (50)" in soft gray) sit fully inside the plot area near the right edge, not clipped.
-      Data: Single RSI line in brand green (#009E73), 120 trading days, oscillating from a deep oversold trough (~13) to a deep overbought peak (~93) and back — clearly visible against both the plain background and the two shaded bands (pale amber tint above 70, pale gray tint below 30).
-      Legibility verdict: PASS — all text is dark-on-light and clearly readable, no light-on-light issues.
+      Background: warm off-white #FAF8F1 page, plot area transparent over it; the 70–100 and 0–30 zones are a light warm-grey tint.
+      Chrome: bold title "indicator-rsi · javascript · muix · anyplot.ai" top left (~28 % of width), monospaced inkSoft subtitle "Wilder's 14-period RSI over 120 periods (Jan 23 to Jul 9, close $69.6 → $85.5) · 63 overbought (≥70) & 33 oversold (≤30) periods"; y-axis title "Relative Strength Index (RSI)" rotated on the left, ticks 0–100 by 20 in mono; x-axis title "Trading date", tick labels every ten trading days (Jan 23 … Jun 26) with a small tick mark under each day; subtle horizontal grid lines; dashed dark lines at 70 and 30 labelled "Overbought (70)" / "Oversold (30)" in bold mono at the right end, a thinner, lighter dashed "Neutral (50)" line. HTML legend at the bottom: green line "RSI (14-period)", grey swatches "Overbought zone (> 70)" and "Oversold zone (< 30)". All text dark and readable; nothing clipped.
+      Data: a single continuous #009E73 RSI line, ~85–93 in Jan–Feb, dropping through 50 in mid-March to a 13–29 oversold trough in April, then rising back above 70 by late May and peaking near 93 in late June; the line is clearly visible inside both shaded zones.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title and axis labels render in light ink (near-white), tick labels in a softer light gray. Grid lines remain thin and subtle against the dark surface. The same three reference-line labels are legible (amber, light gray, soft gray) with no dark-on-dark failures.
-      Data: The RSI line is the same brand green (#009E73) as the light render — data colors are identical across themes; only the chrome (background, shading tint, text) flipped as expected. The amber-tinted overbought band reads as a dark olive tone and the oversold band as a dark charcoal tone, both still visually distinct from the plain background and from each other.
-      Legibility verdict: PASS — no dark-on-dark text; every label, tick, and reference-line annotation is clearly visible on the near-black surface.
+      Background: warm near-black #1A1A17; the zones are a slightly lighter dark-grey tint.
+      Chrome: title, subtitle, axis titles, tick labels, reference-line labels and legend text all flip to light ink/inkSoft and read clearly; grid lines subtle but visible; the dashed 70/30 lines are light grey, the neutral line fainter. No dark-on-dark text anywhere. The legend's zone swatches are faint but visible.
+      Data: the RSI line is the same #009E73 with identical shape; only chrome changed.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, axis labels 14px, ticks
-          13px, reference-line labels 12px, legend 14px); readable and well-proportioned
-          in both themes. Reference-line labels at 12px are the smallest text on the
-          chart and could be nudged up slightly for mobile scaling.
+        comment: Explicit sizes (title 22 px, axis titles 15 px, ticks and reference
+          labels 14 px mono); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between title, axis labels, tick labels, reference-line
-          labels, or legend in either theme.
+        comment: Reference-line labels sit clear of the RSI line; no text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 2.75px line weight with no markers is well-suited to the 120-point
-          daily series; clearly visible against both shaded bands and plain background.
+        comment: RSI line clearly visible over the zones in both themes; legend glyphs
+          visible (zone swatches faint on dark, see suggestion)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Brand-green line against warm cream/near-black backgrounds gives
-          strong contrast; no red-green-only signal used.
+        comment: Single green series against neutral grey zones and ink reference
+          lines; no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart fills the canvas well with balanced margins; no cut-off elements,
-          confirmed by inspecting the right-edge reference-line labels and bottom
-          legend at full resolution.
+        comment: 3200x1800, plot fills the canvas, balanced axis labels, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Trading Date" and "RSI" are descriptive; RSI is a unitless 0-100
-          oscillator so the fixed axis scale itself communicates the implicit unit.'
+        comment: '''Relative Strength Index (RSI)'' and ''Trading date'' are reader
+          text'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First (only) series is exactly #009E73 in both renders; overbought/oversold
-          shading uses the amber and muted semantic anchors correctly; backgrounds
-          match #FAF8F1/#1A1A17; all chrome is theme-correct.'
+        comment: 'RSI in #009E73 (t.palette[0]); backgrounds #FAF8F1 / #1A1A17; zones
+          in theme inkSoft tint'
     design_excellence:
-      score: 14
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Thoughtful, semantically-mapped color use (amber=warning, muted=neutral)
-          and distinctly-styled threshold lines clearly exceed a default MUI X LineChart,
-          though it stops short of a fully custom publication-level treatment.
+        comment: 'Beyond baseline: mono subtitle carrying computed context, bold ink
+          labels for the 70/30 thresholds vs a lighter inkSoft neutral label, a typographic
+          hierarchy decided for this chart'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Axis lines disabled, grid reduced to subtle horizontal-only lines,
-          generous margins — good refinement, though the plain rectangular legend
-          swatches are unrefined.
+        comment: Threshold labels right-aligned at line ends, neutral line weighted
+          below the thresholds, axis lines removed; the per-day tick comb on the x
+          axis holds it back
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: The shaded zones and threshold lines create clear visual hierarchy
-          pointing straight at the overbought/oversold extremes, matching the 'good'
-          tier — this is the expected way to tell the RSI story rather than an exceptional
-          extra layer (e.g. no callout on a specific crossing).
+        comment: Data chosen to show a full overbought → oversold → overbought cycle,
+          and the subtitle quantifies the time spent in each extreme
     spec_compliance:
       score: 15
       max: 15
@@ -152,28 +146,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct RSI line chart on a fixed 0-100 scale.
+        comment: RSI oscillator line chart with thresholds
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 70/30 threshold lines, optional 50 centerline, shaded overbought/oversold
-          zones, and the 14-period lookback noted in both the series label and legend
-          — every spec requirement is present.
+        comment: 'Fixed 0–100 y-axis, 30/70 lines, optional 50 centerline, both zones
+          shaded, lookback noted, distinct line color: every Notes bullet and every
+          ''A good version shows:'' bullet met (price panel optional, not drawn)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = trading date, Y = RSI value; full 120-period series is visible.
+        comment: Dates on x, RSI on y at computed values, linear segments with no
+          overshoot
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches "indicator-rsi · javascript · muix · anyplot.ai" exactly;
-          legend labels accurately describe the series and both shaded zones.
+        comment: Title in the mandated format; legend entries are reader text
     data_quality:
       score: 15
       max: 15
@@ -183,24 +177,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: RSI cycles through a full bull/bear swing, dipping to ~13 (deep oversold)
-          and peaking at ~93 (deep overbought), plus mid-range chop — shows the full
-          behavioral range of the indicator.
+        comment: Shows long overbought and oversold runs, crossings of 70, 50 and
+          30, and the full momentum cycle
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Generic, neutral technical-analysis scenario (daily closing-price
-          RSI) with no sensitive content.
+        comment: Plausible daily stock closes over 120 trading days (weekends skipped),
+          neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: RSI stays within its valid 0-100 bound and the extremes/oscillation
-          pattern are consistent with real Wilder's-RSI behavior on a trending/mean-reverting
-          price series.
+        comment: 'Checked: Wilder''s smoothing in lines 65–77 with a 14-period seed
+          average; RSI values stay inside 0–100 (13–93 in the render); rawRsi[k] aligns
+          with close index k+14 so dates match; no Check values given in the spec'
     code_quality:
       score: 10
       max: 10
@@ -210,70 +203,71 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat imports → data-generation → RSI calculation → chart-component
-          structure; the small helper functions (lcg, computeRSI, yToPixel) are necessary
-          for the indicator math and pixel-band overlay, not over-engineering.
+        comment: Columns → data → plot; the one component (RsiZonesLayer) is required
+          by MUI X's hook-based composition API
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed=7) and a deterministic business-day date generator.
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Every import (ChartContainer, LinePlot, ChartsXAxis, ChartsYAxis,
-          ChartsGrid, ChartsReferenceLine, ChartsTooltip, Box, Typography) is used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and appropriately complex; the manual absolutely-positioned
-          band overlay is a documented, legitimate workaround for the lack of a community
-          reference-area component, not fake functionality.
+        comment: Appropriate complexity; the RSI computation has no available call
+          in JavaScript
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: skipAnimation set on both the chart and LinePlot; sizes driven by
-          window.ANYPLOT_SIZE; no manual mounting or deprecated API.
+        comment: Default-exported component, sized to ANYPLOT_SIZE, skipAnimation
+          set, current v9 API
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Uses the full MUI X composition API (ChartContainer + LinePlot +
-          ChartsGrid + ChartsReferenceLine + ChartsTooltip) rather than just the high-level
-          wrapper, which is the correct pattern for adding custom reference lines
-          and grid styling.
+        comment: Composition API (ChartsContainer + LinePlot + ChartsGrid + ChartsXAxis/YAxis)
+          with axis ids and per-axis label/tick styles; the legend is hand-built HTML
+          rather than ChartsLegend (zones are not series)
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: ChartsReferenceLine with custom label styling is a genuine MUI X-specific
-          feature; the oversold/overbought band overlay itself is a generic absolutely-positioned
-          div rather than a library-native capability.
+        comment: Custom SVG layer using useDrawingArea/useYScale inside the chart
+          context, ChartsReferenceLine with labelAlign and lineStyle
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-10-24T10:19:29Z'
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
-  - manual-ticks
+  - layer-composition
   - custom-legend
+  - annotations
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   dataprep:
-  - time-series
   - rolling-window
+  - time-series
   styling:
   - alpha-blending
   - grid-styling
+  - publication-ready
