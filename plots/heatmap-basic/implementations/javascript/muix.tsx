@@ -73,6 +73,17 @@ const cells = data.map((row, idx) => ({
   value: Number(row[CORRELATION]),
 }));
 
+// Three-stop imprint_div ramp: red at 0, page-colored midpoint at 0.5, blue at 1
+const hexToRgb = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+const DIV_STOPS = t.div.map(hexToRgb);
+
+function divergingColor(frac: number): string {
+  const f = Math.min(1, Math.max(0, frac));
+  const [from, to, local] = f < 0.5 ? [DIV_STOPS[0], DIV_STOPS[1], f * 2] : [DIV_STOPS[1], DIV_STOPS[2], (f - 0.5) * 2];
+  const [r, g, b] = from.map((c, i) => Math.round(c + (to[i] - c) * local));
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
 function HeatmapCells() {
   const xScale = useXScale() as unknown as ((v: string) => number) & { bandwidth: () => number };
   const yScale = useYScale() as unknown as ((v: string) => number) & { bandwidth: () => number };
@@ -191,7 +202,7 @@ export default function Chart() {
             type: "continuous",
             min: DOMAIN_MIN,
             max: DOMAIN_MAX,
-            color: [t.div[0], t.div[1], t.div[2]] as unknown as [string, string],
+            color: divergingColor,
           },
         },
       ]}
