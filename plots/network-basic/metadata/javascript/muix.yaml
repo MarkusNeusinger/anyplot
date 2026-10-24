@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: network-basic
 created: '2026-07-24T04:26:13Z'
-updated: '2026-10-24T11:05:50Z'
+updated: '2026-10-24T11:10:57Z'
 generated_by: gemini-4-argon
 adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
 workflow_run: 40088213440
@@ -13,110 +13,98 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-basic/javascript/muix/plot-dark.html
-quality_score: 82
+quality_score: 85
 review:
   strengths:
-  - 'Composes ChartsContainer with hidden axes (position: "none") and reads useXScale/useYScale
-    inside a custom SVG child, so the written-out Fruchterman–Reingold layout coordinates
-    are mapped to pixels by MUI X''s own scales'
-  - 'Clean force-directed layout: the four social circles form compact communities
-    joined by six visible bridge edges, with no axes or grid, exactly as the spec''s
-    characteristic section asks'
-  - Edges at inkSoft with 0.42 opacity and 1.6 px are clearly thinner and lighter
-    than the nodes, so every connection can be followed end to end in both themes
-  - Node labels carry a page-colored halo (paintOrder stroke) and are placed in the
-    widest angular gap between a node's edges, so no label is crossed by an edge in
-    most of the graph
-  - 'Node color by social circle (Imprint positions 1–4, Family = #009E73) and node
-    size by degree are both named, in a legend and a caption, as the spec requires
-    for optional encodings'
-  - 'Theme tokens threaded through every chrome element: title, labels, legend text,
-    caption, edges and node outlines flip correctly between #FAF8F1 and #1A1A17'
+  - The Fruchterman–Reingold layout, seeded by social circle, splits the 20 people
+    into four clear clusters joined by a few bridging edges, so connected nodes sit
+    together and the groups read at a glance in both themes
+  - Each label goes in the widest angular gap between its node's edges and carries
+    a page-coloured halo (paintOrder stroke), so no label collides with an edge, a
+    node or another label
+  - Edges at 1.6 px in inkSoft with 0.42 opacity stay clearly thinner and lighter
+    than the nodes, so every connection can be followed from end to end
+  - 'Composes the network inside ChartsContainer and maps the layout coordinates through
+    the useXScale/useYScale hooks, with hidden axes (position: ''none'') and skipAnimation'
+  - 'The theme tokens carry all chrome, so title, labels, legend and caption are readable
+    on both #FAF8F1 and #1A1A17, and the group colours come from t.palette in canonical
+    Imprint order (Family = #009E73)'
   weaknesses:
-  - 'VQ-02, SC-02 (both): labels placed left or right of their node touch or overlap
-    the node disc: "Aisha" runs into its node, "Nadia" and "Felix" sit on their node''s
-    edge, the "E" of "Ethan" overlaps its node, and the Kenji–Liam edge grazes the
-    "L" of "Liam" → every label clear of its own node and of edges by at least 4 px.
-    Likely cause: the label offset `labelDist = r + 15` with `textAnchor="middle"`
-    ignores the label''s half-width for near-horizontal angles; anchor the text at
-    "start"/"end" by the cosine of labelAngle (or add half the text width to the offset).'
-  - 'VQ-01 (both): node labels at 15 px and the caption at 14 px on the 1200 px square
-    mount shrink to about 5 px in the 400 px thumbnail and are hard to read → labels
-    about 18 px, caption about 16 px (+2 to +3 px). Likely cause: `fontSize={15}`
-    on the node labels and `fontSize: 14` on the caption div.'
-  - 'Suggestion: render the group legend with MUI X''s ChartsLegend instead of the
-    hand-drawn SVG circles, so the legend shares the library''s styling and interaction.'
-  - 'Suggestion: a slightly larger node-radius step per degree would make the few
-    higher-degree nodes (Grace, Liam, Omar, Victor, Ruby, Chloe, Maya, Sofia) read
-    as hubs more clearly.'
+  - 'DQ-01 (both): every node has degree 3 or 4, so the node-size-by-degree encoding
+    shows two nearly identical sizes and the graph has no central node, which the
+    spec''s Description names as something a network graph reveals → generate edges
+    so degrees range from about 1–2 (peripheral) to 6–8 (one or two hubs). Likely
+    cause: the edge list gives each person three to four ties.'
+  - 'Suggestion: render the group key with MUI X''s ChartsLegend instead of the hand-drawn
+    SVG legend, so the legend uses the library''s own component.'
+  - 'Suggestion: tighten the empty band between the lowest node (Marcus) and the caption
+    so the network fills the square more evenly.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across the whole 2400×2400 canvas, no white panel.
-      Chrome: bold dark title "network-basic · javascript · muix · anyplot.ai" centered at the top (~47 % of the width); a vertical legend top-left with four colored dots (Family, College, Work, Neighbors) in dark ink; a muted caption at the bottom "Fruchterman–Reingold force-directed layout · Node color = Social circle · Node size = degree". No axes, no grid. All text readable.
-      Data: 20 nodes in four communities — Family #009E73 green (right), College purple (top), Work blue (left), Neighbors ochre (bottom) — node radius grows with degree, each with a thin page-colored outline. 31 grey edges, thin and translucent, with six bridges between communities. Labels in dark ink with a page-colored halo next to each node; Aisha, Nadia, Felix and Ethan labels touch their node discs.
+      Background: warm off-white #FAF8F1 across the whole 2400x2400 square canvas; no axes or grid.
+      Chrome: bold centred title "network-basic · javascript · muix · anyplot.ai" in dark ink; top-left legend Family / College / Work / Neighbors with coloured dots; muted caption at the bottom "Fruchterman–Reingold force-directed layout · Node color = Social circle · Node size = degree". All text dark on light and readable.
+      Data: 20 nodes in four clusters: Family green #009E73 (right), College purple (top), Work blue (left), Neighbors ochre (bottom). Grey translucent edges, a few bridging edges between clusters, one crossing (Aisha–Ruby over Omar–Noah). Node labels in dark ink with page-coloured halos, each clear of edges and nodes. Node sizes differ only slightly (degree 3 vs 4).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17, not pure black.
-      Chrome: title, legend text and node labels flip to light ink; caption in a muted light grey; all readable, no dark-on-dark text anywhere.
-      Data: node colors identical to the light render (green, purple, blue, ochre); edges a mid grey that stays visible but subordinate on the dark page; node outlines in the dark page color. Same label-to-node contacts as the light render.
+      Background: warm near-black #1A1A17.
+      Chrome: title, legend text and node labels in light ink, caption in muted light grey; no dark-on-dark text.
+      Data: same node positions and the same four group colours as the light render (green, purple, blue, ochre); edges flip to a mid grey that stays visible but subtle.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable at full size in both themes; 15 px node labels
-          and 14 px caption get small in the 400 px thumbnail (defect line)
+        comment: Explicit sizes (title 22, labels 18, caption 16 CSS px); readable
+          in both themes, halos keep labels crisp over edges
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Aisha, Nadia, Felix and Ethan labels touch or overlap their node;
-          Kenji–Liam edge grazes the Liam label (defect line)
+        passed: true
+        comment: Labels placed in the widest edge gap; no label touches an edge, node
+          or other label
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Nodes prominent, edges thin and visible, legend dots match node fills
-          in both themes
+        comment: 20 nodes at radius 15–18 px are prominent, edges thin and visible,
+          legend dots match node colours in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green, purple, blue and ochre are CVD-distinguishable; no red-green
-          sole signal
+        comment: Green/purple/blue/ochre are CVD-distinct, and the clusters are also
+          told apart by position
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square canvas, network centered and filling the space, legend clear
-          of the graph, nothing cut off
+        comment: Square 2400x2400 canvas, network centred, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: N/A for axes (no axes on a network); caption names both encodings
-          in reader text
+        comment: 'N/A: no axes on a network; the caption names the encodings'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint positions 1–4, first group #009E73, backgrounds #FAF8F1/#1A1A17,
-          data colors identical across themes'
+        comment: 't.palette in canonical order, first group #009E73; backgrounds #FAF8F1
+          / #1A1A17; data colours identical across themes'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -124,24 +112,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Page-colored label halos and node outlines that read as cut-outs
-          over the edges, a quiet caption hierarchy below the title
+        comment: Three-level type hierarchy (600 title, 500 labels, muted inkSoft
+          caption) and page-coloured node outlines go beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Labels placed in the widest angular gap between a node's edges; edges
-          at reduced opacity; but several labels still touch their nodes
+        comment: Each label goes in its node's widest edge gap, with an anchor chosen
+          by direction and a page-coloured halo
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
-        passed: false
-        comment: Communities and bridges displayed; no focal point chosen beyond the
-          Notes
+        passed: true
+        comment: Clusters are readable, but the implementation chose no focal point
+          or hierarchy beyond the Notes
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -149,54 +137,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Basic node-link diagram; only the allowed degree size and group color,
-          both named
+        comment: Node-link diagram; only the allowed size-by-degree and colour-by-group
+          encodings, both named
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Force-directed layout, sparse readable edges, legend/caption present;
-          the 'labels clear of nodes and edges' bullet is broken for Aisha, Nadia,
-          Felix, Ethan, Liam (defect line)
+        passed: true
+        comment: Force-directed layout, no axes or grid, sparse edges thinner and
+          lighter than the nodes, legible labels, a legend and a caption for the encodings
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Layout-positioned type; scales map layout coordinates directly, all
-          nodes shown
+        comment: Layout-positioned type; every edge links its two named nodes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend entries are readable group names
+        comment: Mandated title format; legend entries match the group names
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Clusters, bridge edges, varying degree and a community structure
-          all visible
+        comment: Clusters and bridges shown, but every degree is 3–4, so no central
+          node stands out and the size encoding barely varies (defect line)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 20-person friendship network across Family, College, Work and Neighbors
-          circles, matching the spec example; neutral
+        comment: A friendship network of 20 people in four social circles, matching
+          the spec's example; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 20 nodes / 31 edges within the 10–50 range; checked degrees computed
-          from the edge list (lines 116–124), no hard-coded sizes
+        comment: 20 nodes and 34 edges, inside the 10–50 range and sparse; the spec
+          has no Check values
     code_quality:
       score: 10
       max: 10
@@ -206,64 +192,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear module-level data → layout → component; NetworkOverlay is
-          the React component needed for the scale hooks
+        comment: Module-level data and layout; NetworkOverlay is required because
+          the scale hooks need a child component
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hard-coded data and deterministic circular initial positions
+        comment: Hard-coded data and a deterministic, seeded layout
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: ChartsContainer and the two scale hooks, all used
+        comment: ChartsContainer and useXScale/useYScale, all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: 'Written-out Fruchterman–Reingold is fine: MUI X has no graph layout'
+        comment: MUI X has no graph layout, so the short written-out Fruchterman–Reingold
+          loop is the available path
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Default-exported component, skipAnimation, v9 ChartsContainer and
-          position: ''none'' axes'
+        comment: Default export, v9 ChartsContainer path, skipAnimation, sized from
+          ANYPLOT_SIZE
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: 'v9 composition API: ChartsContainer with hidden linear axes plus
-          useXScale/useYScale inside a custom child'
+        comment: v9 composition API used correctly; the legend is hand-drawn SVG rather
+          than ChartsLegend
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: Uses MUI X's scale hooks to extend the container with a custom mark
-          type; legend is hand-drawn rather than ChartsLegend
-  verdict: REJECTED
+        passed: true
+        comment: useXScale/useYScale hooks map custom SVG marks through MUI X's scale
+          system inside ChartsContainer
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T11:02:47Z'
+  rendered_at: '2026-10-24T11:08:03Z'
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
-  - annotations
   - layer-composition
+  - annotations
   - html-export
-  patterns:
-  - iteration-over-groups
+  patterns: []
   dataprep:
   - force-directed-layout
   styling:
