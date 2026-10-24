@@ -2,245 +2,383 @@
 // indicator-rsi: RSI Technical Indicator Chart
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 91/100 | Created: 2026-09-05
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { LinePlot } from "@mui/x-charts/LineChart";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
-import { ChartsTooltip } from "@mui/x-charts/ChartsTooltip";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
+import { useDrawingArea, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const isDark = window.ANYPLOT_THEME === "dark";
-const MUTED = isDark ? "#A8A79F" : "#6B6A63"; // theme-adaptive Imprint "muted" anchor (not in ANYPLOT_TOKENS)
 
+// Constants
+const FONT = '"Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, sans-serif';
+const MONO = '"JetBrains Mono", "SFMono-Regular", Menlo, monospace';
+const Y_AXIS_LABEL = "Relative Strength Index (RSI)";
 const LOOKBACK = 14;
+const RSI_MIN = 0;
+const RSI_MAX = 100;
+const OVERBOUGHT_THRESHOLD = 70;
+const NEUTRAL_THRESHOLD = 50;
+const OVERSOLD_THRESHOLD = 30;
+
+// Columns: set these to your data's column names
+const DATE = "Trading date"; // role: date
+const CLOSE = "Close price ($)"; // role: close
+const RSI = "RSI (14-period)"; // role: rsi
+
+// Data: replace this block with your own records
 const RSI_PERIODS = 120;
-
-// Tiny fixed-seed LCG — the browser has no seeded Math.random().
-function lcg(seed) {
-  let state = seed;
-  return () => {
-    state = (state * 1664525 + 1013904223) % 4294967296;
-    return state / 4294967296;
-  };
-}
-const rand = lcg(7);
-
-// Business-day dates starting Jan 2, 2025.
+let lcgState = 7;
 const totalDays = RSI_PERIODS + LOOKBACK;
-const dates = [];
+const isoDates: string[] = [];
 const cursor = new Date(Date.UTC(2025, 0, 2));
-while (dates.length < totalDays + 1) {
+while (isoDates.length < totalDays + 1) {
   const weekday = cursor.getUTCDay();
   if (weekday !== 0 && weekday !== 6) {
-    dates.push(new Date(cursor));
+    isoDates.push(cursor.toISOString().slice(0, 10));
   }
   cursor.setUTCDate(cursor.getUTCDate() + 1);
 }
-const dateFormatter = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
 
-// Closing price: a slow oscillation (bull/bear swings) plus noise, so the
-// resulting RSI comfortably reaches both the oversold and overbought bands.
-const closes = [];
+const allCloses: number[] = [];
 let price = 62;
-for (let i = 0; i <= totalDays; i++) {
+for (let i = 0; i <= totalDays; i += 1) {
   const trend = 0.55 * Math.sin(i / 14) + 0.18 * Math.sin(i / 4.5);
-  const noise = (rand() - 0.5) * 1.9;
+  lcgState = (lcgState * 1664525 + 1013904223) % 4294967296;
+  const r = lcgState / 4294967296;
+  const noise = (r - 0.5) * 1.9;
   price += trend + noise;
-  closes.push(price);
+  allCloses.push(price);
 }
 
-// Wilder's RSI(14): average gain/loss smoothed with a (period-1)/period decay.
-function computeRSI(values, period) {
-  const gains = [];
-  const losses = [];
-  for (let i = 1; i < values.length; i++) {
-    const change = values[i] - values[i - 1];
-    gains.push(Math.max(change, 0));
-    losses.push(Math.max(-change, 0));
-  }
-  let avgGain = gains.slice(0, period).reduce((a, b) => a + b, 0) / period;
-  let avgLoss = losses.slice(0, period).reduce((a, b) => a + b, 0) / period;
-  const rsi = [avgLoss === 0 ? 100 : 100 - 100 / (1 + avgGain / avgLoss)];
-  for (let i = period; i < gains.length; i++) {
-    avgGain = (avgGain * (period - 1) + gains[i]) / period;
-    avgLoss = (avgLoss * (period - 1) + losses[i]) / period;
-    rsi.push(avgLoss === 0 ? 100 : 100 - 100 / (1 + avgGain / avgLoss));
-  }
-  return rsi;
+const gains: number[] = [];
+const losses: number[] = [];
+for (let i = 1; i < allCloses.length; i += 1) {
+  const change = allCloses[i] - allCloses[i - 1];
+  gains.push(Math.max(change, 0));
+  losses.push(Math.max(-change, 0));
 }
 
-const rsiValues = computeRSI(closes, LOOKBACK).slice(0, RSI_PERIODS);
-const dateLabels = dates.slice(dates.length - RSI_PERIODS).map((d) => dateFormatter.format(d));
+let avgGain =
+  gains.slice(0, LOOKBACK).reduce((a, b) => a + b, 0) / LOOKBACK;
+let avgLoss =
+  losses.slice(0, LOOKBACK).reduce((a, b) => a + b, 0) / LOOKBACK;
+const rawRsi: number[] = [
+  avgLoss === 0 ? 100 : 100 - 100 / (1 + avgGain / avgLoss),
+];
 
-const MARGIN = { top: 24, right: 32, bottom: 64, left: 76 };
+for (let i = LOOKBACK; i < gains.length; i += 1) {
+  avgGain = (avgGain * (LOOKBACK - 1) + gains[i]) / LOOKBACK;
+  avgLoss = (avgLoss * (LOOKBACK - 1) + losses[i]) / LOOKBACK;
+  rawRsi.push(avgLoss === 0 ? 100 : 100 - 100 / (1 + avgGain / avgLoss));
+}
 
-// The y-axis is a fixed 0-100 linear scale, so the pixel position of any RSI
-// value within the plot area is a plain linear map — used to draw the
-// oversold/overbought backdrop bands without a Pro-only reference-area component.
-function yToPixel(value, plotHeight) {
-  return MARGIN.top + ((100 - value) / 100) * plotHeight;
+const visibleDates = isoDates.slice(isoDates.length - RSI_PERIODS);
+const visibleCloses = allCloses.slice(allCloses.length - RSI_PERIODS);
+const visibleRsi = rawRsi.slice(rawRsi.length - RSI_PERIODS);
+
+const data: Array<{
+  [DATE]: string;
+  [CLOSE]: number;
+  [RSI]: number;
+}> = [];
+
+for (let i = 0; i < RSI_PERIODS; i += 1) {
+  data.push({
+    [DATE]: visibleDates[i],
+    [CLOSE]: visibleCloses[i],
+    [RSI]: Number(visibleRsi[i].toFixed(2)),
+  });
+}
+
+// Plot: reads only data and the constants above
+const nPeriods = data.length;
+const dateFormatter = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+  timeZone: "UTC",
+});
+const formatIsoDate = (iso: string) =>
+  dateFormatter.format(new Date(`${iso}T00:00:00Z`));
+
+const unitMatch = CLOSE.match(/\(([^)]+)\)/);
+const closeUnit = unitMatch ? unitMatch[1] : "";
+
+const dateValues = data.map((row) => row[DATE]);
+const closes = data.map((row) => row[CLOSE]);
+const rsiValues = data.map((row) => row[RSI]);
+
+const overboughtPeriods = rsiValues.filter(
+  (v) => v >= OVERBOUGHT_THRESHOLD,
+).length;
+const oversoldPeriods = rsiValues.filter(
+  (v) => v <= OVERSOLD_THRESHOLD,
+).length;
+
+const RSI_COLOR = t.palette[0];
+const OVERBOUGHT_COLOR = t.inkSoft;
+const OVERSOLD_COLOR = t.inkSoft;
+
+function RsiZonesLayer() {
+  const { left, width } = useDrawingArea();
+  const yScale = useYScale("rsi-axis") as (v: number) => number;
+
+  const y100 = yScale(RSI_MAX);
+  const y70 = yScale(OVERBOUGHT_THRESHOLD);
+  const y30 = yScale(OVERSOLD_THRESHOLD);
+  const y0 = yScale(RSI_MIN);
+
+  return (
+    <g>
+      <rect
+        x={left}
+        y={y100}
+        width={width}
+        height={Math.max(0, y70 - y100)}
+        fill={OVERBOUGHT_COLOR}
+        fillOpacity={0.12}
+      />
+      <rect
+        x={left}
+        y={y30}
+        width={width}
+        height={Math.max(0, y0 - y30)}
+        fill={OVERSOLD_COLOR}
+        fillOpacity={0.12}
+      />
+    </g>
+  );
 }
 
 export default function Chart() {
-  const W = window.ANYPLOT_SIZE.width; // 1600 CSS px (landscape)
-  const H = window.ANYPLOT_SIZE.height; // 900 CSS px
-  const TITLE_H = 72;
-  const LEGEND_H = 44;
-  const chartH = H - TITLE_H - LEGEND_H;
-  const plotHeight = chartH - MARGIN.top - MARGIN.bottom;
-  const overboughtBand = { top: yToPixel(100, plotHeight), height: yToPixel(70, plotHeight) - yToPixel(100, plotHeight) };
-  const oversoldBand = { top: yToPixel(30, plotHeight), height: yToPixel(0, plotHeight) - yToPixel(30, plotHeight) };
+  const W = window.ANYPLOT_SIZE.width;
+  const H = window.ANYPLOT_SIZE.height;
+  const HEADER_H = 84;
+  const LEGEND_H = 48;
+  const chartH = H - HEADER_H - LEGEND_H;
 
   return (
-    <Box
-      sx={{
+    <div
+      style={{
         width: W,
         height: H,
-        bgcolor: t.pageBg,
+        background: t.pageBg,
+        color: t.ink,
+        fontFamily: FONT,
         display: "flex",
         flexDirection: "column",
-        fontFamily: "'Roboto', 'Helvetica Neue', Arial, sans-serif",
         boxSizing: "border-box",
       }}
     >
-      {/* Title */}
-      <Box sx={{ height: TITLE_H, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <Typography sx={{ color: t.ink, fontSize: 22, fontWeight: 600 }}>
-          indicator-rsi · javascript · muix · anyplot.ai
-        </Typography>
-      </Box>
-
-      {/* Chart — wrapped in a relative box so the oversold/overbought bands can
-          sit as plain absolutely-positioned layers behind the (transparent)
-          MUI X chart, computed from the fixed 0-100 linear y-scale. */}
-      <Box sx={{ position: "relative", width: W, height: chartH }}>
-        <Box
-          sx={{
-            position: "absolute",
-            left: MARGIN.left,
-            right: MARGIN.right,
-            top: overboughtBand.top,
-            height: overboughtBand.height,
-            bgcolor: t.amber,
-            opacity: 0.14,
-            pointerEvents: "none",
-          }}
-        />
-        <Box
-          sx={{
-            position: "absolute",
-            left: MARGIN.left,
-            right: MARGIN.right,
-            top: oversoldBand.top,
-            height: oversoldBand.height,
-            bgcolor: MUTED,
-            opacity: 0.14,
-            pointerEvents: "none",
-          }}
-        />
-        <ChartContainer
-          width={W}
-          height={chartH}
-          series={[
-            {
-              type: "line",
-              id: "rsi",
-              data: rsiValues,
-              label: "RSI (14)",
-              color: t.palette[0],
-              showMark: false,
-              curve: "linear",
-            },
-          ]}
-          xAxis={[
-            {
-              id: "dates",
-              scaleType: "band",
-              data: dateLabels,
-              categoryGapRatio: 0.15,
-              tickLabelInterval: (_value, index) => index % 10 === 0,
-              tickLabelStyle: { fontSize: 13, fill: t.inkSoft },
-            },
-          ]}
-          yAxis={[
-            {
-              id: "rsi-axis",
-              min: 0,
-              max: 100,
-              tickNumber: 6,
-              tickLabelStyle: { fontSize: 13, fill: t.inkSoft },
-            },
-          ]}
-          margin={MARGIN}
-          skipAnimation
-          sx={{
-            "& .MuiChartsGrid-line": { stroke: t.grid },
-            "& .MuiLineElement-root": { strokeWidth: 2.75 },
+      <div
+        style={{
+          height: HEADER_H,
+          padding: "14px 44px 4px 104px",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          boxSizing: "border-box",
+        }}
+      >
+        <div
+          style={{
+            fontSize: 22,
+            fontWeight: 700,
+            color: t.ink,
+            lineHeight: 1.2,
           }}
         >
-          <ChartsGrid horizontal />
-          <LinePlot skipAnimation />
-          <ChartsReferenceLine
-            y={70}
-            axisId="rsi-axis"
-            label="Overbought (70)"
-            labelAlign="end"
-            labelStyle={{ fontSize: 12, fill: t.amber }}
-            lineStyle={{ stroke: t.amber, strokeWidth: 1.5 }}
-          />
-          <ChartsReferenceLine
-            y={30}
-            axisId="rsi-axis"
-            label="Oversold (30)"
-            labelAlign="end"
-            labelStyle={{ fontSize: 12, fill: MUTED }}
-            lineStyle={{ stroke: MUTED, strokeWidth: 1.5 }}
-          />
-          <ChartsReferenceLine
-            y={50}
-            axisId="rsi-axis"
-            label="Neutral (50)"
-            labelAlign="end"
-            labelStyle={{ fontSize: 12, fill: t.inkSoft }}
-            lineStyle={{ stroke: t.inkSoft, strokeDasharray: "6 4", strokeOpacity: 0.6 }}
-          />
-          <ChartsXAxis
-            axisId="dates"
-            position="bottom"
-            label="Trading Date"
-            labelStyle={{ fontSize: 14, fill: t.ink }}
-            disableLine
-          />
-          <ChartsYAxis
-            axisId="rsi-axis"
-            position="left"
-            label="RSI"
-            labelStyle={{ fontSize: 14, fill: t.ink }}
-            disableLine
-          />
-          <ChartsTooltip trigger="axis" />
-        </ChartContainer>
-      </Box>
+          indicator-rsi · javascript · muix · anyplot.ai
+        </div>
+        <div
+          style={{
+            fontSize: 14,
+            color: t.inkSoft,
+            marginTop: 4,
+            fontFamily: MONO,
+          }}
+        >
+          Wilder&apos;s {LOOKBACK}-period RSI over {nPeriods} periods (
+          {formatIsoDate(dateValues[0])} to{" "}
+          {formatIsoDate(dateValues[dateValues.length - 1])}, close {closeUnit}
+          {closes[0].toFixed(1)} → {closeUnit}
+          {closes[closes.length - 1].toFixed(1)}) · {overboughtPeriods}{" "}
+          overbought (&ge;{OVERBOUGHT_THRESHOLD}) &amp; {oversoldPeriods}{" "}
+          oversold (&le;{OVERSOLD_THRESHOLD}) periods
+        </div>
+      </div>
 
-      {/* Legend */}
-      <Box sx={{ height: LEGEND_H, display: "flex", alignItems: "center", justifyContent: "center", gap: "32px" }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <Box sx={{ width: 24, height: 3, bgcolor: t.palette[0], borderRadius: "2px", flexShrink: 0 }} />
-          <Typography sx={{ color: t.inkSoft, fontSize: 14 }}>RSI (14-period)</Typography>
-        </Box>
-        <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <Box sx={{ width: 14, height: 14, bgcolor: t.amber, opacity: 0.5, borderRadius: "2px", flexShrink: 0 }} />
-          <Typography sx={{ color: t.inkSoft, fontSize: 14 }}>Overbought zone (&gt; 70)</Typography>
-        </Box>
-        <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <Box sx={{ width: 14, height: 14, bgcolor: MUTED, opacity: 0.5, borderRadius: "2px", flexShrink: 0 }} />
-          <Typography sx={{ color: t.inkSoft, fontSize: 14 }}>Oversold zone (&lt; 30)</Typography>
-        </Box>
-      </Box>
-    </Box>
+      <ChartsContainer
+        width={W}
+        height={chartH}
+        margin={{ top: 20, right: 32, bottom: 16, left: 20 }}
+        skipAnimation
+        series={[
+          {
+            type: "line",
+            id: "rsi",
+            yAxisId: "rsi-axis",
+            data: rsiValues,
+            label: RSI,
+            color: RSI_COLOR,
+            showMark: false,
+            curve: "linear",
+          },
+        ]}
+        xAxis={[
+          {
+            id: "dates",
+            scaleType: "band",
+            data: dateValues,
+            height: 58,
+            categoryGapRatio: 0.15,
+            label: DATE,
+            valueFormatter: (v: string) => formatIsoDate(v),
+            labelStyle: { fontSize: 15, fill: t.ink, fontWeight: 600 },
+            tickLabelInterval: (_value: string, index: number) =>
+              index % 10 === 0,
+            tickLabelStyle: {
+              fontSize: 14,
+              fill: t.inkSoft,
+              fontFamily: MONO,
+            },
+            disableLine: true,
+          },
+        ]}
+        yAxis={[
+          {
+            id: "rsi-axis",
+            min: RSI_MIN,
+            max: RSI_MAX,
+            width: 84,
+            tickNumber: 6,
+            label: Y_AXIS_LABEL,
+            labelStyle: { fontSize: 15, fill: t.ink, fontWeight: 600 },
+            tickLabelStyle: {
+              fontSize: 14,
+              fill: t.inkSoft,
+              fontFamily: MONO,
+            },
+            disableLine: true,
+          },
+        ]}
+        sx={{
+          "& .MuiChartsGrid-line": { stroke: t.grid },
+        }}
+      >
+        <RsiZonesLayer />
+        <ChartsGrid horizontal />
+        <LinePlot skipAnimation />
+        <ChartsReferenceLine
+          y={OVERBOUGHT_THRESHOLD}
+          axisId="rsi-axis"
+          label={`Overbought (${OVERBOUGHT_THRESHOLD})`}
+          labelAlign="end"
+          labelStyle={{
+            fontSize: 14,
+            fill: t.ink,
+            fontWeight: 600,
+            fontFamily: MONO,
+          }}
+          lineStyle={{
+            stroke: OVERBOUGHT_COLOR,
+            strokeWidth: 1.75,
+            strokeDasharray: "6 4",
+          }}
+        />
+        <ChartsReferenceLine
+          y={NEUTRAL_THRESHOLD}
+          axisId="rsi-axis"
+          label={`Neutral (${NEUTRAL_THRESHOLD})`}
+          labelAlign="end"
+          labelStyle={{
+            fontSize: 14,
+            fill: t.inkSoft,
+            fontWeight: 600,
+            fontFamily: MONO,
+          }}
+          lineStyle={{
+            stroke: t.inkSoft,
+            strokeDasharray: "4 4",
+            strokeOpacity: 0.65,
+          }}
+        />
+        <ChartsReferenceLine
+          y={OVERSOLD_THRESHOLD}
+          axisId="rsi-axis"
+          label={`Oversold (${OVERSOLD_THRESHOLD})`}
+          labelAlign="end"
+          labelStyle={{
+            fontSize: 14,
+            fill: t.ink,
+            fontWeight: 600,
+            fontFamily: MONO,
+          }}
+          lineStyle={{
+            stroke: OVERSOLD_COLOR,
+            strokeWidth: 1.75,
+            strokeDasharray: "6 4",
+          }}
+        />
+        <ChartsXAxis axisId="dates" />
+        <ChartsYAxis axisId="rsi-axis" />
+      </ChartsContainer>
+
+      <div
+        style={{
+          height: LEGEND_H,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 32,
+          fontSize: 15,
+          color: t.ink,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span
+            style={{
+              width: 24,
+              height: 3,
+              background: RSI_COLOR,
+              borderRadius: 2,
+              display: "inline-block",
+            }}
+          />
+          <span>{RSI}</span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span
+            style={{
+              width: 16,
+              height: 14,
+              background: `${OVERBOUGHT_COLOR}48`,
+              border: `1.5px dashed ${OVERBOUGHT_COLOR}`,
+              borderRadius: 2,
+              display: "inline-block",
+              boxSizing: "border-box",
+            }}
+          />
+          <span>Overbought zone (&gt; {OVERBOUGHT_THRESHOLD})</span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span
+            style={{
+              width: 16,
+              height: 14,
+              background: `${OVERSOLD_COLOR}48`,
+              border: `1.5px dashed ${OVERSOLD_COLOR}`,
+              borderRadius: 2,
+              display: "inline-block",
+              boxSizing: "border-box",
+            }}
+          />
+          <span>Oversold zone (&lt; {OVERSOLD_THRESHOLD})</span>
+        </div>
+      </div>
+    </div>
   );
 }
