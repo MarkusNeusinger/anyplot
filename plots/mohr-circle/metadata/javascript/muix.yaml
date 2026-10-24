@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: mohr-circle
 created: '2026-08-26T09:11:17Z'
-updated: '2026-10-24T11:04:21Z'
+updated: '2026-10-24T11:09:52Z'
 generated_by: gemini-4-argon
 adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
 workflow_run: 40088088412
@@ -16,125 +16,124 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/mohr-circ
 quality_score: 87
 review:
   strengths:
-  - 'Correct Mohr''s circle math computed from the three inputs: center C(50, 0),
-    R = 42.4 MPa, σ1 = 92.4, σ2 = 7.6, τmax = ±42.4, 2θp = 45°, all derived in code,
-    not placed by hand'
-  - 'True equal aspect ratio: the axis ranges are identical (±1.68R around the center)
-    and the plot area is sized as an exact square through computed margins, so the
-    circle is round in both renders'
-  - 'Idiomatic MUI X composition: ChartsContainer with ChartsGrid, ChartsReferenceLine
-    through the center, ChartsXAxis/ChartsYAxis and a custom SVG layer positioned
-    in data space through the useXScale/useYScale hooks'
-  - 'Clear visual hierarchy: the circle in brand green with a 7 % tint, the input
-    stress points A/B in lavender against ink-colored derived landmarks (σ1, σ2, ±τmax),
-    bold landmark labels against softer inkSoft labels for C and 2θp'
-  - Theme tokens are threaded through every element (ink, inkSoft, grid, pageBg outlines
-    on markers), so both renders are fully legible with identical data colors
-  - The 2θp arc spans exactly from the principal stress axis to the A–B diameter,
-    and A and B sit at opposite ends of a dashed diameter through the center
+  - Uses the MUI X v9 composition API (ChartsContainer with ChartsXAxis/ChartsYAxis,
+    ChartsGrid, ChartsReferenceLine) and draws the Mohr geometry in a custom child
+    component that reads useXScale/useYScale, so every SVG mark sits exactly at its
+    data coordinates
+  - 'All derived values are computed from the stress state, not placed: C = 37, R
+    = 48.9, σ1 = 85.9 MPa, σ2 = −11.9 MPa, τmax = 48.9 MPa and 2θp = atan2(32, 37)
+    = 41° all check out against the render'
+  - Equal data ranges (164 MPa on both axes) on a square drawing area make the circle
+    a true circle; A and B sit at opposite ends of the dashed diameter through C,
+    and the 2θp arc spans exactly from the σ1 axis to the CA line
+  - 'Clear visual hierarchy: Imprint green circle with a faint fill, stress-state
+    points A/B in the second Imprint color, principal and shear landmarks in ink with
+    page-colored halos, bold landmark labels and softer secondary labels for C and
+    2θp'
+  - Theme tokens threaded through every custom element (ink, inkSoft, grid, pageBg
+    halos), so both renders are fully legible with identical data colors
+  - Realistic, neutral engineering scenario (steel drive shaft under bending plus
+    torsion, σy = 0) with plausible MPa magnitudes
   weaknesses:
-  - 'VQ-01 (both): tick labels at 14 px in inkSoft and axis titles at 16 px regular
-    weight become unreadable in the 400 px thumbnail (about 4 px tall) while the 17
-    px bold annotations still read → tick labels about 16 px (+2 px) and axis titles
-    about 18 px (+2 px). Likely cause: tickLabelStyle fontSize: 14 and labelStyle
-    fontSize: 16 on both axes.'
-  - 'DQ-02 (code): the stress state σx = 80, σy = 20, τxy = 30 MPa is a round textbook
-    triple with no component or loading case behind it, so the plot reads as a generic
-    exercise → a stress state taken from a named component (for example a point on
-    a steel drive shaft under combined bending and torsion), named in the optional
-    descriptive title prefix. Likely cause: the data block values and the bare title.'
-  - 'Suggestion: write τ_max with a subscript (τₘₐₓ) like σ₁/σ₂, and use the true
-    minus sign (−) in B(20, −30) and −42.4 so the annotations match the tick labels.'
-  - 'Suggestion: draw the 2θp arc with a single SVG arc command (path ''A'') instead
-    of a 32-step polyline loop.'
+  - 'CQ-04 (code): the 2θp arc is built by a hand-written 33-point polyline loop (lines
+    92–98) → one SVG elliptical-arc command, `M x0 y0 A r r 0 0 0 x1 y1` with r =
+    |xScale(center + arcRadius) − cx|, which draws the same exact arc. Likely cause:
+    the ARC_STEPS sampling loop.'
+  - 'Suggestion: write the shear landmark as τmax (or τₘₐₓ) instead of the code-style
+    ''τ_max'', matching the Unicode subscripts already used for σ₁ and σ₂.'
+  - 'Suggestion: use the Unicode minus (−) in the value labels (''σ₂ = −11.9'', ''B(0,
+    −32)'', ''−τmax = −48.9'') to match the tick labels, which already use it.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across the whole 2400x2400 square canvas.
-      Chrome: centered bold title "mohr-circle · javascript · muix · anyplot.ai" (~43 % of width); x-axis "Normal Stress σ (MPa)" from −20 to 120, y-axis "Shear Stress τ (MPa)" from −70 to 70, ticks every 10 MPa; subtle grid both directions; grid-colored reference lines through τ = 0 and σ = 50. All text dark and readable.
-      Data: brand green #009E73 circle (3.5 px stroke, 7 % fill) centered at C(50, 0) with R = 42.4; heavy ink diameter σ2–σ1 on the horizontal axis with ink markers at σ2 = 7.6 and σ1 = 92.4, ink markers at τmax = 42.4 (top) and −τmax = −42.4 (bottom), each labeled in bold; lavender #C475FD points A(80, 30) and B(20, −30) joined by a dashed diameter through the center; a soft arc from the σ axis to the A line labeled "2θp = 45°"; small "C(50, 0)" label. Circle is a true circle.
+      Background: warm off-white #FAF8F1 across the whole 2400×2400 canvas.
+      Chrome: title "Steel Drive Shaft, Bending + Torsion · mohr-circle · javascript · muix · anyplot.ai" in bold dark ink, centered, ~68% of width; axis titles "Normal Stress σ (MPa)" and "Shear Stress τ (MPa)" in dark ink; tick labels −40…110 and −80…80 in soft ink; subtle grid in both directions; reference lines at τ = 0 and σ = 37 in grid tone. All text readable.
+      Data: Imprint green (#009E73) circle, 3.5 px stroke with faint green fill, centered at (37, 0) with radius 48.9; thick ink σ2–σ1 diameter; ink landmark dots at σ1 (85.9), σ2 (−11.9), τmax (48.9) and −τmax with bold labels; stress points A(74, 32) and B(0, −32) in the second Imprint color (purple) joined by a dashed ink diameter through the small ink center dot labelled C(37, 0); soft-ink arc from the σ axis to the CA line labelled "2θp = 41°". No overlaps, nothing clipped.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, axis titles and tick labels in light ink, grid and reference lines subtle light grey; no dark-on-dark text.
-      Data: identical green circle and lavender A/B points; landmark markers, the σ2–σ1 diameter and the dashed A–B line flip to light ink as theme tokens; arc and C/2θp labels in light inkSoft. Data colors identical to the light render.
+      Chrome: title, axis titles and labels flip to light ink; tick labels in light soft ink; grid and reference lines subtle but visible. No dark-on-dark text anywhere.
+      Data: circle green and A/B purple identical to the light render; landmark dots, diameter and dashed line flip to light ink with dark halos; arc and 2θp/C labels in light soft ink.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Readable in both themes at full size; 14 px ticks and 16 px axis
-          titles vanish in the 400 px thumbnail (defect line)
+        comment: Explicit sizes (title 16 px, axis titles 18 px, ticks 16 px, annotations
+          15–17 px CSS); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All labels clear of markers, lines and each other
+        comment: No text collides with text or marks; labels offset clear of their
+          dots
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 10 px markers with page-colored outlines, 3.5 px circle stroke; no
-          legend needed
+        comment: 10 px landmark dots with page-colored halos, 3.5 px circle stroke;
+          all marks prominent for a 7-mark chart
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green, lavender and ink are CVD-distinct; roles also carried by labels
+        comment: Green circle, purple state points, ink landmarks; distinguished by
+          role and labels, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square canvas, square plot area; empty margins come from the equal
-          aspect ratio, which the spec permits
+        comment: Square canvas, square drawing area, title ~68% width, balanced axis
+          labels; margins come from the permitted equal aspect
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Normal Stress σ (MPa) / Shear Stress τ (MPa) as the spec asks
+        comment: Axis labels as the Notes ask, with MPa
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Circle #009E73 first, A/B in Imprint #C475FD, correct backgrounds
-          in both themes'
+        comment: 'Circle #009E73, state points Imprint position 2, landmarks in ink;
+          #FAF8F1 / #1A1A17 backgrounds; both renders theme-correct'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: Two-tier label typography (bold ink landmarks vs inkSoft C/2θp),
-          7 % tint inside the circle, page-colored marker outlines
+        passed: false
+        comment: 'Deliberate typographic hierarchy: bold 17 px landmark values, 16
+          px state labels, softer 15 px C and 2θp labels; page-colored halos on markers'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: true
-        comment: Computed margins center an exact square plot area; per-quadrant label
-          anchoring keeps labels off the circle
+        passed: false
+        comment: Label placement chosen per landmark (σ2 end-anchored left, σ1 right,
+          τ labels beside their dots); faint 7% circle fill separates the circle from
+          the grid
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Input stress state (lavender A/B) separated from derived landmarks
-          (ink σ1, σ2, ±τmax) and a heavy principal axis as focal line
+        passed: false
+        comment: Thick σ2–σ1 diameter makes the principal axis the focal line; color
+          separates the given stress state (A/B) from derived landmarks
     spec_compliance:
       score: 15
       max: 15
@@ -144,28 +143,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Mohr's circle on σ–τ plane
+        comment: Mohr's circle with the Notes' elements
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Center/radius formula, σ1/σ2, ±τmax, A/B, 2θp arc, equal aspect,
-          axis labels, light grid and center reference lines all present
+        comment: 'Circle at mean with Notes radius, equal aspect, σ1/σ2 on the axis,
+          ±τmax top and bottom, A and B on a diameter, 2θp arc at the center spanning
+          exactly the angle, axis labels, light grid and center reference lines: all
+          present'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All marks at their data values via the chart scales
+        comment: All marks placed through the axis scales at their computed values;
+          axes show the whole circle
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend N/A, marks labeled directly
+        comment: Title format correct with descriptive prefix; legend N/A, every mark
+          directly labeled
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -173,23 +176,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Nonzero τxy gives a non-trivial 2θp; all landmarks shown
+        comment: Shows the circle, principal stresses (one tensile, one compressive),
+          shear extremes, reference points and principal angle
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Plausible MPa values but a generic textbook triple with no component
-          (defect line)
+        comment: 'Steel drive shaft surface point, bending plus torsion with σy =
+          0: realistic and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: C = 50, R = √(30²+30²) = 42.4, σ1 = 92.4, σ2 = 7.6, 2θp
-          = atan2(30, 30) = 45°, all computed in code and matching the render'
+        comment: 'Checked against the render and code: C = 37, R = √2393 = 48.9, σ1
+          = 85.9, σ2 = −11.9, τmax = 48.9, 2θp = 40.9° → 41°; all computed, MPa magnitudes
+          plausible for steel'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -197,8 +202,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Default component plus one annotation layer component required to
-          use the scale hooks
+        comment: One child component, required because the scale hooks must run inside
+          ChartsContainer
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -213,17 +218,18 @@ review:
         comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Appropriate complexity; no fake UI
+        passed: false
+        comment: 2θp arc written out as a 33-point polyline loop (lines 92–98) where
+          one SVG arc command draws it (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component, sized to ANYPLOT_SIZE, skipAnimation
-          set
+        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation,
+          current v9 API
     library_mastery:
       score: 7
       max: 10
@@ -232,29 +238,30 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: ChartsContainer composition with ChartsGrid, ChartsReferenceLine,
-          ChartsText and explicit axis bands
+        passed: false
+        comment: MUI X composition API (ChartsContainer + ChartsXAxis/YAxis/Grid/ReferenceLine)
+          with axis width/height bands set as the v9 docs recommend
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: useXScale/useYScale hooks drive a custom SVG layer in data space
-          inside the composition API
-  verdict: REJECTED
+        passed: false
+        comment: useXScale/useYScale hooks driving a custom SVG layer inside the chart,
+          ChartsReferenceLine and ChartsText for theme-consistent annotation
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T11:01:06Z'
+  rendered_at: '2026-10-24T11:06:55Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - layer-composition
-  - patches
   - html-export
-  patterns: []
+  patterns:
+  - explicit-figure
   dataprep: []
   styling:
   - alpha-blending
-  - edge-highlighting
+  - grid-styling
+  - publication-ready
