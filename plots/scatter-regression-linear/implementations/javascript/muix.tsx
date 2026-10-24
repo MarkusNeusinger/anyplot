@@ -2,7 +2,8 @@
 // scatter-regression-linear: Scatter Plot with Linear Regression
 // Library: muix 7.29.1 | JavaScript 22.23.1
 // Quality: 89/100 | Created: 2026-08-05
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { LinePlot } from "@mui/x-charts/LineChart";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
@@ -11,46 +12,48 @@ import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const THEME = window.ANYPLOT_THEME === "dark" ? "dark" : "light";
-// ANYPLOT_TOKENS has no "muted" anchor — derive it from default-style-guide.md
-// "Theme-adaptive Chrome" (tertiary text / confidence-band fill token).
-const INK_MUTED = THEME === "dark" ? "#A8A79F" : "#6B6A63";
 
-// --- Deterministic PRNG (LCG) + Box-Muller for reproducible normal noise ----
-function makeLcg(seed: number) {
-  let state = seed;
-  return function next() {
-    state = (state * 1664525 + 1013904223) % 4294967296;
-    return state / 4294967296;
-  };
-}
-function randNormal(rand: () => number) {
-  const u1 = Math.max(rand(), 1e-9);
-  const u2 = rand();
-  return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-}
+// Constants
+const TITLE = "scatter-regression-linear · javascript · muix · anyplot.ai";
+const GRID_POINTS = 60;
+const T_CRIT_95 = 1.987;
 
-// --- Data: advertising spend ($k) vs sales revenue ($k) ---------------------
-const rand = makeLcg(42);
+// Columns: set these to your data's column names
+const X_VAL = "Advertising Spend ($k)"; // role: x
+const Y_VAL = "Sales Revenue ($k)"; // role: y
+
+// Data: replace this block with your own records
 const POINT_COUNT = 90;
-const adSpend: number[] = [];
-const salesRevenue: number[] = [];
+let seed = 42;
+const data = [];
 for (let i = 0; i < POINT_COUNT; i += 1) {
-  const spend = 5 + rand() * 45;
-  const revenue = 22 + spend * 3.4 + randNormal(rand) * 24;
-  adSpend.push(Number(spend.toFixed(2)));
-  salesRevenue.push(Number(Math.max(revenue, 8).toFixed(2)));
+  seed = (seed * 1664525 + 1013904223) % 4294967296;
+  const uSpend = seed / 4294967296;
+  seed = (seed * 1664525 + 1013904223) % 4294967296;
+  const u1 = Math.max(seed / 4294967296, 1e-9);
+  seed = (seed * 1664525 + 1013904223) % 4294967296;
+  const u2 = seed / 4294967296;
+  const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+  const spend = 5 + uSpend * 45;
+  const revenue = 22 + spend * 3.4 + z * 24;
+  data.push({
+    [X_VAL]: Number(spend.toFixed(2)),
+    [Y_VAL]: Number(Math.max(revenue, 8).toFixed(2)),
+  });
 }
 
-// --- Ordinary least-squares regression + 95% confidence band ----------------
-const n = adSpend.length;
-const xMean = adSpend.reduce((a, b) => a + b, 0) / n;
-const yMean = salesRevenue.reduce((a, b) => a + b, 0) / n;
+// Plot: reads only data and the constants above
+const xs = data.map((row) => Number(row[X_VAL]));
+const ys = data.map((row) => Number(row[Y_VAL]));
+const n = xs.length;
+const xMean = xs.reduce((a, b) => a + b, 0) / n;
+const yMean = ys.reduce((a, b) => a + b, 0) / n;
+
 let sxy = 0;
 let sxx = 0;
 for (let i = 0; i < n; i += 1) {
-  sxy += (adSpend[i] - xMean) * (salesRevenue[i] - yMean);
-  sxx += (adSpend[i] - xMean) ** 2;
+  sxy += (xs[i] - xMean) * (ys[i] - yMean);
+  sxx += (xs[i] - xMean) ** 2;
 }
 const slope = sxy / sxx;
 const intercept = yMean - slope * xMean;
@@ -58,51 +61,46 @@ const intercept = yMean - slope * xMean;
 let ssRes = 0;
 let ssTot = 0;
 for (let i = 0; i < n; i += 1) {
-  const fitted = intercept + slope * adSpend[i];
-  ssRes += (salesRevenue[i] - fitted) ** 2;
-  ssTot += (salesRevenue[i] - yMean) ** 2;
+  const fitted = intercept + slope * xs[i];
+  ssRes += (ys[i] - fitted) ** 2;
+  ssTot += (ys[i] - yMean) ** 2;
 }
 const rSquared = 1 - ssRes / ssTot;
 const correlation = Math.sign(slope) * Math.sqrt(rSquared);
 const residualStdErr = Math.sqrt(ssRes / (n - 2));
-const T_CRIT_95 = 1.987; // two-tailed 95% critical value, t-distribution df=88
 
-const GRID_POINTS = 60;
-const xMin = Math.min(...adSpend);
-const xMax = Math.max(...adSpend);
+const xMin = Math.min(...xs);
+const xMax = Math.max(...xs);
 const gridX = Array.from(
   { length: GRID_POINTS },
-  (_, i) => xMin + ((xMax - xMin) * i) / (GRID_POINTS - 1),
+  (_, i) => xMin + ((xMax - xMin) * i) / (GRID_POINTS - 1)
 );
 const fittedY = gridX.map((x) => intercept + slope * x);
 const bandHalfWidth = gridX.map(
-  (x) => T_CRIT_95 * residualStdErr * Math.sqrt(1 / n + (x - xMean) ** 2 / sxx),
+  (x) => T_CRIT_95 * residualStdErr * Math.sqrt(1 / n + (x - xMean) ** 2 / sxx)
 );
 const upperY = fittedY.map((y, i) => y + bandHalfWidth[i]);
 const lowerY = fittedY.map((y, i) => y - bandHalfWidth[i]);
 
-const scatterData = adSpend.map((x, i) => ({
+const scatterData = xs.map((x, i) => ({
   x,
-  y: salesRevenue[i],
+  y: ys[i],
   id: `pt-${i}`,
 }));
 
-const yAllValues = [...salesRevenue, ...upperY, ...lowerY];
+const yAllValues = [...ys, ...upperY, ...lowerY];
 const yPad = (Math.max(...yAllValues) - Math.min(...yAllValues)) * 0.08;
 const yDomainMin = Math.min(...yAllValues) - yPad;
 const yDomainMax = Math.max(...yAllValues) + yPad;
 
-const regressionColor = t.palette[2]; // blue — distinct from the brand-green points
+const inkMuted = window.ANYPLOT_THEME === "dark" ? "#A8A79F" : "#6B6A63";
+const regressionColor = t.palette[2];
 const equationLabel = `y = ${slope.toFixed(2)}x + ${intercept.toFixed(1)}   ·   R² = ${rSquared.toFixed(3)}   ·   r = ${correlation.toFixed(3)}`;
-
-const title = "scatter-regression-linear · javascript · muix · anyplot.ai";
 
 function ConfidenceBand() {
   const xScale = useXScale();
   const yScale = useYScale();
-  const top = gridX
-    .map((x, i) => `${xScale(x)},${yScale(upperY[i])}`)
-    .join(" L ");
+  const top = gridX.map((x, i) => `${xScale(x)},${yScale(upperY[i])}`).join(" L ");
   const bottomIndices = [...gridX.keys()].reverse();
   const bottom = bottomIndices
     .map((i) => `${xScale(gridX[i])},${yScale(lowerY[i])}`)
@@ -110,22 +108,21 @@ function ConfidenceBand() {
   return (
     <path
       d={`M ${top} L ${bottom} Z`}
-      fill={INK_MUTED}
+      fill={inkMuted}
       opacity={0.22}
       stroke="none"
     />
   );
 }
 
-// --- Chart (default-exported component — the harness mounts it) ------------
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
 
   return (
-    <ChartContainer
+    <ChartsContainer
       width={width}
       height={height}
-      margin={{ top: 92, right: 56, bottom: 76, left: 132 }}
+      margin={{ top: 92, right: 56, bottom: 24, left: 36 }}
       series={[
         {
           type: "scatter",
@@ -148,7 +145,8 @@ export default function Chart() {
         {
           data: gridX,
           scaleType: "linear",
-          label: "Advertising Spend ($k)",
+          height: 64,
+          label: X_VAL,
           tickLabelStyle: { fontSize: 14 },
           labelStyle: { fontSize: 16 },
         },
@@ -158,12 +156,8 @@ export default function Chart() {
           scaleType: "linear",
           min: yDomainMin,
           max: yDomainMax,
-          label: "Sales Revenue ($k)",
-          // tickFontSize drives the y-axis label's clearance from the tick labels
-          // (MUI X positions the rotated label at tickFontSize + tickSize + 10 px
-          // from the axis line); it's set well above tickLabelStyle.fontSize so
-          // the label never collides with 3-digit tick values like "140".
-          tickFontSize: 32,
+          width: 96,
+          label: Y_VAL,
           tickLabelStyle: { fontSize: 14 },
           labelStyle: { fontSize: 16 },
         },
@@ -187,14 +181,14 @@ export default function Chart() {
         fontWeight={600}
         fill={t.ink}
       >
-        {title}
+        {TITLE}
       </text>
       <text x={140} y={78} fontSize={15} fill={t.inkSoft}>
         {equationLabel}
       </text>
-      <text x={140} y={98} fontSize={13} fill={INK_MUTED}>
+      <text x={140} y={98} fontSize={13} fill={inkMuted}>
         Shaded band: 95% confidence interval for the mean response
       </text>
-    </ChartContainer>
+    </ChartsContainer>
   );
 }
