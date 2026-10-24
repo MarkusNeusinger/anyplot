@@ -1,30 +1,29 @@
 // anyplot.ai
 // heatmap-basic: Basic Heatmap
-// Library: muix 9.2.1 | JavaScript 22.23.2
+// Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 93/100 | Created: 2026-08-20
 //# anyplot-orientation: square
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
-import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
+import { useDrawingArea, useXScale, useYScale, useZColorScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const SIZE = window.ANYPLOT_SIZE;
 
 // Constants
-const X_COL = "x";
-const Y_COL = "y";
-const VALUE_COL = "value";
-
+const SIZE = window.ANYPLOT_SIZE;
 const TITLE = "heatmap-basic · javascript · muix · anyplot.ai";
-const SUBTITLE_PREFIX = "Pairwise correlation matrix across core business metrics";
-const COLORBAR_LABEL = "Correlation coefficient";
 const DOMAIN_MIN = -1;
-const DOMAIN_MID = 0;
 const DOMAIN_MAX = 1;
 const COLORBAR_TICKS = [-1.0, -0.5, 0.0, 0.5, 1.0];
+const MARGIN = { top: 104, right: 138, bottom: 32, left: 20 };
 
-// Data — symmetric 8x8 correlation matrix across business metrics
+// Columns: set these to your data's column names
+const COL_METRIC = "Column metric"; // role: x
+const ROW_METRIC = "Row metric"; // role: y
+const CORRELATION = "Correlation coefficient"; // role: value
+
+// Data: replace this block with your own records
 const METRIC_NAMES = [
   "Revenue",
   "Marketing",
@@ -36,7 +35,6 @@ const METRIC_NAMES = [
   "Churn",
 ];
 
-// Flat scalar upper-triangle correlation string per row (comma-separated for cols i+1..n-1)
 const UPPER_TRIANGLE_ROWS = [
   "0.72,0.45,0.68,0.55,0.81,0.60,-0.52",
   "0.30,0.40,0.25,0.66,0.58,-0.20",
@@ -57,57 +55,32 @@ for (let row = 0; row < nMetrics; row++) {
     const maxIdx = Math.max(row, col);
     const val = row === col ? 1.0 : parsedUpper[minIdx][maxIdx - minIdx - 1];
     data.push({
-      [Y_COL]: METRIC_NAMES[row],
-      [X_COL]: METRIC_NAMES[col],
-      [VALUE_COL]: val,
+      [ROW_METRIC]: METRIC_NAMES[row],
+      [COL_METRIC]: METRIC_NAMES[col],
+      [CORRELATION]: val,
     });
   }
 }
 
-const xCategories = Array.from(new Set(data.map((r) => String(r[X_COL]))));
-const yCategories = Array.from(new Set(data.map((r) => String(r[Y_COL]))));
+// Plot: reads only data and the constants above
+const xCategories = Array.from(new Set(data.map((r) => String(r[COL_METRIC]))));
+const yCategories = Array.from(new Set(data.map((r) => String(r[ROW_METRIC]))));
 
-const divStopInts = t.div.map((hex) => parseInt(hex.slice(1), 16));
-const divStopsRgb: [number, number, number][] = divStopInts.map((v) => [
-  (v >> 16) & 255,
-  (v >> 8) & 255,
-  v & 255,
-]);
-
-const cells = data.map((row, idx) => {
-  const xKey = String(row[X_COL]);
-  const yKey = String(row[Y_COL]);
-  const value = Number(row[VALUE_COL]);
-  const pos = (value - DOMAIN_MIN) / (DOMAIN_MAX - DOMAIN_MIN || 1);
-  const isLowerHalf = pos < 0.5;
-  const start = isLowerHalf ? divStopsRgb[0] : divStopsRgb[1];
-  const end = isLowerHalf ? divStopsRgb[1] : divStopsRgb[2];
-  const localRatio = isLowerHalf ? pos / 0.5 : (pos - 0.5) / 0.5;
-
-  const r = Math.round(start[0] + (end[0] - start[0]) * localRatio);
-  const g = Math.round(start[1] + (end[1] - start[1]) * localRatio);
-  const b = Math.round(start[2] + (end[2] - start[2]) * localRatio);
-  const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-  const textFill = luminance > 140 ? "#1A1A17" : "#FAF8F1";
-
-  return {
-    id: `${idx}-${yKey}-${xKey}`,
-    x: xKey,
-    y: yKey,
-    value,
-    fill: `rgb(${r}, ${g}, ${b})`,
-    textFill,
-  };
-});
+const cells = data.map((row, idx) => ({
+  id: `${idx}-${row[ROW_METRIC]}-${row[COL_METRIC]}`,
+  x: String(row[COL_METRIC]),
+  y: String(row[ROW_METRIC]),
+  value: Number(row[CORRELATION]),
+}));
 
 function HeatmapCells() {
-  const xScale = useXScale();
-  const yScale = useYScale();
+  const xScale = useXScale() as unknown as ((v: string) => number) & { bandwidth: () => number };
+  const yScale = useYScale() as unknown as ((v: string) => number) & { bandwidth: () => number };
+  const colorScale = useZColorScale() as (v: number) => string;
   const { left, top, width, height } = useDrawingArea();
 
-  if (!xScale || !yScale || typeof (xScale as any).bandwidth !== "function") return null;
-  const bw = (xScale as any).bandwidth() as number;
-  const bh = (yScale as any).bandwidth() as number;
+  const bw = xScale.bandwidth();
+  const bh = yScale.bandwidth();
   const barX = left + width + 28;
   const barW = 20;
 
@@ -122,17 +95,22 @@ function HeatmapCells() {
       </defs>
 
       {cells.map((cell) => {
-        const x = Number(xScale(cell.x) ?? 0);
-        const y = Number(yScale(cell.y) ?? 0);
+        const x = xScale(cell.x);
+        const y = yScale(cell.y);
+        const fill = colorScale(cell.value);
+        const [r, g, b] = (fill.match(/[\d.]+/g) ?? ["128", "128", "128"]).map(Number);
+        const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        const textFill = luminance > 140 ? "#1A1A17" : "#FAF8F1";
+
         return (
           <g key={cell.id}>
-            <rect x={x} y={y} width={bw} height={bh} fill={cell.fill} rx={4} />
+            <rect x={x} y={y} width={bw} height={bh} fill={fill} rx={4} />
             <text
               x={x + bw / 2}
               y={y + bh / 2}
               fontSize={16}
               fontWeight={600}
-              fill={cell.textFill}
+              fill={textFill}
               textAnchor="middle"
               dominantBaseline="central"
             >
@@ -169,16 +147,14 @@ function HeatmapCells() {
         textAnchor="middle"
         transform={`rotate(-90, ${barX + barW + 58}, ${top + height / 2})`}
       >
-        {COLORBAR_LABEL}
+        {CORRELATION}
       </text>
     </g>
   );
 }
 
-const MARGIN = { top: 104, right: 138, bottom: 32, left: 20 };
-
 export default function Chart() {
-  const subtitle = `${SUBTITLE_PREFIX} (${xCategories.length}×${yCategories.length})`;
+  const subtitle = `${CORRELATION} matrix (${xCategories.length} × ${yCategories.length})`;
 
   return (
     <ChartsContainer
@@ -207,6 +183,16 @@ export default function Chart() {
           disableLine: true,
           disableTicks: true,
           tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
+        },
+      ]}
+      zAxis={[
+        {
+          colorMap: {
+            type: "continuous",
+            min: DOMAIN_MIN,
+            max: DOMAIN_MAX,
+            color: [t.div[0], t.div[1], t.div[2]] as unknown as [string, string],
+          },
         },
       ]}
     >
