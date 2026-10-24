@@ -1,7 +1,8 @@
 // anyplot.ai
 // point-and-figure-basic: Point and Figure Chart
-// Library: muix 9.2.1 | JavaScript 22.23.2
+// Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 89/100 | Created: 2026-09-02
+
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
@@ -9,21 +10,11 @@ import { useXScale, useYScale } from "@mui/x-charts/hooks";
 import { Box, Typography } from "@mui/material";
 
 const t = window.ANYPLOT_TOKENS;
-const TITLE = "point-and-figure-basic · javascript · muix · anyplot.ai";
 
 // Constants
-const SESSION_COL = "Column (price reversal, not time)";
-const CLOSE_COL = "Price ($)";
-const BOX_SIZE_COL = "Box size ($)";
-const REVERSAL_COL = "Reversal (boxes)";
-
-const NUM_SESSIONS = 360;
-const INITIAL_PRICE = 148;
-const MIN_PRICE_FLOOR = 60;
-const DRIFT_STEP = 0.01;
-const VOLATILITY_STEP = 4.3;
-const DEFAULT_BOX_SIZE = 1.5;
-const DEFAULT_REVERSAL_BOXES = 3;
+const TITLE = "point-and-figure-basic · javascript · muix · anyplot.ai";
+const X_TITLE = "Column (price reversal, not time)";
+const REVERSAL_BOXES = 3;
 const MIN_TREND_SPAN = 2;
 const Y_PAD_BOXES = 2;
 const GRID_TARGET_DIVISIONS = 9;
@@ -36,74 +27,84 @@ const FALLING_LABEL = "Falling column";
 const SUPPORT_LABEL = "Support";
 const RESISTANCE_LABEL = "Resistance";
 
-// Data — deterministic daily close records with box-size and reversal parameters
-const DATA = [];
+// Columns: set these to your data's column names
+const SESSION = "Trading session"; // role: date
+const CLOSE = "Close (USD)"; // role: close
+
+// Data: replace this block with your own records
+const NUM_SESSIONS = 360;
+const INITIAL_PRICE = 148;
+const MIN_PRICE_FLOOR = 60;
+const DRIFT_STEP = 0.01;
+const VOLATILITY_STEP = 4.3;
+const BOX_SIZE = 1.5;
+
+const data: Array<Record<string, number>> = [];
 let lcgState = 42 >>> 0;
 let runningPrice = INITIAL_PRICE;
 for (let session = 1; session <= NUM_SESSIONS; session += 1) {
   lcgState = (Math.imul(lcgState, 1664525) + 1013904223) >>> 0;
   const randUnit = lcgState / 4294967296;
-  runningPrice = Math.max(MIN_PRICE_FLOOR, runningPrice + DRIFT_STEP + (randUnit - 0.5) * VOLATILITY_STEP);
-  DATA.push({
-    [SESSION_COL]: session,
-    [CLOSE_COL]: Math.round(runningPrice * 100) / 100,
-    [BOX_SIZE_COL]: DEFAULT_BOX_SIZE,
-    [REVERSAL_COL]: DEFAULT_REVERSAL_BOXES,
+  runningPrice = Math.max(
+    MIN_PRICE_FLOOR,
+    runningPrice + DRIFT_STEP + (randUnit - 0.5) * VOLATILITY_STEP,
+  );
+  data.push({
+    [SESSION]: session,
+    [CLOSE]: Math.round(runningPrice * 100) / 100,
   });
 }
 
-// Derive sorted rows and P&F parameters from DATA
-const sortedRows = [...DATA].sort((a, b) => Number(a[SESSION_COL]) - Number(b[SESSION_COL]));
-const boxSize = Number(sortedRows[0]?.[BOX_SIZE_COL] ?? DEFAULT_BOX_SIZE);
-const reversalBoxes = Number(sortedRows[0]?.[REVERSAL_COL] ?? DEFAULT_REVERSAL_BOXES);
-const priceUnitMatch = CLOSE_COL.match(/\(([^)]+)\)/);
-const priceUnit = priceUnitMatch ? priceUnitMatch[1] : "$";
+// Plot: reads only data and the constants above
+const sortedRows = [...data].sort((a, b) => Number(a[SESSION]) - Number(b[SESSION]));
 
-// Point & Figure column construction (close-only reversal method)
-const columns = [];
-if (sortedRows.length > 0) {
-  let boxIndex = Math.round(Number(sortedRows[0][CLOSE_COL]) / boxSize);
-  let direction = null;
-  let boxesInColumn = [boxIndex];
+interface PnfColumn {
+  direction: string;
+  boxes: number[];
+}
 
-  for (let i = 1; i < sortedRows.length; i += 1) {
-    const nextBox = Math.round(Number(sortedRows[i][CLOSE_COL]) / boxSize);
-    if (direction === null) {
-      if (nextBox > boxIndex) {
-        direction = RISING_SYMBOL;
-        for (let b = boxIndex + 1; b <= nextBox; b += 1) boxesInColumn.push(b);
-        boxIndex = nextBox;
-      } else if (nextBox < boxIndex) {
-        direction = FALLING_SYMBOL;
-        for (let b = boxIndex - 1; b >= nextBox; b -= 1) boxesInColumn.push(b);
-        boxIndex = nextBox;
-      }
-      continue;
-    }
-    if (direction === RISING_SYMBOL) {
-      if (nextBox > boxIndex) {
-        for (let b = boxIndex + 1; b <= nextBox; b += 1) boxesInColumn.push(b);
-        boxIndex = nextBox;
-      } else if (nextBox <= boxIndex - reversalBoxes) {
-        columns.push({ direction, boxes: boxesInColumn });
-        direction = FALLING_SYMBOL;
-        boxesInColumn = [];
-        for (let b = boxIndex - 1; b >= nextBox; b -= 1) boxesInColumn.push(b);
-        boxIndex = nextBox;
-      }
-    } else if (nextBox < boxIndex) {
-      for (let b = boxIndex - 1; b >= nextBox; b -= 1) boxesInColumn.push(b);
-      boxIndex = nextBox;
-    } else if (nextBox >= boxIndex + reversalBoxes) {
-      columns.push({ direction, boxes: boxesInColumn });
+const columns: PnfColumn[] = [];
+let boxIndex = Math.round(Number(sortedRows[0][CLOSE]) / BOX_SIZE);
+let direction: string | null = null;
+let boxesInColumn: number[] = [boxIndex];
+
+for (let i = 1; i < sortedRows.length; i += 1) {
+  const nextBox = Math.round(Number(sortedRows[i][CLOSE]) / BOX_SIZE);
+  if (direction === null) {
+    if (nextBox > boxIndex) {
       direction = RISING_SYMBOL;
-      boxesInColumn = [];
       for (let b = boxIndex + 1; b <= nextBox; b += 1) boxesInColumn.push(b);
       boxIndex = nextBox;
+    } else if (nextBox < boxIndex) {
+      direction = FALLING_SYMBOL;
+      for (let b = boxIndex - 1; b >= nextBox; b -= 1) boxesInColumn.push(b);
+      boxIndex = nextBox;
     }
+    continue;
   }
-  columns.push({ direction: direction ?? RISING_SYMBOL, boxes: boxesInColumn });
+  if (direction === RISING_SYMBOL) {
+    if (nextBox > boxIndex) {
+      for (let b = boxIndex + 1; b <= nextBox; b += 1) boxesInColumn.push(b);
+      boxIndex = nextBox;
+    } else if (nextBox <= boxIndex - REVERSAL_BOXES) {
+      columns.push({ direction, boxes: boxesInColumn });
+      direction = FALLING_SYMBOL;
+      boxesInColumn = [];
+      for (let b = boxIndex - 1; b >= nextBox; b -= 1) boxesInColumn.push(b);
+      boxIndex = nextBox;
+    }
+  } else if (nextBox < boxIndex) {
+    for (let b = boxIndex - 1; b >= nextBox; b -= 1) boxesInColumn.push(b);
+    boxIndex = nextBox;
+  } else if (nextBox >= boxIndex + REVERSAL_BOXES) {
+    columns.push({ direction, boxes: boxesInColumn });
+    direction = RISING_SYMBOL;
+    boxesInColumn = [];
+    for (let b = boxIndex + 1; b <= nextBox; b += 1) boxesInColumn.push(b);
+    boxIndex = nextBox;
+  }
 }
+columns.push({ direction: String(direction), boxes: boxesInColumn });
 
 const allBoxes = columns.flatMap((column) => column.boxes);
 const minBox = Math.min(...allBoxes);
@@ -112,15 +113,21 @@ const yMinBox = minBox - Y_PAD_BOXES;
 const yMaxBox = maxBox + Y_PAD_BOXES;
 const columnIndices = columns.map((_, index) => index + 1);
 
-const gridStep = Math.max(1, Math.round((maxBox - minBox) / GRID_TARGET_DIVISIONS));
-const gridRows = [];
+const gridStep = Math.round((maxBox - minBox) / GRID_TARGET_DIVISIONS);
+const gridRows: number[] = [];
 for (let box = Math.ceil(minBox / gridStep) * gridStep; box <= maxBox; box += gridStep) {
   gridRows.push(box);
 }
 
-// 45-degree support (+1 box/column) and resistance (-1 box/column) trend lines
-const supportLines = [];
-const resistanceLines = [];
+interface TrendLine {
+  startIndex: number;
+  startBox: number;
+  endIndex: number;
+  endBox: number;
+}
+
+const supportLines: TrendLine[] = [];
+const resistanceLines: TrendLine[] = [];
 for (let i = 1; i < columns.length; i += 1) {
   const column = columns[i];
   const prevColumn = columns[i - 1];
@@ -129,7 +136,8 @@ for (let i = 1; i < columns.length; i += 1) {
     let endIndex = i;
     for (let j = i + 1; j < columns.length; j += 1) {
       const projected = startBox + (j - i);
-      if (columns[j].direction === FALLING_SYMBOL && Math.min(...columns[j].boxes) < projected) break;
+      if (columns[j].direction === FALLING_SYMBOL && Math.min(...columns[j].boxes) < projected)
+        break;
       endIndex = j;
     }
     if (endIndex - i >= MIN_TREND_SPAN) {
@@ -141,23 +149,30 @@ for (let i = 1; i < columns.length; i += 1) {
     let endIndex = i;
     for (let j = i + 1; j < columns.length; j += 1) {
       const projected = startBox - (j - i);
-      if (columns[j].direction === RISING_SYMBOL && Math.max(...columns[j].boxes) > projected) break;
+      if (columns[j].direction === RISING_SYMBOL && Math.max(...columns[j].boxes) > projected)
+        break;
       endIndex = j;
     }
     if (endIndex - i >= MIN_TREND_SPAN) {
-      resistanceLines.push({ startIndex: i, startBox, endIndex, endBox: startBox - (endIndex - i) });
+      resistanceLines.push({
+        startIndex: i,
+        startBox,
+        endIndex,
+        endBox: startBox - (endIndex - i),
+      });
     }
   }
 }
 
-// Finance semantic colors: bullish rising X vs bearish falling O
-const RISING_COLOR = t.palette[0];
-const FALLING_COLOR = t.palette[4];
+const risingColor = t.palette[0];
+const fallingColor = t.palette[4];
 
 function PointAndFigureOverlay() {
-  const xScale = useXScale();
-  const yScale = useYScale();
-  if (!xScale || !yScale || typeof xScale.bandwidth !== "function") return null;
+  const xScale = useXScale("columns") as unknown as ((c: number) => number) & {
+    bandwidth: () => number;
+    range: () => [number, number];
+  };
+  const yScale = useYScale("price") as unknown as (v: number) => number;
 
   const [left, right] = xScale.range();
   const half = xScale.bandwidth() / 2;
@@ -180,11 +195,11 @@ function PointAndFigureOverlay() {
       {supportLines.map((line, index) => (
         <line
           key={`support-${index}`}
-          x1={(xScale(line.startIndex + 1) ?? 0) + half}
+          x1={xScale(line.startIndex + 1) + half}
           y1={yScale(line.startBox)}
-          x2={(xScale(line.endIndex + 1) ?? 0) + half}
+          x2={xScale(line.endIndex + 1) + half}
           y2={yScale(line.endBox)}
-          stroke={RISING_COLOR}
+          stroke={risingColor}
           strokeWidth={1.5}
           strokeDasharray="7 4"
           strokeOpacity={0.6}
@@ -193,11 +208,11 @@ function PointAndFigureOverlay() {
       {resistanceLines.map((line, index) => (
         <line
           key={`resistance-${index}`}
-          x1={(xScale(line.startIndex + 1) ?? 0) + half}
+          x1={xScale(line.startIndex + 1) + half}
           y1={yScale(line.startBox)}
-          x2={(xScale(line.endIndex + 1) ?? 0) + half}
+          x2={xScale(line.endIndex + 1) + half}
           y2={yScale(line.endBox)}
-          stroke={FALLING_COLOR}
+          stroke={fallingColor}
           strokeWidth={1.5}
           strokeDasharray="7 4"
           strokeOpacity={0.6}
@@ -205,8 +220,8 @@ function PointAndFigureOverlay() {
       ))}
       <g style={{ fontWeight: 700 }}>
         {columns.map((column, columnIndex) => {
-          const cx = (xScale(columnIndex + 1) ?? 0) + half;
-          const color = column.direction === RISING_SYMBOL ? RISING_COLOR : FALLING_COLOR;
+          const cx = xScale(columnIndex + 1) + half;
+          const color = column.direction === RISING_SYMBOL ? risingColor : fallingColor;
           return column.boxes.map((box) => (
             <text
               key={`${columnIndex}-${box}`}
@@ -245,22 +260,33 @@ export default function Chart() {
         flexDirection: "column",
       }}
     >
-      <Box sx={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", mb: "18px" }}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "baseline",
+          justifyContent: "space-between",
+          mb: "18px",
+        }}
+      >
         <Typography sx={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1 }}>
           {TITLE}
         </Typography>
         <Box sx={{ display: "flex", alignItems: "center", gap: "20px" }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <Typography sx={{ fontSize: 16, fontWeight: 700, color: RISING_COLOR, lineHeight: 1 }}>
+            <Typography sx={{ fontSize: 16, fontWeight: 700, color: risingColor, lineHeight: 1 }}>
               {RISING_SYMBOL}
             </Typography>
-            <Typography sx={{ fontSize: 14, color: t.inkSoft, lineHeight: 1 }}>{RISING_LABEL}</Typography>
+            <Typography sx={{ fontSize: 14, color: t.inkSoft, lineHeight: 1 }}>
+              {RISING_LABEL}
+            </Typography>
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <Typography sx={{ fontSize: 16, fontWeight: 700, color: FALLING_COLOR, lineHeight: 1 }}>
+            <Typography sx={{ fontSize: 16, fontWeight: 700, color: fallingColor, lineHeight: 1 }}>
               {FALLING_SYMBOL}
             </Typography>
-            <Typography sx={{ fontSize: 14, color: t.inkSoft, lineHeight: 1 }}>{FALLING_LABEL}</Typography>
+            <Typography sx={{ fontSize: 14, color: t.inkSoft, lineHeight: 1 }}>
+              {FALLING_LABEL}
+            </Typography>
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
             <svg width="20" height="14" aria-hidden="true">
@@ -269,13 +295,15 @@ export default function Chart() {
                 y1="12"
                 x2="18"
                 y2="2"
-                stroke={RISING_COLOR}
+                stroke={risingColor}
                 strokeWidth={2}
                 strokeDasharray="4 3"
                 strokeOpacity={0.75}
               />
             </svg>
-            <Typography sx={{ fontSize: 14, color: t.inkSoft, lineHeight: 1 }}>{SUPPORT_LABEL}</Typography>
+            <Typography sx={{ fontSize: 14, color: t.inkSoft, lineHeight: 1 }}>
+              {SUPPORT_LABEL}
+            </Typography>
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
             <svg width="20" height="14" aria-hidden="true">
@@ -284,13 +312,15 @@ export default function Chart() {
                 y1="2"
                 x2="18"
                 y2="12"
-                stroke={FALLING_COLOR}
+                stroke={fallingColor}
                 strokeWidth={2}
                 strokeDasharray="4 3"
                 strokeOpacity={0.75}
               />
             </svg>
-            <Typography sx={{ fontSize: 14, color: t.inkSoft, lineHeight: 1 }}>{RESISTANCE_LABEL}</Typography>
+            <Typography sx={{ fontSize: 14, color: t.inkSoft, lineHeight: 1 }}>
+              {RESISTANCE_LABEL}
+            </Typography>
           </Box>
         </Box>
       </Box>
@@ -307,7 +337,7 @@ export default function Chart() {
             data: columnIndices,
             categoryGapRatio: 0.12,
             height: 56,
-            label: SESSION_COL,
+            label: X_TITLE,
             labelStyle: { fontSize: 15, fill: t.ink },
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
             tickLabelInterval: (_value, index) => index % TICK_EVERY_N_COLS === 0,
@@ -320,9 +350,9 @@ export default function Chart() {
             min: yMinBox,
             max: yMaxBox,
             width: 82,
-            label: CLOSE_COL,
+            label: CLOSE,
             labelStyle: { fontSize: 15, fill: t.ink },
-            valueFormatter: (boxValue) => `${priceUnit}${(Number(boxValue) * boxSize).toFixed(1)}`,
+            valueFormatter: (boxValue: number) => (Number(boxValue) * BOX_SIZE).toFixed(1),
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
             tickNumber: 10,
           },
