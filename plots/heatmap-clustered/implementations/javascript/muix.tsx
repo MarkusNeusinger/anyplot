@@ -1,7 +1,7 @@
 // anyplot.ai
 // heatmap-clustered: Clustered Heatmap
 // Library: muix 9.16.0 | JavaScript 22.23.3
-// Quality: 88/100 | Updated: 2026-10-24
+// Quality: 87/100 | Updated: 2026-10-24
 //# anyplot-orientation: square
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
