@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: map-projections
 created: '2026-08-26T08:15:08Z'
-updated: '2026-10-24T10:53:44Z'
+updated: '2026-10-24T11:11:47Z'
 generated_by: gemini-4-argon
 adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
 workflow_run: 40087414283
@@ -13,68 +13,60 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-proje
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-projections/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-projections/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-projections/javascript/muix/plot-dark.html
-quality_score: 81
+quality_score: 88
 review:
   strengths:
-  - Three projections from three families (cylindrical Mercator, pseudocylindrical
-    Mollweide, azimuthal Orthographic) side by side with the same landmasses, graticule
-    and Tissot set, so only the projection differs.
-  - 'The projections are computed correctly in the code (Mercator ln tan, Mollweide
-    Newton iteration on 2θ + sin 2θ = π sin φ, orthographic with a back-hemisphere
-    cull): Tissot circles stay round and grow toward the poles in Mercator and shear
-    but keep their size in Mollweide, as the spec''s characteristic bullet asks.'
-  - Each panel carries a bold projection name, a property subtitle (conformal / equal-area
-    / globe centre) and a one-line distortion note, giving a clear typographic hierarchy
-    below the mandated title.
-  - Equator and prime meridian are drawn dashed and stronger than the 30° graticule,
-    which sits lighter than the coastlines, and each map is clipped to and outlined
-    by its own projection boundary.
-  - 'Idiomatic MUI X composition: each map is a ChartsContainer with hidden linear
-    axes acting as the projected coordinate system, and a custom GeoOverlay component
-    draws through useXScale/useYScale; skipAnimation is set.'
-  - 'Theme threading is complete: page, map interior, ink and soft-ink tokens flip
-    between renders while the Imprint green of the Tissot indicatrices stays identical.'
+  - 'Three projections side by side cover the three distortion families: Mercator
+    (conformal), Mollweide (equal-area) and Orthographic (azimuthal). Each panel''s
+    subtitle names the property it preserves and its italic note names the distortion.'
+  - 'The Tissot indicatrices behave correctly: on Mercator they stay circular and
+    roughly double in radius at ±60° (sec φ), on Mollweide they keep their area and
+    shear into ellipses toward the limb, and on the globe they foreshorten toward
+    the horizon.'
+  - 'The orthographic clipping is careful work: lines are cut at the horizon and land
+    rings are closed along the limb arc instead of a chord, so the hemisphere reads
+    cleanly with no fill artefacts.'
+  - 'The line-weight hierarchy is clear: a faint 30° graticule, a dashed equator and
+    prime meridian, thin country borders, firmer coastlines and a framed outline.
+    The graticule sits visibly lighter than the coastlines, as the spec asks.'
+  - 'Uses the MUI X composition API: ChartsContainer with hidden linear axes supplies
+    the coordinate system, and a custom child component draws the geometry through
+    useXScale/useYScale.'
+  - 'Theme handling is clean: every chrome element comes from ANYPLOT_TOKENS (ink,
+    inkSoft, elevatedBg, pageBg), the Tissot green is t.palette[0] in both renders,
+    and skipAnimation is set.'
   weaknesses:
-  - 'SC-02, SC-03 (both): in the Orthographic panel, landmasses that cross the horizon
-    (Asia/Russia at top right, North America and Greenland at top left) are closed
-    with straight chords from where they leave the visible hemisphere to where they
-    re-enter, so false triangular land slivers appear (e.g. the narrow wedge from
-    the top limb down to Scandinavia and the straight edge across Siberia) → clip
-    each polygon against the horizon and close it along the limb arc. Likely cause:
-    the projection loop drops back-hemisphere vertices and each run is closed with
-    `Z` in GeoOverlay''s continentsD builder.'
-  - 'DQ-01 (both): country borders exist only as 11 short dashed sketch lines (Canada–US,
-    Sahara South, India–China, …) and coastlines are 5–35-vertex outlines, so the
-    ''coastlines and country borders'' the Notes and the first ''A good version shows:''
-    bullet ask for read as continent sketches without countries → a denser landmass
-    and border dataset (per-country outlines, even simplified) so borders cover the
-    land. Likely cause: the hand-written `data` block of 13 landmasses and 11 border
-    polylines.'
-  - 'VQ-05 (both): the maps fill only the middle ~40 % of the canvas height, with
-    about 200 CSS px of empty band above and below every panel, and the per-panel
-    notes sit ~200 px under their maps next to the footer → shrink the vertical slack
-    so the maps grow (about +40 % height) and the notes sit directly beneath them.
-    Likely cause: mapH = rowHeight − header − footer while the panel width, not height,
-    limits the map scale, and the flex column pins the note to the bottom of a full-height
-    panel.'
-  - 'CQ-04 (code): lines 518–573 repeat the same `for` loop over runs building an
-    SVG path string six times (continents, borders, graticules, equator, meridian,
-    Tissot) → one `runs.map(r => r.map(([x, y], i) => `${i ? "L" : "M"}${xScale(x)},${yScale(y)}`).join("")).join(close)`
-    expression per layer, saving about 40 lines. Likely cause: copy-pasted path builders.'
-  - 'Suggestion: an equal-area projection with a smoother outline (Equal Earth or
-    Robinson) instead of, or next to, Mollweide would show the trade-off between compromise
-    and equal-area projections.'
+  - 'VQ-03 (both): the legend glyphs do not match the marks they explain. The ''Land
+    & coastline'' swatch is filled at opacity 0.45, noticeably darker than the 0.26
+    land fill on the maps. The Tissot swatch applies opacity 0.6 to the whole element,
+    so it reads as a dull solid disc (especially on #1A1A17) instead of a 0.3 translucent
+    fill with a full-strength outline → use the same fill alpha and outline as the
+    map marks (backgroundColor at fillOpacity 0.26 / 0.3 with an opaque border, no
+    element-level opacity). Likely cause: LegendItem swatch styles at lines 775 and
+    780 use `opacity` instead of the GeoOverlay fill values.'
+  - 'CQ-01 (code): about ten module-level helper functions (densify, mollweideTheta,
+    orthoVec, limbPoint, limbArc, projectLine, projectRing, outlineOf, LegendItem,
+    plus the GeoOverlay component). GeoOverlay is needed for the hooks and the projection
+    math has no library call, but outlineOf (used once) and LegendItem (four uses
+    of a 3-line span) are helpers a flat structure does not need → inline outlineOf
+    into the bundles map and write the four legend spans directly. Likely cause: helper-function
+    decomposition beyond what the React component contract requires.'
+  - 'Suggestion: an equal-area Equal Earth or Robinson panel could replace one view
+    to show a compromise projection, which the spec lists among its examples.'
+  - 'Suggestion: the empty band below the legend (about 12 % of the canvas) is larger
+    than the band above the title; nudging the block down would balance the vertical
+    whitespace.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 page; each map interior is the slightly lighter elevated tone, outlined in soft ink.
-      Chrome: bold dark title "map-projections · javascript · muix · anyplot.ai" centred at top; three panel headings (Mercator (Cylindrical), Mollweide (Pseudocylindrical), Orthographic (Azimuthal)) with soft-ink subtitles; distortion notes under each panel near the bottom; a footer legend (landmasses swatch, green Tissot circle, dashed graticule). All text dark on light and readable.
-      Data: grey translucent landmasses with darker outlines and faint dotted country-border sketches; light grey 30° graticule, dashed equator and prime meridian; Tissot indicatrices in Imprint green #009E73 (translucent fill, solid outline) — round and growing toward the poles in Mercator, sheared but similar-sized in Mollweide, foreshortened toward the limb in the Orthographic globe centred at 20°N 0°E. The Orthographic panel shows straight-chord land slivers where polygons cross the horizon (top left and top right). Maps occupy only the middle ~40 % of the height, with large empty bands above and below.
+      Background: warm off-white #FAF8F1 page. Each map interior is filled with the slightly lighter elevated surface, framed by a soft inkSoft outline (rectangle for Mercator, ellipse for Mollweide, circle for Orthographic).
+      Chrome: bold centered title "map-projections · javascript · muix · anyplot.ai" in dark ink with a grey subtitle beneath. Each panel has a bold title (Mercator (Cylindrical), Mollweide (Pseudocylindrical), Orthographic (Azimuthal)), a property subtitle and an italic distortion note under the map. A one-row legend at the bottom: Land & coastline, Country border, Tissot indicatrix (550 km radius), 30° graticule. All text is dark on light and fully readable; nothing is clipped.
+      Data: grey translucent land with darker coastlines and thin country borders. The faint graticule curves with each projection, with a dashed equator and prime meridian. Brand-green #009E73 translucent Tissot circles sit at 30° intervals: circular and growing toward ±60° on Mercator, sheared equal-area ellipses on Mollweide, foreshortened toward the limb on the globe (centered 20°N, 0°E). Antarctica is a wide band at the bottom of the Mercator map (clipped at 85°).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 page with slightly lighter map interiors and light outlines.
-      Chrome: title, headings, subtitles, notes and footer legend all in light ink tokens; no dark-on-dark text. Graticule lines subtle but visible.
-      Data: same geometry; Tissot green identical to the light render; landmasses mid-grey with light outlines, borders light dotted. Brand green reads well on the dark surface.
+      Background: warm near-black #1A1A17 page with a slightly lifted elevated surface inside each map outline. The outlines are drawn in light inkSoft.
+      Chrome: title in light ink, subtitles, panel subtitles, notes and legend in light grey. No dark-on-dark text anywhere; all text readable.
+      Data: Tissot fill and outline are the same #009E73 as in the light render. Land is light grey at low alpha with light coastlines and borders, and the graticule is faint light grey. Only the chrome flipped.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -86,75 +78,76 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 22 px, headings 18 px, subtitles/notes/legend 14 px CSS; all
-          readable in both themes
+        comment: Title 26 px, panel titles 20 px, subtitles, notes and legend 15–17
+          px CSS. All readable in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; Tissot ellipses over land are intended overlays
+        comment: No text collisions. Tissot circles over land are translucent by design.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Landmasses, graticule, Tissot indicatrices and footer glyphs visible
-          in both themes and matching the marks
+        comment: All marks visible in both themes, but the land and Tissot legend
+          swatches use different alpha from the map marks (defect line).
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Neutral grey land vs single green overlay; no red-green signal
+        comment: Neutral grey land plus one green accent. No red-green reliance.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Maps fill only the middle ~40 % of the height; notes stranded near
-          the footer (defect line)
+        passed: true
+        comment: Three panels share one center line. Title well proportioned, nothing
+          overflows or clips.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes; every panel names its projection and family
+        comment: No axes by design (N/A). Panel titles name each projection and its
+          family.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint #009E73 for Tissot, neutral land, #FAF8F1 / #1A1A17 pages,
-          theme-correct chrome'
+        comment: 'Tissot circles use #009E73 in both themes, land is neutral, backgrounds
+          are #FAF8F1 / #1A1A17.'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Three-level panel typography (projection name, property subtitle,
-          distortion note) chosen beyond the baseline
+        passed: true
+        comment: 'A four-level type hierarchy beyond the baseline: main title + subtitle,
+          bold panel titles with property subtitles, italic distortion notes.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Equator and prime meridian emphasised over a lighter graticule; maps
-          clipped to and outlined by their projection boundary; panel widths weighted
-          by aspect ratio
+        passed: true
+        comment: Deliberate line-weight ladder (graticule 0.8 @0.28, borders 0.6,
+          coastlines 0.9, dashed equator and prime meridian), maps aligned on a shared
+          center line, width weights balanced by aspect ratio.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Subtitle and note per panel name what each projection preserves and
-          distorts, guiding the comparison
+        passed: true
+        comment: Each panel states the preserved property and the distortion it causes,
+          so the Tissot circles become the focal comparison across the row.
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -162,109 +155,113 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: World maps in multiple projections side by side
+        comment: World maps in several projections, side by side.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Graticule, projection labels, Tissot (optional) present; Orthographic
-          coastlines broken by horizon chords (defect line)
+        passed: true
+        comment: Coastlines and borders, 30° graticule lighter than the coastlines,
+          each map labelled by projection, optional Tissot indicatrices at regular
+          positions, neutral land.
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: False land slivers in the Orthographic panel put land where there
-          is none (defect line)
+        passed: true
+        comment: Projection formulas correct (Mercator ln tan, Mollweide with a Newton
+          θ, orthographic with horizon clipping). Features sit at their coordinates.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title exact; footer legend entries readable
+        comment: Title matches the mandated format. Legend entries match the drawn
+          layers.
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Country borders only as 11 sketch lines; coastlines coarse (defect
-          line)
+        passed: true
+        comment: Shows conformal size inflation, equal-area shape shear and azimuthal
+          foreshortening.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real world geography, neutral
+        comment: Real world geography (simplified coastlines and borders), neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: Mercator Tissot radius at ±60° about twice the equatorial
-          one (sec φ); Mollweide sizes constant; orthographic centre matches the 20°N,
-          0°E subtitle; Mercator clipped at 82°'
+        comment: 'Checked: Mercator Tissot radius at 60° is about 2× the equator''s
+          (sec 60° = 2). Mollweide ellipses keep roughly equal area. Orthographic
+          centered at 20°N 0°E as labelled.'
     code_quality:
       score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: GeoOverlay component is required for the scale hooks inside ChartsContainer
+        comment: Many helper functions. outlineOf and LegendItem are not needed (defect
+          line).
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic
+        comment: Hard-coded deterministic data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: ChartsContainer, useXScale, useYScale all used
+        comment: ChartsContainer, useXScale and useYScale are all used.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Six copy-pasted path-builder loops (defect line)
+        passed: true
+        comment: No available projection call (only @mui/x-charts/@mui/material),
+          so the hand-written projection math is justified.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation set;
-          harness writes PNG + HTML
+        comment: Default-exported component, skipAnimation, v9 ChartsContainer, hidden
+          axes via position none.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: false
-        comment: ChartsContainer with hidden linear axes as a coordinate system and
-          scale hooks for custom SVG — the composition API
+        passed: true
+        comment: Uses the v9 composition API (ChartsContainer + child overlay reading
+          the scales) instead of fighting a high-level chart.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Custom overlay component driven by useXScale/useYScale inside ChartsContainer
-          is MUI X's composition pattern
-  verdict: REJECTED
+        passed: true
+        comment: MUI X scale hooks (useXScale/useYScale) drive custom SVG inside the
+          chart's coordinate system, one ChartsContainer per panel.
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T10:50:41Z'
+  rendered_at: '2026-10-24T11:08:24Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -274,9 +271,10 @@ impl_tags:
   - annotations
   - html-export
   patterns:
+  - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - interpolation
   styling:
   - minimal-chrome
   - alpha-blending
-  - grid-styling
