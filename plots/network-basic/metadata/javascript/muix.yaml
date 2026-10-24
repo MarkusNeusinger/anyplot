@@ -2,127 +2,132 @@ library: muix
 language: javascript
 specification_id: network-basic
 created: '2026-07-24T04:26:13Z'
-updated: '2026-07-24T04:40:27Z'
-generated_by: claude-sonnet
-workflow_run: 30066443636
+updated: '2026-10-24T11:10:57Z'
+generated_by: gemini-4-argon
+adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
+workflow_run: 40088213440
 issue: 989
-language_version: 22.23.1
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-basic/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-basic/javascript/muix/plot-dark.html
-quality_score: 91
+quality_score: 85
 review:
   strengths:
-  - Aisha label now sits in the widest angular gap between her edges, so the Aisha↔Ruby
-    bridge edge no longer cuts through the text (fixed from Attempt 1's VQ-02 finding).
-  - Node label fontSize bumped 13px → 15px, improving legibility at thumbnail scale
-    (Attempt 1's VQ-01 finding).
-  - Deterministic force-directed (Fruchterman-Reingold) layout computed in-code with
-    no RNG — reproducible and algorithmically genuine, not a canned layout.
-  - Clever use of useXScale/useYScale + custom SVG marks inside ChartContainer to
-    build a network graph — a type MUI X has no built-in component for — while staying
-    entirely within the community @mui/x-charts surface.
-  - Node radius encodes degree centrality, color encodes friend-circle group with
-    a matching hand-built legend, edges drawn with subtle low-opacity strokes for
-    legibility.
-  - Canvas exactly 2400×2400, matching the declared square orientation directive;
-    identical data colors across both themes.
+  - The Fruchterman–Reingold layout, seeded by social circle, splits the 20 people
+    into four clear clusters joined by a few bridging edges, so connected nodes sit
+    together and the groups read at a glance in both themes
+  - Each label goes in the widest angular gap between its node's edges and carries
+    a page-coloured halo (paintOrder stroke), so no label collides with an edge, a
+    node or another label
+  - Edges at 1.6 px in inkSoft with 0.42 opacity stay clearly thinner and lighter
+    than the nodes, so every connection can be followed from end to end
+  - 'Composes the network inside ChartsContainer and maps the layout coordinates through
+    the useXScale/useYScale hooks, with hidden axes (position: ''none'') and skipAnimation'
+  - 'The theme tokens carry all chrome, so title, labels, legend and caption are readable
+    on both #FAF8F1 and #1A1A17, and the group colours come from t.palette in canonical
+    Imprint order (Family = #009E73)'
   weaknesses:
-  - At ~400px thumbnail scale, the now-15px node labels (20 of them) are still fairly
-    small given graph density — largely unavoidable for a 20-node labeled network
-    at that resolution, but a touch more contrast/weight could help.
-  - 'Design Excellence remains mid-pack (14/20): the layout, palette and legend are
-    competent but stop short of a distinctive visual signature beyond the degree-sized
-    nodes.'
+  - 'DQ-01 (both): every node has degree 3 or 4, so the node-size-by-degree encoding
+    shows two nearly identical sizes and the graph has no central node, which the
+    spec''s Description names as something a network graph reveals → generate edges
+    so degrees range from about 1–2 (peripheral) to 6–8 (one or two hubs). Likely
+    cause: the edge list gives each person three to four ties.'
+  - 'Suggestion: render the group key with MUI X''s ChartsLegend instead of the hand-drawn
+    SVG legend, so the legend uses the library''s own component.'
+  - 'Suggestion: tighten the empty band between the lowest node (Marcus) and the caption
+    so the network fills the square more evenly.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Bold dark-ink title "network-basic · javascript · muix · anyplot.ai" centered at top; hand-built legend (top-left) lists Family/College/Work/Neighbors with color swatches and dark-ink text. No axes/ticks/gridlines, which is correct for a node-link diagram.
-      Data: 20 nodes colored by group (Family=brand green #009E73, College=lavender, Work=blue, Neighbors=ochre), radius scaled by degree, connected by ~32 thin semi-transparent gray edges including 6 bridge edges linking the four clusters. The Aisha label (fixed in this attempt) is now offset into the open angular gap between her edges and is no longer crossed by the Aisha↔Ruby bridge line.
+      Background: warm off-white #FAF8F1 across the whole 2400x2400 square canvas; no axes or grid.
+      Chrome: bold centred title "network-basic · javascript · muix · anyplot.ai" in dark ink; top-left legend Family / College / Work / Neighbors with coloured dots; muted caption at the bottom "Fruchterman–Reingold force-directed layout · Node color = Social circle · Node size = degree". All text dark on light and readable.
+      Data: 20 nodes in four clusters: Family green #009E73 (right), College purple (top), Work blue (left), Neighbors ochre (bottom). Grey translucent edges, a few bridging edges between clusters, one crossing (Aisha–Ruby over Omar–Noah). Node labels in dark ink with page-coloured halos, each clear of edges and nodes. Node sizes differ only slightly (degree 3 vs 4).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Same title and legend, rendered in light/cream ink — fully readable, no dark-on-dark issues.
-      Data: Node and edge colors are pixel-identical to the light render (only chrome flipped, as required); layout, node sizes, and label placement are unchanged (deterministic, no re-randomization between themes).
+      Background: warm near-black #1A1A17.
+      Chrome: title, legend text and node labels in light ink, caption in muted light grey; no dark-on-dark text.
+      Data: same node positions and the same four group colours as the light render (green, purple, blue, ochre); edges flip to a mid grey that stays visible but subtle.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Readable at full size in both themes; label fontSize bumped 13→15px
-          improves thumbnail legibility vs Attempt 1, though 20 labels on a dense
-          graph still shrink at ~400px
+        comment: Explicit sizes (title 22, labels 18, caption 16 CSS px); readable
+          in both themes, halos keep labels crisp over edges
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 'Fixed: Aisha label now placed in the widest angular gap between
-          her edges, no longer crossed by the Aisha↔Ruby bridge edge'
+        comment: Labels placed in the widest edge gap; no label touches an edge, node
+          or other label
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Degree-scaled node radii, low-opacity edge strokes, clearly legible
-          sparse graph
+        comment: 20 nodes at radius 15–18 px are prominent, edges thin and visible,
+          legend dots match node colours in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Four distinct Imprint hues, no red-green-only encoding
+        comment: Green/purple/blue/ochre are CVD-distinct, and the clusters are also
+          told apart by position
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas exactly 2400x2400 (square directive), balanced, nothing clipped
+        comment: Square 2400x2400 canvas, network centred, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes shown (correct for this chart type), descriptive title
+        comment: 'N/A: no axes on a network; the caption names the encodings'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Family=palette[0]/brand green in canonical order, identical data
-          colors across themes, correct theme backgrounds
+        comment: 't.palette in canonical order, first group #009E73; backgrounds #FAF8F1
+          / #1A1A17; data colours identical across themes'
     design_excellence:
-      score: 14
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom force-directed layout, degree-encoded sizing, matching legend
+        comment: Three-level type hierarchy (600 title, 500 labels, muted inkSoft
+          caption) and page-coloured node outlines go beyond the baseline
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Axes/gridlines fully absent, subtle low-opacity edges, generous whitespace
+        comment: Each label goes in its node's widest edge gap, with an anchor chosen
+          by direction and a page-coloured halo
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Color-coded clusters + visible bridges tell a clear community-structure
-          story; size adds a centrality signal
+        comment: Clusters are readable, but the implementation chose no focal point
+          or hierarchy beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -132,110 +137,122 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Node-link network diagram, correct type
+        comment: Node-link diagram; only the allowed size-by-degree and colour-by-group
+          encodings, both named
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Force-directed layout, degree-based sizing, legible labels
+        comment: Force-directed layout, no axes or grid, sparse edges thinner and
+          lighter than the nodes, legible labels, a legend and a caption for the encodings
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 20 nodes / edges rendered correctly
+        comment: Layout-positioned type; every edge links its two named nodes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly; legend matches group names
+        comment: Mandated title format; legend entries match the group names
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Clustering, bridges, and degree centrality all shown
+        comment: Clusters and bridges shown, but every degree is 3–4, so no central
+          node stands out and the size encoding barely varies (defect line)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral social-network scenario
+        comment: A friendship network of 20 people in four social circles, matching
+          the spec's example; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 20 nodes / ~32 edges within the spec's 10-50 node range
+        comment: 20 nodes and 34 edges, inside the 10–50 range and sparse; the spec
+          has no Check values
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Necessary helper functions for the layout algorithm and React components
+        comment: Module-level data and layout; NetworkOverlay is required because
+          the scale hooks need a child component
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, no RNG
+        comment: Hard-coded data and a deterministic, seeded layout
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ChartContainer, useXScale, useYScale imported and used
+        comment: ChartsContainer and useXScale/useYScale, all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, appropriate complexity for a custom network render
+        comment: MUI X has no graph layout, so the short written-out Fruchterman–Reingold
+          loop is the available path
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exports Chart, skipAnimation set, no manual mounting
+        comment: Default export, v9 ChartsContainer path, skipAnimation, sized from
+          ANYPLOT_SIZE
     library_mastery:
-      score: 9
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: ChartContainer + useXScale/useYScale hooks for custom marks is the
-          documented community-only path for a chart type MUI X has no built-in component
-          for
+        comment: v9 composition API used correctly; the legend is hand-drawn SVG rather
+          than ChartsLegend
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
         passed: true
-        comment: Custom force-directed layout and degree-based encoding are genuinely
-          distinctive
+        comment: useXScale/useYScale hooks map custom SVG marks through MUI X's scale
+          system inside ChartsContainer
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-10-24T11:08:03Z'
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
+  - layer-composition
+  - annotations
+  - html-export
+  patterns: []
+  dataprep:
   - force-directed-layout
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
   styling:
+  - minimal-chrome
   - alpha-blending
   - edge-highlighting
