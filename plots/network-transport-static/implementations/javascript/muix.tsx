@@ -4,98 +4,175 @@
 // Quality: 87/100 | Created: 2026-09-02
 //# anyplot-orientation: square
 
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
+
+// Constants
 const FONT = "Inter, system-ui, -apple-system, sans-serif";
-
-// --- Data: a regional commuter-rail network — four branches radiating from a
-// Central interchange, plus a limited-stop express to the coast. --------------
-const STATIONS = [
-  { id: "CTR", label: "Central", x: 0, y: 0 },
-  { id: "NJC", label: "North Jct.", x: 0, y: 2.4 },
-  { id: "UPT", label: "Uptown", x: 0.9, y: 4.6 },
-  { id: "EPT", label: "Eastport", x: 2.8, y: 0 },
-  { id: "HBS", label: "Harborside", x: 5.6, y: 0 },
-  { id: "WFD", label: "Westfield", x: -2.8, y: 0 },
-  { id: "WBK", label: "Westbrook", x: -5.4, y: 0.9 },
-  { id: "SGT", label: "Southgate", x: 0, y: -2.6 },
-  { id: "SPK", label: "Southpark", x: 0.7, y: -5.0 },
-];
-
-const TYPES = ["Regional", "Local", "Express"];
-const TYPE_COLOR = {
-  Regional: t.palette[0],
-  Local: t.palette[1],
-  Express: t.palette[2],
+const TITLE = "network-transport-static · javascript · muix · anyplot.ai";
+const TITLE_H = 54;
+const LEGEND_H = 36;
+const CAPTION_H = 32;
+const HUB_RADIUS = 46;
+const BASE_STATION_RADIUS = 17;
+const DEGREE_RADIUS_STEP = 1.4;
+const DOMAIN_SPAN_MULT = 1.3;
+const DEFAULT_BOW_PX = 18;
+const ROUTE_TYPE_STYLES: Record<
+  string,
+  { dashed: boolean; bowShare?: number; strokeWidth: number; labelT: number }
+> = {
+  Express: { dashed: true, bowShare: 0.28, strokeWidth: 2.5, labelT: 0.5 },
 };
+const DEFAULT_ROUTE_STYLE = { dashed: false, strokeWidth: 2, labelT: 0.54 };
 
-// Trunk segments (touching the Central interchange) run both directions.
-// Branch-tip segments run both directions too. The Harborside express skips
-// Eastport entirely, so it is drawn as a bowed arc rather than a straight edge.
-const ROUTES = [
-  { source_id: "CTR", target_id: "NJC", route_id: "R10", departure_time: "07:05", arrival_time: "07:12", type: "Regional" },
-  { source_id: "NJC", target_id: "CTR", route_id: "R11", departure_time: "07:20", arrival_time: "07:27", type: "Regional" },
-  { source_id: "CTR", target_id: "EPT", route_id: "R20", departure_time: "07:00", arrival_time: "07:14", type: "Regional" },
-  { source_id: "EPT", target_id: "CTR", route_id: "R21", departure_time: "07:20", arrival_time: "07:34", type: "Regional" },
-  { source_id: "CTR", target_id: "WFD", route_id: "R30", departure_time: "07:05", arrival_time: "07:17", type: "Regional" },
-  { source_id: "WFD", target_id: "CTR", route_id: "R31", departure_time: "07:25", arrival_time: "07:37", type: "Regional" },
-  { source_id: "CTR", target_id: "SGT", route_id: "R40", departure_time: "07:10", arrival_time: "07:19", type: "Regional" },
-  { source_id: "SGT", target_id: "CTR", route_id: "R41", departure_time: "07:25", arrival_time: "07:34", type: "Regional" },
-  { source_id: "NJC", target_id: "UPT", route_id: "L12", departure_time: "07:15", arrival_time: "07:26", type: "Local" },
-  { source_id: "UPT", target_id: "NJC", route_id: "L13", departure_time: "07:35", arrival_time: "07:46", type: "Local" },
-  { source_id: "EPT", target_id: "HBS", route_id: "L22", departure_time: "07:18", arrival_time: "07:33", type: "Local" },
-  { source_id: "HBS", target_id: "EPT", route_id: "L23", departure_time: "07:40", arrival_time: "07:55", type: "Local" },
-  { source_id: "WFD", target_id: "WBK", route_id: "L32", departure_time: "07:20", arrival_time: "07:34", type: "Local" },
-  { source_id: "WBK", target_id: "WFD", route_id: "L33", departure_time: "07:42", arrival_time: "07:56", type: "Local" },
-  { source_id: "SGT", target_id: "SPK", route_id: "L42", departure_time: "07:22", arrival_time: "07:38", type: "Local" },
-  { source_id: "SPK", target_id: "SGT", route_id: "L43", departure_time: "07:45", arrival_time: "08:01", type: "Local" },
-  { source_id: "CTR", target_id: "HBS", route_id: "EX1", departure_time: "07:00", arrival_time: "07:28", type: "Express" },
-  { source_id: "HBS", target_id: "CTR", route_id: "EX2", departure_time: "07:35", arrival_time: "08:03", type: "Express" },
+// Columns: set these to your data's column names
+const STATION_ID = "Station code"; // role: node
+const STATION_NAME = "Station name"; // role: label
+const STATION_X = "East-west offset (km)"; // role: x
+const STATION_Y = "North-south offset (km)"; // role: y
+const ROUTE_ID = "Route ID"; // role: id
+const ROUTE_TYPE = "Service type"; // role: group
+const DEP_TIME = "Departure"; // role: start
+const ARR_TIME = "Arrival"; // role: end
+const SOURCE = "Origin station"; // role: source
+const TARGET = "Destination station"; // role: target
+
+// Data: replace this block with your own records
+const stations: Array<Record<string, string | number>> = [
+  { [STATION_ID]: "CTR", [STATION_NAME]: "Central", [STATION_X]: 0, [STATION_Y]: 0 },
+  { [STATION_ID]: "NJC", [STATION_NAME]: "North Jct.", [STATION_X]: 0, [STATION_Y]: 2.4 },
+  { [STATION_ID]: "EPT", [STATION_NAME]: "Eastport", [STATION_X]: 2.8, [STATION_Y]: 0 },
+  { [STATION_ID]: "WFD", [STATION_NAME]: "Westfield", [STATION_X]: -2.8, [STATION_Y]: 0 },
+  { [STATION_ID]: "SGT", [STATION_NAME]: "Southgate", [STATION_X]: 0, [STATION_Y]: -2.6 },
+  { [STATION_ID]: "UPT", [STATION_NAME]: "Uptown", [STATION_X]: 0.9, [STATION_Y]: 4.6 },
+  { [STATION_ID]: "HBS", [STATION_NAME]: "Harborside", [STATION_X]: 5.6, [STATION_Y]: 0 },
+  { [STATION_ID]: "WBK", [STATION_NAME]: "Westbrook", [STATION_X]: -5.4, [STATION_Y]: 0.9 },
+  { [STATION_ID]: "SPK", [STATION_NAME]: "Southpark", [STATION_X]: 0.7, [STATION_Y]: -5.0 },
 ];
 
-const DEGREE = {};
-STATIONS.forEach((s) => (DEGREE[s.id] = 0));
-ROUTES.forEach((r) => {
-  DEGREE[r.source_id] += 1;
-  DEGREE[r.target_id] += 1;
-});
+const data: Array<Record<string, string>> = [
+  { [ROUTE_ID]: "R10", [ROUTE_TYPE]: "Regional", [DEP_TIME]: "07:05", [ARR_TIME]: "07:12", [SOURCE]: "CTR", [TARGET]: "NJC" },
+  { [ROUTE_ID]: "R11", [ROUTE_TYPE]: "Regional", [DEP_TIME]: "07:20", [ARR_TIME]: "07:27", [SOURCE]: "NJC", [TARGET]: "CTR" },
+  { [ROUTE_ID]: "R20", [ROUTE_TYPE]: "Regional", [DEP_TIME]: "07:00", [ARR_TIME]: "07:14", [SOURCE]: "CTR", [TARGET]: "EPT" },
+  { [ROUTE_ID]: "R21", [ROUTE_TYPE]: "Regional", [DEP_TIME]: "07:20", [ARR_TIME]: "07:34", [SOURCE]: "EPT", [TARGET]: "CTR" },
+  { [ROUTE_ID]: "R30", [ROUTE_TYPE]: "Regional", [DEP_TIME]: "07:05", [ARR_TIME]: "07:17", [SOURCE]: "CTR", [TARGET]: "WFD" },
+  { [ROUTE_ID]: "R31", [ROUTE_TYPE]: "Regional", [DEP_TIME]: "07:25", [ARR_TIME]: "07:37", [SOURCE]: "WFD", [TARGET]: "CTR" },
+  { [ROUTE_ID]: "R40", [ROUTE_TYPE]: "Regional", [DEP_TIME]: "07:10", [ARR_TIME]: "07:19", [SOURCE]: "CTR", [TARGET]: "SGT" },
+  { [ROUTE_ID]: "R41", [ROUTE_TYPE]: "Regional", [DEP_TIME]: "07:25", [ARR_TIME]: "07:34", [SOURCE]: "SGT", [TARGET]: "CTR" },
+  { [ROUTE_ID]: "L12", [ROUTE_TYPE]: "Local", [DEP_TIME]: "07:15", [ARR_TIME]: "07:26", [SOURCE]: "NJC", [TARGET]: "UPT" },
+  { [ROUTE_ID]: "L13", [ROUTE_TYPE]: "Local", [DEP_TIME]: "07:35", [ARR_TIME]: "07:46", [SOURCE]: "UPT", [TARGET]: "NJC" },
+  { [ROUTE_ID]: "L22", [ROUTE_TYPE]: "Local", [DEP_TIME]: "07:18", [ARR_TIME]: "07:33", [SOURCE]: "EPT", [TARGET]: "HBS" },
+  { [ROUTE_ID]: "L23", [ROUTE_TYPE]: "Local", [DEP_TIME]: "07:40", [ARR_TIME]: "07:55", [SOURCE]: "HBS", [TARGET]: "EPT" },
+  { [ROUTE_ID]: "L32", [ROUTE_TYPE]: "Local", [DEP_TIME]: "07:20", [ARR_TIME]: "07:34", [SOURCE]: "WFD", [TARGET]: "WBK" },
+  { [ROUTE_ID]: "L33", [ROUTE_TYPE]: "Local", [DEP_TIME]: "07:42", [ARR_TIME]: "07:56", [SOURCE]: "WBK", [TARGET]: "WFD" },
+  { [ROUTE_ID]: "L42", [ROUTE_TYPE]: "Local", [DEP_TIME]: "07:22", [ARR_TIME]: "07:38", [SOURCE]: "SGT", [TARGET]: "SPK" },
+  { [ROUTE_ID]: "L43", [ROUTE_TYPE]: "Local", [DEP_TIME]: "07:45", [ARR_TIME]: "08:01", [SOURCE]: "SPK", [TARGET]: "SGT" },
+  { [ROUTE_ID]: "EX1", [ROUTE_TYPE]: "Express", [DEP_TIME]: "07:00", [ARR_TIME]: "07:28", [SOURCE]: "CTR", [TARGET]: "HBS" },
+  { [ROUTE_ID]: "EX2", [ROUTE_TYPE]: "Express", [DEP_TIME]: "07:35", [ARR_TIME]: "08:03", [SOURCE]: "HBS", [TARGET]: "CTR" },
+];
 
-function nodeRadius(id) {
-  // The Central interchange is drawn larger, with its full name inside the
-  // circle instead of an external label — see Stations().
-  if (id === "CTR") return 46;
-  return 13 + DEGREE[id] * 1.4;
+// Plot: reads only data and the constants above
+const routeTypes: string[] = [];
+for (const row of data) {
+  const rt = String(row[ROUTE_TYPE]);
+  if (!routeTypes.includes(rt)) routeTypes.push(rt);
+}
+const typeColorMap: Record<string, string> = {};
+for (let i = 0; i < routeTypes.length; i += 1) {
+  typeColorMap[routeTypes[i]] = t.palette[i];
 }
 
-// --- Square-friendly domain: bounding box of station coordinates, padded ----
-const xs = STATIONS.map((s) => s.x);
-const ys = STATIONS.map((s) => s.y);
+interface StationInfo {
+  id: string;
+  label: string;
+  x: number;
+  y: number;
+  degree: number;
+  radius: number;
+  isHub: boolean;
+  neighbors: string[];
+}
+
+const stationById = new Map<string, StationInfo>();
+const stationList: StationInfo[] = [];
+
+for (const row of stations) {
+  const info: StationInfo = {
+    id: String(row[STATION_ID]),
+    label: String(row[STATION_NAME]),
+    x: Number(row[STATION_X]),
+    y: Number(row[STATION_Y]),
+    degree: 0,
+    radius: BASE_STATION_RADIUS,
+    isHub: false,
+    neighbors: [],
+  };
+  stationById.set(info.id, info);
+  stationList.push(info);
+}
+
+interface RouteInfo {
+  routeId: string;
+  routeType: string;
+  departureTime: string;
+  arrivalTime: string;
+  sourceId: string;
+  targetId: string;
+}
+
+const routes: RouteInfo[] = [];
+for (const row of data) {
+  const sId = String(row[SOURCE]);
+  const tId = String(row[TARGET]);
+  const sInfo = stationById.get(sId)!;
+  const tInfo = stationById.get(tId)!;
+  sInfo.degree += 1;
+  tInfo.degree += 1;
+  if (!sInfo.neighbors.includes(tId)) sInfo.neighbors.push(tId);
+  if (!tInfo.neighbors.includes(sId)) tInfo.neighbors.push(sId);
+  routes.push({
+    routeId: String(row[ROUTE_ID]),
+    routeType: String(row[ROUTE_TYPE]),
+    departureTime: String(row[DEP_TIME]),
+    arrivalTime: String(row[ARR_TIME]),
+    sourceId: sId,
+    targetId: tId,
+  });
+}
+
+const maxStationDegree = Math.max(...stationList.map((s) => s.degree));
+let hubStation = stationList[0];
+for (const station of stationList) {
+  station.isHub = station.degree === maxStationDegree;
+  if (station.isHub) hubStation = station;
+  station.radius = station.isHub
+    ? HUB_RADIUS
+    : BASE_STATION_RADIUS + station.degree * DEGREE_RADIUS_STEP;
+}
+
+const xs = stationList.map((s) => s.x);
+const ys = stationList.map((s) => s.y);
 const minX = Math.min(...xs);
 const maxX = Math.max(...xs);
 const minY = Math.min(...ys);
 const maxY = Math.max(...ys);
 const centerX = (minX + maxX) / 2;
 const centerY = (minY + maxY) / 2;
-const halfSpan = (Math.max(maxX - minX, maxY - minY) / 2) * 1.3;
-const X_DOMAIN = [centerX - halfSpan, centerX + halfSpan];
-const Y_DOMAIN = [centerY - halfSpan, centerY + halfSpan];
+const halfSpan = (Math.max(maxX - minX, maxY - minY) / 2) * DOMAIN_SPAN_MULT;
+const xDomain = [centerX - halfSpan, centerX + halfSpan];
+const yDomain = [centerY - halfSpan, centerY + halfSpan];
 
-const stationById = Object.fromEntries(STATIONS.map((s) => [s.id, s]));
-
-// --- Custom marks — drawn on the MUI X coordinate system --------------------
-// Directed edges as quadratic-bezier curves: opposite-direction services on
-// the same corridor bow to opposite sides (parallel offset), and the
-// skip-stop express bows well clear of the Eastport node it passes over.
-function RouteEdges() {
+function TransportNetworkOverlay() {
   const xScale = useXScale();
   const yScale = useYScale();
 
   return (
     <g fontFamily={FONT}>
       <defs>
-        {TYPES.map((type) => (
+        {routeTypes.map((type) => (
           <marker
             key={type}
             id={`arrow-${type}`}
@@ -105,69 +182,66 @@ function RouteEdges() {
             refY="3"
             orient="auto"
           >
-            <path d="M0,0 L7,3 L0,6 Z" fill={TYPE_COLOR[type]} />
+            <path d="M0,0 L7,3 L0,6 Z" fill={typeColorMap[type]} />
           </marker>
         ))}
       </defs>
-      {ROUTES.map((route) => {
-        const source = stationById[route.source_id];
-        const target = stationById[route.target_id];
-        const sx = xScale(source.x);
-        const sy = yScale(source.y);
-        const tx = xScale(target.x);
-        const ty = yScale(target.y);
+
+      {routes.map((route) => {
+        const source = stationById.get(route.sourceId)!;
+        const target = stationById.get(route.targetId)!;
+        const sx = Number(xScale(source.x));
+        const sy = Number(yScale(source.y));
+        const tx = Number(xScale(target.x));
+        const ty = Number(yScale(target.y));
         const dx = tx - sx;
         const dy = ty - sy;
-        const length = Math.hypot(dx, dy) || 1;
+        const length = Math.hypot(dx, dy);
 
-        // Perpendicular is derived from a *canonical* (sorted) pair direction,
-        // not the route's own source→target direction — otherwise reversing
-        // the route also flips the perpendicular, cancelling out the side
-        // assignment below and stacking both directions on the same side.
-        const [aId, bId] = route.source_id < route.target_id ? [route.source_id, route.target_id] : [route.target_id, route.source_id];
-        const aPoint = { x: xScale(stationById[aId].x), y: yScale(stationById[aId].y) };
-        const bPoint = { x: xScale(stationById[bId].x), y: yScale(stationById[bId].y) };
-        const canonLength = Math.hypot(bPoint.x - aPoint.x, bPoint.y - aPoint.y) || 1;
+        const [aId, bId] =
+          route.sourceId < route.targetId
+            ? [route.sourceId, route.targetId]
+            : [route.targetId, route.sourceId];
+        const aStation = stationById.get(aId)!;
+        const bStation = stationById.get(bId)!;
+        const aPoint = { x: Number(xScale(aStation.x)), y: Number(yScale(aStation.y)) };
+        const bPoint = { x: Number(xScale(bStation.x)), y: Number(yScale(bStation.y)) };
+        const canonLength = Math.hypot(bPoint.x - aPoint.x, bPoint.y - aPoint.y);
         const perpX = -(bPoint.y - aPoint.y) / canonLength;
         const perpY = (bPoint.x - aPoint.x) / canonLength;
-        const sign = route.source_id === aId ? -1 : 1;
+        const sign = route.sourceId === aId ? -1 : 1;
 
-        const isExpress = route.type === "Express";
-        const offset = isExpress ? length * 0.22 : 17;
-        const midX = (sx + tx) / 2 + perpX * offset * sign;
-        const midY = (sy + ty) / 2 + perpY * offset * sign;
-
-        // Pull the endpoints back to the node rims so arrowheads land on the
-        // circle edge instead of under the fill.
-        const sourceR = nodeRadius(route.source_id);
-        const targetR = nodeRadius(route.target_id);
-        const startX = sx + (dx / length) * (sourceR + 2);
-        const startY = sy + (dy / length) * (sourceR + 2);
-        const endX = tx - (dx / length) * (targetR + 5);
-        const endY = ty - (dy / length) * (targetR + 5);
+        const rStyle = ROUTE_TYPE_STYLES[route.routeType] ?? DEFAULT_ROUTE_STYLE;
+        const offset = rStyle.bowShare !== undefined ? length * rStyle.bowShare : DEFAULT_BOW_PX;
+        const startX = sx + (dx / length) * (source.radius + 2);
+        const startY = sy + (dy / length) * (source.radius + 2);
+        const endX = tx - (dx / length) * (target.radius + 5);
+        const endY = ty - (dy / length) * (target.radius + 5);
+        const midX = (startX + endX) / 2 + perpX * offset * sign;
+        const midY = (startY + endY) / 2 + perpY * offset * sign;
 
         const d = `M ${startX} ${startY} Q ${midX} ${midY} ${endX} ${endY}`;
 
-        // Label sits ~60% along the curve, nudged further out — this keeps
-        // it beside its own line, not on top of it.
-        const lt = 0.62;
-        const labelX =
-          (1 - lt) ** 2 * sx + 2 * (1 - lt) * lt * midX + lt ** 2 * tx + perpX * 24 * sign;
-        const labelY =
-          (1 - lt) ** 2 * sy + 2 * (1 - lt) * lt * midY + lt ** 2 * ty + perpY * 24 * sign;
-        const text = `${route.route_id} ${route.departure_time}→${route.arrival_time}`;
-        const boxW = text.length * 7.3 + 10;
-        const tooltip = `${route.route_id}: ${source.label} → ${target.label} (${route.departure_time} → ${route.arrival_time}, ${route.type})`;
+        const lt = rStyle.labelT;
+        const curveX = (1 - lt) ** 2 * startX + 2 * (1 - lt) * lt * midX + lt ** 2 * endX;
+        const curveY = (1 - lt) ** 2 * startY + 2 * (1 - lt) * lt * midY + lt ** 2 * endY;
+        const text = `${route.routeId} ${route.departureTime}→${route.arrivalTime}`;
+        const boxW = text.length * 7.4 + 10;
+        const normPerpX = perpX * sign;
+        const normPerpY = perpY * sign;
+        const labelX = curveX + normPerpX * (boxW * 0.5 + 10);
+        const labelY = curveY + normPerpY * 22;
+        const tooltip = `${route.routeId}: ${source.label} → ${target.label} (${route.departureTime} → ${route.arrivalTime}, ${route.routeType})`;
 
         return (
-          <g key={route.route_id}>
+          <g key={route.routeId}>
             <path
               d={d}
               fill="none"
-              stroke={TYPE_COLOR[route.type]}
-              strokeWidth={isExpress ? 2.5 : 2}
-              strokeDasharray={isExpress ? "9 6" : undefined}
-              markerEnd={`url(#arrow-${route.type})`}
+              stroke={typeColorMap[route.routeType]}
+              strokeWidth={rStyle.strokeWidth}
+              strokeDasharray={rStyle.dashed ? "9 6" : undefined}
+              markerEnd={`url(#arrow-${route.routeType})`}
             >
               <title>{tooltip}</title>
             </path>
@@ -182,65 +256,51 @@ function RouteEdges() {
             >
               <title>{tooltip}</title>
             </rect>
-            <text x={labelX} y={labelY} fontSize={14} fill={t.ink} textAnchor="middle" dominantBaseline="middle">
+            <text
+              x={labelX}
+              y={labelY}
+              fontSize={14}
+              fill={t.ink}
+              textAnchor="middle"
+              dominantBaseline="middle"
+            >
               {text}
             </text>
           </g>
         );
       })}
-    </g>
-  );
-}
 
-// Each station's neighbors, deduplicated across both route directions — used
-// to find the widest angular gap for label placement below.
-const NEIGHBORS_BY_STATION = Object.fromEntries(
-  STATIONS.map((station) => {
-    const ids = new Set();
-    ROUTES.forEach((route) => {
-      if (route.source_id === station.id) ids.add(route.target_id);
-      if (route.target_id === station.id) ids.add(route.source_id);
-    });
-    return [station.id, Array.from(ids)];
-  }),
-);
+      {stationList.map((station) => {
+        const cx = Number(xScale(station.x));
+        const cy = Number(yScale(station.y));
+        const r = station.radius;
+        const fill = station.isHub ? t.ink : t.elevatedBg;
+        const codeColor = station.isHub ? t.pageBg : t.ink;
 
-function Stations() {
-  const xScale = useXScale();
-  const yScale = useYScale();
-
-  return (
-    <g fontFamily={FONT}>
-      {STATIONS.map((station) => {
-        const isHub = station.id === "CTR";
-        const cx = xScale(station.x);
-        const cy = yScale(station.y);
-        const r = nodeRadius(station.id);
-        const fill = isHub ? t.ink : t.elevatedBg;
-        const codeColor = isHub ? t.pageBg : t.ink;
-
-        // The hub has 4 branches converging, so every direction around it is
-        // already claimed by a route label — instead of fighting for an
-        // external spot, the interchange is drawn larger with its full name
-        // set inside the circle, the way transit maps mark major interchanges.
-        if (isHub) {
+        if (station.isHub) {
           return (
             <g key={station.id}>
               <circle cx={cx} cy={cy} r={r} fill={fill} stroke={t.ink} strokeWidth={2}>
-                <title>{`${station.label} — major interchange, ${DEGREE[station.id]} connecting routes`}</title>
+                <title>{`${station.label} — major interchange, ${station.degree} connecting routes`}</title>
               </circle>
-              <text x={cx} y={cy} fontSize={19} fontWeight={600} fill={codeColor} textAnchor="middle" dominantBaseline="middle">
+              <text
+                x={cx}
+                y={cy}
+                fontSize={18}
+                fontWeight={600}
+                fill={codeColor}
+                textAnchor="middle"
+                dominantBaseline="middle"
+              >
                 {station.label}
               </text>
             </g>
           );
         }
 
-        // Place the label in the widest angular gap between this station's
-        // incident edges, so it never sits on top of a route line or label.
-        const edgeAngles = NEIGHBORS_BY_STATION[station.id].map((nid) => {
-          const npos = { x: xScale(stationById[nid].x), y: yScale(stationById[nid].y) };
-          return Math.atan2(npos.y - cy, npos.x - cx);
+        const edgeAngles = station.neighbors.map((nid) => {
+          const nStation = stationById.get(nid)!;
+          return Math.atan2(Number(yScale(nStation.y)) - cy, Number(xScale(nStation.x)) - cx);
         });
         let labelAngle = Math.PI / 2;
         if (edgeAngles.length > 0) {
@@ -248,7 +308,9 @@ function Stations() {
           let bestGap = -1;
           for (let k = 0; k < edgeAngles.length; k += 1) {
             const start = edgeAngles[k];
-            const end = edgeAngles[(k + 1) % edgeAngles.length] + (k === edgeAngles.length - 1 ? 2 * Math.PI : 0);
+            const end =
+              edgeAngles[(k + 1) % edgeAngles.length] +
+              (k === edgeAngles.length - 1 ? 2 * Math.PI : 0);
             const gap = end - start;
             if (gap > bestGap) {
               bestGap = gap;
@@ -256,9 +318,6 @@ function Stations() {
             }
           }
         }
-        // Anchor the label away from the node along the gap direction — a
-        // fixed "middle" anchor would let long names like "Harborside" swing
-        // back over the node when the gap points nearly horizontal.
         const cosA = Math.cos(labelAngle);
         const textAnchor = cosA > 0.35 ? "start" : cosA < -0.35 ? "end" : "middle";
         const labelDist = r + (textAnchor === "middle" ? 20 : 13);
@@ -268,12 +327,28 @@ function Stations() {
         return (
           <g key={station.id}>
             <circle cx={cx} cy={cy} r={r} fill={fill} stroke={t.ink} strokeWidth={2}>
-              <title>{`${station.label} (${station.id}) — ${DEGREE[station.id]} connecting route${DEGREE[station.id] === 1 ? "" : "s"}`}</title>
+              <title>{`${station.label} (${station.id}) — ${station.degree} connecting route${station.degree === 1 ? "" : "s"}`}</title>
             </circle>
-            <text x={cx} y={cy} fontSize={Math.max(10, r * 0.55)} fontWeight={600} fill={codeColor} textAnchor="middle" dominantBaseline="middle">
+            <text
+              x={cx}
+              y={cy}
+              fontSize={14}
+              fontWeight={600}
+              fill={codeColor}
+              textAnchor="middle"
+              dominantBaseline="middle"
+            >
               {station.id}
             </text>
-            <text x={lx} y={ly} fontSize={15} fontWeight={400} fill={t.ink} textAnchor={textAnchor} dominantBaseline="middle">
+            <text
+              x={lx}
+              y={ly}
+              fontSize={15}
+              fontWeight={400}
+              fill={t.ink}
+              textAnchor={textAnchor}
+              dominantBaseline="middle"
+            >
               {station.label}
             </text>
           </g>
@@ -283,62 +358,71 @@ function Stations() {
   );
 }
 
-function Legend() {
-  return (
-    <g transform="translate(28, 26)" fontFamily={FONT}>
-      {TYPES.map((type, i) => (
-        <g key={type} transform={`translate(0, ${i * 28})`}>
-          <line x1={0} y1={8} x2={26} y2={8} stroke={TYPE_COLOR[type]} strokeWidth={3} strokeDasharray={type === "Express" ? "9 6" : undefined} />
-          <text x={34} y={13} fontSize={14} fill={t.ink}>
-            {type}
-          </text>
-        </g>
-      ))}
-    </g>
-  );
-}
-
-const TITLE_H = 62;
-const CAPTION_H = 30;
-
-// --- Chart (default-exported component — the harness mounts it) -------------
 export default function Chart() {
   const W = window.ANYPLOT_SIZE.width;
   const H = window.ANYPLOT_SIZE.height;
-  const chartH = H - TITLE_H - CAPTION_H;
+  const chartH = H - TITLE_H - LEGEND_H - CAPTION_H;
 
   return (
     <div
       style={{
         width: W,
         height: H,
-        background: t.pageBg,
+        backgroundColor: t.pageBg,
         fontFamily: FONT,
         display: "flex",
         flexDirection: "column",
       }}
     >
       <div style={{ height: TITLE_H, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <span style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>
-          network-transport-static · javascript · muix · anyplot.ai
-        </span>
+        <span style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>{TITLE}</span>
       </div>
-      <ChartContainer
+      <div
+        style={{
+          height: LEGEND_H,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 28,
+          fontSize: 14,
+          color: t.ink,
+        }}
+      >
+        <span style={{ color: t.inkSoft, fontWeight: 500 }}>{`${ROUTE_TYPE}:`}</span>
+        {routeTypes.map((type) => {
+          const rStyle = ROUTE_TYPE_STYLES[type] ?? DEFAULT_ROUTE_STYLE;
+          return (
+            <span key={type} style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+              <svg width={30} height={10}>
+                <line
+                  x1={0}
+                  y1={5}
+                  x2={30}
+                  y2={5}
+                  stroke={typeColorMap[type]}
+                  strokeWidth={rStyle.strokeWidth + 0.5}
+                  strokeDasharray={rStyle.dashed ? "7 4" : undefined}
+                />
+              </svg>
+              <span>{type}</span>
+            </span>
+          );
+        })}
+      </div>
+      <ChartsContainer
         width={W}
         height={chartH}
         skipAnimation
         series={[]}
-        margin={{ top: 20, right: 30, bottom: 20, left: 30 }}
-        xAxis={[{ min: X_DOMAIN[0], max: X_DOMAIN[1], scaleType: "linear" }]}
-        yAxis={[{ min: Y_DOMAIN[0], max: Y_DOMAIN[1], scaleType: "linear" }]}
+        margin={{ top: 14, right: 30, bottom: 14, left: 30 }}
+        xAxis={[{ min: xDomain[0], max: xDomain[1], scaleType: "linear", position: "none" }]}
+        yAxis={[{ min: yDomain[0], max: yDomain[1], scaleType: "linear", position: "none" }]}
       >
-        <RouteEdges />
-        <Stations />
-        <Legend />
-      </ChartContainer>
+        <TransportNetworkOverlay />
+      </ChartsContainer>
       <div style={{ height: CAPTION_H, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <span style={{ fontSize: 13, color: t.inkSoft }}>
-          Arrows show travel direction · labels show route ID and scheduled departure {"→"} arrival · larger circle marks the Central interchange
+        <span style={{ fontSize: 14, color: t.inkSoft }}>
+          {`Arrows show travel direction · labels show ${ROUTE_ID} and scheduled ${DEP_TIME} → ${ARR_TIME} · larger circle marks the ${hubStation.label} interchange`}
         </span>
       </div>
     </div>
