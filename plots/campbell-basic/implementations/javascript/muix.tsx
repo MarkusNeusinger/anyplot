@@ -6,26 +6,29 @@ import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
+import { LinePlot } from "@mui/x-charts/LineChart";
+import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
 // Constants
-const ENGINE_ORDERS = [
-  { order: 1, dash: "12 6", opacity: 0.9 },
-  { order: 2, dash: "7 5", opacity: 0.75 },
-  { order: 3, dash: "3 4", opacity: 0.65 },
-];
+const ORDER_DASHES = ["12 6", "7 5", "3 4"]; // one step per engine order, in order
+const ORDER_OPACITIES = [0.9, 0.75, 0.65];
 const RPM_PER_HZ = 60;
+const CRITICAL_PALETTE_IDX = 4; // red marks the critical speeds; the modes take the other positions
 const Y_PAD_SHARE = 0.08;
+const ORDER_LABEL_SHARE = 0.94; // order labels sit at this share of the speed range
+const END_LABEL_CHAR_PX = 8.4; // width of one 14 px semibold character
 const HEADER_H = 122;
 
 // Columns: set these to your data's column names
-const SPEED = "Rotational speed (RPM)"; // role: x
-const MODE = "Mode shape"; // role: series
-const FREQ = "Natural frequency (Hz)"; // role: y
+const SPEED = "Rotational speed (RPM)"; // role: speed
+const MODE = "Mode shape"; // role: extra
+const FREQ = "Natural frequency (Hz)"; // role: frequency_mode
 
 // Data: replace this block with your own records, one object per row
+const engineOrders = [1, 2, 3];
 const data = (() => {
   const modeSpecs = [
     { name: "1st Bending", base: 42, slope: 0.0027 },
@@ -51,37 +54,39 @@ const modeNames = Array.from(new Set(data.map((d) => String(d[MODE]))));
 const speeds = Array.from(new Set(data.map((d) => Number(d[SPEED])))).sort(
   (a, b) => a - b,
 );
-const speedMin = Math.min(...speeds);
-const speedMax = Math.max(...speeds);
+const speedMin = speeds[0];
+const speedMax = speeds[speeds.length - 1];
+const modePalette = t.palette.filter((_, i) => i !== CRITICAL_PALETTE_IDX);
+const criticalColor = t.palette[CRITICAL_PALETTE_IDX];
 
 const modeSeries = modeNames.map((name, idx) => {
-  const modeRows = data
-    .filter((d) => String(d[MODE]) === name)
-    .sort((a, b) => Number(a[SPEED]) - Number(b[SPEED]));
   const bySpeed = new Map(
-    modeRows.map((r) => [Number(r[SPEED]), Number(r[FREQ])]),
+    data
+      .filter((d) => String(d[MODE]) === name)
+      .map((r) => [Number(r[SPEED]), Number(r[FREQ])]),
   );
   return {
     id: `mode-${idx}`,
     label: name,
-    color: t.palette[idx],
+    color: modePalette[idx],
     values: speeds.map((s) => bySpeed.get(s) ?? null),
   };
 });
 
-const orderCurves = ENGINE_ORDERS.map((o) => ({
-  ...o,
-  label: `${o.order}x EO`,
-  shortLabel: `${o.order}x`,
-  values: speeds.map((s) => (o.order * s) / RPM_PER_HZ),
+const orderCurves = engineOrders.map((order, idx) => ({
+  id: `eo-${idx}`,
+  order,
+  label: `${order}x EO`,
+  shortLabel: `${order}x`,
+  dash: ORDER_DASHES[idx],
+  opacity: ORDER_OPACITIES[idx],
+  values: speeds.map((s) => (order * s) / RPM_PER_HZ),
 }));
 
 const criticalSpeeds: {
   id: string;
   speed: number;
   freq: number;
-  modeLabel: string;
-  orderLabel: string;
 }[] = [];
 
 for (const mode of modeSeries) {
@@ -94,14 +99,10 @@ for (const mode of modeSeries) {
       const diffB = mB - order.values[i + 1];
       if (diffA === 0 || diffA * diffB < 0) {
         const frac = diffA / (diffA - diffB);
-        const critSpeed = speeds[i] + frac * (speeds[i + 1] - speeds[i]);
-        const critFreq = mA + frac * (mB - mA);
         criticalSpeeds.push({
-          id: `${mode.id}-eo-${order.order}-${i}`,
-          speed: critSpeed,
-          freq: critFreq,
-          modeLabel: mode.label,
-          orderLabel: order.shortLabel,
+          id: `${mode.id}-${order.id}-${i}`,
+          speed: speeds[i] + frac * (speeds[i + 1] - speeds[i]),
+          freq: mA + frac * (mB - mA),
         });
       }
     }
@@ -112,50 +113,27 @@ const allFreqs = [
   ...data.map((d) => Number(d[FREQ])),
   ...orderCurves.flatMap((o) => o.values),
 ];
-const freqMaxRaw = Math.max(...allFreqs);
-const freqMax = freqMaxRaw * (1 + Y_PAD_SHARE);
-const criticalColor = t.palette[modeNames.length];
+const freqMax = Math.max(...allFreqs) * (1 + Y_PAD_SHARE);
+const endLabelWidth =
+  Math.max(...modeNames.map((name) => name.length)) * END_LABEL_CHAR_PX + 32;
 
 const TITLE = "campbell-basic · javascript · muix · anyplot.ai";
-const SUBTITLE = `${modeSeries.length} rotor modes · ${ENGINE_ORDERS.length} engine orders (${ENGINE_ORDERS.map((o) => `${o.order}x`).join(", ")}) · ${criticalSpeeds.length} critical-speed intersections`;
+const SUBTITLE = `${modeSeries.length} rotor modes · ${engineOrders.length} engine orders (${orderCurves.map((o) => o.shortLabel).join(", ")}) · ${criticalSpeeds.length} critical-speed intersections`;
 
-function CampbellOverlay() {
+function CampbellLabels() {
   const xScale = useXScale("speed");
   const yScale = useYScale("freq");
-  const { left, top, width, height } = useDrawingArea();
-  if (!xScale || !yScale) return null;
+  const { left, width } = useDrawingArea();
+  const labelSpeed = speedMin + (speedMax - speedMin) * ORDER_LABEL_SHARE;
+  const lineEnd = left + width;
 
   return (
     <g>
       {orderCurves.map((o) => {
-        const x0 = xScale(speedMin);
-        const y0 = yScale((o.order * speedMin) / RPM_PER_HZ);
-        const x1 = xScale(speedMax);
-        const y1 = yScale((o.order * speedMax) / RPM_PER_HZ);
-        if (
-          x0 === undefined ||
-          y0 === undefined ||
-          x1 === undefined ||
-          y1 === undefined
-        ) {
-          return null;
-        }
-        const labelSpeed = speedMax * 0.94;
-        const lx = xScale(labelSpeed) ?? x1;
-        const ly = (yScale((o.order * labelSpeed) / RPM_PER_HZ) ?? y1) - 10;
-
+        const lx = xScale(labelSpeed);
+        const ly = yScale((o.order * labelSpeed) / RPM_PER_HZ) - 10;
         return (
-          <g key={o.label}>
-            <line
-              x1={x0}
-              y1={y0}
-              x2={x1}
-              y2={y1}
-              stroke={t.inkSoft}
-              strokeWidth={2}
-              strokeDasharray={o.dash}
-              opacity={o.opacity}
-            />
+          <g key={o.id}>
             <rect
               x={lx - 18}
               y={ly - 11}
@@ -181,59 +159,30 @@ function CampbellOverlay() {
       })}
 
       {modeSeries.map((m) => {
-        const pts = speeds
-          .map((s, idx) => {
-            const val = m.values[idx];
-            if (val === null) return null;
-            const px = xScale(s);
-            const py = yScale(val);
-            return px !== undefined && py !== undefined ? `${px},${py}` : null;
-          })
-          .filter(Boolean)
-          .join(" ");
         const endVal = m.values[m.values.length - 1];
         if (endVal === null) return null;
-        const lx = left + width + 10;
         const ly = yScale(endVal);
-        if (ly === undefined) return null;
         return (
           <g key={m.id}>
-            <polyline
-              points={pts}
-              fill="none"
+            <line
+              x1={lineEnd + 6}
+              x2={lineEnd + 18}
+              y1={ly}
+              y2={ly}
               stroke={m.color}
               strokeWidth={3.2}
               strokeLinecap="round"
-              strokeLinejoin="round"
             />
             <text
-              x={lx}
+              x={lineEnd + 24}
               y={ly}
               dominantBaseline="central"
               fontSize={14}
               fontWeight={600}
-              fill={m.color}
+              fill={t.ink}
             >
               {m.label}
             </text>
-          </g>
-        );
-      })}
-
-      {criticalSpeeds.map((cs) => {
-        const cx = xScale(cs.speed);
-        const cy = yScale(cs.freq);
-        if (cx === undefined || cy === undefined) return null;
-        if (cy < top || cy > top + height) return null;
-        const r = 8.5;
-        return (
-          <g key={cs.id}>
-            <polygon
-              points={`${cx},${cy - r} ${cx + r},${cy} ${cx},${cy + r} ${cx - r},${cy}`}
-              fill={criticalColor}
-              stroke={t.pageBg}
-              strokeWidth={2.2}
-            />
           </g>
         );
       })}
@@ -300,7 +249,7 @@ export default function Chart() {
           ))}
           {orderCurves.map((o) => (
             <div
-              key={o.label}
+              key={o.id}
               style={{ display: "flex", alignItems: "center", gap: 6 }}
             >
               <svg width={28} height={10}>
@@ -319,12 +268,14 @@ export default function Chart() {
             </div>
           ))}
           <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-            <svg width={18} height={18}>
-              <polygon
-                points="9,1 17,9 9,17 1,9"
+            <svg width={20} height={20}>
+              <circle
+                cx={10}
+                cy={10}
+                r={8.5}
                 fill={criticalColor}
                 stroke={t.pageBg}
-                strokeWidth={1.5}
+                strokeWidth={2}
               />
             </svg>
             <span style={{ color: t.ink, fontWeight: 500 }}>
@@ -338,11 +289,44 @@ export default function Chart() {
         width={width}
         height={chartHeight}
         skipAnimation
-        margin={{ top: 20, right: 145, bottom: 20, left: 40 }}
-        series={[]}
+        margin={{ top: 20, right: endLabelWidth, bottom: 20, left: 40 }}
+        series={[
+          ...orderCurves.map((o) => ({
+            type: "line",
+            id: o.id,
+            label: o.label,
+            data: o.values,
+            color: t.inkSoft,
+            showMark: false,
+            curve: "linear",
+          })),
+          ...modeSeries.map((m) => ({
+            type: "line",
+            id: m.id,
+            label: m.label,
+            data: m.values,
+            color: m.color,
+            showMark: false,
+            curve: "linear",
+          })),
+          {
+            type: "scatter",
+            id: "critical",
+            label: "Critical Speeds",
+            data: criticalSpeeds.map((cs) => ({
+              id: cs.id,
+              x: cs.speed,
+              y: cs.freq,
+            })),
+            color: criticalColor,
+            markerSize: 8.5,
+          },
+        ]}
         xAxis={[
           {
             id: "speed",
+            scaleType: "linear",
+            data: speeds,
             min: speedMin,
             max: speedMax,
             tickNumber: 7,
@@ -372,10 +356,29 @@ export default function Chart() {
             opacity: 0.65,
             strokeDasharray: "3 4",
           },
+          "& .MuiLineChart-line": {
+            strokeWidth: 3.2,
+            strokeLinecap: "round",
+            strokeLinejoin: "round",
+          },
+          ...Object.fromEntries(
+            orderCurves.map((o) => [
+              `& .MuiLineChart-line[data-series="${o.id}"]`,
+              {
+                strokeWidth: 2,
+                strokeDasharray: o.dash,
+                strokeLinecap: "butt",
+                opacity: o.opacity,
+              },
+            ]),
+          ),
+          "& .MuiScatterChart-marker": { stroke: t.pageBg, strokeWidth: 2.2 },
         }}
       >
         <ChartsGrid horizontal vertical />
-        <CampbellOverlay />
+        <LinePlot />
+        <ScatterPlot />
+        <CampbellLabels />
         <ChartsXAxis axisId="speed" />
         <ChartsYAxis axisId="freq" />
       </ChartsContainer>
