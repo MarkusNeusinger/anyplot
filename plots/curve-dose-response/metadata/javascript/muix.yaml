@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: curve-dose-response
 created: '2026-06-24T15:48:12Z'
-updated: '2026-10-24T08:33:37Z'
+updated: '2026-10-24T08:39:11Z'
 generated_by: gemini-4-argon
 adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
 workflow_run: 40078214109
@@ -13,56 +13,55 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-dos
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-dose-response/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/curve-dose-response/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/curve-dose-response/javascript/muix/plot-dark.html
-quality_score: 88
+quality_score: 86
 review:
   strengths:
-  - Composes the chart from ChartsContainer + ScatterPlot + ChartsXAxis/ChartsYAxis
-    and draws the fitted curves, CI bands, asymptotes and EC50 drop-lines in a custom
-    overlay that reads useXScale/useYScale/useDrawingArea, so every mark sits exactly
-    in the axis coordinate system
-  - Native log x axis (scaleType 'log') with tickInterval at every decade and a valueFormatter
-    that writes 10⁻⁹…10⁻⁴ as true powers of ten
-  - The 4PL fit falls out of the data (coordinate-descent least squares), and the
-    pointwise 95% CI band comes from the Jacobian covariance with a t critical value,
-    drawn for both compounds at fillOpacity 0.18 so curves, points and reference lines
-    stay visible through it
-  - EC50 drop-lines meet each curve at its own half-maximal response (50% for Osimertinib,
-    46% for Gefitinib, halfway between each curve's fitted plateaus), marked with
-    a hollow page-colored dot
-  - Legend entries carry the fitted EC50 with an automatic SI prefix (100 nM vs 782
-    nM), so the potency comparison reads straight from the legend; the glyph combines
-    band, line and marker like the marks it explains
-  - Asymptote lines are thin, dashed and at 55% opacity, subordinate to curves and
-    points, with their Top/Bottom labels placed so the two compounds' labels never
-    collide
-  - Theme tokens drive all chrome; light and dark renders are both fully legible with
-    identical data colors
+  - 'All Notes features present and correct: log10 concentration axis, two 4PL fits
+    with SEM error bars, EC50 drop-lines meeting the curve at the true half-maximal
+    response (50 % for Osimertinib, 46 % halfway between 5 % and 86 % for Gefitinib),
+    dashed top/bottom asymptotes at the fitted plateaus, and pointwise 95 % CI bands
+    from a t-scaled delta-method covariance'
+  - SI-prefixed concentration ticks (1 nM … 100 µM) derived from the column unit make
+    the log axis read naturally for pharmacologists
+  - 'Idiomatic MUI X v9 composition: ChartsContainer + ScatterPlot + ChartsGrid +
+    ChartsXAxis/ChartsYAxis with a custom SVG layer driven by useXScale/useYScale/useDrawingArea,
+    log scaleType with tickInterval and valueFormatter, axis bands sized with height/width,
+    skipAnimation set'
+  - 'Theme-adaptive chrome via ANYPLOT_TOKENS: ink/inkSoft text, dashed grid from
+    the grid token, EC50 badges and hollow EC50 markers knocked out with pageBg so
+    they read on both surfaces'
+  - Asymptote lines drawn thin and translucent so they stay subordinate to the curves
+    and points, with direct color-matched plateau labels
+  - Legend entries carry each compound's fitted EC50, so potency comparison reads
+    straight off the legend
   weaknesses:
-  - 'VQ-01 (both): the x tick labels'' superscript exponents (⁻⁹ … ⁻⁴) render at roughly
-    9 px, well below the 14 px tick font, and blur in the 400 px thumbnail → exponents
-    at about 12–13 px (+3 to +4 px). Likely cause: Unicode superscript glyphs inside
-    a 14 px tickLabelStyle; raise the x tickLabelStyle fontSize to about 18 px or
-    format the ticks as ''1 nM'', ''10 nM'', … with the SI prefixes the code already
-    has.'
-  - 'Suggestion: use MUI X''s native ChartsLegend (inside ChartsDataProvider/ChartsWrapper)
-    for the series legend instead of the hand-built HTML legend row; the scatter series
-    already carry their labels.'
-  - 'Suggestion: the subtitle repeats the raw column constants (''across 2 Compounds
-    · Response (%) ± Response SEM (%)''); a phrasing such as ''Mean response ± SEM,
-    4PL fit with 95% CI'' would read more naturally.'
-  - 'Suggestion: the y axis padding runs to −10 %, a value no response reaches; clamping
-    the lower limit nearer 0 would give the curves slightly more height.'
+  - 'VQ-03 (both): the 95 % CI bands are only about 2–6 px wide, roughly the curve''s
+    3 px stroke, so the Osimertinib band is invisible and the Gefitinib band reads
+    as a faint halo rather than a band enclosing the curve → a band clearly wider
+    than the curve stroke on at least one compound (about 10 px or more across the
+    slope). Likely cause: the example data sits almost exactly on the 4PL (tiny residuals
+    give a tiny s²); generate responses with realistic residual scatter of a few percent
+    around the fit.'
+  - 'DQ-02 (both): the compounds carry real drug names, Osimertinib and Gefitinib,
+    with invented EC50 values (100 nM, 782 nM) that readers may take as reference
+    potencies → clearly fictional but specific compound codes (e.g. ''EGFR inhibitor
+    KX-207'', ''KX-311''). Likely cause: the COMPOUND values in the data block.'
+  - 'Suggestion: the subtitle is assembled from the raw column constants (''2 Compounds
+    · Response (%) ± Response SEM (%)''); a phrase written for the reader would read
+    more naturally.'
+  - 'Suggestion: add <ChartsTooltip /> to the composition so the HTML view shows concentration
+    and response on hover.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, matches #FAF8F1; no white panel.
-      Chrome: bold title "curve-dose-response · javascript · muix · anyplot.ai" centered (~67% of width), soft-ink subtitle below; y axis "Response (%)" with ticks −10…110, x axis "Concentration (M)" on a log scale with ticks 10⁻⁹…10⁻⁴; subtle dashed horizontal grid; HTML legend row at the bottom. All text dark on light and readable; the superscript exponents of the x ticks are small.
-      Data: Osimertinib in brand green #009E73, Gefitinib in lavender #C475FD. Each compound shows 10 points with SEM error bars and caps, a smooth fitted 4PL sigmoid, a thin translucent 95% CI band (most visible on Gefitinib's upper plateau), dashed top/bottom asymptote lines labelled "Top 98%", "Top 86%", "Bottom 5%", "Bottom 3%", and dashed EC50 horizontal + vertical drop-lines meeting the curve at a hollow dot (green at 10⁻⁷ / 50%, purple at ~7.8×10⁻⁷ / 46%) with "EC₅₀ (50%)" / "EC₅₀ (46%)" labels. Legend: "Osimertinib (EC₅₀ = 100 nM) · 95% CI", "Gefitinib (EC₅₀ = 782 nM) · 95% CI".
+      Background: warm off-white #FAF8F1 across the whole canvas, no white plot panel.
+      Chrome: bold title "curve-dose-response · javascript · muix · anyplot.ai" centered (~34 % of width), grey subtitle below; y-axis "Response (%)" with ticks -10…110, x-axis "Concentration (M)" with log ticks 1 nM, 10 nM, 100 nM, 1 µM, 10 µM, 100 µM; dashed horizontal grid subtle; all text dark on cream and readable.
+      Data: Osimertinib in brand green #009E73 (first series), Gefitinib in Imprint purple; filled points with capped SEM error bars, smooth 4PL sigmoids, faint translucent CI bands (barely wider than the stroke), dashed top/bottom asymptotes at 98 %/3 % (green) and 86 %/5 % (purple) with color-matched labels, dashed EC50 drop-lines meeting the curves at hollow markers (100 nM at 50 %, 782 nM at 46 %) with "EC₅₀ (50%)" / "EC₅₀ (46%)" badges; HTML legend below with line+band+dot glyphs and EC50 values.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black, matches #1A1A17.
-      Chrome: title, subtitle, axis titles, tick labels and legend text flip to light ink and are clearly readable; grid dashed and subtle; axis lines light. No dark-on-dark text.
-      Data: identical green #009E73 and lavender #C475FD marks, curves, bands, asymptotes and EC50 lines as in the light render; the CI bands read as a darker translucent halo; brand green stays clearly visible.
+      Background: warm near-black #1A1A17.
+      Chrome: title, subtitle, axis titles and tick labels in light ink, all readable; grid dashes subtle dark grey; no dark-on-dark text.
+      Data: identical green and purple data colors, positions, bands and reference lines as the light render; only chrome flipped; EC50 badge knockouts use the dark page color. Brand green stays clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -71,52 +70,50 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
-        passed: false
-        comment: Fonts set explicitly (title 22, axis titles 16, ticks 14 px CSS)
-          and readable in both themes; the superscript exponents of the x ticks render
-          about 9 px and blur in the thumbnail (defect line)
+        passed: true
+        comment: Explicit 14-22 px fonts in the 1600 px CSS space; all text readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; EC50 and plateau labels are placed clear of points
-          and each other
+        comment: Labels and badges clear of each other; point overlap at 10 nM is
+          the permitted close-curve case
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 10 points per compound at a prominent marker size, error bars with
-          caps, curves at 3 px; CI bands translucent but visible; legend glyphs match
-          the marks in both themes
+        comment: Points and error bars prominent, but the CI bands are barely wider
+          than the curve stroke (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs lavender is CVD-safe and both contrast on both surfaces
+        comment: Green vs purple is CVD-safe; lines also differ by position
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, balanced proportions, title ~67% width, nothing cut off
+        comment: 3200x1800, plot fills the canvas, balanced axis labels, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Concentration (M)'' and ''Response (%)'' with units'
+        comment: Concentration (M) and Response (%) with units; ticks SI-prefixed
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #C475FD (Imprint order); backgrounds
-          #FAF8F1 / #1A1A17; data colors identical across themes'
+        comment: 'First series #009E73, second Imprint purple from t.palette; correct
+          backgrounds in both themes'
     design_excellence:
       score: 12
       max: 20
@@ -125,25 +122,23 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: 'Beyond baseline: a soft-ink subtitle tier under the title, EC50
-          values with automatic SI prefixes in the legend, hollow page-colored EC50
-          markers'
+        passed: true
+        comment: Title/subtitle hierarchy, SI-prefixed log tick labels, color-matched
+          direct plateau labels beyond the baseline
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: 'Beyond baseline: asymptotes at 55% opacity and thinner dashes than
-          the EC50 lines (clear layering), plateau labels staggered so the two compounds''
-          labels never collide, composite legend glyph (band + line + marker)'
+        passed: true
+        comment: pageBg knockouts behind EC50 badges, hollow EC50 intersection markers,
+          asymptotes thinned and translucent, horizontal-only dashed grid
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: Puts the potency comparison (100 nM vs 782 nM) into the legend so
-          the rightward shift reads as a number; no further focal hierarchy
+        passed: true
+        comment: EC50 values in the legend make the potency shift the readable takeaway;
+          no further hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -153,32 +148,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Sigmoidal dose-response curves on a log x axis
+        comment: 4PL dose-response curves on a log x axis
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Log x axis, 4PL fit, dashed EC50 horizontal+vertical lines meeting
-          at half-max, points with SEM error bars, dashed top/bottom asymptotes, 2
-          compounds, legend, 95% CI bands on both curves; all 'A good version shows'
-          bullets met
+        comment: Log axis, 4PL fit, EC50 dashed H/V lines at half-max, SEM error bars,
+          dashed asymptotes, 2 compounds, legend, 95% CI bands all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Points at their data values; axes cover all data and error bars;
-          curve is the fitted 4PL, no spline overshoot
+        comment: Points at their values; curves pass through their own points; no
+          overshoot
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in the mandated format; legend names the compounds with reader-facing
-          text
+        comment: Mandated title format; legend entries name compounds with their EC50
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -186,23 +178,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Two compounds differing in EC50, Hill slope and top plateau; full
-          plateaus on both ends
+        comment: Curves differ in EC50, Hill slope and top plateau; both plateaus
+          reached
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: EGFR inhibitors Osimertinib vs Gefitinib, a neutral pharmacology
-          scenario with the expected potency ordering
+        comment: Plausible EGFR-inhibitor assay, but real drug names carry invented
+          EC50 values (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Concentrations 1 nM–100 µM, responses 0–100 %, EC50 100 nM / 782
-          nM; checked that each EC50 drop-line meets its curve at (bottom+top)/2 (50
-          % and 46 %) and that the half-max values are computed, not placed
+        comment: '1 nM-100 µM span, 0-100 % response; checked half-max lines: 50 %
+          = (3+98)/2 and 46 % = (5+86)/2, both computed from the fit'
     code_quality:
       score: 10
       max: 10
@@ -212,8 +203,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Module-level data and fit, one overlay component required for the
-          hooks
+        comment: Module-level data/fit; the overlay component is required for MUI
+          X hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -231,54 +222,47 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: The written-out 4PL fit and CI are allowed by the library prompt's
-          Computation line (no stats helpers available)
+        comment: Written-out 4PL fit and covariance are allowed (no stats helpers
+          in MUI X)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-export component, skipAnimation on container and ScatterPlot,
-          v9 ChartsContainer API; harness writes plot-{theme}.png/.html
+        comment: Default-export component, v9 API, skipAnimation
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: false
-        comment: ChartsContainer composition with axis ids, ChartsGrid, ScatterPlot,
-          native log scale with tickInterval and valueFormatter
+        passed: true
+        comment: ChartsContainer composition with log scaleType, tickInterval, valueFormatter
+          and sized axis bands
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: false
-        comment: Custom SVG overlay layer driven by useXScale/useYScale/useDrawingArea
-          hooks inside the composition API, plus native scatter tooltips in the HTML
-  verdict: REJECTED
+        passed: true
+        comment: Custom SVG layer through useXScale/useYScale/useDrawingArea hooks
+          inside the composition
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T08:30:26Z'
+  rendered_at: '2026-10-24T08:35:36Z'
 impl_tags:
   dependencies: []
   techniques:
-  - custom-overlay
-  - error-bars
-  - confidence-band
-  - reference-lines
-  - log-scale
+  - layer-composition
   - annotations
   - custom-legend
   - html-export
   patterns:
-  - data-generation
   - iteration-over-groups
   dataprep:
-  - curve-fitting
-  - confidence-interval
+  - regression
   styling:
-  - publication-ready
   - alpha-blending
+  - grid-styling
