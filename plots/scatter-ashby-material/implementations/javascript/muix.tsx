@@ -2,14 +2,8 @@
 // scatter-ashby-material: Ashby Material Selection Chart
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 94/100 | Created: 2026-08-24
-//# anyplot-orientation: landscape
-// anyplot.ai
-// scatter-ashby-material: Ashby Material Selection Chart
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-08-24
 
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
@@ -18,20 +12,21 @@ import { ChartsTooltip } from "@mui/x-charts/ChartsTooltip";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const { width, height } = window.ANYPLOT_SIZE;
 
-// Deterministic LCG (seed 42) — no Math.random() in the browser harness
-let seed = 42;
-function rng() {
-  seed = (1664525 * seed + 1013904223) >>> 0;
-  return seed / 4294967296;
-}
+// Constants
+const TITLE = "scatter-ashby-material · javascript · muix · anyplot.ai";
+const SUBTITLE = "Density vs. Young's modulus · dashed lines mark constant specific stiffness E/ρ";
+const HULL_MARGIN = 15;
+const GUIDE_INDICES = [1, 100];
+const MARGIN = { top: 130, right: 105, bottom: 32, left: 24 };
 
-// --- Data: classic density vs. Young's modulus Ashby chart -----------------
-// Each family spans an archetypal (density, modulus) box; materials are
-// sampled log-uniformly inside that box, which is how real material families
-// cluster on a log-log Ashby chart — a compact, roughly rectangular smear
-// rather than a tight point cloud.
+// Columns: set these to your data's column names
+const MATERIAL = "Material"; // role: material
+const FAMILY = "Material family"; // role: family
+const PROPERTY_X = "Density (kg/m³)"; // role: property_x
+const PROPERTY_Y = "Young's Modulus (GPa)"; // role: property_y
+
+// Data: replace this block with your own records
 const FAMILIES = [
   {
     name: "Metals",
@@ -99,104 +94,117 @@ const FAMILIES = [
   },
 ];
 
-// A few named materials are common knowledge and would look wrong if sampled
-// from their family's full range — dense refractory metals/ceramics and PTFE
-// sit well outside the rest of their family, so they get a tight sub-range
-// around their real published density/modulus instead.
 const MATERIAL_OVERRIDES = {
   Tungsten: { rho: [18900, 19600], e: [385, 411] },
   "Tungsten Carbide": { rho: [15400, 15800], e: [530, 650] },
   PTFE: { rho: [2150, 2200], e: [0.4, 0.75] },
 };
 
-const familyPoints = FAMILIES.map((family) => ({
-  ...family,
-  points: family.materials.map((material) => {
+let seed = 42;
+const data = [];
+for (const family of FAMILIES) {
+  for (const material of family.materials) {
     const range = MATERIAL_OVERRIDES[material] ?? { rho: family.rho, e: family.e };
-    const logRho = Math.log10(range.rho[0]) + rng() * (Math.log10(range.rho[1]) - Math.log10(range.rho[0]));
-    const logE = Math.log10(range.e[0]) + rng() * (Math.log10(range.e[1]) - Math.log10(range.e[0]));
-    return { material, rho: 10 ** logRho, e: 10 ** logE };
-  }),
+    seed = (1664525 * seed + 1013904223) >>> 0;
+    const uRho = seed / 4294967296;
+    seed = (1664525 * seed + 1013904223) >>> 0;
+    const uE = seed / 4294967296;
+    const logRho = Math.log10(range.rho[0]) + uRho * (Math.log10(range.rho[1]) - Math.log10(range.rho[0]));
+    const logE = Math.log10(range.e[0]) + uE * (Math.log10(range.e[1]) - Math.log10(range.e[0]));
+    data.push({
+      [MATERIAL]: material,
+      [FAMILY]: family.name,
+      [PROPERTY_X]: 10 ** logRho,
+      [PROPERTY_Y]: 10 ** logE,
+    });
+  }
+}
+
+// Plot: reads only data and the constants above
+const familyNames = Array.from(new Set(data.map((row) => String(row[FAMILY]))));
+const familyPoints = familyNames.map((name) => ({
+  name,
+  points: data
+    .filter((row) => String(row[FAMILY]) === name)
+    .map((row) => ({
+      material: String(row[MATERIAL]),
+      rho: Number(row[PROPERTY_X]),
+      e: Number(row[PROPERTY_Y]),
+    })),
 }));
 
 const allRho = familyPoints.flatMap((f) => f.points.map((p) => p.rho));
 const allE = familyPoints.flatMap((f) => f.points.map((p) => p.e));
-const X_MIN = Math.min(...allRho) / 1.7;
-const X_MAX = Math.max(...allRho) * 1.7;
-const Y_MIN = Math.min(...allE) / 2.4;
-const Y_MAX = Math.max(...allE) * 3.2;
+const xMin = Math.min(...allRho) / 1.7;
+const xMax = Math.max(...allRho) * 1.7;
+const yMin = Math.min(...allE) / 2.4;
+const yMax = Math.max(...allE) * 3.2;
 
-function formatAxisValue(v) {
-  if (v >= 100) return Math.round(v).toLocaleString();
-  if (v >= 1) return Number(v.toPrecision(2)).toString();
-  return Number(v.toPrecision(1)).toString();
-}
+const xTickStart = Math.floor(Math.log10(xMin));
+const xTickEnd = Math.ceil(Math.log10(xMax));
+const xDecadeTicks = Array.from({ length: xTickEnd - xTickStart + 1 }, (_, i) => 10 ** (xTickStart + i));
 
-// d3's log-scale ticks include the 2..9 minor steps within every decade,
-// which collide at this plot's span. `tickInterval` as a filter function is
-// only honored for point scales, so force the tick set itself down to just
-// the decade values (…, 0.1, 1, 10, 100, …) via an explicit array.
-function decadeTicks(min, max) {
-  const start = Math.floor(Math.log10(min));
-  const end = Math.ceil(Math.log10(max));
-  const ticks = [];
-  for (let p = start; p <= end; p += 1) ticks.push(10 ** p);
-  return ticks;
-}
+const yTickStart = Math.floor(Math.log10(yMin));
+const yTickEnd = Math.ceil(Math.log10(yMax));
+const yDecadeTicks = Array.from({ length: yTickEnd - yTickStart + 1 }, (_, i) => 10 ** (yTickStart + i));
 
-// Convex hull via the monotone-chain algorithm — the "convex-hull envelope"
-// the spec calls out for showing each material family as a region.
-function convexHull(points) {
-  const sorted = [...points].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
-  const cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
-  const lower = [];
-  for (const p of sorted) {
-    while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) lower.pop();
-    lower.push(p);
-  }
-  const upper = [];
-  for (let i = sorted.length - 1; i >= 0; i -= 1) {
-    const p = sorted[i];
-    while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) upper.pop();
-    upper.push(p);
-  }
-  upper.pop();
-  lower.pop();
-  return lower.concat(upper);
-}
-
-const HULL_MARGIN = 15;
-
-// Renders each family as an inflated convex-hull region behind the points,
-// with a direct color-matched label — the standard Ashby-chart convention
-// (no legend needed once every region carries its own name).
-function FamilyRegions() {
+function AshbyOverlay() {
   const xScale = useXScale();
   const yScale = useYScale();
-  if (!xScale || !yScale) return null;
+  const xDomain = xScale.domain();
+  const yDomain = yScale.domain();
 
   return (
     <g>
       {familyPoints.map((family, i) => {
         const pixels = family.points.map((p) => [xScale(p.rho), yScale(p.e)]);
-        const hull = convexHull(pixels);
+        const sorted = [...pixels].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+        const lower = [];
+        for (const p of sorted) {
+          while (
+            lower.length >= 2 &&
+            (lower[lower.length - 1][0] - lower[lower.length - 2][0]) * (p[1] - lower[lower.length - 2][1]) -
+              (lower[lower.length - 1][1] - lower[lower.length - 2][1]) * (p[0] - lower[lower.length - 2][0]) <=
+              0
+          ) {
+            lower.pop();
+          }
+          lower.push(p);
+        }
+        const upper = [];
+        for (let k = sorted.length - 1; k >= 0; k -= 1) {
+          const p = sorted[k];
+          while (
+            upper.length >= 2 &&
+            (upper[upper.length - 1][0] - upper[upper.length - 2][0]) * (p[1] - upper[upper.length - 2][1]) -
+              (upper[upper.length - 1][1] - upper[upper.length - 2][1]) * (p[0] - upper[upper.length - 2][0]) <=
+              0
+          ) {
+            upper.pop();
+          }
+          upper.push(p);
+        }
+        upper.pop();
+        lower.pop();
+        const hull = lower.concat(upper);
         const cx = hull.reduce((s, p) => s + p[0], 0) / hull.length;
         const cy = hull.reduce((s, p) => s + p[1], 0) / hull.length;
         const inflated = hull.map(([x, y]) => {
           const dx = x - cx;
           const dy = y - cy;
-          const len = Math.hypot(dx, dy) || 1;
+          const len = Math.hypot(dx, dy);
           return [x + (dx / len) * HULL_MARGIN, y + (dy / len) * HULL_MARGIN];
         });
         const d = `M ${inflated.map((p) => p.join(",")).join(" L ")} Z`;
         const labelY = Math.min(...inflated.map((p) => p[1])) - 8;
+        const color = t.palette[i % t.palette.length];
         return (
           <g key={family.name}>
             <path
               d={d}
-              fill={t.palette[i]}
+              fill={color}
               fillOpacity={0.07}
-              stroke={t.palette[i]}
+              stroke={color}
               strokeOpacity={0.6}
               strokeWidth={1.5}
               strokeLinejoin="round"
@@ -207,7 +215,7 @@ function FamilyRegions() {
               textAnchor="middle"
               fontSize={15}
               fontWeight={600}
-              fill={t.palette[i]}
+              fill={color}
               stroke={t.pageBg}
               strokeWidth={4}
               paintOrder="stroke"
@@ -217,51 +225,49 @@ function FamilyRegions() {
           </g>
         );
       })}
-    </g>
-  );
-}
 
-// Constant specific-stiffness (E / rho) guide lines — a classic Ashby-chart
-// selection aid for lightweight-and-stiff design. Straight in log-log space,
-// so a clip against the padded axis box needs only the two endpoints.
-const GUIDE_INDICES = [1, 100];
-
-function clipIsoline(index, xDomain, yDomain) {
-  const k = index / 1000; // E (GPa) = k * rho (kg/m^3)
-  let x0 = xDomain[0];
-  let x1 = xDomain[1];
-  let y0 = k * x0;
-  let y1 = k * x1;
-  if (y0 < yDomain[0]) { x0 = yDomain[0] / k; y0 = yDomain[0]; }
-  if (y0 > yDomain[1]) { x0 = yDomain[1] / k; y0 = yDomain[1]; }
-  if (y1 < yDomain[0]) { x1 = yDomain[0] / k; y1 = yDomain[0]; }
-  if (y1 > yDomain[1]) { x1 = yDomain[1] / k; y1 = yDomain[1]; }
-  if (x0 >= x1) return null;
-  return { x0, y0, x1, y1 };
-}
-
-function PerformanceGuideLines() {
-  const xScale = useXScale();
-  const yScale = useYScale();
-  if (!xScale || !yScale) return null;
-  const xDomain = xScale.domain();
-  const yDomain = yScale.domain();
-
-  return (
-    <g>
       {GUIDE_INDICES.map((index) => {
-        const seg = clipIsoline(index, xDomain, yDomain);
-        if (!seg) return null;
-        const x0 = xScale(seg.x0);
-        const y0 = yScale(seg.y0);
-        const x1 = xScale(seg.x1);
-        const y1 = yScale(seg.y1);
-        const angle = (Math.atan2(y1 - y0, x1 - x0) * 180) / Math.PI;
-        const midX = (x0 + x1) / 2;
-        const midY = (y0 + y1) / 2;
+        const k = index / 1000;
+        let x0 = xDomain[0];
+        let x1 = xDomain[1];
+        let y0 = k * x0;
+        let y1 = k * x1;
+        if (y0 < yDomain[0]) {
+          x0 = yDomain[0] / k;
+          y0 = yDomain[0];
+        }
+        if (y0 > yDomain[1]) {
+          x0 = yDomain[1] / k;
+          y0 = yDomain[1];
+        }
+        if (y1 < yDomain[0]) {
+          x1 = yDomain[0] / k;
+          y1 = yDomain[0];
+        }
+        if (y1 > yDomain[1]) {
+          x1 = yDomain[1] / k;
+          y1 = yDomain[1];
+        }
+        if (x0 >= x1) return null;
+        const px0 = xScale(x0);
+        const py0 = yScale(y0);
+        const px1 = xScale(x1);
+        const py1 = yScale(y1);
+        const angle = (Math.atan2(py1 - py0, px1 - px0) * 180) / Math.PI;
+        const midX = (px0 + px1) / 2;
+        const midY = (py0 + py1) / 2;
         return (
           <g key={index}>
-            <line x1={x0} y1={y0} x2={x1} y2={y1} stroke={t.inkSoft} strokeWidth={1.5} strokeDasharray="7 6" opacity={0.55} />
+            <line
+              x1={px0}
+              y1={py0}
+              x2={px1}
+              y2={py1}
+              stroke={t.inkSoft}
+              strokeWidth={1.5}
+              strokeDasharray="7 6"
+              opacity={0.55}
+            />
             <text
               x={midX}
               y={midY - 8}
@@ -282,14 +288,10 @@ function PerformanceGuideLines() {
   );
 }
 
-const TITLE = "scatter-ashby-material · javascript · muix · anyplot.ai";
-const SUBTITLE = "Density vs. Young's modulus · dashed lines mark constant specific stiffness E/ρ";
-
-const MARGIN = { top: 130, right: 105, bottom: 90, left: 110 };
-
 export default function Chart() {
+  const { width, height } = window.ANYPLOT_SIZE;
   return (
-    <ChartContainer
+    <ChartsContainer
       width={width}
       height={height}
       margin={MARGIN}
@@ -299,7 +301,7 @@ export default function Chart() {
         type: "scatter",
         id: family.name,
         label: family.name,
-        color: t.palette[i],
+        color: t.palette[i % t.palette.length],
         markerSize: 6,
         data: family.points.map((p, j) => ({ x: p.rho, y: p.e, id: `${family.name}-${j}` })),
       }))}
@@ -307,34 +309,45 @@ export default function Chart() {
         {
           id: "density",
           scaleType: "log",
-          min: X_MIN,
-          max: X_MAX,
+          min: xMin,
+          max: xMax,
+          height: 64,
           disableTicks: true,
-          tickInterval: decadeTicks(X_MIN, X_MAX),
-          label: "Density (kg/m³)",
+          tickInterval: xDecadeTicks,
+          label: PROPERTY_X,
           labelStyle: { fontSize: 16, fill: t.ink },
           tickLabelStyle: { fontSize: 13, fill: t.inkSoft },
-          valueFormatter: formatAxisValue,
+          valueFormatter: (v) =>
+            v >= 100
+              ? Math.round(v).toLocaleString()
+              : v >= 1
+                ? Number(v.toPrecision(2)).toString()
+                : Number(v.toPrecision(1)).toString(),
         },
       ]}
       yAxis={[
         {
           id: "modulus",
           scaleType: "log",
-          min: Y_MIN,
-          max: Y_MAX,
+          min: yMin,
+          max: yMax,
+          width: 96,
           disableTicks: true,
-          tickInterval: decadeTicks(Y_MIN, Y_MAX),
-          label: "Young's Modulus (GPa)",
+          tickInterval: yDecadeTicks,
+          label: PROPERTY_Y,
           labelStyle: { fontSize: 16, fill: t.ink },
           tickLabelStyle: { fontSize: 13, fill: t.inkSoft },
-          valueFormatter: formatAxisValue,
+          valueFormatter: (v) =>
+            v >= 100
+              ? Math.round(v).toLocaleString()
+              : v >= 1
+                ? Number(v.toPrecision(2)).toString()
+                : Number(v.toPrecision(1)).toString(),
         },
       ]}
     >
       <ChartsGrid vertical horizontal />
-      <FamilyRegions />
-      <PerformanceGuideLines />
+      <AshbyOverlay />
       <ScatterPlot />
       <ChartsXAxis axisId="density" />
       <ChartsYAxis axisId="modulus" />
@@ -345,6 +358,6 @@ export default function Chart() {
       <text x={width / 2} y={78} textAnchor="middle" fontSize={15} fill={t.inkSoft}>
         {SUBTITLE}
       </text>
-    </ChartContainer>
+    </ChartsContainer>
   );
 }
