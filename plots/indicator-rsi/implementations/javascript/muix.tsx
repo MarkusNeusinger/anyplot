@@ -121,6 +121,7 @@ const oversoldPeriods = rsiValues.filter(
 const RSI_COLOR = t.palette[0];
 const OVERBOUGHT_COLOR = t.inkSoft;
 const OVERSOLD_COLOR = t.inkSoft;
+const ZONE_OPACITY = 0.12;
 
 function RsiZonesLayer() {
   const { left, width } = useDrawingArea();
@@ -139,7 +140,7 @@ function RsiZonesLayer() {
         width={width}
         height={Math.max(0, y70 - y100)}
         fill={OVERBOUGHT_COLOR}
-        fillOpacity={0.12}
+        fillOpacity={ZONE_OPACITY}
       />
       <rect
         x={left}
@@ -147,7 +148,7 @@ function RsiZonesLayer() {
         width={width}
         height={Math.max(0, y0 - y30)}
         fill={OVERSOLD_COLOR}
-        fillOpacity={0.12}
+        fillOpacity={ZONE_OPACITY}
       />
     </g>
   );
@@ -355,11 +356,10 @@ export default function Chart() {
             style={{
               width: 16,
               height: 14,
-              background: `${OVERBOUGHT_COLOR}48`,
-              border: `1.5px dashed ${OVERBOUGHT_COLOR}`,
+              background: OVERBOUGHT_COLOR,
+              opacity: ZONE_OPACITY,
               borderRadius: 2,
               display: "inline-block",
-              boxSizing: "border-box",
             }}
           />
           <span>Overbought zone (&gt; {OVERBOUGHT_THRESHOLD})</span>
@@ -369,11 +369,10 @@ export default function Chart() {
             style={{
               width: 16,
               height: 14,
-              background: `${OVERSOLD_COLOR}48`,
-              border: `1.5px dashed ${OVERSOLD_COLOR}`,
+              background: OVERSOLD_COLOR,
+              opacity: ZONE_OPACITY,
               borderRadius: 2,
               display: "inline-block",
-              boxSizing: "border-box",
             }}
           />
           <span>Oversold zone (&lt; {OVERSOLD_THRESHOLD})</span>
