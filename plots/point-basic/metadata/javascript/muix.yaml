@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: point-basic
 created: '2026-09-05T10:59:10Z'
-updated: '2026-10-24T11:44:53Z'
+updated: '2026-10-24T11:49:21Z'
 generated_by: gemini-4-argon
 adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
 workflow_run: 40090876946
@@ -13,44 +13,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/point-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/point-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/point-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/point-basic/javascript/muix/plot-dark.html
-quality_score: 85
+quality_score: 86
 review:
   strengths:
-  - Composes the chart from ChartsContainer + ChartsXAxis/ChartsYAxis/ChartsGrid and
-    draws the intervals, caps and markers through the useXScale/useYScale hooks, so
-    every mark sits exactly at its data value on MUI X's own scales
-  - Categories sorted by estimate (Denver 0.55 down to Miami -0.05), giving a clear
-    ranked reading as the spec asks
-  - Markers (r=10) carry a page-colored halo (stroke = pageBg) so they stay distinct
-    on top of their 3 px interval lines in both themes; caps drawn at both ends of
-    every interval
-  - Single dashed 'No effect' reference line at d = 0 via native ChartsReferenceLine
-    in the inkSoft token, the one reference line the Notes allow
-  - Value-axis domain computed from the bounds plus the null value with 10% padding,
-    so every interval and the reference line are fully shown
-  - 'Theme tokens threaded through all chrome (ink for title and category labels,
-    inkSoft for ticks); data color #009E73 identical in both renders; skipAnimation
-    set'
+  - 'Uses the MUI X v9 composition API idiomatically: ChartsContainer with id-keyed
+    linear and band axes, and a custom SVG layer that reads positions through the
+    useXScale/useYScale hooks, so every marker, interval and cap sits exactly at its
+    data value.'
+  - Native ChartsReferenceLine draws the null line at d = 0 with an inline 'No effect'
+    label in the theme's soft ink, the single reference line the Notes allow.
+  - Markers (r = 10) carry a page-coloured halo that lifts them off their interval
+    lines in both themes; caps at both ends are clearly visible.
+  - Sites sorted by estimate, horizontal layout with every category named on its own
+    row; the value axis spans every interval plus padding.
+  - 'All chrome threads theme tokens (ink, inkSoft, pageBg); data colour is brand
+    green #009E73, identical in both renders.'
+  - Data is a plausible, neutral multi-site programme evaluation with Cohen's d effects,
+    including one interval that crosses zero and one negative estimate.
   weaknesses:
-  - 'VQ-06 (both): the category (y) axis has no title, although the code defines SITE
-    = "Pilot Site" → label the y axis with the SITE constant ("Pilot Site") and widen
-    its band if needed. Likely cause: yAxis config without label.'
-  - 'Suggestion: the 0.05 tick step yields 26 crowded x tick labels and vertical grid
-    lines; a coarser step (e.g. 0.1 via tickInterval or tickNumber) would calm the
-    axis.'
-  - 'Suggestion: the mandated title fills only about 28% of the width at 22 px; a
-    slightly larger title would balance the canvas.'
+  - 'VQ-01 (both): the x axis carries 26 tick labels at a 0.05 step in 14 px type;
+    in the 400 px thumbnail they shrink to an illegible row of digits → a 0.1 step
+    (about 13 labels) at about 16 px (+2 px). Likely cause: the linear x axis left
+    at its automatic tick density (no tickInterval / tickNumber) with tickLabelStyle
+    fontSize 14.'
+  - 'Suggestion: the 22 px mandated title fills only about 29 % of the width; a slightly
+    larger title would anchor the layout better.'
+  - 'Suggestion: the custom SVG marks have no tooltip in the HTML view; a ChartsTooltip-driven
+    or title-element hover showing estimate and bounds would use the interactive output.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, not pure white.
-      Chrome: title "point-basic · javascript · muix · anyplot.ai" top-left in bold dark ink; x-axis title "Effect Size (Cohen's d)" centered below; x ticks -0.35 to 0.90 in steps of 0.05 in muted dark ink; eight city names (Denver, Portland, Boston, Austin, Chicago, Seattle, Atlanta, Miami) as y tick labels in dark ink; y axis has no title. Subtle light-gray vertical grid lines; left and bottom axis lines only. Dashed dark-gray vertical reference line at 0 with "No effect" label at its foot. All text readable.
-      Data: eight horizontal intervals in #009E73 with vertical caps at both ends and a filled #009E73 circle (white-ish halo) at each estimate, sorted top-to-bottom by estimate (Denver 0.55 ... Miami -0.05). Atlanta and Miami intervals cross zero.
+      Background: warm off-white, matches #FAF8F1.
+      Chrome: bold dark title "point-basic · javascript · muix · anyplot.ai" top-left; y-axis title "Pilot Site" (rotated) and site tick labels in dark ink; x-axis title "Effect Size (Cohen's d)" and tick labels -0.35 … 0.90 in soft ink; subtle vertical grid lines; left and bottom axis lines only. Dashed soft-ink reference line at 0.00 with "No effect" label near its foot. All text readable.
+      Data: eight horizontal intervals in brand green #009E73 with caps at both ends and a filled green marker (page-coloured halo) at each estimate; sites sorted by estimate from Denver (0.55) at the top to Miami (-0.05) at the bottom; Atlanta and Miami intervals cross the zero line.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17, not pure black.
-      Chrome: title, category labels and axis title in light ink; tick labels in light muted ink; grid lines subtle dark gray; reference line dashed light gray with readable "No effect" label. No dark-on-dark text.
-      Data: identical #009E73 intervals, caps and markers as the light render; the marker halo flips to the dark page color. Brand green clearly visible.
+      Background: warm near-black, matches #1A1A17.
+      Chrome: title, axis titles and site labels in light ink, x tick labels in light soft ink, grid lines subtle light-on-dark, dashed reference line and "No effect" label in light soft ink. No dark-on-dark text.
+      Data: identical #009E73 intervals, caps and markers to the light render; marker halo switches to the dark page colour. Only chrome flipped.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -59,74 +59,78 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes (title 22, axis title 15, ticks 14 CSS px, per
-          the muix sizing guidance); readable in both themes
+        comment: Sizes set explicitly and readable at full size in both themes; 26
+          x tick labels at 14 px blur in the 400 px thumbnail (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; 'No effect' label sits clear of the tick labels
+        comment: No text collisions; 'No effect' label clear of the ticks and data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: r=10 markers with page-colored halo, 3 px intervals and caps clearly
-          visible for 8 categories
+        comment: r=10 markers with halo, 3 px intervals and caps clearly visible for
+          8 categories
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single green series on high-contrast backgrounds; no color-only encoding
+        comment: Single green series with strong contrast on both surfaces; no colour-only
+          encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, plot fills the canvas, balanced axis bands, no overflow
+        comment: Canvas gate passed; plot fills the canvas, balanced axis labels,
+          nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: X axis 'Effect Size (Cohen's d)' is descriptive with units; the category
-          axis has no title (defect line)
+        passed: true
+        comment: '''Effect Size (Cohen''s d)'' and ''Pilot Site'' are descriptive
+          with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds #FAF8F1 / #1A1A17; chrome theme-correct'
+        comment: 'First series #009E73, correct #FAF8F1 / #1A1A17 backgrounds, theme-correct
+          chrome in both renders'
     design_excellence:
       score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: false
-        comment: 'Typographic hierarchy beyond baseline: category labels in ink vs
-          ticks in inkSoft, semi-bold title'
+        passed: true
+        comment: Clean style-guide baseline typography and hierarchy; nothing further
+          decided
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Page-colored halo separates marker from interval line; rounded line
-          caps; computed symmetric padding
+        passed: true
+        comment: 'Beyond baseline: page-coloured marker halo separating points from
+          lines, y ticks disabled, grid limited to the value axis; the grid''s 0.05
+          density is inherited rather than chosen'
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Ranked order and zero line are what the spec asks; no further hierarchy
-          chosen
+        passed: true
+        comment: Inline 'No effect' label turns the null line into a reading aid,
+          so the sites whose intervals cross zero stand out
     spec_compliance:
       score: 15
       max: 15
@@ -136,28 +140,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Horizontal point-estimate plot; only the allowed single reference
-          line
+        comment: Point estimate plot, one estimate and interval per category plus
+          the single allowed reference line
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct markers, caps at both ends, horizontal layout, ordered by
-          estimate, reference line at zero
+        comment: Horizontal orientation, distinct markers on top of lines, 95% CIs,
+          capped ends, reference line at zero, ordered by estimate
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Markers at their estimates via the axis scales; domain spans every
-          interval
+        comment: Marks at their scale positions via useXScale/useYScale; axis spans
+          every interval and 0
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; single series needs no legend (N/A)
+        comment: Title matches the mandated format; legend N/A for a single series
     data_quality:
       score: 15
       max: 15
@@ -167,20 +171,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Varied estimates, intervals crossing and clearing the null line
+        comment: Positive, near-zero and negative estimates; intervals that clear
+          and cross the null line
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Effect sizes (Cohen's d) with 95% CIs per pilot site; neutral, plausible
+        comment: 'Programme effect sizes across US pilot sites: plausible and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: d between -0.05 and 0.55 with ~0.23 half-widths is realistic; bounds
-          bracket every estimate (checked in data)
+        comment: Cohen's d from -0.05 to 0.55 with ±0.22-0.26 CIs is realistic; no
+          Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -190,8 +195,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat data -> plot; the PointEstimates component is required for MUI
-          X scale hooks
+        comment: Constants → data → plot; the one inner component is required for
+          the scale hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -209,42 +214,47 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; MUI X has no native error-bar series
+        comment: Community MUI X has no error-bar series, so the short custom SVG
+          layer is appropriate
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component, v9 ChartsContainer API, skipAnimation;
-          harness writes PNG+HTML
+        comment: Default-exported component, skipAnimation, sized to ANYPLOT_SIZE,
+          current v9 API
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: false
-        comment: 'Documented MUI X composition pattern: ChartsContainer with explicit
-          axes, ChartsGrid, ChartsReferenceLine'
+        passed: true
+        comment: v9 composition (ChartsContainer, ChartsXAxis/YAxis, ChartsGrid) with
+          axis ids and scale hooks
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Custom SVG marks driven by useXScale/useYScale hooks and band bandwidth
-  verdict: REJECTED
+        passed: true
+        comment: useXScale/useYScale custom-mark composition and native ChartsReferenceLine
+          with label
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T11:42:20Z'
+  rendered_at: '2026-10-24T11:46:42Z'
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
-  - annotations
+  - error-bars
+  - reference-lines
+  - custom-markers
   patterns:
   - data-generation
-  dataprep: []
+  - iteration-over-groups
+  dataprep:
+  - sorting
   styling:
-  - publication-ready
+  - minimal-chrome
