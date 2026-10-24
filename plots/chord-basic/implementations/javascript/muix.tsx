@@ -3,224 +3,229 @@
 // Library: muix 7.29.1 | JavaScript 22.22.3
 // Quality: 94/100 | Created: 2026-06-17
 //# anyplot-orientation: square
-//
-// MUI X community has no chord/Sankey primitive, so the diagram is drawn with
-// the supported escape hatch: a <ChartContainer> establishes a square linear
-// coordinate space, and the chord ring + ribbons are SVG overlays positioned
-// through the chart's own useXScale/useYScale hooks. Everything is community
-// @mui/x-charts — no Pro, no second charting library.
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
-import { useXScale, useYScale } from "@mui/x-charts/hooks";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
+import { useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const SIZE = window.ANYPLOT_SIZE;
-const TITLE = "chord-basic · javascript · muix · anyplot.ai";
 
-const FONT =
-  '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+// Constants
+const HEADER_H = 98;
+const FOOTER_H = 44;
+const PAD_RAD = 0.05;
+const R_OUT_SHARE = 0.39;
+const R_IN_SHARE = 0.358;
+const R_LABEL_SHARE = 0.422;
 
-// Square drawing domain. The chord ring lives inside radius ~1; the band beyond
-// it is reserved for region labels, the title, and the footnote.
-const R = 1.42;
+// Columns: set these to your data's column names
+const SOURCE = "Origin region"; // role: source
+const TARGET = "Destination region"; // role: target
+const VALUE = "Migrants per year (millions)"; // role: value
 
-// --- Data: annual migration flows between six world regions (millions) -------
-// Deterministic, in-memory. MATRIX[i][j] = migrants moving FROM region i TO
-// region j (diagonal = 0, no internal moves). Both directions are kept, so each
-// chord shows two magnitudes — one per ribbon end.
-const ENTITIES = [
-  { name: "Asia", color: t.palette[0] }, // first categorical series → brand green
-  { name: "Africa", color: t.palette[1] },
-  { name: "Europe", color: t.palette[2] },
-  { name: "N. America", color: t.palette[3] },
-  { name: "S. America", color: t.palette[4] },
-  { name: "Oceania", color: t.palette[5] },
+// Data: replace this block with your own records, one object per row
+const data = [
+  { [SOURCE]: "Asia", [TARGET]: "Africa", [VALUE]: 1.2 },
+  { [SOURCE]: "Asia", [TARGET]: "Europe", [VALUE]: 6.5 },
+  { [SOURCE]: "Asia", [TARGET]: "N. America", [VALUE]: 7.8 },
+  { [SOURCE]: "Asia", [TARGET]: "S. America", [VALUE]: 0.6 },
+  { [SOURCE]: "Asia", [TARGET]: "Oceania", [VALUE]: 1.1 },
+  { [SOURCE]: "Africa", [TARGET]: "Asia", [VALUE]: 0.9 },
+  { [SOURCE]: "Africa", [TARGET]: "Europe", [VALUE]: 5.4 },
+  { [SOURCE]: "Africa", [TARGET]: "N. America", [VALUE]: 1.3 },
+  { [SOURCE]: "Africa", [TARGET]: "S. America", [VALUE]: 0.3 },
+  { [SOURCE]: "Africa", [TARGET]: "Oceania", [VALUE]: 0.2 },
+  { [SOURCE]: "Europe", [TARGET]: "Asia", [VALUE]: 2.1 },
+  { [SOURCE]: "Europe", [TARGET]: "Africa", [VALUE]: 1.7 },
+  { [SOURCE]: "Europe", [TARGET]: "N. America", [VALUE]: 4.2 },
+  { [SOURCE]: "Europe", [TARGET]: "S. America", [VALUE]: 0.7 },
+  { [SOURCE]: "Europe", [TARGET]: "Oceania", [VALUE]: 0.9 },
+  { [SOURCE]: "N. America", [TARGET]: "Asia", [VALUE]: 1.4 },
+  { [SOURCE]: "N. America", [TARGET]: "Africa", [VALUE]: 0.5 },
+  { [SOURCE]: "N. America", [TARGET]: "Europe", [VALUE]: 2.8 },
+  { [SOURCE]: "N. America", [TARGET]: "S. America", [VALUE]: 1.6 },
+  { [SOURCE]: "N. America", [TARGET]: "Oceania", [VALUE]: 0.4 },
+  { [SOURCE]: "S. America", [TARGET]: "Asia", [VALUE]: 0.4 },
+  { [SOURCE]: "S. America", [TARGET]: "Africa", [VALUE]: 0.2 },
+  { [SOURCE]: "S. America", [TARGET]: "Europe", [VALUE]: 2.3 },
+  { [SOURCE]: "S. America", [TARGET]: "N. America", [VALUE]: 3.1 },
+  { [SOURCE]: "S. America", [TARGET]: "Oceania", [VALUE]: 0.3 },
+  { [SOURCE]: "Oceania", [TARGET]: "Asia", [VALUE]: 0.7 },
+  { [SOURCE]: "Oceania", [TARGET]: "Africa", [VALUE]: 0.1 },
+  { [SOURCE]: "Oceania", [TARGET]: "Europe", [VALUE]: 0.6 },
+  { [SOURCE]: "Oceania", [TARGET]: "N. America", [VALUE]: 0.5 },
+  { [SOURCE]: "Oceania", [TARGET]: "S. America", [VALUE]: 0.2 },
 ];
 
-// rows = source, cols = target (Asia, Africa, Europe, N.Am, S.Am, Oceania)
-const MATRIX = [
-  [0.0, 1.2, 6.5, 7.8, 0.6, 1.1], // Asia →
-  [0.9, 0.0, 5.4, 1.3, 0.3, 0.2], // Africa →
-  [2.1, 1.7, 0.0, 4.2, 0.7, 0.9], // Europe →
-  [1.4, 0.5, 2.8, 0.0, 1.6, 0.4], // N. America →
-  [0.4, 0.2, 2.3, 3.1, 0.0, 0.3], // S. America →
-  [0.7, 0.1, 0.6, 0.5, 0.2, 0.0], // Oceania →
-];
+// Plot: reads only data and the constants above
+const entities = Array.from(
+  new Set(data.flatMap((d) => [String(d[SOURCE]), String(d[TARGET])])),
+);
+const nEntities = entities.length;
+const entityIndex = new Map(entities.map((name, idx) => [name, idx]));
+const formatValue = (v: number) => v.toFixed(1);
 
-const N = ENTITIES.length;
-
-// --- Chord layout (manual; standard d3-chord arithmetic) ---------------------
-// Each region subtends an arc proportional to its total outbound flow. Inside a
-// region's arc, sub-segments (one per partner) carry the per-pair magnitude, so
-// a ribbon's two ends can differ in width — that is the bidirectional flow.
-const groupTotal = MATRIX.map((row) => row.reduce((a, b) => a + b, 0));
-const grand = groupTotal.reduce((a, b) => a + b, 0);
-
-const PAD = 0.05; // angular gap between region arcs (radians)
-const avail = 2 * Math.PI - PAD * N;
-
-const groups = [];
-let cur = -Math.PI / 2 + PAD / 2; // start at top, sweep clockwise
-for (let i = 0; i < N; i++) {
-  const span = (groupTotal[i] / grand) * avail;
-  const gStart = cur;
-  const gEnd = cur + span;
-  const subs = [];
-  let sc = gStart;
-  for (let j = 0; j < N; j++) {
-    const sspan = groupTotal[i] > 0 ? (MATRIX[i][j] / groupTotal[i]) * span : 0;
-    subs.push([sc, sc + sspan]);
-    sc += sspan;
-  }
-  groups.push({ i, gStart, gEnd, mid: (gStart + gEnd) / 2, subs });
-  cur = gEnd + PAD;
+const matrix = Array.from({ length: nEntities }, () =>
+  Array.from({ length: nEntities }, () => 0),
+);
+for (const row of data) {
+  const sIdx = entityIndex.get(String(row[SOURCE]));
+  const tIdx = entityIndex.get(String(row[TARGET]));
+  // A flow from an entity to itself has no chord
+  if (sIdx !== tIdx) matrix[sIdx][tIdx] += Number(row[VALUE]);
 }
 
-// One ribbon per unordered region pair, connecting subgroup(i,j) ↔ subgroup(j,i).
-const ribbons = [];
-for (let i = 0; i < N; i++) {
-  for (let j = 0; j < i; j++) {
-    const a = MATRIX[i][j]; // i → j
-    const b = MATRIX[j][i]; // j → i
+const groupTotal = matrix.map((row) => row.reduce((a, b) => a + b, 0));
+const grandTotal = groupTotal.reduce((a, b) => a + b, 0);
+const availRad = 2 * Math.PI - PAD_RAD * nEntities;
+
+let curAngle = -Math.PI / 2 + PAD_RAD / 2;
+const groups = entities.map((name, i) => {
+  const span = (groupTotal[i] / grandTotal) * availRad;
+  const gStart = curAngle;
+  const gEnd = curAngle + span;
+  let subCur = gStart;
+  // An entity with no outbound flow gets a zero-length arc
+  const subs = entities.map((_, j) => {
+    const subSpan =
+      groupTotal[i] > 0 ? (matrix[i][j] / groupTotal[i]) * span : 0;
+    const range: [number, number] = [subCur, subCur + subSpan];
+    subCur += subSpan;
+    return range;
+  });
+  curAngle = gEnd + PAD_RAD;
+  return {
+    i,
+    name,
+    color: t.palette[i],
+    total: groupTotal[i],
+    gStart,
+    gEnd,
+    mid: (gStart + gEnd) / 2,
+    subs,
+  };
+});
+
+const ribbons: {
+  id: string;
+  i: number;
+  j: number;
+  a: number;
+  b: number;
+  color: string;
+  mag: number;
+  sI: [number, number];
+  sJ: [number, number];
+}[] = [];
+
+for (let i = 0; i < nEntities; i += 1) {
+  for (let j = 0; j < i; j += 1) {
+    const a = matrix[i][j];
+    const b = matrix[j][i];
     if (a + b <= 0) continue;
-    const dom = a >= b ? i : j; // colour by the dominant origin region
+    const dom = a >= b ? i : j;
     ribbons.push({
+      id: `${entities[i]}-${entities[j]}`,
       i,
       j,
       a,
       b,
-      color: ENTITIES[dom].color,
+      color: groups[dom].color,
       mag: a + b,
       sI: groups[i].subs[j],
       sJ: groups[j].subs[i],
     });
   }
 }
-// Draw fat ribbons first so thin ones stay legible on top.
 ribbons.sort((x, y) => y.mag - x.mag);
+const bothWays = ribbons.filter((r) => r.a > 0 && r.b > 0).length;
 
-// Ring geometry (data-space radii).
-const R_OUT = 0.9; // outer edge of region band
-const R_IN = 0.83; // inner edge of region band = ribbon attach radius
-const R_RIB = 0.83;
-const R_LABEL = 1.0;
+const TITLE = "chord-basic · javascript · muix · anyplot.ai";
+const SUBTITLE = `${nEntities} entities · ${ribbons.length} connected pairs (${bothWays} with flows in both directions) · Total ${formatValue(grandTotal)}`;
 
-// --- Geometry helpers (data coordinates → SVG path via the chart scales) -----
-function arcPts(a0, a1, r) {
-  const steps = Math.max(2, Math.ceil(Math.abs(a1 - a0) / 0.04));
-  const pts = [];
-  for (let k = 0; k <= steps; k++) {
-    const a = a0 + (a1 - a0) * (k / steps);
-    pts.push([r * Math.cos(a), r * Math.sin(a)]);
-  }
-  return pts;
-}
+function ChordDiagramLayer() {
+  const { left, top, width, height } = useDrawingArea();
+  const cx = left + width / 2;
+  const cy = top + height / 2;
+  const size = Math.min(width, height);
+  const rOut = size * R_OUT_SHARE;
+  const rIn = size * R_IN_SHARE;
+  const rLabel = size * R_LABEL_SHARE;
 
-function ribbonPath(xs, ys, sI, sJ, r) {
-  const cx = xs(0).toFixed(1);
-  const cy = ys(0).toFixed(1);
-  const A = arcPts(sI[0], sI[1], r);
-  const B = arcPts(sJ[0], sJ[1], r);
-  const p = (pt) => `${xs(pt[0]).toFixed(1)} ${ys(pt[1]).toFixed(1)}`;
-  let d = `M ${p(A[0])}`;
-  for (let k = 1; k < A.length; k++) d += ` L ${p(A[k])}`;
-  d += ` Q ${cx} ${cy} ${p(B[0])}`;
-  for (let k = 1; k < B.length; k++) d += ` L ${p(B[k])}`;
-  d += ` Q ${cx} ${cy} ${p(A[0])} Z`;
-  return d;
-}
-
-function bandPath(xs, ys, a0, a1, rIn, rOut) {
-  const outer = arcPts(a0, a1, rOut);
-  const inner = arcPts(a1, a0, rIn);
-  const p = (pt) => `${xs(pt[0]).toFixed(1)} ${ys(pt[1]).toFixed(1)}`;
-  let d = `M ${p(outer[0])}`;
-  for (let k = 1; k < outer.length; k++) d += ` L ${p(outer[k])}`;
-  for (let k = 0; k < inner.length; k++) d += ` L ${p(inner[k])}`;
-  return d + " Z";
-}
-
-const fmt = (v) => `${v.toFixed(1)}M`;
-
-// --- Overlay layers ----------------------------------------------------------
-function Ribbons() {
-  const xs = useXScale();
-  const ys = useYScale();
   return (
     <g>
-      {ribbons.map((rb, k) => (
-        <path
-          key={k}
-          d={ribbonPath(xs, ys, rb.sI, rb.sJ, R_RIB)}
-          fill={rb.color}
-          fillOpacity={0.6}
-          stroke={t.pageBg}
-          strokeWidth={0.8}
-          strokeOpacity={0.5}
-        >
-          <title>
-            {`${ENTITIES[rb.i].name} → ${ENTITIES[rb.j].name}: ${fmt(rb.a)}\n` +
-              `${ENTITIES[rb.j].name} → ${ENTITIES[rb.i].name}: ${fmt(rb.b)}`}
-          </title>
-        </path>
-      ))}
-    </g>
-  );
-}
+      {ribbons.map((rb) => {
+        // Arc along the source end, curve through the centre, arc along the
+        // target end, curve back
+        const [a0, a1] = rb.sI;
+        const [b0, b1] = rb.sJ;
+        const d =
+          `M ${cx + rIn * Math.cos(a0)} ${cy + rIn * Math.sin(a0)}` +
+          ` A ${rIn} ${rIn} 0 ${a1 - a0 > Math.PI ? 1 : 0} 1 ${cx + rIn * Math.cos(a1)} ${cy + rIn * Math.sin(a1)}` +
+          ` Q ${cx} ${cy} ${cx + rIn * Math.cos(b0)} ${cy + rIn * Math.sin(b0)}` +
+          ` A ${rIn} ${rIn} 0 ${b1 - b0 > Math.PI ? 1 : 0} 1 ${cx + rIn * Math.cos(b1)} ${cy + rIn * Math.sin(b1)}` +
+          ` Q ${cx} ${cy} ${cx + rIn * Math.cos(a0)} ${cy + rIn * Math.sin(a0)} Z`;
 
-function Ring() {
-  const xs = useXScale();
-  const ys = useYScale();
-  return (
-    <g>
-      {groups.map((g) => (
-        <path
-          key={g.i}
-          d={bandPath(xs, ys, g.gStart, g.gEnd, R_IN, R_OUT)}
-          fill={ENTITIES[g.i].color}
-          stroke={t.pageBg}
-          strokeWidth={1.5}
-        >
-          <title>{`${ENTITIES[g.i].name} · total outbound ${fmt(groupTotal[g.i])}`}</title>
-        </path>
-      ))}
-    </g>
-  );
-}
-
-function Labels() {
-  const xs = useXScale();
-  const ys = useYScale();
-  return (
-    <g fontFamily={FONT}>
-      {groups.map((g) => {
-        const mid = g.mid;
-        const c = Math.cos(mid);
-        const lx = R_LABEL * c;
-        const ly = R_LABEL * Math.sin(mid);
-        const anchor = c > 0.33 ? "start" : c < -0.33 ? "end" : "middle";
-        const dx = c > 0.33 ? 8 : c < -0.33 ? -8 : 0;
         return (
-          <g key={g.i}>
+          <path
+            key={rb.id}
+            d={d}
+            fill={rb.color}
+            fillOpacity={0.62}
+            stroke={t.pageBg}
+            strokeWidth={0.9}
+            strokeOpacity={0.55}
+          >
+            <title>
+              {`${VALUE}\n${entities[rb.i]} → ${entities[rb.j]}: ${formatValue(rb.a)}\n${entities[rb.j]} → ${entities[rb.i]}: ${formatValue(rb.b)}`}
+            </title>
+          </path>
+        );
+      })}
+
+      {groups.map((g) => {
+        const large = g.gEnd - g.gStart > Math.PI ? 1 : 0;
+        const d =
+          `M ${cx + rOut * Math.cos(g.gStart)} ${cy + rOut * Math.sin(g.gStart)}` +
+          ` A ${rOut} ${rOut} 0 ${large} 1 ${cx + rOut * Math.cos(g.gEnd)} ${cy + rOut * Math.sin(g.gEnd)}` +
+          ` L ${cx + rIn * Math.cos(g.gEnd)} ${cy + rIn * Math.sin(g.gEnd)}` +
+          ` A ${rIn} ${rIn} 0 ${large} 0 ${cx + rIn * Math.cos(g.gStart)} ${cy + rIn * Math.sin(g.gStart)} Z`;
+
+        const cosMid = Math.cos(g.mid);
+        const sinMid = Math.sin(g.mid);
+        const lx = cx + rLabel * cosMid + (cosMid > 0.33 ? 8 : cosMid < -0.33 ? -8 : 0);
+        const ly = cy + rLabel * sinMid;
+        const anchor =
+          cosMid > 0.33 ? "start" : cosMid < -0.33 ? "end" : "middle";
+
+        return (
+          <g key={g.name}>
+            <path
+              d={d}
+              fill={g.color}
+              stroke={t.pageBg}
+              strokeWidth={1.5}
+            >
+              <title>{`${g.name} · outbound ${formatValue(g.total)} (${VALUE})`}</title>
+            </path>
             <text
-              x={xs(lx) + dx}
-              y={ys(ly)}
+              x={lx}
+              y={ly - 8}
               textAnchor={anchor}
               dominantBaseline="middle"
-              fontSize={21}
+              fontSize={19}
               fontWeight={700}
-              fill={ENTITIES[g.i].color}
+              fill={t.ink}
             >
-              {ENTITIES[g.i].name}
+              {g.name}
             </text>
             <text
-              x={xs(lx) + dx}
-              y={ys(ly) + 24}
+              x={lx}
+              y={ly + 14}
               textAnchor={anchor}
               dominantBaseline="middle"
               fontSize={14}
               fill={t.inkSoft}
             >
-              {fmt(groupTotal[g.i])} out
+              {`${formatValue(g.total)} out`}
             </text>
           </g>
         );
@@ -229,62 +234,60 @@ function Labels() {
   );
 }
 
-function Frame() {
-  const xs = useXScale();
-  const ys = useYScale();
-  return (
-    <g fontFamily={FONT}>
-      <text
-        x={xs(0)}
-        y={ys(1.32)}
-        textAnchor="middle"
-        dominantBaseline="middle"
-        fontSize={27}
-        fontWeight={600}
-        fill={t.ink}
-      >
-        {TITLE}
-      </text>
-      <text
-        x={xs(0)}
-        y={ys(1.19)}
-        textAnchor="middle"
-        dominantBaseline="middle"
-        fontSize={16}
-        fill={t.inkSoft}
-      >
-        Annual migration flows between six world regions · ribbon width ∝ migrants
-      </text>
-      <text
-        x={xs(0)}
-        y={ys(-1.3)}
-        textAnchor="middle"
-        dominantBaseline="middle"
-        fontSize={14}
-        fill={t.inkSoft}
-      >
-        Each chord carries both directions; arc length ∝ a region's total outbound flow (millions / yr)
-      </text>
-    </g>
-  );
-}
-
-// --- Chart (default-exported component — the harness mounts it) --------------
 export default function Chart() {
+  const { width, height } = window.ANYPLOT_SIZE;
+  const chartHeight = height - HEADER_H - FOOTER_H;
+
   return (
-    <ChartContainer
-      width={SIZE.width}
-      height={SIZE.height}
-      margin={{ top: 12, right: 12, bottom: 12, left: 12 }}
-      series={[]}
-      xAxis={[{ id: "x", scaleType: "linear", min: -R, max: R }]}
-      yAxis={[{ id: "y", scaleType: "linear", min: -R, max: R }]}
-      skipAnimation
+    <div
+      style={{
+        width,
+        height,
+        background: t.pageBg,
+        fontFamily: "Inter, system-ui, sans-serif",
+        display: "flex",
+        flexDirection: "column",
+      }}
     >
-      <Ribbons />
-      <Ring />
-      <Labels />
-      <Frame />
-    </ChartContainer>
+      <div
+        style={{
+          height: HEADER_H,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 6,
+          paddingTop: 6,
+        }}
+      >
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>
+          {TITLE}
+        </div>
+        <div style={{ fontSize: 15, color: t.inkSoft }}>{SUBTITLE}</div>
+      </div>
+
+      <ChartsContainer
+        width={width}
+        height={chartHeight}
+        margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
+        series={[]}
+        skipAnimation
+      >
+        <ChordDiagramLayer />
+      </ChartsContainer>
+
+      <div
+        style={{
+          height: FOOTER_H,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 14,
+          color: t.inkSoft,
+        }}
+      >
+        Each chord carries both directions; arc length is proportional to total outbound {VALUE}
+      </div>
+    </div>
   );
 }
