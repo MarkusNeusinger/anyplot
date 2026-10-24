@@ -1,107 +1,91 @@
 // anyplot.ai
 // lollipop-grouped: Grouped Lollipop Chart
-// Library: muix 9.x | JavaScript 22.23.2
+// Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 93/100 | Created: 2026-09-02
 
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
-import { useXScale, useYScale, useDrawingArea } from "@mui/x-charts/hooks";
+import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
 // Constants
-const CATEGORY_COL = "Region" as const;
-const SERIES_COL = "Product Line" as const;
-const VALUE_COL = "Revenue ($M)" as const;
-
 const GROUP_PAD_FRAC = 0.18;
 const Y_PAD_FRAC = 0.25;
 
-// Data — quarterly revenue ($M) by product line across regions
-const DATA: Array<Record<string, string | number>> = [
-  { [CATEGORY_COL]: "North America", [SERIES_COL]: "Hardware", [VALUE_COL]: 48 },
-  { [CATEGORY_COL]: "North America", [SERIES_COL]: "Software", [VALUE_COL]: 71 },
-  { [CATEGORY_COL]: "North America", [SERIES_COL]: "Services", [VALUE_COL]: 39 },
-  { [CATEGORY_COL]: "Asia-Pacific", [SERIES_COL]: "Hardware", [VALUE_COL]: 52 },
-  { [CATEGORY_COL]: "Asia-Pacific", [SERIES_COL]: "Software", [VALUE_COL]: 45 },
-  { [CATEGORY_COL]: "Asia-Pacific", [SERIES_COL]: "Services", [VALUE_COL]: 33 },
-  { [CATEGORY_COL]: "Europe", [SERIES_COL]: "Hardware", [VALUE_COL]: 33 },
-  { [CATEGORY_COL]: "Europe", [SERIES_COL]: "Software", [VALUE_COL]: 58 },
-  { [CATEGORY_COL]: "Europe", [SERIES_COL]: "Services", [VALUE_COL]: 30 },
-  { [CATEGORY_COL]: "Latin America", [SERIES_COL]: "Hardware", [VALUE_COL]: 21 },
-  { [CATEGORY_COL]: "Latin America", [SERIES_COL]: "Software", [VALUE_COL]: 24 },
-  { [CATEGORY_COL]: "Latin America", [SERIES_COL]: "Services", [VALUE_COL]: 17 },
+// Columns: set these to your data's column names
+const CATEGORY = "Region"; // role: category
+const SERIES = "Product line"; // role: series
+const VALUE = "Revenue ($M)"; // role: value
+
+// Data: replace this block with your own records
+const data: Array<Record<string, string | number>> = [
+  { [CATEGORY]: "North America", [SERIES]: "Hardware", [VALUE]: 48 },
+  { [CATEGORY]: "North America", [SERIES]: "Software", [VALUE]: 71 },
+  { [CATEGORY]: "North America", [SERIES]: "Services", [VALUE]: 39 },
+  { [CATEGORY]: "Asia-Pacific", [SERIES]: "Hardware", [VALUE]: 52 },
+  { [CATEGORY]: "Asia-Pacific", [SERIES]: "Software", [VALUE]: 45 },
+  { [CATEGORY]: "Asia-Pacific", [SERIES]: "Services", [VALUE]: 33 },
+  { [CATEGORY]: "Europe", [SERIES]: "Hardware", [VALUE]: 33 },
+  { [CATEGORY]: "Europe", [SERIES]: "Software", [VALUE]: 58 },
+  { [CATEGORY]: "Europe", [SERIES]: "Services", [VALUE]: 30 },
+  { [CATEGORY]: "Latin America", [SERIES]: "Hardware", [VALUE]: 21 },
+  { [CATEGORY]: "Latin America", [SERIES]: "Software", [VALUE]: 24 },
+  { [CATEGORY]: "Latin America", [SERIES]: "Services", [VALUE]: 17 },
 ];
 
-// Discover categories and series in order of first appearance, then sort categories by total revenue descending
+// Plot: reads only data and the constants above
 const rawRegions: string[] = [];
 const productLines: string[] = [];
-for (const row of DATA) {
-  const reg = String(row[CATEGORY_COL]);
-  const prod = String(row[SERIES_COL]);
+for (const row of data) {
+  const reg = String(row[CATEGORY]);
+  const prod = String(row[SERIES]);
   if (!rawRegions.includes(reg)) rawRegions.push(reg);
   if (!productLines.includes(prod)) productLines.push(prod);
 }
 
 const regionTotals: Record<string, number> = {};
 for (const reg of rawRegions) {
-  regionTotals[reg] = DATA.filter((r) => String(r[CATEGORY_COL]) === reg).reduce(
-    (sum, r) => sum + Number(r[VALUE_COL]),
-    0,
-  );
+  regionTotals[reg] = data
+    .filter((r) => String(r[CATEGORY]) === reg)
+    .reduce((sum, r) => sum + Number(r[VALUE]), 0);
 }
 const regions = [...rawRegions].sort((a, b) => regionTotals[b] - regionTotals[a]);
-const focalRegion = regions[0];
 
 const seriesColors = productLines.map((_, i) => t.palette[i]);
-const maxRevenue = Math.max(...DATA.map((r) => Number(r[VALUE_COL])));
+const maxRevenue = Math.max(...data.map((r) => Number(r[VALUE])));
 const yAxisMax = maxRevenue * (1 + Y_PAD_FRAC);
-const VALUE_UNIT = VALUE_COL.match(/\(([^)]+)\)/)?.[1] ?? "$M";
+const unitMatch = VALUE.match(/\(([^)]+)\)/);
+const VALUE_UNIT = unitMatch ? unitMatch[1] : "";
 const UNIT_PREFIX = VALUE_UNIT.startsWith("$") ? "$" : "";
-const UNIT_SUFFIX = VALUE_UNIT.startsWith("$") ? VALUE_UNIT.slice(1) : VALUE_UNIT;
+const UNIT_SUFFIX = VALUE_UNIT.startsWith("$")
+  ? VALUE_UNIT.slice(1)
+  : VALUE_UNIT;
 
 function GroupedLollipopsLayer() {
-  const xScale = useXScale("region-axis") as {
-    (v: string): number | undefined;
-    bandwidth?: () => number;
+  const xScale = useXScale("region-axis") as unknown as ((v: string) => number) & {
+    bandwidth: () => number;
   };
-  const yScale = useYScale("revenue-axis") as (v: number) => number | undefined;
-  const { top, height } = useDrawingArea();
-
-  if (!xScale || !yScale || typeof xScale.bandwidth !== "function") return null;
+  const yScale = useYScale("revenue-axis") as (v: number) => number;
 
   const bandwidth = xScale.bandwidth();
   const groupPadding = bandwidth * GROUP_PAD_FRAC;
   const slotWidth = (bandwidth - 2 * groupPadding) / productLines.length;
-  const baselineY = Number(yScale(0) ?? top + height);
-  const focalX = Number(xScale(focalRegion) ?? 0);
+  const baselineY = yScale(0);
 
   return (
     <g>
-      {/* Subtle non-data chrome highlight behind the top-revenue region */}
-      <rect
-        x={focalX}
-        y={top}
-        width={bandwidth}
-        height={height}
-        fill={t.elevatedBg}
-        fillOpacity={0.55}
-        stroke={t.grid}
-        strokeWidth={1}
-        rx={10}
-      />
-
       {regions.map((region) =>
         productLines.map((prod, si) => {
-          const row = DATA.find(
-            (r) => String(r[CATEGORY_COL]) === region && String(r[SERIES_COL]) === prod,
+          const row = data.find(
+            (r) => String(r[CATEGORY]) === region && String(r[SERIES]) === prod,
           );
           if (!row) return null;
-          const value = Number(row[VALUE_COL]);
-          const cx = Number(xScale(region) ?? 0) + groupPadding + slotWidth * (si + 0.5);
-          const cy = Number(yScale(value) ?? baselineY);
+          const value = Number(row[VALUE]);
+          const cx = xScale(region) + groupPadding + slotWidth * (si + 0.5);
+          const cy = yScale(value);
           return (
             <g key={`${region}-${prod}`}>
               <line
@@ -215,7 +199,7 @@ export default function Chart() {
             min: 0,
             max: yAxisMax,
             width: 84,
-            label: VALUE_COL,
+            label: VALUE,
             valueFormatter: (v: number | null) =>
               v != null ? `${UNIT_PREFIX}${v}${UNIT_SUFFIX}` : "",
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
