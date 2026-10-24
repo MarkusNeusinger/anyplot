@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: line-3d-trajectory
 created: '2026-09-10T00:21:49Z'
-updated: '2026-10-24T10:23:28Z'
+updated: '2026-10-24T10:32:00Z'
 generated_by: gemini-4-argon
 adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
 workflow_run: 40085401658
@@ -13,73 +13,73 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-3d-t
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/javascript/muix/plot-dark.html
-quality_score: 81
+quality_score: 83
 review:
   strengths:
-  - Builds a custom SVG layer inside the community ChartsContainer and positions it
-    with the useDrawingArea hook — the MUI X composition API used for a chart type
-    MUI X has no native component for
-  - Two Lorenz trajectories with initial conditions 0.1000 vs 0.1001, integrated with
-    RK4 and a discarded transient, give a real sensitivity-to-initial-conditions story;
-    values (x ±18, y ±25, z 5–45) are correct for σ=10, ρ=28, β=8/3
-  - Oblique view with a translucent floor, a dashed back wall and a labeled orientation
-    triad makes all three axes and their ranges readable
-  - All chrome threads theme tokens (ink, inkSoft, grid, elevatedBg, pageBg); both
-    renders are fully readable and the data colors are identical across themes
-  - Legend for the two trajectories sits in the header band, clear of the data, and
-    names each initial condition
+  - The data is a real RK4 integration of the Lorenz system (σ=10, ρ=28, β=8/3, dt=0.01).
+    It drops a 200-step transient and keeps 2,000 points per trajectory. The axis
+    extents it reports (X −17 to +18, Y −22 to +24, Z +6 to +44) match the known size
+    of the attractor.
+  - Two initial states that differ only by 0.0001 in x₀ start from one shared marker
+    and end at clearly different points. The example data itself shows sensitive dependence
+    on initial conditions, the defining property of a chaotic attractor.
+  - The oblique view (elev 24°, azim −40°) shows the full extent of both lobes in
+    X, Y and Z. A translucent floor and dashed back walls give depth without competing
+    with the data.
+  - Each axis title is rotated to run parallel to its floor edge and pushed outward
+    from the box. The titles carry the data range, so all three axes are labeled without
+    clutter.
+  - Thin translucent strands (1.2 px, opacity 0.5) keep the individual windings of
+    the dense lobes traceable, as the Notes ask.
+  - 'MUI X is used idiomatically: a custom SVG layer goes inside ChartsContainer and
+    is placed with the useDrawingArea hook, skipAnimation is set, and every chrome
+    color comes from the theme tokens, so both renders adapt correctly.'
   weaknesses:
-  - 'SC-02 (both): the wings of the attractor are seen nearly edge-on, so both lobes
-    collapse into thin slivers forming a ''V'' and the butterfly''s extent in the
-    wing plane is flattened, against the bullet ''an oblique angle that reveals the
-    path''s extent in every dimension'' → choose a view where both lobes open up as
-    loops (for example elevation about 25–30° with an azimuth around 120–135°, or
-    about −60°). Likely cause: AZIM_DEG = 32 lines up the projection with the plane
-    of the wings.'
-  - 'SC-02 (both): at the outer turns of the upper-right lobe the polyline shows visible
-    facets and corners instead of a smooth curve, against the bullet ''enough points
-    that a curved path reads as a smooth curve'' → halve the time step between drawn
-    points (0.02 → 0.01 time units) while staying inside the spec''s 100–2000 points
-    per trajectory, for example SUBSAMPLE = 1 with STEPS = 2400 (2,000 points after
-    the transient). Likely cause: SUBSAMPLE = 2 with DT = 0.01 gives 0.02 time units
-    per segment where the trajectory moves fastest.'
-  - 'VQ-03 (both): Trajectory A (green) is drawn first and almost completely hidden
-    under Trajectory B in the dense left lobe, and A''s end marker (near the bottom
-    of the left lobe) is barely visible under B''s strands, so the two paths cannot
-    be traced or compared there → lower the stroke opacity to about 0.45 and the width
-    to about 1.2 px so both strands show through each other, and draw the end markers
-    after both polylines. Likely cause: opacity={0.62} strokeWidth={1.65} on the polyline,
-    and each end circle rendered inside its own trajectory''s group.'
-  - 'VQ-02 (both): the ''Convection rate (X) [-18 to +18]'' axis title sits on the
-    X axis edge line — the line runs through the first letters of ''Convection'' →
-    offset the label about 14 px further below the edge (+14 px on y). Likely cause:
-    the label at (c0+c1)/2 + 28 px does not account for the slope of the edge.'
-  - 'VQ-05 (both): the attractor occupies only about a fifth of the canvas width (roughly
-    x 830–1170 of 2000 in the displayed render) and the wireframe box about 37 %,
-    leaving large empty bands on the left, right and top → let the data fill about
-    60–70 % of the width. Likely cause: the scale is fitted to the full unit cube
-    plus PAD_X_SHARE = 0.12 / PAD_Y_SHARE = 0.14, while the edge-on view keeps the
-    data itself narrow.'
-  - 'CQ-04 (code): lines 203–226 repeat the same pixel-mapping expression six times
-    for c0, c1, c2, c3, c5, c6 → one helper mapping, for example `const px = (p) =>
-    ({ x: offsetX + (p.sx - DOM_X0) * scale, y: offsetY + (DOM_Y1 - p.sy) * scale
-    })` used as `projectedCube.map(px)` and for the polyline points at lines 332–343.
-    Likely cause: the projection was unrolled per corner.'
-  - 'Suggestion: a color gradient along time (imprint_seq) with a color bar, as the
-    Notes suggest, would show where the two trajectories begin to separate.'
-  - 'Suggestion: the ''Shared start'' leader line crosses the dense strands of the
-    left lobe; a shorter leader would keep the lobe cleaner.'
+  - 'VQ-03 (dark): the green Trajectory A strand at 1.2 px and opacity 0.5 renders
+    as a dim dark-green line on #1A1A17 and recedes behind the purple strand, so the
+    first series is noticeably harder to follow than the second → raise its visibility
+    on the dark surface (stroke width about 1.6–1.8 px, +0.4 to +0.6 px, or opacity
+    about 0.65–0.7, +0.15 to +0.2), applied to both series so the colors stay identical
+    between themes. Likely cause: strokeWidth={1.2} with strokeOpacity={0.5} on the
+    trajectory <path>.'
+  - 'VQ-02 (both): the ''Shared start'' label (14 px mono, offset +12/−12 px from
+    the marker) sits on top of several right-lobe strands, which run through the letters
+    of ''Shared'' and behind ''start'' → place it in clear space (for example below-left
+    of the marker, outside the inner loops) so no strand crosses the text. Likely
+    cause: the fixed x+12, y−12 offset of the callout <text>.'
+  - 'VQ-06 (both): the Y and Z axis titles use the abbreviation ''temp var'' (''Horizontal
+    temp var (Y)'', ''Vertical temp var (Z)''), which reads like a shortened column
+    identifier and is ambiguous (variation or variance) → spell it out, for example
+    ''Horizontal temperature variation (Y)'' and ''Vertical temperature variation
+    (Z)''. Likely cause: the Y and Z column constants.'
+  - 'CQ-04 (code): lines 197–210 write out a Catmull-Rom spline (smoothPath) over
+    2,000 points at dt = 0.01, where a plain polyline through the same vertices looks
+    identical at this density. SUBSAMPLE = 1 makes the `(i - TRANSIENT) % SUBSAMPLE
+    === 0` test on line 89 a no-op → draw each strand as `<polyline points={pts(...traj.points)}
+    />` with the existing pts helper and drop SUBSAMPLE. Likely cause: smoothing and
+    decimation knobs kept from a sparser draft.'
+  - 'CQ-01 (code): besides the required component, the file defines module-level project()
+    and axisLabel() functions plus nested px/pts/smoothPath/edgeTitle helpers inside
+    TrajectoriesLayer → inline the one-off helpers (edgeTitle is called twice, axisLabel
+    three times) as direct expressions where that keeps the code readable, leaving
+    project() and px as the only helpers. Likely cause: helper-per-concern structure.'
+  - 'Suggestion: short tick marks with a few values along the three labeled edges
+    would let readers read approximate positions, not only the extents in the axis
+    titles.'
+  - 'Suggestion: the mono subtitle repeats all three axis names that the axis titles
+    already show; a shorter line (for example ''2 trajectories · 2,000 points each
+    · Δx₀ = 0.0001'') would sharpen the header.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, not pure white.
-      Chrome: bold title "line-3d-trajectory · javascript · muix · anyplot.ai" top left with a monospace subtitle "2 trajectories · 1,800 points per trajectory (...)"; inline legend top right (green line Trajectory A x₀ = 0.1000, purple line Trajectory B x₀ = 0.1001). Oblique 3D box: translucent floor, dashed back wall, solid dark outer edges labeled "Convection rate (X) [-18 to +18]", "Horizontal temp var (Y) [-25 to +24]", "Vertical temp var (Z) [5 to 45]". Orientation triad X/Y/Z bottom left with "elev 20°, azim 32°". All dark text readable; the X axis title sits on its edge line.
-      Data: two Lorenz trajectories as thin translucent polylines, first #009E73 green, second purple; the attractor appears as a narrow V with two slender lobes, B largely covering A in the left lobe; a black "Shared start" dot with a dashed leader and small end markers. Outer turns of the upper-right lobe show polygonal facets. Data occupies about a fifth of the width.
+      Background: warm off-white #FAF8F1 across the full canvas, not pure white.
+      Chrome: the bold near-black title "line-3d-trajectory · javascript · muix · anyplot.ai" sits top-left, with a grey monospace subtitle under it listing 2 trajectories and 2,000 points per trajectory. A horizontal legend sits top-right: a green line for "Trajectory A (x₀ = 5.0000)" and a purple line for "Trajectory B (x₀ = 5.0001)". The 3D box has a dark-grey solid front floor edge and a solid Z edge, plus a faint translucent floor and dashed light-grey back walls. Bold dark axis titles run parallel to their edges: "Convection rate (X) [-17 to +18]", "Horizontal temp var (Y) [-22 to +24]", and the rotated "Vertical temp var (Z) [+6 to +44]". An X/Y/Z orientation triad and the mono note "elev 24°, azim -40°" sit bottom-left. All text is clearly readable in dark ink.
+      Data: two Lorenz-attractor trajectories as thin translucent strands, green #009E73 (first series) and purple #C475FD (second). Both butterfly lobes are visible. Where the strands coincide they blend into a blue-grey. A black start dot labeled "Shared start" in mono sits near the center; the label overlaps a few right-lobe strands. A green end dot sits in the right lobe and a purple end dot below the central crossing.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17, not pure black.
-      Chrome: title, subtitle, legend, axis titles, triad labels all in light ink; edges in light gray, back wall dashed gray. No dark-on-dark text.
-      Data: identical green and purple trajectories as in the light render; the shared-start dot flips to light ink with a dark outline. Same layout and same overlap of B over A.
+      Chrome: the title, legend text, axis titles, triad letters and the "Shared start" label switch to light ink. The subtitle and the elev/azim note use a light-grey soft ink. The front edges turn light grey and the back walls a dim grey dash. No dark-on-dark text: everything is readable.
+      Data: the same green and purple strands and marker colors as the light render; only the chrome flipped. The start marker turns light (ink token). The green strand at 1.2 px and opacity 0.5 reads noticeably dimmer than the purple one on the dark surface but is still traceable.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -91,50 +91,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 22 px, axis titles 14 px bold, subtitle and gizmo 14–15 px
-          in CSS space, all explicitly set; readable in both themes
+        comment: Explicit sizes (title 22 px, legend 15, axis titles 14, mono notes
+          14); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: The X axis title sits on the X edge line (defect line); everything
-          else is clear
+        comment: The 'Shared start' label sits on right-lobe strands (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Trajectory A and its end marker are largely hidden under Trajectory
-          B in the left lobe (defect line)
+        comment: The green strand at 1.2 px and opacity 0.5 recedes on the dark surface
+          (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs purple is CVD-safe and contrasts on both surfaces
+        comment: Green/purple pair is CVD-safe; adequate contrast
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Data fills only about a fifth of the canvas width (defect line);
-          no clipping
+        comment: Canvas gate passed; box well proportioned in the landscape canvas,
+          no overflow
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Descriptive axis titles with value ranges for each dimension
+        comment: The abbreviation 'temp var' in the Y/Z titles (defect line); dimensionless
+          Lorenz variables need no units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second Imprint position next; backgrounds
-          #FAF8F1 / #1A1A17; data colors identical across themes'
+        comment: 'First series #009E73, second Imprint purple; backgrounds #FAF8F1/#1A1A17;
+          data colors identical across themes'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -142,25 +142,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Header band with a monospace data subtitle and an inline legend,
-          mono orientation readout — typography hierarchy decided beyond the baseline
+        comment: Mono secondary type for metadata against a sans title; a muted floor
+          and dashed back-wall frame that sets up depth hierarchy
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Translucent floor, dashed back wall and solid labeled outer edges
-          give a graded reference frame instead of a full grid
+        comment: Axis titles rotated parallel to their edges and pushed outward; translucent
+          floor and walls instead of a grid; orientation triad tucked in a corner
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Near-identical initial conditions plus the shared-start marker and
-          separate end markers frame the chaos story, though the divergence is partly
-          hidden
+        comment: 'Chooses two initial states 0.0001 apart: a shared start and divergent
+          end points make sensitive dependence the focal story'
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -168,29 +167,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 3D line trajectory with oblique projection
+        comment: 3D line trajectory
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: 'Missed: oblique view revealing extent in every dimension (wings
-          edge-on) and smooth-curve point density (facets in the outer lobe) — two
-          defect lines. Met: sequential connection, axes labeled, multiple trajectories
-          in own colors with legend, transparency'
+        passed: true
+        comment: Continuous sequential strands, three labeled axes, an oblique view,
+          multiple trajectories in their own colors with a legend, width/transparency
+          for overlap
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Points projected at their x, y, z values; no displacement
+        comment: Every point projected from its normalized x/y/z; dense Catmull-Rom
+          through all vertices shows no visible overshoot
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title line-3d-trajectory · javascript · muix · anyplot.ai; legend
-          names both trajectories
+        comment: Mandated title; legend names both trajectories
     data_quality:
       score: 15
       max: 15
@@ -200,37 +198,39 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Continuous 3D paths, two trajectories, both attractor lobes
+        comment: Both attractor lobes, crossings, tight windings and diverging multiple
+          trajectories
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Lorenz convection model with sensitivity to initial conditions —
-          real, neutral
+        comment: Lorenz convection model, a canonical neutral example named in the
+          spec
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked ranges: x −18..18, y −25..24, z 5..45, consistent with σ=10,
-          ρ=28, β=8/3; 1,800 points per trajectory within 100–2000'
+        comment: Spec has no Check values; checked that the integrated extents (X
+          −17..18, Y −22..24, Z 6..44) fall out of RK4 with σ=10, ρ=28, β=8/3 and
+          match the known attractor
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Only the layer component that useDrawingArea requires
+        comment: Many helper functions beyond the required component (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic RK4 integration
+        comment: Deterministic integration
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -241,49 +241,48 @@ review:
         name: Code Elegance
         score: 1
         max: 2
-        passed: false
-        comment: Pixel mapping repeated six times at lines 203–226 (defect line)
+        passed: true
+        comment: Catmull-Rom spline written out (lines 197–210) where a polyline is
+          identical at this density; no-op SUBSAMPLE (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation set
+        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation set,
+          v9 ChartsContainer API
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: ChartsContainer composition with a child layer reading useDrawingArea
-          — the MUI X pattern for custom marks
+        comment: Composition via ChartsContainer with hidden axes
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: true
-        comment: Custom SVG layer inside the MUI X chart context via hooks; little
-          else MUI X-specific
-  verdict: REJECTED
+        passed: false
+        comment: A custom layer placed with the v9 useDrawingArea hook inside the
+          composed container
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T10:20:16Z'
+  rendered_at: '2026-10-24T10:28:04Z'
 impl_tags:
   dependencies: []
   techniques:
   - 3d-projection
-  - annotations
   - custom-legend
-  - layer-composition
-  - html-export
+  - bezier-curves
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
-  - numerical-integration
+  - normalization
   styling:
   - alpha-blending
   - minimal-chrome
