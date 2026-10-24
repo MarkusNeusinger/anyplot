@@ -20,10 +20,10 @@ const WAVELENGTH_UNIT = "nm";
 const IONIZATION_EV = 0;
 const IONIZATION_LABEL = `Ionization limit (E = ${IONIZATION_EV} ${ENERGY_UNIT})`;
 const COMPRESS_POWER = 0.35;
-const LEVEL_X_START_SHARE = 0.27;
-const LEVEL_X_END_SHARE = 0.85;
+const LEVEL_X_START_SHARE = 0.15;
+const LEVEL_X_END_SHARE = 0.9;
 const ARROW_INNER_PAD_SHARE = 0.08;
-const Y_TOP_PAD_SHARE = 0.12;
+const Y_TOP_PAD_SHARE = 0.03;
 const UV_MAX_NM = 400;
 const VISIBLE_MAX_NM = 700;
 const SPECTRAL_BANDS = [
@@ -288,7 +288,7 @@ export default function Chart() {
       </Box>
       <Box sx={{ height: CONTEXT_H, display: "flex", alignItems: "center", pl: "28px" }}>
         <Typography sx={{ color: t.inkSoft, fontSize: 14, fontFamily: FONT }}>
-          {`${SYSTEM} (${levels.length} bound states, ${transitions.length} transitions: ↓ emission, ↑ absorption) · compressed ${ENERGY_AXIS_TITLE.toLowerCase()} scale (${minEv.toFixed(1)} to ${maxEv} ${ENERGY_UNIT})`}
+          {`${SYSTEM} (${levels.length} bound states, ${transitions.length} transitions: ↓ emission, ↑ absorption) · compressed energy scale (${minEv.toFixed(1)} to ${maxEv} ${ENERGY_UNIT})`}
         </Typography>
       </Box>
       <Box sx={{ height: LEGEND_H, display: "flex", alignItems: "center", gap: "24px", pl: "28px" }}>
@@ -315,7 +315,7 @@ export default function Chart() {
           series={[]}
           xAxis={[{ id: "x", min: 0, max: 1, scaleType: "linear", position: "none" }]}
           yAxis={[{ id: "y", min: yDomainMin, max: yDomainMax, scaleType: "linear", position: "none" }]}
-          margin={{ top: 40, right: 24, bottom: 28, left: 68 }}
+          margin={{ top: 28, right: 24, bottom: 28, left: 68 }}
         >
           <EnergyLevelCanvas />
           <ChartsReferenceLine
