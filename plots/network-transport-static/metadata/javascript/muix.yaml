@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: network-transport-static
 created: '2026-09-02T04:39:34Z'
-updated: '2026-10-24T11:21:05Z'
+updated: '2026-10-24T11:27:28Z'
 generated_by: gemini-4-argon
 adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
 workflow_run: 40089246655
@@ -16,58 +16,53 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-t
 quality_score: 86
 review:
   strengths:
-  - 'Every station sits at its given x/y: hidden linear xAxis/yAxis in ChartsContainer
-    plus useXScale/useYScale map the schematic km offsets to pixels, with no layout
-    algorithm involved'
-  - Each direction of a station pair gets its own quadratic curve with its own arrowhead,
-    colour and label. The labels are offset outward along each curve's normal, so
-    it is clear which edge a label belongs to
-  - 'Route type is encoded twice, by Imprint colour (Regional #009E73, Local #C475FD,
-    Express #4467A3) and by dash pattern for Express. A legend names all three, so
-    the encoding survives CVD and greyscale'
-  - Station names go into the largest angular gap between a station's edges, so no
-    name sits on an edge. The Central interchange stands out as an inverted, larger
-    node with its name inside
-  - Theme tokens drive all chrome (ink, inkSoft, elevatedBg label plates, pageBg).
-    Data colours are identical in both renders, and the dark render has no dark-on-dark
-    text
-  - SVG <title> tooltips on edges, labels and nodes give full route details (origin
-    → destination, times, service type) in the HTML view, as the spec's tooltip note
-    asks
+  - Stations sit at their data coordinates through ChartsContainer's hidden linear
+    axes and the useXScale/useYScale hooks, with no layout pass
+  - Every route has its own curved edge, an arrowhead that stops at the destination's
+    border, and an 'ID dep→arr' label on an elevated backing box, readable in both
+    themes
+  - 'Clear hierarchy: Central is drawn as an inverted ink hub with its full name inside,
+    and Express is encoded redundantly by color, a dashed stroke and a wider bow'
+  - Station names go into the largest angular gap between incident edges, so no name
+    collides with an edge
+  - 'Imprint palette in canonical order (Regional #009E73, Local #C475FD, Express
+    #4467A3), identical across themes; all chrome follows the theme tokens'
+  - Native SVG <title> tooltips on edges, labels and nodes give the full route details
+    in the HTML view
   weaknesses:
-  - 'VQ-02 (both): the dashed Express curves EX1/EX2 are painted over the label plates
-    of R20, R21, L22 and L23 and cut through the text ''07:00'', ''07:20'', ''07:33''
-    and ''07:55'' → no edge stroke may cross any route label. Likely cause: each route''s
-    path and label are drawn in one <g> per route in data order, so the routes drawn
-    later (Express) paint over the labels of earlier ones. Render all edge paths first,
-    then all label rects and texts in a second pass.'
-  - 'VQ-02 (both): the bold 14 px code ''WBK'' is wider than its 19.8 px-radius node,
-    and its letters touch the circle''s 2 px outline → the code fits inside the node
-    with ≥3 px clearance. Likely cause: radius = BASE_STATION_RADIUS + degree × DEGREE_RADIUS_STEP
-    ignores the code''s text width. Size the radius from the code length, or use a
-    smaller code font.'
-  - 'VQ-05 (both): the network fills only about 62 % of the chart band''s height,
-    with empty bands of about 230 px above ''Uptown'' and about 200 px below ''Southpark''
-    → the outermost labels within about 60 px of the band edges. Likely cause: DOMAIN_SPAN_MULT
-    = 1.3 padding applied to a square domain built from the larger span.'
-  - 'Suggestion: the label plates (elevatedBg at 0.94 opacity) are hard to see on
-    the light page. A thin ink-soft outline or a slightly stronger plate would make
-    the label groups easier to scan.'
+  - 'VQ-02 (both): the bowed Express arcs EX1 and EX2 run behind the R20, R21, L22
+    and L23 label boxes in the Central–Eastport–Harborside corridor, so those labels
+    sit on a second edge and it is less plain which edge each belongs to → keep every
+    route label clear of edges other than its own (for example a smaller Express bow
+    or a different labelT for the Express labels; station positions unchanged). Likely
+    cause: ROUTE_TYPE_STYLES.Express bowShare 0.28 combined with the fixed perpendicular
+    label offset (boxW * 0.5 + 10, 22 px).'
+  - 'DQ-03 (code): the run times contradict the km offsets. Express EX1 covers Central→Harborside
+    (5.6 km) in 28 min, about 12 km/h, while Regional R10 covers 2.4 km in 7 min,
+    about 21 km/h, so the Express is the slowest service and saves only 1 min over
+    R20 + L22 (29 min) → Express run times of about 12–15 min (−13 to −16 min). Likely
+    cause: the EX1/EX2 Arrival values in the data block.'
+  - 'CQ-04 (code): lines 81–89 build routeTypes and typeColorMap with hand-written
+    loops → [...new Set(data.map((d) => d[ROUTE_TYPE]))] and Object.fromEntries(routeTypes.map((rt,
+    i) => [rt, t.palette[i]])), as the library prompt''s data-block section prescribes.
+    Likely cause: an imperative style instead of the prescribed idiom.'
+  - 'Suggestion: MUI X''s ChartsTooltip could replace the SVG <title> hovers for styled
+    route details in the HTML view.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across the whole 2400×2400 canvas.
-      Chrome: bold centred title "network-transport-static · javascript · muix · anyplot.ai" in dark ink. Below it, an HTML legend row "Service type: — Regional, — Local, - - Express", and at the bottom a grey caption explaining arrows, label format and the Central interchange. All of it is readable dark text.
-      Data: 9 stations at schematic coordinates in a cross-shaped network. Central is a large near-black filled hub with "Central" in cream. The other 8 stations are small outlined circles with bold three-letter codes and their names beside them in the largest free gap. There are 18 directed curved edges, two per station pair (one per direction), each with an arrowhead at the destination node border: Regional in brand green #009E73, Local in lavender #C475FD, Express in dashed blue #4467A3 bowing widely around EPT. Each edge carries a label such as "R10 07:05→07:12" on a faint plate. The dashed Express curves cross the R20/R21/L22/L23 label texts, and "WBK" touches its node outline.
-      Legibility verdict: PASS (all text is readable; there are a few edge-over-label collisions)
+      Background: warm off-white #FAF8F1, square 2400x2400 canvas.
+      Chrome: bold dark title "network-transport-static · javascript · muix · anyplot.ai" centered at the top (about 57 % of the width); below it a legend row "Service type: — Regional, — Local, - - Express" in soft ink; a soft-ink caption at the bottom explains the arrows, labels and hub. All text is dark and readable.
+      Data: 9 stations in a cross layout (Central hub as a large filled-ink disc with its white name; the others are outlined circles with bold codes UPT, NJC, WBK, WFD, EPT, HBS, SGT, SPK and their names beside them). 18 directed curved edges in outbound and return pairs: Regional in #009E73 (Central to NJC, EPT, WFD, SGT), Local in #C475FD on the outer links, and Express in dashed #4467A3 as wide arcs from Central to HBS above and below the Eastport corridor. Every edge has an arrowhead at the destination border and a label such as "R10 07:05→07:12" on a light backing box. The Express arcs pass behind the R20/R21/L22/L23 labels.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, legend text, station names and edge labels all flip to light ink. The caption and the "Service type:" prefix use the soft grey ink. No dark-on-dark text anywhere. Label plates are visible as slightly lighter dark rectangles.
-      Data: edge colours (green, lavender, dashed blue) are identical to the light render. Station circles are dark-filled with light outlines and light codes. The hub inverts to a cream fill with a dark "Central" label. The same Express-over-label collisions and the tight "WBK" fit appear here.
+      Chrome: title, legend labels, station names and codes switch to light ink; the caption and the legend title are soft light grey; the route-label boxes use the #242420 elevated fill with light text. No dark-on-dark text.
+      Data: edge colors are identical to the light render (green, lavender, dashed blue); the node outlines flip to light ink, and the Central hub becomes a light disc with dark text. Brand green stays clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -75,74 +70,78 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (title 22, names 15, edge labels and codes 14 CSS
-          px at 2x). Readable in both themes
+        comment: Explicit sizes (title 22, station names 15, route labels and codes
+          14 CSS px on the 1200 px mount); every label is readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Express curves cut through the R20/R21/L22/L23 labels, and 'WBK'
-          touches its node outline (defect lines)
+        passed: true
+        comment: The bowed Express arcs pass behind the R20, R21, L22 and L23 label
+          boxes in the Central–Eastport–Harborside corridor (defect line); all text
+          stays legible
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Edges at 2 to 2.5 px, arrowheads clearly visible at destination borders,
-          legend line samples match the edges
+        comment: Edges 2–2.5 px with clear arrowheads, nodes outlined in ink, and
+          the legend line samples match the edges (dashed for Express) in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green, lavender and blue are CVD-separable. Express is also dashed
+        comment: Green, lavender and blue are CVD-distinct, and Express is also dashed,
+          so color is not the only cue
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Square canvas is correct, but the network fills only about 62 % of
-          the band height, leaving large empty top and bottom bands (defect line)
+        comment: Square canvas, title about 57 % of the width, the cross-shaped network
+          fills the frame, nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'N/A: there are no data axes on a schematic network. The caption
-          and legend explain the encodings'
+        comment: N/A for axes (schematic coordinates, axes hidden); the legend title
+          'Service type:' and the caption are readable text
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint positions 1 to 3 in canonical order, first type in #009E73.
-          Backgrounds #FAF8F1 / #1A1A17, chrome theme-correct'
+        comment: 'Regional #009E73, Local #C475FD, Express #4467A3 in canonical Imprint
+          order; backgrounds #FAF8F1 and #1A1A17; data colors identical across themes'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Clear typographic hierarchy: bold station codes inside nodes, regular
-          names outside, the hub inverted with its name inside. Label plates on elevatedBg'
+        comment: 'A deliberate typographic hierarchy: bold station codes inside the
+          nodes, full names beside them, the hub drawn as an inverted ink disc with
+          its name inside, and elevated-surface backing boxes behind the route labels'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Station names go into the widest angular gap between incident edges,
-          and the Express edges get a wider bow so they clear the EPT corridor
+        comment: Station names go into the largest angular gap between incident edges;
+          arrowheads stop at the node borders. The Express arcs still run behind route
+          labels, so refinement is partial
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'A self-chosen focal point: the Central interchange is enlarged and
-          inverted, with a caption that names it as the hub'
+        comment: 'A focal point the implementation chose: Central as the inverted
+          hub node, with Express drawn as wider, dashed arcs that bypass Eastport'
     spec_compliance:
       score: 15
       max: 15
@@ -152,29 +151,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Directed static transport network with positioned nodes
+        comment: Directed transport network with stations at fixed coordinates
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Labels, arrows, route ID plus times on each edge, curved pairs, provided
-          coordinates, colour by route type with legend, and tooltips are all present
+        comment: Labeled nodes, arrowheads at destination borders, route ID and times
+          on each edge, curved paired edges with their own arrowheads, route-type
+          colors with a legend, and <title> tooltips
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Stations at their x/y through linear scales, with no layout or nudging
+        comment: Every station sits at its x and y through the ChartsContainer linear
+          scales; there is no layout pass
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in the mandated format. Legend titled 'Service type' names
-          all three types
+        comment: The title matches the mandated format; the legend entries are Regional,
+          Local and Express
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -182,24 +183,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Hub, branches, bidirectional pairs, three service types and a parallel
-          express corridor
+        comment: A hub with four spokes, outbound and return pairs on every link,
+          and an Express service that runs past an intermediate station
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible fictional regional rail morning service, neutral
+        comment: A plausible fictional rail network (Central, Eastport, Harborside
+          …) with a morning timetable; neutral
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Checked that every arrival is later than its departure, with 7 to
-          16 min hops and a 28 min express. 9 stations and 18 routes are within the
-          spec range
+        passed: false
+        comment: '9 stations and 18 routes are within the spec range. Run times contradict
+          the km offsets: the Express is the slowest service (defect line)'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -207,34 +208,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: The only extra component is the overlay, which the scale hooks require
+        comment: The overlay component is required to call useXScale/useYScale; the
+          rest is linear module-level code
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hard-coded data
+        comment: Hard-coded data, deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: ChartsContainer and the two hooks are all used
+        comment: ChartsContainer, useXScale and useYScale are all used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Geometry is proportionate, and no library call would replace it
+        passed: false
+        comment: Lines 81–89 write out with loops what [...new Set(...)] and Object.fromEntries
+          compute (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default export, skipAnimation, v9 ChartsContainer path, sized from
-          ANYPLOT_SIZE
+        comment: Default export, skipAnimation, sized to window.ANYPLOT_SIZE, v9 ChartsContainer
+          API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -242,19 +245,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'v9 composition API: ChartsContainer with hidden linear axes (position:
-          ''none'') provides the coordinate system for a custom SVG layer'
+        comment: 'Uses ChartsContainer as the coordinate system, with hidden linear
+          axes (position: ''none'') that carry the station domain, instead of hand-rolled
+          scaling'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: useXScale/useYScale hooks drive a custom overlay inside the MUI X
-          chart context, which MUI X's composition model specifically allows
-  verdict: REJECTED
+        comment: A custom SVG layer composed inside ChartsContainer that reads the
+          chart's scales through the useXScale/useYScale hooks, which is MUI X's composition
+          API
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T11:18:02Z'
+  rendered_at: '2026-10-24T11:23:48Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -263,10 +268,11 @@ impl_tags:
   - annotations
   - hover-tooltips
   - html-export
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - publication-ready
-  - alpha-blending
+  - minimal-chrome
+  - edge-highlighting
