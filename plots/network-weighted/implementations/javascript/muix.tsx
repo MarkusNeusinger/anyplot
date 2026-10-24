@@ -1,10 +1,9 @@
 // anyplot.ai
 // network-weighted: Weighted Network Graph with Edge Thickness
-// Library: muix 9.x | JavaScript 22.23.2
+// Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 90/100 | Created: 2026-09-02
 //# anyplot-orientation: square
 
-import * as React from "react";
 import { useState } from "react";
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { useXScale, useYScale, useDrawingArea } from "@mui/x-charts/hooks";
@@ -14,6 +13,7 @@ const t = window.ANYPLOT_TOKENS;
 // Constants
 const TITLE = "network-weighted · javascript · muix · anyplot.ai";
 const TITLE_H = 58;
+const LEGEND_H = 112;
 const AREA = 4.5;
 const ITERATIONS = 500;
 const INITIAL_TEMP = 0.12;
@@ -24,54 +24,60 @@ const NODE_MAX_R = 40;
 const EDGE_MIN_W = 2;
 const EDGE_MAX_W = 13;
 
-const SOURCE_ID_COL = "source_id";
-const SOURCE_LABEL_COL = "source_label";
-const SOURCE_DOMAIN_COL = "source_domain";
-const TARGET_ID_COL = "target_id";
-const TARGET_LABEL_COL = "target_label";
-const TARGET_DOMAIN_COL = "target_domain";
-const WEIGHT_COL = "coauthored_papers";
+// Columns: set these to your data's column names
+const NODE_ID = "Lab code"; // role: node
+const NODE_LABEL = "Research institute"; // role: label
+const DOMAIN = "Research domain"; // role: group
+const SOURCE = "Source lab"; // role: source
+const TARGET = "Partner lab"; // role: target
+const WEIGHT = "Co-authored papers"; // role: weight
 
-// Data: research-lab co-authorship network (flat scalar edge records)
-const DATA: Array<Record<string, string | number>> = [
-  { source_id: "GEN", source_label: "Genomics Lab", source_domain: "Life Sciences", target_id: "IMM", target_label: "Immunology Institute", target_domain: "Life Sciences", coauthored_papers: 42 },
-  { source_id: "GEN", source_label: "Genomics Lab", source_domain: "Life Sciences", target_id: "NEU", target_label: "Neuroscience Institute", target_domain: "Life Sciences", coauthored_papers: 16 },
-  { source_id: "GEN", source_label: "Genomics Lab", source_domain: "Life Sciences", target_id: "BIO", target_label: "Bioengineering Institute", target_domain: "Engineering", coauthored_papers: 22 },
-  { source_id: "IMM", source_label: "Immunology Institute", source_domain: "Life Sciences", target_id: "BIO", target_label: "Bioengineering Institute", target_domain: "Engineering", coauthored_papers: 12 },
-  { source_id: "IMM", source_label: "Immunology Institute", source_domain: "Life Sciences", target_id: "NEU", target_label: "Neuroscience Institute", target_domain: "Life Sciences", coauthored_papers: 6 },
-  { source_id: "NEU", source_label: "Neuroscience Institute", source_domain: "Life Sciences", target_id: "AIR", target_label: "AI Research Center", target_domain: "Computer Science", coauthored_papers: 19 },
-  { source_id: "MAR", source_label: "Marine Biology Station", source_domain: "Life Sciences", target_id: "ENV", target_label: "Environmental Engineering Lab", target_domain: "Engineering", coauthored_papers: 27 },
-  { source_id: "MAR", source_label: "Marine Biology Station", source_domain: "Life Sciences", target_id: "CLI", target_label: "Climate Science Center", target_domain: "Physical Sciences", coauthored_papers: 31 },
-  { source_id: "QPL", source_label: "Quantum Physics Lab", source_domain: "Physical Sciences", target_id: "MAT", target_label: "Materials Science Institute", target_domain: "Physical Sciences", coauthored_papers: 36 },
-  { source_id: "QPL", source_label: "Quantum Physics Lab", source_domain: "Physical Sciences", target_id: "AST", target_label: "Astrophysics Observatory", target_domain: "Physical Sciences", coauthored_papers: 21 },
-  { source_id: "MAT", source_label: "Materials Science Institute", source_domain: "Physical Sciences", target_id: "CHE", target_label: "Chemical Engineering Lab", target_domain: "Engineering", coauthored_papers: 33 },
-  { source_id: "MAT", source_label: "Materials Science Institute", source_domain: "Physical Sciences", target_id: "ENV", target_label: "Environmental Engineering Lab", target_domain: "Engineering", coauthored_papers: 9 },
-  { source_id: "AST", source_label: "Astrophysics Observatory", source_domain: "Physical Sciences", target_id: "CLI", target_label: "Climate Science Center", target_domain: "Physical Sciences", coauthored_papers: 8 },
-  { source_id: "CLI", source_label: "Climate Science Center", source_domain: "Physical Sciences", target_id: "ENV", target_label: "Environmental Engineering Lab", target_domain: "Engineering", coauthored_papers: 24 },
-  { source_id: "AIR", source_label: "AI Research Center", source_domain: "Computer Science", target_id: "DSI", target_label: "Data Science Institute", target_domain: "Computer Science", coauthored_papers: 45 },
-  { source_id: "AIR", source_label: "AI Research Center", source_domain: "Computer Science", target_id: "ROB", target_label: "Robotics Lab", target_domain: "Computer Science", coauthored_papers: 29 },
-  { source_id: "DSI", source_label: "Data Science Institute", source_domain: "Computer Science", target_id: "ROB", target_label: "Robotics Lab", target_domain: "Computer Science", coauthored_papers: 18 },
-  { source_id: "DSI", source_label: "Data Science Institute", source_domain: "Computer Science", target_id: "GEN", target_label: "Genomics Lab", target_domain: "Life Sciences", coauthored_papers: 15 },
-  { source_id: "DSI", source_label: "Data Science Institute", source_domain: "Computer Science", target_id: "CLI", target_label: "Climate Science Center", target_domain: "Physical Sciences", coauthored_papers: 12 },
-  { source_id: "DSI", source_label: "Data Science Institute", source_domain: "Computer Science", target_id: "MAT", target_label: "Materials Science Institute", target_domain: "Physical Sciences", coauthored_papers: 7 },
-  { source_id: "DSI", source_label: "Data Science Institute", source_domain: "Computer Science", target_id: "BIO", target_label: "Bioengineering Institute", target_domain: "Engineering", coauthored_papers: 10 },
-  { source_id: "ROB", source_label: "Robotics Lab", source_domain: "Computer Science", target_id: "BIO", target_label: "Bioengineering Institute", target_domain: "Engineering", coauthored_papers: 14 },
-  { source_id: "CHE", source_label: "Chemical Engineering Lab", source_domain: "Engineering", target_id: "BIO", target_label: "Bioengineering Institute", target_domain: "Engineering", coauthored_papers: 20 },
-  { source_id: "CHE", source_label: "Chemical Engineering Lab", source_domain: "Engineering", target_id: "ENV", target_label: "Environmental Engineering Lab", target_domain: "Engineering", coauthored_papers: 17 },
+// Data: replace this block with your own records
+const nodes: Array<Record<string, string>> = [
+  { [NODE_ID]: "GEN", [NODE_LABEL]: "Genomics Lab", [DOMAIN]: "Life Sciences" },
+  { [NODE_ID]: "IMM", [NODE_LABEL]: "Immunology Institute", [DOMAIN]: "Life Sciences" },
+  { [NODE_ID]: "NEU", [NODE_LABEL]: "Neuroscience Institute", [DOMAIN]: "Life Sciences" },
+  { [NODE_ID]: "MAR", [NODE_LABEL]: "Marine Biology Station", [DOMAIN]: "Life Sciences" },
+  { [NODE_ID]: "QPL", [NODE_LABEL]: "Quantum Physics Lab", [DOMAIN]: "Physical Sciences" },
+  { [NODE_ID]: "MAT", [NODE_LABEL]: "Materials Science Institute", [DOMAIN]: "Physical Sciences" },
+  { [NODE_ID]: "AST", [NODE_LABEL]: "Astrophysics Observatory", [DOMAIN]: "Physical Sciences" },
+  { [NODE_ID]: "CLI", [NODE_LABEL]: "Climate Science Center", [DOMAIN]: "Physical Sciences" },
+  { [NODE_ID]: "AIR", [NODE_LABEL]: "AI Research Center", [DOMAIN]: "Computer Science" },
+  { [NODE_ID]: "DSI", [NODE_LABEL]: "Data Science Institute", [DOMAIN]: "Computer Science" },
+  { [NODE_ID]: "ROB", [NODE_LABEL]: "Robotics Lab", [DOMAIN]: "Computer Science" },
+  { [NODE_ID]: "CHE", [NODE_LABEL]: "Chemical Engineering Lab", [DOMAIN]: "Engineering" },
+  { [NODE_ID]: "BIO", [NODE_LABEL]: "Bioengineering Institute", [DOMAIN]: "Engineering" },
+  { [NODE_ID]: "ENV", [NODE_LABEL]: "Environmental Engineering Lab", [DOMAIN]: "Engineering" },
 ];
 
-// Derive domains in canonical order of first appearance across both columns
-const domains: string[] = [];
-for (const row of DATA) {
-  const sd = String(row[SOURCE_DOMAIN_COL]);
-  const td = String(row[TARGET_DOMAIN_COL]);
-  if (!domains.includes(sd)) domains.push(sd);
-}
-for (const row of DATA) {
-  const td = String(row[TARGET_DOMAIN_COL]);
-  if (!domains.includes(td)) domains.push(td);
-}
+const data: Array<Record<string, string | number>> = [
+  { [SOURCE]: "GEN", [TARGET]: "IMM", [WEIGHT]: 42 },
+  { [SOURCE]: "GEN", [TARGET]: "NEU", [WEIGHT]: 16 },
+  { [SOURCE]: "GEN", [TARGET]: "BIO", [WEIGHT]: 22 },
+  { [SOURCE]: "IMM", [TARGET]: "BIO", [WEIGHT]: 12 },
+  { [SOURCE]: "IMM", [TARGET]: "NEU", [WEIGHT]: 6 },
+  { [SOURCE]: "NEU", [TARGET]: "AIR", [WEIGHT]: 19 },
+  { [SOURCE]: "MAR", [TARGET]: "ENV", [WEIGHT]: 27 },
+  { [SOURCE]: "MAR", [TARGET]: "CLI", [WEIGHT]: 31 },
+  { [SOURCE]: "QPL", [TARGET]: "MAT", [WEIGHT]: 36 },
+  { [SOURCE]: "QPL", [TARGET]: "AST", [WEIGHT]: 21 },
+  { [SOURCE]: "MAT", [TARGET]: "CHE", [WEIGHT]: 33 },
+  { [SOURCE]: "MAT", [TARGET]: "ENV", [WEIGHT]: 9 },
+  { [SOURCE]: "AST", [TARGET]: "CLI", [WEIGHT]: 8 },
+  { [SOURCE]: "CLI", [TARGET]: "ENV", [WEIGHT]: 24 },
+  { [SOURCE]: "AIR", [TARGET]: "DSI", [WEIGHT]: 45 },
+  { [SOURCE]: "AIR", [TARGET]: "ROB", [WEIGHT]: 29 },
+  { [SOURCE]: "DSI", [TARGET]: "ROB", [WEIGHT]: 18 },
+  { [SOURCE]: "DSI", [TARGET]: "GEN", [WEIGHT]: 15 },
+  { [SOURCE]: "DSI", [TARGET]: "CLI", [WEIGHT]: 12 },
+  { [SOURCE]: "DSI", [TARGET]: "MAT", [WEIGHT]: 7 },
+  { [SOURCE]: "DSI", [TARGET]: "BIO", [WEIGHT]: 10 },
+  { [SOURCE]: "ROB", [TARGET]: "BIO", [WEIGHT]: 14 },
+  { [SOURCE]: "CHE", [TARGET]: "BIO", [WEIGHT]: 20 },
+  { [SOURCE]: "CHE", [TARGET]: "ENV", [WEIGHT]: 17 },
+];
 
+// Plot: reads only data and the constants above
 interface LabNode {
   id: string;
   label: string;
@@ -83,42 +89,25 @@ interface LabNode {
   y: number;
 }
 
+const domains: string[] = [];
 const nodeIndexById = new Map<string, number>();
-const nodes: LabNode[] = [];
+const layoutNodes: LabNode[] = [];
 
-for (const row of DATA) {
-  const sId = String(row[SOURCE_ID_COL]);
-  if (!nodeIndexById.has(sId)) {
-    const sDom = String(row[SOURCE_DOMAIN_COL]);
-    nodeIndexById.set(sId, nodes.length);
-    nodes.push({
-      id: sId,
-      label: String(row[SOURCE_LABEL_COL]),
-      domainName: sDom,
-      domainIndex: domains.indexOf(sDom),
-      weightedDegree: 0,
-      radius: NODE_MIN_R,
-      x: 0,
-      y: 0,
-    });
-  }
-}
-for (const row of DATA) {
-  const tId = String(row[TARGET_ID_COL]);
-  if (!nodeIndexById.has(tId)) {
-    const tDom = String(row[TARGET_DOMAIN_COL]);
-    nodeIndexById.set(tId, nodes.length);
-    nodes.push({
-      id: tId,
-      label: String(row[TARGET_LABEL_COL]),
-      domainName: tDom,
-      domainIndex: domains.indexOf(tDom),
-      weightedDegree: 0,
-      radius: NODE_MIN_R,
-      x: 0,
-      y: 0,
-    });
-  }
+for (const row of nodes) {
+  const id = String(row[NODE_ID]);
+  const dom = String(row[DOMAIN]);
+  if (!domains.includes(dom)) domains.push(dom);
+  nodeIndexById.set(id, layoutNodes.length);
+  layoutNodes.push({
+    id,
+    label: String(row[NODE_LABEL]),
+    domainName: dom,
+    domainIndex: domains.indexOf(dom),
+    weightedDegree: 0,
+    radius: NODE_MIN_R,
+    x: 0,
+    y: 0,
+  });
 }
 
 interface LabEdge {
@@ -130,60 +119,59 @@ interface LabEdge {
 }
 
 const edges: LabEdge[] = [];
-for (const row of DATA) {
-  const sIdx = nodeIndexById.get(String(row[SOURCE_ID_COL]))!;
-  const tIdx = nodeIndexById.get(String(row[TARGET_ID_COL]))!;
-  const weight = Number(row[WEIGHT_COL]);
-  nodes[sIdx].weightedDegree += weight;
-  nodes[tIdx].weightedDegree += weight;
+for (const row of data) {
+  const sIdx = nodeIndexById.get(String(row[SOURCE]))!;
+  const tIdx = nodeIndexById.get(String(row[TARGET]))!;
+  const weight = Number(row[WEIGHT]);
+  layoutNodes[sIdx].weightedDegree += weight;
+  layoutNodes[tIdx].weightedDegree += weight;
   edges.push({ sourceIdx: sIdx, targetIdx: tIdx, weight, strokeWidth: EDGE_MIN_W, ratio: 0 });
 }
 
 const edgeWeights = edges.map((e) => e.weight);
-const MIN_WEIGHT = Math.min(...edgeWeights);
-const MAX_WEIGHT = Math.max(...edgeWeights);
-const weightSpan = MAX_WEIGHT - MIN_WEIGHT || 1;
+const minWeight = Math.min(...edgeWeights);
+const maxWeight = Math.max(...edgeWeights);
+const weightSpan = maxWeight - minWeight;
 
 for (const edge of edges) {
-  edge.ratio = (edge.weight - MIN_WEIGHT) / weightSpan;
+  edge.ratio = (edge.weight - minWeight) / weightSpan;
   edge.strokeWidth = EDGE_MIN_W + edge.ratio * (EDGE_MAX_W - EDGE_MIN_W);
 }
 
-const degrees = nodes.map((n) => n.weightedDegree);
-const MIN_DEGREE = Math.min(...degrees);
-const MAX_DEGREE = Math.max(...degrees);
-const degreeSpan = MAX_DEGREE - MIN_DEGREE || 1;
+const degrees = layoutNodes.map((n) => n.weightedDegree);
+const minDegree = Math.min(...degrees);
+const maxDegree = Math.max(...degrees);
+const degreeSpan = maxDegree - minDegree;
 
-for (const node of nodes) {
-  const ratio = (node.weightedDegree - MIN_DEGREE) / degreeSpan;
+for (const node of layoutNodes) {
+  const ratio = (node.weightedDegree - minDegree) / degreeSpan;
   node.radius = NODE_MIN_R + ratio * (NODE_MAX_R - NODE_MIN_R);
 }
 
-// Fruchterman-Reingold force-directed layout with weighted attraction
 let lcgState = 42;
-const N = nodes.length;
-const K = Math.sqrt(AREA / N);
+const nCount = layoutNodes.length;
+const kForce = Math.sqrt(AREA / nCount);
 
-for (let i = 0; i < N; i += 1) {
+for (let i = 0; i < nCount; i += 1) {
   lcgState = (lcgState * 1664525 + 1013904223) % 4294967296;
   const rx = (lcgState / 4294967296) * 2 - 1;
   lcgState = (lcgState * 1664525 + 1013904223) % 4294967296;
   const ry = (lcgState / 4294967296) * 2 - 1;
-  nodes[i].x = rx;
-  nodes[i].y = ry;
+  layoutNodes[i].x = rx;
+  layoutNodes[i].y = ry;
 }
 
 let temperature = INITIAL_TEMP;
 for (let iter = 0; iter < ITERATIONS; iter += 1) {
-  const dispX = new Array(N).fill(0);
-  const dispY = new Array(N).fill(0);
+  const dispX = new Array<number>(nCount).fill(0);
+  const dispY = new Array<number>(nCount).fill(0);
 
-  for (let i = 0; i < N; i += 1) {
-    for (let j = i + 1; j < N; j += 1) {
-      const dx = nodes[i].x - nodes[j].x;
-      const dy = nodes[i].y - nodes[j].y;
+  for (let i = 0; i < nCount; i += 1) {
+    for (let j = i + 1; j < nCount; j += 1) {
+      const dx = layoutNodes[i].x - layoutNodes[j].x;
+      const dy = layoutNodes[i].y - layoutNodes[j].y;
       const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
-      const force = (K * K) / dist;
+      const force = (kForce * kForce) / dist;
       const ux = dx / dist;
       const uy = dy / dist;
       dispX[i] += ux * force;
@@ -196,10 +184,10 @@ for (let iter = 0; iter < ITERATIONS; iter += 1) {
   for (const edge of edges) {
     const i = edge.sourceIdx;
     const j = edge.targetIdx;
-    const dx = nodes[i].x - nodes[j].x;
-    const dy = nodes[i].y - nodes[j].y;
+    const dx = layoutNodes[i].x - layoutNodes[j].x;
+    const dy = layoutNodes[i].y - layoutNodes[j].y;
     const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
-    const idealDist = K * (1.5 - 1.0 * edge.ratio);
+    const idealDist = kForce * (1.5 - 1.0 * edge.ratio);
     const force = (dist * dist) / idealDist;
     const ux = dx / dist;
     const uy = dy / dist;
@@ -209,38 +197,38 @@ for (let iter = 0; iter < ITERATIONS; iter += 1) {
     dispY[j] += uy * force;
   }
 
-  for (let i = 0; i < N; i += 1) {
+  for (let i = 0; i < nCount; i += 1) {
     const dx = dispX[i];
     const dy = dispY[i];
     const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
     const limited = Math.min(dist, temperature);
-    nodes[i].x += (dx / dist) * limited;
-    nodes[i].y += (dy / dist) * limited;
+    layoutNodes[i].x += (dx / dist) * limited;
+    layoutNodes[i].y += (dy / dist) * limited;
   }
   temperature *= COOLING_FACTOR;
 }
 
-const centroidX = nodes.reduce((s, n) => s + n.x, 0) / N;
-const centroidY = nodes.reduce((s, n) => s + n.y, 0) / N;
-for (const node of nodes) {
+const centroidX = layoutNodes.reduce((s, n) => s + n.x, 0) / nCount;
+const centroidY = layoutNodes.reduce((s, n) => s + n.y, 0) / nCount;
+for (const node of layoutNodes) {
   node.x -= centroidX;
   node.y -= centroidY;
 }
 
-const rangeX = Math.max(...nodes.map((n) => Math.abs(n.x))) || 1;
-const rangeY = Math.max(...nodes.map((n) => Math.abs(n.y))) || 1;
-const X_HALF = rangeX * PAD_MULT;
-const Y_HALF = rangeY * PAD_MULT;
+const rangeX = Math.max(...layoutNodes.map((n) => Math.abs(n.x)));
+const rangeY = Math.max(...layoutNodes.map((n) => Math.abs(n.y)));
+const xHalf = rangeX * PAD_MULT;
+const yHalf = rangeY * PAD_MULT;
 
-// Draw heaviest edges last so the strongest collaborations stay legible on top
 const sortedEdges = [...edges].sort((a, b) => a.weight - b.weight);
+const midWeight = Math.round((minWeight + maxWeight) / 2);
 const weightSamples = [
-  { weight: MIN_WEIGHT, strokeWidth: EDGE_MIN_W },
+  { weight: minWeight, strokeWidth: EDGE_MIN_W },
   {
-    weight: Math.round((MIN_WEIGHT + MAX_WEIGHT) / 2),
-    strokeWidth: EDGE_MIN_W + ((Math.round((MIN_WEIGHT + MAX_WEIGHT) / 2) - MIN_WEIGHT) / weightSpan) * (EDGE_MAX_W - EDGE_MIN_W),
+    weight: midWeight,
+    strokeWidth: EDGE_MIN_W + ((midWeight - minWeight) / weightSpan) * (EDGE_MAX_W - EDGE_MIN_W),
   },
-  { weight: MAX_WEIGHT, strokeWidth: EDGE_MAX_W },
+  { weight: maxWeight, strokeWidth: EDGE_MAX_W },
 ];
 
 interface HoverInfo {
@@ -261,24 +249,18 @@ function WeightedNetworkOverlay({
   const yScale = useYScale();
   const drawingArea = useDrawingArea();
 
-  const rowY = drawingArea.top + drawingArea.height + 42;
-  const swatchR = 9;
-  const groupGap = 225;
-  const weightRowY = rowY + 52;
-  const weightStartX = drawingArea.left;
-
   return (
     <g>
       {sortedEdges.map((edge, i) => {
-        const s = nodes[edge.sourceIdx];
-        const d = nodes[edge.targetIdx];
-        const x1 = xScale(s.x);
-        const y1 = yScale(s.y);
-        const x2 = xScale(d.x);
-        const y2 = yScale(d.y);
+        const s = layoutNodes[edge.sourceIdx];
+        const d = layoutNodes[edge.targetIdx];
+        const x1 = Number(xScale(s.x));
+        const y1 = Number(yScale(s.y));
+        const x2 = Number(xScale(d.x));
+        const y2 = Number(yScale(d.y));
         const tooltip: HoverInfo = {
           label: `${s.label} ↔ ${d.label}`,
-          detail: `${edge.weight} co-authored papers`,
+          detail: `${edge.weight} (${WEIGHT})`,
           x: (x1 + x2) / 2,
           y: (y1 + y2) / 2,
         };
@@ -308,9 +290,9 @@ function WeightedNetworkOverlay({
           </g>
         );
       })}
-      {nodes.map((node) => {
-        const cx = xScale(node.x);
-        const cy = yScale(node.y);
+      {layoutNodes.map((node) => {
+        const cx = Number(xScale(node.x));
+        const cy = Number(yScale(node.y));
         const radius = node.radius;
         const tooltip: HoverInfo = {
           label: node.label,
@@ -356,52 +338,18 @@ function WeightedNetworkOverlay({
         );
       })}
 
-      {/* Domain legend + edge weight scale */}
-      <g>
-        {domains.map((name, i) => {
-          const x = drawingArea.left + i * groupGap;
-          return (
-            <g key={name}>
-              <circle cx={x} cy={rowY} r={swatchR} fill={t.palette[i]} />
-              <text x={x + swatchR + 8} y={rowY + 5} fontSize={16} fill={t.inkSoft}>
-                {name}
-              </text>
-            </g>
-          );
-        })}
-        <text x={weightStartX} y={weightRowY - 14} fontSize={14} fill={t.inkSoft}>
-          Edge width = co-authored papers · node size = weighted degree
-        </text>
-        {weightSamples.map((sample, i) => {
-          const x = weightStartX + i * 140;
-          const lineY = weightRowY + 12;
-          return (
-            <g key={sample.weight}>
-              <line
-                x1={x}
-                y1={lineY}
-                x2={x + 60}
-                y2={lineY}
-                stroke={t.ink}
-                strokeOpacity={0.55}
-                strokeWidth={sample.strokeWidth}
-                strokeLinecap="round"
-              />
-              <text x={x + 30} y={lineY + 22} textAnchor="middle" fontSize={14} fill={t.inkSoft}>
-                {sample.weight}
-              </text>
-            </g>
-          );
-        })}
-      </g>
-
-      {/* Hover tooltip */}
       {hover && (
         <g style={{ pointerEvents: "none" }}>
           <rect
             x={Math.min(
-              Math.max(hover.x - (Math.max(hover.label.length, hover.detail.length) * 8 + 24) / 2, 8),
-              drawingArea.left + drawingArea.width - (Math.max(hover.label.length, hover.detail.length) * 8 + 24) - 8,
+              Math.max(
+                hover.x - (Math.max(hover.label.length, hover.detail.length) * 8 + 24) / 2,
+                8,
+              ),
+              drawingArea.left +
+                drawingArea.width -
+                (Math.max(hover.label.length, hover.detail.length) * 8 + 24) -
+                8,
             )}
             y={Math.max(hover.y - 52 - 12, 8)}
             width={Math.max(hover.label.length, hover.detail.length) * 8 + 24}
@@ -439,6 +387,7 @@ function WeightedNetworkOverlay({
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
   const [hover, setHover] = useState<HoverInfo | null>(null);
+  const chartHeight = height - TITLE_H - LEGEND_H;
 
   return (
     <div
@@ -463,16 +412,95 @@ export default function Chart() {
       </div>
       <ChartsContainer
         width={width}
-        height={height - TITLE_H}
-        margin={{ top: 28, right: 60, bottom: 155, left: 60 }}
+        height={chartHeight}
+        margin={{ top: 28, right: 60, bottom: 28, left: 60 }}
         series={[]}
         skipAnimation
         disableAxisListener
-        xAxis={[{ scaleType: "linear", min: -X_HALF, max: X_HALF, position: "none" }]}
-        yAxis={[{ scaleType: "linear", min: -Y_HALF, max: Y_HALF, position: "none" }]}
+        xAxis={[{ scaleType: "linear", min: -xHalf, max: xHalf, position: "none" }]}
+        yAxis={[{ scaleType: "linear", min: -yHalf, max: yHalf, position: "none" }]}
       >
         <WeightedNetworkOverlay hover={hover} onHoverChange={setHover} />
       </ChartsContainer>
+      <div
+        style={{
+          minHeight: LEGEND_H,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 12,
+          padding: "8px 40px 14px",
+          boxSizing: "border-box",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 28,
+          }}
+        >
+          {domains.map((name, i) => (
+            <span
+              key={name}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                fontSize: 15,
+                color: t.inkSoft,
+              }}
+            >
+              <span
+                style={{
+                  width: 14,
+                  height: 14,
+                  borderRadius: "50%",
+                  backgroundColor: t.palette[i],
+                  display: "inline-block",
+                }}
+              />
+              <span>{name}</span>
+            </span>
+          ))}
+        </div>
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 24,
+            fontSize: 14,
+            color: t.inkSoft,
+          }}
+        >
+          <span>{`Edge width = ${WEIGHT} · node size = weighted degree:`}</span>
+          {weightSamples.map((sample) => (
+            <span
+              key={sample.weight}
+              style={{ display: "inline-flex", alignItems: "center", gap: 8 }}
+            >
+              <svg width={52} height={16}>
+                <line
+                  x1={4}
+                  y1={8}
+                  x2={48}
+                  y2={8}
+                  stroke={t.ink}
+                  strokeOpacity={0.55}
+                  strokeWidth={sample.strokeWidth}
+                  strokeLinecap="round"
+                />
+              </svg>
+              <span>{sample.weight}</span>
+            </span>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
