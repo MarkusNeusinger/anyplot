@@ -1,7 +1,7 @@
 // anyplot.ai
 // dendrogram-radial: Radial Dendrogram
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 90/100 | Created: 2026-09-05
+// Quality: pending | Created: 2026-09-05
 //# anyplot-orientation: square
 
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
