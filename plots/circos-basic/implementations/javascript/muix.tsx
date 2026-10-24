@@ -186,7 +186,7 @@ const trackSeriesData = segments.map((s) => {
   };
 });
 
-const SUBTITLE = `Ribbon width ∝ ${FLOW} · outer ring ∝ ${CODE_SIZE} · inner track ∝ ${COVERAGE}`;
+const SUBTITLE = `Ribbon width ∝ ${FLOW} · outer ring ∝ ${CODE_SIZE} · inner track color = ${COVERAGE}`;
 
 function CircosOverlay() {
   const { left, top, width, height } = useDrawingArea();
