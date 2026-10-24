@@ -2,7 +2,8 @@
 // streamline-basic: Basic Streamline Plot
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 89/100 | Created: 2026-09-09
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { LinePlot } from "@mui/x-charts/LineChart";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
@@ -12,132 +13,271 @@ import { useXScale, useYScale, useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Electric dipole field: two opposite point charges. Field lines are
-// traced by RK4 arc-length integration of the *unit* field direction (not a
-// closed-form solution) — the canonical "electric/magnetic field line"
-// application called out in the spec. u = Ex/|E|, v = Ey/|E|. -------------
-const CHARGE_POS = { x: -1.1, y: 0, q: 1 };
-const CHARGE_NEG = { x: 1.1, y: 0, q: -1 };
-const EXCLUSION_R = 0.16; // seed/terminate radius around each charge (avoids the 1/r^2 singularity)
-
-function fieldAt(x, y) {
-  const dxP = x - CHARGE_POS.x;
-  const dyP = y - CHARGE_POS.y;
-  const dxN = x - CHARGE_NEG.x;
-  const dyN = y - CHARGE_NEG.y;
-  const rP3 = Math.pow(dxP * dxP + dyP * dyP, 1.5) + 1e-6;
-  const rN3 = Math.pow(dxN * dxN + dyN * dyN, 1.5) + 1e-6;
-  return [
-    CHARGE_POS.q * (dxP / rP3) + CHARGE_NEG.q * (dxN / rN3),
-    CHARGE_POS.q * (dyP / rP3) + CHARGE_NEG.q * (dyN / rN3),
-  ];
-}
-
-function fieldStep(x, y, h) {
-  const dir = (px, py) => {
-    const [ex, ey] = fieldAt(px, py);
-    const mag = Math.hypot(ex, ey) || 1e-9;
-    return [ex / mag, ey / mag];
-  };
-  const [k1x, k1y] = dir(x, y);
-  const [k2x, k2y] = dir(x + (h / 2) * k1x, y + (h / 2) * k1y);
-  const [k3x, k3y] = dir(x + (h / 2) * k2x, y + (h / 2) * k2y);
-  const [k4x, k4y] = dir(x + h * k3x, y + h * k3y);
-  return [
-    x + (h / 6) * (k1x + 2 * k2x + 2 * k3x + k4x),
-    y + (h / 6) * (k1y + 2 * k2y + 2 * k3y + k4y),
-  ];
-}
-
+// Constants
+const EXCLUSION_R = 0.16;
 const X_BOUND = 4.6;
 const Y_BOUND = 2.55;
 const STEP_LEN = 0.032;
 const MAX_STEPS = 2200;
+const LINE_COUNT = 16;
+const SEGMENTS_PER_LINE = 5;
+const X_MIN = -X_BOUND;
+const X_MAX = 2.0;
+const Y_MIN = -Y_BOUND;
+const Y_MAX = Y_BOUND;
+const TITLE_HEIGHT = 70;
+const MARGIN = { top: 30, bottom: 90, left: 100, right: 60 };
 
-function traceFieldLine(theta) {
-  let x = CHARGE_POS.x + EXCLUSION_R * Math.cos(theta);
-  let y = CHARGE_POS.y + EXCLUSION_R * Math.sin(theta);
+// Columns: set these to your data's column names
+const X_COORD = "x (normalized distance)"; // role: x
+const Y_COORD = "y (normalized distance)"; // role: y
+const U_VEL = "Horizontal Field Component (Ex)"; // role: u
+const V_VEL = "Vertical Field Component (Ey)"; // role: v
+
+// Data: replace this block with your own records
+const polePosX = -1.1;
+const polePosY = 0;
+const poleNegX = 1.1;
+const poleNegY = 0;
+const gridNx = 47;
+const gridNy = 27;
+
+const data: Array<Record<string, number>> = [];
+for (let j = 0; j < gridNy; j++) {
+  const gy = -Y_BOUND + (j / (gridNy - 1)) * (2 * Y_BOUND);
+  for (let i = 0; i < gridNx; i++) {
+    const gx = -X_BOUND + (i / (gridNx - 1)) * (2 * X_BOUND);
+    const dxP = gx - polePosX;
+    const dyP = gy - polePosY;
+    const dxN = gx - poleNegX;
+    const dyN = gy - poleNegY;
+    const rP3 = Math.pow(dxP * dxP + dyP * dyP, 1.5) + 1e-4;
+    const rN3 = Math.pow(dxN * dxN + dyN * dyN, 1.5) + 1e-4;
+    const uVal = dxP / rP3 - dxN / rN3;
+    const vVal = dyP / rP3 - dyN / rN3;
+    data.push({
+      [X_COORD]: Number(gx.toFixed(3)),
+      [Y_COORD]: Number(gy.toFixed(3)),
+      [U_VEL]: uVal,
+      [V_VEL]: vVal,
+    });
+  }
+}
+
+// Plot: reads only data and the constants above
+// Locate the source and sink poles from the vector field grid
+let sourceNode = data[0];
+let sinkNode = data[0];
+let maxSourceScore = -Infinity;
+let maxSinkScore = -Infinity;
+
+for (let idx = 0; idx < data.length; idx++) {
+  const row = data[idx];
+  const rx = Number(row[X_COORD]);
+  const ry = Number(row[Y_COORD]);
+  let outFlux = 0;
+  for (let k = 0; k < data.length; k++) {
+    const nb = data[k];
+    const dx = Number(nb[X_COORD]) - rx;
+    const dy = Number(nb[Y_COORD]) - ry;
+    const d2 = dx * dx + dy * dy;
+    if (d2 > 0.01 && d2 < 0.12) {
+      const dist = Math.sqrt(d2);
+      outFlux += (Number(nb[U_VEL]) * dx + Number(nb[V_VEL]) * dy) / dist;
+    }
+  }
+  if (outFlux > maxSourceScore) {
+    maxSourceScore = outFlux;
+    sourceNode = row;
+  }
+  if (-outFlux > maxSinkScore) {
+    maxSinkScore = -outFlux;
+    sinkNode = row;
+  }
+}
+
+const chargePos = {
+  x: Number(sourceNode[X_COORD]),
+  y: Number(sourceNode[Y_COORD]),
+  q: 1,
+};
+const chargeNeg = {
+  x: Number(sinkNode[X_COORD]),
+  y: Number(sinkNode[Y_COORD]),
+  q: -1,
+};
+
+const rawLines: Array<{ xs: number[]; ys: number[]; mags: number[] }> = [];
+for (let k = 0; k < LINE_COUNT; k++) {
+  const theta = ((k + 0.5) / LINE_COUNT) * 2 * Math.PI;
+  let x = chargePos.x + EXCLUSION_R * Math.cos(theta);
+  let y = chargePos.y + EXCLUSION_R * Math.sin(theta);
   const xs = [x];
   const ys = [y];
-  const mags = [Math.hypot(...fieldAt(x, y))];
-  for (let i = 0; i < MAX_STEPS; i++) {
-    [x, y] = fieldStep(x, y, STEP_LEN);
-    const dSink = Math.hypot(x - CHARGE_NEG.x, y - CHARGE_NEG.y);
+
+  const dxP0 = x - chargePos.x;
+  const dyP0 = y - chargePos.y;
+  const dxN0 = x - chargeNeg.x;
+  const dyN0 = y - chargeNeg.y;
+  const rP30 = Math.pow(dxP0 * dxP0 + dyP0 * dyP0, 1.5) + 1e-6;
+  const rN30 = Math.pow(dxN0 * dxN0 + dyN0 * dyN0, 1.5) + 1e-6;
+  const mags = [
+    Math.hypot(
+      chargePos.q * (dxP0 / rP30) + chargeNeg.q * (dxN0 / rN30),
+      chargePos.q * (dyP0 / rP30) + chargeNeg.q * (dyN0 / rN30),
+    ),
+  ];
+
+  for (let step = 0; step < MAX_STEPS; step++) {
+    // 4-stage RK4 on unit field vector
+    const pts = [
+      [x, y],
+      [x, y],
+      [x, y],
+      [x, y],
+    ];
+    const ks = [
+      [0, 0],
+      [0, 0],
+      [0, 0],
+      [0, 0],
+    ];
+    for (let stage = 0; stage < 4; stage++) {
+      const px =
+        stage === 0
+          ? x
+          : stage === 1
+            ? x + (STEP_LEN / 2) * ks[0][0]
+            : stage === 2
+              ? x + (STEP_LEN / 2) * ks[1][0]
+              : x + STEP_LEN * ks[2][0];
+      const py =
+        stage === 0
+          ? y
+          : stage === 1
+            ? y + (STEP_LEN / 2) * ks[0][1]
+            : stage === 2
+              ? y + (STEP_LEN / 2) * ks[1][1]
+              : y + STEP_LEN * ks[2][1];
+      pts[stage] = [px, py];
+      const dxP = px - chargePos.x;
+      const dyP = py - chargePos.y;
+      const dxN = px - chargeNeg.x;
+      const dyN = py - chargeNeg.y;
+      const rP3 = Math.pow(dxP * dxP + dyP * dyP, 1.5) + 1e-6;
+      const rN3 = Math.pow(dxN * dxN + dyN * dyN, 1.5) + 1e-6;
+      const ex = chargePos.q * (dxP / rP3) + chargeNeg.q * (dxN / rN3);
+      const ey = chargePos.q * (dyP / rP3) + chargeNeg.q * (dyN / rN3);
+      const mag = Math.hypot(ex, ey) || 1e-9;
+      ks[stage] = [ex / mag, ey / mag];
+    }
+
+    x += (STEP_LEN / 6) * (ks[0][0] + 2 * ks[1][0] + 2 * ks[2][0] + ks[3][0]);
+    y += (STEP_LEN / 6) * (ks[0][1] + 2 * ks[1][1] + 2 * ks[2][1] + ks[3][1]);
+
+    const dSink = Math.hypot(x - chargeNeg.x, y - chargeNeg.y);
     if (dSink < EXCLUSION_R) {
       const snap = EXCLUSION_R / dSink;
-      x = CHARGE_NEG.x + (x - CHARGE_NEG.x) * snap;
-      y = CHARGE_NEG.y + (y - CHARGE_NEG.y) * snap;
+      x = chargeNeg.x + (x - chargeNeg.x) * snap;
+      y = chargeNeg.y + (y - chargeNeg.y) * snap;
       xs.push(x);
       ys.push(y);
-      mags.push(Math.hypot(...fieldAt(x, y)));
+      const dxP = x - chargePos.x;
+      const dyP = y - chargePos.y;
+      const dxN = x - chargeNeg.x;
+      const dyN = y - chargeNeg.y;
+      const rP3 = Math.pow(dxP * dxP + dyP * dyP, 1.5) + 1e-6;
+      const rN3 = Math.pow(dxN * dxN + dyN * dyN, 1.5) + 1e-6;
+      mags.push(
+        Math.hypot(
+          chargePos.q * (dxP / rP3) + chargeNeg.q * (dxN / rN3),
+          chargePos.q * (dyP / rP3) + chargeNeg.q * (dyN / rN3),
+        ),
+      );
       break;
     }
     if (Math.abs(x) > X_BOUND || Math.abs(y) > Y_BOUND) break;
     xs.push(x);
     ys.push(y);
-    mags.push(Math.hypot(...fieldAt(x, y)));
+    const dxP = x - chargePos.x;
+    const dyP = y - chargePos.y;
+    const dxN = x - chargeNeg.x;
+    const dyN = y - chargeNeg.y;
+    const rP3 = Math.pow(dxP * dxP + dyP * dyP, 1.5) + 1e-6;
+    const rN3 = Math.pow(dxN * dxN + dyN * dyN, 1.5) + 1e-6;
+    mags.push(
+      Math.hypot(
+        chargePos.q * (dxP / rP3) + chargeNeg.q * (dxN / rN3),
+        chargePos.q * (dyP / rP3) + chargeNeg.q * (dyN / rN3),
+      ),
+    );
   }
-  return { xs, ys, mags };
+  rawLines.push({ xs, ys, mags });
 }
 
-// 16 seeds evenly spaced around the positive charge, offset by half a step so
-// none lands on the +/-x axis (the exact axis line never curves back and
-// would otherwise run to the domain edge as a degenerate special case).
-const LINE_COUNT = 16;
-const rawLines = Array.from({ length: LINE_COUNT }, (_, k) =>
-  traceFieldLine(((k + 0.5) / LINE_COUNT) * 2 * Math.PI),
+const allLogMags = rawLines.flatMap((l) =>
+  l.mags.map((m) => Math.log10(m + 1e-6)),
 );
+const logMin = Math.min(...allLogMags);
+const logMax = Math.max(...allLogMags);
 
-// --- Color-by-magnitude: MUI X has no per-vertex line coloring, so each
-// field line is chopped into fixed sub-segments (own xAxisId + series) and
-// each segment gets one solid color from imprint_seq, driven by its average
-// log-magnitude — a discretized stand-in for a continuous "speed" colormap.
-const allLogMags = rawLines.flatMap((l) => l.mags.map((m) => Math.log10(m + 1e-6)));
-const LOG_MIN = Math.min(...allLogMags);
-const LOG_MAX = Math.max(...allLogMags);
+const seqR1 = parseInt(t.seq[0].slice(1, 3), 16);
+const seqG1 = parseInt(t.seq[0].slice(3, 5), 16);
+const seqB1 = parseInt(t.seq[0].slice(5, 7), 16);
+const seqR2 = parseInt(t.seq[1].slice(1, 3), 16);
+const seqG2 = parseInt(t.seq[1].slice(3, 5), 16);
+const seqB2 = parseInt(t.seq[1].slice(5, 7), 16);
 
-function hexToRgb(hex) {
-  const n = parseInt(hex.slice(1), 16);
-  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-}
-function lerpColor(hexA, hexB, f) {
-  const a = hexToRgb(hexA);
-  const b = hexToRgb(hexB);
-  const c = a.map((v, i) => Math.round(v + (b[i] - v) * Math.min(1, Math.max(0, f))));
-  return `rgb(${c[0]}, ${c[1]}, ${c[2]})`;
-}
-
-const SEGMENTS_PER_LINE = 5;
 let axisCounter = 0;
-const segments = [];
-const arrowSpecs = [];
+const segments: Array<{
+  axisId: string;
+  xs: number[];
+  ys: number[];
+  color: string;
+}> = [];
+const arrowSpecs: Array<{
+  x0: number;
+  y0: number;
+  x1: number;
+  y1: number;
+  color: string;
+}> = [];
 
 for (const line of rawLines) {
   const n = line.xs.length;
   const segLen = Math.max(1, Math.floor((n - 1) / SEGMENTS_PER_LINE));
-  const lineSegments = [];
+  const lineSegments: typeof segments = [];
   for (let s = 0; s < SEGMENTS_PER_LINE; s++) {
     const start = s * segLen;
     const end = s === SEGMENTS_PER_LINE - 1 ? n - 1 : (s + 1) * segLen;
     if (end <= start) continue;
     const segMags = line.mags.slice(start, end + 1);
-    const avgLogMag = segMags.reduce((acc, m) => acc + Math.log10(m + 1e-6), 0) / segMags.length;
-    const norm = LOG_MAX > LOG_MIN ? (avgLogMag - LOG_MIN) / (LOG_MAX - LOG_MIN) : 0.5;
+    const avgLogMag =
+      segMags.reduce((acc, m) => acc + Math.log10(m + 1e-6), 0) /
+      segMags.length;
+    const norm = Math.min(
+      1,
+      Math.max(0, logMax > logMin ? (avgLogMag - logMin) / (logMax - logMin) : 0.5),
+    );
+    const r = Math.round(seqR1 + (seqR2 - seqR1) * norm);
+    const g = Math.round(seqG1 + (seqG2 - seqG1) * norm);
+    const b = Math.round(seqB1 + (seqB2 - seqB1) * norm);
     const segment = {
       axisId: `fl-${axisCounter++}`,
       xs: line.xs.slice(start, end + 1),
       ys: line.ys.slice(start, end + 1),
-      color: lerpColor(t.seq[0], t.seq[1], norm),
+      color: `rgb(${r}, ${g}, ${b})`,
     };
     segments.push(segment);
     lineSegments.push(segment);
   }
-  // Direction arrows at two points along the raw path, colored to match the
-  // local field-strength segment they fall in.
   if (n > 12 && lineSegments.length > 0) {
-    [0.15, 0.42, 0.72].forEach((frac) => {
+    for (const frac of [0.15, 0.42, 0.72]) {
       const idx = Math.min(n - 3, Math.max(2, Math.round(frac * (n - 1))));
-      const segIdx = Math.min(lineSegments.length - 1, Math.floor(idx / segLen));
+      const segIdx = Math.min(
+        lineSegments.length - 1,
+        Math.floor(idx / segLen),
+      );
       const segment = lineSegments[segIdx];
       arrowSpecs.push({
         x0: line.xs[idx],
@@ -146,84 +286,49 @@ for (const line of rawLines) {
         y1: line.ys[idx + 2],
         color: segment.color,
       });
-    });
+    }
   }
 }
 
-const SHARED_AXIS_ID = segments[0].axisId; // every xAxis shares the same explicit
-// [X_MIN, X_MAX] linear domain, so any one of them maps data->pixels for all lines.
+const sharedAxisId = segments[0].axisId;
 
-// Display domain is tighter than the integration bound X_BOUND on the right:
-// this dipole's field lines either loop between the two charges or escape
-// toward -x, so nothing ever occupies the right two-thirds of a symmetric
-// domain — cropping it there fills the canvas instead of framing empty space.
-const X_MIN = -X_BOUND;
-const X_MAX = 2.0;
-const Y_MIN = -Y_BOUND;
-const Y_MAX = Y_BOUND;
-
-const TITLE = "Electric Dipole Field Lines · streamline-basic · javascript · muix · anyplot.ai";
-const TITLE_HEIGHT = 70;
-const TITLE_FONT_SIZE = Math.max(15, Math.round(22 * Math.min(1, 67 / TITLE.length)));
-
-const MARGIN = { top: 30, bottom: 90, left: 100, right: 60 };
-
-function arrowPoints(cx, cy, angle, size) {
-  const backAngle = angle + Math.PI;
-  const spread = 0.48;
-  const tip = [cx + Math.cos(angle) * size, cy + Math.sin(angle) * size];
-  const left = [cx + Math.cos(backAngle - spread) * size, cy + Math.sin(backAngle - spread) * size];
-  const right = [cx + Math.cos(backAngle + spread) * size, cy + Math.sin(backAngle + spread) * size];
-  return `${tip.join(",")} ${left.join(",")} ${right.join(",")}`;
-}
-
-// --- Custom overlay: charge markers, direction arrowheads, and a manual
-// field-strength gradient legend (community x-charts has no bound color-axis
-// legend wired for a line chart, so the swatch is drawn directly). ----------
 function FieldOverlay() {
-  const xScale = useXScale(SHARED_AXIS_ID);
-  const yScale = useYScale();
+  const xScale = useXScale(sharedAxisId) as (v: number) => number;
+  const yScale = useYScale() as (v: number) => number;
   const area = useDrawingArea();
-
-  const posPx = { x: xScale(CHARGE_POS.x), y: yScale(CHARGE_POS.y) };
-  const negPx = { x: xScale(CHARGE_NEG.x), y: yScale(CHARGE_NEG.y) };
 
   const legendW = 190;
   const legendH = 14;
   const legendX = area.left + area.width - legendW - 18;
-  const legendY = area.top + 16;
+  const legendY = area.top + 18;
+  const arrowSize = 11;
+  const spread = 0.48;
 
   return (
     <g>
       {arrowSpecs.map((a, i) => {
-        const p0 = { x: xScale(a.x0), y: yScale(a.y0) };
-        const p1 = { x: xScale(a.x1), y: yScale(a.y1) };
-        const angle = Math.atan2(p1.y - p0.y, p1.x - p0.x);
+        const p0x = xScale(a.x0);
+        const p0y = yScale(a.y0);
+        const p1x = xScale(a.x1);
+        const p1y = yScale(a.y1);
+        const angle = Math.atan2(p1y - p0y, p1x - p0x);
+        const backAngle = angle + Math.PI;
+        const tipX = p0x + Math.cos(angle) * arrowSize;
+        const tipY = p0y + Math.sin(angle) * arrowSize;
+        const leftX = p0x + Math.cos(backAngle - spread) * arrowSize;
+        const leftY = p0y + Math.sin(backAngle - spread) * arrowSize;
+        const rightX = p0x + Math.cos(backAngle + spread) * arrowSize;
+        const rightY = p0y + Math.sin(backAngle + spread) * arrowSize;
         return (
           <polygon
             key={i}
-            points={arrowPoints(p0.x, p0.y, angle, 11)}
+            points={`${tipX},${tipY} ${leftX},${leftY} ${rightX},${rightY}`}
             fill={a.color}
             stroke={t.pageBg}
             strokeWidth={1}
           />
         );
       })}
-
-      <circle cx={posPx.x} cy={posPx.y} r={17} fill={t.ink} stroke={t.pageBg} strokeWidth={2.5} />
-      <ChartsText
-        x={posPx.x}
-        y={posPx.y}
-        text="+"
-        style={{ fontSize: 20, fontWeight: 700, fill: t.pageBg, textAnchor: "middle", dominantBaseline: "central" }}
-      />
-      <circle cx={negPx.x} cy={negPx.y} r={17} fill={t.ink} stroke={t.pageBg} strokeWidth={2.5} />
-      <ChartsText
-        x={negPx.x}
-        y={negPx.y}
-        text="−"
-        style={{ fontSize: 20, fontWeight: 700, fill: t.pageBg, textAnchor: "middle", dominantBaseline: "central" }}
-      />
 
       <defs>
         <linearGradient id="streamline-strength-grad" x1="0" y1="0" x2="1" y2="0">
@@ -234,33 +339,56 @@ function FieldOverlay() {
       <ChartsText
         x={legendX + legendW / 2}
         y={legendY - 14}
-        text="Field strength"
-        style={{ fontSize: 14, fill: t.inkSoft, textAnchor: "middle", dominantBaseline: "central" }}
+        text="Field strength (|E|)"
+        style={{
+          fontSize: 14,
+          fill: t.inkSoft,
+          textAnchor: "middle",
+          dominantBaseline: "central",
+        }}
       />
-      <rect x={legendX} y={legendY} width={legendW} height={legendH} rx={3} fill="url(#streamline-strength-grad)" />
+      <rect
+        x={legendX}
+        y={legendY}
+        width={legendW}
+        height={legendH}
+        rx={3}
+        fill="url(#streamline-strength-grad)"
+      />
       <ChartsText
         x={legendX}
-        y={legendY + legendH + 14}
+        y={legendY + legendH + 15}
         text="weak"
-        style={{ fontSize: 13, fill: t.inkSoft, textAnchor: "start", dominantBaseline: "central" }}
+        style={{
+          fontSize: 14,
+          fill: t.inkSoft,
+          textAnchor: "start",
+          dominantBaseline: "central",
+        }}
       />
       <ChartsText
         x={legendX + legendW}
-        y={legendY + legendH + 14}
+        y={legendY + legendH + 15}
         text="strong"
-        style={{ fontSize: 13, fill: t.inkSoft, textAnchor: "end", dominantBaseline: "central" }}
+        style={{
+          fontSize: 14,
+          fill: t.inkSoft,
+          textAnchor: "end",
+          dominantBaseline: "central",
+        }}
       />
     </g>
   );
 }
 
-// --- Chart (default-exported component — the harness mounts it) -------------
 export default function Chart() {
+  const { width, height } = window.ANYPLOT_SIZE;
   return (
     <div
       style={{
-        width: window.ANYPLOT_SIZE.width,
-        height: window.ANYPLOT_SIZE.height,
+        width,
+        height,
+        background: t.pageBg,
         display: "flex",
         flexDirection: "column",
       }}
@@ -271,56 +399,72 @@ export default function Chart() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          fontSize: TITLE_FONT_SIZE,
-          fontWeight: 500,
+          fontSize: 22,
+          fontWeight: 600,
           color: t.ink,
         }}
       >
-        {TITLE}
+        Electric Dipole Field Lines · streamline-basic · javascript · muix · anyplot.ai
       </div>
-      <ChartContainer
-        width={window.ANYPLOT_SIZE.width}
-        height={window.ANYPLOT_SIZE.height - TITLE_HEIGHT}
+      <ChartsContainer
+        width={width}
+        height={height - TITLE_HEIGHT}
         margin={MARGIN}
-        skipAnimation
         sx={{
-          ".MuiLineElement-root": { strokeWidth: 2.75, strokeLinecap: "round" },
+          "& .MuiLineChart-line": {
+            strokeWidth: 2.75,
+            strokeLinecap: "round",
+          },
           "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 0.75 },
         }}
-        xAxis={segments.map((seg) => ({
-          id: seg.axisId,
-          scaleType: "linear",
-          data: seg.xs,
-          min: X_MIN,
-          max: X_MAX,
-        }))}
-        yAxis={[{ scaleType: "linear", min: Y_MIN, max: Y_MAX }]}
+        xAxis={segments.map((seg, idx) =>
+          idx === 0
+            ? {
+                id: seg.axisId,
+                scaleType: "linear" as const,
+                data: seg.xs,
+                min: X_MIN,
+                max: X_MAX,
+                height: 60,
+                label: X_COORD,
+                labelStyle: { fontSize: 16, fill: t.ink, fontWeight: 500 },
+                tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+              }
+            : {
+                id: seg.axisId,
+                scaleType: "linear" as const,
+                data: seg.xs,
+                min: X_MIN,
+                max: X_MAX,
+                position: "none" as const,
+              },
+        )}
+        yAxis={[
+          {
+            scaleType: "linear",
+            min: Y_MIN,
+            max: Y_MAX,
+            width: 84,
+            label: Y_COORD,
+            labelStyle: { fontSize: 16, fill: t.ink, fontWeight: 500 },
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+          },
+        ]}
         series={segments.map((seg) => ({
-          type: "line",
+          type: "line" as const,
           data: seg.ys,
           xAxisId: seg.axisId,
           color: seg.color,
-          curve: "linear",
+          curve: "linear" as const,
           showMark: false,
         }))}
       >
         <ChartsGrid horizontal />
-        <LinePlot />
+        <LinePlot skipAnimation />
         <FieldOverlay />
-        <ChartsXAxis
-          axisId={SHARED_AXIS_ID}
-          label="x (normalized distance)"
-          labelStyle={{ fontSize: 16, fill: t.ink, fontWeight: 500 }}
-          tickLabelStyle={{ fontSize: 14, fill: t.inkSoft }}
-          stroke={t.inkSoft}
-        />
-        <ChartsYAxis
-          label="y (normalized distance)"
-          labelStyle={{ fontSize: 16, fill: t.ink, fontWeight: 500 }}
-          tickLabelStyle={{ fontSize: 14, fill: t.inkSoft }}
-          stroke={t.inkSoft}
-        />
-      </ChartContainer>
+        <ChartsXAxis axisId={sharedAxisId} />
+        <ChartsYAxis />
+      </ChartsContainer>
     </div>
   );
 }
