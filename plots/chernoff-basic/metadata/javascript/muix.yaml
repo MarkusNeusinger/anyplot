@@ -2,138 +2,128 @@ library: muix
 language: javascript
 specification_id: chernoff-basic
 created: '2026-09-02T15:15:42Z'
-updated: '2026-09-02T15:20:21Z'
-generated_by: claude-sonnet
-workflow_run: 33646524651
+updated: '2026-10-24T04:32:31Z'
+generated_by: gemini-4-argon
+adopted_from: 05fd22b6883131fc8937ab51e4f573041b3dcb44 (05fd22b6883131fc8937ab51e4f573041b3dcb44)
+workflow_run: 40062462174
 issue: 3003
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/javascript/muix/plot-dark.html
-quality_score: 90
+quality_score: 87
 review:
   strengths:
-  - Feature-to-metric mapping is thoughtful and fully documented in code comments
-    (face width/height, eye size/spacing, eyebrow angle, nose length, mouth curvature)
-    covering all 7 normalized metrics from the spec
-  - Sector grouping via row position AND stroke color creates genuine visual storytelling
-    — the Manufacturing row reads as furrowed/frowning, the Technology row reads as
-    relaxed/smiling, forming an at-a-glance pattern before reading any label
-  - Deterministic LCG-based data generation (fixed seed=42) with sector-level baselines
-    plus per-company jitter, producing plausible, distinguishable financial profiles
-  - Correct theme-adaptive tokens throughout (t.ink, t.inkSoft, t.elevatedBg) so both
-    renders are fully readable with no dark-on-dark or light-on-light failures
-  - 'Correct Imprint palette usage in canonical order (row 0 -> #009E73 green, row
-    1 -> lavender, row 2 -> blue), identical across light and dark themes'
-  - Feature-key caption at the bottom substitutes for axis labels, explaining every
-    facial mapping without cluttering the faces themselves
-  - Title fontsize formula scales with title length and matches the required '{Descriptive
-    Title} · {spec-id} · {language} · {library} · anyplot.ai' pattern
+  - Seven variables min-max normalized to [0, 1] and each mapped to one facial feature;
+    faces stay recognizable at both ends of every range
+  - 'One row per sector with Imprint-colored outlines makes the sector profiles instantly
+    comparable: smiling technology faces, flat-mouthed retail, frowning manufacturing
+    with slanted brows'
+  - Two-line footer key names every variable-to-feature mapping, with units, so the
+    faces can be decoded
+  - Theme tokens threaded through every element (elevated face fill, ink features,
+    inkSoft nose and key); both renders are fully readable
+  - 'Uses the MUI X composition API: a custom SVG layer inside ChartsContainer positioned
+    through useXScale / useYScale / useDrawingArea'
   weaknesses:
-  - MUI X's own chart primitives (series, tooltip, legend component, formatted axis)
-    are barely engaged — ChartContainer is used purely as a coordinate-system canvas
-    via useXScale/useYScale, with faces, legend, and feature key all hand-drawn SVG.
-    Legitimate for a glyph type MUI X can't natively express, but leaves little library-distinctive
-    functionality on display.
-  - Company-name captions are set at fontSize=13 (CSS px), which risks becoming hard
-    to read once the image is scaled down to the ~400 px mobile srcset — consider
-    bumping to ~14-15px to match the sizing used elsewhere for tick-label-equivalent
-    text.
-  - Noticeable empty vertical band between the sector legend (y=108) and the top of
-    the first face row (chart area starts at margin.top=190) — tightening margin.top
-    slightly would improve vertical rhythm.
+  - 'Suggestion: align the company labels on one baseline per row (e.g. below the
+    tallest face of the row) so they read as a tidy row instead of shifting with each
+    face height.'
+  - 'Suggestion: hide the layout axes with position: "none" instead of height: 0 /
+    width: 0, the v9 idiom the library prompt names.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "Company Financial Health · chernoff-basic · javascript · muix · anyplot.ai" in bold dark ink, subtitle below in softer gray, sector legend (Technology/Retail/Manufacturing) with colored swatches, company name captions below each face, two-line feature-mapping key at the bottom. All chrome text is clearly readable against the light background.
-      Data: 12 Chernoff faces in a 4-column x 3-row grid, each face an ellipse outlined in the sector's Imprint color (Technology = brand green #009E73, Retail = lavender, Manufacturing = blue) with dark eyes/eyebrows/nose/mouth. Face fill uses the elevated off-white token, distinguishing it subtly from the page background. First series color is confirmed as the brand green #009E73.
-      Legibility verdict: PASS — no overlap, no clipping, all text and face features crisp.
+      Background: warm off-white #FAF8F1 across the whole canvas.
+      Chrome: bold dark title "chernoff-basic · javascript · muix · anyplot.ai" centered at top, a soft-ink subtitle ("12 faces (Company) · 3 groups (Sector) · 7 variables normalized to [0, 1] ..."), a ring-swatch legend (Technology, Retail, Manufacturing), bold dark company labels under each face, and a two-line soft-ink footer key mapping each feature to its variable. All text readable.
+      Data: 3x4 grid of Chernoff faces, one row per sector. Technology faces outlined in #009E73 (large, tall, smiling), Retail in purple (round, big eyes, flat mouths), Manufacturing in blue (narrow, small eyes, steeply slanted brows, frowns). Faces filled with the light elevated surface; eyes, brows and mouth in dark ink, nose in soft ink.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Same title/subtitle/legend/captions/feature key, now rendered in light ink (title/subtitle) and softer light gray (captions, feature key) against the dark background. All chrome text is clearly readable — no dark-on-dark failures observed.
-      Data: Same 12 faces, same layout and grid; stroke colors identical to the light render (green/lavender/blue), face fill uses the darker elevated token (#242420) so faces read as subtly raised cards against the near-black page. Eyes/nose/mouth switch from dark ink to light ink for contrast, as expected — only chrome flips, data-encoding colors (sector stroke) stay identical.
-      Legibility verdict: PASS — no dark-on-dark text, no clipping, faces and captions all legible.
+      Background: warm near-black #1A1A17.
+      Chrome: title, legend labels and company labels in light ink, subtitle and footer key in light soft ink; no dark-on-dark text anywhere.
+      Data: outline colors identical to the light render (green, purple, blue); face fills flip to the dark elevated surface and features flip to light ink, all clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; company-name captions at 13px are
-          a mild mobile-scaling risk
+        comment: Explicit sizes (title 22 px, subtitle 15 px, face labels 14 px bold,
+          key 14 px); ink/inkSoft tokens keep every text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, faces, or legend
+        comment: Faces, labels, legend and key are all clear of each other
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 12 faces at generous size, sector strokes clearly distinguishable
+        comment: 12 faces with 3.5 px outlines and 3 px feature strokes are prominent;
+          legend ring swatches match the face outlines in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint colorblind-safe hues; row position is a redundant encoding
-          alongside color
+        comment: Green/purple/blue group outlines are CVD-distinguishable and redundant
+          with the row grouping
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Nothing cut off; some excess whitespace between legend and face grid
-          top
+        comment: 3200x1800, balanced header/grid/footer bands, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes correctly disabled (not applicable to a face-glyph grid); feature
-          key substitutes for axis labels; title format correct
+        comment: N/A for data axes (layout grid); the key names each variable with
+          its unit
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; canonical order used for all 3 sectors;
-          backgrounds correct in both themes'
+        comment: 'First group #009E73, then Imprint positions 2 and 3; #FAF8F1 / #1A1A17
+          backgrounds; data colors identical across themes'
     design_excellence:
-      score: 16
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom-drawn expressive glyphs with documented, intentional feature
-          mapping — above generic-default
+        comment: Clear ink hierarchy (eyes/brows/mouth in ink, nose in inkSoft), faces
+          filled with the elevated surface, legend swatches drawn as rings matching
+          the face outlines, summary subtitle
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: No spines/grid, generous whitespace, subtle tertiary feature-key
-          caption
+        comment: Feature key split into two balanced lines in the footer; generous
+          whitespace around each face; face labels not row-aligned (vary with face
+          height)
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Sector rows create a clear emotional/visual pattern (furrowed+frowning
-          Manufacturing vs. relaxed+smiling Technology) readable before consulting
-          labels
+        comment: One row per sector makes the sector profiles (smiling tech, flat
+          retail, frowning manufacturing) the focal comparison
     spec_compliance:
       score: 15
       max: 15
@@ -143,27 +133,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Genuine Chernoff faces, correctly custom-drawn since MUI X has no
-          native glyph chart
+        comment: Chernoff face grid; group color is the option the Notes allow; no
+          extra layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Grid layout, normalized [0,1] metrics, group-membership colorization
-          all present
+        comment: Min-max normalization to [0,1], 7 features mapped, grid layout, labelled
+          faces, variable-to-feature key, group legend
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 7 metrics mapped 1:1 to distinct facial features, documented in-code
+        comment: Each variable drives exactly one feature; grid position is layout,
+          no data axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format matches spec exactly; legend labels match sector names
+        comment: Title 'chernoff-basic · javascript · muix · anyplot.ai'; group legend
+          entries match the sector names
     data_quality:
       score: 15
       max: 15
@@ -173,20 +165,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 7 facial-feature mappings exercised across 12 companies
+        comment: Faces differ visibly across and within groups; clusters and feature
+          extremes both visible
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral company financial-health scenario across 3 sectors
+        comment: Fictional companies with financial health metrics - the spec's first
+          application, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 12 observations within the spec's 5-50 recommended range, easy to
-          compare
+        comment: Plausible values (tech growth 25-32 %, manufacturing D/E 1.3-1.7,
+          retention 63-93 %); no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -196,34 +190,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Small React function components are required by the React/MUI X contract,
-          not unnecessary abstraction
+        comment: Data block, flat prep, one layer component required for the MUI hooks,
+          default export
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed=42), fully deterministic
+        comment: Hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ChartContainer, useXScale, useYScale imported, all used
+        comment: ChartsContainer and three hooks, all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity; skipAnimation set; appropriate complexity
-          for a custom-glyph chart
+        comment: Feature geometry via named share constants; no dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct default-export contract for the harness; no manual save/mount
-          calls
+        comment: Default-exported component sized to ANYPLOT_SIZE, v9 ChartsContainer,
+          skipAnimation
     library_mastery:
       score: 6
       max: 10
@@ -233,23 +226,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ChartContainer + useXScale/useYScale as a coordinate-system canvas
-          for custom marks is exactly the documented technique for chart types MUI
-          X can't natively express
+        comment: 'Composition API: a custom SVG layer inside ChartsContainer positioned
+          through useXScale/useYScale/useDrawingArea'
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: Uses the scale-hook mechanism (MUI X-specific) but forgoes series/tooltip/legend-component
-          features, so little of MUI X's signature charting surface is showcased
+        passed: true
+        comment: MUI X scale hooks drive the face grid layout instead of hand-computed
+          pixel positions
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-10-24T04:29:46Z'
 impl_tags:
   dependencies: []
   techniques:
   - patches
-  - bezier-curves
   - custom-legend
+  - layer-composition
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
@@ -257,4 +253,4 @@ impl_tags:
   - normalization
   styling:
   - minimal-chrome
-  - publication-ready
+  - edge-highlighting
