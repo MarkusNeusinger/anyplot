@@ -220,16 +220,38 @@ const rangeY = Math.max(...layoutNodes.map((n) => Math.abs(n.y)));
 const xHalf = rangeX * PAD_MULT;
 const yHalf = rangeY * PAD_MULT;
 
+const edgeOpacity = (ratio: number) => 0.22 + ratio * 0.4;
+
 const sortedEdges = [...edges].sort((a, b) => a.weight - b.weight);
 const midWeight = Math.round((minWeight + maxWeight) / 2);
-const weightSamples = [
-  { weight: minWeight, strokeWidth: EDGE_MIN_W },
-  {
-    weight: midWeight,
-    strokeWidth: EDGE_MIN_W + ((midWeight - minWeight) / weightSpan) * (EDGE_MAX_W - EDGE_MIN_W),
-  },
-  { weight: maxWeight, strokeWidth: EDGE_MAX_W },
-];
+const weightSamples = [minWeight, midWeight, maxWeight].map((weight) => {
+  const ratio = (weight - minWeight) / weightSpan;
+  return { weight, ratio, strokeWidth: EDGE_MIN_W + ratio * (EDGE_MAX_W - EDGE_MIN_W) };
+});
+
+// Label direction per node: bisector of the widest angular gap between its edges
+function labelAngle(nodeIdx: number, px: (n: LabNode) => [number, number]): number {
+  const [cx, cy] = px(layoutNodes[nodeIdx]);
+  const angles = edges
+    .filter((e) => e.sourceIdx === nodeIdx || e.targetIdx === nodeIdx)
+    .map((e) => {
+      const other = layoutNodes[e.sourceIdx === nodeIdx ? e.targetIdx : e.sourceIdx];
+      const [ox, oy] = px(other);
+      return Math.atan2(oy - cy, ox - cx);
+    })
+    .sort((a, b) => a - b);
+  if (angles.length === 0) return -Math.PI / 2;
+  let bestGap = -1;
+  let bestAngle = -Math.PI / 2;
+  angles.forEach((a, i) => {
+    const next = i === angles.length - 1 ? angles[0] + 2 * Math.PI : angles[i + 1];
+    if (next - a > bestGap) {
+      bestGap = next - a;
+      bestAngle = (a + next) / 2;
+    }
+  });
+  return bestAngle;
+}
 
 interface HoverInfo {
   label: string;
@@ -248,6 +270,7 @@ function WeightedNetworkOverlay({
   const xScale = useXScale();
   const yScale = useYScale();
   const drawingArea = useDrawingArea();
+  const toPx = (n: LabNode): [number, number] => [Number(xScale(n.x)), Number(yScale(n.y))];
 
   return (
     <g>
@@ -272,7 +295,7 @@ function WeightedNetworkOverlay({
               x2={x2}
               y2={y2}
               stroke={t.ink}
-              strokeOpacity={0.22 + edge.ratio * 0.4}
+              strokeOpacity={edgeOpacity(edge.ratio)}
               strokeWidth={edge.strokeWidth}
               strokeLinecap="round"
             />
@@ -290,10 +313,20 @@ function WeightedNetworkOverlay({
           </g>
         );
       })}
-      {layoutNodes.map((node) => {
-        const cx = Number(xScale(node.x));
-        const cy = Number(yScale(node.y));
+      {layoutNodes.map((node, idx) => {
+        const [cx, cy] = toPx(node);
         const radius = node.radius;
+        const chipW = node.id.length * 10 + 8;
+        const chipH = 20;
+        const angle = labelAngle(idx, toPx);
+        const cosA = Math.cos(angle);
+        const sinA = Math.sin(angle);
+        const toChipEdge = Math.min(
+          chipW / 2 / Math.max(Math.abs(cosA), 1e-6),
+          chipH / 2 / Math.max(Math.abs(sinA), 1e-6),
+        );
+        const labelX = cx + cosA * (radius + 6 + toChipEdge);
+        const labelY = cy + sinA * (radius + 6 + toChipEdge);
         const tooltip: HoverInfo = {
           label: node.label,
           detail: `${node.domainName} · weighted degree ${node.weightedDegree}`,
@@ -314,19 +347,20 @@ function WeightedNetworkOverlay({
               onMouseLeave={() => onHoverChange(null)}
             />
             <rect
-              x={cx - 21}
-              y={cy - radius - 26}
-              width={42}
-              height={20}
+              x={labelX - chipW / 2}
+              y={labelY - chipH / 2}
+              width={chipW}
+              height={chipH}
               rx={4}
               fill={t.pageBg}
               fillOpacity={0.86}
               style={{ pointerEvents: "none" }}
             />
             <text
-              x={cx}
-              y={cy - radius - 11}
+              x={labelX}
+              y={labelY}
               textAnchor="middle"
+              dominantBaseline="central"
               fontSize={16}
               fontWeight={600}
               fill={t.ink}
@@ -491,7 +525,7 @@ export default function Chart() {
                   x2={48}
                   y2={8}
                   stroke={t.ink}
-                  strokeOpacity={0.55}
+                  strokeOpacity={edgeOpacity(sample.ratio)}
                   strokeWidth={sample.strokeWidth}
                   strokeLinecap="round"
                 />
