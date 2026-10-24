@@ -1,95 +1,154 @@
 // anyplot.ai
 // candlestick-volume: Stock Candlestick Chart with Volume
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 94/100 | Created: 2026-09-02
-
+// Library: muix 9.16.0 | JavaScript 22.23.3
+// Quality: 87/100 | Updated: 2026-10-24
 import { useState } from "react";
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
+import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
-import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
-import { useXScale, useYScale } from "@mui/x-charts/hooks";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
+import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data (in-memory, deterministic LCG PRNG — no fetch, no Math.random) ----
-let seed = 11;
-function rand() {
-  seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-  return seed / 0x7fffffff;
-}
+// Constants
+const PRICE_PAD_SHARE = 0.08;
+const VOL_PAD_SHARE = 0.15;
+const BODY_WIDTH_SHARE = 0.62;
+const X_TICK_COUNT = 10; // about this many labelled date ticks, shared by both panes
+const HEADER_H = 120;
+const PANE_GAP = 10;
+const PRICE_PANE_SHARE = 0.73; // share of the stacked plot-area height, not the container height
+const MARGIN_LEFT = 24;
+const MARGIN_RIGHT = 32;
+const Y_AXIS_W = 96;
+const X_AXIS_H = 60;
+const PRICE_MARGIN_V = 16 + 6; // top + bottom margin of the price container
+const VOLUME_MARGIN_V = 6 + 16; // top + bottom margin of the volume container
+const PRICE_AXIS_LABEL = "Price ($)";
 
-const PERIODS = 60; // daily candles, ~3 trading months
-const open: number[] = [];
-const high: number[] = [];
-const low: number[] = [];
-const close: number[] = [];
-const volume: number[] = [];
-let price = 148; // opening price, USD
+// Columns: set these to your data's column names
+const DATE = "Trading date"; // role: date
+const OPEN = "Open price ($)"; // role: open
+const HIGH = "High price ($)"; // role: high
+const LOW = "Low price ($)"; // role: low
+const CLOSE = "Close price ($)"; // role: close
+const VOLUME = "Volume"; // role: volume
 
-for (let i = 0; i < PERIODS; i++) {
-  const o = price;
-  const drift = (rand() - 0.5) * 6.2;
-  const c = Math.max(20, o + drift);
-  const h = Math.max(o, c) + rand() * 2.4;
-  const l = Math.max(Math.min(o, c) - rand() * 2.4, 1);
-  const move = Math.abs(c - o) + (h - l);
-  const vol = Math.round(1.4e6 + move * 3.6e5 + rand() * 6e5);
-  open.push(o);
-  high.push(h);
-  low.push(l);
-  close.push(c);
-  volume.push(vol);
-  price = c;
-}
+// Data: replace this block with your own records, one object per row
+const data = (() => {
+  let seed = 11;
+  const periods = 60;
+  const day = new Date(Date.UTC(2024, 1, 1));
+  const rows: { [key: string]: string | number }[] = [];
+  let price = 148;
 
-// Fixed calendar anchor (deterministic — not the render-time clock).
-const START = new Date(2024, 1, 1);
-const dateLabels: string[] = [];
-const fullDateLabels: string[] = [];
-for (let i = 0; i < PERIODS; i++) {
-  const d = new Date(START);
-  d.setDate(d.getDate() + i);
-  dateLabels.push(
-    d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-  );
-  fullDateLabels.push(
-    d.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    }),
-  );
-}
+  for (let i = 0; i < periods; i += 1) {
+    const o = price;
+    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+    const u1 = seed / 0x7fffffff;
+    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+    const u2 = seed / 0x7fffffff;
+    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+    const u3 = seed / 0x7fffffff;
+    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+    const u4 = seed / 0x7fffffff;
 
-const priceMin = Math.min(...low);
-const priceMax = Math.max(...high);
-const pricePad = (priceMax - priceMin) * 0.08;
-const volumeMax = Math.max(...volume);
+    const drift = (u1 - 0.5) * 6.2;
+    const c = Math.max(20, o + drift);
+    const h = Math.max(o, c) + u2 * 2.4;
+    const l = Math.max(Math.min(o, c) - u3 * 2.4, 1);
+    const move = Math.abs(c - o) + (h - l);
+    const vol = Math.round(1.4e6 + move * 3.6e5 + u4 * 6e5);
 
-const fmtUsd = (v: number) => `$${v.toFixed(2)}`;
-const fmtVolume = (v: number) =>
-  v >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : `${Math.round(v / 1e3)}K`;
+    // Markets close on weekends: advance to the next weekday
+    while (day.getUTCDay() === 0 || day.getUTCDay() === 6) {
+      day.setUTCDate(day.getUTCDate() + 1);
+    }
+    rows.push({
+      [DATE]: day.toISOString().split("T")[0],
+      [OPEN]: Math.round(o * 100) / 100,
+      [HIGH]: Math.round(h * 100) / 100,
+      [LOW]: Math.round(l * 100) / 100,
+      [CLOSE]: Math.round(c * 100) / 100,
+      [VOLUME]: vol,
+    });
+    day.setUTCDate(day.getUTCDate() + 1);
+    price = c;
+  }
+  return rows;
+})();
 
-// --- Candlesticks: MUI X community has no native candlestick series — draw
-// against the shared band scale via useXScale/useYScale, the documented
-// ChartContainer composition pattern for chart types outside the community
-// surface. Bullish (close >= open) bodies are brand green, bearish bodies
-// matte red — the finance up/down semantic exception from the style guide.
-function Candlesticks() {
-  const xScale = useXScale("x") as any;
-  const yScale = useYScale("yPrice") as any;
-  if (!xScale || !yScale) return null;
+// Plot: reads only data and the constants above
+const sorted = [...data].sort(
+  (a, b) =>
+    new Date(String(a[DATE])).getTime() - new Date(String(b[DATE])).getTime(),
+);
+
+const candles = sorted.map((r, idx) => {
+  const dt = new Date(`${String(r[DATE])}T00:00:00Z`);
+  const shortDate = dt.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+  const fullDate = dt.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+  return {
+    idx,
+    key: `${String(r[DATE])}-${idx}`,
+    bandKey: `${shortDate}#${idx}`,
+    shortDate,
+    fullDate,
+    open: Number(r[OPEN]),
+    high: Number(r[HIGH]),
+    low: Number(r[LOW]),
+    close: Number(r[CLOSE]),
+    volume: Number(r[VOLUME]),
+  };
+});
+
+const bandKeys = candles.map((c) => c.bandKey);
+const shortDateByBand = Object.fromEntries(
+  candles.map((c) => [c.bandKey, c.shortDate]),
+);
+const tickEvery = Math.ceil(candles.length / X_TICK_COUNT);
+const showTick = (_v: string, idx: number) => idx % tickEvery === 0;
+const formatPrice = (v: number) => v.toFixed(2);
+const formatVolume = (v: number) => {
+  if (v === 0) return "0";
+  return v >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : `${Math.round(v / 1e3)}K`;
+};
+
+const priceMinRaw = Math.min(...candles.map((c) => c.low));
+const priceMaxRaw = Math.max(...candles.map((c) => c.high));
+const priceSpan = priceMaxRaw - priceMinRaw || 1;
+const priceMin = priceMinRaw - priceSpan * PRICE_PAD_SHARE;
+const priceMax = priceMaxRaw + priceSpan * PRICE_PAD_SHARE;
+
+const volumeMaxRaw = Math.max(...candles.map((c) => c.volume)) || 1;
+const volumeMax = volumeMaxRaw * (1 + VOL_PAD_SHARE);
+
+const bullishCount = candles.filter((c) => c.close >= c.open).length;
+const bearishCount = candles.length - bullishCount;
+
+const TITLE = "candlestick-volume · javascript · muix · anyplot.ai";
+const SUBTITLE = `${candles.length} periods (${candles[0].shortDate} – ${candles[candles.length - 1].fullDate}) · Price ${formatPrice(priceMinRaw)}–${formatPrice(priceMaxRaw)}`;
+const BEAR_HATCH = `repeating-linear-gradient(135deg, color-mix(in srgb, ${t.ink} 38%, transparent) 0 1.5px, transparent 1.5px 5px)`;
+
+function CandlesticksLayer({ activeIdx }: { activeIdx: number | null }) {
+  const xScale = useXScale("xPrice");
+  const yScale = useYScale("yPrice");
+  const { top, height } = useDrawingArea();
   const bw = xScale.bandwidth();
-  const bodyWidth = bw * 0.6;
+  const bodyWidth = bw * BODY_WIDTH_SHARE;
 
   return (
     <g>
-      {/* Bearish bodies get a heavier outline + diagonal hatch on top of the
-      fill — a redundant (non-hue) encoding of the up/down distinction for
-      color-vision-deficient readers, alongside the brand green / matte red. */}
       <defs>
         <pattern
           id="candle-bear-hatch"
@@ -104,28 +163,40 @@ function Candlesticks() {
             x2={0}
             y2={5}
             stroke={t.ink}
-            strokeOpacity={0.4}
-            strokeWidth={1.6}
+            strokeOpacity={0.38}
+            strokeWidth={1.5}
           />
         </pattern>
       </defs>
-      {dateLabels.map((label, i) => {
-        const cx = xScale(label) + bw / 2;
-        const bullish = close[i] >= open[i];
+      {activeIdx !== null && (
+        <line
+          x1={xScale(candles[activeIdx].bandKey) + bw / 2}
+          x2={xScale(candles[activeIdx].bandKey) + bw / 2}
+          y1={top}
+          y2={top + height}
+          stroke={t.inkSoft}
+          strokeWidth={1.5}
+          strokeDasharray="4 4"
+          opacity={0.75}
+        />
+      )}
+      {candles.map((c) => {
+        const yOpen = yScale(c.open);
+        const yClose = yScale(c.close);
+        const cx = xScale(c.bandKey) + bw / 2;
+        const bullish = c.close >= c.open;
         const color = bullish ? t.palette[0] : t.palette[4];
-        const yOpen = yScale(open[i]);
-        const yClose = yScale(close[i]);
         const bodyTop = Math.min(yOpen, yClose);
-        const bodyHeight = Math.max(Math.abs(yClose - yOpen), 1.5);
+        const bodyHeight = Math.max(Math.abs(yClose - yOpen), 2);
         return (
-          <g key={i}>
+          <g key={c.key}>
             <line
               x1={cx}
               x2={cx}
-              y1={yScale(high[i])}
-              y2={yScale(low[i])}
+              y1={yScale(c.high)}
+              y2={yScale(c.low)}
               stroke={color}
-              strokeWidth={1.4}
+              strokeWidth={1.5}
               strokeLinecap="round"
             />
             <rect
@@ -135,8 +206,8 @@ function Candlesticks() {
               height={bodyHeight}
               fill={color}
               stroke={t.ink}
-              strokeOpacity={bullish ? 0.3 : 0.6}
-              strokeWidth={bullish ? 1 : 2}
+              strokeOpacity={bullish ? 0.3 : 0.55}
+              strokeWidth={bullish ? 1 : 1.6}
             />
             {!bullish && (
               <rect
@@ -155,21 +226,16 @@ function Candlesticks() {
   );
 }
 
-// --- Volume bars: same up/down color scheme as the candlesticks above, on a
-// second ChartContainer sharing the identical band domain, width, and left /
-// right margins so its columns land under the matching candle.
-function VolumeBars() {
-  const xScale = useXScale("x2") as any;
-  const yScale = useYScale("yVolume") as any;
-  if (!xScale || !yScale) return null;
+function VolumeBarsLayer({ activeIdx }: { activeIdx: number | null }) {
+  const xScale = useXScale("xVolume");
+  const yScale = useYScale("yVolume");
+  const { top, height } = useDrawingArea();
   const bw = xScale.bandwidth();
-  const barWidth = bw * 0.6;
+  const barWidth = bw * BODY_WIDTH_SHARE;
   const yZero = yScale(0);
 
   return (
     <g>
-      {/* Same bearish hatch overlay as the candle bodies, so the secondary
-      up/down encoding stays consistent between the price and volume panes. */}
       <defs>
         <pattern
           id="volume-bear-hatch"
@@ -184,29 +250,41 @@ function VolumeBars() {
             x2={0}
             y2={5}
             stroke={t.ink}
-            strokeOpacity={0.4}
-            strokeWidth={1.6}
+            strokeOpacity={0.38}
+            strokeWidth={1.5}
           />
         </pattern>
       </defs>
-      {dateLabels.map((label, i) => {
-        const bullish = close[i] >= open[i];
+      {activeIdx !== null && (
+        <line
+          x1={xScale(candles[activeIdx].bandKey) + bw / 2}
+          x2={xScale(candles[activeIdx].bandKey) + bw / 2}
+          y1={top}
+          y2={top + height}
+          stroke={t.inkSoft}
+          strokeWidth={1.5}
+          strokeDasharray="4 4"
+          opacity={0.75}
+        />
+      )}
+      {candles.map((c) => {
+        const yTop = yScale(c.volume);
+        const bullish = c.close >= c.open;
         const color = bullish ? t.palette[0] : t.palette[4];
-        const cx = xScale(label) + bw / 2;
-        const yTop = yScale(volume[i]);
-        const barHeight = Math.max(yZero - yTop, 1);
+        const cx = xScale(c.bandKey) + bw / 2;
+        const barHeight = Math.max(yZero - yTop, 1.5);
         return (
-          <g key={i}>
+          <g key={c.key}>
             <rect
               x={cx - barWidth / 2}
               y={yTop}
               width={barWidth}
               height={barHeight}
               fill={color}
-              fillOpacity={0.75}
+              fillOpacity={0.78}
               stroke={bullish ? "none" : t.ink}
-              strokeOpacity={bullish ? 0 : 0.5}
-              strokeWidth={bullish ? 0 : 1.4}
+              strokeOpacity={bullish ? 0 : 0.48}
+              strokeWidth={bullish ? 0 : 1.3}
             />
             {!bullish && (
               <rect
@@ -226,350 +304,241 @@ function VolumeBars() {
 }
 
 export default function Chart() {
-  // Real cross-pane crosshair: mouse position over the shared band grid
-  // drives both the vertical rule and the OHLCV readout. Absent on the
-  // headless screenshot (no cursor at capture time) — that is expected, not
-  // faked; it is live in the emitted interactive HTML.
-  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+  // Cross-pane cursor and OHLCV readout: live while hovering in the HTML,
+  // absent from the static PNG, where nothing hovers.
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
 
-  const W = window.ANYPLOT_SIZE.width;
-  const H = window.ANYPLOT_SIZE.height;
+  const { width, height } = window.ANYPLOT_SIZE;
+  const chartsHeight = height - HEADER_H;
+  // Split the plot areas (not the containers) so the volume pane's x-axis band
+  // and margins do not eat into its share
+  const plotAreaTotal =
+    chartsHeight - PANE_GAP - PRICE_MARGIN_V - VOLUME_MARGIN_V - X_AXIS_H;
+  const priceHeight =
+    Math.round(plotAreaTotal * PRICE_PANE_SHARE) + PRICE_MARGIN_V;
+  const volumeHeight = chartsHeight - PANE_GAP - priceHeight;
 
-  const title = "candlestick-volume · javascript · muix · anyplot.ai";
-  const titleSize =
-    title.length > 67 ? Math.round((24 * 67) / title.length) : 24;
-
-  const legendItems = [
-    { label: "Bullish (close ≥ open)", color: t.palette[0], bearish: false },
-    { label: "Bearish (close < open)", color: t.palette[4], bearish: true },
-  ];
-
-  const TITLE_H = 64;
-  const LEGEND_H = 40;
-  const GAP = 10;
-  const chartsH = H - TITLE_H - LEGEND_H;
-  const PRICE_H = Math.round(chartsH * 0.72); // spec: price pane ~70-75% of vertical space
-  const VOLUME_H = chartsH - GAP - PRICE_H; // remaining ~25-30%
-
-  const MARGIN_LEFT = 100;
-  const MARGIN_RIGHT = 28;
-  const innerWidth = W - MARGIN_LEFT - MARGIN_RIGHT;
-  const bandStep = innerWidth / PERIODS;
-
-  const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const localX = event.clientX - rect.left;
-    const idx = Math.floor((localX - MARGIN_LEFT) / bandStep);
-    setHoverIndex(idx >= 0 && idx < PERIODS ? idx : null);
-  };
-
-  const crosshairX =
-    hoverIndex === null
-      ? null
-      : MARGIN_LEFT + hoverIndex * bandStep + bandStep / 2;
-  const tooltipLeft =
-    crosshairX === null ? 0 : Math.min(Math.max(crosshairX - 100, 4), W - 216);
-
-  // Data storytelling: the Feb 19-21 selloff-into-reversal is the largest
-  // directional swing in the series and lines up with a volume spike — the
-  // spec's own framing ("identify volume-confirmed trends or reversals").
-  // Highlight that window across both panes instead of leaving all 60 days
-  // undifferentiated.
-  const HILITE_START = 18; // Feb 19
-  const HILITE_END = 20; // Feb 21 (inclusive)
-  const hiliteX = MARGIN_LEFT + HILITE_START * bandStep;
-  const hiliteWidth = (HILITE_END - HILITE_START + 1) * bandStep;
-  const calloutLeft = Math.min(
-    Math.max(hiliteX + hiliteWidth / 2 - 105, MARGIN_LEFT),
-    W - MARGIN_RIGHT - 210,
-  );
+  const plotLeft = MARGIN_LEFT + Y_AXIS_W;
+  const plotWidth = width - plotLeft - MARGIN_RIGHT;
+  const bandStep = plotWidth / candles.length;
+  const active = hoverIdx === null ? null : candles[hoverIdx];
+  const cursorX = hoverIdx === null ? 0 : plotLeft + (hoverIdx + 0.5) * bandStep;
+  const readoutOnRight = cursorX < plotLeft + plotWidth / 2;
 
   return (
-    <Box
-      sx={{
-        width: W,
-        height: H,
-        bgcolor: t.pageBg,
+    <div
+      style={{
+        width,
+        height,
+        background: t.pageBg,
+        fontFamily: "Inter, system-ui, sans-serif",
         display: "flex",
         flexDirection: "column",
-        fontFamily: "'Roboto', 'Helvetica Neue', Arial, sans-serif",
-        boxSizing: "border-box",
       }}
     >
-      <Box
-        sx={{
-          height: TITLE_H,
+      <div
+        style={{
+          height: HEADER_H,
           display: "flex",
+          flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
+          gap: 6,
+          paddingTop: 4,
         }}
       >
-        <Typography sx={{ color: t.ink, fontSize: titleSize, fontWeight: 600 }}>
-          {title}
-        </Typography>
-      </Box>
-
-      <Box
-        sx={{
-          height: LEGEND_H,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "16px",
-        }}
-      >
-        {legendItems.map((item) => (
-          <Box
-            key={item.label}
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              bgcolor: t.elevatedBg,
-              border: `1px solid ${t.grid}`,
-              borderRadius: "999px",
-              padding: "4px 14px 4px 8px",
-            }}
-          >
-            <Box
-              sx={{
-                width: 12,
-                height: 12,
-                borderRadius: "3px",
-                bgcolor: item.color,
-                border: item.bearish
-                  ? `2px solid ${t.ink}`
-                  : `2px solid transparent`,
-              }}
-            />
-            <Typography
-              sx={{
-                color: t.ink,
-                fontSize: 13,
-                fontWeight: 600,
-                letterSpacing: "0.1px",
-              }}
-            >
-              {item.label}
-            </Typography>
-          </Box>
-        ))}
-      </Box>
-
-      <Box
-        sx={{ position: "relative" }}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={() => setHoverIndex(null)}
-      >
-        {/* Data-storytelling highlight: brackets the volume-confirmed
-        selloff/reversal window so it reads before the reader scans every
-        candle — painted first so bars/candles render on top of it. */}
-        <Box
-          sx={{
-            position: "absolute",
-            top: 0,
-            left: hiliteX,
-            width: hiliteWidth,
-            height: PRICE_H + GAP + VOLUME_H,
-            bgcolor: t.amber,
-            opacity: 0.09,
-            pointerEvents: "none",
-          }}
-        />
-        <Box
-          sx={{
-            position: "absolute",
-            top: 0,
-            left: hiliteX,
-            width: "1px",
-            height: PRICE_H + GAP + VOLUME_H,
-            bgcolor: t.amber,
-            opacity: 0.4,
-            pointerEvents: "none",
-          }}
-        />
-        <Box
-          sx={{
-            position: "absolute",
-            top: 0,
-            left: hiliteX + hiliteWidth,
-            width: "1px",
-            height: PRICE_H + GAP + VOLUME_H,
-            bgcolor: t.amber,
-            opacity: 0.4,
-            pointerEvents: "none",
-          }}
-        />
-        <Box
-          sx={{
-            position: "absolute",
-            top: 22,
-            left: calloutLeft,
-            maxWidth: 210,
-            bgcolor: t.elevatedBg,
-            border: `1px solid ${t.amber}`,
-            borderRadius: "6px",
-            padding: "4px 10px",
-            pointerEvents: "none",
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>
+          {TITLE}
+        </div>
+        <div style={{ fontSize: 15, color: t.inkSoft }}>{SUBTITLE}</div>
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 20,
+            alignItems: "center",
+            fontSize: 14,
+            color: t.inkSoft,
           }}
         >
-          <Typography
-            sx={{ fontSize: 11, fontWeight: 700, color: t.ink, lineHeight: 1.3 }}
-          >
-            Selloff → reversal
-          </Typography>
-          <Typography sx={{ fontSize: 10, color: t.inkSoft, lineHeight: 1.3 }}>
-            Feb 19-21, volume-confirmed
-          </Typography>
-        </Box>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span
+              style={{
+                width: 14,
+                height: 14,
+                borderRadius: 3,
+                background: t.palette[0],
+                display: "inline-block",
+              }}
+            />
+            <span style={{ color: t.ink, fontWeight: 500 }}>
+              Bullish (close ≥ open, n={bullishCount})
+            </span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span
+              style={{
+                width: 14,
+                height: 14,
+                borderRadius: 3,
+                backgroundColor: t.palette[4],
+                backgroundImage: BEAR_HATCH,
+                border: `1.5px solid ${t.ink}`,
+                display: "inline-block",
+              }}
+            />
+            <span style={{ color: t.ink, fontWeight: 500 }}>
+              Bearish (close &lt; open, n={bearishCount})
+            </span>
+          </div>
+        </div>
+      </div>
 
-        {/* Subtle tint on the volume pane's plot area delineates it from the
-        price pane above, beyond the shared divider rule. */}
-        <Box
-          sx={{
-            position: "absolute",
-            top: PRICE_H + GAP,
-            left: MARGIN_LEFT,
-            width: W - MARGIN_LEFT - MARGIN_RIGHT,
-            height: VOLUME_H,
-            bgcolor: t.elevatedBg,
-            opacity: 0.4,
-            pointerEvents: "none",
-          }}
-        />
-
-        <ChartContainer
-          width={W}
-          height={PRICE_H}
+      <div
+        style={{ position: "relative" }}
+        onMouseMove={(event) => {
+          const rect = event.currentTarget.getBoundingClientRect();
+          const idx = Math.floor((event.clientX - rect.left - plotLeft) / bandStep);
+          setHoverIdx(idx >= 0 && idx < candles.length ? idx : null);
+        }}
+        onMouseLeave={() => setHoverIdx(null)}
+      >
+        <ChartsContainer
+          width={width}
+          height={priceHeight}
           skipAnimation
           series={[]}
-          xAxis={[{ id: "x", scaleType: "band", data: dateLabels }]}
-          yAxis={[
-            {
-              id: "yPrice",
-              min: priceMin - pricePad,
-              max: priceMax + pricePad,
-              label: "Price (USD)",
-              valueFormatter: fmtUsd,
-              tickLabelStyle: { fontSize: 13, fill: t.inkSoft },
-              labelStyle: { fontSize: 15, fill: t.ink },
-            },
-          ]}
           margin={{
-            top: 20,
-            bottom: 8,
+            top: 16,
+            bottom: 6,
             left: MARGIN_LEFT,
             right: MARGIN_RIGHT,
           }}
-          sx={{
-            "& .MuiChartsAxis-line": { stroke: t.inkSoft, strokeOpacity: 0.2 },
-            "& .MuiChartsGrid-line": { stroke: t.grid },
-          }}
-        >
-          <ChartsGrid horizontal />
-          <Candlesticks />
-          <ChartsYAxis axisId="yPrice" slotProps={{ axisLabel: { x: -80 } }} />
-        </ChartContainer>
-
-        <Box
-          sx={{
-            height: GAP,
-            display: "flex",
-            alignItems: "center",
-            marginLeft: `${MARGIN_LEFT}px`,
-            marginRight: `${MARGIN_RIGHT}px`,
-          }}
-        >
-          <Box sx={{ flex: 1, height: "1px", bgcolor: t.grid }} />
-        </Box>
-
-        <ChartContainer
-          width={W}
-          height={VOLUME_H}
-          skipAnimation
-          series={[]}
           xAxis={[
             {
-              id: "x2",
+              id: "xPrice",
               scaleType: "band",
-              data: dateLabels,
-              label: "Date",
-              tickLabelInterval: (_value: string, index: number) =>
-                index % 6 === 0,
-              tickLabelStyle: { fontSize: 13, fill: t.inkSoft },
-              labelStyle: { fontSize: 15, fill: t.ink },
+              data: bandKeys,
+              position: "none",
+              tickInterval: showTick,
+            },
+          ]}
+          yAxis={[
+            {
+              id: "yPrice",
+              min: priceMin,
+              max: priceMax,
+              tickNumber: 6,
+              width: Y_AXIS_W,
+              label: PRICE_AXIS_LABEL,
+              valueFormatter: (v: number) => v.toFixed(0),
+              tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+              labelStyle: { fontSize: 16, fill: t.ink, fontWeight: 500 },
+            },
+          ]}
+          sx={{
+            "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+            "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+            "& .MuiChartsGrid-line": {
+              stroke: t.grid,
+              opacity: 0.65,
+              strokeDasharray: "3 4",
+            },
+          }}
+        >
+          <ChartsGrid horizontal vertical />
+          <CandlesticksLayer activeIdx={hoverIdx} />
+          <ChartsYAxis axisId="yPrice" />
+        </ChartsContainer>
+
+        <div
+          style={{
+            height: PANE_GAP,
+            display: "flex",
+            alignItems: "center",
+            marginLeft: plotLeft,
+            marginRight: MARGIN_RIGHT,
+          }}
+        >
+          <div style={{ flex: 1, height: 1, background: t.grid }} />
+        </div>
+
+        <ChartsContainer
+          width={width}
+          height={volumeHeight}
+          skipAnimation
+          series={[]}
+          margin={{
+            top: 6,
+            bottom: 16,
+            left: MARGIN_LEFT,
+            right: MARGIN_RIGHT,
+          }}
+          xAxis={[
+            {
+              id: "xVolume",
+              scaleType: "band",
+              data: bandKeys,
+              height: X_AXIS_H,
+              label: DATE,
+              valueFormatter: (v: string) => shortDateByBand[v],
+              tickInterval: showTick,
+              tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+              labelStyle: { fontSize: 16, fill: t.ink, fontWeight: 500 },
             },
           ]}
           yAxis={[
             {
               id: "yVolume",
               min: 0,
-              max: volumeMax * 1.15,
-              label: "Volume",
-              valueFormatter: fmtVolume,
-              tickLabelStyle: { fontSize: 12, fill: t.inkSoft },
-              labelStyle: { fontSize: 14, fill: t.ink },
+              max: volumeMax,
+              tickNumber: 4,
+              width: Y_AXIS_W,
+              label: VOLUME,
+              valueFormatter: formatVolume,
+              tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+              labelStyle: { fontSize: 16, fill: t.ink, fontWeight: 500 },
             },
           ]}
-          margin={{
-            top: 8,
-            bottom: 52,
-            left: MARGIN_LEFT,
-            right: MARGIN_RIGHT,
-          }}
           sx={{
-            "& .MuiChartsAxis-line": { stroke: t.inkSoft, strokeOpacity: 0.2 },
-            "& .MuiChartsGrid-line": { stroke: t.grid },
+            "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+            "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+            "& .MuiChartsGrid-line": {
+              stroke: t.grid,
+              opacity: 0.65,
+              strokeDasharray: "3 4",
+            },
           }}
         >
-          <ChartsGrid horizontal />
-          <VolumeBars />
-          <ChartsXAxis axisId="x2" />
-          <ChartsYAxis axisId="yVolume" slotProps={{ axisLabel: { x: -70 } }} />
-        </ChartContainer>
+          <ChartsGrid horizontal vertical />
+          <VolumeBarsLayer activeIdx={hoverIdx} />
+          <ChartsXAxis axisId="xVolume" />
+          <ChartsYAxis axisId="yVolume" />
+        </ChartsContainer>
 
-        {crosshairX !== null && (
-          <Box
-            sx={{
-              position: "absolute",
-              top: 0,
-              left: crosshairX,
-              width: "1px",
-              height: PRICE_H + GAP + VOLUME_H,
-              bgcolor: t.ink,
-              opacity: 0.45,
-              pointerEvents: "none",
-            }}
-          />
-        )}
-
-        {hoverIndex !== null && (
-          <Box
-            sx={{
+        {active && (
+          <div
+            style={{
               position: "absolute",
               top: 8,
-              left: tooltipLeft,
-              bgcolor: t.elevatedBg,
+              left: readoutOnRight ? cursorX + 12 : undefined,
+              right: readoutOnRight ? undefined : width - cursorX + 12,
+              padding: "6px 12px",
+              borderRadius: 6,
+              background: t.elevatedBg,
               border: `1px solid ${t.grid}`,
-              borderRadius: "6px",
-              padding: "8px 14px",
+              color: t.ink,
+              fontSize: 14,
+              whiteSpace: "nowrap",
               pointerEvents: "none",
             }}
           >
-            <Typography sx={{ fontSize: 12, fontWeight: 600, color: t.ink }}>
-              {fullDateLabels[hoverIndex]}
-            </Typography>
-            <Typography sx={{ fontSize: 11, color: t.inkSoft }}>
-              O {fmtUsd(open[hoverIndex])} &nbsp;H {fmtUsd(high[hoverIndex])}{" "}
-              &nbsp;L {fmtUsd(low[hoverIndex])} &nbsp;C{" "}
-              {fmtUsd(close[hoverIndex])}
-            </Typography>
-            <Typography sx={{ fontSize: 11, color: t.inkSoft }}>
-              Vol {fmtVolume(volume[hoverIndex])}
-            </Typography>
-          </Box>
+            <strong>{active.fullDate}</strong> · O {formatPrice(active.open)} · H{" "}
+            {formatPrice(active.high)} · L {formatPrice(active.low)} · C{" "}
+            {formatPrice(active.close)} · Vol {formatVolume(active.volume)}
+          </div>
         )}
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 }
