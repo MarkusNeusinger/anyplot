@@ -10,76 +10,81 @@ import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { useDrawingArea } from "@mui/x-charts/hooks";
 
-// Data
-const LON = "Longitude (°W)";
-const LAT = "Latitude (°N)";
-const ELEVATION = "Elevation (m)";
-const FEATURE_NAME = "Feature Name";
-const FEATURE_TYPE = "Feature Type";
-const SUBTITLE_PREFIX = "Cascade Range Stratovolcanoes (Washington, WGS84)";
+const t = window.ANYPLOT_TOKENS;
+const { width, height } = window.ANYPLOT_SIZE;
 
-const SAMPLE_PEAKS = [
+// Constants
+const TITLE = "contour-map-geographic · javascript · muix · anyplot.ai";
+const FONT = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+const TARGET_CONTOUR_COUNT = 10;
+const COLORBAR_TICKS = [0, 0.25, 0.5, 0.75, 1];
+
+// Columns: set these to your data's column names
+const LON = "Longitude (°)"; // role: lon
+const LAT = "Latitude (°)"; // role: lat
+const ELEVATION = "Elevation (m)"; // role: value
+
+// Data: replace this block with your own records
+const PEAKS = [
   { lon: -121.7603, lat: 46.8523, height: 4392, sigmaLon: 0.22, sigmaLat: 0.17, name: "Mount Rainier" },
   { lon: -121.4906, lat: 46.2024, height: 3743, sigmaLon: 0.18, sigmaLat: 0.15, name: "Mount Adams" },
   { lon: -122.1956, lat: 46.1912, height: 2549, sigmaLon: 0.16, sigmaLat: 0.13, name: "Mount St. Helens" },
 ];
 
-const SAMPLE_LON_MIN = -123.6;
-const SAMPLE_LON_MAX = -120.4;
-const SAMPLE_LAT_MIN = 45.5;
-const SAMPLE_LAT_MAX = 47.3;
-const SAMPLE_NLON = 101;
-const SAMPLE_NLAT = 61;
-
-const GRID_DATA: Record<string, number>[] = [];
-for (let j = 0; j < SAMPLE_NLAT; j++) {
-  const lat = SAMPLE_LAT_MIN + (j * (SAMPLE_LAT_MAX - SAMPLE_LAT_MIN)) / (SAMPLE_NLAT - 1);
-  for (let i = 0; i < SAMPLE_NLON; i++) {
-    const lon = SAMPLE_LON_MIN + (i * (SAMPLE_LON_MAX - SAMPLE_LON_MIN)) / (SAMPLE_NLON - 1);
-    let elev =
-      460 + 60 * Math.sin(((lon - SAMPLE_LON_MIN) / (SAMPLE_LON_MAX - SAMPLE_LON_MIN)) * Math.PI);
-    for (const p of SAMPLE_PEAKS) {
-      const dLon = lon - p.lon;
-      const dLat = lat - p.lat;
-      elev +=
-        p.height *
-        Math.exp(
-          -(
-            (dLon * dLon) / (2 * p.sigmaLon * p.sigmaLon) +
-            (dLat * dLat) / (2 * p.sigmaLat * p.sigmaLat)
-          )
-        );
-    }
-    GRID_DATA.push({ [LON]: lon, [LAT]: lat, [ELEVATION]: elev });
-  }
-}
-
-const FEATURES_DATA: Record<string, string | number>[] = [
-  ...SAMPLE_PEAKS.map((p) => ({
-    [LON]: p.lon,
-    [LAT]: p.lat,
-    [FEATURE_NAME]: p.name,
-    [FEATURE_TYPE]: "peak",
-  })),
-  { [LON]: -123.6, [LAT]: 45.62, [FEATURE_NAME]: "Columbia River", [FEATURE_TYPE]: "river" },
-  { [LON]: -123.1, [LAT]: 45.65, [FEATURE_NAME]: "Columbia River", [FEATURE_TYPE]: "river" },
-  { [LON]: -122.6, [LAT]: 45.6, [FEATURE_NAME]: "Columbia River", [FEATURE_TYPE]: "river" },
-  { [LON]: -122.1, [LAT]: 45.68, [FEATURE_NAME]: "Columbia River", [FEATURE_TYPE]: "river" },
-  { [LON]: -121.6, [LAT]: 45.72, [FEATURE_NAME]: "Columbia River", [FEATURE_TYPE]: "river" },
-  { [LON]: -121.1, [LAT]: 45.66, [FEATURE_NAME]: "Columbia River", [FEATURE_TYPE]: "river" },
-  { [LON]: -120.4, [LAT]: 45.6, [FEATURE_NAME]: "Columbia River", [FEATURE_TYPE]: "river" },
+const RIVERS = [
+  {
+    name: "Columbia River",
+    points: [
+      [-123.6, 45.62],
+      [-123.1, 45.65],
+      [-122.6, 45.6],
+      [-122.1, 45.68],
+      [-121.6, 45.72],
+      [-121.1, 45.66],
+      [-120.4, 45.6],
+    ] as [number, number][],
+  },
 ];
 
-// Constants
-const t = window.ANYPLOT_TOKENS;
-const { width, height } = window.ANYPLOT_SIZE;
-const FONT = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
-const TARGET_CONTOUR_COUNT = 10;
-const COLORBAR_TICKS = [0, 0.25, 0.5, 0.75, 1];
+const data = (() => {
+  const sampleLonMin = -123.6;
+  const sampleLonMax = -120.4;
+  const sampleLatMin = 45.5;
+  const sampleLatMax = 47.3;
+  const sampleNLon = 101;
+  const sampleNLat = 61;
+  const rows: Record<string, number>[] = [];
 
-// Preparation
-const LONS = Array.from(new Set(GRID_DATA.map((d) => d[LON]))).sort((a, b) => a - b);
-const LATS = Array.from(new Set(GRID_DATA.map((d) => d[LAT]))).sort((a, b) => a - b);
+  for (let j = 0; j < sampleNLat; j++) {
+    const lat = sampleLatMin + (j * (sampleLatMax - sampleLatMin)) / (sampleNLat - 1);
+    for (let i = 0; i < sampleNLon; i++) {
+      const lon = sampleLonMin + (i * (sampleLonMax - sampleLonMin)) / (sampleNLon - 1);
+      let elev =
+        460 + 60 * Math.sin(((lon - sampleLonMin) / (sampleLonMax - sampleLonMin)) * Math.PI);
+      for (const p of PEAKS) {
+        const baseAtPeak =
+          460 + 60 * Math.sin(((p.lon - sampleLonMin) / (sampleLonMax - sampleLonMin)) * Math.PI);
+        const amp = p.height - baseAtPeak;
+        const dLon = lon - p.lon;
+        const dLat = lat - p.lat;
+        elev +=
+          amp *
+          Math.exp(
+            -(
+              (dLon * dLon) / (2 * p.sigmaLon * p.sigmaLon) +
+              (dLat * dLat) / (2 * p.sigmaLat * p.sigmaLat)
+            ),
+          );
+      }
+      rows.push({ [LON]: lon, [LAT]: lat, [ELEVATION]: elev });
+    }
+  }
+  return rows;
+})();
+
+// Plot: reads only data and the constants above
+const LONS = Array.from(new Set(data.map((d) => Number(d[LON])))).sort((a, b) => a - b);
+const LATS = Array.from(new Set(data.map((d) => Number(d[LAT])))).sort((a, b) => a - b);
 const NLON = LONS.length;
 const NLAT = LATS.length;
 const LON_MIN = LONS[0];
@@ -90,24 +95,27 @@ const MEAN_LAT_RAD = (((LAT_MIN + LAT_MAX) / 2) * Math.PI) / 180;
 const LON_TO_LAT_COS = Math.cos(MEAN_LAT_RAD);
 
 const ELEV_UNIT = ELEVATION.match(/\(([^)]+)\)/)?.[1] ?? "";
-const LON_TITLE = LON.replace(/\s*\([^)]+\)/, "");
-const LAT_TITLE = LAT.replace(/\s*\([^)]+\)/, "");
+const elevUnitSuffix = ELEV_UNIT ? ` ${ELEV_UNIT}` : "";
 
 const lonIdxMap = new Map(LONS.map((v, i) => [v, i]));
 const latIdxMap = new Map(LATS.map((v, j) => [v, j]));
-const GRID: number[][] = Array.from({ length: NLAT }, () => new Array(NLON).fill(0));
+const GRID: number[][] = Array.from({ length: NLAT }, () => new Array(NLON).fill(NaN));
 
 let MIN_ELEV = Infinity;
 let MAX_ELEV = -Infinity;
-for (const row of GRID_DATA) {
-  const val = row[ELEVATION];
-  if (val < MIN_ELEV) MIN_ELEV = val;
-  if (val > MAX_ELEV) MAX_ELEV = val;
-  GRID[latIdxMap.get(row[LAT])!][lonIdxMap.get(row[LON])!] = val;
+for (const row of data) {
+  const val = Number(row[ELEVATION]);
+  if (Number.isFinite(val)) {
+    if (val < MIN_ELEV) MIN_ELEV = val;
+    if (val > MAX_ELEV) MAX_ELEV = val;
+    GRID[latIdxMap.get(Number(row[LAT]))!][lonIdxMap.get(Number(row[LON]))!] = val;
+  }
 }
 
 const rawInterval = (MAX_ELEV - MIN_ELEV) / TARGET_CONTOUR_COUNT;
-const CONTOUR_STEP = Math.max(50, Math.round(rawInterval / 200) * 200);
+const intervalMag = Math.pow(10, Math.floor(Math.log10(rawInterval)));
+const intervalNorm = rawInterval / intervalMag;
+const CONTOUR_STEP = (intervalNorm <= 1.5 ? 1 : intervalNorm <= 3.5 ? 2 : 5) * intervalMag;
 const INDEX_STEP = CONTOUR_STEP * 2;
 const LEVELS: number[] = [];
 for (
@@ -115,7 +123,7 @@ for (
   lvl <= MAX_ELEV;
   lvl += CONTOUR_STEP
 ) {
-  LEVELS.push(lvl);
+  LEVELS.push(Number(lvl.toFixed(6)));
 }
 
 type Point = [number, number];
@@ -129,6 +137,9 @@ const CONTOURS = LEVELS.map((level) => {
       const tr = GRID[j][i + 1];
       const bl = GRID[j + 1][i];
       const br = GRID[j + 1][i + 1];
+      if (Number.isNaN(tl) || Number.isNaN(tr) || Number.isNaN(bl) || Number.isNaN(br)) {
+        continue;
+      }
       const x0 = LONS[i];
       const x1 = LONS[i + 1];
       const y0 = LATS[j];
@@ -163,7 +174,7 @@ const CONTOURS = LEVELS.map((level) => {
       }
     }
   }
-  return { level, segments, isIndex: level % INDEX_STEP === 0 };
+  return { level, segments, isIndex: Math.abs(level % INDEX_STEP) < 1e-6 };
 });
 
 const SEQ_LOW = [
@@ -186,7 +197,14 @@ const CELLS: {
 }[] = [];
 for (let j = 0; j < NLAT - 1; j++) {
   for (let i = 0; i < NLON - 1; i++) {
-    const mean = (GRID[j][i] + GRID[j][i + 1] + GRID[j + 1][i] + GRID[j + 1][i + 1]) / 4;
+    const tl = GRID[j][i];
+    const tr = GRID[j][i + 1];
+    const bl = GRID[j + 1][i];
+    const br = GRID[j + 1][i + 1];
+    if (Number.isNaN(tl) || Number.isNaN(tr) || Number.isNaN(bl) || Number.isNaN(br)) {
+      continue;
+    }
+    const mean = (tl + tr + bl + br) / 4;
     const frac = Math.max(0, Math.min(1, (mean - MIN_ELEV) / (MAX_ELEV - MIN_ELEV)));
     const r = Math.round(SEQ_LOW[0] + (SEQ_HIGH[0] - SEQ_LOW[0]) * frac);
     const g = Math.round(SEQ_LOW[1] + (SEQ_HIGH[1] - SEQ_LOW[1]) * frac);
@@ -201,14 +219,7 @@ for (let j = 0; j < NLAT - 1; j++) {
   }
 }
 
-const PEAKS = FEATURES_DATA.filter((d) => d[FEATURE_TYPE] === "peak").map((d) => ({
-  lon: Number(d[LON]),
-  lat: Number(d[LAT]),
-  name: String(d[FEATURE_NAME]),
-}));
-const RIVER_ROWS = FEATURES_DATA.filter((d) => d[FEATURE_TYPE] === "river");
-const RIVER_NAME = String(RIVER_ROWS[0]?.[FEATURE_NAME] ?? "");
-const RIVER: Point[] = RIVER_ROWS.map((d) => [Number(d[LON]), Number(d[LAT])]);
+const SUBTITLE = `${NLON}×${NLAT} grid (${Math.round(MIN_ELEV)}–${Math.round(MAX_ELEV)}${elevUnitSuffix}) · index contours every ${INDEX_STEP}${elevUnitSuffix}, intermediate every ${CONTOUR_STEP}${elevUnitSuffix}`;
 
 function ContourLayer() {
   const { left, top, width: areaW, height: areaH } = useDrawingArea();
@@ -294,7 +305,7 @@ function ContourLayer() {
               const my =
                 top + (1 - ((seg[0][1] + seg[1][1]) / 2 - LAT_MIN) / latSpan) * areaH;
               const clears = occupiedBoxes.every(
-                (b) => mx + 36 < b.x0 || mx - 36 > b.x1 || my + 13 < b.y0 || my - 13 > b.y1
+                (b) => mx + 36 < b.x0 || mx - 36 > b.x1 || my + 13 < b.y0 || my - 13 > b.y1,
               );
               if (clears) {
                 chosen = seg;
@@ -328,47 +339,55 @@ function ContourLayer() {
                 fontWeight={600}
                 fill={t.ink}
               >
-                {`${level} ${ELEV_UNIT}`}
+                {`${level}${elevUnitSuffix}`}
               </text>
             </g>
           );
-        }
-      )}
+        })}
 
-      <polyline
-        points={RIVER.map(([lon, lat]) => {
-          const px = left + ((lon - LON_MIN) / lonSpan) * areaW;
-          const py = top + (1 - (lat - LAT_MIN) / latSpan) * areaH;
-          return `${px.toFixed(1)},${py.toFixed(1)}`;
-        }).join(" ")}
-        fill="none"
-        stroke={t.palette[2]}
-        strokeWidth={3}
-        strokeLinecap="round"
-        strokeOpacity={0.8}
-      />
-      {RIVER.length > 0 && (
-        <g>
-          <rect
-            x={left + ((RIVER[0][0] - LON_MIN) / lonSpan) * areaW + 6}
-            y={top + (1 - (RIVER[0][1] - LAT_MIN) / latSpan) * areaH - 26}
-            width={116}
-            height={22}
-            rx={4}
-            fill={t.pageBg}
-            opacity={0.88}
-          />
-          <text
-            x={left + ((RIVER[0][0] - LON_MIN) / lonSpan) * areaW + 12}
-            y={top + (1 - (RIVER[0][1] - LAT_MIN) / latSpan) * areaH - 10}
-            fontSize={14}
-            fontStyle="italic"
-            fill={t.inkSoft}
-          >
-            {RIVER_NAME}
-          </text>
-        </g>
-      )}
+      {RIVERS.map((river) => {
+        const pts = river.points
+          .map(([lon, lat]) => {
+            const px = left + ((lon - LON_MIN) / lonSpan) * areaW;
+            const py = top + (1 - (lat - LAT_MIN) / latSpan) * areaH;
+            return `${px.toFixed(1)},${py.toFixed(1)}`;
+          })
+          .join(" ");
+        const [firstLon, firstLat] = river.points[0];
+        const rx = left + ((firstLon - LON_MIN) / lonSpan) * areaW + 6;
+        const ry = top + (1 - (firstLat - LAT_MIN) / latSpan) * areaH - 26;
+        const boxW = Math.max(96, river.name.length * 7.8 + 14);
+        return (
+          <g key={river.name}>
+            <polyline
+              points={pts}
+              fill="none"
+              stroke={t.inkSoft}
+              strokeWidth={3}
+              strokeLinecap="round"
+              strokeOpacity={0.8}
+            />
+            <rect
+              x={rx}
+              y={ry}
+              width={boxW}
+              height={22}
+              rx={4}
+              fill={t.pageBg}
+              opacity={0.88}
+            />
+            <text
+              x={rx + 6}
+              y={ry + 16}
+              fontSize={14}
+              fontStyle="italic"
+              fill={t.inkSoft}
+            >
+              {river.name}
+            </text>
+          </g>
+        );
+      })}
 
       {PEAKS.map((p) => {
         const cx = left + ((p.lon - LON_MIN) / lonSpan) * areaW;
@@ -482,7 +501,7 @@ export default function Chart() {
           lineHeight: 1.2,
         }}
       >
-        contour-map-geographic · javascript · muix · anyplot.ai
+        {TITLE}
       </Typography>
       <Typography
         sx={{
@@ -494,7 +513,7 @@ export default function Chart() {
           mb: "4px",
         }}
       >
-        {`${SUBTITLE_PREFIX} · Index contours every ${INDEX_STEP} ${ELEV_UNIT}, intermediate every ${CONTOUR_STEP} ${ELEV_UNIT}`}
+        {SUBTITLE}
       </Typography>
 
       <ChartsContainer
@@ -515,8 +534,8 @@ export default function Chart() {
             min: LON_MIN,
             max: LON_MAX,
             height: xAxisH,
-            label: LON_TITLE,
-            valueFormatter: (v: number) => `${Math.abs(v).toFixed(1)}°W`,
+            label: LON,
+            valueFormatter: (v: number) => `${Math.abs(v).toFixed(1)}°${v < 0 ? "W" : "E"}`,
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft, fontFamily: FONT },
             labelStyle: { fontSize: 16, fill: t.ink, fontFamily: FONT },
           },
@@ -528,8 +547,8 @@ export default function Chart() {
             min: LAT_MIN,
             max: LAT_MAX,
             width: yAxisW,
-            label: LAT_TITLE,
-            valueFormatter: (v: number) => `${v.toFixed(1)}°N`,
+            label: LAT,
+            valueFormatter: (v: number) => `${Math.abs(v).toFixed(1)}°${v < 0 ? "S" : "N"}`,
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft, fontFamily: FONT },
             labelStyle: { fontSize: 16, fill: t.ink, fontFamily: FONT },
           },
