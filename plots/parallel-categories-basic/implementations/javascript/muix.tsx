@@ -21,6 +21,8 @@ const OUTCOME_SEMANTICS: Record<string, { color: string; hatched: boolean }> = {
   "Did not survive": { color: t.palette[4], hatched: true },
 };
 const UNUSED_PALETTE = [t.palette[1], t.palette[2], t.palette[3], t.palette[5]];
+const HATCH_OPACITY = 0.45;
+const hatchInk = `color-mix(in srgb, ${t.ink} ${HATCH_OPACITY * 100}%, transparent)`;
 
 // Columns: set these to your data's column names
 const DIMENSIONS = ["Passenger class", "Sex", "Outcome"]; // role: dimension
@@ -132,7 +134,7 @@ function ParallelCategories() {
           height={6}
           patternTransform="rotate(45)"
         >
-          <line x1={0} y1={0} x2={0} y2={6} stroke={t.ink} strokeOpacity={0.45} strokeWidth={1.5} />
+          <line x1={0} y1={0} x2={0} y2={6} stroke={t.ink} strokeOpacity={HATCH_OPACITY} strokeWidth={1.5} />
         </pattern>
       </defs>
 
@@ -273,7 +275,7 @@ export default function Chart() {
                     borderRadius: 3,
                     backgroundColor: style.color,
                     backgroundImage: style.hatched
-                      ? "repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(0,0,0,0.4) 2px, rgba(0,0,0,0.4) 3px)"
+                      ? `repeating-linear-gradient(45deg, transparent, transparent 2px, ${hatchInk} 2px, ${hatchInk} 3px)`
                       : undefined,
                     display: "inline-block",
                   }}
