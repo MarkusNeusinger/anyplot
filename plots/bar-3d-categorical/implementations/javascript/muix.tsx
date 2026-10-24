@@ -7,6 +7,7 @@ import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { useXScale, useYScale, useDrawingArea } from "@mui/x-charts/hooks";
+import { lighten, darken } from "@mui/material/styles";
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -32,17 +33,17 @@ const data = [
   { [X_CATEGORY]: "Ti-6Al-4V", [Y_CATEGORY]: "Annealed", [VALUE]: 830 },
   { [X_CATEGORY]: "Steel 4140", [Y_CATEGORY]: "Annealed", [VALUE]: 655 },
   { [X_CATEGORY]: "Inconel 718", [Y_CATEGORY]: "Annealed", [VALUE]: 965 },
-  { [X_CATEGORY]: "Mg AZ31", [Y_CATEGORY]: "Annealed", [VALUE]: 145 },
+  { [X_CATEGORY]: "Mg AZ31", [Y_CATEGORY]: "Annealed", [VALUE]: 240 },
   { [X_CATEGORY]: "Al 6061", [Y_CATEGORY]: "Tempered", [VALUE]: 200 },
   { [X_CATEGORY]: "Ti-6Al-4V", [Y_CATEGORY]: "Tempered", [VALUE]: 950 },
   { [X_CATEGORY]: "Steel 4140", [Y_CATEGORY]: "Tempered", [VALUE]: 780 },
   { [X_CATEGORY]: "Inconel 718", [Y_CATEGORY]: "Tempered", [VALUE]: 1100 },
-  { [X_CATEGORY]: "Mg AZ31", [Y_CATEGORY]: "Tempered", [VALUE]: 200 },
+  { [X_CATEGORY]: "Mg AZ31", [Y_CATEGORY]: "Tempered", [VALUE]: 250 },
   { [X_CATEGORY]: "Al 6061", [Y_CATEGORY]: "Quenched", [VALUE]: 275 },
   { [X_CATEGORY]: "Ti-6Al-4V", [Y_CATEGORY]: "Quenched", [VALUE]: 1100 },
   { [X_CATEGORY]: "Steel 4140", [Y_CATEGORY]: "Quenched", [VALUE]: 900 },
   { [X_CATEGORY]: "Inconel 718", [Y_CATEGORY]: "Quenched", [VALUE]: 1250 },
-  { [X_CATEGORY]: "Mg AZ31", [Y_CATEGORY]: "Quenched", [VALUE]: 240 },
+  { [X_CATEGORY]: "Mg AZ31", [Y_CATEGORY]: "Quenched", [VALUE]: 265 },
   { [X_CATEGORY]: "Al 6061", [Y_CATEGORY]: "Aged", [VALUE]: 310 },
   { [X_CATEGORY]: "Ti-6Al-4V", [Y_CATEGORY]: "Aged", [VALUE]: 1170 },
   { [X_CATEGORY]: "Steel 4140", [Y_CATEGORY]: "Aged", [VALUE]: 1080 },
@@ -64,21 +65,22 @@ const rowLabelW = Math.max(...treatments.map((tr) => tr.length)) * LABEL_CHAR_PX
 const marginRight =
   (treatments.length - 1) * STAGGER_DX + ISO_DX + ROW_LABEL_GAP + rowLabelW + EDGE_PAD;
 
+// Value levels: one nice step shared by the y axis, the back wall and the side wall
+const rawStep = yMax / 8;
+const stepMag = 10 ** Math.floor(Math.log10(rawStep));
+const tickStep =
+  [1, 2, 2.5, 5, 10].find((m) => m * stepMag >= rawStep)! * stepMag;
+const valueTicks = Array.from(
+  { length: Math.floor(yMax / tickStep) + 1 },
+  (_, i) => i * tickStep,
+);
+// Back wall sits behind the rear row's back faces
+const wallDx = (treatments.length - 1) * STAGGER_DX + ISO_DX;
+const wallDy = (treatments.length - 1) * STAGGER_DY + ISO_DY;
+
 const rowColors = treatments.map((_, i) => t.palette[i]);
-const topColors = rowColors.map((hex) => {
-  const num = parseInt(hex.slice(1), 16);
-  const r = Math.round(((num >> 16) & 255) + (255 - ((num >> 16) & 255)) * 0.34);
-  const g = Math.round(((num >> 8) & 255) + (255 - ((num >> 8) & 255)) * 0.34);
-  const b = Math.round((num & 255) + (255 - (num & 255)) * 0.34);
-  return `rgb(${r}, ${g}, ${b})`;
-});
-const sideColors = rowColors.map((hex) => {
-  const num = parseInt(hex.slice(1), 16);
-  const r = Math.round(((num >> 16) & 255) * 0.7);
-  const g = Math.round(((num >> 8) & 255) * 0.7);
-  const b = Math.round((num & 255) * 0.7);
-  return `rgb(${r}, ${g}, ${b})`;
-});
+const topColors = rowColors.map((hex) => lighten(hex, 0.34));
+const sideColors = rowColors.map((hex) => darken(hex, 0.3));
 
 const paintOrder = [...treatments.keys()].sort((a, b) => b - a);
 
@@ -93,6 +95,26 @@ function Bars3D() {
   return (
     <g data-drawing-container>
       <g>
+        {valueTicks.map((v) => (
+          <line
+            key={`wall-level-${v}`}
+            x1={left}
+            y1={yScale(v)}
+            x2={left + wallDx}
+            y2={yScale(v) + wallDy}
+            stroke={t.grid}
+            strokeWidth={1}
+          />
+        ))}
+        <line
+          x1={left + wallDx}
+          y1={baseline + wallDy}
+          x2={left + wallDx}
+          y2={yScale(yMax) + wallDy}
+          stroke={t.inkSoft}
+          strokeWidth={1}
+          opacity={0.35}
+        />
         {treatments.map((treatment, row) => {
           const dx = row * STAGGER_DX;
           const dy = row * STAGGER_DY;
@@ -314,6 +336,7 @@ export default function Chart() {
             scaleType: "linear",
             min: 0,
             max: yMax,
+            tickInterval: valueTicks,
             valueFormatter: formatValue,
             label: VALUE,
             width: 96,
@@ -327,7 +350,9 @@ export default function Chart() {
           "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
         }}
       >
-        <ChartsGrid horizontal />
+        <g transform={`translate(${wallDx}, ${wallDy})`}>
+          <ChartsGrid horizontal />
+        </g>
         <Bars3D />
         <ChartsXAxis />
         <ChartsYAxis />
