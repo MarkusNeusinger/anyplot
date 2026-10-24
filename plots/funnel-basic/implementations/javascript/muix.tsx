@@ -1,7 +1,7 @@
 // anyplot.ai
 // funnel-basic: Basic Funnel Chart
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 93/100 | Created: 2026-09-05
+// Quality: pending | Created: 2026-09-05
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { useXScale, useYScale, useDrawingArea } from "@mui/x-charts/hooks";
