@@ -159,7 +159,9 @@ export default function Chart() {
             id: "site",
             scaleType: "band",
             data: siteNames,
-            width: 100,
+            width: 130,
+            label: SITE,
+            labelStyle: { fontSize: 15, fill: t.ink },
             tickLabelStyle: { fontSize: 14, fill: t.ink },
           },
         ]}
