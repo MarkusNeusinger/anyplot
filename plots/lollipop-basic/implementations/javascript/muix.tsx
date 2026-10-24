@@ -1,6 +1,6 @@
 // anyplot.ai
 // lollipop-basic: Basic Lollipop Chart
-// Library: muix 9.x | JavaScript 22.23.0
+// Library: muix 7.29.1 | JavaScript 22.23.0
 // Quality: 90/100 | Created: 2026-07-01
 
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
@@ -14,52 +14,52 @@ import Typography from "@mui/material/Typography";
 const t = window.ANYPLOT_TOKENS;
 
 // Constants
-const CATEGORY_COL = "Book Genre" as const;
-const VALUE_COL = "Annual Sales (millions of units)" as const;
 const X_PAD_FRAC = 0.1;
+const TITLE = "lollipop-basic · javascript · muix · anyplot.ai";
+const TITLE_HEIGHT = 70;
 
-// Data — annual book sales by genre (millions of units)
-const DATA: Array<Record<string, string | number>> = [
-  { [CATEGORY_COL]: "Children's", [VALUE_COL]: 22.1 },
-  { [CATEGORY_COL]: "Romance", [VALUE_COL]: 18.7 },
-  { [CATEGORY_COL]: "Thriller", [VALUE_COL]: 16.3 },
-  { [CATEGORY_COL]: "Mystery", [VALUE_COL]: 15.2 },
-  { [CATEGORY_COL]: "Fantasy", [VALUE_COL]: 14.8 },
-  { [CATEGORY_COL]: "Sci-Fi", [VALUE_COL]: 12.4 },
-  { [CATEGORY_COL]: "Self-Help", [VALUE_COL]: 11.2 },
-  { [CATEGORY_COL]: "Business", [VALUE_COL]: 10.5 },
-  { [CATEGORY_COL]: "Cooking", [VALUE_COL]: 9.8 },
-  { [CATEGORY_COL]: "Biography", [VALUE_COL]: 8.9 },
-  { [CATEGORY_COL]: "History", [VALUE_COL]: 7.6 },
-  { [CATEGORY_COL]: "Literary Fiction", [VALUE_COL]: 6.4 },
+// Columns: set these to your data's column names
+const CATEGORY = "Book genre"; // role: category
+const VALUE = "Annual sales (millions of units)"; // role: value
+
+// Data: replace this block with your own records
+const data: Array<Record<string, string | number>> = [
+  { [CATEGORY]: "Children's", [VALUE]: 22.1 },
+  { [CATEGORY]: "Romance", [VALUE]: 18.7 },
+  { [CATEGORY]: "Thriller", [VALUE]: 16.3 },
+  { [CATEGORY]: "Mystery", [VALUE]: 15.2 },
+  { [CATEGORY]: "Fantasy", [VALUE]: 14.8 },
+  { [CATEGORY]: "Sci-Fi", [VALUE]: 12.4 },
+  { [CATEGORY]: "Self-Help", [VALUE]: 11.2 },
+  { [CATEGORY]: "Business", [VALUE]: 10.5 },
+  { [CATEGORY]: "Cooking", [VALUE]: 9.8 },
+  { [CATEGORY]: "Biography", [VALUE]: 8.9 },
+  { [CATEGORY]: "History", [VALUE]: 7.6 },
+  { [CATEGORY]: "Literary Fiction", [VALUE]: 6.4 },
 ];
 
-const sortedData = [...DATA].sort((a, b) => Number(b[VALUE_COL]) - Number(a[VALUE_COL]));
-const genres = sortedData.map((r) => String(r[CATEGORY_COL]));
-const salesData = sortedData.map((r) => Number(r[VALUE_COL]));
+// Plot: reads only data and the constants above
+const sortedData = [...data].sort((a, b) => Number(b[VALUE]) - Number(a[VALUE]));
+const genres = sortedData.map((r) => String(r[CATEGORY]));
+const salesData = sortedData.map((r) => Number(r[VALUE]));
 const maxVal = Math.max(...salesData);
 const xAxisMax = maxVal * (1 + X_PAD_FRAC);
 
 function LollipopPlot() {
-  const xScale = useXScale("sales") as (v: number) => number | undefined;
-  const yScale = useYScale("genre") as {
-    (v: string): number | undefined;
-    bandwidth?: () => number;
+  const xScale = useXScale("sales") as (v: number) => number;
+  const yScale = useYScale("genre") as unknown as ((v: string) => number) & {
+    bandwidth: () => number;
   };
-
-  if (!xScale || !yScale || typeof yScale.bandwidth !== "function") return null;
   const bw = yScale.bandwidth();
+  const x0 = xScale(0);
 
   return (
     <g>
       {sortedData.map((row) => {
-        const genre = String(row[CATEGORY_COL]);
-        const val = Number(row[VALUE_COL]);
-        const x0 = Number(xScale(0) ?? 0);
-        const x1 = Number(xScale(val) ?? 0);
-        const bandTop = yScale(genre);
-        if (bandTop == null || !Number.isFinite(Number(bandTop))) return null;
-        const cy = Number(bandTop) + bw / 2;
+        const genre = String(row[CATEGORY]);
+        const val = Number(row[VALUE]);
+        const x1 = xScale(val);
+        const cy = yScale(genre) + bw / 2;
 
         return (
           <g key={genre}>
@@ -88,9 +88,6 @@ function LollipopPlot() {
     </g>
   );
 }
-
-const TITLE = "lollipop-basic · javascript · muix · anyplot.ai";
-const TITLE_HEIGHT = 70;
 
 export default function Chart() {
   const chartWidth = window.ANYPLOT_SIZE.width;
@@ -133,7 +130,7 @@ export default function Chart() {
             min: 0,
             max: xAxisMax,
             height: 54,
-            label: VALUE_COL,
+            label: VALUE,
             labelStyle: { fontSize: 15, fill: t.ink },
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
           },
