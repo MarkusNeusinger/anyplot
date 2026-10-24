@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: network-directed
 created: '2026-09-05T10:07:50Z'
-updated: '2026-10-24T11:12:08Z'
+updated: '2026-10-24T11:18:36Z'
 generated_by: gemini-4-argon
 adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
 workflow_run: 40088623870
@@ -13,57 +13,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-d
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-directed/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-directed/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-directed/javascript/muix/plot-dark.html
-quality_score: 82
+quality_score: 84
 review:
   strengths:
-  - 'Composes the graph from MUI X primitives: an empty ChartsContainer with hidden
-    linear axes, plus a custom overlay that reads useDrawingArea/useXScale/useYScale,
-    so node positions go through the chart''s own scales'
-  - Arrowheads are SVG markers ending a fixed END_GAP outside each target's radius,
-    so every arrow tip sits visibly at the target node's border in both themes
-  - The auth/config bidirectional pair is drawn as two opposite quadratic curves whose
+  - Every arrowhead stops at the target box's border with a 6 px gap, computed per
+    edge from the box geometry, so no arrowhead is hidden under a node
+  - The bidirectional pair config<->auth is drawn as two opposite curves, and both
     arrowheads can be told apart
-  - 'Theme tokens are applied throughout: ink/inkSoft text, page-colored node outlines
-    and label halos (paintOrder stroke), so both renders read cleanly'
-  - Hierarchical left-to-right layout by architecture layer with layer colors from
-    Imprint positions 1-4 and 6, keeping the red anchor free for a semantic role
+  - The hierarchical column layout runs from UI & Apps to Foundation, so the import
+    direction reads right to left at a glance
+  - Label-fitted rounded node boxes over a page-colored underlay keep edges out of
+    the text in both themes
+  - Uses MUI X composition (ChartsContainer with hidden linear axes plus useXScale,
+    useYScale and useDrawingArea) to map node positions through the library's own
+    scales
   weaknesses:
-  - 'VQ-02 (both): two edges run straight through an unrelated node because their
-    endpoints are collinear with it in the layer grid: billing→orders passes under
-    inventory, and admin-panel→inventory passes under graphql-api. They read as billing–inventory
-    + inventory→orders and admin-panel–graphql-api + graphql-api→inventory → no edge
-    may pass beneath a node it does not join. Likely cause: the integer column / centred
-    row positions (x = depth, y = seen − (count − 1)/2) put nodes on exact lines between
-    others; stagger the rows per layer (for example offset alternate layers by half
-    a step) or reorder nodes within layers.'
-  - 'VQ-02, SC-02 (both): node labels are crossed by edges: ''config'' by the red
-    config→auth curve and the config→utils line, ''cache'' by the cache→utils and
-    orders→cache lines, ''graphql-api'' by graphql-api→orders and web-app→graphql-api,
-    ''inventory'' and ''billing'' by the vertical billing→orders line. This breaks
-    the ''edges and arrowheads kept out of the text'' property → labels clear of every
-    edge. Likely cause: labels placed directly below each node (y + NODE_RADIUS +
-    22), exactly where edges leave downward; place them beside the node on the side
-    away from its edges, or route the layout so edges leave through the sides.'
-  - 'Suggestion: a small three-step width key (1, 2, 3 import calls) under ''Edge
-    width = Import calls'' would make the weight encoding decodable; the 1.8–2.8 px
-    range is hard to read without one.'
-  - 'Suggestion: MUI X tooltips are not used; a hover readout of importer → imported
-    and the call count would add value to the HTML view.'
+  - 'VQ-03 (both): edge widths for 1, 2 and 3 import calls are 1.8, 2.3 and 2.8 px,
+    too close to tell apart, and the legend line ''Edge width = Import calls'' has
+    no width samples to decode them → spread the range to about 1.5-5 px and add three
+    short line samples labelled 1, 2 and 3 to the legend. Likely cause: strokeWidth
+    = 1.3 + weight * 0.5, and the legend''s text-only weight entry.'
+  - 'CQ-01 (code): lines 83-89 define a borderDistance helper function outside the
+    overlay component that MUI requires → compute the direction vector in each branch
+    and the stop distance once, inline, after the straight/curved branch. Likely cause:
+    the border clipping factored out into a function.'
+  - 'Suggestion: add the MUI ChartsTooltip or a native <title> on each edge so that
+    the HTML view shows source, target and import calls on hover.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, no axes or grid.
-      Chrome: bold dark title "network-directed · javascript · muix · anyplot.ai" centered at top; right-side legend "Architecture layer" with five colored dots, a red "Upward dependency" arrow sample and the note "Edge width = Import calls"; node labels in dark ink below each node. All text readable.
-      Data: 13 nodes in five columns by layer (Foundation #009E73 green, Core Services purple, Domain Logic blue, API Layer ochre, UI & Apps cyan); grey straight edges with filled arrowheads ending at target borders; auth→config and config→auth drawn as two opposite curves, config→auth in matte red. billing→orders runs under inventory and admin-panel→inventory under graphql-api; several labels (config, cache, graphql-api, inventory, billing) are crossed by edges.
+      Background: warm off-white, matching #FAF8F1; no axes or grid.
+      Chrome: bold dark title "network-directed · javascript · muix · anyplot.ai" centered at top (~37% width); legend top right with bold "Architecture layer" title, five layer swatches, a red arrow sample "Upward dependency" and a muted note "Edge width = Import calls". All text dark and readable.
+      Data: 13 rounded node boxes in five columns (Foundation green #009E73: utils, config; Core Services purple: cache, auth, logger; Domain Logic blue: inventory, billing, orders; API Layer ochre: graphql-api, rest-api; UI & Apps cyan: admin-panel, mobile-app, web-app), each with a tinted fill, a strong outline and a bold dark label. Grey straight edges end in filled grey arrowheads at the target border; config<->auth is drawn as two curves, config->auth in red #AE3030 with a red arrowhead. Edge widths differ only slightly.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17.
-      Chrome: title, legend text and node labels in light ink, all readable; no dark-on-dark text.
-      Data: node colors and the red flagged edge identical to the light render; edges and arrowheads switch to the light inkSoft token and stay visible; the same edge-through-node and label crossings appear.
+      Background: warm near-black, matching #1A1A17.
+      Chrome: title, legend title, legend entries and node labels in light ink; the edge-width note in a lighter muted grey. No dark-on-dark text.
+      Data: node outline and swatch colors identical to the light render; the tinted fills read as dark versions of each layer color; edges and arrowheads light grey; the red config->auth curve unchanged. All arrowheads visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -71,51 +61,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 22 px, labels and legend 14-15 px CSS; all readable in both
-          themes
+        comment: All sizes set explicitly (title 22 px, node labels 15 px bold, legend
+          14-15 px); readable in both themes, title at about 37% of the width
       - id: VQ-02
         name: No Overlap
-        score: 3
-        max: 6
-        passed: true
-        comment: Edges pass beneath unrelated nodes (billing→orders under inventory,
-          admin-panel→inventory under graphql-api) and cross five node labels (defect
-          lines)
-      - id: VQ-03
-        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Nodes, edges and arrowheads clearly visible; arrowheads proportionate
-          to 30 px nodes
+        comment: No text collisions; edges start under the opaque node boxes and stay
+          clear of every label
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Nodes and arrowheads clearly visible, but the weight widths 1.8/2.3/2.8
+          px are hard to tell apart and the legend has no width samples (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Layer colors CVD-distinct Imprint slots; red flag also carried by
-          the legend label
+        comment: Layers also separated by column position; red flagged edge differs
+          from the grey edges in luminance as well as hue
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced landscape layout, legend in reserved right margin, nothing
+        comment: Graph fills the canvas well, legend sits close beside it, nothing
           clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'N/A: no axes on a network; legend title and edge-width note are
-          reader text'
+        comment: 'N/A: no axes on a layout-positioned network; legend titles read
+          as text'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First layer #009E73, Imprint slots 1-4 and 6, matte red reserved
-          for the error role; backgrounds #FAF8F1 / #1A1A17'
+        comment: 'First layer #009E73, then Imprint positions 2-4 and 6; red #AE3030
+          reserved for the warning edge; data colors identical across themes; backgrounds
+          #FAF8F1 / #1A1A17'
     design_excellence:
       score: 10
       max: 20
@@ -125,24 +115,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Typographic hierarchy in the hand-built legend (bold title, regular
-          entries, soft note) and page-colored label halos go beyond the baseline
+        comment: Rounded label-fitted node boxes with a tinted fill and a strong layer-colored
+          outline; the legend has its own typographic hierarchy (bold title, entries,
+          muted note)
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Page-colored node outlines and an end gap that lets arrowheads sit
-          clear of node borders
+        comment: Box widths fitted to label length and a page-colored underlay so
+          that no edge shows through a translucent node
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Layered layout is the hierarchy the Notes allow; the red upward-dependency
-          highlight is an unrequested layer and earns no credit
+        comment: The column layout is the hierarchical layout the Notes allow; the
+          red 'upward dependency' highlight is a derived channel the spec does not
+          ask for and earns no credit
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -153,24 +145,26 @@ review:
         comment: Directed network graph with arrowheads
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Arrowheads at target borders, consistent style, weight-encoded width
-          and curved bidirectional pair present; the 'edges kept out of the label
-          text' property is broken (defect line)
+        comment: Arrowheads at the target border, sized for the nodes; one filled-triangle
+          style; config<->auth drawn as two curves; hierarchical layout, no axes or
+          grid, edges thinner and lighter than the nodes; labels readable and clear
+          of edges
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Layout-positioned type; every edge drawn source→target
+        comment: Layout-positioned type; every edge goes from source to target as
+          in the data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title; legend entries are reader text
+        comment: Title in the mandated format; legend entries are readable layer names
     data_quality:
       score: 15
       max: 15
@@ -180,78 +174,82 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 13 nodes, 23 weighted edges, a bidirectional pair (auth/config),
-          sources-only and sinks-only nodes
+        comment: A bidirectional pair, a cycle, weighted edges, and source-only and
+          sink-only nodes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible layered software module import graph, neutral
+        comment: Software module import graph with plausible module names, the spec's
+          own example
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: No check values; 1-3 import-call weights and the layered dependency
-          direction are plausible
+        comment: 'Checked: 13 nodes (inside 10-50), weights 1-3 import calls, and
+          layer assignment consistent with the import directions apart from the one
+          flagged edge'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Data → layout → one overlay component that the MUI hooks require
+        comment: A borderDistance helper function sits outside the overlay component
+          that MUI requires (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hand-written data
+        comment: Hard-coded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: ChartsContainer and the three hooks are all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a hand-laid-out graph
+        comment: Complexity fits a custom network on a library without a graph chart
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation set,
-          community @mui/x-charts only
+        comment: 'Default export, sized to ANYPLOT_SIZE, skipAnimation, v9 ChartsContainer
+          and position: ''none'' axes'
     library_mastery:
       score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: ChartsContainer composition with useDrawingArea/useXScale/useYScale
-          is the documented way to add custom SVG to MUI X
+        comment: Correct v9 composition, but the marks, the legend and the arrowheads
+          are all hand-written SVG
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses MUI X's composition hooks to map a custom layer through chart
-          scales; no tooltip or other native interactive feature
-  verdict: REJECTED
+        passed: true
+        comment: Uses the MUI X composition hooks (useXScale, useYScale, useDrawingArea)
+          inside ChartsContainer, so node positions go through MUI's own linear scales
+          and drawing area
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T11:08:55Z'
+  rendered_at: '2026-10-24T11:14:57Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -261,8 +259,8 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
+  - minimal-chrome
   - alpha-blending
   - edge-highlighting
