@@ -1,7 +1,7 @@
 // anyplot.ai
 // energy-level-atomic: Atomic Energy Level Diagram
-// Library: muix 9.0.0 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-08-25
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 89/100 | Created: 2026-08-25
 
 import * as React from "react";
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
@@ -10,115 +10,58 @@ import { useXScale, useYScale, useDrawingArea } from "@mui/x-charts/hooks";
 import { Box, Typography } from "@mui/material";
 
 const t = window.ANYPLOT_TOKENS;
-const FONT = "'Roboto', 'Helvetica Neue', Arial, sans-serif";
 
 // Constants
-const LEVEL_ID = "levelId";
-const LEVEL_LABEL = "levelLabel";
-const ENERGY_EV = "energyEv";
-const FROM_LEVEL = "fromLevel";
-const TO_LEVEL = "toLevel";
-const SERIES_GROUP = "seriesGroup";
-const WAVELENGTH_NM = "wavelengthNm";
-
+const TITLE = "energy-level-atomic · javascript · muix · anyplot.ai";
+const FONT = "'Roboto', 'Helvetica Neue', Arial, sans-serif";
 const ENERGY_UNIT = "eV";
+const ENERGY_AXIS_TITLE = `Energy (${ENERGY_UNIT})`;
 const WAVELENGTH_UNIT = "nm";
 const IONIZATION_EV = 0;
-const IONIZATION_LABEL = "Ionization limit (E = 0 eV)";
+const IONIZATION_LABEL = `Ionization limit (E = ${IONIZATION_EV} ${ENERGY_UNIT})`;
 const COMPRESS_POWER = 0.35;
 const LEVEL_X_START_SHARE = 0.27;
 const LEVEL_X_END_SHARE = 0.85;
 const ARROW_INNER_PAD_SHARE = 0.08;
 const Y_TOP_PAD_SHARE = 0.12;
-const Y_TICK_SHARES = [0, 0.0735, 0.2206, 0.4412, 1];
-
-// Data: Hydrogen atom (Z = 1) bound-state energies (E_n = -13.6 eV / n^2) and transitions
-const levelData = [
-  { [LEVEL_ID]: 1, [LEVEL_LABEL]: "n = 1 (1s) — ground state", [ENERGY_EV]: -13.6 },
-  { [LEVEL_ID]: 2, [LEVEL_LABEL]: "n = 2 (2s, 2p)", [ENERGY_EV]: -3.4 },
-  { [LEVEL_ID]: 3, [LEVEL_LABEL]: "n = 3 (3s, 3p, 3d)", [ENERGY_EV]: -1.5111 },
-  { [LEVEL_ID]: 4, [LEVEL_LABEL]: "n = 4 (4s–4f)", [ENERGY_EV]: -0.85 },
-  { [LEVEL_ID]: 5, [LEVEL_LABEL]: "n = 5 (5s–5g)", [ENERGY_EV]: -0.544 },
-  { [LEVEL_ID]: 6, [LEVEL_LABEL]: "n = 6 (6s–6h)", [ENERGY_EV]: -0.3778 },
+const UV_MAX_NM = 400;
+const VISIBLE_MAX_NM = 700;
+const SPECTRAL_BANDS = [
+  { maxNm: UV_MAX_NM, label: `Ultraviolet (< ${UV_MAX_NM} ${WAVELENGTH_UNIT})` },
+  { maxNm: VISIBLE_MAX_NM, label: `Visible (${UV_MAX_NM}–${VISIBLE_MAX_NM} ${WAVELENGTH_UNIT})` },
+  { maxNm: Infinity, label: `Infrared (> ${VISIBLE_MAX_NM} ${WAVELENGTH_UNIT})` },
 ];
 
-const transitionData = [
-  {
-    [FROM_LEVEL]: 2,
-    [TO_LEVEL]: 1,
-    [SERIES_GROUP]: "Lyman series · emission → n = 1 (UV) ↓",
-    [WAVELENGTH_NM]: 121.6,
-  },
-  {
-    [FROM_LEVEL]: 3,
-    [TO_LEVEL]: 1,
-    [SERIES_GROUP]: "Lyman series · emission → n = 1 (UV) ↓",
-    [WAVELENGTH_NM]: 102.6,
-  },
-  {
-    [FROM_LEVEL]: 4,
-    [TO_LEVEL]: 1,
-    [SERIES_GROUP]: "Lyman series · emission → n = 1 (UV) ↓",
-    [WAVELENGTH_NM]: 97.3,
-  },
-  {
-    [FROM_LEVEL]: 3,
-    [TO_LEVEL]: 2,
-    [SERIES_GROUP]: "Balmer series · emission → n = 2 (visible) ↓",
-    [WAVELENGTH_NM]: 656.3,
-  },
-  {
-    [FROM_LEVEL]: 4,
-    [TO_LEVEL]: 2,
-    [SERIES_GROUP]: "Balmer series · emission → n = 2 (visible) ↓",
-    [WAVELENGTH_NM]: 486.1,
-  },
-  {
-    [FROM_LEVEL]: 1,
-    [TO_LEVEL]: 3,
-    [SERIES_GROUP]: "Ground-state absorption ↑",
-    [WAVELENGTH_NM]: 102.6,
-  },
-  {
-    [FROM_LEVEL]: 1,
-    [TO_LEVEL]: 4,
-    [SERIES_GROUP]: "Ground-state absorption ↑",
-    [WAVELENGTH_NM]: 97.3,
-  },
-  {
-    [FROM_LEVEL]: 2,
-    [TO_LEVEL]: 6,
-    [SERIES_GROUP]: "Excited-state absorption (n = 2 → n = 6) ↑",
-    [WAVELENGTH_NM]: 410.2,
-  },
+// Data: named parameters for Hydrogen atom bound states and transitions
+const SYSTEM = "Hydrogen atom (Z = 1)";
+const RYDBERG_EV = 13.6; // role: energy
+const LEVELS_SPEC = [
+  { n: 1, orbital: "n = 1 (1s) — ground state" }, // role: level
+  { n: 2, orbital: "n = 2 (2s, 2p)" },
+  { n: 3, orbital: "n = 3 (3s, 3p, 3d)" },
+  { n: 4, orbital: "n = 4 (4s–4f)" },
+  { n: 5, orbital: "n = 5 (5s–5g)" },
+  { n: 6, orbital: "n = 6 (6s–6h)" },
 ];
 
-// Derived series groups in order of first appearance
-const seriesGroups: string[] = [];
-for (const row of transitionData) {
-  const g = row[SERIES_GROUP];
-  if (!seriesGroups.includes(g)) {
-    seriesGroups.push(g);
-  }
-}
+const TRANSITIONS_SPEC = [
+  { fromN: 2, toN: 1, wavelengthNm: 121.6 }, // role: transitions
+  { fromN: 3, toN: 1, wavelengthNm: 102.6 },
+  { fromN: 4, toN: 1, wavelengthNm: 97.3 },
+  { fromN: 3, toN: 2, wavelengthNm: 656.3 },
+  { fromN: 4, toN: 2, wavelengthNm: 486.1 },
+  { fromN: 1, toN: 3, wavelengthNm: 102.6 },
+  { fromN: 1, toN: 4, wavelengthNm: 97.3 },
+  { fromN: 2, toN: 6, wavelengthNm: 410.2 },
+];
 
-const groupColorMap = new Map<string, string>();
-seriesGroups.forEach((g, idx) => {
-  groupColorMap.set(g, t.palette[idx]);
-});
-
-const legendItems = seriesGroups.map((g) => ({
-  label: g,
-  color: groupColorMap.get(g) ?? t.inkSoft,
-}));
-
-// Compressed vertical coordinates for energy levels
-const levels = levelData.map((row) => {
-  const ev = row[ENERGY_EV];
+// Plot: reads only data and the constants above
+const levels = LEVELS_SPEC.map((row) => {
+  const ev = -RYDBERG_EV / (row.n * row.n);
   const compressedY = ev >= 0 ? ev : -((-ev) ** COMPRESS_POWER);
   return {
-    id: row[LEVEL_ID],
-    label: row[LEVEL_LABEL],
+    id: row.n,
+    label: row.orbital,
     energy: ev,
     compressedY,
   };
@@ -126,38 +69,63 @@ const levels = levelData.map((row) => {
 
 const levelById = new Map(levels.map((l) => [l.id, l]));
 
-const minEv = Math.min(...levels.map((l) => l.energy));
-const maxEv = Math.max(IONIZATION_EV, ...levels.map((l) => l.energy));
-const evSpan = maxEv - minEv || 1;
+const spectralGroups: string[] = [];
+for (const tr of TRANSITIONS_SPEC) {
+  const band = SPECTRAL_BANDS.find((b) => tr.wavelengthNm <= b.maxNm)!;
+  if (!spectralGroups.includes(band.label)) {
+    spectralGroups.push(band.label);
+  }
+}
 
-const yTicks = Y_TICK_SHARES.map((share) => {
-  const rawVal = Number((maxEv - share * evSpan).toFixed(1));
-  const compressedY = rawVal >= 0 ? rawVal : -((-rawVal) ** COMPRESS_POWER);
-  return { value: rawVal, compressedY };
+const groupColorMap = new Map<string, string>();
+spectralGroups.forEach((g, idx) => {
+  groupColorMap.set(g, t.palette[idx]);
 });
 
+const legendItems = spectralGroups.map((g) => ({
+  label: g,
+  color: groupColorMap.get(g)!,
+}));
+
+const minEv = Math.min(...levels.map((l) => l.energy));
+const maxEv = Math.max(IONIZATION_EV, ...levels.map((l) => l.energy));
+
+// Derive ticks in eV from the level energies and ionization limit
+const tickEvCandidates = [maxEv, ...levels.map((l) => Number(l.energy.toFixed(1)))].sort(
+  (a, b) => b - a,
+);
+const yTicks: { value: number; compressedY: number }[] = [];
+for (const val of tickEvCandidates) {
+  const compressedY = val >= 0 ? val : -((-val) ** COMPRESS_POWER);
+  if (
+    yTicks.length === 0 ||
+    Math.abs(compressedY - yTicks[yTicks.length - 1].compressedY) >= 0.28
+  ) {
+    yTicks.push({ value: val, compressedY });
+  }
+}
+
 const yDomainMin = Math.min(...levels.map((l) => l.compressedY));
-const yCompressedSpan = Math.abs(yDomainMin) || 1;
+const yCompressedSpan = Math.abs(yDomainMin);
 const yDomainMax = yCompressedSpan * Y_TOP_PAD_SHARE;
 
 const levelSpanX = LEVEL_X_END_SHARE - LEVEL_X_START_SHARE;
 const arrowStartX = LEVEL_X_START_SHARE + levelSpanX * ARROW_INNER_PAD_SHARE;
 const arrowEndX = LEVEL_X_END_SHARE - levelSpanX * ARROW_INNER_PAD_SHARE;
-const transitionCount = transitionData.length;
+const transitionCount = TRANSITIONS_SPEC.length;
 
-const transitions = transitionData.map((row, idx) => {
-  const xFrac =
-    transitionCount > 1
-      ? arrowStartX + ((arrowEndX - arrowStartX) * idx) / (transitionCount - 1)
-      : (arrowStartX + arrowEndX) / 2;
-  const fromLvl = levelById.get(row[FROM_LEVEL]) ?? levels[0];
-  const toLvl = levelById.get(row[TO_LEVEL]) ?? levels[0];
+const transitions = TRANSITIONS_SPEC.map((row, idx) => {
+  const xFrac = arrowStartX + ((arrowEndX - arrowStartX) * idx) / (transitionCount - 1);
+  const fromLvl = levelById.get(row.fromN)!;
+  const toLvl = levelById.get(row.toN)!;
   const lowerLvl = fromLvl.energy <= toLvl.energy ? fromLvl : toLvl;
   const upperCandidates = levels
     .filter((l) => l.energy > lowerLvl.energy)
     .sort((a, b) => a.energy - b.energy);
-  const nextAboveLvl = upperCandidates[0] ?? toLvl;
-  const color = groupColorMap.get(row[SERIES_GROUP]) ?? t.palette[0];
+  const nextAboveLvl = upperCandidates[0];
+  const band = SPECTRAL_BANDS.find((b) => row.wavelengthNm <= b.maxNm)!;
+  const color = groupColorMap.get(band.label)!;
+  const isEmission = fromLvl.energy > toLvl.energy;
   return {
     x: xFrac,
     y1Compressed: fromLvl.compressedY,
@@ -165,7 +133,8 @@ const transitions = transitionData.map((row, idx) => {
     labelLowCompressed: lowerLvl.compressedY,
     labelHighCompressed: nextAboveLvl.compressedY,
     color,
-    wavelengthText: `${row[WAVELENGTH_NM].toFixed(1)} ${WAVELENGTH_UNIT}`,
+    isEmission,
+    wavelengthText: `${row.wavelengthNm.toFixed(1)} ${WAVELENGTH_UNIT} ${isEmission ? "↓" : "↑"}`,
   };
 });
 
@@ -314,13 +283,12 @@ export default function Chart() {
     >
       <Box sx={{ height: TITLE_H, display: "flex", alignItems: "center", pl: "28px" }}>
         <Typography sx={{ color: t.ink, fontSize: 22, fontWeight: 600, fontFamily: FONT }}>
-          energy-level-atomic · javascript · muix · anyplot.ai
+          {TITLE}
         </Typography>
       </Box>
       <Box sx={{ height: CONTEXT_H, display: "flex", alignItems: "center", pl: "28px" }}>
         <Typography sx={{ color: t.inkSoft, fontSize: 14, fontFamily: FONT }}>
-          Hydrogen atom (Z = 1, {levels.length} bound states, {transitions.length} transitions) · compressed energy
-          scale ({ENERGY_UNIT})
+          {`${SYSTEM} (${levels.length} bound states, ${transitions.length} transitions: ↓ emission, ↑ absorption) · compressed ${ENERGY_AXIS_TITLE.toLowerCase()} scale (${minEv.toFixed(1)} to ${maxEv} ${ENERGY_UNIT})`}
         </Typography>
       </Box>
       <Box sx={{ height: LEGEND_H, display: "flex", alignItems: "center", gap: "24px", pl: "28px" }}>
@@ -337,7 +305,7 @@ export default function Chart() {
           <Typography
             sx={{ fontSize: 16, fontWeight: 600, color: t.ink, whiteSpace: "nowrap", transform: "rotate(-90deg)", fontFamily: FONT }}
           >
-            Energy ({ENERGY_UNIT})
+            {ENERGY_AXIS_TITLE}
           </Typography>
         </Box>
         <ChartsContainer
@@ -356,7 +324,7 @@ export default function Chart() {
             label={IONIZATION_LABEL}
             labelAlign="end"
             lineStyle={{ stroke: t.amber, strokeWidth: 2, strokeDasharray: "6 4" }}
-            labelStyle={{ fill: t.amber, fontSize: 14, fontWeight: 600, fontFamily: FONT }}
+            labelStyle={{ fill: t.ink, fontSize: 14, fontWeight: 600, fontFamily: FONT }}
           />
         </ChartsContainer>
       </Box>
