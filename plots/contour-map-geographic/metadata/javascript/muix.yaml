@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: contour-map-geographic
 created: '2026-09-01T23:47:05Z'
-updated: '2026-10-24T08:30:30Z'
+updated: '2026-10-24T08:39:15Z'
 generated_by: gemini-4-argon
 adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
 workflow_run: 40078015210
@@ -13,66 +13,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/javascript/muix/plot-dark.html
-quality_score: 83
+quality_score: 88
 review:
   strengths:
-  - Composes the map from ChartsContainer + ChartsXAxis/ChartsYAxis with a custom
-    ContourLayer that reads useDrawingArea(), so the contours, fill and labels live
-    in MUI X's own coordinate system and the axes stay theme-adaptive
-  - 'Cartographic index/intermediate contour hierarchy: 1000 m index lines at 2.2
-    px / 0.85 opacity, 500 m intermediate lines at 1 px / 0.42 opacity, labels only
-    on the index lines, so the three peaks read at a glance'
-  - Plot area aspect corrected by cos(mean latitude), so the longitude and latitude
-    degrees are true to scale for a real map region
-  - Contour lines drawn in the ink token flip from near-black (light) to near-white
-    (dark) while the imprint_seq fill stays identical; every label sits in a page-colored
-    pill and stays readable in both themes
-  - Real-world setting (Mount Rainier, Mount Adams, Mount St. Helens with their real
-    summit heights) and a meaningful 500 m / 1000 m interval, with the saddle where
-    the 1000 m contour merges the three peaks
+  - Hand-written marching squares on the 101x61 grid gives smooth closed isolines
+    with a clear saddle between Mount Rainier and Mount Adams
+  - 'Cartographic hierarchy: thick labeled index contours every 1000 m over thin intermediate
+    contours every 500 m'
+  - Filled bands rasterized bilinearly per cell so band edges follow the isolines,
+    in imprint_seq steps matched by a stepped colorbar
+  - Map aspect corrected by cos(mean latitude); axis valueFormatter renders 123.6°W
+    / 47.3°N
+  - useDrawingArea places the custom SVG map layer inside the MUI X chart frame so
+    axes and map share one coordinate system
+  - Basemap labels typed by feature class (caps states, italic rivers, bold peaks)
+    on page-colored halos that work in both themes
   weaknesses:
-  - 'SC-02 (both): the geographic basemap is a single 7-vertex ''Columbia River''
-    polyline along the bottom edge; there are no coastlines, borders or terrain context,
-    so the map reads as an abstract contour plot with lat/lon ticks → add a real basemap
-    layer (e.g. state border Washington/Oregon along the Columbia, a few more river
-    courses or terrain shading) beneath the contours, as the first Notes bullet asks.
-    Likely cause: RIVERS holds one coarse polyline and nothing else is drawn as basemap.'
-  - 'SC-02 (both): the fill is a continuous per-cell gradient rather than bands between
-    contour levels, so filled regions do not match the line levels (the ''filled bands
-    … that match the line levels'' property) → quantize each cell''s color to the
-    band between its enclosing LEVELS (or drop the fill for a line-only version).
-    Likely cause: CELLS color uses the continuous frac of the cell mean instead of
-    the level band index.'
-  - 'SC-04 (both): the elevation color bar is ticked at 460, 1441, 2421, 3402, 4382
-    m — non-round values unrelated to the 500 m contour levels → tick it at the contour
-    levels (500, 1000, … 4000 m) so the legend reads in the same round units as the
-    lines. Likely cause: COLORBAR_TICKS fractions [0, 0.25, 0.5, 0.75, 1] of the raw
-    min–max range.'
-  - 'VQ-05 (both): the aspect-locked map occupies only ~58 % of the canvas width,
-    leaving ~330 px (display) of empty page on each side of a landscape canvas → widen
-    the sampled longitude range (or narrow the latitude range) so the map fills ~80
-    % of the width while keeping the cos(lat) aspect. Likely cause: sampleLonMin/Max
-    span 3.2° against a 1.8° latitude span.'
-  - 'Suggestion: the low-elevation background (460–520 m) fills most of the map with
-    one saturated brand-green slab; a lighter fill opacity would let a basemap show
-    through.'
-  - 'Suggestion: a small summit marker under each peak name would anchor the names
-    to the summits.'
+  - 'DQ-03 (both): the lowland base field sits at 460-520 m everywhere, so Portland
+    and the Columbia River lie at ~470 m (real: under 50 m; Yakima ~330 m), and the
+    500 m isoline becomes two dead-straight meridians at about 122.6°W and 120.2°W
+    that read as graticule lines → a lowland base rising from about 0-50 m along the
+    Columbia to a few hundred metres toward the Cascades (about -400 m at the river).
+    Likely cause: the `460 + 60 * Math.sin(...)` baseline in the data block.'
+  - 'CQ-04 (code): projX/projY are defined in ContourLayer (lines 326-327) but the
+    same lon/lat-to-pixel formula is written out again for contour paths (lines 411-414),
+    label candidates (lines 443-446) and the chosen label (lines 460-461) → call projX/projY
+    there. Likely cause: projection helpers added after the contour code.'
+  - 'Suggestion: a few intermediate contour labels (e.g. 1500 m, 2500 m) on the wider
+    loops would make reading levels easier without the colorbar.'
+  - 'Suggestion: the inner 3500 m loop on Mount Adams and the 2500 m loop on St. Helens
+    are visibly faceted; a slightly denser grid near the summits would round them.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 page; the map area is filled with the imprint_seq gradient (brand green #009E73 at 460 m to blue #4467A3 at the Rainier summit).
-      Chrome: title "contour-map-geographic · javascript · muix · anyplot.ai" bold dark ink, centered (~36 % width); grey subtitle with grid size, range and contour intervals; y-axis "Latitude (°)" with ticks 45.5°N–47.3°N, x-axis "Longitude (°)" with ticks 123.6°W–120.4°W; vertical color bar right with title "Elevation (m)" and ticks 460/1441/2421/3402/4382. All text readable.
-      Data: dark-ink contour lines: bold index lines every 1000 m, thin intermediate lines every 500 m; closed loops around Mount Rainier (top), Mount St. Helens (left) and Mount Adams (right), merged by the 1000 m contour; two thin 500 m lines run off the top/bottom edges. Labels "1000 m", "2000 m", "3000 m", "4000 m" in off-white pills on the index lines; peak names in pills; italic "Columbia River" grey polyline along the bottom. First data color is #009E73.
+      Background: warm off-white #FAF8F1 around the map; title and subtitle centered above.
+      Chrome: title "contour-map-geographic · javascript · muix · anyplot.ai" bold dark ink; subtitle "101×61 grid (460–4389 m) · index contours every 1000 m, intermediate every 500 m"; x ticks 123.6°W–119.2°W, y ticks 45.5°N–47.3°N, axis titles "Longitude (°)" / "Latitude (°)", colorbar "Elevation (m)" with ticks 500–4000 (thousands bold). All dark text, readable.
+      Data: map filled with imprint_seq bands from #009E73 green (lowland) to #4467A3 blue at the Mount Rainier summit; dark ink contours, thick index lines labeled 1000/2000/3000/4000 m on page-colored boxes; closed loops around Rainier, Adams and St. Helens with a saddle joining Rainier and Adams. Basemap: rivers in page color (Columbia along the border, Cowlitz, Yakima, Lewis, Nisqually, Hanford Reach), town dots (Olympia, Ellensburg, Yakima, Portland), WASHINGTON/OREGON state labels. Two straight vertical 500 m isolines at ~122.6°W and ~120.2°W.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 page; the imprint_seq fill is identical to the light render.
-      Chrome: title, subtitle, axis titles, ticks and color bar text flip to light ink and are clearly readable; no dark-on-dark text.
-      Data: contour lines flip to near-white (same index/intermediate weights), label pills become dark with light text, the river becomes light grey; data fill colors identical to light.
+      Background: warm near-black #1A1A17.
+      Chrome: title, subtitle, ticks, axis titles and colorbar labels in light ink, all readable; no dark-on-dark text.
+      Data: fill colors identical to the light render; contours flip to light ink, rivers and label boxes flip to the near-black page color with light text; town dots become light with dark outline. Everything remains distinguishable.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -80,72 +65,77 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit 22/16/15/14 px sizes; all text readable in both themes
+        comment: Explicit sizes (title 22, ticks 14, axis titles 16, map labels 14
+          px CSS); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Contour labels placed clear of peak-name boxes; no text collisions
+        comment: Map labels and contour labels sit on page-colored boxes and clear
+          each other; no text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Index and intermediate lines both visible on the fill in both themes
+        comment: Index contours 2.2 px, intermediate 1 px at reduced opacity; all
+          lines, rivers and town dots visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue sequential ramp, CVD-safe; contours carry values independently
-          of color
+        comment: Green-to-blue sequential ramp, no red-green signal; ink contours
+          contrast with the fill
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Map fills only ~58 % of the canvas width (defect line)
+        comment: 3200x1800, aspect-corrected map (cos latitude), balanced margins,
+          colorbar fits
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Latitude (°) / Longitude (°) with hemisphere-formatted ticks; color
-          bar 'Elevation (m)'
+        comment: Longitude (°) / Latitude (°) with hemisphere tick formatting; colorbar
+          'Elevation (m)'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq from t.seq; correct page backgrounds; fill identical
-          across themes
+        comment: 'Filled bands are imprint_seq steps (#009E73 -> #4467A3); backgrounds
+          #FAF8F1 / #1A1A17; chrome flips correctly'
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Cartographic index/intermediate line-weight hierarchy and page-colored
-          label pills, italic hydrography label
+        comment: 'Cartographic type hierarchy beyond the baseline: letter-spaced caps
+          for states, italic for rivers, bold for peaks, regular for towns'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: cos(lat) aspect correction, labels steered clear of peak names; large
-          empty side margins
+        comment: Index vs intermediate contour weights, label halo boxes, contour
+          labels placed clear of map labels, map aspect corrected by cos(latitude)
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Named peaks and labelled index contours give three clear focal points
+        comment: Named volcano summits give the eye three focal points; subtitle states
+          grid size, range and contour intervals
     spec_compliance:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -153,31 +143,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Contour lines over a lat/lon map with optional fill
+        comment: Contour lines on a geographic basemap with lat/lon axes
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Basemap reduced to one coarse river polyline; fill is a continuous
-          gradient, not bands matching the levels (defect lines). Labels, meaningful
-          interval and colorbar present
+        passed: true
+        comment: Smooth isolines, basemap (rivers incl. the Columbia border, towns,
+          state names), labeled index contours, filled bands, colorbar with variable
+          and unit, 500/1000 m intervals
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Marching-squares isolines at their grid positions; axes span the
-          full grid
+        comment: Contours computed from the grid at their lon/lat; full extent shown
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title format correct; color bar ticked at non-round raw-range values
-          (defect line)
+        comment: Exact mandated title; colorbar titled 'Elevation (m)'
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -185,23 +173,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Closed loops, bunching on steep flanks, saddle merge, index vs intermediate
-          levels, lines running off the edge
+        comment: Closed loops around three summits, a saddle merging Rainier and Adams,
+          steep bunching vs flat lowland
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Cascade volcanoes with their real summit heights; neutral
+        comment: Real Cascades region (Rainier, Adams, St. Helens) with real towns
+          and rivers; neutral
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 'Checked: max 4382 m vs Rainier 4392 m (grid sampling), 500 m / 1000
-          m interval computed from the range; no Check values in the Notes'
+        comment: Summit heights plausible (4389 m, ~3740 m, ~2550 m); lowlands at
+          460-520 m are not (defect line)
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -209,8 +198,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Only the components MUI X composition needs (ContourLayer for useDrawingArea,
-          default Chart)
+        comment: Linear script; the ContourLayer component is required for useDrawingArea
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -225,17 +213,18 @@ review:
         comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: 'Written-out marching squares is allowed: no contouring helper in
-          @mui/x-charts'
+        comment: projX/projY exist but the projection is re-inlined three times (defect
+          line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component, skipAnimation, v9 ChartsContainer API
+        comment: Default-exported component into the harness, skipAnimation, v9 ChartsContainer
+          API
     library_mastery:
       score: 6
       max: 10
@@ -246,31 +235,31 @@ review:
         max: 5
         passed: true
         comment: ChartsContainer composition with ChartsXAxis/ChartsYAxis, axis valueFormatter
-          and sized axis bands
+          for °W/°N, tickLabelStyle/labelStyle
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: true
-        comment: useDrawingArea hook to inject a custom SVG layer into the MUI X coordinate
-          space
-  verdict: REJECTED
+        passed: false
+        comment: useDrawingArea hook to place a custom SVG map layer inside the MUI
+          chart coordinate frame
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T08:27:12Z'
+  rendered_at: '2026-10-24T08:36:18Z'
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - annotations
   - layer-composition
-  - html-export
+  - custom-legend
   patterns:
   - data-generation
-  - matrix-construction
+  - iteration-over-groups
   dataprep:
   - interpolation
+  - binning
   styling:
-  - custom-colormap
-  - gradient-fill
+  - publication-ready
   - alpha-blending
