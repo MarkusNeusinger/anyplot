@@ -2,170 +2,172 @@ library: muix
 language: javascript
 specification_id: flamegraph-basic
 created: '2026-08-20T19:33:46Z'
-updated: '2026-08-20T19:54:38Z'
-generated_by: claude-sonnet
-workflow_run: 32408192367
+updated: '2026-10-24T09:14:37Z'
+generated_by: gemini-4-argon
+adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
+workflow_run: 40080385430
 issue: 4665
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/javascript/muix/plot-dark.html
-quality_score: 96
+quality_score: 84
 review:
   strengths:
-  - 'Directly and thoroughly addressed every weakness flagged in Attempt 1: expanded
-    to 174 stack frames (well within the spec''s 50-500 range), switched to a warm
-    amber->ochre->matte-red gradient built purely from Imprint anchors (#DDCC77/#BD8233/#AE3030),
-    added an explicit hot-path outline plus caption, and enlarged the title fontsize
-    formula.'
-  - 'Genuine data storytelling: the dominant call chain gets a bold ink outline plus
-    a plain-language caption naming the exact chain and its percentage of total samples,
-    giving the viewer an immediate takeaway instead of forcing a bar-width comparison
-    by eye.'
-  - 'Theme-adaptive chrome is handled correctly and kept separate from the theme-invariant
-    warm data gradient: the root frame and hot-path stroke use t.ink/t.pageBg (flip
-    cleanly light/dark) while the amber-ochre-red frame colors stay identical between
-    renders.'
-  - Sample counts are internally consistent at every depth (each parent's samples
-    exactly equal the sum of its children), exactly as a real profiler would report,
-    and function-name labels only render when they actually fit the bar width.
-  - Creative, idiomatic use of ChartContainer + useXScale/useYScale to hand-build
-    a chart type the MUI X community package has no canned component for, rather than
-    falling back to NOT_FEASIBLE.
+  - Builds the flame layout from folded stacks inside ChartsContainer and draws the
+    frames through useXScale/useYScale, so every frame's width is its exact sample
+    share (handle_business_logic 54.6 %, 11,380 samples, 99 frames, verified against
+    the data) and every callee sits within its caller
+  - Siblings are separated by 1.5 px strokes in the page color, which keeps adjacent
+    frames distinguishable and flips correctly between the cream and near-black themes
+  - In-bar labels pick dark or light ink per fill by contrast ratio and are drawn
+    only when the name fits, so no label spills past its bar in either render
+  - Depth row labels ("Depth 0 · root" … "Depth 6") read as stack depth, and no samples
+    axis implies a time sequence
+  - Native SVG <title> on every frame gives function, sample count and share on hover
+    in the HTML view
   weaknesses:
-  - Depth-row labels (DepthLabels) and the heat-legend text (HeatLegend) render at
-    13px CSS, a touch under the library's recommended 14-16px floor for axis/legend
-    text in JS libraries -- bump both to ~14px so they hold up better at mobile/thumbnail
-    scale.
-  - The title still fills only ~48% of canvas width at the new fontsize formula (title.length=50
-    < 67 so the formula never scales up past its base 34px) -- comfortably within
-    the non-overflow, non-squeezed safe zone so this is not a deduction, but there's
-    headroom to grow it toward the 50-70% target for a bit more visual weight.
+  - 'SC-01 (both): the fill is a heat channel driven by each frame''s sample share
+    (gradient legend "fewer Samples (0.4%)" → "more Samples (54.6%)" plus a separate
+    root swatch), which re-encodes width and paints the hot path main → handle_business_logic
+    → fetch_orders → db_query in red and orange, a highlighted hot path the basic
+    variant excludes → assign the warm hues independently of the share (for example
+    cycle or hash the function name over the amber/ochre/red stops) and drop the gradient
+    legend and the root swatch. Likely cause: the u = (pct − minPct)/(maxPct − minPct)
+    interpolation in the frames map (lines 212–222) and the heat-scale legend block
+    (lines 312–325).'
+  - 'CQ-01 (code): three helper functions, hexToRgb (lines 18–22), relLuminance and
+    contrast (lines 200–210), sit beside the required FlameGraphCanvas component →
+    inline them: hard-code the three warm stops as RGB triples and choose the label
+    ink with one inline luminance expression. Likely cause: a general-purpose colour
+    toolkit written for a two-ink choice.'
+  - 'Suggestion: the share-driven ramp leaves about 90 % of the frames in nearly the
+    same pale amber; once the colouring no longer encodes share, more hue variation
+    between neighbours would make the upper rows easier to scan.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
-      Chrome: Bold dark title "flamegraph-basic · javascript · muix · anyplot.ai" centered at top; italic grey subtitle ("Simulated web-request CPU profile · 14,000 samples across 174 stack frames") below it; italic grey hot-path caption naming the dominant chain and its share; a two-part color-key legend (black "root" swatch + amber->ochre->red gradient bar labeled "fewer samples"/"more samples"); left-side "Depth N" row labels in soft grey. All chrome text renders in dark ink against the light background and is clearly legible.
-      Data: Seven stacked rows of directly-adjacent rectangles in classic icicle/flame layout, root at the bottom. Root ("main") fills the full width in near-black with a cream label. Higher rows are colored on a continuous warm gradient (amber -> ochre -> matte red) keyed to each frame's share of total samples, so the hottest branches (handle_business_logic and its heaviest descendants) read distinctly redder than cooler siblings. The dominant hot-path frames carry a bold ink outline that visually traces the chain from root to leaf. Function-name labels appear inside bars wide enough to fit them; narrower bars correctly omit their label rather than clipping or rotating text.
-      Legibility verdict: PASS -- all text (title, subtitle, caption, legend, depth labels, in-bar labels) is clearly readable against the light background; no light-on-light issues.
+      Background: warm off-white, consistent with #FAF8F1.
+      Chrome: bold dark title "flamegraph-basic · javascript · muix · anyplot.ai" centred at top, grey subtitle "11,380 Samples across 99 stack frames (59 leaf traces)", a horizontal gradient bar (pale amber → ochre → matte red) labelled "fewer Samples (0.4%)" / "more Samples (54.6%)" and a red swatch "main (root · 100% Samples)". Left column of right-aligned row labels "Depth 0 · root" to "Depth 6". All text dark and readable; no axes drawn.
+      Data: seven rows of adjacent bars, root "main" full width in matte red at the bottom; handle_business_logic (red, white label) dominates depth 1, flanked by parse_request and write_response (ochre/amber); fetch_orders orange at depth 2; db_query, orm_hydrate, score_products at depth 3; pg_wait_result, poll_socket, epoll_wait tower up to depth 6. Most frames pale amber; siblings separated by thin cream strokes. Labels only on wide bars, dark ink on amber, white ink on red; none spills past its bar. Ragged top edge. No #009E73 — the spec asks for a warm palette.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
-      Chrome: Identical title, subtitle, hot-path caption, legend and depth labels, now rendered in light ink / soft grey and fully legible -- no dark-on-dark failures anywhere.
-      Data: The amber -> ochre -> matte-red gradient frame colors are pixel-identical to the light render (only chrome flipped, as required). The root frame correctly inverts to a light cream fill with a dark "main" label (theme-adaptive neutral anchor, matching the style guide's semantic "neutral" role for baseline/reference elements). The hot-path outline correctly switches to a light stroke so it still reads as an outline against the near-black frame fills.
-      Legibility verdict: PASS -- all text is clearly readable against the dark background; no dark-on-dark or light-on-light failures found in either render.
+      Background: warm near-black, consistent with #1A1A17.
+      Chrome: title in light ink, subtitle, legend labels and depth labels in light grey; all readable, no dark-on-dark text.
+      Data: frame fills, gradient and in-bar label inks identical to the light render; only the sibling separators flip to the near-black page color and stay visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicit and readable in both themes; depth-row and
-          legend text at 13px CSS is a touch under the 14-16px library guideline for
-          JS-library axis/legend text
+        comment: Title 22 px, subtitle 15 px, depth/legend/in-bar labels 14 px (CSS),
+          all readable in both themes; label ink chosen per fill
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, legend, or data elements in either render
+        comment: No text collisions; labels drawn only where they fit
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 174 frames laid out with minimal-gap adjacency per spec; density-appropriate
-          widths, no invisible elements
+        comment: Frames down to 0.4 % visible as slivers with separators; legend gradient
+          and swatch visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Monochromatic warm gradient avoids red-green ambiguity; hot-path
-          outline adds redundant (non-color) encoding
+        comment: Amber-to-red ramp separates by lightness; separators carry adjacency;
+          not a red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Nothing cut off, good proportions, canvas dimension gate passed
+        comment: Canvas gate passed; flame fills the canvas below a compact header
+          and legend; balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Depth rows clearly labeled; title descriptive with units in subtitle/caption
+        comment: Depth row labels read as stack depth; no samples axis needed (axes
+          'if drawn')
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Warm gradient built purely from existing Imprint anchors (amber/ochre/matte-red),
-          honoring the spec's explicit domain-convention override of the default categorical
-          order; theme-correct backgrounds and theme-adaptive root/chrome in both
-          renders
+        comment: Warm ramp built from Imprint tokens (amber, ochre, matte red) as
+          the spec's Notes ask; correct backgrounds; data colors identical across
+          themes
     design_excellence:
-      score: 18
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 5
         max: 8
-        passed: true
-        comment: 'Fully custom-built composition: warm Imprint-anchor gradient, theme-adaptive
-          neutral root, hot-path emphasis, custom two-part legend'
+        passed: false
+        comment: Clear title/subtitle/legend hierarchy and per-fill contrast-based
+          label ink beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: No axis chrome, subtle divider strokes between siblings, generous
-          whitespace
+        passed: false
+        comment: Theme-adaptive page-colored separators and right-aligned depth labels
+          in place of an axis
       - id: DE-03
         name: Data Storytelling
-        score: 6
+        score: 2
         max: 6
-        passed: true
-        comment: Explicit hot-path outline plus a plain-language caption naming the
-          chain and its percentage gives an immediate, guided takeaway -- directly
-          fixes Attempt 1's flagged gap
+        passed: false
+        comment: The only emphasis comes from the share-driven hot-path coloring,
+          which is the SC-01 defect and earns no credit
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Correct icicle-style flame graph, root-to-leaf bottom-to-top
+        passed: false
+        comment: Correct flame graph, but the fill is an unasked heat channel by sample
+          share that highlights the hot path (defect line)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 174 stack frames (within 50-500 range), warm yellow/orange/red palette,
-          adjacent bars, fit-based labeling -- all spec Notes satisfied
+        comment: Root at bottom, callees within callers, width = share, adjacent siblings,
+          warm palette, in-bar labels where they fit — all Notes and good-version
+          bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Bar width proportional to samples, x-position arbitrary/non-temporal,
-          depth = row, exactly per spec
+        comment: Frame x0/width from cumulative samples; marks at their values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend clearly explains the
-          color-to-sample-share mapping
+        comment: Title matches the mandated format; legend text is readable
     data_quality:
       score: 15
       max: 15
@@ -175,89 +177,89 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 174 stack frames across 7 depth levels, realistic uneven branching
-          texture
+        comment: Seven depth levels, wide and narrow frames, ragged towers, flat stretches
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral simulated web-request CPU profile
+        comment: Plausible web-request CPU profile (parsing, JWT, DB, ORM, templating,
+          GC)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 14,000 samples with parent-equals-sum-of-children consistency at
-          every level
+        comment: 'Checked: 59 traces (within 50–500), 11,380 samples, 99 frames, handle_business_logic
+          54.6 %, min frame 0.4 % — subtitle and legend match the data'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Small component functions are the idiomatic React/MUI X shape, not
-          over-engineering
+        passed: false
+        comment: Helper functions hexToRgb, relLuminance, contrast beside the required
+          hook component (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG, fully deterministic
+        comment: Hard-coded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ChartContainer and the two scale hooks imported, both used
+        comment: ChartsContainer and the two scale hooks, all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a hand-built flamegraph layout, no fake
-          UI
+        comment: Partition layout is necessary; no available call computes it in @mui/x-charts
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct ChartContainer usage with skipAnimation; sizes from window.ANYPLOT_SIZE
+        comment: Mount-node contract, v9 ChartsContainer, skipAnimation
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: ChartContainer + useXScale/useYScale is the documented MUI X pattern
-          for custom marks, used correctly
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
-        passed: true
-        comment: Low-level scale-hook composition to hand-build a chart type the community
-          package has no built-in component for; native <title> tooltips add real
-          (non-fake) interactivity
+        passed: false
+        comment: Composition via ChartsContainer with a child component reading useXScale/useYScale
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Custom SVG layer driven by MUI X's scale hooks inside the chart's
+          drawing area
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-10-24T09:10:49Z'
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
-  - gradient-fill
-  - annotations
+  - html-export
   - hover-tooltips
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep:
   - cumulative-sum
+  - normalization
   styling:
   - custom-colormap
   - edge-highlighting
-  - publication-ready
