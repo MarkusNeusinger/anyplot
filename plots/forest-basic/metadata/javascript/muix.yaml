@@ -2,141 +2,134 @@ library: muix
 language: javascript
 specification_id: forest-basic
 created: '2026-09-05T01:50:12Z'
-updated: '2026-09-05T01:54:59Z'
-generated_by: claude-sonnet
-workflow_run: 33937016067
+updated: '2026-10-24T09:18:30Z'
+generated_by: gemini-4-argon
+adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
+workflow_run: 40080787154
 issue: 2378
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/forest-basic/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/forest-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/forest-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/forest-basic/javascript/muix/plot-dark.html
-quality_score: 91
+quality_score: 87
 review:
   strengths:
-  - Custom SVG marks built via useXScale/useYScale/useDrawingArea correctly implement
-    a forest plot (point squares, CI whiskers with caps, pooled diamond) that MUI
-    X has no native chart type for
-  - Marker size scales with study weight (5-11px half-size proportional to inverse-variance
-    weight), giving an honest visual read of each study's influence on the pooled
-    estimate
-  - Diamond for the pooled effect uses the theme-adaptive ink token (not brand green),
-    correctly distinguishing it as chrome/summary rather than a categorical data series,
-    and flips white-on-dark / black-on-light correctly
-  - Right-aligned per-study annotation text (effect, CI, weight%) plus a dashed zero-reference
-    line with 'No difference' label give the plot the full clinical-forest-plot information
-    density without a redundant legend
-  - Studies are ordered chronologically (2019→2023) per the spec's ordering guidance,
-    and both CI-crosses-null and CI-excludes-null cases are represented, showing real
-    heterogeneity
-  - Title font size is computed from title length via a scaling formula, and both
-    renders use identical brand-green (#009E73) data color with correctly flipped
-    theme chrome
+  - 'Composes the forest plot from MUI X v9 building blocks: ChartsContainer with
+    a linear y axis whose tickInterval/valueFormatter place each study name at its
+    own row, ChartsGrid for vertical gridlines and ChartsReferenceLine for the labelled
+    null line at 0'
+  - Custom SVG marks are drawn through the useXScale/useYScale/useDrawingArea hooks,
+    so every square, whisker and the diamond sit exactly at their data values on the
+    library's own scales
+  - The pooled diamond is computed in code (DerSimonian-Laird random effects from
+    the CIs), sits in its own row below a thin divider, and is drawn in the ink token
+    so it reads clearly apart from the green study squares in both themes
+  - Square area scales with study weight (side ~ sqrt(weight)) with a 5 px floor,
+    so the lightest study (Ivanova, 7.9) stays visible and the heaviest stays inside
+    its row
+  - Studies are ordered chronologically (2019-2023), and the scenario (antihypertensive
+    RCTs, SBP mean difference in mmHg) is realistic with intervals on both sides of
+    the null line
+  - 'Theme tokens are threaded through every element: title in ink, subtitle/ticks/reference
+    label in inkSoft, grid at reduced opacity; both renders are fully legible'
   weaknesses:
-  - At the ~400px mobile width, study names and the right-side CI/weight annotations
-    become quite small and harder to read — inherent to a dense 8-study forest plot
-    with two text columns, but consider nudging tick/annotation font size up slightly
-    or trimming the annotation text to help mobile legibility
-  - Design is a clean, correct forest plot but fairly textbook — no additional visual
-    emphasis (e.g., muted color or lighter weight for the two CIs that cross the null
-    line) to help the reader spot statistical significance patterns at a glance beyond
-    reading each whisker
-  - The composition draws everything as manual SVG through ChartContainer with an
-    empty series array, so MUI X's own series rendering is bypassed entirely — correct
-    and necessary for this chart type, but leaves headroom for library-native touches
-    (e.g. tooltips wired to the custom marks) that weren't attempted
+  - 'Suggestion: the hard-coded ''Study weight'' column (e.g. Ivanova 7.9 %) does
+    not match the random-effects weights the code computes for the pooled diamond;
+    deriving the marker weights from the same reWeights would keep the square sizes
+    and the diamond consistent.'
+  - 'Suggestion: adding MUI X tooltips (e.g. a ChartsTooltip on an invisible scatter
+    series at the study positions) would expose the exact effect and CI in the HTML
+    view.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "Systolic BP Reduction · forest-basic · javascript · muix · anyplot.ai" in dark ink, centered and fully visible; subtitle in soft gray explaining marker sizing and diamond meaning; 8 study-name row labels on the left and "Pooled Effect (Random Effects)" label below a thin divider line; x-axis labeled "Mean Difference in Systolic Blood Pressure (mmHg)" with numeric ticks -12 to 3; dashed vertical reference line at x=0 labeled "No difference"; subtle vertical gridlines. All text is dark-on-light and clearly legible.
-      Data: All 8 study markers are brand green (#009E73) squares sized by study weight, with horizontal CI whiskers and end caps in the same green; a black diamond spans the pooled effect's 95% CI at the bottom; right-aligned gray text per row gives "effect [lower, upper] · weight%", bold black text for the pooled row.
-      Legibility verdict: PASS — all title/axis/tick/annotation text is readable against the light background; only the two-column dense text becomes small when the whole PNG is shrunk to mobile width, which is an inherent density trade-off rather than a dark/light contrast failure.
+      Background: warm off-white, matches #FAF8F1.
+      Chrome: bold dark title "Systolic BP Reduction · forest-basic · javascript · muix · anyplot.ai" centered at top (~43 % of width), grey subtitle "Mean difference in SBP (mmHg) · squares sized by Study weight · diamond = pooled effect"; eight study names (Anderson et al. 2019 … Kowalski et al. 2023) as left y tick labels plus "Pooled Effect (Random Effects)"; x ticks −12 to 3 and x-axis title "Mean difference in SBP (mmHg)"; subtle vertical gridlines; dashed null line at 0 labelled "No difference" at its foot. All text readable, nothing clipped.
+      Data: green #009E73 squares sized by weight with capped horizontal CI whiskers in green, one row per study, ordered chronologically; Dubois and Ivanova cross the null line. A thin grey divider separates the studies from a near-black diamond centred near −5.6 with tips at about −7.0 and −4.2.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, subtitle, study labels, axis label, ticks and dashed reference line, all re-rendered in light ink (white/light-gray) against the dark surface. Gridlines are faint light lines. No element uses a light-mode color left over from the other theme.
-      Data: The 8 study squares and whiskers are unchanged brand green (#009E73), identical hue to the light render. The pooled diamond flips from black fill to a light off-white fill (theme-adaptive ink token), which is correct since it represents chrome/summary rather than a categorical series.
-      Legibility verdict: PASS — no dark-on-dark text found; every label, tick, and annotation is light-colored and reads clearly against the near-black background; brand green remains highly visible on the dark surface.
+      Background: warm near-black, matches #1A1A17.
+      Chrome: title in light ink, subtitle, tick labels and "No difference" label in light grey; gridlines subtle but visible; x-axis line light. No dark-on-dark text.
+      Data: study squares and whiskers in the identical #009E73 green as the light render; the pooled diamond flips to the light ink token (as chrome-style ink, set apart from the green studies). Brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes throughout, fully readable in both themes at
-          full resolution; dense two-column text (study names + CI/weight annotations)
-          gets small at ~400px mobile width
+        comment: Title 22 px, ticks 14 px, axis title 15 px in the 1600x900 CSS space
+          per the muix sizing guide; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions in either render
+        comment: No text collisions; 'No difference' label sits clear of the diamond
+          and axis
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Marker size scales with study weight (5-11px half-size), appropriate
-          for 8 sparse data points
+        comment: Squares 10-22 px with 2.2 px whiskers and caps; smallest marker clearly
+          visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: High-contrast single hue plus black/white diamond, no red-green reliance
+        comment: Single green hue plus ink diamond; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills most of the canvas with balanced margins, nothing
-          cut off
+        comment: 3200x1800, balanced margins, y band sized for the longest label,
+          nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis label descriptive with units (mmHg)
+        comment: x axis 'Mean difference in SBP (mmHg)' names measure and unit
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73 in both themes; pooled diamond correctly
-          uses theme-adaptive ink token, not a categorical color; backgrounds match
-          Imprint light/dark surfaces'
+        comment: 'Studies in #009E73, identical across themes; backgrounds #FAF8F1
+          / #1A1A17; diamond in the ink token'
     design_excellence:
-      score: 15
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom SVG marks, weight-proportional sizing, formatted annotation
-          text — clearly above library defaults
+        comment: Title/subtitle hierarchy with a subtitle that keys the encodings;
+          ink diamond contrasted against green squares
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Subtle grid, disabled Y-axis line, divider separating pooled row,
-          generous whitespace
+        comment: Thin divider setting the pooled row apart, capped whiskers, vertical-only
+          grid at reduced opacity, axis line disabled on y
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Diamond + divider + bold text create a clear focal point for the
-          pooled estimate; no additional emphasis (e.g. highlighting non-significant
-          studies) beyond that
+        passed: false
+        comment: 'Default: data displayed as the spec asks, no further hierarchy'
     spec_compliance:
       score: 15
       max: 15
@@ -146,27 +139,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct forest plot: point estimates, CI whiskers, pooled diamond'
+        comment: Forest plot, single meta-analysis, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Diamond, vertical null-reference line, weight-proportional markers,
-          chronological ordering all present
+        comment: Rows per study with CI lines, pooled diamond at bottom, null line
+          at 0 through all rows, weight-sized markers, chronological order, labelled
+          axis
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Effect size on X, studies on Y, all data visible within axis range
+        comment: All marks at their data values via the library scales; full CI range
+          visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct with descriptive prefix; no legend needed given
-          single-series design explained via subtitle
+        comment: Descriptive prefix + mandated title format; no legend needed (subtitle
+          keys the encoding)
     data_quality:
       score: 15
       max: 15
@@ -176,21 +171,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows both CI-crosses-null and CI-excludes-null studies, varying
-          weights, and a narrower pooled CI
+        comment: Varying CI widths, two studies crossing the null, weight range 7.9-16,
+          narrow pooled diamond
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral clinical meta-analysis of an antihypertensive drug vs. placebo
+        comment: Antihypertensive RCTs, plausible SBP reductions of 2-8.5 mmHg
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: SBP reduction magnitudes and weight percentages are realistic for
-          RCT meta-analyses
+        comment: 'Checked: fixed-effect mean ~-5.8 from the CIs, random-effects pooled
+          computed at ~-5.6 [-7.0, -4.2], matching the diamond in the render'
     code_quality:
       score: 10
       max: 10
@@ -200,34 +195,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Data → helper marks component → default-exported Chart, no over-structuring
+        comment: Columns -> data -> computation -> component; the ForestMarks sub-component
+          is required for the MUI X scale hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully hard-coded deterministic data
+        comment: Hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Every import is used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a chart type MUI X has no native support
-          for; no fake UI
+        comment: Random-effects pooling written out; no available call computes it
+          in this runtime
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Harness-owned output, current hooks API, skipAnimation set
+        comment: Default-exported component, skipAnimation, v9 ChartsContainer API
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -235,25 +231,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses the documented ChartContainer + scale-hooks composition pattern
-          for custom marks beyond built-in chart types
+        comment: 'v9 composition API: ChartsContainer + ChartsXAxis/ChartsYAxis/ChartsGrid/ChartsReferenceLine,
+          axis band sizing via height/width, tickInterval + valueFormatter for row
+          labels'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: useXScale/useYScale/useDrawingArea for custom SVG marks is a MUI
-          X-specific technique not easily replicated in another library
+        comment: useXScale/useYScale/useDrawingArea hooks for custom marks inside
+          the chart's coordinate system; ChartsReferenceLine with built-in label
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-10-24T09:15:30Z'
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
-  - manual-ticks
   - layer-composition
+  - manual-ticks
+  - annotations
+  - patches
+  - html-export
   patterns:
-  - iteration-over-groups
-  dataprep:
-  - normalization
+  - data-generation
+  dataprep: []
   styling:
-  - edge-highlighting
+  - grid-styling
