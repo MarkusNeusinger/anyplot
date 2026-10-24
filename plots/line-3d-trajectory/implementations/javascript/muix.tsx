@@ -1,234 +1,396 @@
 // anyplot.ai
 // line-3d-trajectory: 3D Line Plot for Trajectory Visualization
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 88/100 | Created: 2026-09-10
-//# anyplot-orientation: landscape
+// Library: muix 9.16.0 | JavaScript 22.23.3
+// Quality: 83/100 | Updated: 2026-10-24
 
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data: Lorenz attractor, two trajectories from nearly identical initial
-// conditions — the classic demonstration of chaotic sensitivity to initial
-// conditions ("butterfly effect"), integrated with RK4. ---------------------
+// Constants
+const FONT = '"Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, sans-serif';
+const MONO = '"JetBrains Mono", "SFMono-Regular", Menlo, monospace';
+const ELEV_DEG = 24;
+const AZIM_DEG = -40;
+const ELEV_RAD = (ELEV_DEG * Math.PI) / 180;
+const AZIM_RAD = (AZIM_DEG * Math.PI) / 180;
+const COS_AZ = Math.cos(AZIM_RAD);
+const SIN_AZ = Math.sin(AZIM_RAD);
+const COS_EL = Math.cos(ELEV_RAD);
+const SIN_EL = Math.sin(ELEV_RAD);
+// Half-extents of the drawn box per axis (x, y, z): a flatter box fits the landscape canvas
+const BOX = [1, 1, 0.52];
+const PAD_SHARE = 0.05;
+
+// Columns: set these to your data's column names
+const X = "Convection rate (X)"; // role: x
+const Y = "Horizontal temp var (Y)"; // role: y
+const Z = "Vertical temp var (Z)"; // role: z
+const TRAJECTORY = "Trajectory"; // role: color
+
+// Data: replace this block with your own records
 const SIGMA = 10;
 const RHO = 28;
 const BETA = 8 / 3;
 const DT = 0.01;
-const STEPS = 4000; // 40 time units — long enough for the two trajectories to
-const TRANSIENT = 400; // switch attractor wings at different moments
-const SUBSAMPLE = 2; // effective 0.02 step keeps the tight loops smooth
+const STEPS = 2200;
+const TRANSIENT = 200;
+const SUBSAMPLE = 1;
 
-function lorenzDerivative(state: number[]) {
-  const [x, y, z] = state;
-  return [SIGMA * (y - x), x * (RHO - z) - y, x * y - BETA * z];
-}
+const INITIAL_STATES: Array<{ label: string; init: [number, number, number] }> = [
+  { label: "Trajectory A (x₀ = 5.0000)", init: [5, 5, 20] },
+  { label: "Trajectory B (x₀ = 5.0001)", init: [5.0001, 5, 20] },
+];
 
-function rk4Step(state: number[], dt: number) {
-  const k1 = lorenzDerivative(state);
-  const k2 = lorenzDerivative(state.map((v, i) => v + (dt / 2) * k1[i]));
-  const k3 = lorenzDerivative(state.map((v, i) => v + (dt / 2) * k2[i]));
-  const k4 = lorenzDerivative(state.map((v, i) => v + dt * k3[i]));
-  return state.map(
-    (v, i) => v + (dt / 6) * (k1[i] + 2 * k2[i] + 2 * k3[i] + k4[i]),
-  );
-}
+const data: Array<{
+  [TRAJECTORY]: string;
+  [X]: number;
+  [Y]: number;
+  [Z]: number;
+}> = [];
 
-function simulate(initial: number[]) {
-  let state = initial;
-  const points: number[][] = [];
-  for (let i = 0; i < STEPS; i++) {
-    state = rk4Step(state, DT);
-    if (i >= TRANSIENT && (i - TRANSIENT) % SUBSAMPLE === 0)
-      points.push(state.slice());
+for (let s = 0; s < INITIAL_STATES.length; s += 1) {
+  const { label, init } = INITIAL_STATES[s];
+  let x = init[0];
+  let y = init[1];
+  let z = init[2];
+
+  for (let i = 0; i < STEPS; i += 1) {
+    const k1x = SIGMA * (y - x);
+    const k1y = x * (RHO - z) - y;
+    const k1z = x * y - BETA * z;
+
+    const x2 = x + 0.5 * DT * k1x;
+    const y2 = y + 0.5 * DT * k1y;
+    const z2 = z + 0.5 * DT * k1z;
+    const k2x = SIGMA * (y2 - x2);
+    const k2y = x2 * (RHO - z2) - y2;
+    const k2z = x2 * y2 - BETA * z2;
+
+    const x3 = x + 0.5 * DT * k2x;
+    const y3 = y + 0.5 * DT * k2y;
+    const z3 = z + 0.5 * DT * k2z;
+    const k3x = SIGMA * (y3 - x3);
+    const k3y = x3 * (RHO - z3) - y3;
+    const k3z = x3 * y3 - BETA * z3;
+
+    const x4 = x + DT * k3x;
+    const y4 = y + DT * k3y;
+    const z4 = z + DT * k3z;
+    const k4x = SIGMA * (y4 - x4);
+    const k4y = x4 * (RHO - z4) - y4;
+    const k4z = x4 * y4 - BETA * z4;
+
+    x += (DT / 6) * (k1x + 2 * k2x + 2 * k3x + k4x);
+    y += (DT / 6) * (k1y + 2 * k2y + 2 * k3y + k4y);
+    z += (DT / 6) * (k1z + 2 * k2z + 2 * k3z + k4z);
+
+    if (i >= TRANSIENT && (i - TRANSIENT) % SUBSAMPLE === 0) {
+      data.push({
+        [TRAJECTORY]: label,
+        [X]: x,
+        [Y]: y,
+        [Z]: z,
+      });
+    }
   }
-  return points;
 }
 
-const trajectoryA = simulate([0.1, 0, 0]);
-const trajectoryB = simulate([0.1001, 0, 0]); // perturbed by 0.0001 in x
+// Plot: reads only data and the constants above
+const trajectoryNames = Array.from(new Set(data.map((d) => d[TRAJECTORY])));
 
-// --- Normalize to a unit cube so the isometric projection treats every axis
-// equivalently, then project 3D -> 2D with a fixed camera angle (elevation
-// 20°, azimuth 32°) — the same technique a static mplot3d render uses. ------
-const allPoints = [...trajectoryA, ...trajectoryB];
-const X_MIN = Math.min(...allPoints.map((p) => p[0]));
-const X_MAX = Math.max(...allPoints.map((p) => p[0]));
-const Y_MIN = Math.min(...allPoints.map((p) => p[1]));
-const Y_MAX = Math.max(...allPoints.map((p) => p[1]));
-const Z_MIN = Math.min(...allPoints.map((p) => p[2]));
-const Z_MAX = Math.max(...allPoints.map((p) => p[2]));
+const COLS = [X, Y, Z] as const;
+const ranges = COLS.map((c) => {
+  const vals = data.map((d) => d[c]);
+  return { min: Math.min(...vals), max: Math.max(...vals) };
+});
 
-function normalize(p: number[]) {
-  return [
-    (2 * (p[0] - X_MIN)) / (X_MAX - X_MIN) - 1,
-    (2 * (p[1] - Y_MIN)) / (Y_MAX - Y_MIN) - 1,
-    (2 * (p[2] - Z_MIN)) / (Z_MAX - Z_MIN) - 1,
-  ];
+interface ScreenPt {
+  sx: number;
+  sy: number;
+  depth: number;
 }
 
-const ELEV = (20 * Math.PI) / 180;
-const AZIM = (32 * Math.PI) / 180;
-
-function projectUnit(x: number, y: number, z: number) {
-  const xRot = x * Math.cos(AZIM) - y * Math.sin(AZIM);
-  const yRot = x * Math.sin(AZIM) + y * Math.cos(AZIM);
-  return { sx: xRot, sy: yRot * Math.sin(ELEV) + z * Math.cos(ELEV) };
+// Orthographic oblique projection of box coordinates (each in [-1, 1])
+function project(n: [number, number, number]): ScreenPt {
+  const bx = n[0] * BOX[0];
+  const by = n[1] * BOX[1];
+  const bz = n[2] * BOX[2];
+  const xRot = bx * COS_AZ - by * SIN_AZ;
+  const depth = bx * SIN_AZ + by * COS_AZ;
+  return { sx: xRot, sy: depth * SIN_EL + bz * COS_EL, depth };
 }
 
-function project(p: number[]) {
-  const [x, y, z] = normalize(p);
-  return projectUnit(x, y, z);
-}
+const projectedTrajectories = trajectoryNames.map((name, idx) => ({
+  name,
+  color: t.palette[idx],
+  points: data
+    .filter((d) => d[TRAJECTORY] === name)
+    .map((d) =>
+      project(
+        COLS.map(
+          (c, k) => (2 * (d[c] - ranges[k].min)) / (ranges[k].max - ranges[k].min) - 1,
+        ) as [number, number, number],
+      ),
+    ),
+}));
 
-const projectedA = trajectoryA.map(project);
-const projectedB = trajectoryB.map(project);
-const allProjected = [...projectedA, ...projectedB];
+// Floor corners sorted into near / left / right / far for the current view
+const floor = (
+  [
+    [-1, -1],
+    [1, -1],
+    [1, 1],
+    [-1, 1],
+  ] as Array<[number, number]>
+).map(([a, b]) => ({ a, b, bottom: project([a, b, -1]), top: project([a, b, 1]) }));
+const byDepth = [...floor].sort((p, q) => p.bottom.depth - q.bottom.depth);
+const near = byDepth[0];
+const far = byDepth[3];
+const [leftC, rightC] = [byDepth[1], byDepth[2]].sort((p, q) => p.bottom.sx - q.bottom.sx);
 
-const SX_MIN = Math.min(...allProjected.map((p) => p.sx));
-const SX_MAX = Math.max(...allProjected.map((p) => p.sx));
-const SY_MIN = Math.min(...allProjected.map((p) => p.sy));
-const SY_MAX = Math.max(...allProjected.map((p) => p.sy));
-const PAD_X = (SX_MAX - SX_MIN) * 0.08;
-const PAD_Y = (SY_MAX - SY_MIN) * 0.12;
+const allScreenPts = [
+  ...projectedTrajectories.flatMap((tr) => tr.points),
+  ...floor.flatMap((c) => [c.bottom, c.top]),
+];
+const SX_MIN = Math.min(...allScreenPts.map((p) => p.sx));
+const SX_MAX = Math.max(...allScreenPts.map((p) => p.sx));
+const SY_MIN = Math.min(...allScreenPts.map((p) => p.sy));
+const SY_MAX = Math.max(...allScreenPts.map((p) => p.sy));
+const PAD = Math.max(SX_MAX - SX_MIN, SY_MAX - SY_MIN) * PAD_SHARE;
+const DOM_X0 = SX_MIN - PAD;
+const DOM_X1 = SX_MAX + PAD;
+const DOM_Y0 = SY_MIN - PAD;
+const DOM_Y1 = SY_MAX + PAD;
 
-const TITLE_H = 60;
-const FONT = "Inter, system-ui, sans-serif";
+const axisLabel = (k: number) => {
+  const { min, max } = ranges[k];
+  const fmt = (v: number) => (v > 0 ? `+${v.toFixed(0)}` : v.toFixed(0));
+  return `${COLS[k]} [${fmt(min)} to ${fmt(max)}]`;
+};
 
-// --- Custom overlay: MUI X's built-in series don't cover 3D paths, so we
-// project the trajectories ourselves and paint them as plain SVG inside the
-// ChartContainer's drawing area — the composition pattern MUI X documents
-// for chart types outside the built-in series set. --------------------------
-function Trajectories() {
+const gizmoAxes = ["X", "Y", "Z"].map((label, k) => {
+  const unit: [number, number, number] = [0, 0, 0];
+  unit[k] = 1;
+  const p = project(unit);
+  return { label, sx: p.sx / BOX[k], sy: p.sy / BOX[k] };
+});
+
+function TrajectoriesLayer() {
   const { left, top, width, height: areaHeight } = useDrawingArea();
-  const xOf = (sx: number) =>
-    left +
-    ((sx - (SX_MIN - PAD_X)) / (SX_MAX + PAD_X - (SX_MIN - PAD_X))) * width;
-  const yOf = (sy: number) =>
-    top +
-    areaHeight -
-    ((sy - (SY_MIN - PAD_Y)) / (SY_MAX + PAD_Y - (SY_MIN - PAD_Y))) *
-      areaHeight;
 
-  const toPolyline = (pts: { sx: number; sy: number }[]) =>
-    pts.map((p) => `${xOf(p.sx)},${yOf(p.sy)}`).join(" ");
+  const xDomSpan = DOM_X1 - DOM_X0;
+  const yDomSpan = DOM_Y1 - DOM_Y0;
+  const scale = Math.min(width / xDomSpan, areaHeight / yDomSpan);
+  const offsetX = left + (width - xDomSpan * scale) / 2;
+  const offsetY = top + (areaHeight - yDomSpan * scale) / 2;
+  const px = (p: ScreenPt) => ({
+    x: offsetX + (p.sx - DOM_X0) * scale,
+    y: offsetY + (DOM_Y1 - p.sy) * scale,
+  });
+  const pts = (...ps: ScreenPt[]) =>
+    ps
+      .map(px)
+      .map((q) => `${q.x.toFixed(1)},${q.y.toFixed(1)}`)
+      .join(" ");
+  // Uniform Catmull-Rom spline through every point: same vertices, smooth turns
+  const smoothPath = (ps: ScreenPt[]) => {
+    const q = ps.map(px);
+    const f = (v: number) => v.toFixed(1);
+    let d = `M${f(q[0].x)},${f(q[0].y)}`;
+    for (let i = 0; i < q.length - 1; i += 1) {
+      const p0 = q[Math.max(i - 1, 0)];
+      const p1 = q[i];
+      const p2 = q[i + 1];
+      const p3 = q[Math.min(i + 2, q.length - 1)];
+      d += `C${f(p1.x + (p2.x - p0.x) / 6)},${f(p1.y + (p2.y - p0.y) / 6)} ${f(p2.x - (p3.x - p1.x) / 6)},${f(p2.y - (p3.y - p1.y) / 6)} ${f(p2.x)},${f(p2.y)}`;
+    }
+    return d;
+  };
 
-  const startPx = { x: xOf(projectedA[0].sx), y: yOf(projectedA[0].sy) };
-  // The padding (PAD_X/PAD_Y) reserves a data-free margin around the projected
-  // bounding box, so the top-left corner of the drawing area is guaranteed
-  // clear of trajectory lines — a safe spot for the "shared start" label,
-  // reached via a leader line from the actual start marker.
-  const labelAnchor = { x: left + 14, y: top + 22 };
+  const boxCenter = px(project([0, 0, -1]));
 
-  // Small axis-orientation gizmo fixed near the corner — a bounding-box axis
-  // frame would fight the attractor's irregular, self-crossing shape.
-  const gizmoOrigin = { x: left + 66, y: top + areaHeight - 60 };
-  const ARM = 60;
-  const gizmoAxes = [
-    { dir: projectUnit(1, 0, 0), label: "X" },
-    { dir: projectUnit(0, 1, 0), label: "Y" },
-    { dir: projectUnit(0, 0, 1), label: "Z" },
-  ];
+  // Front floor edges carry the X / Y titles, parallel to the edge and pushed outward
+  const edgeTitle = (c: typeof near, k: number) => {
+    const p0 = px(near.bottom);
+    const p1 = px(c.bottom);
+    const mid = { x: (p0.x + p1.x) / 2, y: (p0.y + p1.y) / 2 };
+    const len = Math.hypot(p1.x - p0.x, p1.y - p0.y);
+    let nx = (p1.y - p0.y) / len;
+    let ny = -(p1.x - p0.x) / len;
+    if (nx * (mid.x - boxCenter.x) + ny * (mid.y - boxCenter.y) < 0) {
+      nx = -nx;
+      ny = -ny;
+    }
+    let angle = (Math.atan2(p1.y - p0.y, p1.x - p0.x) * 180) / Math.PI;
+    if (angle > 90) angle -= 180;
+    if (angle < -90) angle += 180;
+    return { x: mid.x + nx * 30, y: mid.y + ny * 30, angle, text: axisLabel(k) };
+  };
+  const frontTitles = [leftC, rightC].map((c) => edgeTitle(c, c.a !== near.a ? 0 : 1));
+
+  const zBottom = px(leftC.bottom);
+  const zTop = px(leftC.top);
+  const zTitle = { x: zBottom.x - 26, y: (zBottom.y + zTop.y) / 2 };
+
+  const starts = projectedTrajectories.map((tr) => px(tr.points[0]));
+  const startsClose = starts.length > 1 && starts.every((s) => Math.hypot(s.x - starts[0].x, s.y - starts[0].y) < 6);
+  const gizmoOrigin = { x: left + 96, y: top + areaHeight - 104 };
+  const ARM = 52;
 
   return (
     <g>
-      <polyline
-        points={toPolyline(projectedA)}
-        fill="none"
-        stroke={t.palette[0]}
-        strokeWidth={1.5}
-        opacity={0.55}
+      {/* Floor and the two back walls as a light reference frame */}
+      <polygon
+        points={pts(near.bottom, rightC.bottom, far.bottom, leftC.bottom)}
+        fill={t.elevatedBg}
+        fillOpacity={0.35}
+        stroke={t.grid}
+        strokeWidth={1.2}
       />
-      <polyline
-        points={toPolyline(projectedB)}
-        fill="none"
-        stroke={t.palette[1]}
-        strokeWidth={1.5}
-        opacity={0.55}
-      />
-      <circle cx={startPx.x} cy={startPx.y} r={6} fill={t.ink} />
-      <line
-        x1={startPx.x}
-        y1={startPx.y}
-        x2={labelAnchor.x}
-        y2={labelAnchor.y}
-        stroke={t.inkSoft}
-        strokeWidth={1}
-        strokeDasharray="3,3"
-        opacity={0.7}
-      />
-      <text
-        x={labelAnchor.x}
-        y={labelAnchor.y}
-        fill={t.inkSoft}
-        style={{ fontSize: 14, fontFamily: FONT }}
-      >
-        shared start
-      </text>
+      {[leftC, rightC].map((c) => (
+        <polygon
+          key={`wall-${c.a}-${c.b}`}
+          points={pts(c.bottom, far.bottom, far.top, c.top)}
+          fill={t.elevatedBg}
+          fillOpacity={0.18}
+          stroke={t.grid}
+          strokeWidth={1.2}
+          strokeDasharray="4 4"
+        />
+      ))}
 
-      {gizmoAxes.map((a) => {
-        const tip = {
-          x: gizmoOrigin.x + a.dir.sx * ARM,
-          y: gizmoOrigin.y - a.dir.sy * ARM,
-        };
+      {/* Labeled outer axis edges */}
+      {[leftC, rightC].map((c) => {
+        const a = px(near.bottom);
+        const b = px(c.bottom);
         return (
-          <g key={a.label}>
-            <line
-              x1={gizmoOrigin.x}
-              y1={gizmoOrigin.y}
-              x2={tip.x}
-              y2={tip.y}
-              stroke={t.inkSoft}
-              strokeWidth={2}
-            />
-            <text
-              x={gizmoOrigin.x + a.dir.sx * (ARM + 20)}
-              y={gizmoOrigin.y - a.dir.sy * (ARM + 20)}
-              fill={t.inkSoft}
-              textAnchor="middle"
-              style={{ fontSize: 15, fontWeight: 600, fontFamily: FONT }}
-            >
-              {a.label}
-            </text>
-          </g>
+          <line key={`edge-${c.a}-${c.b}`} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={t.inkSoft} strokeWidth={2} />
         );
       })}
+      <line x1={zBottom.x} y1={zBottom.y} x2={zTop.x} y2={zTop.y} stroke={t.inkSoft} strokeWidth={2} />
+      {frontTitles.map((ft) => (
+        <text
+          key={ft.text}
+          x={ft.x}
+          y={ft.y}
+          fill={t.ink}
+          fontSize={14}
+          fontWeight={600}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          transform={`rotate(${ft.angle.toFixed(1)} ${ft.x.toFixed(1)} ${ft.y.toFixed(1)})`}
+        >
+          {ft.text}
+        </text>
+      ))}
       <text
-        x={gizmoOrigin.x}
-        y={gizmoOrigin.y + 20}
-        fill={t.inkSoft}
+        x={zTitle.x}
+        y={zTitle.y}
+        fill={t.ink}
+        fontSize={14}
+        fontWeight={600}
         textAnchor="middle"
-        style={{
-          fontSize: 10,
-          fontStyle: "italic",
-          fontFamily: FONT,
-          opacity: 0.85,
-        }}
+        dominantBaseline="middle"
+        transform={`rotate(-90 ${zTitle.x.toFixed(1)} ${zTitle.y.toFixed(1)})`}
       >
-        normalized units
+        {axisLabel(2)}
       </text>
 
-      <g transform={`translate(${left + width - 300}, ${top + 6})`}>
-        <rect x={0} y={0} width={14} height={14} fill={t.palette[0]} />
-        <text
-          x={20}
-          y={12}
-          fill={t.inkSoft}
-          style={{ fontSize: 14, fontFamily: FONT }}
-        >
-          Trajectory A · x₀ = 0.1000
-        </text>
-        <rect x={0} y={24} width={14} height={14} fill={t.palette[1]} />
-        <text
-          x={20}
-          y={36}
-          fill={t.inkSoft}
-          style={{ fontSize: 14, fontFamily: FONT }}
-        >
-          Trajectory B · x₀ = 0.1001
-        </text>
-      </g>
+      {/* Trajectories: thin translucent strands so overlapping paths stay traceable */}
+      {projectedTrajectories.map((traj) => (
+        <path
+          key={traj.name}
+          d={smoothPath(traj.points)}
+          fill="none"
+          stroke={traj.color}
+          strokeWidth={1.2}
+          strokeOpacity={0.5}
+          strokeLinejoin="round"
+        />
+      ))}
+
+      {/* End markers drawn above both strands */}
+      {projectedTrajectories.map((traj) => {
+        const end = px(traj.points[traj.points.length - 1]);
+        return (
+          <circle
+            key={`end-${traj.name}`}
+            cx={end.x}
+            cy={end.y}
+            r={6}
+            fill={traj.color}
+            stroke={t.pageBg}
+            strokeWidth={1.8}
+          />
+        );
+      })}
+
+      {/* Start marker and conditional shared-start callout */}
+      {startsClose ? (
+        <g>
+          <circle cx={starts[0].x} cy={starts[0].y} r={6.5} fill={t.ink} stroke={t.pageBg} strokeWidth={1.5} />
+          <text
+            x={starts[0].x + 12}
+            y={starts[0].y - 12}
+            fill={t.ink}
+            fontSize={14}
+            fontWeight={600}
+            fontFamily={MONO}
+            textAnchor="start"
+          >
+            Shared start
+          </text>
+        </g>
+      ) : (
+        projectedTrajectories.map((traj, i) => (
+          <circle
+            key={`start-${traj.name}`}
+            cx={starts[i].x}
+            cy={starts[i].y}
+            r={5}
+            fill={t.ink}
+            stroke={traj.color}
+            strokeWidth={2}
+          />
+        ))
+      )}
+
+      {/* 3D orientation triad */}
+      {gizmoAxes.map((a) => (
+        <g key={a.label}>
+          <line
+            x1={gizmoOrigin.x}
+            y1={gizmoOrigin.y}
+            x2={gizmoOrigin.x + a.sx * ARM}
+            y2={gizmoOrigin.y - a.sy * ARM}
+            stroke={t.inkSoft}
+            strokeWidth={2}
+          />
+          <text
+            x={gizmoOrigin.x + a.sx * (ARM + 16)}
+            y={gizmoOrigin.y - a.sy * (ARM + 16)}
+            fill={t.ink}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            fontSize={15}
+            fontWeight={700}
+          >
+            {a.label}
+          </text>
+        </g>
+      ))}
+      <text
+        x={gizmoOrigin.x}
+        y={gizmoOrigin.y + 72}
+        fill={t.inkSoft}
+        textAnchor="middle"
+        fontSize={14}
+        fontFamily={MONO}
+      >
+        elev {ELEV_DEG}°, azim {AZIM_DEG}°
+      </text>
     </g>
   );
 }
@@ -236,6 +398,8 @@ function Trajectories() {
 export default function Chart() {
   const W = window.ANYPLOT_SIZE.width;
   const H = window.ANYPLOT_SIZE.height;
+  const HEADER_H = 84;
+  const chartH = H - HEADER_H;
 
   return (
     <div
@@ -243,34 +407,88 @@ export default function Chart() {
         width: W,
         height: H,
         background: t.pageBg,
+        color: t.ink,
         fontFamily: FONT,
         display: "flex",
         flexDirection: "column",
+        boxSizing: "border-box",
       }}
     >
       <div
         style={{
-          height: TITLE_H,
+          height: HEADER_H,
+          padding: "14px 44px 4px 44px",
           display: "flex",
           alignItems: "center",
-          justifyContent: "center",
+          justifyContent: "space-between",
+          boxSizing: "border-box",
         }}
       >
-        <span style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>
-          line-3d-trajectory · javascript · muix · anyplot.ai
-        </span>
+        <div>
+          <div
+            style={{
+              fontSize: 22,
+              fontWeight: 700,
+              color: t.ink,
+              lineHeight: 1.2,
+            }}
+          >
+            line-3d-trajectory · javascript · muix · anyplot.ai
+          </div>
+          <div
+            style={{
+              fontSize: 14,
+              color: t.inkSoft,
+              marginTop: 4,
+              fontFamily: MONO,
+            }}
+          >
+            {projectedTrajectories.length} trajectories ·{" "}
+            {projectedTrajectories[0].points.length.toLocaleString()} points per
+            trajectory ({X}, {Y}, {Z})
+          </div>
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 24,
+            fontSize: 15,
+            color: t.ink,
+          }}
+        >
+          {projectedTrajectories.map((traj) => (
+            <div
+              key={traj.name}
+              style={{ display: "flex", alignItems: "center", gap: 8 }}
+            >
+              <span
+                style={{
+                  width: 22,
+                  height: 3,
+                  borderRadius: 2,
+                  background: traj.color,
+                  display: "inline-block",
+                }}
+              />
+              <span>{traj.name}</span>
+            </div>
+          ))}
+        </div>
       </div>
-      <ChartContainer
+
+      <ChartsContainer
         width={W}
-        height={H - TITLE_H}
+        height={chartH}
         skipAnimation
         series={[]}
-        xAxis={[{ min: 0, max: 1 }]}
-        yAxis={[{ min: 0, max: 1 }]}
-        margin={{ top: 20, bottom: 30, left: 30, right: 30 }}
+        xAxis={[{ min: 0, max: 1, position: "none" }]}
+        yAxis={[{ min: 0, max: 1, position: "none" }]}
+        margin={{ top: 12, bottom: 24, left: 32, right: 32 }}
       >
-        <Trajectories />
-      </ChartContainer>
+        <TrajectoriesLayer />
+      </ChartsContainer>
     </div>
   );
 }
