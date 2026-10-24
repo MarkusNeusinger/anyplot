@@ -2,45 +2,56 @@ library: muix
 language: javascript
 specification_id: funnel-basic
 created: '2026-09-05T02:19:05Z'
-updated: '2026-09-05T02:25:37Z'
-generated_by: claude-sonnet
-workflow_run: 33938120264
+updated: '2026-10-24T09:24:01Z'
+generated_by: gemini-4-argon
+adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
+workflow_run: 40081185108
 issue: 789
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/javascript/muix/plot-dark.html
-quality_score: 93
+quality_score: 88
 review:
   strengths:
-  - 'Palette-perfect: canonical Imprint order across all 5 stages, correct in both
-    themes'
-  - Luminance-based adaptive text color per segment guarantees legibility regardless
-    of fill brightness
-  - Well-justified low-level composition (ChartContainer + useXScale/useYScale/useDrawingArea)
-    to build a funnel chart that @mui/x-charts@7.29.1's community package doesn't
-    natively support
-  - Realistic, fully-featured e-commerce funnel data with sensible proportions
+  - 'Builds the funnel the community way: a ChartsContainer with a linear x scale
+    and a band y scale, and a custom FunnelPlot child that draws trapezoids from useXScale,
+    useYScale and useDrawingArea. Funnel is Pro-only in MUI X, and this stays on the
+    MIT surface.'
+  - Each segment's top edge is exactly value/first × drawing width, centred on one
+    vertical axis, so widths are true to the data (50,000 → 5,500, 100 % → 11 %).
+  - Label ink is chosen per fill by luminance (light on green and blue; dark on lavender,
+    ochre and cyan), so every value and percentage label stays readable against its
+    own segment in both themes.
+  - A two-level label hierarchy (bold 18 px value over a 14 px share line) plus a
+    computed end-to-end conversion subtitle gives a clear reading order.
+  - 'Stage colours follow Imprint order and skip the semantic red anchor #AE3030,
+    as the style guide allows; the data colours are identical in light and dark, and
+    only the chrome flips.'
+  - skipAnimation is set, and the y-axis band is sized explicitly (width 210), so
+    the stage names are not truncated.
   weaknesses:
-  - Wide gaps between segments (categoryGapRatio 0.35) read slightly more like separated
-    bars than a continuous funnel silhouette
-  - Only "% of total" is shown per stage; adding stage-to-stage conversion rate would
-    sharpen the storytelling
-  - Drop-off ratios between consecutive stages are fairly uniform (~55-60%); more
-    variation would better showcase feature coverage
+  - 'Suggestion: the stage names sit in a fixed left column about 740 px from the
+    narrow bottom segments; right-aligning each name just left of its own segment
+    edge would tie name and segment more closely.'
+  - 'Suggestion: the funnel is centred on the drawing area, not the canvas, so it
+    sits about 100 px right of the centred title; balancing the left axis band with
+    an equal right margin would align the two.'
+  - 'Suggestion: the subtitle''s ''5 Stages'' is built from the column name plus ''s'';
+    a constant for the plural noun would read better with other column names.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1, not pure white.
-      Chrome: Title "funnel-basic · javascript · muix · anyplot.ai" in dark ink, centered, fully legible. Stage names (Product Views, Added to Cart, Checkout Started, Payment Submitted, Order Completed) in soft ink to the left of each band, all readable.
-      Data: 5 trapezoids narrowing top-to-bottom. First series is #009E73 (brand green), followed by #C475FD, #4467A3, #BD8233, #AE3030 — exact canonical Imprint order. In-segment value/percentage labels use luminance-based adaptive white/near-black text, all legible.
+      Background: warm off-white #FAF8F1, no white panel.
+      Chrome: bold dark title "funnel-basic · javascript · muix · anyplot.ai" centred at the top, a soft-ink subtitle "5 Stages · Shoppers from 50,000 to 5,500 (11.0% end-to-end conversion)", and stage names in soft dark ink in a left column (Product Views, Added to Cart, Checkout Started, Payment Submitted, Order Completed). No axes and no grid. All text is readable.
+      Data: five centred trapezoids narrowing top to bottom: #009E73 green (50,000 / 100%), #C475FD lavender (30,000 / 60%), #4467A3 blue (16,000 / 32%), #BD8233 ochre (9,000 / 18%), #2ABCCD cyan (5,500 / 11%, a rectangle). Each carries a bold value and an "x% of initial stage" line in contrast-chosen ink. The first series is #009E73.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17, not pure black.
-      Chrome: Title and stage names render in light gray/white against the dark background, fully legible. No dark-on-dark issues found.
-      Data: Identical fill colors to light render (#009E73, #C475FD, #4467A3, #BD8233, #AE3030) — only chrome flipped as expected. In-segment labels stay legible since their color is computed from the fixed segment fill, not the page theme.
+      Background: warm near-black #1A1A17.
+      Chrome: title in light ink, subtitle and stage names in light soft ink, all clearly readable. No dark-on-dark text.
+      Data: the same five fills and the same in-segment label colours as the light render; only the page and chrome flipped. Brand green is clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -52,66 +63,69 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicit, readable in both themes, no clipping
+        comment: Explicit sizes (title 22, ticks 16, values 18, shares 14 CSS px);
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions
+        comment: No collisions; labels fit inside every segment
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Generously sized trapezoids
+        comment: Five large segments with page-coloured separators; no legend needed
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Adaptive luminance-based text contrast
+        comment: Distinct hue families; labels contrast-adapted per fill
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Funnel fills ~75-80% of canvas, balanced margins
+        comment: Canvas gate passed; balanced vertical use; nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Fully descriptive stage + value/percentage labels
+        comment: Readable stage names; the subtitle names the measure (Shoppers)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Canonical Imprint order, correct backgrounds in both themes
+        comment: 'Imprint order, starting at #009E73, skips the red loss anchor; correct
+          backgrounds in both themes'
     design_excellence:
-      score: 16
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        passed: true
-        comment: Adaptive contrast text is a sophisticated touch
+        passed: false
+        comment: Two-level value/share label hierarchy, luminance-chosen label ink
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Clean chrome; gaps between segments slightly break the continuous
-          funnel look
+        passed: false
+        comment: Axis chrome removed entirely, page-coloured segment strokes, even
+          stage gaps
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Narrowing widths + inline labels communicate drop-off clearly
+        passed: false
+        comment: Computed end-to-end conversion headline in the subtitle frames the
+          drop-off
     spec_compliance:
       score: 15
       max: 15
@@ -121,48 +135,49 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct funnel chart
+        comment: Single basic funnel, no unrequested layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Ordering, distinct colors, value/percentage labels, proportional
-          widths all present
+        comment: Largest-to-smallest order, distinct colour per stage, value and percentage
+          labels, width proportional to the first stage, names beside segments
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 5 stages shown correctly
+        comment: Top widths at value/first; marks at their data values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact; no separate legend needed
+        comment: Mandated title format; no legend needed (N/A)
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Realistic 5-stage funnel; drop-off ratios fairly uniform
+        comment: Five stages with drops of different size
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral e-commerce checkout scenario
+        comment: E-commerce checkout funnel, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic conversion numbers
+        comment: Plausible 11 % end-to-end conversion; percentages computed from the
+          data (checked 60/32/18/11)
     code_quality:
       score: 10
       max: 10
@@ -172,57 +187,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear structure appropriate for React component contract
+        comment: Only the default component and one hook-consuming child component
+          the composition API requires
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hard-coded data
+        comment: Hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Every import used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake functionality
+        comment: Appropriate complexity; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: skipAnimation set, current API, harness-sized
+        comment: Default export, skipAnimation, v9 ChartsContainer/hooks API
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Documented low-level ChartContainer + scale-hooks composition pattern
+        passed: false
+        comment: Uses the MUI X v9 composition pattern (ChartsContainer + ChartsYAxis
+          + scale hooks)
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
-        passed: true
-        comment: Internal scale/drawing-area context hooks not trivially portable
-          to other libraries
+        passed: false
+        comment: useXScale/useYScale/useDrawingArea hooks drive custom SVG marks in
+          the chart coordinate system
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-10-24T09:21:15Z'
 impl_tags:
   dependencies: []
   techniques:
-  - custom-composition
-  - low-level-scale-hooks
-  - adaptive-text-contrast
+  - patches
+  - annotations
+  - layer-composition
+  - html-export
   patterns:
   - data-generation
-  dataprep: []
+  - iteration-over-groups
+  dataprep:
+  - normalization
   styling:
-  - publication-ready
+  - minimal-chrome
+  - edge-highlighting
