@@ -2,47 +2,27 @@
 // scatter-embedding: t-SNE and UMAP Embedding Visualization
 // Library: muix 7.29.1 | JavaScript 22.23.1
 // Quality: 90/100 | Created: 2026-08-11
-//# anyplot-orientation: landscape
-// anyplot.ai
-// scatter-embedding: t-SNE and UMAP Embedding Visualization
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-08-11
 
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
-import { ChartsLegend } from "@mui/x-charts/ChartsLegend";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const { width, height } = window.ANYPLOT_SIZE;
 
-// Deterministic LCG (seed 42) — no Math.random() in the browser harness
-let seed = 42;
-function rng() {
-  seed = (1664525 * seed + 1013904223) >>> 0;
-  return seed / 4294967296;
-}
-function randn() {
-  const u = Math.max(rng(), 1e-9);
-  const v = rng();
-  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
-}
-function hexToRgba(hex, alpha) {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
+// Constants
+const TITLE = "scatter-embedding · javascript · muix · anyplot.ai";
+const SUBTITLE = "UMAP (n_neighbors=15) · synthetic single-cell RNA-seq embedding";
+const MARGIN = { top: 120, right: 250, bottom: 24, left: 24 };
 
-// --- Data: simulated UMAP projection of single-cell RNA-seq data -----------
-// 8 cell-type clusters scattered around distinct centroids in 2D embedding
-// space (the axes themselves carry no interpretable units). Point count and
-// spread vary per cluster — real UMAP/t-SNE embeddings show clusters of
-// differing size and compactness, not uniform blobs.
-const CLUSTERS = [
+// Columns: set these to your data's column names
+const X_DIM = "UMAP dimension 1"; // role: x
+const Y_DIM = "UMAP dimension 2"; // role: y
+const LABEL = "Cell type"; // role: label
+
+// Data: replace this block with your own records
+const CLUSTER_SPECS = [
   { label: "T cells", cx: -9, cy: 5, spread: 1.9, n: 90 },
   { label: "B cells", cx: 8, cy: 6.5, spread: 1.3, n: 65 },
   { label: "Monocytes", cx: -7, cy: -6.5, spread: 2.1, n: 95 },
@@ -53,48 +33,73 @@ const CLUSTERS = [
   { label: "Neutrophils", cx: 13, cy: 1.5, spread: 1.5, n: 65 },
 ];
 
-const clusterData = CLUSTERS.map((cluster) =>
-  Array.from({ length: cluster.n }, (_, i) => ({
-    id: `${cluster.label}-${i}`,
-    x: cluster.cx + randn() * cluster.spread,
-    y: cluster.cy + randn() * cluster.spread,
-  })),
-);
+let seed = 42;
+const data = [];
+for (const spec of CLUSTER_SPECS) {
+  for (let i = 0; i < spec.n; i += 1) {
+    seed = (1664525 * seed + 1013904223) >>> 0;
+    const u1x = Math.max(seed / 4294967296, 1e-9);
+    seed = (1664525 * seed + 1013904223) >>> 0;
+    const u2x = seed / 4294967296;
+    const zx = Math.sqrt(-2 * Math.log(u1x)) * Math.cos(2 * Math.PI * u2x);
 
-// Denser, tighter clusters get more transparency so overlapping cores stay
-// distinguishable; sparser clusters can afford to render more opaque.
-const densities = CLUSTERS.map((c) => c.n / (c.spread * c.spread));
-const MIN_DENSITY = Math.min(...densities);
-const MAX_DENSITY = Math.max(...densities);
-function alphaForCluster(cluster) {
-  const density = cluster.n / (cluster.spread * cluster.spread);
-  const t01 = (density - MIN_DENSITY) / (MAX_DENSITY - MIN_DENSITY || 1);
-  return 0.72 - t01 * 0.17; // 0.72 (sparse) -> 0.55 (dense)
+    seed = (1664525 * seed + 1013904223) >>> 0;
+    const u1y = Math.max(seed / 4294967296, 1e-9);
+    seed = (1664525 * seed + 1013904223) >>> 0;
+    const u2y = seed / 4294967296;
+    const zy = Math.sqrt(-2 * Math.log(u1y)) * Math.cos(2 * Math.PI * u2y);
+
+    data.push({
+      [X_DIM]: spec.cx + zx * spec.spread,
+      [Y_DIM]: spec.cy + zy * spec.spread,
+      [LABEL]: spec.label,
+    });
+  }
 }
 
-const allPoints = clusterData.flat();
+// Plot: reads only data and the constants above
+const clusterLabels = Array.from(new Set(data.map((row) => String(row[LABEL]))));
+const clusters = clusterLabels.map((label, i) => {
+  const pts = data
+    .filter((row) => String(row[LABEL]) === label)
+    .map((row, j) => ({
+      id: `${label}-${j}`,
+      x: Number(row[X_DIM]),
+      y: Number(row[Y_DIM]),
+    }));
+  const n = pts.length;
+  const cx = pts.reduce((s, p) => s + p.x, 0) / n;
+  const cy = pts.reduce((s, p) => s + p.y, 0) / n;
+  const varSum = pts.reduce((s, p) => s + (p.x - cx) ** 2 + (p.y - cy) ** 2, 0) / (2 * n);
+  const density = n / varSum;
+  return { label, color: t.palette[i % t.palette.length], pts, cx, cy, density };
+});
+
+const densities = clusters.map((c) => c.density);
+const minDensity = Math.min(...densities);
+const maxDensity = Math.max(...densities);
+const densitySpan = maxDensity - minDensity;
+
+const allPoints = clusters.flatMap((c) => c.pts);
 const xs = allPoints.map((p) => p.x);
 const ys = allPoints.map((p) => p.y);
 const xPad = (Math.max(...xs) - Math.min(...xs)) * 0.08;
 const yPad = (Math.max(...ys) - Math.min(...ys)) * 0.08;
-const X_MIN = Math.min(...xs) - xPad;
-const X_MAX = Math.max(...xs) + xPad;
-const Y_MIN = Math.min(...ys) - yPad;
-const Y_MAX = Math.max(...ys) + yPad;
+const xMin = Math.min(...xs) - xPad;
+const xMax = Math.max(...xs) + xPad;
+const yMin = Math.min(...ys) - yPad;
+const yMax = Math.max(...ys) + yPad;
 
-const MARGIN = { top: 120, right: 250, bottom: 60, left: 60 };
-
-// Centroid labels rendered at data coordinates via the live D3 scales — the
-// redundant color+text encoding required once a chart uses all 8 categorical
-// series (see default-style-guide.md "series-count guidance").
-function CentroidLabels() {
+function EmbeddingOverlay() {
   const xScale = useXScale();
   const yScale = useYScale();
-  if (!xScale || !yScale) return null;
+  const { width, height } = window.ANYPLOT_SIZE;
+  const legendX = width - MARGIN.right + 28;
+  const legendStartY = Math.round(height / 2 - ((clusters.length - 1) * 32) / 2);
 
   return (
     <g>
-      {CLUSTERS.map((cluster, i) => {
+      {clusters.map((cluster) => {
         const cx = xScale(cluster.cx);
         const cy = yScale(cluster.cy) - 20;
         const halfWidth = cluster.label.length * 3.9 + 8;
@@ -116,8 +121,20 @@ function CentroidLabels() {
               dominantBaseline="middle"
               fontSize={13}
               fontWeight={600}
-              fill={t.palette[i]}
+              fill={cluster.color}
             >
+              {cluster.label}
+            </text>
+          </g>
+        );
+      })}
+
+      {clusters.map((cluster, i) => {
+        const ly = legendStartY + i * 32;
+        return (
+          <g key={`legend-${cluster.label}`}>
+            <circle cx={legendX} cy={ly} r={6} fill={cluster.color} />
+            <text x={legendX + 16} y={ly} fontSize={14} fill={t.ink} dominantBaseline="middle">
               {cluster.label}
             </text>
           </g>
@@ -127,34 +144,40 @@ function CentroidLabels() {
   );
 }
 
-const TITLE = "scatter-embedding · javascript · muix · anyplot.ai";
-const SUBTITLE = "UMAP (n_neighbors=15) · synthetic single-cell RNA-seq embedding";
-
 export default function Chart() {
+  const { width, height } = window.ANYPLOT_SIZE;
   return (
-    <ChartContainer
+    <ChartsContainer
       width={width}
       height={height}
       margin={MARGIN}
+      skipAnimation
       sx={{ "& .MuiChartsAxis-line, & .MuiChartsAxis-tick": { display: "none" } }}
-      series={CLUSTERS.map((cluster, i) => ({
-        type: "scatter",
-        id: cluster.label,
-        label: cluster.label,
-        data: clusterData[i],
-        color: hexToRgba(t.palette[i], alphaForCluster(cluster)),
-        markerSize: 5,
-      }))}
+      series={clusters.map((cluster) => {
+        const t01 = densitySpan > 0 ? (cluster.density - minDensity) / densitySpan : 0;
+        const alpha = 0.72 - t01 * 0.17;
+        const cNum = parseInt(cluster.color.slice(1), 16);
+        const rgba = `rgba(${(cNum >> 16) & 255}, ${(cNum >> 8) & 255}, ${cNum & 255}, ${alpha.toFixed(2)})`;
+        return {
+          type: "scatter",
+          id: cluster.label,
+          label: cluster.label,
+          data: cluster.pts,
+          color: rgba,
+          markerSize: 5,
+        };
+      })}
       xAxis={[
         {
           id: "umap1",
           scaleType: "linear",
-          min: X_MIN,
-          max: X_MAX,
+          min: xMin,
+          max: xMax,
+          height: 48,
           disableTicks: true,
           disableLine: true,
           tickLabelStyle: { display: "none" },
-          label: "UMAP dimension 1",
+          label: X_DIM,
           labelStyle: { fontSize: 15, fill: t.inkSoft },
         },
       ]}
@@ -162,39 +185,27 @@ export default function Chart() {
         {
           id: "umap2",
           scaleType: "linear",
-          min: Y_MIN,
-          max: Y_MAX,
+          min: yMin,
+          max: yMax,
+          width: 48,
           disableTicks: true,
           disableLine: true,
           tickLabelStyle: { display: "none" },
-          label: "UMAP dimension 2",
+          label: Y_DIM,
           labelStyle: { fontSize: 15, fill: t.inkSoft },
         },
       ]}
     >
       <ScatterPlot skipAnimation />
-      <CentroidLabels />
+      <EmbeddingOverlay />
       <ChartsXAxis axisId="umap1" />
       <ChartsYAxis axisId="umap2" />
-      <ChartsLegend
-        position={{ vertical: "middle", horizontal: "right" }}
-        direction="column"
-        slotProps={{
-          legend: {
-            itemMarkWidth: 12,
-            itemMarkHeight: 12,
-            markGap: 8,
-            itemGap: 18,
-            labelStyle: { fontSize: 14, fill: t.ink },
-          },
-        }}
-      />
       <text x={width / 2} y={46} textAnchor="middle" fontSize={28} fontWeight={600} fill={t.ink}>
         {TITLE}
       </text>
       <text x={width / 2} y={82} textAnchor="middle" fontSize={15} fill={t.inkSoft}>
         {SUBTITLE}
       </text>
-    </ChartContainer>
+    </ChartsContainer>
   );
 }
