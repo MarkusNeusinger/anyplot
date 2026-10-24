@@ -1,7 +1,7 @@
 // anyplot.ai
 // bar-pareto: Pareto Chart with Cumulative Line
 // Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 88/100 | Created: 2026-06-20
+// Quality: pending | Created: 2026-06-20
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { BarPlot } from "@mui/x-charts/BarChart";
 import { LinePlot, MarkPlot } from "@mui/x-charts/LineChart";
