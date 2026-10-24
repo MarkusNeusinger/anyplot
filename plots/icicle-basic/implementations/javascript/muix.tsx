@@ -5,6 +5,7 @@
 
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { useDrawingArea } from "@mui/x-charts/hooks";
+import { getLuminance } from "@mui/material/styles";
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -36,15 +37,15 @@ const data: Array<{
 }> = [
   { [ID]: "repo/", [NAME]: "repo/", [PARENT]: "", [VALUE]: 0 },
   // Top-level directories
-  { [ID]: "repo/node_modules/", [NAME]: "node_modules/", [PARENT]: "repo/", [VALUE]: 0 },
+  { [ID]: "repo/dist/", [NAME]: "dist/", [PARENT]: "repo/", [VALUE]: 0 },
   { [ID]: "repo/src/", [NAME]: "src/", [PARENT]: "repo/", [VALUE]: 0 },
   { [ID]: "repo/tests/", [NAME]: "tests/", [PARENT]: "repo/", [VALUE]: 0 },
   { [ID]: "repo/docs/", [NAME]: "docs/", [PARENT]: "repo/", [VALUE]: 0 },
-  // Subdirectories under node_modules/
-  { [ID]: "repo/node_modules/react/", [NAME]: "react/", [PARENT]: "repo/node_modules/", [VALUE]: 0 },
-  { [ID]: "repo/node_modules/webpack/", [NAME]: "webpack/", [PARENT]: "repo/node_modules/", [VALUE]: 0 },
-  { [ID]: "repo/node_modules/typescript/", [NAME]: "typescript/", [PARENT]: "repo/node_modules/", [VALUE]: 0 },
-  { [ID]: "repo/node_modules/eslint/", [NAME]: "eslint/", [PARENT]: "repo/node_modules/", [VALUE]: 0 },
+  // Subdirectories under dist/ (build output)
+  { [ID]: "repo/dist/js/", [NAME]: "js/", [PARENT]: "repo/dist/", [VALUE]: 0 },
+  { [ID]: "repo/dist/assets/", [NAME]: "assets/", [PARENT]: "repo/dist/", [VALUE]: 0 },
+  { [ID]: "repo/dist/fonts/", [NAME]: "fonts/", [PARENT]: "repo/dist/", [VALUE]: 0 },
+  { [ID]: "repo/dist/css/", [NAME]: "css/", [PARENT]: "repo/dist/", [VALUE]: 0 },
   // Subdirectories under src/
   { [ID]: "repo/src/components/", [NAME]: "components/", [PARENT]: "repo/src/", [VALUE]: 0 },
   { [ID]: "repo/src/utils/", [NAME]: "utils/", [PARENT]: "repo/src/", [VALUE]: 0 },
@@ -55,21 +56,21 @@ const data: Array<{
   // Subdirectories under docs/
   { [ID]: "repo/docs/guides/", [NAME]: "guides/", [PARENT]: "repo/docs/", [VALUE]: 0 },
   { [ID]: "repo/docs/reference/", [NAME]: "reference/", [PARENT]: "repo/docs/", [VALUE]: 0 },
-  // Files under react/
-  { [ID]: "repo/node_modules/react/index.js", [NAME]: "index.js", [PARENT]: "repo/node_modules/react/", [VALUE]: 180 },
-  { [ID]: "repo/node_modules/react/package.json", [NAME]: "package.json", [PARENT]: "repo/node_modules/react/", [VALUE]: 60 },
-  { [ID]: "repo/node_modules/react/README.md", [NAME]: "README.md", [PARENT]: "repo/node_modules/react/", [VALUE]: 80 },
-  // Files under webpack/
-  { [ID]: "repo/node_modules/webpack/webpack.js", [NAME]: "webpack.js", [PARENT]: "repo/node_modules/webpack/", [VALUE]: 140 },
-  { [ID]: "repo/node_modules/webpack/loader.js", [NAME]: "loader.js", [PARENT]: "repo/node_modules/webpack/", [VALUE]: 90 },
-  { [ID]: "repo/node_modules/webpack/config.js", [NAME]: "config.js", [PARENT]: "repo/node_modules/webpack/", [VALUE]: 50 },
-  // Files under typescript/
-  { [ID]: "repo/node_modules/typescript/tsc.js", [NAME]: "tsc.js", [PARENT]: "repo/node_modules/typescript/", [VALUE]: 120 },
-  { [ID]: "repo/node_modules/typescript/lib.d.ts", [NAME]: "lib.d.ts", [PARENT]: "repo/node_modules/typescript/", [VALUE]: 70 },
-  { [ID]: "repo/node_modules/typescript/compiler.js", [NAME]: "compiler.js", [PARENT]: "repo/node_modules/typescript/", [VALUE]: 60 },
-  // Files under eslint/
-  { [ID]: "repo/node_modules/eslint/index.js", [NAME]: "index.js", [PARENT]: "repo/node_modules/eslint/", [VALUE]: 55 },
-  { [ID]: "repo/node_modules/eslint/rules.js", [NAME]: "rules.js", [PARENT]: "repo/node_modules/eslint/", [VALUE]: 45 },
+  // Files under js/
+  { [ID]: "repo/dist/js/vendor.js", [NAME]: "vendor.js", [PARENT]: "repo/dist/js/", [VALUE]: 180 },
+  { [ID]: "repo/dist/js/polyfills.js", [NAME]: "polyfills.js", [PARENT]: "repo/dist/js/", [VALUE]: 60 },
+  { [ID]: "repo/dist/js/main.js", [NAME]: "main.js", [PARENT]: "repo/dist/js/", [VALUE]: 80 },
+  // Files under assets/
+  { [ID]: "repo/dist/assets/hero.webp", [NAME]: "hero.webp", [PARENT]: "repo/dist/assets/", [VALUE]: 140 },
+  { [ID]: "repo/dist/assets/logo.png", [NAME]: "logo.png", [PARENT]: "repo/dist/assets/", [VALUE]: 90 },
+  { [ID]: "repo/dist/assets/icons.svg", [NAME]: "icons.svg", [PARENT]: "repo/dist/assets/", [VALUE]: 50 },
+  // Files under fonts/
+  { [ID]: "repo/dist/fonts/inter.woff2", [NAME]: "inter.woff2", [PARENT]: "repo/dist/fonts/", [VALUE]: 120 },
+  { [ID]: "repo/dist/fonts/jakarta.woff2", [NAME]: "jakarta.woff2", [PARENT]: "repo/dist/fonts/", [VALUE]: 70 },
+  { [ID]: "repo/dist/fonts/mono.woff2", [NAME]: "mono.woff2", [PARENT]: "repo/dist/fonts/", [VALUE]: 60 },
+  // Files under css/
+  { [ID]: "repo/dist/css/main.css", [NAME]: "main.css", [PARENT]: "repo/dist/css/", [VALUE]: 55 },
+  { [ID]: "repo/dist/css/vendor.css", [NAME]: "vendor.css", [PARENT]: "repo/dist/css/", [VALUE]: 45 },
   // Files under components/
   { [ID]: "repo/src/components/Button.tsx", [NAME]: "Button.tsx", [PARENT]: "repo/src/components/", [VALUE]: 90 },
   { [ID]: "repo/src/components/Modal.tsx", [NAME]: "Modal.tsx", [PARENT]: "repo/src/components/", [VALUE]: 110 },
@@ -200,7 +201,7 @@ for (let i = 0; i < bfsOrder.length; i += 1) {
     cx += w;
   }
 
-  // Compute tinted RGB fill and relative luminance contrast text
+  // Tint the branch hue toward the warm paper per depth; label ink by luminance
   const hex = node.depth === 0 ? ROOT_FILL : node.branchColor;
   const hexInt = parseInt(hex.slice(1), 16);
   const baseR = (hexInt >> 16) & 255;
@@ -211,21 +212,7 @@ for (let i = 0; i < bfsOrder.length; i += 1) {
   const g = Math.round(baseG + (246 - baseG) * tintFactor);
   const b = Math.round(baseB + (238 - baseB) * tintFactor);
   node.fill = `rgb(${r}, ${g}, ${b})`;
-
-  const sR =
-    r / 255 <= 0.03928
-      ? r / 255 / 12.92
-      : Math.pow((r / 255 + 0.055) / 1.055, 2.4);
-  const sG =
-    g / 255 <= 0.03928
-      ? g / 255 / 12.92
-      : Math.pow((g / 255 + 0.055) / 1.055, 2.4);
-  const sB =
-    b / 255 <= 0.03928
-      ? b / 255 / 12.92
-      : Math.pow((b / 255 + 0.055) / 1.055, 2.4);
-  const lum = 0.2126 * sR + 0.7152 * sG + 0.0722 * sB;
-  node.textFill = lum > 0.18 ? FIXED_DARK_TEXT : FIXED_LIGHT_TEXT;
+  node.textFill = getLuminance(node.fill) > 0.18 ? FIXED_DARK_TEXT : FIXED_LIGHT_TEXT;
 }
 
 const maxDepth = Math.max(...bfsOrder.map((n) => n.depth));
