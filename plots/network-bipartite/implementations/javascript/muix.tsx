@@ -1,6 +1,6 @@
 // anyplot.ai
 // network-bipartite: Bipartite Network Graph
-// Library: muix 9.2.1 | JavaScript 22.23.2
+// Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 93/100 | Created: 2026-09-05
 //# anyplot-orientation: square
 
@@ -21,76 +21,86 @@ const ISOLATED_R = 7.5;
 const EDGE_MIN_W = 1.6;
 const EDGE_MAX_W = 6;
 
-// Data
-const STUDENT_COL = "Student (Set A)";
-const COURSE_COL = "Course (Set B)";
-const HOURS_COL = "Weekly Contact Hours";
+// Columns: set these to your data's column names
+const STUDENT = "Student (Set A)"; // role: source
+const COURSE = "Course (Set B)"; // role: target
+const HOURS = "Weekly contact (h)"; // role: weight
 
-const DATA: Array<Record<string, string | number>> = [
-  { [STUDENT_COL]: "Ava Chen", [COURSE_COL]: "Linear Algebra", [HOURS_COL]: 4 },
-  { [STUDENT_COL]: "Ava Chen", [COURSE_COL]: "Data Structures", [HOURS_COL]: 5 },
-  { [STUDENT_COL]: "Ava Chen", [COURSE_COL]: "Machine Learning", [HOURS_COL]: 3 },
-  { [STUDENT_COL]: "Ava Chen", [COURSE_COL]: "Statistics", [HOURS_COL]: 3 },
-  { [STUDENT_COL]: "Liam Brooks", [COURSE_COL]: "Data Structures", [HOURS_COL]: 5 },
-  { [STUDENT_COL]: "Liam Brooks", [COURSE_COL]: "Machine Learning", [HOURS_COL]: 4 },
-  { [STUDENT_COL]: "Liam Brooks", [COURSE_COL]: "Digital Design", [HOURS_COL]: 3 },
-  { [STUDENT_COL]: "Noor Malik", [COURSE_COL]: "Organic Chemistry", [HOURS_COL]: 6 },
-  { [STUDENT_COL]: "Noor Malik", [COURSE_COL]: "Cell Biology", [HOURS_COL]: 4 },
-  { [STUDENT_COL]: "Noor Malik", [COURSE_COL]: "Statistics", [HOURS_COL]: 3 },
-  { [STUDENT_COL]: "Ethan Diaz", [COURSE_COL]: "Microeconomics", [HOURS_COL]: 4 },
-  { [STUDENT_COL]: "Ethan Diaz", [COURSE_COL]: "World History", [HOURS_COL]: 2 },
-  { [STUDENT_COL]: "Ethan Diaz", [COURSE_COL]: "Statistics", [HOURS_COL]: 4 },
-  { [STUDENT_COL]: "Priya Nair", [COURSE_COL]: "Organic Chemistry", [HOURS_COL]: 4 },
-  { [STUDENT_COL]: "Priya Nair", [COURSE_COL]: "Cell Biology", [HOURS_COL]: 5 },
-  { [STUDENT_COL]: "Priya Nair", [COURSE_COL]: "Statistics", [HOURS_COL]: 3 },
-  { [STUDENT_COL]: "Marcus Lee", [COURSE_COL]: "Linear Algebra", [HOURS_COL]: 3 },
-  { [STUDENT_COL]: "Marcus Lee", [COURSE_COL]: "Thermodynamics", [HOURS_COL]: 5 },
-  { [STUDENT_COL]: "Marcus Lee", [COURSE_COL]: "Statistics", [HOURS_COL]: 3 },
-  { [STUDENT_COL]: "Sofia Reyes", [COURSE_COL]: "Microeconomics", [HOURS_COL]: 3 },
-  { [STUDENT_COL]: "Sofia Reyes", [COURSE_COL]: "World History", [HOURS_COL]: 3 },
-  { [STUDENT_COL]: "Jamal Carter", [COURSE_COL]: "Data Structures", [HOURS_COL]: 4 },
-  { [STUDENT_COL]: "Jamal Carter", [COURSE_COL]: "Machine Learning", [HOURS_COL]: 5 },
-  { [STUDENT_COL]: "Jamal Carter", [COURSE_COL]: "Digital Design", [HOURS_COL]: 4 },
-  { [STUDENT_COL]: "Elena Popov", [COURSE_COL]: "Linear Algebra", [HOURS_COL]: 4 },
-  { [STUDENT_COL]: "Elena Popov", [COURSE_COL]: "Thermodynamics", [HOURS_COL]: 4 },
-  { [STUDENT_COL]: "Diego Silva", [COURSE_COL]: "Microeconomics", [HOURS_COL]: 5 },
-  { [STUDENT_COL]: "Diego Silva", [COURSE_COL]: "World History", [HOURS_COL]: 3 },
-  { [STUDENT_COL]: "Diego Silva", [COURSE_COL]: "Statistics", [HOURS_COL]: 2 },
-  { [STUDENT_COL]: "Grace Kim", [COURSE_COL]: "Cell Biology", [HOURS_COL]: 4 },
-  { [STUDENT_COL]: "Grace Kim", [COURSE_COL]: "Machine Learning", [HOURS_COL]: 3 },
-  { [STUDENT_COL]: "Grace Kim", [COURSE_COL]: "Statistics", [HOURS_COL]: 4 },
-  { [STUDENT_COL]: "Omar Haddad", [COURSE_COL]: "Data Structures", [HOURS_COL]: 3 },
-  { [STUDENT_COL]: "Omar Haddad", [COURSE_COL]: "Digital Design", [HOURS_COL]: 5 },
-  { [STUDENT_COL]: "Isla Fraser", [COURSE_COL]: "Organic Chemistry", [HOURS_COL]: 5 },
-  { [STUDENT_COL]: "Isla Fraser", [COURSE_COL]: "Cell Biology", [HOURS_COL]: 3 },
-  { [STUDENT_COL]: "Victor Alves", [COURSE_COL]: "Linear Algebra", [HOURS_COL]: 3 },
-  { [STUDENT_COL]: "Victor Alves", [COURSE_COL]: "Thermodynamics", [HOURS_COL]: 3 },
-  { [STUDENT_COL]: "Victor Alves", [COURSE_COL]: "Digital Design", [HOURS_COL]: 3 },
-  // Isolated entities with zero enrollments
-  { [STUDENT_COL]: "Talia Novak", [COURSE_COL]: "", [HOURS_COL]: 0 },
-  { [STUDENT_COL]: "", [COURSE_COL]: "Advanced Robotics", [HOURS_COL]: 0 },
+// Data: replace this block with your own records
+const data: Array<Record<string, string | number | null>> = [
+  { [STUDENT]: "Ava Chen", [COURSE]: "Linear Algebra", [HOURS]: 4 },
+  { [STUDENT]: "Ava Chen", [COURSE]: "Data Structures", [HOURS]: 5 },
+  { [STUDENT]: "Ava Chen", [COURSE]: "Machine Learning", [HOURS]: 3 },
+  { [STUDENT]: "Ava Chen", [COURSE]: "Statistics", [HOURS]: 3 },
+  { [STUDENT]: "Liam Brooks", [COURSE]: "Data Structures", [HOURS]: 5 },
+  { [STUDENT]: "Liam Brooks", [COURSE]: "Machine Learning", [HOURS]: 4 },
+  { [STUDENT]: "Liam Brooks", [COURSE]: "Digital Design", [HOURS]: 3 },
+  { [STUDENT]: "Noor Malik", [COURSE]: "Organic Chemistry", [HOURS]: 6 },
+  { [STUDENT]: "Noor Malik", [COURSE]: "Cell Biology", [HOURS]: 4 },
+  { [STUDENT]: "Noor Malik", [COURSE]: "Statistics", [HOURS]: 3 },
+  { [STUDENT]: "Ethan Diaz", [COURSE]: "Microeconomics", [HOURS]: 4 },
+  { [STUDENT]: "Ethan Diaz", [COURSE]: "World History", [HOURS]: 2 },
+  { [STUDENT]: "Ethan Diaz", [COURSE]: "Statistics", [HOURS]: 4 },
+  { [STUDENT]: "Priya Nair", [COURSE]: "Organic Chemistry", [HOURS]: 4 },
+  { [STUDENT]: "Priya Nair", [COURSE]: "Cell Biology", [HOURS]: 5 },
+  { [STUDENT]: "Priya Nair", [COURSE]: "Statistics", [HOURS]: 3 },
+  { [STUDENT]: "Marcus Lee", [COURSE]: "Linear Algebra", [HOURS]: 3 },
+  { [STUDENT]: "Marcus Lee", [COURSE]: "Thermodynamics", [HOURS]: 5 },
+  { [STUDENT]: "Marcus Lee", [COURSE]: "Statistics", [HOURS]: 3 },
+  { [STUDENT]: "Sofia Reyes", [COURSE]: "Microeconomics", [HOURS]: 3 },
+  { [STUDENT]: "Sofia Reyes", [COURSE]: "World History", [HOURS]: 3 },
+  { [STUDENT]: "Jamal Carter", [COURSE]: "Data Structures", [HOURS]: 4 },
+  { [STUDENT]: "Jamal Carter", [COURSE]: "Machine Learning", [HOURS]: 5 },
+  { [STUDENT]: "Jamal Carter", [COURSE]: "Digital Design", [HOURS]: 4 },
+  { [STUDENT]: "Elena Popov", [COURSE]: "Linear Algebra", [HOURS]: 4 },
+  { [STUDENT]: "Elena Popov", [COURSE]: "Thermodynamics", [HOURS]: 4 },
+  { [STUDENT]: "Diego Silva", [COURSE]: "Microeconomics", [HOURS]: 5 },
+  { [STUDENT]: "Diego Silva", [COURSE]: "World History", [HOURS]: 3 },
+  { [STUDENT]: "Diego Silva", [COURSE]: "Statistics", [HOURS]: 2 },
+  { [STUDENT]: "Grace Kim", [COURSE]: "Cell Biology", [HOURS]: 4 },
+  { [STUDENT]: "Grace Kim", [COURSE]: "Machine Learning", [HOURS]: 3 },
+  { [STUDENT]: "Grace Kim", [COURSE]: "Statistics", [HOURS]: 4 },
+  { [STUDENT]: "Omar Haddad", [COURSE]: "Data Structures", [HOURS]: 3 },
+  { [STUDENT]: "Omar Haddad", [COURSE]: "Digital Design", [HOURS]: 5 },
+  { [STUDENT]: "Isla Fraser", [COURSE]: "Organic Chemistry", [HOURS]: 5 },
+  { [STUDENT]: "Isla Fraser", [COURSE]: "Cell Biology", [HOURS]: 3 },
+  { [STUDENT]: "Victor Alves", [COURSE]: "Linear Algebra", [HOURS]: 3 },
+  { [STUDENT]: "Victor Alves", [COURSE]: "Thermodynamics", [HOURS]: 3 },
+  { [STUDENT]: "Victor Alves", [COURSE]: "Digital Design", [HOURS]: 3 },
+  { [STUDENT]: "Talia Novak", [COURSE]: null, [HOURS]: 0 },
+  { [STUDENT]: null, [COURSE]: "Advanced Robotics", [HOURS]: 0 },
 ];
 
-// Derive unique students (Set A), courses (Set B), and active edges in appearance order
+// Plot: reads only data and the constants above
+const unitMatch = /\(([^)]+)\)/.exec(HOURS);
+const unit = unitMatch ? unitMatch[1] : "";
+const unitSuffix = unit ? `${unit}` : "";
+
 const students: string[] = [];
 const courses: string[] = [];
 const edges: Array<{ student: number; course: number; hours: number }> = [];
 
-for (let i = 0; i < DATA.length; i++) {
-  const sName = String(DATA[i][STUDENT_COL]);
-  const cName = String(DATA[i][COURSE_COL]);
-  if (sName && !students.includes(sName)) students.push(sName);
-  if (cName && !courses.includes(cName)) courses.push(cName);
+for (let i = 0; i < data.length; i++) {
+  const sVal = data[i][STUDENT];
+  const cVal = data[i][COURSE];
+  if (sVal !== null && sVal !== undefined) {
+    const sName = String(sVal);
+    if (!students.includes(sName)) students.push(sName);
+  }
+  if (cVal !== null && cVal !== undefined) {
+    const cName = String(cVal);
+    if (!courses.includes(cName)) courses.push(cName);
+  }
 }
 
-for (let i = 0; i < DATA.length; i++) {
-  const sName = String(DATA[i][STUDENT_COL]);
-  const cName = String(DATA[i][COURSE_COL]);
-  const hours = Number(DATA[i][HOURS_COL]);
-  if (sName && cName && hours > 0) {
+for (let i = 0; i < data.length; i++) {
+  const sVal = data[i][STUDENT];
+  const cVal = data[i][COURSE];
+  const hours = Number(data[i][HOURS]);
+  if (sVal !== null && sVal !== undefined && cVal !== null && cVal !== undefined && hours > 0) {
     edges.push({
-      student: students.indexOf(sName),
-      course: courses.indexOf(cName),
+      student: students.indexOf(String(sVal)),
+      course: courses.indexOf(String(cVal)),
       hours,
     });
   }
@@ -98,6 +108,7 @@ for (let i = 0; i < DATA.length; i++) {
 
 const minHours = Math.min(...edges.map((e) => e.hours));
 const maxHours = Math.max(...edges.map((e) => e.hours));
+const hoursSpan = maxHours - minHours;
 
 const studentDegree = students.map(() => 0);
 const courseDegree = courses.map(() => 0);
@@ -112,7 +123,6 @@ for (let i = 0; i < edges.length; i++) {
   courseNeighbors[e.course].push(e.student);
 }
 
-// Initial degree order + barycenter crossing-reduction
 const initStudentOrder = students
   .map((_, i) => i)
   .sort((a, b) => studentDegree[b] - studentDegree[a] || a - b);
@@ -156,16 +166,17 @@ for (let r = 0; r < courseOrder.length; r++) courseRow[courseOrder[r]] = r;
 
 const minDegree = 1;
 const maxDegree = Math.max(...studentDegree, ...courseDegree);
+const degreeSpan = maxDegree - minDegree;
 
 const studentRadii = studentDegree.map((deg) =>
   deg === 0
     ? ISOLATED_R
-    : NODE_MIN_R + ((deg - minDegree) / (maxDegree - minDegree || 1)) * (NODE_MAX_R - NODE_MIN_R),
+    : NODE_MIN_R + ((deg - minDegree) / degreeSpan) * (NODE_MAX_R - NODE_MIN_R),
 );
 const courseRadii = courseDegree.map((deg) =>
   deg === 0
     ? ISOLATED_R
-    : NODE_MIN_R + ((deg - minDegree) / (maxDegree - minDegree || 1)) * (NODE_MAX_R - NODE_MIN_R),
+    : NODE_MIN_R + ((deg - minDegree) / degreeSpan) * (NODE_MAX_R - NODE_MIN_R),
 );
 
 interface HoverInfo {
@@ -192,16 +203,16 @@ function BipartiteOverlay({
 
   return (
     <g>
-      {/* Column headers */}
       <text
         x={studentX}
         y={top - 22}
         textAnchor="middle"
         fontSize={16}
         fontWeight={700}
-        fill={t.palette[0]}
+        fill={t.ink}
       >
-        Students (Set A)
+        <tspan fill={t.palette[0]}>● </tspan>
+        {STUDENT}
       </text>
       <text
         x={courseX}
@@ -209,21 +220,21 @@ function BipartiteOverlay({
         textAnchor="middle"
         fontSize={16}
         fontWeight={700}
-        fill={t.palette[1]}
+        fill={t.ink}
       >
-        Courses (Set B)
+        <tspan fill={t.palette[1]}>● </tspan>
+        {COURSE}
       </text>
 
-      {/* Bipartite edges */}
       {edges.map((edge, i) => {
         const y1 = Number(yScale(1 - (studentRow[edge.student] + 0.5) / students.length));
         const y2 = Number(yScale(1 - (courseRow[edge.course] + 0.5) / courses.length));
-        const hRatio = (edge.hours - minHours) / (maxHours - minHours || 1);
+        const hRatio = (edge.hours - minHours) / hoursSpan;
         const strokeW = EDGE_MIN_W + hRatio * (EDGE_MAX_W - EDGE_MIN_W);
         const strokeOp = 0.25 + hRatio * 0.45;
         const tooltip: HoverInfo = {
           label: `${students[edge.student]} → ${courses[edge.course]}`,
-          detail: `${edge.hours} h/week`,
+          detail: `${edge.hours} ${unitSuffix}`,
           x: (studentX + courseX) / 2,
           y: (y1 + y2) / 2,
         };
@@ -254,13 +265,12 @@ function BipartiteOverlay({
         );
       })}
 
-      {/* Student nodes (Set A) */}
       {students.map((label, i) => {
         const cy = Number(yScale(1 - (studentRow[i] + 0.5) / students.length));
         const r = studentRadii[i];
         const tooltip: HoverInfo = {
           label,
-          detail: `${studentDegree[i]} course${studentDegree[i] === 1 ? "" : "s"}`,
+          detail: `degree = ${studentDegree[i]}`,
           x: studentX,
           y: cy,
         };
@@ -294,13 +304,12 @@ function BipartiteOverlay({
         );
       })}
 
-      {/* Course nodes (Set B) */}
       {courses.map((label, i) => {
         const cy = Number(yScale(1 - (courseRow[i] + 0.5) / courses.length));
         const r = courseRadii[i];
         const tooltip: HoverInfo = {
           label,
-          detail: `${courseDegree[i]} student${courseDegree[i] === 1 ? "" : "s"}`,
+          detail: `degree = ${courseDegree[i]}`,
           x: courseX,
           y: cy,
         };
@@ -334,7 +343,6 @@ function BipartiteOverlay({
         );
       })}
 
-      {/* Interactive hover tooltip */}
       {hover && (
         <g style={{ pointerEvents: "none" }}>
           {(() => {
@@ -446,7 +454,7 @@ export default function Chart() {
                 display: "inline-block",
               }}
             />
-            Students (Set A) · node size = enrolled courses
+            {`${STUDENT} · node size = degree`}
           </span>
           <span style={{ display: "inline-flex", alignItems: "center", gap: 8, color: t.ink }}>
             <span
@@ -458,13 +466,13 @@ export default function Chart() {
                 display: "inline-block",
               }}
             />
-            Courses (Set B) · node size = enrolled students
+            {`${COURSE} · node size = degree`}
           </span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
-          <span>Edge width = {HOURS_COL}:</span>
+          <span>{`Edge width = ${HOURS}:`}</span>
           {hourSamples.map((h) => {
-            const hRatio = (h - minHours) / (maxHours - minHours || 1);
+            const hRatio = (h - minHours) / hoursSpan;
             const w = EDGE_MIN_W + hRatio * (EDGE_MAX_W - EDGE_MIN_W);
             const op = 0.25 + hRatio * 0.45;
             return (
@@ -479,11 +487,11 @@ export default function Chart() {
                     display: "inline-block",
                   }}
                 />
-                <span>{h}h</span>
+                <span>{`${h}${unitSuffix}`}</span>
               </span>
             );
           })}
-          <span>· Dashed outline = isolated node (0 enrollments)</span>
+          <span>· Dashed outline = isolated node (no edges)</span>
         </div>
       </div>
     </div>
