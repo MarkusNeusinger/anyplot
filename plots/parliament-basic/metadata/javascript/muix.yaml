@@ -2,56 +2,50 @@ library: muix
 language: javascript
 specification_id: parliament-basic
 created: '2026-09-02T04:57:33Z'
-updated: '2026-09-02T05:15:01Z'
-generated_by: claude-sonnet
-workflow_run: 33592273575
+updated: '2026-10-24T11:42:12Z'
+generated_by: gemini-4-argon
+adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
+workflow_run: 40090268680
 issue: 2499
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/javascript/muix/plot-dark.html
-quality_score: 91
+quality_score: 86
 review:
   strengths:
-  - Correct Imprint palette order (green, lavender, blue, ochre, matte red, cyan)
-    with identical data colors between light and dark renders, and theme-correct chrome
-    (background, text, dashed guideline) in both
-  - New MajorityHighlight wedge directly addresses the prior review's storytelling
-    feedback, subtly shading the contiguous party blocks that combine to reach the
-    101-seat majority
-  - Title font size increased to 30px per prior feedback and now reads as well-proportioned,
-    fully legible, with no overflow or clipping
-  - Mathematically sound concentric-arc seat-placement algorithm that keeps proportional
-    row spacing and contiguous left-to-right party wedges
-  - Clean, deterministic code that correctly follows the MUI X harness contract (default
-    export, skipAnimation, sized from window.ANYPLOT_SIZE) and uses useXScale/useYScale
-    idiomatically to build a custom mark type not natively offered by MUI X community
-  - Legend clearly pairs party name with seat count using circular swatches consistent
-    with the seat marker style
+  - 'Exact seat layout: 200 seats in 6 concentric arcs, row capacities proportional
+    to radius, every party a contiguous left-to-right wedge whose mark count equals
+    its seat count (24+38+52+46+28+12)'
+  - Majority threshold (101) drawn as a stepped dashed boundary that follows the real
+    gap between seat 101 and 102 in every row, labeled 'Majority · 101' above the
+    outer arc and clear of all seat marks
+  - 'Idiomatic MUI X composition: ScatterChart with position:''none'' axes plus a
+    child overlay that uses useXScale/useYScale to draw the threshold in data coordinates'
+  - Theme-adaptive chrome from ANYPLOT_TOKENS (ink/inkSoft/pageBg) with marker outlines
+    in the page color; data colors are the Imprint palette in canonical order and
+    identical in both renders
+  - Legend lists every party with its seat count; per-series valueFormatter gives
+    seat-count tooltips in the HTML view
   weaknesses:
-  - The majority-highlight wedge is very subtle (6% fill opacity) — could be nudged
-    slightly more visible without becoming chartjunk so the coalition-math payoff
-    registers immediately
-  - Design is clean and functional but stops just short of top-tier publication polish
-    — no secondary annotation or subtitle reinforces the majority narrative beyond
-    the dashed line and shaded wedge
-  - No native MUI X high-level chart type is used (series={[]}); all marks are hand-built
-    via custom SVG layers — reasonable since MUI X community has no built-in hemicycle/parliament
-    chart, but it still caps idiomatic canned-API credit
+  - 'Suggestion: the bottom caption ''200 (Seats)'' reads like a column header; ''200
+    seats'' would read more naturally.'
+  - 'Suggestion: the legend sits flush left and leaves the right half of its band
+    empty; centering it over the hemicycle would balance the header.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "parliament-basic · javascript · muix · anyplot.ai" top-left in dark ink at 30px, clearly readable. Below it, a horizontal legend row with 6 colored circular swatches paired with party name + seat count (Green Alliance (24), Progress Party (38), Unity Coalition (52), Civic Alliance (46), Heritage Party (28), Reform Movement (12)) in legible dark-gray text. "Majority · 101" label sits above a vertical dashed guideline running through the arc. "200 seats" caption below the arc.
-      Data: 200 dots arranged in 6 concentric semicircular rows, colored in contiguous left-to-right party blocks matching Imprint order (green #009E73, lavender, blue, ochre, matte red, cyan). A faint grey wedge (~6% opacity) shades the region from the leftmost seat to the majority line, highlighting which contiguous party blocks reach the 101-seat majority. First series (Green Alliance) is #009E73.
-      Legibility verdict: PASS — all text clearly readable against the light background, no light-on-light issues.
+      Background: warm off-white #FAF8F1, no axes or grid.
+      Chrome: bold dark title "parliament-basic · javascript · muix · anyplot.ai" top-left; a horizontal legend below it with six round swatches and "Party (seats)" labels in dark gray; "Majority · 101" label above the apex; "200 (Seats)" caption centered under the hemicycle. All text readable.
+      Data: 200 equal-size dots in 6 concentric semicircular arcs. Blocks left to right: Harbor Guild green #009E73 (24), Meadow Union purple (38), Lantern League blue (52), Bridge Assembly ochre (46), Granite Circle red (28), Orchard Compact cyan (12). Stepped block boundaries as expected. A thin dashed ink line runs vertically through the seat gaps after seat 101, with small horizontal jogs between rows. First series is #009E73.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Identical layout to the light render; title, legend text, "Majority · 101" label, and "200 seats" caption all render in light/off-white text, clearly legible against the dark surface. The dashed majority guideline is light gray and clearly visible. No dark-on-dark failures observed.
-      Data: Seat dot colors are pixel-identical to the light render (same green/lavender/blue/ochre/red/cyan hues) — only the chrome (background, text) flipped, as required. The majority-highlight wedge is present and equally subtle.
-      Legibility verdict: PASS — all text clearly readable against the dark background.
+      Background: warm near-black #1A1A17.
+      Chrome: title in light ink, legend labels and majority label in light gray, caption in light ink. No dark-on-dark text.
+      Data: identical seat layout and colors to the light render; the dashed majority line flips to light ink and stays visible. Blue Lantern League has the lowest contrast against the dark page but every dot is clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -62,74 +56,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes throughout; title increased to 30px per prior
-          feedback, no overflow or clipping, readable in both themes
+        comment: Title 22 px, legend and labels 16 px CSS; readable in both themes
+          and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between seat dots, legend, or annotation text
+        comment: No text collisions; majority line runs through seat gaps without
+          touching marks
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 200 seat markers sized adaptively (SEAT_R clamped from row/angular
-          spacing), clearly visible with no overlap
+        comment: Prominent equal-size dots for 200 seats; legend swatches match the
+          marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint hues CVD-safe and well separated across 6 parties
+        comment: Six Imprint hues distinguishable from neighbours and the page; party
+          identity also carried by legend order and block position
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart, legend, and title use a large, balanced portion of the canvas;
-          tight but not clipped margins
+        comment: 3200x1800; hemicycle centered with balanced margins; small mandated
+          title is no deduction
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No traditional axes needed for a hemicycle chart; legend, majority
-          label, and total caption supply descriptive context
+        comment: N/A for axes (layout-positioned type); legend and threshold text
+          are reader-facing
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical Imprint order for remaining 5 parties,
-          theme-correct chrome in both renders'
+        comment: 'Imprint palette in canonical order from t.palette, first party #009E73;
+          correct backgrounds in both themes'
     design_excellence:
-      score: 15
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Thoughtful custom geometry, coloring, and highlight layer, clearly
-          above a configured default; not quite FiveThirtyEight-level
+        comment: Legend set as a header band under the title, page-colored marker
+          outlines that separate dots, medium-weight caption vs soft label hierarchy
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Subtle dashed majority line, seat stroke matching page background
-          for definition, generous whitespace, consistent legend/marker styling
+        comment: Majority boundary traced exactly through each row's seat gap with
+          row-to-row jogs instead of a straight line cutting marks
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Majority line + subtle highlight wedge + total-seat caption give
-          visual hierarchy, but the highlight is faint enough that the insight isn't
-          fully immediate
+        passed: false
+        comment: Data displayed with the Notes' optional majority line; no hierarchy
+          chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -139,28 +134,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct semicircular parliament seat chart with concentric arcs
+        comment: Semicircular parliament seat chart; only the Notes-allowed majority
+          line added
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Arcs, individual seat dots, legend with names+counts, and optional
-          majority-threshold line/highlight all present
+        comment: Arcs left to right, dots, legend with seat counts, labeled majority
+          line clear of seats; all good-version bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 200 seats mapped, cumulative party totals match legend counts
+        comment: Mark count per party equals its seat count; contiguous blocks in
+          data order
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels/counts match the data exactly
+        comment: Title format correct; legend entries 'Party (seats)'
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -168,24 +165,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 6 parties spanning 12-52 seats, majority annotation, and total-seat
-          count show the full feature set
+        comment: Six parties including a small one (12), large and mid blocks, majority
+          threshold
       - id: DQ-02
         name: Realistic Context
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Spec inherently requires party/seat data for this chart type; implementation
-          uses entirely fictional, generic party names with no real country or divisive
-          framing — the most neutral treatment available, consistent with attempt
-          1's precedent
+        comment: Fictional party names from neutral nouns plus group words; no real
+          parliament
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 200-seat total, correctly computed 101-seat majority, realistic individual
-          party sizes
+        comment: 'Checked: 200 total seats, majority floor(200/2)+1 = 101 in label
+          and boundary after slot 101; legend counts sum to 200'
     code_quality:
       score: 10
       max: 10
@@ -195,35 +190,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward top-to-bottom structure; function components are
-          the required React/MUI pattern, not over-engineering
+        comment: Flat module-level layout code; the only extra component is the overlay
+          MUI X hooks require
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic in-memory data, no randomness
+        comment: Hard-coded data, deterministic layout
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ChartContainer, useXScale, useYScale imported and used
+        comment: ScatterChart, useXScale, useYScale all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriately complex for the custom geometry, no fake UI
+        comment: Seat layout has no library equivalent in community MUI X; written
+          out compactly
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Follows the harness contract correctly: skipAnimation, sized from
-          ANYPLOT_SIZE, default export'
+        comment: Default-export component, skipAnimation, v9 API (position:'none',
+          slotProps.legend.sx)
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -231,27 +227,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: useXScale/useYScale inside ChartContainer is the documented pattern
-          for custom marks; series={[]} means no canned chart component is used at
-          all
+        comment: ScatterChart with hidden linear axes as the seat canvas, series per
+          party, chart children for composition
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
-        passed: true
-        comment: Scale-hook-driven custom SVG layers are a genuinely MUI X-distinctive
-          capability, hard to replicate as cleanly elsewhere
+        passed: false
+        comment: useXScale/useYScale hooks to draw a custom SVG overlay in data coordinates;
+          per-series valueFormatter tooltips
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-10-24T11:39:09Z'
 impl_tags:
   dependencies: []
   techniques:
-  - patches
+  - layer-composition
   - annotations
-  - custom-legend
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - alpha-blending
-  - edge-highlighting
+  - minimal-chrome
