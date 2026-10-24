@@ -3,84 +3,83 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 92/100 | Created: 2026-09-02
 
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
-import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data (in-memory, deterministic LCG PRNG — no fetch, no Math.random) ----
-let seed = 42;
-function rand() {
-  seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-  return seed / 0x7fffffff;
-}
+// Constants
+const TITLE = "SolarGrid Energy Daily Close · renko-basic · javascript · muix · anyplot.ai";
+const X_TITLE = "Brick Sequence (estimated dates)";
+const BULLISH_LABEL = "Bullish brick (price up)";
+const BEARISH_LABEL = "Bearish brick (price down)";
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-// Daily closes for a fictional solar-energy stock across four trend regimes
-// (uptrend, consolidation, downtrend, recovery) — the zigzag that a Renko
-// chart is built to filter down to a handful of clean bricks.
+// Columns: set these to your data's column names
+const DATE = "Date"; // role: date
+const CLOSE = "Price (USD)"; // role: close
+
+// Data: replace this block with your own records
+const BRICK_SIZE = 1.5;
 const REGIMES = [
   { days: 60, drift: 0.34 },
   { days: 50, drift: 0.0 },
   { days: 70, drift: -0.3 },
   { days: 60, drift: 0.26 },
 ];
-const closes = [64.0];
-const dates = [new Date(2024, 0, 2)];
+
+let seed = 42;
+const data = [{ [DATE]: "2024-01-02", [CLOSE]: 64.0 }];
+let currentDate = new Date(Date.UTC(2024, 0, 2));
 for (const regime of REGIMES) {
-  for (let d = 0; d < regime.days; d++) {
-    const noise = (rand() - 0.5) * 1.6;
-    const prev = closes[closes.length - 1];
-    closes.push(Math.max(prev + regime.drift + noise, 5));
-    const nextDate = new Date(dates[dates.length - 1]);
-    nextDate.setDate(nextDate.getDate() + 1);
-    dates.push(nextDate);
+  for (let d = 0; d < regime.days; d += 1) {
+    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+    const noise = (seed / 0x7fffffff - 0.5) * 1.6;
+    const prev = Number(data[data.length - 1][CLOSE]);
+    const nextPrice = Math.max(prev + regime.drift + noise, 5);
+    currentDate = new Date(currentDate.getTime() + 86400000);
+    const iso = currentDate.toISOString().slice(0, 10);
+    data.push({ [DATE]: iso, [CLOSE]: nextPrice });
   }
 }
 
-// --- Renko brick construction: a new brick is only drawn once price moves a
-// full BRICK_SIZE away from the last brick's boundary — this is what strips
-// time and minor noise out of the series, leaving only decisive moves.
-const BRICK_SIZE = 1.5;
-const bricks = []; // { base, direction: 1 | -1, date }
-let anchor = Math.round(closes[0] / BRICK_SIZE) * BRICK_SIZE;
-for (let i = 1; i < closes.length; i++) {
-  const price = closes[i];
+// Plot: reads only data and the constants above
+const sortedRows = [...data].sort((a, b) => String(a[DATE]).localeCompare(String(b[DATE])));
+const bricks = [];
+let anchor = Math.round(Number(sortedRows[0][CLOSE]) / BRICK_SIZE) * BRICK_SIZE;
+for (let i = 1; i < sortedRows.length; i += 1) {
+  const price = Number(sortedRows[i][CLOSE]);
+  const rawDate = new Date(`${sortedRows[i][DATE]}T00:00:00Z`);
+  const dateLabel = `${MONTHS[rawDate.getUTCMonth()]} ${rawDate.getUTCDate()}`;
   while (price - anchor >= BRICK_SIZE) {
-    bricks.push({ base: anchor, direction: 1, date: dates[i] });
+    bricks.push({ base: anchor, direction: 1, dateLabel });
     anchor += BRICK_SIZE;
   }
   while (anchor - price >= BRICK_SIZE) {
     anchor -= BRICK_SIZE;
-    bricks.push({ base: anchor, direction: -1, date: dates[i] });
+    bricks.push({ base: anchor, direction: -1, dateLabel });
   }
 }
+
+const firstRawDate = new Date(`${sortedRows[0][DATE]}T00:00:00Z`);
+const lastRawDate = new Date(`${sortedRows[sortedRows.length - 1][DATE]}T00:00:00Z`);
+const startDateStr = `${MONTHS[firstRawDate.getUTCMonth()]} ${firstRawDate.getUTCDate()}`;
+const endDateStr = `${MONTHS[lastRawDate.getUTCMonth()]} ${lastRawDate.getUTCDate()}`;
 
 const brickLabels = bricks.map((_, i) => `${i + 1}`);
 const yMin = Math.min(...bricks.map((b) => b.base));
 const yMax = Math.max(...bricks.map((b) => b.base + BRICK_SIZE));
 const yPad = (yMax - yMin) * 0.08;
-
-const fmtDate = (d) => d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 const tickEvery = Math.ceil(bricks.length / 10);
 
-// --- Bricks: MUI X community has no native Renko series — draw uniform,
-// gapped rectangles against the shared band/linear scales via
-// useXScale/useYScale, the documented ChartContainer composition pattern for
-// chart types outside the community surface (same idiom as candlestick/OHLC).
-// Bullish bricks (price up) are brand green, bearish (price down) matte red —
-// the finance up/down semantic exception from the style guide. Each brick also
-// carries an ink-colored up/down triangle so direction reads from shape alone,
-// not just hue, for viewers who can't distinguish red from green.
 function Bricks() {
   const xScale = useXScale("x");
   const yScale = useYScale("y");
-  if (!xScale || !yScale) return null;
   const bw = xScale.bandwidth();
   const brickWidth = bw * 0.78;
 
@@ -126,13 +125,12 @@ export default function Chart() {
   const LEGEND_H = 52;
   const chartH = H - TITLE_H - LEGEND_H;
 
-  const title = "SolarGrid Energy Daily Close · renko-basic · javascript · muix · anyplot.ai";
-  const titleSize = title.length > 67 ? Math.round((22 * 67) / title.length) : 22;
-  const subtitle = `${fmtDate(dates[0])} – ${fmtDate(dates[dates.length - 1])} · $${BRICK_SIZE.toFixed(2)} brick size · ${bricks.length} bricks`;
+  const titleSize = TITLE.length > 67 ? Math.round((22 * 67) / TITLE.length) : 22;
+  const subtitle = `${startDateStr} – ${endDateStr} · $${BRICK_SIZE.toFixed(2)} brick size · ${bricks.length} bricks`;
 
   const legendItems = [
-    { label: "Bullish brick (price up)", color: t.palette[0] },
-    { label: "Bearish brick (price down)", color: t.palette[4] },
+    { label: BULLISH_LABEL, color: t.palette[0] },
+    { label: BEARISH_LABEL, color: t.palette[4] },
   ];
 
   return (
@@ -143,7 +141,6 @@ export default function Chart() {
         bgcolor: t.pageBg,
         display: "flex",
         flexDirection: "column",
-        fontFamily: "'Roboto', 'Helvetica Neue', Arial, sans-serif",
         boxSizing: "border-box",
       }}
     >
@@ -157,13 +154,13 @@ export default function Chart() {
           gap: "6px",
         }}
       >
-        <Typography sx={{ color: t.ink, fontSize: titleSize, fontWeight: 600 }}>{title}</Typography>
+        <Typography sx={{ color: t.ink, fontSize: titleSize, fontWeight: 600 }}>{TITLE}</Typography>
         <Typography sx={{ color: t.inkSoft, fontSize: 13, fontWeight: 400, letterSpacing: "0.03em" }}>
           {subtitle}
         </Typography>
       </Box>
 
-      <ChartContainer
+      <ChartsContainer
         width={W}
         height={chartH}
         skipAnimation
@@ -173,8 +170,9 @@ export default function Chart() {
             id: "x",
             scaleType: "band",
             data: brickLabels,
-            label: "Brick Sequence (estimated dates)",
-            valueFormatter: (label) => fmtDate(bricks[Number(label) - 1].date),
+            height: 64,
+            label: X_TITLE,
+            valueFormatter: (label) => bricks[Number(label) - 1].dateLabel,
             tickLabelInterval: (_value, index) => index % tickEvery === 0,
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
             labelStyle: { fontSize: 15, fill: t.ink },
@@ -185,13 +183,14 @@ export default function Chart() {
             id: "y",
             min: yMin - yPad,
             max: yMax + yPad,
-            label: "Price (USD)",
+            width: 88,
+            label: CLOSE,
             valueFormatter: (v) => `$${v.toFixed(2)}`,
             tickLabelStyle: { fontSize: 13, fill: t.inkSoft },
             labelStyle: { fontSize: 15, fill: t.ink },
           },
         ]}
-        margin={{ top: 24, bottom: 64, left: 96, right: 32 }}
+        margin={{ top: 24, bottom: 16, left: 24, right: 32 }}
         sx={{
           "& .MuiChartsAxis-line": { stroke: t.inkSoft, strokeOpacity: 0.2 },
           "& .MuiChartsGrid-line": { stroke: t.grid },
@@ -199,25 +198,9 @@ export default function Chart() {
       >
         <ChartsGrid horizontal />
         <Bricks />
-        <ChartsReferenceLine
-          axisId="y"
-          y={yMax}
-          label={`Swing high $${yMax.toFixed(2)}`}
-          labelAlign="end"
-          lineStyle={{ stroke: t.amber, strokeDasharray: "4 4", strokeWidth: 1.5 }}
-          labelStyle={{ fill: t.amber, fontSize: 12, fontWeight: 600 }}
-        />
-        <ChartsReferenceLine
-          axisId="y"
-          y={yMin}
-          label={`Swing low $${yMin.toFixed(2)}`}
-          labelAlign="end"
-          lineStyle={{ stroke: t.amber, strokeDasharray: "4 4", strokeWidth: 1.5 }}
-          labelStyle={{ fill: t.amber, fontSize: 12, fontWeight: 600 }}
-        />
         <ChartsXAxis axisId="x" />
-        <ChartsYAxis axisId="y" slotProps={{ axisLabel: { x: -64 } }} />
-      </ChartContainer>
+        <ChartsYAxis axisId="y" />
+      </ChartsContainer>
 
       <Box sx={{ height: LEGEND_H, display: "flex", alignItems: "center", justifyContent: "center", gap: "16px" }}>
         {legendItems.map((item) => (
