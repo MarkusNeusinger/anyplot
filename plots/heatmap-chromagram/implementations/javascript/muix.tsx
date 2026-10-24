@@ -1,6 +1,6 @@
 // anyplot.ai
 // heatmap-chromagram: Music Chromagram (Pitch Class Distribution over Time)
-// Library: muix 9.2.1 | JavaScript 22.22.3
+// Library: muix 7.29.1 | JavaScript 22.22.3
 // Quality: 89/100 | Created: 2026-06-24
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
@@ -8,26 +8,25 @@ import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { useDrawingArea, useXScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const { width, height } = window.ANYPLOT_SIZE;
 
 // Constants
-const TIME_COL = "time";
-const PITCH_COL = "pitch_class";
-const ENERGY_COL = "energy";
-const CHORD_COL = "chord";
-
+const { width, height } = window.ANYPLOT_SIZE;
 const TITLE = "heatmap-chromagram · javascript · muix · anyplot.ai";
-const SUBTITLE_PREFIX = "Chroma energy distribution across 12 pitch classes";
-const X_AXIS_LABEL = "Time (seconds)";
-const Y_AXIS_LABEL = "Pitch Class";
-const COLORBAR_LABEL = "Energy";
 const FONT = "Inter, system-ui, sans-serif";
-
 const PITCH_CLASSES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+const ENERGY_MIN = 0;
+const ENERGY_MAX = 1;
+
+// Columns: set these to your data's column names
+const TIME = "Time (s)"; // role: time
+const PITCH_CLASS = "Pitch class"; // role: pitch_class
+const ENERGY = "Energy"; // role: energy
+const CHORD = "Chord";
+
+// Data: replace this block with your own records
 const N_FRAMES = 80;
 const SEC_PER_FRAME = 0.05;
 
-// Flat scalar chord-section definitions ("label|pc1,pc2,pc3|startFrame|endFrame")
 const CHORD_SECTIONS = [
   "C major|0,4,7|0|20",
   "G major|7,11,2|20|40",
@@ -48,7 +47,6 @@ const parsedChords = CHORD_SECTIONS.map((s) => {
   };
 });
 
-// Data — 12 pitch classes × 80 time frames = 960 flat scalar records
 let lcgState = 42 >>> 0;
 const data: Record<string, string | number>[] = [];
 
@@ -65,31 +63,32 @@ for (let pc = 0; pc < PITCH_CLASSES.length; pc++) {
       : isOvertone
         ? 0.22 + randVal * 0.18
         : randVal * 0.16;
-    const energy = Number(Math.min(1.0, rawEnergy).toFixed(4));
+    const energy = Number(Math.min(ENERGY_MAX, rawEnergy).toFixed(4));
     const timeSec = Number((f * SEC_PER_FRAME).toFixed(3));
     data.push({
-      [TIME_COL]: timeSec,
-      [PITCH_COL]: pitchName,
-      [ENERGY_COL]: energy,
-      [CHORD_COL]: chord.label,
+      [TIME]: timeSec,
+      [PITCH_CLASS]: pitchName,
+      [ENERGY]: energy,
+      [CHORD]: chord.label,
     });
   }
 }
 
-// Derive pitch classes, frame step, time extent, and chord intervals from data
-const pitchOrder = Array.from(new Set(data.map((r) => String(r[PITCH_COL]))));
+// Plot: reads only data and the constants above
+const pitchOrder = Array.from(new Set(data.map((r) => String(r[PITCH_CLASS]))));
 const pitchIndexMap = new Map<string, number>(pitchOrder.map((p, idx) => [p, idx]));
-const uniqueTimes = Array.from(new Set(data.map((r) => Number(r[TIME_COL])))).sort((a, b) => a - b);
-const frameStepSec = uniqueTimes.length > 1 ? uniqueTimes[1] - uniqueTimes[0] : SEC_PER_FRAME;
-const minTimeSec = uniqueTimes[0] ?? 0;
-const maxTimeSec = (uniqueTimes[uniqueTimes.length - 1] ?? 0) + frameStepSec;
+const uniqueTimes = Array.from(new Set(data.map((r) => Number(r[TIME])))).sort((a, b) => a - b);
+const frameStepSec = uniqueTimes[1] - uniqueTimes[0];
+const minTimeSec = uniqueTimes[0];
+const maxTimeSec = uniqueTimes[uniqueTimes.length - 1] + frameStepSec;
+const timeUnitMatch = TIME.match(/\(([^)]+)\)/);
+const timeUnit = timeUnitMatch ? timeUnitMatch[1] : "";
 
-// Derive contiguous chord spans from time-ordered frames
 const timeToChord = new Map<number, string>();
 for (const r of data) {
-  const tVal = Number(r[TIME_COL]);
+  const tVal = Number(r[TIME]);
   if (!timeToChord.has(tVal)) {
-    timeToChord.set(tVal, String(r[CHORD_COL]));
+    timeToChord.set(tVal, String(r[CHORD]));
   }
 }
 
@@ -116,13 +115,14 @@ const g2 = (seq1Int >> 8) & 255;
 const b2 = seq1Int & 255;
 
 const cells = data.map((row, idx) => {
-  const timeSec = Number(row[TIME_COL]);
-  const pitch = String(row[PITCH_COL]);
-  const pcIdx = pitchIndexMap.get(pitch) ?? 0;
-  const val = Number(row[ENERGY_COL]);
-  const r = Math.round(r1 + (r2 - r1) * val);
-  const g = Math.round(g1 + (g2 - g1) * val);
-  const b = Math.round(b1 + (b2 - b1) * val);
+  const timeSec = Number(row[TIME]);
+  const pitch = String(row[PITCH_CLASS]);
+  const pcIdx = pitchIndexMap.get(pitch)!;
+  const val = Number(row[ENERGY]);
+  const norm = (val - ENERGY_MIN) / (ENERGY_MAX - ENERGY_MIN);
+  const r = Math.round(r1 + (r2 - r1) * norm);
+  const g = Math.round(g1 + (g2 - g1) * norm);
+  const b = Math.round(b1 + (b2 - b1) * norm);
   return {
     key: `${pcIdx}-${idx}`,
     pcIdx,
@@ -134,13 +134,10 @@ const cells = data.map((row, idx) => {
 
 function ChromagramLayer() {
   const { left, top, width: gW, height: gH } = useDrawingArea();
-  const xScale = useXScale();
-  if (!xScale) return null;
+  const xScale = useXScale() as (v: number) => number;
 
   const nRows = pitchOrder.length;
   const step = gH / nRows;
-  const divColor =
-    window.ANYPLOT_THEME === "dark" ? "rgba(240,239,232,0.45)" : "rgba(26,26,23,0.45)";
   const cbX = left + gW + 24;
   const cbW = 20;
 
@@ -154,14 +151,14 @@ function ChromagramLayer() {
       </defs>
 
       {cells.map((cell) => {
-        const x0 = Number(xScale(cell.timeSec) ?? 0);
-        const x1 = Number(xScale(cell.nextTimeSec) ?? 0);
+        const x0 = xScale(cell.timeSec);
+        const x1 = xScale(cell.nextTimeSec);
         return (
           <rect
             key={cell.key}
             x={x0}
             y={top + (nRows - 1 - cell.pcIdx) * step}
-            width={Math.max(1, x1 - x0 + 0.5)}
+            width={x1 - x0 + 0.5}
             height={step + 0.5}
             fill={cell.fill}
           />
@@ -170,7 +167,7 @@ function ChromagramLayer() {
 
       {/* Chord-change vertical dividers */}
       {chordDividers.map((sec) => {
-        const sx = Number(xScale(sec) ?? 0);
+        const sx = xScale(sec);
         return (
           <line
             key={sec}
@@ -178,7 +175,8 @@ function ChromagramLayer() {
             y1={top}
             x2={sx}
             y2={top + gH}
-            stroke={divColor}
+            stroke={t.ink}
+            strokeOpacity={0.45}
             strokeWidth={2.5}
           />
         );
@@ -190,7 +188,7 @@ function ChromagramLayer() {
         return (
           <text
             key={`${c.label}-${c.startSec}`}
-            x={Number(xScale(midSec) ?? 0)}
+            x={xScale(midSec)}
             y={top - 12}
             textAnchor="middle"
             fontSize={14}
@@ -213,7 +211,7 @@ function ChromagramLayer() {
         fill={t.inkSoft}
         fontFamily={FONT}
       >
-        1.0
+        {ENERGY_MAX.toFixed(1)}
       </text>
       <text
         x={cbX + cbW / 2}
@@ -223,7 +221,7 @@ function ChromagramLayer() {
         fill={t.inkSoft}
         fontFamily={FONT}
       >
-        0.0
+        {ENERGY_MIN.toFixed(1)}
       </text>
       <text
         x={cbX + cbW + 20}
@@ -234,7 +232,7 @@ function ChromagramLayer() {
         fontFamily={FONT}
         transform={`rotate(90, ${cbX + cbW + 20}, ${top + gH / 2})`}
       >
-        {COLORBAR_LABEL}
+        {ENERGY}
       </text>
     </g>
   );
@@ -242,7 +240,7 @@ function ChromagramLayer() {
 
 export default function Chart() {
   const chordProgressionText = chordSpans.map((c) => c.label).join(" → ");
-  const subtitle = `${SUBTITLE_PREFIX} · ${chordProgressionText} (${uniqueTimes.length} frames)`;
+  const subtitle = `${ENERGY} across ${pitchOrder.length} ${PITCH_CLASS}es · ${chordProgressionText} (${uniqueTimes.length} frames)`;
 
   return (
     <ChartsContainer
@@ -256,8 +254,8 @@ export default function Chart() {
           min: minTimeSec,
           max: maxTimeSec,
           height: 56,
-          label: X_AXIS_LABEL,
-          valueFormatter: (v: number) => `${v.toFixed(1)}s`,
+          label: TIME,
+          valueFormatter: (v: number) => `${v.toFixed(1)}${timeUnit}`,
           tickLabelStyle: { fontSize: 14, fill: t.inkSoft, fontFamily: FONT },
           labelStyle: { fontSize: 15, fill: t.ink, fontFamily: FONT },
         },
@@ -267,7 +265,7 @@ export default function Chart() {
           scaleType: "band",
           data: [...pitchOrder].reverse(),
           width: 82,
-          label: Y_AXIS_LABEL,
+          label: PITCH_CLASS,
           tickLabelStyle: { fontSize: 14, fill: t.inkSoft, fontFamily: FONT },
           labelStyle: { fontSize: 15, fill: t.ink, fontFamily: FONT },
         },
