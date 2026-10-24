@@ -2,7 +2,10 @@
 // histogram-density: Density Histogram
 // Library: muix 9.16.0 | JavaScript 22.23.3
 // Quality: 86/100 | Updated: 2026-10-24
-import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
+import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
+import { ChartsWrapper } from "@mui/x-charts/ChartsWrapper";
+import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
+import { ChartsLegend } from "@mui/x-charts/ChartsLegend";
 import { BarPlot } from "@mui/x-charts/BarChart";
 import { LinePlot } from "@mui/x-charts/LineChart";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
@@ -80,7 +83,8 @@ const SUBTITLE = `${WEIGHT} (n = ${n}, bin width = ${binWidth.toFixed(2)}${unitS
 
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
-  const HEADER_H = 108;
+  const HEADER_H = 76;
+  const LEGEND_H = 40;
 
   return (
     <Box
@@ -122,52 +126,16 @@ export default function Chart() {
         {SUBTITLE}
       </Typography>
 
-      {/* Series legend rendered in HTML outside the SVG drawing area */}
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: "24px",
-          px: "40px",
-          pt: "8px",
-        }}
-      >
-        <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <Box
-            sx={{
-              width: 18,
-              height: 12,
-              bgcolor: BRAND,
-              borderRadius: "2px",
-            }}
-          />
-          <Typography
-            sx={{ fontSize: 14, fontWeight: 600, color: t.ink, fontFamily: FONT }}
-          >
-            Observed density ({BIN_COUNT} bins)
-          </Typography>
-        </Box>
-        <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <Box
-            sx={{ width: 20, height: 3.5, bgcolor: CURVE, borderRadius: "2px" }}
-          />
-          <Typography
-            sx={{ fontSize: 14, fontWeight: 600, color: t.ink, fontFamily: FONT }}
-          >
-            Fitted Normal PDF
-          </Typography>
-        </Box>
-      </Box>
-
-      <ChartsContainer
+      <ChartsDataProvider
         width={width}
-        height={height - HEADER_H}
+        height={height - HEADER_H - LEGEND_H}
         series={[
           {
             type: "bar",
             id: "observed",
             data: density,
-            label: "Observed density",
+            label: `Observed density (${BIN_COUNT} bins)`,
+            labelMarkType: "square",
             color: BRAND,
           },
           {
@@ -175,6 +143,7 @@ export default function Chart() {
             id: "fitted",
             data: normalPdf,
             label: "Fitted Normal PDF",
+            labelMarkType: "line",
             color: CURVE,
             showMark: false,
             curve: "monotoneX",
@@ -209,30 +178,48 @@ export default function Chart() {
         margin={{ top: 20, right: 40, bottom: 20, left: 20 }}
         skipAnimation
       >
-        <ChartsGrid
-          horizontal
-          sx={{ "& line": { stroke: t.grid, strokeWidth: 0.8 } }}
-        />
-        <BarPlot skipAnimation />
-        <LinePlot
-          skipAnimation
-          slotProps={{ line: { sx: { strokeWidth: 3.5 } } }}
-        />
-        <ChartsXAxis
-          axisId="weight-axis"
-          sx={{
-            [`& .${axisClasses.line}`]: { stroke: t.grid },
-            [`& .${axisClasses.tick}`]: { stroke: t.grid },
-          }}
-        />
-        <ChartsYAxis
-          axisId="density-axis"
-          sx={{
-            [`& .${axisClasses.line}`]: { stroke: t.grid },
-            [`& .${axisClasses.tick}`]: { stroke: t.grid },
-          }}
-        />
-      </ChartsContainer>
+        <ChartsWrapper
+          legendPosition={{ horizontal: "start", vertical: "top" }}
+          legendDirection="horizontal"
+        >
+          <ChartsLegend
+            sx={{
+              fontSize: 14,
+              fontWeight: 600,
+              color: t.ink,
+              fontFamily: FONT,
+              px: "40px",
+              pt: "8px",
+              gap: "24px",
+            }}
+          />
+          <ChartsSurface>
+            <ChartsGrid
+              horizontal
+              sx={{ "& line": { stroke: t.grid, strokeWidth: 0.8 } }}
+            />
+            <BarPlot skipAnimation />
+            <LinePlot
+              skipAnimation
+              slotProps={{ line: { sx: { strokeWidth: 3.5 } } }}
+            />
+            <ChartsXAxis
+              axisId="weight-axis"
+              sx={{
+                [`& .${axisClasses.line}`]: { stroke: t.grid },
+                [`& .${axisClasses.tick}`]: { stroke: t.grid },
+              }}
+            />
+            <ChartsYAxis
+              axisId="density-axis"
+              sx={{
+                [`& .${axisClasses.line}`]: { stroke: t.grid },
+                [`& .${axisClasses.tick}`]: { stroke: t.grid },
+              }}
+            />
+          </ChartsSurface>
+        </ChartsWrapper>
+      </ChartsDataProvider>
     </Box>
   );
 }
