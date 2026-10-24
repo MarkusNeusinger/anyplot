@@ -2,108 +2,109 @@ library: muix
 language: javascript
 specification_id: errorbar-basic
 created: '2026-06-30T20:49:39Z'
-updated: '2026-06-30T21:09:46Z'
-generated_by: claude-sonnet
-workflow_run: 28474424869
+updated: '2026-10-24T08:57:28Z'
+generated_by: gemini-4-argon
+adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
+workflow_run: 40079793769
 issue: 973
-language_version: 22.23.0
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/javascript/muix/plot-dark.html
-quality_score: 88
+quality_score: 86
 review:
   strengths:
-  - Semantic color hierarchy (full green = optimal/reference, amber = caution/peak
-    stress, muted green = intermediate) creates an immediate self-explaining narrative
-    about plant stress severity
-  - Custom SVG ErrorBars component correctly uses CartesianContext hooks (useXScale/useYScale)
-    — the idiomatic MUI X approach for custom SVG overlays inside ChartContainer
-  - ChartsReferenceLine baseline at y=4.2 anchors all comparisons visually with minimal
-    code and an inline label
-  - Both themes render correctly with fully readable text; ThemeProvider chrome adaptation
-    is seamless — no dark-on-dark failures
-  - 'Perfect spec compliance: error bars with visible caps, consistent widths, color-coded
-    groups, and all data correctly mapped'
+  - 'Error bars are composed natively inside ChartsContainer: a small custom SVG layer
+    reads the band and linear scales through useXScale/useYScale, so whiskers, caps
+    and markers sit exactly at their data values on MUI X''s own axes and grid'
+  - Every marker sits on top of its whisker with a page-colored ring, so each reads
+    as a point with whiskers; caps share one width and the 3 px line weight across
+    all seven groups, visible in both themes
+  - Value axis is derived from the data (lowest lower bound to highest upper bound
+    plus 14 % padding), so every error bar is shown in full without typed limits
+  - 'A subtitle states what the bars encode (± standard deviation, units) and the
+    y-axis title carries units (cm / week): the chart is self-explanatory'
+  - Plausible, neutral plant-growth scenario with seven conditions and SDs of 0.5–0.9
+    cm/week; data hard-coded and fully deterministic
+  - 'Single brand-green series (t.palette[0]) identical in both renders; chrome uses
+    ink / inkSoft tokens and reads cleanly on #FAF8F1 and #1A1A17'
   weaknesses:
-  - Duplicate header comment block at top of file (lines 1-4 contain old muix 7.29.1
-    header, followed by correct MUI X Charts header at lines 7-10) — remove the first
-    block
-  - Axis label font size (16px) is slightly on the larger side for a 3200x1800 landscape
-    canvas; 14px would be more proportional while maintaining readability
-  - MUI X default axis chrome still visible — no explicit spine suppression; adding
-    slotProps or sx overrides to remove top/right axis lines would improve DE-02 refinement
+  - 'Suggestion: a 0.5 major tick step on the y axis (instead of 0.2, 21 gridlines)
+    would lighten the grid and let the whiskers carry the panel.'
+  - 'Suggestion: the `as any` casts on useXScale/useYScale are unnecessary because
+    the snippet is only bundled by esbuild, never type-checked; dropping them would
+    tidy the code.'
+  - 'Suggestion: lowerBounds/upperBounds could reuse the already-extracted means and
+    errors arrays instead of re-reading the records.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
-      Chrome: Title "Seedling Growth Under Stress · errorbar-basic · javascript · muix · anyplot.ai" in dark ink, readable; Y-axis label "Mean Stem Elongation (cm / week)" vertical, readable; X-axis label "Growth Condition" readable; tick labels 0.0-6.0 (Y) and 7 condition names (X) all clearly visible; "Control baseline" reference label at right edge readable in italic style
-      Data: Control bar = full brand green #009E73; Drought bar = amber #DDCC77 (semantic caution anchor); Low Temp/High Temp/Low pH/High pH/Flood = brand green at ~60% opacity; all bars have black-ink error bars with visible end caps; dashed baseline reference line at y=4.2 spans full plot width
-      Legibility verdict: PASS — all text clearly readable against warm off-white background; no light-on-light issues
+      Background: warm off-white #FAF8F1 across the whole canvas, no white panel.
+      Chrome: bold dark title "errorbar-basic · javascript · muix · anyplot.ai" centered at top (~30 % width), softer subtitle "Error bars: ± Standard deviation (cm / week) · 7 Growth conditions"; y-axis title "Mean stem elongation (cm / week)" rotated, x-axis title "Growth condition"; tick labels 1.0–5.0 in 0.2 steps and seven category names (Control, Low Temp, High Temp, Low pH, High pH, Drought, Flood) all dark and readable; light grey horizontal grid; left and bottom axis lines only.
+      Data: seven brand-green #009E73 points with vertical whiskers and horizontal caps of equal width, each filled circle on top of its whisker with a thin page-colored ring; Control highest (4.2 ± 0.5), Drought lowest (1.9 ± 0.6); all bars fully inside the axis range.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
-      Chrome: Title, axis labels, tick labels, and "Control baseline" label all render in warm near-white (ThemeProvider ink token flipped to F0EFE8); all clearly legible against dark background; error bar strokes appear white/light; no dark-on-dark failures detected
-      Data: Colors identical to light render — Control = #009E73, Drought = #DDCC77, intermediates = muted brand green; data visual identity preserved across both themes
-      Legibility verdict: PASS — all text clearly readable against dark background; ThemeProvider chrome adaptation is seamless
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title, subtitle, axis titles and tick labels flip to light ink / soft light grey and are all clearly readable; no dark-on-dark text; grid lines are subtle dark grey but visible.
+      Data: identical #009E73 markers, whiskers and caps at the same positions as the light render; marker ring now in the dark page color.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes. Title scaled via formula for 74-char
-          title (~20px). Axis labels 16px, tick labels 14px — slightly larger than
-          needed for landscape canvas but within acceptable range.
+        comment: Fonts set explicitly (title 22, axis titles 16, ticks 14 CSS px);
+          all text readable in both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions in either render; error bars clear of all
-          labels.
+        comment: No text collisions; whiskers and labels well separated
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Error bar whiskers and caps clearly visible in both renders; bar
-          fills clearly distinguishable; baseline reference line visible.
+        comment: Seven sparse points with r=10 markers and 3 px whiskers/caps, prominent
+          in both themes; single series needs no legend
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette + amber anchor; CVD-safe.
+        comment: Single green series with strong contrast on both backgrounds; no
+          color-only encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (landscape 3200x1800); generous margins (top:72,
-          bottom:92, left:100, right:100); no clipping detected.
+        comment: 3200x1800 canvas (gate passed); plot fills the canvas, balanced axis
+          titles, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units (cm / week); X-axis descriptive; title correctly
-          formatted with spec-id, language, library, anyplot.ai.
+        comment: '''Mean stem elongation (cm / week)'' and ''Growth condition'' are
+          descriptive with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Control = #009E73 (first series); Drought = #DDCC77 (amber semantic
-          anchor for caution); intermediates = brand green with alpha (single-series
-          design choice). Backgrounds correct: #FAF8F1 / #1A1A17. Data colors identical
-          across themes.'
+        comment: 'Single series in #009E73 (t.palette[0]); backgrounds #FAF8F1 / #1A1A17;
+          chrome theme-correct in both renders'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -111,25 +112,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Semantic color hierarchy (full green = optimal, amber = peak stress,
-          muted green = intermediate) is deliberate and effective. Reference baseline
-          line adds contextual sophistication. Above default floor of 4.
+        comment: 'Raised one: a two-level header (bold title plus soft-ink subtitle
+          naming the error measure and its units) gives a clear typographic hierarchy
+          beyond the baseline'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Border radius on bars, horizontal-only subtle grid, no visible top/right
-          spines, generous margins. Solid refinement above default floor of 2, but
-          overall chrome is still MUI X default.
+        comment: 'Raised one: page-colored ring around each marker separates it cleanly
+          from its whisker, and round line caps finish the whiskers; grid density
+          (0.2 steps) left at default'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: 'Clear focal narrative: Control as reference, Drought as worst stressor,
-          intermediate conditions semantically grouped. Baseline dashed line anchors
-          the comparison. Visual hierarchy guides reader''s eye.'
+        comment: Data displayed clearly; no hierarchy or focal point chosen beyond
+          the spec
     spec_compliance:
       score: 15
       max: 15
@@ -139,29 +139,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bar+error-bar chart type; custom SVG error bars overlaid
-          on MUI X BarPlot.
+        comment: Correct error bar plot; points and whiskers only, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Visible caps on all error bars; consistent widths; color variation
-          across groups; symmetric +/-1 SD errors.
+        comment: Visible caps at both ends, one cap width and line weight across all
+          points, marker on top of each whisker, one color; all 'A good version shows'
+          bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = categorical conditions; Y = mean stem elongation; error = +/-1
-          SD; full data range shown.
+        comment: Categories on x, means on y; axis spans every bar (1.3 to 4.7) in
+          full; marks at their data values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches {Descriptive Title} · {spec-id} · {language} · {library}
-          · anyplot.ai format. Single-series chart; legend omitted correctly.
+        comment: Title is exactly 'errorbar-basic · javascript · muix · anyplot.ai';
+          legend N/A for a single series
     data_quality:
       score: 15
       max: 15
@@ -171,61 +171,62 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All error bar features present: central values, +/-1 SD whiskers
-          with caps, reference baseline, color-coded groups.'
+        comment: Seven groups with varied means and error lengths (0.5–0.9), overlapping
+          and non-overlapping intervals
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plant stress experiment is scientifically plausible; cm/week growth
-          rates and SD magnitudes are realistic; neutral subject matter.
+        comment: 'Plant stem elongation under growth conditions with SD: plausible
+          and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Y 0-6 cm/week is appropriate; 7 conditions within spec's 3-20 range;
-          error magnitudes (0.5-0.9) proportionate to means.
+        comment: 1.9–4.2 cm/week with SDs 0.5–0.9 is sensible; checked bounds in render
+          (e.g. Control 3.7–4.7, Flood 1.3–3.1) match mean ± error; spec has no Check
+          values
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: One necessary sub-component (ErrorBars) required to access CartesianContext
-          hooks — unavoidable in MUI X. Minor complexity trade-off.
+        comment: 'Linear module: constants, data, derived arrays, one hook-based layer
+          component (required for MUI X scale hooks) and the default export'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded; no RNG.
+        comment: Hard-coded data, deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All 8 imports are used; no dead imports.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Semantic color comments explain design intent clearly; as any casts
-          scoped appropriately; no fake interactivity.
+        comment: Appropriate complexity; no fake UI; MUI X community has no error
+          bar series, so the custom SVG layer is the shortest route
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-export component; harness handles screenshots; community
-          @mui/x-charts only.
+        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation set,
+          v9 ChartsContainer API; harness writes plot-{theme}.png/html
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -233,24 +234,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses ChartContainer composition pattern (more idiomatic than top-level
-          BarChart for mixed content); proper hook-based scale access.
+        comment: 'Raised one: composition API (ChartsContainer + ChartsGrid + ChartsXAxis/ChartsYAxis
+          with axis ids and per-axis label/tick styles) used as MUI X recommends for
+          custom charts'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
         passed: true
-        comment: useXScale/useYScale CartesianContext hooks for custom SVG overlay;
-          colorMap.type:ordinal per-bar coloring on xAxis; ChartsReferenceLine with
-          inline label — three distinctly MUI X features.
+        comment: 'Raised one: custom marks drawn through MUI X''s useXScale/useYScale
+          hooks inside the chart context'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-10-24T08:54:51Z'
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - annotations
+  - patches
+  - html-export
   patterns:
+  - explicit-figure
   - iteration-over-groups
   dataprep: []
   styling:
-  - alpha-blending
+  - minimal-chrome
+  - edge-highlighting

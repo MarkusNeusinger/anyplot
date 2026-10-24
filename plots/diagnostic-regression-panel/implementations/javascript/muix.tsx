@@ -1,275 +1,519 @@
 // anyplot.ai
 // diagnostic-regression-panel: Regression Diagnostic Panel (Four-Plot Display)
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 90/100 | Created: 2026-09-05
+// Library: muix 9.16.0 | JavaScript 22.23.3
+// Quality: 87/100 | Updated: 2026-10-24
 //# anyplot-orientation: square
+
 import * as React from "react";
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { LinePlot } from "@mui/x-charts/LineChart";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
-import { ChartsText } from "@mui/x-charts/ChartsText";
-import { useXScale, useYScale } from "@mui/x-charts/hooks";
+import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 const FONT = "system-ui, -apple-system, 'Segoe UI', sans-serif";
 
-// --- Deterministic PRNG (LCG) + Box-Muller normal --------------------------
-let seed = 20260905;
-function nextUniform() {
-  seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-  return seed / 0x7fffffff;
-}
-function nextNormal() {
-  const u1 = Math.max(nextUniform(), 1e-9);
-  const u2 = nextUniform();
-  return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-}
+// Constants
+const LOWESS_GRID_COUNT = 36;
+const LOWESS_SPAN = 0.5;
+const TOP_INFLUENTIAL_COUNT = 3;
+const COOK_LEVELS = [0.5, 1.0];
+const COOK_GRID_COUNT = 80;
+const AXIS_PAD_RATIO = 0.08;
+const MARKER_SIZE = 6.5;
 
-// --- Data: dose-response study (drug dose vs biomarker response) -----------
-const N = 56;
-const dose = [];
-for (let i = 0; i < N; i++) {
-  dose.push(4 + 92 * (i / (N - 1)) + (nextUniform() - 0.5) * 3);
-}
-dose.sort((a, b) => a - b);
+const acklamA = [-3.969683028665376e1, 2.209460984245205e2, -2.759285104469687e2, 1.38357751867269e2, -3.066479806614716e1, 2.506628277459239];
+const acklamB = [-5.447609879822406e1, 1.615858368580409e2, -1.556989798598866e2, 6.680131188771972e1, -1.328068155288572e1];
+const acklamC = [-7.784894002430293e-3, -3.223964580411365e-1, -2.400758277161838, -2.549732539343734, 4.374664141464968, 2.938163982698783];
+const acklamD = [7.784695709041462e-3, 3.224671290700398e-1, 2.445134137142996, 3.754408661907416];
 
-const response = dose.map((d) => {
-  const trend = 18 + 2.9 * d - 0.012 * d * d; // mild curvature
-  const noiseScale = 2.5 + 0.11 * d; // heteroscedastic — variance grows with dose
-  return trend + nextNormal() * noiseScale;
-});
+// Columns: set these to your data's column names
+const OBS_ID = "Observation"; // role: extra
+const FITTED = "Fitted values"; // role: fitted
+const RESIDUALS = "Residuals"; // role: residuals
+const STD_RESIDUALS = "Standardized residuals"; // role: std_residuals
+const LEVERAGE = "Leverage"; // role: leverage
+const COOKS_D = "Cook's distance"; // role: cooks_d
 
-// Two deliberately influential observations, so the panel has something to diagnose
-response[10] += 34; // large residual, moderate leverage
-dose[N - 2] = 118;
-response[N - 2] -= 46; // high leverage + large residual
+// Data: replace this block with your own records
+const data = (() => {
+  const sampleSize = 56;
+  const modelParams = 2;
+  let seed = 20260905;
+  const doses: number[] = [];
+  for (let i = 0; i < sampleSize; i++) {
+    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+    const u = seed / 0x7fffffff;
+    doses.push(4 + 92 * (i / (sampleSize - 1)) + (u - 0.5) * 3);
+  }
+  doses.sort((a, b) => a - b);
 
-// --- Ordinary least squares (simple linear regression) ---------------------
-const n = dose.length;
-const p = 2; // parameters: intercept + slope
-const doseMean = dose.reduce((a, b) => a + b, 0) / n;
-const responseMean = response.reduce((a, b) => a + b, 0) / n;
-const sxx = dose.reduce((acc, d) => acc + (d - doseMean) ** 2, 0);
-const sxy = dose.reduce((acc, d, i) => acc + (d - doseMean) * (response[i] - responseMean), 0);
-const slope = sxy / sxx;
-const intercept = responseMean - slope * doseMean;
+  const responses = doses.map((d) => {
+    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+    const u1 = Math.max(seed / 0x7fffffff, 1e-9);
+    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+    const u2 = seed / 0x7fffffff;
+    const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+    const trend = 18 + 2.9 * d - 0.012 * d * d;
+    const noiseScale = 2.5 + 0.11 * d;
+    return trend + z * noiseScale;
+  });
 
-const fitted = dose.map((d) => intercept + slope * d);
-const residuals = response.map((y, i) => y - fitted[i]);
-const rss = residuals.reduce((acc, r) => acc + r * r, 0);
-const sigma = Math.sqrt(rss / (n - p));
-const leverage = dose.map((d) => 1 / n + (d - doseMean) ** 2 / sxx);
-const stdResiduals = residuals.map((r, i) => r / (sigma * Math.sqrt(1 - leverage[i])));
+  responses[10] += 34;
+  doses[sampleSize - 2] = 118;
+  responses[sampleSize - 2] -= 46;
+
+  const doseMean = doses.reduce((a, b) => a + b, 0) / sampleSize;
+  const responseMean = responses.reduce((a, b) => a + b, 0) / sampleSize;
+  const sxx = doses.reduce((acc, d) => acc + (d - doseMean) ** 2, 0);
+  const sxy = doses.reduce((acc, d, i) => acc + (d - doseMean) * (responses[i] - responseMean), 0);
+  const olsSlope = sxy / sxx;
+  const olsIntercept = responseMean - olsSlope * doseMean;
+
+  const rawFitted = doses.map((d) => olsIntercept + olsSlope * d);
+  const rawResiduals = responses.map((y, i) => y - rawFitted[i]);
+  const rss = rawResiduals.reduce((acc, r) => acc + r * r, 0);
+  const sigmaHat = Math.sqrt(rss / (sampleSize - modelParams));
+
+  return doses.map((d, i) => {
+    const h = 1 / sampleSize + (d - doseMean) ** 2 / sxx;
+    const stdRes = rawResiduals[i] / (sigmaHat * Math.sqrt(1 - h));
+    const cooks = (stdRes * stdRes * h) / (modelParams * (1 - h));
+    return {
+      [OBS_ID]: i + 1,
+      [FITTED]: Number(rawFitted[i].toFixed(4)),
+      [RESIDUALS]: Number(rawResiduals[i].toFixed(4)),
+      [STD_RESIDUALS]: Number(stdRes.toFixed(4)),
+      [LEVERAGE]: Number(h.toFixed(5)),
+      [COOKS_D]: Number(cooks.toFixed(5)),
+    };
+  });
+})();
+
+// Plot: reads only data and the constants above
+const n = data.length;
+const fitted = data.map((r) => Number(r[FITTED]));
+const residuals = data.map((r) => Number(r[RESIDUALS]));
+const stdResiduals = data.map((r) => Number(r[STD_RESIDUALS]));
+const leverage = data.map((r) => Number(r[LEVERAGE]));
+const cooksD = data.map((r) => Number(r[COOKS_D]));
 const scaleLocation = stdResiduals.map((r) => Math.sqrt(Math.abs(r)));
-const cooksD = stdResiduals.map((r, i) => (r * r * leverage[i]) / (p * (1 - leverage[i])));
+const p = Math.round(leverage.reduce((a, b) => a + b, 0));
 
-// Three most influential observations (highest Cook's distance), labeled by 1-based index
-const influentialIdx = cooksD
-  .map((d, i) => [d, i])
-  .sort((a, b) => b[0] - a[0])
-  .slice(0, 3)
-  .map(([, i]) => i);
+const influentialIndices = cooksD
+  .map((cooks, idx) => ({ idx, cooks }))
+  .sort((a, b) => b.cooks - a.cooks)
+  .slice(0, TOP_INFLUENTIAL_COUNT)
+  .map((item) => item.idx);
 
-// --- Normal Q-Q: theoretical quantiles vs sorted standardized residuals ----
-function inverseNormalCdf(pr) {
-  // Acklam's rational approximation of the standard normal quantile function
-  const a = [-3.969683028665376e1, 2.209460984245205e2, -2.759285104469687e2, 1.38357751867269e2, -3.066479806614716e1, 2.506628277459239];
-  const b = [-5.447609879822406e1, 1.615858368580409e2, -1.556989798598866e2, 6.680131188771972e1, -1.328068155288572e1];
-  const c = [-7.784894002430293e-3, -3.223964580411365e-1, -2.400758277161838, -2.549732539343734, 4.374664141464968, 2.938163982698783];
-  const d = [7.784695709041462e-3, 3.224671290700398e-1, 2.445134137142996, 3.754408661907416];
+const qqRanked = stdResiduals.map((v, i) => ({ v, origIdx: i })).sort((a, b) => a.v - b.v);
+const theoreticalQuantiles = new Array<number>(n);
+const qqTheoretical = new Array<number>(n);
+
+qqRanked.forEach(({ origIdx }, rank) => {
+  const pr = (rank + 0.5) / n;
   const low = 0.02425;
+  let z = 0;
   if (pr < low) {
     const q = Math.sqrt(-2 * Math.log(pr));
-    return (((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) / ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1);
-  }
-  if (pr > 1 - low) {
+    z =
+      (((((acklamC[0] * q + acklamC[1]) * q + acklamC[2]) * q + acklamC[3]) * q + acklamC[4]) * q + acklamC[5]) /
+      ((((acklamD[0] * q + acklamD[1]) * q + acklamD[2]) * q + acklamD[3]) * q + 1);
+  } else if (pr > 1 - low) {
     const q = Math.sqrt(-2 * Math.log(1 - pr));
-    return -(((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) / ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1);
+    z =
+      -(((((acklamC[0] * q + acklamC[1]) * q + acklamC[2]) * q + acklamC[3]) * q + acklamC[4]) * q + acklamC[5]) /
+      ((((acklamD[0] * q + acklamD[1]) * q + acklamD[2]) * q + acklamD[3]) * q + 1);
+  } else {
+    const q = pr - 0.5;
+    const r = q * q;
+    z =
+      ((((((acklamA[0] * r + acklamA[1]) * r + acklamA[2]) * r + acklamA[3]) * r + acklamA[4]) * r + acklamA[5]) * q) /
+      (((((acklamB[0] * r + acklamB[1]) * r + acklamB[2]) * r + acklamB[3]) * r + acklamB[4]) * r + 1);
   }
-  const q = pr - 0.5;
-  const r = q * q;
-  return (((((a[0] * r + a[1]) * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5]) * q / (((((b[0] * r + b[1]) * r + b[2]) * r + b[3]) * r + b[4]) * r + 1);
-}
-
-const qqRanked = stdResiduals.map((v, i) => [v, i]).sort((a, b) => a[0] - b[0]);
-const theoreticalQuantiles = new Array(n);
-const sortedStdResiduals = new Array(n);
-const qqRankByOrigIdx = new Array(n);
-qqRanked.forEach(([v, origIdx], rank) => {
-  theoreticalQuantiles[rank] = inverseNormalCdf((rank + 0.5) / n);
-  sortedStdResiduals[rank] = v;
-  qqRankByOrigIdx[origIdx] = rank;
+  theoreticalQuantiles[rank] = z;
+  qqTheoretical[origIdx] = z;
 });
 
-// --- LOWESS (locally weighted linear regression, tricube kernel) -----------
-function linspace(min, max, count) {
-  if (count <= 1) return [min];
-  const step = (max - min) / (count - 1);
-  return Array.from({ length: count }, (_, i) => min + step * i);
+const fittedMin = Math.min(...fitted);
+const fittedMax = Math.max(...fitted);
+const fittedSpan = fittedMax - fittedMin;
+const fittedAxisMin = fittedMin - fittedSpan * AXIS_PAD_RATIO;
+const fittedAxisMax = fittedMax + fittedSpan * AXIS_PAD_RATIO;
+
+const fittedGrid = Array.from(
+  { length: LOWESS_GRID_COUNT },
+  (_, i) => fittedMin + (fittedSpan * i) / (LOWESS_GRID_COUNT - 1),
+);
+
+const lowessK = Math.max(3, Math.round(LOWESS_SPAN * n));
+const residLowess: number[] = [];
+const scaleLocLowess: number[] = [];
+
+for (const x0 of fittedGrid) {
+  const dists = fitted.map((xi) => Math.abs(xi - x0));
+  const bandwidth = [...dists].sort((a, b) => a - b)[Math.min(lowessK - 1, n - 1)];
+  let sw = 0;
+  let swx = 0;
+  let swxx = 0;
+  let swyRes = 0;
+  let swxyRes = 0;
+  let swySL = 0;
+  let swxySL = 0;
+  for (let i = 0; i < n; i++) {
+    const u = dists[i] / bandwidth;
+    if (u >= 1) continue;
+    const w = (1 - u ** 3) ** 3;
+    sw += w;
+    swx += w * fitted[i];
+    swxx += w * fitted[i] * fitted[i];
+    swyRes += w * residuals[i];
+    swxyRes += w * fitted[i] * residuals[i];
+    swySL += w * scaleLocation[i];
+    swxySL += w * fitted[i] * scaleLocation[i];
+  }
+  const denom = sw * swxx - swx * swx;
+  const b1Res = (sw * swxyRes - swx * swyRes) / denom;
+  const b0Res = (swyRes - b1Res * swx) / sw;
+  residLowess.push(b0Res + b1Res * x0);
+
+  const b1SL = (sw * swxySL - swx * swySL) / denom;
+  const b0SL = (swySL - b1SL * swx) / sw;
+  scaleLocLowess.push(b0SL + b1SL * x0);
 }
 
-function lowess(xs, ys, xGrid, bandwidthFraction) {
-  const m = xs.length;
-  const k = Math.max(3, Math.round(bandwidthFraction * m));
-  return xGrid.map((x0) => {
-    const dists = xs.map((xi) => Math.abs(xi - x0));
-    const bandwidth = [...dists].sort((a, b) => a - b)[Math.min(k - 1, m - 1)] || 1e-6;
-    let sw = 0, swx = 0, swy = 0, swxx = 0, swxy = 0;
-    for (let i = 0; i < m; i++) {
-      const u = dists[i] / bandwidth;
-      if (u >= 1) continue;
-      const w = (1 - u ** 3) ** 3; // tricube weight
-      sw += w; swx += w * xs[i]; swy += w * ys[i];
-      swxx += w * xs[i] * xs[i]; swxy += w * xs[i] * ys[i];
-    }
-    const denom = sw * swxx - swx * swx;
-    if (Math.abs(denom) < 1e-9) return swy / sw;
-    const b1 = (sw * swxy - swx * swy) / denom;
-    const b0 = (swy - b1 * swx) / sw;
-    return b0 + b1 * x0;
-  });
+const residMin = Math.min(...residuals, ...residLowess);
+const residMax = Math.max(...residuals, ...residLowess);
+const residSpan = residMax - residMin;
+const residAxisMin = residMin - residSpan * AXIS_PAD_RATIO;
+const residAxisMax = residMax + residSpan * AXIS_PAD_RATIO;
+
+const qqDataMin = Math.min(...theoreticalQuantiles);
+const qqDataMax = Math.max(...theoreticalQuantiles);
+const qqXSpan = qqDataMax - qqDataMin;
+const qqXMin = qqDataMin - qqXSpan * AXIS_PAD_RATIO;
+const qqXMax = qqDataMax + qqXSpan * AXIS_PAD_RATIO;
+
+const stdResMin = Math.min(...stdResiduals);
+const stdResMax = Math.max(...stdResiduals);
+const stdResSpan = stdResMax - stdResMin;
+const stdResAxisMin = stdResMin - stdResSpan * AXIS_PAD_RATIO;
+const stdResAxisMax = stdResMax + stdResSpan * AXIS_PAD_RATIO;
+const p4SymLim = Math.max(Math.abs(stdResAxisMin), Math.abs(stdResAxisMax));
+
+const slMin = Math.min(...scaleLocation, ...scaleLocLowess);
+const slMax = Math.max(...scaleLocation, ...scaleLocLowess);
+const slSpan = slMax - slMin;
+const slAxisMin = Math.max(0, slMin - slSpan * AXIS_PAD_RATIO);
+const slAxisMax = slMax + slSpan * AXIS_PAD_RATIO;
+
+const levMin = Math.min(...leverage);
+const levMax = Math.max(...leverage);
+const levSpan = levMax - levMin;
+const levAxisMin = Math.max(0, levMin - levSpan * AXIS_PAD_RATIO);
+const levAxisMax = levMax + levSpan * (AXIS_PAD_RATIO * 1.6);
+
+const cookHStart = Math.max(levAxisMin, levSpan * 0.02);
+const cookGrid = Array.from(
+  { length: COOK_GRID_COUNT },
+  (_, i) => cookHStart + ((levAxisMax - cookHStart) * i) / (COOK_GRID_COUNT - 1),
+);
+
+const POINT_COLOR = t.palette[0];
+const SMOOTH_COLOR = t.palette[2];
+const CONTOUR_COLOR = t.inkSoft;
+const REF_LINE_STYLE = { stroke: t.inkSoft, strokeWidth: 1.5, strokeDasharray: "6 5", opacity: 0.75 };
+const AXIS_LABEL_STYLE = { fill: t.ink, fontSize: 15, fontWeight: 600, fontFamily: FONT };
+const TICK_LABEL_STYLE = { fill: t.inkSoft, fontSize: 14, fontFamily: FONT };
+const CHART_MARGIN = { top: 14, right: 26, bottom: 54, left: 74 };
+
+const LABEL_FONT_SIZE = 14;
+const LABEL_CHAR_W = 8.6;
+const LABEL_STYLE = { fontSize: LABEL_FONT_SIZE, fontWeight: 600, fontFamily: FONT };
+
+type Anchor = "start" | "middle" | "end";
+
+// Candidate label positions around a marker (dx, dy = baseline offset), in order of preference
+const LABEL_CANDIDATES: { dx: number; dy: number; anchor: Anchor }[] = [
+  { dx: 9, dy: -6, anchor: "start" },
+  { dx: -9, dy: -6, anchor: "end" },
+  { dx: 9, dy: 16, anchor: "start" },
+  { dx: -9, dy: 16, anchor: "end" },
+  { dx: 11, dy: 5, anchor: "start" },
+  { dx: -11, dy: 5, anchor: "end" },
+  { dx: 0, dy: -11, anchor: "middle" },
+  { dx: 0, dy: 22, anchor: "middle" },
+];
+
+interface Box {
+  x0: number;
+  y0: number;
+  x1: number;
+  y1: number;
 }
 
-const fittedGrid = linspace(Math.min(...fitted), Math.max(...fitted), 36);
-const residLowess = lowess(fitted, residuals, fittedGrid, 0.5);
-const scaleLocLowess = lowess(fitted, scaleLocation, fittedGrid, 0.5);
-
-// --- Q-Q reference line: y = x across the combined data range --------------
-const qqMin = Math.min(...theoreticalQuantiles, ...sortedStdResiduals);
-const qqMax = Math.max(...theoreticalQuantiles, ...sortedStdResiduals);
-const qqDiagonalGrid = [qqMin, qqMax];
-
-// --- Cook's distance contours (Residuals vs Leverage) -----------------------
-const leverageMax = Math.max(...leverage);
-const leverageGrid = linspace(Math.max(0.004, Math.min(...leverage) * 0.3), leverageMax * 1.15, 44);
-const cookYCap = Math.max(3, Math.max(...stdResiduals.map(Math.abs)) * 1.35);
-function cookBranch(cooksLevel) {
-  return leverageGrid.map((h) => {
-    const v = Math.sqrt((cooksLevel * p * (1 - h)) / h);
-    return v > cookYCap ? null : v;
-  });
-}
-const cookHalfPos = cookBranch(0.5);
-const cookHalfNeg = cookHalfPos.map((v) => (v === null ? null : -v));
-const cookOnePos = cookBranch(1.0);
-const cookOneNeg = cookOnePos.map((v) => (v === null ? null : -v));
-
-// --- Shared styling ----------------------------------------------------------
-const POINT_COLOR = t.palette[0]; // brand green — same marker color in all four subplots
-const SMOOTH_COLOR = t.palette[2]; // blue trend line
-const CONTOUR_COLOR = t.amber; // warning/threshold semantic color for Cook's distance
-const REF_LINE_STYLE = { stroke: t.ink, strokeWidth: 1.5, strokeDasharray: "6 5", opacity: 0.55 };
-const CONTOUR_LINE_STYLE = { strokeDasharray: "5 4" };
-const MARKER_SIZE = 6.5;
-const AXIS_LABEL_STYLE = { fontSize: 13 };
-const TICK_LABEL_STYLE = { fontSize: 11 };
-
-function scatterSeries(id, xs, ys) {
-  return {
-    id,
-    type: "scatter",
-    color: POINT_COLOR,
-    markerSize: MARKER_SIZE,
-    data: xs.map((x, i) => ({ x, y: ys[i], id: i })),
-  };
+function labelBox(tx: number, ty: number, text: string, anchor: Anchor): Box {
+  const w = text.length * LABEL_CHAR_W;
+  const x0 = anchor === "start" ? tx : anchor === "end" ? tx - w : tx - w / 2;
+  return { x0, y0: ty - LABEL_FONT_SIZE * 0.78, x1: x0 + w, y1: ty + LABEL_FONT_SIZE * 0.2 };
 }
 
-// Labels the top-3 most-influential observations inside a chart's SVG space.
-// Must run as a child of ChartContainer to read the live x/y scales.
-// Two labels whose marker centers are closer than this (Euclidean, px) are
-// considered crowded and get staggered vertically so their index numbers
-// don't visually merge — covers both stacked and side-by-side markers.
-const LABEL_CROWD_PX = 20;
-const LABEL_STAGGER_PX = 13;
+function boxCircleGap(b: Box, cx: number, cy: number) {
+  const nx = Math.max(b.x0, Math.min(cx, b.x1));
+  const ny = Math.max(b.y0, Math.min(cy, b.y1));
+  return Math.hypot(cx - nx, cy - ny);
+}
 
-function InfluentialLabels({ points }) {
-  const xScale = useXScale();
-  const yScale = useYScale();
-  const positioned = points
-    .map(({ x, y, text }) => {
-      const px = xScale(x);
-      const py = yScale(y);
-      if (px == null || py == null || Number.isNaN(px) || Number.isNaN(py)) return null;
-      return { px, py, text };
-    })
-    .filter(Boolean);
+interface PanelOverlayProps {
+  xs: number[];
+  ys: number[];
+  qqLine?: boolean;
+  cookContours?: boolean;
+  clipId: string;
+}
 
-  // Stagger along the direction away from the colliding neighbor, so a point
-  // below its neighbor moves further down (not toward it).
-  positioned.forEach((point, i) => {
-    let stackOffset = 0;
-    let sign = 1;
-    for (let j = 0; j < i; j++) {
-      const other = positioned[j];
-      const dist = Math.hypot(point.px - other.px, point.py - other.py);
-      if (dist < LABEL_CROWD_PX) {
-        stackOffset += 1;
-        sign = point.py >= other.py ? -1 : 1;
-      }
-    }
-    point.dy = sign * stackOffset * LABEL_STAGGER_PX;
+function PanelOverlay({ xs, ys, qqLine, cookContours, clipId }: PanelOverlayProps) {
+  const xScale = useXScale() as (v: number) => number;
+  const yScale = useYScale() as (v: number) => number;
+  const { left, top, width, height } = useDrawingArea();
+
+  const markers = xs.map((x, i) => ({ px: xScale(x), py: yScale(ys[i]) }));
+  const labelled = influentialIndices.map((i) => ({ i, ...markers[i], text: String(data[i][OBS_ID]) }));
+  const markerClearance = MARKER_SIZE + 2;
+
+  // Pick, per label, the candidate that stays clear of other markers and placed labels
+  // and keeps the label nearer to its own marker than to any other labelled one
+  const placed: (Box & { tx: number; ty: number; anchor: Anchor; text: string })[] = [];
+  labelled.forEach(({ i, px, py, text }) => {
+    let best = { score: Infinity, tx: px, ty: py, anchor: "start" as Anchor, box: labelBox(px, py, text, "start") };
+    LABEL_CANDIDATES.forEach(({ dx, dy, anchor }, order) => {
+      const tx = px + dx;
+      const ty = py + dy;
+      const box = labelBox(tx, ty, text, anchor);
+      const cx = (box.x0 + box.x1) / 2;
+      const cy = (box.y0 + box.y1) / 2;
+      let score = order * 0.5;
+      if (box.x0 < left || box.x1 > left + width || box.y0 < top || box.y1 > top + height) score += 200;
+      markers.forEach((m, j) => {
+        if (j !== i && boxCircleGap(box, m.px, m.py) < markerClearance) score += 8;
+      });
+      labelled.forEach((o) => {
+        if (o.i === i) return;
+        if (boxCircleGap(box, o.px, o.py) < markerClearance) score += 100;
+        if (Math.hypot(cx - o.px, cy - o.py) < 1.5 * Math.hypot(cx - px, cy - py)) score += 60;
+      });
+      placed.forEach((b) => {
+        if (box.x0 < b.x1 && box.x1 > b.x0 && box.y0 < b.y1 && box.y1 > b.y0) score += 150;
+      });
+      if (score < best.score) best = { score, tx, ty, anchor, box };
+    });
+    placed.push({ ...best.box, tx: best.tx, ty: best.ty, anchor: best.anchor, text });
   });
 
   return (
-    <React.Fragment>
-      {positioned.map(({ px, py, text, dy }) => (
-        <ChartsText
+    <g>
+      <defs>
+        <clipPath id={clipId}>
+          <rect x={left} y={top} width={width} height={height} />
+        </clipPath>
+      </defs>
+
+      {qqLine && (
+        <g clipPath={`url(#${clipId})`}>
+          <line
+            x1={xScale(qqXMin)}
+            y1={yScale(qqXMin)}
+            x2={xScale(qqXMax)}
+            y2={yScale(qqXMax)}
+            stroke={t.inkSoft}
+            strokeWidth={1.6}
+            strokeDasharray="6 5"
+            opacity={0.8}
+          />
+        </g>
+      )}
+
+      {cookContours && (
+        <g clipPath={`url(#${clipId})`}>
+          {COOK_LEVELS.flatMap((level) =>
+            [1, -1].map((sign) => {
+              const cookAt = (h: number) => sign * Math.sqrt((level * p * (1 - h)) / h);
+              const path = cookGrid
+                .map((h, idx) => `${idx === 0 ? "M" : "L"}${xScale(h).toFixed(1)},${yScale(cookAt(h)).toFixed(1)}`)
+                .join(" ");
+              const labelH = levAxisMax - levSpan * 0.04;
+              const ly = yScale(cookAt(labelH)) + (sign > 0 ? -6 : 15);
+              return (
+                <g key={`${level}-${sign}`}>
+                  <path d={path} fill="none" stroke={CONTOUR_COLOR} strokeWidth={1.7} strokeDasharray="5 4" />
+                  {ly > top + 14 && ly < top + height - 6 && (
+                    <text
+                      x={xScale(labelH) - 6}
+                      y={ly}
+                      textAnchor="end"
+                      fill={t.ink}
+                      stroke={t.pageBg}
+                      strokeWidth={3.5}
+                      paintOrder="stroke"
+                      style={LABEL_STYLE}
+                    >
+                      {level.toFixed(1)}
+                    </text>
+                  )}
+                </g>
+              );
+            }),
+          )}
+        </g>
+      )}
+
+      {placed.map(({ tx, ty, anchor, text }) => (
+        <text
           key={text}
-          x={px + 8}
-          y={py - 8 - dy}
-          text={text}
-          fill={t.inkSoft}
-          style={{ fontSize: 12, fontFamily: FONT, textAnchor: "start" }}
-        />
+          x={tx}
+          y={ty}
+          textAnchor={anchor}
+          fill={t.ink}
+          stroke={t.pageBg}
+          strokeWidth={3.5}
+          paintOrder="stroke"
+          style={LABEL_STYLE}
+        >
+          {text}
+        </text>
       ))}
-    </React.Fragment>
+    </g>
   );
 }
 
-function SubplotTitle({ children, height }) {
-  return (
-    <div style={{ height, display: "flex", alignItems: "flex-end", paddingBottom: 4 }}>
-      <span style={{ fontSize: 15, fontWeight: 500, color: t.inkSoft, fontFamily: FONT }}>{children}</span>
-    </div>
-  );
-}
+const panels = [
+  {
+    key: "p1",
+    title: `1. ${RESIDUALS} vs ${FITTED}`,
+    x: { min: fittedAxisMin, max: fittedAxisMax, label: FITTED, data: fittedGrid },
+    y: { min: residAxisMin, max: residAxisMax, label: RESIDUALS },
+    xs: fitted,
+    ys: residuals,
+    smooth: residLowess,
+    zeroLine: true,
+  },
+  {
+    key: "p2",
+    title: "2. Normal Q-Q",
+    x: { min: qqXMin, max: qqXMax, label: "Theoretical quantiles" },
+    y: { min: stdResAxisMin, max: stdResAxisMax, label: STD_RESIDUALS },
+    xs: qqTheoretical,
+    ys: stdResiduals,
+    qqLine: true,
+  },
+  {
+    key: "p3",
+    title: "3. Scale-Location",
+    x: { min: fittedAxisMin, max: fittedAxisMax, label: FITTED, data: fittedGrid },
+    y: { min: slAxisMin, max: slAxisMax, label: `√|${STD_RESIDUALS}|` },
+    xs: fitted,
+    ys: scaleLocation,
+    smooth: scaleLocLowess,
+  },
+  {
+    key: "p4",
+    title: `4. ${RESIDUALS} vs ${LEVERAGE}`,
+    x: { min: levAxisMin, max: levAxisMax, label: LEVERAGE },
+    y: { min: -p4SymLim, max: p4SymLim, label: STD_RESIDUALS },
+    xs: leverage,
+    ys: stdResiduals,
+    zeroLine: true,
+    cookContours: true,
+  },
+];
 
 export default function Chart() {
   const W = window.ANYPLOT_SIZE.width;
   const H = window.ANYPLOT_SIZE.height;
-  const titleH = 60;
+  const padX = 20;
+  const padBottom = 14;
+  const headerH = 74;
   const subTitleH = 30;
-  const gap = 18;
-  const rowH = (H - titleH - gap) / 2;
-  const colW = (W - gap) / 2;
+  const gap = 16;
+  const rowH = Math.floor((H - headerH - padBottom - gap) / 2);
+  const colW = Math.floor((W - padX * 2 - gap) / 2);
   const chartH = rowH - subTitleH;
   const chartW = colW;
 
-  // Subplot 1: Residuals vs Fitted
-  const p1Points = influentialIdx.map((i) => ({ x: fitted[i], y: residuals[i], text: String(i + 1) }));
-
-  // Subplot 2: Normal Q-Q
-  const p2Points = influentialIdx.map((i) => {
-    const rank = qqRankByOrigIdx[i];
-    return { x: theoreticalQuantiles[rank], y: sortedStdResiduals[rank], text: String(i + 1) };
-  });
-
-  // Subplot 3: Scale-Location
-  const p3Points = influentialIdx.map((i) => ({ x: fitted[i], y: scaleLocation[i], text: String(i + 1) }));
-
-  // Subplot 4: Residuals vs Leverage
-  const p4Points = influentialIdx.map((i) => ({ x: leverage[i], y: stdResiduals[i], text: String(i + 1) }));
-
   return (
-    <div style={{ width: W, height: H, display: "flex", flexDirection: "column", fontFamily: FONT }}>
-      <div style={{ height: titleH, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <span style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>
+    <div
+      style={{
+        width: W,
+        height: H,
+        backgroundColor: t.pageBg,
+        display: "flex",
+        flexDirection: "column",
+        padding: `0 ${padX}px ${padBottom}px ${padX}px`,
+        boxSizing: "border-box",
+        fontFamily: FONT,
+      }}
+    >
+      <div
+        style={{
+          height: headerH,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 4,
+        }}
+      >
+        <div style={{ fontSize: 22, fontWeight: 700, color: t.ink }}>
           diagnostic-regression-panel · javascript · muix · anyplot.ai
-        </span>
+        </div>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 20,
+            fontSize: 14,
+            color: t.inkSoft,
+          }}
+        >
+          <span>OLS diagnostics (n = {n}, p = {p})</span>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+            <span
+              style={{
+                width: 10,
+                height: 10,
+                borderRadius: "50%",
+                backgroundColor: POINT_COLOR,
+                display: "inline-block",
+              }}
+            />
+            {`${OBS_ID}s (top ${TOP_INFLUENTIAL_COUNT} by ${COOKS_D} labeled)`}
+          </span>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+            <span
+              style={{
+                width: 18,
+                height: 2.5,
+                backgroundColor: SMOOTH_COLOR,
+                display: "inline-block",
+              }}
+            />
+            LOWESS smoother
+          </span>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+            <span
+              style={{
+                width: 18,
+                borderTop: `2px dashed ${CONTOUR_COLOR}`,
+                display: "inline-block",
+              }}
+            />
+            {`${COOKS_D} (${COOK_LEVELS.map((l) => l.toFixed(1)).join(", ")})`}
+          </span>
+        </div>
       </div>
 
       <div
@@ -281,102 +525,74 @@ export default function Chart() {
           rowGap: gap,
         }}
       >
-        {/* Panel 1: Residuals vs Fitted */}
-        <div style={{ width: chartW, height: rowH }}>
-          <SubplotTitle height={subTitleH}>Residuals vs Fitted</SubplotTitle>
-          <ChartContainer
-            width={chartW}
-            height={chartH}
-            skipAnimation
-            xAxis={[{ id: "p1x", scaleType: "linear", data: fittedGrid, label: "Fitted Values", labelStyle: AXIS_LABEL_STYLE, tickLabelStyle: TICK_LABEL_STYLE }]}
-            yAxis={[{ id: "p1y", scaleType: "linear", label: "Residuals", labelStyle: AXIS_LABEL_STYLE, tickLabelStyle: TICK_LABEL_STYLE }]}
-            series={[
-              scatterSeries("p1-points", fitted, residuals),
-              { id: "p1-smooth", type: "line", color: SMOOTH_COLOR, data: residLowess, showMark: false, curve: "natural" },
-            ]}
-          >
-            <ChartsGrid horizontal vertical />
-            <ChartsReferenceLine y={0} lineStyle={REF_LINE_STYLE} />
-            <ScatterPlot />
-            <LinePlot />
-            <ChartsXAxis axisId="p1x" />
-            <ChartsYAxis axisId="p1y" />
-            <InfluentialLabels points={p1Points} />
-          </ChartContainer>
-        </div>
-
-        {/* Panel 2: Normal Q-Q */}
-        <div style={{ width: chartW, height: rowH }}>
-          <SubplotTitle height={subTitleH}>Normal Q-Q</SubplotTitle>
-          <ChartContainer
-            width={chartW}
-            height={chartH}
-            skipAnimation
-            xAxis={[{ id: "p2x", scaleType: "linear", data: qqDiagonalGrid, label: "Theoretical Quantiles", labelStyle: AXIS_LABEL_STYLE, tickLabelStyle: TICK_LABEL_STYLE }]}
-            yAxis={[{ id: "p2y", scaleType: "linear", label: "Standardized Residuals", labelStyle: AXIS_LABEL_STYLE, tickLabelStyle: TICK_LABEL_STYLE }]}
-            series={[
-              scatterSeries("p2-points", theoreticalQuantiles, sortedStdResiduals),
-              { id: "p2-diagonal", type: "line", color: t.ink, data: qqDiagonalGrid, showMark: false, curve: "linear" },
-            ]}
-          >
-            <ChartsGrid horizontal vertical />
-            <ScatterPlot />
-            <LinePlot slotProps={{ line: { style: REF_LINE_STYLE } }} />
-            <ChartsXAxis axisId="p2x" />
-            <ChartsYAxis axisId="p2y" />
-            <InfluentialLabels points={p2Points} />
-          </ChartContainer>
-        </div>
-
-        {/* Panel 3: Scale-Location */}
-        <div style={{ width: chartW, height: rowH }}>
-          <SubplotTitle height={subTitleH}>Scale-Location</SubplotTitle>
-          <ChartContainer
-            width={chartW}
-            height={chartH}
-            skipAnimation
-            xAxis={[{ id: "p3x", scaleType: "linear", data: fittedGrid, label: "Fitted Values", labelStyle: AXIS_LABEL_STYLE, tickLabelStyle: TICK_LABEL_STYLE }]}
-            yAxis={[{ id: "p3y", scaleType: "linear", label: "√|Standardized Residuals|", labelStyle: AXIS_LABEL_STYLE, tickLabelStyle: TICK_LABEL_STYLE }]}
-            series={[
-              scatterSeries("p3-points", fitted, scaleLocation),
-              { id: "p3-smooth", type: "line", color: SMOOTH_COLOR, data: scaleLocLowess, showMark: false, curve: "natural" },
-            ]}
-          >
-            <ChartsGrid horizontal vertical />
-            <ScatterPlot />
-            <LinePlot />
-            <ChartsXAxis axisId="p3x" />
-            <ChartsYAxis axisId="p3y" />
-            <InfluentialLabels points={p3Points} />
-          </ChartContainer>
-        </div>
-
-        {/* Panel 4: Residuals vs Leverage, with Cook's distance contours */}
-        <div style={{ width: chartW, height: rowH }}>
-          <SubplotTitle height={subTitleH}>Residuals vs Leverage</SubplotTitle>
-          <ChartContainer
-            width={chartW}
-            height={chartH}
-            skipAnimation
-            xAxis={[{ id: "p4x", scaleType: "linear", data: leverageGrid, label: "Leverage", labelStyle: AXIS_LABEL_STYLE, tickLabelStyle: TICK_LABEL_STYLE }]}
-            yAxis={[{ id: "p4y", scaleType: "linear", label: "Standardized Residuals", labelStyle: AXIS_LABEL_STYLE, tickLabelStyle: TICK_LABEL_STYLE }]}
-            series={[
-              scatterSeries("p4-points", leverage, stdResiduals),
-              { id: "p4-cook-half-pos", type: "line", color: CONTOUR_COLOR, data: cookHalfPos, showMark: false, curve: "natural" },
-              { id: "p4-cook-half-neg", type: "line", color: CONTOUR_COLOR, data: cookHalfNeg, showMark: false, curve: "natural" },
-              { id: "p4-cook-one-pos", type: "line", color: CONTOUR_COLOR, data: cookOnePos, showMark: false, curve: "natural" },
-              { id: "p4-cook-one-neg", type: "line", color: CONTOUR_COLOR, data: cookOneNeg, showMark: false, curve: "natural" },
-            ]}
-          >
-            <ChartsGrid horizontal vertical />
-            <ChartsReferenceLine y={0} lineStyle={REF_LINE_STYLE} />
-            <LinePlot slotProps={{ line: { style: CONTOUR_LINE_STYLE } }} />
-            <ScatterPlot />
-            <ChartsXAxis axisId="p4x" />
-            <ChartsYAxis axisId="p4y" />
-            <InfluentialLabels points={p4Points} />
-          </ChartContainer>
-        </div>
+        {panels.map((panel) => (
+          <div key={panel.key} style={{ width: chartW, height: rowH }}>
+            <div style={{ height: subTitleH, display: "flex", alignItems: "flex-end", paddingBottom: 4, paddingLeft: 74 }}>
+              <span style={{ fontSize: 16, fontWeight: 600, color: t.ink }}>{panel.title}</span>
+            </div>
+            <ChartsContainer
+              width={chartW}
+              height={chartH}
+              margin={CHART_MARGIN}
+              skipAnimation
+              xAxis={[
+                {
+                  id: `${panel.key}x`,
+                  scaleType: "linear",
+                  ...panel.x,
+                  height: 54,
+                  labelStyle: AXIS_LABEL_STYLE,
+                  tickLabelStyle: TICK_LABEL_STYLE,
+                },
+              ]}
+              yAxis={[
+                {
+                  id: `${panel.key}y`,
+                  scaleType: "linear",
+                  ...panel.y,
+                  width: 74,
+                  labelStyle: AXIS_LABEL_STYLE,
+                  tickLabelStyle: TICK_LABEL_STYLE,
+                },
+              ]}
+              series={[
+                {
+                  id: `${panel.key}-points`,
+                  type: "scatter",
+                  color: POINT_COLOR,
+                  markerSize: MARKER_SIZE,
+                  data: panel.xs.map((x, i) => ({ x, y: panel.ys[i], id: i })),
+                },
+                ...(panel.smooth
+                  ? [
+                      {
+                        id: `${panel.key}-smooth`,
+                        type: "line" as const,
+                        color: SMOOTH_COLOR,
+                        data: panel.smooth,
+                        showMark: false,
+                        curve: "natural" as const,
+                      },
+                    ]
+                  : []),
+              ]}
+            >
+              <ChartsGrid horizontal vertical />
+              {panel.zeroLine && <ChartsReferenceLine y={0} lineStyle={REF_LINE_STYLE} />}
+              <ScatterPlot />
+              {panel.smooth && <LinePlot />}
+              <ChartsXAxis axisId={`${panel.key}x`} />
+              <ChartsYAxis axisId={`${panel.key}y`} />
+              <PanelOverlay
+                xs={panel.xs}
+                ys={panel.ys}
+                qqLine={panel.qqLine}
+                cookContours={panel.cookContours}
+                clipId={`clip-${panel.key}`}
+              />
+            </ChartsContainer>
+          </div>
+        ))}
       </div>
     </div>
   );
