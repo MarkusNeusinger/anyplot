@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: parallel-categories-basic
 created: '2026-09-05T10:16:15Z'
-updated: '2026-10-24T11:32:44Z'
+updated: '2026-10-24T11:37:51Z'
 generated_by: gemini-4-argon
 adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
 workflow_run: 40090058240
@@ -13,47 +13,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/javascript/muix/plot-dark.html
-quality_score: 84
+quality_score: 83
 review:
   strengths:
-  - 'Correct parallel-categories form: three named axes, segment lengths and ribbon
-    widths scaled by one factor k from passenger counts'
-  - Real Titanic training-set counts (891 passengers; 216/184/491 by class, 314/577
-    by sex, 342/549 by outcome) that sum exactly
-  - 'Ribbons colored by the last dimension with a correct semantic exception (Survived
-    brand green, Did not survive matte red #AE3030) plus hatching as a CVD-safe second
-    cue'
-  - Hover highlighting traces one full path across all axes and dims the rest, the
-    interactive tracing the Notes ask for
-  - Natural category order with counts in every segment label
-  - Composes the chart within the community surface (ChartsContainer + useDrawingArea
-    + skipAnimation) since Sankey is Pro-only
+  - 'Faithful parallel-categories layout built on MUI X v9 composition: ChartsContainer
+    with a custom child reading useDrawingArea, one shared count scale across all
+    three axes'
+  - Semantic Survived green / Did not survive matte red, backed by an SVG hatch pattern
+    that the HTML legend swatch reproduces — readable without colour vision
+  - Real Titanic counts (891 passengers) computed into segment totals shown in the
+    labels (1st · 216, Male · 577, Did not survive · 549)
+  - 'Native hover path highlighting in the HTML output: the hovered ribbon brightens
+    and all others dim, as the Notes suggest'
+  - 'Both themes correct: chrome from ink/inkSoft tokens, node bars flip from dark
+    to light ink, data colours unchanged'
   weaknesses:
-  - 'VQ-03 (dark): the ''Did not survive'' legend swatch draws dark stripes (rgba(0,0,0,0.4))
-    while the dark-theme ribbons carry light t.ink stripes, so the glyph does not
-    match the marks it explains → draw the swatch hatch from the same t.ink token
-    at about 0.45 opacity. Likely cause: hard-coded repeating-linear-gradient(...
-    rgba(0,0,0,0.4) ...) in the legend span.'
-  - 'Suggestion: the subtitle phrase ''across 891 (Passengers)'' reads like a column
-    identifier; ''across 891 passengers'' reads more naturally.'
-  - 'Suggestion: ribbons stack within each segment in data-row order; sorting the
-    stacks by the next axis''s category would remove some avoidable crossings near
-    the Sex axis.'
+  - 'CQ-04 (code): lines 92-97 build a `heights` map by re-summing every row''s count
+    × k, which `def.totals` (lines 50-60) already holds → use `(def.totals.get(name)
+    ?? 0) * k` and drop the loop. Likely cause: the per-column node layout written
+    independently of `columnDefs`.'
+  - 'Suggestion: the subtitle reads ''across 891 (Passengers)'' — ''across 891 passengers''
+    would read more naturally.'
+  - 'Suggestion: ordering the Sex axis segments to reduce crossings (the Notes offer
+    it) would calm the braid between the first two axes.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1
-      Chrome: bold dark title 'parallel-categories-basic · javascript · muix · anyplot.ai', soft-ink subtitle, legend (Survived / Did not survive), axis names Passenger class / Sex / Outcome, segment labels with counts (1st · 216, 2nd · 184, 3rd · 491, Female · 314, Male · 577, Survived · 342, Did not survive · 549) - all readable
-      Data: dark ink segment bars; translucent Bezier ribbons in #009E73 (Survived) and hatched #AE3030 (Did not survive), widths proportional to counts
+      Background: warm off-white #FAF8F1, no pure white.
+      Chrome: bold title "parallel-categories-basic · javascript · muix · anyplot.ai" top-left, grey subtitle "Passenger class → Sex → Outcome across 891 (Passengers) — ribbon width is proportional to Passengers.", a two-entry legend (green Survived, hatched red Did not survive), semibold column headers Passenger class / Sex / Outcome, category labels with counts (1st · 216, 2nd · 184, 3rd · 491, Female · 314, Male · 577, Survived · 342, Did not survive · 549). All dark text, all readable.
+      Data: three dark-ink node bars; translucent bezier ribbons coloured by outcome — #009E73 for Survived, #AE3030 with diagonal hatching for Did not survive. The 3rd-class male non-survivor ribbon dominates the bottom; thin 3- and 6-passenger ribbons show as hairlines. No clipping.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17
-      Chrome: title, subtitle, axis names and segment labels in light ink, all readable; no dark-on-dark text
-      Data: identical #009E73 / #AE3030 ribbon colors; segment bars and ribbon hatching flip to light ink; legend swatch for Did not survive keeps dark stripes (mismatch with ribbons)
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title, subtitle, legend text, column headers and category labels all in light ink; node bars flip to light grey. No dark-on-dark text.
+      Data: same green and matte red ribbons with the same hatch as the light render (only the page behind the translucency differs); brand green clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -61,45 +58,53 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 22 px, labels 14-15 px CSS (2x DPR); all readable in both themes
+        comment: Title 22 px, subtitle 15 px, column headers 15 px semibold, category
+          labels 14 px (style-guide range); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; ribbon crossings translucent
+        comment: No text collisions; middle-axis labels sit in the gaps above their
+          segments, outer labels outside the bars; ribbon crossings are translucent
+          and permitted by the spec
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
-        passed: false
-        comment: Dark legend swatch hatch (dark stripes) does not match light-striped
-          dark ribbons (defect line)
+        passed: true
+        comment: Ribbons at 0.78 opacity with a faint ink outline stay distinguishable
+          where they cross; thin 3-passenger ribbons visible as permitted hairlines;
+          legend swatches match the ribbons (incl. hatching) in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/red outcome doubled by hatching - not color alone
+        comment: Green/red outcome pair is backed by a hatch pattern on 'Did not survive',
+          so red-green is not the sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Full-width layout, end labels fit, nothing clipped
+        comment: 3200x1800, canvas gate passed; three axes spread across the width,
+          margins sized for the outer labels, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes named Passenger class / Sex / Outcome
+        comment: Axes named 'Passenger class', 'Sex', 'Outcome'; category labels carry
+          their counts
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Semantic exception: Survived #009E73, Did not survive #AE3030; correct
-          backgrounds both themes'
+        comment: 'Survived = #009E73, Did not survive = matte red #AE3030 (semantic
+          exception, good/bad); backgrounds #FAF8F1 / #1A1A17; chrome from ink/inkSoft
+          tokens flips correctly'
     design_excellence:
       score: 10
       max: 20
@@ -109,21 +114,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Redundant hatch on loss outcome, name-count labels, title/subtitle/legend
-          header hierarchy
+        comment: '+1: an SVG hatch pattern as redundant encoding for the bad outcome,
+          mirrored in the HTML legend swatch, and a clear title/subtitle/column-header
+          type hierarchy in ink vs inkSoft'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: End-axis labels placed outside bars, middle labels above segments,
-          rounded node bars
+        comment: '+1: position-aware label placement (outer axes label outside the
+          bars, middle axis labels above the segment) and columns centred vertically
+          with a shared scale'
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
-        passed: false
-        comment: Data displayed; no hierarchy chosen beyond the Notes
+        passed: true
+        comment: Data displayed as the Notes prescribe (colour by outcome); no hierarchy
+          chosen beyond that
     spec_compliance:
       score: 15
       max: 15
@@ -133,26 +141,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Parallel categories with ribbons; no unasked layers
+        comment: Parallel categories with width-proportional ribbons; no unrequested
+          layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Named axes, proportional segments and ribbons, colored by last dimension
-          with legend, natural order, interactive path highlighting
+        comment: Named axes with proportional labelled segments, proportional ribbons,
+          colour by last dimension with a legend, natural category order, hover path
+          highlighting in HTML — all good-version bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Segment lengths and ribbon widths share one scale k
+        comment: One shared scale k for every column; segment lengths and ribbon widths
+          proportional to the counts
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title; legend entries Survived / Did not survive
+        comment: Title 'parallel-categories-basic · javascript · muix · anyplot.ai';
+          legend entries 'Survived' / 'Did not survive'
     data_quality:
       score: 15
       max: 15
@@ -162,21 +174,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Splits, merges, wide and hair-thin ribbons all shown
+        comment: Three dimensions, crossing ribbons, splits by category and hair-thin
+          rare combinations all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real Titanic training-set counts (spec example)
+        comment: Titanic passenger survival — the spec's own example, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked totals: 216/184/491, 314/577, 342/549 sum to 891'
+        comment: 'Checked the counts against the familiar 891-passenger Titanic set:
+          class totals 216/184/491, sex 314/577, outcome 342/549, all computed from
+          the records'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -184,13 +199,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: One React component as required by the harness
+        comment: Columns → data → plot; the one inner component is required to call
+          useDrawingArea inside ChartsContainer
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Static data
+        comment: Hard-coded records, deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -199,19 +215,20 @@ review:
         comment: useState, ChartsContainer, useDrawingArea all used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Layout computation is short; no available call replaces it (Sankey
-          is Pro-only)
+        passed: false
+        comment: Lines 92-97 re-sum the per-category heights that def.totals already
+          holds (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-export Chart sized to ANYPLOT_SIZE, skipAnimation
+        comment: Default-exported component, skipAnimation, sized from ANYPLOT_SIZE,
+          v9 ChartsContainer API
     library_mastery:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
@@ -219,17 +236,19 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Community ChartsContainer composition
+        comment: Correct v9 composition (ChartsContainer + useDrawingArea child),
+          but the marks are raw SVG since the community package has no Sankey/parallel-categories
+          series
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: true
-        comment: Custom SVG layer inside ChartsContainer via useDrawingArea hook
-  verdict: REJECTED
+        comment: Nothing beyond what the library prompt mandates
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T11:29:57Z'
+  rendered_at: '2026-10-24T11:34:37Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -237,11 +256,9 @@ impl_tags:
   - custom-legend
   - hover-tooltips
   - html-export
-  - annotations
   patterns:
-  - iteration-over-groups
-  dataprep:
   - groupby-aggregation
+  dataprep: []
   styling:
   - alpha-blending
-  - hatching
+  - minimal-chrome
