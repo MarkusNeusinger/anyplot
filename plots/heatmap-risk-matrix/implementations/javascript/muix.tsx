@@ -1,9 +1,8 @@
 // anyplot.ai
 // heatmap-risk-matrix: Risk Assessment Matrix (Probability vs Impact)
-// Library: muix 9.2.1 | JavaScript 22.22.3
+// Library: muix 7.29.1 | JavaScript 22.22.3
 // Quality: 88/100 | Created: 2026-06-20
 //# anyplot-orientation: square
-
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
@@ -11,14 +10,18 @@ import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
+
+// Constants
 const W = window.ANYPLOT_SIZE.width;
 const H = window.ANYPLOT_SIZE.height;
 const FONT = "system-ui, -apple-system, sans-serif";
+const TITLE = "heatmap-risk-matrix · javascript · muix · anyplot.ai";
 
-// Constants
-const RISK_NAME_COL = "risk_name";
-const LIKELIHOOD_COL = "likelihood";
-const IMPACT_COL = "impact";
+const RATING_MIN = 1;
+const RATING_MAX = 5;
+const CELL_FILL_OPACITY = 0.62;
+const DARK_INK = "#1A1A17";
+const LIGHT_INK = "#FAF8F1";
 
 const LIKELIHOOD_LABELS = [
   "Rare (1)",
@@ -36,80 +39,87 @@ const IMPACT_LABELS = [
 ];
 
 const ZONE_LEGEND = [
-  { label: "Low (1–4)", maxScore: 4, color: "#009E73" },
-  { label: "Medium (5–9)", maxScore: 9, color: "#DDCC77" },
-  { label: "High (10–16)", maxScore: 16, color: "#BD8233" },
-  { label: "Critical (20–25)", maxScore: 25, color: "#AE3030" },
+  { name: "Low", label: "Low (1–4)", maxScore: 4, color: t.palette[1] },
+  { name: "Medium", label: "Medium (5–9)", maxScore: 9, color: t.amber },
+  { name: "High", label: "High (10–16)", maxScore: 16, color: t.palette[3] },
+  { name: "Critical", label: "Critical (20–25)", maxScore: 25, color: t.palette[4] },
 ];
 
-// Data
-const DATA = [
-  { [RISK_NAME_COL]: "Data Breach", [LIKELIHOOD_COL]: 3, [IMPACT_COL]: 5 },
-  { [RISK_NAME_COL]: "Ransomware", [LIKELIHOOD_COL]: 4, [IMPACT_COL]: 5 },
-  { [RISK_NAME_COL]: "DDoS Attack", [LIKELIHOOD_COL]: 4, [IMPACT_COL]: 3 },
-  { [RISK_NAME_COL]: "Supply Chain", [LIKELIHOOD_COL]: 2, [IMPACT_COL]: 4 },
-  { [RISK_NAME_COL]: "Insider Threat", [LIKELIHOOD_COL]: 2, [IMPACT_COL]: 5 },
-  { [RISK_NAME_COL]: "API Failure", [LIKELIHOOD_COL]: 3, [IMPACT_COL]: 3 },
-  { [RISK_NAME_COL]: "Key Staff Loss", [LIKELIHOOD_COL]: 3, [IMPACT_COL]: 4 },
-  { [RISK_NAME_COL]: "Budget Cut", [LIKELIHOOD_COL]: 4, [IMPACT_COL]: 2 },
-  { [RISK_NAME_COL]: "Compliance", [LIKELIHOOD_COL]: 2, [IMPACT_COL]: 3 },
-  { [RISK_NAME_COL]: "Cloud Outage", [LIKELIHOOD_COL]: 2, [IMPACT_COL]: 4 },
-  { [RISK_NAME_COL]: "Phishing", [LIKELIHOOD_COL]: 5, [IMPACT_COL]: 2 },
-  { [RISK_NAME_COL]: "HW Failure", [LIKELIHOOD_COL]: 1, [IMPACT_COL]: 3 },
+// Columns: set these to your data's column names
+const RISK_NAME = "Risk"; // role: risk_name
+const LIKELIHOOD = "Likelihood"; // role: likelihood
+const IMPACT = "Consequence Impact"; // role: impact
+
+// Data: replace this block with your own records
+const data = [
+  { [RISK_NAME]: "Data Breach", [LIKELIHOOD]: 3, [IMPACT]: 5 },
+  { [RISK_NAME]: "Ransomware", [LIKELIHOOD]: 4, [IMPACT]: 5 },
+  { [RISK_NAME]: "DDoS Attack", [LIKELIHOOD]: 4, [IMPACT]: 3 },
+  { [RISK_NAME]: "Supply Chain", [LIKELIHOOD]: 2, [IMPACT]: 4 },
+  { [RISK_NAME]: "Insider Threat", [LIKELIHOOD]: 2, [IMPACT]: 5 },
+  { [RISK_NAME]: "API Failure", [LIKELIHOOD]: 3, [IMPACT]: 3 },
+  { [RISK_NAME]: "Key Staff Loss", [LIKELIHOOD]: 3, [IMPACT]: 4 },
+  { [RISK_NAME]: "Budget Cut", [LIKELIHOOD]: 4, [IMPACT]: 2 },
+  { [RISK_NAME]: "Compliance", [LIKELIHOOD]: 2, [IMPACT]: 3 },
+  { [RISK_NAME]: "Cloud Outage", [LIKELIHOOD]: 2, [IMPACT]: 4 },
+  { [RISK_NAME]: "Phishing", [LIKELIHOOD]: 5, [IMPACT]: 2 },
+  { [RISK_NAME]: "HW Failure", [LIKELIHOOD]: 1, [IMPACT]: 3 },
 ];
 
-const ratings = Array.from(
-  new Set([
-    ...DATA.map((r) => r[LIKELIHOOD_COL]),
-    ...DATA.map((r) => r[IMPACT_COL]),
-  ]),
-).sort((a, b) => a - b);
-const minRating = Math.min(...ratings);
-const maxRating = Math.max(...ratings);
-const gridCount = maxRating - minRating + 1;
-const axisMin = minRating - 0.5;
-const axisMax = maxRating + 0.5;
-const tickRatings = Array.from({ length: gridCount }, (_, i) => minRating + i);
+// Plot: reads only data and the constants above
+const gridCount = RATING_MAX - RATING_MIN + 1;
+const axisMin = RATING_MIN - 0.5;
+const axisMax = RATING_MAX + 0.5;
+const tickRatings = Array.from({ length: gridCount }, (_, i) => RATING_MIN + i);
+
+const bgInt = parseInt(t.pageBg.slice(1), 16);
+const bgR = (bgInt >> 16) & 255;
+const bgG = (bgInt >> 8) & 255;
+const bgB = bgInt & 255;
 
 const gridCells: Array<{
   lh: number;
   imp: number;
   score: number;
   color: string;
+  scoreTextFill: string;
 }> = [];
 
-for (let lh = minRating; lh <= maxRating; lh++) {
-  for (let imp = minRating; imp <= maxRating; imp++) {
+for (let lh = RATING_MIN; lh <= RATING_MAX; lh++) {
+  for (let imp = RATING_MIN; imp <= RATING_MAX; imp++) {
     const score = lh * imp;
-    let color = ZONE_LEGEND[ZONE_LEGEND.length - 1].color;
-    for (const z of ZONE_LEGEND) {
-      if (score <= z.maxScore) {
-        color = z.color;
-        break;
-      }
-    }
-    gridCells.push({ lh, imp, score, color });
+    const zone = ZONE_LEGEND.find((z) => score <= z.maxScore) ?? ZONE_LEGEND[ZONE_LEGEND.length - 1];
+    const zInt = parseInt(zone.color.slice(1), 16);
+    const zR = (zInt >> 16) & 255;
+    const zG = (zInt >> 8) & 255;
+    const zB = zInt & 255;
+    const effR = bgR * (1 - CELL_FILL_OPACITY) + zR * CELL_FILL_OPACITY;
+    const effG = bgG * (1 - CELL_FILL_OPACITY) + zG * CELL_FILL_OPACITY;
+    const effB = bgB * (1 - CELL_FILL_OPACITY) + zB * CELL_FILL_OPACITY;
+    const lum = (0.2126 * effR + 0.7152 * effG + 0.0722 * effB) / 255;
+    const scoreTextFill = lum > 0.52 ? DARK_INK : LIGHT_INK;
+    gridCells.push({ lh, imp, score, color: zone.color, scoreTextFill });
   }
 }
 
 const cellCounts = new Map<string, number>();
-for (const r of DATA) {
-  const k = `${r[LIKELIHOOD_COL]}-${r[IMPACT_COL]}`;
+for (const r of data) {
+  const k = `${r[LIKELIHOOD]}-${r[IMPACT]}`;
   cellCounts.set(k, (cellCounts.get(k) ?? 0) + 1);
 }
 
 const cellSeen = new Map<string, number>();
-const risksPlaced = DATA.map((r, id) => {
-  const lh = r[LIKELIHOOD_COL];
-  const imp = r[IMPACT_COL];
+const risksPlaced = data.map((r, id) => {
+  const lh = r[LIKELIHOOD];
+  const imp = r[IMPACT];
   const k = `${lh}-${imp}`;
   const idx = cellSeen.get(k) ?? 0;
   cellSeen.set(k, idx + 1);
-  const siblings = cellCounts.get(k) ?? 1;
+  const siblings = cellCounts.get(k)!;
   if (siblings === 1) {
     return {
       id,
-      name: r[RISK_NAME_COL],
+      name: r[RISK_NAME],
       lh,
       imp,
       jx: imp,
@@ -120,7 +130,7 @@ const risksPlaced = DATA.map((r, id) => {
   const angle = (2 * Math.PI * idx) / siblings - Math.PI / 2;
   return {
     id,
-    name: r[RISK_NAME_COL],
+    name: r[RISK_NAME],
     lh,
     imp,
     jx: imp + 0.14 * Math.sin(angle),
@@ -130,16 +140,20 @@ const risksPlaced = DATA.map((r, id) => {
 });
 
 const scatterData = risksPlaced.map((r) => ({ id: r.id, x: r.jx, y: r.jy }));
-const criticalCount = DATA.filter(
-  (r) => r[LIKELIHOOD_COL] * r[IMPACT_COL] >= 20,
-).length;
-const highCount = DATA.filter((r) => {
-  const s = r[LIKELIHOOD_COL] * r[IMPACT_COL];
-  return s >= 10 && s <= 16;
-}).length;
 
-const TITLE = "heatmap-risk-matrix · javascript · muix · anyplot.ai";
-const SUBTITLE = `${DATA.length} assessed risks across ${gridCount}×${gridCount} likelihood × impact matrix (${criticalCount} Critical, ${highCount} High)`;
+const zoneCountMap = new Map<string, number>();
+for (const z of ZONE_LEGEND) zoneCountMap.set(z.name, 0);
+for (const r of data) {
+  const score = r[LIKELIHOOD] * r[IMPACT];
+  const zone = ZONE_LEGEND.find((z) => score <= z.maxScore) ?? ZONE_LEGEND[ZONE_LEGEND.length - 1];
+  zoneCountMap.set(zone.name, (zoneCountMap.get(zone.name) ?? 0) + 1);
+}
+const topTwoSummary = ZONE_LEGEND.slice(-2)
+  .reverse()
+  .map((z) => `${zoneCountMap.get(z.name)} ${z.name}`)
+  .join(", ");
+
+const SUBTITLE = `${data.length} ${RISK_NAME}s across ${gridCount}×${gridCount} ${LIKELIHOOD} × ${IMPACT} matrix (${topTwoSummary})`;
 
 function RiskMatrixLayer() {
   const { left, top, width, height } = useDrawingArea();
@@ -173,8 +187,8 @@ function RiskMatrixLayer() {
       </text>
 
       {gridCells.map((cell) => {
-        const cx = left + (cell.imp - minRating) * cW;
-        const cy = top + (maxRating - cell.lh) * cH;
+        const cx = left + (cell.imp - RATING_MIN) * cW;
+        const cy = top + (RATING_MAX - cell.lh) * cH;
         return (
           <g key={`cell-${cell.lh}-${cell.imp}`}>
             <rect
@@ -183,7 +197,7 @@ function RiskMatrixLayer() {
               width={cW}
               height={cH}
               fill={cell.color}
-              fillOpacity={0.42}
+              fillOpacity={CELL_FILL_OPACITY}
               stroke={t.ink}
               strokeOpacity={0.24}
               strokeWidth={1.5}
@@ -194,8 +208,7 @@ function RiskMatrixLayer() {
               textAnchor="end"
               fontSize={14}
               fontWeight="600"
-              fill={t.ink}
-              fillOpacity={0.55}
+              fill={cell.scoreTextFill}
               fontFamily={FONT}
             >
               {cell.score}
@@ -227,7 +240,7 @@ function RiskMatrixLayer() {
               height={pillH}
               rx={4}
               fill={t.pageBg}
-              fillOpacity={0.88}
+              fillOpacity={0.92}
               stroke={t.grid}
               strokeWidth={1}
             />
@@ -256,7 +269,7 @@ function RiskMatrixLayer() {
               width={20}
               height={20}
               fill={z.color}
-              fillOpacity={0.7}
+              fillOpacity={CELL_FILL_OPACITY}
               stroke={t.ink}
               strokeOpacity={0.25}
               rx={3}
@@ -301,8 +314,8 @@ export default function Chart() {
           max: axisMax,
           tickInterval: tickRatings,
           height: 62,
-          label: "Consequence Impact",
-          valueFormatter: (v: number) => IMPACT_LABELS[Math.round(v) - 1] ?? "",
+          label: IMPACT,
+          valueFormatter: (v: number) => IMPACT_LABELS[Math.round(v) - RATING_MIN] ?? "",
           tickLabelStyle: { fontSize: 14, fill: t.inkSoft, fontFamily: FONT },
           labelStyle: {
             fontSize: 15,
@@ -319,9 +332,9 @@ export default function Chart() {
           max: axisMax,
           tickInterval: tickRatings,
           width: 158,
-          label: "Likelihood",
+          label: LIKELIHOOD,
           valueFormatter: (v: number) =>
-            LIKELIHOOD_LABELS[Math.round(v) - 1] ?? "",
+            LIKELIHOOD_LABELS[Math.round(v) - RATING_MIN] ?? "",
           tickLabelStyle: { fontSize: 14, fill: t.inkSoft, fontFamily: FONT },
           labelStyle: {
             fontSize: 15,
