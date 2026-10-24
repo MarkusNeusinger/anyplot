@@ -3,256 +3,259 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 89/100 | Created: 2026-09-02
 //# anyplot-orientation: square
-// anyplot.ai
-// smith-chart-basic: Smith Chart for RF/Impedance
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-09-02
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsText } from "@mui/x-charts/ChartsText";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Antenna feed impedance sweep (in-memory, deterministic RLC model) ------
-// A series R-L-C feed model: radiation resistance rises gently with
-// frequency while the reactance swings through resonance — a textbook
-// Smith-chart trajectory for a monopole antenna matched to Z0.
-const Z0 = 50; // ohms — reference impedance
-const INDUCTANCE = 5e-9; // henries — series feed inductance
-const CAPACITANCE = 0.4e-12; // farads — series feed capacitance
+// Constants
+const TITLE = "smith-chart-basic · javascript · muix · anyplot.ai";
+const TITLE_HEIGHT = 70;
+const RESISTANCE_VALUES = [0.2, 0.5, 1, 2, 5];
+const REACTANCE_VALUES = [0.2, 0.5, 1, 2, 5];
+const GAMMA_MAX = 1.15;
+const CIRCLE_STEPS = 120;
+const ARC_STEPS = 400;
+const BASE_MARGIN = 50;
+const LABEL_OFFSET_PX = 26;
+
+// Columns: set these to your data's column names
+const FREQUENCY = "Frequency (GHz)"; // role: frequency
+const Z_REAL = "Resistance R (Ω)"; // role: z_real
+const Z_IMAG = "Reactance X (Ω)"; // role: z_imag
+
+// Data: replace this block with your own records
+const Z0 = 50; // role: z0
+const INDUCTANCE = 5e-9;
+const CAPACITANCE = 0.4e-12;
 const FREQ_START_GHZ = 1;
 const FREQ_END_GHZ = 6;
 const FREQ_STEP_GHZ = 0.125;
 
-const frequenciesGHz = [];
+const data = [];
 for (let f = FREQ_START_GHZ; f <= FREQ_END_GHZ + 1e-9; f += FREQ_STEP_GHZ) {
-  frequenciesGHz.push(Math.round(f * 1000) / 1000);
-}
-
-const gammaPoints = frequenciesGHz.map((fGHz) => {
+  const fGHz = Math.round(f * 1000) / 1000;
   const omega = 2 * Math.PI * fGHz * 1e9;
   const resistance = 35 + 3 * (fGHz - FREQ_START_GHZ);
   const reactance = omega * INDUCTANCE - 1 / (omega * CAPACITANCE);
-  const zReal = resistance / Z0;
-  const zImag = reactance / Z0;
-  // gamma = (z_norm - 1) / (z_norm + 1), complex division done by hand
+  data.push({
+    [FREQUENCY]: fGHz,
+    [Z_REAL]: resistance,
+    [Z_IMAG]: reactance,
+  });
+}
+
+// Plot: reads only data and the constants above
+const freqUnitMatch = /\(([^)]+)\)/.exec(FREQUENCY);
+const freqUnit = freqUnitMatch ? ` ${freqUnitMatch[1]}` : "";
+
+const gammaPoints = data.map((row) => {
+  const fVal = Number(row[FREQUENCY]);
+  const zReal = Number(row[Z_REAL]) / Z0;
+  const zImag = Number(row[Z_IMAG]) / Z0;
   const denomReal = zReal + 1;
   const denomImag = zImag;
   const denomMagSq = denomReal * denomReal + denomImag * denomImag;
   const numReal = zReal - 1;
   const numImag = zImag;
   return {
-    fGHz,
+    fVal,
     re: (numReal * denomReal + numImag * denomImag) / denomMagSq,
     im: (numImag * denomReal - numReal * denomImag) / denomMagSq,
   };
 });
-const labeledFreqs = [1, 2, 3, 4, 5, 6];
 
-// --- Smith-chart grid geometry (unit circle in the Γ-plane) -----------------
-const RESISTANCE_VALUES = [0.2, 0.5, 1, 2, 5];
-const REACTANCE_VALUES = [0.2, 0.5, 1, 2, 5];
-const GAMMA_MAX = 1.15;
-const CIRCLE_STEPS = 120;
+const labeledWaypoints = gammaPoints.filter((p) => Math.abs(p.fVal - Math.round(p.fVal)) < 1e-6);
 
-const circlePoints = (cx, cy, r, steps = CIRCLE_STEPS) =>
-  Array.from({ length: steps + 1 }, (_, i) => {
-    const theta = (i / steps) * 2 * Math.PI;
-    return [cx + r * Math.cos(theta), cy + r * Math.sin(theta)];
+const unitCirclePts = Array.from({ length: CIRCLE_STEPS + 1 }, (_, i) => {
+  const theta = (i / CIRCLE_STEPS) * 2 * Math.PI;
+  return [Math.cos(theta), Math.sin(theta)];
+});
+
+const resistanceCircles = RESISTANCE_VALUES.map((r) => {
+  const cx = r / (1 + r);
+  const rad = 1 / (1 + r);
+  const pts = Array.from({ length: CIRCLE_STEPS + 1 }, (_, i) => {
+    const theta = (i / CIRCLE_STEPS) * 2 * Math.PI;
+    return [cx + rad * Math.cos(theta), rad * Math.sin(theta)];
   });
+  return { r, pts };
+});
 
-// Every constant-reactance circle passes through the open-circuit point
-// (1, 0); only the portion that curves back into the unit disk belongs on
-// the chart. That portion's angular span depends on the circle's radius
-// (tiny for large |x|, most of the circle for small |x|), so it is found by
-// walking outward from (1, 0) until the circle re-crosses |Γ| = 1, rather
-// than assumed to be a fixed half-circle.
-const reactanceArcPoints = (xVal, steps = 400) => {
+const reactanceArcs = REACTANCE_VALUES.flatMap((x) => [x, -x]).map((xVal) => {
   const cx = 1;
   const cy = 1 / xVal;
   const r = Math.abs(1 / xVal);
   const theta0 = Math.atan2(-cy, 0);
-  const pointAt = (theta) => [cx + r * Math.cos(theta), cy + r * Math.sin(theta)];
-  const norm2 = ([x, y]) => x * x + y * y;
-  const dTheta = (2 * Math.PI) / steps;
-  const direction = norm2(pointAt(theta0 + dTheta)) < norm2(pointAt(theta0 - dTheta)) ? 1 : -1;
-  const points = [pointAt(theta0)];
-  for (let i = 1; i <= steps; i++) {
-    const p = pointAt(theta0 + direction * dTheta * i);
-    if (norm2(p) > 1.0005) break;
-    points.push(p);
+  const dTheta = (2 * Math.PI) / ARC_STEPS;
+  const pPlusX = cx + r * Math.cos(theta0 + dTheta);
+  const pPlusY = cy + r * Math.sin(theta0 + dTheta);
+  const pMinusX = cx + r * Math.cos(theta0 - dTheta);
+  const pMinusY = cy + r * Math.sin(theta0 - dTheta);
+  const direction =
+    pPlusX * pPlusX + pPlusY * pPlusY < pMinusX * pMinusX + pMinusY * pMinusY ? 1 : -1;
+  const pts = [[cx + r * Math.cos(theta0), cy + r * Math.sin(theta0)]];
+  for (let i = 1; i <= ARC_STEPS; i += 1) {
+    const theta = theta0 + direction * dTheta * i;
+    const px = cx + r * Math.cos(theta);
+    const py = cy + r * Math.sin(theta);
+    if (px * px + py * py > 1.0005) break;
+    pts.push([px, py]);
   }
-  return points;
-};
+  return { xVal, pts };
+});
 
-const pathFromPoints = (points, toPx) =>
-  points
-    .map(([x, y], i) => {
-      const p = toPx(x, y);
-      return `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`;
-    })
-    .join(" ");
-
-// --- Overlay: resistance circles, reactance arcs, matched-center marker -----
-// Community `@mui/x-charts/hooks` (useXScale/useYScale) map Γ-plane
-// coordinates to pixels so the grid stays aligned with the locus at any size.
-function SmithGrid() {
+function SmithChartLayer() {
   const xScale = useXScale();
   const yScale = useYScale();
-  const toPx = (re, im) => ({ x: xScale(re), y: yScale(im) });
+  const brand = t.palette[0];
+  const originX = xScale(0);
+  const originY = yScale(0);
+
+  const unitCircleD = unitCirclePts
+    .map(([x, y], i) => `${i === 0 ? "M" : "L"} ${xScale(x)} ${yScale(y)}`)
+    .join(" ");
+
+  const locusD = gammaPoints
+    .map((p, i) => `${i === 0 ? "M" : "L"} ${xScale(p.re)} ${yScale(p.im)}`)
+    .join(" ");
 
   return (
     <g>
-      <path d={pathFromPoints(circlePoints(0, 0, 1), toPx)} fill="none" stroke={t.ink} strokeWidth={2.5} />
+      <path d={unitCircleD} fill="none" stroke={t.ink} strokeWidth={2.5} />
       <line
-        x1={toPx(-1, 0).x}
-        y1={toPx(-1, 0).y}
-        x2={toPx(1, 0).x}
-        y2={toPx(1, 0).y}
+        x1={xScale(-1)}
+        y1={originY}
+        x2={xScale(1)}
+        y2={originY}
         stroke={t.inkSoft}
         strokeWidth={1.5}
       />
-      {RESISTANCE_VALUES.map((r) => (
-        <path
-          key={`r-${r}`}
-          d={pathFromPoints(circlePoints(r / (1 + r), 0, 1 / (1 + r)), toPx)}
-          fill="none"
-          stroke={t.inkSoft}
-          strokeWidth={1}
-          opacity={0.55}
-        />
-      ))}
-      {REACTANCE_VALUES.flatMap((x) => [x, -x]).map((x) => (
-        <path
-          key={`x-${x}`}
-          d={pathFromPoints(reactanceArcPoints(x), toPx)}
-          fill="none"
-          stroke={t.inkSoft}
-          strokeWidth={1}
-          opacity={0.55}
-        />
-      ))}
+
+      {resistanceCircles.map(({ r, pts }) => {
+        const d = pts
+          .map(([x, y], i) => `${i === 0 ? "M" : "L"} ${xScale(x)} ${yScale(y)}`)
+          .join(" ");
+        return (
+          <path
+            key={`r-${r}`}
+            d={d}
+            fill="none"
+            stroke={t.inkSoft}
+            strokeWidth={1}
+            opacity={0.55}
+          />
+        );
+      })}
+
+      {reactanceArcs.map(({ xVal, pts }) => {
+        const d = pts
+          .map(([x, y], i) => `${i === 0 ? "M" : "L"} ${xScale(x)} ${yScale(y)}`)
+          .join(" ");
+        return (
+          <path
+            key={`x-${xVal}`}
+            d={d}
+            fill="none"
+            stroke={t.inkSoft}
+            strokeWidth={1}
+            opacity={0.55}
+          />
+        );
+      })}
+
       {RESISTANCE_VALUES.map((r) => {
-        const p = toPx((r - 1) / (1 + r), 0);
-        // r=1 sits exactly at the chart center, right next to the Z0 marker —
-        // give it extra clearance so the two labels don't cluster together.
+        const px = xScale((r - 1) / (1 + r));
         const labelOffset = r === 1 ? 26 : 18;
         return (
           <ChartsText
             key={`rl-${r}`}
-            x={p.x}
-            y={p.y + labelOffset}
+            x={px}
+            y={originY + labelOffset}
             text={String(r)}
             style={{ fontSize: 13, fill: t.inkSoft, textAnchor: "middle" }}
           />
         );
       })}
-      {REACTANCE_VALUES.flatMap((x) => [x, -x]).map((x) => {
-        // Label at the arc's outer end (where it re-crosses the boundary),
-        // nudged further out along the same radial direction from origin.
-        const arcPoints = reactanceArcPoints(x);
-        const [ax, ay] = arcPoints[arcPoints.length - 1];
-        const p = toPx(ax * 1.06, ay * 1.06);
+
+      {reactanceArcs.map(({ xVal, pts }) => {
+        const [ax, ay] = pts[pts.length - 1];
+        const px = xScale(ax * 1.06);
+        const py = yScale(ay * 1.06);
         return (
           <ChartsText
-            key={`xl-${x}`}
-            x={p.x}
-            y={p.y}
-            text={`${x > 0 ? "+j" : "−j"}${Math.abs(x)}`}
+            key={`xl-${xVal}`}
+            x={px}
+            y={py}
+            text={`${xVal > 0 ? "+j" : "−j"}${Math.abs(xVal)}`}
             style={{ fontSize: 13, fill: t.inkSoft, textAnchor: "middle", dominantBaseline: "central" }}
           />
         );
       })}
-      <circle cx={toPx(0, 0).x} cy={toPx(0, 0).y} r={5} fill="none" stroke={t.ink} strokeWidth={2} />
+
+      <circle cx={originX} cy={originY} r={5} fill="none" stroke={t.ink} strokeWidth={2} />
       <ChartsText
-        x={toPx(0, 0).x}
-        y={toPx(0, 0).y - 26}
+        x={originX}
+        y={originY - 26}
         text="Z0"
         style={{ fontSize: 15, fill: t.ink, textAnchor: "middle", fontWeight: 500 }}
       />
-    </g>
-  );
-}
 
-// --- Overlay: the swept impedance locus with frequency waypoints ------------
-function ImpedanceLocus() {
-  const xScale = useXScale();
-  const yScale = useYScale();
-  const toPx = (re, im) => ({ x: xScale(re), y: yScale(im) });
-  const brand = t.palette[0];
-
-  return (
-    <g>
       <path
-        d={pathFromPoints(
-          gammaPoints.map((p) => [p.re, p.im]),
-          toPx,
-        )}
+        d={locusD}
         fill="none"
         stroke={brand}
         strokeWidth={3.5}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      {gammaPoints
-        .filter((p) => labeledFreqs.includes(p.fGHz))
-        .map((p) => {
-          const px = toPx(p.re, p.im);
-          // Nudge the label outward along the radial direction from the chart
-          // center (same technique as the reactance-arc labels above) rather
-          // than a fixed pixel offset — points near |Γ|=1 (e.g. 1 GHz at
-          // |Γ|≈0.975) would otherwise sit on top of the boundary circle and
-          // converging grid arcs.
-          const origin = toPx(0, 0);
-          const dx = px.x - origin.x;
-          const dy = px.y - origin.y;
-          const dist = Math.hypot(dx, dy) || 1;
-          const ux = dx / dist;
-          const uy = dy / dist;
-          const LABEL_OFFSET_PX = 26;
-          const lx = px.x + ux * LABEL_OFFSET_PX;
-          const ly = px.y + uy * LABEL_OFFSET_PX;
-          return (
-            <g key={p.fGHz}>
-              <circle cx={px.x} cy={px.y} r={9} fill={brand} stroke={t.pageBg} strokeWidth={2.5} />
-              <ChartsText
-                x={lx}
-                y={ly}
-                text={`${p.fGHz} GHz`}
-                style={{
-                  fontSize: 14,
-                  fill: t.ink,
-                  fontWeight: 500,
-                  textAnchor: ux >= 0.15 ? "start" : ux <= -0.15 ? "end" : "middle",
-                  dominantBaseline: uy >= 0.15 ? "hanging" : uy <= -0.15 ? "auto" : "central",
-                }}
-              />
-            </g>
-          );
-        })}
+
+      {labeledWaypoints.map((p) => {
+        const px = xScale(p.re);
+        const py = yScale(p.im);
+        const dx = px - originX;
+        const dy = py - originY;
+        const dist = Math.hypot(dx, dy);
+        const ux = dx / dist;
+        const uy = dy / dist;
+        const lx = px + ux * LABEL_OFFSET_PX;
+        const ly = py + uy * LABEL_OFFSET_PX;
+        return (
+          <g key={p.fVal}>
+            <circle cx={px} cy={py} r={9} fill={brand} stroke={t.pageBg} strokeWidth={2.5} />
+            <ChartsText
+              x={lx}
+              y={ly}
+              text={`${p.fVal}${freqUnit}`}
+              style={{
+                fontSize: 14,
+                fill: t.ink,
+                fontWeight: 500,
+                textAnchor: ux >= 0.15 ? "start" : ux <= -0.15 ? "end" : "middle",
+                dominantBaseline: uy >= 0.15 ? "hanging" : uy <= -0.15 ? "auto" : "central",
+              }}
+            />
+          </g>
+        );
+      })}
     </g>
   );
 }
 
-const TITLE = "smith-chart-basic · javascript · muix · anyplot.ai";
-const TITLE_HEIGHT = 70;
-
-// Left/right margin is derived so the drawing area is a perfect square —
-// required for the Γ-plane circles to render as true circles, not ellipses.
-const BASE_MARGIN = 50;
-const chartHeight = window.ANYPLOT_SIZE.height - TITLE_HEIGHT;
-const squareSide = chartHeight - 2 * BASE_MARGIN;
-const sideMargin = (window.ANYPLOT_SIZE.width - squareSide) / 2;
-const MARGIN = { top: BASE_MARGIN, bottom: BASE_MARGIN, left: sideMargin, right: sideMargin };
-
-// --- Chart (default-exported component — the harness mounts it) -------------
 export default function Chart() {
+  const { width, height } = window.ANYPLOT_SIZE;
+  const chartHeight = height - TITLE_HEIGHT;
+  const squareSide = chartHeight - 2 * BASE_MARGIN;
+  const sideMargin = (width - squareSide) / 2;
+  const margin = { top: BASE_MARGIN, bottom: BASE_MARGIN, left: sideMargin, right: sideMargin };
+
   return (
     <div
       style={{
-        width: window.ANYPLOT_SIZE.width,
-        height: window.ANYPLOT_SIZE.height,
+        width,
+        height,
         display: "flex",
         flexDirection: "column",
       }}
@@ -270,19 +273,18 @@ export default function Chart() {
       >
         {TITLE}
       </div>
-      <ChartContainer
-        width={window.ANYPLOT_SIZE.width}
+      <ChartsContainer
+        width={width}
         height={chartHeight}
-        margin={MARGIN}
+        margin={margin}
         series={[]}
         skipAnimation
         disableAxisListener
-        xAxis={[{ scaleType: "linear", min: -GAMMA_MAX, max: GAMMA_MAX }]}
-        yAxis={[{ scaleType: "linear", min: -GAMMA_MAX, max: GAMMA_MAX }]}
+        xAxis={[{ scaleType: "linear", min: -GAMMA_MAX, max: GAMMA_MAX, position: "none" }]}
+        yAxis={[{ scaleType: "linear", min: -GAMMA_MAX, max: GAMMA_MAX, position: "none" }]}
       >
-        <SmithGrid />
-        <ImpedanceLocus />
-      </ChartContainer>
+        <SmithChartLayer />
+      </ChartsContainer>
     </div>
   );
 }
