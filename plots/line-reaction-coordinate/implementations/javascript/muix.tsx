@@ -117,25 +117,8 @@ function EnergyAnnotations() {
   const inkSoft = t.inkSoft;
   const green = t.palette[0];
 
-  let curveD = "";
-  for (let i = 0; i < sortedData.length; i++) {
-    const px = xScale(xData[i]);
-    const py = yScale(yData[i]);
-    curveD += `${i === 0 ? "M" : "L"}${px.toFixed(1)},${py.toFixed(1)} `;
-  }
-
   return (
     <g fontFamily={FONT}>
-      {/* Reaction coordinate energy curve */}
-      <path
-        d={curveD}
-        fill="none"
-        stroke={green}
-        strokeWidth={3.5}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-
       {/* Transition state peak marker — hollow circle on the curve */}
       <circle
         cx={xScale(xPeak)}
@@ -273,6 +256,13 @@ export default function Chart() {
         height={height - titleH}
         skipAnimation
         margin={{ left: 24, right: 64, top: 36, bottom: 20 }}
+        sx={{
+          "& .MuiLineChart-line": {
+            strokeWidth: 3.5,
+            strokeLinecap: "round",
+            strokeLinejoin: "round",
+          },
+        }}
         series={[
           {
             type: "line",
