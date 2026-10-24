@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-3d-trajectory: 3D Line Plot for Trajectory Visualization
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-09-10
+// Library: muix 9.16.0 | JavaScript 22.23.3
+// Quality: 81/100 | Updated: 2026-10-24
 
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { useDrawingArea } from "@mui/x-charts/hooks";
