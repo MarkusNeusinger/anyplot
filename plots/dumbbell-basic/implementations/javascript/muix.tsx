@@ -1,7 +1,7 @@
 // anyplot.ai
 // dumbbell-basic: Basic Dumbbell Chart
-// Library: muix 9.0.0 | JavaScript 22.23.0
-// Quality: pending | Created: 2026-06-30
+// Library: muix 7.29.1 | JavaScript 22.23.0
+// Quality: 89/100 | Created: 2026-06-30
 
 import * as React from "react";
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
@@ -12,20 +12,23 @@ import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const FONT = "system-ui, -apple-system, 'Segoe UI', sans-serif";
-const TITLE = "dumbbell-basic · javascript · muix · anyplot.ai";
 
 // Constants
-const CATEGORY = "Department";
-const START_VALUE = "Before Program";
-const END_VALUE = "After Program";
-const X_AXIS_LABEL = "Employee Satisfaction Score (0–10 scale)";
+const FONT = "system-ui, -apple-system, 'Segoe UI', sans-serif";
+const TITLE = "dumbbell-basic · javascript · muix · anyplot.ai";
 const X_PAD_LEFT_SHARE = 0.14;
 const X_PAD_RIGHT_SHARE = 0.2;
 const MARKER_SIZE = 10;
+const START_COLOR = t.palette[0];
+const END_COLOR = t.palette[1];
 
-// Data: employee satisfaction scores before and after a wellness program
-const rawData = [
+// Columns: set these to your data's column names
+const CATEGORY = "Department"; // role: category
+const START_VALUE = "Before program (satisfaction score)"; // role: start_value
+const END_VALUE = "After program (satisfaction score)"; // role: end_value
+
+// Data: replace this block with your own records
+const data = [
   { [CATEGORY]: "Finance", [START_VALUE]: 5.4, [END_VALUE]: 5.9 },
   { [CATEGORY]: "Legal", [START_VALUE]: 5.7, [END_VALUE]: 5.5 },
   { [CATEGORY]: "Marketing", [START_VALUE]: 6.0, [END_VALUE]: 7.6 },
@@ -36,27 +39,27 @@ const rawData = [
   { [CATEGORY]: "Design", [START_VALUE]: 7.4, [END_VALUE]: 8.0 },
 ];
 
-// Sort ascending by start value
-const data = [...rawData].sort((a, b) => a[START_VALUE] - b[START_VALUE]);
+// Plot: reads only data and the constants above
+const sortedData = [...data].sort(
+  (a, b) => Number(a[START_VALUE]) - Number(b[START_VALUE]),
+);
 
-const categories = data.map((d) => d[CATEGORY]);
-const startValues = data.map((d) => d[START_VALUE]);
-const endValues = data.map((d) => d[END_VALUE]);
-const diffs = data.map((d) => +(d[END_VALUE] - d[START_VALUE]).toFixed(1));
-const n = data.length;
+const categories = sortedData.map((d) => String(d[CATEGORY]));
+const startValues = sortedData.map((d) => Number(d[START_VALUE]));
+const endValues = sortedData.map((d) => Number(d[END_VALUE]));
+const diffs = sortedData.map((d) => +(Number(d[END_VALUE]) - Number(d[START_VALUE])).toFixed(1));
+const n = sortedData.length;
 
 const allValues = [...startValues, ...endValues];
 const valMin = Math.min(...allValues);
 const valMax = Math.max(...allValues);
-const valSpan = valMax - valMin || 1;
+const valSpan = valMax - valMin;
 const xMin = valMin - valSpan * X_PAD_LEFT_SHARE;
 const xMax = valMax + valSpan * X_PAD_RIGHT_SHARE;
 
 const startSeriesData = startValues.map((x, i) => ({ id: i, x, y: i }));
 const endSeriesData = endValues.map((x, i) => ({ id: i + n, x, y: i }));
-
-const START_COLOR = t.palette[0];
-const END_COLOR = t.palette[1];
+const X_AXIS_LABEL = `${START_VALUE} vs ${END_VALUE}`;
 
 function DumbbellOverlay() {
   const xScale = useXScale() as (v: number) => number;
@@ -64,16 +67,16 @@ function DumbbellOverlay() {
 
   return (
     <g>
-      {data.map((d, i) => {
-        const x1 = xScale(d[START_VALUE]) ?? 0;
-        const x2 = xScale(d[END_VALUE]) ?? 0;
-        const y = yScale(i) ?? 0;
+      {sortedData.map((d, i) => {
+        const x1 = xScale(Number(d[START_VALUE]));
+        const x2 = xScale(Number(d[END_VALUE]));
+        const y = yScale(i);
         const rightX = Math.max(x1, x2);
         const diff = diffs[i];
         const diffLabel = diff > 0 ? `+${diff.toFixed(1)}` : diff.toFixed(1);
 
         return (
-          <g key={d[CATEGORY]}>
+          <g key={String(d[CATEGORY])}>
             <line
               x1={x1}
               y1={y}
@@ -195,14 +198,14 @@ export default function Chart() {
             min: -0.5,
             max: n - 0.5,
             width: 124,
-            tickMinStep: 1,
+            tickInterval: categories.map((_, i) => i),
             disableLine: true,
             disableTicks: true,
             valueFormatter: (v: number) => categories[Math.round(v)] ?? "",
             tickLabelStyle: { fontSize: 15, fill: t.ink, fontFamily: FONT },
           },
         ]}
-        margin={{ left: 136, right: 64, top: 18, bottom: 72 }}
+        margin={{ left: 24, right: 64, top: 18, bottom: 20 }}
       >
         <ChartsGrid vertical />
         <DumbbellOverlay />
