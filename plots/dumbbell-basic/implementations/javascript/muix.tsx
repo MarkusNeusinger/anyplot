@@ -2,189 +2,217 @@
 // dumbbell-basic: Basic Dumbbell Chart
 // Library: muix 7.29.1 | JavaScript 22.23.0
 // Quality: 89/100 | Created: 2026-06-30
-//# anyplot-orientation: landscape
 
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import * as React from "react";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
-import { ChartsLegend } from "@mui/x-charts/ChartsLegend";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// Employee satisfaction (0–10) before/after a wellness program.
-// Includes a wide range of outcomes — one regression, one standout gain.
-const RAW = [
-  { dept: "Finance",     before: 5.4, after: 5.9 },  // +0.5 modest gain
-  { dept: "Legal",       before: 5.7, after: 5.5 },  // -0.2 regression
-  { dept: "Marketing",   before: 6.0, after: 7.6 },  // +1.6
-  { dept: "Sales",       before: 6.2, after: 6.7 },  // +0.5
-  { dept: "Operations",  before: 6.5, after: 9.0 },  // +2.5 ← largest gain
-  { dept: "Engineering", before: 6.8, after: 7.7 },  // +0.9
-  { dept: "HR",          before: 7.1, after: 8.4 },  // +1.3
-  { dept: "Design",      before: 7.4, after: 8.0 },  // +0.6
+// Constants
+const FONT = "system-ui, -apple-system, 'Segoe UI', sans-serif";
+const TITLE = "dumbbell-basic · javascript · muix · anyplot.ai";
+const X_PAD_LEFT_SHARE = 0.14;
+const X_PAD_RIGHT_SHARE = 0.2;
+const MARKER_SIZE = 10;
+const START_COLOR = t.palette[0];
+const END_COLOR = t.palette[1];
+
+// Columns: set these to your data's column names
+const CATEGORY = "Department"; // role: category
+const START_VALUE = "Before program (satisfaction score)"; // role: start_value
+const END_VALUE = "After program (satisfaction score)"; // role: end_value
+
+// Data: replace this block with your own records
+const data = [
+  { [CATEGORY]: "Finance", [START_VALUE]: 5.4, [END_VALUE]: 5.9 },
+  { [CATEGORY]: "Legal", [START_VALUE]: 5.7, [END_VALUE]: 5.5 },
+  { [CATEGORY]: "Marketing", [START_VALUE]: 6.0, [END_VALUE]: 7.6 },
+  { [CATEGORY]: "Sales", [START_VALUE]: 6.2, [END_VALUE]: 6.7 },
+  { [CATEGORY]: "Operations", [START_VALUE]: 6.5, [END_VALUE]: 9.0 },
+  { [CATEGORY]: "Engineering", [START_VALUE]: 6.8, [END_VALUE]: 7.7 },
+  { [CATEGORY]: "HR", [START_VALUE]: 7.1, [END_VALUE]: 8.4 },
+  { [CATEGORY]: "Design", [START_VALUE]: 7.4, [END_VALUE]: 8.0 },
 ];
 
-// Sort ascending by before-score to reveal baseline-vs-gain pattern
-const DATA = [...RAW].sort((a, b) => a.before - b.before);
+// Plot: reads only data and the constants above
+const sortedData = [...data].sort(
+  (a, b) => Number(a[START_VALUE]) - Number(b[START_VALUE]),
+);
 
-const departments  = DATA.map(d => d.dept);
-const beforeScores = DATA.map(d => d.before);
-const afterScores  = DATA.map(d => d.after);
-const gaps         = DATA.map(d => +(d.after - d.before).toFixed(1));
-const N            = DATA.length;
+const categories = sortedData.map((d) => String(d[CATEGORY]));
+const startValues = sortedData.map((d) => Number(d[START_VALUE]));
+const endValues = sortedData.map((d) => Number(d[END_VALUE]));
+const diffs = sortedData.map((d) => +(Number(d[END_VALUE]) - Number(d[START_VALUE])).toFixed(1));
+const n = sortedData.length;
 
-// Index of the department with the largest gain (focal point)
-const maxGapIdx = gaps.indexOf(Math.max(...gaps));
+const allValues = [...startValues, ...endValues];
+const valMin = Math.min(...allValues);
+const valMax = Math.max(...allValues);
+const valSpan = valMax - valMin;
+const xMin = valMin - valSpan * X_PAD_LEFT_SHARE;
+const xMax = valMax + valSpan * X_PAD_RIGHT_SHARE;
 
-const beforeData = beforeScores.map((x, i) => ({ id: i,       x, y: i }));
-const afterData  = afterScores.map( (x, i) => ({ id: i + 100, x, y: i }));
+const startSeriesData = startValues.map((x, i) => ({ id: i, x, y: i }));
+const endSeriesData = endValues.map((x, i) => ({ id: i + n, x, y: i }));
+const X_AXIS_LABEL = `${START_VALUE} vs ${END_VALUE}`;
 
-// Rendered inside ChartContainer so it can access the D3 coordinate scales.
-// Placed before <ScatterPlot /> so lines sit below the dots.
 function DumbbellOverlay() {
-  const xScale = useXScale();
-  const yScale = useYScale();
+  const xScale = useXScale() as (v: number) => number;
+  const yScale = useYScale() as (v: number) => number;
 
   return (
     <g>
-      {/* Connecting lines — highlight the biggest-gain row with amber */}
-      {DATA.map((d, i) => {
-        const x1 = xScale(d.before) ?? 0;
-        const x2 = xScale(d.after)  ?? 0;
-        const y  = yScale(i) ?? 0;
-        const isHighlight = i === maxGapIdx;
+      {sortedData.map((d, i) => {
+        const x1 = xScale(Number(d[START_VALUE]));
+        const x2 = xScale(Number(d[END_VALUE]));
+        const y = yScale(i);
+        const rightX = Math.max(x1, x2);
+        const diff = diffs[i];
+        const diffLabel = diff > 0 ? `+${diff.toFixed(1)}` : diff.toFixed(1);
+
         return (
-          <line
-            key={i}
-            x1={x1} y1={y}
-            x2={x2} y2={y}
-            stroke={isHighlight ? t.amber : t.inkSoft}
-            strokeWidth={isHighlight ? 5 : 2.5}
-            strokeOpacity={isHighlight ? 0.9 : 0.35}
-          />
+          <g key={String(d[CATEGORY])}>
+            <line
+              x1={x1}
+              y1={y}
+              x2={x2}
+              y2={y}
+              stroke={t.inkSoft}
+              strokeWidth={2.5}
+              strokeOpacity={0.55}
+            />
+            <text
+              x={rightX + 16}
+              y={y + 5}
+              fontSize={14}
+              fill={t.inkSoft}
+              fontFamily={FONT}
+              fontWeight={500}
+            >
+              {diffLabel}
+            </text>
+          </g>
         );
       })}
-
-      {/* Gap labels — showing change magnitude to the right of each dumbbell */}
-      {DATA.map((d, i) => {
-        const rightX = Math.max(xScale(d.before) ?? 0, xScale(d.after) ?? 0);
-        const y      = yScale(i) ?? 0;
-        const g      = gaps[i];
-        const isHighlight  = i === maxGapIdx;
-        const isRegression = g < 0;
-        const label = g > 0 ? `+${g.toFixed(1)}` : g.toFixed(1);
-        return (
-          <text
-            key={`gap-${i}`}
-            x={rightX + 14}
-            y={y + 5}
-            fontSize={isHighlight ? 13 : 12}
-            fill={isHighlight ? t.amber : t.inkSoft}
-            fontFamily="sans-serif"
-            fontWeight={isHighlight ? "700" : isRegression ? "600" : "400"}
-            fontStyle={isRegression ? "italic" : "normal"}
-          >
-            {label}
-          </text>
-        );
-      })}
-
-      {/* Callout annotation for the focal-point row */}
-      {(() => {
-        const i  = maxGapIdx;
-        const x1 = xScale(beforeScores[i]) ?? 0;
-        const x2 = xScale(afterScores[i])  ?? 0;
-        const y  = yScale(i) ?? 0;
-        const xMid = (x1 + x2) / 2;
-        return (
-          <text
-            x={xMid}
-            y={y - 16}
-            textAnchor="middle"
-            fontSize={12}
-            fill={t.amber}
-            fontFamily="sans-serif"
-            fontWeight="600"
-          >
-            largest gain
-          </text>
-        );
-      })()}
     </g>
   );
 }
 
-const TITLE = "dumbbell-basic · javascript · muix · anyplot.ai";
-
 export default function Chart() {
   const W = window.ANYPLOT_SIZE.width;
   const H = window.ANYPLOT_SIZE.height;
+  const headerH = 84;
+  const chartH = H - headerH;
 
   return (
-    <ChartContainer
-      width={W}
-      height={H}
-      skipAnimation
-      series={[
-        {
-          type: "scatter",
-          id: "before",
-          label: "Before Program",
-          data: beforeData,
-          color: t.palette[0],
-          markerSize: 10,
-        },
-        {
-          type: "scatter",
-          id: "after",
-          label: "After Program",
-          data: afterData,
-          color: t.palette[1],
-          markerSize: 10,
-        },
-      ]}
-      xAxis={[{
-        id: "xAxis",
-        min: 4.5,
-        max: 9.8,
-        label: "Employee Satisfaction Score (0 – 10)",
-        tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-        labelStyle: { fontSize: 16, fill: t.ink },
-      }]}
-      yAxis={[{
-        id: "yAxis",
-        min: -0.5,
-        max: N - 0.5,
-        tickMinStep: 1,
-        valueFormatter: (v) => departments[Math.round(v)] ?? "",
-        tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-      }]}
-      margin={{ left: 130, right: 80, top: 70, bottom: 110 }}
+    <div
+      style={{
+        width: W,
+        height: H,
+        backgroundColor: t.pageBg,
+        display: "flex",
+        flexDirection: "column",
+        fontFamily: FONT,
+      }}
     >
-      <ChartsGrid vertical />
-      <DumbbellOverlay />
-      <ScatterPlot />
-      <ChartsXAxis axisId="xAxis" />
-      {/* disableLine removes the left spine for a cleaner open-chart look */}
-      <ChartsYAxis axisId="yAxis" disableLine />
-      <ChartsLegend
-        position={{ vertical: "bottom", horizontal: "middle" }}
-        direction="row"
-      />
-      <text
-        x={W / 2}
-        y={42}
-        textAnchor="middle"
-        fontSize={22}
-        fontFamily="sans-serif"
-        fontWeight="500"
-        fill={t.ink}
+      <div
+        style={{
+          height: headerH,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 8,
+        }}
       >
-        {TITLE}
-      </text>
-    </ChartContainer>
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>{TITLE}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 28, fontSize: 15, color: t.ink }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+            <span
+              style={{
+                width: 13,
+                height: 13,
+                borderRadius: "50%",
+                backgroundColor: START_COLOR,
+                display: "inline-block",
+              }}
+            />
+            {START_VALUE}
+          </span>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+            <span
+              style={{
+                width: 13,
+                height: 13,
+                borderRadius: "50%",
+                backgroundColor: END_COLOR,
+                display: "inline-block",
+              }}
+            />
+            {END_VALUE}
+          </span>
+        </div>
+      </div>
+
+      <ChartsContainer
+        width={W}
+        height={chartH}
+        skipAnimation
+        series={[
+          {
+            type: "scatter",
+            id: "start",
+            label: START_VALUE,
+            data: startSeriesData,
+            color: START_COLOR,
+            markerSize: MARKER_SIZE,
+          },
+          {
+            type: "scatter",
+            id: "end",
+            label: END_VALUE,
+            data: endSeriesData,
+            color: END_COLOR,
+            markerSize: MARKER_SIZE,
+          },
+        ]}
+        xAxis={[
+          {
+            id: "xAxis",
+            min: xMin,
+            max: xMax,
+            height: 60,
+            label: X_AXIS_LABEL,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft, fontFamily: FONT },
+            labelStyle: { fontSize: 16, fontWeight: 600, fill: t.ink, fontFamily: FONT },
+          },
+        ]}
+        yAxis={[
+          {
+            id: "yAxis",
+            min: -0.5,
+            max: n - 0.5,
+            width: 124,
+            tickInterval: categories.map((_, i) => i),
+            disableLine: true,
+            disableTicks: true,
+            valueFormatter: (v: number) => categories[Math.round(v)] ?? "",
+            tickLabelStyle: { fontSize: 15, fill: t.ink, fontFamily: FONT },
+          },
+        ]}
+        margin={{ left: 24, right: 64, top: 18, bottom: 20 }}
+      >
+        <ChartsGrid vertical />
+        <DumbbellOverlay />
+        <ScatterPlot />
+        <ChartsXAxis axisId="xAxis" />
+        <ChartsYAxis axisId="yAxis" />
+      </ChartsContainer>
+    </div>
   );
 }
