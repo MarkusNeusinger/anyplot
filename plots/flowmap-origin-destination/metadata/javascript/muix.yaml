@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: flowmap-origin-destination
 created: '2026-09-02T00:48:43Z'
-updated: '2026-10-24T09:12:10Z'
+updated: '2026-10-24T09:22:10Z'
 generated_by: gemini-4-argon
 adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
 workflow_run: 40080588293
@@ -13,56 +13,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/flowmap-o
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/javascript/muix/plot-dark.html
-quality_score: 88
+quality_score: 87
 review:
   strengths:
-  - Composes a custom flow layer inside ChartsContainer through useXScale / useYScale
-    / useDrawingArea, so arcs, nodes and continents share MUI X's linear lon/lat axes
-    and grid instead of a separate coordinate system
-  - One quadratic Bezier arc per flow with both ends exactly on the origin and destination
-    coordinates; width (2.2-9.2 px) and imprint_seq color both scale with volume,
-    so the Shanghai-Los Angeles corridor stands out at once
-  - Arc opacity 0.4-0.75 keeps the thin Colombo, Piraeus and Vancouver flows visible
-    where they pass beside the thick Asia-Europe corridors, and arcs are drawn smallest-first
-    so thick flows sit on top
-  - Mid-arc arrowheads oriented along the curve tangent make direction readable in
-    the static PNG; the gradient key at bottom-left states that color encodes container
-    flow
-  - Lon/lat ranges are derived from the data and corrected by cos(mean latitude) so
-    the map is not stretched; hub labels are bolder and carry a page-colored halo
-    that keeps them readable over arcs in both themes
-  - Real hover tooltips for every arc (origin → destination, flow value) and every
-    port (throughput) via React state in the HTML output
+  - Composes a custom SVG flow layer inside ChartsContainer and places it with MUI
+    X's useXScale/useYScale/useDrawingArea hooks, so arcs, ports and coastlines share
+    the chart's own linear lon/lat axes, ChartsGrid and tick formatting
+  - Quadratic Bezier arcs end exactly on the origin and destination coordinates; stroke
+    width (2.2-9.2 px) and the imprint_seq green-to-blue gradient both scale with
+    container flow, and a titled gradient bar (260 to 1,450) explains the colour
+  - Arcs are translucent (0.40-0.75) and drawn thinnest-first, so thin feeder flows
+    stay visible beside the dominant Shanghai-Los Angeles and Shanghai-Rotterdam corridors
+  - Even-odd filled coastline basemap at 12 % inkSoft stays quieter than the arcs
+    in both themes, and the lon/lat window is aspect-corrected by cos(mean latitude)
+    so continents are not stretched
+  - Port labels carry a page-coloured halo (paintOrder stroke) and bold hub weights,
+    staying readable over arcs and land in both renders
+  - Library-native React state drives hover tooltips for every arc (origin -> destination,
+    flow) and every port (throughput) in the HTML output
   weaknesses:
-  - 'SC-02 (both): the basemap is five hand-typed continent polygons that misplace
-    the coast. Rotterdam (4.5°E, 51.9°N) and Hamburg (10°E, 53.6°N) sit north of the
-    Europe outline in open water, the Asia and Africa polygons overlap with a double-shaded
-    wedge around 30-40°E, and Australia, Japan and the British Isles are missing.
-    The A good version shows: basemap bullet asks for recognizable coastlines → denser
-    outlines (more vertices per continent, with the ports'' coasts placed correctly
-    and the overlap removed). Likely cause: the coarse CONTINENT_OUTLINES strings
-    (lines 32-38).'
-  - 'VQ-02 (both): the bold ''Shanghai'' label sits directly on the Shanghai-Rotterdam
-    and Shanghai-Los Angeles arcs and one arrowhead, and the ''Piraeus'' and ''Jebel
-    Ali'' labels are drawn over the converging Rotterdam-Asia arcs; the halo keeps
-    them readable but the text still covers data → choose label slots that avoid arc
-    paths as well as node boxes. Likely cause: the label candidate search scores overlap
-    only against node and label boxes (lines 193-285), not against the arc geometry.'
-  - 'Suggestion: a small width key (three reference strokes at 260 / 850 / 1,450)
-    beside the color bar would tie arc thickness to values directly.'
-  - 'Suggestion: the southern half of the map (-10° to -45°) holds only Santos; tightening
-    the lower latitude padding would give the dense Asia-Europe cluster more room.'
+  - 'VQ-03 (dark): the thinnest arcs (260-360 thousand TEU, e.g. Santos -> Rotterdam,
+    Vancouver -> Singapore) are 2.2 px green at strokeOpacity 0.40 and fade into the
+    #1A1A17 page, much fainter than in the light render → keep them clearly visible
+    on dark, about 0.55 minimum opacity or 3 px minimum width (+0.15 opacity or +0.8
+    px). Likely cause: strokeOpacity = 0.4 + ratio * 0.35 and MIN_ARC_WIDTH = 2.2
+    shared by both themes.'
+  - 'Suggestion: a small width key (two or three reference strokes) next to the gradient
+    bar would tie the arc thickness to flow values as directly as the colour.'
+  - 'Suggestion: the node-size note at the bottom right could move next to the flow
+    legend so both keys read as one block.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across the whole canvas, no white plot panel.
-      Chrome: bold dark title "flowmap-origin-destination · javascript · muix · anyplot.ai" centered at top (~37% of width), grey subtitle "21 flows across 14 locations · total Container flow (thousand TEU/year): 11,890"; y axis "Latitude (°)" with ticks -40° to 70°, x axis "Longitude (°)" with ticks -140° to 150°, subtle horizontal grid lines; bottom-left gradient key "Container flow (thousand TEU/year)" green-to-blue with 260 and 1,450, bottom-right note "Node size = total throughput · arrowheads indicate flow direction". All text dark on light and readable.
-      Data: five pale grey continent silhouettes; 21 curved Bezier arcs colored from brand green #009E73 (small flows) to blue #4467A3 (Shanghai → Los Angeles, 1,450), widths scaling with volume, translucent, with mid-arc arrowheads; 14 green #009E73 port circles sized by throughput (Rotterdam, Shanghai, Singapore, Los Angeles largest) with a page-colored outline, labelled with bold names with halo. 'Shanghai', 'Piraeus' and 'Jebel Ali' labels sit over arcs.
+      Background: warm off-white #FAF8F1, no white panel.
+      Chrome: title "flowmap-origin-destination · javascript · muix · anyplot.ai" centred in dark ink, grey subtitle "21 flows across 14 locations · total Container flow (thousand TEU/year): 11,890"; y axis "Latitude (°)" with -40° to 70° ticks, x axis "Longitude (°)" with -140° to 150° ticks; subtle horizontal grid; gradient legend "Container flow (thousand TEU/year)" 260-1,450 bottom left and a note "Node size = total throughput · arrowheads indicate flow direction" bottom right. All text readable.
+      Data: light grey filled coastlines (Americas, Europe, Africa, Asia, Australia) as a quiet basemap; 21 curved translucent arcs from green (#009E73, small flows) to blue (largest flows, Shanghai-Los Angeles and Shanghai-Rotterdam), width growing with flow, small arrowheads at each arc's midpoint; 14 green port circles sized by throughput with white outline, bold labels with halos (Rotterdam, Shanghai, Singapore, Los Angeles largest).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, subtitle, axis titles, tick labels, legend title and note all switch to light ink and are clearly readable; grid lines subtle grey; no dark-on-dark text.
-      Data: arc and node colors identical to the light render (green → blue gradient, #009E73 nodes); continent silhouettes become a slightly lighter warm grey; port outlines now in the dark page color; thin green arcs at low opacity remain visible against the dark surface; label halos switch to the dark page color.
+      Chrome: title, subtitle, tick labels, axis titles, legend text and note all in light ink / light grey; grid subtle; no dark-on-dark text.
+      Data: identical arc gradient, node green #009E73 and blue top corridor as the light render; coastlines darker grey fill. The thinnest arcs (Santos-Rotterdam, Vancouver-Singapore) are noticeably fainter than in light but still traceable. Port labels in light ink with dark halos.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -74,50 +64,48 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (title 22, ticks 14, labels 15, port names 14-15 CSS
-          px); all text readable in both themes
+        comment: Explicit sizes (22 px title, 15 px axis titles, 14 px ticks/labels);
+          readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
-        max: 6
-        passed: true
-        comment: '''Shanghai'', ''Piraeus'' and ''Jebel Ali'' labels drawn over arcs
-          (defect line); halos keep them readable; no text-on-text collisions'
-      - id: VQ-03
-        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Arcs 2.2-9.2 px with opacity 0.4-0.75 all visible; nodes 7-22 px;
-          color key swatch visible in both themes
+        comment: Labels haloed and clear of each other; arc crossings at hubs are
+          permitted by the spec
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Thinnest arcs fade on the dark page (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue sequential ramp is CVD-safe; width doubles the magnitude
-          encoding
+        comment: Green-to-blue sequential ramp, CVD-safe, width carries the same magnitude
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800; title, axes and bottom legend row balanced; nothing clipped
+        comment: 3200x1800, balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude (°) / Latitude (°) with degree tick formatter
+        comment: Longitude (°) / Latitude (°) with degree ticks
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Nodes #009E73, arcs on imprint_seq from t.seq; theme backgrounds
-          correct; data colors identical across themes'
+        comment: 'Ports #009E73, arcs from imprint_seq stops, correct backgrounds,
+          data colours identical across themes'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -125,27 +113,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Beyond baseline: deliberate typographic hierarchy (bold hub labels
-          at 15 px vs 14 px, subtitle with totals, haloed labels) and a compact bottom
-          key row'
+        comment: Summary subtitle, bold hub vs regular port label weights, haloed
+          labels beyond the baseline
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Beyond baseline: horizontal-only grid chosen for the map, cos-latitude
-          aspect correction, page-colored node outlines and label halos, arcs drawn
-          smallest-first'
+        comment: Aspect-corrected lon/lat window, thin-first draw order, label slots
+          chosen clear of arcs, clipped basemap
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: 'Hierarchy chosen by the implementation: hubs emphasized by node
-          size and bold labels, the dominant trans-Pacific corridor pops in blue and
-          thickest'
+        comment: Dominant trans-Pacific/Asia-Europe corridors lead through blue colour
+          and draw order; node sizing is an extra derived encoding and earns no credit
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -156,24 +141,23 @@ review:
         comment: Origin-destination flow map with curved arcs over a basemap
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Curved arcs, proportional width, transparency, color gradient with
-          legend, tooltips present; basemap coastlines are too coarse and misplace
-          Rotterdam/Hamburg (defect line)
+        comment: Bezier arcs, width proportional to flow, alpha 0.40-0.75, gradient
+          explained by legend, coastline basemap, hover tooltips all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Arc ends and nodes at exact coordinates; only labels are repositioned
+        comment: Arc ends and ports at their coordinates; only labels are repositioned
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; key title names the flow variable and its unit
+        comment: Mandated title; legend titled with the flow column and its units
     data_quality:
       score: 15
       max: 15
@@ -183,8 +167,8 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Hub convergence (Rotterdam, Singapore, Shanghai), dominant corridors
-          vs thin flows, both directions and a long-haul outlier (Santos)
+        comment: 21 flows with hubs, converging corridors, a wide magnitude range
+          and directional pairs
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -196,8 +180,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Flows 260-1,450 thousand TEU/year per lane are plausible; coordinates
-          checked against port locations
+        comment: Port coordinates checked against real locations; flows 260-1,450
+          thousand TEU/year plausible; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -207,8 +191,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Module-level data prep; one layer component needed for the scale
-          hooks
+        comment: One layer component needed for the scale hooks plus the default export
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -226,17 +209,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Complexity proportional; RGB interpolation hand-written is fine (no
-          d3 available)
+        comment: No available call replaces the written-out parts; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component, skipAnimation, v9 ChartsContainer API,
-          sized to ANYPLOT_SIZE
+        comment: Default export, skipAnimation, v9 ChartsContainer API, sized to ANYPLOT_SIZE
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -244,34 +225,35 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses the v9 composition pattern (ChartsContainer + ChartsXAxis/YAxis/Grid)
-          with axis valueFormatter and sized axis bands; custom marks via the plotting
-          hooks
+        comment: ChartsContainer composition with ChartsXAxis/ChartsYAxis/ChartsGrid
+          and axis valueFormatter
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: useXScale / useYScale / useDrawingArea hooks let a custom SVG layer
-          share MUI X's axes and drawing area
-  verdict: REJECTED
+        comment: useXScale/useYScale/useDrawingArea hooks to draw a custom layer in
+          chart coordinates
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T09:09:04Z'
+  rendered_at: '2026-10-24T09:19:21Z'
 impl_tags:
   dependencies: []
   techniques:
   - bezier-curves
-  - hover-tooltips
   - custom-legend
+  - hover-tooltips
+  - html-export
   - layer-composition
   - annotations
-  - html-export
   patterns:
-  - iteration-over-groups
+  - data-generation
+  - groupby-aggregation
   dataprep:
-  - aggregation
+  - normalization
   styling:
   - alpha-blending
   - gradient-fill
-  - publication-ready
+  - edge-highlighting
+  - custom-colormap
