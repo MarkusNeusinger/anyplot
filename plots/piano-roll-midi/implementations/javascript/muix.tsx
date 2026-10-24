@@ -1,9 +1,8 @@
 // anyplot.ai
 // piano-roll-midi: MIDI Piano Roll Visualization
-// Library: muix 9.x | JavaScript 22.23.2
+// Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 94/100 | Created: 2026-08-20
 
-import * as React from "react";
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
@@ -16,145 +15,152 @@ const t = window.ANYPLOT_TOKENS;
 const TITLE = "piano-roll-midi · javascript · muix · anyplot.ai";
 const BEATS_PER_MEASURE = 4;
 const PITCH_PAD_SHARE = 0.08;
+const MIN_PITCH_PAD_SEMITONES = 2;
 const BEAT_PAD_SHARE = 0.012;
+const TIME_AXIS_TITLE = "Time (measures)";
 const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 const BLACK_SEMITONES = [1, 3, 6, 8, 10];
 
-const START_COL = "start_beat";
-const DURATION_COL = "duration_beats";
-const PITCH_COL = "midi_pitch";
-const VELOCITY_COL = "velocity";
+// Columns: set these to your data's column names
+const START = "Onset (beats)"; // role: start
+const DURATION = "Duration (beats)"; // role: duration
+const PITCH = "Pitch (MIDI note)"; // role: y
+const VELOCITY = "Velocity"; // role: value
 
-// Data: 8-measure C-major chord progression with bass, comping triads, and melody (flat scalar records)
-const DATA: Array<Record<string, number>> = [
+// Data: replace this block with your own records
+const data: Array<Record<string, number>> = [
   // Measure 1 (C major)
-  { start_beat: 0, duration_beats: 4, midi_pitch: 48, velocity: 78 },
-  { start_beat: 0, duration_beats: 2, midi_pitch: 60, velocity: 58 },
-  { start_beat: 0, duration_beats: 2, midi_pitch: 64, velocity: 58 },
-  { start_beat: 0, duration_beats: 2, midi_pitch: 67, velocity: 58 },
-  { start_beat: 2, duration_beats: 2, midi_pitch: 60, velocity: 64 },
-  { start_beat: 2, duration_beats: 2, midi_pitch: 64, velocity: 64 },
-  { start_beat: 2, duration_beats: 2, midi_pitch: 67, velocity: 64 },
-  { start_beat: 0, duration_beats: 1, midi_pitch: 72, velocity: 88 },
-  { start_beat: 1, duration_beats: 1, midi_pitch: 74, velocity: 82 },
-  { start_beat: 2, duration_beats: 0.5, midi_pitch: 72, velocity: 88 },
-  { start_beat: 2.5, duration_beats: 0.5, midi_pitch: 71, velocity: 82 },
-  { start_beat: 3, duration_beats: 1, midi_pitch: 69, velocity: 88 },
+  { [START]: 0, [DURATION]: 4, [PITCH]: 48, [VELOCITY]: 78 },
+  { [START]: 0, [DURATION]: 2, [PITCH]: 60, [VELOCITY]: 58 },
+  { [START]: 0, [DURATION]: 2, [PITCH]: 64, [VELOCITY]: 58 },
+  { [START]: 0, [DURATION]: 2, [PITCH]: 67, [VELOCITY]: 58 },
+  { [START]: 2, [DURATION]: 2, [PITCH]: 60, [VELOCITY]: 64 },
+  { [START]: 2, [DURATION]: 2, [PITCH]: 64, [VELOCITY]: 64 },
+  { [START]: 2, [DURATION]: 2, [PITCH]: 67, [VELOCITY]: 64 },
+  { [START]: 0, [DURATION]: 1, [PITCH]: 72, [VELOCITY]: 88 },
+  { [START]: 1, [DURATION]: 1, [PITCH]: 74, [VELOCITY]: 82 },
+  { [START]: 2, [DURATION]: 0.5, [PITCH]: 72, [VELOCITY]: 88 },
+  { [START]: 2.5, [DURATION]: 0.5, [PITCH]: 71, [VELOCITY]: 82 },
+  { [START]: 3, [DURATION]: 1, [PITCH]: 69, [VELOCITY]: 88 },
 
   // Measure 2 (C major)
-  { start_beat: 4, duration_beats: 4, midi_pitch: 48, velocity: 81 },
-  { start_beat: 4, duration_beats: 2, midi_pitch: 60, velocity: 60 },
-  { start_beat: 4, duration_beats: 2, midi_pitch: 64, velocity: 60 },
-  { start_beat: 4, duration_beats: 2, midi_pitch: 67, velocity: 60 },
-  { start_beat: 6, duration_beats: 2, midi_pitch: 60, velocity: 66 },
-  { start_beat: 6, duration_beats: 2, midi_pitch: 64, velocity: 66 },
-  { start_beat: 6, duration_beats: 2, midi_pitch: 67, velocity: 66 },
-  { start_beat: 4, duration_beats: 1, midi_pitch: 72, velocity: 91 },
-  { start_beat: 5, duration_beats: 1, midi_pitch: 74, velocity: 85 },
-  { start_beat: 6, duration_beats: 0.5, midi_pitch: 72, velocity: 91 },
-  { start_beat: 6.5, duration_beats: 0.5, midi_pitch: 71, velocity: 85 },
-  { start_beat: 7, duration_beats: 1, midi_pitch: 69, velocity: 91 },
+  { [START]: 4, [DURATION]: 4, [PITCH]: 48, [VELOCITY]: 81 },
+  { [START]: 4, [DURATION]: 2, [PITCH]: 60, [VELOCITY]: 60 },
+  { [START]: 4, [DURATION]: 2, [PITCH]: 64, [VELOCITY]: 60 },
+  { [START]: 4, [DURATION]: 2, [PITCH]: 67, [VELOCITY]: 60 },
+  { [START]: 6, [DURATION]: 2, [PITCH]: 60, [VELOCITY]: 66 },
+  { [START]: 6, [DURATION]: 2, [PITCH]: 64, [VELOCITY]: 66 },
+  { [START]: 6, [DURATION]: 2, [PITCH]: 67, [VELOCITY]: 66 },
+  { [START]: 4, [DURATION]: 1, [PITCH]: 72, [VELOCITY]: 91 },
+  { [START]: 5, [DURATION]: 1, [PITCH]: 74, [VELOCITY]: 85 },
+  { [START]: 6, [DURATION]: 0.5, [PITCH]: 72, [VELOCITY]: 91 },
+  { [START]: 6.5, [DURATION]: 0.5, [PITCH]: 71, [VELOCITY]: 85 },
+  { [START]: 7, [DURATION]: 1, [PITCH]: 69, [VELOCITY]: 91 },
 
   // Measure 3 (A minor)
-  { start_beat: 8, duration_beats: 4, midi_pitch: 45, velocity: 84 },
-  { start_beat: 8, duration_beats: 2, midi_pitch: 57, velocity: 62 },
-  { start_beat: 8, duration_beats: 2, midi_pitch: 60, velocity: 62 },
-  { start_beat: 8, duration_beats: 2, midi_pitch: 64, velocity: 62 },
-  { start_beat: 10, duration_beats: 2, midi_pitch: 57, velocity: 68 },
-  { start_beat: 10, duration_beats: 2, midi_pitch: 60, velocity: 68 },
-  { start_beat: 10, duration_beats: 2, midi_pitch: 64, velocity: 68 },
-  { start_beat: 8, duration_beats: 1, midi_pitch: 69, velocity: 94 },
-  { start_beat: 9, duration_beats: 1, midi_pitch: 71, velocity: 88 },
-  { start_beat: 10, duration_beats: 0.5, midi_pitch: 69, velocity: 94 },
-  { start_beat: 10.5, duration_beats: 0.5, midi_pitch: 67, velocity: 88 },
-  { start_beat: 11, duration_beats: 1, midi_pitch: 65, velocity: 94 },
+  { [START]: 8, [DURATION]: 4, [PITCH]: 45, [VELOCITY]: 84 },
+  { [START]: 8, [DURATION]: 2, [PITCH]: 57, [VELOCITY]: 62 },
+  { [START]: 8, [DURATION]: 2, [PITCH]: 60, [VELOCITY]: 62 },
+  { [START]: 8, [DURATION]: 2, [PITCH]: 64, [VELOCITY]: 62 },
+  { [START]: 10, [DURATION]: 2, [PITCH]: 57, [VELOCITY]: 68 },
+  { [START]: 10, [DURATION]: 2, [PITCH]: 60, [VELOCITY]: 68 },
+  { [START]: 10, [DURATION]: 2, [PITCH]: 64, [VELOCITY]: 68 },
+  { [START]: 8, [DURATION]: 1, [PITCH]: 69, [VELOCITY]: 94 },
+  { [START]: 9, [DURATION]: 1, [PITCH]: 71, [VELOCITY]: 88 },
+  { [START]: 10, [DURATION]: 0.5, [PITCH]: 69, [VELOCITY]: 94 },
+  { [START]: 10.5, [DURATION]: 0.5, [PITCH]: 67, [VELOCITY]: 88 },
+  { [START]: 11, [DURATION]: 1, [PITCH]: 65, [VELOCITY]: 94 },
 
   // Measure 4 (A minor)
-  { start_beat: 12, duration_beats: 4, midi_pitch: 45, velocity: 87 },
-  { start_beat: 12, duration_beats: 2, midi_pitch: 57, velocity: 64 },
-  { start_beat: 12, duration_beats: 2, midi_pitch: 60, velocity: 64 },
-  { start_beat: 12, duration_beats: 2, midi_pitch: 64, velocity: 64 },
-  { start_beat: 14, duration_beats: 2, midi_pitch: 57, velocity: 70 },
-  { start_beat: 14, duration_beats: 2, midi_pitch: 60, velocity: 70 },
-  { start_beat: 14, duration_beats: 2, midi_pitch: 64, velocity: 70 },
-  { start_beat: 12, duration_beats: 1, midi_pitch: 69, velocity: 97 },
-  { start_beat: 13, duration_beats: 1, midi_pitch: 71, velocity: 91 },
-  { start_beat: 14, duration_beats: 0.5, midi_pitch: 69, velocity: 97 },
-  { start_beat: 14.5, duration_beats: 0.5, midi_pitch: 67, velocity: 91 },
-  { start_beat: 15, duration_beats: 1, midi_pitch: 65, velocity: 97 },
+  { [START]: 12, [DURATION]: 4, [PITCH]: 45, [VELOCITY]: 87 },
+  { [START]: 12, [DURATION]: 2, [PITCH]: 57, [VELOCITY]: 64 },
+  { [START]: 12, [DURATION]: 2, [PITCH]: 60, [VELOCITY]: 64 },
+  { [START]: 12, [DURATION]: 2, [PITCH]: 64, [VELOCITY]: 64 },
+  { [START]: 14, [DURATION]: 2, [PITCH]: 57, [VELOCITY]: 70 },
+  { [START]: 14, [DURATION]: 2, [PITCH]: 60, [VELOCITY]: 70 },
+  { [START]: 14, [DURATION]: 2, [PITCH]: 64, [VELOCITY]: 70 },
+  { [START]: 12, [DURATION]: 1, [PITCH]: 69, [VELOCITY]: 97 },
+  { [START]: 13, [DURATION]: 1, [PITCH]: 71, [VELOCITY]: 91 },
+  { [START]: 14, [DURATION]: 0.5, [PITCH]: 69, [VELOCITY]: 97 },
+  { [START]: 14.5, [DURATION]: 0.5, [PITCH]: 67, [VELOCITY]: 91 },
+  { [START]: 15, [DURATION]: 1, [PITCH]: 65, [VELOCITY]: 97 },
 
   // Measure 5 (F major)
-  { start_beat: 16, duration_beats: 4, midi_pitch: 53, velocity: 90 },
-  { start_beat: 16, duration_beats: 2, midi_pitch: 65, velocity: 66 },
-  { start_beat: 16, duration_beats: 2, midi_pitch: 69, velocity: 66 },
-  { start_beat: 16, duration_beats: 2, midi_pitch: 72, velocity: 66 },
-  { start_beat: 18, duration_beats: 2, midi_pitch: 65, velocity: 72 },
-  { start_beat: 18, duration_beats: 2, midi_pitch: 69, velocity: 72 },
-  { start_beat: 18, duration_beats: 2, midi_pitch: 72, velocity: 72 },
-  { start_beat: 16, duration_beats: 1, midi_pitch: 74, velocity: 100 },
-  { start_beat: 17, duration_beats: 1, midi_pitch: 76, velocity: 94 },
-  { start_beat: 18, duration_beats: 0.5, midi_pitch: 74, velocity: 100 },
-  { start_beat: 18.5, duration_beats: 0.5, midi_pitch: 74, velocity: 94 },
-  { start_beat: 19, duration_beats: 1, midi_pitch: 71, velocity: 100 },
+  { [START]: 16, [DURATION]: 4, [PITCH]: 53, [VELOCITY]: 90 },
+  { [START]: 16, [DURATION]: 2, [PITCH]: 65, [VELOCITY]: 66 },
+  { [START]: 16, [DURATION]: 2, [PITCH]: 69, [VELOCITY]: 66 },
+  { [START]: 16, [DURATION]: 2, [PITCH]: 72, [VELOCITY]: 66 },
+  { [START]: 18, [DURATION]: 2, [PITCH]: 65, [VELOCITY]: 72 },
+  { [START]: 18, [DURATION]: 2, [PITCH]: 69, [VELOCITY]: 72 },
+  { [START]: 18, [DURATION]: 2, [PITCH]: 72, [VELOCITY]: 72 },
+  { [START]: 16, [DURATION]: 1, [PITCH]: 74, [VELOCITY]: 100 },
+  { [START]: 17, [DURATION]: 1, [PITCH]: 76, [VELOCITY]: 94 },
+  { [START]: 18, [DURATION]: 0.5, [PITCH]: 74, [VELOCITY]: 100 },
+  { [START]: 18.5, [DURATION]: 0.5, [PITCH]: 74, [VELOCITY]: 94 },
+  { [START]: 19, [DURATION]: 1, [PITCH]: 71, [VELOCITY]: 100 },
 
   // Measure 6 (F major)
-  { start_beat: 20, duration_beats: 4, midi_pitch: 53, velocity: 93 },
-  { start_beat: 20, duration_beats: 2, midi_pitch: 65, velocity: 68 },
-  { start_beat: 20, duration_beats: 2, midi_pitch: 69, velocity: 68 },
-  { start_beat: 20, duration_beats: 2, midi_pitch: 72, velocity: 68 },
-  { start_beat: 22, duration_beats: 2, midi_pitch: 65, velocity: 74 },
-  { start_beat: 22, duration_beats: 2, midi_pitch: 69, velocity: 74 },
-  { start_beat: 22, duration_beats: 2, midi_pitch: 72, velocity: 74 },
-  { start_beat: 20, duration_beats: 1, midi_pitch: 74, velocity: 103 },
-  { start_beat: 21, duration_beats: 1, midi_pitch: 76, velocity: 97 },
-  { start_beat: 22, duration_beats: 0.5, midi_pitch: 74, velocity: 103 },
-  { start_beat: 22.5, duration_beats: 0.5, midi_pitch: 74, velocity: 97 },
-  { start_beat: 23, duration_beats: 1, midi_pitch: 71, velocity: 103 },
+  { [START]: 20, [DURATION]: 4, [PITCH]: 53, [VELOCITY]: 93 },
+  { [START]: 20, [DURATION]: 2, [PITCH]: 65, [VELOCITY]: 68 },
+  { [START]: 20, [DURATION]: 2, [PITCH]: 69, [VELOCITY]: 68 },
+  { [START]: 20, [DURATION]: 2, [PITCH]: 72, [VELOCITY]: 68 },
+  { [START]: 22, [DURATION]: 2, [PITCH]: 65, [VELOCITY]: 74 },
+  { [START]: 22, [DURATION]: 2, [PITCH]: 69, [VELOCITY]: 74 },
+  { [START]: 22, [DURATION]: 2, [PITCH]: 72, [VELOCITY]: 74 },
+  { [START]: 20, [DURATION]: 1, [PITCH]: 74, [VELOCITY]: 103 },
+  { [START]: 21, [DURATION]: 1, [PITCH]: 76, [VELOCITY]: 97 },
+  { [START]: 22, [DURATION]: 0.5, [PITCH]: 74, [VELOCITY]: 103 },
+  { [START]: 22.5, [DURATION]: 0.5, [PITCH]: 74, [VELOCITY]: 97 },
+  { [START]: 23, [DURATION]: 1, [PITCH]: 71, [VELOCITY]: 103 },
 
   // Measure 7 (G major)
-  { start_beat: 24, duration_beats: 4, midi_pitch: 55, velocity: 96 },
-  { start_beat: 24, duration_beats: 2, midi_pitch: 67, velocity: 70 },
-  { start_beat: 24, duration_beats: 2, midi_pitch: 71, velocity: 70 },
-  { start_beat: 24, duration_beats: 2, midi_pitch: 74, velocity: 70 },
-  { start_beat: 26, duration_beats: 2, midi_pitch: 67, velocity: 76 },
-  { start_beat: 26, duration_beats: 2, midi_pitch: 71, velocity: 76 },
-  { start_beat: 26, duration_beats: 2, midi_pitch: 74, velocity: 76 },
-  { start_beat: 24, duration_beats: 1, midi_pitch: 76, velocity: 106 },
-  { start_beat: 25, duration_beats: 1, midi_pitch: 77, velocity: 100 },
-  { start_beat: 26, duration_beats: 0.5, midi_pitch: 76, velocity: 106 },
-  { start_beat: 26.5, duration_beats: 0.5, midi_pitch: 69, velocity: 100 },
-  { start_beat: 27, duration_beats: 1, midi_pitch: 72, velocity: 106 },
+  { [START]: 24, [DURATION]: 4, [PITCH]: 55, [VELOCITY]: 96 },
+  { [START]: 24, [DURATION]: 2, [PITCH]: 67, [VELOCITY]: 70 },
+  { [START]: 24, [DURATION]: 2, [PITCH]: 71, [VELOCITY]: 70 },
+  { [START]: 24, [DURATION]: 2, [PITCH]: 74, [VELOCITY]: 70 },
+  { [START]: 26, [DURATION]: 2, [PITCH]: 67, [VELOCITY]: 76 },
+  { [START]: 26, [DURATION]: 2, [PITCH]: 71, [VELOCITY]: 76 },
+  { [START]: 26, [DURATION]: 2, [PITCH]: 74, [VELOCITY]: 76 },
+  { [START]: 24, [DURATION]: 1, [PITCH]: 76, [VELOCITY]: 106 },
+  { [START]: 25, [DURATION]: 1, [PITCH]: 77, [VELOCITY]: 100 },
+  { [START]: 26, [DURATION]: 0.5, [PITCH]: 76, [VELOCITY]: 106 },
+  { [START]: 26.5, [DURATION]: 0.5, [PITCH]: 69, [VELOCITY]: 100 },
+  { [START]: 27, [DURATION]: 1, [PITCH]: 72, [VELOCITY]: 106 },
 
   // Measure 8 (G major)
-  { start_beat: 28, duration_beats: 4, midi_pitch: 55, velocity: 99 },
-  { start_beat: 28, duration_beats: 2, midi_pitch: 67, velocity: 72 },
-  { start_beat: 28, duration_beats: 2, midi_pitch: 71, velocity: 72 },
-  { start_beat: 28, duration_beats: 2, midi_pitch: 74, velocity: 72 },
-  { start_beat: 30, duration_beats: 2, midi_pitch: 67, velocity: 78 },
-  { start_beat: 30, duration_beats: 2, midi_pitch: 71, velocity: 78 },
-  { start_beat: 30, duration_beats: 2, midi_pitch: 74, velocity: 78 },
-  { start_beat: 28, duration_beats: 1, midi_pitch: 76, velocity: 109 },
-  { start_beat: 29, duration_beats: 1, midi_pitch: 77, velocity: 103 },
-  { start_beat: 30, duration_beats: 0.5, midi_pitch: 76, velocity: 109 },
-  { start_beat: 30.5, duration_beats: 0.5, midi_pitch: 69, velocity: 103 },
-  { start_beat: 31, duration_beats: 1, midi_pitch: 72, velocity: 109 },
+  { [START]: 28, [DURATION]: 4, [PITCH]: 55, [VELOCITY]: 99 },
+  { [START]: 28, [DURATION]: 2, [PITCH]: 67, [VELOCITY]: 72 },
+  { [START]: 28, [DURATION]: 2, [PITCH]: 71, [VELOCITY]: 72 },
+  { [START]: 28, [DURATION]: 2, [PITCH]: 74, [VELOCITY]: 72 },
+  { [START]: 30, [DURATION]: 2, [PITCH]: 67, [VELOCITY]: 78 },
+  { [START]: 30, [DURATION]: 2, [PITCH]: 71, [VELOCITY]: 78 },
+  { [START]: 30, [DURATION]: 2, [PITCH]: 74, [VELOCITY]: 78 },
+  { [START]: 28, [DURATION]: 1, [PITCH]: 76, [VELOCITY]: 109 },
+  { [START]: 29, [DURATION]: 1, [PITCH]: 77, [VELOCITY]: 103 },
+  { [START]: 30, [DURATION]: 0.5, [PITCH]: 76, [VELOCITY]: 109 },
+  { [START]: 30.5, [DURATION]: 0.5, [PITCH]: 69, [VELOCITY]: 103 },
+  { [START]: 31, [DURATION]: 1, [PITCH]: 72, [VELOCITY]: 109 },
 ];
 
-const pitches = DATA.map((n) => n[PITCH_COL]);
-const velocities = DATA.map((n) => n[VELOCITY_COL]);
-const endBeats = DATA.map((n) => n[START_COL] + n[DURATION_COL]);
+// Plot: reads only data and the constants above
+const pitches = data.map((n) => n[PITCH]);
+const velocities = data.map((n) => n[VELOCITY]);
+const endBeats = data.map((n) => n[START] + n[DURATION]);
 const totalBeats = Math.max(...endBeats);
 const measures = Math.ceil(totalBeats / BEATS_PER_MEASURE);
 
 const minPitch = Math.min(...pitches);
 const maxPitch = Math.max(...pitches);
-const pitchPad = Math.max(2, Math.round((maxPitch - minPitch) * PITCH_PAD_SHARE));
+const pitchPad = Math.max(
+  MIN_PITCH_PAD_SEMITONES,
+  Math.round((maxPitch - minPitch) * PITCH_PAD_SHARE),
+);
 const pitchAxisMin = minPitch - pitchPad;
 const pitchAxisMax = maxPitch + pitchPad;
 
 const velocityMin = Math.min(...velocities);
 const velocityMax = Math.max(...velocities);
-const velocitySpan = velocityMax - velocityMin || 1;
+const velocitySpan = velocityMax - velocityMin;
 
 const beatPad = totalBeats * BEAT_PAD_SHARE;
 const measureTicks = Array.from({ length: measures }, (_, i) => i * BEATS_PER_MEASURE);
@@ -169,7 +175,6 @@ for (let p = Math.ceil(pitchAxisMin); p <= Math.floor(pitchAxisMax); p += 1) {
   if (BLACK_SEMITONES.includes(semitone)) blackKeyPitches.push(p);
 }
 
-// Parse sequential color endpoints for velocity interpolation
 const seq0Num = parseInt(t.seq[0].replace("#", ""), 16);
 const seq1Num = parseInt(t.seq[1].replace("#", ""), 16);
 const r0 = (seq0Num >> 16) & 255;
@@ -179,8 +184,8 @@ const r1 = (seq1Num >> 16) & 255;
 const g1 = (seq1Num >> 8) & 255;
 const b1 = seq1Num & 255;
 
-const noteFills = DATA.map((row) => {
-  const ratio = (row[VELOCITY_COL] - velocityMin) / velocitySpan;
+const noteFills = data.map((row) => {
+  const ratio = (row[VELOCITY] - velocityMin) / velocitySpan;
   const r = Math.round(r0 + (r1 - r0) * ratio);
   const g = Math.round(g0 + (g1 - g0) * ratio);
   const b = Math.round(b0 + (b1 - b0) * ratio);
@@ -196,7 +201,6 @@ function PianoRollOverlay() {
 
   return (
     <g>
-      {/* Black-key row shading */}
       {blackKeyPitches.map((p) => (
         <rect
           key={`row-${p}`}
@@ -209,7 +213,6 @@ function PianoRollOverlay() {
         />
       ))}
 
-      {/* Beat and measure grid lines */}
       {beats.map((b) => {
         const isMeasure = b % BEATS_PER_MEASURE === 0;
         return (
@@ -226,12 +229,11 @@ function PianoRollOverlay() {
         );
       })}
 
-      {/* Note bars */}
-      {DATA.map((row, i) => {
-        const x0 = xScale(row[START_COL]);
-        const x1 = xScale(row[START_COL] + row[DURATION_COL]);
-        const rowTop = yScale(row[PITCH_COL] + 0.5);
-        const rowBottom = yScale(row[PITCH_COL] - 0.5);
+      {data.map((row, i) => {
+        const x0 = xScale(row[START]);
+        const x1 = xScale(row[START] + row[DURATION]);
+        const rowTop = yScale(row[PITCH] + 0.5);
+        const rowBottom = yScale(row[PITCH] - 0.5);
         const pad = (rowBottom - rowTop) * 0.14;
         return (
           <rect
@@ -270,13 +272,21 @@ export default function Chart() {
         flexDirection: "column",
       }}
     >
-      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: "14px", height: "32px" }}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: "14px",
+          height: "32px",
+        }}
+      >
         <Typography sx={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1 }}>
           {TITLE}
         </Typography>
         <Box sx={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <Typography sx={{ fontSize: 14, color: t.inkSoft, lineHeight: 1 }}>
-            {`Velocity: Soft (${velocityMin})`}
+            {`${VELOCITY}: Soft (${velocityMin})`}
           </Typography>
           <Box
             sx={{
@@ -306,7 +316,7 @@ export default function Chart() {
             height: 54,
             tickInterval: measureTicks,
             valueFormatter: (beat: number) => `M${Math.round(beat / BEATS_PER_MEASURE) + 1}`,
-            label: "Time (measures)",
+            label: TIME_AXIS_TITLE,
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
             labelStyle: { fontSize: 15, fill: t.ink },
           },
@@ -319,8 +329,8 @@ export default function Chart() {
             max: pitchAxisMax,
             width: 68,
             tickInterval: octaveTicks,
-            valueFormatter: (pitch: number) => noteNameByPitch[Math.round(pitch)] ?? `${pitch}`,
-            label: "Pitch",
+            valueFormatter: (pitch: number) => noteNameByPitch[Math.round(pitch)],
+            label: PITCH,
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
             labelStyle: { fontSize: 15, fill: t.ink },
           },
