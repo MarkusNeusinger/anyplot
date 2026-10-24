@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: box-grouped
 created: '2026-08-18T09:08:39Z'
-updated: '2026-10-24T00:27:52Z'
+updated: '2026-10-24T00:33:03Z'
 generated_by: gemini-4-argon
 adopted_from: a6754ae47632b531aec6e975e6a4b937aa81fea5 (a6754ae47632b531aec6e975e6a4b937aa81fea5)
 workflow_run: 40044756189
@@ -13,51 +13,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-group
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-grouped/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-grouped/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-grouped/javascript/muix/plot-dark.html
-quality_score: 85
+quality_score: 86
 review:
   strengths:
-  - 'Composes the box-and-whisker layer natively into MUI X: a ChartsContainer with
-    a band x axis (categoryGapRatio 0.36) and a numeric y axis, plus a custom SVG
-    layer that places every box through useXScale/useYScale, so boxes, ticks and grid
-    share one coordinate system'
-  - 'Box statistics are written out correctly: linearly interpolated quartiles, whiskers
-    ending at the most extreme values inside 1.5×IQR, and every value beyond the fences
-    drawn as a hollow outlier ring at its own value'
-  - Boxes of one width in every cluster, with clear gaps between the four departments,
-    a shared value axis that is not forced to zero, and a thick median stroke that
-    stays visible against the translucent fill in both themes
-  - Legend swatches repeat the boxes' own style (translucent fill, 2.2 px outline,
-    rounded corners), and every chrome element reads from ANYPLOT_TOKENS, so the light
-    and dark renders differ only in background and text
-  - 'Plausible, deterministic scenario: a seeded LCG with a Box-Muller transform generates
-    productivity scores by department and experience level, with department offsets
-    and a few injected outliers'
+  - Composes the box layer on MUI X's own band and linear scales via useXScale/useYScale
+    inside ChartsContainer, so boxes stay aligned with the native axes, ticks and
+    grid
+  - Ordered experience levels are colored with evenly spaced imprint_seq steps built
+    from t.seq, green to blue in natural order, identical in both themes
+  - 'Correct box statistics: linear-interpolated quartiles, whiskers ending at the
+    most extreme inliers within 1.5×IQR, outliers as hollow page-colored circles at
+    their values'
+  - 'Clean header hierarchy: title, ink-soft subtitle stating n and the whisker rule,
+    and a compact legend whose swatches mirror the box styling'
   weaknesses:
-  - 'VQ-07 (both): the ordered experience levels Junior → Mid-Level → Senior are drawn
-    in categorical palette positions 1–3 (#009E73, #C475FD, #4467A3), as if they were
-    unrelated groups → three ordered steps of one Imprint ramp (imprint_seq, from
-    t.seq[0] to t.seq[1]) in Junior→Senior order, kept distinct from each other and
-    from both backgrounds. Likely cause: `const color = t.palette[subIdx]` in BoxWhiskerLayer
-    and `t.palette[i]` in the header legend.'
-  - 'Suggestion: a legend heading such as ''Experience level'' in front of the swatches
-    would name the grouping variable right at the legend instead of only in the subtitle.'
-  - 'Suggestion: a slightly larger x tick font (about 15–16 px) would balance the
-    department names against the 16 px axis titles in the 400 px thumbnail.'
+  - 'Suggestion: the y-axis title sits about 50 px from its tick labels; a narrower
+    y band (width about 64) would tie it to the axis.'
+  - 'Suggestion: MUI X''s native ChartsLegend could replace the hand-built HTML legend
+    if the boxes were registered as series.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, consistent with #FAF8F1 (not pure white).
-      Chrome: bold dark title "box-grouped · javascript · muix · anyplot.ai" centered at the top (~35% of width); a muted subtitle "558 observations · Department: 4 · Experience level: 3 · Whiskers at 1.5×IQR"; a horizontal legend under it with box-style swatches for Junior, Mid-Level and Senior. The y axis is titled "Productivity index (0–100)" with ticks 30–100; the x axis is titled "Department" with Engineering, Sales, Marketing and Customer Support. Dashed horizontal grid, subtle. All text is dark and readable.
-      Data: four department clusters, each with three side-by-side boxes: Junior #009E73 green, Mid-Level #C475FD purple, Senior #4467A3 blue. Translucent fills, solid outlines, a thicker median line, capped whiskers and hollow outlier rings (Engineering Junior at ~88 and ~33, Sales Mid at ~91, Marketing Junior at ~85, Customer Support Mid at ~89, ~78 and ~44). Senior whiskers reach 100 in Engineering and Marketing.
+      Background: warm off-white #FAF8F1, no white panel.
+      Chrome: bold dark title "box-grouped · javascript · muix · anyplot.ai" centered at top, ink-soft subtitle "558 observations · Department: 4 · Experience level: 3 · Whiskers at 1.5×IQR", a centered legend (Junior, Mid-Level, Senior) with rounded-square swatches. Y axis "Productivity index (0–100)" ticks 30–100, x axis "Department" with Engineering, Sales, Marketing, Customer Support. Subtle dashed horizontal grid. All text dark and readable.
+      Data: four clusters of three boxes; Junior in brand green #009E73, Mid-Level teal, Senior blue (imprint_seq steps), translucent fills with solid strokes and heavier median lines. Hollow circle outliers above and below (e.g. Engineering Junior at ~88 and ~33, Customer Support Mid-Level at ~89, ~78, ~44). Clusters clearly separated.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black, consistent with #1A1A17 (not pure black).
-      Chrome: the title, subtitle, legend labels, axis titles and tick labels all switch to light ink. Axis lines and tick marks are light, and the dashed grid stays subtle but visible. No dark-on-dark text.
-      Data: the same three hues as the light render (green, purple, blue); the translucent fills read darker against the dark page, as expected. The outlines, medians and outlier rings are clearly visible, and the brand green holds up well.
+      Background: warm near-black #1A1A17.
+      Chrome: title, subtitle, legend text, axis titles and tick labels in light ink, all readable; axis lines light; grid dashed and subtle. No dark-on-dark text.
+      Data: same green/teal/blue strokes as the light render; translucent fills read darker against the page, median lines remain visible against the fill. Outlier circles filled with the page color, outlined in series color.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -65,50 +53,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All sizes explicit (title 22, subtitle 15, legend 14, axis titles
-          16, ticks 14 CSS px); readable in both themes, title ~35% of width
+        comment: Explicit font sizes (title 22, subtitle 15, axis titles 16, ticks
+          14, legend 14 CSS px); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; outlier rings are clear of the boxes
+        comment: No text collisions; boxes within each cluster are separated by clear
+          gaps
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Boxes, whiskers, caps, 3.5 px medians and r=5 outlier rings are all
-          clearly visible; legend swatches match the marks in both themes
+        comment: Boxes, 2 px whiskers, caps and r=5 hollow outliers are clearly visible;
+          legend swatches match the box fill + stroke in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green, purple and blue differ in lightness as well as hue, and position
-          within the cluster also identifies the level
+        comment: Green-teal-blue ramp steps plus fixed position within each cluster;
+          no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills most of the canvas, balanced margins, legend sits right
-          above the plot; canvas 3200×1800
+        comment: 3200x1800; plot fills the canvas, title about 34% of the width, balanced
+          axis titles, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Productivity index (0–100)'' gives the scale; ''Department'' is
-          categorical'
+        comment: '''Productivity index (0–100)'' and ''Department'' are descriptive
+          with a range'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Backgrounds and chrome are theme-correct, but the ordered experience
-          levels use categorical positions 1–3 instead of steps of one Imprint ramp
-          (defect line)
+        comment: 'Ordered experience levels use evenly spaced imprint_seq steps (t.seq)
+          from #009E73 to blue in natural order; backgrounds #FAF8F1 / #1A1A17; data
+          colors identical across themes'
     design_excellence:
       score: 10
       max: 20
@@ -118,24 +107,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Beyond the baseline: a header block with a muted descriptive subtitle
-          (n, factor counts, whisker rule), and legend swatches drawn as miniature
-          boxes with the marks'' fill and outline'
+        comment: Three-tier header hierarchy (title, ink-soft subtitle stating n and
+          the whisker rule, compact legend) and hollow page-colored outlier markers
+          go beyond the baseline
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: 'Beyond the baseline: hollow outlier rings filled with the page color,
-          whisker caps at 62% of the box width, a heavier median stroke and rounded
-          box corners'
+        comment: Caps narrower than the boxes, rounded box corners, translucent fill
+          with solid stroke and a heavier median stroke; dashed subtle grid
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
-        passed: false
-        comment: The data is displayed clearly; no emphasis or focal point beyond
-          the comparison itself
+        passed: true
+        comment: Data displayed clearly; no focal point chosen beyond what the spec
+          asks
     spec_compliance:
       score: 15
       max: 15
@@ -145,28 +133,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Grouped box plot, no unrequested layers
+        comment: Grouped box plot, 3 boxes side by side per department
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Side-by-side boxes per category with clear group gaps; distinct consistent
-          colors plus legend; one box width; quartile box, visible median, 1.5×IQR
-          whiskers and outliers — all present
+        comment: 'Distinct colors per subcategory, legend, equal box widths, median/quartiles/1.5×IQR
+          whiskers/outliers, clusters set apart, shared axis not forced to zero: all
+          present'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Shared y axis padded from the data, not forced to zero; outliers
-          drawn at their values on the box center line
+        comment: Department on x, productivity on y; outliers at their values; axis
+          covers all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format; legend entries name the subcategories
+        comment: Title 'box-grouped · javascript · muix · anyplot.ai'; legend names
+          Junior / Mid-Level / Senior
     data_quality:
       score: 15
       max: 15
@@ -176,23 +165,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows outliers above and below, unequal whiskers, overlapping and
-          separated boxes across 4 categories × 3 subcategories
+        comment: Different box positions and spreads, unequal whiskers, outliers above
+          and below, overlapping ranges across levels
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Productivity by department and experience level is plausible and
-          neutral
+        comment: 'Productivity by department and experience level: plausible and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: scores are clamped to 0–100, consistent with the axis title;
-          quartiles use linear interpolation; whiskers come from the inliers within
-          Q1−1.5·IQR and Q3+1.5·IQR (no Check values in the spec)'
+        comment: Index values 27–100 inside the stated 0–100 range, 46–47 points per
+          box (within 20–200); checked box stats computed from the data, whiskers
+          end at inliers
     code_quality:
       score: 10
       max: 10
@@ -202,35 +190,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Only the two components React and the scale hooks need, plus the
-          data IIFE
+        comment: Linear module; the one extra component is required to use the MUI
+          X scale hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG (state 42)
+        comment: Fixed-seed LCG with Box-Muller
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Every import is used
+        comment: All five imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Box statistics are written out as the library prompt allows; the
-          hand-built legend is justified because ChartsContainer has no series for
-          ChartsLegend
+        comment: Written-out quartiles allowed per the library prompt; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation,
-          v9 ChartsContainer composition
+        comment: Default-exported component, skipAnimation, sized to ANYPLOT_SIZE,
+          v9 ChartsContainer API
     library_mastery:
       score: 6
       max: 10
@@ -240,31 +226,31 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'v9 composition API: ChartsContainer, ChartsXAxis/ChartsYAxis/ChartsGrid
-          with axis ids, band scale with categoryGapRatio, axis width/height bands
-          sized for the labels'
+        comment: 'Proper v9 composition: ChartsContainer with band/linear axes, ChartsGrid,
+          ChartsXAxis/YAxis and a custom layer using the axes'' own scales'
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: Uses MUI X's useXScale/useYScale hooks to put a custom SVG mark layer
-          into the chart's coordinate system — the library's extension point for chart
-          types it lacks
-  verdict: REJECTED
+        passed: true
+        comment: useXScale/useYScale hooks drive a custom SVG layer on MUI X's band
+          scale (bandwidth, categoryGapRatio)
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T00:25:08Z'
+  rendered_at: '2026-10-24T00:30:13Z'
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
   - custom-legend
+  - layer-composition
   - html-export
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - groupby-aggregation
   styling:
   - alpha-blending
   - grid-styling
+  - custom-colormap
