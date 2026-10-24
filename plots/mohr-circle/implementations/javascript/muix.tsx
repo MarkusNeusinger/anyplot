@@ -1,6 +1,6 @@
 // anyplot.ai
 // mohr-circle: Mohr's Circle for Stress Analysis
-// Library: muix 9.2.1 | JavaScript 22.23.2
+// Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 90/100 | Created: 2026-08-26
 //# anyplot-orientation: square
 
@@ -22,26 +22,34 @@ const Y_AXIS_WIDTH = 90;
 const PAD_RATIO = 0.68;
 const ARC_RADIUS_RATIO = 0.32;
 const ARC_STEPS = 32;
+const X_AXIS_PREFIX = "Normal Stress σ";
+const Y_AXIS_PREFIX = "Shear Stress τ";
 
-// Data
-const SIGMA_X_COL = "Normal Stress σx (MPa)";
-const SIGMA_Y_COL = "Normal Stress σy (MPa)";
-const TAU_XY_COL = "Shear Stress τxy (MPa)";
-const X_AXIS_LABEL = "Normal Stress σ (MPa)";
-const Y_AXIS_LABEL = "Shear Stress τ (MPa)";
+// Columns: set these to your data's column names
+const SIGMA_X = "Normal Stress σx (MPa)"; // role: sigma_x
+const SIGMA_Y = "Normal Stress σy (MPa)"; // role: sigma_y
+const TAU_XY = "Shear Stress τxy (MPa)"; // role: tau_xy
 
-const DATA: Array<Record<string, number>> = [
+// Data: replace this block with your own records
+const data: Array<Record<string, number>> = [
   {
-    [SIGMA_X_COL]: 80,
-    [SIGMA_Y_COL]: 20,
-    [TAU_XY_COL]: 30,
+    [SIGMA_X]: 80,
+    [SIGMA_Y]: 20,
+    [TAU_XY]: 30,
   },
 ];
 
-const stateRow = DATA[0];
-const sigmaX = Number(stateRow[SIGMA_X_COL]);
-const sigmaY = Number(stateRow[SIGMA_Y_COL]);
-const tauXY = Number(stateRow[TAU_XY_COL]);
+// Plot: reads only data and the constants above
+const unitMatch = /\(([^)]+)\)/.exec(SIGMA_X);
+const unit = unitMatch ? unitMatch[1] : "";
+const unitSuffix = unit ? ` ${unit}` : "";
+const xAxisLabel = unit ? `${X_AXIS_PREFIX} (${unit})` : X_AXIS_PREFIX;
+const yAxisLabel = unit ? `${Y_AXIS_PREFIX} (${unit})` : Y_AXIS_PREFIX;
+
+const stateRow = data[0];
+const sigmaX = Number(stateRow[SIGMA_X]);
+const sigmaY = Number(stateRow[SIGMA_Y]);
+const tauXY = Number(stateRow[TAU_XY]);
 
 const center = (sigmaX + sigmaY) / 2;
 const radius = Math.sqrt(((sigmaX - sigmaY) / 2) ** 2 + tauXY ** 2);
@@ -107,7 +115,6 @@ function MohrAnnotations() {
 
   return (
     <g>
-      {/* Mohr's Circle */}
       <circle
         cx={cx}
         cy={cy}
@@ -118,7 +125,6 @@ function MohrAnnotations() {
         strokeWidth={3.5}
       />
 
-      {/* Principal-stress segment between σ2 and σ1 */}
       <line
         x1={s2x}
         y1={s2y}
@@ -129,7 +135,6 @@ function MohrAnnotations() {
         strokeLinecap="round"
       />
 
-      {/* Reference diameter A-B through center */}
       <line
         x1={ax}
         y1={ay}
@@ -140,13 +145,10 @@ function MohrAnnotations() {
         strokeDasharray="7 6"
       />
 
-      {/* Principal plane angle arc 2θp */}
       <path d={arcPath.trim()} fill="none" stroke={t.inkSoft} strokeWidth={2} />
 
-      {/* Center point C */}
       <circle cx={cx} cy={cy} r={6} fill={landmarkColor} />
 
-      {/* Principal & max shear landmarks */}
       {principalPoints.map((p, i) => (
         <circle
           key={`p-${i}`}
@@ -159,7 +161,6 @@ function MohrAnnotations() {
         />
       ))}
 
-      {/* Given stress state points A and B */}
       {statePoints.map((p, i) => (
         <circle
           key={`s-${i}`}
@@ -193,13 +194,13 @@ function MohrAnnotations() {
       <ChartsText
         x={s1x + 14}
         y={s1y + 28}
-        text={`σ₁ = ${sigma1.toFixed(1)} MPa`}
+        text={`σ₁ = ${sigma1.toFixed(1)}${unitSuffix}`}
         style={{ fontSize: 17, fontWeight: 700, fill: t.ink, dominantBaseline: "central" }}
       />
       <ChartsText
         x={s2x - 14}
         y={s2y + 28}
-        text={`σ₂ = ${sigma2.toFixed(1)} MPa`}
+        text={`σ₂ = ${sigma2.toFixed(1)}${unitSuffix}`}
         style={{
           fontSize: 17,
           fontWeight: 700,
@@ -211,13 +212,13 @@ function MohrAnnotations() {
       <ChartsText
         x={tmaxX + 16}
         y={tmaxY - 14}
-        text={`τ_max = ${tauMax.toFixed(1)} MPa`}
+        text={`τ_max = ${tauMax.toFixed(1)}${unitSuffix}`}
         style={{ fontSize: 17, fontWeight: 700, fill: t.ink, dominantBaseline: "central" }}
       />
       <ChartsText
         x={tminX + 16}
         y={tminY + 14}
-        text={`−τ_max = ${(-tauMax).toFixed(1)} MPa`}
+        text={`−τ_max = ${(-tauMax).toFixed(1)}${unitSuffix}`}
         style={{ fontSize: 17, fontWeight: 700, fill: t.ink, dominantBaseline: "central" }}
       />
       <ChartsText
@@ -292,7 +293,7 @@ export default function Chart() {
             min: xAxisMin,
             max: xAxisMax,
             height: X_AXIS_HEIGHT,
-            label: X_AXIS_LABEL,
+            label: xAxisLabel,
             labelStyle: { fontSize: 16, fill: t.ink, fontWeight: 500 },
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
             stroke: t.inkSoft,
@@ -305,7 +306,7 @@ export default function Chart() {
             min: yAxisMin,
             max: yAxisMax,
             width: Y_AXIS_WIDTH,
-            label: Y_AXIS_LABEL,
+            label: yAxisLabel,
             labelStyle: { fontSize: 16, fill: t.ink, fontWeight: 500 },
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
             stroke: t.inkSoft,
