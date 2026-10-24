@@ -77,12 +77,8 @@ for (const spec of facetSpecs) {
 }
 
 // Plot: reads only data and the constants above
-const colFacets: string[] = [];
-const rowFacets: string[] = [];
-for (const row of data) {
-  if (!colFacets.includes(row[SPECIES])) colFacets.push(row[SPECIES]);
-  if (!rowFacets.includes(row[SEX])) rowFacets.push(row[SEX]);
-}
+const colFacets = [...new Set(data.map((r) => r[SPECIES]))];
+const rowFacets = [...new Set(data.map((r) => r[SEX]))];
 
 const allX = data.map((r) => r[BILL_LENGTH]);
 const allY = data.map((r) => r[BILL_DEPTH]);
