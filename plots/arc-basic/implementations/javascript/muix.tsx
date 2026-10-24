@@ -14,10 +14,10 @@ const X_PAD_SHARE = 0.04;
 const Y_DOMAIN_MAX = 1.05;
 const MIN_ARC_HEIGHT = 0.12;
 const MAX_ARC_SPAN = 0.88;
-const STROKE_MIN_PX = 1.6;
-const STROKE_MAX_PX = 3.4;
-const STROKE_ALPHA_MIN = 0.52;
-const STROKE_ALPHA_MAX = 0.82;
+const STROKE_MIN_PX = 2;
+const STROKE_MAX_PX = 3.8;
+const STROKE_ALPHA_MIN = 0.7;
+const STROKE_ALPHA_MAX = 0.9;
 const SEMANTIC_COLORS: Record<string, string> = {
   Activates: t.palette[0],
   Represses: t.palette[4],
@@ -131,7 +131,7 @@ function ArcLayer() {
               x={labelX}
               y={labelY}
               textAnchor="end"
-              fontSize={14}
+              fontSize={16}
               fontWeight={500}
               fill={t.inkSoft}
               transform={`rotate(-40 ${labelX} ${labelY})`}
