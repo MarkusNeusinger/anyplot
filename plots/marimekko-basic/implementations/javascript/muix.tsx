@@ -55,14 +55,8 @@ const rawUnit = unitMatch ? unitMatch[1] : "";
 const unitPrefix = rawUnit.startsWith("$") ? "$" : "";
 const unitSuffix = rawUnit.startsWith("$") ? rawUnit.slice(1) : rawUnit;
 
-const regions: string[] = [];
-const products: string[] = [];
-for (let i = 0; i < data.length; i++) {
-  const reg = String(data[i][REGION]);
-  const prod = String(data[i][PRODUCT]);
-  if (!regions.includes(reg)) regions.push(reg);
-  if (!products.includes(prod)) products.push(prod);
-}
+const regions = [...new Set(data.map((d) => String(d[REGION])))];
+const products = [...new Set(data.map((d) => String(d[PRODUCT])))];
 
 // Compute luminance-based fixed text color for each product category color
 const productColors: string[] = [];
