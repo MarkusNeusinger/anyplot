@@ -22,6 +22,7 @@ const OPEN = "BTC/USD open ($)"; // role: open
 const HIGH = "BTC/USD high ($)"; // role: high
 const LOW = "BTC/USD low ($)"; // role: low
 const CLOSE = "BTC/USD close ($)"; // role: close
+const PRICE_LABEL = "BTC/USD price ($)"; // y-axis title: carries all four prices
 
 // Data: replace this block with your own records, one object per row
 const data = (() => {
@@ -262,7 +263,7 @@ export default function Chart() {
             max: yMax,
             tickNumber: 7,
             width: 96,
-            label: CLOSE,
+            label: PRICE_LABEL,
             valueFormatter: formatPrice,
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
             labelStyle: { fontSize: 16, fill: t.ink, fontWeight: 500 },
