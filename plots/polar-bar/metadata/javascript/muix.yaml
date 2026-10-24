@@ -2,57 +2,63 @@ library: muix
 language: javascript
 specification_id: polar-bar
 created: '2026-09-05T11:27:09Z'
-updated: '2026-09-05T11:32:58Z'
-generated_by: claude-sonnet
-workflow_run: 33962928430
+updated: '2026-10-24T11:53:00Z'
+generated_by: gemini-4-argon
+adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
+workflow_run: 40091073049
 issue: 2693
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-bar/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-bar/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-bar/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-bar/javascript/muix/plot-dark.html
-quality_score: 92
+quality_score: 86
 review:
   strengths:
-  - Faithfully composes a wind rose despite MUI X community having no native polar-bar
-    component, following the established ChartContainer + useDrawingArea pattern already
-    precedented by polar-basic and radar-basic in this catalog.
-  - Correct stacked-wedge encoding of 3 wind-speed bins per direction with canonical
-    Imprint palette order (brand green, lavender, blue), identical data colors across
-    both themes.
-  - 'Thoughtful legibility touches: background chip behind radial tick labels keeps
-    them readable over colored wedges, page-background stroke separates stacked segments,
-    and inner rings are visually lighter than the bold outer boundary ring.'
-  - Realistic, neutral meteorological data with a clear directional and speed hierarchy
-    (dominant SW wind cluster reads immediately).
-  - Clean, deterministic, KISS-appropriate code for a React component; correct mandated
-    title format; skipAnimation set to avoid mid-tween screenshots.
+  - Stacked wind-rose wedges for 16 compass points in compass order, starting at N
+    and running clockwise, with segments in the same Light → Moderate → Strong order
+    in every bar and each segment's radial length equal to its own count on a zero-based
+    scale
+  - 'Ordered speed bins colored as three evenly interpolated steps of imprint_seq
+    (t.seq[0] #009E73 → t.seq[1] #4467A3), so the legend reads as a low → high progression;
+    data colors are identical in both renders'
+  - 'Typographic hierarchy at the rim: cardinal and intercardinal labels (N, NE, E…)
+    in 16 px semibold ink, the eight secondary points in 14 px inkSoft, matched by
+    heavier primary spokes and a 2 px outer ring'
+  - Nice-number ring scale (30/60/90/120 obs) computed from the data with units on
+    every ring label, and page-colored 2 px wedge strokes that keep the stacked segments
+    readable in both themes
+  - 'Built on the MUI X v9 composition API: ChartsContainer with a custom SVG layer
+    that reads its geometry from the useDrawingArea hook, with skipAnimation set'
   weaknesses:
-  - series={[]} on ChartContainer means no genuine MUI X data-bound chart component
-    is used anywhere — unlike the polar-basic precedent, which also registers a real
-    <ScatterPlot> series so ChartsTooltip/hover works, this implementation gets none
-    of MUI X's built-in interactivity in the HTML output, weakening Library Mastery
-    for an interactive-library entry. Consider registering an invisible/synced series
-    (e.g. one scatter point per wedge centroid) purely to drive a real ChartsTooltip.
-  - Title occupies only ~40% of canvas width at fontSize=28 — smaller than the comfortable
-    50-70% range for a non-prefixed mandated title; not a violation (no overflow,
-    no clipping) but there is room to grow it slightly for stronger visual hierarchy.
+  - 'VQ-02 (both): the page-colored backing pill behind the ''30 obs'' ring label
+    is drawn after the wedges and hides about the right third of the N bar''s Strong
+    (20+ mph) cap and the top-right corner of its Moderate segment, because the N
+    total (30) sits exactly on the 30 ring → no ring label or label backing over a
+    data mark (0 px of the bar covered). Likely cause: the ring-label <rect> at x=cx+6
+    is placed on the N axis inside the rings.map tick block and rendered after the
+    wedge paths; set the labels along a spoke that no bar reaches, or draw the backing
+    under the wedges.'
+  - 'Suggestion: a legend title naming the variable ("Wind speed") would complete
+    the legend, though the entries already carry the mph ranges.'
+  - 'Suggestion: an MUI X tooltip on the wedges would add per-segment counts in the
+    interactive HTML.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "polar-bar · javascript · muix · anyplot.ai" in bold dark ink at top, clearly legible. Eight compass labels (N, NE, E, SE, S, SW, W, NW) in bold dark ink ring the outer edge of the rose. Four concentric frequency rings ("30 obs" … "120 obs") in subtle grid lines, with tick labels in soft ink placed on small background chips along the top (N) spoke so they stay legible over any wedge color beneath. Legend at the bottom center with three color swatches and labels (Light 0–10 mph, Moderate 10–20 mph, Strong 20+ mph), all clearly readable.
-      Data: 16 stacked wedges radiate from center, one per compass direction, each split into 3 color segments (green/lavender/blue) representing the 3 speed bins, separated by thin page-background strokes. First series (Light) is #009E73 brand green; Moderate is lavender (#C475FD); Strong is blue (#4467A3) — the mandated canonical Imprint order. A clear directional pattern emerges: small wedges cluster around N/NE/E, growing to the largest wedges around S/SW/W.
-      Legibility verdict: PASS — all text (title, compass labels, tick labels, legend) is clearly readable against the light background; no light-on-light text found.
+      Background: warm off-white #FAF8F1 across the full 2400x2400 square canvas.
+      Chrome: title "polar-bar · javascript · muix · anyplot.ai" bold dark ink, centered at top (~35% of width). Sixteen compass labels at the rim: N, NE, E, SE, S, SW, W, NW bold dark ink, the secondary points (NNE, ENE, …) smaller inkSoft grey. Four concentric rings at 30/60/90/120 obs with grey labels on the N axis; spokes subtle grey, primary spokes slightly heavier; outer ring heavier. Legend at the bottom: three rounded swatches with "Light (0–10 mph)", "Moderate (10–20 mph)", "Strong (20+ mph)". All text readable.
+      Data: 16 stacked wedges, inner segment brand green #009E73, middle teal (~#22838C), outer blue #4467A3, separated by page-colored 2 px strokes. The rose is lopsided toward SW (longest bar ~119 obs, almost reaching the 120 ring), S/SSW/WSW/W large, the NE quadrant short. The '30 obs' label pill covers the right part of the N bar's blue cap.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, compass labels, and legend, now rendered in light ink, clearly legible against the dark surface. Grid rings and spokes render as a light, subtle grid rather than the light-theme's darker grid, and the tick-label background chips flip to the dark elevated color so the light tick text stays legible over any wedge color.
-      Data: Identical wedge geometry and identical data colors (green/lavender/blue) to the light render — only the chrome (background, grid, text, tick-chip fill) has flipped, exactly as required.
-      Legibility verdict: PASS — no dark-on-dark failures; all title/label/tick text is light-colored and clearly readable against the near-black background; brand green remains vivid on the dark surface.
+      Background: warm near-black #1A1A17.
+      Chrome: title, cardinal labels and legend text in light ink; secondary labels and ring labels in lighter grey inkSoft; rings and spokes dark grey, subtle but visible. No dark-on-dark text.
+      Data: green, teal and blue segments identical to the light render; wedge separators now near-black (page color). Same '30 obs' pill occlusion of the N bar cap.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -60,78 +66,77 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28, compass labels 18, legend
-          17, ticks 15); readable in both themes with no overflow or clipping.
+        comment: All sizes set explicitly (title 22 px, cardinal labels 16 px, secondary
+          and ring labels 14 px, legend 15 px CSS); readable in both themes and at
+          thumbnail size
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Tick-label background chips prevent collisions with wedge fills;
-          compass labels sit clear of the data ring; legend well spaced.
+        comment: The '30 obs' ring-label pill hides part of the N bar's Strong cap
+          (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stacked wedge segments are clearly visible at all magnitudes; near-zero
-          segments render as thin but honestly-scaled slivers, an accurate reflection
-          of the data rather than a legibility defect.
+        comment: Wedges well sized with page-colored separators; thin Strong caps
+          still visible; legend swatches match the marks
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Page-background strokes separate adjacent wedge segments; three hues
-          are CVD-distinguishable; no red-green-only encoding.
+        comment: Three ramp steps differ in luminance and are separated by page-colored
+          strokes; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Rose + labels + legend use a large, balanced share of the 2400x2400
-          canvas; margins are even; nothing cut off.
+        comment: Rose fills most of the square canvas, balanced margins, legend directly
+          below
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Radial tick labels carry units ("30 obs" etc.); compass labels are
-          the standard direction abbreviations.
+        comment: Ring labels carry the unit (obs), compass labels at the rim, legend
+          entries carry mph ranges
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, remaining series follow canonical Imprint
-          order (#C475FD, #4467A3); backgrounds are #FAF8F1/#1A1A17; chrome is theme-correct
-          in both renders.'
+        comment: 'Ordered speed bins as steps of imprint_seq (#009E73 → #4467A3) in
+          low → high order; backgrounds #FAF8F1 / #1A1A17; chrome theme-correct'
     design_excellence:
-      score: 15
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom-composed geometry (rings, spokes, stacked wedges, tick chips)
-          is clearly above a configured default — MUI X has no native component for
-          this at all — though not quite publication-level polish.
+        comment: 'Beyond baseline: two-level rim typography (16 px semibold ink cardinals
+          vs 14 px inkSoft secondaries) mirrored in spoke weights and a heavier outer
+          ring'
       - id: DE-02
         name: Visual Refinement
-        score: 5
-        max: 6
-        passed: true
-        comment: Subtle inner-ring grid vs. bold outer boundary, segment separator
-          strokes, and a background chip for tick labels show real attention to detail.
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: The size progression from small NE/E wedges to the large SW cluster
-          creates an immediate visual focal point without any added annotation.
+        comment: Angular wedge gaps, page-colored segment strokes, quadrant-aware
+          label anchoring and baselines, backed ring labels, faded minor spokes
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Data chosen so a prevailing SW wind with stronger winds from the
+          same sector reads at once; no emphasis beyond the data itself
     spec_compliance:
       score: 15
       max: 15
@@ -141,29 +146,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct polar/wind-rose bar chart with stacked, angularly-arranged
-          bars.
+        comment: Stacked polar bar / wind rose, stacking allowed by the Notes
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 16 compass directions (8 labeled), stacking for multiple speed bins,
-          color encoding the extra variable — all present per spec notes.
+        comment: Bars from center, 16 compass directions with equal widths in compass
+          order, rim labels, zero-based radial scale with labeled concentric rings,
+          consistent stack order, legend for the stacked categories
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Direction maps to angle, frequency to radius/length; all 16 directions
-          and all 3 bins are shown.
+        comment: Angle = direction, radius = cumulative count on a linear scale from
+          0; max total 119 within the 120 ring
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches "polar-bar · javascript · muix · anyplot.ai";
-          legend labels match the speed-bin data exactly.
+        comment: Title matches the mandated format; legend entries are readable speed
+          ranges
     data_quality:
       score: 15
       max: 15
@@ -173,21 +178,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Values vary across all 16 directions and all 3 bins, showing both
-          a near-zero minimum and a clear dominant cluster.
+        comment: 16 directions, three stacked bins, long and very short bars, thin
+          caps
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral meteorological wind-observation scenario.
+        comment: Meteorological wind observations binned by speed in mph
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Observation counts and speed-bin proportions (fewer strong-wind observations
-          than light/moderate) are physically plausible.
+        comment: 'Checked: ring step computed as 30 from max total 119 (45+46+28 at
+          SW), rings 30–120 read off the render; stronger winds rarer than light ones
+          in most directions, plausible'
     code_quality:
       score: 10
       max: 10
@@ -197,66 +203,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Component structure (WindRose, Chrome, Chart) is the idiomatic minimum
-          for a composed React/SVG chart, consistent with prior approved muix implementations
-          of the same pattern.
+        comment: Module-level data and prep; the overlay component is required by
+          the React hook API
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data is hard-coded and deterministic.
+        comment: Hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ChartContainer and useDrawingArea imported, both used.
+        comment: ChartsContainer and useDrawingArea both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or faked interactivity; complexity matches the custom
-          polar geometry required.
+        comment: Wedge geometry and nice-step ring computation are not provided by
+          MUI X community; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: skipAnimation set; sizes from window.ANYPLOT_SIZE; no deprecated
-          API.
+        comment: Default-exported component, v9 ChartsContainer, skipAnimation, sized
+          to ANYPLOT_SIZE
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Uses ChartContainer + useDrawingArea idiomatically for a chart type
-          the community surface can't natively express, matching catalog precedent.
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: series={[]} means no genuine MUI X data-bound series or tooltip is
-          leveraged anywhere, unlike the polar-basic precedent's real ScatterPlot
-          + ChartsTooltip — a missed opportunity for an interactive-library entry.
+        comment: Correct v9 composition, but the chart itself is hand-drawn SVG inside
+          an empty ChartsContainer
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Uses MUI X's useDrawingArea hook to size a custom layer inside the
+          composition container
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-10-24T11:49:56Z'
 impl_tags:
   dependencies: []
   techniques:
   - polar-projection
-  - manual-ticks
+  - patches
   - custom-legend
+  - layer-composition
+  - html-export
   patterns:
-  - data-generation
   - iteration-over-groups
   dataprep:
   - cumulative-sum
   styling:
-  - edge-highlighting
-  - grid-styling
+  - minimal-chrome
