@@ -1,6 +1,6 @@
 // anyplot.ai
 // flamegraph-basic: Flame Graph for Performance Profiling
-// Library: muix 9.2.1 | JavaScript 22.23.2
+// Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 96/100 | Created: 2026-08-20
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
@@ -8,30 +8,34 @@ import { useXScale, useYScale } from "@mui/x-charts/hooks";
 const t = window.ANYPLOT_TOKENS;
 
 // Constants
-const STACK_COL = "stack";
-const FUNCTION_COL = "function";
-const VALUE_COL = "samples";
-
 const TITLE = "flamegraph-basic · javascript · muix · anyplot.ai";
-const PROFILE_NAME = "Simulated web-request CPU profile";
 const DEPTH_LABEL = "Depth";
 const ROOT_ROLE_LABEL = "root";
 const LEGEND_LOW_PREFIX = "fewer";
 const LEGEND_HIGH_PREFIX = "more";
 
-const WARM_STOPS: [number, number, number][] = [
-  [221, 204, 119], // #DDCC77 amber
-  [189, 130, 51], // #BD8233 ochre
-  [174, 48, 48], // #AE3030 matte red
+const WARM_STOPS: [number, number, number][] = [t.amber, t.palette[3], t.palette[4]].map((hex) => [
+  parseInt(hex.slice(1, 3), 16),
+  parseInt(hex.slice(3, 5), 16),
+  parseInt(hex.slice(5, 7), 16),
+]);
+const ROOT_RGB: [number, number, number] = [
+  parseInt(t.inkSoft.slice(1, 3), 16),
+  parseInt(t.inkSoft.slice(3, 5), 16),
+  parseInt(t.inkSoft.slice(5, 7), 16),
 ];
-const ROOT_RGB: [number, number, number] = [110, 106, 97]; // #6E6A61 neutral baseline
 
 const ROW_H_SHARE = 0.92;
 const LABEL_FONT_SIZE = 14;
 const CHAR_WIDTH_RATIO = 0.58;
 const MARGIN = { top: 126, right: 40, bottom: 28, left: 118 };
 
-// Data — folded stack-trace records (stack;path, leaf function, sample count)
+// Columns: set these to your data's column names
+const STACK = "Stack"; // role: stack
+const FUNCTION = "Function"; // role: function
+const SAMPLES = "Samples"; // role: value
+
+// Data: replace this block with your own records
 const VERBS = [
   "parse",
   "validate",
@@ -92,9 +96,9 @@ while (expandStack.length > 0) {
   const current = expandStack.pop()!;
   if (current.remainingDepth <= 0 || current.samples < 220) {
     data.push({
-      [STACK_COL]: current.stack,
-      [FUNCTION_COL]: current.name,
-      [VALUE_COL]: current.samples,
+      [STACK]: current.stack,
+      [FUNCTION]: current.name,
+      [SAMPLES]: current.samples,
     });
     continue;
   }
@@ -136,7 +140,7 @@ while (expandStack.length > 0) {
   }
 }
 
-// Aggregate folded stack paths into hierarchical frame nodes
+// Plot: reads only data and the constants above
 type FrameNode = {
   pathKey: string;
   name: string;
@@ -146,12 +150,12 @@ type FrameNode = {
 };
 
 const nodeMap = new Map<string, FrameNode>();
-let rootKey = "";
+const rootKeys: string[] = [];
 
 for (const row of data) {
-  const stackStr = String(row[STACK_COL]);
-  const leafFn = String(row[FUNCTION_COL]);
-  const samples = Number(row[VALUE_COL]);
+  const stackStr = String(row[STACK]);
+  const leafFn = String(row[FUNCTION]);
+  const samples = Number(row[SAMPLES]);
   const parts = stackStr.split(";");
   if (parts.length > 0 && parts[parts.length - 1] !== leafFn) {
     parts[parts.length - 1] = leafFn;
@@ -160,7 +164,9 @@ for (const row of data) {
   for (let d = 0; d < parts.length; d++) {
     const fn = parts[d];
     const nextPrefix = d === 0 ? fn : `${prefix};${fn}`;
-    if (d === 0 && !rootKey) rootKey = nextPrefix;
+    if (d === 0 && !rootKeys.includes(nextPrefix)) {
+      rootKeys.push(nextPrefix);
+    }
     let node = nodeMap.get(nextPrefix);
     if (!node) {
       node = { pathKey: nextPrefix, name: fn, depth: d, samples: 0, childKeys: [] };
@@ -175,7 +181,6 @@ for (const row of data) {
   }
 }
 
-// Iterative pre-order layout computing contiguous x0/width intervals per depth
 type PositionedFrame = {
   pathKey: string;
   name: string;
@@ -189,7 +194,16 @@ type PositionedFrame = {
 };
 
 const rawFrames: { pathKey: string; name: string; depth: number; x0: number; width: number; samples: number }[] = [];
-const layoutQueue: { key: string; x0: number }[] = rootKey ? [{ key: rootKey, x0: 0 }] : [];
+const layoutQueue: { key: string; x0: number }[] = [];
+let rootCursor = 0;
+const rootEntries: { key: string; x0: number }[] = [];
+for (const rKey of rootKeys) {
+  rootEntries.push({ key: rKey, x0: rootCursor });
+  rootCursor += nodeMap.get(rKey)!.samples;
+}
+for (let i = rootEntries.length - 1; i >= 0; i--) {
+  layoutQueue.push(rootEntries[i]);
+}
 
 while (layoutQueue.length > 0) {
   const { key, x0 } = layoutQueue.pop()!;
@@ -214,7 +228,7 @@ while (layoutQueue.length > 0) {
   }
 }
 
-const totalSamples = rootKey ? nodeMap.get(rootKey)!.samples : 1;
+const totalSamples = rootCursor;
 const maxDepth = Math.max(...rawFrames.map((f) => f.depth));
 const nonRootPcts = rawFrames.filter((f) => f.depth > 0).map((f) => f.samples / totalSamples);
 const minPct = Math.min(...nonRootPcts);
@@ -225,7 +239,7 @@ const frames: PositionedFrame[] = rawFrames.map((f) => {
   const pct = (f.samples / totalSamples) * 100;
   let rgb: [number, number, number] = ROOT_RGB;
   if (!isRoot) {
-    const u = Math.min(1, Math.max(0, (pct / 100 - minPct) / (maxPct - minPct || 1)));
+    const u = (pct / 100 - minPct) / (maxPct - minPct);
     const scaled = u * (WARM_STOPS.length - 1);
     const idx = Math.min(WARM_STOPS.length - 2, Math.floor(scaled));
     const frac = scaled - idx;
@@ -258,10 +272,10 @@ function FlameGraphCanvas() {
   const legendY = 104;
   const barW = 220;
   const barH = 14;
-  const rootName = rootKey || ROOT_ROLE_LABEL;
-  const rootLabel = `${rootName} (${ROOT_ROLE_LABEL} · 100% ${VALUE_COL})`;
-  const leftLabel = `${LEGEND_LOW_PREFIX} ${VALUE_COL} (${(minPct * 100).toFixed(1)}%)`;
-  const rightLabel = `${LEGEND_HIGH_PREFIX} ${VALUE_COL} (${(maxPct * 100).toFixed(1)}%)`;
+  const rootName = rootKeys.join(", ");
+  const rootLabel = `${rootName} (${ROOT_ROLE_LABEL} · 100% ${SAMPLES})`;
+  const leftLabel = `${LEGEND_LOW_PREFIX} ${SAMPLES} (${(minPct * 100).toFixed(1)}%)`;
+  const rightLabel = `${LEGEND_HIGH_PREFIX} ${SAMPLES} (${(maxPct * 100).toFixed(1)}%)`;
   const rootSwatchW = 14;
   const rootBlockW = rootSwatchW + 8 + rootLabel.length * legendCharW;
   const leftLabelW = leftLabel.length * legendCharW;
@@ -311,7 +325,7 @@ function FlameGraphCanvas() {
               stroke={t.pageBg}
               strokeWidth={1.5}
             >
-              <title>{`${f.name}: ${f.samples.toLocaleString()} ${VALUE_COL} (${f.pct.toFixed(1)}%)`}</title>
+              <title>{`${f.name}: ${f.samples.toLocaleString()} ${SAMPLES} (${f.pct.toFixed(1)}%)`}</title>
             </rect>
             {fits && (
               <text
@@ -374,7 +388,7 @@ function FlameGraphCanvas() {
 
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
-  const subtitle = `${PROFILE_NAME} · ${totalSamples.toLocaleString()} ${VALUE_COL} across ${frames.length} stack frames (${data.length} leaf traces)`;
+  const subtitle = `${totalSamples.toLocaleString()} ${SAMPLES} across ${frames.length} stack frames (${data.length} leaf traces)`;
 
   return (
     <ChartsContainer
