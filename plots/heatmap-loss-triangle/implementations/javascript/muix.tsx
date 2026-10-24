@@ -1,324 +1,207 @@
 // anyplot.ai
 // heatmap-loss-triangle: Actuarial Loss Development Triangle
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 89/100 | Created: 2026-08-20
+// Library: muix 9.16.0 | JavaScript 22.23.3
+// Quality: 87/100 | Updated: 2026-10-24
 //# anyplot-orientation: square
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
-import { ChartsText } from "@mui/x-charts/ChartsText";
-import { ContinuousColorLegend } from "@mui/x-charts/ChartsLegend";
-import {
-  useXScale,
-  useYScale,
-  useZColorScale,
-  useDrawingArea,
-} from "@mui/x-charts/hooks";
+import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
+
+// Constants
 const SIZE = window.ANYPLOT_SIZE;
-
-// --- Data: cumulative paid-claims triangle, $000s (in-memory, deterministic) ----------
-// Tiny fixed-seed LCG — no Math.random() in the browser render harness.
-function lcg(seed) {
-  let state = seed;
-  return () => {
-    state = (state * 1103515245 + 12345) & 0x7fffffff;
-    return state / 0x7fffffff;
-  };
-}
-const random = lcg(42);
-
-const ACCIDENT_YEARS = Array.from({ length: 10 }, (_, i) => 2015 + i);
-const DEVELOPMENT_PERIODS = Array.from({ length: 10 }, (_, i) => i + 1);
-const LATEST_EVALUATION_YEAR = 2024;
-
-// Age-to-age development factors, period p -> p+1 (classic chain-ladder decay).
-const DEV_FACTORS = [1.45, 1.2, 1.12, 1.07, 1.045, 1.028, 1.017, 1.01, 1.005];
-
-// Period-1 base losses grow with accident-year exposure plus mild noise.
-const basePeriod1 = ACCIDENT_YEARS.map((year, i) =>
-  Math.round(820 + i * 35 + (random() - 0.5) * 60),
-);
-
-// Full cumulative grid: same development factors drive both the observed
-// history and the chain-ladder projection of the still-open accident years.
-const cumulativeByYear = basePeriod1.map((base) => {
-  const row = [base];
-  for (let p = 1; p < DEVELOPMENT_PERIODS.length; p += 1) {
-    row.push(row[p - 1] * DEV_FACTORS[p - 1]);
-  }
-  return row.map((value) => Math.round(value));
-});
-
-// Accident year `i` rows down from 2015 has (10 - i) periods observed by the
-// latest evaluation date, so a cell is actual when row-index + development
-// period <= 10 — the anti-diagonal running from the top-right corner to the
-// bottom-left corner. Everything past it is the chain-ladder projection.
-const cells = [];
-ACCIDENT_YEARS.forEach((year, i) => {
-  DEVELOPMENT_PERIODS.forEach((period, j) => {
-    cells.push({
-      id: `${year}-${period}`,
-      x: String(period),
-      y: String(year),
-      value: cumulativeByYear[i][j],
-      isProjected: i + period > DEVELOPMENT_PERIODS.length,
-    });
-  });
-});
-
-const allValues = cells.map((cell) => cell.value);
-const MIN_VALUE = Math.min(...allValues);
-const MAX_VALUE = Math.max(...allValues);
-
-// --- Colour: sequential Imprint colormap (imprint_seq) driven by the z-axis colorMap --
-function hexToRgb(hex) {
-  const int = parseInt(hex.slice(1), 16);
-  return [(int >> 16) & 255, (int >> 8) & 255, int & 255];
-}
-
-function lerp(a, b, ratio) {
-  return Math.round(a + (b - a) * ratio);
-}
-
-function imprintSeqInterpolator(stops) {
-  const [low, high] = stops.map(hexToRgb);
-  return (position) => {
-    const ratio = Math.min(1, Math.max(0, position));
-    const [r, g, b] = [0, 1, 2].map((channel) =>
-      lerp(low[channel], high[channel], ratio),
-    );
-    return `rgb(${r}, ${g}, ${b})`;
-  };
-}
-
-// Cell text must stay legible against that cell's own fill luminance regardless
-// of the current site theme, so pick between the two fixed Imprint ink literals
-// (light-mode ink / dark-mode ink) rather than the theme-dependent `t.ink`.
-const CELL_TEXT_ON_LIGHT_FILL = "#1A1A17";
-const CELL_TEXT_ON_DARK_FILL = "#F0EFE8";
-
-function textColorFor(fill) {
-  const [r, g, b] = fill.match(/[\d.]+/g).map(Number);
-  const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-  return luminance > 140 ? CELL_TEXT_ON_LIGHT_FILL : CELL_TEXT_ON_DARK_FILL;
-}
-
-const HATCH_ID = "loss-triangle-hatch";
-
-// --- Cells (custom composition: MUI X band scales + z-axis colour scale) --------------
-function TriangleCells() {
-  const xScale = useXScale();
-  const yScale = useYScale();
-  const colorScale = useZColorScale();
-
-  return (
-    <g>
-      {cells.map((cell) => {
-        const x = xScale(cell.x) ?? 0;
-        const y = yScale(cell.y) ?? 0;
-        const width = xScale.bandwidth();
-        const height = yScale.bandwidth();
-        const fill = colorScale(cell.value);
-        const textFill = textColorFor(fill);
-        return (
-          <g key={cell.id}>
-            <rect
-              x={x}
-              y={y}
-              width={width}
-              height={height}
-              fill={fill}
-              rx={4}
-              stroke={cell.isProjected ? t.inkSoft : t.pageBg}
-              strokeWidth={cell.isProjected ? 1.5 : 2}
-              strokeDasharray={cell.isProjected ? "4 3" : undefined}
-            />
-            {cell.isProjected && (
-              <rect
-                x={x}
-                y={y}
-                width={width}
-                height={height}
-                fill={`url(#${HATCH_ID})`}
-                rx={4}
-              />
-            )}
-            <ChartsText
-              text={cell.value.toLocaleString("en-US")}
-              x={x + width / 2}
-              y={y + height / 2}
-              style={{
-                fontSize: 13,
-                fill: textFill,
-                textAnchor: "middle",
-                dominantBaseline: "central",
-              }}
-            />
-          </g>
-        );
-      })}
-    </g>
-  );
-}
-
-// --- Age-to-age development factors, shown as a row below the triangle ----------------
-function DevelopmentFactorRow() {
-  const xScale = useXScale();
-  const area = useDrawingArea();
-  const rowY = area.top + area.height + 108;
-
-  return (
-    <g>
-      <ChartsText
-        text="Age-to-age factors"
-        x={area.left - 12}
-        y={rowY}
-        style={{
-          fontSize: 12,
-          fill: t.inkSoft,
-          textAnchor: "end",
-          dominantBaseline: "central",
-        }}
-      />
-      {DEV_FACTORS.map((factor, k) => {
-        const period = k + 1;
-        const boundaryX = (xScale(String(period)) ?? 0) + xScale.bandwidth();
-        return (
-          <ChartsText
-            key={`factor-${period}`}
-            text={`×${factor.toFixed(2)}`}
-            x={boundaryX}
-            y={rowY}
-            style={{
-              fontSize: 12,
-              fill: t.inkSoft,
-              textAnchor: "middle",
-              dominantBaseline: "central",
-            }}
-          />
-        );
-      })}
-    </g>
-  );
-}
-
-// --- Actual vs. projected legend (manual swatches — not a data-series legend) ---------
-const LEGEND_ITEMS = [
-  { label: "Actual (observed)", hatched: false },
-  { label: "Projected (IBNR estimate)", hatched: true },
-];
-const LEGEND_SWATCH = 18;
-const LEGEND_GAP = 8;
-const LEGEND_BLOCK_GAP = 40;
-const LEGEND_CHAR_WIDTH = 7;
-
-function LegendSwatches() {
-  const blockWidths = LEGEND_ITEMS.map(
-    (item) =>
-      LEGEND_SWATCH + LEGEND_GAP + item.label.length * LEGEND_CHAR_WIDTH,
-  );
-  const totalWidth =
-    blockWidths.reduce((sum, w) => sum + w, 0) +
-    LEGEND_BLOCK_GAP * (LEGEND_ITEMS.length - 1);
-  let cursorX = SIZE.width / 2 - totalWidth / 2;
-  const y = 118;
-
-  return (
-    <g>
-      {LEGEND_ITEMS.map((item, index) => {
-        const swatchX = cursorX;
-        cursorX += blockWidths[index] + LEGEND_BLOCK_GAP;
-        return (
-          <g key={item.label}>
-            <rect
-              x={swatchX}
-              y={y - LEGEND_SWATCH / 2}
-              width={LEGEND_SWATCH}
-              height={LEGEND_SWATCH}
-              rx={3}
-              fill={t.seq[0]}
-              stroke={item.hatched ? t.inkSoft : "none"}
-              strokeDasharray={item.hatched ? "3 2" : undefined}
-            />
-            {item.hatched && (
-              <rect
-                x={swatchX}
-                y={y - LEGEND_SWATCH / 2}
-                width={LEGEND_SWATCH}
-                height={LEGEND_SWATCH}
-                rx={3}
-                fill={`url(#${HATCH_ID})`}
-              />
-            )}
-            <ChartsText
-              text={item.label}
-              x={swatchX + LEGEND_SWATCH + LEGEND_GAP}
-              y={y}
-              style={{
-                fontSize: 13,
-                fill: t.inkSoft,
-                textAnchor: "start",
-                dominantBaseline: "central",
-              }}
-            />
-          </g>
-        );
-      })}
-    </g>
-  );
-}
-
-// --- Chart (default-exported component — the harness mounts it) ----------------------
 const TITLE = "heatmap-loss-triangle · javascript · muix · anyplot.ai";
-const MARGIN = { top: 190, right: 300, bottom: 200, left: 150 };
-// The ContinuousColorLegend (translated -28px, ~40px wide) hugs the canvas's
-// right edge, so its column spans roughly [SIZE.width - 132, SIZE.width - 28].
-// Anchor the caption well clear of both that column and the drawing area
-// (which ends at SIZE.width - MARGIN.right) instead of crowding the bar.
-const LEGEND_CAPTION_X = SIZE.width - MARGIN.right / 2;
-const LEGEND_CAPTION_Y = SIZE.height / 2;
+const CELL_TEXT_ON_LIGHT_FILL = "#1A1A17";
+const CELL_TEXT_ON_DARK_FILL = "#FAF8F1";
+const HATCH_ID = "loss-triangle-hatch";
+const GRAD_ID = "loss-triangle-seq-grad";
+const COLORBAR_TICKS = [0, 0.25, 0.5, 0.75, 1];
 
-export default function Chart() {
+// Columns: set these to your data's column names
+const ACCIDENT_YEAR = "Accident Year"; // role: accident_year
+const DEV_PERIOD = "Development Period (years since occurrence)"; // role: development_period
+const CUMULATIVE_CLAIMS = "Cumulative paid claims ($000s)"; // role: cumulative_amount
+const IS_PROJECTED = "Projected"; // role: is_projected
+const DEV_FACTOR = "Age-to-age factor"; // role: development_factor
+
+// Data: replace this block with your own records
+const SEED_YEARS = [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024];
+const SEED_FACTORS = [1.45, 1.2, 1.12, 1.07, 1.045, 1.028, 1.017, 1.01, 1.005, 1.0];
+
+type LossTriangleRow = {
+  [ACCIDENT_YEAR]: number;
+  [DEV_PERIOD]: number;
+  [CUMULATIVE_CLAIMS]: number;
+  [IS_PROJECTED]: number;
+  [DEV_FACTOR]: number;
+};
+
+let lcgState = 42;
+const nextRand = () => {
+  lcgState = (lcgState * 1103515245 + 12345) & 0x7fffffff;
+  return lcgState / 0x7fffffff;
+};
+const nPeriods = SEED_FACTORS.length;
+const nYears = SEED_YEARS.length;
+
+// Observed triangle: each year's link ratios scatter around the seed factors
+const grid: number[][] = SEED_YEARS.map((_, i) => {
+  const row = [Math.round(820 + i * 35 + (nextRand() - 0.5) * 60)];
+  for (let j = 1; j < nPeriods - i; j++) {
+    const growth = SEED_FACTORS[j - 1] - 1;
+    const noisy = 1 + growth * (1 + (nextRand() - 0.5) * 0.5);
+    row.push(Math.round(row[j - 1] * noisy));
+  }
+  return row;
+});
+
+// Chain-ladder: volume-weighted age-to-age factors from the observed cells
+const selectedFactors = SEED_FACTORS.map((seed, j) => {
+  let num = 0;
+  let den = 0;
+  for (const row of grid) {
+    if (row.length > j + 1) {
+      num += row[j + 1];
+      den += row[j];
+    }
+  }
+  return den > 0 ? num / den : seed;
+});
+
+const data: LossTriangleRow[] = [];
+for (let i = 0; i < nYears; i++) {
+  const observedCount = grid[i].length;
+  let cumulative = grid[i][0];
+  for (let j = 0; j < nPeriods; j++) {
+    if (j > 0) {
+      cumulative = j < observedCount ? grid[i][j] : cumulative * selectedFactors[j - 1];
+    }
+    data.push({
+      [ACCIDENT_YEAR]: SEED_YEARS[i],
+      [DEV_PERIOD]: j + 1,
+      [CUMULATIVE_CLAIMS]: Math.round(cumulative),
+      [IS_PROJECTED]: j < observedCount ? 0 : 1,
+      [DEV_FACTOR]: selectedFactors[j],
+    });
+  }
+}
+
+// Plot: reads only data and the constants above
+const accidentYearNums = Array.from(
+  new Set(data.map((r) => r[ACCIDENT_YEAR])),
+).sort((a, b) => a - b);
+const devPeriodNums = Array.from(
+  new Set(data.map((r) => r[DEV_PERIOD])),
+).sort((a, b) => a - b);
+
+const accidentYearLabels = accidentYearNums.map(String);
+const devPeriodLabels = devPeriodNums.map(String);
+
+const factorByPeriod = new Map<number, number>();
+for (const row of data) {
+  const p = row[DEV_PERIOD];
+  if (!factorByPeriod.has(p)) {
+    factorByPeriod.set(p, row[DEV_FACTOR]);
+  }
+}
+
+const maxObsPeriodIdxByYear = new Map<number, number>();
+for (const year of accidentYearNums) {
+  const obsPeriods = data
+    .filter((r) => r[ACCIDENT_YEAR] === year && r[IS_PROJECTED] === 0)
+    .map((r) => r[DEV_PERIOD]);
+  const maxP = Math.max(...obsPeriods);
+  maxObsPeriodIdxByYear.set(year, devPeriodNums.indexOf(maxP));
+}
+
+const allAmounts = data.map((r) => r[CUMULATIVE_CLAIMS]);
+const minVal = Math.min(...allAmounts);
+const maxVal = Math.max(...allAmounts);
+const valSpan = maxVal - minVal;
+
+const seqLowNum = parseInt(t.seq[0].slice(1), 16);
+const seqHighNum = parseInt(t.seq[1].slice(1), 16);
+const lowR = (seqLowNum >> 16) & 255;
+const lowG = (seqLowNum >> 8) & 255;
+const lowB = seqLowNum & 255;
+const highR = (seqHighNum >> 16) & 255;
+const highG = (seqHighNum >> 8) & 255;
+const highB = seqHighNum & 255;
+
+const cells = data.map((row) => {
+  const val = row[CUMULATIVE_CLAIMS];
+  const ratio = (val - minVal) / valSpan;
+  const r = Math.round(lowR + (highR - lowR) * ratio);
+  const g = Math.round(lowG + (highG - lowG) * ratio);
+  const b = Math.round(lowB + (highB - lowB) * ratio);
+  const lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  return {
+    id: `${row[ACCIDENT_YEAR]}-${row[DEV_PERIOD]}`,
+    yearKey: String(row[ACCIDENT_YEAR]),
+    periodKey: String(row[DEV_PERIOD]),
+    value: val,
+    isProjected: row[IS_PROJECTED] === 1,
+    fill: `rgb(${r}, ${g}, ${b})`,
+    textFill: lum > 0.54 ? CELL_TEXT_ON_LIGHT_FILL : CELL_TEXT_ON_DARK_FILL,
+  };
+});
+
+const latestYear = accidentYearNums[accidentYearNums.length - 1];
+let totalIbnr = 0;
+for (const year of accidentYearNums) {
+  const yearRows = data.filter((r) => r[ACCIDENT_YEAR] === year);
+  const observedRows = yearRows.filter((r) => r[IS_PROJECTED] === 0);
+  const latestObserved = observedRows[observedRows.length - 1][CUMULATIVE_CLAIMS];
+  const ultimate = yearRows[yearRows.length - 1][CUMULATIVE_CLAIMS];
+  totalIbnr += ultimate - latestObserved;
+}
+
+const unitMatch = CUMULATIVE_CLAIMS.match(/\(([^)]+)\)/);
+const claimsUnit = unitMatch ? unitMatch[1] : "";
+const claimsName = CUMULATIVE_CLAIMS.replace(/\s*\([^)]*\)/, "");
+const subtitle = `${ACCIDENT_YEAR}s ${accidentYearNums[0]}–${latestYear} · ${CUMULATIVE_CLAIMS} · Total projected IBNR reserve: ${totalIbnr.toLocaleString("en-US")} (${claimsUnit})`;
+
+function LossTriangleLayer() {
+  const area = useDrawingArea();
+  const xScale = useXScale("dev-period") as unknown as ((v: string) => number) & { bandwidth: () => number };
+  const yScale = useYScale("accident-year") as unknown as ((v: string) => number) & { bandwidth: () => number };
+
+  const bw = xScale.bandwidth();
+  const bh = yScale.bandwidth();
+  const stepX = xScale(devPeriodLabels[1]) - xScale(devPeriodLabels[0]);
+  const stepY = yScale(accidentYearLabels[1]) - yScale(accidentYearLabels[0]);
+
+  const staircasePts: string[] = [];
+  let prevXRight = xScale(devPeriodLabels[devPeriodLabels.length - 1]) + bw;
+  for (let i = 0; i < accidentYearNums.length; i++) {
+    const year = accidentYearNums[i];
+    const maxObsIdx = maxObsPeriodIdxByYear.get(year)!;
+    if (maxObsIdx < devPeriodLabels.length - 1) {
+      const xRight = xScale(devPeriodLabels[maxObsIdx]) + bw + (stepX - bw) / 2;
+      const yTop = yScale(accidentYearLabels[i]) - (stepY - bh) / 2;
+      const yBot = yScale(accidentYearLabels[i]) + bh + (stepY - bh) / 2;
+      if (staircasePts.length === 0) {
+        staircasePts.push(`M ${prevXRight} ${yTop}`);
+      }
+      staircasePts.push(`L ${xRight} ${yTop}`);
+      staircasePts.push(`L ${xRight} ${yBot}`);
+      prevXRight = xRight;
+    } else {
+      prevXRight = xScale(devPeriodLabels[maxObsIdx]) + bw;
+    }
+  }
+  const staircasePath = staircasePts.join(" ");
+
+  const factorRowY = area.top + area.height + 92;
+  const barX = area.left + area.width + 28;
+  const barW = 18;
+  const barTop = area.top + area.height * 0.12;
+  const barH = area.height * 0.78;
+
   return (
-    <ChartContainer
-      width={SIZE.width}
-      height={SIZE.height}
-      series={[]}
-      margin={MARGIN}
-      skipAnimation
-      xAxis={[
-        {
-          scaleType: "band",
-          data: DEVELOPMENT_PERIODS.map(String),
-          categoryGapRatio: 0.06,
-          disableLine: true,
-          disableTicks: true,
-          tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-        },
-      ]}
-      yAxis={[
-        {
-          scaleType: "band",
-          data: ACCIDENT_YEARS.map(String),
-          categoryGapRatio: 0.06,
-          disableLine: true,
-          disableTicks: true,
-          tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-        },
-      ]}
-      zAxis={[
-        {
-          colorMap: {
-            type: "continuous",
-            min: MIN_VALUE,
-            max: MAX_VALUE,
-            color: imprintSeqInterpolator(t.seq),
-          },
-        },
-      ]}
-    >
+    <g>
       <defs>
         <pattern
           id={HATCH_ID}
@@ -334,66 +217,269 @@ export default function Chart() {
             y2={8}
             stroke={t.ink}
             strokeWidth={2}
-            strokeOpacity={0.22}
+            strokeOpacity={0.24}
           />
         </pattern>
+        <linearGradient id={GRAD_ID} x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0%" stopColor={t.seq[0]} />
+          <stop offset="100%" stopColor={t.seq[1]} />
+        </linearGradient>
       </defs>
-      <TriangleCells />
-      <DevelopmentFactorRow />
-      <ChartsXAxis />
-      <ChartsYAxis />
-      <g transform="translate(-28, 0)">
-        <ContinuousColorLegend
-          position={{ horizontal: "right", vertical: "middle" }}
-          direction="column"
-          length="50%"
-          thickness={18}
-          labelStyle={{ fontSize: 12, fill: t.inkSoft }}
+
+      <text
+        x={SIZE.width / 2}
+        y={42}
+        textAnchor="middle"
+        fontSize={22}
+        fontWeight="600"
+        fill={t.ink}
+      >
+        {TITLE}
+      </text>
+      <text
+        x={SIZE.width / 2}
+        y={70}
+        textAnchor="middle"
+        fontSize={15}
+        fill={t.inkSoft}
+      >
+        {subtitle}
+      </text>
+
+      {/* Legend swatches: Actual vs Projected */}
+      <g transform={`translate(${SIZE.width / 2 - 225}, 96)`}>
+        <rect
+          x={0}
+          y={0}
+          width={20}
+          height={20}
+          rx={3}
+          fill={t.seq[0]}
+          stroke={t.pageBg}
+          strokeWidth={1.5}
         />
+        <text
+          x={28}
+          y={15}
+          fontSize={14}
+          fontWeight="600"
+          fill={t.ink}
+        >
+          Actual (observed claims)
+        </text>
+
+        <rect
+          x={235}
+          y={0}
+          width={20}
+          height={20}
+          rx={3}
+          fill={t.seq[0]}
+          stroke={t.inkSoft}
+          strokeWidth={1.5}
+          strokeDasharray="4 2"
+        />
+        <rect
+          x={235}
+          y={0}
+          width={20}
+          height={20}
+          rx={3}
+          fill={`url(#${HATCH_ID})`}
+        />
+        <text
+          x={263}
+          y={15}
+          fontSize={14}
+          fontWeight="600"
+          fill={t.ink}
+        >
+          Projected (chain-ladder IBNR)
+        </text>
       </g>
-      <ChartsText
-        text="Cumulative paid claims ($000s)"
-        x={LEGEND_CAPTION_X}
-        y={LEGEND_CAPTION_Y}
-        style={{
-          fontSize: 12,
-          fill: t.inkSoft,
-          textAnchor: "middle",
-          angle: -90,
-        }}
+
+      {/* Triangle cells */}
+      {cells.map((cell) => {
+        const x = xScale(cell.periodKey);
+        const y = yScale(cell.yearKey);
+        return (
+          <g key={cell.id}>
+            <rect
+              x={x}
+              y={y}
+              width={bw}
+              height={bh}
+              fill={cell.fill}
+              rx={4}
+              stroke={cell.isProjected ? t.inkSoft : t.pageBg}
+              strokeWidth={cell.isProjected ? 1.5 : 2}
+              strokeDasharray={cell.isProjected ? "4 3" : undefined}
+            />
+            {cell.isProjected && (
+              <rect
+                x={x}
+                y={y}
+                width={bw}
+                height={bh}
+                fill={`url(#${HATCH_ID})`}
+                rx={4}
+              />
+            )}
+            <text
+              x={x + bw / 2}
+              y={y + bh / 2}
+              textAnchor="middle"
+              dominantBaseline="central"
+              fontSize={14}
+              fontWeight="600"
+              fill={cell.textFill}
+            >
+              {cell.value.toLocaleString("en-US")}
+            </text>
+          </g>
+        );
+      })}
+
+      {/* Latest evaluation diagonal boundary */}
+      <path
+        d={staircasePath}
+        fill="none"
+        stroke={t.ink}
+        strokeWidth={2.5}
       />
-      <ChartsText
-        text="Development Period (years since occurrence)"
-        x={MARGIN.left + (SIZE.width - MARGIN.left - MARGIN.right) / 2}
-        y={SIZE.height - MARGIN.bottom + 60}
-        style={{
-          fontSize: 14,
-          fill: t.inkSoft,
-          textAnchor: "middle",
-        }}
+
+      {/* Age-to-age development factors row below the x-axis */}
+      <text
+        x={area.left}
+        y={factorRowY}
+        textAnchor="end"
+        dominantBaseline="central"
+        fontSize={14}
+        fontWeight="600"
+        fill={t.inkSoft}
+      >
+        {DEV_FACTOR}
+      </text>
+      {devPeriodNums.slice(0, -1).map((period, k) => {
+        const nextPeriod = devPeriodNums[k + 1];
+        const factor = factorByPeriod.get(period)!;
+        const xLeft = xScale(String(period)) + bw;
+        const xRight = xScale(String(nextPeriod));
+        const boundaryX = (xLeft + xRight) / 2;
+        return (
+          <text
+            key={`factor-${period}`}
+            x={boundaryX}
+            y={factorRowY}
+            textAnchor="middle"
+            dominantBaseline="central"
+            fontSize={14}
+            fontWeight="600"
+            fill={t.inkSoft}
+          >
+            {`×${factor.toFixed(2)}`}
+          </text>
+        );
+      })}
+
+      {/* Sequential Colorbar */}
+      <text
+        x={barX}
+        y={barTop - 30}
+        textAnchor="start"
+        fontSize={14}
+        fontWeight="600"
+        fill={t.ink}
+      >
+        {claimsName}
+      </text>
+      <text
+        x={barX}
+        y={barTop - 12}
+        textAnchor="start"
+        fontSize={14}
+        fill={t.inkSoft}
+      >
+        {`(${claimsUnit})`}
+      </text>
+      <rect
+        x={barX}
+        y={barTop}
+        width={barW}
+        height={barH}
+        fill={`url(#${GRAD_ID})`}
+        stroke={t.grid}
+        strokeWidth={1}
+        rx={3}
       />
-      <LegendSwatches />
-      <ChartsText
-        text={TITLE}
-        x={SIZE.width / 2}
-        y={50}
-        style={{
-          fontSize: 26,
-          fontWeight: 600,
-          fill: t.ink,
-          textAnchor: "middle",
-        }}
-      />
-      <ChartsText
-        text={`Accident years ${ACCIDENT_YEARS[0]}–${ACCIDENT_YEARS[ACCIDENT_YEARS.length - 1]} · evaluated as of Dec ${LATEST_EVALUATION_YEAR}`}
-        x={SIZE.width / 2}
-        y={84}
-        style={{
-          fontSize: 15,
-          fill: t.inkSoft,
-          textAnchor: "middle",
-        }}
-      />
-    </ChartContainer>
+      {COLORBAR_TICKS.map((frac) => {
+        const val = Math.round(minVal + frac * valSpan);
+        const ty = barTop + barH * (1 - frac);
+        return (
+          <g key={frac}>
+            <line
+              x1={barX + barW}
+              y1={ty}
+              x2={barX + barW + 6}
+              y2={ty}
+              stroke={t.inkSoft}
+              strokeWidth={1}
+            />
+            <text
+              x={barX + barW + 10}
+              y={ty + 5}
+              fontSize={14}
+              fill={t.inkSoft}
+            >
+              {val.toLocaleString("en-US")}
+            </text>
+          </g>
+        );
+      })}
+    </g>
+  );
+}
+
+export default function Chart() {
+  return (
+    <ChartsContainer
+      width={SIZE.width}
+      height={SIZE.height}
+      series={[]}
+      margin={{ top: 138, right: 210, bottom: 64, left: 74 }}
+      skipAnimation
+      xAxis={[
+        {
+          id: "dev-period",
+          scaleType: "band",
+          data: devPeriodLabels,
+          categoryGapRatio: 0.06,
+          height: 58,
+          label: DEV_PERIOD,
+          disableLine: true,
+          disableTicks: true,
+          tickLabelStyle: { fontSize: 14, fill: t.inkSoft, fontWeight: 600 },
+          labelStyle: { fontSize: 15, fill: t.ink },
+        },
+      ]}
+      yAxis={[
+        {
+          id: "accident-year",
+          scaleType: "band",
+          data: accidentYearLabels,
+          categoryGapRatio: 0.06,
+          width: 82,
+          label: ACCIDENT_YEAR,
+          disableLine: true,
+          disableTicks: true,
+          tickLabelStyle: { fontSize: 14, fill: t.inkSoft, fontWeight: 600 },
+          labelStyle: { fontSize: 15, fill: t.ink },
+        },
+      ]}
+    >
+      <LossTriangleLayer />
+      <ChartsXAxis axisId="dev-period" />
+      <ChartsYAxis axisId="accident-year" />
+    </ChartsContainer>
   );
 }
