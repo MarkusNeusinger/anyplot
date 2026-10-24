@@ -10,53 +10,51 @@ import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
-// Data
-const LABEL = "Sample ID";
-const SPECIES = "Species";
-const SEPAL_L = "Sepal Length (cm)";
-const SEPAL_W = "Sepal Width (cm)";
-const PETAL_L = "Petal Length (cm)";
-const PETAL_W = "Petal Width (cm)";
-const DISTANCE = "Distance (Complete Linkage)";
-const SUBTITLE = "Complete-linkage hierarchical clustering of Iris floral measurements";
-
-const DATA = [
-  { [LABEL]: "S-01", [SPECIES]: "Iris setosa", [SEPAL_L]: 5.1, [SEPAL_W]: 3.5, [PETAL_L]: 1.4, [PETAL_W]: 0.2 },
-  { [LABEL]: "S-02", [SPECIES]: "Iris setosa", [SEPAL_L]: 4.9, [SEPAL_W]: 3.0, [PETAL_L]: 1.4, [PETAL_W]: 0.2 },
-  { [LABEL]: "S-03", [SPECIES]: "Iris setosa", [SEPAL_L]: 4.7, [SEPAL_W]: 3.2, [PETAL_L]: 1.3, [PETAL_W]: 0.2 },
-  { [LABEL]: "S-04", [SPECIES]: "Iris setosa", [SEPAL_L]: 5.0, [SEPAL_W]: 3.6, [PETAL_L]: 1.4, [PETAL_W]: 0.2 },
-  { [LABEL]: "S-05", [SPECIES]: "Iris setosa", [SEPAL_L]: 5.4, [SEPAL_W]: 3.9, [PETAL_L]: 1.7, [PETAL_W]: 0.4 },
-  { [LABEL]: "Ve-01", [SPECIES]: "Iris versicolor", [SEPAL_L]: 7.0, [SEPAL_W]: 3.2, [PETAL_L]: 4.7, [PETAL_W]: 1.4 },
-  { [LABEL]: "Ve-02", [SPECIES]: "Iris versicolor", [SEPAL_L]: 6.4, [SEPAL_W]: 3.2, [PETAL_L]: 4.5, [PETAL_W]: 1.5 },
-  { [LABEL]: "Ve-03", [SPECIES]: "Iris versicolor", [SEPAL_L]: 6.9, [SEPAL_W]: 3.1, [PETAL_L]: 4.9, [PETAL_W]: 1.5 },
-  { [LABEL]: "Ve-04", [SPECIES]: "Iris versicolor", [SEPAL_L]: 5.5, [SEPAL_W]: 2.3, [PETAL_L]: 4.0, [PETAL_W]: 1.3 },
-  { [LABEL]: "Ve-05", [SPECIES]: "Iris versicolor", [SEPAL_L]: 6.5, [SEPAL_W]: 2.8, [PETAL_L]: 4.6, [PETAL_W]: 1.5 },
-  { [LABEL]: "Vi-01", [SPECIES]: "Iris virginica", [SEPAL_L]: 6.3, [SEPAL_W]: 3.3, [PETAL_L]: 6.0, [PETAL_W]: 2.5 },
-  { [LABEL]: "Vi-02", [SPECIES]: "Iris virginica", [SEPAL_L]: 5.8, [SEPAL_W]: 2.7, [PETAL_L]: 5.1, [PETAL_W]: 1.9 },
-  { [LABEL]: "Vi-03", [SPECIES]: "Iris virginica", [SEPAL_L]: 7.1, [SEPAL_W]: 3.0, [PETAL_L]: 5.9, [PETAL_W]: 2.1 },
-  { [LABEL]: "Vi-04", [SPECIES]: "Iris virginica", [SEPAL_L]: 6.3, [SEPAL_W]: 2.9, [PETAL_L]: 5.6, [PETAL_W]: 1.8 },
-  { [LABEL]: "Vi-05", [SPECIES]: "Iris virginica", [SEPAL_L]: 6.5, [SEPAL_W]: 3.0, [PETAL_L]: 5.8, [PETAL_W]: 2.2 },
-];
+const t = window.ANYPLOT_TOKENS;
 
 // Constants
-const t = window.ANYPLOT_TOKENS;
+const TITLE = "dendrogram-basic · javascript · muix · anyplot.ai";
 const FONT = "Inter, system-ui, -apple-system, sans-serif";
-const FEATURE_COLS = [SEPAL_L, SEPAL_W, PETAL_L, PETAL_W];
+const DISTANCE_LABEL = "Euclidean distance (complete linkage)";
 const Y_PAD_SHARE = 0.08;
+const BRANCH_COLOR = t.palette[0];
 
-// Preparation
-const n = DATA.length;
-const SPECIES_NAMES = Array.from(new Set(DATA.map((d) => String(d[SPECIES]))));
-const SPECIES_COLORS = Object.fromEntries(
-  SPECIES_NAMES.map((sp, i) => [sp, t.palette[i]])
-);
+// Columns: set these to your data's column names
+const LABEL = "Sample ID"; // role: labels
+const SEPAL_L = "Sepal length (cm)"; // role: features
+const SEPAL_W = "Sepal width (cm)"; // role: features
+const PETAL_L = "Petal length (cm)"; // role: features
+const PETAL_W = "Petal width (cm)"; // role: features
+
+// Data: replace this block with your own records
+const data = [
+  { [LABEL]: "S-01", [SEPAL_L]: 5.1, [SEPAL_W]: 3.5, [PETAL_L]: 1.4, [PETAL_W]: 0.2 },
+  { [LABEL]: "S-02", [SEPAL_L]: 4.9, [SEPAL_W]: 3.0, [PETAL_L]: 1.4, [PETAL_W]: 0.2 },
+  { [LABEL]: "S-03", [SEPAL_L]: 4.7, [SEPAL_W]: 3.2, [PETAL_L]: 1.3, [PETAL_W]: 0.2 },
+  { [LABEL]: "S-04", [SEPAL_L]: 5.0, [SEPAL_W]: 3.6, [PETAL_L]: 1.4, [PETAL_W]: 0.2 },
+  { [LABEL]: "S-05", [SEPAL_L]: 5.4, [SEPAL_W]: 3.9, [PETAL_L]: 1.7, [PETAL_W]: 0.4 },
+  { [LABEL]: "Ve-01", [SEPAL_L]: 7.0, [SEPAL_W]: 3.2, [PETAL_L]: 4.7, [PETAL_W]: 1.4 },
+  { [LABEL]: "Ve-02", [SEPAL_L]: 6.4, [SEPAL_W]: 3.2, [PETAL_L]: 4.5, [PETAL_W]: 1.5 },
+  { [LABEL]: "Ve-03", [SEPAL_L]: 6.9, [SEPAL_W]: 3.1, [PETAL_L]: 4.9, [PETAL_W]: 1.5 },
+  { [LABEL]: "Ve-04", [SEPAL_L]: 5.5, [SEPAL_W]: 2.3, [PETAL_L]: 4.0, [PETAL_W]: 1.3 },
+  { [LABEL]: "Ve-05", [SEPAL_L]: 6.5, [SEPAL_W]: 2.8, [PETAL_L]: 4.6, [PETAL_W]: 1.5 },
+  { [LABEL]: "Vi-01", [SEPAL_L]: 6.3, [SEPAL_W]: 3.3, [PETAL_L]: 6.0, [PETAL_W]: 2.5 },
+  { [LABEL]: "Vi-02", [SEPAL_L]: 5.8, [SEPAL_W]: 2.7, [PETAL_L]: 5.1, [PETAL_W]: 1.9 },
+  { [LABEL]: "Vi-03", [SEPAL_L]: 7.1, [SEPAL_W]: 3.0, [PETAL_L]: 5.9, [PETAL_W]: 2.1 },
+  { [LABEL]: "Vi-04", [SEPAL_L]: 6.3, [SEPAL_W]: 2.9, [PETAL_L]: 5.6, [PETAL_W]: 1.8 },
+  { [LABEL]: "Vi-05", [SEPAL_L]: 6.5, [SEPAL_W]: 3.0, [PETAL_L]: 5.8, [PETAL_W]: 2.2 },
+];
+
+// Plot: reads only data and the constants above
+const FEATURE_COLS = [SEPAL_L, SEPAL_W, PETAL_L, PETAL_W];
+const n = data.length;
 
 const distMatrix = Array.from({ length: n }, () => new Array(n).fill(0));
 for (let i = 0; i < n; i++) {
   for (let j = i + 1; j < n; j++) {
     let sumSq = 0;
     for (const col of FEATURE_COLS) {
-      const diff = Number(DATA[i][col]) - Number(DATA[j][col]);
+      const diff = Number(data[i][col]) - Number(data[j][col]);
       sumSq += diff * diff;
     }
     const d = Math.sqrt(sumSq);
@@ -71,16 +69,14 @@ type TreeNode = {
   leaves: number[];
   children: [TreeNode, TreeNode] | null;
   x: number;
-  species: string | null;
 };
 
-const allNodes: TreeNode[] = DATA.map((row, i) => ({
+const allNodes: TreeNode[] = data.map((_, i) => ({
   id: i,
   height: 0,
   leaves: [i],
   children: null,
   x: 0,
-  species: String(row[SPECIES]),
 }));
 
 const activeNodes: TreeNode[] = [...allNodes];
@@ -111,10 +107,6 @@ while (activeNodes.length > 1) {
     leaves: [...leftNode.leaves, ...rightNode.leaves],
     children: [leftNode, rightNode],
     x: 0,
-    species:
-      leftNode.species !== null && leftNode.species === rightNode.species
-        ? leftNode.species
-        : null,
   };
   allNodes.push(merged);
   activeNodes.splice(mj, 1);
@@ -146,18 +138,15 @@ for (let id = n; id < allNodes.length; id++) {
   }
 }
 
-const segs: { x1: number; y1: number; x2: number; y2: number; color: string }[] = [];
+const segs: { x1: number; y1: number; x2: number; y2: number }[] = [];
 for (let id = n; id < allNodes.length; id++) {
   const node = allNodes[id];
   if (!node.children) continue;
   const [l, r] = node.children;
-  const bridgeColor = node.species !== null ? SPECIES_COLORS[node.species] : t.ink;
-  const leftColor = l.species !== null ? SPECIES_COLORS[l.species] : t.ink;
-  const rightColor = r.species !== null ? SPECIES_COLORS[r.species] : t.ink;
   segs.push(
-    { x1: l.x, y1: node.height, x2: r.x, y2: node.height, color: bridgeColor },
-    { x1: l.x, y1: l.height, x2: l.x, y2: node.height, color: leftColor },
-    { x1: r.x, y1: r.height, x2: r.x, y2: node.height, color: rightColor }
+    { x1: l.x, y1: node.height, x2: r.x, y2: node.height },
+    { x1: l.x, y1: l.height, x2: l.x, y2: node.height },
+    { x1: r.x, y1: r.height, x2: r.x, y2: node.height },
   );
 }
 
@@ -165,27 +154,24 @@ const maxH = root.height;
 const X_MIN = -0.5;
 const X_MAX = n - 0.5;
 const Y_MAX = maxH * (1 + Y_PAD_SHARE);
-const orderedLabels = order.map((li) => String(DATA[li][LABEL]));
+const orderedLabels = order.map((li) => String(data[li][LABEL]));
+const SUBTITLE = `${n} items clustered over ${FEATURE_COLS.length} features · root merge height ${maxH.toFixed(2)}`;
 
-const scatterSeries = SPECIES_NAMES.map((sp) => ({
-  type: "scatter" as const,
-  id: sp,
-  data: order
-    .map((li, pos) =>
-      DATA[li][SPECIES] === sp ? { id: `${sp}-${pos}`, x: pos, y: 0 } : null
-    )
-    .filter(Boolean) as { id: string; x: number; y: number }[],
-  label: sp,
-  color: SPECIES_COLORS[sp],
-  markerSize: 7,
-  xAxisId: "x",
-  yAxisId: "y",
-}));
+const scatterSeries = [
+  {
+    type: "scatter" as const,
+    id: "leaves",
+    data: order.map((li, pos) => ({ id: `${li}`, x: pos, y: 0 })),
+    color: BRANCH_COLOR,
+    markerSize: 7,
+    xAxisId: "x",
+    yAxisId: "y",
+  },
+];
 
 function DendrogramBranches() {
-  const xs = useXScale("x");
-  const ys = useYScale("y");
-  if (!xs || !ys) return null;
+  const xs = useXScale("x") as any;
+  const ys = useYScale("y") as any;
   return (
     <g>
       {segs.map((s, i) => (
@@ -195,7 +181,7 @@ function DendrogramBranches() {
           y1={ys(s.y1)}
           x2={xs(s.x2)}
           y2={ys(s.y2)}
-          stroke={s.color}
+          stroke={BRANCH_COLOR}
           strokeWidth={2.4}
           strokeLinecap="round"
         />
@@ -207,8 +193,7 @@ function DendrogramBranches() {
 export default function Chart() {
   const W = window.ANYPLOT_SIZE.width;
   const H = window.ANYPLOT_SIZE.height;
-  const HEADER_H = 78;
-  const LEGEND_H = 44;
+  const HEADER_H = 84;
 
   return (
     <div
@@ -233,15 +218,13 @@ export default function Chart() {
           paddingTop: 8,
         }}
       >
-        <span style={{ fontSize: 22, fontWeight: 700, color: t.ink }}>
-          dendrogram-basic · javascript · muix · anyplot.ai
-        </span>
+        <span style={{ fontSize: 22, fontWeight: 700, color: t.ink }}>{TITLE}</span>
         <span style={{ fontSize: 15, color: t.inkSoft }}>{SUBTITLE}</span>
       </div>
 
       <ChartsContainer
         width={W - 48}
-        height={H - HEADER_H - LEGEND_H}
+        height={H - HEADER_H - 12}
         skipAnimation
         series={scatterSeries}
         margin={{ top: 18, right: 36, bottom: 20, left: 24 }}
@@ -268,7 +251,7 @@ export default function Chart() {
             min: 0,
             max: Y_MAX,
             width: 84,
-            label: DISTANCE,
+            label: DISTANCE_LABEL,
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft, fontFamily: FONT },
             labelStyle: { fontSize: 15, fill: t.ink, fontFamily: FONT },
           },
@@ -285,42 +268,6 @@ export default function Chart() {
         <ChartsXAxis axisId="x" />
         <ChartsYAxis axisId="y" />
       </ChartsContainer>
-
-      <div
-        style={{
-          height: LEGEND_H,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 28,
-        }}
-      >
-        {SPECIES_NAMES.map((name) => (
-          <div
-            key={name}
-            style={{ display: "flex", alignItems: "center", gap: 8 }}
-          >
-            <span
-              style={{
-                width: 13,
-                height: 13,
-                borderRadius: "50%",
-                background: SPECIES_COLORS[name],
-                display: "inline-block",
-              }}
-            />
-            <span
-              style={{
-                fontSize: 14,
-                fontStyle: "italic",
-                color: t.ink,
-              }}
-            >
-              {name}
-            </span>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
