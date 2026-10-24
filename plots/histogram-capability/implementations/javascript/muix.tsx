@@ -1,8 +1,7 @@
 // anyplot.ai
 // histogram-capability: Process Capability Plot with Specification Limits
-// Library: muix 9.2.1 | JavaScript 22.22.3
+// Library: muix 7.29.1 | JavaScript 22.22.3
 // Quality: 92/100 | Created: 2026-06-20
-
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { LinePlot } from "@mui/x-charts/LineChart";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
@@ -14,33 +13,38 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
-const FONT = "system-ui, -apple-system, sans-serif";
 
 // Constants
-const MEASUREMENT_COL = "measurement";
-const LSL_COL = "lsl";
-const USL_COL = "usl";
-const TARGET_COL = "target";
+const FONT = "system-ui, -apple-system, sans-serif";
+const TITLE = "histogram-capability · javascript · muix · anyplot.ai";
 
 const N_BINS = 15;
+const CURVE_STEPS = 120;
 const X_PAD_RATIO = 0.25;
 const Y_PAD_RATIO = 0.14;
 const CAPABLE_MIN = 1.33;
 const MARGINAL_MIN = 1.0;
 
 const BRAND = t.palette[0];
+const TARGET_COLOR = t.palette[1];
 const BLUE = t.palette[2];
 const RED = t.palette[4];
 
-// Data
+// Columns: set these to your data's column names
+const DIAMETER = "Shaft diameter (mm)"; // role: measurement
+const LSL = "LSL"; // role: lsl
+const USL = "USL"; // role: usl
+const TARGET = "Target"; // role: target
+
+// Data: replace this block with your own records
 type CapabilityRow = {
-  [MEASUREMENT_COL]: number;
-  [LSL_COL]: number;
-  [USL_COL]: number;
-  [TARGET_COL]: number;
+  [DIAMETER]: number;
+  [LSL]: number;
+  [USL]: number;
+  [TARGET]: number;
 };
 
-const DATA: CapabilityRow[] = [];
+const data: CapabilityRow[] = [];
 let seed = 42 >>> 0;
 const sampleSize = 200;
 
@@ -50,23 +54,24 @@ for (let i = 0; i < sampleSize; i++) {
   seed = (Math.imul(1664525, seed) + 1013904223) >>> 0;
   const u2 = seed / 0x100000000;
   const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-  DATA.push({
-    [MEASUREMENT_COL]: Number((10.005 + z * 0.015).toFixed(5)),
-    [LSL_COL]: 9.95,
-    [USL_COL]: 10.05,
-    [TARGET_COL]: 10.0,
+  data.push({
+    [DIAMETER]: Number((10.005 + z * 0.015).toFixed(5)),
+    [LSL]: 9.95,
+    [USL]: 10.05,
+    [TARGET]: 10.0,
   });
 }
 
-const n = DATA.length;
-const lsl = DATA[0][LSL_COL];
-const usl = DATA[0][USL_COL];
-const target = DATA[0][TARGET_COL];
-const measurements = DATA.map((r) => r[MEASUREMENT_COL]);
+// Plot: reads only data and the constants above
+const n = data.length;
+const lsl = data[0][LSL];
+const usl = data[0][USL];
+const target = data[0][TARGET];
+const measurements = data.map((r) => r[DIAMETER]);
 
 const sampleMean = measurements.reduce((s, v) => s + v, 0) / n;
 const sampleSigma = Math.sqrt(
-  measurements.reduce((s, v) => s + (v - sampleMean) ** 2, 0) / Math.max(1, n - 1),
+  measurements.reduce((s, v) => s + (v - sampleMean) ** 2, 0) / (n - 1),
 );
 
 const Cp = (usl - lsl) / (6 * sampleSigma);
@@ -75,25 +80,25 @@ const Cpk = Math.min(
   (sampleMean - lsl) / (3 * sampleSigma),
 );
 
-const specSpan = Math.max(1e-6, usl - lsl);
-const dataMin = Math.min(...measurements, lsl);
-const dataMax = Math.max(...measurements, usl);
-const xMin = Math.min(dataMin, lsl - specSpan * X_PAD_RATIO);
-const xMax = Math.max(dataMax, usl + specSpan * X_PAD_RATIO);
-const binWidth = (xMax - xMin) / N_BINS;
-
-const binCenters = Array.from(
-  { length: N_BINS },
-  (_, i) => xMin + (i + 0.5) * binWidth,
-);
+const dataMin = Math.min(...measurements);
+const dataMax = Math.max(...measurements);
+const binWidth = (dataMax - dataMin) / N_BINS;
 
 const histCounts = new Array(N_BINS).fill(0);
 for (const v of measurements) {
-  const idx = Math.floor((v - xMin) / binWidth);
-  if (idx >= 0 && idx < N_BINS) histCounts[idx]++;
+  const idx = Math.min(N_BINS - 1, Math.floor((v - dataMin) / binWidth));
+  histCounts[idx]++;
 }
 
-const normalValues = binCenters.map((x) => {
+const specSpan = usl - lsl;
+const xMin = Math.min(dataMin, lsl - specSpan * X_PAD_RATIO);
+const xMax = Math.max(dataMax, usl + specSpan * X_PAD_RATIO);
+
+const curveX = Array.from(
+  { length: CURVE_STEPS },
+  (_, i) => xMin + (i / (CURVE_STEPS - 1)) * (xMax - xMin),
+);
+const normalValues = curveX.map((x) => {
   const z = (x - sampleMean) / sampleSigma;
   return (
     (Math.exp(-0.5 * z * z) / (sampleSigma * Math.sqrt(2 * Math.PI))) *
@@ -102,31 +107,30 @@ const normalValues = binCenters.map((x) => {
   );
 });
 
-const yMax = Math.ceil(
-  Math.max(...histCounts, ...normalValues) * (1 + Y_PAD_RATIO),
-);
+const yMax = Math.max(...histCounts, ...normalValues) * (1 + Y_PAD_RATIO);
 
 const capStatus =
   Cpk >= CAPABLE_MIN
-    ? "Status: Fully Capable"
+    ? "Status: Capable"
     : Cpk >= MARGINAL_MIN
-      ? "Status: Marginally Capable"
+      ? "Status: Marginal"
       : "Status: Not Capable";
 
-const TITLE = "histogram-capability · javascript · muix · anyplot.ai";
-const SUBTITLE = `CNC shaft diameter (n = ${n}) · μ = ${sampleMean.toFixed(4)} mm, σ = ${sampleSigma.toFixed(4)} mm · LSL = ${lsl.toFixed(2)}, Target = ${target.toFixed(2)}, USL = ${usl.toFixed(2)} mm`;
+const unitMatch = DIAMETER.match(/\(([^)]+)\)/);
+const unit = unitMatch ? ` ${unitMatch[1]}` : "";
+const SUBTITLE = `${DIAMETER} (n = ${n}) · μ = ${sampleMean.toFixed(4)}${unit}, σ = ${sampleSigma.toFixed(4)}${unit} · ${LSL} = ${lsl.toFixed(2)}, ${TARGET} = ${target.toFixed(2)}, ${USL} = ${usl.toFixed(2)}${unit}`;
 
 function CapabilityLayer() {
   const { left, top, width, height } = useDrawingArea();
   const binPx = (binWidth / (xMax - xMin)) * width;
-  const px = left + width + 24;
+  const px = left + width + 22;
   const py = top + 16;
   const lh = 28;
 
   return (
     <g fontFamily={FONT}>
       {histCounts.map((c, i) => {
-        const bx = left + ((xMin + i * binWidth - xMin) / (xMax - xMin)) * width;
+        const bx = left + ((dataMin + i * binWidth - xMin) / (xMax - xMin)) * width;
         const by = top + (1 - c / yMax) * height;
         const bh = top + height - by;
         return (
@@ -134,8 +138,8 @@ function CapabilityLayer() {
             key={i}
             x={bx + 0.5}
             y={by}
-            width={Math.max(0, binPx - 1)}
-            height={Math.max(0, bh)}
+            width={binPx - 1}
+            height={bh}
             fill={BRAND}
             fillOpacity={0.82}
           />
@@ -145,7 +149,7 @@ function CapabilityLayer() {
       <rect
         x={px - 14}
         y={py - 16}
-        width={196}
+        width={216}
         height={264}
         fill={t.elevatedBg}
         stroke={t.grid}
@@ -185,7 +189,7 @@ function CapabilityLayer() {
       <line
         x1={px}
         y1={py + 2 * lh + 22}
-        x2={px + 168}
+        x2={px + 188}
         y2={py + 2 * lh + 22}
         stroke={t.inkSoft}
         strokeWidth={1}
@@ -211,7 +215,7 @@ function CapabilityLayer() {
         rx={2}
       />
       <text x={px + 30} y={py + 4 * lh + 38} fontSize={14} fill={t.ink}>
-        Measurements
+        Observations
       </text>
 
       <line
@@ -233,10 +237,10 @@ function CapabilityLayer() {
         y2={py + 6 * lh + 32}
         stroke={RED}
         strokeWidth={2.5}
-        strokeDasharray="5 3"
+        strokeDasharray="6 3"
       />
       <text x={px + 30} y={py + 6 * lh + 37} fontSize={14} fill={t.ink}>
-        LSL / USL
+        {`${LSL} / ${USL}`}
       </text>
 
       <line
@@ -244,12 +248,12 @@ function CapabilityLayer() {
         y1={py + 7 * lh + 32}
         x2={px + 22}
         y2={py + 7 * lh + 32}
-        stroke={BRAND}
+        stroke={TARGET_COLOR}
         strokeWidth={2.5}
         strokeDasharray="8 4"
       />
       <text x={px + 30} y={py + 7 * lh + 37} fontSize={14} fill={t.ink}>
-        Target
+        {TARGET}
       </text>
     </g>
   );
@@ -316,13 +320,12 @@ export default function Chart() {
         xAxis={[
           {
             id: "diameter-axis",
-            data: binCenters,
+            data: curveX,
             scaleType: "linear",
             min: xMin,
             max: xMax,
             height: 60,
-            label: "Shaft Diameter (mm)",
-            tickInterval: binCenters.filter((_, i) => i % 3 === 1),
+            label: DIAMETER,
             valueFormatter: (v: number) => v.toFixed(3),
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft, fontFamily: FONT },
             labelStyle: { fontSize: 15, fill: t.ink, fontFamily: FONT },
@@ -339,7 +342,7 @@ export default function Chart() {
             labelStyle: { fontSize: 15, fill: t.ink, fontFamily: FONT },
           },
         ]}
-        margin={{ top: 24, right: 224, bottom: 20, left: 20 }}
+        margin={{ top: 24, right: 244, bottom: 20, left: 20 }}
         skipAnimation
       >
         <ChartsGrid
@@ -350,7 +353,7 @@ export default function Chart() {
         <LinePlot skipAnimation />
         <ChartsReferenceLine
           x={lsl}
-          label="LSL"
+          label={LSL}
           labelAlign="start"
           lineStyle={{ stroke: RED, strokeDasharray: "6 3", strokeWidth: 2.5 }}
           labelStyle={{
@@ -362,7 +365,7 @@ export default function Chart() {
         />
         <ChartsReferenceLine
           x={usl}
-          label="USL"
+          label={USL}
           labelAlign="start"
           lineStyle={{ stroke: RED, strokeDasharray: "6 3", strokeWidth: 2.5 }}
           labelStyle={{
@@ -374,11 +377,11 @@ export default function Chart() {
         />
         <ChartsReferenceLine
           x={target}
-          label="Target"
+          label={TARGET}
           labelAlign="start"
-          lineStyle={{ stroke: BRAND, strokeDasharray: "8 4", strokeWidth: 2 }}
+          lineStyle={{ stroke: TARGET_COLOR, strokeDasharray: "8 4", strokeWidth: 2.5 }}
           labelStyle={{
-            fill: BRAND,
+            fill: TARGET_COLOR,
             fontSize: 14,
             fontWeight: "bold",
             fontFamily: FONT,
