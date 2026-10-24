@@ -19,7 +19,7 @@ const t = window.ANYPLOT_TOKENS;
 // Constants
 const LOAD_PAD_FRAC = 0.14;
 const TSB_PAD_FRAC = 0.25;
-const TSS_SCALE_FACTOR = 4.0;
+const TSS_DOT_OPACITY = 0.55;
 const TITLE = "line-training-load-pmc · javascript · muix · anyplot.ai";
 const TITLE_H = 54;
 const LEGEND_H = 44;
@@ -120,14 +120,12 @@ const finalPhaseFirstRow = sortedData.find(
 )!;
 const finalPhaseStartDate = new Date(Number(finalPhaseFirstRow[DATE]));
 
-const maxLoad = Math.max(...ctlData, ...atlData);
+// CTL and ATL are averages of daily TSS, so TSS shares the load axis at its true values
+const maxLoad = Math.max(...ctlData, ...atlData, ...tssData);
 const loadAxisMax = maxLoad * (1 + LOAD_PAD_FRAC);
 
 const maxAbsTsb = Math.max(...tsbData.map((v) => Math.abs(v)));
 const tsbBound = maxAbsTsb * (1 + TSB_PAD_FRAC);
-
-const maxTss = Math.max(...tssData);
-const tssAxisMax = maxTss * TSS_SCALE_FACTOR;
 
 const unitMatch = CTL.match(/\(([^)]+)\)/);
 const LOAD_UNIT = unitMatch ? unitMatch[1] : "";
@@ -139,7 +137,7 @@ const LEGEND_ITEMS = [
   { label: ATL_SERIES_LABEL, color: t.palette[1], kind: "line" as const },
   { label: "Form (Fresh)", color: t.palette[2], kind: "area" as const },
   { label: "Form (Fatigued)", color: t.palette[4], kind: "area" as const },
-  { label: TSS, color: t.palette[3], kind: "dot" as const },
+  { label: `${TSS} (left axis)`, color: t.palette[3], kind: "dot" as const },
 ];
 
 function TsbAreaLayer() {
@@ -275,12 +273,6 @@ export default function Chart() {
             tickLabelStyle: { fill: t.inkSoft, fontSize: 14 },
             labelStyle: { fill: t.inkSoft, fontSize: 15 },
           },
-          {
-            id: "tss",
-            position: "none",
-            min: 0,
-            max: tssAxisMax,
-          },
         ]}
         series={[
           {
@@ -310,13 +302,14 @@ export default function Chart() {
             type: "scatter",
             data: tssScatter,
             xAxisId: "date",
-            yAxisId: "tss",
+            yAxisId: "load",
             label: TSS,
             color: t.palette[3],
             markerSize: 3,
           },
         ]}
         margin={{ top: 20, bottom: 12, left: 16, right: 16 }}
+        sx={{ "& .MuiScatterChart-marker": { fillOpacity: TSS_DOT_OPACITY } }}
       >
         <ChartsGrid horizontal />
         <TsbAreaLayer />
@@ -383,9 +376,8 @@ export default function Chart() {
                   width: 18,
                   height: 12,
                   bgcolor: item.color,
-                  opacity: 0.55,
+                  opacity: 0.3,
                   borderRadius: "2px",
-                  border: `1.5px solid ${item.color}`,
                 }}
               />
             ) : (
@@ -394,6 +386,7 @@ export default function Chart() {
                   width: 8,
                   height: 8,
                   bgcolor: item.color,
+                  opacity: TSS_DOT_OPACITY,
                   borderRadius: "50%",
                 }}
               />
