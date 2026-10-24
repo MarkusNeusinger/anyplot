@@ -2,136 +2,133 @@ library: muix
 language: javascript
 specification_id: facet-grid
 created: '2026-09-05T01:33:48Z'
-updated: '2026-09-05T01:45:13Z'
-generated_by: claude-sonnet
-workflow_run: 33936134229
+updated: '2026-10-24T09:05:34Z'
+generated_by: gemini-4-argon
+adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
+workflow_run: 40079991233
 issue: 2696
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/facet-grid/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/facet-grid/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/facet-grid/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/facet-grid/javascript/muix/plot-dark.html
-quality_score: 89
+quality_score: 85
 review:
   strengths:
-  - Faithful facet_grid-style layout (column strip labels on top, row strip labels
-    on right, axis ticks shown only on the left column / bottom row) despite MUI X
-    having no native faceting component — built from composed ChartContainer instances.
-  - Shared axis domain (X_DOMAIN / Y_DOMAIN computed across all facets) so every panel
-    renders on the same scale, satisfying the spec's 'shared axes by default' requirement
-    and enabling direct visual comparison.
-  - Deterministic seeded LCG + Box-Muller transform generates reproducible Palmer-Penguins-like
-    data entirely in-browser (no seeded Math.random available).
-  - Correct Imprint brand green (#009E73) with alpha 0.8 and a thin page-background
-    stroke on markers for definition in the denser clusters — identical data color
-    across both themes.
-  - Theme-adaptive chrome (ANYPLOT_TOKENS) threaded consistently through strip backgrounds,
-    ink colors, and grid lines — both light and dark renders are fully readable and
-    correctly themed.
+  - 'Uses the MUI X v9 composition API idiomatically: one ChartsContainer per facet
+    with ScatterPlot, ChartsGrid, ChartsXAxis and ChartsYAxis composed inside, and
+    shared min/max on every panel''s axes so a position means the same value in all
+    six panels'
+  - Facet labels are styled strips (column headers for Species, rotated row headers
+    for Sex) on the elevated surface token, readable in both themes, with outer-only
+    tick labels via axis valueFormatter as the shared-scale convention allows
+  - 'Marker fill #009E73 at CC alpha with a page-colored outline keeps the 45-point
+    clusters legible without hiding overlapping points; identical data color in light
+    and dark'
+  - Realistic Palmer-Penguins-like data (270 points, species and sex means close to
+    the real dataset) generated deterministically with a seeded LCG and Box-Muller;
+    the shared domain is derived from the data rather than typed
+  - A subtitle line names the variables, the facet dimensions and n, which gives a
+    clear typographic hierarchy under the mandated title
   weaknesses:
-  - In the densest facets (Adelie, Chinstrap, Gentoo-Male clusters) points overlap
-    noticeably; slightly lower alpha (~0.65-0.7) or a smaller marker size would improve
-    separation without sacrificing visibility.
-  - At the ~400px mobile scale the six-panel grid's tick labels and rotated row-strip
-    labels ('Female'/'Male') shrink close to the edge of comfortable legibility —
-    consider marginally larger tick/strip font sizes.
-  - KISS structure carries several helper functions (hexToRgba, makeLcg, gaussianSample,
-    StripLabel) — reasonable given the React/faceting requirements, but slightly more
-    structure than a minimal script.
+  - 'CQ-03 (code): `import * as React from "react"` is never referenced; the harness
+    bundles with esbuild `jsx: "automatic"`, so JSX needs no React binding → remove
+    the import (−1 line). Likely cause: classic-runtime JSX habit.'
+  - 'Suggestion: the top-row panels and the inner-column panels still reserve the
+    34 px x-axis band and 44 px y-axis band for blank tick labels, which leaves an
+    empty strip under the top row; shrinking the axis height/width for non-outer panels
+    would tighten the grid.'
+  - 'Suggestion: the mandated title at 22 px fills only about a third of the width;
+    a slightly larger title would give the header more presence.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1-like), not pure white — matches spec.
-      Chrome: Title "facet-grid · javascript · muix · anyplot.ai" centered at top in bold dark ink, clearly readable. Column strip labels (Adelie, Chinstrap, Gentoo) sit in light elevated boxes above each column. Row strip labels (Female, Male) sit rotated 90deg in elevated boxes on the far right. Y-axis label "Bill Depth (mm)" rotated on the far left; x-axis label "Bill Length (mm)" centered at the bottom. Tick labels only appear on the left column (y-axis) and bottom row (x-axis) of the 2x3 grid, per faceted-grid convention. Subtle light grid lines are visible but unobtrusive in every panel.
-      Data: All six facets use the same brand green (#009E73-family) scatter markers with a thin light stroke for separation in denser clusters. Point clusters differ visibly by facet (e.g., Gentoo panels sit at lower bill-depth values than Adelie/Chinstrap), showing real variation across facets.
-      Legibility verdict: PASS — all text (title, strip labels, axis labels, tick labels) is clearly readable against the light background.
+      Background: warm off-white #FAF8F1 across the whole 3200x1800 canvas; panels are framed by thin grid-colored rounded borders.
+      Chrome: bold dark title "facet-grid · javascript · muix · anyplot.ai" centered at top with a soft-ink subtitle ("Bill length (mm) vs Bill depth (mm) · faceted by Species (3) × Sex (2), n = 270"). Column header strips "Species: Adelie / Chinstrap / Gentoo" and rotated row strips "Sex: Female / Sex: Male" on the slightly lighter elevated surface, dark bold text. Shared y-axis title "Bill depth (mm)" rotated at left, x-axis title "Bill length (mm)" centered at bottom. Tick labels (14–20 on y, 35–55 on x) only on the outer panels, dark gray and readable; subtle gray grid in every panel.
+      Data: 2x3 grid of scatter panels, ~45 points each, all in brand green #009E73 with slight transparency and a page-colored outline. Clusters move right/up as expected: Adelie short bills, Chinstrap long/deep, Gentoo long/shallow; males shifted larger than females. All panels share identical x (≈33–59) and y (≈12–21.5) ranges.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17-like), not pure black — matches spec.
-      Chrome: Same layout as the light render. Title and axis labels render in light ink (near-white), strip label boxes use a slightly elevated dark gray fill with light text, tick labels are light gray and clearly visible against the dark background. Grid lines are subtle light-on-dark and still visible without competing with the data.
-      Data: Scatter markers are the identical brand green as the light render — confirmed unchanged across themes; only the chrome (background, text, strip boxes, grid) flipped as expected.
-      Legibility verdict: PASS — no dark-on-dark issues found; all title/label/tick text is clearly legible against the dark background, and the brand green remains highly visible on the dark surface.
+      Background: warm near-black #1A1A17; panel borders and strips on a slightly lighter elevated dark surface.
+      Chrome: title, subtitle, strip labels, axis titles and tick labels all flip to light ink and are clearly readable; no dark-on-dark text. Grid lines are subtle gray and visible.
+      Data: identical #009E73 markers and positions to the light render; the outline now uses the dark page color. Brand green reads well on the dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; readable in both themes and at 400px
-          mobile scale, though rotated row-strip labels and tick labels get close
-          to the legibility floor when scaled down.
+        comment: Explicit font sizes (title 22, strips 15, axis titles 16, ticks 14
+          CSS px); everything readable in both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps with other text or data elements in either render.
+        comment: No text collisions; marker overlap within clusters is softened by
+          alpha and outline
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Markers well sized for ~45 pts/facet with alpha 0.8 + stroke, but
-          densest clusters (Adelie, Chinstrap, Gentoo-Male) still show noticeable
-          overlap.
+        comment: 6.5 px markers with alpha and page-colored outline suit ~45 points
+          per panel
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-hue data with page-background stroke for definition; no red-green
-          reliance.
+        comment: Single color; no color-only encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Grid fills a large, balanced portion of the canvas; nothing cut off;
-          margins are even.
+        comment: 3200x1800, equal panels with even gaps, nothing clipped or overflowing
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Bill Depth (mm)" / "Bill Length (mm)" are descriptive with units.'
+        comment: Bill length (mm) / Bill depth (mm) with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First (only) series is Imprint brand green #009E73, identical across
-          themes; backgrounds are theme-correct #FAF8F1/#1A1A17.'
+        comment: '#009E73 single series; correct #FAF8F1 / #1A1A17 backgrounds; theme
+          tokens for all chrome'
     design_excellence:
-      score: 14
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom facet_grid-style composition (strip labels, shared scale,
-          outer-only ticks) is clearly above a default MUI X chart, though single-hue
-          and no additional custom palette work.
+        comment: 'Raised one: subtitle line with variables, facet dimensions and n
+          creates a three-level typographic hierarchy; strips on the elevated surface
+          token'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Subtle grid, generous inter-panel gaps, elevated strip boxes; spines
-          limited to left/bottom per panel.
+        comment: 'Raised one: card-framed panels with rounded borders aligned to header
+          strips and consistent 10 px gutters'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: The facet layout itself creates an immediate comparative narrative
-          across species/sex (e.g. Gentoo's markedly lower bill depth); no explicit
-          annotations, so short of 'excellent'.
+        passed: false
+        comment: Data displayed; no focal point chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -141,28 +138,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 2x3 faceted grid of scatter plots.
+        comment: Faceted grid of scatter plots, split by both row and column
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Row facet (sex), column facet (species), shared axes, facet labels
-          all present.
+        comment: Shared scales, row and column facet labels, equal aligned panels,
+          outer tick labels; all good-version bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = Bill Length (mm), Y = Bill Depth (mm), correctly mapped and consistent
-          across facets.
+        comment: Each panel holds only its subset at its data values; shared domain
+          covers all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; single-series legend correctly
-          omitted in favor of facet labels.
+        comment: Mandated title format; no legend needed (single color, N/A)
     data_quality:
       score: 15
       max: 15
@@ -172,62 +168,60 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Six distinct facets each show a visibly different cluster location/spread,
-          demonstrating real cross-facet variation.
+        comment: Both facet dimensions used, clear shifts between panels make the
+          comparison work
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Palmer-Penguins-like bill measurements — real, neutral, comprehensible
-          scientific scenario.
+        comment: Palmer-Penguins-like bill measurements by species and sex, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Bill length (~34-58mm) and bill depth (~13-21mm) ranges align with
-          real Palmer Penguins measurements per species/sex.
+        comment: Bill lengths 35–57 mm and depths 13–21 mm match the real dataset;
+          no Check values in the spec
     code_quality:
       score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: A few helper functions (hexToRgba, makeLcg, gaussianSample, StripLabel)
-          beyond the minimal script, justified by the React/faceting requirements.
+        comment: Flat script plus the required Chart component
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG (seed=42) drives all random sampling deterministically.
+        comment: Seeded LCG
       - id: CQ-03
         name: Clean Imports
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: All imports (ChartContainer, ScatterPlot, ChartsXAxis, ChartsYAxis,
-          ChartsGrid) are used.
+        comment: '`import * as React` unused under the automatic JSX runtime (defect
+          line)'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for hand-building a facet grid on a library
-          with no native faceting; no fake functionality.
+        comment: Appropriate complexity; Box-Muller is fine since no RNG helpers are
+          available
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: skipAnimation set on every ChartContainer; harness owns save/screenshot
-          as expected for muix.
+        comment: Default-exported component, skipAnimation, current v9 ChartsContainer
+          API
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -235,27 +229,32 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses MUI X's composable primitives (ChartContainer + ScatterPlot
-          + ChartsXAxis/YAxis + ChartsGrid) correctly to build a custom multi-panel
-          layout.
+        comment: 'Raised one: v9 composition (ChartsContainer + ScatterPlot + ChartsGrid
+          + axes by axisId) instead of a monolithic chart per panel'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
-        passed: true
-        comment: Leverages MUI X's low-level composition API (rather than a monolithic
-          chart) to synthesize faceting the library doesn't natively support.
+        passed: false
+        comment: 'Raised one: axis valueFormatter used to suppress inner tick labels
+          while keeping ticks, and sx class targeting of MuiScatterChart-marker /
+          MuiChartsGrid-line'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-10-24T09:03:03Z'
 impl_tags:
   dependencies: []
   techniques:
-  - faceting
-  - manual-ticks
+  - subplots
+  - small-multiples
+  - shared-axes
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - groupby
   styling:
   - alpha-blending
   - edge-highlighting
-  - publication-ready
+  - minimal-chrome
