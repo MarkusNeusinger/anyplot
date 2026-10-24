@@ -1,106 +1,214 @@
 // anyplot.ai
 // network-force-directed: Force-Directed Graph
-// Library: muix 7.29.1 | JavaScript 22.23.2
+// Library: muix 9.x | JavaScript 22.23.2
 // Quality: 92/100 | Created: 2026-08-24
 //# anyplot-orientation: square
-// anyplot.ai
-// network-force-directed: Force-Directed Graph
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-08-24
+
 import * as React from "react";
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data: research co-authorship network (in-memory, deterministic) -------
-// Four research groups, each with a "lab lead" hub who co-authors with every
-// group member, plus a peer chain within the group and a few inter-group
-// bridge collaborations — the kind of modular structure force layouts are
-// good at revealing.
-const GROUPS = [
-  { name: "Machine Learning" },
-  { name: "Robotics" },
-  { name: "Bioinformatics" },
-  { name: "Network Science" },
-  { name: "Cryptography" },
-];
-const GROUP_SIZE = 7;
-
-// Tiny fixed-seed LCG — the browser has no seeded RNG.
-function makeLcg(seed) {
-  let state = seed;
-  return () => {
-    state = (state * 1664525 + 1013904223) % 4294967296;
-    return state / 4294967296;
-  };
-}
-const rand = makeLcg(42);
-
-const groupRanges = GROUPS.map((_, groupIndex) => [
-  groupIndex * GROUP_SIZE,
-  groupIndex * GROUP_SIZE + GROUP_SIZE,
-]);
-
-const nodes = [];
-GROUPS.forEach((group, groupIndex) => {
-  for (let i = 0; i < GROUP_SIZE; i += 1) {
-    nodes.push({
-      id: `${groupIndex}-${i}`,
-      group: groupIndex,
-      isHub: i === 0,
-      label: group.name,
-      x: 0,
-      y: 0,
-    });
-  }
-});
-
-// edges: [sourceIndex, targetIndex, weight, isBridge] — weight ~ co-authored
-// papers; isBridge marks the thin inter-group collaborations so they can be
-// styled (dashed, lower alpha) distinctly from intra-group edges.
-const edges = [];
-groupRanges.forEach(([start, end]) => {
-  const hub = start; // lab lead co-authors with every member
-  for (let i = start + 1; i < end; i += 1) {
-    edges.push([hub, i, 2 + Math.floor(rand() * 2), false]);
-  }
-  for (let i = start + 1; i < end - 1; i += 1) {
-    edges.push([i, i + 1, 1 + Math.floor(rand() * 2), false]); // peer chain
-  }
-});
-groupRanges.forEach(([start], groupIndex) => {
-  const [nextStart] = groupRanges[(groupIndex + 1) % groupRanges.length];
-  edges.push([start, nextStart, 1, true]); // thin cross-group bridge between hubs
-});
-
-const degree = new Array(nodes.length).fill(0);
-edges.forEach(([a, b]) => {
-  degree[a] += 1;
-  degree[b] += 1;
-});
-const maxDegree = Math.max(...degree);
-
-// --- Initial layout: cluster around a per-group anchor on a ring -----------
-const GROUP_CENTERS = GROUPS.map((_, i) => {
-  const angle = (i / GROUPS.length) * Math.PI * 2;
-  return { x: Math.cos(angle) * 260, y: Math.sin(angle) * 260 };
-});
-nodes.forEach((node, idx) => {
-  const [start] = groupRanges[node.group];
-  const within = idx - start;
-  const angle = (within / GROUP_SIZE) * Math.PI * 2;
-  const center = GROUP_CENTERS[node.group];
-  node.x = center.x + Math.cos(angle) * 70 + (rand() - 0.5) * 24;
-  node.y = center.y + Math.sin(angle) * 70 + (rand() - 0.5) * 24;
-});
-
-// --- Force-directed simulation (Fruchterman-Reingold, fixed iterations) ----
-const IDEAL_DISTANCE = Math.sqrt((1000 * 1000) / nodes.length);
+// Constants
+const TITLE = "network-force-directed · javascript · muix · anyplot.ai";
+const TITLE_FONT_SIZE = 22;
+const TITLE_H = 46;
+const LEGEND_H = 36;
+const SIM_AREA_SPAN = 1000;
+const RING_RADIUS_SHARE = 0.26;
+const SUBRING_RADIUS_SHARE = 0.07;
+const JITTER_SHARE = 0.024;
 const ITERATIONS = 300;
-let temperature = 80;
-const COOLING = temperature / ITERATIONS;
+const INITIAL_TEMP_SHARE = 0.08;
+const GRAVITY_FACTOR = 0.01;
+const PAD_SHARE = 0.14;
+const MIN_NODE_R = 7;
+const MAX_NODE_R_SPAN = 16;
+const HUB_HALO_OFFSET = 7;
+
+const SOURCE_ID_COL = "source_id";
+const SOURCE_GROUP_COL = "source_group";
+const SOURCE_HUB_COL = "source_is_hub";
+const TARGET_ID_COL = "target_id";
+const TARGET_GROUP_COL = "target_group";
+const TARGET_HUB_COL = "target_is_hub";
+const WEIGHT_COL = "weight";
+const BRIDGE_COL = "is_bridge";
+
+// Data: research co-authorship network (flat scalar edge records)
+const DATA: Array<Record<string, string | number | boolean>> = [
+  // Machine Learning (ML-0 hub, ML-1..ML-6 peers)
+  { source_id: "ML-0", source_group: "Machine Learning", source_is_hub: true, target_id: "ML-1", target_group: "Machine Learning", target_is_hub: false, weight: 3, is_bridge: false },
+  { source_id: "ML-0", source_group: "Machine Learning", source_is_hub: true, target_id: "ML-2", target_group: "Machine Learning", target_is_hub: false, weight: 3, is_bridge: false },
+  { source_id: "ML-0", source_group: "Machine Learning", source_is_hub: true, target_id: "ML-3", target_group: "Machine Learning", target_is_hub: false, weight: 3, is_bridge: false },
+  { source_id: "ML-0", source_group: "Machine Learning", source_is_hub: true, target_id: "ML-4", target_group: "Machine Learning", target_is_hub: false, weight: 2, is_bridge: false },
+  { source_id: "ML-0", source_group: "Machine Learning", source_is_hub: true, target_id: "ML-5", target_group: "Machine Learning", target_is_hub: false, weight: 3, is_bridge: false },
+  { source_id: "ML-0", source_group: "Machine Learning", source_is_hub: true, target_id: "ML-6", target_group: "Machine Learning", target_is_hub: false, weight: 2, is_bridge: false },
+  { source_id: "ML-1", source_group: "Machine Learning", source_is_hub: false, target_id: "ML-2", target_group: "Machine Learning", target_is_hub: false, weight: 1, is_bridge: false },
+  { source_id: "ML-2", source_group: "Machine Learning", source_is_hub: false, target_id: "ML-3", target_group: "Machine Learning", target_is_hub: false, weight: 1, is_bridge: false },
+  { source_id: "ML-3", source_group: "Machine Learning", source_is_hub: false, target_id: "ML-4", target_group: "Machine Learning", target_is_hub: false, weight: 1, is_bridge: false },
+  { source_id: "ML-4", source_group: "Machine Learning", source_is_hub: false, target_id: "ML-5", target_group: "Machine Learning", target_is_hub: false, weight: 2, is_bridge: false },
+  { source_id: "ML-5", source_group: "Machine Learning", source_is_hub: false, target_id: "ML-6", target_group: "Machine Learning", target_is_hub: false, weight: 2, is_bridge: false },
+
+  // Robotics (RB-0 hub, RB-1..RB-6 peers)
+  { source_id: "RB-0", source_group: "Robotics", source_is_hub: true, target_id: "RB-1", target_group: "Robotics", target_is_hub: false, weight: 3, is_bridge: false },
+  { source_id: "RB-0", source_group: "Robotics", source_is_hub: true, target_id: "RB-2", target_group: "Robotics", target_is_hub: false, weight: 2, is_bridge: false },
+  { source_id: "RB-0", source_group: "Robotics", source_is_hub: true, target_id: "RB-3", target_group: "Robotics", target_is_hub: false, weight: 3, is_bridge: false },
+  { source_id: "RB-0", source_group: "Robotics", source_is_hub: true, target_id: "RB-4", target_group: "Robotics", target_is_hub: false, weight: 2, is_bridge: false },
+  { source_id: "RB-0", source_group: "Robotics", source_is_hub: true, target_id: "RB-5", target_group: "Robotics", target_is_hub: false, weight: 2, is_bridge: false },
+  { source_id: "RB-0", source_group: "Robotics", source_is_hub: true, target_id: "RB-6", target_group: "Robotics", target_is_hub: false, weight: 2, is_bridge: false },
+  { source_id: "RB-1", source_group: "Robotics", source_is_hub: false, target_id: "RB-2", target_group: "Robotics", target_is_hub: false, weight: 1, is_bridge: false },
+  { source_id: "RB-2", source_group: "Robotics", source_is_hub: false, target_id: "RB-3", target_group: "Robotics", target_is_hub: false, weight: 2, is_bridge: false },
+  { source_id: "RB-3", source_group: "Robotics", source_is_hub: false, target_id: "RB-4", target_group: "Robotics", target_is_hub: false, weight: 2, is_bridge: false },
+  { source_id: "RB-4", source_group: "Robotics", source_is_hub: false, target_id: "RB-5", target_group: "Robotics", target_is_hub: false, weight: 1, is_bridge: false },
+  { source_id: "RB-5", source_group: "Robotics", source_is_hub: false, target_id: "RB-6", target_group: "Robotics", target_is_hub: false, weight: 1, is_bridge: false },
+
+  // Bioinformatics (BI-0 hub, BI-1..BI-6 peers)
+  { source_id: "BI-0", source_group: "Bioinformatics", source_is_hub: true, target_id: "BI-1", target_group: "Bioinformatics", target_is_hub: false, weight: 2, is_bridge: false },
+  { source_id: "BI-0", source_group: "Bioinformatics", source_is_hub: true, target_id: "BI-2", target_group: "Bioinformatics", target_is_hub: false, weight: 2, is_bridge: false },
+  { source_id: "BI-0", source_group: "Bioinformatics", source_is_hub: true, target_id: "BI-3", target_group: "Bioinformatics", target_is_hub: false, weight: 3, is_bridge: false },
+  { source_id: "BI-0", source_group: "Bioinformatics", source_is_hub: true, target_id: "BI-4", target_group: "Bioinformatics", target_is_hub: false, weight: 3, is_bridge: false },
+  { source_id: "BI-0", source_group: "Bioinformatics", source_is_hub: true, target_id: "BI-5", target_group: "Bioinformatics", target_is_hub: false, weight: 2, is_bridge: false },
+  { source_id: "BI-0", source_group: "Bioinformatics", source_is_hub: true, target_id: "BI-6", target_group: "Bioinformatics", target_is_hub: false, weight: 3, is_bridge: false },
+  { source_id: "BI-1", source_group: "Bioinformatics", source_is_hub: false, target_id: "BI-2", target_group: "Bioinformatics", target_is_hub: false, weight: 2, is_bridge: false },
+  { source_id: "BI-2", source_group: "Bioinformatics", source_is_hub: false, target_id: "BI-3", target_group: "Bioinformatics", target_is_hub: false, weight: 2, is_bridge: false },
+  { source_id: "BI-3", source_group: "Bioinformatics", source_is_hub: false, target_id: "BI-4", target_group: "Bioinformatics", target_is_hub: false, weight: 2, is_bridge: false },
+  { source_id: "BI-4", source_group: "Bioinformatics", source_is_hub: false, target_id: "BI-5", target_group: "Bioinformatics", target_is_hub: false, weight: 1, is_bridge: false },
+  { source_id: "BI-5", source_group: "Bioinformatics", source_is_hub: false, target_id: "BI-6", target_group: "Bioinformatics", target_is_hub: false, weight: 1, is_bridge: false },
+
+  // Network Science (NS-0 hub, NS-1..NS-6 peers)
+  { source_id: "NS-0", source_group: "Network Science", source_is_hub: true, target_id: "NS-1", target_group: "Network Science", target_is_hub: false, weight: 2, is_bridge: false },
+  { source_id: "NS-0", source_group: "Network Science", source_is_hub: true, target_id: "NS-2", target_group: "Network Science", target_is_hub: false, weight: 2, is_bridge: false },
+  { source_id: "NS-0", source_group: "Network Science", source_is_hub: true, target_id: "NS-3", target_group: "Network Science", target_is_hub: false, weight: 2, is_bridge: false },
+  { source_id: "NS-0", source_group: "Network Science", source_is_hub: true, target_id: "NS-4", target_group: "Network Science", target_is_hub: false, weight: 3, is_bridge: false },
+  { source_id: "NS-0", source_group: "Network Science", source_is_hub: true, target_id: "NS-5", target_group: "Network Science", target_is_hub: false, weight: 2, is_bridge: false },
+  { source_id: "NS-0", source_group: "Network Science", source_is_hub: true, target_id: "NS-6", target_group: "Network Science", target_is_hub: false, weight: 3, is_bridge: false },
+  { source_id: "NS-1", source_group: "Network Science", source_is_hub: false, target_id: "NS-2", target_group: "Network Science", target_is_hub: false, weight: 1, is_bridge: false },
+  { source_id: "NS-2", source_group: "Network Science", source_is_hub: false, target_id: "NS-3", target_group: "Network Science", target_is_hub: false, weight: 1, is_bridge: false },
+  { source_id: "NS-3", source_group: "Network Science", source_is_hub: false, target_id: "NS-4", target_group: "Network Science", target_is_hub: false, weight: 2, is_bridge: false },
+  { source_id: "NS-4", source_group: "Network Science", source_is_hub: false, target_id: "NS-5", target_group: "Network Science", target_is_hub: false, weight: 1, is_bridge: false },
+  { source_id: "NS-5", source_group: "Network Science", source_is_hub: false, target_id: "NS-6", target_group: "Network Science", target_is_hub: false, weight: 2, is_bridge: false },
+
+  // Cryptography (CR-0 hub, CR-1..CR-6 peers)
+  { source_id: "CR-0", source_group: "Cryptography", source_is_hub: true, target_id: "CR-1", target_group: "Cryptography", target_is_hub: false, weight: 2, is_bridge: false },
+  { source_id: "CR-0", source_group: "Cryptography", source_is_hub: true, target_id: "CR-2", target_group: "Cryptography", target_is_hub: false, weight: 2, is_bridge: false },
+  { source_id: "CR-0", source_group: "Cryptography", source_is_hub: true, target_id: "CR-3", target_group: "Cryptography", target_is_hub: false, weight: 2, is_bridge: false },
+  { source_id: "CR-0", source_group: "Cryptography", source_is_hub: true, target_id: "CR-4", target_group: "Cryptography", target_is_hub: false, weight: 3, is_bridge: false },
+  { source_id: "CR-0", source_group: "Cryptography", source_is_hub: true, target_id: "CR-5", target_group: "Cryptography", target_is_hub: false, weight: 2, is_bridge: false },
+  { source_id: "CR-0", source_group: "Cryptography", source_is_hub: true, target_id: "CR-6", target_group: "Cryptography", target_is_hub: false, weight: 3, is_bridge: false },
+  { source_id: "CR-1", source_group: "Cryptography", source_is_hub: false, target_id: "CR-2", target_group: "Cryptography", target_is_hub: false, weight: 1, is_bridge: false },
+  { source_id: "CR-2", source_group: "Cryptography", source_is_hub: false, target_id: "CR-3", target_group: "Cryptography", target_is_hub: false, weight: 2, is_bridge: false },
+  { source_id: "CR-3", source_group: "Cryptography", source_is_hub: false, target_id: "CR-4", target_group: "Cryptography", target_is_hub: false, weight: 2, is_bridge: false },
+  { source_id: "CR-4", source_group: "Cryptography", source_is_hub: false, target_id: "CR-5", target_group: "Cryptography", target_is_hub: false, weight: 1, is_bridge: false },
+  { source_id: "CR-5", source_group: "Cryptography", source_is_hub: false, target_id: "CR-6", target_group: "Cryptography", target_is_hub: false, weight: 1, is_bridge: false },
+
+  // Inter-group hub bridges
+  { source_id: "ML-0", source_group: "Machine Learning", source_is_hub: true, target_id: "RB-0", target_group: "Robotics", target_is_hub: true, weight: 1, is_bridge: true },
+  { source_id: "RB-0", source_group: "Robotics", source_is_hub: true, target_id: "BI-0", target_group: "Bioinformatics", target_is_hub: true, weight: 1, is_bridge: true },
+  { source_id: "BI-0", source_group: "Bioinformatics", source_is_hub: true, target_id: "NS-0", target_group: "Network Science", target_is_hub: true, weight: 1, is_bridge: true },
+  { source_id: "NS-0", source_group: "Network Science", source_is_hub: true, target_id: "CR-0", target_group: "Cryptography", target_is_hub: true, weight: 1, is_bridge: true },
+  { source_id: "CR-0", source_group: "Cryptography", source_is_hub: true, target_id: "ML-0", target_group: "Machine Learning", target_is_hub: true, weight: 1, is_bridge: true },
+];
+
+// Derive groups in order of first appearance across both columns
+const groups: string[] = [];
+for (const row of DATA) {
+  const sg = String(row[SOURCE_GROUP_COL]);
+  const tg = String(row[TARGET_GROUP_COL]);
+  if (!groups.includes(sg)) groups.push(sg);
+  if (!groups.includes(tg)) groups.push(tg);
+}
+
+interface ForceNode {
+  id: string;
+  groupIndex: number;
+  groupName: string;
+  isHub: boolean;
+  withinIndex: number;
+  degree: number;
+  radius: number;
+  x: number;
+  y: number;
+}
+
+const nodeIndexById = new Map<string, number>();
+const nodes: ForceNode[] = [];
+const groupCounts = new Array(groups.length).fill(0);
+
+for (const row of DATA) {
+  const endpoints = [
+    { id: String(row[SOURCE_ID_COL]), group: String(row[SOURCE_GROUP_COL]), isHub: Boolean(row[SOURCE_HUB_COL]) },
+    { id: String(row[TARGET_ID_COL]), group: String(row[TARGET_GROUP_COL]), isHub: Boolean(row[TARGET_HUB_COL]) },
+  ];
+  for (const ep of endpoints) {
+    if (!nodeIndexById.has(ep.id)) {
+      const groupIndex = groups.indexOf(ep.group);
+      const withinIndex = groupCounts[groupIndex];
+      groupCounts[groupIndex] += 1;
+      nodeIndexById.set(ep.id, nodes.length);
+      nodes.push({
+        id: ep.id,
+        groupIndex,
+        groupName: ep.group,
+        isHub: ep.isHub,
+        withinIndex,
+        degree: 0,
+        radius: MIN_NODE_R,
+        x: 0,
+        y: 0,
+      });
+    }
+  }
+}
+
+interface ForceEdge {
+  sourceIdx: number;
+  targetIdx: number;
+  weight: number;
+  isBridge: boolean;
+}
+
+const edges: ForceEdge[] = [];
+for (const row of DATA) {
+  const a = nodeIndexById.get(String(row[SOURCE_ID_COL]))!;
+  const b = nodeIndexById.get(String(row[TARGET_ID_COL]))!;
+  const weight = Number(row[WEIGHT_COL]);
+  const isBridge = Boolean(row[BRIDGE_COL]);
+  edges.push({ sourceIdx: a, targetIdx: b, weight, isBridge });
+  nodes[a].degree += 1;
+  nodes[b].degree += 1;
+}
+
+const maxDegree = Math.max(1, ...nodes.map((n) => n.degree));
+for (const node of nodes) {
+  node.radius = MIN_NODE_R + (node.degree / maxDegree) * MAX_NODE_R_SPAN;
+}
+
+// Deterministic initial positions on a ring of group centers
+let lcgState = 104729;
+const ringRadius = SIM_AREA_SPAN * RING_RADIUS_SHARE;
+const subringRadius = SIM_AREA_SPAN * SUBRING_RADIUS_SHARE;
+const jitterSpan = SIM_AREA_SPAN * JITTER_SHARE;
+
+for (const node of nodes) {
+  const groupAngle = (node.groupIndex / groups.length) * Math.PI * 2;
+  const centerX = Math.cos(groupAngle) * ringRadius;
+  const centerY = Math.sin(groupAngle) * ringRadius;
+  const groupCount = Math.max(1, groupCounts[node.groupIndex]);
+  const withinAngle = (node.withinIndex / groupCount) * Math.PI * 2;
+  lcgState = (lcgState * 1664525 + 1013904223) % 4294967296;
+  const jx = (lcgState / 4294967296 - 0.5) * jitterSpan;
+  lcgState = (lcgState * 1664525 + 1013904223) % 4294967296;
+  const jy = (lcgState / 4294967296 - 0.5) * jitterSpan;
+  node.x = centerX + Math.cos(withinAngle) * subringRadius + jx;
+  node.y = centerY + Math.sin(withinAngle) * subringRadius + jy;
+}
+
+// Fruchterman-Reingold force-directed simulation (flat module-level statements)
+const idealDistance = Math.sqrt((SIM_AREA_SPAN * SIM_AREA_SPAN) / nodes.length);
+let temperature = SIM_AREA_SPAN * INITIAL_TEMP_SHARE;
+const cooling = temperature / ITERATIONS;
 
 for (let iter = 0; iter < ITERATIONS; iter += 1) {
   const dispX = new Array(nodes.length).fill(0);
@@ -111,7 +219,7 @@ for (let iter = 0; iter < ITERATIONS; iter += 1) {
       const dx = nodes[i].x - nodes[j].x;
       const dy = nodes[i].y - nodes[j].y;
       const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
-      const force = (IDEAL_DISTANCE * IDEAL_DISTANCE) / dist;
+      const force = (idealDistance * idealDistance) / dist;
       const fx = (dx / dist) * force;
       const fy = (dy / dist) * force;
       dispX[i] += fx;
@@ -121,38 +229,45 @@ for (let iter = 0; iter < ITERATIONS; iter += 1) {
     }
   }
 
-  edges.forEach(([a, b, weight]) => {
+  for (const edge of edges) {
+    const a = edge.sourceIdx;
+    const b = edge.targetIdx;
     const dx = nodes[a].x - nodes[b].x;
     const dy = nodes[a].y - nodes[b].y;
     const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
-    const force = ((dist * dist) / IDEAL_DISTANCE) * (0.6 + weight * 0.2);
+    const force = ((dist * dist) / idealDistance) * (0.6 + edge.weight * 0.2);
     const fx = (dx / dist) * force;
     const fy = (dy / dist) * force;
     dispX[a] -= fx;
     dispY[a] -= fy;
     dispX[b] += fx;
     dispY[b] += fy;
-  });
+  }
 
-  nodes.forEach((node, i) => {
-    dispX[i] -= node.x * 0.01; // mild centering gravity
-    dispY[i] -= node.y * 0.01;
+  for (let i = 0; i < nodes.length; i += 1) {
+    dispX[i] -= nodes[i].x * GRAVITY_FACTOR;
+    dispY[i] -= nodes[i].y * GRAVITY_FACTOR;
     const dist = Math.sqrt(dispX[i] * dispX[i] + dispY[i] * dispY[i]) || 0.01;
     const capped = Math.min(dist, temperature);
-    node.x += (dispX[i] / dist) * capped;
-    node.y += (dispY[i] / dist) * capped;
-  });
+    nodes[i].x += (dispX[i] / dist) * capped;
+    nodes[i].y += (dispY[i] / dist) * capped;
+  }
 
-  temperature = Math.max(temperature - COOLING, 1);
+  temperature = Math.max(temperature - cooling, 1);
 }
 
-// Square, padded domain so the layout renders with equal x/y scale.
+// Square, padded domain derived from simulated node extent
 const xs = nodes.map((n) => n.x);
 const ys = nodes.map((n) => n.y);
-const PADDING = 110;
-const xMid = (Math.min(...xs) + Math.max(...xs)) / 2;
-const yMid = (Math.min(...ys) + Math.max(...ys)) / 2;
-const span = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)) + PADDING * 2;
+const rawXMin = Math.min(...xs);
+const rawXMax = Math.max(...xs);
+const rawYMin = Math.min(...ys);
+const rawYMax = Math.max(...ys);
+const rawSpan = Math.max(rawXMax - rawXMin, rawYMax - rawYMin) || 1;
+const pad = rawSpan * PAD_SHARE;
+const xMid = (rawXMin + rawXMax) / 2;
+const yMid = (rawYMin + rawYMax) / 2;
+const span = rawSpan + pad * 2;
 const domain = {
   xMin: xMid - span / 2,
   xMax: xMid + span / 2,
@@ -160,65 +275,65 @@ const domain = {
   yMax: yMid + span / 2,
 };
 
-const nodeRadius = (i) => 7 + (degree[i] / maxDegree) * 16;
-
-// --- Custom SVG layers, positioned via the chart's own scales --------------
-function GraphEdges() {
+function ForceNetworkOverlay() {
   const xScale = useXScale();
   const yScale = useYScale();
   return (
     <g data-drawing-container>
-      {edges.map(([a, b, weight, isBridge], i) => (
+      {edges.map((edge, i) => (
         <line
           key={`edge-${i}`}
-          x1={xScale(nodes[a].x)}
-          y1={yScale(nodes[a].y)}
-          x2={xScale(nodes[b].x)}
-          y2={yScale(nodes[b].y)}
+          x1={xScale(nodes[edge.sourceIdx].x)}
+          y1={yScale(nodes[edge.sourceIdx].y)}
+          x2={xScale(nodes[edge.targetIdx].x)}
+          y2={yScale(nodes[edge.targetIdx].y)}
           stroke={t.inkSoft}
-          strokeOpacity={isBridge ? 0.22 : 0.4}
-          strokeWidth={isBridge ? 1.1 : 0.8 + weight * 0.7}
-          strokeDasharray={isBridge ? "5,4" : undefined}
+          strokeOpacity={edge.isBridge ? 0.22 : 0.4}
+          strokeWidth={edge.isBridge ? 1.1 : 0.8 + edge.weight * 0.7}
+          strokeDasharray={edge.isBridge ? "5,4" : undefined}
         />
       ))}
-    </g>
-  );
-}
-
-function GraphNodes() {
-  const xScale = useXScale();
-  const yScale = useYScale();
-  return (
-    <g data-drawing-container>
-      {nodes.map((node, i) => (
+      {nodes.map((node) => (
         <React.Fragment key={node.id}>
           {node.isHub && (
             <circle
               cx={xScale(node.x)}
               cy={yScale(node.y)}
-              r={nodeRadius(i) + 7}
-              fill={t.palette[node.group]}
+              r={node.radius + HUB_HALO_OFFSET}
+              fill={t.palette[node.groupIndex]}
               opacity={0.2}
             />
           )}
           <circle
             cx={xScale(node.x)}
             cy={yScale(node.y)}
-            r={nodeRadius(i)}
-            fill={t.palette[node.group]}
+            r={node.radius}
+            fill={t.palette[node.groupIndex]}
             stroke={t.pageBg}
             strokeWidth={1.5}
           />
           {node.isHub && (
-            <text
-              x={xScale(node.x)}
-              y={yScale(node.y) - nodeRadius(i) - 8}
-              textAnchor="middle"
-              fontSize={15}
-              fill={t.ink}
-            >
-              {node.label}
-            </text>
+            <g>
+              <rect
+                x={xScale(node.x) - (node.groupName.length * 4.4 + 8)}
+                y={yScale(node.y) - node.radius - 24}
+                width={node.groupName.length * 8.8 + 16}
+                height={20}
+                rx={4}
+                fill={t.pageBg}
+                fillOpacity={0.88}
+              />
+              <text
+                x={xScale(node.x)}
+                y={yScale(node.y) - node.radius - 10}
+                textAnchor="middle"
+                fontSize={15}
+                fontWeight={500}
+                fill={t.ink}
+              >
+                {node.groupName}
+              </text>
+            </g>
           )}
         </React.Fragment>
       ))}
@@ -226,66 +341,69 @@ function GraphNodes() {
   );
 }
 
-// --- Title + legend chrome ---------------------------------------------------
-const TITLE = "network-force-directed · javascript · muix · anyplot.ai";
-const TITLE_FONT_DEFAULT = 25;
-const titleFontSize =
-  TITLE.length > 67 ? Math.round(TITLE_FONT_DEFAULT * (67 / TITLE.length)) : TITLE_FONT_DEFAULT;
-const TITLE_H = 46;
-const LEGEND_H = 34;
-
-function Legend() {
-  return (
-    <div style={{ height: LEGEND_H, display: "flex", alignItems: "center", gap: "20px", flexWrap: "wrap" }}>
-      {GROUPS.map((group, i) => (
-        <div key={group.name} style={{ display: "flex", alignItems: "center", gap: "7px" }}>
-          <span
-            style={{
-              width: "12px",
-              height: "12px",
-              borderRadius: "50%",
-              backgroundColor: t.palette[i],
-              display: "inline-block",
-            }}
-          />
-          <span style={{ fontSize: "14px", color: t.inkSoft }}>{group.name}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// --- Chart (default-exported component — the harness mounts it) ------------
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
   const chartHeight = height - TITLE_H - LEGEND_H;
 
   return (
-    <div style={{ width, height, display: "flex", flexDirection: "column" }}>
+    <div
+      style={{
+        width,
+        height,
+        backgroundColor: t.pageBg,
+        display: "flex",
+        flexDirection: "column",
+        fontFamily: "Inter, system-ui, sans-serif",
+      }}
+    >
       <div
         style={{
           height: `${TITLE_H}px`,
           lineHeight: `${TITLE_H}px`,
-          fontSize: `${titleFontSize}px`,
-          fontWeight: 500,
+          fontSize: `${TITLE_FONT_SIZE}px`,
+          fontWeight: 600,
           color: t.ink,
+          paddingLeft: "16px",
         }}
       >
         {TITLE}
       </div>
-      <Legend />
-      <ChartContainer
+      <div
+        style={{
+          height: LEGEND_H,
+          display: "flex",
+          alignItems: "center",
+          gap: "20px",
+          flexWrap: "wrap",
+          paddingLeft: "16px",
+        }}
+      >
+        {groups.map((groupName, i) => (
+          <div key={groupName} style={{ display: "flex", alignItems: "center", gap: "7px" }}>
+            <span
+              style={{
+                width: "12px",
+                height: "12px",
+                borderRadius: "50%",
+                backgroundColor: t.palette[i],
+                display: "inline-block",
+              }}
+            />
+            <span style={{ fontSize: "14px", color: t.inkSoft }}>{groupName}</span>
+          </div>
+        ))}
+      </div>
+      <ChartsContainer
         width={width}
         height={chartHeight}
         series={[]}
         margin={{ top: 8, bottom: 8, left: 8, right: 8 }}
-        xAxis={[{ id: "x", scaleType: "linear", min: domain.xMin, max: domain.xMax }]}
-        yAxis={[{ id: "y", scaleType: "linear", min: domain.yMin, max: domain.yMax }]}
+        xAxis={[{ id: "x", scaleType: "linear", min: domain.xMin, max: domain.xMax, position: "none" }]}
+        yAxis={[{ id: "y", scaleType: "linear", min: domain.yMin, max: domain.yMax, position: "none" }]}
         skipAnimation
       >
-        <GraphEdges />
-        <GraphNodes />
-      </ChartContainer>
+        <ForceNetworkOverlay />
+      </ChartsContainer>
     </div>
   );
 }
