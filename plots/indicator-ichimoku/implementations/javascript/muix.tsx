@@ -67,54 +67,22 @@ for (let i = 0; i < HISTORY_PERIODS; i += 1) {
   currentPrice = c;
 }
 
-const tenkanRaw: Array<number | null> = [];
-const kijunRaw: Array<number | null> = [];
-const spanARaw: Array<number | null> = [];
-const spanBRaw: Array<number | null> = [];
+// Rolling (highest high + lowest low) / 2 over `period` bars
+const rollingMidpoint = (period: number): Array<number | null> =>
+  rawHigh.map((_, i) =>
+    i < period - 1
+      ? null
+      : (Math.max(...rawHigh.slice(i - period + 1, i + 1)) +
+          Math.min(...rawLow.slice(i - period + 1, i + 1))) /
+        2,
+  );
 
-for (let i = 0; i < HISTORY_PERIODS; i += 1) {
-  if (i < TENKAN_PERIOD - 1) {
-    tenkanRaw.push(null);
-  } else {
-    let hh = -Infinity;
-    let ll = Infinity;
-    for (let k = i - TENKAN_PERIOD + 1; k <= i; k += 1) {
-      if (rawHigh[k] > hh) hh = rawHigh[k];
-      if (rawLow[k] < ll) ll = rawLow[k];
-    }
-    tenkanRaw.push((hh + ll) / 2);
-  }
-
-  if (i < KIJUN_PERIOD - 1) {
-    kijunRaw.push(null);
-  } else {
-    let hh = -Infinity;
-    let ll = Infinity;
-    for (let k = i - KIJUN_PERIOD + 1; k <= i; k += 1) {
-      if (rawHigh[k] > hh) hh = rawHigh[k];
-      if (rawLow[k] < ll) ll = rawLow[k];
-    }
-    kijunRaw.push((hh + ll) / 2);
-  }
-
-  if (tenkanRaw[i] !== null && kijunRaw[i] !== null) {
-    spanARaw.push((tenkanRaw[i]! + kijunRaw[i]!) / 2);
-  } else {
-    spanARaw.push(null);
-  }
-
-  if (i < SENKOU_B_PERIOD - 1) {
-    spanBRaw.push(null);
-  } else {
-    let hh = -Infinity;
-    let ll = Infinity;
-    for (let k = i - SENKOU_B_PERIOD + 1; k <= i; k += 1) {
-      if (rawHigh[k] > hh) hh = rawHigh[k];
-      if (rawLow[k] < ll) ll = rawLow[k];
-    }
-    spanBRaw.push((hh + ll) / 2);
-  }
-}
+const tenkanRaw = rollingMidpoint(TENKAN_PERIOD);
+const kijunRaw = rollingMidpoint(KIJUN_PERIOD);
+const spanBRaw = rollingMidpoint(SENKOU_B_PERIOD);
+const spanARaw = tenkanRaw.map((tk, i) =>
+  tk !== null && kijunRaw[i] !== null ? (tk + kijunRaw[i]!) / 2 : null,
+);
 
 const isoDates: string[] = [];
 let cursorMs = Date.UTC(2024, 0, 2);
@@ -170,9 +138,6 @@ const dateFormat = new Intl.DateTimeFormat("en-US", {
 });
 const formatIsoDate = (iso: string) =>
   dateFormat.format(new Date(`${iso}T00:00:00Z`));
-
-const unitMatch = CLOSE.match(/\(([^)]+)\)/);
-const priceUnit = unitMatch ? unitMatch[1] : "";
 
 const dateValues = data.map((row) => row[DATE]);
 const openArr = data.map((row) => row[OPEN]);
@@ -286,6 +251,40 @@ const BEAR_COLOR = t.palette[4];
 const TENKAN_COLOR = t.palette[1];
 const KIJUN_COLOR = t.palette[2];
 const CHIKOU_COLOR = t.palette[3];
+
+const lineSwatch = (color: string, thickness: number, dashed = false) => ({
+  width: 20,
+  height: 0,
+  borderTop: `${thickness}px ${dashed ? "dashed" : "solid"} ${color}`,
+});
+const boxSwatch = (fill: string, border: string) => ({
+  width: 14,
+  height: 14,
+  background: fill,
+  border,
+  borderRadius: 2,
+});
+
+const legendItems = [
+  {
+    label: "Bullish candle",
+    swatch: boxSwatch(t.pageBg, `2px solid ${BULL_COLOR}`),
+  },
+  { label: "Bearish candle", swatch: boxSwatch(BEAR_COLOR, "none") },
+  { label: TENKAN_SEN, swatch: lineSwatch(TENKAN_COLOR, 3) },
+  { label: KIJUN_SEN, swatch: lineSwatch(KIJUN_COLOR, 3) },
+  { label: SENKOU_SPAN_A, swatch: lineSwatch(BULL_COLOR, 2) },
+  { label: SENKOU_SPAN_B, swatch: lineSwatch(BEAR_COLOR, 2, true) },
+  { label: CHIKOU_SPAN, swatch: lineSwatch(CHIKOU_COLOR, 2.5, true) },
+  {
+    label: "Kumo bullish (A > B)",
+    swatch: boxSwatch(`${BULL_COLOR}48`, `1.5px solid ${BULL_COLOR}`),
+  },
+  {
+    label: "Kumo bearish (B > A)",
+    swatch: boxSwatch(`${BEAR_COLOR}48`, `1.5px dashed ${BEAR_COLOR}`),
+  },
+];
 
 function IchimokuLayer() {
   const xScale = useXScale("x") as unknown as ((v: string) => number) & {
@@ -515,8 +514,7 @@ export default function Chart() {
             width: 84,
             label: CLOSE,
             labelStyle: { fontSize: 15, fill: t.ink, fontWeight: 600 },
-            valueFormatter: (v: number) =>
-              priceUnit ? `${v.toFixed(0)} ${priceUnit}` : v.toFixed(0),
+            valueFormatter: (v: number) => v.toFixed(0),
             tickLabelStyle: {
               fontSize: 14,
               fill: t.inkSoft,
@@ -546,117 +544,21 @@ export default function Chart() {
           boxSizing: "border-box",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span
-            style={{
-              width: 14,
-              height: 14,
-              background: t.pageBg,
-              border: `2px solid ${BULL_COLOR}`,
-              borderRadius: 2,
-              display: "inline-block",
-              boxSizing: "border-box",
-            }}
-          />
-          <span>Bullish candle</span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span
-            style={{
-              width: 14,
-              height: 14,
-              background: BEAR_COLOR,
-              borderRadius: 2,
-              display: "inline-block",
-            }}
-          />
-          <span>Bearish candle</span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span
-            style={{
-              width: 20,
-              height: 3,
-              background: TENKAN_COLOR,
-              borderRadius: 2,
-              display: "inline-block",
-            }}
-          />
-          <span>{TENKAN_SEN}</span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span
-            style={{
-              width: 20,
-              height: 3,
-              background: KIJUN_COLOR,
-              borderRadius: 2,
-              display: "inline-block",
-            }}
-          />
-          <span>{KIJUN_SEN}</span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span
-            style={{
-              width: 20,
-              height: 2,
-              background: BULL_COLOR,
-              display: "inline-block",
-            }}
-          />
-          <span>{SENKOU_SPAN_A}</span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span
-            style={{
-              width: 20,
-              height: 0,
-              borderTop: `2px dashed ${BEAR_COLOR}`,
-              display: "inline-block",
-            }}
-          />
-          <span>{SENKOU_SPAN_B}</span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span
-            style={{
-              width: 20,
-              height: 0,
-              borderTop: `2.5px dashed ${CHIKOU_COLOR}`,
-              display: "inline-block",
-            }}
-          />
-          <span>{CHIKOU_SPAN}</span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span
-            style={{
-              width: 16,
-              height: 12,
-              background: `${BULL_COLOR}48`,
-              border: `1.5px solid ${BULL_COLOR}`,
-              borderRadius: 2,
-              display: "inline-block",
-              boxSizing: "border-box",
-            }}
-          />
-          <span>Kumo bullish (A &gt; B)</span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span
-            style={{
-              width: 16,
-              height: 12,
-              background: `${BEAR_COLOR}48`,
-              border: `1.5px dashed ${BEAR_COLOR}`,
-              borderRadius: 2,
-              display: "inline-block",
-              boxSizing: "border-box",
-            }}
-          />
-          <span>Kumo bearish (B &gt; A)</span>
-        </div>
+        {legendItems.map((item) => (
+          <div
+            key={item.label}
+            style={{ display: "flex", alignItems: "center", gap: 6 }}
+          >
+            <span
+              style={{
+                ...item.swatch,
+                display: "inline-block",
+                boxSizing: "border-box",
+              }}
+            />
+            <span>{item.label}</span>
+          </div>
+        ))}
       </div>
     </div>
   );
