@@ -1,7 +1,7 @@
 // anyplot.ai
 // frontier-efficient: Efficient Frontier for Portfolio Optimization
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 87/100 | Created: 2026-09-02
+// Quality: pending | Created: 2026-09-02
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { LinePlot } from "@mui/x-charts/LineChart";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
