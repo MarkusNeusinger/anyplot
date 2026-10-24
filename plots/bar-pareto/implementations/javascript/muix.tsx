@@ -215,14 +215,11 @@ export default function Chart() {
         <ChartsReferenceLine
           y={PARETO_THRESHOLD}
           axisId="percent"
-          label={`${PARETO_THRESHOLD}%`}
-          labelAlign="end"
           lineStyle={{
             stroke: t.amber,
             strokeDasharray: "8 5",
             strokeWidth: 2.5,
           }}
-          labelStyle={{ fill: t.ink, fontSize: 14, fontWeight: 700 }}
         />
         <ChartsXAxis axisId="x" />
         <ChartsYAxis axisId="counts" />
