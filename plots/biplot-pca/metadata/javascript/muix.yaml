@@ -2,160 +2,157 @@ library: muix
 language: javascript
 specification_id: biplot-pca
 created: '2026-09-01T18:44:43Z'
-updated: '2026-09-01T19:06:25Z'
-generated_by: claude-sonnet
-workflow_run: 33544507529
+updated: '2026-10-24T00:21:22Z'
+generated_by: gemini-4-argon
+adopted_from: a6754ae47632b531aec6e975e6a4b937aa81fea5 (a6754ae47632b531aec6e975e6a4b937aa81fea5)
+workflow_run: 40044245065
 issue: 3417
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/javascript/muix/plot-dark.html
-quality_score: 88
+quality_score: 87
 review:
   strengths:
-  - 'Correct biplot construction: observation scores as colored points and variable
-    loadings as labeled arrows from the origin, exactly matching the spec'
-  - From-scratch Jacobi eigendecomposition and correlation-biplot scaling — genuine
-    PCA computation rather than a canned library call
-  - Custom label-decluttering algorithm keeps nearly-parallel loading labels (Throughput/Temperature)
-    from overlapping
-  - Distinctive use of MUI X's useXScale/useYScale hooks to draw a custom SVG overlay
-    (arrows, unit circle, origin gridlines) precisely synced to the chart's data-to-pixel
-    scale
-  - Correct Imprint palette assignment in canonical order (green/lavender/blue), with
-    theme-correct chrome in both light and dark renders
-  - Realistic, neutral manufacturing QC dataset with two latent drivers producing
-    genuine, plausible group separation
+  - Loading vectors are true correlation loadings (eigenvector × √eigenvalue) scaled
+    by one common factor, and the dashed unit circle uses the same factor, so arrow
+    length reads directly against the correlation circle; equal x/y scaling keeps
+    the circle round
+  - Composes ChartsContainer with ScatterPlot, ChartsGrid, axes and an item-triggered
+    ChartsTooltip, and draws the arrows, circle and origin cross-hairs as a custom
+    SVG layer positioned via useXScale/useYScale, so every overlay lives in the chart's
+    own data coordinates
+  - Arrow labels sit at their own tips on semi-opaque page-colored pills, attributable
+    even for the near-parallel Throughput and Temperature arrows
+  - Axis labels carry the computed variance share (PC1 70.7 %, PC2 24.1 %) and a subtitle
+    summarizes the 94.8 % explained by both
+  - Plausible manufacturing QC scenario (three facilities, temperature/pressure/vibration/throughput)
+    with a deterministic Park–Miller LCG; theme tokens drive all chrome in both renders
   weaknesses:
-  - The dashed unit-circle reference renders as a visible ellipse, not a circle, because
-    PC1 and PC2 share the same data-unit range but the landscape canvas gives them
-    unequal pixels-per-unit — compute separate x/y radii from the actual pixel-per-unit
-    ratio (or accept as a landscape trade-off) so the correlation-magnitude reference
-    reads as a true circle
-  - Both-axis grid plus the default MUI X axis frame gives a fairly busy technical-plot
-    look; lightening or removing the axis tick marks would push Design Excellence
-    further
-  - Data storytelling relies solely on color separation between production lines;
-    a short callout on which line clusters toward which loading direction would sharpen
-    the insight
+  - 'Suggestion: the equal-aspect x range of −6 to 6 leaves wide empty bands left
+    of −4.5 and right of 3.5; narrowing the 200 px side margins would give the scatter
+    more width while keeping the circle round.'
+  - 'Suggestion: the native ChartsLegend could carry the three facility entries, keeping
+    only the unit-circle key as custom markup.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matching #FAF8F1 — not pure white, not dark.
-      Chrome: Title "biplot-pca · javascript · muix · anyplot.ai" in bold dark ink at top-center, clearly legible. Axis labels "PC1 (70.7%)" / "PC2 (24.1%)" and tick labels in dark/soft-dark ink, all readable. Legend ("Line A", "Line B", "Line C") at bottom-center with color swatches, readable. Subtle light-gray grid on both axes. Loading arrows and their variable-name labels (Vibration, Throughput, Temperature, Pressure) drawn in solid black ink, clearly visible against the cream background. Dashed gray unit-circle (rendered as an ellipse due to the landscape aspect ratio) surrounds the origin.
-      Data: First series (Line A) is brand green #009E73, second (Line B) is lavender #C475FD, third (Line C) is blue #4467A3 — correct canonical Imprint order. Points are clearly distinguishable by color and reasonably sized for ~60 observations.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+      Background: warm off-white, matches #FAF8F1.
+      Chrome: bold dark title "biplot-pca · javascript · muix · anyplot.ai", grey subtitle "60 observations · Production facility: 3 · 4 standardized features · PC1 + PC2 explain 94.8% variance", HTML legend row (three facilities + dashed "Correlation unit circle"), axis titles "PC1 (70.7% variance)" and "PC2 (24.1% variance)", ticks −6…6 and −4…4, subtle grey grid with slightly stronger origin cross-hairs. All readable.
+      Data: 60 score points in #009E73 (Munich Assembly), #C475FD (Stuttgart Press), #4467A3 (Dresden Optics), separating along PC1; four near-black arrows from the origin with arrowheads (Vibration up-left, Throughput and Temperature up-right nearly parallel, Pressure right slightly down), bold labels at the tips on page-colored pills; dashed round unit circle of radius ~3.5 that the Pressure/Throughput/Temperature tips nearly reach.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matching #1A1A17 — not pure black, not light.
-      Chrome: Title, axis labels, and tick labels flip to light ink (near-white/soft-light), fully readable against the dark background. Legend text is light and legible. Grid lines are subtle light strokes at low opacity. Loading arrows and their labels flip to white/light ink, remaining clearly visible against the dark surface. The dashed unit-circle overlay is drawn in a light gray tone, still visible.
-      Data: Colors are identical to the light render (#009E73 green, #C475FD lavender, #4467A3 blue) — only chrome flipped, as required.
-      Legibility verdict: PASS — no dark-on-dark failures observed; all chrome elements are correctly inverted for the dark surface.
+      Background: warm near-black, matches #1A1A17.
+      Chrome: title, subtitle, legend text, axis titles and ticks flip to light ink; grid and dashed circle in soft grey, visible. No dark-on-dark text.
+      Data: point colors identical to the light render; arrows and their labels flip to light ink and remain clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22, axis label 16, tick 13,
-          arrow labels 15, legend 14); readable in both themes; title proportion is
-          appropriate for the short spec-id
+        comment: Title 22 px, axis titles 16 px, ticks and arrow labels 14 px, all
+          explicitly set and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Label decluttering algorithm prevents loading-label collisions; no
-          text overlaps observed
+        comment: No text collisions; arrow labels clear of points and of each other
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: markerSize=7 is well-adapted to ~60 observations across 3 groups
+        comment: 60 points at markerSize 7 clearly visible; arrows 2.5 px with arrowheads;
+          legend glyphs match marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender/blue are CVD-distinguishable, arrows in ink color
-          contrast well against data
+        comment: Imprint hues, CVD-safe; group also separable by position
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good margins and legend placement, but the unit-circle reference
-          renders as an ellipse due to unequal x/y pixel-per-unit scale on the landscape
-          canvas
+        comment: 3200×1800, balanced axis labels, title ~31% width, nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: PC1/PC2 axis labels include variance-explained percentages
+        comment: Component name plus variance share on both axes
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical Imprint order for all 3 groups;
-          theme-correct chrome in both renders'
+        comment: 'First group #009E73, then Imprint order; correct backgrounds and
+          theme chrome in both renders'
     design_excellence:
-      score: 14
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        comment: Correlation-biplot scaling, unit-circle reference, and custom label
-          decluttering show real design thought beyond a library default
+        passed: true
+        comment: 'Clear hierarchy: bold title, quieter subtitle, bold tip labels on
+          pills; inline legend that also keys the unit circle'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        comment: Subtle grid, generous whitespace, but default MUI X axis frame/ticks
-          are kept on both axes
+        passed: true
+        comment: Origin cross-hairs, semi-opaque pill backgrounds behind arrow labels,
+          equal aspect keeps the circle round
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        comment: Color-coded groups plus loading arrows create clear visual hierarchy
-          showing which variables drive the PC1/PC2 separation
+        passed: false
+        comment: Data displayed with the features the Notes ask for; no focal point
+          chosen beyond them
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
         score: 5
         max: 5
-        comment: 'Correct PCA biplot: scores as points, loadings as arrows'
+        passed: true
+        comment: PCA biplot with scores and loading arrows
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        comment: All spec features present (scores, labeled loadings, variance-% axis
-          labels, unit circle); the unit circle's elliptical distortion is a minor
-          inaccuracy
+        passed: true
+        comment: PC1 vs PC2, colored scores with legend, arrows from origin, tip labels,
+          common loading scale, round centered unit circle, variance in axis labels
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: PC1 on x-axis, PC2 on y-axis, all observations visible within axis
-          bounds
+        passed: true
+        comment: Scores at their computed coordinates; no displacement of data marks
+          (only labels are de-collided)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title matches mandated format exactly; legend labels (Line A/B/C)
-          match the data groups
+        passed: true
+        comment: Mandated title format; legend names the facilities
     data_quality:
       score: 15
       max: 15
@@ -164,80 +161,93 @@ review:
         name: Feature Coverage
         score: 6
         max: 6
-        comment: 4 correlated variables with varying loading directions/magnitudes;
-          3 groups with real separation along both components
+        passed: true
+        comment: Correlated (Throughput/Temperature), orthogonal-ish (Vibration) and
+          differently long arrows; groups separate along PC1
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Neutral, plausible manufacturing QC sensor scenario
+        passed: true
+        comment: Manufacturing QC across three facilities with realistic process variables
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        comment: Sensor value ranges (temperature ~68°C, pressure ~120kPa, vibration
-          ~3.2mm/s, throughput ~480 units/min) are realistic
+        passed: true
+        comment: Standardized scores within ±4; correlation loadings ≤1 shown against
+          the unit circle; variance shares sum to 94.8%, consistent with the generated
+          two-factor structure
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        comment: Flat top-to-bottom script, but several helper functions (LCG, jacobiEigen,
-          declutterLabels) beyond minimal structure — justified by the from-scratch
-          PCA requirement
+        passed: true
+        comment: Flat module-level computation; the one component beyond Chart() is
+          required to call the scale hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        comment: Deterministic seeded LCG (seed=42)
+        passed: true
+        comment: Seeded Park–Miller LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: Only used @mui/x-charts imports
+        passed: true
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        comment: Complexity is appropriate for implementing PCA and a correlation
-          biplot from scratch; no fake functionality
+        passed: true
+        comment: 'Written-out Jacobi eigendecomposition is allowed: the library prompt
+          lists no statistics helpers'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: Correct default-exported component, skipAnimation set, current MUI
-          X API
+        passed: true
+        comment: Default-exported component, sized to ANYPLOT_SIZE, skipAnimation,
+          v9 ChartsContainer API
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        comment: Idiomatic ChartContainer composition (ScatterPlot + ChartsXAxis/YAxis/Grid/Legend/Tooltip)
+        passed: true
+        comment: ChartsContainer composition with ScatterPlot/ChartsGrid/ChartsXAxis/ChartsYAxis
+          and axis ids
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
-        comment: useXScale/useYScale hooks drive a custom SVG overlay synced to the
-          chart's own scale — a feature distinctive to MUI X's architecture
+        passed: true
+        comment: useXScale/useYScale hooks to draw a custom SVG layer in data coordinates;
+          item-triggered ChartsTooltip
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-10-24T00:18:55Z'
 impl_tags:
   dependencies: []
   techniques:
+  - custom-legend
   - annotations
-  - layer-composition
+  - hover-tooltips
   patterns:
   - data-generation
-  - matrix-construction
   - iteration-over-groups
   dataprep:
   - pca
-  - correlation-matrix
   - normalization
   styling:
-  - alpha-blending
+  - publication-ready
