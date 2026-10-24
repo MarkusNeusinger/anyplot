@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: chord-basic
 created: '2026-06-17T02:10:23Z'
-updated: '2026-10-24T04:39:27Z'
+updated: '2026-10-24T04:44:29Z'
 generated_by: gemini-4-argon
 adopted_from: 05fd22b6883131fc8937ab51e4f573041b3dcb44 (05fd22b6883131fc8937ab51e4f573041b3dcb44)
 workflow_run: 40062873243
@@ -13,43 +13,37 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chord-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chord-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chord-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chord-basic/javascript/muix/plot-dark.html
-quality_score: 87
+quality_score: 85
 review:
   strengths:
-  - Bidirectional pairs drawn as one ribbon whose width at each end equals that direction's
-    flow, anchored on per-target sub-arcs, exactly as the spec allows
-  - Each ribbon takes the color of the pair's dominant sender, so net direction reads
-    without arrows
-  - 'Composition API used idiomatically: ChartsContainer with a custom layer whose
-    geometry comes from useDrawingArea'
-  - Anchor-aware radial labels with a bold entity name over a softer outbound total,
-    readable in both themes
-  - Theme tokens threaded through all chrome; page-colored separator strokes keep
-    crossing ribbons distinguishable on both backgrounds
-  - Hover tooltips in the HTML output give both directional values per ribbon and
-    the outbound total per arc
+  - Bidirectional flows drawn as one ribbon whose width at each end equals that direction's
+    flow (matrix[i][j] at the source arc, matrix[j][i] at the target arc), exactly
+    as the spec allows
+  - Uses the MUI X v9 composition API (ChartsContainer + useDrawingArea) to add a
+    chord layer the community package lacks, sized to the drawing area and with skipAnimation
+  - Native SVG <title> tooltips on ribbons and arcs give both directional values in
+    the interactive HTML
+  - 'Theme tokens threaded through every text and separator stroke: entity names,
+    value sublabels, subtitle and footer all readable on #FAF8F1 and #1A1A17, data
+    colors identical across themes'
+  - Two-level arc labels (bold name over soft outbound total) with side-aware text
+    anchors keep labels clear of the ring
   weaknesses:
-  - 'DQ-03 (code): the 30 flows sum to 50.0 M migrants per year, with Asia to N. America
-    at 7.8 M/yr, several times real annual inter-continental migration (UN/Abel estimates
-    put global flows at roughly 40–60 M per five years) → either relabel the measure
-    as per five-year period or scale the values down about fivefold (total ≈ 10 M/yr).
-    Likely cause: the VALUE column name "Migrants per year (millions)" combined with
-    five-year-scale numbers in the data block.'
-  - 'Suggestion: the subtitle repeats ''15 connected pairs (15 with flows in both
-    directions)''; a shorter subtitle would leave the title more room to lead.'
-  - 'Suggestion: MUI X''s own tooltip slot styling (or a custom tooltip content) would
-    match the theme better than the native SVG title tooltips in the HTML output.'
+  - 'Suggestion: the subtitle''s ''(15 with flows in both directions)'' repeats ''15
+    connected pairs'' for this data; dropping it would tighten the header.'
+  - 'Suggestion: MUI X''s ChartsTooltip slot styled from the theme could replace the
+    native SVG <title> tooltips for a tooltip that matches the MUI chrome.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, square 2400x2400.
-      Chrome: dark bold title "chord-basic · javascript · muix · anyplot.ai" centred at top, grey subtitle "6 entities · 15 connected pairs (15 with flows in both directions) · Total 50.0", grey footer note explaining that each chord carries both directions and arc length is total outbound migrants per year (millions). Six entity labels (Asia, Africa, Europe, N. America, S. America, Oceania) in bold dark ink with a grey "X.X out" total beneath, placed radially outside the ring — all readable.
-      Data: ring of six solid arcs — Asia #009E73 (largest, right), Africa lavender, Europe blue, N. America ochre, S. America matte red, Oceania cyan (smallest, top) — separated by small gaps. Translucent ribbons (≈0.62 opacity, thin off-white outlines) connect every pair; wide green ribbons from Asia to N. America and Europe, a wide lavender Africa–Europe ribbon, hair-thin Oceania chords. Crossings blend but remain distinguishable.
+      Background: warm off-white #FAF8F1, no white panel.
+      Chrome: centred bold title "chord-basic · javascript · muix · anyplot.ai", muted subtitle "6 entities · 15 connected pairs (15 with flows in both directions) · Total 50.0", footer caption naming the value and its units. Entity labels (Asia, Africa, Europe, N. America, S. America, Oceania) in bold dark ink with "X.X out" sublabels in soft ink beside each arc. All readable.
+      Data: six solid outer arcs in Imprint order — Asia #009E73 (largest, right side), Africa purple, Europe blue, N. America ochre, S. America red, Oceania cyan — separated by even gaps. 15 translucent ribbons through the interior, each colored by its dominant direction, with unequal end widths for asymmetric pairs (e.g. Asia–N. America wide at Asia, narrow at N. America). Thin page-colored outlines separate overlapping ribbons.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, entity labels in light ink, subtitle, value sublabels and footer in light grey — all readable, no dark-on-dark text.
-      Data: arc colors identical to the light render; ribbons use the same hues at the same opacity, appearing deeper against the dark page, with dark outlines separating them. Brand green clearly visible.
+      Chrome: title, entity names in light ink, subtitle, sublabels and footer in light soft ink; no dark-on-dark text.
+      Data: arc and ribbon colors identical to the light render; ribbons read darker because the 0.62 opacity blends with the dark page, but each remains distinguishable, with dark separator outlines. Brand green arc clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -61,53 +55,53 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (title 22 px, entity labels 19 px bold, value sublabels
-          14 px, subtitle 15 px, footer 14 px in the 1200 px CSS space); all text
-          readable in both themes via ink/inkSoft tokens
+        comment: Explicit sizes (title 22 px, entity names 19 px bold, value sublabels/subtitle/footer
+          14–15 px); ink/inkSoft tokens readable on both backgrounds
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Entity labels sit clear of the ring with anchor-aware placement;
-          chord crossings in the centre are permitted by the spec
+        comment: No text collisions; side-aware label anchors keep names clear of
+          the ring. Chord pile-up in the centre is permitted by the spec
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Arcs are solid, ribbons at 0.62 opacity with page-colored outlines
-          stay distinguishable in both themes; hair-thin Oceania chords are permitted
+        comment: Arcs solid, chords at 0.62 opacity with a page-colored hairline so
+          crossings stay distinguishable in both themes; hair-thin small flows are
+          permitted
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Six distinct Imprint hues, every arc also labelled by name, so color
-          is never the sole signal
+        comment: Imprint palette, every arc directly labelled so color is never the
+          sole identifier
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 2400x2400 square canvas (gate passed), ring centred, labels inside
-          the canvas, title ~45 % of width
+        comment: Square 2400x2400 canvas, ring centred and ~66% of width, nothing
+          clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: N/A for axes; the footer states the measure with its unit (Migrants
-          per year, millions)
+        comment: No axes; the footer names the value with units (Migrants per five
+          years, millions)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 't.palette in canonical Imprint order, first entity (Asia) #009E73,
-          identical data colors in both renders, backgrounds #FAF8F1 / #1A1A17'
+        comment: 'First entity #009E73, Imprint palette in canonical order via t.palette,
+          #FAF8F1 / #1A1A17 backgrounds, data colors identical across themes'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -115,24 +109,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Two-level label typography (bold entity name over a softer inkSoft
-          total) and a title/subtitle hierarchy chosen beyond the baseline
+        comment: Two-level label hierarchy (bold ink name over inkSoft outbound total)
+          and a muted subtitle line chosen beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Uniform pad gaps between arcs, page-colored separator strokes on
-          arcs and ribbons, a thin gap between ring and ribbons, labels anchored start/middle/end
-          by angle
+        comment: Page-colored separators between arcs and along ribbons, even angular
+          padding between groups
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Ribbons take the color of the dominant direction of each pair, so
-          the net sender of every corridor reads at a glance; largest ribbons drawn
-          first so thin ones stay on top
+        comment: Ribbons colored by their dominant direction, and drawn largest-first
+          so small flows stay on top
     spec_compliance:
       score: 15
       max: 15
@@ -142,32 +134,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Classic chord diagram: ring of entity arcs plus interior ribbons,
-          no extra tracks, highlights or reference layers'
+        comment: 'Proper chord diagram: arc ring plus interior ribbons; no extra tracks,
+          highlights or callouts'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct color per entity, ribbon width proportional to flow, bidirectional
-          pairs as one ribbon whose end widths equal each direction's flow, arcs labelled
-          with length from total outbound flow, hover tooltips via SVG title
+        comment: Distinct color per entity, chord width proportional to flow, native
+          SVG hover tooltips with both directions, bidirectional flows as one ribbon
+          whose end widths equal each direction's flow; arcs labelled at the arc
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Each ribbon end anchored on the sub-arc of its entity sized to that
-          direction's flow; no displacement
+        comment: Arc spans from outbound totals, ribbon ends from matrix[i][j] and
+          matrix[j][i]; all 30 flows drawn
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'chord-basic · javascript · muix · anyplot.ai'; entities labelled
-          directly at their arcs, so no legend is needed
+        comment: Title 'chord-basic · javascript · muix · anyplot.ai'; direct arc
+          labels replace a legend (N/A)
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -175,22 +167,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: '6 entities, 30 directed flows forming 15 bidirectional pairs with
-          widths from 0.1 to 7.8, unequal arcs: every aspect of the chord type shown'
+        comment: 6 entities, 30 directed flows, strongly asymmetric pairs, wide value
+          range and very unequal arcs
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Migration between continents, the spec's own example, neutral
+        comment: Inter-continental migration, the spec's own example, neutral
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Relative corridor sizes plausible (Asia to N. America and Europe
-          largest), but a 50 M total labelled as per year is several times the real
-          annual inter-continental flow (defect line)
+        comment: 0.1–7.8 million per five years, total 50 million, a plausible magnitude
+          for continental migration; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -200,14 +191,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear data -> matrix -> layout code; the single ChordDiagramLayer
-          component exists because useDrawingArea must be called inside ChartsContainer
+        comment: Columns → Data → Plot zones; the one inner component is required
+          because useDrawingArea must run inside ChartsContainer
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hard-coded data
+        comment: Hard-coded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -219,51 +210,49 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Chord layout written out compactly; no community MUI X chord component
-          exists and the library prompt allows short written-out computation
+        comment: Chord layout written out, but no available call computes it (no chord
+          layout in @mui/x-charts community)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation set,
-          community @mui/x-charts only
+        comment: Default-exported component, v9 ChartsContainer, skipAnimation set,
+          sized to ANYPLOT_SIZE
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Uses MUI X's composition API (ChartsContainer with an empty series
-          and a custom child layer reading useDrawingArea), the documented route for
-          a chart type the library lacks
+        comment: ChartsContainer composition with a custom layer reading useDrawingArea,
+          the documented way to add a mark type MUI X lacks
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
-        passed: true
-        comment: useDrawingArea hook drives the geometry from the container's drawing
-          area; tooltips are plain SVG title rather than MUI's tooltip system
-  verdict: REJECTED
+        passed: false
+        comment: Nothing beyond what the library prompt mandates; all marks are hand-built
+          SVG
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T04:36:03Z'
+  rendered_at: '2026-10-24T04:41:14Z'
 impl_tags:
   dependencies: []
   techniques:
   - bezier-curves
-  - patches
-  - annotations
   - hover-tooltips
+  - layer-composition
   - html-export
   patterns:
   - matrix-construction
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - groupby-aggregation
   styling:
-  - minimal-chrome
   - alpha-blending
-  - edge-highlighting
+  - minimal-chrome
