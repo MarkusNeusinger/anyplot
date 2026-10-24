@@ -15,6 +15,7 @@ const t = window.ANYPLOT_TOKENS;
 const PRICE_PAD_SHARE = 0.08;
 const VOL_PAD_SHARE = 0.15;
 const BODY_WIDTH_SHARE = 0.62;
+const X_TICK_COUNT = 10; // about this many labelled date ticks, shared by both panes
 const HEADER_H = 120;
 const PANE_GAP = 10;
 const PRICE_PANE_SHARE = 0.72;
@@ -23,7 +24,7 @@ const MARGIN_RIGHT = 32;
 const Y_AXIS_W = 96;
 
 // Columns: set these to your data's column names
-const DATE = "Trading date"; // role: x
+const DATE = "Trading date"; // role: date
 const OPEN = "Open price ($)"; // role: open
 const HIGH = "High price ($)"; // role: high
 const LOW = "Low price ($)"; // role: low
@@ -34,7 +35,7 @@ const VOLUME = "Volume"; // role: volume
 const data = (() => {
   let seed = 11;
   const periods = 60;
-  const start = new Date(Date.UTC(2024, 1, 1));
+  const day = new Date(Date.UTC(2024, 1, 1));
   const rows: { [key: string]: string | number }[] = [];
   let price = 148;
 
@@ -56,15 +57,19 @@ const data = (() => {
     const move = Math.abs(c - o) + (h - l);
     const vol = Math.round(1.4e6 + move * 3.6e5 + u4 * 6e5);
 
-    const d = new Date(start.getTime() + i * 86400 * 1000);
+    // Markets close on weekends: advance to the next weekday
+    while (day.getUTCDay() === 0 || day.getUTCDay() === 6) {
+      day.setUTCDate(day.getUTCDate() + 1);
+    }
     rows.push({
-      [DATE]: d.toISOString().split("T")[0],
+      [DATE]: day.toISOString().split("T")[0],
       [OPEN]: Math.round(o * 100) / 100,
       [HIGH]: Math.round(h * 100) / 100,
       [LOW]: Math.round(l * 100) / 100,
       [CLOSE]: Math.round(c * 100) / 100,
       [VOLUME]: vol,
     });
+    day.setUTCDate(day.getUTCDate() + 1);
     price = c;
   }
   return rows;
@@ -74,13 +79,6 @@ const data = (() => {
 const sorted = [...data].sort(
   (a, b) =>
     new Date(String(a[DATE])).getTime() - new Date(String(b[DATE])).getTime(),
-);
-
-const currencyMatch = OPEN.match(/\(([^)]+)\)/);
-const currencyPrefix = currencyMatch ? currencyMatch[1] : "";
-const priceAxisLabel = OPEN.replace(/^Open\s+/i, "").replace(
-  /^([a-z])/,
-  (m) => m.toUpperCase(),
 );
 
 const candles = sorted.map((r, idx) => {
@@ -114,6 +112,11 @@ const bandKeys = candles.map((c) => c.bandKey);
 const shortDateByBand = Object.fromEntries(
   candles.map((c) => [c.bandKey, c.shortDate]),
 );
+const tickEvery = Math.ceil(candles.length / X_TICK_COUNT);
+const showTick = (_v: string, idx: number) => idx % tickEvery === 0;
+const formatPrice = (v: number) => v.toFixed(2);
+const formatVolume = (v: number) =>
+  v >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : `${Math.round(v / 1e3)}K`;
 
 const priceMinRaw = Math.min(...candles.map((c) => c.low));
 const priceMaxRaw = Math.max(...candles.map((c) => c.high));
@@ -124,33 +127,19 @@ const priceMax = priceMaxRaw + priceSpan * PRICE_PAD_SHARE;
 const volumeMaxRaw = Math.max(...candles.map((c) => c.volume)) || 1;
 const volumeMax = volumeMaxRaw * (1 + VOL_PAD_SHARE);
 
-const peakVolIdx = candles.reduce(
-  (best, c, i) => (c.volume > candles[best].volume ? i : best),
-  0,
-);
-
 const bullishCount = candles.filter((c) => c.close >= c.open).length;
 const bearishCount = candles.length - bullishCount;
 
 const TITLE = "candlestick-volume · javascript · muix · anyplot.ai";
-const SUBTITLE = `${candles.length} trading days (${candles[0]?.shortDate} – ${candles[candles.length - 1]?.fullDate}) · Price ${currencyPrefix}${priceMinRaw.toFixed(2)}–${currencyPrefix}${priceMaxRaw.toFixed(2)}`;
+const SUBTITLE = `${candles.length} periods (${candles[0].shortDate} – ${candles[candles.length - 1].fullDate}) · Price ${formatPrice(priceMinRaw)}–${formatPrice(priceMaxRaw)}`;
+const BEAR_HATCH = `repeating-linear-gradient(135deg, color-mix(in srgb, ${t.ink} 38%, transparent) 0 1.5px, transparent 1.5px 5px)`;
 
-let activeCursorIndex = peakVolIdx;
-
-function CandlesticksLayer() {
-  const xScale = useXScale("xPrice") as unknown as {
-    (v: string): number | undefined;
-    bandwidth?: () => number;
-  };
+function CandlesticksLayer({ activeIdx }: { activeIdx: number | null }) {
+  const xScale = useXScale("xPrice");
   const yScale = useYScale("yPrice");
   const { top, height } = useDrawingArea();
-  if (!xScale || !yScale || !xScale.bandwidth) return null;
-
   const bw = xScale.bandwidth();
   const bodyWidth = bw * BODY_WIDTH_SHARE;
-  const activeCandle = candles[activeCursorIndex];
-  const cursorBandX = activeCandle ? xScale(activeCandle.bandKey) : undefined;
-  const cursorCx = cursorBandX !== undefined ? cursorBandX + bw / 2 : undefined;
 
   return (
     <g>
@@ -173,10 +162,10 @@ function CandlesticksLayer() {
           />
         </pattern>
       </defs>
-      {cursorCx !== undefined && (
+      {activeIdx !== null && (
         <line
-          x1={cursorCx}
-          x2={cursorCx}
+          x1={xScale(candles[activeIdx].bandKey) + bw / 2}
+          x2={xScale(candles[activeIdx].bandKey) + bw / 2}
           y1={top}
           y2={top + height}
           stroke={t.inkSoft}
@@ -186,21 +175,9 @@ function CandlesticksLayer() {
         />
       )}
       {candles.map((c) => {
-        const xBand = xScale(c.bandKey);
         const yOpen = yScale(c.open);
         const yClose = yScale(c.close);
-        const yHigh = yScale(c.high);
-        const yLow = yScale(c.low);
-        if (
-          xBand === undefined ||
-          yOpen === undefined ||
-          yClose === undefined ||
-          yHigh === undefined ||
-          yLow === undefined
-        ) {
-          return null;
-        }
-        const cx = xBand + bw / 2;
+        const cx = xScale(c.bandKey) + bw / 2;
         const bullish = c.close >= c.open;
         const color = bullish ? t.palette[0] : t.palette[4];
         const bodyTop = Math.min(yOpen, yClose);
@@ -210,8 +187,8 @@ function CandlesticksLayer() {
             <line
               x1={cx}
               x2={cx}
-              y1={yHigh}
-              y2={yLow}
+              y1={yScale(c.high)}
+              y2={yScale(c.low)}
               stroke={color}
               strokeWidth={1.5}
               strokeLinecap="round"
@@ -243,21 +220,13 @@ function CandlesticksLayer() {
   );
 }
 
-function VolumeBarsLayer() {
-  const xScale = useXScale("xVolume") as unknown as {
-    (v: string): number | undefined;
-    bandwidth?: () => number;
-  };
+function VolumeBarsLayer({ activeIdx }: { activeIdx: number | null }) {
+  const xScale = useXScale("xVolume");
   const yScale = useYScale("yVolume");
   const { top, height } = useDrawingArea();
-  if (!xScale || !yScale || !xScale.bandwidth) return null;
-
   const bw = xScale.bandwidth();
   const barWidth = bw * BODY_WIDTH_SHARE;
-  const yZero = yScale(0) ?? top + height;
-  const activeCandle = candles[activeCursorIndex];
-  const cursorBandX = activeCandle ? xScale(activeCandle.bandKey) : undefined;
-  const cursorCx = cursorBandX !== undefined ? cursorBandX + bw / 2 : undefined;
+  const yZero = yScale(0);
 
   return (
     <g>
@@ -280,10 +249,10 @@ function VolumeBarsLayer() {
           />
         </pattern>
       </defs>
-      {cursorCx !== undefined && (
+      {activeIdx !== null && (
         <line
-          x1={cursorCx}
-          x2={cursorCx}
+          x1={xScale(candles[activeIdx].bandKey) + bw / 2}
+          x2={xScale(candles[activeIdx].bandKey) + bw / 2}
           y1={top}
           y2={top + height}
           stroke={t.inkSoft}
@@ -293,12 +262,10 @@ function VolumeBarsLayer() {
         />
       )}
       {candles.map((c) => {
-        const xBand = xScale(c.bandKey);
         const yTop = yScale(c.volume);
-        if (xBand === undefined || yTop === undefined) return null;
         const bullish = c.close >= c.open;
         const color = bullish ? t.palette[0] : t.palette[4];
-        const cx = xBand + bw / 2;
+        const cx = xScale(c.bandKey) + bw / 2;
         const barHeight = Math.max(yZero - yTop, 1.5);
         return (
           <g key={c.key}>
@@ -331,8 +298,9 @@ function VolumeBarsLayer() {
 }
 
 export default function Chart() {
-  const [hoverIdx, setHoverIdx] = useState<number>(peakVolIdx);
-  activeCursorIndex = hoverIdx;
+  // Cross-pane cursor and OHLCV readout: live while hovering in the HTML,
+  // absent from the static PNG, where nothing hovers.
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
 
   const { width, height } = window.ANYPLOT_SIZE;
   const chartsHeight = height - HEADER_H;
@@ -342,11 +310,9 @@ export default function Chart() {
   const plotLeft = MARGIN_LEFT + Y_AXIS_W;
   const plotWidth = width - plotLeft - MARGIN_RIGHT;
   const bandStep = plotWidth / candles.length;
-  const active = candles[hoverIdx] ?? candles[peakVolIdx];
-  const activeVolText =
-    active.volume >= 1e6
-      ? `${(active.volume / 1e6).toFixed(2)}M`
-      : `${Math.round(active.volume / 1e3)}K`;
+  const active = hoverIdx === null ? null : candles[hoverIdx];
+  const cursorX = hoverIdx === null ? 0 : plotLeft + (hoverIdx + 0.5) * bandStep;
+  const readoutOnRight = cursorX < plotLeft + plotWidth / 2;
 
   return (
     <div
@@ -404,7 +370,8 @@ export default function Chart() {
                 width: 14,
                 height: 14,
                 borderRadius: 3,
-                background: t.palette[4],
+                backgroundColor: t.palette[4],
+                backgroundImage: BEAR_HATCH,
                 border: `1.5px solid ${t.ink}`,
                 display: "inline-block",
               }}
@@ -413,23 +380,6 @@ export default function Chart() {
               Bearish (close &lt; open, n={bearishCount})
             </span>
           </div>
-          <div
-            style={{
-              padding: "3px 12px",
-              borderRadius: 6,
-              background: t.elevatedBg,
-              border: `1px solid ${t.grid}`,
-              color: t.ink,
-              fontSize: 14,
-            }}
-          >
-            <strong>Cursor ({active.fullDate}):</strong> O{" "}
-            {currencyPrefix}
-            {active.open.toFixed(2)} · H {currencyPrefix}
-            {active.high.toFixed(2)} · L {currencyPrefix}
-            {active.low.toFixed(2)} · C {currencyPrefix}
-            {active.close.toFixed(2)} · Vol {activeVolText}
-          </div>
         </div>
       </div>
 
@@ -437,13 +387,10 @@ export default function Chart() {
         style={{ position: "relative" }}
         onMouseMove={(event) => {
           const rect = event.currentTarget.getBoundingClientRect();
-          const localX = event.clientX - rect.left;
-          const idx = Math.floor((localX - plotLeft) / bandStep);
-          if (idx >= 0 && idx < candles.length) {
-            setHoverIdx(idx);
-          }
+          const idx = Math.floor((event.clientX - rect.left - plotLeft) / bandStep);
+          setHoverIdx(idx >= 0 && idx < candles.length ? idx : null);
         }}
-        onMouseLeave={() => setHoverIdx(peakVolIdx)}
+        onMouseLeave={() => setHoverIdx(null)}
       >
         <ChartsContainer
           width={width}
@@ -461,9 +408,8 @@ export default function Chart() {
               id: "xPrice",
               scaleType: "band",
               data: bandKeys,
-              height: 0,
-              valueFormatter: (v: string) => shortDateByBand[v] ?? v,
-              tickLabelInterval: (_v: string, idx: number) => idx % 6 === 0,
+              position: "none",
+              tickInterval: showTick,
             },
           ]}
           yAxis={[
@@ -473,8 +419,8 @@ export default function Chart() {
               max: priceMax,
               tickNumber: 6,
               width: Y_AXIS_W,
-              label: priceAxisLabel,
-              valueFormatter: (v: number) => `${currencyPrefix}${v.toFixed(0)}`,
+              label: CLOSE,
+              valueFormatter: (v: number) => v.toFixed(0),
               tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
               labelStyle: { fontSize: 16, fill: t.ink, fontWeight: 500 },
             },
@@ -490,7 +436,7 @@ export default function Chart() {
           }}
         >
           <ChartsGrid horizontal vertical />
-          <CandlesticksLayer />
+          <CandlesticksLayer activeIdx={hoverIdx} />
           <ChartsYAxis axisId="yPrice" />
         </ChartsContainer>
 
@@ -524,8 +470,8 @@ export default function Chart() {
               data: bandKeys,
               height: 60,
               label: DATE,
-              valueFormatter: (v: string) => shortDateByBand[v] ?? v,
-              tickLabelInterval: (_v: string, idx: number) => idx % 6 === 0,
+              valueFormatter: (v: string) => shortDateByBand[v],
+              tickInterval: showTick,
               tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
               labelStyle: { fontSize: 16, fill: t.ink, fontWeight: 500 },
             },
@@ -538,10 +484,7 @@ export default function Chart() {
               tickNumber: 4,
               width: Y_AXIS_W,
               label: VOLUME,
-              valueFormatter: (v: number) =>
-                v >= 1e6
-                  ? `${(v / 1e6).toFixed(1)}M`
-                  : `${Math.round(v / 1e3)}K`,
+              valueFormatter: formatVolume,
               tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
               labelStyle: { fontSize: 16, fill: t.ink, fontWeight: 500 },
             },
@@ -557,10 +500,33 @@ export default function Chart() {
           }}
         >
           <ChartsGrid horizontal vertical />
-          <VolumeBarsLayer />
+          <VolumeBarsLayer activeIdx={hoverIdx} />
           <ChartsXAxis axisId="xVolume" />
           <ChartsYAxis axisId="yVolume" />
         </ChartsContainer>
+
+        {active && (
+          <div
+            style={{
+              position: "absolute",
+              top: 8,
+              left: readoutOnRight ? cursorX + 12 : undefined,
+              right: readoutOnRight ? undefined : width - cursorX + 12,
+              padding: "6px 12px",
+              borderRadius: 6,
+              background: t.elevatedBg,
+              border: `1px solid ${t.grid}`,
+              color: t.ink,
+              fontSize: 14,
+              whiteSpace: "nowrap",
+              pointerEvents: "none",
+            }}
+          >
+            <strong>{active.fullDate}</strong> · O {formatPrice(active.open)} · H{" "}
+            {formatPrice(active.high)} · L {formatPrice(active.low)} · C{" "}
+            {formatPrice(active.close)} · Vol {formatVolume(active.volume)}
+          </div>
+        )}
       </div>
     </div>
   );
