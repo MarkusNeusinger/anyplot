@@ -3,7 +3,7 @@
 // Library: muix 9.16.0 | JavaScript 22.23.3
 // Quality: 82/100 | Updated: 2026-10-24
 
-import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
+import { ScatterChart } from "@mui/x-charts/ScatterChart";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
@@ -12,7 +12,8 @@ const t = window.ANYPLOT_TOKENS;
 const TITLE = "parliament-basic · javascript · muix · anyplot.ai";
 const TITLE_FONT_SIZE = 22;
 const TITLE_H = 44;
-const LEGEND_H = 38;
+const LEGEND_H = 40;
+const LABEL_FONT_SIZE = 16;
 const OUTER_R = 628;
 const INNER_R = 252;
 const TOP_PAD_SHARE = 0.14;
@@ -87,6 +88,16 @@ for (let partyIndex = 0; partyIndex < parties.length; partyIndex += 1) {
   }
 }
 
+const series = parties.map((party, partyIndex) => ({
+  id: `party-${partyIndex}`,
+  label: `${party.name} (${party.seats})`,
+  color: party.color,
+  data: assignedSeats
+    .filter((seat) => seat.partyIndex === partyIndex)
+    .map((seat, i) => ({ id: `${partyIndex}-${i}`, x: seat.x, y: seat.y })),
+  valueFormatter: () => `${party.seats} ${SEATS.toLowerCase()}`,
+}));
+
 const rowRadialGap = rowCount > 1 ? (OUTER_R - INNER_R) / (rowCount - 1) : OUTER_R - INNER_R;
 const minAngularSpacing = Math.min(...rowRadii.map((r, i) => (r * Math.PI) / rowCapacities[i]));
 const seatDataRadius = 0.42 * Math.min(rowRadialGap, minAngularSpacing);
@@ -133,11 +144,10 @@ const domain = {
 const domainWidth = domain.xMax - domain.xMin;
 const domainHeight = domain.yMax - domain.yMin;
 
-function ParliamentOverlay() {
+function MajorityOverlay() {
   const xScale = useXScale();
   const yScale = useYScale();
 
-  const pxRadius = Math.abs(Number(xScale(seatDataRadius)) - Number(xScale(0)));
   const labelX = (OUTER_R + topPad * 0.8) * Math.cos(outerTheta);
   const labelY = (OUTER_R + topPad * 0.8) * Math.sin(outerTheta);
   const boundaryPath = boundaryPoints
@@ -145,18 +155,7 @@ function ParliamentOverlay() {
     .join(" ");
 
   return (
-    <g data-drawing-container>
-      {assignedSeats.map((seat, i) => (
-        <circle
-          key={`seat-${i}`}
-          cx={xScale(seat.x)}
-          cy={yScale(seat.y)}
-          r={pxRadius}
-          fill={parties[seat.partyIndex].color}
-          stroke={t.pageBg}
-          strokeWidth={1}
-        />
-      ))}
+    <g>
       <path
         d={boundaryPath}
         fill="none"
@@ -165,14 +164,14 @@ function ParliamentOverlay() {
         strokeWidth={1.6}
         strokeDasharray="6,5"
       />
-      <text x={xScale(labelX)} y={yScale(labelY)} textAnchor="middle" fontSize={14} fill={t.inkSoft}>
+      <text x={xScale(labelX)} y={yScale(labelY)} textAnchor="middle" fontSize={LABEL_FONT_SIZE} fill={t.inkSoft}>
         {`Majority · ${majoritySeats}`}
       </text>
       <text
         x={xScale(0)}
         y={yScale(-bottomPad * 0.45)}
         textAnchor="middle"
-        fontSize={16}
+        fontSize={LABEL_FONT_SIZE}
         fontWeight={500}
         fill={t.ink}
       >
@@ -195,6 +194,7 @@ export default function Chart() {
   const drawH = Math.round(domainHeight * pxPerUnit);
   const hPad = Math.max(margin, Math.floor((availW - drawW) / 2));
   const vPad = Math.max(margin, Math.floor((availH - drawH) / 2));
+  const seatPxRadius = seatDataRadius * pxPerUnit;
 
   return (
     <div
@@ -219,37 +219,18 @@ export default function Chart() {
       >
         {TITLE}
       </div>
-      <div
-        style={{
-          height: LEGEND_H,
-          display: "flex",
-          alignItems: "center",
-          gap: "18px",
-          flexWrap: "wrap",
-          paddingLeft: "24px",
-        }}
-      >
-        {parties.map((party) => (
-          <div key={party.name} style={{ display: "flex", alignItems: "center", gap: "7px" }}>
-            <span
-              style={{
-                width: "12px",
-                height: "12px",
-                borderRadius: "50%",
-                backgroundColor: party.color,
-                display: "inline-block",
-              }}
-            />
-            <span style={{ fontSize: "14px", color: t.inkSoft }}>
-              {party.name} ({party.seats})
-            </span>
-          </div>
-        ))}
-      </div>
-      <ChartsContainer
+      <ScatterChart
         width={availW}
         height={availH}
-        series={[]}
+        series={series.map((s) => ({ ...s, markerSize: seatPxRadius }))}
+        slotProps={{
+          legend: {
+            direction: "horizontal",
+            position: { vertical: "top", horizontal: "start" },
+            sx: { fontSize: LABEL_FONT_SIZE, color: t.inkSoft, paddingLeft: "24px", minHeight: `${LEGEND_H}px` },
+          },
+        }}
+        sx={{ "& .MuiScatterChart-marker": { stroke: t.pageBg, strokeWidth: 1 } }}
         margin={{
           top: vPad,
           bottom: availH - drawH - vPad,
@@ -260,8 +241,8 @@ export default function Chart() {
         yAxis={[{ id: "y", scaleType: "linear", min: domain.yMin, max: domain.yMax, position: "none" }]}
         skipAnimation
       >
-        <ParliamentOverlay />
-      </ChartsContainer>
+        <MajorityOverlay />
+      </ScatterChart>
     </div>
   );
 }
