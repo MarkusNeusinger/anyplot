@@ -2,223 +2,426 @@
 // column-stratigraphic: Stratigraphic Column with Lithology Patterns
 // Library: muix 7.29.1 | JavaScript 22.22.3
 // Quality: 95/100 | Created: 2026-06-17
-//# anyplot-orientation: landscape
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 const SIZE = window.ANYPLOT_SIZE;
+
+// Constants
 const TITLE = "column-stratigraphic · javascript · muix · anyplot.ai";
 const FONT =
   '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
-
-// --- Lithology dictionary --------------------------------------------------
-// Each rock type maps to an Imprint colour + a distinct FGDC/USGS-style fill
-// pattern. The pattern (not the colour) is the primary lithology cue; the colour
-// is a redundant, colourblind-safe secondary. Sandstone takes brand green
-// (Imprint position 1 — always the first categorical series).
-const LITHO = {
-  sandstone: { name: "Sandstone", color: t.palette[0] }, // brand green
-  shale: { name: "Shale", color: t.palette[1] }, // lavender
-  limestone: { name: "Limestone", color: t.palette[2] }, // blue
-  siltstone: { name: "Siltstone", color: t.palette[3] }, // ochre
-  dolomite: { name: "Dolomite", color: t.palette[5] }, // cyan
-  conglomerate: { name: "Conglomerate", color: t.palette[4] }, // matte red
+const PATTERN_TYPES = ["stipple", "dash", "brick", "rhomb", "silt", "clasts"] as const;
+const LITHOLOGY_PATTERN_MAP: Record<string, (typeof PATTERN_TYPES)[number]> = {
+  Sandstone: "stipple",
+  Shale: "dash",
+  Limestone: "brick",
+  Dolomite: "rhomb",
+  Siltstone: "silt",
+  Conglomerate: "clasts",
 };
-const LITHO_ORDER = [
-  "sandstone",
-  "shale",
-  "limestone",
-  "siltstone",
-  "dolomite",
-  "conglomerate",
-];
 
-// --- Data: synthetic borehole section (deterministic, in-memory) -----------
-// A Western-Canada-style sedimentary succession: a young clastic/marine
-// Cretaceous package resting unconformably on Paleozoic carbonates, with a
-// second unconformity onto basal Cambrian clastics. Depth increases downward.
-const LAYERS = [
-  { top: 0, bottom: 28, litho: "sandstone", formation: "Horseshoe Canyon Fm", age: "Maastrichtian" },
-  { top: 28, bottom: 62, litho: "shale", formation: "Bearpaw Shale", age: "Campanian" },
-  { top: 62, bottom: 88, litho: "sandstone", formation: "Belly River Fm", age: "Campanian" },
-  { top: 88, bottom: 120, litho: "limestone", formation: "Rundle Group", age: "Mississippian", unconf: true },
-  { top: 120, bottom: 150, litho: "dolomite", formation: "Palliser Fm", age: "Famennian" },
-  { top: 150, bottom: 178, litho: "shale", formation: "Ireton Fm", age: "Frasnian" },
-  { top: 178, bottom: 214, litho: "limestone", formation: "Leduc Reef", age: "Frasnian" },
-  { top: 214, bottom: 246, litho: "siltstone", formation: "Beaverhill Lake Gp", age: "Givetian" },
-  { top: 246, bottom: 280, litho: "conglomerate", formation: "Basal Clastics", age: "Cambrian", unconf: true },
-];
-const MAXDEPTH = 280;
-
-// Geological periods spanned, grouped for the left-margin time brackets.
-const PERIODS = [
-  { name: "Cretaceous", age: "100–66 Ma", top: 0, bottom: 88 },
-  { name: "Carboniferous", age: "359–299 Ma", top: 88, bottom: 120 },
-  { name: "Devonian", age: "419–359 Ma", top: 120, bottom: 246 },
-  { name: "Cambrian", age: "539–485 Ma", top: 246, bottom: 280 },
-];
-
-// --- World layout (abstract 16×9 coordinate space, y increases upward) ------
 const COL_LEFT = 4.25;
 const COL_RIGHT = 7.7;
-const COL_TOP_Y = 7.7; // world-y of the shallowest depth (top of column)
-const COL_BOT_Y = 0.6; // world-y of the deepest depth (bottom of column)
+const COL_TOP_Y = 7.7;
+const COL_BOT_Y = 0.6;
 const AXIS_X = 4.05;
 const BRACKET_X = 2.95;
 const FORM_X = 7.95;
 const LEGEND_X = 11.3;
+const LEGEND_STEP = 0.72;
+const TICK_COUNT = 7;
+const WAVY_SAMPLES = 48;
 
-// Depth (m) → world-y. Depth 0 sits at the top, MAXDEPTH at the bottom.
-const depthToY = (d) => COL_TOP_Y - (d / MAXDEPTH) * (COL_TOP_Y - COL_BOT_Y);
+// Columns: set these to your data's column names
+const TOP = "Top depth (m)"; // role: top
+const BOTTOM = "Bottom depth (m)"; // role: bottom
+const LITHOLOGY = "Lithology"; // role: lithology
+const FORMATION = "Formation"; // role: formation
+const STAGE_AGE = "Stage age"; // role: age
+const PERIOD = "Geological period"; // role: extra
+const PERIOD_SPAN = "Period span"; // role: extra
+const UNCONFORMITY = "Unconformity"; // role: extra
 
-// --- SVG fill patterns (FGDC/USGS-style lithology motifs) -------------------
-// Each tile paints a faint colour wash (identity) plus a saturated motif in the
-// same Imprint hue. userSpaceOnUse keeps motifs a constant pixel size whatever
-// the layer thickness. Theme-independent: identical in light & dark.
-function Defs() {
-  return (
-    <defs>
-      {/* Sandstone — stipple dots */}
-      <pattern id="lith-sandstone" patternUnits="userSpaceOnUse" width={24} height={24}>
-        <rect width={24} height={24} fill={LITHO.sandstone.color} fillOpacity={0.26} />
-        {[[5, 5], [17, 9], [9, 17], [20, 20], [13, 13]].map(([x, y], i) => (
-          <circle key={i} cx={x} cy={y} r={2.1} fill={LITHO.sandstone.color} />
-        ))}
-      </pattern>
-      {/* Shale — fine horizontal laminations */}
-      <pattern id="lith-shale" patternUnits="userSpaceOnUse" width={24} height={16}>
-        <rect width={24} height={16} fill={LITHO.shale.color} fillOpacity={0.26} />
-        {[4, 9, 14].map((y, i) => (
-          <line key={i} x1={0} y1={y} x2={24} y2={y} stroke={LITHO.shale.color} strokeWidth={1.7} />
-        ))}
-      </pattern>
-      {/* Limestone — brickwork */}
-      <pattern id="lith-limestone" patternUnits="userSpaceOnUse" width={28} height={18}>
-        <rect width={28} height={18} fill={LITHO.limestone.color} fillOpacity={0.26} />
-        <g stroke={LITHO.limestone.color} strokeWidth={1.7}>
-          <line x1={0} y1={0} x2={28} y2={0} />
-          <line x1={0} y1={9} x2={28} y2={9} />
-          <line x1={0} y1={18} x2={28} y2={18} />
-          <line x1={14} y1={0} x2={14} y2={9} />
-          <line x1={0} y1={9} x2={0} y2={18} />
-          <line x1={28} y1={9} x2={28} y2={18} />
-        </g>
-      </pattern>
-      {/* Siltstone — short scattered dashes */}
-      <pattern id="lith-siltstone" patternUnits="userSpaceOnUse" width={26} height={26}>
-        <rect width={26} height={26} fill={LITHO.siltstone.color} fillOpacity={0.26} />
-        <g stroke={LITHO.siltstone.color} strokeWidth={1.8} strokeLinecap="round">
-          <line x1={3} y1={6} x2={10} y2={6} />
-          <line x1={15} y1={12} x2={22} y2={12} />
-          <line x1={6} y1={19} x2={13} y2={19} />
-          <line x1={18} y1={23} x2={25} y2={23} />
-        </g>
-      </pattern>
-      {/* Dolomite — rhombic (diagonal) brick */}
-      <pattern id="lith-dolomite" patternUnits="userSpaceOnUse" width={20} height={20}>
-        <rect width={20} height={20} fill={LITHO.dolomite.color} fillOpacity={0.26} />
-        <g stroke={LITHO.dolomite.color} strokeWidth={1.6}>
-          <line x1={0} y1={0} x2={20} y2={20} />
-          <line x1={0} y1={20} x2={20} y2={0} />
-          <line x1={-10} y1={10} x2={10} y2={-10} />
-          <line x1={10} y1={30} x2={30} y2={10} />
-        </g>
-      </pattern>
-      {/* Conglomerate — clast outlines (pebbles) */}
-      <pattern id="lith-conglomerate" patternUnits="userSpaceOnUse" width={32} height={32}>
-        <rect width={32} height={32} fill={LITHO.conglomerate.color} fillOpacity={0.26} />
-        <g fill="none" stroke={LITHO.conglomerate.color} strokeWidth={1.8}>
-          <circle cx={9} cy={9} r={5.5} />
-          <circle cx={24} cy={13} r={6.5} />
-          <circle cx={15} cy={25} r={5} />
-          <circle cx={30} cy={29} r={4} />
-        </g>
-      </pattern>
-    </defs>
-  );
-}
+// Data: replace this block with your own records
+const data = [
+  {
+    [TOP]: 0,
+    [BOTTOM]: 28,
+    [LITHOLOGY]: "Sandstone",
+    [FORMATION]: "Horseshoe Canyon Fm",
+    [STAGE_AGE]: "Maastrichtian",
+    [PERIOD]: "Cretaceous",
+    [PERIOD_SPAN]: "145–66 Ma",
+    [UNCONFORMITY]: false,
+  },
+  {
+    [TOP]: 28,
+    [BOTTOM]: 62,
+    [LITHOLOGY]: "Shale",
+    [FORMATION]: "Bearpaw Shale",
+    [STAGE_AGE]: "Campanian",
+    [PERIOD]: "Cretaceous",
+    [PERIOD_SPAN]: "145–66 Ma",
+    [UNCONFORMITY]: false,
+  },
+  {
+    [TOP]: 62,
+    [BOTTOM]: 88,
+    [LITHOLOGY]: "Sandstone",
+    [FORMATION]: "Belly River Fm",
+    [STAGE_AGE]: "Campanian",
+    [PERIOD]: "Cretaceous",
+    [PERIOD_SPAN]: "145–66 Ma",
+    [UNCONFORMITY]: false,
+  },
+  {
+    [TOP]: 88,
+    [BOTTOM]: 120,
+    [LITHOLOGY]: "Limestone",
+    [FORMATION]: "Rundle Group",
+    [STAGE_AGE]: "Mississippian",
+    [PERIOD]: "Carboniferous",
+    [PERIOD_SPAN]: "359–299 Ma",
+    [UNCONFORMITY]: true,
+  },
+  {
+    [TOP]: 120,
+    [BOTTOM]: 150,
+    [LITHOLOGY]: "Dolomite",
+    [FORMATION]: "Palliser Fm",
+    [STAGE_AGE]: "Famennian",
+    [PERIOD]: "Devonian",
+    [PERIOD_SPAN]: "419–359 Ma",
+    [UNCONFORMITY]: false,
+  },
+  {
+    [TOP]: 150,
+    [BOTTOM]: 178,
+    [LITHOLOGY]: "Shale",
+    [FORMATION]: "Ireton Fm",
+    [STAGE_AGE]: "Frasnian",
+    [PERIOD]: "Devonian",
+    [PERIOD_SPAN]: "419–359 Ma",
+    [UNCONFORMITY]: false,
+  },
+  {
+    [TOP]: 178,
+    [BOTTOM]: 214,
+    [LITHOLOGY]: "Limestone",
+    [FORMATION]: "Leduc Reef",
+    [STAGE_AGE]: "Frasnian",
+    [PERIOD]: "Devonian",
+    [PERIOD_SPAN]: "419–359 Ma",
+    [UNCONFORMITY]: false,
+  },
+  {
+    [TOP]: 214,
+    [BOTTOM]: 246,
+    [LITHOLOGY]: "Siltstone",
+    [FORMATION]: "Beaverhill Lake Gp",
+    [STAGE_AGE]: "Givetian",
+    [PERIOD]: "Devonian",
+    [PERIOD_SPAN]: "419–359 Ma",
+    [UNCONFORMITY]: false,
+  },
+  {
+    [TOP]: 246,
+    [BOTTOM]: 280,
+    [LITHOLOGY]: "Conglomerate",
+    [FORMATION]: "Basal Clastics",
+    [STAGE_AGE]: "Cambrian",
+    [PERIOD]: "Cambrian",
+    [PERIOD_SPAN]: "539–485 Ma",
+    [UNCONFORMITY]: true,
+  },
+];
 
-// Wavy path (sine) for unconformity contacts.
-function wavyPath(x1, x2, y, amp, wavelength) {
-  const n = Math.max(2, Math.round((x2 - x1) / 6));
-  let d = `M${x1.toFixed(1)} ${(y).toFixed(1)}`;
-  for (let i = 1; i <= n; i++) {
-    const x = x1 + ((x2 - x1) * i) / n;
-    const yy = y + amp * Math.sin(((x - x1) / wavelength) * 2 * Math.PI);
-    d += ` L${x.toFixed(1)} ${yy.toFixed(1)}`;
+// Plot: reads only data and the constants above
+const DEPTH_UNIT = TOP.match(/\(([^)]+)\)/)?.[1] ?? "";
+const depthUnitSuffix = DEPTH_UNIT ? ` ${DEPTH_UNIT}` : "";
+const DEPTH_AXIS_TITLE = TOP.replace(/^Top\s+/i, "").replace(/^d/, "D");
+
+const minDepth = Math.min(...data.map((d) => Number(d[TOP])));
+const maxDepth = Math.max(...data.map((d) => Number(d[BOTTOM])));
+const depthSpan = maxDepth - minDepth;
+const worldSpan = COL_TOP_Y - COL_BOT_Y;
+
+const LITHO_NAMES = Array.from(new Set(data.map((d) => String(d[LITHOLOGY]))));
+const LITHO_COLORS = Object.fromEntries(
+  LITHO_NAMES.map((name, idx) => [name, t.palette[idx]]),
+);
+const LITHO_IDS = Object.fromEntries(
+  LITHO_NAMES.map((name, idx) => [name, `lith-${idx}`]),
+);
+
+const usedPatterns = new Set<string>(
+  LITHO_NAMES.map((name) => LITHOLOGY_PATTERN_MAP[name]).filter(Boolean),
+);
+const unusedPatterns = PATTERN_TYPES.filter((p) => !usedPatterns.has(p));
+let unusedIdx = 0;
+const LITHO_PATTERNS: Record<string, (typeof PATTERN_TYPES)[number]> = {};
+for (const name of LITHO_NAMES) {
+  const mapped = LITHOLOGY_PATTERN_MAP[name];
+  if (mapped) {
+    LITHO_PATTERNS[name] = mapped;
+  } else {
+    if (unusedIdx >= unusedPatterns.length) {
+      throw new Error(`Exceeded available lithology patterns (${PATTERN_TYPES.length})`);
+    }
+    LITHO_PATTERNS[name] = unusedPatterns[unusedIdx++];
   }
-  return d;
 }
 
-// --- Column: patterned lithology blocks + contacts --------------------------
-function Column() {
-  const xs = useXScale();
-  const ys = useYScale();
+const LAYERS = data.map((d) => {
+  const top = Number(d[TOP]);
+  const bottom = Number(d[BOTTOM]);
+  const litho = String(d[LITHOLOGY]);
+  const yTopW = COL_TOP_Y - ((top - minDepth) / depthSpan) * worldSpan;
+  const yBotW = COL_TOP_Y - ((bottom - minDepth) / depthSpan) * worldSpan;
+  return {
+    top,
+    bottom,
+    thickness: bottom - top,
+    litho,
+    patternId: LITHO_IDS[litho],
+    formation: String(d[FORMATION]),
+    age: String(d[STAGE_AGE]),
+    period: String(d[PERIOD]),
+    periodSpan: String(d[PERIOD_SPAN]),
+    unconf: Boolean(d[UNCONFORMITY]),
+    yTopW,
+    yBotW,
+    yMidW: (yTopW + yBotW) / 2,
+  };
+});
+
+const PERIODS: {
+  name: string;
+  age: string;
+  top: number;
+  bottom: number;
+  yTopW: number;
+  yBotW: number;
+}[] = [];
+for (const layer of LAYERS) {
+  const prev = PERIODS[PERIODS.length - 1];
+  if (prev && prev.name === layer.period) {
+    prev.bottom = layer.bottom;
+    prev.yBotW = layer.yBotW;
+  } else {
+    PERIODS.push({
+      name: layer.period,
+      age: layer.periodSpan,
+      top: layer.top,
+      bottom: layer.bottom,
+      yTopW: layer.yTopW,
+      yBotW: layer.yBotW,
+    });
+  }
+}
+
+const rawStep = depthSpan / TICK_COUNT;
+const stepMag = Math.pow(10, Math.floor(Math.log10(rawStep)));
+const stepNorm = rawStep / stepMag;
+const tickStep = (stepNorm <= 1.5 ? 1 : stepNorm <= 3.5 ? 2 : 5) * stepMag;
+const DEPTH_TICKS = [];
+for (let d = Math.ceil(minDepth / tickStep) * tickStep; d <= maxDepth + 1e-9; d += tickStep) {
+  DEPTH_TICKS.push({
+    depth: Number(d.toFixed(4)),
+    yW: COL_TOP_Y - ((d - minDepth) / depthSpan) * worldSpan,
+  });
+}
+
+const SUBTITLE = `${LAYERS.length} stratigraphic units (${minDepth}–${maxDepth}${depthUnitSuffix}) · ${LITHO_NAMES.length} ${LITHOLOGY} types across ${PERIODS.length} periods`;
+const WAVY_STEPS = Array.from({ length: WAVY_SAMPLES + 1 }, (_, i) => i / WAVY_SAMPLES);
+
+function StratigraphicLayer() {
+  const xs = useXScale() as any;
+  const ys = useYScale() as any;
+
   const xL = xs(COL_LEFT);
   const xR = xs(COL_RIGHT);
+  const colW = xR - xL;
+  const axisX = xs(AXIS_X);
+  const bx = xs(BRACKET_X);
+  const xLead = xs(FORM_X) - 8;
+  const xText = xs(FORM_X);
+  const legX = xs(LEGEND_X);
+  const swW = xs(LEGEND_X + 0.85) - legX;
+  const swH = Math.abs(ys(0) - ys(0.42));
+
   return (
-    <g>
+    <g fontFamily={FONT}>
+      <defs>
+        {LITHO_NAMES.map((name) => {
+          const color = LITHO_COLORS[name];
+          const pid = LITHO_IDS[name];
+          const patType = LITHO_PATTERNS[name];
+          if (patType === "stipple") {
+            return (
+              <pattern key={pid} id={pid} patternUnits="userSpaceOnUse" width={24} height={24}>
+                <rect width={24} height={24} fill={color} fillOpacity={0.26} />
+                {[
+                  [5, 5],
+                  [17, 9],
+                  [9, 17],
+                  [20, 20],
+                  [13, 13],
+                ].map(([x, y], i) => (
+                  <circle key={i} cx={x} cy={y} r={2.1} fill={color} />
+                ))}
+              </pattern>
+            );
+          }
+          if (patType === "dash") {
+            return (
+              <pattern key={pid} id={pid} patternUnits="userSpaceOnUse" width={24} height={16}>
+                <rect width={24} height={16} fill={color} fillOpacity={0.26} />
+                {[4, 9, 14].map((y, i) => (
+                  <line key={i} x1={0} y1={y} x2={24} y2={y} stroke={color} strokeWidth={1.7} />
+                ))}
+              </pattern>
+            );
+          }
+          if (patType === "brick") {
+            return (
+              <pattern key={pid} id={pid} patternUnits="userSpaceOnUse" width={28} height={18}>
+                <rect width={28} height={18} fill={color} fillOpacity={0.26} />
+                <g stroke={color} strokeWidth={1.7}>
+                  <line x1={0} y1={0} x2={28} y2={0} />
+                  <line x1={0} y1={9} x2={28} y2={9} />
+                  <line x1={0} y1={18} x2={28} y2={18} />
+                  <line x1={14} y1={0} x2={14} y2={9} />
+                  <line x1={0} y1={9} x2={0} y2={18} />
+                  <line x1={28} y1={9} x2={28} y2={18} />
+                </g>
+              </pattern>
+            );
+          }
+          if (patType === "rhomb") {
+            return (
+              <pattern key={pid} id={pid} patternUnits="userSpaceOnUse" width={20} height={20}>
+                <rect width={20} height={20} fill={color} fillOpacity={0.26} />
+                <g stroke={color} strokeWidth={1.6}>
+                  <line x1={0} y1={0} x2={20} y2={20} />
+                  <line x1={0} y1={20} x2={20} y2={0} />
+                  <line x1={-10} y1={10} x2={10} y2={-10} />
+                  <line x1={10} y1={30} x2={30} y2={10} />
+                </g>
+              </pattern>
+            );
+          }
+          if (patType === "silt") {
+            return (
+              <pattern key={pid} id={pid} patternUnits="userSpaceOnUse" width={26} height={26}>
+                <rect width={26} height={26} fill={color} fillOpacity={0.26} />
+                <g stroke={color} strokeWidth={1.8} strokeLinecap="round">
+                  <line x1={3} y1={6} x2={10} y2={6} />
+                  <line x1={15} y1={12} x2={22} y2={12} />
+                  <line x1={6} y1={19} x2={13} y2={19} />
+                  <line x1={18} y1={23} x2={25} y2={23} />
+                </g>
+              </pattern>
+            );
+          }
+          return (
+            <pattern key={pid} id={pid} patternUnits="userSpaceOnUse" width={32} height={32}>
+              <rect width={32} height={32} fill={color} fillOpacity={0.26} />
+              <g fill="none" stroke={color} strokeWidth={1.8}>
+                <circle cx={9} cy={9} r={5.5} />
+                <circle cx={24} cy={13} r={6.5} />
+                <circle cx={15} cy={25} r={5} />
+                <circle cx={30} cy={29} r={4} />
+              </g>
+            </pattern>
+          );
+        })}
+      </defs>
+
+      {/* Column blocks */}
       {LAYERS.map((L, i) => {
-        const yTop = ys(depthToY(L.top));
-        const yBot = ys(depthToY(L.bottom));
+        const yTop = ys(L.yTopW);
+        const yBot = ys(L.yBotW);
         return (
           <rect
-            key={i}
+            key={`blk-${i}`}
             x={xL}
             y={yTop}
-            width={xR - xL}
+            width={colW}
             height={yBot - yTop}
-            fill={`url(#lith-${L.litho})`}
+            fill={`url(#${L.patternId})`}
             stroke={t.ink}
             strokeWidth={1.4}
           />
         );
       })}
-      {/* Contacts: solid = conformable, wavy = unconformity (hiatus) */}
+
+      {/* Contacts */}
       {LAYERS.map((L, i) => {
-        const y = ys(depthToY(L.top));
-        if (L.top === 0) return null;
-        return L.unconf ? (
+        if (L.top === minDepth) return null;
+        const y = ys(L.yTopW);
+        if (!L.unconf) {
+          return (
+            <line
+              key={`c-${i}`}
+              x1={xL}
+              y1={y}
+              x2={xR}
+              y2={y}
+              stroke={t.ink}
+              strokeWidth={1.6}
+            />
+          );
+        }
+        const dPath = WAVY_STEPS.map((frac, k) => {
+          const px = xL + colW * frac;
+          const py = y + 4.5 * Math.sin(frac * 5 * 2 * Math.PI);
+          return `${k === 0 ? "M" : "L"}${px.toFixed(1)} ${py.toFixed(1)}`;
+        }).join(" ");
+        return (
           <path
-            key={`c${i}`}
-            d={wavyPath(xL, xR, y, 4.5, (xR - xL) / 5)}
+            key={`c-${i}`}
+            d={dPath}
             fill="none"
             stroke={t.ink}
             strokeWidth={3}
             strokeLinecap="round"
           />
-        ) : (
-          <line key={`c${i}`} x1={xL} y1={y} x2={xR} y2={y} stroke={t.ink} strokeWidth={1.6} />
         );
       })}
-    </g>
-  );
-}
 
-// --- Depth scale (left axis, metres, increasing downward) -------------------
-function DepthAxis() {
-  const xs = useXScale();
-  const ys = useYScale();
-  const x = xs(AXIS_X);
-  const ticks = [];
-  for (let d = 0; d <= MAXDEPTH; d += 40) ticks.push(d);
-  return (
-    <g fontFamily={FONT}>
-      <line x1={x} y1={ys(COL_TOP_Y)} x2={x} y2={ys(COL_BOT_Y)} stroke={t.inkSoft} strokeWidth={1.6} />
-      {ticks.map((d) => {
-        const y = ys(depthToY(d));
+      {/* Depth axis */}
+      <line
+        x1={axisX}
+        y1={ys(COL_TOP_Y)}
+        x2={axisX}
+        y2={ys(COL_BOT_Y)}
+        stroke={t.inkSoft}
+        strokeWidth={1.6}
+      />
+      {DEPTH_TICKS.map((tk) => {
+        const y = ys(tk.yW);
         return (
-          <g key={d}>
-            <line x1={x - 8} y1={y} x2={x} y2={y} stroke={t.inkSoft} strokeWidth={1.6} />
-            <text x={x - 13} y={y} textAnchor="end" dominantBaseline="middle" fontSize={14} fill={t.inkSoft}>
-              {d}
+          <g key={`tk-${tk.depth}`}>
+            <line x1={axisX - 8} y1={y} x2={axisX} y2={y} stroke={t.inkSoft} strokeWidth={1.6} />
+            <text
+              x={axisX - 13}
+              y={y}
+              textAnchor="end"
+              dominantBaseline="middle"
+              fontSize={14}
+              fill={t.inkSoft}
+            >
+              {tk.depth}
             </text>
           </g>
         );
       })}
       <text
-        x={x - 13}
+        x={axisX - 13}
         y={ys(COL_TOP_Y) - 22}
         textAnchor="end"
         dominantBaseline="middle"
@@ -226,160 +429,172 @@ function DepthAxis() {
         fontWeight={600}
         fill={t.ink}
       >
-        Depth (m)
+        {DEPTH_AXIS_TITLE}
       </text>
-    </g>
-  );
-}
 
-// --- Geological time brackets (far left) ------------------------------------
-function Periods() {
-  const xs = useXScale();
-  const ys = useYScale();
-  const bx = xs(BRACKET_X);
-  const cap = 10;
-  return (
-    <g fontFamily={FONT}>
+      {/* Geological periods */}
       {PERIODS.map((p, i) => {
-        const yTop = ys(depthToY(p.top));
-        const yBot = ys(depthToY(p.bottom));
+        const yTop = ys(p.yTopW);
+        const yBot = ys(p.yBotW);
         const yMid = (yTop + yBot) / 2;
         return (
-          <g key={i}>
+          <g key={`p-${i}`}>
             <line x1={bx} y1={yTop + 1} x2={bx} y2={yBot - 1} stroke={t.inkSoft} strokeWidth={1.8} />
-            <line x1={bx} y1={yTop + 1} x2={bx - cap} y2={yTop + 1} stroke={t.inkSoft} strokeWidth={1.8} />
-            <line x1={bx} y1={yBot - 1} x2={bx - cap} y2={yBot - 1} stroke={t.inkSoft} strokeWidth={1.8} />
-            <text x={bx - 16} y={yMid - 9} textAnchor="end" dominantBaseline="middle" fontSize={16} fontWeight={600} fill={t.ink}>
+            <line x1={bx} y1={yTop + 1} x2={bx - 10} y2={yTop + 1} stroke={t.inkSoft} strokeWidth={1.8} />
+            <line x1={bx} y1={yBot - 1} x2={bx - 10} y2={yBot - 1} stroke={t.inkSoft} strokeWidth={1.8} />
+            <text
+              x={bx - 16}
+              y={yMid - 10}
+              textAnchor="end"
+              dominantBaseline="middle"
+              fontSize={16}
+              fontWeight={600}
+              fill={t.ink}
+            >
               {p.name}
             </text>
-            <text x={bx - 16} y={yMid + 11} textAnchor="end" dominantBaseline="middle" fontSize={12.5} fill={t.inkSoft}>
+            <text
+              x={bx - 16}
+              y={yMid + 11}
+              textAnchor="end"
+              dominantBaseline="middle"
+              fontSize={14}
+              fill={t.inkSoft}
+            >
               {p.age}
             </text>
           </g>
         );
       })}
-    </g>
-  );
-}
 
-// --- Formation labels (right of each layer, with leader lines) --------------
-function Formations() {
-  const xs = useXScale();
-  const ys = useYScale();
-  const xR = xs(COL_RIGHT);
-  const xLead = xs(FORM_X) - 8;
-  const xText = xs(FORM_X);
-  return (
-    <g fontFamily={FONT}>
+      {/* Formation labels */}
       {LAYERS.map((L, i) => {
-        const yMid = ys(depthToY((L.top + L.bottom) / 2));
+        const yMid = ys(L.yMidW);
         return (
-          <g key={i}>
+          <g key={`fm-${i}`}>
             <line x1={xR} y1={yMid} x2={xLead} y2={yMid} stroke={t.grid} strokeWidth={1.2} />
-            <text x={xText} y={yMid - 9} dominantBaseline="middle" fontSize={16} fontWeight={600} fill={t.ink}>
+            <text
+              x={xText}
+              y={yMid - 10}
+              dominantBaseline="middle"
+              fontSize={16}
+              fontWeight={600}
+              fill={t.ink}
+            >
               {L.formation}
             </text>
-            <text x={xText} y={yMid + 11} dominantBaseline="middle" fontSize={13} fill={t.inkSoft}>
-              {`${L.age} · ${L.bottom - L.top} m`}
+            <text
+              x={xText}
+              y={yMid + 11}
+              dominantBaseline="middle"
+              fontSize={14}
+              fill={t.inkSoft}
+            >
+              {`${L.age} · ${L.thickness}${depthUnitSuffix}`}
             </text>
           </g>
         );
       })}
-    </g>
-  );
-}
 
-// --- Legend: lithology patterns + contact types -----------------------------
-function Legend() {
-  const xs = useXScale();
-  const ys = useYScale();
-  const x = xs(LEGEND_X);
-  const swW = xs(LEGEND_X + 0.85) - xs(LEGEND_X);
-  const top = COL_TOP_Y;
-  const step = 0.72;
-  const rowY = (i) => ys(top - i * step);
-  const swH = Math.abs(ys(0) - ys(0.42));
-  return (
-    <g fontFamily={FONT}>
-      <text x={x} y={ys(top + 0.55)} fontSize={18} fontWeight={700} fill={t.ink}>
-        Lithology
+      {/* Legend */}
+      <text x={legX} y={ys(COL_TOP_Y + 0.55)} fontSize={18} fontWeight={700} fill={t.ink}>
+        {LITHOLOGY}
       </text>
-      {LITHO_ORDER.map((key, i) => {
-        const y = rowY(i);
+      {LITHO_NAMES.map((name, i) => {
+        const y = ys(COL_TOP_Y - i * LEGEND_STEP);
         return (
-          <g key={key}>
-            <rect x={x} y={y - swH / 2} width={swW} height={swH} fill={`url(#lith-${key})`} stroke={t.ink} strokeWidth={1.2} />
-            <text x={x + swW + 14} y={y} dominantBaseline="middle" fontSize={15} fill={t.inkSoft}>
-              {LITHO[key].name}
+          <g key={`leg-${name}`}>
+            <rect
+              x={legX}
+              y={y - swH / 2}
+              width={swW}
+              height={swH}
+              fill={`url(#${LITHO_IDS[name]})`}
+              stroke={t.ink}
+              strokeWidth={1.2}
+            />
+            <text x={legX + swW + 14} y={y} dominantBaseline="middle" fontSize={15} fill={t.inkSoft}>
+              {name}
             </text>
           </g>
         );
       })}
-      {/* Contact-type key */}
-      <text x={x} y={ys(top - LITHO_ORDER.length * step - 0.15)} fontSize={16} fontWeight={700} fill={t.ink}>
+
+      <text
+        x={legX}
+        y={ys(COL_TOP_Y - LITHO_NAMES.length * LEGEND_STEP - 0.15)}
+        fontSize={16}
+        fontWeight={700}
+        fill={t.ink}
+      >
         Contacts
       </text>
-      {(() => {
-        const yC = rowY(LITHO_ORDER.length + 0.6);
-        return (
-          <g>
-            <line x1={x} y1={yC} x2={x + swW} y2={yC} stroke={t.ink} strokeWidth={2} />
-            <text x={x + swW + 14} y={yC} dominantBaseline="middle" fontSize={15} fill={t.inkSoft}>
-              Conformable
-            </text>
-          </g>
-        );
-      })()}
-      {(() => {
-        const yC = rowY(LITHO_ORDER.length + 1.4);
-        return (
-          <g>
-            <path d={wavyPath(x, x + swW, yC, 3.5, swW / 2.5)} fill="none" stroke={t.ink} strokeWidth={2.4} />
-            <text x={x + swW + 14} y={yC} dominantBaseline="middle" fontSize={15} fill={t.inkSoft}>
-              Unconformity (hiatus)
-            </text>
-          </g>
-        );
-      })()}
-    </g>
-  );
-}
+      <g>
+        <line
+          x1={legX}
+          y1={ys(COL_TOP_Y - (LITHO_NAMES.length + 0.6) * LEGEND_STEP)}
+          x2={legX + swW}
+          y2={ys(COL_TOP_Y - (LITHO_NAMES.length + 0.6) * LEGEND_STEP)}
+          stroke={t.ink}
+          strokeWidth={2}
+        />
+        <text
+          x={legX + swW + 14}
+          y={ys(COL_TOP_Y - (LITHO_NAMES.length + 0.6) * LEGEND_STEP)}
+          dominantBaseline="middle"
+          fontSize={15}
+          fill={t.inkSoft}
+        >
+          Conformable
+        </text>
+      </g>
+      <g>
+        <path
+          d={WAVY_STEPS.map((frac, k) => {
+            const px = legX + swW * frac;
+            const py =
+              ys(COL_TOP_Y - (LITHO_NAMES.length + 1.4) * LEGEND_STEP) +
+              3.5 * Math.sin(frac * 2.5 * 2 * Math.PI);
+            return `${k === 0 ? "M" : "L"}${px.toFixed(1)} ${py.toFixed(1)}`;
+          }).join(" ")}
+          fill="none"
+          stroke={t.ink}
+          strokeWidth={2.4}
+        />
+        <text
+          x={legX + swW + 14}
+          y={ys(COL_TOP_Y - (LITHO_NAMES.length + 1.4) * LEGEND_STEP)}
+          dominantBaseline="middle"
+          fontSize={15}
+          fill={t.inkSoft}
+        >
+          Unconformity (hiatus)
+        </text>
+      </g>
 
-// --- Title / subtitle -------------------------------------------------------
-function TitleBlock() {
-  const xs = useXScale();
-  const ys = useYScale();
-  return (
-    <g fontFamily={FONT}>
-      <text x={xs(0.55)} y={ys(8.62)} fontSize={26} fontWeight={600} fill={t.ink}>
+      {/* Title block */}
+      <text x={xs(0.55)} y={ys(8.62)} fontSize={22} fontWeight={600} fill={t.ink}>
         {TITLE}
       </text>
       <text x={xs(0.55)} y={ys(8.2)} fontSize={15} fill={t.inkSoft}>
-        Synthetic borehole section · Western Canada Sedimentary Basin · lithology symbols after FGDC/USGS
+        {SUBTITLE}
       </text>
     </g>
   );
 }
 
-// --- Chart (default-exported component — the harness mounts it) -------------
 export default function Chart() {
   return (
-    <ChartContainer
+    <ChartsContainer
       width={SIZE.width}
       height={SIZE.height}
       margin={{ top: 12, right: 12, bottom: 12, left: 12 }}
       series={[]}
-      xAxis={[{ scaleType: "linear", min: 0, max: 16 }]}
-      yAxis={[{ scaleType: "linear", min: 0, max: 9 }]}
+      xAxis={[{ scaleType: "linear", min: 0, max: 16, position: "none" }]}
+      yAxis={[{ scaleType: "linear", min: 0, max: 9, position: "none" }]}
       skipAnimation
     >
-      <Defs />
-      <Column />
-      <DepthAxis />
-      <Periods />
-      <Formations />
-      <Legend />
-      <TitleBlock />
-    </ChartContainer>
+      <StratigraphicLayer />
+    </ChartsContainer>
   );
 }
