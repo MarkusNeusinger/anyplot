@@ -102,7 +102,6 @@ const AXES = axisLabels.map((label, idx) => {
   return {
     id: label,
     label,
-    index: idx,
     angle,
     cos: Math.cos(rad),
     sin: Math.sin(rad),
@@ -115,7 +114,6 @@ interface HiveNode {
   id: string;
   axis: string;
   degree: number;
-  weightSum: number;
   r: number;
   x: number;
   y: number;
@@ -128,7 +126,6 @@ for (let i = 0; i < nodes.length; i += 1) {
     id: row[NODE],
     axis: row[LAYER],
     degree: 0,
-    weightSum: 0,
     r: INNER_R,
     x: 0,
     y: 0,
@@ -139,15 +136,8 @@ for (let i = 0; i < data.length; i += 1) {
   const row = data[i];
   const srcNode = nodeMap.get(row[SOURCE]);
   const tgtNode = nodeMap.get(row[TARGET]);
-  const w = row[WEIGHT];
-  if (srcNode) {
-    srcNode.degree += 1;
-    srcNode.weightSum += w;
-  }
-  if (tgtNode) {
-    tgtNode.degree += 1;
-    tgtNode.weightSum += w;
-  }
+  if (srcNode) srcNode.degree += 1;
+  if (tgtNode) tgtNode.degree += 1;
 }
 
 const allNodes = Array.from(nodeMap.values());
@@ -286,7 +276,7 @@ function HiveGeometry() {
               textAnchor="middle"
               dominantBaseline="middle"
             >
-              degree {nodesOnAxis[0].degree}→
+              ranked by degree {nodesOnAxis[0].degree}→
               {nodesOnAxis[nodesOnAxis.length - 1].degree}
             </text>
           </g>
@@ -342,7 +332,7 @@ export default function Chart() {
           }}
         >
           {allNodes.length} nodes across {AXES.length} axes ({LAYER}) ·{" "}
-          {data.length} edges · radial distance encodes node degree (
+          {data.length} edges · nodes spaced outward by degree rank (degree{" "}
           {MIN_DEGREE} → {MAX_DEGREE})
         </div>
         <div
