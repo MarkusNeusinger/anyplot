@@ -1,6 +1,6 @@
 // anyplot.ai
 // circlepacking-basic: Circle Packing Chart
-// Library: muix 9.0.0 | JavaScript 22.23.2
+// Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 92/100 | Created: 2026-09-02
 //# anyplot-orientation: square
 
@@ -10,13 +10,26 @@ import { ChartsText } from "@mui/x-charts/ChartsText";
 
 const t = window.ANYPLOT_TOKENS;
 
-// Columns
-const ID = "Node ID";
-const PARENT = "Parent ID";
-const LABEL = "Asset Class / Holding";
-const VALUE = "Market value ($K)";
+// Constants
+const TITLE = "circlepacking-basic · javascript · muix · anyplot.ai";
+const MARGIN = { top: 16, right: 24, bottom: 24, left: 24 };
+const HEADER_HEIGHT = 136;
+const LEAF_RADIUS_SCALE = 8;
+const SIBLING_PADDING_RATIO = 0.06;
+const PARENT_PADDING_RATIO = 0.08;
+const PACK_ATTRACTION = 0.02;
+const PACK_ITERATIONS = 400;
+const SEED_SPREAD = 1.4;
+const INNER_FILL_OPACITY = 0.14;
+const LEAF_FILL_OPACITY = 0.92;
 
-// Data
+// Columns: set these to your data's column names
+const ID = "Node ID"; // role: id
+const PARENT = "Parent ID"; // role: parent
+const LABEL = "Asset class / holding"; // role: label
+const VALUE = "Market value ($K)"; // role: value
+
+// Data: replace this block with your own records
 const data = [
   { [ID]: "portfolio", [PARENT]: null, [LABEL]: "Portfolio", [VALUE]: null },
   { [ID]: "equities", [PARENT]: "portfolio", [LABEL]: "Equities", [VALUE]: null },
@@ -40,23 +53,16 @@ const data = [
   { [ID]: "treasury-bills", [PARENT]: "cash", [LABEL]: "Treasury Bills", [VALUE]: 40 },
 ];
 
-// Constants
-const TITLE = "circlepacking-basic · javascript · muix · anyplot.ai";
-const MARGIN = { top: 168, right: 24, bottom: 24, left: 24 };
-const LEAF_RADIUS_SCALE = 8;
-const SIBLING_PADDING_RATIO = 0.06;
-const PARENT_PADDING_RATIO = 0.08;
-const PACK_ATTRACTION = 0.02;
-const PACK_ITERATIONS = 400;
-const SEED_SPREAD = 1.4;
+// Plot: reads only data and the constants above
 const VALUE_UNIT = VALUE.match(/\(([^)]+)\)/)?.[1] ?? "";
+const unitSuffix = VALUE_UNIT ? ` ${VALUE_UNIT}` : "";
 
 const nodes = data.map((row) => ({
-  id: row[ID],
-  parent: row[PARENT],
-  label: row[LABEL],
-  value: row[VALUE] ?? 0,
-  children: [],
+  id: String(row[ID]),
+  parent: row[PARENT] == null ? null : String(row[PARENT]),
+  label: String(row[LABEL]),
+  value: Number(row[VALUE] ?? 0),
+  children: [] as any[],
   depth: 0,
   x: 0,
   y: 0,
@@ -64,9 +70,8 @@ const nodes = data.map((row) => ({
   cx: 0,
   cy: 0,
   color: t.palette[0],
-  fill: t.palette[0],
   ink: "#1A1A17",
-  lines: [row[LABEL]],
+  lines: [String(row[LABEL])],
 }));
 
 const byId = new Map(nodes.map((n) => [n.id, n]));
@@ -75,7 +80,7 @@ for (const node of nodes) {
   if (node.parent == null) {
     root = node;
   } else {
-    byId.get(node.parent).children.push(node);
+    byId.get(node.parent)?.children.push(node);
   }
 }
 
@@ -93,7 +98,34 @@ root.children.forEach((branch, i) => {
 });
 for (const node of order) {
   if (node.depth > 1 && node.parent != null) {
-    node.color = byId.get(node.parent).color;
+    const parentNode = byId.get(node.parent);
+    if (parentNode) node.color = parentNode.color;
+  }
+  const hexNum = parseInt(node.color.slice(1), 16);
+  const rgb = [(hexNum >> 16) & 255, (hexNum >> 8) & 255, hexNum & 255];
+  const lin = rgb.map((v) => {
+    const s = v / 255;
+    return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+  });
+  const lum = 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2];
+  node.ink = lum > 0.18 ? "#1A1A17" : "#FAF8F1";
+
+  const words = node.label.split(" ");
+  if (words.length <= 1 || node.label.length <= 10) {
+    node.lines = [node.label];
+  } else {
+    let best = [node.label];
+    let bestDiff = Infinity;
+    for (let k = 1; k < words.length; k++) {
+      const l1 = words.slice(0, k).join(" ");
+      const l2 = words.slice(k).join(" ");
+      const diff = Math.abs(l1.length - l2.length);
+      if (diff < bestDiff) {
+        bestDiff = diff;
+        best = [l1, l2];
+      }
+    }
+    node.lines = best;
   }
 }
 
@@ -172,43 +204,7 @@ for (const node of order) {
   }
 }
 
-for (const branch of root.children) {
-  const maxLeafValue = Math.max(...branch.children.map((c) => c.value));
-  const hexNum = parseInt(branch.color.slice(1), 16);
-  const baseRgb = [(hexNum >> 16) & 255, (hexNum >> 8) & 255, hexNum & 255];
-
-  for (const leaf of branch.children) {
-    const tintFactor = maxLeafValue > 0 ? (1 - leaf.value / maxLeafValue) * 0.58 : 0;
-    const rgb = baseRgb.map((c) => Math.round(c + (255 - c) * tintFactor));
-    leaf.fill = `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
-    const lin = rgb.map((v) => {
-      const s = v / 255;
-      return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
-    });
-    const lum = 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2];
-    leaf.ink = lum > 0.45 ? "#1A1A17" : "#FAF8F1";
-
-    const words = leaf.label.split(" ");
-    if (words.length <= 1 || leaf.label.length <= 10) {
-      leaf.lines = [leaf.label];
-    } else {
-      let best = [leaf.label];
-      let bestDiff = Infinity;
-      for (let k = 1; k < words.length; k++) {
-        const l1 = words.slice(0, k).join(" ");
-        const l2 = words.slice(k).join(" ");
-        const diff = Math.abs(l1.length - l2.length);
-        if (diff < bestDiff) {
-          bestDiff = diff;
-          best = [l1, l2];
-        }
-      }
-      leaf.lines = best;
-    }
-  }
-}
-
-const SUBTITLE = `${root.label} breakdown across ${root.children.length} categories ($${root.value.toLocaleString()}K total · circle area ∝ ${VALUE.toLowerCase()})`;
+const SUBTITLE = `${root.label} · ${root.children.length} groups · total ${root.value.toLocaleString()}${unitSuffix} · circle area ∝ ${VALUE}`;
 
 function CirclePacking() {
   const { left, top, width, height } = useDrawingArea();
@@ -217,100 +213,101 @@ function CirclePacking() {
   const originX = left + width / 2;
   const originY = top + height / 2;
 
-  const rootCx = originX + root.cx * scale;
-  const rootCy = originY + root.cy * scale;
-  const rootR = root.r * scale;
-
   return (
     <g>
-      <circle
-        cx={rootCx}
-        cy={rootCy}
-        r={rootR}
-        fill="none"
-        stroke={t.inkSoft}
-        strokeOpacity={0.35}
-        strokeWidth={1.5}
-      />
-      {root.children.map((branch) => {
-        const bCx = originX + branch.cx * scale;
-        const bCy = originY + branch.cy * scale;
-        const bR = branch.r * scale;
-        return (
-          <g key={branch.id}>
+      {order.map((node) => {
+        const nCx = originX + node.cx * scale;
+        const nCy = originY + node.cy * scale;
+        const nR = node.r * scale;
+        const formattedVal = `${node.value.toLocaleString()}${unitSuffix}`;
+
+        if (node.depth === 0) {
+          return (
             <circle
-              cx={bCx}
-              cy={bCy}
-              r={bR}
-              fill={branch.color}
-              fillOpacity={0.14}
-              stroke={branch.color}
+              key={node.id}
+              cx={nCx}
+              cy={nCy}
+              r={nR}
+              fill="none"
+              stroke={t.inkSoft}
+              strokeOpacity={0.35}
+              strokeWidth={1.5}
+            />
+          );
+        }
+
+        if (node.children.length > 0) {
+          return (
+            <circle
+              key={node.id}
+              cx={nCx}
+              cy={nCy}
+              r={nR}
+              fill={node.color}
+              fillOpacity={INNER_FILL_OPACITY}
+              stroke={node.color}
               strokeOpacity={0.85}
               strokeWidth={2}
             >
-              <title>{`${branch.label}: $${branch.value}K`}</title>
+              <title>{`${node.label}: ${formattedVal}`}</title>
             </circle>
-            {branch.children.map((leaf) => {
-              const lCx = originX + leaf.cx * scale;
-              const lCy = originY + leaf.cy * scale;
-              const lR = leaf.r * scale;
-              const nameSize = Math.max(14, Math.min(17, Math.round(lR * 0.22)));
-              const valueSize = 14;
-              const maxLineChars = Math.max(...leaf.lines.map((line) => line.length));
-              const reqHalfWidth = (maxLineChars * nameSize * 0.56) / 2;
-              const showName = lR >= 32 && reqHalfWidth <= lR * 0.9;
-              const showValue = showName && lR >= 46;
-              const lineHeightEm = 1.18;
-              const nameHalfHeight = (leaf.lines.length * nameSize * lineHeightEm) / 2;
-              const valueHalfHeight = (valueSize * lineHeightEm) / 2;
-              const gap = nameSize * 0.28;
-              const nameCenterY = showValue ? lCy - valueHalfHeight - gap / 2 : lCy;
-              const valueCenterY = lCy + nameHalfHeight + gap / 2;
-              const formattedVal = VALUE_UNIT === "$K" ? `$${leaf.value}K` : `${leaf.value}`;
+          );
+        }
 
-              return (
-                <g key={leaf.id}>
-                  <circle
-                    cx={lCx}
-                    cy={lCy}
-                    r={lR}
-                    fill={leaf.fill}
-                    stroke={t.pageBg}
-                    strokeWidth={2}
-                  >
-                    <title>{`${branch.label} / ${leaf.label}: ${formattedVal}`}</title>
-                  </circle>
-                  {showName && (
-                    <ChartsText
-                      text={leaf.lines.join("\n")}
-                      x={lCx}
-                      y={nameCenterY}
-                      style={{
-                        fontSize: nameSize,
-                        fontWeight: 600,
-                        fill: leaf.ink,
-                        textAnchor: "middle",
-                        dominantBaseline: "central",
-                      }}
-                    />
-                  )}
-                  {showValue && (
-                    <ChartsText
-                      text={formattedVal}
-                      x={lCx}
-                      y={valueCenterY}
-                      opacity={0.88}
-                      style={{
-                        fontSize: valueSize,
-                        fill: leaf.ink,
-                        textAnchor: "middle",
-                        dominantBaseline: "central",
-                      }}
-                    />
-                  )}
-                </g>
-              );
-            })}
+        const nameSize = Math.max(14, Math.min(17, Math.round(nR * 0.22)));
+        const valueSize = 14;
+        const maxLineChars = Math.max(...node.lines.map((line: string) => line.length));
+        const reqHalfWidth = (maxLineChars * nameSize * 0.56) / 2;
+        const showName = nR >= 32 && reqHalfWidth <= nR * 0.9;
+        const showValue = showName && nR >= 46;
+        const lineHeightEm = 1.18;
+        const nameHalfHeight = (node.lines.length * nameSize * lineHeightEm) / 2;
+        const valueHalfHeight = (valueSize * lineHeightEm) / 2;
+        const gap = nameSize * 0.28;
+        const nameCenterY = showValue ? nCy - valueHalfHeight - gap / 2 : nCy;
+        const valueCenterY = nCy + nameHalfHeight + gap / 2;
+
+        return (
+          <g key={node.id}>
+            <circle
+              cx={nCx}
+              cy={nCy}
+              r={nR}
+              fill={node.color}
+              fillOpacity={LEAF_FILL_OPACITY}
+              stroke={t.pageBg}
+              strokeWidth={2}
+            >
+              <title>{`${node.label}: ${formattedVal}`}</title>
+            </circle>
+            {showName && (
+              <ChartsText
+                text={node.lines.join("\n")}
+                x={nCx}
+                y={nameCenterY}
+                style={{
+                  fontSize: nameSize,
+                  fontWeight: 600,
+                  fill: node.ink,
+                  textAnchor: "middle",
+                  dominantBaseline: "central",
+                }}
+              />
+            )}
+            {showValue && (
+              <ChartsText
+                text={formattedVal}
+                x={nCx}
+                y={valueCenterY}
+                opacity={0.92}
+                style={{
+                  fontSize: valueSize,
+                  fill: node.ink,
+                  textAnchor: "middle",
+                  dominantBaseline: "central",
+                }}
+              />
+            )}
           </g>
         );
       })}
@@ -320,37 +317,74 @@ function CirclePacking() {
 
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
-  const legendWidth = width - MARGIN.left - MARGIN.right;
-  const itemWidth = legendWidth / root.children.length;
+  const chartHeight = height - HEADER_HEIGHT;
 
   return (
-    <ChartsContainer width={width} height={height} series={[]} margin={MARGIN} skipAnimation>
-      <text x={width / 2} y={44} textAnchor="middle" fontSize={22} fontWeight={600} fill={t.ink}>
-        {TITLE}
-      </text>
-      <text x={width / 2} y={74} textAnchor="middle" fontSize={15} fill={t.inkSoft}>
-        {SUBTITLE}
-      </text>
-      <g>
-        {root.children.map((branch, i) => {
-          const itemX = MARGIN.left + itemWidth * i;
-          return (
-            <g key={branch.id}>
-              <circle cx={itemX + 10} cy={116} r={7} fill={branch.color} />
-              <text
-                x={itemX + 24}
-                y={116}
-                dominantBaseline="middle"
-                fontSize={14}
-                fill={t.inkSoft}
-              >
-                {`${branch.label} ($${branch.value}K)`}
-              </text>
-            </g>
-          );
-        })}
-      </g>
-      <CirclePacking />
-    </ChartsContainer>
+    <div
+      style={{
+        width,
+        height,
+        backgroundColor: t.pageBg,
+        display: "flex",
+        flexDirection: "column",
+        fontFamily: "Inter, system-ui, sans-serif",
+      }}
+    >
+      <div
+        style={{
+          height: HEADER_HEIGHT,
+          padding: "18px 28px 0 28px",
+          boxSizing: "border-box",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+        }}
+      >
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.25 }}>
+          {TITLE}
+        </div>
+        <div style={{ fontSize: 15, color: t.inkSoft, marginTop: 4, lineHeight: 1.3 }}>
+          {SUBTITLE}
+        </div>
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            justifyContent: "center",
+            gap: "8px 22px",
+            marginTop: 12,
+            fontSize: 14,
+            color: t.inkSoft,
+          }}
+        >
+          {root.children.map((branch) => (
+            <div key={branch.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span
+                style={{
+                  width: 14,
+                  height: 14,
+                  borderRadius: "50%",
+                  backgroundColor: branch.color,
+                  opacity: LEAF_FILL_OPACITY,
+                  display: "inline-block",
+                }}
+              />
+              <span>{`${branch.label} (${branch.value.toLocaleString()}${unitSuffix})`}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <ChartsContainer
+        width={width}
+        height={chartHeight}
+        series={[]}
+        xAxis={[{ position: "none" }]}
+        yAxis={[{ position: "none" }]}
+        margin={MARGIN}
+        skipAnimation
+      >
+        <CirclePacking />
+      </ChartsContainer>
+    </div>
   );
 }
