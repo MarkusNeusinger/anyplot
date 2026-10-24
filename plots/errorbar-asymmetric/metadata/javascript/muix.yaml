@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: errorbar-asymmetric
 created: '2026-09-05T01:18:03Z'
-updated: '2026-10-24T08:55:22Z'
+updated: '2026-10-24T09:00:12Z'
 generated_by: gemini-4-argon
 adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
 workflow_run: 40079598442
@@ -13,43 +13,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/javascript/muix/plot-dark.html
-quality_score: 83
+quality_score: 84
 review:
   strengths:
-  - Error bars drawn as a custom SVG layer inside ChartsContainer via useXScale/useYScale,
-    so they share the band and linear scales with the native axes and grid
-  - Each central marker carries a page-colored halo that separates it from its bar,
-    so the point's position between the two arms is unmistakable in both themes
-  - 'Realistic nitrogen dose-response data: saturation near 200 kg/ha, a slight decline
-    at 240 kg/ha, and arms whose asymmetry ratios vary from dose to dose'
-  - All font sizes set explicitly and theme tokens threaded through axes, grid, legend
-    and title, so both renders read cleanly
+  - Composes the error bars as a custom SVG layer inside ChartsContainer, using the
+    useXScale/useYScale hooks, so every arm, cap and marker sits exactly on the MUI
+    X band and linear scales. This is the idiomatic MUI X way to draw a mark type
+    the community surface does not ship.
+  - 'Each arm''s length comes from its own error column (lines 121–123), and the data
+    shows the full asymmetric range: upper-heavy arms at low doses, near-symmetric
+    arms around 200 kg/ha, and a lower-heavy arm at 240 kg/ha.'
+  - The marker has a 3 px page-coloured ring that separates it from the bar line,
+    so where the median sits between the two arms is unmistakable in both themes.
+  - The legend names both the median marker and the '10th–90th percentile range' with
+    matching glyphs (a ringed dot and a capped I-bar), as the Notes ask.
+  - 'The nitrogen dose-response scenario is realistic: diminishing returns and a slight
+    decline past 200 kg/ha, with uncertainty widening as the dose rises.'
+  - 'Theme tokens reach every element: ink for the title and axis titles, inkSoft
+    for ticks and the secondary legend label, and a grid at 50 % opacity. The Imprint
+    green #009E73 is identical in both renders, and skipAnimation is set.'
   weaknesses:
-  - 'SC-04 (both): the bounds legend entry reads ''Asymmetric bounds (−10th percentile
-    gap (%), +90th percentile gap (%))'' — two raw column headers pasted into nested
-    parentheses, and ''−10th'' reads as a negative percentile → a reader''s label
-    such as ''10th–90th percentile range''. Likely cause: BOUNDS_LABEL built by interpolating
-    LOWER_ERROR and UPPER_ERROR.'
-  - 'VQ-03 (both): the error-bar legend glyph is a horizontal bar with vertical caps,
-    while every error bar in the plot is vertical with horizontal caps → draw the
-    glyph vertically (vertical stem, horizontal caps) so it matches the marks it explains.
-    Likely cause: the legend <svg> lines use x1=2/x2=20 for the stem at y=8.'
-  - 'Suggestion: drop the shaded ''Spread ≥ 85% of maximum'' band, an annotation layer
-    the spec does not ask for whose label tells the reader little; the widening bars
-    already show the growth in uncertainty.'
-  - 'Suggestion: draw the central markers as a native MUI X scatter series so ChartsLegend
-    and the tooltip come for free, keeping only the error bars as the custom layer.'
+  - 'VQ-01 (both): tick labels at 14 px and legend text at 15 px (CSS) blur to about
+    3.5 px in the 400 px thumbnail, so the dose and percentage ticks are hard to read
+    on mobile → tick labels about 16 px (+2 px), legend text about 16 px (+1 px).
+    Likely cause: tickLabelStyle fontSize: 14 on both axes and fontSize: 15 on the
+    legend Typography.'
+  - 'CQ-04 (code): lines 65–71 hand-roll a reverse for-loop that finds the last index
+    meeting the spread threshold → `totalSpreads.findLastIndex((s) => s >= maxSpread
+    * PLATEAU_SPREAD_SHARE)`. Lines 52 and 54–55 also recompute the sums from the
+    raw records although lowerErrors/upperErrors already exist. Likely cause: the
+    plateau-band computation was written out by hand.'
+  - 'Suggestion: the ''Spread ≥ 85% of maximum'' shaded band is an annotation layer
+    the spec does not request. Dropping it (with lines 23 and 63–117) would simplify
+    the chart and the code, and it earns no storytelling credit.'
+  - 'Suggestion: pass the medians as a real ScatterChart/scatter series in ChartsContainer
+    so the HTML view gets MUI X''s native tooltip with the dose and median on hover.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white consistent with #FAF8F1; the 120–240 kg/ha region is shaded slightly lighter (elevatedBg) with a dashed border and an italic "Spread ≥ 85% of maximum" label at its top.
-      Chrome: bold dark title "errorbar-asymmetric · javascript · muix · anyplot.ai" centered at the top; a legend row beneath it (green ringed dot "Median yield increase (%)", green horizontal error-bar glyph "Asymmetric bounds (−10th percentile gap (%), +90th percentile gap (%))"); bold axis titles "Nitrogen dose (kg/ha)" and "Median yield increase (%)"; tick labels 0–240 and 0–50 in soft dark ink; subtle horizontal grid only. All readable.
-      Data: seven #009E73 markers (0, 40, … 240 kg/ha) at medians 1, 8, 19, 29, 35, 38, 36, each with a vertical green stem and horizontal caps at both ends; upper arms mostly longer than lower arms; 240 kg/ha nearly symmetric. Markers have a page-colored halo.
+      Background: warm off-white #FAF8F1. The 120–240 kg/ha region carries a slightly lighter elevated-bg band with a dashed grid-coloured border and an italic "Spread ≥ 85% of maximum" label at the top.
+      Chrome: bold dark title "errorbar-asymmetric · javascript · muix · anyplot.ai" centred at the top (~40 % of the width). Below it is an HTML legend: a ringed green dot labelled "Median yield increase (%)" and a green capped I-glyph labelled "10th–90th percentile range". The y-axis title is "Median yield increase (%)" and the x-axis title is "Nitrogen dose (kg/ha)", both semibold dark ink. Ticks 0–50 step 5 and 0–240 step 40 are in soft ink. Grid lines are subtle horizontal lines, and the left and bottom axis lines show with no tick marks. All text is readable; ticks are small in the 400 px thumbnail.
+      Data: 7 points in #009E73. Each has a 3 px vertical bar, 3 px caps at both ends and a 10 px filled circle with a page-coloured ring at the median. The arms are clearly asymmetric (e.g. 160: 28–48 around 35; 240: 26–45 around 36, lower arm longer). The y-axis spans every bar.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black consistent with #1A1A17; shaded band slightly lighter.
-      Chrome: title, axis titles and legend in light ink, tick labels in light soft ink, faint grid; no dark-on-dark text anywhere.
-      Data: identical #009E73 markers and error bars as the light render; the marker halo flips to the dark page color. Only chrome changed.
+      Background: warm near-black #1A1A17. The plateau band is slightly lighter with a dashed border and the same soft-ink italic label.
+      Chrome: title and axis titles in light ink, ticks and the secondary legend label in a softer light grey, grid lines subtle dark grey, axis lines light. No dark-on-dark text anywhere.
+      Data: identical #009E73 bars, caps and markers. The marker ring now uses the dark page colour, which keeps the marker separated from the bar.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -58,82 +67,80 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All sizes set explicitly (title 22, axis titles 16, ticks 14, legend
-          15 CSS px); readable in both themes and balanced X/Y; title spans ~40% of
-          the width
+        comment: Font sizes are set explicitly and readable in both themes at full
+          size. Tick labels at 14 px blur in the 400 px thumbnail (defect line).
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; the band label sits clear of every error bar
+        comment: No text collisions. The band label sits clear of the caps.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Markers r=10 with a page-colored halo and 3 px bars suit 7 points;
-          the error-bar legend glyph is drawn horizontally while the bars are vertical
-          (defect line)
+        comment: 7 sparse points with 10 px markers, 3 px bars and caps. The legend
+          glyphs match the marks in both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single series, strong contrast on both surfaces, no hue-only signal
+        comment: Single green series with strong contrast on both surfaces. No colour-only
+          encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills most of the canvas, balanced margins, legend directly
-          above the plot; 3200x1800, gate passed
+        comment: Canvas gate passed (3200x1800). Balanced margins, no overflow, axis
+          titles balanced.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Nitrogen dose (kg/ha) and Median yield increase (%) — descriptive
-          with units
+        comment: '''Nitrogen dose (kg/ha)'' and ''Median yield increase (%)'' are
+          descriptive and carry units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint #009E73 for the single series, identical in both renders;
-          backgrounds #FAF8F1 / #1A1A17; chrome theme-correct'
+        comment: 'Series in #009E73 from t.palette[0]. Backgrounds are #FAF8F1 and
+          #1A1A17; chrome flips correctly.'
     design_excellence:
       score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: The style-guide baseline (Imprint, theme tokens, explicit sizes,
-          bold axis titles); nothing decided clearly beyond it
+        comment: Deliberate three-level type hierarchy (600-weight title, semibold
+          axis titles, inkSoft ticks) and a legend that grades its two entries ink
+          vs inkSoft, beyond the baseline.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Horizontal-only grid at reduced opacity chosen for a categorical-x
-          chart, tick marks removed, page-colored halo separating each marker from
-          its bar
+        comment: Page-coloured marker ring that separates the median from the bar,
+          tick marks removed (tickSize 0), cap width scaled to the band (CAP_BAND_SHARE).
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: 'Data choice tells a dose-response story: saturation near 200 kg/ha,
-          a slight decline at 240, and uncertainty widening with dose. The unrequested
-          shaded ''Spread ≥ 85%'' band earns no credit'
+        passed: false
+        comment: Default. The only focal device is the unrequested plateau band, which
+          earns no credit.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -141,29 +148,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Asymmetric vertical error bars with central markers
+        comment: Asymmetric error bar plot with point markers. Not a -basic spec.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Caps at both ends of every bar, marker distinct from the bar, legend
-          states the 10th/90th percentile bounds, value axis spans every bar; single
-          series so the multi-series bullet does not apply
+        comment: Caps at both ends, marker distinct from the bar, legend naming '10th–90th
+          percentile range', each arm sized by its own error. Single series, so the
+          multi-series bullet is N/A.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Marks at their values; arms drawn from each error value; y axis covers
-          all bounds
+        comment: Marks at their data values. The y-axis spans every bar (−2 to ~55).
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title correct; the bounds legend entry pastes two raw column headers
-          into nested parentheses (defect line)
+        passed: true
+        comment: Title format correct. Legend entries are reader text.
     data_quality:
       score: 15
       max: 15
@@ -173,25 +178,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Upper arms longer at most doses, ratios vary, 240 kg/ha nearly symmetric
-          (10/9), 0 kg/ha point near its lower bound
+        comment: Upper-heavy, near-symmetric and lower-heavy intervals, with ratios
+          that vary from point to point.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Nitrogen fertilizer yield response across doses — real, neutral agronomy
-          scenario
+        comment: 'Nitrogen fertiliser dose response: neutral and plausible.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: 120 kg/ha bar reads 23–40 (29−6, 29+11), 240 kg/ha reads
-          26–45 (36−10, 36+9), 0 kg/ha 0–3; plateau near 200 kg/ha is agronomically
-          plausible. No check values in the spec'
+        comment: 'No check values in spec. Checked: bounds read off the axis match
+          y−lower/y+upper (e.g. 160: 28/48, 240: 26/45). Yield gains of 0–38 % with
+          a plateau past 200 kg/ha are plausible.'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -199,61 +203,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Columns → data → plot zones; the ErrorBars component is required
-          to call the scale hooks
+        comment: The ErrorBars component is needed for the scale hooks. Otherwise
+          the code runs linearly through columns, data and plot.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hard-coded data
+        comment: Hard-coded data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Appropriate complexity; minor recomputation of bounds is a suggestion
-          at most
+        passed: false
+        comment: Lines 65–71 hand-roll findLastIndex, and lines 52–55 recompute sums
+          already available (defect line).
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component, skipAnimation, v9 ChartsContainer API,
-          sized from ANYPLOT_SIZE
+        comment: Default-exported component, skipAnimation, v9 ChartsContainer API.
+          The harness writes plot-{theme}.png/html.
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Correct v9 composition, but no native series at all (series=[]) and
-          a hand-built Box/Typography legend
+        comment: v9 composition API (ChartsContainer + ChartsGrid + ChartsXAxis/YAxis)
+          with axis-config label/tick styles and sized axis bands.
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: true
-        comment: Custom SVG layer inside ChartsContainer driven by the useXScale/useYScale
-          hooks, sharing the band and linear scales with ChartsXAxis/ChartsYAxis/ChartsGrid
-  verdict: REJECTED
+        passed: false
+        comment: A custom mark layer drawn through the useXScale/useYScale hooks,
+          MUI X's extension point for marks it does not ship.
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T08:52:10Z'
+  rendered_at: '2026-10-24T08:57:17Z'
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
   - layer-composition
+  - custom-legend
   - annotations
   - html-export
   patterns: []
