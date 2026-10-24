@@ -16,7 +16,7 @@ const CYCLE_HOURS = 24;
 const RING_COUNT = 5;
 const SPOKE_STEP_HOURS = 3;
 const MARKER_RADIUS = 6.5;
-const HEADER_HEIGHT = 68;
+const HEADER_HEIGHT = 84;
 const CHART_MARGIN = 36;
 const DOMAIN_PAD_FACTOR = 1.16;
 const LABEL_RADIUS_FACTOR = 1.09;
@@ -69,6 +69,7 @@ for (let k = 1; k <= RING_COUNT; k += 1) {
 
 const kwhUnitMatch = /\(([^)]+)\)/.exec(KWH);
 const kwhUnit = kwhUnitMatch ? kwhUnitMatch[1] : "";
+const subtitle = `Radius: ${KWH} · Angle: ${HOUR.replace(/\s*\([^)]*\)/, "")}, midnight at top`;
 
 const points = sortedRows.map((row) => {
   const hour = Number(row[HOUR]);
@@ -242,13 +243,13 @@ export default function Chart() {
           height: HEADER_HEIGHT,
           display: "flex",
           alignItems: "center",
+          flexDirection: "column",
           justifyContent: "center",
-          fontSize: 22,
-          fontWeight: 700,
-          color: t.ink,
+          gap: 6,
         }}
       >
-        {TITLE}
+        <div style={{ fontSize: 22, fontWeight: 700, color: t.ink }}>{TITLE}</div>
+        <div style={{ fontSize: 15, fontWeight: 500, color: t.inkSoft }}>{subtitle}</div>
       </div>
       <ChartsContainer
         width={chartSize}
