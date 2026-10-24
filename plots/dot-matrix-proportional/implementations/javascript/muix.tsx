@@ -7,11 +7,11 @@
 import * as React from "react";
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
-import { useXScale, useYScale } from "@mui/x-charts/hooks";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
+const MUTED = window.ANYPLOT_THEME === "dark" ? "#A8A79F" : "#6B6A63";
 
 // Constants
 const FONT = "system-ui, -apple-system, sans-serif";
@@ -19,12 +19,10 @@ const TITLE = "dot-matrix-proportional · javascript · muix · anyplot.ai";
 const SEMANTIC_COLORS: Record<string, string> = {
   Agreed: t.palette[0],
   Disagreed: t.palette[4],
-  "No opinion": t.inkSoft,
+  "No opinion": MUTED,
 };
 const REMAINDER_LABEL = "Remainder";
 const MARKER_CELL_SHARE = 0.38;
-const RING_GAP_SHARE = 0.05;
-const RING_STROKE_SHARE = 0.16;
 const TITLE_HEIGHT = 76;
 const LEGEND_HEIGHT = 84;
 
@@ -60,7 +58,7 @@ const categories = data.map((r) => {
     color = availablePalette[fallbackIdx];
     fallbackIdx += 1;
   }
-  return { label, count, color, ringed: color === t.palette[4] };
+  return { label, count, color };
 });
 
 if (remainderCount > 0) {
@@ -68,7 +66,6 @@ if (remainderCount > 0) {
     label: REMAINDER_LABEL,
     count: remainderCount,
     color: t.grid,
-    ringed: false,
   });
 }
 
@@ -87,36 +84,6 @@ const seriesDataByCategory = categories.map((cat) => {
   };
 });
 
-const ringedPoints = seriesDataByCategory
-  .filter((cat) => cat.ringed)
-  .flatMap((cat) => cat.points);
-
-interface DotRingOverlayProps {
-  ringRadius: number;
-  ringStrokeWidth: number;
-}
-
-function DotRingOverlay({ ringRadius, ringStrokeWidth }: DotRingOverlayProps) {
-  const xScale = useXScale() as (v: number) => number;
-  const yScale = useYScale() as (v: number) => number;
-
-  return (
-    <g style={{ pointerEvents: "none" }}>
-      {ringedPoints.map((pt) => (
-        <circle
-          key={pt.id}
-          cx={xScale(pt.x)}
-          cy={yScale(pt.y)}
-          r={ringRadius}
-          fill="none"
-          stroke={t.ink}
-          strokeWidth={ringStrokeWidth}
-        />
-      ))}
-    </g>
-  );
-}
-
 export default function Chart() {
   const width = window.ANYPLOT_SIZE.width;
   const height = window.ANYPLOT_SIZE.height;
@@ -127,10 +94,6 @@ export default function Chart() {
   const gridWidth = cellSize * gridCols;
   const gridHeight = cellSize * gridRows;
   const markerSize = cellSize * MARKER_CELL_SHARE;
-
-  const ringGap = markerSize * RING_GAP_SHARE;
-  const ringStrokeWidth = Math.max(1.5, markerSize * RING_STROKE_SHARE);
-  const ringRadius = markerSize + ringGap + ringStrokeWidth / 2;
 
   return (
     <Box
@@ -191,7 +154,6 @@ export default function Chart() {
           ]}
         >
           <ScatterPlot />
-          <DotRingOverlay ringRadius={ringRadius} ringStrokeWidth={ringStrokeWidth} />
         </ChartsContainer>
       </Box>
 
@@ -214,7 +176,6 @@ export default function Chart() {
                 borderRadius: "50%",
                 backgroundColor: category.color,
                 flexShrink: 0,
-                boxShadow: category.ringed ? `0 0 0 2px ${t.pageBg}, 0 0 0 4px ${t.ink}` : "none",
               }}
             />
             <Typography sx={{ color: t.ink, fontSize: 16, fontFamily: FONT }}>
