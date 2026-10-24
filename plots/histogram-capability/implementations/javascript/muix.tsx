@@ -120,6 +120,13 @@ const unitMatch = DIAMETER.match(/\(([^)]+)\)/);
 const unit = unitMatch ? ` ${unitMatch[1]}` : "";
 const SUBTITLE = `${DIAMETER} (n = ${n}) · μ = ${sampleMean.toFixed(4)}${unit}, σ = ${sampleSigma.toFixed(4)}${unit} · ${LSL} = ${lsl.toFixed(2)}, ${TARGET} = ${target.toFixed(2)}, ${USL} = ${usl.toFixed(2)}${unit}`;
 
+const LEGEND = [
+  { label: "Observations", kind: "box", color: BRAND },
+  { label: "Normal fit", kind: "line", color: BLUE, width: 3 },
+  { label: `${LSL} / ${USL}`, kind: "line", color: RED, width: 2.5, dash: "6 3" },
+  { label: TARGET, kind: "line", color: TARGET_COLOR, width: 2.5, dash: "8 4" },
+];
+
 function CapabilityLayer() {
   const { left, top, width, height } = useDrawingArea();
   const binPx = (binWidth / (xMax - xMin)) * width;
@@ -205,56 +212,37 @@ function CapabilityLayer() {
         {capStatus}
       </text>
 
-      <rect
-        x={px}
-        y={py + 4 * lh + 26}
-        width={22}
-        height={14}
-        fill={BRAND}
-        fillOpacity={0.82}
-        rx={2}
-      />
-      <text x={px + 30} y={py + 4 * lh + 38} fontSize={14} fill={t.ink}>
-        Observations
-      </text>
-
-      <line
-        x1={px}
-        y1={py + 5 * lh + 32}
-        x2={px + 22}
-        y2={py + 5 * lh + 32}
-        stroke={BLUE}
-        strokeWidth={3}
-      />
-      <text x={px + 30} y={py + 5 * lh + 37} fontSize={14} fill={t.ink}>
-        Normal fit
-      </text>
-
-      <line
-        x1={px}
-        y1={py + 6 * lh + 32}
-        x2={px + 22}
-        y2={py + 6 * lh + 32}
-        stroke={RED}
-        strokeWidth={2.5}
-        strokeDasharray="6 3"
-      />
-      <text x={px + 30} y={py + 6 * lh + 37} fontSize={14} fill={t.ink}>
-        {`${LSL} / ${USL}`}
-      </text>
-
-      <line
-        x1={px}
-        y1={py + 7 * lh + 32}
-        x2={px + 22}
-        y2={py + 7 * lh + 32}
-        stroke={TARGET_COLOR}
-        strokeWidth={2.5}
-        strokeDasharray="8 4"
-      />
-      <text x={px + 30} y={py + 7 * lh + 37} fontSize={14} fill={t.ink}>
-        {TARGET}
-      </text>
+      {LEGEND.map((e, i) => {
+        const ry = py + (4 + i) * lh + 32;
+        return (
+          <g key={e.label}>
+            {e.kind === "box" ? (
+              <rect
+                x={px}
+                y={ry - 6}
+                width={22}
+                height={14}
+                fill={e.color}
+                fillOpacity={0.82}
+                rx={2}
+              />
+            ) : (
+              <line
+                x1={px}
+                y1={ry}
+                x2={px + 22}
+                y2={ry}
+                stroke={e.color}
+                strokeWidth={e.width}
+                strokeDasharray={e.dash}
+              />
+            )}
+            <text x={px + 30} y={ry + 5} fontSize={14} fill={t.ink}>
+              {e.label}
+            </text>
+          </g>
+        );
+      })}
     </g>
   );
 }
