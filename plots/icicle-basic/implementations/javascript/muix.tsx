@@ -1,363 +1,411 @@
 // anyplot.ai
 // icicle-basic: Basic Icicle Chart
-// Library: muix 7.29.1 | JavaScript 22.23.2
+// Library: muix 9.0.0 | JavaScript 22.23.2
 // Quality: 86/100 | Created: 2026-09-05
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-const title = "icicle-basic · javascript · muix · anyplot.ai";
-const titleFontSize = Math.round(30 * Math.min(1, 67 / title.length));
+// Constants
+const ID_COL = "Node Path";
+const NAME_COL = "Node Name";
+const PARENT_COL = "Parent Path";
+const VALUE_COL = "Size (KB)";
 
-// --- Data: a file-system hierarchy (name/children/value in KB) -- one of the
-// spec's listed applications. 4 top-level directories, 11 subdirectories, 25
-// files -- 41 nodes total, well inside the spec's 10-100 node range. Only
-// leaves carry an explicit size; directory sizes are the sum of their
-// contents, exactly like `du` on a real file system. -----------------------
-const TREE = {
-  name: "repo/",
-  children: [
-    {
-      name: "node_modules/",
-      children: [
-        {
-          name: "react/",
-          children: [
-            { name: "index.js", value: 180 },
-            { name: "package.json", value: 60 },
-            { name: "README.md", value: 80 },
-          ],
-        },
-        {
-          name: "webpack/",
-          children: [
-            { name: "webpack.js", value: 140 },
-            { name: "loader.js", value: 90 },
-            { name: "config.js", value: 50 },
-          ],
-        },
-        {
-          name: "typescript/",
-          children: [
-            { name: "tsc.js", value: 120 },
-            { name: "lib.d.ts", value: 70 },
-            { name: "compiler.js", value: 60 },
-          ],
-        },
-        {
-          name: "eslint/",
-          children: [
-            { name: "index.js", value: 55 },
-            { name: "rules.js", value: 45 },
-          ],
-        },
-      ],
-    },
-    {
-      name: "src/",
-      children: [
-        {
-          name: "components/",
-          children: [
-            { name: "Button.tsx", value: 90 },
-            { name: "Modal.tsx", value: 110 },
-            { name: "Chart.tsx", value: 80 },
-          ],
-        },
-        {
-          name: "utils/",
-          children: [
-            { name: "format.ts", value: 100 },
-            { name: "api.ts", value: 90 },
-          ],
-        },
-        {
-          name: "styles/",
-          children: [
-            { name: "theme.css", value: 75 },
-            { name: "globals.css", value: 55 },
-          ],
-        },
-      ],
-    },
-    {
-      name: "tests/",
-      children: [
-        {
-          name: "unit/",
-          children: [
-            { name: "button.test.ts", value: 100 },
-            { name: "utils.test.ts", value: 90 },
-          ],
-        },
-        {
-          name: "integration/",
-          children: [
-            { name: "api.test.ts", value: 85 },
-            { name: "flow.test.ts", value: 75 },
-          ],
-        },
-      ],
-    },
-    {
-      name: "docs/",
-      children: [
-        {
-          name: "guides/",
-          children: [
-            { name: "getting-started.md", value: 70 },
-            { name: "deployment.md", value: 60 },
-          ],
-        },
-        {
-          name: "reference/",
-          children: [{ name: "api-reference.md", value: 70 }],
-        },
-      ],
-    },
-  ],
-};
+const ROOT_FILL = "#6E6A61";
+const FIXED_DARK_TEXT = "#1A1A17";
+const FIXED_LIGHT_TEXT = "#FAF8F1";
+const TINT_STEP = 0.24;
+const ROW_GUTTER = 5;
+const COL_GUTTER = 2;
+const LABEL_FONT_SIZE = [20, 16, 15, 14];
+const SUBLABEL_FONT_SIZE = 14;
+const CHAR_WIDTH_RATIO = 0.56;
 
-// Bottom-up: a directory's size is the sum of what it contains (leaves carry
-// their own explicit `value`).
-function computeValue(node) {
-  if (!node.children) return node.value;
-  node.value = node.children.reduce((sum, c) => sum + computeValue(c), 0);
-  return node.value;
+// Data: repository file-system hierarchy in flat scalar records (sizes in KB)
+const DATA: Array<{
+  [ID_COL]: string;
+  [NAME_COL]: string;
+  [PARENT_COL]: string;
+  [VALUE_COL]: number;
+}> = [
+  { [ID_COL]: "repo/", [NAME_COL]: "repo/", [PARENT_COL]: "", [VALUE_COL]: 0 },
+  // Top-level directories
+  { [ID_COL]: "repo/node_modules/", [NAME_COL]: "node_modules/", [PARENT_COL]: "repo/", [VALUE_COL]: 0 },
+  { [ID_COL]: "repo/src/", [NAME_COL]: "src/", [PARENT_COL]: "repo/", [VALUE_COL]: 0 },
+  { [ID_COL]: "repo/tests/", [NAME_COL]: "tests/", [PARENT_COL]: "repo/", [VALUE_COL]: 0 },
+  { [ID_COL]: "repo/docs/", [NAME_COL]: "docs/", [PARENT_COL]: "repo/", [VALUE_COL]: 0 },
+  // Subdirectories under node_modules/
+  { [ID_COL]: "repo/node_modules/react/", [NAME_COL]: "react/", [PARENT_COL]: "repo/node_modules/", [VALUE_COL]: 0 },
+  { [ID_COL]: "repo/node_modules/webpack/", [NAME_COL]: "webpack/", [PARENT_COL]: "repo/node_modules/", [VALUE_COL]: 0 },
+  { [ID_COL]: "repo/node_modules/typescript/", [NAME_COL]: "typescript/", [PARENT_COL]: "repo/node_modules/", [VALUE_COL]: 0 },
+  { [ID_COL]: "repo/node_modules/eslint/", [NAME_COL]: "eslint/", [PARENT_COL]: "repo/node_modules/", [VALUE_COL]: 0 },
+  // Subdirectories under src/
+  { [ID_COL]: "repo/src/components/", [NAME_COL]: "components/", [PARENT_COL]: "repo/src/", [VALUE_COL]: 0 },
+  { [ID_COL]: "repo/src/utils/", [NAME_COL]: "utils/", [PARENT_COL]: "repo/src/", [VALUE_COL]: 0 },
+  { [ID_COL]: "repo/src/styles/", [NAME_COL]: "styles/", [PARENT_COL]: "repo/src/", [VALUE_COL]: 0 },
+  // Subdirectories under tests/
+  { [ID_COL]: "repo/tests/unit/", [NAME_COL]: "unit/", [PARENT_COL]: "repo/tests/", [VALUE_COL]: 0 },
+  { [ID_COL]: "repo/tests/integration/", [NAME_COL]: "integration/", [PARENT_COL]: "repo/tests/", [VALUE_COL]: 0 },
+  // Subdirectories under docs/
+  { [ID_COL]: "repo/docs/guides/", [NAME_COL]: "guides/", [PARENT_COL]: "repo/docs/", [VALUE_COL]: 0 },
+  { [ID_COL]: "repo/docs/reference/", [NAME_COL]: "reference/", [PARENT_COL]: "repo/docs/", [VALUE_COL]: 0 },
+  // Files under react/
+  { [ID_COL]: "repo/node_modules/react/index.js", [NAME_COL]: "index.js", [PARENT_COL]: "repo/node_modules/react/", [VALUE_COL]: 180 },
+  { [ID_COL]: "repo/node_modules/react/package.json", [NAME_COL]: "package.json", [PARENT_COL]: "repo/node_modules/react/", [VALUE_COL]: 60 },
+  { [ID_COL]: "repo/node_modules/react/README.md", [NAME_COL]: "README.md", [PARENT_COL]: "repo/node_modules/react/", [VALUE_COL]: 80 },
+  // Files under webpack/
+  { [ID_COL]: "repo/node_modules/webpack/webpack.js", [NAME_COL]: "webpack.js", [PARENT_COL]: "repo/node_modules/webpack/", [VALUE_COL]: 140 },
+  { [ID_COL]: "repo/node_modules/webpack/loader.js", [NAME_COL]: "loader.js", [PARENT_COL]: "repo/node_modules/webpack/", [VALUE_COL]: 90 },
+  { [ID_COL]: "repo/node_modules/webpack/config.js", [NAME_COL]: "config.js", [PARENT_COL]: "repo/node_modules/webpack/", [VALUE_COL]: 50 },
+  // Files under typescript/
+  { [ID_COL]: "repo/node_modules/typescript/tsc.js", [NAME_COL]: "tsc.js", [PARENT_COL]: "repo/node_modules/typescript/", [VALUE_COL]: 120 },
+  { [ID_COL]: "repo/node_modules/typescript/lib.d.ts", [NAME_COL]: "lib.d.ts", [PARENT_COL]: "repo/node_modules/typescript/", [VALUE_COL]: 70 },
+  { [ID_COL]: "repo/node_modules/typescript/compiler.js", [NAME_COL]: "compiler.js", [PARENT_COL]: "repo/node_modules/typescript/", [VALUE_COL]: 60 },
+  // Files under eslint/
+  { [ID_COL]: "repo/node_modules/eslint/index.js", [NAME_COL]: "index.js", [PARENT_COL]: "repo/node_modules/eslint/", [VALUE_COL]: 55 },
+  { [ID_COL]: "repo/node_modules/eslint/rules.js", [NAME_COL]: "rules.js", [PARENT_COL]: "repo/node_modules/eslint/", [VALUE_COL]: 45 },
+  // Files under components/
+  { [ID_COL]: "repo/src/components/Button.tsx", [NAME_COL]: "Button.tsx", [PARENT_COL]: "repo/src/components/", [VALUE_COL]: 90 },
+  { [ID_COL]: "repo/src/components/Modal.tsx", [NAME_COL]: "Modal.tsx", [PARENT_COL]: "repo/src/components/", [VALUE_COL]: 110 },
+  { [ID_COL]: "repo/src/components/Chart.tsx", [NAME_COL]: "Chart.tsx", [PARENT_COL]: "repo/src/components/", [VALUE_COL]: 80 },
+  // Files under utils/
+  { [ID_COL]: "repo/src/utils/format.ts", [NAME_COL]: "format.ts", [PARENT_COL]: "repo/src/utils/", [VALUE_COL]: 100 },
+  { [ID_COL]: "repo/src/utils/api.ts", [NAME_COL]: "api.ts", [PARENT_COL]: "repo/src/utils/", [VALUE_COL]: 90 },
+  // Files under styles/
+  { [ID_COL]: "repo/src/styles/theme.css", [NAME_COL]: "theme.css", [PARENT_COL]: "repo/src/styles/", [VALUE_COL]: 75 },
+  { [ID_COL]: "repo/src/styles/globals.css", [NAME_COL]: "globals.css", [PARENT_COL]: "repo/src/styles/", [VALUE_COL]: 55 },
+  // Files under unit/
+  { [ID_COL]: "repo/tests/unit/button.test.ts", [NAME_COL]: "button.test.ts", [PARENT_COL]: "repo/tests/unit/", [VALUE_COL]: 100 },
+  { [ID_COL]: "repo/tests/unit/utils.test.ts", [NAME_COL]: "utils.test.ts", [PARENT_COL]: "repo/tests/unit/", [VALUE_COL]: 90 },
+  // Files under integration/
+  { [ID_COL]: "repo/tests/integration/api.test.ts", [NAME_COL]: "api.test.ts", [PARENT_COL]: "repo/tests/integration/", [VALUE_COL]: 85 },
+  { [ID_COL]: "repo/tests/integration/flow.test.ts", [NAME_COL]: "flow.test.ts", [PARENT_COL]: "repo/tests/integration/", [VALUE_COL]: 75 },
+  // Files under guides/
+  { [ID_COL]: "repo/docs/guides/getting-started.md", [NAME_COL]: "getting-started.md", [PARENT_COL]: "repo/docs/guides/", [VALUE_COL]: 70 },
+  { [ID_COL]: "repo/docs/guides/deployment.md", [NAME_COL]: "deployment.md", [PARENT_COL]: "repo/docs/guides/", [VALUE_COL]: 60 },
+  // Files under reference/
+  { [ID_COL]: "repo/docs/reference/api-reference.md", [NAME_COL]: "api-reference.md", [PARENT_COL]: "repo/docs/reference/", [VALUE_COL]: 70 },
+];
+
+interface IcicleNode {
+  id: string;
+  name: string;
+  parentId: string;
+  value: number;
+  depth: number;
+  childrenIds: string[];
+  branchColor: string;
+  x0Norm: number;
+  x1Norm: number;
+  fill: string;
+  textFill: string;
+  parentValue: number;
 }
-computeValue(TREE);
 
-// Fixed neutral grey for the root/total band -- unlike `t.ink`, this stays
-// pixel-identical across light and dark renders, so every data band
-// (including root) is theme-stable, not just the top-level branches.
-const ROOT_FILL = "#6B6A63";
-
-// Each top-level directory owns one Imprint hue; every descendant inherits
-// its ancestor's hue so a branch stays recognizable at any depth (the
-// spec's "color by hierarchy level or category" note).
-function assignBranch(node, color) {
-  node.branchColor = color;
-  node.children?.forEach((c) => assignBranch(c, color));
-}
-assignBranch(TREE, ROOT_FILL); // root itself reads as the neutral/total anchor
-TREE.children.forEach((dir, i) => assignBranch(dir, t.palette[i % t.palette.length]));
-
-// --- Icicle (partition) layout: each depth is a full-width horizontal band;
-// within a band, a node's horizontal span is proportional to its value
-// within its parent's span. Root at top, children stacked below -- the
-// spec's "horizontal orientation, root at top" note. ------------------------
-function partition(node, x0, x1, depth) {
-  node.x0 = x0;
-  node.x1 = x1;
-  node.depth = depth;
-  if (!node.children) return;
-  let cx = x0;
-  const total = node.value;
-  node.children.forEach((child) => {
-    const w = total > 0 ? (child.value / total) * (x1 - x0) : 0;
-    partition(child, cx, cx + w, depth + 1);
-    cx += w;
+const nodeById = new Map<string, IcicleNode>();
+for (let i = 0; i < DATA.length; i += 1) {
+  const row = DATA[i];
+  nodeById.set(row[ID_COL], {
+    id: row[ID_COL],
+    name: row[NAME_COL],
+    parentId: row[PARENT_COL],
+    value: row[VALUE_COL],
+    depth: 0,
+    childrenIds: [],
+    branchColor: ROOT_FILL,
+    x0Norm: 0,
+    x1Norm: 1,
+    fill: ROOT_FILL,
+    textFill: FIXED_LIGHT_TEXT,
+    parentValue: 0,
   });
 }
 
-function flatten(node, acc) {
-  acc.push(node);
-  node.children?.forEach((c) => flatten(c, acc));
-  return acc;
-}
-
-const DEPTH_COUNT = 4; // root, directory, subdirectory, file
-const TINT_STEP = 0.28; // lighter per depth level below the branch's directory
-
-// --- Color: contrast-aware text over an arbitrary tinted fill, same
-// relative-luminance technique used for every other custom-drawn anyplot
-// chart so labels stay legible regardless of hue or tint. -------------------
-function hexToRgb(hex) {
-  const n = parseInt(hex.slice(1), 16);
-  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-}
-function rgbToHsl(r, g, b) {
-  r /= 255;
-  g /= 255;
-  b /= 255;
-  const max = Math.max(r, g, b);
-  const min = Math.min(r, g, b);
-  const l = (max + min) / 2;
-  if (max === min) return [0, 0, l];
-  const d = max - min;
-  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-  let h;
-  if (max === r) h = (g - b) / d + (g < b ? 6 : 0);
-  else if (max === g) h = (b - r) / d + 2;
-  else h = (r - g) / d + 4;
-  return [h / 6, s, l];
-}
-function hueToRgb(p, q, tIn) {
-  let tt = tIn;
-  if (tt < 0) tt += 1;
-  if (tt > 1) tt -= 1;
-  if (tt < 1 / 6) return p + (q - p) * 6 * tt;
-  if (tt < 1 / 2) return q;
-  if (tt < 2 / 3) return p + (q - p) * (2 / 3 - tt) * 6;
-  return p;
-}
-function hslToRgb(h, s, l) {
-  if (s === 0) {
-    const v = Math.round(l * 255);
-    return [v, v, v];
+let rootId = "";
+for (let i = 0; i < DATA.length; i += 1) {
+  const row = DATA[i];
+  const node = nodeById.get(row[ID_COL])!;
+  if (!node.parentId) {
+    rootId = node.id;
+  } else {
+    const parent = nodeById.get(node.parentId);
+    if (parent) parent.childrenIds.push(node.id);
   }
-  const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-  const p = 2 * l - q;
-  return [Math.round(hueToRgb(p, q, h + 1 / 3) * 255), Math.round(hueToRgb(p, q, h) * 255), Math.round(hueToRgb(p, q, h - 1 / 3) * 255)];
-}
-function tintRgb(hex, factor) {
-  const [r, g, b] = hexToRgb(hex);
-  const [h, s, l] = rgbToHsl(r, g, b);
-  return hslToRgb(h, s, l + (0.94 - l) * factor);
-}
-function relLuminanceRgb([r, g, b]) {
-  const srgb = [r, g, b].map((v) => v / 255).map((v) => (v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)));
-  return 0.2126 * srgb[0] + 0.7152 * srgb[1] + 0.0722 * srgb[2];
-}
-// Fixed, theme-independent ink/paper pair -- the data fills themselves don't
-// change between themes, so the contrast decision must depend only on the
-// fill's own luminance, never on `t.ink`/`t.pageBg` (which flip meaning
-// between light and dark theme and previously produced near-invisible text
-// on the leaf-level tints in dark mode).
-const FIXED_DARK_TEXT = "#1A1A17";
-const FIXED_LIGHT_TEXT = "#FFFDF6";
-function textColorForRgb(rgb) {
-  return relLuminanceRgb(rgb) > 0.45 ? FIXED_DARK_TEXT : FIXED_LIGHT_TEXT;
 }
 
-// --- Sizing + label fitting -------------------------------------------------
-const MARGIN = { top: 96, right: 24, bottom: 20, left: 24 };
-const ROW_GUTTER = 5;
-const COL_GUTTER = 2;
-const LABEL_FONT_SIZE = [22, 17, 15, 13]; // by depth -- 15/13 for the two deepest levels (was 14/12) so labels hold up better at mobile thumbnail scale
-const CHAR_WIDTH_RATIO = 0.56;
-
-function fmtKB(v) {
-  return `${v.toLocaleString()} KB`;
-}
-function fitsLabel(w, h, text, fontSize) {
-  return w - 10 >= text.length * fontSize * CHAR_WIDTH_RATIO && h >= fontSize + 4;
-}
-
-function IcicleRect({ x, y, w, h, fill, textFill, label, sublabel, fontSize, tooltip }) {
-  const showLabel = label && fitsLabel(w, h, label, fontSize);
-  const showSub = showLabel && sublabel && h >= fontSize * 2 + 8 && fitsLabel(w, h, sublabel, fontSize - 2);
-  return (
-    <g>
-      <rect x={x} y={y} width={w} height={h} fill={fill} stroke={t.pageBg} strokeWidth={1.5}>
-        <title>{tooltip}</title>
-      </rect>
-      {showLabel && (
-        <text x={x + 7} y={y + fontSize + 3} fontSize={fontSize} fontWeight={showSub ? 600 : 500} fill={textFill} pointerEvents="none">
-          {label}
-        </text>
-      )}
-      {showSub && (
-        <text x={x + 7} y={y + fontSize * 2 + 4} fontSize={fontSize - 2} fill={textFill} opacity={0.85} pointerEvents="none">
-          {sublabel}
-        </text>
-      )}
-    </g>
-  );
+// Topological BFS order from root
+const bfsOrder: IcicleNode[] = [];
+const queue: string[] = [rootId];
+while (queue.length > 0) {
+  const curId = queue.shift()!;
+  const cur = nodeById.get(curId)!;
+  bfsOrder.push(cur);
+  for (let c = 0; c < cur.childrenIds.length; c += 1) {
+    const child = nodeById.get(cur.childrenIds[c])!;
+    child.depth = cur.depth + 1;
+    queue.push(child.id);
+  }
 }
 
-function Icicle() {
-  // Drawing area comes from MUI X's own DrawingProvider (via ChartContainer's
-  // `margin` prop), the documented composition primitive for a custom mark --
-  // MUI X community has no native Icicle/partition chart type.
+// Bottom-up sum of leaf sizes
+for (let i = bfsOrder.length - 1; i >= 0; i -= 1) {
+  const node = bfsOrder[i];
+  if (node.childrenIds.length > 0) {
+    let sum = 0;
+    for (let c = 0; c < node.childrenIds.length; c += 1) {
+      sum += nodeById.get(node.childrenIds[c])!.value;
+    }
+    node.value = sum;
+  }
+}
+
+// Top-down branch color assignment and normalized [0, 1] partition
+const rootNode = nodeById.get(rootId)!;
+const topDirs = rootNode.childrenIds.map((id, idx) => {
+  const dir = nodeById.get(id)!;
+  dir.branchColor = t.palette[idx];
+  return dir;
+});
+
+for (let i = 0; i < bfsOrder.length; i += 1) {
+  const node = bfsOrder[i];
+  if (node.depth >= 2) {
+    const parent = nodeById.get(node.parentId)!;
+    node.branchColor = parent.branchColor;
+  }
+  if (node.parentId) {
+    node.parentValue = nodeById.get(node.parentId)!.value;
+  } else {
+    node.parentValue = node.value;
+  }
+
+  let cx = node.x0Norm;
+  const span = node.x1Norm - node.x0Norm;
+  for (let c = 0; c < node.childrenIds.length; c += 1) {
+    const child = nodeById.get(node.childrenIds[c])!;
+    const w = node.value > 0 ? (child.value / node.value) * span : 0;
+    child.x0Norm = cx;
+    child.x1Norm = cx + w;
+    cx += w;
+  }
+
+  // Compute tinted RGB fill and relative luminance contrast text
+  const hex = node.depth === 0 ? ROOT_FILL : node.branchColor;
+  const hexInt = parseInt(hex.slice(1), 16);
+  const baseR = (hexInt >> 16) & 255;
+  const baseG = (hexInt >> 8) & 255;
+  const baseB = hexInt & 255;
+  const tintFactor = node.depth === 0 ? 0 : (node.depth - 1) * TINT_STEP;
+  const r = Math.round(baseR + (248 - baseR) * tintFactor);
+  const g = Math.round(baseG + (246 - baseG) * tintFactor);
+  const b = Math.round(baseB + (238 - baseB) * tintFactor);
+  node.fill = `rgb(${r}, ${g}, ${b})`;
+
+  const sR =
+    r / 255 <= 0.03928
+      ? r / 255 / 12.92
+      : Math.pow((r / 255 + 0.055) / 1.055, 2.4);
+  const sG =
+    g / 255 <= 0.03928
+      ? g / 255 / 12.92
+      : Math.pow((g / 255 + 0.055) / 1.055, 2.4);
+  const sB =
+    b / 255 <= 0.03928
+      ? b / 255 / 12.92
+      : Math.pow((b / 255 + 0.055) / 1.055, 2.4);
+  const lum = 0.2126 * sR + 0.7152 * sG + 0.0722 * sB;
+  node.textFill = lum > 0.32 ? FIXED_DARK_TEXT : FIXED_LIGHT_TEXT;
+}
+
+const maxDepth = Math.max(...bfsOrder.map((n) => n.depth));
+const DEPTH_COUNT = maxDepth + 1;
+const leafCount = bfsOrder.filter((n) => n.childrenIds.length === 0).length;
+
+function IcicleLayer() {
   const { left, top, width, height } = useDrawingArea();
-  partition(TREE, left, left + width, 0);
-  const nodes = flatten(TREE, []);
   const rowH = height / DEPTH_COUNT;
 
   return (
     <g>
-      {nodes.map((node) => {
-        const x = node.x0 + COL_GUTTER / 2;
-        const w = Math.max(0, node.x1 - node.x0 - COL_GUTTER);
+      {bfsOrder.map((node) => {
+        const x = left + node.x0Norm * width + COL_GUTTER / 2;
+        const w = Math.max(0, (node.x1Norm - node.x0Norm) * width - COL_GUTTER);
         const y = top + node.depth * rowH + ROW_GUTTER / 2;
         const h = rowH - ROW_GUTTER;
-        const fontSize = LABEL_FONT_SIZE[node.depth];
+        const fontSize =
+          LABEL_FONT_SIZE[
+            Math.min(node.depth, LABEL_FONT_SIZE.length - 1)
+          ];
 
-        if (node.depth === 0) {
-          return (
-            <IcicleRect
-              key="root"
+        const labelText =
+          node.depth === 0
+            ? `${node.name} · ${node.value.toLocaleString()} KB total`
+            : node.name;
+        const subText =
+          node.depth === 0 ? "" : `${node.value.toLocaleString()} KB`;
+        const pct =
+          node.parentValue > 0
+            ? ((node.value / node.parentValue) * 100).toFixed(0)
+            : "100";
+
+        const showLabel =
+          w - 12 >= labelText.length * fontSize * CHAR_WIDTH_RATIO &&
+          h >= fontSize + 6;
+        const showSub =
+          showLabel &&
+          subText.length > 0 &&
+          h >= fontSize + SUBLABEL_FONT_SIZE + 12 &&
+          w - 12 >= subText.length * SUBLABEL_FONT_SIZE * CHAR_WIDTH_RATIO;
+
+        return (
+          <g key={node.id}>
+            <rect
               x={x}
               y={y}
-              w={w}
-              h={h}
-              fill={ROOT_FILL}
-              textFill={textColorForRgb(hexToRgb(ROOT_FILL))}
-              label={`${node.name} · ${fmtKB(node.value)} total`}
-              fontSize={fontSize}
-              tooltip={`${node.name}: ${fmtKB(node.value)}`}
-            />
-          );
-        }
-
-        const tintFactor = (node.depth - 1) * TINT_STEP;
-        const rgb = tintRgb(node.branchColor, tintFactor);
-        const fill = `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
-        const parentValue = findParentValue(TREE, node);
-        const pct = parentValue > 0 ? ((node.value / parentValue) * 100).toFixed(0) : "0";
-        return (
-          <IcicleRect
-            key={`${node.depth}-${node.name}-${node.x0.toFixed(1)}`}
-            x={x}
-            y={y}
-            w={w}
-            h={h}
-            fill={fill}
-            textFill={textColorForRgb(rgb)}
-            label={node.name}
-            sublabel={fmtKB(node.value)}
-            fontSize={fontSize}
-            tooltip={`${node.name}: ${fmtKB(node.value)} (${pct}% of parent)`}
-          />
+              width={w}
+              height={h}
+              fill={node.fill}
+              stroke={t.pageBg}
+              strokeWidth={1.5}
+              rx={2}
+            >
+              <title>
+                {node.id}: {node.value.toLocaleString()} KB ({pct}% of parent)
+              </title>
+            </rect>
+            {showLabel && (
+              <text
+                x={x + 8}
+                y={y + fontSize + 5}
+                fontSize={fontSize}
+                fontWeight={showSub || node.depth <= 1 ? 600 : 500}
+                fill={node.textFill}
+                pointerEvents="none"
+              >
+                {labelText}
+              </text>
+            )}
+            {showSub && (
+              <text
+                x={x + 8}
+                y={y + fontSize + SUBLABEL_FONT_SIZE + 9}
+                fontSize={SUBLABEL_FONT_SIZE}
+                fontFamily={t.mono}
+                fill={node.textFill}
+                opacity={0.88}
+                pointerEvents="none"
+              >
+                {subText}
+              </text>
+            )}
+          </g>
         );
       })}
     </g>
   );
 }
 
-// Walks the tree to find `target`'s parent value, used for the "% of parent"
-// tooltip -- flatten() discards parent links, so this is the cheap way back.
-function findParentValue(node, target) {
-  if (!node.children) return node.value;
-  if (node.children.includes(target)) return node.value;
-  for (const c of node.children) {
-    const found = findParentValue(c, target);
-    if (found !== undefined) return found;
-  }
-  return undefined;
-}
-
-// --- Chart (default-exported component -- the harness mounts it) ----------
-// ChartContainer supplies the <ChartsSurface> SVG root and theme context; its
-// `margin` prop drives the DrawingProvider that Icicle() reads back via
-// useDrawingArea(), so the title/plot split uses MUI X's own layout system
-// rather than a parallel hand-rolled offset. The bands themselves are laid
-// out in absolute pixel space via partition() above, so no axis/scale is
-// needed -- xAxis/yAxis are omitted entirely.
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
+  const headerHeight = 84;
+  const chartHeight = height - headerHeight;
 
   return (
-    <ChartContainer width={width} height={height} series={[]} margin={MARGIN} skipAnimation>
-      <text x={width / 2} y={40} textAnchor="middle" fontSize={titleFontSize} fontWeight={600} fill={t.ink}>
-        {title}
-      </text>
-      <text x={width / 2} y={68} textAnchor="middle" fontSize={15} fill={t.inkSoft}>
-        Repository file sizes by directory depth · width ∝ size (KB)
-      </text>
-      <Icicle />
-    </ChartContainer>
+    <div
+      style={{
+        width,
+        height,
+        background: t.pageBg,
+        color: t.ink,
+        fontFamily: t.sans,
+        display: "flex",
+        flexDirection: "column",
+        boxSizing: "border-box",
+      }}
+    >
+      <div
+        style={{
+          height: headerHeight,
+          padding: "14px 28px 4px 28px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          boxSizing: "border-box",
+        }}
+      >
+        <div>
+          <div
+            style={{
+              fontSize: 22,
+              fontWeight: 700,
+              color: t.ink,
+              lineHeight: 1.2,
+            }}
+          >
+            icicle-basic · javascript · muix · anyplot.ai
+          </div>
+          <div
+            style={{
+              fontSize: 14,
+              color: t.inkSoft,
+              marginTop: 4,
+              fontFamily: t.mono,
+            }}
+          >
+            Repository file sizes across {DEPTH_COUNT} hierarchy levels (
+            {leafCount} files, {rootNode.value.toLocaleString()} KB total) ·
+            width ∝ {VALUE_COL}
+          </div>
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 20,
+            fontSize: 14,
+            color: t.ink,
+          }}
+        >
+          {topDirs.map((dir) => (
+            <div
+              key={dir.id}
+              style={{ display: "flex", alignItems: "center", gap: 8 }}
+            >
+              <span
+                style={{
+                  width: 14,
+                  height: 14,
+                  borderRadius: 3,
+                  background: dir.branchColor,
+                  display: "inline-block",
+                }}
+              />
+              <span>
+                <strong style={{ fontWeight: 600 }}>{dir.name}</strong>{" "}
+                <span style={{ color: t.inkSoft, fontFamily: t.mono }}>
+                  ({dir.value.toLocaleString()} KB)
+                </span>
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <ChartsContainer
+        width={width}
+        height={chartHeight}
+        series={[]}
+        xAxis={[{ position: "none" }]}
+        yAxis={[{ position: "none" }]}
+        margin={{ top: 8, right: 24, bottom: 20, left: 24 }}
+        skipAnimation
+      >
+        <IcicleLayer />
+      </ChartsContainer>
+    </div>
   );
 }
