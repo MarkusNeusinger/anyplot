@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: map-connection-lines
 created: '2026-08-26T08:03:16Z'
-updated: '2026-10-24T10:50:23Z'
+updated: '2026-10-24T10:57:19Z'
 generated_by: gemini-4-argon
 adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
 workflow_run: 40087218824
@@ -13,66 +13,54 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-conne
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/javascript/muix/plot-dark.html
-quality_score: 81
+quality_score: 85
 review:
   strengths:
-  - Composes the map as a custom SVG layer inside ChartsContainer via useXScale/useYScale/useDrawingArea,
-    so land masses, arcs and markers share the MUI X axis scales and grid exactly
-  - Line thickness (2.5-8.5 px) and opacity (0.3-0.6) both scale with annual passengers,
-    so the JFK-LHR / JFK-CDG / DXB-LHR transatlantic corridor reads as the busiest
-    bundle
-  - Aspect-preserving extent (cos(mean lat) correction) keeps continents undistorted
-    in an equirectangular frame
-  - Land masses drawn in the grid token at 0.6 opacity sit clearly beneath the green
-    routes in both themes
-  - Endpoint markers carry a page-colored outline, keeping them distinct from the
-    arcs that meet at hubs
-  - 'Realistic scenario: 16 real long-haul routes between real airports at true coordinates
-    with plausible passenger volumes'
+  - Composes a custom SVG map layer inside ChartsContainer through the useXScale/useYScale/useDrawingArea
+    hooks, so land masses, arcs and markers share MUI X's own linear lon/lat scales,
+    grid and axes
+  - Routes crossing the antimeridian (LAX–SYD, SFO–HKG, LAX–NRT, PEK–LAX) are split
+    at ±180° and continue on the opposite edge instead of streaking across the map
+  - Line thickness (3–9 px) and opacity (0.45–0.70) both follow annual passengers,
+    so the JFK–LHR/CDG and DXB–LHR corridors read as the busiest while thin routes
+    stay visible
+  - Arcs bow toward the nearer pole as quadratic curves, giving a geodesic look; endpoint
+    markers carry a page-colored ring that separates them from the lines meeting there
+  - 'Base map is quieter than the data: land in the grid token at 0.6 opacity with
+    a soft inkSoft outline, identical treatment in both themes'
+  - Airport codes are placed on the side away from their routes and from close neighbors
+    (LHR/CDG/FRA cluster stays readable); title, axes and caption are all theme tokens
+    and readable in both renders
   weaknesses:
-  - 'SC-03 (both): the trans-Pacific routes (LAX-NRT, LAX-SYD, SFO-HKG, PEK-LAX) are
-    split at ±180° but the x-axis only spans about -145° to 172°, so each of them
-    leaves the frame at one edge and re-enters at the other with its middle section
-    invisible → an extent that shows every route whole (e.g. a Pacific-centred longitude
-    range or a -180° to 180° frame). Likely cause: LON_MIN/LON_MAX derived from airport
-    longitudes only while the arcs are wrapped at the antimeridian.'
-  - 'VQ-03 (dark): the thinnest routes (GRU-CDG, JNB-DXB, HKG-SYD, LAX-SYD) render
-    at 2.5 px with opacity 0.30 and almost dissolve into the #1A1A17 background →
-    a floor of about 0.45 opacity (+0.15) or 3.5 px width so every route stays traceable.
-    Likely cause: strokeOpacity = 0.3 + ratio * 0.3 with the low end tuned for the
-    light surface.'
-  - 'VQ-02 (both): the GRU label sits where the GRU-JFK and GRU-CDG arcs leave the
-    marker, so both lines cross the letters → place the label on the side away from
-    the departing routes (e.g. below the marker). Likely cause: the default label
-    offset dy = -(radius + 9) puts every isolated label above its marker.'
-  - 'VQ-06 (both): the axis titles read ''Origin latitude (°)'' and ''Origin longitude
-    (°)'' although the axes position both origins and destinations and the land mass
-    → ''Latitude (°)'' and ''Longitude (°)''. Likely cause: the axis label taken from
-    the ORIGIN_LAT/ORIGIN_LON column names.'
-  - 'VQ-05 (both): the latitude band from -40° to -65° (about a fifth of the plot
-    height) is empty while the routes are cut at the left and right edges → a tighter
-    latitude range that gives the freed height to the map. Likely cause: the aspect
-    correction expands LAT span symmetrically around the data centre.'
-  - 'Suggestion: a more detailed coastline (UK, Japan, Indonesia, separate Arabian
-    peninsula) would make the base map read as a world map rather than abstract polygons.'
-  - 'Suggestion: a Robinson-like projection, which the Notes suggest for world maps,
-    would give the arcs a more natural geographic frame than the latitude/longitude
-    grid.'
+  - 'SC-02 (both): the base map is too coarse to place the airports — Britain, Japan,
+    Indonesia, New Zealand and Greenland are missing, so LHR sits just outside the
+    Europe outline and NRT on the bare Asian edge → coastline vertices detailed enough
+    that every endpoint airport lands on its land mass (add the British Isles and
+    Japan at least). Likely cause: the hand-written CONTINENTS polygons with 10–24
+    vertices each.'
+  - 'Suggestion: a small key with three reference line widths (e.g. 260 / 540 / 820
+    thousand passengers) would make the thickness encoding readable as values, not
+    only as the caption sentence.'
+  - 'Suggestion: a Robinson or Natural Earth projection of the lon/lat inputs, as
+    the Notes suggest, would make the world map read less stretched at high latitudes
+    than the plate carrée frame.'
+  - 'Suggestion: line 375 has the valueFormatter on the same line as the label after
+    a run of spaces; one property per line would match the rest of the file.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, correct.
-      Chrome: title "map-connection-lines · javascript · muix · anyplot.ai" centred at top in dark ink; y-axis "Origin latitude (°)" with ticks -60° to 80° every 10°, x-axis "Origin longitude (°)" with ticks -140° to 170° every 10°; dashed Prime Meridian and Equator reference lines with soft-ink labels; caption at bottom-left explaining that line thickness/opacity encode annual passengers and marker size encodes route degree. Subtle grey grid. All text readable.
-      Data: simplified continents as light-grey polygons with thin outlines; 16 routes drawn as poleward-bowing curves in #009E73 with varying width and opacity; the JFK-LHR/JFK-CDG/DXB-LHR corridor is the thickest. Green endpoint markers with page-colored outline, sized by route degree (JFK, DXB, LHR, SYD, LAX largest), labelled with IATA codes. Trans-Pacific routes exit at the left/right frame edges.
+      Background: warm off-white #FAF8F1 across the whole canvas, no white plot panel.
+      Chrome: centered title "map-connection-lines · javascript · muix · anyplot.ai" (~31 % of width) in dark ink; x axis "Longitude (°)" with ticks -180° to 180° every 10°, y axis "Latitude (°)" with ticks -40° to 60°; dashed Equator and Prime Meridian lines with soft labels; bottom-left caption "Line thickness and opacity encode Annual passengers (thousands); marker size encodes route degree." All text dark on light and readable; subtle grid visible.
+      Data: simplified grey continents (North/South America, Europe, Africa, Asia, Australia) under 16 brand-green #009E73 translucent curved routes of varying width between 14 airports (JFK, LHR, CDG, LAX, SFO, NRT, SYD, HKG, ORD, FRA, DXB, SIN, GRU, JNB, DEL, PEK); trans-Pacific routes leave one edge and re-enter at the other. Green endpoint circles sized by route count with a cream ring; airport codes in dark ink next to each. No clipped text.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17, correct.
-      Chrome: title, axis titles, tick labels, reference-line labels, airport codes and caption all in light ink; grid subtle grey; no dark-on-dark text.
-      Data: identical #009E73 routes and markers; continents in a dark-grey fill with lighter outlines. The thinnest low-opacity routes (GRU-CDG, JNB-DXB, HKG-SYD) are noticeably fainter than in light mode but still traceable.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles, tick labels, Equator/Prime Meridian labels, airport codes and caption all switch to light ink and are clearly readable; no dark-on-dark text. Grid subtle grey, land masses a slightly lighter warm grey with a soft outline.
+      Data: identical #009E73 routes and markers at the same widths and opacities as the light render (translucent lines appear deeper green over the dark surface); markers ringed in the dark page color. Brand green clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -80,70 +68,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (title 22, axis titles 16, ticks/labels 14); all text
-          readable in both themes
+        comment: Explicit sizes (title 22, axis titles 16, ticks/labels/caption 14
+          CSS px); readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
-        passed: false
-        comment: GRU label crossed by its departing arcs (defect line)
+        passed: true
+        comment: Airport codes clear of markers and routes, including the LHR/CDG/FRA
+          cluster; route crossings are permitted by the spec
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
-        passed: false
-        comment: Thinnest routes nearly dissolve in the dark render (defect line)
+        passed: true
+        comment: 3–9 px translucent lines and ringed markers visible on both surfaces
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single hue, value carried by width; no red-green reliance
+        comment: Single hue; value carried by width as well as opacity, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Empty -40° to -65° band while routes are cut at the side edges (defect
-          line)
+        passed: true
+        comment: 3200x1800, map fills the frame, nothing clipped, caption fits
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Axis titles say 'Origin latitude/longitude' for axes that position
-          everything (defect line)
+        passed: true
+        comment: Longitude (°) / Latitude (°) with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'All marks #009E73, correct #FAF8F1/#1A1A17 surfaces, chrome theme-correct'
+        comment: 'Routes and markers #009E73 in both themes; correct page backgrounds;
+          chrome from tokens'
     design_excellence:
       score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Style-guide baseline; crude polygon base map keeps it from rising
+        passed: true
+        comment: 'Raised one: a tiered map hierarchy — land in the grid token at 0.6
+          opacity with an inkSoft outline under ink-weighted data, caption in inkSoft
+          below the axes'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Land fill tuned quieter than routes and page-colored marker outlines
-          separating hubs from arcs
+        passed: true
+        comment: 'Raised one: page-colored rings on endpoint markers and labels placed
+          on the side away from each airport''s routes'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Hub sizing plus width/opacity make the transatlantic corridor the
-          clear focal point
+        comment: 'Default: the corridors stand out through the required value encoding;
+          no further hierarchy chosen'
     spec_compliance:
       score: 14
       max: 15
@@ -156,24 +146,25 @@ review:
         comment: Origin-destination connection map on a base map
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Curved poleward arcs, value-scaled width/opacity, endpoint markers,
-          translucency 0.3-0.6, coastline base map, caption explaining the encoding
+        comment: Curved arcs, value-scaled width/opacity, endpoint markers, translucency
+          and a base map are present; the base map is too coarse to place LHR and
+          NRT on land (defect line)
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Trans-Pacific routes leave the frame with their middle sections invisible
-          (defect line)
+        passed: true
+        comment: Markers at true lon/lat; all routes in frame, antimeridian routes
+          split correctly
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title; caption key matches the encodings
+        comment: Title format correct; encoding explained by caption
     data_quality:
       score: 15
       max: 15
@@ -183,21 +174,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Hub bundling, varied weights, long and short arcs, antimeridian crossings
-          all shown
+        comment: Long and short routes, hubs, overlapping corridors and antimeridian
+          crossings
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real airports at true coordinates, plausible passenger volumes, neutral
+        comment: Real airport codes and coordinates with plausible annual passenger
+          volumes; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Checked airport coordinates (e.g. JFK 40.64/-73.78, SYD -33.95/151.18)
-          against the axes; volumes 260-820k plausible
+        comment: Airport coordinates checked (JFK 40.64/-73.78, SYD -33.95/151.18)
+          and volumes 260–820 thousand plausible
     code_quality:
       score: 10
       max: 10
@@ -207,13 +199,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: One layer component, required for MUI X scale hooks
+        comment: Single layer component is required by MUI X hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data
+        comment: Hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -225,15 +217,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no available call replaces the arc/label
-          math
+        comment: Complexity matches a custom map layer; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Renders into the harness mount with skipAnimation; v9 ChartsContainer
-          API
+        comment: Default export, skipAnimation, v9 ChartsContainer/axis band API
     library_mastery:
       score: 6
       max: 10
@@ -242,26 +232,27 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: false
-        comment: Composition API with ChartsContainer, ChartsGrid, ChartsXAxis/YAxis
-          and useXScale/useYScale/useDrawingArea custom layer
+        passed: true
+        comment: 'Raised one: v9 composition (ChartsContainer + ChartsXAxis/YAxis/Grid)
+          with axis ids and sized axis bands'
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: ChartsReferenceLine for equator/meridian and drawing-area hooks for
-          a clipPath
-  verdict: REJECTED
+        comment: 'Raised one: custom SVG layer drawn with useXScale/useYScale/useDrawingArea
+          inside the chart'
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T10:47:32Z'
+  rendered_at: '2026-10-24T10:53:49Z'
 impl_tags:
   dependencies: []
   techniques:
   - bezier-curves
   - layer-composition
   - annotations
+  - patches
   - html-export
   patterns:
   - iteration-over-groups
