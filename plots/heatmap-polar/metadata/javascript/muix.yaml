@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: heatmap-polar
 created: '2026-09-05T03:42:44Z'
-updated: '2026-10-24T09:43:43Z'
+updated: '2026-10-24T09:48:54Z'
 generated_by: gemini-4-argon
 adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
 workflow_run: 40082794039
@@ -13,51 +13,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-p
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/javascript/muix/plot-dark.html
-quality_score: 85
+quality_score: 86
 review:
   strengths:
-  - 'Correct polar heatmap: 7 concentric day rings (Mon innermost to Sun outermost)
-    × 24 equal 15° hour sectors drawn as SVG annular paths inside a community ChartsContainer
-    via the useDrawingArea hook, so geometry follows MUI X''s drawing area'
-  - 'Cyclic continuity is real and visible: the 11pm and 12am sectors meet with no
-    seam, and the data is built so the Fri/Sat nightlife bump straddles midnight (cyclic
-    distance min(h, 24−h)), which shows exactly what a rectangular heatmap would split'
-  - Sequential imprint_seq gradient (t.seq[0] → t.seq[1]) is used for both the cells
-    and the horizontal colorbar, with a titled colorbar and five value ticks; cell
-    borders in the page color stay subordinate to the cell colors in both themes
-  - Ring labels placed along the 12pm spoke pick dark or light ink from the cell's
-    luminance, so each day label stays legible on its cell in both themes
-  - Subtitle states the ring orientation (Mon inner → Sun outer) and the computed
-    peak (134, Sat 1pm), giving the viewer a reading key and a focal point derived
-    from the data
-  - Fully deterministic data, theme tokens threaded through every text element, skipAnimation
-    set
+  - Composes the polar heatmap through MUI X's ChartsContainer with the useDrawingArea
+    hook, so the 168 ring segments are laid out from the chart's own drawing area
+    instead of hard-coded pixel offsets
+  - 'The angular axis closes cleanly: 24 equal 15° sectors run clockwise from 12am
+    at the top, and 11pm sits directly next to 12am with no seam; the Fri/Sat late-night
+    traffic block spans midnight and shows the cyclic continuity'
+  - Rings run Mon (inner) to Sun (outer) and are labelled inside the 12pm sector,
+    with each label's fill switched between dark and light ink from the luminance
+    of the cell under it
+  - 'The sequential imprint_seq gradient (#009E73 → #4467A3) is built from window.ANYPLOT_TOKENS.seq,
+    and a horizontal color bar with rounded ticks (14–134) is drawn from the same
+    stops; data colors are identical in both themes'
+  - Cell borders use the theme page color at 2 px, so they stay thin and subordinate
+    to the cell colors on both the light and the dark surface
+  - skipAnimation is set and the component is a default export sized to window.ANYPLOT_SIZE
+    with the square orientation directive
   weaknesses:
-  - 'VQ-02 (both): the ''Mon'' ring label is wider than its narrow innermost cell
-    and its final ''n'' runs across the 180° cell border (the page-colored separator
-    cuts through the letter) → the label fits inside its cell with a few px to spare
-    (about −2 px font or a spoke angle where the innermost cell is wider). Likely
-    cause: fontSize={14} fontWeight={700} for every ring label regardless of the inner
-    ring''s arc width at DAY_LABEL_ANGLE.'
-  - 'Suggestion: colorbar ticks at 14, 44, 74, 104, 134 come from min/max fractions;
-    round values (25, 50, 75, 100, 125) would read faster.'
-  - 'Suggestion: the HTML output could expose each cell''s value on hover (a ChartsTooltip
-    or SVG <title>) since the PNG shows color only.'
+  - 'Suggestion: the mandated title fills only about 40 % of the width; a slightly
+    larger title size (about 26 px) would give it more presence over the large disc.'
+  - 'Suggestion: MUI X tooltips are not wired up, so the HTML view gives no per-cell
+    value on hover; a ChartsTooltip-style hover readout of day, hour and visits would
+    add value in the interactive output.'
+  - 'Suggestion: the ring and sector bins are collected with Array.includes loops;
+    [...new Set(data.map(...))], as the library prompt shows, would be shorter.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, 2400×2400 square canvas.
-      Chrome: bold dark title "heatmap-polar · javascript · muix · anyplot.ai" centered at top, softer subtitle "Visits per hour by Hour of day (24 sectors) & Day of week (Mon inner → Sun outer) · Peak 134 (Sat 1pm)"; hour labels 12am, 3am, 6am, 9am, 12pm, 3pm, 6pm, 9pm in bold soft ink around the circle; day labels Mon–Sun stacked along the 12pm spoke in light ink; horizontal colorbar "Visits per hour" at the bottom with ticks 14/44/74/104/134. All text readable; the 'Mon' label's last letter is crossed by the white cell border.
-      Data: 7 rings × 24 sectors of annular cells with a small center hole, colored on the imprint_seq gradient from brand green #009E73 (low, night hours on weekdays) to blue #4467A3 (high, Sat/Sun late morning–afternoon). White 2 px separators between cells. 11pm and 12am sectors meet seamlessly at the top.
+      Background: warm off-white #FAF8F1, square 2400x2400 canvas.
+      Chrome: bold dark title "heatmap-polar · javascript · muix · anyplot.ai" at the top, a soft-ink subtitle ("Visits per hour by Hour of day (24 sectors) & Day of week (Mon inner → Sun outer) · Peak 134 (Sat 1pm)"), angular labels every 3 hours (12am, 3am, 6am, 9am, 12pm, 3pm, 6pm, 9pm) in bold soft ink around the outside, ring labels Mon–Sun inside the 12pm sector in white text, and a horizontal color bar titled "Visits per hour" with ticks 14, 44, 74, 104, 134 at the bottom. All text is readable.
+      Data: a donut-shaped polar heatmap of 7 concentric rings × 24 equal sectors, filled along the imprint_seq ramp from brand green #009E73 (low, the night hours of Mon–Thu) to blue #4467A3 (high, the Sat/Sun afternoon and the weekday 8–9am peak). Cells are separated by thin page-colored borders. The ring closes at 12am with no gap.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title in light ink, subtitle, hour labels and colorbar ticks in light soft ink — all clearly readable, no dark-on-dark text. Cell separators switch to the dark page color.
-      Data: cell and colorbar colors identical to the light render (green → blue); only chrome flipped. Brand green clearly visible.
+      Chrome: title in light ink, subtitle, angular labels and color-bar ticks in light soft ink; ring labels stay white on the mid-tone cells. No dark-on-dark text anywhere.
+      Data: cell colors and the color-bar gradient are identical to the light render; only the cell borders flip to the dark page color and the chrome inverts.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -65,46 +62,49 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 22 px, subtitle/labels 14–15 px CSS (2× scale) per the muix
-          sizing guidance; all text readable in both themes
+        comment: Explicit sizes (title 22 px, labels 14–15 px CSS); all text readable
+          in both themes, ring labels contrast-adaptive
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: '''Mon'' ring label runs across the 180° cell border (defect line)'
+        comment: No text collisions; angular labels sit clear of the outer ring, ring
+          labels fit their cells
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 168 cells clearly visible; borders thin and subordinate; colorbar
-          glyph visible in both themes
+        comment: 168 cells clearly visible; 2 px page-colored borders subordinate
+          to the fills; color bar visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green→blue sequential ramp, no red-green signal
+        comment: Green→blue sequential ramp, CVD-safe, no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square canvas, circle centered and large, colorbar balanced below;
-          no overflow
+        comment: Square 2400x2400, disc centered, balanced margins, color bar below
+          with room, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Colorbar titled 'Visits per hour', hour and day labels readable text
+        comment: Color bar titled 'Visits per hour', subtitle names both dimensions
+          and the ring order
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq from t.seq tokens; theme backgrounds correct
+        comment: 'imprint_seq from tokens; #FAF8F1 / #1A1A17 backgrounds; data colors
+          identical across themes'
     design_excellence:
       score: 11
       max: 20
@@ -114,22 +114,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Title/subtitle hierarchy and luminance-adaptive ink for in-cell ring
-          labels go beyond the baseline
+        comment: 'Raised one: title/subtitle hierarchy and ring labels whose ink flips
+          with the luminance of the cell beneath'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Page-colored separators, ring labels set on a spoke inside the rings
-          instead of a separate legend, centered rounded colorbar
+        comment: 'Raised one: ring labels set on a single spoke inside the cells,
+          freeing the outer edge for the hour labels; rounded color-bar ticks'
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Subtitle names the computed peak (Sat 1pm) and ring orientation;
-          data designed so the nightlife bump crosses midnight
+        comment: 'Raised one: the subtitle names the computed peak (Sat 1pm, 134)
+          as a focal point'
     spec_compliance:
       score: 15
       max: 15
@@ -139,26 +139,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Polar heatmap with ring segments, no unrequested layers
+        comment: Correct polar heatmap with concentric ring segments
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Wraps without seam, Mon innermost, angular labels every 3 h in cyclic
-          order, sequential colormap, colorbar, thin borders, ring labels
+        comment: Cyclic wrap without seam, Mon innermost, labels every 3 h in cyclic
+          order, sequential colormap, color bar, thin borders, equal sector widths
+          — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Each cell at its hour sector and day ring, equal 15° widths
+        comment: Each cell at its hour sector and day ring; full value range on the
+          color bar
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; colorbar title readable
+        comment: Title in the mandated format; color bar title is reader text
     data_quality:
       score: 15
       max: 15
@@ -168,21 +170,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows weekday vs weekend contrast, morning/evening peaks and midnight-crossing
-          activity that exercises cyclic continuity
+        comment: Weekday vs weekend profiles plus Fri/Sat late-night traffic across
+          midnight exercise the cyclic wrap
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Hourly website visits by day of week — the spec's example, neutral
+        comment: Hourly website visits by weekday — plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'No Check values in the spec; checked the subtitle peak: Sat h=13
-          gives 27+35.5+71.2≈134, matching the render and colorbar max'
+        comment: 14–134 visits per hour, sensible; no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -192,14 +193,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Only the default-exported Chart and the hook-using layer component
-          the harness/composition API require
+        comment: Single layer component, required for the useDrawingArea hook; otherwise
+          flat
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data
+        comment: Deterministic formula data
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -211,13 +212,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no available call replaces the arc geometry
+        comment: Short color interpolation is fine per the library prompt's Computation
+          line
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component, ChartsContainer v9 API, skipAnimation
+        comment: Default export, skipAnimation, current v9 ChartsContainer API
     library_mastery:
       score: 5
       max: 10
@@ -227,18 +229,18 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: ChartsContainer composition with a custom layer — the standard pattern,
-          but every mark is hand-drawn SVG
+        comment: 'Default: ChartsContainer composition with hidden axes; marks are
+          custom SVG rather than a MUI X series'
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: useDrawingArea hook ties the custom layer to MUI X's drawing area
-  verdict: REJECTED
+        comment: 'Raised one: useDrawingArea hook drives the custom layer''s geometry'
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T09:40:39Z'
+  rendered_at: '2026-10-24T09:46:04Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -255,5 +257,5 @@ impl_tags:
   styling:
   - custom-colormap
   - edge-highlighting
-  - gradient-fill
   - minimal-chrome
+  - gradient-fill
