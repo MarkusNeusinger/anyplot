@@ -2,183 +2,328 @@
 // lightcurve-transit: Astronomical Light Curve
 // Library: muix 7.29.1 | JavaScript 22.22.3
 // Quality: 92/100 | Created: 2026-06-20
-//# anyplot-orientation: landscape
 
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { LinePlot } from "@mui/x-charts/LineChart";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
+import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
-import { useDrawingArea } from "@mui/x-charts/hooks";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
+import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const FONT = "system-ui, -apple-system, sans-serif";
 
-// Deterministic LCG — no seeded Math.random in the browser
-function makeLCG(seed) {
-  let s = seed >>> 0;
-  return () => {
-    s = (Math.imul(1664525, s) + 1013904223) >>> 0;
-    return s / 0x100000000;
-  };
-}
+// Constants
+const FONT = '"Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, sans-serif';
+const MONO = '"JetBrains Mono", "SFMono-Regular", Menlo, monospace';
+const PHASE_AXIS_LABEL = "Orbital phase";
+const BASELINE_FLUX = 1.0;
+const Y_PAD_SHARE = 0.14;
 
-// Smooth limb-darkened transit model using smoothstep ingress/egress
+// Columns: set these to your data's column names
+const TIME = "Observation time (BJD - 2457000)"; // role: time
+const PERIOD = "Orbital period (days)"; // role: period
+const FLUX = "Relative flux"; // role: flux
+const FLUX_ERR = "Flux uncertainty"; // role: flux_err
+const MODEL_FLUX = "Transit model"; // role: model_flux
+
+// Data: replace this block with your own records
 const N_PTS = 280;
-const TRANSIT_CENTER = 0.5;     // transit centered at mid-phase
-const TRANSIT_HALF_DUR = 0.05;  // full duration = 0.10 phase units (0.45–0.55)
-const TRANSIT_DEPTH = 0.01;     // 1% flux dip relative to out-of-transit baseline
+const ORBITAL_PERIOD_DAYS = 3.5247;
+const EPOCH_BJD = 1325.41;
+const TRANSIT_CENTER = 0.5;
+const TRANSIT_HALF_DUR = 0.018;
+const TRANSIT_DEPTH = 0.01;
+const NOISE_SIGMA = 0.0015;
 
-function smoothstep(x) { return x * x * (3 - 2 * x); }
+let lcgState = 42 >>> 0;
+const data: Array<{
+  [TIME]: number;
+  [PERIOD]: number;
+  [FLUX]: number;
+  [FLUX_ERR]: number;
+  [MODEL_FLUX]: number;
+}> = [];
 
-function computeModel(ph) {
+for (let i = 0; i < N_PTS; i += 1) {
+  const ph = i / N_PTS;
+  const orbitCycle = i === 0 ? 0 : i % 4;
+  const timeBjd = EPOCH_BJD + (orbitCycle + ph) * ORBITAL_PERIOD_DAYS;
+
   const dt = Math.abs(ph - TRANSIT_CENTER);
-  if (dt >= TRANSIT_HALF_DUR) return 1.0;
-  return 1 - TRANSIT_DEPTH * smoothstep(1 - dt / TRANSIT_HALF_DUR);
+  let modFlux = BASELINE_FLUX;
+  if (dt < TRANSIT_HALF_DUR) {
+    const u = 1 - dt / TRANSIT_HALF_DUR;
+    const smooth = u * u * (3 - 2 * u);
+    modFlux = BASELINE_FLUX - TRANSIT_DEPTH * smooth;
+  }
+
+  lcgState = (Math.imul(1664525, lcgState) + 1013904223) >>> 0;
+  const r1 = lcgState / 0x100000000;
+  const obsFlux = modFlux + (r1 * 2 - 1) * NOISE_SIGMA * 2.5;
+
+  lcgState = (Math.imul(1664525, lcgState) + 1013904223) >>> 0;
+  const r2 = lcgState / 0x100000000;
+  const fluxErr = NOISE_SIGMA * (1 + r2 * 0.35);
+
+  data.push({
+    [TIME]: Number(timeBjd.toFixed(6)),
+    [PERIOD]: ORBITAL_PERIOD_DAYS,
+    [FLUX]: Number(obsFlux.toFixed(6)),
+    [FLUX_ERR]: Number(fluxErr.toFixed(6)),
+    [MODEL_FLUX]: Number(modFlux.toFixed(6)),
+  });
 }
 
-// Simulated TESS-like photometry: 280 phase-folded observations
-const rng = makeLCG(42);
-const phases = Array.from({ length: N_PTS }, (_, i) => i / (N_PTS - 1));
-const modelFlux = phases.map(computeModel);
-const NOISE_SIGMA = 0.0015;
-const observedFlux = phases.map((_, i) => modelFlux[i] + (rng() * 2 - 1) * NOISE_SIGMA * 2.5);
-const fluxErrors = phases.map(() => NOISE_SIGMA * (1 + rng() * 0.35));
+// Plot: reads only data and the constants above
+const rawTimes = data.map((d) => d[TIME]);
+const minTime = Math.min(...rawTimes);
+const maxTime = Math.max(...rawTimes);
+const isAlreadyPhase = minTime >= 0 && maxTime <= 1;
 
-// Explicit axis bounds — must match the coordinate mapping inside DataLayer
-const FLUX_MIN = 0.983;
-const FLUX_MAX = 1.007;
+const foldedRows = data
+  .map((row) => {
+    const p = row[PERIOD];
+    const phase = isAlreadyPhase
+      ? row[TIME]
+      : (((row[TIME] - minTime) / p) % 1 + 1) % 1;
+    return {
+      ...row,
+      phase,
+    };
+  })
+  .sort((a, b) => a.phase - b.phase);
 
-// Renders observed data points: vertical error bars + measurement dots
-// Uses useDrawingArea to map data coordinates to SVG pixel positions.
-// FLUX_MIN/FLUX_MAX must match the yAxis min/max above for correct alignment.
-function DataLayer() {
-  const { left, top, width, height } = useDrawingArea();
-  const toX = (ph) => left + ph * width;
-  const toY = (fl) => top + (FLUX_MAX - fl) / (FLUX_MAX - FLUX_MIN) * height;
-  const toH = (e) => e / (FLUX_MAX - FLUX_MIN) * height;
-  const C = t.palette[0];  // Imprint brand green — first categorical series
+const phases = foldedRows.map((d) => d.phase);
+const modelFlux = foldedRows.map((d) => d[MODEL_FLUX]);
+const orbitalPeriod = foldedRows[0][PERIOD];
+
+const minPhase = Math.min(...phases);
+const maxPhase = Math.max(...phases);
+const lowerExtents = foldedRows.map((d) => d[FLUX] - d[FLUX_ERR]);
+const upperExtents = foldedRows.map((d) => d[FLUX] + d[FLUX_ERR]);
+const minDataFlux = Math.min(...lowerExtents, ...modelFlux);
+const maxDataFlux = Math.max(...upperExtents, ...modelFlux);
+const fluxSpan = maxDataFlux - minDataFlux;
+const FLUX_MIN = minDataFlux - fluxSpan * Y_PAD_SHARE;
+const FLUX_MAX = maxDataFlux + fluxSpan * Y_PAD_SHARE;
+
+const minModelFlux = Math.min(...modelFlux);
+const transitDepthPct = ((BASELINE_FLUX - minModelFlux) * 100).toFixed(2);
+const inTransitPhases = foldedRows
+  .filter((r) => r[MODEL_FLUX] < BASELINE_FLUX - 1e-5)
+  .map((r) => r.phase);
+const transitPhaseSpan =
+  inTransitPhases.length > 1
+    ? Math.max(...inTransitPhases) - Math.min(...inTransitPhases)
+    : 0;
+const transitDurationHours = (
+  transitPhaseSpan *
+  orbitalPeriod *
+  24
+).toFixed(2);
+const timeSpanDays = (maxTime - minTime).toFixed(1);
+
+const OBS_COLOR = t.palette[0];
+const MODEL_COLOR = t.palette[1];
+
+function TransitDataLayer() {
+  const xScale = useXScale("phase") as (v: number) => number;
+  const yScale = useYScale("flux") as (v: number) => number;
 
   return (
     <g>
-      {/* Error bars (drawn behind dots) */}
-      {phases.map((ph, i) => {
-        const x = toX(ph);
-        const y = toY(observedFlux[i]);
-        const ey = toH(fluxErrors[i]);
+      {foldedRows.map((row, i) => {
+        const x = xScale(row.phase);
+        const yTop = yScale(row[FLUX] + row[FLUX_ERR]);
+        const yBot = yScale(row[FLUX] - row[FLUX_ERR]);
         return (
           <line
-            key={i}
-            x1={x} y1={y - ey} x2={x} y2={y + ey}
-            stroke={C} strokeWidth={1.2} opacity={0.52}
+            key={`err-${i}`}
+            x1={x}
+            y1={yTop}
+            x2={x}
+            y2={yBot}
+            stroke={OBS_COLOR}
+            strokeWidth={1.25}
+            opacity={0.5}
           />
         );
       })}
-      {/* Data dots */}
-      {phases.map((ph, i) => (
+      {foldedRows.map((row, i) => (
         <circle
-          key={`d${i}`}
-          cx={toX(ph)} cy={toY(observedFlux[i])} r={3.5}
-          fill={C} opacity={0.82}
+          key={`pt-${i}`}
+          cx={xScale(row.phase)}
+          cy={yScale(row[FLUX])}
+          r={3.5}
+          fill={OBS_COLOR}
+          opacity={0.84}
         />
       ))}
     </g>
   );
 }
 
-// Inline legend positioned in the right margin
-function LegendPanel() {
-  const { left, top, width } = useDrawingArea();
-  const lx = left + width + 20;
-  const ly = top + 60;
-
-  return (
-    <g fontFamily={FONT} fontSize={15} fill={t.inkSoft}>
-      <circle cx={lx + 7} cy={ly} r={5} fill={t.palette[0]} opacity={0.85} />
-      <text x={lx + 20} y={ly + 5}>Observed Flux</text>
-      <line
-        x1={lx} y1={ly + 36} x2={lx + 20} y2={ly + 36}
-        stroke={t.palette[1]} strokeWidth={3}
-      />
-      <text x={lx + 26} y={ly + 41}>Transit Model</text>
-    </g>
-  );
-}
-
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
-  const titleH = 50;
+  const headerHeight = 84;
+  const chartHeight = height - headerHeight;
 
   return (
-    <Box
-      sx={{
+    <div
+      style={{
         width,
         height,
-        bgcolor: t.pageBg,
+        background: t.pageBg,
+        color: t.ink,
+        fontFamily: FONT,
         display: "flex",
         flexDirection: "column",
-        pt: "14px",
+        boxSizing: "border-box",
       }}
     >
-      <Typography
-        sx={{
-          color: t.ink,
-          fontSize: 21,
-          fontWeight: 500,
-          textAlign: "center",
-          lineHeight: 1.2,
-          mb: "4px",
-          fontFamily: "inherit",
+      <div
+        style={{
+          height: headerHeight,
+          padding: "14px 44px 4px 116px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          boxSizing: "border-box",
         }}
       >
-        Exoplanet Transit · lightcurve-transit · javascript · muix · anyplot.ai
-      </Typography>
+        <div>
+          <div
+            style={{
+              fontSize: 22,
+              fontWeight: 700,
+              color: t.ink,
+              lineHeight: 1.2,
+            }}
+          >
+            lightcurve-transit · javascript · muix · anyplot.ai
+          </div>
+          <div
+            style={{
+              fontSize: 14,
+              color: t.inkSoft,
+              marginTop: 4,
+              fontFamily: MONO,
+            }}
+          >
+            {foldedRows.length} phase-folded observations ({timeSpanDays} d
+            span, P = {orbitalPeriod.toFixed(4)} d) · transit depth{" "}
+            {transitDepthPct}% ({transitDurationHours} h duration)
+          </div>
+        </div>
 
-      <ChartContainer
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 24,
+            fontSize: 15,
+            color: t.ink,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span
+              style={{
+                width: 11,
+                height: 11,
+                borderRadius: "50%",
+                background: OBS_COLOR,
+                display: "inline-block",
+              }}
+            />
+            <span>Observed {FLUX} (±1σ)</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span
+              style={{
+                width: 24,
+                height: 3,
+                borderRadius: 2,
+                background: MODEL_COLOR,
+                display: "inline-block",
+              }}
+            />
+            <span>{MODEL_FLUX}</span>
+          </div>
+        </div>
+      </div>
+
+      <ChartsContainer
         width={width}
-        height={height - titleH}
-        margin={{ left: 138, right: 172, top: 28, bottom: 72 }}
+        height={chartHeight}
+        margin={{ left: 20, right: 40, top: 20, bottom: 20 }}
+        skipAnimation
         series={[
           {
             type: "line",
             id: "model",
+            xAxisId: "phase",
+            yAxisId: "flux",
             data: modelFlux,
-            label: "Transit Model",
-            color: t.palette[1],
+            label: MODEL_FLUX,
+            color: MODEL_COLOR,
             showMark: false,
             curve: "natural",
           },
         ]}
-        xAxis={[{ data: phases, scaleType: "linear", min: 0, max: 1 }]}
-        yAxis={[{ min: FLUX_MIN, max: FLUX_MAX, valueFormatter: (v) => v.toFixed(3) }]}
+        xAxis={[
+          {
+            id: "phase",
+            data: phases,
+            scaleType: "linear",
+            min: minPhase,
+            max: maxPhase,
+            height: 60,
+            label: PHASE_AXIS_LABEL,
+            labelStyle: { fontSize: 16, fontWeight: 600, fill: t.ink },
+            tickLabelStyle: {
+              fontSize: 14,
+              fill: t.inkSoft,
+              fontFamily: MONO,
+            },
+            valueFormatter: (v: number) => v.toFixed(2),
+          },
+        ]}
+        yAxis={[
+          {
+            id: "flux",
+            min: FLUX_MIN,
+            max: FLUX_MAX,
+            width: 96,
+            label: FLUX,
+            labelStyle: { fontSize: 16, fontWeight: 600, fill: t.ink },
+            tickLabelStyle: {
+              fontSize: 14,
+              fill: t.inkSoft,
+              fontFamily: MONO,
+            },
+            valueFormatter: (v: number) => v.toFixed(3),
+          },
+        ]}
+        sx={{
+          "& .MuiChartsGrid-line": { stroke: t.grid },
+        }}
       >
-        {/* Dashed reference at out-of-transit baseline (flux = 1.0) */}
+        <ChartsGrid horizontal />
         <ChartsReferenceLine
-          y={1.0}
-          lineStyle={{ stroke: t.inkSoft, strokeDasharray: "5 4", strokeWidth: 1 }}
+          y={BASELINE_FLUX}
+          axisId="flux"
+          lineStyle={{
+            stroke: t.inkSoft,
+            strokeDasharray: "5 4",
+            strokeWidth: 1.4,
+          }}
         />
-
-        {/* Observed flux: error bars + dots (rendered before model curve) */}
-        <DataLayer />
-
-        {/* Smooth transit model overlaid on top of scatter data */}
+        <TransitDataLayer />
         <LinePlot skipAnimation />
-
-        <ChartsXAxis
-          label="Orbital Phase"
-          tickLabelStyle={{ fontSize: 14, fill: t.inkSoft, fontFamily: FONT }}
-          labelStyle={{ fontSize: 16, fontWeight: "500", fill: t.inkSoft, fontFamily: FONT }}
-        />
-        <ChartsYAxis
-          label="Relative Flux"
-          tickLabelStyle={{ fontSize: 14, fill: t.inkSoft, fontFamily: FONT }}
-          labelStyle={{ fontSize: 16, fontWeight: "500", fill: t.inkSoft, fontFamily: FONT }}
-        />
-
-        <LegendPanel />
-      </ChartContainer>
-    </Box>
+        <ChartsXAxis axisId="phase" />
+        <ChartsYAxis axisId="flux" />
+      </ChartsContainer>
+    </div>
   );
 }
