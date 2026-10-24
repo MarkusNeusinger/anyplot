@@ -1,0 +1,12 @@
+box-horizontal
+box-notched
+boxen-basic
+bubble-basic
+bubble-packed
+campbell-basic
+candlestick-basic
+candlestick-volume
+cat-box-strip
+chernoff-basic
+chessboard-basic
+chord-basic

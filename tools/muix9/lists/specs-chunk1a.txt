@@ -1,0 +1,10 @@
+alluvial-opinion-flow
+arc-basic
+bar-3d-categorical
+bar-error
+bar-pareto
+bar-permutation-importance
+bifurcation-basic
+biplot-pca
+box-basic
+box-grouped
