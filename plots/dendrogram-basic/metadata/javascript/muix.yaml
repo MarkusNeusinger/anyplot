@@ -2,113 +2,103 @@ library: muix
 language: javascript
 specification_id: dendrogram-basic
 created: '2026-06-18T04:38:41Z'
-updated: '2026-06-18T05:11:12Z'
-generated_by: claude-sonnet
-workflow_run: 27736615810
+updated: '2026-10-24T08:36:17Z'
+generated_by: gemini-4-argon
+adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
+workflow_run: 40078418332
 issue: 986
-language_version: 22.22.3
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dendrogram-basic/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dendrogram-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dendrogram-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dendrogram-basic/javascript/muix/plot-dark.html
-quality_score: 90
+quality_score: 86
 review:
   strengths:
-  - Complete-linkage hierarchical clustering implemented from scratch in pure JavaScript
-    — no external scipy dependency, fully self-contained and deterministic
-  - Expert use of MUI X coordinate hooks (useXScale, useYScale, useDrawingArea) to
-    draw dendrogram branches precisely aligned to the chart's coordinate system
-  - Species-colored leaf dots using Imprint palette positions 1–3 in canonical order
-    create effective visual hierarchy — viewer immediately sees setosa cluster vs
-    versicolor/virginica group
-  - 'Both renders theme-adapt correctly: branch lines use t.ink (dark on light, light
-    on dark), custom Legend uses t.ink for text, backgrounds match #FAF8F1 / #1A1A17'
-  - Iris dataset is an ideal, scientifically neutral context for a dendrogram — labels
-    (S-01…Vi-05) are compact and readable at -45° rotation, distance scale (0–5.5
-    Euclidean) is factually correct
+  - 'Correct dendrogram geometry: complete-linkage clustering on Euclidean distances,
+    every crossbar at its exact merge height (S-01/S-04 at 0.14 and Ve-01/Ve-03 at
+    0.26 match the computed distances), leaf order from a depth-first tree walk so
+    no branches cross'
+  - 'Idiomatic MUI X v9 composition: ChartsContainer with ChartsGrid, ChartsXAxis/ChartsYAxis
+    and a custom SVG layer that reads the axis scales through useXScale/useYScale,
+    so the branches share the axis coordinate system'
+  - Height axis titled 'Euclidean distance (complete linkage)' names both the metric
+    and the linkage method; x ticks are placed per leaf via tickInterval + valueFormatter
+  - 'Theme-correct chrome in both renders: warm page backgrounds, ink/inkSoft text,
+    a subtle dashed horizontal grid, identical Imprint green branches'
+  - Real iris measurements give three natural groups with the expected setosa separation
+    (root merge at 5.53) and the familiar versicolor/virginica overlap
   weaknesses:
-  - 'Design could be elevated: the dendrogram branches use a flat ink stroke with
-    no color differentiation by cluster depth or species group — coloring sub-tree
-    branches by the dominant species assignment would reinforce the visual story without
-    adding complexity'
-  - The chart has a large right-margin blank zone (~190 CSS px) above the legend;
-    the legend items (3 rows) occupy only the top ~100 px of that 800+ px tall column
-    — repositioning the legend closer to the data (e.g. top-left inset or embedded
-    along the top of the dendrogram) would reduce visual imbalance
-  - Y-axis label 'Distance (Complete Linkage)' at 15 CSS px is at the low end of the
-    recommended range — bumping to 16–17 px would improve readability when scaled
-    to mobile widths
+  - 'Suggestion: the leaf ids S-, Ve- and Vi- are cryptic and inconsistently abbreviated;
+    spelling the species prefix out (Setosa-01, Versicolor-01, Virginica-01) would
+    let a reader see the species grouping without prior knowledge.'
+  - 'Suggestion: the leaf scatter tooltip shows the numeric x position and y = 0;
+    a valueFormatter on the series showing the sample id would make the HTML hover
+    useful.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, no pure white.
-      Chrome: Title "dendrogram-basic · javascript · muix · anyplot.ai" in bold dark ink, clearly readable, spans ~65% of canvas width. Y-axis label "Distance (Complete Linkage)" rotated 90°, readable though compact. X-axis tick labels (S-05, S-01, … Vi-05) rotated -45°, dark, well-spaced and readable. Y-axis ticks (0 to 5.5 in 0.5 steps) dark and clear. Legend in top-right margin shows three labeled species with colored circles — text in dark ink, readable.
-      Data: Dendrogram branches drawn in dark ink (#1A1A17), strokeWidth=2, clean right-angle topology. Leaf dots: Iris setosa (#009E73 green, positions S-*), Iris versicolor (#C475FD lavender, Ve-*), Iris virginica (#4467A3 blue, Vi-*). Setosa cluster is tightly grouped on the left (merge height ~1.1); versicolor and virginica interleave with one virginica (Vi-02) adjacent to the versicolor group. Horizontal grid lines are subtle and unobtrusive.
-      Legibility verdict: PASS — all text clearly readable against the warm off-white background.
+      Background: warm off-white #FAF8F1 across the whole canvas, no white plot panel.
+      Chrome: bold dark title "dendrogram-basic · javascript · muix · anyplot.ai" centred at top (~38 % width) with a soft-gray subtitle "15 items clustered over 4 features · root merge height 5.53"; y-axis title "Euclidean distance (complete linkage)" rotated on the left, ticks 0.0–5.5 every 0.5; x-axis title "Sample ID" with 15 leaf labels (S-05 … Vi-05) under the baseline; dashed subtle horizontal grid; left and bottom axis lines only. All text readable.
+      Data: a single-colour Imprint green (#009E73) dendrogram drawn with right-angle links and small green leaf dots on the zero baseline. Setosa cluster merges below 1.1 on the left, versicolor/virginica merge at 2.7, root merge at 5.53. No crossings, no cut line.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black.
-      Chrome: Title in light text (#F0EFE8) clearly visible on dark background. Y-axis label and all tick labels are light-colored on dark background — no dark-on-dark failure. Legend text renders in t.ink = #F0EFE8 (light). Grid lines are subtle light rules on dark surface.
-      Data: Branch lines render in t.ink (#F0EFE8) — white/cream lines on dark background, clearly visible. Leaf dot colors are identical to the light render: #009E73 (setosa), #C475FD (versicolor), #4467A3 (virginica). Data color identity between light and dark confirmed.
-      Legibility verdict: PASS — all chrome flips correctly; no dark-on-dark elements detected; data colors unchanged.
+      Background: warm near-black #1A1A17.
+      Chrome: title in light ink, subtitle, axis titles and tick labels in light gray, axis lines light, dashed grid subtle but visible; no dark-on-dark text.
+      Data: identical green branches and leaf dots, same geometry as light.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title 22px, ticks 13px, y-label 15px,
-          legend 14px). Readable in both themes. Minor: y-axis label at 15px CSS is
-          at the low end of the recommended range.'
+        comment: Explicit sizes (title 22, ticks 14, axis titles 15 CSS px); readable
+          in both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlap. X-axis labels at -45° are well-spaced across 15
-          leaf positions.
+        comment: No text collisions; leaf labels well spaced
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Dendrogram branches (strokeWidth=2) clearly visible. Leaf scatter
-          dots (markerSize=8) prominent and readable.
+        comment: 2.4 px branches and leaf dots clearly visible on both backgrounds
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette positions 1-3 used; colorblind-safe by design. Good
-          luminance contrast between all three species colors.
+        comment: Single-hue structure; high contrast both themes
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart fills canvas well. Right margin (190px) accommodates legend.
-          Generous but balanced whitespace. No clipping.
+        comment: Canvas 3200x1800; plot fills the area, balanced axis labels, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis labeled 'Distance (Complete Linkage)' — descriptive. X-axis
-          shows individual sample labels.
+        comment: '''Euclidean distance (complete linkage)'' and ''Sample ID'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series Iris setosa = #009E73 (brand green). Positions 2-3
-          (#C475FD, #4467A3) follow canonical Imprint order. Background #FAF8F1 light
-          / #1A1A17 dark. Branch lines use t.ink (theme-adaptive). Full compliance.'
+        comment: 'Branches #009E73; correct #FAF8F1 / #1A1A17 backgrounds; theme-correct
+          chrome'
     design_excellence:
-      score: 13
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -116,24 +106,20 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above library defaults: Imprint palette, explicit typography, custom
-          SVG branches, species coloring. Not quite publication-ready — branch coloring
-          is monochrome ink rather than species-colored sub-trees.'
+        comment: Raised one for the title/subtitle hierarchy carrying the item count
+          and root height; otherwise the style-guide baseline
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Horizontal grid only, no top/right spines apparent, generous whitespace.
-          Large empty column in the right margin above the legend reduces perfection.
+        comment: Spine and grid rules met (dashed horizontal grid), nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: 'Species coloring at leaf dots clearly guides the reader: setosa
-          is a tight isolated cluster, versicolor/virginica interleave. Visual hierarchy
-          through color contrast creates a clear focal story.'
+        comment: Tree displayed faithfully; no focal hierarchy chosen beyond the spec
     spec_compliance:
       score: 15
       max: 15
@@ -143,30 +129,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct dendrogram chart type with tree topology and proportional
-          branch heights.
+        comment: Vertical dendrogram, single tree, no cut line or extra layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Hierarchical clustering (complete linkage), branch heights proportional
-          to merge distance, leaf labels, vertical orientation, iris dataset. All
-          spec requirements met.
+        comment: Crossbars at merge distances, labeled height axis with ticks, one
+          labeled leaf per item on a common baseline, non-crossing order
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis correctly shows merge distance; X-axis shows leaf positions
-          with sample labels. All 15 samples visible.
+        comment: Heights unscaled from 0 to root 5.53; all leaves shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'dendrogram-basic · javascript · muix · anyplot.ai' — correct
-          format. Legend labels match species names.
+        comment: Mandated title format; legend N/A for a single-colour tree
     data_quality:
       score: 15
       max: 15
@@ -176,93 +158,90 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows complete dendrogram: tight clusters (setosa), looser clusters
-          (versicolor/virginica), multiple merge heights, 15 labeled leaves.'
+        comment: Uneven merge heights, tight low merges, one late root merge, three
+          groups
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Iris dataset is a classic, scientifically neutral dataset. Hierarchical
-          clustering of iris species is a canonical use case.
+        comment: Real iris measurements (the spec's example), neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Euclidean distances 0–5.5 are factually correct for iris measurements
-          (sepal/petal lengths in cm). Clustering result is biologically authentic.
+        comment: Checked S-01/S-04 = 0.141 and Ve-01/Ve-03 = 0.265 against the render
+          (0.14, 0.26)
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Well-organized but uses multiple helper functions (buildTree, leafOrder,
-          assignX, getSegments) and two React sub-components. Necessary for MUI X
-          React pattern but more complex than minimal.
+        comment: Linear script; the one inner component is required for the scale
+          hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Data is hard-coded iris samples — fully deterministic.
+        comment: Fixed data, deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported symbols (ChartContainer, ScatterPlot, ChartsXAxis, ChartsYAxis,
-          ChartsGrid, hooks) are used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the task. Complete-linkage algorithm is
-          concise (~20 lines). No fake UI elements.
+        comment: Written-out distance and linkage are allowed (no clustering in JS
+          runtime)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: MUI X is in INTERACTIVE_LIBRARIES — harness generates plot-light.png,
-          plot-dark.png, plot-light.html, plot-dark.html correctly.
+        comment: Default-exported component, skipAnimation, sized to ANYPLOT_SIZE,
+          v9 API
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert use of MUI X composition mode: ChartContainer + sub-components
-          + hooks. useXScale/useYScale/useDrawingArea used correctly for custom SVG
-          overlay. sx prop for axis styling. skipAnimation set. Default-exported component
-          with no props.'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Coordinate hook integration (useXScale/useYScale) to map data space
-          to SVG pixel space for dendrogram branches is distinctively MUI X. Could
-          score 5 if the dendrogram branches themselves were colored by cluster —
-          currently the hook usage is the only MUI X-specific feature.
+        comment: Composition API (ChartsContainer + ChartsGrid/ChartsXAxis/ChartsYAxis/ScatterPlot)
+          instead of forcing a preset chart
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom SVG layer driven by useXScale/useYScale hooks inside the chart
+          context
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-10-24T08:33:29Z'
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
+  - layer-composition
+  - manual-ticks
+  - hover-tooltips
   - html-export
   patterns:
-  - data-generation
-  - iteration-over-groups
+  - dataset-loading
   dataprep:
   - hierarchical-clustering
   styling:
-  - minimal-chrome
+  - grid-styling
