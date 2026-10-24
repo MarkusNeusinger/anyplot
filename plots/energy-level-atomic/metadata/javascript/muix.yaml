@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: energy-level-atomic
 created: '2026-08-25T00:00:52Z'
-updated: '2026-10-24T08:51:35Z'
+updated: '2026-10-24T08:57:19Z'
 generated_by: gemini-4-argon
 adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
 workflow_run: 40079405629
@@ -13,56 +13,58 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/energy-le
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/javascript/muix/plot-dark.html
-quality_score: 84
+quality_score: 87
 review:
   strengths:
-  - Energies fall out of the computation E = -13.6/n^2 (line 60) and match the right-hand
-    readouts (-3.40, -1.51, -0.85, -0.54, -0.38 eV); the wavelengths shown (Lyman
-    alpha 121.6, Lyman beta 102.6, Lyman gamma 97.3, H-alpha 656.3, H-beta 486.1,
-    H-delta 410.2 nm) are the correct hydrogen lines
-  - 'Composes the chart from MUI X building blocks: ChartsContainer with the useXScale/useYScale/useDrawingArea
-    hooks drives a custom SVG layer, and the native ChartsReferenceLine draws the
-    amber dashed ionization limit with its label'
-  - Each arrow's ends sit exactly on the levels it connects; emission arrows point
-    down and absorption arrows point up, evenly spread so every arrow can be followed
-  - 'Arrows are colored by spectral region (UV #009E73, visible #C475FD), with a matching
-    legend, and the wavelength labels have a page-colored halo (paintOrder stroke)
-    that keeps them readable where they cross grid lines'
-  - The power-compressed energy axis keeps n=2..6 legible next to the -13.6 eV ground
-    state; the eV ticks and the per-level energy readouts on the right make the nonlinear
-    scale explicit
-  - 'Theme tokens are threaded through every element: ink and inkSoft text, grid and
-    level lines flip correctly, and the data colors are identical in both renders'
+  - All eight transitions are physically correct for hydrogen (Lyman 121.6/102.6/97.3
+    nm, Balmer 656.3/486.1/410.2 nm), and the level energies -13.6/n² eV (-13.60,
+    -3.40, -1.51, -0.85, -0.54, -0.38) come out of the computation rather than being
+    typed in
+  - The nonlinear (power-compressed) energy axis keeps the converging upper levels
+    apart, and the subtitle plus the tick values at the real level energies make the
+    compression clear
+  - Emission arrows are grouped on the left and absorption arrows on the right, all
+    spread across the level width, so every arrow can be followed from level to level;
+    the arrowheads end exactly on their target levels
+  - 'Arrows and their wavelength labels are coloured by spectral region (Ultraviolet
+    = brand green #009E73, Visible = Imprint lavender #C475FD), with identical data
+    colours in both themes'
+  - The ionization limit uses MUI X's native ChartsReferenceLine (dashed amber, labelled),
+    so it reads as different from the solid level lines
+  - Custom SVG is drawn inside ChartsContainer through the useXScale/useYScale/useDrawingArea
+    hooks, so levels and arrows sit on the chart's own scales; the wavelength labels
+    use a page-coloured paint-order halo
+  - Exact energies are repeated on the right end of each level, and the orbital designations
+    (1s, 2s/2p, …) are on the left
   weaknesses:
-  - 'VQ-05 (both): the level lines start at 27 % of the plot width, so about 480 CSS
-    px (roughly a quarter of the canvas) between the energy axis and the level labels
-    is empty, and the band between the legend and the 0 eV line is empty too → start
-    the levels at about 12–15 % of the width (about −12 percentage points) and reduce
-    the top padding. Likely cause: LEVEL_X_START_SHARE = 0.27 and the 40 px top margin
-    plus Y_TOP_PAD_SHARE = 0.12.'
-  - 'VQ-06 (both): the subtitle reads ''compressed energy (ev) scale'': the unit is
-    lowercased to ''ev'' → ''eV''. Likely cause: ENERGY_AXIS_TITLE.toLowerCase() in
-    the context line (line 291).'
-  - 'Suggestion: compute the wavelengths from the level energies (λ = 1239.84 / ΔE
-    nm) instead of hard-coding them in TRANSITIONS_SPEC, so the labels follow from
-    the data.'
-  - 'Suggestion: a native ChartsYAxis on a pow scale with a valueFormatter could replace
-    the hand-drawn axis line, ticks and tick labels.'
+  - 'LM-01 (code): the data lives in two ad-hoc arrays (LEVELS_SPEC, TRANSITIONS_SPEC)
+    with no column-role constants and no records-shaped `const data` block, which
+    the muix library prompt''s Data block contract requires → declare role constants
+    (level, energy, transition from/to, wavelength) and keep records keyed by them
+    so ''Use with my data'' can replace the block. Likely cause: data block written
+    as named parameters instead of the six-zone layout.'
+  - 'Suggestion: the y-axis ticks are rounded to one decimal (-0.4 eV, -1.5 eV), so
+    the -0.4 eV grid line runs a few pixels off the n = 6 level line. Ticks at the
+    exact level energies, or no grid under the level lines, would remove that near-double
+    line.'
+  - 'Suggestion: the ↓/↑ glyphs inside the rotated wavelength labels turn sideways
+    and repeat what the arrowheads already show; dropping them would make the labels
+    cleaner.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, matches #FAF8F1.
-      Chrome: bold title 'energy-level-atomic · javascript · muix · anyplot.ai' at top left; a soft-ink context line (Hydrogen atom, 6 bound states, 8 transitions, compressed energy scale); a legend with green 'Ultraviolet (< 400 nm)' and purple 'Visible (400–700 nm)' swatches; a rotated bold 'Energy (eV)' axis title; tick labels 0, -0.4, -1.5, -3.4, -13.6 eV with subtle grid lines; dark ink level lines labeled n = 1 (1s) — ground state ... n = 6 (6s–6h) on the left, with energy readouts on the right (-13.60 ... -0.38 eV); an amber dashed ionization line at 0 eV labeled 'Ionization limit (E = 0 eV)'. All text readable.
-      Data: eight vertical arrows evenly spaced: Lyman emission (121.6, 102.6, 97.3 nm) and absorption (102.6, 97.3 nm ↑) arrows in #009E73, and Balmer 656.3 and 486.1 nm (↓) plus 410.2 nm (↑) in #C475FD, each with a rotated wavelength label. The arrow ends sit on their levels. The left quarter of the plot is empty between the axis and the level labels, and the subtitle's unit reads 'ev'.
+      Background: warm off-white #FAF8F1, not pure white.
+      Chrome: bold dark title "energy-level-atomic · javascript · muix · anyplot.ai" at top left; inkSoft subtitle "Hydrogen atom (Z = 1) (6 bound states, 8 transitions: ↓ emission, ↑ absorption) · compressed energy scale (-13.6 to 0 eV)"; an HTML legend row with Ultraviolet (< 400 nm) and Visible (400–700 nm) swatches; rotated "Energy (eV)" axis title; y ticks 0, -0.4, -1.5, -3.4, -13.6 eV with subtle grid lines. All text dark on light and readable.
+      Data: six near-black level lines spanning about 70 % of the width, labelled on the left (n = 1 (1s) — ground state … n = 6 (6s–6h)) and with exact energies on the right (-13.60 … -0.38 eV). Eight vertical arrows: emission arrows on the left (green 121.6/102.6/97.3 nm to n=1; lavender 656.3/486.1 nm to n=2) and absorption arrows on the right (green 102.6/97.3 nm up from n=1; lavender 410.2 nm from n=2 to n=6). Each arrow has a rotated bold wavelength label in its own colour. A dashed amber ionization line at 0 eV, labelled "Ionization limit (E = 0 eV)" at the right. UV arrows are brand green #009E73.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black, matches #1A1A17.
-      Chrome: title, context line, legend text, axis title, tick labels, level labels and the ionization label all render in light ink and are clearly readable; no dark-on-dark text. Grid lines are subtle but visible; the level lines flip to light ink.
-      Data: arrow colors are identical to the light render (#009E73 UV, #C475FD visible); brand green reads well; the amber dashed ionization line stays visible.
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title, ionization label, level labels and axis title in light ink; subtitle, ticks, energy values and legend text in light inkSoft; grid subtle. No dark-on-dark text anywhere.
+      Data: level lines flip to light ink (chrome); arrow colours (#009E73 green, #C475FD lavender) and the amber reference line are identical to the light render.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -70,50 +72,48 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes (title 22, labels 14–16 CSS px); everything is
-          readable in both themes
+        comment: Explicit sizes (title 22, labels 14–16 px CSS); readable in both
+          themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; the wavelength labels have a halo and clear their
-          arrows; n=5 and n=6 labels are close but separate
+        comment: Wavelength labels sit between levels with halos; no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Arrows at 2.5 px with clear heads; level lines at 3 px; legend swatches
+        comment: 2.5 px arrows with arrowheads, 3 px level lines, legend swatches
           visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green and purple are CVD-distinguishable, and every arrow also carries
-          a wavelength label
+        comment: Green vs lavender is CVD-safe, and the wavelength labels carry the
+          value as well
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Empty left quarter between the axis and the level labels, plus an
-          empty band above 0 eV (defect line)
+        passed: true
+        comment: 3200×1800; balanced; the empty band below the ionization limit comes
+          from the compressed scale (permitted)
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: The axis title 'Energy (eV)' is fine, but the subtitle lowercases
-          the unit to 'ev' (defect line)
+        passed: true
+        comment: Energy (eV) with units; ticks in eV
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First band #009E73, second #C475FD (canonical order); amber for
-          the reference line; correct backgrounds and chrome in both themes'
+        comment: 'First group #009E73, second #C475FD (Imprint order); amber token
+          for the reference; correct backgrounds'
     design_excellence:
       score: 11
       max: 20
@@ -123,22 +123,22 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: 'Typographic hierarchy: bold title, soft context line, bold axis
-          title, and level labels set heavier than the soft energy readouts'
+        comment: Title/subtitle/legend hierarchy, orbital designations on the left
+          and exact energies on the right, halo-stroked semibold wavelength labels
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Halo-stroked wavelength labels and right-aligned energy readouts
-          that mirror the level labels; the large empty left band holds it back
+        comment: Grid only at the level energies; labels aligned to the level ends;
+          the rounded ticks leave the -0.4 grid line slightly off the n=6 line
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Groups the emission arrows before the absorption arrows, and the
-          context line states the system and the transition counts
+        comment: Emission and absorption split into left and right groups; ground
+          state called out
     spec_compliance:
       score: 15
       max: 15
@@ -148,27 +148,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Energy level diagram with transition arrows
+        comment: Atomic energy level diagram with transition arrows
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'Partial-width labeled levels, emission down and absorption up, color
-          by spectral region, ionization line, nonlinear scale with ticks: all present'
+        comment: Partial-width labelled levels, emission down / absorption up, colour
+          by spectral region, ionization line, nonlinear scale with ticks — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Levels at their compressed energies; arrow ends on their levels;
-          no displacement
+        comment: Levels at their (compressed) energies; arrow ends on the levels they
+          connect
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; the legend labels name the spectral regions
+        comment: Correct title format; legend entries are readable spectral-region
+          names
     data_quality:
       score: 15
       max: 15
@@ -178,22 +179,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Lyman and Balmer series, emission and absorption, two spectral regions,
+        comment: 6 levels, 8 transitions, emission and absorption, two spectral regions,
           converging upper levels
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Hydrogen atom, a neutral textbook system
+        comment: Hydrogen Lyman and Balmer series, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: E_n = -13.6/n^2 at line 60 gives -3.40/-1.51/-0.85/-0.54/-0.38
-          eV; wavelengths 121.6/102.6/97.3/656.3/486.1/410.2 nm are the correct H
-          lines (no Check values in the spec)'
+        comment: 'Checked: E_n = -13.6/n² gives -13.60/-3.40/-1.51/-0.85/-0.54/-0.38
+          eV; the wavelengths match the known Lyman α/β/γ and Hα/β/δ lines'
     code_quality:
       score: 10
       max: 10
@@ -203,14 +203,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: The default-export component plus one custom chart-layer component,
-          as MUI X composition requires
+        comment: Only the hook-based SVG component React needs, plus the default export
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic, no randomness
+        comment: Deterministic, computed data
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -222,16 +221,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the custom tick derivation and arrow layout
+        comment: Appropriate complexity; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-export component sized to ANYPLOT_SIZE, skipAnimation set,
-          community package only
+        comment: Default-exported component, skipAnimation, v9 ChartsContainer API
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -239,27 +237,30 @@ review:
         score: 3
         max: 5
         passed: false
-        comment: ChartsContainer composition with scale hooks is idiomatic, but the
-          axis is hand-drawn rather than a native ChartsYAxis
+        comment: ChartsContainer composition with the scale hooks; the data block
+          does not follow the muix records contract (defect line)
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Uses useXScale/useYScale/useDrawingArea for a custom SVG layer and
-          ChartsReferenceLine for the ionization limit
-  verdict: REJECTED
+        comment: ChartsReferenceLine with a label, and custom SVG layers drawn on
+          the chart's own scales through the useXScale/useYScale/useDrawingArea hooks
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T08:48:37Z'
+  rendered_at: '2026-10-24T08:53:59Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - custom-legend
-  - manual-ticks
   - layer-composition
+  - manual-ticks
   - html-export
-  patterns: []
-  dataprep: []
-  styling: []
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  styling:
+  - publication-ready
