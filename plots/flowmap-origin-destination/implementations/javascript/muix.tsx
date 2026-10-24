@@ -1,6 +1,6 @@
 // anyplot.ai
 // flowmap-origin-destination: Origin-Destination Flow Map
-// Library: muix 9.2.1 | JavaScript 22.23.2
+// Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 89/100 | Created: 2026-09-02
 import { useState } from "react";
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
@@ -12,21 +12,10 @@ import { useXScale, useYScale, useDrawingArea } from "@mui/x-charts/hooks";
 const t = window.ANYPLOT_TOKENS;
 
 // Constants
-const ORIGIN_NAME = "origin_name";
-const ORIGIN_LAT = "origin_lat";
-const ORIGIN_LON = "origin_lon";
-const DEST_NAME = "dest_name";
-const DEST_LAT = "dest_lat";
-const DEST_LON = "dest_lon";
-const FLOW_COL = "flow";
-
 const TITLE = "flowmap-origin-destination · javascript · muix · anyplot.ai";
-const SUBTITLE_PREFIX = "Global maritime container corridors";
-const FLOW_UNIT = "thousand TEU/year";
 const LON_AXIS_LABEL = "Longitude (°)";
 const LAT_AXIS_LABEL = "Latitude (°)";
-const LEGEND_TITLE = `Flow volume (${FLOW_UNIT})`;
-const LEGEND_NOTE = "Node size = total port throughput · arrowheads indicate flow direction";
+const LEGEND_NOTE = "Node size = total throughput · arrowheads indicate flow direction";
 
 const LON_PAD_SHARE = 0.09;
 const LAT_PAD_SHARE = 0.14;
@@ -40,7 +29,6 @@ const MARGIN = { top: 88, right: 48, bottom: 108, left: 20 };
 const X_AXIS_HEIGHT = 50;
 const Y_AXIS_WIDTH = 68;
 
-// Simplified continent silhouettes encoded as scalar coordinate strings ("lon,lat ...")
 const CONTINENT_OUTLINES = [
   "-165,68 -135,58 -125,48 -118,33 -105,20 -95,15 -80,25 -75,35 -65,45 -70,50 -95,62 -130,70 -165,68",
   "-80,10 -70,-5 -70,-20 -68,-35 -70,-50 -65,-45 -50,-25 -35,-8 -50,2 -65,8 -80,10",
@@ -49,32 +37,41 @@ const CONTINENT_OUTLINES = [
   "30,45 40,15 55,25 70,20 80,10 95,15 105,10 115,22 130,35 140,40 135,50 100,55 70,55 45,45 30,45",
 ];
 
-// Data — origin-destination container shipping flows (thousand TEU/year)
+// Columns: set these to your data's column names
+const ORIGIN_NAME = "Origin"; // role: origin_name
+const ORIGIN_LAT = "Origin latitude (°)"; // role: origin_lat
+const ORIGIN_LON = "Origin longitude (°)"; // role: origin_lon
+const DEST_NAME = "Destination"; // role: dest_name
+const DEST_LAT = "Destination latitude (°)"; // role: dest_lat
+const DEST_LON = "Destination longitude (°)"; // role: dest_lon
+const FLOW = "Container flow (thousand TEU/year)"; // role: flow
+
+// Data: replace this block with your own records
 const data: Record<string, string | number>[] = [
-  { [ORIGIN_NAME]: "Shanghai", [ORIGIN_LAT]: 31.23, [ORIGIN_LON]: 121.47, [DEST_NAME]: "Los Angeles", [DEST_LAT]: 33.73, [DEST_LON]: -118.26, [FLOW_COL]: 1450 },
-  { [ORIGIN_NAME]: "Shanghai", [ORIGIN_LAT]: 31.23, [ORIGIN_LON]: 121.47, [DEST_NAME]: "Rotterdam", [DEST_LAT]: 51.92, [DEST_LON]: 4.48, [FLOW_COL]: 980 },
-  { [ORIGIN_NAME]: "Shanghai", [ORIGIN_LAT]: 31.23, [ORIGIN_LON]: 121.47, [DEST_NAME]: "Singapore", [DEST_LAT]: 1.29, [DEST_LON]: 103.85, [FLOW_COL]: 620 },
-  { [ORIGIN_NAME]: "Singapore", [ORIGIN_LAT]: 1.29, [ORIGIN_LON]: 103.85, [DEST_NAME]: "Rotterdam", [DEST_LAT]: 51.92, [DEST_LON]: 4.48, [FLOW_COL]: 710 },
-  { [ORIGIN_NAME]: "Singapore", [ORIGIN_LAT]: 1.29, [ORIGIN_LON]: 103.85, [DEST_NAME]: "Jebel Ali", [DEST_LAT]: 25.01, [DEST_LON]: 55.06, [FLOW_COL]: 540 },
-  { [ORIGIN_NAME]: "Singapore", [ORIGIN_LAT]: 1.29, [ORIGIN_LON]: 103.85, [DEST_NAME]: "Mumbai", [DEST_LAT]: 18.95, [DEST_LON]: 72.95, [FLOW_COL]: 460 },
-  { [ORIGIN_NAME]: "Hong Kong", [ORIGIN_LAT]: 22.32, [ORIGIN_LON]: 114.17, [DEST_NAME]: "Los Angeles", [DEST_LAT]: 33.73, [DEST_LON]: -118.26, [FLOW_COL]: 890 },
-  { [ORIGIN_NAME]: "Hong Kong", [ORIGIN_LAT]: 22.32, [ORIGIN_LON]: 114.17, [DEST_NAME]: "Rotterdam", [DEST_LAT]: 51.92, [DEST_LON]: 4.48, [FLOW_COL]: 520 },
-  { [ORIGIN_NAME]: "Busan", [ORIGIN_LAT]: 35.18, [ORIGIN_LON]: 129.08, [DEST_NAME]: "Los Angeles", [DEST_LAT]: 33.73, [DEST_LON]: -118.26, [FLOW_COL]: 780 },
-  { [ORIGIN_NAME]: "Busan", [ORIGIN_LAT]: 35.18, [ORIGIN_LON]: 129.08, [DEST_NAME]: "Rotterdam", [DEST_LAT]: 51.92, [DEST_LON]: 4.48, [FLOW_COL]: 410 },
-  { [ORIGIN_NAME]: "Rotterdam", [ORIGIN_LAT]: 51.92, [ORIGIN_LON]: 4.48, [DEST_NAME]: "New York", [DEST_LAT]: 40.67, [DEST_LON]: -74.13, [FLOW_COL]: 630 },
-  { [ORIGIN_NAME]: "Jebel Ali", [ORIGIN_LAT]: 25.01, [ORIGIN_LON]: 55.06, [DEST_NAME]: "Rotterdam", [DEST_LAT]: 51.92, [DEST_LON]: 4.48, [FLOW_COL]: 590 },
-  { [ORIGIN_NAME]: "Jebel Ali", [ORIGIN_LAT]: 25.01, [ORIGIN_LON]: 55.06, [DEST_NAME]: "Mumbai", [DEST_LAT]: 18.95, [DEST_LON]: 72.95, [FLOW_COL]: 350 },
-  { [ORIGIN_NAME]: "Mumbai", [ORIGIN_LAT]: 18.95, [ORIGIN_LON]: 72.95, [DEST_NAME]: "Rotterdam", [DEST_LAT]: 51.92, [DEST_LON]: 4.48, [FLOW_COL]: 480 },
-  { [ORIGIN_NAME]: "Mumbai", [ORIGIN_LAT]: 18.95, [ORIGIN_LON]: 72.95, [DEST_NAME]: "Colombo", [DEST_LAT]: 6.95, [DEST_LON]: 79.84, [FLOW_COL]: 260 },
-  { [ORIGIN_NAME]: "Colombo", [ORIGIN_LAT]: 6.95, [ORIGIN_LON]: 79.84, [DEST_NAME]: "Singapore", [DEST_LAT]: 1.29, [DEST_LON]: 103.85, [FLOW_COL]: 300 },
-  { [ORIGIN_NAME]: "Hamburg", [ORIGIN_LAT]: 53.55, [ORIGIN_LON]: 9.99, [DEST_NAME]: "New York", [DEST_LAT]: 40.67, [DEST_LON]: -74.13, [FLOW_COL]: 410 },
-  { [ORIGIN_NAME]: "Piraeus", [ORIGIN_LAT]: 37.94, [ORIGIN_LON]: 23.65, [DEST_NAME]: "Singapore", [DEST_LAT]: 1.29, [DEST_LON]: 103.85, [FLOW_COL]: 330 },
-  { [ORIGIN_NAME]: "Santos", [ORIGIN_LAT]: -23.96, [ORIGIN_LON]: -46.33, [DEST_NAME]: "Rotterdam", [DEST_LAT]: 51.92, [DEST_LON]: 4.48, [FLOW_COL]: 360 },
-  { [ORIGIN_NAME]: "Vancouver", [ORIGIN_LAT]: 49.29, [ORIGIN_LON]: -123.11, [DEST_NAME]: "Shanghai", [DEST_LAT]: 31.23, [DEST_LON]: 121.47, [FLOW_COL]: 520 },
-  { [ORIGIN_NAME]: "Vancouver", [ORIGIN_LAT]: 49.29, [ORIGIN_LON]: -123.11, [DEST_NAME]: "Singapore", [DEST_LAT]: 1.29, [DEST_LON]: 103.85, [FLOW_COL]: 300 },
+  { [ORIGIN_NAME]: "Shanghai", [ORIGIN_LAT]: 31.23, [ORIGIN_LON]: 121.47, [DEST_NAME]: "Los Angeles", [DEST_LAT]: 33.73, [DEST_LON]: -118.26, [FLOW]: 1450 },
+  { [ORIGIN_NAME]: "Shanghai", [ORIGIN_LAT]: 31.23, [ORIGIN_LON]: 121.47, [DEST_NAME]: "Rotterdam", [DEST_LAT]: 51.92, [DEST_LON]: 4.48, [FLOW]: 980 },
+  { [ORIGIN_NAME]: "Shanghai", [ORIGIN_LAT]: 31.23, [ORIGIN_LON]: 121.47, [DEST_NAME]: "Singapore", [DEST_LAT]: 1.29, [DEST_LON]: 103.85, [FLOW]: 620 },
+  { [ORIGIN_NAME]: "Singapore", [ORIGIN_LAT]: 1.29, [ORIGIN_LON]: 103.85, [DEST_NAME]: "Rotterdam", [DEST_LAT]: 51.92, [DEST_LON]: 4.48, [FLOW]: 710 },
+  { [ORIGIN_NAME]: "Singapore", [ORIGIN_LAT]: 1.29, [ORIGIN_LON]: 103.85, [DEST_NAME]: "Jebel Ali", [DEST_LAT]: 25.01, [DEST_LON]: 55.06, [FLOW]: 540 },
+  { [ORIGIN_NAME]: "Singapore", [ORIGIN_LAT]: 1.29, [ORIGIN_LON]: 103.85, [DEST_NAME]: "Mumbai", [DEST_LAT]: 18.95, [DEST_LON]: 72.95, [FLOW]: 460 },
+  { [ORIGIN_NAME]: "Hong Kong", [ORIGIN_LAT]: 22.32, [ORIGIN_LON]: 114.17, [DEST_NAME]: "Los Angeles", [DEST_LAT]: 33.73, [DEST_LON]: -118.26, [FLOW]: 890 },
+  { [ORIGIN_NAME]: "Hong Kong", [ORIGIN_LAT]: 22.32, [ORIGIN_LON]: 114.17, [DEST_NAME]: "Rotterdam", [DEST_LAT]: 51.92, [DEST_LON]: 4.48, [FLOW]: 520 },
+  { [ORIGIN_NAME]: "Busan", [ORIGIN_LAT]: 35.18, [ORIGIN_LON]: 129.08, [DEST_NAME]: "Los Angeles", [DEST_LAT]: 33.73, [DEST_LON]: -118.26, [FLOW]: 780 },
+  { [ORIGIN_NAME]: "Busan", [ORIGIN_LAT]: 35.18, [ORIGIN_LON]: 129.08, [DEST_NAME]: "Rotterdam", [DEST_LAT]: 51.92, [DEST_LON]: 4.48, [FLOW]: 410 },
+  { [ORIGIN_NAME]: "Rotterdam", [ORIGIN_LAT]: 51.92, [ORIGIN_LON]: 4.48, [DEST_NAME]: "New York", [DEST_LAT]: 40.67, [DEST_LON]: -74.13, [FLOW]: 630 },
+  { [ORIGIN_NAME]: "Jebel Ali", [ORIGIN_LAT]: 25.01, [ORIGIN_LON]: 55.06, [DEST_NAME]: "Rotterdam", [DEST_LAT]: 51.92, [DEST_LON]: 4.48, [FLOW]: 590 },
+  { [ORIGIN_NAME]: "Jebel Ali", [ORIGIN_LAT]: 25.01, [ORIGIN_LON]: 55.06, [DEST_NAME]: "Mumbai", [DEST_LAT]: 18.95, [DEST_LON]: 72.95, [FLOW]: 350 },
+  { [ORIGIN_NAME]: "Mumbai", [ORIGIN_LAT]: 18.95, [ORIGIN_LON]: 72.95, [DEST_NAME]: "Rotterdam", [DEST_LAT]: 51.92, [DEST_LON]: 4.48, [FLOW]: 480 },
+  { [ORIGIN_NAME]: "Mumbai", [ORIGIN_LAT]: 18.95, [ORIGIN_LON]: 72.95, [DEST_NAME]: "Colombo", [DEST_LAT]: 6.95, [DEST_LON]: 79.84, [FLOW]: 260 },
+  { [ORIGIN_NAME]: "Colombo", [ORIGIN_LAT]: 6.95, [ORIGIN_LON]: 79.84, [DEST_NAME]: "Singapore", [DEST_LAT]: 1.29, [DEST_LON]: 103.85, [FLOW]: 300 },
+  { [ORIGIN_NAME]: "Hamburg", [ORIGIN_LAT]: 53.55, [ORIGIN_LON]: 9.99, [DEST_NAME]: "New York", [DEST_LAT]: 40.67, [DEST_LON]: -74.13, [FLOW]: 410 },
+  { [ORIGIN_NAME]: "Piraeus", [ORIGIN_LAT]: 37.94, [ORIGIN_LON]: 23.65, [DEST_NAME]: "Singapore", [DEST_LAT]: 1.29, [DEST_LON]: 103.85, [FLOW]: 330 },
+  { [ORIGIN_NAME]: "Santos", [ORIGIN_LAT]: -23.96, [ORIGIN_LON]: -46.33, [DEST_NAME]: "Rotterdam", [DEST_LAT]: 51.92, [DEST_LON]: 4.48, [FLOW]: 360 },
+  { [ORIGIN_NAME]: "Vancouver", [ORIGIN_LAT]: 49.29, [ORIGIN_LON]: -123.11, [DEST_NAME]: "Shanghai", [DEST_LAT]: 31.23, [DEST_LON]: 121.47, [FLOW]: 520 },
+  { [ORIGIN_NAME]: "Vancouver", [ORIGIN_LAT]: 49.29, [ORIGIN_LON]: -123.11, [DEST_NAME]: "Singapore", [DEST_LAT]: 1.29, [DEST_LON]: 103.85, [FLOW]: 300 },
 ];
 
-// Derive unique ports in order of first appearance across origin and destination columns
+// Plot: reads only data and the constants above
 type PortInfo = {
   name: string;
   lat: number;
@@ -90,7 +87,7 @@ for (const row of data) {
   const dName = String(row[DEST_NAME]);
   const dLat = Number(row[DEST_LAT]);
   const dLon = Number(row[DEST_LON]);
-  const vol = Number(row[FLOW_COL]);
+  const vol = Number(row[FLOW]);
 
   if (!portMap.has(oName)) {
     portMap.set(oName, { name: oName, lat: oLat, lon: oLon, throughput: 0 });
@@ -104,7 +101,7 @@ for (const row of data) {
 }
 
 const portList = Array.from(portMap.values());
-const volumes = data.map((r) => Number(r[FLOW_COL]));
+const volumes = data.map((r) => Number(r[FLOW]));
 const minVolume = Math.min(...volumes);
 const maxVolume = Math.max(...volumes);
 const totalVolume = volumes.reduce((s, v) => s + v, 0);
@@ -113,7 +110,7 @@ const throughputs = portList.map((p) => p.throughput);
 const minThroughput = Math.min(...throughputs);
 const maxThroughput = Math.max(...throughputs);
 
-const hubCount = Math.max(1, Math.round(portList.length * HUB_TOP_SHARE));
+const hubCount = Math.round(portList.length * HUB_TOP_SHARE);
 const hubNames = new Set(
   [...portList]
     .sort((a, b) => b.throughput - a.throughput)
@@ -121,17 +118,16 @@ const hubNames = new Set(
     .map((p) => p.name),
 );
 
-const sortedFlows = [...data].sort((a, b) => Number(a[FLOW_COL]) - Number(b[FLOW_COL]));
+const sortedFlows = [...data].sort((a, b) => Number(a[FLOW]) - Number(b[FLOW]));
 
-// Geographic bounds with 1 / cos(meanLat) aspect correction
 const allLons = portList.map((p) => p.lon);
 const allLats = portList.map((p) => p.lat);
 const rawLonMin = Math.min(...allLons);
 const rawLonMax = Math.max(...allLons);
 const rawLatMin = Math.min(...allLats);
 const rawLatMax = Math.max(...allLats);
-const rawLonSpan = rawLonMax - rawLonMin || 1;
-const rawLatSpan = rawLatMax - rawLatMin || 1;
+const rawLonSpan = rawLonMax - rawLonMin;
+const rawLatSpan = rawLatMax - rawLatMin;
 
 const baseLonMin = rawLonMin - rawLonSpan * LON_PAD_SHARE;
 const baseLonMax = rawLonMax + rawLonSpan * LON_PAD_SHARE;
@@ -181,21 +177,19 @@ function FlowMapLayer({
   hover: HoverInfo;
   onHoverChange: (h: HoverInfo) => void;
 }) {
-  const xScale = useXScale();
-  const yScale = useYScale();
+  const xScale = useXScale() as (v: number) => number;
+  const yScale = useYScale() as (v: number) => number;
   const drawingArea = useDrawingArea();
 
-  // Compute screen coordinates for ports and collision-avoiding label positions
   const positionedPorts = portList.map((p) => {
-    const cx = xScale(p.lon) ?? 0;
-    const cy = yScale(p.lat) ?? 0;
-    const tRatio = (p.throughput - minThroughput) / (maxThroughput - minThroughput || 1);
+    const cx = xScale(p.lon);
+    const cy = yScale(p.lat);
+    const tRatio = (p.throughput - minThroughput) / (maxThroughput - minThroughput);
     const radius = MIN_NODE_R + tRatio * (MAX_NODE_R - MIN_NODE_R);
     const isHub = hubNames.has(p.name);
     return { ...p, cx, cy, radius, isHub };
   });
 
-  // Place labels for highest-throughput ports first using candidate directions around node
   const labelBoxes: { x0: number; y0: number; x1: number; y1: number }[] = positionedPorts.map((p) => ({
     x0: p.cx - p.radius - 2,
     y0: p.cy - p.radius - 2,
@@ -337,15 +331,15 @@ function FlowMapLayer({
       {sortedFlows.map((flow, i) => {
         const oName = String(flow[ORIGIN_NAME]);
         const dName = String(flow[DEST_NAME]);
-        const vol = Number(flow[FLOW_COL]);
-        const x1 = xScale(Number(flow[ORIGIN_LON])) ?? 0;
-        const y1 = yScale(Number(flow[ORIGIN_LAT])) ?? 0;
-        const x2 = xScale(Number(flow[DEST_LON])) ?? 0;
-        const y2 = yScale(Number(flow[DEST_LAT])) ?? 0;
+        const vol = Number(flow[FLOW]);
+        const x1 = xScale(Number(flow[ORIGIN_LON]));
+        const y1 = yScale(Number(flow[ORIGIN_LAT]));
+        const x2 = xScale(Number(flow[DEST_LON]));
+        const y2 = yScale(Number(flow[DEST_LAT]));
 
         const dx = x2 - x1;
         const dy = y2 - y1;
-        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+        const dist = Math.hypot(dx, dy);
         const midX = (x1 + x2) / 2;
         const midY = (y1 + y2) / 2;
         const ux = -dy / dist;
@@ -356,7 +350,7 @@ function FlowMapLayer({
         const controlX = midX + ux * bow;
         const controlY = midY + uy * bow;
 
-        const ratio = (vol - minVolume) / (maxVolume - minVolume || 1);
+        const ratio = (vol - minVolume) / (maxVolume - minVolume);
         const strokeWidth = MIN_ARC_WIDTH + ratio * (MAX_ARC_WIDTH - MIN_ARC_WIDTH);
         const strokeOpacity = 0.4 + ratio * 0.35;
 
@@ -371,7 +365,7 @@ function FlowMapLayer({
 
         const flowTooltip = {
           label: `${oName} → ${dName}`,
-          detail: `${vol.toLocaleString()} ${FLOW_UNIT}`,
+          detail: `${FLOW}: ${vol.toLocaleString()}`,
           x: arrowX,
           y: arrowY,
         };
@@ -410,7 +404,7 @@ function FlowMapLayer({
         const pos = labelOffsets.get(port.name)!;
         const portTooltip = {
           label: port.name,
-          detail: `Throughput: ${port.throughput.toLocaleString()} ${FLOW_UNIT}`,
+          detail: `Throughput: ${port.throughput.toLocaleString()}`,
           x: port.cx,
           y: port.cy - port.radius - 8,
         };
@@ -448,7 +442,7 @@ function FlowMapLayer({
       {/* Legend and usage key */}
       <g>
         <text x={barX} y={barY - 10} textAnchor="start" fontSize={14} fontWeight={600} fill={t.inkSoft}>
-          {LEGEND_TITLE}
+          {FLOW}
         </text>
         <rect x={barX} y={barY} width={barWidth} height={barHeight} fill="url(#flowLegendGradient)" rx={3} />
         <text x={barX} y={barY + barHeight + 18} textAnchor="start" fontSize={14} fill={t.inkSoft}>
@@ -504,7 +498,7 @@ function FlowMapLayer({
 export default function Chart() {
   const [hover, setHover] = useState<HoverInfo>(null);
   const { width, height } = window.ANYPLOT_SIZE;
-  const subtitle = `${SUBTITLE_PREFIX} · ${data.length} routes across ${portList.length} ports (${totalVolume.toLocaleString()} ${FLOW_UNIT})`;
+  const subtitle = `${data.length} flows across ${portList.length} locations · total ${FLOW}: ${totalVolume.toLocaleString()}`;
 
   return (
     <ChartsContainer
