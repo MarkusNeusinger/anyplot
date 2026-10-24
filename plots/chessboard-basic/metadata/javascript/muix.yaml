@@ -2,55 +2,53 @@ library: muix
 language: javascript
 specification_id: chessboard-basic
 created: '2026-09-01T23:24:28Z'
-updated: '2026-09-01T23:30:30Z'
-generated_by: claude-sonnet
-workflow_run: 33570361555
+updated: '2026-10-24T04:35:38Z'
+generated_by: gemini-4-argon
+adopted_from: 05fd22b6883131fc8937ab51e4f573041b3dcb44 (05fd22b6883131fc8937ab51e4f573041b3dcb44)
+workflow_run: 40062670030
 issue: 3340
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/javascript/muix/plot-dark.html
-quality_score: 90
+quality_score: 86
 review:
   strengths:
-  - 'Correct chess board conventions: light squares precisely at a8 and h1, matching
-    real-world board orientation'
-  - 'Distinctive MUI X usage: composes ChartContainer + a custom scatter slot (BoardSquares)
-    with direct xScale/yScale bandwidth access to tile exact squares — an idiomatic
-    use of MUI X''s composability/slots API rather than the high-level ScatterChart
-    convenience component'
-  - 'Well-reasoned, in-palette color choice: dark square uses Imprint ochre (palette[3],
-    the documented ''wood'' semantic exception), light square uses the amber anchor
-    for warm cream contrast — no custom hexes, both squares clearly distinguishable
-    in both themes'
-  - Board scales to a perfect square via min(availW, availH), keeping true 1:1 cell
-    aspect ratio as the spec requires
-  - Clean, deterministic code with correct harness contract (export default, skipAnimation,
-    sized to window.ANYPLOT_SIZE)
-  - 'Both renders are theme-correct: title and axis labels readable in light and dark,
-    background-matched square strokes create a clean grid separation in both themes'
+  - 'Correct standard orientation verified in both renders and in code: (fileIndex
+    + rank) % 2 === 0 makes h1 (7+1) and a8 (0+8) light, a1 dark; light squares sit
+    at the bottom-right and top-left corners'
+  - Grid built from two native MUI X band axes with categoryGapRatio 0 so the 8×8
+    squares come straight from the scales, and a square ChartsContainer with equal
+    axis bands (48 px) gives a true 1:1 drawing area (1016×1016 CSS px)
+  - File labels a–h and rank labels 1–8 are drawn by native ChartsXAxis/ChartsYAxis,
+    centered on each column/row, at 16 px semibold in the inkSoft token — readable
+    in both themes
+  - Custom BoardLayer uses the useXScale/useYScale/useDrawingArea hooks to place squares,
+    the idiomatic MUI X composition path for marks the stock charts lack
+  - Theme-adaptive square separators (pageBg stroke) and an ink frame make the board
+    stand out from the page in both themes while the wood tones stay identical across
+    renders
   weaknesses:
-  - Design Excellence is limited by the plot's inherently static/diagrammatic nature
-    — there is no visual hierarchy or storytelling device (e.g. a highlighted example
-    square with a notation callout) beyond the base grid, leaving Data Storytelling
-    at the default 'no story' tier
-  - The custom scatter-slot rendering is MUI X-specific, but the resulting visual
-    (a static checkerboard of rects) could in principle be approximated in other libraries
-    too, so Distinctive Features credit is only partial rather than maximal
+  - 'Suggestion: the 48 px y-axis band sits only on the left, so the board is offset
+    about 40 CSS px right of the canvas center; adding an equal right margin would
+    center the board under the title.'
+  - 'Suggestion: the light squares in amber #DDCC77 read more yellow than the classic
+    cream maple; a paler cream tone would sit closer to the traditional cream/brown
+    board.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "chessboard-basic · javascript · muix · anyplot.ai" is centered at top in dark ink, clearly legible. Rank labels (8 down to 1) sit on the left in soft ink, file labels (a-h) sit along the bottom in the same soft ink — all fully readable against the light background.
-      Data: An 8x8 checkerboard of squares alternating between a warm ochre/brown (#BD8233, the Imprint "wood" semantic exception) and a warm cream/amber (#DDCC77, the Imprint amber anchor). Squares are tiled edge-to-edge with a thin page-background-colored stroke between them, and the whole board is framed by a solid dark outer border. h1 (bottom-right) and a8 (top-left) are correctly light squares, matching standard chess-diagram convention.
-      Legibility verdict: PASS — all text is clearly readable, no dark-on-light or light-on-light issues.
+      Background: warm off-white #FAF8F1 page.
+      Chrome: bold dark title "chessboard-basic · javascript · muix · anyplot.ai" centered at top (~50% width), muted subtitle "64 squares (8×8) · Algebraic notation (a–h, 1–8)" below it; rank labels 1–8 on the left (1 at bottom) and file labels a–h along the bottom (a at left), each centered on its row/column, dark gray semibold — all readable. A 3 px near-black frame outlines the board.
+      Data: 8×8 board of equal squares alternating light (amber #DDCC77) and dark (ochre #BD8233) wood tones, separated by thin cream lines; a1 dark, h1 and a8 light. No pieces, highlights or callouts. Board is square and fills most of the canvas.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Same title and axis labels, now rendered in light ink tones, clearly legible against the dark background. No dark-on-dark text observed.
-      Data: The same ochre (#BD8233) and amber (#DDCC77) square colors as the light render — confirmed identical, only the chrome (background, text, frame stroke color) has flipped for the theme. Board geometry and square placement are unchanged.
-      Legibility verdict: PASS — all text and chrome elements are theme-adaptive and fully readable; data colors match the light render exactly.
+      Background: warm near-black #1A1A17 page.
+      Chrome: title in near-white, subtitle and rank/file labels in light gray — all clearly readable, no dark-on-dark text. Board frame flips to a light ink outline; square separators flip to the dark page color.
+      Data: identical square colors to the light render (#DDCC77 / #BD8233), same orientation (h1 and a8 light). Board stands out clearly from the dark page.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -61,71 +59,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes (15px labels, 22px title, fontFamily set); well-proportioned,
-          readable in both themes
+        comment: Title 22 px, subtitle 15 px, axis labels 16 px semibold (CSS); all
+          readable in both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements
+        comment: No text collisions; labels clear of the board
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 64 squares tile the grid exactly, no gaps, no overlaps
+        comment: All 64 squares and their separators clearly visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Strong luminance separation between ochre and amber squares, CVD-safe
+        comment: Light/dark squares differ strongly in lightness, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Board fills most of the square canvas with balanced, symmetric margins
+        comment: 2400×2400 square canvas, 1:1 board fills the space, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Standard chess algebraic notation (a-h, 1-8) is the correct descriptive
-          labeling for this domain
+        comment: Algebraic file/rank labels are the axis labels a chess board needs;
+          N/A for units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Dark square uses Imprint ochre (palette[3], the documented wood exception);
-          light square uses the amber anchor — no custom hexes, identical across themes
+        comment: 'Wood tones via domain convention (wood→ochre #BD8233 with the amber
+          anchor as light wood), identical across themes; backgrounds #FAF8F1/#1A1A17;
+          chrome theme-adaptive'
     design_excellence:
-      score: 11
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Thoughtful wood-tone palette clearly above library defaults, but
-          a simple diagram with limited room for elaborate hierarchy
+        passed: true
+        comment: 'Clear type hierarchy: semibold title, muted informative subtitle,
+          semibold coordinate labels'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: false
-        comment: Subtle same-background-color grid strokes, generous whitespace, intentional
-          board frame
+        passed: true
+        comment: Separators drawn in the page color and a theme-flipping ink frame
+          give the board a crisp edge in both themes
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Reference diagram with no visual hierarchy or emphasis beyond the
-          grid itself — default tier
+        comment: Empty board displayed as the spec asks; no hierarchy beyond it (appropriate
+          for basic)
     spec_compliance:
       score: 15
       max: 15
@@ -135,28 +134,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 8x8 grid visualization
+        comment: Empty 8×8 chess board, no unrequested layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Alternating colors, a-h/1-8 labels, correct h1/a8 light-square convention,
-          optional square borders present
+        comment: 'All Notes and ''A good version shows'' bullets met: alternating
+          squares at 1:1, h1/a8 light, a–h bottom and 1–8 left centered, clear two-tone,
+          empty board'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Columns a-h on x, ranks 8-to-1 top-to-bottom on y, matches standard
-          board orientation
+        comment: Files a→h left to right, ranks 1→8 bottom to top
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact match; no legend needed for a fixed two-color
-          board
+        comment: Title format correct; no legend needed (N/A)
     data_quality:
       score: 15
       max: 15
@@ -166,19 +164,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 64 squares present with correct alternation
+        comment: All 64 squares with full notation
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, standard chess board — neutral and comprehensible
+        comment: Standard chess board, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Factually correct board geometry and light/dark square placement
+        comment: 'Checked: 8×8 grid, a1 dark, h1 and a8 light in the render and via
+          (fIdx+rank)%2 in code'
     code_quality:
       score: 10
       max: 10
@@ -188,58 +187,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat, simple structure appropriate for a React component
+        comment: Flat constants/data/plot layout; BoardLayer component is required
+          to call the MUI X scale hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, no randomness
+        comment: Fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: All four imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriately complex, no fake functionality
+        comment: Squares derived from band scales, no hand-computed geometry
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct harness contract: export default, skipAnimation, sized to
-          ANYPLOT_SIZE'
+        comment: Default-exported component, sized to ANYPLOT_SIZE, skipAnimation
+          set, square orientation directive
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expertly composes ChartContainer + custom scatter slot with scale-driven
-          positioning
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Slots-based custom mark override is MUI X-specific, though the resulting
-          visual could be approximated elsewhere
+        comment: Band axes with categoryGapRatio 0 drive the grid and native ChartsXAxis/ChartsYAxis
+          render the notation instead of hand-placed text
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Custom SVG layer via useXScale/useYScale/useDrawingArea hooks inside
+          ChartsContainer
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-10-24T04:32:45Z'
 impl_tags:
   dependencies: []
   techniques:
-  - patches
+  - layer-composition
+  - html-export
   patterns:
-  - data-generation
+  - matrix-construction
   dataprep: []
   styling:
-  - minimal-chrome
   - edge-highlighting
