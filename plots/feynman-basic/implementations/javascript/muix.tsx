@@ -12,16 +12,14 @@ const t = window.ANYPLOT_TOKENS;
 // Constants
 const SIZE = window.ANYPLOT_SIZE;
 const TITLE = "feynman-basic · javascript · muix · anyplot.ai";
-const FOOTER_NOTE =
-  "Vertex dots mark interaction points · arrows show particle (forward) vs antiparticle (backward) flow in time";
 const TIME_AXIS_LABEL = "time";
 
 const FONT =
   '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
 
 const X_PAD_SHARE = 0.095;
-const Y_TOP_PAD_SHARE = 0.67;
-const Y_BOTTOM_PAD_SHARE = 0.83;
+const Y_TOP_PAD_SHARE = 0.62;
+const Y_BOTTOM_PAD_SHARE = 0.72;
 const TIME_AXIS_DROP_SHARE = 0.25;
 const STYLE_KEY_DROP_SHARE = 0.54;
 const PHOTON_WAVES = 6;
@@ -99,19 +97,6 @@ const styleKeyY = minVy - vySpan * STYLE_KEY_DROP_SHARE;
 
 const interactionVertices = VERTICES.filter((v) => v.isInteraction);
 
-const inLabels: string[] = [];
-const internalLabels: string[] = [];
-const outLabels: string[] = [];
-for (const prop of PROPAGATORS) {
-  const fromV = vertexMap.get(prop.fromVertex)!;
-  const toV = vertexMap.get(prop.toVertex)!;
-  const p = particleMap.get(prop.particleId)!;
-  if (!fromV.isInteraction) inLabels.push(p.label);
-  else if (!toV.isInteraction) outLabels.push(p.label);
-  else internalLabels.push(p.label);
-}
-const subtitle = `${inLabels.join(" + ")} → ${internalLabels.join(" + ")} → ${outLabels.join(" + ")} · ${interactionVertices.length} interaction vertices, ${PROPAGATORS.length} propagators`;
-
 function FeynmanCanvas() {
   const xs = useXScale() as (v: number) => number;
   const ys = useYScale() as (v: number) => number;
@@ -123,14 +108,14 @@ function FeynmanCanvas() {
       <defs>
         <marker
           id="arrow-fermion"
-          markerWidth="11"
-          markerHeight="11"
-          refX="8"
-          refY="5.5"
+          markerWidth="22"
+          markerHeight="20"
+          refX="14"
+          refY="10"
           orient="auto"
           markerUnits="userSpaceOnUse"
         >
-          <path d="M0,0 L11,5.5 L0,11 Z" fill={fermionColor} />
+          <path d="M0,0 L22,10 L0,20 Z" fill={fermionColor} />
         </marker>
         <marker
           id="arrow-axis"
@@ -341,7 +326,7 @@ function FeynmanCanvas() {
         );
       })}
 
-      {/* Header and footer text */}
+      {/* Title */}
       <text
         x={xs(midVx)}
         y={ys(maxVy + vySpan * 0.5)}
@@ -351,24 +336,6 @@ function FeynmanCanvas() {
         fill={t.ink}
       >
         {TITLE}
-      </text>
-      <text
-        x={xs(midVx)}
-        y={ys(maxVy + vySpan * 0.31)}
-        textAnchor="middle"
-        fontSize={16}
-        fill={t.inkSoft}
-      >
-        {subtitle}
-      </text>
-      <text
-        x={xs(midVx)}
-        y={ys(minVy - vySpan * 0.75)}
-        textAnchor="middle"
-        fontSize={14}
-        fill={t.inkSoft}
-      >
-        {FOOTER_NOTE}
       </text>
     </g>
   );
