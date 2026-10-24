@@ -1,7 +1,7 @@
 // anyplot.ai
 // diagnostic-regression-panel: Regression Diagnostic Panel (Four-Plot Display)
-// Library: muix 9.0.0 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-09-05
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 90/100 | Created: 2026-09-05
 //# anyplot-orientation: square
 
 import * as React from "react";
@@ -18,14 +18,6 @@ const t = window.ANYPLOT_TOKENS;
 const FONT = "system-ui, -apple-system, 'Segoe UI', sans-serif";
 
 // Constants
-const OBS_ID = "obsId";
-const FITTED = "fitted";
-const RESIDUALS = "residuals";
-const STD_RESIDUALS = "stdResiduals";
-const LEVERAGE = "leverage";
-const COOKS_D = "cooksD";
-
-const MODEL_PARAMS = 2;
 const LOWESS_GRID_COUNT = 36;
 const LOWESS_SPAN = 0.5;
 const TOP_INFLUENTIAL_COUNT = 3;
@@ -34,79 +26,89 @@ const COOK_GRID_COUNT = 80;
 const AXIS_PAD_RATIO = 0.08;
 const MARKER_SIZE = 6.5;
 
-// Data: dose-response regression diagnostics (56 observations)
-const sampleSize = 56;
-let seed = 20260905;
-const doses: number[] = [];
-for (let i = 0; i < sampleSize; i++) {
-  seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-  const u = seed / 0x7fffffff;
-  doses.push(4 + 92 * (i / (sampleSize - 1)) + (u - 0.5) * 3);
-}
-doses.sort((a, b) => a - b);
-
-const responses = doses.map((d) => {
-  seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-  const u1 = Math.max(seed / 0x7fffffff, 1e-9);
-  seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-  const u2 = seed / 0x7fffffff;
-  const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-  const trend = 18 + 2.9 * d - 0.012 * d * d;
-  const noiseScale = 2.5 + 0.11 * d;
-  return trend + z * noiseScale;
-});
-
-responses[10] += 34;
-doses[sampleSize - 2] = 118;
-responses[sampleSize - 2] -= 46;
-
-const doseMean = doses.reduce((a, b) => a + b, 0) / sampleSize;
-const responseMean = responses.reduce((a, b) => a + b, 0) / sampleSize;
-const sxx = doses.reduce((acc, d) => acc + (d - doseMean) ** 2, 0);
-const sxy = doses.reduce((acc, d, i) => acc + (d - doseMean) * (responses[i] - responseMean), 0);
-const olsSlope = sxy / sxx;
-const olsIntercept = responseMean - olsSlope * doseMean;
-
-const rawFitted = doses.map((d) => olsIntercept + olsSlope * d);
-const rawResiduals = responses.map((y, i) => y - rawFitted[i]);
-const rss = rawResiduals.reduce((acc, r) => acc + r * r, 0);
-const sigmaHat = Math.sqrt(rss / (sampleSize - MODEL_PARAMS));
-
-const data = doses.map((d, i) => {
-  const h = 1 / sampleSize + (d - doseMean) ** 2 / sxx;
-  const stdRes = rawResiduals[i] / (sigmaHat * Math.sqrt(1 - h));
-  const cooks = (stdRes * stdRes * h) / (MODEL_PARAMS * (1 - h));
-  return {
-    [OBS_ID]: i + 1,
-    [FITTED]: Number(rawFitted[i].toFixed(4)),
-    [RESIDUALS]: Number(rawResiduals[i].toFixed(4)),
-    [STD_RESIDUALS]: Number(stdRes.toFixed(4)),
-    [LEVERAGE]: Number(h.toFixed(5)),
-    [COOKS_D]: Number(cooks.toFixed(5)),
-  };
-});
-
-// Derived diagnostic vectors from data records
-const n = data.length;
-const fitted = data.map((r) => r[FITTED]);
-const residuals = data.map((r) => r[RESIDUALS]);
-const stdResiduals = data.map((r) => r[STD_RESIDUALS]);
-const leverage = data.map((r) => r[LEVERAGE]);
-const cooksD = data.map((r) => r[COOKS_D]);
-const scaleLocation = stdResiduals.map((r) => Math.sqrt(Math.abs(r)));
-
-// Top influential observations by Cook's distance
-const influentialIndices = data
-  .map((r, idx) => ({ idx, cooks: r[COOKS_D] }))
-  .sort((a, b) => b.cooks - a.cooks)
-  .slice(0, TOP_INFLUENTIAL_COUNT)
-  .map((item) => item.idx);
-
-// Normal Q-Q theoretical quantiles (Acklam's rational approximation)
 const acklamA = [-3.969683028665376e1, 2.209460984245205e2, -2.759285104469687e2, 1.38357751867269e2, -3.066479806614716e1, 2.506628277459239];
 const acklamB = [-5.447609879822406e1, 1.615858368580409e2, -1.556989798598866e2, 6.680131188771972e1, -1.328068155288572e1];
 const acklamC = [-7.784894002430293e-3, -3.223964580411365e-1, -2.400758277161838, -2.549732539343734, 4.374664141464968, 2.938163982698783];
 const acklamD = [7.784695709041462e-3, 3.224671290700398e-1, 2.445134137142996, 3.754408661907416];
+
+// Columns: set these to your data's column names
+const OBS_ID = "Observation"; // role: extra
+const FITTED = "Fitted values"; // role: fitted
+const RESIDUALS = "Residuals"; // role: residuals
+const STD_RESIDUALS = "Standardized residuals"; // role: std_residuals
+const LEVERAGE = "Leverage"; // role: leverage
+const COOKS_D = "Cook's distance"; // role: cooks_d
+
+// Data: replace this block with your own records
+const data = (() => {
+  const sampleSize = 56;
+  const modelParams = 2;
+  let seed = 20260905;
+  const doses: number[] = [];
+  for (let i = 0; i < sampleSize; i++) {
+    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+    const u = seed / 0x7fffffff;
+    doses.push(4 + 92 * (i / (sampleSize - 1)) + (u - 0.5) * 3);
+  }
+  doses.sort((a, b) => a - b);
+
+  const responses = doses.map((d) => {
+    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+    const u1 = Math.max(seed / 0x7fffffff, 1e-9);
+    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+    const u2 = seed / 0x7fffffff;
+    const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+    const trend = 18 + 2.9 * d - 0.012 * d * d;
+    const noiseScale = 2.5 + 0.11 * d;
+    return trend + z * noiseScale;
+  });
+
+  responses[10] += 34;
+  doses[sampleSize - 2] = 118;
+  responses[sampleSize - 2] -= 46;
+
+  const doseMean = doses.reduce((a, b) => a + b, 0) / sampleSize;
+  const responseMean = responses.reduce((a, b) => a + b, 0) / sampleSize;
+  const sxx = doses.reduce((acc, d) => acc + (d - doseMean) ** 2, 0);
+  const sxy = doses.reduce((acc, d, i) => acc + (d - doseMean) * (responses[i] - responseMean), 0);
+  const olsSlope = sxy / sxx;
+  const olsIntercept = responseMean - olsSlope * doseMean;
+
+  const rawFitted = doses.map((d) => olsIntercept + olsSlope * d);
+  const rawResiduals = responses.map((y, i) => y - rawFitted[i]);
+  const rss = rawResiduals.reduce((acc, r) => acc + r * r, 0);
+  const sigmaHat = Math.sqrt(rss / (sampleSize - modelParams));
+
+  return doses.map((d, i) => {
+    const h = 1 / sampleSize + (d - doseMean) ** 2 / sxx;
+    const stdRes = rawResiduals[i] / (sigmaHat * Math.sqrt(1 - h));
+    const cooks = (stdRes * stdRes * h) / (modelParams * (1 - h));
+    return {
+      [OBS_ID]: i + 1,
+      [FITTED]: Number(rawFitted[i].toFixed(4)),
+      [RESIDUALS]: Number(rawResiduals[i].toFixed(4)),
+      [STD_RESIDUALS]: Number(stdRes.toFixed(4)),
+      [LEVERAGE]: Number(h.toFixed(5)),
+      [COOKS_D]: Number(cooks.toFixed(5)),
+    };
+  });
+})();
+
+// Plot: reads only data and the constants above
+const n = data.length;
+const fitted = data.map((r) => Number(r[FITTED]));
+const residuals = data.map((r) => Number(r[RESIDUALS]));
+const stdResiduals = data.map((r) => Number(r[STD_RESIDUALS]));
+const leverage = data.map((r) => Number(r[LEVERAGE]));
+const cooksD = data.map((r) => Number(r[COOKS_D]));
+const scaleLocation = stdResiduals.map((r) => Math.sqrt(Math.abs(r)));
+const p = Math.round(leverage.reduce((a, b) => a + b, 0));
+
+const influentialIndices = cooksD
+  .map((cooks, idx) => ({ idx, cooks }))
+  .sort((a, b) => b.cooks - a.cooks)
+  .slice(0, TOP_INFLUENTIAL_COUNT)
+  .map((item) => item.idx);
 
 const qqRanked = stdResiduals.map((v, i) => ({ v, origIdx: i })).sort((a, b) => a.v - b.v);
 const theoreticalQuantiles = new Array<number>(n);
@@ -139,16 +141,15 @@ qqRanked.forEach(({ v, origIdx }, rank) => {
   qqRankByOrigIdx[origIdx] = rank;
 });
 
-// Fitted-value grid and tricube LOWESS smoothers for Panel 1 & Panel 3
 const fittedMin = Math.min(...fitted);
 const fittedMax = Math.max(...fitted);
-const fittedSpan = fittedMax - fittedMin || 1;
+const fittedSpan = fittedMax - fittedMin;
 const fittedAxisMin = fittedMin - fittedSpan * AXIS_PAD_RATIO;
 const fittedAxisMax = fittedMax + fittedSpan * AXIS_PAD_RATIO;
 
 const fittedGrid = Array.from(
   { length: LOWESS_GRID_COUNT },
-  (_, i) => fittedMin + (fittedSpan * i) / (LOWESS_GRID_COUNT - 1)
+  (_, i) => fittedMin + (fittedSpan * i) / (LOWESS_GRID_COUNT - 1),
 );
 
 const lowessK = Math.max(3, Math.round(LOWESS_SPAN * n));
@@ -157,7 +158,7 @@ const scaleLocLowess: number[] = [];
 
 for (const x0 of fittedGrid) {
   const dists = fitted.map((xi) => Math.abs(xi - x0));
-  const bandwidth = [...dists].sort((a, b) => a - b)[Math.min(lowessK - 1, n - 1)] || 1e-6;
+  const bandwidth = [...dists].sort((a, b) => a - b)[Math.min(lowessK - 1, n - 1)];
   let sw = 0;
   let swx = 0;
   let swxx = 0;
@@ -178,62 +179,55 @@ for (const x0 of fittedGrid) {
     swxySL += w * fitted[i] * scaleLocation[i];
   }
   const denom = sw * swxx - swx * swx;
-  if (Math.abs(denom) < 1e-9) {
-    residLowess.push(swyRes / sw);
-    scaleLocLowess.push(swySL / sw);
-  } else {
-    const b1Res = (sw * swxyRes - swx * swyRes) / denom;
-    const b0Res = (swyRes - b1Res * swx) / sw;
-    residLowess.push(b0Res + b1Res * x0);
+  const b1Res = (sw * swxyRes - swx * swyRes) / denom;
+  const b0Res = (swyRes - b1Res * swx) / sw;
+  residLowess.push(b0Res + b1Res * x0);
 
-    const b1SL = (sw * swxySL - swx * swySL) / denom;
-    const b0SL = (swySL - b1SL * swx) / sw;
-    scaleLocLowess.push(b0SL + b1SL * x0);
-  }
+  const b1SL = (sw * swxySL - swx * swySL) / denom;
+  const b0SL = (swySL - b1SL * swx) / sw;
+  scaleLocLowess.push(b0SL + b1SL * x0);
 }
 
-// Axis extents derived from data ranges
 const residMin = Math.min(...residuals, ...residLowess);
 const residMax = Math.max(...residuals, ...residLowess);
-const residSpan = residMax - residMin || 1;
+const residSpan = residMax - residMin;
 const residAxisMin = residMin - residSpan * AXIS_PAD_RATIO;
 const residAxisMax = residMax + residSpan * AXIS_PAD_RATIO;
 
 const qqDataMin = Math.min(...theoreticalQuantiles);
 const qqDataMax = Math.max(...theoreticalQuantiles);
-const qqXSpan = qqDataMax - qqDataMin || 1;
+const qqXSpan = qqDataMax - qqDataMin;
 const qqXMin = qqDataMin - qqXSpan * AXIS_PAD_RATIO;
 const qqXMax = qqDataMax + qqXSpan * AXIS_PAD_RATIO;
 
 const stdResMin = Math.min(...stdResiduals);
 const stdResMax = Math.max(...stdResiduals);
-const stdResSpan = stdResMax - stdResMin || 1;
+const stdResSpan = stdResMax - stdResMin;
 const stdResAxisMin = stdResMin - stdResSpan * AXIS_PAD_RATIO;
 const stdResAxisMax = stdResMax + stdResSpan * AXIS_PAD_RATIO;
 const p4SymLim = Math.max(Math.abs(stdResAxisMin), Math.abs(stdResAxisMax));
 
 const slMin = Math.min(...scaleLocation, ...scaleLocLowess);
 const slMax = Math.max(...scaleLocation, ...scaleLocLowess);
-const slSpan = slMax - slMin || 1;
+const slSpan = slMax - slMin;
 const slAxisMin = Math.max(0, slMin - slSpan * AXIS_PAD_RATIO);
 const slAxisMax = slMax + slSpan * AXIS_PAD_RATIO;
 
 const levMin = Math.min(...leverage);
 const levMax = Math.max(...leverage);
-const levSpan = levMax - levMin || 1;
+const levSpan = levMax - levMin;
 const levAxisMin = Math.max(0, levMin - levSpan * AXIS_PAD_RATIO);
 const levAxisMax = levMax + levSpan * (AXIS_PAD_RATIO * 1.6);
 
 const cookHStart = Math.max(levAxisMin, levSpan * 0.02);
 const cookGrid = Array.from(
   { length: COOK_GRID_COUNT },
-  (_, i) => cookHStart + ((levAxisMax - cookHStart) * i) / (COOK_GRID_COUNT - 1)
+  (_, i) => cookHStart + ((levAxisMax - cookHStart) * i) / (COOK_GRID_COUNT - 1),
 );
 
-// Styling constants
 const POINT_COLOR = t.palette[0];
 const SMOOTH_COLOR = t.palette[2];
-const CONTOUR_COLOR = t.amber;
+const CONTOUR_COLOR = t.inkSoft;
 const REF_LINE_STYLE = { stroke: t.inkSoft, strokeWidth: 1.5, strokeDasharray: "6 5", opacity: 0.75 };
 const AXIS_LABEL_STYLE = { fill: t.ink, fontSize: 15, fontWeight: 600, fontFamily: FONT };
 const TICK_LABEL_STYLE = { fill: t.inkSoft, fontSize: 14, fontFamily: FONT };
@@ -257,17 +251,14 @@ function PanelOverlay({ points, qqLine, cookContours, clipId }: PanelOverlayProp
   const yScale = useYScale() as (v: number) => number;
   const { left, top, width, height } = useDrawingArea();
 
-  const positioned = points
-    .map(({ x, y, text }) => {
-      const px = xScale(x);
-      const py = yScale(y);
-      if (px == null || py == null || Number.isNaN(px) || Number.isNaN(py)) return null;
-      return { px, py, text, dx: 10, dy: -8, anchor: "start" as "start" | "end" };
-    })
-    .filter(
-      (item): item is { px: number; py: number; text: string; dx: number; dy: number; anchor: "start" | "end" } =>
-        item !== null
-    );
+  const positioned = points.map(({ x, y, text }) => ({
+    px: xScale(x),
+    py: yScale(y),
+    text,
+    dx: 10,
+    dy: -8,
+    anchor: "start" as "start" | "end",
+  }));
 
   const rightBound = left + width;
   positioned.forEach((point, i) => {
@@ -317,19 +308,19 @@ function PanelOverlay({ points, qqLine, cookContours, clipId }: PanelOverlayProp
           {COOK_LEVELS.map((level) => {
             const posPath = cookGrid
               .map((h, idx) => {
-                const v = Math.sqrt((level * MODEL_PARAMS * (1 - h)) / h);
+                const v = Math.sqrt((level * p * (1 - h)) / h);
                 return `${idx === 0 ? "M" : "L"}${xScale(h).toFixed(1)},${yScale(v).toFixed(1)}`;
               })
               .join(" ");
             const negPath = cookGrid
               .map((h, idx) => {
-                const v = -Math.sqrt((level * MODEL_PARAMS * (1 - h)) / h);
+                const v = -Math.sqrt((level * p * (1 - h)) / h);
                 return `${idx === 0 ? "M" : "L"}${xScale(h).toFixed(1)},${yScale(v).toFixed(1)}`;
               })
               .join(" ");
 
             const labelH = levAxisMax - levSpan * 0.04;
-            const posLabelV = Math.sqrt((level * MODEL_PARAMS * (1 - labelH)) / labelH);
+            const posLabelV = Math.sqrt((level * p * (1 - labelH)) / labelH);
             const negLabelV = -posLabelV;
             const lx = xScale(labelH) - 6;
             const lyPos = yScale(posLabelV) - 6;
@@ -356,7 +347,10 @@ function PanelOverlay({ points, qqLine, cookContours, clipId }: PanelOverlayProp
                     x={lx}
                     y={lyPos}
                     textAnchor="end"
-                    fill={CONTOUR_COLOR}
+                    fill={t.ink}
+                    stroke={t.pageBg}
+                    strokeWidth={3.5}
+                    paintOrder="stroke"
                     style={{ fontSize: 14, fontWeight: 600, fontFamily: FONT }}
                   >
                     {level.toFixed(1)}
@@ -367,7 +361,10 @@ function PanelOverlay({ points, qqLine, cookContours, clipId }: PanelOverlayProp
                     x={lx}
                     y={lyNeg}
                     textAnchor="end"
-                    fill={CONTOUR_COLOR}
+                    fill={t.ink}
+                    stroke={t.pageBg}
+                    strokeWidth={3.5}
+                    paintOrder="stroke"
                     style={{ fontSize: 14, fontWeight: 600, fontFamily: FONT }}
                   >
                     {level.toFixed(1)}
@@ -477,7 +474,7 @@ export default function Chart() {
             color: t.inkSoft,
           }}
         >
-          <span>OLS diagnostics (n = {n}, p = {MODEL_PARAMS})</span>
+          <span>OLS diagnostics (n = {n}, p = {p})</span>
           <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
             <span
               style={{
@@ -488,7 +485,7 @@ export default function Chart() {
                 display: "inline-block",
               }}
             />
-            Observations (top {TOP_INFLUENTIAL_COUNT} by Cook&apos;s D labeled)
+            {`${OBS_ID}s (top ${TOP_INFLUENTIAL_COUNT} by ${COOKS_D} labeled)`}
           </span>
           <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
             <span
@@ -509,7 +506,7 @@ export default function Chart() {
                 display: "inline-block",
               }}
             />
-            Cook&apos;s distance (0.5, 1.0)
+            {`${COOKS_D} (${COOK_LEVELS.map((l) => l.toFixed(1)).join(", ")})`}
           </span>
         </div>
       </div>
@@ -526,7 +523,7 @@ export default function Chart() {
         {/* Panel 1: Residuals vs Fitted */}
         <div style={{ width: chartW, height: rowH }}>
           <div style={{ height: subTitleH, display: "flex", alignItems: "flex-end", paddingBottom: 4, paddingLeft: 74 }}>
-            <span style={{ fontSize: 16, fontWeight: 600, color: t.ink }}>1. Residuals vs Fitted</span>
+            <span style={{ fontSize: 16, fontWeight: 600, color: t.ink }}>{`1. ${RESIDUALS} vs ${FITTED}`}</span>
           </div>
           <ChartsContainer
             width={chartW}
@@ -541,7 +538,7 @@ export default function Chart() {
                 max: fittedAxisMax,
                 data: fittedGrid,
                 height: 54,
-                label: "Fitted Values",
+                label: FITTED,
                 labelStyle: AXIS_LABEL_STYLE,
                 tickLabelStyle: TICK_LABEL_STYLE,
               },
@@ -553,7 +550,7 @@ export default function Chart() {
                 min: residAxisMin,
                 max: residAxisMax,
                 width: 74,
-                label: "Residuals",
+                label: RESIDUALS,
                 labelStyle: AXIS_LABEL_STYLE,
                 tickLabelStyle: TICK_LABEL_STYLE,
               },
@@ -603,7 +600,7 @@ export default function Chart() {
                 min: qqXMin,
                 max: qqXMax,
                 height: 54,
-                label: "Theoretical Quantiles",
+                label: "Theoretical quantiles",
                 labelStyle: AXIS_LABEL_STYLE,
                 tickLabelStyle: TICK_LABEL_STYLE,
               },
@@ -615,7 +612,7 @@ export default function Chart() {
                 min: stdResAxisMin,
                 max: stdResAxisMax,
                 width: 74,
-                label: "Standardized Residuals",
+                label: STD_RESIDUALS,
                 labelStyle: AXIS_LABEL_STYLE,
                 tickLabelStyle: TICK_LABEL_STYLE,
               },
@@ -656,7 +653,7 @@ export default function Chart() {
                 max: fittedAxisMax,
                 data: fittedGrid,
                 height: 54,
-                label: "Fitted Values",
+                label: FITTED,
                 labelStyle: AXIS_LABEL_STYLE,
                 tickLabelStyle: TICK_LABEL_STYLE,
               },
@@ -668,7 +665,7 @@ export default function Chart() {
                 min: slAxisMin,
                 max: slAxisMax,
                 width: 74,
-                label: "√|Standardized Residuals|",
+                label: `√|${STD_RESIDUALS}|`,
                 labelStyle: AXIS_LABEL_STYLE,
                 tickLabelStyle: TICK_LABEL_STYLE,
               },
@@ -703,7 +700,7 @@ export default function Chart() {
         {/* Panel 4: Residuals vs Leverage */}
         <div style={{ width: chartW, height: rowH }}>
           <div style={{ height: subTitleH, display: "flex", alignItems: "flex-end", paddingBottom: 4, paddingLeft: 74 }}>
-            <span style={{ fontSize: 16, fontWeight: 600, color: t.ink }}>4. Residuals vs Leverage</span>
+            <span style={{ fontSize: 16, fontWeight: 600, color: t.ink }}>{`4. ${RESIDUALS} vs ${LEVERAGE}`}</span>
           </div>
           <ChartsContainer
             width={chartW}
@@ -717,7 +714,7 @@ export default function Chart() {
                 min: levAxisMin,
                 max: levAxisMax,
                 height: 54,
-                label: "Leverage",
+                label: LEVERAGE,
                 labelStyle: AXIS_LABEL_STYLE,
                 tickLabelStyle: TICK_LABEL_STYLE,
               },
@@ -729,7 +726,7 @@ export default function Chart() {
                 min: -p4SymLim,
                 max: p4SymLim,
                 width: 74,
-                label: "Standardized Residuals",
+                label: STD_RESIDUALS,
                 labelStyle: AXIS_LABEL_STYLE,
                 tickLabelStyle: TICK_LABEL_STYLE,
               },
