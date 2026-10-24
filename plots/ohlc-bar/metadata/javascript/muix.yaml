@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: ohlc-bar
 created: '2026-09-02T04:52:33Z'
-updated: '2026-10-24T11:26:24Z'
+updated: '2026-10-24T11:31:14Z'
 generated_by: gemini-4-argon
 adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
 workflow_run: 40089656571
@@ -13,53 +13,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/javascript/muix/plot-dark.html
-quality_score: 84
+quality_score: 86
 review:
   strengths:
   - 'Uses the MUI X v9 composition API idiomatically: ChartsContainer with a band
-    x axis and a linear y axis, and a custom OhlcBars component that draws high-low
-    lines and open/close ticks through useXScale/useYScale, so every mark sits exactly
-    at its data value on the library''s own scales'
-  - Open ticks extend left and close ticks right at 11 px (40 % of the band), long
-    enough to read direction at a glance and short enough that neighboring bars never
-    touch
-  - 'Up/down coloring follows the finance semantic exception (brand green #009E73
-    up, matte red #AE3030 down), identical in both themes, with legend labels that
-    literally say Up/Down; direction still reads from the tick sides'
-  - Band axis draws a tick for every session but labels only every fifth (Mondays)
-    as 'Jan 2', 'Jan 9' …, with the year moved into the axis title, a date format
-    fitted to daily data
-  - Price axis padded 6 % around the lows and highs instead of forced to zero, horizontal-only
-    dashed grid at reduced opacity drawn behind the bars
-  - Theme tokens threaded through every chrome element (page background, title, axis
-    titles, tick labels, grid, legend text); both renders fully legible
+    x axis and a numeric y axis, and a custom OhlcBars layer drawing through useXScale/useYScale,
+    so every bar sits exactly at its data values and shares the axes and grid'
+  - Open ticks left, close ticks right, with tick length derived from the band width
+    (capped at 11 px) so neighboring bars never touch
+  - 'Finance semantic exception applied correctly: up = brand green #009E73, down
+    = matte red #AE3030, identical in both themes, legend literally says Up / Down'
+  - Price axis padded 6 % around the data range rather than forced to zero; dates
+    formatted as 'Jan 2' with the year moved into the axis title, labels every fifth
+    session
+  - ChartsGrid restyled via sx to a faint dashed grid behind the bars; skipAnimation
+    set
   weaknesses:
-  - 'VQ-06 (both): the price axis is titled ''Close (USD)'' although it carries open,
-    high, low and close of every bar → a title for the whole price scale such as ''Price
-    (USD)''. Likely cause: yAxis label: CLOSE.'
-  - 'DQ-02 (both): the series includes a session on 2024-02-19, Presidents'' Day,
-    when US exchanges were closed, in an otherwise realistic daily US-stock series
-    → drop that date (or shift the window) so every bar is a real trading day. Likely
-    cause: the hard-coded data rows include { [DATE]: "2024-02-19" }.'
-  - 'Suggestion: the title at 22 px fills only about 30 % of the width; a slightly
-    larger title would anchor the wide canvas better.'
-  - 'Suggestion: an occasional doji session (open = close) would show how the chart
-    handles equal ticks, which the spec permits.'
+  - 'DQ-02 (both): the series is an unnamed stock that climbs almost linearly from
+    about 218 to 255 USD with near-uniform 4–6 USD daily ranges and a regular up/down
+    alternation, which reads as synthetic rather than as a real trading record → give
+    the bars a named (fictional) ticker in the axis or column label and vary volatility
+    (a few wide-range sessions, a short pullback). Likely cause: the hand-written
+    data block with a fixed step per session.'
+  - 'Suggestion: an HTML-only tooltip showing the exact open/high/low/close per session
+    would add value in the interactive view.'
+  - 'Suggestion: y ticks every 5 USD instead of every 2 USD would lighten the 23-label
+    price axis.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across the whole canvas, including the title row.
-      Chrome: bold dark title "ohlc-bar · javascript · muix · anyplot.ai" top-left; inline legend top-right ("Up (close > open)" with a green line glyph, "Down (close < open)" with a red line glyph). Y-axis title "Close (USD)" rotated, ticks 214–258 in steps of 2; x-axis title "Trading session (2024)", tick labels "Jan 2" … "Feb 27" every fifth session with minor ticks at every session. Faint dashed horizontal grid. All text dark on light and readable.
-      Data: 45 OHLC bars from Jan 2 to Mar 4, 2024, rising from ~218 to ~255; each a thin vertical high-low line with a short left open tick and right close tick. Up bars brand green #009E73, down bars matte red #AE3030. Ticks do not touch neighbors.
+      Background: warm off-white #FAF8F1
+      Chrome: bold dark title top-left, inline Up/Down legend top-right, "Price (USD)" y axis 214-258 in 2-USD steps, "Trading session (2024)" x axis labelled every fifth session ("Jan 2" ... "Feb 29"), faint dashed horizontal grid; all readable
+      Data: 44 OHLC bars (thin high-low line, left open tick, right close tick); up sessions brand green #009E73, down sessions matte red #AE3030; ticks never touch neighbors
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17, not pure black.
-      Chrome: title, axis titles and tick labels in light ink, legend text in soft light ink, dashed grid subtle but visible; no dark-on-dark text anywhere.
-      Data: identical bars and colors to the light render (green #009E73 up, red #AE3030 down), both clearly visible on the dark surface.
+      Background: warm near-black #1A1A17
+      Chrome: title, axis titles, ticks and legend text in light ink, all readable; grid subtle but visible; no dark-on-dark
+      Data: identical green/red colors and positions to the light render
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -67,49 +61,46 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (title 22, axis titles 16, ticks/legend 14 CSS px
-          at dpr 2); all text readable in both themes
+        comment: Explicit sizes (title 22, axis 16, ticks 14 CSS px); all text readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; bars and ticks never touch
+        comment: No text collisions; bars and ticks stay separate
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 2.4 px strokes with rounded caps suit 45 bars; legend line glyphs
-          match the marks in both themes
+        comment: 2.4 px strokes clearly visible for 44 bars; legend line samples match
+          marks
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Red/green is not the sole signal: direction also reads from the
-          left/right tick positions'
+        comment: Imprint green/red plus left/right ticks carry direction; not color-only
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; plot fills the canvas, balanced axis labels,
-          nothing cut off
+        comment: 3200x1800; balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Price axis titled 'Close (USD)' though it carries all four prices
-          (defect line)
+        passed: true
+        comment: '''Price (USD)'', ''Trading session (2024)'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Finance semantic exception: green #009E73 up, red #AE3030 down;
-          correct theme backgrounds'
+        comment: 'Finance semantic exception: up #009E73, down #AE3030; correct backgrounds
+          both themes'
     design_excellence:
       score: 10
       max: 20
@@ -119,21 +110,21 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Legend folded into the title row with line glyphs that echo the OHLC
-          ticks, freeing the full plot area
+        comment: Custom header band pairing the title with an inline legend; clear
+          type hierarchy
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: 'Grid density chosen for the chart: horizontal-only dashed grid at
-          0.55 opacity, session ticks with weekly labels'
+        comment: Dashed low-opacity grid, round line caps, tick length capped to keep
+          bars separate
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed, no hierarchy chosen beyond the Notes
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -143,27 +134,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'True OHLC bars: high-low line, left open tick, right close tick'
+        comment: Correct OHLC bars
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Thin lines, left/right ticks, up/down colors, date formatting fitted
-          to daily data, grid lines behind bars; all good-version bullets met
+        comment: Thin high-low lines, left open/right close ticks, direction colors,
+          date formatting, grid all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Marks drawn through the axis scales at their values; y axis spans
-          lows/highs without zero
+        comment: Marks drawn at data values via axis scales; axis spans all lows/highs
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; legend entries Up/Down match colors
+        comment: Title format correct; legend Up/Down labels match marks
     data_quality:
       score: 14
       max: 15
@@ -173,22 +163,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Mix of up and down sessions, varying ranges, a trending series with
-          pullbacks
+        comment: 44 sessions with up and down bars, varied open/close positions
       - id: DQ-02
         name: Realistic Context
         score: 4
         max: 5
         passed: true
-        comment: Plausible daily stock series, but includes 2024-02-19, a US market
-          holiday (defect line)
+        comment: Plausible and neutral but an unnamed, near-linear, uniformly volatile
+          series reads synthetic (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Prices ~216–257 USD with 1–3 % daily ranges; checked high ≥ open/close
-          ≥ low on the rendered bars; no Check values in the spec
+        comment: Prices ~216-257 USD, daily ranges 3-6 USD plausible; low<=open,close<=high
     code_quality:
       score: 10
       max: 10
@@ -198,13 +186,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Only the React components the composition API requires
+        comment: Only the OhlcBars component the scale hooks require
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hard-coded deterministic data
+        comment: Hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -222,10 +210,9 @@ review:
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation,
-          v9 imports
+        comment: Default-exported component, v9 API, skipAnimation
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -233,29 +220,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ChartsContainer composition with ChartsGrid/ChartsXAxis/ChartsYAxis,
-          tickLabelInterval and valueFormatter on the band axis
+        comment: ChartsContainer composition with custom marks via useXScale/useYScale
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: true
-        comment: Custom series drawn via useXScale/useYScale hooks inside the composition
-          tree, MUI X's extension point for unsupported marks
-  verdict: REJECTED
+        comment: ChartsGrid sx styling, tickLabelInterval, band-scale hooks for a
+          custom series
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T11:23:48Z'
+  rendered_at: '2026-10-24T11:28:30Z'
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
-  - manual-ticks
   - layer-composition
   - html-export
-  patterns:
-  - iteration-over-groups
-  dataprep: []
+  patterns: []
+  dataprep:
+  - time-series
   styling:
-  - minimal-chrome
   - grid-styling
