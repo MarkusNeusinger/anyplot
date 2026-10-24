@@ -15,7 +15,8 @@ import { useXScale, useYScale } from "@mui/x-charts/hooks";
 const t = window.ANYPLOT_TOKENS;
 
 // Constants
-const TITLE = "mohr-circle · javascript · muix · anyplot.ai";
+const TITLE = "Steel Drive Shaft, Bending + Torsion · mohr-circle · javascript · muix · anyplot.ai";
+const TITLE_FONT_SIZE = Math.max(16, Math.round((22 * 67) / Math.max(67, TITLE.length)));
 const TITLE_HEIGHT = 64;
 const X_AXIS_HEIGHT = 60;
 const Y_AXIS_WIDTH = 90;
@@ -31,11 +32,12 @@ const SIGMA_Y = "Normal Stress σy (MPa)"; // role: sigma_y
 const TAU_XY = "Shear Stress τxy (MPa)"; // role: tau_xy
 
 // Data: replace this block with your own records
+// Surface point of a steel drive shaft: bending stress σx, no transverse load, torsional shear τxy
 const data: Array<Record<string, number>> = [
   {
-    [SIGMA_X]: 80,
-    [SIGMA_Y]: 20,
-    [TAU_XY]: 30,
+    [SIGMA_X]: 74,
+    [SIGMA_Y]: 0,
+    [TAU_XY]: 32,
   },
 ];
 
@@ -268,7 +270,7 @@ export default function Chart() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          fontSize: 22,
+          fontSize: TITLE_FONT_SIZE,
           fontWeight: 600,
           color: t.ink,
         }}
@@ -294,8 +296,8 @@ export default function Chart() {
             max: xAxisMax,
             height: X_AXIS_HEIGHT,
             label: xAxisLabel,
-            labelStyle: { fontSize: 16, fill: t.ink, fontWeight: 500 },
-            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 18, fill: t.ink, fontWeight: 500 },
+            tickLabelStyle: { fontSize: 16, fill: t.inkSoft },
             stroke: t.inkSoft,
           },
         ]}
@@ -307,8 +309,8 @@ export default function Chart() {
             max: yAxisMax,
             width: Y_AXIS_WIDTH,
             label: yAxisLabel,
-            labelStyle: { fontSize: 16, fill: t.ink, fontWeight: 500 },
-            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 18, fill: t.ink, fontWeight: 500 },
+            tickLabelStyle: { fontSize: 16, fill: t.inkSoft },
             stroke: t.inkSoft,
           },
         ]}
