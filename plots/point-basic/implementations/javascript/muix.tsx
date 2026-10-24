@@ -1,7 +1,8 @@
 // anyplot.ai
 // point-basic: Point Estimate Plot
-// Library: muix 9.2.1 | JavaScript 22.23.2
+// Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 87/100 | Created: 2026-09-05
+
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
@@ -10,14 +11,9 @@ import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const TITLE = "point-basic · javascript · muix · anyplot.ai";
 
 // Constants
-const SITE_COL = "Pilot Site";
-const ESTIMATE_COL = "Effect Size (Cohen's d)";
-const LOWER_COL = "Lower 95% CI";
-const UPPER_COL = "Upper 95% CI";
-
+const TITLE = "point-basic · javascript · muix · anyplot.ai";
 const NULL_VALUE = 0;
 const NULL_LABEL = "No effect";
 const X_PAD_SHARE = 0.1;
@@ -25,49 +21,89 @@ const TITLE_HEIGHT = 68;
 const CAP_BAND_SHARE = 0.22;
 const MARKER_RADIUS = 10;
 
-// Data: effect of an after-school tutoring program on standardized test scores
-const DATA = [
-  { [SITE_COL]: "Denver", [ESTIMATE_COL]: 0.55, [LOWER_COL]: 0.3, [UPPER_COL]: 0.8 },
-  { [SITE_COL]: "Portland", [ESTIMATE_COL]: 0.45, [LOWER_COL]: 0.22, [UPPER_COL]: 0.68 },
-  { [SITE_COL]: "Boston", [ESTIMATE_COL]: 0.42, [LOWER_COL]: 0.18, [UPPER_COL]: 0.66 },
-  { [SITE_COL]: "Austin", [ESTIMATE_COL]: 0.38, [LOWER_COL]: 0.15, [UPPER_COL]: 0.61 },
-  { [SITE_COL]: "Chicago", [ESTIMATE_COL]: 0.31, [LOWER_COL]: 0.05, [UPPER_COL]: 0.57 },
-  { [SITE_COL]: "Seattle", [ESTIMATE_COL]: 0.28, [LOWER_COL]: 0.02, [UPPER_COL]: 0.54 },
-  { [SITE_COL]: "Atlanta", [ESTIMATE_COL]: 0.12, [LOWER_COL]: -0.1, [UPPER_COL]: 0.34 },
-  { [SITE_COL]: "Miami", [ESTIMATE_COL]: -0.05, [LOWER_COL]: -0.28, [UPPER_COL]: 0.18 },
+// Columns: set these to your data's column names
+const SITE = "Pilot Site"; // role: category
+const ESTIMATE = "Effect Size (Cohen's d)"; // role: value
+const LOWER = "Lower 95% CI"; // role: low
+const UPPER = "Upper 95% CI"; // role: high
+
+// Data: replace this block with your own records
+const data: Array<Record<string, string | number>> = [
+  { [SITE]: "Denver", [ESTIMATE]: 0.55, [LOWER]: 0.3, [UPPER]: 0.8 },
+  { [SITE]: "Portland", [ESTIMATE]: 0.45, [LOWER]: 0.22, [UPPER]: 0.68 },
+  { [SITE]: "Boston", [ESTIMATE]: 0.42, [LOWER]: 0.18, [UPPER]: 0.66 },
+  { [SITE]: "Austin", [ESTIMATE]: 0.38, [LOWER]: 0.15, [UPPER]: 0.61 },
+  { [SITE]: "Chicago", [ESTIMATE]: 0.31, [LOWER]: 0.05, [UPPER]: 0.57 },
+  { [SITE]: "Seattle", [ESTIMATE]: 0.28, [LOWER]: 0.02, [UPPER]: 0.54 },
+  { [SITE]: "Atlanta", [ESTIMATE]: 0.12, [LOWER]: -0.1, [UPPER]: 0.34 },
+  { [SITE]: "Miami", [ESTIMATE]: -0.05, [LOWER]: -0.28, [UPPER]: 0.18 },
 ];
 
-// Sort descending by point estimate so visual hierarchy reads top-to-bottom
-const sortedSites = [...DATA].sort((a, b) => Number(b[ESTIMATE_COL]) - Number(a[ESTIMATE_COL]));
-const siteNames = sortedSites.map((row) => String(row[SITE_COL]));
-const allBounds = sortedSites.flatMap((row) => [Number(row[LOWER_COL]), Number(row[UPPER_COL]), NULL_VALUE]);
+// Plot: reads only data and the constants above
+const sortedSites = [...data].sort((a, b) => Number(b[ESTIMATE]) - Number(a[ESTIMATE]));
+const siteNames = sortedSites.map((row) => String(row[SITE]));
+const allBounds = sortedSites.flatMap((row) => [
+  Number(row[LOWER]),
+  Number(row[UPPER]),
+  NULL_VALUE,
+]);
 const rawMin = Math.min(...allBounds);
 const rawMax = Math.max(...allBounds);
-const span = rawMax - rawMin || 1;
+const span = rawMax - rawMin;
 const xMin = rawMin - span * X_PAD_SHARE;
 const xMax = rawMax + span * X_PAD_SHARE;
 
 function PointEstimates() {
-  const xScale = useXScale();
-  const yScale = useYScale();
-  if (!xScale || !yScale) return null;
-  const bandwidth = typeof yScale.bandwidth === "function" ? yScale.bandwidth() : 0;
+  const xScale = useXScale("effect-size") as unknown as (v: number) => number;
+  const yScale = useYScale("site") as unknown as ((s: string) => number) & {
+    bandwidth: () => number;
+  };
+  const bandwidth = yScale.bandwidth();
   const capHalf = bandwidth * CAP_BAND_SHARE;
 
   return (
     <g>
       {sortedSites.map((row) => {
-        const siteLabel = String(row[SITE_COL]);
-        const y = (yScale(siteLabel) ?? 0) + bandwidth / 2;
-        const xLow = xScale(Number(row[LOWER_COL]));
-        const xHigh = xScale(Number(row[UPPER_COL]));
-        const xEst = xScale(Number(row[ESTIMATE_COL]));
+        const siteLabel = String(row[SITE]);
+        const y = yScale(siteLabel) + bandwidth / 2;
+        const xLow = xScale(Number(row[LOWER]));
+        const xHigh = xScale(Number(row[UPPER]));
+        const xEst = xScale(Number(row[ESTIMATE]));
         return (
           <g key={siteLabel}>
-            <line x1={xLow} x2={xHigh} y1={y} y2={y} stroke={t.palette[0]} strokeWidth={3} strokeLinecap="round" />
-            <line x1={xLow} x2={xLow} y1={y - capHalf} y2={y + capHalf} stroke={t.palette[0]} strokeWidth={3} />
-            <line x1={xHigh} x2={xHigh} y1={y - capHalf} y2={y + capHalf} stroke={t.palette[0]} strokeWidth={3} />
-            <circle cx={xEst} cy={y} r={MARKER_RADIUS} fill={t.palette[0]} stroke={t.pageBg} strokeWidth={2.5} />
+            <line
+              x1={xLow}
+              x2={xHigh}
+              y1={y}
+              y2={y}
+              stroke={t.palette[0]}
+              strokeWidth={3}
+              strokeLinecap="round"
+            />
+            <line
+              x1={xLow}
+              x2={xLow}
+              y1={y - capHalf}
+              y2={y + capHalf}
+              stroke={t.palette[0]}
+              strokeWidth={3}
+            />
+            <line
+              x1={xHigh}
+              x2={xHigh}
+              y1={y - capHalf}
+              y2={y + capHalf}
+              stroke={t.palette[0]}
+              strokeWidth={3}
+            />
+            <circle
+              cx={xEst}
+              cy={y}
+              r={MARKER_RADIUS}
+              fill={t.palette[0]}
+              stroke={t.pageBg}
+              strokeWidth={2.5}
+            />
           </g>
         );
       })}
@@ -113,7 +149,7 @@ export default function Chart() {
             min: xMin,
             max: xMax,
             height: 56,
-            label: ESTIMATE_COL,
+            label: ESTIMATE,
             labelStyle: { fontSize: 15, fill: t.ink },
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
           },
