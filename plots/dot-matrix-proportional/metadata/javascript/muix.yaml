@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: dot-matrix-proportional
 created: '2026-09-05T00:26:12Z'
-updated: '2026-10-24T08:45:21Z'
+updated: '2026-10-24T08:50:18Z'
 generated_by: gemini-4-argon
 adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
 workflow_run: 40079006977
@@ -13,46 +13,59 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dot-matri
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/javascript/muix/plot-dark.html
-quality_score: 81
+quality_score: 83
 review:
   strengths:
-  - 'Exact 10x10 grid for a total of 100, filled left-to-right, top-to-bottom: 47
-    Agreed, 35 Disagreed, 18 No opinion, verified dot by dot in the render'
-  - 'Semantic color exception applied correctly: Agreed in brand green #009E73, Disagreed
-    in matte red #AE3030'
-  - Legend carries label, count and percentage for each category, computed from the
-    data
-  - 'Idiomatic MUI X v9 composition: ChartsContainer with one scatter series per category
-    and hidden strict-domain axes, which gives per-dot tooltips in the HTML'
-  - Grid geometry derived from the total (ceil(sqrt(total)) columns), so the layout
-    adapts to other totals and adds a neutral remainder when counts fall short
+  - 'Exactly 100 dots on a 10x10 grid, one dot per respondent, filled left to right
+    and top to bottom: Agreed runs 47 dots and ends partway through row 5, Disagreed
+    35, No opinion 18. The rows are 10/10/10/10/7, then 3+10+10+10+2, then 8+10, matching
+    the counts exactly'
+  - 'Semantic color mapping from the style guide''s polarity exception: Agreed in
+    brand green #009E73, Disagreed in matte red #AE3030, No opinion in the theme-adaptive
+    muted anchor (#6B6A63 light / #A8A79F dark), so the agree/disagree split reads
+    at once'
+  - 'Uniform dot size from one computed cell (markerSize = 0.38 x cell) with even
+    spacing in both directions, no axes and no grid lines. The axes use position:
+    ''none'' and a strict domain of -0.5..n-0.5, so the grid fills the canvas without
+    padding'
+  - Legend gives each category's label, its absolute count and its share ("Agreed
+    — 47 (47%)"), which covers both the required counts and the optional percentage
+    annotation, and the numbers match the dots
+  - Composes ChartsContainer + ScatterPlot from community @mui/x-charts v9 with skipAnimation,
+    and builds the remainder logic (a neutral run for dots no listed category claims)
+    from the records rather than typed counts
+  - Chrome threads through theme tokens (t.pageBg, t.ink), so the title and legend
+    text flip correctly while the data hues stay identical in both renders
   weaknesses:
-  - 'SC-02 (both): the Disagreed dots carry an ink ring (light: near-black, dark:
-    off-white) whose outer radius is about 20 % larger than the other dots, so the
-    dots are not of one size and the Disagreed run covers visibly more area than its
-    count → draw every dot at the same marker size with no ring. Likely cause: DotRingOverlay
-    with ringRadius = markerSize + ringGap + ringStrokeWidth/2 for categories with
-    ringed: true.'
-  - 'VQ-07 (both): No opinion is filled with the inkSoft chrome token (#4A4A44 light
-    / #B8B7B0 dark), not one of the Imprint colors or anchors → the muted anchor (#6B6A63
-    light / #A8A79F dark). Likely cause: SEMANTIC_COLORS[''No opinion''] = t.inkSoft.'
-  - 'CQ-01 (code): a second component DotRingOverlay plus the DotRingOverlayProps
-    interface and ring constants (RING_GAP_SHARE, RING_STROKE_SHARE, ringedPoints,
-    ringed flags, legend boxShadow) exist only to draw the rings → delete them together
-    with the rings. Likely cause: the ring overlay.'
-  - 'Suggestion: the legend could be MUI X''s own ChartsLegend with series labels
-    carrying the count and percentage, instead of the hand-built Box legend.'
+  - 'VQ-01 (both): the legend text is set at 16 CSS px (about 32 px in the 2400 px
+    PNG). Against dots about 160 px across, it reads small, and at the 400 px thumbnail
+    it shrinks to about 5 px and blurs → about 20 CSS px (+4 px), with the swatch
+    scaled to match (about 24 px). Likely cause: the legend Typography fontSize: 16
+    and the swatch width/height: 20.'
+  - 'DQ-02 (both): the scenario is a survey, but nothing says what was asked. "Response
+    category" with Agreed / Disagreed / No opinion reads as a generic placeholder
+    → name the statement, e.g. a descriptive title prefix such as "Support for a four-day
+    work week · " ahead of the mandated title. Likely cause: the data block and TITLE
+    carry no subject.'
+  - 'Suggestion: use the native ChartsLegend (inside ChartsDataProvider/ChartsWrapper)
+    with series labels that carry the count, instead of the hand-built Box/Typography
+    legend, to show more of MUI X''s own composition API.'
+  - 'Suggestion: add <ChartsTooltip /> to the ChartsContainer so the HTML output shows
+    each dot''s category on hover.'
+  - 'Suggestion: the remainder run uses t.grid as its fill, a gridline tone that may
+    be too faint for dots; the muted anchor or inkSoft would keep a remainder visible
+    when the data has one.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across the full 2400x2400 canvas.
-      Chrome: bold near-black title "dot-matrix-proportional · javascript · muix · anyplot.ai" centred at the top (~56% of width); centred legend row at the bottom "Agreed — 47 (47%)", "Disagreed — 35 (35%)", "No opinion — 18 (18%)" in near-black text with round swatches. No axes or grid lines. All text readable.
-      Data: 10x10 grid of large evenly spaced dots. First 47 dots brand green #009E73 (four full rows plus seven), then 35 matte red #AE3030 dots, each surrounded by a thick near-black ring with a page-colored gap, making them visibly larger than the other dots, then 18 dark gray (#4A4A44) dots.
+      Background: warm off-white #FAF8F1 across the full 2400x2400 square canvas.
+      Chrome: the bold title "dot-matrix-proportional · javascript · muix · anyplot.ai" sits centered at the top in dark ink, spanning about 56% of the width. There are no axes and no grid lines. A centered horizontal legend at the bottom reads "Agreed — 47 (47%)", "Disagreed — 35 (35%)" and "No opinion — 18 (18%)" in dark ink with round swatches. All text is readable; the legend text is small relative to the dots.
+      Data: a 10x10 grid of 100 equal circles with even spacing. Rows 1-4 are all green (#009E73); row 5 has 7 green and 3 red (#AE3030); rows 6-8 are all red; row 9 has 2 red and 8 muted gray (#6B6A63); row 10 is all gray. Counts match: 47 / 35 / 18. The first series is brand green.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title and legend text in off-white, clearly readable; no dark-on-dark text. The Disagreed legend swatch keeps its ring, now off-white.
-      Data: green and red dots identical to the light render (#009E73, #AE3030); the ring around Disagreed dots flips to off-white; the No opinion dots flip to light gray #B8B7B0 (theme-adaptive token). All dots clearly visible.
+      Chrome: the title and legend text render in light ink (#F0EFE8-like) and are clearly readable; there is no dark-on-dark text.
+      Data: green and red dots are identical to the light render. The "No opinion" dots use the theme-adaptive muted anchor (#A8A79F), as the style guide prescribes for the muted role. Every dot stands out clearly from the background, and the layout is identical to the light render.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -61,78 +74,81 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Title 22 px semibold and legend 16 px set explicitly; ink text readable
-          on both backgrounds
+        comment: Title 22 px and legend 16 px are set explicitly and readable in both
+          themes; the legend text is small against the large dots and blurs at the
+          400 px thumbnail (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; dots and rings never touch
+        comment: No text collisions; dots are evenly spaced with clear gaps
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
         comment: 100 large dots, all clearly visible in both themes; legend swatches
-          match the dots
+          match the dot colors
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green, red and gray differ strongly in lightness; good contrast on
-          both surfaces
+        comment: Green and matte red differ in lightness and come from the CVD-tuned
+          Imprint semantic pair; gray is a third, lightness-distinct tone, and the
+          runs are contiguous
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 2400x2400 square, grid centred, title ~56% of width, balanced margins
+        comment: Square 2400x2400; the grid fills the canvas with balanced margins;
+          nothing is clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'N/A: no axes on a dot matrix; legend labels are reader text'
+        comment: No axes by design (N/A); the legend labels are reader text
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Agreed #009E73 and Disagreed #AE3030 are a valid semantic exception,
-          but No opinion uses the inkSoft chrome token instead of the muted anchor
-          (defect line)'
+        passed: true
+        comment: 'Semantic exception: Agreed #009E73, Disagreed #AE3030, No opinion
+          in the muted anchor; backgrounds are correct in both themes'
     design_excellence:
-      score: 9
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: 'Style-guide baseline: clean title and inline legend, nothing beyond
-          it'
+        passed: true
+        comment: 'A deliberate typographic hierarchy: a bold title, then legend entries
+          that combine label, count and share with em-dash formatting; generous dot
+          sizing'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Dot diameter tied to cell size (MARKER_CELL_SHARE) gives even gutters;
-          grid, title and legend share one centred column with deliberate band heights
+        comment: Dot-to-cell ratio chosen (0.38 radius share); a strict -0.5..n-0.5
+          domain removes padding so the grid is centered with even gutters
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Data displayed; the ring emphasis on Disagreed is an unrequested
-          addition and earns no credit
+        passed: true
+        comment: A polarity color mapping the spec does not prescribe (agree green,
+          disagree red, no opinion muted) makes the majority-agree reading immediate
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -140,31 +156,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct dot matrix, 10x10 for a total of 100
+        comment: A true dot matrix, one dot per unit
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: 'Grid, fill order, colors, legend with counts all present; the ''dots
-          of one size'' bullet is missed: ringed Disagreed dots are visibly larger
-          (defect line)'
+        passed: true
+        comment: Grid matches the total (10x10 for 100); uniform size and spacing;
+          filled left to right, top to bottom; the legend has labels and counts; no
+          axes or gridlines; remainder logic present (no remainder in this data)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: One dot per unit, filled left-to-right, top-to-bottom; positions
-          are layout
+        comment: Layout-positioned type; dot counts per color equal the data counts
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format; legend shows label, count and
-          percentage
+        comment: Mandated title format; legend labels match the categories
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -172,38 +186,38 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Three runs of different length, a run ending mid-row; no remainder
-          needed since counts sum to the total
+        comment: Three categories of different sizes; runs end partway through rows;
+          reads as X out of N
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Neutral survey-response scenario, plausible split
+        comment: A neutral survey, but the statement asked is never named, so it reads
+          as a generic placeholder (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked: 47 green + 35 red + 18 gray = 100 dots in the render; legend
-          percentages 47/35/18 match'
+        comment: Checked 47 + 35 + 18 = 100 = total; dot counts in the render are
+          47 / 35 / 18; percentages match
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Extra DotRingOverlay component plus props interface exists only to
-          draw the unrequested rings (defect line)
+        passed: true
+        comment: Module-level data prep plus the required default-exported component
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hard-coded data
+        comment: Hard-coded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -215,46 +229,44 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Grid layout computed from the total; no fake UI
+        comment: Concise grid indexing; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default export, sized to ANYPLOT_SIZE, skipAnimation, v9 ChartsContainer
-          API
+        comment: Default export, skipAnimation, v9 ChartsContainer API, sized from
+          ANYPLOT_SIZE
     library_mastery:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: 'v9 composition: ChartsContainer + ScatterPlot with one scatter series
-          per category and hidden strict-domain axes'
+        comment: ChartsContainer + ScatterPlot composition with hidden axes; the legend
+          is hand-built in MUI Box/Typography rather than ChartsLegend, so there is
+          no raise
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Nothing beyond what the library prompt mandates; the useXScale/useYScale
-          overlay serves an unrequested addition
-  verdict: REJECTED
+        comment: Nothing beyond what the library prompt mandates (no tooltip, no native
+          legend)
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T08:42:29Z'
+  rendered_at: '2026-10-24T08:47:18Z'
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
-  - layer-composition
-  - hover-tooltips
   - html-export
   patterns:
-  - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - publication-ready
+  - minimal-chrome
