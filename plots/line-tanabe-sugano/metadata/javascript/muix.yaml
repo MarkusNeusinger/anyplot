@@ -2,185 +2,133 @@ library: muix
 language: javascript
 specification_id: line-tanabe-sugano
 created: '2026-10-01T20:23:56Z'
-updated: '2026-10-01T20:33:26Z'
-generated_by: claude-opus
-workflow_run: 36918327654
+updated: '2026-10-24T10:44:34Z'
+generated_by: gemini-4-argon
+adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
+workflow_run: 40086007375
 issue: 11846
 language_version: 22.23.3
-library_version: 7.29.1
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-tanabe-sugano/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-tanabe-sugano/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-tanabe-sugano/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-tanabe-sugano/javascript/muix/plot-dark.html
-quality_score: 90
+quality_score: 89
 review:
   strengths:
-  - Curve energies come from the real weak-field Tanabe-Sugano 4T1g block (18Dq and
-    15B+12Dq on the diagonal, 4Dq off-diagonal, lines 32-37), so the 4T1g(F)/4T1g(P)
-    avoided crossing is produced by diagonalizing the matrix rather than by a fitted
-    spline, exactly as the Notes demand; at Do/B = 0 the eigenvalues land on 0 and
-    15B, the free-ion 4F and 4P positions.
-  - Term symbols are typeset as real SVG <tspan> runs with per-run dy and fontSize
-    (lines 64-76), giving true superscript multiplicities and true subscript Mulliken
-    labels in the curve labels, the subtitle and the complex annotation - the library's
-    own text markup, as the Notes ask.
-  - Six direct per-curve labels in each series' own color replace a legend entirely,
-    and the spin classes carry redundant encoding (4.2 px solid quartets against 2.4
-    px dashed doublets via sx on .MuiLineElement-series-{id}) - the double encoding
-    the style guide calls for at six series.
-  - 'Idiomatic MUI X community composition: ChartContainer with LinePlot, ChartsXAxis,
-    ChartsYAxis, ChartsGrid and ChartsReferenceLine as children, plus useDrawingArea/useXScale/useYScale
-    hooks to place the custom SVG overlays in the chart''s own coordinate space.'
-  - ChartsTooltip trigger="axis" gives the HTML detail view a cross-series read-out
-    of all six term energies at one Do/B - exactly the operation a chemist performs
-    on this diagram (static PNG unaffected, 5e).
-  - 'Data is real literature chemistry: Cr3+ d3 at C/B = 4.5 with [Cr(H2O)6]3+ placed
-    at Do = 17 400 cm-1 against B = 700 cm-1, and the two drawn bands are that complex''s
-    actual nu1 and nu2 d-d transitions.'
-  - 'Theme handling is exact and verified by pixel sampling: backgrounds are #FAF8F1
-    and #1A1A17, and the six data colors (#009E73, #C475FD, #4467A3, #BD8233, #AE3030,
-    #2ABCCD) are byte-identical between the two renders - only chrome flips.'
+  - Energies come from a real diagonalization of all d3 Tanabe-Sugano blocks at C/B
+    = 4.5; free-ion limits (4P 15, 2G 17.5, 2P/2H 22.5, 2D 24.9/60.1, 2F 37.5) all
+    land correctly
+  - Term symbols are typeset as SVG tspans with a true superscript multiplicity and
+    subscript numeral and g, bold for spin-allowed and regular for spin-forbidden
+  - Right-edge labels are de-collided with colored leader lines, and curves that leave
+    through the ceiling are labeled where they exit
+  - Composes ChartsContainer, LinePlot, ChartsGrid and ChartsReferenceLine with a
+    custom layer driven by the useXScale/useYScale hooks
+  - Optional example complex [Cr(H2O)6]3+ with ν1/ν2 arrows reproduces the observed
+    band ratio of about 1.40
   weaknesses:
-  - 'SC-02 (both): the nu1 and nu2 transition arrows are drawn at x +/- 12 px from
-    the example line but terminate at each term''s energy at the exact Do/B = 24.9,
-    so the nu1 head pokes about 12 px (0.5 E/B) above the 4T2g curve and the nu2 head
-    stops about 12 px short of 4T1g(F) instead of landing on it -> evaluate each term
-    at the arrow''s own x (about Do/B 24.4 and 25.4) so both heads touch their curve.
-    Likely cause: `yScale(term.energy(EXAMPLE_FIELD))` in `ExampleComplex` (lines
-    132 and 136) ignores the `dx` offset applied to x1/x2.'
-  - 'VQ-01 (both): the subtitle carries the whole solid-vs-dashed encoding key (''spin-allowed
-    quartets solid, spin-forbidden doublets dashed'') at fontSize 15 on the 1200 px
-    mount, the same size as the tick labels, so the key is the first thing to go in
-    the 400 px srcset preview -> about 17 px (+2 px) and a clearer step below the
-    22 px title. Likely cause: the subtitle `<text ... fontSize={15}>` on line 198.'
-  - 'Suggestion: the comment above `t1gEigenvalues` claims the matrix ''keeps a 12B
-    gap at d = 9''; the two diagonal elements 1.8d and 15 + 1.2d are closest at d
-    = 25, where the eigenvalue gap is 2 x 0.4 x 25 = 20B - worth correcting so the
-    comment matches the matrix it documents.'
-  - 'Suggestion: with the 15 %-ink grid already providing the ruler the Notes ask
-    for, the 7 px tick marks on both axes could go, per the style guide''s decoration-removal
-    checklist.'
-  - 'Suggestion: a third spin-forbidden doublet (2T1g) would push the curve count
-    off the 6-curve floor of the spec''s 6-12 range and fill the sparse upper-left
-    of the panel.'
+  - 'Suggestion: the example complex''s dashed marker at Δo/B = 24.9 reads like a
+    crossover line at first glance; a short label at its top end (or a dotted rather
+    than dashed style) would tell it apart on a d3 diagram.'
+  - 'Suggestion: the ν1/ν2 arrows sit about ±0.3 Δo/B units either side of the marker;
+    drawing them closer to the marker would keep the ν2 tip exactly on the 4T1g(F)
+    curve.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, sampled at exactly #FAF8F1 (250, 248, 241) across the panel and the margins; no pure white anywhere, and the chart surface is transparent so the mount color shows through as intended.
-      Chrome: title "line-tanabe-sugano · javascript · muix · anyplot.ai" in bold near-black (t.ink) centred over the panel; a single subtitle line "d³ (Cr³⁺) in an octahedral field · C/B = 4.5 · spin-allowed quartets solid, spin-forbidden doublets dashed" in soft grey (t.inkSoft) with d³ and Cr³⁺ as true superscripts; x-axis title "Ligand-field strength Δ_o / B" with a true subscript o, y-axis title "Term energy E / B" rotated on the left; tick labels 0/5/.../40 and 0/10/.../90 in soft grey; a very faint solid grid on both axes at roughly 15 % ink, clearly behind the curves. A dashed grey vertical line at Δ_o/B ≈ 24.9 with the rotated annotation "[Cr(H₂O)₆]³⁺ · Δ_o / B = 24.9" running up its left side, and two thin grey arrows labelled ν₁ and ν₂ rising from the baseline. All chrome text is clearly readable against the light background; no light-on-light anywhere.
-      Data: six term curves, first series brand green #009E73 (verified by pixel sample) as the flat ⁴A₂g ground term lying visibly along E/B = 0; then lavender #C475FD ⁴T₂g rising linearly to 40, blue #4467A3 ⁴T₁g(F) rising with visible curvature to ~50.7, ochre #BD8233 ⁴T₁g(P) from 15 at zero field to ~84 — the two ⁴T₁g curves bend away from each other and never cross. The two spin-forbidden doublets are thinner dashed lines: matte red #AE3030 ²Eg at 22.5 and cyan #2ABCCD ²T₂g at 28.5. Every curve carries its term symbol in its own color just outside the right edge, with true superscript multiplicity and subscript Mulliken label. Spin-allowed strokes are visibly thicker (4.2 px) than spin-forbidden (2.4 px).
+      Background: warm off-white #FAF8F1, square 2400x2400 canvas with a near-square plot area.
+      Chrome: bold title "line-tanabe-sugano · javascript · muix · anyplot.ai", subtitle "d³ (Cr³⁺) in an octahedral field · C/B = 4.5 · colour marks symmetry · spin-allowed terms solid, spin-forbidden dashed"; axes "Ligand-field strength Δo / B" (0–40, step 5) and "Term energy E / B" (0–90, step 10); light grid; all dark text readable.
+      Data: ground term 4A2g as a thick green (#009E73) line at E/B = 0; 4T2g (lavender) and 4T1g(F)/(P) (blue) thick solid; 2Eg roots red, 2T1g blue, 2T2g lavender, 2A1g ochre, 2A2g green, all dashed and thinner. 4T1g(P) starts at 15. Right-edge typeset labels with leaders; six curves that exit at E/B = 90 are labeled above the ceiling. Dashed marker at Δo/B = 24.9 for [Cr(H2O)6]3+ with ν1 and ν2 arrows from 0 to 4T2g and 4T1g(F).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black, sampled at exactly #1A1A17 (26, 26, 23); not pure black.
-      Chrome: identical layout. Title now in light ink #F0EFE8, subtitle, tick labels, the reference line, the ν₁/ν₂ arrows and the rotated complex annotation in the dark-theme soft ink #B8B7B0, axis titles in #F0EFE8. Grid flips to rgba(240,239,232,0.15) and stays subtle but visible. No dark-on-dark failure anywhere — every title, axis title, tick label, arrow label and annotation reads cleanly against the near-black surface. Tick marks and the L-shaped axis lines are visible but restrained.
-      Data: data colors are identical to the light render — pixel sampling along the same column returns exactly #009E73, #C475FD, #4467A3, #BD8233, #AE3030 and #2ABCCD in both PNGs, so only chrome flipped. Brand green #009E73 for the ⁴A₂g ground line reads strongly against the dark page. Curve labels use the same six hues; the #4467A3 ⁴T₁g(F) and #AE3030 ²Eg labels are the lowest-contrast of the six but remain legible at their rendered 40 device px, and each sits directly beside the curve it names, so identification never rests on color alone.
+      Background: warm near-black #1A1A17.
+      Chrome: title, subtitle, axis titles and ticks in light ink, grid subtle; marker line and arrows in light inkSoft; no dark-on-dark text.
+      Data: curve and label colors identical to the light render; brand green ground term clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'Every size is explicit (title 22, axis titles 17, ticks/subtitle
-          15, curve labels 20, band labels 17, complex annotation 15) and all text
-          reads cleanly in both themes. One point off: the subtitle carries the entire
-          solid-vs-dashed encoding key at tick-label size (15 px), so the key is the
-          first thing lost in the 400 px srcset preview.'
+        comment: Explicit sizes (title 22, labels 19, ticks/subtitle 15, axis titles
+          17 CSS px); every label, tick and term symbol readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collides with text or with data. The three near-parallel
-          verticals at Do/B 24.9 (nu1 arrow, dashed reference line, nu2 arrow) stay
-          about 12 CSS px apart and are told apart by dash pattern; the rotated complex
-          annotation sits in empty canvas above the curves, and the nu1/nu2 labels
-          sit clear of every curve. The 4A2g label clears the '40' tick label.
+        comment: Right-edge labels de-collided with leaders (25 px minimum gap), ceiling
+          labels spaced left to right; no text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stroke weights are deliberately split (4.2 px solid for the four
-          quartets, 2.4 px dashed 13/8 for the two doublets) and both classes read
-          at full size in both themes. No legend glyphs to check - direct per-curve
-          labels take that role and each is drawn in its curve's own color.
+        comment: Spin-allowed curves 4.2 px solid, spin-forbidden 2.2 px dashed; ground
+          term visible as a green line at E/B = 0 in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint palette in canonical order, CVD-optimised. At six series
-          the style guide asks for redundant encoding and the implementation supplies
-          two independent channels: line style (solid vs dashed) and a direct label
-          adjacent to every curve, so nothing depends on hue discrimination. No red-green-only
-          signal.'
+        comment: Every curve directly labeled, so color is never the sole identifier;
+          line style carries the spin class
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 2400x2400 exactly, square directive present, canvas gate did not
-          fire. Near-square plot area with both axes starting at 0, as the Notes ask.
-          Margins 96/172/88/96 leave room for the right-edge term labels; nothing
-          overflows or is cut off. X and Y axis titles are both 17 px and tick labels
-          both 15 px, so the two axes are balanced.
+        comment: 2400x2400, near-square plot area (~1535x1570 px), label margins used
+          without overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Ligand-field strength Delta_o / B'' and ''Term energy E / B''
-          both name the quantity and its reduced unit, with the o typeset as a true
-          subscript.'
+        comment: '''Ligand-field strength Δo / B'' with typeset subscript and ''Term
+          energy E / B'' (reduced, dimensionless quantities)'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73 (the 4A2g ground term) and the remaining
-          five follow the canonical Imprint order. Pixel sampling confirms the six
-          data hexes are identical between renders and the backgrounds are exactly
-          #FAF8F1 and #1A1A17; chrome uses t.ink / t.inkSoft / the theme divider for
-          the grid.'
+        comment: 'Imprint palette in canonical order by symmetry (A2g = #009E73 first),
+          identical across themes; #FAF8F1 / #1A1A17 backgrounds'
     design_excellence:
-      score: 14
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Well above generic: hand-typeset super/subscript term symbols, an
-          intentional two-tier stroke hierarchy, direct labelling instead of a legend,
-          and a subtitle that does the legend''s explanatory work in prose. Reads
-          like a textbook figure.'
+        comment: Two-weight label typography (bold spin-allowed, regular spin-forbidden)
+          and a symmetry-family color scheme explained in the subtitle, beyond the
+          baseline
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: L-shaped frame only, 15 %-ink solid grid well behind the curves,
-          generous margins, tuned dash pattern. Held back by the 7 px tick marks the
-          style guide's decoration checklist would drop, and by the large empty upper-left
-          quadrant that the 0-90 y-range leaves unused.
+        comment: Colored leader lines from curve ends to stacked labels, ceiling labels
+          placed where curves exit the top, 10-unit grid chosen for ruler reading
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: 'Strong narrative: the example-complex line plus nu1/nu2 arrows shows
-          the reader exactly how a chemist reads the diagram in reverse, and the stroke
-          hierarchy tells intense from weak absorptions at a glance. Docked because
-          the two arrowheads do not land on the curves they point at, which blunts
-          the one moment the story depends on.'
+        comment: Symmetry-family coloring groups the many doublet roots so the quartet
+          manifold reads as the focus; the example complex itself is the optional
+          Notes feature
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -188,39 +136,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'A Tanabe-Sugano diagram: E/B against Delta_o/B for one d-n configuration,
-          one continuous curve per term, ground term flat at 0. Exactly the requested
-          form.'
+        comment: Tanabe-Sugano diagram, E/B against Δo/B, one d3 configuration
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: 'Nearly complete: one configuration, C/B stated in the subtitle,
-          matrix-derived (not spline) energies, visible ground term, thick-solid vs
-          thin-dashed spin classes, markup-typeset labels near the right edge, avoided
-          crossing preserved, no crossover line (correct for d3), light grid, both
-          axes from 0. Docked one point because the optional example-complex marker
-          the spec describes as ''arrows from the ground term up to the excited terms''
-          has arrowheads that overshoot 4T2g and fall short of 4T1g(F).'
+        passed: true
+        comment: Diagonalized matrices, flat visible ground term, solid/dashed spin
+          classes, typeset super/subscript labels at the right edge, config and C/B
+          in subtitle, axes from 0, light grid, both curves of every avoided crossing;
+          optional example complex with ν1/ν2 arrows
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'x = Delta_o/B over 0-40 at 321 samples, y = E/B over 0-90; both
-          axes cover all the data. curve: ''linear'' over a dense sample means no
-          spline overshoot, so every drawn point sits at its computed energy. No force,
-          nudge or declutter pass touches the curves - the greedy declutter in TermLabels
-          moves only text.'
+        comment: Curves at computed values, no displacement; avoided crossings preserved
+          by ascending eigenvalue order
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'line-tanabe-sugano · javascript · muix · anyplot.ai'.
-          No legend component; the six direct curve labels match the term keys and
-          each series also carries a label for the tooltip.
+        comment: Mandated title; direct curve labels replace a legend (N/A)
     data_quality:
       score: 15
       max: 15
@@ -230,25 +168,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows every aspect of the type: a flat ground term on the axis,
-          linear and curved excited terms, an avoided crossing between the two 4T1g
-          terms, spin-allowed against spin-forbidden styling, and the optional read-off
-          marker with its transitions. Six curves sits inside the spec''s 6-12 range.'
+        comment: All quartet and doublet terms in range, several avoided crossings
+          shown as near-touches; d3 has no crossover (permitted)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Cr3+ d3 at C/B = 4.5 is one of the two textbook examples the spec
-          names, and [Cr(H2O)6]3+ at Do = 17 400 cm-1 with B = 700 cm-1 are the literature
-          values. Entirely neutral subject matter.
+        comment: Cr3+ d3 with [Cr(H2O)6]3+ (Δo = 17400 cm-1, B ≈ 700 cm-1), a textbook
+          example
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Delta_o/B over 0-40 and E/B over 0-90 match the spec's stated ranges,
-          and the example complex at 24.9 falls sensibly inside the field axis.
+        comment: 'Check value 1: 4T1g(P) at Δo/B = 0 sits at E/B = 15 (render and
+          matrix eigenvalues 0 and 15); free-ion limits verified: 2G 17.5, 2P/2H 22.5,
+          2D 24.9/60.1, 2F 37.5 for C/B = 4.5; 4T1g(F)/(P) at Δo/B = 40 read 50.9/84.1
+          as computed. Check values 2 and 3 do not apply to d3'
     code_quality:
       score: 10
       max: 10
@@ -258,45 +195,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat, top-to-bottom file. The only functions are the mandatory default-exported
-          component, two small overlay components that exist solely to reach the chart-scale
-          hooks, and two three-line helpers each used more than once. No classes,
-          no indirection.
+        comment: Columns → data → plot zones; the Jacobi solver and React layer components
+          are needed (no eigen call available, scale hooks need a component)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic - closed-form energies over an Array.from grid,
-          no RNG, no fetch, no network.
+        comment: Fully deterministic computation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All nine imports are used (ChartContainer, LinePlot, ChartsXAxis,
-          ChartsYAxis, ChartsGrid, ChartsReferenceLine, ChartsTooltip and the three
-          hooks). Community @mui/x-charts only - no Pro or Premium surface.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No dead code and no fake UI. The 2x2 eigenvalue closed form is the
-          right call - neither @mui/x-charts nor @mui/material has a linear-algebra
-          helper, and the library prompt's Computation line permits a short written-out
-          computation. typeset() is reused four times rather than copied.
+        comment: 'Written-out eigenvalue solver is allowed (library prompt: no numeric
+          helpers available); no fake UI'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Honours the harness contract: default-exported component, sized
-          from window.ANYPLOT_SIZE, no createRoot or ThemeProvider of its own, skipAnimation
-          on LinePlot so the screenshot catches the final frame. The harness writes
-          plot-{theme}.png and .html.'
+        comment: Default-exported component, skipAnimation, v9 ChartsContainer and
+          .MuiLineChart-line[data-series] selectors
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -304,38 +232,32 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: The composition API used the way MUI X documents it - ChartContainer
-          owning series and axes, with LinePlot, ChartsGrid, ChartsXAxis, ChartsYAxis,
-          ChartsReferenceLine and ChartsTooltip as children. One point off because
-          the axis titles are hand-drawn SVG text rather than the axis `label` prop;
-          defensible, since `label` takes a plain string and cannot carry the subscript
-          o, but it does bypass the library's own layout.
+        comment: 'Composition API: ChartsContainer + LinePlot + ChartsXAxis/YAxis
+          + ChartsGrid, per-series styling through sx data-series selectors'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: 'Genuinely MUI X-specific work: per-series stroke and dash styling
-          through sx targeting .MuiLineElement-series-{id}, useDrawingArea/useXScale/useYScale
-          to draw custom SVG into the chart''s coordinate space, ChartsReferenceLine,
-          and an axis-trigger ChartsTooltip for the interactive HTML. Little of this
-          transfers to another library.'
+        comment: Custom SVG layer driven by useDrawingArea/useXScale/useYScale hooks,
+          ChartsReferenceLine for the example complex, axis-triggered ChartsTooltip
+          in the HTML
   verdict: APPROVED
-  model: claude-opus-5
-  criteria_version: qc-08c3141e4a.aqr-cfd364e1ff.sg-7006008fc6.lib-a9ea82c7d3
-  rendered_at: '2026-10-01T20:24:18Z'
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-10-24T10:40:59Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - custom-legend
+  - reference-lines
   - hover-tooltips
-  - layer-composition
-  - manual-ticks
   patterns:
   - data-generation
-  - iteration-over-groups
-  dataprep: []
+  - matrix-construction
+  dataprep:
+  - eigendecomposition
   styling:
   - publication-ready
-  - grid-styling
+  - dashed-lines
