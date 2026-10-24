@@ -2,59 +2,55 @@ library: muix
 language: javascript
 specification_id: box-notched
 created: '2026-08-18T05:10:10Z'
-updated: '2026-08-18T05:15:46Z'
-generated_by: claude-sonnet
-workflow_run: 32101309150
+updated: '2026-10-24T04:08:11Z'
+generated_by: gemini-4-argon
+adopted_from: 05fd22b6883131fc8937ab51e4f573041b3dcb44 (05fd22b6883131fc8937ab51e4f573041b3dcb44)
+workflow_run: 40060856274
 issue: 2019
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-notched/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-notched/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-notched/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-notched/javascript/muix/plot-dark.html
-quality_score: 90
+quality_score: 87
 review:
   strengths:
-  - Notch depth is computed exactly per spec formula (1.57 x IQR / sqrt(n)), and whiskers
-    correctly bound at 1.5x IQR with fence-based outlier detection
-  - Imprint palette applied in exact canonical order (green, lavender, blue, ochre,
-    matte red) across the 5 departments, identical hex values in both light and dark
-    renders
-  - Theme-adaptive chrome verified correct in both renders -- no dark-on-dark or light-on-light
-    failures; even the median-notch line itself flips ink token per theme
-  - Deterministic seeded LCG+Box-Muller data generation produces realistic, varied
-    department salary distributions -- Engineering/Finance notches visibly overlap
-    (no significant median difference) while Sales/Marketing/Support are clearly separated,
-    genuinely demonstrating the statistical value proposition of notched box plots
-  - Idiomatic composition via MUI X's low-level useXScale/useYScale hooks to hand-draw
-    the notched-box glyph -- exactly the documented approach for chart types the community
-    package has no built-in component for
-  - Outlier markers use a page-background stroke halo for clean separation from box
-    fills, a nice refined detail
+  - 'Notches computed exactly as the Notes define (±1.57×IQR/√n): Engineering (n=56,
+    IQR≈19.5) is drawn with a ±4.1 notch, and each median line sits at the narrowest
+    point of its pinched box'
+  - 'Idiomatic MUI X v9 composition: a ChartsContainer with a band x axis and a linear
+    y axis, plus a custom NotchedBoxes layer that reads useXScale/useYScale, so the
+    hand-drawn SVG marks share the library''s scales, grid and axes'
+  - 'Notch overlap reads directly: Engineering and Finance notches share the 87–95
+    range, while Finance vs Sales and Marketing vs Customer Support clearly separate,
+    which shows the significance comparison the plot type exists for'
+  - Translucent box fills (0.32) with full-strength 2.5 px outlines and hollow, page-filled
+    outlier circles keep the notch outline distinct in both themes, with identical
+    data colors in light and dark
+  - Salary-by-department data is realistic and neutral; departments are ordered roughly
+    by descending median so the notches read as a staircase, and the value axis starts
+    near the data instead of at zero
   weaknesses:
-  - Y-axis label 'Annual Salary' does not include an explicit unit suffix (e.g. '(USD)')
-    -- the dollar sign only appears in tick labels, not the axis title itself
-  - Default MUI X tick marks (small perpendicular dashes) are retained on both axes;
-    the style guide recommends removing tick marks while keeping tick labels for a
-    cleaner look
-  - Visual treatment is solid and correct but fairly conventional for the box-plot
-    genre -- more distinctive polish (refined typography, a subtler box fill treatment)
-    could push Aesthetic Sophistication further toward publication-ready
+  - 'Suggestion: the custom SVG marks have no hover; a ChartsTooltip-style readout
+    of n, quartiles and the notch interval in the HTML would use MUI X interactivity.'
+  - 'Suggestion: the mandated title fills about a third of the width at 22 px; a slightly
+    larger title would give the header more presence.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 -- not pure white.
-      Chrome: Title "box-notched · javascript · muix · anyplot.ai" bold dark text top-left; "Annual Salary" rotated Y-axis label and "Department" X-axis label both dark and clearly legible; tick labels ($30k-$130k, department names) dark, readable; subtle horizontal gridlines only.
-      Data: 5 notched boxes in Imprint canonical order -- Engineering #009E73 (green), Finance #C475FD (lavender), Sales #4467A3 (blue), Marketing #BD8233 (ochre), Support #AE3030 (matte red). Median line drawn in dark ink, semi-transparent box fills, whisker caps, and two visible outlier dots (Engineering, Finance) with a light-colored halo stroke.
-      Legibility verdict: PASS -- all text is clearly readable against the light background, no light-on-light issues.
+      Background: warm off-white #FAF8F1, no pure white.
+      Chrome: bold dark title "box-notched · javascript · muix · anyplot.ai" centered at the top, a soft-ink subtitle "243 observations · 5 groups (Department) · Notches at ±1.57×IQR/√n (95% CI around median)", y-axis "Annual salary ($k)" with ticks from 30 to 140, x-axis "Department" with five category ticks, and subtle dashed horizontal grid lines. All readable.
+      Data: five notched boxes in Imprint order: Engineering #009E73 green, Finance #C475FD lavender, Sales #4467A3 blue, Marketing #BD8233 ochre, Customer Support #AE3030 red. Each box has a translucent fill with a strong outline, a pinched notch with a thick median line at its waist, whiskers with caps, and hollow outlier circles (Engineering at 136, 52 and 49; Finance at 60; Sales at 31; Customer Support at 36).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 -- not pure black.
-      Chrome: Same title, axis labels, and tick labels now rendered in light ink, all clearly legible against the dark background; gridlines subtle but visible; median line automatically flips to light ink (theme token correctly threaded through).
-      Data: Confirmed identical to the light render -- same green/lavender/blue/ochre/red hexes for the five departments, no unintended shifts. Outlier-dot halo stroke also uses the (now dark) page background, keeping the same clean separation effect.
-      Legibility verdict: PASS -- no dark-on-dark failures anywhere; every text element and data element is clearly distinguishable from the near-black surface.
+      Background: warm near-black #1A1A17, no pure black.
+      Chrome: the title, subtitle, axis labels and ticks flip to light ink and are all clearly readable. The grid is subtle but visible. No dark-on-dark text.
+      Data: the same five outline colors as the light render. The fills read darker because the translucent fill composites over the dark page. Brand green stays clearly visible, and the outliers are hollow with the page fill.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -62,75 +58,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, axis label 16px, tick
-          14px CSS), well-proportioned, readable in both themes, no overflow
+        comment: Title 22 px, axis labels 16 px, ticks 14 px CSS (per the muix sizing
+          guide); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions; manually-positioned Y-axis label avoids the wide '$130k'
-          tick column
+        comment: No text collisions; outliers and whiskers clear of each other
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Box widths, whisker caps, and outlier markers all appropriately sized
-          for 38-60 points per group
+        comment: Boxes, 2.5 px outlines, 3.5 px medians and 5.5 px hollow outliers
+          are all clearly visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, CVD-safe Imprint hues, no red-green as sole signal
+        comment: Imprint hues are CVD-separated; the categories are also told apart
+          by x position
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills the canvas with balanced margins, nothing cut off
+        comment: 3200x1800, balanced margins, no overflow; axis label sizes balanced
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Descriptive labels but Y-axis title lacks an explicit unit suffix;
-          unit only implied via '$Xk' tick format
+        passed: true
+        comment: '''Annual salary ($k)'' with units, ''Department'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Exact Imprint canonical order 1-5, identical across themes, theme-correct
-          backgrounds and chrome
+        comment: 'Imprint positions 1-5 in canonical order starting at #009E73; correct
+          #FAF8F1/#1A1A17 backgrounds; theme-adaptive chrome'
     design_excellence:
-      score: 14
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        passed: true
-        comment: Custom-drawn box-notch glyph with alpha-blended fill, thick colored
-          stroke, and halo-stroked outliers -- clearly above a generic default, though
-          not fully publication-level
+        passed: false
+        comment: 'Beyond baseline: translucent fills under full-strength outlines,
+          page-filled hollow outliers, a two-tier title/subtitle header stating the
+          notch formula'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Horizontal-only subtle grid, L-shaped axis chrome, generous whitespace;
-          default MUI X tick marks not removed
+        passed: false
+        comment: Dashed grid at reduced opacity chosen for this chart, thicker median
+          than the outline, rounded caps and joins
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Notch overlap pattern (Engineering/Finance overlap, others clearly
-          separated) visually demonstrates the statistical point of the plot type;
-          no explicit callout annotation, which isn't required by spec
+        passed: false
+        comment: Departments ordered by roughly descending median so the notch comparison
+          reads as a staircase; no further focal point
     spec_compliance:
       score: 15
       max: 15
@@ -140,115 +134,123 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct notched box plot
+        comment: Correct notched box plot, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Median, quartiles, 1.5xIQR whiskers, outliers, and 95%-CI notches
-          all present per spec formula
+        comment: Notches at ±1.57·IQR/√n, Q1-Q3 boxes, whiskers at 1.5·IQR, outliers
+          as points, a color per category, a shared axis not forced to zero; all characteristic
+          bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Department on X, Annual Salary on Y, all data visible
+        comment: Marks at their data values; the axis covers all data, including outliers
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact match; no legend needed since color maps 1:1 to
-          X-axis category labels
+        comment: Mandated title format; no legend needed (categories labelled on the
+          x axis), N/A
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows outliers (2 of 5 groups) and clearly different spreads (Sales
-          much wider than Support)
+        comment: Shows overlapping (Eng/Fin) and separated notches, outliers above
+          and below, and different spreads
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, neutral business scenario -- department salary comparison
+        comment: Salary by department, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Salary ranges and relative department ordering are realistic
+        comment: 'Checked: Engineering notch ±4.1 at n=56, IQR≈19.5 (rendered ≈86.6-94.8
+          around the median ≈90.7); salaries of $30k-$136k are plausible'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Helper functions (quantile, computeBoxStats, NotchedBoxes) are necessary
-          given the React/component model and the need to hand-compute box statistics;
-          still a single readable file
+        comment: Flat module; the NotchedBoxes component is required to use the scale
+          hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic seeded LCG + Box-Muller PRNG
+        comment: Fixed-seed LCG with Box-Muller
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All five imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a custom SVG glyph plot, no fake functionality
+        comment: Written-out box statistics, allowed by the library prompt; no dead
+          code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct harness contract, default export, skipAnimation set
+        comment: Default-exported component, skipAnimation, v9 ChartsContainer API,
+          sized to ANYPLOT_SIZE
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Textbook use of ChartContainer + axis hooks for a chart type the
-          community package has no built-in component for
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
-        passed: true
-        comment: useXScale/useYScale hooks for hand-drawn glyphs are genuinely MUI
-          X-specific and not trivially replicated in other libraries
+        passed: false
+        comment: v9 ChartsContainer composition with ChartsGrid/ChartsXAxis/ChartsYAxis,
+          band axis categoryGapRatio, axis width/height bands
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Custom SVG layer that reads useXScale/useYScale inside the MUI X
+          container
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-10-24T04:05:24Z'
 impl_tags:
   dependencies: []
   techniques:
-  - confidence-intervals
-  - custom-glyphs
+  - layer-composition
+  - patches
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
-  - outlier-detection
+  - groupby-aggregation
   styling:
   - alpha-blending
-  - edge-highlighting
+  - grid-styling
+  - minimal-chrome
