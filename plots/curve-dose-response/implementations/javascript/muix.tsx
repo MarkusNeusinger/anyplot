@@ -23,20 +23,6 @@ const LOG_PAD_SHARE = 0.09;
 const Y_PAD_SHARE = 0.12;
 const ERROR_CAP = 7;
 
-const SUPERSCRIPT: Record<string, string> = {
-  "0": "⁰",
-  "1": "¹",
-  "2": "²",
-  "3": "³",
-  "4": "⁴",
-  "5": "⁵",
-  "6": "⁶",
-  "7": "⁷",
-  "8": "⁸",
-  "9": "⁹",
-  "-": "⁻",
-};
-
 const SI_PREFIXES = [
   { exp: -12, prefix: "p" },
   { exp: -9, prefix: "n" },
@@ -115,6 +101,16 @@ const yMax = rawYMax + ySpan * Y_PAD_SHARE;
 
 const CONC_UNIT = CONCENTRATION.match(/\(([^)]+)\)/)?.[1] ?? "";
 const RESP_UNIT = RESPONSE.match(/\(([^)]+)\)/)?.[1] ?? "";
+
+// Concentration with an SI prefix, e.g. 1e-7 → "100 nM"
+const formatConc = (v: number) => {
+  let best = SI_PREFIXES[0];
+  for (const entry of SI_PREFIXES) {
+    if (Math.log10(v) >= entry.exp - 1e-9) best = entry;
+  }
+  const scaled = Number((v / Math.pow(10, best.exp)).toPrecision(3));
+  return `${scaled} ${best.prefix}${CONC_UNIT}`;
+};
 
 const tickPowers: number[] = [];
 for (let p = Math.ceil(logMin); p <= Math.floor(logMax); p++) {
@@ -276,14 +272,7 @@ const GROUPS = COMPOUND_NAMES.map((name, idx) => {
     ciLower.push(curveY[i] - halfBand);
   }
 
-  let bestPrefix = SI_PREFIXES[0];
-  for (const entry of SI_PREFIXES) {
-    if (Math.log10(ec50) >= entry.exp) {
-      bestPrefix = entry;
-    }
-  }
-  const scaledEc50 = Number((ec50 / Math.pow(10, bestPrefix.exp)).toPrecision(3));
-  const ec50Label = `${name} (EC₅₀ = ${scaledEc50} ${bestPrefix.prefix}${CONC_UNIT})`;
+  const ec50Label = `${name} (EC₅₀ = ${formatConc(ec50)})`;
 
   return {
     name,
@@ -550,13 +539,7 @@ export default function Chart() {
             height: 60,
             label: CONCENTRATION,
             tickInterval: tickPowers,
-            valueFormatter: (v: number) => {
-              const exp = String(Math.round(Math.log10(v)))
-                .split("")
-                .map((c) => SUPERSCRIPT[c] || c)
-                .join("");
-              return `10${exp}`;
-            },
+            valueFormatter: formatConc,
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft, fontFamily: FONT },
             labelStyle: { fontSize: 16, fill: t.ink, fontFamily: FONT },
           },
