@@ -29,7 +29,7 @@ const MAX_MARKER_HALF = 11;
 
 const TITLE_HEIGHT = 56;
 const SUBTITLE_HEIGHT = 36;
-const MARGIN = { top: 20, right: 256, bottom: 20, left: 16 };
+const MARGIN = { top: 20, right: 48, bottom: 20, left: 16 };
 const X_AXIS_HEIGHT = 56;
 const Y_AXIS_WIDTH = 228;
 
@@ -78,17 +78,13 @@ const pooledEffect = studyRecords.reduce((s, r, idx) => s + reWeights[idx] * r.e
 const pooledSe = Math.sqrt(1 / sumReWeights);
 const pooledLower = pooledEffect - Z_95 * pooledSe;
 const pooledUpper = pooledEffect + Z_95 * pooledSe;
-const iSquared = qStat > df ? ((qStat - df) / qStat) * 100 : 0;
 
-const weights = studyRecords.map((s) => s.weight);
-const minWeight = Math.min(...weights);
-const maxWeight = Math.max(...weights);
+const maxWeight = Math.max(...studyRecords.map((s) => s.weight));
 
+// Square area proportional to weight: side scales with sqrt(weight)
 const rows = studyRecords.map((s) => ({
   ...s,
-  halfSize:
-    MIN_MARKER_HALF +
-    ((s.weight - minWeight) / (maxWeight - minWeight)) * (MAX_MARKER_HALF - MIN_MARKER_HALF),
+  halfSize: Math.max(MIN_MARKER_HALF, MAX_MARKER_HALF * Math.sqrt(s.weight / maxWeight)),
 }));
 
 const overallY = 1 - POOLED_ROW_GAP;
@@ -109,7 +105,6 @@ function ForestMarks() {
   const drawingArea = useDrawingArea();
 
   const dividerY = yScale((rows[rows.length - 1].y + overallY) / 2);
-  const textX = drawingArea.left + drawingArea.width + 18;
   const capHalf = 6;
 
   const cyOverall = yScale(overallY);
@@ -141,9 +136,6 @@ function ForestMarks() {
             <line x1={x1} x2={x1} y1={cy - capHalf} y2={cy + capHalf} stroke={t.palette[0]} strokeWidth={2.2} />
             <line x1={x2} x2={x2} y1={cy - capHalf} y2={cy + capHalf} stroke={t.palette[0]} strokeWidth={2.2} />
             <rect x={cx - half} y={cy - half} width={half * 2} height={half * 2} fill={t.palette[0]} />
-            <text x={textX} y={cy + 5} fontSize={14} fill={t.inkSoft} fontFamily="sans-serif">
-              {`${r.effect.toFixed(1)} [${r.lower.toFixed(1)}, ${r.upper.toFixed(1)}]  ·  w = ${r.weight.toFixed(1)}`}
-            </text>
           </g>
         );
       })}
@@ -155,9 +147,6 @@ function ForestMarks() {
           stroke={t.pageBg}
           strokeWidth={1}
         />
-        <text x={textX} y={cyOverall + 5} fontSize={14} fontWeight={700} fill={t.ink} fontFamily="sans-serif">
-          {`${pooledEffect.toFixed(1)} [${pooledLower.toFixed(1)}, ${pooledUpper.toFixed(1)}]`}
-        </text>
       </g>
     </g>
   );
@@ -166,7 +155,7 @@ function ForestMarks() {
 export default function Chart() {
   const chartWidth = window.ANYPLOT_SIZE.width;
   const chartHeight = window.ANYPLOT_SIZE.height - TITLE_HEIGHT - SUBTITLE_HEIGHT;
-  const subtitle = `${EFFECT} · squares sized by ${WEIGHT} · diamond = pooled effect (k = ${nStudies}, I² = ${iSquared.toFixed(0)}%)`;
+  const subtitle = `${EFFECT} · squares sized by ${WEIGHT} · diamond = pooled effect`;
 
   return (
     <Box
@@ -211,6 +200,7 @@ export default function Chart() {
             scaleType: "linear",
             min: xMin,
             max: xMax,
+            tickMinStep: 1,
             height: X_AXIS_HEIGHT,
             label: EFFECT,
             labelStyle: { fontSize: 15, fill: t.ink },
