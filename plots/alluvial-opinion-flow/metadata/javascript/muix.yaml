@@ -2,12 +2,13 @@ library: muix
 language: javascript
 specification_id: alluvial-opinion-flow
 created: '2026-08-26T17:58:55Z'
-updated: '2026-08-26T18:03:30Z'
-generated_by: claude-sonnet
-workflow_run: 32996302596
+updated: '2026-10-24T00:01:24Z'
+generated_by: gemini-4-argon
+adopted_from: a6754ae47632b531aec6e975e6a4b937aa81fea5 (a6754ae47632b531aec6e975e6a4b937aa81fea5)
+workflow_run: 40042396151
 issue: 4430
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-opinion-flow/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-opinion-flow/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-opinion-flow/javascript/muix/plot-light.html
@@ -15,100 +16,102 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-
 quality_score: 90
 review:
   strengths:
-  - Faithfully realizes an alluvial/Sankey diagram entirely from MUI X's composable
-    API (ChartContainer + useXScale/useYScale) even though the community package has
-    no native Sankey component, without reaching into any Pro/Premium surface.
-  - 'Excellent spec compliance: explicit per-wave node totals as labels, stable-vs-changer
-    opacity distinction (0.55 solid vs 0.16 faint ribbons), net-change delta annotations
-    vs Q1 with color-coded up/down arrows, and clear chronological wave column headers.'
-  - Thoughtful semantic color mapping (brand green -> lime -> muted -> amber -> matte
-    red, a sentiment gradient built entirely from Imprint palette slots + the amber/muted
-    anchors) that reads intuitively and reduces reliance on a separate legend.
-  - 'Deterministic, internally-consistent data: every wave''s populations sum to exactly
-    1,000 and every transition matrix''s row/column sums exactly match the adjacent
-    wave populations (no rounding drift).'
-  - Consistent theme-adaptive chrome (t.ink / t.inkSoft for text) with identical data
-    colors between light and dark renders; both backgrounds match the Imprint light/dark
-    spec exactly.
+  - 'Flow conservation is exact: every wave''s node totals equal both the incoming
+    and outgoing flow sums (e.g. Q2 Very Satisfied 200 in = 160+30+10 out), all four
+    waves sum to 1,000 respondents, and the Q4 deltas (+170, -150, -180, +40, +120
+    vs Q1) follow from the data'
+  - Stable respondents (fillOpacity 0.58) are clearly set apart from changers (0.18),
+    and each node's outgoing ribbons are stacked in target order, so stable flows
+    run nearly level across the four waves
+  - 'Ordered satisfaction ramp from brand green #009E73 (Very Satisfied) through the
+    muted anchor (Neutral) to matte red #AE3030 (Very Dissatisfied), in the categories''
+    natural order and kept in the header legend'
+  - Node labels carry the per-wave totals on page-colored pills that stay readable
+    over the ribbons in both themes; the last column's labels sit outside the blocks
+    with a colored ▲/▼ net-shift line that makes the polarization (both poles grow,
+    Neutral shrinks) readable at a glance
+  - 'Idiomatic MUI X composition: ChartsContainer with a point-scale top x axis as
+    wave headers and a custom SVG layer drawn through useXScale/useYScale, with skipAnimation
+    and the ANYPLOT_SIZE mount contract'
   weaknesses:
-  - 'VQ-04: ''Very Satisfied'' (teal-green #009E73) and ''Satisfied'' (lime #99B314)
-    are both green-family hues; under red-green CVD they may read as closer together
-    than the amber/red bands lower in the scale. A thin ink-color stroke on the ribbons/nodes
-    (per the style guide''s optional outline pattern) would fully separate them for
-    CVD readers even though direct text labels already prevent color-only misreading.'
-  - 'LM-01: Because @mui/x-charts community has no native Sankey/alluvial chart, the
-    implementation necessarily drops to the low-level ChartContainer + useXScale/useYScale
-    overlay pattern instead of a high-level chart component -- the correct choice
-    given the constraint, but it means less of MUI X''s idiomatic declarative surface
-    is exercised than in a typical bar/line/pie implementation.'
+  - 'VQ-05 (both): an empty band of about 60 CSS px separates the legend row (ends
+    near y≈85) from the wave headers (y≈145), so the header block floats above the
+    diagram → about 20 px (−40 px). Likely cause: HEADER_H = 104 plus the x axis band
+    height 44 and margin top 10 stacked on top of each other.'
+  - 'Suggestion: the changer ribbons at fillOpacity 0.18 read as near-black bands
+    on the dark page where their source hue is hard to identify; a slightly higher
+    changer opacity in dark (about 0.25) would keep the hue legible while staying
+    well below the 0.58 of stable flows.'
+  - 'Suggestion: adding a tooltip (count and source → target) on each ribbon in the
+    HTML output would let readers inspect the hair-thin transitions.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), matches the Imprint light-theme surface exactly.
-      Chrome: Dark title "alluvial-opinion-flow · javascript · muix · anyplot.ai" and subtitle/legend-note text are fully legible against the cream background; wave column headers ("Q1 2025" .. "Q4 2025") are bold dark gray and clearly readable; node labels (category name + count, and delta arrows on the last wave) sit directly on top of the colored ribbons and remain legible because of sufficient contrast.
-      Data: Five ordinal sentiment bands rendered top-to-bottom as Very Satisfied (teal-green), Satisfied (lime), Neutral (gray), Dissatisfied (amber/tan), Very Dissatisfied (matte red) -- first series is the brand green #009E73 as required. Ribbon opacity clearly differentiates stable respondents (bold/solid) from changers (faint), and the polarization trend (top and bottom bands widening left to right) is immediately visible.
+      Background: warm off-white #FAF8F1, not pure white.
+      Chrome: centered bold title "alluvial-opinion-flow · javascript · muix · anyplot.ai" (~33% width), subtitle "Respondents: 1,000 · Survey wave: Q1 2025–Q4 2025", one-row legend with five rounded swatches (Very Satisfied … Very Dissatisfied) plus the key "Bold ribbon = stable · Faint ribbon = changed · ▲▼ = net shift". Column headers Q1 2025 … Q4 2025 in bold soft ink above four node columns. All text dark on light, fully readable.
+      Data: four columns of five stacked blocks each — Very Satisfied #009E73, Satisfied dark teal, Neutral muted grey #6B6A63, Dissatisfied brownish red, Very Dissatisfied #AE3030. Stable ribbons are bold tinted bands running level; changer ribbons are faint, many hair-thin crossing curves. Node labels "Category (n)" on page-colored pills; the Q4 column has labels to the right with ▲ +170 / ▼ −150 / ▼ −180 / ▲ +40 / ▲ +120 vs Q1 2025. An empty band of about 60 CSS px sits between the legend row and the wave headers.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), matches the Imprint dark-theme surface exactly.
-      Chrome: Title and subtitle render in light ink against the dark background with strong contrast; wave headers and node labels (category name, count, delta arrows) are light-colored and clearly readable on top of the ribbons; no dark-on-dark or light-on-light failures observed anywhere in the frame.
-      Data: Same five category colors as the light render (teal-green, lime, gray, amber, matte red) -- confirmed identical hex values, only the chrome (background/text) flipped as required. Ribbon opacity distinction (stable vs changed) and the polarization story read just as clearly as in the light render.
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title, subtitle, legend and wave headers in light ink; no dark-on-dark text. Label pills switch to the dark page color with light text, readable.
+      Data: Very Satisfied #009E73 and Very Dissatisfied #AE3030 identical to light; Neutral takes the dark muted anchor #A8A79F and the intermediate ramp steps lighten accordingly (theme-adaptive ramp steps, as allowed for ordered categories). Stable ribbons stay clearly visible; changer ribbons at low opacity read as dark tinted bands, distinguishable from each other and the page but with weak hue.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All titles, headers, node labels and delta annotations are readable
-          at full size in both themes; font sizes explicitly set (13-26px CSS).
+        comment: All sizes set explicitly (title 22, subtitle 15, headers 15, labels
+          14); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-on-text or text-on-data collisions observed; node labels
-          sit cleanly beside their nodes.
+        comment: No text collisions; node labels sit on page-colored pills over the
+          ribbons
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Ribbon widths and node bars are clearly visible and proportional
-          to their counts across all waves.
+        comment: Blocks, stable and changer ribbons visible in both themes; hair-thin
+          rare flows are permitted by the spec
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Adjacent green-family hues (Very Satisfied vs Satisfied) are close
-          under CVD simulation; text labels mitigate but a stroke would fully resolve
-          it.
+        passed: true
+        comment: Ramp steps differ in lightness as well as hue, and every block is
+          direct-labelled, so red/green is never the sole signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Nothing clipped, good margins, canvas gate passed, title well within
-          bounds.
+        comment: Diagram fills the canvas well, but an empty ~60 px band between legend
+          row and wave headers (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title plus subtitle explaining scope and encoding legend.
+        comment: N/A for value axes; wave column headers and the subtitle name the
+          unit (Respondents)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is brand green #009E73; data colors identical across
-          themes; backgrounds are the correct Imprint light/dark hex values.'
+        comment: 'Ordered categories on a green #009E73 → muted → red #AE3030 ramp
+          in natural order, poles on the matching sides; backgrounds and chrome theme-correct'
     design_excellence:
-      score: 16
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -116,22 +119,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom-built alluvial visualization with a deliberate sentiment-gradient
-          palette and net-change annotations; polished but not maximally distinctive.
+        comment: 'Beyond baseline: title/subtitle/legend hierarchy with an inline
+          encoding key, rounded swatches matching rounded node blocks, semi-opaque
+          label pills, colored ▲▼ glyphs'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: No axes/gridlines clutter (appropriate for this diagram type), generous
-          whitespace, clear typographic hierarchy.
+        comment: Ribbons stacked in target order to minimise crossings, proportional
+          node gaps, last-column labels moved outside the blocks; held back by the
+          header gap
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Polarization narrative (top/bottom bands growing) is immediately
-          visible via layout, color and the delta callouts.
+        comment: Data chosen so both poles grow every wave while Neutral drains, and
+          the deltas are framed cumulatively against Q1, so polarization is the immediate
+          read
     spec_compliance:
       score: 15
       max: 15
@@ -141,28 +147,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct alluvial/Sankey-style opinion-flow diagram.
+        comment: Alluvial opinion-flow diagram with stacked category blocks per wave
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Consistent per-category colors, proportional flow widths, per-wave
-          node totals, stable-vs-changer opacity distinction, net-change highlighting,
-          chronological headers, ribbon transparency -- all present.
+        comment: Chronological columns with headers, proportional widths, consistent
+          colors, per-wave totals as node labels, stable vs changers by opacity, net
+          shift per category highlighted
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = waves, ribbon/node height = respondent counts, correctly mapped.
+        comment: Block heights and ribbon widths on one linear scale; same vertical
+          order every wave
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format exactly; direct node labeling substitutes
-          for a legend appropriately.
+        comment: Mandated title format; legend lists the five categories in order
+          plus the opacity/▲▼ key
     data_quality:
       score: 15
       max: 15
@@ -172,21 +179,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 4 waves, 5 categories, 68 flow connections -- within spec size ranges,
-          and every notable feature of the plot type is exercised.
+        comment: Stable and changing flows, rare thin transitions, growing and shrinking
+          blocks, clear polarization
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible customer-satisfaction survey scenario.
+        comment: Quarterly customer-satisfaction survey of 1,000 respondents; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values sum exactly to 1,000 respondents per wave; transition matrices
-          balance row/column sums exactly.
+        comment: 'Checked: every wave sums to 1,000; each node''s inflow equals its
+          outflow for Q2 and Q3; Q4 deltas match Q4 minus Q1 totals'
     code_quality:
       score: 10
       max: 10
@@ -196,36 +203,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Component decomposition (Links/Nodes/Labels/Frame) is the natural
-          React/SVG-overlay structure, not incidental complexity.
+        comment: Columns → data → plot; the one inner component is required by the
+          scale hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, hand-authored data, no RNG.
+        comment: Deterministic literal data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ChartContainer, useXScale, useYScale imported, all used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI/interactivity; appropriate complexity for the diagram
-          type.
+        comment: Layout computation is short and nothing available computes it
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: default-exports Chart with skipAnimation, harness mount-node contract
-          respected.
+        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation,
+          community imports only
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -233,22 +239,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses ChartContainer + useXScale/useYScale, the correct community-surface
-          escape hatch for a chart type MUI X doesn't natively support.
+        comment: Composition API (ChartsContainer + ChartsXAxis + custom layer) is
+          the recommended route for a chart type the community package lacks
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Leverages MUI X's low-level scale-hook composition API, a genuinely
-          advanced/distinctive capability beyond a stock chart component.
+        comment: useXScale/useYScale hooks drive a custom SVG layer inside the MUI
+          chart context; point-scale x axis at position top reused as the wave headers
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-10-23T23:57:42Z'
 impl_tags:
   dependencies: []
   techniques:
   - bezier-curves
+  - custom-legend
+  - annotations
+  - layer-composition
+  - html-export
   patterns:
-  - data-generation
   - iteration-over-groups
   dataprep:
   - cumulative-sum

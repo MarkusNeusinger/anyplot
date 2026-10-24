@@ -1,340 +1,434 @@
 // anyplot.ai
 // alluvial-opinion-flow: Opinion Flow Diagram
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 90/100 | Created: 2026-08-26
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+// Library: muix 9.16.0 | JavaScript 22.23.3
+// Quality: 90/100 | Updated: 2026-10-24
+import * as React from "react";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
+import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const SIZE = window.ANYPLOT_SIZE;
-const TITLE = "alluvial-opinion-flow · javascript · muix · anyplot.ai";
-const MUTED = t.theme === "light" ? "#6B6A63" : "#A8A79F"; // Imprint muted anchor
+const INK_MUTED = window.ANYPLOT_THEME === "dark" ? "#A8A79F" : "#6B6A63";
 
-const FONT =
-  '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
-
-// --- Data: quarterly customer-satisfaction survey, 1,000 respondents ---------
-// Ordinal sentiment scale, deterministic. Populations and transition counts
-// are hand-designed so row/column sums match exactly (no rounding drift):
-// each wave sums to 1,000, and every transition matrix's row sums equal the
-// source wave's populations while its column sums equal the target wave's.
-// The scenario deliberately drifts toward the extremes (polarization) while
-// "Neutral" and "Satisfied" shrink.
-const CATEGORIES = [
-  { id: "vs", label: "Very Satisfied", color: t.palette[0] }, // brand green — always first series
-  { id: "s", label: "Satisfied", color: t.palette[7] }, // lime — still green family, reads "positive"
-  { id: "n", label: "Neutral", color: MUTED }, // muted semantic anchor
-  { id: "d", label: "Dissatisfied", color: t.amber }, // amber semantic anchor — caution
-  { id: "vd", label: "Very Dissatisfied", color: t.palette[4] }, // matte red — bad/error semantic anchor
-];
-const CATEGORY_ORDER = CATEGORIES.map((c) => c.id);
-const CATEGORY_BY_ID = Object.fromEntries(CATEGORIES.map((c) => [c.id, c]));
-
-const WAVES = ["Q1 2025", "Q2 2025", "Q3 2025", "Q4 2025"];
-
-const POPULATIONS = [
-  { vs: 150, s: 300, n: 300, d: 150, vd: 100 },
-  { vs: 200, s: 250, n: 220, d: 180, vd: 150 },
-  { vs: 260, s: 200, n: 160, d: 200, vd: 180 },
-  { vs: 320, s: 150, n: 120, d: 190, vd: 220 },
-];
-
-// One transition matrix per wave-to-wave step (3 steps for 4 waves).
-const TRANSITIONS = [
-  [
-    { source: "vs", target: "vs", count: 110 },
-    { source: "vs", target: "s", count: 30 },
-    { source: "vs", target: "n", count: 10 },
-    { source: "s", target: "vs", count: 60 },
-    { source: "s", target: "s", count: 180 },
-    { source: "s", target: "n", count: 40 },
-    { source: "s", target: "d", count: 15 },
-    { source: "s", target: "vd", count: 5 },
-    { source: "n", target: "vs", count: 25 },
-    { source: "n", target: "s", count: 35 },
-    { source: "n", target: "n", count: 140 },
-    { source: "n", target: "d", count: 70 },
-    { source: "n", target: "vd", count: 30 },
-    { source: "d", target: "vs", count: 3 },
-    { source: "d", target: "s", count: 3 },
-    { source: "d", target: "n", count: 20 },
-    { source: "d", target: "d", count: 80 },
-    { source: "d", target: "vd", count: 44 },
-    { source: "vd", target: "vs", count: 2 },
-    { source: "vd", target: "s", count: 2 },
-    { source: "vd", target: "n", count: 10 },
-    { source: "vd", target: "d", count: 15 },
-    { source: "vd", target: "vd", count: 71 },
-  ],
-  [
-    { source: "vs", target: "vs", count: 160 },
-    { source: "vs", target: "s", count: 30 },
-    { source: "vs", target: "n", count: 10 },
-    { source: "s", target: "vs", count: 70 },
-    { source: "s", target: "s", count: 150 },
-    { source: "s", target: "n", count: 20 },
-    { source: "s", target: "d", count: 8 },
-    { source: "s", target: "vd", count: 2 },
-    { source: "n", target: "vs", count: 25 },
-    { source: "n", target: "s", count: 15 },
-    { source: "n", target: "n", count: 100 },
-    { source: "n", target: "d", count: 60 },
-    { source: "n", target: "vd", count: 20 },
-    { source: "d", target: "vs", count: 3 },
-    { source: "d", target: "s", count: 3 },
-    { source: "d", target: "n", count: 20 },
-    { source: "d", target: "d", count: 110 },
-    { source: "d", target: "vd", count: 44 },
-    { source: "vd", target: "vs", count: 2 },
-    { source: "vd", target: "s", count: 2 },
-    { source: "vd", target: "n", count: 10 },
-    { source: "vd", target: "d", count: 22 },
-    { source: "vd", target: "vd", count: 114 },
-  ],
-  [
-    { source: "vs", target: "vs", count: 220 },
-    { source: "vs", target: "s", count: 30 },
-    { source: "vs", target: "n", count: 10 },
-    { source: "s", target: "vs", count: 90 },
-    { source: "s", target: "s", count: 90 },
-    { source: "s", target: "n", count: 12 },
-    { source: "s", target: "d", count: 6 },
-    { source: "s", target: "vd", count: 2 },
-    { source: "n", target: "vs", count: 8 },
-    { source: "n", target: "s", count: 20 },
-    { source: "n", target: "n", count: 80 },
-    { source: "n", target: "d", count: 40 },
-    { source: "n", target: "vd", count: 12 },
-    { source: "d", target: "vs", count: 2 },
-    { source: "d", target: "s", count: 8 },
-    { source: "d", target: "n", count: 15 },
-    { source: "d", target: "d", count: 125 },
-    { source: "d", target: "vd", count: 50 },
-    { source: "vd", target: "s", count: 2 },
-    { source: "vd", target: "n", count: 3 },
-    { source: "vd", target: "d", count: 19 },
-    { source: "vd", target: "vd", count: 156 },
-  ],
-];
-
-// --- Layout: fixed category row order in every column (polarization reads as
-// the top and bottom bands growing wave over wave) ---------------------------
+// Constants
 const NODE_W = 24;
-const GAP = 14;
-const LEFT_MARGIN = 140;
-const RIGHT_MARGIN = 170; // room for the last wave's node labels + net-change deltas
-const PLOT_TOP = 170;
-const PLOT_BOTTOM = SIZE.height - 50;
-const PLOT_H = PLOT_BOTTOM - PLOT_TOP;
-const H = SIZE.height; // flips top-down pixel y into the chart's bottom-up data y
+const GAP_SHARE = 0.08; // vertical gap between category blocks as a share of total wave count
 
-const usableW = SIZE.width - LEFT_MARGIN - RIGHT_MARGIN - NODE_W;
-const COL_X = WAVES.map((_, w) => LEFT_MARGIN + (usableW * w) / (WAVES.length - 1));
-const SCALE = (PLOT_H - GAP * (CATEGORIES.length - 1)) / 1000; // every wave sums to 1,000
+// Columns: set these to your data's column names
+const WAVE = "Survey wave"; // role: wave
+const NEXT_WAVE = "Next wave"; // role: extra
+const SOURCE_CATEGORY = "Source opinion"; // role: source_category
+const TARGET_CATEGORY = "Target opinion"; // role: target_category
+const FLOW_COUNT = "Respondents"; // role: flow_count
 
-const nodes = [];
-const nodeByKey = {};
-for (let w = 0; w < WAVES.length; w++) {
-  let cursor = PLOT_TOP;
-  for (const cat of CATEGORIES) {
-    const value = POPULATIONS[w][cat.id];
-    const height = value * SCALE;
-    const node = {
-      key: `${w}:${cat.id}`,
-      wave: w,
-      catId: cat.id,
-      label: cat.label,
-      color: cat.color,
-      value,
-      x0: COL_X[w],
-      x1: COL_X[w] + NODE_W,
-      y0: cursor,
-      y1: cursor + height,
-      out: [],
-      in: [],
-    };
-    nodes.push(node);
-    nodeByKey[node.key] = node;
-    cursor = node.y1 + GAP;
-  }
-}
+// Data: replace this block with your own records, one object per row
+const data = [
+  // Q1 2025 -> Q2 2025
+  { [WAVE]: "Q1 2025", [NEXT_WAVE]: "Q2 2025", [SOURCE_CATEGORY]: "Very Satisfied", [TARGET_CATEGORY]: "Very Satisfied", [FLOW_COUNT]: 110 },
+  { [WAVE]: "Q1 2025", [NEXT_WAVE]: "Q2 2025", [SOURCE_CATEGORY]: "Very Satisfied", [TARGET_CATEGORY]: "Satisfied", [FLOW_COUNT]: 30 },
+  { [WAVE]: "Q1 2025", [NEXT_WAVE]: "Q2 2025", [SOURCE_CATEGORY]: "Very Satisfied", [TARGET_CATEGORY]: "Neutral", [FLOW_COUNT]: 10 },
+  { [WAVE]: "Q1 2025", [NEXT_WAVE]: "Q2 2025", [SOURCE_CATEGORY]: "Satisfied", [TARGET_CATEGORY]: "Very Satisfied", [FLOW_COUNT]: 60 },
+  { [WAVE]: "Q1 2025", [NEXT_WAVE]: "Q2 2025", [SOURCE_CATEGORY]: "Satisfied", [TARGET_CATEGORY]: "Satisfied", [FLOW_COUNT]: 180 },
+  { [WAVE]: "Q1 2025", [NEXT_WAVE]: "Q2 2025", [SOURCE_CATEGORY]: "Satisfied", [TARGET_CATEGORY]: "Neutral", [FLOW_COUNT]: 40 },
+  { [WAVE]: "Q1 2025", [NEXT_WAVE]: "Q2 2025", [SOURCE_CATEGORY]: "Satisfied", [TARGET_CATEGORY]: "Dissatisfied", [FLOW_COUNT]: 15 },
+  { [WAVE]: "Q1 2025", [NEXT_WAVE]: "Q2 2025", [SOURCE_CATEGORY]: "Satisfied", [TARGET_CATEGORY]: "Very Dissatisfied", [FLOW_COUNT]: 5 },
+  { [WAVE]: "Q1 2025", [NEXT_WAVE]: "Q2 2025", [SOURCE_CATEGORY]: "Neutral", [TARGET_CATEGORY]: "Very Satisfied", [FLOW_COUNT]: 25 },
+  { [WAVE]: "Q1 2025", [NEXT_WAVE]: "Q2 2025", [SOURCE_CATEGORY]: "Neutral", [TARGET_CATEGORY]: "Satisfied", [FLOW_COUNT]: 35 },
+  { [WAVE]: "Q1 2025", [NEXT_WAVE]: "Q2 2025", [SOURCE_CATEGORY]: "Neutral", [TARGET_CATEGORY]: "Neutral", [FLOW_COUNT]: 140 },
+  { [WAVE]: "Q1 2025", [NEXT_WAVE]: "Q2 2025", [SOURCE_CATEGORY]: "Neutral", [TARGET_CATEGORY]: "Dissatisfied", [FLOW_COUNT]: 70 },
+  { [WAVE]: "Q1 2025", [NEXT_WAVE]: "Q2 2025", [SOURCE_CATEGORY]: "Neutral", [TARGET_CATEGORY]: "Very Dissatisfied", [FLOW_COUNT]: 30 },
+  { [WAVE]: "Q1 2025", [NEXT_WAVE]: "Q2 2025", [SOURCE_CATEGORY]: "Dissatisfied", [TARGET_CATEGORY]: "Very Satisfied", [FLOW_COUNT]: 3 },
+  { [WAVE]: "Q1 2025", [NEXT_WAVE]: "Q2 2025", [SOURCE_CATEGORY]: "Dissatisfied", [TARGET_CATEGORY]: "Satisfied", [FLOW_COUNT]: 3 },
+  { [WAVE]: "Q1 2025", [NEXT_WAVE]: "Q2 2025", [SOURCE_CATEGORY]: "Dissatisfied", [TARGET_CATEGORY]: "Neutral", [FLOW_COUNT]: 20 },
+  { [WAVE]: "Q1 2025", [NEXT_WAVE]: "Q2 2025", [SOURCE_CATEGORY]: "Dissatisfied", [TARGET_CATEGORY]: "Dissatisfied", [FLOW_COUNT]: 80 },
+  { [WAVE]: "Q1 2025", [NEXT_WAVE]: "Q2 2025", [SOURCE_CATEGORY]: "Dissatisfied", [TARGET_CATEGORY]: "Very Dissatisfied", [FLOW_COUNT]: 44 },
+  { [WAVE]: "Q1 2025", [NEXT_WAVE]: "Q2 2025", [SOURCE_CATEGORY]: "Very Dissatisfied", [TARGET_CATEGORY]: "Very Satisfied", [FLOW_COUNT]: 2 },
+  { [WAVE]: "Q1 2025", [NEXT_WAVE]: "Q2 2025", [SOURCE_CATEGORY]: "Very Dissatisfied", [TARGET_CATEGORY]: "Satisfied", [FLOW_COUNT]: 2 },
+  { [WAVE]: "Q1 2025", [NEXT_WAVE]: "Q2 2025", [SOURCE_CATEGORY]: "Very Dissatisfied", [TARGET_CATEGORY]: "Neutral", [FLOW_COUNT]: 10 },
+  { [WAVE]: "Q1 2025", [NEXT_WAVE]: "Q2 2025", [SOURCE_CATEGORY]: "Very Dissatisfied", [TARGET_CATEGORY]: "Dissatisfied", [FLOW_COUNT]: 15 },
+  { [WAVE]: "Q1 2025", [NEXT_WAVE]: "Q2 2025", [SOURCE_CATEGORY]: "Very Dissatisfied", [TARGET_CATEGORY]: "Very Dissatisfied", [FLOW_COUNT]: 71 },
+  // Q2 2025 -> Q3 2025
+  { [WAVE]: "Q2 2025", [NEXT_WAVE]: "Q3 2025", [SOURCE_CATEGORY]: "Very Satisfied", [TARGET_CATEGORY]: "Very Satisfied", [FLOW_COUNT]: 160 },
+  { [WAVE]: "Q2 2025", [NEXT_WAVE]: "Q3 2025", [SOURCE_CATEGORY]: "Very Satisfied", [TARGET_CATEGORY]: "Satisfied", [FLOW_COUNT]: 30 },
+  { [WAVE]: "Q2 2025", [NEXT_WAVE]: "Q3 2025", [SOURCE_CATEGORY]: "Very Satisfied", [TARGET_CATEGORY]: "Neutral", [FLOW_COUNT]: 10 },
+  { [WAVE]: "Q2 2025", [NEXT_WAVE]: "Q3 2025", [SOURCE_CATEGORY]: "Satisfied", [TARGET_CATEGORY]: "Very Satisfied", [FLOW_COUNT]: 70 },
+  { [WAVE]: "Q2 2025", [NEXT_WAVE]: "Q3 2025", [SOURCE_CATEGORY]: "Satisfied", [TARGET_CATEGORY]: "Satisfied", [FLOW_COUNT]: 150 },
+  { [WAVE]: "Q2 2025", [NEXT_WAVE]: "Q3 2025", [SOURCE_CATEGORY]: "Satisfied", [TARGET_CATEGORY]: "Neutral", [FLOW_COUNT]: 20 },
+  { [WAVE]: "Q2 2025", [NEXT_WAVE]: "Q3 2025", [SOURCE_CATEGORY]: "Satisfied", [TARGET_CATEGORY]: "Dissatisfied", [FLOW_COUNT]: 8 },
+  { [WAVE]: "Q2 2025", [NEXT_WAVE]: "Q3 2025", [SOURCE_CATEGORY]: "Satisfied", [TARGET_CATEGORY]: "Very Dissatisfied", [FLOW_COUNT]: 2 },
+  { [WAVE]: "Q2 2025", [NEXT_WAVE]: "Q3 2025", [SOURCE_CATEGORY]: "Neutral", [TARGET_CATEGORY]: "Very Satisfied", [FLOW_COUNT]: 25 },
+  { [WAVE]: "Q2 2025", [NEXT_WAVE]: "Q3 2025", [SOURCE_CATEGORY]: "Neutral", [TARGET_CATEGORY]: "Satisfied", [FLOW_COUNT]: 15 },
+  { [WAVE]: "Q2 2025", [NEXT_WAVE]: "Q3 2025", [SOURCE_CATEGORY]: "Neutral", [TARGET_CATEGORY]: "Neutral", [FLOW_COUNT]: 100 },
+  { [WAVE]: "Q2 2025", [NEXT_WAVE]: "Q3 2025", [SOURCE_CATEGORY]: "Neutral", [TARGET_CATEGORY]: "Dissatisfied", [FLOW_COUNT]: 60 },
+  { [WAVE]: "Q2 2025", [NEXT_WAVE]: "Q3 2025", [SOURCE_CATEGORY]: "Neutral", [TARGET_CATEGORY]: "Very Dissatisfied", [FLOW_COUNT]: 20 },
+  { [WAVE]: "Q2 2025", [NEXT_WAVE]: "Q3 2025", [SOURCE_CATEGORY]: "Dissatisfied", [TARGET_CATEGORY]: "Very Satisfied", [FLOW_COUNT]: 3 },
+  { [WAVE]: "Q2 2025", [NEXT_WAVE]: "Q3 2025", [SOURCE_CATEGORY]: "Dissatisfied", [TARGET_CATEGORY]: "Satisfied", [FLOW_COUNT]: 3 },
+  { [WAVE]: "Q2 2025", [NEXT_WAVE]: "Q3 2025", [SOURCE_CATEGORY]: "Dissatisfied", [TARGET_CATEGORY]: "Neutral", [FLOW_COUNT]: 20 },
+  { [WAVE]: "Q2 2025", [NEXT_WAVE]: "Q3 2025", [SOURCE_CATEGORY]: "Dissatisfied", [TARGET_CATEGORY]: "Dissatisfied", [FLOW_COUNT]: 110 },
+  { [WAVE]: "Q2 2025", [NEXT_WAVE]: "Q3 2025", [SOURCE_CATEGORY]: "Dissatisfied", [TARGET_CATEGORY]: "Very Dissatisfied", [FLOW_COUNT]: 44 },
+  { [WAVE]: "Q2 2025", [NEXT_WAVE]: "Q3 2025", [SOURCE_CATEGORY]: "Very Dissatisfied", [TARGET_CATEGORY]: "Very Satisfied", [FLOW_COUNT]: 2 },
+  { [WAVE]: "Q2 2025", [NEXT_WAVE]: "Q3 2025", [SOURCE_CATEGORY]: "Very Dissatisfied", [TARGET_CATEGORY]: "Satisfied", [FLOW_COUNT]: 2 },
+  { [WAVE]: "Q2 2025", [NEXT_WAVE]: "Q3 2025", [SOURCE_CATEGORY]: "Very Dissatisfied", [TARGET_CATEGORY]: "Neutral", [FLOW_COUNT]: 10 },
+  { [WAVE]: "Q2 2025", [NEXT_WAVE]: "Q3 2025", [SOURCE_CATEGORY]: "Very Dissatisfied", [TARGET_CATEGORY]: "Dissatisfied", [FLOW_COUNT]: 22 },
+  { [WAVE]: "Q2 2025", [NEXT_WAVE]: "Q3 2025", [SOURCE_CATEGORY]: "Very Dissatisfied", [TARGET_CATEGORY]: "Very Dissatisfied", [FLOW_COUNT]: 114 },
+  // Q3 2025 -> Q4 2025
+  { [WAVE]: "Q3 2025", [NEXT_WAVE]: "Q4 2025", [SOURCE_CATEGORY]: "Very Satisfied", [TARGET_CATEGORY]: "Very Satisfied", [FLOW_COUNT]: 220 },
+  { [WAVE]: "Q3 2025", [NEXT_WAVE]: "Q4 2025", [SOURCE_CATEGORY]: "Very Satisfied", [TARGET_CATEGORY]: "Satisfied", [FLOW_COUNT]: 30 },
+  { [WAVE]: "Q3 2025", [NEXT_WAVE]: "Q4 2025", [SOURCE_CATEGORY]: "Very Satisfied", [TARGET_CATEGORY]: "Neutral", [FLOW_COUNT]: 10 },
+  { [WAVE]: "Q3 2025", [NEXT_WAVE]: "Q4 2025", [SOURCE_CATEGORY]: "Satisfied", [TARGET_CATEGORY]: "Very Satisfied", [FLOW_COUNT]: 90 },
+  { [WAVE]: "Q3 2025", [NEXT_WAVE]: "Q4 2025", [SOURCE_CATEGORY]: "Satisfied", [TARGET_CATEGORY]: "Satisfied", [FLOW_COUNT]: 90 },
+  { [WAVE]: "Q3 2025", [NEXT_WAVE]: "Q4 2025", [SOURCE_CATEGORY]: "Satisfied", [TARGET_CATEGORY]: "Neutral", [FLOW_COUNT]: 12 },
+  { [WAVE]: "Q3 2025", [NEXT_WAVE]: "Q4 2025", [SOURCE_CATEGORY]: "Satisfied", [TARGET_CATEGORY]: "Dissatisfied", [FLOW_COUNT]: 6 },
+  { [WAVE]: "Q3 2025", [NEXT_WAVE]: "Q4 2025", [SOURCE_CATEGORY]: "Satisfied", [TARGET_CATEGORY]: "Very Dissatisfied", [FLOW_COUNT]: 2 },
+  { [WAVE]: "Q3 2025", [NEXT_WAVE]: "Q4 2025", [SOURCE_CATEGORY]: "Neutral", [TARGET_CATEGORY]: "Very Satisfied", [FLOW_COUNT]: 8 },
+  { [WAVE]: "Q3 2025", [NEXT_WAVE]: "Q4 2025", [SOURCE_CATEGORY]: "Neutral", [TARGET_CATEGORY]: "Satisfied", [FLOW_COUNT]: 20 },
+  { [WAVE]: "Q3 2025", [NEXT_WAVE]: "Q4 2025", [SOURCE_CATEGORY]: "Neutral", [TARGET_CATEGORY]: "Neutral", [FLOW_COUNT]: 80 },
+  { [WAVE]: "Q3 2025", [NEXT_WAVE]: "Q4 2025", [SOURCE_CATEGORY]: "Neutral", [TARGET_CATEGORY]: "Dissatisfied", [FLOW_COUNT]: 40 },
+  { [WAVE]: "Q3 2025", [NEXT_WAVE]: "Q4 2025", [SOURCE_CATEGORY]: "Neutral", [TARGET_CATEGORY]: "Very Dissatisfied", [FLOW_COUNT]: 12 },
+  { [WAVE]: "Q3 2025", [NEXT_WAVE]: "Q4 2025", [SOURCE_CATEGORY]: "Dissatisfied", [TARGET_CATEGORY]: "Very Satisfied", [FLOW_COUNT]: 2 },
+  { [WAVE]: "Q3 2025", [NEXT_WAVE]: "Q4 2025", [SOURCE_CATEGORY]: "Dissatisfied", [TARGET_CATEGORY]: "Satisfied", [FLOW_COUNT]: 8 },
+  { [WAVE]: "Q3 2025", [NEXT_WAVE]: "Q4 2025", [SOURCE_CATEGORY]: "Dissatisfied", [TARGET_CATEGORY]: "Neutral", [FLOW_COUNT]: 15 },
+  { [WAVE]: "Q3 2025", [NEXT_WAVE]: "Q4 2025", [SOURCE_CATEGORY]: "Dissatisfied", [TARGET_CATEGORY]: "Dissatisfied", [FLOW_COUNT]: 125 },
+  { [WAVE]: "Q3 2025", [NEXT_WAVE]: "Q4 2025", [SOURCE_CATEGORY]: "Dissatisfied", [TARGET_CATEGORY]: "Very Dissatisfied", [FLOW_COUNT]: 50 },
+  { [WAVE]: "Q3 2025", [NEXT_WAVE]: "Q4 2025", [SOURCE_CATEGORY]: "Very Dissatisfied", [TARGET_CATEGORY]: "Satisfied", [FLOW_COUNT]: 2 },
+  { [WAVE]: "Q3 2025", [NEXT_WAVE]: "Q4 2025", [SOURCE_CATEGORY]: "Very Dissatisfied", [TARGET_CATEGORY]: "Neutral", [FLOW_COUNT]: 3 },
+  { [WAVE]: "Q3 2025", [NEXT_WAVE]: "Q4 2025", [SOURCE_CATEGORY]: "Very Dissatisfied", [TARGET_CATEGORY]: "Dissatisfied", [FLOW_COUNT]: 19 },
+  { [WAVE]: "Q3 2025", [NEXT_WAVE]: "Q4 2025", [SOURCE_CATEGORY]: "Very Dissatisfied", [TARGET_CATEGORY]: "Very Dissatisfied", [FLOW_COUNT]: 156 },
+];
 
-const flows = [];
-TRANSITIONS.forEach((step, t) => {
-  step.forEach((f) => {
-    const source = nodeByKey[`${t}:${f.source}`];
-    const target = nodeByKey[`${t + 1}:${f.target}`];
-    const flow = { source, target, count: f.count, stable: f.source === f.target };
-    source.out.push(flow);
-    target.in.push(flow);
-    flows.push(flow);
-  });
+// Plot: reads only data and the constants above
+const categories = [
+  ...new Set([
+    ...data.map((d) => d[SOURCE_CATEGORY]),
+    ...data.map((d) => d[TARGET_CATEGORY]),
+  ]),
+];
+const waves = [
+  ...new Set([
+    ...data.map((d) => d[WAVE]),
+    ...data.map((d) => d[NEXT_WAVE]),
+  ]),
+];
+
+// Ordered sentiment ramp: good pole (t.seq[0] = #009E73) -> neutral midpoint (INK_MUTED) -> bad pole (t.div[0] = #AE3030)
+const posPole = parseInt(t.seq[0].slice(1), 16);
+const midPole = parseInt(INK_MUTED.slice(1), 16);
+const negPole = parseInt(t.div[0].slice(1), 16);
+const categoryColor: Record<string, string> = {};
+categories.forEach((cat, i) => {
+  const u = categories.length > 1 ? i / (categories.length - 1) : 0;
+  const fromHex = u <= 0.5 ? posPole : midPole;
+  const toHex = u <= 0.5 ? midPole : negPole;
+  const mix = u <= 0.5 ? u * 2 : (u - 0.5) * 2;
+  const hex = [16, 8, 0]
+    .map((shift) => {
+      const a = (fromHex >> shift) & 255;
+      const b = (toHex >> shift) & 255;
+      return Math.round(a + (b - a) * mix)
+        .toString(16)
+        .padStart(2, "0");
+    })
+    .join("");
+  categoryColor[cat] = `#${hex}`;
 });
 
-// Stack each node's links along its edge, ordered by the counterpart's fixed
-// row rank, so ribbons fan out with minimal crossing near the node.
-const rankOf = (catId) => CATEGORY_ORDER.indexOf(catId);
-for (const n of nodes) {
-  n.out.sort((a, b) => rankOf(a.target.catId) - rankOf(b.target.catId));
-  let oc = n.y0;
-  for (const f of n.out) {
-    f.sy0 = oc;
-    f.sy1 = oc + f.count * SCALE;
-    f.sx = n.x1;
-    oc = f.sy1;
-  }
-  n.in.sort((a, b) => rankOf(a.source.catId) - rankOf(b.source.catId));
-  let ic = n.y0;
-  for (const f of n.in) {
-    f.ty0 = ic;
-    f.ty1 = ic + f.count * SCALE;
-    f.tx = n.x0;
-    ic = f.ty1;
-  }
+const populations = waves.map((wave, idx) => {
+  const pop: Record<string, number> = {};
+  categories.forEach((cat) => {
+    if (idx < waves.length - 1) {
+      pop[cat] = data
+        .filter((d) => d[WAVE] === wave && d[SOURCE_CATEGORY] === cat)
+        .reduce((sum, d) => sum + d[FLOW_COUNT], 0);
+    } else {
+      const prevWave = waves[idx - 1];
+      pop[cat] = data
+        .filter((d) => d[WAVE] === prevWave && d[TARGET_CATEGORY] === cat)
+        .reduce((sum, d) => sum + d[FLOW_COUNT], 0);
+    }
+  });
+  return pop;
+});
+
+const waveTotals = waves.map((wave) =>
+  Math.max(
+    data.filter((d) => d[WAVE] === wave).reduce((sum, d) => sum + d[FLOW_COUNT], 0),
+    data.filter((d) => d[NEXT_WAVE] === wave).reduce((sum, d) => sum + d[FLOW_COUNT], 0),
+  ),
+);
+const stackTotal = Math.max(...waveTotals);
+const minWaveTotal = Math.min(...waveTotals);
+const gapUnits =
+  categories.length > 1
+    ? (stackTotal * GAP_SHARE) / (categories.length - 1)
+    : 0;
+const domainMax = stackTotal + gapUnits * (categories.length - 1);
+
+const nodeExtents = populations.map((pop) => {
+  let cursor = domainMax;
+  const extents: Record<string, { top: number; bottom: number; value: number }> = {};
+  categories.forEach((cat) => {
+    const val = pop[cat];
+    const bottom = cursor - val;
+    extents[cat] = { top: cursor, bottom, value: val };
+    cursor = bottom - gapUnits;
+  });
+  return extents;
+});
+
+const flows: {
+  step: number;
+  source: string;
+  target: string;
+  count: number;
+  stable: boolean;
+  srcTop: number;
+  srcBottom: number;
+  dstTop: number;
+  dstBottom: number;
+}[] = [];
+
+for (let step = 0; step < waves.length - 1; step += 1) {
+  const w = waves[step];
+  const outCursor: Record<string, number> = {};
+  const inCursor: Record<string, number> = {};
+  categories.forEach((cat) => {
+    outCursor[cat] = nodeExtents[step][cat].top;
+    inCursor[cat] = nodeExtents[step + 1][cat].top;
+  });
+  categories.forEach((from) => {
+    categories.forEach((to) => {
+      const count = data
+        .filter(
+          (d) =>
+            d[WAVE] === w &&
+            d[SOURCE_CATEGORY] === from &&
+            d[TARGET_CATEGORY] === to,
+        )
+        .reduce((s, d) => s + d[FLOW_COUNT], 0);
+      if (count <= 0) return;
+      const srcTop = outCursor[from];
+      const srcBottom = srcTop - count;
+      outCursor[from] = srcBottom;
+      const dstTop = inCursor[to];
+      const dstBottom = dstTop - count;
+      inCursor[to] = dstBottom;
+      flows.push({
+        step,
+        source: from,
+        target: to,
+        count,
+        stable: from === to,
+        srcTop,
+        srcBottom,
+        dstTop,
+        dstBottom,
+      });
+    });
+  });
 }
 
-function ribbonPath(xs, ys, f) {
-  const cx = (f.sx + f.tx) / 2;
-  const P = (x, yPix) => `${xs(x).toFixed(1)} ${ys(H - yPix).toFixed(1)}`;
-  const C = (yPix) => `${xs(cx).toFixed(1)} ${ys(H - yPix).toFixed(1)}`;
+function OpinionFlowLayer() {
+  const xScale = useXScale();
+  const yScale = useYScale();
   return (
-    `M ${P(f.sx, f.sy0)} ` +
-    `C ${C(f.sy0)}, ${C(f.ty0)}, ${P(f.tx, f.ty0)} ` +
-    `L ${P(f.tx, f.ty1)} ` +
-    `C ${C(f.ty1)}, ${C(f.sy1)}, ${P(f.sx, f.sy1)} Z`
-  );
-}
-
-// --- Overlay layers -----------------------------------------------------------
-function Links() {
-  const xs = useXScale();
-  const ys = useYScale();
-  return (
-    <g>
-      {flows.map((f, k) => (
-        <path
-          key={k}
-          d={ribbonPath(xs, ys, f)}
-          fill={CATEGORY_BY_ID[f.source.catId].color}
-          fillOpacity={f.stable ? 0.55 : 0.16}
-        >
-          <title>
-            {`${f.source.label} (${WAVES[f.source.wave]}) → ${f.target.label} (${WAVES[f.target.wave]}): ${f.count} respondents`}
-          </title>
-        </path>
-      ))}
-    </g>
-  );
-}
-
-function Nodes() {
-  const xs = useXScale();
-  const ys = useYScale();
-  return (
-    <g>
-      {nodes.map((n) => (
-        <rect
-          key={n.key}
-          x={xs(n.x0).toFixed(1)}
-          y={ys(H - n.y0).toFixed(1)}
-          width={(xs(n.x1) - xs(n.x0)).toFixed(1)}
-          height={(ys(H - n.y1) - ys(H - n.y0)).toFixed(1)}
-          fill={n.color}
-          rx={3}
-        >
-          <title>{`${n.label} · ${WAVES[n.wave]}: ${n.value} respondents`}</title>
-        </rect>
-      ))}
-    </g>
-  );
-}
-
-function Labels() {
-  const xs = useXScale();
-  const ys = useYScale();
-  const firstWaveByCat = Object.fromEntries(CATEGORIES.map((c) => [c.id, POPULATIONS[0][c.id]]));
-  return (
-    <g fontFamily={FONT}>
-      {WAVES.map((label, w) => (
-        <text
-          key={label}
-          x={xs(COL_X[w] + NODE_W / 2)}
-          y={ys(H - (PLOT_TOP - 22))}
-          textAnchor="middle"
-          fontSize={13}
-          fontWeight={600}
-          letterSpacing={1}
-          fill={t.inkSoft}
-        >
-          {label.toUpperCase()}
-        </text>
-      ))}
-      {nodes.map((n) => {
-        const cy = (n.y0 + n.y1) / 2;
-        const lx = xs(n.x1) + 10;
-        const isLast = n.wave === WAVES.length - 1;
-        const delta = isLast ? n.value - firstWaveByCat[n.catId] : null;
+    <g data-drawing-container>
+      {flows.map((f, i) => {
+        const x1 = xScale(waves[f.step]) + NODE_W / 2;
+        const x2 = xScale(waves[f.step + 1]) - NODE_W / 2;
+        const midX = (x1 + x2) / 2;
+        const ySrcTop = yScale(f.srcTop);
+        const ySrcBottom = yScale(f.srcBottom);
+        const yDstTop = yScale(f.dstTop);
+        const yDstBottom = yScale(f.dstBottom);
         return (
-          <g key={n.key}>
-            <text x={lx} y={ys(H - (cy - 2))} textAnchor="start" fontSize={13} fontWeight={600} fill={t.ink}>
-              {n.label}
-            </text>
-            <text x={lx} y={ys(H - (cy + 14))} textAnchor="start" fontSize={12} fill={t.inkSoft}>
-              {n.value}
-            </text>
-            {isLast && (
+          <path
+            key={`flow-${i}`}
+            d={`M ${x1} ${ySrcTop} C ${midX} ${ySrcTop}, ${midX} ${yDstTop}, ${x2} ${yDstTop} L ${x2} ${yDstBottom} C ${midX} ${yDstBottom}, ${midX} ${ySrcBottom}, ${x1} ${ySrcBottom} Z`}
+            fill={categoryColor[f.source]}
+            fillOpacity={f.stable ? 0.58 : 0.18}
+          />
+        );
+      })}
+      {waves.map((wave, wIdx) => {
+        const cx = xScale(wave);
+        const isLast = wIdx === waves.length - 1;
+        return categories.map((cat) => {
+          const ext = nodeExtents[wIdx][cat];
+          if (ext.value <= 0) return null;
+          const yTop = yScale(ext.top);
+          const yBottom = yScale(ext.bottom);
+          const midY = (yTop + yBottom) / 2;
+          const delta = isLast ? ext.value - populations[0][cat] : 0;
+          const lx = cx + NODE_W / 2 + 10;
+          const labelText = `${cat} (${ext.value})`;
+          const pillW = labelText.length * 8.2 + 14;
+          return (
+            <React.Fragment key={`${wave}-${cat}`}>
+              <rect
+                x={cx - NODE_W / 2}
+                y={yTop}
+                width={NODE_W}
+                height={Math.max(2, yBottom - yTop)}
+                fill={categoryColor[cat]}
+                rx={3}
+              />
+              {!isLast && (
+                <rect
+                  x={lx - 6}
+                  y={midY - 12}
+                  width={pillW}
+                  height={22}
+                  rx={4}
+                  fill={t.pageBg}
+                  fillOpacity={0.86}
+                />
+              )}
               <text
                 x={lx}
-                y={ys(H - (cy + 28))}
+                y={isLast ? midY - 4 : midY + 4}
                 textAnchor="start"
-                fontSize={12}
+                fontSize={14}
                 fontWeight={600}
-                fill={delta >= 0 ? t.palette[0] : t.palette[4]}
+                fill={t.ink}
               >
-                {delta >= 0 ? `▲ +${delta}` : `▼ ${delta}`}
+                {labelText}
               </text>
-            )}
-          </g>
-        );
+              {isLast && (
+                <text
+                  x={lx}
+                  y={midY + 15}
+                  textAnchor="start"
+                  fontSize={14}
+                  fontWeight={600}
+                  fill={t.inkSoft}
+                >
+                  <tspan fill={categoryColor[cat]}>{delta >= 0 ? "▲" : "▼"}</tspan>
+                  {delta >= 0 ? ` +${delta} vs ${waves[0]}` : ` ${delta} vs ${waves[0]}`}
+                </text>
+              )}
+            </React.Fragment>
+          );
+        });
       })}
     </g>
   );
 }
 
-function Frame() {
-  const xs = useXScale();
-  const ys = useYScale();
-  return (
-    <g fontFamily={FONT}>
-      <text x={xs(SIZE.width / 2)} y={ys(H - 40)} textAnchor="middle" fontSize={26} fontWeight={600} fill={t.ink}>
-        {TITLE}
-      </text>
-      <text x={xs(SIZE.width / 2)} y={ys(H - 66)} textAnchor="middle" fontSize={15} fill={t.inkSoft}>
-        Quarterly customer-satisfaction survey · 1,000 respondents tracked Q1–Q4 2025
-      </text>
-      <text x={xs(SIZE.width / 2)} y={ys(H - 90)} textAnchor="middle" fontSize={12} fill={MUTED}>
-        Bold ribbon = same rating next wave · Faint ribbon = rating changed · ▲▼ = net change vs Q1
-      </text>
-    </g>
-  );
-}
+const TITLE = "alluvial-opinion-flow · javascript · muix · anyplot.ai";
+const countText =
+  minWaveTotal === stackTotal
+    ? stackTotal.toLocaleString("en-US")
+    : `${minWaveTotal.toLocaleString("en-US")}–${stackTotal.toLocaleString("en-US")}`;
+const SUBTITLE = `${FLOW_COUNT}: ${countText} · ${WAVE}: ${waves[0]}–${waves[waves.length - 1]}`;
+const HEADER_H = 104;
 
-// --- Chart (default-exported component — the harness mounts it) -------------
 export default function Chart() {
+  const { width, height } = window.ANYPLOT_SIZE;
+
   return (
-    <ChartContainer
-      width={SIZE.width}
-      height={SIZE.height}
-      margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
-      series={[]}
-      xAxis={[{ id: "x", scaleType: "linear", min: 0, max: SIZE.width }]}
-      yAxis={[{ id: "y", scaleType: "linear", min: 0, max: SIZE.height }]}
-      skipAnimation
+    <div
+      style={{
+        width,
+        height,
+        backgroundColor: t.pageBg,
+        display: "flex",
+        flexDirection: "column",
+        fontFamily:
+          '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+      }}
     >
-      <Links />
-      <Nodes />
-      <Labels />
-      <Frame />
-    </ChartContainer>
+      <div
+        style={{
+          height: HEADER_H,
+          padding: "14px 40px 0 40px",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          boxSizing: "border-box",
+        }}
+      >
+        <div
+          style={{
+            fontSize: 22,
+            fontWeight: 600,
+            color: t.ink,
+            lineHeight: 1.25,
+          }}
+        >
+          {TITLE}
+        </div>
+        <div
+          style={{
+            fontSize: 15,
+            color: t.inkSoft,
+            marginTop: 4,
+          }}
+        >
+          {SUBTITLE}
+        </div>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 18,
+            marginTop: 6,
+            fontSize: 14,
+            color: t.inkSoft,
+          }}
+        >
+          {categories.map((cat) => (
+            <span
+              key={cat}
+              style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+            >
+              <span
+                style={{
+                  width: 12,
+                  height: 12,
+                  borderRadius: 3,
+                  backgroundColor: categoryColor[cat],
+                  display: "inline-block",
+                }}
+              />
+              <span>{cat}</span>
+            </span>
+          ))}
+          <span style={{ color: INK_MUTED }}>
+            · Bold ribbon = stable · Faint ribbon = changed · ▲▼ = net shift
+          </span>
+        </div>
+      </div>
+      <ChartsContainer
+        width={width}
+        height={height - HEADER_H}
+        series={[]}
+        margin={{ top: 10, right: 230, bottom: 24, left: 60 }}
+        xAxis={[
+          {
+            id: "wave",
+            scaleType: "point",
+            data: waves,
+            position: "top",
+            disableLine: true,
+            disableTicks: true,
+            height: 44,
+            tickLabelStyle: { fontSize: 15, fontWeight: 600, fill: t.inkSoft },
+          },
+        ]}
+        yAxis={[
+          {
+            id: "count",
+            scaleType: "linear",
+            min: 0,
+            max: domainMax,
+            position: "none",
+          },
+        ]}
+        skipAnimation
+      >
+        <ChartsXAxis />
+        <OpinionFlowLayer />
+      </ChartsContainer>
+    </div>
   );
 }
