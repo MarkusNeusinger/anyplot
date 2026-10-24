@@ -9,7 +9,6 @@ import { LinePlot } from "@mui/x-charts/LineChart";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
-import { useDrawingArea, useXScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -129,50 +128,6 @@ const yMax = maxDensity * (1 + Y_TOP_PAD_SHARE);
 const CORE_COLOR = t.palette[0];
 const TAIL_COLOR = t.palette[1];
 const NORMAL_COLOR = t.ink;
-
-function MeanReferenceLineLayer() {
-  const { top, height } = useDrawingArea();
-  const xScale = useXScale() as unknown as ((v: number) => number) & {
-    bandwidth: () => number;
-  };
-  const bw = xScale.bandwidth();
-  const leftBinIdx = Math.max(
-    0,
-    Math.min(BIN_COUNT - 2, Math.floor((mean - binCenters[0]) / binWidth)),
-  );
-  const cLeft = binCenters[leftBinIdx];
-  const cRight = binCenters[leftBinIdx + 1];
-  const xLeft = xScale(cLeft) + bw / 2;
-  const xRight = xScale(cRight) + bw / 2;
-  const frac = (mean - cLeft) / binWidth;
-  const meanX = xLeft + frac * (xRight - xLeft);
-
-  return (
-    <g>
-      <line
-        x1={meanX}
-        y1={top}
-        x2={meanX}
-        y2={top + height}
-        stroke={t.ink}
-        strokeDasharray="6 4"
-        strokeWidth={1.75}
-      />
-      <text
-        x={meanX + 8}
-        y={top + 18}
-        fill={t.ink}
-        fontSize={14}
-        fontWeight={600}
-        fontFamily={MONO}
-      >
-        Mean ({mean >= 0 ? "+" : ""}
-        {mean.toFixed(2)}
-        {returnUnit})
-      </text>
-    </g>
-  );
-}
 
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
@@ -352,7 +307,6 @@ export default function Chart() {
           <ChartsGrid horizontal />
           <BarPlot skipAnimation borderRadius={2} />
           <LinePlot skipAnimation />
-          <MeanReferenceLineLayer />
           <ChartsXAxis />
           <ChartsYAxis />
         </ChartsContainer>
