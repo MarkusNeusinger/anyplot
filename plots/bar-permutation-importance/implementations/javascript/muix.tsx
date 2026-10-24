@@ -52,20 +52,8 @@ const stds = sorted.map((d) => d[IMPORTANCE_STD]);
 const minMean = Math.min(...means);
 const maxMean = Math.max(...means);
 const meanSpan = maxMean - minMean || 1;
-
-const seqLowInt = parseInt(t.seq[0].slice(1), 16);
-const seqHighInt = parseInt(t.seq[1].slice(1), 16);
-const seqLowRgb = [(seqLowInt >> 16) & 255, (seqLowInt >> 8) & 255, seqLowInt & 255];
-const seqHighRgb = [(seqHighInt >> 16) & 255, (seqHighInt >> 8) & 255, seqHighInt & 255];
-
-const barColors = means.map((v) => {
-  const norm = (v - minMean) / meanSpan;
-  const ratio = SEQ_MIN_MIX + (1 - SEQ_MIN_MIX) * norm;
-  const r = Math.round(seqLowRgb[0] + (seqHighRgb[0] - seqLowRgb[0]) * ratio);
-  const g = Math.round(seqLowRgb[1] + (seqHighRgb[1] - seqLowRgb[1]) * ratio);
-  const b = Math.round(seqLowRgb[2] + (seqHighRgb[2] - seqLowRgb[2]) * ratio);
-  return `rgb(${r}, ${g}, ${b})`;
-});
+// Start the gradient below the weakest mean so the lowest bar keeps SEQ_MIN_MIX of the ramp
+const colorMin = minMean - (meanSpan * SEQ_MIN_MIX) / (1 - SEQ_MIN_MIX);
 
 const rawMin = Math.min(
   ZERO_REF,
@@ -152,6 +140,7 @@ export default function Chart() {
               min: xMin,
               max: xMax,
               tickNumber: 8,
+              colorMap: { type: "continuous", min: colorMin, max: maxMean, color: [t.seq[0], t.seq[1]] },
               height: 64,
               label: IMPORTANCE_MEAN,
               labelStyle: { fontSize: 16, fill: t.ink, fontWeight: 500 },
@@ -164,7 +153,6 @@ export default function Chart() {
               scaleType: "band",
               data: features,
               width: 175,
-              colorMap: { type: "ordinal", values: features, colors: barColors },
               categoryGapRatio: 0.3,
               label: FEATURE,
               labelStyle: { fontSize: 16, fill: t.ink, fontWeight: 500 },
