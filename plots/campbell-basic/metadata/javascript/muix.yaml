@@ -2,123 +2,135 @@ library: muix
 language: javascript
 specification_id: campbell-basic
 created: '2026-08-24T19:57:29Z'
-updated: '2026-08-24T20:12:30Z'
-generated_by: claude-sonnet
-workflow_run: 32770205911
+updated: '2026-10-24T04:20:19Z'
+generated_by: gemini-4-argon
+adopted_from: 05fd22b6883131fc8937ab51e4f573041b3dcb44 (05fd22b6883131fc8937ab51e4f573041b3dcb44)
+workflow_run: 40061672277
 issue: 4241
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/javascript/muix/plot-dark.html
-quality_score: 94
+quality_score: 88
 review:
   strengths:
-  - 'Both attempt-1 weaknesses fixed exactly as suggested: engine-order legend swatches
-    now show a clear opacity gradient (1x/2x/3x) and the widened swatch makes it legible;
-    mode curves now carry a heavier stroke than the reference lines for clear hierarchy.'
-  - 'Perfect Imprint palette compliance: brand green first, canonical order for modes
-    2-4, matte red (#AE3030) used as an intentional semantic exception for critical-speed
-    markers.'
-  - Critical-speed markers are physically correct, independently verifiable via linear
-    interpolation of mode/engine-order intersections.
-  - Natural frequency curves show realistic gyroscopic behavior per the spec (some
-    modes stiffen, some soften with speed).
-  - Fully deterministic, in-memory data generation with no RNG.
-  - Theme chrome fully correct in both renders, no dark-on-dark or light-on-light
-    failures.
+  - 'Critical speeds are computed, not placed: every sign change of mode minus engine-order
+    line is linearly interpolated (lines 92-110), so the 10 red markers sit exactly
+    on their crossings (1st Bending x 1x at about 3007 RPM / 50 Hz, as 42/(1/60-0.0027)
+    gives)'
+  - Engine-order lines get a three-step dash and opacity hierarchy in a neutral inkSoft
+    tone, clearly distinct from the solid palette-colored mode curves, with 1x/2x/3x
+    labels on small page-colored plates near the right end
+  - 'Mode curves are identified twice without crowding: a header legend separating
+    the four modes, the three EO dash styles and the critical-speed marker, plus direct
+    end labels with color ticks to the right of the plot'
+  - Composes ChartsContainer with LinePlot, ScatterPlot, ChartsGrid and explicit axes,
+    and draws the order and mode labels in an in-chart SVG layer positioned through
+    the useXScale/useYScale/useDrawingArea hooks
+  - Per-series styling through sx selectors on data-series attributes (dash, width,
+    opacity per engine order) and a page-colored marker outline that keeps the red
+    markers crisp on both themes
+  - 'Theme tokens threaded through every text and stroke: all chrome flips cleanly
+    while the Imprint data colors stay identical, and skipAnimation is set'
   weaknesses:
-  - No visual grouping/shading around the critical-speed clusters -- the spec lists
-    this as an optional enhancement, and it's the one remaining gap toward top-tier
-    Design Excellence / Data Storytelling.
+  - 'Suggestion: the header carries a legend for the four modes that the direct end
+    labels already name; dropping the mode entries from the header legend would shorten
+    it to the line-style key the reader actually needs.'
+  - 'Suggestion: the empty band between the legend row and the top of the plot (about
+    50 CSS px) plus the 8 % y padding above 300 Hz could be tightened to give the
+    crossings more vertical room.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1.
-      Chrome: Title "campbell-basic · javascript · muix · anyplot.ai" centered and bold in dark ink; axis titles "Rotational Speed (RPM)" / "Natural Frequency (Hz)" and tick labels dark and clearly legible. Right-side legend lists Critical Speeds, the 4 mode curves, and the 3 engine-order lines, all readable.
-      Data: 1st Bending brand green (#009E73), 2nd Bending lavender, 1st Torsional blue, Axial ochre (Imprint canonical order). Mode curves render with a visibly heavier stroke than the thin gray engine-order lines. The three engine-order lines are now distinguishable via an opacity step (1x darkest, 2x medium, 3x lightest) both in the plot body and in the widened legend swatches. Eight matte-red circular markers denote critical-speed intersections.
+      Background: warm off-white #FAF8F1 across the whole canvas, no white plot panel.
+      Chrome: bold dark title "campbell-basic · javascript · muix · anyplot.ai" centered at the top, a gray subtitle "4 rotor modes · 3 engine orders (1x, 2x, 3x) · 10 critical-speed intersections", and a one-line HTML legend (1st Bending, 1st Torsional, 2nd Bending, Axial as solid colored strokes; 1x/2x/3x EO as dashed/dotted gray samples; a red dot for "Critical Speeds (10)"). X axis "Rotational speed (RPM)" 0-6,000 with thousands separators, y axis "Natural frequency (Hz)" 0-300; dark tick labels, faint dashed grid in both directions. All text readable.
+      Data: four nearly flat mode curves — 1st Bending green #009E73 rising 42→58 Hz, 1st Torsional purple rising slightly 88→93 Hz, 2nd Bending blue falling 125→110 Hz, Axial ochre falling 152→145 Hz — with bold direct end labels to the right. Three gray engine-order lines fan from the origin (1x to 100 Hz, 2x to 200 Hz, 3x to 300 Hz) with "1x/2x/3x" labels near the right end. Ten red circles with a page-colored outline sit exactly on the crossings.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17.
-      Chrome: Title, axis labels, and tick labels render in light ink and remain clearly legible -- no dark-on-dark failures observed anywhere.
-      Data: Mode-curve colors, engine-order opacity gradient, stroke-weight hierarchy, and critical-speed marker color are all pixel-identical to the light render; only chrome (background, text, grid) flipped as required.
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title, subtitle, legend, axis titles, tick labels and end labels all render in light ink; grid dashed and subtle but visible; no dark-on-dark text.
+      Data: mode curve colors, the red critical-speed markers and the gray EO lines are identical to the light render; only chrome flipped. Green #009E73 reads well; the dotted 3x EO line is the faintest element but clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set, readable in both themes, well-proportioned,
-          no overflow
+        comment: Explicit sizes (22/15/14/16 px CSS); all text readable in both themes
+          and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions; legend sits clear of the plot
+        comment: No text collisions; order labels sit on page-colored plates clear
+          of the markers
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 'Fixed from attempt 1: opacity step (0.85/0.6/0.4) plus widened legend
-          swatches (itemMarkWidth: 36) make the three engine-order lines clearly distinguishable'
+        comment: 3.2 px mode curves, 2 px EO lines, outlined 8.5 px markers; legend
+          glyphs match the marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, CVD-safe, red markers not relying on hue alone
+        comment: Modes differ in hue and position; critical speeds also differ by
+          shape; EO lines separated by dash pattern
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, good canvas utilization, nothing cut off
+        comment: 3200x1800, balanced axis labels, title about 35 % width, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive, with units
+        comment: Rotational speed (RPM) and Natural frequency (Hz) with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical order for modes 2-4, matte-red semantic
-          exception for critical speeds, theme-correct chrome both renders'
+        comment: 'Modes take Imprint positions 1-4 starting with #009E73; red critical
+          markers as the spec asks; correct page backgrounds'
     design_excellence:
-      score: 16
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Improved: deliberate opacity gradient across order lines plus stroke-weight
-          hierarchy reads as an intentional design system'
+        comment: 'Typographic hierarchy beyond baseline: bold title, muted summary
+          subtitle, semibold direct end labels with color ticks'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: 'Improved: line-weight hierarchy and legend swatch clarity resolved;
-          subtle grid and generous whitespace remain strong'
+        comment: EO labels on translucent page-colored plates, dash/opacity steps
+          per order, page-colored marker outlines
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
-        passed: false
-        comment: Stroke hierarchy sharpens the focal point on critical-speed markers;
-          optional zone-shading around intersections still not used
+        passed: true
+        comment: Red critical markers as the single saturated accent against neutral
+          EO lines; subtitle states the count of intersections
     spec_compliance:
       score: 15
       max: 15
@@ -128,25 +140,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Campbell diagram
+        comment: Standard Campbell diagram; no extra layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All present
+        comment: Rising and falling modes, EO lines from the origin with slope order/60,
+          labeled 1x/2x/3x, distinct critical markers, mode names, legend separating
+          curves from EO lines
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct
+        comment: Speed on x, frequency on y; markers at interpolated crossings
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Exact title format, legend labels correct
+        comment: Mandated title format; legend labels readable
     data_quality:
       score: 15
       max: 15
@@ -156,21 +170,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Gyroscopic stiffening/softening shown across modes, 8 critical-speed
-          intersections
+        comment: 4 modes, 3 orders, 10 critical speeds, crossings across the speed
+          range
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Turbocompressor rotor-train, neutral engineering scenario
+        comment: Rotor with bending, torsional and axial modes over 0-6000 RPM; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Physically correct engine-order slopes and plausible frequency/speed
-          ranges
+        comment: 'Checked: EO lines reach 100/200/300 Hz at 6000 RPM (slope order/60);
+          1st Bending x 1x at about 3007 RPM / 50 Hz matches 42/(1/60-0.0027)'
     code_quality:
       score: 10
       max: 10
@@ -180,60 +194,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions/classes
+        comment: Linear data/plot flow; one label component the React harness needs
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, closed-form data
+        comment: Deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Intersection search is short and no library call provides it
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct harness contract: default export, skipAnimation, sized from
-          ANYPLOT_SIZE'
+        comment: Default-exported component, skipAnimation, v9 ChartsContainer composition
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Composable ChartContainer + LinePlot + ScatterPlot overlay
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Improved: coordinated per-series sx targeting drives opacity/dash/stroke-width
-          encoding across plot body and legend'
+        comment: Composition API with LinePlot/ScatterPlot/ChartsGrid and axis ids
+          instead of a monolithic chart
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: useXScale/useYScale/useDrawingArea hooks for an in-chart SVG label
+          layer; per-series sx selectors on data-series attributes
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-10-24T04:17:21Z'
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
   - layer-composition
+  - annotations
+  - custom-legend
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - interpolation
   styling:
-  - alpha-blending
+  - edge-highlighting
   - grid-styling
+  - alpha-blending
