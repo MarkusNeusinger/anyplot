@@ -13,6 +13,8 @@ const t = window.ANYPLOT_TOKENS;
 // Constants
 const TITLE = "funnel-basic · javascript · muix · anyplot.ai";
 const TOTAL_SHARE_SUFFIX = "of initial stage";
+const LOSS_ANCHOR = "#AE3030"; // Imprint's bad/loss hue — never a funnel stage
+const STAGE_COLORS = t.palette.filter((c: string) => c !== LOSS_ANCHOR);
 
 const TITLE_HEIGHT = 82;
 const MARGIN = { top: 20, right: 60, bottom: 28, left: 20 };
@@ -41,7 +43,7 @@ const stages = data.map((row, i) => {
   const name = String(row[STAGE]);
   const value = Number(row[SHOPPERS]);
   const nextVal = i < data.length - 1 ? Number(data[i + 1][SHOPPERS]) : value;
-  const color = t.palette[i];
+  const color = STAGE_COLORS[i % STAGE_COLORS.length];
   const r = parseInt(color.slice(1, 3), 16);
   const g = parseInt(color.slice(3, 5), 16);
   const b = parseInt(color.slice(5, 7), 16);
