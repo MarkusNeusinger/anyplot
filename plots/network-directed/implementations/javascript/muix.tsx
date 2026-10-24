@@ -12,7 +12,10 @@ const t = window.ANYPLOT_TOKENS;
 const TITLE = "network-directed · javascript · muix · anyplot.ai";
 const TITLE_HEIGHT = 64;
 const MARGIN = { top: 28, right: 260, bottom: 32, left: 44 };
-const NODE_RADIUS = 30;
+const NODE_HALF_HEIGHT = 21;
+const NODE_PAD_X = 16;
+const CHAR_WIDTH = 8.6;
+const LABEL_SIZE = 15;
 const END_GAP = 6;
 const PAD_X_SHARE = 0.14;
 const PAD_Y_SHARE = 0.25;
@@ -32,8 +35,8 @@ const nodes: Array<Record<string, string>> = [
   { [MODULE]: "auth", [LAYER]: "Core Services" },
   { [MODULE]: "cache", [LAYER]: "Core Services" },
   { [MODULE]: "orders", [LAYER]: "Domain Logic" },
-  { [MODULE]: "inventory", [LAYER]: "Domain Logic" },
   { [MODULE]: "billing", [LAYER]: "Domain Logic" },
+  { [MODULE]: "inventory", [LAYER]: "Domain Logic" },
   { [MODULE]: "rest-api", [LAYER]: "API Layer" },
   { [MODULE]: "graphql-api", [LAYER]: "API Layer" },
   { [MODULE]: "web-app", [LAYER]: "UI & Apps" },
@@ -74,6 +77,15 @@ interface ModuleNode {
   depth: number;
   x: number;
   y: number;
+  halfWidth: number;
+}
+
+// Distance from a node's centre to its border along the direction (dx, dy)
+function borderDistance(n: ModuleNode, dx: number, dy: number) {
+  const dist = Math.hypot(dx, dy);
+  const ux = Math.abs(dx / dist);
+  const uy = Math.abs(dy / dist);
+  return Math.min(ux > 0 ? n.halfWidth / ux : Infinity, uy > 0 ? NODE_HALF_HEIGHT / uy : Infinity);
 }
 
 const layerNames: string[] = [];
@@ -117,6 +129,7 @@ for (let i = 0; i < rawModules.length; i++) {
     depth: m.depth,
     x: m.depth,
     y: seen - (count - 1) / 2,
+    halfWidth: (m.id.length * CHAR_WIDTH) / 2 + NODE_PAD_X,
   };
   layoutNodes.push(node);
   nodeById.set(node.id, node);
@@ -201,8 +214,9 @@ function DirectedNetworkOverlay() {
           const dx = x2 - x1;
           const dy = y2 - y1;
           const dist = Math.hypot(dx, dy);
-          const ex = x2 - (dx / dist) * (NODE_RADIUS + END_GAP);
-          const ey = y2 - (dy / dist) * (NODE_RADIUS + END_GAP);
+          const stop = borderDistance(d, dx, dy) + END_GAP;
+          const ex = x2 - (dx / dist) * stop;
+          const ey = y2 - (dy / dist) * stop;
           pathD = `M ${x1} ${y1} L ${ex} ${ey}`;
         } else {
           const mx = (x1 + x2) / 2;
@@ -221,8 +235,9 @@ function DirectedNetworkOverlay() {
           const tdx = x2 - cx;
           const tdy = y2 - cy;
           const tdist = Math.hypot(tdx, tdy);
-          const ex = x2 - (tdx / tdist) * (NODE_RADIUS + END_GAP);
-          const ey = y2 - (tdy / tdist) * (NODE_RADIUS + END_GAP);
+          const stop = borderDistance(d, tdx, tdy) + END_GAP;
+          const ex = x2 - (tdx / tdist) * stop;
+          const ey = y2 - (tdy / tdist) * stop;
           pathD = `M ${x1} ${y1} Q ${cx} ${cy} ${ex} ${ey}`;
         }
 
@@ -239,34 +254,34 @@ function DirectedNetworkOverlay() {
         );
       })}
 
-      {layoutNodes.map((n) => (
-        <circle
-          key={`node-${n.id}`}
-          cx={Number(xScale(n.x))}
-          cy={Number(yScale(n.y))}
-          r={NODE_RADIUS}
-          fill={String(layerColors.get(n.layer))}
-          stroke={t.pageBg}
-          strokeWidth={3}
-        />
-      ))}
-
-      {layoutNodes.map((n) => (
-        <text
-          key={`label-${n.id}`}
-          x={Number(xScale(n.x))}
-          y={Number(yScale(n.y)) + NODE_RADIUS + 22}
-          textAnchor="middle"
-          fontSize={15}
-          fontWeight={500}
-          fill={t.ink}
-          stroke={t.pageBg}
-          strokeWidth={4}
-          paintOrder="stroke"
-        >
-          {n.id}
-        </text>
-      ))}
+      {layoutNodes.map((n) => {
+        const cx = Number(xScale(n.x));
+        const cy = Number(yScale(n.y));
+        const color = String(layerColors.get(n.layer));
+        const box = {
+          x: cx - n.halfWidth,
+          y: cy - NODE_HALF_HEIGHT,
+          width: n.halfWidth * 2,
+          height: NODE_HALF_HEIGHT * 2,
+          rx: 10,
+        };
+        return (
+          <g key={`node-${n.id}`}>
+            <rect {...box} fill={t.pageBg} />
+            <rect {...box} fill={color} fillOpacity={0.24} stroke={color} strokeWidth={3} />
+            <text
+              x={cx}
+              y={cy + 5}
+              textAnchor="middle"
+              fontSize={LABEL_SIZE}
+              fontWeight={600}
+              fill={t.ink}
+            >
+              {n.id}
+            </text>
+          </g>
+        );
+      })}
 
       <g transform={`translate(${legendX}, ${legendY})`}>
         <text x={0} y={14} fontSize={15} fontWeight={700} fill={t.ink}>
@@ -274,7 +289,17 @@ function DirectedNetworkOverlay() {
         </text>
         {layerNames.map((lName, idx) => (
           <g key={lName} transform={`translate(0, ${38 + idx * 32})`}>
-            <circle cx={9} cy={0} r={9} fill={String(layerColors.get(lName))} />
+            <rect
+              x={0}
+              y={-9}
+              width={20}
+              height={18}
+              rx={5}
+              fill={String(layerColors.get(lName))}
+              fillOpacity={0.24}
+              stroke={String(layerColors.get(lName))}
+              strokeWidth={2.5}
+            />
             <text x={28} y={5} fontSize={15} fill={t.ink}>
               {lName}
             </text>
