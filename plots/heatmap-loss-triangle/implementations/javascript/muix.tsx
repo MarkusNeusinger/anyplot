@@ -1,43 +1,44 @@
 // anyplot.ai
 // heatmap-loss-triangle: Actuarial Loss Development Triangle
-// Library: muix 9.2.1 | JavaScript 22.23.2
+// Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 89/100 | Created: 2026-08-20
 //# anyplot-orientation: square
-
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const SIZE = window.ANYPLOT_SIZE;
 
 // Constants
-const ACCIDENT_YEAR_COL = "accident_year";
-const DEV_PERIOD_COL = "development_period";
-const CUMULATIVE_COL = "cumulative_amount";
-const IS_PROJECTED_COL = "is_projected";
-const DEV_FACTOR_COL = "development_factor";
-
+const SIZE = window.ANYPLOT_SIZE;
+const TITLE = "heatmap-loss-triangle · javascript · muix · anyplot.ai";
 const CELL_TEXT_ON_LIGHT_FILL = "#1A1A17";
 const CELL_TEXT_ON_DARK_FILL = "#FAF8F1";
 const HATCH_ID = "loss-triangle-hatch";
 const GRAD_ID = "loss-triangle-seq-grad";
 const COLORBAR_TICKS = [0, 0.25, 0.5, 0.75, 1];
 
-// Data
+// Columns: set these to your data's column names
+const ACCIDENT_YEAR = "Accident Year"; // role: accident_year
+const DEV_PERIOD = "Development Period (years since occurrence)"; // role: development_period
+const CUMULATIVE_CLAIMS = "Cumulative paid claims ($000s)"; // role: cumulative_amount
+const IS_PROJECTED = "Projected"; // role: is_projected
+const DEV_FACTOR = "Age-to-age factor"; // role: development_factor
+
+// Data: replace this block with your own records
 const SEED_YEARS = [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024];
 const SEED_FACTORS = [1.45, 1.2, 1.12, 1.07, 1.045, 1.028, 1.017, 1.01, 1.005, 1.0];
 
 type LossTriangleRow = {
-  [ACCIDENT_YEAR_COL]: number;
-  [DEV_PERIOD_COL]: number;
-  [CUMULATIVE_COL]: number;
-  [IS_PROJECTED_COL]: number;
-  [DEV_FACTOR_COL]: number;
+  [ACCIDENT_YEAR]: number;
+  [DEV_PERIOD]: number;
+  [CUMULATIVE_CLAIMS]: number;
+  [IS_PROJECTED]: number;
+  [DEV_FACTOR]: number;
 };
 
-const DATA: LossTriangleRow[] = [];
+const data: LossTriangleRow[] = [];
 let lcgState = 42;
 const nPeriods = SEED_FACTORS.length;
 
@@ -52,38 +53,48 @@ for (let i = 0; i < SEED_YEARS.length; i++) {
     if (j > 0) {
       cumulative = cumulative * SEED_FACTORS[j - 1];
     }
-    DATA.push({
-      [ACCIDENT_YEAR_COL]: SEED_YEARS[i],
-      [DEV_PERIOD_COL]: period,
-      [CUMULATIVE_COL]: Math.round(cumulative),
-      [IS_PROJECTED_COL]: i + period > nPeriods ? 1 : 0,
-      [DEV_FACTOR_COL]: SEED_FACTORS[j],
+    data.push({
+      [ACCIDENT_YEAR]: SEED_YEARS[i],
+      [DEV_PERIOD]: period,
+      [CUMULATIVE_CLAIMS]: Math.round(cumulative),
+      [IS_PROJECTED]: i + period > nPeriods ? 1 : 0,
+      [DEV_FACTOR]: SEED_FACTORS[j],
     });
   }
 }
 
+// Plot: reads only data and the constants above
 const accidentYearNums = Array.from(
-  new Set(DATA.map((r) => r[ACCIDENT_YEAR_COL])),
+  new Set(data.map((r) => r[ACCIDENT_YEAR])),
 ).sort((a, b) => a - b);
 const devPeriodNums = Array.from(
-  new Set(DATA.map((r) => r[DEV_PERIOD_COL])),
+  new Set(data.map((r) => r[DEV_PERIOD])),
 ).sort((a, b) => a - b);
 
 const accidentYearLabels = accidentYearNums.map(String);
 const devPeriodLabels = devPeriodNums.map(String);
 
 const factorByPeriod = new Map<number, number>();
-for (const row of DATA) {
-  const p = row[DEV_PERIOD_COL];
-  if (!factorByPeriod.has(p) && p < devPeriodNums.length) {
-    factorByPeriod.set(p, row[DEV_FACTOR_COL]);
+for (const row of data) {
+  const p = row[DEV_PERIOD];
+  if (!factorByPeriod.has(p)) {
+    factorByPeriod.set(p, row[DEV_FACTOR]);
   }
 }
 
-const allAmounts = DATA.map((r) => r[CUMULATIVE_COL]);
+const maxObsPeriodIdxByYear = new Map<number, number>();
+for (const year of accidentYearNums) {
+  const obsPeriods = data
+    .filter((r) => r[ACCIDENT_YEAR] === year && r[IS_PROJECTED] === 0)
+    .map((r) => r[DEV_PERIOD]);
+  const maxP = Math.max(...obsPeriods);
+  maxObsPeriodIdxByYear.set(year, devPeriodNums.indexOf(maxP));
+}
+
+const allAmounts = data.map((r) => r[CUMULATIVE_CLAIMS]);
 const minVal = Math.min(...allAmounts);
 const maxVal = Math.max(...allAmounts);
-const valSpan = Math.max(1, maxVal - minVal);
+const valSpan = maxVal - minVal;
 
 const seqLowNum = parseInt(t.seq[0].slice(1), 16);
 const seqHighNum = parseInt(t.seq[1].slice(1), 16);
@@ -94,21 +105,19 @@ const highR = (seqHighNum >> 16) & 255;
 const highG = (seqHighNum >> 8) & 255;
 const highB = seqHighNum & 255;
 
-const cells = DATA.map((row) => {
-  const val = row[CUMULATIVE_COL];
-  const ratio = Math.min(1, Math.max(0, (val - minVal) / valSpan));
+const cells = data.map((row) => {
+  const val = row[CUMULATIVE_CLAIMS];
+  const ratio = (val - minVal) / valSpan;
   const r = Math.round(lowR + (highR - lowR) * ratio);
   const g = Math.round(lowG + (highG - lowG) * ratio);
   const b = Math.round(lowB + (highB - lowB) * ratio);
   const lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
   return {
-    id: `${row[ACCIDENT_YEAR_COL]}-${row[DEV_PERIOD_COL]}`,
-    yearKey: String(row[ACCIDENT_YEAR_COL]),
-    periodKey: String(row[DEV_PERIOD_COL]),
-    yearIdx: accidentYearNums.indexOf(row[ACCIDENT_YEAR_COL]),
-    periodIdx: devPeriodNums.indexOf(row[DEV_PERIOD_COL]),
+    id: `${row[ACCIDENT_YEAR]}-${row[DEV_PERIOD]}`,
+    yearKey: String(row[ACCIDENT_YEAR]),
+    periodKey: String(row[DEV_PERIOD]),
     value: val,
-    isProjected: row[IS_PROJECTED_COL] === 1,
+    isProjected: row[IS_PROJECTED] === 1,
     fill: `rgb(${r}, ${g}, ${b})`,
     textFill: lum > 0.54 ? CELL_TEXT_ON_LIGHT_FILL : CELL_TEXT_ON_DARK_FILL,
   };
@@ -117,49 +126,46 @@ const cells = DATA.map((row) => {
 const latestYear = accidentYearNums[accidentYearNums.length - 1];
 let totalIbnr = 0;
 for (const year of accidentYearNums) {
-  const yearRows = DATA.filter((r) => r[ACCIDENT_YEAR_COL] === year);
-  const observedRows = yearRows.filter((r) => r[IS_PROJECTED_COL] === 0);
-  const latestObserved =
-    observedRows.length > 0
-      ? observedRows[observedRows.length - 1][CUMULATIVE_COL]
-      : 0;
-  const ultimate =
-    yearRows.length > 0 ? yearRows[yearRows.length - 1][CUMULATIVE_COL] : 0;
-  totalIbnr += Math.max(0, ultimate - latestObserved);
+  const yearRows = data.filter((r) => r[ACCIDENT_YEAR] === year);
+  const observedRows = yearRows.filter((r) => r[IS_PROJECTED] === 0);
+  const latestObserved = observedRows[observedRows.length - 1][CUMULATIVE_CLAIMS];
+  const ultimate = yearRows[yearRows.length - 1][CUMULATIVE_CLAIMS];
+  totalIbnr += ultimate - latestObserved;
 }
 
-const TITLE = "heatmap-loss-triangle · javascript · muix · anyplot.ai";
-const SUBTITLE = `Accident years ${accidentYearNums[0]}–${latestYear} ($000s, Dec ${latestYear} diagonal) · Total projected IBNR reserve $${totalIbnr.toLocaleString("en-US")}k`;
+const unitMatch = CUMULATIVE_CLAIMS.match(/\(([^)]+)\)/);
+const claimsUnit = unitMatch ? unitMatch[1] : "";
+const claimsName = CUMULATIVE_CLAIMS.replace(/\s*\([^)]*\)/, "");
+const subtitle = `${ACCIDENT_YEAR}s ${accidentYearNums[0]}–${latestYear} · ${CUMULATIVE_CLAIMS} · Total projected IBNR reserve: ${totalIbnr.toLocaleString("en-US")} (${claimsUnit})`;
 
 function LossTriangleLayer() {
   const area = useDrawingArea();
-  const xScale = useXScale("dev-period") as any;
-  const yScale = useYScale("accident-year") as any;
-  if (!xScale || !yScale || !xScale.bandwidth || !yScale.bandwidth) return null;
+  const xScale = useXScale("dev-period") as unknown as ((v: string) => number) & { bandwidth: () => number };
+  const yScale = useYScale("accident-year") as unknown as ((v: string) => number) & { bandwidth: () => number };
 
   const bw = xScale.bandwidth();
   const bh = yScale.bandwidth();
-  const stepX =
-    devPeriodLabels.length > 1
-      ? (xScale(devPeriodLabels[1]) ?? 0) - (xScale(devPeriodLabels[0]) ?? 0)
-      : bw;
-  const stepY =
-    accidentYearLabels.length > 1
-      ? (yScale(accidentYearLabels[1]) ?? 0) - (yScale(accidentYearLabels[0]) ?? 0)
-      : bh;
+  const stepX = xScale(devPeriodLabels[1]) - xScale(devPeriodLabels[0]);
+  const stepY = yScale(accidentYearLabels[1]) - yScale(accidentYearLabels[0]);
 
   const staircasePts: string[] = [];
-  for (let i = 1; i < accidentYearLabels.length; i++) {
-    const obsCount = devPeriodLabels.length - i;
-    const xRight = (xScale(devPeriodLabels[obsCount - 1]) ?? 0) + bw + (stepX - bw) / 2;
-    const yTop = (yScale(accidentYearLabels[i]) ?? 0) - (stepY - bh) / 2;
-    const yBot = (yScale(accidentYearLabels[i]) ?? 0) + bh + (stepY - bh) / 2;
-    if (i === 1) {
-      const xFarRight = (xScale(devPeriodLabels[devPeriodLabels.length - 1]) ?? 0) + bw;
-      staircasePts.push(`M ${xFarRight} ${yTop}`);
+  let prevXRight = xScale(devPeriodLabels[devPeriodLabels.length - 1]) + bw;
+  for (let i = 0; i < accidentYearNums.length; i++) {
+    const year = accidentYearNums[i];
+    const maxObsIdx = maxObsPeriodIdxByYear.get(year)!;
+    if (maxObsIdx < devPeriodLabels.length - 1) {
+      const xRight = xScale(devPeriodLabels[maxObsIdx]) + bw + (stepX - bw) / 2;
+      const yTop = yScale(accidentYearLabels[i]) - (stepY - bh) / 2;
+      const yBot = yScale(accidentYearLabels[i]) + bh + (stepY - bh) / 2;
+      if (staircasePts.length === 0) {
+        staircasePts.push(`M ${prevXRight} ${yTop}`);
+      }
+      staircasePts.push(`L ${xRight} ${yTop}`);
+      staircasePts.push(`L ${xRight} ${yBot}`);
+      prevXRight = xRight;
+    } else {
+      prevXRight = xScale(devPeriodLabels[maxObsIdx]) + bw;
     }
-    staircasePts.push(`L ${xRight} ${yTop}`);
-    staircasePts.push(`L ${xRight} ${yBot}`);
   }
   const staircasePath = staircasePts.join(" ");
 
@@ -212,7 +218,7 @@ function LossTriangleLayer() {
         fontSize={15}
         fill={t.inkSoft}
       >
-        {SUBTITLE}
+        {subtitle}
       </text>
 
       {/* Legend swatches: Actual vs Projected */}
@@ -269,8 +275,8 @@ function LossTriangleLayer() {
 
       {/* Triangle cells */}
       {cells.map((cell) => {
-        const x = xScale(cell.periodKey) ?? 0;
-        const y = yScale(cell.yearKey) ?? 0;
+        const x = xScale(cell.periodKey);
+        const y = yScale(cell.yearKey);
         return (
           <g key={cell.id}>
             <rect
@@ -327,12 +333,13 @@ function LossTriangleLayer() {
         fontWeight="600"
         fill={t.inkSoft}
       >
-        Age-to-age factor
+        {DEV_FACTOR}
       </text>
-      {devPeriodNums.slice(0, -1).map((period) => {
-        const factor = factorByPeriod.get(period) ?? 1;
-        const xLeft = (xScale(String(period)) ?? 0) + bw;
-        const xRight = xScale(String(period + 1)) ?? xLeft;
+      {devPeriodNums.slice(0, -1).map((period, k) => {
+        const nextPeriod = devPeriodNums[k + 1];
+        const factor = factorByPeriod.get(period)!;
+        const xLeft = xScale(String(period)) + bw;
+        const xRight = xScale(String(nextPeriod));
         const boundaryX = (xLeft + xRight) / 2;
         return (
           <text
@@ -359,7 +366,7 @@ function LossTriangleLayer() {
         fontWeight="600"
         fill={t.ink}
       >
-        Cumulative
+        {claimsName}
       </text>
       <text
         x={barX}
@@ -368,7 +375,7 @@ function LossTriangleLayer() {
         fontSize={14}
         fill={t.inkSoft}
       >
-        ($000s)
+        {`(${claimsUnit})`}
       </text>
       <rect
         x={barX}
@@ -423,7 +430,7 @@ export default function Chart() {
           data: devPeriodLabels,
           categoryGapRatio: 0.06,
           height: 58,
-          label: "Development Period (years since occurrence)",
+          label: DEV_PERIOD,
           disableLine: true,
           disableTicks: true,
           tickLabelStyle: { fontSize: 14, fill: t.inkSoft, fontWeight: 600 },
@@ -437,7 +444,7 @@ export default function Chart() {
           data: accidentYearLabels,
           categoryGapRatio: 0.06,
           width: 82,
-          label: "Accident Year",
+          label: ACCIDENT_YEAR,
           disableLine: true,
           disableTicks: true,
           tickLabelStyle: { fontSize: 14, fill: t.inkSoft, fontWeight: 600 },
