@@ -3,18 +3,28 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 93/100 | Created: 2026-08-20
 //# anyplot-orientation: square
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
-import { ChartsText } from "@mui/x-charts/ChartsText";
-import { ContinuousColorLegend } from "@mui/x-charts/ChartsLegend";
-import { useXScale, useYScale, useZColorScale } from "@mui/x-charts/hooks";
+import { useDrawingArea, useXScale, useYScale, useZColorScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const SIZE = window.ANYPLOT_SIZE;
 
-// --- Data: correlation matrix between business metrics (in-memory, deterministic) ---
-const metrics = [
+// Constants
+const SIZE = window.ANYPLOT_SIZE;
+const TITLE = "heatmap-basic · javascript · muix · anyplot.ai";
+const DOMAIN_MIN = -1;
+const DOMAIN_MAX = 1;
+const COLORBAR_TICKS = [-1.0, -0.5, 0.0, 0.5, 1.0];
+const MARGIN = { top: 104, right: 138, bottom: 32, left: 20 };
+
+// Columns: set these to your data's column names
+const COL_METRIC = "Column metric"; // role: x
+const ROW_METRIC = "Row metric"; // role: y
+const CORRELATION = "Correlation coefficient"; // role: value
+
+// Data: replace this block with your own records
+const METRIC_NAMES = [
   "Revenue",
   "Marketing",
   "CSAT",
@@ -25,123 +35,129 @@ const metrics = [
   "Churn",
 ];
 
-// Upper-triangular correlation coefficients (row i vs. columns i+1..n-1); mirrored below.
-const upperTriangle = [
-  [0.72, 0.45, 0.68, 0.55, 0.81, 0.6, -0.52],
-  [0.3, 0.4, 0.25, 0.66, 0.58, -0.2],
-  [0.35, 0.28, 0.5, -0.1, -0.78],
-  [0.62, 0.47, 0.71, -0.18],
-  [0.58, 0.33, -0.25],
-  [0.4, -0.44],
-  [0.15],
+const UPPER_TRIANGLE_ROWS = [
+  "0.72,0.45,0.68,0.55,0.81,0.60,-0.52",
+  "0.30,0.40,0.25,0.66,0.58,-0.20",
+  "0.35,0.28,0.50,-0.10,-0.78",
+  "0.62,0.47,0.71,-0.18",
+  "0.58,0.33,-0.25",
+  "0.40,-0.44",
+  "0.15",
 ];
 
-const n = metrics.length;
-const cells = [];
-for (let row = 0; row < n; row += 1) {
-  for (let col = 0; col < n; col += 1) {
-    const value =
-      row === col
-        ? 1
-        : upperTriangle[Math.min(row, col)][
-            Math.max(row, col) - Math.min(row, col) - 1
-          ];
-    cells.push({
-      id: `${row}-${col}`,
-      x: metrics[col],
-      y: metrics[row],
-      value,
+const parsedUpper = UPPER_TRIANGLE_ROWS.map((s) => s.split(",").map(Number));
+const nMetrics = METRIC_NAMES.length;
+const data: Record<string, string | number>[] = [];
+
+for (let row = 0; row < nMetrics; row++) {
+  for (let col = 0; col < nMetrics; col++) {
+    const minIdx = Math.min(row, col);
+    const maxIdx = Math.max(row, col);
+    const val = row === col ? 1.0 : parsedUpper[minIdx][maxIdx - minIdx - 1];
+    data.push({
+      [ROW_METRIC]: METRIC_NAMES[row],
+      [COL_METRIC]: METRIC_NAMES[col],
+      [CORRELATION]: val,
     });
   }
 }
 
-// --- Colour: diverging Imprint colormap (imprint_div) driven by the z-axis colorMap ---
-function hexToRgb(hex) {
-  const int = parseInt(hex.slice(1), 16);
-  return [(int >> 16) & 255, (int >> 8) & 255, int & 255];
-}
+// Plot: reads only data and the constants above
+const xCategories = Array.from(new Set(data.map((r) => String(r[COL_METRIC]))));
+const yCategories = Array.from(new Set(data.map((r) => String(r[ROW_METRIC]))));
 
-function lerp(a, b, ratio) {
-  return Math.round(a + (b - a) * ratio);
-}
+const cells = data.map((row, idx) => ({
+  id: `${idx}-${row[ROW_METRIC]}-${row[COL_METRIC]}`,
+  x: String(row[COL_METRIC]),
+  y: String(row[ROW_METRIC]),
+  value: Number(row[CORRELATION]),
+}));
 
-function imprintDivInterpolator(stops) {
-  const [low, mid, high] = stops.map(hexToRgb);
-  return (position) => {
-    const [start, end, localRatio] =
-      position < 0.5
-        ? [low, mid, position / 0.5]
-        : [mid, high, (position - 0.5) / 0.5];
-    const [r, g, b] = [0, 1, 2].map((channel) =>
-      lerp(start[channel], end[channel], localRatio),
-    );
-    return `rgb(${r}, ${g}, ${b})`;
-  };
-}
-
-// Cell text must stay legible against that cell's own fill luminance regardless
-// of the current site theme, so pick between the two fixed Imprint ink literals
-// (light-mode ink / dark-mode ink) rather than the theme-dependent `t.ink`.
-const CELL_TEXT_ON_LIGHT_FILL = "#1A1A17";
-const CELL_TEXT_ON_DARK_FILL = "#F0EFE8";
-
-function textColorFor(fill) {
-  const [r, g, b] = fill.match(/[\d.]+/g).map(Number);
-  const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-  return luminance > 140 ? CELL_TEXT_ON_LIGHT_FILL : CELL_TEXT_ON_DARK_FILL;
-}
-
-// --- Cells (custom composition: MUI X band scales + z-axis colour scale) --------------
 function HeatmapCells() {
-  const xScale = useXScale();
-  const yScale = useYScale();
-  const colorScale = useZColorScale();
+  const xScale = useXScale() as unknown as ((v: string) => number) & { bandwidth: () => number };
+  const yScale = useYScale() as unknown as ((v: string) => number) & { bandwidth: () => number };
+  const colorScale = useZColorScale() as (v: number) => string;
+  const { left, top, width, height } = useDrawingArea();
+
+  const bw = xScale.bandwidth();
+  const bh = yScale.bandwidth();
+  const barX = left + width + 28;
+  const barW = 20;
 
   return (
     <g>
+      <defs>
+        <linearGradient id="basicHeatmapDivGrad" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0%" stopColor={t.div[0]} />
+          <stop offset="50%" stopColor={t.div[1]} />
+          <stop offset="100%" stopColor={t.div[2]} />
+        </linearGradient>
+      </defs>
+
       {cells.map((cell) => {
-        const x = xScale(cell.x) ?? 0;
-        const y = yScale(cell.y) ?? 0;
-        const width = xScale.bandwidth();
-        const height = yScale.bandwidth();
+        const x = xScale(cell.x);
+        const y = yScale(cell.y);
         const fill = colorScale(cell.value);
+        const [r, g, b] = (fill.match(/[\d.]+/g) ?? ["128", "128", "128"]).map(Number);
+        const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        const textFill = luminance > 140 ? "#1A1A17" : "#FAF8F1";
+
         return (
           <g key={cell.id}>
-            <rect
-              x={x}
-              y={y}
-              width={width}
-              height={height}
-              fill={fill}
-              rx={4}
-            />
-            <ChartsText
-              text={cell.value.toFixed(2)}
-              x={x + width / 2}
-              y={y + height / 2}
-              style={{
-                fontSize: 15,
-                fill: textColorFor(fill),
-                textAnchor: "middle",
-                dominantBaseline: "central",
-              }}
-            />
+            <rect x={x} y={y} width={bw} height={bh} fill={fill} rx={4} />
+            <text
+              x={x + bw / 2}
+              y={y + bh / 2}
+              fontSize={16}
+              fontWeight={600}
+              fill={textFill}
+              textAnchor="middle"
+              dominantBaseline="central"
+            >
+              {cell.value.toFixed(2)}
+            </text>
           </g>
         );
       })}
+
+      {/* Diverging colorbar legend */}
+      <rect x={barX} y={top} width={barW} height={height} fill="url(#basicHeatmapDivGrad)" rx={3} />
+      {COLORBAR_TICKS.map((tick) => {
+        const ty = top + height * (1 - (tick - DOMAIN_MIN) / (DOMAIN_MAX - DOMAIN_MIN));
+        return (
+          <g key={tick}>
+            <line x1={barX + barW} y1={ty} x2={barX + barW + 6} y2={ty} stroke={t.inkSoft} strokeWidth={1} />
+            <text
+              x={barX + barW + 10}
+              y={ty}
+              fontSize={14}
+              fill={t.inkSoft}
+              dominantBaseline="central"
+            >
+              {tick.toFixed(1)}
+            </text>
+          </g>
+        );
+      })}
+      <text
+        x={barX + barW + 58}
+        y={top + height / 2}
+        fontSize={15}
+        fill={t.inkSoft}
+        textAnchor="middle"
+        transform={`rotate(-90, ${barX + barW + 58}, ${top + height / 2})`}
+      >
+        {CORRELATION}
+      </text>
     </g>
   );
 }
 
-// --- Chart (default-exported component — the harness mounts it) ----------------------
-const TITLE = "heatmap-basic · javascript · muix · anyplot.ai";
-const MARGIN = { top: 150, right: 200, bottom: 150, left: 170 };
-const LEGEND_CAPTION_X = SIZE.width - 26;
-const LEGEND_CAPTION_Y = SIZE.height / 2;
-
 export default function Chart() {
+  const subtitle = `${CORRELATION} matrix (${xCategories.length} × ${yCategories.length})`;
+
   return (
-    <ChartContainer
+    <ChartsContainer
       width={SIZE.width}
       height={SIZE.height}
       series={[]}
@@ -150,30 +166,32 @@ export default function Chart() {
       xAxis={[
         {
           scaleType: "band",
-          data: metrics,
+          data: xCategories,
+          height: 54,
           categoryGapRatio: 0.08,
           disableLine: true,
           disableTicks: true,
-          tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+          tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
         },
       ]}
       yAxis={[
         {
           scaleType: "band",
-          data: metrics,
+          data: yCategories,
+          width: 124,
           categoryGapRatio: 0.08,
           disableLine: true,
           disableTicks: true,
-          tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+          tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
         },
       ]}
       zAxis={[
         {
           colorMap: {
             type: "continuous",
-            min: -1,
-            max: 1,
-            color: imprintDivInterpolator(t.div),
+            min: DOMAIN_MIN,
+            max: DOMAIN_MAX,
+            color: [t.div[0], t.div[1], t.div[2]] as unknown as [string, string],
           },
         },
       ]}
@@ -181,35 +199,25 @@ export default function Chart() {
       <HeatmapCells />
       <ChartsXAxis />
       <ChartsYAxis />
-      <ContinuousColorLegend
-        position={{ horizontal: "right", vertical: "middle" }}
-        direction="column"
-        length="55%"
-        thickness={18}
-        labelStyle={{ fontSize: 13, fill: t.inkSoft }}
-      />
-      <ChartsText
-        text="Correlation coefficient"
-        x={LEGEND_CAPTION_X}
-        y={LEGEND_CAPTION_Y}
-        style={{
-          fontSize: 12,
-          fill: t.inkSoft,
-          textAnchor: "middle",
-          angle: -90,
-        }}
-      />
-      <ChartsText
-        text={TITLE}
+      <text
         x={SIZE.width / 2}
-        y={50}
-        style={{
-          fontSize: 26,
-          fontWeight: 600,
-          fill: t.ink,
-          textAnchor: "middle",
-        }}
-      />
-    </ChartContainer>
+        y={42}
+        fontSize={22}
+        fontWeight={600}
+        fill={t.ink}
+        textAnchor="middle"
+      >
+        {TITLE}
+      </text>
+      <text
+        x={SIZE.width / 2}
+        y={68}
+        fontSize={15}
+        fill={t.inkSoft}
+        textAnchor="middle"
+      >
+        {subtitle}
+      </text>
+    </ChartsContainer>
   );
 }
