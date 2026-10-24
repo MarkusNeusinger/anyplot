@@ -268,7 +268,7 @@ export default function Chart() {
             label: MODEL_FLUX,
             color: MODEL_COLOR,
             showMark: false,
-            curve: "natural",
+            curve: "monotoneX",
           },
         ]}
         xAxis={[
