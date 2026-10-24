@@ -1,7 +1,7 @@
 // anyplot.ai
 // lollipop-basic: Basic Lollipop Chart
 // Library: muix 7.29.1 | JavaScript 22.23.0
-// Quality: 90/100 | Created: 2026-07-01
+// Quality: pending | Created: 2026-07-01
 
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
