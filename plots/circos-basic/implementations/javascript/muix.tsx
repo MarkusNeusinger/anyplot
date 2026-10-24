@@ -1,49 +1,14 @@
 // anyplot.ai
 // circos-basic: Circos Plot
-// Library: muix 9.0.0 | JavaScript 22.23.2
+// Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 89/100 | Created: 2026-09-04
 //# anyplot-orientation: square
 
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { PiePlot } from "@mui/x-charts/PieChart";
-import { ChartsTooltip } from "@mui/x-charts/ChartsTooltip";
 import { useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-
-// Columns
-const SOURCE = "Origin service";
-const TARGET = "Destination service";
-const VALUE = "API call volume (req/s)";
-const SEGMENT_SIZE = "Code size (kLOC)";
-const TRACK_DATA = "Test coverage (%)";
-
-// Data
-const data = [
-  { [SOURCE]: "Gateway", [TARGET]: "Auth", [VALUE]: 120, [SEGMENT_SIZE]: 22, [TRACK_DATA]: 73 },
-  { [SOURCE]: "Gateway", [TARGET]: "Catalog", [VALUE]: 95, [SEGMENT_SIZE]: 22, [TRACK_DATA]: 73 },
-  { [SOURCE]: "Gateway", [TARGET]: "Orders", [VALUE]: 80, [SEGMENT_SIZE]: 22, [TRACK_DATA]: 73 },
-  { [SOURCE]: "Gateway", [TARGET]: "Payments", [VALUE]: 60, [SEGMENT_SIZE]: 22, [TRACK_DATA]: 73 },
-  { [SOURCE]: "Gateway", [TARGET]: "Inventory", [VALUE]: 55, [SEGMENT_SIZE]: 22, [TRACK_DATA]: 73 },
-  { [SOURCE]: "Gateway", [TARGET]: "Notify", [VALUE]: 20, [SEGMENT_SIZE]: 22, [TRACK_DATA]: 73 },
-  { [SOURCE]: "Gateway", [TARGET]: "Analytics", [VALUE]: 8, [SEGMENT_SIZE]: 22, [TRACK_DATA]: 73 },
-  { [SOURCE]: "Auth", [TARGET]: "Notify", [VALUE]: 15, [SEGMENT_SIZE]: 14, [TRACK_DATA]: 88 },
-  { [SOURCE]: "Catalog", [TARGET]: "Inventory", [VALUE]: 40, [SEGMENT_SIZE]: 35, [TRACK_DATA]: 65 },
-  { [SOURCE]: "Catalog", [TARGET]: "Notify", [VALUE]: 10, [SEGMENT_SIZE]: 35, [TRACK_DATA]: 65 },
-  { [SOURCE]: "Orders", [TARGET]: "Payments", [VALUE]: 70, [SEGMENT_SIZE]: 40, [TRACK_DATA]: 79 },
-  { [SOURCE]: "Orders", [TARGET]: "Inventory", [VALUE]: 65, [SEGMENT_SIZE]: 40, [TRACK_DATA]: 79 },
-  { [SOURCE]: "Orders", [TARGET]: "Notify", [VALUE]: 30, [SEGMENT_SIZE]: 40, [TRACK_DATA]: 79 },
-  { [SOURCE]: "Orders", [TARGET]: "Catalog", [VALUE]: 25, [SEGMENT_SIZE]: 40, [TRACK_DATA]: 79 },
-  { [SOURCE]: "Orders", [TARGET]: "Auth", [VALUE]: 14, [SEGMENT_SIZE]: 40, [TRACK_DATA]: 79 },
-  { [SOURCE]: "Payments", [TARGET]: "Notify", [VALUE]: 35, [SEGMENT_SIZE]: 18, [TRACK_DATA]: 95 },
-  { [SOURCE]: "Payments", [TARGET]: "Auth", [VALUE]: 18, [SEGMENT_SIZE]: 18, [TRACK_DATA]: 95 },
-  { [SOURCE]: "Inventory", [TARGET]: "Notify", [VALUE]: 12, [SEGMENT_SIZE]: 28, [TRACK_DATA]: 58 },
-  { [SOURCE]: "Notify", [TARGET]: "Analytics", [VALUE]: 14, [SEGMENT_SIZE]: 9, [TRACK_DATA]: 82 },
-  { [SOURCE]: "Analytics", [TARGET]: "Orders", [VALUE]: 45, [SEGMENT_SIZE]: 16, [TRACK_DATA]: 69 },
-  { [SOURCE]: "Analytics", [TARGET]: "Catalog", [VALUE]: 38, [SEGMENT_SIZE]: 16, [TRACK_DATA]: 69 },
-  { [SOURCE]: "Analytics", [TARGET]: "Payments", [VALUE]: 28, [SEGMENT_SIZE]: 16, [TRACK_DATA]: 69 },
-  { [SOURCE]: "Analytics", [TARGET]: "Inventory", [VALUE]: 22, [SEGMENT_SIZE]: 16, [TRACK_DATA]: 69 },
-];
 
 // Constants
 const TITLE = "circos-basic · javascript · muix · anyplot.ai";
@@ -58,31 +23,67 @@ const RIBBON_GAP_RATIO = 0.015;
 const LABEL_GAP_RATIO = 0.045;
 const HEADER_H = 128;
 
-const moduleNames = [];
-const sizeByModule = new Map();
-const trackByModule = new Map();
-for (const row of data) {
-  if (!sizeByModule.has(row[SOURCE])) {
-    sizeByModule.set(row[SOURCE], row[SEGMENT_SIZE]);
-    trackByModule.set(row[SOURCE], row[TRACK_DATA]);
-  }
-  if (!moduleNames.includes(row[SOURCE])) {
-    moduleNames.push(row[SOURCE]);
-  }
-}
-for (const row of data) {
-  if (!moduleNames.includes(row[TARGET])) {
-    moduleNames.push(row[TARGET]);
-  }
-}
+// Columns: set these to your data's column names
+const SOURCE = "Origin service"; // role: source
+const TARGET = "Destination service"; // role: target
+const FLOW = "API call volume (req/s)"; // role: value
+const SEGMENT = "Service"; // role: extra
+const CODE_SIZE = "Code size (kLOC)"; // role: segment_size
+const COVERAGE = "Test coverage (%)"; // role: track_data
 
-const totalSize = moduleNames.reduce((sum, name) => sum + (sizeByModule.get(name) ?? 1), 0);
-const availableDeg = 360 - GAP_DEG * moduleNames.length;
+// Data: replace this block with your own records
+const segmentsData = [
+  { [SEGMENT]: "Gateway", [CODE_SIZE]: 22, [COVERAGE]: 73 },
+  { [SEGMENT]: "Auth", [CODE_SIZE]: 14, [COVERAGE]: 88 },
+  { [SEGMENT]: "Catalog", [CODE_SIZE]: 35, [COVERAGE]: 65 },
+  { [SEGMENT]: "Orders", [CODE_SIZE]: 40, [COVERAGE]: 79 },
+  { [SEGMENT]: "Payments", [CODE_SIZE]: 18, [COVERAGE]: 95 },
+  { [SEGMENT]: "Inventory", [CODE_SIZE]: 28, [COVERAGE]: 58 },
+  { [SEGMENT]: "Notify", [CODE_SIZE]: 9, [COVERAGE]: 82 },
+  { [SEGMENT]: "Analytics", [CODE_SIZE]: 16, [COVERAGE]: 69 },
+];
+
+const data = [
+  { [SOURCE]: "Gateway", [TARGET]: "Auth", [FLOW]: 120 },
+  { [SOURCE]: "Gateway", [TARGET]: "Catalog", [FLOW]: 95 },
+  { [SOURCE]: "Gateway", [TARGET]: "Orders", [FLOW]: 80 },
+  { [SOURCE]: "Gateway", [TARGET]: "Payments", [FLOW]: 60 },
+  { [SOURCE]: "Gateway", [TARGET]: "Inventory", [FLOW]: 55 },
+  { [SOURCE]: "Gateway", [TARGET]: "Notify", [FLOW]: 20 },
+  { [SOURCE]: "Gateway", [TARGET]: "Analytics", [FLOW]: 8 },
+  { [SOURCE]: "Auth", [TARGET]: "Notify", [FLOW]: 15 },
+  { [SOURCE]: "Catalog", [TARGET]: "Inventory", [FLOW]: 40 },
+  { [SOURCE]: "Catalog", [TARGET]: "Notify", [FLOW]: 10 },
+  { [SOURCE]: "Orders", [TARGET]: "Payments", [FLOW]: 70 },
+  { [SOURCE]: "Orders", [TARGET]: "Inventory", [FLOW]: 65 },
+  { [SOURCE]: "Orders", [TARGET]: "Notify", [FLOW]: 30 },
+  { [SOURCE]: "Orders", [TARGET]: "Catalog", [FLOW]: 25 },
+  { [SOURCE]: "Orders", [TARGET]: "Auth", [FLOW]: 14 },
+  { [SOURCE]: "Payments", [TARGET]: "Notify", [FLOW]: 35 },
+  { [SOURCE]: "Payments", [TARGET]: "Auth", [FLOW]: 18 },
+  { [SOURCE]: "Inventory", [TARGET]: "Notify", [FLOW]: 12 },
+  { [SOURCE]: "Notify", [TARGET]: "Analytics", [FLOW]: 14 },
+  { [SOURCE]: "Analytics", [TARGET]: "Orders", [FLOW]: 45 },
+  { [SOURCE]: "Analytics", [TARGET]: "Catalog", [FLOW]: 38 },
+  { [SOURCE]: "Analytics", [TARGET]: "Payments", [FLOW]: 28 },
+  { [SOURCE]: "Analytics", [TARGET]: "Inventory", [FLOW]: 22 },
+];
+
+// Plot: reads only data and the constants above
+const SIZE_UNIT = CODE_SIZE.match(/\(([^)]+)\)/)?.[1] ?? "";
+const sizeUnitSuffix = SIZE_UNIT ? ` ${SIZE_UNIT}` : "";
+
+const activeSegments = segmentsData.filter(
+  (row) => row[CODE_SIZE] != null && Number.isFinite(Number(row[CODE_SIZE])) && Number(row[CODE_SIZE]) > 0,
+);
+const totalSize = activeSegments.reduce((sum, row) => sum + Number(row[CODE_SIZE]), 0);
+const availableDeg = 360 - GAP_DEG * activeSegments.length;
 let angleCursor = 0;
 
-const segments = moduleNames.map((name, i) => {
-  const codeSize = sizeByModule.get(name) ?? 1;
-  const coverage = trackByModule.get(name) ?? 0;
+const segments = activeSegments.map((row, i) => {
+  const name = String(row[SEGMENT]);
+  const codeSize = Number(row[CODE_SIZE]);
+  const coverage = row[COVERAGE] != null && Number.isFinite(Number(row[COVERAGE])) ? Number(row[COVERAGE]) : null;
   const span = (codeSize / totalSize) * availableDeg;
   const startAngle = angleCursor;
   const endAngle = angleCursor + span;
@@ -99,7 +100,7 @@ const segments = moduleNames.map((name, i) => {
 });
 
 const segmentByName = Object.fromEntries(segments.map((s) => [s.name, s]));
-const coverageValues = segments.map((s) => s.coverage);
+const coverageValues = segments.map((s) => s.coverage).filter((v): v is number => v != null);
 const coverageMin = Math.min(...coverageValues);
 const coverageMax = Math.max(...coverageValues);
 
@@ -110,56 +111,82 @@ const seqEndRgb = [(seqEndNum >> 16) & 255, (seqEndNum >> 8) & 255, seqEndNum & 
 
 const touchTotal = Object.fromEntries(segments.map((s) => [s.name, 0]));
 for (const row of data) {
-  touchTotal[row[SOURCE]] += row[VALUE];
-  touchTotal[row[TARGET]] += row[VALUE];
+  const src = String(row[SOURCE]);
+  const tgt = String(row[TARGET]);
+  const val = Number(row[FLOW]);
+  if (src in touchTotal && tgt in touchTotal && Number.isFinite(val)) {
+    touchTotal[src] += val;
+    touchTotal[tgt] += val;
+  }
 }
 
-const segCursor = Object.fromEntries(segments.map((s) => [s.name, s.startAngle]));
-const ribbons = data.map((row) => {
-  const srcName = row[SOURCE];
-  const tgtName = row[TARGET];
-  const val = row[VALUE];
-  const segS = segmentByName[srcName];
-  const segT = segmentByName[tgtName];
-  const spanS = (val / touchTotal[srcName]) * (segS.endAngle - segS.startAngle);
-  const spanT = (val / touchTotal[tgtName]) * (segT.endAngle - segT.startAngle);
-  const sStart = segCursor[srcName];
-  const sEnd = sStart + spanS;
-  segCursor[srcName] = sEnd;
-  const tStart = segCursor[tgtName];
-  const tEnd = tStart + spanT;
-  segCursor[tgtName] = tEnd;
-  return {
-    source: srcName,
-    target: tgtName,
-    value: val,
-    sStart,
-    sEnd,
-    tStart,
-    tEnd,
-    color: segS.color,
-  };
-});
+const degPerUnit = Math.min(
+  ...segments
+    .filter((s) => touchTotal[s.name] > 0)
+    .map((s) => (s.endAngle - s.startAngle) / touchTotal[s.name]),
+);
+
+const segCursor = Object.fromEntries(
+  segments.map((s) => {
+    const usedSpan = touchTotal[s.name] * degPerUnit;
+    const padOffset = (s.endAngle - s.startAngle - usedSpan) / 2;
+    return [s.name, s.startAngle + padOffset];
+  }),
+);
+
+const ribbons = data
+  .filter((row) => String(row[SOURCE]) in segmentByName && String(row[TARGET]) in segmentByName)
+  .map((row) => {
+    const srcName = String(row[SOURCE]);
+    const tgtName = String(row[TARGET]);
+    const val = Number(row[FLOW]);
+    const segS = segmentByName[srcName];
+    const span = val * degPerUnit;
+    const sStart = segCursor[srcName];
+    const sEnd = sStart + span;
+    segCursor[srcName] = sEnd;
+    const tStart = segCursor[tgtName];
+    const tEnd = tStart + span;
+    segCursor[tgtName] = tEnd;
+    return {
+      source: srcName,
+      target: tgtName,
+      value: val,
+      sStart,
+      sEnd,
+      tStart,
+      tEnd,
+      color: segS.color,
+    };
+  });
 
 const segmentSeriesData = segments.map((s) => ({
   id: s.name,
   value: s.codeSize,
-  label: `${s.name} · ${s.codeSize} kLOC`,
+  label: `${s.name} · ${s.codeSize}${sizeUnitSuffix}`,
   color: s.color,
 }));
 
 const trackSeriesData = segments.map((s) => {
-  const ratio = (s.coverage - coverageMin) / (coverageMax - coverageMin || 1);
+  if (s.coverage == null) {
+    return {
+      id: `${s.name}-track`,
+      value: s.codeSize,
+      label: s.name,
+      color: "transparent",
+    };
+  }
+  const ratio = (s.coverage - coverageMin) / (coverageMax - coverageMin);
   const rgb = seqStartRgb.map((v, idx) => Math.round(v + (seqEndRgb[idx] - v) * ratio));
   return {
     id: `${s.name}-track`,
     value: s.codeSize,
-    label: `${s.name} · ${s.coverage}%`,
+    label: `${s.name} · ${s.coverage}`,
     color: `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`,
   };
 });
 
-const SUBTITLE = `Ribbon width ∝ ${VALUE.toLowerCase()} · outer ring ∝ ${SEGMENT_SIZE.toLowerCase()} · inner track ∝ ${TRACK_DATA.toLowerCase()}`;
+const SUBTITLE = `Ribbon width ∝ ${FLOW} · outer ring ∝ ${CODE_SIZE} · inner track ∝ ${COVERAGE}`;
 
 function CircosOverlay() {
   const { left, top, width, height } = useDrawingArea();
@@ -287,8 +314,8 @@ export default function Chart() {
             color: t.inkSoft,
           }}
         >
-          <span style={{ fontWeight: 500, color: t.ink }}>{TRACK_DATA}:</span>
-          <span>{coverageMin}%</span>
+          <span style={{ fontWeight: 500, color: t.ink }}>{COVERAGE}:</span>
+          <span>{coverageMin}</span>
           <div
             style={{
               width: 88,
@@ -297,7 +324,7 @@ export default function Chart() {
               background: `linear-gradient(to right, ${t.seq[0]}, ${t.seq[1]})`,
             }}
           />
-          <span>{coverageMax}%</span>
+          <span>{coverageMax}</span>
         </div>
       </div>
       <div
@@ -342,7 +369,6 @@ export default function Chart() {
         >
           <PiePlot skipAnimation />
           <CircosOverlay />
-          <ChartsTooltip trigger="item" />
         </ChartsContainer>
       </div>
     </div>
