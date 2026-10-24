@@ -4,7 +4,10 @@
 // Quality: 83/100 | Updated: 2026-10-24
 //# anyplot-orientation: square
 
-import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
+import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
+import { ChartsWrapper } from "@mui/x-charts/ChartsWrapper";
+import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
+import { ChartsLegend } from "@mui/x-charts/ChartsLegend";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
@@ -18,11 +21,11 @@ const FULL_CIRCLE_DEG = 360;
 const DEG_SYMBOL = "°";
 const FILL_OPACITY = 0.72;
 const MARKER_SIZE = 8;
-const TITLE_HEIGHT = 70;
-const LEGEND_HEIGHT = 54;
-const CHART_MARGIN = { top: 36, bottom: 36, left: 36, right: 36 };
-const LABEL_RADIUS_FACTOR = 1.13;
-const DOMAIN_PAD_FACTOR = 1.26;
+const TITLE_HEIGHT = 74;
+const LEGEND_HEIGHT = 40;
+const CHART_MARGIN = { top: 14, bottom: 14, left: 14, right: 14 };
+const LABEL_RADIUS_FACTOR = 1.065;
+const DOMAIN_PAD_FACTOR = 1.11;
 
 // Columns: set these to your data's column names
 const CATEGORY = "Time of Day"; // role: group
@@ -112,13 +115,6 @@ const domainLimit = maxRadius * DOMAIN_PAD_FACTOR;
 
 const seriesGroups = categories.map((cat, i) => {
   const catRows = data.filter((r) => String(r[CATEGORY]) === cat);
-  const baseHex = t.palette[i];
-  const cleanHex = baseHex.replace("#", "");
-  const rVal = parseInt(cleanHex.substring(0, 2), 16);
-  const gVal = parseInt(cleanHex.substring(2, 4), 16);
-  const bVal = parseInt(cleanHex.substring(4, 6), 16);
-  const rgbaColor = `rgba(${rVal}, ${gVal}, ${bVal}, ${FILL_OPACITY})`;
-
   const points = catRows.map((row, idx) => {
     const bearingDeg = Number(row[BEARING]);
     const radiusVal = Number(row[SPEED]);
@@ -134,8 +130,7 @@ const seriesGroups = categories.map((cat, i) => {
     type: "scatter" as const,
     id: cat,
     label: cat,
-    baseColor: baseHex,
-    color: rgbaColor,
+    color: t.palette[i],
     markerSize: MARKER_SIZE,
     data: points,
   };
@@ -191,6 +186,17 @@ function PolarGrid() {
           </g>
         );
       })}
+    </g>
+  );
+}
+
+// Drawn after <ScatterPlot /> so the ring labels stay readable above the markers
+function RingLabels() {
+  const xScale = useXScale();
+  const yScale = useYScale();
+
+  return (
+    <g>
       {rings.map((r) => {
         const tx = Number(xScale(r * Math.sin(tickSpokeRad)));
         const ty = Number(yScale(r * Math.cos(tickSpokeRad)));
@@ -244,16 +250,18 @@ export default function Chart() {
         style={{
           height: TITLE_HEIGHT,
           display: "flex",
+          flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          fontSize: 22,
-          fontWeight: 600,
-          color: t.ink,
+          gap: 6,
         }}
       >
-        {TITLE}
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>{TITLE}</div>
+        <div style={{ fontSize: 15, color: t.inkSoft }}>
+          {`Angle: ${BEARING}, clockwise from 0${DEG_SYMBOL} at top  ·  Radius: ${SPEED}`}
+        </div>
       </div>
-      <ChartsContainer
+      <ChartsDataProvider
         width={chartSize}
         height={chartSize}
         margin={CHART_MARGIN}
@@ -262,33 +270,18 @@ export default function Chart() {
         yAxis={[{ scaleType: "linear", min: -domainLimit, max: domainLimit, position: "none" }]}
         series={seriesGroups}
       >
-        <PolarGrid />
-        <ScatterPlot />
-      </ChartsContainer>
-      <div
-        style={{
-          height: LEGEND_HEIGHT,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 28,
-        }}
-      >
-        {seriesGroups.map((group) => (
-          <div key={group.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span
-              style={{
-                width: 14,
-                height: 14,
-                borderRadius: "50%",
-                backgroundColor: group.baseColor,
-                display: "inline-block",
-              }}
-            />
-            <span style={{ fontSize: 15, color: t.inkSoft, fontWeight: 500 }}>{group.label}</span>
-          </div>
-        ))}
-      </div>
+        <ChartsWrapper
+          legendPosition={{ vertical: "bottom", horizontal: "center" }}
+          sx={{ "& .MuiScatterChart-marker": { fillOpacity: FILL_OPACITY } }}
+        >
+          <ChartsLegend sx={{ fontSize: 15, color: t.inkSoft, gap: 3.5 }} />
+          <ChartsSurface>
+            <PolarGrid />
+            <ScatterPlot />
+            <RingLabels />
+          </ChartsSurface>
+        </ChartsWrapper>
+      </ChartsDataProvider>
     </div>
   );
 }
