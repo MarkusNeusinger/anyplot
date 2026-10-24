@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: diagnostic-regression-panel
 created: '2026-09-05T00:10:24Z'
-updated: '2026-10-24T08:43:42Z'
+updated: '2026-10-24T08:50:08Z'
 generated_by: gemini-4-argon
 adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
 workflow_run: 40078811128
@@ -13,58 +13,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/diagnosti
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/javascript/muix/plot-dark.html
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - Uses MUI X's composition API (ChartsContainer with ScatterPlot, LinePlot, ChartsGrid,
-    ChartsReferenceLine) per panel and draws the Q-Q line, Cook's contours and index
-    labels in a custom overlay through useXScale/useYScale/useDrawingArea, clipped
-    to the drawing area
-  - 'Diagnostics are computed honestly from an OLS fit: hat values, standardized residuals
-    and Cook''s distance follow the textbook formulas, and the contours use sqrt(level·p·(1−h)/h)
-    mirrored above and below zero with their 0.5/1.0 levels labelled'
-  - 'The synthetic dose-response data is designed to exercise every panel: curvature
-    in Residuals vs Fitted, rising spread, a heavy lower tail in the Q-Q plot, and
-    one high-leverage observation (55) that falls beyond the Cook''s 1.0 contour'
-  - 'Theme handling is complete: all text, reference lines and contours use ink/inkSoft
-    tokens, labels carry page-coloured halos, and the green points and blue smoother
-    are identical in both renders'
-  - Shared title with a compact key line (n, p, point, smoother and contour glyphs)
-    plus numbered panel titles gives a clear hierarchy; scatter tooltips stay available
-    in the HTML output
+  - Composes the four panels from MUI X primitives inside ChartsContainer (ScatterPlot,
+    LinePlot, ChartsGrid, ChartsReferenceLine, ChartsXAxis/ChartsYAxis) with explicit
+    axis bands sized for the 15 px labels, so nothing is truncated
+  - The Q-Q line, Cook's distance contours and point labels are drawn in a PanelOverlay
+    that reads useXScale, useYScale and useDrawingArea, so every overlay sits in the
+    chart's own coordinate system and is clipped to the drawing area
+  - 'All statistics fall out of an actual OLS fit: leverage, standardized residuals,
+    Cook''s distance (p recovered as the sum of hat values), tricube-weighted LOWESS
+    and Acklam normal quantiles; Cook''s contours use r = ±sqrt(D·p·(1−h)/h) and close
+    in on zero as leverage grows'
+  - Cook's contours mirrored above and below zero and identified in-plot by their
+    level (0.5, 1.0) with page-colored halos; the top three observations by Cook's
+    distance (55, 1, 2) are labeled in all four panels
+  - Chrome is threaded from ANYPLOT_TOKENS (ink, inkSoft, pageBg) so both themes are
+    fully legible, and the data colors are identical between renders
+  - 'Clear hierarchy: numbered panel titles, bold axis titles, muted tick labels and
+    one header line carrying n, p and a key for the point, smoother and contour styles'
   weaknesses:
-  - 'SC-02, VQ-02 (both): in panels 1 (Residuals vs Fitted) and 3 (Scale-Location)
-    observations 1 (fitted 54.1) and 2 (fitted 57.3) sit about 15 CSS px apart; the
-    collision pass pushes label "2" up-left and label "1" down-right, so "2" ends
-    up next to observation 1''s marker and "1" next to observation 2''s marker (panel
-    3: "1" also sits on the neighbouring marker at fitted ~62), breaking the spec''s
-    ''each label beside its own point'' → each label within its own marker''s halo
-    radius and nearer to it than to any other labelled marker, e.g. anchor both labels
-    on the outer side of the pair (the left/lower-fitted point labelled on its left,
-    the right one on its right). Likely cause: PanelOverlay''s swap rule (lines 263–281)
-    sets fixed dx/dy for ''other'' and ''point'' regardless of which of the two lies
-    left or above.'
-  - 'CQ-04 (code): the four panel blocks (lines 524–751) repeat the same ~55-line
-    ChartsContainer scaffold with only axis ids, limits, labels and series changing,
-    and the positive/negative Cook''s contour paths and their labels are written out
-    twice (lines 309–320, 345–372) → one panels config array rendered with panels.map,
-    and one loop over the sign [1, -1] for the contours. Likely cause: copy-paste
-    per panel instead of a config-driven render.'
-  - 'Suggestion: the vertical grid in all four panels could be dropped or lightened
-    so the horizontal zero line and the Cook''s contours carry more of the reading.'
-  - 'Suggestion: the Q-Q panel could use an equal data range on both axes so the 45-degree
-    reference line reads as an actual diagonal of the plot area.'
+  - 'VQ-07 (both): the LOWESS smoother, the second data series, is drawn in palette
+    slot 3 (blue) while slot 2 (purple) is skipped with no semantic reason → use the
+    next canonical position, t.palette[1]. Likely cause: SMOOTH_COLOR = t.palette[2]
+    (line 227).'
+  - 'CQ-01 (code): two helper functions (labelBox, boxCircleGap) and an eight-candidate
+    scoring search (lines 238–315) place only three labels per panel → a fixed offset
+    per label inside PanelOverlay, with the anchor flipped near the drawing-area edge.
+    Likely cause: a generic label-collision engine written for a case that needs none.'
+  - 'Suggestion: the zero reference line and the Cook''s contours in the leverage
+    panel share the same dashed inkSoft style; a solid thin zero line would separate
+    them at a glance.'
+  - 'Suggestion: the header could name what was modelled (response against dose) so
+    the reader knows the context behind the diagnostics.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (#FAF8F1) across the full 2400×2400 square canvas.
-      Chrome: bold dark title "diagnostic-regression-panel · javascript · muix · anyplot.ai" (~60 % of the width), a grey key line below it (OLS diagnostics n = 56, p = 2; green dot = observations, top 3 by Cook's distance labelled; blue line = LOWESS smoother; dashed = Cook's distance 0.5, 1.0). Four numbered panel titles in bold dark ink; axis titles bold dark, tick labels grey, all clearly readable. Light grey horizontal and vertical grid; dashed grey zero lines in panels 1 and 4 and a dashed y = x line in panel 2.
-      Data: all points brand green #009E73 at the same size in all four panels; LOWESS smoothers in Imprint blue in panels 1 and 3 (bending down to −65 and up to 1.6 at the sparse right end, where only observation 55 lies). Panel 2: Q-Q points follow the diagonal with a heavy lower tail (55 at −5.2). Panel 4: dashed Cook's contours at 0.5 and 1.0 mirrored above and below zero, labelled at the right edge; observation 55 at leverage 0.123 lies beyond the lower 1.0 contour. Labels 55, 2 and 1 appear in every panel with page-coloured halos; in panels 1 and 3 the labels "2" and "1" sit closer to each other's markers than to their own.
+      Background: warm off-white #FAF8F1 across the whole 2400x2400 canvas.
+      Chrome: centered bold title "diagnostic-regression-panel · javascript · muix · anyplot.ai"; one muted header line "OLS diagnostics (n = 56, p = 2)" with a key (green dot = observations, top 3 by Cook's distance labeled; blue line = LOWESS smoother; dashed = Cook's distance 0.5, 1.0). Four numbered panel titles (1. Residuals vs Fitted values, 2. Normal Q-Q, 3. Scale-Location, 4. Residuals vs Leverage), bold dark axis titles, muted grey tick labels, subtle grid. All text dark on light, readable.
+      Data: green (#009E73) circles in all four panels with identical styling; blue LOWESS curve in panels 1 and 3 (panel 1 arches up then dives toward the lone point 55 at fitted 222, residual -89; panel 3 dips then rises toward 55); dashed grey zero line in panels 1 and 4; dashed 45-degree line in the Q-Q panel with 55 far below at (-2.4, -5.2); mirrored dashed Cook's contours labeled 0.5 and 1.0 in panel 4, with 55 at leverage 0.123 beyond the 1.0 contour. Observations 55, 1 and 2 labeled in bold ink with page-colored halo in every panel.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black (#1A1A17).
-      Chrome: title, panel titles and axis titles in light ink, tick labels and key line in light grey; grid, zero lines, Q-Q diagonal and Cook's contours flip to light grey dashes and remain visible. No dark-on-dark text anywhere; the point labels and contour labels carry dark halos and read clearly.
-      Data: green points and blue smoothers identical to the light render; only chrome flipped. Brand green clearly visible.
+      Background: warm near-black #1A1A17.
+      Chrome: title, header key, panel titles and axis titles in light ink; tick labels light grey; grid subtle but visible; dashed reference lines and Cook's contours switch to a light grey. No dark-on-dark text; point labels readable with dark halos.
+      Data: green markers and blue smoother identical to the light render; only chrome flipped.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -76,50 +69,49 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (22/16/15/14 CSS px); all text readable in both themes
+        comment: Explicit sizes (title 22, panel titles 16, axis 15, ticks 14, labels
+          14 bold); readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Panel 3 label "1" sits on the neighbouring marker at fitted ~62 (defect
-          line)
+        comment: Point labels haloed and clear of other text; Cook's level labels
+          sit beside their contours
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 56 points at a prominent size; smoothers and contours clearly visible;
-          low-leverage crowding is permitted by the spec
+        comment: 56 points at 6.5 px are prominent; smoother 2.5 px; contours and
+          reference lines visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green points vs blue smoother, CVD-safe; reference lines in neutral
-          ink
+        comment: Green vs blue plus dashed grey; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canonical 2400x2400; balanced 2x2 grid, title ~60 % width, nothing
-          cut off
+        comment: 2400x2400, balanced 2x2 grid, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive diagnostic axis titles including √|Standardized residuals|
+        comment: Conventional diagnostic axis titles including √|Standardized residuals|
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Points #009E73, smoother Imprint blue, chrome from tokens; correct
-          backgrounds both themes'
+        passed: false
+        comment: 'Points #009E73 and correct backgrounds, but the smoother skips slot
+          2 for slot 3 (defect line)'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -127,24 +119,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Clear typographic hierarchy: title, compact key line carrying n
-          and p, numbered panel titles aligned to the plot areas'
+        comment: Numbered panel titles, bold axis titles over muted ticks, a single
+          header line combining n/p with a compact key
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Page-coloured halos on point and contour labels, overlays clipped
-          to the drawing area, symmetric y range on the leverage panel
+        comment: Page-colored halos on labels, in-plot contour level labels at the
+          right edge, symmetric y range on the leverage panel, overlays clipped to
+          the drawing area
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Data built so one high-leverage point (55) crosses the Cook's 1.0
-          contour and drives the tail in every panel, a coherent focal point
+        comment: Header key explains the labeling rule; consistent labeling makes
+          observation 55 traceable across panels
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -152,28 +145,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Four-plot regression diagnostic panel as specified
+        comment: Four-plot regression diagnostic panel
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'All Notes features present (zero line, LOWESS x2, 45-degree line,
-          mirrored Cook''s contours, top-3 labels); missed: ''each label beside its
-          own point'' in panels 1 and 3 (defect line)'
+        comment: 2x2 with shared title, zero line + LOWESS, Q-Q 45° line, scale-location
+          LOWESS, mirrored labeled Cook's contours 0.5/1.0, top-3 Cook's labeled in
+          every panel, consistent point style
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All marks at their computed values; smoothers follow their points
-          without overshoot
+        comment: Marks at their computed values; axes include all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct mandated title; key line entries readable
+        comment: Mandated title; header key matches the marks
     data_quality:
       score: 15
       max: 15
@@ -183,33 +175,33 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows non-linearity, heteroscedasticity, tail deviation and an influential
-          high-leverage point
+        comment: Curvature, heteroscedasticity, an outlier and a high-leverage influential
+          point all visible
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Dose-response OLS fit, plausible and neutral
+        comment: Dose-response OLS with a missed quadratic term; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked by recomputation: obs 55 h=0.123, std res −5.16, Cook''s
-          D 1.87 (beyond the 1.0 contour); obs 2/1 Cook''s 0.074/0.064 — matches the
-          render'
+        comment: 'Checked in code: h = 1/n + (x−x̄)²/Sxx, r = e/(σ̂√(1−h)), D = r²h/(p(1−h)),
+          contours ±sqrt(D·p·(1−h)/h); p = 2 from the summed hat values; obs 55 at
+          h≈0.123, r≈−5.2 lies past D = 1, consistent with the render'
     code_quality:
       score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Overlay component is required for MUI X scale hooks; otherwise linear
-          module-level flow
+        passed: false
+        comment: Label-placement helpers and candidate search (defect line); PanelOverlay
+          itself is needed for the hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -224,18 +216,17 @@ review:
         comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Four near-identical panel blocks (lines 524–751) and duplicated pos/neg
-          contour code (defect line)
+        passed: true
+        comment: LOWESS and inverse normal written out, which the Computation line
+          permits (no stats helper available)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default export, skipAnimation, sized from ANYPLOT_SIZE, v9 ChartsContainer
-          API
+        comment: Default export, v9 ChartsContainer API, skipAnimation
     library_mastery:
       score: 7
       max: 10
@@ -245,31 +236,33 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Composition API with ScatterPlot/LinePlot/ChartsGrid/ChartsReferenceLine
-          per ChartsContainer and axis ids
+        comment: Composed ChartsContainer with ScatterPlot/LinePlot/ChartsGrid/ChartsReferenceLine
+          and per-axis bands
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Custom SVG overlay driven by useXScale/useYScale/useDrawingArea hooks
-          inside the chart context
-  verdict: REJECTED
+        comment: useXScale/useYScale/useDrawingArea hooks drive a custom SVG overlay
+          inside the chart context; ChartsReferenceLine for the zero lines
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T08:39:30Z'
+  rendered_at: '2026-10-24T08:47:16Z'
 impl_tags:
   dependencies: []
   techniques:
   - subplots
-  - annotations
   - layer-composition
+  - annotations
   - custom-legend
-  - hover-tooltips
   - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep:
   - regression
+  - lowess
+  - quantile-computation
   styling:
-  - grid-styling
+  - publication-ready
