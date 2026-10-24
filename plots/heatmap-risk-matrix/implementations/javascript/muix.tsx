@@ -3,160 +3,286 @@
 // Library: muix 7.29.1 | JavaScript 22.22.3
 // Quality: 88/100 | Created: 2026-06-20
 //# anyplot-orientation: square
-
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
+
+// Constants
+const W = window.ANYPLOT_SIZE.width;
+const H = window.ANYPLOT_SIZE.height;
 const FONT = "system-ui, -apple-system, sans-serif";
 const TITLE = "heatmap-risk-matrix · javascript · muix · anyplot.ai";
 
-const LIKELIHOOD_LABELS = ["Rare", "Unlikely", "Possible", "Likely", "Almost Certain"];
-const IMPACT_LABELS = ["Negligible", "Minor", "Moderate", "Major", "Catastrophic"];
+const RATING_MIN = 1;
+const RATING_MAX = 5;
+const CELL_FILL_OPACITY = 0.62;
+const DARK_INK = "#1A1A17";
+const LIGHT_INK = "#FAF8F1";
+
+const LIKELIHOOD_LABELS = [
+  "Rare (1)",
+  "Unlikely (2)",
+  "Possible (3)",
+  "Likely (4)",
+  "Almost Certain (5)",
+];
+const IMPACT_LABELS = [
+  "Negligible (1)",
+  "Minor (2)",
+  "Moderate (3)",
+  "Major (4)",
+  "Catastrophic (5)",
+];
 
 const ZONE_LEGEND = [
-  { label: "Low (1–4)",        color: "#009E73" },
-  { label: "Medium (5–9)",     color: "#DDCC77" },
-  { label: "High (10–16)",     color: "#BD8233" },
-  { label: "Critical (20–25)", color: "#AE3030" },
+  { name: "Low", label: "Low (1–4)", maxScore: 4, color: t.palette[1] },
+  { name: "Medium", label: "Medium (5–9)", maxScore: 9, color: t.amber },
+  { name: "High", label: "High (10–16)", maxScore: 16, color: t.palette[3] },
+  { name: "Critical", label: "Critical (20–25)", maxScore: 25, color: t.palette[4] },
 ];
 
-// IT security risk register — 12 items across the 5×5 matrix
-const risks = [
-  { name: "Data Breach",    likelihood: 3, impact: 5 },
-  { name: "Ransomware",     likelihood: 4, impact: 5 },
-  { name: "DDoS Attack",    likelihood: 4, impact: 3 },
-  { name: "Supply Chain",   likelihood: 2, impact: 4 },
-  { name: "Insider Threat", likelihood: 2, impact: 5 },
-  { name: "API Failure",    likelihood: 3, impact: 3 },
-  { name: "Key Staff Loss", likelihood: 3, impact: 4 },
-  { name: "Budget Cut",     likelihood: 4, impact: 2 },
-  { name: "Compliance",     likelihood: 2, impact: 3 },
-  { name: "Cloud Outage",   likelihood: 2, impact: 4 },
-  { name: "Phishing",       likelihood: 5, impact: 2 },
-  { name: "HW Failure",     likelihood: 1, impact: 3 },
+// Columns: set these to your data's column names
+const RISK_NAME = "Risk"; // role: risk_name
+const LIKELIHOOD = "Likelihood"; // role: likelihood
+const IMPACT = "Consequence Impact"; // role: impact
+
+// Data: replace this block with your own records
+const data = [
+  { [RISK_NAME]: "Data Breach", [LIKELIHOOD]: 3, [IMPACT]: 5 },
+  { [RISK_NAME]: "Ransomware", [LIKELIHOOD]: 4, [IMPACT]: 5 },
+  { [RISK_NAME]: "DDoS Attack", [LIKELIHOOD]: 4, [IMPACT]: 3 },
+  { [RISK_NAME]: "Supply Chain", [LIKELIHOOD]: 2, [IMPACT]: 4 },
+  { [RISK_NAME]: "Insider Threat", [LIKELIHOOD]: 2, [IMPACT]: 5 },
+  { [RISK_NAME]: "API Failure", [LIKELIHOOD]: 3, [IMPACT]: 3 },
+  { [RISK_NAME]: "Key Staff Loss", [LIKELIHOOD]: 3, [IMPACT]: 4 },
+  { [RISK_NAME]: "Budget Cut", [LIKELIHOOD]: 4, [IMPACT]: 2 },
+  { [RISK_NAME]: "Compliance", [LIKELIHOOD]: 2, [IMPACT]: 3 },
+  { [RISK_NAME]: "Cloud Outage", [LIKELIHOOD]: 2, [IMPACT]: 4 },
+  { [RISK_NAME]: "Phishing", [LIKELIHOOD]: 5, [IMPACT]: 2 },
+  { [RISK_NAME]: "HW Failure", [LIKELIHOOD]: 1, [IMPACT]: 3 },
 ];
 
-function zoneColor(lh, imp) {
-  const score = lh * imp;
-  if (score <= 4)  return "#009E73"; // Low  — Imprint brand green
-  if (score <= 9)  return "#DDCC77"; // Medium — Imprint amber
-  if (score <= 16) return "#BD8233"; // High — Imprint ochre
-  return "#AE3030";                  // Critical — Imprint matte red
+// Plot: reads only data and the constants above
+const gridCount = RATING_MAX - RATING_MIN + 1;
+const axisMin = RATING_MIN - 0.5;
+const axisMax = RATING_MAX + 0.5;
+const tickRatings = Array.from({ length: gridCount }, (_, i) => RATING_MIN + i);
+
+const bgInt = parseInt(t.pageBg.slice(1), 16);
+const bgR = (bgInt >> 16) & 255;
+const bgG = (bgInt >> 8) & 255;
+const bgB = bgInt & 255;
+
+const gridCells: Array<{
+  lh: number;
+  imp: number;
+  score: number;
+  color: string;
+  scoreTextFill: string;
+}> = [];
+
+for (let lh = RATING_MIN; lh <= RATING_MAX; lh++) {
+  for (let imp = RATING_MIN; imp <= RATING_MAX; imp++) {
+    const score = lh * imp;
+    const zone = ZONE_LEGEND.find((z) => score <= z.maxScore) ?? ZONE_LEGEND[ZONE_LEGEND.length - 1];
+    const zInt = parseInt(zone.color.slice(1), 16);
+    const zR = (zInt >> 16) & 255;
+    const zG = (zInt >> 8) & 255;
+    const zB = zInt & 255;
+    const effR = bgR * (1 - CELL_FILL_OPACITY) + zR * CELL_FILL_OPACITY;
+    const effG = bgG * (1 - CELL_FILL_OPACITY) + zG * CELL_FILL_OPACITY;
+    const effB = bgB * (1 - CELL_FILL_OPACITY) + zB * CELL_FILL_OPACITY;
+    const lum = (0.2126 * effR + 0.7152 * effG + 0.0722 * effB) / 255;
+    const scoreTextFill = lum > 0.52 ? DARK_INK : LIGHT_INK;
+    gridCells.push({ lh, imp, score, color: zone.color, scoreTextFill });
+  }
 }
 
-// Jitter: count co-occupants per cell, assign circular offset
-const _cnt = {};
-risks.forEach(r => { const k = `${r.likelihood}-${r.impact}`; _cnt[k] = (_cnt[k] ?? 0) + 1; });
-const _itr = {};
-const risksPlaced = risks.map(r => {
-  const k = `${r.likelihood}-${r.impact}`;
-  const idx = _itr[k] ?? 0;
-  _itr[k] = idx + 1;
-  const siblings = _cnt[k];
-  if (siblings === 1) return { ...r, jx: r.impact, jy: r.likelihood };
+const cellCounts = new Map<string, number>();
+for (const r of data) {
+  const k = `${r[LIKELIHOOD]}-${r[IMPACT]}`;
+  cellCounts.set(k, (cellCounts.get(k) ?? 0) + 1);
+}
+
+const cellSeen = new Map<string, number>();
+const risksPlaced = data.map((r, id) => {
+  const lh = r[LIKELIHOOD];
+  const imp = r[IMPACT];
+  const k = `${lh}-${imp}`;
+  const idx = cellSeen.get(k) ?? 0;
+  cellSeen.set(k, idx + 1);
+  const siblings = cellCounts.get(k)!;
+  if (siblings === 1) {
+    return {
+      id,
+      name: r[RISK_NAME],
+      lh,
+      imp,
+      jx: imp,
+      jy: lh,
+      labelBelow: false,
+    };
+  }
   const angle = (2 * Math.PI * idx) / siblings - Math.PI / 2;
-  return { ...r, jx: r.impact + 0.22 * Math.cos(angle), jy: r.likelihood + 0.22 * Math.sin(angle) };
+  return {
+    id,
+    name: r[RISK_NAME],
+    lh,
+    imp,
+    jx: imp + 0.14 * Math.sin(angle),
+    jy: lh - 0.18 * Math.cos(angle),
+    labelBelow: idx % 2 === 1,
+  };
 });
 
-// Scatter series data — x=impact, y=likelihood
-const scatterData = risksPlaced.map((r, i) => ({ id: i, x: r.jx, y: r.jy }));
+const scatterData = risksPlaced.map((r) => ({ id: r.id, x: r.jx, y: r.jy }));
 
-// Custom scatter mark component used both as a slot and as a direct overlay
-function RiskMark({ x, y, markerSize }) {
-  return (
-    <circle cx={x} cy={y} r={markerSize ?? 10}
-      fill={t.elevatedBg} stroke={t.ink} strokeWidth={2} />
-  );
+const zoneCountMap = new Map<string, number>();
+for (const z of ZONE_LEGEND) zoneCountMap.set(z.name, 0);
+for (const r of data) {
+  const score = r[LIKELIHOOD] * r[IMPACT];
+  const zone = ZONE_LEGEND.find((z) => score <= z.maxScore) ?? ZONE_LEGEND[ZONE_LEGEND.length - 1];
+  zoneCountMap.set(zone.name, (zoneCountMap.get(zone.name) ?? 0) + 1);
 }
+const topTwoSummary = ZONE_LEGEND.slice(-2)
+  .reverse()
+  .map((z) => `${zoneCountMap.get(z.name)} ${z.name}`)
+  .join(", ");
 
-// Direct circle overlay via useDrawingArea — ensures correct positioning even when
-// ScatterPlot slots are not forwarded (MUI X v7 ScatterPlot may not support slots directly)
-function RiskCircles() {
+const SUBTITLE = `${data.length} ${RISK_NAME}s across ${gridCount}×${gridCount} ${LIKELIHOOD} × ${IMPACT} matrix (${topTwoSummary})`;
+
+function RiskMatrixLayer() {
   const { left, top, width, height } = useDrawingArea();
-  const toSvg = (dx, dy) => ({
-    sx: left + (dx - 0.5) / 5 * width,
-    sy: top  + (5.5 - dy) / 5 * height,
-  });
+  const cW = width / gridCount;
+  const cH = height / gridCount;
+  const legendY = top + height + 104;
+  const colW = width / ZONE_LEGEND.length;
+
   return (
     <g>
-      {risksPlaced.map((r, i) => {
-        const { sx, sy } = toSvg(r.jx, r.jy);
+      <text
+        x={W / 2}
+        y={42}
+        textAnchor="middle"
+        fontSize={22}
+        fontWeight="600"
+        fill={t.ink}
+        fontFamily={FONT}
+      >
+        {TITLE}
+      </text>
+      <text
+        x={W / 2}
+        y={70}
+        textAnchor="middle"
+        fontSize={15}
+        fill={t.inkSoft}
+        fontFamily={FONT}
+      >
+        {SUBTITLE}
+      </text>
+
+      {gridCells.map((cell) => {
+        const cx = left + (cell.imp - RATING_MIN) * cW;
+        const cy = top + (RATING_MAX - cell.lh) * cH;
         return (
-          <circle key={i} cx={sx} cy={sy} r={10}
-            fill={t.elevatedBg} stroke={t.ink} strokeWidth={2} />
+          <g key={`cell-${cell.lh}-${cell.imp}`}>
+            <rect
+              x={cx}
+              y={cy}
+              width={cW}
+              height={cH}
+              fill={cell.color}
+              fillOpacity={CELL_FILL_OPACITY}
+              stroke={t.ink}
+              strokeOpacity={0.24}
+              strokeWidth={1.5}
+            />
+            <text
+              x={cx + cW - 10}
+              y={cy + cH - 10}
+              textAnchor="end"
+              fontSize={14}
+              fontWeight="600"
+              fill={cell.scoreTextFill}
+              fontFamily={FONT}
+            >
+              {cell.score}
+            </text>
+          </g>
         );
       })}
-    </g>
-  );
-}
 
-// Zone background + risk-score numbers — uses MUI X useDrawingArea hook for positioning
-function ZoneBackground() {
-  const { left, top, width, height } = useDrawingArea();
-  const cW = width / 5;
-  const cH = height / 5;
-  const items = [];
-  for (let lh = 1; lh <= 5; lh++) {
-    for (let imp = 1; imp <= 5; imp++) {
-      items.push(
-        <rect key={`z${lh}${imp}`}
-          x={left + (imp - 1) * cW} y={top + (5 - lh) * cH}
-          width={cW} height={cH}
-          fill={zoneColor(lh, imp)} fillOpacity={0.38}
-          stroke={t.ink} strokeOpacity={0.18} strokeWidth={1} />,
-        <text key={`n${lh}${imp}`}
-          x={left + (imp - 0.5) * cW} y={top + (5.5 - lh) * cH}
-          textAnchor="middle" dominantBaseline="middle"
-          fontSize={16} fill={t.ink} fillOpacity={0.42} fontFamily={FONT}>
-          {lh * imp}
-        </text>
-      );
-    }
-  }
-  return <g>{items}</g>;
-}
-
-// Risk name labels — uses useDrawingArea to map data coords → SVG coords
-function RiskLabels() {
-  const { left, top, width, height } = useDrawingArea();
-  const toSvg = (dx, dy) => ({
-    sx: left + (dx - 0.5) / 5 * width,
-    sy: top  + (5.5 - dy) / 5 * height,
-  });
-  return (
-    <g>
-      {risksPlaced.map((r, i) => {
-        const { sx, sy } = toSvg(r.jx, r.jy);
+      {risksPlaced.map((r) => {
+        const sx = left + ((r.jx - axisMin) / gridCount) * width;
+        const sy = top + ((axisMax - r.jy) / gridCount) * height;
+        const labelY = r.labelBelow ? sy + 24 : sy - 18;
+        const pillW = r.name.length * 8.2 + 14;
+        const pillH = 22;
         return (
-          <text key={i} x={sx} y={sy - 16}
-            textAnchor="middle" fontSize={13} fontWeight="500"
-            fill={t.ink} fontFamily={FONT}>
-            {r.name}
-          </text>
+          <g key={`risk-${r.id}`}>
+            <circle
+              cx={sx}
+              cy={sy}
+              r={9}
+              fill={t.elevatedBg}
+              stroke={t.ink}
+              strokeWidth={2.5}
+            />
+            <rect
+              x={sx - pillW / 2}
+              y={labelY - pillH / 2 - 4}
+              width={pillW}
+              height={pillH}
+              rx={4}
+              fill={t.pageBg}
+              fillOpacity={0.92}
+              stroke={t.grid}
+              strokeWidth={1}
+            />
+            <text
+              x={sx}
+              y={labelY}
+              textAnchor="middle"
+              fontSize={14}
+              fontWeight="600"
+              fill={t.ink}
+              fontFamily={FONT}
+            >
+              {r.name}
+            </text>
+          </g>
         );
       })}
-    </g>
-  );
-}
 
-// Zone legend rendered as SVG elements below the chart area
-function ZoneLegend({ W, H, ML, MR }) {
-  const colW = (W - ML - MR) / 4;
-  const ly = H - 55;
-  return (
-    <g>
       {ZONE_LEGEND.map((z, i) => {
-        const lx = ML + colW * i + colW / 2 - 50;
+        const lx = left + colW * i + colW / 2 - 72;
         return (
-          <g key={i}>
-            <rect x={lx} y={ly - 9} width={18} height={18}
-              fill={z.color} fillOpacity={0.65} rx={2} />
-            <text x={lx + 22} y={ly} dominantBaseline="middle"
-              fontSize={12} fill={t.ink} fontFamily={FONT}>
+          <g key={z.label}>
+            <rect
+              x={lx}
+              y={legendY - 10}
+              width={20}
+              height={20}
+              fill={z.color}
+              fillOpacity={CELL_FILL_OPACITY}
+              stroke={t.ink}
+              strokeOpacity={0.25}
+              rx={3}
+            />
+            <text
+              x={lx + 28}
+              y={legendY + 1}
+              dominantBaseline="central"
+              fontSize={14}
+              fontWeight="600"
+              fill={t.ink}
+              fontFamily={FONT}
+            >
               {z.label}
             </text>
           </g>
@@ -167,66 +293,63 @@ function ZoneLegend({ W, H, ML, MR }) {
 }
 
 export default function Chart() {
-  const W = window.ANYPLOT_SIZE.width;   // 1200 CSS px (square)
-  const H = window.ANYPLOT_SIZE.height;  // 1200 CSS px (square)
-  const margin = { left: 150, top: 72, right: 44, bottom: 190 };
-
   return (
-    <ChartContainer
+    <ChartsContainer
       width={W}
       height={H}
-      margin={margin}
-      series={[{
-        type: "scatter",
-        id: "risks",
-        data: scatterData,
-        color: t.ink,
-        markerSize: 10,
-      }]}
-      xAxis={[{
-        min: 0.5, max: 5.5,
-        tickInterval: [1, 2, 3, 4, 5],
-        valueFormatter: (v) => IMPACT_LABELS[Math.round(v) - 1] ?? "",
-      }]}
-      yAxis={[{
-        min: 0.5, max: 5.5,
-        tickInterval: [1, 2, 3, 4, 5],
-        valueFormatter: (v) => LIKELIHOOD_LABELS[Math.round(v) - 1] ?? "",
-      }]}
+      margin={{ left: 32, top: 96, right: 44, bottom: 84 }}
+      series={[
+        {
+          type: "scatter",
+          id: "risks",
+          data: scatterData,
+          color: t.ink,
+          markerSize: 8,
+        },
+      ]}
+      xAxis={[
+        {
+          id: "impact-axis",
+          min: axisMin,
+          max: axisMax,
+          tickInterval: tickRatings,
+          height: 62,
+          label: IMPACT,
+          valueFormatter: (v: number) => IMPACT_LABELS[Math.round(v) - RATING_MIN] ?? "",
+          tickLabelStyle: { fontSize: 14, fill: t.inkSoft, fontFamily: FONT },
+          labelStyle: {
+            fontSize: 15,
+            fontWeight: 600,
+            fill: t.ink,
+            fontFamily: FONT,
+          },
+        },
+      ]}
+      yAxis={[
+        {
+          id: "likelihood-axis",
+          min: axisMin,
+          max: axisMax,
+          tickInterval: tickRatings,
+          width: 158,
+          label: LIKELIHOOD,
+          valueFormatter: (v: number) =>
+            LIKELIHOOD_LABELS[Math.round(v) - RATING_MIN] ?? "",
+          tickLabelStyle: { fontSize: 14, fill: t.inkSoft, fontFamily: FONT },
+          labelStyle: {
+            fontSize: 15,
+            fontWeight: 600,
+            fill: t.ink,
+            fontFamily: FONT,
+          },
+        },
+      ]}
+      skipAnimation
     >
-      {/* Chart title */}
-      <text x={W / 2} y={46}
-        textAnchor="middle" fontSize={20} fontWeight="500"
-        fill={t.ink} fontFamily={FONT}>
-        {TITLE}
-      </text>
-
-      {/* Zone cells + score labels (behind markers) */}
-      <ZoneBackground />
-
-      {/* MUI X scatter plot (provides axis-aware series rendering) */}
-      <ScatterPlot slots={{ scatter: RiskMark }} />
-
-      {/* Direct circle overlay: styled markers with elevated-bg fill + ink stroke */}
-      <RiskCircles />
-
-      {/* Risk item name labels (above markers) */}
-      <RiskLabels />
-
-      {/* MUI X axis components */}
-      <ChartsXAxis
-        label="Impact"
-        tickLabelStyle={{ fontSize: 13, fill: t.inkSoft, fontFamily: FONT }}
-        labelStyle={{ fontSize: 15, fontWeight: "500", fill: t.ink, fontFamily: FONT }}
-      />
-      <ChartsYAxis
-        label="Likelihood"
-        tickLabelStyle={{ fontSize: 13, fill: t.inkSoft, fontFamily: FONT }}
-        labelStyle={{ fontSize: 15, fontWeight: "500", fill: t.ink, fontFamily: FONT }}
-      />
-
-      {/* Zone legend */}
-      <ZoneLegend W={W} H={H} ML={margin.left} MR={margin.right} />
-    </ChartContainer>
+      <ScatterPlot />
+      <RiskMatrixLayer />
+      <ChartsXAxis axisId="impact-axis" />
+      <ChartsYAxis axisId="likelihood-axis" />
+    </ChartsContainer>
   );
 }
