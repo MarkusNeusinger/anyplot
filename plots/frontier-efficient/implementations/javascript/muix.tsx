@@ -2,15 +2,12 @@
 // frontier-efficient: Efficient Frontier for Portfolio Optimization
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 87/100 | Created: 2026-09-02
-//# anyplot-orientation: landscape
-
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { LinePlot } from "@mui/x-charts/LineChart";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
-import { ChartsLegend } from "@mui/x-charts/ChartsLegend";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 import Box from "@mui/material/Box";
@@ -18,149 +15,325 @@ import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Linear algebra helpers (Gauss-Jordan inverse, dot / matrix-vector) -----
-function invertMatrix(M) {
-  const n = M.length;
-  const A = M.map((row, i) => [...row, ...Array.from({ length: n }, (_, j) => (i === j ? 1 : 0))]);
-  for (let col = 0; col < n; col++) {
-    let pivotRow = col;
-    let maxVal = Math.abs(A[col][col]);
-    for (let r = col + 1; r < n; r++) {
-      if (Math.abs(A[r][col]) > maxVal) {
-        maxVal = Math.abs(A[r][col]);
-        pivotRow = r;
-      }
-    }
-    [A[col], A[pivotRow]] = [A[pivotRow], A[col]];
-    const pivot = A[col][col];
-    for (let j = 0; j < 2 * n; j++) A[col][j] /= pivot;
-    for (let r = 0; r < n; r++) {
-      if (r === col) continue;
-      const factor = A[r][col];
-      for (let j = 0; j < 2 * n; j++) A[r][j] -= factor * A[col][j];
+// Constants
+const TITLE = "frontier-efficient · javascript · muix · anyplot.ai";
+const FRONTIER_LABEL = "Efficient Frontier";
+const CML_LABEL = "Capital Market Line";
+const GMV_LABEL = "Min-Variance Portfolio";
+const TAN_LABEL = "Max-Sharpe (Tangency) Portfolio";
+const RF_LABEL = "Risk-free rate";
+const SHARPE_LOW_LABEL = "Low Sharpe ratio";
+const SHARPE_HIGH_LABEL = "High Sharpe ratio";
+const CML_DASH = "10,6";
+
+const RF_RATE = 0.02;
+const FRONTIER_R_MAX_MULT = 1.18;
+const FRONTIER_STEPS = 80;
+const X_MAX_PAD_MULT = 1.08;
+const Y_MIN_PAD_SHARE = 0.14;
+const Y_MAX_PAD_MULT = 1.05;
+
+// Columns: set these to your data's column names
+const PORTFOLIO_ID = "Portfolio";
+const RISK = "Portfolio Risk — Annualized Standard Deviation (%)"; // role: risk
+const RETURN = "Expected Portfolio Return — Annualized (%)"; // role: return
+
+// Data: replace this block with your own records
+const N_PORTFOLIOS = 300;
+const ASSET_RETURNS = [0.095, 0.075, 0.11, 0.035, 0.085, 0.045];
+const ASSET_VOLS = [0.16, 0.18, 0.24, 0.055, 0.19, 0.15];
+const ASSET_CORR_ROWS = [
+  "1.00,0.82,0.72,-0.08,0.58,0.02",
+  "0.82,1.00,0.78,-0.04,0.52,0.08",
+  "0.72,0.78,1.00,-0.12,0.48,0.12",
+  "-0.08,-0.04,-0.12,1.00,0.10,0.18",
+  "0.58,0.52,0.48,0.10,1.00,0.06",
+  "0.02,0.08,0.12,0.18,0.06,1.00",
+];
+
+const nAssets = ASSET_RETURNS.length;
+const covMatrix = ASSET_CORR_ROWS.map((rowStr, i) =>
+  rowStr.split(",").map((cStr, j) => Number(cStr) * ASSET_VOLS[i] * ASSET_VOLS[j]),
+);
+
+let lcgSeed = 7;
+const data: Record<string, string | number>[] = [];
+
+for (let k = 0; k < N_PORTFOLIOS; k++) {
+  const expSamples: number[] = [];
+  let weightSum = 0;
+  for (let i = 0; i < nAssets; i++) {
+    lcgSeed = (Math.imul(1664525, lcgSeed) + 1013904223) >>> 0;
+    const u = lcgSeed / 4294967296;
+    const e = -Math.log(1 - u);
+    expSamples.push(e);
+    weightSum += e;
+  }
+  const weights = expSamples.map((e) => e / weightSum);
+  let portRet = 0;
+  let portVar = 0;
+  for (let i = 0; i < nAssets; i++) {
+    portRet += weights[i] * ASSET_RETURNS[i];
+    for (let j = 0; j < nAssets; j++) {
+      portVar += weights[i] * covMatrix[i][j] * weights[j];
     }
   }
-  return A.map((row) => row.slice(n));
+  const portRisk = Math.sqrt(Math.max(0, portVar));
+  data.push({
+    [PORTFOLIO_ID]: `p${k}`,
+    [RISK]: portRisk,
+    [RETURN]: portRet,
+  });
 }
-const matVec = (M, v) => M.map((row) => row.reduce((s, mij, j) => s + mij * v[j], 0));
-const dot = (a, b) => a.reduce((s, ai, i) => s + ai * b[i], 0);
 
-// --- Asset universe (annualized historical return / vol / correlation) -----
-const MU = [0.095, 0.075, 0.11, 0.035, 0.085, 0.045];
-const VOL = [0.16, 0.18, 0.24, 0.055, 0.19, 0.15];
-const CORR = [
-  [1.0, 0.82, 0.72, -0.08, 0.58, 0.02],
-  [0.82, 1.0, 0.78, -0.04, 0.52, 0.08],
-  [0.72, 0.78, 1.0, -0.12, 0.48, 0.12],
-  [-0.08, -0.04, -0.12, 1.0, 0.1, 0.18],
-  [0.58, 0.52, 0.48, 0.1, 1.0, 0.06],
-  [0.02, 0.08, 0.12, 0.18, 0.06, 1.0],
-];
-const N = MU.length;
-const COV = CORR.map((row, i) => row.map((c, j) => c * VOL[i] * VOL[j]));
-const COV_INV = invertMatrix(COV);
-const ONES = Array(N).fill(1);
-const RF = 0.02; // risk-free rate
+// Plot: reads only data and the constants above
+const augMatrix = covMatrix.map((row, i) => [
+  ...row,
+  ...Array.from({ length: nAssets }, (_, j) => (i === j ? 1 : 0)),
+]);
 
-// Two-fund theorem scalars for the analytic minimum-variance frontier
-const A_ = dot(ONES, matVec(COV_INV, ONES));
-const B_ = dot(ONES, matVec(COV_INV, MU));
-const C_ = dot(MU, matVec(COV_INV, MU));
-const D_ = A_ * C_ - B_ * B_;
+for (let col = 0; col < nAssets; col++) {
+  let pivotRow = col;
+  let maxVal = Math.abs(augMatrix[col][col]);
+  for (let r = col + 1; r < nAssets; r++) {
+    if (Math.abs(augMatrix[r][col]) > maxVal) {
+      maxVal = Math.abs(augMatrix[r][col]);
+      pivotRow = r;
+    }
+  }
+  const tmpRow = augMatrix[col];
+  augMatrix[col] = augMatrix[pivotRow];
+  augMatrix[pivotRow] = tmpRow;
 
-const R_GMV = B_ / A_;
-const RISK_GMV = Math.sqrt(1 / A_);
+  const pivot = augMatrix[col][col];
+  for (let j = 0; j < 2 * nAssets; j++) {
+    augMatrix[col][j] /= pivot;
+  }
+  for (let r = 0; r < nAssets; r++) {
+    if (r === col) continue;
+    const factor = augMatrix[r][col];
+    for (let j = 0; j < 2 * nAssets; j++) {
+      augMatrix[r][j] -= factor * augMatrix[col][j];
+    }
+  }
+}
 
-// Tangency (max Sharpe ratio) portfolio: w = Sigma^-1 (mu - rf) / 1'Sigma^-1(mu - rf)
-const excess = MU.map((m) => m - RF);
-const zTan = matVec(COV_INV, excess);
+const covInv = augMatrix.map((row) => row.slice(nAssets));
+const invOnes = covInv.map((row) => row.reduce((s, v) => s + v, 0));
+const invMu = covInv.map((row) => row.reduce((s, v, j) => s + v * ASSET_RETURNS[j], 0));
+
+const scalarA = invOnes.reduce((s, v) => s + v, 0);
+const scalarB = invMu.reduce((s, v) => s + v, 0);
+const scalarC = ASSET_RETURNS.reduce((s, mu_i, i) => s + mu_i * invMu[i], 0);
+const scalarD = scalarA * scalarC - scalarB * scalarB;
+
+const rGmv = scalarB / scalarA;
+const riskGmv = Math.sqrt(1 / scalarA);
+
+const excessReturns = ASSET_RETURNS.map((m) => m - RF_RATE);
+const zTan = covInv.map((row) => row.reduce((s, v, j) => s + v * excessReturns[j], 0));
 const sumZTan = zTan.reduce((a, b) => a + b, 0);
 const wTan = zTan.map((z) => z / sumZTan);
-const R_TAN = dot(wTan, MU);
-const RISK_TAN = Math.sqrt(dot(wTan, matVec(COV, wTan)));
-const SHARPE_TAN = (R_TAN - RF) / RISK_TAN;
-
-// Analytic efficient frontier: risk(r) = sqrt((A*r^2 - 2*B*r + C) / D) for r >= r_gmv
-const R_MAX = Math.max(...MU) * 1.18;
-const FN = 80;
-const frontierReturns = Array.from({ length: FN }, (_, i) => R_GMV + ((R_MAX - R_GMV) * i) / (FN - 1));
-const frontierRisks = frontierReturns.map((r) => Math.sqrt(Math.max(0, (A_ * r * r - 2 * B_ * r + C_) / D_)));
-
-// Reproducible LCG (seed 7) — no Math.random() in browser harness context
-let seed = 7;
-function rng() {
-  seed = (Math.imul(1664525, seed) + 1013904223) >>> 0;
-  return seed / 4294967296;
+const rTan = wTan.reduce((s, w, i) => s + w * ASSET_RETURNS[i], 0);
+let varTan = 0;
+for (let i = 0; i < nAssets; i++) {
+  for (let j = 0; j < nAssets; j++) {
+    varTan += wTan[i] * covMatrix[i][j] * wTan[j];
+  }
 }
-const randExp = () => -Math.log(1 - rng());
+const riskTan = Math.sqrt(Math.max(0, varTan));
+const sharpeTan = (rTan - RF_RATE) / riskTan;
 
-// 300 randomly weighted long-only portfolios (Dirichlet(1) weights via normalized exponentials)
-const N_PORT = 300;
-const portfolios = Array.from({ length: N_PORT }, (_, k) => {
-  const e = Array.from({ length: N }, randExp);
-  const s = e.reduce((a, b) => a + b, 0);
-  const w = e.map((v) => v / s);
-  const r = dot(w, MU);
-  const risk = Math.sqrt(dot(w, matVec(COV, w)));
-  return { id: `p${k}`, x: risk, y: r, z: (r - RF) / risk };
+const rFrontierMax = Math.max(...ASSET_RETURNS) * FRONTIER_R_MAX_MULT;
+const frontierReturns = Array.from(
+  { length: FRONTIER_STEPS },
+  (_, i) => rGmv + ((rFrontierMax - rGmv) * i) / (FRONTIER_STEPS - 1),
+);
+const frontierRisks = frontierReturns.map((r) =>
+  Math.sqrt(Math.max(0, (scalarA * r * r - 2 * scalarB * r + scalarC) / scalarD)),
+);
+
+const portfolios = data.map((row) => {
+  const x = Number(row[RISK]);
+  const y = Number(row[RETURN]);
+  const z = (y - RF_RATE) / x;
+  return {
+    id: String(row[PORTFOLIO_ID]),
+    x,
+    y,
+    z,
+  };
 });
+
 const sharpeVals = portfolios.map((p) => p.z);
-const SHARPE_MIN = Math.min(...sharpeVals);
-const SHARPE_MAX = Math.max(...sharpeVals, SHARPE_TAN);
+const sharpeMin = Math.min(...sharpeVals);
+const sharpeMax = Math.max(...sharpeVals, sharpeTan);
 
-const X_MAX = Math.max(RISK_TAN, RISK_GMV, ...frontierRisks, ...portfolios.map((p) => p.x)) * 1.08;
-const Y_MIN = Math.min(RF, R_GMV, ...portfolios.map((p) => p.y)) - 0.015;
-const Y_MAX = Math.max(R_MAX, ...portfolios.map((p) => p.y)) * 1.04;
+const xMax = Math.max(riskTan, riskGmv, ...frontierRisks, ...portfolios.map((p) => p.x)) * X_MAX_PAD_MULT;
+const rawYMin = Math.min(RF_RATE, rGmv, ...portfolios.map((p) => p.y));
+const rawYMax = Math.max(rFrontierMax, ...portfolios.map((p) => p.y));
+const yMin = rawYMin - (rawYMax - rawYMin) * Y_MIN_PAD_SHARE;
+const yMax = rawYMax * Y_MAX_PAD_MULT;
 
-const pct = (v) => `${(v * 100).toFixed(0)}%`;
+const cmlXEnd = Math.min(xMax, (yMax - RF_RATE) / sharpeTan);
+const cmlYEnd = RF_RATE + sharpeTan * cmlXEnd;
+const cmlLabelX = 0.58 * cmlXEnd;
+const cmlLabelY = RF_RATE + sharpeTan * cmlLabelX;
 
-// Capital Market Line: r = rf + Sharpe_tan * risk, drawn via axis-scale hooks.
-// Clip the endpoint to the visible plot bounds (intersect the ray with y = Y_MAX) so the
-// line never overshoots the chart, and place the label ~60% along the visible segment
-// (well clear of both the top-right legend and the bottom-left risk-free reference line).
-const CML_X_END = SHARPE_TAN > 0 ? Math.min(X_MAX, (Y_MAX - RF) / SHARPE_TAN) : X_MAX;
-const CML_Y_END = RF + SHARPE_TAN * CML_X_END;
-const CML_LABEL_X = 0.6 * CML_X_END;
-const CML_LABEL_Y = RF + SHARPE_TAN * CML_LABEL_X;
+function FrontierOverlay() {
+  const xScale = useXScale("risk") as (v: number) => number;
+  const yScale = useYScale("return") as (v: number) => number;
 
-function CapitalMarketLine() {
-  const xScale = useXScale("risk");
-  const yScale = useYScale("return");
-  if (!xScale || !yScale) return null;
   const x1 = xScale(0);
-  const y1 = yScale(RF);
-  const x2 = xScale(CML_X_END);
-  const y2 = yScale(CML_Y_END);
-  const xLabel = xScale(CML_LABEL_X);
-  const yLabel = yScale(CML_LABEL_Y);
+  const y1 = yScale(RF_RATE);
+  const x2 = xScale(cmlXEnd);
+  const y2 = yScale(cmlYEnd);
+  const xLabel = xScale(cmlLabelX);
+  const yLabel = yScale(cmlLabelY);
+
+  const gmvX = xScale(riskGmv);
+  const gmvY = yScale(rGmv);
+  const tanX = xScale(riskTan);
+  const tanY = yScale(rTan);
+
   return (
     <g>
-      <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={t.palette[1]} strokeWidth={2.5} strokeDasharray="10,6" />
-      <text x={xLabel} y={yLabel - 22} textAnchor="middle" fontSize={14} fontWeight={600} fill={t.palette[1]}>
-        Capital Market Line
+      {/* Capital Market Line */}
+      <line
+        x1={x1}
+        y1={y1}
+        x2={x2}
+        y2={y2}
+        stroke={t.palette[1]}
+        strokeWidth={2.5}
+        strokeDasharray={CML_DASH}
+      />
+      <text
+        x={xLabel}
+        y={yLabel - 28}
+        textAnchor="middle"
+        fontSize={14}
+        fontWeight={600}
+        fill={t.palette[1]}
+        stroke={t.pageBg}
+        strokeWidth={3.5}
+        paintOrder="stroke"
+      >
+        {CML_LABEL}
+      </text>
+
+      {/* Highlight rings around GMV and Tangency markers */}
+      <circle cx={gmvX} cy={gmvY} r={10} fill={t.ink} stroke={t.pageBg} strokeWidth={2.5} />
+      <text
+        x={gmvX - 14}
+        y={gmvY + 5}
+        textAnchor="end"
+        fontSize={14}
+        fontWeight={600}
+        fill={t.ink}
+        stroke={t.pageBg}
+        strokeWidth={3.5}
+        paintOrder="stroke"
+      >
+        {`GMV (${(riskGmv * 100).toFixed(1)}%, ${(rGmv * 100).toFixed(1)}%)`}
+      </text>
+
+      <circle cx={tanX} cy={tanY} r={10} fill={t.palette[0]} stroke={t.pageBg} strokeWidth={2.5} />
+      <text
+        x={tanX - 14}
+        y={tanY - 12}
+        textAnchor="end"
+        fontSize={14}
+        fontWeight={600}
+        fill={t.ink}
+        stroke={t.pageBg}
+        strokeWidth={3.5}
+        paintOrder="stroke"
+      >
+        {`Max Sharpe = ${sharpeTan.toFixed(2)} (${(riskTan * 100).toFixed(1)}%, ${(rTan * 100).toFixed(1)}%)`}
       </text>
     </g>
   );
 }
 
-const TITLE = "frontier-efficient · javascript · muix · anyplot.ai";
-
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
-  const TITLE_H = 56;
-  const COLORBAR_H = 54;
-  const chartH = height - TITLE_H - COLORBAR_H;
+  const headerH = 82;
+  const legendH = 38;
+  const colorbarH = 44;
+  const chartH = height - headerH - legendH - colorbarH;
+  const subtitle = `Mean-variance optimization across ${nAssets} assets · ${data.length} simulated portfolios · rf = ${(RF_RATE * 100).toFixed(1)}%`;
 
   return (
-    <Box sx={{ width, height, background: t.pageBg, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-      <Typography sx={{ fontSize: "22px", fontWeight: 600, color: t.ink, textAlign: "center", pt: "14px", pb: "6px" }}>
-        {TITLE}
-      </Typography>
-      <ChartContainer
+    <Box
+      sx={{
+        width,
+        height,
+        background: t.pageBg,
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+      }}
+    >
+      <Box sx={{ height: headerH, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
+        <Typography sx={{ fontSize: "22px", fontWeight: 600, color: t.ink }}>
+          {TITLE}
+        </Typography>
+        <Typography sx={{ fontSize: "15px", color: t.inkSoft, mt: "2px" }}>
+          {subtitle}
+        </Typography>
+      </Box>
+
+      {/* Series legend rendered outside the SVG drawing area */}
+      <Box
+        sx={{
+          height: legendH,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "28px",
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <svg width={28} height={14}>
+            <line x1={0} y1={7} x2={28} y2={7} stroke={t.ink} strokeWidth={4} />
+          </svg>
+          <Typography sx={{ fontSize: "14px", color: t.ink }}>{FRONTIER_LABEL}</Typography>
+        </Box>
+        <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <svg width={28} height={14}>
+            <line
+              x1={0}
+              y1={7}
+              x2={28}
+              y2={7}
+              stroke={t.palette[1]}
+              strokeWidth={2.5}
+              strokeDasharray={CML_DASH}
+            />
+          </svg>
+          <Typography sx={{ fontSize: "14px", color: t.ink }}>{CML_LABEL}</Typography>
+        </Box>
+        <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <svg width={18} height={18}>
+            <circle cx={9} cy={9} r={7} fill={t.ink} stroke={t.pageBg} strokeWidth={1.5} />
+          </svg>
+          <Typography sx={{ fontSize: "14px", color: t.ink }}>{GMV_LABEL}</Typography>
+        </Box>
+        <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <svg width={18} height={18}>
+            <circle cx={9} cy={9} r={7} fill={t.palette[0]} stroke={t.pageBg} strokeWidth={1.5} />
+          </svg>
+          <Typography sx={{ fontSize: "14px", color: t.ink }}>{TAN_LABEL}</Typography>
+        </Box>
+      </Box>
+
+      <ChartsContainer
         width={width}
         height={chartH}
-        margin={{ top: 24, right: 64, bottom: 76, left: 132 }}
-        sx={{ "& .MuiLineElement-root": { strokeWidth: 4 } }}
+        skipAnimation
+        margin={{ top: 12, right: 48, bottom: 16, left: 20 }}
+        sx={{ '& .MuiLineChart-line[data-series="frontier"]': { strokeWidth: 4 } }}
         series={[
           {
             type: "line",
@@ -171,7 +344,7 @@ export default function Chart() {
             color: t.ink,
             showMark: false,
             curve: "monotoneX",
-            label: "Efficient Frontier",
+            label: FRONTIER_LABEL,
           },
           {
             type: "scatter",
@@ -180,29 +353,7 @@ export default function Chart() {
             xAxisId: "risk",
             yAxisId: "return",
             zAxisId: "sharpe",
-            markerSize: 6,
-          },
-          {
-            type: "scatter",
-            id: "gmv",
-            data: [{ x: RISK_GMV, y: R_GMV, id: "gmv" }],
-            xAxisId: "risk",
-            yAxisId: "return",
-            zAxisId: "flat",
-            color: t.ink,
-            markerSize: 20,
-            label: "Min-Variance Portfolio",
-          },
-          {
-            type: "scatter",
-            id: "tan",
-            data: [{ x: RISK_TAN, y: R_TAN, id: "tan" }],
-            xAxisId: "risk",
-            yAxisId: "return",
-            zAxisId: "flat",
-            color: t.palette[0],
-            markerSize: 20,
-            label: "Max-Sharpe (Tangency) Portfolio",
+            markerSize: 5.5,
           },
         ]}
         xAxis={[
@@ -211,74 +362,80 @@ export default function Chart() {
             scaleType: "linear",
             data: frontierRisks,
             min: 0,
-            max: X_MAX,
-            label: "Portfolio Risk (Annualized Std Dev)",
-            valueFormatter: pct,
+            max: xMax,
+            height: 54,
+            label: RISK,
+            valueFormatter: (v: number) => `${(v * 100).toFixed(0)}%`,
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-            labelStyle: { fontSize: 16, fill: t.ink },
+            labelStyle: { fontSize: 15, fill: t.ink },
           },
         ]}
         yAxis={[
           {
             id: "return",
-            min: Y_MIN,
-            max: Y_MAX,
-            label: "Expected Portfolio Return (Annualized)",
-            valueFormatter: pct,
+            min: yMin,
+            max: yMax,
+            width: 84,
+            label: RETURN,
+            valueFormatter: (v: number) => `${(v * 100).toFixed(0)}%`,
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-            labelStyle: { fontSize: 16, fill: t.ink },
+            labelStyle: { fontSize: 15, fill: t.ink },
           },
         ]}
         zAxis={[
           {
             id: "sharpe",
-            min: SHARPE_MIN,
-            max: SHARPE_MAX,
-            colorMap: { type: "continuous", min: SHARPE_MIN, max: SHARPE_MAX, color: [t.seq[0], t.seq[1]] },
+            min: sharpeMin,
+            max: sharpeMax,
+            colorMap: {
+              type: "continuous",
+              min: sharpeMin,
+              max: sharpeMax,
+              color: [t.seq[0], t.seq[1]],
+            },
           },
-          // No colorMap: gives the highlight markers below an escape hatch from the
-          // "sharpe" colorScale, which MUI X otherwise applies to every scatter series
-          // that doesn't set its own zAxisId (ScatterPlot.js falls back to zAxisIds[0]).
-          { id: "flat" },
         ]}
       >
         <ChartsGrid horizontal vertical />
-        <LinePlot skipAnimation />
         <ScatterPlot skipAnimation />
-        <CapitalMarketLine />
+        <LinePlot skipAnimation />
         <ChartsReferenceLine
-          y={RF}
+          y={RF_RATE}
           axisId="return"
-          label="Risk-free rate"
+          label={`${RF_LABEL} (${(RF_RATE * 100).toFixed(0)}%)`}
           labelAlign="end"
-          labelStyle={{ fill: t.inkSoft, fontSize: 12 }}
-          lineStyle={{ stroke: t.inkSoft, strokeDasharray: "4,4", strokeWidth: 1, opacity: 0.5 }}
+          labelStyle={{ fill: t.inkSoft, fontSize: 14 }}
+          lineStyle={{ stroke: t.inkSoft, strokeDasharray: "4,4", strokeWidth: 1.2, opacity: 0.65 }}
         />
-        <ChartsXAxis axisId="risk" tickLabelStyle={{ fontSize: 14, fill: t.inkSoft }} labelStyle={{ fontSize: 16, fill: t.ink }} />
-        <ChartsYAxis
-          axisId="return"
-          tickFontSize={30}
-          tickLabelStyle={{ fontSize: 14, fill: t.inkSoft }}
-          labelStyle={{ fontSize: 16, fill: t.ink }}
-        />
-        <ChartsLegend
-          position={{ vertical: "top", horizontal: "right" }}
-          slotProps={{
-            legend: {
-              itemMarkWidth: 16,
-              itemMarkHeight: 16,
-              markGap: 8,
-              itemGap: 24,
-              labelStyle: { fontSize: 14, fill: t.ink },
-            },
+        <FrontierOverlay />
+        <ChartsXAxis axisId="risk" />
+        <ChartsYAxis axisId="return" />
+      </ChartsContainer>
+
+      <Box
+        sx={{
+          height: colorbarH,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "12px",
+          pb: "6px",
+        }}
+      >
+        <Typography sx={{ fontSize: "14px", color: t.inkSoft }}>
+          {`${SHARPE_LOW_LABEL} (${sharpeMin.toFixed(2)})`}
+        </Typography>
+        <Box
+          sx={{
+            width: 240,
+            height: 14,
+            borderRadius: "3px",
+            background: `linear-gradient(to right, ${t.seq[0]}, ${t.seq[1]})`,
           }}
         />
-      </ChartContainer>
-      {/* Sharpe-ratio colorbar for the random-portfolio cloud */}
-      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "12px", pb: "14px" }}>
-        <Typography sx={{ fontSize: "13px", color: t.inkSoft }}>Low Sharpe ratio</Typography>
-        <Box sx={{ width: 220, height: 14, borderRadius: "3px", background: `linear-gradient(to right, ${t.seq[0]}, ${t.seq[1]})` }} />
-        <Typography sx={{ fontSize: "13px", color: t.inkSoft }}>High Sharpe ratio</Typography>
+        <Typography sx={{ fontSize: "14px", color: t.inkSoft }}>
+          {`${SHARPE_HIGH_LABEL} (${sharpeMax.toFixed(2)})`}
+        </Typography>
       </Box>
     </Box>
   );
