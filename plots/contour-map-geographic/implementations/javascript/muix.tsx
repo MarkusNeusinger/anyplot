@@ -17,7 +17,7 @@ const { width, height } = window.ANYPLOT_SIZE;
 const TITLE = "contour-map-geographic · javascript · muix · anyplot.ai";
 const FONT = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
 const TARGET_CONTOUR_COUNT = 10;
-const COLORBAR_TICKS = [0, 0.25, 0.5, 0.75, 1];
+const FILL_SUBSAMPLE = 12;
 
 // Columns: set these to your data's column names
 const LON = "Longitude (°)"; // role: lon
@@ -31,24 +31,118 @@ const PEAKS = [
   { lon: -122.1956, lat: 46.1912, height: 2549, sigmaLon: 0.16, sigmaLat: 0.13, name: "Mount St. Helens" },
 ];
 
-const RIVERS = [
+// Basemap: rivers (the Columbia is the Washington–Oregon border here), towns, states
+const RIVERS: { name: string; width: number; label?: [number, number]; points: [number, number][] }[] = [
   {
     name: "Columbia River",
+    width: 4,
+    label: [-120.9, 45.6],
     points: [
-      [-123.6, 45.62],
-      [-123.1, 45.65],
-      [-122.6, 45.6],
-      [-122.1, 45.68],
-      [-121.6, 45.72],
-      [-121.1, 45.66],
-      [-120.4, 45.6],
-    ] as [number, number][],
+      [-123.6, 46.25],
+      [-123.38, 46.2],
+      [-123.15, 46.18],
+      [-122.95, 46.12],
+      [-122.85, 46.01],
+      [-122.8, 45.86],
+      [-122.77, 45.65],
+      [-122.67, 45.62],
+      [-122.35, 45.58],
+      [-121.95, 45.64],
+      [-121.89, 45.67],
+      [-121.52, 45.71],
+      [-121.4, 45.69],
+      [-121.18, 45.61],
+      [-120.83, 45.68],
+      [-120.74, 45.69],
+      [-120.2, 45.72],
+      [-119.7, 45.84],
+      [-119.5, 45.9],
+      [-119.35, 45.92],
+      [-119.2, 45.95],
+    ],
   },
+  {
+    name: "Columbia River (Hanford Reach)",
+    width: 4,
+    points: [
+      [-119.91, 46.64],
+      [-119.73, 46.64],
+      [-119.5, 46.62],
+      [-119.45, 46.55],
+      [-119.35, 46.4],
+      [-119.27, 46.28],
+      [-119.2, 46.23],
+    ],
+  },
+  {
+    name: "Cowlitz River",
+    width: 2.4,
+    label: [-122.55, 46.62],
+    points: [
+      [-122.91, 46.1],
+      [-122.9, 46.15],
+      [-122.91, 46.28],
+      [-122.85, 46.44],
+      [-122.49, 46.53],
+      [-121.95, 46.53],
+      [-121.67, 46.6],
+      [-121.6, 46.72],
+    ],
+  },
+  {
+    name: "Yakima River",
+    width: 2.4,
+    label: [-119.85, 46.45],
+    points: [
+      [-120.94, 47.19],
+      [-120.55, 46.99],
+      [-120.5, 46.6],
+      [-120.47, 46.55],
+      [-120.25, 46.4],
+      [-120.0, 46.3],
+      [-119.77, 46.21],
+      [-119.48, 46.26],
+      [-119.27, 46.28],
+    ],
+  },
+  {
+    name: "Lewis River",
+    width: 1.8,
+    points: [
+      [-122.77, 45.88],
+      [-122.5, 45.95],
+      [-122.33, 45.97],
+      [-122.15, 46.06],
+      [-121.9, 46.13],
+    ],
+  },
+  {
+    name: "Nisqually River",
+    width: 1.8,
+    points: [
+      [-121.75, 46.78],
+      [-122.2, 46.77],
+      [-122.5, 46.88],
+      [-122.7, 47.08],
+    ],
+  },
+];
+
+const TOWNS: { name: string; lon: number; lat: number; side: "left" | "right"; dy: number }[] = [
+  { name: "Portland", lon: -122.68, lat: 45.52, side: "left", dy: -14 },
+  { name: "Olympia", lon: -122.9, lat: 47.04, side: "right", dy: 0 },
+  { name: "Yakima", lon: -120.51, lat: 46.6, side: "right", dy: 0 },
+  { name: "Ellensburg", lon: -120.55, lat: 46.99, side: "right", dy: 0 },
+];
+
+const STATES: { name: string; lon: number; lat: number }[] = [
+  { name: "WASHINGTON", lon: -123.2, lat: 46.45 },
+  { name: "OREGON", lon: -123.2, lat: 45.95 },
 ];
 
 const data = (() => {
   const sampleLonMin = -123.6;
-  const sampleLonMax = -120.4;
+  const sampleLonMax = -119.2;
   const sampleLatMin = 45.5;
   const sampleLatMax = 47.3;
   const sampleNLon = 101;
@@ -177,47 +271,51 @@ const CONTOURS = LEVELS.map((level) => {
   return { level, segments, isIndex: Math.abs(level % INDEX_STEP) < 1e-6 };
 });
 
-const SEQ_LOW = [
-  parseInt(t.seq[0].slice(1, 3), 16),
-  parseInt(t.seq[0].slice(3, 5), 16),
-  parseInt(t.seq[0].slice(5, 7), 16),
-];
-const SEQ_HIGH = [
-  parseInt(t.seq[1].slice(1, 3), 16),
-  parseInt(t.seq[1].slice(3, 5), 16),
-  parseInt(t.seq[1].slice(5, 7), 16),
-];
+// Filled bands between the contour levels: one imprint_seq step per band
+const hexToRgb = (hex: string) => [1, 3, 5].map((k) => parseInt(hex.slice(k, k + 2), 16));
+const SEQ_LOW = hexToRgb(t.seq[0]);
+const SEQ_HIGH = hexToRgb(t.seq[1]);
+const BAND_EDGES = [MIN_ELEV, ...LEVELS, MAX_ELEV];
+const N_BANDS = BAND_EDGES.length - 1;
+const BAND_RGB = Array.from({ length: N_BANDS }, (_, k) =>
+  SEQ_LOW.map((c, ch) => Math.round(c + ((SEQ_HIGH[ch] - c) * k) / (N_BANDS - 1))),
+);
+const bandOf = (v: number) => LEVELS.filter((l) => l <= v).length;
 
-const CELLS: {
-  lonMin: number;
-  lonMax: number;
-  latMin: number;
-  latMax: number;
-  color: string;
-}[] = [];
-for (let j = 0; j < NLAT - 1; j++) {
-  for (let i = 0; i < NLON - 1; i++) {
-    const tl = GRID[j][i];
-    const tr = GRID[j][i + 1];
-    const bl = GRID[j + 1][i];
-    const br = GRID[j + 1][i + 1];
-    if (Number.isNaN(tl) || Number.isNaN(tr) || Number.isNaN(bl) || Number.isNaN(br)) {
-      continue;
+// Rasterize the banded field (bilinear within each grid cell, so band edges follow the isolines)
+const FILL_URL = (() => {
+  const w = (NLON - 1) * FILL_SUBSAMPLE;
+  const h = (NLAT - 1) * FILL_SUBSAMPLE;
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d")!;
+  const img = ctx.createImageData(w, h);
+  for (let py = 0; py < h; py++) {
+    const gy = NLAT - 1 - (py + 0.5) / FILL_SUBSAMPLE;
+    const j = Math.min(NLAT - 2, Math.floor(gy));
+    const fy = gy - j;
+    for (let px = 0; px < w; px++) {
+      const gx = (px + 0.5) / FILL_SUBSAMPLE;
+      const i = Math.min(NLON - 2, Math.floor(gx));
+      const fx = gx - i;
+      const v =
+        GRID[j][i] * (1 - fx) * (1 - fy) +
+        GRID[j][i + 1] * fx * (1 - fy) +
+        GRID[j + 1][i] * (1 - fx) * fy +
+        GRID[j + 1][i + 1] * fx * fy;
+      if (Number.isNaN(v)) continue;
+      const [r, g, b] = BAND_RGB[bandOf(v)];
+      const o = (py * w + px) * 4;
+      img.data[o] = r;
+      img.data[o + 1] = g;
+      img.data[o + 2] = b;
+      img.data[o + 3] = 255;
     }
-    const mean = (tl + tr + bl + br) / 4;
-    const frac = Math.max(0, Math.min(1, (mean - MIN_ELEV) / (MAX_ELEV - MIN_ELEV)));
-    const r = Math.round(SEQ_LOW[0] + (SEQ_HIGH[0] - SEQ_LOW[0]) * frac);
-    const g = Math.round(SEQ_LOW[1] + (SEQ_HIGH[1] - SEQ_LOW[1]) * frac);
-    const b = Math.round(SEQ_LOW[2] + (SEQ_HIGH[2] - SEQ_LOW[2]) * frac);
-    CELLS.push({
-      lonMin: LONS[i],
-      lonMax: LONS[i + 1],
-      latMin: LATS[j],
-      latMax: LATS[j + 1],
-      color: `rgb(${r},${g},${b})`,
-    });
   }
-}
+  ctx.putImageData(img, 0, 0);
+  return canvas.toDataURL();
+})();
 
 const SUBTITLE = `${NLON}×${NLAT} grid (${Math.round(MIN_ELEV)}–${Math.round(MAX_ELEV)}${elevUnitSuffix}) · index contours every ${INDEX_STEP}${elevUnitSuffix}, intermediate every ${CONTOUR_STEP}${elevUnitSuffix}`;
 
@@ -225,45 +323,87 @@ function ContourLayer() {
   const { left, top, width: areaW, height: areaH } = useDrawingArea();
   const lonSpan = LON_MAX - LON_MIN;
   const latSpan = LAT_MAX - LAT_MIN;
+  const projX = (lon: number) => left + ((lon - LON_MIN) / lonSpan) * areaW;
+  const projY = (lat: number) => top + (1 - (lat - LAT_MIN) / latSpan) * areaH;
 
-  const occupiedBoxes = PEAKS.map((p) => {
-    const cx = left + ((p.lon - LON_MIN) / lonSpan) * areaW;
-    const cy = top + (1 - (p.lat - LAT_MIN) / latSpan) * areaH;
+  const peakLabels = PEAKS.map((p) => {
+    const cx = projX(p.lon);
+    const cy = projY(p.lat);
     const boxW = Math.max(108, p.name.length * 8.2 + 14);
-    return { x0: cx - boxW / 2 - 6, x1: cx + boxW / 2 + 6, y0: cy - 58, y1: cy - 28 };
+    return { key: p.name, text: p.name, x: cx - boxW / 2, y: cy - 54, w: boxW };
   });
+  const riverLabels = RIVERS.filter((r) => r.label).map((r) => {
+    const boxW = r.name.length * 7.4 + 14;
+    return {
+      key: r.name,
+      text: r.name,
+      x: projX(r.label![0]) - boxW / 2,
+      y: projY(r.label![1]) - 11,
+      w: boxW,
+    };
+  });
+  const townLabels = TOWNS.map((town) => {
+    const boxW = town.name.length * 7.6 + 12;
+    const cx = projX(town.lon);
+    return {
+      key: town.name,
+      text: town.name,
+      cx,
+      cy: projY(town.lat),
+      x: town.side === "right" ? cx + 8 : cx - 8 - boxW,
+      y: projY(town.lat) - 11 + town.dy,
+      w: boxW,
+    };
+  });
+  const stateLabels = STATES.map((s) => {
+    const boxW = s.name.length * 13 + 16;
+    return { key: s.name, text: s.name, x: projX(s.lon) - boxW / 2, y: projY(s.lat) - 11, w: boxW };
+  });
+  const occupiedBoxes = [...peakLabels, ...riverLabels, ...townLabels, ...stateLabels].map(
+    (b) => ({ x0: b.x - 6, x1: b.x + b.w + 6, y0: b.y - 4, y1: b.y + 26 }),
+  );
 
   const barX = left + areaW + 46;
   const barW = 24;
   const barTop = top + 16;
   const barBottom = top + areaH;
+  const barY = (v: number) =>
+    barBottom - ((v - MIN_ELEV) / (MAX_ELEV - MIN_ELEV)) * (barBottom - barTop);
 
   return (
     <g fontFamily={FONT}>
       <defs>
-        <linearGradient id="elevationRamp" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={t.seq[1]} />
-          <stop offset="100%" stopColor={t.seq[0]} />
-        </linearGradient>
+        <clipPath id="mapClip">
+          <rect x={left} y={top} width={areaW} height={areaH} />
+        </clipPath>
       </defs>
 
-      {CELLS.map((cell, idx) => {
-        const x0 = left + ((cell.lonMin - LON_MIN) / lonSpan) * areaW;
-        const x1 = left + ((cell.lonMax - LON_MIN) / lonSpan) * areaW;
-        const y0 = top + (1 - (cell.latMax - LAT_MIN) / latSpan) * areaH;
-        const y1 = top + (1 - (cell.latMin - LAT_MIN) / latSpan) * areaH;
-        return (
-          <rect
-            key={idx}
-            x={x0}
-            y={y0}
-            width={x1 - x0 + 0.5}
-            height={y1 - y0 + 0.5}
-            fill={cell.color}
-            stroke="none"
+      <image
+        href={FILL_URL}
+        x={left}
+        y={top}
+        width={areaW}
+        height={areaH}
+        preserveAspectRatio="none"
+      />
+
+      {/* Basemap: rivers in the page color, beneath the contours */}
+      <g clipPath="url(#mapClip)">
+        {RIVERS.map((river) => (
+          <polyline
+            key={river.name}
+            points={river.points
+              .map(([lon, lat]) => `${projX(lon).toFixed(1)},${projY(lat).toFixed(1)}`)
+              .join(" ")}
+            fill="none"
+            stroke={t.pageBg}
+            strokeWidth={river.width}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeOpacity={0.9}
           />
-        );
-      })}
+        ))}
+      </g>
 
       {CONTOURS.map(({ level, segments, isIndex }) => {
         const d = segments
@@ -345,78 +485,40 @@ function ContourLayer() {
           );
         })}
 
-      {RIVERS.map((river) => {
-        const pts = river.points
-          .map(([lon, lat]) => {
-            const px = left + ((lon - LON_MIN) / lonSpan) * areaW;
-            const py = top + (1 - (lat - LAT_MIN) / latSpan) * areaH;
-            return `${px.toFixed(1)},${py.toFixed(1)}`;
-          })
-          .join(" ");
-        const [firstLon, firstLat] = river.points[0];
-        const rx = left + ((firstLon - LON_MIN) / lonSpan) * areaW + 6;
-        const ry = top + (1 - (firstLat - LAT_MIN) / latSpan) * areaH - 26;
-        const boxW = Math.max(96, river.name.length * 7.8 + 14);
-        return (
-          <g key={river.name}>
-            <polyline
-              points={pts}
-              fill="none"
-              stroke={t.inkSoft}
-              strokeWidth={3}
-              strokeLinecap="round"
-              strokeOpacity={0.8}
-            />
-            <rect
-              x={rx}
-              y={ry}
-              width={boxW}
-              height={22}
-              rx={4}
-              fill={t.pageBg}
-              opacity={0.88}
-            />
-            <text
-              x={rx + 6}
-              y={ry + 16}
-              fontSize={14}
-              fontStyle="italic"
-              fill={t.inkSoft}
-            >
-              {river.name}
-            </text>
-          </g>
-        );
-      })}
+      {townLabels.map((town) => (
+        <circle
+          key={`dot-${town.key}`}
+          cx={town.cx}
+          cy={town.cy}
+          r={4.5}
+          fill={t.ink}
+          stroke={t.pageBg}
+          strokeWidth={1.5}
+        />
+      ))}
 
-      {PEAKS.map((p) => {
-        const cx = left + ((p.lon - LON_MIN) / lonSpan) * areaW;
-        const cy = top + (1 - (p.lat - LAT_MIN) / latSpan) * areaH;
-        const boxW = Math.max(108, p.name.length * 8.2 + 14);
-        return (
-          <g key={p.name}>
-            <rect
-              x={cx - boxW / 2}
-              y={cy - 54}
-              width={boxW}
-              height={22}
-              rx={4}
-              fill={t.pageBg}
-              opacity={0.88}
-            />
-            <text
-              x={cx}
-              y={cy - 38}
-              textAnchor="middle"
-              fontSize={14}
-              fontWeight={600}
-              fill={t.ink}
-            >
-              {p.name}
-            </text>
-          </g>
-        );
-      })}
+      {[
+        ...stateLabels.map((b) => ({ ...b, color: t.inkSoft, weight: 600, italic: false, spacing: 3 })),
+        ...riverLabels.map((b) => ({ ...b, color: t.inkSoft, weight: 400, italic: true, spacing: 0 })),
+        ...townLabels.map((b) => ({ ...b, color: t.ink, weight: 400, italic: false, spacing: 0 })),
+        ...peakLabels.map((b) => ({ ...b, color: t.ink, weight: 600, italic: false, spacing: 0 })),
+      ].map((b) => (
+        <g key={`text-${b.key}`}>
+          <rect x={b.x} y={b.y} width={b.w} height={22} rx={4} fill={t.pageBg} opacity={0.88} />
+          <text
+            x={b.x + b.w / 2}
+            y={b.y + 16}
+            textAnchor="middle"
+            fontSize={14}
+            fontWeight={b.weight}
+            fontStyle={b.italic ? "italic" : "normal"}
+            letterSpacing={b.spacing}
+            fill={b.color}
+          >
+            {b.text}
+          </text>
+        </g>
+      ))}
 
       {/* Vertical Colorbar */}
       <text
@@ -429,31 +531,46 @@ function ContourLayer() {
       >
         {ELEVATION}
       </text>
+      {BAND_RGB.map(([r, g, b], k) => (
+        <rect
+          key={`band-${k}`}
+          x={barX}
+          y={barY(BAND_EDGES[k + 1])}
+          width={barW}
+          height={barY(BAND_EDGES[k]) - barY(BAND_EDGES[k + 1])}
+          fill={`rgb(${r},${g},${b})`}
+        />
+      ))}
       <rect
         x={barX}
         y={barTop}
         width={barW}
         height={barBottom - barTop}
-        fill="url(#elevationRamp)"
+        fill="none"
         stroke={t.inkSoft}
         strokeWidth={1}
-        rx={3}
       />
-      {COLORBAR_TICKS.map((f) => {
-        const value = Math.round(MIN_ELEV + f * (MAX_ELEV - MIN_ELEV));
-        const y = barBottom - f * (barBottom - barTop);
+      {LEVELS.map((level) => {
+        const y = barY(level);
+        const isIndex = Math.abs(level % INDEX_STEP) < 1e-6;
         return (
-          <g key={f}>
+          <g key={`tick-${level}`}>
             <line
-              x1={barX + barW}
+              x1={barX}
               y1={y}
               x2={barX + barW + 6}
               y2={y}
               stroke={t.inkSoft}
-              strokeWidth={1.2}
+              strokeWidth={isIndex ? 1.4 : 0.8}
             />
-            <text x={barX + barW + 12} y={y + 5} fontSize={14} fill={t.inkSoft}>
-              {value}
+            <text
+              x={barX + barW + 12}
+              y={y + 5}
+              fontSize={14}
+              fontWeight={isIndex ? 600 : 400}
+              fill={t.inkSoft}
+            >
+              {level}
             </text>
           </g>
         );
