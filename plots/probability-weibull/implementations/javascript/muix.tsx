@@ -17,6 +17,7 @@ const t = window.ANYPLOT_TOKENS;
 const TITLE = "probability-weibull · javascript · muix · anyplot.ai";
 const CHAR_LIFE_PCT = 63.2;
 const PROB_TICKS = [0.1, 0.5, 1, 2, 5, 10, 20, 30, 50, 63.2, 80, 90, 95, 99, 99.9];
+const LOG_TICK_MANTISSAS = [1, 1.5, 2, 3, 5, 7];
 const DEFAULT_MIN_PROB_PCT = 1;
 const DEFAULT_MAX_PROB_PCT = 99;
 const Y_PAD_SHARE = 0.08;
@@ -98,7 +99,14 @@ const minObsTime = Math.min(...plottedPoints.map((p) => p.time));
 const maxObsTime = Math.max(...plottedPoints.map((p) => p.time));
 const xMin = minObsTime * X_MIN_FACTOR;
 const xMax = maxObsTime * X_MAX_FACTOR;
-const yAtCharLife = Math.log(-Math.log(1 - CHAR_LIFE_PCT / 100));
+const xTickValues: number[] = [];
+for (let decade = Math.floor(Math.log10(xMin)); decade <= Math.ceil(Math.log10(xMax)); decade += 1) {
+  for (const m of LOG_TICK_MANTISSAS) {
+    const tick = m * 10 ** decade;
+    if (tick >= xMin && tick <= xMax) xTickValues.push(tick);
+  }
+}
+const yAtCharLife =Math.log(-Math.log(1 - CHAR_LIFE_PCT / 100));
 
 const minPlotY = Math.min(...plottedPoints.map((p) => p.y));
 const maxPlotY = Math.max(...plottedPoints.map((p) => p.y));
@@ -275,7 +283,8 @@ export default function Chart() {
             min: xMin,
             max: xMax,
             height: 58,
-            valueFormatter: (v: number) => `${Math.round(v)}`,
+            tickInterval: xTickValues,
+            valueFormatter: (v: number) => `${Number(v.toPrecision(3))}`,
             label: TIME,
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
             labelStyle: { fontSize: 15, fill: t.ink },
