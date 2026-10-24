@@ -1,9 +1,8 @@
 // anyplot.ai
 // parliament-basic: Parliament Seat Chart
-// Library: muix 9.x | JavaScript 22.23.2
+// Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 91/100 | Created: 2026-09-02
 
-import * as React from "react";
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
@@ -20,29 +19,30 @@ const TOP_PAD_SHARE = 0.14;
 const BOTTOM_PAD_SHARE = 0.13;
 const X_PAD_SHARE = 0.12;
 
-const PARTY_COL = "party_name";
-const SEATS_COL = "seat_count";
+// Columns: set these to your data's column names
+const PARTY = "Party"; // role: category
+const SEATS = "Seats"; // role: value
 
-// Data: fictional chamber assembly with neutral party names (flat scalar records)
-const DATA: Array<Record<string, string | number>> = [
-  { party_name: "Harbor Guild", seat_count: 24 },
-  { party_name: "Meadow Union", seat_count: 38 },
-  { party_name: "Lantern League", seat_count: 52 },
-  { party_name: "Bridge Assembly", seat_count: 46 },
-  { party_name: "Granite Circle", seat_count: 28 },
-  { party_name: "Orchard Compact", seat_count: 12 },
+// Data: replace this block with your own records
+const data: Array<Record<string, string | number>> = [
+  { [PARTY]: "Harbor Guild", [SEATS]: 24 },
+  { [PARTY]: "Meadow Union", [SEATS]: 38 },
+  { [PARTY]: "Lantern League", [SEATS]: 52 },
+  { [PARTY]: "Bridge Assembly", [SEATS]: 46 },
+  { [PARTY]: "Granite Circle", [SEATS]: 28 },
+  { [PARTY]: "Orchard Compact", [SEATS]: 12 },
 ];
 
-const parties = DATA.map((row, idx) => ({
-  name: String(row[PARTY_COL]),
-  seats: Number(row[SEATS_COL]),
+// Plot: reads only data and the constants above
+const parties = data.map((row, idx) => ({
+  name: String(row[PARTY]),
+  seats: Number(row[SEATS]),
   color: t.palette[idx],
 }));
 
 const totalSeats = parties.reduce((sum, p) => sum + p.seats, 0);
 const majoritySeats = Math.floor(totalSeats / 2) + 1;
 
-// Concentric semicircular arcs with seat count proportional to arc length
 const rowCount = Math.min(9, Math.max(3, Math.round(Math.sqrt(totalSeats / 6))));
 const rowRadii = Array.from({ length: rowCount }, (_, i) =>
   rowCount === 1 ? OUTER_R : INNER_R + (i * (OUTER_R - INNER_R)) / (rowCount - 1),
@@ -53,6 +53,7 @@ const capacityDrift = totalSeats - rowCapacities.reduce((sum, c) => sum + c, 0);
 rowCapacities[rowCount - 1] += capacityDrift;
 
 interface SeatSlot {
+  rowIndex: number;
   r: number;
   theta: number;
   x: number;
@@ -64,9 +65,8 @@ for (let rowIndex = 0; rowIndex < rowRadii.length; rowIndex += 1) {
   const r = rowRadii[rowIndex];
   const capacity = rowCapacities[rowIndex];
   for (let j = 0; j < capacity; j += 1) {
-    // theta from pi (left) to 0 (right) so seats order naturally left-to-right
     const theta = Math.PI - ((j + 0.5) / capacity) * Math.PI;
-    slots.push({ r, theta, x: r * Math.cos(theta), y: r * Math.sin(theta) });
+    slots.push({ rowIndex, r, theta, x: r * Math.cos(theta), y: r * Math.sin(theta) });
   }
 }
 slots.sort((a, b) => b.theta - a.theta || a.r - b.r);
@@ -91,14 +91,39 @@ const rowRadialGap = rowCount > 1 ? (OUTER_R - INNER_R) / (rowCount - 1) : OUTER
 const minAngularSpacing = Math.min(...rowRadii.map((r, i) => (r * Math.PI) / rowCapacities[i]));
 const seatDataRadius = 0.42 * Math.min(rowRadialGap, minAngularSpacing);
 
-// Majority threshold angle bisecting seat majoritySeats - 1 and majoritySeats
-const majorityLower = slots[majoritySeats - 1];
-const majorityUpper = slots[majoritySeats] ?? majorityLower;
-const majorityTheta = (majorityLower.theta + majorityUpper.theta) / 2;
+// Stepped majority boundary through each row's gap between the first majoritySeats and the rest
+const rowGapThetas = rowRadii.map((_, rIdx) => {
+  const leftInRow = slots.filter((s, idx) => s.rowIndex === rIdx && idx < majoritySeats);
+  const rightInRow = slots.filter((s, idx) => s.rowIndex === rIdx && idx >= majoritySeats);
+  const lastLeft = leftInRow[leftInRow.length - 1];
+  const firstRight = rightInRow[0];
+  return (lastLeft.theta + firstRight.theta) / 2;
+});
 
 const topPad = OUTER_R * TOP_PAD_SHARE;
 const bottomPad = OUTER_R * BOTTOM_PAD_SHARE;
 const xPad = OUTER_R * X_PAD_SHARE;
+
+const boundaryPoints: Array<{ x: number; y: number }> = [];
+const innerStartR = INNER_R - rowRadialGap * 0.55;
+boundaryPoints.push({
+  x: innerStartR * Math.cos(rowGapThetas[0]),
+  y: innerStartR * Math.sin(rowGapThetas[0]),
+});
+for (let rIdx = 0; rIdx < rowCount; rIdx += 1) {
+  const theta = rowGapThetas[rIdx];
+  if (rIdx < rowCount - 1) {
+    const midR = (rowRadii[rIdx] + rowRadii[rIdx + 1]) / 2;
+    boundaryPoints.push({ x: midR * Math.cos(theta), y: midR * Math.sin(theta) });
+    const nextTheta = rowGapThetas[rIdx + 1];
+    boundaryPoints.push({ x: midR * Math.cos(nextTheta), y: midR * Math.sin(nextTheta) });
+  } else {
+    const outerEndR = OUTER_R + topPad * 0.48;
+    boundaryPoints.push({ x: outerEndR * Math.cos(theta), y: outerEndR * Math.sin(theta) });
+  }
+}
+
+const outerTheta = rowGapThetas[rowCount - 1];
 const domain = {
   xMin: -(OUTER_R + xPad),
   xMax: OUTER_R + xPad,
@@ -112,13 +137,12 @@ function ParliamentOverlay() {
   const xScale = useXScale();
   const yScale = useYScale();
 
-  const pxRadius = Math.abs(xScale(seatDataRadius) - xScale(0));
-  const innerX = (INNER_R * 0.28) * Math.cos(majorityTheta);
-  const innerY = (INNER_R * 0.28) * Math.sin(majorityTheta);
-  const outerX = (OUTER_R + topPad * 0.48) * Math.cos(majorityTheta);
-  const outerY = (OUTER_R + topPad * 0.48) * Math.sin(majorityTheta);
-  const labelX = (OUTER_R + topPad * 0.8) * Math.cos(majorityTheta);
-  const labelY = (OUTER_R + topPad * 0.8) * Math.sin(majorityTheta);
+  const pxRadius = Math.abs(Number(xScale(seatDataRadius)) - Number(xScale(0)));
+  const labelX = (OUTER_R + topPad * 0.8) * Math.cos(outerTheta);
+  const labelY = (OUTER_R + topPad * 0.8) * Math.sin(outerTheta);
+  const boundaryPath = boundaryPoints
+    .map((pt, i) => `${i === 0 ? "M" : "L"} ${xScale(pt.x)} ${yScale(pt.y)}`)
+    .join(" ");
 
   return (
     <g data-drawing-container>
@@ -133,15 +157,13 @@ function ParliamentOverlay() {
           strokeWidth={1}
         />
       ))}
-      <line
-        x1={xScale(innerX)}
-        y1={yScale(innerY)}
-        x2={xScale(outerX)}
-        y2={yScale(outerY)}
+      <path
+        d={boundaryPath}
+        fill="none"
         stroke={t.ink}
-        strokeOpacity={0.45}
-        strokeWidth={1.5}
-        strokeDasharray="7,6"
+        strokeOpacity={0.55}
+        strokeWidth={1.6}
+        strokeDasharray="6,5"
       />
       <text x={xScale(labelX)} y={yScale(labelY)} textAnchor="middle" fontSize={14} fill={t.inkSoft}>
         {`Majority · ${majoritySeats}`}
@@ -154,7 +176,7 @@ function ParliamentOverlay() {
         fontWeight={500}
         fill={t.ink}
       >
-        {`${totalSeats} seats`}
+        {`${totalSeats} (${SEATS})`}
       </text>
     </g>
   );
@@ -165,7 +187,6 @@ export default function Chart() {
   const availW = width;
   const availH = height - TITLE_H - LEGEND_H;
 
-  // Enforce exact 1:1 px/unit scale so the chamber arc is a true semicircle
   const margin = 12;
   const maxDrawW = availW - margin * 2;
   const maxDrawH = availH - margin * 2;
@@ -229,7 +250,12 @@ export default function Chart() {
         width={availW}
         height={availH}
         series={[]}
-        margin={{ top: vPad, bottom: availH - drawH - vPad, left: hPad, right: availW - drawW - hPad }}
+        margin={{
+          top: vPad,
+          bottom: availH - drawH - vPad,
+          left: hPad,
+          right: availW - drawW - hPad,
+        }}
         xAxis={[{ id: "x", scaleType: "linear", min: domain.xMin, max: domain.xMax, position: "none" }]}
         yAxis={[{ id: "y", scaleType: "linear", min: domain.yMin, max: domain.yMax, position: "none" }]}
         skipAnimation
