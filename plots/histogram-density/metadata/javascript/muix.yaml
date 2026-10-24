@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: histogram-density
 created: '2026-09-05T04:38:58Z'
-updated: '2026-10-24T09:52:05Z'
+updated: '2026-10-24T09:56:59Z'
 generated_by: gemini-4-argon
 adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
 workflow_run: 40083399591
@@ -16,40 +16,44 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram
 quality_score: 86
 review:
   strengths:
-  - Composes BarPlot, LinePlot, ChartsGrid and both axes inside a v9 ChartsContainer,
-    so the bar and line series share one band x axis and one density y axis without
-    a second chart instance
-  - Density is computed correctly as count / (n * binWidth), so the bar areas sum
-    to 1 and the y axis reads in 1/g; the fitted Normal PDF uses the sample mean and
-    SD and sits on the same scale
-  - Subtitle states n = 400, the bin width (1.98 g), the mean and the SD, giving the
-    reader the scale facts needed to read a density axis
-  - 18 bins for 400 observations show the bell shape and both tails without breaking
-    into spikes; categoryGapRatio 0.02 keeps the bars contiguous
-  - Theme tokens threaded through every text and chrome element; both renders are
-    fully legible, and tickLabelInterval thins the x tick labels to every other bin
+  - 'Correct density normalization: each bar is count / (n × bin width), so the 18
+    bar areas sum to 1 and the y axis reads ''Probability Density (1/g)'' with values
+    that follow from the gram unit'
+  - 'Fitted normal PDF (sample mean and SD) drawn on the same density scale in Imprint
+    lavender #C475FD over brand-green bars, identified in the legend with a line glyph
+    against the square bar glyph (labelMarkType)'
+  - 'Composed MUI X v9 chart: ChartsDataProvider + ChartsWrapper with an HTML ChartsLegend
+    outside ChartsSurface, BarPlot and LinePlot sharing one band axis, skipAnimation
+    set throughout'
+  - Subtitle carries n, bin width, mean and SD in inkSoft under the ink title, giving
+    a clear typographic hierarchy that explains the normalization
+  - 'Theme-correct in both renders: chrome from ANYPLOT_TOKENS (ink, inkSoft, grid,
+    pageBg), identical data colors, thin page-colored bar separators that keep the
+    bars contiguous'
+  - Realistic quality-control scenario (400 packages around a 500 g target, SD 6 g)
+    with a deterministic LCG + Box-Muller generator
   weaknesses:
-  - 'LM-01 (code): the series legend is hand-built from MUI Box and Typography elements
-    (swatch divs plus labels) instead of the community ChartsLegend, which the library
-    prompt names for a composed chart → render <ChartsLegend /> inside ChartsDataProvider/ChartsWrapper
-    above the ChartsSurface and style it with slotProps.legend.sx. Likely cause: the
-    custom legend Box block above ChartsContainer.'
-  - 'Suggestion: x tick labels sit at bin centers (484.0, 487.9, 491.9 …), which read
-    as odd values; ticks at bin edges or round grams would be easier to read.'
-  - 'Suggestion: the subtitle repeats the unit inside nested parentheses (''Package
-    weight (g) (n = 400, …)''); a plain ''Package weight · n = 400 · …'' would read
-    more cleanly.'
+  - 'SC-03 (both): the x axis is a categorical band scale, so tick marks sit on bin
+    edges while the labels name bin centers with irregular decimals (484.0, 487.9,
+    491.9 …), and a value cannot be read off a tick position → a continuous weight
+    scale with round ticks at the bin edges (e.g. every 4 g). Likely cause: xAxis
+    scaleType "band" with data binCenters and valueFormatter toFixed(1).'
+  - 'Suggestion: evaluate the fitted PDF on a finer grid that spans the full bin range
+    so the curve reaches the outer bar edges instead of stopping at the first and
+    last bin centers.'
+  - 'Suggestion: drop the doubled parentheses in the subtitle (''Package weight (g)
+    (n = 400 …'') by writing the unit once.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, no white panel.
-      Chrome: bold dark title "histogram-density · javascript · muix · anyplot.ai" top-left (~40% width), soft-ink subtitle with n, bin width, mean and SD, an HTML legend (green swatch "Observed density (18 bins)", lavender line "Fitted Normal PDF"). Y axis "Probability Density (1/g)" with ticks 0.000–0.075 at 0.005 steps; x axis "Package weight (g)" with every other bin center labelled (484.0 … 515.7). Subtle light grey horizontal grid. All text readable.
-      Data: 18 contiguous brand-green #009E73 bars from a zero baseline, separated by hairline page-coloured edges, peaking at ~0.068 around 501.8 g; a 3.5 px lavender #C475FD fitted Normal curve drawn over the bars, peaking ~0.065 at 499.8 g, tails falling toward ~0.002.
+      Background: warm off-white #FAF8F1 across the whole canvas.
+      Chrome: bold near-black title "histogram-density · javascript · muix · anyplot.ai" top-left (~40 % of the width), inkSoft subtitle "Package weight (g) (n = 400, bin width = 1.98 g) · Mean 500.2 g, SD 6.1 g", horizontal HTML legend below it, y-axis label "Probability Density (1/g)" with ticks 0.000–0.075, x-axis label "Package weight (g)" with every other bin center labelled (484.0 … 515.7). Subtle horizontal grid lines, thin grid-colored axis lines. All text readable.
+      Data: 18 contiguous brand-green #009E73 bars separated by hairline page-colored gaps, rising from zero; lumpy bell shape peaking at ~0.068; a lavender #C475FD fitted normal curve (peak ~0.065) drawn over the bars.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, subtitle, legend text, axis titles and tick labels all flip to light ink and read cleanly; grid lines dark grey and subtle. No dark-on-dark text.
-      Data: identical green bars and lavender curve; bar edges now in the dark page colour. Data colours match the light render exactly.
+      Chrome: title, subtitle, legend, axis labels and tick labels all flip to light ink / inkSoft and read clearly; grid lines subtle dark grey; no dark-on-dark text.
+      Data: identical green bars and lavender curve as the light render; only the chrome and bar separators (now dark) flip.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -61,45 +65,46 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (title 22, ticks 14, labels 15 px); readable in both
-          themes
+        comment: Explicit sizes (title 22, ticks 14, labels 15, legend 14 CSS px);
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; curve over bars is intended
+        comment: No text collisions; curve crosses bars by design
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars and 3.5 px curve clearly visible; legend swatches match the
-          marks in both themes
+        comment: Bars and 3.5 px curve clearly visible; legend glyphs match marks
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs lavender is CVD-distinct; curve contrasts with bars
+        comment: Green vs lavender distinguishable under CVD; good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800; balanced margins, no overflow
+        comment: Balanced proportions, no overflow; canvas gate passed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Package weight (g)'' and ''Probability Density (1/g)'' with units'
+        comment: Descriptive labels with units, density unit 1/g
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Bars #009E73, curve Imprint #C475FD; backgrounds #FAF8F1/#1A1A17'
+        comment: 'First series #009E73, second #C475FD; correct backgrounds in both
+          themes'
     design_excellence:
       score: 11
       max: 20
@@ -109,24 +114,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Title/subtitle/legend typographic hierarchy with a stats subtitle
-          beyond the baseline
+        comment: Stats subtitle in inkSoft under the ink title forms a deliberate
+          typographic hierarchy beyond the baseline
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Thinned x tick labels, headroom ratio, hairline bar separators chosen
-          for this chart
+        comment: Hairline page-colored bar separators (categoryGapRatio 0.02) and
+          grid-colored axis lines/ticks chosen for this chart
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Subtitle reports mean/SD/bin width so the fit can be judged at a
-          glance
+        comment: Subtitle surfaces n, bin width, mean and SD so the reader can check
+          the normalization and fit
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -134,26 +139,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Density histogram with fitted PDF overlay as the Notes suggest
+        comment: Density histogram with optional PDF overlay
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Density y axis, contiguous bins from zero, areas sum to 1, curve
-          on same scale identified by legend, fitting bin count
+        comment: Density y axis, area = 1, consistent bins, contrasting labelled curve,
+          fitting bin count
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Bars at their bin densities; monotoneX curve does not overshoot
+        comment: 'Band x axis: ticks at bin edges, labels at irregular bin centers
+          (defect line)'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title; legend labels are reader text
+        comment: Mandated title; legend labels readable
     data_quality:
       score: 15
       max: 15
@@ -163,20 +169,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows peak, both tails and bars above/below the fitted curve
+        comment: Shows bell shape, tails, lumpy bins and bars above/below the fit
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Package fill weights around 500 g, neutral QC scenario
+        comment: Package fill weights around a 500 g target
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Checked density = c/(n*binWidth); peak ~0.068 with SD 6.1 g matches
-          1/(6.1*sqrt(2pi)) ≈ 0.065; no Check values in spec
+        comment: 'Checked: density = c/(n*bw) so areas sum to 1; peak ~0.068 ≈ 1/(6.1*sqrt(2π))
+          ≈ 0.065'
     code_quality:
       score: 10
       max: 10
@@ -186,13 +192,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat module code plus the required component
+        comment: Linear module code plus the required component
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG with Box-Muller
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -204,43 +210,41 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Short written-out binning and PDF, allowed by the library prompt's
-          Computation line
+        comment: Short written-out binning/fit, allowed by the library prompt
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-export component, skipAnimation, v9 ChartsContainer API
+        comment: Default export, v9 API, skipAnimation; harness writes PNG/HTML
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Composed ChartsContainer is idiomatic, but the legend is hand-built
-          instead of ChartsLegend (defect line)
+        comment: v9 composition API (ChartsDataProvider/ChartsWrapper/ChartsSurface)
+          with axisClasses styling
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Mixed bar+line series in one container, tickLabelInterval, axisClasses
-          styling
-  verdict: REJECTED
+        comment: Mixed BarPlot + LinePlot on a shared axis with per-series labelMarkType
+          legend glyphs
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T09:49:34Z'
+  rendered_at: '2026-10-24T09:54:13Z'
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - custom-legend
-  - hover-tooltips
-  - html-export
+  - legend
+  - custom-subtitle
   patterns:
   - data-generation
   dataprep:
@@ -249,3 +253,4 @@ impl_tags:
   - distribution-fit
   styling:
   - minimal-chrome
+  - grid-styling
