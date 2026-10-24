@@ -15,7 +15,8 @@ const TITLE = "network-force-directed · javascript · muix · anyplot.ai";
 const TITLE_FONT_SIZE = 22;
 const TITLE_H = 46;
 const LEGEND_H = 36;
-const CAPTION_H = 32;
+const CAPTION_H = 38;
+const CHART_MARGIN = 8;
 const SIM_AREA_SPAN = 1000;
 const RING_RADIUS_SHARE = 0.26;
 const SUBRING_RADIUS_SHARE = 0.07;
@@ -23,7 +24,9 @@ const JITTER_SHARE = 0.024;
 const ITERATIONS = 300;
 const INITIAL_TEMP_SHARE = 0.08;
 const GRAVITY_FACTOR = 0.01;
-const PAD_SHARE = 0.14;
+const ROTATION_STEPS = 180;
+const PAD_X_PX = 80;
+const PAD_Y_PX = 56;
 const MIN_NODE_R = 7;
 const MAX_NODE_R_SPAN = 16;
 const HUB_HALO_OFFSET = 7;
@@ -38,116 +41,106 @@ const WEIGHT = "Co-authored papers"; // role: weight
 // Data: replace this block with your own records
 const nodes: Array<Record<string, string>> = [
   // Machine Learning (8 researchers)
-  { [NODE]: "ML-0", [GROUP]: "Machine Learning" },
-  { [NODE]: "ML-1", [GROUP]: "Machine Learning" },
-  { [NODE]: "ML-2", [GROUP]: "Machine Learning" },
-  { [NODE]: "ML-3", [GROUP]: "Machine Learning" },
-  { [NODE]: "ML-4", [GROUP]: "Machine Learning" },
-  { [NODE]: "ML-5", [GROUP]: "Machine Learning" },
-  { [NODE]: "ML-6", [GROUP]: "Machine Learning" },
-  { [NODE]: "ML-7", [GROUP]: "Machine Learning" },
+  { [NODE]: "Okafor", [GROUP]: "Machine Learning" },
+  { [NODE]: "Lindqvist", [GROUP]: "Machine Learning" },
+  { [NODE]: "Tanaka", [GROUP]: "Machine Learning" },
+  { [NODE]: "Moreau", [GROUP]: "Machine Learning" },
+  { [NODE]: "Haddad", [GROUP]: "Machine Learning" },
+  { [NODE]: "Silva", [GROUP]: "Machine Learning" },
+  { [NODE]: "Kowalski", [GROUP]: "Machine Learning" },
+  { [NODE]: "Brennan", [GROUP]: "Machine Learning" },
 
   // Robotics (6 researchers)
-  { [NODE]: "RB-0", [GROUP]: "Robotics" },
-  { [NODE]: "RB-1", [GROUP]: "Robotics" },
-  { [NODE]: "RB-2", [GROUP]: "Robotics" },
-  { [NODE]: "RB-3", [GROUP]: "Robotics" },
-  { [NODE]: "RB-4", [GROUP]: "Robotics" },
-  { [NODE]: "RB-5", [GROUP]: "Robotics" },
+  { [NODE]: "Nakamura", [GROUP]: "Robotics" },
+  { [NODE]: "Fischer", [GROUP]: "Robotics" },
+  { [NODE]: "Adeyemi", [GROUP]: "Robotics" },
+  { [NODE]: "Rossi", [GROUP]: "Robotics" },
+  { [NODE]: "Petrov", [GROUP]: "Robotics" },
+  { [NODE]: "Chen", [GROUP]: "Robotics" },
 
   // Bioinformatics (7 researchers)
-  { [NODE]: "BI-0", [GROUP]: "Bioinformatics" },
-  { [NODE]: "BI-1", [GROUP]: "Bioinformatics" },
-  { [NODE]: "BI-2", [GROUP]: "Bioinformatics" },
-  { [NODE]: "BI-3", [GROUP]: "Bioinformatics" },
-  { [NODE]: "BI-4", [GROUP]: "Bioinformatics" },
-  { [NODE]: "BI-5", [GROUP]: "Bioinformatics" },
-  { [NODE]: "BI-6", [GROUP]: "Bioinformatics" },
+  { [NODE]: "Iyer", [GROUP]: "Bioinformatics" },
+  { [NODE]: "Novak", [GROUP]: "Bioinformatics" },
+  { [NODE]: "Garcia", [GROUP]: "Bioinformatics" },
+  { [NODE]: "Holm", [GROUP]: "Bioinformatics" },
+  { [NODE]: "Abiodun", [GROUP]: "Bioinformatics" },
+  { [NODE]: "Larsen", [GROUP]: "Bioinformatics" },
+  { [NODE]: "Wojcik", [GROUP]: "Bioinformatics" },
 
   // Network Science (5 researchers)
-  { [NODE]: "NS-0", [GROUP]: "Network Science" },
-  { [NODE]: "NS-1", [GROUP]: "Network Science" },
-  { [NODE]: "NS-2", [GROUP]: "Network Science" },
-  { [NODE]: "NS-3", [GROUP]: "Network Science" },
-  { [NODE]: "NS-4", [GROUP]: "Network Science" },
+  { [NODE]: "Varga", [GROUP]: "Network Science" },
+  { [NODE]: "Duarte", [GROUP]: "Network Science" },
+  { [NODE]: "Sato", [GROUP]: "Network Science" },
+  { [NODE]: "Keller", [GROUP]: "Network Science" },
+  { [NODE]: "Amari", [GROUP]: "Network Science" },
 
   // Cryptography (6 researchers)
-  { [NODE]: "CR-0", [GROUP]: "Cryptography" },
-  { [NODE]: "CR-1", [GROUP]: "Cryptography" },
-  { [NODE]: "CR-2", [GROUP]: "Cryptography" },
-  { [NODE]: "CR-3", [GROUP]: "Cryptography" },
-  { [NODE]: "CR-4", [GROUP]: "Cryptography" },
-  { [NODE]: "CR-5", [GROUP]: "Cryptography" },
+  { [NODE]: "Ivanova", [GROUP]: "Cryptography" },
+  { [NODE]: "Osei", [GROUP]: "Cryptography" },
+  { [NODE]: "Bauer", [GROUP]: "Cryptography" },
+  { [NODE]: "Mendez", [GROUP]: "Cryptography" },
+  { [NODE]: "Park", [GROUP]: "Cryptography" },
+  { [NODE]: "Quinn", [GROUP]: "Cryptography" },
 ];
 
 const data: Array<Record<string, string | number>> = [
-  // Machine Learning
-  { [SOURCE]: "ML-0", [TARGET]: "ML-1", [WEIGHT]: 5 },
-  { [SOURCE]: "ML-0", [TARGET]: "ML-2", [WEIGHT]: 4 },
-  { [SOURCE]: "ML-0", [TARGET]: "ML-3", [WEIGHT]: 3 },
-  { [SOURCE]: "ML-0", [TARGET]: "ML-4", [WEIGHT]: 4 },
-  { [SOURCE]: "ML-0", [TARGET]: "ML-5", [WEIGHT]: 2 },
-  { [SOURCE]: "ML-0", [TARGET]: "ML-6", [WEIGHT]: 3 },
-  { [SOURCE]: "ML-0", [TARGET]: "ML-7", [WEIGHT]: 2 },
-  { [SOURCE]: "ML-1", [TARGET]: "ML-2", [WEIGHT]: 3 },
-  { [SOURCE]: "ML-1", [TARGET]: "ML-4", [WEIGHT]: 2 },
-  { [SOURCE]: "ML-2", [TARGET]: "ML-3", [WEIGHT]: 1 },
-  { [SOURCE]: "ML-4", [TARGET]: "ML-5", [WEIGHT]: 2 },
-  { [SOURCE]: "ML-5", [TARGET]: "ML-6", [WEIGHT]: 3 },
-  { [SOURCE]: "ML-6", [TARGET]: "ML-7", [WEIGHT]: 1 },
+  // Machine Learning: a lab lead with a dense core and two sub-teams
+  { [SOURCE]: "Okafor", [TARGET]: "Lindqvist", [WEIGHT]: 6 },
+  { [SOURCE]: "Okafor", [TARGET]: "Tanaka", [WEIGHT]: 4 },
+  { [SOURCE]: "Okafor", [TARGET]: "Moreau", [WEIGHT]: 3 },
+  { [SOURCE]: "Okafor", [TARGET]: "Haddad", [WEIGHT]: 2 },
+  { [SOURCE]: "Lindqvist", [TARGET]: "Tanaka", [WEIGHT]: 3 },
+  { [SOURCE]: "Lindqvist", [TARGET]: "Silva", [WEIGHT]: 2 },
+  { [SOURCE]: "Tanaka", [TARGET]: "Kowalski", [WEIGHT]: 1 },
+  { [SOURCE]: "Silva", [TARGET]: "Kowalski", [WEIGHT]: 4 },
+  { [SOURCE]: "Silva", [TARGET]: "Haddad", [WEIGHT]: 1 },
+  { [SOURCE]: "Haddad", [TARGET]: "Brennan", [WEIGHT]: 2 },
+  { [SOURCE]: "Moreau", [TARGET]: "Brennan", [WEIGHT]: 1 },
 
-  // Robotics
-  { [SOURCE]: "RB-0", [TARGET]: "RB-1", [WEIGHT]: 4 },
-  { [SOURCE]: "RB-0", [TARGET]: "RB-2", [WEIGHT]: 3 },
-  { [SOURCE]: "RB-0", [TARGET]: "RB-3", [WEIGHT]: 5 },
-  { [SOURCE]: "RB-0", [TARGET]: "RB-4", [WEIGHT]: 2 },
-  { [SOURCE]: "RB-0", [TARGET]: "RB-5", [WEIGHT]: 3 },
-  { [SOURCE]: "RB-1", [TARGET]: "RB-2", [WEIGHT]: 2 },
-  { [SOURCE]: "RB-2", [TARGET]: "RB-3", [WEIGHT]: 3 },
-  { [SOURCE]: "RB-3", [TARGET]: "RB-4", [WEIGHT]: 1 },
-  { [SOURCE]: "RB-4", [TARGET]: "RB-5", [WEIGHT]: 2 },
+  // Robotics: two close collaborators carry the group
+  { [SOURCE]: "Nakamura", [TARGET]: "Fischer", [WEIGHT]: 5 },
+  { [SOURCE]: "Nakamura", [TARGET]: "Adeyemi", [WEIGHT]: 2 },
+  { [SOURCE]: "Fischer", [TARGET]: "Rossi", [WEIGHT]: 3 },
+  { [SOURCE]: "Fischer", [TARGET]: "Petrov", [WEIGHT]: 2 },
+  { [SOURCE]: "Rossi", [TARGET]: "Petrov", [WEIGHT]: 4 },
+  { [SOURCE]: "Adeyemi", [TARGET]: "Chen", [WEIGHT]: 1 },
+  { [SOURCE]: "Petrov", [TARGET]: "Chen", [WEIGHT]: 2 },
 
-  // Bioinformatics
-  { [SOURCE]: "BI-0", [TARGET]: "BI-1", [WEIGHT]: 3 },
-  { [SOURCE]: "BI-0", [TARGET]: "BI-2", [WEIGHT]: 4 },
-  { [SOURCE]: "BI-0", [TARGET]: "BI-3", [WEIGHT]: 5 },
-  { [SOURCE]: "BI-0", [TARGET]: "BI-4", [WEIGHT]: 2 },
-  { [SOURCE]: "BI-0", [TARGET]: "BI-5", [WEIGHT]: 3 },
-  { [SOURCE]: "BI-0", [TARGET]: "BI-6", [WEIGHT]: 4 },
-  { [SOURCE]: "BI-1", [TARGET]: "BI-2", [WEIGHT]: 2 },
-  { [SOURCE]: "BI-2", [TARGET]: "BI-3", [WEIGHT]: 3 },
-  { [SOURCE]: "BI-3", [TARGET]: "BI-5", [WEIGHT]: 2 },
-  { [SOURCE]: "BI-4", [TARGET]: "BI-6", [WEIGHT]: 1 },
-  { [SOURCE]: "BI-5", [TARGET]: "BI-6", [WEIGHT]: 2 },
+  // Bioinformatics: a star around one core-facility head
+  { [SOURCE]: "Iyer", [TARGET]: "Novak", [WEIGHT]: 4 },
+  { [SOURCE]: "Iyer", [TARGET]: "Garcia", [WEIGHT]: 5 },
+  { [SOURCE]: "Iyer", [TARGET]: "Holm", [WEIGHT]: 3 },
+  { [SOURCE]: "Iyer", [TARGET]: "Abiodun", [WEIGHT]: 2 },
+  { [SOURCE]: "Iyer", [TARGET]: "Larsen", [WEIGHT]: 3 },
+  { [SOURCE]: "Iyer", [TARGET]: "Wojcik", [WEIGHT]: 1 },
+  { [SOURCE]: "Novak", [TARGET]: "Garcia", [WEIGHT]: 2 },
+  { [SOURCE]: "Holm", [TARGET]: "Larsen", [WEIGHT]: 2 },
+  { [SOURCE]: "Abiodun", [TARGET]: "Wojcik", [WEIGHT]: 3 },
 
-  // Network Science
-  { [SOURCE]: "NS-0", [TARGET]: "NS-1", [WEIGHT]: 4 },
-  { [SOURCE]: "NS-0", [TARGET]: "NS-2", [WEIGHT]: 3 },
-  { [SOURCE]: "NS-0", [TARGET]: "NS-3", [WEIGHT]: 5 },
-  { [SOURCE]: "NS-0", [TARGET]: "NS-4", [WEIGHT]: 2 },
-  { [SOURCE]: "NS-1", [TARGET]: "NS-2", [WEIGHT]: 2 },
-  { [SOURCE]: "NS-2", [TARGET]: "NS-3", [WEIGHT]: 3 },
-  { [SOURCE]: "NS-3", [TARGET]: "NS-4", [WEIGHT]: 1 },
+  // Network Science: a small loop with one outlier
+  { [SOURCE]: "Varga", [TARGET]: "Duarte", [WEIGHT]: 3 },
+  { [SOURCE]: "Duarte", [TARGET]: "Sato", [WEIGHT]: 2 },
+  { [SOURCE]: "Sato", [TARGET]: "Keller", [WEIGHT]: 4 },
+  { [SOURCE]: "Keller", [TARGET]: "Varga", [WEIGHT]: 1 },
+  { [SOURCE]: "Duarte", [TARGET]: "Amari", [WEIGHT]: 2 },
 
-  // Cryptography
-  { [SOURCE]: "CR-0", [TARGET]: "CR-1", [WEIGHT]: 4 },
-  { [SOURCE]: "CR-0", [TARGET]: "CR-2", [WEIGHT]: 3 },
-  { [SOURCE]: "CR-0", [TARGET]: "CR-3", [WEIGHT]: 2 },
-  { [SOURCE]: "CR-0", [TARGET]: "CR-4", [WEIGHT]: 5 },
-  { [SOURCE]: "CR-0", [TARGET]: "CR-5", [WEIGHT]: 3 },
-  { [SOURCE]: "CR-1", [TARGET]: "CR-2", [WEIGHT]: 1 },
-  { [SOURCE]: "CR-2", [TARGET]: "CR-4", [WEIGHT]: 3 },
-  { [SOURCE]: "CR-3", [TARGET]: "CR-4", [WEIGHT]: 2 },
-  { [SOURCE]: "CR-4", [TARGET]: "CR-5", [WEIGHT]: 2 },
+  // Cryptography: a tight trio trailing into a chain
+  { [SOURCE]: "Ivanova", [TARGET]: "Osei", [WEIGHT]: 5 },
+  { [SOURCE]: "Ivanova", [TARGET]: "Bauer", [WEIGHT]: 4 },
+  { [SOURCE]: "Osei", [TARGET]: "Bauer", [WEIGHT]: 3 },
+  { [SOURCE]: "Bauer", [TARGET]: "Mendez", [WEIGHT]: 2 },
+  { [SOURCE]: "Mendez", [TARGET]: "Park", [WEIGHT]: 3 },
+  { [SOURCE]: "Park", [TARGET]: "Quinn", [WEIGHT]: 1 },
 
-  // Cross-group bridges
-  { [SOURCE]: "ML-0", [TARGET]: "RB-0", [WEIGHT]: 2 },
-  { [SOURCE]: "ML-1", [TARGET]: "BI-0", [WEIGHT]: 1 },
-  { [SOURCE]: "RB-0", [TARGET]: "BI-0", [WEIGHT]: 2 },
-  { [SOURCE]: "BI-0", [TARGET]: "NS-0", [WEIGHT]: 1 },
-  { [SOURCE]: "NS-0", [TARGET]: "CR-0", [WEIGHT]: 2 },
-  { [SOURCE]: "CR-0", [TARGET]: "ML-0", [WEIGHT]: 1 },
-  { [SOURCE]: "NS-2", [TARGET]: "ML-3", [WEIGHT]: 1 },
+  // Cross-field collaborations
+  { [SOURCE]: "Okafor", [TARGET]: "Nakamura", [WEIGHT]: 3 },
+  { [SOURCE]: "Tanaka", [TARGET]: "Iyer", [WEIGHT]: 2 },
+  { [SOURCE]: "Kowalski", [TARGET]: "Fischer", [WEIGHT]: 1 },
+  { [SOURCE]: "Garcia", [TARGET]: "Duarte", [WEIGHT]: 2 },
+  { [SOURCE]: "Sato", [TARGET]: "Silva", [WEIGHT]: 1 },
+  { [SOURCE]: "Keller", [TARGET]: "Mendez", [WEIGHT]: 1 },
+  { [SOURCE]: "Moreau", [TARGET]: "Osei", [WEIGHT]: 2 },
+  { [SOURCE]: "Chen", [TARGET]: "Holm", [WEIGHT]: 1 },
 ];
 
 // Plot: reads only data and the constants above
@@ -214,7 +207,7 @@ for (const row of data) {
 
 const minW = Math.min(...edges.map((e) => e.weight));
 const maxW = Math.max(...edges.map((e) => e.weight));
-const wSpan = maxW - minW;
+const wSpan = maxW - minW || 1;
 for (const edge of edges) {
   edge.wRatio = (edge.weight - minW) / wSpan;
 }
@@ -308,22 +301,49 @@ for (let iter = 0; iter < ITERATIONS; iter += 1) {
   temperature = Math.max(temperature - cooling, 1);
 }
 
+// A force layout has no meaningful orientation: rotate it to the angle that
+// lets it fill the drawing area best, then fit the domain to the pixel aspect
+const plotW = window.ANYPLOT_SIZE.width - CHART_MARGIN * 2;
+const plotH = window.ANYPLOT_SIZE.height - TITLE_H - LEGEND_H - CAPTION_H - CHART_MARGIN * 2;
+const fitW = plotW - PAD_X_PX * 2;
+const fitH = plotH - PAD_Y_PX * 2;
+
+let bestAngle = 0;
+let bestScale = 0;
+for (let step = 0; step < ROTATION_STEPS; step += 1) {
+  const angle = (step / ROTATION_STEPS) * Math.PI;
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
+  const rx = layoutNodes.map((n) => n.x * cos - n.y * sin);
+  const ry = layoutNodes.map((n) => n.x * sin + n.y * cos);
+  const scale = Math.min(
+    fitW / (Math.max(...rx) - Math.min(...rx)),
+    fitH / (Math.max(...ry) - Math.min(...ry)),
+  );
+  if (scale > bestScale) {
+    bestScale = scale;
+    bestAngle = angle;
+  }
+}
+
+for (const node of layoutNodes) {
+  const x = node.x * Math.cos(bestAngle) - node.y * Math.sin(bestAngle);
+  const y = node.x * Math.sin(bestAngle) + node.y * Math.cos(bestAngle);
+  node.x = x;
+  node.y = y;
+}
+
 const xs = layoutNodes.map((n) => n.x);
 const ys = layoutNodes.map((n) => n.y);
-const rawXMin = Math.min(...xs);
-const rawXMax = Math.max(...xs);
-const rawYMin = Math.min(...ys);
-const rawYMax = Math.max(...ys);
-const rawSpan = Math.max(rawXMax - rawXMin, rawYMax - rawYMin);
-const pad = rawSpan * PAD_SHARE;
-const xMid = (rawXMin + rawXMax) / 2;
-const yMid = (rawYMin + rawYMax) / 2;
-const span = rawSpan + pad * 2;
+const xMid = (Math.min(...xs) + Math.max(...xs)) / 2;
+const yMid = (Math.min(...ys) + Math.max(...ys)) / 2;
+const halfSpanX = plotW / 2 / bestScale;
+const halfSpanY = plotH / 2 / bestScale;
 const domain = {
-  xMin: xMid - span / 2,
-  xMax: xMid + span / 2,
-  yMin: yMid - span / 2,
-  yMax: yMid + span / 2,
+  xMin: xMid - halfSpanX,
+  xMax: xMid + halfSpanX,
+  yMin: yMid - halfSpanY,
+  yMax: yMid + halfSpanY,
 };
 
 function ForceNetworkOverlay() {
@@ -339,8 +359,8 @@ function ForceNetworkOverlay() {
           x2={xScale(layoutNodes[edge.targetIdx].x)}
           y2={yScale(layoutNodes[edge.targetIdx].y)}
           stroke={t.inkSoft}
-          strokeOpacity={edge.isBridge ? 0.25 : 0.42}
-          strokeWidth={edge.isBridge ? 1.2 : 1.1 + edge.wRatio * 2.2}
+          strokeOpacity={edge.isBridge ? 0.32 : 0.42}
+          strokeWidth={1.1 + edge.wRatio * 2.2}
           strokeDasharray={edge.isBridge ? "5,4" : undefined}
         />
       ))}
@@ -448,7 +468,7 @@ export default function Chart() {
         width={width}
         height={chartHeight}
         series={[]}
-        margin={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        margin={{ top: CHART_MARGIN, bottom: CHART_MARGIN, left: CHART_MARGIN, right: CHART_MARGIN }}
         xAxis={[{ id: "x", scaleType: "linear", min: domain.xMin, max: domain.xMax, position: "none" }]}
         yAxis={[{ id: "y", scaleType: "linear", min: domain.yMin, max: domain.yMax, position: "none" }]}
         skipAnimation
@@ -461,11 +481,11 @@ export default function Chart() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          fontSize: 13,
+          fontSize: 15,
           color: t.inkSoft,
         }}
       >
-        {`Node size = degree · Halo & label = highest-degree hub per ${GROUP} · Edge width = ${WEIGHT} · Dashed line = cross-group link`}
+        {`Node size = degree · Halo & label = top hub per ${GROUP} · Edge width = ${WEIGHT} · Dashed = cross-field link`}
       </div>
     </div>
   );
