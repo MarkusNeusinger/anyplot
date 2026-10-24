@@ -39,7 +39,7 @@ const IMPACT_LABELS = [
 ];
 
 const ZONE_LEGEND = [
-  { name: "Low", label: "Low (1–4)", maxScore: 4, color: t.palette[1] },
+  { name: "Low", label: "Low (1–4)", maxScore: 4, color: t.palette[0] },
   { name: "Medium", label: "Medium (5–9)", maxScore: 9, color: t.amber },
   { name: "High", label: "High (10–16)", maxScore: 16, color: t.palette[3] },
   { name: "Critical", label: "Critical (20–25)", maxScore: 25, color: t.palette[4] },
@@ -217,48 +217,6 @@ function RiskMatrixLayer() {
         );
       })}
 
-      {risksPlaced.map((r) => {
-        const sx = left + ((r.jx - axisMin) / gridCount) * width;
-        const sy = top + ((axisMax - r.jy) / gridCount) * height;
-        const labelY = r.labelBelow ? sy + 24 : sy - 18;
-        const pillW = r.name.length * 8.2 + 14;
-        const pillH = 22;
-        return (
-          <g key={`risk-${r.id}`}>
-            <circle
-              cx={sx}
-              cy={sy}
-              r={9}
-              fill={t.elevatedBg}
-              stroke={t.ink}
-              strokeWidth={2.5}
-            />
-            <rect
-              x={sx - pillW / 2}
-              y={labelY - pillH / 2 - 4}
-              width={pillW}
-              height={pillH}
-              rx={4}
-              fill={t.pageBg}
-              fillOpacity={0.92}
-              stroke={t.grid}
-              strokeWidth={1}
-            />
-            <text
-              x={sx}
-              y={labelY}
-              textAnchor="middle"
-              fontSize={14}
-              fontWeight="600"
-              fill={t.ink}
-              fontFamily={FONT}
-            >
-              {r.name}
-            </text>
-          </g>
-        );
-      })}
-
       {ZONE_LEGEND.map((z, i) => {
         const lx = left + colW * i + colW / 2 - 72;
         return (
@@ -292,6 +250,48 @@ function RiskMatrixLayer() {
   );
 }
 
+function RiskLabelsLayer() {
+  const { left, top, width, height } = useDrawingArea();
+
+  return (
+    <g>
+      {risksPlaced.map((r) => {
+        const sx = left + ((r.jx - axisMin) / gridCount) * width;
+        const sy = top + ((axisMax - r.jy) / gridCount) * height;
+        const labelY = r.labelBelow ? sy + 26 : sy - 20;
+        const pillW = r.name.length * 8.2 + 14;
+        const pillH = 22;
+        return (
+          <g key={`risk-${r.id}`}>
+            <rect
+              x={sx - pillW / 2}
+              y={labelY - pillH / 2 - 4}
+              width={pillW}
+              height={pillH}
+              rx={4}
+              fill={t.pageBg}
+              fillOpacity={0.92}
+              stroke={t.grid}
+              strokeWidth={1}
+            />
+            <text
+              x={sx}
+              y={labelY}
+              textAnchor="middle"
+              fontSize={14}
+              fontWeight="600"
+              fill={t.ink}
+              fontFamily={FONT}
+            >
+              {r.name}
+            </text>
+          </g>
+        );
+      })}
+    </g>
+  );
+}
+
 export default function Chart() {
   return (
     <ChartsContainer
@@ -304,7 +304,7 @@ export default function Chart() {
           id: "risks",
           data: scatterData,
           color: t.ink,
-          markerSize: 8,
+          markerSize: 9,
         },
       ]}
       xAxis={[
@@ -346,8 +346,9 @@ export default function Chart() {
       ]}
       skipAnimation
     >
-      <ScatterPlot />
       <RiskMatrixLayer />
+      <ScatterPlot />
+      <RiskLabelsLayer />
       <ChartsXAxis axisId="impact-axis" />
       <ChartsYAxis axisId="likelihood-axis" />
     </ChartsContainer>
