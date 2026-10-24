@@ -126,12 +126,8 @@ function PackedBubblesLayer() {
     };
   });
 
-  for (let iter = 0; iter < ITERATIONS; iter += 1) {
-    for (const b of bubbles) {
-      const anchor = anchors[b.group];
-      b.x += (anchor.x - b.x) * ATTRACTION;
-      b.y += (anchor.y - b.y) * ATTRACTION;
-    }
+  const resolveCollisions = () => {
+    let maxOverlap = 0;
     for (let i = 0; i < bubbles.length; i += 1) {
       for (let j = i + 1; j < bubbles.length; j += 1) {
         const a = bubbles[i];
@@ -142,6 +138,7 @@ function PackedBubblesLayer() {
         const minDist = a.r + c.r + PADDING;
         if (dist < minDist) {
           const overlap = (minDist - dist) / 2;
+          maxOverlap = Math.max(maxOverlap, overlap);
           const ux = dx / dist;
           const uy = dy / dist;
           a.x -= ux * overlap;
@@ -151,11 +148,25 @@ function PackedBubblesLayer() {
         }
       }
     }
+    return maxOverlap;
+  };
+
+  for (let iter = 0; iter < ITERATIONS; iter += 1) {
+    const pull = ATTRACTION * (1 - iter / ITERATIONS);
+    for (const b of bubbles) {
+      const anchor = anchors[b.group];
+      b.x += (anchor.x - b.x) * pull;
+      b.y += (anchor.y - b.y) * pull;
+    }
+    resolveCollisions();
     for (const b of bubbles) {
       b.x = Math.min(left + width - b.r, Math.max(left + b.r, b.x));
       b.y = Math.min(top + height - b.r, Math.max(top + b.r, b.y));
     }
   }
+  // Collision-only passes: no attraction or clamp, so no circle ends crossing another
+  let pass = 0;
+  while (pass < 500 && resolveCollisions() > 0.01) pass += 1;
 
   return (
     <g>
@@ -186,7 +197,6 @@ function PackedBubblesLayer() {
               cy={b.y}
               r={b.r}
               fill={meta.color}
-              fillOpacity={0.94}
               stroke={t.pageBg}
               strokeWidth={2}
             >
