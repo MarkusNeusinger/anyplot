@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: bar-3d-categorical
 created: '2026-09-04T22:33:53Z'
-updated: '2026-10-24T00:06:57Z'
+updated: '2026-10-24T00:12:46Z'
 generated_by: gemini-4-argon
 adopted_from: a6754ae47632b531aec6e975e6a4b937aa81fea5 (a6754ae47632b531aec6e975e6a4b937aa81fea5)
 workflow_run: 40042931270
@@ -13,52 +13,53 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-3d-ca
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/javascript/muix/plot-dark.html
-quality_score: 83
+quality_score: 86
 review:
   strengths:
-  - Composes ChartsContainer with ChartsXAxis, ChartsYAxis and ChartsGrid and draws
-    the 3D bars in a custom layer through useXScale/useYScale/useDrawingArea, so the
-    bars share MUI X's band and linear scales
-  - Three-tone face shading (lightened top, darkened side) derived from each Imprint
-    color gives the bars clear volume and depth in both themes
-  - The depth stagger keeps every rear bar top and its value label in sight, so no
-    bar is fully hidden
-  - Value labels on translucent page-colored pills stay readable where they sit over
-    rear bar faces, in both themes
-  - Realistic materials-engineering data (alloy tensile strength by heat treatment)
-    with a wide, meaningful value spread
+  - 'Builds the 3D view on MUI X''s composition API: ChartsContainer with band/linear
+    axes, and a custom Bars3D layer reading useXScale, useYScale and useDrawingArea,
+    so bars sit exactly at their scale values against a zero-based value axis'
+  - Oblique offset per heat-treatment row with gaps between bars keeps the top face
+    and value label of every rear bar in sight; no bar is fully hidden
+  - Shaded front, side (darken) and top (lighten) faces from each Imprint color give
+    the bars a convincing solid look identical in both themes
+  - Base-plane grid (row lines plus column polylines) and back-wall level lines extended
+    from the value axis relate the bars to their cells and values
+  - Value labels sit on their own bars, with page-colored pills where they fall over
+    a rear bar, readable in both themes and free of collisions
+  - All chrome threaded from ANYPLOT_TOKENS (ink, inkSoft, grid, pageBg); text readable
+    on both backgrounds
+  - Axis bands sized explicitly (x height 68, y width 96) so no tick label is truncated;
+    skipAnimation set
   weaknesses:
-  - 'SC-03 (both): the horizontal value grid and the y axis belong only to the front
-    (Annealed) floor, while rear rows are shifted up by the depth stagger, so a rear
-    bar top reads too high against the grid; the Aged Inconel 718 bar (1,400) tops
-    out at about 1,540 on the axis (about +140 MPa), Quenched bars about +95, Tempered
-    about +47 → rear bar tops readable at their values, e.g. by drawing the value
-    gridlines on a back wall that follows the depth offset or by projecting each row''s
-    grid level along the depth direction. Likely cause: ChartsGrid horizontal and
-    ChartsYAxis drawn for row 0 only while each row group is translated by (row*STAGGER_DX,
-    row*STAGGER_DY).'
-  - 'DQ-03 (code): Mg AZ31 annealed is given 145 MPa, well below the typical 240–260
-    MPa ultimate tensile strength of annealed AZ31 → about 240 MPa (+95 MPa), keeping
-    the treatments in a plausible order. Likely cause: the Mg AZ31 values in the data
-    block.'
-  - 'CQ-04 (code): lines 68–81 write out per-channel RGB lightening and darkening
-    for the top and side faces → lighten(hex, 0.34) and darken(hex, 0.3) from @mui/material/styles.
-    Likely cause: hand-rolled color math instead of the MUI color helpers.'
-  - 'Suggestion: the depth (heat treatment) axis could carry its own title next to
-    the Annealed…Aged row labels instead of relying on the header legend title.'
-  - 'Suggestion: drop the `as any` casts on useXScale/useYScale; the snippet is only
-    bundled by esbuild, never type-checked.'
+  - 'DQ-02 (both): the heat-treatment values read as invented for Steel 4140: ''Quenched''
+    at 900 MPa is well below as-quenched 4140 (about 1,500–1,900 MPa, higher than
+    tempered), and ''Aged'' is not a treatment that applies to 4140 or yields 1,080
+    MPa → use treatments and values each alloy actually takes (e.g. as-quenched above
+    tempered for 4140, or a treatment set like Annealed / T4 / T6 for the aluminium-type
+    alloys). Likely cause: one Annealed<Tempered<Quenched<Aged staircase applied uniformly
+    to every alloy in the data block.'
+  - 'CQ-04 (code): lines 69–76 hand-roll a ''nice'' tick step and tick array that
+    the d3 linear scale computes → `yScale.ticks(8)` inside Bars3D with `tickNumber:
+    8` on the y axis (and drop the `as any` casts, which the library prompt says esbuild
+    does not need). Likely cause: wall level lines computed outside the component,
+    before the scale exists.'
+  - 'Suggestion: the header subtitle repeating category counts and the value range
+    adds a line of chrome with little reading value; the legend line alone could carry
+    the header.'
+  - 'Suggestion: a muix tooltip or highlight on the custom bars would add value in
+    the interactive HTML.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across the full canvas.
-      Chrome: bold dark title "bar-3d-categorical · javascript · muix · anyplot.ai" centred at top, grey subtitle "Alloy: 5 · Heat treatment: 4 · Tensile strength (MPa): 124–1,400", inline legend "Heat treatment: Annealed / Tempered / Quenched / Aged". Y axis "Tensile strength (MPa)" 0–1,500 in steps of 100 with subtle horizontal gridlines; x axis "Alloy" with Al 6061, Ti-6Al-4V, Steel 4140, Inconel 718, Mg AZ31; depth row labels Annealed…Aged at right along the staggered floor lines. All text dark and readable.
-      Data: 20 oblique 3D bars in 5 alloy groups, rows staggered back and up: Annealed brand green #009E73 in front, then lavender Tempered, blue Quenched, ochre Aged; lighter top faces and darker side faces. Value labels above each bar top (pills for the front three rows), e.g. 1,400 on the tallest Aged Inconel bar. First series is #009E73.
+      Background: warm off-white #FAF8F1 throughout.
+      Chrome: bold title "bar-3d-categorical · javascript · muix · anyplot.ai" (~32% width), subtitle with category counts and value range, header legend "Heat treatment:" with four swatches; y axis "Tensile strength (MPa)" 0–1,400 ticks, x axis "Alloy" with five alloy tick labels, row labels Annealed/Quenched/Tempered/Aged at the right of the base-plane row lines; back-wall level lines and faint floor grid. All text dark and readable.
+      Data: 20 shaded 3D bars in an oblique view, four rows offset up-right; Annealed #009E73 front, Tempered #C475FD, Quenched #4467A3, Aged #BD8233 rear; lighter top faces, darker side faces; value labels on each bar (pills over rear bars). Rear tops all visible.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, subtitle, legend, axis titles, tick labels and depth row labels all flip to light ink and are clearly readable; gridlines subtle grey; value-label pills flip to dark with light text. No dark-on-dark text.
-      Data: bar colors and shading identical to the light render; brand green front row stays vivid.
+      Chrome: title, subtitle, legend, axis titles, tick labels and row labels all in light ink; grid lines subtle but visible; value-label pills switch to the dark page color with light text. No dark-on-dark text.
+      Data: bar colors identical to the light render; only chrome flips.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -70,52 +71,49 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 22 px, axis titles 16 px, ticks and value labels 14 px set
-          explicitly; all text readable in both themes, no dark-on-dark
+        comment: Explicit 14–22 px sizes; all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Value labels sit on pill backgrounds above their own bar tops and
-          never collide with each other or with the row labels
+        comment: Value labels clear of each other; pills keep labels over rear bars
+          readable
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 20 bars well sized, shaded top/side faces read clearly, legend swatches
-          match the bar front colors in both themes
+        comment: All 20 bars and their top faces visible; legend swatches match bar
+          colors
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender/blue/ochre are CVD-distinct, and row position plus
-          labels carry the same information
+        comment: Four Imprint hues of distinct families; rows also separated by position
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, balanced axis titles and ticks, depth labels fit inside
-          the canvas, nothing overflows
+        comment: 3200x1800; margins computed from stagger and row-label width; nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Tensile strength (MPa)'' with units, ''Alloy'', and the depth
-          axis named by the ''Heat treatment:'' legend title'
+        comment: Tensile strength (MPa), Alloy, Heat treatment legend title
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint canonical order with #009E73 first, identical data colors
-          in both renders, #FAF8F1 / #1A1A17 backgrounds'
+        comment: 'Imprint canonical order, first series #009E73; correct backgrounds
+          in both themes'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -123,26 +121,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Raised for the three-tone face shading (lightened top, darkened side)
-          that gives the bars real volume and a compact header with a data-range subtitle
-          and inline legend
+        comment: Face shading derived per hue (lighten top, darken side) and page-colored
+          label pills go beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Raised for translucent page-colored pills behind value labels that
-          sit over rear bar faces, and depth-row labels aligned to the staggered floor
-          lines
+        comment: Back-wall level lines continuing the value grid, low-opacity floor
+          grid, row labels aligned to their floor lines
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed clearly, no focal point or hierarchy chosen beyond
-          the spec
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -150,30 +145,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 3D bars on a 5x4 categorical grid with an oblique elevated view
+        comment: 3D categorical bar grid, 5x4
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Bar spacing, color by heat treatment with legend, base-plane row/column
-          lines, value labels on a 20-bar grid, rear bar tops kept in sight by the
-          stagger
+        comment: Bar spacing, oblique view, base-plane grid, legend for color, value
+          labels on small grid; rear tops visible
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Bar heights are proportional above their own floor row, but the value
-          grid belongs only to the front plane, so rear bar tops read too high against
-          it (defect line)
+        passed: true
+        comment: Heights from yScale(value) on a zero-based axis; checked Inconel
+          Annealed 965 and Aged 1,400
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format; legend 'Heat treatment:' with
-          readable entries
+        comment: Mandated title; legend labelled Heat treatment with readable entries
     data_quality:
       score: 14
       max: 15
@@ -183,23 +175,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Wide value spread, partial occlusion of rear bars, labels and color
-          all exercised
+        comment: Wide value range, some rear bars taller and some shorter than front
+          ones
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Alloy tensile strength by heat treatment, a real and neutral materials-engineering
-          scenario
+        comment: Alloy strength by heat treatment is neutral, but Steel 4140 treatments/values
+          implausible (defect line)
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: 'Checked Al 6061 (124 annealed, 310 aged), Ti-6Al-4V, Inconel 718
-          against typical values: plausible; Mg AZ31 annealed 145 MPa is well below
-          its typical value (defect line)'
+        passed: true
+        comment: MPa values in plausible range; axis 0–1,512 with 200 steps
     code_quality:
       score: 9
       max: 10
@@ -209,13 +199,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: One child component, needed to use the MUI X scale hooks inside ChartsContainer
+        comment: Only the default export plus one child component required for the
+          scale hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hard-coded data
+        comment: Deterministic inline data
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -227,17 +218,17 @@ review:
         score: 1
         max: 2
         passed: false
-        comment: Lines 68-81 write out RGB lightening/darkening that @mui/material's
-          lighten/darken compute (defect line)
+        comment: Hand-rolled nice-tick computation (lines 69–76) instead of yScale.ticks;
+          unnecessary as-any casts (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation set,
-          v9 ChartsContainer API
+        comment: Default-exported component sized to ANYPLOT_SIZE; skipAnimation;
+          MUI X 9 API
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -245,19 +236,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Raised for composing ChartsContainer with ChartsXAxis/ChartsYAxis/ChartsGrid
-          and a custom SVG layer, the documented composition pattern
+        comment: ChartsContainer composition with ChartsXAxis/ChartsYAxis/ChartsGrid
+          and sx class overrides
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: true
-        comment: Raised for drawing custom marks through useXScale/useYScale/useDrawingArea
-          so the 3D bars share the MUI X band and linear scales
-  verdict: REJECTED
+        comment: Custom SVG layer driven by useXScale/useYScale/useDrawingArea hooks;
+          translated ChartsGrid as back wall
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T00:03:41Z'
+  rendered_at: '2026-10-24T00:09:58Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -265,9 +256,12 @@ impl_tags:
   - annotations
   - custom-legend
   - layer-composition
+  - patches
   - html-export
   patterns:
+  - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - grid-styling
+  - publication-ready
+  - edge-highlighting
