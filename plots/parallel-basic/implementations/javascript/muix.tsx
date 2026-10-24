@@ -1,94 +1,165 @@
 // anyplot.ai
 // parallel-basic: Basic Parallel Coordinates Plot
-// Library: muix 7.29.1 | JavaScript 22.23.1
-// Quality: 92/100 | Created: 2026-07-24
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+// Library: muix 9.16.0 | JavaScript 22.23.3
+// Quality: 86/100 | Updated: 2026-10-24
+
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { useXScale, useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
+
+// Constants
 const FONT = "Inter, system-ui, -apple-system, sans-serif";
+const TITLE = "parallel-basic · javascript · muix · anyplot.ai";
+const TITLE_H = 64;
+const DIM_PAD_SHARE = 0.08;
+const TARGET_TICK_DIVS = 3.5;
 
-// --- Data: 30 model-training runs across 3 architectures, compared on 5 -----
-// hyperparameter/performance dimensions. Each dimension keeps its own native
-// scale (batch size, layer count, dropout %, accuracy %, minutes) — that is
-// the whole point of a parallel-coordinates plot: it lets very differently
-// scaled variables sit side by side without forcing a shared axis.
-function makeLcg(seed) {
-  let state = seed >>> 0;
-  return () => {
-    state = (state * 1664525 + 1013904223) >>> 0;
-    return state / 4294967296;
-  };
-}
-const rand = makeLcg(20260724);
-
+// Columns: set these to your data's column names
+const ARCH = "Architecture"; // role: group
 const DIMENSIONS = [
-  { key: "batch", label: "Batch Size", min: 16, max: 256, format: (v) => `${Math.round(v)}` },
-  { key: "layers", label: "Hidden Layers", min: 1, max: 8, format: (v) => `${Math.round(v)}` },
-  { key: "dropout", label: "Dropout (%)", min: 0, max: 50, format: (v) => `${v.toFixed(0)}%` },
-  { key: "accuracy", label: "Val Accuracy (%)", min: 60, max: 99, format: (v) => `${v.toFixed(0)}%` },
-  { key: "time", label: "Train Time (min)", min: 5, max: 180, format: (v) => `${Math.round(v)}` },
+  "Batch size",
+  "Hidden layers",
+  "Dropout (%)",
+  "Validation accuracy (%)",
+  "Training time (min)",
+]; // role: dimension
+
+// Data: replace this block with your own records
+const SEED = 20260724;
+const DIM_BOUNDS: Array<[number, number]> = [
+  [16, 256],
+  [1, 8],
+  [0, 50],
+  [60, 99],
+  [5, 180],
+];
+const BATCH_SIZES = [16, 32, 64, 128, 256];
+const DIM_DECIMALS = [0, 0, 1, 1, 1];
+const ARCH_PROFILES: Array<{ name: string; count: number; centers: number[] }> = [
+  { name: "CNN", count: 10, centers: [0.35, 0.5, 0.25, 0.65, 0.4] },
+  { name: "RNN", count: 10, centers: [0.25, 0.35, 0.55, 0.35, 0.7] },
+  { name: "Transformer", count: 10, centers: [0.75, 0.8, 0.35, 0.85, 0.85] },
 ];
 
-// Fractional (0–1) centers per dimension, per architecture — the source of
-// the clustering pattern the plot is meant to reveal.
-const ARCHITECTURES = [
-  { name: "CNN", color: t.palette[0], count: 10, centers: [0.35, 0.5, 0.25, 0.65, 0.4] },
-  { name: "RNN", color: t.palette[1], count: 10, centers: [0.25, 0.35, 0.55, 0.35, 0.7] },
-  { name: "Transformer", color: t.palette[2], count: 10, centers: [0.75, 0.8, 0.35, 0.85, 0.85] },
-];
-
-function withAlpha(hex, alpha) {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+let lcgState = SEED >>> 0;
+const data: Array<Record<string, string | number>> = [];
+for (const arch of ARCH_PROFILES) {
+  for (let i = 0; i < arch.count; i += 1) {
+    const row: Record<string, string | number> = { [ARCH]: arch.name };
+    for (let d = 0; d < DIMENSIONS.length; d += 1) {
+      lcgState = (lcgState * 1664525 + 1013904223) >>> 0;
+      const rand = lcgState / 4294967296;
+      const jitter = (rand - 0.5) * 0.36;
+      const fraction = Math.min(1, Math.max(0, arch.centers[d] + jitter));
+      const [bMin, bMax] = DIM_BOUNDS[d];
+      row[DIMENSIONS[d]] =
+        d === 0
+          ? BATCH_SIZES[Math.round(fraction * (BATCH_SIZES.length - 1))]
+          : Number((bMin + fraction * (bMax - bMin)).toFixed(DIM_DECIMALS[d]));
+    }
+    data.push(row);
+  }
 }
 
-const RUNS = [];
-ARCHITECTURES.forEach((arch) => {
-  for (let i = 0; i < arch.count; i += 1) {
-    const values = DIMENSIONS.map((dim, d) => {
-      const jitter = (rand() - 0.5) * 0.36;
-      const fraction = Math.min(1, Math.max(0, arch.centers[d] + jitter));
-      return dim.min + fraction * (dim.max - dim.min);
-    });
-    RUNS.push({ architecture: arch.name, color: arch.color, values });
+// Plot: reads only data and the constants above
+const architectures: string[] = [];
+for (const row of data) {
+  const arch = String(row[ARCH]);
+  if (!architectures.includes(arch)) architectures.push(arch);
+}
+
+const archColorMap: Record<string, string> = {};
+for (let i = 0; i < architectures.length; i += 1) {
+  archColorMap[architectures[i]] = t.palette[i];
+}
+
+interface DimensionConfig {
+  col: string;
+  min: number;
+  max: number;
+  ticks: number[];
+  decimals: number;
+}
+
+const dimensions: DimensionConfig[] = DIMENSIONS.map((col) => {
+  const vals = data.map((r) => Number(r[col]));
+  const rawMin = Math.min(...vals);
+  const rawMax = Math.max(...vals);
+  const rawSpan = rawMax - rawMin;
+  const pad = rawSpan * DIM_PAD_SHARE;
+  const min = rawMin - pad;
+  const max = rawMax + pad;
+  const targetStep = (max - min) / TARGET_TICK_DIVS;
+  const mag = 10 ** Math.floor(Math.log10(targetStep));
+  const norm = targetStep / mag;
+  const step = (norm <= 1.5 ? 1 : norm <= 3.5 ? 2 : norm <= 7.5 ? 5 : 10) * mag;
+  const decimals = Math.max(0, -Math.floor(Math.log10(step) + 1e-9));
+  const firstTick = Math.ceil(min / step) * step;
+  const ticks: number[] = [];
+  for (let v = firstTick; v <= max + step * 1e-6; v += step) {
+    ticks.push(Number(v.toFixed(decimals)));
   }
+  return {
+    col,
+    min,
+    max,
+    ticks,
+    decimals,
+  };
 });
 
-// --- Custom marks — drawn on the MUI X coordinate system --------------------
-// @mui/x-charts has no native parallel-coordinates chart, so the axes and
-// connecting lines are drawn directly with useXScale/useDrawingArea, the same
-// low-level building blocks ChartsAxis/ChartsGrid use internally. The x-axis
-// (dimension index → pixel) comes from a genuine x-charts linear scale; the
-// y position per dimension is computed by hand since each axis has its own
-// independent value domain, which no single x-charts y-axis can express.
-
-function ParallelAxes() {
+function ParallelCoordinatesOverlay() {
   const xScale = useXScale();
   const { top, height } = useDrawingArea();
+
   return (
     <g fontFamily={FONT}>
-      {DIMENSIONS.map((dim, i) => {
-        const x = xScale(i);
+      <g fill="none" strokeWidth={1.8} strokeOpacity={0.75}>
+        {data.map((row, i) => {
+          const arch = String(row[ARCH]);
+          const points = dimensions
+            .map((dim, dIdx) => {
+              const val = Number(row[dim.col]);
+              const fraction = (val - dim.min) / (dim.max - dim.min);
+              const x = xScale(dIdx);
+              const y = top + height * (1 - fraction);
+              return `${x},${y}`;
+            })
+            .join(" ");
+          return <polyline key={i} points={points} stroke={archColorMap[arch]} />;
+        })}
+      </g>
+
+      {dimensions.map((dim, i) => {
+        const x = Number(xScale(i));
         return (
-          <g key={dim.key}>
+          <g key={dim.col}>
             <line x1={x} y1={top} x2={x} y2={top + height} stroke={t.inkSoft} strokeWidth={1.5} />
-            {[0, 0.5, 1].map((f) => {
+            {dim.ticks.map((tickVal) => {
+              const f = (tickVal - dim.min) / (dim.max - dim.min);
               const y = top + height * (1 - f);
-              const value = dim.min + f * (dim.max - dim.min);
+              const formatted = tickVal.toFixed(dim.decimals);
               return (
-                <g key={f}>
+                <g key={tickVal}>
                   <line x1={x - 6} y1={y} x2={x + 6} y2={y} stroke={t.inkSoft} strokeWidth={1.5} />
-                  <text x={x + 10} y={y} fontSize={13} fill={t.inkSoft} dominantBaseline="middle">
-                    {dim.format(value)}
+                  <rect
+                    x={x + 8}
+                    y={y - 10}
+                    width={formatted.length * 8.4 + 8}
+                    height={20}
+                    rx={3}
+                    fill={t.pageBg}
+                    fillOpacity={0.86}
+                  />
+                  <text x={x + 12} y={y} fontSize={14} fill={t.inkSoft} dominantBaseline="middle">
+                    {formatted}
                   </text>
                 </g>
               );
             })}
             <text x={x} y={top - 18} fontSize={15} fontWeight={600} fill={t.ink} textAnchor="middle">
-              {dim.label}
+              {dim.col}
             </text>
           </g>
         );
@@ -97,52 +168,17 @@ function ParallelAxes() {
   );
 }
 
-function ParallelLines() {
-  const xScale = useXScale();
-  const { top, height } = useDrawingArea();
-  const yFor = (dimIndex, value) => {
-    const dim = DIMENSIONS[dimIndex];
-    const fraction = (value - dim.min) / (dim.max - dim.min);
-    return top + height * (1 - fraction);
-  };
-  return (
-    <g fill="none" strokeWidth={1.6}>
-      {RUNS.map((run, i) => {
-        const points = run.values.map((v, d) => `${xScale(d)},${yFor(d, v)}`).join(" ");
-        return <polyline key={i} points={points} stroke={withAlpha(run.color, 0.55)} />;
-      })}
-    </g>
-  );
-}
-
-function Legend() {
-  return (
-    <g fontFamily={FONT}>
-      {ARCHITECTURES.map((arch, i) => (
-        <g key={arch.name} transform={`translate(${i * 170}, 0)`}>
-          <circle cx={7} cy={7} r={7} fill={arch.color} />
-          <text x={20} y={12} fontSize={15} fill={t.ink}>
-            {arch.name}
-          </text>
-        </g>
-      ))}
-    </g>
-  );
-}
-
-const TITLE_H = 64;
-
 export default function Chart() {
   const W = window.ANYPLOT_SIZE.width;
   const H = window.ANYPLOT_SIZE.height;
-  const N = DIMENSIONS.length;
+  const N = dimensions.length;
 
   return (
     <div
       style={{
         width: W,
         height: H,
-        background: t.pageBg,
+        backgroundColor: t.pageBg,
         fontFamily: FONT,
         display: "flex",
         flexDirection: "column",
@@ -157,25 +193,35 @@ export default function Chart() {
           padding: "0 90px",
         }}
       >
-        <span style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>
-          parallel-basic · javascript · muix · anyplot.ai
-        </span>
-        <svg width={ARCHITECTURES.length * 170} height={20}>
-          <Legend />
-        </svg>
+        <span style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>{TITLE}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
+          {architectures.map((archName) => (
+            <div key={archName} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span
+                style={{
+                  width: 14,
+                  height: 14,
+                  borderRadius: "50%",
+                  backgroundColor: archColorMap[archName],
+                  display: "inline-block",
+                }}
+              />
+              <span style={{ fontSize: 15, color: t.ink }}>{archName}</span>
+            </div>
+          ))}
+        </div>
       </div>
-      <ChartContainer
+      <ChartsContainer
         width={W}
         height={H - TITLE_H}
         skipAnimation
         series={[]}
-        margin={{ top: 70, right: 90, bottom: 40, left: 90 }}
-        xAxis={[{ scaleType: "linear", min: 0, max: N - 1 }]}
-        yAxis={[{ scaleType: "linear", min: 0, max: 1 }]}
+        margin={{ top: 56, right: 110, bottom: 36, left: 90 }}
+        xAxis={[{ scaleType: "linear", min: 0, max: N - 1, position: "none" }]}
+        yAxis={[{ scaleType: "linear", min: 0, max: 1, position: "none" }]}
       >
-        <ParallelAxes />
-        <ParallelLines />
-      </ChartContainer>
+        <ParallelCoordinatesOverlay />
+      </ChartsContainer>
     </div>
   );
 }
