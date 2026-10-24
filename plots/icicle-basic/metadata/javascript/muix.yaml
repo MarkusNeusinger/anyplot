@@ -2,64 +2,60 @@ library: muix
 language: javascript
 specification_id: icicle-basic
 created: '2026-09-05T05:36:47Z'
-updated: '2026-09-05T06:00:35Z'
-generated_by: claude-sonnet
-workflow_run: 33947337379
+updated: '2026-10-24T18:24:49Z'
+generated_by: gemini-4-argon
+adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
+workflow_run: 40084393541
 issue: 2497
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/javascript/muix/plot-dark.html
-quality_score: 86
+quality_score: 83
 review:
   strengths:
-  - 'The Review-2 dark-mode text-legibility bug is fully fixed: textColorForRgb()
-    now branches on two fixed, theme-independent absolute colors (FIXED_DARK_TEXT
-    #1A1A17 / FIXED_LIGHT_TEXT #FFFDF6) chosen purely from the fill''s own relative
-    luminance, instead of the theme tokens t.ink/t.pageBg. Verified by pixel-cropping
-    the leaf-file row in plot-dark.png: labels like ''index.js / 180 KB'' render in
-    clear dark text on the mint tint, matching the light render.'
-  - 'Correct icicle/partition math: bottom-up value aggregation (computeValue) mirrors
-    du-style directory sizing, and partition() produces gapless, proportional bands
-    per the spec''s width-proportional-to-value requirement.'
-  - 'Palette compliance is excellent and theme-stable: node_modules/ uses Imprint
-    #009E73, remaining top-level branches follow canonical Imprint order (lavender,
-    blue, ochre), the root band uses a fixed neutral grey, and all data fills are
-    byte-identical between light and dark renders -- only chrome (title, subtitle,
-    page background) flips.'
-  - fitsLabel() correctly hides labels on boxes too small to hold them (both primary
-    label and KB sublabel gated independently), matching the spec's 'label rectangles
-    with sufficient space, hide labels for small nodes' note.
-  - 'Realistic, in-range dataset: 41-node file-system hierarchy (4 top-level directories,
-    11 subdirectories, 25 files) sits well inside the spec''s 10-100 node recommendation,
-    with plausible KB sizes.'
-  - 'Solid harness compliance: single default export, sized from window.ANYPLOT_SIZE,
-    skipAnimation set, no AR-09 edge clipping on any border in either render.'
+  - 'Correct icicle layout: one row per level with the root at the top, every child
+    within its parent''s horizontal extent, siblings adjacent with thin page-colored
+    gutters; leaf sums fall out of a bottom-up aggregation (dist 950, src 600, tests
+    350, docs 200, total 2,100 KB all verified)'
+  - 'Color by top-level branch in canonical Imprint order (#009E73, #C475FD, #4467A3,
+    #BD8233), tinted lighter per depth, so branch membership and hierarchy level read
+    at once and identically in both themes'
+  - Label ink chosen per rectangle from the fill's luminance via MUI's getLuminance,
+    so every label is readable against its fill in both themes
+  - 'Two-tier label typography: sans-serif bold names over monospace values, with
+    font size stepping down by depth; labels are suppressed on rectangles too narrow
+    to hold them, as the Notes ask'
+  - Uses ChartsContainer composition with a custom SVG layer positioned by the useDrawingArea
+    hook, the community MUI X way to draw a chart type it has no component for; native
+    SVG <title> tooltips give path, size and share of parent in the HTML
   weaknesses:
-  - Library Mastery is thin beyond the required custom-mark composition primitive
-    -- no use of MUI X's own ChartsTooltip/ChartsLegend components; hover text relies
-    on a plain SVG <title> element instead.
-  - Design Excellence is competent but generic -- the HSL tint ramp and consistent
-    gutters are clean, but there is no additional visual-hierarchy device (e.g. an
-    accent outline or subtle emphasis on the single largest branch/file) beyond the
-    color-by-branch scheme.
-  - The root band's own label ('repo/ · 2,100 KB total') is set at the same modest
-    fontsize step as other depth-0 content despite occupying by far the largest area
-    of the canvas -- a slightly larger or bolder treatment would let the root read
-    more clearly as the anchor of the whole chart.
+  - 'VQ-07 (both): the root block is filled with the custom hex #6E6A61, which is
+    neither an Imprint position nor the theme-adaptive muted anchor → the muted anchor
+    (#6B6A63 light / #A8A79F dark), with label ink still chosen by luminance. Likely
+    cause: the ROOT_FILL constant.'
+  - 'CQ-04 (code): lines 205–214 parse the hex and blend each channel toward the paper
+    by hand, which @mui/material/styles'' lighten(color, coefficient) computes in
+    one call → node.fill = lighten(hex, tintFactor). Likely cause: a written-out color
+    blend instead of the MUI color helper already imported alongside getLuminance.'
+  - 'Suggestion: 21 of the 25 leaf rectangles carry no label although each is about
+    235 px tall; a vertical (rotated) name for the tall narrow leaves would identify
+    the files in the static PNG.'
+  - 'Suggestion: the root row spends a quarter of the chart height on one grey block;
+    a shorter root row would give the leaf row more room.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, matches #FAF8F1.
-      Chrome: bold dark title "icicle-basic · javascript · muix · anyplot.ai" and muted secondary-tone subtitle "Repository file sizes by directory depth · width ∝ size (KB)" -- both crisp and fully readable against the light background.
-      Data: 4-row icicle (partition) layout. Row 0 is a full-width neutral-grey "repo/ · 2,100 KB total" root band with white text. Row 1 has four Imprint-colored top-level directories in canonical order: node_modules/ = #009E73 brand green, src/ = lavender, tests/ = blue, docs/ = ochre, each with a white label. Row 2 (subdirectories) and row 3 (leaf files) use progressively lighter HSL tints of their ancestor's branch color, with automatically contrast-selected dark or light text; wide-enough leaf boxes (index.js, webpack.js, tsc.js, Modal.tsx, api.ts) show name + KB sublabel in dark ink, narrower leaf boxes correctly hide their labels. No overlapping text, no clipping at any canvas edge.
+      Background: warm off-white #FAF8F1 (sampled 250,248,241).
+      Chrome: title "icicle-basic · javascript · muix · anyplot.ai" in dark bold sans at top left, a monospace subtitle "4 levels · 25 leaves · 2,100 KB total · width ∝ Size (KB)" in soft ink below it, and at top right a legend of four swatches (dist/ 950 KB, src/ 600 KB, tests/ 350 KB, docs/ 200 KB). All dark text, all readable.
+      Data: four equal-height rows. Row 1: the root "repo/ · 2,100 KB total" as one full-width grey (#6E6A61) block with white label. Row 2: dist/ (#009E73), src/ (#C475FD), tests/ (#4467A3), docs/ (#BD8233) with widths proportional to 950/600/350/200. Row 3: 11 subdirectories in lighter tints of their branch hue, labelled with name + size except the narrow docs/reference/. Row 4: 25 files in the lightest tints; only vendor.js, hero.webp and api.ts carry labels, the others are narrow and unlabelled. Thin page-colored gutters separate every rectangle; children sit within their parents. First series is #009E73.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black, matches #1A1A17.
-      Chrome: light/cream title and subtitle, both fully readable against the dark background.
-      Data: confirmed pixel-identical fill colors to the light render (root grey, node_modules/ green, src/ lavender, tests/ blue, docs/ ochre, and all descendant tints) -- only the page chrome flips. Critically, the leaf-file row (previously the Review-2 rejection reason: near-invisible ~1.1:1 contrast text from using theme tokens instead of fixed colors) is now fully legible: a pixel crop of the leaf row shows clear dark text ("index.js" / "180 KB", "webpack.js" / "140 KB") on the mint-tinted fills, matching the light render's presentation. All rows at all depths pass legibility in this render.
+      Background: warm near-black #1A1A17 (sampled 26,26,23).
+      Chrome: title, subtitle and legend text flip to light ink and are clearly readable; no dark-on-dark text. Gutters are now near-black.
+      Data: rectangle fills are identical to the light render (sampled root 110,106,97 and a dist/ leaf 119,200,174 in both); label ink inside rectangles is chosen by fill luminance and stays readable. Brand green is clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -68,78 +64,76 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Dark-mode leaf-label bug from Review 2 is fixed (verified via pixel
-          crop); all font sizes explicitly set per depth (22/17/15/13px); readable
-          in both themes with no overflow
+        comment: Title 22 px, legend and subtitle 14 px, labels 14–20 px by depth;
+          all readable in both themes, label ink picked per fill by luminance
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/element collisions in either render
+        comment: No text collisions; labels only where they fit their rectangle
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All bands clearly visible with consistent gutters; labels correctly
-          hidden on boxes too small to hold them
+        comment: All 39 rectangles visible with thin gutters; legend swatches match
+          the branch fills
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; contrast-aware text selection based
-          on fill luminance
+        comment: Green, lavender, blue and ochre branches stay distinguishable at
+          every tint; no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas confirmed, no gate failure, no overflow/clipping,
-          sensible margins
+        comment: 3200x1800, full-width layout with balanced header; root block as
+          one row is permitted by the spec
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive subtitle explains size encoding with units (KB); no traditional
-          axes needed for this chart type
+        comment: N/A for axes (hierarchy layout has none); title and subtitle descriptive
+          with units
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: 'First branch color #009E73 verified, canonical Imprint order for
-          remaining branches, data colors identical across themes, correct theme backgrounds'
+        comment: 'Branches in canonical Imprint order and identical across themes,
+          backgrounds correct; root uses custom hex #6E6A61 (defect line)'
     design_excellence:
-      score: 13
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Contrast-aware HSL tint ramp shows real effort and is now bug-free,
-          but overall look stays close to a well-configured default
+        passed: true
+        comment: Two-tier typography (bold sans names over monospace values) with
+          font size stepping down by depth, monospace subtitle; beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: false
-        comment: Clean gutters and stroke separators, generous margins, but fairly
-          generic beyond the tint ramp
+        passed: true
+        comment: Depth tints toward the paper tone and page-colored gutters with consistent
+          8 px inset labels
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Depth rows and branch coloring communicate hierarchy clearly, but
-          there is no additional focal point or emphasis on the largest contributor
+        comment: Color by branch is what the Notes ask; no further focal point chosen
     spec_compliance:
       score: 15
       max: 15
@@ -149,117 +143,122 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal icicle/partition layout, root at top, children
-          below
+        comment: Horizontal icicle, root at top, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Root at top with children below, color by hierarchy/branch, labels
-          hidden on small nodes -- all spec notes satisfied
+        comment: 'All Notes and A-good-version bullets met: one row per level, widths
+          proportional, children within parents, consistent color by branch, labels
+          only where room'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Bottom-up aggregation, correct proportional widths within each parent
-          span
+        comment: Widths proportional to aggregated sizes; children inside parent extent
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly; band labels substitute for
-          a legend appropriately
+        comment: Title in mandated format; legend entries match the branch names and
+          fills
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 41 nodes across 4 depth levels, full hierarchy shown with varied
-          branch sizes
+        comment: 4 levels, 39 nodes, uneven sibling sizes show proportional widths
+          well
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral file-system dataset (repo directories and files)
+        comment: Plausible front-end repository with dist/src/tests/docs and realistic
+          file names and sizes
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible KB values across the hierarchy, correctly summing bottom-up
+        comment: 'Checked sums: js 320, assets 280, fonts 250, css 100 → dist 950;
+          src 600; tests 350; docs 200; total 2,100 KB, all computed bottom-up'
     code_quality:
       score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Many helper functions, but justified by the custom SVG partition
-          layout MUI X has no native primitive for
+        comment: Default component plus one layer component required for the useDrawingArea
+          hook
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, hard-coded tree data
+        comment: Hard-coded data, deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ChartContainer + useDrawingArea imported, both used
+        comment: All three imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: No fake UI, appropriate complexity for a hand-rolled icicle mark
+        comment: Lines 205–214 hand-blend hex channels where MUI lighten() computes
+          it (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct default export, sized from ANYPLOT_SIZE, skipAnimation set,
-          no clipping
+        comment: Default export, skipAnimation, sized to ANYPLOT_SIZE, v9 ChartsContainer
+          API
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: ChartContainer + useDrawingArea is exactly the documented custom-mark
-          composition primitive for a chart type MUI X community has no native component
-          for
+        comment: Community ChartsContainer with axes hidden via position none; mostly
+          hand-written SVG as the community surface has no icicle
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: No use of MUI X's own ChartsTooltip/ChartsLegend components; relies
-          on a plain SVG <title> for hover text
+        comment: Custom SVG layer composed into ChartsContainer via the useDrawingArea
+          hook; getLuminance from @mui/material for adaptive label ink
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-10-24T18:21:42Z'
 impl_tags:
   dependencies: []
   techniques:
-  - custom-mark
+  - custom-legend
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
+  dataprep:
   - hierarchical-aggregation
-  dataprep: []
   styling:
+  - minimal-chrome
   - edge-highlighting
-  - alpha-blending
