@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: point-and-figure-basic
 created: '2026-09-02T05:18:22Z'
-updated: '2026-10-24T11:42:24Z'
+updated: '2026-10-24T11:48:14Z'
 generated_by: gemini-4-argon
 adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
 workflow_run: 40090671402
@@ -13,53 +13,54 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/point-and
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/javascript/muix/plot-dark.html
-quality_score: 83
+quality_score: 86
 review:
   strengths:
-  - 'Correct P&F construction from closes: box size $1.5, 3-box reversal, 29 columns
-    that alternate X/O, each column one symbol only; spot-checked column 2 (X 141–148.5)
-    → column 3 (O 147–144, a 3-box reversal from the top) and columns 26–29'
-  - Symbols sit on a regular box lattice (yScale(box) with one box per row) on a band
-    x-axis of evenly spaced construction columns, labelled 'Column (price reversal,
-    not time)'
-  - Support and resistance lines rise or fall exactly one box per column and stop
-    when a later column breaks them, matching the spec's 45-degree rule
-  - 'Idiomatic MUI X v9 composition: ChartsContainer with ChartsXAxis/ChartsYAxis
-    and a custom SVG layer driven by the useXScale/useYScale hooks; the y valueFormatter
-    converts box indices back to prices'
-  - 'Theme-correct chrome in both renders from ANYPLOT_TOKENS; brand green #009E73
-    for X and the semantic red #AE3030 for O, identical in both themes, and shape
-    plus color both separate the two directions'
-  - Compact header-row legend with bold X/O glyphs and dashed-line samples that match
-    the marks
+  - Composes the chart from ChartsContainer with a band x axis (one even step per
+    column) and a linear price axis, then draws the X/O glyphs, box lattice and trend
+    lines in a custom SVG overlay positioned through the useXScale/useYScale hooks
+    — the MUI X v9 composition API used as intended
+  - 'Correct P&F construction from closes: 3-box reversal, a single symbol per column,
+    strict X/O alternation across all 29 columns, and the x axis titled as columns,
+    not time'
+  - Box lattice drawn half a box off the tick values, one rule per box, so every glyph
+    sits inside its own cell and column tops and bottoms read directly as prices via
+    the box-unit valueFormatter
+  - Support (rising) and resistance (falling) trend lines run exactly one box per
+    column, placed one box beyond the lows/highs so they pass through empty cells
+    and never cover a symbol
+  - Header row puts the title and a compact legend on one baseline, with legend glyphs
+    that reuse the actual X/O characters and dashed diagonal samples in the data colors
+  - 'Imprint green #009E73 for X and the semantic red anchor #AE3030 for O, identical
+    in both themes; chrome flips cleanly through ANYPLOT_TOKENS'
   weaknesses:
-  - 'SC-02 (both): the horizontal grid lines are drawn every 3 boxes ($4.5), but the
-    y tick labels step every 5 boxes ($7.5), so only every third line (150, 165, 180)
-    carries a label. The unlabelled lines at about 147, 156, 160.5, 169.5 and 174
-    USD make it hard to read a column''s top and bottom as prices → put the grid at
-    box-size intervals (every row) or on the labelled tick values. Likely cause: gridStep
-    = Math.round((maxBox - minBox) / GRID_TARGET_DIVISIONS) is independent of the
-    axis tickNumber: 10.'
-  - 'VQ-02 (both): trend lines start and end on the centers of their anchor glyphs
-    and strike through symbols. The column-4 support line runs through the column-5
-    O at 147 and ends on the column-6 X at 148.5, and the column-16 line starts inside
-    the X at 148.5 → anchor support lines one box below the low (startBox - 1) and
-    resistance lines one box above the high (startBox + 1), so the lines run between
-    glyphs. Likely cause: y1 = yScale(line.startBox) uses the symbol''s own box.'
-  - 'Suggestion: the 22 px title fills only about 35 % of the width. A slightly larger
-    title would balance the right-aligned legend row.'
+  - 'VQ-03 (dark): the dashed trend lines at 1.5 px and strokeOpacity 0.6 sink into
+    the #1A1A17 background — the resistance line between columns 7 and 9 and the support
+    segments on the right are hard to pick out → full or near-full opacity (0.85–1.0,
+    +0.25 or more) and about 2 px stroke (+0.5 px) so both line types stay visible
+    in the dark render. Likely cause: strokeOpacity={0.6} and strokeWidth={1.5} on
+    the support/resistance <line> elements.'
+  - 'CQ-04 (code): lines 276–325 repeat four near-identical legend-item JSX blocks
+    (two glyph+label pairs, two svg-line+label pairs), about 50 lines → map over a
+    small array of {mark, color, label} items rendering one item template. Likely
+    cause: legend items written out by hand.'
+  - 'Suggestion: sizing the chart so a box is about as wide as it is tall would make
+    the one-box-per-column trend lines read as true 45-degree diagonals through the
+    grid.'
+  - 'Suggestion: a named ticker or sector in the y-axis label or data context would
+    anchor the generic price series.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across the whole canvas, no white panel.
-      Chrome: header row with the bold dark title "point-and-figure-basic · javascript · muix · anyplot.ai" on the left and a right-aligned legend (green X "Rising column", red O "Falling column", dashed green "Support", dashed red "Resistance") in ink-soft text. Y axis "Close (USD)" with ticks 142.5–180.0 every 7.5; x axis "Column (price reversal, not time)" with ticks 1, 6, 11, 16, 21, 26. Subtle light-gray horizontal grid lines every 3 boxes. All text is dark on light and readable.
-      Data: 29 alternating columns of bold X glyphs (#009E73) and O glyphs (#AE3030) on a regular box lattice, rising from about 140 to 181.5 USD with a sideways phase around 147–154 in columns 7–15. Four dashed green 45-degree support lines (from columns 2/4, 16, 22, 24 and 26) and one dashed red resistance line (columns 7–9), drawn at about 60 % opacity. The lines start on glyph centers, and the column-4 support line passes through the column-5 O at 147.
+      Background: warm off-white #FAF8F1 across the whole canvas, no white box.
+      Chrome: bold title "point-and-figure-basic · javascript · muix · anyplot.ai" top-left (~35 % of width), legend top-right (X Rising column, O Falling column, dashed Support, dashed Resistance) on the same baseline. Y axis "Close (USD)" with ticks 142.5–180.0 every 7.5 (5 boxes of $1.5); x axis "Column (price reversal, not time)" with ticks 1, 6, 11, 16, 21, 26. Thin horizontal box rules between every price row, no vertical grid. All text dark and readable.
+      Data: 29 alternating columns, X in brand green #009E73, O in matte red #AE3030, bold ~22 px glyphs, one per box. Price climbs from ~139 to ~182 in a staircase. Four green dashed support lines rise one box per column (cols 2–6, 4–6, 16–29, 22–28, 24–28, 26–28 region) and one short red dashed resistance line falls from column 7 to 9; none crosses a symbol.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: the title is light ink, and the legend, tick labels and axis titles are light ink-soft. All are clearly readable, with no dark-on-dark text. The axis lines are light, and the grid lines are subtle dark gray but visible.
-      Data: X and O colors are identical to the light render (green #009E73, red #AE3030), as are the glyph layout and the dashed trend lines. Only the chrome flipped.
-      Legibility verdict: PASS
+      Chrome: title, legend labels, axis titles and tick labels in light ink, all readable; box rules subtle dark grey but visible. No dark-on-dark text.
+      Data: X/O colors identical to the light render (green #009E73, red #AE3030); brand green clearly visible. The dashed trend lines at 0.6 opacity are dimmer here than in light, the red resistance line especially low-contrast.
+      Legibility verdict: PASS (trend lines dim, see VQ-03)
   criteria_checklist:
     visual_quality:
       score: 29
@@ -70,49 +71,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'Explicit sizes: 22 px title, 14–16 px ticks, labels and legend;
-          readable in both themes'
+        comment: Explicit sizes (title 22, axis titles 15, ticks/legend 14, glyphs
+          ~22 px bold); readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
-        max: 6
-        passed: true
-        comment: Trend lines start on and strike through glyphs, e.g. the column-5
-          O at 147 (defect line)
-      - id: VQ-03
-        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bold glyphs sized to the box, dashed lines visible, legend glyphs
-          match the marks in both themes
+        comment: No text collisions; trend lines run through empty boxes and never
+          cover symbols
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Glyphs prominent; dashed trend lines at 0.6 opacity / 1.5 px are
+          faint in the dark render (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/red is backed by the X/O shapes, so color is not the sole signal
+        comment: Green/red is doubled by the X/O shape, so color is never the sole
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, balanced margins, nothing clipped or overflowing
+        comment: 3200x1800, balanced axis bands, nothing clipped or overflowing
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Close (USD)'' and ''Column (price reversal, not time)'''
+        comment: Close (USD) with unit; x axis explains columns are reversals, not
+          time
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'X in #009E73, O in the semantic red #AE3030 as the Notes ask; correct
-          backgrounds in both themes'
+        comment: 'X = #009E73, O = semantic red anchor #AE3030 as the Notes ask; correct
+          backgrounds, identical data colors across themes'
     design_excellence:
-      score: 9
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -120,22 +123,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Title and legend share one header row; the legend uses bold X/O glyphs
-          and slanted dashed samples that echo the marks
+        comment: Title and legend share one header baseline; legend glyphs reuse the
+          X/O characters and diagonal dashed samples
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Baseline only; the grid density does not match the tick spacing
+        passed: true
+        comment: 'Grid density chosen for this chart: one rule per box, offset half
+          a box so each glyph sits in a cell; no vertical grid; trend lines kept one
+          box clear of symbols'
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed, with no hierarchy chosen beyond the Notes
+        comment: Data displayed with the required trend lines; no hierarchy chosen
+          beyond the Notes
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -143,28 +149,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: A true P&F chart with no price line, volume or other additions
+        comment: Point and figure chart, no unrequested layers
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: X/O columns, colors, 3-box reversal, construction x-axis and 45-degree
-          support/resistance lines are present; the grid sits every 3 boxes and is
-          not aligned with the tick labels, so column tops are hard to read as prices
-          (defect line)
+        comment: X/O columns, green/red, single-symbol columns, 3-box reversal, columns-not-time
+          x axis, support and resistance 45-degree lines (one box per column), price
+          grid at box intervals
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Every glyph sits at its box value; the axis covers all columns
+        comment: Each symbol at its box price, columns one even step apart; full range
+          shown with 2-box padding
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; the legend entries are reader text
+        comment: Mandated title format; legend entries match marks and lines
     data_quality:
       score: 15
       max: 15
@@ -174,23 +180,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Uptrend, sideways congestion, reversals, short and tall columns,
-          and both kinds of trend line
+        comment: Up- and downtrends, short and long columns, revisited price levels,
+          several support lines and a resistance line
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: A neutral stock series of 360 daily closes in USD
+        comment: Plausible stock close series in USD over 360 sessions; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Prices of 140–182 USD with a $1.5 box. Checked that the reversals
-          in columns 2→3 and 26→27 are exactly 3 boxes
+        comment: Prices ~139–182 with a $1.5 box give 29 columns; checked reversal
+          logic (nextBox <= boxIndex - 3) and box-unit tick formatter
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -198,8 +204,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Module-level construction; the only extra component is the overlay
-          that the scale hooks require
+        comment: Module-level data and construction; only the overlay component the
+          scale hooks require
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -211,22 +217,22 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: The P&F construction is written out, which the library has no helper
-          for
+        passed: false
+        comment: Four hand-repeated legend item blocks at lines 276–325 (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default export, skipAnimation, v9 ChartsContainer
+        comment: Default export, sized to ANYPLOT_SIZE, skipAnimation, v9 ChartsContainer
+          API
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -234,28 +240,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ChartsContainer composition with a band x-axis, tickLabelInterval
-          and a y valueFormatter
+        comment: ChartsContainer composition with ChartsXAxis/ChartsYAxis, band scale
+          with categoryGapRatio, tickLabelInterval and valueFormatter
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: true
-        comment: A custom SVG layer drawn through the useXScale/useYScale hooks
-  verdict: REJECTED
+        comment: Custom SVG overlay driven by useXScale/useYScale hooks inside the
+          chart context — MUI X's composition extension point
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T11:39:16Z'
+  rendered_at: '2026-10-24T11:44:41Z'
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
   - custom-legend
+  - layer-composition
   - html-export
   patterns:
   - data-generation
   dataprep:
   - binning
   styling:
-  - alpha-blending
   - grid-styling
