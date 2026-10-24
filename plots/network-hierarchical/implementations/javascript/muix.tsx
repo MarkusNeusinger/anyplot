@@ -15,9 +15,11 @@ const TITLE_FONT_SIZE = 22;
 const TITLE_H = 44;
 const LEGEND_H = 36;
 const LEVEL_RADII = [22, 16, 12, 9];
-const X_PAD_SHARE = 0.08;
-const Y_TOP_PAD_SHARE = 0.22;
-const Y_BOTTOM_PAD_SHARE = 0.34;
+const X_LEFT_PAD_SHARE = 0.065; // room for the left-leaning rotated leaf labels
+const X_RIGHT_PAD_SHARE = 0.015;
+const Y_TOP_PAD_SHARE = 0.1;
+const Y_BOTTOM_PAD_SHARE = 0.19;
+const EDGE_OPACITY = 0.62;
 
 // Columns: set these to your data's column names
 const NODE_ID = "Node ID"; // role: id
@@ -159,10 +161,9 @@ for (const node of allNodes) {
 }
 
 const xSpan = nextLeafX - 1;
-const xPad = xSpan * X_PAD_SHARE;
 const domain = {
-  xMin: -xPad,
-  xMax: xSpan + xPad,
+  xMin: -xSpan * X_LEFT_PAD_SHARE,
+  xMax: xSpan * (1 + X_RIGHT_PAD_SHARE),
   yMin: -maxLevel * Y_BOTTOM_PAD_SHARE,
   yMax: maxLevel * (1 + Y_TOP_PAD_SHARE),
 };
@@ -180,7 +181,7 @@ function HierarchicalTreeOverlay() {
           x2={xScale(child.x)}
           y2={yScale(child.y)}
           stroke={child.color}
-          strokeOpacity={0.38}
+          strokeOpacity={EDGE_OPACITY}
           strokeWidth={1.6}
         />
       ))}
