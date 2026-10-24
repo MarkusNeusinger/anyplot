@@ -1,18 +1,13 @@
 // anyplot.ai
 // dot-matrix-proportional: Dot Matrix Chart for Proportional Counts
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 86/100 | Created: 2026-09-05
-//# anyplot-orientation: square
-// anyplot.ai
-// dot-matrix-proportional: Dot Matrix Chart for Proportional Counts
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
+// Library: muix 9.0.0 | JavaScript 22.23.2
 // Quality: pending | Created: 2026-09-05
+//# anyplot-orientation: square
 
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import * as React from "react";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
-import { ChartsTooltip } from "@mui/x-charts/ChartsTooltip";
-import { ChartsVoronoiHandler } from "@mui/x-charts/ChartsVoronoiHandler";
+import { useXScale, useYScale } from "@mui/x-charts/hooks";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
@@ -20,70 +15,121 @@ const t = window.ANYPLOT_TOKENS;
 const FONT = "system-ui, -apple-system, sans-serif";
 const TITLE = "dot-matrix-proportional · javascript · muix · anyplot.ai";
 
-// Muted anchor (other/rest/neutral) — not part of the harness's ANYPLOT_TOKENS,
-// so it's keyed off ANYPLOT_THEME directly using the documented Imprint hexes.
-const MUTED = window.ANYPLOT_THEME === "dark" ? "#A8A79F" : "#6B6A63";
+// Constants
+const CATEGORY = "category";
+const COUNT = "count";
+const TOTAL = "total";
 
-// Survey of 100 respondents on a new workplace policy — one dot per
-// respondent, grid sized to match the total exactly (10x10 = 100).
-const TOTAL = 100;
-const GRID_COLS = 10;
-const GRID_ROWS = 10;
+const NEUTRAL_COLOR = window.ANYPLOT_THEME === "dark" ? "#A8A79F" : "#6B6A63";
+const SEMANTIC_COLORS: Record<string, string> = {
+  Agreed: t.palette[0],
+  Disagreed: t.palette[4],
+  "No opinion": NEUTRAL_COLOR,
+};
+const REMAINDER_LABEL = "Remainder";
+const MARKER_CELL_SHARE = 0.38;
+const RING_GAP_SHARE = 0.05;
+const RING_STROKE_SHARE = 0.16;
+const TITLE_HEIGHT = 76;
+const LEGEND_HEIGHT = 84;
 
-// Sentiment semantic exception: positive -> brand green, negative -> matte
-// red, neutral -> the muted anchor (all from the Imprint palette / anchors).
-const CATEGORIES = [
-  { label: "Agreed", count: 47, color: t.palette[0] },
-  { label: "Disagreed", count: 35, color: t.palette[4] },
-  { label: "No opinion", count: 18, color: MUTED },
+// Data: survey of 100 respondents on a workplace policy
+const data = [
+  { [CATEGORY]: "Agreed", [COUNT]: 47, [TOTAL]: 100 },
+  { [CATEGORY]: "Disagreed", [COUNT]: 35, [TOTAL]: 100 },
+  { [CATEGORY]: "No opinion", [COUNT]: 18, [TOTAL]: 100 },
 ];
 
-// Fill the grid sequentially by category in reading order (left-to-right,
-// top-to-bottom); row 0 is the top of the chart, so it maps to the highest y.
+// Derived grid geometry and category runs from data
+const listedSum = data.reduce((acc, r) => acc + r[COUNT], 0);
+const declaredTotal = Math.max(...data.map((r) => r[TOTAL]), listedSum);
+const remainderCount = Math.max(0, declaredTotal - listedSum);
+
+const gridCols = Math.ceil(Math.sqrt(declaredTotal));
+const gridRows = Math.ceil(declaredTotal / gridCols);
+
+const usedPalette = new Set(Object.values(SEMANTIC_COLORS));
+const availablePalette = t.palette.filter((c: string) => !usedPalette.has(c));
+let fallbackIdx = 0;
+
+const categories = data.map((r) => {
+  const label = String(r[CATEGORY]);
+  const count = r[COUNT];
+  let color = SEMANTIC_COLORS[label];
+  if (!color) {
+    color = availablePalette[fallbackIdx] ?? t.inkSoft;
+    fallbackIdx += 1;
+  }
+  return { label, count, color, ringed: color === t.palette[4] };
+});
+
+if (remainderCount > 0) {
+  categories.push({
+    label: REMAINDER_LABEL,
+    count: remainderCount,
+    color: t.grid,
+    ringed: false,
+  });
+}
+
 let dotIndex = 0;
-const series = CATEGORIES.map((category) => {
-  const data = [];
-  for (let n = 0; n < category.count; n += 1) {
-    const row = Math.floor(dotIndex / GRID_COLS);
-    const col = dotIndex % GRID_COLS;
-    data.push({ x: col, y: GRID_ROWS - 1 - row, id: dotIndex });
+const seriesDataByCategory = categories.map((cat) => {
+  const pts: { x: number; y: number; id: number }[] = [];
+  for (let n = 0; n < cat.count; n += 1) {
+    const row = Math.floor(dotIndex / gridCols);
+    const col = dotIndex % gridCols;
+    pts.push({ x: col, y: gridRows - 1 - row, id: dotIndex });
     dotIndex += 1;
   }
   return {
-    type: "scatter",
-    id: category.label,
-    label: category.label,
-    color: category.color,
-    data,
+    ...cat,
+    points: pts,
   };
 });
 
-// CVD-safety: green ("Agreed") vs. red ("Disagreed") is otherwise a pure-hue
-// distinction, so the "Disagreed" dots get a non-color ring cue (a shape/
-// contrast difference, not just a different hex) that a red-green colorblind
-// viewer can still pick up. It's a decorative overlay -- not a chart series --
-// so it never touches MUI X's Voronoi hit-testing or the hover tooltip.
-const disagreedData = series.find((s) => s.id === "Disagreed").data;
+const ringedPoints = seriesDataByCategory
+  .filter((cat) => cat.ringed)
+  .flatMap((cat) => cat.points);
 
-const TITLE_HEIGHT = 76;
-const LEGEND_HEIGHT = 84;
+interface DotRingOverlayProps {
+  ringRadius: number;
+  ringStrokeWidth: number;
+}
+
+function DotRingOverlay({ ringRadius, ringStrokeWidth }: DotRingOverlayProps) {
+  const xScale = useXScale() as (v: number) => number;
+  const yScale = useYScale() as (v: number) => number;
+
+  return (
+    <g style={{ pointerEvents: "none" }}>
+      {ringedPoints.map((pt) => (
+        <circle
+          key={pt.id}
+          cx={xScale(pt.x)}
+          cy={yScale(pt.y)}
+          r={ringRadius}
+          fill="none"
+          stroke={t.ink}
+          strokeWidth={ringStrokeWidth}
+        />
+      ))}
+    </g>
+  );
+}
 
 export default function Chart() {
   const width = window.ANYPLOT_SIZE.width;
   const height = window.ANYPLOT_SIZE.height;
 
-  // The grid is a true square: same pixel span on both axes for the same
-  // 10-unit domain, so every dot renders as a perfect circle in a perfect
-  // cell, never stretched.
-  const gridArea = Math.min(width, height - TITLE_HEIGHT - LEGEND_HEIGHT);
-  const cellSize = gridArea / GRID_COLS;
-  const markerSize = cellSize * 0.38;
+  const availW = width - 48;
+  const availH = height - TITLE_HEIGHT - LEGEND_HEIGHT;
+  const cellSize = Math.min(availW / gridCols, availH / gridRows);
+  const gridWidth = cellSize * gridCols;
+  const gridHeight = cellSize * gridRows;
+  const markerSize = cellSize * MARKER_CELL_SHARE;
 
-  // Ring sized to clear the fill dot with a visible gap, and its outer edge
-  // (ringRadius + ringStrokeWidth / 2 = markerSize * 1.21) stays inside half a
-  // cell (0.5 * cellSize) so rings on adjacent "Disagreed" dots never touch.
-  const ringGap = markerSize * 0.05;
-  const ringStrokeWidth = Math.max(1.5, markerSize * 0.16);
+  const ringGap = markerSize * RING_GAP_SHARE;
+  const ringStrokeWidth = Math.max(1.5, markerSize * RING_STROKE_SHARE);
   const ringRadius = markerSize + ringGap + ringStrokeWidth / 2;
 
   return (
@@ -91,6 +137,7 @@ export default function Chart() {
       sx={{
         width,
         height,
+        backgroundColor: t.pageBg,
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -105,66 +152,47 @@ export default function Chart() {
           flexShrink: 0,
         }}
       >
-        <Typography sx={{ color: t.ink, fontSize: 22, fontWeight: 500, fontFamily: FONT }}>
+        <Typography sx={{ color: t.ink, fontSize: 22, fontWeight: 600, fontFamily: FONT }}>
           {TITLE}
         </Typography>
       </Box>
 
-      <Box sx={{ position: "relative", width: gridArea, height: gridArea, flexShrink: 0 }}>
-        <ChartContainer
-          width={gridArea}
-          height={gridArea}
+      <Box sx={{ position: "relative", width: gridWidth, height: gridHeight, flexShrink: 0 }}>
+        <ChartsContainer
+          width={gridWidth}
+          height={gridHeight}
           margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
           skipAnimation
-          series={series.map((s) => ({ ...s, markerSize }))}
+          series={seriesDataByCategory.map((cat) => ({
+            type: "scatter" as const,
+            id: cat.label,
+            label: cat.label,
+            color: cat.color,
+            markerSize,
+            data: cat.points,
+          }))}
           xAxis={[
             {
               scaleType: "linear",
               min: -0.5,
-              max: GRID_COLS - 0.5,
+              max: gridCols - 0.5,
+              position: "none",
               domainLimit: "strict",
-              disableLine: true,
-              disableTicks: true,
-              tickLabelInterval: () => false,
             },
           ]}
           yAxis={[
             {
               scaleType: "linear",
               min: -0.5,
-              max: GRID_ROWS - 0.5,
+              max: gridRows - 0.5,
+              position: "none",
               domainLimit: "strict",
-              disableLine: true,
-              disableTicks: true,
-              tickLabelInterval: () => false,
             },
           ]}
         >
           <ScatterPlot />
-          <ChartsVoronoiHandler />
-          <ChartsTooltip trigger="item" />
-        </ChartContainer>
-
-        {/* Decorative CVD-safety ring, matches the grid's own domain-to-pixel
-            mapping ((value + 0.5) * cellSize, y flipped since row 0 is top). */}
-        <svg
-          width={gridArea}
-          height={gridArea}
-          viewBox={`0 0 ${gridArea} ${gridArea}`}
-          style={{ position: "absolute", top: 0, left: 0, pointerEvents: "none" }}
-        >
-          {disagreedData.map((point) => (
-            <circle
-              key={point.id}
-              cx={(point.x + 0.5) * cellSize}
-              cy={gridArea - (point.y + 0.5) * cellSize}
-              r={ringRadius}
-              fill="none"
-              stroke={t.ink}
-              strokeWidth={ringStrokeWidth}
-            />
-          ))}
-        </svg>
+          <DotRingOverlay ringRadius={ringRadius} ringStrokeWidth={ringStrokeWidth} />
+        </ChartsContainer>
       </Box>
 
       <Box
@@ -177,7 +205,7 @@ export default function Chart() {
           flexShrink: 0,
         }}
       >
-        {CATEGORIES.map((category) => (
+        {seriesDataByCategory.map((category) => (
           <Box key={category.label} sx={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <Box
               sx={{
@@ -186,13 +214,11 @@ export default function Chart() {
                 borderRadius: "50%",
                 backgroundColor: category.color,
                 flexShrink: 0,
-                // Mirrors the grid's CVD-safety ring so the legend swatch
-                // matches what's actually drawn for "Disagreed" dots.
-                boxShadow: category.label === "Disagreed" ? `0 0 0 2px ${t.pageBg}, 0 0 0 4px ${t.ink}` : "none",
+                boxShadow: category.ringed ? `0 0 0 2px ${t.pageBg}, 0 0 0 4px ${t.ink}` : "none",
               }}
             />
             <Typography sx={{ color: t.ink, fontSize: 16, fontFamily: FONT }}>
-              {category.label} — {category.count} ({Math.round((category.count / TOTAL) * 100)}%)
+              {category.label} — {category.count} ({Math.round((category.count / declaredTotal) * 100)}%)
             </Typography>
           </Box>
         ))}
