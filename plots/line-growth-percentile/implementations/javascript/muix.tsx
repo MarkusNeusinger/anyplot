@@ -1,6 +1,6 @@
 // anyplot.ai
 // line-growth-percentile: Pediatric Growth Chart with Percentile Curves
-// Library: muix 9.0.0 | JavaScript 22.23.2
+// Library: muix 7.29.1 | JavaScript 22.22.3
 // Quality: 90/100 | Created: 2026-06-20
 
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
@@ -12,28 +12,8 @@ import { useXScale, useYScale } from "@mui/x-charts/hooks";
 const t = window.ANYPLOT_TOKENS;
 
 // Constants
-const AGE_COL = "Age (months)";
-const P3_COL = "P3";
-const P10_COL = "P10";
-const P25_COL = "P25";
-const P50_COL = "P50";
-const P75_COL = "P75";
-const P90_COL = "P90";
-const P97_COL = "P97";
-const PATIENT_COL = "Patient Weight (kg)";
-const Y_AXIS_LABEL = "Weight (kg)";
-
-const PERCENTILE_COLS = [
-  P3_COL,
-  P10_COL,
-  P25_COL,
-  P50_COL,
-  P75_COL,
-  P90_COL,
-  P97_COL,
-] as const;
-
-const Z_SCORES = [-1.88, -1.28, -0.67, 0, 0.67, 1.28, 1.88];
+const FONT = '"Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, sans-serif';
+const MONO = '"JetBrains Mono", "SFMono-Regular", Menlo, monospace';
 const BANDS: Array<{ loIdx: number; hiIdx: number; opacity: number }> = [
   { loIdx: 0, hiIdx: 1, opacity: 0.25 },
   { loIdx: 1, hiIdx: 2, opacity: 0.17 },
@@ -41,9 +21,23 @@ const BANDS: Array<{ loIdx: number; hiIdx: number; opacity: number }> = [
   { loIdx: 4, hiIdx: 5, opacity: 0.17 },
   { loIdx: 5, hiIdx: 6, opacity: 0.25 },
 ];
+const X_PAD_SHARE = 0.02;
 const Y_TOP_PAD_SHARE = 0.08;
 
-// Data: WHO Boys weight-for-age reference curves (0–36 months) + well-child patient visits
+// Columns: set these to your data's column names
+const AGE = "Age (months)"; // role: age_months
+const P3 = "P3"; // role: percentile_3
+const P10 = "P10"; // role: percentile_10
+const P25 = "P25"; // role: percentile_25
+const P50 = "P50"; // role: percentile_50
+const P75 = "P75"; // role: percentile_75
+const P90 = "P90"; // role: percentile_90
+const P97 = "P97"; // role: percentile_97
+const PATIENT = "Patient weight (kg)"; // role: measurement
+const PERCENTILES = [P3, P10, P25, P50, P75, P90, P97] as const;
+
+// Data: replace this block with your own records
+const Z_SCORES = [-1.88, -1.28, -0.67, 0, 0.67, 1.28, 1.88];
 const PATIENT_VISITS: Record<number, number> = {
   0: 3.35,
   2: 5.1,
@@ -59,54 +53,63 @@ const PATIENT_VISITS: Record<number, number> = {
   36: 15.9,
 };
 
-const DATA: Array<{
-  [AGE_COL]: number;
-  [P3_COL]: number;
-  [P10_COL]: number;
-  [P25_COL]: number;
-  [P50_COL]: number;
-  [P75_COL]: number;
-  [P90_COL]: number;
-  [P97_COL]: number;
-  [PATIENT_COL]: number | null;
+const data: Array<{
+  [AGE]: number;
+  [P3]: number;
+  [P10]: number;
+  [P25]: number;
+  [P50]: number;
+  [P75]: number;
+  [P90]: number;
+  [P97]: number;
+  [PATIENT]: number | null;
 }> = [];
 
 for (let ageM = 0; ageM <= 36; ageM += 1) {
   const med = 16 - 12.7 * Math.exp(-0.057 * ageM);
   const cv = 0.128 - (0.013 * ageM) / 36;
-  DATA.push({
-    [AGE_COL]: ageM,
-    [P3_COL]: Number((med * (1 + Z_SCORES[0] * cv)).toFixed(2)),
-    [P10_COL]: Number((med * (1 + Z_SCORES[1] * cv)).toFixed(2)),
-    [P25_COL]: Number((med * (1 + Z_SCORES[2] * cv)).toFixed(2)),
-    [P50_COL]: Number((med * (1 + Z_SCORES[3] * cv)).toFixed(2)),
-    [P75_COL]: Number((med * (1 + Z_SCORES[4] * cv)).toFixed(2)),
-    [P90_COL]: Number((med * (1 + Z_SCORES[5] * cv)).toFixed(2)),
-    [P97_COL]: Number((med * (1 + Z_SCORES[6] * cv)).toFixed(2)),
-    [PATIENT_COL]:
-      ageM in PATIENT_VISITS ? PATIENT_VISITS[ageM] : null,
+  data.push({
+    [AGE]: ageM,
+    [P3]: Number((med * (1 + Z_SCORES[0] * cv)).toFixed(2)),
+    [P10]: Number((med * (1 + Z_SCORES[1] * cv)).toFixed(2)),
+    [P25]: Number((med * (1 + Z_SCORES[2] * cv)).toFixed(2)),
+    [P50]: Number((med * (1 + Z_SCORES[3] * cv)).toFixed(2)),
+    [P75]: Number((med * (1 + Z_SCORES[4] * cv)).toFixed(2)),
+    [P90]: Number((med * (1 + Z_SCORES[5] * cv)).toFixed(2)),
+    [P97]: Number((med * (1 + Z_SCORES[6] * cv)).toFixed(2)),
+    [PATIENT]: ageM in PATIENT_VISITS ? PATIENT_VISITS[ageM] : null,
   });
 }
 
-// Sort by age before drawing lines
-const sortedData = [...DATA].sort((a, b) => a[AGE_COL] - b[AGE_COL]);
-const ages = sortedData.map((d) => d[AGE_COL]);
-const X_MIN = Math.min(...ages);
-const X_MAX = Math.max(...ages);
+// Plot: reads only data and the constants above
+const ageUnitMatch = AGE.match(/\(([^)]+)\)/);
+const ageUnitRaw = ageUnitMatch ? ageUnitMatch[1] : "";
+const ageUnit = ageUnitRaw === "months" ? "mo" : ageUnitRaw;
+
+const measUnitMatch = PATIENT.match(/\(([^)]+)\)/);
+const measUnit = measUnitMatch ? measUnitMatch[1] : "";
+
+const sortedData = [...data].sort((a, b) => a[AGE] - b[AGE]);
+const ages = sortedData.map((d) => d[AGE]);
+const rawXMin = Math.min(...ages);
+const rawXMax = Math.max(...ages);
+const xSpan = rawXMax - rawXMin;
+const X_MIN = rawXMin - xSpan * X_PAD_SHARE;
+const X_MAX = rawXMax + xSpan * X_PAD_SHARE;
 
 const allRefValues = sortedData.flatMap((d) =>
-  PERCENTILE_COLS.map((col) => d[col]),
+  PERCENTILES.map((col) => d[col]),
 );
 const patientPoints = sortedData
-  .filter((d) => d[PATIENT_COL] !== null)
-  .map((d) => ({ age: d[AGE_COL], weight: d[PATIENT_COL]! }));
+  .filter((d) => d[PATIENT] !== null)
+  .map((d) => ({ age: d[AGE], weight: d[PATIENT]! }));
 
 const maxRefVal = Math.max(
   ...allRefValues,
   ...patientPoints.map((p) => p.weight),
 );
 const Y_MIN = 0;
-const Y_MAX = Math.ceil((maxRefVal * (1 + Y_TOP_PAD_SHARE)) / 2) * 2;
+const Y_MAX = maxRefVal * (1 + Y_TOP_PAD_SHARE);
 
 const BAND_COLOR = t.palette[2];
 const PATIENT_COLOR = t.palette[0];
@@ -114,9 +117,8 @@ const PATIENT_COLOR = t.palette[0];
 function GrowthChartLayer() {
   const xScale = useXScale("age") as (v: number) => number;
   const yScale = useYScale("weight") as (v: number) => number;
-  if (!xScale || !yScale) return null;
 
-  const rightEdgeX = xScale(X_MAX) + 12;
+  const rightEdgeX = xScale(rawXMax) + 12;
   const patientPath = patientPoints
     .map(
       (pt, i) =>
@@ -130,18 +132,18 @@ function GrowthChartLayer() {
     <g>
       {/* Filled percentile bands (P3→P97) */}
       {BANDS.map((band, idx) => {
-        const loCol = PERCENTILE_COLS[band.loIdx];
-        const hiCol = PERCENTILE_COLS[band.hiIdx];
-        let d = `M ${xScale(sortedData[0][AGE_COL]).toFixed(1)} ${yScale(
+        const loCol = PERCENTILES[band.loIdx];
+        const hiCol = PERCENTILES[band.hiIdx];
+        let d = `M ${xScale(sortedData[0][AGE]).toFixed(1)} ${yScale(
           sortedData[0][hiCol],
         ).toFixed(1)}`;
         for (let i = 1; i < sortedData.length; i += 1) {
-          d += ` L ${xScale(sortedData[i][AGE_COL]).toFixed(1)} ${yScale(
+          d += ` L ${xScale(sortedData[i][AGE]).toFixed(1)} ${yScale(
             sortedData[i][hiCol],
           ).toFixed(1)}`;
         }
         for (let i = sortedData.length - 1; i >= 0; i -= 1) {
-          d += ` L ${xScale(sortedData[i][AGE_COL]).toFixed(1)} ${yScale(
+          d += ` L ${xScale(sortedData[i][AGE]).toFixed(1)} ${yScale(
             sortedData[i][loCol],
           ).toFixed(1)}`;
         }
@@ -159,12 +161,12 @@ function GrowthChartLayer() {
       })}
 
       {/* Percentile reference curves */}
-      {PERCENTILE_COLS.map((col) => {
-        const isMedian = col === P50_COL;
+      {PERCENTILES.map((col) => {
+        const isMedian = col === P50;
         const pathD = sortedData
           .map(
             (row, i) =>
-              `${i === 0 ? "M" : "L"} ${xScale(row[AGE_COL]).toFixed(
+              `${i === 0 ? "M" : "L"} ${xScale(row[AGE]).toFixed(
                 1,
               )} ${yScale(row[col]).toFixed(1)}`,
           )
@@ -206,8 +208,8 @@ function GrowthChartLayer() {
       ))}
 
       {/* Right-margin percentile labels (P3–P97) */}
-      {PERCENTILE_COLS.map((col) => {
-        const isMedian = col === P50_COL;
+      {PERCENTILES.map((col) => {
+        const isMedian = col === P50;
         const lastRow = sortedData[sortedData.length - 1];
         const yPx = yScale(lastRow[col]);
 
@@ -218,7 +220,7 @@ function GrowthChartLayer() {
             y={yPx}
             fontSize={isMedian ? 16 : 14}
             fontWeight={isMedian ? 700 : 600}
-            fontFamily={t.mono}
+            fontFamily={MONO}
             fill={isMedian ? t.ink : BAND_COLOR}
             dominantBaseline="middle"
           >
@@ -256,7 +258,7 @@ export default function Chart() {
         height,
         background: t.pageBg,
         color: t.ink,
-        fontFamily: t.sans,
+        fontFamily: FONT,
         display: "flex",
         flexDirection: "column",
         boxSizing: "border-box",
@@ -281,20 +283,21 @@ export default function Chart() {
               lineHeight: 1.2,
             }}
           >
-            Boys Weight-for-Age · line-growth-percentile · javascript · muix ·
-            anyplot.ai
+            line-growth-percentile · javascript · muix · anyplot.ai
           </div>
           <div
             style={{
               fontSize: 14,
               color: t.inkSoft,
               marginTop: 4,
-              fontFamily: t.mono,
+              fontFamily: MONO,
             }}
           >
-            WHO reference percentiles ({P3_COL}–{P97_COL}, {X_MIN}–{X_MAX} mo) ·{" "}
-            {patientPoints.length} well-child visits ({firstVisit.weight.toFixed(2)}{" "}
-            kg at birth → {lastVisit.weight.toFixed(2)} kg at {lastVisit.age} mo)
+            WHO-like reference (synthetic, {P3}–{P97}, {rawXMin}–{rawXMax}{" "}
+            {ageUnit}) · {patientPoints.length} visits (
+            {firstVisit.weight.toFixed(2)} {measUnit} at {firstVisit.age}{" "}
+            {ageUnit} → {lastVisit.weight.toFixed(2)} {measUnit} at{" "}
+            {lastVisit.age} {ageUnit})
           </div>
         </div>
 
@@ -317,7 +320,7 @@ export default function Chart() {
                 display: "inline-block",
               }}
             />
-            <span>{PATIENT_COL}</span>
+            <span>{PATIENT}</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span
@@ -329,7 +332,7 @@ export default function Chart() {
                 display: "inline-block",
               }}
             />
-            <span>Median ({P50_COL})</span>
+            <span>Median ({P50})</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span
@@ -344,7 +347,7 @@ export default function Chart() {
               }}
             />
             <span>
-              WHO bands ({P3_COL}–{P97_COL})
+              Reference bands ({P3}–{P97})
             </span>
           </div>
         </div>
@@ -364,13 +367,12 @@ export default function Chart() {
             min: X_MIN,
             max: X_MAX,
             height: 60,
-            tickMinStep: 6,
-            label: AGE_COL,
+            label: AGE,
             labelStyle: { fontSize: 16, fontWeight: 600, fill: t.ink },
             tickLabelStyle: {
               fontSize: 14,
               fill: t.inkSoft,
-              fontFamily: t.mono,
+              fontFamily: MONO,
             },
             valueFormatter: (v: number) => String(v),
           },
@@ -382,13 +384,12 @@ export default function Chart() {
             min: Y_MIN,
             max: Y_MAX,
             width: 84,
-            tickMinStep: 2,
-            label: Y_AXIS_LABEL,
+            label: PATIENT,
             labelStyle: { fontSize: 16, fontWeight: 600, fill: t.ink },
             tickLabelStyle: {
               fontSize: 14,
               fill: t.inkSoft,
-              fontFamily: t.mono,
+              fontFamily: MONO,
             },
             valueFormatter: (v: number) => String(v),
           },
