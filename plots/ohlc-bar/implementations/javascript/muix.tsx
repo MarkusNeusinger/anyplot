@@ -1,9 +1,8 @@
 // anyplot.ai
 // ohlc-bar: OHLC Bar Chart
-// Library: muix 9.x | JavaScript 22.23.2
+// Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 90/100 | Created: 2026-09-02
 
-import * as React from "react";
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
@@ -17,67 +16,80 @@ const TITLE = "ohlc-bar · javascript · muix · anyplot.ai";
 const TITLE_HEIGHT = 56;
 const Y_PAD_SHARE = 0.06;
 const TICK_INTERVAL_STEP = 5;
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-const DATE_COL = "trading_session";
-const OPEN_COL = "open_usd";
-const HIGH_COL = "high_usd";
-const LOW_COL = "low_usd";
-const CLOSE_COL = "close_usd";
+// Columns: set these to your data's column names
+const DATE = "Trading session"; // role: date
+const OPEN = "Open (USD)"; // role: open
+const HIGH = "High (USD)"; // role: high
+const LOW = "Low (USD)"; // role: low
+const CLOSE = "Close (USD)"; // role: close
 
-// Data: 45 trading sessions of daily OHLC prices (flat scalar records)
-const DATA: Array<Record<string, string | number>> = [
-  { trading_session: "Jan 2", open_usd: 218.26, high_usd: 221.39, low_usd: 216.69, close_usd: 219.51 },
-  { trading_session: "Jan 3", open_usd: 219.59, high_usd: 221.25, low_usd: 216.2, close_usd: 218.08 },
-  { trading_session: "Jan 4", open_usd: 217.56, high_usd: 222.07, low_usd: 216.12, close_usd: 220.43 },
-  { trading_session: "Jan 5", open_usd: 220.99, high_usd: 222.39, low_usd: 217.99, close_usd: 219.72 },
-  { trading_session: "Jan 8", open_usd: 219.35, high_usd: 223.95, low_usd: 218.3, close_usd: 222.58 },
-  { trading_session: "Jan 9", open_usd: 222.25, high_usd: 225.73, low_usd: 220.51, close_usd: 224.09 },
-  { trading_session: "Jan 10", open_usd: 224.51, high_usd: 226.47, low_usd: 220.69, close_usd: 222.36 },
-  { trading_session: "Jan 11", open_usd: 221.96, high_usd: 225.56, low_usd: 220.76, close_usd: 224.22 },
-  { trading_session: "Jan 12", open_usd: 224.58, high_usd: 226.15, low_usd: 220.89, close_usd: 222.71 },
-  { trading_session: "Jan 15", open_usd: 222.42, high_usd: 227.51, low_usd: 221.11, close_usd: 225.78 },
-  { trading_session: "Jan 16", open_usd: 226.14, high_usd: 229.88, low_usd: 224.36, close_usd: 228.11 },
-  { trading_session: "Jan 17", open_usd: 227.79, high_usd: 229.47, low_usd: 223.82, close_usd: 225.63 },
-  { trading_session: "Jan 18", open_usd: 225.95, high_usd: 229.74, low_usd: 224.14, close_usd: 227.85 },
-  { trading_session: "Jan 19", open_usd: 228.19, high_usd: 232.42, low_usd: 226.78, close_usd: 230.89 },
-  { trading_session: "Jan 22", open_usd: 230.52, high_usd: 232.28, low_usd: 227.05, close_usd: 228.94 },
-  { trading_session: "Jan 23", open_usd: 229.28, high_usd: 233.61, low_usd: 227.91, close_usd: 231.98 },
-  { trading_session: "Jan 24", open_usd: 231.69, high_usd: 234.12, low_usd: 228.44, close_usd: 230.15 },
-  { trading_session: "Jan 25", open_usd: 230.49, high_usd: 235.18, low_usd: 229.12, close_usd: 233.54 },
-  { trading_session: "Jan 26", open_usd: 233.86, high_usd: 236.24, low_usd: 230.65, close_usd: 232.41 },
-  { trading_session: "Jan 29", open_usd: 232.11, high_usd: 236.89, low_usd: 230.94, close_usd: 235.22 },
-  { trading_session: "Jan 30", open_usd: 235.58, high_usd: 237.45, low_usd: 231.38, close_usd: 233.19 },
-  { trading_session: "Jan 31", open_usd: 232.88, high_usd: 236.12, low_usd: 229.76, close_usd: 231.42 },
-  { trading_session: "Feb 1", open_usd: 231.76, high_usd: 236.48, low_usd: 230.52, close_usd: 234.86 },
-  { trading_session: "Feb 2", open_usd: 235.21, high_usd: 239.62, low_usd: 233.84, close_usd: 237.94 },
-  { trading_session: "Feb 5", open_usd: 237.62, high_usd: 239.44, low_usd: 233.91, close_usd: 235.78 },
-  { trading_session: "Feb 6", open_usd: 236.12, high_usd: 240.35, low_usd: 234.68, close_usd: 238.65 },
-  { trading_session: "Feb 7", open_usd: 238.98, high_usd: 242.84, low_usd: 237.21, close_usd: 241.12 },
-  { trading_session: "Feb 8", open_usd: 240.79, high_usd: 242.56, low_usd: 237.14, close_usd: 239.08 },
-  { trading_session: "Feb 9", open_usd: 239.42, high_usd: 243.91, low_usd: 238.05, close_usd: 242.18 },
-  { trading_session: "Feb 12", open_usd: 241.86, high_usd: 244.12, low_usd: 238.22, close_usd: 240.04 },
-  { trading_session: "Feb 13", open_usd: 239.71, high_usd: 242.15, low_usd: 235.88, close_usd: 237.62 },
-  { trading_session: "Feb 14", open_usd: 237.98, high_usd: 242.64, low_usd: 236.54, close_usd: 240.89 },
-  { trading_session: "Feb 15", open_usd: 241.24, high_usd: 245.38, low_usd: 239.72, close_usd: 243.65 },
-  { trading_session: "Feb 16", open_usd: 243.31, high_usd: 245.19, low_usd: 239.84, close_usd: 241.72 },
-  { trading_session: "Feb 19", open_usd: 242.08, high_usd: 246.52, low_usd: 240.68, close_usd: 244.84 },
-  { trading_session: "Feb 20", open_usd: 244.51, high_usd: 246.78, low_usd: 241.12, close_usd: 242.96 },
-  { trading_session: "Feb 21", open_usd: 243.29, high_usd: 247.85, low_usd: 241.94, close_usd: 246.12 },
-  { trading_session: "Feb 22", open_usd: 246.48, high_usd: 250.42, low_usd: 244.86, close_usd: 248.75 },
-  { trading_session: "Feb 23", open_usd: 248.41, high_usd: 250.36, low_usd: 244.92, close_usd: 246.88 },
-  { trading_session: "Feb 26", open_usd: 247.22, high_usd: 251.64, low_usd: 245.78, close_usd: 249.92 },
-  { trading_session: "Feb 27", open_usd: 249.58, high_usd: 251.84, low_usd: 246.15, close_usd: 248.04 },
-  { trading_session: "Feb 28", open_usd: 248.39, high_usd: 252.91, low_usd: 246.98, close_usd: 251.18 },
-  { trading_session: "Feb 29", open_usd: 251.54, high_usd: 255.12, low_usd: 249.62, close_usd: 253.46 },
-  { trading_session: "Mar 1", open_usd: 253.12, high_usd: 255.28, low_usd: 249.74, close_usd: 251.82 },
-  { trading_session: "Mar 4", open_usd: 252.18, high_usd: 256.84, low_usd: 250.88, close_usd: 255.14 },
+// Data: replace this block with your own records
+const data: Array<Record<string, string | number>> = [
+  { [DATE]: "2024-01-02", [OPEN]: 218.26, [HIGH]: 221.39, [LOW]: 216.69, [CLOSE]: 219.51 },
+  { [DATE]: "2024-01-03", [OPEN]: 219.59, [HIGH]: 221.25, [LOW]: 216.2, [CLOSE]: 218.08 },
+  { [DATE]: "2024-01-04", [OPEN]: 217.56, [HIGH]: 222.07, [LOW]: 216.12, [CLOSE]: 220.43 },
+  { [DATE]: "2024-01-05", [OPEN]: 220.99, [HIGH]: 222.39, [LOW]: 217.99, [CLOSE]: 219.72 },
+  { [DATE]: "2024-01-08", [OPEN]: 219.35, [HIGH]: 223.95, [LOW]: 218.3, [CLOSE]: 222.58 },
+  { [DATE]: "2024-01-09", [OPEN]: 222.25, [HIGH]: 225.73, [LOW]: 220.51, [CLOSE]: 224.09 },
+  { [DATE]: "2024-01-10", [OPEN]: 224.51, [HIGH]: 226.47, [LOW]: 220.69, [CLOSE]: 222.36 },
+  { [DATE]: "2024-01-11", [OPEN]: 221.96, [HIGH]: 225.56, [LOW]: 220.76, [CLOSE]: 224.22 },
+  { [DATE]: "2024-01-12", [OPEN]: 224.58, [HIGH]: 226.15, [LOW]: 220.89, [CLOSE]: 222.71 },
+  { [DATE]: "2024-01-15", [OPEN]: 222.42, [HIGH]: 227.51, [LOW]: 221.11, [CLOSE]: 225.78 },
+  { [DATE]: "2024-01-16", [OPEN]: 226.14, [HIGH]: 229.88, [LOW]: 224.36, [CLOSE]: 228.11 },
+  { [DATE]: "2024-01-17", [OPEN]: 227.79, [HIGH]: 229.47, [LOW]: 223.82, [CLOSE]: 225.63 },
+  { [DATE]: "2024-01-18", [OPEN]: 225.95, [HIGH]: 229.74, [LOW]: 224.14, [CLOSE]: 227.85 },
+  { [DATE]: "2024-01-19", [OPEN]: 228.19, [HIGH]: 232.42, [LOW]: 226.78, [CLOSE]: 230.89 },
+  { [DATE]: "2024-01-22", [OPEN]: 230.52, [HIGH]: 232.28, [LOW]: 227.05, [CLOSE]: 228.94 },
+  { [DATE]: "2024-01-23", [OPEN]: 229.28, [HIGH]: 233.61, [LOW]: 227.91, [CLOSE]: 231.98 },
+  { [DATE]: "2024-01-24", [OPEN]: 231.69, [HIGH]: 234.12, [LOW]: 228.44, [CLOSE]: 230.15 },
+  { [DATE]: "2024-01-25", [OPEN]: 230.49, [HIGH]: 235.18, [LOW]: 229.12, [CLOSE]: 233.54 },
+  { [DATE]: "2024-01-26", [OPEN]: 233.86, [HIGH]: 236.24, [LOW]: 230.65, [CLOSE]: 232.41 },
+  { [DATE]: "2024-01-29", [OPEN]: 232.11, [HIGH]: 236.89, [LOW]: 230.94, [CLOSE]: 235.22 },
+  { [DATE]: "2024-01-30", [OPEN]: 235.58, [HIGH]: 237.45, [LOW]: 231.38, [CLOSE]: 233.19 },
+  { [DATE]: "2024-01-31", [OPEN]: 232.88, [HIGH]: 236.12, [LOW]: 229.76, [CLOSE]: 231.42 },
+  { [DATE]: "2024-02-01", [OPEN]: 231.76, [HIGH]: 236.48, [LOW]: 230.52, [CLOSE]: 234.86 },
+  { [DATE]: "2024-02-02", [OPEN]: 235.21, [HIGH]: 239.62, [LOW]: 233.84, [CLOSE]: 237.94 },
+  { [DATE]: "2024-02-05", [OPEN]: 237.62, [HIGH]: 239.44, [LOW]: 233.91, [CLOSE]: 235.78 },
+  { [DATE]: "2024-02-06", [OPEN]: 236.12, [HIGH]: 240.35, [LOW]: 234.68, [CLOSE]: 238.65 },
+  { [DATE]: "2024-02-07", [OPEN]: 238.98, [HIGH]: 242.84, [LOW]: 237.21, [CLOSE]: 241.12 },
+  { [DATE]: "2024-02-08", [OPEN]: 240.79, [HIGH]: 242.56, [LOW]: 237.14, [CLOSE]: 239.08 },
+  { [DATE]: "2024-02-09", [OPEN]: 239.42, [HIGH]: 243.91, [LOW]: 238.05, [CLOSE]: 242.18 },
+  { [DATE]: "2024-02-12", [OPEN]: 241.86, [HIGH]: 244.12, [LOW]: 238.22, [CLOSE]: 240.04 },
+  { [DATE]: "2024-02-13", [OPEN]: 239.71, [HIGH]: 242.15, [LOW]: 235.88, [CLOSE]: 237.62 },
+  { [DATE]: "2024-02-14", [OPEN]: 237.98, [HIGH]: 242.64, [LOW]: 236.54, [CLOSE]: 240.89 },
+  { [DATE]: "2024-02-15", [OPEN]: 241.24, [HIGH]: 245.38, [LOW]: 239.72, [CLOSE]: 243.65 },
+  { [DATE]: "2024-02-16", [OPEN]: 243.31, [HIGH]: 245.19, [LOW]: 239.84, [CLOSE]: 241.72 },
+  { [DATE]: "2024-02-19", [OPEN]: 242.08, [HIGH]: 246.52, [LOW]: 240.68, [CLOSE]: 244.84 },
+  { [DATE]: "2024-02-20", [OPEN]: 244.51, [HIGH]: 246.78, [LOW]: 241.12, [CLOSE]: 242.96 },
+  { [DATE]: "2024-02-21", [OPEN]: 243.29, [HIGH]: 247.85, [LOW]: 241.94, [CLOSE]: 246.12 },
+  { [DATE]: "2024-02-22", [OPEN]: 246.48, [HIGH]: 250.42, [LOW]: 244.86, [CLOSE]: 248.75 },
+  { [DATE]: "2024-02-23", [OPEN]: 248.41, [HIGH]: 250.36, [LOW]: 244.92, [CLOSE]: 246.88 },
+  { [DATE]: "2024-02-26", [OPEN]: 247.22, [HIGH]: 251.64, [LOW]: 245.78, [CLOSE]: 249.92 },
+  { [DATE]: "2024-02-27", [OPEN]: 249.58, [HIGH]: 251.84, [LOW]: 246.15, [CLOSE]: 248.04 },
+  { [DATE]: "2024-02-28", [OPEN]: 248.39, [HIGH]: 252.91, [LOW]: 246.98, [CLOSE]: 251.18 },
+  { [DATE]: "2024-02-29", [OPEN]: 251.54, [HIGH]: 255.12, [LOW]: 249.62, [CLOSE]: 253.46 },
+  { [DATE]: "2024-03-01", [OPEN]: 253.12, [HIGH]: 255.28, [LOW]: 249.74, [CLOSE]: 251.82 },
+  { [DATE]: "2024-03-04", [OPEN]: 252.18, [HIGH]: 256.84, [LOW]: 250.88, [CLOSE]: 255.14 },
 ];
 
-const dates = DATA.map((r) => String(r[DATE_COL]));
-const opens = DATA.map((r) => Number(r[OPEN_COL]));
-const highs = DATA.map((r) => Number(r[HIGH_COL]));
-const lows = DATA.map((r) => Number(r[LOW_COL]));
-const closes = DATA.map((r) => Number(r[CLOSE_COL]));
+// Plot: reads only data and the constants above
+const sortedData = [...data].sort((a, b) => String(a[DATE]).localeCompare(String(b[DATE])));
+const dates = sortedData.map((r) => String(r[DATE]));
+const opens = sortedData.map((r) => Number(r[OPEN]));
+const highs = sortedData.map((r) => Number(r[HIGH]));
+const lows = sortedData.map((r) => Number(r[LOW]));
+const closes = sortedData.map((r) => Number(r[CLOSE]));
+
+const years = Array.from(new Set(dates.map((d) => d.slice(0, 4)).filter((y) => /^\d{4}$/.test(y))));
+const yearSuffix =
+  years.length === 1
+    ? ` (${years[0]})`
+    : years.length > 1
+      ? ` (${years[0]}–${years[years.length - 1]})`
+      : "";
+const xAxisLabel = `${DATE}${yearSuffix}`;
 
 const yMin = Math.min(...lows);
 const yMax = Math.max(...highs);
@@ -89,7 +101,9 @@ const legendItems = [
 ];
 
 function OhlcBars() {
-  const xScale = useXScale("sessions") as unknown as ((d: string) => number) & { bandwidth: () => number };
+  const xScale = useXScale("sessions") as unknown as ((d: string) => number) & {
+    bandwidth: () => number;
+  };
   const yScale = useYScale("price") as unknown as (v: number) => number;
   const bandwidth = xScale.bandwidth();
   const tickWidth = Math.min(bandwidth * 0.4, 11);
@@ -164,10 +178,20 @@ export default function Chart() {
             data: dates,
             scaleType: "band",
             height: 58,
-            label: "Trading Session (2024)",
+            label: xAxisLabel,
             labelStyle: { fontSize: 16, fill: t.ink },
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-            tickLabelInterval: (_value: unknown, index: number) => index % TICK_INTERVAL_STEP === 0,
+            tickLabelInterval: (_value: unknown, index: number) =>
+              index % TICK_INTERVAL_STEP === 0,
+            valueFormatter: (iso: string) => {
+              const parts = String(iso).split("-");
+              if (parts.length === 3) {
+                const m = Number(parts[1]) - 1;
+                const d = Number(parts[2]);
+                return `${MONTHS[m]} ${d}`;
+              }
+              return String(iso);
+            },
           },
         ]}
         yAxis={[
@@ -176,10 +200,10 @@ export default function Chart() {
             min: yMin - yPad,
             max: yMax + yPad,
             width: 88,
-            label: "Share Price (USD)",
+            label: CLOSE,
             labelStyle: { fontSize: 16, fill: t.ink },
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-            valueFormatter: (v: number) => `$${v.toFixed(0)}`,
+            valueFormatter: (v: number) => v.toFixed(0),
           },
         ]}
       >
