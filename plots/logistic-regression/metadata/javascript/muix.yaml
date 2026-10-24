@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: logistic-regression
 created: '2026-09-02T02:17:07Z'
-updated: '2026-10-24T10:38:25Z'
+updated: '2026-10-24T10:43:55Z'
 generated_by: gemini-4-argon
 adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
 workflow_run: 40086416984
@@ -13,53 +13,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/logistic-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/javascript/muix/plot-dark.html
-quality_score: 84
+quality_score: 89
 review:
   strengths:
-  - Composes the chart from ChartsContainer + ScatterPlot + ChartsReferenceLine and
-    draws the sigmoid and its 95% band as an SVG overlay through useXScale/useYScale,
-    so curve, band and points share the axes exactly
-  - Confidence band computed properly on the logit scale from the Fisher-information
-    covariance and back-transformed, so it stays inside [0,1] and widens toward the
-    sparse ends
-  - 'Theme-adaptive chrome: the curve and band use t.ink (black on light, white on
-    dark) while the class colors stay identical across renders; all text is readable
-    in both themes'
-  - Points carry ~0.6 alpha with small y-jitter around 0 and 1 at their exact x values,
-    and the classes overlap realistically between scores 40 and 70
-  - The open circle marking the 50% crossing on the threshold line, with the midpoint
-    and accuracy annotation the Notes invite, gives the eye a focal point
-  - Plausible marketing-conversion scenario (customer engagement score vs. converted)
-    with deterministic LCG data
+  - 'Every ''A good version shows'' property is met: y-only jitter rows near 0 and
+    1, ~0.6 alpha points, a smooth 3 px S-curve, a translucent 95% CI band that encloses
+    the curve, and a dashed 0.5 threshold across the whole x range'
+  - The fit and the Wald CI are computed from the data (fitted midpoint 54.5 vs generating
+    55), and the CI is built on the logit scale so it stays inside [0, 1]
+  - useXScale/useYScale hooks feed a custom SVG layer (band, curve, midpoint ring)
+    inside the ChartsContainer composition, with ChartsReferenceLine for the threshold
+  - 'Curve and band use the ink token so they flip cleanly between themes while class
+    colors (green #009E73 / red #AE3030 semantic pair) stay identical'
+  - Legend and annotations sit in empty regions of the plot, leaving the data unobstructed
+    in both renders
   weaknesses:
-  - 'VQ-05 (both): the legend is squeezed into the top-right corner of the title band,
-    its first entry ''Not converted (y = 0)'' sits about 6 CSS px below the canvas
-    top edge, far from the plot it explains → give it at least ~16 px top clearance
-    (+10 px) or move it into the plot''s empty upper-left area via the chart margin.
-    Likely cause: the absolutely positioned legend div at top:50% inside the 64 px
-    TITLE_HEIGHT band with three stacked rows.'
-  - 'CQ-04 (code): lines 84–106 build a generic outcome-discovery and palette-slot
-    allocation loop (outcomeBins, usedPalette, nextSlot) for an outcome that is binary
-    by definition and whose two colors are already fixed in SEMANTIC_COLORS → map
-    0/1 straight to SEMANTIC_COLORS and the two labels (about 20 lines shorter). Likely
-    cause: over-generalised class handling.'
-  - 'Suggestion: MUI X''s own ChartsLegend inside the composition would replace the
-    hand-built HTML legend and show the library''s legend idiom.'
+  - 'Suggestion: render the legend with the native ChartsLegend (inside ChartsDataProvider)
+    for the two class series instead of the hand-built HTML block, keeping only the
+    curve entry custom.'
+  - 'Suggestion: draw the legend''s class dots with the same ~0.6 alpha as the scatter
+    marks so swatch and marks match exactly.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, no pure white.
-      Chrome: centered bold title "logistic-regression · javascript · muix · anyplot.ai" in dark ink; x-axis "Customer engagement score" (0–100), y-axis "Probability" with ticks 0.0–1.0; dark-gray tick labels, subtle horizontal gridlines, left and bottom axis lines only. Legend in the top-right corner of the title band (Not converted red dot, Converted green dot, black line "Fitted probability (95% CI)"); its top entry sits very close to the canvas top edge but is not clipped. All text readable.
-      Data: ~180 points, red (y = 0) jittered around 0 and brand green #009E73 (y = 1) jittered around 1, both at ~0.6 alpha; a smooth black S-curve (~3 px) with a light-gray semi-transparent 95% band that widens in the transition; dashed gray threshold line at 0.5 labelled "Decision threshold (p = 0.5)"; an open circle at the curve's 0.5 crossing with the annotation "Midpoint ≈ 54.5 / Accuracy at p=0.5: 89%".
+      Background: warm off-white #FAF8F1 across the whole canvas.
+      Chrome: bold dark title "logistic-regression · javascript · muix · anyplot.ai" centred at top; y axis "Probability" with ticks 0.0-1.0, x axis "Customer engagement score" with ticks 0-100; subtle horizontal grid; all text dark and readable. Legend upper-left inside the plot (Not converted / Converted / Fitted probability (95% CI)); inline "Decision threshold (p = 0.5)" label; "Midpoint ≈ 54.5 / Accuracy at p=0.5: 89%" annotation left of the curve.
+      Data: ~180 points, red #AE3030 (not converted) jittered around 0, green #009E73 (converted) jittered around 1, both semi-transparent; near-black smooth S-curve with a light grey CI band; dashed threshold line at 0.5; hollow ring at the curve/threshold crossing.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17, not pure black.
-      Chrome: title, axis titles, tick labels, legend and annotations all in light ink; gridlines subtle dark-gray but visible; no dark-on-dark text.
-      Data: point colors identical to the light render (red and #009E73); the curve and band flip to white / translucent light gray, the threshold line to light gray dashes. Brand green clearly visible.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles, ticks, legend and annotations all in light ink tokens and readable; grid subtle; no dark-on-dark text.
+      Data: point colors identical to the light render; curve flips to light ink with a light translucent band; threshold line light grey dashed; brand green clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -67,51 +55,53 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Fonts set explicitly (title 22, axis titles 16, ticks/legend/annotation
-          14 CSS px); all readable in both themes
+        comment: Explicit sizes (title 22, axis titles 16, ticks/legend/annotations
+          14 px); all text readable in both themes, inkSoft/ink tokens flip correctly
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; annotation and threshold label sit clear of points
-          and curve
+        comment: Legend, threshold label and midpoint annotation all sit in empty
+          regions; no text collides with data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers sized 7 with ~0.6 alpha suit 180 points; curve prominent;
-          legend glyphs visible in both themes
+        comment: 180 points at markerSize 7 with ~0.6 alpha; 3 px curve dominant;
+          band visible but translucent in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red/green classes are also separated by position (y near 0 vs near
-          1), so color is not the sole signal
+        comment: Class is double-encoded by row position (near 0 vs near 1), so the
+          red/green pair is not the sole signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Legend crammed into the top-right corner, ~6 px from the canvas top
-          edge (defect line)
+        comment: 3200x1800 canvas, plot fills the frame, balanced axis titles and
+          ticks, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Customer engagement score'' and ''Probability'' are descriptive'
+        comment: '''Customer engagement score'' (unitless score) and ''Probability''
+          as the spec asks'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint palette: converted = #009E73, not converted = Imprint red;
-          backgrounds correct; data colors identical across themes'
+        comment: 'Converted = brand green #009E73, Not converted = matte red #AE3030
+          via the semantic exception (labels literally say converted / not converted);
+          backgrounds #FAF8F1 / #1A1A17; data colors identical in both renders'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -119,22 +109,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Curve and band in theme ink rather than a palette hue keep the class
-          colors for the points; legend folded into the title band
+        comment: Curve and band drawn in the ink token so the model reads as neutral
+          'structure' against the two class colors; clear title > axis > annotation
+          hierarchy
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Horizontal-only grid, y-ticks fixed to 0–1 while the axis pads for
-          jitter, threshold label tucked at the line's start
+        comment: Legend placed inside the empty upper-left corner (computed from the
+          probability scale) and threshold label set inline at the line's start instead
+          of in a separate box
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Open-circle marker at the 50% crossing creates a focal point beyond
-          the Notes' optional metric annotation
+        comment: Hollow ring marks where the curve crosses the 0.5 threshold, tying
+          the midpoint (≈54.5) and accuracy text to the decision boundary as a focal
+          point
     spec_compliance:
       score: 15
       max: 15
@@ -144,30 +137,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Logistic curve with class-colored points; metric annotation is offered
-          by the Notes
+        comment: Logistic regression curve over binary jittered observations
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Jitter on y only, distinct class colors, solid smooth curve, semi-transparent
-          95% CI band, dashed 0.5 threshold over the whole x range, alpha ~0.6 — every
-          Notes and 'A good version shows' bullet met
+        comment: Y-only jitter, distinct class colors, smooth solid ~3 px curve, 95%
+          CI band, dashed 0.5 threshold across full x range, 'Probability' y label,
+          alpha ~0.6, metrics annotation (optional Notes item); all 'A good version
+          shows' bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Points at exact x; jitter only on y as the spec asks; curve cannot
-          overshoot (evaluated sigmoid)
+        comment: Points at exact x; jitter only on y as the Notes ask; axes cover
+          all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in the mandated format; legend entries read 'Not converted
-          (y = 0)', 'Converted (y = 1)', 'Fitted probability (95% CI)'
+        comment: Title 'logistic-regression · javascript · muix · anyplot.ai'; legend
+          entries are reader text
     data_quality:
       score: 15
       max: 15
@@ -177,24 +170,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: S-curve, class overlap in the middle, band widening in the transition,
-          threshold crossing all shown
+        comment: Full S-curve from ~0 to ~1, overlap zone in the middle, band widening
+          where data thins
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Marketing conversion vs. customer engagement score — plausible and
+        comment: Marketing conversion vs engagement score, one of the spec's applications;
           neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Scores 0–100, probabilities 0–1; midpoint 54.5 matches the generating
-          slope centre 55; band encloses the curve at every x
+        comment: 'Checked: fitted midpoint 54.5 vs generating midpoint 55, computed
+          from the fit (not placed); curve and CI stay inside [0,1]; accuracy 89%
+          plausible for slope 0.09 over 0-100'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -202,14 +196,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat module-level data and fit; only the required default component
-          and an overlay component needed for the scale hooks
+        comment: Linear script; the only extra component (LogisticOverlay) is needed
+          to call the scale hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG for data and jitter
+        comment: Seeded LCGs for data and jitter
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -218,53 +212,55 @@ review:
         comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Over-generalised outcome discovery / palette-slot loop at lines 84–106
-          for a binary outcome (defect line); hand-written GD fit is allowed by the
-          library prompt
+        comment: 'Written-out GD fit and Fisher-information CI are allowed (library
+          prompt: no stats helpers available)'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component, skipAnimation, v9 ChartsContainer API;
-          harness writes PNG + HTML
+        comment: Default-exported component, v9 ChartsContainer API, skipAnimation
+          set
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: v9 composition (ChartsContainer + ScatterPlot + ChartsXAxis/YAxis
+          + ChartsGrid) with explicit axis bands; legend is hand-built HTML rather
+          than ChartsLegend
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Composition API with per-axis ids and bands; legend is hand-built
-          HTML rather than ChartsLegend
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: useXScale/useYScale hooks to draw a custom overlay in chart coordinates,
-          plus ChartsReferenceLine with its own label
-  verdict: REJECTED
+        comment: useXScale/useYScale hooks drive a custom SVG overlay layer inside
+          the chart; native ChartsReferenceLine with labelAlign for the threshold
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T10:35:22Z'
+  rendered_at: '2026-10-24T10:41:18Z'
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - annotations
   - custom-legend
+  - annotations
   - hover-tooltips
   - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep:
   - regression
   - normalization
   styling:
   - alpha-blending
+  - grid-styling
