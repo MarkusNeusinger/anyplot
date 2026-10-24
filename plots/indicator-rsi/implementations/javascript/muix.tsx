@@ -1,6 +1,6 @@
 // anyplot.ai
 // indicator-rsi: RSI Technical Indicator Chart
-// Library: muix 9.0.0 | JavaScript 22.23.2
+// Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 91/100 | Created: 2026-09-05
 
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
@@ -14,37 +14,34 @@ import { useDrawingArea, useYScale } from "@mui/x-charts/hooks";
 const t = window.ANYPLOT_TOKENS;
 
 // Constants
-const DATE_COL = "Trading Date";
-const CLOSE_COL = "Close Price ($)";
-const RSI_COL = "RSI (14-period)";
+const FONT = '"Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, sans-serif';
+const MONO = '"JetBrains Mono", "SFMono-Regular", Menlo, monospace';
 const Y_AXIS_LABEL = "Relative Strength Index (RSI)";
-
 const LOOKBACK = 14;
-const RSI_PERIODS = 120;
 const RSI_MIN = 0;
 const RSI_MAX = 100;
 const OVERBOUGHT_THRESHOLD = 70;
 const NEUTRAL_THRESHOLD = 50;
 const OVERSOLD_THRESHOLD = 30;
 
-// Data: 120 business days of Wilder's 14-period RSI
+// Columns: set these to your data's column names
+const DATE = "Trading date"; // role: date
+const CLOSE = "Close price ($)"; // role: close
+const RSI = "RSI (14-period)"; // role: rsi
+
+// Data: replace this block with your own records
+const RSI_PERIODS = 120;
 let lcgState = 7;
 const totalDays = RSI_PERIODS + LOOKBACK;
-const dates: Date[] = [];
+const isoDates: string[] = [];
 const cursor = new Date(Date.UTC(2025, 0, 2));
-while (dates.length < totalDays + 1) {
+while (isoDates.length < totalDays + 1) {
   const weekday = cursor.getUTCDay();
   if (weekday !== 0 && weekday !== 6) {
-    dates.push(new Date(cursor));
+    isoDates.push(cursor.toISOString().slice(0, 10));
   }
   cursor.setUTCDate(cursor.getUTCDate() + 1);
 }
-
-const dateFormatter = new Intl.DateTimeFormat("en-US", {
-  month: "short",
-  day: "numeric",
-  timeZone: "UTC",
-});
 
 const allCloses: number[] = [];
 let price = 62;
@@ -79,32 +76,47 @@ for (let i = LOOKBACK; i < gains.length; i += 1) {
   rawRsi.push(avgLoss === 0 ? 100 : 100 - 100 / (1 + avgGain / avgLoss));
 }
 
-const visibleDates = dates.slice(dates.length - RSI_PERIODS);
+const visibleDates = isoDates.slice(isoDates.length - RSI_PERIODS);
 const visibleCloses = allCloses.slice(allCloses.length - RSI_PERIODS);
-const visibleRsi = rawRsi.slice(0, RSI_PERIODS);
+const visibleRsi = rawRsi.slice(rawRsi.length - RSI_PERIODS);
 
-const DATA: Array<{
-  [DATE_COL]: string;
-  [CLOSE_COL]: number;
-  [RSI_COL]: number;
+const data: Array<{
+  [DATE]: string;
+  [CLOSE]: number;
+  [RSI]: number;
 }> = [];
 
 for (let i = 0; i < RSI_PERIODS; i += 1) {
-  DATA.push({
-    [DATE_COL]: dateFormatter.format(visibleDates[i]),
-    [CLOSE_COL]: visibleCloses[i],
-    [RSI_COL]: Number(visibleRsi[i].toFixed(2)),
+  data.push({
+    [DATE]: visibleDates[i],
+    [CLOSE]: visibleCloses[i],
+    [RSI]: Number(visibleRsi[i].toFixed(2)),
   });
 }
 
-const dateLabels = DATA.map((row) => row[DATE_COL]);
-const closes = DATA.map((row) => row[CLOSE_COL]);
-const rsiValues = DATA.map((row) => row[RSI_COL]);
+// Plot: reads only data and the constants above
+const nPeriods = data.length;
+const dateFormatter = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+  timeZone: "UTC",
+});
+const formatIsoDate = (iso: string) =>
+  dateFormatter.format(new Date(`${iso}T00:00:00Z`));
 
-const overboughtDays = rsiValues.filter(
+const unitMatch = CLOSE.match(/\(([^)]+)\)/);
+const closeUnit = unitMatch ? unitMatch[1] : "";
+
+const dateValues = data.map((row) => row[DATE]);
+const closes = data.map((row) => row[CLOSE]);
+const rsiValues = data.map((row) => row[RSI]);
+
+const overboughtPeriods = rsiValues.filter(
   (v) => v >= OVERBOUGHT_THRESHOLD,
 ).length;
-const oversoldDays = rsiValues.filter((v) => v <= OVERSOLD_THRESHOLD).length;
+const oversoldPeriods = rsiValues.filter(
+  (v) => v <= OVERSOLD_THRESHOLD,
+).length;
 
 const RSI_COLOR = t.palette[0];
 const OVERBOUGHT_COLOR = t.inkSoft;
@@ -113,7 +125,6 @@ const OVERSOLD_COLOR = t.inkSoft;
 function RsiZonesLayer() {
   const { left, width } = useDrawingArea();
   const yScale = useYScale("rsi-axis") as (v: number) => number;
-  if (!yScale) return null;
 
   const y100 = yScale(RSI_MAX);
   const y70 = yScale(OVERBOUGHT_THRESHOLD);
@@ -156,7 +167,7 @@ export default function Chart() {
         height: H,
         background: t.pageBg,
         color: t.ink,
-        fontFamily: t.sans,
+        fontFamily: FONT,
         display: "flex",
         flexDirection: "column",
         boxSizing: "border-box",
@@ -187,14 +198,16 @@ export default function Chart() {
             fontSize: 14,
             color: t.inkSoft,
             marginTop: 4,
-            fontFamily: t.mono,
+            fontFamily: MONO,
           }}
         >
-          Wilder&apos;s {LOOKBACK}-period RSI over {RSI_PERIODS} trading days (
-          {dateLabels[0]} to {dateLabels[dateLabels.length - 1]}, close $
-          {closes[0].toFixed(1)} → ${closes[closes.length - 1].toFixed(1)}) ·{" "}
-          {overboughtDays} overbought (&ge;{OVERBOUGHT_THRESHOLD}) &amp;{" "}
-          {oversoldDays} oversold (&le;{OVERSOLD_THRESHOLD}) days
+          Wilder&apos;s {LOOKBACK}-period RSI over {nPeriods} periods (
+          {formatIsoDate(dateValues[0])} to{" "}
+          {formatIsoDate(dateValues[dateValues.length - 1])}, close {closeUnit}
+          {closes[0].toFixed(1)} → {closeUnit}
+          {closes[closes.length - 1].toFixed(1)}) · {overboughtPeriods}{" "}
+          overbought (&ge;{OVERBOUGHT_THRESHOLD}) &amp; {oversoldPeriods}{" "}
+          oversold (&le;{OVERSOLD_THRESHOLD}) periods
         </div>
       </div>
 
@@ -209,7 +222,7 @@ export default function Chart() {
             id: "rsi",
             yAxisId: "rsi-axis",
             data: rsiValues,
-            label: RSI_COL,
+            label: RSI,
             color: RSI_COLOR,
             showMark: false,
             curve: "linear",
@@ -219,17 +232,18 @@ export default function Chart() {
           {
             id: "dates",
             scaleType: "band",
-            data: dateLabels,
+            data: dateValues,
             height: 58,
             categoryGapRatio: 0.15,
-            label: DATE_COL,
+            label: DATE,
+            valueFormatter: (v: string) => formatIsoDate(v),
             labelStyle: { fontSize: 15, fill: t.ink, fontWeight: 600 },
             tickLabelInterval: (_value: string, index: number) =>
               index % 10 === 0,
             tickLabelStyle: {
               fontSize: 14,
               fill: t.inkSoft,
-              fontFamily: t.mono,
+              fontFamily: MONO,
             },
             disableLine: true,
           },
@@ -246,7 +260,7 @@ export default function Chart() {
             tickLabelStyle: {
               fontSize: 14,
               fill: t.inkSoft,
-              fontFamily: t.mono,
+              fontFamily: MONO,
             },
             disableLine: true,
           },
@@ -267,7 +281,7 @@ export default function Chart() {
             fontSize: 14,
             fill: t.ink,
             fontWeight: 600,
-            fontFamily: t.mono,
+            fontFamily: MONO,
           }}
           lineStyle={{
             stroke: OVERBOUGHT_COLOR,
@@ -284,7 +298,7 @@ export default function Chart() {
             fontSize: 14,
             fill: t.inkSoft,
             fontWeight: 600,
-            fontFamily: t.mono,
+            fontFamily: MONO,
           }}
           lineStyle={{
             stroke: t.inkSoft,
@@ -301,7 +315,7 @@ export default function Chart() {
             fontSize: 14,
             fill: t.ink,
             fontWeight: 600,
-            fontFamily: t.mono,
+            fontFamily: MONO,
           }}
           lineStyle={{
             stroke: OVERSOLD_COLOR,
@@ -334,7 +348,7 @@ export default function Chart() {
               display: "inline-block",
             }}
           />
-          <span>{RSI_COL}</span>
+          <span>{RSI}</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <span
