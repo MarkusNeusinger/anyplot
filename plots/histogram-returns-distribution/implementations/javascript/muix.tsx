@@ -1,6 +1,6 @@
 // anyplot.ai
 // histogram-returns-distribution: Returns Distribution Histogram
-// Library: muix 9.0.0 | JavaScript 22.23.2
+// Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 93/100 | Created: 2026-09-02
 
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
@@ -9,30 +9,35 @@ import { LinePlot } from "@mui/x-charts/LineChart";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
-import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
+import { useDrawingArea, useXScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
 // Constants
-const DATE_COL = "Trading Date";
-const RETURNS_COL = "Daily Return (%)";
-const Y_AXIS_LABEL = "Probability Density";
+const FONT = '"Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, sans-serif';
+const MONO = '"JetBrains Mono", "SFMono-Regular", Menlo, monospace';
+const Y_AXIS_LABEL = "Probability density";
 const CORE_SERIES_LABEL = "Within ±2σ";
 const TAIL_SERIES_LABEL = "Beyond ±2σ (tail)";
 const NORMAL_SERIES_LABEL = "Normal fit";
 
-const N_DAYS = 252;
-const DAILY_VOL = 1.15;
-const DRIFT = 0.04;
 const BIN_COUNT = 26;
 const TAIL_SIGMA_MULT = 2.0;
 const Y_TOP_PAD_SHARE = 0.14;
 
-// Data: one trading year of daily equity returns (deterministic LCG)
+// Columns: set these to your data's column names
+const DATE = "Trading date"; // role: date
+const RETURNS = "Daily return (%)"; // role: returns
+
+// Data: replace this block with your own records
+const N_DAYS = 252;
+const DAILY_VOL = 1.15;
+const DRIFT = 0.04;
+
 let seed = 42;
-const DATA: Array<{
-  [DATE_COL]: string;
-  [RETURNS_COL]: number;
+const data: Array<{
+  [DATE]: string;
+  [RETURNS]: number;
 }> = [];
 
 const baseMs = Date.UTC(2025, 0, 2);
@@ -62,32 +67,36 @@ for (let i = 0; i < N_DAYS; i += 1) {
     .toISOString()
     .slice(0, 10);
 
-  DATA.push({
-    [DATE_COL]: dateStr,
-    [RETURNS_COL]: r,
+  data.push({
+    [DATE]: dateStr,
+    [RETURNS]: r,
   });
 }
 
-const dailyReturns = DATA.map((row) => row[RETURNS_COL]);
-const tradingDates = DATA.map((row) => row[DATE_COL]);
-const startDate = tradingDates[0];
-const endDate = tradingDates[tradingDates.length - 1];
+// Plot: reads only data and the constants above
+const unitMatch = RETURNS.match(/\(([^)]+)\)/);
+const returnUnit = unitMatch ? unitMatch[1] : "";
 
-const n = dailyReturns.length;
-const mean = dailyReturns.reduce((a, b) => a + b, 0) / n;
-const variance = dailyReturns.reduce((a, b) => a + (b - mean) ** 2, 0) / n;
+const periodReturns = data.map((row) => row[RETURNS]);
+const periodDates = data.map((row) => row[DATE]);
+const startDate = periodDates[0];
+const endDate = periodDates[periodDates.length - 1];
+
+const n = periodReturns.length;
+const mean = periodReturns.reduce((a, b) => a + b, 0) / n;
+const variance = periodReturns.reduce((a, b) => a + (b - mean) ** 2, 0) / n;
 const std = Math.sqrt(variance);
 const skewness =
-  dailyReturns.reduce((a, b) => a + ((b - mean) / std) ** 3, 0) / n;
+  periodReturns.reduce((a, b) => a + ((b - mean) / std) ** 3, 0) / n;
 const excessKurtosis =
-  dailyReturns.reduce((a, b) => a + ((b - mean) / std) ** 4, 0) / n - 3;
+  periodReturns.reduce((a, b) => a + ((b - mean) / std) ** 4, 0) / n - 3;
 
-const minReturn = Math.min(...dailyReturns);
-const maxReturn = Math.max(...dailyReturns);
+const minReturn = Math.min(...periodReturns);
+const maxReturn = Math.max(...periodReturns);
 const binWidth = (maxReturn - minReturn) / BIN_COUNT;
 const binCounts = new Array<number>(BIN_COUNT).fill(0);
 for (let i = 0; i < n; i += 1) {
-  const r = dailyReturns[i];
+  const r = periodReturns[i];
   const idx = Math.min(
     BIN_COUNT - 1,
     Math.max(0, Math.floor((r - minReturn) / binWidth)),
@@ -110,20 +119,60 @@ const coreDensity = density.map((d, i) =>
 const tailDensity = density.map((d, i) =>
   binCenters[i] < lowerTail || binCenters[i] > upperTail ? d : 0,
 );
-const tailDayCount = dailyReturns.filter(
+const tailPeriodCount = periodReturns.filter(
   (r) => r < lowerTail || r > upperTail,
 ).length;
 
-const meanBinCenter = binCenters.reduce((closest, c) =>
-  Math.abs(c - mean) < Math.abs(closest - mean) ? c : closest,
-);
-
 const maxDensity = Math.max(...density, ...normalCurve);
-const yMax = Number((maxDensity * (1 + Y_TOP_PAD_SHARE)).toFixed(2));
+const yMax = maxDensity * (1 + Y_TOP_PAD_SHARE);
 
 const CORE_COLOR = t.palette[0];
 const TAIL_COLOR = t.palette[1];
 const NORMAL_COLOR = t.ink;
+
+function MeanReferenceLineLayer() {
+  const { top, height } = useDrawingArea();
+  const xScale = useXScale() as unknown as ((v: number) => number) & {
+    bandwidth: () => number;
+  };
+  const bw = xScale.bandwidth();
+  const leftBinIdx = Math.max(
+    0,
+    Math.min(BIN_COUNT - 2, Math.floor((mean - binCenters[0]) / binWidth)),
+  );
+  const cLeft = binCenters[leftBinIdx];
+  const cRight = binCenters[leftBinIdx + 1];
+  const xLeft = xScale(cLeft) + bw / 2;
+  const xRight = xScale(cRight) + bw / 2;
+  const frac = (mean - cLeft) / binWidth;
+  const meanX = xLeft + frac * (xRight - xLeft);
+
+  return (
+    <g>
+      <line
+        x1={meanX}
+        y1={top}
+        x2={meanX}
+        y2={top + height}
+        stroke={t.ink}
+        strokeDasharray="6 4"
+        strokeWidth={1.75}
+      />
+      <text
+        x={meanX + 8}
+        y={top + 18}
+        fill={t.ink}
+        fontSize={14}
+        fontWeight={600}
+        fontFamily={MONO}
+      >
+        Mean ({mean >= 0 ? "+" : ""}
+        {mean.toFixed(2)}
+        {returnUnit})
+      </text>
+    </g>
+  );
+}
 
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
@@ -137,7 +186,7 @@ export default function Chart() {
         height,
         background: t.pageBg,
         color: t.ink,
-        fontFamily: t.sans,
+        fontFamily: FONT,
         display: "flex",
         flexDirection: "column",
         boxSizing: "border-box",
@@ -169,12 +218,14 @@ export default function Chart() {
               fontSize: 14,
               color: t.inkSoft,
               marginTop: 4,
-              fontFamily: t.mono,
+              fontFamily: MONO,
             }}
           >
-            {n} trading days ({startDate} to {endDate}) · {tailDayCount} tail
-            days beyond ±{TAIL_SIGMA_MULT.toFixed(0)}σ (
-            {lowerTail.toFixed(2)}% / +{upperTail.toFixed(2)}%)
+            {n} periods ({startDate} to {endDate}) · {tailPeriodCount} tail
+            periods beyond ±{TAIL_SIGMA_MULT.toFixed(0)}σ (
+            {lowerTail.toFixed(2)}
+            {returnUnit} / +{upperTail.toFixed(2)}
+            {returnUnit})
           </div>
         </div>
 
@@ -230,6 +281,7 @@ export default function Chart() {
         <ChartsContainer
           width={width}
           height={chartHeight}
+          skipAnimation
           margin={{ top: 20, right: 40, bottom: 20, left: 20 }}
           series={[
             {
@@ -268,13 +320,15 @@ export default function Chart() {
               height: 60,
               categoryGapRatio: 0.04,
               valueFormatter: (v: number) =>
-                Math.abs(v) < 0.05 ? "0.0%" : `${v.toFixed(1)}%`,
-              label: RETURNS_COL,
+                Math.abs(v) < 0.05
+                  ? `0.0${returnUnit}`
+                  : `${v.toFixed(1)}${returnUnit}`,
+              label: RETURNS,
               labelStyle: { fill: t.ink, fontSize: 16, fontWeight: 600 },
               tickLabelStyle: {
                 fill: t.inkSoft,
                 fontSize: 14,
-                fontFamily: t.mono,
+                fontFamily: MONO,
               },
               tickLabelInterval: (_: unknown, i: number) => i % 3 === 0,
             },
@@ -289,7 +343,7 @@ export default function Chart() {
               tickLabelStyle: {
                 fill: t.inkSoft,
                 fontSize: 14,
-                fontFamily: t.mono,
+                fontFamily: MONO,
               },
               valueFormatter: (v: number) => v.toFixed(2),
             },
@@ -298,22 +352,7 @@ export default function Chart() {
           <ChartsGrid horizontal />
           <BarPlot skipAnimation borderRadius={2} />
           <LinePlot skipAnimation />
-          <ChartsReferenceLine
-            x={meanBinCenter}
-            label={`Mean (${mean >= 0 ? "+" : ""}${mean.toFixed(2)}%)`}
-            labelAlign="start"
-            labelStyle={{
-              fill: t.ink,
-              fontSize: 14,
-              fontWeight: 600,
-              fontFamily: t.mono,
-            }}
-            lineStyle={{
-              stroke: t.ink,
-              strokeDasharray: "6 4",
-              strokeWidth: 1.75,
-            }}
-          />
+          <MeanReferenceLineLayer />
           <ChartsXAxis />
           <ChartsYAxis />
         </ChartsContainer>
@@ -331,21 +370,27 @@ export default function Chart() {
             lineHeight: 1.65,
             color: t.ink,
             minWidth: 210,
-            fontFamily: t.mono,
+            fontFamily: MONO,
           }}
         >
           <div
             style={{
               fontWeight: 700,
               marginBottom: 4,
-              fontFamily: t.sans,
+              fontFamily: FONT,
               fontSize: 15,
             }}
           >
             Return statistics
           </div>
-          <div style={{ color: t.inkSoft }}>Mean: {mean.toFixed(2)}%</div>
-          <div style={{ color: t.inkSoft }}>Std dev: {std.toFixed(2)}%</div>
+          <div style={{ color: t.inkSoft }}>
+            Mean: {mean.toFixed(2)}
+            {returnUnit}
+          </div>
+          <div style={{ color: t.inkSoft }}>
+            Std dev: {std.toFixed(2)}
+            {returnUnit}
+          </div>
           <div style={{ color: t.inkSoft }}>
             Skewness: {skewness.toFixed(2)}
           </div>
