@@ -8,54 +8,11 @@ import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
-// Data
-const SAMPLE_ID = "Sample ID";
-const REGION = "Origin Region";
-const ACIDITY = "Acidity";
-const BODY = "Body";
-const SWEETNESS = "Sweetness";
-const FLORAL = "Floral Aroma";
-const EARTHINESS = "Earthiness";
-const SUBTITLE =
-  "Complete-linkage clustering of coffee origin sensory profiles · Outer metadata ring by region";
-
-const SAMPLE_PROFILES = [
-  { code: "ETH", name: "Ethiopian Highlands", center: [8.5, 3.0, 7.0, 8.5, 1.0] },
-  { code: "KEN", name: "Kenyan Highlands", center: [8.8, 4.0, 6.0, 5.0, 1.5] },
-  { code: "COL", name: "Colombian Andes", center: [5.5, 6.0, 7.5, 2.5, 2.0] },
-  { code: "GUA", name: "Guatemalan Volcanic", center: [6.0, 5.0, 5.5, 4.0, 2.5] },
-  { code: "SUM", name: "Sumatran Lowlands", center: [2.0, 8.5, 3.0, 1.0, 8.5] },
-];
-
-const DATA: Record<string, string | number>[] = [];
-let lcgState = 42 >>> 0;
-for (const reg of SAMPLE_PROFILES) {
-  for (let s = 0; s < 6; s++) {
-    const vals: number[] = [];
-    for (let d = 0; d < 5; d++) {
-      lcgState = (Math.imul(1664525, lcgState) + 1013904223) >>> 0;
-      const u1 = Math.max(lcgState / 4294967296, 1e-9);
-      lcgState = (Math.imul(1664525, lcgState) + 1013904223) >>> 0;
-      const u2 = lcgState / 4294967296;
-      const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-      vals.push(reg.center[d] + z * 0.7);
-    }
-    DATA.push({
-      [SAMPLE_ID]: `${reg.code}-${s + 1}`,
-      [REGION]: reg.name,
-      [ACIDITY]: vals[0],
-      [BODY]: vals[1],
-      [SWEETNESS]: vals[2],
-      [FLORAL]: vals[3],
-      [EARTHINESS]: vals[4],
-    });
-  }
-}
+const t = window.ANYPLOT_TOKENS;
 
 // Constants
-const t = window.ANYPLOT_TOKENS;
+const TITLE = "dendrogram-radial · javascript · muix · anyplot.ai";
 const FONT = "Inter, system-ui, -apple-system, sans-serif";
-const FEATURE_COLS = [ACIDITY, BODY, SWEETNESS, FLORAL, EARTHINESS];
 const REF_RINGS = [0.25, 0.5, 0.75, 1.0];
 const RING_INNER = 1.06;
 const RING_OUTER = 1.13;
@@ -64,12 +21,58 @@ const LABEL_RADIUS = 1.21;
 const DOMAIN_LIMIT = 1.38;
 const ARC_STEPS = 14;
 
-// Preparation
-const n = DATA.length;
+// Columns: set these to your data's column names
+const SAMPLE_ID = "Sample ID"; // role: labels
+const REGION = "Origin region"; // role: clusters
+const ACIDITY = "Acidity"; // role: linkage_matrix
+const BODY = "Body"; // role: linkage_matrix
+const SWEETNESS = "Sweetness"; // role: linkage_matrix
+const FLORAL = "Floral aroma"; // role: linkage_matrix
+const EARTHINESS = "Earthiness"; // role: linkage_matrix
+
+// Data: replace this block with your own records
+const data = (() => {
+  const sampleProfiles = [
+    { code: "ETH", name: "Ethiopian Highlands", center: [8.5, 3.0, 7.0, 8.5, 1.0] },
+    { code: "KEN", name: "Kenyan Highlands", center: [8.8, 4.0, 6.0, 5.0, 1.5] },
+    { code: "COL", name: "Colombian Andes", center: [5.5, 6.0, 7.5, 2.5, 2.0] },
+    { code: "GUA", name: "Guatemalan Volcanic", center: [6.0, 5.0, 5.5, 4.0, 2.5] },
+    { code: "SUM", name: "Sumatran Lowlands", center: [2.0, 8.5, 3.0, 1.0, 8.5] },
+  ];
+  const rows: Record<string, string | number>[] = [];
+  let lcgState = 42 >>> 0;
+  for (const reg of sampleProfiles) {
+    for (let s = 0; s < 6; s++) {
+      const vals: number[] = [];
+      for (let d = 0; d < 5; d++) {
+        lcgState = (Math.imul(1664525, lcgState) + 1013904223) >>> 0;
+        const u1 = Math.max(lcgState / 4294967296, 1e-9);
+        lcgState = (Math.imul(1664525, lcgState) + 1013904223) >>> 0;
+        const u2 = lcgState / 4294967296;
+        const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+        vals.push(reg.center[d] + z * 0.7);
+      }
+      rows.push({
+        [SAMPLE_ID]: `${reg.code}-${s + 1}`,
+        [REGION]: reg.name,
+        [ACIDITY]: vals[0],
+        [BODY]: vals[1],
+        [SWEETNESS]: vals[2],
+        [FLORAL]: vals[3],
+        [EARTHINESS]: vals[4],
+      });
+    }
+  }
+  return rows;
+})();
+
+// Plot: reads only data and the constants above
+const FEATURE_COLS = [ACIDITY, BODY, SWEETNESS, FLORAL, EARTHINESS];
+const n = data.length;
 const nodeCount = 2 * n - 1;
-const REGION_NAMES = Array.from(new Set(DATA.map((d) => String(d[REGION]))));
+const REGION_NAMES = Array.from(new Set(data.map((d) => String(d[REGION]))));
 const REGION_COLORS = Object.fromEntries(
-  REGION_NAMES.map((reg, i) => [reg, t.palette[i]])
+  REGION_NAMES.map((reg, i) => [reg, t.palette[i]]),
 );
 
 const D = Array.from({ length: nodeCount }, () => new Array(nodeCount).fill(Infinity));
@@ -77,7 +80,7 @@ for (let i = 0; i < n; i++) {
   for (let j = i + 1; j < n; j++) {
     let sumSq = 0;
     for (const col of FEATURE_COLS) {
-      const diff = Number(DATA[i][col]) - Number(DATA[j][col]);
+      const diff = Number(data[i][col]) - Number(data[j][col]);
       sumSq += diff * diff;
     }
     const dist = Math.sqrt(sumSq);
@@ -139,7 +142,7 @@ const regionOf: (string | null)[] = new Array(nodeCount).fill(null);
 order.forEach((leafId, idx) => {
   angleOf[leafId] = Math.PI / 2 - idx * ((2 * Math.PI) / n);
   radiusOf[leafId] = 1;
-  regionOf[leafId] = String(DATA[leafId][REGION]);
+  regionOf[leafId] = String(data[leafId][REGION]);
 });
 
 for (let id = n; id < nodeCount; id++) {
@@ -150,11 +153,14 @@ for (let id = n; id < nodeCount; id++) {
     regionOf[a] !== null && regionOf[a] === regionOf[b] ? regionOf[a] : null;
 }
 
+const SUBTITLE = `${n} leaves across ${REGION_NAMES.length} ${REGION}s · complete-linkage clustering over ${FEATURE_COLS.length} features`;
+
 const scatterSeries = REGION_NAMES.map((reg) => ({
   type: "scatter" as const,
   id: reg,
-  data: DATA.map((row, i) => ({ row, i }))
-    .filter(({ row }) => row[REGION] === reg)
+  data: data
+    .map((row, i) => ({ row, i }))
+    .filter(({ row }) => String(row[REGION]) === reg)
     .map(({ row, i }) => ({
       id: String(row[SAMPLE_ID]),
       x: Math.cos(angleOf[i]),
@@ -168,14 +174,13 @@ const scatterSeries = REGION_NAMES.map((reg) => ({
 }));
 
 function RadialDendrogram() {
-  const xs = useXScale("x");
-  const ys = useYScale("y");
-  if (!xs || !ys) return null;
+  const xs = useXScale("x") as any;
+  const ys = useYScale("y") as any;
 
-  const cx = xs(0) ?? 0;
-  const cy = ys(0) ?? 0;
-  const unitPx = Math.abs((xs(1) ?? 0) - cx);
-  const ringThickness = Math.abs((xs(RING_OUTER) ?? 0) - (xs(RING_INNER) ?? 0));
+  const cx = xs(0);
+  const cy = ys(0);
+  const unitPx = Math.abs(xs(1) - cx);
+  const ringThickness = Math.abs(xs(RING_OUTER) - xs(RING_INNER));
 
   const branches = [];
   for (let id = n; id < nodeCount; id++) {
@@ -190,8 +195,8 @@ function RadialDendrogram() {
     let dArc = "";
     for (let k = 0; k <= ARC_STEPS; k++) {
       const th = angleOf[a] + (diff * k) / ARC_STEPS;
-      const px = xs(rParent * Math.cos(th)) ?? 0;
-      const py = ys(rParent * Math.sin(th)) ?? 0;
+      const px = xs(rParent * Math.cos(th));
+      const py = ys(rParent * Math.sin(th));
       dArc += `${k === 0 ? "M" : "L"}${px.toFixed(1)},${py.toFixed(1)} `;
     }
     branches.push(
@@ -202,7 +207,7 @@ function RadialDendrogram() {
         stroke={bridgeColor}
         strokeWidth={2.5}
         strokeLinecap="round"
-      />
+      />,
     );
 
     for (const child of [a, b]) {
@@ -213,14 +218,14 @@ function RadialDendrogram() {
       branches.push(
         <line
           key={`seg-${id}-${child}`}
-          x1={xs(rParent * Math.cos(th)) ?? 0}
-          y1={ys(rParent * Math.sin(th)) ?? 0}
-          x2={xs(rChild * Math.cos(th)) ?? 0}
-          y2={ys(rChild * Math.sin(th)) ?? 0}
+          x1={xs(rParent * Math.cos(th))}
+          y1={ys(rParent * Math.sin(th))}
+          x2={xs(rChild * Math.cos(th))}
+          y2={ys(rChild * Math.sin(th))}
           stroke={childColor}
           strokeWidth={2.5}
           strokeLinecap="round"
-        />
+        />,
       );
     }
   }
@@ -232,8 +237,8 @@ function RadialDendrogram() {
     let dRing = "";
     for (let k = 0; k <= 4; k++) {
       const th = th0 + ((th1 - th0) * k) / 4;
-      const px = xs(RING_MID * Math.cos(th)) ?? 0;
-      const py = ys(RING_MID * Math.sin(th)) ?? 0;
+      const px = xs(RING_MID * Math.cos(th));
+      const py = ys(RING_MID * Math.sin(th));
       dRing += `${k === 0 ? "M" : "L"}${px.toFixed(1)},${py.toFixed(1)} `;
     }
     return (
@@ -241,7 +246,7 @@ function RadialDendrogram() {
         key={`ring-${leafId}`}
         d={dRing}
         fill="none"
-        stroke={REGION_COLORS[String(DATA[leafId][REGION])]}
+        stroke={REGION_COLORS[String(data[leafId][REGION])]}
         strokeWidth={ringThickness}
         strokeLinecap="butt"
       />
@@ -250,8 +255,8 @@ function RadialDendrogram() {
 
   const labels = order.map((leafId) => {
     const theta = angleOf[leafId];
-    const px = xs(LABEL_RADIUS * Math.cos(theta)) ?? 0;
-    const py = ys(LABEL_RADIUS * Math.sin(theta)) ?? 0;
+    const px = xs(LABEL_RADIUS * Math.cos(theta));
+    const py = ys(LABEL_RADIUS * Math.sin(theta));
     const rotDeg = (Math.atan2(py - cy, px - cx) * 180) / Math.PI;
     const flip = Math.cos(theta) < 0;
     return (
@@ -267,7 +272,7 @@ function RadialDendrogram() {
         fontFamily={FONT}
         fill={t.inkSoft}
       >
-        {String(DATA[leafId][SAMPLE_ID])}
+        {String(data[leafId][SAMPLE_ID])}
       </text>
     );
   });
@@ -323,9 +328,7 @@ export default function Chart() {
           paddingTop: 10,
         }}
       >
-        <span style={{ fontSize: 22, fontWeight: 700, color: t.ink }}>
-          dendrogram-radial · javascript · muix · anyplot.ai
-        </span>
+        <span style={{ fontSize: 22, fontWeight: 700, color: t.ink }}>{TITLE}</span>
         <span style={{ fontSize: 15, color: t.inkSoft }}>{SUBTITLE}</span>
       </div>
       <ChartsContainer
