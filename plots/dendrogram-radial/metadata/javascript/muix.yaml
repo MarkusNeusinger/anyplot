@@ -2,145 +2,130 @@ library: muix
 language: javascript
 specification_id: dendrogram-radial
 created: '2026-09-05T00:17:12Z'
-updated: '2026-09-05T00:22:53Z'
-generated_by: claude-sonnet
-workflow_run: 33931956322
+updated: '2026-10-24T08:45:05Z'
+generated_by: gemini-4-argon
+adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
+workflow_run: 40078615669
 issue: 5245
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/javascript/muix/plot-dark.html
-quality_score: 90
+quality_score: 88
 review:
   strengths:
-  - Fully custom radial dendrogram built through the documented MUI X ChartContainer
-    + useXScale/useYScale composition pattern — complete-linkage clustering, radial
-    angle/radius math, and SVG arc paths are all implemented correctly and produce
-    a mathematically sound dendrogram (root at center, branch radius proportional
-    to merge distance).
-  - 'Correct Imprint palette usage in both renders: brand green (#009E73) is the first
-    series, the remaining 4 regions follow canonical palette order, and background/text/grid
-    chrome flips correctly between #FAF8F1 (light) and #1A1A17 (dark) while data colors
-    stay identical.'
-  - Outer metadata ring plus branch coloring gives redundant, legible cluster encoding;
-    cross-cluster internal merges render in neutral ink instead of an arbitrary child
-    color, an honest and accurate touch that most dendrogram implementations skip.
-  - No text clipping or overlap anywhere — title, all 30 rotated leaf labels, and
-    the 5-item legend comfortably fit the canvas with generous, balanced margins in
-    both themes.
-  - Deterministic LCG-seeded data generation with a plausible, neutral scenario (coffee-origin
-    flavor profiles) whose resulting clustering (Sumatran Lowlands as a late-joining
-    outlier, Ethiopian/Kenyan highlands as an adjacent East-African clade) matches
-    the intended, factually-grounded story.
+  - The root is at the centre and the merge radius is 1 - height/maxHeight, so radial
+    distance is proportional to the complete-linkage merge distance and is never equalised
+    by depth
+  - The leaf order comes from a DFS of the linkage tree at equal angular spacing,
+    so no branches cross
+  - Branches are coloured per region and mixed merges fall back to neutral ink, so
+    each region reads as one coloured sector; the outer metadata ring aligns with
+    each leaf and has a legend
+  - Leaf labels are rotated radially and flipped on the left half, so 30 labels fan
+    out without collisions
+  - Uses MUI X composition (ChartsDataProvider + ChartsWrapper + ChartsSurface) with
+    useXScale/useYScale to draw the custom dendrogram layer in the chart's own coordinates;
+    the leaf dots are a native ScatterPlot series with legend and hover tooltips in
+    the HTML
+  - 'The data is deterministic (fixed-seed LCG) and plausible: coffee cupping profiles
+    from five origin regions'
   weaknesses:
-  - Leaf tick labels (explicit 13px) become hard to read once the PNG is scaled to
-    the ~400px mobile thumbnail — largely an inherent tension of packing 30 rotated
-    labels around a circle, but worth checking whether a slightly larger font still
-    fits without crowding the desktop render.
-  - 'Design polish is strong but not maximal: the reference grid rings and branch
-    strokes are uniform with no variation in weight/opacity to emphasize hierarchy
-    depth, and there''s no quantitative labeling of what the concentric rings represent
-    (distance scale).'
-  - Data storytelling relies on the viewer already knowing dendrogram semantics (branch
-    length = dissimilarity) — the East-African clade adjacency and the Sumatran outlier
-    that the code comments call out are not visually emphasized (e.g. via annotation
-    or subtle highlight) for a first-time reader.
+  - 'VQ-06 (both): the radial axis encodes merge distance, but the four reference
+    rings carry no values and nothing names the measure, so a reader cannot read how
+    far apart two clusters are → label the rings with their distance values (e.g.
+    ''Euclidean distance'' at 0.25·max … max). Likely cause: the REF_RINGS circles
+    are drawn without any <text> value labels.'
+  - 'Suggestion: ''Origin regions'' in the subtitle keeps the column name''s capital
+    O mid-sentence; lower-casing it would read more naturally.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Bold dark title "dendrogram-radial · javascript · muix · anyplot.ai" centered at top, clearly readable. 30 rotated leaf tick labels (e.g. COL-1, SUM-4, ETH-2) around the circumference in dark-gray ink, all legible at full resolution. Subtle light-gray concentric reference-ring gridlines at 0.25/0.5/0.75/1.0 radius. Circular legend with 5 colored dot swatches + labels at the bottom, fully readable.
-      Data: Radial dendrogram with root at center (small dark dot) and 5 color-coded clades — Ethiopian Highlands (brand green #009E73, first series), Kenyan Highlands (lavender), Colombian Andes (blue), Guatemalan Volcanic (ochre), Sumatran Lowlands (matte red) — matching Imprint canonical order 1-5. Branch lines and an outer metadata ring both encode cluster color; internal merges spanning multiple clusters render in neutral dark-gray. The Sumatran cluster's connecting branch runs almost to the center, visually marking it as the most dissimilar/outlier group.
-      Legibility verdict: PASS — all title, tick-label, and legend text readable against the light background; no dark-on-light failures.
+      Background: warm off-white #FAF8F1, square 2400x2400 canvas.
+      Chrome: bold dark title "dendrogram-radial · javascript · muix · anyplot.ai" with a softer subtitle; leaf IDs rotated radially outside the ring (left half flipped upright); HTML legend at the bottom listing the five regions; faint reference rings. All readable.
+      Data: radial elbow dendrogram with the root dot at the centre; subtrees coloured per region (Ethiopian #009E73 first, then lavender, blue, ochre, matte red); mixed-region backbone in neutral ink; 30 leaf dots at equal angular spacing on the unit circle; segmented metadata ring aligned with the leaves.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title now rendered in light/off-white text, clearly readable. Leaf tick labels render in light gray, fully legible against the dark background — no dark-on-dark failures observed. Reference rings are a subtle light-gray at low opacity, still visible without competing with data. Legend text is light-colored and readable.
-      Data: All five region colors (brand green, lavender, blue, ochre, matte red) are pixel-identical to the light render — confirmed only the chrome (background, text, gridline color) flipped. Same branch structure, same metadata ring, same outlier pattern for Sumatran Lowlands.
-      Legibility verdict: PASS — no dark-on-dark or light-on-light issues in either theme; both renders are fully readable.
+      Background: warm near-black #1A1A17.
+      Chrome: title, subtitle, leaf labels and legend in light ink, all clearly readable, no dark-on-dark text; the neutral backbone and the root dot turn light grey; the reference rings are subtle but visible.
+      Data: branch, dot, ring and legend colours identical to the light render; only the chrome flips.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (13px labels, 22px title, 14px legend);
-          readable at full resolution in both themes, but the 30 rotated leaf labels
-          crowd together once scaled to the ~400px mobile thumbnail.
+        comment: Title 22 px, leaf labels 14 px, legend 14 px; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements in either render.
+        comment: Rotated leaf labels fan out with no collisions; near-coincident arcs
+          at small merge distances are permitted by the spec
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Leaf markers, branch strokes, and metadata-ring segments are clearly
-          visible and appropriately sized for 30 data points; not maximally optimized
-          (uniform stroke weight throughout).
+        comment: Branches 2.5 px, prominent leaf dots, legend dots visible in both
+          themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Colors distinguishable with redundant position/label encoding; no
-          reliance on hue alone.
+        comment: Imprint categorical colours, reinforced by sector position and labels
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Radial chart fills most of the square canvas with balanced title/legend
-          margins; nothing cut off.
+        comment: Square 2400x2400, balanced circle, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: No traditional axes needed for a radial dendrogram; title is fully
-          descriptive per spec format.
+        comment: 'Radial merge-distance scale unlabeled: reference rings carry no
+          values or measure name (defect line)'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, remaining 4 regions in canonical Imprint
-          order, theme-correct chrome and identical data colors across both renders.'
+        comment: 'Positions 1-5 in canonical order, first #009E73, theme-correct backgrounds'
     design_excellence:
-      score: 15
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Bespoke radial layout with custom arcs and metadata ring is clearly
-          above library defaults, though short of publication-grade with annotation/emphasis
-          layers.
+        comment: Title/subtitle hierarchy, radially rotated labels flipped on the
+          left half, unified colour system across dots, ring and branches
       - id: DE-02
         name: Visual Refinement
-        score: 5
-        max: 6
-        passed: true
-        comment: No chart frame/spines, subtle reference grid, generous whitespace;
-          ring/branch strokes are uniform rather than richly detailed.
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color-coded clades and the Sumatran outlier's long branch create
-          visual hierarchy, but require dendrogram literacy to interpret — no explicit
-          callout of the featured insight.
+        comment: Gapped ring segments aligned to the leaves, faint reference rings,
+          root dot
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Neutral-ink mixed backbone makes the regional sectors the focal point
     spec_compliance:
       score: 15
       max: 15
@@ -150,28 +135,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct radial dendrogram: root at center, leaves on the rim.'
+        comment: Radial dendrogram with the root at the centre
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Linkage-proportional branch lengths, cluster-colored branches, and
-          the optional outer metadata ring are all present.
+        comment: Equal angular spacing, distance-proportional radii, cluster-coloured
+          branches, outer ring with legend, tooltips
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Angle = leaf position, radius = 1 - normalized merge distance; all
-          30 leaves shown.
+        comment: Merge radius = 1 - height/maxHeight; leaves on the unit circle
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the exact mandated format; legend labels match the
-          5 region names.
+        comment: Correct title format; legend names the regions
     data_quality:
       score: 15
       max: 15
@@ -181,22 +164,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows varied branch lengths, a distinct outlier cluster, and tight
-          sub-clades — full range of dendrogram structure.
+        comment: Uneven merge radii, five clear clusters, mixed backbone
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Coffee-origin flavor profiles are realistic, neutral, and easy to
-          understand.
+        comment: Coffee cupping profiles from five origin regions
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 30 leaves within the spec's 20-500 recommended range; 0-10 flavor-trait
-          values and resulting distances are plausible.
+        comment: Attribute scores around 0-10; 30 leaves within the spec's 20-500
+          range
     code_quality:
       score: 10
       max: 10
@@ -206,37 +187,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Structure is appropriate for a React/MUI-X component — no unnecessary
-          abstraction beyond what the clustering and SVG overlay require.
+        comment: Single component needed for the scale hooks; module-level data and
+          linkage
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG (seed 42) makes the flavor-noise generation fully deterministic.
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ChartContainer, ScatterPlot, and the two scale hooks are imported,
-          all used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or over-engineering; complexity matches the custom radial-layout
-          requirement.
+        comment: 'Hand-written complete linkage is acceptable: no linkage call is
+          available in the muix runtime'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exports a component sized to window.ANYPLOT_SIZE with skipAnimation,
-          following the harness contract.
+        comment: Default export, skipAnimation, v9 composition API
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -244,27 +223,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses the documented ChartContainer + useXScale/useYScale overlay
-          pattern correctly for a chart type MUI X has no built-in component for.
+        comment: ChartsDataProvider + ChartsWrapper + ChartsSurface composition with
+          an HTML ChartsLegend
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Leveraging the scale hooks to drive a fully custom SVG radial layout
-          inside a MUI X ChartContainer is distinctive to this library's architecture.
+        comment: useXScale/useYScale hooks draw a custom SVG layer in chart coordinates;
+          native ScatterPlot series give legend and tooltips
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-10-24T08:41:56Z'
 impl_tags:
   dependencies: []
   techniques:
-  - polar-projection
-  - custom-legend
   - hover-tooltips
+  - html-export
+  - layer-composition
   patterns:
   - data-generation
-  - matrix-construction
   - iteration-over-groups
   dataprep:
   - hierarchical-clustering
   styling:
-  - minimal-chrome
+  - publication-ready
