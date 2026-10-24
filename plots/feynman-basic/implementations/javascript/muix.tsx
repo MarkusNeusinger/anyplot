@@ -1,39 +1,23 @@
 // anyplot.ai
 // feynman-basic: Feynman Diagram for Particle Interactions
-// Library: muix 9.0.0 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-08-20
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 92/100 | Created: 2026-08-20
 
 import * as React from "react";
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
+
+// Constants
 const SIZE = window.ANYPLOT_SIZE;
 const TITLE = "feynman-basic · javascript · muix · anyplot.ai";
-const SUBTITLE = "Electron–positron annihilation → virtual photon → muon pair (QED)";
 const FOOTER_NOTE =
   "Vertex dots mark interaction points · arrows show particle (forward) vs antiparticle (backward) flow in time";
 const TIME_AXIS_LABEL = "time";
 
 const FONT =
   '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
-
-// Constants
-const VERTEX_ID = "vertexId";
-const VERTEX_X = "vertexX";
-const VERTEX_Y = "vertexY";
-const VERTEX_INTERACTION = "isInteraction";
-
-const PARTICLE_ID = "particleId";
-const PARTICLE_TYPE = "particleType";
-const PARTICLE_LABEL = "particleLabel";
-const PARTICLE_ANTI = "isAntiparticle";
-
-const FROM_VERTEX = "fromVertex";
-const TO_VERTEX = "toVertex";
-
-const STYLE_KIND = "styleKind";
-const STYLE_LABEL = "styleLabel";
 
 const X_PAD_SHARE = 0.095;
 const Y_TOP_PAD_SHARE = 0.67;
@@ -42,76 +26,67 @@ const TIME_AXIS_DROP_SHARE = 0.25;
 const STYLE_KEY_DROP_SHARE = 0.54;
 const PHOTON_WAVES = 6;
 const PHOTON_AMP_PX = 12;
+const GLUON_LOOPS = 8;
+const GLUON_R_PX = 9;
 const KEY_SWATCH_W_PX = 60;
 const KEY_WAVES = 2.5;
 const KEY_AMP_PX = 8;
 
-// Data: vertices, particles, propagators, and standard Feynman line-style key
-const vertexData = [
-  { [VERTEX_ID]: "eIn", [VERTEX_X]: 8, [VERTEX_Y]: 24, [VERTEX_INTERACTION]: 0 },
-  { [VERTEX_ID]: "posIn", [VERTEX_X]: 8, [VERTEX_Y]: 0, [VERTEX_INTERACTION]: 0 },
-  { [VERTEX_ID]: "v1", [VERTEX_X]: 34, [VERTEX_Y]: 12, [VERTEX_INTERACTION]: 1 },
-  { [VERTEX_ID]: "v2", [VERTEX_X]: 66, [VERTEX_Y]: 12, [VERTEX_INTERACTION]: 1 },
-  { [VERTEX_ID]: "muOut", [VERTEX_X]: 92, [VERTEX_Y]: 24, [VERTEX_INTERACTION]: 0 },
-  { [VERTEX_ID]: "antiMuOut", [VERTEX_X]: 92, [VERTEX_Y]: 0, [VERTEX_INTERACTION]: 0 },
+const STYLE_KEY: { kind: "fermion" | "photon" | "gluon" | "boson"; label: string }[] = [
+  { kind: "fermion", label: "Fermion (e⁻, q, …)" },
+  { kind: "photon", label: "Photon (γ)" },
+  { kind: "gluon", label: "Gluon (g)" },
+  { kind: "boson", label: "Scalar boson (H)" },
 ];
 
-const particleData = [
-  { [PARTICLE_ID]: "e-", [PARTICLE_TYPE]: "fermion", [PARTICLE_LABEL]: "e⁻", [PARTICLE_ANTI]: 0 },
-  { [PARTICLE_ID]: "e+", [PARTICLE_TYPE]: "fermion", [PARTICLE_LABEL]: "e⁺", [PARTICLE_ANTI]: 1 },
-  { [PARTICLE_ID]: "gamma", [PARTICLE_TYPE]: "photon", [PARTICLE_LABEL]: "γ*", [PARTICLE_ANTI]: 0 },
-  { [PARTICLE_ID]: "mu-", [PARTICLE_TYPE]: "fermion", [PARTICLE_LABEL]: "μ⁻", [PARTICLE_ANTI]: 0 },
-  { [PARTICLE_ID]: "mu+", [PARTICLE_TYPE]: "fermion", [PARTICLE_LABEL]: "μ⁺", [PARTICLE_ANTI]: 1 },
+// Data: replace this block with your own parameters
+const VERTICES = [ // role: vertices
+  { id: "eIn", x: 8, y: 24, isInteraction: false },
+  { id: "posIn", x: 8, y: 0, isInteraction: false },
+  { id: "v1", x: 34, y: 12, isInteraction: true },
+  { id: "v2", x: 66, y: 12, isInteraction: true },
+  { id: "muOut", x: 92, y: 24, isInteraction: false },
+  { id: "antiMuOut", x: 92, y: 0, isInteraction: false },
 ];
 
-const propagatorData = [
-  { [FROM_VERTEX]: "eIn", [TO_VERTEX]: "v1", [PARTICLE_ID]: "e-" },
-  { [FROM_VERTEX]: "posIn", [TO_VERTEX]: "v1", [PARTICLE_ID]: "e+" },
-  { [FROM_VERTEX]: "v1", [TO_VERTEX]: "v2", [PARTICLE_ID]: "gamma" },
-  { [FROM_VERTEX]: "v2", [TO_VERTEX]: "muOut", [PARTICLE_ID]: "mu-" },
-  { [FROM_VERTEX]: "v2", [TO_VERTEX]: "antiMuOut", [PARTICLE_ID]: "mu+" },
+const PARTICLES: {
+  id: string;
+  type: "fermion" | "photon" | "gluon" | "boson";
+  label: string;
+  anti: boolean;
+}[] = [ // role: particles
+  { id: "e-", type: "fermion", label: "e⁻", anti: false },
+  { id: "e+", type: "fermion", label: "e⁺", anti: true },
+  { id: "gamma", type: "photon", label: "γ*", anti: false },
+  { id: "mu-", type: "fermion", label: "μ⁻", anti: false },
+  { id: "mu+", type: "fermion", label: "μ⁺", anti: true },
 ];
 
-const styleKeyData = [
-  { [STYLE_KIND]: "fermion", [STYLE_LABEL]: "Fermion (e⁻, q, …)" },
-  { [STYLE_KIND]: "photon", [STYLE_LABEL]: "Photon (γ)" },
-  { [STYLE_KIND]: "gluon", [STYLE_LABEL]: "Gluon (g)" },
-  { [STYLE_KIND]: "boson", [STYLE_LABEL]: "Scalar boson (H)" },
+const PROPAGATORS = [ // role: propagators
+  { fromVertex: "eIn", toVertex: "v1", particleId: "e-" },
+  { fromVertex: "posIn", toVertex: "v1", particleId: "e+" },
+  { fromVertex: "v1", toVertex: "v2", particleId: "gamma" },
+  { fromVertex: "v2", toVertex: "muOut", particleId: "mu-" },
+  { fromVertex: "v2", toVertex: "antiMuOut", particleId: "mu+" },
 ];
 
-// Derived lookup maps and coordinate bounds from data
-const vertexMap = new Map(
-  vertexData.map((v) => [
-    v[VERTEX_ID],
-    { x: v[VERTEX_X], y: v[VERTEX_Y], isInteraction: v[VERTEX_INTERACTION] === 1 },
-  ])
-);
+// Plot: reads only data and the constants above
+const vertexMap = new Map(VERTICES.map((v) => [v.id, v]));
+const particleMap = new Map(PARTICLES.map((p) => [p.id, p]));
 
-const particleMap = new Map(
-  particleData.map((p) => [
-    p[PARTICLE_ID],
-    {
-      type: p[PARTICLE_TYPE],
-      label: p[PARTICLE_LABEL],
-      anti: p[PARTICLE_ANTI] === 1,
-    },
-  ])
-);
-
-const styleKindOrder = styleKeyData.map((s) => s[STYLE_KIND]);
 const typeColorMap = new Map<string, string>();
-styleKindOrder.forEach((kind, idx) => {
-  typeColorMap.set(kind, t.palette[idx]);
+STYLE_KEY.forEach((entry, idx) => {
+  typeColorMap.set(entry.kind, t.palette[idx]);
 });
 
-const vxValues = vertexData.map((v) => v[VERTEX_X]);
-const vyValues = vertexData.map((v) => v[VERTEX_Y]);
+const vxValues = VERTICES.map((v) => v.x);
+const vyValues = VERTICES.map((v) => v.y);
 const minVx = Math.min(...vxValues);
 const maxVx = Math.max(...vxValues);
 const minVy = Math.min(...vyValues);
 const maxVy = Math.max(...vyValues);
-const vxSpan = maxVx - minVx || 1;
-const vySpan = maxVy - minVy || 1;
+const vxSpan = maxVx - minVx;
+const vySpan = maxVy - minVy;
 const midVx = (minVx + maxVx) / 2;
 
 const xDomainMin = minVx - vxSpan * X_PAD_SHARE;
@@ -122,13 +97,26 @@ const yDomainMax = maxVy + vySpan * Y_TOP_PAD_SHARE;
 const timeAxisY = minVy - vySpan * TIME_AXIS_DROP_SHARE;
 const styleKeyY = minVy - vySpan * STYLE_KEY_DROP_SHARE;
 
-const interactionVertices = vertexData.filter((v) => v[VERTEX_INTERACTION] === 1);
+const interactionVertices = VERTICES.filter((v) => v.isInteraction);
+
+const inLabels: string[] = [];
+const internalLabels: string[] = [];
+const outLabels: string[] = [];
+for (const prop of PROPAGATORS) {
+  const fromV = vertexMap.get(prop.fromVertex)!;
+  const toV = vertexMap.get(prop.toVertex)!;
+  const p = particleMap.get(prop.particleId)!;
+  if (!fromV.isInteraction) inLabels.push(p.label);
+  else if (!toV.isInteraction) outLabels.push(p.label);
+  else internalLabels.push(p.label);
+}
+const subtitle = `${inLabels.join(" + ")} → ${internalLabels.join(" + ")} → ${outLabels.join(" + ")} · ${interactionVertices.length} interaction vertices, ${PROPAGATORS.length} propagators`;
 
 function FeynmanCanvas() {
   const xs = useXScale() as (v: number) => number;
   const ys = useYScale() as (v: number) => number;
 
-  const fermionColor = typeColorMap.get("fermion") ?? t.palette[0];
+  const fermionColor = typeColorMap.get("fermion")!;
 
   return (
     <g fontFamily={FONT}>
@@ -158,15 +146,11 @@ function FeynmanCanvas() {
       </defs>
 
       {/* Propagator lines and particle symbol labels */}
-      {propagatorData.map((prop, i) => {
-        const fromV = vertexMap.get(prop[FROM_VERTEX]) ?? { x: 0, y: 0, isInteraction: false };
-        const toV = vertexMap.get(prop[TO_VERTEX]) ?? { x: 0, y: 0, isInteraction: false };
-        const particle = particleMap.get(prop[PARTICLE_ID]) ?? {
-          type: "fermion",
-          label: prop[PARTICLE_ID],
-          anti: false,
-        };
-        const color = typeColorMap.get(particle.type) ?? fermionColor;
+      {PROPAGATORS.map((prop, i) => {
+        const fromV = vertexMap.get(prop.fromVertex)!;
+        const toV = vertexMap.get(prop.toVertex)!;
+        const particle = particleMap.get(prop.particleId)!;
+        const color = typeColorMap.get(particle.type)!;
 
         const x1 = xs(fromV.x);
         const y1 = ys(fromV.y);
@@ -175,7 +159,6 @@ function FeynmanCanvas() {
         const mx = (x1 + x2) / 2;
         const my = (y1 + y2) / 2;
 
-        // Label placement derived from vertex roles and coordinates
         let labelX = mx;
         let labelY = my - 22;
         let labelAnchor: "start" | "middle" | "end" = "middle";
@@ -189,15 +172,17 @@ function FeynmanCanvas() {
           labelAnchor = "start";
         }
 
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        const len = Math.hypot(dx, dy);
+        const ux = dx / len;
+        const uy = dy / len;
+        const px = -uy;
+        const py = ux;
+
+        let lineEl: React.ReactNode;
         if (particle.type === "photon") {
-          const dx = x2 - x1;
-          const dy = y2 - y1;
-          const len = Math.hypot(dx, dy) || 1;
-          const ux = dx / len;
-          const uy = dy / len;
-          const px = -uy;
-          const py = ux;
-          const steps = Math.max(24, Math.round(PHOTON_WAVES * 22));
+          const steps = Math.round(PHOTON_WAVES * 22);
           let d = "";
           for (let s = 0; s <= steps; s++) {
             const u = s / steps;
@@ -206,33 +191,48 @@ function FeynmanCanvas() {
             const wy = y1 + uy * u * len + py * offset;
             d += `${s === 0 ? "M" : "L"} ${wx.toFixed(1)} ${wy.toFixed(1)} `;
           }
-          return (
-            <g key={i}>
-              <path d={d} stroke={color} strokeWidth={4.5} fill="none" />
-              <text
-                x={labelX}
-                y={labelY}
-                textAnchor={labelAnchor}
-                fontSize={24}
-                fontWeight={700}
-                fill={color}
-              >
-                {particle.label}
-              </text>
-            </g>
+          lineEl = <path d={d} stroke={color} strokeWidth={4.5} fill="none" />;
+        } else if (particle.type === "gluon") {
+          const steps = Math.round(GLUON_LOOPS * 24);
+          let d = "";
+          for (let s = 0; s <= steps; s++) {
+            const u = s / steps;
+            const theta = u * GLUON_LOOPS * 2 * Math.PI;
+            const along = u * len + GLUON_R_PX * 0.72 * Math.sin(theta);
+            const perp = -GLUON_R_PX * Math.cos(theta);
+            const gx = x1 + ux * along + px * perp;
+            const gy = y1 + uy * along + py * perp;
+            d += `${s === 0 ? "M" : "L"} ${gx.toFixed(1)} ${gy.toFixed(1)} `;
+          }
+          lineEl = <path d={d} stroke={color} strokeWidth={3.6} fill="none" />;
+        } else if (particle.type === "boson") {
+          lineEl = (
+            <line
+              x1={x1}
+              y1={y1}
+              x2={x2}
+              y2={y2}
+              stroke={color}
+              strokeWidth={4.5}
+              strokeDasharray="12,7"
+              strokeLinecap="round"
+            />
           );
-        }
-
-        const marked = particle.anti
-          ? { ax: x2, ay: y2, bx: x1, by: y1 }
-          : { ax: x1, ay: y1, bx: x2, by: y2 };
-
-        return (
-          <g key={i}>
+        } else {
+          const marked = particle.anti
+            ? { ax: x2, ay: y2, bx: x1, by: y1 }
+            : { ax: x1, ay: y1, bx: x2, by: y2 };
+          lineEl = (
             <g stroke={color} strokeWidth={4.5} strokeLinecap="round">
               <line x1={marked.ax} y1={marked.ay} x2={mx} y2={my} markerEnd="url(#arrow-fermion)" />
               <line x1={marked.bx} y1={marked.by} x2={mx} y2={my} />
             </g>
+          );
+        }
+
+        return (
+          <g key={i}>
+            {lineEl}
             <text
               x={labelX}
               y={labelY}
@@ -250,9 +250,9 @@ function FeynmanCanvas() {
       {/* Interaction vertex dots */}
       {interactionVertices.map((v) => (
         <circle
-          key={v[VERTEX_ID]}
-          cx={xs(v[VERTEX_X])}
-          cy={ys(v[VERTEX_Y])}
+          key={v.id}
+          cx={xs(v.x)}
+          cy={ys(v.y)}
           r={9}
           fill={t.ink}
         />
@@ -273,19 +273,15 @@ function FeynmanCanvas() {
       </text>
 
       {/* Four-type Feynman propagator style key */}
-      {styleKeyData.map((item, idx) => {
-        const kind = item[STYLE_KIND];
-        const label = item[STYLE_LABEL];
-        const color = typeColorMap.get(kind) ?? t.inkSoft;
-        const xFrac =
-          styleKeyData.length > 1
-            ? minVx + vxSpan * 0.02 + (vxSpan * 0.86 * idx) / (styleKeyData.length - 1)
-            : midVx;
+      {STYLE_KEY.map((item, idx) => {
+        const { kind, label } = item;
+        const color = typeColorMap.get(kind)!;
+        const xFrac = minVx + vxSpan * 0.02 + (vxSpan * 0.86 * idx) / (STYLE_KEY.length - 1);
         const px = xs(xFrac);
         const py = ys(styleKeyY);
         const x2 = px + KEY_SWATCH_W_PX;
 
-        let swatchEl: React.ReactNode = null;
+        let swatchEl: React.ReactNode;
         if (kind === "fermion") {
           swatchEl = (
             <line
@@ -299,7 +295,7 @@ function FeynmanCanvas() {
             />
           );
         } else if (kind === "photon") {
-          const steps = Math.max(24, Math.round(KEY_WAVES * 22));
+          const steps = Math.round(KEY_WAVES * 22);
           let d = "";
           for (let s = 0; s <= steps; s++) {
             const u = s / steps;
@@ -363,7 +359,7 @@ function FeynmanCanvas() {
         fontSize={16}
         fill={t.inkSoft}
       >
-        {SUBTITLE}
+        {subtitle}
       </text>
       <text
         x={xs(midVx)}
