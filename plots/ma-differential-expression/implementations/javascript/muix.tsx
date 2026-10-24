@@ -1,6 +1,6 @@
 // anyplot.ai
 // ma-differential-expression: MA Plot for Differential Expression
-// Library: muix 9.x | JavaScript 22.22.3
+// Library: muix 7.29.1 | JavaScript 22.22.3
 // Quality: 87/100 | Created: 2026-06-21
 
 import Box from "@mui/material/Box";
@@ -15,28 +15,34 @@ import { useXScale, useYScale } from "@mui/x-charts/hooks";
 const t = window.ANYPLOT_TOKENS;
 
 // Constants
-const MEAN_EXPR_COL = "Mean Expression (log₂ A)" as const;
-const LFC_COL = "Log₂ Fold Change (M)" as const;
-const SIG_COL = "Significant" as const;
-const STATUS_COL = "Regulation Status" as const;
-
 const LFC_THRESHOLD = 1;
-const PADJ_CUTOFF = 0.05;
-const MIN_SIG_LFC = 0.5;
 const N_SMOOTH_BINS = 24;
 const SMOOTH_BW_FACTOR = 2.2;
 const NOT_SIG_ALPHA_HEX = "55";
+const X_PAD_SHARE = 0.02;
+const Y_PAD_SHARE = 0.06;
+
+const NOT_SIG_LABEL = "Not significant";
+const UP_REG_LABEL = "Up-regulated";
+const DOWN_REG_LABEL = "Down-regulated";
 
 const SEMANTIC_COLORS: Record<string, string> = {
-  "Up-regulated": t.palette[0],
-  "Down-regulated": t.palette[4],
+  [UP_REG_LABEL]: t.palette[0],
+  [DOWN_REG_LABEL]: t.palette[4],
 };
 
-// Data — simulated RNA-seq differential expression (10,000 genes)
+// Columns: set these to your data's column names
+const MEAN_EXPR = "Mean expression (log₂ A)"; // role: mean_expression
+const LFC = "Log₂ fold change (M)"; // role: log_fold_change
+const SIG = "Significant"; // role: significant
+
+// Data: replace this block with your own records
 const N_GENES = 10000;
+const PADJ_CUTOFF = 0.05;
+const MIN_SIG_LFC = 0.5;
 let seed = 42 >>> 0;
 
-const DATA: Array<Record<string, number | string | boolean>> = [];
+const data: Array<Record<string, number | boolean>> = [];
 for (let i = 0; i < N_GENES; i++) {
   seed = (Math.imul(1664525, seed) + 1013904223) >>> 0;
   const r1 = seed / 0x100000000;
@@ -52,64 +58,53 @@ for (let i = 0; i < N_GENES; i++) {
   const m = (r2 - 0.5) * 5 * dispersion + (r3 - 0.5) * 0.3;
   const padj = Math.exp(-Math.abs(m) * (a + 0.3) * 0.8) * r4;
   const sig = padj < PADJ_CUTOFF && Math.abs(m) > MIN_SIG_LFC;
-  const status = !sig ? "Not significant" : m > 0 ? "Up-regulated" : "Down-regulated";
 
-  DATA.push({
-    [MEAN_EXPR_COL]: a,
-    [LFC_COL]: m,
-    [SIG_COL]: sig,
-    [STATUS_COL]: status,
+  data.push({
+    [MEAN_EXPR]: a,
+    [LFC]: m,
+    [SIG]: sig,
   });
 }
 
-// Derive axis bounds from data extent
+// Plot: reads only data and the constants above
 let minA = Infinity;
 let maxA = -Infinity;
 let minM = Infinity;
 let maxM = -Infinity;
-for (const row of DATA) {
-  const a = Number(row[MEAN_EXPR_COL]);
-  const m = Number(row[LFC_COL]);
+for (const row of data) {
+  const a = Number(row[MEAN_EXPR]);
+  const m = Number(row[LFC]);
   if (a < minA) minA = a;
   if (a > maxA) maxA = a;
   if (m < minM) minM = m;
   if (m > maxM) maxM = m;
 }
-const xAxisMin = Math.floor(minA);
-const xAxisMax = Math.ceil(maxA);
-const yBound = Math.ceil(Math.max(Math.abs(minM), Math.abs(maxM)));
+const rawXSpan = maxA - minA;
+const xAxisMin = minA - rawXSpan * X_PAD_SHARE;
+const xAxisMax = maxA + rawXSpan * X_PAD_SHARE;
+const maxAbsM = Math.max(Math.abs(minM), Math.abs(maxM));
+const yBound = maxAbsM * (1 + Y_PAD_SHARE);
 const yAxisMin = -yBound;
 const yAxisMax = yBound;
 
-// Discover regulation statuses and assign colors
-const statusList: string[] = ["Not significant", "Up-regulated", "Down-regulated"].filter((s) =>
-  DATA.some((r) => String(r[STATUS_COL]) === s),
-);
 const usedColors = new Set(Object.values(SEMANTIC_COLORS));
 let nextPaletteIdx = 0;
-const statusColorMap: Record<string, string> = {};
-for (const s of statusList) {
-  if (s === "Not significant") {
-    statusColorMap[s] = `${t.inkSoft}${NOT_SIG_ALPHA_HEX}`;
-  } else if (SEMANTIC_COLORS[s]) {
-    statusColorMap[s] = SEMANTIC_COLORS[s];
-  } else {
-    while (usedColors.has(t.palette[nextPaletteIdx])) nextPaletteIdx++;
-    statusColorMap[s] = t.palette[nextPaletteIdx];
-    usedColors.add(t.palette[nextPaletteIdx]);
-  }
-}
+const statusColorMap: Record<string, string> = {
+  [NOT_SIG_LABEL]: `${t.inkSoft}${NOT_SIG_ALPHA_HEX}`,
+  [UP_REG_LABEL]: SEMANTIC_COLORS[UP_REG_LABEL],
+  [DOWN_REG_LABEL]: SEMANTIC_COLORS[DOWN_REG_LABEL],
+};
 while (usedColors.has(t.palette[nextPaletteIdx])) nextPaletteIdx++;
-const trendColor = t.palette[5] ?? t.palette[nextPaletteIdx];
+const trendColor = t.palette[nextPaletteIdx];
 
 const notSigPts: Array<{ id: number; x: number; y: number }> = [];
 const upRegPts: Array<{ id: number; x: number; y: number }> = [];
 const downRegPts: Array<{ id: number; x: number; y: number }> = [];
 
-for (let i = 0; i < DATA.length; i++) {
-  const row = DATA[i];
-  const pt = { id: i, x: Number(row[MEAN_EXPR_COL]), y: Number(row[LFC_COL]) };
-  if (!row[SIG_COL]) {
+for (let i = 0; i < data.length; i++) {
+  const row = data[i];
+  const pt = { id: i, x: Number(row[MEAN_EXPR]), y: Number(row[LFC]) };
+  if (!row[SIG]) {
     notSigPts.push(pt);
   } else if (pt.y > 0) {
     upRegPts.push(pt);
@@ -120,19 +115,19 @@ for (let i = 0; i < DATA.length; i++) {
 
 // Windowed tricube local average (LOESS trend) across expression range
 const smoothPoints: Array<{ x: number; y: number }> = [];
-const xSpan = xAxisMax - xAxisMin || 1;
+const xSpan = xAxisMax - xAxisMin;
 const bw = (xSpan / N_SMOOTH_BINS) * SMOOTH_BW_FACTOR;
 for (let b = 0; b <= N_SMOOTH_BINS; b++) {
   const cx = xAxisMin + (b * xSpan) / N_SMOOTH_BINS;
   let wSum = 0;
   let wySum = 0;
-  for (let i = 0; i < DATA.length; i++) {
-    const dx = Math.abs(Number(DATA[i][MEAN_EXPR_COL]) - cx);
+  for (let i = 0; i < data.length; i++) {
+    const dx = Math.abs(Number(data[i][MEAN_EXPR]) - cx);
     if (dx < bw) {
       const u = dx / bw;
       const w = Math.pow(1 - u * u * u, 3);
       wSum += w;
-      wySum += w * Number(DATA[i][LFC_COL]);
+      wySum += w * Number(data[i][LFC]);
     }
   }
   if (wSum > 0) {
@@ -141,40 +136,37 @@ for (let b = 0; b <= N_SMOOTH_BINS; b++) {
 }
 
 function MaOverlay() {
-  const xScale = useXScale("x") as (v: number) => number | undefined;
-  const yScale = useYScale("y") as (v: number) => number | undefined;
-
-  const toX = (v: number) => Number(xScale(v) ?? 0);
-  const toY = (v: number) => Number(yScale(v) ?? 0);
+  const xScale = useXScale("x") as (v: number) => number;
+  const yScale = useYScale("y") as (v: number) => number;
 
   const R = 6.5;
   const H = R * 0.866;
 
   const smoothD = smoothPoints
-    .map((p, i) => `${i === 0 ? "M" : "L"}${toX(p.x).toFixed(1)},${toY(p.y).toFixed(1)}`)
+    .map((p, i) => `${i === 0 ? "M" : "L"}${xScale(p.x).toFixed(1)},${yScale(p.y).toFixed(1)}`)
     .join(" ");
 
   return (
     <g>
       {upRegPts.map((p) => {
-        const x = toX(p.x);
-        const y = toY(p.y);
+        const x = xScale(p.x);
+        const y = yScale(p.y);
         return (
           <polygon
             key={p.id}
             points={`${x},${y - R} ${x - H},${y + R * 0.5} ${x + H},${y + R * 0.5}`}
-            fill={statusColorMap["Up-regulated"]}
+            fill={statusColorMap[UP_REG_LABEL]}
           />
         );
       })}
       {downRegPts.map((p) => {
-        const x = toX(p.x);
-        const y = toY(p.y);
+        const x = xScale(p.x);
+        const y = yScale(p.y);
         return (
           <polygon
             key={p.id}
             points={`${x},${y + R} ${x - H},${y - R * 0.5} ${x + H},${y - R * 0.5}`}
-            fill={statusColorMap["Down-regulated"]}
+            fill={statusColorMap[DOWN_REG_LABEL]}
           />
         );
       })}
@@ -188,37 +180,37 @@ function MaOverlay() {
       />
       {/* Reference lines and right-margin threshold labels drawn above the dense cloud */}
       <line
-        x1={toX(xAxisMin)}
-        y1={toY(0)}
-        x2={toX(xAxisMax)}
-        y2={toY(0)}
+        x1={xScale(xAxisMin)}
+        y1={yScale(0)}
+        x2={xScale(xAxisMax)}
+        y2={yScale(0)}
         stroke={t.ink}
         strokeWidth={1.8}
         strokeOpacity={0.75}
       />
       <line
-        x1={toX(xAxisMin)}
-        y1={toY(LFC_THRESHOLD)}
-        x2={toX(xAxisMax)}
-        y2={toY(LFC_THRESHOLD)}
+        x1={xScale(xAxisMin)}
+        y1={yScale(LFC_THRESHOLD)}
+        x2={xScale(xAxisMax)}
+        y2={yScale(LFC_THRESHOLD)}
         stroke={t.ink}
         strokeWidth={1.6}
         strokeDasharray="8 4"
         strokeOpacity={0.85}
       />
       <line
-        x1={toX(xAxisMin)}
-        y1={toY(-LFC_THRESHOLD)}
-        x2={toX(xAxisMax)}
-        y2={toY(-LFC_THRESHOLD)}
+        x1={xScale(xAxisMin)}
+        y1={yScale(-LFC_THRESHOLD)}
+        x2={xScale(xAxisMax)}
+        y2={yScale(-LFC_THRESHOLD)}
         stroke={t.ink}
         strokeWidth={1.6}
         strokeDasharray="8 4"
         strokeOpacity={0.85}
       />
       <text
-        x={toX(xAxisMax) + 10}
-        y={toY(LFC_THRESHOLD)}
+        x={xScale(xAxisMax) + 10}
+        y={yScale(LFC_THRESHOLD)}
         fontSize={14}
         fill={t.inkSoft}
         dominantBaseline="middle"
@@ -226,8 +218,8 @@ function MaOverlay() {
         {`log₂FC = +${LFC_THRESHOLD}`}
       </text>
       <text
-        x={toX(xAxisMax) + 10}
-        y={toY(-LFC_THRESHOLD)}
+        x={xScale(xAxisMax) + 10}
+        y={yScale(-LFC_THRESHOLD)}
         fontSize={14}
         fill={t.inkSoft}
         dominantBaseline="middle"
@@ -239,9 +231,9 @@ function MaOverlay() {
 }
 
 const LEGEND_ITEMS = [
-  { label: "Not significant", color: t.inkSoft, kind: "dot" as const },
-  { label: "Up-regulated", color: statusColorMap["Up-regulated"], kind: "up" as const },
-  { label: "Down-regulated", color: statusColorMap["Down-regulated"], kind: "down" as const },
+  { label: NOT_SIG_LABEL, color: t.inkSoft, kind: "dot" as const },
+  { label: UP_REG_LABEL, color: statusColorMap[UP_REG_LABEL], kind: "up" as const },
+  { label: DOWN_REG_LABEL, color: statusColorMap[DOWN_REG_LABEL], kind: "down" as const },
   { label: "LOESS trend", color: trendColor, kind: "line" as const },
 ];
 
@@ -286,9 +278,9 @@ export default function Chart() {
           {
             type: "scatter",
             id: "notSig",
-            label: "Not significant",
+            label: NOT_SIG_LABEL,
             data: notSigPts,
-            color: statusColorMap["Not significant"],
+            color: statusColorMap[NOT_SIG_LABEL],
             markerSize: 2.5,
             xAxisId: "x",
             yAxisId: "y",
@@ -301,7 +293,7 @@ export default function Chart() {
             min: xAxisMin,
             max: xAxisMax,
             height: 54,
-            label: MEAN_EXPR_COL,
+            label: MEAN_EXPR,
             labelStyle: { fontSize: 16, fill: t.ink },
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
             tickNumber: 7,
@@ -314,7 +306,7 @@ export default function Chart() {
             min: yAxisMin,
             max: yAxisMax,
             width: 76,
-            label: LFC_COL,
+            label: LFC,
             labelStyle: { fontSize: 16, fill: t.ink },
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
             tickNumber: 9,
