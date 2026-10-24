@@ -13,6 +13,7 @@ const t = window.ANYPLOT_TOKENS;
 
 // Constants
 const TITLE = "ohlc-bar · javascript · muix · anyplot.ai";
+const PRICE_AXIS_LABEL = "Price (USD)";
 const TITLE_HEIGHT = 56;
 const Y_PAD_SHARE = 0.06;
 const TICK_INTERVAL_STEP = 5;
@@ -36,7 +37,6 @@ const data: Array<Record<string, string | number>> = [
   { [DATE]: "2024-01-10", [OPEN]: 224.51, [HIGH]: 226.47, [LOW]: 220.69, [CLOSE]: 222.36 },
   { [DATE]: "2024-01-11", [OPEN]: 221.96, [HIGH]: 225.56, [LOW]: 220.76, [CLOSE]: 224.22 },
   { [DATE]: "2024-01-12", [OPEN]: 224.58, [HIGH]: 226.15, [LOW]: 220.89, [CLOSE]: 222.71 },
-  { [DATE]: "2024-01-15", [OPEN]: 222.42, [HIGH]: 227.51, [LOW]: 221.11, [CLOSE]: 225.78 },
   { [DATE]: "2024-01-16", [OPEN]: 226.14, [HIGH]: 229.88, [LOW]: 224.36, [CLOSE]: 228.11 },
   { [DATE]: "2024-01-17", [OPEN]: 227.79, [HIGH]: 229.47, [LOW]: 223.82, [CLOSE]: 225.63 },
   { [DATE]: "2024-01-18", [OPEN]: 225.95, [HIGH]: 229.74, [LOW]: 224.14, [CLOSE]: 227.85 },
@@ -61,7 +61,6 @@ const data: Array<Record<string, string | number>> = [
   { [DATE]: "2024-02-14", [OPEN]: 237.98, [HIGH]: 242.64, [LOW]: 236.54, [CLOSE]: 240.89 },
   { [DATE]: "2024-02-15", [OPEN]: 241.24, [HIGH]: 245.38, [LOW]: 239.72, [CLOSE]: 243.65 },
   { [DATE]: "2024-02-16", [OPEN]: 243.31, [HIGH]: 245.19, [LOW]: 239.84, [CLOSE]: 241.72 },
-  { [DATE]: "2024-02-19", [OPEN]: 242.08, [HIGH]: 246.52, [LOW]: 240.68, [CLOSE]: 244.84 },
   { [DATE]: "2024-02-20", [OPEN]: 244.51, [HIGH]: 246.78, [LOW]: 241.12, [CLOSE]: 242.96 },
   { [DATE]: "2024-02-21", [OPEN]: 243.29, [HIGH]: 247.85, [LOW]: 241.94, [CLOSE]: 246.12 },
   { [DATE]: "2024-02-22", [OPEN]: 246.48, [HIGH]: 250.42, [LOW]: 244.86, [CLOSE]: 248.75 },
@@ -200,7 +199,7 @@ export default function Chart() {
             min: yMin - yPad,
             max: yMax + yPad,
             width: 88,
-            label: CLOSE,
+            label: PRICE_AXIS_LABEL,
             labelStyle: { fontSize: 16, fill: t.ink },
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
             valueFormatter: (v: number) => v.toFixed(0),
