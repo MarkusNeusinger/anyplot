@@ -7,6 +7,7 @@ import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
+import { LinePlot, MarkPlot } from "@mui/x-charts/LineChart";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
@@ -23,6 +24,8 @@ const BANDS: Array<{ loIdx: number; hiIdx: number; opacity: number }> = [
 ];
 const X_PAD_SHARE = 0.02;
 const Y_TOP_PAD_SHARE = 0.08;
+const X_TICK_COUNT = 7;
+const Y_TICK_COUNT = 6;
 
 // Columns: set these to your data's column names
 const AGE = "Age (months)"; // role: age_months
@@ -114,19 +117,39 @@ const Y_MAX = maxRefVal * (1 + Y_TOP_PAD_SHARE);
 const BAND_COLOR = t.palette[2];
 const PATIENT_COLOR = t.palette[0];
 
-function GrowthChartLayer() {
+const PATIENT_ID = "patient";
+
+const series = [
+  ...PERCENTILES.map((col) => ({
+    type: "line" as const,
+    id: col,
+    label: col,
+    xAxisId: "age",
+    yAxisId: "weight",
+    data: sortedData.map((d) => d[col]),
+    color: BAND_COLOR,
+    curve: "linear" as const,
+    showMark: false,
+  })),
+  {
+    type: "line" as const,
+    id: PATIENT_ID,
+    label: PATIENT,
+    xAxisId: "age",
+    yAxisId: "weight",
+    data: sortedData.map((d) => d[PATIENT]),
+    color: PATIENT_COLOR,
+    curve: "linear" as const,
+    connectNulls: true,
+    showMark: true,
+    shape: "circle" as const,
+  },
+];
+
+// Filled bands and right-margin labels: the parts line series can't draw
+function BandLayer() {
   const xScale = useXScale("age") as (v: number) => number;
   const yScale = useYScale("weight") as (v: number) => number;
-
-  const rightEdgeX = xScale(rawXMax) + 12;
-  const patientPath = patientPoints
-    .map(
-      (pt, i) =>
-        `${i === 0 ? "M" : "L"} ${xScale(pt.age).toFixed(1)} ${yScale(
-          pt.weight,
-        ).toFixed(1)}`,
-    )
-    .join(" ");
 
   return (
     <g>
@@ -159,65 +182,25 @@ function GrowthChartLayer() {
           />
         );
       })}
+    </g>
+  );
+}
 
-      {/* Percentile reference curves */}
+function PercentileLabels() {
+  const xScale = useXScale("age") as (v: number) => number;
+  const yScale = useYScale("weight") as (v: number) => number;
+  const rightEdgeX = xScale(rawXMax) + 12;
+  const lastRow = sortedData[sortedData.length - 1];
+
+  return (
+    <g>
       {PERCENTILES.map((col) => {
         const isMedian = col === P50;
-        const pathD = sortedData
-          .map(
-            (row, i) =>
-              `${i === 0 ? "M" : "L"} ${xScale(row[AGE]).toFixed(
-                1,
-              )} ${yScale(row[col]).toFixed(1)}`,
-          )
-          .join(" ");
-
-        return (
-          <path
-            key={`line-${col}`}
-            d={pathD}
-            fill="none"
-            stroke={BAND_COLOR}
-            strokeWidth={isMedian ? 2.8 : 1.3}
-            strokeOpacity={isMedian ? 0.94 : 0.58}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        );
-      })}
-
-      {/* Patient trajectory line and markers */}
-      <path
-        d={patientPath}
-        stroke={PATIENT_COLOR}
-        strokeWidth={3.2}
-        fill="none"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      {patientPoints.map((pt) => (
-        <circle
-          key={`pt-${pt.age}`}
-          cx={xScale(pt.age)}
-          cy={yScale(pt.weight)}
-          r={6.2}
-          fill={PATIENT_COLOR}
-          stroke={t.pageBg}
-          strokeWidth={2}
-        />
-      ))}
-
-      {/* Right-margin percentile labels (P3–P97) */}
-      {PERCENTILES.map((col) => {
-        const isMedian = col === P50;
-        const lastRow = sortedData[sortedData.length - 1];
-        const yPx = yScale(lastRow[col]);
-
         return (
           <text
             key={`lbl-${col}`}
             x={rightEdgeX}
-            y={yPx}
+            y={yScale(lastRow[col])}
             fontSize={isMedian ? 16 : 14}
             fontWeight={isMedian ? 700 : 600}
             fontFamily={MONO}
@@ -231,18 +214,6 @@ function GrowthChartLayer() {
     </g>
   );
 }
-
-const anchorSeries = [
-  {
-    type: "line" as const,
-    id: "_anchor",
-    xAxisId: "age",
-    yAxisId: "weight",
-    data: ages.map(() => null),
-    color: "transparent",
-    showMark: false,
-  },
-];
 
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
@@ -358,7 +329,7 @@ export default function Chart() {
         height={chartHeight}
         margin={{ left: 20, right: 72, top: 20, bottom: 20 }}
         skipAnimation
-        series={anchorSeries}
+        series={series}
         xAxis={[
           {
             id: "age",
@@ -367,6 +338,7 @@ export default function Chart() {
             min: X_MIN,
             max: X_MAX,
             height: 60,
+            tickNumber: X_TICK_COUNT,
             label: AGE,
             labelStyle: { fontSize: 16, fontWeight: 600, fill: t.ink },
             tickLabelStyle: {
@@ -384,6 +356,7 @@ export default function Chart() {
             min: Y_MIN,
             max: Y_MAX,
             width: 84,
+            tickNumber: Y_TICK_COUNT,
             label: PATIENT,
             labelStyle: { fontSize: 16, fontWeight: 600, fill: t.ink },
             tickLabelStyle: {
@@ -396,10 +369,33 @@ export default function Chart() {
         ]}
         sx={{
           "& .MuiChartsGrid-line": { stroke: t.grid },
+          "& .MuiLineChart-line": {
+            strokeWidth: 1.3,
+            strokeOpacity: 0.58,
+            strokeLinecap: "round",
+            strokeLinejoin: "round",
+          },
+          [`& .MuiLineChart-line[data-series="${P50}"]`]: {
+            strokeWidth: 2.8,
+            strokeOpacity: 0.94,
+          },
+          [`& .MuiLineChart-line[data-series="${PATIENT_ID}"]`]: {
+            strokeWidth: 3.2,
+            strokeOpacity: 1,
+          },
+          [`& .MuiLineChart-mark[data-series="${PATIENT_ID}"]`]: {
+            r: 6.2,
+            fill: PATIENT_COLOR,
+            stroke: t.pageBg,
+            strokeWidth: 2,
+          },
         }}
       >
-        <ChartsGrid horizontal vertical />
-        <GrowthChartLayer />
+        <ChartsGrid horizontal />
+        <BandLayer />
+        <LinePlot />
+        <MarkPlot />
+        <PercentileLabels />
         <ChartsXAxis axisId="age" />
         <ChartsYAxis axisId="weight" />
       </ChartsContainer>
