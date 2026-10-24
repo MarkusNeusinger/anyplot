@@ -14,85 +14,50 @@ const t = window.ANYPLOT_TOKENS;
 const HEADER_H = 96;
 const AXIS_SIZE = 48;
 const PAD = 20;
+const SQUARE_COLOR = { light: t.amber, dark: t.palette[3] }; // light and dark wood
 
-// Columns: set these to your data's column names
-const FILE = "File"; // role: x
-const RANK = "Rank"; // role: y
-const TONE = "Square tone"; // role: color
+// Data: board size, files are labelled a, b, c, … and ranks 1, 2, 3, …
+const N_FILES = 8;
+const N_RANKS = 8;
 
-// Data: replace this block with your own records, one object per row
-const data = (() => {
-  const files = ["a", "b", "c", "d", "e", "f", "g", "h"];
-  const rows: { [key: string]: string | number }[] = [];
-  for (let r = 8; r >= 1; r -= 1) {
-    for (let fIdx = 0; fIdx < files.length; fIdx += 1) {
-      const isLight = (fIdx + r - 1) % 2 === 1;
-      rows.push({
-        [FILE]: files[fIdx],
-        [RANK]: r,
-        [TONE]: isLight ? "Light" : "Dark",
-      });
-    }
-  }
-  return rows;
-})();
+// Plot: reads only the parameters and the constants above
+const files = Array.from({ length: N_FILES }, (_, i) => String.fromCharCode(97 + i));
+const ranksTopToBottom = Array.from({ length: N_RANKS }, (_, i) => String(N_RANKS - i));
 
-// Plot: reads only data and the constants above
-const files = Array.from(new Set(data.map((d) => String(d[FILE]))));
-const ranksTopToBottom = Array.from(new Set(data.map((d) => Number(d[RANK]))))
-  .sort((a, b) => b - a)
-  .map((r) => String(r));
-const tones = Array.from(new Set(data.map((d) => String(d[TONE]))));
-const toneColors: { [key: string]: string } = {
-  [tones[0]]: t.amber,
-  [tones[1] ?? ""]: t.palette[3],
-};
-
-const squares = data.map((d) => ({
-  id: `${String(d[FILE])}${String(d[RANK])}`,
-  file: String(d[FILE]),
-  rank: String(d[RANK]),
-  tone: String(d[TONE]),
-  fill: toneColors[String(d[TONE])] ?? t.palette[3],
-}));
+// a1 is dark, so a square is light when file index + rank is even (h1 and a8 light)
+const squares = ranksTopToBottom.flatMap((rank) =>
+  files.map((file, fIdx) => ({
+    id: `${file}${rank}`,
+    file,
+    rank,
+    fill: (fIdx + Number(rank)) % 2 === 0 ? SQUARE_COLOR.light : SQUARE_COLOR.dark,
+  })),
+);
 
 const TITLE = "chessboard-basic · javascript · muix · anyplot.ai";
 const SUBTITLE = `${squares.length} squares (${files.length}×${ranksTopToBottom.length}) · Algebraic notation (${files[0]}–${files[files.length - 1]}, ${ranksTopToBottom[ranksTopToBottom.length - 1]}–${ranksTopToBottom[0]})`;
 
 function BoardLayer() {
-  const xScale = useXScale("file") as unknown as {
-    (v: string): number | undefined;
-    bandwidth?: () => number;
-  };
-  const yScale = useYScale("rank") as unknown as {
-    (v: string): number | undefined;
-    bandwidth?: () => number;
-  };
+  const xScale = useXScale("file");
+  const yScale = useYScale("rank");
   const { left, top, width, height } = useDrawingArea();
-  if (!xScale || !yScale || !xScale.bandwidth || !yScale.bandwidth) return null;
-
   const cellW = xScale.bandwidth();
   const cellH = yScale.bandwidth();
 
   return (
     <g>
-      {squares.map((sq) => {
-        const x = xScale(sq.file);
-        const y = yScale(sq.rank);
-        if (x === undefined || y === undefined) return null;
-        return (
-          <rect
-            key={sq.id}
-            x={x}
-            y={y}
-            width={cellW}
-            height={cellH}
-            fill={sq.fill}
-            stroke={t.pageBg}
-            strokeWidth={1.5}
-          />
-        );
-      })}
+      {squares.map((sq) => (
+        <rect
+          key={sq.id}
+          x={xScale(sq.file)}
+          y={yScale(sq.rank)}
+          width={cellW}
+          height={cellH}
+          fill={sq.fill}
+          stroke={t.pageBg}
+          strokeWidth={1.5}
+        />
+      ))}
       <rect
         x={left}
         y={top}
