@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: heatmap-loss-triangle
 created: '2026-08-20T20:50:41Z'
-updated: '2026-10-24T09:37:57Z'
+updated: '2026-10-24T09:43:41Z'
 generated_by: gemini-4-argon
 adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
 workflow_run: 40082397444
@@ -13,61 +13,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-l
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-loss-triangle/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-loss-triangle/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-loss-triangle/javascript/muix/plot-dark.html
-quality_score: 0
+quality_score: 87
 review:
   strengths:
-  - Composes the triangle on a ChartsContainer with band x/y axes and draws a custom
-    cell layer through the useXScale / useYScale / useDrawingArea hooks, so cells,
-    the staircase boundary and the factor row are all placed by the chart's own scales
-  - Projected cells are clearly set apart by a hatch pattern plus a dashed outline
-    that keep the imprint_seq fill visible underneath, and the same styling is repeated
-    in the legend swatch
-  - The latest-evaluation staircase is drawn in the ink token, so the boundary reads
-    clearly in both themes
-  - Every cell carries its amount with a thousands separator, and the white bold text
-    stays legible on both the actual and the hatched projected fills
-  - Age-to-age factors are centred on the boundaries between the two periods they
-    link
-  - Color uses the imprint_seq green→blue ramp from window.ANYPLOT_TOKENS with a matching
-    gradient colorbar; data colors are identical in light and dark
-  - The subtitle computes the total projected IBNR reserve from the triangle, giving
-    the reader the headline figure the chart exists to produce
+  - 'Composes the Pro-only heatmap from community parts: ChartsContainer with band
+    x/y axes, ChartsXAxis/ChartsYAxis, and a custom SVG layer positioned through useDrawingArea/useXScale/useYScale,
+    so every cell sits exactly in its year/period band'
+  - Actual vs projected told apart by two independent cues (diagonal hatch plus dashed
+    outline) on top of the imprint_seq fill, so the magnitude color stays readable
+    under the projected styling in both themes
+  - Ink-colored staircase traces the latest evaluation diagonal and flips with the
+    theme (dark on cream, light on near-black)
+  - 'Chain-ladder is actually computed: volume-weighted age-to-age factors from the
+    observed cells drive the projections, the factor row and the IBNR total in the
+    subtitle'
+  - Colorbar built from the t.seq stops with a title and unit, cell text color chosen
+    by fill luminance, deterministic LCG data, skipAnimation set
   weaknesses:
-  - 'AR-09, VQ-05 (both): the colorbar title "Cumulative paid claims" starts at the
-    colorbar''s x position and runs off the right canvas edge, so only "Cumulative
-    paic" is visible and the rest of the letters are missing → the whole title inside
-    the canvas with at least 16 px of margin (about +90 CSS px of room, or a shorter
-    or two-line title). Likely cause: margin.right = 132 is narrower than the colorbar
-    title; it is drawn at barX = area.left + area.width + 28 with textAnchor="start".
-    Widen margin.right to about 230, or split the title ("Cumulative paid" / "claims
-    ($000s)"), or anchor it at the end of the colorbar tick labels.'
-  - 'DQ-02 (both): every accident year develops with exactly the same age-to-age factors
-    (1.45, 1.20, 1.12, …), so all observed rows are scaled copies of each other and
-    the factor row is the exact ratio in every row, which is not how a real paid-claims
-    triangle behaves → per-year link ratios that scatter around the selected factors
-    (for example ±3 % noise from the seeded LCG), with the factor row computed from
-    the observed triangle as volume-weighted averages. Likely cause: cumulative =
-    cumulative * SEED_FACTORS[j - 1] applied identically to every row.'
   - 'Suggestion: the age-to-age factor row sits below the x-axis title, about 130
-    px under the column labels; putting it directly under the period labels (above
-    the axis title) would tie each factor more closely to the two columns it links.'
-  - 'Suggestion: round colorbar ticks (1,000 / 1,500 / 2,000 / 2,500) would read faster
-    than the evenly split 825 / 1,266 / 1,707 / 2,147 / 2,588.'
+    px under the cells; placing it directly under the period tick labels would tie
+    each factor more closely to the columns it links.'
+  - 'Suggestion: the colorbar ticks fall on min/max-derived values (825, 1,295, 1,766,
+    …); round ticks such as 1,000 / 1,500 / 2,000 / 2,500 would read faster.'
+  - 'Suggestion: the subtitle repeats the unit ''($000s)'' twice; one mention after
+    the IBNR figure would tighten it.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1, square 2400x2400 canvas.
-      Chrome: bold dark title "heatmap-loss-triangle · javascript · muix · anyplot.ai" centred at the top, a grey subtitle (Accident Years 2015–2024 · Cumulative paid claims ($000s) · Total projected IBNR reserve: 3,832 ($000s)), a legend row (solid green "Actual (observed claims)" swatch, hatched dashed "Projected (chain-ladder IBNR)" swatch), y-axis "Accident Year" with year ticks 2015–2024, x-axis "Development Period (years since occurrence)" with ticks 1–10, and an "Age-to-age factor" row (×1.45 … ×1.00) at the bottom between the column positions. A vertical colorbar on the right runs 825–2,588; its title "Cumulative paid claims" is cut at the right canvas edge and reads "Cumulative paic" (AR-09). All other text is dark and readable.
-      Data: 10×10 grid of rounded cells colored on the imprint_seq ramp from #009E73 (825, 2015 period 1) to blue #4467A3 (2,588, 2024 period 10); every cell has a white bold amount with thousands separators. The lower-right 45 projected cells carry a diagonal hatch and dashed outline; a dark staircase line marks the latest-evaluation diagonal. 2024 has a single observed cell.
-      Legibility verdict: FAIL (colorbar title clipped at the right edge; everything else PASS)
+      Chrome: bold dark title "heatmap-loss-triangle · javascript · muix · anyplot.ai" (~45% width), softer subtitle with accident-year range, unit and total projected IBNR reserve 3,883 ($000s); legend row "Actual (observed claims)" (solid green swatch) and "Projected (chain-ladder IBNR)" (hatched, dashed swatch); y ticks 2015–2024 with "Accident Year" title, x ticks 1–10 with "Development Period (years since occurrence)"; factor row "Age-to-age factor ×1.45 ×1.20 ×1.12 ×1.07 ×1.05 ×1.03 ×1.02 ×1.01 ×1.00" placed at the column boundaries; colorbar on the right titled "Cumulative paid claims ($000s)" with ticks 825–2,706. All text readable.
+      Data: 10x10 grid of rounded cells colored on imprint_seq (#009E73 green at low amounts → #4467A3 blue at high); upper-left 55 observed cells solid, lower-right 45 projected cells hatched with dashed outlines; black staircase along the latest evaluation diagonal; every cell carries a white bold value with thousands separator, legible on both styles.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, legend labels and axis titles flip to light ink; tick labels, subtitle, factor row and colorbar ticks in light grey inkSoft — all readable, no dark-on-dark text. The staircase boundary and the hatch strokes flip to light ink and are clearly visible. The colorbar title is clipped at the right edge exactly as in the light render ("Cumulative paic").
-      Data: cell fills, gradient and legend swatch colors are identical to the light render; only chrome flips.
-      Legibility verdict: FAIL (same right-edge clipping of the colorbar title; everything else PASS)
+      Chrome: title, legend text and colorbar title in light ink, ticks/subtitle/factor row in light soft ink — all readable, no dark-on-dark text.
+      Data: cell fills identical to the light render; hatch and staircase flip to light ink and remain visible; cell values white and legible; brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -75,47 +59,45 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit 14-22 px fonts; title, ticks, cell values and factors readable
-          in both themes, no dark-on-dark text
+        comment: Explicit sizes (title 22, ticks/cells 14, axis titles 15); readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; cell labels sit centred in their cells
+        comment: No text collisions; staircase runs in the cell gaps
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Cells, hatch, dashed outlines, staircase and legend swatches visible
-          in both themes
+        comment: Hatch and dashed outlines visible in both themes; legend swatches
+          match the cells
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green→blue ramp is CVD-safe; actual vs projected also separated by
-          hatch, not color alone
+        comment: Green→blue sequential, projected also encoded by hatch; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 1
+        score: 4
         max: 4
-        passed: false
-        comment: Colorbar title runs off the right canvas edge (defect line, AR-09)
+        passed: true
+        comment: 2400x2400 square, nothing clipped, balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles with units in the colorbar
+        comment: Descriptive axis titles with units on colorbar
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq from tokens, correct #FAF8F1 / #1A1A17 backgrounds,
-          identical data colors'
+        comment: imprint_seq from t.seq stops; correct page backgrounds in both themes
     design_excellence:
       score: 11
       max: 20
@@ -125,22 +107,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Considered hierarchy: bold title, grey subtitle with headline IBNR,
-          weighted tick labels, rounded cells with page-colored gutters'
+        comment: 'Clear hierarchy: bold title, soft subtitle, rounded cells with gaps,
+          colorbar with title+unit on two lines'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Hatch + dashed outline keep the fill readable under projection; factors
-          centred on column boundaries; no axis lines or ticks
+        comment: Luminance-based cell text, dual cue (hatch + dashed outline) for
+          projected cells, factors centered on column boundaries
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Subtitle surfaces the total projected IBNR reserve computed from
-          the triangle as the headline figure
+        comment: Subtitle surfaces the computed total IBNR reserve as a focal number
+          beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -156,23 +138,23 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 'All Notes and A-good-version bullets met: distinct projected styling,
-          legend, latest-diagonal boundary, separated amounts, factors row aligned
-          between periods, color intensity, year/period labels'
+        comment: Rows/columns labeled, actual vs projected styling, legend, diagonal
+          boundary, thousands separators, color intensity, factor row aligned to period
+          boundaries — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Every cell at its year and period on band scales
+        comment: Every cell at its year/period band
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; legend names both regions
+        comment: Correct mandated title; legend names both regions
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -180,23 +162,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 55 observed + 45 projected cells, growing and levelling rows, decaying
-          factors, single observed cell for 2024
+        comment: 55 observed + 45 projected cells, decaying factors, single observed
+          cell for 2024
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
-        passed: false
-        comment: Plausible paid-claims triangle, but every year develops with identical
-          factors (defect line)
+        passed: true
+        comment: Paid claims triangle 2015–2024 in $000s, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Amounts $825k–$2.6M and factors 1.45→1.00 sensible; checked IBNR
-          3,832 is the sum of ultimate minus latest observed per year; no Check values
-          in the spec
+        comment: 'Checked: 2024 period 2 = 1,161 × 1.454 ≈ 1,688; factors decline
+          1.45→1.00; no Check values in spec'
     code_quality:
       score: 10
       max: 10
@@ -206,8 +186,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear data/plot zones; the one layer component is required for the
-          scale hooks
+        comment: One layer component needed for the scale hooks; otherwise linear
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -225,15 +204,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Hand-written color interpolation is acceptable per the muix Computation
-          line
+        comment: Short hex interpolation is allowed by the Computation line
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: export default, skipAnimation, v9 ChartsContainer API, SIZE from
-          window.ANYPLOT_SIZE
+        comment: Default-exported component, v9 ChartsContainer API, skipAnimation
     library_mastery:
       score: 6
       max: 10
@@ -243,36 +220,32 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Composition via ChartsContainer + ChartsXAxis/ChartsYAxis with band
-          axes and categoryGapRatio for cell gaps
+        comment: 'v9 composition: ChartsContainer + band axes with sized height/width
+          + ChartsXAxis/ChartsYAxis'
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: true
-        comment: useXScale / useYScale / useDrawingArea hooks drive a custom SVG layer
-          on the community package
-  verdict: REJECTED
+        passed: false
+        comment: useDrawingArea/useXScale/useYScale hooks to place a custom SVG layer
+          on MUI band scales
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T09:34:24Z'
+  rendered_at: '2026-10-24T09:40:24Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - colorbar
   - custom-legend
-  - patches
   - layer-composition
-  - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  - matrix-construction
   dataprep:
   - cumulative-sum
-  - normalization
   styling:
+  - hatching
   - custom-colormap
   - edge-highlighting
-  - minimal-chrome
