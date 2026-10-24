@@ -14,12 +14,13 @@ const t = window.ANYPLOT_TOKENS;
 // Constants
 const TITLE = "map-route-path · javascript · muix · anyplot.ai";
 const BASEMAP_CAPTION =
-  "Coordinates: WGS 84 (EPSG:4326) · SVG lon/lat graticule provides spatial reference";
+  "Coordinates: WGS 84 (EPSG:4326) · Basemap: simplified IJ waterfront, canal ring, Amstel and Vondelpark";
 const TITLE_HEIGHT = 54;
 const CAPTION_HEIGHT = 32;
 const X_AXIS_HEIGHT = 58;
 const Y_AXIS_WIDTH = 98;
-const MARGIN = { top: 20, right: 260, bottom: 14, left: 16 };
+const MARGIN = { top: 20, right: 300, bottom: 14, left: 16 };
+const LABEL_OFFSET = 18;
 const PAD_SHARE = 0.14;
 const ARROW_STRIDE = 8;
 
@@ -86,6 +87,30 @@ data.push({
   [LANDMARK]: lastKeyframe[2],
 });
 
+// Basemap: simplified [lat, lon] outlines of the city around the route
+const RING_CENTER: [number, number] = [52.3772, 4.8948];
+const CANAL_RING_RADII = [0.0045, 0.0068, 0.0089, 0.011, 0.0152]; // Singel … Singelgracht (° lat)
+const WATER_AREAS: Array<Array<[number, number]>> = [
+  // IJ waterfront north of Centraal
+  [
+    [52.3812, 4.84], [52.3808, 4.875], [52.3815, 4.893], [52.3812, 4.905],
+    [52.3802, 4.915], [52.3805, 4.93], [52.39, 4.93], [52.39, 4.84],
+  ],
+  // Oosterdok
+  [[52.3778, 4.9035], [52.3785, 4.912], [52.3768, 4.9135], [52.3762, 4.905]],
+];
+const RIVERS: Array<Array<[number, number]>> = [
+  // Amstel
+  [[52.35, 4.907], [52.356, 4.9055], [52.3615, 4.9035], [52.3655, 4.9005], [52.3675, 4.8975], [52.3695, 4.8955]],
+];
+const PARKS: Array<Array<[number, number]>> = [
+  // Vondelpark
+  [
+    [52.3612, 4.8795], [52.3601, 4.8805], [52.3578, 4.8725], [52.3561, 4.8625],
+    [52.3555, 4.858], [52.3567, 4.8575], [52.3585, 4.866], [52.3603, 4.8745],
+  ],
+];
+
 // Plot: reads only data and the constants above
 const sortedRows = [...data].sort(
   (a, b) => Number(a[SEQUENCE]) - Number(b[SEQUENCE]),
@@ -133,6 +158,70 @@ const yAxisMax = centerLat + finalLatSpan / 2;
 const startColor = t.palette[0];
 const endColor = t.palette[4];
 
+const waterColor = t.seq[t.seq.length - 1];
+const parkColor = t.seq[0];
+
+function Basemap() {
+  const { left, top, width, height } = useDrawingArea();
+  const xScale = useXScale("lon") as (v: number) => number;
+  const yScale = useYScale("lat") as (v: number) => number;
+  const toPath = (coords: Array<[number, number]>, closed: boolean) =>
+    coords
+      .map(([la, lo], i) => `${i === 0 ? "M" : "L"}${xScale(lo).toFixed(1)},${yScale(la).toFixed(1)}`)
+      .join(" ") + (closed ? " Z" : "");
+
+  // Canal ring: half-moon arcs opening towards the IJ, in ground-true proportions
+  const canalArcs = CANAL_RING_RADII.map((r) => {
+    const arc: Array<[number, number]> = [];
+    for (let deg = -12; deg <= 192; deg += 4) {
+      const a = (deg * Math.PI) / 180;
+      arc.push([RING_CENTER[0] - r * Math.sin(a) * 0.85, RING_CENTER[1] + (r * Math.cos(a)) / cosMeanLat]);
+    }
+    return arc;
+  });
+
+  return (
+    <g>
+      <defs>
+        <clipPath id="basemap-clip">
+          <rect x={left} y={top} width={width} height={height} />
+        </clipPath>
+      </defs>
+      <g clipPath="url(#basemap-clip)">
+        {PARKS.map((poly, i) => (
+          <path key={`park-${i}`} d={toPath(poly, true)} fill={parkColor} fillOpacity={0.12} stroke="none" />
+        ))}
+        {WATER_AREAS.map((poly, i) => (
+          <path key={`water-${i}`} d={toPath(poly, true)} fill={waterColor} fillOpacity={0.13} stroke="none" />
+        ))}
+        {canalArcs.map((arc, i) => (
+          <path
+            key={`canal-${i}`}
+            d={toPath(arc, false)}
+            fill="none"
+            stroke={waterColor}
+            strokeOpacity={0.2}
+            strokeWidth={i === CANAL_RING_RADII.length - 1 ? 7 : 4}
+            strokeLinecap="round"
+          />
+        ))}
+        {RIVERS.map((line, i) => (
+          <path
+            key={`river-${i}`}
+            d={toPath(line, false)}
+            fill="none"
+            stroke={waterColor}
+            strokeOpacity={0.2}
+            strokeWidth={10}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        ))}
+      </g>
+    </g>
+  );
+}
+
 function RouteOverlay() {
   const { left, top, width } = useDrawingArea();
   const xScale = useXScale("lon") as (v: number) => number;
@@ -149,6 +238,10 @@ function RouteOverlay() {
     lon: Number(row[LON]),
   }));
 
+  // Points sampled densely along the route, used to keep landmark labels off the line
+  const routeSamples = pts.slice(0, -1).flatMap((p, i) =>
+    [0, 0.25, 0.5, 0.75].map((f) => [p.x + (pts[i + 1].x - p.x) * f, p.y + (pts[i + 1].y - p.y) * f]),
+  );
   const startPt = pts[0];
   const endPt = pts[pts.length - 1];
   const startLabel = startPt.landmark || "Start";
@@ -216,8 +309,8 @@ function RouteOverlay() {
         return (
           <g key={`arrow-${i}`} transform={`translate(${mx}, ${my}) rotate(${angleDeg})`}>
             <polygon
-              points="7,0 -6,-5.5 -3,0 -6,5.5"
-              fill={p.color}
+              points="10,0 -8,-7.5 -4,0 -8,7.5"
+              fill={t.ink}
               stroke={t.pageBg}
               strokeWidth={1.5}
               strokeLinejoin="round"
@@ -245,16 +338,31 @@ function RouteOverlay() {
       {/* Intermediate landmark labels derived from LANDMARK column */}
       {pts.slice(1, -1).map((p, i) => {
         if (!p.landmark) return null;
-        const isLeftOfCenter = p.lon < centerLon;
-        const dx = isLeftOfCenter ? -14 : 14;
-        const dy = p.lat < centerLat ? 16 : -10;
-        const anchor = isLeftOfCenter ? "end" : "start";
+        // Try 8 positions around the waypoint; keep the one whose text box lies farthest from the route
+        const labelW = p.landmark.length * 7.6;
+        let best = { score: -Infinity, nx: 0, ny: 0, anchor: "middle" as "start" | "middle" | "end" };
+        for (let k = 0; k < 8; k++) {
+          const a = (k * Math.PI) / 4;
+          const nx = Math.cos(a);
+          const ny = Math.sin(a);
+          const anchor = nx < -0.3 ? "end" : nx > 0.3 ? "start" : "middle";
+          const bx = p.x + nx * LABEL_OFFSET;
+          const x0 = anchor === "end" ? bx - labelW : anchor === "middle" ? bx - labelW / 2 : bx;
+          const y1 = p.y + ny * LABEL_OFFSET + 5;
+          const y0 = y1 - 14;
+          const score = Math.min(
+            ...routeSamples.map(([sx, sy]) =>
+              Math.hypot(Math.max(x0 - sx, 0, sx - x0 - labelW), Math.max(y0 - sy, 0, sy - y1)),
+            ),
+          );
+          if (score > best.score) best = { score, nx, ny, anchor };
+        }
         return (
           <text
             key={`lm-${i}`}
-            x={p.x + dx}
-            y={p.y + dy}
-            textAnchor={anchor}
+            x={p.x + best.nx * LABEL_OFFSET}
+            y={p.y + best.ny * LABEL_OFFSET + 5}
+            textAnchor={best.anchor}
             fontSize={14}
             fontWeight={500}
             fill={t.inkSoft}
@@ -368,16 +476,32 @@ function RouteOverlay() {
           </text>
         </g>
         <g transform="translate(0, 94)">
-          <polygon
-            points="15,0 3,-5 6,0 3,5"
-            fill={pts[Math.floor(pts.length / 2)].color}
-          />
-          <text x={26} y={5} fontSize={14} fill={t.inkSoft}>
-            {`Travel direction (${nWaypoints} waypoints)`}
+          <polygon points="17,0 2,-6.5 5.5,0 2,6.5" fill={t.ink} />
+          <text x={26} y={5} fontSize={14} fill={t.ink}>
+            Travel direction
+          </text>
+          <text x={26} y={24} fontSize={14} fill={t.inkSoft}>
+            {`${nWaypoints} waypoints in sequence`}
           </text>
         </g>
 
-        <g transform="translate(0, 140)">
+        <text x={0} y={162} fontSize={15} fontWeight={700} fill={t.ink}>
+          Basemap
+        </text>
+        <g transform="translate(0, 184)">
+          <rect x={1} y={-8} width={16} height={16} rx={2} fill={waterColor} fillOpacity={0.25} />
+          <text x={26} y={5} fontSize={14} fill={t.ink}>
+            Water · canals
+          </text>
+        </g>
+        <g transform="translate(0, 212)">
+          <rect x={1} y={-8} width={16} height={16} rx={2} fill={parkColor} fillOpacity={0.22} />
+          <text x={26} y={5} fontSize={14} fill={t.ink}>
+            Park
+          </text>
+        </g>
+
+        <g transform="translate(0, 262)">
           <text x={0} y={0} fontSize={15} fontWeight={700} fill={t.ink}>
             {PROGRESS}
           </text>
@@ -472,6 +596,7 @@ export default function Chart() {
           },
         ]}
       >
+        <Basemap />
         <ChartsGrid horizontal vertical />
         <RouteOverlay />
         <ChartsXAxis axisId="lon" />
