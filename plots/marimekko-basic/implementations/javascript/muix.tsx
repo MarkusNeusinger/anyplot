@@ -1,130 +1,185 @@
 // anyplot.ai
-// marimekko-basic: Basic Marimekko Chart
-// Library: muix 7.29.1 | JavaScript 22.23.1
-// Quality: 94/100 | Created: 2026-07-24
-//# anyplot-orientation: landscape
-// anyplot.ai
-// marimekko-basic: Basic Marimekko Chart
-// Library: muix 7.29.1 | JavaScript 22.23.1
-// Quality: pending | Created: 2026-07-24
+// marimekko-basic: Marimekko Chart
+// Library: muix 9.2.1 | JavaScript 22.23.1
+// Quality: 90/100 | Created: 2026-08-03
 
-import * as React from "react";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
-import { useTheme } from "@mui/material/styles";
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { ChartsText } from "@mui/x-charts/ChartsText";
-import { useXScale, useYScale, useDrawingArea } from "@mui/x-charts/hooks";
+import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const FONT = "system-ui, -apple-system, sans-serif";
-const X_AXIS_ID = "region-axis";
-const Y_AXIS_ID = "share-axis";
 
-// --- Data (in-memory, deterministic) ----------------------------------------
-// Quarterly revenue ($M) by store region (column width) and product line
-// (segment height within each column).
-const regions = ["North", "South", "East", "West", "Central"];
-const products = ["Electronics", "Apparel", "Home Goods", "Grocery"];
-const revenueByRegion = [
-  [42, 18, 15, 25], // North
-  [20, 22, 10, 8], // South
-  [55, 30, 25, 40], // East
-  [15, 12, 8, 5], // West
-  [30, 25, 20, 15], // Central
+// Constants
+const TITLE = "marimekko-basic · javascript · muix · anyplot.ai";
+const TITLE_HEIGHT = 56;
+const LEGEND_HEIGHT = 44;
+const Y_AXIS_WIDTH = 86;
+const MARGIN = { top: 20, right: 32, bottom: 72, left: 16 };
+const MIN_LABEL_SHARE = 0.08;
+const MIN_LABEL_WIDTH_PX = 64;
+
+// Data
+const REGION_COL = "Region";
+const PRODUCT_COL = "Product Category";
+const REVENUE_COL = "Revenue ($M)";
+
+const DATA: Array<Record<string, string | number>> = [
+  { [REGION_COL]: "North", [PRODUCT_COL]: "Electronics", [REVENUE_COL]: 120 },
+  { [REGION_COL]: "North", [PRODUCT_COL]: "Apparel", [REVENUE_COL]: 80 },
+  { [REGION_COL]: "North", [PRODUCT_COL]: "Home & Garden", [REVENUE_COL]: 60 },
+  { [REGION_COL]: "North", [PRODUCT_COL]: "Sports", [REVENUE_COL]: 40 },
+  { [REGION_COL]: "South", [PRODUCT_COL]: "Electronics", [REVENUE_COL]: 60 },
+  { [REGION_COL]: "South", [PRODUCT_COL]: "Apparel", [REVENUE_COL]: 70 },
+  { [REGION_COL]: "South", [PRODUCT_COL]: "Home & Garden", [REVENUE_COL]: 40 },
+  { [REGION_COL]: "South", [PRODUCT_COL]: "Sports", [REVENUE_COL]: 30 },
+  { [REGION_COL]: "East", [PRODUCT_COL]: "Electronics", [REVENUE_COL]: 150 },
+  { [REGION_COL]: "East", [PRODUCT_COL]: "Apparel", [REVENUE_COL]: 90 },
+  { [REGION_COL]: "East", [PRODUCT_COL]: "Home & Garden", [REVENUE_COL]: 70 },
+  { [REGION_COL]: "East", [PRODUCT_COL]: "Sports", [REVENUE_COL]: 40 },
+  { [REGION_COL]: "West", [PRODUCT_COL]: "Electronics", [REVENUE_COL]: 50 },
+  { [REGION_COL]: "West", [PRODUCT_COL]: "Apparel", [REVENUE_COL]: 45 },
+  { [REGION_COL]: "West", [PRODUCT_COL]: "Home & Garden", [REVENUE_COL]: 35 },
+  { [REGION_COL]: "West", [PRODUCT_COL]: "Sports", [REVENUE_COL]: 20 },
 ];
 
-const columnTotals = revenueByRegion.map((row) =>
-  row.reduce((sum, v) => sum + v, 0),
-);
-const grandTotal = columnTotals.reduce((sum, v) => sum + v, 0);
-const columnStarts = columnTotals.reduce((acc, total, i) => {
-  acc.push(i === 0 ? 0 : acc[i - 1] + columnTotals[i - 1]);
-  return acc;
-}, []);
-// The single standout column (largest revenue total) gets a subtle visual
-// accent so the reader sees the headline insight immediately instead of
-// having to compare all five totals themselves.
-const leaderTotal = Math.max(...columnTotals);
-const leaderIndex = columnTotals.indexOf(leaderTotal);
+// Derive regions and product categories in order of first appearance
+const regions: string[] = [];
+const products: string[] = [];
+for (let i = 0; i < DATA.length; i++) {
+  const reg = String(DATA[i][REGION_COL]);
+  const prod = String(DATA[i][PRODUCT_COL]);
+  if (!regions.includes(reg)) regions.push(reg);
+  if (!products.includes(prod)) products.push(prod);
+}
 
-// MUI X has no built-in mekko/mosaic series, so the tiles are drawn as plain
-// SVG rects positioned with the scales ChartContainer already computed from
-// the declared xAxis/yAxis config — the community-package way to compose a
-// chart type the library doesn't ship a dedicated component for.
-function MekkoTiles() {
-  const xScale = useXScale(X_AXIS_ID);
-  const yScale = useYScale(Y_AXIS_ID);
-  const drawing = useDrawingArea();
-  const theme = useTheme();
+// Compute luminance-based fixed text color for each product category color
+const productColors: string[] = [];
+const productTextColors: string[] = [];
+for (let i = 0; i < products.length; i++) {
+  const hex = t.palette[i];
+  productColors.push(hex);
+  const c = hex.replace("#", "");
+  const r = parseInt(c.slice(0, 2), 16) / 255;
+  const g = parseInt(c.slice(2, 4), 16) / 255;
+  const b = parseInt(c.slice(4, 6), 16) / 255;
+  const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  productTextColors.push(lum > 0.52 ? "#1A1A17" : "#FAF8F1");
+}
+
+// Compute region totals and Marimekko layout in data percentage space (0..100)
+const regionTotals = new Map<string, number>();
+let grandTotal = 0;
+for (let i = 0; i < DATA.length; i++) {
+  const reg = String(DATA[i][REGION_COL]);
+  const val = Number(DATA[i][REVENUE_COL]);
+  regionTotals.set(reg, (regionTotals.get(reg) ?? 0) + val);
+  grandTotal += val;
+}
+
+interface MarimekkoSegment {
+  product: string;
+  productIdx: number;
+  value: number;
+  share: number;
+  y0: number;
+  y1: number;
+}
+
+interface MarimekkoColumn {
+  region: string;
+  total: number;
+  widthPct: number;
+  x0: number;
+  x1: number;
+  segments: MarimekkoSegment[];
+}
+
+const columns: MarimekkoColumn[] = [];
+let cumX = 0;
+for (let r = 0; r < regions.length; r++) {
+  const reg = regions[r];
+  const total = regionTotals.get(reg) ?? 0;
+  const widthPct = (total / grandTotal) * 100;
+  const x0 = cumX;
+  const x1 = cumX + widthPct;
+  cumX = x1;
+
+  // Stack bottom-to-top so first product is at the top of each column
+  let cumY = 100;
+  const segments: MarimekkoSegment[] = [];
+  for (let p = 0; p < products.length; p++) {
+    const prod = products[p];
+    const matchingRow = DATA.find(
+      (row) => String(row[REGION_COL]) === reg && String(row[PRODUCT_COL]) === prod,
+    );
+    const val = matchingRow ? Number(matchingRow[REVENUE_COL]) : 0;
+    const share = total > 0 ? val / total : 0;
+    const heightPct = share * 100;
+    const y1 = cumY;
+    const y0 = cumY - heightPct;
+    cumY = y0;
+    segments.push({
+      product: prod,
+      productIdx: p,
+      value: val,
+      share,
+      y0,
+      y1,
+    });
+  }
+
+  columns.push({
+    region: reg,
+    total,
+    widthPct,
+    x0,
+    x1,
+    segments,
+  });
+}
+
+function MarimekkoCells() {
+  const xScale = useXScale();
+  const yScale = useYScale();
+  const { top, height } = useDrawingArea();
+  const bottomY = top + height;
 
   return (
     <g>
-      <ChartsText
-        x={drawing.left - 76}
-        y={drawing.top + drawing.height / 2}
-        text="Share of Regional Revenue"
-        fill={theme.palette.text.primary}
-        style={{
-          fontSize: 15,
-          textAnchor: "middle",
-          dominantBaseline: "auto",
-          angle: -90,
-        }}
-      />
-      {[0.25, 0.5, 0.75].map((share) => (
-        <line
-          key={share}
-          x1={drawing.left}
-          x2={drawing.left + drawing.width}
-          y1={yScale(share)}
-          y2={yScale(share)}
-          stroke={t.grid}
-          strokeWidth={1}
-          strokeOpacity={0.45}
-        />
-      ))}
-      {regions.map((region, colIndex) => {
-        const colStart = columnStarts[colIndex];
-        const colTotal = columnTotals[colIndex];
-        const x0 = xScale(colStart);
-        const x1 = xScale(colStart + colTotal);
-        const colWidth = x1 - x0;
-        const isLeader = colIndex === leaderIndex;
-        let cumShare = 0;
+      {columns.map((col) => {
+        const px0 = Number(xScale(col.x0));
+        const px1 = Number(xScale(col.x1));
+        const colW = px1 - px0;
+        const colMidX = px0 + colW / 2;
 
         return (
-          <g key={region}>
-            {revenueByRegion[colIndex].map((value, rowIndex) => {
-              const shareBottom = cumShare;
-              const shareTop = cumShare + value / colTotal;
-              cumShare = shareTop;
-              const yTop = yScale(shareTop);
-              const yBottom = yScale(shareBottom);
-              const segHeight = yBottom - yTop;
-              const showLabel = colWidth > 70 && segHeight > 46;
+          <g key={col.region}>
+            {col.segments.map((seg) => {
+              const pyTop = Number(yScale(seg.y1));
+              const pyBottom = Number(yScale(seg.y0));
+              const segH = pyBottom - pyTop;
+              const showLabel = seg.share >= MIN_LABEL_SHARE && colW >= MIN_LABEL_WIDTH_PX;
 
               return (
-                <g key={products[rowIndex]}>
+                <g key={seg.product}>
                   <rect
-                    x={x0 + 1.5}
-                    y={yTop}
-                    width={Math.max(colWidth - 3, 0)}
-                    height={Math.max(segHeight, 0)}
-                    rx={2}
-                    fill={t.palette[rowIndex]}
+                    x={px0}
+                    y={pyTop}
+                    width={colW}
+                    height={segH}
+                    fill={productColors[seg.productIdx]}
                     stroke={t.pageBg}
-                    strokeWidth={2}
+                    strokeWidth={2.5}
                   />
                   {showLabel && (
                     <ChartsText
-                      x={x0 + colWidth / 2}
-                      y={yTop + segHeight / 2}
-                      text={`$${value}M`}
-                      fill={t.pageBg}
+                      x={colMidX}
+                      y={pyTop + segH / 2}
+                      text={`$${seg.value}M (${Math.round(seg.share * 100)}%)`}
                       style={{
-                        fontSize: 15,
+                        fill: productTextColors[seg.productIdx],
+                        fontSize: 14,
                         fontWeight: 600,
                         textAnchor: "middle",
                         dominantBaseline: "central",
@@ -135,47 +190,27 @@ function MekkoTiles() {
               );
             })}
 
-            {isLeader && (
-              <rect
-                x={x0 - 1}
-                y={drawing.top - 3}
-                width={colWidth + 2}
-                height={drawing.height + 6}
-                rx={4}
-                fill="none"
-                stroke={theme.palette.text.primary}
-                strokeWidth={1.5}
-                strokeOpacity={0.55}
-              />
-            )}
-
             <ChartsText
-              x={x0 + colWidth / 2}
-              y={drawing.top - 14}
-              text={`$${colTotal}M`}
-              fill={
-                isLeader
-                  ? theme.palette.text.primary
-                  : theme.palette.text.secondary
-              }
+              x={colMidX}
+              y={bottomY + 24}
+              text={col.region}
               style={{
-                fontSize: isLeader ? 16 : 14,
-                fontWeight: isLeader ? 700 : 400,
+                fill: t.ink,
+                fontSize: 15,
+                fontWeight: 600,
                 textAnchor: "middle",
-                dominantBaseline: "auto",
+                dominantBaseline: "central",
               }}
             />
-
             <ChartsText
-              x={x0 + colWidth / 2}
-              y={drawing.top + drawing.height + 24}
-              text={region}
-              fill={theme.palette.text.primary}
+              x={colMidX}
+              y={bottomY + 46}
+              text={`$${col.total}M (${Math.round(col.widthPct)}%)`}
               style={{
-                fontSize: 16,
-                fontWeight: isLeader ? 700 : 400,
+                fill: t.inkSoft,
+                fontSize: 14,
                 textAnchor: "middle",
-                dominantBaseline: "hanging",
+                dominantBaseline: "central",
               }}
             />
           </g>
@@ -186,92 +221,89 @@ function MekkoTiles() {
 }
 
 export default function Chart() {
-  const theme = useTheme();
   const { width, height } = window.ANYPLOT_SIZE;
-  const TITLE_H = 56;
-  const LEGEND_H = 44;
-  const CHART_H = height - TITLE_H - LEGEND_H;
+  const chartHeight = height - TITLE_HEIGHT - LEGEND_HEIGHT;
 
   return (
-    <Box
-      sx={{
+    <div
+      style={{
         width,
         height,
-        bgcolor: t.pageBg,
+        backgroundColor: t.pageBg,
         display: "flex",
         flexDirection: "column",
-        boxSizing: "border-box",
-        pt: "18px",
+        fontFamily: "Inter, system-ui, sans-serif",
       }}
     >
-      <Typography
-        sx={{
-          color: t.ink,
-          fontSize: 22,
-          fontWeight: 500,
-          textAlign: "center",
-          fontFamily: FONT,
-          lineHeight: 1,
-          mb: "4px",
-        }}
-      >
-        Retail Revenue by Region &amp; Product Line · marimekko-basic ·
-        javascript · muix · anyplot.ai
-      </Typography>
-
-      <Box
-        sx={{
-          height: LEGEND_H,
+      <div
+        style={{
+          height: TITLE_HEIGHT,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          gap: 3,
+          fontSize: 22,
+          fontWeight: 600,
+          color: t.ink,
         }}
       >
-        {products.map((product, i) => (
-          <Box
-            key={product}
-            sx={{ display: "flex", alignItems: "center", gap: "8px" }}
-          >
-            <Box
-              sx={{
+        {TITLE}
+      </div>
+      <div
+        style={{
+          height: LEGEND_HEIGHT,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 28,
+        }}
+      >
+        {products.map((prod, idx) => (
+          <div key={prod} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span
+              style={{
                 width: 14,
                 height: 14,
-                borderRadius: "3px",
-                bgcolor: t.palette[i],
+                borderRadius: 3,
+                backgroundColor: productColors[idx],
+                display: "inline-block",
               }}
             />
-            <Typography
-              sx={{
-                fontSize: 14,
-                color: theme.palette.text.secondary,
-                fontFamily: FONT,
-              }}
-            >
-              {product}
-            </Typography>
-          </Box>
+            <span style={{ fontSize: 15, color: t.ink, fontWeight: 500 }}>{prod}</span>
+          </div>
         ))}
-      </Box>
-
-      <ChartContainer
+      </div>
+      <ChartsContainer
         width={width}
-        height={CHART_H}
+        height={chartHeight}
+        margin={MARGIN}
+        skipAnimation
         series={[]}
-        margin={{ top: 40, right: 32, bottom: 48, left: 100 }}
         xAxis={[
-          { id: X_AXIS_ID, scaleType: "linear", min: 0, max: grandTotal },
+          {
+            id: "x",
+            position: "none",
+            scaleType: "linear",
+            min: 0,
+            max: 100,
+          },
         ]}
-        yAxis={[{ id: Y_AXIS_ID, scaleType: "linear", min: 0, max: 1 }]}
+        yAxis={[
+          {
+            id: "y",
+            scaleType: "linear",
+            min: 0,
+            max: 100,
+            width: Y_AXIS_WIDTH,
+            label: "Share of Regional Revenue (%)",
+            labelStyle: { fontSize: 16, fill: t.ink, fontWeight: 500 },
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            valueFormatter: (v: number) => `${v}%`,
+          },
+        ]}
       >
-        <ChartsYAxis
-          axisId={Y_AXIS_ID}
-          valueFormatter={(value) => `${Math.round(value * 100)}%`}
-          tickNumber={5}
-          tickLabelStyle={{ fontSize: 13, fill: t.inkSoft, fontFamily: FONT }}
-        />
-        <MekkoTiles />
-      </ChartContainer>
-    </Box>
+        <MarimekkoCells />
+        <ChartsYAxis axisId="y" />
+      </ChartsContainer>
+    </div>
   );
 }
