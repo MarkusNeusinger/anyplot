@@ -1,227 +1,311 @@
 // anyplot.ai
 // network-weighted: Weighted Network Graph with Edge Thickness
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 90/100 | Created: 2026-09-02
+// Library: muix 9.16.0 | JavaScript 22.23.3
+// Quality: 86/100 | Updated: 2026-10-24
 //# anyplot-orientation: square
+
 import { useState } from "react";
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { useXScale, useYScale, useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
+
+// Constants
 const TITLE = "network-weighted · javascript · muix · anyplot.ai";
-
-// --- Data: research-lab co-authorship network (in-memory, deterministic) ----
-// Four research domains, colored by the Imprint categorical palette in
-// canonical order (abstract groups, no semantic-color exception applies).
-const DOMAINS = ["Life Sciences", "Physical Sciences", "Computer Science", "Engineering"];
-
-const nodes = [
-  { id: "GEN", label: "Genomics Lab", domain: 0 },
-  { id: "IMM", label: "Immunology Institute", domain: 0 },
-  { id: "NEU", label: "Neuroscience Institute", domain: 0 },
-  { id: "MAR", label: "Marine Biology Station", domain: 0 },
-  { id: "QPL", label: "Quantum Physics Lab", domain: 1 },
-  { id: "MAT", label: "Materials Science Institute", domain: 1 },
-  { id: "AST", label: "Astrophysics Observatory", domain: 1 },
-  { id: "CLI", label: "Climate Science Center", domain: 1 },
-  { id: "AIR", label: "AI Research Center", domain: 2 },
-  { id: "DSI", label: "Data Science Institute", domain: 2 },
-  { id: "ROB", label: "Robotics Lab", domain: 2 },
-  { id: "CHE", label: "Chemical Engineering Lab", domain: 3 },
-  { id: "BIO", label: "Bioengineering Institute", domain: 3 },
-  { id: "ENV", label: "Environmental Engineering Lab", domain: 3 },
-];
-
-// Weight = co-authored papers, 2020-2024, between the two labs.
-const edges = [
-  { source: "GEN", target: "IMM", weight: 42 },
-  { source: "GEN", target: "NEU", weight: 16 },
-  { source: "GEN", target: "BIO", weight: 22 },
-  { source: "IMM", target: "BIO", weight: 12 },
-  { source: "IMM", target: "NEU", weight: 6 },
-  { source: "NEU", target: "AIR", weight: 19 },
-  { source: "MAR", target: "ENV", weight: 27 },
-  { source: "MAR", target: "CLI", weight: 31 },
-  { source: "QPL", target: "MAT", weight: 36 },
-  { source: "QPL", target: "AST", weight: 21 },
-  { source: "MAT", target: "CHE", weight: 33 },
-  { source: "MAT", target: "ENV", weight: 9 },
-  { source: "AST", target: "CLI", weight: 8 },
-  { source: "CLI", target: "ENV", weight: 24 },
-  { source: "AIR", target: "DSI", weight: 45 },
-  { source: "AIR", target: "ROB", weight: 29 },
-  { source: "DSI", target: "ROB", weight: 18 },
-  { source: "DSI", target: "GEN", weight: 15 },
-  { source: "DSI", target: "CLI", weight: 12 },
-  { source: "DSI", target: "MAT", weight: 7 },
-  { source: "DSI", target: "BIO", weight: 10 },
-  { source: "ROB", target: "BIO", weight: 14 },
-  { source: "CHE", target: "BIO", weight: 20 },
-  { source: "CHE", target: "ENV", weight: 17 },
-];
-
-const nodeIndex = {};
-nodes.forEach((n, i) => {
-  nodeIndex[n.id] = i;
-});
-
-const edgeWeights = edges.map((e) => e.weight);
-const MIN_WEIGHT = Math.min(...edgeWeights);
-const MAX_WEIGHT = Math.max(...edgeWeights);
-
-// Weighted degree = sum of incident edge weights, drives node radius.
-const weightedDegree = nodes.map(() => 0);
-edges.forEach((e) => {
-  weightedDegree[nodeIndex[e.source]] += e.weight;
-  weightedDegree[nodeIndex[e.target]] += e.weight;
-});
-const MIN_DEGREE = Math.min(...weightedDegree);
-const MAX_DEGREE = Math.max(...weightedDegree);
-
-// --- Force-directed layout (Fruchterman-Reingold, weighted attraction) ------
-// A tiny fixed-seed LCG stands in for a seeded RNG (the browser has none);
-// only the initial scatter is randomized, the physics is fully deterministic.
-let lcgState = 42;
-function rand() {
-  lcgState = (lcgState * 1664525 + 1013904223) % 4294967296;
-  return lcgState / 4294967296;
-}
-
-const N = nodes.length;
+const TITLE_H = 58;
+const LEGEND_H = 112;
 const AREA = 4.5;
-const K = Math.sqrt(AREA / N);
 const ITERATIONS = 500;
-
-const positions = nodes.map(() => ({ x: rand() * 2 - 1, y: rand() * 2 - 1 }));
-let temperature = 0.12;
-
-for (let iter = 0; iter < ITERATIONS; iter++) {
-  const disp = positions.map(() => ({ x: 0, y: 0 }));
-
-  // Repulsion between every node pair keeps the layout from collapsing.
-  for (let i = 0; i < N; i++) {
-    for (let j = i + 1; j < N; j++) {
-      const dx = positions[i].x - positions[j].x;
-      const dy = positions[i].y - positions[j].y;
-      const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
-      const force = (K * K) / dist;
-      const ux = dx / dist;
-      const uy = dy / dist;
-      disp[i].x += ux * force;
-      disp[i].y += uy * force;
-      disp[j].x -= ux * force;
-      disp[j].y -= uy * force;
-    }
-  }
-
-  // Attraction along edges — heavier weight pulls the pair closer together,
-  // so the layout itself, not just line width, communicates connection strength.
-  edges.forEach((e) => {
-    const i = nodeIndex[e.source];
-    const j = nodeIndex[e.target];
-    const dx = positions[i].x - positions[j].x;
-    const dy = positions[i].y - positions[j].y;
-    const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
-    const wRatio = (e.weight - MIN_WEIGHT) / (MAX_WEIGHT - MIN_WEIGHT || 1);
-    const idealDist = K * (1.5 - 1.0 * wRatio);
-    const force = (dist * dist) / idealDist;
-    const ux = dx / dist;
-    const uy = dy / dist;
-    disp[i].x -= ux * force;
-    disp[i].y -= uy * force;
-    disp[j].x += ux * force;
-    disp[j].y += uy * force;
-  });
-
-  for (let i = 0; i < N; i++) {
-    const dx = disp[i].x;
-    const dy = disp[i].y;
-    const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
-    const limited = Math.min(dist, temperature);
-    positions[i].x += (dx / dist) * limited;
-    positions[i].y += (dy / dist) * limited;
-  }
-  temperature *= 0.99;
-}
-
-// Center the layout, then fit its actual (generally non-circular) bounding
-// box to the drawing area independently per axis — a chain-shaped network
-// like this one would otherwise sit inside a huge, mostly-empty circle.
-const centroidX = positions.reduce((s, p) => s + p.x, 0) / N;
-const centroidY = positions.reduce((s, p) => s + p.y, 0) / N;
-positions.forEach((p) => {
-  p.x -= centroidX;
-  p.y -= centroidY;
-});
-
-const MARGIN = { top: 100, right: 60, bottom: 170, left: 60 };
-const { width: CANVAS_W, height: CANVAS_H } = window.ANYPLOT_SIZE;
-const PAD = 1.25; // headroom for node radius + label above the outermost nodes
-const rangeX = Math.max(...positions.map((p) => Math.abs(p.x))) || 1;
-const rangeY = Math.max(...positions.map((p) => Math.abs(p.y))) || 1;
-const X_HALF = rangeX * PAD;
-const Y_HALF = rangeY * PAD;
-
+const INITIAL_TEMP = 0.12;
+const COOLING_FACTOR = 0.99;
+const PAD_MULT = 1.25;
 const NODE_MIN_R = 15;
 const NODE_MAX_R = 40;
 const EDGE_MIN_W = 2;
 const EDGE_MAX_W = 13;
 
-function nodeRadius(i) {
-  const ratio = (weightedDegree[i] - MIN_DEGREE) / (MAX_DEGREE - MIN_DEGREE || 1);
-  return NODE_MIN_R + ratio * (NODE_MAX_R - NODE_MIN_R);
+// Columns: set these to your data's column names
+const NODE_ID = "Lab code"; // role: node
+const NODE_LABEL = "Research institute"; // role: label
+const DOMAIN = "Research domain"; // role: group
+const SOURCE = "Source lab"; // role: source
+const TARGET = "Partner lab"; // role: target
+const WEIGHT = "Co-authored papers"; // role: weight
+
+// Data: replace this block with your own records
+const nodes: Array<Record<string, string>> = [
+  { [NODE_ID]: "GEN", [NODE_LABEL]: "Genomics Lab", [DOMAIN]: "Life Sciences" },
+  { [NODE_ID]: "IMM", [NODE_LABEL]: "Immunology Institute", [DOMAIN]: "Life Sciences" },
+  { [NODE_ID]: "NEU", [NODE_LABEL]: "Neuroscience Institute", [DOMAIN]: "Life Sciences" },
+  { [NODE_ID]: "MAR", [NODE_LABEL]: "Marine Biology Station", [DOMAIN]: "Life Sciences" },
+  { [NODE_ID]: "QPL", [NODE_LABEL]: "Quantum Physics Lab", [DOMAIN]: "Physical Sciences" },
+  { [NODE_ID]: "MAT", [NODE_LABEL]: "Materials Science Institute", [DOMAIN]: "Physical Sciences" },
+  { [NODE_ID]: "AST", [NODE_LABEL]: "Astrophysics Observatory", [DOMAIN]: "Physical Sciences" },
+  { [NODE_ID]: "CLI", [NODE_LABEL]: "Climate Science Center", [DOMAIN]: "Physical Sciences" },
+  { [NODE_ID]: "AIR", [NODE_LABEL]: "AI Research Center", [DOMAIN]: "Computer Science" },
+  { [NODE_ID]: "DSI", [NODE_LABEL]: "Data Science Institute", [DOMAIN]: "Computer Science" },
+  { [NODE_ID]: "ROB", [NODE_LABEL]: "Robotics Lab", [DOMAIN]: "Computer Science" },
+  { [NODE_ID]: "CHE", [NODE_LABEL]: "Chemical Engineering Lab", [DOMAIN]: "Engineering" },
+  { [NODE_ID]: "BIO", [NODE_LABEL]: "Bioengineering Institute", [DOMAIN]: "Engineering" },
+  { [NODE_ID]: "ENV", [NODE_LABEL]: "Environmental Engineering Lab", [DOMAIN]: "Engineering" },
+];
+
+const data: Array<Record<string, string | number>> = [
+  { [SOURCE]: "GEN", [TARGET]: "IMM", [WEIGHT]: 42 },
+  { [SOURCE]: "GEN", [TARGET]: "NEU", [WEIGHT]: 16 },
+  { [SOURCE]: "GEN", [TARGET]: "BIO", [WEIGHT]: 22 },
+  { [SOURCE]: "IMM", [TARGET]: "BIO", [WEIGHT]: 12 },
+  { [SOURCE]: "IMM", [TARGET]: "NEU", [WEIGHT]: 6 },
+  { [SOURCE]: "NEU", [TARGET]: "AIR", [WEIGHT]: 19 },
+  { [SOURCE]: "MAR", [TARGET]: "ENV", [WEIGHT]: 27 },
+  { [SOURCE]: "MAR", [TARGET]: "CLI", [WEIGHT]: 31 },
+  { [SOURCE]: "QPL", [TARGET]: "MAT", [WEIGHT]: 36 },
+  { [SOURCE]: "QPL", [TARGET]: "AST", [WEIGHT]: 21 },
+  { [SOURCE]: "MAT", [TARGET]: "CHE", [WEIGHT]: 33 },
+  { [SOURCE]: "MAT", [TARGET]: "ENV", [WEIGHT]: 9 },
+  { [SOURCE]: "AST", [TARGET]: "CLI", [WEIGHT]: 8 },
+  { [SOURCE]: "CLI", [TARGET]: "ENV", [WEIGHT]: 24 },
+  { [SOURCE]: "AIR", [TARGET]: "DSI", [WEIGHT]: 45 },
+  { [SOURCE]: "AIR", [TARGET]: "ROB", [WEIGHT]: 29 },
+  { [SOURCE]: "DSI", [TARGET]: "ROB", [WEIGHT]: 18 },
+  { [SOURCE]: "DSI", [TARGET]: "GEN", [WEIGHT]: 15 },
+  { [SOURCE]: "DSI", [TARGET]: "CLI", [WEIGHT]: 12 },
+  { [SOURCE]: "DSI", [TARGET]: "MAT", [WEIGHT]: 7 },
+  { [SOURCE]: "DSI", [TARGET]: "BIO", [WEIGHT]: 10 },
+  { [SOURCE]: "ROB", [TARGET]: "BIO", [WEIGHT]: 14 },
+  { [SOURCE]: "CHE", [TARGET]: "BIO", [WEIGHT]: 20 },
+  { [SOURCE]: "CHE", [TARGET]: "ENV", [WEIGHT]: 17 },
+];
+
+// Plot: reads only data and the constants above
+interface LabNode {
+  id: string;
+  label: string;
+  domainName: string;
+  domainIndex: number;
+  weightedDegree: number;
+  radius: number;
+  x: number;
+  y: number;
 }
 
-function edgeWidth(weight) {
-  const ratio = (weight - MIN_WEIGHT) / (MAX_WEIGHT - MIN_WEIGHT || 1);
-  return EDGE_MIN_W + ratio * (EDGE_MAX_W - EDGE_MIN_W);
+const domains: string[] = [];
+const nodeIndexById = new Map<string, number>();
+const layoutNodes: LabNode[] = [];
+
+for (const row of nodes) {
+  const id = String(row[NODE_ID]);
+  const dom = String(row[DOMAIN]);
+  if (!domains.includes(dom)) domains.push(dom);
+  nodeIndexById.set(id, layoutNodes.length);
+  layoutNodes.push({
+    id,
+    label: String(row[NODE_LABEL]),
+    domainName: dom,
+    domainIndex: domains.indexOf(dom),
+    weightedDegree: 0,
+    radius: NODE_MIN_R,
+    x: 0,
+    y: 0,
+  });
 }
 
-// Draw heaviest edges last so the strongest collaborations stay legible on top.
+interface LabEdge {
+  sourceIdx: number;
+  targetIdx: number;
+  weight: number;
+  strokeWidth: number;
+  ratio: number;
+}
+
+const edges: LabEdge[] = [];
+for (const row of data) {
+  const sIdx = nodeIndexById.get(String(row[SOURCE]))!;
+  const tIdx = nodeIndexById.get(String(row[TARGET]))!;
+  const weight = Number(row[WEIGHT]);
+  layoutNodes[sIdx].weightedDegree += weight;
+  layoutNodes[tIdx].weightedDegree += weight;
+  edges.push({ sourceIdx: sIdx, targetIdx: tIdx, weight, strokeWidth: EDGE_MIN_W, ratio: 0 });
+}
+
+const edgeWeights = edges.map((e) => e.weight);
+const minWeight = Math.min(...edgeWeights);
+const maxWeight = Math.max(...edgeWeights);
+const weightSpan = maxWeight - minWeight;
+
+for (const edge of edges) {
+  edge.ratio = (edge.weight - minWeight) / weightSpan;
+  edge.strokeWidth = EDGE_MIN_W + edge.ratio * (EDGE_MAX_W - EDGE_MIN_W);
+}
+
+const degrees = layoutNodes.map((n) => n.weightedDegree);
+const minDegree = Math.min(...degrees);
+const maxDegree = Math.max(...degrees);
+const degreeSpan = maxDegree - minDegree;
+
+for (const node of layoutNodes) {
+  const ratio = (node.weightedDegree - minDegree) / degreeSpan;
+  node.radius = NODE_MIN_R + ratio * (NODE_MAX_R - NODE_MIN_R);
+}
+
+let lcgState = 42;
+const nCount = layoutNodes.length;
+const kForce = Math.sqrt(AREA / nCount);
+
+for (let i = 0; i < nCount; i += 1) {
+  lcgState = (lcgState * 1664525 + 1013904223) % 4294967296;
+  const rx = (lcgState / 4294967296) * 2 - 1;
+  lcgState = (lcgState * 1664525 + 1013904223) % 4294967296;
+  const ry = (lcgState / 4294967296) * 2 - 1;
+  layoutNodes[i].x = rx;
+  layoutNodes[i].y = ry;
+}
+
+let temperature = INITIAL_TEMP;
+for (let iter = 0; iter < ITERATIONS; iter += 1) {
+  const dispX = new Array<number>(nCount).fill(0);
+  const dispY = new Array<number>(nCount).fill(0);
+
+  for (let i = 0; i < nCount; i += 1) {
+    for (let j = i + 1; j < nCount; j += 1) {
+      const dx = layoutNodes[i].x - layoutNodes[j].x;
+      const dy = layoutNodes[i].y - layoutNodes[j].y;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+      const force = (kForce * kForce) / dist;
+      const ux = dx / dist;
+      const uy = dy / dist;
+      dispX[i] += ux * force;
+      dispY[i] += uy * force;
+      dispX[j] -= ux * force;
+      dispY[j] -= uy * force;
+    }
+  }
+
+  for (const edge of edges) {
+    const i = edge.sourceIdx;
+    const j = edge.targetIdx;
+    const dx = layoutNodes[i].x - layoutNodes[j].x;
+    const dy = layoutNodes[i].y - layoutNodes[j].y;
+    const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+    const idealDist = kForce * (1.5 - 1.0 * edge.ratio);
+    const force = (dist * dist) / idealDist;
+    const ux = dx / dist;
+    const uy = dy / dist;
+    dispX[i] -= ux * force;
+    dispY[i] -= uy * force;
+    dispX[j] += ux * force;
+    dispY[j] += uy * force;
+  }
+
+  for (let i = 0; i < nCount; i += 1) {
+    const dx = dispX[i];
+    const dy = dispY[i];
+    const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+    const limited = Math.min(dist, temperature);
+    layoutNodes[i].x += (dx / dist) * limited;
+    layoutNodes[i].y += (dy / dist) * limited;
+  }
+  temperature *= COOLING_FACTOR;
+}
+
+const centroidX = layoutNodes.reduce((s, n) => s + n.x, 0) / nCount;
+const centroidY = layoutNodes.reduce((s, n) => s + n.y, 0) / nCount;
+for (const node of layoutNodes) {
+  node.x -= centroidX;
+  node.y -= centroidY;
+}
+
+const rangeX = Math.max(...layoutNodes.map((n) => Math.abs(n.x)));
+const rangeY = Math.max(...layoutNodes.map((n) => Math.abs(n.y)));
+const xHalf = rangeX * PAD_MULT;
+const yHalf = rangeY * PAD_MULT;
+
+const edgeOpacity = (ratio: number) => 0.22 + ratio * 0.4;
+
 const sortedEdges = [...edges].sort((a, b) => a.weight - b.weight);
+const midWeight = Math.round((minWeight + maxWeight) / 2);
+const weightSamples = [minWeight, midWeight, maxWeight].map((weight) => {
+  const ratio = (weight - minWeight) / weightSpan;
+  return { weight, ratio, strokeWidth: EDGE_MIN_W + ratio * (EDGE_MAX_W - EDGE_MIN_W) };
+});
 
-// --- Overlay: title drawn in the reserved top margin -------------------------
-function GraphTitle() {
-  return (
-    <text x={CANVAS_W / 2} y={44} textAnchor="middle" dominantBaseline="hanging" fontSize={28} fontWeight={500} fill={t.ink}>
-      {TITLE}
-    </text>
-  );
+// Label direction per node: bisector of the widest angular gap between its edges
+function labelAngle(nodeIdx: number, px: (n: LabNode) => [number, number]): number {
+  const [cx, cy] = px(layoutNodes[nodeIdx]);
+  const angles = edges
+    .filter((e) => e.sourceIdx === nodeIdx || e.targetIdx === nodeIdx)
+    .map((e) => {
+      const other = layoutNodes[e.sourceIdx === nodeIdx ? e.targetIdx : e.sourceIdx];
+      const [ox, oy] = px(other);
+      return Math.atan2(oy - cy, ox - cx);
+    })
+    .sort((a, b) => a - b);
+  if (angles.length === 0) return -Math.PI / 2;
+  let bestGap = -1;
+  let bestAngle = -Math.PI / 2;
+  angles.forEach((a, i) => {
+    const next = i === angles.length - 1 ? angles[0] + 2 * Math.PI : angles[i + 1];
+    if (next - a > bestGap) {
+      bestGap = next - a;
+      bestAngle = (a + next) / 2;
+    }
+  });
+  return bestAngle;
 }
 
-// --- Overlay: edges + nodes, both hoverable for the interactive HTML export -
-function NetworkOverlay({ onHoverChange }) {
+interface HoverInfo {
+  label: string;
+  detail: string;
+  x: number;
+  y: number;
+}
+
+function WeightedNetworkOverlay({
+  hover,
+  onHoverChange,
+}: {
+  hover: HoverInfo | null;
+  onHoverChange: (info: HoverInfo | null) => void;
+}) {
   const xScale = useXScale();
   const yScale = useYScale();
+  const drawingArea = useDrawingArea();
+  const toPx = (n: LabNode): [number, number] => [Number(xScale(n.x)), Number(yScale(n.y))];
 
   return (
     <g>
       {sortedEdges.map((edge, i) => {
-        const s = positions[nodeIndex[edge.source]];
-        const d = positions[nodeIndex[edge.target]];
-        const x1 = xScale(s.x);
-        const y1 = yScale(s.y);
-        const x2 = xScale(d.x);
-        const y2 = yScale(d.y);
-        const width = edgeWidth(edge.weight);
-        const ratio = (edge.weight - MIN_WEIGHT) / (MAX_WEIGHT - MIN_WEIGHT || 1);
-        const tooltip = {
-          label: `${nodes[nodeIndex[edge.source]].label} ↔ ${nodes[nodeIndex[edge.target]].label}`,
-          detail: `${edge.weight} co-authored papers`,
+        const s = layoutNodes[edge.sourceIdx];
+        const d = layoutNodes[edge.targetIdx];
+        const x1 = Number(xScale(s.x));
+        const y1 = Number(yScale(s.y));
+        const x2 = Number(xScale(d.x));
+        const y2 = Number(yScale(d.y));
+        const tooltip: HoverInfo = {
+          label: `${s.label} ↔ ${d.label}`,
+          detail: `${edge.weight} (${WEIGHT})`,
           x: (x1 + x2) / 2,
           y: (y1 + y2) / 2,
         };
         return (
-          <g key={`${edge.source}-${edge.target}-${i}`}>
-            <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={t.ink} strokeOpacity={0.22 + ratio * 0.4} strokeWidth={width} strokeLinecap="round" />
-            {/* Wider transparent hit path: the visible stroke is often too thin to hover reliably. */}
+          <g key={`${s.id}-${d.id}-${i}`}>
+            <line
+              x1={x1}
+              y1={y1}
+              x2={x2}
+              y2={y2}
+              stroke={t.ink}
+              strokeOpacity={edgeOpacity(edge.ratio)}
+              strokeWidth={edge.strokeWidth}
+              strokeLinecap="round"
+            />
             <line
               x1={x1}
               y1={y1}
               x2={x2}
               y2={y2}
               stroke="transparent"
-              strokeWidth={Math.max(width, 18)}
+              strokeWidth={Math.max(edge.strokeWidth, 18)}
               style={{ cursor: "pointer" }}
               onMouseEnter={() => onHoverChange(tooltip)}
               onMouseLeave={() => onHoverChange(null)}
@@ -229,14 +313,23 @@ function NetworkOverlay({ onHoverChange }) {
           </g>
         );
       })}
-      {nodes.map((node, i) => {
-        const p = positions[i];
-        const cx = xScale(p.x);
-        const cy = yScale(p.y);
-        const radius = nodeRadius(i);
-        const tooltip = {
+      {layoutNodes.map((node, idx) => {
+        const [cx, cy] = toPx(node);
+        const radius = node.radius;
+        const chipW = node.id.length * 10 + 8;
+        const chipH = 20;
+        const angle = labelAngle(idx, toPx);
+        const cosA = Math.cos(angle);
+        const sinA = Math.sin(angle);
+        const toChipEdge = Math.min(
+          chipW / 2 / Math.max(Math.abs(cosA), 1e-6),
+          chipH / 2 / Math.max(Math.abs(sinA), 1e-6),
+        );
+        const labelX = cx + cosA * (radius + 6 + toChipEdge);
+        const labelY = cy + sinA * (radius + 6 + toChipEdge);
+        const tooltip: HoverInfo = {
           label: node.label,
-          detail: `${DOMAINS[node.domain]} · weighted degree ${weightedDegree[i]}`,
+          detail: `${node.domainName} · weighted degree ${node.weightedDegree}`,
           x: cx,
           y: cy - radius - 10,
         };
@@ -246,105 +339,202 @@ function NetworkOverlay({ onHoverChange }) {
               cx={cx}
               cy={cy}
               r={radius}
-              fill={t.palette[node.domain]}
+              fill={t.palette[node.domainIndex]}
               stroke={t.pageBg}
               strokeWidth={3}
               style={{ cursor: "pointer" }}
               onMouseEnter={() => onHoverChange(tooltip)}
               onMouseLeave={() => onHoverChange(null)}
             />
-            <text x={cx} y={cy - radius - 10} textAnchor="middle" fontSize={16} fontWeight={600} fill={t.ink} style={{ pointerEvents: "none" }}>
+            <rect
+              x={labelX - chipW / 2}
+              y={labelY - chipH / 2}
+              width={chipW}
+              height={chipH}
+              rx={4}
+              fill={t.pageBg}
+              fillOpacity={0.86}
+              style={{ pointerEvents: "none" }}
+            />
+            <text
+              x={labelX}
+              y={labelY}
+              textAnchor="middle"
+              dominantBaseline="central"
+              fontSize={16}
+              fontWeight={600}
+              fill={t.ink}
+              style={{ pointerEvents: "none" }}
+            >
               {node.id}
             </text>
           </g>
         );
       })}
+
+      {hover && (
+        <g style={{ pointerEvents: "none" }}>
+          <rect
+            x={Math.min(
+              Math.max(
+                hover.x - (Math.max(hover.label.length, hover.detail.length) * 8 + 24) / 2,
+                8,
+              ),
+              drawingArea.left +
+                drawingArea.width -
+                (Math.max(hover.label.length, hover.detail.length) * 8 + 24) -
+                8,
+            )}
+            y={Math.max(hover.y - 52 - 12, 8)}
+            width={Math.max(hover.label.length, hover.detail.length) * 8 + 24}
+            height={52}
+            rx={6}
+            fill={t.elevatedBg}
+            stroke={t.inkSoft}
+            strokeOpacity={0.4}
+          />
+          <text
+            x={hover.x}
+            y={Math.max(hover.y - 52 - 12, 8) + 21}
+            textAnchor="middle"
+            fontSize={14}
+            fontWeight={600}
+            fill={t.ink}
+          >
+            {hover.label}
+          </text>
+          <text
+            x={hover.x}
+            y={Math.max(hover.y - 52 - 12, 8) + 40}
+            textAnchor="middle"
+            fontSize={14}
+            fill={t.inkSoft}
+          >
+            {hover.detail}
+          </text>
+        </g>
+      )}
     </g>
   );
 }
 
-// --- Overlay: hover tooltip for edges and nodes ------------------------------
-function HoverTooltip({ hover }) {
-  if (!hover) return null;
-  const charWidth = 7.4;
-  const width = Math.max(hover.label.length, hover.detail.length) * charWidth + 24;
-  const height = 46;
-  const x = Math.min(Math.max(hover.x - width / 2, 8), CANVAS_W - width - 8);
-  const y = Math.max(hover.y - height - 12, 8);
-  return (
-    <g style={{ pointerEvents: "none" }}>
-      <rect x={x} y={y} width={width} height={height} rx={6} fill={t.elevatedBg} stroke={t.inkSoft} strokeOpacity={0.4} />
-      <text x={x + width / 2} y={y + 19} textAnchor="middle" fontSize={13} fontWeight={600} fill={t.ink}>
-        {hover.label}
-      </text>
-      <text x={x + width / 2} y={y + 36} textAnchor="middle" fontSize={12} fill={t.inkSoft}>
-        {hover.detail}
-      </text>
-    </g>
-  );
-}
-
-// --- Overlay: domain-color legend + edge-weight scale, in the bottom margin -
-function Legend() {
-  const drawingArea = useDrawingArea();
-  const rowY = drawingArea.top + drawingArea.height + 55;
-  const swatchR = 9;
-  const groupGap = 225;
-
-  const weightSamples = [MIN_WEIGHT, Math.round((MIN_WEIGHT + MAX_WEIGHT) / 2), MAX_WEIGHT];
-  const weightRowY = rowY + 55;
-  const weightStartX = drawingArea.left;
-
-  return (
-    <g>
-      {DOMAINS.map((name, i) => {
-        const x = drawingArea.left + i * groupGap;
-        return (
-          <g key={name}>
-            <circle cx={x} cy={rowY} r={swatchR} fill={t.palette[i]} />
-            <text x={x + swatchR + 8} y={rowY + 5} fontSize={16} fill={t.inkSoft}>
-              {name}
-            </text>
-          </g>
-        );
-      })}
-      <text x={weightStartX} y={weightRowY - 14} fontSize={14} fill={t.inkSoft}>
-        Edge width = co-authored papers · node size = weighted degree
-      </text>
-      {weightSamples.map((w, i) => {
-        const x = weightStartX + i * 140;
-        const lineY = weightRowY + 12;
-        return (
-          <g key={w}>
-            <line x1={x} y1={lineY} x2={x + 60} y2={lineY} stroke={t.ink} strokeOpacity={0.55} strokeWidth={edgeWidth(w)} strokeLinecap="round" />
-            <text x={x + 30} y={lineY + 22} textAnchor="middle" fontSize={14} fill={t.inkSoft}>
-              {w}
-            </text>
-          </g>
-        );
-      })}
-    </g>
-  );
-}
-
-// --- Chart (default-exported component — the harness mounts it) -------------
 export default function Chart() {
-  const [hover, setHover] = useState(null);
+  const { width, height } = window.ANYPLOT_SIZE;
+  const [hover, setHover] = useState<HoverInfo | null>(null);
+  const chartHeight = height - TITLE_H - LEGEND_H;
+
   return (
-    <ChartContainer
-      width={CANVAS_W}
-      height={CANVAS_H}
-      margin={MARGIN}
-      series={[]}
-      skipAnimation
-      disableAxisListener
-      xAxis={[{ scaleType: "linear", min: -X_HALF, max: X_HALF }]}
-      yAxis={[{ scaleType: "linear", min: -Y_HALF, max: Y_HALF }]}
+    <div
+      style={{
+        width,
+        height,
+        backgroundColor: t.pageBg,
+        display: "flex",
+        flexDirection: "column",
+        fontFamily: "Inter, system-ui, sans-serif",
+      }}
     >
-      <NetworkOverlay onHoverChange={setHover} />
-      <GraphTitle />
-      <Legend />
-      <HoverTooltip hover={hover} />
-    </ChartContainer>
+      <div
+        style={{
+          height: TITLE_H,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <span style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>{TITLE}</span>
+      </div>
+      <ChartsContainer
+        width={width}
+        height={chartHeight}
+        margin={{ top: 28, right: 60, bottom: 28, left: 60 }}
+        series={[]}
+        skipAnimation
+        disableAxisListener
+        xAxis={[{ scaleType: "linear", min: -xHalf, max: xHalf, position: "none" }]}
+        yAxis={[{ scaleType: "linear", min: -yHalf, max: yHalf, position: "none" }]}
+      >
+        <WeightedNetworkOverlay hover={hover} onHoverChange={setHover} />
+      </ChartsContainer>
+      <div
+        style={{
+          minHeight: LEGEND_H,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 12,
+          padding: "8px 40px 14px",
+          boxSizing: "border-box",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 28,
+          }}
+        >
+          {domains.map((name, i) => (
+            <span
+              key={name}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                fontSize: 15,
+                color: t.inkSoft,
+              }}
+            >
+              <span
+                style={{
+                  width: 14,
+                  height: 14,
+                  borderRadius: "50%",
+                  backgroundColor: t.palette[i],
+                  display: "inline-block",
+                }}
+              />
+              <span>{name}</span>
+            </span>
+          ))}
+        </div>
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 24,
+            fontSize: 14,
+            color: t.inkSoft,
+          }}
+        >
+          <span>{`Edge width = ${WEIGHT} · node size = weighted degree:`}</span>
+          {weightSamples.map((sample) => (
+            <span
+              key={sample.weight}
+              style={{ display: "inline-flex", alignItems: "center", gap: 8 }}
+            >
+              <svg width={52} height={16}>
+                <line
+                  x1={4}
+                  y1={8}
+                  x2={48}
+                  y2={8}
+                  stroke={t.ink}
+                  strokeOpacity={edgeOpacity(sample.ratio)}
+                  strokeWidth={sample.strokeWidth}
+                  strokeLinecap="round"
+                />
+              </svg>
+              <span>{sample.weight}</span>
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
