@@ -1,131 +1,145 @@
 // anyplot.ai
 // boxen-basic: Basic Boxen Plot (Letter-Value Plot)
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 92/100 | Created: 2026-09-01
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+// Library: muix 9.16.0 | JavaScript 22.23.3
+// Quality: 88/100 | Updated: 2026-10-24
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const TITLE = "API Response Times · boxen-basic · javascript · muix · anyplot.ai";
-const TITLE_HEIGHT = 56;
-const LEGEND_HEIGHT = 44;
 
-// --- Data (in-memory, deterministic LCG — no seeded RNG in the browser) -----
-function lcg(seed) {
-  let state = seed;
-  return () => {
-    state = (state * 1664525 + 1013904223) % 4294967296;
-    return state / 4294967296;
-  };
-}
-
-function randomNormal(rand) {
-  const u1 = Math.max(rand(), 1e-9);
-  const u2 = rand();
-  return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-}
-
-// Server endpoints — right-skewed (log-normal) latency, the classic shape
-// where a boxen/letter-value plot earns its keep over a regular box plot:
-// the interesting behavior lives in the tail, not around the median.
-const endpoints = [
-  { name: "/search", medianMs: 45, sigma: 0.3 },
-  { name: "/profile", medianMs: 65, sigma: 0.35 },
-  { name: "/checkout", medianMs: 120, sigma: 0.45 },
-  { name: "/upload", medianMs: 260, sigma: 0.55 },
+// Constants
+const MAX_LEVELS = 5;
+const WIDTH_FACTORS = [1.0, 0.8, 0.62, 0.46, 0.32];
+const LEVEL_MIX = [0.86, 0.68, 0.52, 0.37, 0.24];
+const LEVEL_NAMES = [
+  "Fourths (50%)",
+  "Eighths (75%)",
+  "Sixteenths (87.5%)",
+  "32nds (93.8%)",
+  "64ths (96.9%)",
 ];
+const Y_LOW_FACTOR = 0.85;
+const Y_HIGH_FACTOR = 1.15;
+const BASE_WIDTH_SHARE = 0.56;
+const HEADER_H = 108;
 
-const N_PER_ENDPOINT = 3000;
-const MAX_LEVELS = 6; // capped for legibility — deeper levels shrink toward imperceptible slivers at this canvas size
+// Columns: set these to your data's column names
+const CATEGORY = "Service endpoint"; // role: category
+const VALUE = "Response time (ms)"; // role: value
 
-const rand = lcg(42);
+// Data: replace this block with your own records, one object per row
+const data = (() => {
+  let state = 42;
+  const endpoints = [
+    { name: "/api/search", medianMs: 45, sigma: 0.3 },
+    { name: "/api/profile", medianMs: 65, sigma: 0.35 },
+    { name: "/api/checkout", medianMs: 120, sigma: 0.45 },
+    { name: "/api/upload", medianMs: 260, sigma: 0.55 },
+  ];
+  const nPerEndpoint = 1500;
+  const rows: { [key: string]: string | number }[] = [];
 
-function orderStat(sortedAsc, depth) {
-  const n = sortedAsc.length;
-  const lo = Math.max(0, Math.floor(depth) - 1);
-  const hi = Math.min(n - 1, Math.ceil(depth) - 1);
-  return lo === hi ? sortedAsc[lo] : (sortedAsc[lo] + sortedAsc[hi]) / 2;
-}
-
-// Tukey letter-value recursion: each level's depth is half the previous
-// level's (floored) depth + 1, converging from the median toward the
-// extremes. Each level's box spans the order statistics at that depth from
-// either end — quartiles first, then eighths, sixteenths, and so on.
-function letterValues(sortedAsc, maxLevels) {
-  const n = sortedAsc.length;
-  let depth = (n + 1) / 2;
-  const median = orderStat(sortedAsc, depth);
-  const boxes = [];
-  for (let i = 0; i < maxLevels; i++) {
-    const nextDepth = (Math.floor(depth) + 1) / 2;
-    if (nextDepth < 1 || nextDepth === depth) break;
-    depth = nextDepth;
-    boxes.push({
-      lower: orderStat(sortedAsc, depth),
-      upper: orderStat(sortedAsc, n - depth + 1),
-      pctLower: (depth / (n + 1)) * 100,
-      pctUpper: 100 - (depth / (n + 1)) * 100,
-    });
+  for (const ep of endpoints) {
+    const mu = Math.log(ep.medianMs);
+    for (let i = 0; i < nPerEndpoint; i += 1) {
+      state = (state * 1664525 + 1013904223) % 4294967296;
+      const u1 = Math.max(state / 4294967296, 1e-9);
+      state = (state * 1664525 + 1013904223) % 4294967296;
+      const u2 = state / 4294967296;
+      const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+      const val = Math.exp(mu + ep.sigma * z);
+      rows.push({
+        [CATEGORY]: ep.name,
+        [VALUE]: Number(val.toFixed(2)),
+      });
+    }
   }
-  return { median, boxes };
+  return rows;
+})();
+
+// Plot: reads only data and the constants above
+const categories: string[] = [];
+for (const row of data) {
+  const c = String(row[CATEGORY]);
+  if (!categories.includes(c)) categories.push(c);
 }
 
-const categoryStats = endpoints.map(({ name, medianMs, sigma }) => {
-  const mu = Math.log(medianMs);
-  const values = Array.from({ length: N_PER_ENDPOINT }, () =>
-    Math.exp(mu + sigma * randomNormal(rand)),
-  ).sort((a, b) => a - b);
+const bgInt = parseInt(t.pageBg.slice(1), 16);
+const bgRgb = [(bgInt >> 16) & 255, (bgInt >> 8) & 255, bgInt & 255];
 
-  const { median, boxes } = letterValues(values, MAX_LEVELS);
-  const outer = boxes[boxes.length - 1];
+const categoryStats = categories.map((name, ci) => {
+  const values = data
+    .filter((row) => String(row[CATEGORY]) === name)
+    .map((row) => Number(row[VALUE]))
+    .sort((a, b) => a - b);
+  const n = values.length;
+
+  let depth = (n + 1) / 2;
+  const medLo = Math.floor(depth) - 1;
+  const medHi = Math.ceil(depth) - 1;
+  const median = (values[medLo] + values[medHi]) / 2;
+
+  const boxes: { lower: number; upper: number }[] = [];
+  for (let i = 0; i < MAX_LEVELS; i += 1) {
+    const nextDepth = (Math.floor(depth) + 1) / 2;
+    if (nextDepth === depth) break;
+    depth = nextDepth;
+    const loIdx1 = Math.floor(depth) - 1;
+    const loIdx2 = Math.ceil(depth) - 1;
+    const lower = (values[loIdx1] + values[loIdx2]) / 2;
+
+    const upDepth = n - depth + 1;
+    const hiIdx1 = Math.floor(upDepth) - 1;
+    const hiIdx2 = Math.ceil(upDepth) - 1;
+    const upper = (values[hiIdx1] + values[hiIdx2]) / 2;
+
+    boxes.push({ lower, upper });
+  }
+
+  const outer = boxes[boxes.length - 1] ?? { lower: median, upper: median };
   const outliers = values.filter((v) => v < outer.lower || v > outer.upper);
 
-  return { name, median, boxes, outer, outliers };
+  const colHex = t.palette[ci];
+  const colInt = parseInt(colHex.slice(1), 16);
+  const colRgb = [(colInt >> 16) & 255, (colInt >> 8) & 255, colInt & 255];
+  const levelFills = LEVEL_MIX.map((mix) => {
+    const r = Math.round(bgRgb[0] + (colRgb[0] - bgRgb[0]) * mix);
+    const g = Math.round(bgRgb[1] + (colRgb[1] - bgRgb[1]) * mix);
+    const b = Math.round(bgRgb[2] + (colRgb[2] - bgRgb[2]) * mix);
+    return `rgb(${r}, ${g}, ${b})`;
+  });
+
+  return { name, median, boxes, outer, outliers, color: colHex, levelFills };
 });
 
-// series=[] means the ChartContainer has no dataset to infer a y-domain
-// from, so the log-scale axis needs an explicit min/max computed from the
-// actual plotted extremes (outer letter-value bounds + outliers).
 const allExtremes = categoryStats.flatMap((s) => [
   s.outer.lower,
   s.outer.upper,
   ...s.outliers,
 ]);
-const Y_MIN = Math.min(...allExtremes) * 0.85;
-const Y_MAX = Math.max(...allExtremes) * 1.15;
+const yMin = Math.min(...allExtremes) * Y_LOW_FACTOR;
+const yMax = Math.max(...allExtremes) * Y_HIGH_FACTOR;
+const levelsDrawn = Math.max(...categoryStats.map((s) => s.boxes.length));
+const levelLabels = LEVEL_NAMES.slice(0, levelsDrawn);
 
-// Box width shrinks and fill lightens at deeper levels — the wider,
-// paler bands cover more of the tail but represent a thinner slice of the
-// distribution, giving the characteristic tapered "boxen" silhouette.
-const WIDTH_FACTORS = [1, 0.82, 0.64, 0.48, 0.34, 0.22];
-const FILL_OPACITY = [0.6, 0.5, 0.4, 0.32, 0.24, 0.17];
+const TITLE = "API Response Times · boxen-basic · javascript · muix · anyplot.ai";
+const SUBTITLE = `${data.length.toLocaleString("en-US")} observations · ${categories.length} groups (${CATEGORY}) · ${levelsDrawn} letter-value levels`;
 
-function hexToRgba(hex, alpha) {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
-
-// --- Nested letter-value boxes -----------------------------------------------
-// The community package (7.29.1) ships no box/letter-value plot component at
-// all — this reproduces one as a custom SVG layer positioned via the chart's
-// own band/linear scale hooks, the same technique used for span overlays.
 function BoxenLayer() {
-  const xScale = useXScale();
-  const yScale = useYScale();
+  const xScale = useXScale("endpoints");
+  const yScale = useYScale("latency");
   const bandwidth = xScale.bandwidth();
-  const baseWidth = bandwidth * 0.55;
+  const baseWidth = bandwidth * BASE_WIDTH_SHARE;
 
   return (
     <g>
-      {categoryStats.map((cat, ci) => {
+      {categoryStats.map((cat) => {
         const center = xScale(cat.name) + bandwidth / 2;
-        const color = t.palette[ci % t.palette.length];
         const innerWidth = baseWidth * WIDTH_FACTORS[0];
+        const yMed = yScale(cat.median);
 
         return (
           <g key={cat.name}>
@@ -141,19 +155,18 @@ function BoxenLayer() {
                   y={yTop}
                   width={w}
                   height={Math.max(1, yBottom - yTop)}
-                  fill={color}
-                  fillOpacity={FILL_OPACITY[idx]}
-                  stroke={color}
-                  strokeOpacity={Math.min(1, FILL_OPACITY[idx] + 0.25)}
-                  strokeWidth={1}
+                  rx={2}
+                  fill={cat.levelFills[idx]}
+                  stroke={cat.color}
+                  strokeWidth={1.4}
                 />
               );
             })}
             <line
               x1={center - innerWidth / 2}
               x2={center + innerWidth / 2}
-              y1={yScale(cat.median)}
-              y2={yScale(cat.median)}
+              y1={yMed}
+              y2={yMed}
               stroke={t.pageBg}
               strokeWidth={5}
               strokeLinecap="round"
@@ -161,8 +174,8 @@ function BoxenLayer() {
             <line
               x1={center - innerWidth / 2}
               x2={center + innerWidth / 2}
-              y1={yScale(cat.median)}
-              y2={yScale(cat.median)}
+              y1={yMed}
+              y2={yMed}
               stroke={t.ink}
               strokeWidth={2.5}
               strokeLinecap="round"
@@ -170,13 +183,12 @@ function BoxenLayer() {
             {cat.outliers.map((v, j) => (
               <circle
                 key={j}
-                cx={center + ((j % 5) - 2) * 7}
+                cx={center}
                 cy={yScale(v)}
-                r={4}
+                r={4.5}
                 fill={t.pageBg}
-                stroke={color}
-                strokeWidth={1.5}
-                fillOpacity={0.9}
+                stroke={cat.color}
+                strokeWidth={1.8}
               />
             ))}
           </g>
@@ -187,131 +199,124 @@ function BoxenLayer() {
 }
 
 export default function Chart() {
-  const chartHeight = window.ANYPLOT_SIZE.height - TITLE_HEIGHT - LEGEND_HEIGHT;
+  const chartHeight = window.ANYPLOT_SIZE.height - HEADER_H;
+  const legendSwatches = categoryStats[0].levelFills;
   const brand = t.palette[0];
-  const inner = categoryStats[0].boxes[0];
-  const outer = categoryStats[0].outer;
-
-  const legendItems = [
-    { kind: "line", label: "Median (50th pct.)" },
-    {
-      kind: "swatch",
-      opacity: FILL_OPACITY[0],
-      label: `${inner.pctLower.toFixed(1)}–${inner.pctUpper.toFixed(1)}% (fourths)`,
-    },
-    {
-      kind: "swatch",
-      opacity: FILL_OPACITY[FILL_OPACITY.length - 1],
-      label: `${outer.pctLower.toFixed(1)}–${outer.pctUpper.toFixed(1)}% (deepest level)`,
-    },
-    { kind: "outlier", label: "Outlier beyond deepest level" },
-  ];
 
   return (
     <div
       style={{
         width: window.ANYPLOT_SIZE.width,
         height: window.ANYPLOT_SIZE.height,
+        background: t.pageBg,
+        fontFamily: "Inter, system-ui, sans-serif",
+        display: "flex",
+        flexDirection: "column",
       }}
     >
       <div
         style={{
-          height: TITLE_HEIGHT,
-          lineHeight: `${TITLE_HEIGHT}px`,
-          paddingLeft: 24,
-          fontSize: 22,
-          fontWeight: 500,
-          color: t.ink,
-        }}
-      >
-        {TITLE}
-      </div>
-      <div
-        style={{
-          height: LEGEND_HEIGHT,
+          height: HEADER_H,
           display: "flex",
+          flexDirection: "column",
           alignItems: "center",
-          gap: 28,
-          paddingLeft: 24,
-          fontSize: 14,
-          color: t.inkSoft,
+          justifyContent: "center",
+          gap: 6,
         }}
       >
-        {legendItems.map((item) => (
-          <div
-            key={item.label}
-            style={{ display: "flex", alignItems: "center", gap: 8 }}
-          >
-            {item.kind === "line" && (
-              <div style={{ width: 16, height: 2.5, background: t.ink }} />
-            )}
-            {item.kind === "swatch" && (
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>
+          {TITLE}
+        </div>
+        <div style={{ fontSize: 15, color: t.inkSoft }}>{SUBTITLE}</div>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 22,
+            fontSize: 14,
+            color: t.inkSoft,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+            <div style={{ width: 16, height: 2.5, background: t.ink }} />
+            <span>Median</span>
+          </div>
+          {levelLabels.map((label, idx) => (
+            <div
+              key={label}
+              style={{ display: "flex", alignItems: "center", gap: 7 }}
+            >
               <div
                 style={{
                   width: 14,
                   height: 14,
                   borderRadius: 3,
-                  background: hexToRgba(brand, item.opacity),
-                  border: `1px solid ${hexToRgba(brand, Math.min(1, item.opacity + 0.25))}`,
+                  background: legendSwatches[idx],
+                  border: `1.2px solid ${brand}`,
                 }}
               />
-            )}
-            {item.kind === "outlier" && (
-              <div
-                style={{
-                  width: 10,
-                  height: 10,
-                  borderRadius: "50%",
-                  background: t.pageBg,
-                  border: `1.5px solid ${brand}`,
-                }}
-              />
-            )}
-            <span>{item.label}</span>
+              <span>{label}</span>
+            </div>
+          ))}
+          <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+            <div
+              style={{
+                width: 10,
+                height: 10,
+                borderRadius: "50%",
+                background: t.pageBg,
+                border: `1.8px solid ${brand}`,
+              }}
+            />
+            <span>Outliers</span>
           </div>
-        ))}
+        </div>
       </div>
-      <ChartContainer
+
+      <ChartsContainer
         width={window.ANYPLOT_SIZE.width}
         height={chartHeight}
         series={[]}
         skipAnimation
-        margin={{ top: 20, right: 40, bottom: 64, left: 96 }}
+        margin={{ top: 20, right: 40, bottom: 20, left: 40 }}
         xAxis={[
           {
             id: "endpoints",
-            data: categoryStats.map((s) => s.name),
+            data: categories,
             scaleType: "band",
-            label: "Endpoint",
-            labelStyle: { fontSize: 16 },
-            tickLabelStyle: { fontSize: 14 },
+            height: 64,
+            label: CATEGORY,
+            labelStyle: { fontSize: 16, fill: t.ink, fontWeight: 500 },
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
           },
         ]}
         yAxis={[
           {
             id: "latency",
             scaleType: "log",
-            min: Y_MIN,
-            max: Y_MAX,
-            label: "Response Time (ms)",
-            labelStyle: { fontSize: 16 },
-            tickLabelStyle: { fontSize: 14 },
+            min: yMin,
+            max: yMax,
+            width: 88,
+            label: VALUE,
+            labelStyle: { fontSize: 16, fill: t.ink, fontWeight: 500 },
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
           },
         ]}
+        sx={{
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+          "& .MuiChartsGrid-line": {
+            stroke: t.grid,
+            opacity: 0.65,
+            strokeDasharray: "3 4",
+          },
+        }}
       >
-        <ChartsGrid
-          horizontal
-          sx={{
-            "& .MuiChartsGrid-line": {
-              opacity: 0.55,
-              strokeDasharray: "2 5",
-            },
-          }}
-        />
+        <ChartsGrid horizontal />
         <BoxenLayer />
         <ChartsXAxis axisId="endpoints" />
         <ChartsYAxis axisId="latency" />
-      </ChartContainer>
+      </ChartsContainer>
     </div>
   );
 }

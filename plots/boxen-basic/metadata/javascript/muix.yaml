@@ -2,145 +2,135 @@ library: muix
 language: javascript
 specification_id: boxen-basic
 created: '2026-09-01T18:51:39Z'
-updated: '2026-09-01T19:02:52Z'
-generated_by: claude-sonnet
-workflow_run: 33545269856
+updated: '2026-10-24T04:11:17Z'
+generated_by: gemini-4-argon
+adopted_from: 05fd22b6883131fc8937ab51e4f573041b3dcb44 (05fd22b6883131fc8937ab51e4f573041b3dcb44)
+workflow_run: 40061062000
 issue: 3414
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/javascript/muix/plot-dark.html
-quality_score: 92
+quality_score: 88
 review:
   strengths:
-  - Reproduces a true Tukey letter-value recursion from scratch (order-statistic depths
-    halving toward the extremes) since the MUI X community package ships no boxen/letter-value
-    component — a legitimate, well-executed custom-SVG-layer technique built on the
-    documented useXScale/useYScale hooks.
-  - Nested boxes visibly taper in width and lighten in opacity at deeper quantile
-    levels, giving the correct 'boxen' silhouette; outliers beyond the deepest level
-    render as individual open circles.
-  - Four endpoints show genuinely different medians, spreads, and outlier counts (log-normal
-    right-skewed latency), which is exactly the shape a boxen plot is meant to reveal
-    over a regular box plot.
-  - 'First categorical series renders as brand green #009E73 with the remaining three
-    following the Imprint canonical order (purple, blue, ochre); light background
-    measured exactly #FAF8F1 and dark exactly #1A1A17.'
-  - Median line, tick labels, axis labels, and legend text all correctly flip from
-    dark-on-light to light-on-dark via ANYPLOT_TOKENS — no dark-on-dark or light-on-light
-    failures in either render.
-  - 'No edge clipping: verified top, left, and bottom canvas margins pixel-by-pixel
-    — the highest outliers, y-axis tick labels, and x-axis title all sit fully inside
-    the 3200×1800 canvas.'
-  - Deterministic, seeded (LCG seed 42) data generation with a clean, minimal import
-    list and no fake interactive elements.
+  - Correct letter-value depth recursion (Hofmann et al.) yields five nested levels
+    per endpoint, with box edges at their quantiles and outliers beyond the deepest
+    level drawn at their values
+  - 'Idiomatic MUI X composition: ChartsContainer with ChartsGrid and the axis components,
+    plus a custom BoxenLayer driven by useXScale/useYScale on a band and a log scale'
+  - Level shades are computed as blends of the category color toward the page color,
+    so the quantile ramp reads correctly in both themes while the Imprint strokes
+    stay identical
+  - The median line has a page-colored halo, so it stays distinct on the darkest inner
+    box in both renders
+  - The log value axis and the endpoint order by rising median make the right-skewed
+    latency comparison easy to read
+  - The header legend names each level with its coverage (50% to 96.9%) plus the median
+    and outlier glyphs
   weaknesses:
-  - Title fontsize (22px) leaves the mandated title occupying only ~40% of canvas
-    width, well under the ~70-85% that similarly long mandated titles typically reach
-    — not a defect, but there is headroom to grow the title a couple of points for
-    a more confident first impression.
-  - Data storytelling relies on implicit ordering (endpoints roughly sorted by latency)
-    and color alone; no annotation or callout highlights the standout finding (e.g.
-    /upload's long tail and highest outlier count) even though the underlying data
-    supports one.
-  - The custom BoxenLayer necessarily introduces several helper functions (lcg, randomNormal,
-    orderStat, letterValues) for the letter-value math — justified by the missing
-    native component, but it pushes past a strict KISS import→data→plot structure.
+  - 'Suggestion: the level legend uses only the green ramp; a short note that each
+    endpoint shades its own color the same way would make the mapping explicit for
+    the other three colors'
+  - 'Suggestion: a tooltip on the boxes (level name, bounds, n) would add HTML value
+    through MUI X''s tooltip slot'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, measured exactly #FAF8F1 (RGB 250,248,241) — not pure white.
-      Chrome: Title "API Response Times · boxen-basic · javascript · muix · anyplot.ai" in dark ink at top-left; x-axis label "Endpoint" and y-axis label "Response Time (ms)" both dark and clearly readable; tick labels (log scale: 20...1k) dark and legible; horizontal gridlines are subtle dashed lines at ~55% opacity; legend row (median line, two swatch levels, outlier marker) sits directly under the title, fully legible.
-      Data: Four categories (/search, /profile, /checkout, /upload) each rendered as a stack of nested, tapering letter-value boxes. First series (/search) is brand green (~#009E73 base, blended darker where levels overlap); /profile is light purple (~#C475FD family); /checkout is blue (~#4467A3 family); /upload is amber/ochre (~#BD8233 family) — matches the Imprint canonical order. Median lines are solid black. Outliers beyond the deepest level render as small open circles in the category's color.
-      Legibility verdict: PASS — no overlapping or clipped text found (verified top/left/bottom canvas margins pixel-by-pixel).
+      Background: warm off-white #FAF8F1 across the whole canvas.
+      Chrome: bold dark title "API Response Times · boxen-basic · javascript · muix · anyplot.ai", a gray subtitle "6,000 observations · 4 groups (Service endpoint) · 5 letter-value levels", and an inline legend row (Median, Fourths 50%, Eighths 75%, Sixteenths 87.5%, 32nds 93.8%, 64ths 96.9%, Outliers). Log y axis "Response time (ms)" with ticks from 20 to 1k; x axis "Service endpoint" with /api/search, /api/profile, /api/checkout, /api/upload. Faint dashed horizontal grid. All text is dark and readable.
+      Data: four letter-value stacks of five nested boxes each, narrowing outward, in green #009E73, purple, blue and amber, each shaded from saturated (fourths) to pale (64ths) and outlined in the category color. The dark median line has a halo. Hollow outlier circles sit above and below each stack. Medians are about 45, 65, 120 and 260 ms.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, measured exactly #1A1A17 (RGB 26,26,23) — not pure black.
-      Chrome: Title, axis labels, and tick labels all render in light/white text against the dark background — fully readable, no dark-on-dark failures. Median lines switch to white (from black in light mode), correctly following the theme ink token. Gridlines remain subtle.
-      Data: Same four categories in the identical hues as the light render (green/purple/blue/amber) — only the chrome (background, text, median-line color) flips, confirming data-color consistency across themes as required.
-      Legibility verdict: PASS — all text and data elements clearly legible; brand green remains vivid on the dark surface.
+      Background: warm near-black #1A1A17.
+      Chrome: title, subtitle, legend, tick labels and axis titles render in light ink; no dark-on-dark text. Grid is subtle but visible.
+      Data: the same outline colors as the light render; the level shades blend toward the dark page, so the inner boxes are saturated and the outer levels darker, each still outlined. The median line is light ink with a dark halo. The outlier circles are identical in color.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; readable in both themes and at 400px
-          mobile scale. Title comfortably fits without clipping, though somewhat under-filled
-          at ~40% width.
+        comment: Explicit sizes (title 22, axis titles 16, ticks/legend 14 CSS px)
+          as the library prompt asks; all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements in either render.
+        comment: No text collisions; outlier circles stack at their values in the
+          center column, which is expected for a large sample
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Letter-value binning is the ideal density adaptation for 3000 points/category
-          — avoids overplotting entirely; outlier markers sized appropriately.
+        comment: Every letter-value box is outlined in the category color, so even
+          the faintest level stays visible on both backgrounds; the legend swatches
+          carry the same outline
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Four distinct hues plus opacity-encoded depth; not reliant on hue
-          alone; good contrast in both themes.
+        comment: Imprint green/purple/blue/amber are CVD-distinguishable; categories
+          are also separated by position
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills most of the canvas, balanced margins, legend adjacent
-          to title, nothing cut off.
+        comment: 3200x1800, no gate file; balanced plot area, title at about 50% of
+          the width, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Response Time (ms)" and "Endpoint" — descriptive with units.'
+        comment: '''Response time (ms)'' with unit, ''Service endpoint'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, remaining series follow Imprint canonical
-          order; backgrounds measured exactly #FAF8F1/#1A1A17; chrome theme-correct
-          in both renders.'
+        comment: 'First category #009E73, then Imprint order; level shades are blends
+          of the category color toward the page, so the strokes stay identical across
+          themes; backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 15
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom-built letter-value visualization with tapering widths and
-          opacity gradient — clearly above a configured default, since no default
-          exists for this chart type in MUI X.
+        comment: 'Raised: a compact header holding the title, a subtitle and an inline
+          legend row frees the plot area; the level shades are computed as blends
+          toward the page color, so the ramp works in both themes'
       - id: DE-02
         name: Visual Refinement
-        score: 5
-        max: 6
-        passed: true
-        comment: Subtle dashed gridlines, no top/right spines, generous whitespace,
-          consistent shading progression.
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Visual hierarchy via color and endpoint ordering (roughly fastest
-          to slowest) creates emphasis, though no explicit annotation calls out the
-          /upload tail.
+        comment: 'Raised: the median line has a page-colored halo that separates it
+          from the box fill, the boxes have softly rounded corners, and the dashed
+          grid is tuned to sit behind the data'
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: 'Raised: the log value axis shows the right-skewed latency tails
+          symmetrically, and the endpoints are ordered by rising median, so the comparison
+          reads left to right'
     spec_compliance:
       score: 15
       max: 15
@@ -150,27 +140,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct boxen/letter-value plot with nested quantile boxes and outliers.
+        comment: A true letter-value plot with no whiskers, strips, density shapes
+          or reference lines
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Tapering widths, shading by depth, outliers beyond deepest level,
-          clear legend — all present.
+        comment: 'Nested boxes (fourths to 64ths), narrowing widths centered on each
+          category, shading per level, outliers beyond the deepest level as points,
+          and a legend naming each level and its coverage: all good-version bullets
+          met'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=endpoint category, Y=response time (log scale) — correct and complete.
+        comment: Box edges at the computed letter values (depth recursion), outliers
+          at their values; the axis range covers every outlier
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct with descriptive prefix; legend labels accurately
-          describe each quantile level.
+        comment: '''API Response Times · boxen-basic · javascript · muix · anyplot.ai'';
+          the legend entries are readable labels'
     data_quality:
       score: 15
       max: 15
@@ -180,86 +174,92 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Four endpoints with distinct medians, spreads, and outlier populations.
+        comment: 1,500 points per group, 5 levels, outliers on both tails, varying
+          spread across groups
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: API response-time-by-endpoint is a real, neutral, comprehensible
-          business/tech scenario.
+        comment: 'Log-normal API response times per endpoint: plausible and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Right-skewed log-normal latencies (15ms-1400ms) plausibly increasing
-          with endpoint complexity.
+        comment: Medians in the render (~45, ~65, ~120, ~260 ms) match the generator's
+          medianMs; checked against the axis
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Several helper functions needed for the letter-value math and custom
-          SVG layer — justified by the missing native component, not over-engineered.
+        comment: Only the default-export component and the one custom layer component
+          that the scale hooks require
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG (seed 42), fully deterministic.
+        comment: Seeded LCG (state = 42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports from @mui/x-charts.
+        comment: All six imports are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or interactivity comments; complexity matches the task.
+        comment: The letter-value recursion is written out because no JS runtime provides
+          it; it is compact
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct default-export component contract, skipAnimation set, current
-          API.
+        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation set,
+          harness writes the PNG and HTML
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses the documented ChartContainer + scale-hooks pattern for custom
-          overlays — the officially sanctioned technique for chart types the community
-          package doesn't natively support.
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: useXScale/useYScale hooks to build a fully custom SVG layer is a
-          MUI X-specific extensibility mechanism not easily replicated in other libraries.
+        comment: 'Raised: the ChartsContainer composition API with ChartsGrid, ChartsXAxis
+          and ChartsYAxis plus a custom SVG layer is the documented MUI X way to add
+          a mark type that has no built-in chart'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: 'Raised: the useXScale and useYScale hooks drive the custom layer
+          from MUI X''s own band and log scales'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-10-24T04:08:10Z'
 impl_tags:
   dependencies: []
   techniques:
+  - layer-composition
   - custom-legend
+  - patches
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - alpha-blending
   - edge-highlighting
   - grid-styling
