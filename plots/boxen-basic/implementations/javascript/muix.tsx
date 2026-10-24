@@ -78,25 +78,23 @@ const categoryStats = categories.map((name, ci) => {
   const n = values.length;
 
   let depth = (n + 1) / 2;
-  const medLo = Math.max(0, Math.floor(depth) - 1);
-  const medHi = Math.min(n - 1, Math.ceil(depth) - 1);
-  const median = medLo === medHi ? values[medLo] : (values[medLo] + values[medHi]) / 2;
+  const medLo = Math.floor(depth) - 1;
+  const medHi = Math.ceil(depth) - 1;
+  const median = (values[medLo] + values[medHi]) / 2;
 
   const boxes: { lower: number; upper: number }[] = [];
   for (let i = 0; i < MAX_LEVELS; i += 1) {
     const nextDepth = (Math.floor(depth) + 1) / 2;
-    if (nextDepth < 1 || nextDepth === depth) break;
+    if (nextDepth === depth) break;
     depth = nextDepth;
-    const loIdx1 = Math.max(0, Math.floor(depth) - 1);
-    const loIdx2 = Math.min(n - 1, Math.ceil(depth) - 1);
-    const lower =
-      loIdx1 === loIdx2 ? values[loIdx1] : (values[loIdx1] + values[loIdx2]) / 2;
+    const loIdx1 = Math.floor(depth) - 1;
+    const loIdx2 = Math.ceil(depth) - 1;
+    const lower = (values[loIdx1] + values[loIdx2]) / 2;
 
     const upDepth = n - depth + 1;
-    const hiIdx1 = Math.max(0, Math.floor(upDepth) - 1);
-    const hiIdx2 = Math.min(n - 1, Math.ceil(upDepth) - 1);
-    const upper =
-      hiIdx1 === hiIdx2 ? values[hiIdx1] : (values[hiIdx1] + values[hiIdx2]) / 2;
+    const hiIdx1 = Math.floor(upDepth) - 1;
+    const hiIdx2 = Math.ceil(upDepth) - 1;
+    const upper = (values[hiIdx1] + values[hiIdx2]) / 2;
 
     boxes.push({ lower, upper });
   }
@@ -124,34 +122,32 @@ const allExtremes = categoryStats.flatMap((s) => [
 ]);
 const yMin = Math.min(...allExtremes) * Y_LOW_FACTOR;
 const yMax = Math.max(...allExtremes) * Y_HIGH_FACTOR;
+const levelsDrawn = Math.max(...categoryStats.map((s) => s.boxes.length));
+const levelLabels = LEVEL_NAMES.slice(0, levelsDrawn);
 
 const TITLE = "API Response Times · boxen-basic · javascript · muix · anyplot.ai";
-const SUBTITLE = `${data.length.toLocaleString("en-US")} observations across ${categories.length} ${CATEGORY.toLowerCase()}s · ${MAX_LEVELS} letter-value levels`;
+const SUBTITLE = `${data.length.toLocaleString("en-US")} observations · ${categories.length} groups (${CATEGORY}) · ${levelsDrawn} letter-value levels`;
 
 function BoxenLayer() {
   const xScale = useXScale("endpoints");
   const yScale = useYScale("latency");
-  if (!xScale || !yScale || !("bandwidth" in xScale)) return null;
-
   const bandwidth = xScale.bandwidth();
   const baseWidth = bandwidth * BASE_WIDTH_SHARE;
 
   return (
     <g>
       {categoryStats.map((cat) => {
-        const bandStart = xScale(cat.name);
-        if (bandStart === undefined) return null;
-        const center = bandStart + bandwidth / 2;
+        const center = xScale(cat.name) + bandwidth / 2;
         const innerWidth = baseWidth * WIDTH_FACTORS[0];
-        const yMed = yScale(cat.median) ?? 0;
+        const yMed = yScale(cat.median);
 
         return (
           <g key={cat.name}>
             {[...cat.boxes].reverse().map((box, ri) => {
               const idx = cat.boxes.length - 1 - ri;
               const w = baseWidth * WIDTH_FACTORS[idx];
-              const yTop = yScale(box.upper) ?? 0;
-              const yBottom = yScale(box.lower) ?? 0;
+              const yTop = yScale(box.upper);
+              const yBottom = yScale(box.lower);
               return (
                 <rect
                   key={idx}
@@ -188,7 +184,7 @@ function BoxenLayer() {
               <circle
                 key={j}
                 cx={center}
-                cy={yScale(v) ?? 0}
+                cy={yScale(v)}
                 r={4.5}
                 fill={t.pageBg}
                 stroke={cat.color}
@@ -204,7 +200,7 @@ function BoxenLayer() {
 
 export default function Chart() {
   const chartHeight = window.ANYPLOT_SIZE.height - HEADER_H;
-  const legendSwatches = categoryStats[0]?.levelFills ?? [];
+  const legendSwatches = categoryStats[0].levelFills;
   const brand = t.palette[0];
 
   return (
@@ -245,7 +241,7 @@ export default function Chart() {
             <div style={{ width: 16, height: 2.5, background: t.ink }} />
             <span>Median</span>
           </div>
-          {LEVEL_NAMES.map((label, idx) => (
+          {levelLabels.map((label, idx) => (
             <div
               key={label}
               style={{ display: "flex", alignItems: "center", gap: 7 }}
@@ -255,7 +251,7 @@ export default function Chart() {
                   width: 14,
                   height: 14,
                   borderRadius: 3,
-                  background: legendSwatches[idx] ?? brand,
+                  background: legendSwatches[idx],
                   border: `1.2px solid ${brand}`,
                 }}
               />
