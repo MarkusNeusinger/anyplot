@@ -1,6 +1,6 @@
 // anyplot.ai
 // line-reaction-coordinate: Reaction Coordinate Energy Diagram
-// Library: muix 9.x | JavaScript 22.22.3
+// Library: muix 7.29.1 | JavaScript 22.22.3
 // Quality: 88/100 | Created: 2026-06-24
 
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
@@ -16,10 +16,6 @@ const t = window.ANYPLOT_TOKENS;
 
 // Constants
 const FONT = "system-ui, -apple-system, sans-serif";
-const COORD_COL = "Reaction Coordinate" as const;
-const ENERGY_COL = "Potential Energy (kJ/mol)" as const;
-const STAGE_COL = "Reaction Stage" as const;
-
 const Y_PAD_BOTTOM_FRAC = 0.2;
 const Y_PAD_TOP_FRAC = 0.25;
 const EA_X_OFFSET_FRAC = 0.14;
@@ -27,9 +23,14 @@ const DH_X_FRAC = 0.86;
 const REACTANT_LABEL_X_FRAC = 0.02;
 const PRODUCT_LABEL_X_FRAC = 0.72;
 
-// Data: single-step exothermic reaction profile (201 points across [0, 1])
+// Columns: set these to your data's column names
+const COORD = "Reaction coordinate"; // role: reaction_coordinate
+const ENERGY = "Potential energy (kJ/mol)"; // role: energy
+const STAGE = "Reaction stage"; // role: stage
+
+// Data: replace this block with your own records
 const N_POINTS = 201;
-const DATA: Array<Record<string, number | string>> = [];
+const data: Array<Record<string, number | string>> = [];
 for (let i = 0; i < N_POINTS; i++) {
   const x = Math.round((i / (N_POINTS - 1)) * 1000) / 1000;
   let energy: number;
@@ -52,39 +53,41 @@ for (let i = 0; i < N_POINTS; i++) {
         : x >= 0.72
           ? "Products"
           : "Pathway";
-  DATA.push({
-    [COORD_COL]: x,
-    [ENERGY_COL]: Math.round(energy * 10) / 10,
-    [STAGE_COL]: stage,
+  data.push({
+    [COORD]: x,
+    [ENERGY]: Math.round(energy * 10) / 10,
+    [STAGE]: stage,
   });
 }
 
-const sortedData = [...DATA].sort((a, b) => Number(a[COORD_COL]) - Number(b[COORD_COL]));
-const xData = sortedData.map((r) => Number(r[COORD_COL]));
-const yData = sortedData.map((r) => Number(r[ENERGY_COL]));
+// Plot: reads only data and the constants above
+const sortedData = [...data].sort((a, b) => Number(a[COORD]) - Number(b[COORD]));
+const xData = sortedData.map((r) => Number(r[COORD]));
+const yData = sortedData.map((r) => Number(r[ENERGY]));
 
 const reactantRow = sortedData[0];
 const productRow = sortedData[sortedData.length - 1];
 let peakRow = sortedData[0];
 for (const row of sortedData) {
-  if (Number(row[ENERGY_COL]) > Number(peakRow[ENERGY_COL])) {
+  if (Number(row[ENERGY]) > Number(peakRow[ENERGY])) {
     peakRow = row;
   }
 }
 
-const eReactants = Number(reactantRow[ENERGY_COL]);
-const eProducts = Number(productRow[ENERGY_COL]);
-const eTransition = Number(peakRow[ENERGY_COL]);
-const xPeak = Number(peakRow[COORD_COL]);
+const eReactants = Number(reactantRow[ENERGY]);
+const eProducts = Number(productRow[ENERGY]);
+const eTransition = Number(peakRow[ENERGY]);
+const xPeak = Number(peakRow[COORD]);
 const xMin = xData[0];
 const xMax = xData[xData.length - 1];
-const xSpan = xMax - xMin || 1;
+const xSpan = xMax - xMin;
 
-const stageReactants = String(reactantRow[STAGE_COL]);
-const stageProducts = String(productRow[STAGE_COL]);
-const stageTransition = String(peakRow[STAGE_COL]);
+const stageReactants = String(reactantRow[STAGE]);
+const stageProducts = String(productRow[STAGE]);
+const stageTransition = String(peakRow[STAGE]);
 
-const ENERGY_UNIT = ENERGY_COL.match(/\(([^)]+)\)/)?.[1] ?? "";
+const unitMatch = ENERGY.match(/\(([^)]+)\)/);
+const ENERGY_UNIT = unitMatch ? unitMatch[1] : "";
 const activationEnergy = Math.round(eTransition - eReactants);
 const enthalpyChange = Math.round(eProducts - eReactants);
 const enthalpyText =
@@ -92,23 +95,20 @@ const enthalpyText =
 
 const minEnergy = Math.min(...yData);
 const maxEnergy = Math.max(...yData);
-const energyRange = maxEnergy - minEnergy || 1;
-const yMin = Math.max(0, Math.floor((minEnergy - energyRange * Y_PAD_BOTTOM_FRAC) / 5) * 5);
-const yMax = Math.ceil((maxEnergy + energyRange * Y_PAD_TOP_FRAC) / 5) * 5;
+const energyRange = maxEnergy - minEnergy;
+const yMin = minEnergy - energyRange * Y_PAD_BOTTOM_FRAC;
+const yMax = maxEnergy + energyRange * Y_PAD_TOP_FRAC;
 
 function EnergyAnnotations() {
-  const xScale = useXScale("coord") as (v: number) => number | undefined;
-  const yScale = useYScale("energy") as (v: number) => number | undefined;
+  const xScale = useXScale("coord") as (v: number) => number;
+  const yScale = useYScale("energy") as (v: number) => number;
 
-  const toX = (x: number) => Number(xScale(x) ?? 0);
-  const toY = (y: number) => Number(yScale(y) ?? 0);
+  const yR = yScale(eReactants);
+  const yTS = yScale(eTransition);
+  const yP = yScale(eProducts);
 
-  const yR = toY(eReactants);
-  const yTS = toY(eTransition);
-  const yP = toY(eProducts);
-
-  const xEa = toX(xPeak + xSpan * EA_X_OFFSET_FRAC);
-  const xDH = toX(xMin + xSpan * DH_X_FRAC);
+  const xEa = xScale(xPeak + xSpan * EA_X_OFFSET_FRAC);
+  const xDH = xScale(xMin + xSpan * DH_X_FRAC);
 
   const AW = 5;
   const AH = 9;
@@ -119,8 +119,8 @@ function EnergyAnnotations() {
 
   let curveD = "";
   for (let i = 0; i < sortedData.length; i++) {
-    const px = toX(xData[i]);
-    const py = toY(yData[i]);
+    const px = xScale(xData[i]);
+    const py = yScale(yData[i]);
     curveD += `${i === 0 ? "M" : "L"}${px.toFixed(1)},${py.toFixed(1)} `;
   }
 
@@ -138,7 +138,7 @@ function EnergyAnnotations() {
 
       {/* Transition state peak marker — hollow circle on the curve */}
       <circle
-        cx={toX(xPeak)}
+        cx={xScale(xPeak)}
         cy={yTS}
         r={7}
         fill={t.pageBg}
@@ -204,7 +204,7 @@ function EnergyAnnotations() {
 
       {/* Transition State label (above peak marker) */}
       <text
-        x={toX(xPeak)}
+        x={xScale(xPeak)}
         y={yTS - 22}
         fill={ink}
         fontSize={18}
@@ -216,7 +216,7 @@ function EnergyAnnotations() {
 
       {/* Reactants label — offset above flat reactant shelf */}
       <text
-        x={toX(xMin + xSpan * REACTANT_LABEL_X_FRAC)}
+        x={xScale(xMin + xSpan * REACTANT_LABEL_X_FRAC)}
         y={yR - 18}
         fill={ink}
         fontSize={18}
@@ -227,7 +227,7 @@ function EnergyAnnotations() {
 
       {/* Products label — offset below flat product shelf so it clears ΔH arrow */}
       <text
-        x={toX(xMin + xSpan * PRODUCT_LABEL_X_FRAC)}
+        x={xScale(xMin + xSpan * PRODUCT_LABEL_X_FRAC)}
         y={yP + 28}
         fill={ink}
         fontSize={18}
@@ -271,6 +271,7 @@ export default function Chart() {
       <ChartsContainer
         width={width}
         height={height - titleH}
+        skipAnimation
         margin={{ left: 24, right: 64, top: 36, bottom: 20 }}
         series={[
           {
@@ -282,7 +283,7 @@ export default function Chart() {
             color: t.palette[0],
             showMark: false,
             curve: "linear",
-            label: ENERGY_COL,
+            label: ENERGY,
           },
         ]}
         xAxis={[
@@ -293,7 +294,7 @@ export default function Chart() {
             min: xMin,
             max: xMax,
             height: 58,
-            label: COORD_COL,
+            label: COORD,
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft, fontFamily: FONT },
             labelStyle: { fontSize: 16, fontWeight: "500", fill: t.inkSoft, fontFamily: FONT },
             disableLine: true,
@@ -306,8 +307,9 @@ export default function Chart() {
             min: yMin,
             max: yMax,
             width: 88,
-            label: ENERGY_COL,
-            valueFormatter: (v: number | null) => `${v ?? ""}`,
+            label: ENERGY,
+            valueFormatter: (v: number | null) =>
+              v === null ? "" : `${Math.round(v)}`,
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft, fontFamily: FONT },
             labelStyle: { fontSize: 16, fontWeight: "500", fill: t.inkSoft, fontFamily: FONT },
             disableLine: true,
@@ -317,6 +319,7 @@ export default function Chart() {
       >
         <ChartsReferenceLine
           y={eReactants}
+          axisId="energy"
           lineStyle={{
             stroke: t.inkSoft,
             strokeDasharray: "8 5",
@@ -326,6 +329,7 @@ export default function Chart() {
         />
         <ChartsReferenceLine
           y={eProducts}
+          axisId="energy"
           lineStyle={{
             stroke: t.inkSoft,
             strokeDasharray: "8 5",
