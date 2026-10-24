@@ -18,10 +18,14 @@ const BODY_WIDTH_SHARE = 0.62;
 const X_TICK_COUNT = 10; // about this many labelled date ticks, shared by both panes
 const HEADER_H = 120;
 const PANE_GAP = 10;
-const PRICE_PANE_SHARE = 0.72;
+const PRICE_PANE_SHARE = 0.73; // share of the stacked plot-area height, not the container height
 const MARGIN_LEFT = 24;
 const MARGIN_RIGHT = 32;
 const Y_AXIS_W = 96;
+const X_AXIS_H = 60;
+const PRICE_MARGIN_V = 16 + 6; // top + bottom margin of the price container
+const VOLUME_MARGIN_V = 6 + 16; // top + bottom margin of the volume container
+const PRICE_AXIS_LABEL = "Price ($)";
 
 // Columns: set these to your data's column names
 const DATE = "Trading date"; // role: date
@@ -115,8 +119,10 @@ const shortDateByBand = Object.fromEntries(
 const tickEvery = Math.ceil(candles.length / X_TICK_COUNT);
 const showTick = (_v: string, idx: number) => idx % tickEvery === 0;
 const formatPrice = (v: number) => v.toFixed(2);
-const formatVolume = (v: number) =>
-  v >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : `${Math.round(v / 1e3)}K`;
+const formatVolume = (v: number) => {
+  if (v === 0) return "0";
+  return v >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : `${Math.round(v / 1e3)}K`;
+};
 
 const priceMinRaw = Math.min(...candles.map((c) => c.low));
 const priceMaxRaw = Math.max(...candles.map((c) => c.high));
@@ -304,7 +310,12 @@ export default function Chart() {
 
   const { width, height } = window.ANYPLOT_SIZE;
   const chartsHeight = height - HEADER_H;
-  const priceHeight = Math.round(chartsHeight * PRICE_PANE_SHARE);
+  // Split the plot areas (not the containers) so the volume pane's x-axis band
+  // and margins do not eat into its share
+  const plotAreaTotal =
+    chartsHeight - PANE_GAP - PRICE_MARGIN_V - VOLUME_MARGIN_V - X_AXIS_H;
+  const priceHeight =
+    Math.round(plotAreaTotal * PRICE_PANE_SHARE) + PRICE_MARGIN_V;
   const volumeHeight = chartsHeight - PANE_GAP - priceHeight;
 
   const plotLeft = MARGIN_LEFT + Y_AXIS_W;
@@ -419,7 +430,7 @@ export default function Chart() {
               max: priceMax,
               tickNumber: 6,
               width: Y_AXIS_W,
-              label: CLOSE,
+              label: PRICE_AXIS_LABEL,
               valueFormatter: (v: number) => v.toFixed(0),
               tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
               labelStyle: { fontSize: 16, fill: t.ink, fontWeight: 500 },
@@ -468,7 +479,7 @@ export default function Chart() {
               id: "xVolume",
               scaleType: "band",
               data: bandKeys,
-              height: 60,
+              height: X_AXIS_H,
               label: DATE,
               valueFormatter: (v: string) => shortDateByBand[v],
               tickInterval: showTick,
