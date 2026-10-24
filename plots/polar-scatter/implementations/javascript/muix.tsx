@@ -1,26 +1,21 @@
 // anyplot.ai
 // polar-scatter: Polar Scatter Plot
-// Library: muix 9.2.1 | JavaScript 22.23.2
+// Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 85/100 | Created: 2026-09-05
 //# anyplot-orientation: square
+
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const TITLE = "polar-scatter · javascript · muix · anyplot.ai";
 
 // Constants
-const CATEGORY_COL = "Time of Day";
-const BEARING_COL = "Wind Bearing (°)";
-const SPEED_COL = "Wind Speed (m/s)";
-
-const POINTS_PER_GROUP = 30;
-const MIN_SPEED_FLOOR = 0.5;
-const SPEED_CEIL_CAP = 20;
+const TITLE = "polar-scatter · javascript · muix · anyplot.ai";
 const RING_COUNT = 4;
 const SPOKE_STEP_DEG = 45;
 const FULL_CIRCLE_DEG = 360;
+const DEG_SYMBOL = "°";
 const FILL_OPACITY = 0.72;
 const MARKER_SIZE = 8;
 const TITLE_HEIGHT = 70;
@@ -28,8 +23,16 @@ const LEGEND_HEIGHT = 54;
 const CHART_MARGIN = { top: 36, bottom: 36, left: 36, right: 36 };
 const LABEL_RADIUS_FACTOR = 1.13;
 const DOMAIN_PAD_FACTOR = 1.26;
-const TICK_SPOKE_DEG = 245;
 
+// Columns: set these to your data's column names
+const CATEGORY = "Time of Day"; // role: group
+const BEARING = "Wind Bearing (°)"; // role: theta
+const SPEED = "Wind Speed (m/s)"; // role: r
+
+// Data: replace this block with your own records
+const POINTS_PER_GROUP = 30;
+const MIN_SPEED_FLOOR = 0.5;
+const SPEED_CEIL_CAP = 20;
 const GROUP_SEEDS = [
   { name: "Morning", meanBearing: 15, meanSpeed: 7, spread: 85 },
   { name: "Afternoon", meanBearing: 105, meanSpeed: 13, spread: 90 },
@@ -37,8 +40,7 @@ const GROUP_SEEDS = [
   { name: "Night", meanBearing: 285, meanSpeed: 4, spread: 75 },
 ];
 
-// Data — deterministic diurnal wind observations (flat scalar records)
-const DATA = [];
+const data: Array<Record<string, string | number>> = [];
 let lcgState = 42;
 for (const cfg of GROUP_SEEDS) {
   for (let idx = 0; idx < POINTS_PER_GROUP; idx += 1) {
@@ -46,51 +48,70 @@ for (const cfg of GROUP_SEEDS) {
     const u1 = lcgState / 4294967296;
     lcgState = (lcgState * 1664525 + 1013904223) % 4294967296;
     const u2 = lcgState / 4294967296;
-    const bearing = (((cfg.meanBearing + (u1 - 0.5) * cfg.spread) % FULL_CIRCLE_DEG) + FULL_CIRCLE_DEG) % FULL_CIRCLE_DEG;
+    const bearing =
+      (((cfg.meanBearing + (u1 - 0.5) * cfg.spread) % FULL_CIRCLE_DEG) + FULL_CIRCLE_DEG) %
+      FULL_CIRCLE_DEG;
     const speed = Math.min(
       SPEED_CEIL_CAP,
       Math.max(MIN_SPEED_FLOOR, cfg.meanSpeed + (u2 - 0.5) * cfg.meanSpeed),
     );
-    DATA.push({
-      [CATEGORY_COL]: cfg.name,
-      [BEARING_COL]: Math.round(bearing * 100) / 100,
-      [SPEED_COL]: Math.round(speed * 100) / 100,
+    data.push({
+      [CATEGORY]: cfg.name,
+      [BEARING]: Math.round(bearing * 100) / 100,
+      [SPEED]: Math.round(speed * 100) / 100,
     });
   }
 }
 
-// Derive categories in order of first appearance and radial domain from DATA
-const categories = [];
-for (const row of DATA) {
-  const cat = String(row[CATEGORY_COL]);
+// Plot: reads only data and the constants above
+const categories: string[] = [];
+for (const row of data) {
+  const cat = String(row[CATEGORY]);
   if (!categories.includes(cat)) categories.push(cat);
 }
 
-const rawMaxSpeed = Math.max(...DATA.map((r) => Number(r[SPEED_COL])), 1);
-const ringStep = Math.ceil(rawMaxSpeed / RING_COUNT / 5) * 5;
+const rawMaxSpeed = Math.max(...data.map((r) => Number(r[SPEED])));
+const rawStep = rawMaxSpeed / RING_COUNT;
+const stepMag = 10 ** Math.floor(Math.log10(rawStep));
+const stepNorm = rawStep / stepMag;
+const ringStep = (stepNorm <= 1 ? 1 : stepNorm <= 2 ? 2 : stepNorm <= 5 ? 5 : 10) * stepMag;
+const ringDecimals = Math.max(0, -Math.floor(Math.log10(ringStep) + 1e-9));
 const maxRadius = ringStep * RING_COUNT;
-const rings = [];
+const rings: number[] = [];
 for (let k = 1; k <= RING_COUNT; k += 1) {
-  rings.push(k * ringStep);
+  rings.push(Number((k * ringStep).toFixed(ringDecimals)));
 }
 
-const spokeDegrees = [];
+const spokeDegrees: number[] = [];
 for (let deg = 0; deg < FULL_CIRCLE_DEG; deg += SPOKE_STEP_DEG) {
   spokeDegrees.push(deg);
 }
 
-const bearingUnitMatch = BEARING_COL.match(/\(([^)]+)\)/);
-const bearingUnit = bearingUnitMatch ? bearingUnitMatch[1] : "°";
-const speedUnitMatch = SPEED_COL.match(/\(([^)]+)\)/);
-const speedUnit = speedUnitMatch ? speedUnitMatch[1] : "m/s";
+// Choose ring-label bearing at the centre of the 45° sector with fewest points
+const sectorCount = FULL_CIRCLE_DEG / SPOKE_STEP_DEG;
+const sectorCounts = new Array<number>(sectorCount).fill(0);
+for (const row of data) {
+  const b = (((Number(row[BEARING]) % FULL_CIRCLE_DEG) + FULL_CIRCLE_DEG) % FULL_CIRCLE_DEG);
+  const sIdx = Math.min(sectorCount - 1, Math.floor(b / SPOKE_STEP_DEG));
+  sectorCounts[sIdx] += 1;
+}
+let minSectorIdx = 0;
+for (let s = 1; s < sectorCount; s += 1) {
+  if (sectorCounts[s] < sectorCounts[minSectorIdx]) {
+    minSectorIdx = s;
+  }
+}
+const tickSpokeDeg = minSectorIdx * SPOKE_STEP_DEG + SPOKE_STEP_DEG / 2;
+const tickSpokeRad = (tickSpokeDeg * Math.PI) / 180;
+
+const speedUnitMatch = /\(([^)]+)\)/.exec(SPEED);
+const speedUnit = speedUnitMatch ? speedUnitMatch[1] : "";
 
 const labelRadius = maxRadius * LABEL_RADIUS_FACTOR;
 const domainLimit = maxRadius * DOMAIN_PAD_FACTOR;
-const tickSpokeRad = (TICK_SPOKE_DEG * Math.PI) / 180;
 
 const seriesGroups = categories.map((cat, i) => {
-  const catRows = DATA.filter((r) => String(r[CATEGORY_COL]) === cat);
-  const label = String(catRows[0]?.[CATEGORY_COL] ?? cat);
+  const catRows = data.filter((r) => String(r[CATEGORY]) === cat);
   const baseHex = t.palette[i];
   const cleanHex = baseHex.replace("#", "");
   const rVal = parseInt(cleanHex.substring(0, 2), 16);
@@ -99,20 +120,20 @@ const seriesGroups = categories.map((cat, i) => {
   const rgbaColor = `rgba(${rVal}, ${gVal}, ${bVal}, ${FILL_OPACITY})`;
 
   const points = catRows.map((row, idx) => {
-    const bearingDeg = Number(row[BEARING_COL]);
-    const radiusVal = Number(row[SPEED_COL]);
+    const bearingDeg = Number(row[BEARING]);
+    const radiusVal = Number(row[SPEED]);
     const rad = (bearingDeg * Math.PI) / 180;
     return {
-      id: `${label}-${idx}`,
+      id: `${cat}-${idx}`,
       x: radiusVal * Math.sin(rad),
       y: radiusVal * Math.cos(rad),
     };
   });
 
   return {
-    type: "scatter",
-    id: label,
-    label,
+    type: "scatter" as const,
+    id: cat,
+    label: cat,
     baseColor: baseHex,
     color: rgbaColor,
     markerSize: MARKER_SIZE,
@@ -123,10 +144,9 @@ const seriesGroups = categories.map((cat, i) => {
 function PolarGrid() {
   const xScale = useXScale();
   const yScale = useYScale();
-  if (!xScale || !yScale) return null;
 
-  const cx = xScale(0);
-  const cy = yScale(0);
+  const cx = Number(xScale(0));
+  const cy = Number(yScale(0));
 
   return (
     <g>
@@ -135,7 +155,7 @@ function PolarGrid() {
           key={`ring-${r}`}
           cx={cx}
           cy={cy}
-          r={Math.abs(xScale(r) - cx)}
+          r={Math.abs(Number(xScale(r)) - cx)}
           fill="none"
           stroke={t.grid}
           strokeWidth={r === maxRadius ? 1.5 : 1}
@@ -166,15 +186,16 @@ function PolarGrid() {
               textAnchor="middle"
               dominantBaseline="central"
             >
-              {`${deg}${bearingUnit}`}
+              {`${deg}${DEG_SYMBOL}`}
             </text>
           </g>
         );
       })}
       {rings.map((r) => {
-        const tx = xScale(r * Math.sin(tickSpokeRad));
-        const ty = yScale(r * Math.cos(tickSpokeRad));
-        const tickText = `${r} ${speedUnit}`;
+        const tx = Number(xScale(r * Math.sin(tickSpokeRad)));
+        const ty = Number(yScale(r * Math.cos(tickSpokeRad)));
+        const rStr = r.toFixed(ringDecimals);
+        const tickText = speedUnit ? `${rStr} ${speedUnit}` : rStr;
         const pillWidth = tickText.length * 8.2 + 12;
         return (
           <g key={`ring-label-${r}`}>
