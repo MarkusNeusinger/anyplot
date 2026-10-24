@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: network-force-directed
 created: '2026-08-24T14:13:40Z'
-updated: '2026-10-24T11:14:46Z'
+updated: '2026-10-24T11:21:01Z'
 generated_by: gemini-4-argon
 adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
 workflow_run: 40088827790
@@ -13,109 +13,107 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-f
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/javascript/muix/plot-dark.html
-quality_score: 82
+quality_score: 86
 review:
   strengths:
-  - 'Genuine Fruchterman-Reingold force simulation with a fixed-seed LCG start: connected
-    researchers cluster tightly, unconnected fields sit apart, and no axes or grid
-    are drawn'
-  - 'One property per channel, all explained: color = research field (legend), node
-    size = degree, edge width = co-authored papers (caption)'
-  - Hub labels on page-colored plates stay readable among converging edges in both
-    themes; peripheral nodes stay unlabeled to avoid clutter
-  - Edges are thin, translucent inkSoft lines, clearly lighter than the nodes, and
-    page-colored node outlines keep marks separated in light and dark
-  - Custom SVG overlay drawn through MUI X's useXScale/useYScale hooks inside ChartsContainer,
-    with skipAnimation and hidden v9 axes
+  - Composes the network inside ChartsContainer with hidden linear axes and draws
+    edges and nodes as a custom SVG overlay positioned through MUI X's useXScale/useYScale
+    hooks, so the community package carries a chart type it has no ready component
+    for
+  - 'Deterministic Fruchterman-Reingold layout (seeded LCG start, 300 cooling iterations,
+    weight-scaled attraction) separates the five research fields into clear communities
+    with irregular, realistic structure: a Bioinformatics star, a Network Science
+    loop with an outlier, a Cryptography chain'
+  - The layout is rotated to the angle that fills the square drawing area best, so
+    the network uses nearly the whole canvas without crowding
+  - Node size encodes degree, edge width encodes co-authored papers, and a centered
+    caption states every encoding; edges are thin, translucent ink and stay behind
+    the nodes in both themes
+  - Halos on the top hub of each field give the eye one anchor per community, and
+    dashed cross-field edges make the bridges between communities readable
+  - 'All chrome comes from ANYPLOT_TOKENS: title, legend, caption and hub labels flip
+    correctly between the #FAF8F1 and #1A1A17 surfaces while the Imprint data colors
+    stay identical'
   weaknesses:
-  - 'SC-03 (both): the seven cross-group edges are drawn at a fixed 1.2 px regardless
-    of weight (1-2 papers), while the caption states edge width = co-authored papers
-    → scale bridge widths by wRatio like the intra-group edges (dash pattern and lower
-    opacity can stay). Likely cause: strokeWidth={edge.isBridge ? 1.2 : 1.1 + edge.wRatio
-    * 2.2}.'
-  - 'VQ-01 (both): the encoding caption is set at 13 px and becomes about 4 px in
-    the 400 px thumbnail, below the 14-15 px of legend and hub labels → about 15 px
-    (+2 px). Likely cause: caption div fontSize: 13.'
-  - 'VQ-05 (both): the tall layout spans only about 55 % of the square canvas width,
-    leaving roughly 22 % empty bands on each side → rotate the layout to its principal
-    axis or pad less so the network fills about 80 % of the width. Likely cause: square
-    domain built from the larger (vertical) raw span with PAD_SHARE = 0.14.'
-  - 'DQ-02 (both): every field follows the same template (member 0 tied to all others
-    plus a short chain; bridges almost all hub-to-hub) and node IDs are ML-0..CR-5
-    → vary hub degree and add a few member-to-member bridges so the data reads like
-    a real co-authorship network. Likely cause: the templated edge list in the data
-    block.'
-  - 'Suggestion: render the legend with MUI X''s ChartsLegend instead of hand-built
-    HTML spans.'
+  - 'VQ-02 (both): each hub label''s backing rectangle overlaps the top of its hub
+    halo by about 3 px, flattening the halo''s top edge (clearly visible on Bioinformatics,
+    Machine Learning and Cryptography) → keep the rectangle''s bottom edge at least
+    2 px above the halo (raise it by about 5 px). Likely cause: rect y = yScale(y)
+    - radius - 24 with height 20 ends 4 px above the node while the halo extends HUB_HALO_OFFSET
+    = 7 px beyond it.'
+  - 'Suggestion: label each hub with the researcher''s name (e.g. ''Okafor'') instead
+    of the field name, which the color legend already gives, so the labels add information
+    about the key nodes.'
+  - 'Suggestion: render the field legend with MUI X''s ChartsLegend instead of a hand-built
+    HTML row.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across the whole 2400x2400 square canvas.
-      Chrome: bold dark title "network-force-directed · javascript · muix · anyplot.ai" top-left (~57 % width); a one-row legend below it (Machine Learning, Robotics, Bioinformatics, Network Science, Cryptography) in inkSoft gray; a centered caption at the bottom explaining node size = degree, halo & label = hub, edge width = co-authored papers, dashed = cross-group link. No axes or grid. All text readable; the caption is the smallest text.
-      Data: 32 nodes in five clusters: green Machine Learning (center right, first group = #009E73), lavender Robotics (top), blue Bioinformatics (upper left), ochre Network Science (lower left), red Cryptography (bottom). Each cluster has one larger hub with a translucent halo and a dark label on a cream plate. Intra-group edges are gray, width varying with weight; seven dashed faint gray bridges link the clusters. The network spans about 55 % of the canvas width with empty side bands.
+      Background: warm off-white #FAF8F1 across the whole 2400x2400 square canvas, no axes or grid.
+      Chrome: bold dark title "network-force-directed · javascript · muix · anyplot.ai" top-left (~55% of width); a horizontal legend row below it with five colored dots (Machine Learning, Robotics, Bioinformatics, Network Science, Cryptography) in soft dark ink; a centered caption at the bottom explaining node size = degree, halo & label = top hub, edge width = co-authored papers, dashed = cross-field link. Hub labels in dark ink on pale backing pills. All text readable.
+      Data: 32 nodes in five communities: green #009E73 Machine Learning in the center, purple Robotics top, blue Bioinformatics left (a star around a large hub), ochre Network Science bottom (loop plus a peripheral node), red Cryptography right (trio trailing into a chain). Node radius scales with degree; each field's top hub carries a translucent halo and a field-name label. Edges are thin grey lines, width by weight; cross-field bridges are dashed and lighter. The label pills slightly cut the top of the hub halos.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17.
-      Chrome: title in light ink, legend and caption in light gray inkSoft, hub labels in light ink on dark plates. No dark-on-dark text anywhere.
-      Data: node colors identical to the light render; node outlines flip to the dark page color; edges remain visible as mid-gray translucent lines, halos remain visible as darker tints of each group hue. Layout is identical.
+      Background: warm near-black #1A1A17, no axes or grid.
+      Chrome: title in light ink, legend labels and caption in light soft ink, hub labels in light ink on dark backing pills; no dark-on-dark text anywhere.
+      Data: identical layout and identical Imprint node colors to the light render; node outlines switch to the dark page color, edges are mid-grey and still lighter than the nodes; halos are dimmer but visible. Brand green reads well.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title 22 px, hub labels 15 px and legend 14 px read well in both
-          themes; the 13 px encoding caption shrinks to about 4 px in the 400 px thumbnail
-          (defect line)
+        comment: Title 22 px, legend 14 px, labels and caption 15 px in a 1200 px
+          CSS canvas, as the library prompt recommends; readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Hub labels sit on page-colored plates that keep converging edges
-          from crossing the text; node overlap is negligible
+        comment: Hub label backing rectangles clip the top of the hub halos by about
+          3 px (defect line); no text collisions otherwise
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 32 nodes at 7-23 px radius with page-colored outlines; edges thin
-          and translucent; legend dots match node fills in both themes
+        comment: 32 nodes at 7-23 px radius, all clearly visible; edges thin but visible;
+          legend dots match node colors
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Five Imprint hues, CVD-separated; communities also separated spatially
-          by the layout
+        comment: Five Imprint hues with page-colored outlines; communities also separated
+          spatially, color not the sole signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: The tall layout fills only about 55 % of the square canvas width,
-          leaving wide empty side bands (defect line)
+        comment: Square 2400x2400, rotation-to-fit fills the area, balanced margins,
+          nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: N/A for axes (network has none by design); caption names every encoding
-          in reader terms
+        comment: N/A for axes (layout-positioned type); caption names each encoding
+          with reader-facing text
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint positions 1-5 in canonical order, first group #009E73; backgrounds
-          #FAF8F1 / #1A1A17; data colors identical across themes'
+        comment: 'First group #009E73, Imprint order via t.palette, correct backgrounds
+          in both themes'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -123,26 +121,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Clear typographic hierarchy (600 title, 500 hub labels, inkSoft legend
-          and caption) and translucent hub halos in each group's hue
+        comment: Hub halos, semi-opaque label pills and a quiet caption form a deliberate
+          typographic hierarchy beyond the baseline
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Page-colored node outlines that separate overlapping marks in both
-          themes, and semi-opaque label plates that knock out edges behind the hub
-          names
+        comment: Layout rotated to the angle that best fills the canvas; page-colored
+          node outlines separate overlapping marks; bridges lighter than intra-field
+          edges
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Dashed, fainter cross-group links set the inter-community bridges
-          apart from the dense intra-field ties, so the five-community structure reads
-          first
+        comment: 'Chosen focal points: one haloed hub per community and dashed bridges
+          that show how fields connect'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -150,31 +147,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Force-directed node-link graph with positions from a Fruchterman-Reingold
-          simulation
+        comment: Force-directed node-link graph
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: No axes/grid, seeded layout, size = degree and color = field with
-          legend and caption, labels on hubs only, edges thinner and lighter than
-          nodes, width encodes weight
+        comment: No axes/grid, seeded layout, irregular structure, degree-sized nodes
+          with caption, hub labels, thin edges with width by weight - all characteristic
+          bullets met
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Cross-group edges ignore their weight (fixed 1.2 px) although the
-          caption states edge width = co-authored papers (defect line)
+        passed: true
+        comment: Layout-positioned type; connected nodes sit close, all nodes in view
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title format; legend entries are readable field names
+        comment: Mandated title format; legend entries are the field names
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -182,22 +177,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Communities, hubs, peripheral nodes, inter-community bridges and
-          weighted edges all visible
+        comment: Communities, hubs, bridges, peripheral nodes and weighted edges all
+          shown
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Co-authorship network across research fields is plausible and neutral,
-          but every field is built from the same template (defect line)
+        comment: Fictional research co-authorship network with named researchers,
+          neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 32 nodes inside the 20-200 range; 1-5 co-authored papers per pair
-          is plausible; no Check values in the spec
+        comment: 32 nodes (within 20-200), 46 edges, 1-6 co-authored papers per pair;
+          checked against the data block
     code_quality:
       score: 10
       max: 10
@@ -207,34 +202,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear module-level flow; the only functions are the required default-exported
-          component and its overlay component
+        comment: Linear module-level code; the overlay component exists only because
+          the scale hooks need one
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG for initial jitter and deterministic simulation
+        comment: Fixed-seed LCG and deterministic simulation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: React, ChartsContainer, useXScale/useYScale all used
+        comment: React, ChartsContainer and the two scale hooks are all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: 'Hand-written force layout is justified: MUI X community has no graph
-          layout and the library prompt allows written-out computation'
+        comment: 'Written-out force layout is allowed: no layout helper is available
+          in @mui/x-charts'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Default-exported component sized to ANYPLOT_SIZE, skipAnimation
-          set, v9 ChartsContainer and position: ''none'' axes'
+        comment: 'Default export, skipAnimation, v9 ChartsContainer and position:
+          ''none'' axes'
     library_mastery:
       score: 5
       max: 10
@@ -244,31 +239,32 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Composition via ChartsContainer with hidden linear axes; legend is
-          hand-built HTML rather than ChartsLegend
+        comment: 'Default: ChartsContainer composition is idiomatic, but the legend
+          is a hand-built HTML row'
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: true
-        comment: Custom SVG overlay drawn through MUI X's useXScale/useYScale hooks
-          inside the chart's drawing area
-  verdict: REJECTED
+        comment: useXScale/useYScale hooks drive a custom SVG layer inside the MUI
+          X coordinate system
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T11:11:58Z'
+  rendered_at: '2026-10-24T11:18:13Z'
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
   - annotations
+  - custom-legend
   - layer-composition
   - html-export
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - force-layout
+  - normalization
   styling:
-  - minimal-chrome
   - alpha-blending
-  - edge-highlighting
+  - minimal-chrome
