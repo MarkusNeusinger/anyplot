@@ -16,7 +16,7 @@ const FULL_CIRCLE_DEG = 360;
 const SPOKE_STEP_DEG = 45;
 const DEG_SYMBOL = "°";
 const RING_COUNT = 5;
-const MARKER_SIZE = 7;
+const MARKER_SIZE = 4;
 const HEADER_HEIGHT = 64;
 const FOOTER_HEIGHT = 56;
 const CHART_MARGIN = 36;
@@ -119,6 +119,8 @@ function PolarLayer() {
   const cx = Number(xScale(0));
   const cy = Number(yScale(0));
   const midRingY = Number(yScale(rings[Math.floor(rings.length / 2)]));
+  const azimuthLabelX = cx + 32;
+  const azimuthLabelY = Number(yScale(labelRadiusVal));
 
   return (
     <g>
@@ -164,20 +166,6 @@ function PolarLayer() {
         );
       })}
 
-      {seriesGroups.map((group) => {
-        const polyPoints = group.points.map((p) => `${xScale(p.x)},${yScale(p.y)}`).join(" ");
-        return (
-          <polygon
-            key={`poly-${group.label}`}
-            points={polyPoints}
-            fill="none"
-            stroke={group.color}
-            strokeWidth={3}
-            strokeLinejoin="round"
-          />
-        );
-      })}
-
       {rings.map((level) => {
         const ty = Number(yScale(level));
         const label = level.toFixed(ringDecimals);
@@ -213,6 +201,32 @@ function PolarLayer() {
           {GAIN}
         </text>
       </g>
+
+      <text
+        x={azimuthLabelX}
+        y={azimuthLabelY}
+        fill={t.inkSoft}
+        fontSize={14}
+        fontWeight={600}
+        textAnchor="start"
+        dominantBaseline="auto"
+      >
+        {`${AZIMUTH}, clockwise`}
+      </text>
+
+      {seriesGroups.map((group) => {
+        const polyPoints = group.points.map((p) => `${xScale(p.x)},${yScale(p.y)}`).join(" ");
+        return (
+          <polygon
+            key={`poly-${group.label}`}
+            points={polyPoints}
+            fill="none"
+            stroke={group.color}
+            strokeWidth={3}
+            strokeLinejoin="round"
+          />
+        );
+      })}
     </g>
   );
 }
