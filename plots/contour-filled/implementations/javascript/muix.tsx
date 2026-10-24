@@ -25,7 +25,7 @@ const Z = "Temperature anomaly (°C)"; // role: z
 
 // Data: replace this block with your own records
 const data = (() => {
-  const sampleGrid = 36;
+  const sampleGrid = 90;
   const sampleSpan = 6;
   const rows: Record<string, number>[] = [];
   for (let j = 0; j < sampleGrid; j += 1) {
@@ -348,6 +348,7 @@ export default function Chart() {
             min: xMin,
             max: xMax,
             height: 60,
+            tickNumber: 13,
             label: X,
             labelStyle: { fontSize: 15, fill: t.ink, fontFamily: FONT },
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft, fontFamily: FONT },
@@ -360,6 +361,7 @@ export default function Chart() {
             min: yMin,
             max: yMax,
             width: 84,
+            tickNumber: 13,
             label: Y,
             labelStyle: { fontSize: 15, fill: t.ink, fontFamily: FONT },
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft, fontFamily: FONT },
