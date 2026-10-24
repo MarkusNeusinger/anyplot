@@ -1,7 +1,7 @@
 // anyplot.ai
 // histogram-kde: Histogram with KDE Overlay
 // Library: muix 7.29.1 | JavaScript 22.23.1
-// Quality: 89/100 | Created: 2026-08-05
+// Quality: pending | Created: 2026-08-05
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { LinePlot } from "@mui/x-charts/LineChart";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
