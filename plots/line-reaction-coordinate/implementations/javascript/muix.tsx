@@ -1,76 +1,144 @@
 // anyplot.ai
 // line-reaction-coordinate: Reaction Coordinate Energy Diagram
-// Library: muix 7.29.1 | JavaScript 22.22.3
+// Library: muix 9.x | JavaScript 22.22.3
 // Quality: 88/100 | Created: 2026-06-24
-//# anyplot-orientation: landscape
-// anyplot.ai
-// line-reaction-coordinate: Reaction Coordinate Energy Diagram
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-06-24
 
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { LinePlot } from "@mui/x-charts/LineChart";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
-import { useDrawingArea } from "@mui/x-charts/hooks";
+import { useXScale, useYScale } from "@mui/x-charts/hooks";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
+
+// Constants
 const FONT = "system-ui, -apple-system, sans-serif";
+const COORD_COL = "Reaction Coordinate" as const;
+const ENERGY_COL = "Potential Energy (kJ/mol)" as const;
+const STAGE_COL = "Reaction Stage" as const;
 
-// Energy diagram: single-step exothermic reaction (kJ/mol)
-const E_REACTANTS  = 50;
-const E_TRANSITION = 120;
-const E_PRODUCTS   = 20;
-const X_PEAK       = 0.4;   // reaction coordinate at transition state
+const Y_PAD_BOTTOM_FRAC = 0.2;
+const Y_PAD_TOP_FRAC = 0.25;
+const EA_X_OFFSET_FRAC = 0.14;
+const DH_X_FRAC = 0.86;
+const REACTANT_LABEL_X_FRAC = 0.02;
+const PRODUCT_LABEL_X_FRAC = 0.72;
 
-// Y-axis bounds — must match yAxis min/max below for correct coordinate mapping
-const Y_MIN = 0;
-const Y_MAX = 145;
+// Data: single-step exothermic reaction profile (201 points across [0, 1])
+const N_POINTS = 201;
+const DATA: Array<Record<string, number | string>> = [];
+for (let i = 0; i < N_POINTS; i++) {
+  const x = Math.round((i / (N_POINTS - 1)) * 1000) / 1000;
+  let energy: number;
+  if (x <= 0.14) {
+    energy = 50;
+  } else if (x <= 0.4) {
+    const u = (x - 0.14) / (0.4 - 0.14);
+    energy = 50 + (120 - 50) * (3 * u * u - 2 * u * u * u);
+  } else if (x <= 0.72) {
+    const u = (x - 0.4) / (0.72 - 0.4);
+    energy = 120 + (20 - 120) * (3 * u * u - 2 * u * u * u);
+  } else {
+    energy = 20;
+  }
+  const stage =
+    x <= 0.14
+      ? "Reactants"
+      : Math.abs(x - 0.4) < 0.003
+        ? "Transition State ‡"
+        : x >= 0.72
+          ? "Products"
+          : "Pathway";
+  DATA.push({
+    [COORD_COL]: x,
+    [ENERGY_COL]: Math.round(energy * 10) / 10,
+    [STAGE_COL]: stage,
+  });
+}
 
-// Smooth energy curve: baseline from 50→20, Gaussian peak at TS (200 points)
-// E(x) = (50 + (20-50)*x) + 82 * exp(-0.5 * ((x - 0.4) / 0.12)^2)
-// At x=0: ≈50.3  |  x=0.4: 120.0  |  x=1: ≈20.0
-const N = 200;
-const xData = Array.from({ length: N }, (_, i) => i / (N - 1));
-const yData = xData.map((x) => {
-  const baseline = E_REACTANTS + (E_PRODUCTS - E_REACTANTS) * x;
-  const peak = 82 * Math.exp(-0.5 * Math.pow((x - X_PEAK) / 0.12, 2));
-  return Math.round((baseline + peak) * 10) / 10;
-});
+const sortedData = [...DATA].sort((a, b) => Number(a[COORD_COL]) - Number(b[COORD_COL]));
+const xData = sortedData.map((r) => Number(r[COORD_COL]));
+const yData = sortedData.map((r) => Number(r[ENERGY_COL]));
 
-// Custom SVG annotations: labels + double-headed arrows for Ea and ΔH.
-// Renders inside ChartContainer's SVG; uses useDrawingArea for coordinate mapping.
+const reactantRow = sortedData[0];
+const productRow = sortedData[sortedData.length - 1];
+let peakRow = sortedData[0];
+for (const row of sortedData) {
+  if (Number(row[ENERGY_COL]) > Number(peakRow[ENERGY_COL])) {
+    peakRow = row;
+  }
+}
+
+const eReactants = Number(reactantRow[ENERGY_COL]);
+const eProducts = Number(productRow[ENERGY_COL]);
+const eTransition = Number(peakRow[ENERGY_COL]);
+const xPeak = Number(peakRow[COORD_COL]);
+const xMin = xData[0];
+const xMax = xData[xData.length - 1];
+const xSpan = xMax - xMin || 1;
+
+const stageReactants = String(reactantRow[STAGE_COL]);
+const stageProducts = String(productRow[STAGE_COL]);
+const stageTransition = String(peakRow[STAGE_COL]);
+
+const ENERGY_UNIT = ENERGY_COL.match(/\(([^)]+)\)/)?.[1] ?? "";
+const activationEnergy = Math.round(eTransition - eReactants);
+const enthalpyChange = Math.round(eProducts - eReactants);
+const enthalpyText =
+  enthalpyChange < 0 ? `−${Math.abs(enthalpyChange)}` : `+${enthalpyChange}`;
+
+const minEnergy = Math.min(...yData);
+const maxEnergy = Math.max(...yData);
+const energyRange = maxEnergy - minEnergy || 1;
+const yMin = Math.max(0, Math.floor((minEnergy - energyRange * Y_PAD_BOTTOM_FRAC) / 5) * 5);
+const yMax = Math.ceil((maxEnergy + energyRange * Y_PAD_TOP_FRAC) / 5) * 5;
+
 function EnergyAnnotations() {
-  const { left, top, width, height } = useDrawingArea();
+  const xScale = useXScale("coord") as (v: number) => number | undefined;
+  const yScale = useYScale("energy") as (v: number) => number | undefined;
 
-  // Linear mapping: data coords → SVG pixel position
-  const toX = (x) => left + x * width;
-  const toY = (y) => top + ((Y_MAX - y) / (Y_MAX - Y_MIN)) * height;
+  const toX = (x: number) => Number(xScale(x) ?? 0);
+  const toY = (y: number) => Number(yScale(y) ?? 0);
 
-  const yR  = toY(E_REACTANTS);   // pixel y for reactant level (50)
-  const yTS = toY(E_TRANSITION);  // pixel y for transition state (120)
-  const yP  = toY(E_PRODUCTS);    // pixel y for product level (20)
+  const yR = toY(eReactants);
+  const yTS = toY(eTransition);
+  const yP = toY(eProducts);
 
-  // Arrow x positions (in data-coordinate space)
-  const xEa  = toX(0.53);  // Ea annotation — right of peak, descending area
-  const xDH  = toX(0.85);  // ΔH annotation — flat product region
+  const xEa = toX(xPeak + xSpan * EA_X_OFFSET_FRAC);
+  const xDH = toX(xMin + xSpan * DH_X_FRAC);
 
-  const AW = 5;  // arrowhead half-width (px)
-  const AH = 9;  // arrowhead height (px)
+  const AW = 5;
+  const AH = 9;
 
-  const ink     = t.ink;
+  const ink = t.ink;
   const inkSoft = t.inkSoft;
-  const green   = t.palette[0];
+  const green = t.palette[0];
+
+  let curveD = "";
+  for (let i = 0; i < sortedData.length; i++) {
+    const px = toX(xData[i]);
+    const py = toY(yData[i]);
+    curveD += `${i === 0 ? "M" : "L"}${px.toFixed(1)},${py.toFixed(1)} `;
+  }
 
   return (
     <g fontFamily={FONT}>
-      {/* ── Transition state peak marker — hollow circle on the curve ── */}
+      {/* Reaction coordinate energy curve */}
+      <path
+        d={curveD}
+        fill="none"
+        stroke={green}
+        strokeWidth={3.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+
+      {/* Transition state peak marker — hollow circle on the curve */}
       <circle
-        cx={toX(X_PEAK)}
+        cx={toX(xPeak)}
         cy={yTS}
         r={7}
         fill={t.pageBg}
@@ -78,74 +146,94 @@ function EnergyAnnotations() {
         strokeWidth={2.5}
       />
 
-      {/* ── Ea arrow: reactant level → transition state ── */}
+      {/* Ea arrow: reactant level -> transition state */}
       <line
-        x1={xEa} y1={yTS + AH + 1}
-        x2={xEa} y2={yR - AH - 1}
-        stroke={ink} strokeWidth={1.5}
+        x1={xEa}
+        y1={yTS + AH + 1}
+        x2={xEa}
+        y2={yR - AH - 1}
+        stroke={ink}
+        strokeWidth={1.5}
       />
-      {/* Upper tip (at TS level, pointing up) */}
       <polygon
         points={`${xEa - AW},${yTS + AH} ${xEa + AW},${yTS + AH} ${xEa},${yTS}`}
         fill={ink}
       />
-      {/* Lower tip (at reactant level, pointing down) */}
       <polygon
         points={`${xEa - AW},${yR - AH} ${xEa + AW},${yR - AH} ${xEa},${yR}`}
         fill={ink}
       />
       <text
-        x={xEa + 11} y={(yTS + yR) / 2}
-        fill={ink} fontSize={18} dominantBaseline="middle" fontWeight="500"
+        x={xEa + 12}
+        y={(yTS + yR) / 2}
+        fill={ink}
+        fontSize={18}
+        dominantBaseline="middle"
+        fontWeight="500"
       >
-        Ea = 70 kJ/mol
+        {`Ea = ${activationEnergy} ${ENERGY_UNIT}`}
       </text>
 
-      {/* ── ΔH arrow: reactant level → product level ── */}
+      {/* ΔH arrow: reactant level -> product level */}
       <line
-        x1={xDH} y1={yR + AH + 1}
-        x2={xDH} y2={yP - AH - 1}
-        stroke={inkSoft} strokeWidth={1.5} strokeDasharray="6 3"
+        x1={xDH}
+        y1={yR + AH + 1}
+        x2={xDH}
+        y2={yP - AH - 1}
+        stroke={inkSoft}
+        strokeWidth={1.5}
+        strokeDasharray="6 3"
       />
-      {/* Upper tip (at reactant level, pointing up) */}
       <polygon
         points={`${xDH - AW},${yR + AH} ${xDH + AW},${yR + AH} ${xDH},${yR}`}
         fill={inkSoft}
       />
-      {/* Lower tip (at product level, pointing down) */}
       <polygon
         points={`${xDH - AW},${yP - AH} ${xDH + AW},${yP - AH} ${xDH},${yP}`}
         fill={inkSoft}
       />
       <text
-        x={xDH + 11} y={(yR + yP) / 2}
-        fill={inkSoft} fontSize={18} dominantBaseline="middle"
+        x={xDH + 12}
+        y={(yR + yP) / 2}
+        fill={inkSoft}
+        fontSize={18}
+        dominantBaseline="middle"
       >
-        ΔH = −30 kJ/mol
+        {`ΔH = ${enthalpyText} ${ENERGY_UNIT}`}
       </text>
 
-      {/* ── Transition State label (above peak marker) ── */}
+      {/* Transition State label (above peak marker) */}
       <text
-        x={toX(X_PEAK)} y={yTS - 22}
-        fill={ink} fontSize={18} textAnchor="middle" fontWeight="500"
+        x={toX(xPeak)}
+        y={yTS - 22}
+        fill={ink}
+        fontSize={18}
+        textAnchor="middle"
+        fontWeight="500"
       >
-        Transition State ‡
+        {stageTransition}
       </text>
 
-      {/* ── Reactants label — offset 22px above dashed reference line ── */}
+      {/* Reactants label — offset above flat reactant shelf */}
       <text
-        x={toX(0.03)} y={yR - 22}
-        fill={ink} fontSize={18} textAnchor="start"
+        x={toX(xMin + xSpan * REACTANT_LABEL_X_FRAC)}
+        y={yR - 18}
+        fill={ink}
+        fontSize={18}
+        textAnchor="start"
       >
-        Reactants (50 kJ/mol)
+        {`${stageReactants} (${eReactants} ${ENERGY_UNIT})`}
       </text>
 
-      {/* ── Products label ── */}
+      {/* Products label — offset below flat product shelf so it clears ΔH arrow */}
       <text
-        x={toX(0.72)} y={yP - 18}
-        fill={ink} fontSize={18} textAnchor="start"
+        x={toX(xMin + xSpan * PRODUCT_LABEL_X_FRAC)}
+        y={yP + 28}
+        fill={ink}
+        fontSize={18}
+        textAnchor="start"
       >
-        Products (20 kJ/mol)
+        {`${stageProducts} (${eProducts} ${ENERGY_UNIT})`}
       </text>
     </g>
   );
@@ -180,41 +268,55 @@ export default function Chart() {
         line-reaction-coordinate · javascript · muix · anyplot.ai
       </Typography>
 
-      <ChartContainer
+      <ChartsContainer
         width={width}
         height={height - titleH}
-        margin={{ left: 110, right: 70, top: 44, bottom: 72 }}
+        margin={{ left: 24, right: 64, top: 36, bottom: 20 }}
         series={[
           {
             type: "line",
             id: "energy",
             data: yData,
-            color: t.palette[0],  // Imprint brand green — first series
+            xAxisId: "coord",
+            yAxisId: "energy",
+            color: t.palette[0],
             showMark: false,
-            curve: "natural",
-            label: "Energy profile",
+            curve: "linear",
+            label: ENERGY_COL,
           },
         ]}
-        xAxis={[{
-          data: xData,
-          scaleType: "linear",
-          min: 0,
-          max: 1,
-        }]}
-        yAxis={[{
-          min: Y_MIN,
-          max: Y_MAX,
-          valueFormatter: (v) => `${v}`,
-        }]}
-        sx={{
-          "& .MuiLineElement-root": { strokeWidth: 3 },
-          "& .MuiChartsAxis-line": { stroke: t.inkSoft, strokeWidth: 0.7 },
-          "& .MuiChartsAxis-tick": { stroke: t.inkSoft, strokeWidth: 0.7 },
-        }}
+        xAxis={[
+          {
+            id: "coord",
+            data: xData,
+            scaleType: "linear",
+            min: xMin,
+            max: xMax,
+            height: 58,
+            label: COORD_COL,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft, fontFamily: FONT },
+            labelStyle: { fontSize: 16, fontWeight: "500", fill: t.inkSoft, fontFamily: FONT },
+            disableLine: true,
+            disableTicks: true,
+          },
+        ]}
+        yAxis={[
+          {
+            id: "energy",
+            min: yMin,
+            max: yMax,
+            width: 88,
+            label: ENERGY_COL,
+            valueFormatter: (v: number | null) => `${v ?? ""}`,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft, fontFamily: FONT },
+            labelStyle: { fontSize: 16, fontWeight: "500", fill: t.inkSoft, fontFamily: FONT },
+            disableLine: true,
+            disableTicks: true,
+          },
+        ]}
       >
-        {/* Horizontal dashed reference lines at reactant and product energy levels */}
         <ChartsReferenceLine
-          y={E_REACTANTS}
+          y={eReactants}
           lineStyle={{
             stroke: t.inkSoft,
             strokeDasharray: "8 5",
@@ -223,7 +325,7 @@ export default function Chart() {
           }}
         />
         <ChartsReferenceLine
-          y={E_PRODUCTS}
+          y={eProducts}
           lineStyle={{
             stroke: t.inkSoft,
             strokeDasharray: "8 5",
@@ -232,28 +334,11 @@ export default function Chart() {
           }}
         />
 
-        {/* Energy curve */}
         <LinePlot skipAnimation />
-
-        {/* Axes */}
-        <ChartsXAxis
-          label="Reaction Coordinate"
-          tickLabelStyle={{ fontSize: 14, fill: t.inkSoft, fontFamily: FONT }}
-          labelStyle={{ fontSize: 16, fontWeight: "500", fill: t.inkSoft, fontFamily: FONT }}
-          disableLine
-          disableTicks
-        />
-        <ChartsYAxis
-          label="Potential Energy (kJ/mol)"
-          tickLabelStyle={{ fontSize: 14, fill: t.inkSoft, fontFamily: FONT }}
-          labelStyle={{ fontSize: 16, fontWeight: "500", fill: t.inkSoft, fontFamily: FONT }}
-          disableLine
-          disableTicks
-        />
-
-        {/* Custom annotations: peak marker, labels, and measurement arrows */}
+        <ChartsXAxis axisId="coord" />
+        <ChartsYAxis axisId="energy" />
         <EnergyAnnotations />
-      </ChartContainer>
+      </ChartsContainer>
     </Box>
   );
 }
