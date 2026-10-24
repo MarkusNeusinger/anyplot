@@ -3,110 +3,275 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 92/100 | Created: 2026-08-24
 //# anyplot-orientation: square
+
 import * as React from "react";
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data: research co-authorship network (in-memory, deterministic) -------
-// Four research groups, each with a "lab lead" hub who co-authors with every
-// group member, plus a peer chain within the group and a few inter-group
-// bridge collaborations — the kind of modular structure force layouts are
-// good at revealing.
-const GROUPS = [
-  { name: "Machine Learning" },
-  { name: "Robotics" },
-  { name: "Bioinformatics" },
-  { name: "Network Science" },
-  { name: "Cryptography" },
-];
-const GROUP_SIZE = 7;
-
-// Tiny fixed-seed LCG — the browser has no seeded RNG.
-function makeLcg(seed) {
-  let state = seed;
-  return () => {
-    state = (state * 1664525 + 1013904223) % 4294967296;
-    return state / 4294967296;
-  };
-}
-const rand = makeLcg(42);
-
-const groupRanges = GROUPS.map((_, groupIndex) => [
-  groupIndex * GROUP_SIZE,
-  groupIndex * GROUP_SIZE + GROUP_SIZE,
-]);
-
-const nodes = [];
-GROUPS.forEach((group, groupIndex) => {
-  for (let i = 0; i < GROUP_SIZE; i += 1) {
-    nodes.push({
-      id: `${groupIndex}-${i}`,
-      group: groupIndex,
-      isHub: i === 0,
-      label: group.name,
-      x: 0,
-      y: 0,
-    });
-  }
-});
-
-// edges: [sourceIndex, targetIndex, weight, isBridge] — weight ~ co-authored
-// papers; isBridge marks the thin inter-group collaborations so they can be
-// styled (dashed, lower alpha) distinctly from intra-group edges.
-const edges = [];
-groupRanges.forEach(([start, end]) => {
-  const hub = start; // lab lead co-authors with every member
-  for (let i = start + 1; i < end; i += 1) {
-    edges.push([hub, i, 2 + Math.floor(rand() * 2), false]);
-  }
-  for (let i = start + 1; i < end - 1; i += 1) {
-    edges.push([i, i + 1, 1 + Math.floor(rand() * 2), false]); // peer chain
-  }
-});
-groupRanges.forEach(([start], groupIndex) => {
-  const [nextStart] = groupRanges[(groupIndex + 1) % groupRanges.length];
-  edges.push([start, nextStart, 1, true]); // thin cross-group bridge between hubs
-});
-
-const degree = new Array(nodes.length).fill(0);
-edges.forEach(([a, b]) => {
-  degree[a] += 1;
-  degree[b] += 1;
-});
-const maxDegree = Math.max(...degree);
-
-// --- Initial layout: cluster around a per-group anchor on a ring -----------
-const GROUP_CENTERS = GROUPS.map((_, i) => {
-  const angle = (i / GROUPS.length) * Math.PI * 2;
-  return { x: Math.cos(angle) * 260, y: Math.sin(angle) * 260 };
-});
-nodes.forEach((node, idx) => {
-  const [start] = groupRanges[node.group];
-  const within = idx - start;
-  const angle = (within / GROUP_SIZE) * Math.PI * 2;
-  const center = GROUP_CENTERS[node.group];
-  node.x = center.x + Math.cos(angle) * 70 + (rand() - 0.5) * 24;
-  node.y = center.y + Math.sin(angle) * 70 + (rand() - 0.5) * 24;
-});
-
-// --- Force-directed simulation (Fruchterman-Reingold, fixed iterations) ----
-const IDEAL_DISTANCE = Math.sqrt((1000 * 1000) / nodes.length);
+// Constants
+const TITLE = "network-force-directed · javascript · muix · anyplot.ai";
+const TITLE_FONT_SIZE = 22;
+const TITLE_H = 46;
+const LEGEND_H = 36;
+const CAPTION_H = 32;
+const SIM_AREA_SPAN = 1000;
+const RING_RADIUS_SHARE = 0.26;
+const SUBRING_RADIUS_SHARE = 0.07;
+const JITTER_SHARE = 0.024;
 const ITERATIONS = 300;
-let temperature = 80;
-const COOLING = temperature / ITERATIONS;
+const INITIAL_TEMP_SHARE = 0.08;
+const GRAVITY_FACTOR = 0.01;
+const PAD_SHARE = 0.14;
+const MIN_NODE_R = 7;
+const MAX_NODE_R_SPAN = 16;
+const HUB_HALO_OFFSET = 7;
+
+// Columns: set these to your data's column names
+const NODE = "Researcher"; // role: node
+const GROUP = "Research field"; // role: group
+const SOURCE = "Source researcher"; // role: source
+const TARGET = "Target researcher"; // role: target
+const WEIGHT = "Co-authored papers"; // role: weight
+
+// Data: replace this block with your own records
+const nodes: Array<Record<string, string>> = [
+  // Machine Learning (8 researchers)
+  { [NODE]: "ML-0", [GROUP]: "Machine Learning" },
+  { [NODE]: "ML-1", [GROUP]: "Machine Learning" },
+  { [NODE]: "ML-2", [GROUP]: "Machine Learning" },
+  { [NODE]: "ML-3", [GROUP]: "Machine Learning" },
+  { [NODE]: "ML-4", [GROUP]: "Machine Learning" },
+  { [NODE]: "ML-5", [GROUP]: "Machine Learning" },
+  { [NODE]: "ML-6", [GROUP]: "Machine Learning" },
+  { [NODE]: "ML-7", [GROUP]: "Machine Learning" },
+
+  // Robotics (6 researchers)
+  { [NODE]: "RB-0", [GROUP]: "Robotics" },
+  { [NODE]: "RB-1", [GROUP]: "Robotics" },
+  { [NODE]: "RB-2", [GROUP]: "Robotics" },
+  { [NODE]: "RB-3", [GROUP]: "Robotics" },
+  { [NODE]: "RB-4", [GROUP]: "Robotics" },
+  { [NODE]: "RB-5", [GROUP]: "Robotics" },
+
+  // Bioinformatics (7 researchers)
+  { [NODE]: "BI-0", [GROUP]: "Bioinformatics" },
+  { [NODE]: "BI-1", [GROUP]: "Bioinformatics" },
+  { [NODE]: "BI-2", [GROUP]: "Bioinformatics" },
+  { [NODE]: "BI-3", [GROUP]: "Bioinformatics" },
+  { [NODE]: "BI-4", [GROUP]: "Bioinformatics" },
+  { [NODE]: "BI-5", [GROUP]: "Bioinformatics" },
+  { [NODE]: "BI-6", [GROUP]: "Bioinformatics" },
+
+  // Network Science (5 researchers)
+  { [NODE]: "NS-0", [GROUP]: "Network Science" },
+  { [NODE]: "NS-1", [GROUP]: "Network Science" },
+  { [NODE]: "NS-2", [GROUP]: "Network Science" },
+  { [NODE]: "NS-3", [GROUP]: "Network Science" },
+  { [NODE]: "NS-4", [GROUP]: "Network Science" },
+
+  // Cryptography (6 researchers)
+  { [NODE]: "CR-0", [GROUP]: "Cryptography" },
+  { [NODE]: "CR-1", [GROUP]: "Cryptography" },
+  { [NODE]: "CR-2", [GROUP]: "Cryptography" },
+  { [NODE]: "CR-3", [GROUP]: "Cryptography" },
+  { [NODE]: "CR-4", [GROUP]: "Cryptography" },
+  { [NODE]: "CR-5", [GROUP]: "Cryptography" },
+];
+
+const data: Array<Record<string, string | number>> = [
+  // Machine Learning
+  { [SOURCE]: "ML-0", [TARGET]: "ML-1", [WEIGHT]: 5 },
+  { [SOURCE]: "ML-0", [TARGET]: "ML-2", [WEIGHT]: 4 },
+  { [SOURCE]: "ML-0", [TARGET]: "ML-3", [WEIGHT]: 3 },
+  { [SOURCE]: "ML-0", [TARGET]: "ML-4", [WEIGHT]: 4 },
+  { [SOURCE]: "ML-0", [TARGET]: "ML-5", [WEIGHT]: 2 },
+  { [SOURCE]: "ML-0", [TARGET]: "ML-6", [WEIGHT]: 3 },
+  { [SOURCE]: "ML-0", [TARGET]: "ML-7", [WEIGHT]: 2 },
+  { [SOURCE]: "ML-1", [TARGET]: "ML-2", [WEIGHT]: 3 },
+  { [SOURCE]: "ML-1", [TARGET]: "ML-4", [WEIGHT]: 2 },
+  { [SOURCE]: "ML-2", [TARGET]: "ML-3", [WEIGHT]: 1 },
+  { [SOURCE]: "ML-4", [TARGET]: "ML-5", [WEIGHT]: 2 },
+  { [SOURCE]: "ML-5", [TARGET]: "ML-6", [WEIGHT]: 3 },
+  { [SOURCE]: "ML-6", [TARGET]: "ML-7", [WEIGHT]: 1 },
+
+  // Robotics
+  { [SOURCE]: "RB-0", [TARGET]: "RB-1", [WEIGHT]: 4 },
+  { [SOURCE]: "RB-0", [TARGET]: "RB-2", [WEIGHT]: 3 },
+  { [SOURCE]: "RB-0", [TARGET]: "RB-3", [WEIGHT]: 5 },
+  { [SOURCE]: "RB-0", [TARGET]: "RB-4", [WEIGHT]: 2 },
+  { [SOURCE]: "RB-0", [TARGET]: "RB-5", [WEIGHT]: 3 },
+  { [SOURCE]: "RB-1", [TARGET]: "RB-2", [WEIGHT]: 2 },
+  { [SOURCE]: "RB-2", [TARGET]: "RB-3", [WEIGHT]: 3 },
+  { [SOURCE]: "RB-3", [TARGET]: "RB-4", [WEIGHT]: 1 },
+  { [SOURCE]: "RB-4", [TARGET]: "RB-5", [WEIGHT]: 2 },
+
+  // Bioinformatics
+  { [SOURCE]: "BI-0", [TARGET]: "BI-1", [WEIGHT]: 3 },
+  { [SOURCE]: "BI-0", [TARGET]: "BI-2", [WEIGHT]: 4 },
+  { [SOURCE]: "BI-0", [TARGET]: "BI-3", [WEIGHT]: 5 },
+  { [SOURCE]: "BI-0", [TARGET]: "BI-4", [WEIGHT]: 2 },
+  { [SOURCE]: "BI-0", [TARGET]: "BI-5", [WEIGHT]: 3 },
+  { [SOURCE]: "BI-0", [TARGET]: "BI-6", [WEIGHT]: 4 },
+  { [SOURCE]: "BI-1", [TARGET]: "BI-2", [WEIGHT]: 2 },
+  { [SOURCE]: "BI-2", [TARGET]: "BI-3", [WEIGHT]: 3 },
+  { [SOURCE]: "BI-3", [TARGET]: "BI-5", [WEIGHT]: 2 },
+  { [SOURCE]: "BI-4", [TARGET]: "BI-6", [WEIGHT]: 1 },
+  { [SOURCE]: "BI-5", [TARGET]: "BI-6", [WEIGHT]: 2 },
+
+  // Network Science
+  { [SOURCE]: "NS-0", [TARGET]: "NS-1", [WEIGHT]: 4 },
+  { [SOURCE]: "NS-0", [TARGET]: "NS-2", [WEIGHT]: 3 },
+  { [SOURCE]: "NS-0", [TARGET]: "NS-3", [WEIGHT]: 5 },
+  { [SOURCE]: "NS-0", [TARGET]: "NS-4", [WEIGHT]: 2 },
+  { [SOURCE]: "NS-1", [TARGET]: "NS-2", [WEIGHT]: 2 },
+  { [SOURCE]: "NS-2", [TARGET]: "NS-3", [WEIGHT]: 3 },
+  { [SOURCE]: "NS-3", [TARGET]: "NS-4", [WEIGHT]: 1 },
+
+  // Cryptography
+  { [SOURCE]: "CR-0", [TARGET]: "CR-1", [WEIGHT]: 4 },
+  { [SOURCE]: "CR-0", [TARGET]: "CR-2", [WEIGHT]: 3 },
+  { [SOURCE]: "CR-0", [TARGET]: "CR-3", [WEIGHT]: 2 },
+  { [SOURCE]: "CR-0", [TARGET]: "CR-4", [WEIGHT]: 5 },
+  { [SOURCE]: "CR-0", [TARGET]: "CR-5", [WEIGHT]: 3 },
+  { [SOURCE]: "CR-1", [TARGET]: "CR-2", [WEIGHT]: 1 },
+  { [SOURCE]: "CR-2", [TARGET]: "CR-4", [WEIGHT]: 3 },
+  { [SOURCE]: "CR-3", [TARGET]: "CR-4", [WEIGHT]: 2 },
+  { [SOURCE]: "CR-4", [TARGET]: "CR-5", [WEIGHT]: 2 },
+
+  // Cross-group bridges
+  { [SOURCE]: "ML-0", [TARGET]: "RB-0", [WEIGHT]: 2 },
+  { [SOURCE]: "ML-1", [TARGET]: "BI-0", [WEIGHT]: 1 },
+  { [SOURCE]: "RB-0", [TARGET]: "BI-0", [WEIGHT]: 2 },
+  { [SOURCE]: "BI-0", [TARGET]: "NS-0", [WEIGHT]: 1 },
+  { [SOURCE]: "NS-0", [TARGET]: "CR-0", [WEIGHT]: 2 },
+  { [SOURCE]: "CR-0", [TARGET]: "ML-0", [WEIGHT]: 1 },
+  { [SOURCE]: "NS-2", [TARGET]: "ML-3", [WEIGHT]: 1 },
+];
+
+// Plot: reads only data and the constants above
+const groups: string[] = [];
+for (const row of nodes) {
+  const grp = String(row[GROUP]);
+  if (!groups.includes(grp)) groups.push(grp);
+}
+
+interface ForceNode {
+  id: string;
+  groupIndex: number;
+  groupName: string;
+  isHub: boolean;
+  withinIndex: number;
+  degree: number;
+  radius: number;
+  x: number;
+  y: number;
+}
+
+const nodeIndexById = new Map<string, number>();
+const layoutNodes: ForceNode[] = [];
+const groupCounts = new Array<number>(groups.length).fill(0);
+
+for (const row of nodes) {
+  const id = String(row[NODE]);
+  const grp = String(row[GROUP]);
+  const groupIndex = groups.indexOf(grp);
+  const withinIndex = groupCounts[groupIndex];
+  groupCounts[groupIndex] += 1;
+  nodeIndexById.set(id, layoutNodes.length);
+  layoutNodes.push({
+    id,
+    groupIndex,
+    groupName: grp,
+    isHub: false,
+    withinIndex,
+    degree: 0,
+    radius: MIN_NODE_R,
+    x: 0,
+    y: 0,
+  });
+}
+
+interface ForceEdge {
+  sourceIdx: number;
+  targetIdx: number;
+  weight: number;
+  wRatio: number;
+  isBridge: boolean;
+}
+
+const edges: ForceEdge[] = [];
+for (const row of data) {
+  const a = nodeIndexById.get(String(row[SOURCE]))!;
+  const b = nodeIndexById.get(String(row[TARGET]))!;
+  const weight = Number(row[WEIGHT]);
+  const isBridge = layoutNodes[a].groupIndex !== layoutNodes[b].groupIndex;
+  edges.push({ sourceIdx: a, targetIdx: b, weight, wRatio: 0, isBridge });
+  layoutNodes[a].degree += 1;
+  layoutNodes[b].degree += 1;
+}
+
+const minW = Math.min(...edges.map((e) => e.weight));
+const maxW = Math.max(...edges.map((e) => e.weight));
+const wSpan = maxW - minW;
+for (const edge of edges) {
+  edge.wRatio = (edge.weight - minW) / wSpan;
+}
+
+// Identify the primary hub in each group by highest degree
+for (let g = 0; g < groups.length; g += 1) {
+  let bestIdx = -1;
+  let bestDeg = -1;
+  for (let i = 0; i < layoutNodes.length; i += 1) {
+    if (layoutNodes[i].groupIndex === g && layoutNodes[i].degree > bestDeg) {
+      bestDeg = layoutNodes[i].degree;
+      bestIdx = i;
+    }
+  }
+  if (bestIdx >= 0) {
+    layoutNodes[bestIdx].isHub = true;
+  }
+}
+
+const maxDegree = Math.max(...layoutNodes.map((n) => n.degree));
+for (const node of layoutNodes) {
+  node.radius = MIN_NODE_R + (node.degree / maxDegree) * MAX_NODE_R_SPAN;
+}
+
+let lcgState = 104729;
+const ringRadius = SIM_AREA_SPAN * RING_RADIUS_SHARE;
+const subringRadius = SIM_AREA_SPAN * SUBRING_RADIUS_SHARE;
+const jitterSpan = SIM_AREA_SPAN * JITTER_SHARE;
+
+for (const node of layoutNodes) {
+  const groupAngle = (node.groupIndex / groups.length) * Math.PI * 2;
+  const centerX = Math.cos(groupAngle) * ringRadius;
+  const centerY = Math.sin(groupAngle) * ringRadius;
+  const groupCount = groupCounts[node.groupIndex];
+  const withinAngle = (node.withinIndex / groupCount) * Math.PI * 2;
+  lcgState = (lcgState * 1664525 + 1013904223) % 4294967296;
+  const jx = (lcgState / 4294967296 - 0.5) * jitterSpan;
+  lcgState = (lcgState * 1664525 + 1013904223) % 4294967296;
+  const jy = (lcgState / 4294967296 - 0.5) * jitterSpan;
+  node.x = centerX + Math.cos(withinAngle) * subringRadius + jx;
+  node.y = centerY + Math.sin(withinAngle) * subringRadius + jy;
+}
+
+const idealDistance = Math.sqrt((SIM_AREA_SPAN * SIM_AREA_SPAN) / layoutNodes.length);
+let temperature = SIM_AREA_SPAN * INITIAL_TEMP_SHARE;
+const cooling = temperature / ITERATIONS;
 
 for (let iter = 0; iter < ITERATIONS; iter += 1) {
-  const dispX = new Array(nodes.length).fill(0);
-  const dispY = new Array(nodes.length).fill(0);
+  const dispX = new Array<number>(layoutNodes.length).fill(0);
+  const dispY = new Array<number>(layoutNodes.length).fill(0);
 
-  for (let i = 0; i < nodes.length; i += 1) {
-    for (let j = i + 1; j < nodes.length; j += 1) {
-      const dx = nodes[i].x - nodes[j].x;
-      const dy = nodes[i].y - nodes[j].y;
+  for (let i = 0; i < layoutNodes.length; i += 1) {
+    for (let j = i + 1; j < layoutNodes.length; j += 1) {
+      const dx = layoutNodes[i].x - layoutNodes[j].x;
+      const dy = layoutNodes[i].y - layoutNodes[j].y;
       const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
-      const force = (IDEAL_DISTANCE * IDEAL_DISTANCE) / dist;
+      const force = (idealDistance * idealDistance) / dist;
       const fx = (dx / dist) * force;
       const fy = (dy / dist) * force;
       dispX[i] += fx;
@@ -116,38 +281,44 @@ for (let iter = 0; iter < ITERATIONS; iter += 1) {
     }
   }
 
-  edges.forEach(([a, b, weight]) => {
-    const dx = nodes[a].x - nodes[b].x;
-    const dy = nodes[a].y - nodes[b].y;
+  for (const edge of edges) {
+    const a = edge.sourceIdx;
+    const b = edge.targetIdx;
+    const dx = layoutNodes[a].x - layoutNodes[b].x;
+    const dy = layoutNodes[a].y - layoutNodes[b].y;
     const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
-    const force = ((dist * dist) / IDEAL_DISTANCE) * (0.6 + weight * 0.2);
+    const force = ((dist * dist) / idealDistance) * (0.6 + edge.wRatio * 0.6);
     const fx = (dx / dist) * force;
     const fy = (dy / dist) * force;
     dispX[a] -= fx;
     dispY[a] -= fy;
     dispX[b] += fx;
     dispY[b] += fy;
-  });
+  }
 
-  nodes.forEach((node, i) => {
-    dispX[i] -= node.x * 0.01; // mild centering gravity
-    dispY[i] -= node.y * 0.01;
+  for (let i = 0; i < layoutNodes.length; i += 1) {
+    dispX[i] -= layoutNodes[i].x * GRAVITY_FACTOR;
+    dispY[i] -= layoutNodes[i].y * GRAVITY_FACTOR;
     const dist = Math.sqrt(dispX[i] * dispX[i] + dispY[i] * dispY[i]) || 0.01;
     const capped = Math.min(dist, temperature);
-    node.x += (dispX[i] / dist) * capped;
-    node.y += (dispY[i] / dist) * capped;
-  });
+    layoutNodes[i].x += (dispX[i] / dist) * capped;
+    layoutNodes[i].y += (dispY[i] / dist) * capped;
+  }
 
-  temperature = Math.max(temperature - COOLING, 1);
+  temperature = Math.max(temperature - cooling, 1);
 }
 
-// Square, padded domain so the layout renders with equal x/y scale.
-const xs = nodes.map((n) => n.x);
-const ys = nodes.map((n) => n.y);
-const PADDING = 110;
-const xMid = (Math.min(...xs) + Math.max(...xs)) / 2;
-const yMid = (Math.min(...ys) + Math.max(...ys)) / 2;
-const span = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)) + PADDING * 2;
+const xs = layoutNodes.map((n) => n.x);
+const ys = layoutNodes.map((n) => n.y);
+const rawXMin = Math.min(...xs);
+const rawXMax = Math.max(...xs);
+const rawYMin = Math.min(...ys);
+const rawYMax = Math.max(...ys);
+const rawSpan = Math.max(rawXMax - rawXMin, rawYMax - rawYMin);
+const pad = rawSpan * PAD_SHARE;
+const xMid = (rawXMin + rawXMax) / 2;
+const yMid = (rawYMin + rawYMax) / 2;
+const span = rawSpan + pad * 2;
 const domain = {
   xMin: xMid - span / 2,
   xMax: xMid + span / 2,
@@ -155,65 +326,65 @@ const domain = {
   yMax: yMid + span / 2,
 };
 
-const nodeRadius = (i) => 7 + (degree[i] / maxDegree) * 16;
-
-// --- Custom SVG layers, positioned via the chart's own scales --------------
-function GraphEdges() {
+function ForceNetworkOverlay() {
   const xScale = useXScale();
   const yScale = useYScale();
   return (
     <g data-drawing-container>
-      {edges.map(([a, b, weight, isBridge], i) => (
+      {edges.map((edge, i) => (
         <line
           key={`edge-${i}`}
-          x1={xScale(nodes[a].x)}
-          y1={yScale(nodes[a].y)}
-          x2={xScale(nodes[b].x)}
-          y2={yScale(nodes[b].y)}
+          x1={xScale(layoutNodes[edge.sourceIdx].x)}
+          y1={yScale(layoutNodes[edge.sourceIdx].y)}
+          x2={xScale(layoutNodes[edge.targetIdx].x)}
+          y2={yScale(layoutNodes[edge.targetIdx].y)}
           stroke={t.inkSoft}
-          strokeOpacity={isBridge ? 0.22 : 0.4}
-          strokeWidth={isBridge ? 1.1 : 0.8 + weight * 0.7}
-          strokeDasharray={isBridge ? "5,4" : undefined}
+          strokeOpacity={edge.isBridge ? 0.25 : 0.42}
+          strokeWidth={edge.isBridge ? 1.2 : 1.1 + edge.wRatio * 2.2}
+          strokeDasharray={edge.isBridge ? "5,4" : undefined}
         />
       ))}
-    </g>
-  );
-}
-
-function GraphNodes() {
-  const xScale = useXScale();
-  const yScale = useYScale();
-  return (
-    <g data-drawing-container>
-      {nodes.map((node, i) => (
+      {layoutNodes.map((node) => (
         <React.Fragment key={node.id}>
           {node.isHub && (
             <circle
               cx={xScale(node.x)}
               cy={yScale(node.y)}
-              r={nodeRadius(i) + 7}
-              fill={t.palette[node.group]}
+              r={node.radius + HUB_HALO_OFFSET}
+              fill={t.palette[node.groupIndex]}
               opacity={0.2}
             />
           )}
           <circle
             cx={xScale(node.x)}
             cy={yScale(node.y)}
-            r={nodeRadius(i)}
-            fill={t.palette[node.group]}
+            r={node.radius}
+            fill={t.palette[node.groupIndex]}
             stroke={t.pageBg}
             strokeWidth={1.5}
           />
           {node.isHub && (
-            <text
-              x={xScale(node.x)}
-              y={yScale(node.y) - nodeRadius(i) - 8}
-              textAnchor="middle"
-              fontSize={15}
-              fill={t.ink}
-            >
-              {node.label}
-            </text>
+            <g>
+              <rect
+                x={Number(xScale(node.x)) - (node.groupName.length * 4.4 + 8)}
+                y={Number(yScale(node.y)) - node.radius - 24}
+                width={node.groupName.length * 8.8 + 16}
+                height={20}
+                rx={4}
+                fill={t.pageBg}
+                fillOpacity={0.88}
+              />
+              <text
+                x={xScale(node.x)}
+                y={Number(yScale(node.y)) - node.radius - 10}
+                textAnchor="middle"
+                fontSize={15}
+                fontWeight={500}
+                fill={t.ink}
+              >
+                {node.groupName}
+              </text>
+            </g>
           )}
         </React.Fragment>
       ))}
@@ -221,66 +392,81 @@ function GraphNodes() {
   );
 }
 
-// --- Title + legend chrome ---------------------------------------------------
-const TITLE = "network-force-directed · javascript · muix · anyplot.ai";
-const TITLE_FONT_DEFAULT = 25;
-const titleFontSize =
-  TITLE.length > 67 ? Math.round(TITLE_FONT_DEFAULT * (67 / TITLE.length)) : TITLE_FONT_DEFAULT;
-const TITLE_H = 46;
-const LEGEND_H = 34;
-
-function Legend() {
-  return (
-    <div style={{ height: LEGEND_H, display: "flex", alignItems: "center", gap: "20px", flexWrap: "wrap" }}>
-      {GROUPS.map((group, i) => (
-        <div key={group.name} style={{ display: "flex", alignItems: "center", gap: "7px" }}>
-          <span
-            style={{
-              width: "12px",
-              height: "12px",
-              borderRadius: "50%",
-              backgroundColor: t.palette[i],
-              display: "inline-block",
-            }}
-          />
-          <span style={{ fontSize: "14px", color: t.inkSoft }}>{group.name}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// --- Chart (default-exported component — the harness mounts it) ------------
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
-  const chartHeight = height - TITLE_H - LEGEND_H;
+  const chartHeight = height - TITLE_H - LEGEND_H - CAPTION_H;
 
   return (
-    <div style={{ width, height, display: "flex", flexDirection: "column" }}>
+    <div
+      style={{
+        width,
+        height,
+        backgroundColor: t.pageBg,
+        display: "flex",
+        flexDirection: "column",
+        fontFamily: "Inter, system-ui, sans-serif",
+      }}
+    >
       <div
         style={{
           height: `${TITLE_H}px`,
           lineHeight: `${TITLE_H}px`,
-          fontSize: `${titleFontSize}px`,
-          fontWeight: 500,
+          fontSize: `${TITLE_FONT_SIZE}px`,
+          fontWeight: 600,
           color: t.ink,
+          paddingLeft: "16px",
         }}
       >
         {TITLE}
       </div>
-      <Legend />
-      <ChartContainer
+      <div
+        style={{
+          height: LEGEND_H,
+          display: "flex",
+          alignItems: "center",
+          gap: "20px",
+          flexWrap: "wrap",
+          paddingLeft: "16px",
+        }}
+      >
+        {groups.map((groupName, i) => (
+          <div key={groupName} style={{ display: "flex", alignItems: "center", gap: "7px" }}>
+            <span
+              style={{
+                width: "12px",
+                height: "12px",
+                borderRadius: "50%",
+                backgroundColor: t.palette[i],
+                display: "inline-block",
+              }}
+            />
+            <span style={{ fontSize: "14px", color: t.inkSoft }}>{groupName}</span>
+          </div>
+        ))}
+      </div>
+      <ChartsContainer
         width={width}
         height={chartHeight}
         series={[]}
         margin={{ top: 8, bottom: 8, left: 8, right: 8 }}
-        xAxis={[{ id: "x", scaleType: "linear", min: domain.xMin, max: domain.xMax }]}
-        yAxis={[{ id: "y", scaleType: "linear", min: domain.yMin, max: domain.yMax }]}
+        xAxis={[{ id: "x", scaleType: "linear", min: domain.xMin, max: domain.xMax, position: "none" }]}
+        yAxis={[{ id: "y", scaleType: "linear", min: domain.yMin, max: domain.yMax, position: "none" }]}
         skipAnimation
       >
-        <GraphEdges />
-        <GraphNodes />
-      </ChartContainer>
+        <ForceNetworkOverlay />
+      </ChartsContainer>
+      <div
+        style={{
+          height: CAPTION_H,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 13,
+          color: t.inkSoft,
+        }}
+      >
+        {`Node size = degree · Halo & label = highest-degree hub per ${GROUP} · Edge width = ${WEIGHT} · Dashed line = cross-group link`}
+      </div>
     </div>
   );
 }
