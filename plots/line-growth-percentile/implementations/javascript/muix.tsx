@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-growth-percentile: Pediatric Growth Chart with Percentile Curves
 // Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 90/100 | Created: 2026-06-20
+// Quality: pending | Created: 2026-06-20
 
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
