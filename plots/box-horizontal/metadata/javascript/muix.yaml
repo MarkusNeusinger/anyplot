@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: box-horizontal
 created: '2026-09-02T13:45:24Z'
-updated: '2026-10-24T04:05:28Z'
+updated: '2026-10-24T04:10:24Z'
 generated_by: gemini-4-argon
 adopted_from: 05fd22b6883131fc8937ab51e4f573041b3dcb44 (05fd22b6883131fc8937ab51e4f573041b3dcb44)
 workflow_run: 40060645164
@@ -16,44 +16,36 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-horiz
 quality_score: 86
 review:
   strengths:
-  - 'Uses the MUI X v9 composition API idiomatically: ChartsContainer with linear/band
-    axes, ChartsGrid, ChartsXAxis/ChartsYAxis and a custom BoxWhiskers SVG layer that
-    draws through the useXScale/useYScale hooks, so every box sits exactly on the
-    library''s own scales'
-  - 'All statistical elements of a box plot are present and correct: interpolated
-    Q1/median/Q3, whiskers to the last value inside 1.5×IQR, hollow outlier circles
-    at their values, on both sides of boxes (Data Scientist and DevOps low, Senior
-    Software Engineer, UX/UI Designer and Customer Success Manager high)'
-  - Categories sorted by median, long job titles read horizontally beside their boxes
-    on one shared salary axis that starts near the data (≈30k) rather than at zero
-  - 'Refined mark styling: translucent tinted box fill with a saturated outline, a
-    heavier median stroke that stays visible against the fill in both themes, rounded
-    box corners and outlier circles filled with the page color'
-  - 'Theme threading is complete: title, subtitle, axis labels, ticks, axis lines
-    and the dashed vertical-only grid all come from ANYPLOT_TOKENS and read cleanly
-    on #FAF8F1 and #1A1A17'
-  - Realistic, neutral salary scenario with plausible ranges per role, generated deterministically
-    with a fixed-seed LCG and Box–Muller
+  - Uses MUI X composition (ChartsContainer + useXScale/useYScale hooks) to draw box-and-whisker
+    marks on the library's own band and linear scales, since the community package
+    has no box series
+  - 'All statistical elements are present and correct: Q1-Q3 boxes, a thick median
+    line visible against the 30 % fill in both themes, capped 1.5xIQR whiskers, and
+    open outlier circles at their values'
+  - Categories sorted by median with long job titles reading horizontally beside their
+    boxes; shared value axis not forced to zero
+  - Realistic salary-by-job-title data with varied spreads, skewed medians and outliers
+    on both sides
+  - Theme tokens threaded through title, subtitle, axes and grid; Imprint palette
+    in canonical order identical across both renders
   weaknesses:
-  - 'CQ-04 (code): lines 58–62 build the category list with a manual loop and `includes`
-    check → `const rawCategories = [...new Set(data.map((row) => String(row[CATEGORIES])))];`,
-    the order-preserving form the muix library prompt names. Likely cause: hand-written
-    dedupe loop.'
-  - 'Suggestion: the mandated title fills only about 35 % of the width; a slightly
-    larger title (≈26 px) would give the header more presence against the wide plot.'
-  - 'Suggestion: the wide gap between the rotated ''Job title'' axis label and the
-    tick labels could be tightened by reducing the y-axis band width a little.'
+  - 'Suggestion: color carries no information beyond the y position here; a single
+    brand-green hue (or a highlight of one group) would let the median ordering read
+    as one story instead of seven unrelated colors.'
+  - 'Suggestion: the y-axis band of 240 px leaves a wide gap between the ''Job title''
+    axis label and the shorter category names; a narrower band (about 200 px) would
+    tighten the left edge.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: bold dark title "box-horizontal · javascript · muix · anyplot.ai" centered at top with a soft-ink subtitle "83 observations · 7 groups (Job title), sorted by median · Whiskers at 1.5×IQR". Y axis lists seven job titles (Senior Software Engineer at top down to Customer Success Manager) with rotated axis label "Job title"; x axis "Annual base salary ($k)" with ticks 40–200. Dashed, faint vertical grid lines only. All text dark on light, fully readable.
-      Data: seven horizontal boxes, one per role, in Imprint order — brand green #009E73 first (Senior Software Engineer), then lavender, blue, ochre, matte red, cyan, rose. Tinted translucent fills, saturated outlines, thick median lines visible inside each box, whiskers with caps on both sides, hollow outlier circles (e.g. ≈206k for Senior SWE, ≈98k for Data Scientist, ≈95k for DevOps, ≈123k for UX/UI, ≈86k for Customer Success). Nothing clipped or overlapping.
+      Background: warm off-white #FAF8F1 across the whole canvas.
+      Chrome: bold dark title "box-horizontal · javascript · muix · anyplot.ai" centered at top, grey subtitle "83 observations · 7 groups (Job title), sorted by median · Whiskers at 1.5×IQR"; y-axis label "Job title" (rotated), seven job-title tick labels, x-axis "Annual base salary ($k)" with ticks 40-200; dashed vertical grid lines, subtle. All text readable.
+      Data: seven horizontal boxes sorted by median top to bottom (Senior Software Engineer #009E73, Data Scientist lavender, Product Manager blue, DevOps Engineer ochre, UX/UI Designer matte red, Marketing Analyst cyan, Customer Success Manager rose); 30 % fills, thick median lines, capped whiskers, open outlier circles (206 for Senior SWE, ~98 Data Scientist, ~95 DevOps, ~123 UX/UI, ~86 Customer Success).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black, matches #1A1A17 — not pure black.
-      Chrome: title in light ink, subtitle and tick labels in soft light ink, axis lines light, grid dashed and faint but visible. No dark-on-dark text anywhere.
-      Data: identical hues and positions to the light render; only the box fill tint reads darker because the translucent fill blends with the dark page. Median lines and outlier circles (filled with the page color) remain clearly visible; brand green reads well.
+      Background: warm near-black #1A1A17.
+      Chrome: title in light ink, subtitle, tick labels and axis titles in light/soft ink, axis lines light; grid dashed and faint but visible. No dark-on-dark text.
+      Data: identical hues and positions to the light render; box fills read as dark tints of each hue, strokes and medians stay bright and visible; outlier circles filled with the dark page color.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -65,47 +57,48 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (title 22, ticks 14, labels 16 CSS px); all text readable
-          in both themes
+        comment: Explicit sizes (title 22, subtitle 15, axis titles 16, ticks 14 CSS
+          px); ink/inkSoft tokens readable on both backgrounds
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or mark collisions
+        comment: No text collisions; boxes, whiskers and outlier circles stay clear
+          of each other and of labels
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Boxes, 2–3.5 px strokes and r=5.5 outlier circles clearly visible
-          for 7 groups / 83 points
+        comment: 2.5 px box strokes, 3.5 px median, capped whiskers and 5.5 px open
+          outlier circles are clearly visible in both themes; no legend needed
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Category identity carried by y-axis labels, color is redundant; good
-          contrast
+        comment: Color is redundant with the y position; Imprint hues are CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200×1800, balanced margins, nothing cut off
+        comment: 3200x1800, no canvas-gate file; balanced margins, no overflow; title
+          at about 35 % width is acceptable
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Annual base salary ($k)'' with units, ''Job title'''
+        comment: '''Annual base salary ($k)'' with units, ''Job title'' for the categories'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First group #009E73, Imprint canonical order via t.palette[i]; correct
-          backgrounds in both themes'
+        comment: 'Imprint positions 1-7 in canonical order starting with #009E73;
+          identical in both renders; backgrounds #FAF8F1 / #1A1A17'
     design_excellence:
       score: 10
       max: 20
@@ -115,21 +108,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Beyond baseline: tinted fill + saturated outline + heavier median
-          stroke, rounded box corners, page-colored hollow outliers, informative subtitle'
+        comment: 'Beyond baseline: title/subtitle hierarchy (600-weight ink title,
+          inkSoft subtitle stating n, grouping and whisker rule), rounded box corners,
+          open outlier circles filled with the page color'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Vertical-only dashed grid chosen for the value axis, generous whitespace
-          around boxes
+        comment: Value-axis-only dashed grid at reduced opacity chosen for this chart,
+          whisker caps at 65 % of box height, 8 % value padding so the extreme outlier
+          breathes
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
-        passed: false
-        comment: Median sort is what the Notes suggest; no further hierarchy chosen
+        passed: true
+        comment: Median sort is what the Notes suggest; no further hierarchy or focal
+          point chosen
     spec_compliance:
       score: 15
       max: 15
@@ -139,27 +135,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Horizontal box plot
+        comment: Horizontal box plot, categories on y, values on x
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Median, quartile box, whiskers at 1.5×IQR, outliers, sorted by median,
-          shared non-zero axis — all good-version bullets met
+        comment: Median line, Q1-Q3 box, whiskers on both sides at 1.5xIQR, outliers
+          at their values, shared non-zero value axis, sorted by median - all Notes
+          and 'A good version shows' bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on y, values on x; marks at their computed values; axis
-          covers all data
+        comment: Axis spans all data (43-206) with padding; marks at their computed
+          values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; legend N/A (categories labeled on axis)
+        comment: Title 'box-horizontal · javascript · muix · anyplot.ai'; legend N/A
+          (categories labelled on the axis)
     data_quality:
       score: 15
       max: 15
@@ -169,22 +167,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Outliers on both sides, varied spreads, skewed medians, whiskers
-          of unequal length
+        comment: Different spreads, skewed medians, unequal whiskers, outliers on
+          both sides (low for Data Scientist and DevOps, high for three groups)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Salaries by job title — plausible and neutral
+        comment: Salary ranges by job title - the spec's own example, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Salaries 43k–206k fit the roles; no Check values in spec
+        comment: 'Checked: medians ~73k (Customer Success) to ~161k (Senior SWE) plausible
+          for US tech salaries; 83 observations inside the 10-100 range; quartiles
+          by linear interpolation, fences at 1.5xIQR in code (lines 67-77). No check
+          values in spec'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -192,36 +193,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Only the default-export component and a hook-consuming BoxWhiskers
-          component the MUI composition API requires
+        comment: Columns/Data/Plot zones; the one inner component is required by React
+          to call the scale hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG
+        comment: Fixed-seed LCG with Box-Muller
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All five imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Lines 58–62 manual dedupe loop instead of [...new Set(...)] (defect
-          line)
+        comment: 'Box statistics written out is allowed (library prompt: no stats
+          helpers); appropriate complexity'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default export, skipAnimation, sized to ANYPLOT_SIZE, current v9
-          ChartsContainer API
+        comment: Default export, skipAnimation, sized to ANYPLOT_SIZE, v9 ChartsContainer
+          API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -229,30 +230,32 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Composition with ChartsContainer, axis ids, ChartsGrid, ChartsXAxis/YAxis,
-          sx class styling
+        comment: 'Composition API: ChartsContainer with id''d axes, ChartsGrid, ChartsXAxis/ChartsYAxis
+          and a custom SVG layer'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: Custom SVG layer driven by useXScale/useYScale hooks — MUI X's composition
-          extension point; band-scale bandwidth for box height
-  verdict: REJECTED
+        comment: useXScale/useYScale hooks drive a custom box layer on MUI's own band
+          and linear scales - the MUI X way to add a mark type the community package
+          lacks
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T04:02:45Z'
+  rendered_at: '2026-10-24T04:07:14Z'
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - patches
   - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
-  - quartile-statistics
+  - groupby-aggregation
   styling:
   - alpha-blending
-  - grid-styling
   - edge-highlighting
+  - grid-styling
