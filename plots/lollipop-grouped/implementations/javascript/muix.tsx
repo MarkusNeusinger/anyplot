@@ -1,8 +1,9 @@
 // anyplot.ai
 // lollipop-grouped: Grouped Lollipop Chart
-// Library: muix 7.29.1 | JavaScript 22.23.2
+// Library: muix 9.x | JavaScript 22.23.2
 // Quality: 93/100 | Created: 2026-09-02
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
@@ -10,52 +11,99 @@ import { useXScale, useYScale, useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data (in-memory, deterministic) ---------------------------------------
-// Quarterly revenue ($M) by product line, across regions — sorted by total
-// revenue descending to reveal the regional ranking at a glance. Asia-Pacific
-// (a hardware-manufacturing hub) leads with Hardware rather than Software,
-// so the cross-group comparison isn't a flat repeat of the same ranking.
-const regions = ["North America", "Asia-Pacific", "Europe", "Latin America"];
-const productLines = ["Hardware", "Software", "Services"];
-const revenueByRegion = [
-  [48, 71, 39],
-  [52, 45, 33],
-  [33, 58, 30],
-  [21, 24, 17],
-];
-const focalRegion = "North America";
-const seriesColors = [t.palette[0], t.palette[1], t.palette[2]];
-const maxRevenue = Math.max(...revenueByRegion.flat());
+// Constants
+const CATEGORY_COL = "Region" as const;
+const SERIES_COL = "Product Line" as const;
+const VALUE_COL = "Revenue ($M)" as const;
 
-// --- Focal-region highlight: a subtle band behind the top-revenue region ---
-function FocalHighlight() {
-  const xScale = useXScale();
-  const { top, height } = useDrawingArea();
-  const x0 = xScale(focalRegion) ?? 0;
-  return <rect x={x0} y={top} width={xScale.bandwidth()} height={height} fill={t.palette[0]} opacity={0.07} rx={10} />;
+const GROUP_PAD_FRAC = 0.18;
+const Y_PAD_FRAC = 0.25;
+
+// Data — quarterly revenue ($M) by product line across regions
+const DATA: Array<Record<string, string | number>> = [
+  { [CATEGORY_COL]: "North America", [SERIES_COL]: "Hardware", [VALUE_COL]: 48 },
+  { [CATEGORY_COL]: "North America", [SERIES_COL]: "Software", [VALUE_COL]: 71 },
+  { [CATEGORY_COL]: "North America", [SERIES_COL]: "Services", [VALUE_COL]: 39 },
+  { [CATEGORY_COL]: "Asia-Pacific", [SERIES_COL]: "Hardware", [VALUE_COL]: 52 },
+  { [CATEGORY_COL]: "Asia-Pacific", [SERIES_COL]: "Software", [VALUE_COL]: 45 },
+  { [CATEGORY_COL]: "Asia-Pacific", [SERIES_COL]: "Services", [VALUE_COL]: 33 },
+  { [CATEGORY_COL]: "Europe", [SERIES_COL]: "Hardware", [VALUE_COL]: 33 },
+  { [CATEGORY_COL]: "Europe", [SERIES_COL]: "Software", [VALUE_COL]: 58 },
+  { [CATEGORY_COL]: "Europe", [SERIES_COL]: "Services", [VALUE_COL]: 30 },
+  { [CATEGORY_COL]: "Latin America", [SERIES_COL]: "Hardware", [VALUE_COL]: 21 },
+  { [CATEGORY_COL]: "Latin America", [SERIES_COL]: "Software", [VALUE_COL]: 24 },
+  { [CATEGORY_COL]: "Latin America", [SERIES_COL]: "Services", [VALUE_COL]: 17 },
+];
+
+// Discover categories and series in order of first appearance, then sort categories by total revenue descending
+const rawRegions: string[] = [];
+const productLines: string[] = [];
+for (const row of DATA) {
+  const reg = String(row[CATEGORY_COL]);
+  const prod = String(row[SERIES_COL]);
+  if (!rawRegions.includes(reg)) rawRegions.push(reg);
+  if (!productLines.includes(prod)) productLines.push(prod);
 }
 
-// --- Custom marks: thin stems + circular heads, grouped per category -------
-// MUI X community has no built-in lollipop series, so the stems/markers are
-// drawn as plain SVG using the ChartContainer's own band/linear scales — this
-// guarantees the marks line up exactly with the shared axes.
-function Lollipops() {
-  const xScale = useXScale();
-  const yScale = useYScale();
+const regionTotals: Record<string, number> = {};
+for (const reg of rawRegions) {
+  regionTotals[reg] = DATA.filter((r) => String(r[CATEGORY_COL]) === reg).reduce(
+    (sum, r) => sum + Number(r[VALUE_COL]),
+    0,
+  );
+}
+const regions = [...rawRegions].sort((a, b) => regionTotals[b] - regionTotals[a]);
+const focalRegion = regions[0];
+
+const seriesColors = productLines.map((_, i) => t.palette[i]);
+const maxRevenue = Math.max(...DATA.map((r) => Number(r[VALUE_COL])));
+const yAxisMax = maxRevenue * (1 + Y_PAD_FRAC);
+const VALUE_UNIT = VALUE_COL.match(/\(([^)]+)\)/)?.[1] ?? "$M";
+const UNIT_PREFIX = VALUE_UNIT.startsWith("$") ? "$" : "";
+const UNIT_SUFFIX = VALUE_UNIT.startsWith("$") ? VALUE_UNIT.slice(1) : VALUE_UNIT;
+
+function GroupedLollipopsLayer() {
+  const xScale = useXScale("region-axis") as {
+    (v: string): number | undefined;
+    bandwidth?: () => number;
+  };
+  const yScale = useYScale("revenue-axis") as (v: number) => number | undefined;
+  const { top, height } = useDrawingArea();
+
+  if (!xScale || !yScale || typeof xScale.bandwidth !== "function") return null;
+
   const bandwidth = xScale.bandwidth();
-  const groupPadding = bandwidth * 0.18;
+  const groupPadding = bandwidth * GROUP_PAD_FRAC;
   const slotWidth = (bandwidth - 2 * groupPadding) / productLines.length;
-  const baselineY = yScale(0);
+  const baselineY = Number(yScale(0) ?? top + height);
+  const focalX = Number(xScale(focalRegion) ?? 0);
 
   return (
-    <>
-      {regions.map((region, ri) =>
-        productLines.map((_, si) => {
-          const value = revenueByRegion[ri][si];
-          const cx = (xScale(region) ?? 0) + groupPadding + slotWidth * (si + 0.5);
-          const cy = yScale(value);
+    <g>
+      {/* Subtle non-data chrome highlight behind the top-revenue region */}
+      <rect
+        x={focalX}
+        y={top}
+        width={bandwidth}
+        height={height}
+        fill={t.elevatedBg}
+        fillOpacity={0.55}
+        stroke={t.grid}
+        strokeWidth={1}
+        rx={10}
+      />
+
+      {regions.map((region) =>
+        productLines.map((prod, si) => {
+          const row = DATA.find(
+            (r) => String(r[CATEGORY_COL]) === region && String(r[SERIES_COL]) === prod,
+          );
+          if (!row) return null;
+          const value = Number(row[VALUE_COL]);
+          const cx = Number(xScale(region) ?? 0) + groupPadding + slotWidth * (si + 0.5);
+          const cy = Number(yScale(value) ?? baselineY);
           return (
-            <g key={`${region}-${si}`}>
+            <g key={`${region}-${prod}`}>
               <line
                 x1={cx}
                 y1={baselineY}
@@ -65,54 +113,32 @@ function Lollipops() {
                 strokeWidth={4}
                 strokeLinecap="round"
               />
-              <circle cx={cx} cy={cy} r={12} fill={seriesColors[si]} stroke={t.pageBg} strokeWidth={2.5} />
-              <text x={cx} y={cy - 19} textAnchor="middle" fontSize={12} fill={t.ink}>
-                {`$${value}M`}
+              <circle
+                cx={cx}
+                cy={cy}
+                r={12}
+                fill={seriesColors[si]}
+                stroke={t.pageBg}
+                strokeWidth={2.5}
+              />
+              <text
+                x={cx}
+                y={cy - 19}
+                textAnchor="middle"
+                fontSize={14}
+                fontWeight={500}
+                fill={t.ink}
+              >
+                {`${UNIT_PREFIX}${value}${UNIT_SUFFIX}`}
               </text>
             </g>
           );
         }),
       )}
-    </>
+    </g>
   );
 }
 
-// --- Y-axis title (manual — ChartsYAxis's built-in `label` offset formula
-// assumes narrow tick text and overlaps wide "$NNM" tick labels here) --------
-function YAxisTitle({ text }) {
-  const { top, height } = useDrawingArea();
-  const cx = 22;
-  const cy = top + height / 2;
-  return (
-    <text x={cx} y={cy} transform={`rotate(-90, ${cx}, ${cy})`} textAnchor="middle" fontSize={16} fill={t.inkSoft}>
-      {text}
-    </text>
-  );
-}
-
-// --- Legend (manual — custom marks aren't registered as chart series) ------
-function Legend() {
-  return (
-    <div style={{ display: "flex", justifyContent: "center", gap: 28, height: 36, alignItems: "center" }}>
-      {productLines.map((name, i) => (
-        <div key={name} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span
-            style={{
-              width: 14,
-              height: 14,
-              borderRadius: "50%",
-              background: seriesColors[i],
-              display: "inline-block",
-            }}
-          />
-          <span style={{ fontSize: 15, color: t.inkSoft }}>{name}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// --- Chart (default-exported component — the harness mounts it) -------------
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
   const titleHeight = 56;
@@ -120,7 +146,15 @@ export default function Chart() {
   const chartHeight = height - titleHeight - legendHeight;
 
   return (
-    <div style={{ width, height, display: "flex", flexDirection: "column" }}>
+    <div
+      style={{
+        width,
+        height,
+        backgroundColor: t.pageBg,
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
       <div
         style={{
           height: titleHeight,
@@ -134,31 +168,66 @@ export default function Chart() {
       >
         lollipop-grouped · javascript · muix · anyplot.ai
       </div>
-      <Legend />
-      <ChartContainer
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          gap: 28,
+          height: legendHeight,
+          alignItems: "center",
+        }}
+      >
+        {productLines.map((name, i) => (
+          <div key={name} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span
+              style={{
+                width: 14,
+                height: 14,
+                borderRadius: "50%",
+                background: seriesColors[i],
+                display: "inline-block",
+              }}
+            />
+            <span style={{ fontSize: 15, color: t.inkSoft }}>{name}</span>
+          </div>
+        ))}
+      </div>
+      <ChartsContainer
         width={width}
         height={chartHeight}
         series={[]}
         skipAnimation
-        margin={{ top: 20, bottom: 44, left: 92, right: 24 }}
-        xAxis={[{ id: "region-axis", scaleType: "band", data: regions, categoryGapRatio: 0.3 }]}
+        margin={{ top: 20, bottom: 16, left: 20, right: 24 }}
+        xAxis={[
+          {
+            id: "region-axis",
+            scaleType: "band",
+            data: regions,
+            categoryGapRatio: 0.3,
+            height: 44,
+            tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
+          },
+        ]}
         yAxis={[
           {
             id: "revenue-axis",
             scaleType: "linear",
             min: 0,
-            max: maxRevenue * 1.25,
-            valueFormatter: (v) => `$${v}M`,
+            max: yAxisMax,
+            width: 84,
+            label: VALUE_COL,
+            valueFormatter: (v: number | null) =>
+              v != null ? `${UNIT_PREFIX}${v}${UNIT_SUFFIX}` : "",
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.inkSoft },
           },
         ]}
       >
-        <FocalHighlight />
         <ChartsGrid horizontal />
-        <ChartsXAxis axisId="region-axis" tickLabelStyle={{ fontSize: 15 }} />
-        <ChartsYAxis axisId="revenue-axis" tickLabelStyle={{ fontSize: 14 }} />
-        <YAxisTitle text="Revenue ($M)" />
-        <Lollipops />
-      </ChartContainer>
+        <GroupedLollipopsLayer />
+        <ChartsXAxis axisId="region-axis" />
+        <ChartsYAxis axisId="revenue-axis" />
+      </ChartsContainer>
     </div>
   );
 }
