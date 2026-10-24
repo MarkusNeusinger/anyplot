@@ -2,126 +2,134 @@ library: muix
 language: javascript
 specification_id: marimekko-basic
 created: '2026-07-24T14:55:24Z'
-updated: '2026-07-24T15:11:40Z'
-generated_by: claude-sonnet
-workflow_run: 30102481895
+updated: '2026-10-24T11:03:49Z'
+generated_by: gemini-4-argon
+adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
+workflow_run: 40087809100
 issue: 1002
-language_version: 22.23.1
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/javascript/muix/plot-dark.html
-quality_score: 94
+quality_score: 87
 review:
   strengths:
-  - Leader-column visual accent (outline + bold total label + bold region label) directly
-    resolves attempt 1's "no explicit emphasis on the standout data point" finding
-    — East ($150M) now reads as the headline insight at a glance
-  - 'Reference-gridline weight (strokeOpacity: 0.45) is now clearly subordinate to
-    the solid segment dividers, resolving attempt 1''s chrome-hierarchy note'
-  - Idiomatic low-level MUI X composition (useXScale/useYScale/useDrawingArea) — the
-    correct community-package pattern for a chart type the library doesn't ship natively
-  - Canonical Imprint palette with brand green first series; data colors verified
-    pixel-identical between light and dark renders
-  - 'Spec compliance is complete and numerically verified: column totals, segment
-    shares, and labels all reconcile correctly across all 5 regions'
+  - Composes the Marimekko as a custom SVG layer inside ChartsContainer, driving every
+    rect through the useXScale/useYScale/useDrawingArea hooks so cells and the native
+    ChartsYAxis share one linear 0–100 coordinate space
+  - 'Bar widths and segment heights are computed from the data: widths 23/14/34/9/20
+    % of the $440M grand total and within-column shares (e.g. North Electronics 42
+    %), so area equals value'
+  - Segment labels pick a fixed dark or light ink per fill by luminance (white on
+    green and blue, near-black on lavender and ochre), so every label reads identically
+    in both themes
+  - 'Two-line x labels: bold region name centered under each variable-width bar plus
+    a softer ink line with the column total and its share of the grand total'
+  - 2.5 px page-colored cell separators keep the 20 segments crisp without a grid,
+    in both themes
+  - 'Correct Imprint order (Electronics #009E73, Apparel #C475FD, Home Goods #4467A3,
+    Grocery #BD8233) from t.palette by index, stacked in the same order in every bar'
+  - Theme chrome from ANYPLOT_TOKENS throughout (pageBg, ink, inkSoft); skipAnimation
+    set
   weaknesses:
-  - Segment value-label fill always uses t.pageBg regardless of the underlying tile
-    color; reads well for most tiles but computes to a borderline ~3.1:1 contrast
-    on the mid-tone blue Home Goods segments in dark mode (below 4.5:1 AA for that
-    text size) — consider per-tile luminance-aware label color
-  - ChartContainer does not set skipAnimation; harmless today since series={[]} means
-    nothing MUI-X-native animates, but the library guide's "always set skipAnimation"
-    rule is a defensive belt-and-braces measure worth adding
+  - 'Suggestion: the legend is a hand-built HTML row of divs; feeding the product
+    names as labelled series to ChartsDataProvider and rendering the community <ChartsLegend
+    /> would use the library''s own legend.'
+  - 'Suggestion: the unit parsing (regex on the REVENUE column name to split ''$''
+    and ''M'') is clever but opaque; a plain formatter constant would read more simply.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Dark-ink title ("Retail Revenue by Region & Product Line · marimekko-basic · javascript · muix · anyplot.ai"), legend row, per-column $-total labels, and region names below the x-axis are all crisp and clearly readable. Y-axis "Share of Regional Revenue" title and % tick labels are legible with no clipping.
-      Data: Four Imprint colors (teal/lavender/blue/ochre) in canonical order, first series = #009E73 brand green. Segment $-value labels render as near-white text, clearly legible on every tile. East column carries a bold outline + bold labels (leader accent).
+      Background: warm off-white #FAF8F1 across the whole 3200x1800 canvas.
+      Chrome: title "marimekko-basic · javascript · muix · anyplot.ai" bold dark ink centered at top (~37 % of width); a centered legend row below it (Electronics, Apparel, Home Goods, Grocery with rounded swatches); y axis on the left with 0%–100% ticks every 10 % in soft ink and a rotated "Share within column (%)" title; no x axis line — under each bar a bold region name (North, South, East, West, Central) and a soft-ink line with the column total and share ($100M (23%), $60M (14%), $150M (34%), $40M (9%), $90M (20%)). All text readable.
+      Data: five full-height columns with widths proportional to totals (East widest, West narrowest), each split into four stacked segments: Electronics #009E73 on top, Apparel #C475FD, Home Goods #4467A3, Grocery #BD8233 at bottom; segment boundaries at different heights per column; separated by page-colored 2.5 px strokes. Every segment carries a bold "$value (share%)" label — white on green/blue, near-black on lavender/ochre. No overlaps, nothing clipped.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: All chrome (title, legend, region labels, totals, y-axis ticks/label) flips to light ink and stays fully legible. No dark-on-dark chrome failures anywhere.
-      Data: Segment fill colors pixel-identical to the light render (only chrome flipped). Segment value labels flip to near-black text on the colored tiles; contrast is good on ochre/purple/teal tiles, borderline (~3.1:1) on the mid-blue Home Goods tiles specifically — readable in practice (bold text) but flagged as a minor weakness. Leader-column accent on East is equally visible.
-      Legibility verdict: PASS (with one minor borderline-contrast note on blue-segment labels, not a failure)
+      Background: warm near-black #1A1A17.
+      Chrome: title, legend text, region names in light ink; ticks, y-axis title and column totals in light soft ink — all clearly readable, no dark-on-dark text. Cell separators flip to the dark page color.
+      Data: segment fills identical to the light render (#009E73, #C475FD, #4467A3, #BD8233), segment label colors also identical (fixed by fill luminance), brand green clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicit and readable in both themes; blue-segment
-          value labels in dark mode sit at borderline ~3.1:1 contrast
+        comment: Explicit sizes (title 22, region 15, ticks/values 14, axis title
+          16 CSS px); all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/element collisions in either render
+        comment: No text collisions; every value label fits inside its segment
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Value labels shown only where colWidth>70 && segHeight>46; small
-          segments cleanly omit labels
+        comment: All 20 cells clearly visible with page-colored separators; value
+          labels fit their marks and add information; legend swatches visible in both
+          themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Imprint hues, no red-green-only encoding
+        comment: Imprint hues are CVD-safe; label ink chosen by fill luminance for
+          contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Exact 3200x1800 canvas, no clipping at any edge, balanced margins
+        comment: Canvas 3200x1800; plot fills the width, balanced margins, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis labeled with % units; column totals and region names cover
-          x dimension
+        comment: Y axis 'Share within column (%)' with unit; x categories named under
+          bars with totals in $M
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Canonical Imprint order, brand green first, correct theme backgrounds
-          both renders
+        comment: 'Electronics #009E73 first, Imprint canonical order; backgrounds
+          #FAF8F1 / #1A1A17; chrome theme-correct'
     design_excellence:
-      score: 18
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 5
         max: 8
         passed: true
-        comment: Leader-column accent, rounded segment corners, refined gridline weight
-          lift this past attempt 1's flat rectangles
+        comment: Luminance-chosen segment label ink and a typographic hierarchy in
+          the x labels (bold name, soft-ink total line) go beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Gridlines now explicitly subdued (strokeOpacity 0.45) relative to
-          solid segment dividers
+        comment: Page-colored 2.5 px cell separators replace a grid; no x axis line
+          so the variable-width bars carry the axis
       - id: DE-03
         name: Data Storytelling
-        score: 6
+        score: 3
         max: 6
         passed: true
-        comment: East region ($150M leader) is unmistakable via outline + bold weight,
-          resolving attempt 1's feedback
+        comment: Column totals with share of grand total under each bar make the width
+          encoding readable at a glance
     spec_compliance:
       score: 15
       max: 15
@@ -131,49 +139,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct marimekko/mekko chart, both width and height carry information
+        comment: 'Correct Marimekko: variable-width, full-height stacked columns;
+          no extra layers'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Widths proportional to totals, heights proportional to share, area=value,
-          legend, value labels, centered category names
+        comment: Widths proportional to totals, heights = within-column share, consistent
+          colors + legend, names centered under bars, value labels on segments — all
+          Notes and good-version bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Column totals verified to sum correctly for all 5 regions
+        comment: Cells sit exactly at computed cumulative positions; 0–100 % both
+          axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches spec pattern exactly; legend labels match product names
+        comment: Title format correct; legend names the four product lines
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Covers width, height, area, value labels, legend, and totals
+        comment: Widths range 9–34 %, segment boundaries differ per column, shares
+          13–42 %
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible retail revenue-by-region-and-product scenario, neutral
-          domain
+        comment: Retail revenue by sales region and product line — plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible $5M-$55M segment values
+        comment: 'Checked: totals 100/60/150/40/90 of $440M → 23/14/34/9/20 % match
+          the labels; North Electronics 42/100 = 42 %, West Grocery 5/40 = 13 %'
     code_quality:
       score: 10
       max: 10
@@ -183,33 +195,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Chart + one MekkoTiles helper, no unnecessary abstraction
+        comment: Flat data prep; only the React components the hook API requires
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, hardcoded in-memory data
+        comment: Deterministic inline data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Every import is used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex for an unsupported chart type, no fake UI
+        comment: Layout computation is short and necessary — MUI X has no Marimekko
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct export default, respects harness contract
+        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation,
+          v9 ChartsContainer API
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -217,26 +230,31 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: useXScale/useYScale/useDrawingArea is the documented community pattern
-          for unsupported chart types
+        comment: 'Idiomatic v9 composition: ChartsContainer + useXScale/useYScale/useDrawingArea
+          custom layer + native ChartsYAxis with width/labelStyle/valueFormatter'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
-        passed: true
-        comment: ChartsText/ChartsYAxis integrate with the scale/drawing-area system;
-          native legend/tooltip layer left unused in favor of custom legend
+        passed: false
+        comment: Uses MUI X's composable scale hooks and ChartsText to build a chart
+          type the library does not ship
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-10-24T11:00:55Z'
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
   - annotations
+  - layer-composition
+  - html-export
   patterns:
-  - data-generation
   - iteration-over-groups
   dataprep:
+  - normalization
   - cumulative-sum
   styling:
-  - alpha-blending
   - edge-highlighting
+  - minimal-chrome
