@@ -17,9 +17,11 @@ const LEGEND_HEIGHT = 86;
 const MARGIN = { top: 44, right: 220, bottom: 24, left: 220 };
 const NODE_MIN_R = 12;
 const NODE_MAX_R = 26;
-const ISOLATED_R = 7.5;
+const ISOLATED_R = 9;
 const EDGE_MIN_W = 1.6;
 const EDGE_MAX_W = 6;
+const EDGE_MIN_OP = 0.42;
+const EDGE_OP_RANGE = 0.4;
 
 // Columns: set these to your data's column names
 const STUDENT = "Student (Set A)"; // role: source
@@ -231,7 +233,7 @@ function BipartiteOverlay({
         const y2 = Number(yScale(1 - (courseRow[edge.course] + 0.5) / courses.length));
         const hRatio = (edge.hours - minHours) / hoursSpan;
         const strokeW = EDGE_MIN_W + hRatio * (EDGE_MAX_W - EDGE_MIN_W);
-        const strokeOp = 0.25 + hRatio * 0.45;
+        const strokeOp = EDGE_MIN_OP + hRatio * EDGE_OP_RANGE;
         const tooltip: HoverInfo = {
           label: `${students[edge.student]} → ${courses[edge.course]}`,
           detail: `${edge.hours} ${unitSuffix}`,
@@ -280,11 +282,9 @@ function BipartiteOverlay({
               cx={studentX}
               cy={cy}
               r={r}
-              fill={t.palette[0]}
-              fillOpacity={studentDegree[i] === 0 ? 0.4 : 1}
-              stroke={t.pageBg}
-              strokeWidth={2.5}
-              strokeDasharray={studentDegree[i] === 0 ? "3 2" : undefined}
+              fill={studentDegree[i] === 0 ? t.pageBg : t.palette[0]}
+              stroke={studentDegree[i] === 0 ? t.palette[0] : t.pageBg}
+              strokeWidth={studentDegree[i] === 0 ? 3.5 : 2.5}
               style={{ cursor: "pointer" }}
               onMouseEnter={() => onHoverChange(tooltip)}
               onMouseLeave={() => onHoverChange(null)}
@@ -319,11 +319,9 @@ function BipartiteOverlay({
               cx={courseX}
               cy={cy}
               r={r}
-              fill={t.palette[1]}
-              fillOpacity={courseDegree[i] === 0 ? 0.4 : 1}
-              stroke={t.pageBg}
-              strokeWidth={2.5}
-              strokeDasharray={courseDegree[i] === 0 ? "3 2" : undefined}
+              fill={courseDegree[i] === 0 ? t.pageBg : t.palette[1]}
+              stroke={courseDegree[i] === 0 ? t.palette[1] : t.pageBg}
+              strokeWidth={courseDegree[i] === 0 ? 3.5 : 2.5}
               style={{ cursor: "pointer" }}
               onMouseEnter={() => onHoverChange(tooltip)}
               onMouseLeave={() => onHoverChange(null)}
@@ -474,7 +472,7 @@ export default function Chart() {
           {hourSamples.map((h) => {
             const hRatio = (h - minHours) / hoursSpan;
             const w = EDGE_MIN_W + hRatio * (EDGE_MAX_W - EDGE_MIN_W);
-            const op = 0.25 + hRatio * 0.45;
+            const op = EDGE_MIN_OP + hRatio * EDGE_OP_RANGE;
             return (
               <span key={h} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
                 <span
@@ -491,7 +489,7 @@ export default function Chart() {
               </span>
             );
           })}
-          <span>· Dashed outline = isolated node (no edges)</span>
+          <span>· Hollow ring = isolated node (no edges)</span>
         </div>
       </div>
     </div>
