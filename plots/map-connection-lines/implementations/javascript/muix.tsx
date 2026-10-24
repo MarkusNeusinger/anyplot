@@ -15,7 +15,7 @@ const t = window.ANYPLOT_TOKENS;
 // Constants
 const TITLE = "map-connection-lines · javascript · muix · anyplot.ai";
 const LON_PAD_FRAC = 0.08;
-const LAT_PAD_FRAC = 0.08;
+const LAT_PAD_FRAC = 0.15;
 const ARC_BOW_FACTOR = 0.16;
 const NEIGHBOR_THRESHOLD_SHARE = 0.045;
 
@@ -135,16 +135,21 @@ const paddedLatSpan = (rawLatMax - rawLatMin) * (1 + 2 * LAT_PAD_FRAC);
 const targetAspect = DRAW_W / DRAW_H;
 const groundAspect = (paddedLonSpan * cosMeanLat) / paddedLatSpan;
 
-const finalLonSpan =
-  groundAspect >= targetAspect
+// Routes crossing the antimeridian need the whole globe in frame to stay whole
+const wrapsAntimeridian = data.some(
+  (r) => Math.abs(Number(r[DEST_LON]) - Number(r[ORIGIN_LON])) > 180,
+);
+
+// Regional data widens longitude to keep the ground aspect; a wide frame keeps
+// the latitude range tight instead of padding it with empty bands
+const finalLonSpan = wrapsAntimeridian
+  ? 360
+  : groundAspect >= targetAspect
     ? paddedLonSpan
     : (paddedLatSpan * targetAspect) / cosMeanLat;
-const finalLatSpan =
-  groundAspect >= targetAspect
-    ? (paddedLonSpan * cosMeanLat) / targetAspect
-    : paddedLatSpan;
+const finalLatSpan = paddedLatSpan;
 
-const lonCenter = (rawLonMin + rawLonMax) / 2;
+const lonCenter = wrapsAntimeridian ? 0 : (rawLonMin + rawLonMax) / 2;
 const latCenter = (rawLatMin + rawLatMax) / 2;
 const LON_MIN = lonCenter - finalLonSpan / 2;
 const LON_MAX = lonCenter + finalLonSpan / 2;
@@ -162,7 +167,16 @@ for (const a of airportList) {
         neighborThresholdDeg,
   );
   if (neighbors.length === 0) {
-    airportLabelOffsets[a.code] = { dx: 0, dy: -(radius + 9) };
+    // Isolated label goes on the side away from where its routes leave
+    const partnerLatShift = data.reduce((s, r) => {
+      if (r[ORIGIN_CODE] === a.code) return s + Number(r[DEST_LAT]) - a.lat;
+      if (r[DEST_CODE] === a.code) return s + Number(r[ORIGIN_LAT]) - a.lat;
+      return s;
+    }, 0);
+    airportLabelOffsets[a.code] =
+      partnerLatShift > 0
+        ? { dx: 0, dy: radius + 20 }
+        : { dx: 0, dy: -(radius + 9) };
   } else {
     const meanLon = neighbors.reduce((s, n) => s + n.lon, 0) / neighbors.length;
     const meanLat = neighbors.reduce((s, n) => s + n.lat, 0) / neighbors.length;
@@ -233,8 +247,8 @@ function ConnectionMapLayer() {
           const pax = Number(row[PASSENGERS]);
           const ratio =
             (pax - minPassengers) / (maxPassengers - minPassengers);
-          const strokeWidth = 2.5 + ratio * 6;
-          const strokeOpacity = 0.3 + ratio * 0.3;
+          const strokeWidth = 3 + ratio * 6;
+          const strokeOpacity = 0.45 + ratio * 0.25;
 
           const segments: Array<[number, number, number, number]> = [];
           if (Math.abs(lon2 - lon1) <= 180) {
@@ -358,8 +372,7 @@ export default function Chart() {
             min: LON_MIN,
             max: LON_MAX,
             height: X_AXIS_H,
-            label: ORIGIN_LON,
-            valueFormatter: (v: number | null) =>
+            label: `Longitude (${LON_UNIT})`,            valueFormatter: (v: number | null) =>
               v === null ? "" : `${Math.round(v)}${LON_UNIT}`,
             labelStyle: { fontSize: 16, fill: t.ink },
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
@@ -372,7 +385,7 @@ export default function Chart() {
             min: LAT_MIN,
             max: LAT_MAX,
             width: Y_AXIS_W,
-            label: ORIGIN_LAT,
+            label: `Latitude (${LAT_UNIT})`,
             valueFormatter: (v: number | null) =>
               v === null ? "" : `${Math.round(v)}${LAT_UNIT}`,
             labelStyle: { fontSize: 16, fill: t.ink },
