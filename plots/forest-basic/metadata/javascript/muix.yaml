@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: forest-basic
 created: '2026-09-05T01:50:12Z'
-updated: '2026-10-24T09:13:02Z'
+updated: '2026-10-24T09:18:30Z'
 generated_by: gemini-4-argon
 adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
 workflow_run: 40080787154
@@ -13,48 +13,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/forest-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/forest-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/forest-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/forest-basic/javascript/muix/plot-dark.html
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - Composes the forest plot from MUI X's ChartsContainer with a custom ForestMarks
-    component that reads useXScale/useYScale/useDrawingArea, so every square, whisker
-    and the diamond sits exactly on the shared axis scales
-  - 'Pooled diamond computed from the data (DerSimonian-Laird random effects): -5.6
-    [-7.1, -4.1], I² = 48%, verified independently; tips sit at the pooled bounds'
-  - Diamond drawn in the ink token in its own row below a thin divider, clearly set
-    apart from the green study squares in both themes
-  - Studies in chronological order, null line at 0 via native ChartsReferenceLine
-    with a 'No difference' label running through all rows including the diamond
-  - 'Theme tokens threaded through all chrome; Imprint #009E73 for study marks identical
-    in both renders; skipAnimation set; y-axis band sized explicitly so no study name
-    truncates'
+  - 'Composes the forest plot from MUI X v9 building blocks: ChartsContainer with
+    a linear y axis whose tickInterval/valueFormatter place each study name at its
+    own row, ChartsGrid for vertical gridlines and ChartsReferenceLine for the labelled
+    null line at 0'
+  - Custom SVG marks are drawn through the useXScale/useYScale/useDrawingArea hooks,
+    so every square, whisker and the diamond sit exactly at their data values on the
+    library's own scales
+  - The pooled diamond is computed in code (DerSimonian-Laird random effects from
+    the CIs), sits in its own row below a thin divider, and is drawn in the ink token
+    so it reads clearly apart from the green study squares in both themes
+  - Square area scales with study weight (side ~ sqrt(weight)) with a 5 px floor,
+    so the lightest study (Ivanova, 7.9) stays visible and the heaviest stays inside
+    its row
+  - Studies are ordered chronologically (2019-2023), and the scenario (antihypertensive
+    RCTs, SBP mean difference in mmHg) is realistic with intervals on both sides of
+    the null line
+  - 'Theme tokens are threaded through every element: title in ink, subtitle/ticks/reference
+    label in inkSoft, grid at reduced opacity; both renders are fully legible'
   weaknesses:
-  - 'SC-01 (both): a right-hand text column of per-study values (''-4.2 [-7.1, -1.3]
-    · w = 11.9'' on every row plus the bold pooled value) and an I² heterogeneity
-    statistic in the subtitle are an annotation layer the forest-basic spec neither
-    requires nor offers → remove the value column and the I²/k statistics from the
-    subtitle, and give the freed right margin back to the plot area. Likely cause:
-    the <text x={textX}> elements in ForestMarks, MARGIN.right = 256, and the iSquared
-    term in the subtitle string.'
-  - 'SC-03 (both): marker size is a min-max rescale of weight (half-size 5 + (w -
-    min)/(max - min) * 6), so the 7.9-weight square has about 1/5 the area of the
-    16.0-weight square while its weight is about 1/2 → make square area proportional
-    to weight (side ∝ sqrt(weight), e.g. half = MAX_MARKER_HALF * sqrt(w / maxWeight)),
-    keeping the smallest at least ~5 px half-size. Likely cause: the halfSize formula
-    in rows.'
-  - 'Suggestion: format the right-column and pooled numbers with the same typographic
-    minus (−) the axis ticks use, if any numeric text is kept.'
+  - 'Suggestion: the hard-coded ''Study weight'' column (e.g. Ivanova 7.9 %) does
+    not match the random-effects weights the code computes for the pooled diamond;
+    deriving the marker weights from the same reWeights would keep the square sizes
+    and the diamond consistent.'
+  - 'Suggestion: adding MUI X tooltips (e.g. a ChartsTooltip on an invisible scatter
+    series at the study positions) would expose the exact effect and CI in the HTML
+    view.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across the full canvas, 3200x1800.
-      Chrome: bold dark title "Systolic BP Reduction · forest-basic · javascript · muix · anyplot.ai" (~43% width), soft-ink subtitle "Mean difference in SBP (mmHg) · squares sized by Study weight · diamond = pooled effect (k = 8, I² = 48%)"; eight study names on the y axis (Anderson et al. 2019 … Kowalski et al. 2023, chronological) plus "Pooled Effect (Random Effects)"; x axis −12…3 with title "Mean difference in SBP (mmHg)"; subtle vertical grid only; thin divider above the pooled row; all text dark and readable.
-      Data: green #009E73 squares (sized by weight) with capped horizontal CI whiskers per study; black ink diamond spanning −7.1 to −4.1 centered at −5.6 in its own bottom row; dashed soft-ink null line at 0 labelled "No difference" running through all rows; right-hand text column with "effect [lower, upper] · w = …" per row and bold pooled value. Dubois and Ivanova intervals cross the null line.
+      Background: warm off-white, matches #FAF8F1.
+      Chrome: bold dark title "Systolic BP Reduction · forest-basic · javascript · muix · anyplot.ai" centered at top (~43 % of width), grey subtitle "Mean difference in SBP (mmHg) · squares sized by Study weight · diamond = pooled effect"; eight study names (Anderson et al. 2019 … Kowalski et al. 2023) as left y tick labels plus "Pooled Effect (Random Effects)"; x ticks −12 to 3 and x-axis title "Mean difference in SBP (mmHg)"; subtle vertical gridlines; dashed null line at 0 labelled "No difference" at its foot. All text readable, nothing clipped.
+      Data: green #009E73 squares sized by weight with capped horizontal CI whiskers in green, one row per study, ordered chronologically; Dubois and Ivanova cross the null line. A thin grey divider separates the studies from a near-black diamond centred near −5.6 with tips at about −7.0 and −4.2.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17.
-      Chrome: title, subtitle, study names, tick labels, axis title and right-hand value column all flip to light ink and are clearly readable; grid lines and divider subtle but visible; no dark-on-dark text.
-      Data: study squares and whiskers in the identical #009E73 green; pooled diamond flips to the light ink token (chrome-like summary mark), still distinct from the green squares; dashed null line in light soft ink.
+      Background: warm near-black, matches #1A1A17.
+      Chrome: title in light ink, subtitle, tick labels and "No difference" label in light grey; gridlines subtle but visible; x-axis line light. No dark-on-dark text.
+      Data: study squares and whiskers in the identical #009E73 green as the light render; the pooled diamond flips to the light ink token (as chrome-style ink, set apart from the green studies). Brand green clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -66,49 +64,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (title 22, axis 14-15 CSS px at 2x) per the muix prompt;
-          readable in both themes
+        comment: Title 22 px, ticks 14 px, axis title 15 px in the 1600x900 CSS space
+          per the muix sizing guide; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; 'No difference' label clear of the diamond and
-          ticks
+        comment: No text collisions; 'No difference' label sits clear of the diamond
+          and axis
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Smallest square (~20 px) still visible, whiskers with caps 2.2 px,
-          diamond prominent
+        comment: Squares 10-22 px with 2.2 px whiskers and caps; smallest marker clearly
+          visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single green hue plus ink diamond; no red-green reliance
+        comment: Single green hue plus ink diamond; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, canvas gate passed; balanced margins, nothing cut off
+        comment: 3200x1800, balanced margins, y band sized for the longest label,
+          nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Mean difference in SBP (mmHg)'' names measure and unit'
+        comment: x axis 'Mean difference in SBP (mmHg)' names measure and unit
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Study marks #009E73 in both renders; backgrounds #FAF8F1 / #1A1A17;
-          chrome theme-correct'
+        comment: 'Studies in #009E73, identical across themes; backgrounds #FAF8F1
+          / #1A1A17; diamond in the ink token'
     design_excellence:
-      score: 11
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -116,55 +115,53 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Bold title over soft-ink subtitle gives a clear typographic hierarchy
-          beyond the baseline; capped whiskers
+        comment: Title/subtitle hierarchy with a subtitle that keys the encodings;
+          ink diamond contrasted against green squares
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Vertical-only grid chosen for a horizontal-interval chart, thin divider
-          isolating the summary row, generous row spacing, y-axis line removed
+        comment: Thin divider setting the pooled row apart, capped whiskers, vertical-only
+          grid at reduced opacity, axis line disabled on y
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Default; diamond separation is spec-required, value column and I²
-          are creep and earn no credit
+        comment: 'Default: data displayed as the spec asks, no further hierarchy'
     spec_compliance:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Correct forest plot, but an unrequested per-row value/CI text column
-          and I² statistic form an annotation layer on a -basic spec (defect line)
+        passed: true
+        comment: Forest plot, single meta-analysis, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Rows named at their row, CIs, chronological order, bottom diamond
-          with tips at pooled bounds, null line through all rows, weight-sized markers,
-          labelled axis
+        comment: Rows per study with CI lines, pooled diamond at bottom, null line
+          at 0 through all rows, weight-sized markers, chronological order, labelled
+          axis
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Positions exact; marker area not proportional to weight (min-max
-          rescale exaggerates ratio ~2.4x) (defect line)
+        passed: true
+        comment: All marks at their data values via the library scales; full CI range
+          visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title prefix + mandated format; single series, legend N/A (subtitle
-          explains encodings)
+        comment: Descriptive prefix + mandated title format; no legend needed (subtitle
+          keys the encoding)
     data_quality:
       score: 15
       max: 15
@@ -174,21 +171,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Varied interval widths and weights, two intervals crossing null,
-          pooled diamond narrower than any study
+        comment: Varying CI widths, two studies crossing the null, weight range 7.9-16,
+          narrow pooled diamond
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Antihypertensive RCT meta-analysis, neutral and plausible
+        comment: Antihypertensive RCTs, plausible SBP reductions of 2-8.5 mmHg
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'SBP reductions 2-8.5 mmHg plausible; recomputed DL random effects:
-          -5.62 [-7.10, -4.14], I² 47.8% matches render'
+        comment: 'Checked: fixed-effect mean ~-5.8 from the CIs, random-effects pooled
+          computed at ~-5.6 [-7.0, -4.2], matching the diamond in the render'
     code_quality:
       score: 10
       max: 10
@@ -198,14 +195,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script; the one inner component is required to call MUI X
-          scale hooks
+        comment: Columns -> data -> computation -> component; the ForestMarks sub-component
+          is required for the MUI X scale hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic inline data
+        comment: Hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -217,15 +214,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Pooling written out only because no JS meta-analysis call is available;
-          no fake UI
+        comment: Random-effects pooling written out; no available call computes it
+          in this runtime
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-export component, sized to ANYPLOT_SIZE, skipAnimation, community
-          imports only
+        comment: Default-exported component, skipAnimation, v9 ChartsContainer API
     library_mastery:
       score: 7
       max: 10
@@ -235,31 +231,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ChartsContainer composition with ChartsGrid/ChartsXAxis/ChartsYAxis,
-          valueFormatter + tickInterval for row labels
+        comment: 'v9 composition API: ChartsContainer + ChartsXAxis/ChartsYAxis/ChartsGrid/ChartsReferenceLine,
+          axis band sizing via height/width, tickInterval + valueFormatter for row
+          labels'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Custom SVG layer via useXScale/useYScale/useDrawingArea hooks inside
-          the composition API — MUI X's distinctive extension pattern
-  verdict: REJECTED
+        comment: useXScale/useYScale/useDrawingArea hooks for custom marks inside
+          the chart's coordinate system; ChartsReferenceLine with built-in label
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T09:10:09Z'
+  rendered_at: '2026-10-24T09:15:30Z'
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   - manual-ticks
-  - patches
   - annotations
+  - patches
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
-  - minimal-chrome
   - grid-styling
