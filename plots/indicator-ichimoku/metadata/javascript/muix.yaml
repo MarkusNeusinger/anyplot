@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: indicator-ichimoku
 created: '2026-08-20T21:33:40Z'
-updated: '2026-10-24T10:10:59Z'
+updated: '2026-10-24T10:16:23Z'
 generated_by: gemini-4-argon
 adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
 workflow_run: 40084596663
@@ -13,107 +13,108 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/javascript/muix/plot-dark.html
-quality_score: 82
+quality_score: 84
 review:
   strengths:
-  - 'All five Ichimoku lines are computed from the generated OHLC with the standard
-    9/26/52 parameters and placed at the correct displacement: Senkou A/B start 26
-    periods after their lookback fills and run 26 periods past the last candle, Chikou
-    repeats the closes 26 periods to the left and stops short of the last candle'
-  - Kumo segments are split at exact interpolated crossover points, so the tint switches
-    cleanly from green to red where Span A and Span B cross (around May 10 and Jun
-    20)
-  - Composes ChartsContainer + LinePlot + ChartsGrid with a custom SVG layer driven
-    by useXScale/useYScale, so candles, cloud and Chikou share the MUI band scale
-    and axes with the native Tenkan/Kijun line series
-  - Up/down candles carry a second cue beyond hue (hollow vs filled bodies), and Span
-    B / Chikou are dashed, so the red-green encoding never rests on color alone
-  - 'Both themes are correct: #FAF8F1 and #1A1A17 surfaces, theme-token ink for title,
-    subtitle, axis titles and ticks, and identical Imprint data colors in both renders'
+  - Composes the chart with ChartsContainer + LinePlot and draws candles, Kumo and
+    Chikou in a custom SVG layer that reads the shared band and linear scales through
+    useXScale/useYScale, so every mark sits exactly on the MUI axes
+  - Kumo tint changes at the interpolated crossover point of Span A and Span B rather
+    than at the nearest bar, so the green/red boundaries sit where the spans actually
+    cross
+  - Senkou spans run 26 periods past the last candle into an empty future stretch
+    of the date axis, and the Chikou Span ends 26 periods before the last candle,
+    exactly as the spec describes
+  - Hollow green up-candles versus filled red down-candles add a shape cue on top
+    of the conventional green/red color
+  - Header with a monospaced subtitle naming the parameters (9, 26, 52), the history
+    window and the projection length gives clear typographic hierarchy; chrome is
+    theme-correct in both renders
   weaknesses:
-  - 'VQ-01, VQ-05 (both): every y tick label is truncated to ''162 U…'', ''150 U…''
-    because the ''USD'' unit suffix does not fit the 84 px y-axis band, so the price
-    ticks read as clipped text → full labels (''162 USD'') or the bare number with
-    the unit only in the axis title. Likely cause: yAxis valueFormatter appending
-    priceUnit with width: 84 (widen to about 110 px or drop the suffix).'
-  - 'CQ-04 (code): the 9/26/52 rolling high-low midpoint is written out three times
-    (lines 79–85, 91–97, 109–115) and the legend repeats eight near-identical item
-    divs (lines 549–659) → one midpoint helper expression reused per period and an
-    array of legend items mapped to one swatch+label template. Likely cause: copy-pasted
-    blocks.'
-  - 'Suggestion: the x axis draws a tick mark for every one of the 156 band positions,
-    which reads as a dense comb under the dates; ticks only at the labelled positions
-    would calm the axis.'
-  - 'Suggestion: Senkou Span A shares the bullish-candle green; a slightly heavier
-    stroke would separate it from the green candles where the cloud and candles overlap
-    (Apr–Jun).'
+  - 'SC-03 (both): Senkou Span A is drawn only inside Kumo segments, so its first
+    26 computed values (plotted from about Mar 14, where Kijun''s lookback is filled)
+    are missing until Span B starts at about Apr 19 → draw Span A over every period
+    where it has a value (−26 hidden points → 0). Likely cause: the Span A polyline
+    is built from kumoSegments.spanAPts instead of from spanAArr.'
+  - 'SC-02 (both): Senkou Span A uses the same #009E73 as the bullish candles and
+    Span B the same red as the bearish candles, so inside the Apr 19–May cloud the
+    Span A line merges with the green candle outlines and wicks, against the ''all
+    five lines distinguishable from one another and from the candles'' property →
+    give the spans line colors (or a weight/dash) that the candles do not use. Likely
+    cause: stroke={BULL_COLOR} / stroke={BEAR_COLOR} on the span polylines.'
+  - 'VQ-06 (both): the y-axis title reads ''Close price (USD)'' while the axis carries
+    open/high/low/close candles and all five indicator lines → a title for the whole
+    axis, e.g. ''Price (USD)''. Likely cause: yAxis label: CLOSE.'
+  - 'Suggestion: the hollow bullish bodies are filled with the page color, which punches
+    opaque boxes into the cloud; a transparent fill would let the Kumo show through
+    them.'
+  - 'Suggestion: a ChartsTooltip / axis highlight on the composed chart would add
+    OHLC and indicator readouts in the HTML view.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across the whole canvas.
-      Chrome: bold title "indicator-ichimoku · javascript · muix · anyplot.ai" top-left, monospace subtitle "Ichimoku Kinko Hyo (9, 26, 52) · 130 trading periods (Jan 2 to Jul 1) + 26-period Kumo cloud projection"; y-axis title "Close price (USD)", x-axis title "Trading date"; dark ink text, subtle horizontal grid. Y tick labels are truncated to "162 U…" etc. (MUI band truncation), x ticks Jan 2 … Jul 19 in mono. Bottom HTML legend with 8 entries.
-      Data: 130 candles, bullish hollow #009E73 outlines, bearish filled #AE3030; Tenkan-sen purple, Kijun-sen blue step lines; Senkou A solid green / Senkou B dashed red bounding a translucent cloud that starts ~Apr 17, turns red ~May 10, green again ~Jun 20 and runs ~26 periods past the last candle to late July; Chikou dashed amber shifted 26 bars left, ending ~late May.
-      Legibility verdict: PASS (all text visible; y tick values truncated but the numbers remain readable)
+      Background: warm off-white #FAF8F1, no white panel.
+      Chrome: bold title "indicator-ichimoku · javascript · muix · anyplot.ai" top-left, monospaced subtitle "Ichimoku Kinko Hyo (9, 26, 52) · 130 trading periods (Jan 2 to Jul 1) + 26-period Kumo cloud projection"; y axis "Close price (USD)" 145–162, x axis "Trading date" with Jan 2 … Jul 19 ticks every 13 bars, subtle horizontal grid; HTML legend row at the bottom with nine entries. All text dark ink, readable.
+      Data: 130 candles (hollow green #009E73 up, filled red down) with wicks; purple Tenkan-sen, blue Kijun-sen (stepped), green Senkou Span A solid and red dashed Senkou Span B bounding a translucent cloud (green Apr 19–May 10 and from late Jun to the end, red May 10–Jun 20); ochre dashed Chikou Span ending ~26 bars before the last candle; the cloud runs 26 periods past Jul 1 into an empty stretch to late Jul.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, subtitle, axis titles and ticks in light ink, no dark-on-dark text; grid subtle but visible. Same y tick truncation "162 U…".
-      Data: identical colors to the light render — green/red candles, purple Tenkan, blue Kijun, amber Chikou, green/red cloud (bearish cloud slightly more opaque, reads as dark maroon). Brand green clearly visible.
+      Chrome: title, subtitle, axis titles, tick labels and legend text all in light ink; grid subtle; no dark-on-dark text.
+      Data: identical colors to the light render (green, red, purple, blue, ochre); bullish candle bodies are hollow with the dark page color; red cloud slightly more opaque but same hue; Kijun blue lower in contrast but clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Fonts explicitly set (22/15/14 px), readable in both themes; every
-          y tick truncated to '162 U…' (defect line)
+        comment: Explicit sizes (title 22, ticks 14, axis titles 15, legend 13 px
+          CSS); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; candle/line overlap is inherent to the overlay
-          and readable
+        comment: No text collisions; Chikou/candle overlap is native to the chart
+          type
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Candles, five lines and cloud all visible; legend swatches match
-          the marks in both themes
+        comment: 130 candles well sized, lines clear, legend glyphs visible in both
+          themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Hollow vs filled candles and dashed Span B/Chikou give non-color
-          cues
+        comment: Green/red backed by hollow vs filled bodies
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 3200x1800, balanced layout; the y-axis band is too narrow for its
-          tick labels, which get truncated (defect line)
+        comment: 3200x1800, plot fills canvas, balanced margins
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: '''Close price (USD)'' and ''Trading date'''
+        passed: false
+        comment: Y title 'Close price (USD)' does not describe an axis carrying OHLC
+          and indicators (defect line)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Green up / #AE3030 down as the semantic up/down exception, Imprint
-          slots for the lines, correct backgrounds'
+        comment: Imprint tokens, semantic green/red, correct backgrounds in both themes
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -121,24 +122,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Monospace subtitle computed from the data (parameters, date range,
-          projection length) and mono ticks give a deliberate type hierarchy beyond
-          the baseline
+        comment: Title/monospaced-subtitle hierarchy and hollow vs filled candle styling
+          beyond the baseline
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Hollow bullish bodies, dashed coding for Span B and Chikou, legend
-          swatches drawn to match each mark
+        comment: Dash-coded legend swatches that mirror the marks; theme-tuned bearish
+          cloud opacity
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Displays the indicator; no focal point chosen beyond the Notes
+        passed: true
+        comment: Subtitle frames the history window vs the projected cloud
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -146,27 +146,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Candlestick with Ichimoku overlay
+        comment: Candlestick with Ichimoku overlay and Kumo
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Cloud tinted by A>B / B>A with tint switch at crossovers; Senkou
-          +26, Chikou -26; distinct Tenkan/Kijun; green/red candles — all Notes and
-          good-version bullets met
+        passed: false
+        comment: Span A/B share the candle colors and merge with candles inside the
+          cloud (defect line); all other Notes and good-version bullets met
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: All marks at their computed values; y range covers all data
+        passed: false
+        comment: Span A's first 26 computed values not drawn (defect line); other
+          marks at their values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title; legend entries readable with parameters
+        comment: Mandated title; legend labels match marks
     data_quality:
       score: 15
       max: 15
@@ -176,23 +176,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Bullish and bearish cloud, two crossovers, TK crosses, future cloud
-          stretch, lookback gaps
+        comment: Bullish and bearish cloud, crossovers, future projection, lagging
+          span, Tenkan/Kijun crosses
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible daily stock OHLC around 150 USD, neutral
+        comment: Neutral daily equity prices on weekday dates
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked in code: tenkan/kijun/span B as rolling (HH+LL)/2 over 9/26/52,
-          span A as their mean, shifts of +26/-26; cloud begins at bar 77 as expected'
+        comment: Prices ~146-161 USD; indicators computed with 9/26/52 and 26-period
+          shifts in code (checked)
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -200,8 +200,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear module; the single IchimokuLayer component is required to
-          call the scale hooks
+        comment: Only the custom layer component the composition API needs plus one
+          rolling helper
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -216,11 +216,10 @@ review:
         comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Rolling midpoint triplicated and eight copy-pasted legend items (defect
-          line)
+        comment: No library call replaces the written-out rolling and crossover logic
       - id: CQ-05
         name: Output & API
         score: 1
@@ -236,32 +235,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Composed ChartsContainer with native LinePlot/ChartsGrid/ChartsXAxis/ChartsYAxis
-          series and axis config (band scale, tickLabelInterval, valueFormatter)
+        comment: 'Composition API: ChartsContainer + LinePlot + ChartsGrid + axes
+          with a band x scale'
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: Custom SVG layer reading the chart's scales through useXScale/useYScale
-          hooks
-  verdict: REJECTED
+        passed: true
+        comment: useXScale/useYScale hooks drive a custom SVG layer inside the MUI
+          chart
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T10:07:53Z'
+  rendered_at: '2026-10-24T10:13:42Z'
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   - custom-legend
-  - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep:
   - rolling-window
   - time-series
   styling:
   - alpha-blending
-  - publication-ready
+  - grid-styling
