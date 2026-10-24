@@ -2,93 +2,91 @@
 // probability-weibull: Weibull Probability Plot for Reliability Analysis
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 92/100 | Created: 2026-08-24
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
-import { ScatterPlot } from "@mui/x-charts/ScatterChart";
+
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { LinePlot } from "@mui/x-charts/LineChart";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
-import { useDrawingArea, useYScale } from "@mui/x-charts/hooks";
+import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const THEME = window.ANYPLOT_THEME === "dark" ? "dark" : "light";
-// ANYPLOT_TOKENS has no "muted" anchor — derive it from default-style-guide.md
-// "Theme-adaptive Chrome" (tertiary text token).
-const INK_MUTED = THEME === "dark" ? "#A8A79F" : "#6B6A63";
 
-// --- Data: fixed-seed LCG (the browser has no seeded RNG) -------------------
-function makeLcg(seed: number) {
-  let state = seed >>> 0;
-  return () => {
-    state = (state * 1664525 + 1013904223) >>> 0;
-    return state / 4294967296;
-  };
-}
-const rand = makeLcg(42);
+// Constants
+const TITLE = "probability-weibull · javascript · muix · anyplot.ai";
+const CHAR_LIFE_PCT = 63.2;
+const PROB_TICKS = [0.1, 0.5, 1, 2, 5, 10, 20, 30, 50, 63.2, 80, 90, 95, 99, 99.9];
+const DEFAULT_MIN_PROB_PCT = 1;
+const DEFAULT_MAX_PROB_PCT = 99;
+const Y_PAD_SHARE = 0.08;
+const X_MIN_FACTOR = 0.72;
+const X_MAX_FACTOR = 1.38;
+const MARKER_RADIUS = 7;
+const HEADER_HEIGHT = 76;
+const PROB_AXIS_LABEL = "Cumulative Failure Probability (%)";
+const FAILURE_LABEL = "Failure";
+const CENSORED_LABEL = "Suspended (censored)";
 
-// Turbine blade fatigue-life test: cycles to failure, in thousands (kcycles).
+// Columns: set these to your data's column names
+const TIME = "Cycles to Failure (kcycles)"; // role: x
+const IS_CENSORED = "Right Censored"; // role: group
+
+// Data: replace this block with your own records
 const BETA_TRUE = 2.4;
 const ETA_TRUE = 420;
-const N = 24;
-const CENSORED_EVERY = 6; // every 6th-ranked blade pulled for inspection, unfailed
+const SAMPLE_SIZE = 24;
+const CENSORED_EVERY = 6;
 
-const sortedTimes = Array.from({ length: N }, () => {
-  const u = rand();
-  return (
-    Math.round(ETA_TRUE * Math.pow(-Math.log(1 - u), 1 / BETA_TRUE) * 10) / 10
-  );
-}).sort((a, b) => a - b);
+const rawSamples: number[] = [];
+let lcgState = 42 >>> 0;
+for (let i = 0; i < SAMPLE_SIZE; i += 1) {
+  lcgState = (Math.imul(lcgState, 1664525) + 1013904223) >>> 0;
+  const u = lcgState / 4294967296;
+  const sampleTime = Math.round(ETA_TRUE * Math.pow(-Math.log(1 - u), 1 / BETA_TRUE) * 10) / 10;
+  rawSamples.push(sampleTime);
+}
+rawSamples.sort((a, b) => a - b);
 
-// Never censor the very first (smallest) time — a suspension needs at least
-// one preceding failure to inherit a plotting position from.
-const observations = sortedTimes.map((time, idx) => ({
-  time,
-  isCensored: idx > 0 && (idx + 1) % CENSORED_EVERY === 0,
+const data: Array<Record<string, number | boolean>> = rawSamples.map((timeVal, idx) => ({
+  [TIME]: timeVal,
+  [IS_CENSORED]: idx > 0 && (idx + 1) % CENSORED_EVERY === 0,
 }));
 
-// Median-rank plotting positions via Johnson's rank-adjustment method: each
-// failure's adjusted rank absorbs the "credit" left behind by suspensions
-// that preceded it, then Benard's approximation turns rank into probability.
+// Plot: reads only data and the constants above
+const sortedObs = [...data].sort((a, b) => Number(a[TIME]) - Number(b[TIME]));
+const totalN = sortedObs.length;
 let adjustedRank = 0;
 let lastProbability = 0;
-const n = observations.length;
-const points = observations.map((obs, idx) => {
-  const reverseRank = n - idx;
-  if (!obs.isCensored) {
-    adjustedRank += (n + 1 - adjustedRank) / (1 + reverseRank);
-    lastProbability = (adjustedRank - 0.3) / (n + 0.4);
+const plottedPoints = sortedObs.map((row, idx) => {
+  const time = Number(row[TIME]);
+  const isCensored = Boolean(row[IS_CENSORED]);
+  const reverseRank = totalN - idx;
+  if (!isCensored) {
+    adjustedRank += (totalN + 1 - adjustedRank) / (1 + reverseRank);
+    lastProbability = (adjustedRank - 0.3) / (totalN + 0.4);
   }
-  return { ...obs, probability: lastProbability };
+  const weibullYVal = Math.log(-Math.log(1 - lastProbability));
+  return {
+    id: `obs-${idx}`,
+    time,
+    isCensored,
+    probability: lastProbability,
+    y: weibullYVal,
+  };
 });
 
-// y = ln(-ln(1-F)) linearizes the Weibull CDF so Weibull data plots straight.
-const weibullY = (p: number) => Math.log(-Math.log(1 - p));
+const failurePoints = plottedPoints.filter((p) => !p.isCensored);
+const censoredPoints = plottedPoints.filter((p) => p.isCensored);
 
-const failurePoints = points.filter((p) => !p.isCensored);
-const censoredPoints = points.filter((p) => p.isCensored);
-
-const failureData = failurePoints.map((p, i) => ({
-  x: p.time,
-  y: weibullY(p.probability),
-  id: `failure-${i}`,
-}));
-const censoredData = censoredPoints.map((p, i) => ({
-  x: p.time,
-  y: weibullY(p.probability),
-  id: `censored-${i}`,
-}));
-
-// Least-squares fit of ln(t) vs y over failures only: y = beta*ln(t) + b, so
-// slope = shape parameter (beta) and eta = exp(-intercept / beta).
 const xs = failurePoints.map((p) => Math.log(p.time));
-const ys = failureData.map((d) => d.y);
-const nF = xs.length;
-const meanX = xs.reduce((a, b) => a + b, 0) / nF;
-const meanY = ys.reduce((a, b) => a + b, 0) / nF;
+const ys = failurePoints.map((p) => p.y);
+const nFailures = xs.length;
+const meanX = xs.reduce((a, b) => a + b, 0) / nFailures;
+const meanY = ys.reduce((a, b) => a + b, 0) / nFailures;
 let sxy = 0;
 let sxx = 0;
-for (let i = 0; i < nF; i += 1) {
+for (let i = 0; i < nFailures; i += 1) {
   sxy += (xs[i] - meanX) * (ys[i] - meanY);
   sxx += (xs[i] - meanX) ** 2;
 }
@@ -96,142 +94,78 @@ const beta = sxy / sxx;
 const intercept = meanY - beta * meanX;
 const eta = Math.exp(-intercept / beta);
 
-const X_MIN = 80;
-const X_MAX = 1000;
-const fitLineX = [X_MIN, X_MAX];
+const minObsTime = Math.min(...plottedPoints.map((p) => p.time));
+const maxObsTime = Math.max(...plottedPoints.map((p) => p.time));
+const xMin = minObsTime * X_MIN_FACTOR;
+const xMax = maxObsTime * X_MAX_FACTOR;
+const yAtCharLife = Math.log(-Math.log(1 - CHAR_LIFE_PCT / 100));
+
+const minPlotY = Math.min(...plottedPoints.map((p) => p.y));
+const maxPlotY = Math.max(...plottedPoints.map((p) => p.y));
+const plotYSpan = maxPlotY - minPlotY;
+const yMin = Math.min(
+  minPlotY - plotYSpan * Y_PAD_SHARE,
+  Math.log(-Math.log(1 - DEFAULT_MIN_PROB_PCT / 100)),
+);
+const yMax = Math.max(
+  maxPlotY + plotYSpan * Y_PAD_SHARE,
+  Math.log(-Math.log(1 - DEFAULT_MAX_PROB_PCT / 100)),
+);
+
+const activeProbTicks = PROB_TICKS.filter((p) => {
+  const wy = Math.log(-Math.log(1 - p / 100));
+  return wy >= yMin && wy <= yMax;
+});
+const yTickValues = activeProbTicks.map((p) => Math.log(-Math.log(1 - p / 100)));
+const yTickLabels = new Map(activeProbTicks.map((p, i) => [yTickValues[i], `${p}%`]));
+
+const fitXStart = Math.max(xMin, Math.exp((yMin - intercept) / beta));
+const fitXEnd = Math.min(xMax, Math.exp((yMax - intercept) / beta));
+const fitLineX = [fitXStart, fitXEnd];
 const fitLineY = fitLineX.map((x) => beta * Math.log(x) + intercept);
 
-const yAt632 = weibullY(0.632);
+const timeUnitMatch = /\(([^)]+)\)/.exec(TIME);
+const timeUnit = timeUnitMatch ? timeUnitMatch[1] : "";
+const unitSuffix = timeUnit ? ` ${timeUnit}` : "";
+const fitLegendText = `Fit: β ≈ ${beta.toFixed(2)}, η ≈ ${Math.round(eta)}${unitSuffix}`;
+const charLifeCalloutText = `${CHAR_LIFE_PCT}% · η ≈ ${Math.round(eta)}${unitSuffix}`;
 
-// Probability-paper y-axis: fixed percentage gridlines, deliberately NOT
-// evenly spaced in y — that nonlinearity is the whole point of the transform.
-const PROB_TICKS = [1, 2, 5, 10, 20, 30, 50, 63.2, 80, 90, 95, 99];
-const yTickValues = PROB_TICKS.map((p) => weibullY(p / 100));
-const yTickLabels = new Map(
-  PROB_TICKS.map((p, i) => [yTickValues[i], `${p}%`]),
-);
-const Y_MIN = weibullY(0.01);
-const Y_MAX = weibullY(0.99);
+function WeibullOverlay() {
+  const { left, width: drawWidth } = useDrawingArea();
+  const xScale = useXScale();
+  const yScale = useYScale();
 
-// Custom scatter marker: filled circle for observed failures, hollow ring for
-// right-censored (suspended) units — same hue, status told by fill alone.
-function StatusMarker({ series, xScale, yScale, color, markerSize }: any) {
-  const isCensored = series.id === "censored";
+  const yPixelChar = Number(yScale(yAtCharLife));
+  const paddingX = 10;
+  const boxWidth = charLifeCalloutText.length * 7.6 + paddingX * 2;
+  const boxHeight = 26;
+  const boxX = left + drawWidth - boxWidth - 10;
+  const boxY = yPixelChar - boxHeight - 8;
+
   return (
     <g>
-      {series.data.map((point: any) => (
+      {failurePoints.map((pt) => (
         <circle
-          key={point.id}
-          cx={xScale(point.x)}
-          cy={yScale(point.y)}
-          r={markerSize}
-          fill={isCensored ? "none" : color}
-          stroke={color}
-          strokeWidth={isCensored ? 2.5 : 0}
+          key={pt.id}
+          cx={xScale(pt.time)}
+          cy={yScale(pt.y)}
+          r={MARKER_RADIUS}
+          fill={t.palette[0]}
+          stroke={t.pageBg}
+          strokeWidth={1.5}
         />
       ))}
-    </g>
-  );
-}
-
-const TITLE = "probability-weibull · javascript · muix · anyplot.ai";
-const TITLE_FONT_SIZE =
-  TITLE.length > 67 ? Math.max(15, Math.round((22 * 67) / TITLE.length)) : 22;
-
-// Chart margins — the y-axis label below is a hand-placed <text>, not the
-// built-in `label` prop, because ChartsYAxis offsets it by a fixed
-// `tickFontSize + tickSize + 10` regardless of the actual (custom-formatted)
-// tick label width, which collided with "63.2%"-style ticks.
-// `top` is tall enough for the hand-rolled 3-row legend below the title.
-const MARGIN = { top: 132, right: 64, bottom: 84, left: 140 };
-
-// Hand-rolled legend: the built-in ChartsLegend only draws solid-color square
-// swatches, which can't reflect the filled-vs-hollow marker encoding used on
-// the chart. Swatches here mirror the on-chart marks exactly (dash for the
-// fit line, filled circle for failures, hollow ring for suspensions).
-const LEGEND_FONT_SIZE = 13;
-const LEGEND_ROW_HEIGHT = 22;
-const LEGEND_TOP = 60;
-
-function Legend({ right }: { right: number }) {
-  const legendItems = [
-    {
-      kind: "dash" as const,
-      label: `Fit: β≈${beta.toFixed(2)}, η≈${Math.round(eta)} kcycles`,
-      swatchColor: t.ink,
-    },
-    { kind: "filled" as const, label: "Failure", swatchColor: t.palette[0] },
-    {
-      kind: "hollow" as const,
-      label: "Suspended (censored)",
-      swatchColor: t.palette[0],
-    },
-  ];
-  const legendWidth = Math.max(
-    ...legendItems.map(
-      (item) => 22 + item.label.length * LEGEND_FONT_SIZE * 0.58,
-    ),
-  );
-  const left = right - legendWidth;
-  return (
-    <g>
-      {legendItems.map((item, i) => {
-        const y = LEGEND_TOP + i * LEGEND_ROW_HEIGHT;
-        return (
-          <g key={item.kind}>
-            {item.kind === "dash" && (
-              <line
-                x1={left}
-                x2={left + 14}
-                y1={y}
-                y2={y}
-                stroke={item.swatchColor}
-                strokeWidth={2.5}
-                strokeDasharray="6 3"
-              />
-            )}
-            {item.kind === "filled" && (
-              <circle cx={left + 7} cy={y} r={6} fill={item.swatchColor} />
-            )}
-            {item.kind === "hollow" && (
-              <circle
-                cx={left + 7}
-                cy={y}
-                r={6}
-                fill="none"
-                stroke={item.swatchColor}
-                strokeWidth={2.5}
-              />
-            )}
-            <text
-              x={left + 22}
-              y={y}
-              dominantBaseline="central"
-              fontSize={LEGEND_FONT_SIZE}
-              fill={t.inkSoft}
-            >
-              {item.label}
-            </text>
-          </g>
-        );
-      })}
-    </g>
-  );
-}
-
-// Small elevated callout for the eta/63.2% crossing — a filled rounded box
-// behind the label sharpens the focal point beyond a thin dashed line + text.
-function ReferenceCallout({ y, label }: { y: number; label: string }) {
-  const { left, width: drawWidth } = useDrawingArea();
-  const yScale = useYScale();
-  const yPixel = yScale(y);
-  const paddingX = 8;
-  const boxWidth = label.length * 6.8 + paddingX * 2;
-  const boxHeight = 22;
-  const boxX = left + drawWidth - boxWidth;
-  const boxY = yPixel - boxHeight - 8;
-  return (
-    <g>
+      {censoredPoints.map((pt) => (
+        <circle
+          key={pt.id}
+          cx={xScale(pt.time)}
+          cy={yScale(pt.y)}
+          r={MARKER_RADIUS}
+          fill={t.pageBg}
+          stroke={t.palette[0]}
+          strokeWidth={2.5}
+        />
+      ))}
       <rect
         x={boxX}
         y={boxY}
@@ -239,7 +173,7 @@ function ReferenceCallout({ y, label }: { y: number; label: string }) {
         height={boxHeight}
         rx={4}
         fill={t.elevatedBg}
-        stroke={INK_MUTED}
+        stroke={t.inkSoft}
         strokeWidth={1}
       />
       <text
@@ -247,116 +181,138 @@ function ReferenceCallout({ y, label }: { y: number; label: string }) {
         y={boxY + boxHeight / 2}
         textAnchor="middle"
         dominantBaseline="central"
-        fontSize={LEGEND_FONT_SIZE}
-        fill={INK_MUTED}
+        fontSize={14}
+        fill={t.ink}
       >
-        {label}
+        {charLifeCalloutText}
       </text>
     </g>
   );
 }
 
-// --- Chart (default-exported component — the harness mounts it) -----------
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
-  const plotMidY = MARGIN.top + (height - MARGIN.top - MARGIN.bottom) / 2;
+  const chartHeight = height - HEADER_HEIGHT;
 
   return (
-    <ChartContainer
-      width={width}
-      height={height}
-      margin={MARGIN}
-      series={[
-        {
-          type: "line",
-          id: "fit",
-          data: fitLineY,
-          curve: "linear",
-          color: t.ink,
-          showMark: false,
-          disableHighlight: true,
-        },
-        {
-          type: "scatter",
-          id: "failure",
-          data: failureData,
-          markerSize: 12,
-          color: t.palette[0],
-        },
-        {
-          type: "scatter",
-          id: "censored",
-          data: censoredData,
-          markerSize: 12,
-          color: t.palette[0],
-        },
-      ]}
-      xAxis={[
-        {
-          data: fitLineX,
-          scaleType: "log",
-          min: X_MIN,
-          max: X_MAX,
-          tickInterval: [100, 200, 300, 500, 700, 1000],
-          valueFormatter: (v: number) => `${v}`,
-          label: "Cycles to Failure (thousands)",
-          tickLabelStyle: { fontSize: 14 },
-          labelStyle: { fontSize: 16 },
-        },
-      ]}
-      yAxis={[
-        {
-          scaleType: "linear",
-          min: Y_MIN,
-          max: Y_MAX,
-          tickInterval: yTickValues,
-          valueFormatter: (v: number) => yTickLabels.get(v) ?? "",
-          tickLabelStyle: { fontSize: 14 },
-        },
-      ]}
-      skipAnimation
+    <div
+      style={{
+        width,
+        height,
+        backgroundColor: t.pageBg,
+        display: "flex",
+        flexDirection: "column",
+        boxSizing: "border-box",
+      }}
     >
-      <ChartsGrid horizontal vertical />
-      <LinePlot
-        skipAnimation
-        slotProps={{ line: { strokeDasharray: "12 7", strokeWidth: 2.5 } }}
-      />
-      <ScatterPlot slots={{ scatter: StatusMarker }} />
-      <ChartsXAxis />
-      <ChartsYAxis />
-      <ChartsReferenceLine
-        y={yAt632}
-        lineStyle={{
-          stroke: INK_MUTED,
-          strokeDasharray: "4 4",
-          strokeWidth: 1.5,
+      <div
+        style={{
+          height: HEADER_HEIGHT,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "0 48px 0 32px",
         }}
-      />
-      <ReferenceCallout
-        y={yAt632}
-        label={`63.2% · η ≈ ${Math.round(eta)} kcycles`}
-      />
-      <Legend right={width - MARGIN.right} />
-      <text
-        x={width / 2}
-        y={44}
-        textAnchor="middle"
-        fontSize={TITLE_FONT_SIZE}
-        fontWeight={600}
-        fill={t.ink}
       >
-        {TITLE}
-      </text>
-      <text
-        x={0}
-        y={0}
-        textAnchor="middle"
-        fontSize={16}
-        fill={t.ink}
-        transform={`translate(36, ${plotMidY}) rotate(-90)`}
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>{TITLE}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <svg width="24" height="14" aria-hidden="true">
+              <line
+                x1="2"
+                y1="7"
+                x2="22"
+                y2="7"
+                stroke={t.ink}
+                strokeWidth={2.5}
+                strokeDasharray="6 3"
+              />
+            </svg>
+            <span style={{ fontSize: 14, color: t.inkSoft, fontWeight: 500 }}>{fitLegendText}</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <svg width="18" height="18" aria-hidden="true">
+              <circle cx="9" cy="9" r="6.5" fill={t.palette[0]} />
+            </svg>
+            <span style={{ fontSize: 14, color: t.inkSoft, fontWeight: 500 }}>{FAILURE_LABEL}</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <svg width="18" height="18" aria-hidden="true">
+              <circle
+                cx="9"
+                cy="9"
+                r="6.5"
+                fill="none"
+                stroke={t.palette[0]}
+                strokeWidth={2.5}
+              />
+            </svg>
+            <span style={{ fontSize: 14, color: t.inkSoft, fontWeight: 500 }}>
+              {CENSORED_LABEL}
+            </span>
+          </div>
+        </div>
+      </div>
+      <ChartsContainer
+        width={width}
+        height={chartHeight}
+        margin={{ top: 14, right: 48, bottom: 18, left: 20 }}
+        series={[
+          {
+            type: "line",
+            id: "fit",
+            data: fitLineY,
+            curve: "linear",
+            color: t.ink,
+            showMark: false,
+            disableHighlight: true,
+          },
+        ]}
+        xAxis={[
+          {
+            data: fitLineX,
+            scaleType: "log",
+            min: xMin,
+            max: xMax,
+            height: 58,
+            valueFormatter: (v: number) => `${Math.round(v)}`,
+            label: TIME,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 15, fill: t.ink },
+          },
+        ]}
+        yAxis={[
+          {
+            scaleType: "linear",
+            min: yMin,
+            max: yMax,
+            width: 96,
+            tickInterval: yTickValues,
+            valueFormatter: (v: number) => yTickLabels.get(v) ?? "",
+            label: PROB_AXIS_LABEL,
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            labelStyle: { fontSize: 15, fill: t.ink },
+          },
+        ]}
+        skipAnimation
       >
-        Cumulative Failure Probability
-      </text>
-    </ChartContainer>
+        <ChartsGrid horizontal vertical />
+        <LinePlot
+          skipAnimation
+          slotProps={{ line: { strokeDasharray: "12 7", strokeWidth: 2.5 } }}
+        />
+        <ChartsReferenceLine
+          y={yAtCharLife}
+          lineStyle={{
+            stroke: t.inkSoft,
+            strokeDasharray: "4 4",
+            strokeWidth: 1.5,
+          }}
+        />
+        <WeibullOverlay />
+        <ChartsXAxis />
+        <ChartsYAxis />
+      </ChartsContainer>
+    </div>
   );
 }
