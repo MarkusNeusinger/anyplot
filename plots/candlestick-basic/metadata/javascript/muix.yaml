@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: candlestick-basic
 created: '2026-08-24T20:01:32Z'
-updated: '2026-10-24T04:23:26Z'
+updated: '2026-10-24T04:28:07Z'
 generated_by: gemini-4-argon
 adopted_from: 05fd22b6883131fc8937ab51e4f573041b3dcb44 (05fd22b6883131fc8937ab51e4f573041b3dcb44)
 workflow_run: 40061867015
@@ -16,41 +16,39 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/candlesti
 quality_score: 85
 review:
   strengths:
-  - Custom candlestick layer drawn on MUI X's own band and linear scales via useXScale/useYScale
-    inside ChartsContainer — the idiomatic community-tier route to a series type MUI
-    X does not ship
-  - 'Semantic finance colors: bullish brand green #009E73 and bearish matte red #AE3030,
-    identical in both themes, with theme-adaptive chrome throughout'
-  - Wicks at 1.6 px through the body centre, bodies at 64% of the band with a faint
-    ink outline — every one of the 48 candles stays distinct
-  - 'Time axis tuned to the hourly frequency: hour labels every 4 h with the day name
-    at midnight, and a price axis padded 8% around the low/high range instead of forced
-    to zero'
-  - Seeded data generation guarantees valid OHLC relations (high ≥ max(open, close),
-    low ≤ min(open, close))
+  - Candles drawn as a custom SVG layer inside ChartsContainer via useXScale/useYScale,
+    so bodies and wicks sit exactly at their OHLC values on MUI X's own axes
+  - Wicks (1.6 px) clearly visible yet much thinner than the ~64% band-width bodies;
+    dojis keep a 2 px minimum body so every period stays a distinct candle
+  - Hourly time axis labels the date at midnight and HH:MM elsewhere, thinned with
+    tickLabelInterval; price axis padded from the data, not forced to zero
+  - 'Imprint green #009E73 for bullish and Imprint red for bearish, identical in both
+    themes, with theme tokens on all chrome'
+  - Restrained dashed horizontal-only grid and a faint ink outline on bodies give
+    crisp, readable candles
   weaknesses:
-  - 'VQ-06 (both): the y-axis is titled ''BTC/USD close ($)'' but carries open, high,
-    low and close prices → a price title such as ''BTC/USD price ($)''. Likely cause:
-    yAxis label set to the CLOSE column constant.'
-  - 'Suggestion: use MUI X''s own ChartsLegend (via a custom legend slot) instead
-    of the hand-built HTML legend row so the legend follows the library''s styling.'
-  - 'Suggestion: the ~50 px empty band between the header and the plot could be tightened
-    to give the candles more height.'
+  - 'DQ-03 (both): the synthetic prices (41,707–42,482) are labelled as real BTC/USD
+    on Jan 8–9, 2024, when BTC actually traded roughly 44,000–47,000 → keep the levels
+    consistent with the stated real dates (start near 44,000+) or drop the year/real-date
+    anchor (about +2,000 to +5,000 $ shift). Likely cause: `price = 42000` and `Date.UTC(2024,
+    0, 8)` in the data block.'
+  - 'Suggestion: the subtitle''s period count and price range repeat what the axes
+    already show; a shorter subtitle (or none) would put more weight on the candles.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across the full canvas.
-      Chrome: bold dark title "candlestick-basic · javascript · muix · anyplot.ai" centred top, grey subtitle "48 periods (Jan 8 – Jan 9, 2024) · Range 41,707–42,482", legend row with green "Bullish (close ≥ open, n=26)" and red "Bearish (close < open, n=22)" swatches; y-axis "BTC/USD close ($)" with ticks 41,700–42,500, x-axis "Timestamp (UTC)" with labels Jan 8, 04:00 … 20:00, Jan 9, … 20:00; dashed faint horizontal grid. All dark text clearly readable.
-      Data: 48 hourly candles; bullish bodies/wicks brand green #009E73, bearish matte red #AE3030; thin wicks through body centres, a few doji-thin bodies; dip to ~41,700 around 13:00 on Jan 8 then a climb to ~42,400.
+      Background: warm off-white #FAF8F1 across the whole 3200x1800 canvas.
+      Chrome: bold dark title "candlestick-basic · javascript · muix · anyplot.ai" centered at top, inkSoft subtitle "48 periods (Jan 8 – Jan 9, 2024) · Range 41,707–42,482", legend row with green "Bullish (close ≥ open, n=26)" and red "Bearish (close < open, n=22)" swatches. Y-axis "BTC/USD price ($)" with ticks 41,700–42,500; x-axis "Timestamp (UTC)" with labels Jan 8, 04:00 … 20:00, Jan 9, 04:00 … 20:00. Dashed subtle horizontal grid. Left and bottom axis lines only. All readable.
+      Data: 48 hourly candles; bullish bodies/wicks in #009E73, bearish in Imprint red; thin wicks through body centers, faint outline on bodies, dojis as thin bars. Dip to ~41,700 around 12:00 Jan 8, then a climb to ~42,400.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, subtitle, legend text, axis titles and tick labels in light ink, all clearly readable; no dark-on-dark text; grid dashed and subtle but visible; axis lines light.
-      Data: candle colors identical to the light render (#009E73 / #AE3030); brand green reads well on the dark surface.
+      Chrome: title, subtitle, legend text, tick and axis labels all light on dark; grid dashes subtle but visible; no dark-on-dark text.
+      Data: candle colors identical to the light render (#009E73 green, Imprint red); brand green reads well.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -58,48 +56,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (title 22, subtitle 15, ticks 14, axis titles 16 CSS
-          px); all text readable in both themes
+        comment: Explicit sizes (title 22, axis titles 16, ticks 14, legend 14 CSS
+          px); all text readable in both themes, ink/inkSoft tokens threaded through
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; 48 candles separated by gaps
+        comment: No text collisions; candles separated by gaps; tick labels thinned
+          via tickLabelInterval
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bodies at 64% of the band, 1.6 px wicks visible yet thinner than
-          bodies; legend swatches match the marks in both themes
+        comment: 48 candles, bodies ~64% of band width, 1.6 px wicks clearly visible
+          and thinner than bodies; doji bodies kept at a 2 px minimum; legend swatches
+          match the marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/red differ strongly in lightness and hue; direction is also
-          legible from open/close geometry
+        comment: 'Imprint green #009E73 vs Imprint red differ strongly in luminance;
+          green/red is the spec-mandated pairing'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, balanced axes, no overflow; title ~37% width (no deduction)
+        comment: 3200x1800, plot area fills the canvas, balanced axis titles, title
+          ~37% width with no overflow
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Y-axis titled 'BTC/USD close ($)' although it carries open, high,
-          low and close (defect line)
+        comment: '''BTC/USD price ($)'' and ''Timestamp (UTC)'' are descriptive with
+          units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Bullish #009E73, bearish matte red #AE3030 (finance semantic exception);
-          backgrounds #FAF8F1 / #1A1A17; chrome flips correctly'
+        comment: 'Bullish = palette[0] #009E73, bearish = Imprint red; backgrounds
+          #FAF8F1 / #1A1A17; data colors identical across themes'
     design_excellence:
       score: 10
       max: 20
@@ -109,21 +110,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Deliberate three-level header hierarchy (bold title, soft subtitle,
-          legend in ink) and bodies outlined with a 32% ink stroke for crisp edges
+        comment: Clear three-tier header hierarchy (bold title, inkSoft subtitle with
+          period/range context, legend row) beyond the baseline
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Dashed horizontal-only grid at 0.65 opacity chosen for price reading,
-          8% y padding, tick interval tuned to ~12 labels with day labels at midnight
+        comment: Dashed horizontal-only grid at reduced opacity chosen for reading
+          price levels; faint ink outline on bodies and rounded wick caps give crisp
+          candle edges
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
-        passed: false
-        comment: Data displayed clearly; no hierarchy chosen beyond the Notes
+        passed: true
+        comment: Data displayed cleanly; no hierarchy or focal point chosen beyond
+          the Notes (appropriate for a -basic spec)
     spec_compliance:
       score: 15
       max: 15
@@ -133,29 +136,33 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct candlestick chart; no overlays, volume or indicators
+        comment: True OHLC candlesticks; no volume, indicators, reference lines or
+          callouts
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Green/red up/down, wicks thinner than bodies, frequency-appropriate
-          time axis (hours + day labels), subtle grid, price axis not forced to zero
+        comment: Green/red up/down coloring, wicks visible but thinner than bodies,
+          hourly time axis with date at midnight, subtle grid; all A-good-version
+          bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Bodies open→close, wicks low→high through body centre, at data values;
-          axis spans all lows/highs
+        comment: Each candle at its period; body open-close and wick low-high through
+          the body center via yScale; price axis spans data with 8% padding, not forced
+          to zero
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in mandated format; legend labels Bullish/Bearish match colors
+        comment: Title 'candlestick-basic · javascript · muix · anyplot.ai'; legend
+          reads Bullish / Bearish with plain-language definitions
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -163,21 +170,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows rising and falling runs, doji-like candles, long and short
-          wicks, a dip and recovery
+        comment: 26 bullish and 22 bearish candles, dojis, long and short wicks, a
+          dip and a recovery trend
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Hourly BTC/USD over two days at ~42k (Jan 2024) — plausible and neutral
+        comment: Hourly BTC/USD candles are a real, neutral financial scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Hourly moves of up to ~$260 and wicks up to ~$140 are realistic for
-          BTC; high ≥ max(open,close), low ≤ min checked in code
+        comment: Hourly moves (~0.3%) plausible, but the prices are pinned to real
+          dates (Jan 8–9, 2024) where BTC/USD traded far higher (defect line)
     code_quality:
       score: 10
       max: 10
@@ -187,14 +194,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script; the only components are the required default export
-          and a hook-using layer
+        comment: Only the custom layer component that the scale hooks require; linear
+          module-level flow
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG (seed 42)
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -206,14 +213,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a custom series in a community-only library
+        comment: Appropriate complexity; limits computed from data
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation,
-          v9 axis height/width bands
+        comment: Default-exported component, skipAnimation, v9 ChartsContainer API,
+          sized from ANYPLOT_SIZE
     library_mastery:
       score: 6
       max: 10
@@ -223,26 +230,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Composition API (ChartsContainer + ChartsGrid/ChartsXAxis/ChartsYAxis)
-          with useXScale/useYScale hooks to draw a custom series on the chart's own
-          scales
+        comment: 'Idiomatic v9 composition: ChartsContainer + ChartsGrid + ChartsXAxis/ChartsYAxis
+          with axis ids and a custom layer'
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: Band-scale bandwidth() for body width and tickLabelInterval/valueFormatter
-          for decluttered time labels
-  verdict: REJECTED
+        passed: true
+        comment: useXScale/useYScale hooks to draw a custom mark type inside MUI X's
+          coordinate system; band-axis tickLabelInterval and valueFormatter
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T04:20:33Z'
+  rendered_at: '2026-10-24T04:25:03Z'
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
   - layer-composition
-  - hover-tooltips
+  - custom-legend
   - html-export
   patterns:
   - data-generation
