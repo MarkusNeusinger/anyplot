@@ -2,113 +2,112 @@ library: muix
 language: javascript
 specification_id: polar-scatter
 created: '2026-09-05T11:40:06Z'
-updated: '2026-09-05T11:55:17Z'
-generated_by: claude-sonnet
-workflow_run: 33963668090
+updated: '2026-10-24T12:03:12Z'
+generated_by: gemini-4-argon
+adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
+workflow_run: 40091679090
 issue: 2023
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/javascript/muix/plot-dark.html
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - Builds a genuine polar scatter on top of the community-only @mui/x-charts by drawing
-    a custom SVG grid (rings + spokes + labels) via useXScale/useYScale, so the overlay
-    stays perfectly aligned with the underlying linear scatter scale at any canvas
-    size — a clean way to work within the community-surface constraint instead of
-    reaching for Pro/Premium or another library.
-  - 'Deterministic, realistic wind-observation dataset (LCG-seeded) with a clear diurnal
-    wind-rotation narrative: Morning/Afternoon/Evening/Night bearings are spaced ~90°
-    apart, so the four categories visibly occupy distinct compass sectors.'
-  - 'Palette compliance is correct: first category (Morning) uses brand green, data
-    colors are identical between light and dark renders, and only chrome (background,
-    grid, text) flips per theme.'
-  - Marker size and alpha (0.7) are tuned per group to keep overlapping points distinguishable;
-    ChartsTooltip is wired for per-item detail in the interactive HTML output.
-  - 'Clean, idiomatic code: skipAnimation set, sizes from window.ANYPLOT_SIZE, no
-    unused imports, no fake interactivity.'
+  - 'Polar layout built on MUI X''s own composition API: a ScatterPlot inside ChartsSurface
+    with a custom SVG grid drawn from useXScale/useYScale, so native tooltips and
+    the HTML legend still work'
+  - Angular ticks every 45° in degrees with bold cardinals, 0° at top clockwise, and
+    a subtitle that states the convention and units
+  - Radius axis computed from the data to a nice 5 m/s step, starting at 0 and closing
+    past the 19 m/s maximum so every marker sits inside the rim
+  - Fill opacity 0.72 lets the dense Night cluster read darker while single outliers
+    stay visible
+  - Imprint palette in canonical order with identical data colors across themes; all
+    chrome uses theme tokens and reads cleanly in both renders
+  - 'Deterministic LCG data tells a clear diurnal story: the prevailing wind rotates
+    N → E → S → W through the day and calms at night'
   weaknesses:
-  - The '5 m/s' ring label sits directly against/behind a Morning-category marker
-    in both renders (visible at the inner ring along the 0° spoke) — move ring labels
-    to an unoccupied angular gap (e.g. between two spoke lines away from the densest
-    cluster) or give them a small background pill for contrast.
-  - The Night (amber) cluster near the center is dense enough that several markers
-    fully overlap even at alpha=0.7 — consider a slightly smaller markerSize for that
-    group or a touch more jitter/spread so individual observations stay distinguishable.
-  - Design excellence is solid but stops at functional refinement — no radial fade,
-    no emphasis/callout on one category, no secondary visual hierarchy beyond color
-    and position, which caps this a notch below top-tier polish.
+  - 'VQ-02 (both): the opaque page-colored pills behind the ''5 m/s'' and ''10 m/s''
+    ring labels sit on top of the scatter layer and hide parts of two Morning markers
+    near bearing 337° (about half of the marker at ~5.5 m/s and an edge of the one
+    at ~10 m/s) → no marker covered by a ring label. Likely cause: <RingLabels />
+    rendered after <ScatterPlot /> with fill={t.pageBg}, and the ''emptiest sector''
+    bearing (337.5°) still holds Morning points; draw the labels below the markers
+    or drop the opaque pill.'
+  - 'Suggestion: placing the ring labels on a bearing chosen by distance to the nearest
+    marker rather than by sector count would keep them clear without a pill.'
+  - 'Suggestion: a slightly larger angular label size (16 px) would hold up better
+    in the 400 px thumbnail.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1, not pure white.
-      Chrome: Title "polar-scatter · javascript · muix · anyplot.ai" is dark ink, centered, fully legible. Radial ring labels (5/10/15/20 m/s) and angular spoke labels (0°, 45°, 90° ... 315°) are dark-gray and legible against the light background. Grid rings and spokes are thin, subtle gray lines — visible but not dominant. Bottom legend (Morning/Afternoon/Evening/Night) is clear with matching color swatches.
-      Data: Four color groups — Morning (brand green #009E73), Afternoon (light purple), Evening (indigo/blue), Night (amber) — each occupying a distinct ~90°-wide compass sector, consistent with a diurnal wind-rotation story. First categorical series correctly uses the brand green.
-      Legibility verdict: PASS, with one minor caveat — the "5 m/s" ring label sits directly against/behind a nearby Morning marker, a small text/marker overlap (not a legibility failure, all letters remain visible).
+      Background: warm off-white #FAF8F1 across the whole 2400x2400 canvas.
+      Chrome: bold dark title "polar-scatter · javascript · muix · anyplot.ai" at top, grey subtitle "Angle: Wind Bearing (°), clockwise from 0° at top · Radius: Wind Speed (m/s)". Four concentric rings (5/10/15/20 m/s, outer rim slightly heavier) and eight spokes in subtle grey; angular labels 0°–315° every 45° outside the rim, cardinals bold; ring labels on page-colored pills along the ~337° bearing. Legend at the bottom: Morning, Afternoon, Evening, Night. All text readable dark-on-light.
+      Data: 120 translucent circles — Morning green #009E73 clustered N–NE at 5–10 m/s, Afternoon purple spread E–SE at 8–19 m/s, Evening blue S–SW at 5–15 m/s, Night ochre tightly clustered W–NW at 2–6 m/s. All inside the 20 m/s rim. The 5 m/s and 10 m/s pills cover parts of two Morning markers.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17, not pure black.
-      Chrome: Title, ring labels, and spoke labels flip to light gray/white text, fully legible against the dark background — no dark-on-dark text anywhere. Grid lines remain subtle but visible. Legend text is light and readable.
-      Data: Same four colors as the light render, confirming data colors are identical between themes and only chrome flips.
-      Legibility verdict: PASS, same minor "5 m/s" label/marker overlap as in the light render — no dark-on-dark or light-on-light issues.
+      Background: warm near-black #1A1A17.
+      Chrome: title in light ink, subtitle, angular and ring labels in light grey; rings and spokes subtle dark grey, still visible; ring-label pills in the dark page color. Legend text light. No dark-on-dark text.
+      Data: same four hues as the light render (green first), same positions; translucency blends toward the dark page, so markers read slightly deeper but remain clearly distinguishable, brand green clearly visible. The same two Morning markers are partly covered by the ring-label pills.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes at appropriate sizes; minor crowding
-          near the '5 m/s' label from a nearby marker
+        comment: Explicit font sizes (title 22, subtitle/legend 15, angular and ring
+          labels 14 CSS px); all text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 4
-        max: 6
-        passed: true
-        comment: '''5 m/s'' ring label overlaps a Morning marker in both renders;
-          some Night-cluster markers fully overlap each other'
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Marker size/alpha tuned per group for ~30-point clusters; dense Night
-          cluster still has some fully-hidden overlaps
+        comment: The opaque ring-label pills for 5 m/s and 10 m/s are drawn above
+          the markers and cover parts of two Morning markers (defect line)
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 120 markers at a prominent size with 0.72 fill opacity; legend dots
+          match the marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette hues are distinguishable by hue, not relying on red-green
-          alone
+        comment: Green, purple, blue and ochre separate well; no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square canvas gate passed, well-centered, generous padding, nothing
-          cropped
+        comment: 2400x2400 square, polar disc centered with balanced padding; title,
+          subtitle and legend fit cleanly
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Radial labels carry units (m/s), angular labels in degrees at 45°
-          intervals
+        comment: Subtitle names both axes with units and the angle convention; ring
+          labels carry m/s
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: First series is brand green, data colors identical across themes,
-          correct backgrounds in both themes
+        comment: 'Imprint palette in canonical order with first series #009E73; backgrounds
+          #FAF8F1 / #1A1A17; chrome theme-correct in both renders'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -116,23 +115,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom polar overlay perfectly aligned to chart scale is a genuinely
-          sophisticated engineering solution; visual polish is functional rather than
-          showcase-level
+        comment: Bold cardinal angles vs regular intercardinals, a heavier outer rim,
+          and a quiet subtitle line explaining the angle convention form a typographic
+          hierarchy beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Subtle grid, generous whitespace, integrated custom title/legend
-          bars
+        comment: Ring labels placed along the bearing of the emptiest sector on page-colored
+          pills; the placement still lands on markers, so only partial credit
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Diurnal wind-rotation pattern (4 sectors ~90° apart) is visible at
-          a glance, though no additional emphasis/callout beyond color and position
+        comment: Data designed so the prevailing direction rotates clockwise through
+          the day (N morning, E afternoon, S evening, W night, calm at night) — a
+          readable diurnal story beyond the spec
     spec_compliance:
       score: 15
       max: 15
@@ -142,28 +142,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: True polar scatter behavior (theta/radius mapping) despite no native
-          MUI X polar primitive
+        comment: Polar scatter with color by the optional category column
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Radial gridlines, angular ticks at 45° intervals, category color
-          encoding, radius axis starts at 0 — all present
+        comment: Radians internally / degrees displayed, regular radial rings, angular
+          ticks every 45°, radius from 0 past the max, legend, translucent markers
+          — all Notes and 'A good version shows' bullets met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: theta/radius correctly converted to x/y via polarToXY; full data
-          range shown within domain
+        comment: Markers at their computed (theta, r) positions, no jitter or nudging;
+          all points inside the 20 m/s rim
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format; legend labels match category names
+        comment: Title 'polar-scatter · javascript · muix · anyplot.ai'; legend Morning/Afternoon/Evening/Night
     data_quality:
       score: 15
       max: 15
@@ -173,20 +173,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Angle, radius, and categorical color encoding all present, 120 points
-          across 4 groups
+        comment: Clusters around prevailing directions, a sparse WNW sector, outliers
+          near the rim, interleaving edges
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible diurnal wind-direction/speed pattern, neutral subject matter
+        comment: Wind observations by time of day, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Wind speeds 0-20 m/s and bearings 0-360° are realistic ranges
+        comment: Speeds 0.5–20 m/s, 120 points (inside 100–150); no Check values in
+          the spec
     code_quality:
       score: 10
       max: 10
@@ -196,32 +197,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary classes; plain functions
+        comment: Data/plot zones at module level; PolarGrid and RingLabels are React
+          components required to call the useXScale/useYScale hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG, fully deterministic
+        comment: Fixed-seed LCG (seed 42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (ChartContainer, ScatterPlot, ChartsTooltip, useXScale,
-          useYScale) are used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the custom polar overlay; no fake UI/interactivity
+        comment: Nice-step ring computation and sector count are short and have no
+          available call equivalent
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Follows harness contract: default export, window.ANYPLOT_SIZE, skipAnimation'
+        comment: Default-exported component, skipAnimation, v9 composition API
     library_mastery:
       score: 7
       max: 10
@@ -231,22 +233,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Composes ChartContainer + ScatterPlot correctly and stays within
-          the community API surface
+        comment: 'v9 composition: ChartsDataProvider + ChartsWrapper + ChartsSurface
+          + ChartsLegend with ScatterPlot, styled via the .MuiScatterChart-marker
+          class'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: useXScale/useYScale hooks used to align a custom SVG overlay with
-          the chart's internal scale — a distinctive, non-obvious technique
+        comment: Custom SVG polar grid drawn from the chart's own useXScale/useYScale
+          hooks inside ChartsSurface, keeping native scatter tooltips and legend
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-10-24T12:00:20Z'
 impl_tags:
   dependencies: []
   techniques:
   - polar-projection
-  - custom-legend
+  - layer-composition
   - manual-ticks
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
@@ -254,3 +262,4 @@ impl_tags:
   styling:
   - alpha-blending
   - grid-styling
+  - minimal-chrome
