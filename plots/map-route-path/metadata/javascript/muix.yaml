@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: map-route-path
 created: '2026-09-02T03:05:54Z'
-updated: '2026-10-24T10:56:09Z'
+updated: '2026-10-24T11:04:09Z'
 generated_by: gemini-4-argon
 adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
 workflow_run: 40087614547
@@ -13,62 +13,57 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-route
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-route-path/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-route-path/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-route-path/javascript/muix/plot-dark.html
-quality_score: 0
+quality_score: 89
 review:
   strengths:
-  - Composes the map with ChartsContainer + a zAxis continuous colorMap and reads
-    it back through useZColorScale, so the time gradient along the path is driven
-    by MUI X's own color-scale machinery rather than hand-interpolated colors
-  - Axis domains are fitted to the route with a cos(latitude) correction, so the lon/lat
-    graticule keeps true ground proportions instead of stretching the route
-  - Start (green circle) and end (red square) markers are distinct by both shape and
-    color and are named in the legend and on the map
-  - Elapsed-time gradient from the Imprint sequential ramp is explained by a labelled
-    color bar (Early → Late)
-  - Real Amsterdam walking-tour coordinates (Dam Square, Rijksmuseum, Waterlooplein,
-    Centraal) with deterministic LCG jitter give a plausible GPS track
-  - Page-colored halos under the path and stroke-outlined labels keep the route and
-    text legible over the grid in both themes
+  - Composes the map from ChartsContainer with custom SVG children that read the chart's
+    own scales through useDrawingArea, useXScale, useYScale and useZColorScale, so
+    basemap, route, markers and the linear lon/lat axes share one coordinate system
+  - Route segments are colored by a continuous zAxis colorMap built from the Imprint
+    imprint_seq stops (t.seq) and explained by an 'Elapsed time share' color bar with
+    Early/Late ends
+  - 'Ground-true aspect: the axis extents are derived from the data with a cos(mean
+    latitude) correction, so the route is not stretched and the view is fitted to
+    its extent'
+  - Start (brand-green circle) and end (red square) markers differ in both shape and
+    color, and the legend names both
+  - Sparse chevrons every 8 waypoints show the direction of travel without hiding
+    the line; a page-colored halo under the path keeps it readable over grid and basemap
+  - Basemap of IJ waterfront, canal ring, Amstel and Vondelpark at low opacity stays
+    quieter than the route in both themes
+  - 'Plausible, neutral data: a 61-waypoint Amsterdam walking route between real landmark
+    coordinates (Dam Square, Rijksmuseum, Waterlooplein, Centraal), generated deterministically
+    with a fixed-seed LCG'
+  - skipAnimation set, chrome from ANYPLOT_TOKENS so both themes are correct
   weaknesses:
-  - 'AR-09, VQ-05 (both): the legend entry "Travel direction (61 waypoints)" runs
-    past the right canvas edge — the closing ")" is missing and the final "s" touches
-    the border → keep the whole legend panel at least ~16 px inside the 1600 px canvas
-    (about −60 px on the entry''s right end). Likely cause: MARGIN.right = 260 with
-    the legend at legX = left + width + 24 while the 14 px label is ~250 px wide;
-    widen MARGIN.right to ~320 or shorten the label (e.g. move the waypoint count
-    to its own line).'
-  - 'SC-02 (both): no geographic basemap — only the lon/lat graticule — although the
-    Notes and the ''A good version shows'' bullet ask for streets, terrain or satellite
-    context → draw a quiet basemap layer under the route (e.g. simplified canal/water
-    and park polygons or street lines as low-contrast SVG paths from t.grid/t.elevatedBg).
-    Likely cause: RouteOverlay renders only the route; the caption substitutes a sentence
-    for the basemap.'
-  - 'VQ-03 (both): the direction chevrons are ~13 px, filled in the same color as
-    the line underneath and outlined in the page color, so they read as small notches
-    rather than arrows → make them visibly larger (~18–20 px) or contrast them with
-    the line (ink fill, or a page-colored fill with line-colored outline). Likely
-    cause: polygon points "7,0 -6,-5.5 -3,0 -6,5.5" with fill={p.color}.'
-  - 'VQ-02 (both): the "Rijksmuseum" label''s right end abuts the route line and its
-    waypoint dot at about (4.884°, 52.3595°) → clear the line by at least 4 px (+6
-    px). Likely cause: the fixed dx = −14 / dy = +16 label offset for points below
-    centerLat left of centerLon.'
-  - 'Suggestion: the landmark labels could carry a small leader or sit consistently
-    on the outside of the loop so they read as a set.'
+  - 'SC-02 (both): the basemap is a schematic of water areas, canal arcs and one park
+    polygon with no streets, terrain or imagery, so the ''A good version shows: a
+    geographic basemap of streets, terrain or satellite imagery'' property is only
+    partly met → add a simplified street layer (main streets such as Damrak, Rokin,
+    Leidsestraat, Raadhuisstraat) as thin low-opacity ink lines under the route. Likely
+    cause: the Basemap component draws only WATER_AREAS, CANAL_RING_RADII, RIVERS
+    and PARKS.'
+  - 'Suggestion: the ''Elapsed time share'' color bar is hand-drawn with an SVG linearGradient;
+    MUI X''s ContinuousColorLegend bound to the ''seqAxis'' zAxis could show the same
+    scale natively.'
+  - 'Suggestion: the start and end names appear both as bold callouts on the map and
+    as legend entries; the legend could name the marker roles only (''Start'', ''End'')
+    to avoid repeating the callouts.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 throughout.
-      Chrome: bold dark title "map-route-path · javascript · muix · anyplot.ai" centered on top; Latitude (°N) / Longitude (°E) axis titles and degree-formatted ticks in dark ink; subtle grey lon/lat graticule; compass rose top-right of the plot area; right-hand legend panel (Route endpoints, Travel direction, Elapsed time share color bar); caption below the x axis. The legend entry "Travel direction (61 waypoints" is chopped at the right canvas edge — the ")" is missing.
-      Data: a 61-waypoint route from a #009E73 start circle (Dam Square) south-west to Vondelpark, east past Rijksmuseum to Waterlooplein, north to Jordaan and east to a red end square (Amsterdam Centraal); line colored by elapsed time from green to blue, small waypoint dots, landmark labels, small direction chevrons on the line.
-      Legibility verdict: PASS for contrast; FAIL for the clipped legend entry (AR-09).
+      Background: warm off-white #FAF8F1 across canvas and plot area.
+      Chrome: centered bold title "map-route-path · javascript · muix · anyplot.ai"; axis titles "Longitude (°E)" and "Latitude (°N)"; tick labels 4.850°–4.925° and 52.354°–52.382° in soft ink; subtle grey grid; caption bottom-left naming WGS 84 and the simplified basemap; compass rose with "N" top-right; right-side legend panel (Route endpoints, Travel direction, 61 waypoints, Basemap swatches, Elapsed time share color bar 0.00 (Early)–1.00 (Late)). All text dark and readable.
+      Data: route line graded from brand green #009E73 (start) through teal to blue (end) with small waypoint dots, black chevrons pointing along travel, larger green circle at Dam Square and red square at Amsterdam Centraal with bold callouts; landmark labels Vondelpark West, Rijksmuseum, Waterlooplein, Jordaan. Basemap: grey-blue IJ waterfront and Oosterdok, five concentric canal arcs, Amstel river, pale-green Vondelpark — all quieter than the route.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, axis titles, ticks, legend and landmark labels flip to light ink and are clearly readable; no dark-on-dark text; grid subtle grey. Same right-edge clipping of the legend entry.
-      Data: route gradient, start green, end red and waypoint colors identical to the light render; only chrome flipped.
-      Legibility verdict: PASS for contrast; FAIL for the clipped legend entry (AR-09).
+      Chrome: title, axis titles, ticks, legend, caption and compass in light ink; grid subtle grey; no dark-on-dark text.
+      Data: route gradient, start green circle, end red square and waypoint dots identical to the light render; chevrons flip to light ink with dark outline; basemap water and park fills dark-tinted and quiet but visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -76,71 +71,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (22 px title, 16 px axis titles, 14 px ticks/legend);
-          all text readable in both themes
+        comment: All fonts set explicitly (title 22, axis titles 16, ticks/labels
+          14 CSS px); readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
-        passed: false
-        comment: '''Rijksmuseum'' label abuts the route line (defect line)'
+        passed: true
+        comment: Labels kept clear of the route with page-colored halos; no text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
-        passed: false
-        comment: Direction chevrons blend into the line (defect line); route, waypoints
-          and endpoints clear
+        passed: true
+        comment: 4 px route with halo, waypoint dots sized for 61 points, sparse chevrons;
+          legend glyphs visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green→blue sequential ramp plus shape-distinct start/end markers;
-          CVD-safe
+        comment: Start/end differ by shape as well as color; green-to-blue gradient
+          is CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Legend entry runs off the right canvas edge (defect line, AR-09)
+        passed: true
+        comment: 3200x1800, view fitted to route with ground-true aspect, legend in
+          reserved right margin, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Latitude (°N) / Longitude (°E) with degree tick formatting
+        comment: Longitude (°E) / Latitude (°N) with degree tick formatting
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Start #009E73, end from Imprint red, gradient from t.seq; correct
-          backgrounds in both themes'
+        comment: 'Start #009E73, gradient from t.seq (imprint_seq), correct backgrounds
+          in both themes'
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Bold endpoint callouts vs. soft landmark labels give a typographic
-          hierarchy; structured right-hand legend panel
+        passed: true
+        comment: Layered basemap at low opacity under a haloed route, weighted typography
+          hierarchy (bold endpoint callouts vs soft landmark labels) beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Page-colored halos under path and labels; cos(lat) aspect fitting
-          of the graticule
+        passed: true
+        comment: Page-colored halo under the path, paint-order text halos, ground-true
+          aspect correction, grouped legend panel with section headings
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Gradient and endpoints follow the Notes; no further hierarchy chosen
+        passed: true
+        comment: Landmark labels along the walk plus bold start/end callouts let the
+          reader follow the tour's sequence
     spec_compliance:
       score: 14
       max: 15
@@ -150,28 +147,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Connected route path over a lon/lat frame
+        comment: Connected route path on a map
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
-        passed: false
-        comment: Sequence line, distinct start/end, gradient with color bar and arrows
-          present; geographic basemap missing (defect line)
+        passed: true
+        comment: Sequence line, distinct start/end markers, gradient with color bar,
+          direction arrows present; basemap shows water and park only, no streets/terrain/imagery
+          (defect line). Zoom/pan is Pro-only in MUI X, not deducted
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Waypoints at their coordinates, sorted by sequence, ground-proportional
-          axes
+        comment: Marks at their lon/lat; only text labels are placed by a search,
+          not data marks
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches format; legend names start, end, direction and the
-          gradient variable
+        comment: Mandated title; legend entries match the marks
     data_quality:
       score: 15
       max: 15
@@ -181,20 +178,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Loop route with turns, start/end separation and time progression
+        comment: Loop with retrace-free sequence, gradient progression, arrows, endpoints
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Amsterdam city walk through real landmarks
+        comment: Amsterdam city walk, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Checked landmark coordinates: Dam 52.373/4.893, Centraal 52.379/4.900,
-          Rijksmuseum 52.360/4.885 — all correct; 61 waypoints within 50–1000'
+        comment: 'Checked landmark coordinates: Dam 52.3731/4.8926, Rijksmuseum 52.360/4.885,
+          Centraal 52.3791/4.9003 match reality; 61 waypoints within 50-1000'
     code_quality:
       score: 10
       max: 10
@@ -204,7 +201,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: One overlay component, required for MUI X hooks
+        comment: Component functions are required for MUI X hooks; otherwise flat
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -222,14 +219,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity
+        comment: Appropriate complexity for a composed map
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default export, skipAnimation, ChartsContainer v9 API, sized from
-          ANYPLOT_SIZE
+        comment: Default-exported component, skipAnimation, v9 ChartsContainer API
     library_mastery:
       score: 7
       max: 10
@@ -238,33 +234,32 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: false
-        comment: ChartsContainer composition with ChartsGrid/ChartsXAxis/ChartsYAxis
-          and useXScale/useYScale/useDrawingArea hooks
+        passed: true
+        comment: ChartsContainer composition with ChartsXAxis/ChartsYAxis/ChartsGrid
+          and axis ids
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: zAxis continuous colorMap consumed via useZColorScale for the path
-          gradient
-  verdict: REJECTED
+        passed: true
+        comment: zAxis continuous colorMap read via useZColorScale, useDrawingArea/useXScale/useYScale
+          hooks to draw a custom basemap in chart coordinates
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T10:53:18Z'
+  rendered_at: '2026-10-24T10:59:58Z'
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
-  - custom-legend
-  - colorbar
   - annotations
-  - html-export
+  - colorbar
+  - custom-legend
+  - layer-composition
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep:
   - interpolation
   styling:
-  - custom-colormap
-  - edge-highlighting
   - gradient-fill
+  - alpha-blending
