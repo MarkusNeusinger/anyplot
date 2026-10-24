@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: heatmap-chromagram
 created: '2026-06-24T13:52:36Z'
-updated: '2026-10-24T09:28:49Z'
+updated: '2026-10-24T09:35:14Z'
 generated_by: gemini-4-argon
 adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
 workflow_run: 40081789452
@@ -13,46 +13,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/javascript/muix/plot-dark.html
-quality_score: 86
+quality_score: 87
 review:
   strengths:
-  - Composes the chromagram inside ChartsContainer with a band y-axis and a linear
-    time x-axis, drawing the cells as a custom SVG layer positioned through the useDrawingArea
-    and useXScale hooks, so the native ChartsXAxis/ChartsYAxis supply theme-adaptive
-    ticks and labels
-  - All 12 pitch classes in chromatic order C→B with clear labels, and the time axis
-    formatted in seconds via valueFormatter
-  - 80 frames at 50 ms tile the time axis seamlessly (0.5 px overlap), so each chord
-    change shows as a sharp column boundary
-  - The imprint_seq gradient is built from window.ANYPLOT_TOKENS.seq, identical in
-    both themes, with a labelled 'Energy' color bar
-  - 'Data reads as a real chromagram: three bright chord tones per section, weaker
-    fifth-overtone leakage, a low noise floor, and the common tones of the C–G–Am–F
-    progression (C, E, A) carry across the changes'
-  - Deterministic LCG data generation and skipAnimation for a stable harness capture
+  - 'Builds the heatmap on the community surface: a zAxis continuous colorMap in imprint_seq
+    read through useZColorScale, with rects placed via useXScale/useDrawingArea inside
+    ChartsSurface, since the Heatmap chart is Pro-only'
+  - ContinuousColorLegend titled 'Energy' serves as the colour bar the spec asks for,
+    vertically centred beside the plot
+  - Fine 50 ms frames tile the time axis seamlessly, so the C-G-Am-F chord changes
+    appear as sharp boundaries with shared tones carrying across them
+  - Chrome fully theme-adaptive through ink/inkSoft tokens; data colours identical
+    in both renders
   weaknesses:
-  - 'CQ-04 (code): lines 108–125 parse the seq hex stops and interpolate RGB by hand,
-    and the color bar (gradient rect plus 0.0/1.0/Energy texts) is drawn by hand,
-    although MUI X community computes both → a `zAxis` with `colorMap: { type: ''continuous'',
-    min: 0, max: 1, color: [t.seq[0], t.seq[1]] }` plus `ContinuousColorLegend` from
-    `@mui/x-charts/ChartsLegend` (as the repo''s confusion-matrix and heatmap-clustered
-    muix implementations do). Likely cause: the hand-rolled colorbar block in ChromagramLayer.'
-  - 'Suggestion: intermediate color-bar ticks (0.25, 0.5, 0.75) would make the energy
-    scale easier to read than the two end values alone.'
-  - 'Suggestion: the subtitle builds ''Pitch classes'' by appending ''es'' to the
-    column name, which yields an odd mid-sentence capital (''12 Pitch classes'');
-    a plain lowercase phrase reads better.'
+  - 'CQ-04 (code): the chord sections are written as pipe-delimited strings ("C major|0,4,7|0|20")
+    and re-parsed with split/map(Number) in lines 37-55 → declare them directly as
+    object literals ({ label, pcs: [0, 4, 7], start: 0, end: 20 }) and drop the parsing
+    block. Likely cause: string encoding of the CHORD_SECTIONS table.'
+  - 'LM-01 (code): the colour-scale limits are typed constants (ENERGY_MIN = 0, ENERGY_MAX
+    = 1, lines 22-23) against the library prompt''s ''Limits come from the data or
+    stay automatic'' rule → derive min/max from the data''s energy values (or leave
+    the colorMap domain to the data). Likely cause: ENERGY_MIN/ENERGY_MAX passed to
+    zAxis.colorMap.'
+  - 'Suggestion: the subtitle builds ''Pitch classes'' from the column constant, leaving
+    a capitalised word mid-sentence; lower-casing it would read more naturally.'
+  - 'Suggestion: intermediate colour-bar ticks (0.5) would make mid-range overtone
+    energy easier to read off.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, not pure white.
-      Chrome: bold title "heatmap-chromagram · javascript · muix · anyplot.ai" at the top center, a smaller inkSoft subtitle "Energy across 12 Pitch classes · C major → G major → A minor → F major (80 frames)", bold chord headers (C major, G major, A minor, F major) above each section, y-axis title "Pitch class" with ticks C … B (C at the bottom), x-axis "Time (s)" with ticks 0.0s–4.0s every 0.2 s, a vertical color bar on the right labelled 1.0 / 0.0 and rotated "Energy". All text dark on light and readable.
-      Data: 12×80 heatmap in the imprint_seq gradient (#009E73 green = low → #4467A3 blue = high). Bright blue bands: C/E/G for 0–1 s, G/B/D for 1–2 s, A/C/E for 2–3 s, F/A/C for 3–4 s; teal overtone rows and a green noise floor elsewhere. Thin dark vertical dividers at 1, 2 and 3 s.
+      Background: warm off-white #FAF8F1.
+      Chrome: bold dark title "heatmap-chromagram · javascript · muix · anyplot.ai" centred at the top, soft-ink subtitle "Energy across 12 Pitch classes · C major → G major → A minor → F major (80 frames)", bold chord headers above each 1 s section, y axis "Pitch class" with C (bottom) to B (top), x axis "Time (s)" with ticks 0.0s-4.0s every 0.2 s, colour bar titled "Energy" at the right with 0.0 / 1.0 labels. All text dark on light and readable.
+      Data: 80x12 cells in the imprint_seq ramp, #009E73 green (low) to #4467A3 blue (high). Blue bands on C/E/G (0-1 s), G/B/D (1-2 s), A/C/E (2-3 s), F/A/C (3-4 s); teal overtone rows; dark-ink chord dividers at 1, 2, 3 s.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17, not pure black.
-      Chrome: title, subtitle, chord headers, axis titles, tick labels and color-bar labels all flip to light ink and are clearly readable; no dark-on-dark text. Chord dividers flip to light lines.
-      Data: cell colors and the color-bar gradient are identical to the light render; only the chrome changed.
+      Background: warm near-black #1A1A17.
+      Chrome: title, subtitle, chord headers, axis titles, tick labels and colour-bar labels in light ink, all readable; no dark-on-dark text. Chord dividers flip to a light ink line.
+      Data: cell colours identical to the light render; brand green clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -64,46 +61,49 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 22 px, axis/tick text 14–15 px CSS (2× DPR); readable in both
-          themes
+        comment: Explicit sizes (title 22 px, axis titles 15 px, ticks 14 px CSS);
+          every label readable in both themes, ink/inkSoft tokens threaded through
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; chord headers sit above the grid, color-bar labels
-          clear
+        comment: No text collisions; chord headers sit clear of the subtitle and the
+          plot top
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Cells tile seamlessly; bright chord bands clearly visible
+        comment: 80x12 cells tile the area seamlessly (+0.5 px overlap); colour bar
+          visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green→blue sequential ramp, no red-green signal
+        comment: Mandated imprint_seq green-to-blue ramp; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200×1800, balanced margins, color bar fits to the right, nothing
-          cut off
+        comment: Canvas gate passed (3200x1800); heatmap fills the canvas, colour
+          bar balanced at the right, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Time (s)'', ''Pitch class'', ''Energy'''
+        comment: '''Time (s)'', ''Pitch class'', colour bar ''Energy'' (normalised,
+          unitless)'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq from t.seq, correct backgrounds in both themes
+        comment: 'Continuous energy uses imprint_seq (t.seq[0] #009E73 -> t.seq[1]
+          #4467A3); backgrounds #FAF8F1 / #1A1A17; data colours identical across themes'
     design_excellence:
       score: 11
       max: 20
@@ -113,23 +113,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Clear typographic hierarchy: bold title, inkSoft subtitle, semibold
-          chord headers above each section'
+        comment: Title / soft-ink subtitle hierarchy with a data-derived subtitle
+          summarising the progression; chord headers are an unrequested annotation
+          layer and earn nothing
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Seamless cell tiling (0.5 px overlap) and section dividers aligned
-          to frame boundaries; tick density at 0.2 s chosen to land on chord changes
+        comment: Gridless heatmap with seam-free cells and a titled colour bar vertically
+          centred beside the plot
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: The C–G–Am–F progression is chosen so common tones (C, E, A) persist
-          across changes while the other tones swap, a focal pattern beyond the Notes'
-          C/G alternation
+        comment: Data chosen as a recognisable I-V-vi-IV progression, so each section
+          shows a distinct triad pattern with shared tones carrying across changes
+          (C/E into A minor, A/C into F major)
     spec_compliance:
       score: 15
       max: 15
@@ -139,26 +140,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Chromagram heatmap
+        comment: Pitch-class x time chromagram heatmap
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All 12 pitch classes C→B, sequential colormap, color bar, seconds
-          on the time axis, 50 ms frames giving sharp chord boundaries
+        comment: All 12 pitch classes C to B labelled; time in seconds; sequential
+          colormap; colour bar titled Energy; 50 ms frames give sharp chord boundaries;
+          chord bands visible
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Time on x, pitch class on y, cells at their frame times
+        comment: Each cell spans [t, t+step) on a linear time axis 0-4 s; rows on
+          a band scale; all data shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; color bar labelled Energy
+        comment: Title 'heatmap-chromagram · javascript · muix · anyplot.ai'; colour
+          bar labelled
     data_quality:
       score: 15
       max: 15
@@ -168,20 +172,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Chord bands, chord changes, overtone leakage, noise floor
+        comment: Bright chord-tone bands, weaker overtone/leakage rows, dark rows,
+          four chord changes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Common pop progression C–G–Am–F, plausible chroma energies
+        comment: Synthetic chroma of a C-G-Am-F progression, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Energy normalized 0–1, 80 frames over 4 s within the 50–500 range;
-          chord tones checked against the render (C/E/G, G/B/D, A/C/E, F/A/C)
+        comment: 'Checked in render and code: chord tones C/E/G, G/B/D, A/C/E, F/A/C
+          bright in their sections; energy normalised 0-1; 80 frames x 12 pitch classes
+          inside the 50-500 range'
     code_quality:
       score: 9
       max: 10
@@ -191,7 +197,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Only the hook-using layer component and the mandated Chart export
+        comment: Only the custom layer component the MUI X hooks require plus the
+          default export
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -208,19 +215,18 @@ review:
         name: Code Elegance
         score: 1
         max: 2
-        passed: true
-        comment: Hand-written hex/RGB interpolation (lines 108–125) and hand-built
-          color bar where zAxis colorMap + ContinuousColorLegend compute them (defect
-          line)
+        passed: false
+        comment: Chord sections encoded as pipe-delimited strings and re-parsed (lines
+          37-55) (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Renders into the harness mount with skipAnimation; v9 ChartsContainer
+        comment: Default export, skipAnimation, sized to ANYPLOT_SIZE, v9 community
           API
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -228,28 +234,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Composition API with useDrawingArea/useXScale hooks, band y-axis,
-          valueFormatter
+        comment: ChartsDataProvider + ChartsWrapper + ChartsSurface composition with
+          v9 axis bands; hard-typed colour-scale limits (defect line)
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Custom SVG layer inside the MUI X composition container, driven by
-          the library's scale hooks
-  verdict: REJECTED
+        passed: true
+        comment: Community-only heatmap built from a zAxis continuous colorMap read
+          through useZColorScale/useXScale/useDrawingArea, with ContinuousColorLegend
+          as the colour bar
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T09:25:49Z'
+  rendered_at: '2026-10-24T09:31:53Z'
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - annotations
-  - custom-legend
+  - layer-composition
+  - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
+  - matrix-construction
   dataprep: []
   styling:
   - custom-colormap
