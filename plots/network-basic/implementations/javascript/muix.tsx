@@ -21,6 +21,8 @@ const GRAVITY = 0.01;
 const DOMAIN_PAD_RATIO = 1.32;
 const BASE_RADIUS = 7;
 const RADIUS_PER_DEGREE = 2.8;
+const LABEL_SIZE = 18;
+const LABEL_GAP = 8;
 
 // Columns: set these to your data's column names
 const PERSON = "Person"; // role: node
@@ -249,9 +251,13 @@ function NetworkOverlay() {
           }
         }
 
-        const labelDist = r + 15;
-        const lx = cx + Math.cos(labelAngle) * labelDist;
-        const ly = cy + Math.sin(labelAngle) * labelDist;
+        // Anchor the text on the side facing the node so the label grows away from it
+        const cosA = Math.cos(labelAngle);
+        const sinA = Math.sin(labelAngle);
+        const anchor = cosA > 0.3 ? "start" : cosA < -0.3 ? "end" : "middle";
+        const labelDist = r + LABEL_GAP;
+        const lx = cx + cosA * labelDist;
+        const ly = cy + sinA * (labelDist + LABEL_SIZE * 0.55);
 
         return (
           <g key={label}>
@@ -259,10 +265,10 @@ function NetworkOverlay() {
             <text
               x={lx}
               y={ly}
-              fontSize={15}
+              fontSize={LABEL_SIZE}
               fontWeight={500}
               fill={t.ink}
-              textAnchor="middle"
+              textAnchor={anchor}
               dominantBaseline="middle"
               stroke={t.pageBg}
               strokeWidth={3.5}
@@ -276,9 +282,9 @@ function NetworkOverlay() {
 
       <g transform="translate(28, 22)">
         {groups.map((grp, i) => (
-          <g key={grp} transform={`translate(0, ${i * 30})`}>
-            <circle cx={8} cy={8} r={7.5} fill={String(groupColors.get(grp))} />
-            <text x={24} y={13} fontSize={15} fontWeight={500} fill={t.ink}>
+          <g key={grp} transform={`translate(0, ${i * 32})`}>
+            <circle cx={9} cy={9} r={8.5} fill={String(groupColors.get(grp))} />
+            <text x={26} y={15} fontSize={LABEL_SIZE} fontWeight={500} fill={t.ink}>
               {grp}
             </text>
           </g>
@@ -334,7 +340,7 @@ export default function Chart() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          fontSize: 14,
+          fontSize: 16,
           color: t.inkSoft,
         }}
       >
