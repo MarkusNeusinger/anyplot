@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: polar-line
 created: '2026-09-05T11:31:01Z'
-updated: '2026-10-24T11:54:13Z'
+updated: '2026-10-24T11:59:25Z'
 generated_by: gemini-4-argon
 adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
 workflow_run: 40091475148
@@ -13,59 +13,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-lin
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-line/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-line/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-line/javascript/muix/plot-dark.html
-quality_score: 83
+quality_score: 86
 review:
   strengths:
-  - 'Composes a true polar frame inside MUI X''s ChartsContainer: a custom SVG layer
-    reads useXScale/useYScale so rings, spokes and the closed polygons share the exact
-    scales of the native ScatterPlot markers'
-  - 'Both series are closed straight-segment loops in azimuth order with every marker
-    on its data value: no smoothing overshoot, correct compass orientation (0° at
-    top, clockwise)'
-  - 'Antenna radiation patterns (omnidirectional dipole vs directional Yagi with main
-    and back lobe) are a realistic, neutral scenario that exercises the plot type:
-    a near-circular loop beside a lobed shape near the center'
-  - 'Clear angular label hierarchy: cardinal angles bold in ink at 17 px, 45° diagonals
-    in inkSoft at 14 px; heavier outer ring frames the plot'
-  - Imprint palette by position (t.palette[idx]) with brand green first, theme tokens
-    on all chrome, both renders fully readable; scatter markers keep MUI X hover tooltips
-    in the HTML output
+  - 'Polar coordinates built on MUI X''s composition API: a ChartsContainer with hidden
+    linear axes, a custom SVG layer reading the shared scales through useXScale/useYScale,
+    and the native ScatterPlot drawing the markers on top'
+  - Each series is one closed straight-segment loop through its points in azimuth
+    order, so no line swings past its data values
+  - Grid of concentric rings and radial spokes in the theme grid token, lighter than
+    the data lines in both themes, with angles and ring values labeled
+  - 'Realistic antenna-pattern scenario: an omnidirectional dipole beside a directional
+    Yagi with main lobe, side nulls and back lobe; values computed from the pattern
+    formulas'
+  - Ring step derived from the data maximum with a nice-number rule rather than typed
+    limits; skipAnimation set; first series brand green, second Imprint lavender,
+    identical across themes
   weaknesses:
-  - 'VQ-02 (both): the page-colored pill behind the radius tick labels is drawn after
-    the data polygons and cuts the lines, a gap in the Yagi line just right of the
-    1.0 peak and in the dipole line beside the 0.8 label → no data line interrupted
-    by a tick-label background. Likely cause: the `rings.map` tick-label `<rect fill={t.pageBg}>`
-    block rendered after the `<polygon>` elements in PolarLayer; draw the tick labels
-    before the polygons or drop the opaque pill.'
-  - 'VQ-03 (both): between about 75° and 285° the 15 Yagi markers at gain 0.06–0.10
-    (7 px marker size) sit almost on top of each other near the center and merge into
-    a solid purple cluster where the line no longer reads as a line → markers small
-    enough near the center that the line between them is visible (about 4 px, −3 px),
-    or no markers on that series. Likely cause: MARKER_SIZE = 7 applied to every series.'
-  - 'VQ-06 (both): the angular variable is never named, the AZIMUTH constant ''Azimuth
-    (°)'' is not drawn anywhere, so only the radial axis has a title → label the angular
-    axis with AZIMUTH (e.g. beside the 0° label or under the plot). Likely cause:
-    PolarLayer only renders a title for GAIN.'
-  - 'Suggestion: MUI X''s native ChartsLegend (inside ChartsDataProvider/ChartsWrapper)
-    could replace the hand-built HTML legend so legend highlighting works in the interactive
-    HTML.'
-  - 'Suggestion: the rotated ''Normalized gain'' title on its own pill cuts the 0.6
-    and 0.8 rings; placing it outside the plot would leave the grid uninterrupted.'
+  - 'CQ-04 (code): lines 59–63 build the series list with a manual loop and includes()
+    check → const seriesNames = [...new Set(data.map((r) => String(r[SERIES_NAME])))];,
+    the idiom the muix library prompt names. Likely cause: hand-written de-duplication
+    loop.'
+  - 'Suggestion: render the legend with MUI X''s <ChartsLegend /> (inside ChartsDataProvider
+    / ChartsWrapper) instead of the hand-built HTML legend, so it reads its swatches
+    from the series.'
+  - 'Suggestion: the polar disc fills about 71 % of the canvas width; a smaller DOMAIN_PAD_FACTOR
+    or header gap would give the data more room.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1, no white panel.
-      Chrome: title "polar-line · javascript · muix · anyplot.ai" bold dark ink at top center (~35% of width); five concentric rings (0.2–1.0, outer ring heavier) and eight spokes every 45° in soft grey; cardinal labels 0°/90°/180°/270° bold dark ink, diagonal labels 45°/135°/225°/315° in soft grey; radial tick labels 0.2–1.0 on pills along the 0° spoke; rotated "Normalized gain" axis title inside the plot; HTML legend at bottom with green and purple dots. All text readable.
-      Data: Omnidirectional dipole in #009E73 as a closed near-circular loop (gain ~0.7–0.86), Directional Yagi in lavender #C475FD as a narrow main lobe peaking at 1.0 at 0° with a small back lobe at 180° (~0.24); 24 markers per series. Tick-label pills cut small gaps in the lines near the 1.0 and 0.8 labels; Yagi markers near the center merge into a cluster.
+      Background: warm off-white #FAF8F1, square 2400x2400 canvas
+      Chrome: centered title "polar-line · javascript · muix · anyplot.ai" in dark ink; bold cardinal angle labels (0°/90°/180°/270°) and lighter diagonal labels; ring values 0.2–1.0 on page-colored pills along the 0° spoke; "Normalized gain" rotated axis title and "Azimuth (°), clockwise" label; subtle grey concentric rings and 45° spokes; all readable
+      Data: two closed straight-segment loops with small dots — Omnidirectional dipole in #009E73 (first series, near-round trefoil 0.72–0.86) and Directional Yagi in #C475FD (main lobe 1.0 at 0°, back lobe ~0.24 at 180°); HTML legend with round swatches at the bottom
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17.
-      Chrome: title, cardinal labels and legend text in light ink; diagonal and radial tick labels in light soft grey; rings and spokes dark grey, subtle but visible. No dark-on-dark text.
-      Data: identical #009E73 and #C475FD series, same shapes and markers as the light render; only chrome flips.
+      Background: warm near-black #1A1A17
+      Chrome: title, cardinal labels and legend text in light ink; diagonal labels, ring values and axis titles in light ink-soft; grid subtle dark grey; ring pills in the dark page color; no dark-on-dark text
+      Data: identical colors to the light render (#009E73, #C475FD), same shapes and markers
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -73,73 +61,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (title 22 px, cardinal 17 px, ticks 14 px, legend
-          15 px); readable in both themes
+        comment: Explicit sizes (title 22, cardinals 17, labels 14–15 CSS px); all
+          text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
-        passed: false
-        comment: Tick-label pills cut the data lines near the 1.0 and 0.8 labels (defect
-          line)
+        passed: true
+        comment: No text collisions; ring values sit on page-colored pills; marker
+          crowding near the center is permitted data overlap
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
-        passed: false
-        comment: Yagi markers near the center merge into a cluster between ~75° and
-          285° (defect line)
+        passed: true
+        comment: 3 px lines with small 4 px markers suit 24 points per series; legend
+          swatches visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs lavender, CVD-safe, high contrast on both surfaces
+        comment: Green vs lavender is CVD-safe; strong contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400, polar area well centered and sized, nothing clipped
+        comment: 2400×2400 square canvas, disc centered, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Radial axis titled; angular variable (Azimuth) never named (defect
-          line)
+        passed: true
+        comment: '''Azimuth (°), clockwise'' and ''Normalized gain'' are descriptive'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Imprint positions 1-2 via t.palette[idx], correct theme backgrounds
-          and chrome
+        comment: '#009E73 first, #C475FD second; correct #FAF8F1 / #1A1A17 backgrounds;
+          theme-adaptive chrome'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: 'Typographic hierarchy beyond the baseline: cardinal angles bold
-          ink 17 px vs diagonals inkSoft 14 px'
+        passed: true
+        comment: 'Typographic hierarchy: bold ink cardinal angles vs lighter ink-soft
+          diagonals; heavier outer ring frames the scale'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Heavier outer boundary ring, inner rings at reduced opacity, quadrant-aware
-          anchoring of angle labels
+        passed: true
+        comment: Page-colored pills knock the grid out behind ring values; radial
+          scale placed along the 0° spoke
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: Paired omni vs directional patterns make the main-lobe focus and
-          front-to-back contrast the obvious read
+        passed: true
+        comment: Omni vs directional pairing makes the 0° boresight and the side nulls
+          the focal contrast
     spec_compliance:
       score: 15
       max: 15
@@ -149,26 +136,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Polar line plot with lines joined in theta order
+        comment: Polar line plot with lines connecting points in theta order
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Theta-order lines, multiple colored series with legend, concentric
-          circle + radial line grid, angles and radii labeled
+        comment: Theta-ordered lines, concentric-circle and radial grid with labels,
+          multiple series in different colors with legend, markers on the line
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Every marker at its own angle and radius; straight segments, no smoothing
+        comment: Every point at its angle and radius; straight segments, no smoothing;
+          shared scales
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title format; legend names both series in reader text
+        comment: Title in mandated format; legend names both series
     data_quality:
       score: 15
       max: 15
@@ -178,23 +166,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Closed cyclic loops, a large near-circular loop and a small lobed
-          loop near the center, crossing lines
+        comment: Two series of very different shapes, closed cyclic loops, small near-center
+          values beside a large loop
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Antenna radiation patterns, real-world and neutral
+        comment: Antenna azimuth radiation patterns, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Normalized gain 0-1, Yagi peak 1.0 at 0°, back lobe ~0.24 at 180°,
-          24 points per series inside the 20-500 range; no Check values in the spec
+        comment: Normalized gain 0–1; Yagi peak 1.0 at 0°, back lobe ~0.24 at 180°,
+          omni 0.86 at 0° — checked against the formulas and the render
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -202,33 +190,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat module-level data and plot code; PolarLayer component needed
-          for the scale hooks
+        comment: Module-level data and one required React layer component
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic analytic data
+        comment: Deterministic formulas
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All three imports used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Appropriate complexity for a polar frame the community package lacks
+        comment: Lines 59–63 hand-roll de-duplication that [...new Set(...)] replaces
+          (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component, v9 ChartsContainer, skipAnimation, sized
-          from ANYPLOT_SIZE
+        comment: Default-exported component, v9 ChartsContainer API, skipAnimation
     library_mastery:
       score: 5
       max: 10
@@ -237,28 +224,27 @@ review:
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: false
-        comment: ChartsContainer composition with ScatterPlot and hooks; legend hand-built
-          in HTML instead of ChartsLegend
+        passed: true
+        comment: ChartsContainer composition with hidden axes; legend is hand-built
+          HTML rather than ChartsLegend
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Custom SVG layer driven by useXScale/useYScale inside ChartsContainer,
-          extending MUI X to a polar frame
-  verdict: REJECTED
+        comment: Custom SVG layer composed into ChartsContainer using useXScale/useYScale
+          scale hooks
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T11:51:24Z'
+  rendered_at: '2026-10-24T11:56:12Z'
 impl_tags:
   dependencies: []
   techniques:
   - polar-projection
   - custom-legend
   - layer-composition
-  - hover-tooltips
-  - html-export
+  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
