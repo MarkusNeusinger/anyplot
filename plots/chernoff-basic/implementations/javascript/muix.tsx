@@ -2,155 +2,317 @@
 // chernoff-basic: Chernoff Faces for Multivariate Data
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 90/100 | Created: 2026-09-02
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
-import { useXScale, useYScale } from "@mui/x-charts/hooks";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
+import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-const SPEC_TITLE = "Company Financial Health";
-const TITLE = `${SPEC_TITLE} · chernoff-basic · javascript · muix · anyplot.ai`;
-// Title fontsize scales linearly off the 67-char baseline (default 22px, floor 15px).
-const TITLE_FONT_SIZE = Math.max(15, Math.round(22 * Math.min(1, 67 / TITLE.length)));
-const SUBTITLE = "Twelve companies across three sectors — each face is one company, each feature is one metric";
+// Constants
+const HEADER_H = 122;
+const FOOTER_H = 64;
+const FACE_H_SHARE = 0.315; // base face half-height as a share of the cell height
+const FACE_W_SHARE = 0.4; // cap on the base face half-height as a share of the cell width
+// Facial features as shares of the base face half-height
+const FACE_RX_SHARE = 0.806;
+const EYE_R_SHARE = 0.125;
+const EYE_DX_SHARE = 0.306;
+const BROW_LEN_SHARE = 0.361;
+const BROW_GAP_SHARE = 0.111;
+const NOSE_LEN_SHARE = 0.306;
+const MOUTH_HALF_W_SHARE = 0.361;
+const MOUTH_CURVE_SHARE = 0.347;
+// Features in mapping order; variable i drives feature i
+const FEATURES = [
+  "Face width",
+  "Face height",
+  "Eye size",
+  "Eye spacing",
+  "Eyebrow slant",
+  "Nose length",
+  "Mouth smile",
+];
+const NEUTRAL = 0.5; // value of a feature that no variable drives
 
-// --- Data: 12 companies across 3 sectors, 7 metrics normalized to [0, 1] ----
-// Small fixed-seed LCG — the browser has no seeded RNG.
-let seed = 42;
-function rand() {
-  seed = (seed * 1103515245 + 12345) % 2147483648;
-  return seed / 2147483648;
-}
-const clamp01 = (v) => Math.min(1, Math.max(0, v));
-const jitter = () => (rand() - 0.5) * 0.44;
+// Columns: set these to your data's column names
+const OBSERVATION = "Company"; // role: observation_id
+const GROUP = "Sector"; // role: extra
+const VARIABLES = [
+  "Revenue growth (%)",
+  "Profit margin (%)",
+  "Liquidity ratio",
+  "Market share (%)",
+  "Debt-to-equity",
+  "Innovation score",
+  "Employee retention (%)",
+]; // role: variable
 
-const SECTORS = ["Technology", "Retail", "Manufacturing"];
-
-// Sector-level baselines that make the three rows read as distinct visual
-// families before any per-company jitter is applied.
-const SECTOR_PROFILE = {
-  Technology: { revenueGrowth: 0.85, profitMargin: 0.65, liquidityRatio: 0.55, marketShare: 0.4, debtRatio: 0.15, innovationIndex: 0.9, employeeRetention: 0.85 },
-  Retail: { revenueGrowth: 0.4, profitMargin: 0.28, liquidityRatio: 0.72, marketShare: 0.68, debtRatio: 0.45, innovationIndex: 0.28, employeeRetention: 0.48 },
-  Manufacturing: { revenueGrowth: 0.22, profitMargin: 0.38, liquidityRatio: 0.32, marketShare: 0.55, debtRatio: 0.85, innovationIndex: 0.5, employeeRetention: 0.25 },
-};
-
-const COMPANIES = [
-  { name: "Nova Systems", sector: "Technology" },
-  { name: "Quantum Byte", sector: "Technology" },
-  { name: "CloudPeak", sector: "Technology" },
-  { name: "Vertex Labs", sector: "Technology" },
-  { name: "Harborline Retail", sector: "Retail" },
-  { name: "Meadow Mart", sector: "Retail" },
-  { name: "Urban Goods", sector: "Retail" },
-  { name: "Riverside Shops", sector: "Retail" },
-  { name: "IronWorks Mfg", sector: "Manufacturing" },
-  { name: "Steelframe Co", sector: "Manufacturing" },
-  { name: "Forge Dynamics", sector: "Manufacturing" },
-  { name: "Anvil Industries", sector: "Manufacturing" },
+// Data: replace this block with your own records, one object per row
+const data = [
+  {
+    [OBSERVATION]: "Nova Systems",
+    [GROUP]: "Technology",
+    [VARIABLES[0]]: 28.4,
+    [VARIABLES[1]]: 24.1,
+    [VARIABLES[2]]: 2.15,
+    [VARIABLES[3]]: 14.2,
+    [VARIABLES[4]]: 0.32,
+    [VARIABLES[5]]: 91,
+    [VARIABLES[6]]: 93,
+  },
+  {
+    [OBSERVATION]: "Quantum Byte",
+    [GROUP]: "Technology",
+    [VARIABLES[0]]: 31.8,
+    [VARIABLES[1]]: 21.6,
+    [VARIABLES[2]]: 1.92,
+    [VARIABLES[3]]: 11.8,
+    [VARIABLES[4]]: 0.24,
+    [VARIABLES[5]]: 95,
+    [VARIABLES[6]]: 89,
+  },
+  {
+    [OBSERVATION]: "CloudPeak",
+    [GROUP]: "Technology",
+    [VARIABLES[0]]: 24.9,
+    [VARIABLES[1]]: 26.8,
+    [VARIABLES[2]]: 2.38,
+    [VARIABLES[3]]: 18.5,
+    [VARIABLES[4]]: 0.41,
+    [VARIABLES[5]]: 84,
+    [VARIABLES[6]]: 91,
+  },
+  {
+    [OBSERVATION]: "Vertex Labs",
+    [GROUP]: "Technology",
+    [VARIABLES[0]]: 29.6,
+    [VARIABLES[1]]: 19.4,
+    [VARIABLES[2]]: 1.78,
+    [VARIABLES[3]]: 9.6,
+    [VARIABLES[4]]: 0.28,
+    [VARIABLES[5]]: 88,
+    [VARIABLES[6]]: 87,
+  },
+  {
+    [OBSERVATION]: "Harborline Retail",
+    [GROUP]: "Retail",
+    [VARIABLES[0]]: 14.2,
+    [VARIABLES[1]]: 11.5,
+    [VARIABLES[2]]: 2.45,
+    [VARIABLES[3]]: 24.6,
+    [VARIABLES[4]]: 0.88,
+    [VARIABLES[5]]: 46,
+    [VARIABLES[6]]: 76,
+  },
+  {
+    [OBSERVATION]: "Meadow Mart",
+    [GROUP]: "Retail",
+    [VARIABLES[0]]: 11.8,
+    [VARIABLES[1]]: 9.8,
+    [VARIABLES[2]]: 2.62,
+    [VARIABLES[3]]: 21.4,
+    [VARIABLES[4]]: 0.74,
+    [VARIABLES[5]]: 39,
+    [VARIABLES[6]]: 79,
+  },
+  {
+    [OBSERVATION]: "Urban Goods",
+    [GROUP]: "Retail",
+    [VARIABLES[0]]: 16.5,
+    [VARIABLES[1]]: 13.2,
+    [VARIABLES[2]]: 2.18,
+    [VARIABLES[3]]: 19.2,
+    [VARIABLES[4]]: 0.96,
+    [VARIABLES[5]]: 54,
+    [VARIABLES[6]]: 73,
+  },
+  {
+    [OBSERVATION]: "Riverside Shops",
+    [GROUP]: "Retail",
+    [VARIABLES[0]]: 12.9,
+    [VARIABLES[1]]: 10.4,
+    [VARIABLES[2]]: 2.51,
+    [VARIABLES[3]]: 26.1,
+    [VARIABLES[4]]: 0.82,
+    [VARIABLES[5]]: 42,
+    [VARIABLES[6]]: 77,
+  },
+  {
+    [OBSERVATION]: "IronWorks Mfg",
+    [GROUP]: "Manufacturing",
+    [VARIABLES[0]]: 7.4,
+    [VARIABLES[1]]: 15.6,
+    [VARIABLES[2]]: 1.42,
+    [VARIABLES[3]]: 17.8,
+    [VARIABLES[4]]: 1.54,
+    [VARIABLES[5]]: 64,
+    [VARIABLES[6]]: 66,
+  },
+  {
+    [OBSERVATION]: "Steelframe Co",
+    [GROUP]: "Manufacturing",
+    [VARIABLES[0]]: 9.1,
+    [VARIABLES[1]]: 14.2,
+    [VARIABLES[2]]: 1.55,
+    [VARIABLES[3]]: 20.3,
+    [VARIABLES[4]]: 1.38,
+    [VARIABLES[5]]: 59,
+    [VARIABLES[6]]: 69,
+  },
+  {
+    [OBSERVATION]: "Forge Dynamics",
+    [GROUP]: "Manufacturing",
+    [VARIABLES[0]]: 6.2,
+    [VARIABLES[1]]: 16.9,
+    [VARIABLES[2]]: 1.34,
+    [VARIABLES[3]]: 15.4,
+    [VARIABLES[4]]: 1.68,
+    [VARIABLES[5]]: 71,
+    [VARIABLES[6]]: 63,
+  },
+  {
+    [OBSERVATION]: "Anvil Industries",
+    [GROUP]: "Manufacturing",
+    [VARIABLES[0]]: 8.3,
+    [VARIABLES[1]]: 13.5,
+    [VARIABLES[2]]: 1.48,
+    [VARIABLES[3]]: 22.0,
+    [VARIABLES[4]]: 1.46,
+    [VARIABLES[5]]: 61,
+    [VARIABLES[6]]: 67,
+  },
 ];
 
-const METRIC_KEYS = ["revenueGrowth", "profitMargin", "liquidityRatio", "marketShare", "debtRatio", "innovationIndex", "employeeRetention"];
+// Plot: reads only data and the constants above
+const groups = Array.from(new Set(data.map((d) => String(d[GROUP]))));
+const mappedVariables = VARIABLES.slice(0, FEATURES.length);
 
-const faces = COMPANIES.map((c, i) => {
-  const base = SECTOR_PROFILE[c.sector];
-  const metrics = {};
-  METRIC_KEYS.forEach((k) => {
-    metrics[k] = clamp01(base[k] + jitter());
-  });
+const extents = mappedVariables.map((col) => {
+  const vals = data.map((d) => Number(d[col]));
+  const min = Math.min(...vals);
+  return { min, span: Math.max(...vals) - min || 1 };
+});
+
+const numCols = Math.max(
+  ...groups.map((g) => data.filter((d) => String(d[GROUP]) === g).length),
+);
+const numRows = groups.length;
+
+const groupCounts = new Map<string, number>();
+const faces = data.map((d) => {
+  const groupName = String(d[GROUP]);
+  const rowIdx = groups.indexOf(groupName);
+  const colIdx = groupCounts.get(groupName) ?? 0;
+  groupCounts.set(groupName, colIdx + 1);
+
   return {
-    ...c,
-    row: SECTORS.indexOf(c.sector),
-    col: i % 4,
-    metrics,
+    name: String(d[OBSERVATION]),
+    row: rowIdx,
+    col: colIdx,
+    color: t.palette[rowIdx],
+    // One value in [0, 1] per feature: min-max normalised, or neutral when unmapped
+    f: FEATURES.map((_, i) =>
+      i < mappedVariables.length
+        ? (Number(d[mappedVariables[i]]) - extents[i].min) / extents[i].span
+        : NEUTRAL,
+    ),
   };
 });
 
-// --- Facial feature mapping (documented, not arbitrary) ----------------------
-// face width      <- revenueGrowth      face height   <- profitMargin
-// eye size        <- liquidityRatio     eye spacing   <- marketShare
-// eyebrow angle   <- debtRatio (higher debt -> more furrowed / worried brow)
-// nose length     <- innovationIndex
-// mouth curvature <- employeeRetention (higher retention -> bigger smile)
-const FACE_RX = 62;
-const FACE_RY = 78;
-const EYE_R = 9;
-const EYE_DX = 22;
-const BROW_LEN = 26;
-const NOSE_LEN = 22;
-const MOUTH_HALF_W = 26;
-const MOUTH_CURVE_MAX = 26;
+const featureKey = mappedVariables.map((v, i) => `${FEATURES[i]} → ${v}`);
+const keySplit = Math.ceil(featureKey.length / 2);
+const featureKeyLine1 = featureKey.slice(0, keySplit).join(" · ");
+const featureKeyLine2 = featureKey.slice(keySplit).join(" · ");
 
-function FaceGlyph({ face, cx, cy, color }) {
-  const m = face.metrics;
-  const rx = FACE_RX * (0.72 + 0.56 * m.revenueGrowth);
-  const ry = FACE_RY * (0.75 + 0.5 * m.profitMargin);
-  const eyeR = EYE_R * (0.6 + 0.8 * m.liquidityRatio);
-  const eyeDx = EYE_DX * (0.7 + 0.6 * m.marketShare);
-  const browAngle = -8 + 36 * m.debtRatio; // degrees; negative = relaxed/raised, positive = furrowed as debt rises
-  const noseLen = NOSE_LEN * (0.6 + 0.8 * m.innovationIndex);
-  const mouthCurve = (m.employeeRetention - 0.5) * 2 * MOUTH_CURVE_MAX; // + = smile, - = frown
+const TITLE = "chernoff-basic · javascript · muix · anyplot.ai";
+const SUBTITLE = `${faces.length} faces (${OBSERVATION}) · ${groups.length} groups (${GROUP}) · ${mappedVariables.length} variables normalized to [0, 1] and mapped to facial features`;
 
-  const eyeY = cy - ry * 0.12;
-  const browY = eyeY - eyeR - 8;
-  const noseY0 = cy + ry * 0.05;
-  const noseY1 = noseY0 + noseLen;
-  const mouthY = cy + ry * 0.48;
+function FaceGridLayer() {
+  const xs = useXScale("col");
+  const ys = useYScale("row");
+  const { width: areaW, height: areaH } = useDrawingArea();
+  const unit = Math.min(
+    (areaH / numRows) * FACE_H_SHARE,
+    (areaW / numCols) * FACE_W_SHARE,
+  );
 
   return (
     <g>
-      <ellipse cx={cx} cy={cy} rx={rx} ry={ry} fill={t.elevatedBg} stroke={color} strokeWidth={3.5} />
-      <circle cx={cx - eyeDx} cy={eyeY} r={eyeR} fill={t.ink} />
-      <circle cx={cx + eyeDx} cy={eyeY} r={eyeR} fill={t.ink} />
-      <line x1={cx - eyeDx - BROW_LEN / 2} y1={browY} x2={cx - eyeDx + BROW_LEN / 2} y2={browY} stroke={t.ink} strokeWidth={3} strokeLinecap="round" transform={`rotate(${browAngle} ${cx - eyeDx} ${browY})`} />
-      <line x1={cx + eyeDx - BROW_LEN / 2} y1={browY} x2={cx + eyeDx + BROW_LEN / 2} y2={browY} stroke={t.ink} strokeWidth={3} strokeLinecap="round" transform={`rotate(${-browAngle} ${cx + eyeDx} ${browY})`} />
-      <path d={`M ${cx} ${noseY0} L ${cx} ${noseY1} L ${cx + 4} ${noseY1 + 3}`} fill="none" stroke={t.inkSoft} strokeWidth={2.5} strokeLinecap="round" />
-      <path
-        d={`M ${cx - MOUTH_HALF_W} ${mouthY} Q ${cx} ${mouthY + mouthCurve} ${cx + MOUTH_HALF_W} ${mouthY}`}
-        fill="none"
-        stroke={t.ink}
-        strokeWidth={3}
-        strokeLinecap="round"
-      />
-      <text x={cx} y={cy + ry + 26} textAnchor="middle" fontSize={13} fill={t.inkSoft}>
-        {face.name}
-      </text>
-    </g>
-  );
-}
+      {faces.map((face) => {
+        const cx = xs(face.col + 0.5);
+        const cy = ys(face.row + 0.45);
+        const f = face.f;
+        const rx = unit * FACE_RX_SHARE * (0.72 + 0.54 * f[0]);
+        const ry = unit * (0.74 + 0.48 * f[1]);
+        const eyeR = unit * EYE_R_SHARE * (0.62 + 0.78 * f[2]);
+        const eyeDx = unit * EYE_DX_SHARE * (0.72 + 0.58 * f[3]);
+        const browAngle = -10 + 38 * f[4];
+        const noseLen = unit * NOSE_LEN_SHARE * (0.62 + 0.78 * f[5]);
+        const mouthCurve = (f[6] - 0.5) * 2 * unit * MOUTH_CURVE_SHARE;
+        const browLen = unit * BROW_LEN_SHARE;
+        const mouthHalfW = unit * MOUTH_HALF_W_SHARE;
 
-function FaceGrid() {
-  const xs = useXScale();
-  const ys = useYScale();
-  return (
-    <g>
-      {faces.map((face) => (
-        <FaceGlyph key={face.name} face={face} cx={xs(face.col + 0.5)} cy={ys(face.row + 0.5)} color={t.palette[face.row]} />
-      ))}
-    </g>
-  );
-}
+        const eyeY = cy - ry * 0.14;
+        const browY = eyeY - eyeR - unit * BROW_GAP_SHARE;
+        const noseY0 = cy + ry * 0.04;
+        const noseY1 = noseY0 + noseLen;
+        const mouthY = cy + ry * 0.48;
 
-function SectorLegend() {
-  const { width } = window.ANYPLOT_SIZE;
-  const swatch = 14;
-  const gap = 10;
-  const groupGap = 32;
-  const fontSize = 14;
-  const charW = fontSize * 0.58;
-  const widths = SECTORS.map((s) => swatch + gap + s.length * charW);
-  const totalWidth = widths.reduce((a, b) => a + b, 0) + groupGap * (SECTORS.length - 1);
-  let x = width / 2 - totalWidth / 2;
-  const y = 108;
-  return (
-    <g fontSize={fontSize} fill={t.inkSoft}>
-      {SECTORS.map((s, i) => {
-        const rectX = x;
-        const labelX = rectX + swatch + gap;
-        x += widths[i] + groupGap;
         return (
-          <g key={s}>
-            <rect x={rectX} y={y - swatch + 3} width={swatch} height={swatch} rx={3} fill={t.palette[i]} />
-            <text x={labelX} y={y}>
-              {s}
+          <g key={face.name}>
+            <ellipse
+              cx={cx}
+              cy={cy}
+              rx={rx}
+              ry={ry}
+              fill={t.elevatedBg}
+              stroke={face.color}
+              strokeWidth={3.5}
+            />
+            <circle cx={cx - eyeDx} cy={eyeY} r={eyeR} fill={t.ink} />
+            <circle cx={cx + eyeDx} cy={eyeY} r={eyeR} fill={t.ink} />
+            <line
+              x1={cx - eyeDx - browLen / 2}
+              y1={browY}
+              x2={cx - eyeDx + browLen / 2}
+              y2={browY}
+              stroke={t.ink}
+              strokeWidth={3}
+              strokeLinecap="round"
+              transform={`rotate(${browAngle} ${cx - eyeDx} ${browY})`}
+            />
+            <line
+              x1={cx + eyeDx - browLen / 2}
+              y1={browY}
+              x2={cx + eyeDx + browLen / 2}
+              y2={browY}
+              stroke={t.ink}
+              strokeWidth={3}
+              strokeLinecap="round"
+              transform={`rotate(${-browAngle} ${cx + eyeDx} ${browY})`}
+            />
+            <path
+              d={`M ${cx} ${noseY0} L ${cx} ${noseY1} L ${cx + 5} ${noseY1 + 3}`}
+              fill="none"
+              stroke={t.inkSoft}
+              strokeWidth={2.5}
+              strokeLinecap="round"
+            />
+            <path
+              d={`M ${cx - mouthHalfW} ${mouthY} Q ${cx} ${mouthY + mouthCurve} ${cx + mouthHalfW} ${mouthY}`}
+              fill="none"
+              stroke={t.ink}
+              strokeWidth={3}
+              strokeLinecap="round"
+            />
+            <text
+              x={cx}
+              y={cy + ry + 24}
+              textAnchor="middle"
+              fontSize={14}
+              fontWeight={600}
+              fill={t.ink}
+            >
+              {face.name}
             </text>
           </g>
         );
@@ -159,46 +321,110 @@ function SectorLegend() {
   );
 }
 
-function FeatureKey() {
-  const { width, height } = window.ANYPLOT_SIZE;
-  const lines = ["Face width → revenue growth · Face height → profit margin · Eye size → liquidity ratio · Eye spacing → market share", "Eyebrow angle → debt ratio · Nose length → innovation index · Smile → employee retention"];
-  return (
-    <g fontSize={12} fill={t.inkSoft} textAnchor="middle">
-      {lines.map((line, i) => (
-        <text key={line} x={width / 2} y={height - 34 + i * 18}>
-          {line}
-        </text>
-      ))}
-    </g>
-  );
-}
-
-// --- Chart (default-exported component — the harness mounts it) -------------
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
-  const MARGIN = { top: 190, right: 60, bottom: 80, left: 60 };
-  const cols = 4;
-  const rows = SECTORS.length;
+  const chartHeight = height - HEADER_H - FOOTER_H;
 
   return (
-    <ChartContainer
-      width={width}
-      height={height}
-      series={[]}
-      margin={MARGIN}
-      xAxis={[{ scaleType: "linear", min: 0, max: cols, disableLine: true, disableTicks: true, valueFormatter: () => "" }]}
-      yAxis={[{ scaleType: "linear", min: 0, max: rows, reverse: true, disableLine: true, disableTicks: true, valueFormatter: () => "" }]}
-      skipAnimation
+    <div
+      style={{
+        width,
+        height,
+        background: t.pageBg,
+        fontFamily: "Inter, system-ui, sans-serif",
+        display: "flex",
+        flexDirection: "column",
+      }}
     >
-      <FaceGrid />
-      <text x={width / 2} y={44} textAnchor="middle" fontSize={TITLE_FONT_SIZE} fontWeight={600} fill={t.ink}>
-        {TITLE}
-      </text>
-      <text x={width / 2} y={72} textAnchor="middle" fontSize={15} fill={t.inkSoft}>
-        {SUBTITLE}
-      </text>
-      <SectorLegend />
-      <FeatureKey />
-    </ChartContainer>
+      <div
+        style={{
+          height: HEADER_H,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 8,
+          paddingTop: 6,
+        }}
+      >
+        <div style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>
+          {TITLE}
+        </div>
+        <div style={{ fontSize: 15, color: t.inkSoft }}>{SUBTITLE}</div>
+        <div
+          style={{
+            display: "flex",
+            gap: 28,
+            alignItems: "center",
+            fontSize: 14,
+            color: t.inkSoft,
+          }}
+        >
+          {groups.map((g, i) => (
+            <div
+              key={g}
+              style={{ display: "flex", alignItems: "center", gap: 8 }}
+            >
+              <span
+                style={{
+                  width: 14,
+                  height: 16,
+                  borderRadius: "50%",
+                  border: `3px solid ${t.palette[i]}`,
+                  background: t.elevatedBg,
+                  display: "inline-block",
+                }}
+              />
+              <span style={{ color: t.ink, fontWeight: 500 }}>{g}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <ChartsContainer
+        width={width}
+        height={chartHeight}
+        series={[]}
+        margin={{ top: 10, right: 48, bottom: 18, left: 48 }}
+        xAxis={[
+          {
+            id: "col",
+            scaleType: "linear",
+            min: 0,
+            max: numCols,
+            height: 0,
+          },
+        ]}
+        yAxis={[
+          {
+            id: "row",
+            scaleType: "linear",
+            min: 0,
+            max: numRows,
+            reverse: true,
+            width: 0,
+          },
+        ]}
+        skipAnimation
+      >
+        <FaceGridLayer />
+      </ChartsContainer>
+
+      <div
+        style={{
+          height: FOOTER_H,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 4,
+          fontSize: 14,
+          color: t.inkSoft,
+        }}
+      >
+        <div>{featureKeyLine1}</div>
+        <div>{featureKeyLine2}</div>
+      </div>
+    </div>
   );
 }
