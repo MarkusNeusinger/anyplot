@@ -4,7 +4,10 @@
 // Quality: 86/100 | Updated: 2026-10-24
 //# anyplot-orientation: square
 
-import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
+import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
+import { ChartsWrapper } from "@mui/x-charts/ChartsWrapper";
+import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
+import { ChartsLegend } from "@mui/x-charts/ChartsLegend";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
@@ -331,7 +334,7 @@ export default function Chart() {
         <span style={{ fontSize: 22, fontWeight: 700, color: t.ink }}>{TITLE}</span>
         <span style={{ fontSize: 15, color: t.inkSoft }}>{SUBTITLE}</span>
       </div>
-      <ChartsContainer
+      <ChartsDataProvider
         width={chartSize}
         height={chartSize}
         skipAnimation
@@ -340,35 +343,17 @@ export default function Chart() {
         xAxis={[{ id: "x", min: -DOMAIN_LIMIT, max: DOMAIN_LIMIT, position: "none" }]}
         yAxis={[{ id: "y", min: -DOMAIN_LIMIT, max: DOMAIN_LIMIT, position: "none" }]}
       >
-        <RadialDendrogram />
-        <ScatterPlot />
-      </ChartsContainer>
-      <div
-        style={{
-          height: LEGEND_H,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 28,
-          flexWrap: "wrap",
-          padding: "0 24px",
-        }}
-      >
-        {REGION_NAMES.map((reg) => (
-          <div key={reg} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span
-              style={{
-                width: 14,
-                height: 14,
-                borderRadius: "50%",
-                background: REGION_COLORS[reg],
-                display: "inline-block",
-              }}
-            />
-            <span style={{ fontSize: 14, color: t.ink }}>{reg}</span>
-          </div>
-        ))}
-      </div>
+        <ChartsWrapper
+          legendPosition={{ horizontal: "center", vertical: "bottom" }}
+          legendDirection="horizontal"
+        >
+          <ChartsLegend sx={{ fontSize: 14, fontFamily: FONT, color: t.ink, gap: 3.5, pt: 3 }} />
+          <ChartsSurface>
+            <RadialDendrogram />
+            <ScatterPlot />
+          </ChartsSurface>
+        </ChartsWrapper>
+      </ChartsDataProvider>
     </div>
   );
 }
