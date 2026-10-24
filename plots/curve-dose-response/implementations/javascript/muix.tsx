@@ -9,19 +9,67 @@ import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
-import { ChartsTooltip } from "@mui/x-charts/ChartsTooltip";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
 
-// Data
-const COMPOUND = "Compound";
-const CONCENTRATION = "Concentration (M)";
-const RESPONSE = "Response (%)";
-const RESPONSE_SEM = "Response SEM (%)";
-const SUBTITLE =
-  "Four-parameter logistic (4PL) dose-response fit · Mean ± SEM with 95% CI band and EC₅₀ drop-lines";
+const t = window.ANYPLOT_TOKENS;
+const { width, height } = window.ANYPLOT_SIZE;
 
-const DATA = [
+// Constants
+const TITLE = "curve-dose-response · javascript · muix · anyplot.ai";
+const FONT = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+const CURVE_SAMPLES = 90;
+const LOG_PAD_SHARE = 0.09;
+const Y_PAD_SHARE = 0.12;
+const ERROR_CAP = 7;
+
+const SUPERSCRIPT: Record<string, string> = {
+  "0": "⁰",
+  "1": "¹",
+  "2": "²",
+  "3": "³",
+  "4": "⁴",
+  "5": "⁵",
+  "6": "⁶",
+  "7": "⁷",
+  "8": "⁸",
+  "9": "⁹",
+  "-": "⁻",
+};
+
+const SI_PREFIXES = [
+  { exp: -12, prefix: "p" },
+  { exp: -9, prefix: "n" },
+  { exp: -6, prefix: "µ" },
+  { exp: -3, prefix: "m" },
+  { exp: 0, prefix: "" },
+];
+
+const T_CRIT_95: Record<number, number> = {
+  1: 12.706,
+  2: 4.303,
+  3: 3.182,
+  4: 2.776,
+  5: 2.571,
+  6: 2.447,
+  7: 2.365,
+  8: 2.306,
+  9: 2.262,
+  10: 2.228,
+  12: 2.179,
+  15: 2.131,
+  20: 2.086,
+  30: 2.042,
+};
+
+// Columns: set these to your data's column names
+const COMPOUND = "Compound"; // role: compound
+const CONCENTRATION = "Concentration (M)"; // role: concentration
+const RESPONSE = "Response (%)"; // role: response
+const RESPONSE_SEM = "Response SEM (%)"; // role: response_sem
+
+// Data: replace this block with your own records
+const data = [
   { [COMPOUND]: "Osimertinib", [CONCENTRATION]: 1e-9, [RESPONSE]: 2.8, [RESPONSE_SEM]: 2.6 },
   { [COMPOUND]: "Osimertinib", [CONCENTRATION]: 3.16e-9, [RESPONSE]: 4.1, [RESPONSE_SEM]: 3.1 },
   { [COMPOUND]: "Osimertinib", [CONCENTRATION]: 1e-8, [RESPONSE]: 5.6, [RESPONSE_SEM]: 3.4 },
@@ -45,55 +93,15 @@ const DATA = [
   { [COMPOUND]: "Gefitinib", [CONCENTRATION]: 1e-4, [RESPONSE]: 84.6, [RESPONSE_SEM]: 3.1 },
 ];
 
-// Constants
-const t = window.ANYPLOT_TOKENS;
-const { width, height } = window.ANYPLOT_SIZE;
-const FONT = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
-const CURVE_SAMPLES = 90;
-const LOG_PAD_SHARE = 0.09;
-const Y_PAD_SHARE = 0.12;
-const ERROR_CAP = 7;
-
-const SUPERSCRIPT: Record<string, string> = {
-  "0": "⁰",
-  "1": "¹",
-  "2": "²",
-  "3": "³",
-  "4": "⁴",
-  "5": "⁵",
-  "6": "⁶",
-  "7": "⁷",
-  "8": "⁸",
-  "9": "⁹",
-  "-": "⁻",
-};
-
-const T_CRIT_95: Record<number, number> = {
-  1: 12.706,
-  2: 4.303,
-  3: 3.182,
-  4: 2.776,
-  5: 2.571,
-  6: 2.447,
-  7: 2.365,
-  8: 2.306,
-  9: 2.262,
-  10: 2.228,
-  12: 2.179,
-  15: 2.131,
-  20: 2.086,
-  30: 2.042,
-};
-
-// Preparation
-const COMPOUND_NAMES = Array.from(new Set(DATA.map((d) => String(d[COMPOUND]))));
-const allConcs = DATA.map((d) => Number(d[CONCENTRATION]));
-const allResp = DATA.map((d) => Number(d[RESPONSE]));
-const allSem = DATA.map((d) => Number(d[RESPONSE_SEM]));
+// Plot: reads only data and the constants above
+const COMPOUND_NAMES = Array.from(new Set(data.map((d) => String(d[COMPOUND]))));
+const allConcs = data.map((d) => Number(d[CONCENTRATION]));
+const allResp = data.map((d) => Number(d[RESPONSE]));
+const allSem = data.map((d) => Number(d[RESPONSE_SEM]));
 
 const rawLogMin = Math.log10(Math.min(...allConcs));
 const rawLogMax = Math.log10(Math.max(...allConcs));
-const logSpan = rawLogMax - rawLogMin || 1;
+const logSpan = rawLogMax - rawLogMin;
 const logMin = rawLogMin - logSpan * LOG_PAD_SHARE;
 const logMax = rawLogMax + logSpan * LOG_PAD_SHARE;
 const xMin = Math.pow(10, logMin);
@@ -101,11 +109,12 @@ const xMax = Math.pow(10, logMax);
 
 const rawYMin = Math.min(...allResp.map((v, i) => v - allSem[i]));
 const rawYMax = Math.max(...allResp.map((v, i) => v + allSem[i]));
-const ySpan = rawYMax - rawYMin || 100;
-const yMin = Math.floor(rawYMin - ySpan * Y_PAD_SHARE);
-const yMax = Math.ceil(rawYMax + ySpan * Y_PAD_SHARE);
+const ySpan = rawYMax - rawYMin;
+const yMin = rawYMin - ySpan * Y_PAD_SHARE;
+const yMax = rawYMax + ySpan * Y_PAD_SHARE;
 
-const RESP_UNIT = RESPONSE.match(/\(([^)]+)\)/)?.[1] ?? "%";
+const CONC_UNIT = CONCENTRATION.match(/\(([^)]+)\)/)?.[1] ?? "";
+const RESP_UNIT = RESPONSE.match(/\(([^)]+)\)/)?.[1] ?? "";
 
 const tickPowers: number[] = [];
 for (let p = Math.ceil(logMin); p <= Math.floor(logMax); p++) {
@@ -113,11 +122,12 @@ for (let p = Math.ceil(logMin); p <= Math.floor(logMax); p++) {
 }
 
 const curveXs = Array.from({ length: CURVE_SAMPLES }, (_, i) =>
-  Math.pow(10, logMin + (i / (CURVE_SAMPLES - 1)) * (logMax - logMin))
+  Math.pow(10, logMin + (i / (CURVE_SAMPLES - 1)) * (logMax - logMin)),
 );
 
 const GROUPS = COMPOUND_NAMES.map((name, idx) => {
-  const rows = DATA.filter((d) => d[COMPOUND] === name)
+  const rows = data
+    .filter((d) => String(d[COMPOUND]) === name)
     .map((d, i) => ({
       id: `${name}-${i}`,
       x: Number(d[CONCENTRATION]),
@@ -127,23 +137,6 @@ const GROUPS = COMPOUND_NAMES.map((name, idx) => {
     .sort((a, b) => a.x - b.x);
 
   const color = t.palette[idx];
-  if (rows.length === 0) {
-    return {
-      name,
-      color,
-      rows: [],
-      bottom: 0,
-      top: 100,
-      ec50: 1e-7,
-      hill: 1,
-      halfMax: 50,
-      ec50Label: "",
-      curveY: [],
-      ciUpper: [],
-      ciLower: [],
-      hasCI: false,
-    };
-  }
 
   let bottom = rows[0].y;
   let top = rows[rows.length - 1].y;
@@ -151,7 +144,7 @@ const GROUPS = COMPOUND_NAMES.map((name, idx) => {
   let logEc50 = (rawLogMin + rawLogMax) / 2;
   for (let i = 0; i < rows.length - 1; i++) {
     if ((rows[i].y - initHalf) * (rows[i + 1].y - initHalf) <= 0) {
-      const denom = rows[i + 1].y - rows[i].y || 1;
+      const denom = rows[i + 1].y - rows[i].y;
       const frac = (initHalf - rows[i].y) / denom;
       logEc50 =
         Math.log10(rows[i].x) + frac * (Math.log10(rows[i + 1].x) - Math.log10(rows[i].x));
@@ -194,15 +187,103 @@ const GROUPS = COMPOUND_NAMES.map((name, idx) => {
   const halfMax = (bottom + top) / 2;
   const curveY = curveXs.map((c) => bottom + (top - bottom) / (1 + Math.pow(ec50 / c, hill)));
 
-  const df = Math.max(1, rows.length - 4);
-  const tCrit = T_CRIT_95[df] ?? 1.96;
-  const meanSem = rows.reduce((acc, r) => acc + r.sem, 0) / rows.length;
-  const ciHalfWidth = tCrit * meanSem * 0.62;
-  const ciUpper = curveY.map((y) => y + ciHalfWidth);
-  const ciLower = curveY.map((y) => y - ciHalfWidth);
+  // Residual variance s² = SSE / (n - 4) + numeric Jacobian covariance (J^T J)^-1 s²
+  let finalSse = 0;
+  for (const r of rows) {
+    const pred = bottom + (top - bottom) / (1 + Math.pow(ec50 / r.x, hill));
+    finalSse += (r.y - pred) ** 2;
+  }
+  const df = rows.length - 4;
+  const s2 = finalSse / df;
+  const tCrit = T_CRIT_95[df];
 
-  const ec50NMPrec = Math.round(ec50 * 1e9);
-  const ec50Label = `${name} (EC₅₀ = ${ec50NMPrec} nM)`;
+  const eps = [1e-4, 1e-4, 1e-5, 1e-4];
+  const jtj = Array.from({ length: 4 }, () => [0, 0, 0, 0]);
+  for (let k = 0; k < 4; k++) jtj[k][k] = 1e-8;
+  for (const r of rows) {
+    const gRow = [0, 0, 0, 0];
+    for (let k = 0; k < 4; k++) {
+      const pPlus = [bottom, top, logEc50, hill];
+      const pMinus = [bottom, top, logEc50, hill];
+      pPlus[k] += eps[k];
+      pMinus[k] -= eps[k];
+      const fPlus =
+        pPlus[0] + (pPlus[1] - pPlus[0]) / (1 + Math.pow(Math.pow(10, pPlus[2]) / r.x, pPlus[3]));
+      const fMinus =
+        pMinus[0] +
+        (pMinus[1] - pMinus[0]) / (1 + Math.pow(Math.pow(10, pMinus[2]) / r.x, pMinus[3]));
+      gRow[k] = (fPlus - fMinus) / (2 * eps[k]);
+    }
+    for (let a = 0; a < 4; a++) {
+      for (let b = 0; b < 4; b++) {
+        jtj[a][b] += gRow[a] * gRow[b];
+      }
+    }
+  }
+
+  // Invert 4x4 jtj via Gauss-Jordan
+  const aug = jtj.map((row, rIdx) => [
+    ...row,
+    rIdx === 0 ? 1 : 0,
+    rIdx === 1 ? 1 : 0,
+    rIdx === 2 ? 1 : 0,
+    rIdx === 3 ? 1 : 0,
+  ]);
+  for (let col = 0; col < 4; col++) {
+    let piv = col;
+    for (let rIdx = col + 1; rIdx < 4; rIdx++) {
+      if (Math.abs(aug[rIdx][col]) > Math.abs(aug[piv][col])) piv = rIdx;
+    }
+    const tmp = aug[col];
+    aug[col] = aug[piv];
+    aug[piv] = tmp;
+    const div = aug[col][col];
+    for (let j = 0; j < 8; j++) aug[col][j] /= div;
+    for (let rIdx = 0; rIdx < 4; rIdx++) {
+      if (rIdx === col) continue;
+      const factor = aug[rIdx][col];
+      for (let j = 0; j < 8; j++) aug[rIdx][j] -= factor * aug[col][j];
+    }
+  }
+  const jtjInv = aug.map((row) => row.slice(4, 8));
+
+  const ciUpper: number[] = [];
+  const ciLower: number[] = [];
+  for (let i = 0; i < curveXs.length; i++) {
+    const cx = curveXs[i];
+    const gVec = [0, 0, 0, 0];
+    for (let k = 0; k < 4; k++) {
+      const pPlus = [bottom, top, logEc50, hill];
+      const pMinus = [bottom, top, logEc50, hill];
+      pPlus[k] += eps[k];
+      pMinus[k] -= eps[k];
+      const fPlus =
+        pPlus[0] + (pPlus[1] - pPlus[0]) / (1 + Math.pow(Math.pow(10, pPlus[2]) / cx, pPlus[3]));
+      const fMinus =
+        pMinus[0] +
+        (pMinus[1] - pMinus[0]) / (1 + Math.pow(Math.pow(10, pMinus[2]) / cx, pMinus[3]));
+      gVec[k] = (fPlus - fMinus) / (2 * eps[k]);
+    }
+    let varPred = 0;
+    for (let a = 0; a < 4; a++) {
+      for (let b = 0; b < 4; b++) {
+        varPred += gVec[a] * jtjInv[a][b] * gVec[b];
+      }
+    }
+    const se = Math.sqrt(Math.max(0, varPred * s2));
+    const halfBand = tCrit * se;
+    ciUpper.push(curveY[i] + halfBand);
+    ciLower.push(curveY[i] - halfBand);
+  }
+
+  let bestPrefix = SI_PREFIXES[0];
+  for (const entry of SI_PREFIXES) {
+    if (Math.log10(ec50) >= entry.exp) {
+      bestPrefix = entry;
+    }
+  }
+  const scaledEc50 = Number((ec50 / Math.pow(10, bestPrefix.exp)).toPrecision(3));
+  const ec50Label = `${name} (EC₅₀ = ${scaledEc50} ${bestPrefix.prefix}${CONC_UNIT})`;
 
   return {
     name,
@@ -217,9 +298,10 @@ const GROUPS = COMPOUND_NAMES.map((name, idx) => {
     curveY,
     ciUpper,
     ciLower,
-    hasCI: idx === 0,
   };
 });
+
+const SUBTITLE = `4PL sigmoid fit across ${GROUPS.length} ${COMPOUND}s · ${RESPONSE} ± ${RESPONSE_SEM} with pointwise 95% CI bands and EC₅₀ drop-lines`;
 
 const scatterSeries = GROUPS.map((g) => ({
   type: "scatter" as const,
@@ -233,19 +315,18 @@ const scatterSeries = GROUPS.map((g) => ({
 }));
 
 function DoseResponseOverlay() {
-  const xScale = useXScale("concentration");
-  const yScale = useYScale("response");
+  const xScale = useXScale("concentration") as any;
+  const yScale = useYScale("response") as any;
   const { left, width: areaW, top, height: areaH } = useDrawingArea();
-  if (!xScale || !yScale) return null;
 
   const yBottomAxis = top + areaH;
 
   return (
     <g fontFamily={FONT}>
-      {/* 95% CI bands */}
-      {GROUPS.filter((g) => g.hasCI && g.curveY.length > 0).map((g) => {
-        const upper = curveXs.map((x, i) => [xScale(x) ?? 0, yScale(g.ciUpper[i]) ?? 0]);
-        const lower = curveXs.map((x, i) => [xScale(x) ?? 0, yScale(g.ciLower[i]) ?? 0]);
+      {/* Pointwise 95% CI bands */}
+      {GROUPS.map((g) => {
+        const upper = curveXs.map((x, i) => [xScale(x), yScale(g.ciUpper[i])]);
+        const lower = curveXs.map((x, i) => [xScale(x), yScale(g.ciLower[i])]);
         const pts = [...upper, ...lower.slice().reverse()];
         const d =
           pts
@@ -256,8 +337,8 @@ function DoseResponseOverlay() {
 
       {/* Top and bottom plateau asymptote dashed lines */}
       {GROUPS.map((g, idx) => {
-        const yTop = yScale(g.top) ?? 0;
-        const yBot = yScale(g.bottom) ?? 0;
+        const yTop = yScale(g.top);
+        const yBot = yScale(g.bottom);
         const labelX = left + 12 + idx * 145;
         return (
           <g key={`asym-${g.name}`}>
@@ -306,8 +387,8 @@ function DoseResponseOverlay() {
 
       {/* EC50 horizontal & vertical drop-lines intersecting at (ec50, halfMax) */}
       {GROUPS.map((g, idx) => {
-        const cx = xScale(g.ec50) ?? 0;
-        const cy = yScale(g.halfMax) ?? 0;
+        const cx = xScale(g.ec50);
+        const cy = yScale(g.halfMax);
         const badgeX = idx === 0 ? cx - 108 : cx + 10;
         const badgeY = idx === 0 ? cy - 30 : cy + 10;
         return (
@@ -359,8 +440,8 @@ function DoseResponseOverlay() {
       {GROUPS.map((g) => {
         const d = curveXs
           .map((x, i) => {
-            const px = (xScale(x) ?? 0).toFixed(1);
-            const py = (yScale(g.curveY[i]) ?? 0).toFixed(1);
+            const px = xScale(x).toFixed(1);
+            const py = yScale(g.curveY[i]).toFixed(1);
             return `${i === 0 ? "M" : "L"}${px},${py}`;
           })
           .join(" ");
@@ -379,9 +460,9 @@ function DoseResponseOverlay() {
       {/* SEM error bars */}
       {GROUPS.map((g) =>
         g.rows.map((r) => {
-          const cx = xScale(r.x) ?? 0;
-          const ytop = yScale(r.y + r.sem) ?? 0;
-          const ybot = yScale(r.y - r.sem) ?? 0;
+          const cx = xScale(r.x);
+          const ytop = yScale(r.y + r.sem);
+          const ybot = yScale(r.y - r.sem);
           return (
             <g key={`err-${r.id}`}>
               <line x1={cx} y1={ytop} x2={cx} y2={ybot} stroke={g.color} strokeWidth={2.2} />
@@ -403,7 +484,7 @@ function DoseResponseOverlay() {
               />
             </g>
           );
-        })
+        }),
       )}
     </g>
   );
@@ -439,7 +520,7 @@ export default function Chart() {
           lineHeight: 1.2,
         }}
       >
-        curve-dose-response · javascript · muix · anyplot.ai
+        {TITLE}
       </Typography>
       <Typography
         sx={{
@@ -503,7 +584,6 @@ export default function Chart() {
         <ScatterPlot skipAnimation />
         <ChartsXAxis axisId="concentration" />
         <ChartsYAxis axisId="response" />
-        <ChartsTooltip trigger="item" />
       </ChartsContainer>
 
       <Box
@@ -518,14 +598,12 @@ export default function Chart() {
         {GROUPS.map((g) => (
           <Box key={g.name} sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <svg width={28} height={16}>
-              {g.hasCI && (
-                <rect x={2} y={2} width={24} height={12} fill={g.color} fillOpacity={0.22} rx={2} />
-              )}
+              <rect x={2} y={2} width={24} height={12} fill={g.color} fillOpacity={0.22} rx={2} />
               <line x1={2} y1={8} x2={26} y2={8} stroke={g.color} strokeWidth={3} strokeLinecap="round" />
               <circle cx={14} cy={8} r={4.5} fill={g.color} />
             </svg>
             <Typography sx={{ fontSize: 14, color: t.ink, fontFamily: FONT }}>
-              {g.hasCI ? `${g.ec50Label} · 95% CI` : g.ec50Label}
+              {`${g.ec50Label} · 95% CI`}
             </Typography>
           </Box>
         ))}
