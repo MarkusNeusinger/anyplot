@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-reaction-coordinate: Reaction Coordinate Energy Diagram
 // Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 88/100 | Created: 2026-06-24
+// Quality: pending | Created: 2026-06-24
 
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { LinePlot } from "@mui/x-charts/LineChart";
