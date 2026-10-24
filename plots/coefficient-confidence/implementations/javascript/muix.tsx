@@ -1,7 +1,7 @@
 // anyplot.ai
 // coefficient-confidence: Coefficient Plot with Confidence Intervals
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 95/100 | Created: 2026-09-01
+// Quality: pending | Created: 2026-09-01
 
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
