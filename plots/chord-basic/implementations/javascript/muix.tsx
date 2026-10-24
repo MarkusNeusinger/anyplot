@@ -19,7 +19,7 @@ const R_LABEL_SHARE = 0.422;
 // Columns: set these to your data's column names
 const SOURCE = "Origin region"; // role: source
 const TARGET = "Destination region"; // role: target
-const VALUE = "Annual flow (M)"; // role: value
+const VALUE = "Migrants per year (millions)"; // role: value
 
 // Data: replace this block with your own records, one object per row
 const data = [
@@ -61,9 +61,7 @@ const entities = Array.from(
 );
 const nEntities = entities.length;
 const entityIndex = new Map(entities.map((name, idx) => [name, idx]));
-
-const unitMatch = VALUE.match(/\(([^)]+)\)/);
-const unitSuffix = unitMatch ? unitMatch[1] : "";
+const formatValue = (v: number) => v.toFixed(1);
 
 const matrix = Array.from({ length: nEntities }, () =>
   Array.from({ length: nEntities }, () => 0),
@@ -71,13 +69,12 @@ const matrix = Array.from({ length: nEntities }, () =>
 for (const row of data) {
   const sIdx = entityIndex.get(String(row[SOURCE]));
   const tIdx = entityIndex.get(String(row[TARGET]));
-  if (sIdx !== undefined && tIdx !== undefined && sIdx !== tIdx) {
-    matrix[sIdx][tIdx] += Number(row[VALUE]);
-  }
+  // A flow from an entity to itself has no chord
+  if (sIdx !== tIdx) matrix[sIdx][tIdx] += Number(row[VALUE]);
 }
 
 const groupTotal = matrix.map((row) => row.reduce((a, b) => a + b, 0));
-const grandTotal = groupTotal.reduce((a, b) => a + b, 0) || 1;
+const grandTotal = groupTotal.reduce((a, b) => a + b, 0);
 const availRad = 2 * Math.PI - PAD_RAD * nEntities;
 
 let curAngle = -Math.PI / 2 + PAD_RAD / 2;
@@ -86,6 +83,7 @@ const groups = entities.map((name, i) => {
   const gStart = curAngle;
   const gEnd = curAngle + span;
   let subCur = gStart;
+  // An entity with no outbound flow gets a zero-length arc
   const subs = entities.map((_, j) => {
     const subSpan =
       groupTotal[i] > 0 ? (matrix[i][j] / groupTotal[i]) * span : 0;
@@ -138,9 +136,10 @@ for (let i = 0; i < nEntities; i += 1) {
   }
 }
 ribbons.sort((x, y) => y.mag - x.mag);
+const bothWays = ribbons.filter((r) => r.a > 0 && r.b > 0).length;
 
 const TITLE = "chord-basic · javascript · muix · anyplot.ai";
-const SUBTITLE = `${nEntities} ${SOURCE.replace(/^Origin\s+/i, "")}s · ${ribbons.length} bidirectional pairs · Total flow ${grandTotal.toFixed(1)}${unitSuffix}`;
+const SUBTITLE = `${nEntities} entities · ${ribbons.length} connected pairs (${bothWays} with flows in both directions) · Total ${formatValue(grandTotal)}`;
 
 function ChordDiagramLayer() {
   const { left, top, width, height } = useDrawingArea();
@@ -154,42 +153,16 @@ function ChordDiagramLayer() {
   return (
     <g>
       {ribbons.map((rb) => {
-        const stepsA = Math.max(
-          2,
-          Math.ceil(Math.abs(rb.sI[1] - rb.sI[0]) / 0.04),
-        );
-        const ptsA: string[] = [];
-        for (let k = 0; k <= stepsA; k += 1) {
-          const ang = rb.sI[0] + (rb.sI[1] - rb.sI[0]) * (k / stepsA);
-          ptsA.push(
-            `${(cx + rIn * Math.cos(ang)).toFixed(1)} ${(cy + rIn * Math.sin(ang)).toFixed(1)}`,
-          );
-        }
-
-        const stepsB = Math.max(
-          2,
-          Math.ceil(Math.abs(rb.sJ[1] - rb.sJ[0]) / 0.04),
-        );
-        const ptsB: string[] = [];
-        for (let k = 0; k <= stepsB; k += 1) {
-          const ang = rb.sJ[0] + (rb.sJ[1] - rb.sJ[0]) * (k / stepsB);
-          ptsB.push(
-            `${(cx + rIn * Math.cos(ang)).toFixed(1)} ${(cy + rIn * Math.sin(ang)).toFixed(1)}`,
-          );
-        }
-
+        // Arc along the source end, curve through the centre, arc along the
+        // target end, curve back
+        const [a0, a1] = rb.sI;
+        const [b0, b1] = rb.sJ;
         const d =
-          `M ${ptsA[0]}` +
-          ptsA
-            .filter((_, idx) => idx > 0)
-            .map((p) => ` L ${p}`)
-            .join("") +
-          ` Q ${cx.toFixed(1)} ${cy.toFixed(1)} ${ptsB[0]}` +
-          ptsB
-            .filter((_, idx) => idx > 0)
-            .map((p) => ` L ${p}`)
-            .join("") +
-          ` Q ${cx.toFixed(1)} ${cy.toFixed(1)} ${ptsA[0]} Z`;
+          `M ${cx + rIn * Math.cos(a0)} ${cy + rIn * Math.sin(a0)}` +
+          ` A ${rIn} ${rIn} 0 ${a1 - a0 > Math.PI ? 1 : 0} 1 ${cx + rIn * Math.cos(a1)} ${cy + rIn * Math.sin(a1)}` +
+          ` Q ${cx} ${cy} ${cx + rIn * Math.cos(b0)} ${cy + rIn * Math.sin(b0)}` +
+          ` A ${rIn} ${rIn} 0 ${b1 - b0 > Math.PI ? 1 : 0} 1 ${cx + rIn * Math.cos(b1)} ${cy + rIn * Math.sin(b1)}` +
+          ` Q ${cx} ${cy} ${cx + rIn * Math.cos(a0)} ${cy + rIn * Math.sin(a0)} Z`;
 
         return (
           <path
@@ -202,37 +175,19 @@ function ChordDiagramLayer() {
             strokeOpacity={0.55}
           >
             <title>
-              {`${entities[rb.i]} → ${entities[rb.j]}: ${rb.a.toFixed(1)}${unitSuffix}\n${entities[rb.j]} → ${entities[rb.i]}: ${rb.b.toFixed(1)}${unitSuffix}`}
+              {`${VALUE}\n${entities[rb.i]} → ${entities[rb.j]}: ${formatValue(rb.a)}\n${entities[rb.j]} → ${entities[rb.i]}: ${formatValue(rb.b)}`}
             </title>
           </path>
         );
       })}
 
       {groups.map((g) => {
-        const steps = Math.max(
-          2,
-          Math.ceil(Math.abs(g.gEnd - g.gStart) / 0.04),
-        );
-        const outerPts: string[] = [];
-        const innerPts: string[] = [];
-        for (let k = 0; k <= steps; k += 1) {
-          const angOut = g.gStart + (g.gEnd - g.gStart) * (k / steps);
-          outerPts.push(
-            `${(cx + rOut * Math.cos(angOut)).toFixed(1)} ${(cy + rOut * Math.sin(angOut)).toFixed(1)}`,
-          );
-          const angIn = g.gEnd + (g.gStart - g.gEnd) * (k / steps);
-          innerPts.push(
-            `${(cx + rIn * Math.cos(angIn)).toFixed(1)} ${(cy + rIn * Math.sin(angIn)).toFixed(1)}`,
-          );
-        }
+        const large = g.gEnd - g.gStart > Math.PI ? 1 : 0;
         const d =
-          `M ${outerPts[0]}` +
-          outerPts
-            .filter((_, idx) => idx > 0)
-            .map((p) => ` L ${p}`)
-            .join("") +
-          innerPts.map((p) => ` L ${p}`).join("") +
-          " Z";
+          `M ${cx + rOut * Math.cos(g.gStart)} ${cy + rOut * Math.sin(g.gStart)}` +
+          ` A ${rOut} ${rOut} 0 ${large} 1 ${cx + rOut * Math.cos(g.gEnd)} ${cy + rOut * Math.sin(g.gEnd)}` +
+          ` L ${cx + rIn * Math.cos(g.gEnd)} ${cy + rIn * Math.sin(g.gEnd)}` +
+          ` A ${rIn} ${rIn} 0 ${large} 0 ${cx + rIn * Math.cos(g.gStart)} ${cy + rIn * Math.sin(g.gStart)} Z`;
 
         const cosMid = Math.cos(g.mid);
         const sinMid = Math.sin(g.mid);
@@ -249,7 +204,7 @@ function ChordDiagramLayer() {
               stroke={t.pageBg}
               strokeWidth={1.5}
             >
-              <title>{`${g.name} · outbound ${g.total.toFixed(1)}${unitSuffix}`}</title>
+              <title>{`${g.name} · outbound ${formatValue(g.total)} (${VALUE})`}</title>
             </path>
             <text
               x={lx}
@@ -258,7 +213,7 @@ function ChordDiagramLayer() {
               dominantBaseline="middle"
               fontSize={19}
               fontWeight={700}
-              fill={g.color}
+              fill={t.ink}
             >
               {g.name}
             </text>
@@ -270,7 +225,7 @@ function ChordDiagramLayer() {
               fontSize={14}
               fill={t.inkSoft}
             >
-              {`${g.total.toFixed(1)}${unitSuffix} out`}
+              {`${formatValue(g.total)} out`}
             </text>
           </g>
         );
@@ -331,7 +286,7 @@ export default function Chart() {
           color: t.inkSoft,
         }}
       >
-        Each chord carries both directions; arc length is proportional to total outbound {VALUE.toLowerCase()}
+        Each chord carries both directions; arc length is proportional to total outbound {VALUE}
       </div>
     </div>
   );
