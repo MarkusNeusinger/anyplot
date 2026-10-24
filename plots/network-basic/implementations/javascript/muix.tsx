@@ -1,6 +1,6 @@
 // anyplot.ai
 // network-basic: Basic Network Graph
-// Library: muix 9.2.1 | JavaScript 22.23.1
+// Library: muix 7.29.1 | JavaScript 22.23.1
 // Quality: 91/100 | Created: 2026-07-24
 //# anyplot-orientation: square
 
@@ -22,77 +22,85 @@ const DOMAIN_PAD_RATIO = 1.32;
 const BASE_RADIUS = 7;
 const RADIUS_PER_DEGREE = 2.8;
 
-// Data
-const SOURCE_COL = "Person A";
-const SOURCE_GROUP_COL = "Group A";
-const TARGET_COL = "Person B";
-const TARGET_GROUP_COL = "Group B";
+// Columns: set these to your data's column names
+const PERSON = "Person"; // role: node
+const GROUP = "Social circle"; // role: group
+const PERSON_A = "Person A"; // role: source
+const PERSON_B = "Person B"; // role: target
 
-const DATA: Array<Record<string, string>> = [
-  // Family circle
-  { [SOURCE_COL]: "Maya", [SOURCE_GROUP_COL]: "Family", [TARGET_COL]: "Noah", [TARGET_GROUP_COL]: "Family" },
-  { [SOURCE_COL]: "Maya", [SOURCE_GROUP_COL]: "Family", [TARGET_COL]: "Priya", [TARGET_GROUP_COL]: "Family" },
-  { [SOURCE_COL]: "Maya", [SOURCE_GROUP_COL]: "Family", [TARGET_COL]: "Ethan", [TARGET_GROUP_COL]: "Family" },
-  { [SOURCE_COL]: "Noah", [SOURCE_GROUP_COL]: "Family", [TARGET_COL]: "Sofia", [TARGET_GROUP_COL]: "Family" },
-  { [SOURCE_COL]: "Priya", [SOURCE_GROUP_COL]: "Family", [TARGET_COL]: "Ethan", [TARGET_GROUP_COL]: "Family" },
-  { [SOURCE_COL]: "Ethan", [SOURCE_GROUP_COL]: "Family", [TARGET_COL]: "Sofia", [TARGET_GROUP_COL]: "Family" },
-  { [SOURCE_COL]: "Priya", [SOURCE_GROUP_COL]: "Family", [TARGET_COL]: "Sofia", [TARGET_GROUP_COL]: "Family" },
-  // College circle
-  { [SOURCE_COL]: "Liam", [SOURCE_GROUP_COL]: "College", [TARGET_COL]: "Aisha", [TARGET_GROUP_COL]: "College" },
-  { [SOURCE_COL]: "Liam", [SOURCE_GROUP_COL]: "College", [TARGET_COL]: "Kenji", [TARGET_GROUP_COL]: "College" },
-  { [SOURCE_COL]: "Aisha", [SOURCE_GROUP_COL]: "College", [TARGET_COL]: "Grace", [TARGET_GROUP_COL]: "College" },
-  { [SOURCE_COL]: "Kenji", [SOURCE_GROUP_COL]: "College", [TARGET_COL]: "Grace", [TARGET_GROUP_COL]: "College" },
-  { [SOURCE_COL]: "Kenji", [SOURCE_GROUP_COL]: "College", [TARGET_COL]: "Diego", [TARGET_GROUP_COL]: "College" },
-  { [SOURCE_COL]: "Grace", [SOURCE_GROUP_COL]: "College", [TARGET_COL]: "Diego", [TARGET_GROUP_COL]: "College" },
-  { [SOURCE_COL]: "Liam", [SOURCE_GROUP_COL]: "College", [TARGET_COL]: "Diego", [TARGET_GROUP_COL]: "College" },
-  // Work circle
-  { [SOURCE_COL]: "Omar", [SOURCE_GROUP_COL]: "Work", [TARGET_COL]: "Isla", [TARGET_GROUP_COL]: "Work" },
-  { [SOURCE_COL]: "Omar", [SOURCE_GROUP_COL]: "Work", [TARGET_COL]: "Victor", [TARGET_GROUP_COL]: "Work" },
-  { [SOURCE_COL]: "Isla", [SOURCE_GROUP_COL]: "Work", [TARGET_COL]: "Nadia", [TARGET_GROUP_COL]: "Work" },
-  { [SOURCE_COL]: "Victor", [SOURCE_GROUP_COL]: "Work", [TARGET_COL]: "Nadia", [TARGET_GROUP_COL]: "Work" },
-  { [SOURCE_COL]: "Victor", [SOURCE_GROUP_COL]: "Work", [TARGET_COL]: "Felix", [TARGET_GROUP_COL]: "Work" },
-  { [SOURCE_COL]: "Nadia", [SOURCE_GROUP_COL]: "Work", [TARGET_COL]: "Felix", [TARGET_GROUP_COL]: "Work" },
-  { [SOURCE_COL]: "Omar", [SOURCE_GROUP_COL]: "Work", [TARGET_COL]: "Felix", [TARGET_GROUP_COL]: "Work" },
-  // Neighbors circle
-  { [SOURCE_COL]: "Ruby", [SOURCE_GROUP_COL]: "Neighbors", [TARGET_COL]: "Hassan", [TARGET_GROUP_COL]: "Neighbors" },
-  { [SOURCE_COL]: "Ruby", [SOURCE_GROUP_COL]: "Neighbors", [TARGET_COL]: "Chloe", [TARGET_GROUP_COL]: "Neighbors" },
-  { [SOURCE_COL]: "Hassan", [SOURCE_GROUP_COL]: "Neighbors", [TARGET_COL]: "Marcus", [TARGET_GROUP_COL]: "Neighbors" },
-  { [SOURCE_COL]: "Chloe", [SOURCE_GROUP_COL]: "Neighbors", [TARGET_COL]: "Marcus", [TARGET_GROUP_COL]: "Neighbors" },
-  { [SOURCE_COL]: "Chloe", [SOURCE_GROUP_COL]: "Neighbors", [TARGET_COL]: "Elena", [TARGET_GROUP_COL]: "Neighbors" },
-  { [SOURCE_COL]: "Marcus", [SOURCE_GROUP_COL]: "Neighbors", [TARGET_COL]: "Elena", [TARGET_GROUP_COL]: "Neighbors" },
-  { [SOURCE_COL]: "Ruby", [SOURCE_GROUP_COL]: "Neighbors", [TARGET_COL]: "Elena", [TARGET_GROUP_COL]: "Neighbors" },
-  // Cross-circle bridges
-  { [SOURCE_COL]: "Maya", [SOURCE_GROUP_COL]: "Family", [TARGET_COL]: "Liam", [TARGET_GROUP_COL]: "College" },
-  { [SOURCE_COL]: "Noah", [SOURCE_GROUP_COL]: "Family", [TARGET_COL]: "Omar", [TARGET_GROUP_COL]: "Work" },
-  { [SOURCE_COL]: "Aisha", [SOURCE_GROUP_COL]: "College", [TARGET_COL]: "Ruby", [TARGET_GROUP_COL]: "Neighbors" },
-  { [SOURCE_COL]: "Grace", [SOURCE_GROUP_COL]: "College", [TARGET_COL]: "Isla", [TARGET_GROUP_COL]: "Work" },
-  { [SOURCE_COL]: "Victor", [SOURCE_GROUP_COL]: "Work", [TARGET_COL]: "Hassan", [TARGET_GROUP_COL]: "Neighbors" },
-  { [SOURCE_COL]: "Sofia", [SOURCE_GROUP_COL]: "Family", [TARGET_COL]: "Chloe", [TARGET_GROUP_COL]: "Neighbors" },
+// Data: replace this block with your own records
+const nodes: Array<Record<string, string>> = [
+  { [PERSON]: "Maya", [GROUP]: "Family" },
+  { [PERSON]: "Noah", [GROUP]: "Family" },
+  { [PERSON]: "Priya", [GROUP]: "Family" },
+  { [PERSON]: "Ethan", [GROUP]: "Family" },
+  { [PERSON]: "Sofia", [GROUP]: "Family" },
+  { [PERSON]: "Liam", [GROUP]: "College" },
+  { [PERSON]: "Aisha", [GROUP]: "College" },
+  { [PERSON]: "Kenji", [GROUP]: "College" },
+  { [PERSON]: "Grace", [GROUP]: "College" },
+  { [PERSON]: "Diego", [GROUP]: "College" },
+  { [PERSON]: "Omar", [GROUP]: "Work" },
+  { [PERSON]: "Isla", [GROUP]: "Work" },
+  { [PERSON]: "Victor", [GROUP]: "Work" },
+  { [PERSON]: "Nadia", [GROUP]: "Work" },
+  { [PERSON]: "Felix", [GROUP]: "Work" },
+  { [PERSON]: "Ruby", [GROUP]: "Neighbors" },
+  { [PERSON]: "Hassan", [GROUP]: "Neighbors" },
+  { [PERSON]: "Chloe", [GROUP]: "Neighbors" },
+  { [PERSON]: "Marcus", [GROUP]: "Neighbors" },
+  { [PERSON]: "Elena", [GROUP]: "Neighbors" },
 ];
 
-// Derive unique nodes and groups across both endpoint columns in appearance order
+const data: Array<Record<string, string>> = [
+  { [PERSON_A]: "Maya", [PERSON_B]: "Noah" },
+  { [PERSON_A]: "Maya", [PERSON_B]: "Priya" },
+  { [PERSON_A]: "Maya", [PERSON_B]: "Ethan" },
+  { [PERSON_A]: "Noah", [PERSON_B]: "Sofia" },
+  { [PERSON_A]: "Priya", [PERSON_B]: "Ethan" },
+  { [PERSON_A]: "Ethan", [PERSON_B]: "Sofia" },
+  { [PERSON_A]: "Priya", [PERSON_B]: "Sofia" },
+  { [PERSON_A]: "Liam", [PERSON_B]: "Aisha" },
+  { [PERSON_A]: "Liam", [PERSON_B]: "Kenji" },
+  { [PERSON_A]: "Aisha", [PERSON_B]: "Grace" },
+  { [PERSON_A]: "Kenji", [PERSON_B]: "Grace" },
+  { [PERSON_A]: "Kenji", [PERSON_B]: "Diego" },
+  { [PERSON_A]: "Grace", [PERSON_B]: "Diego" },
+  { [PERSON_A]: "Liam", [PERSON_B]: "Diego" },
+  { [PERSON_A]: "Omar", [PERSON_B]: "Isla" },
+  { [PERSON_A]: "Omar", [PERSON_B]: "Victor" },
+  { [PERSON_A]: "Isla", [PERSON_B]: "Nadia" },
+  { [PERSON_A]: "Victor", [PERSON_B]: "Nadia" },
+  { [PERSON_A]: "Victor", [PERSON_B]: "Felix" },
+  { [PERSON_A]: "Nadia", [PERSON_B]: "Felix" },
+  { [PERSON_A]: "Omar", [PERSON_B]: "Felix" },
+  { [PERSON_A]: "Ruby", [PERSON_B]: "Hassan" },
+  { [PERSON_A]: "Ruby", [PERSON_B]: "Chloe" },
+  { [PERSON_A]: "Hassan", [PERSON_B]: "Marcus" },
+  { [PERSON_A]: "Chloe", [PERSON_B]: "Marcus" },
+  { [PERSON_A]: "Chloe", [PERSON_B]: "Elena" },
+  { [PERSON_A]: "Marcus", [PERSON_B]: "Elena" },
+  { [PERSON_A]: "Ruby", [PERSON_B]: "Elena" },
+  { [PERSON_A]: "Maya", [PERSON_B]: "Liam" },
+  { [PERSON_A]: "Noah", [PERSON_B]: "Omar" },
+  { [PERSON_A]: "Aisha", [PERSON_B]: "Ruby" },
+  { [PERSON_A]: "Grace", [PERSON_B]: "Isla" },
+  { [PERSON_A]: "Victor", [PERSON_B]: "Hassan" },
+  { [PERSON_A]: "Sofia", [PERSON_B]: "Chloe" },
+];
+
+// Plot: reads only data and the constants above
 const nodeNames: string[] = [];
 const nodeGroupByName = new Map<string, string>();
 const groups: string[] = [];
 
-for (let i = 0; i < DATA.length; i++) {
-  const row = DATA[i];
-  const src = String(row[SOURCE_COL]);
-  const srcG = String(row[SOURCE_GROUP_COL]);
-  const tgt = String(row[TARGET_COL]);
-  const tgtG = String(row[TARGET_GROUP_COL]);
-
-  if (!nodeGroupByName.has(src)) {
-    nodeNames.push(src);
-    nodeGroupByName.set(src, srcG);
-  }
-  if (!groups.includes(srcG)) groups.push(srcG);
-
-  if (!nodeGroupByName.has(tgt)) {
-    nodeNames.push(tgt);
-    nodeGroupByName.set(tgt, tgtG);
-  }
-  if (!groups.includes(tgtG)) groups.push(tgtG);
+for (let i = 0; i < nodes.length; i++) {
+  const row = nodes[i];
+  const name = String(row[PERSON]);
+  const grp = String(row[GROUP]);
+  nodeNames.push(name);
+  nodeGroupByName.set(name, grp);
+  if (!groups.includes(grp)) groups.push(grp);
 }
 
 const groupColors = new Map<string, string>();
@@ -107,19 +115,18 @@ for (let i = 0; i < nodeNames.length; i++) {
 
 const edgePairs: Array<[number, number]> = [];
 const degrees = nodeNames.map(() => 0);
-for (let i = 0; i < DATA.length; i++) {
-  const a = nodeIndexByName.get(String(DATA[i][SOURCE_COL])) ?? 0;
-  const b = nodeIndexByName.get(String(DATA[i][TARGET_COL])) ?? 0;
+for (let i = 0; i < data.length; i++) {
+  const a = Number(nodeIndexByName.get(String(data[i][PERSON_A])));
+  const b = Number(nodeIndexByName.get(String(data[i][PERSON_B])));
   edgePairs.push([a, b]);
   degrees[a] += 1;
   degrees[b] += 1;
 }
 
-// Deterministic initial positions on group rings
 const layoutPositions: Array<{ x: number; y: number }> = [];
 for (let i = 0; i < nodeNames.length; i++) {
   const name = nodeNames[i];
-  const grp = nodeGroupByName.get(name) ?? groups[0];
+  const grp = String(nodeGroupByName.get(name));
   const grpIdx = groups.indexOf(grp);
   const grpAngle = (2 * Math.PI * grpIdx) / groups.length;
   const members = nodeNames.filter((n) => nodeGroupByName.get(n) === grp);
@@ -131,7 +138,6 @@ for (let i = 0; i < nodeNames.length; i++) {
   });
 }
 
-// Fruchterman-Reingold force-directed layout
 const nodeCount = nodeNames.length;
 const cooling = INITIAL_TEMP / ITERATIONS;
 let temperature = INITIAL_TEMP;
@@ -201,7 +207,6 @@ function NetworkOverlay() {
 
   return (
     <g fontFamily={FONT}>
-      {/* Edges */}
       <g stroke={t.inkSoft} strokeOpacity={0.42} strokeWidth={1.6}>
         {edgePairs.map(([a, b], i) => (
           <line
@@ -214,11 +219,10 @@ function NetworkOverlay() {
         ))}
       </g>
 
-      {/* Nodes and collision-avoiding labels */}
       {nodeNames.map((label, i) => {
         const { x: cx, y: cy } = screenPos[i];
-        const grp = nodeGroupByName.get(label) ?? groups[0];
-        const color = groupColors.get(grp) ?? t.palette[0];
+        const grp = String(nodeGroupByName.get(label));
+        const color = String(groupColors.get(grp));
         const r = BASE_RADIUS + degrees[i] * RADIUS_PER_DEGREE;
 
         const edgeAngles: number[] = [];
@@ -270,11 +274,10 @@ function NetworkOverlay() {
         );
       })}
 
-      {/* Group Legend */}
       <g transform="translate(28, 22)">
         {groups.map((grp, i) => (
           <g key={grp} transform={`translate(0, ${i * 30})`}>
-            <circle cx={8} cy={8} r={7.5} fill={groupColors.get(grp) ?? t.palette[0]} />
+            <circle cx={8} cy={8} r={7.5} fill={String(groupColors.get(grp))} />
             <text x={24} y={13} fontSize={15} fontWeight={500} fill={t.ink}>
               {grp}
             </text>
@@ -335,7 +338,7 @@ export default function Chart() {
           color: t.inkSoft,
         }}
       >
-        Fruchterman–Reingold force-directed layout · Node color = social circle · Node size = friendship count (degree)
+        {`Fruchterman–Reingold force-directed layout · Node color = ${GROUP} · Node size = degree`}
       </div>
     </div>
   );
