@@ -2,53 +2,55 @@ library: muix
 language: javascript
 specification_id: network-hierarchical
 created: '2026-09-02T06:19:01Z'
-updated: '2026-09-02T06:29:49Z'
-generated_by: claude-sonnet
-workflow_run: 33597877588
+updated: '2026-10-24T11:23:16Z'
+generated_by: gemini-4-argon
+adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
+workflow_run: 40089036370
 issue: 3343
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/javascript/muix/plot-dark.html
-quality_score: 90
+quality_score: 87
 review:
   strengths:
-  - Correct tidy-tree layout algorithm (leaves get sequential x, parents average children)
-    exactly matching the spec's hierarchical model, with root positioned at top
-  - 'Effective visual hierarchy: node size decreases with depth, edges colored by
-    branch at low opacity - ties color identity to structure without chartjunk'
-  - 'Idiomatic, sophisticated MUI X usage: composes ChartContainer with useXScale/useYScale
-    to draw fully custom SVG marks, the officially sanctioned pattern for chart types
-    the community package doesn''t natively support'
-  - 'Correct Imprint palette usage across both themes: first series is #009E73, canonical
-    order for the remaining 3 departments, theme-adaptive neutral anchor for the CEO
-    root'
-  - Edges are plain lines without arrows, exactly as the spec recommends
-  - Fully deterministic, self-contained data generation; skipAnimation set; title
-    format exactly matches spec
+  - 'Uses the v9 composition API properly: ChartsContainer with hidden linear axes
+    (position: "none") plus a child overlay that reads the useXScale/useYScale hooks,
+    so the hand-drawn tree lives in MUI X''s coordinate system rather than raw pixels'
+  - 'The tree layout is a real hierarchical layout: leaves are spaced in DFS order
+    and each parent is centered over its children, so siblings group together, every
+    level sits on its own row, and the CEO is at the top'
+  - 'Depth is encoded twice: node radius steps down by level (22/16/12/9 px), and
+    manager labels in ink at weight 500/600 sit above the leaf labels in INK_SOFT,
+    which gives a clear typographic hierarchy'
+  - Edges are thin (1.6 px) straight lines with no arrowheads, drawn in their branch
+    color at 0.62 opacity, so they stay lighter than the nodes and remain traceable
+    from parent to child in both themes
+  - Manager labels sit on a translucent page-colored halo, so edges pass behind them
+    cleanly; the crowded 18-leaf bottom row uses -36° rotated labels anchored at each
+    node, so no two labels collide
+  - 'Theme handling is correct: page background, ink and INK_SOFT come from ANYPLOT_TOKENS,
+    the four branches follow the Imprint order (#009E73, #C475FD, #4467A3, #BD8233)
+    identically in both renders, and skipAnimation is set'
   weaknesses:
-  - Data-branching pattern is largely uniform (7 of 8 directors have exactly 2 reports;
-    only Platform Eng has 3) - doesn't fully showcase the branching-pattern variety
-    the spec calls out as a value of hierarchical layouts
-  - Leaf-level labels are omitted entirely; while this avoids clutter at 30 nodes,
-    ~17 of 30 node labels are never shown on screen
-  - Design is solid but not yet publication-level - consider curved/bundled edges
-    (per the spec's edge-bundling suggestion) or a callout highlighting the one asymmetric
-    branch for a stronger focal point
+  - 'Suggestion: a horizontal (root-left) orientation would give the 18 leaf labels
+    room to sit level, without the -36° rotation that makes them slower to read.'
+  - 'Suggestion: the branch legend repeats the VP labels already drawn on the tree,
+    so dropping it would free the top band for the tree itself.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
-      Chrome: Title top-left ("network-hierarchical · javascript · muix · anyplot.ai") in dark ink, clearly readable; 4-item legend (colored dot + department name) below title, dark/soft-ink text, clearly readable; node labels for CEO/VP/Director levels in dark ink, all legible with no overlap.
-      Data: A tidy-tree hierarchy - large black/ink CEO node at top, 4 VP nodes (green/Engineering, lavender/Sales, blue/Marketing, ochre/Operations - matching Imprint canonical order with #009E73 first), 8 Director nodes, 17 unlabeled leaf nodes at the bottom. Edges are thin, low-opacity lines colored by the child's department, no arrowheads.
-      Legibility verdict: PASS - all title, legend, and node-label text is clearly readable against the light background; no light-on-light failures.
+      Background: warm off-white #FAF8F1 across the full 3200x1800 canvas; no axes and no grid, as a tree layout should have.
+      Chrome: the bold near-black title "network-hierarchical · javascript · muix · anyplot.ai" sits top-left and spans about 40% of the width. Below it, an HTML legend row of four colored dots labels VP Engineering, VP Sales, VP Marketing and VP Operations in INK_SOFT. All text is dark on light and readable.
+      Data: a 4-level org chart of 30 nodes. The CEO root is a large ink-colored circle at top center with a bold label. Four VP nodes sit on row 2 in green #009E73, lavender #C475FD, blue #4467A3 and ochre #BD8233. Eight director nodes are on row 3, labeled above on page-colored halos. Eighteen leaf nodes are on row 4, labeled below at -36°. Node radius steps down by level. Edges are thin straight lines in the child's branch color at reduced opacity, with no arrowheads. No labels collide, and nothing is clipped at any edge.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
-      Chrome: Title, legend, and node labels all render in light/cream ink, clearly legible against the dark background. The CEO node itself flips from black (light theme) to near-white/cream (dark theme) via the theme-adaptive neutral anchor.
-      Data: Department colors on VP/Director/leaf nodes and their edges are visually identical to the light render (green, lavender, blue, ochre) - only the chrome (background, text, CEO root fill) flipped as expected.
-      Legibility verdict: PASS - no dark-on-dark failures; all text is light-colored and legible; brand green remains vivid and identifiable.
+      Background: warm near-black #1A1A17.
+      Chrome: the title is near-white, legend labels and leaf labels are light grey (INK_SOFT), and manager labels are near-white (ink). No dark-on-dark text anywhere.
+      Data: the four branch colors are identical to the light render. Only the root node flips (ink to near-white), as the theme-adaptive neutral it is. Edges are dimmer at 0.62 opacity on the dark surface but stay clearly traceable. Layout and labels match the light render exactly.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -59,78 +61,81 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title formula, node labels 15/13px,
-          legend 14px); readable and well-proportioned in both themes
+        comment: Font sizes are set explicitly (title 22 px, labels 14–15 px CSS at
+          2x). All text is readable in both themes, with ink and INK_SOFT used correctly.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; level 0-2 labels spaced cleanly across the full
-          width
+        comment: No text collisions. Manager labels sit on page-colored halos over
+          the edges, and the 18 rotated leaf labels stay apart.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Node radius scales by hierarchy level (22->16->12->8px), clearly
-          visible at every level
+        comment: Node radii 22/16/12/9 px suit 30 nodes. Edges at 1.6 px and 0.62
+          opacity stay visible in both themes, and the legend dots match the branch
+          colors.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, branch colors clearly distinguishable, no red-green-only
-          signal
+        comment: The four Imprint hues differ in lightness and are CVD-safe, with
+          no red-green pairing.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Tree fills most of the canvas width/height with balanced margins;
-          nothing cut off
+        comment: The tree fills the canvas with balanced margins. The title spans
+          about 40% of the width, nothing overflows, and the canvas gate passed.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title descriptive and correctly formatted; axis labels intentionally
-          omitted as layout coordinates carry no measured units
+        comment: 'N/A for axes: a layout-positioned tree correctly has none. The title
+          and node labels are written for a reader.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73 (Engineering); departments use canonical
-          Imprint order 2-4; CEO root uses the theme-adaptive neutral anchor; both
-          renders theme-correct'
+        comment: 'The first branch is #009E73, followed by #C475FD, #4467A3 and #BD8233
+          in canonical order. The root uses the theme-adaptive ink neutral, and the
+          backgrounds are #FAF8F1 and #1A1A17.'
     design_excellence:
-      score: 15
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        passed: true
-        comment: Thoughtful level-based node sizing and branch-colored low-opacity
-          edges create above-default polish, not yet FiveThirtyEight-level
+        passed: false
+        comment: 'Raised one point above the default: a typographic hierarchy decided
+          for this chart, with a bold 15 px root label, 14 px weight-500 manager labels
+          in ink and regular leaf labels in INK_SOFT.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: No spines/grid, generous whitespace, subtle edge opacity; minor bottom-margin
-          imbalance
+        passed: false
+        comment: 'Raised one point above the default: translucent page-colored halos
+          behind the manager labels keep edges from cutting through text, and the
+          leaf labels are anchored at each node and rotated for the crowded row.'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Size/color hierarchy guides the eye top-down, but no specific branch
-          or insight is called out
+        passed: false
+        comment: 'Raised one point above the default: node radius shrinks with depth
+          and the root is emphasized, which makes rank read at a glance.'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -138,53 +143,57 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct tidy-tree hierarchical layout, root at top per spec
+        comment: A hierarchical tree layout with the root at the top and fixed levels.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Nodes/edges/levels all present, but leaf-level (17 of 30) node labels
-          are omitted entirely
+        comment: 'All Notes and ''A good version shows'' bullets are met: root on
+          top, one row per level, layout-derived positions with no axes or grid, siblings
+          grouped, straight edges without arrows that are thinner than the nodes,
+          and spacing that keeps labels apart. Edge bundling is optional (''Consider'').'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly encode tree position and level depth; all 30 nodes
-          visible
+        comment: Layout-positioned type, so positions are exempt. Every parent-child
+          edge from the data is drawn, and depth maps to the row.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches mandated format; legend labels match the 4
-          department names
+        comment: The title is exactly 'network-hierarchical · javascript · muix ·
+          anyplot.ai', and the legend entries match the VP branch labels.
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Shows branching and 4-level depth, but 7 of 8 directors have an identical
-          2-report fanout
+        comment: Shows 4 levels, branching from the root, fan-out of 2–4 per node
+          and a wide lowest level.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic, neutral org-chart scenario (CEO/VP/Director/IC)
+        comment: 'A neutral, plausible company org chart: CEO, VPs, directors and
+          individual contributors.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Plausible org structure and team sizes for a 30-person company chart
+        comment: 30 nodes across 4 management levels, exactly the spec's example and
+          inside its 10–50 range. The spec has no 'Check values'.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -192,62 +201,68 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Appropriate for the mandatory React functional-component contract,
-          no unnecessary classes
+        comment: Flat module-level data and layout code. The only extra component
+          is the overlay, which MUI X hooks require.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data and layout, no RNG
+        comment: Hard-coded deterministic data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (React, ChartContainer, scale hooks)
+        comment: React (Fragment), ChartsContainer and the useXScale/useYScale hooks
+          are all used.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Custom tidy-tree layout algorithm is a bit more elaborate than the
-          simplest approach, though clean
+        comment: A compact leaf-order layout with parent centering. MUI X has no tree
+          layout to call instead.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: No manual save calls; correctly default-exports the Chart component
-          per the harness contract
+        comment: Default-exports a component sized to ANYPLOT_SIZE, uses skipAnimation,
+          and imports the v9 ChartsContainer from the community package only.
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert use of ChartContainer + useXScale/useYScale - the sanctioned
-          MUI X pattern for chart types the community package doesn't natively support
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
-        passed: true
-        comment: Leverages MUI X's scale-hook composition model, distinctive to this
-          library's architecture
+        passed: false
+        comment: 'Idiomatic v9 composition: ChartsContainer with axes hidden via position:
+          "none" and custom SVG children that use the scale hooks.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: 'Raised one point above the default: uses MUI X''s scale-hook composition
+          (useXScale/useYScale inside ChartsContainer) to draw a chart type the library
+          has no component for.'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-10-24T11:20:15Z'
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - annotations
   - custom-legend
-  patterns:
-  - data-generation
-  - iteration-over-groups
+  - layer-composition
+  - html-export
+  patterns: []
   dataprep: []
   styling:
-  - alpha-blending
   - minimal-chrome
+  - alpha-blending
+  - edge-highlighting

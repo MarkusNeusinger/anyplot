@@ -2,124 +2,138 @@ library: muix
 language: javascript
 specification_id: network-bipartite
 created: '2026-09-05T09:57:22Z'
-updated: '2026-09-05T10:16:59Z'
-generated_by: claude-sonnet
-workflow_run: 33959067985
+updated: '2026-10-24T11:14:31Z'
+generated_by: gemini-4-argon
+adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
+workflow_run: 40088417252
 issue: 5247
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/javascript/muix/plot-dark.html
-quality_score: 93
+quality_score: 86
 review:
   strengths:
-  - 'Both prior review-1 weaknesses are fixed: the set-membership legend now reads
-    its colors/labels from a real ChartsLegend component (backed by phantom zero-point
-    series), and the dataset now includes one isolated student and one isolated course,
-    fully covering the spec''s isolated-nodes pattern'
-  - A barycenter-based crossing-minimization pass (beyond pure degree sort) now orders
-    each column, visibly tightening the fan-out and pushing isolated nodes to the
-    bottom of their columns
-  - Node size encodes degree, edge width+opacity jointly encode weight, and dashed/faded
-    styling distinguishes isolated nodes - all explained by a legend with a literal
-    hour scale (2h/4h/6h)
-  - Correct Imprint palette, fully theme-adaptive chrome, exact mandated title format,
-    no edge clipping in either render
-  - Real (non-faked) hover tooltips for the interactive HTML export via a wider invisible
-    hit-path on thin edges
+  - 'Clean two-column bipartite layout: students on the left, courses on the right,
+    every edge runs between the columns and none within a set; no axes or grid, as
+    the characteristic section asks'
+  - 'Node size encodes degree (radius 12-26 CSS px): Statistics, the 7-student hub,
+    stands out clearly while the degree-2 nodes stay well visible in both themes'
+  - Edge width and opacity both encode weekly contact hours (2-6 h) with a three-sample
+    edge-width legend; the faintest 2 h edges remain visible on both backgrounds
+  - Labels sit on the outer side of each column (right-aligned left of students, left-aligned
+    right of courses), so no label touches an edge
+  - Node order is chosen by degree with a barycentre tie-break against the other column,
+    which places hubs at the top and keeps edge bundles readable
+  - Page-coloured halos around nodes separate the converging edge ends from the node
+    fill; isolated nodes are drawn as hollow rings and explained in the legend
+  - Composes the chart with ChartsContainer and the useDrawingArea/useXScale/useYScale
+    hooks, a community MUI X composition idiom, with skipAnimation and theme tokens
+    throughout
+  - Real hover tooltips in the HTML output on both nodes (degree) and edges (student
+    → course, hours) via wide transparent hit lines
   weaknesses:
-  - Nodes, edges, and the hover tooltip are still entirely hand-drawn raw SVG; only
-    the legend now uses a native MUI X component - further leaning on MUI X-specific
-    building blocks (e.g. ChartsTooltip for the hover overlay) would push Library
-    Mastery further
-  - With 26 node labels and 39 edges, text and thin edge strokes still shrink to only
-    a few effective pixels at a 400px mobile thumbnail, even after the crossing-minimization
-    pass
+  - 'Suggestion: the bottom legend repeats the two coloured column headings ("Student
+    (Set A)", "Course (Set B)"); a single line explaining node size = degree, edge
+    width = hours and the hollow ring would carry the same information with less repetition.'
+  - 'Suggestion: student and course blocks are computed twice side by side (order,
+    radii, render loops, lines 128-182 and 270-342); folding them into one per-set
+    array would shorten the file without changing the render.'
+  - 'Suggestion: drawing the nodes as a native ScatterChart series inside the ChartsContainer
+    would show more of MUI X''s own series API than hand-placed SVG circles.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1
-      Chrome: Bold dark title centered at top ("network-bipartite · javascript · muix · anyplot.ai"), 15 student names in dark ink on the left column, 11 course names in dark ink on the right column, native ChartsLegend row below the plot with set-membership swatches/labels, custom weight-scale legend (2h/4h/6h) and isolated-node note below that - all clearly visible
-      Data: Student nodes brand green (#009E73), course nodes lavender (#C475FD), sized by degree ("Statistics" is the largest hub); grey edges vary width/opacity by weight; two isolated nodes (Talia Novak, Advanced Robotics) rendered with dashed outline + faded fill at the bottom of each column
+      Background: warm off-white #FAF8F1, no axes, no grid.
+      Chrome: title "network-bipartite · javascript · muix · anyplot.ai" bold dark ink centred at top (~50% width); bold column headings "● Student (Set A)" (green bullet) and "● Course (Set B)" (lavender bullet); 15 student and 12 course labels in dark ink on the outer sides of the columns; two-line bottom legend (set swatches with "node size = degree", edge-width samples 2h/4h/6h, "Hollow ring = isolated node"). All text readable.
+      Data: left column of 15 brand-green #009E73 nodes, right column of 12 lavender #C475FD nodes, sized by degree (Statistics clearly the largest hub). ~45 grey straight edges whose width and opacity grow with weekly hours; crossings in the middle band as expected. Talia Novak and Advanced Robotics drawn as hollow rings at the bottom of each column.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17
-      Chrome: Title and all node/legend labels flip to light ink, remain clearly readable - no dark-on-dark failures anywhere
-      Data: Green/lavender node colors and grey edge colors identical to the light render, confirming only chrome flipped
+      Background: warm near-black #1A1A17.
+      Chrome: title, headings, node labels in light ink; legend text in light soft ink. No dark-on-dark text anywhere.
+      Data: node colours identical to the light render (green #009E73, lavender #C475FD); edges switch to the light soft-ink tone, still thinner and lighter than the nodes, faintest 2 h edges visible; hollow rings visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Explicit sizes, well-proportioned; 26 node labels get dense at 400px
-          mobile
+        comment: Title 22px, headings 16px bold, node labels 15px, legend 14px (CSS
+          px at 2x); all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Labels sit outside the edge-drawing zone by construction
+        comment: Labels on the outer side of each column, clear of edges and nodes;
+          edge crossings are permitted by the spec
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Degree/weight-scaled sizing reads clearly at both extremes
+        comment: Smallest nodes and faintest edges visible in both themes; legend
+          swatches and edge samples match the marks
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Distinct hue families, pageBg strokes for definition
+        comment: Green vs lavender is CVD-safe and set membership is also given by
+          column position
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, legend directly below plot, nothing cut off
+        comment: Canvas gate passed (2400x2400); balanced columns, nothing cut off,
+          title ~50% width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Legend documents both encodings with units
+        comment: No axes by design; column headings and 'Weekly contact (h)' read
+          as text for a reader
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #C475FD, theme-correct chrome both
-          renders'
+        comment: 'First set #009E73, second set #C475FD (Imprint order); backgrounds
+          #FAF8F1 / #1A1A17; data colours identical across themes'
     design_excellence:
-      score: 17
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 5
         max: 8
         passed: true
-        comment: Hub-sorted layout, multiple joint encodings, native ChartsLegend
+        comment: 'Typographic hierarchy beyond baseline: bold set headings with inline
+          coloured bullets, two-tier legend in soft ink, page-coloured node halos'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: No spines, generous whitespace; residual edge-crossing density
+        comment: Barycentre tie-break ordering against the other column tidies the
+          edge bundles; hollow rings for isolated nodes
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Hub clustering + dashed/faded isolated nodes make the pattern legible
+        comment: Degree-sorted columns put the hubs (Statistics, Ava Chen) at the
+          top and isolated nodes at the bottom, a reading order chosen by the implementation
     spec_compliance:
       score: 15
       max: 15
@@ -129,26 +143,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bipartite layout, clearly separated columns
+        comment: Bipartite network in two parallel columns; isolated nodes are a pattern
+          the spec Description names
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Color by set, degree/weight encodings, isolated-node pattern now
-          shown
+        comment: 'Separated columns, colour by set with headings, size = degree, width/opacity
+          = weight, straight edges, labels on the outer side: all Notes and good-version
+          bullets met'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct column mapping, all data visible
+        comment: Layout-positioned type; every edge connects its student and course;
+          degrees match the radii
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Exact mandated title format, correct legend labels
+        comment: Title in the mandated format; legend entries match the marks
     data_quality:
       score: 15
       max: 15
@@ -158,19 +175,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Hubs, weight variation, AND isolated nodes in both sets now shown
+        comment: Shows a hub, mid-degree nodes, low-degree nodes, isolated nodes and
+          weighted edges
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible student-course enrollment scenario
+        comment: 'Student-course enrollment with weekly contact hours: one of the
+          spec''s applications, neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 15 students / 11 courses / 39 edges / 2-6h weights, within spec guidance
+        comment: '15 students, 12 courses, 45 edges, 2-6 h/week: inside the spec''s
+          ranges and plausible; no Check values in the spec'
     code_quality:
       score: 10
       max: 10
@@ -180,59 +200,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Appropriate shape for React/SVG composition, no unnecessary abstraction
+        comment: Columns/Data/Plot zones; the overlay component is needed because
+          the scale hooks must run inside ChartsContainer
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully hard-coded, deterministic dataset
+        comment: Hard-coded deterministic records
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only what's used
+        comment: useState, ChartsContainer and the three hooks are all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, real hover interactivity
+        comment: Real hover tooltips (not fake UI); the per-set duplication is a suggestion
+          only
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: skipAnimation set, default-exported component
+        comment: Default-exported component, skipAnimation, v9 ChartsContainer/hooks
+          API, sized to ANYPLOT_SIZE
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Scale-hook composition plus a genuine native ChartsLegend
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Hooks + ChartsLegend are real MUI X features, but core marks remain
-          generic SVG
+        passed: true
+        comment: 'Default: ChartsContainer composition with hidden linear axes; marks
+          are hand-placed SVG rather than MUI X series'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: useDrawingArea / useXScale / useYScale hooks to draw a custom layer
+          inside the MUI X drawing area
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-10-24T11:11:08Z'
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - custom-legend
   - hover-tooltips
+  - html-export
+  - layer-composition
   patterns:
-  - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
+  - minimal-chrome
   - alpha-blending
   - edge-highlighting
