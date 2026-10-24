@@ -1,6 +1,6 @@
 // anyplot.ai
 // lightcurve-transit: Astronomical Light Curve
-// Library: muix 9.0.0 | JavaScript 22.23.2
+// Library: muix 7.29.1 | JavaScript 22.22.3
 // Quality: 92/100 | Created: 2026-06-20
 
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
@@ -14,37 +14,40 @@ import { useXScale, useYScale } from "@mui/x-charts/hooks";
 const t = window.ANYPLOT_TOKENS;
 
 // Constants
-const TIME_COL = "Observation Time (BJD - 2457000)";
-const PERIOD_COL = "Orbital Period (days)";
-const PHASE_COL = "Orbital Phase";
-const FLUX_COL = "Relative Flux";
-const FLUX_ERR_COL = "Flux Uncertainty";
-const MODEL_FLUX_COL = "Transit Model";
+const FONT = '"Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, sans-serif';
+const MONO = '"JetBrains Mono", "SFMono-Regular", Menlo, monospace';
+const PHASE_AXIS_LABEL = "Orbital phase";
+const BASELINE_FLUX = 1.0;
+const Y_PAD_SHARE = 0.14;
 
+// Columns: set these to your data's column names
+const TIME = "Observation time (BJD - 2457000)"; // role: time
+const PERIOD = "Orbital period (days)"; // role: period
+const FLUX = "Relative flux"; // role: flux
+const FLUX_ERR = "Flux uncertainty"; // role: flux_err
+const MODEL_FLUX = "Transit model"; // role: model_flux
+
+// Data: replace this block with your own records
 const N_PTS = 280;
 const ORBITAL_PERIOD_DAYS = 3.5247;
 const EPOCH_BJD = 1325.41;
 const TRANSIT_CENTER = 0.5;
-const TRANSIT_HALF_DUR = 0.05;
+const TRANSIT_HALF_DUR = 0.018;
 const TRANSIT_DEPTH = 0.01;
-const BASELINE_FLUX = 1.0;
 const NOISE_SIGMA = 0.0015;
-const Y_PAD_SHARE = 0.14;
 
-// Data: 280 simulated TESS-like photometric observations folded by orbital period
 let lcgState = 42 >>> 0;
-const rawRows: Array<{
-  [TIME_COL]: number;
-  [PERIOD_COL]: number;
-  [PHASE_COL]: number;
-  [FLUX_COL]: number;
-  [FLUX_ERR_COL]: number;
-  [MODEL_FLUX_COL]: number;
+const data: Array<{
+  [TIME]: number;
+  [PERIOD]: number;
+  [FLUX]: number;
+  [FLUX_ERR]: number;
+  [MODEL_FLUX]: number;
 }> = [];
 
 for (let i = 0; i < N_PTS; i += 1) {
-  const ph = i / (N_PTS - 1);
-  const orbitCycle = i % 4;
+  const ph = i / N_PTS;
+  const orbitCycle = i === 0 ? 0 : i % 4;
   const timeBjd = EPOCH_BJD + (orbitCycle + ph) * ORBITAL_PERIOD_DAYS;
 
   const dt = Math.abs(ph - TRANSIT_CENTER);
@@ -63,45 +66,63 @@ for (let i = 0; i < N_PTS; i += 1) {
   const r2 = lcgState / 0x100000000;
   const fluxErr = NOISE_SIGMA * (1 + r2 * 0.35);
 
-  rawRows.push({
-    [TIME_COL]: Number(timeBjd.toFixed(4)),
-    [PERIOD_COL]: ORBITAL_PERIOD_DAYS,
-    [PHASE_COL]: Number(ph.toFixed(5)),
-    [FLUX_COL]: Number(obsFlux.toFixed(6)),
-    [FLUX_ERR_COL]: Number(fluxErr.toFixed(6)),
-    [MODEL_FLUX_COL]: Number(modFlux.toFixed(6)),
+  data.push({
+    [TIME]: Number(timeBjd.toFixed(6)),
+    [PERIOD]: ORBITAL_PERIOD_DAYS,
+    [FLUX]: Number(obsFlux.toFixed(6)),
+    [FLUX_ERR]: Number(fluxErr.toFixed(6)),
+    [MODEL_FLUX]: Number(modFlux.toFixed(6)),
   });
 }
 
-// Sort by orbital phase before drawing model curve
-const DATA = [...rawRows].sort((a, b) => a[PHASE_COL] - b[PHASE_COL]);
+// Plot: reads only data and the constants above
+const rawTimes = data.map((d) => d[TIME]);
+const minTime = Math.min(...rawTimes);
+const maxTime = Math.max(...rawTimes);
+const isAlreadyPhase = minTime >= 0 && maxTime <= 1;
 
-const phases = DATA.map((d) => d[PHASE_COL]);
-const observedFlux = DATA.map((d) => d[FLUX_COL]);
-const fluxErrors = DATA.map((d) => d[FLUX_ERR_COL]);
-const modelFlux = DATA.map((d) => d[MODEL_FLUX_COL]);
-const times = DATA.map((d) => d[TIME_COL]);
-const orbitalPeriod = DATA[0][PERIOD_COL];
+const foldedRows = data
+  .map((row) => {
+    const p = row[PERIOD];
+    const phase = isAlreadyPhase
+      ? row[TIME]
+      : (((row[TIME] - minTime) / p) % 1 + 1) % 1;
+    return {
+      ...row,
+      phase,
+    };
+  })
+  .sort((a, b) => a.phase - b.phase);
+
+const phases = foldedRows.map((d) => d.phase);
+const modelFlux = foldedRows.map((d) => d[MODEL_FLUX]);
+const orbitalPeriod = foldedRows[0][PERIOD];
 
 const minPhase = Math.min(...phases);
 const maxPhase = Math.max(...phases);
-const lowerExtents = DATA.map((d) => d[FLUX_COL] - d[FLUX_ERR_COL]);
-const upperExtents = DATA.map((d) => d[FLUX_COL] + d[FLUX_ERR_COL]);
+const lowerExtents = foldedRows.map((d) => d[FLUX] - d[FLUX_ERR]);
+const upperExtents = foldedRows.map((d) => d[FLUX] + d[FLUX_ERR]);
 const minDataFlux = Math.min(...lowerExtents, ...modelFlux);
 const maxDataFlux = Math.max(...upperExtents, ...modelFlux);
 const fluxSpan = maxDataFlux - minDataFlux;
-const FLUX_MIN = Number((minDataFlux - fluxSpan * Y_PAD_SHARE).toFixed(4));
-const FLUX_MAX = Number((maxDataFlux + fluxSpan * Y_PAD_SHARE).toFixed(4));
+const FLUX_MIN = minDataFlux - fluxSpan * Y_PAD_SHARE;
+const FLUX_MAX = maxDataFlux + fluxSpan * Y_PAD_SHARE;
 
 const minModelFlux = Math.min(...modelFlux);
 const transitDepthPct = ((BASELINE_FLUX - minModelFlux) * 100).toFixed(2);
+const inTransitPhases = foldedRows
+  .filter((r) => r[MODEL_FLUX] < BASELINE_FLUX - 1e-5)
+  .map((r) => r.phase);
+const transitPhaseSpan =
+  inTransitPhases.length > 1
+    ? Math.max(...inTransitPhases) - Math.min(...inTransitPhases)
+    : 0;
 const transitDurationHours = (
-  TRANSIT_HALF_DUR *
-  2 *
+  transitPhaseSpan *
   orbitalPeriod *
   24
 ).toFixed(2);
-const bjdSpanDays = (Math.max(...times) - Math.min(...times)).toFixed(1);
+const timeSpanDays = (maxTime - minTime).toFixed(1);
 
 const OBS_COLOR = t.palette[0];
 const MODEL_COLOR = t.palette[1];
@@ -109,14 +130,13 @@ const MODEL_COLOR = t.palette[1];
 function TransitDataLayer() {
   const xScale = useXScale("phase") as (v: number) => number;
   const yScale = useYScale("flux") as (v: number) => number;
-  if (!xScale || !yScale) return null;
 
   return (
     <g>
-      {DATA.map((row, i) => {
-        const x = xScale(row[PHASE_COL]);
-        const yTop = yScale(row[FLUX_COL] + row[FLUX_ERR_COL]);
-        const yBot = yScale(row[FLUX_COL] - row[FLUX_ERR_COL]);
+      {foldedRows.map((row, i) => {
+        const x = xScale(row.phase);
+        const yTop = yScale(row[FLUX] + row[FLUX_ERR]);
+        const yBot = yScale(row[FLUX] - row[FLUX_ERR]);
         return (
           <line
             key={`err-${i}`}
@@ -130,11 +150,11 @@ function TransitDataLayer() {
           />
         );
       })}
-      {DATA.map((row, i) => (
+      {foldedRows.map((row, i) => (
         <circle
           key={`pt-${i}`}
-          cx={xScale(row[PHASE_COL])}
-          cy={yScale(row[FLUX_COL])}
+          cx={xScale(row.phase)}
+          cy={yScale(row[FLUX])}
           r={3.5}
           fill={OBS_COLOR}
           opacity={0.84}
@@ -156,7 +176,7 @@ export default function Chart() {
         height,
         background: t.pageBg,
         color: t.ink,
-        fontFamily: t.sans,
+        fontFamily: FONT,
         display: "flex",
         flexDirection: "column",
         boxSizing: "border-box",
@@ -181,20 +201,19 @@ export default function Chart() {
               lineHeight: 1.2,
             }}
           >
-            Exoplanet Transit · lightcurve-transit · javascript · muix ·
-            anyplot.ai
+            lightcurve-transit · javascript · muix · anyplot.ai
           </div>
           <div
             style={{
               fontSize: 14,
               color: t.inkSoft,
               marginTop: 4,
-              fontFamily: t.mono,
+              fontFamily: MONO,
             }}
           >
-            {DATA.length} phase-folded observations ({bjdSpanDays} d baseline, P
-            = {orbitalPeriod.toFixed(4)} d) · transit depth {transitDepthPct}% (
-            {transitDurationHours} h duration)
+            {foldedRows.length} phase-folded observations ({timeSpanDays} d
+            span, P = {orbitalPeriod.toFixed(4)} d) · transit depth{" "}
+            {transitDepthPct}% ({transitDurationHours} h duration)
           </div>
         </div>
 
@@ -217,7 +236,7 @@ export default function Chart() {
                 display: "inline-block",
               }}
             />
-            <span>Observed {FLUX_COL} (±1σ)</span>
+            <span>Observed {FLUX} (±1σ)</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span
@@ -229,7 +248,7 @@ export default function Chart() {
                 display: "inline-block",
               }}
             />
-            <span>{MODEL_FLUX_COL}</span>
+            <span>{MODEL_FLUX}</span>
           </div>
         </div>
       </div>
@@ -246,7 +265,7 @@ export default function Chart() {
             xAxisId: "phase",
             yAxisId: "flux",
             data: modelFlux,
-            label: MODEL_FLUX_COL,
+            label: MODEL_FLUX,
             color: MODEL_COLOR,
             showMark: false,
             curve: "natural",
@@ -260,12 +279,12 @@ export default function Chart() {
             min: minPhase,
             max: maxPhase,
             height: 60,
-            label: PHASE_COL,
+            label: PHASE_AXIS_LABEL,
             labelStyle: { fontSize: 16, fontWeight: 600, fill: t.ink },
             tickLabelStyle: {
               fontSize: 14,
               fill: t.inkSoft,
-              fontFamily: t.mono,
+              fontFamily: MONO,
             },
             valueFormatter: (v: number) => v.toFixed(2),
           },
@@ -276,12 +295,12 @@ export default function Chart() {
             min: FLUX_MIN,
             max: FLUX_MAX,
             width: 96,
-            label: FLUX_COL,
+            label: FLUX,
             labelStyle: { fontSize: 16, fontWeight: 600, fill: t.ink },
             tickLabelStyle: {
               fontSize: 14,
               fill: t.inkSoft,
-              fontFamily: t.mono,
+              fontFamily: MONO,
             },
             valueFormatter: (v: number) => v.toFixed(3),
           },
