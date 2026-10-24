@@ -134,6 +134,16 @@ const valSpan = dataMax - dataMin || 1;
 const yMin = dataMin - valSpan * Y_PAD_SHARE;
 const yMax = dataMax + valSpan * Y_PAD_SHARE;
 
+// Ordered subcategories: evenly spaced steps of the imprint_seq ramp, in order
+const hexToRgb = (hex: string) =>
+  [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+const [seqStart, seqEnd] = [hexToRgb(t.seq[0]), hexToRgb(t.seq[1])];
+const subColors = subcategories.map((_, i) => {
+  const f = subcategories.length > 1 ? i / (subcategories.length - 1) : 0;
+  const rgb = seqStart.map((c, k) => Math.round(c + f * (seqEnd[k] - c)));
+  return `#${rgb.map((c) => c.toString(16).padStart(2, "0")).join("")}`;
+});
+
 const TITLE = "box-grouped · javascript · muix · anyplot.ai";
 const SUBTITLE = `${data.length} observations · ${CATEGORY}: ${categories.length} · ${SUBCATEGORY}: ${subcategories.length} · Whiskers at ${IQR_FENCE_MULTIPLIER}×IQR`;
 
@@ -153,7 +163,7 @@ function BoxWhiskerLayer() {
         return group.boxes.map((box, subIdx) => {
           if (!box.stats) return null;
           const cx = groupStart + boxSlot * (subIdx + 0.5);
-          const color = t.palette[subIdx];
+          const color = subColors[subIdx];
           const yQ1 = yScale(box.stats.q1);
           const yQ3 = yScale(box.stats.q3);
           const yMedian = yScale(box.stats.median);
@@ -278,9 +288,9 @@ export default function Chart() {
                   width={16 - BOX_STROKE_PX}
                   height={16 - BOX_STROKE_PX}
                   rx={3}
-                  fill={t.palette[i]}
+                  fill={subColors[i]}
                   fillOpacity={BOX_FILL_ALPHA}
-                  stroke={t.palette[i]}
+                  stroke={subColors[i]}
                   strokeWidth={BOX_STROKE_PX}
                 />
               </svg>
