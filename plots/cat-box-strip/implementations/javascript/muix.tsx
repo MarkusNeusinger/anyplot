@@ -18,12 +18,11 @@ const IQR_FENCE_MULT = 1.5;
 const HEADER_H = 112;
 
 // Columns: set these to your data's column names
-const CATEGORY = "Transport mode"; // role: x
-const VALUE = "Commute time (minutes)"; // role: y
+const CATEGORY = "Transport mode"; // role: category
+const VALUE = "Commute time (minutes)"; // role: value
 
 // Data: replace this block with your own records, one object per row
 const data = (() => {
-  let seed = 42;
   const nPerCategory = 45;
   const params = [
     { category: "Bike", mean: 17, sd: 4, min: 5, jamProb: 0, jamExtra: 0 },
@@ -32,35 +31,28 @@ const data = (() => {
     { category: "Bus", mean: 31, sd: 8, min: 9, jamProb: 0, jamExtra: 0 },
     { category: "Car", mean: 24, sd: 9, min: 7, jamProb: 0.12, jamExtra: 25 },
   ];
-  const rows: { [key: string]: string | number }[] = [];
 
+  // One stream of uniforms (mulberry32, seed 42), consumed in order below
+  let seed = 42;
+  const uniforms: number[] = [];
+  for (let i = 0; i < 4 * nPerCategory * params.length; i += 1) {
+    seed = (seed + 0x6d2b79f5) | 0;
+    let x = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x;
+    uniforms.push(((x ^ (x >>> 14)) >>> 0) / 4294967296);
+  }
+
+  let k = 0;
+  const rows: { [key: string]: string | number }[] = [];
   for (const p of params) {
     for (let i = 0; i < nPerCategory; i += 1) {
-      seed = (seed + 0x6d2b79f5) | 0;
-      let x1 = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-      x1 = (x1 + Math.imul(x1 ^ (x1 >>> 7), 61 | x1)) ^ x1;
-      const u1 = Math.max(((x1 ^ (x1 >>> 14)) >>> 0) / 4294967296, 1e-9);
-
-      seed = (seed + 0x6d2b79f5) | 0;
-      let x2 = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-      x2 = (x2 + Math.imul(x2 ^ (x2 >>> 7), 61 | x2)) ^ x2;
-      const u2 = ((x2 ^ (x2 >>> 14)) >>> 0) / 4294967296;
-
+      const u1 = Math.max(uniforms[k++], 1e-9);
+      const u2 = uniforms[k++];
       const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
       let v = p.mean + z * p.sd;
-
-      if (p.jamProb > 0) {
-        seed = (seed + 0x6d2b79f5) | 0;
-        let x3 = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-        x3 = (x3 + Math.imul(x3 ^ (x3 >>> 7), 61 | x3)) ^ x3;
-        const u3 = ((x3 ^ (x3 >>> 14)) >>> 0) / 4294967296;
-        if (u3 < p.jamProb) {
-          seed = (seed + 0x6d2b79f5) | 0;
-          let x4 = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-          x4 = (x4 + Math.imul(x4 ^ (x4 >>> 7), 61 | x4)) ^ x4;
-          const u4 = ((x4 ^ (x4 >>> 14)) >>> 0) / 4294967296;
-          v += p.jamExtra + u4 * p.jamExtra;
-        }
+      // A share of car trips hits a traffic jam
+      if (p.jamProb > 0 && uniforms[k++] < p.jamProb) {
+        v += p.jamExtra + uniforms[k++] * p.jamExtra;
       }
 
       rows.push({
@@ -81,38 +73,18 @@ const stats = categories.map((category, idx) => {
   const values = catRows.map((d) => Number(d[VALUE]));
   const sorted = [...values].sort((a, b) => a - b);
   const n = sorted.length;
-
-  const qPos1 = (n - 1) * 0.25;
-  const qBase1 = Math.floor(qPos1);
-  const qRest1 = qPos1 - qBase1;
-  const q1 =
-    sorted[qBase1 + 1] !== undefined
-      ? sorted[qBase1] + qRest1 * (sorted[qBase1 + 1] - sorted[qBase1])
-      : sorted[qBase1];
-
-  const qPos2 = (n - 1) * 0.5;
-  const qBase2 = Math.floor(qPos2);
-  const qRest2 = qPos2 - qBase2;
-  const median =
-    sorted[qBase2 + 1] !== undefined
-      ? sorted[qBase2] + qRest2 * (sorted[qBase2 + 1] - sorted[qBase2])
-      : sorted[qBase2];
-
-  const qPos3 = (n - 1) * 0.75;
-  const qBase3 = Math.floor(qPos3);
-  const qRest3 = qPos3 - qBase3;
-  const q3 =
-    sorted[qBase3 + 1] !== undefined
-      ? sorted[qBase3] + qRest3 * (sorted[qBase3 + 1] - sorted[qBase3])
-      : sorted[qBase3];
+  const [q1, median, q3] = [0.25, 0.5, 0.75].map((q) => {
+    const p = (n - 1) * q;
+    const b = Math.floor(p);
+    return b + 1 < n ? sorted[b] + (p - b) * (sorted[b + 1] - sorted[b]) : sorted[b];
+  });
 
   const iqr = q3 - q1;
   const lowFence = q1 - IQR_FENCE_MULT * iqr;
   const highFence = q3 + IQR_FENCE_MULT * iqr;
   const inFence = sorted.filter((v) => v >= lowFence && v <= highFence);
-  const whiskerLow = inFence.length > 0 ? inFence[0] : sorted[0];
-  const whiskerHigh =
-    inFence.length > 0 ? inFence[inFence.length - 1] : sorted[n - 1];
+  const whiskerLow = inFence[0];
+  const whiskerHigh = inFence[inFence.length - 1];
 
   const jittered = values.map((value) => {
     jitterSeed = (jitterSeed + 0x6d2b79f5) | 0;
@@ -134,7 +106,6 @@ const stats = categories.map((category, idx) => {
     q3,
     whiskerLow,
     whiskerHigh,
-    count: n,
   };
 });
 
@@ -142,20 +113,17 @@ const allValues = data.map((d) => Number(d[VALUE]));
 const rawMin = Math.min(...allValues);
 const rawMax = Math.max(...allValues);
 const span = rawMax - rawMin || 1;
-const yMin = Math.max(0, rawMin - span * Y_PAD_SHARE);
+const paddedMin = rawMin - span * Y_PAD_SHARE;
+// A non-negative variable keeps its zero floor; negative data keeps its padding
+const yMin = rawMin >= 0 ? Math.max(0, paddedMin) : paddedMin;
 const yMax = rawMax + span * Y_PAD_SHARE;
 
 const TITLE = "cat-box-strip · javascript · muix · anyplot.ai";
-const SUBTITLE = `Box: median, Q1–Q3, whiskers to ${IQR_FENCE_MULT}×IQR · Dots: jittered individual observations (${data.length} total across ${categories.length} ${CATEGORY.toLowerCase()}s)`;
+const SUBTITLE = `Box: median, Q1–Q3, whiskers to ${IQR_FENCE_MULT}×IQR · Dots: ${data.length} jittered observations · ${categories.length} groups (${CATEGORY})`;
 
 function BoxStripLayer() {
-  const xScale = useXScale("cat") as unknown as {
-    (v: string): number | undefined;
-    bandwidth?: () => number;
-  };
+  const xScale = useXScale("cat");
   const yScale = useYScale("val");
-  if (!xScale || !yScale || !xScale.bandwidth) return null;
-
   const bandwidth = xScale.bandwidth();
   const boxWidth = bandwidth * BOX_WIDTH_SHARE;
   const capHalf = boxWidth * 0.32;
@@ -164,23 +132,12 @@ function BoxStripLayer() {
   return (
     <g>
       {stats.map((s) => {
-        const xBand = xScale(s.category);
         const yLow = yScale(s.whiskerLow);
         const yQ1 = yScale(s.q1);
         const yQ3 = yScale(s.q3);
         const yHigh = yScale(s.whiskerHigh);
         const yMed = yScale(s.median);
-        if (
-          xBand === undefined ||
-          yLow === undefined ||
-          yQ1 === undefined ||
-          yQ3 === undefined ||
-          yHigh === undefined ||
-          yMed === undefined
-        ) {
-          return null;
-        }
-        const cx = xBand + bandwidth / 2;
+        const cx = xScale(s.category) + bandwidth / 2;
 
         return (
           <g key={s.category}>
@@ -244,25 +201,19 @@ function BoxStripLayer() {
         );
       })}
       {stats.map((s) => {
-        const xBand = xScale(s.category);
-        if (xBand === undefined) return null;
-        const cx = xBand + bandwidth / 2;
-        return s.jittered.map((p, i) => {
-          const cy = yScale(p.value);
-          if (cy === undefined) return null;
-          return (
-            <circle
-              key={`${s.category}-${i}`}
-              cx={cx + p.offset * jitterSpread}
-              cy={cy}
-              r={5.2}
-              fill={s.color}
-              fillOpacity={0.5}
-              stroke={t.pageBg}
-              strokeWidth={0.9}
-            />
-          );
-        });
+        const cx = xScale(s.category) + bandwidth / 2;
+        return s.jittered.map((p, i) => (
+          <circle
+            key={`${s.category}-${i}`}
+            cx={cx + p.offset * jitterSpread}
+            cy={yScale(p.value)}
+            r={5.2}
+            fill={s.color}
+            fillOpacity={0.5}
+            stroke={t.pageBg}
+            strokeWidth={0.9}
+          />
+        ));
       })}
     </g>
   );
