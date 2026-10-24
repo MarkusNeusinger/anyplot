@@ -4,7 +4,10 @@
 // Quality: 86/100 | Updated: 2026-10-24
 
 import * as React from "react";
-import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
+import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
+import { ChartsWrapper } from "@mui/x-charts/ChartsWrapper";
+import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
+import { ChartsLegend } from "@mui/x-charts/ChartsLegend";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
@@ -21,6 +24,7 @@ const X_PAD_RIGHT_SHARE = 0.2;
 const MARKER_SIZE = 10;
 const START_COLOR = t.palette[0];
 const END_COLOR = t.palette[1];
+const X_AXIS_LABEL = "Satisfaction score (0–10)";
 
 // Columns: set these to your data's column names
 const CATEGORY = "Department"; // role: category
@@ -59,7 +63,6 @@ const xMax = valMax + valSpan * X_PAD_RIGHT_SHARE;
 
 const startSeriesData = startValues.map((x, i) => ({ id: i, x, y: i }));
 const endSeriesData = endValues.map((x, i) => ({ id: i + n, x, y: i }));
-const X_AXIS_LABEL = `${START_VALUE} vs ${END_VALUE}`;
 
 function DumbbellOverlay() {
   const xScale = useXScale() as (v: number) => number;
@@ -106,8 +109,9 @@ function DumbbellOverlay() {
 export default function Chart() {
   const W = window.ANYPLOT_SIZE.width;
   const H = window.ANYPLOT_SIZE.height;
-  const headerH = 84;
-  const chartH = H - headerH;
+  const headerH = 52;
+  const legendH = 40;
+  const chartH = H - headerH - legendH;
 
   return (
     <div
@@ -126,40 +130,13 @@ export default function Chart() {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          justifyContent: "center",
-          gap: 8,
+          justifyContent: "flex-end",
         }}
       >
         <div style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>{TITLE}</div>
-        <div style={{ display: "flex", alignItems: "center", gap: 28, fontSize: 15, color: t.ink }}>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-            <span
-              style={{
-                width: 13,
-                height: 13,
-                borderRadius: "50%",
-                backgroundColor: START_COLOR,
-                display: "inline-block",
-              }}
-            />
-            {START_VALUE}
-          </span>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-            <span
-              style={{
-                width: 13,
-                height: 13,
-                borderRadius: "50%",
-                backgroundColor: END_COLOR,
-                display: "inline-block",
-              }}
-            />
-            {END_VALUE}
-          </span>
-        </div>
       </div>
 
-      <ChartsContainer
+      <ChartsDataProvider
         width={W}
         height={chartH}
         skipAnimation
@@ -207,12 +184,20 @@ export default function Chart() {
         ]}
         margin={{ left: 24, right: 64, top: 18, bottom: 20 }}
       >
-        <ChartsGrid vertical />
-        <DumbbellOverlay />
-        <ScatterPlot />
-        <ChartsXAxis axisId="xAxis" />
-        <ChartsYAxis axisId="yAxis" />
-      </ChartsContainer>
+        <ChartsWrapper
+          legendPosition={{ horizontal: "center", vertical: "top" }}
+          legendDirection="horizontal"
+        >
+          <ChartsLegend sx={{ fontSize: 15, color: t.ink, fontFamily: FONT, pt: 1 }} />
+          <ChartsSurface>
+            <ChartsGrid vertical />
+            <DumbbellOverlay />
+            <ScatterPlot />
+            <ChartsXAxis axisId="xAxis" />
+            <ChartsYAxis axisId="yAxis" />
+          </ChartsSurface>
+        </ChartsWrapper>
+      </ChartsDataProvider>
     </div>
   );
 }
