@@ -13,14 +13,15 @@ const t = window.ANYPLOT_TOKENS;
 // Constants
 const Y_PAD_SHARE = 0.08;
 const BODY_WIDTH_SHARE = 0.64;
+const X_TICK_COUNT = 12; // about this many labelled time ticks
 const HEADER_H = 118;
 
 // Columns: set these to your data's column names
-const DATE = "Timestamp (UTC)"; // role: x
-const OPEN = "Open price ($)"; // role: open
-const HIGH = "High price ($)"; // role: high
-const LOW = "Low price ($)"; // role: low
-const CLOSE = "Close price ($)"; // role: close
+const DATE = "Timestamp (UTC)"; // role: date
+const OPEN = "BTC/USD open ($)"; // role: open
+const HIGH = "BTC/USD high ($)"; // role: high
+const LOW = "BTC/USD low ($)"; // role: low
+const CLOSE = "BTC/USD close ($)"; // role: close
 
 // Data: replace this block with your own records, one object per row
 const data = (() => {
@@ -63,13 +64,6 @@ const sorted = [...data].sort(
     new Date(String(a[DATE])).getTime() - new Date(String(b[DATE])).getTime(),
 );
 
-const currencyMatch = OPEN.match(/\(([^)]+)\)/);
-const currencyPrefix = currencyMatch ? currencyMatch[1] : "";
-const yAxisLabel = OPEN.replace(/^Open\s+/i, "").replace(
-  /^([a-z])/,
-  (m) => m.toUpperCase(),
-);
-
 const candles = sorted.map((r, idx) => {
   const dt = new Date(String(r[DATE]));
   const label =
@@ -102,6 +96,8 @@ const dateKeys = candles.map((c) => c.label);
 const displayByKey = Object.fromEntries(
   candles.map((c) => [c.label, c.displayLabel]),
 );
+const tickEvery = Math.ceil(candles.length / X_TICK_COUNT);
+const formatPrice = (v: number) => Math.round(v).toLocaleString("en-US");
 
 const yMinRaw = Math.min(...candles.map((c) => c.low));
 const yMaxRaw = Math.max(...candles.map((c) => c.high));
@@ -112,15 +108,12 @@ const yMax = yMaxRaw + ySpan * Y_PAD_SHARE;
 const bullishCount = candles.filter((c) => c.close >= c.open).length;
 const bearishCount = candles.length - bullishCount;
 
-const firstDate = candles[0]?.date;
-const lastDate = candles[candles.length - 1]?.date;
-const rangeText =
-  firstDate && lastDate
-    ? `${firstDate.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })} – ${lastDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}`
-    : "";
+const firstDate = candles[0].date;
+const lastDate = candles[candles.length - 1].date;
+const rangeText = `${firstDate.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })} – ${lastDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}`;
 
 const TITLE = "candlestick-basic · javascript · muix · anyplot.ai";
-const SUBTITLE = `${candles.length} periods (${rangeText}) · Range ${currencyPrefix}${Math.round(yMinRaw).toLocaleString("en-US")}–${currencyPrefix}${Math.round(yMaxRaw).toLocaleString("en-US")}`;
+const SUBTITLE = `${candles.length} periods (${rangeText}) · Range ${formatPrice(yMinRaw)}–${formatPrice(yMaxRaw)}`;
 
 const legendItems = [
   {
@@ -134,34 +127,19 @@ const legendItems = [
 ];
 
 function CandlesticksLayer() {
-  const xScale = useXScale("time") as unknown as {
-    (v: string): number | undefined;
-    bandwidth?: () => number;
-  };
+  const xScale = useXScale("time");
   const yScale = useYScale("price");
-  if (!xScale || !yScale || !xScale.bandwidth) return null;
-
   const bw = xScale.bandwidth();
   const bodyWidth = bw * BODY_WIDTH_SHARE;
 
   return (
     <g>
       {candles.map((c) => {
-        const xBand = xScale(c.label);
         const yOpen = yScale(c.open);
         const yClose = yScale(c.close);
         const yHigh = yScale(c.high);
         const yLow = yScale(c.low);
-        if (
-          xBand === undefined ||
-          yOpen === undefined ||
-          yClose === undefined ||
-          yHigh === undefined ||
-          yLow === undefined
-        ) {
-          return null;
-        }
-        const cx = xBand + bw / 2;
+        const cx = xScale(c.label) + bw / 2;
         const bullish = c.close >= c.open;
         const color = bullish ? t.palette[0] : t.palette[4];
         const bodyTop = Math.min(yOpen, yClose);
@@ -270,9 +248,9 @@ export default function Chart() {
             data: dateKeys,
             height: 64,
             label: DATE,
-            valueFormatter: (v: string) => displayByKey[v] ?? v,
+            valueFormatter: (v: string) => displayByKey[v],
             tickLabelInterval: (_value: string, index: number) =>
-              index % 4 === 0,
+              index % tickEvery === 0,
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
             labelStyle: { fontSize: 16, fill: t.ink, fontWeight: 500 },
           },
@@ -284,9 +262,8 @@ export default function Chart() {
             max: yMax,
             tickNumber: 7,
             width: 96,
-            label: yAxisLabel,
-            valueFormatter: (v: number) =>
-              `${currencyPrefix}${Math.round(v).toLocaleString("en-US")}`,
+            label: CLOSE,
+            valueFormatter: formatPrice,
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
             labelStyle: { fontSize: 16, fill: t.ink, fontWeight: 500 },
           },
