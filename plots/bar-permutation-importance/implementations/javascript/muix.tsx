@@ -1,10 +1,8 @@
 // anyplot.ai
 // bar-permutation-importance: Permutation Feature Importance Plot
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 92/100 | Created: 2026-08-26
-//# anyplot-orientation: landscape
-
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+// Library: muix 9.16.0 | JavaScript 22.23.3
+// Quality: 87/100 | Updated: 2026-10-24
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { BarPlot } from "@mui/x-charts/BarChart";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
@@ -16,71 +14,82 @@ import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
 
-// Churn-prediction random forest, sklearn.inspection.permutation_importance
-// (n_repeats=10) — decrease in held-out accuracy when each feature is
-// shuffled. Sorted so the strongest driver renders at the top of the ranking.
-const FEATURES = [
-  "contract_type",
-  "tenure_months",
-  "monthly_charges",
-  "total_charges",
-  "tech_support",
-  "online_security",
-  "support_calls",
-  "internet_service",
-  "payment_method",
-  "paperless_billing",
-  "dependents",
-  "streaming_tv",
-  "partner",
-  "multiple_lines",
-  "senior_citizen",
+// Constants
+const ZERO_REF = 0;
+const X_PAD_SHARE = 0.08;
+const SEQ_MIN_MIX = 0.22;
+
+// Columns: set these to your data's column names
+const FEATURE = "Model feature"; // role: feature
+const IMPORTANCE_MEAN = "Mean decrease in accuracy"; // role: importance_mean
+const IMPORTANCE_STD = "Shuffle SD"; // role: importance_std
+
+// Data: replace this block with your own records, one object per row
+const data = [
+  { [FEATURE]: "Contract Type", [IMPORTANCE_MEAN]: 0.182, [IMPORTANCE_STD]: 0.021 },
+  { [FEATURE]: "Tenure (Months)", [IMPORTANCE_MEAN]: 0.146, [IMPORTANCE_STD]: 0.018 },
+  { [FEATURE]: "Monthly Charges", [IMPORTANCE_MEAN]: 0.098, [IMPORTANCE_STD]: 0.015 },
+  { [FEATURE]: "Total Charges", [IMPORTANCE_MEAN]: 0.071, [IMPORTANCE_STD]: 0.014 },
+  { [FEATURE]: "Tech Support", [IMPORTANCE_MEAN]: 0.058, [IMPORTANCE_STD]: 0.012 },
+  { [FEATURE]: "Online Security", [IMPORTANCE_MEAN]: 0.049, [IMPORTANCE_STD]: 0.011 },
+  { [FEATURE]: "Support Calls", [IMPORTANCE_MEAN]: 0.041, [IMPORTANCE_STD]: 0.010 },
+  { [FEATURE]: "Internet Service", [IMPORTANCE_MEAN]: 0.033, [IMPORTANCE_STD]: 0.009 },
+  { [FEATURE]: "Payment Method", [IMPORTANCE_MEAN]: 0.026, [IMPORTANCE_STD]: 0.008 },
+  { [FEATURE]: "Paperless Billing", [IMPORTANCE_MEAN]: 0.019, [IMPORTANCE_STD]: 0.007 },
+  { [FEATURE]: "Dependents", [IMPORTANCE_MEAN]: 0.014, [IMPORTANCE_STD]: 0.006 },
+  { [FEATURE]: "Streaming TV", [IMPORTANCE_MEAN]: 0.009, [IMPORTANCE_STD]: 0.006 },
+  { [FEATURE]: "Partner", [IMPORTANCE_MEAN]: 0.006, [IMPORTANCE_STD]: 0.005 },
+  { [FEATURE]: "Multiple Lines", [IMPORTANCE_MEAN]: 0.003, [IMPORTANCE_STD]: 0.005 },
+  { [FEATURE]: "Senior Citizen", [IMPORTANCE_MEAN]: -0.004, [IMPORTANCE_STD]: 0.004 },
 ];
-const MEANS = [0.182, 0.146, 0.098, 0.071, 0.058, 0.049, 0.041, 0.033, 0.026, 0.019, 0.014, 0.009, 0.006, 0.003, -0.004];
-const STDS  = [0.021, 0.018, 0.015, 0.014, 0.012, 0.011, 0.010, 0.009, 0.008, 0.007, 0.006, 0.006, 0.005, 0.005, 0.004];
 
-// --- Colour: sequential Imprint colormap (imprint_seq), one stop per bar ----
-function hexToRgb(hex) {
-  const int = parseInt(hex.slice(1), 16);
-  return [(int >> 16) & 255, (int >> 8) & 255, int & 255];
-}
+// Plot: reads only data and the constants above
+const sorted = [...data].sort((a, b) => b[IMPORTANCE_MEAN] - a[IMPORTANCE_MEAN]);
+const features = sorted.map((d) => d[FEATURE]);
+const means = sorted.map((d) => d[IMPORTANCE_MEAN]);
+const stds = sorted.map((d) => d[IMPORTANCE_STD]);
 
-function lerp(a, b, ratio) {
-  return Math.round(a + (b - a) * ratio);
-}
+const minMean = Math.min(...means);
+const maxMean = Math.max(...means);
+const meanSpan = maxMean - minMean || 1;
+// Start the gradient below the weakest mean so the lowest bar keeps SEQ_MIN_MIX of the ramp
+const colorMin = minMean - (meanSpan * SEQ_MIN_MIX) / (1 - SEQ_MIN_MIX);
 
-function imprintSeqInterpolator(stops) {
-  const [low, high] = stops.map(hexToRgb);
-  return (position) => {
-    const ratio = Math.min(1, Math.max(0, position));
-    const [r, g, b] = [0, 1, 2].map((channel) => lerp(low[channel], high[channel], ratio));
-    return `rgb(${r}, ${g}, ${b})`;
-  };
-}
+const rawMin = Math.min(
+  ZERO_REF,
+  ...sorted.map((d) => d[IMPORTANCE_MEAN] - d[IMPORTANCE_STD]),
+);
+const rawMax = Math.max(
+  ZERO_REF,
+  ...sorted.map((d) => d[IMPORTANCE_MEAN] + d[IMPORTANCE_STD]),
+);
+const xSpan = rawMax - rawMin || 1;
+const xMin = rawMin - xSpan * X_PAD_SHARE;
+const xMax = rawMax + xSpan * X_PAD_SHARE;
 
-const seqColor = imprintSeqInterpolator(t.seq);
-const MIN_MEAN = Math.min(...MEANS);
-const MAX_MEAN = Math.max(...MEANS);
-const BAR_COLORS = MEANS.map((v) => seqColor((v - MIN_MEAN) / (MAX_MEAN - MIN_MEAN)));
+const TITLE = "Churn Prediction Model · bar-permutation-importance · javascript · muix · anyplot.ai";
+const SUBTITLE = `${FEATURE}: ${features.length} · Whiskers: ±1 ${IMPORTANCE_STD} · Top: ${features[0]}, ${means[0].toFixed(3)} ± ${stds[0].toFixed(3)}`;
 
-// Horizontal ±1 SD whiskers across the shuffle repetitions, drawn with the
-// CartesianContext scales so they line up exactly with the bars underneath.
 function ErrorBars() {
   const xScale = useXScale("x");
   const yScale = useYScale("y");
-  if (!xScale || !yScale) return null;
-
   const bw = yScale.bandwidth();
   const cap = bw * 0.34;
 
   return (
     <g>
-      {FEATURES.map((feature, i) => {
+      {features.map((feature, i) => {
         const cy = yScale(feature) + bw / 2;
-        const xLo = xScale(MEANS[i] - STDS[i]);
-        const xHi = xScale(MEANS[i] + STDS[i]);
+        const xLo = xScale(means[i] - stds[i]);
+        const xHi = xScale(means[i] + stds[i]);
         return (
-          <g key={feature} stroke={t.ink} strokeWidth={3} strokeOpacity={0.8} strokeLinecap="round">
+          <g
+            key={feature}
+            stroke={t.ink}
+            strokeWidth={2.5}
+            strokeOpacity={0.85}
+            strokeLinecap="round"
+          >
             <line x1={xLo} y1={cy} x2={xHi} y2={cy} />
             <line x1={xLo} y1={cy - cap} x2={xLo} y2={cy + cap} />
             <line x1={xHi} y1={cy - cap} x2={xHi} y2={cy + cap} />
@@ -92,86 +101,84 @@ function ErrorBars() {
 }
 
 export default function Chart() {
-  const W = window.ANYPLOT_SIZE.width; // 1600 CSS px (landscape mount)
-  const H = window.ANYPLOT_SIZE.height; // 900 CSS px
+  const W = window.ANYPLOT_SIZE.width;
+  const H = window.ANYPLOT_SIZE.height;
   const CHART_TOP = 84;
-
-  const title = "Churn Prediction Model · bar-permutation-importance · javascript · muix · anyplot.ai";
-  const titleSize = title.length > 67 ? Math.round(22 * 67 / title.length) : 22;
 
   return (
     <Box sx={{ position: "relative", width: W, height: H, bgcolor: t.pageBg }}>
-      {/* Title + subtitle */}
-      <Box sx={{ position: "absolute", top: 22, left: 56, right: 56 }}>
-        <Typography sx={{ color: t.ink, fontSize: titleSize, fontWeight: 500, lineHeight: 1.25 }}>
-          {title}
+      <Box sx={{ position: "absolute", top: 20, left: 56, right: 56 }}>
+        <Typography sx={{ color: t.ink, fontSize: 22, fontWeight: 600, lineHeight: 1.25 }}>
+          {TITLE}
         </Typography>
-        <Typography sx={{ color: t.inkSoft, fontSize: 14, mt: 0.5 }}>
-          Decrease in held-out accuracy after shuffling each feature, ±1 SD across 10 repetitions
+        <Typography sx={{ color: t.inkSoft, fontSize: 15, mt: 0.5 }}>
+          {SUBTITLE}
         </Typography>
       </Box>
 
-      {/* Chart */}
       <Box sx={{ position: "absolute", top: CHART_TOP, left: 0, right: 0, bottom: 0 }}>
-        <ChartContainer
+        <ChartsContainer
           width={W}
           height={H - CHART_TOP}
           series={[
             {
               type: "bar",
               id: "importance",
-              data: MEANS,
+              data: means,
               layout: "horizontal",
               xAxisId: "x",
               yAxisId: "y",
-              label: "Permutation importance",
-              valueFormatter: (v, ctx) => {
-                const i = ctx?.dataIndex ?? 0;
-                return `${v.toFixed(3)} ± ${STDS[i].toFixed(3)} accuracy`;
-              },
+              label: IMPORTANCE_MEAN,
+              valueFormatter: (v: number, { dataIndex }: { dataIndex: number }) =>
+                `${v.toFixed(3)} ± ${stds[dataIndex].toFixed(3)}`,
             },
           ]}
           xAxis={[
             {
               id: "x",
               scaleType: "linear",
-              min: -0.02,
-              max: 0.22,
-              label: "Mean Decrease in Accuracy",
-              labelStyle: { fontSize: 16, fill: t.ink },
+              min: xMin,
+              max: xMax,
+              tickNumber: 8,
+              colorMap: { type: "continuous", min: colorMin, max: maxMean, color: [t.seq[0], t.seq[1]] },
+              height: 64,
+              label: IMPORTANCE_MEAN,
+              labelStyle: { fontSize: 16, fill: t.ink, fontWeight: 500 },
               tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-              tickInterval: [0, 0.04, 0.08, 0.12, 0.16, 0.2],
             },
           ]}
           yAxis={[
             {
               id: "y",
               scaleType: "band",
-              data: FEATURES,
-              colorMap: { type: "ordinal", values: FEATURES, colors: BAR_COLORS },
-              categoryGapRatio: 0.32,
+              data: features,
+              width: 175,
+              categoryGapRatio: 0.3,
+              label: FEATURE,
+              labelStyle: { fontSize: 16, fill: t.ink, fontWeight: 500 },
               tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
               disableTicks: true,
             },
           ]}
-          margin={{ top: 14, right: 60, bottom: 64, left: 210 }}
+          margin={{ top: 14, right: 48, bottom: 20, left: 36 }}
+          skipAnimation
           sx={{
             "& .MuiChartsAxis-line": { stroke: t.inkSoft },
             "& .MuiChartsGrid-line": { stroke: t.grid },
-            "& .MuiBarElement-root": { stroke: t.pageBg, strokeWidth: 1.5 },
+            "& .MuiBarChart-element": { stroke: t.inkSoft, strokeOpacity: 0.25, strokeWidth: 1 },
           }}
         >
           <ChartsGrid vertical />
           <BarPlot skipAnimation borderRadius={3} />
           <ErrorBars />
           <ChartsReferenceLine
-            x={0}
+            x={ZERO_REF}
             axisId="x"
-            lineStyle={{ stroke: t.ink, strokeWidth: 2, strokeOpacity: 0.55 }}
+            lineStyle={{ stroke: t.ink, strokeWidth: 2, strokeOpacity: 0.6 }}
           />
           <ChartsXAxis axisId="x" />
           <ChartsYAxis axisId="y" />
-        </ChartContainer>
+        </ChartsContainer>
       </Box>
     </Box>
   );
