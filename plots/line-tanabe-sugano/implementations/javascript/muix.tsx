@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-tanabe-sugano: Tanabe-Sugano Diagram for Crystal Field Theory
 // Library: muix 9.16.0 | JavaScript 22.23.3
-// Quality: 81/100 | Updated: 2026-10-24
+// Quality: 89/100 | Updated: 2026-10-24
 //# anyplot-orientation: square
 
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";

@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: line-tanabe-sugano
 created: '2026-10-01T20:23:56Z'
-updated: '2026-10-24T10:32:52Z'
+updated: '2026-10-24T10:44:34Z'
 generated_by: gemini-4-argon
 adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
 workflow_run: 40086007375
@@ -13,54 +13,38 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-tana
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-tanabe-sugano/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-tanabe-sugano/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-tanabe-sugano/javascript/muix/plot-dark.html
-quality_score: 81
+quality_score: 89
 review:
   strengths:
-  - The spin-allowed quartet block is a real 2×2 diagonalization in closed form (diagonal
-    1.8·Δ and 15 + 1.2·Δ, coupling 0.4·Δ), so ⁴T₁g(F) and ⁴T₁g(P) bend away from each
-    other as an avoided crossing and ⁴T₁g(P) starts at E/B = 15 at Δo/B = 0 (check
-    value 1, computed, not placed)
-  - 'Composed MUI X chart: ChartsContainer + LinePlot + ChartsReferenceLine + ChartsGrid,
-    with a custom SVG layer that reads useDrawingArea/useXScale/useYScale so the direct
-    labels, the example-complex annotation and the ν₁/ν₂ arrows sit exactly in data
-    coordinates'
-  - Term labels are typeset with real SVG tspan superscripts and subscripts (multiplicity
-    up, numeral and g down), colour-matched to their curves in the right margin, so
-    no legend is needed
-  - Spin-allowed vs spin-forbidden encoding through per-series sx selectors on data-series
-    (4.2 px solid vs 2.4 px dashed) reads clearly in both themes
-  - The optional [Cr(H₂O)₆]³⁺ marker at Δo/B = 24.9 with ν₁ → ⁴T₂g and ν₂ → ⁴T₁g(F)
-    arrows anchored on the curves shows how the diagram is read in practice
-  - Axis tooltip (trigger="axis") gives every term's E/B at a field strength in the
-    HTML view
+  - Energies come from a real diagonalization of all d3 Tanabe-Sugano blocks at C/B
+    = 4.5; free-ion limits (4P 15, 2G 17.5, 2P/2H 22.5, 2D 24.9/60.1, 2F 37.5) all
+    land correctly
+  - Term symbols are typeset as SVG tspans with a true superscript multiplicity and
+    subscript numeral and g, bold for spin-allowed and regular for spin-forbidden
+  - Right-edge labels are de-collided with colored leader lines, and curves that leave
+    through the ceiling are labeled where they exit
+  - Composes ChartsContainer, LinePlot, ChartsGrid and ChartsReferenceLine with a
+    custom layer driven by the useXScale/useYScale hooks
+  - Optional example complex [Cr(H2O)6]3+ with ν1/ν2 arrows reproduces the observed
+    band ratio of about 1.40
   weaknesses:
-  - 'DQ-03, SC-02 (both): the two doublet curves are hard-coded constants, not diagonalized:
-    ²Eg is a flat line at 9 + 3·C/B = 22.5 across the whole axis and ²T₂g a flat line
-    at 15 + 3·C/B = 28.5. At Δo/B = 0 every doublet from ²G must start at the free-ion
-    ²G energy 4B + 3C = 17.5 (²Eg observed 22.5, delta −5.0), and in the strong-field
-    limit ²T₂g(t₂g³) approaches 15B + 5C = 37.5 (observed 28.5, delta +9.0) → compute
-    the doublet energies by diagonalizing the d³ doublet Tanabe-Sugano matrices at
-    C/B = 4.5 and subtract the ⁴A₂g energy at each Δo/B, as the Notes require. Likely
-    cause: the `9 + 3 * C_OVER_B` and `15 + 3 * C_OVER_B` entries in the energies
-    array.'
-  - 'DQ-01, SC-02 (both): only 2 of the doublet terms that fall inside the plotted
-    0–84 E/B range are drawn; ²T₁g (from ²G, nearly coincident with ²Eg), ²A₁g and
-    the higher ²T₁g / ²T₂g / ²Eg roots from ²H, ²P, ²D are missing, so the diagram
-    does not show one curve per term in range and loses the doublet avoided crossings
-    the spec asks to keep → include every doublet root of each symmetry block that
-    falls below the top of the y-axis. Likely cause: TERM_SPECS lists six terms and
-    the doublet blocks are never built.'
+  - 'Suggestion: the example complex''s dashed marker at Δo/B = 24.9 reads like a
+    crossover line at first glance; a short label at its top end (or a dotted rather
+    than dashed style) would tell it apart on a d3 diagram.'
+  - 'Suggestion: the ν1/ν2 arrows sit about ±0.3 Δo/B units either side of the marker;
+    drawing them closer to the marker would keep the ν2 tip exactly on the 4T1g(F)
+    curve.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across the full 2400×2400 canvas.
-      Chrome: bold dark title "line-tanabe-sugano · javascript · muix · anyplot.ai", grey subtitle "d³ (Cr³⁺) in an octahedral field · C/B = 4.5 · spin-allowed quartets solid, spin-forbidden doublets dashed" with real superscripts; axis titles "Ligand-field strength Δo / B" (x, 0–40) and "Term energy E / B" (y, 0–80); light grey grid in both directions; all dark text readable.
-      Data: ⁴A₂g green #009E73 flat at E/B = 0 along the x axis; ⁴T₂g purple straight line 0→40; ⁴T₁g(F) blue curving 0→~51; ⁴T₁g(P) ochre from 15 at Δo/B = 0 to ~84; ²Eg red dashed flat at 22.5; ²T₂g cyan dashed flat at 28.5. Dashed vertical marker at Δo/B = 24.9 labelled "[Cr(H₂O)₆]³⁺ · Δo / B = 24.9" with ν₁ and ν₂ arrows from 0 to ⁴T₂g and ⁴T₁g(F). Colour-matched typeset term labels in the right margin.
+      Background: warm off-white #FAF8F1, square 2400x2400 canvas with a near-square plot area.
+      Chrome: bold title "line-tanabe-sugano · javascript · muix · anyplot.ai", subtitle "d³ (Cr³⁺) in an octahedral field · C/B = 4.5 · colour marks symmetry · spin-allowed terms solid, spin-forbidden dashed"; axes "Ligand-field strength Δo / B" (0–40, step 5) and "Term energy E / B" (0–90, step 10); light grid; all dark text readable.
+      Data: ground term 4A2g as a thick green (#009E73) line at E/B = 0; 4T2g (lavender) and 4T1g(F)/(P) (blue) thick solid; 2Eg roots red, 2T1g blue, 2T2g lavender, 2A1g ochre, 2A2g green, all dashed and thinner. 4T1g(P) starts at 15. Right-edge typeset labels with leaders; six curves that exit at E/B = 90 are labeled above the ceiling. Dashed marker at Δo/B = 24.9 for [Cr(H2O)6]3+ with ν1 and ν2 arrows from 0 to 4T2g and 4T1g(F).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, subtitle, axis titles, ticks and the complex label switch to light ink; arrows and their ν labels light grey; grid subtle dark grey; no dark-on-dark text.
-      Data: curve colours identical to the light render (green, purple, blue, ochre, red, cyan); the green ground term stays visible on the axis.
+      Chrome: title, subtitle, axis titles and ticks in light ink, grid subtle; marker line and arrows in light inkSoft; no dark-on-dark text.
+      Data: curve and label colors identical to the light render; brand green ground term clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -72,78 +56,79 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 22 px, ticks 15 px, axis titles 17 px, term labels 20 px; all
-          readable in both themes and at thumbnail size
+        comment: Explicit sizes (title 22, labels 19, ticks/subtitle 15, axis titles
+          17 CSS px); every label, tick and term symbol readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Right-margin labels are spaced at least 32 px; ν₁/ν₂ labels and the
-          rotated complex label stay clear of curves and text
+        comment: Right-edge labels de-collided with leaders (25 px minimum gap), ceiling
+          labels spaced left to right; no text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 4.2 px solid quartets and 2.4 px dashed doublets are clearly visible;
-          the ground term is visible on the x axis in both themes
+        comment: Spin-allowed curves 4.2 px solid, spin-forbidden 2.2 px dashed; ground
+          term visible as a green line at E/B = 0 in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Line style (solid/dashed) plus direct labels carry identity; no colour-only
-          signal
+        comment: Every curve directly labeled, so color is never the sole identifier;
+          line style carries the spin class
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 2400×2400 square canvas, near-square plot area, balanced margins,
-          title well proportioned
+        comment: 2400x2400, near-square plot area (~1535x1570 px), label margins used
+          without overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Ligand-field strength Δo / B'' and ''Term energy E / B'' with
-          typeset subscript'
+        comment: '''Ligand-field strength Δo / B'' with typeset subscript and ''Term
+          energy E / B'' (reduced, dimensionless quantities)'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Ground term ⁴A₂g is #009E73, remaining terms follow the Imprint
-          order; backgrounds #FAF8F1 / #1A1A17; data colours identical across themes'
+        comment: 'Imprint palette in canonical order by symmetry (A2g = #009E73 first),
+          identical across themes; #FAF8F1 / #1A1A17 backgrounds'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Typeset super/subscripts carried through subtitle, axis title and
-          complex label, and bold weight for spin-allowed labels vs regular for forbidden
-          ones form a deliberate typographic hierarchy
+        passed: true
+        comment: Two-weight label typography (bold spin-allowed, regular spin-forbidden)
+          and a symmetry-family color scheme explained in the subtitle, beyond the
+          baseline
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Legend replaced by colour-matched right-margin direct labels with
-          a minimum-gap stacking; arrows offset either side of the example line
+        passed: true
+        comment: Colored leader lines from curve ends to stacked labels, ceiling labels
+          placed where curves exit the top, 10-unit grid chosen for ruler reading
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: The example complex with ν₁/ν₂ arrows anchored on the computed curves
-          gives a focal reading of the diagram
+        passed: true
+        comment: Symmetry-family coloring groups the many doublet roots so the quartet
+          manifold reads as the focus; the example complex itself is the optional
+          Notes feature
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -151,58 +136,56 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Tanabe-Sugano line diagram, E/B vs Δo/B, d³
+        comment: Tanabe-Sugano diagram, E/B against Δo/B, one d3 configuration
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: 'Ground term, spin emphasis, typeset labels, C/B in subtitle, axes
-          from 0 all present; missed: doublet curves are not diagonalized (Notes bullet
-          2) and most doublet terms in range are absent (first ''A good version shows''
-          bullet) — see defect lines'
+        passed: true
+        comment: Diagonalized matrices, flat visible ground term, solid/dashed spin
+          classes, typeset super/subscript labels at the right edge, config and C/B
+          in subtitle, axes from 0, light grid, both curves of every avoided crossing;
+          optional example complex with ν1/ν2 arrows
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Δo/B on x 0–40, E/B on y from 0; all series within the axes; marks
-          at their values
+        comment: Curves at computed values, no displacement; avoided crossings preserved
+          by ascending eigenvalue order
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'line-tanabe-sugano · javascript · muix · anyplot.ai'; direct
-          labels replace a legend and match the curves
+        comment: Mandated title; direct curve labels replace a legend (N/A)
     data_quality:
-      score: 10
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: Quartet avoided crossing and ground term shown; the doublet manifold
-          is reduced to two flat lines and ²T₁g, ²A₁g and higher doublet roots in
-          range are missing (defect line)
+        passed: true
+        comment: All quartet and doublet terms in range, several avoided crossings
+          shown as near-touches; d3 has no crossover (permitted)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Cr³⁺ d³ at C/B = 4.5 with [Cr(H₂O)₆]³⁺ (Δo = 17400 cm⁻¹, B = 700
-          cm⁻¹) is a textbook case
+        comment: Cr3+ d3 with [Cr(H2O)6]3+ (Δo = 17400 cm-1, B ≈ 700 cm-1), a textbook
+          example
       - id: DQ-03
         name: Appropriate Scale
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: 'Checked value 1: ⁴T₁g(P) at Δo/B = 0 reads 15 on the axis and falls
-          out of the 2×2 eigenvalue — pass. Values 2 and 3 do not apply to d³. Doublets
-          hard-coded at wrong energies: ²Eg 22.5 at Δo/B = 0 vs ²G 17.5, ²T₂g 28.5
-          vs strong-field 37.5 (defect line)'
+        passed: true
+        comment: 'Check value 1: 4T1g(P) at Δo/B = 0 sits at E/B = 15 (render and
+          matrix eigenvalues 0 and 15); free-ion limits verified: 2G 17.5, 2P/2H 22.5,
+          2D 24.9/60.1, 2F 37.5 for C/B = 4.5; 4T1g(F)/(P) at Δo/B = 40 read 50.9/84.1
+          as computed. Check values 2 and 3 do not apply to d3'
     code_quality:
       score: 10
       max: 10
@@ -212,14 +195,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script; the one component (TanabeSuganoLayer) is required
-          to use MUI X scale hooks
+        comment: Columns → data → plot zones; the Jacobi solver and React layer components
+          are needed (no eigen call available, scale hooks need a component)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic
+        comment: Fully deterministic computation
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -231,15 +214,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'Complexity justified: the typesetting parser substitutes for missing
-          text markup'
+        comment: 'Written-out eigenvalue solver is allowed (library prompt: no numeric
+          helpers available); no fake UI'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Renders into the harness mount, skipAnimation set, current v9 composition
-          API
+        comment: Default-exported component, skipAnimation, v9 ChartsContainer and
+          .MuiLineChart-line[data-series] selectors
     library_mastery:
       score: 7
       max: 10
@@ -248,34 +231,33 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: false
-        comment: Composed ChartsContainer with LinePlot, ChartsXAxis/YAxis, ChartsGrid,
-          ChartsReferenceLine and axis band sizing via height/width
+        passed: true
+        comment: 'Composition API: ChartsContainer + LinePlot + ChartsXAxis/YAxis
+          + ChartsGrid, per-series styling through sx data-series selectors'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Custom SVG overlay driven by useDrawingArea/useXScale/useYScale,
-          per-series styling through .MuiLineChart-line[data-series] sx selectors,
-          ChartsReferenceLine for the complex marker
-  verdict: REJECTED
+        passed: true
+        comment: Custom SVG layer driven by useDrawingArea/useXScale/useYScale hooks,
+          ChartsReferenceLine for the example complex, axis-triggered ChartsTooltip
+          in the HTML
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T10:29:28Z'
+  rendered_at: '2026-10-24T10:40:59Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - custom-legend
-  - layer-composition
-  - html-export
+  - reference-lines
   - hover-tooltips
   patterns:
   - data-generation
-  - iteration-over-groups
   - matrix-construction
-  dataprep: []
+  dataprep:
+  - eigendecomposition
   styling:
   - publication-ready
-  - grid-styling
+  - dashed-lines
