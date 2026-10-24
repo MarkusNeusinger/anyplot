@@ -24,13 +24,13 @@ const VALUES = "Annual base salary ($k)"; // role: values
 const data = (() => {
   let state = 42;
   const roles = [
-    { title: "Senior Software Engineer", mean: 152, std: 16, size: 18, extra: 206 },
-    { title: "Data Scientist", mean: 138, std: 15, size: 16 },
-    { title: "Product Manager", mean: 134, std: 19, size: 15 },
-    { title: "DevOps Engineer", mean: 121, std: 13, size: 16 },
-    { title: "UX/UI Designer", mean: 104, std: 14, size: 15 },
-    { title: "Marketing Analyst", mean: 79, std: 11, size: 15, extra: 43 },
-    { title: "Customer Success Manager", mean: 73, std: 9, size: 15 },
+    { title: "Senior Software Engineer", mean: 152, std: 16, size: 13, extra: 206 },
+    { title: "Data Scientist", mean: 138, std: 15, size: 12 },
+    { title: "Product Manager", mean: 134, std: 19, size: 11 },
+    { title: "DevOps Engineer", mean: 121, std: 13, size: 12 },
+    { title: "UX/UI Designer", mean: 104, std: 14, size: 11 },
+    { title: "Marketing Analyst", mean: 79, std: 11, size: 11, extra: 43 },
+    { title: "Customer Success Manager", mean: 73, std: 9, size: 11 },
   ];
   const rows: { [key: string]: string | number }[] = [];
 
@@ -68,27 +68,11 @@ const boxStats = rawCategories
       .map((row) => Number(row[VALUES]))
       .sort((a, b) => a - b);
     const n = salaries.length;
-
-    const q1Pos = (n - 1) * 0.25;
-    const q1Base = Math.floor(q1Pos);
-    const q1 =
-      q1Base + 1 < n
-        ? salaries[q1Base] + (q1Pos - q1Base) * (salaries[q1Base + 1] - salaries[q1Base])
-        : salaries[q1Base];
-
-    const medPos = (n - 1) * 0.5;
-    const medBase = Math.floor(medPos);
-    const median =
-      medBase + 1 < n
-        ? salaries[medBase] + (medPos - medBase) * (salaries[medBase + 1] - salaries[medBase])
-        : salaries[medBase];
-
-    const q3Pos = (n - 1) * 0.75;
-    const q3Base = Math.floor(q3Pos);
-    const q3 =
-      q3Base + 1 < n
-        ? salaries[q3Base] + (q3Pos - q3Base) * (salaries[q3Base + 1] - salaries[q3Base])
-        : salaries[q3Base];
+    const [q1, median, q3] = [0.25, 0.5, 0.75].map((q) => {
+      const p = (n - 1) * q;
+      const b = Math.floor(p);
+      return b + 1 < n ? salaries[b] + (p - b) * (salaries[b + 1] - salaries[b]) : salaries[b];
+    });
 
     const iqr = q3 - q1;
     const lowerFence = q1 - IQR_FENCE_MULTIPLIER * iqr;
@@ -101,8 +85,8 @@ const boxStats = rawCategories
       q1,
       median,
       q3,
-      whiskerLow: inliers.length ? inliers[0] : q1,
-      whiskerHigh: inliers.length ? inliers[inliers.length - 1] : q3,
+      whiskerLow: inliers[0],
+      whiskerHigh: inliers[inliers.length - 1],
       outliers,
     };
   })
@@ -117,13 +101,11 @@ const valueMin = minVal - valSpan * X_PAD_SHARE;
 const valueMax = maxVal + valSpan * X_PAD_SHARE;
 
 const TITLE = "box-horizontal · javascript · muix · anyplot.ai";
-const SUBTITLE = `${data.length} observations across ${categories.length} ${CATEGORIES.toLowerCase()}s sorted by median · Whiskers at ${IQR_FENCE_MULTIPLIER}×IQR`;
+const SUBTITLE = `${data.length} observations · ${categories.length} groups (${CATEGORIES}), sorted by median · Whiskers at ${IQR_FENCE_MULTIPLIER}×IQR`;
 
 function BoxWhiskers() {
   const xScale = useXScale("salary");
   const yScale = useYScale("role");
-  if (!xScale || !yScale || !("bandwidth" in yScale)) return null;
-
   const bandwidth = yScale.bandwidth();
   const boxHeight = bandwidth * BOX_HEIGHT_SHARE;
   const capHeight = boxHeight * 0.65;
@@ -131,19 +113,17 @@ function BoxWhiskers() {
   return (
     <g>
       {boxStats.map((s, i) => {
-        const yBand = yScale(s.title);
-        if (yBand === undefined) return null;
-        const center = yBand + bandwidth / 2;
+        const center = yScale(s.title) + bandwidth / 2;
         const top = center - boxHeight / 2;
         const bottom = center + boxHeight / 2;
         const capTop = center - capHeight / 2;
         const capBottom = center + capHeight / 2;
         const color = t.palette[i];
-        const xWhiskerLow = xScale(s.whiskerLow) ?? 0;
-        const xWhiskerHigh = xScale(s.whiskerHigh) ?? 0;
-        const xQ1 = xScale(s.q1) ?? 0;
-        const xQ3 = xScale(s.q3) ?? 0;
-        const xMedian = xScale(s.median) ?? 0;
+        const xWhiskerLow = xScale(s.whiskerLow);
+        const xWhiskerHigh = xScale(s.whiskerHigh);
+        const xQ1 = xScale(s.q1);
+        const xQ3 = xScale(s.q3);
+        const xMedian = xScale(s.median);
 
         return (
           <g key={s.title}>
@@ -207,7 +187,7 @@ function BoxWhiskers() {
             {s.outliers.map((v, j) => (
               <circle
                 key={j}
-                cx={xScale(v) ?? 0}
+                cx={xScale(v)}
                 cy={center}
                 r={5.5}
                 fill={t.pageBg}
