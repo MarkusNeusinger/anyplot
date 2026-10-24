@@ -1,20 +1,20 @@
 // anyplot.ai
-// map-route-path: Route and Path Map with Sequential Waypoints
-// Library: muix 9.2.1 | JavaScript 22.23.1
-// Quality: 90/100 | Created: 2026-08-19
+// map-route-path: Route Path Map
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 85/100 | Created: 2026-09-02
 
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
-import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
+import { useDrawingArea, useXScale, useYScale, useZColorScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
 // Constants
 const TITLE = "map-route-path · javascript · muix · anyplot.ai";
 const BASEMAP_CAPTION =
-  "Coordinates: WGS 84 (EPSG:4326) · Amsterdam Centrum (Dam Square → Vondelpark → Rijksmuseum → Jordaan → Centraal)";
+  "Coordinates: WGS 84 (EPSG:4326) · SVG lon/lat graticule provides spatial reference";
 const TITLE_HEIGHT = 54;
 const CAPTION_HEIGHT = 32;
 const X_AXIS_HEIGHT = 58;
@@ -23,35 +23,36 @@ const MARGIN = { top: 20, right: 260, bottom: 14, left: 16 };
 const PAD_SHARE = 0.14;
 const ARROW_STRIDE = 8;
 
-// Data
-const SEQ_COL = "Waypoint Sequence";
-const LAT_COL = "Latitude (°N)";
-const LON_COL = "Longitude (°E)";
-const PROGRESS_COL = "Elapsed Time Share";
-const LANDMARK_COL = "Landmark";
+// Columns: set these to your data's column names
+const SEQUENCE = "Waypoint sequence"; // role: sequence
+const LAT = "Latitude (°N)"; // role: lat
+const LON = "Longitude (°E)"; // role: lon
+const PROGRESS = "Elapsed time share"; // role: timestamp
+const LANDMARK = "Landmark"; // role: label
 
+// Data: replace this block with your own records
 const KEYFRAMES: Array<[number, number, string]> = [
   [52.3731, 4.8926, "Start · Dam Square"],
-  [52.3702, 4.8895, "Spui"],
-  [52.3668, 4.8838, "Leidsestraat"],
-  [52.364, 4.8815, "Leidseplein"],
+  [52.3702, 4.8895, ""],
+  [52.3668, 4.8838, ""],
+  [52.364, 4.8815, ""],
   [52.358, 4.8686, "Vondelpark West"],
-  [52.3565, 4.8755, "Vondelpark Pond"],
-  [52.3585, 4.8815, "Museumplein"],
+  [52.3565, 4.8755, ""],
+  [52.3585, 4.8815, ""],
   [52.36, 4.8852, "Rijksmuseum"],
-  [52.3635, 4.892, "Vijzelgracht"],
-  [52.3662, 4.8995, "Rembrandtplein"],
+  [52.3635, 4.892, ""],
+  [52.3662, 4.8995, ""],
   [52.3678, 4.904, "Waterlooplein"],
-  [52.372, 4.9005, "Nieuwmarkt"],
-  [52.3755, 4.896, "Oude Kerk"],
-  [52.3765, 4.884, "Jordaan · Westerkerk"],
-  [52.3795, 4.8895, "Haarlemmerstraat"],
+  [52.372, 4.9005, ""],
+  [52.3755, 4.896, ""],
+  [52.3765, 4.884, "Jordaan"],
+  [52.3795, 4.8895, ""],
   [52.3791, 4.9003, "End · Amsterdam Centraal"],
 ];
 
 const STEPS_PER_LEG = 4;
 const TOTAL_WAYPOINTS = (KEYFRAMES.length - 1) * STEPS_PER_LEG + 1;
-const DATA: Array<Record<string, string | number>> = [];
+const data: Array<Record<string, string | number>> = [];
 
 let seed = 42;
 for (let leg = 0; leg < KEYFRAMES.length - 1; leg++) {
@@ -67,29 +68,34 @@ for (let leg = 0; leg < KEYFRAMES.length - 1; leg++) {
     const wobble = Math.sin(u * Math.PI);
     const jLat = (r1 - 0.5) * 0.0005 * wobble;
     const jLon = (r2 - 0.5) * 0.0007 * wobble;
-    DATA.push({
-      [SEQ_COL]: idx,
-      [LAT_COL]: Number((lat1 + (lat2 - lat1) * u + jLat).toFixed(6)),
-      [LON_COL]: Number((lon1 + (lon2 - lon1) * u + jLon).toFixed(6)),
-      [PROGRESS_COL]: Number((idx / (TOTAL_WAYPOINTS - 1)).toFixed(4)),
-      [LANDMARK_COL]: s === 0 ? name1 : "",
+    data.push({
+      [SEQUENCE]: idx,
+      [LAT]: Number((lat1 + (lat2 - lat1) * u + jLat).toFixed(6)),
+      [LON]: Number((lon1 + (lon2 - lon1) * u + jLon).toFixed(6)),
+      [PROGRESS]: Number((idx / (TOTAL_WAYPOINTS - 1)).toFixed(4)),
+      [LANDMARK]: s === 0 ? name1 : "",
     });
   }
 }
 const lastKeyframe = KEYFRAMES[KEYFRAMES.length - 1];
-DATA.push({
-  [SEQ_COL]: TOTAL_WAYPOINTS - 1,
-  [LAT_COL]: lastKeyframe[0],
-  [LON_COL]: lastKeyframe[1],
-  [PROGRESS_COL]: 1,
-  [LANDMARK_COL]: lastKeyframe[2],
+data.push({
+  [SEQUENCE]: TOTAL_WAYPOINTS - 1,
+  [LAT]: lastKeyframe[0],
+  [LON]: lastKeyframe[1],
+  [PROGRESS]: 1,
+  [LANDMARK]: lastKeyframe[2],
 });
 
-// Sort by sequence order before drawing path
-const sortedRows = [...DATA].sort((a, b) => Number(a[SEQ_COL]) - Number(b[SEQ_COL]));
-const lats = sortedRows.map((d) => Number(d[LAT_COL]));
-const lons = sortedRows.map((d) => Number(d[LON_COL]));
-const progressVals = sortedRows.map((d) => Number(d[PROGRESS_COL]));
+// Plot: reads only data and the constants above
+const sortedRows = [...data].sort(
+  (a, b) => Number(a[SEQUENCE]) - Number(b[SEQUENCE]),
+);
+const nWaypoints = sortedRows.length;
+const lats = sortedRows.map((d) => Number(d[LAT]));
+const lons = sortedRows.map((d) => Number(d[LON]));
+const progressVals = sortedRows.map((d) => Number(d[PROGRESS]));
+const minProgress = Math.min(...progressVals);
+const maxProgress = Math.max(...progressVals);
 
 const minLat = Math.min(...lats);
 const maxLat = Math.max(...lats);
@@ -109,9 +115,13 @@ const rawLatSpan = (maxLat - minLat) * (1 + 2 * PAD_SHARE);
 const rawGroundAspect = (rawLonSpan * cosMeanLat) / rawLatSpan;
 
 const finalLonSpan =
-  rawGroundAspect >= targetAspect ? rawLonSpan : (rawLatSpan * targetAspect) / cosMeanLat;
+  rawGroundAspect >= targetAspect
+    ? rawLonSpan
+    : (rawLatSpan * targetAspect) / cosMeanLat;
 const finalLatSpan =
-  rawGroundAspect >= targetAspect ? (rawLonSpan * cosMeanLat) / targetAspect : rawLatSpan;
+  rawGroundAspect >= targetAspect
+    ? (rawLonSpan * cosMeanLat) / targetAspect
+    : rawLatSpan;
 
 const centerLon = (minLon + maxLon) / 2;
 const centerLat = (minLat + maxLat) / 2;
@@ -120,56 +130,29 @@ const xAxisMax = centerLon + finalLonSpan / 2;
 const yAxisMin = centerLat - finalLatSpan / 2;
 const yAxisMax = centerLat + finalLatSpan / 2;
 
-// Parse sequential palette stops for smooth segment interpolation
-const seqStops = t.seq.map((hex: string) => {
-  const c = hex.replace("#", "");
-  return [
-    parseInt(c.slice(0, 2), 16),
-    parseInt(c.slice(2, 4), 16),
-    parseInt(c.slice(4, 6), 16),
-  ];
-});
-
-const segmentColors: string[] = [];
-for (let i = 0; i < sortedRows.length; i++) {
-  const u = Math.max(0, Math.min(1, progressVals[i]));
-  const scaled = u * (seqStops.length - 1);
-  const idx = Math.min(seqStops.length - 2, Math.floor(scaled));
-  const frac = scaled - idx;
-  const c0 = seqStops[idx];
-  const c1 = seqStops[idx + 1];
-  const r = Math.round(c0[0] + (c1[0] - c0[0]) * frac);
-  const g = Math.round(c0[1] + (c1[1] - c0[1]) * frac);
-  const b = Math.round(c0[2] + (c1[2] - c0[2]) * frac);
-  segmentColors.push(`rgb(${r}, ${g}, ${b})`);
-}
-
 const startColor = t.palette[0];
 const endColor = t.palette[4];
 
 function RouteOverlay() {
-  const { left, top, width, height } = useDrawingArea();
-  const xScale = useXScale();
-  const yScale = useYScale();
+  const { left, top, width } = useDrawingArea();
+  const xScale = useXScale("lon") as (v: number) => number;
+  const yScale = useYScale("lat") as (v: number) => number;
+  const zColorScale = useZColorScale("seqAxis") as (v: number) => string;
 
   const pts = sortedRows.map((row) => ({
-    x: Number(xScale(Number(row[LON_COL]))),
-    y: Number(yScale(Number(row[LAT_COL]))),
-    landmark: String(row[LANDMARK_COL]),
-    lat: Number(row[LAT_COL]),
-    lon: Number(row[LON_COL]),
+    x: xScale(Number(row[LON])),
+    y: yScale(Number(row[LAT])),
+    progress: Number(row[PROGRESS]),
+    color: zColorScale(Number(row[PROGRESS])),
+    landmark: String(row[LANDMARK]),
+    lat: Number(row[LAT]),
+    lon: Number(row[LON]),
   }));
 
   const startPt = pts[0];
   const endPt = pts[pts.length - 1];
-
-  // Key intermediate landmarks to label without clutter
-  const keyLandmarks = [
-    { idx: 4 * STEPS_PER_LEG, label: "Vondelpark West", dx: -14, dy: -12, anchor: "end" as const },
-    { idx: 7 * STEPS_PER_LEG, label: "Rijksmuseum", dx: 14, dy: 18, anchor: "start" as const },
-    { idx: 10 * STEPS_PER_LEG, label: "Waterlooplein", dx: 14, dy: 6, anchor: "start" as const },
-    { idx: 13 * STEPS_PER_LEG, label: "Jordaan", dx: -14, dy: -10, anchor: "end" as const },
-  ];
+  const startLabel = startPt.landmark || "Start";
+  const endLabel = endPt.landmark || "End";
 
   // Compass rose in top-right corner of drawing area
   const roseCx = left + width - 38;
@@ -216,7 +199,7 @@ function RouteOverlay() {
             y1={p.y}
             x2={next.x}
             y2={next.y}
-            stroke={segmentColors[i]}
+            stroke={p.color}
             strokeWidth={4}
             strokeLinecap="round"
           />
@@ -234,7 +217,7 @@ function RouteOverlay() {
           <g key={`arrow-${i}`} transform={`translate(${mx}, ${my}) rotate(${angleDeg})`}>
             <polygon
               points="7,0 -6,-5.5 -3,0 -6,5.5"
-              fill={segmentColors[i]}
+              fill={p.color}
               stroke={t.pageBg}
               strokeWidth={1.5}
               strokeLinejoin="round"
@@ -245,30 +228,33 @@ function RouteOverlay() {
 
       {/* Waypoint dots */}
       {pts.slice(1, -1).map((p, i) => {
-        const isKeyframe = (i + 1) % STEPS_PER_LEG === 0;
+        const isLandmark = p.landmark !== "";
         return (
           <circle
             key={`wp-${i}`}
             cx={p.x}
             cy={p.y}
-            r={isKeyframe ? 4.8 : 2.8}
-            fill={segmentColors[i + 1]}
+            r={isLandmark ? 4.8 : 2.8}
+            fill={p.color}
             stroke={t.pageBg}
-            strokeWidth={isKeyframe ? 1.8 : 1}
+            strokeWidth={isLandmark ? 1.8 : 1}
           />
         );
       })}
 
-      {/* Intermediate landmark labels */}
-      {keyLandmarks.map((lm) => {
-        const pt = pts[lm.idx];
-        if (!pt) return null;
+      {/* Intermediate landmark labels derived from LANDMARK column */}
+      {pts.slice(1, -1).map((p, i) => {
+        if (!p.landmark) return null;
+        const isLeftOfCenter = p.lon < centerLon;
+        const dx = isLeftOfCenter ? -14 : 14;
+        const dy = p.lat < centerLat ? 16 : -10;
+        const anchor = isLeftOfCenter ? "end" : "start";
         return (
           <text
-            key={lm.label}
-            x={pt.x + lm.dx}
-            y={pt.y + lm.dy}
-            textAnchor={lm.anchor}
+            key={`lm-${i}`}
+            x={p.x + dx}
+            y={p.y + dy}
+            textAnchor={anchor}
             fontSize={14}
             fontWeight={500}
             fill={t.inkSoft}
@@ -276,7 +262,7 @@ function RouteOverlay() {
             strokeWidth={3.5}
             paintOrder="stroke"
           >
-            {lm.label}
+            {p.landmark}
           </text>
         );
       })}
@@ -301,7 +287,7 @@ function RouteOverlay() {
         strokeWidth={4}
         paintOrder="stroke"
       >
-        Start · Dam Square
+        {startLabel}
       </text>
 
       {/* End marker (square) and callout */}
@@ -326,7 +312,7 @@ function RouteOverlay() {
         strokeWidth={4}
         paintOrder="stroke"
       >
-        End · Amsterdam Centraal
+        {endLabel}
       </text>
 
       {/* Geographic compass rose */}
@@ -358,12 +344,12 @@ function RouteOverlay() {
       {/* Right-side legend panel */}
       <g transform={`translate(${legX}, ${legY})`}>
         <text x={0} y={14} fontSize={15} fontWeight={700} fill={t.ink}>
-          Route Endpoints
+          Route endpoints
         </text>
         <g transform="translate(0, 34)">
           <circle cx={9} cy={0} r={8} fill={startColor} stroke={t.pageBg} strokeWidth={2} />
           <text x={26} y={5} fontSize={14} fill={t.ink}>
-            Start · Dam Square
+            {startLabel}
           </text>
         </g>
         <g transform="translate(0, 64)">
@@ -378,22 +364,22 @@ function RouteOverlay() {
             strokeWidth={2}
           />
           <text x={26} y={5} fontSize={14} fill={t.ink}>
-            End · Centraal Station
+            {endLabel}
           </text>
         </g>
         <g transform="translate(0, 94)">
           <polygon
             points="15,0 3,-5 6,0 3,5"
-            fill={seqStops ? segmentColors[Math.floor(segmentColors.length / 2)] : t.palette[0]}
+            fill={pts[Math.floor(pts.length / 2)].color}
           />
           <text x={26} y={5} fontSize={14} fill={t.inkSoft}>
-            Travel direction ({TOTAL_WAYPOINTS} GPS pts)
+            {`Travel direction (${nWaypoints} waypoints)`}
           </text>
         </g>
 
         <g transform="translate(0, 140)">
           <text x={0} y={0} fontSize={15} fontWeight={700} fill={t.ink}>
-            {PROGRESS_COL}
+            {PROGRESS}
           </text>
           <rect
             x={0}
@@ -406,10 +392,10 @@ function RouteOverlay() {
             strokeWidth={1}
           />
           <text x={0} y={44} fontSize={14} fill={t.inkSoft}>
-            09:00 (Early)
+            {`${minProgress.toFixed(2)} (Early)`}
           </text>
           <text x={barW} y={44} textAnchor="end" fontSize={14} fill={t.inkSoft}>
-            10:30 (Late)
+            {`${maxProgress.toFixed(2)} (Late)`}
           </text>
         </g>
       </g>
@@ -455,10 +441,10 @@ export default function Chart() {
             min: xAxisMin,
             max: xAxisMax,
             height: X_AXIS_HEIGHT,
-            label: LON_COL,
+            label: LON,
             labelStyle: { fontSize: 16, fill: t.ink, fontWeight: 500 },
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-            valueFormatter: (v: number) => `${v.toFixed(3)}°E`,
+            valueFormatter: (v: number) => `${v.toFixed(3)}°`,
           },
         ]}
         yAxis={[
@@ -468,10 +454,21 @@ export default function Chart() {
             min: yAxisMin,
             max: yAxisMax,
             width: Y_AXIS_WIDTH,
-            label: LAT_COL,
+            label: LAT,
             labelStyle: { fontSize: 16, fill: t.ink, fontWeight: 500 },
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-            valueFormatter: (v: number) => `${v.toFixed(3)}°N`,
+            valueFormatter: (v: number) => `${v.toFixed(3)}°`,
+          },
+        ]}
+        zAxis={[
+          {
+            id: "seqAxis",
+            min: minProgress,
+            max: maxProgress,
+            colorMap: {
+              type: "continuous",
+              color: [t.seq[0], t.seq[t.seq.length - 1]],
+            },
           },
         ]}
       >
