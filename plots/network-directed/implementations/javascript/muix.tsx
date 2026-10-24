@@ -1,147 +1,348 @@
 // anyplot.ai
 // network-directed: Directed Network Graph
-// Library: muix 7.29.1 | JavaScript 22.23.2
+// Library: muix 9.2.1 | JavaScript 22.23.2
 // Quality: 91/100 | Created: 2026-09-05
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
-import { ScatterPlot } from "@mui/x-charts/ScatterChart";
-import { ChartsLegend } from "@mui/x-charts/ChartsLegend";
-import { useXScale, useYScale, useDrawingArea } from "@mui/x-charts/hooks";
+
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
+import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Module dependency graph (in-memory, deterministic) ---------------------
-// A layered "build order" layout: layer 0 (foundation) has no dependencies,
-// each later layer imports from earlier ones. x = layer index, y = position
-// within the layer (centered so layers with fewer modules stay balanced).
-const LAYERS = [
-  { id: "foundation", label: "Foundation", color: t.palette[0] },
-  { id: "core", label: "Core Services", color: t.palette[1] },
-  { id: "domain", label: "Domain Logic", color: t.palette[2] },
-  { id: "api", label: "API Layer", color: t.palette[3] },
-  { id: "ui", label: "UI & Apps", color: t.palette[5] }, // skip palette[4] — reserved matte-red for the flagged cycle below
-];
-
-const RAW_NODES = [
-  { id: "utils", label: "utils", layer: 0, group: "foundation" },
-  { id: "config", label: "config", layer: 0, group: "foundation" },
-  { id: "logger", label: "logger", layer: 1, group: "core" },
-  { id: "auth", label: "auth", layer: 1, group: "core" },
-  { id: "cache", label: "cache", layer: 1, group: "core" },
-  { id: "orders", label: "orders", layer: 2, group: "domain" },
-  { id: "inventory", label: "inventory", layer: 2, group: "domain" },
-  { id: "billing", label: "billing", layer: 2, group: "domain" },
-  { id: "rest-api", label: "rest-api", layer: 3, group: "api" },
-  { id: "graphql-api", label: "graphql-api", layer: 3, group: "api" },
-  { id: "web-app", label: "web-app", layer: 4, group: "ui" },
-  { id: "mobile-app", label: "mobile-app", layer: 4, group: "ui" },
-  { id: "admin-panel", label: "admin-panel", layer: 4, group: "ui" },
-];
-
-// Center each layer's nodes vertically around y = 0.
-const layerCounts = new Map();
-RAW_NODES.forEach((n) => layerCounts.set(n.layer, (layerCounts.get(n.layer) ?? 0) + 1));
-const layerSeen = new Map();
-const NODES = RAW_NODES.map((n) => {
-  const seen = layerSeen.get(n.layer) ?? 0;
-  layerSeen.set(n.layer, seen + 1);
-  const count = layerCounts.get(n.layer);
-  return { ...n, x: n.layer, y: seen - (count - 1) / 2 };
-});
-const NODE_BY_ID = new Map(NODES.map((n) => [n.id, n]));
-
-// Edges read "source depends on / imports target" — the arrow points from the
-// importer to the imported module (build order flows right to left). The
-// third tuple entry is the optional spec `weight` field (import call count),
-// which drives arrow/stroke thickness below.
-const RAW_EDGES = [
-  ["config", "utils", 2],
-  ["logger", "utils", 3],
-  ["auth", "utils", 2],
-  ["auth", "config", 1],
-  ["cache", "utils", 2],
-  ["orders", "auth", 2],
-  ["orders", "logger", 3],
-  ["orders", "cache", 2],
-  ["inventory", "cache", 2],
-  ["inventory", "logger", 2],
-  ["billing", "auth", 2],
-  ["billing", "orders", 1],
-  ["rest-api", "orders", 3],
-  ["rest-api", "inventory", 2],
-  ["rest-api", "billing", 2],
-  ["graphql-api", "orders", 3],
-  ["graphql-api", "billing", 1],
-  ["web-app", "rest-api", 3],
-  ["web-app", "graphql-api", 2],
-  ["mobile-app", "graphql-api", 2],
-  ["admin-panel", "rest-api", 2],
-  ["admin-panel", "inventory", 1],
-  // "config" is Foundation yet reaches up into Core — combined with the
-  // existing auth -> config edge this closes a 2-cycle: a real circular
-  // dependency, flagged in the semantic error red instead of the group color.
-  ["config", "auth", 1],
-];
-const EDGES = RAW_EDGES.map(([source, target, weight]) => ({
-  source,
-  target,
-  weight,
-  flagged: source === "config" && target === "auth",
-}));
-const EDGE_KEYS = new Set(EDGES.map((e) => `${e.source}>${e.target}`));
-const isBidirectional = (e) => EDGE_KEYS.has(`${e.target}>${e.source}`);
-
+// Constants
+const TITLE = "network-directed · javascript · muix · anyplot.ai";
+const TITLE_HEIGHT = 64;
+const MARGIN = { top: 28, right: 260, bottom: 32, left: 44 };
 const NODE_RADIUS = 30;
-const END_GAP = 6; // leaves room for the arrowhead before it touches the node
-const FLAG_COLOR = "#AE3030"; // Imprint palette position 5 — semantic anchor for a real bug
+const END_GAP = 6;
+const PAD_X_SHARE = 0.14;
+const PAD_Y_SHARE = 0.25;
 
-function edgePath(e, xScale, yScale) {
-  const s = NODE_BY_ID.get(e.source);
-  const d = NODE_BY_ID.get(e.target);
-  const x1 = xScale(s.x);
-  const y1 = yScale(s.y);
-  const x2 = xScale(d.x);
-  const y2 = yScale(d.y);
+// Data
+const SOURCE_COL = "Importer Module";
+const SOURCE_LAYER_COL = "Importer Layer";
+const SOURCE_DEPTH_COL = "Importer Depth";
+const TARGET_COL = "Imported Module";
+const TARGET_LAYER_COL = "Imported Layer";
+const TARGET_DEPTH_COL = "Imported Depth";
+const WEIGHT_COL = "Import Calls";
 
-  if (!isBidirectional(e)) {
-    const dx = x2 - x1;
-    const dy = y2 - y1;
-    const dist = Math.hypot(dx, dy) || 1;
-    const ex = x2 - (dx / dist) * (NODE_RADIUS + END_GAP);
-    const ey = y2 - (dy / dist) * (NODE_RADIUS + END_GAP);
-    return `M ${x1} ${y1} L ${ex} ${ey}`;
-  }
+const DATA: Array<Record<string, string | number>> = [
+  {
+    [SOURCE_COL]: "config",
+    [SOURCE_LAYER_COL]: "Foundation",
+    [SOURCE_DEPTH_COL]: 0,
+    [TARGET_COL]: "utils",
+    [TARGET_LAYER_COL]: "Foundation",
+    [TARGET_DEPTH_COL]: 0,
+    [WEIGHT_COL]: 2,
+  },
+  {
+    [SOURCE_COL]: "logger",
+    [SOURCE_LAYER_COL]: "Core Services",
+    [SOURCE_DEPTH_COL]: 1,
+    [TARGET_COL]: "utils",
+    [TARGET_LAYER_COL]: "Foundation",
+    [TARGET_DEPTH_COL]: 0,
+    [WEIGHT_COL]: 3,
+  },
+  {
+    [SOURCE_COL]: "auth",
+    [SOURCE_LAYER_COL]: "Core Services",
+    [SOURCE_DEPTH_COL]: 1,
+    [TARGET_COL]: "utils",
+    [TARGET_LAYER_COL]: "Foundation",
+    [TARGET_DEPTH_COL]: 0,
+    [WEIGHT_COL]: 2,
+  },
+  {
+    [SOURCE_COL]: "auth",
+    [SOURCE_LAYER_COL]: "Core Services",
+    [SOURCE_DEPTH_COL]: 1,
+    [TARGET_COL]: "config",
+    [TARGET_LAYER_COL]: "Foundation",
+    [TARGET_DEPTH_COL]: 0,
+    [WEIGHT_COL]: 1,
+  },
+  {
+    [SOURCE_COL]: "cache",
+    [SOURCE_LAYER_COL]: "Core Services",
+    [SOURCE_DEPTH_COL]: 1,
+    [TARGET_COL]: "utils",
+    [TARGET_LAYER_COL]: "Foundation",
+    [TARGET_DEPTH_COL]: 0,
+    [WEIGHT_COL]: 2,
+  },
+  {
+    [SOURCE_COL]: "orders",
+    [SOURCE_LAYER_COL]: "Domain Logic",
+    [SOURCE_DEPTH_COL]: 2,
+    [TARGET_COL]: "auth",
+    [TARGET_LAYER_COL]: "Core Services",
+    [TARGET_DEPTH_COL]: 1,
+    [WEIGHT_COL]: 2,
+  },
+  {
+    [SOURCE_COL]: "orders",
+    [SOURCE_LAYER_COL]: "Domain Logic",
+    [SOURCE_DEPTH_COL]: 2,
+    [TARGET_COL]: "logger",
+    [TARGET_LAYER_COL]: "Core Services",
+    [TARGET_DEPTH_COL]: 1,
+    [WEIGHT_COL]: 3,
+  },
+  {
+    [SOURCE_COL]: "orders",
+    [SOURCE_LAYER_COL]: "Domain Logic",
+    [SOURCE_DEPTH_COL]: 2,
+    [TARGET_COL]: "cache",
+    [TARGET_LAYER_COL]: "Core Services",
+    [TARGET_DEPTH_COL]: 1,
+    [WEIGHT_COL]: 2,
+  },
+  {
+    [SOURCE_COL]: "inventory",
+    [SOURCE_LAYER_COL]: "Domain Logic",
+    [SOURCE_DEPTH_COL]: 2,
+    [TARGET_COL]: "cache",
+    [TARGET_LAYER_COL]: "Core Services",
+    [TARGET_DEPTH_COL]: 1,
+    [WEIGHT_COL]: 2,
+  },
+  {
+    [SOURCE_COL]: "inventory",
+    [SOURCE_LAYER_COL]: "Domain Logic",
+    [SOURCE_DEPTH_COL]: 2,
+    [TARGET_COL]: "logger",
+    [TARGET_LAYER_COL]: "Core Services",
+    [TARGET_DEPTH_COL]: 1,
+    [WEIGHT_COL]: 2,
+  },
+  {
+    [SOURCE_COL]: "billing",
+    [SOURCE_LAYER_COL]: "Domain Logic",
+    [SOURCE_DEPTH_COL]: 2,
+    [TARGET_COL]: "auth",
+    [TARGET_LAYER_COL]: "Core Services",
+    [TARGET_DEPTH_COL]: 1,
+    [WEIGHT_COL]: 2,
+  },
+  {
+    [SOURCE_COL]: "billing",
+    [SOURCE_LAYER_COL]: "Domain Logic",
+    [SOURCE_DEPTH_COL]: 2,
+    [TARGET_COL]: "orders",
+    [TARGET_LAYER_COL]: "Domain Logic",
+    [TARGET_DEPTH_COL]: 2,
+    [WEIGHT_COL]: 1,
+  },
+  {
+    [SOURCE_COL]: "rest-api",
+    [SOURCE_LAYER_COL]: "API Layer",
+    [SOURCE_DEPTH_COL]: 3,
+    [TARGET_COL]: "orders",
+    [TARGET_LAYER_COL]: "Domain Logic",
+    [TARGET_DEPTH_COL]: 2,
+    [WEIGHT_COL]: 3,
+  },
+  {
+    [SOURCE_COL]: "rest-api",
+    [SOURCE_LAYER_COL]: "API Layer",
+    [SOURCE_DEPTH_COL]: 3,
+    [TARGET_COL]: "inventory",
+    [TARGET_LAYER_COL]: "Domain Logic",
+    [TARGET_DEPTH_COL]: 2,
+    [WEIGHT_COL]: 2,
+  },
+  {
+    [SOURCE_COL]: "rest-api",
+    [SOURCE_LAYER_COL]: "API Layer",
+    [SOURCE_DEPTH_COL]: 3,
+    [TARGET_COL]: "billing",
+    [TARGET_LAYER_COL]: "Domain Logic",
+    [TARGET_DEPTH_COL]: 2,
+    [WEIGHT_COL]: 2,
+  },
+  {
+    [SOURCE_COL]: "graphql-api",
+    [SOURCE_LAYER_COL]: "API Layer",
+    [SOURCE_DEPTH_COL]: 3,
+    [TARGET_COL]: "orders",
+    [TARGET_LAYER_COL]: "Domain Logic",
+    [TARGET_DEPTH_COL]: 2,
+    [WEIGHT_COL]: 3,
+  },
+  {
+    [SOURCE_COL]: "graphql-api",
+    [SOURCE_LAYER_COL]: "API Layer",
+    [SOURCE_DEPTH_COL]: 3,
+    [TARGET_COL]: "billing",
+    [TARGET_LAYER_COL]: "Domain Logic",
+    [TARGET_DEPTH_COL]: 2,
+    [WEIGHT_COL]: 1,
+  },
+  {
+    [SOURCE_COL]: "web-app",
+    [SOURCE_LAYER_COL]: "UI & Apps",
+    [SOURCE_DEPTH_COL]: 4,
+    [TARGET_COL]: "rest-api",
+    [TARGET_LAYER_COL]: "API Layer",
+    [TARGET_DEPTH_COL]: 3,
+    [WEIGHT_COL]: 3,
+  },
+  {
+    [SOURCE_COL]: "web-app",
+    [SOURCE_LAYER_COL]: "UI & Apps",
+    [SOURCE_DEPTH_COL]: 4,
+    [TARGET_COL]: "graphql-api",
+    [TARGET_LAYER_COL]: "API Layer",
+    [TARGET_DEPTH_COL]: 3,
+    [WEIGHT_COL]: 2,
+  },
+  {
+    [SOURCE_COL]: "mobile-app",
+    [SOURCE_LAYER_COL]: "UI & Apps",
+    [SOURCE_DEPTH_COL]: 4,
+    [TARGET_COL]: "graphql-api",
+    [TARGET_LAYER_COL]: "API Layer",
+    [TARGET_DEPTH_COL]: 3,
+    [WEIGHT_COL]: 2,
+  },
+  {
+    [SOURCE_COL]: "admin-panel",
+    [SOURCE_LAYER_COL]: "UI & Apps",
+    [SOURCE_DEPTH_COL]: 4,
+    [TARGET_COL]: "rest-api",
+    [TARGET_LAYER_COL]: "API Layer",
+    [TARGET_DEPTH_COL]: 3,
+    [WEIGHT_COL]: 2,
+  },
+  {
+    [SOURCE_COL]: "admin-panel",
+    [SOURCE_LAYER_COL]: "UI & Apps",
+    [SOURCE_DEPTH_COL]: 4,
+    [TARGET_COL]: "inventory",
+    [TARGET_LAYER_COL]: "Domain Logic",
+    [TARGET_DEPTH_COL]: 2,
+    [WEIGHT_COL]: 1,
+  },
+  {
+    [SOURCE_COL]: "config",
+    [SOURCE_LAYER_COL]: "Foundation",
+    [SOURCE_DEPTH_COL]: 0,
+    [TARGET_COL]: "auth",
+    [TARGET_LAYER_COL]: "Core Services",
+    [TARGET_DEPTH_COL]: 1,
+    [WEIGHT_COL]: 1,
+  },
+];
 
-  // Bow bidirectional pairs apart (see spec note on curved edges) so the two
-  // opposing arrows never sit exactly on top of one another. The normal must
-  // be computed from a direction-independent (canonical) chord — otherwise it
-  // flips sign along with the edge's own direction and the two bows cancel
-  // out instead of separating.
-  const mx = (x1 + x2) / 2;
-  const my = (y1 + y2) / 2;
-  const canonicalFrom = e.source < e.target ? s : d;
-  const canonicalTo = e.source < e.target ? d : s;
-  const cdx = xScale(canonicalTo.x) - xScale(canonicalFrom.x);
-  const cdy = yScale(canonicalTo.y) - yScale(canonicalFrom.y);
-  const cdist = Math.hypot(cdx, cdy) || 1;
-  const nx = -cdy / cdist;
-  const ny = cdx / cdist;
-  const sign = e.source < e.target ? 1 : -1;
-  const bow = Math.max(55, cdist * 0.4) * sign;
-  const cx = mx + nx * bow;
-  const cy = my + ny * bow;
-  // Tangent at the curve's end is exactly the control-point → end direction.
-  const tdx = x2 - cx;
-  const tdy = y2 - cy;
-  const tdist = Math.hypot(tdx, tdy) || 1;
-  const ex = x2 - (tdx / tdist) * (NODE_RADIUS + END_GAP);
-  const ey = y2 - (tdy / tdist) * (NODE_RADIUS + END_GAP);
-  return `M ${x1} ${y1} Q ${cx} ${cy} ${ex} ${ey}`;
+// Derive unique modules and architectural layers across both endpoint columns
+interface ModuleNode {
+  id: string;
+  layer: string;
+  depth: number;
+  x: number;
+  y: number;
 }
 
-// --- Edges layer (drawn first, so nodes sit visually on top) ----------------
-function GraphEdges() {
+const rawModules: Array<{ id: string; layer: string; depth: number }> = [];
+const seenModules = new Set<string>();
+const layerNames: string[] = [];
+
+for (let i = 0; i < DATA.length; i++) {
+  const row = DATA[i];
+  const tgt = String(row[TARGET_COL]);
+  const tgtLayer = String(row[TARGET_LAYER_COL]);
+  const tgtDepth = Number(row[TARGET_DEPTH_COL]);
+  if (!seenModules.has(tgt)) {
+    seenModules.add(tgt);
+    rawModules.push({ id: tgt, layer: tgtLayer, depth: tgtDepth });
+  }
+  if (!layerNames.includes(tgtLayer)) layerNames.push(tgtLayer);
+
+  const src = String(row[SOURCE_COL]);
+  const srcLayer = String(row[SOURCE_LAYER_COL]);
+  const srcDepth = Number(row[SOURCE_DEPTH_COL]);
+  if (!seenModules.has(src)) {
+    seenModules.add(src);
+    rawModules.push({ id: src, layer: srcLayer, depth: srcDepth });
+  }
+  if (!layerNames.includes(srcLayer)) layerNames.push(srcLayer);
+}
+
+// Reserve palette[4] (semantic error red) for circular back-edge; assign unused palette slots in order
+const flagColor = t.palette[4];
+const unusedPaletteSlots = [t.palette[0], t.palette[1], t.palette[2], t.palette[3], t.palette[5]];
+const layerColors = new Map<string, string>();
+for (let i = 0; i < layerNames.length; i++) {
+  layerColors.set(layerNames[i], unusedPaletteSlots[i]);
+}
+
+// Group modules by depth and center vertically within each layer
+const depthCounts = new Map<number, number>();
+for (let i = 0; i < rawModules.length; i++) {
+  const d = rawModules[i].depth;
+  depthCounts.set(d, (depthCounts.get(d) ?? 0) + 1);
+}
+
+const depthSeen = new Map<number, number>();
+const nodes: ModuleNode[] = [];
+const nodeById = new Map<string, ModuleNode>();
+
+for (let i = 0; i < rawModules.length; i++) {
+  const m = rawModules[i];
+  const seen = depthSeen.get(m.depth) ?? 0;
+  depthSeen.set(m.depth, seen + 1);
+  const count = depthCounts.get(m.depth) ?? 1;
+  const node: ModuleNode = {
+    id: m.id,
+    layer: m.layer,
+    depth: m.depth,
+    x: m.depth,
+    y: seen - (count - 1) / 2,
+  };
+  nodes.push(node);
+  nodeById.set(node.id, node);
+}
+
+const edgeKeys = new Set<string>();
+for (let i = 0; i < DATA.length; i++) {
+  edgeKeys.add(`${DATA[i][SOURCE_COL]}>${DATA[i][TARGET_COL]}`);
+}
+
+// Rule-based detection of bidirectional pairs and upward dependency violations (sourceDepth < targetDepth)
+const edges = DATA.map((row) => {
+  const source = String(row[SOURCE_COL]);
+  const target = String(row[TARGET_COL]);
+  const weight = Number(row[WEIGHT_COL]);
+  const srcDepth = Number(row[SOURCE_DEPTH_COL]);
+  const tgtDepth = Number(row[TARGET_DEPTH_COL]);
+  const bidirectional = edgeKeys.has(`${target}>${source}`);
+  const flagged = srcDepth < tgtDepth;
+  return { source, target, weight, bidirectional, flagged };
+});
+
+const xs = nodes.map((n) => n.x);
+const ys = nodes.map((n) => n.y);
+const minX = Math.min(...xs);
+const maxX = Math.max(...xs);
+const minY = Math.min(...ys);
+const maxY = Math.max(...ys);
+const xPad = (maxX - minX) * PAD_X_SHARE;
+const yPad = (maxY - minY) * PAD_Y_SHARE;
+const xAxisMin = minX - xPad;
+const xAxisMax = maxX + xPad;
+const yAxisMin = minY - yPad;
+const yAxisMax = maxY + yPad;
+
+function DirectedNetworkOverlay() {
+  const { left, top, width } = useDrawingArea();
   const xScale = useXScale();
   const yScale = useYScale();
+
+  const legendX = left + width + 36;
+  const legendY = top + 12;
+
   return (
     <g>
       <defs>
@@ -167,55 +368,82 @@ function GraphEdges() {
           markerUnits="userSpaceOnUse"
           orient="auto-start-reverse"
         >
-          <path d="M0,0 L12,5 L0,10 Z" fill={FLAG_COLOR} />
+          <path d="M0,0 L12,5 L0,10 Z" fill={flagColor} />
         </marker>
       </defs>
-      {EDGES.map((e, i) => (
-        <path
-          key={`${e.source}-${e.target}-${i}`}
-          d={edgePath(e, xScale, yScale)}
-          fill="none"
-          stroke={e.flagged ? FLAG_COLOR : t.inkSoft}
-          strokeWidth={e.flagged ? 3.5 : 1.3 + e.weight * 0.5}
-          strokeOpacity={e.flagged ? 0.95 : 0.68}
-          markerEnd={e.flagged ? "url(#np-arrow-flag)" : "url(#np-arrow)"}
-        />
-      ))}
-    </g>
-  );
-}
 
-// --- Node markers — a custom ScatterPlot scatter slot so each circle gets a
-// page-background stroke ring for definition where edges cross underneath. --
-function NodeMarker({ series, xScale, yScale, color, colorGetter, markerSize }) {
-  return (
-    <g>
-      {series.data.map((d, i) => (
+      {/* Directed edges with arrowheads stopping at target node rim */}
+      {edges.map((e, i) => {
+        const s = nodeById.get(e.source);
+        const d = nodeById.get(e.target);
+        if (!s || !d) return null;
+        const x1 = Number(xScale(s.x));
+        const y1 = Number(yScale(s.y));
+        const x2 = Number(xScale(d.x));
+        const y2 = Number(yScale(d.y));
+
+        let pathD = "";
+        if (!e.bidirectional) {
+          const dx = x2 - x1;
+          const dy = y2 - y1;
+          const dist = Math.hypot(dx, dy) || 1;
+          const ex = x2 - (dx / dist) * (NODE_RADIUS + END_GAP);
+          const ey = y2 - (dy / dist) * (NODE_RADIUS + END_GAP);
+          pathD = `M ${x1} ${y1} L ${ex} ${ey}`;
+        } else {
+          const mx = (x1 + x2) / 2;
+          const my = (y1 + y2) / 2;
+          const canonFrom = e.source < e.target ? s : d;
+          const canonTo = e.source < e.target ? d : s;
+          const cdx = Number(xScale(canonTo.x)) - Number(xScale(canonFrom.x));
+          const cdy = Number(yScale(canonTo.y)) - Number(yScale(canonFrom.y));
+          const cdist = Math.hypot(cdx, cdy) || 1;
+          const nx = -cdy / cdist;
+          const ny = cdx / cdist;
+          const sign = e.source < e.target ? 1 : -1;
+          const bow = Math.max(55, cdist * 0.4) * sign;
+          const cx = mx + nx * bow;
+          const cy = my + ny * bow;
+          const tdx = x2 - cx;
+          const tdy = y2 - cy;
+          const tdist = Math.hypot(tdx, tdy) || 1;
+          const ex = x2 - (tdx / tdist) * (NODE_RADIUS + END_GAP);
+          const ey = y2 - (tdy / tdist) * (NODE_RADIUS + END_GAP);
+          pathD = `M ${x1} ${y1} Q ${cx} ${cy} ${ex} ${ey}`;
+        }
+
+        return (
+          <path
+            key={`${e.source}-${e.target}-${i}`}
+            d={pathD}
+            fill="none"
+            stroke={e.flagged ? flagColor : t.inkSoft}
+            strokeWidth={e.flagged ? 3.5 : 1.3 + e.weight * 0.5}
+            strokeOpacity={e.flagged ? 0.95 : 0.68}
+            markerEnd={e.flagged ? "url(#np-arrow-flag)" : "url(#np-arrow)"}
+          />
+        );
+      })}
+
+      {/* Node circles */}
+      {nodes.map((n) => (
         <circle
-          key={d.id ?? i}
-          cx={xScale(d.x)}
-          cy={yScale(d.y)}
-          r={markerSize}
-          fill={colorGetter ? colorGetter(i) : color}
+          key={`node-${n.id}`}
+          cx={Number(xScale(n.x))}
+          cy={Number(yScale(n.y))}
+          r={NODE_RADIUS}
+          fill={layerColors.get(n.layer) ?? t.palette[0]}
           stroke={t.pageBg}
           strokeWidth={3}
         />
       ))}
-    </g>
-  );
-}
 
-// --- Node labels (drawn last, always legible over edges/markers) -----------
-function NodeLabels() {
-  const xScale = useXScale();
-  const yScale = useYScale();
-  return (
-    <g>
-      {NODES.map((n) => (
+      {/* Node labels */}
+      {nodes.map((n) => (
         <text
-          key={n.id}
-          x={xScale(n.x)}
-          y={yScale(n.y) + NODE_RADIUS + 24}
+          key={`label-${n.id}`}
+          x={Number(xScale(n.x))}
+          y={Number(yScale(n.y)) + NODE_RADIUS + 22}
           textAnchor="middle"
           fontSize={15}
           fontWeight={500}
@@ -224,50 +452,61 @@ function NodeLabels() {
           strokeWidth={4}
           paintOrder="stroke"
         >
-          {n.label}
+          {n.id}
         </text>
       ))}
+
+      {/* Right-side architectural layer and circular dependency legend */}
+      <g transform={`translate(${legendX}, ${legendY})`}>
+        <text x={0} y={14} fontSize={15} fontWeight={700} fill={t.ink}>
+          Architecture Layer
+        </text>
+        {layerNames.map((lName, idx) => (
+          <g key={lName} transform={`translate(0, ${38 + idx * 32})`}>
+            <circle cx={9} cy={0} r={9} fill={layerColors.get(lName) ?? t.palette[0]} />
+            <text x={28} y={5} fontSize={15} fill={t.ink}>
+              {lName}
+            </text>
+          </g>
+        ))}
+
+        <g transform={`translate(0, ${52 + layerNames.length * 32})`}>
+          <line
+            x1={0}
+            y1={0}
+            x2={32}
+            y2={0}
+            stroke={flagColor}
+            strokeWidth={3.5}
+            markerEnd="url(#np-arrow-flag)"
+          />
+          <text x={44} y={5} fontSize={14} fontWeight={600} fill={t.ink}>
+            Circular dependency
+          </text>
+        </g>
+
+        <g transform={`translate(0, ${92 + layerNames.length * 32})`}>
+          <text x={0} y={0} fontSize={14} fill={t.inkSoft}>
+            Edge width = {WEIGHT_COL}
+          </text>
+        </g>
+      </g>
     </g>
   );
 }
 
-// --- Manual note explaining the flagged cycle, placed under the group legend
-function CircularDependencyNote() {
-  const drawingArea = useDrawingArea();
-  const x = drawingArea.left + drawingArea.width + 46;
-  const y = drawingArea.top + LAYERS.length * 30 + 58;
-  return (
-    <g>
-      <line x1={x} y1={y} x2={x + 32} y2={y} stroke={FLAG_COLOR} strokeWidth={3.5} markerEnd="url(#np-arrow-flag)" />
-      <text x={x + 44} y={y + 5} fontSize={14} fill={t.ink}>
-        Circular dependency
-      </text>
-    </g>
-  );
-}
-
-const TITLE = "network-directed · javascript · muix · anyplot.ai";
-const TITLE_HEIGHT = 70;
-const MARGIN = { top: 30, right: 260, bottom: 30, left: 40 };
-
-const series = LAYERS.map((g) => ({
-  type: "scatter",
-  id: g.id,
-  label: g.label,
-  color: g.color,
-  markerSize: NODE_RADIUS,
-  data: NODES.filter((n) => n.group === g.id).map((n) => ({ x: n.x, y: n.y, id: n.id })),
-}));
-
-// --- Chart (default-exported component — the harness mounts it) -------------
 export default function Chart() {
+  const { width, height } = window.ANYPLOT_SIZE;
+
   return (
     <div
       style={{
-        width: window.ANYPLOT_SIZE.width,
-        height: window.ANYPLOT_SIZE.height,
+        width,
+        height,
+        backgroundColor: t.pageBg,
         display: "flex",
         flexDirection: "column",
+        fontFamily: "Inter, system-ui, sans-serif",
       }}
     >
       <div
@@ -277,36 +516,23 @@ export default function Chart() {
           alignItems: "center",
           justifyContent: "center",
           fontSize: 22,
-          fontWeight: 500,
+          fontWeight: 600,
           color: t.ink,
         }}
       >
         {TITLE}
       </div>
-      <ChartContainer
-        width={window.ANYPLOT_SIZE.width}
-        height={window.ANYPLOT_SIZE.height - TITLE_HEIGHT}
+      <ChartsContainer
+        width={width}
+        height={height - TITLE_HEIGHT}
         margin={MARGIN}
         skipAnimation
-        xAxis={[{ scaleType: "linear", min: -0.5, max: 4.5 }]}
-        yAxis={[{ scaleType: "linear", min: -1.5, max: 1.5 }]}
-        series={series}
+        series={[]}
+        xAxis={[{ position: "none", scaleType: "linear", min: xAxisMin, max: xAxisMax }]}
+        yAxis={[{ position: "none", scaleType: "linear", min: yAxisMin, max: yAxisMax }]}
       >
-        <GraphEdges />
-        <ScatterPlot slots={{ scatter: NodeMarker }} />
-        <NodeLabels />
-        <ChartsLegend
-          position={{ vertical: "top", horizontal: "right" }}
-          direction="column"
-          itemMarkWidth={18}
-          itemMarkHeight={18}
-          markGap={10}
-          itemGap={14}
-          padding={{ top: 10, right: 20 }}
-          labelStyle={{ fontSize: 15, fill: t.ink }}
-        />
-        <CircularDependencyNote />
-      </ChartContainer>
+        <DirectedNetworkOverlay />
+      </ChartsContainer>
     </div>
   );
 }
