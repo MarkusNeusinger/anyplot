@@ -3,149 +3,243 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 85/100 | Created: 2026-09-05
 //# anyplot-orientation: square
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
-import { ChartsTooltip } from "@mui/x-charts/ChartsTooltip";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data (in-memory, deterministic LCG — the browser has no seeded RNG) ----
-let seed = 42;
-function rand() {
-  seed = (seed * 1664525 + 1013904223) % 4294967296;
-  return seed / 4294967296;
-}
+// Constants
+const TITLE = "polar-scatter · javascript · muix · anyplot.ai";
+const RING_COUNT = 4;
+const SPOKE_STEP_DEG = 45;
+const FULL_CIRCLE_DEG = 360;
+const DEG_SYMBOL = "°";
+const FILL_OPACITY = 0.72;
+const MARKER_SIZE = 8;
+const TITLE_HEIGHT = 70;
+const LEGEND_HEIGHT = 54;
+const CHART_MARGIN = { top: 36, bottom: 36, left: 36, right: 36 };
+const LABEL_RADIUS_FACTOR = 1.13;
+const DOMAIN_PAD_FACTOR = 1.26;
 
-// Wind observations grouped by time of day. Coastal sites see a diurnal wind
-// rotation (land breeze overnight/morning, sea breeze in the afternoon, with
-// evening/night transitional flow), so each group's prevailing bearing is
-// spaced ~90° apart around the full compass rather than clustered on one side.
-const GROUPS = [
-  { category: "Morning", bearing: 15, speed: 7, spread: 85, markerSize: 8 },
-  { category: "Afternoon", bearing: 105, speed: 13, spread: 90, markerSize: 8 },
-  { category: "Evening", bearing: 195, speed: 10, spread: 80, markerSize: 8 },
-  { category: "Night", bearing: 285, speed: 4, spread: 75, markerSize: 6 },
-];
+// Columns: set these to your data's column names
+const CATEGORY = "Time of Day"; // role: group
+const BEARING = "Wind Bearing (°)"; // role: theta
+const SPEED = "Wind Speed (m/s)"; // role: r
+
+// Data: replace this block with your own records
 const POINTS_PER_GROUP = 30;
-const MAX_RADIUS = 20; // m/s
-const FILL_OPACITY = 0.7; // keeps overlapping points distinguishable
+const MIN_SPEED_FLOOR = 0.5;
+const SPEED_CEIL_CAP = 20;
+const GROUP_SEEDS = [
+  { name: "Morning", meanBearing: 15, meanSpeed: 7, spread: 85 },
+  { name: "Afternoon", meanBearing: 105, meanSpeed: 13, spread: 90 },
+  { name: "Evening", meanBearing: 195, meanSpeed: 10, spread: 80 },
+  { name: "Night", meanBearing: 285, meanSpeed: 4, spread: 75 },
+];
 
-function polarToXY(bearingDeg, radius) {
-  const rad = (bearingDeg * Math.PI) / 180;
-  return { x: radius * Math.sin(rad), y: radius * Math.cos(rad) };
+const data: Array<Record<string, string | number>> = [];
+let lcgState = 42;
+for (const cfg of GROUP_SEEDS) {
+  for (let idx = 0; idx < POINTS_PER_GROUP; idx += 1) {
+    lcgState = (lcgState * 1664525 + 1013904223) % 4294967296;
+    const u1 = lcgState / 4294967296;
+    lcgState = (lcgState * 1664525 + 1013904223) % 4294967296;
+    const u2 = lcgState / 4294967296;
+    const bearing =
+      (((cfg.meanBearing + (u1 - 0.5) * cfg.spread) % FULL_CIRCLE_DEG) + FULL_CIRCLE_DEG) %
+      FULL_CIRCLE_DEG;
+    const speed = Math.min(
+      SPEED_CEIL_CAP,
+      Math.max(MIN_SPEED_FLOOR, cfg.meanSpeed + (u2 - 0.5) * cfg.meanSpeed),
+    );
+    data.push({
+      [CATEGORY]: cfg.name,
+      [BEARING]: Math.round(bearing * 100) / 100,
+      [SPEED]: Math.round(speed * 100) / 100,
+    });
+  }
 }
 
-// `ScatterSeriesType` has no `fillOpacity` prop — the renderer paints markers
-// with `fill: series.color` directly, so translucency is baked into the color.
-function withAlpha(hex, alpha) {
-  const h = hex.replace("#", "");
-  const r = parseInt(h.substring(0, 2), 16);
-  const g = parseInt(h.substring(2, 4), 16);
-  const b = parseInt(h.substring(4, 6), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+// Plot: reads only data and the constants above
+const categories: string[] = [];
+for (const row of data) {
+  const cat = String(row[CATEGORY]);
+  if (!categories.includes(cat)) categories.push(cat);
 }
 
-const series = GROUPS.map((group, i) => ({
-  type: "scatter",
-  id: group.category,
-  label: group.category,
-  color: withAlpha(t.palette[i], FILL_OPACITY),
-  markerSize: group.markerSize,
-  data: Array.from({ length: POINTS_PER_GROUP }, (_, idx) => {
-    const bearing = (((group.bearing + (rand() - 0.5) * group.spread) % 360) + 360) % 360;
-    const radius = Math.min(MAX_RADIUS, Math.max(0.5, group.speed + (rand() - 0.5) * group.speed));
-    const { x, y } = polarToXY(bearing, radius);
-    return { id: `${group.category}-${idx}`, x, y };
-  }),
-}));
+const rawMaxSpeed = Math.max(...data.map((r) => Number(r[SPEED])));
+const rawStep = rawMaxSpeed / RING_COUNT;
+const stepMag = 10 ** Math.floor(Math.log10(rawStep));
+const stepNorm = rawStep / stepMag;
+const ringStep = (stepNorm <= 1 ? 1 : stepNorm <= 2 ? 2 : stepNorm <= 5 ? 5 : 10) * stepMag;
+const ringDecimals = Math.max(0, -Math.floor(Math.log10(ringStep) + 1e-9));
+const maxRadius = ringStep * RING_COUNT;
+const rings: number[] = [];
+for (let k = 1; k <= RING_COUNT; k += 1) {
+  rings.push(Number((k * ringStep).toFixed(ringDecimals)));
+}
 
-// --- Polar grid overlay — community `@mui/x-charts` has no native polar
-// chart, so the radial/angular grid is drawn as an SVG layer that shares the
-// same linear x/y scales as the scatter points (via useXScale/useYScale),
-// keeping rings, spokes and the data perfectly aligned at any canvas size. --
-const RINGS = [5, 10, 15, 20];
-const SPOKE_DEGREES = [0, 45, 90, 135, 180, 225, 270, 315];
-const LABEL_RADIUS = MAX_RADIUS * 1.14;
+const spokeDegrees: number[] = [];
+for (let deg = 0; deg < FULL_CIRCLE_DEG; deg += SPOKE_STEP_DEG) {
+  spokeDegrees.push(deg);
+}
+
+// Choose ring-label bearing at the centre of the 45° sector with fewest points
+const sectorCount = FULL_CIRCLE_DEG / SPOKE_STEP_DEG;
+const sectorCounts = new Array<number>(sectorCount).fill(0);
+for (const row of data) {
+  const b = (((Number(row[BEARING]) % FULL_CIRCLE_DEG) + FULL_CIRCLE_DEG) % FULL_CIRCLE_DEG);
+  const sIdx = Math.min(sectorCount - 1, Math.floor(b / SPOKE_STEP_DEG));
+  sectorCounts[sIdx] += 1;
+}
+let minSectorIdx = 0;
+for (let s = 1; s < sectorCount; s += 1) {
+  if (sectorCounts[s] < sectorCounts[minSectorIdx]) {
+    minSectorIdx = s;
+  }
+}
+const tickSpokeDeg = minSectorIdx * SPOKE_STEP_DEG + SPOKE_STEP_DEG / 2;
+const tickSpokeRad = (tickSpokeDeg * Math.PI) / 180;
+
+const speedUnitMatch = /\(([^)]+)\)/.exec(SPEED);
+const speedUnit = speedUnitMatch ? speedUnitMatch[1] : "";
+
+const labelRadius = maxRadius * LABEL_RADIUS_FACTOR;
+const domainLimit = maxRadius * DOMAIN_PAD_FACTOR;
+
+const seriesGroups = categories.map((cat, i) => {
+  const catRows = data.filter((r) => String(r[CATEGORY]) === cat);
+  const baseHex = t.palette[i];
+  const cleanHex = baseHex.replace("#", "");
+  const rVal = parseInt(cleanHex.substring(0, 2), 16);
+  const gVal = parseInt(cleanHex.substring(2, 4), 16);
+  const bVal = parseInt(cleanHex.substring(4, 6), 16);
+  const rgbaColor = `rgba(${rVal}, ${gVal}, ${bVal}, ${FILL_OPACITY})`;
+
+  const points = catRows.map((row, idx) => {
+    const bearingDeg = Number(row[BEARING]);
+    const radiusVal = Number(row[SPEED]);
+    const rad = (bearingDeg * Math.PI) / 180;
+    return {
+      id: `${cat}-${idx}`,
+      x: radiusVal * Math.sin(rad),
+      y: radiusVal * Math.cos(rad),
+    };
+  });
+
+  return {
+    type: "scatter" as const,
+    id: cat,
+    label: cat,
+    baseColor: baseHex,
+    color: rgbaColor,
+    markerSize: MARKER_SIZE,
+    data: points,
+  };
+});
 
 function PolarGrid() {
   const xScale = useXScale();
   const yScale = useYScale();
-  const cx = xScale(0);
-  const cy = yScale(0);
+
+  const cx = Number(xScale(0));
+  const cy = Number(yScale(0));
 
   return (
     <g>
-      {RINGS.map((r) => (
+      {rings.map((r) => (
         <circle
           key={`ring-${r}`}
           cx={cx}
           cy={cy}
-          r={Math.abs(xScale(r) - xScale(0))}
+          r={Math.abs(Number(xScale(r)) - cx)}
           fill="none"
           stroke={t.grid}
-          strokeWidth={1}
+          strokeWidth={r === maxRadius ? 1.5 : 1}
         />
       ))}
-      {SPOKE_DEGREES.map((deg) => {
-        const { x, y } = polarToXY(deg, MAX_RADIUS);
+      {spokeDegrees.map((deg) => {
+        const rad = (deg * Math.PI) / 180;
+        const sx = maxRadius * Math.sin(rad);
+        const sy = maxRadius * Math.cos(rad);
+        const lx = labelRadius * Math.sin(rad);
+        const ly = labelRadius * Math.cos(rad);
         return (
-          <line
-            key={`spoke-${deg}`}
-            x1={cx}
-            y1={cy}
-            x2={xScale(x)}
-            y2={yScale(y)}
-            stroke={t.grid}
-            strokeWidth={1}
-          />
+          <g key={`spoke-${deg}`}>
+            <line
+              x1={cx}
+              y1={cy}
+              x2={xScale(sx)}
+              y2={yScale(sy)}
+              stroke={t.grid}
+              strokeWidth={1}
+            />
+            <text
+              x={xScale(lx)}
+              y={yScale(ly)}
+              fill={t.inkSoft}
+              fontSize={14}
+              fontWeight={deg % 90 === 0 ? 600 : 400}
+              textAnchor="middle"
+              dominantBaseline="central"
+            >
+              {`${deg}${DEG_SYMBOL}`}
+            </text>
+          </g>
         );
       })}
-      {SPOKE_DEGREES.map((deg) => {
-        const { x, y } = polarToXY(deg, LABEL_RADIUS);
+      {rings.map((r) => {
+        const tx = Number(xScale(r * Math.sin(tickSpokeRad)));
+        const ty = Number(yScale(r * Math.cos(tickSpokeRad)));
+        const rStr = r.toFixed(ringDecimals);
+        const tickText = speedUnit ? `${rStr} ${speedUnit}` : rStr;
+        const pillWidth = tickText.length * 8.2 + 12;
         return (
-          <text
-            key={`spoke-label-${deg}`}
-            x={xScale(x)}
-            y={yScale(y)}
-            fill={t.inkSoft}
-            fontSize={14}
-            textAnchor="middle"
-            dominantBaseline="middle"
-          >
-            {`${deg}°`}
-          </text>
+          <g key={`ring-label-${r}`}>
+            <rect
+              x={tx - pillWidth / 2}
+              y={ty - 11}
+              width={pillWidth}
+              height={22}
+              rx={4}
+              fill={t.pageBg}
+            />
+            <text
+              x={tx}
+              y={ty}
+              fill={t.inkSoft}
+              fontSize={14}
+              textAnchor="middle"
+              dominantBaseline="central"
+            >
+              {tickText}
+            </text>
+          </g>
         );
       })}
-      {RINGS.map((r) => (
-        <text
-          key={`ring-label-${r}`}
-          x={xScale(0) + 8}
-          y={yScale(r) - 6}
-          fill={t.inkSoft}
-          fontSize={12}
-          textAnchor="start"
-        >
-          {`${r} m/s`}
-        </text>
-      ))}
     </g>
   );
 }
 
-const TITLE = "polar-scatter · javascript · muix · anyplot.ai";
-const TITLE_HEIGHT = 70;
-const LEGEND_HEIGHT = 50;
-const MARGIN = { top: 40, bottom: 40, left: 40, right: 40 };
-const DOMAIN = MAX_RADIUS * 1.3;
-
-// --- Chart (default-exported component — the harness mounts it) -------------
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
   const chartSize = height - TITLE_HEIGHT - LEGEND_HEIGHT;
 
   return (
-    <div style={{ width, height, display: "flex", flexDirection: "column", alignItems: "center" }}>
+    <div
+      style={{
+        width,
+        height,
+        backgroundColor: t.pageBg,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        boxSizing: "border-box",
+      }}
+    >
       <div
         style={{
           height: TITLE_HEIGHT,
@@ -153,46 +247,45 @@ export default function Chart() {
           alignItems: "center",
           justifyContent: "center",
           fontSize: 22,
-          fontWeight: 500,
+          fontWeight: 600,
           color: t.ink,
         }}
       >
         {TITLE}
       </div>
-      <ChartContainer
+      <ChartsContainer
         width={chartSize}
         height={chartSize}
-        margin={MARGIN}
+        margin={CHART_MARGIN}
         skipAnimation
-        xAxis={[{ scaleType: "linear", min: -DOMAIN, max: DOMAIN }]}
-        yAxis={[{ scaleType: "linear", min: -DOMAIN, max: DOMAIN }]}
-        series={series}
+        xAxis={[{ scaleType: "linear", min: -domainLimit, max: domainLimit, position: "none" }]}
+        yAxis={[{ scaleType: "linear", min: -domainLimit, max: domainLimit, position: "none" }]}
+        series={seriesGroups}
       >
         <PolarGrid />
         <ScatterPlot />
-        <ChartsTooltip trigger="item" />
-      </ChartContainer>
+      </ChartsContainer>
       <div
         style={{
           height: LEGEND_HEIGHT,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          gap: 24,
+          gap: 28,
         }}
       >
-        {GROUPS.map((group, i) => (
-          <div key={group.category} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        {seriesGroups.map((group) => (
+          <div key={group.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span
               style={{
-                width: 12,
-                height: 12,
+                width: 14,
+                height: 14,
                 borderRadius: "50%",
-                backgroundColor: t.palette[i],
+                backgroundColor: group.baseColor,
                 display: "inline-block",
               }}
             />
-            <span style={{ fontSize: 14, color: t.inkSoft }}>{group.category}</span>
+            <span style={{ fontSize: 15, color: t.inkSoft, fontWeight: 500 }}>{group.label}</span>
           </div>
         ))}
       </div>
