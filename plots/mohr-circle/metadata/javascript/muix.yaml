@@ -2,147 +2,138 @@ library: muix
 language: javascript
 specification_id: mohr-circle
 created: '2026-08-26T09:11:17Z'
-updated: '2026-08-26T09:26:14Z'
-generated_by: claude-sonnet
-workflow_run: 32950623822
+updated: '2026-10-24T11:09:52Z'
+generated_by: gemini-4-argon
+adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
+workflow_run: 40088088412
 issue: 4432
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/javascript/muix/plot-dark.html
-quality_score: 90
+quality_score: 87
 review:
   strengths:
-  - True 1:1 circle enforced via an equal-size square drawing area (measured bounding
-    box 1154x1154 px) — the aspect-ratio requirement is a hard geometric guarantee,
-    not a visual approximation
-  - Custom SVG overlay (stress points A/B, principal-axis segment, tau_max/tau_min
-    markers, 2-theta-p arc) is positioned via the library's own useXScale/useYScale
-    hooks, so annotations stay pixel-perfect at any canvas size instead of hard-coded
-    offsets
-  - 'Deliberate visual hierarchy: a bold black principal-stress-axis segment plus
-    bold 19px result labels (sigma1, sigma2, tau_max, tau_min) read as the headline
-    numbers, while the supporting geometry (points A/B, center C, angle label) uses
-    thinner strokes and smaller 16-17px text — a clear focal point (DE-03)'
-  - 'Correct Mohr''s-circle mathematics: center, radius, principal stresses, max shear,
-    and the 2-theta-p rotation angle all computed directly from sigma_x/sigma_y/tau_xy
-    with no magic numbers'
-  - 'Backgrounds are pixel-exact Imprint tokens (#FAF8F1 light / #1A1A17 dark measured
-    directly from the PNGs), first data series is #009E73, and data colors are identical
-    between themes — only chrome flips'
-  - No edge clipping in either render (verified by scanning all four canvas borders
-    for non-background pixels) and no overflow of any label past the plot bounds
-  - Deterministic, in-memory stress state with no randomness; imports are all used;
-    skipAnimation set on the ChartContainer per the harness contract
+  - Uses the MUI X v9 composition API (ChartsContainer with ChartsXAxis/ChartsYAxis,
+    ChartsGrid, ChartsReferenceLine) and draws the Mohr geometry in a custom child
+    component that reads useXScale/useYScale, so every SVG mark sits exactly at its
+    data coordinates
+  - 'All derived values are computed from the stress state, not placed: C = 37, R
+    = 48.9, σ1 = 85.9 MPa, σ2 = −11.9 MPa, τmax = 48.9 MPa and 2θp = atan2(32, 37)
+    = 41° all check out against the render'
+  - Equal data ranges (164 MPa on both axes) on a square drawing area make the circle
+    a true circle; A and B sit at opposite ends of the dashed diameter through C,
+    and the 2θp arc spans exactly from the σ1 axis to the CA line
+  - 'Clear visual hierarchy: Imprint green circle with a faint fill, stress-state
+    points A/B in the second Imprint color, principal and shear landmarks in ink with
+    page-colored halos, bold landmark labels and softer secondary labels for C and
+    2θp'
+  - Theme tokens threaded through every custom element (ink, inkSoft, grid, pageBg
+    halos), so both renders are fully legible with identical data colors
+  - Realistic, neutral engineering scenario (steel drive shaft under bending plus
+    torsion, σy = 0) with plausible MPa magnitudes
   weaknesses:
-  - 'File header is duplicated: lines 1-5 are one anyplot.ai header block (with a
-    stale ''Quality: 87/100'' from a prior attempt) immediately followed by a second,
-    different anyplot.ai header block on lines 6-9 (with ''Quality: pending'' and
-    the License line). Collapse this into a single header per the muix.md skeleton,
-    and put the ''//# anyplot-orientation: square'' directive on its own line at the
-    very top of the file as required, not sandwiched between the two header blocks.'
-  - The small 'C' center-point label sits directly on top of the dashed A-B reference
-    line in both renders (confirmed at 3x zoom in both light and dark PNGs) — the
-    glyph is legible but visually cut by the line. Nudge its x/y offset a few more
-    px away from the diagonal so it clears the dashed stroke.
-  - 'Visual refinement is solid but not maximal: the MUI X default axis line/tick
-    styling is kept as-is beyond stroke color — no further chrome customization (e.g.
-    tick length, axis line removal) was attempted, so DE-02 is scored as good-not-exceptional.'
+  - 'CQ-04 (code): the 2θp arc is built by a hand-written 33-point polyline loop (lines
+    92–98) → one SVG elliptical-arc command, `M x0 y0 A r r 0 0 0 x1 y1` with r =
+    |xScale(center + arcRadius) − cx|, which draws the same exact arc. Likely cause:
+    the ARC_STEPS sampling loop.'
+  - 'Suggestion: write the shear landmark as τmax (or τₘₐₓ) instead of the code-style
+    ''τ_max'', matching the Unicode subscripts already used for σ₁ and σ₂.'
+  - 'Suggestion: use the Unicode minus (−) in the value labels (''σ₂ = −11.9'', ''B(0,
+    −32)'', ''−τmax = −48.9'') to match the tick labels, which already use it.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, measured (250,248,241) = #FAF8F1, matches the Imprint light-mode page background exactly.
-      Chrome: Title "mohr-circle · javascript · muix · anyplot.ai" is centered, dark ink, fully legible. X-axis label "Normal Stress σ (MPa)" and Y-axis label "Shear Stress τ (MPa)" are both dark ink at a balanced size, clearly readable. Tick labels on both axes are legible mid-gray. Horizontal grid lines are subtle light-gray, visible but not dominant. Two solid vertical/horizontal reference lines cross at the circle center.
-      Data: The circle outline is the brand green #009E73, identical hue on both renders. Stress-state points A(80,30) and B(20,-30) are a violet/purple (second Imprint palette color) with a light stroke ring. The principal-stress axis (thick black segment between sigma2 and sigma1), the sigma1/sigma2/tau_max/tau_min landmark dots (black with light ring), and all text/labels are dark ink, clearly distinguishable from the light background and from the green circle. The center label "C" is legible but is drawn directly on top of the dashed A-B reference line, causing a minor visual overlap.
-      Legibility verdict: PASS (the "C"/dashed-line overlap is a minor blemish, not a legibility failure — all text remains readable).
+      Background: warm off-white #FAF8F1 across the whole 2400×2400 canvas.
+      Chrome: title "Steel Drive Shaft, Bending + Torsion · mohr-circle · javascript · muix · anyplot.ai" in bold dark ink, centered, ~68% of width; axis titles "Normal Stress σ (MPa)" and "Shear Stress τ (MPa)" in dark ink; tick labels −40…110 and −80…80 in soft ink; subtle grid in both directions; reference lines at τ = 0 and σ = 37 in grid tone. All text readable.
+      Data: Imprint green (#009E73) circle, 3.5 px stroke with faint green fill, centered at (37, 0) with radius 48.9; thick ink σ2–σ1 diameter; ink landmark dots at σ1 (85.9), σ2 (−11.9), τmax (48.9) and −τmax with bold labels; stress points A(74, 32) and B(0, −32) in the second Imprint color (purple) joined by a dashed ink diameter through the small ink center dot labelled C(37, 0); soft-ink arc from the σ axis to the CA line labelled "2θp = 41°". No overlaps, nothing clipped.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, measured (26,26,23) = #1A1A17, matches the Imprint dark-mode page background exactly.
-      Chrome: Title, axis labels, and tick labels all render in light/cream ink against the dark background — no dark-on-dark failures anywhere. Grid lines are subtle light-gray, visible but restrained. Reference lines and the principal-stress axis switch to light/cream strokes so they stay visible against the dark canvas.
-      Data: Circle color, violet stress-point color, and all label colors are visually identical to the light render — only the chrome (background, ink, grid, reference-line color) flipped, exactly as required. Same minor "C" label / dashed-line overlap present as in the light render, equally legible.
-      Legibility verdict: PASS (no dark-on-dark or light-on-light failures found; same minor overlap noted above, not a legibility failure).
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles and labels flip to light ink; tick labels in light soft ink; grid and reference lines subtle but visible. No dark-on-dark text anywhere.
+      Data: circle green and A/B purple identical to the light render; landmark dots, diameter and dashed line flip to light ink with dark halos; arc and 2θp/C labels in light soft ink.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All title/axis/tick/annotation text is clearly readable in both themes
-          with a deliberate size hierarchy (bold 19px headline results vs 16-17px
-          supporting labels)
+        comment: Explicit sizes (title 16 px, axis titles 18 px, ticks 16 px, annotations
+          15–17 px CSS); all text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Minor: the ''C'' center label is drawn on top of the dashed A-B
-          reference line in both renders; everything else is clean'
+        comment: No text collides with text or marks; labels offset clear of their
+          dots
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Landmark dots (r=11), center dot (r=6), circle stroke, and reference
-          lines are all well-sized for this sparse single-stress-state dataset
+        comment: 10 px landmark dots with page-colored halos, 3.5 px circle stroke;
+          all marks prominent for a 7-mark chart
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green circle vs violet stress points vs neutral ink landmarks gives
-          adequate contrast; not red-green dependent
+        comment: Green circle, purple state points, ink landmarks; distinguished by
+          role and labels, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Measured circle bounding box is 1154x1154 px (true 1:1); no clipping
-          detected on any of the four canvas edges; canvas gate passed
+        comment: Square canvas, square drawing area, title ~68% width, balanced axis
+          labels; margins come from the permitted equal aspect
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Normal Stress σ (MPa)'' / ''Shear Stress τ (MPa)'' are descriptive
-          with units'
+        comment: Axis labels as the Notes ask, with MPa
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; backgrounds measured as exact #FAF8F1 /
-          #1A1A17; data colors identical across themes'
+        comment: 'Circle #009E73, state points Imprint position 2, landmarks in ink;
+          #FAF8F1 / #1A1A17 backgrounds; both renders theme-correct'
     design_excellence:
-      score: 14
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        passed: true
-        comment: Intentional color semantics (neutral landmarks for derived geometry
-          vs colored points for the given stress state) and weighted typography go
-          beyond generic defaults
+        passed: false
+        comment: 'Deliberate typographic hierarchy: bold 17 px landmark values, 16
+          px state labels, softer 15 px C and 2θp labels; page-colored halos on markers'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: true
-        comment: Grid is subtle and horizontal-only, whitespace is generous (PAD =
-          0.75*radius); MUI X default axis line/tick chrome is otherwise left as-is
+        passed: false
+        comment: Label placement chosen per landmark (σ2 end-anchored left, σ1 right,
+          τ labels beside their dots); faint 7% circle fill separates the circle from
+          the grid
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Bold principal-stress-axis segment and bold result labels create
-          a clear focal point distinct from the supporting geometry
+        passed: false
+        comment: Thick σ2–σ1 diameter makes the principal axis the focal line; color
+          separates the given stress state (A/B) from derived landmarks
     spec_compliance:
       score: 15
       max: 15
@@ -152,28 +143,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Mohr's circle construction
+        comment: Mohr's circle with the Notes' elements
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Center, radius, sigma1/sigma2, tau_max/tau_min, points A and B, 2-theta-p
-          annotation, equal aspect ratio, and center reference lines are all present
-          per the spec's Notes section
+        comment: 'Circle at mean with Notes radius, equal aspect, σ1/σ2 on the axis,
+          ±τmax top and bottom, A and B on a diameter, 2θp arc at the center spanning
+          exactly the angle, axis labels, light grid and center reference lines: all
+          present'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: sigma on X, tau on Y, full circle plus padding visible on both axes
+        comment: All marks placed through the axis scales at their computed values;
+          axes show the whole circle
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'mohr-circle · javascript · muix · anyplot.ai'; labeled
-          points substitute for a legend appropriately
+        comment: Title format correct with descriptive prefix; legend N/A, every mark
+          directly labeled
     data_quality:
       score: 15
       max: 15
@@ -183,21 +176,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows every characteristic feature of a Mohr's circle diagram
+        comment: Shows the circle, principal stresses (one tensile, one compressive),
+          shear extremes, reference points and principal angle
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: sigma_x=80, sigma_y=20, tau_xy=30 MPa is a plausible, neutral structural-engineering
-          stress state
+        comment: 'Steel drive shaft surface point, bending plus torsion with σy =
+          0: realistic and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values and resulting radius (~42.4 MPa) sit in a typical textbook
-          MPa range
+        comment: 'Checked against the render and code: C = 37, R = √2393 = 48.9, σ1
+          = 85.9, σ2 = −11.9, τmax = 48.9, 2θp = 40.9° → 41°; all computed, MPa magnitudes
+          plausible for steel'
     code_quality:
       score: 9
       max: 10
@@ -207,64 +202,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Only one small helper component (MohrAnnotations), required to use
-          the scale hooks inside the chart tree — idiomatic for React, not bloat
+        comment: One child component, required because the scale hooks must run inside
+          ChartsContainer
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hard-coded deterministic stress state, no RNG
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Every import is used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Overlay positioning uses real scale hooks rather than hand-guessed
-          pixel math; no fake UI
+        passed: false
+        comment: 2θp arc written out as a 33-point polyline loop (lines 92–98) where
+          one SVG arc command draws it (defect line)
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Duplicated header block (two stacked anyplot.ai comment headers,
-          one stale) and the orientation directive is not on its own line at the very
-          top as the muix.md skeleton requires
+        passed: true
+        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation,
+          current v9 API
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: ChartContainer + LinePlot + useXScale/useYScale for a custom overlay
-          is exactly the recommended community-surface pattern for annotations beyond
-          the built-in chart types
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
-        passed: true
-        comment: Combines ChartsReferenceLine, horizontal-only ChartsGrid, and ChartsText
-          with the scale hooks — solid distinctive usage, stops short of showcasing
-          e.g. multi-axis or gradient features
+        passed: false
+        comment: MUI X composition API (ChartsContainer + ChartsXAxis/YAxis/Grid/ReferenceLine)
+          with axis width/height bands set as the v9 docs recommend
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: useXScale/useYScale hooks driving a custom SVG layer inside the chart,
+          ChartsReferenceLine and ChartsText for theme-consistent annotation
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-10-24T11:06:55Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - reference-lines
+  - layer-composition
+  - html-export
   patterns:
-  - data-generation
+  - explicit-figure
   dataprep: []
   styling:
+  - alpha-blending
   - grid-styling
   - publication-ready
