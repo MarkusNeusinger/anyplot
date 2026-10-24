@@ -21,16 +21,17 @@ const HEADER_H = 148;
 const X = "Revenue growth rate (%)"; // role: x
 const Y = "Operating profit margin (%)"; // role: y
 const SIZE = "Market share index"; // role: size
+const SEGMENT = "Company segment"; // role: extra
 
 // Data: replace this block with your own records, one object per row
 const data = (() => {
   let state = 42;
   const clusters = [
-    { growth: 24, margin: 19, share: 64, count: 16, xSpread: 8.5, ySpread: 6.5 },
-    { growth: 13, margin: 11, share: 36, count: 20, xSpread: 6.5, ySpread: 5.5 },
-    { growth: 4, margin: 3.5, share: 16, count: 16, xSpread: 6.5, ySpread: 5.5 },
+    { name: "Growth leaders", growth: 24, margin: 19, share: 64, count: 16, xSpread: 8.5, ySpread: 6.5 },
+    { name: "Mid-market", growth: 13, margin: 11, share: 36, count: 20, xSpread: 6.5, ySpread: 5.5 },
+    { name: "Niche players", growth: 4, margin: 3.5, share: 16, count: 16, xSpread: 6.5, ySpread: 5.5 },
   ];
-  const rows: { [key: string]: number }[] = [];
+  const rows: { [key: string]: string | number }[] = [];
 
   for (const c of clusters) {
     for (let i = 0; i < c.count; i += 1) {
@@ -46,6 +47,7 @@ const data = (() => {
       const yVal = Math.round((c.margin + normals[1] * c.ySpread) * 10) / 10;
       const sVal = Math.min(100, Math.max(10, Math.round(c.share + normals[2] * 16)));
       rows.push({
+        [SEGMENT]: c.name,
         [X]: xVal,
         [Y]: yVal,
         [SIZE]: sVal,
@@ -59,6 +61,7 @@ const data = (() => {
 const xValues = data.map((d) => d[X]);
 const yValues = data.map((d) => d[Y]);
 const sizeValues = data.map((d) => d[SIZE]);
+const segments = [...new Set(data.map((d) => d[SEGMENT]))];
 
 const sizeMin = Math.min(...sizeValues);
 const sizeMax = Math.max(...sizeValues) || 1;
@@ -69,6 +72,7 @@ const bubbles = data.map((d, i) => ({
   y: d[Y],
   size: d[SIZE],
   r: MAX_RADIUS * Math.sqrt(Math.max(0, d[SIZE]) / sizeMax),
+  color: t.palette[segments.indexOf(d[SEGMENT])],
 }));
 
 const xMinRaw = Math.min(...xValues);
@@ -93,32 +97,26 @@ const legendSizes = [
 }));
 
 const TITLE = "bubble-basic · javascript · muix · anyplot.ai";
-const SUBTITLE = `${data.length} observations · Bubble area proportional to ${SIZE.toLowerCase()} (${sizeMin}–${sizeMax})`;
+const SUBTITLE = `${data.length} observations · Bubble area ∝ ${SIZE}, ${sizeMin}–${sizeMax}`;
 
 function Bubbles() {
   const xScale = useXScale("growth");
   const yScale = useYScale("margin");
-  if (!xScale || !yScale) return null;
 
   return (
     <g>
-      {bubbles.map((d) => {
-        const cx = xScale(d.x);
-        const cy = yScale(d.y);
-        if (cx === undefined || cy === undefined) return null;
-        return (
-          <circle
-            key={d.id}
-            cx={cx}
-            cy={cy}
-            r={d.r}
-            fill={t.palette[0]}
-            fillOpacity={BUBBLE_OPACITY}
-            stroke={t.pageBg}
-            strokeWidth={2}
-          />
-        );
-      })}
+      {bubbles.map((d) => (
+        <circle
+          key={d.id}
+          cx={xScale(d.x)}
+          cy={yScale(d.y)}
+          r={d.r}
+          fill={d.color}
+          fillOpacity={BUBBLE_OPACITY}
+          stroke={t.pageBg}
+          strokeWidth={2}
+        />
+      ))}
     </g>
   );
 }
@@ -156,35 +154,59 @@ export default function Chart() {
           style={{
             display: "flex",
             alignItems: "center",
-            gap: 24,
+            gap: 48,
             fontSize: 14,
             color: t.inkSoft,
           }}
         >
-          <span style={{ fontWeight: 600, color: t.ink }}>{SIZE}:</span>
-          {legendSizes.map((item) => (
-            <div
-              key={item.val}
-              style={{ display: "flex", alignItems: "center", gap: 8 }}
-            >
-              <svg
-                width={item.r * 2 + 4}
-                height={item.r * 2 + 4}
-                style={{ overflow: "visible" }}
+          <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+            <span style={{ fontWeight: 600, color: t.ink }}>{SEGMENT}:</span>
+            {segments.map((segment, i) => (
+              <div
+                key={segment}
+                style={{ display: "flex", alignItems: "center", gap: 8 }}
               >
-                <circle
-                  cx={item.r + 2}
-                  cy={item.r + 2}
-                  r={item.r}
-                  fill={t.palette[0]}
-                  fillOpacity={BUBBLE_OPACITY}
-                  stroke={t.pageBg}
-                  strokeWidth={1.5}
-                />
-              </svg>
-              <span>{item.val}</span>
-            </div>
-          ))}
+                <svg width={20} height={20}>
+                  <circle
+                    cx={10}
+                    cy={10}
+                    r={9}
+                    fill={t.palette[i]}
+                    fillOpacity={BUBBLE_OPACITY}
+                    stroke={t.pageBg}
+                    strokeWidth={1.5}
+                  />
+                </svg>
+                <span>{segment}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+            <span style={{ fontWeight: 600, color: t.ink }}>{SIZE}:</span>
+            {legendSizes.map((item) => (
+              <div
+                key={item.val}
+                style={{ display: "flex", alignItems: "center", gap: 8 }}
+              >
+                <svg
+                  width={item.r * 2 + 4}
+                  height={item.r * 2 + 4}
+                  style={{ overflow: "visible" }}
+                >
+                  <circle
+                    cx={item.r + 2}
+                    cy={item.r + 2}
+                    r={item.r}
+                    fill={t.inkSoft}
+                    fillOpacity={BUBBLE_OPACITY}
+                    stroke={t.pageBg}
+                    strokeWidth={1.5}
+                  />
+                </svg>
+                <span>{item.val}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
