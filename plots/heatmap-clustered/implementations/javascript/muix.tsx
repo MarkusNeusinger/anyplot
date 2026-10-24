@@ -1,6 +1,6 @@
 // anyplot.ai
 // heatmap-clustered: Clustered Heatmap
-// Library: muix 9.2.1 | JavaScript 22.23.2
+// Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 87/100 | Created: 2026-09-05
 //# anyplot-orientation: square
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
@@ -9,20 +9,35 @@ import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { useXScale, useYScale, useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const SIZE = window.ANYPLOT_SIZE;
 
 // Constants
-const GENE_COL = "gene";
-const PATHWAY_COL = "pathway";
-const SAMPLE_COL = "sample";
-const CONDITION_COL = "condition";
-const VALUE_COL = "log2_fold_change";
-
+const SIZE = window.ANYPLOT_SIZE;
 const TITLE = "heatmap-clustered · javascript · muix · anyplot.ai";
-const SUBTITLE_PREFIX = "Ward hierarchical clustering of log2 fold-change gene expression";
-const COLORBAR_LABEL = "Log2 fold change";
 
-// Flat scalar gene definitions ("gene|pathway|baseControl|baseTreated")
+const HEADER_H = 80;
+const COL_DENDRO_H = 92;
+const ANNOT_H = 16;
+const ROW_DENDRO_LEFT = 22;
+const ROW_DENDRO_W = 112;
+const ROW_ANNOT_W = 16;
+const Y_AXIS_WIDTH = 92;
+const X_AXIS_HEIGHT = 96;
+
+const MARGIN = {
+  top: HEADER_H + COL_DENDRO_H + ANNOT_H + 16,
+  right: 176,
+  bottom: 24,
+  left: ROW_DENDRO_LEFT + ROW_DENDRO_W + 8 + ROW_ANNOT_W + 8,
+};
+
+// Columns: set these to your data's column names
+const GENE = "Gene"; // role: row_labels
+const PATHWAY = "Pathway";
+const SAMPLE = "Sample"; // role: column_labels
+const CONDITION = "Condition";
+const LOG2_FC = "Log2 fold change"; // role: matrix
+
+// Data: replace this block with your own records
 const GENE_SPECS = [
   "IL6|Inflammatory|-0.3|2.4",
   "TNF|Inflammatory|-0.3|2.4",
@@ -42,7 +57,6 @@ const GENE_SPECS = [
   "CDK4|Proliferation|0.6|1.4",
 ];
 
-// Flat scalar sample definitions ("sample|condition")
 const SAMPLE_SPECS = [
   "Control-01|Control",
   "Control-02|Control",
@@ -58,7 +72,6 @@ const SAMPLE_SPECS = [
   "Treated-06|Treated",
 ];
 
-// Data — 16 genes × 12 samples = 192 flat scalar expression records
 let lcgState = 42 >>> 0;
 const geneOffsets = GENE_SPECS.map(() => {
   lcgState = (lcgState * 1664525 + 1013904223) >>> 0;
@@ -81,48 +94,51 @@ for (let i = 0; i < GENE_SPECS.length; i++) {
     const base = condition === "Control" ? ctrlBase : trtBase;
     const val = Number((base + geneOffsets[i] + sampleBatches[j] + cellNoise).toFixed(4));
     data.push({
-      [GENE_COL]: gene,
-      [PATHWAY_COL]: pathway,
-      [SAMPLE_COL]: sample,
-      [CONDITION_COL]: condition,
-      [VALUE_COL]: val,
+      [GENE]: gene,
+      [PATHWAY]: pathway,
+      [SAMPLE]: sample,
+      [CONDITION]: condition,
+      [LOG2_FC]: val,
     });
   }
 }
 
-// Derive unique genes, samples, conditions, and pathways in order of first appearance
-const genes = Array.from(new Set(data.map((r) => String(r[GENE_COL]))));
-const samples = Array.from(new Set(data.map((r) => String(r[SAMPLE_COL]))));
-const conditions = Array.from(new Set(data.map((r) => String(r[CONDITION_COL]))));
-const pathways = Array.from(new Set(data.map((r) => String(r[PATHWAY_COL]))));
+// Plot: reads only data and the constants above
+const genes = Array.from(new Set(data.map((r) => String(r[GENE]))));
+const samples = Array.from(new Set(data.map((r) => String(r[SAMPLE]))));
+const conditions = Array.from(new Set(data.map((r) => String(r[CONDITION]))));
+const pathways = Array.from(new Set(data.map((r) => String(r[PATHWAY]))));
 
+const usedPaletteColors = new Set<string>([t.div[0].toUpperCase(), t.div[2].toUpperCase()]);
 const conditionColorMap = new Map<string, string>();
 conditions.forEach((c, idx) => {
-  conditionColorMap.set(c, t.palette[idx]);
+  const col = t.palette[idx];
+  conditionColorMap.set(c, col);
+  usedPaletteColors.add(col.toUpperCase());
 });
+const availablePathwayColors = t.palette.filter((col) => !usedPaletteColors.has(col.toUpperCase()));
 const pathwayColorMap = new Map<string, string>();
 pathways.forEach((p, idx) => {
-  pathwayColorMap.set(p, t.palette[conditions.length + idx]);
+  pathwayColorMap.set(p, availablePathwayColors[idx]);
 });
 
 const geneToPathway = new Map<string, string>();
 const sampleToCondition = new Map<string, string>();
 const valLookup = new Map<string, number>();
 for (const r of data) {
-  const g = String(r[GENE_COL]);
-  const s = String(r[SAMPLE_COL]);
-  geneToPathway.set(g, String(r[PATHWAY_COL]));
-  sampleToCondition.set(s, String(r[CONDITION_COL]));
-  valLookup.set(`${g}|${s}`, Number(r[VALUE_COL]));
+  const g = String(r[GENE]);
+  const s = String(r[SAMPLE]);
+  geneToPathway.set(g, String(r[PATHWAY]));
+  sampleToCondition.set(s, String(r[CONDITION]));
+  valLookup.set(`${g}|${s}`, Number(r[LOG2_FC]));
 }
 
-const rowVectors = genes.map((g) => samples.map((s) => valLookup.get(`${g}|${s}`) ?? 0));
-const colVectors = samples.map((s) => genes.map((g) => valLookup.get(`${g}|${s}`) ?? 0));
+const rowVectors = genes.map((g) => samples.map((s) => valLookup.get(`${g}|${s}`)!));
+const colVectors = samples.map((s) => genes.map((g) => valLookup.get(`${g}|${s}`)!));
 
-const allAbsVals = data.map((r) => Math.abs(Number(r[VALUE_COL])));
+const allAbsVals = data.map((r) => Math.abs(Number(r[LOG2_FC])));
 const colorDomain = Math.ceil(Math.max(...allAbsVals) * 10) / 10;
 
-// Flat iterative Ward hierarchical clustering for both rows and columns
 type ClusterNode = {
   id: number;
   height: number;
@@ -201,9 +217,8 @@ for (const target of clusterTargets) {
   }
 
   const rootNode = allNodes[activeIds[0]];
-  target.maxHeight = rootNode.height || 1;
+  target.maxHeight = rootNode.height;
 
-  // Iterative pre-order leaf ordering
   const stack = [rootNode.id];
   while (stack.length > 0) {
     const curr = allNodes[stack.pop()!];
@@ -220,10 +235,9 @@ for (const target of clusterTargets) {
     posByLeaf.set(leafIdx, pos);
   });
 
-  // Bottom-up position assignment (nodes were appended in topological merge order)
   for (const node of allNodes) {
     if (node.leftId === null || node.rightId === null) {
-      node.pos = posByLeaf.get(node.leaves[0]) ?? 0;
+      node.pos = posByLeaf.get(node.leaves[0])!;
     } else {
       node.pos = (allNodes[node.leftId].pos + allNodes[node.rightId].pos) / 2;
       const lNode = allNodes[node.leftId];
@@ -260,8 +274,9 @@ for (let pr = 0; pr < orderedGeneLabels.length; pr++) {
   for (let pc = 0; pc < orderedSampleLabels.length; pc++) {
     const gLabel = orderedGeneLabels[pr];
     const sLabel = orderedSampleLabels[pc];
-    const value = valLookup.get(`${gLabel}|${sLabel}`) ?? 0;
-    const pos = Math.min(1, Math.max(0, (value + colorDomain) / (2 * colorDomain || 1)));
+    const value = valLookup.get(`${gLabel}|${sLabel}`);
+    if (value === undefined) continue;
+    const pos = Math.min(1, Math.max(0, (value + colorDomain) / (2 * colorDomain)));
     const isLowerHalf = pos < 0.5;
     const start = isLowerHalf ? divStopsRgb[0] : divStopsRgb[1];
     const end = isLowerHalf ? divStopsRgb[1] : divStopsRgb[2];
@@ -278,23 +293,6 @@ for (let pr = 0; pr < orderedGeneLabels.length; pr++) {
   }
 }
 
-// Layout geometry
-const HEADER_H = 80;
-const COL_DENDRO_H = 92;
-const ANNOT_H = 16;
-const ROW_DENDRO_LEFT = 22;
-const ROW_DENDRO_W = 112;
-const ROW_ANNOT_W = 16;
-const Y_AXIS_WIDTH = 92;
-const X_AXIS_HEIGHT = 96;
-
-const MARGIN = {
-  top: HEADER_H + COL_DENDRO_H + ANNOT_H + 16,
-  right: 176,
-  bottom: 24,
-  left: ROW_DENDRO_LEFT + ROW_DENDRO_W + 8 + ROW_ANNOT_W + 8,
-};
-
 const colorbarTicks = [
   -colorDomain,
   Number((-colorDomain / 2).toFixed(1)),
@@ -304,13 +302,12 @@ const colorbarTicks = [
 ];
 
 function ClusteredOverlay() {
-  const xScale = useXScale();
-  const yScale = useYScale();
+  const xScale = useXScale() as unknown as ((v: string) => number) & { bandwidth: () => number };
+  const yScale = useYScale() as unknown as ((v: string) => number) & { bandwidth: () => number };
   const drawingArea = useDrawingArea();
 
-  if (!xScale || !yScale || typeof (xScale as any).bandwidth !== "function") return null;
-  const bw = (xScale as any).bandwidth() as number;
-  const bh = (yScale as any).bandwidth() as number;
+  const bw = xScale.bandwidth();
+  const bh = yScale.bandwidth();
 
   const nCols = orderedSampleLabels.length;
   const nRows = orderedGeneLabels.length;
@@ -326,15 +323,14 @@ function ClusteredOverlay() {
 
   const stripTop = drawingArea.top - ANNOT_H - 4;
 
-  // Colorbar in the right margin
   const cbX = drawingArea.left + drawingArea.width + 28;
   const cbW = 18;
-  const cbTop = drawingArea.top + drawingArea.height * 0.22;
-  const cbH = drawingArea.height * 0.56;
+  const cbTop = drawingArea.top + drawingArea.height * 0.25;
+  const cbH = drawingArea.height * 0.52;
 
-  // Group legends in top-right above colorbar
   const legX = drawingArea.left + drawingArea.width + 18;
   const legY = HEADER_H + 6;
+  const pwStartY = legY + 22 + conditions.length * 22 + 14;
 
   return (
     <g>
@@ -350,8 +346,8 @@ function ClusteredOverlay() {
       {cells.map((cell) => (
         <rect
           key={cell.id}
-          x={Number(xScale(cell.x) ?? 0)}
-          y={Number(yScale(cell.y) ?? 0)}
+          x={xScale(cell.x)}
+          y={yScale(cell.y)}
           width={bw}
           height={bh}
           fill={cell.fill}
@@ -374,7 +370,7 @@ function ClusteredOverlay() {
         );
       })}
 
-      {/* Gene pathway annotation strip (placed between row dendrogram and y-axis labels) */}
+      {/* Gene pathway annotation strip */}
       {orderedGeneLabels.map((gLabel, pos) => {
         const pathway = geneToPathway.get(gLabel)!;
         const cy = drawingArea.top + rowStep * (pos + 0.5);
@@ -430,26 +426,35 @@ function ClusteredOverlay() {
         );
       })}
 
-      {/* Condition & Pathway legend swatches */}
-      {conditions.map((cond, idx) => (
-        <g key={`cond-leg-${cond}`}>
-          <circle cx={legX + 6} cy={legY + idx * 22} r={6} fill={conditionColorMap.get(cond)} />
-          <text
-            x={legX + 18}
-            y={legY + idx * 22}
-            fontSize={14}
-            fill={t.inkSoft}
-            dominantBaseline="central"
-          >
-            {cond}
-          </text>
-        </g>
-      ))}
+      {/* Condition & Pathway legend with square swatches and section titles */}
+      <text x={legX} y={legY} fontSize={14} fontWeight={600} fill={t.ink} dominantBaseline="central">
+        {CONDITION}
+      </text>
+      {conditions.map((cond, idx) => {
+        const cy = legY + 22 + idx * 22;
+        return (
+          <g key={`cond-leg-${cond}`}>
+            <rect x={legX} y={cy - 6} width={12} height={12} rx={2} fill={conditionColorMap.get(cond)} />
+            <text
+              x={legX + 18}
+              y={cy}
+              fontSize={14}
+              fill={t.inkSoft}
+              dominantBaseline="central"
+            >
+              {cond}
+            </text>
+          </g>
+        );
+      })}
+      <text x={legX} y={pwStartY} fontSize={14} fontWeight={600} fill={t.ink} dominantBaseline="central">
+        {PATHWAY}
+      </text>
       {pathways.map((pw, idx) => {
-        const py = legY + conditions.length * 22 + 12 + idx * 22;
+        const py = pwStartY + 22 + idx * 22;
         return (
           <g key={`pw-leg-${pw}`}>
-            <circle cx={legX + 6} cy={py} r={6} fill={pathwayColorMap.get(pw)} />
+            <rect x={legX} y={py - 6} width={12} height={12} rx={2} fill={pathwayColorMap.get(pw)} />
             <text x={legX + 18} y={py} fontSize={14} fill={t.inkSoft} dominantBaseline="central">
               {pw}
             </text>
@@ -460,7 +465,7 @@ function ClusteredOverlay() {
       {/* Diverging colorbar */}
       <rect x={cbX} y={cbTop} width={cbW} height={cbH} fill="url(#clusteredHeatmapDivGrad)" rx={3} />
       {colorbarTicks.map((tick) => {
-        const ty = cbTop + cbH * (1 - (tick + colorDomain) / (2 * colorDomain || 1));
+        const ty = cbTop + cbH * (1 - (tick + colorDomain) / (2 * colorDomain));
         return (
           <g key={tick}>
             <line x1={cbX + cbW} y1={ty} x2={cbX + cbW + 6} y2={ty} stroke={t.inkSoft} strokeWidth={1} />
@@ -484,14 +489,14 @@ function ClusteredOverlay() {
         textAnchor="middle"
         transform={`rotate(-90, ${cbX + cbW + 64}, ${cbTop + cbH / 2})`}
       >
-        {COLORBAR_LABEL}
+        {LOG2_FC}
       </text>
     </g>
   );
 }
 
 export default function Chart() {
-  const subtitle = `${SUBTITLE_PREFIX} (${orderedGeneLabels.length} genes × ${orderedSampleLabels.length} samples)`;
+  const subtitle = `Ward hierarchical clustering of ${LOG2_FC} (${orderedGeneLabels.length} ${GENE}s × ${orderedSampleLabels.length} ${SAMPLE}s)`;
 
   return (
     <ChartsContainer
