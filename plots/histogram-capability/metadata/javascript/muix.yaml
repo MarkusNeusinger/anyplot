@@ -2,48 +2,54 @@ library: muix
 language: javascript
 specification_id: histogram-capability
 created: '2026-06-20T15:30:16Z'
-updated: '2026-06-20T15:48:56Z'
-generated_by: claude-sonnet
-workflow_run: 27875273679
+updated: '2026-10-24T09:55:59Z'
+generated_by: gemini-4-argon
+adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
+workflow_run: 40083198021
 issue: 4552
-language_version: 22.22.3
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/javascript/muix/plot-dark.html
-quality_score: 92
+quality_score: 86
 review:
   strengths:
-  - 'Excellent MUI X composable architecture: ChartContainer + useDrawingArea + LinePlot
-    used idiomatically to blend a custom histogram into a MUI X chart viewport'
-  - 'Rich annotation panel: Cp/Cpk in monospace, amber capability-status, all spec
-    elements summarised in right margin — professional engineering dashboard aesthetic'
-  - 'Fully deterministic LCG + Box-Muller: clean browser-safe reproducibility without
-    Math.random()'
-  - 'Perfect spec compliance: all required elements (LSL, USL, Target, Cp, Cpk annotations,
-    normal fit) present and correctly implemented'
-  - 'Semantic Imprint palette use: green bars, red spec limits, amber warning status
-    — all map to real-world meaning'
-  - Both themes render correctly with all chrome adapting via t.* tokens
+  - Fitted normal curve scaled by n x binWidth so it follows the bar outline exactly,
+    centered on the sample mean
+  - Cp/Cpk computed from the data with sample sigma and shown in a dedicated capability
+    panel beside the plot, covering no bars, curve or limit lines
+  - Measurement axis padded to 9.925-10.075 so both specification limits and margins
+    are visible, with limits red dashed and the target purple dashed, each directly
+    labelled
+  - 'Idiomatic MUI X v9 composition: ChartsContainer + LinePlot + ChartsReferenceLine
+    + ChartsGrid, with a useDrawingArea-driven custom layer for the contiguous histogram
+    bars'
+  - Theme tokens threaded through all chrome; both renders fully theme-correct with
+    identical data colors
   weaknesses:
-  - Title occupies ~45% of canvas width, slightly below the 50–70% guideline for this
-    ~54-char title; consider increasing the titleSize floor slightly
-  - 'DE-03 could be elevated: histogram does not visually annotate the mean-vs-target
-    offset — adding a mean line or small annotation (e.g. ''μ = 10.005'') would make
-    the process shift immediately obvious without reading the Cpk panel'
+  - 'VQ-01 (dark): the bold 14 px ''LSL'' and ''USL'' line labels are drawn in #AE3030
+    on the #1A1A17 page, about 2.6:1 contrast, and fade at thumbnail size → label
+    text at 4.5:1 or better, e.g. t.ink for the label while the dashed line keeps
+    the red. Likely cause: labelStyle fill: RED on both LSL/USL ChartsReferenceLine
+    elements.'
+  - 'Suggestion: the subtitle opens with ''Shaft diameter (mm) (n = 200)'', two parenthesised
+    groups in a row; ''Shaft diameter, n = 200 · …'' would read more cleanly.'
+  - 'Suggestion: the Normal fit curve runs along the x-axis baseline across the empty
+    margins; starting it a few sigma from the mean would keep the axis line clean.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white.
-      Chrome: Title "histogram-capability · javascript · muix · anyplot.ai" in dark ink, clearly readable at ~45% canvas width. X-axis label "Shaft Diameter (mm)" and Y-axis label "Count" in dark ink, explicitly sized at 15px. Tick labels (9.930–10.050 on X, 0–55 on Y) in inkSoft at 13–14px, all readable. Annotation panel on right margin with "CAPABILITY" small-caps header, Cp/Cpk in monospace, "Marginally Capable" in amber — all clearly readable.
-      Data: Green (#009E73) histogram bars with 0.82 opacity. Blue (#4467A3) normal-fit curve. Red dashed (#AE3030) LSL and USL vertical lines. Green dashed Target line. First series correctly #009E73.
-      Legibility verdict: PASS — all elements clearly readable against light background.
+      Background: warm off-white #FAF8F1, not pure white.
+      Chrome: bold dark title "histogram-capability · javascript · muix · anyplot.ai" top left (~42% of width), grey subtitle with n = 200, mu = 10.0058 mm, sigma = 0.0140 mm and the limits; x axis "Shaft diameter (mm)" with ticks 9.925-10.075, y axis "Count" 0-36; subtle horizontal grid; all text dark and readable.
+      Data: 15 contiguous brand-green #009E73 bars separated by page-colored hairlines, peaking at 32 around 10.005; a blue #4467A3 fitted normal curve tracking the bar outline; red #AE3030 dashed LSL (9.95) and USL (10.05) lines and a purple #C475FD dashed Target line (10.00), each labelled at the top. Right-side panel on the elevated surface: "CAPABILITY", "Cp = 1.189", "Cpk = 1.051", "Status: Marginal", then a legend (Observations, Normal fit, LSL / USL, Target) with glyphs matching the marks.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black.
-      Chrome: Title in light text (#F0EFE8-range), fully readable against dark background. Axis labels, tick labels in light colours via t.ink/t.inkSoft tokens. Annotation panel text renders light. "Marginally Capable" in amber (#DDCC77) — clearly readable on dark surface. No dark-on-dark failures detected.
-      Data: Green (#009E73) bars, blue (#4467A3) curve, red (#AE3030) spec-limit lines — all identical to light render. Data colours are unchanged across themes; only chrome flips.
-      Legibility verdict: PASS — all elements clearly readable against dark background.
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title, subtitle, axis titles and ticks in light ink, readable; grid subtle; capability panel on a slightly lighter elevated surface with light text. No dark-on-dark text. The red LSL/USL labels are readable but low-contrast against the dark page.
+      Data: bars, curve, red limit lines and purple target line in the same colors as the light render; bar separators flip to the dark page color. Brand green clearly visible.
+      Legibility verdict: PASS (LSL/USL labels dim)
   criteria_checklist:
     visual_quality:
       score: 29
@@ -54,73 +60,81 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; everything readable in both themes;
-          title slightly below 50-70% width guideline at ~45%
+        comment: 'All font sizes explicitly set (title 22, ticks 14, axis titles 15,
+          panel 14-16 CSS px) and readable in both themes; the bold #AE3030 LSL/USL
+          line labels are low-contrast on the dark page (defect line)'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements in either render
+        comment: No text collisions; line labels sit at the top of the plot clear
+          of the bars; capability panel sits outside the plot area
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars, curve, and reference lines all well-sized and clearly visible
+        comment: 15 contiguous bars with thin page-colored separators, fitted curve
+          and three dashed limit lines all clearly visible in both themes; legend
+          glyphs match the marks
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette; green/blue/red trio CVD-distinguishable; semi-transparent
-          bars don't obscure overlay
+        comment: Spec lines differ from the target line by hue (red vs purple), dash
+          pattern and direct label, so no hue-only distinction
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; chart fills canvas well; annotation panel in
-          right margin; no overflow or clipping
+        comment: Plot fills most of the canvas, panel sits directly beside the plot,
+          balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: Shaft Diameter (mm) with units; Y: Count; title in correct format'
+        comment: '''Shaft diameter (mm)'' with unit, ''Count'' for the y axis'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; blue #4467A3; semantic red #AE3030 for limits;
-          amber anchor for status; correct backgrounds both themes'
+        comment: 'Bars #009E73, curve #4467A3, target #C475FD, limits on the #AE3030
+          red anchor; identical in both renders; #FAF8F1 / #1A1A17 backgrounds and
+          theme-correct chrome'
     design_excellence:
-      score: 14
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom annotation panel with monospace metrics, small-caps header,
-          amber status colouring; clearly above configured default
+        comment: 'Beyond the baseline: a dedicated capability panel on the elevated
+          surface with a letter-spaced small-caps header, monospace-aligned Cp/Cpk
+          values and a divider, plus a statistics subtitle (mu, sigma, limits) under
+          the title'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Horizontal grid only; semi-transparent bars; rounded annotation panel
-          with divider; grid via t.grid token
+        comment: Bars separated by page-colored hairlines, line labels aligned along
+          the plot top, horizontal-only grid; the subtitle's stacked parentheses 'Shaft
+          diameter (mm) (n = 200)' read a bit clumsy
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Amber capability-status immediately conveys process state; annotation
-          panel creates hierarchy; mean offset illustrates Cp>Cpk; lacks direct histogram
-          annotation of mean shift
+        comment: 'A ''Status: Marginal'' verdict derived from Cpk against the 1.33
+          / 1.0 thresholds gives the reader the conclusion; otherwise no visual emphasis
+          beyond what the Notes prescribe'
     spec_compliance:
       score: 15
       max: 15
@@ -130,29 +144,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: histogram + fitted normal curve + spec limits + target
-          line'
+        comment: 'Histogram with fitted normal curve and specification-limit lines:
+          the capability plot'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: LSL, USL, Target lines; Cp/Cpk calculated and annotated; visually
-          distinct styling per spec
+        comment: Contiguous bars with the curve scaled by n x binWidth; LSL/USL/target
+          lines at their values with labels; axis spans 9.925-10.075 past both limits;
+          limits red dashed vs target purple dashed; Cp/Cpk as text in a panel that
+          covers no bars, curve or line
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: shaft diameter (mm); Y: count; 200 measurements binned; normal
-          curve scaled to histogram area'
+        comment: Bars at their bin edges on the linear measurement axis; the catmullRom
+          curve passes through 120 dense samples of a smooth density, no visible overshoot
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format; annotation panel covers all legend
-          items
+        comment: Title 'histogram-capability · javascript · muix · anyplot.ai'; legend
+          entries Observations / Normal fit / LSL / USL / Target match the marks
     data_quality:
       score: 15
       max: 15
@@ -162,88 +178,96 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Full coverage: histogram, normal curve, both spec limits, target,
-          Cp/Cpk, capability status; mean offset illustrates Cp≠Cpk'
+        comment: 200 measurements, mean slightly off target so Cpk < Cp shows the
+          centering effect, bars deviate from the curve as the spec permits
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: CNC machining shaft-diameter scenario (9.95–10.05 mm tolerance) —
-          realistic, industry-standard, neutral
+        comment: Shaft diameter in mm with LSL 9.95 / USL 10.05 / target 10.00 — the
+          spec's own engineering example, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: ±0.05 mm tolerance realistic for precision machining; 200 measurements
-          appropriate; Cp≈1.19, Cpk≈1.05 plausible marginal values
+        comment: 'Checked: mu 10.0058, sigma 0.0140 give Cp = 0.1/(6*0.0140) = 1.19
+          and Cpk = (10.05-10.0058)/(3*0.0140) = 1.05, matching the panel''s 1.189
+          / 1.051, computed in code with sample sigma (n-1); Marginal status consistent
+          with 1.0 <= Cpk < 1.33'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Helper components (HistogramBars, AnnotationPanel) necessary for
-          MUI X useDrawingArea hook — idiomatic but departs from pure linear KISS
+        comment: Constants → data → computation → component; the one extra component
+          is needed because useDrawingArea only works inside the chart context
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic LCG + Box-Muller — fully reproducible
+        comment: Seeded LCG + Box-Muller, deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All 9 imports used
+        comment: Every import is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, readable, no fake UI elements, helpful comments on non-obvious
-          choices
+        comment: Written-out binning and normal density are permitted (muix has no
+          statistics helpers); no dead code, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default export; skipAnimation on both ChartContainer and LinePlot;
-          harness handles file output
+        comment: Default-exported component sized from ANYPLOT_SIZE, v9 ChartsContainer
+          API, skipAnimation on container and LinePlot
     library_mastery:
-      score: 10
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Exemplary: ChartContainer composition, useDrawingArea for coordinate-space
-          SVG, ChartsReferenceLine, ChartsGrid with sx token styling, subpath imports'
+        comment: 'Clean v9 composition: ChartsContainer with LinePlot, ChartsGrid,
+          ChartsReferenceLine and the axis components, all on shared axis ids'
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 2
         max: 5
         passed: true
-        comment: useDrawingArea + custom SVG HistogramBars in MUI X coordinate space
-          is distinctively MUI X — cannot be replicated in Chart.js/Plotly; ChartContainer
-          composition another MUI X strength
+        comment: A custom SVG layer that reads the plot geometry from the useDrawingArea
+          hook and draws inside the chart's coordinate space, a MUI X composition
+          idiom
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-10-24T09:52:35Z'
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
+  - layer-composition
   - custom-legend
+  - annotations
+  - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep:
   - binning
   styling:
   - alpha-blending
+  - edge-highlighting
+  - grid-styling
