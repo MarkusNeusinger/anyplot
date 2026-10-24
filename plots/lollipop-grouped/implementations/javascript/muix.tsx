@@ -188,8 +188,10 @@ export default function Chart() {
             scaleType: "band",
             data: regions,
             categoryGapRatio: 0.3,
-            height: 44,
+            height: 72,
+            label: CATEGORY,
             tickLabelStyle: { fontSize: 15, fill: t.inkSoft },
+            labelStyle: { fontSize: 16, fill: t.inkSoft },
           },
         ]}
         yAxis={[
