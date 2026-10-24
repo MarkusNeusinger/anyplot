@@ -1,7 +1,7 @@
 // anyplot.ai
 // dendrogram-basic: Basic Dendrogram
 // Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 90/100 | Created: 2026-06-18
+// Quality: pending | Created: 2026-06-18
 
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
