@@ -1,15 +1,10 @@
 // anyplot.ai
 // mohr-circle: Mohr's Circle for Stress Analysis
-// Library: muix 7.29.1 | JavaScript 22.23.2
+// Library: muix 9.2.1 | JavaScript 22.23.2
 // Quality: 90/100 | Created: 2026-08-26
 //# anyplot-orientation: square
-// anyplot.ai
-// mohr-circle: Mohr's Circle for Stress Analysis
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-08-26
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
-import { LinePlot } from "@mui/x-charts/LineChart";
+
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
@@ -19,165 +14,251 @@ import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Stress state (in-memory, deterministic) --------------------------------
-const sigmaX = 80; // MPa — normal stress on the x-face
-const sigmaY = 20; // MPa — normal stress on the y-face
-const tauXY = 30; // MPa — shear stress on the xy-plane
+// Constants
+const TITLE = "mohr-circle · javascript · muix · anyplot.ai";
+const TITLE_HEIGHT = 64;
+const X_AXIS_HEIGHT = 60;
+const Y_AXIS_WIDTH = 90;
+const PAD_RATIO = 0.68;
+const ARC_RADIUS_RATIO = 0.32;
+const ARC_STEPS = 32;
+
+// Data
+const SIGMA_X_COL = "Normal Stress σx (MPa)";
+const SIGMA_Y_COL = "Normal Stress σy (MPa)";
+const TAU_XY_COL = "Shear Stress τxy (MPa)";
+const X_AXIS_LABEL = "Normal Stress σ (MPa)";
+const Y_AXIS_LABEL = "Shear Stress τ (MPa)";
+
+const DATA: Array<Record<string, number>> = [
+  {
+    [SIGMA_X_COL]: 80,
+    [SIGMA_Y_COL]: 20,
+    [TAU_XY_COL]: 30,
+  },
+];
+
+const stateRow = DATA[0];
+const sigmaX = Number(stateRow[SIGMA_X_COL]);
+const sigmaY = Number(stateRow[SIGMA_Y_COL]);
+const tauXY = Number(stateRow[TAU_XY_COL]);
 
 const center = (sigmaX + sigmaY) / 2;
 const radius = Math.sqrt(((sigmaX - sigmaY) / 2) ** 2 + tauXY ** 2);
 const sigma1 = center + radius;
 const sigma2 = center - radius;
 const tauMax = radius;
-const twoThetaPDeg = (Math.atan2(tauXY, (sigmaX - sigmaY) / 2) * 180) / Math.PI;
+const twoThetaPRad = Math.atan2(tauXY, (sigmaX - sigmaY) / 2);
+const twoThetaPDeg = (twoThetaPRad * 180) / Math.PI;
 
-// --- Circle geometry, sampled parametrically (x is non-monotonic, so the
-// line series is positioned via an explicit numeric xAxis.data array rather
-// than relying on a sorted/categorical axis) --------------------------------
-const CIRCLE_STEPS = 180;
-const circleX = [];
-const circleY = [];
-for (let i = 0; i <= CIRCLE_STEPS; i++) {
-  const angle = (i / CIRCLE_STEPS) * 2 * Math.PI;
-  circleX.push(center + radius * Math.cos(angle));
-  circleY.push(radius * Math.sin(angle));
-}
+const pad = radius * PAD_RATIO;
+const xAxisMin = center - radius - pad;
+const xAxisMax = center + radius + pad;
+const yAxisMin = -radius - pad;
+const yAxisMax = radius + pad;
 
-// --- Axis domain — equal span on both axes; combined with the equal-size
-// drawing area (see MARGIN below) this keeps the circle a true circle. ------
-const PAD = radius * 0.75;
-const X_MIN = center - radius - PAD;
-const X_MAX = center + radius + PAD;
-const Y_MIN = -radius - PAD;
-const Y_MAX = radius + PAD;
-
-const TITLE = "mohr-circle · javascript · muix · anyplot.ai";
-const TITLE_HEIGHT = 70;
-
-// left+right and top+bottom leave an equal-size square drawing area — the
-// hard requirement for the circle to render with a true 1:1 aspect ratio.
-const MARGIN = { top: 55, bottom: 65, left: 130, right: 60 };
-
-// --- Custom overlay: stress points, reference diameter, angle callout -------
-// Community `@mui/x-charts/hooks` (useXScale/useYScale) map data coordinates
-// to pixels so the annotations stay aligned with the circle at any size.
 function MohrAnnotations() {
   const xScale = useXScale();
   const yScale = useYScale();
-  const toPx = (x, y) => ({ x: xScale(x), y: yScale(y) });
 
-  const c = toPx(center, 0);
-  const pointA = toPx(sigmaX, tauXY);
-  const pointB = toPx(sigmaY, -tauXY);
-  const pointS1 = toPx(sigma1, 0);
-  const pointS2 = toPx(sigma2, 0);
-  const pointTauMax = toPx(center, tauMax);
-  const pointTauMin = toPx(center, -tauMax);
+  const cx = Number(xScale(center));
+  const cy = Number(yScale(0));
+  const ax = Number(xScale(sigmaX));
+  const ay = Number(yScale(tauXY));
+  const bx = Number(xScale(sigmaY));
+  const by = Number(yScale(-tauXY));
+  const s1x = Number(xScale(sigma1));
+  const s1y = Number(yScale(0));
+  const s2x = Number(xScale(sigma2));
+  const s2y = Number(yScale(0));
+  const tmaxX = Number(xScale(center));
+  const tmaxY = Number(yScale(tauMax));
+  const tminX = Number(xScale(center));
+  const tminY = Number(yScale(-tauMax));
 
-  const arcRadius = radius * 0.32;
-  const arcStepCount = 24;
-  const twoThetaPRad = (twoThetaPDeg * Math.PI) / 180;
-  const arcPath = Array.from({ length: arcStepCount + 1 }, (_, i) => {
-    const angle = (twoThetaPRad * i) / arcStepCount;
-    return toPx(center + arcRadius * Math.cos(angle), arcRadius * Math.sin(angle));
-  })
-    .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`)
-    .join(" ");
-  const angleLabelPos = toPx(
-    center + arcRadius * 1.7 * Math.cos(twoThetaPRad / 2),
-    arcRadius * 1.7 * Math.sin(twoThetaPRad / 2),
-  );
+  const circleRadiusPx = Math.abs(s1x - cx);
+  const arcRadius = radius * ARC_RADIUS_RATIO;
 
-  const stateColor = t.palette[1]; // the given stress-state points A and B
-  const landmarkColor = t.ink; // derived circle geometry (neutral / reference)
+  let arcPath = "";
+  for (let i = 0; i <= ARC_STEPS; i++) {
+    const angle = (twoThetaPRad * i) / ARC_STEPS;
+    const px = Number(xScale(center + arcRadius * Math.cos(angle)));
+    const py = Number(yScale(arcRadius * Math.sin(angle)));
+    arcPath += `${i === 0 ? "M" : "L"} ${px.toFixed(1)} ${py.toFixed(1)} `;
+  }
+
+  const angleLabelX = Number(xScale(center + arcRadius * 1.65 * Math.cos(twoThetaPRad / 2)));
+  const angleLabelY = Number(yScale(arcRadius * 1.65 * Math.sin(twoThetaPRad / 2)));
+
+  const stateColor = t.palette[1];
+  const circleColor = t.palette[0];
+  const landmarkColor = t.ink;
+
+  const principalPoints = [
+    { x: s1x, y: s1y },
+    { x: s2x, y: s2y },
+    { x: tmaxX, y: tmaxY },
+    { x: tminX, y: tminY },
+  ];
+  const statePoints = [
+    { x: ax, y: ay },
+    { x: bx, y: by },
+  ];
 
   return (
     <g>
-      {/* Principal-stress axis — a bold neutral segment between sigma2/sigma1
-          makes the headline result the diagram's clear focal point. */}
-      <line x1={pointS2.x} y1={pointS2.y} x2={pointS1.x} y2={pointS1.y} stroke={landmarkColor} strokeWidth={5} strokeLinecap="round" />
+      {/* Mohr's Circle */}
+      <circle
+        cx={cx}
+        cy={cy}
+        r={circleRadiusPx}
+        fill={circleColor}
+        fillOpacity={0.07}
+        stroke={circleColor}
+        strokeWidth={3.5}
+      />
+
+      {/* Principal-stress segment between σ2 and σ1 */}
       <line
-        x1={pointA.x}
-        y1={pointA.y}
-        x2={pointB.x}
-        y2={pointB.y}
+        x1={s2x}
+        y1={s2y}
+        x2={s1x}
+        y2={s1y}
+        stroke={landmarkColor}
+        strokeWidth={4}
+        strokeLinecap="round"
+      />
+
+      {/* Reference diameter A-B through center */}
+      <line
+        x1={ax}
+        y1={ay}
+        x2={bx}
+        y2={by}
         stroke={t.ink}
         strokeWidth={2}
         strokeDasharray="7 6"
       />
-      <path d={arcPath} fill="none" stroke={t.inkSoft} strokeWidth={1.5} />
 
-      <circle cx={c.x} cy={c.y} r={6} fill={landmarkColor} />
-      {[pointS1, pointS2, pointTauMax, pointTauMin].map((p, i) => (
-        <circle key={i} cx={p.x} cy={p.y} r={11} fill={landmarkColor} stroke={t.pageBg} strokeWidth={2.5} />
+      {/* Principal plane angle arc 2θp */}
+      <path d={arcPath.trim()} fill="none" stroke={t.inkSoft} strokeWidth={2} />
+
+      {/* Center point C */}
+      <circle cx={cx} cy={cy} r={6} fill={landmarkColor} />
+
+      {/* Principal & max shear landmarks */}
+      {principalPoints.map((p, i) => (
+        <circle
+          key={`p-${i}`}
+          cx={p.x}
+          cy={p.y}
+          r={10}
+          fill={landmarkColor}
+          stroke={t.pageBg}
+          strokeWidth={2.5}
+        />
       ))}
-      {[pointA, pointB].map((p, i) => (
-        <circle key={i} cx={p.x} cy={p.y} r={11} fill={stateColor} stroke={t.pageBg} strokeWidth={2.5} />
+
+      {/* Given stress state points A and B */}
+      {statePoints.map((p, i) => (
+        <circle
+          key={`s-${i}`}
+          cx={p.x}
+          cy={p.y}
+          r={10}
+          fill={stateColor}
+          stroke={t.pageBg}
+          strokeWidth={2.5}
+        />
       ))}
 
       <ChartsText
-        x={pointA.x + 22}
-        y={pointA.y - 18}
+        x={ax + 18}
+        y={ay - 16}
         text={`A(${sigmaX}, ${tauXY})`}
-        style={{ fontSize: 17, fill: t.ink, dominantBaseline: "central" }}
+        style={{ fontSize: 16, fontWeight: 600, fill: t.ink, dominantBaseline: "central" }}
       />
       <ChartsText
-        x={pointB.x - 22}
-        y={pointB.y + 20}
+        x={bx - 18}
+        y={by + 18}
         text={`B(${sigmaY}, ${-tauXY})`}
-        style={{ fontSize: 17, fill: t.ink, textAnchor: "end", dominantBaseline: "central" }}
+        style={{
+          fontSize: 16,
+          fontWeight: 600,
+          fill: t.ink,
+          textAnchor: "end",
+          dominantBaseline: "central",
+        }}
       />
-      {/* Principal-stress / shear results — bolder and larger than the
-          supporting geometry labels so they read as the headline numbers. */}
       <ChartsText
-        x={pointS1.x + 14}
-        y={pointS1.y + 30}
+        x={s1x + 14}
+        y={s1y + 28}
         text={`σ₁ = ${sigma1.toFixed(1)} MPa`}
-        style={{ fontSize: 19, fontWeight: 700, fill: t.ink, dominantBaseline: "central" }}
+        style={{ fontSize: 17, fontWeight: 700, fill: t.ink, dominantBaseline: "central" }}
       />
       <ChartsText
-        x={pointS2.x - 14}
-        y={pointS2.y + 30}
+        x={s2x - 14}
+        y={s2y + 28}
         text={`σ₂ = ${sigma2.toFixed(1)} MPa`}
-        style={{ fontSize: 19, fontWeight: 700, fill: t.ink, textAnchor: "end", dominantBaseline: "central" }}
+        style={{
+          fontSize: 17,
+          fontWeight: 700,
+          fill: t.ink,
+          textAnchor: "end",
+          dominantBaseline: "central",
+        }}
       />
       <ChartsText
-        x={pointTauMax.x + 16}
-        y={pointTauMax.y - 12}
+        x={tmaxX + 16}
+        y={tmaxY - 14}
         text={`τ_max = ${tauMax.toFixed(1)} MPa`}
-        style={{ fontSize: 19, fontWeight: 700, fill: t.ink, dominantBaseline: "central" }}
+        style={{ fontSize: 17, fontWeight: 700, fill: t.ink, dominantBaseline: "central" }}
       />
       <ChartsText
-        x={pointTauMin.x + 16}
-        y={pointTauMin.y + 12}
-        text={`τ_min = ${(-tauMax).toFixed(1)} MPa`}
-        style={{ fontSize: 19, fontWeight: 700, fill: t.ink, dominantBaseline: "central" }}
+        x={tminX + 16}
+        y={tminY + 14}
+        text={`−τ_max = ${(-tauMax).toFixed(1)} MPa`}
+        style={{ fontSize: 17, fontWeight: 700, fill: t.ink, dominantBaseline: "central" }}
       />
       <ChartsText
-        x={c.x + 14}
-        y={c.y - 20}
-        text="C"
-        style={{ fontSize: 16, fill: t.inkSoft, dominantBaseline: "central" }}
+        x={cx - 14}
+        y={cy - 18}
+        text={`C(${center.toFixed(0)}, 0)`}
+        style={{
+          fontSize: 15,
+          fill: t.inkSoft,
+          textAnchor: "end",
+          dominantBaseline: "central",
+        }}
       />
       <ChartsText
-        x={angleLabelPos.x + 10}
-        y={angleLabelPos.y - 8}
+        x={angleLabelX + 8}
+        y={angleLabelY - 6}
         text={`2θp = ${twoThetaPDeg.toFixed(0)}°`}
-        style={{ fontSize: 16, fill: t.inkSoft, dominantBaseline: "central" }}
+        style={{ fontSize: 15, fontWeight: 600, fill: t.inkSoft, dominantBaseline: "central" }}
       />
     </g>
   );
 }
 
-// --- Chart (default-exported component — the harness mounts it) -------------
 export default function Chart() {
+  const { width, height } = window.ANYPLOT_SIZE;
+  const chartH = height - TITLE_HEIGHT;
+  const targetDrawSize = Math.min(width - Y_AXIS_WIDTH - 64, chartH - X_AXIS_HEIGHT - 44);
+  const marginLeft = Math.floor((width - Y_AXIS_WIDTH - targetDrawSize) / 2);
+  const marginRight = width - Y_AXIS_WIDTH - targetDrawSize - marginLeft;
+  const marginTop = Math.floor((chartH - X_AXIS_HEIGHT - targetDrawSize) / 2);
+  const marginBottom = chartH - X_AXIS_HEIGHT - targetDrawSize - marginTop;
+
   return (
     <div
       style={{
-        width: window.ANYPLOT_SIZE.width,
-        height: window.ANYPLOT_SIZE.height,
+        width,
+        height,
+        backgroundColor: t.pageBg,
         display: "flex",
         flexDirection: "column",
+        fontFamily: "Inter, system-ui, sans-serif",
       }}
     >
       <div
@@ -187,39 +268,57 @@ export default function Chart() {
           alignItems: "center",
           justifyContent: "center",
           fontSize: 22,
-          fontWeight: 500,
+          fontWeight: 600,
           color: t.ink,
         }}
       >
         {TITLE}
       </div>
-      <ChartContainer
-        width={window.ANYPLOT_SIZE.width}
-        height={window.ANYPLOT_SIZE.height - TITLE_HEIGHT}
-        margin={MARGIN}
+      <ChartsContainer
+        width={width}
+        height={chartH}
+        margin={{
+          top: marginTop,
+          right: marginRight,
+          bottom: marginBottom,
+          left: marginLeft,
+        }}
         skipAnimation
-        xAxis={[{ scaleType: "linear", data: circleX, min: X_MIN, max: X_MAX }]}
-        yAxis={[{ scaleType: "linear", min: Y_MIN, max: Y_MAX }]}
-        series={[{ type: "line", data: circleY, color: t.palette[0], curve: "linear", showMark: false }]}
+        series={[]}
+        xAxis={[
+          {
+            id: "sigma",
+            scaleType: "linear",
+            min: xAxisMin,
+            max: xAxisMax,
+            height: X_AXIS_HEIGHT,
+            label: X_AXIS_LABEL,
+            labelStyle: { fontSize: 16, fill: t.ink, fontWeight: 500 },
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            stroke: t.inkSoft,
+          },
+        ]}
+        yAxis={[
+          {
+            id: "tau",
+            scaleType: "linear",
+            min: yAxisMin,
+            max: yAxisMax,
+            width: Y_AXIS_WIDTH,
+            label: Y_AXIS_LABEL,
+            labelStyle: { fontSize: 16, fill: t.ink, fontWeight: 500 },
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            stroke: t.inkSoft,
+          },
+        ]}
       >
-        <ChartsGrid horizontal />
+        <ChartsGrid horizontal vertical />
         <ChartsReferenceLine y={0} lineStyle={{ stroke: t.grid, strokeWidth: 2 }} />
         <ChartsReferenceLine x={center} lineStyle={{ stroke: t.grid, strokeWidth: 2 }} />
-        <LinePlot />
         <MohrAnnotations />
-        <ChartsXAxis
-          label="Normal Stress σ (MPa)"
-          labelStyle={{ fontSize: 16, fill: t.ink, fontWeight: 500 }}
-          tickLabelStyle={{ fontSize: 14, fill: t.inkSoft }}
-          stroke={t.inkSoft}
-        />
-        <ChartsYAxis
-          label="Shear Stress τ (MPa)"
-          labelStyle={{ fontSize: 16, fill: t.ink, fontWeight: 500 }}
-          tickLabelStyle={{ fontSize: 14, fill: t.inkSoft }}
-          stroke={t.inkSoft}
-        />
-      </ChartContainer>
+        <ChartsXAxis axisId="sigma" />
+        <ChartsYAxis axisId="tau" />
+      </ChartsContainer>
     </div>
   );
 }
