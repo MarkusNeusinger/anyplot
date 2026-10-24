@@ -2,131 +2,141 @@ library: muix
 language: javascript
 specification_id: line-growth-percentile
 created: '2026-06-20T09:46:57Z'
-updated: '2026-06-20T09:54:02Z'
-generated_by: claude-sonnet
-workflow_run: 27867184973
+updated: '2026-10-24T10:31:48Z'
+generated_by: gemini-4-argon
+adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
+workflow_run: 40085604006
 issue: 4555
-language_version: 22.22.3
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-growth-percentile/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-growth-percentile/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-growth-percentile/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-growth-percentile/javascript/muix/plot-dark.html
-quality_score: 90
+quality_score: 87
 review:
   strengths:
-  - Complete spec compliance with all 7 percentile curves, filled bands, P50 emphasis,
-    right-margin P-labels, and patient trajectory overlay.
-  - 'Advanced MUI X technique: ChartContainer + useDrawingArea() hook for pixel-accurate
-    custom SVG layers — demonstrates deep library mastery.'
-  - Graduated band opacity (0.24 outer to 0.09 inner) creates an elegant clinical
-    hierarchy matching WHO/CDC chart conventions.
-  - 'Proper Imprint palette usage: brand green for the patient series, Imprint position-3
-    blue for reference bands (justified semantic exception for boys'' growth charts).'
-  - Theme-adaptive chrome throughout — t.pageBg, t.ink, t.inkSoft, t.grid tokens used
-    consistently; correct backgrounds in both renders.
-  - Realistic, medically plausible WHO-approximated weight data with correct birth
-    weight and growth trajectory.
+  - Composes the chart from ChartsContainer + LinePlot/MarkPlot/ChartsGrid/axes and
+    draws the filled bands and right-margin percentile labels as custom children through
+    the useXScale/useYScale hooks, so bands, curves and labels share one coordinate
+    system
+  - Graduated band opacity (0.25 / 0.17 / 0.09, symmetric around the median) in Imprint
+    blue for a boy's chart, with the P50 line at 2.8 px against 1.3 px for the other
+    percentiles and its right-margin label set in bold ink
+  - Brand-green patient trajectory with page-coloured marker outlines stands out clearly
+    against the muted blue reference in both themes
+  - Synthetic reference closely tracks WHO boys weight-for-age (P50 3.3 kg at birth,
+    ~9.6 kg at 12 mo, ~14.4 kg at 36 mo; P3 ~2.5 kg at birth), generated deterministically
+    from a median curve and z-scores
+  - Every chrome element (title, mono subtitle, HTML legend, axis labels, ticks, grid)
+    is threaded through ANYPLOT_TOKENS and flips correctly between themes; skipAnimation
+    set
   weaknesses:
-  - Inner percentile band (P25-P75) at fillOpacity=0.09 becomes nearly invisible on
-    the dark background (#1A1A17). The graduated design that works beautifully in
-    light mode loses its central band in dark mode. Consider using theme-adaptive
-    opacity (higher opacity values in dark theme, e.g. 0.18 for the inner band when
-    dark).
-  - skipAnimation is not passed to ChartContainer. While the anchor series has no
-    visible animation, the library rules require it on the container component for
-    screenshot safety.
+  - 'SC-02 (dark): the band steps are barely distinguishable on the #1A1A17 page —
+    the P25–P75 band at fillOpacity 0.09 and the P10–P25 / P75–P90 bands at 0.17 read
+    as almost the same dark slate, so the graduated intensity the spec asks for is
+    visible only in the light render → widen the opacity steps (e.g. about 0.12 /
+    0.24 / 0.36, +0.03 to +0.11) so each step separates in both themes. Likely cause:
+    the BANDS opacity values were tuned on the light background only.'
+  - 'Suggestion: the five band paths could come from MUI X''s native stacked area
+    series (`stack` + `area: true` with a transparent base series) instead of hand-built
+    SVG path strings in BandLayer.'
+  - 'Suggestion: the y axis starts at 0 while the lowest reference value is about
+    2.5 kg, leaving the bottom ~13 % of the plot empty; letting the lower limit follow
+    the data would give the curves more vertical room.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct anyplot light surface.
-      Chrome: Title "Boys Weight-for-Age · line-growth-percentile · javascript · muix · anyplot.ai" in dark ink, centered, clearly readable. Axis labels "Age (months)" and "Weight (kg)" in muted dark ink (t.inkSoft), clearly readable. Tick labels in muted dark ink, clearly readable. Subtle horizontal grid lines using t.grid token.
-      Data: Seven graduated percentile bands in Imprint blue (#4467A3) with decreasing opacity from extremes (0.24) to inner (0.09), creating a clinical gradient. Blue percentile lines overlay bands; P50 is thicker and more opaque. Patient trajectory in brand green (#009E73) as connected markers with white-stroke rings. Right-margin P-labels in blue; P50 bold and larger. Custom SVG legend in upper left.
-      First series (patient) = #009E73 brand green — CORRECT.
+      Background: warm off-white #FAF8F1, no white panel.
+      Chrome: bold dark title "line-growth-percentile · javascript · muix · anyplot.ai" top-left (~34 % width) with a grey mono subtitle summarising the synthetic WHO-like reference and the 12 visits (3.35 kg at 0 mo → 15.90 kg at 36 mo); HTML legend top-right (green dot "Patient weight (kg)", blue line "Median (P50)", blue swatch "Reference bands (P3–P97)"). Y axis "Patient weight (kg)" 0–18, x axis "Age (months)" 0–35, mono tick labels, subtle horizontal grid only, left and bottom axis lines. All text readable.
+      Data: seven blue (#4467A3) percentile curves fanning out from ~2.5–4.1 kg at birth to ~11.3–17.5 kg at 36 mo, never crossing; five filled bands with graduated opacity (darker outer, lighter centre), clearly stepped; P50 drawn thicker and more opaque. Right-margin labels P3…P97 beside each curve end, P50 in bold ink. Brand-green (#009E73) patient line with 12 circular markers (page-coloured outline) rising from the median at birth to just above P90 territory at 36 mo, crossing P75.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct anyplot dark surface.
-      Chrome: Title in light muted text (t.inkSoft = #B8B7B0), clearly readable. Axis labels and tick labels in light muted text, clearly readable. No dark-on-dark failures found. Grid lines subtle and visible.
-      Data: Brand green (#009E73) patient trajectory highly visible and prominent. Imprint blue (#4467A3) for percentile lines and labels readable on dark surface; P50 bold label clearly distinguishable. Data colors identical to light render (only chrome flipped). Minor concern: inner P25-P75 band (fillOpacity 0.09 over #1A1A17) is nearly invisible — appears as extremely faint tint; outer bands visible.
-      Legibility verdict: PASS (minor concern: inner percentile band nearly imperceptible in dark mode)
+      Background: warm near-black #1A1A17.
+      Chrome: title, legend text, axis labels in light ink; subtitle and tick labels in light grey inkSoft; grid lines subtle dark grey but visible. No dark-on-dark text; P50 label switches to light ink.
+      Data: identical blue curves/bands and identical green patient line and markers (marker outline now the dark page colour). The band steps are much weaker here — the inner P25–P75 band and the adjacent bands read as nearly the same dark slate, only the outermost bands are marginally lighter.
+      Legibility verdict: PASS (band-step distinguishability is weak — see SC-02)
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set; both renders readable. Minor: title
-          weight 500 could be bolder.'
+        comment: Explicit sizes per the library prompt (title 22, axis titles 16,
+          ticks/labels 14 CSS px); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element collisions found in either render.
+        comment: No text collisions; right-margin labels separate; patient/median
+          line contact is data overlap that hides nothing
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Patient and outer bands clearly visible. Inner P25-P75 band (fillOpacity
-          0.09) nearly invisible on dark background.
+        comment: 12 sparse patient markers prominent (r 6.2 with page outline); percentile
+          lines thin but visible; legend glyphs visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint green + blue is CVD-safe with strong hue and luminance separation.
+        comment: Green vs blue, CVD-safe; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. No clipping. Generous margins. Good proportions.
+        comment: 3200x1800; balanced axes; labels fit the right margin; nothing cut
+          off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units. Title follows correct spec-id format
-          with descriptive prefix.
+        comment: '''Age (months)'', ''Patient weight (kg)'' with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Patient = #009E73 (first series). Bands = #4467A3 (Imprint pos 3,
-          semantic exception for boys). Correct backgrounds in both themes.'
+        comment: 'Patient = #009E73; blue (Imprint position 3) for the boy''s reference
+          per the spec''s gender convention; correct backgrounds both themes'
     design_excellence:
-      score: 14
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        passed: true
-        comment: 'Above defaults: graduated opacity bands, P50 emphasis, clinical
-          right-margin labels, clear visual hierarchy.'
+        passed: false
+        comment: 'Beyond baseline: header with mono data-summary subtitle and a compact
+          custom HTML legend whose glyphs match each mark type; mono right-margin
+          labels with the median in bold ink'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Subtle y-only grid with t.grid token, L-frame axes, good whitespace.
-          Inner band disappears in dark mode.
+        passed: false
+        comment: 'Beyond baseline: percentile strokes at reduced opacity with round
+          caps so the bands lead, patient markers ringed in the page colour, curve
+          ends aligned with the label column'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: 'Clear narrative: patient above median (P75-P90 range). P50 anchor
-          helps orientation. Graduated bands guide eye.'
+        passed: false
+        comment: Subtitle states the trajectory (3.35 kg at 0 mo → 15.90 kg at 36
+          mo), framing the patient's upward percentile drift as the focal point
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -134,29 +144,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Line chart with filled percentile bands — correct WHO/CDC growth
-          chart format.
+        comment: Growth chart with percentile curves, bands and patient overlay
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All features: filled areas, P50 emphasis, blue for boys, P-labels
-          on right margin, connected patient markers.'
+        passed: false
+        comment: Curves, median emphasis, right-margin labels, contrasting connected
+          patient markers, blue tones, age in months all met; the 'steps between bands
+          distinguishable in both themes' bullet is missed in the dark render (defect
+          line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: age months 0-36. Y: weight kg. All 7 percentile curves. Patient
-          overlaid correctly.'
+        comment: Linear curves through the reference points, no overshoot; markers
+          at their values; full range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: Boys Weight-for-Age · line-growth-percentile · javascript
-          · muix · anyplot.ai. Legend labels clear.'
+        comment: Mandated title format; legend entries readable
     data_quality:
       score: 15
       max: 15
@@ -166,22 +176,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 7 percentile curves, filled bands, graduated opacity, P50 emphasis,
-          patient overlay, right-margin labels, custom legend.
+        comment: Curves fan out with age, steep early growth flattening, patient crosses
+          a percentile curve
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: WHO Boys weight-for-age via biologically plausible exponential model.
-          Birthweight 3.35 kg, ~16 kg at 36 months. No controversial content.
+        comment: WHO-style boys weight-for-age 0–36 mo, 12 well-child visits
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-36 month range (standard WHO infant reference). 0-22 kg Y-range
-          appropriate.
+        comment: 'Checked against WHO boys weight-for-age: P50 3.3 kg at 0 mo, 9.6
+          kg at 12 mo, 12.8 kg at 24 mo (WHO 12.2), 14.4 kg at 36 mo; P3 2.5 kg at
+          birth — plausible'
     code_quality:
       score: 10
       max: 10
@@ -191,62 +201,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Sub-components necessary for useDrawingArea() hook access — idiomatic
-          React/MUI X. Helper functions minimal.
+        comment: Two small React components are required to read the scale hooks;
+          otherwise flat module-level code
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hard-coded or generated via deterministic mathematical formulas.
-          No RNG.
+        comment: Fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only imports actually used. No unused imports.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean SVG path construction helpers. No fake interactivity.
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exports React component. Current MUI X community API. Harness
-          produces plot-{THEME}.png and .html.
+        comment: Default export, skipAnimation, v9 ChartsContainer and data-series
+          selectors
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: 'Advanced ChartContainer + useDrawingArea() pattern, composable axis
-          components, anchor-series scale trick. Minor: skipAnimation not on ChartContainer.'
+        passed: false
+        comment: Composition API (ChartsContainer + LinePlot/MarkPlot/ChartsGrid/ChartsXAxis/ChartsYAxis)
+          with v9 per-series sx selectors
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
-        passed: true
-        comment: useDrawingArea() hook for pixel-accurate SVG overlays. Composable
-          chart architecture with custom layer components.
+        passed: false
+        comment: useXScale/useYScale hooks to inject custom SVG layers (bands, labels)
+          into the MUI X composition
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-10-24T10:28:48Z'
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   - custom-legend
-  - html-export
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
+  - publication-ready

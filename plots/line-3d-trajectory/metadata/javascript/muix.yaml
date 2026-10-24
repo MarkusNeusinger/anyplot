@@ -2,144 +2,164 @@ library: muix
 language: javascript
 specification_id: line-3d-trajectory
 created: '2026-09-10T00:21:49Z'
-updated: '2026-09-10T00:35:07Z'
-generated_by: claude-sonnet
-workflow_run: 34420423568
+updated: '2026-10-24T10:32:00Z'
+generated_by: gemini-4-argon
+adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
+workflow_run: 40085401658
 issue: 3182
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/javascript/muix/plot-dark.html
-quality_score: 88
+quality_score: 83
 review:
   strengths:
-  - 'Overplotting fix works: strokeOpacity dropped from 0.9 to 0.55 and strokeWidth
-    from 2 to 1.5, so the dense inner spiral now reads as layered winding rings instead
-    of a solid blob.'
-  - The 'shared start' label was moved to a clear corner of the drawing area (via
-    useDrawingArea's padded bounds) and connected with a dashed leader line, fully
-    resolving the prior overlap with Trajectory B's spiral.
-  - Added an italic 'normalized units' caption near the axis gizmo, giving the reader
-    a magnitude reference that was missing before.
-  - 'Correct Imprint palette use — Trajectory A is brand green (#009E73), Trajectory
-    B is lavender (palette[1]); backgrounds are theme-correct (#FAF8F1 light / #1A1A17
-    dark) in both renders, data colors identical across themes.'
-  - Deterministic RK4 Lorenz integration with a realistic perturbation (x0=0.1000
-    vs 0.1001) directly illustrates chaotic sensitivity to initial conditions — a
-    strong, spec-aligned data choice.
-  - 'Idiomatic MUI X usage: composes a custom SVG overlay via ChartContainer + useDrawingArea,
-    the library''s documented pattern for chart types (3D projections) outside the
-    built-in series set.'
-  - Clean, deterministic, single-purpose code — no unused imports, no fake interactivity,
-    skipAnimation set correctly.
+  - The data is a real RK4 integration of the Lorenz system (σ=10, ρ=28, β=8/3, dt=0.01).
+    It drops a 200-step transient and keeps 2,000 points per trajectory. The axis
+    extents it reports (X −17 to +18, Y −22 to +24, Z +6 to +44) match the known size
+    of the attractor.
+  - Two initial states that differ only by 0.0001 in x₀ start from one shared marker
+    and end at clearly different points. The example data itself shows sensitive dependence
+    on initial conditions, the defining property of a chaotic attractor.
+  - The oblique view (elev 24°, azim −40°) shows the full extent of both lobes in
+    X, Y and Z. A translucent floor and dashed back walls give depth without competing
+    with the data.
+  - Each axis title is rotated to run parallel to its floor edge and pushed outward
+    from the box. The titles carry the data range, so all three axes are labeled without
+    clutter.
+  - Thin translucent strands (1.2 px, opacity 0.5) keep the individual windings of
+    the dense lobes traceable, as the Notes ask.
+  - 'MUI X is used idiomatically: a custom SVG layer goes inside ChartsContainer and
+    is placed with the useDrawingArea hook, skipAnimation is set, and every chrome
+    color comes from the theme tokens, so both renders adapt correctly.'
   weaknesses:
-  - The innermost loops of Trajectory B are still fairly dense even at opacity 0.55
-    — a small further reduction (~0.4-0.45) on just the tightest coils would let the
-    very center resolve even more cleanly, though this is no longer a hard readability
-    problem.
-  - The visualization is entirely custom SVG drawn over an empty ChartContainer, so
-    it doesn't showcase MUI X's own series/tooltip/legend components — a real constraint
-    of doing 3D projection on a 2D-only community library, not an oversight.
-  - True interactive rotation (the spec calls it 'essential' for exploring 3D structure)
-    isn't available — only a fixed isometric camera angle — an inherent MUI X community-surface
-    limitation rather than something this implementation could add.
+  - 'VQ-03 (dark): the green Trajectory A strand at 1.2 px and opacity 0.5 renders
+    as a dim dark-green line on #1A1A17 and recedes behind the purple strand, so the
+    first series is noticeably harder to follow than the second → raise its visibility
+    on the dark surface (stroke width about 1.6–1.8 px, +0.4 to +0.6 px, or opacity
+    about 0.65–0.7, +0.15 to +0.2), applied to both series so the colors stay identical
+    between themes. Likely cause: strokeWidth={1.2} with strokeOpacity={0.5} on the
+    trajectory <path>.'
+  - 'VQ-02 (both): the ''Shared start'' label (14 px mono, offset +12/−12 px from
+    the marker) sits on top of several right-lobe strands, which run through the letters
+    of ''Shared'' and behind ''start'' → place it in clear space (for example below-left
+    of the marker, outside the inner loops) so no strand crosses the text. Likely
+    cause: the fixed x+12, y−12 offset of the callout <text>.'
+  - 'VQ-06 (both): the Y and Z axis titles use the abbreviation ''temp var'' (''Horizontal
+    temp var (Y)'', ''Vertical temp var (Z)''), which reads like a shortened column
+    identifier and is ambiguous (variation or variance) → spell it out, for example
+    ''Horizontal temperature variation (Y)'' and ''Vertical temperature variation
+    (Z)''. Likely cause: the Y and Z column constants.'
+  - 'CQ-04 (code): lines 197–210 write out a Catmull-Rom spline (smoothPath) over
+    2,000 points at dt = 0.01, where a plain polyline through the same vertices looks
+    identical at this density. SUBSAMPLE = 1 makes the `(i - TRANSIENT) % SUBSAMPLE
+    === 0` test on line 89 a no-op → draw each strand as `<polyline points={pts(...traj.points)}
+    />` with the existing pts helper and drop SUBSAMPLE. Likely cause: smoothing and
+    decimation knobs kept from a sparser draft.'
+  - 'CQ-01 (code): besides the required component, the file defines module-level project()
+    and axisLabel() functions plus nested px/pts/smoothPath/edgeTitle helpers inside
+    TrajectoriesLayer → inline the one-off helpers (edgeTitle is called twice, axisLabel
+    three times) as direct expressions where that keeps the code readable, leaving
+    project() and px as the only helpers. Likely cause: helper-per-concern structure.'
+  - 'Suggestion: short tick marks with a few values along the three labeled edges
+    would let readers read approximate positions, not only the extents in the axis
+    titles.'
+  - 'Suggestion: the mono subtitle repeats all three axis names that the axis titles
+    already show; a shorter line (for example ''2 trajectories · 2,000 points each
+    · Δx₀ = 0.0001'') would sharpen the header.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1, not pure white.
-      Chrome: Title "line-3d-trajectory · javascript · muix · anyplot.ai" in bold dark ink, clearly legible, comfortably sized within the plot width. Legend (top right) with two color swatches and descriptive labels ("Trajectory A · x0=0.1000", "Trajectory B · x0=0.1001") in soft dark gray, fully legible and clear of the data. Axis gizmo (bottom left) with X/Y/Z labels plus a new italic "normalized units" caption, all in soft dark gray, legible. "shared start" annotation now sits in the clear top-left corner of the drawing area, connected to the actual start point by a dashed leader line — no longer crossed by trajectory lines.
-      Data: Trajectory A is brand green (#009E73), Trajectory B is lavender/purple (palette[1]) — both densely wound near a shared origin, diverging into two separate "butterfly wing" loops, classic Lorenz-attractor shape. With opacity reduced to 0.55 and strokeWidth to 1.5, the inner loops now show distinct concentric winding rings instead of a solid blob, though the innermost coils are still fairly tight.
-      Legibility verdict: PASS (all chrome text clearly readable, no overlap issues remain).
+      Background: warm off-white #FAF8F1 across the full canvas, not pure white.
+      Chrome: the bold near-black title "line-3d-trajectory · javascript · muix · anyplot.ai" sits top-left, with a grey monospace subtitle under it listing 2 trajectories and 2,000 points per trajectory. A horizontal legend sits top-right: a green line for "Trajectory A (x₀ = 5.0000)" and a purple line for "Trajectory B (x₀ = 5.0001)". The 3D box has a dark-grey solid front floor edge and a solid Z edge, plus a faint translucent floor and dashed light-grey back walls. Bold dark axis titles run parallel to their edges: "Convection rate (X) [-17 to +18]", "Horizontal temp var (Y) [-22 to +24]", and the rotated "Vertical temp var (Z) [+6 to +44]". An X/Y/Z orientation triad and the mono note "elev 24°, azim -40°" sit bottom-left. All text is clearly readable in dark ink.
+      Data: two Lorenz-attractor trajectories as thin translucent strands, green #009E73 (first series) and purple #C475FD (second). Both butterfly lobes are visible. Where the strands coincide they blend into a blue-grey. A black start dot labeled "Shared start" in mono sits near the center; the label overlaps a few right-lobe strands. A green end dot sits in the right lobe and a purple end dot below the central crossing.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17, not pure black.
-      Chrome: Title in light off-white ink, legend and gizmo labels (including the new "normalized units" caption) in light soft gray — all clearly legible against the dark background, no dark-on-dark issues. "shared start" text sits in the clear top-left corner with its dashed leader line, fully legible with no crossing lines.
-      Data: Trajectory colors are identical to the light render (green #009E73 and lavender palette[1]), confirming the palette rule that only chrome flips between themes. Same improved winding-ring visibility in the dense inner loops as the light render.
-      Legibility verdict: PASS (no dark-on-dark failures, no label-overlap concerns).
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: the title, legend text, axis titles, triad letters and the "Shared start" label switch to light ink. The subtitle and the elev/azim note use a light-grey soft ink. The front edges turn light grey and the back walls a dim grey dash. No dark-on-dark text: everything is readable.
+      Data: the same green and purple strands and marker colors as the light render; only the chrome flipped. The start marker turns light (ink token). The green strand at 1.2 px and opacity 0.5 reads noticeably dimmer than the purple one on the dark surface but is still traceable.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title, legend, gizmo labels, and the now-relocated 'shared start'
-          label are all readable in both themes.
+        comment: Explicit sizes (title 22 px, legend 15, axis titles 14, mono notes
+          14); all text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: '''shared start'' label moved to a clear corner with a leader line
-          — the prior overlap with Trajectory B''s spiral is fully resolved.'
+        comment: The 'Shared start' label sits on right-lobe strands (defect line)
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Opacity reduced from 0.9 to 0.55 and strokeWidth from 2 to 1.5 —
-          inner loops now show distinct winding rings instead of a solid blob; innermost
-          coils are still fairly tight.
+        comment: The green strand at 1.2 px and opacity 0.5 recedes on the dark surface
+          (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green + lavender pair (Imprint positions 1-2) is CVD-safe and contrasts
-          well on both surfaces.
+        comment: Green/purple pair is CVD-safe; adequate contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, nothing clipped at canvas edges, title well-sized,
-          canvas dimension gate passed.
+        comment: Canvas gate passed; box well proportioned in the landscape canvas,
+          no overflow
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Title excellent; the new 'normalized units' caption near the gizmo
-          resolves the prior missing-scale-reference gap.
+        comment: The abbreviation 'temp var' in the Y/Z titles (defect line); dimensionless
+          Lorenz variables need no units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is brand green #009E73, second is Imprint lavender;
-          theme-correct backgrounds in both renders; data colors identical across
-          themes.'
+        comment: 'First series #009E73, second Imprint purple; backgrounds #FAF8F1/#1A1A17;
+          data colors identical across themes'
     design_excellence:
-      score: 16
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom isometric 3D->2D projection, fixed camera angle, orientation
-          gizmo, and a hand-built legend go well beyond generic defaults.
+        comment: Mono secondary type for metadata against a sans title; a muted floor
+          and dashed back-wall frame that sets up depth hierarchy
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: No spines/grid clutter, transparent chart area, generous whitespace;
-          the tuned alpha/stroke values add polish over the prior attempt.
+        comment: Axis titles rotated parallel to their edges and pushed outward; translucent
+          floor and walls instead of a grid; orientation triad tucked in a corner
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Shared-start marker (now clearly annotated via leader line) and diverging
-          wings visually narrate the butterfly-effect story the spec calls for.
+        comment: 'Chooses two initial states 0.0001 apart: a shared start and divergent
+          end points make sensitive dependence the focal story'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -147,118 +167,122 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 3D trajectory plot, achieved via the documented MUI X composition
-          pattern since community MUI X has no native 3D series.
+        comment: 3D line trajectory
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Sequential connected lines and multi-trajectory color comparison
-          satisfy the spec; true interactive rotation isn't implemented, an inherent
-          MUI X community-surface limitation.
+        comment: Continuous sequential strands, three labeled axes, an oblique view,
+          multiple trajectories in their own colors with a legend, width/transparency
+          for overlap
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y/Z correctly projected and normalized; full data range visible
-          without clipping.
+        comment: Every point projected from its normalized x/y/z; dense Catmull-Rom
+          through all vertices shows no visible overshoot
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format exactly; legend labels are descriptive
-          and match the data.
+        comment: Mandated title; legend names both trajectories
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Connected sequential path, multiple comparable trajectories; no time-progression
-          color gradient, but that's an explicit spec alternative, not a gap.
+        comment: Both attractor lobes, crossings, tight windings and diverging multiple
+          trajectories
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Lorenz attractor is exactly the canonical example the spec names,
-          neutral subject matter.
+        comment: Lorenz convection model, a canonical neutral example named in the
+          spec
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: ~1800 points per trajectory, within the spec's 100-2000 point range.
+        comment: Spec has no Check values; checked that the integrated extents (X
+          −17..18, Y −22..24, Z 6..44) fall out of RK4 with σ=10, ρ=28, β=8/3 and
+          match the known attractor
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Helper functions are necessary for the RK4 integration and projection
-          math, not superfluous abstraction.
+        comment: Many helper functions beyond the required component (defect line)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic RK4 integration, no RNG.
+        comment: Deterministic integration
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ChartContainer and useDrawingArea imported, both used.
+        comment: ChartsContainer and useDrawingArea both used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Appropriate complexity for the math involved, no fake UI/interactivity.
+        comment: Catmull-Rom spline written out (lines 197–210) where a polyline is
+          identical at this density; no-op SUBSAMPLE (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: export default component, skipAnimation set, sized from window.ANYPLOT_SIZE
-          — correct harness contract.
+        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation set,
+          v9 ChartsContainer API
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Correctly applies the ChartContainer + useDrawingArea composition
-          pattern MUI X documents for chart types outside the built-in series set.
+        comment: Composition via ChartsContainer with hidden axes
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Doesn't showcase native MUI X series/tooltip/legend richness since
-          the visualization is custom SVG; the useDrawingArea hook usage itself is
-          a modest distinctive touch.
+        comment: A custom layer placed with the v9 useDrawingArea hook inside the
+          composed container
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-10-24T10:28:04Z'
 impl_tags:
   dependencies: []
   techniques:
   - 3d-projection
   - custom-legend
-  - annotations
+  - bezier-curves
   patterns:
   - data-generation
-  dataprep: []
+  - iteration-over-groups
+  dataprep:
+  - normalization
   styling:
   - alpha-blending
+  - minimal-chrome
