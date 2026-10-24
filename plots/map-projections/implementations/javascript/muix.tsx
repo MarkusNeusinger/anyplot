@@ -1,7 +1,7 @@
 // anyplot.ai
 // map-projections: World Map with Different Projections
-// Library: muix 9.2.1 | JavaScript 22.23.1
-// Quality: 90/100 | Created: 2026-08-06
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 85/100 | Created: 2026-08-26
 
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
@@ -22,26 +22,49 @@ const SQRT2 = Math.SQRT2;
 const MERCATOR_LAT_CLIP = 82;
 const ORTHO_LON0 = 0;
 const ORTHO_LAT0 = 20;
-const TISSOT_RADIUS_RAD = 550 / 6371;
+const TISSOT_RADIUS_KM = 550;
+const EARTH_RADIUS_KM = 6371;
+const TISSOT_RADIUS_RAD = TISSOT_RADIUS_KM / EARTH_RADIUS_KM;
 const TISSOT_STEPS = 48;
+const GRATICULE_STEP_DEG = 30;
 const DOMAIN_PAD_SHARE = 0.04;
 
-// Data
-const FEATURE_KIND_COL = "Feature Kind";
-const FEATURE_NAME_COL = "Feature Name";
-const SEQ_COL = "Vertex Sequence";
-const LON_COL = "Longitude (°)";
-const LAT_COL = "Latitude (°)";
-const PROJ_ID_COL = "Projection ID";
-const PROJ_TITLE_COL = "Projection Title";
-const PROJ_SUBTITLE_COL = "Projection Subtitle";
-const PROJ_NOTE_COL = "Distortion Note";
+// Columns: set these to your data's column names
+const FEATURE_KIND = "Feature kind"; // role: kind
+const FEATURE_NAME = "Country / landmass"; // role: country
+const VERTICES = "Boundary coordinates (lon, lat)"; // role: coordinates
 
-const RAW_POLYGONS: Array<{ kind: string; name: string; pts: Array<[number, number]> }> = [
+// Data: replace this block with your own records
+const PROJECTIONS = [
   {
-    kind: "continent",
-    name: "North America",
-    pts: [
+    id: "Mercator",
+    title: "Mercator (Cylindrical)",
+    subtitle: "Conformal — angles preserved",
+    note: "Area inflates as sec²(φ) toward the poles",
+  },
+  {
+    id: "Mollweide",
+    title: "Mollweide (Pseudocylindrical)",
+    subtitle: "Equal-area — true relative size",
+    note: "Shapes shear near the outer limb",
+  },
+  {
+    id: "Orthographic",
+    title: "Orthographic (Azimuthal)",
+    subtitle: `Globe view centered at ${ORTHO_LAT0}°N, ${ORTHO_LON0}°E`,
+    note: "Foreshortened to zero at the horizon",
+  },
+];
+
+const data: Array<{
+  [FEATURE_KIND]: "continent" | "border";
+  [FEATURE_NAME]: string;
+  [VERTICES]: Array<[number, number]>;
+}> = [
+  {
+    [FEATURE_KIND]: "continent",
+    [FEATURE_NAME]: "North America",
+    [VERTICES]: [
       [-168, 65], [-160, 70], [-140, 70], [-125, 72], [-95, 74], [-80, 70], [-65, 62],
       [-55, 52], [-60, 46], [-70, 42], [-76, 35], [-81, 25], [-90, 21], [-88, 16],
       [-83, 10], [-78, 8], [-85, 11], [-92, 15], [-97, 19], [-105, 20], [-110, 24],
@@ -49,26 +72,26 @@ const RAW_POLYGONS: Array<{ kind: string; name: string; pts: Array<[number, numb
     ],
   },
   {
-    kind: "continent",
-    name: "Greenland",
-    pts: [
+    [FEATURE_KIND]: "continent",
+    [FEATURE_NAME]: "Greenland",
+    [VERTICES]: [
       [-52, 60], [-44, 60], [-22, 70], [-18, 77], [-30, 83], [-55, 82], [-68, 76],
       [-56, 68], [-52, 60],
     ],
   },
   {
-    kind: "continent",
-    name: "South America",
-    pts: [
+    [FEATURE_KIND]: "continent",
+    [FEATURE_NAME]: "South America",
+    [VERTICES]: [
       [-78, 9], [-72, 12], [-62, 10], [-50, 2], [-35, -6], [-38, -15], [-40, -22],
       [-48, -28], [-54, -34], [-62, -40], [-66, -48], [-68, -55], [-74, -52], [-73, -42],
       [-71, -30], [-70, -18], [-76, -12], [-81, -5], [-79, 2], [-78, 9],
     ],
   },
   {
-    kind: "continent",
-    name: "Europe",
-    pts: [
+    [FEATURE_KIND]: "continent",
+    [FEATURE_NAME]: "Europe",
+    [VERTICES]: [
       [-10, 36], [-9, 43], [-2, 44], [-5, 48], [2, 51], [8, 55], [10, 58], [5, 62],
       [15, 68], [28, 71], [42, 68], [58, 68], [60, 55], [48, 46], [38, 45], [29, 41],
       [26, 38], [22, 37], [18, 40], [15, 38], [12, 42], [8, 44], [3, 42], [-2, 37],
@@ -76,28 +99,28 @@ const RAW_POLYGONS: Array<{ kind: string; name: string; pts: Array<[number, numb
     ],
   },
   {
-    kind: "continent",
-    name: "Great Britain",
-    pts: [[-6, 50], [-5, 58], [-2, 58], [1, 52], [-6, 50]],
+    [FEATURE_KIND]: "continent",
+    [FEATURE_NAME]: "Great Britain",
+    [VERTICES]: [[-6, 50], [-5, 58], [-2, 58], [1, 52], [-6, 50]],
   },
   {
-    kind: "continent",
-    name: "Africa",
-    pts: [
+    [FEATURE_KIND]: "continent",
+    [FEATURE_NAME]: "Africa",
+    [VERTICES]: [
       [-17, 15], [-13, 28], [-6, 35], [10, 37], [25, 32], [33, 31], [38, 22], [43, 12],
       [51, 12], [45, 2], [40, -10], [35, -22], [28, -33], [18, -35], [14, -22], [12, -6],
       [9, 4], [2, 6], [-8, 5], [-16, 11], [-17, 15],
     ],
   },
   {
-    kind: "continent",
-    name: "Madagascar",
-    pts: [[44, -25], [49, -13], [50, -16], [47, -25], [44, -25]],
+    [FEATURE_KIND]: "continent",
+    [FEATURE_NAME]: "Madagascar",
+    [VERTICES]: [[44, -25], [49, -13], [50, -16], [47, -25], [44, -25]],
   },
   {
-    kind: "continent",
-    name: "Asia",
-    pts: [
+    [FEATURE_KIND]: "continent",
+    [FEATURE_NAME]: "Asia",
+    [VERTICES]: [
       [28, 41], [40, 42], [50, 40], [58, 55], [60, 68], [75, 73], [105, 76], [140, 73],
       [175, 66], [170, 60], [155, 52], [142, 50], [135, 38], [128, 36], [122, 31],
       [118, 23], [108, 21], [105, 10], [102, 2], [98, 8], [92, 21], [88, 22], [80, 10],
@@ -106,167 +129,95 @@ const RAW_POLYGONS: Array<{ kind: string; name: string; pts: Array<[number, numb
     ],
   },
   {
-    kind: "continent",
-    name: "Japan",
-    pts: [[130, 31], [136, 35], [141, 41], [145, 44], [141, 38], [134, 33], [130, 31]],
+    [FEATURE_KIND]: "continent",
+    [FEATURE_NAME]: "Japan",
+    [VERTICES]: [[130, 31], [136, 35], [141, 41], [145, 44], [141, 38], [134, 33], [130, 31]],
   },
   {
-    kind: "continent",
-    name: "Maritime SE Asia",
-    pts: [[96, 5], [104, -2], [114, -7], [120, -8], [116, -2], [106, 2], [96, 5]],
+    [FEATURE_KIND]: "continent",
+    [FEATURE_NAME]: "Maritime SE Asia",
+    [VERTICES]: [[96, 5], [104, -2], [114, -7], [120, -8], [116, -2], [106, 2], [96, 5]],
   },
   {
-    kind: "continent",
-    name: "Australia",
-    pts: [
+    [FEATURE_KIND]: "continent",
+    [FEATURE_NAME]: "Australia",
+    [VERTICES]: [
       [114, -22], [122, -16], [132, -12], [136, -15], [142, -11], [148, -20], [153, -28],
       [150, -37], [140, -38], [132, -32], [122, -34], [115, -34], [114, -22],
     ],
   },
   {
-    kind: "continent",
-    name: "New Zealand",
-    pts: [[166, -46], [172, -41], [178, -37], [175, -42], [168, -46], [166, -46]],
+    [FEATURE_KIND]: "continent",
+    [FEATURE_NAME]: "New Zealand",
+    [VERTICES]: [[166, -46], [172, -41], [178, -37], [175, -42], [168, -46], [166, -46]],
   },
   {
-    kind: "continent",
-    name: "Antarctica",
-    pts: [
+    [FEATURE_KIND]: "continent",
+    [FEATURE_NAME]: "Antarctica",
+    [VERTICES]: [
       [-179, -72], [-120, -73], [-62, -65], [-58, -74], [-20, -72], [20, -70], [70, -68],
-      [120, -67], [170, -71], [179, -78], [120, -82], [0, -82], [-120, -82], [-179, -78],
-      [-179, -72],
+      [120, -67], [179, -71], [179, -82], [120, -82], [60, -82], [0, -82], [-60, -82],
+      [-120, -82], [-179, -82], [-179, -72],
     ],
   },
   {
-    kind: "border",
-    name: "Canada-US",
-    pts: [[-124, 49], [-95, 49], [-83, 46], [-75, 45], [-67, 47]],
+    [FEATURE_KIND]: "border",
+    [FEATURE_NAME]: "Canada-US",
+    [VERTICES]: [[-124, 49], [-95, 49], [-83, 46], [-75, 45], [-67, 47]],
   },
   {
-    kind: "border",
-    name: "US-Mexico",
-    pts: [[-117, 32], [-106, 31], [-97, 26]],
+    [FEATURE_KIND]: "border",
+    [FEATURE_NAME]: "US-Mexico",
+    [VERTICES]: [[-117, 32], [-106, 31], [-97, 26]],
   },
   {
-    kind: "border",
-    name: "Brazil West",
-    pts: [[-52, 4], [-60, 2], [-70, -4], [-70, -11], [-58, -20], [-54, -33]],
+    [FEATURE_KIND]: "border",
+    [FEATURE_NAME]: "Brazil West",
+    [VERTICES]: [[-52, 4], [-60, 2], [-70, -4], [-70, -11], [-58, -20], [-54, -33]],
   },
   {
-    kind: "border",
-    name: "Andes South",
-    pts: [[-70, -18], [-68, -27], [-70, -38], [-72, -50]],
+    [FEATURE_KIND]: "border",
+    [FEATURE_NAME]: "Andes South",
+    [VERTICES]: [[-70, -18], [-68, -27], [-70, -38], [-72, -50]],
   },
   {
-    kind: "border",
-    name: "Europe-Russia",
-    pts: [[28, 70], [30, 60], [38, 50], [40, 44]],
+    [FEATURE_KIND]: "border",
+    [FEATURE_NAME]: "Europe-Russia",
+    [VERTICES]: [[28, 70], [30, 60], [38, 50], [40, 44]],
   },
   {
-    kind: "border",
-    name: "Sahara South",
-    pts: [[-16, 15], [0, 15], [15, 14], [32, 12], [43, 12]],
+    [FEATURE_KIND]: "border",
+    [FEATURE_NAME]: "Sahara South",
+    [VERTICES]: [[-16, 15], [0, 15], [15, 14], [32, 12], [43, 12]],
   },
   {
-    kind: "border",
-    name: "Egypt-Sudan",
-    pts: [[25, 31], [25, 22], [36, 22]],
+    [FEATURE_KIND]: "border",
+    [FEATURE_NAME]: "Egypt-Sudan",
+    [VERTICES]: [[25, 31], [25, 22], [36, 22]],
   },
   {
-    kind: "border",
-    name: "Equatorial Africa",
-    pts: [[12, -6], [28, -4], [30, -10], [40, -11]],
+    [FEATURE_KIND]: "border",
+    [FEATURE_NAME]: "Equatorial Africa",
+    [VERTICES]: [[12, -6], [28, -4], [30, -10], [40, -11]],
   },
   {
-    kind: "border",
-    name: "Southern Africa",
-    pts: [[14, -17], [25, -18], [33, -26]],
+    [FEATURE_KIND]: "border",
+    [FEATURE_NAME]: "Southern Africa",
+    [VERTICES]: [[14, -17], [25, -18], [33, -26]],
   },
   {
-    kind: "border",
-    name: "Russia-Kazakhstan-China",
-    pts: [[50, 46], [68, 52], [87, 49], [105, 50], [120, 50], [134, 48]],
+    [FEATURE_KIND]: "border",
+    [FEATURE_NAME]: "Russia-Kazakhstan-China",
+    [VERTICES]: [[50, 46], [68, 52], [87, 49], [105, 50], [120, 50], [134, 48]],
   },
   {
-    kind: "border",
-    name: "India-China",
-    pts: [[67, 25], [75, 35], [88, 28], [97, 28]],
+    [FEATURE_KIND]: "border",
+    [FEATURE_NAME]: "India-China",
+    [VERTICES]: [[67, 25], [75, 35], [88, 28], [97, 28]],
   },
 ];
 
-const DATA: Array<Record<string, string | number>> = [];
-for (let p = 0; p < RAW_POLYGONS.length; p++) {
-  const poly = RAW_POLYGONS[p];
-  for (let i = 0; i < poly.pts.length; i++) {
-    DATA.push({
-      [FEATURE_KIND_COL]: poly.kind,
-      [FEATURE_NAME_COL]: poly.name,
-      [SEQ_COL]: i,
-      [LON_COL]: poly.pts[i][0],
-      [LAT_COL]: poly.pts[i][1],
-      [PROJ_ID_COL]: "Mercator",
-      [PROJ_TITLE_COL]: "Mercator (Cylindrical)",
-      [PROJ_SUBTITLE_COL]: "Conformal — angles preserved",
-      [PROJ_NOTE_COL]: "Area inflates as sec²(φ) toward the poles",
-    });
-  }
-}
-
-const PROJECTION_META: Array<Record<string, string | number>> = [
-  {
-    [FEATURE_KIND_COL]: "projection",
-    [FEATURE_NAME_COL]: "Mercator",
-    [SEQ_COL]: 0,
-    [LON_COL]: 0,
-    [LAT_COL]: 0,
-    [PROJ_ID_COL]: "Mercator",
-    [PROJ_TITLE_COL]: "Mercator (Cylindrical)",
-    [PROJ_SUBTITLE_COL]: "Conformal — angles preserved",
-    [PROJ_NOTE_COL]: "Area inflates as sec²(φ) toward the poles",
-  },
-  {
-    [FEATURE_KIND_COL]: "projection",
-    [FEATURE_NAME_COL]: "Mollweide",
-    [SEQ_COL]: 1,
-    [LON_COL]: 0,
-    [LAT_COL]: 0,
-    [PROJ_ID_COL]: "Mollweide",
-    [PROJ_TITLE_COL]: "Mollweide (Pseudocylindrical)",
-    [PROJ_SUBTITLE_COL]: "Equal-area — true relative size",
-    [PROJ_NOTE_COL]: "Shapes shear near the outer limb",
-  },
-  {
-    [FEATURE_KIND_COL]: "projection",
-    [FEATURE_NAME_COL]: "Orthographic",
-    [SEQ_COL]: 2,
-    [LON_COL]: ORTHO_LON0,
-    [LAT_COL]: ORTHO_LAT0,
-    [PROJ_ID_COL]: "Orthographic",
-    [PROJ_TITLE_COL]: "Orthographic (Azimuthal)",
-    [PROJ_SUBTITLE_COL]: `Globe view centered at ${ORTHO_LAT0}°N, ${ORTHO_LON0}°E`,
-    [PROJ_NOTE_COL]: "Foreshortened to zero at the horizon",
-  },
-];
-for (let m = 0; m < PROJECTION_META.length; m++) {
-  DATA.push(PROJECTION_META[m]);
-}
-
-// Reconstruct continent and border polylines from flat DATA rows
-const featureMap = new Map<string, { kind: string; pts: Array<[number, number]> }>();
-for (let i = 0; i < DATA.length; i++) {
-  const row = DATA[i];
-  const kind = String(row[FEATURE_KIND_COL]);
-  if (kind !== "continent" && kind !== "border") continue;
-  const name = String(row[FEATURE_NAME_COL]);
-  const key = `${kind}:${name}`;
-  let entry = featureMap.get(key);
-  if (!entry) {
-    entry = { kind, pts: [] };
-    featureMap.set(key, entry);
-  }
-  entry.pts.push([Number(row[LON_COL]), Number(row[LAT_COL])]);
-}
-
+// Plot: reads only data and the constants above
 interface InputPolyline {
   layer: "continent" | "border" | "graticule" | "equator" | "meridian" | "tissot";
   pts: Array<[number, number]>;
@@ -277,21 +228,22 @@ interface InputPolyline {
 }
 
 const inputPolylines: InputPolyline[] = [];
-for (const entry of featureMap.values()) {
-  if (entry.kind === "continent") {
+for (let i = 0; i < data.length; i++) {
+  const row = data[i];
+  if (row[FEATURE_KIND] === "continent") {
     inputPolylines.push({
       layer: "continent",
-      pts: entry.pts,
-      jumpMax: 1.6,
+      pts: row[VERTICES],
+      jumpMax: 1.8,
       minPts: 3,
       singleRunOnly: false,
       centerLonLat: null,
     });
-  } else if (entry.kind === "border") {
+  } else {
     inputPolylines.push({
       layer: "border",
-      pts: entry.pts,
-      jumpMax: 1.6,
+      pts: row[VERTICES],
+      jumpMax: 1.8,
       minPts: 2,
       singleRunOnly: false,
       centerLonLat: null,
@@ -299,8 +251,9 @@ for (const entry of featureMap.values()) {
   }
 }
 
-// Graticules (30° intervals)
-for (const lat of [-60, -30, 30, 60]) {
+// Graticules at GRATICULE_STEP_DEG intervals
+for (let lat = -60; lat <= 60; lat += GRATICULE_STEP_DEG) {
+  if (lat === 0) continue;
   const pts: Array<[number, number]> = [];
   for (let lon = -180; lon <= 180; lon += 3) pts.push([lon, lat]);
   inputPolylines.push({
@@ -312,7 +265,8 @@ for (const lat of [-60, -30, 30, 60]) {
     centerLonLat: null,
   });
 }
-for (const lon of [-150, -120, -90, -60, -30, 30, 60, 90, 120, 150]) {
+for (let lon = -150; lon <= 150; lon += GRATICULE_STEP_DEG) {
+  if (lon === 0) continue;
   const pts: Array<[number, number]> = [];
   for (let lat = -80; lat <= 80; lat += 2) pts.push([lon, lat]);
   inputPolylines.push({
@@ -348,9 +302,9 @@ inputPolylines.push({
   centerLonLat: null,
 });
 
-// Tissot indicatrix circles at 30° intervals
-for (const latC of [-60, -30, 0, 30, 60]) {
-  for (const lonC of [-120, -60, 0, 60, 120]) {
+// Tissot indicatrix circles at GRATICULE_STEP_DEG intervals
+for (let latC = -60; latC <= 60; latC += GRATICULE_STEP_DEG) {
+  for (let lonC = -120; lonC <= 120; lonC += GRATICULE_STEP_DEG * 2) {
     const ring: Array<[number, number]> = [];
     const phi1 = latC * DEG2RAD;
     const lam1 = lonC * DEG2RAD;
@@ -379,7 +333,6 @@ for (const latC of [-60, -30, 0, 30, 60]) {
   }
 }
 
-// Precompute projected geometry for each of the 3 projections
 interface ProjectedBundle {
   id: string;
   title: string;
@@ -400,9 +353,9 @@ const projectedBundles: ProjectedBundle[] = [];
 const sinLat0 = Math.sin(ORTHO_LAT0 * DEG2RAD);
 const cosLat0 = Math.cos(ORTHO_LAT0 * DEG2RAD);
 
-for (let pIdx = 0; pIdx < PROJECTION_META.length; pIdx++) {
-  const meta = PROJECTION_META[pIdx];
-  const projId = String(meta[PROJ_ID_COL]);
+for (let pIdx = 0; pIdx < PROJECTIONS.length; pIdx++) {
+  const meta = PROJECTIONS[pIdx];
+  const projId = meta.id;
 
   const boundary: Array<[number, number]> = [];
   if (projId === "Mercator") {
@@ -486,7 +439,7 @@ for (let pIdx = 0; pIdx < PROJECTION_META.length; pIdx++) {
         if (cur.length > 1) runs.push(cur);
         cur = [];
       } else {
-        if (cur.length > 0) {
+        if (cur.length > 0 && poly.layer !== "continent") {
           const last = cur[cur.length - 1];
           if (Math.hypot(projPt[0] - last[0], projPt[1] - last[1]) > poly.jumpMax) {
             if (cur.length > 1) runs.push(cur);
@@ -528,9 +481,9 @@ for (let pIdx = 0; pIdx < PROJECTION_META.length; pIdx++) {
 
   projectedBundles.push({
     id: projId,
-    title: String(meta[PROJ_TITLE_COL]),
-    subtitle: String(meta[PROJ_SUBTITLE_COL]),
-    note: String(meta[PROJ_NOTE_COL]),
+    title: meta.title,
+    subtitle: meta.subtitle,
+    note: meta.note,
     boundary,
     continents,
     borders,
@@ -544,15 +497,15 @@ for (let pIdx = 0; pIdx < PROJECTION_META.length; pIdx++) {
 }
 
 function GeoOverlay({ bundleIndex }: { bundleIndex: number }) {
-  const xScale = useXScale();
-  const yScale = useYScale();
+  const xScale = useXScale() as (v: number) => number;
+  const yScale = useYScale() as (v: number) => number;
   const bundle = projectedBundles[bundleIndex];
   const clipId = `proj-clip-${bundle.id}`;
 
   let boundaryD = "";
   for (let i = 0; i < bundle.boundary.length; i++) {
-    const px = Number(xScale(bundle.boundary[i][0]));
-    const py = Number(yScale(bundle.boundary[i][1]));
+    const px = xScale(bundle.boundary[i][0]);
+    const py = yScale(bundle.boundary[i][1]);
     boundaryD += `${i === 0 ? "M" : "L"}${px.toFixed(1)},${py.toFixed(1)}`;
   }
   boundaryD += "Z";
@@ -561,8 +514,8 @@ function GeoOverlay({ bundleIndex }: { bundleIndex: number }) {
   for (let r = 0; r < bundle.continents.length; r++) {
     const run = bundle.continents[r];
     for (let i = 0; i < run.length; i++) {
-      const px = Number(xScale(run[i][0]));
-      const py = Number(yScale(run[i][1]));
+      const px = xScale(run[i][0]);
+      const py = yScale(run[i][1]);
       continentsD += `${i === 0 ? "M" : "L"}${px.toFixed(1)},${py.toFixed(1)}`;
     }
     continentsD += "Z";
@@ -572,8 +525,8 @@ function GeoOverlay({ bundleIndex }: { bundleIndex: number }) {
   for (let r = 0; r < bundle.borders.length; r++) {
     const run = bundle.borders[r];
     for (let i = 0; i < run.length; i++) {
-      const px = Number(xScale(run[i][0]));
-      const py = Number(yScale(run[i][1]));
+      const px = xScale(run[i][0]);
+      const py = yScale(run[i][1]);
       bordersD += `${i === 0 ? "M" : "L"}${px.toFixed(1)},${py.toFixed(1)}`;
     }
   }
@@ -582,8 +535,8 @@ function GeoOverlay({ bundleIndex }: { bundleIndex: number }) {
   for (let r = 0; r < bundle.graticules.length; r++) {
     const run = bundle.graticules[r];
     for (let i = 0; i < run.length; i++) {
-      const px = Number(xScale(run[i][0]));
-      const py = Number(yScale(run[i][1]));
+      const px = xScale(run[i][0]);
+      const py = yScale(run[i][1]);
       graticuleD += `${i === 0 ? "M" : "L"}${px.toFixed(1)},${py.toFixed(1)}`;
     }
   }
@@ -592,8 +545,8 @@ function GeoOverlay({ bundleIndex }: { bundleIndex: number }) {
   for (let r = 0; r < bundle.equator.length; r++) {
     const run = bundle.equator[r];
     for (let i = 0; i < run.length; i++) {
-      const px = Number(xScale(run[i][0]));
-      const py = Number(yScale(run[i][1]));
+      const px = xScale(run[i][0]);
+      const py = yScale(run[i][1]);
       equatorD += `${i === 0 ? "M" : "L"}${px.toFixed(1)},${py.toFixed(1)}`;
     }
   }
@@ -602,8 +555,8 @@ function GeoOverlay({ bundleIndex }: { bundleIndex: number }) {
   for (let r = 0; r < bundle.primeMeridian.length; r++) {
     const run = bundle.primeMeridian[r];
     for (let i = 0; i < run.length; i++) {
-      const px = Number(xScale(run[i][0]));
-      const py = Number(yScale(run[i][1]));
+      const px = xScale(run[i][0]);
+      const py = yScale(run[i][1]);
       meridianD += `${i === 0 ? "M" : "L"}${px.toFixed(1)},${py.toFixed(1)}`;
     }
   }
@@ -612,8 +565,8 @@ function GeoOverlay({ bundleIndex }: { bundleIndex: number }) {
   for (let r = 0; r < bundle.tissot.length; r++) {
     const run = bundle.tissot[r];
     for (let i = 0; i < run.length; i++) {
-      const px = Number(xScale(run[i][0]));
-      const py = Number(yScale(run[i][1]));
+      const px = xScale(run[i][0]);
+      const py = yScale(run[i][1]);
       tissotD += `${i === 0 ? "M" : "L"}${px.toFixed(1)},${py.toFixed(1)}`;
     }
     tissotD += "Z";
@@ -647,26 +600,26 @@ function GeoOverlay({ bundleIndex }: { bundleIndex: number }) {
         />
         <path
           d={continentsD}
-          fill={t.palette[0]}
-          fillOpacity={0.32}
-          stroke={t.palette[0]}
-          strokeOpacity={0.95}
-          strokeWidth={1.3}
+          fill={t.inkSoft}
+          fillOpacity={0.28}
+          stroke={t.inkSoft}
+          strokeOpacity={0.85}
+          strokeWidth={1.2}
           strokeLinejoin="round"
         />
         <path
           d={bordersD}
           fill="none"
-          stroke={t.inkSoft}
+          stroke={t.ink}
           strokeOpacity={0.55}
           strokeWidth={0.9}
           strokeDasharray="2 2"
         />
         <path
           d={tissotD}
-          fill={t.palette[1]}
-          fillOpacity={0.34}
-          stroke={t.palette[1]}
+          fill={t.palette[0]}
+          fillOpacity={0.28}
+          stroke={t.palette[0]}
           strokeOpacity={0.95}
           strokeWidth={1.2}
         />
@@ -827,9 +780,9 @@ export default function Chart() {
               width: 14,
               height: 14,
               borderRadius: 3,
-              background: t.palette[0],
-              opacity: 0.55,
-              border: `1.5px solid ${t.palette[0]}`,
+              background: t.inkSoft,
+              opacity: 0.45,
+              border: `1.5px solid ${t.inkSoft}`,
               display: "inline-block",
             }}
           />
@@ -841,13 +794,13 @@ export default function Chart() {
               width: 14,
               height: 14,
               borderRadius: "50%",
-              background: t.palette[1],
+              background: t.palette[0],
               opacity: 0.55,
-              border: `1.5px solid ${t.palette[1]}`,
+              border: `1.5px solid ${t.palette[0]}`,
               display: "inline-block",
             }}
           />
-          Tissot indicatrix (equal 550 km radius circles on the globe — reveals local scale & angular distortion)
+          {`Tissot indicatrix (equal ${TISSOT_RADIUS_KM} km radius circles on the globe — reveals local scale & angular distortion)`}
         </span>
         <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
           <span
@@ -858,7 +811,7 @@ export default function Chart() {
               display: "inline-block",
             }}
           />
-          30° graticule (equator & prime meridian dashed)
+          {`${GRATICULE_STEP_DEG}° graticule (equator & prime meridian dashed)`}
         </span>
       </div>
     </div>
