@@ -2,41 +2,28 @@
 // scatter-3d: 3D Scatter Plot
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 93/100 | Created: 2026-09-10
-//# anyplot-orientation: landscape
-// anyplot.ai
-// scatter-3d: 3D Scatter Plot
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-09-10
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { ChartsTooltip } from "@mui/x-charts/ChartsTooltip";
-import { ContinuousColorLegend } from "@mui/x-charts/ChartsLegend";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const size = window.ANYPLOT_SIZE;
 
-// --- Deterministic PRNG (LCG + Box-Muller, no seeded RNG in the browser) ----
-function createLcg(seed) {
-  let state = seed;
-  return function nextUniform() {
-    state = (state * 16807) % 2147483647;
-    return (state - 1) / 2147483646;
-  };
-}
-const nextUniform = createLcg(7);
-function nextGaussian() {
-  const u1 = Math.max(nextUniform(), 1e-9);
-  const u2 = nextUniform();
-  return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-}
+// Constants
+const TITLE = "scatter-3d · javascript · muix · anyplot.ai";
+const ISO_ANGLE = Math.PI / 6;
+const MARKER_SIZE_BY_TIER = { near: 12, mid: 8.5, far: 5.5 };
+const MARKER_ALPHA = 0.85;
+const PAD = 16;
 
-// --- Data: simulated nanocluster fragments from a molecular-dynamics run ----
-// Three atom groups (fragments) placed in a 100x100x100 nm cell; each atom's
-// local potential energy (eV) rises with distance from its fragment's core —
-// the classic "stable core, strained periphery" pattern used to demo a
-// genuine 4th-variable color encoding on top of real x/y/z spatial position.
+// Columns: set these to your data's column names
+const X_COORD = "X (nm)"; // role: x
+const Y_COORD = "Height (Y) (nm)"; // role: y
+const Z_COORD = "Z (nm)"; // role: z
+const COLOR_VAL = "Potential energy (eV)"; // role: color
+
+// Data: replace this block with your own records
 const AXIS_MIN = 0;
 const AXIS_MAX = 100;
 const FRAGMENTS = [
@@ -45,86 +32,94 @@ const FRAGMENTS = [
   { center: [42, 20, 84], sigma: 6, count: 45 },
 ];
 
-const atoms = [];
-FRAGMENTS.forEach((fragment, fragmentIndex) => {
+let lcgState = 7;
+const data = [];
+FRAGMENTS.forEach((fragment) => {
   for (let i = 0; i < fragment.count; i += 1) {
-    const x = fragment.center[0] + nextGaussian() * fragment.sigma;
-    const y = fragment.center[1] + nextGaussian() * fragment.sigma;
-    const z = fragment.center[2] + nextGaussian() * fragment.sigma;
+    lcgState = (lcgState * 16807) % 2147483647;
+    const u1x = Math.max((lcgState - 1) / 2147483646, 1e-9);
+    lcgState = (lcgState * 16807) % 2147483647;
+    const u2x = (lcgState - 1) / 2147483646;
+    const gx = Math.sqrt(-2 * Math.log(u1x)) * Math.cos(2 * Math.PI * u2x);
+
+    lcgState = (lcgState * 16807) % 2147483647;
+    const u1y = Math.max((lcgState - 1) / 2147483646, 1e-9);
+    lcgState = (lcgState * 16807) % 2147483647;
+    const u2y = (lcgState - 1) / 2147483646;
+    const gy = Math.sqrt(-2 * Math.log(u1y)) * Math.cos(2 * Math.PI * u2y);
+
+    lcgState = (lcgState * 16807) % 2147483647;
+    const u1z = Math.max((lcgState - 1) / 2147483646, 1e-9);
+    lcgState = (lcgState * 16807) % 2147483647;
+    const u2z = (lcgState - 1) / 2147483646;
+    const gz = Math.sqrt(-2 * Math.log(u1z)) * Math.cos(2 * Math.PI * u2z);
+
+    lcgState = (lcgState * 16807) % 2147483647;
+    const u1e = Math.max((lcgState - 1) / 2147483646, 1e-9);
+    lcgState = (lcgState * 16807) % 2147483647;
+    const u2e = (lcgState - 1) / 2147483646;
+    const ge = Math.sqrt(-2 * Math.log(u1e)) * Math.cos(2 * Math.PI * u2e);
+
+    const x = fragment.center[0] + gx * fragment.sigma;
+    const y = fragment.center[1] + gy * fragment.sigma;
+    const z = fragment.center[2] + gz * fragment.sigma;
     const distanceFromCore = Math.sqrt(
       (x - fragment.center[0]) ** 2 +
         (y - fragment.center[1]) ** 2 +
         (z - fragment.center[2]) ** 2
     );
-    const energy = -6.4 + 0.062 * distanceFromCore + nextGaussian() * 0.22; // eV
-    atoms.push({
-      id: `atom-${fragmentIndex}-${i}`,
-      x: Math.min(Math.max(x, AXIS_MIN + 1), AXIS_MAX - 1),
-      y: Math.min(Math.max(y, AXIS_MIN + 1), AXIS_MAX - 1),
-      z: Math.min(Math.max(z, AXIS_MIN + 1), AXIS_MAX - 1),
-      energy,
+    const energy = -6.4 + 0.062 * distanceFromCore + ge * 0.22;
+    data.push({
+      [X_COORD]: Math.min(Math.max(x, AXIS_MIN + 1), AXIS_MAX - 1),
+      [Y_COORD]: Math.min(Math.max(y, AXIS_MIN + 1), AXIS_MAX - 1),
+      [Z_COORD]: Math.min(Math.max(z, AXIS_MIN + 1), AXIS_MAX - 1),
+      [COLOR_VAL]: energy,
     });
   }
 });
 
-// --- Isometric projection: (x, y, z) -> 2D (px, py) data-space coordinates -
-// x/z form the ground plane (down-right / down-left), y is height (straight
-// up). Fed as ordinary numeric x/y into a linear-scale scatter, so the chart
-// does the pixel conversion; the sign choices below make the axes read as a
-// conventional isometric cube once the y-axis' usual "up = larger" inversion
-// is applied.
-const ISO_ANGLE = Math.PI / 6; // 30 degrees
-function project(x, y, z) {
-  return {
-    px: (x - z) * Math.cos(ISO_ANGLE),
-    py: y - (x + z) * Math.sin(ISO_ANGLE),
-  };
-}
+// Plot: reads only data and the constants above
+const cosIso = Math.cos(ISO_ANGLE);
+const sinIso = Math.sin(ISO_ANGLE);
 
-atoms.forEach((atom) => {
-  const projected = project(atom.x, atom.y, atom.z);
-  atom.px = projected.px;
-  atom.py = projected.py;
+const atoms = data.map((row, idx) => {
+  const x = Number(row[X_COORD]);
+  const y = Number(row[Y_COORD]);
+  const z = Number(row[Z_COORD]);
+  const energy = Number(row[COLOR_VAL]);
+  const px = (x - z) * cosIso;
+  const py = y - (x + z) * sinIso;
+  return { id: `atom-${idx}`, x, y, z, energy, px, py };
 });
 
-// --- Depth cue: points nearer the (x=0, z=0) front edge render larger -------
+const maxCoord = Math.max(...atoms.flatMap((a) => [a.x, a.y, a.z]));
+const cellMin = 0;
+const cellMax = Math.ceil(maxCoord / 50) * 50;
+
 const groundDepths = atoms.map((atom) => atom.x + atom.z).sort((a, b) => a - b);
 const tierBoundary1 = groundDepths[Math.floor(groundDepths.length / 3)];
 const tierBoundary2 = groundDepths[Math.floor((2 * groundDepths.length) / 3)];
-function depthTier(atom) {
-  const depth = atom.x + atom.z;
-  if (depth <= tierBoundary1) return "near";
-  if (depth <= tierBoundary2) return "mid";
-  return "far";
-}
-const MARKER_SIZE_BY_TIER = { near: 12, mid: 8.5, far: 5.5 };
 
-// --- Domain bounds: project the cell's 8 corners so every axis line and all
-// data stay comfortably inside the computed x/y scale, then pad for labels --
 const cellCorners = [];
-[AXIS_MIN, AXIS_MAX].forEach((cx) =>
-  [AXIS_MIN, AXIS_MAX].forEach((cy) =>
-    [AXIS_MIN, AXIS_MAX].forEach((cz) => cellCorners.push(project(cx, cy, cz)))
+[cellMin, cellMax].forEach((cx) =>
+  [cellMin, cellMax].forEach((cy) =>
+    [cellMin, cellMax].forEach((cz) =>
+      cellCorners.push({
+        px: (cx - cz) * cosIso,
+        py: cy - (cx + cz) * sinIso,
+      })
+    )
   )
 );
-const PAD = 16;
 const pxMin = Math.min(...cellCorners.map((c) => c.px)) - PAD;
 const pxMax = Math.max(...cellCorners.map((c) => c.px)) + PAD;
 const pyMin = Math.min(...cellCorners.map((c) => c.py)) - PAD;
 const pyMax = Math.max(...cellCorners.map((c) => c.py)) + PAD * 1.6;
 
-// --- Color axis: continuous Imprint sequential scale over the energy field -
-// The scatter series has no direct opacity prop, so a slight fill-opacity is
-// baked into the colorMap stops themselves to reduce occlusion where the
-// dense upper fragment cluster overlaps.
-const withAlpha = (hex, alpha) => {
-  const n = parseInt(hex.slice(1), 16);
-  const r = (n >> 16) & 255;
-  const g = (n >> 8) & 255;
-  const b = n & 255;
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-};
-const MARKER_ALPHA = 0.85;
+const seq0Num = parseInt(t.seq[0].slice(1), 16);
+const seq1Num = parseInt(t.seq[1].slice(1), 16);
+const seq0Rgba = `rgba(${(seq0Num >> 16) & 255}, ${(seq0Num >> 8) & 255}, ${seq0Num & 255}, ${MARKER_ALPHA})`;
+const seq1Rgba = `rgba(${(seq1Num >> 16) & 255}, ${(seq1Num >> 8) & 255}, ${seq1Num & 255}, ${MARKER_ALPHA})`;
 
 const energyValues = atoms.map((atom) => atom.energy);
 const energyMin = Math.min(...energyValues);
@@ -137,20 +132,22 @@ const zAxis = [
       type: "continuous",
       min: energyMin,
       max: energyMax,
-      color: [withAlpha(t.seq[0], MARKER_ALPHA), withAlpha(t.seq[1], MARKER_ALPHA)],
+      color: [seq0Rgba, seq1Rgba],
     },
   },
 ];
 
-// --- One scatter series per depth tier (all sharing the same color axis) so
-// per-point markerSize can vary while color stays driven by energy alone ----
 const series = ["near", "mid", "far"].map((tier) => ({
   type: "scatter",
   id: `atoms-${tier}`,
   zAxisId: "energyColor",
   markerSize: MARKER_SIZE_BY_TIER[tier],
   data: atoms
-    .filter((atom) => depthTier(atom) === tier)
+    .filter((atom) => {
+      const depth = atom.x + atom.z;
+      const atomTier = depth <= tierBoundary1 ? "near" : depth <= tierBoundary2 ? "mid" : "far";
+      return atomTier === tier;
+    })
     .map((atom) => ({
       x: atom.px,
       y: atom.py,
@@ -162,62 +159,25 @@ const series = ["near", "mid", "far"].map((tier) => ({
       energy: atom.energy,
     })),
   valueFormatter: (value) =>
-    `x=${value.realX.toFixed(1)} nm, y=${value.realY.toFixed(1)} nm, z=${value.realZ.toFixed(1)} nm · E=${value.energy.toFixed(2)} eV`,
+    `x=${value.realX.toFixed(1)}, y=${value.realY.toFixed(1)}, z=${value.realZ.toFixed(1)} · ${value.energy.toFixed(2)}`,
 }));
 
-// --- Wireframe cell + axis labels + depth mini-legend, drawn in data space
-// via the chart's own scale hooks (same pattern as biplot-pca's LoadingArrows)
-const originPoint = project(AXIS_MIN, AXIS_MIN, AXIS_MIN);
-const xEndPoint = project(AXIS_MAX, AXIS_MIN, AXIS_MIN);
-const yEndPoint = project(AXIS_MIN, AXIS_MAX, AXIS_MIN);
-const zEndPoint = project(AXIS_MIN, AXIS_MIN, AXIS_MAX);
-const farFloorCorner = project(AXIS_MAX, AXIS_MIN, AXIS_MAX);
+const originPoint = { px: 0, py: 0 };
+const xEndPoint = { px: cellMax * cosIso, py: -cellMax * sinIso };
+const yEndPoint = { px: 0, py: cellMax };
+const zEndPoint = { px: -cellMax * cosIso, py: -cellMax * sinIso };
+const farFloorCorner = { px: 0, py: -2 * cellMax * sinIso };
 
 function Iso3DFrame() {
   const xScale = useXScale();
   const yScale = useYScale();
-  const toPixels = (p) => ({ x: xScale(p.px), y: yScale(p.py) });
+  const { width, height } = window.ANYPLOT_SIZE;
 
-  const origin = toPixels(originPoint);
-  const xEnd = toPixels(xEndPoint);
-  const yEnd = toPixels(yEndPoint);
-  const zEnd = toPixels(zEndPoint);
-  const farFloor = toPixels(farFloorCorner);
-
-  const axisLine = (from, to) => (
-    <line
-      x1={from.x}
-      y1={from.y}
-      x2={to.x}
-      y2={to.y}
-      stroke={t.inkSoft}
-      strokeWidth={2}
-    />
-  );
-  const floorEdge = (from, to) => (
-    <line
-      x1={from.x}
-      y1={from.y}
-      x2={to.x}
-      y2={to.y}
-      stroke={t.grid}
-      strokeWidth={1.5}
-      strokeDasharray="6 5"
-    />
-  );
-  const axisLabel = (point, text, dx, dy) => (
-    <text
-      x={point.x + dx}
-      y={point.y + dy}
-      fill={t.ink}
-      fontSize={15}
-      fontWeight={600}
-      fontFamily="system-ui, sans-serif"
-      textAnchor="middle"
-    >
-      {text}
-    </text>
-  );
+  const origin = { x: xScale(originPoint.px), y: yScale(originPoint.py) };
+  const xEnd = { x: xScale(xEndPoint.px), y: yScale(xEndPoint.py) };
+  const yEnd = { x: xScale(yEndPoint.px), y: yScale(yEndPoint.py) };
+  const zEnd = { x: xScale(zEndPoint.px), y: yScale(zEndPoint.py) };
+  const farFloor = { x: xScale(farFloorCorner.px), y: yScale(farFloorCorner.py) };
 
   const depthLegendX = 70;
   const depthLegendY = 96;
@@ -227,57 +187,89 @@ function Iso3DFrame() {
     { tier: "Far", r: MARKER_SIZE_BY_TIER.far },
   ];
 
+  const cbWidth = Math.round(width * 0.26);
+  const cbX = Math.round((width - cbWidth) / 2);
+  const cbY = height - 48;
+
   return (
     <g>
-      {floorEdge(xEnd, farFloor)}
-      {floorEdge(zEnd, farFloor)}
-      {axisLine(origin, xEnd)}
-      {axisLine(origin, yEnd)}
-      {axisLine(origin, zEnd)}
-      {axisLabel(origin, "0", -14, 18)}
-      {axisLabel(xEnd, `X · ${AXIS_MAX} nm`, 24, 8)}
-      {axisLabel(yEnd, `Height (Y) · ${AXIS_MAX} nm`, 0, -14)}
-      {axisLabel(zEnd, `Z · ${AXIS_MAX} nm`, -30, 8)}
+      <line
+        x1={xEnd.x}
+        y1={xEnd.y}
+        x2={farFloor.x}
+        y2={farFloor.y}
+        stroke={t.grid}
+        strokeWidth={1.5}
+        strokeDasharray="6 5"
+      />
+      <line
+        x1={zEnd.x}
+        y1={zEnd.y}
+        x2={farFloor.x}
+        y2={farFloor.y}
+        stroke={t.grid}
+        strokeWidth={1.5}
+        strokeDasharray="6 5"
+      />
+      <line x1={origin.x} y1={origin.y} x2={xEnd.x} y2={xEnd.y} stroke={t.inkSoft} strokeWidth={2} />
+      <line x1={origin.x} y1={origin.y} x2={yEnd.x} y2={yEnd.y} stroke={t.inkSoft} strokeWidth={2} />
+      <line x1={origin.x} y1={origin.y} x2={zEnd.x} y2={zEnd.y} stroke={t.inkSoft} strokeWidth={2} />
 
-      <text
-        x={depthLegendX}
-        y={depthLegendY - 22}
-        fill={t.inkSoft}
-        fontSize={16}
-        fontFamily="system-ui, sans-serif"
-      >
+      <text x={origin.x - 14} y={origin.y + 18} fill={t.ink} fontSize={15} fontWeight={600} textAnchor="middle">
+        0
+      </text>
+      <text x={xEnd.x + 24} y={xEnd.y + 8} fill={t.ink} fontSize={15} fontWeight={600} textAnchor="middle">
+        {`${X_COORD} · ${cellMax}`}
+      </text>
+      <text x={yEnd.x} y={yEnd.y - 14} fill={t.ink} fontSize={15} fontWeight={600} textAnchor="middle">
+        {`${Y_COORD} · ${cellMax}`}
+      </text>
+      <text x={zEnd.x - 30} y={zEnd.y + 8} fill={t.ink} fontSize={15} fontWeight={600} textAnchor="middle">
+        {`${Z_COORD} · ${cellMax}`}
+      </text>
+
+      <text x={depthLegendX} y={depthLegendY - 22} fill={t.inkSoft} fontSize={16}>
         Marker size = depth
       </text>
       {depthLegendItems.map((item, i) => (
         <g key={item.tier} transform={`translate(${depthLegendX + i * 90}, ${depthLegendY})`}>
           <circle cx={0} cy={0} r={item.r} fill={t.inkSoft} opacity={0.55} />
-          <text
-            x={18}
-            y={5}
-            fill={t.inkSoft}
-            fontSize={15}
-            fontFamily="system-ui, sans-serif"
-          >
+          <text x={18} y={5} fill={t.inkSoft} fontSize={15}>
             {item.tier}
           </text>
         </g>
       ))}
+
+      <defs>
+        <linearGradient id="scatter3dEnergyGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor={seq0Rgba} />
+          <stop offset="100%" stopColor={seq1Rgba} />
+        </linearGradient>
+      </defs>
+      <text x={width / 2} y={cbY - 8} textAnchor="middle" fontSize={14} fill={t.inkSoft}>
+        {COLOR_VAL}
+      </text>
+      <rect x={cbX} y={cbY} width={cbWidth} height={10} rx={3} fill="url(#scatter3dEnergyGrad)" />
+      <text x={cbX - 10} y={cbY + 9} textAnchor="end" fontSize={14} fill={t.inkSoft}>
+        {`${energyMin.toFixed(1)} · core`}
+      </text>
+      <text x={cbX + cbWidth + 10} y={cbY + 9} textAnchor="start" fontSize={14} fill={t.inkSoft}>
+        {`${energyMax.toFixed(1)} · edge`}
+      </text>
     </g>
   );
 }
 
-const chartTitle = "scatter-3d · javascript · muix · anyplot.ai";
-
-// --- Chart (default-exported component — the harness mounts it) ------------
 export default function Chart() {
+  const size = window.ANYPLOT_SIZE;
   return (
-    <ChartContainer
+    <ChartsContainer
       width={size.width}
       height={size.height}
       series={series}
       zAxis={zAxis}
-      xAxis={[{ id: "iso-x", scaleType: "linear", min: pxMin, max: pxMax }]}
-      yAxis={[{ id: "iso-y", scaleType: "linear", min: pyMin, max: pyMax }]}
+      xAxis={[{ id: "iso-x", scaleType: "linear", min: pxMin, max: pxMax, position: "none" }]}
+      yAxis={[{ id: "iso-y", scaleType: "linear", min: pyMin, max: pyMax, position: "none" }]}
       margin={{ top: 70, right: 60, bottom: 90, left: 60 }}
       disableVoronoi
       skipAnimation
@@ -289,23 +281,12 @@ export default function Chart() {
         fontSize={26}
         fontWeight={600}
         fill={t.ink}
-        fontFamily="system-ui, sans-serif"
       >
-        {chartTitle}
+        {TITLE}
       </text>
       <Iso3DFrame />
       <ScatterPlot />
-      <ContinuousColorLegend
-        axisDirection="z"
-        axisId="energyColor"
-        position={{ horizontal: "middle", vertical: "bottom" }}
-        length="26%"
-        thickness={10}
-        minLabel={() => `${energyMin.toFixed(1)} eV · core`}
-        maxLabel={() => `${energyMax.toFixed(1)} eV · edge`}
-        labelStyle={{ fontSize: 15, fill: t.inkSoft }}
-      />
       <ChartsTooltip trigger="item" />
-    </ChartContainer>
+    </ChartsContainer>
   );
 }
