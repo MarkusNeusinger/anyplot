@@ -1,29 +1,31 @@
 // anyplot.ai
 // heatmap-cohort-retention: Cohort Retention Heatmap
-// Library: muix 9.2.1 | JavaScript 22.22.3
+// Library: muix 7.29.1 | JavaScript 22.22.3
 // Quality: 90/100 | Created: 2026-06-20
 //# anyplot-orientation: square
-
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const tok = window.ANYPLOT_TOKENS;
-const W = window.ANYPLOT_SIZE.width;
-const H = window.ANYPLOT_SIZE.height;
 
 // Constants
-const COHORT_COL = "cohort";
-const COHORT_SIZE_COL = "cohort_size";
-const PERIOD_COL = "period";
-const RETENTION_COL = "retention_rate";
-
+const W = window.ANYPLOT_SIZE.width;
+const H = window.ANYPLOT_SIZE.height;
+const TITLE = "heatmap-cohort-retention · javascript · muix · anyplot.ai";
 const SCALE_MAX = 100;
 const COLORBAR_TICKS = [0, 25, 50, 75, 100];
 const LIGHT_TEXT = "#FAF8F1";
 const DARK_TEXT = "#1A1A17";
+const PERIOD_UNIT = "Month";
 
-// Data
+// Columns: set these to your data's column names
+const COHORT = "Cohort"; // role: cohort
+const COHORT_SIZE = "Cohort size"; // role: cohort_size
+const PERIOD = "Months since signup"; // role: period
+const RETENTION = "Retention (%)"; // role: retention_rate
+
+// Data: replace this block with your own records
 const COHORT_SEEDS = [
   { cohort: "Jan 2024", size: 4821 },
   { cohort: "Feb 2024", size: 3956 },
@@ -38,13 +40,13 @@ const COHORT_SEEDS = [
 ];
 
 type RetentionRow = {
-  [COHORT_COL]: string;
-  [COHORT_SIZE_COL]: number;
-  [PERIOD_COL]: number;
-  [RETENTION_COL]: number;
+  [COHORT]: string;
+  [COHORT_SIZE]: number;
+  [PERIOD]: number;
+  [RETENTION]: number;
 };
 
-const DATA: RetentionRow[] = [];
+const data: RetentionRow[] = [];
 let lcg = 42 >>> 0;
 const totalPeriods = COHORT_SEEDS.length;
 
@@ -59,26 +61,27 @@ for (let ci = 0; ci < COHORT_SEEDS.length; ci++) {
       const base = SCALE_MAX * Math.pow(0.8, pi) + 5 / (1 + 0.4 * pi);
       retention = Math.max(2, Math.min(97, Math.round(base + noise)));
     }
-    DATA.push({
-      [COHORT_COL]: seed.cohort,
-      [COHORT_SIZE_COL]: seed.size,
-      [PERIOD_COL]: pi,
-      [RETENTION_COL]: retention,
+    data.push({
+      [COHORT]: seed.cohort,
+      [COHORT_SIZE]: seed.size,
+      [PERIOD]: pi,
+      [RETENTION]: retention,
     });
   }
 }
 
+// Plot: reads only data and the constants above
 const cohorts: string[] = [];
 const cohortSizeByLabel = new Map<string, number>();
 const periodSet = new Set<number>();
 
-for (const row of DATA) {
-  const c = row[COHORT_COL];
+for (const row of data) {
+  const c = row[COHORT];
   if (!cohortSizeByLabel.has(c)) {
     cohorts.push(c);
-    cohortSizeByLabel.set(c, row[COHORT_SIZE_COL]);
+    cohortSizeByLabel.set(c, row[COHORT_SIZE]);
   }
-  periodSet.add(row[PERIOD_COL]);
+  periodSet.add(row[PERIOD]);
 }
 
 const periods = Array.from(periodSet)
@@ -96,36 +99,33 @@ const r2 = (seqEndNum >> 16) & 255;
 const g2 = (seqEndNum >> 8) & 255;
 const b2 = seqEndNum & 255;
 
-const cells = DATA.map((row) => {
-  const val = row[RETENTION_COL];
-  const ratio = Math.max(0, Math.min(1, val / SCALE_MAX));
+const cells = data.map((row) => {
+  const val = row[RETENTION];
+  const ratio = val / SCALE_MAX;
   const r = Math.round(r1 + ratio * (r2 - r1));
   const g = Math.round(g1 + ratio * (g2 - g1));
   const b = Math.round(b1 + ratio * (b2 - b1));
   const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
   return {
-    cohort: row[COHORT_COL],
-    periodKey: String(row[PERIOD_COL]),
+    cohort: row[COHORT],
+    periodKey: String(row[PERIOD]),
     val,
     fill: `rgb(${r},${g},${b})`,
     textFill: lum > 0.54 ? DARK_TEXT : LIGHT_TEXT,
   };
 });
 
-const period1Rows = DATA.filter((r) => r[PERIOD_COL] === 1);
+const period1Rows = data.filter((r) => r[PERIOD] === 1);
 const avgPeriod1 =
-  period1Rows.reduce((acc, r) => acc + r[RETENTION_COL], 0) /
-  Math.max(1, period1Rows.length);
-const totalUsers = cohorts.reduce((acc, c) => acc + (cohortSizeByLabel.get(c) ?? 0), 0);
+  period1Rows.reduce((acc, r) => acc + r[RETENTION], 0) / period1Rows.length;
+const totalUsers = cohorts.reduce((acc, c) => acc + cohortSizeByLabel.get(c)!, 0);
 
-const TITLE = "heatmap-cohort-retention · javascript · muix · anyplot.ai";
-const SUBTITLE = `${cohorts.length} monthly cohorts (${cohorts[0]}–${cohorts[cohorts.length - 1]}, n=${totalUsers.toLocaleString("en-US")}) · Month 1 mean retention ${avgPeriod1.toFixed(0)}%`;
+const subtitle = `${cohorts.length} ${COHORT}s (${cohorts[0]}–${cohorts[cohorts.length - 1]}, n=${totalUsers.toLocaleString("en-US")}) · ${PERIOD_UNIT} 1 mean ${RETENTION}: ${avgPeriod1.toFixed(0)}%`;
 
 function CohortRetentionLayer() {
   const { left, top, width, height } = useDrawingArea();
-  const xScale = useXScale("periods") as any;
-  const yScale = useYScale("cohorts") as any;
-  if (!xScale || !yScale || !xScale.bandwidth || !yScale.bandwidth) return null;
+  const xScale = useXScale("periods") as unknown as ((v: string) => number) & { bandwidth: () => number };
+  const yScale = useYScale("cohorts") as unknown as ((v: string) => number) & { bandwidth: () => number };
 
   const bw = xScale.bandwidth();
   const bh = yScale.bandwidth();
@@ -158,20 +158,19 @@ function CohortRetentionLayer() {
         fontSize={15}
         fill={tok.inkSoft}
       >
-        {SUBTITLE}
+        {subtitle}
       </text>
 
       {cells.map((cell) => {
         const x0 = xScale(cell.periodKey);
         const y0 = yScale(cell.cohort);
-        if (x0 === undefined || y0 === undefined) return null;
         return (
           <g key={`${cell.cohort}-${cell.periodKey}`}>
             <rect
               x={x0 + 1}
               y={y0 + 1}
-              width={Math.max(0, bw - 2)}
-              height={Math.max(0, bh - 2)}
+              width={bw - 2}
+              height={bh - 2}
               fill={cell.fill}
               rx={4}
             />
@@ -191,9 +190,8 @@ function CohortRetentionLayer() {
 
       {cohorts.map((cohort) => {
         const y0 = yScale(cohort);
-        if (y0 === undefined) return null;
         const mid = y0 + bh / 2;
-        const size = cohortSizeByLabel.get(cohort) ?? 0;
+        const size = cohortSizeByLabel.get(cohort)!;
         return (
           <g key={cohort}>
             <text
@@ -227,7 +225,7 @@ function CohortRetentionLayer() {
         fontWeight="600"
         fill={tok.inkSoft}
       >
-        Retention
+        {RETENTION}
       </text>
       <rect
         x={barX}
@@ -279,8 +277,8 @@ export default function Chart() {
           data: periods,
           categoryGapRatio: 0.04,
           height: 58,
-          label: "Months Since Signup",
-          valueFormatter: (v: string) => `Month ${v}`,
+          label: PERIOD,
+          valueFormatter: (v: string) => `${PERIOD_UNIT} ${v}`,
           disableTicks: true,
           tickLabelStyle: { fontSize: 14, fill: tok.inkSoft },
           labelStyle: { fontSize: 15, fill: tok.ink },
