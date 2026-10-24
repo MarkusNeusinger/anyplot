@@ -2,129 +2,130 @@ library: muix
 language: javascript
 specification_id: heatmap-mandelbrot
 created: '2026-08-25T00:43:18Z'
-updated: '2026-08-25T00:57:53Z'
-generated_by: claude-sonnet
-workflow_run: 32794037001
+updated: '2026-10-24T09:40:23Z'
+generated_by: gemini-4-argon
+adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
+workflow_run: 40082598129
 issue: 4431
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-mandelbrot/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-mandelbrot/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-mandelbrot/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-mandelbrot/javascript/muix/plot-dark.html
-quality_score: 89
+quality_score: 86
 review:
   strengths:
-  - 'Y-axis label/tick collision from Attempt 1 is fixed: ''Im(c)'' now sits clear
-    of the ''0.0'' tick label with visible whitespace in both themes'
-  - Bounded-interior fill is now a fixed hex (#1A1A17) instead of the theme-adaptive
-    `ink` token, so the data color is identical between light and dark; a theme-adaptive
-    stroke keeps the legend swatch visible even when the fill matches the dark page
-    background
-  - Smooth (renormalized) escape-time coloring with a gamma=0.42 curve pulls filamentary
-    boundary detail out of the ramp instead of leaving a flat green field
-  - 'Clever, well-integrated solution to the community-only Heatmap gap: fractal rasterized
-    onto a `<canvas>` sized/positioned via `useDrawingArea()` to exactly fill the
-    real MUI X axes rectangle'
-  - Full classic Mandelbrot silhouette (cardioid, period-2 bulb, satellites) clearly
-    visible and well-composed
-  - Correct title format, descriptive Re(c)/Im(c) axis labels, deterministic computation
+  - 'Composes the plot natively in MUI X: a ChartsContainer with linear real/imaginary
+    axes and a custom layer that reads useDrawingArea(), so the fractal canvas sits
+    exactly inside the axis-scaled drawing area and the tick coordinates are true
+    complex-plane coordinates'
+  - 'Equal complex-plane scale enforced in code: the margin is derived from (X_MAX−X_MIN)/(Y_MAX−Y_MIN),
+    so 0.2 units span the same ~113 px on both axes and the cardioid and period-2
+    bulb are undistorted'
+  - 'Smooth normalized iteration count (n + 1 − log2(log|z|)) with the Imprint seq
+    ramp (#009E73 → #4467A3) gives continuous exterior transitions with no stepped
+    bands; data colors are identical in both themes'
+  - 'Full set resolved at device-pixel resolution (~2200 px canvas): cardioid, period-2
+    bulb, period-3 bulbs, satellite bulbs at −1.75 and filament specks are crisp and
+    mirror-symmetric about the real axis'
+  - 'Mathematically correct geometry: cardioid cusp at Re = 0.25, period-2 bulb spanning
+    −1.25 to −0.75, antenna tip at Re = −2.0, all inside the window'
+  - Theme tokens threaded through all chrome (title, subtitle, ticks, axis titles,
+    legend labels, frame) so both renders are fully legible
   weaknesses:
-  - 'Plotted window is still narrowed from the spec''s default (x: -2.5 to 1.0) to
-    (x: -2.0 to 0.5) to force a square aspect ratio — captures the cardioid/bulb fine
-    but diverges from the documented default (minor, unresolved from Attempt 1)'
-  - A modest strip of empty whitespace remains below the legend swatch at the bottom
-    of the canvas
+  - 'Suggestion: the escape-time color bar is a hand-built SVG linearGradient; MUI
+    X''s ContinuousColorLegend driven by a zAxis colorMap could carry it natively.'
+  - 'Suggestion: about 120 px of empty page below the legend row could go to the drawing
+    area or be balanced against the top margin.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1.
-      Chrome: Bold dark title "heatmap-mandelbrot · javascript · muix · anyplot.ai" with subtitle "z(n+1) = z(n)² + c · escape-time coloured over the complex plane", both clearly readable. Re(c)/Im(c) axis labels and tick labels are dark/soft-gray and legible. The Attempt-1 y-axis label/"0.0" tick collision is fixed: a pixel-level crop around the vertical center confirms "Im(c)" now sits with clear whitespace to the left of the tick labels, no merging. Legend below (gradient bar, "fast escape"/"slow escape", "bounded (never escapes)" swatch) is cleanly laid out with no overlap; the swatch renders as a solid near-black square with a thin dark border.
-      Data: Continuous escape-time gradient runs brand green → blue (imprint_seq). Bounded interior (cardioid, period-2 bulb, satellites) is solid near-black (#1A1A17), full classic Mandelbrot silhouette with filament detail pulled out by the gamma-adjusted ramp.
+      Background: warm off-white #FAF8F1 page around a square plot area framed by a thin grid-colored rule.
+      Chrome: bold dark title "heatmap-mandelbrot · javascript · muix · anyplot.ai" (~45 % of width), a soft-ink subtitle with the iteration formula, ranges and max 100 iterations; tick labels −2.0…0.4 (x) and −1.2…1.2 (y) in soft ink; axis titles "Real Part Re(c)" and "Imaginary Part Im(c)". All readable.
+      Data: Mandelbrot set over Re ∈ [−2.0, 0.5], Im ∈ [−1.25, 1.25] with equal axis scale; near-black (#1A1A17) interior of cardioid, period-2 bulb, period-3 bulbs and satellites; exterior colored from brand green #009E73 (fast escape) through teal to the blue end #4467A3 in a thin fringe along the boundary, smooth with no banding. Legend row below: gradient bar "Smooth escape-time scale (1–100 iterations)" with "Fast escape (1)" / "Slow escape (100)", and a black swatch "Bounded interior – Never escapes (|z| ≤ 2)".
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17.
-      Chrome: Title/subtitle/axis text correctly inverted to light ink, no dark-on-dark failures. Same y-axis label region checked via pixel-level crop: "Im(c)" and "0.0" no longer collide — clear gap visible, same fix holds in this theme. Legend swatch for "bounded" now renders as an outline-only square (light-ink stroke) because its fixed fill color (#1A1A17) matches the dark page background — this is the intended behavior for keeping the underlying data color identical across themes; the stroke (theme-adaptive chrome) keeps it visible.
-      Data: Green → blue escape-time gradient is pixel-identical to the light render. Bounded-interior fill is now the same fixed hex in both renders (verified via source: INTERIOR_HEX = "#1A1A17" is a hard-coded constant, no longer sourced from the theme-adaptive `t.ink` token) — the Attempt-1 VQ-07 issue (black in light vs. near-white in dark) is resolved.
+      Background: warm near-black #1A1A17 page.
+      Chrome: title, subtitle, ticks, axis titles and legend text switch to light ink; frame and axis lines light. No dark-on-dark text.
+      Data: fractal image, color ramp and interior color are identical to the light render; interior swatch in the legend reads as an outlined square against the dark page, the interior itself stays clearly apart from the teal exterior.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicit, y-axis label/tick collision from Attempt
-          1 fixed, readable in both themes
+        comment: Explicit sizes (title 22, subtitle 15, ticks 14, axis titles 15,
+          legend 14 px CSS); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Y-axis label/tick collision fixed; confirmed via pixel-level crop
-          in both renders
+        comment: No text collisions; legend row sits clear of the axis title
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Fractal detail and gamma-adjusted ramp render at good density
+        comment: Bulbs and filaments resolved at device-pixel resolution; legend gradient
+          and interior swatch visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue gradient, good contrast, CVD-safe
+        comment: Green-to-blue ramp against a near-black interior; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Plot area uses a healthy majority of the canvas; modest leftover
-          whitespace below the legend
+        comment: 2400x2400 square canvas, plot area centered, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Re(c)/Im(c) descriptive for the domain, no units needed for complex-plane
-          coordinates
+        comment: Real Part Re(c) / Imaginary Part Im(c)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Fixed hex interior color now identical across themes; imprint_seq
-          gradient; theme-correct backgrounds in both renders
+        comment: 'Continuous data on imprint_seq from t.seq; backgrounds #FAF8F1 /
+          #1A1A17; data colors identical across themes'
     design_excellence:
-      score: 15
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Gamma-corrected ramp, custom canvas-raster technique inside real
-          MUI X axes, purpose-built legend
+        comment: 'Typographic hierarchy beyond baseline: formula/range subtitle in
+          soft ink, bold legend headings over soft-ink end labels'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Clean minimal chrome; both Attempt-1 refinement issues (overlap,
-          theme-inconsistent fill) resolved
+        comment: Legend row aligned to the plot's left edge, rounded bar and swatch,
+          thin frame instead of a grid over the image
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Color directly encodes escape-time with a clear focal point
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -132,27 +133,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct escape-time fractal heatmap
+        comment: Escape-time Mandelbrot heatmap
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Smooth coloring, cardioid/period-2 bulb, labeled axes, distinct interior
-          color all present
+        comment: Smooth normalized iteration count, perceptually uniform imprint_seq,
+          full set with cardioid and period-2 bulb, axes labeled in coordinates, solid
+          interior, equal aspect, fine pixel grid — all Notes and good-version bullets
+          met
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Window still narrowed from spec default (-2.5..1.0) to (-2.0..0.5)
-          to force a square aspect, unresolved from Attempt 1
+        comment: Canvas pixels mapped to the axis domain via useDrawingArea; set not
+          cropped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, legend matches
+        comment: Mandated title format; color legend and interior key labeled for
+          a reader
     data_quality:
       score: 15
       max: 15
@@ -162,19 +166,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Cardioid, period-2 bulb, satellites, filament detail all shown
+        comment: Cardioid, period-2 bulb, smaller bulbs, satellite at −1.75, filaments
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral mathematical scenario
+        comment: Standard mathematical object, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Mathematically correct proportions
+        comment: 'Checked off the axes: cusp at Re 0.25, period-2 bulb −1.25 to −0.75,
+          top bulb near (−0.12, 0.74), antenna tip −2.0; max 100 iterations per spec
+          default'
     code_quality:
       score: 10
       max: 10
@@ -184,33 +190,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean, focused components
+        comment: Linear module; the one inner component is needed for the useDrawingArea
+          hook
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic escape-time computation, no RNG needed
+        comment: Deterministic computation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake functionality
+        comment: Direct escape loop with LUT; appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Harness contract followed correctly, skipAnimation set
+        comment: Default-exported component, skipAnimation, v9 ChartsContainer API,
+          sized from ANYPLOT_SIZE
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -218,23 +226,31 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Composes ChartContainer + useDrawingArea + axes idiomatically
+        comment: 'MUI X composition: ChartsContainer + ChartsXAxis/ChartsYAxis + custom
+          layer via useDrawingArea'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: Creative, well-integrated workaround for the Pro-only Heatmap gap
+        comment: useDrawingArea hook to embed a raster canvas in MUI's axis-scaled
+          SVG surface
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-10-24T09:37:37Z'
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - custom-legend
-  - manual-ticks
+  - layer-composition
+  - html-export
   patterns:
+  - data-generation
   - matrix-construction
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
   - custom-colormap
   - gradient-fill
