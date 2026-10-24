@@ -1,8 +1,7 @@
 // anyplot.ai
 // histogram-kde: Histogram with KDE Overlay
-// Library: muix 9.2.1 | JavaScript 22.23.1
+// Library: muix 7.29.1 | JavaScript 22.23.1
 // Quality: 89/100 | Created: 2026-08-05
-
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { LinePlot } from "@mui/x-charts/LineChart";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
@@ -14,10 +13,10 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
-const FONT = "system-ui, -apple-system, sans-serif";
 
 // Constants
-const VALUES_COL = "values";
+const FONT = "system-ui, -apple-system, sans-serif";
+const TITLE = "histogram-kde · javascript · muix · anyplot.ai";
 const BIN_COUNT = 30;
 const KDE_POINTS = 240;
 const X_PAD_RATIO = 0.04;
@@ -27,12 +26,15 @@ const SILVERMAN_FACTOR = 1.06;
 const BRAND = t.palette[0];
 const BLUE = t.palette[2];
 
-// Data
+// Columns: set these to your data's column names
+const DAILY_RETURN = "Daily return (%)"; // role: values
+
+// Data: replace this block with your own records
 type KdeRow = {
-  [VALUES_COL]: number;
+  [DAILY_RETURN]: number;
 };
 
-const DATA: KdeRow[] = [];
+const data: KdeRow[] = [];
 let seed = 42 >>> 0;
 const sampleSize = 500;
 
@@ -46,12 +48,13 @@ for (let i = 0; i < sampleSize; i++) {
   const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
   const mean = isShockDay ? -2.6 : 0.12;
   const sd = isShockDay ? 2.4 : 0.85;
-  DATA.push({
-    [VALUES_COL]: Number((mean + z * sd).toFixed(4)),
+  data.push({
+    [DAILY_RETURN]: Number((mean + z * sd).toFixed(4)),
   });
 }
 
-const returns = DATA.map((r) => r[VALUES_COL]);
+// Plot: reads only data and the constants above
+const returns = data.map((r) => r[DAILY_RETURN]);
 const n = returns.length;
 const dataMin = Math.min(...returns);
 const dataMax = Math.max(...returns);
@@ -59,20 +62,17 @@ const pad = (dataMax - dataMin) * X_PAD_RATIO;
 const xMin = dataMin - pad;
 const xMax = dataMax + pad;
 
-const binWidth = Math.max(1e-6, (dataMax - dataMin) / BIN_COUNT);
+const binWidth = (dataMax - dataMin) / BIN_COUNT;
 const binCounts = new Array(BIN_COUNT).fill(0);
 for (const v of returns) {
-  const idx = Math.min(
-    BIN_COUNT - 1,
-    Math.max(0, Math.floor((v - dataMin) / binWidth)),
-  );
+  const idx = Math.min(BIN_COUNT - 1, Math.floor((v - dataMin) / binWidth));
   binCounts[idx] += 1;
 }
 const histogramDensity = binCounts.map((c) => c / (n * binWidth));
 
 const sampleMean = returns.reduce((s, v) => s + v, 0) / n;
 const sampleStd = Math.sqrt(
-  returns.reduce((s, v) => s + (v - sampleMean) ** 2, 0) / Math.max(1, n - 1),
+  returns.reduce((s, v) => s + (v - sampleMean) ** 2, 0) / (n - 1),
 );
 const bandwidth = SILVERMAN_FACTOR * sampleStd * Math.pow(n, -0.2);
 
@@ -91,8 +91,9 @@ const kdeDensity = kdeX.map((x) => {
 
 const yMax = Math.max(...histogramDensity, ...kdeDensity) * (1 + Y_HEADROOM_RATIO);
 
-const TITLE = "histogram-kde · javascript · muix · anyplot.ai";
-const SUBTITLE = `Daily portfolio returns (n = ${n}) · Mean ${sampleMean.toFixed(2)}%, SD ${sampleStd.toFixed(2)}%, Silverman KDE bandwidth h = ${bandwidth.toFixed(2)}%`;
+const unitMatch = DAILY_RETURN.match(/\(([^)]+)\)/);
+const unitSuffix = unitMatch ? unitMatch[1] : "";
+const SUBTITLE = `${DAILY_RETURN} (n = ${n}) · Mean ${sampleMean.toFixed(2)}${unitSuffix}, SD ${sampleStd.toFixed(2)}${unitSuffix}, Silverman KDE bandwidth h = ${bandwidth.toFixed(2)}${unitSuffix}`;
 
 function HistogramBarsLayer() {
   const { left, top, width, height } = useDrawingArea();
@@ -108,8 +109,8 @@ function HistogramBarsLayer() {
             key={i}
             x={bx + 0.5}
             y={by}
-            width={Math.max(0, binPx - 1)}
-            height={Math.max(0, top + height - by)}
+            width={binPx - 1}
+            height={top + height - by}
             fill={BRAND}
             fillOpacity={0.5}
           />
@@ -221,8 +222,8 @@ export default function Chart() {
             min: xMin,
             max: xMax,
             height: 60,
-            label: "Daily Return (%)",
-            valueFormatter: (v: number) => `${v.toFixed(1)}%`,
+            label: DAILY_RETURN,
+            valueFormatter: (v: number) => `${v.toFixed(1)}${unitSuffix}`,
             labelStyle: { fontSize: 15, fill: t.ink, fontFamily: FONT },
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft, fontFamily: FONT },
           },
@@ -253,7 +254,7 @@ export default function Chart() {
         />
         <ChartsReferenceLine
           x={sampleMean}
-          label={`Mean ${sampleMean.toFixed(2)}%`}
+          label={`Mean ${sampleMean.toFixed(2)}${unitSuffix}`}
           labelAlign="start"
           lineStyle={{
             stroke: t.inkSoft,
