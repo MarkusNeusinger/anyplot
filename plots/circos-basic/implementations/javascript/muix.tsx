@@ -1,7 +1,7 @@
 // anyplot.ai
 // circos-basic: Circos Plot
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-09-04
+// Library: muix 9.16.0 | JavaScript 22.23.3
+// Quality: 85/100 | Updated: 2026-10-24
 //# anyplot-orientation: square
 
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
