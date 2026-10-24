@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: line-training-load-pmc
 created: '2026-06-13T21:09:36Z'
-updated: '2026-10-24T10:35:40Z'
+updated: '2026-10-24T10:42:37Z'
 generated_by: gemini-4-argon
 adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
 workflow_run: 40086213206
@@ -16,48 +16,43 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-trai
 quality_score: 85
 review:
   strengths:
-  - 'Composes the PMC from MUI X''s composition API: ChartsContainer with three y
-    axes (left load axis, right TSB axis, hidden TSS axis), LinePlot, ScatterPlot
-    and ChartsReferenceLine, all bound to one shared time x axis'
-  - TSB band is two-toned with exact zero-crossing interpolation, so the blue fresh
-    and red fatigued fills meet cleanly at the dashed zero line in both themes
-  - Data generation follows the standard EWMA formulas (CTL 1/42, ATL 1/7) with TSB
-    from previous-day CTL minus ATL; base, build with recovery weeks, peak and taper
-    phases make CTL visibly smoother and lagging ATL, and form turns positive only
-    in recovery weeks and the taper
-  - Both y axes carry readable titles with units (Training load (AU), Form / TSB (AU)),
-    so form values are not read against the load scale
-  - The taper start is marked with a subtle dashed vertical reference line and an
-    italic label, giving the viewer a focal point for the positive-form window
-  - Theme tokens are threaded through every text element and the zero line; data colors
-    are identical between light and dark renders
+  - Composes the chart from ChartsContainer with a time x axis and two y axes (load
+    on the left, TSB on the right, each labeled with its unit), so form values are
+    never read against the load scale
+  - 'CTL and ATL drawn with monotoneX curves: smooth without overshooting their daily
+    values; CTL visibly lags and smooths the spikier ATL'
+  - Two-toned TSB band (blue fresh, red fatigued) with exact zero-crossing interpolation,
+    plus a subtle dashed TSB = 0 reference line visible in both themes
+  - Daily TSS as small 55 %-opacity dots on the load axis at their true values, reading
+    as raw input without dominating the lines
+  - Custom legend glyphs match their marks (line strokes, translucent area swatches,
+    a dot), and the TSS entry names its axis
+  - Chrome fully theme-adaptive via ANYPLOT_TOKENS; data colors identical across light
+    and dark; seeded LCG data with realistic Base/Build/Peak/Taper periodization
   weaknesses:
-  - 'SC-03 (both): daily TSS dots sit on a hidden axis scaled to 4x the TSS maximum,
-    so a ~170 TSS session is drawn at ~40 on the labeled ''Training load (AU)'' axis
-    and every TSS value is misread against the load scale by a factor of about 4 →
-    make the TSS scale readable: plot the dots on the load axis at their true values,
-    or state the scaling where the reader looks (for example a legend label such as
-    ''Daily TSS (÷4, left axis)''). Likely cause: yAxis id ''tss'' with position ''none''
-    and max = maxTss * TSS_SCALE_FACTOR.'
-  - 'VQ-03 (both): the Form legend swatches are drawn at opacity 0.55 with a solid
-    1.5 px border while the bands they explain are fillOpacity 0.3 with no stroke,
-    so the Fresh swatch reads as a clearly brighter blue than the band, especially
-    on the dark background → draw the swatches at the band''s 0.3 opacity without
-    the border. Likely cause: the ''area'' legend Box sx opacity 0.55 and border.'
-  - 'Suggestion: the hand-built TsbAreaLayer path could be replaced by two native
-    line series on the ''tsb'' axis (values clamped to ≥0 and ≤0) with area: true
-    and baseline: 0, which also lets ChartsLegend and tooltips cover the form band.'
+  - 'VQ-03 (dark): the Form (Fresh) fill (#4467A3 at 0.3 opacity) turns into a dark
+    navy that barely separates from the #1A1A17 page; the short positive TSB spikes
+    in mid-April, mid-May and mid-June are hard to make out → raise the fresh fill
+    so it reads clearly on the dark page (about 0.45–0.5 opacity, +0.15). Likely cause:
+    fillOpacity={0.3} on both TSB paths in TsbAreaLayer.'
+  - 'CQ-04 (code): lines 143–199 hand-build the two TSB polygons with a written-out
+    zero-crossing loop and SVG path strings, although MUI X line series fill to a
+    baseline natively → two line series on the tsb axis with area: true (data tsb
+    clamped to ≥ 0 and ≤ 0, baseline 0) styled via .MuiLineChart-area[data-series=…].
+    Likely cause: the custom TsbAreaLayer component instead of native area series.'
+  - 'Suggestion: the ''↑ Taper'' phase marker is an annotation the spec does not request;
+    it can go without loss.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, matches #FAF8F1; not pure white.
-      Chrome: title "line-training-load-pmc · javascript · muix · anyplot.ai" top left in dark ink (~34% of width); left axis "Training load (AU)" 0–160, right axis "Form / TSB (AU)" −50 to 50, x axis Mar–Aug 2025 month ticks; subtle horizontal grid; HTML legend at the bottom (CTL – Fitness, ATL – Fatigue, Form (Fresh), Form (Fatigued), Daily TSS). All text dark and clearly readable.
-      Data: CTL in brand green #009E73 climbing smoothly from ~37 to ~118 then easing in the taper; ATL in lavender #C475FD spiking to ~144 with weekly sawtooth and recovery dips; TSB as a two-tone band around a dashed zero line — translucent matte red below zero through most of the build, translucent blue above zero in recovery weeks and a large positive taper wedge to ~+45; ochre TSS dots in the lower third with a bottom row of rest-day values; dashed vertical line with italic "↑ Taper" label at early July.
+      Background: warm off-white #FAF8F1, no pure white.
+      Chrome: title "line-training-load-pmc · javascript · muix · anyplot.ai" top-left in dark ink (~34 % of width); left axis "Training load (AU)" 0–200, right axis "Form / TSB (AU)" −50 to 50, x axis Mar–Aug 2025; dark-gray tick labels, subtle horizontal grid; bottom legend (CTL – Fitness, ATL – Fatigue, Form (Fresh), Form (Fatigued), Daily TSS (left axis)) all readable.
+      Data: CTL in brand green #009E73 rising smoothly 37 → 118 then easing in the taper; ATL in lavender spiking up to ~144 and dropping to ~45; TSB as a red translucent band below zero through the build and a blue band above zero in the taper (up to ~+43); dashed zero line; daily TSS as small ochre dots at their values (20–180); a dashed vertical "↑ Taper" marker in early July.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black, matches #1A1A17; not pure black.
-      Chrome: title, axis titles, tick labels and legend text in light ink, all clearly readable; grid lines subtle but visible; no dark-on-dark text.
-      Data: identical hues to the light render (green CTL, lavender ATL, blue/red TSB band, ochre TSS dots); the red fatigued fill reads as deep maroon and the blue fresh fill as dim navy — both still recognizable; brand green clearly visible; dashed zero line and taper line visible.
+      Background: warm near-black #1A1A17.
+      Chrome: title, axis titles, ticks and legend in light ink, all readable; no dark-on-dark text; grid subtle but visible.
+      Data: identical colors to the light render (green CTL, lavender ATL, ochre TSS dots, red/blue TSB band). The fatigued fill reads as dark maroon, the fresh fill as dark navy, which is recognizable in the taper block but faint for the short positive spikes.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -69,49 +64,48 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes (22 px title, 14–15 px axes and legend in CSS
-          px); readable in both themes
+        comment: Title 22 px, ticks 14 px, axis titles 15 px, legend 14 px; readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; TSS dots over the translucent red band stay visible
+        comment: No text collisions; dots over lines/bands are translucent and hide
+          nothing
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Lines and dots well sized; Form legend swatches at 0.55 opacity with
-          border do not match the 0.3 bands (defect line)
+        comment: Fresh TSB fill faint on the dark page (defect line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Blue vs red form is split by the zero line and position, not color
-          alone
+        comment: Blue/red form split and green/lavender lines are CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, balanced axes, nothing clipped
+        comment: 3200x1800, balanced axes, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both y axes titled with units; month ticks self-explanatory
+        comment: Both y axes labeled with units (AU)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'CTL #009E73 first, Imprint lavender, blue, ochre and matte red for
-          fatigued; correct backgrounds in both themes'
+        comment: 'First series #009E73, Imprint palette, correct backgrounds in both
+          themes'
     design_excellence:
-      score: 11
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -119,24 +113,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom legend with glyph kinds per encoding (line, area, dot), italic
-          phase label, considered type hierarchy
+        comment: Legend glyphs shaped per mark kind (stroke, translucent swatch, dot)
+          and axis hint in the TSS entry go beyond the baseline
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Dashed low-opacity zero line, horizontal-only grid, generous margins
-          chosen for this chart
+        comment: Exact zero-crossing fills so the two tones meet cleanly at the baseline;
+          subtle dashed zero line
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: Taper start marker draws the eye to the positive-form window before
-          race day
+        passed: false
+        comment: Default; the Taper marker is an unrequested annotation and earns
+          no credit
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -144,27 +138,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct PMC: CTL/ATL lines, TSB band, TSS points'
+        comment: PMC with CTL/ATL lines, TSB band, TSS points
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Two-tone TSB, zero line, TSS near bottom, four-way legend, labeled
-          secondary TSB axis — all present
+        comment: Secondary TSB axis, two-toned band, zero line, TSS points, legend
+          for all four quantities
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: TSS dots on a hidden 4x-scaled axis read against the load axis (defect
-          line)
+        comment: All marks at their values; monotoneX does not overshoot
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title; legend entries readable
+        comment: Mandated title; reader-friendly legend labels
     data_quality:
       score: 15
       max: 15
@@ -174,23 +167,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Build, recovery weeks, peak and taper; ATL spikes over CTL; form
-          positive in recoveries and taper
+        comment: Build fatigue, recovery weeks, CTL lag and positive taper form all
+          visible
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible 26-week cycling season with phase-structured TSS
+        comment: 180-day Base/Build/Peak/Taper season with rest days
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Checked EWMA constants 1/42 and 1/7 and TSB from previous-day values
-          in code; CTL ~37→118, ATL peaks ~144 plausible
+        comment: 'Checked: CTL/ATL from EWMA (1/42, 1/7) in code; TSB = previous-day
+          CTL − ATL; TSS 20–180, CTL ~37–118, TSB −38 to +43 are plausible; no Check
+          values in spec'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -198,8 +192,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Default-export component required by harness; TsbAreaLayer needed
-          for scale hooks
+        comment: Linear module; React components are required by the harness/composition
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -214,18 +207,19 @@ review:
         comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Appropriate complexity, no fake UI
+        passed: false
+        comment: Hand-built TSB polygons (lines 143–199) where native area series
+          with baseline 0 apply (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: v9 ChartsContainer composition, skipAnimation, sized from ANYPLOT_SIZE
+        comment: Default export, skipAnimation, v9 API, sized from ANYPLOT_SIZE
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -233,30 +227,32 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Composition API with multiple y axes by id, axis-bound reference
-          lines
+        comment: ChartsContainer composition with per-series axis ids, LinePlot/ScatterPlot/ChartsGrid/ChartsYAxis
+          primitives
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: useXScale/useYScale hooks for a custom SVG layer and labeled ChartsReferenceLine
-  verdict: REJECTED
+        passed: true
+        comment: Custom SVG layer driven by useXScale/useYScale hooks inside the composed
+          chart; ChartsReferenceLine bound to the secondary axis
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T10:32:15Z'
+  rendered_at: '2026-10-24T10:38:13Z'
 impl_tags:
   dependencies: []
   techniques:
   - twin-axes
+  - custom-legend
   - layer-composition
   - reference-lines
-  - custom-legend
   - annotations
   patterns:
   - data-generation
   dataprep:
   - rolling-window
+  - time-series
   styling:
   - alpha-blending
   - minimal-chrome
