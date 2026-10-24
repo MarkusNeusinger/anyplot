@@ -2,154 +2,138 @@ library: muix
 language: javascript
 specification_id: frontier-efficient
 created: '2026-09-02T01:11:35Z'
-updated: '2026-09-02T01:32:38Z'
-generated_by: claude-sonnet
-workflow_run: 33577687557
+updated: '2026-10-24T09:16:27Z'
+generated_by: gemini-4-argon
+adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
+workflow_run: 40080987683
 issue: 3342
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/javascript/muix/plot-dark.html
-quality_score: 87
+quality_score: 86
 review:
   strengths:
-  - 'Correct, comprehensive feature set: analytic efficient frontier (two-fund theorem),
-    300-portfolio random cloud, explicit min-variance and max-Sharpe (tangency) markers,
-    plus the optional Capital Market Line — every spec requirement plus the optional
-    extra is present.'
-  - 'Creative, semantically sound color usage: the continuous imprint_seq (green→blue)
-    colormap correctly encodes the continuous Sharpe-ratio dimension on the scatter
-    cloud, brand green is reserved for the optimal (max-Sharpe) portfolio, and the
-    frontier curve/min-variance marker use the theme-adaptive ink/neutral token as
-    a baseline reference — all data colors are verified identical between light and
-    dark renders.'
-  - 'Genuinely distinctive MUI X usage: composes ChartContainer + individual Plot
-    components with the useXScale/useYScale hooks to render a fully custom SVG overlay
-    (the Capital Market Line with a clipped, dynamically-positioned label) — a technique
-    specific to MUI X''s advanced composition API.'
-  - 'Realistic, well-scaled financial data: a 6-asset universe with plausible historical
-    returns/vols/correlations, deterministic LCG-seeded portfolio generation (no Math.random),
-    and sensible risk-free rate/Sharpe-ratio ranges.'
-  - Canvas usage is excellent — chart fills nearly the full 3200×1800 canvas with
-    only a compact title and colorbar strip, no clipped elements at either canvas
-    edge in either theme.
+  - Frontier, GMV and tangency portfolio are computed in closed form from the inverse
+    covariance matrix (A, B, C, D scalars), so the minimum-variance point sits exactly
+    at the leftmost point of the frontier and the capital market line touches the
+    frontier exactly at the tangency portfolio, lying above it everywhere else
+  - Random portfolios are colored by Sharpe ratio through a native zAxis continuous
+    colorMap built from the Imprint sequential stops (t.seq[0] to t.seq[1]), with
+    a labelled gradient bar giving the min and max Sharpe values
+  - Composes the chart from ChartsContainer primitives (ScatterPlot, LinePlot, ChartsGrid,
+    ChartsReferenceLine) and draws the CML and key-point markers in data coordinates
+    with the useXScale/useYScale hooks, so everything stays aligned to the axes
+  - Key-point labels carry their exact risk/return values and a page-colored text
+    halo (paintOrder stroke), keeping them readable where they cross the grid and
+    the CML in both themes
+  - 'Theme threading is complete: ink/inkSoft tokens on every text element, warm off-white
+    and near-black backgrounds, identical data colors in both renders'
+  - Native MUI X tooltips on the scatter and line series add per-portfolio inspection
+    in the HTML output
   weaknesses:
-  - The 300-point random-portfolio scatter cloud has no alpha/opacity reduction (fully
-    opaque markers), so the densest cluster (~10-15% risk, 7-9% return) turns into
-    overlapping blobs that obscure individual points and mute the Sharpe-ratio color
-    gradient — apply alpha ≈ 0.6-0.75 per the data-density heuristic for 300+ points.
-  - The 'Capital Market Line' text label sits directly on top of the efficient-frontier
-    curve near the tangency point, so the black/ink line visibly cuts through the
-    letters ('t Line') in both renders — shift the label further along the CML or
-    add a small perpendicular offset so it clears the frontier curve.
-  - The CML label uses lavender (#C475FD) at 14px/600-weight directly on the cream/near-black
-    background; lavender falls below the WCAG 3:1 threshold on the light surface (see
-    style-guide 'Optional outline pattern') — consider a thin ink-colored text stroke
-    or halo for this specific annotation to keep it crisp once the overlap above is
-    fixed.
+  - 'Suggestion: the tangency marker uses brand green #009E73, which is also the low-Sharpe
+    end of the scatter''s color scale, so the maximum-Sharpe portfolio reads like
+    the lowest-Sharpe one at a glance; a marker color outside the green-blue ramp
+    (or the ramp''s high end) would keep the two encodings apart.'
+  - 'Suggestion: the frontier is drawn to 1.18x the highest asset return (13 % return
+    at about 22 % risk), far beyond the long-only cloud that tops out near 9.8 %;
+    ending it near the highest attainable return would tighten the axes around the
+    data.'
+  - 'Suggestion: the native ChartsLegend and ContinuousColorLegend components could
+    replace the hand-built HTML legend row and gradient bar, and the in-plot ''Capital
+    Market Line'' label repeats the legend entry.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "frontier-efficient · javascript · muix · anyplot.ai" in bold dark ink, centered, ~50% width, fully visible. X-axis "Portfolio Risk (Annualized Std Dev)" and Y-axis "Expected Portfolio Return (Annualized)" labels in dark ink, tick labels (0%-23% / 1%-13%) in a softer dark gray. Legend top-right ("Min-Variance Portfolio", "Max-Sharpe (Tangency) Portfolio", "Efficient Frontier") in dark text with black swatches, comfortably inside the right edge (verified via crop — no clipping). Subtle horizontal+vertical grid lines. Bottom colorbar strip ("Low Sharpe ratio" → "High Sharpe ratio") in soft gray text, fully visible with margin below.
-      Data: Efficient frontier is a thick black curve; min-variance portfolio is a large black dot; max-Sharpe (tangency) portfolio is a large brand-green (#009E73) dot; Capital Market Line is a dashed lavender (#C475FD) line with a "Capital Market Line" label; 300-point scatter cloud is colored on a green→blue continuous scale (imprint_seq) by Sharpe ratio. First/primary highlighted portfolio is confirmed brand green.
-      Legibility verdict: PASS overall, with one specific issue — the lavender "Capital Market Line" label is crossed by the black frontier curve line at the point they visually intersect, and the label's lavender color has borderline contrast against the cream background (both flagged as weaknesses, not full failures — text remains legible).
+      Background: warm off-white, #FAF8F1, no pure white.
+      Chrome: bold title "frontier-efficient · javascript · muix · anyplot.ai" (~65% width) with an inkSoft subtitle; centered HTML legend row (Efficient Frontier, Capital Market Line, Min-Variance Portfolio, Max-Sharpe (Tangency) Portfolio); y-axis "Expected Portfolio Return — Annualized (%)" 1–13 %, x-axis "Portfolio Risk — Annualized Standard Deviation (%)" 0–23 %; subtle grid in both directions; no top/right spines. All dark text, fully readable.
+      Data: 300 portfolios as a green-to-blue (Imprint seq) Sharpe-colored cloud from ~5 % to 18.5 % risk; thick near-black efficient frontier starting at the GMV point (black dot, "GMV (5.0%, 4.3%)") and running above the cloud; purple dashed CML from 2 % at zero risk, tangent at the green #009E73 tangency marker "Max Sharpe = 0.62 (6.7%, 6.1%)"; dashed risk-free reference line at 2 %; gradient bar at the bottom "Low Sharpe ratio (0.22)" to "High Sharpe ratio (0.62)".
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, axis labels, tick labels, legend and colorbar text — all correctly flipped to light/cream ink, fully readable against the dark surface. No dark-on-dark text found anywhere (title, axes, ticks, legend, colorbar caption all checked). Grid lines subtle and visible. Frontier curve and min-variance/legend swatches correctly flip from black to off-white ink (theme-adaptive neutral token).
-      Data: Colors are identical to the light render — brand green tangency marker, lavender CML, green→blue Sharpe colormap on the scatter cloud — confirming only chrome (not data colors) changes between themes.
-      Legibility verdict: PASS, with the same CML-label-crosses-frontier-line overlap present in this render too (chrome-independent geometric issue, not a dark-mode-specific failure).
+      Background: warm near-black, #1A1A17, no pure black.
+      Chrome: title, subtitle, legend, tick labels and axis titles all rendered in light ink; grid subtle but visible; no dark-on-dark text anywhere.
+      Data: identical to light — same green-blue cloud, purple CML, green tangency marker; only the frontier line and the GMV marker flip from near-black to off-white with the ink token, as theme chrome-ink elements. Labels keep a dark halo.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 22
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, axis labels 16px, ticks
-          14px) and well-proportioned in both themes; the lavender Capital Market
-          Line label has borderline contrast on the cream surface.
+        comment: Explicit 14-22 px fonts; all text readable in both themes and at
+          thumbnail size
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 6
         max: 6
         passed: true
-        comment: The 'Capital Market Line' text label is visibly crossed by the black/ink
-          efficient-frontier curve near the tangency point in both renders — minimal
-          overlap, text still readable.
+        comment: No text collisions; labels haloed; cloud overlap is light and hides
+          nothing
       - id: VQ-03
         name: Element Visibility
-        score: 3
+        score: 6
         max: 6
         passed: true
-        comment: 300-point scatter cloud uses fully opaque markers with no alpha reduction;
-          the dense mid-cluster (~10-15% risk) becomes overlapping blobs that obscure
-          individual points and the Sharpe color gradient.
+        comment: 300 points at markerSize 5.5 suit the density; thick frontier; legend
+          glyphs match marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue sequential colormap and highlighted portfolio markers
-          are CVD-safe and distinguishable without relying on hue alone.
+        comment: Green-blue ramp plus purple CML and ink frontier; no red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart fills nearly the entire 3200x1800 canvas; only a compact title
-          strip and colorbar caption above/below; no clipped elements at any canvas
-          edge in either theme.
+        comment: 3200x1800; balanced axis labels; nothing clipped or overflowing
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with percent-formatted tick units ('Portfolio
-          Risk (Annualized Std Dev)', 'Expected Portfolio Return (Annualized)').
+        comment: Descriptive axis titles with units (%)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Max-Sharpe portfolio uses brand green #009E73, scatter cloud uses
-          the imprint_seq continuous colormap (correct for single-polarity Sharpe-ratio
-          data), frontier/min-variance use the theme-adaptive neutral (ink) token
-          as a baseline reference, CML uses palette position 2 (lavender). Backgrounds
-          and all chrome are theme-correct and data colors are identical between light
-          and dark renders.'
+        comment: 'Continuous color from Imprint seq stops; first categorical accent
+          #009E73; correct theme backgrounds; data colors identical'
     design_excellence:
-      score: 15
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Thoughtful semantic color mapping (green=optimal, neutral=baseline,
-          continuous colormap=risk-adjusted quality) and a custom CML overlay go clearly
-          above library defaults.
+        comment: Title/subtitle hierarchy with a data-derived subtitle, haloed bold
+          key-point labels, a coherent ink/purple/green accent system beyond the baseline
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Subtle grid and generous whitespace, but the unblended opaque scatter
-          cloud and the label/line overlap keep it from full polish.
+        comment: Page-colored text halos and marker outlines, a labelled colorbar
+          band and legend band laid out outside the plot area
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: 'Strong visual hierarchy: bold frontier curve, size-differentiated
-          key portfolios, color-coded Sharpe quality, and a dashed CML with risk-free
-          reference line together tell a clear MPT story.'
+        comment: Key points carry their exact Sharpe and risk/return values, making
+          the tangency the focal point; tangency green clashes with the low-Sharpe
+          color end
     spec_compliance:
       score: 15
       max: 15
@@ -159,28 +143,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter+line efficient-frontier chart with all expected subtypes.
+        comment: Efficient frontier with scatter cloud; CML is offered by the Notes
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinguished frontier curve, portfolio scatter cloud, min-variance
-          and max-Sharpe markers, plus the optional Capital Market Line and Sharpe-ratio
-          color coding — all present.
+        comment: Risk on x, return on y; thick distinct frontier; random cloud below;
+          GMV and tangency marked and distinct; optional CML tangent and above the
+          frontier; Sharpe color scale explained
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=risk, Y=return, axes show the full data range.
+        comment: Every portfolio at its own risk/return; no displacement; axes show
+          all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the exact mandated format; legend labels accurately
-          describe the highlighted series.
+        comment: Correct title format; legend entries and colorbar labels read cleanly
     data_quality:
       score: 15
       max: 15
@@ -190,22 +174,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows the full frontier curve, a wide spread of suboptimal portfolios,
-          and both key optimal points.
+        comment: Cloud, frontier, GMV, tangency, CML and risk-free anchor all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, realistic 6-asset portfolio-optimization scenario with plausible
-          historical return/vol/correlation inputs.
+        comment: Six-asset universe with plausible returns, vols and correlations
+          including a low-vol bond-like asset
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Returns, risks, Sharpe ratios and the risk-free rate all fall within
-          realistic real-world ranges for a mixed equity/bond universe.
+        comment: 'Returns 4-10 %, risk 5-18.5 %, Sharpe 0.22-0.62: within the spec''s
+          typical ranges; checked tangency Sharpe = (6.1-2)/6.7 = 0.62 consistent
+          with the label'
     code_quality:
       score: 10
       max: 10
@@ -215,65 +199,69 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat helper functions for necessary linear algebra (matrix inverse,
-          dot products) and one custom overlay component — no unnecessary classes
-          or abstraction.
+        comment: Linear script; the one FrontierOverlay component is required to use
+          the scale hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic fixed-seed LCG generates all randomness; no Math.random().
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Every imported MUI X / MUI component is used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for genuine mean-variance optimization math;
-          no fake UI or simulated interactivity.
+        comment: 'Gauss-Jordan inversion and closed-form frontier are needed: no matrix
+          library is available in the JS runtime'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct harness contract: default-exported Chart component, skipAnimation
-          set on both LinePlot and ScatterPlot, current MUI X API.'
+        comment: Default-exported component, skipAnimation set, v9 ChartsContainer
+          API
     library_mastery:
-      score: 10
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: Uses the ChartContainer advanced-composition pattern (rather than
-          the simpler wrapper charts) exactly as MUI X recommends for custom multi-series
-          + overlay compositions.
+        comment: Good composition with ChartsContainer and axis ids, but the legend
+          and colorbar are hand-built HTML instead of ChartsLegend/ContinuousColorLegend
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 2
         max: 5
-        passed: true
-        comment: useXScale/useYScale hooks driving a fully custom SVG overlay, plus
-          zAxis colorMap for continuous scatter coloring — both genuinely MUI X-specific
-          and hard to replicate simply in another library.
+        passed: false
+        comment: zAxis continuous colorMap and useXScale/useYScale hooks for a data-coordinate
+          overlay
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-10-24T09:13:11Z'
 impl_tags:
   dependencies: []
   techniques:
-  - colorbar
   - annotations
+  - colorbar
+  - custom-legend
+  - layer-composition
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   - matrix-construction
-  dataprep:
-  - correlation-matrix
+  dataprep: []
   styling:
   - custom-colormap
+  - edge-highlighting
