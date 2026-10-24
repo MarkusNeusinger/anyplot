@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: arc-basic
 created: '2026-08-24T15:24:43Z'
-updated: '2026-10-24T00:07:42Z'
+updated: '2026-10-24T00:13:26Z'
 generated_by: gemini-4-argon
 adopted_from: a6754ae47632b531aec6e975e6a4b937aa81fea5 (a6754ae47632b531aec6e975e6a4b937aa81fea5)
 workflow_run: 40042651552
@@ -16,103 +16,100 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/arc-basic
 quality_score: 84
 review:
   strengths:
-  - 'Builds the arc layer the documented MUI X v9 way: ChartsContainer with hidden
-    linear axes, and a custom ArcLayer component that reads node and baseline positions
-    through the useXScale/useYScale hooks, so every arc and node sits exactly on the
-    chart''s own scales'
-  - 'Interaction type is double-encoded, color plus dash pattern (Activates solid
-    #009E73, Represses dashed #AE3030), so the type stays readable without relying
-    on red-green alone'
-  - 'Interaction strength drives both stroke width (1.6–3.4 px) and opacity (0.52–0.82):
-    the strong PIK3CA→AKT1 link reads as the main arc and weak links recede, which
-    matches the semi-transparent arcs the Notes ask for'
-  - The header carries a compact inline key (line samples for both types plus the
-    height and width encodings) and a data-derived subtitle (18 nodes · 23 arcs ·
-    strength 1–4), with no axes or grid, as the spec asks
-  - Node labels are rotated −40° and end-anchored at their nodes, so all 18 gene names
-    (NOTCH1, PIK3CA included) fit without colliding
-  - A realistic gene-regulation scenario that matches the spec's genomics application,
-    with plain-language column names
+  - 'Composes the chart natively in MUI X v9: an empty ChartsContainer with hidden
+    linear axes provides the scales, and a custom ArcLayer reads them through useXScale/useYScale
+    to draw quadratic-Bézier arcs, so node positions come from the sequence index
+    and not from data values'
+  - Arc apex height is linear in index distance (MIN_ARC_HEIGHT + MAX_ARC_SPAN·|b−a|/maxDistance),
+    so the FOXP2→ACE2 span rises clearly above the long-range links, which rise above
+    the adjacent-node hops
+  - 'Regulation type is encoded twice, brand green solid for Activates and the semantic
+    red anchor #AE3030 dashed for Represses, so the two types stay distinguishable
+    without color vision'
+  - Nodes carry a page-colored 1.5 px ring that separates them from the arcs piling
+    into them; the rotated −40° labels at 16 px sit cleanly under each node without
+    colliding
+  - Theme tokens are threaded through every element (t.ink, t.inkSoft, t.pageBg, t.palette),
+    so the chrome flips correctly while data colors stay identical
+  - skipAnimation is set, and the data is hard-coded and deterministic
   weaknesses:
-  - 'VQ-03 (dark): the weakest arcs (weight 1 at stroke-opacity 0.52, e.g. the FOXP2–ACE2
-    span and the dashed BRCA2–CDK4 and BRCA1–ACE2 Represses arcs) almost dissolve
-    into the #1A1A17 background, and the long FOXP2–ACE2 arc is hard to follow to
-    its end nodes in the 800 px preview → raise the minimum opacity to about 0.7 (+0.18)
-    or the minimum stroke to about 2.2 px (+0.6 px). Likely cause: STROKE_ALPHA_MIN
-    = 0.52 and STROKE_MIN_PX = 1.6, applied the same way on both themes.'
-  - 'VQ-01 (both): node labels at 14 px in inkSoft, rotated −40°, turn into a blur
-    at the 400–800 px preview sizes, which is the only place node identity is shown
-    → about 16 px (+2 px). Likely cause: fontSize={14} on the node <text>.'
-  - 'Suggestion: the gap between the Represses key item and the ''· Arc height ∝ …''
-    explanation is wider than the gap between the two key items; one consistent gap
-    would tidy the header row.'
-  - 'Suggestion: an MUI X tooltip on hover (e.g. through ChartsTooltip with a custom
-    item) would let the HTML view name source, target and strength for each arc.'
+  - 'VQ-03 (dark): the weight-1 Represses arcs (BRCA2→CDK4, BRCA1→ACE2) at 2 px, dashed,
+    0.7 opacity are faint against #1A1A17 and hard to follow to their end nodes →
+    about 2.6 px minimum stroke (+0.6 px) or a minimum opacity of about 0.85 (+0.15).
+    Likely cause: STROKE_MIN_PX = 2 together with STROKE_ALPHA_MIN = 0.7.'
+  - 'DQ-02 (both): real gene symbols (FOXP2, ACE2, APOE, BRCA1 …) are wired into invented
+    regulatory links such as FOXP2→ACE2 and APOE→ACE2 that read as biological claims
+    → use the documented edges of one real pathway, or rename the nodes to clearly
+    fictional identifiers. Likely cause: the data block''s source/target pairs.'
+  - 'Suggestion: the mandated title fills only about 29 % of the width; a slightly
+    larger title (about 26 px) would give the header more weight over the long legend
+    row.'
+  - 'Suggestion: a small stroke-width key (a thin and a thick line sample labelled
+    1 and 4) would show the weight encoding instead of describing it in text.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, #FAF8F1, with no axes, grid or spines.
-      Chrome: bold dark title "arc-basic · javascript · muix · anyplot.ai" at the top left (about 29 % of the width), a subtitle in inkSoft ("18 nodes · 23 arcs · Interaction strength: 1–4"), and a key row (green solid line "Activates", red dashed line "Represses", "· Arc height ∝ sequence distance · Stroke width ∝ Interaction strength"). 18 gene labels (FOXP2 … ACE2) are rotated −40° under the nodes, dark grey and readable.
-      Data: 18 brand-green #009E73 nodes evenly spaced on one horizontal line; 23 quadratic arcs above it. Activates arcs are #009E73 and solid; Represses arcs are #AE3030 and dashed. Height grows with node distance: 17 short neighbor arcs, mid-range arcs (MYC–TP53, KRAS–BRCA2, TP53–BRCA1), and a tall FOXP2–ACE2 arc spanning the line. Width and opacity grow with weight; the thick PIK3CA–AKT1 arc stands out.
+      Background: warm off-white #FAF8F1 over the full 3200×1800 canvas.
+      Chrome: bold dark title "arc-basic · javascript · muix · anyplot.ai" at the top left, a soft-ink subtitle "18 nodes · 23 arcs · Interaction strength: 1–4", and an inline legend row (green solid "Activates", red dashed "Represses", "· Arc height ∝ sequence distance · Stroke width ∝ Interaction strength"). There are no axes or grid. 18 gene labels (FOXP2 … ACE2) rotated −40° under the nodes, all dark and readable, with no collisions.
+      Data: 18 brand-green #009E73 nodes with page-colored rings on one horizontal line near the bottom. 23 arcs above the line: adjacent hops at a uniform low height, longer links rising with distance, and the FOXP2→ACE2 arc spanning almost the full width at the top. Activates arcs are green and solid, Represses arcs are matte red #AE3030 and dashed; stroke widths of 2–3.8 px follow the weight.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black, #1A1A17.
-      Chrome: title in light ink, subtitle, key and node labels in light grey inkSoft. All readable, with no dark-on-dark text.
-      Data: identical node and arc colors to the light render (#009E73 green, #AE3030 red, same dashes, widths and opacities). Only chrome flips. Brand green reads well. The low-opacity weight-1 arcs (FOXP2–ACE2, dashed BRCA2–CDK4, BRCA1–ACE2) are faint against the dark page but still traceable at full size.
-      Legibility verdict: PASS (text). Weak arcs have low contrast; see the VQ-03 defect.
+      Background: warm near-black #1A1A17.
+      Chrome: the title is light ink and the subtitle, legend row and node labels are light soft ink, all readable; there is no dark-on-dark text.
+      Data: node and arc colors are identical to the light render (green #009E73, red #AE3030); only the chrome flipped. The thinnest dashed red arcs (BRCA2→CDK4, BRCA1→ACE2) are faint on the dark surface but still traceable.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
-        passed: false
-        comment: All text explicitly sized and readable in both themes; node labels
-          at 14 px blur in the 400–800 px previews (defect line)
+        passed: true
+        comment: Title 22 px, labels 16 px, subtitle and legend 14–15 px, set explicitly
+          and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Rotated node labels clear their neighbors; arc crossings are permitted
-          by the spec
+        comment: Rotated node labels clear of each other and of the arcs; legend row
+          clear
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
-        passed: false
-        comment: Nodes prominent; weight-1 arcs at opacity 0.52 nearly dissolve on
-          the dark background (defect line)
+        passed: true
+        comment: Weight-1 dashed Represses arcs are faint on the dark background (defect
+          line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Type is double-encoded by color and dash, so it does not depend on
-          red-green alone
+        comment: Type encoded by color and dash pattern, so it is CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200×1800; arcs fill the plot area; no overflow or clipping
+        comment: 3200×1800; arcs fill the plot area and the header is compact; the
+          canvas gate passed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No value axes by design; key and subtitle name the encodings in reader
-          terms
+        comment: N/A for value axes (none by design); title and legend text are descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Activates #009E73, Represses #AE3030 (semantic red anchor for down-regulation);
-          correct backgrounds in both themes; data colors identical'
+        comment: 'First series #009E73; Represses on the semantic red anchor #AE3030;
+          backgrounds correct in both themes'
     design_excellence:
       score: 10
       max: 20
@@ -122,22 +119,22 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: 'Typographic hierarchy decided beyond the baseline: bold title, inkSoft
-          data subtitle and a compact inline key with line samples'
+        comment: Title/subtitle/inline-legend typographic hierarchy built for this
+          chart, beyond the baseline
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Redundant dash encoding for type, plus weight-scaled opacity that
-          makes dense arcs recede; header aligned with the plot's left edge
+        comment: Page-colored node rings separating converging arcs; rotated labels
+          placed under each node
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed with the allowed encodings; no hierarchy chosen beyond
-          them
+        comment: Data displayed with the encodings the Notes allow; no hierarchy chosen
+          beyond them
     spec_compliance:
       score: 15
       max: 15
@@ -147,30 +144,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct basic arc diagram: one row of nodes, arcs above, color by
-          type and width by weight as the Data and Notes allow'
+        comment: Single-row arc diagram; color by type and width by weight are allowed
+          by the Data and Notes
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'Sequence order kept, no value axes or grid, height grows with distance,
-          semi-transparent arcs, labels at their nodes: every Notes and ''A good version
-          shows'' bullet is met'
+        comment: 'Arcs above the line with height growing with distance, semi-transparent
+          arcs, readable labels at their nodes, one row in data order: all Notes and
+          good-version bullets met'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Nodes at their sequence index; arcs join exactly their two nodes
+        comment: Nodes at their sequence index, arcs join their exact endpoints, quadratic
+          arcs with no overshoot
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; key entries match the type values in the data
+        comment: Title in the mandated format; legend entries match the types
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -178,22 +176,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Short, mid and long-range links, nesting, crossings, both types and
-          the full weight range
+        comment: Short- and long-range links, crossing and nesting arcs, a hub at
+          AKT1/ACE2, two types, four weights
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Gene-regulation network, a real and neutral science scenario named
-          among the spec's applications
+        comment: Real gene names in invented regulatory links (defect line)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Interaction strengths 1–4 on an ordinal scale; no 'Check values:'
-          in the spec
+        comment: 18 nodes within the 10–50 range; weights 1–4 are sensible; no Check
+          values in the spec
     code_quality:
       score: 10
       max: 10
@@ -203,7 +200,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: The single ArcLayer component is required for the MUI X scale hooks
+        comment: Linear data→plot flow; the ArcLayer component is required so the
+          scale hooks run inside ChartsContainer
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -215,21 +213,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: React, ChartsContainer, useXScale and useYScale are all used
+        comment: React, ChartsContainer and the scale hooks are all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; nothing an available call computes is written
-          out
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component, sized to ANYPLOT_SIZE, skipAnimation,
-          v9 ChartsContainer API
+        comment: Default export, skipAnimation, current v9 ChartsContainer API; the
+          harness writes the PNG and HTML
     library_mastery:
       score: 6
       max: 10
@@ -238,31 +235,30 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: false
-        comment: Composition through ChartsContainer with axis configs (position 'none')
-          and custom children, the documented MUI X pattern for custom marks
+        passed: true
+        comment: 'v9 composition: ChartsContainer with hidden axes (position: ''none'')
+          and a custom layer'
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Uses the MUI X useXScale/useYScale hooks to place custom SVG on the
-          chart's scales
-  verdict: REJECTED
+        comment: Custom SVG layer driven by MUI X's useXScale/useYScale hooks
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T00:04:41Z'
+  rendered_at: '2026-10-24T00:10:20Z'
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
   - bezier-curves
+  - custom-legend
   - layer-composition
   - html-export
-  patterns:
-  - iteration-over-groups
-  dataprep: []
+  patterns: []
+  dataprep:
+  - normalization
   styling:
   - alpha-blending
   - minimal-chrome
-  - linewidth
+  - edge-highlighting
