@@ -38,48 +38,50 @@ const CONDITION = "Condition";
 const LOG2_FC = "Log2 fold change"; // role: matrix
 
 // Data: replace this block with your own records
+// gene|pathway|control base|treated base — each pathway holds two sub-modules
 const GENE_SPECS = [
-  "IL6|Inflammatory|-0.3|2.4",
-  "TNF|Inflammatory|-0.3|2.4",
-  "IFNG|Inflammatory|-0.3|2.4",
-  "IL1B|Inflammatory|-0.3|2.4",
-  "CXCL10|Inflammatory|-0.3|2.4",
-  "STAT1|Inflammatory|-0.3|2.4",
-  "COL1A1|Fibrosis|0.3|-2.2",
-  "COL3A1|Fibrosis|0.3|-2.2",
-  "ACTA2|Fibrosis|0.3|-2.2",
-  "FN1|Fibrosis|0.3|-2.2",
-  "VIM|Fibrosis|0.3|-2.2",
-  "MKI67|Proliferation|0.6|1.4",
-  "PCNA|Proliferation|0.6|1.4",
-  "TOP2A|Proliferation|0.6|1.4",
-  "CCND1|Proliferation|0.6|1.4",
-  "CDK4|Proliferation|0.6|1.4",
+  "IL6|Inflammatory|-0.6|2.8",
+  "TNF|Inflammatory|-0.6|2.8",
+  "IL1B|Inflammatory|-0.6|2.8",
+  "IFNG|Inflammatory|-0.4|2.1",
+  "CXCL10|Inflammatory|-0.4|2.1",
+  "STAT1|Inflammatory|-0.4|2.1",
+  "COL1A1|Fibrosis|0.4|-2.6",
+  "COL3A1|Fibrosis|0.4|-2.6",
+  "FN1|Fibrosis|0.4|-2.6",
+  "ACTA2|Fibrosis|0.2|-1.8",
+  "VIM|Fibrosis|0.2|-1.8",
+  "MKI67|Proliferation|1.4|0.7",
+  "PCNA|Proliferation|1.4|0.7",
+  "TOP2A|Proliferation|1.4|0.7",
+  "CCND1|Proliferation|0.9|0.2",
+  "CDK4|Proliferation|0.9|0.2",
 ];
 
+// sample|condition|response scale — two replicate sub-groups per condition
 const SAMPLE_SPECS = [
-  "Control-01|Control",
-  "Control-02|Control",
-  "Control-03|Control",
-  "Control-04|Control",
-  "Control-05|Control",
-  "Control-06|Control",
-  "Treated-01|Treated",
-  "Treated-02|Treated",
-  "Treated-03|Treated",
-  "Treated-04|Treated",
-  "Treated-05|Treated",
-  "Treated-06|Treated",
+  "Control-01|Control|0.6",
+  "Control-02|Control|0.6",
+  "Control-03|Control|0.6",
+  "Control-04|Control|1.4",
+  "Control-05|Control|1.4",
+  "Control-06|Control|1.4",
+  "Treated-01|Treated|0.75",
+  "Treated-02|Treated|0.75",
+  "Treated-03|Treated|0.75",
+  "Treated-04|Treated|1.2",
+  "Treated-05|Treated|1.2",
+  "Treated-06|Treated|1.2",
 ];
 
 let lcgState = 42 >>> 0;
 const geneOffsets = GENE_SPECS.map(() => {
   lcgState = (lcgState * 1664525 + 1013904223) >>> 0;
-  return ((lcgState / 4294967296) * 2 - 1) * 0.25;
+  return ((lcgState / 4294967296) * 2 - 1) * 0.15;
 });
 const sampleBatches = SAMPLE_SPECS.map(() => {
   lcgState = (lcgState * 1664525 + 1013904223) >>> 0;
-  return ((lcgState / 4294967296) * 2 - 1) * 0.3;
+  return ((lcgState / 4294967296) * 2 - 1) * 0.12;
 });
 
 const data: Record<string, string | number>[] = [];
@@ -88,10 +90,10 @@ for (let i = 0; i < GENE_SPECS.length; i++) {
   const ctrlBase = Number(ctrlStr);
   const trtBase = Number(trtStr);
   for (let j = 0; j < SAMPLE_SPECS.length; j++) {
-    const [sample, condition] = SAMPLE_SPECS[j].split("|");
+    const [sample, condition, scaleStr] = SAMPLE_SPECS[j].split("|");
     lcgState = (lcgState * 1664525 + 1013904223) >>> 0;
-    const cellNoise = ((lcgState / 4294967296) * 2 - 1) * 0.35;
-    const base = condition === "Control" ? ctrlBase : trtBase;
+    const cellNoise = ((lcgState / 4294967296) * 2 - 1) * 0.2;
+    const base = (condition === "Control" ? ctrlBase : trtBase) * Number(scaleStr);
     const val = Number((base + geneOffsets[i] + sampleBatches[j] + cellNoise).toFixed(4));
     data.push({
       [GENE]: gene,
