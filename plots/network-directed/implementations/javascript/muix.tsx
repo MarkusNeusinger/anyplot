@@ -1,6 +1,6 @@
 // anyplot.ai
 // network-directed: Directed Network Graph
-// Library: muix 9.2.1 | JavaScript 22.23.2
+// Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 91/100 | Created: 2026-09-05
 
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
@@ -17,226 +17,57 @@ const END_GAP = 6;
 const PAD_X_SHARE = 0.14;
 const PAD_Y_SHARE = 0.25;
 
-// Data
-const SOURCE_COL = "Importer Module";
-const SOURCE_LAYER_COL = "Importer Layer";
-const SOURCE_DEPTH_COL = "Importer Depth";
-const TARGET_COL = "Imported Module";
-const TARGET_LAYER_COL = "Imported Layer";
-const TARGET_DEPTH_COL = "Imported Depth";
-const WEIGHT_COL = "Import Calls";
+// Columns: set these to your data's column names
+const MODULE = "Module"; // role: node
+const LAYER = "Architecture layer"; // role: group
+const SOURCE = "Importer module"; // role: source
+const TARGET = "Imported module"; // role: target
+const WEIGHT = "Import calls"; // role: weight
 
-const DATA: Array<Record<string, string | number>> = [
-  {
-    [SOURCE_COL]: "config",
-    [SOURCE_LAYER_COL]: "Foundation",
-    [SOURCE_DEPTH_COL]: 0,
-    [TARGET_COL]: "utils",
-    [TARGET_LAYER_COL]: "Foundation",
-    [TARGET_DEPTH_COL]: 0,
-    [WEIGHT_COL]: 2,
-  },
-  {
-    [SOURCE_COL]: "logger",
-    [SOURCE_LAYER_COL]: "Core Services",
-    [SOURCE_DEPTH_COL]: 1,
-    [TARGET_COL]: "utils",
-    [TARGET_LAYER_COL]: "Foundation",
-    [TARGET_DEPTH_COL]: 0,
-    [WEIGHT_COL]: 3,
-  },
-  {
-    [SOURCE_COL]: "auth",
-    [SOURCE_LAYER_COL]: "Core Services",
-    [SOURCE_DEPTH_COL]: 1,
-    [TARGET_COL]: "utils",
-    [TARGET_LAYER_COL]: "Foundation",
-    [TARGET_DEPTH_COL]: 0,
-    [WEIGHT_COL]: 2,
-  },
-  {
-    [SOURCE_COL]: "auth",
-    [SOURCE_LAYER_COL]: "Core Services",
-    [SOURCE_DEPTH_COL]: 1,
-    [TARGET_COL]: "config",
-    [TARGET_LAYER_COL]: "Foundation",
-    [TARGET_DEPTH_COL]: 0,
-    [WEIGHT_COL]: 1,
-  },
-  {
-    [SOURCE_COL]: "cache",
-    [SOURCE_LAYER_COL]: "Core Services",
-    [SOURCE_DEPTH_COL]: 1,
-    [TARGET_COL]: "utils",
-    [TARGET_LAYER_COL]: "Foundation",
-    [TARGET_DEPTH_COL]: 0,
-    [WEIGHT_COL]: 2,
-  },
-  {
-    [SOURCE_COL]: "orders",
-    [SOURCE_LAYER_COL]: "Domain Logic",
-    [SOURCE_DEPTH_COL]: 2,
-    [TARGET_COL]: "auth",
-    [TARGET_LAYER_COL]: "Core Services",
-    [TARGET_DEPTH_COL]: 1,
-    [WEIGHT_COL]: 2,
-  },
-  {
-    [SOURCE_COL]: "orders",
-    [SOURCE_LAYER_COL]: "Domain Logic",
-    [SOURCE_DEPTH_COL]: 2,
-    [TARGET_COL]: "logger",
-    [TARGET_LAYER_COL]: "Core Services",
-    [TARGET_DEPTH_COL]: 1,
-    [WEIGHT_COL]: 3,
-  },
-  {
-    [SOURCE_COL]: "orders",
-    [SOURCE_LAYER_COL]: "Domain Logic",
-    [SOURCE_DEPTH_COL]: 2,
-    [TARGET_COL]: "cache",
-    [TARGET_LAYER_COL]: "Core Services",
-    [TARGET_DEPTH_COL]: 1,
-    [WEIGHT_COL]: 2,
-  },
-  {
-    [SOURCE_COL]: "inventory",
-    [SOURCE_LAYER_COL]: "Domain Logic",
-    [SOURCE_DEPTH_COL]: 2,
-    [TARGET_COL]: "cache",
-    [TARGET_LAYER_COL]: "Core Services",
-    [TARGET_DEPTH_COL]: 1,
-    [WEIGHT_COL]: 2,
-  },
-  {
-    [SOURCE_COL]: "inventory",
-    [SOURCE_LAYER_COL]: "Domain Logic",
-    [SOURCE_DEPTH_COL]: 2,
-    [TARGET_COL]: "logger",
-    [TARGET_LAYER_COL]: "Core Services",
-    [TARGET_DEPTH_COL]: 1,
-    [WEIGHT_COL]: 2,
-  },
-  {
-    [SOURCE_COL]: "billing",
-    [SOURCE_LAYER_COL]: "Domain Logic",
-    [SOURCE_DEPTH_COL]: 2,
-    [TARGET_COL]: "auth",
-    [TARGET_LAYER_COL]: "Core Services",
-    [TARGET_DEPTH_COL]: 1,
-    [WEIGHT_COL]: 2,
-  },
-  {
-    [SOURCE_COL]: "billing",
-    [SOURCE_LAYER_COL]: "Domain Logic",
-    [SOURCE_DEPTH_COL]: 2,
-    [TARGET_COL]: "orders",
-    [TARGET_LAYER_COL]: "Domain Logic",
-    [TARGET_DEPTH_COL]: 2,
-    [WEIGHT_COL]: 1,
-  },
-  {
-    [SOURCE_COL]: "rest-api",
-    [SOURCE_LAYER_COL]: "API Layer",
-    [SOURCE_DEPTH_COL]: 3,
-    [TARGET_COL]: "orders",
-    [TARGET_LAYER_COL]: "Domain Logic",
-    [TARGET_DEPTH_COL]: 2,
-    [WEIGHT_COL]: 3,
-  },
-  {
-    [SOURCE_COL]: "rest-api",
-    [SOURCE_LAYER_COL]: "API Layer",
-    [SOURCE_DEPTH_COL]: 3,
-    [TARGET_COL]: "inventory",
-    [TARGET_LAYER_COL]: "Domain Logic",
-    [TARGET_DEPTH_COL]: 2,
-    [WEIGHT_COL]: 2,
-  },
-  {
-    [SOURCE_COL]: "rest-api",
-    [SOURCE_LAYER_COL]: "API Layer",
-    [SOURCE_DEPTH_COL]: 3,
-    [TARGET_COL]: "billing",
-    [TARGET_LAYER_COL]: "Domain Logic",
-    [TARGET_DEPTH_COL]: 2,
-    [WEIGHT_COL]: 2,
-  },
-  {
-    [SOURCE_COL]: "graphql-api",
-    [SOURCE_LAYER_COL]: "API Layer",
-    [SOURCE_DEPTH_COL]: 3,
-    [TARGET_COL]: "orders",
-    [TARGET_LAYER_COL]: "Domain Logic",
-    [TARGET_DEPTH_COL]: 2,
-    [WEIGHT_COL]: 3,
-  },
-  {
-    [SOURCE_COL]: "graphql-api",
-    [SOURCE_LAYER_COL]: "API Layer",
-    [SOURCE_DEPTH_COL]: 3,
-    [TARGET_COL]: "billing",
-    [TARGET_LAYER_COL]: "Domain Logic",
-    [TARGET_DEPTH_COL]: 2,
-    [WEIGHT_COL]: 1,
-  },
-  {
-    [SOURCE_COL]: "web-app",
-    [SOURCE_LAYER_COL]: "UI & Apps",
-    [SOURCE_DEPTH_COL]: 4,
-    [TARGET_COL]: "rest-api",
-    [TARGET_LAYER_COL]: "API Layer",
-    [TARGET_DEPTH_COL]: 3,
-    [WEIGHT_COL]: 3,
-  },
-  {
-    [SOURCE_COL]: "web-app",
-    [SOURCE_LAYER_COL]: "UI & Apps",
-    [SOURCE_DEPTH_COL]: 4,
-    [TARGET_COL]: "graphql-api",
-    [TARGET_LAYER_COL]: "API Layer",
-    [TARGET_DEPTH_COL]: 3,
-    [WEIGHT_COL]: 2,
-  },
-  {
-    [SOURCE_COL]: "mobile-app",
-    [SOURCE_LAYER_COL]: "UI & Apps",
-    [SOURCE_DEPTH_COL]: 4,
-    [TARGET_COL]: "graphql-api",
-    [TARGET_LAYER_COL]: "API Layer",
-    [TARGET_DEPTH_COL]: 3,
-    [WEIGHT_COL]: 2,
-  },
-  {
-    [SOURCE_COL]: "admin-panel",
-    [SOURCE_LAYER_COL]: "UI & Apps",
-    [SOURCE_DEPTH_COL]: 4,
-    [TARGET_COL]: "rest-api",
-    [TARGET_LAYER_COL]: "API Layer",
-    [TARGET_DEPTH_COL]: 3,
-    [WEIGHT_COL]: 2,
-  },
-  {
-    [SOURCE_COL]: "admin-panel",
-    [SOURCE_LAYER_COL]: "UI & Apps",
-    [SOURCE_DEPTH_COL]: 4,
-    [TARGET_COL]: "inventory",
-    [TARGET_LAYER_COL]: "Domain Logic",
-    [TARGET_DEPTH_COL]: 2,
-    [WEIGHT_COL]: 1,
-  },
-  {
-    [SOURCE_COL]: "config",
-    [SOURCE_LAYER_COL]: "Foundation",
-    [SOURCE_DEPTH_COL]: 0,
-    [TARGET_COL]: "auth",
-    [TARGET_LAYER_COL]: "Core Services",
-    [TARGET_DEPTH_COL]: 1,
-    [WEIGHT_COL]: 1,
-  },
+// Data: replace this block with your own records
+const nodes: Array<Record<string, string>> = [
+  { [MODULE]: "utils", [LAYER]: "Foundation" },
+  { [MODULE]: "config", [LAYER]: "Foundation" },
+  { [MODULE]: "logger", [LAYER]: "Core Services" },
+  { [MODULE]: "auth", [LAYER]: "Core Services" },
+  { [MODULE]: "cache", [LAYER]: "Core Services" },
+  { [MODULE]: "orders", [LAYER]: "Domain Logic" },
+  { [MODULE]: "inventory", [LAYER]: "Domain Logic" },
+  { [MODULE]: "billing", [LAYER]: "Domain Logic" },
+  { [MODULE]: "rest-api", [LAYER]: "API Layer" },
+  { [MODULE]: "graphql-api", [LAYER]: "API Layer" },
+  { [MODULE]: "web-app", [LAYER]: "UI & Apps" },
+  { [MODULE]: "mobile-app", [LAYER]: "UI & Apps" },
+  { [MODULE]: "admin-panel", [LAYER]: "UI & Apps" },
 ];
 
-// Derive unique modules and architectural layers across both endpoint columns
+const data: Array<Record<string, string | number>> = [
+  { [SOURCE]: "config", [TARGET]: "utils", [WEIGHT]: 2 },
+  { [SOURCE]: "logger", [TARGET]: "utils", [WEIGHT]: 3 },
+  { [SOURCE]: "auth", [TARGET]: "utils", [WEIGHT]: 2 },
+  { [SOURCE]: "auth", [TARGET]: "config", [WEIGHT]: 1 },
+  { [SOURCE]: "cache", [TARGET]: "utils", [WEIGHT]: 2 },
+  { [SOURCE]: "orders", [TARGET]: "auth", [WEIGHT]: 2 },
+  { [SOURCE]: "orders", [TARGET]: "logger", [WEIGHT]: 3 },
+  { [SOURCE]: "orders", [TARGET]: "cache", [WEIGHT]: 2 },
+  { [SOURCE]: "inventory", [TARGET]: "cache", [WEIGHT]: 2 },
+  { [SOURCE]: "inventory", [TARGET]: "logger", [WEIGHT]: 2 },
+  { [SOURCE]: "billing", [TARGET]: "auth", [WEIGHT]: 2 },
+  { [SOURCE]: "billing", [TARGET]: "orders", [WEIGHT]: 1 },
+  { [SOURCE]: "rest-api", [TARGET]: "orders", [WEIGHT]: 3 },
+  { [SOURCE]: "rest-api", [TARGET]: "inventory", [WEIGHT]: 2 },
+  { [SOURCE]: "rest-api", [TARGET]: "billing", [WEIGHT]: 2 },
+  { [SOURCE]: "graphql-api", [TARGET]: "orders", [WEIGHT]: 3 },
+  { [SOURCE]: "graphql-api", [TARGET]: "billing", [WEIGHT]: 1 },
+  { [SOURCE]: "web-app", [TARGET]: "rest-api", [WEIGHT]: 3 },
+  { [SOURCE]: "web-app", [TARGET]: "graphql-api", [WEIGHT]: 2 },
+  { [SOURCE]: "mobile-app", [TARGET]: "graphql-api", [WEIGHT]: 2 },
+  { [SOURCE]: "admin-panel", [TARGET]: "rest-api", [WEIGHT]: 2 },
+  { [SOURCE]: "admin-panel", [TARGET]: "inventory", [WEIGHT]: 1 },
+  { [SOURCE]: "config", [TARGET]: "auth", [WEIGHT]: 1 },
+];
+
+// Plot: reads only data and the constants above
 interface ModuleNode {
   id: string;
   layer: string;
@@ -245,32 +76,19 @@ interface ModuleNode {
   y: number;
 }
 
-const rawModules: Array<{ id: string; layer: string; depth: number }> = [];
-const seenModules = new Set<string>();
 const layerNames: string[] = [];
-
-for (let i = 0; i < DATA.length; i++) {
-  const row = DATA[i];
-  const tgt = String(row[TARGET_COL]);
-  const tgtLayer = String(row[TARGET_LAYER_COL]);
-  const tgtDepth = Number(row[TARGET_DEPTH_COL]);
-  if (!seenModules.has(tgt)) {
-    seenModules.add(tgt);
-    rawModules.push({ id: tgt, layer: tgtLayer, depth: tgtDepth });
-  }
-  if (!layerNames.includes(tgtLayer)) layerNames.push(tgtLayer);
-
-  const src = String(row[SOURCE_COL]);
-  const srcLayer = String(row[SOURCE_LAYER_COL]);
-  const srcDepth = Number(row[SOURCE_DEPTH_COL]);
-  if (!seenModules.has(src)) {
-    seenModules.add(src);
-    rawModules.push({ id: src, layer: srcLayer, depth: srcDepth });
-  }
-  if (!layerNames.includes(srcLayer)) layerNames.push(srcLayer);
+for (let i = 0; i < nodes.length; i++) {
+  const layer = String(nodes[i][LAYER]);
+  if (!layerNames.includes(layer)) layerNames.push(layer);
 }
 
-// Reserve palette[4] (semantic error red) for circular back-edge; assign unused palette slots in order
+const rawModules = nodes.map((row) => {
+  const id = String(row[MODULE]);
+  const layer = String(row[LAYER]);
+  const depth = layerNames.indexOf(layer);
+  return { id, layer, depth };
+});
+
 const flagColor = t.palette[4];
 const unusedPaletteSlots = [t.palette[0], t.palette[1], t.palette[2], t.palette[3], t.palette[5]];
 const layerColors = new Map<string, string>();
@@ -278,7 +96,6 @@ for (let i = 0; i < layerNames.length; i++) {
   layerColors.set(layerNames[i], unusedPaletteSlots[i]);
 }
 
-// Group modules by depth and center vertically within each layer
 const depthCounts = new Map<number, number>();
 for (let i = 0; i < rawModules.length; i++) {
   const d = rawModules[i].depth;
@@ -286,14 +103,14 @@ for (let i = 0; i < rawModules.length; i++) {
 }
 
 const depthSeen = new Map<number, number>();
-const nodes: ModuleNode[] = [];
+const layoutNodes: ModuleNode[] = [];
 const nodeById = new Map<string, ModuleNode>();
 
 for (let i = 0; i < rawModules.length; i++) {
   const m = rawModules[i];
   const seen = depthSeen.get(m.depth) ?? 0;
   depthSeen.set(m.depth, seen + 1);
-  const count = depthCounts.get(m.depth) ?? 1;
+  const count = Number(depthCounts.get(m.depth));
   const node: ModuleNode = {
     id: m.id,
     layer: m.layer,
@@ -301,29 +118,28 @@ for (let i = 0; i < rawModules.length; i++) {
     x: m.depth,
     y: seen - (count - 1) / 2,
   };
-  nodes.push(node);
+  layoutNodes.push(node);
   nodeById.set(node.id, node);
 }
 
 const edgeKeys = new Set<string>();
-for (let i = 0; i < DATA.length; i++) {
-  edgeKeys.add(`${DATA[i][SOURCE_COL]}>${DATA[i][TARGET_COL]}`);
+for (let i = 0; i < data.length; i++) {
+  edgeKeys.add(`${data[i][SOURCE]}>${data[i][TARGET]}`);
 }
 
-// Rule-based detection of bidirectional pairs and upward dependency violations (sourceDepth < targetDepth)
-const edges = DATA.map((row) => {
-  const source = String(row[SOURCE_COL]);
-  const target = String(row[TARGET_COL]);
-  const weight = Number(row[WEIGHT_COL]);
-  const srcDepth = Number(row[SOURCE_DEPTH_COL]);
-  const tgtDepth = Number(row[TARGET_DEPTH_COL]);
+const edges = data.map((row) => {
+  const source = String(row[SOURCE]);
+  const target = String(row[TARGET]);
+  const weight = Number(row[WEIGHT]);
+  const srcNode = nodeById.get(source)!;
+  const tgtNode = nodeById.get(target)!;
   const bidirectional = edgeKeys.has(`${target}>${source}`);
-  const flagged = srcDepth < tgtDepth;
+  const flagged = srcNode.depth < tgtNode.depth;
   return { source, target, weight, bidirectional, flagged };
 });
 
-const xs = nodes.map((n) => n.x);
-const ys = nodes.map((n) => n.y);
+const xs = layoutNodes.map((n) => n.x);
+const ys = layoutNodes.map((n) => n.y);
 const minX = Math.min(...xs);
 const maxX = Math.max(...xs);
 const minY = Math.min(...ys);
@@ -372,11 +188,9 @@ function DirectedNetworkOverlay() {
         </marker>
       </defs>
 
-      {/* Directed edges with arrowheads stopping at target node rim */}
       {edges.map((e, i) => {
-        const s = nodeById.get(e.source);
-        const d = nodeById.get(e.target);
-        if (!s || !d) return null;
+        const s = nodeById.get(e.source)!;
+        const d = nodeById.get(e.target)!;
         const x1 = Number(xScale(s.x));
         const y1 = Number(yScale(s.y));
         const x2 = Number(xScale(d.x));
@@ -386,7 +200,7 @@ function DirectedNetworkOverlay() {
         if (!e.bidirectional) {
           const dx = x2 - x1;
           const dy = y2 - y1;
-          const dist = Math.hypot(dx, dy) || 1;
+          const dist = Math.hypot(dx, dy);
           const ex = x2 - (dx / dist) * (NODE_RADIUS + END_GAP);
           const ey = y2 - (dy / dist) * (NODE_RADIUS + END_GAP);
           pathD = `M ${x1} ${y1} L ${ex} ${ey}`;
@@ -397,7 +211,7 @@ function DirectedNetworkOverlay() {
           const canonTo = e.source < e.target ? d : s;
           const cdx = Number(xScale(canonTo.x)) - Number(xScale(canonFrom.x));
           const cdy = Number(yScale(canonTo.y)) - Number(yScale(canonFrom.y));
-          const cdist = Math.hypot(cdx, cdy) || 1;
+          const cdist = Math.hypot(cdx, cdy);
           const nx = -cdy / cdist;
           const ny = cdx / cdist;
           const sign = e.source < e.target ? 1 : -1;
@@ -406,7 +220,7 @@ function DirectedNetworkOverlay() {
           const cy = my + ny * bow;
           const tdx = x2 - cx;
           const tdy = y2 - cy;
-          const tdist = Math.hypot(tdx, tdy) || 1;
+          const tdist = Math.hypot(tdx, tdy);
           const ex = x2 - (tdx / tdist) * (NODE_RADIUS + END_GAP);
           const ey = y2 - (tdy / tdist) * (NODE_RADIUS + END_GAP);
           pathD = `M ${x1} ${y1} Q ${cx} ${cy} ${ex} ${ey}`;
@@ -418,28 +232,26 @@ function DirectedNetworkOverlay() {
             d={pathD}
             fill="none"
             stroke={e.flagged ? flagColor : t.inkSoft}
-            strokeWidth={e.flagged ? 3.5 : 1.3 + e.weight * 0.5}
+            strokeWidth={1.3 + e.weight * 0.5}
             strokeOpacity={e.flagged ? 0.95 : 0.68}
             markerEnd={e.flagged ? "url(#np-arrow-flag)" : "url(#np-arrow)"}
           />
         );
       })}
 
-      {/* Node circles */}
-      {nodes.map((n) => (
+      {layoutNodes.map((n) => (
         <circle
           key={`node-${n.id}`}
           cx={Number(xScale(n.x))}
           cy={Number(yScale(n.y))}
           r={NODE_RADIUS}
-          fill={layerColors.get(n.layer) ?? t.palette[0]}
+          fill={String(layerColors.get(n.layer))}
           stroke={t.pageBg}
           strokeWidth={3}
         />
       ))}
 
-      {/* Node labels */}
-      {nodes.map((n) => (
+      {layoutNodes.map((n) => (
         <text
           key={`label-${n.id}`}
           x={Number(xScale(n.x))}
@@ -456,14 +268,13 @@ function DirectedNetworkOverlay() {
         </text>
       ))}
 
-      {/* Right-side architectural layer and circular dependency legend */}
       <g transform={`translate(${legendX}, ${legendY})`}>
         <text x={0} y={14} fontSize={15} fontWeight={700} fill={t.ink}>
-          Architecture Layer
+          {LAYER}
         </text>
         {layerNames.map((lName, idx) => (
           <g key={lName} transform={`translate(0, ${38 + idx * 32})`}>
-            <circle cx={9} cy={0} r={9} fill={layerColors.get(lName) ?? t.palette[0]} />
+            <circle cx={9} cy={0} r={9} fill={String(layerColors.get(lName))} />
             <text x={28} y={5} fontSize={15} fill={t.ink}>
               {lName}
             </text>
@@ -477,17 +288,17 @@ function DirectedNetworkOverlay() {
             x2={32}
             y2={0}
             stroke={flagColor}
-            strokeWidth={3.5}
+            strokeWidth={2.3}
             markerEnd="url(#np-arrow-flag)"
           />
           <text x={44} y={5} fontSize={14} fontWeight={600} fill={t.ink}>
-            Circular dependency
+            Upward dependency
           </text>
         </g>
 
         <g transform={`translate(0, ${92 + layerNames.length * 32})`}>
           <text x={0} y={0} fontSize={14} fill={t.inkSoft}>
-            Edge width = {WEIGHT_COL}
+            {`Edge width = ${WEIGHT}`}
           </text>
         </g>
       </g>
