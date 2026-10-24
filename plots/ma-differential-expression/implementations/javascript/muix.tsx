@@ -1,7 +1,7 @@
 // anyplot.ai
 // ma-differential-expression: MA Plot for Differential Expression
 // Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 87/100 | Created: 2026-06-21
+// Quality: pending | Created: 2026-06-21
 
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
