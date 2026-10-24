@@ -1,6 +1,6 @@
 // anyplot.ai
 // indicator-ichimoku: Ichimoku Cloud Technical Indicator Chart
-// Library: muix 9.0.0 | JavaScript 22.23.2
+// Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 92/100 | Created: 2026-08-20
 
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
@@ -13,28 +13,31 @@ import { useXScale, useYScale } from "@mui/x-charts/hooks";
 const t = window.ANYPLOT_TOKENS;
 
 // Constants
-const DATE_COL = "Trading Date";
-const OPEN_COL = "Open Price (USD)";
-const HIGH_COL = "High Price (USD)";
-const LOW_COL = "Low Price (USD)";
-const CLOSE_COL = "Close Price (USD)";
-const TENKAN_COL = "Tenkan-sen (9)";
-const KIJUN_COL = "Kijun-sen (26)";
-const SPAN_A_COL = "Senkou Span A (+26)";
-const SPAN_B_COL = "Senkou Span B (52, +26)";
-const CHIKOU_COL = "Chikou Span (-26)";
-const Y_AXIS_LABEL = "Price (USD)";
-
-const HISTORY_PERIODS = 130;
+const FONT = '"Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, sans-serif';
+const MONO = '"JetBrains Mono", "SFMono-Regular", Menlo, monospace';
 const TENKAN_PERIOD = 9;
 const KIJUN_PERIOD = 26;
 const SENKOU_B_PERIOD = 52;
 const DISPLACEMENT = 26;
-const TOTAL_PERIODS = HISTORY_PERIODS + DISPLACEMENT;
 const Y_PAD_SHARE = 0.08;
 const BODY_WIDTH_SHARE = 0.72;
 
-// Data: deterministic LCG daily OHLC prices + standard Ichimoku (9, 26, 52)
+// Columns: set these to your data's column names
+const DATE = "Trading date"; // role: date
+const OPEN = "Open price (USD)"; // role: open
+const HIGH = "High price (USD)"; // role: high
+const LOW = "Low price (USD)"; // role: low
+const CLOSE = "Close price (USD)"; // role: close
+const TENKAN_SEN = "Tenkan-sen (9)"; // role: tenkan_sen
+const KIJUN_SEN = "Kijun-sen (26)"; // role: kijun_sen
+const SENKOU_SPAN_A = "Senkou Span A (+26)"; // role: senkou_span_a
+const SENKOU_SPAN_B = "Senkou Span B (52, +26)"; // role: senkou_span_b
+const CHIKOU_SPAN = "Chikou Span (-26)"; // role: chikou_span
+
+// Data: replace this block with your own records
+const HISTORY_PERIODS = 130;
+const TOTAL_PERIODS = HISTORY_PERIODS + DISPLACEMENT;
+
 let seed = 42;
 const rawOpen: number[] = [];
 const rawHigh: number[] = [];
@@ -113,59 +116,81 @@ for (let i = 0; i < HISTORY_PERIODS; i += 1) {
   }
 }
 
-const startMs = Date.UTC(2024, 0, 2);
+const isoDates: string[] = [];
+let cursorMs = Date.UTC(2024, 0, 2);
+while (isoDates.length < TOTAL_PERIODS) {
+  const dt = new Date(cursorMs);
+  const utcDay = dt.getUTCDay();
+  if (utcDay !== 0 && utcDay !== 6) {
+    isoDates.push(dt.toISOString().slice(0, 10));
+  }
+  cursorMs += 86400000;
+}
+
+const data: Array<{
+  [DATE]: string;
+  [OPEN]: number | null;
+  [HIGH]: number | null;
+  [LOW]: number | null;
+  [CLOSE]: number | null;
+  [TENKAN_SEN]: number | null;
+  [KIJUN_SEN]: number | null;
+  [SENKOU_SPAN_A]: number | null;
+  [SENKOU_SPAN_B]: number | null;
+  [CHIKOU_SPAN]: number | null;
+}> = [];
+
+for (let i = 0; i < TOTAL_PERIODS; i += 1) {
+  const inHistory = i < HISTORY_PERIODS;
+  const srcIdx = i - DISPLACEMENT;
+  const chikouIdx = i + DISPLACEMENT;
+
+  data.push({
+    [DATE]: isoDates[i],
+    [OPEN]: inHistory ? rawOpen[i] : null,
+    [HIGH]: inHistory ? rawHigh[i] : null,
+    [LOW]: inHistory ? rawLow[i] : null,
+    [CLOSE]: inHistory ? rawClose[i] : null,
+    [TENKAN_SEN]: inHistory ? tenkanRaw[i] : null,
+    [KIJUN_SEN]: inHistory ? kijunRaw[i] : null,
+    [SENKOU_SPAN_A]:
+      srcIdx >= 0 && srcIdx < HISTORY_PERIODS ? spanARaw[srcIdx] : null,
+    [SENKOU_SPAN_B]:
+      srcIdx >= 0 && srcIdx < HISTORY_PERIODS ? spanBRaw[srcIdx] : null,
+    [CHIKOU_SPAN]: chikouIdx < HISTORY_PERIODS ? rawClose[chikouIdx] : null,
+  });
+}
+
+// Plot: reads only data and the constants above
+const totalPeriods = data.length;
 const dateFormat = new Intl.DateTimeFormat("en-US", {
   month: "short",
   day: "numeric",
   timeZone: "UTC",
 });
+const formatIsoDate = (iso: string) =>
+  dateFormat.format(new Date(`${iso}T00:00:00Z`));
 
-const DATA: Array<{
-  [DATE_COL]: string;
-  [OPEN_COL]: number | null;
-  [HIGH_COL]: number | null;
-  [LOW_COL]: number | null;
-  [CLOSE_COL]: number | null;
-  [TENKAN_COL]: number | null;
-  [KIJUN_COL]: number | null;
-  [SPAN_A_COL]: number | null;
-  [SPAN_B_COL]: number | null;
-  [CHIKOU_COL]: number | null;
-}> = [];
+const unitMatch = CLOSE.match(/\(([^)]+)\)/);
+const priceUnit = unitMatch ? unitMatch[1] : "";
 
-for (let i = 0; i < TOTAL_PERIODS; i += 1) {
-  const d = new Date(startMs + i * 86400000);
-  const label = dateFormat.format(d);
-  const inHistory = i < HISTORY_PERIODS;
-  const srcIdx = i - DISPLACEMENT;
-  const chikouIdx = i + DISPLACEMENT;
+const dateValues = data.map((row) => row[DATE]);
+const openArr = data.map((row) => row[OPEN]);
+const highArr = data.map((row) => row[HIGH]);
+const lowArr = data.map((row) => row[LOW]);
+const closeArr = data.map((row) => row[CLOSE]);
+const tenkanArr = data.map((row) => row[TENKAN_SEN]);
+const kijunArr = data.map((row) => row[KIJUN_SEN]);
+const spanAArr = data.map((row) => row[SENKOU_SPAN_A]);
+const spanBArr = data.map((row) => row[SENKOU_SPAN_B]);
+const chikouArr = data.map((row) => row[CHIKOU_SPAN]);
 
-  DATA.push({
-    [DATE_COL]: label,
-    [OPEN_COL]: inHistory ? rawOpen[i] : null,
-    [HIGH_COL]: inHistory ? rawHigh[i] : null,
-    [LOW_COL]: inHistory ? rawLow[i] : null,
-    [CLOSE_COL]: inHistory ? rawClose[i] : null,
-    [TENKAN_COL]: inHistory ? tenkanRaw[i] : null,
-    [KIJUN_COL]: inHistory ? kijunRaw[i] : null,
-    [SPAN_A_COL]:
-      srcIdx >= 0 && srcIdx < HISTORY_PERIODS ? spanARaw[srcIdx] : null,
-    [SPAN_B_COL]:
-      srcIdx >= 0 && srcIdx < HISTORY_PERIODS ? spanBRaw[srcIdx] : null,
-    [CHIKOU_COL]: chikouIdx < HISTORY_PERIODS ? rawClose[chikouIdx] : null,
-  });
-}
-
-const dateLabels = DATA.map((row) => row[DATE_COL]);
-const openArr = DATA.map((row) => row[OPEN_COL]);
-const highArr = DATA.map((row) => row[HIGH_COL]);
-const lowArr = DATA.map((row) => row[LOW_COL]);
-const closeArr = DATA.map((row) => row[CLOSE_COL]);
-const tenkanArr = DATA.map((row) => row[TENKAN_COL]);
-const kijunArr = DATA.map((row) => row[KIJUN_COL]);
-const spanAArr = DATA.map((row) => row[SPAN_A_COL]);
-const spanBArr = DATA.map((row) => row[SPAN_B_COL]);
-const chikouArr = DATA.map((row) => row[CHIKOU_COL]);
+const historyDates = data
+  .filter((row) => row[CLOSE] !== null)
+  .map((row) => row[DATE]);
+const historyCount = historyDates.length;
+const firstHistoryDate = formatIsoDate(historyDates[0]);
+const lastHistoryDate = formatIsoDate(historyDates[historyCount - 1]);
 
 const definedValues = [
   ...highArr,
@@ -180,48 +205,48 @@ const definedValues = [
 const minPrice = Math.min(...definedValues);
 const maxPrice = Math.max(...definedValues);
 const pricePad = (maxPrice - minPrice) * Y_PAD_SHARE;
-const yMin = Math.floor(minPrice - pricePad);
-const yMax = Math.ceil(maxPrice + pricePad);
+const yMin = minPrice - pricePad;
+const yMax = maxPrice + pricePad;
 
 // Precompute Kumo segments with exact crossover interpolation
 const kumoSegments: Array<{
   bullish: boolean;
-  topPts: Array<{ idx: number; val: number }>;
-  botPts: Array<{ idx: number; val: number }>;
+  spanAPts: Array<{ idx: number; val: number }>;
+  spanBPts: Array<{ idx: number; val: number }>;
 }> = [];
 
 let curBullish: boolean | null = null;
-let curTop: Array<{ idx: number; val: number }> = [];
-let curBot: Array<{ idx: number; val: number }> = [];
+let curSpanA: Array<{ idx: number; val: number }> = [];
+let curSpanB: Array<{ idx: number; val: number }> = [];
 
-for (let j = 0; j < TOTAL_PERIODS; j += 1) {
+for (let j = 0; j < totalPeriods; j += 1) {
   const a = spanAArr[j];
   const b = spanBArr[j];
   if (a === null || b === null) {
-    if (curTop.length > 1 && curBullish !== null) {
+    if (curSpanA.length > 1 && curBullish !== null) {
       kumoSegments.push({
         bullish: curBullish,
-        topPts: curTop,
-        botPts: curBot,
+        spanAPts: curSpanA,
+        spanBPts: curSpanB,
       });
     }
     curBullish = null;
-    curTop = [];
-    curBot = [];
+    curSpanA = [];
+    curSpanB = [];
     continue;
   }
 
   const up = a >= b;
   if (curBullish === null) {
     curBullish = up;
-    curTop = [{ idx: j, val: a }];
-    curBot = [{ idx: j, val: b }];
+    curSpanA = [{ idx: j, val: a }];
+    curSpanB = [{ idx: j, val: b }];
   } else if (up === curBullish) {
-    curTop.push({ idx: j, val: a });
-    curBot.push({ idx: j, val: b });
+    curSpanA.push({ idx: j, val: a });
+    curSpanB.push({ idx: j, val: b });
   } else {
-    const prevA = curTop[curTop.length - 1].val;
-    const prevB = curBot[curBot.length - 1].val;
+    const prevA = curSpanA[curSpanA.length - 1].val;
+    const prevB = curSpanB[curSpanB.length - 1].val;
     const prevDiff = prevA - prevB;
     const curDiff = a - b;
     const frac =
@@ -229,30 +254,30 @@ for (let j = 0; j < TOTAL_PERIODS; j += 1) {
     const crossIdx = j - 1 + frac;
     const crossVal = prevA + frac * (a - prevA);
 
-    curTop.push({ idx: crossIdx, val: crossVal });
-    curBot.push({ idx: crossIdx, val: crossVal });
+    curSpanA.push({ idx: crossIdx, val: crossVal });
+    curSpanB.push({ idx: crossIdx, val: crossVal });
     kumoSegments.push({
       bullish: curBullish,
-      topPts: curTop,
-      botPts: curBot,
+      spanAPts: curSpanA,
+      spanBPts: curSpanB,
     });
 
     curBullish = up;
-    curTop = [
+    curSpanA = [
       { idx: crossIdx, val: crossVal },
       { idx: j, val: a },
     ];
-    curBot = [
+    curSpanB = [
       { idx: crossIdx, val: crossVal },
       { idx: j, val: b },
     ];
   }
 }
-if (curTop.length > 1 && curBullish !== null) {
+if (curSpanA.length > 1 && curBullish !== null) {
   kumoSegments.push({
     bullish: curBullish,
-    topPts: curTop,
-    botPts: curBot,
+    spanAPts: curSpanA,
+    spanBPts: curSpanB,
   });
 }
 
@@ -267,17 +292,16 @@ function IchimokuLayer() {
     bandwidth: () => number;
   };
   const yScale = useYScale("y") as (v: number) => number;
-  if (!xScale || !yScale) return null;
 
   const bw = xScale.bandwidth();
   const bodyWidth = bw * BODY_WIDTH_SHARE;
-  const xZero = xScale(dateLabels[0]) + bw / 2;
-  const xOne = xScale(dateLabels[1]) + bw / 2;
+  const xZero = xScale(dateValues[0]) + bw / 2;
+  const xOne = xScale(dateValues[1]) + bw / 2;
   const stepX = xOne - xZero;
   const isDark = window.ANYPLOT_THEME === "dark";
 
   const chikouPoints: string[] = [];
-  for (let i = 0; i < TOTAL_PERIODS; i += 1) {
+  for (let i = 0; i < totalPeriods; i += 1) {
     if (chikouArr[i] !== null) {
       chikouPoints.push(
         `${xZero + i * stepX},${yScale(chikouArr[i]!)}`,
@@ -289,53 +313,51 @@ function IchimokuLayer() {
     <g>
       {/* Kumo cloud */}
       {kumoSegments.map((seg, s) => {
-        const color = seg.bullish ? BULL_COLOR : BEAR_COLOR;
+        const fillColor = seg.bullish ? BULL_COLOR : BEAR_COLOR;
         const fillOpacity = seg.bullish ? 0.22 : isDark ? 0.34 : 0.24;
-        const dash = seg.bullish ? undefined : "6 4";
-        const topPoly = seg.topPts.map(
+        const spanALine = seg.spanAPts.map(
           (p) => `${xZero + p.idx * stepX},${yScale(p.val)}`,
         );
-        const botPoly = seg.botPts
+        const spanBPolyRev = seg.spanBPts
           .slice()
           .reverse()
           .map((p) => `${xZero + p.idx * stepX},${yScale(p.val)}`);
-        const botLine = seg.botPts.map(
+        const spanBLine = seg.spanBPts.map(
           (p) => `${xZero + p.idx * stepX},${yScale(p.val)}`,
         );
 
         return (
           <g key={`kumo-${s}`}>
             <polygon
-              points={[...topPoly, ...botPoly].join(" ")}
-              fill={color}
+              points={[...spanALine, ...spanBPolyRev].join(" ")}
+              fill={fillColor}
               fillOpacity={fillOpacity}
             />
             <polyline
-              points={topPoly.join(" ")}
+              points={spanALine.join(" ")}
               fill="none"
-              stroke={color}
-              strokeOpacity={0.62}
-              strokeWidth={1.35}
-              strokeDasharray={dash}
+              stroke={BULL_COLOR}
+              strokeOpacity={0.85}
+              strokeWidth={1.6}
             />
             <polyline
-              points={botLine.join(" ")}
+              points={spanBLine.join(" ")}
               fill="none"
-              stroke={color}
-              strokeOpacity={0.62}
-              strokeWidth={1.35}
-              strokeDasharray={dash}
+              stroke={BEAR_COLOR}
+              strokeOpacity={0.85}
+              strokeWidth={1.6}
+              strokeDasharray="6 4"
             />
           </g>
         );
       })}
 
       {/* Candlesticks */}
-      {DATA.map((row, i) => {
-        const o = row[OPEN_COL];
-        const h = row[HIGH_COL];
-        const l = row[LOW_COL];
-        const c = row[CLOSE_COL];
+      {data.map((row, i) => {
+        const o = row[OPEN];
+        const h = row[HIGH];
+        const l = row[LOW];
+        const c = row[CLOSE];
         if (o === null || h === null || l === null || c === null) return null;
 
         const cx = xZero + i * stepX;
@@ -385,7 +407,7 @@ export default function Chart() {
   const W = window.ANYPLOT_SIZE.width;
   const H = window.ANYPLOT_SIZE.height;
   const HEADER_H = 84;
-  const LEGEND_H = 48;
+  const LEGEND_H = 54;
   const chartH = H - HEADER_H - LEGEND_H;
 
   return (
@@ -395,7 +417,7 @@ export default function Chart() {
         height: H,
         background: t.pageBg,
         color: t.ink,
-        fontFamily: t.sans,
+        fontFamily: FONT,
         display: "flex",
         flexDirection: "column",
         boxSizing: "border-box",
@@ -419,20 +441,19 @@ export default function Chart() {
             lineHeight: 1.2,
           }}
         >
-          TechCo Daily Price · indicator-ichimoku · javascript · muix ·
-          anyplot.ai
+          indicator-ichimoku · javascript · muix · anyplot.ai
         </div>
         <div
           style={{
             fontSize: 14,
             color: t.inkSoft,
             marginTop: 4,
-            fontFamily: t.mono,
+            fontFamily: MONO,
           }}
         >
           Ichimoku Kinko Hyo ({TENKAN_PERIOD}, {KIJUN_PERIOD}, {SENKOU_B_PERIOD}
-          ) · {HISTORY_PERIODS} trading days ({dateLabels[0]} to{" "}
-          {dateLabels[HISTORY_PERIODS - 1]}) + {DISPLACEMENT}-period Kumo cloud
+          ) · {historyCount} trading periods ({firstHistoryDate} to{" "}
+          {lastHistoryDate}) + {totalPeriods - historyCount}-period Kumo cloud
           projection
         </div>
       </div>
@@ -449,7 +470,7 @@ export default function Chart() {
             xAxisId: "x",
             yAxisId: "y",
             data: tenkanArr,
-            label: TENKAN_COL,
+            label: TENKAN_SEN,
             color: TENKAN_COLOR,
             showMark: false,
             curve: "linear",
@@ -461,7 +482,7 @@ export default function Chart() {
             xAxisId: "x",
             yAxisId: "y",
             data: kijunArr,
-            label: KIJUN_COL,
+            label: KIJUN_SEN,
             color: KIJUN_COLOR,
             showMark: false,
             curve: "linear",
@@ -472,16 +493,17 @@ export default function Chart() {
           {
             id: "x",
             scaleType: "band",
-            data: dateLabels,
+            data: dateValues,
             height: 58,
-            label: DATE_COL,
+            label: DATE,
+            valueFormatter: (v: string) => formatIsoDate(v),
             labelStyle: { fontSize: 15, fill: t.ink, fontWeight: 600 },
             tickLabelInterval: (_value: string, index: number) =>
               index % 13 === 0,
             tickLabelStyle: {
               fontSize: 14,
               fill: t.inkSoft,
-              fontFamily: t.mono,
+              fontFamily: MONO,
             },
           },
         ]}
@@ -491,13 +513,14 @@ export default function Chart() {
             min: yMin,
             max: yMax,
             width: 84,
-            label: Y_AXIS_LABEL,
+            label: CLOSE,
             labelStyle: { fontSize: 15, fill: t.ink, fontWeight: 600 },
-            valueFormatter: (v: number) => `$${v.toFixed(0)}`,
+            valueFormatter: (v: number) =>
+              priceUnit ? `${v.toFixed(0)} ${priceUnit}` : v.toFixed(0),
             tickLabelStyle: {
               fontSize: 14,
               fill: t.inkSoft,
-              fontFamily: t.mono,
+              fontFamily: MONO,
             },
           },
         ]}
@@ -515,13 +538,15 @@ export default function Chart() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          gap: 24,
-          fontSize: 14,
+          gap: 18,
+          fontSize: 13,
           color: t.ink,
           flexWrap: "wrap",
+          padding: "0 20px",
+          boxSizing: "border-box",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <span
             style={{
               width: 14,
@@ -533,9 +558,9 @@ export default function Chart() {
               boxSizing: "border-box",
             }}
           />
-          <span>Bullish Candle</span>
+          <span>Bullish candle</span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <span
             style={{
               width: 14,
@@ -545,48 +570,70 @@ export default function Chart() {
               display: "inline-block",
             }}
           />
-          <span>Bearish Candle</span>
+          <span>Bearish candle</span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <span
             style={{
-              width: 22,
+              width: 20,
               height: 3,
               background: TENKAN_COLOR,
               borderRadius: 2,
               display: "inline-block",
             }}
           />
-          <span>{TENKAN_COL}</span>
+          <span>{TENKAN_SEN}</span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <span
             style={{
-              width: 22,
+              width: 20,
               height: 3,
               background: KIJUN_COLOR,
               borderRadius: 2,
               display: "inline-block",
             }}
           />
-          <span>{KIJUN_COL}</span>
+          <span>{KIJUN_SEN}</span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <span
             style={{
-              width: 22,
+              width: 20,
+              height: 2,
+              background: BULL_COLOR,
+              display: "inline-block",
+            }}
+          />
+          <span>{SENKOU_SPAN_A}</span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <span
+            style={{
+              width: 20,
+              height: 0,
+              borderTop: `2px dashed ${BEAR_COLOR}`,
+              display: "inline-block",
+            }}
+          />
+          <span>{SENKOU_SPAN_B}</span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <span
+            style={{
+              width: 20,
               height: 0,
               borderTop: `2.5px dashed ${CHIKOU_COLOR}`,
               display: "inline-block",
             }}
           />
-          <span>{CHIKOU_COL}</span>
+          <span>{CHIKOU_SPAN}</span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <span
             style={{
-              width: 18,
-              height: 14,
+              width: 16,
+              height: 12,
               background: `${BULL_COLOR}48`,
               border: `1.5px solid ${BULL_COLOR}`,
               borderRadius: 2,
@@ -594,13 +641,13 @@ export default function Chart() {
               boxSizing: "border-box",
             }}
           />
-          <span>Kumo Bullish ({SPAN_A_COL} &gt; B)</span>
+          <span>Kumo bullish (A &gt; B)</span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <span
             style={{
-              width: 18,
-              height: 14,
+              width: 16,
+              height: 12,
               background: `${BEAR_COLOR}48`,
               border: `1.5px dashed ${BEAR_COLOR}`,
               borderRadius: 2,
@@ -608,7 +655,7 @@ export default function Chart() {
               boxSizing: "border-box",
             }}
           />
-          <span>Kumo Bearish ({SPAN_B_COL} &gt; A)</span>
+          <span>Kumo bearish (B &gt; A)</span>
         </div>
       </div>
     </div>
