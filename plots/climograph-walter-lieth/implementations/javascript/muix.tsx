@@ -23,6 +23,7 @@ const PRECIP_COMPRESS_MM = 100;
 const COMPRESS_RATIO = 10;
 const COMPRESS_Y = PRECIP_COMPRESS_MM / WL_PRECIP_RATIO;
 const Y_PAD_TOP = 0.075;
+const TICK_STEP = 10;
 const HUMID_FILL = t.palette[2];
 const ARID_FILL = t.palette[4];
 const FROST_COLOR = t.palette[5];
@@ -37,18 +38,18 @@ const PRECIPITATION = "Precipitation (mm)"; // role: precipitation
 
 // Data: replace this block with your own records
 const data = [
-  { [STATION]: "Lisbon, Portugal", [ELEVATION]: 77, [PERIOD]: "1991–2020", [MONTH]: "Jan", [TEMPERATURE]: 11.3, [PRECIPITATION]: 77 },
-  { [STATION]: "Lisbon, Portugal", [ELEVATION]: 77, [PERIOD]: "1991–2020", [MONTH]: "Feb", [TEMPERATURE]: 12.4, [PRECIPITATION]: 62 },
-  { [STATION]: "Lisbon, Portugal", [ELEVATION]: 77, [PERIOD]: "1991–2020", [MONTH]: "Mar", [TEMPERATURE]: 14.2, [PRECIPITATION]: 54 },
-  { [STATION]: "Lisbon, Portugal", [ELEVATION]: 77, [PERIOD]: "1991–2020", [MONTH]: "Apr", [TEMPERATURE]: 16.0, [PRECIPITATION]: 42 },
-  { [STATION]: "Lisbon, Portugal", [ELEVATION]: 77, [PERIOD]: "1991–2020", [MONTH]: "May", [TEMPERATURE]: 18.5, [PRECIPITATION]: 36 },
-  { [STATION]: "Lisbon, Portugal", [ELEVATION]: 77, [PERIOD]: "1991–2020", [MONTH]: "Jun", [TEMPERATURE]: 21.7, [PRECIPITATION]: 13 },
-  { [STATION]: "Lisbon, Portugal", [ELEVATION]: 77, [PERIOD]: "1991–2020", [MONTH]: "Jul", [TEMPERATURE]: 24.2, [PRECIPITATION]: 4 },
-  { [STATION]: "Lisbon, Portugal", [ELEVATION]: 77, [PERIOD]: "1991–2020", [MONTH]: "Aug", [TEMPERATURE]: 24.5, [PRECIPITATION]: 5 },
-  { [STATION]: "Lisbon, Portugal", [ELEVATION]: 77, [PERIOD]: "1991–2020", [MONTH]: "Sep", [TEMPERATURE]: 22.3, [PRECIPITATION]: 25 },
-  { [STATION]: "Lisbon, Portugal", [ELEVATION]: 77, [PERIOD]: "1991–2020", [MONTH]: "Oct", [TEMPERATURE]: 18.6, [PRECIPITATION]: 65 },
-  { [STATION]: "Lisbon, Portugal", [ELEVATION]: 77, [PERIOD]: "1991–2020", [MONTH]: "Nov", [TEMPERATURE]: 14.8, [PRECIPITATION]: 93 },
-  { [STATION]: "Lisbon, Portugal", [ELEVATION]: 77, [PERIOD]: "1991–2020", [MONTH]: "Dec", [TEMPERATURE]: 11.7, [PRECIPITATION]: 91 },
+  { [STATION]: "Lisbon, Portugal", [ELEVATION]: 77, [PERIOD]: "1991–2020", [MONTH]: "Jan", [TEMPERATURE]: 11.6, [PRECIPITATION]: 99 },
+  { [STATION]: "Lisbon, Portugal", [ELEVATION]: 77, [PERIOD]: "1991–2020", [MONTH]: "Feb", [TEMPERATURE]: 12.6, [PRECIPITATION]: 67 },
+  { [STATION]: "Lisbon, Portugal", [ELEVATION]: 77, [PERIOD]: "1991–2020", [MONTH]: "Mar", [TEMPERATURE]: 14.7, [PRECIPITATION]: 52 },
+  { [STATION]: "Lisbon, Portugal", [ELEVATION]: 77, [PERIOD]: "1991–2020", [MONTH]: "Apr", [TEMPERATURE]: 16.0, [PRECIPITATION]: 64 },
+  { [STATION]: "Lisbon, Portugal", [ELEVATION]: 77, [PERIOD]: "1991–2020", [MONTH]: "May", [TEMPERATURE]: 18.3, [PRECIPITATION]: 48 },
+  { [STATION]: "Lisbon, Portugal", [ELEVATION]: 77, [PERIOD]: "1991–2020", [MONTH]: "Jun", [TEMPERATURE]: 21.0, [PRECIPITATION]: 14 },
+  { [STATION]: "Lisbon, Portugal", [ELEVATION]: 77, [PERIOD]: "1991–2020", [MONTH]: "Jul", [TEMPERATURE]: 23.0, [PRECIPITATION]: 4 },
+  { [STATION]: "Lisbon, Portugal", [ELEVATION]: 77, [PERIOD]: "1991–2020", [MONTH]: "Aug", [TEMPERATURE]: 23.5, [PRECIPITATION]: 6 },
+  { [STATION]: "Lisbon, Portugal", [ELEVATION]: 77, [PERIOD]: "1991–2020", [MONTH]: "Sep", [TEMPERATURE]: 21.9, [PRECIPITATION]: 34 },
+  { [STATION]: "Lisbon, Portugal", [ELEVATION]: 77, [PERIOD]: "1991–2020", [MONTH]: "Oct", [TEMPERATURE]: 19.1, [PRECIPITATION]: 103 },
+  { [STATION]: "Lisbon, Portugal", [ELEVATION]: 77, [PERIOD]: "1991–2020", [MONTH]: "Nov", [TEMPERATURE]: 14.9, [PRECIPITATION]: 120 },
+  { [STATION]: "Lisbon, Portugal", [ELEVATION]: 77, [PERIOD]: "1991–2020", [MONTH]: "Dec", [TEMPERATURE]: 12.2, [PRECIPITATION]: 113 },
 ];
 
 // Plot: reads only data and the constants above
@@ -75,6 +76,9 @@ const minDataVal = Math.min(0, ...temperature, ...precipScaled);
 const maxDataVal = Math.max(...temperature, ...precipScaled);
 const yMin = minDataVal < 0 ? minDataVal * (1 + Y_PAD_TOP) : 0;
 const yMax = maxDataVal * (1 + Y_PAD_TOP);
+// Conventional Walter-Lieth ticks: every 10 °C on the left, i.e. every 20 mm on the right
+const yTicks = [];
+for (let v = Math.ceil(yMin / TICK_STEP) * TICK_STEP; v <= yMax; v += TICK_STEP) yTicks.push(v);
 
 const hasFrostMonths = temperature.some((temp) => temp < 0);
 const hasPerhumidMonths = precipitation.some((p) => p > PRECIP_COMPRESS_MM);
@@ -220,33 +224,6 @@ function WalterLiethFill() {
     }
   }
 
-  for (let i = 0; i < months.length - 1; i++) {
-    const x0 = xs[i];
-    const x1 = xs[i + 1];
-    elems.push(
-      <line
-        key={`tl-${i}`}
-        x1={x0}
-        y1={tys[i]}
-        x2={x1}
-        y2={tys[i + 1]}
-        stroke={ARID_FILL}
-        strokeWidth={3}
-        strokeLinecap="round"
-      />,
-      <line
-        key={`pl-${i}`}
-        x1={x0}
-        y1={pys[i]}
-        x2={x1}
-        y2={pys[i + 1]}
-        stroke={HUMID_FILL}
-        strokeWidth={3}
-        strokeLinecap="round"
-      />,
-    );
-  }
-
   return <g>{elems}</g>;
 }
 
@@ -298,6 +275,7 @@ export default function Chart() {
             min: yMin,
             max: yMax,
             width: 76,
+            tickInterval: yTicks,
             label: TEMPERATURE,
             labelStyle: { fontSize: 15, fill: t.ink },
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
@@ -308,6 +286,7 @@ export default function Chart() {
             min: yMin,
             max: yMax,
             width: 84,
+            tickInterval: yTicks,
             label: PRECIPITATION,
             valueFormatter: (v: number) =>
               `${
@@ -325,6 +304,7 @@ export default function Chart() {
           "& .MuiChartsAxis-line": { stroke: t.inkSoft },
           "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
           "& .MuiChartsGrid-line": { stroke: t.grid },
+          "& .MuiLineChart-line": { strokeWidth: 3, strokeLinecap: "round" },
         }}
       >
         <ChartsGrid horizontal />
