@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: heatmap-risk-matrix
 created: '2026-06-20T06:13:41Z'
-updated: '2026-10-24T09:46:50Z'
+updated: '2026-10-24T09:51:44Z'
 generated_by: gemini-4-argon
 adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
 workflow_run: 40082998489
@@ -13,53 +13,55 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-r
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/javascript/muix/plot-dark.html
-quality_score: 83
+quality_score: 87
 review:
   strengths:
-  - Composes the chart from ChartsContainer + ScatterPlot + ChartsXAxis/ChartsYAxis
-    and draws the matrix in a custom layer positioned by useDrawingArea(), so cells
-    align exactly with the axis scale.
-  - 'Axis bands are sized explicitly (height: 62, width: 158) and valueFormatter maps
-    ratings to the descriptive terms with their numeric rank, in order from lowest
-    to highest; nothing is truncated.'
-  - Every cell carries its likelihood × impact score, and the score ink switches between
-    dark and light by the blended cell luminance, legible in both themes.
-  - Shared-cell jitter is small and deterministic and keeps both markers inside their
-    cell; labels sit in theme-adaptive pills that stay readable on every zone color.
-  - Realistic IT-security risk register covering all four zones, with skipAnimation
-    set.
+  - 'Composes the chart from MUI X v9 building blocks: ChartsContainer + ScatterPlot
+    for the risk markers, with useDrawingArea-driven SVG layers for the 5x5 cells,
+    cell scores and labels, so cells and markers share one coordinate system'
+  - Cell backgrounds follow the risk score (likelihood x impact) on a green (#009E73)
+    - amber - ochre - matte red (#AE3030) gradient, with the Low/Medium/High/Critical
+    legend spaced under the matrix and matching the cell colors
+  - Each cell carries its score in the corner, with ink chosen by computed luminance
+    so the numbers stay readable on every cell in both themes
+  - Axes use the descriptive rating terms from the spec, ordered Rare→Almost Certain
+    and Negligible→Catastrophic, with the numeric rating in parentheses
+  - Risk labels sit on page-colored pills, which keeps them readable over every zone
+    color in both themes; the two risks sharing the Unlikely/Major cell are jittered
+    apart within the cell, with labels above and below
+  - The data-driven subtitle (12 risks, 1 Critical, 5 High) gives the takeaway, and
+    the scatter series gives hover tooltips in the HTML output
   weaknesses:
-  - 'VQ-07, SC-02 (both): the Low zone (scores 1–4) and its legend swatch are lavender
-    #C475FD, so the ordered scale runs lavender → amber → ochre → red and the lowest-score
-    corner is not green as the spec''s gradient requires → brand green #009E73 for
-    Low (green pole on the good side). Likely cause: ZONE_LEGEND indexes t.palette
-    as if 1-based — t.palette[1] is lavender; use t.palette[0] for Low (palette[3]
-    ochre and palette[4] red are already correct).'
-  - 'CQ-04 (code): every risk is drawn twice — the ScatterPlot series renders 8 px
-    ink markers that the hand-drawn <circle r={9}> in RiskMatrixLayer (lines 228–235)
-    fully covers, so one of the two passes has no visible effect → style the series
-    markers (color/markerSize) and drop the hand-drawn circles, or drop the series.
-    Likely cause: custom marker layer added on top of the scatter series.'
-  - 'Suggestion: the pill width is estimated as name.length * 8.2 + 14, which leaves
-    "Ransomware" touching its pill edges; a slightly larger per-character factor would
-    give every label the same padding.'
-  - 'Suggestion: adding <ChartsTooltip /> would make the scatter series useful in
-    the HTML view (risk name, likelihood, impact on hover).'
+  - 'VQ-07 (both): the cell fills are drawn at fillOpacity 0.62 over the page, so
+    the effective zone colors change with the theme: Medium reads pale yellow in light
+    and khaki/olive in dark, High reads tan in light and dark brown in dark → data
+    colors identical in both renders (opaque fills of the zone tokens, keeping the
+    luminance-based score ink). Likely cause: CELL_FILL_OPACITY = 0.62 on the cell
+    rects and legend swatches.'
+  - 'VQ-02 (both): the ''Ransomware'' label runs past both ends of its pill box, so
+    the first and last letters sit on the pill border → pill wider than the text by
+    about 7 px on each side (about +10 px total). Likely cause: pillW = name.length
+    * 8.2 + 14 underestimates wide glyphs at 14 px bold; measure the text or use a
+    larger per-character factor.'
+  - 'Suggestion: give the markers of the Critical cells more presence (larger marker
+    or ring) so the single Critical risk draws the eye first.'
+  - 'Suggestion: encode the optional category column with marker shape or color, with
+    its own legend entries.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1.
-      Chrome: dark title "heatmap-risk-matrix · javascript · muix · anyplot.ai" plus soft-ink subtitle; axis titles Likelihood / Consequence Impact; descriptive tick terms Rare (1)..Almost Certain (5), Negligible (1)..Catastrophic (5); thin ink cell borders; four-swatch zone legend at the bottom. All readable.
-      Data: 5x5 cells tinted by zone at 62% opacity — lavender Low (should be green), amber Medium, ochre High, matte red Critical; cell scores in bottom-right corners; 12 cream markers with dark outlines and bold labels in cream pills; Supply Chain / Cloud Outage jittered in the shared Unlikely x Major cell.
+      Background: warm off-white #FAF8F1, square 2400x2400 canvas.
+      Chrome: bold title "heatmap-risk-matrix · javascript · muix · anyplot.ai" at the top (~53 % width), soft-ink subtitle "12 Risks across 5×5 Likelihood × Consequence Impact matrix (1 Critical, 5 High)". Y axis "Likelihood" with ticks Rare (1) … Almost Certain (5); x axis "Consequence Impact" with ticks Negligible (1) … Catastrophic (5). Legend row at the bottom: Low (1–4), Medium (5–9), High (10–16), Critical (20–25). All text dark and readable.
+      Data: 5x5 grid delineated by thin ink lines; cells colored by score: green (#009E73 at 62 % opacity) for Low, pale yellow (amber) Medium, tan (ochre) High, rose (#AE3030 at 62 %) Critical; lowest corner green, top-right red. Each cell shows its score bottom-right. Twelve black dots with bold labels on light pills; Supply Chain and Cloud Outage share the Unlikely/Major cell and are jittered horizontally. The "Ransomware" text slightly overflows its pill.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, axis titles and labels in light ink, ticks in light soft ink, light cell borders, legend text light. No dark-on-dark text.
-      Data: same zone hexes and opacity as light (darker-looking from blending over the dark page); score numerals switch dark/light by luminance and stay legible; markers become dark discs with light outlines, label pills dark with light text.
+      Chrome: title, subtitle, tick labels, axis titles and legend text all light ink, readable; no dark-on-dark text.
+      Data: same zone tokens, but at 62 % opacity over the dark page they read as dark teal, khaki/olive, dark brown and dark red, so effective cell colors differ from the light render. Markers flip to light ink, label pills to dark fill with light text; score numbers switch between dark and light ink by luminance and remain readable. Brand green remains visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -67,48 +69,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 22 px, ticks 14 px, axis titles 15 px; all readable in both
-          themes
+        comment: Title 22 px, ticks 14 px, axis titles 15 px (CSS) per library guidance;
+          all text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: No text collisions; shared-cell labels split above/below
+        passed: false
+        comment: '''Ransomware'' label overflows its pill box (defect line)'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers outlined and visible on every zone color in both themes;
-          legend swatches match cells
+        comment: Prominent markers for 12 sparse risks; legend swatches visible in
+          both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Zones also carry printed scores and a legend; not color-only
+        comment: Zone colour is backed by the per-cell score numbers and labelled
+          legend, so red-green is not the sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400, balanced margins, nothing clipped
+        comment: Square 2400x2400 canvas, matrix fills the space, balanced axis labels,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Likelihood / Consequence Impact with descriptive tick terms
+        comment: Descriptive axis titles with rating terms
       - id: VQ-07
         name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: Low zone lavender instead of green pole of the ordered scale (defect
-          line); backgrounds and chrome correct
+        comment: Correct Imprint tokens and theme backgrounds, but translucent cell
+          fills make the effective zone colors differ between light and dark (defect
+          line)
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -116,22 +121,24 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Label pills and corner score numerals with luminance-switched ink
+        comment: 'Clear hierarchy: bold title, soft subtitle, page-colored label pills,
+          luminance-adaptive score ink'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: Scores tucked into cell corners leaving centers for markers; sibling
-          labels above/below
+        comment: Corner-placed cell scores, legend items aligned under the five columns,
+          subtle cell borders
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Subtitle computes Critical/High counts as headline
+        comment: Data-driven subtitle states the Critical/High count; no visual focal
+          point on the critical risk
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -139,26 +146,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 5x5 risk matrix heatmap with labeled markers
+        comment: 5x5 risk matrix heatmap with labeled risk markers
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Gradient starts on lavender, lowest corner not green (C2 missed,
-          defect line); grid lines, descriptive axes, zone legend, jitter present
+        passed: true
+        comment: Score-based green-yellow-orange-red gradient, descriptive axis terms,
+          jitter for shared cell, zone legend, cell grid lines all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Markers in their cells; jitter as the Notes ask
+        comment: Markers in their likelihood/impact cells; spec-requested jitter keeps
+          them inside the cell
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; zone legend labels with score ranges
+        comment: Title format correct; legend labels name levels with score ranges
     data_quality:
       score: 15
       max: 15
@@ -168,22 +176,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All four zones populated, a shared cell shows jitter
+        comment: All four zones present, a shared cell with jitter, empty cells, both
+          extremes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible IT security risk register
+        comment: Plausible IT/enterprise risk register (ransomware, DDoS, key staff
+          loss), neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Ratings 1-5, score = product; zone thresholds 4/9/16/25 checked against
-          cell numbers
+        comment: Ratings 1–5 integers; checked scores = likelihood x impact in every
+          cell (e.g. 4x5=20 Critical, 2x4=8 Medium), zone bounds 4/9/16/25 as spec
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -191,13 +201,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: One layer component required for useDrawingArea hook
+        comment: Layer components are required by the useDrawingArea hook; otherwise
+          Data → Plot flow
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data and jitter
+        comment: Hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -206,19 +217,19 @@ review:
         comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Markers drawn twice: ScatterPlot series hidden under hand-drawn
-          circles (defect line)'
+        passed: true
+        comment: Appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component, skipAnimation, current v9 API
+        comment: Default-exported component, skipAnimation, v9 API, harness writes
+          PNG/HTML
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -226,29 +237,32 @@ review:
         score: 4
         max: 5
         passed: false
-        comment: ChartsContainer composition, axis ids, tickInterval, valueFormatter,
-          sized axis bands
+        comment: v9 composition with ChartsContainer, axis valueFormatter/tickInterval
+          and sized axis bands
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Custom SVG layer via useDrawingArea inside the composition API
-  verdict: REJECTED
+        comment: useDrawingArea custom SVG layers composed with ScatterPlot inside
+          one ChartsContainer; scatter tooltips in HTML
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T09:43:57Z'
+  rendered_at: '2026-10-24T09:48:55Z'
 impl_tags:
   dependencies: []
   techniques:
+  - layer-composition
   - annotations
   - custom-legend
-  - layer-composition
-  - manual-ticks
+  - hover-tooltips
   - html-export
+  - manual-ticks
   patterns:
-  - matrix-construction
+  - explicit-figure
+  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - edge-highlighting
+  - minimal-chrome
