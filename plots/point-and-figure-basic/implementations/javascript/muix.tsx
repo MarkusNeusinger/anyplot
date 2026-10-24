@@ -17,7 +17,6 @@ const X_TITLE = "Column (price reversal, not time)";
 const REVERSAL_BOXES = 3;
 const MIN_TREND_SPAN = 2;
 const Y_PAD_BOXES = 2;
-const GRID_TARGET_DIVISIONS = 9;
 const TICK_EVERY_N_COLS = 5;
 
 const RISING_SYMBOL = "X";
@@ -113,10 +112,10 @@ const yMinBox = minBox - Y_PAD_BOXES;
 const yMaxBox = maxBox + Y_PAD_BOXES;
 const columnIndices = columns.map((_, index) => index + 1);
 
-const gridStep = Math.round((maxBox - minBox) / GRID_TARGET_DIVISIONS);
+// Box lattice: one horizontal rule between every pair of price rows
 const gridRows: number[] = [];
-for (let box = Math.ceil(minBox / gridStep) * gridStep; box <= maxBox; box += gridStep) {
-  gridRows.push(box);
+for (let box = yMinBox; box < yMaxBox; box += 1) {
+  gridRows.push(box + 0.5);
 }
 
 interface TrendLine {
@@ -132,11 +131,12 @@ for (let i = 1; i < columns.length; i += 1) {
   const column = columns[i];
   const prevColumn = columns[i - 1];
   if (column.direction === RISING_SYMBOL && prevColumn.direction === FALLING_SYMBOL) {
-    const startBox = Math.min(...column.boxes);
+    // Drawn one box below the low so the line runs through empty boxes
+    const startBox = Math.min(...column.boxes) - 1;
     let endIndex = i;
     for (let j = i + 1; j < columns.length; j += 1) {
       const projected = startBox + (j - i);
-      if (columns[j].direction === FALLING_SYMBOL && Math.min(...columns[j].boxes) < projected)
+      if (columns[j].direction === FALLING_SYMBOL && Math.min(...columns[j].boxes) <= projected)
         break;
       endIndex = j;
     }
@@ -145,11 +145,12 @@ for (let i = 1; i < columns.length; i += 1) {
     }
   }
   if (column.direction === FALLING_SYMBOL && prevColumn.direction === RISING_SYMBOL) {
-    const startBox = Math.max(...column.boxes);
+    // Drawn one box above the high so the line runs through empty boxes
+    const startBox = Math.max(...column.boxes) + 1;
     let endIndex = i;
     for (let j = i + 1; j < columns.length; j += 1) {
       const projected = startBox - (j - i);
-      if (columns[j].direction === RISING_SYMBOL && Math.max(...columns[j].boxes) > projected)
+      if (columns[j].direction === RISING_SYMBOL && Math.max(...columns[j].boxes) >= projected)
         break;
       endIndex = j;
     }
