@@ -1,6 +1,6 @@
 // anyplot.ai
 // line-training-load-pmc: Training Load Performance Management Chart
-// Library: muix 9.x | JavaScript 22.22.3
+// Library: muix 7.29.1 | JavaScript 22.22.3
 // Quality: 91/100 | Created: 2026-06-13
 
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
@@ -17,20 +17,22 @@ import Typography from "@mui/material/Typography";
 const t = window.ANYPLOT_TOKENS;
 
 // Constants
-const DATE_COL = "Date" as const;
-const TSS_COL = "Daily TSS" as const;
-const CTL_COL = "CTL – Fitness (AU)" as const;
-const ATL_COL = "ATL – Fatigue (AU)" as const;
-const TSB_COL = "Form / TSB (AU)" as const;
-const PHASE_COL = "Training Phase" as const;
-
 const LOAD_PAD_FRAC = 0.14;
 const TSB_PAD_FRAC = 0.25;
 const TSS_SCALE_FACTOR = 4.0;
-const LOAD_STEP = 10;
-const TSB_STEP = 10;
+const TITLE = "line-training-load-pmc · javascript · muix · anyplot.ai";
+const TITLE_H = 54;
+const LEGEND_H = 44;
 
-// Data — 180-day PMC training block (6-month endurance build to race)
+// Columns: set these to your data's column names
+const DATE = "Date"; // role: date
+const TSS = "Daily TSS"; // role: tss
+const CTL = "CTL – Fitness (AU)"; // role: ctl
+const ATL = "ATL – Fatigue (AU)"; // role: atl
+const TSB = "Form / TSB (AU)"; // role: tsb
+const PHASE = "Training phase"; // role: phase
+
+// Data: replace this block with your own records
 const DAYS = 180;
 const START_MS = Date.UTC(2025, 1, 3);
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -39,7 +41,7 @@ let seed = 42 >>> 0;
 let ctl = 36;
 let atl = 34;
 
-const DATA: Array<Record<string, number | string>> = [];
+const data: Array<Record<string, number | string>> = [];
 for (let i = 0; i < DAYS; i++) {
   seed = (Math.imul(1664525, seed) + 1013904223) >>> 0;
   const rand = seed / 4294967295;
@@ -88,78 +90,78 @@ for (let i = 0; i < DAYS; i++) {
   ctl += (tss - ctl) / 42;
   atl += (tss - atl) / 7;
 
-  DATA.push({
-    [DATE_COL]: START_MS + i * DAY_MS,
-    [TSS_COL]: tss,
-    [CTL_COL]: Math.round(ctl * 10) / 10,
-    [ATL_COL]: Math.round(atl * 10) / 10,
-    [TSB_COL]: tsb,
-    [PHASE_COL]: phase,
+  data.push({
+    [DATE]: START_MS + i * DAY_MS,
+    [TSS]: tss,
+    [CTL]: Math.round(ctl * 10) / 10,
+    [ATL]: Math.round(atl * 10) / 10,
+    [TSB]: tsb,
+    [PHASE]: phase,
   });
 }
 
-const sortedData = [...DATA].sort((a, b) => Number(a[DATE_COL]) - Number(b[DATE_COL]));
-const dates = sortedData.map((r) => new Date(Number(r[DATE_COL])));
-const tssData = sortedData.map((r) => Number(r[TSS_COL]));
-const ctlData = sortedData.map((r) => Number(r[CTL_COL]));
-const atlData = sortedData.map((r) => Number(r[ATL_COL]));
-const tsbData = sortedData.map((r) => Number(r[TSB_COL]));
+// Plot: reads only data and the constants above
+const sortedData = [...data].sort((a, b) => Number(a[DATE]) - Number(b[DATE]));
+const dates = sortedData.map((r) => new Date(Number(r[DATE])));
+const tssData = sortedData.map((r) => Number(r[TSS]));
+const ctlData = sortedData.map((r) => Number(r[CTL]));
+const atlData = sortedData.map((r) => Number(r[ATL]));
+const tsbData = sortedData.map((r) => Number(r[TSB]));
 
 const tssScatter = sortedData.map((r, i) => ({
   x: dates[i],
-  y: Number(r[TSS_COL]),
+  y: Number(r[TSS]),
   id: i,
 }));
 
-const taperRow = sortedData.find((r) => String(r[PHASE_COL]) === "Taper") ?? sortedData[0];
-const taperDate = new Date(Number(taperRow[DATE_COL]));
-const taperPhaseLabel = String(taperRow[PHASE_COL]);
+const finalPhaseName = String(sortedData[sortedData.length - 1][PHASE]);
+const finalPhaseFirstRow = sortedData.find(
+  (r) => String(r[PHASE]) === finalPhaseName,
+)!;
+const finalPhaseStartDate = new Date(Number(finalPhaseFirstRow[DATE]));
 
 const maxLoad = Math.max(...ctlData, ...atlData);
-const loadAxisMax = Math.ceil((maxLoad * (1 + LOAD_PAD_FRAC)) / LOAD_STEP) * LOAD_STEP;
+const loadAxisMax = maxLoad * (1 + LOAD_PAD_FRAC);
 
 const maxAbsTsb = Math.max(...tsbData.map((v) => Math.abs(v)));
-const tsbBound = Math.ceil((maxAbsTsb * (1 + TSB_PAD_FRAC)) / TSB_STEP) * TSB_STEP;
+const tsbBound = maxAbsTsb * (1 + TSB_PAD_FRAC);
 
 const maxTss = Math.max(...tssData);
-const tssAxisMax = Math.ceil(maxTss * TSS_SCALE_FACTOR);
+const tssAxisMax = maxTss * TSS_SCALE_FACTOR;
 
-const LOAD_UNIT = CTL_COL.match(/\(([^)]+)\)/)?.[1] ?? "AU";
-const CTL_SERIES_LABEL = CTL_COL.replace(/\s*\([^)]+\)$/, "");
-const ATL_SERIES_LABEL = ATL_COL.replace(/\s*\([^)]+\)$/, "");
-
-const TITLE = "line-training-load-pmc · javascript · muix · anyplot.ai";
-const TITLE_H = 54;
-const LEGEND_H = 44;
+const unitMatch = CTL.match(/\(([^)]+)\)/);
+const LOAD_UNIT = unitMatch ? unitMatch[1] : "";
+const CTL_SERIES_LABEL = CTL.replace(/\s*\([^)]+\)$/, "");
+const ATL_SERIES_LABEL = ATL.replace(/\s*\([^)]+\)$/, "");
 
 const LEGEND_ITEMS = [
   { label: CTL_SERIES_LABEL, color: t.palette[0], kind: "line" as const },
   { label: ATL_SERIES_LABEL, color: t.palette[1], kind: "line" as const },
   { label: "Form (Fresh)", color: t.palette[2], kind: "area" as const },
   { label: "Form (Fatigued)", color: t.palette[4], kind: "area" as const },
-  { label: TSS_COL, color: t.palette[3], kind: "dot" as const },
+  { label: TSS, color: t.palette[3], kind: "dot" as const },
 ];
 
 function TsbAreaLayer() {
-  const xScale = useXScale("date") as (v: Date | number) => number | undefined;
-  const yScale = useYScale("tsb") as (v: number) => number | undefined;
+  const xScale = useXScale("date") as (v: Date | number) => number;
+  const yScale = useYScale("tsb") as (v: number) => number;
 
-  const yZero = Number(yScale(0) ?? 0);
+  const yZero = yScale(0);
 
   // Build exact zero-crossing polygons for positive (Fresh) and negative (Fatigued) TSB
   const posPts: Array<[number, number]> = [];
   const negPts: Array<[number, number]> = [];
 
   for (let i = 0; i < sortedData.length; i++) {
-    const x = Number(xScale(dates[i]) ?? 0);
+    const x = xScale(dates[i]);
     const val = tsbData[i];
-    const y = Number(yScale(val) ?? yZero);
+    const y = yScale(val);
 
     if (i > 0) {
       const prevVal = tsbData[i - 1];
       if ((prevVal >= 0 && val < 0) || (prevVal < 0 && val >= 0)) {
-        const prevX = Number(xScale(dates[i - 1]) ?? 0);
-        const frac = Math.abs(prevVal) / (Math.abs(prevVal) + Math.abs(val) || 1);
+        const prevX = xScale(dates[i - 1]);
+        const frac = Math.abs(prevVal) / (Math.abs(prevVal) + Math.abs(val));
         const crossX = prevX + frac * (x - prevX);
         posPts.push([crossX, yZero]);
         negPts.push([crossX, yZero]);
@@ -175,8 +177,8 @@ function TsbAreaLayer() {
     }
   }
 
-  const firstX = Number(xScale(dates[0]) ?? 0);
-  const lastX = Number(xScale(dates[dates.length - 1]) ?? 0);
+  const firstX = xScale(dates[0]);
+  const lastX = xScale(dates[dates.length - 1]);
 
   let posPath = `M${firstX.toFixed(1)},${yZero.toFixed(1)} `;
   for (const [px, py] of posPts) {
@@ -259,7 +261,7 @@ export default function Chart() {
             width: 82,
             min: 0,
             max: loadAxisMax,
-            label: `Training Load (${LOAD_UNIT})`,
+            label: LOAD_UNIT ? `Training load (${LOAD_UNIT})` : "Training load",
             tickLabelStyle: { fill: t.inkSoft, fontSize: 14 },
             labelStyle: { fill: t.inkSoft, fontSize: 15 },
           },
@@ -269,7 +271,7 @@ export default function Chart() {
             width: 82,
             min: -tsbBound,
             max: tsbBound,
-            label: TSB_COL,
+            label: TSB,
             tickLabelStyle: { fill: t.inkSoft, fontSize: 14 },
             labelStyle: { fill: t.inkSoft, fontSize: 15 },
           },
@@ -309,7 +311,7 @@ export default function Chart() {
             data: tssScatter,
             xAxisId: "date",
             yAxisId: "tss",
-            label: TSS_COL,
+            label: TSS,
             color: t.palette[3],
             markerSize: 3,
           },
@@ -318,7 +320,7 @@ export default function Chart() {
       >
         <ChartsGrid horizontal />
         <TsbAreaLayer />
-        <LinePlot />
+        <LinePlot skipAnimation />
         <ScatterPlot />
         <ChartsXAxis axisId="date" />
         <ChartsYAxis axisId="load" />
@@ -326,7 +328,7 @@ export default function Chart() {
         {/* TSB = 0 horizontal reference — separates fresh from fatigued zones */}
         <ChartsReferenceLine
           y={0}
-          yAxisId="tsb"
+          axisId="tsb"
           lineStyle={{
             stroke: t.ink,
             strokeOpacity: 0.28,
@@ -334,11 +336,11 @@ export default function Chart() {
             strokeWidth: 1.5,
           }}
         />
-        {/* Taper start — marks the positive-form window before race day */}
+        {/* Final phase start — marks the positive-form window before race day */}
         <ChartsReferenceLine
-          x={taperDate}
-          xAxisId="date"
-          label={`↑ ${taperPhaseLabel}`}
+          x={finalPhaseStartDate}
+          axisId="date"
+          label={`↑ ${finalPhaseName}`}
           labelAlign="start"
           labelStyle={{ fill: t.inkSoft, fontSize: 14, fontStyle: "italic" }}
           lineStyle={{
