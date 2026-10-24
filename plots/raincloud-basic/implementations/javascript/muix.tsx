@@ -3,104 +3,132 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 89/100 | Created: 2026-08-26
 
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { useXScale, useYScale, useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const FONT = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
 
-// --- Data: reaction times (ms) across a 4-arm drug trial ---------------------
-// Deterministic LCG so the sampled distributions (and their KDEs) are stable
-// across renders — the browser has no seeded Math.random().
-function makeLcg(seed) {
-  let state = seed >>> 0;
-  return function next() {
-    state = (state * 1664525 + 1013904223) >>> 0;
-    return state / 4294967296;
-  };
-}
-const rand = makeLcg(42);
-function gaussianSample() {
-  const u1 = Math.max(rand(), 1e-9);
-  const u2 = rand();
-  return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-}
+// Constants
+const TITLE = "raincloud-basic · javascript · muix · anyplot.ai";
+const GRID_N = 140;
+const JITTER_SEED = 198472;
 
-const CATEGORIES = ["Placebo", "10 mg Dose", "25 mg Dose", "50 mg Dose"];
-const N_PER_GROUP = 70;
+// Columns: set these to your data's column names
+const CATEGORY = "Treatment arm"; // role: category
+const VALUE = "Reaction Time (ms)"; // role: value
 
-// The 50 mg arm is deliberately bimodal (fast responders vs. non-responders)
-// — exactly the shape a plain box plot would hide and a raincloud reveals.
-const valuesByCategory = [
-  Array.from({ length: N_PER_GROUP }, () => 540 + 55 * gaussianSample()),
-  Array.from({ length: N_PER_GROUP }, () => 495 + 50 * gaussianSample()),
-  Array.from({ length: N_PER_GROUP }, () => 445 + 48 * gaussianSample()),
-  Array.from({ length: N_PER_GROUP }, () =>
-    rand() < 0.55 ? 360 + 35 * gaussianSample() : 470 + 40 * gaussianSample()
-  ),
+// Data: replace this block with your own records
+const GROUP_SPECS = [
+  { name: "Placebo", n: 70, meanA: 540, stdA: 55, mixProb: 1.0, meanB: 540, stdB: 55 },
+  { name: "10 mg Dose", n: 70, meanA: 495, stdA: 50, mixProb: 1.0, meanB: 495, stdB: 50 },
+  { name: "25 mg Dose", n: 70, meanA: 445, stdA: 48, mixProb: 1.0, meanB: 445, stdB: 48 },
+  { name: "50 mg Dose", n: 70, meanA: 360, stdA: 35, mixProb: 0.55, meanB: 470, stdB: 40 },
 ];
-// Jitter fractions for the "rain", drawn from the same deterministic stream
-// right after the data so the whole script's randomness stays reproducible.
-const jittersByCategory = valuesByCategory.map((values) => values.map(() => rand()));
+
+let dataSeed = 42;
+const data = [];
+for (const group of GROUP_SPECS) {
+  for (let i = 0; i < group.n; i += 1) {
+    let branchProb = 0;
+    if (group.mixProb < 1.0) {
+      dataSeed = (dataSeed * 1664525 + 1013904223) >>> 0;
+      branchProb = dataSeed / 4294967296;
+    }
+    dataSeed = (dataSeed * 1664525 + 1013904223) >>> 0;
+    const u1 = Math.max(dataSeed / 4294967296, 1e-9);
+    dataSeed = (dataSeed * 1664525 + 1013904223) >>> 0;
+    const u2 = dataSeed / 4294967296;
+    const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+    const val =
+      group.mixProb < 1.0 && branchProb >= group.mixProb
+        ? group.meanB + group.stdB * z
+        : group.meanA + group.stdA * z;
+    data.push({ [CATEGORY]: group.name, [VALUE]: val });
+  }
+}
+
+// Plot: reads only data and the constants above
+const categories = Array.from(new Set(data.map((row) => String(row[CATEGORY]))));
+const valuesByCategory = categories.map((cat) =>
+  data.filter((row) => String(row[CATEGORY]) === cat).map((row) => Number(row[VALUE]))
+);
+
+let jitterState = JITTER_SEED >>> 0;
+const jittersByCategory = valuesByCategory.map((values) =>
+  values.map(() => {
+    jitterState = (jitterState * 1664525 + 1013904223) >>> 0;
+    return jitterState / 4294967296;
+  })
+);
 
 const allValues = valuesByCategory.flat();
 const dataMin = Math.min(...allValues);
 const dataMax = Math.max(...allValues);
 const xPad = (dataMax - dataMin) * 0.08;
-const X_MIN = dataMin - xPad;
-const X_MAX = dataMax + xPad;
+const xMin = dataMin - xPad;
+const xMax = dataMax + xPad;
 
-// --- Box-plot summary stats (Tukey whiskers, 1.5×IQR) ------------------------
-function quantile(sorted, q) {
-  const pos = (sorted.length - 1) * q;
-  const base = Math.floor(pos);
-  const rest = pos - base;
-  return sorted[base + 1] !== undefined ? sorted[base] + rest * (sorted[base + 1] - sorted[base]) : sorted[base];
-}
-function boxStats(values) {
+const statsByCategory = valuesByCategory.map((values) => {
   const sorted = [...values].sort((a, b) => a - b);
-  const q1 = quantile(sorted, 0.25);
-  const median = quantile(sorted, 0.5);
-  const q3 = quantile(sorted, 0.75);
+  const lastIdx = sorted.length - 1;
+  const q1Pos = lastIdx * 0.25;
+  const q1Base = Math.floor(q1Pos);
+  const q1 =
+    sorted[q1Base + 1] !== undefined
+      ? sorted[q1Base] + (q1Pos - q1Base) * (sorted[q1Base + 1] - sorted[q1Base])
+      : sorted[q1Base];
+  const medPos = lastIdx * 0.5;
+  const medBase = Math.floor(medPos);
+  const median =
+    sorted[medBase + 1] !== undefined
+      ? sorted[medBase] + (medPos - medBase) * (sorted[medBase + 1] - sorted[medBase])
+      : sorted[medBase];
+  const q3Pos = lastIdx * 0.75;
+  const q3Base = Math.floor(q3Pos);
+  const q3 =
+    sorted[q3Base + 1] !== undefined
+      ? sorted[q3Base] + (q3Pos - q3Base) * (sorted[q3Base + 1] - sorted[q3Base])
+      : sorted[q3Base];
   const iqr = q3 - q1;
   const lowerFence = q1 - 1.5 * iqr;
   const upperFence = q3 + 1.5 * iqr;
   const lowerWhisker = sorted.find((v) => v >= lowerFence) ?? sorted[0];
-  const upperWhisker = [...sorted].reverse().find((v) => v <= upperFence) ?? sorted[sorted.length - 1];
+  const upperWhisker = [...sorted].reverse().find((v) => v <= upperFence) ?? sorted[lastIdx];
   return { q1, median, q3, lowerWhisker, upperWhisker };
-}
-const statsByCategory = valuesByCategory.map(boxStats);
+});
 
-// --- Gaussian KDE per group, Silverman bandwidth, normalized to its own peak
-// so the "cloud" shows shape (including the 50 mg arm's two humps), not raw n.
-const GRID_N = 140;
-const grid = Array.from({ length: GRID_N }, (_, k) => X_MIN + (k * (X_MAX - X_MIN)) / (GRID_N - 1));
-function stdOf(values) {
-  const m = values.reduce((a, b) => a + b, 0) / values.length;
-  const variance = values.reduce((a, b) => a + (b - m) ** 2, 0) / (values.length - 1);
-  return Math.sqrt(variance);
-}
-function kde(values) {
+const grid = Array.from({ length: GRID_N }, (_, k) => xMin + (k * (xMax - xMin)) / (GRID_N - 1));
+const densityByCategory = valuesByCategory.map((values) => {
   const n = values.length;
-  const bandwidth = 0.9 * stdOf(values) * Math.pow(n, -0.2);
+  const m = values.reduce((a, b) => a + b, 0) / n;
+  const variance = values.reduce((a, b) => a + (b - m) ** 2, 0) / (n - 1);
+  const std = Math.sqrt(variance);
+  const bandwidth = 0.9 * std * Math.pow(n, -0.2);
   const raw = grid.map((gx) => values.reduce((sum, v) => sum + Math.exp(-0.5 * ((gx - v) / bandwidth) ** 2), 0));
   const peak = Math.max(...raw);
   return raw.map((v) => v / peak);
-}
-const densityByCategory = valuesByCategory.map(kde);
+});
 
-// --- Cloud (half-violin, upward) + rain (jittered points, downward) + box ---
-// drawn with raw SVG positioned by the chart's own scales — MUI X's documented
-// composition API for chart types the community package has no built-in for.
-function CloudRainBox() {
+function RaincloudLayer() {
   const xScale = useXScale("value");
   const yScale = useYScale("category");
+  const { left, top, width: drawW, height } = useDrawingArea();
+  const ticks = xScale.ticks ? xScale.ticks(8) : [];
+  const titleSize = TITLE.length > 67 ? Math.round(22 * (67 / TITLE.length)) : 22;
 
   return (
     <g>
-      {CATEGORIES.map((cat, i) => {
+      <text x={left + drawW / 2} y={top - 46} textAnchor="middle" fontSize={titleSize} fontWeight={600} fill={t.ink}>
+        {TITLE}
+      </text>
+
+      {ticks.map((tick) => (
+        <line key={tick} x1={xScale(tick)} x2={xScale(tick)} y1={top} y2={top + height} stroke={t.grid} strokeWidth={1} />
+      ))}
+
+      {categories.map((cat, i) => {
         const color = t.palette[i % t.palette.length];
         const bandWidth = yScale.bandwidth();
         const baselineY = yScale(cat) + bandWidth / 2;
@@ -168,52 +196,23 @@ function CloudRainBox() {
   );
 }
 
-// Subtle vertical gridlines (15%-opacity ink, per style guide) aligned with
-// the x-axis ticks, so exact reaction-time values are easier to compare
-// across the four category rows.
-function Gridlines() {
-  const xScale = useXScale("value");
-  const { top, height } = useDrawingArea();
-  const ticks = xScale.ticks ? xScale.ticks(8) : [];
-
-  return (
-    <g>
-      {ticks.map((tick) => (
-        <line key={tick} x1={xScale(tick)} x2={xScale(tick)} y1={top} y2={top + height} stroke={t.grid} strokeWidth={1} />
-      ))}
-    </g>
-  );
-}
-
-function ChartTitle({ text, fontSize }) {
-  const { left, top, width: drawW } = useDrawingArea();
-  return (
-    <text x={left + drawW / 2} y={top - 46} textAnchor="middle" fontSize={fontSize} fontWeight={600} fill={t.ink} fontFamily={FONT}>
-      {text}
-    </text>
-  );
-}
-
 export default function Chart() {
-  const W = window.ANYPLOT_SIZE.width;
-  const H = window.ANYPLOT_SIZE.height;
-
-  const title = "raincloud-basic · javascript · muix · anyplot.ai";
-  const titleSize = title.length > 67 ? Math.round(22 * (67 / title.length)) : 22;
+  const { width, height } = window.ANYPLOT_SIZE;
 
   return (
-    <ChartContainer
-      width={W}
-      height={H}
+    <ChartsContainer
+      width={width}
+      height={height}
       skipAnimation
       series={[]}
       xAxis={[
         {
           id: "value",
           scaleType: "linear",
-          min: X_MIN,
-          max: X_MAX,
-          label: "Reaction Time (ms)",
+          min: xMin,
+          max: xMax,
+          height: 64,
+          label: VALUE,
           labelStyle: { fontSize: 16 },
           tickLabelStyle: { fontSize: 14 },
         },
@@ -222,18 +221,17 @@ export default function Chart() {
         {
           id: "category",
           scaleType: "band",
-          data: CATEGORIES,
+          data: categories,
+          width: 120,
           categoryGapRatio: 0.35,
           tickLabelStyle: { fontSize: 15 },
         },
       ]}
-      margin={{ top: 110, right: 70, bottom: 90, left: 190 }}
+      margin={{ top: 110, right: 70, bottom: 32, left: 60 }}
     >
-      <ChartTitle text={title} fontSize={titleSize} />
-      <Gridlines />
-      <CloudRainBox />
+      <RaincloudLayer />
       <ChartsXAxis axisId="value" position="bottom" />
       <ChartsYAxis axisId="category" position="left" disableTicks disableLine />
-    </ChartContainer>
+    </ChartsContainer>
   );
 }
