@@ -1,7 +1,7 @@
 // anyplot.ai
 // heatmap-annotated: Annotated Heatmap
-// Library: muix 7.29.1 | JavaScript 22.23.1
-// Quality: pending | Created: 2026-08-05
+// Library: muix 9.16.0 | JavaScript 22.23.3
+// Quality: 86/100 | Updated: 2026-10-24
 //# anyplot-orientation: square
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
