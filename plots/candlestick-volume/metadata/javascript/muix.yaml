@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: candlestick-volume
 created: '2026-09-02T14:29:19Z'
-updated: '2026-10-24T04:26:20Z'
+updated: '2026-10-24T04:31:12Z'
 generated_by: gemini-4-argon
 adopted_from: 05fd22b6883131fc8937ab51e4f573041b3dcb44 (05fd22b6883131fc8937ab51e4f573041b3dcb44)
 workflow_run: 40062068554
@@ -16,46 +16,51 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/candlesti
 quality_score: 87
 review:
   strengths:
-  - Candles drawn as a custom SVG layer inside ChartsContainer with useXScale/useYScale/useDrawingArea,
-    so bodies (open–close) and wicks (low–high) sit exactly at their data values on
-    the price axis
-  - Two ChartsContainers share one band x-axis over the same keys and margins, so
-    every volume bar sits directly beneath its candle and the vertical grid lines
-    align across both panes
-  - 'Volume bars reuse the candle colors (brand green #009E73 up, matte red #AE3030
-    down), and bearish marks carry a diagonal hatch as a redundant, CVD-safe second
-    cue in both themes'
-  - Weekend gaps removed by a band scale over trading days, with short 'Feb 9' style
-    date ticks thinned via tickInterval
-  - Theme tokens threaded through every text, axis line, grid and divider element;
-    both renders read cleanly
-  - HTML output carries a single vertical cursor spanning both panes plus an OHLCV
-    readout on hover, as the Notes ask, while staying absent from the static PNG
+  - Composes the candlesticks and volume bars as custom SVG layers inside two ChartsContainer
+    instances, reading positions from the useXScale/useYScale/useDrawingArea hooks,
+    so every candle body, wick and volume bar sits at its exact data value on community
+    @mui/x-charts (which has no native candlestick series)
+  - Both panes share one band scale over the same keys and the same tickInterval,
+    so vertical grid lines and every volume bar line up exactly beneath their candles;
+    the pane split is computed on the plot areas (not the containers) to land the
+    price pane at 73% of the stacked height
+  - Bearish candles and volume bars carry a diagonal hatch on top of the matte red,
+    giving a redundant non-color up/down cue that survives CVD and grayscale, mirrored
+    in the header legend swatch
+  - 'Semantic finance colors from the Imprint palette (brand green #009E73 up, matte
+    red down), identical in both renders, with theme tokens threaded through every
+    text, axis line and grid line'
+  - 'Library-native interactivity in the HTML: a synchronized dashed cursor runs through
+    both panes at the hovered date with an OHLCV readout box'
+  - Trading weekends are skipped with a band axis, so the series reads as continuous
+    sessions with dated ticks in a compact 'Feb 9' format and the year in the subtitle
   weaknesses:
-  - 'SC-02 (both): the price plot area takes about 80 % and the volume plot area about
-    20 % of the stacked data height (roughly 675 px vs 160 px in the 1125 px preview)
-    → price 72–75 %, volume 25–28 % (about +5 to +8 percentage points for volume).
-    Likely cause: PRICE_PANE_SHARE = 0.72 splits the container heights, but the volume
-    container also holds the 60 px x-axis band and margins, so its drawing area ends
-    up much shorter.'
-  - 'VQ-06 (both): the price axis is titled ''Close price ($)'' although it carries
-    open, high, low and close values, and the volume axis bottom tick reads ''0K''
-    → title the axis ''Price ($)'' and label zero as ''0''. Likely cause: yAxis label:
-    CLOSE and formatVolume returning `${Math.round(v / 1e3)}K` for 0.'
-  - 'Suggestion: the hatch pattern defs and the cursor line are written out twice,
-    once per layer; one shared component taking the axis ids would shorten the file
-    by about 30 lines.'
+  - 'VQ-06 (both): the volume pane''s y-axis title reads only ''Volume'', without
+    the unit the price axis carries (''Price ($)'') → ''Volume (shares)''. Likely
+    cause: the VOLUME column constant used as the axis label.'
+  - 'CQ-04 (code): the bear-hatch <pattern> definition (lines 152-170 and 239-257),
+    the dashed cursor <line> (lines 171-182 and 258-269) and the axis/grid sx block
+    (lines 439-447 and 503-511) are each written out twice with identical values →
+    define each once (one shared pattern element or constant, one cursor helper, one
+    sx constant) and reuse it in both panes. Likely cause: the volume layer copied
+    from the candle layer.'
+  - 'Suggestion: the price y-axis domain padding leaves a band below the lowest tick
+    (135) without a label; a tick near the bottom edge would anchor the lowest wicks
+    more clearly.'
+  - 'Suggestion: lift the volume bars to full opacity so their green and red match
+    the candles'' fill exactly in the light render, where the 0.78 alpha reads a shade
+    paler.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, matches #FAF8F1; not pure white.
-      Chrome: centered bold title "candlestick-volume · javascript · muix · anyplot.ai" in dark ink, a soft-ink subtitle "60 periods (Feb 1 – Apr 24, 2024) · Price 133.93–153.78", and an HTML legend with a green swatch "Bullish (close ≥ open, n=34)" and a hatched red swatch "Bearish (close < open, n=26)". Price pane y-axis "Close price ($)" with ticks 135–155; volume pane y-axis "Volume" with ticks 0K–6.0M; shared x-axis "Trading date" with ticks Feb 1 … Apr 17. Dashed subtle grid in both panes, thin divider line between panes. All text dark on light, readable.
-      Data: 60 candles, bullish in #009E73, bearish in #AE3030 with a diagonal hatch and darker outline; wicks low–high. Volume bars below in the matching up/down color (slightly translucent), each under its candle. Price pane takes ~80 % of the stacked data height, volume ~20 %.
+      Background: warm off-white #FAF8F1 across the whole canvas, no pure white.
+      Chrome: bold title "candlestick-volume · javascript · muix · anyplot.ai" centered at ~38% width, grey subtitle "60 periods (Feb 1 – Apr 24, 2024) · Price 133.93–153.78", header legend with a green "Bullish (close ≥ open, n=34)" swatch and a hatched red "Bearish (close < open, n=26)" swatch. Price pane y-axis "Price ($)" with ticks 135–155, volume pane y-axis "Volume" with ticks 0 / 2.0M / 4.0M / 6.0M, shared x-axis "Trading date" with ticks Feb 1 … Apr 17. All text dark ink, clearly readable. Dotted grid lines subtle but visible, aligned across both panes; a thin divider separates the panes.
+      Data: 60 candles in the upper ~73% (brand green #009E73 bullish, matte red #AE3030 bearish with a diagonal hatch and darker outline), wicks low→high; doji candles collapse to thin lines. Lower pane: 60 volume bars from a zero baseline, same green/red (slightly translucent), each directly under its candle. Price dips to ~134 at end of February then climbs to ~153 in early April.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black, matches #1A1A17; not pure black.
-      Chrome: title, subtitle, legend, axis titles and tick labels all in light ink; axis lines and dashed grid visible but subtle; no dark-on-dark text.
-      Data: same #009E73 / #AE3030 candle and volume colors as the light render; the bearish hatch flips to light ink strokes and stays visible; green volume bars read slightly deeper due to their alpha over the dark page. Layout identical to the light render.
+      Background: warm near-black #1A1A17, no pure black.
+      Chrome: title, subtitle, legend text, axis titles and tick labels in light ink, all clearly readable; no dark-on-dark text. Grid lines subtle dotted, still visible; pane divider visible.
+      Data: identical green and red as the light render (only the hatch stroke flips to light ink, reading as a light diagonal on the red bodies and bars). Volume bars read a touch darker than the candles because of their alpha over the dark page. Brand green clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -67,48 +72,48 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (title 22, ticks 14, axis titles 16 CSS px); readable
-          in both themes
+        comment: Title 22 px, axis titles 16 px, ticks 14 px in the 1600-px CSS mount
+          as the library prompt asks; all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; candles and bars well separated
+        comment: No text collisions; date ticks spaced every 6 sessions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 60 candles at 62 % band width, wicks 1.5 px, doji bodies kept at
-          2 px; legend swatches match marks in both themes
+        comment: 60 candles and bars well sized for density; doji bodies kept at a
+          2 px minimum; legend swatches match the marks
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/red backed by a hatch on bearish marks, so the up/down split
-          survives CVD
+        comment: Green/red backed by a hatch on bearish marks, so color is not the
+          sole up/down signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, balanced margins, nothing cut off, title ~40 % width
+        comment: 3200x1800, balanced margins, price pane ~73% of stacked height, nothing
+          clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 1
         max: 2
         passed: false
-        comment: Price axis titled 'Close price ($)' though it carries OHLC; '0K'
-          zero tick (defect line)
+        comment: Volume axis title lacks its unit (defect line)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: '#009E73 up, #AE3030 semantic loss red for down; backgrounds #FAF8F1
-          / #1A1A17'
+        comment: Imprint finance semantic exception (green up / matte red down), correct
+          backgrounds in both themes
     design_excellence:
       score: 12
       max: 20
@@ -118,24 +123,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Title/subtitle/legend hierarchy in the header, hatch texture for
-          bearish marks, outline weighting differing by direction
+        comment: Hatch overlay as a redundant bearish cue carried into the legend
+          swatch; three-level header hierarchy (title, data-range subtitle, counted
+          legend)
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Dashed low-opacity grid, thin pane divider aligned to the plot area,
-          panes share exact margins so grids line up
+        comment: Dashed low-opacity grid with ticks thinned to ~10 dates, a hairline
+          pane divider instead of a second x-axis, plot-area-based pane split
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Subtitle states period and price range; legend carries bullish/bearish
-          counts as context
+        comment: Subtitle states the period and price range, legend states up/down
+          counts; no further focal point
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -146,17 +152,18 @@ review:
         comment: Candlestick price pane over a volume pane
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Shared axis, matching colors, aligned subtle grid, cross-pane cursor
-          (HTML) present; pane split ~80/20 instead of 70–75/25–30 (defect line)
+        passed: true
+        comment: Shared date axis, matching up/down colors on volume, ~73/27 split,
+          subtle aligned grid, cross-pane cursor in the HTML
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Bodies, wicks and bars at their data values; volume from zero
+        comment: Bodies open→close, wicks low→high, bars from zero; all marks at data
+          values
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -172,21 +179,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Up/down candles, long wicks, dojis, trend reversals, volume variation
+        comment: Up and down runs, dojis, long wicks, a trough and recovery, volume
+          varying with range
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 60 trading days of a stock, weekends skipped; neutral
+        comment: 60 weekday sessions of a ~$140 stock, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Prices 134–154, daily moves of a few dollars, volume 2–5.3M: plausible'
+        comment: Daily moves of a few dollars, 2–5M shares per day; 60 periods within
+          the 30–120 range
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -194,13 +203,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Layer components are the React composition idiom
+        comment: Layer components are the required MUI composition pattern
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG
+        comment: Seeded LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -209,16 +218,18 @@ review:
         comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Appropriate for a hand-drawn candlestick layer; no fake UI
+        passed: false
+        comment: Pattern, cursor line and sx block duplicated between panes (defect
+          line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default export, skipAnimation, v9 ChartsContainer API, sized to ANYPLOT_SIZE
+        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation on
+          both containers
     library_mastery:
       score: 7
       max: 10
@@ -229,19 +240,18 @@ review:
         max: 5
         passed: true
         comment: ChartsContainer composition with ChartsGrid/ChartsXAxis/ChartsYAxis,
-          band axes with tickInterval and valueFormatter, position:'none' for the
-          hidden shared axis
+          axis ids, tickInterval and valueFormatter
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Custom SVG series drawn through the useXScale/useYScale/useDrawingArea
-          hooks, MUI X's composition extension point
-  verdict: REJECTED
+        comment: Custom series layers built on the useXScale/useYScale/useDrawingArea
+          hooks, the composition API's way to add a mark MUI lacks
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T04:23:29Z'
+  rendered_at: '2026-10-24T04:28:17Z'
 impl_tags:
   dependencies: []
   techniques:
@@ -252,8 +262,9 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - time-series
   styling:
-  - grid-styling
-  - edge-highlighting
   - alpha-blending
+  - edge-highlighting
+  - grid-styling
