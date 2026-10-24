@@ -1,7 +1,7 @@
 // anyplot.ai
 // column-stratigraphic: Stratigraphic Column with Lithology Patterns
 // Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 95/100 | Created: 2026-06-17
+// Quality: pending | Created: 2026-06-17
 
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
