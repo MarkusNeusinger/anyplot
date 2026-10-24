@@ -1,28 +1,31 @@
 // anyplot.ai
 // heatmap-polar: Polar Heatmap for Cyclic Two-Dimensional Data
-// Library: muix 9.2.1 | JavaScript 22.23.2
+// Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 89/100 | Created: 2026-09-05
 //# anyplot-orientation: square
-
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const size = window.ANYPLOT_SIZE;
 
 // Constants
-const ANGULAR_COL = "angular";
-const RADIAL_COL = "radial";
-const VALUE_COL = "value";
-
+const size = window.ANYPLOT_SIZE;
+const TITLE = "heatmap-polar · javascript · muix · anyplot.ai";
 const START_ANGLE = 0;
 const RING_HOLE_RATIO = 0.17;
 const LABEL_PAD = 56;
 const DAY_LABEL_ANGLE = 180;
 const COLORBAR_TICKS = [0, 0.25, 0.5, 0.75, 1];
 const GRAD_ID = "polar-heatmap-seq-grad";
+const DARK_INK = "#1A1A17";
+const LIGHT_INK = "#FAF8F1";
 
-// Data
+// Columns: set these to your data's column names
+const HOUR = "Hour of day"; // role: angular
+const DAY = "Day of week"; // role: radial
+const VISITS = "Visits per hour"; // role: value
+
+// Data: replace this block with your own records
 const DAY_SEEDS = [
   { day: "Mon", base: 14, weekend: false, nightlife: false },
   { day: "Tue", base: 18, weekend: false, nightlife: false },
@@ -41,12 +44,12 @@ const HOUR_LABELS = [
 ];
 
 type PolarHeatmapRow = {
-  [ANGULAR_COL]: string;
-  [RADIAL_COL]: string;
-  [VALUE_COL]: number;
+  [HOUR]: string;
+  [DAY]: string;
+  [VISITS]: number;
 };
 
-const DATA: PolarHeatmapRow[] = [];
+const data: PolarHeatmapRow[] = [];
 const totalHours = HOUR_LABELS.length;
 
 for (let dIdx = 0; dIdx < DAY_SEEDS.length; dIdx++) {
@@ -67,25 +70,26 @@ for (let dIdx = 0; dIdx < DAY_SEEDS.length; dIdx++) {
       ? 48 * Math.exp(-(cycDist * cycDist) / (2 * 2.4 * 2.4))
       : 0;
 
-    DATA.push({
-      [ANGULAR_COL]: HOUR_LABELS[h],
-      [RADIAL_COL]: ds.day,
-      [VALUE_COL]: Number((ds.base + morning + evening + nightlife).toFixed(1)),
+    data.push({
+      [HOUR]: HOUR_LABELS[h],
+      [DAY]: ds.day,
+      [VISITS]: Number((ds.base + morning + evening + nightlife).toFixed(1)),
     });
   }
 }
 
+// Plot: reads only data and the constants above
 const radialBins: string[] = [];
 const angularBins: string[] = [];
-for (const row of DATA) {
-  if (!radialBins.includes(row[RADIAL_COL])) radialBins.push(row[RADIAL_COL]);
-  if (!angularBins.includes(row[ANGULAR_COL])) angularBins.push(row[ANGULAR_COL]);
+for (const row of data) {
+  if (!radialBins.includes(row[DAY])) radialBins.push(row[DAY]);
+  if (!angularBins.includes(row[HOUR])) angularBins.push(row[HOUR]);
 }
 
-const allVals = DATA.map((r) => r[VALUE_COL]);
+const allVals = data.map((r) => r[VISITS]);
 const minValue = Math.min(...allVals);
 const maxValue = Math.max(...allVals);
-const valSpan = Math.max(1e-6, maxValue - minValue);
+const valSpan = maxValue - minValue;
 
 const seqLowNum = parseInt(t.seq[0].slice(1), 16);
 const seqHighNum = parseInt(t.seq[1].slice(1), 16);
@@ -96,29 +100,31 @@ const highR = (seqHighNum >> 16) & 255;
 const highG = (seqHighNum >> 8) & 255;
 const highB = seqHighNum & 255;
 
-const cells = DATA.map((row) => {
-  const frac = Math.max(0, Math.min(1, (row[VALUE_COL] - minValue) / valSpan));
+const cells = data.map((row) => {
+  const frac = (row[VISITS] - minValue) / valSpan;
   const r = Math.round(lowR + (highR - lowR) * frac);
   const g = Math.round(lowG + (highG - lowG) * frac);
   const b = Math.round(lowB + (highB - lowB) * frac);
+  const lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
   return {
-    dayIdx: radialBins.indexOf(row[RADIAL_COL]),
-    hourIdx: angularBins.indexOf(row[ANGULAR_COL]),
-    day: row[RADIAL_COL],
-    hour: row[ANGULAR_COL],
-    value: row[VALUE_COL],
+    dayIdx: radialBins.indexOf(row[DAY]),
+    hourIdx: angularBins.indexOf(row[HOUR]),
+    day: row[DAY],
+    hour: row[HOUR],
+    value: row[VISITS],
     fill: `rgb(${r}, ${g}, ${b})`,
+    labelFill: lum > 0.54 ? DARK_INK : LIGHT_INK,
   };
 });
 
-let peakRow = DATA[0];
-for (const row of DATA) {
-  if (row[VALUE_COL] > peakRow[VALUE_COL]) peakRow = row;
+let peakRow = data[0];
+for (const row of data) {
+  if (row[VISITS] > peakRow[VISITS]) peakRow = row;
 }
 
 const anglePerBin = 360 / angularBins.length;
-const TITLE = "heatmap-polar · javascript · muix · anyplot.ai";
-const SUBTITLE = `Website traffic by hour (${angularBins.length}h cycle) & day (${radialBins[0]} inner → ${radialBins[radialBins.length - 1]} outer) · Peak ${Math.round(peakRow[VALUE_COL])} visits/hr (${peakRow[RADIAL_COL]} ${peakRow[ANGULAR_COL]})`;
+const spokeHourIdx = Math.floor(((DAY_LABEL_ANGLE - START_ANGLE + 360) % 360) / anglePerBin);
+const SUBTITLE = `${VISITS} by ${HOUR} (${angularBins.length} sectors) & ${DAY} (${radialBins[0]} inner → ${radialBins[radialBins.length - 1]} outer) · Peak ${Math.round(peakRow[VISITS])} (${peakRow[DAY]} ${peakRow[HOUR]})`;
 
 function PolarHeatmapLayer() {
   const area = useDrawingArea();
@@ -133,11 +139,7 @@ function PolarHeatmapLayer() {
   const barX = cx - barW / 2;
   const barY = area.top + area.height + 54;
 
-  const daySpokeRad = (DAY_LABEL_ANGLE * Math.PI) / 180;
-  const spokeX1 = cx + innerR * Math.sin(daySpokeRad);
-  const spokeY1 = cy - innerR * Math.cos(daySpokeRad);
-  const spokeX2 = cx + outerR * Math.sin(daySpokeRad);
-  const spokeY2 = cy - outerR * Math.cos(daySpokeRad);
+  const daySpokeRad = ((START_ANGLE + (spokeHourIdx + 0.5) * anglePerBin) * Math.PI) / 180;
 
   return (
     <g>
@@ -223,33 +225,21 @@ function PolarHeatmapLayer() {
         );
       })}
 
-      <line
-        x1={spokeX1}
-        y1={spokeY1}
-        x2={spokeX2}
-        y2={spokeY2}
-        stroke={t.ink}
-        strokeWidth={1}
-        strokeOpacity={0.35}
-      />
       {radialBins.map((day, i) => {
         const r = innerR + (i + 0.5) * ringThickness;
         const lx = cx + r * Math.sin(daySpokeRad);
         const ly = cy - r * Math.cos(daySpokeRad);
+        const spokeCell = cells.find((c) => c.dayIdx === i && c.hourIdx === spokeHourIdx)!;
         return (
           <text
             key={`day-${day}`}
             x={lx}
             y={ly}
-            fill={t.ink}
+            fill={spokeCell.labelFill}
             fontSize={14}
             fontWeight={700}
             textAnchor="middle"
             dominantBaseline="central"
-            stroke={t.pageBg}
-            strokeWidth={4}
-            strokeLinejoin="round"
-            paintOrder="stroke"
           >
             {day}
           </text>
@@ -265,7 +255,7 @@ function PolarHeatmapLayer() {
         fontWeight={600}
         fill={t.ink}
       >
-        Hourly Website Traffic (visits / hr)
+        {VISITS}
       </text>
       <rect
         x={barX}
