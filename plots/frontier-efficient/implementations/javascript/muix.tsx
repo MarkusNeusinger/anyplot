@@ -1,6 +1,6 @@
 // anyplot.ai
 // frontier-efficient: Efficient Frontier for Portfolio Optimization
-// Library: muix 9.2.1 | JavaScript 22.23.2
+// Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 87/100 | Created: 2026-09-02
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { LinePlot } from "@mui/x-charts/LineChart";
@@ -9,22 +9,14 @@ import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
-import { useXScale, useYScale, useDrawingArea } from "@mui/x-charts/hooks";
+import { useXScale, useYScale } from "@mui/x-charts/hooks";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
 
 // Constants
-const PORTFOLIO_ID = "portfolio_id";
-const RISK_COL = "risk";
-const RETURN_COL = "return";
-const SHARPE_COL = "sharpe_ratio";
-
 const TITLE = "frontier-efficient · javascript · muix · anyplot.ai";
-const SUBTITLE_PREFIX = "Mean-variance optimization across 6 asset classes";
-const X_AXIS_LABEL = "Portfolio Risk — Annualized Standard Deviation (%)";
-const Y_AXIS_LABEL = "Expected Portfolio Return — Annualized (%)";
 const FRONTIER_LABEL = "Efficient Frontier";
 const CML_LABEL = "Capital Market Line";
 const GMV_LABEL = "Min-Variance Portfolio";
@@ -32,16 +24,22 @@ const TAN_LABEL = "Max-Sharpe (Tangency) Portfolio";
 const RF_LABEL = "Risk-free rate";
 const SHARPE_LOW_LABEL = "Low Sharpe ratio";
 const SHARPE_HIGH_LABEL = "High Sharpe ratio";
+const CML_DASH = "10,6";
 
 const RF_RATE = 0.02;
 const FRONTIER_R_MAX_MULT = 1.18;
 const FRONTIER_STEPS = 80;
-const N_PORTFOLIOS = 300;
 const X_MAX_PAD_MULT = 1.08;
 const Y_MIN_PAD_SHARE = 0.14;
 const Y_MAX_PAD_MULT = 1.05;
 
-// Flat scalar asset universe parameters (6 assets: US Large Cap, Intl Developed, Emerging Markets, US Treasuries, REITs, Commodities)
+// Columns: set these to your data's column names
+const PORTFOLIO_ID = "Portfolio";
+const RISK = "Portfolio Risk — Annualized Standard Deviation (%)"; // role: risk
+const RETURN = "Expected Portfolio Return — Annualized (%)"; // role: return
+
+// Data: replace this block with your own records
+const N_PORTFOLIOS = 300;
 const ASSET_RETURNS = [0.095, 0.075, 0.11, 0.035, 0.085, 0.045];
 const ASSET_VOLS = [0.16, 0.18, 0.24, 0.055, 0.19, 0.15];
 const ASSET_CORR_ROWS = [
@@ -58,7 +56,6 @@ const covMatrix = ASSET_CORR_ROWS.map((rowStr, i) =>
   rowStr.split(",").map((cStr, j) => Number(cStr) * ASSET_VOLS[i] * ASSET_VOLS[j]),
 );
 
-// Data — 300 simulated long-only portfolios with Dirichlet(1) weights
 let lcgSeed = 7;
 const data: Record<string, string | number>[] = [];
 
@@ -82,16 +79,14 @@ for (let k = 0; k < N_PORTFOLIOS; k++) {
     }
   }
   const portRisk = Math.sqrt(Math.max(0, portVar));
-  const portSharpe = (portRet - RF_RATE) / (portRisk || 1);
   data.push({
     [PORTFOLIO_ID]: `p${k}`,
-    [RISK_COL]: portRisk,
-    [RETURN_COL]: portRet,
-    [SHARPE_COL]: portSharpe,
+    [RISK]: portRisk,
+    [RETURN]: portRet,
   });
 }
 
-// Gauss-Jordan matrix inversion for two-fund analytic frontier
+// Plot: reads only data and the constants above
 const augMatrix = covMatrix.map((row, i) => [
   ...row,
   ...Array.from({ length: nAssets }, (_, j) => (i === j ? 1 : 0)),
@@ -158,12 +153,17 @@ const frontierRisks = frontierReturns.map((r) =>
   Math.sqrt(Math.max(0, (scalarA * r * r - 2 * scalarB * r + scalarC) / scalarD)),
 );
 
-const portfolios = data.map((row) => ({
-  id: String(row[PORTFOLIO_ID]),
-  x: Number(row[RISK_COL]),
-  y: Number(row[RETURN_COL]),
-  z: Number(row[SHARPE_COL]),
-}));
+const portfolios = data.map((row) => {
+  const x = Number(row[RISK]);
+  const y = Number(row[RETURN]);
+  const z = (y - RF_RATE) / x;
+  return {
+    id: String(row[PORTFOLIO_ID]),
+    x,
+    y,
+    z,
+  };
+});
 
 const sharpeVals = portfolios.map((p) => p.z);
 const sharpeMin = Math.min(...sharpeVals);
@@ -175,34 +175,26 @@ const rawYMax = Math.max(rFrontierMax, ...portfolios.map((p) => p.y));
 const yMin = rawYMin - (rawYMax - rawYMin) * Y_MIN_PAD_SHARE;
 const yMax = rawYMax * Y_MAX_PAD_MULT;
 
-const cmlXEnd = sharpeTan > 0 ? Math.min(xMax, (yMax - RF_RATE) / sharpeTan) : xMax;
+const cmlXEnd = Math.min(xMax, (yMax - RF_RATE) / sharpeTan);
 const cmlYEnd = RF_RATE + sharpeTan * cmlXEnd;
 const cmlLabelX = 0.58 * cmlXEnd;
 const cmlLabelY = RF_RATE + sharpeTan * cmlLabelX;
 
 function FrontierOverlay() {
-  const xScale = useXScale("risk");
-  const yScale = useYScale("return");
-  const drawingArea = useDrawingArea();
-  if (!xScale || !yScale) return null;
+  const xScale = useXScale("risk") as (v: number) => number;
+  const yScale = useYScale("return") as (v: number) => number;
 
-  const x1 = xScale(0) ?? 0;
-  const y1 = yScale(RF_RATE) ?? 0;
-  const x2 = xScale(cmlXEnd) ?? 0;
-  const y2 = yScale(cmlYEnd) ?? 0;
-  const xLabel = xScale(cmlLabelX) ?? 0;
-  const yLabel = yScale(cmlLabelY) ?? 0;
+  const x1 = xScale(0);
+  const y1 = yScale(RF_RATE);
+  const x2 = xScale(cmlXEnd);
+  const y2 = yScale(cmlYEnd);
+  const xLabel = xScale(cmlLabelX);
+  const yLabel = yScale(cmlLabelY);
 
-  const gmvX = xScale(riskGmv) ?? 0;
-  const gmvY = yScale(rGmv) ?? 0;
-  const tanX = xScale(riskTan) ?? 0;
-  const tanY = yScale(rTan) ?? 0;
-
-  // Legend box in top-left of drawing area (empty region above frontier)
-  const legX = drawingArea.left + 18;
-  const legY = drawingArea.top + 16;
-  const legW = 310;
-  const legH = 122;
+  const gmvX = xScale(riskGmv);
+  const gmvY = yScale(rGmv);
+  const tanX = xScale(riskTan);
+  const tanY = yScale(rTan);
 
   return (
     <g>
@@ -214,7 +206,7 @@ function FrontierOverlay() {
         y2={y2}
         stroke={t.palette[1]}
         strokeWidth={2.5}
-        strokeDasharray="10,6"
+        strokeDasharray={CML_DASH}
       />
       <text
         x={xLabel}
@@ -260,48 +252,6 @@ function FrontierOverlay() {
       >
         {`Max Sharpe = ${sharpeTan.toFixed(2)} (${(riskTan * 100).toFixed(1)}%, ${(rTan * 100).toFixed(1)}%)`}
       </text>
-
-      {/* In-canvas series legend in the open upper-left region */}
-      <g>
-        <rect
-          x={legX}
-          y={legY}
-          width={legW}
-          height={legH}
-          rx={6}
-          fill={t.elevatedBg}
-          fillOpacity={0.9}
-          stroke={t.grid}
-          strokeWidth={1}
-        />
-        <line x1={legX + 14} y1={legY + 22} x2={legX + 38} y2={legY + 22} stroke={t.ink} strokeWidth={4} />
-        <text x={legX + 48} y={legY + 27} fontSize={14} fill={t.ink}>
-          {FRONTIER_LABEL}
-        </text>
-
-        <line
-          x1={legX + 14}
-          y1={legY + 50}
-          x2={legX + 38}
-          y2={legY + 50}
-          stroke={t.palette[1]}
-          strokeWidth={2.5}
-          strokeDasharray="6,4"
-        />
-        <text x={legX + 48} y={legY + 55} fontSize={14} fill={t.ink}>
-          {CML_LABEL}
-        </text>
-
-        <circle cx={legX + 26} cy={legY + 78} r={7} fill={t.ink} stroke={t.pageBg} strokeWidth={1.5} />
-        <text x={legX + 48} y={legY + 83} fontSize={14} fill={t.ink}>
-          {GMV_LABEL}
-        </text>
-
-        <circle cx={legX + 26} cy={legY + 104} r={7} fill={t.palette[0]} stroke={t.pageBg} strokeWidth={1.5} />
-        <text x={legX + 48} y={legY + 109} fontSize={14} fill={t.ink}>
-          {TAN_LABEL}
-        </text>
-      </g>
     </g>
   );
 }
@@ -309,9 +259,10 @@ function FrontierOverlay() {
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
   const headerH = 82;
-  const colorbarH = 48;
-  const chartH = height - headerH - colorbarH;
-  const subtitle = `${SUBTITLE_PREFIX} · ${data.length} simulated portfolios · rf = ${(RF_RATE * 100).toFixed(1)}%`;
+  const legendH = 38;
+  const colorbarH = 44;
+  const chartH = height - headerH - legendH - colorbarH;
+  const subtitle = `Mean-variance optimization across ${nAssets} assets · ${data.length} simulated portfolios · rf = ${(RF_RATE * 100).toFixed(1)}%`;
 
   return (
     <Box
@@ -333,11 +284,56 @@ export default function Chart() {
         </Typography>
       </Box>
 
+      {/* Series legend rendered outside the SVG drawing area */}
+      <Box
+        sx={{
+          height: legendH,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "28px",
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <svg width={28} height={14}>
+            <line x1={0} y1={7} x2={28} y2={7} stroke={t.ink} strokeWidth={4} />
+          </svg>
+          <Typography sx={{ fontSize: "14px", color: t.ink }}>{FRONTIER_LABEL}</Typography>
+        </Box>
+        <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <svg width={28} height={14}>
+            <line
+              x1={0}
+              y1={7}
+              x2={28}
+              y2={7}
+              stroke={t.palette[1]}
+              strokeWidth={2.5}
+              strokeDasharray={CML_DASH}
+            />
+          </svg>
+          <Typography sx={{ fontSize: "14px", color: t.ink }}>{CML_LABEL}</Typography>
+        </Box>
+        <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <svg width={18} height={18}>
+            <circle cx={9} cy={9} r={7} fill={t.ink} stroke={t.pageBg} strokeWidth={1.5} />
+          </svg>
+          <Typography sx={{ fontSize: "14px", color: t.ink }}>{GMV_LABEL}</Typography>
+        </Box>
+        <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <svg width={18} height={18}>
+            <circle cx={9} cy={9} r={7} fill={t.palette[0]} stroke={t.pageBg} strokeWidth={1.5} />
+          </svg>
+          <Typography sx={{ fontSize: "14px", color: t.ink }}>{TAN_LABEL}</Typography>
+        </Box>
+      </Box>
+
       <ChartsContainer
         width={width}
         height={chartH}
-        margin={{ top: 16, right: 48, bottom: 16, left: 20 }}
-        sx={{ "& .MuiLineElement-root": { strokeWidth: 4 } }}
+        skipAnimation
+        margin={{ top: 12, right: 48, bottom: 16, left: 20 }}
+        sx={{ '& .MuiLineChart-line[data-series="frontier"]': { strokeWidth: 4 } }}
         series={[
           {
             type: "line",
@@ -368,7 +364,7 @@ export default function Chart() {
             min: 0,
             max: xMax,
             height: 54,
-            label: X_AXIS_LABEL,
+            label: RISK,
             valueFormatter: (v: number) => `${(v * 100).toFixed(0)}%`,
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
             labelStyle: { fontSize: 15, fill: t.ink },
@@ -380,7 +376,7 @@ export default function Chart() {
             min: yMin,
             max: yMax,
             width: 84,
-            label: Y_AXIS_LABEL,
+            label: RETURN,
             valueFormatter: (v: number) => `${(v * 100).toFixed(0)}%`,
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
             labelStyle: { fontSize: 15, fill: t.ink },
@@ -423,7 +419,7 @@ export default function Chart() {
           alignItems: "center",
           justifyContent: "center",
           gap: "12px",
-          pb: "8px",
+          pb: "6px",
         }}
       >
         <Typography sx={{ fontSize: "14px", color: t.inkSoft }}>
