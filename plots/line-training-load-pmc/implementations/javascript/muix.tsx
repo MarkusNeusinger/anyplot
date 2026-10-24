@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-training-load-pmc: Training Load Performance Management Chart
-// Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: pending | Created: 2026-06-13
+// Library: muix 9.16.0 | JavaScript 22.23.3
+// Quality: 85/100 | Updated: 2026-10-24
 
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { LinePlot } from "@mui/x-charts/LineChart";
