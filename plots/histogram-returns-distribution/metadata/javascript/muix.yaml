@@ -2,133 +2,134 @@ library: muix
 language: javascript
 specification_id: histogram-returns-distribution
 created: '2026-09-02T01:32:46Z'
-updated: '2026-09-02T01:38:23Z'
-generated_by: claude-sonnet
-workflow_run: 33579068836
+updated: '2026-10-24T10:06:39Z'
+generated_by: gemini-4-argon
+adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
+workflow_run: 40083986609
 issue: 3751
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/javascript/muix/plot-dark.html
-quality_score: 93
+quality_score: 85
 review:
   strengths:
-  - Two-tone stacked histogram (green core / amber tail) clearly separates the ±2σ
-    regions per the spec's tail-highlighting requirement, using the amber token in
-    its correct semantic 'warning/caution' role rather than as an arbitrary extra
-    color.
-  - Overlaid normal-fit curve on a density-normalized histogram lets viewers directly
-    compare empirical vs. theoretical shape, and the realistic negative skew (-1.49)
-    / excess kurtosis (6.66) makes the fat left tail the spec calls for visibly obvious
-    (empirical peak well above the fitted curve).
-  - Live-computed stats box (mean, std dev, skewness, kurtosis) plus a dashed mean
-    reference line gives a fast, self-contained read without needing the raw data.
-  - Idiomatic MUI X composition via ChartContainer + BarPlot/LinePlot/ChartsReferenceLine/ChartsGrid
-    rather than the basic <BarChart> wrapper, showing real command of the library's
-    composable API surface.
-  - 'Both renders are theme-correct: chrome (curve color, reference line, ticks, legend
-    swatches) flips between ink-on-cream and ink-on-near-black while the data colors
-    (green core, amber tail) stay identical between themes.'
+  - Composes the chart from ChartsContainer with BarPlot and LinePlot, so the density
+    bars and the fitted normal curve share one band x axis and one density y axis
+    and compare directly
+  - 'Tail coloring is done natively by splitting the density into two stacked bar
+    series (core #009E73, tail Imprint position 2), with the boundary at the bin nearest
+    ±2σ on both sides'
+  - The statistics card (mean, std dev, skewness, excess kurtosis) sits in the empty
+    upper-left region and covers neither bars nor curve; monospace numerals align
+    the values
+  - 'Theme threading is complete: ink/inkSoft/grid/elevatedBg tokens drive all chrome,
+    and the normal curve uses ink so it flips dark→light while the data colors stay
+    identical'
+  - Axis bands are sized explicitly (x height 60, y width 84), so no tick label is
+    truncated at 14 px; skipAnimation set on the container and on each plot
+  - valueFormatter on every series gives readable tooltips in the interactive HTML
   weaknesses:
-  - The 'Mean' reference-line label sits directly on the solid green bar fill in both
-    themes (brownish-on-green in light, pale-gray-on-green in dark), giving borderline
-    contrast — nudge the label above the bar top or add a small background chip so
-    it isn't printed on data fill.
-  - Visual refinement is solid but modest beyond the horizontal-only grid — no other
-    distinguishing chrome treatment (e.g. subtle bar edge stroke) pushes it into top-tier
-    polish.
-  - n=252 sits at the exact floor of the spec's '252+ observations recommended' —
-    fine, but a slightly larger sample (e.g. 400-500) would make the tail bins read
-    a bit more robustly.
+  - 'CQ-04 (code): lines 187–232 hand-build the legend (swatch spans and labels in
+    a flex div, ~45 lines) although every series already carries a label → render
+    the native `<ChartsLegend />` (inside ChartsDataProvider/ChartsWrapper, styled
+    through slotProps.legend.sx) and delete the HTML block. Likely cause: the header
+    legend was written by hand instead of using the library legend.'
+  - 'Suggestion: tick labels sit at every third bin center and read as unround values
+    (-6.3 %, -3.8 %, -1.3 %, 1.2 %); a linear x axis with ticks at whole percents
+    would read faster.'
+  - 'Suggestion: dashed vertical markers at the two ±2σ values would make the tail
+    boundary readable without the subtitle.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1-range), correct light-theme surface, not pure white.
-      Chrome: Dark ink title "histogram-returns-distribution · javascript · muix · anyplot.ai" centered top, fully legible. Axis titles "Daily Return (%)" and "Density" in dark ink, tick labels in a slightly softer ink, all clearly readable. Horizontal grid lines are subtle light-gray, visible but not dominant. Legend top-right ("Within ±2σ", "Beyond ±2σ (tail)", "Normal fit") reads clearly in dark text. Stats box top-left (Mean/Std dev/Skewness/Kurtosis) has a light card background with dark text, fully legible.
-      Data: First/core series is the mandated brand green (#009E73); tail bins beyond ±2σ use the amber warning token; the normal-fit curve is drawn in dark ink (black) with a dashed "Mean" reference line labeled in soft ink directly over a green bar (readable but lower contrast than surrounding chrome text).
-      Legibility verdict: PASS (minor exception: the "Mean" label sitting on the green bar fill has reduced but still readable contrast).
+      Background: warm off-white, matches #FAF8F1; stats card on a slightly lighter elevated surface with a thin grid-colored border.
+      Chrome: title "histogram-returns-distribution · javascript · muix · anyplot.ai" bold dark ink top-left (~45 % width), monospace subtitle "252 periods (2025-01-02 to 2025-12-19) · 8 tail periods beyond ±2σ (-2.72% / +2.82%)", legend top-right (Within ±2σ, Beyond ±2σ (tail), Normal fit). X axis "Daily return (%)" with monospace ticks -7.5% … 2.4%, y axis "Probability density" 0.00–0.45; subtle horizontal grid. All text dark and readable.
+      Data: 26 near-contiguous density bars, central ones in #009E73, tail bins (three isolated bars near -7.5/-6.5 %, one at -2.9 %, one at +2.75 %) in Imprint purple; black normal-fit curve peaking ~0.29 under a taller 0.42 central bar; negative skew and fat left tail visible. Stats card top-left: Mean 0.05 %, Std dev 1.38 %, Skewness -1.49, Excess kurtosis 6.66.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17-range), correct dark-theme surface, not pure black.
-      Chrome: Title and axis titles/tick labels render in light ink against the dark background, fully legible — no dark-on-dark failures observed. Grid lines are subtle light gray, visible without dominating. Legend and stats box both use light text on the dark/elevated background, fully readable.
-      Data: Bar colors (green core, amber tail) are pixel-identical to the light render, confirming only chrome flipped. The normal-fit curve and legend swatch for "Normal fit" flip to white (ink token), consistent with the theme. The "Mean" label again sits on a green bar with pale-gray text — readable but the lowest-contrast element in the render.
-      Legibility verdict: PASS (same minor "Mean" label contrast note as the light render; no dark-on-dark chrome failures).
+      Background: warm near-black, matches #1A1A17; stats card on a slightly lighter elevated surface.
+      Chrome: title, subtitle, legend, axis titles and tick labels all in light ink; grid subtle but visible; no dark-on-dark text.
+      Data: bar colors identical to the light render (#009E73 core, same purple tails); normal-fit curve flips to light ink and stays clearly visible over bars and background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All chrome text readable in both themes; 'Mean' label on green bar
-          fill has borderline but acceptable contrast in both renders
+        comment: Explicit sizes (title 22, axis titles 16, ticks 14 mono); readable
+          in both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions found
+        comment: No text collisions; stats card sits in empty space
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 26 bins with clear bar widths, normal-fit line and reference line
-          clearly distinguishable
+        comment: Bars, tail bars and curve clearly visible; legend glyphs match the
+          marks in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/amber/ink combination is CVD-safe per style guide; no red-green
-          as sole signal
+        comment: Green vs purple is CVD-safe; curve in ink contrasts on both themes
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (no /tmp/anyplot-canvas-gate.txt); good proportions,
-          nothing clipped at edges
+        comment: 3200x1800, balanced header/plot proportions, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Daily Return (%)'' and ''Density'' are descriptive with units'
+        comment: '''Daily return (%)'' and ''Probability density'' are descriptive
+          with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; amber used in its correct warning/caution
-          semantic role for the tail; backgrounds match #FAF8F1/#1A1A17; both renders
-          theme-correct'
+        comment: 'Core #009E73, tails Imprint position 2, correct backgrounds in both
+          themes'
     design_excellence:
-      score: 15
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        comment: Semantic tail highlighting, computed stats overlay, mean reference
-          line, multi-series composition go beyond a generic default chart
+        passed: true
+        comment: 'Typographic hierarchy beyond baseline: monospace numerals for ticks,
+          subtitle and stats card versus the sans title'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        comment: Horizontal-only grid and clean MUI X chrome are refined but modest;
-          no further distinguishing treatment (e.g. bar edge stroke)
+        passed: true
+        comment: Legend integrated in the header band, stats card placed in the empty
+          upper-left, near-contiguous bars with a small radius
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
-        comment: Tail coloring + normal overlay + mean line + stats box together build
-          a clear risk-analysis narrative
+        passed: true
+        comment: Subtitle quantifies the tail (8 periods beyond ±2σ with both thresholds),
+          beyond what the Notes ask
     spec_compliance:
       score: 15
       max: 15
@@ -138,27 +139,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct histogram with normal overlay
+        comment: Density histogram with normal overlay
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Normal curve, stats box (mean/std/skew/kurtosis), tail highlighting,
-          density normalization, 26 bins all present
+        comment: Percent x axis, fitted normal curve on density scale, ±2σ tail coloring
+          both sides at nearest bin, stats box clear of bars and curve, 26 bins
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=return bin center (%), Y=density, full data range shown
+        comment: Bars at their bin densities; curve evaluated at bin centers on the
+          same scale; all data shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend labels ('Within ±2σ',
-          'Beyond ±2σ (tail)', 'Normal fit') match series semantically
+        comment: Mandated title format; legend labels readable and matching
     data_quality:
       score: 15
       max: 15
@@ -168,24 +169,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Distribution shape, fat tail, skew, and kurtosis all represented
-          and visible
+        comment: Shows peaked center, negative skew and a fat left tail against the
+          normal fit
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible daily equity-return volatility/drift with a realistic crash-risk
-          left-skew pattern; neutral subject matter
+        comment: 252 trading days of daily returns with occasional negative shocks;
+          neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Return range (~-7.5% to +3%) and n=252 (1 trading year) match spec
-          guidance
+        comment: Mean 0.05 %, std 1.38 %, kurtosis 6.66 plausible for daily equity
+          returns; stats computed from data, not placed
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -193,13 +194,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No classes; small necessary helpers (RNG, normal PDF) only
+        comment: Linear script with the single required component
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed=42)
+        comment: Seeded LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -208,42 +209,51 @@ review:
         comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Appropriate complexity; no fake UI/interactivity
+        passed: false
+        comment: Hand-built HTML legend (lines 187–232) where native ChartsLegend
+          applies (defect line)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component, skipAnimation set, correctly sized to
-          window.ANYPLOT_SIZE
+        comment: Default-exported component, v9 ChartsContainer API, skipAnimation
     library_mastery:
-      score: 9
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
-        comment: ChartContainer composition with BarPlot/LinePlot/ChartsXAxis/ChartsYAxis/ChartsGrid/ChartsLegend/ChartsTooltip/ChartsReferenceLine
-          rather than the basic wrapper component
+        passed: true
+        comment: Composition API used correctly; legend hand-built rather than ChartsLegend
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
-        comment: Stacked bars for a two-tone histogram effect, ChartsReferenceLine
-          for the mean marker, custom tickLabelInterval
+        passed: true
+        comment: Composed BarPlot+LinePlot in one ChartsContainer with stacked series
+          to split tail bins
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-10-24T10:03:49Z'
 impl_tags:
   dependencies: []
   techniques:
+  - layer-composition
   - annotations
-  - manual-ticks
+  - custom-legend
+  - html-export
   patterns:
   - data-generation
   dataprep:
   - binning
+  - normalization
+  - statistical-moments
   styling:
-  - grid-styling
+  - publication-ready
+  - minimal-chrome
