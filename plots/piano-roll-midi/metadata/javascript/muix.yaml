@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: piano-roll-midi
 created: '2026-08-20T22:38:16Z'
-updated: '2026-10-24T11:39:10Z'
+updated: '2026-10-24T11:44:26Z'
 generated_by: gemini-4-argon
 adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
 workflow_run: 40090470808
@@ -13,127 +13,131 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/piano-rol
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/javascript/muix/plot-dark.html
-quality_score: 86
+quality_score: 85
 review:
   strengths:
-  - Composed ChartsContainer with a custom SVG overlay drawn through useXScale/useYScale/useDrawingArea,
-    so notes, keyboard rows and beat lines share the axes' exact scales
-  - Velocity mapped onto imprint_seq with a compact gradient legend in the title row
-    whose ends read Soft (58) and Loud (109)
-  - Piano-keyboard row shading at low opacity and measure lines weighted above beat
-    lines, all drawn behind the notes and readable in both themes
-  - Realistic C-Am-F-G progression with sustained bass, chord pads, eighth-note melody
-    and a crescendo, so chords, short notes, repeats and rests all appear
-  - Axis valueFormatter turns beats into M1-M8 measure labels and pitches into note
-    names; pitch range auto-fits with a small margin
+  - Composes the piano roll from ChartsContainer with the useXScale / useYScale /
+    useDrawingArea hooks, so every note, row shade and beat line sits on MUI X's own
+    linear scales and the native ChartsXAxis / ChartsYAxis draw the ticks
+  - Notes sit exactly at their onset and duration in beats on a continuous x scale,
+    with pitch rows centred on integer MIDI numbers; nothing is snapped or stretched
+    to the grid
+  - Pitch axis is fitted to the data (F#2 to G#5, 3 semitones of margin) and labels
+    the white keys with note names via tickInterval + valueFormatter, as a DAW keyboard
+    does
+  - Black-key rows are shaded with the ink token at 5 % opacity, so the keyboard pattern
+    reads in both themes and stays behind the notes
+  - Beat lines in the grid token with stronger ink measure lines, drawn before the
+    notes, and measure ticks labelled M1–M8 instead of raw beat numbers
+  - Velocity maps onto the Imprint sequential ramp (t.seq) with a Soft (58) → Loud
+    (109) gradient bar beside the title that names both ends
+  - Realistic I–vi–IV–V progression in C with a sustained bass, block chords, a moving
+    melody and a velocity crescendo across the eight measures
   weaknesses:
-  - 'SC-02 (both): the pitch axis labels only the three C rows (C3, C4, C5), so the
-    other 30 rows, including every melody note, cannot be named → a note name on every
-    white-key row (or every row), as the Notes'' ''C4, D4, etc.'' asks. Likely cause:
-    yAxis tickInterval: octaveTicks (only semitone === 0 pushed).'
-  - 'VQ-06 (both): the y-axis title reads ''Pitch (MIDI note)'' but the ticks show
-    note names and no MIDI number appears → a title that matches the ticks, e.g. ''Pitch
-    (note)'', or ticks like ''C4 (60)''. Likely cause: label: PITCH with the column
-    constant ''Pitch (MIDI note)''.'
-  - 'CQ-04 (code): lines 178-185 parse the two seq hex colors by hand with bit shifts
-    → hexToRgb/decomposeColor from @mui/material/styles give the channels in one call
-    each. Likely cause: hand-rolled hex parsing.'
-  - 'Suggestion: label the closing barline (beat 32) so the last measure''s extent
-    reads at a glance.'
+  - 'VQ-05 (both): the black-key rows at the range edges (G#5 at the top, F#2 at the
+    bottom) are drawn as full rows centred on the axis limits, so half of each shade
+    band sticks out past the plot area, above the top of the y axis and below the
+    x-axis line (about 12 px each) → clip the shading to the drawing area so no band
+    extends past the axes. Likely cause: the row <rect> uses yScale(p + 0.5) / yScale(p
+    - 0.5) for p at pitchAxisMin/Max without clamping to drawingArea.top / drawingArea.top
+    + drawingArea.height.'
+  - 'VQ-01 (both): the pitch tick labels are 13 px, smaller than the 14 px x-axis
+    ticks and below the library''s 14–16 px axis guidance, and they are the smallest
+    text in the 400 px thumbnail → 14 px (+1 px) to match the x ticks. Likely cause:
+    yAxis tickLabelStyle fontSize: 13.'
+  - 'Suggestion: the header block could carry the library prompt''s License line ("@mui/x-charts
+    — MIT (community)").'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 page; black-key rows shaded with a faint warm-grey band.
-      Chrome: bold title "piano-roll-midi · javascript · muix · anyplot.ai" top left; velocity gradient legend top right ("Velocity: Soft (58)" / "Loud (109)"); y-axis title "Pitch (MIDI note)" with ticks C3, C4, C5; x-axis title "Time (measures)" with ticks M1-M8; light beat lines with darker measure lines. All text dark and readable.
-      Data: 96 rounded note rectangles from A2 to F5 over 8 measures; soft chord pads in brand green #009E73 through teal, loud melody in blue toward #4467A3; bass notes mid-teal.
+      Background: warm off-white #FAF8F1; black-key pitch rows shaded a slightly darker cream band, alternating in keyboard pattern.
+      Chrome: title "piano-roll-midi · javascript · muix · anyplot.ai" bold dark ink top-left; velocity gradient bar top-right labelled "Velocity: Soft (58)" … "Loud (109)"; y axis "Pitch (note)" with white-key names G2…G5; x axis "Time (measures)" with ticks M1–M8. Thin beat lines and stronger grey measure lines. All text dark on light, readable. The edge black-key bands (G#5, F#2) poke about half a row past the top of the y axis and below the x-axis line.
+      Data: 96 rounded note bars from #009E73 green (soft) through teal to blue (loud): sustained bass notes (C3, A2, F3, G3), half-note block chords, short melody notes in the C5–F5 range; the colour drifts green→blue across the crescendo.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17; black-key rows a slightly lighter band, still distinguishable.
-      Chrome: title, legend labels, axis titles and ticks in light ink, all readable; no dark-on-dark text; beat and measure lines visible but subtle.
-      Data: note colors identical to the light render (green to blue imprint_seq); notes stand out from both row shades.
+      Chrome: title, legend labels, axis titles and tick labels all in light ink; beat and measure lines visible in light grey; no dark-on-dark text.
+      Data: note colours identical to the light render (same green→teal→blue ramp); every note stands out from both row shades.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
-        passed: true
-        comment: Explicit sizes (title 22 px, ticks 14 px, axis titles 15 px, CSS)
-          within the library prompt's range; all text readable in both themes
+        passed: false
+        comment: Fonts set explicitly, readable in both themes; y tick labels at 13
+          px are below the x ticks and the 14 px guidance (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; chords stack in separate rows, touching repeated
-          notes kept apart by a 1 px page-colored outline
+        comment: No text collisions; adjacent E3/F3 and B3/C4 labels stay clear
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Even the 0.5-beat notes are clearly visible; gradient legend visible
+        comment: All 96 notes visible including eighth notes; legend gradient visible
           in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue ramp, no red-green signal; notes contrast well with
+        comment: Green→blue sequential ramp, no red-green signal, notes contrast with
           both row shades
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Canvas gate passed; plot fills the canvas, balanced axis label sizes,
-          no overflow
+        passed: false
+        comment: Canvas 3200x1800, good proportions; edge black-key shade bands extend
+          past the axes (defect line)
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Y-axis title says 'Pitch (MIDI note)' while the ticks show note names
-          and no MIDI number appears (defect line)
+        passed: true
+        comment: '''Pitch (note)'' and ''Time (measures)'' descriptive'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Velocity uses imprint_seq (t.seq[0] -> t.seq[1]); backgrounds #FAF8F1
-          / #1A1A17; data colors identical in both themes'
+        comment: 'Velocity on Imprint t.seq; backgrounds #FAF8F1 / #1A1A17; data colours
+          identical across themes'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: Velocity gradient legend set inline in the title row with Soft/Loud
-          end labels, a clean header band separating chrome from the roll
+        passed: false
+        comment: Legend folded into the title row, rounded note bars with page-coloured
+          outlines separating repeated notes, DAW-style white-key-only labels
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Rounded note rects with a page-colored outline and vertical inset
-          inside each row, very low-opacity black-key shading, measure lines weighted
-          against beat lines
+        passed: false
+        comment: Measure ticks relabelled M1–M8, note insets leave hairline gaps between
+          touching notes; shade bands overflow at the edges
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: true
-        comment: Data built with a crescendo across 8 measures and accented melody
-          over soft chords, so the color shift itself carries the dynamics
+        passed: false
+        comment: Velocity crescendo built into the data reads as a green→blue drift
+          across the eight measures
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -141,29 +145,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct piano roll: horizontal rectangles by pitch and time'
+        comment: Correct piano roll
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Keyboard row shading, beat/measure grid, velocity scale with legend
-          and fitted pitch range present; note names only on the three C rows, so
-          most rows cannot be named (defect line)
+        passed: true
+        comment: Note names, keyboard row shading, beat + stronger measure lines,
+          sequential velocity colour with soft/loud colour bar, auto-fit pitch range
+          — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Notes sit at their onset/duration/pitch values; only a 1 px visual
-          gap at each end
+        comment: Notes at their onset/duration and pitch; only a 1 px visual inset,
+          no snapping
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in mandated format; velocity legend states Soft (58) and Loud
-          (109) ends
+        comment: Title format correct; colour bar names soft and loud ends with values
     data_quality:
       score: 15
       max: 15
@@ -173,23 +176,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Chords, sustained bass, 0.5-beat runs, repeated touching notes, rests
-          and a velocity range
+        comment: Chords, melody, sustained bass, mixed durations (0.5–4 beats), rests,
+          repeated notes, velocity range
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: C-Am-F-G progression with bass, chord pads and melody; neutral
+        comment: I–vi–IV–V progression in C, neutral musical content
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 96 notes over 8 measures (within 20-200, 4-16); pitches 45-77, velocities
-          58-109; checked against the data block and axis
+        comment: 96 notes over 8 measures (within 20–200 / 4–16); MIDI pitches 45–77,
+          velocities 58–109; checked note names (60=C4) on the axis; no Check values
+          in the spec
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -197,8 +201,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Single overlay component needed for the MUI X scale hooks; otherwise
-          flat
+        comment: Flat module; the one overlay component is required for the MUI scale
+          hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -213,51 +217,53 @@ review:
         comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Hand-written hex parsing at lines 178-185 replaces hexToRgb/decomposeColor
-          from @mui/material/styles (defect line)
+        passed: true
+        comment: Appropriate; manual RGB interpolation is needed because notes are
+          custom SVG marks
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component, skipAnimation, v9 ChartsContainer API
+        comment: Default export, skipAnimation, v9 ChartsContainer API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Composed ChartsContainer with axis config (tickInterval, valueFormatter,
-          label bands) and ChartsXAxis/ChartsYAxis
+        passed: false
+        comment: ChartsContainer composition with useXScale/useYScale/useDrawingArea
+          hooks, tickInterval arrays, valueFormatter, tickLabelInterval
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Custom SVG layer drawn through useXScale/useYScale/useDrawingArea
-          hooks inside the composition API
-  verdict: REJECTED
+        passed: false
+        comment: Custom SVG layer drawn inside MUI X's scales via its composition
+          hooks; MUI Typography/Box for the header legend
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T11:36:11Z'
+  rendered_at: '2026-10-24T11:41:22Z'
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
   - layer-composition
+  - manual-ticks
   - custom-legend
-  - patches
+  - colorbar
   - html-export
-  patterns: []
+  patterns:
+  - data-generation
   dataprep:
   - normalization
   styling:
   - custom-colormap
   - edge-highlighting
   - grid-styling
+  - gradient-fill
