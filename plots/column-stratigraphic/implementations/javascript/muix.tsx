@@ -49,7 +49,7 @@ const UNCONFORMITY = "Unconformity"; // role: extra
 const data = [
   {
     [TOP]: 0,
-    [BOTTOM]: 28,
+    [BOTTOM]: 180,
     [LITHOLOGY]: "Sandstone",
     [FORMATION]: "Horseshoe Canyon Fm",
     [STAGE_AGE]: "Maastrichtian",
@@ -58,8 +58,8 @@ const data = [
     [UNCONFORMITY]: false,
   },
   {
-    [TOP]: 28,
-    [BOTTOM]: 62,
+    [TOP]: 180,
+    [BOTTOM]: 380,
     [LITHOLOGY]: "Shale",
     [FORMATION]: "Bearpaw Shale",
     [STAGE_AGE]: "Campanian",
@@ -68,8 +68,8 @@ const data = [
     [UNCONFORMITY]: false,
   },
   {
-    [TOP]: 62,
-    [BOTTOM]: 88,
+    [TOP]: 380,
+    [BOTTOM]: 560,
     [LITHOLOGY]: "Sandstone",
     [FORMATION]: "Belly River Fm",
     [STAGE_AGE]: "Campanian",
@@ -78,8 +78,8 @@ const data = [
     [UNCONFORMITY]: false,
   },
   {
-    [TOP]: 88,
-    [BOTTOM]: 120,
+    [TOP]: 560,
+    [BOTTOM]: 700,
     [LITHOLOGY]: "Limestone",
     [FORMATION]: "Rundle Group",
     [STAGE_AGE]: "Mississippian",
@@ -88,8 +88,8 @@ const data = [
     [UNCONFORMITY]: true,
   },
   {
-    [TOP]: 120,
-    [BOTTOM]: 150,
+    [TOP]: 700,
+    [BOTTOM]: 850,
     [LITHOLOGY]: "Dolomite",
     [FORMATION]: "Palliser Fm",
     [STAGE_AGE]: "Famennian",
@@ -98,8 +98,8 @@ const data = [
     [UNCONFORMITY]: false,
   },
   {
-    [TOP]: 150,
-    [BOTTOM]: 178,
+    [TOP]: 850,
+    [BOTTOM]: 980,
     [LITHOLOGY]: "Shale",
     [FORMATION]: "Ireton Fm",
     [STAGE_AGE]: "Frasnian",
@@ -108,8 +108,8 @@ const data = [
     [UNCONFORMITY]: false,
   },
   {
-    [TOP]: 178,
-    [BOTTOM]: 214,
+    [TOP]: 980,
+    [BOTTOM]: 1230,
     [LITHOLOGY]: "Limestone",
     [FORMATION]: "Leduc Reef",
     [STAGE_AGE]: "Frasnian",
@@ -118,8 +118,8 @@ const data = [
     [UNCONFORMITY]: false,
   },
   {
-    [TOP]: 214,
-    [BOTTOM]: 246,
+    [TOP]: 1230,
+    [BOTTOM]: 1400,
     [LITHOLOGY]: "Siltstone",
     [FORMATION]: "Beaverhill Lake Gp",
     [STAGE_AGE]: "Givetian",
@@ -128,8 +128,8 @@ const data = [
     [UNCONFORMITY]: false,
   },
   {
-    [TOP]: 246,
-    [BOTTOM]: 280,
+    [TOP]: 1400,
+    [BOTTOM]: 1500,
     [LITHOLOGY]: "Conglomerate",
     [FORMATION]: "Basal Clastics",
     [STAGE_AGE]: "Cambrian",
