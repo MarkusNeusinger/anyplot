@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: lollipop-grouped
 created: '2026-09-02T02:47:31Z'
-updated: '2026-10-24T10:43:55Z'
+updated: '2026-10-24T10:48:37Z'
 generated_by: gemini-4-argon
 adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
 workflow_run: 40086812387
@@ -13,45 +13,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/javascript/muix/plot-dark.html
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - 'Every spec property shows: thin stems from one shared zero baseline, an untruncated
-    value axis, side-by-side offset within each region with clearly wider gaps between
-    regions, and the same series order and colors in every group'
-  - Regions sorted by total revenue computed from the records (North America 158 >
-    Asia-Pacific 130 > Europe 121 > Latin America 62)
-  - Uses the v9 ChartsContainer composition API with useXScale/useYScale hooks to
-    draw lollipops as a custom SVG layer on MUI X band/linear axes
-  - Page-colored ring around each marker separates dot from stem, and the '$xxM' format
-    is derived from the value column name and shared by ticks and value labels
-  - 'Theme-correct in both renders: Imprint colors identical, chrome (ticks, labels,
-    grid, legend text) flips cleanly'
+  - 'Uses MUI X''s composition API idiomatically: a custom SVG lollipop layer reads
+    the band and linear scales through useXScale/useYScale inside ChartsContainer,
+    with ChartsGrid and ChartsXAxis/ChartsYAxis supplying theme-adaptive chrome'
+  - 'Faithful to the spec''s characteristics: thin stems from a shared, untruncated
+    zero baseline, the same series order in every group, a wider gap between groups
+    than within them, and regions sorted by total revenue'
+  - Page-colored ring around each marker separates it cleanly from its stem in both
+    themes, and the legend circles match the markers
+  - The data shows rank swaps (Software leads North America and Europe, Hardware leads
+    Asia-Pacific) and a near-tie group, which suits the chart's purpose
+  - 'Imprint palette applied through t.palette with #009E73 first; chrome flips correctly
+    between #FAF8F1 and #1A1A17'
   weaknesses:
-  - 'VQ-06 (both): the category axis carries no title, so the four tick labels are
-    not named as regions → add the axis label from the CATEGORY constant (''Region''),
-    with the x-axis height raised to fit it. Likely cause: xAxis config without label:
-    CATEGORY.'
-  - 'Suggestion: drive the legend from MUI X''s own ChartsLegend (series declared
-    with labels and colors) instead of the hand-built HTML legend, which would also
-    give hover tooltips in the HTML output.'
-  - 'Suggestion: the 25% headroom above the tallest marker leaves the $75M-$85M band
-    empty; a smaller pad would give the stems more height.'
+  - 'Suggestion: build the legend with MUI''s ChartsLegend (for example from declared
+    series whose own marks are hidden) instead of the hand-built HTML flex row, so
+    legend layout and theming come from the library.'
+  - 'Suggestion: a $10M tick step would halve the 18 horizontal gridlines and calm
+    the background without losing readability, since the value labels already carry
+    the exact numbers.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white #FAF8F1 across the whole canvas.
-      Chrome: centered dark title "lollipop-grouped · javascript · muix · anyplot.ai"; horizontal legend below it (Hardware, Software, Services with circular swatches); y axis "Revenue ($M)" with ticks $0M-$85M every $5M; region tick labels North America, Asia-Pacific, Europe, Latin America; subtle horizontal grid. All text dark and readable.
-      Data: 12 lollipops in 4 groups of 3 - Hardware #009E73 green, Software purple, Services blue - thin stems from $0M to circular markers with page-colored rings, value labels ($48M, $71M, ... $17M) above each marker. Regions sorted by total.
+      Chrome: centered title "lollipop-grouped · javascript · muix · anyplot.ai" in dark ink; a horizontal legend below it (Hardware, Software, Services with circular swatches); left axis "Revenue ($M)" with ticks $0M–$85M in $5M steps; bottom axis "Region" with North America, Asia-Pacific, Europe, Latin America; subtle horizontal gridlines; L-shaped axis lines. All text dark and readable.
+      Data: four region groups sorted by total revenue, each with three lollipops side by side — Hardware #009E73 (green), Software purple, Services blue — thin stems from $0 to 12 px circular markers ringed in the page color, with a dollar value label above each marker ($48M/$71M/$39M, $52M/$45M/$33M, $33M/$58M/$30M, $21M/$24M/$17M). First series is #009E73.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title, legend text, tick labels, axis title and value labels all render in light ink; grid lines subtle but visible; no dark-on-dark text.
-      Data: identical green / purple / blue series colors and positions as the light render; marker rings switch to the dark page color.
+      Chrome: title, legend labels, axis titles, tick labels and value labels all render in light ink; gridlines subtle light lines; axis lines light. No dark-on-dark text.
+      Data: green, purple and blue markers and stems are identical to the light render; only the chrome and the marker ring (page color) flip.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -59,51 +57,52 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All fonts set explicitly (title 22 px, ticks 14-15 px, axis title
-          16 px, value labels 14 px); readable in both themes
+        comment: All font sizes set explicitly (title 22, ticks 14/15, axis titles
+          16, value labels 14, legend 15 CSS px); readable in both themes, balanced
+          X/Y sizing
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Value labels sit clear above each marker; no text collisions
+        comment: No text collisions; value labels sit clear above their markers, including
+          the close Latin America trio
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 12 sparse lollipops with r=12 markers and 4 px stems; legend dots
-          match the marks in both themes; 12 value labels fit their marks without
-          crowding
+        comment: 12 sparse lollipops with prominent 12 px markers and thin stems;
+          legend circles match the markers in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green / purple / blue are CVD-distinguishable; position also separates
-          the series
+        comment: Green / purple / blue are well separated in luminance and hue; page-colored
+          marker ring adds contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; balanced margins, no overflow
+        comment: Plot fills most of the canvas, legend sits directly under the title,
+          balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Y axis titled 'Revenue ($M)' with units, but the category axis has
-          no title (defect line)
+        passed: true
+        comment: '''Revenue ($M)'' with units and ''Region'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, then Imprint positions 2 and 3 from t.palette;
-          #FAF8F1 / #1A1A17 backgrounds; data colors identical across themes'
+        comment: 'First series #009E73, Imprint order via t.palette, backgrounds #FAF8F1
+          / #1A1A17, chrome flips correctly'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -111,23 +110,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Raised one: page-colored ring around each marker separates dot from
-          stem, unit-aware ''$xxM'' formatting shared by ticks and value labels, medium-weight
-          label hierarchy'
+        comment: Legend glyphs are circles that mirror the markers, and value labels
+          use a medium weight in ink over inkSoft chrome, giving a clear text hierarchy
+          beyond the baseline
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: 'Raised one: rounded stem caps and a deliberate within-group padding
-          (GROUP_PAD_FRAC) that keeps groups compact with generous gaps between them'
+        comment: Page-colored ring separates each marker from its stem; round stem
+          caps; clear gap between groups versus tight within-group spacing
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
         passed: true
-        comment: Sorting by total is prescribed by the Notes; no further hierarchy
-          chosen
+        comment: Data chosen so the leading product line swaps (Software leads North
+          America and Europe, Hardware leads Asia-Pacific); direct value labels support
+          reading exact comparisons
     spec_compliance:
       score: 15
       max: 15
@@ -137,29 +137,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Grouped lollipop chart with thin stems and circular markers
+        comment: 'Grouped lollipop chart: thin stems from zero to circular markers,
+          grouped by category'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Shared zero baseline, untruncated axis, side-by-side offset within
-          groups, wider gaps between groups, consistent series order and colors, legend,
-          categories sorted by total - all present
+        comment: Thin stems, circular colored markers, side-by-side offset, legend,
+          categories sorted by total, same series order per group, zero baseline untruncated
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Markers at their values; within-group offset is the dodge the spec
-          asks for
+        comment: Markers at their values on a 0-based linear axis; offsets are the
+          spec-requested within-group dodge
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: Title 'lollipop-grouped · javascript · muix · anyplot.ai'; legend
-          names the three product lines
+          names Hardware / Software / Services
     data_quality:
       score: 15
       max: 15
@@ -169,21 +169,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 4 categories x 3 series; series swap rank across groups (Hardware
-          leads in Asia-Pacific, Software elsewhere)
+        comment: 4 categories x 3 series, rank swaps across groups, a near-tie group
+          (Latin America) and a dominant outlier
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Revenue by product line across world regions - plausible and neutral
+        comment: Revenue by product line across world regions — neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: $17M-$71M per region/line is plausible; no Check values in the spec;
-          verified sort order by totals (158, 130, 121, 62)
+        comment: $17M–$71M per line per region is plausible; checked region order
+          from totals (158 / 130 / 121 / 62) matches the render; no Check values in
+          the spec
     code_quality:
       score: 10
       max: 10
@@ -193,64 +194,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Only the React components the harness and scale hooks require
+        comment: The only extra function is the React layer component that MUI's scale
+          hooks require
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hard-coded data
+        comment: Deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All five imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component, skipAnimation, v9 ChartsContainer API
+        comment: Default-exported Chart for the React harness, uses ANYPLOT_SIZE/TOKENS,
+          skipAnimation, v9 ChartsContainer API
     library_mastery:
       score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: 'Raised one: v9 ChartsContainer composition with band/linear axis
-          configs, ChartsGrid and ChartsXAxis/ChartsYAxis; legend is hand-built HTML
-          rather than ChartsLegend'
+        comment: Correct v9 composition (ChartsContainer, ChartsGrid, ChartsXAxis/YAxis,
+          axis valueFormatter), but the legend is hand-built HTML rather than ChartsLegend
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: true
-        comment: 'Raised one: custom SVG mark layer driven by useXScale/useYScale
-          hooks inside the composition API'
-  verdict: REJECTED
+        comment: Custom SVG mark layer driven by useXScale/useYScale hooks on a band
+          axis inside ChartsContainer — MUI X's composition API
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T10:41:19Z'
+  rendered_at: '2026-10-24T10:45:54Z'
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
-  - annotations
   - layer-composition
+  - annotations
   - html-export
   patterns:
+  - data-generation
   - iteration-over-groups
   dataprep:
   - groupby-aggregation
   styling:
-  - edge-highlighting
+  - grid-styling
+  - minimal-chrome
