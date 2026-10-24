@@ -1,20 +1,16 @@
 // anyplot.ai
 // polar-bar: Polar Bar Chart (Wind Rose)
-// Library: muix 9.2.1 | JavaScript 22.23.2
+// Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 92/100 | Created: 2026-09-05
 //# anyplot-orientation: square
+
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const size = window.ANYPLOT_SIZE;
-const TITLE = "polar-bar · javascript · muix · anyplot.ai";
 
 // Constants
-const DIRECTION_COL = "Direction";
-const SPEED_BIN_COL = "Wind Speed";
-const COUNT_COL = "Observations (obs)";
-
+const TITLE = "polar-bar · javascript · muix · anyplot.ai";
 const RING_COUNT = 4;
 const WEDGE_GAP_RAD = 0.035;
 const OUTER_PAD_PX = 64;
@@ -22,90 +18,109 @@ const LABEL_OFFSET_PX = 28;
 const HEADER_HEIGHT = 64;
 const FOOTER_HEIGHT = 56;
 
-// Data — monthly wind observations by compass direction and speed range
-const DATA = [
-  { [DIRECTION_COL]: "N", [SPEED_BIN_COL]: "Light (0–10 mph)", [COUNT_COL]: 18 },
-  { [DIRECTION_COL]: "NNE", [SPEED_BIN_COL]: "Light (0–10 mph)", [COUNT_COL]: 15 },
-  { [DIRECTION_COL]: "NE", [SPEED_BIN_COL]: "Light (0–10 mph)", [COUNT_COL]: 12 },
-  { [DIRECTION_COL]: "ENE", [SPEED_BIN_COL]: "Light (0–10 mph)", [COUNT_COL]: 10 },
-  { [DIRECTION_COL]: "E", [SPEED_BIN_COL]: "Light (0–10 mph)", [COUNT_COL]: 14 },
-  { [DIRECTION_COL]: "ESE", [SPEED_BIN_COL]: "Light (0–10 mph)", [COUNT_COL]: 20 },
-  { [DIRECTION_COL]: "SE", [SPEED_BIN_COL]: "Light (0–10 mph)", [COUNT_COL]: 25 },
-  { [DIRECTION_COL]: "SSE", [SPEED_BIN_COL]: "Light (0–10 mph)", [COUNT_COL]: 30 },
-  { [DIRECTION_COL]: "S", [SPEED_BIN_COL]: "Light (0–10 mph)", [COUNT_COL]: 35 },
-  { [DIRECTION_COL]: "SSW", [SPEED_BIN_COL]: "Light (0–10 mph)", [COUNT_COL]: 40 },
-  { [DIRECTION_COL]: "SW", [SPEED_BIN_COL]: "Light (0–10 mph)", [COUNT_COL]: 45 },
-  { [DIRECTION_COL]: "WSW", [SPEED_BIN_COL]: "Light (0–10 mph)", [COUNT_COL]: 42 },
-  { [DIRECTION_COL]: "W", [SPEED_BIN_COL]: "Light (0–10 mph)", [COUNT_COL]: 38 },
-  { [DIRECTION_COL]: "WNW", [SPEED_BIN_COL]: "Light (0–10 mph)", [COUNT_COL]: 30 },
-  { [DIRECTION_COL]: "NW", [SPEED_BIN_COL]: "Light (0–10 mph)", [COUNT_COL]: 24 },
-  { [DIRECTION_COL]: "NNW", [SPEED_BIN_COL]: "Light (0–10 mph)", [COUNT_COL]: 20 },
+// Columns: set these to your data's column names
+const DIRECTION = "Direction"; // role: theta
+const SPEED_BIN = "Wind Speed"; // role: group
+const COUNT = "Observations (obs)"; // role: r
 
-  { [DIRECTION_COL]: "N", [SPEED_BIN_COL]: "Moderate (10–20 mph)", [COUNT_COL]: 10 },
-  { [DIRECTION_COL]: "NNE", [SPEED_BIN_COL]: "Moderate (10–20 mph)", [COUNT_COL]: 8 },
-  { [DIRECTION_COL]: "NE", [SPEED_BIN_COL]: "Moderate (10–20 mph)", [COUNT_COL]: 6 },
-  { [DIRECTION_COL]: "ENE", [SPEED_BIN_COL]: "Moderate (10–20 mph)", [COUNT_COL]: 5 },
-  { [DIRECTION_COL]: "E", [SPEED_BIN_COL]: "Moderate (10–20 mph)", [COUNT_COL]: 8 },
-  { [DIRECTION_COL]: "ESE", [SPEED_BIN_COL]: "Moderate (10–20 mph)", [COUNT_COL]: 14 },
-  { [DIRECTION_COL]: "SE", [SPEED_BIN_COL]: "Moderate (10–20 mph)", [COUNT_COL]: 18 },
-  { [DIRECTION_COL]: "SSE", [SPEED_BIN_COL]: "Moderate (10–20 mph)", [COUNT_COL]: 24 },
-  { [DIRECTION_COL]: "S", [SPEED_BIN_COL]: "Moderate (10–20 mph)", [COUNT_COL]: 30 },
-  { [DIRECTION_COL]: "SSW", [SPEED_BIN_COL]: "Moderate (10–20 mph)", [COUNT_COL]: 38 },
-  { [DIRECTION_COL]: "SW", [SPEED_BIN_COL]: "Moderate (10–20 mph)", [COUNT_COL]: 46 },
-  { [DIRECTION_COL]: "WSW", [SPEED_BIN_COL]: "Moderate (10–20 mph)", [COUNT_COL]: 40 },
-  { [DIRECTION_COL]: "W", [SPEED_BIN_COL]: "Moderate (10–20 mph)", [COUNT_COL]: 32 },
-  { [DIRECTION_COL]: "WNW", [SPEED_BIN_COL]: "Moderate (10–20 mph)", [COUNT_COL]: 22 },
-  { [DIRECTION_COL]: "NW", [SPEED_BIN_COL]: "Moderate (10–20 mph)", [COUNT_COL]: 16 },
-  { [DIRECTION_COL]: "NNW", [SPEED_BIN_COL]: "Moderate (10–20 mph)", [COUNT_COL]: 12 },
+// Data: replace this block with your own records
+const data: Array<Record<string, string | number>> = [
+  { [DIRECTION]: "N", [SPEED_BIN]: "Light (0–10 mph)", [COUNT]: 18 },
+  { [DIRECTION]: "NNE", [SPEED_BIN]: "Light (0–10 mph)", [COUNT]: 15 },
+  { [DIRECTION]: "NE", [SPEED_BIN]: "Light (0–10 mph)", [COUNT]: 12 },
+  { [DIRECTION]: "ENE", [SPEED_BIN]: "Light (0–10 mph)", [COUNT]: 10 },
+  { [DIRECTION]: "E", [SPEED_BIN]: "Light (0–10 mph)", [COUNT]: 14 },
+  { [DIRECTION]: "ESE", [SPEED_BIN]: "Light (0–10 mph)", [COUNT]: 20 },
+  { [DIRECTION]: "SE", [SPEED_BIN]: "Light (0–10 mph)", [COUNT]: 25 },
+  { [DIRECTION]: "SSE", [SPEED_BIN]: "Light (0–10 mph)", [COUNT]: 30 },
+  { [DIRECTION]: "S", [SPEED_BIN]: "Light (0–10 mph)", [COUNT]: 35 },
+  { [DIRECTION]: "SSW", [SPEED_BIN]: "Light (0–10 mph)", [COUNT]: 40 },
+  { [DIRECTION]: "SW", [SPEED_BIN]: "Light (0–10 mph)", [COUNT]: 45 },
+  { [DIRECTION]: "WSW", [SPEED_BIN]: "Light (0–10 mph)", [COUNT]: 42 },
+  { [DIRECTION]: "W", [SPEED_BIN]: "Light (0–10 mph)", [COUNT]: 38 },
+  { [DIRECTION]: "WNW", [SPEED_BIN]: "Light (0–10 mph)", [COUNT]: 30 },
+  { [DIRECTION]: "NW", [SPEED_BIN]: "Light (0–10 mph)", [COUNT]: 24 },
+  { [DIRECTION]: "NNW", [SPEED_BIN]: "Light (0–10 mph)", [COUNT]: 20 },
 
-  { [DIRECTION_COL]: "N", [SPEED_BIN_COL]: "Strong (20+ mph)", [COUNT_COL]: 2 },
-  { [DIRECTION_COL]: "NNE", [SPEED_BIN_COL]: "Strong (20+ mph)", [COUNT_COL]: 1 },
-  { [DIRECTION_COL]: "NE", [SPEED_BIN_COL]: "Strong (20+ mph)", [COUNT_COL]: 1 },
-  { [DIRECTION_COL]: "ENE", [SPEED_BIN_COL]: "Strong (20+ mph)", [COUNT_COL]: 1 },
-  { [DIRECTION_COL]: "E", [SPEED_BIN_COL]: "Strong (20+ mph)", [COUNT_COL]: 2 },
-  { [DIRECTION_COL]: "ESE", [SPEED_BIN_COL]: "Strong (20+ mph)", [COUNT_COL]: 4 },
-  { [DIRECTION_COL]: "SE", [SPEED_BIN_COL]: "Strong (20+ mph)", [COUNT_COL]: 6 },
-  { [DIRECTION_COL]: "SSE", [SPEED_BIN_COL]: "Strong (20+ mph)", [COUNT_COL]: 10 },
-  { [DIRECTION_COL]: "S", [SPEED_BIN_COL]: "Strong (20+ mph)", [COUNT_COL]: 14 },
-  { [DIRECTION_COL]: "SSW", [SPEED_BIN_COL]: "Strong (20+ mph)", [COUNT_COL]: 20 },
-  { [DIRECTION_COL]: "SW", [SPEED_BIN_COL]: "Strong (20+ mph)", [COUNT_COL]: 28 },
-  { [DIRECTION_COL]: "WSW", [SPEED_BIN_COL]: "Strong (20+ mph)", [COUNT_COL]: 22 },
-  { [DIRECTION_COL]: "W", [SPEED_BIN_COL]: "Strong (20+ mph)", [COUNT_COL]: 15 },
-  { [DIRECTION_COL]: "WNW", [SPEED_BIN_COL]: "Strong (20+ mph)", [COUNT_COL]: 8 },
-  { [DIRECTION_COL]: "NW", [SPEED_BIN_COL]: "Strong (20+ mph)", [COUNT_COL]: 4 },
-  { [DIRECTION_COL]: "NNW", [SPEED_BIN_COL]: "Strong (20+ mph)", [COUNT_COL]: 3 },
+  { [DIRECTION]: "N", [SPEED_BIN]: "Moderate (10–20 mph)", [COUNT]: 10 },
+  { [DIRECTION]: "NNE", [SPEED_BIN]: "Moderate (10–20 mph)", [COUNT]: 8 },
+  { [DIRECTION]: "NE", [SPEED_BIN]: "Moderate (10–20 mph)", [COUNT]: 6 },
+  { [DIRECTION]: "ENE", [SPEED_BIN]: "Moderate (10–20 mph)", [COUNT]: 5 },
+  { [DIRECTION]: "E", [SPEED_BIN]: "Moderate (10–20 mph)", [COUNT]: 8 },
+  { [DIRECTION]: "ESE", [SPEED_BIN]: "Moderate (10–20 mph)", [COUNT]: 14 },
+  { [DIRECTION]: "SE", [SPEED_BIN]: "Moderate (10–20 mph)", [COUNT]: 18 },
+  { [DIRECTION]: "SSE", [SPEED_BIN]: "Moderate (10–20 mph)", [COUNT]: 24 },
+  { [DIRECTION]: "S", [SPEED_BIN]: "Moderate (10–20 mph)", [COUNT]: 30 },
+  { [DIRECTION]: "SSW", [SPEED_BIN]: "Moderate (10–20 mph)", [COUNT]: 38 },
+  { [DIRECTION]: "SW", [SPEED_BIN]: "Moderate (10–20 mph)", [COUNT]: 46 },
+  { [DIRECTION]: "WSW", [SPEED_BIN]: "Moderate (10–20 mph)", [COUNT]: 40 },
+  { [DIRECTION]: "W", [SPEED_BIN]: "Moderate (10–20 mph)", [COUNT]: 32 },
+  { [DIRECTION]: "WNW", [SPEED_BIN]: "Moderate (10–20 mph)", [COUNT]: 22 },
+  { [DIRECTION]: "NW", [SPEED_BIN]: "Moderate (10–20 mph)", [COUNT]: 16 },
+  { [DIRECTION]: "NNW", [SPEED_BIN]: "Moderate (10–20 mph)", [COUNT]: 12 },
+
+  { [DIRECTION]: "N", [SPEED_BIN]: "Strong (20+ mph)", [COUNT]: 2 },
+  { [DIRECTION]: "NNE", [SPEED_BIN]: "Strong (20+ mph)", [COUNT]: 1 },
+  { [DIRECTION]: "NE", [SPEED_BIN]: "Strong (20+ mph)", [COUNT]: 1 },
+  { [DIRECTION]: "ENE", [SPEED_BIN]: "Strong (20+ mph)", [COUNT]: 1 },
+  { [DIRECTION]: "E", [SPEED_BIN]: "Strong (20+ mph)", [COUNT]: 2 },
+  { [DIRECTION]: "ESE", [SPEED_BIN]: "Strong (20+ mph)", [COUNT]: 4 },
+  { [DIRECTION]: "SE", [SPEED_BIN]: "Strong (20+ mph)", [COUNT]: 6 },
+  { [DIRECTION]: "SSE", [SPEED_BIN]: "Strong (20+ mph)", [COUNT]: 10 },
+  { [DIRECTION]: "S", [SPEED_BIN]: "Strong (20+ mph)", [COUNT]: 14 },
+  { [DIRECTION]: "SSW", [SPEED_BIN]: "Strong (20+ mph)", [COUNT]: 20 },
+  { [DIRECTION]: "SW", [SPEED_BIN]: "Strong (20+ mph)", [COUNT]: 28 },
+  { [DIRECTION]: "WSW", [SPEED_BIN]: "Strong (20+ mph)", [COUNT]: 22 },
+  { [DIRECTION]: "W", [SPEED_BIN]: "Strong (20+ mph)", [COUNT]: 15 },
+  { [DIRECTION]: "WNW", [SPEED_BIN]: "Strong (20+ mph)", [COUNT]: 8 },
+  { [DIRECTION]: "NW", [SPEED_BIN]: "Strong (20+ mph)", [COUNT]: 4 },
+  { [DIRECTION]: "NNW", [SPEED_BIN]: "Strong (20+ mph)", [COUNT]: 3 },
 ];
 
-// Derive directions and speed bins in order of first appearance
-const directions = [];
-const speedBinLabels = [];
-for (const row of DATA) {
-  const dir = String(row[DIRECTION_COL]);
-  const bin = String(row[SPEED_BIN_COL]);
+// Plot: reads only data and the constants above
+const directions: string[] = [];
+const speedBinLabels: string[] = [];
+for (const row of data) {
+  const dir = String(row[DIRECTION]);
+  const bin = String(row[SPEED_BIN]);
   if (!directions.includes(dir)) directions.push(dir);
   if (!speedBinLabels.includes(bin)) speedBinLabels.push(bin);
 }
 
-const speedBins = speedBinLabels.map((label, idx) => ({
-  label,
-  color: t.palette[idx],
-}));
+const seq0Num = parseInt(t.seq[0].replace("#", ""), 16);
+const seq1Num = parseInt(t.seq[1].replace("#", ""), 16);
+const r0 = (seq0Num >> 16) & 255;
+const g0 = (seq0Num >> 8) & 255;
+const b0 = seq0Num & 255;
+const r1 = (seq1Num >> 16) & 255;
+const g1 = (seq1Num >> 8) & 255;
+const b1 = seq1Num & 255;
 
-const countUnitMatch = COUNT_COL.match(/\(([^)]+)\)/);
+const speedBins = speedBinLabels.map((label, idx) => {
+  const ratio = speedBinLabels.length > 1 ? idx / (speedBinLabels.length - 1) : 1;
+  const r = Math.round(r0 + (r1 - r0) * ratio);
+  const g = Math.round(g0 + (g1 - g0) * ratio);
+  const b = Math.round(b0 + (b1 - b0) * ratio);
+  return {
+    label,
+    color: `rgb(${r}, ${g}, ${b})`,
+  };
+});
+
+const countUnitMatch = /\(([^)]+)\)/.exec(COUNT);
 const countUnit = countUnitMatch ? countUnitMatch[1] : "";
 
 const dirCount = directions.length;
 const sectorHalfWidth = Math.PI / dirCount;
 
-// Group values by direction and compute radial domain
 const directionStacks = directions.map((dir, i) => {
   const angle = (-90 + (i * 360) / dirCount) * (Math.PI / 180);
   let cumulative = 0;
   const segments = speedBins.map((bin) => {
-    const match = DATA.find(
-      (r) => String(r[DIRECTION_COL]) === dir && String(r[SPEED_BIN_COL]) === bin.label,
+    const match = data.find(
+      (r) => String(r[DIRECTION]) === dir && String(r[SPEED_BIN]) === bin.label,
     );
-    const val = match ? Number(match[COUNT_COL]) : 0;
+    const val = match ? Number(match[COUNT]) : 0;
     const startVal = cumulative;
     cumulative += val;
     return {
@@ -118,12 +133,16 @@ const directionStacks = directions.map((dir, i) => {
   return { dir, index: i, angle, total: cumulative, segments };
 });
 
-const rawMaxTotal = Math.max(...directionStacks.map((d) => d.total), 1);
-const ringStep = Math.ceil(rawMaxTotal / RING_COUNT / 10) * 10;
+const rawMaxTotal = Math.max(...directionStacks.map((d) => d.total));
+const rawStep = rawMaxTotal / RING_COUNT;
+const stepMag = 10 ** Math.floor(Math.log10(rawStep));
+const stepNorm = rawStep / stepMag;
+const ringStep = (stepNorm <= 1 ? 1 : stepNorm <= 2 ? 2 : stepNorm <= 5 ? 5 : 10) * stepMag;
+const ringDecimals = Math.max(0, -Math.floor(Math.log10(ringStep) + 1e-9));
 const maxValue = ringStep * RING_COUNT;
-const rings = [];
+const rings: number[] = [];
 for (let k = 1; k <= RING_COUNT; k += 1) {
-  rings.push(k * ringStep);
+  rings.push(Number((k * ringStep).toFixed(ringDecimals)));
 }
 
 function WindRoseOverlay() {
@@ -137,7 +156,6 @@ function WindRoseOverlay() {
 
   return (
     <g>
-      {/* Concentric frequency rings */}
       {rings.map((level) => (
         <circle
           key={`ring-${level}`}
@@ -151,7 +169,6 @@ function WindRoseOverlay() {
         />
       ))}
 
-      {/* Spokes and rim labels for all compass directions */}
       {directionStacks.map((item) => {
         const isPrimary = item.index % 2 === 0;
         const ox = cx + radius * Math.cos(item.angle);
@@ -188,7 +205,6 @@ function WindRoseOverlay() {
         );
       })}
 
-      {/* Stacked wedges */}
       {directionStacks.map((item) => {
         const a0 = item.angle - sectorHalfWidth + WEDGE_GAP_RAD;
         const a1 = item.angle + sectorHalfWidth - WEDGE_GAP_RAD;
@@ -198,25 +214,25 @@ function WindRoseOverlay() {
         const sin1 = Math.sin(a1);
 
         return item.segments.map((seg) => {
-          const r0 = seg.startVal * pxPerUnit;
-          const r1 = seg.endVal * pxPerUnit;
-          if (r1 <= r0) return null;
-          const ox0 = cx + r1 * cos0;
-          const oy0 = cy + r1 * sin0;
-          const ox1 = cx + r1 * cos1;
-          const oy1 = cy + r1 * sin1;
+          const r0Px = seg.startVal * pxPerUnit;
+          const r1Px = seg.endVal * pxPerUnit;
+          if (r1Px <= r0Px) return null;
+          const ox0 = cx + r1Px * cos0;
+          const oy0 = cy + r1Px * sin0;
+          const ox1 = cx + r1Px * cos1;
+          const oy1 = cy + r1Px * sin1;
           let pathD = "";
-          if (r0 < 0.5) {
-            pathD = `M ${cx},${cy} L ${ox0},${oy0} A ${r1} ${r1} 0 0 1 ${ox1},${oy1} Z`;
+          if (r0Px < 0.5) {
+            pathD = `M ${cx},${cy} L ${ox0},${oy0} A ${r1Px} ${r1Px} 0 0 1 ${ox1},${oy1} Z`;
           } else {
-            const ix0 = cx + r0 * cos0;
-            const iy0 = cy + r0 * sin0;
-            const ix1 = cx + r0 * cos1;
-            const iy1 = cy + r0 * sin1;
+            const ix0 = cx + r0Px * cos0;
+            const iy0 = cy + r0Px * sin0;
+            const ix1 = cx + r0Px * cos1;
+            const iy1 = cy + r0Px * sin1;
             pathD =
               `M ${ix0},${iy0} L ${ox0},${oy0} ` +
-              `A ${r1} ${r1} 0 0 1 ${ox1},${oy1} L ${ix1},${iy1} ` +
-              `A ${r0} ${r0} 0 0 0 ${ix0},${iy0} Z`;
+              `A ${r1Px} ${r1Px} 0 0 1 ${ox1},${oy1} L ${ix1},${iy1} ` +
+              `A ${r0Px} ${r0Px} 0 0 0 ${ix0},${iy0} Z`;
           }
           return (
             <path
@@ -230,10 +246,10 @@ function WindRoseOverlay() {
         });
       })}
 
-      {/* Frequency tick labels along the top spoke with pageBg pill badges */}
       {rings.map((level) => {
         const ty = cy - (level / maxValue) * radius;
-        const tickText = countUnit ? `${level} ${countUnit}` : `${level}`;
+        const levelStr = level.toFixed(ringDecimals);
+        const tickText = countUnit ? `${levelStr} ${countUnit}` : levelStr;
         const pillWidth = tickText.length * 8.5 + 14;
         return (
           <g key={`tick-${level}`}>
@@ -256,6 +272,7 @@ function WindRoseOverlay() {
 }
 
 export default function Chart() {
+  const size = window.ANYPLOT_SIZE;
   const chartHeight = size.height - HEADER_HEIGHT - FOOTER_HEIGHT;
 
   return (
