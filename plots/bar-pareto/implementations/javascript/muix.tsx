@@ -2,9 +2,7 @@
 // bar-pareto: Pareto Chart with Cumulative Line
 // Library: muix 7.29.1 | JavaScript 22.22.3
 // Quality: 88/100 | Created: 2026-06-20
-//# anyplot-orientation: landscape
-
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { BarPlot } from "@mui/x-charts/BarChart";
 import { LinePlot, MarkPlot } from "@mui/x-charts/LineChart";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
@@ -16,54 +14,134 @@ import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
 
-// Manufacturing QC: defect frequency analysis — sorted descending
-const categories = [
-  "Scratches", "Dents", "Cracks", "Warping",
-  "Discolor.", "Miss. Part", "Wrong Size", "Surf. Flaw",
-];
-const counts = [412, 298, 187, 143, 98, 76, 54, 32];
-const total = counts.reduce((a, b) => a + b, 0); // 1300
+// Constants
+const PARETO_THRESHOLD = 80;
+const PERCENT_MAX = 100;
+const COUNT_PAD_SHARE = 0.18;
 
-// Cumulative percentages (0–100 range): 31.7, 54.6, 69.0, 80.0, 87.5, 93.4, 97.5, 100.0
+// Columns: set these to your data's column names
+const CATEGORY = "Defect type"; // role: category
+const COUNT = "Defect count"; // role: count
+
+// Data: replace this block with your own records, one object per row
+const data = [
+  { [CATEGORY]: "Scratches", [COUNT]: 412 },
+  { [CATEGORY]: "Dents", [COUNT]: 298 },
+  { [CATEGORY]: "Cracks", [COUNT]: 187 },
+  { [CATEGORY]: "Warping", [COUNT]: 143 },
+  { [CATEGORY]: "Discoloration", [COUNT]: 98 },
+  { [CATEGORY]: "Missing Part", [COUNT]: 76 },
+  { [CATEGORY]: "Wrong Size", [COUNT]: 54 },
+  { [CATEGORY]: "Surface Flaw", [COUNT]: 32 },
+];
+
+// Plot: reads only data and the constants above
+const sorted = [...data].sort((a, b) => b[COUNT] - a[COUNT]);
+const categories = sorted.map((d) => d[CATEGORY]);
+const counts = sorted.map((d) => d[COUNT]);
+const total = counts.reduce((a, b) => a + b, 0);
+
 let running = 0;
 const cumPercent = counts.map((c) => {
   running += c;
-  return parseFloat(((running / total) * 100).toFixed(1));
+  return Number(((running / total) * PERCENT_MAX).toFixed(1));
 });
 
-const COUNT_MAX = 500; // multiple of 500 ensures left ticks (100,200,300,400,500) align with right ticks (20,40,60,80,100%) at exact 20% intervals
-
-const MARGIN = { top: 24, right: 90, bottom: 80, left: 80 };
+const countMax = Math.ceil(counts[0] * (1 + COUNT_PAD_SHARE));
+const vitalCount = cumPercent.findIndex((p) => p >= PARETO_THRESHOLD) + 1;
+const cumLabel = "Cumulative share (%)";
+const TITLE = "bar-pareto · javascript · muix · anyplot.ai";
+const SUBTITLE = `${COUNT}: ${total.toLocaleString("en-US")} · ${CATEGORY}: ${categories.length} · Top ${vitalCount} reach ${cumPercent[vitalCount - 1]}%`;
 
 export default function Chart() {
-  const W = window.ANYPLOT_SIZE.width;   // 1600 CSS px (landscape)
-  const H = window.ANYPLOT_SIZE.height;  // 900 CSS px
-  const TITLE_H = 72;
-  const LEGEND_H = 44;
-  const chartH = H - TITLE_H - LEGEND_H; // 784
+  const { width, height } = window.ANYPLOT_SIZE;
+  const HEADER_H = 104;
+  const chartH = height - HEADER_H;
 
   return (
     <Box
       sx={{
-        width: W,
-        height: H,
+        width,
+        height,
         bgcolor: t.pageBg,
         display: "flex",
         flexDirection: "column",
-        fontFamily: "'Roboto', 'Helvetica Neue', Arial, sans-serif",
+        fontFamily:
+          '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
         boxSizing: "border-box",
       }}
     >
-      {/* Title */}
-      <Box sx={{ height: TITLE_H, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <Typography sx={{ color: t.ink, fontSize: 22, fontWeight: 600 }}>
-          bar-pareto · javascript · muix · anyplot.ai
+      <Box
+        sx={{
+          height: HEADER_H,
+          pt: "14px",
+          px: "48px",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          boxSizing: "border-box",
+        }}
+      >
+        <Typography
+          sx={{ color: t.ink, fontSize: 22, fontWeight: 600, lineHeight: 1.25 }}
+        >
+          {TITLE}
         </Typography>
+        <Typography sx={{ color: t.inkSoft, fontSize: 15, mt: "4px" }}>
+          {SUBTITLE}
+        </Typography>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "28px",
+            mt: "6px",
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <Box
+              sx={{
+                width: 18,
+                height: 12,
+                bgcolor: t.palette[0],
+                borderRadius: "2px",
+              }}
+            />
+            <Typography sx={{ color: t.inkSoft, fontSize: 14 }}>
+              {COUNT}
+            </Typography>
+          </Box>
+          <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <Box
+              sx={{
+                width: 22,
+                height: 3,
+                bgcolor: t.palette[1],
+                borderRadius: "2px",
+              }}
+            />
+            <Typography sx={{ color: t.inkSoft, fontSize: 14 }}>
+              {cumLabel}
+            </Typography>
+          </Box>
+          <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <Box
+              sx={{
+                width: 22,
+                height: 0,
+                borderTop: `2.5px dashed ${t.amber}`,
+              }}
+            />
+            <Typography sx={{ color: t.inkSoft, fontSize: 14 }}>
+              {`${PARETO_THRESHOLD}% threshold`}
+            </Typography>
+          </Box>
+        </Box>
       </Box>
 
-      {/* Chart */}
-      <ChartContainer
-        width={W}
+      <ChartsContainer
+        width={width}
         height={chartH}
         series={[
           {
@@ -71,7 +149,7 @@ export default function Chart() {
             id: "defect-counts",
             yAxisId: "counts",
             data: counts,
-            label: "Defect Count",
+            label: COUNT,
             color: t.palette[0],
           },
           {
@@ -79,9 +157,10 @@ export default function Chart() {
             id: "cum-line",
             yAxisId: "percent",
             data: cumPercent,
-            label: "Cumulative %",
+            label: cumLabel,
             color: t.palette[1],
             showMark: true,
+            shape: "circle",
             curve: "linear",
           },
         ]}
@@ -90,69 +169,65 @@ export default function Chart() {
             id: "x",
             scaleType: "band",
             data: categories,
-            categoryGapRatio: 0.38,
+            categoryGapRatio: 0.35,
+            height: 68,
+            label: CATEGORY,
+            labelStyle: { fontSize: 16, fill: t.ink, fontWeight: 500 },
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
           },
         ]}
         yAxis={[
           {
             id: "counts",
+            position: "left",
             min: 0,
-            max: COUNT_MAX,
-            tickMinStep: 100,
-            tickLabelStyle: { fontSize: 13, fill: t.inkSoft },
+            max: countMax,
+            width: 84,
+            label: COUNT,
+            labelStyle: { fontSize: 16, fill: t.ink, fontWeight: 500 },
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
           },
           {
-            // Right axis: 0–100% domain. Aligned with left axis (100/500 = 20/100).
             id: "percent",
             position: "right",
             min: 0,
-            max: 100,
-            tickMinStep: 20,
-            valueFormatter: (v) => `${v}%`,
-            tickLabelStyle: { fontSize: 13, fill: t.inkSoft },
+            max: PERCENT_MAX,
+            width: 88,
+            valueFormatter: (v: number) => `${v}%`,
+            label: cumLabel,
+            labelStyle: { fontSize: 16, fill: t.ink, fontWeight: 500 },
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
           },
         ]}
-        margin={MARGIN}
+        margin={{ top: 20, right: 36, bottom: 24, left: 36 }}
         skipAnimation
         sx={{
-          "& .MuiChartsAxis-line": { stroke: t.inkSoft, strokeOpacity: 0.4 },
-          "& .MuiChartsGrid-line": { stroke: t.grid },
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+          "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
+          "& .MuiLineChart-line": { strokeWidth: 3 },
         }}
       >
         <ChartsGrid horizontal />
-        <BarPlot />
-        <LinePlot />
-        <MarkPlot />
-        {/* 80% threshold on the percentage axis — y=80 == 80% cumulative */}
+        <BarPlot borderRadius={3} skipAnimation />
+        <LinePlot skipAnimation />
+        <MarkPlot skipAnimation />
         <ChartsReferenceLine
-          y={80}
+          y={PARETO_THRESHOLD}
           axisId="percent"
-          label="80%"
+          label={`${PARETO_THRESHOLD}%`}
           labelAlign="end"
-          lineStyle={{ stroke: t.amber, strokeDasharray: "8 5", strokeWidth: 2.5 }}
-          labelStyle={{ fill: t.amber, fontSize: 14, fontWeight: 700 }}
+          lineStyle={{
+            stroke: t.amber,
+            strokeDasharray: "8 5",
+            strokeWidth: 2.5,
+          }}
+          labelStyle={{ fill: t.ink, fontSize: 14, fontWeight: 700 }}
         />
-        <ChartsXAxis axisId="x" position="bottom" label="Defect Type" labelStyle={{ fontSize: 14, fill: t.ink }} />
-        <ChartsYAxis axisId="counts" position="left" label="Defect Count" labelStyle={{ fontSize: 14, fill: t.ink }} />
-        <ChartsYAxis axisId="percent" position="right" label="Cumulative %" labelStyle={{ fontSize: 14, fill: t.ink }} disableLine disableTicks />
-      </ChartContainer>
-
-      {/* Legend */}
-      <Box sx={{ height: LEGEND_H, display: "flex", alignItems: "center", justifyContent: "center", gap: "36px" }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <Box sx={{ width: 22, height: 14, bgcolor: t.palette[0], borderRadius: "2px", flexShrink: 0 }} />
-          <Typography sx={{ color: t.inkSoft, fontSize: 14 }}>Defect Count</Typography>
-        </Box>
-        <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <Box sx={{ width: 24, height: 3, bgcolor: t.palette[1], borderRadius: "2px", flexShrink: 0 }} />
-          <Typography sx={{ color: t.inkSoft, fontSize: 14 }}>Cumulative %</Typography>
-        </Box>
-        <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <Box sx={{ width: 24, height: 0, borderTop: `2.5px dashed ${t.amber}`, flexShrink: 0 }} />
-          <Typography sx={{ color: t.inkSoft, fontSize: 14 }}>80% Threshold</Typography>
-        </Box>
-      </Box>
+        <ChartsXAxis axisId="x" />
+        <ChartsYAxis axisId="counts" />
+        <ChartsYAxis axisId="percent" />
+      </ChartsContainer>
     </Box>
   );
 }
