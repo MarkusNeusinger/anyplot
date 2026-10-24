@@ -11,17 +11,26 @@ import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
-import { ChartsTooltip } from "@mui/x-charts/ChartsTooltip";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
-// Data
-const VARIABLE = "Predictor Variable";
-const COEFFICIENT = "Coefficient Estimate (Standardized β)";
-const CI_LOWER = "95% CI Lower";
-const CI_UPPER = "95% CI Upper";
-const SUBTITLE = "Housing Price Multiple Linear Regression · Standardized β with 95% confidence intervals";
+const t = window.ANYPLOT_TOKENS;
 
-const RAW_DATA = [
+// Constants
+const TITLE = "coefficient-confidence · javascript · muix · anyplot.ai";
+const FONT = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+const SIG_COLOR = t.palette[0];
+const NON_SIG_COLOR = t.inkSoft;
+const X_PAD_SHARE = 0.14;
+const WHISKER_CAP = 9;
+
+// Columns: set these to your data's column names
+const VARIABLE = "Predictor variable"; // role: variable
+const COEFFICIENT = "Coefficient estimate (standardized β)"; // role: coefficient
+const CI_LOWER = "95% CI lower"; // role: ci_lower
+const CI_UPPER = "95% CI upper"; // role: ci_upper
+
+// Data: replace this block with your own records
+const data = [
   { [VARIABLE]: "Proximity to Highway", [COEFFICIENT]: -0.04, [CI_LOWER]: -0.19, [CI_UPPER]: 0.11 },
   { [VARIABLE]: "Number of Bedrooms", [COEFFICIENT]: -0.05, [CI_LOWER]: -0.21, [CI_UPPER]: 0.11 },
   { [VARIABLE]: "Garage Spaces", [COEFFICIENT]: 0.08, [CI_LOWER]: -0.09, [CI_UPPER]: 0.25 },
@@ -35,34 +44,28 @@ const RAW_DATA = [
   { [VARIABLE]: "Square Footage", [COEFFICIENT]: 0.52, [CI_LOWER]: 0.41, [CI_UPPER]: 0.63 },
 ];
 
-// Constants
-const t = window.ANYPLOT_TOKENS;
-const FONT = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
-const SIG_COLOR = t.palette[0];
-const NON_SIG_COLOR = t.inkSoft;
-const X_PAD_SHARE = 0.14;
-const WHISKER_CAP = 9;
-
-// Preparation
-const COEFFICIENTS = [...RAW_DATA]
-  .sort((a, b) => Math.abs(a[COEFFICIENT]) - Math.abs(b[COEFFICIENT]))
+// Plot: reads only data and the constants above
+const COEFFICIENTS = [...data]
+  .sort((a, b) => Math.abs(Number(a[COEFFICIENT])) - Math.abs(Number(b[COEFFICIENT])))
   .map((d, i) => ({
     i,
-    variable: d[VARIABLE],
-    coefficient: d[COEFFICIENT],
-    ciLower: d[CI_LOWER],
-    ciUpper: d[CI_UPPER],
-    significant: d[CI_LOWER] > 0 || d[CI_UPPER] < 0,
+    variable: String(d[VARIABLE]),
+    coefficient: Number(d[COEFFICIENT]),
+    ciLower: Number(d[CI_LOWER]),
+    ciUpper: Number(d[CI_UPPER]),
+    significant: Number(d[CI_LOWER]) > 0 || Number(d[CI_UPPER]) < 0,
   }));
 
 const VARIABLES = COEFFICIENTS.map((d) => d.variable);
 const N = COEFFICIENTS.length;
+const N_SIG = COEFFICIENTS.filter((d) => d.significant).length;
+const SUBTITLE = `${N} predictors · ${N_SIG} significant (${CI_LOWER} to ${CI_UPPER})`;
 
 const rawMin = Math.min(0, ...COEFFICIENTS.map((d) => d.ciLower));
 const rawMax = Math.max(0, ...COEFFICIENTS.map((d) => d.ciUpper));
-const rawSpan = rawMax - rawMin || 1;
-const xMin = Number((rawMin - rawSpan * X_PAD_SHARE).toFixed(2));
-const xMax = Number((rawMax + rawSpan * X_PAD_SHARE).toFixed(2));
+const rawSpan = rawMax - rawMin;
+const xMin = rawMin - rawSpan * X_PAD_SHARE;
+const xMax = rawMax + rawSpan * X_PAD_SHARE;
 
 const significantPoints = COEFFICIENTS.filter((d) => d.significant).map((d) => ({
   id: d.i,
@@ -76,21 +79,20 @@ const notSignificantPoints = COEFFICIENTS.filter((d) => !d.significant).map((d) 
 }));
 
 const LEGEND_ITEMS = [
-  { label: "Significant (95% CI excludes 0)", color: SIG_COLOR },
-  { label: "Not significant (95% CI includes 0)", color: NON_SIG_COLOR },
+  { label: "Significant (CI excludes 0)", color: SIG_COLOR },
+  { label: "Not significant (CI includes 0)", color: NON_SIG_COLOR },
 ];
 
 function ConfidenceWhiskers() {
-  const xScale = useXScale("x");
-  const yScale = useYScale("y");
-  if (!xScale || !yScale) return null;
+  const xScale = useXScale("x") as any;
+  const yScale = useYScale("y") as any;
 
   return (
     <g>
       {COEFFICIENTS.map((d) => {
-        const x1 = xScale(d.ciLower) ?? 0;
-        const x2 = xScale(d.ciUpper) ?? 0;
-        const y = yScale(d.i) ?? 0;
+        const x1 = xScale(d.ciLower);
+        const x2 = xScale(d.ciUpper);
+        const y = yScale(d.i);
         const color = d.significant ? SIG_COLOR : NON_SIG_COLOR;
         return (
           <g key={d.variable}>
@@ -160,7 +162,7 @@ export default function Chart() {
           lineHeight: 1.2,
         }}
       >
-        coefficient-confidence · javascript · muix · anyplot.ai
+        {TITLE}
       </Typography>
       <Typography
         sx={{
@@ -218,10 +220,10 @@ export default function Chart() {
             min: -0.5,
             max: N - 0.5,
             width: 230,
-            tickMinStep: 1,
+            tickInterval: COEFFICIENTS.map((d) => d.i),
             disableLine: true,
             disableTicks: true,
-            valueFormatter: (v) => VARIABLES[Math.round(v)] ?? "",
+            valueFormatter: (v: number) => VARIABLES[Math.round(v)] ?? "",
             tickLabelStyle: { fontSize: 15, fill: t.inkSoft, fontFamily: FONT },
           },
         ]}
@@ -236,7 +238,7 @@ export default function Chart() {
         <ChartsReferenceLine
           x={0}
           axisId="x"
-          label="No effect (β = 0)"
+          label="No effect (0)"
           labelAlign="start"
           lineStyle={{ stroke: t.inkSoft, strokeDasharray: "6 4", strokeWidth: 1.5 }}
           labelStyle={{ fontSize: 14, fill: t.inkSoft, fontStyle: "italic", fontFamily: FONT }}
@@ -245,7 +247,6 @@ export default function Chart() {
         <ScatterPlot />
         <ChartsXAxis axisId="x" />
         <ChartsYAxis axisId="y" />
-        <ChartsTooltip trigger="item" />
       </ChartsContainer>
 
       <Box
