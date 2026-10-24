@@ -2,10 +2,15 @@
 // heatmap-chromagram: Music Chromagram (Pitch Class Distribution over Time)
 // Library: muix 9.16.0 | JavaScript 22.23.3
 // Quality: 86/100 | Updated: 2026-10-24
-import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import { ChartsDataProvider } from "@mui/x-charts/ChartsDataProvider";
+import { ContinuousColorLegend } from "@mui/x-charts/ChartsLegend";
+import { ChartsSurface } from "@mui/x-charts/ChartsSurface";
+import { ChartsWrapper } from "@mui/x-charts/ChartsWrapper";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
-import { useDrawingArea, useXScale } from "@mui/x-charts/hooks";
+import { useDrawingArea, useXScale, useZColorScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -16,6 +21,8 @@ const FONT = "Inter, system-ui, sans-serif";
 const PITCH_CLASSES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 const ENERGY_MIN = 0;
 const ENERGY_MAX = 1;
+const LEGEND_W = 110;
+const LEGEND_H = 520;
 
 // Columns: set these to your data's column names
 const TIME = "Time (s)"; // role: time
@@ -105,51 +112,28 @@ for (const tVal of uniqueTimes) {
 }
 const chordDividers = chordSpans.slice(1).map((c) => c.startSec);
 
-const seq0Int = parseInt(t.seq[0].slice(1), 16);
-const seq1Int = parseInt(t.seq[1].slice(1), 16);
-const r1 = (seq0Int >> 16) & 255;
-const g1 = (seq0Int >> 8) & 255;
-const b1 = seq0Int & 255;
-const r2 = (seq1Int >> 16) & 255;
-const g2 = (seq1Int >> 8) & 255;
-const b2 = seq1Int & 255;
-
 const cells = data.map((row, idx) => {
   const timeSec = Number(row[TIME]);
-  const pitch = String(row[PITCH_CLASS]);
-  const pcIdx = pitchIndexMap.get(pitch)!;
-  const val = Number(row[ENERGY]);
-  const norm = (val - ENERGY_MIN) / (ENERGY_MAX - ENERGY_MIN);
-  const r = Math.round(r1 + (r2 - r1) * norm);
-  const g = Math.round(g1 + (g2 - g1) * norm);
-  const b = Math.round(b1 + (b2 - b1) * norm);
+  const pcIdx = pitchIndexMap.get(String(row[PITCH_CLASS]))!;
   return {
     key: `${pcIdx}-${idx}`,
     pcIdx,
     timeSec,
     nextTimeSec: timeSec + frameStepSec,
-    fill: `rgb(${r},${g},${b})`,
+    energy: Number(row[ENERGY]),
   };
 });
 
 function ChromagramLayer() {
-  const { left, top, width: gW, height: gH } = useDrawingArea();
+  const { top, height: gH } = useDrawingArea();
   const xScale = useXScale() as (v: number) => number;
+  const colorScale = useZColorScale() as (v: number) => string;
 
   const nRows = pitchOrder.length;
   const step = gH / nRows;
-  const cbX = left + gW + 24;
-  const cbW = 20;
 
   return (
     <g>
-      <defs>
-        <linearGradient id="cbGrad" x1="0" y1="1" x2="0" y2="0">
-          <stop offset="0%" stopColor={t.seq[0]} />
-          <stop offset="100%" stopColor={t.seq[1]} />
-        </linearGradient>
-      </defs>
-
       {cells.map((cell) => {
         const x0 = xScale(cell.timeSec);
         const x1 = xScale(cell.nextTimeSec);
@@ -160,7 +144,7 @@ function ChromagramLayer() {
             y={top + (nRows - 1 - cell.pcIdx) * step}
             width={x1 - x0 + 0.5}
             height={step + 0.5}
-            fill={cell.fill}
+            fill={colorScale(cell.energy)}
           />
         );
       })}
@@ -200,40 +184,6 @@ function ChromagramLayer() {
           </text>
         );
       })}
-
-      {/* Sequential energy colorbar */}
-      <rect x={cbX} y={top} width={cbW} height={gH} fill="url(#cbGrad)" rx={2} />
-      <text
-        x={cbX + cbW / 2}
-        y={top - 8}
-        textAnchor="middle"
-        fontSize={14}
-        fill={t.inkSoft}
-        fontFamily={FONT}
-      >
-        {ENERGY_MAX.toFixed(1)}
-      </text>
-      <text
-        x={cbX + cbW / 2}
-        y={top + gH + 18}
-        textAnchor="middle"
-        fontSize={14}
-        fill={t.inkSoft}
-        fontFamily={FONT}
-      >
-        {ENERGY_MIN.toFixed(1)}
-      </text>
-      <text
-        x={cbX + cbW + 20}
-        y={top + gH / 2}
-        textAnchor="middle"
-        fontSize={15}
-        fill={t.inkSoft}
-        fontFamily={FONT}
-        transform={`rotate(90, ${cbX + cbW + 20}, ${top + gH / 2})`}
-      >
-        {ENERGY}
-      </text>
     </g>
   );
 }
@@ -243,11 +193,21 @@ export default function Chart() {
   const subtitle = `${ENERGY} across ${pitchOrder.length} ${PITCH_CLASS}es · ${chordProgressionText} (${uniqueTimes.length} frames)`;
 
   return (
-    <ChartsContainer
-      width={width}
+    <ChartsDataProvider
+      width={width - LEGEND_W}
       height={height}
       series={[]}
       skipAnimation
+      zAxis={[
+        {
+          colorMap: {
+            type: "continuous",
+            min: ENERGY_MIN,
+            max: ENERGY_MAX,
+            color: [t.seq[0], t.seq[1]],
+          },
+        },
+      ]}
       xAxis={[
         {
           scaleType: "linear",
@@ -270,9 +230,38 @@ export default function Chart() {
           labelStyle: { fontSize: 15, fill: t.ink, fontFamily: FONT },
         },
       ]}
-      margin={{ left: 20, right: 96, top: 112, bottom: 24 }}
+      margin={{ left: 20, right: 24, top: 112, bottom: 24 }}
     >
-      <text
+      <ChartsWrapper
+        legendPosition={{ vertical: "middle", horizontal: "end" }}
+        legendDirection="vertical"
+        sx={{ width, height }}
+      >
+        <Box
+          sx={{
+            gridArea: "legend",
+            width: LEGEND_W,
+            height: LEGEND_H,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            fontFamily: FONT,
+          }}
+        >
+          <Typography sx={{ color: t.ink, fontSize: 15, fontFamily: FONT, mb: "8px" }}>
+            {ENERGY}
+          </Typography>
+          <ContinuousColorLegend
+            direction="vertical"
+            thickness={20}
+            labelPosition="end"
+            minLabel={({ value }) => Number(value).toFixed(1)}
+            maxLabel={({ value }) => Number(value).toFixed(1)}
+            sx={{ flex: 1, color: t.inkSoft, fontSize: 14, fontFamily: FONT }}
+          />
+        </Box>
+        <ChartsSurface>
+          <text
         x={width / 2}
         y={38}
         textAnchor="middle"
@@ -293,9 +282,11 @@ export default function Chart() {
       >
         {subtitle}
       </text>
-      <ChromagramLayer />
-      <ChartsXAxis />
-      <ChartsYAxis />
-    </ChartsContainer>
+          <ChromagramLayer />
+          <ChartsXAxis />
+          <ChartsYAxis />
+        </ChartsSurface>
+      </ChartsWrapper>
+    </ChartsDataProvider>
   );
 }
