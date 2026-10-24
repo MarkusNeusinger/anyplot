@@ -1,198 +1,413 @@
 // anyplot.ai
 // line-3d-trajectory: 3D Line Plot for Trajectory Visualization
-// Library: muix 7.29.1 | JavaScript 22.23.2
+// Library: muix 9.0.0 | JavaScript 22.23.2
 // Quality: 88/100 | Created: 2026-09-10
-//# anyplot-orientation: landscape
-// anyplot.ai
-// line-3d-trajectory: 3D Line Plot for Trajectory Visualization
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-09-10
 
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data: Lorenz attractor, two trajectories from nearly identical initial
-// conditions — the classic demonstration of chaotic sensitivity to initial
-// conditions ("butterfly effect"), integrated with RK4. ---------------------
+// Constants
+const TRAJECTORY_COL = "Trajectory";
+const TIME_COL = "Simulation Time (t)";
+const X_COL = "Convection Rate (X)";
+const Y_COL = "Horizontal Temp Var (Y)";
+const Z_COL = "Vertical Temp Var (Z)";
+
 const SIGMA = 10;
 const RHO = 28;
 const BETA = 8 / 3;
 const DT = 0.01;
-const STEPS = 4000; // 40 time units — long enough for the two trajectories to
-const TRANSIENT = 400; // switch attractor wings at different moments
-const SUBSAMPLE = 2; // effective 0.02 step keeps the tight loops smooth
+const STEPS = 4000;
+const TRANSIENT = 400;
+const SUBSAMPLE = 2;
+const ELEV_RAD = (20 * Math.PI) / 180;
+const AZIM_RAD = (32 * Math.PI) / 180;
+const COS_AZ = Math.cos(AZIM_RAD);
+const SIN_AZ = Math.sin(AZIM_RAD);
+const COS_EL = Math.cos(ELEV_RAD);
+const SIN_EL = Math.sin(ELEV_RAD);
+const PAD_X_SHARE = 0.12;
+const PAD_Y_SHARE = 0.14;
 
-function lorenzDerivative(state: number[]) {
-  const [x, y, z] = state;
-  return [SIGMA * (y - x), x * (RHO - z) - y, x * y - BETA * z];
-}
+// Data: Lorenz attractor integrated via RK4 from two perturbed initial states
+const INITIAL_STATES: Array<{ label: string; init: [number, number, number] }> = [
+  { label: "Trajectory A (x₀ = 0.1000)", init: [0.1, 0, 0] },
+  { label: "Trajectory B (x₀ = 0.1001)", init: [0.1001, 0, 0] },
+];
 
-function rk4Step(state: number[], dt: number) {
-  const k1 = lorenzDerivative(state);
-  const k2 = lorenzDerivative(state.map((v, i) => v + (dt / 2) * k1[i]));
-  const k3 = lorenzDerivative(state.map((v, i) => v + (dt / 2) * k2[i]));
-  const k4 = lorenzDerivative(state.map((v, i) => v + dt * k3[i]));
-  return state.map(
-    (v, i) => v + (dt / 6) * (k1[i] + 2 * k2[i] + 2 * k3[i] + k4[i]),
-  );
-}
+const DATA: Array<{
+  [TRAJECTORY_COL]: string;
+  [TIME_COL]: number;
+  [X_COL]: number;
+  [Y_COL]: number;
+  [Z_COL]: number;
+}> = [];
 
-function simulate(initial: number[]) {
-  let state = initial;
-  const points: number[][] = [];
-  for (let i = 0; i < STEPS; i++) {
-    state = rk4Step(state, DT);
-    if (i >= TRANSIENT && (i - TRANSIENT) % SUBSAMPLE === 0)
-      points.push(state.slice());
+for (let s = 0; s < INITIAL_STATES.length; s += 1) {
+  const { label, init } = INITIAL_STATES[s];
+  let x = init[0];
+  let y = init[1];
+  let z = init[2];
+
+  for (let i = 0; i < STEPS; i += 1) {
+    const k1x = SIGMA * (y - x);
+    const k1y = x * (RHO - z) - y;
+    const k1z = x * y - BETA * z;
+
+    const x2 = x + 0.5 * DT * k1x;
+    const y2 = y + 0.5 * DT * k1y;
+    const z2 = z + 0.5 * DT * k1z;
+    const k2x = SIGMA * (y2 - x2);
+    const k2y = x2 * (RHO - z2) - y2;
+    const k2z = x2 * y2 - BETA * z2;
+
+    const x3 = x + 0.5 * DT * k2x;
+    const y3 = y + 0.5 * DT * k2y;
+    const z3 = z + 0.5 * DT * k2z;
+    const k3x = SIGMA * (y3 - x3);
+    const k3y = x3 * (RHO - z3) - y3;
+    const k3z = x3 * y3 - BETA * z3;
+
+    const x4 = x + DT * k3x;
+    const y4 = y + DT * k3y;
+    const z4 = z + DT * k3z;
+    const k4x = SIGMA * (y4 - x4);
+    const k4y = x4 * (RHO - z4) - y4;
+    const k4z = x4 * y4 - BETA * z4;
+
+    x += (DT / 6) * (k1x + 2 * k2x + 2 * k3x + k4x);
+    y += (DT / 6) * (k1y + 2 * k2y + 2 * k3y + k4y);
+    z += (DT / 6) * (k1z + 2 * k2z + 2 * k3z + k4z);
+
+    if (i >= TRANSIENT && (i - TRANSIENT) % SUBSAMPLE === 0) {
+      DATA.push({
+        [TRAJECTORY_COL]: label,
+        [TIME_COL]: Number(((i - TRANSIENT) * DT).toFixed(2)),
+        [X_COL]: x,
+        [Y_COL]: y,
+        [Z_COL]: z,
+      });
+    }
   }
-  return points;
 }
 
-const trajectoryA = simulate([0.1, 0, 0]);
-const trajectoryB = simulate([0.1001, 0, 0]); // perturbed by 0.0001 in x
+const trajectoryNames = Array.from(
+  new Set(DATA.map((d) => d[TRAJECTORY_COL])),
+);
 
-// --- Normalize to a unit cube so the isometric projection treats every axis
-// equivalently, then project 3D -> 2D with a fixed camera angle (elevation
-// 20°, azimuth 32°) — the same technique a static mplot3d render uses. ------
-const allPoints = [...trajectoryA, ...trajectoryB];
-const X_MIN = Math.min(...allPoints.map((p) => p[0]));
-const X_MAX = Math.max(...allPoints.map((p) => p[0]));
-const Y_MIN = Math.min(...allPoints.map((p) => p[1]));
-const Y_MAX = Math.max(...allPoints.map((p) => p[1]));
-const Z_MIN = Math.min(...allPoints.map((p) => p[2]));
-const Z_MAX = Math.max(...allPoints.map((p) => p[2]));
+const allX = DATA.map((d) => d[X_COL]);
+const allY = DATA.map((d) => d[Y_COL]);
+const allZ = DATA.map((d) => d[Z_COL]);
+const X_MIN = Math.min(...allX);
+const X_MAX = Math.max(...allX);
+const Y_MIN = Math.min(...allY);
+const Y_MAX = Math.max(...allY);
+const Z_MIN = Math.min(...allZ);
+const Z_MAX = Math.max(...allZ);
 
-function normalize(p: number[]) {
-  return [
-    (2 * (p[0] - X_MIN)) / (X_MAX - X_MIN) - 1,
-    (2 * (p[1] - Y_MIN)) / (Y_MAX - Y_MIN) - 1,
-    (2 * (p[2] - Z_MIN)) / (Z_MAX - Z_MIN) - 1,
-  ];
+interface ProjectedTrajectory {
+  name: string;
+  color: string;
+  points: Array<{ sx: number; sy: number; t: number }>;
 }
 
-const ELEV = (20 * Math.PI) / 180;
-const AZIM = (32 * Math.PI) / 180;
+const projectedTrajectories: ProjectedTrajectory[] = [];
+const allScreenPts: Array<{ sx: number; sy: number }> = [];
 
-function projectUnit(x: number, y: number, z: number) {
-  const xRot = x * Math.cos(AZIM) - y * Math.sin(AZIM);
-  const yRot = x * Math.sin(AZIM) + y * Math.cos(AZIM);
-  return { sx: xRot, sy: yRot * Math.sin(ELEV) + z * Math.cos(ELEV) };
+for (let idx = 0; idx < trajectoryNames.length; idx += 1) {
+  const name = trajectoryNames[idx];
+  const rows = DATA.filter((d) => d[TRAJECTORY_COL] === name).sort(
+    (a, b) => a[TIME_COL] - b[TIME_COL],
+  );
+  const pts: Array<{ sx: number; sy: number; t: number }> = [];
+  for (let i = 0; i < rows.length; i += 1) {
+    const r = rows[i];
+    const nx = (2 * (r[X_COL] - X_MIN)) / (X_MAX - X_MIN) - 1;
+    const ny = (2 * (r[Y_COL] - Y_MIN)) / (Y_MAX - Y_MIN) - 1;
+    const nz = (2 * (r[Z_COL] - Z_MIN)) / (Z_MAX - Z_MIN) - 1;
+    const xRot = nx * COS_AZ - ny * SIN_AZ;
+    const yRot = nx * SIN_AZ + ny * COS_AZ;
+    const sx = xRot;
+    const sy = yRot * SIN_EL + nz * COS_EL;
+    pts.push({ sx, sy, t: r[TIME_COL] });
+    allScreenPts.push({ sx, sy });
+  }
+  projectedTrajectories.push({
+    name,
+    color: t.palette[idx],
+    points: pts,
+  });
 }
 
-function project(p: number[]) {
-  const [x, y, z] = normalize(p);
-  return projectUnit(x, y, z);
+// Project 3D bounding cube corners to include them in screen bounds
+const cubeCorners: Array<[number, number, number]> = [
+  [-1, -1, -1],
+  [1, -1, -1],
+  [1, 1, -1],
+  [-1, 1, -1],
+  [-1, -1, 1],
+  [-1, 1, 1],
+  [1, 1, 1],
+];
+const projectedCube = cubeCorners.map(([nx, ny, nz]) => {
+  const xRot = nx * COS_AZ - ny * SIN_AZ;
+  const yRot = nx * SIN_AZ + ny * COS_AZ;
+  return { sx: xRot, sy: yRot * SIN_EL + nz * COS_EL };
+});
+for (let i = 0; i < projectedCube.length; i += 1) {
+  allScreenPts.push(projectedCube[i]);
 }
 
-const projectedA = trajectoryA.map(project);
-const projectedB = trajectoryB.map(project);
-const allProjected = [...projectedA, ...projectedB];
+const SX_MIN = Math.min(...allScreenPts.map((p) => p.sx));
+const SX_MAX = Math.max(...allScreenPts.map((p) => p.sx));
+const SY_MIN = Math.min(...allScreenPts.map((p) => p.sy));
+const SY_MAX = Math.max(...allScreenPts.map((p) => p.sy));
+const PAD_X = (SX_MAX - SX_MIN) * PAD_X_SHARE;
+const PAD_Y = (SY_MAX - SY_MIN) * PAD_Y_SHARE;
+const DOM_X0 = SX_MIN - PAD_X;
+const DOM_X1 = SX_MAX + PAD_X;
+const DOM_Y0 = SY_MIN - PAD_Y;
+const DOM_Y1 = SY_MAX + PAD_Y;
 
-const SX_MIN = Math.min(...allProjected.map((p) => p.sx));
-const SX_MAX = Math.max(...allProjected.map((p) => p.sx));
-const SY_MIN = Math.min(...allProjected.map((p) => p.sy));
-const SY_MAX = Math.max(...allProjected.map((p) => p.sy));
-const PAD_X = (SX_MAX - SX_MIN) * 0.08;
-const PAD_Y = (SY_MAX - SY_MIN) * 0.12;
+const gizmoAxes = [
+  {
+    label: "X",
+    sx: 1 * COS_AZ - 0 * SIN_AZ,
+    sy: (1 * SIN_AZ + 0 * COS_AZ) * SIN_EL + 0 * COS_EL,
+  },
+  {
+    label: "Y",
+    sx: 0 * COS_AZ - 1 * SIN_AZ,
+    sy: (0 * SIN_AZ + 1 * COS_AZ) * SIN_EL + 0 * COS_EL,
+  },
+  {
+    label: "Z",
+    sx: 0,
+    sy: COS_EL,
+  },
+];
 
-const TITLE_H = 60;
-const FONT = "Inter, system-ui, sans-serif";
-
-// --- Custom overlay: MUI X's built-in series don't cover 3D paths, so we
-// project the trajectories ourselves and paint them as plain SVG inside the
-// ChartContainer's drawing area — the composition pattern MUI X documents
-// for chart types outside the built-in series set. --------------------------
-function Trajectories() {
+function TrajectoriesLayer() {
   const { left, top, width, height: areaHeight } = useDrawingArea();
-  const xOf = (sx: number) =>
-    left +
-    ((sx - (SX_MIN - PAD_X)) / (SX_MAX + PAD_X - (SX_MIN - PAD_X))) * width;
-  const yOf = (sy: number) =>
-    top +
-    areaHeight -
-    ((sy - (SY_MIN - PAD_Y)) / (SY_MAX + PAD_Y - (SY_MIN - PAD_Y))) *
-      areaHeight;
 
-  const toPolyline = (pts: { sx: number; sy: number }[]) =>
-    pts.map((p) => `${xOf(p.sx)},${yOf(p.sy)}`).join(" ");
+  const xDomSpan = DOM_X1 - DOM_X0;
+  const yDomSpan = DOM_Y1 - DOM_Y0;
+  const scaleY = areaHeight / yDomSpan;
+  const scaleX = Math.min(width / xDomSpan, scaleY * 1.38);
+  const offsetX = left + (width - xDomSpan * scaleX) / 2;
+  const offsetY = top + (areaHeight - yDomSpan * scaleY) / 2;
 
-  const startPx = { x: xOf(projectedA[0].sx), y: yOf(projectedA[0].sy) };
-  // The padding (PAD_X/PAD_Y) reserves a data-free margin around the projected
-  // bounding box, so the top-left corner of the drawing area is guaranteed
-  // clear of trajectory lines — a safe spot for the "shared start" label,
-  // reached via a leader line from the actual start marker.
-  const labelAnchor = { x: left + 14, y: top + 22 };
+  const c0 = {
+    x: offsetX + (projectedCube[0].sx - DOM_X0) * scaleX,
+    y: offsetY + (DOM_Y1 - projectedCube[0].sy) * scaleY,
+  };
+  const c1 = {
+    x: offsetX + (projectedCube[1].sx - DOM_X0) * scaleX,
+    y: offsetY + (DOM_Y1 - projectedCube[1].sy) * scaleY,
+  };
+  const c2 = {
+    x: offsetX + (projectedCube[2].sx - DOM_X0) * scaleX,
+    y: offsetY + (DOM_Y1 - projectedCube[2].sy) * scaleY,
+  };
+  const c3 = {
+    x: offsetX + (projectedCube[3].sx - DOM_X0) * scaleX,
+    y: offsetY + (DOM_Y1 - projectedCube[3].sy) * scaleY,
+  };
+  const c5 = {
+    x: offsetX + (projectedCube[5].sx - DOM_X0) * scaleX,
+    y: offsetY + (DOM_Y1 - projectedCube[5].sy) * scaleY,
+  };
+  const c6 = {
+    x: offsetX + (projectedCube[6].sx - DOM_X0) * scaleX,
+    y: offsetY + (DOM_Y1 - projectedCube[6].sy) * scaleY,
+  };
 
-  // Small axis-orientation gizmo fixed near the corner — a bounding-box axis
-  // frame would fight the attractor's irregular, self-crossing shape.
-  const gizmoOrigin = { x: left + 66, y: top + areaHeight - 60 };
-  const ARM = 60;
-  const gizmoAxes = [
-    { dir: projectUnit(1, 0, 0), label: "X" },
-    { dir: projectUnit(0, 1, 0), label: "Y" },
-    { dir: projectUnit(0, 0, 1), label: "Z" },
-  ];
+  const firstPt = projectedTrajectories[0].points[0];
+  const startPx = {
+    x: offsetX + (firstPt.sx - DOM_X0) * scaleX,
+    y: offsetY + (DOM_Y1 - firstPt.sy) * scaleY,
+  };
+  const labelAnchor = { x: c3.x + 156, y: c5.y + 44 };
+  const gizmoOrigin = { x: left + 96, y: top + areaHeight - 78 };
+  const ARM = 58;
 
   return (
     <g>
-      <polyline
-        points={toPolyline(projectedA)}
-        fill="none"
-        stroke={t.palette[0]}
-        strokeWidth={1.5}
-        opacity={0.55}
+      {/* 3D floor and back-wall reference wireframe */}
+      <polygon
+        points={`${c0.x},${c0.y} ${c1.x},${c1.y} ${c2.x},${c2.y} ${c3.x},${c3.y}`}
+        fill={t.elevatedBg}
+        fillOpacity={0.35}
+        stroke={t.grid}
+        strokeWidth={1.2}
       />
-      <polyline
-        points={toPolyline(projectedB)}
-        fill="none"
-        stroke={t.palette[1]}
-        strokeWidth={1.5}
-        opacity={0.55}
+      <polygon
+        points={`${c3.x},${c3.y} ${c2.x},${c2.y} ${c6.x},${c6.y} ${c5.x},${c5.y}`}
+        fill={t.elevatedBg}
+        fillOpacity={0.18}
+        stroke={t.grid}
+        strokeWidth={1.2}
+        strokeDasharray="4 4"
       />
-      <circle cx={startPx.x} cy={startPx.y} r={6} fill={t.ink} />
+      <line
+        x1={c0.x}
+        y1={c0.y}
+        x2={c3.x}
+        y2={c3.y}
+        stroke={t.grid}
+        strokeWidth={1.2}
+      />
+
+      {/* Labeled outer 3D axis edges (never crossing trajectories) */}
+      <line
+        x1={c0.x}
+        y1={c0.y}
+        x2={c1.x}
+        y2={c1.y}
+        stroke={t.inkSoft}
+        strokeWidth={2}
+      />
+      <text
+        x={(c0.x + c1.x) / 2 + 12}
+        y={(c0.y + c1.y) / 2 + 28}
+        fill={t.ink}
+        fontSize={14}
+        fontWeight={600}
+        textAnchor="middle"
+      >
+        {X_COL} [{X_MIN.toFixed(0)} to +{X_MAX.toFixed(0)}]
+      </text>
+
+      <line
+        x1={c1.x}
+        y1={c1.y}
+        x2={c2.x}
+        y2={c2.y}
+        stroke={t.inkSoft}
+        strokeWidth={2}
+      />
+      <text
+        x={(c1.x + c2.x) / 2 + 22}
+        y={(c1.y + c2.y) / 2 - 6}
+        fill={t.ink}
+        fontSize={14}
+        fontWeight={600}
+        textAnchor="start"
+      >
+        {Y_COL} [{Y_MIN.toFixed(0)} to +{Y_MAX.toFixed(0)}]
+      </text>
+
+      <line
+        x1={c3.x}
+        y1={c3.y}
+        x2={c5.x}
+        y2={c5.y}
+        stroke={t.inkSoft}
+        strokeWidth={2}
+      />
+      <text
+        x={c3.x - 16}
+        y={(c3.y + c5.y) / 2}
+        fill={t.ink}
+        fontSize={14}
+        fontWeight={600}
+        textAnchor="end"
+        dominantBaseline="middle"
+      >
+        {Z_COL} [{Z_MIN.toFixed(0)} to {Z_MAX.toFixed(0)}]
+      </text>
+
+      {/* Trajectories */}
+      {projectedTrajectories.map((traj) => {
+        const poly = traj.points
+          .map(
+            (p) =>
+              `${(offsetX + (p.sx - DOM_X0) * scaleX).toFixed(1)},${(
+                offsetY +
+                (DOM_Y1 - p.sy) * scaleY
+              ).toFixed(1)}`,
+          )
+          .join(" ");
+        const endPt = traj.points[traj.points.length - 1];
+        const endX = offsetX + (endPt.sx - DOM_X0) * scaleX;
+        const endY = offsetY + (DOM_Y1 - endPt.sy) * scaleY;
+
+        return (
+          <g key={traj.name}>
+            <polyline
+              points={poly}
+              fill="none"
+              stroke={traj.color}
+              strokeWidth={1.65}
+              opacity={0.62}
+            />
+            <circle
+              cx={endX}
+              cy={endY}
+              r={5}
+              fill={traj.color}
+              stroke={t.pageBg}
+              strokeWidth={1.5}
+            />
+          </g>
+        );
+      })}
+
+      {/* Shared start marker and leader callout */}
+      <circle
+        cx={startPx.x}
+        cy={startPx.y}
+        r={6.5}
+        fill={t.ink}
+        stroke={t.pageBg}
+        strokeWidth={1.5}
+      />
       <line
         x1={startPx.x}
         y1={startPx.y}
-        x2={labelAnchor.x}
-        y2={labelAnchor.y}
+        x2={labelAnchor.x + 8}
+        y2={labelAnchor.y + 4}
         stroke={t.inkSoft}
-        strokeWidth={1}
-        strokeDasharray="3,3"
-        opacity={0.7}
+        strokeWidth={1.3}
+        strokeDasharray="4 3"
+        opacity={0.8}
       />
       <text
         x={labelAnchor.x}
         y={labelAnchor.y}
-        fill={t.inkSoft}
-        style={{ fontSize: 14, fontFamily: FONT }}
+        fill={t.ink}
+        fontSize={14}
+        fontWeight={600}
+        fontFamily={t.mono}
+        textAnchor="end"
       >
-        shared start
+        Shared start (t = {firstPt.t.toFixed(1)})
       </text>
 
+      {/* 3D orientation triad gizmo */}
       {gizmoAxes.map((a) => {
-        const tip = {
-          x: gizmoOrigin.x + a.dir.sx * ARM,
-          y: gizmoOrigin.y - a.dir.sy * ARM,
-        };
+        const tipX = gizmoOrigin.x + a.sx * ARM;
+        const tipY = gizmoOrigin.y - a.sy * ARM;
         return (
           <g key={a.label}>
             <line
               x1={gizmoOrigin.x}
               y1={gizmoOrigin.y}
-              x2={tip.x}
-              y2={tip.y}
+              x2={tipX}
+              y2={tipY}
               stroke={t.inkSoft}
               strokeWidth={2}
             />
             <text
-              x={gizmoOrigin.x + a.dir.sx * (ARM + 20)}
-              y={gizmoOrigin.y - a.dir.sy * (ARM + 20)}
-              fill={t.inkSoft}
+              x={gizmoOrigin.x + a.sx * (ARM + 18)}
+              y={gizmoOrigin.y - a.sy * (ARM + 18)}
+              fill={t.ink}
               textAnchor="middle"
-              style={{ fontSize: 15, fontWeight: 600, fontFamily: FONT }}
+              dominantBaseline="middle"
+              fontSize={15}
+              fontWeight={700}
             >
               {a.label}
             </text>
@@ -201,39 +416,14 @@ function Trajectories() {
       })}
       <text
         x={gizmoOrigin.x}
-        y={gizmoOrigin.y + 20}
+        y={gizmoOrigin.y + 24}
         fill={t.inkSoft}
         textAnchor="middle"
-        style={{
-          fontSize: 10,
-          fontStyle: "italic",
-          fontFamily: FONT,
-          opacity: 0.85,
-        }}
+        fontSize={14}
+        fontFamily={t.mono}
       >
-        normalized units
+        isometric triad
       </text>
-
-      <g transform={`translate(${left + width - 300}, ${top + 6})`}>
-        <rect x={0} y={0} width={14} height={14} fill={t.palette[0]} />
-        <text
-          x={20}
-          y={12}
-          fill={t.inkSoft}
-          style={{ fontSize: 14, fontFamily: FONT }}
-        >
-          Trajectory A · x₀ = 0.1000
-        </text>
-        <rect x={0} y={24} width={14} height={14} fill={t.palette[1]} />
-        <text
-          x={20}
-          y={36}
-          fill={t.inkSoft}
-          style={{ fontSize: 14, fontFamily: FONT }}
-        >
-          Trajectory B · x₀ = 0.1001
-        </text>
-      </g>
     </g>
   );
 }
@@ -241,6 +431,8 @@ function Trajectories() {
 export default function Chart() {
   const W = window.ANYPLOT_SIZE.width;
   const H = window.ANYPLOT_SIZE.height;
+  const HEADER_H = 84;
+  const chartH = H - HEADER_H;
 
   return (
     <div
@@ -248,34 +440,92 @@ export default function Chart() {
         width: W,
         height: H,
         background: t.pageBg,
-        fontFamily: FONT,
+        color: t.ink,
+        fontFamily: t.sans,
         display: "flex",
         flexDirection: "column",
+        boxSizing: "border-box",
       }}
     >
       <div
         style={{
-          height: TITLE_H,
+          height: HEADER_H,
+          padding: "14px 44px 4px 44px",
           display: "flex",
           alignItems: "center",
-          justifyContent: "center",
+          justifyContent: "space-between",
+          boxSizing: "border-box",
         }}
       >
-        <span style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>
-          line-3d-trajectory · javascript · muix · anyplot.ai
-        </span>
+        <div>
+          <div
+            style={{
+              fontSize: 22,
+              fontWeight: 700,
+              color: t.ink,
+              lineHeight: 1.2,
+            }}
+          >
+            line-3d-trajectory · javascript · muix · anyplot.ai
+          </div>
+          <div
+            style={{
+              fontSize: 14,
+              color: t.inkSoft,
+              marginTop: 4,
+              fontFamily: t.mono,
+            }}
+          >
+            Lorenz attractor (σ = {SIGMA}, ρ = {RHO}, β = 8/3) ·{" "}
+            {projectedTrajectories[0].points.length.toLocaleString()} steps per
+            trajectory ({TIME_COL} 0 →{" "}
+            {projectedTrajectories[0].points[
+              projectedTrajectories[0].points.length - 1
+            ].t.toFixed(0)}
+            )
+          </div>
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 24,
+            fontSize: 15,
+            color: t.ink,
+          }}
+        >
+          {projectedTrajectories.map((traj) => (
+            <div
+              key={traj.name}
+              style={{ display: "flex", alignItems: "center", gap: 8 }}
+            >
+              <span
+                style={{
+                  width: 22,
+                  height: 3,
+                  borderRadius: 2,
+                  background: traj.color,
+                  display: "inline-block",
+                }}
+              />
+              <span>{traj.name}</span>
+            </div>
+          ))}
+        </div>
       </div>
-      <ChartContainer
+
+      <ChartsContainer
         width={W}
-        height={H - TITLE_H}
+        height={chartH}
         skipAnimation
         series={[]}
-        xAxis={[{ min: 0, max: 1 }]}
-        yAxis={[{ min: 0, max: 1 }]}
-        margin={{ top: 20, bottom: 30, left: 30, right: 30 }}
+        xAxis={[{ min: 0, max: 1, position: "none" }]}
+        yAxis={[{ min: 0, max: 1, position: "none" }]}
+        margin={{ top: 12, bottom: 24, left: 32, right: 32 }}
       >
-        <Trajectories />
-      </ChartContainer>
+        <TrajectoriesLayer />
+      </ChartsContainer>
     </div>
   );
 }
